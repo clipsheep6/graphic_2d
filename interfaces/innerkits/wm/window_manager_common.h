@@ -38,6 +38,7 @@ typedef enum {
     WINDOW_TYPE_SYSTEM_UI = 4,
     WINDOW_TYPE_LAUNCHER = 5,
     WINDOW_TYPE_VIDEO = 6,
+    WINDOW_TYPE_VIDEO_NORMAL = 7,
 } WindowType;
 
 struct FormatTbl {

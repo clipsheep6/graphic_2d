@@ -1438,8 +1438,10 @@ bool CreateVideoSubWindow(InnerWindowInfo &newSubInfo, struct wl_shm &shm)
             return false;
         }
 
-        if (newSubInfo.windowconfig.type == WINDOW_TYPE_VIDEO) {
+        if (newSubInfo.windowconfig.type == WINDOW_TYPE_VIDEO_NORMAL) {
             wl_surface_set_surface_type(newSubInfo.wlSurface, WL_SURFACE_TYPE_VIDEO);
+        } else if (newSubInfo.windowconfig.type == WINDOW_TYPE_VIDEO) {
+            wl_surface_set_surface_type(newSubInfo.wlSurface, WL_SURFACE_TYPE_POTHOLING_VIDEO);
         }
 
         newSubInfo.p_cb = wl_surface_frame(newSubInfo.wlSurface);
@@ -1477,8 +1479,8 @@ InnerWindowInfo* LayerControllerClient::CreateSubWindow(int32_t subid, int32_t p
         wl_subsurface_set_position(newSubInfo.wlSubSurface, newSubInfo.pos_x, newSubInfo.pos_y);
         wl_subsurface_set_desync(newSubInfo.wlSubSurface);
     }
-
-    if (newSubInfo.windowconfig.type != WINDOW_TYPE_VIDEO) {
+    const auto &t = newSubInfo.windowconfig.type;
+    if ((t != WINDOW_TYPE_VIDEO) && (t != WINDOW_TYPE_VIDEO_NORMAL)) {
         newSubInfo.surface = Surface::CreateSurfaceAsConsumer();
         if (newSubInfo.surface) {
             newSubInfo.listener = new SurfaceListener(newSubInfo.surface, subid);
@@ -1494,6 +1496,11 @@ InnerWindowInfo* LayerControllerClient::CreateSubWindow(int32_t subid, int32_t p
         }
 
         newSubInfo.viewport = wp_viewporter_get_viewport(wlContextStruct_.viewporter, newSubInfo.wlSurface);
+        if (t == WINDOW_TYPE_VIDEO) {
+            wl_surface_set_surface_type(parentInnerWindowInfo->wlSurface, WL_SURFACE_TYPE_POTHOLING_VIDEO);
+        } else if (t == WINDOW_TYPE_VIDEO_NORMAL) {
+            wl_surface_set_surface_type(parentInnerWindowInfo->wlSurface, WL_SURFACE_TYPE_GRAPHIC);
+        }
         if (!CreateVideoSubWindow(newSubInfo, *wlContextStruct_.wl_shm)) {
             return nullptr;
         }
@@ -1903,7 +1910,7 @@ void ProcessWindowInfo(InnerWindowInfo& info)
             wl_subsurface_destroy(info.wlSubSurface);
         }
 
-        if (info.windowconfig.type == WINDOW_TYPE_VIDEO) {
+        if ((info.windowconfig.type == WINDOW_TYPE_VIDEO) || (info.windowconfig.type == WINDOW_TYPE_VIDEO_NORMAL)) {
             if (info.wl_buffer) {
                 wl_buffer_destroy(info.wl_buffer);
             }

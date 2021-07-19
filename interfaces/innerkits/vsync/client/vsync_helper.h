@@ -16,21 +16,22 @@
 #ifndef INTERFACES_INNERKITS_VSYNC_CLIENT_VSYNC_HELPER_H
 #define INTERFACES_INNERKITS_VSYNC_CLIENT_VSYNC_HELPER_H
 
-#include <refbase.h>
+#include <vector>
+
 #include <event_handler.h>
+#include <functional>
+#include <refbase.h>
 
 #include "vsync_type.h"
 
 namespace OHOS {
+using SyncFunc = std::function<void(int64_t, void *)>;
+
 struct FrameCallback {
+    uint32_t frequency_;
     int64_t timestamp_;
     void* userdata_;
-    void (*callback_)(int64_t, void*);
-
-    bool operator < (const struct FrameCallback& cb) const
-    {
-        return timestamp_ < cb.timestamp_;
-    }
+    SyncFunc callback_;
 };
 
 class VsyncHelper : public RefBase {
@@ -38,7 +39,8 @@ public:
     static sptr<VsyncHelper> Current();
     static sptr<VsyncHelper> FromHandler(std::shared_ptr<AppExecFwk::EventHandler>& handler);
 
-    virtual VsyncError RequestFrameCallback(struct FrameCallback& cb) = 0;
+    virtual VsyncError RequestFrameCallback(const struct FrameCallback& cb) = 0;
+    virtual VsyncError GetSupportedVsyncFrequencys(std::vector<uint32_t>& freqs) = 0;
 };
 } // namespace OHOS
 

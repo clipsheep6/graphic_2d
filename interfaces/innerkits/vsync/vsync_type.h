@@ -30,6 +30,8 @@ using VsyncError = enum VsyncError {
     VSYNC_ERROR_SAMGR,
     VSYNC_ERROR_SERVICE_NOT_FOUND,
     VSYNC_ERROR_PROXY_NOT_INCLUDE,
+    VSYNC_ERROR_INNER,
+    VSYNC_ERROR_INVALID_ARGUMENTS,
     _VSYNC_ERROR_MAX,
 };
 
@@ -42,6 +44,8 @@ static const std::string VsyncErrorStrs[] = {
     [VSYNC_ERROR_SAMGR] = "<get system ability failed>",
     [VSYNC_ERROR_SERVICE_NOT_FOUND] = "<service is not found>",
     [VSYNC_ERROR_PROXY_NOT_INCLUDE] = "<proxy header file is not included>",
+    [VSYNC_ERROR_INNER] = "<internal error>",
+    [VSYNC_ERROR_INVALID_ARGUMENTS] = "<invalid arguments>",
 };
 
 static inline std::string VsyncErrorStr(VsyncError err)

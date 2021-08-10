@@ -43,6 +43,8 @@ ohos_shared_library("libvsync_client") {
     "src/vsync_helper.cpp",
     "src/vsync_helper_impl.cpp",
     "src/vsync_manager_proxy.cpp",
+    "src/return_value_tester.cpp",
+    "src/static_call.cpp",
   ]
 
   configs = [ ":libvsync_client_config" ]
@@ -94,6 +96,8 @@ ohos_executable("vsync_server") {
     "src/vsync_manager.cpp",
     "src/vsync_module.cpp",
     "src/vsync_module_impl.cpp",
+    "src/return_value_tester.cpp",
+    "src/drm_module.cpp",
   ]
 
   configs = [ ":vsync_server_config" ]

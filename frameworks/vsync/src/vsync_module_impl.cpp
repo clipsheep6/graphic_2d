@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include "vsync_module_impl.h"
 
 #include <chrono>
 #include <mutex>
@@ -24,6 +23,7 @@
 #include <system_ability_definition.h>
 
 #include "vsync_log.h"
+#include "vsync_module_impl.h"
 
 namespace OHOS {
 namespace {
@@ -53,7 +53,7 @@ int64_t VsyncModuleImpl::WaitNextVBlank()
         }
     };
 
-    int ret = drmWaitVBlank(drmFd_, &vblank);
+    int ret = DrmModule::GetInstance()->DrmWaitBlank(drmFd_, vblank);
     if (ret != 0) {
         VLOG_ERROR_API(errno, drmWaitVBlank);
         return -1;
@@ -80,7 +80,7 @@ bool VsyncModuleImpl::RegisterSystemAbility()
     if (isRegisterSA_) {
         return true;
     }
-    auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    auto sm = DrmModule::GetInstance()->GetSystemAbilityManager();
     if (sm) {
         sm->AddSystemAbility(vsyncSystemAbilityId_, vsyncManager_);
         isRegisterSA_ = true;
@@ -90,7 +90,7 @@ bool VsyncModuleImpl::RegisterSystemAbility()
 
 void VsyncModuleImpl::UnregisterSystemAbility()
 {
-    auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    auto sm = DrmModule::GetInstance()->GetSystemAbilityManager();
     if (sm) {
         sm->RemoveSystemAbility(vsyncSystemAbilityId_);
         isRegisterSA_ = false;
@@ -99,18 +99,17 @@ void VsyncModuleImpl::UnregisterSystemAbility()
 
 VsyncModuleImpl::VsyncModuleImpl()
 {
-    VLOGD("DEBUG VsyncModuleImpl");
     drmFd_ = -1;
     vsyncThread_ = nullptr;
     vsyncThreadRunning_ = false;
     vsyncSystemAbilityId_ = 0;
     isRegisterSA_ = false;
     vsyncManager_ = new VsyncManager();
+    sc = DrmModule::GetInstance();
 }
 
 VsyncModuleImpl::~VsyncModuleImpl()
 {
-    VLOGD("DEBUG ~VsyncModuleImpl");
     if (vsyncThreadRunning_) {
         Stop();
     }
@@ -128,7 +127,7 @@ VsyncError VsyncModuleImpl::Start()
     }
 
     for (const auto &name : DrmModuleNames) {
-        drmFd_ = drmOpen(name, nullptr);
+        drmFd_ = DrmModule::GetInstance()->DrmOpen(name, "");
         if (drmFd_ < 0) {
             VLOGW("drmOpen %{public}s failed with %{public}d", name, errno);
         } else {
@@ -138,7 +137,6 @@ VsyncError VsyncModuleImpl::Start()
     if (drmFd_ < 0) {
         return VSYNC_ERROR_API_FAILED;
     }
-    VLOGD("drmOpen fd is %{public}d", drmFd_);
 
     vsyncThreadRunning_ = true;
     vsyncThread_ = std::make_unique<std::thread>([this]()->void {
@@ -150,6 +148,10 @@ VsyncError VsyncModuleImpl::Start()
 
 VsyncError VsyncModuleImpl::Stop()
 {
+    if (isRegisterSA_) {
+        UnregisterSystemAbility();
+    }
+
     if (!vsyncThreadRunning_) {
         return VSYNC_ERROR_INVALID_OPERATING;
     }
@@ -158,16 +160,12 @@ VsyncError VsyncModuleImpl::Stop()
     vsyncThread_->join();
     vsyncThread_.reset();
 
-    int ret = drmClose(drmFd_);
+    int ret = DrmModule::GetInstance()->DrmClose(drmFd_);
     if (ret) {
         VLOG_ERROR_API(errno, drmClose);
         return VSYNC_ERROR_API_FAILED;
     }
     drmFd_ = -1;
-
-    if (isRegisterSA_) {
-        UnregisterSystemAbility();
-    }
 
     return VSYNC_ERROR_OK;
 }

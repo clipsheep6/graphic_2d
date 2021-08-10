@@ -20,6 +20,7 @@
 
 #include <vsync_module.h>
 
+#include "drm_module.h"
 #include "vsync_type.h"
 #include "vsync_manager.h"
 
@@ -52,6 +53,7 @@ private:
     int32_t vsyncSystemAbilityId_;
     bool isRegisterSA_;
     sptr<VsyncManager> vsyncManager_;
+    sptr<DrmModule> sc = nullptr;
 };
 } // namespace OHOS
 

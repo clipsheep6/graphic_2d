@@ -33,7 +33,7 @@ public:
     virtual VsyncError ListenVsync(sptr<IVsyncCallback>& cb) override;
     virtual VsyncError GetVsyncFrequency(uint32_t& freq) override;
 
-    void Callback(int64_t timestamp);
+    virtual void Callback(int64_t timestamp);
 
 private:
     std::list<sptr<IVsyncCallback>> callbacks_;

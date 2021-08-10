@@ -27,7 +27,6 @@
 
 #include "ivsync_manager.h"
 #include "vsync_callback_stub.h"
-#include "vsync_manager_proxy.h"
 
 namespace OHOS {
 struct VsyncElement {
@@ -45,12 +44,12 @@ class VsyncClient : public RefBase {
 public:
     static sptr<VsyncClient> GetInstance();
 
-    VsyncError Init();
+    virtual VsyncError Init();
 
     VsyncError RequestFrameCallback(const struct FrameCallback& cb);
     VsyncError GetSupportedVsyncFrequencys(std::vector<uint32_t>& freqs);
 
-    void DispatchFrameCallback(int64_t timestamp);
+    virtual void DispatchFrameCallback(int64_t timestamp);
 
 private:
     VsyncClient() = default;

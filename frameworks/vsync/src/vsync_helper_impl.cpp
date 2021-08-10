@@ -22,6 +22,7 @@
 #include <iservice_registry.h>
 #include <system_ability_definition.h>
 
+#include "static_call.h"
 #include "vsync_log.h"
 #include "vsync_type.h"
 
@@ -53,17 +54,17 @@ sptr<VsyncClient> VsyncClient::GetInstance()
 VsyncError VsyncClient::Init()
 {
     if (service_ == nullptr) {
-        auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        auto sm = StaticCall::GetInstance()->GetSystemAbilityManager();
         if (sm == nullptr) {
             VLOG_FAILURE_RET(VSYNC_ERROR_SAMGR);
         }
 
-        auto remoteObject = sm->GetSystemAbility(VSYNC_MANAGER_ID);
+        auto remoteObject = StaticCall::GetInstance()->GetSystemAbility(sm, VSYNC_MANAGER_ID);
         if (remoteObject == nullptr) {
             VLOG_FAILURE_RET(VSYNC_ERROR_SERVICE_NOT_FOUND);
         }
 
-        service_ = iface_cast<IVsyncManager>(remoteObject);
+        service_ = StaticCall::GetInstance()->GetCast(remoteObject);
         if (service_ == nullptr) {
             VLOG_FAILURE_RET(VSYNC_ERROR_PROXY_NOT_INCLUDE);
         }
@@ -72,7 +73,7 @@ VsyncError VsyncClient::Init()
     }
 
     if (vsyncFrequency_ == 0) {
-        auto vret = service_->GetVsyncFrequency(vsyncFrequency_);
+        auto vret = StaticCall::GetInstance()->GetVsyncFrequency(service_, vsyncFrequency_);
         if (vret != VSYNC_ERROR_OK) {
             VLOG_FAILURE_RET(vret);
         }
@@ -85,7 +86,7 @@ VsyncError VsyncClient::Init()
 
     if (listener_ == nullptr) {
         listener_ = new VsyncCallback();
-        VsyncError ret = service_->ListenVsync(listener_);
+        VsyncError ret = StaticCall::GetInstance()->ListenVsync(service_, listener_);
         if (ret == VSYNC_ERROR_OK) {
             VLOG_SUCCESS("ListenVsync");
         } else {
@@ -216,7 +217,7 @@ void VsyncClient::DispatchMain(int64_t timestamp)
 sptr<VsyncHelperImpl> VsyncHelperImpl::Current()
 {
     if (currentHelper_ == nullptr) {
-        auto handler = AppExecFwk::EventHandler::Current();
+        auto handler = StaticCall::GetInstance()->Current();
         if (handler == nullptr) {
             VLOG_FAILURE("AppExecFwk::EventHandler::Current() return nullptr");
             return nullptr;

@@ -79,7 +79,7 @@ HWTEST_F(VsyncManagerStubTest, OnRemoteRequest4, testing::ext::TestSize.Level0)
     MessageParcel data;
     MessageParcel reply;
     data.WriteInterfaceToken(IVsyncManager::GetDescriptor());
-    std::shared_ptr<int> count =std::make_shared<int>(0);
+    int count = 0;
     sptr<IVsyncCallback> cb = new  VsyncCallback(count);
     data.WriteRemoteObject(cb->AsObject());
     auto ret = vc_->OnRemoteRequest(IVsyncManager::IVSYNC_MANAGER_LISTEN_VSYNC, data, reply, opt);
@@ -95,7 +95,7 @@ HWTEST_F(VsyncManagerStubTest, ListenVsync1, testing::ext::TestSize.Level0)
 
 HWTEST_F(VsyncManagerStubTest, ListenVsync2, testing::ext::TestSize.Level0)
 {
-    std::shared_ptr<int> count =std::make_shared<int>(0);
+    int count = 0;
     sptr<IVsyncCallback> cb = new VsyncCallback(count);
     auto ret = vc_->ListenVsync(cb);
     ASSERT_EQ(ret, VSYNC_ERROR_OK);
@@ -111,26 +111,26 @@ HWTEST_F(VsyncManagerStubTest, GetVsyncFrequency, testing::ext::TestSize.Level0)
 
 HWTEST_F(VsyncManagerStubTest, Callback1, testing::ext::TestSize.Level0)
 {
-    std::shared_ptr<int> count =std::make_shared<int>(0);
+    int count = 0;
     sptr<IVsyncCallback> cb = new VsyncCallback(count);
     vc_->ListenVsync(cb);
     auto now = std::chrono::steady_clock::now().time_since_epoch();
     int64_t timestamp = (int64_t)std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
     vc_->Callback(timestamp);
-    ASSERT_EQ(*count, 1);
+    ASSERT_EQ(count, 1);
 }
 
 HWTEST_F(VsyncManagerStubTest, Callback2, testing::ext::TestSize.Level0)
 {
-    std::shared_ptr<int> count =std::make_shared<int>(0);
+    int count = 0;
     sptr<IVsyncCallback> cb = new VsyncCallback(count);
     vc_->ListenVsync(cb);
     vc_->Callback(0);
-    ASSERT_EQ(*count, 0);
+    ASSERT_EQ(count, 0);
 }
 } // namespace
 
-VsyncCallback::VsyncCallback(const std::shared_ptr<int> count) : count_(count)
+VsyncCallback::VsyncCallback(int& count) : count_(&count)
 {
 }
 

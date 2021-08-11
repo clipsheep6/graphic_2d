@@ -19,8 +19,8 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "vsync_manager.h"
 #include "vsync_callback_stub.h"
+#include "vsync_manager.h"
 
 namespace OHOS {
 namespace {
@@ -39,11 +39,11 @@ private:
 
 class VsyncCallback : public VsyncCallbackStub {
 public:
-    explicit VsyncCallback(const std::shared_ptr<int> count);
+    explicit VsyncCallback(int& count);
     virtual ~VsyncCallback() = default;
     virtual VsyncError OnVsync(int64_t timestamp) override;
 private:
-    std::shared_ptr<int> count_ = nullptr;
+    int *count_ = nullptr;
 };
 }
 

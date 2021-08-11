@@ -18,8 +18,8 @@
 
 #include <gtest/gtest.h>
 
-#include "vsync_manager.h"
 #include "vsync_callback_stub.h"
+#include "vsync_manager.h"
 
 namespace OHOS {
 namespace {

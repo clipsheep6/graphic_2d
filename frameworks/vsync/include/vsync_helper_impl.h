@@ -44,7 +44,7 @@ class VsyncClient : public RefBase {
 public:
     static sptr<VsyncClient> GetInstance();
 
-    virtual VsyncError Init();
+    virtual VsyncError Init(bool restart = false);
 
     VsyncError RequestFrameCallback(const struct FrameCallback& cb);
     VsyncError GetSupportedVsyncFrequencys(std::vector<uint32_t>& freqs);
@@ -56,6 +56,8 @@ private:
     virtual ~VsyncClient() = default;
     static inline sptr<VsyncClient> instance = nullptr;
 
+    VsyncError InitService();
+
     void DispatchMain(int64_t timestamp);
 
     std::map<uint32_t, std::priority_queue<struct VsyncElement>> callbacksMap_;
@@ -65,6 +67,7 @@ private:
 
     uint32_t vsyncFrequency_ = 0;
     sptr<IVsyncManager> service_ = nullptr;
+    std::mutex serviceMutex_;
     sptr<IVsyncCallback> listener_ = nullptr;
 };
 
@@ -86,6 +89,13 @@ private:
 class VsyncCallback : public VsyncCallbackStub {
 public:
     virtual VsyncError OnVsync(int64_t timestamp) override;
+};
+
+class VsyncManagerDeathRecipient : public IRemoteObject::DeathRecipient {
+public:
+        VsyncManagerDeathRecipient() = default;
+        ~VsyncManagerDeathRecipient() = default;
+        void OnRemoteDied(const wptr<IRemoteObject> &remote);
 };
 } // namespace OHOS
 

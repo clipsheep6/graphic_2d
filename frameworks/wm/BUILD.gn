@@ -79,7 +79,7 @@ ohos_shared_library("wms_client") {
   deps = [
     "//foundation/graphic/standard:libwmservice",
     "//foundation/graphic/standard/frameworks/wmserver:wms_protocol",
-    "//foundation/multimedia/media_standard/frameworks/videodisplaymanager:videodisplaymanager",
+    ":libvideo_display_manager",
     "//third_party/wayland-ivi-extension:libilmClient",
     "//third_party/wayland-ivi-extension:libilmCommon",
     "//third_party/wayland-ivi-extension:libilmControl",
@@ -175,7 +175,7 @@ ohos_shared_library("libwmclient") {
   deps = [
     "//foundation/graphic/standard:libwmservice",
     "//foundation/graphic/standard/frameworks/wmserver:wms_protocol",
-    "//foundation/multimedia/media_standard/frameworks/videodisplaymanager:videodisplaymanager",
+    ":libvideo_display_manager",
     "//third_party/wayland-ivi-extension:libilmClient",
     "//third_party/wayland-ivi-extension:libilmCommon",
     "//third_party/wayland-ivi-extension:libilmControl",
@@ -204,6 +204,46 @@ ohos_shared_library("libwmclient") {
 }
 
 ## Build libwmclient.so }}}
+
+group("libvideo_display_manager") {
+  if (target_cpu == "arm64") {
+    public_deps = [ ":mock_libvideo_display_manager" ]
+  } else {
+    public_deps = [ "//foundation/multimedia/media_standard/frameworks/videodisplaymanager:videodisplaymanager",]
+  }
+}
+
+## Build mock_libvideo_display_manager.so {{{
+config("mock_libvideo_display_manager_public_config") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "//foundation/multimedia/media_standard/frameworks/videodisplaymanager/include",
+    "//drivers/peripheral/display/interfaces/include",
+    "//drivers/peripheral/display/interfaces/hdi_cpp/client",
+    "//drivers/adapter/uhdf2/hdi",
+    "//drivers/adapter/uhdf2/include/hdi",
+  ]
+}
+
+ohos_shared_library("mock_libvideo_display_manager") {
+  sources = [
+    "src/mock_video_display_manager.cpp",
+  ]
+
+  include_dirs = [ "//foundation/graphic/standard/frameworks/surface/include" ]
+
+  public_configs = [
+    ":mock_libvideo_display_manager_public_config",
+    "//utils/native/base:utils_config",
+  ]
+
+  public_deps = [
+    "//foundation/graphic/standard/frameworks/surface:surface"
+  ]
+
+}
+
+## Build mock_libvideo_display_manager.so }}}
 
 ## Build wm_test {{{
 config("wm_test_config") {

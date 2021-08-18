@@ -19,10 +19,11 @@
 #include <list>
 #include <mutex>
 
-#include "ivsync_manager.h"
 #include <iremote_stub.h>
 #include <message_parcel.h>
 #include <message_option.h>
+
+#include "ivsync_manager.h"
 
 namespace OHOS {
 class VsyncManager : public IRemoteStub<IVsyncManager> {

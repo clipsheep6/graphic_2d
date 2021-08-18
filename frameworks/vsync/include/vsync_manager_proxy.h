@@ -16,8 +16,9 @@
 #ifndef FRAMEWORKS_VSYNC_INCLUDE_VSYNC_MANAGER_PROXY_H
 #define FRAMEWORKS_VSYNC_INCLUDE_VSYNC_MANAGER_PROXY_H
 
-#include "ivsync_manager.h"
 #include <iremote_proxy.h>
+
+#include "ivsync_manager.h"
 
 namespace OHOS {
 class VsyncManagerProxy : public IRemoteProxy<IVsyncManager> {

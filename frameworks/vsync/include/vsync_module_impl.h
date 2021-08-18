@@ -21,7 +21,6 @@
 #include <vsync_module.h>
 
 #include "drm_module.h"
-#include "vsync_type.h"
 #include "vsync_manager.h"
 
 namespace OHOS {
@@ -31,6 +30,8 @@ public:
 
     virtual VsyncError Start() override;
     virtual VsyncError Stop() override;
+
+    virtual void SetDrmFd(int32_t Fd) override;
 
 protected:
     virtual VsyncError InitSA();
@@ -48,6 +49,7 @@ private:
     int64_t WaitNextVBlank();
 
     int32_t drmFd_;
+    bool isSetDrmFd_;
     std::unique_ptr<std::thread> vsyncThread_;
     bool vsyncThreadRunning_;
     int32_t vsyncSystemAbilityId_;

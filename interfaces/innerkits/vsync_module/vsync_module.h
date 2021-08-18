@@ -18,15 +18,24 @@
 
 #include <refbase.h>
 
-#include "vsync_type.h"
+#include <graphic_common.h>
 
 namespace OHOS {
+static const char *DrmModuleNames[] = {
+    "hisilicon",
+    "sprd",
+    "imx-drm",
+    "rockchip",
+};
+
 class VsyncModule : public RefBase {
 public:
     static sptr<VsyncModule> GetInstance();
 
     virtual VsyncError Start() = 0;
     virtual VsyncError Stop() = 0;
+
+    virtual void SetDrmFd(int32_t Fd) = 0;
 };
 } // namespace OHOS
 

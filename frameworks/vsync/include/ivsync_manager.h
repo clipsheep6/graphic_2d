@@ -16,8 +16,9 @@
 #ifndef FRAMEWORKS_VSYNC_INCLUDE_IVSYNC_MANAGER_H
 #define FRAMEWORKS_VSYNC_INCLUDE_IVSYNC_MANAGER_H
 
+#include <graphic_common.h>
 #include <iremote_broker.h>
-#include "vsync_type.h"
+
 #include "ivsync_callback.h"
 
 namespace OHOS {

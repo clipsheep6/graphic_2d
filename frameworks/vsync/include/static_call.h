@@ -16,7 +16,6 @@
 #ifndef FRAMEWORKS_VSYNC_INCLUDE_STATIC_CALL_H
 #define FRAMEWORKS_VSYNC_INCLUDE_STATIC_CALL_H
 
-#include <refbase.h>
 #include <iservice_registry.h>
 
 #include "vsync_helper_impl.h"

@@ -16,9 +16,8 @@
 #ifndef FRAMEWORKS_VSYNC_INCLUDE_IVSYNC_CALLBACK_H
 #define FRAMEWORKS_VSYNC_INCLUDE_IVSYNC_CALLBACK_H
 
+#include <graphic_common.h>
 #include <iremote_broker.h>
-
-#include <vsync_type.h>
 
 namespace OHOS {
 class IVsyncCallback : public IRemoteBroker {

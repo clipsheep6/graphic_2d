@@ -16,8 +16,9 @@
 #ifndef FRAMEWORKS_VSYNC_INCLUDE_VSYNC_CALLBACK_PROXY_H
 #define FRAMEWORKS_VSYNC_INCLUDE_VSYNC_CALLBACK_PROXY_H
 
-#include "ivsync_callback.h"
 #include <iremote_proxy.h>
+
+#include "ivsync_callback.h"
 
 namespace OHOS {
 class VsyncCallbackProxy : public IRemoteProxy<IVsyncCallback> {

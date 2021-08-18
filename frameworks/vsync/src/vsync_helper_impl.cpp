@@ -25,7 +25,6 @@
 
 #include "static_call.h"
 #include "vsync_log.h"
-#include "vsync_type.h"
 
 namespace OHOS {
 namespace {

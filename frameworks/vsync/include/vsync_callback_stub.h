@@ -16,10 +16,11 @@
 #ifndef FRAMEWORKS_VSYNC_INCLUDE_VSYNC_CALLBACK_STUB_H
 #define FRAMEWORKS_VSYNC_INCLUDE_VSYNC_CALLBACK_STUB_H
 
-#include "ivsync_callback.h"
 #include <iremote_stub.h>
 #include <message_parcel.h>
 #include <message_option.h>
+
+#include "ivsync_callback.h"
 
 namespace OHOS {
 class VsyncCallbackStub : public IRemoteStub<IVsyncCallback> {

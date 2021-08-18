@@ -126,16 +126,20 @@ VsyncError VsyncModuleImpl::Start()
         return ret;
     }
 
-    for (const auto &name : DrmModuleNames) {
-        drmFd_ = DrmModule::GetInstance()->DrmOpen(name, "");
-        if (drmFd_ < 0) {
-            VLOGW("drmOpen %{public}s failed with %{public}d", name, errno);
-        } else {
-            break;
+    if (isSetDrmFd_ == false) {
+        for (const auto &name : DrmModuleNames) {
+            drmFd_ = DrmModule::GetInstance()->DrmOpen(name, "");
+            if (drmFd_ < 0) {
+                VLOGW("drmOpen %{public}s failed with %{public}d", name, errno);
+            } else {
+                break;
+            }
         }
-    }
-    if (drmFd_ < 0) {
-        return VSYNC_ERROR_API_FAILED;
+        if (drmFd_ < 0) {
+            return VSYNC_ERROR_API_FAILED;
+        }
+    } else {
+        VLOGD("SetDrmFd fd is %{public}d", drmFd_);
     }
 
     vsyncThreadRunning_ = true;
@@ -160,14 +164,22 @@ VsyncError VsyncModuleImpl::Stop()
     vsyncThread_->join();
     vsyncThread_.reset();
 
-    int ret = DrmModule::GetInstance()->DrmClose(drmFd_);
-    if (ret) {
-        VLOG_ERROR_API(errno, drmClose);
-        return VSYNC_ERROR_API_FAILED;
+    if (isSetDrmFd_ == false) {
+        int ret = DrmModule::GetInstance()->DrmClose(drmFd_);
+        if (ret) {
+            VLOG_ERROR_API(errno, drmClose);
+            return VSYNC_ERROR_API_FAILED;
+        }
+        drmFd_ = -1;
     }
-    drmFd_ = -1;
 
     return VSYNC_ERROR_OK;
+}
+
+void VsyncModuleImpl::SetDrmFd(int32_t Fd)
+{
+    drmFd_ = Fd;
+    isSetDrmFd_ = true;
 }
 
 VsyncError VsyncModuleImpl::InitSA()

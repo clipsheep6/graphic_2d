@@ -13,20 +13,29 @@
  * limitations under the License.
  */
 
-#ifndef INTERFACES_INNERKITS_VSYNC_VSYNC_TYPE_H
-#define INTERFACES_INNERKITS_VSYNC_VSYNC_TYPE_H
+#include <vsync_module.h>
 
-#include <string>
+#include "vsync_module_c.h"
 
-#include <graphic_common.h>
+int VsyncModuleStart()
+{
+    auto ret = OHOS::VsyncModule::GetInstance()->Start();
+    if (ret != 0) {
+        return ret;
+    }
+    return ret;
+}
 
-namespace OHOS {
-static const char *DrmModuleNames[] = {
-    "hisilicon",
-    "sprd",
-    "imx-drm",
-    "rockchip",
-};
-} // namespace OHOS
+int VsyncModuleStop()
+{
+    auto ret = OHOS::VsyncModule::GetInstance()->Stop();
+    if (ret != 0) {
+        return ret;
+    }
+    return ret;
+}
 
-#endif // INTERFACES_INNERKITS_VSYNC_VSYNC_TYPE_H
+void VsyncModuleSetDrmFd(int32_t Fd)
+{
+    OHOS::VsyncModule::GetInstance()->SetDrmFd(Fd);
+}

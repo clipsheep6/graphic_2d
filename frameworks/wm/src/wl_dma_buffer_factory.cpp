@@ -92,7 +92,8 @@ struct zwp_linux_buffer_params_v1 *WlDMABufferFactory::CreateParam(BufferHandle 
 
     auto param = zwp_linux_dmabuf_v1_create_params(dmabuf);
     if (param == nullptr) {
-        WMLOGFE("zwp_linux_dmabuf_v1_create_params failed with %{public}d", display->GetError());
+        auto err = display->GetError();
+        WMLOGFE("zwp_linux_dmabuf_v1_create_params failed with %{public}s", strerror(err));
         return nullptr;
     }
 
@@ -103,7 +104,8 @@ struct zwp_linux_buffer_params_v1 *WlDMABufferFactory::CreateParam(BufferHandle 
     SendBufferHandle(param, handle);
 
     if (display->GetError() != 0) {
-        WMLOGFE("zwp_linux_buffer_params_v1_add failed with %{public}d", display->GetError());
+        auto err = display->GetError();
+        WMLOGFE("zwp_linux_buffer_params_v1_add failed with %{public}s", strerror(err));
         WMLOGFE("args: fd(%{public}d), w(%{public}d)", handle->fd, handle->width);
         zwp_linux_buffer_params_v1_destroy(param);
         return nullptr;

@@ -523,9 +523,9 @@ void WindowImpl::OnBufferAvailable()
     int32_t flushFence;
     int64_t timestamp;
     Rect damage;
-    SurfaceError ret = csurface->AcquireBuffer(sbuffer, flushFence, timestamp, damage);
-    if (ret != SURFACE_ERROR_OK) {
-        WMLOG_I("AcquireBuffer failed");
+    auto sret = csurface->AcquireBuffer(sbuffer, flushFence, timestamp, damage);
+    if (sret != SURFACE_ERROR_OK) {
+        WMLOGFE("AcquireBuffer failed");
         return;
     }
 
@@ -534,6 +534,14 @@ void WindowImpl::OnBufferAvailable()
     if (wbuffer == nullptr) {
         auto dmaBufferFactory = SingletonContainer::Get<WlDMABufferFactory>();
         auto dmaWlBuffer = dmaBufferFactory->Create(sbuffer->GetBufferHandle());
+        if (dmaWlBuffer == nullptr) {
+            WMLOGFE("Create DMA Buffer Failed");
+            sret = csurface->ReleaseBuffer(sbuffer, -1);
+            if (sret != SURFACE_ERROR_OK) {
+                WMLOGFW("ReleaseBuffer failed");
+            }
+            return;
+        }
         dmaWlBuffer->OnRelease(BufferRelease);
 
         wbuffer = dmaWlBuffer;

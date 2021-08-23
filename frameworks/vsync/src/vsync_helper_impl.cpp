@@ -197,10 +197,12 @@ VsyncError VsyncClient::GetSupportedVsyncFrequencys(std::vector<uint32_t>& freqs
 
     freqs.clear();
     for (uint32_t i = 1; i * i <= vsyncFrequency_; i++) {
-        if (i * i != vsyncFrequency_) {
-            freqs.push_back(vsyncFrequency_ / i);
+        if (vsyncFrequency_ % i == 0) {
+            if (i * i != vsyncFrequency_) {
+                freqs.push_back(vsyncFrequency_ / i);
+            }
+            freqs.push_back(i);
         }
-        freqs.push_back(i);
     }
     return VSYNC_ERROR_OK;
 }

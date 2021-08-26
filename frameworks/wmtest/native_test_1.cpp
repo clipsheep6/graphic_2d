@@ -43,7 +43,7 @@ int32_t NativeTest1::GetID() const
 
 uint32_t NativeTest1::GetLastTime() const
 {
-    constexpr uint32_t lastTime = 1 << 30;
+    constexpr uint32_t lastTime = LAST_TIME_FOREVER;
     return lastTime;
 }
 

@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
-#include <cstdio>
+#include <iomanip>
+#include <iostream>
 #include <securec.h>
+#include <sstream>
 #include <vector>
 
 #include <vsync_helper.h>
@@ -29,8 +31,14 @@ void Usage(const char *argv0)
 {
     printf("Usage: %s test_id\n", argv0);
     auto visitFunc = [](INativeTest *test) {
-        printf("test %d: %s (last %u millseconds)\n",
-            test->GetID(), test->GetDescription().c_str(), test->GetLastTime());
+        std::stringstream ss;
+        ss << "test " << test->GetID() << ": ";
+        ss << test->GetDescription();
+        if (test->GetLastTime() != INativeTest::LAST_TIME_FOREVER) {
+            constexpr double MSEC_TO_SEC = 1000.0;
+            ss << " (last " << std::setprecision(1) << test->GetLastTime() / MSEC_TO_SEC << "s)";
+        }
+        std::cout << ss.str() << std::endl;
     };
     INativeTest::VisitTests(visitFunc);
 }
@@ -44,8 +52,9 @@ int32_t main(int32_t argc, const char **argv)
     }
 
     int32_t testcase = -1;
-    int ret = sscanf_s(argv[1], "%d", &testcase);
-    if (ret == 0) {
+    std::stringstream ss(argv[1]);
+    ss >> testcase;
+    if (ss.good() == false) {
         Usage(argv[0]);
         return 1;
     }
@@ -65,7 +74,9 @@ int32_t main(int32_t argc, const char **argv)
     auto runner = AppExecFwk::EventRunner::Create(false);
     auto handler = std::make_shared<AppExecFwk::EventHandler>(runner);
     handler->PostTask(std::bind(&INativeTest::Run, found, argc - 1, argv + 1));
-    handler->PostTask(std::bind(&AppExecFwk::EventRunner::Stop, runner), found->GetLastTime());
+    if (found->GetLastTime() != INativeTest::LAST_TIME_FOREVER) {
+        handler->PostTask(std::bind(&AppExecFwk::EventRunner::Stop, runner), found->GetLastTime());
+    }
 
     printf("%d %s run!\n", found->GetID(), found->GetDescription().c_str());
     runner->Run();

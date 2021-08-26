@@ -45,7 +45,7 @@ public:
 
     uint32_t GetLastTime() const override
     {
-        constexpr uint32_t lastTime = 1 << 30;
+        constexpr uint32_t lastTime = LAST_TIME_FOREVER;
         return lastTime;
     }
 

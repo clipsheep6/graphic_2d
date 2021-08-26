@@ -38,6 +38,7 @@ ohos_executable("wmtest") {
     "test/crash_native_test_2.cpp",
     "test/other_native_test_1.cpp",
     "test/pref_native_test_1.cpp",
+    "test/vsync_native_test_1.cpp",
     "test/wmclient_native_test_1.cpp",
     "test/wmclient_native_test_10.cpp",
     "test/wmclient_native_test_11.cpp",

@@ -15,6 +15,7 @@
 
 #include "util.h"
 
+#include <chrono>
 #include <thread>
 #include <unistd.h>
 
@@ -51,5 +52,11 @@ void ExitTest()
     };
     std::thread thread(exitThreadMain);
     thread.detach();
+}
+
+int64_t GetNowTime()
+{
+    auto now = std::chrono::steady_clock::now().time_since_epoch();
+    return (int64_t)std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
 }
 }

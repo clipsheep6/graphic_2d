@@ -13,19 +13,7 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_SRC_TEST_UTIL_H
-#define FRAMEWORKS_WM_SRC_TEST_UTIL_H
+#ifndef FRAMEWORKS_WMTEST_TEST_VSYNC_NATIVE_TEST_1_H
+#define FRAMEWORKS_WMTEST_TEST_VSYNC_NATIVE_TEST_1_H
 
-#include <cstdint>
-#include <functional>
-
-#include <vsync_helper.h>
-
-namespace OHOS {
-uint32_t RequestSync(const SyncFunc syncFunc, void *data = nullptr);
-void PostTask(std::function<void()> func, uint32_t delayTime = 0);
-void ExitTest();
-int64_t GetNowTime();
-} // namespace OHOS
-
-#endif // FRAMEWORKS_WM_SRC_TEST_UTIL_H
+#endif // FRAMEWORKS_WMTEST_TEST_VSYNC_NATIVE_TEST_1_H

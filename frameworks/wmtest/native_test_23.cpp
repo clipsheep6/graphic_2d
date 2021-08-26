@@ -34,6 +34,12 @@ public:
         return desc;
     }
 
+    std::string GetDomain() const override
+    {
+        constexpr const char *domain = "WMClient";
+        return domain;
+    }
+
     int32_t GetID() const override
     {
         constexpr int32_t id = 23;

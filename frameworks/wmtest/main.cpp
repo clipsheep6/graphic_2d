@@ -32,6 +32,7 @@ void Usage(const char *argv0)
     printf("Usage: %s test_id\n", argv0);
     auto visitFunc = [](INativeTest *test) {
         std::stringstream ss;
+        ss << test->GetDomain() << ".";
         ss << "test " << test->GetID() << ": ";
         ss << test->GetDescription();
         if (test->GetLastTime() != INativeTest::LAST_TIME_FOREVER) {
@@ -46,13 +47,14 @@ void Usage(const char *argv0)
 
 int32_t main(int32_t argc, const char **argv)
 {
-    if (argc <= 1) {
+    if (argc <= 2) {
         Usage(argv[0]);
         return 0;
     }
 
     int32_t testcase = -1;
-    std::stringstream ss(argv[1]);
+    std::stringstream ss;
+    ss << argv[2];
     ss >> testcase;
     if (ss.good() == false) {
         Usage(argv[0]);
@@ -60,8 +62,8 @@ int32_t main(int32_t argc, const char **argv)
     }
 
     INativeTest *found = nullptr;
-    auto visitFunc = [testcase, &found](INativeTest *test) {
-        if (test->GetID() == testcase) {
+    auto visitFunc = [argv, testcase, &found](INativeTest *test) {
+        if (test->GetDomain() == argv[1] && test->GetID() == testcase) {
             found = test;
         }
     };

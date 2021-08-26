@@ -35,6 +35,12 @@ std::string NativeTest1::GetDescription() const
     return desc;
 }
 
+std::string NativeTest1::GetDomain() const
+{
+    constexpr const char *desc = "WMClient";
+    return desc;
+}
+
 int32_t NativeTest1::GetID() const
 {
     constexpr int32_t id = 1;

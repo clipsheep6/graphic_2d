@@ -29,6 +29,7 @@ namespace OHOS {
 class NativeTest1 : public INativeTest {
 public:
     std::string GetDescription() const override;
+    std::string GetDomain() const override;
     int32_t GetID() const override;
     uint32_t GetLastTime() const override;
 

@@ -35,6 +35,7 @@ public:
     virtual ~INativeTest() = default;
 
     virtual std::string GetDescription() const = 0;
+    virtual std::string GetDomain() const = 0;
     virtual int32_t GetID() const = 0;
     virtual uint32_t GetLastTime() const = 0;
     virtual void Run(int32_t argc, const char **argv) = 0;

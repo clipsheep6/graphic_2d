@@ -40,6 +40,12 @@ public:
         return desc;
     }
 
+    std::string GetDomain() const override
+    {
+        constexpr const char *domain = "Crash";
+        return domain;
+    }
+
     int32_t GetID() const override
     {
         constexpr int32_t id = 12;

@@ -34,8 +34,14 @@ class NativeTest15 : public INativeTest {
 public:
     std::string GetDescription() const override
     {
-        constexpr const char *desc = "ipc draw(raise samgr/ipc crash)";
+        constexpr const char *desc = "ipc draw";
         return desc;
+    }
+
+    std::string GetDomain() const override
+    {
+        constexpr const char *domain = "WMClient";
+        return domain;
     }
 
     int32_t GetID() const override

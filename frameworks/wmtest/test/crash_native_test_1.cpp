@@ -38,7 +38,7 @@ public:
 
     std::string GetDomain() const override
     {
-        constexpr const char *domain = "crash";
+        constexpr const char *domain = "!crash";
         return domain;
     }
 

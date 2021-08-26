@@ -17,6 +17,7 @@
 #include <iostream>
 #include <securec.h>
 #include <sstream>
+#include <unistd.h>
 #include <vector>
 
 #include <vsync_helper.h>
@@ -79,7 +80,7 @@ int32_t main(int32_t argc, const char **argv)
         handler->PostTask(std::bind(&AppExecFwk::EventRunner::Stop, runner), found->GetLastTime());
     }
 
-    printf("%d %s run!\n", found->GetID(), found->GetDescription().c_str());
+    printf("%d %s run! pid=%d\n", found->GetID(), found->GetDescription().c_str(), getpid());
     runner->Run();
     return 0;
 }

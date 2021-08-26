@@ -17,7 +17,7 @@ import("//build/ohos.gni")
 config("wmtest_config") {
   visibility = [ ":*" ]
 
-  include_dirs = []
+  include_dirs = [ "frameworks" ]
 
   cflags = [
     "-Wall",
@@ -30,33 +30,33 @@ ohos_executable("wmtest") {
   install_enable = true
 
   sources = [
-    "inative_test.cpp",
-    "main.cpp",
-    "native_test_0.cpp",
-    "native_test_1.cpp",
-    "native_test_10.cpp",
-    "native_test_11.cpp",
-    "native_test_12.cpp",
-    "native_test_13.cpp",
-    "native_test_14.cpp",
-    "native_test_15.cpp",
-    "native_test_16.cpp",
-    "native_test_17.cpp",
-    "native_test_18.cpp",
-    "native_test_19.cpp",
-    "native_test_2.cpp",
-    "native_test_20.cpp",
-    "native_test_23.cpp",
-    "native_test_24.cpp",
-    "native_test_3.cpp",
-    "native_test_4.cpp",
-    "native_test_5.cpp",
-    "native_test_6.cpp",
-    "native_test_7.cpp",
-    "native_test_8.cpp",
-    "native_test_9.cpp",
-    "native_test_class.cpp",
-    "util.cpp",
+    "frameworks/inative_test.cpp",
+    "frameworks/main.cpp",
+    "frameworks/native_test_class.cpp",
+    "frameworks/util.cpp",
+    "test/crash_native_test_1.cpp",
+    "test/crash_native_test_2.cpp",
+    "test/other_native_test_1.cpp",
+    "test/pref_native_test_1.cpp",
+    "test/wmclient_native_test_1.cpp",
+    "test/wmclient_native_test_10.cpp",
+    "test/wmclient_native_test_11.cpp",
+    "test/wmclient_native_test_12.cpp",
+    "test/wmclient_native_test_13.cpp",
+    "test/wmclient_native_test_14.cpp",
+    "test/wmclient_native_test_15.cpp",
+    "test/wmclient_native_test_16.cpp",
+    "test/wmclient_native_test_17.cpp",
+    "test/wmclient_native_test_18.cpp",
+    "test/wmclient_native_test_19.cpp",
+    "test/wmclient_native_test_2.cpp",
+    "test/wmclient_native_test_3.cpp",
+    "test/wmclient_native_test_4.cpp",
+    "test/wmclient_native_test_5.cpp",
+    "test/wmclient_native_test_6.cpp",
+    "test/wmclient_native_test_7.cpp",
+    "test/wmclient_native_test_8.cpp",
+    "test/wmclient_native_test_9.cpp",
   ]
 
   configs = [ ":wmtest_config" ]

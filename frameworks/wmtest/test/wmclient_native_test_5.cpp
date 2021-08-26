@@ -22,9 +22,9 @@
 #include <display_type.h>
 #include <window_manager.h>
 
-#include "wmclient_native_test_1.h"
 #include "native_test_class.h"
 #include "util.h"
+#include "wmclient_native_test_1.h"
 
 using namespace OHOS;
 

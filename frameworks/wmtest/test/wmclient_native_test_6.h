@@ -22,17 +22,18 @@
 #include <refbase.h>
 #include <window_manager.h>
 
-#include "wmclient_native_test_1.h"
 #include "native_test_class.h"
+#include "wmclient_native_test_1.h"
 
 namespace OHOS {
 class WMClientNativeTest6 : public WMClientNativeTest1 {
 public:
-    std::string GetDescription() const override;
-    int32_t GetID() const override;
-    void Run(int32_t argc, const char **argv) override;
+    virtual ~WMClientNativeTest6() = default;
+    virtual std::string GetDescription() const override;
+    virtual int32_t GetID() const override;
+    virtual void Run(int32_t argc, const char **argv) override;
 
-    void AfterRun();
+    virtual void AfterRun();
 
 protected:
     sptr<Surface> subcsurface = nullptr;

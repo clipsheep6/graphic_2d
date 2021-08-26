@@ -28,12 +28,13 @@
 namespace OHOS {
 class WMClientNativeTest1 : public INativeTest {
 public:
-    std::string GetDescription() const override;
-    std::string GetDomain() const override;
-    int32_t GetID() const override;
-    uint32_t GetLastTime() const override;
+    virtual ~WMClientNativeTest1() = default;
+    virtual std::string GetDescription() const override;
+    virtual std::string GetDomain() const override;
+    virtual int32_t GetID() const override;
+    virtual uint32_t GetLastTime() const override;
 
-    void Run(int32_t argc, const char **argv) override;
+    virtual void Run(int32_t argc, const char **argv) override;
 
 protected:
     sptr<Window> window = nullptr;

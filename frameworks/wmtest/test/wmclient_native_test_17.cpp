@@ -19,9 +19,9 @@
 
 #include <window_manager.h>
 
-#include "wmclient_native_test_6.h"
 #include "native_test_class.h"
 #include "util.h"
+#include "wmclient_native_test_6.h"
 
 using namespace OHOS;
 

@@ -56,8 +56,8 @@ public:
 
     void Run(int32_t argc, const char **argv) override
     {
-        wptr<Object> wptr;
-        sptr<Object> sptr;
+        wptr<Object> wptr = nullptr;
+        sptr<Object> sptr = nullptr;
 
         auto threadFunc = [&wptr]() {
             while (true) {

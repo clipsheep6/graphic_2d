@@ -15,10 +15,9 @@
 
 #include "pref_native_test_1.h"
 
+#include <cinttypes>
 #include <cstdio>
 #include <securec.h>
-#include <sys/time.h>
-#include <inttypes.h>
 
 #include <zlib.h>
 
@@ -53,14 +52,6 @@ public:
     {
         constexpr uint32_t lastTime = LAST_TIME_FOREVER;
         return lastTime;
-    }
-
-    int64_t GetNowTime() const
-    {
-        struct timeval start = {};
-        gettimeofday(&start, nullptr);
-        constexpr uint32_t secToUsec = 1000 * 1000;
-        return static_cast<int64_t>(start.tv_sec) * secToUsec + start.tv_usec;
     }
 
     void Run(int32_t argc, const char **argv) override

@@ -49,15 +49,15 @@ public:
 
     uint32_t GetLastTime() const override
     {
-        constexpr uint32_t lastTime = LAST_TIME_FOREVER;
+        constexpr uint32_t lastTime = 2000;
         return lastTime;
     }
 
     void Run(int32_t argc, const char **argv) override
     {
         auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        constexpr int32_t SAID = 123123;
-        auto robj = sam->GetSystemAbility(SAID);
+        constexpr int32_t said = 123123;
+        auto robj = sam->GetSystemAbility(said);
 
         pid_t pid = fork();
         if (pid < 0) {
@@ -68,7 +68,7 @@ public:
 
         if (pid == 0) {
             auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-            auto robj = sam->GetSystemAbility(SAID);
+            auto robj = sam->GetSystemAbility(said);
         } else {
             ExitTest();
         }

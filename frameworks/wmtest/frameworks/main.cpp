@@ -31,14 +31,14 @@ namespace {
 void Usage(const char *argv0)
 {
     printf("Usage: %s type id\n", argv0);
-    auto visitFunc = [](INativeTest *test) {
+    auto visitFunc = [](const INativeTest *test) {
         std::stringstream ss;
         ss << test->GetDomain() << ", id=";
         ss << test->GetID() << ": ";
         ss << test->GetDescription();
         if (test->GetLastTime() != INativeTest::LAST_TIME_FOREVER) {
-            constexpr double MSEC_TO_SEC = 1000.0;
-            ss << " (last " << std::setprecision(1) << test->GetLastTime() / MSEC_TO_SEC << "s)";
+            constexpr double msecToSec = 1000.0;
+            ss << " (last " << std::setprecision(1) << test->GetLastTime() / msecToSec << "s)";
         }
         std::cout << ss.str() << std::endl;
     };
@@ -48,13 +48,16 @@ void Usage(const char *argv0)
 
 int32_t main(int32_t argc, const char **argv)
 {
-    if (argc <= 2) {
+    constexpr int32_t argNumber = 2;
+    if (argc <= argNumber) {
         Usage(argv[0]);
         return 0;
     }
 
     int32_t testcase = -1;
-    std::stringstream ss(argv[2]);
+    constexpr int32_t domainIndex = 1;
+    constexpr int32_t idIndex = 2;
+    std::stringstream ss(argv[idIndex]);
     ss >> testcase;
     if (ss.fail() == true || testcase == -1) {
         Usage(argv[0]);
@@ -62,9 +65,9 @@ int32_t main(int32_t argc, const char **argv)
     }
 
     INativeTest *found = nullptr;
-    auto visitFunc = [argv, testcase, &found](INativeTest *test) {
-        if (test->GetDomain() == argv[1] && test->GetID() == testcase) {
-            found = test;
+    auto visitFunc = [argv, testcase, &found](const INativeTest *test) {
+        if (test->GetDomain() == argv[domainIndex] && test->GetID() == testcase) {
+            found = const_cast<INativeTest *>(test);
         }
     };
     INativeTest::VisitTests(visitFunc);

@@ -23,7 +23,7 @@
 
 namespace OHOS {
 class INativeTest;
-using VisitTestFunc = std::function<void(INativeTest *)>;
+using VisitTestFunc = std::function<void(const INativeTest *)>;
 
 class INativeTest {
 public:

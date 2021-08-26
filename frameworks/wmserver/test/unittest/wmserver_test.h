@@ -60,6 +60,12 @@ struct WMSWindowStatus {
     uint32_t width;
     uint32_t height;
 };
+
+struct WMSGlobalWindowStatus {
+    uint32_t pid;
+    int32_t wid;
+    uint32_t status;
+};
 }
 
 namespace OHOS {
@@ -85,6 +91,12 @@ private:
     static inline WMSWindowStatus windowStatus;
     static inline std::list<WMSDisplayInfo> displayInfo;
     static inline WMSScreenShotInfo shotInfo;
+
+    // for wms global window status check.
+    static inline std::mutex syncMutexGlobalWinInfoCb;
+    static inline bool replyGlobalWinInfoCbFlag = false;
+    static inline std::condition_variable globalWinInfoCbVariable;
+    static inline WMSGlobalWindowStatus gloadWindowStatus;
 
     //for passive destroy window.
     static inline std::mutex destroyMutex;

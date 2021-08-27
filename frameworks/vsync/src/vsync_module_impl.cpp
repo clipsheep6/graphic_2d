@@ -44,18 +44,22 @@ sptr<VsyncModuleImpl> VsyncModuleImpl::GetInstance()
 
 VsyncError VsyncModuleImpl::Start()
 {
+    VLOGI("Start");
     VsyncError ret = InitSA();
     if (ret != VSYNC_ERROR_OK) {
+        VLOGE("Start failed");
         return ret;
     }
 
     vsyncThreadRunning_ = true;
     vsyncThread_ = std::make_unique<std::thread>(std::bind(&VsyncModuleImpl::VsyncMainThread, this));
+    VLOG_SUCCESS("Start");
     return VSYNC_ERROR_OK;
 }
 
 VsyncError VsyncModuleImpl::Trigger()
 {
+    VLOG_SUCCESS("Trigger");
     const auto &now = std::chrono::steady_clock::now().time_since_epoch();
     int64_t occurTimestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
 
@@ -72,7 +76,9 @@ VsyncError VsyncModuleImpl::Trigger()
 
 VsyncError VsyncModuleImpl::Stop()
 {
+    VLOGI("Stop");
     if (vsyncThreadRunning_ == false) {
+        VLOGI("Stop failed, invalid operating");
         return VSYNC_ERROR_INVALID_OPERATING;
     }
 
@@ -83,6 +89,7 @@ VsyncError VsyncModuleImpl::Stop()
     if (isRegisterSA_ == true) {
         UnregisterSystemAbility();
     }
+    VLOG_SUCCESS("Stop");
     return VSYNC_ERROR_OK;
 }
 
@@ -118,6 +125,7 @@ VsyncError VsyncModuleImpl::InitSA(int32_t vsyncSystemAbilityId)
 
 VsyncModuleImpl::~VsyncModuleImpl()
 {
+    VLOGI("~VsyncModuleImpl");
     Stop();
 }
 
@@ -149,8 +157,11 @@ bool VsyncModuleImpl::RegisterSystemAbility()
     }
     auto sam = DrmModule::GetInstance()->GetSystemAbilityManager();
     if (sam) {
-        sam->AddSystemAbility(vsyncSystemAbilityId_, &vsyncManager_);
-        isRegisterSA_ = true;
+        if (sam->AddSystemAbility(vsyncSystemAbilityId_, &vsyncManager_) == false) {
+            VLOGW("AddSystemAbility failed");
+        } else {
+            isRegisterSA_ = true;
+        }
     }
     return isRegisterSA_;
 }

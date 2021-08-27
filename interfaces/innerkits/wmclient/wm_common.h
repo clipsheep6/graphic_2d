@@ -16,22 +16,32 @@
 #ifndef INTERFACES_INNERKITS_WMCLIENT_WM_COMMON_H
 #define INTERFACES_INNERKITS_WMCLIENT_WM_COMMON_H
 
+#ifdef __cplusplus
 #include <functional>
 #include <string>
 
 #include "../common/graphic_common.h"
 
 namespace OHOS {
+#endif // __cplusplus
+
 enum WindowType {
     WINDOW_TYPE_NORMAL = 0,
-    WINDOW_TYPE_STATUS_BAR = 1,
-    WINDOW_TYPE_NAVI_BAR = 2,
-    WINDOW_TYPE_ALARM_SCREEN = 3,
-    WINDOW_TYPE_SYSTEM_UI = 4,
-    WINDOW_TYPE_LAUNCHER = 5,
-    WINDOW_TYPE_VIDEO = 6,
+    WINDOW_TYPE_STATUS_BAR = 10,
+    WINDOW_TYPE_NAVI_BAR = 20,
+    WINDOW_TYPE_ALARM_SCREEN = 30,
+    WINDOW_TYPE_SYSTEM_UI = 31,
+    WINDOW_TYPE_LAUNCHER = 40,
+    WINDOW_TYPE_VIDEO = 41,
+    WINDOW_TYPE_INPUT_METHOD = 50,
+    WINDOW_TYPE_INPUT_METHOD_SELECTOR = 60,
+    WINDOW_TYPE_VOLUME_OVERLAY = 70,
+    WINDOW_TYPE_NOTIFICATION_SHADE = 80,
+    WINDOW_TYPE_FLOAT = 90,
     WINDOW_TYPE_MAX,
 };
+
+#ifdef __cplusplus
 
 enum SubWindowType {
     WM_WINDOW_TYPE_SUB_NORMAL = 0,
@@ -121,5 +131,7 @@ struct WindowConfig {
     FuncSync sync;
 };
 } // namespace OHOS
+
+#endif // __cplusplus
 
 #endif // INTERFACES_INNERKITS_WMCLIENT_WM_COMMON_H

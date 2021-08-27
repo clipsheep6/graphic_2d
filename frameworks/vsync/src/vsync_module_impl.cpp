@@ -47,7 +47,7 @@ VsyncError VsyncModuleImpl::Start()
     VLOGI("Start");
     VsyncError ret = InitSA();
     if (ret != VSYNC_ERROR_OK) {
-        VLOGE("Start failed");
+        VLOG_FAILURE("Start");
         return ret;
     }
 
@@ -59,6 +59,11 @@ VsyncError VsyncModuleImpl::Start()
 
 VsyncError VsyncModuleImpl::Trigger()
 {
+    if (IsRunning() == false) {
+        VLOG_FAILURE("Trigger");
+        return VSYNC_ERROR_INVALID_OPERATING;
+    }
+
     VLOG_SUCCESS("Trigger");
     const auto &now = std::chrono::steady_clock::now().time_since_epoch();
     int64_t occurTimestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
@@ -78,8 +83,7 @@ VsyncError VsyncModuleImpl::Stop()
 {
     VLOGI("Stop");
     if (vsyncThreadRunning_ == false) {
-        VLOGI("Stop failed, invalid operating");
-        return VSYNC_ERROR_INVALID_OPERATING;
+        VLOG_FAILURE_RET(VSYNC_ERROR_INVALID_OPERATING);
     }
 
     vsyncThreadRunning_ = false;
@@ -140,7 +144,7 @@ int64_t VsyncModuleImpl::WaitNextVsync()
 
 void VsyncModuleImpl::VsyncMainThread()
 {
-    while (vsyncThreadRunning_) {
+    while (IsRunning()) {
         int64_t timestamp = WaitNextVsync();
         if (timestamp < 0) {
             VLOGE("WaitNextVsync return negative time");
@@ -157,7 +161,7 @@ bool VsyncModuleImpl::RegisterSystemAbility()
     }
     auto sam = DrmModule::GetInstance()->GetSystemAbilityManager();
     if (sam) {
-        if (sam->AddSystemAbility(vsyncSystemAbilityId_, &vsyncManager_) == false) {
+        if (sam->AddSystemAbility(vsyncSystemAbilityId_, &vsyncManager_) != ERR_OK) {
             VLOGW("AddSystemAbility failed");
         } else {
             isRegisterSA_ = true;

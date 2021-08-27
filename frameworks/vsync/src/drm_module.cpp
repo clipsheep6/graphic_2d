@@ -16,6 +16,7 @@
 #include <mutex>
 
 namespace OHOS {
+namespace Vsync {
 sptr<DrmModule> DrmModule::GetInstance()
 {
     if (instance == nullptr) {
@@ -56,4 +57,5 @@ int DrmModule::DrmWaitBlank(int32_t drmFd, drmVBlank vblank)
 {
     return drmWaitVBlank(drmFd, &vblank);
 }
+} // namespace Vsync
 } // namespace OHOS

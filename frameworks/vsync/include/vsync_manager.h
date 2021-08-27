@@ -26,6 +26,7 @@
 #include "ivsync_manager.h"
 
 namespace OHOS {
+namespace Vsync {
 class VsyncManager : public IRemoteStub<IVsyncManager> {
 public:
     virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel& data,
@@ -40,6 +41,7 @@ private:
     std::list<sptr<IVsyncCallback>> callbacks_;
     std::mutex callbacksMutex_;
 };
+} // namespace Vsync
 } // namespace OHOS
 
 #endif // FRAMEWORKS_VSYNC_INCLUDE_VSYNC_MANAGER_H

@@ -20,6 +20,6 @@
 namespace OHOS {
 sptr<VsyncModule> VsyncModule::GetInstance()
 {
-    return VsyncModuleImpl::GetInstance();
+    return Vsync::VsyncModuleImpl::GetInstance();
 }
 } // namespace OHOS

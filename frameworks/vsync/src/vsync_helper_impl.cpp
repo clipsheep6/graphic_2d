@@ -27,6 +27,7 @@
 #include "vsync_log.h"
 
 namespace OHOS {
+namespace Vsync {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "VsyncHelperImpl" };
 std::list<std::shared_ptr<AppExecFwk::EventHandler>> g_handlers;
@@ -321,4 +322,5 @@ void VsyncManagerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
     VLOGD("IS DEAD");
     VsyncClient::GetInstance()->Init(true);
 }
+} // namespace Vsync
 } // namespace OHOS

@@ -20,6 +20,7 @@
 #include <xf86drm.h>
 
 namespace OHOS {
+namespace Vsync {
 class DrmModule : public RefBase {
 public:
     static sptr<DrmModule> GetInstance();
@@ -36,6 +37,7 @@ private:
     virtual ~DrmModule() = default;
     static inline sptr<DrmModule> instance = nullptr;
 };
+} // namespace Vsync
 } // namespace OHOS
 
 #endif // FRAMEWORKS_VSYNC_INCLUDE_DRM_MODULE_H

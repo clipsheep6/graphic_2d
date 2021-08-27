@@ -25,6 +25,7 @@
     break
 
 namespace OHOS {
+namespace Vsync {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "VsyncManager" };
 }
@@ -96,4 +97,5 @@ void VsyncManager::Callback(int64_t timestamp)
     }
     callbacks_ = okcbs;
 }
+} // namespace Vsync
 } // namespace OHOS

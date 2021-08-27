@@ -21,6 +21,7 @@
 #include "ivsync_callback.h"
 
 namespace OHOS {
+namespace Vsync {
 class VsyncCallbackProxy : public IRemoteProxy<IVsyncCallback> {
 public:
     VsyncCallbackProxy(const sptr<IRemoteObject>& impl);
@@ -31,6 +32,7 @@ public:
 private:
     static inline BrokerDelegator<VsyncCallbackProxy> delegator_;
 };
+} // namespace Vsync
 } // namespace OHOS
 
 #endif // FRAMEWORKS_VSYNC_INCLUDE_VSYNC_CALLBACK_PROXY_H

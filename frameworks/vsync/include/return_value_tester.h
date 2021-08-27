@@ -19,6 +19,7 @@
 #include <map>
 
 namespace OHOS {
+namespace Vsync {
 class ReturnValueTester : public RefBase {
 public:
     static sptr<ReturnValueTester> GetInstance();
@@ -59,4 +60,5 @@ private:
     std::map<int, std::any> anyMap;
     int id = 0;
 };
+} // namespace Vsync
 } // namespace OHOS

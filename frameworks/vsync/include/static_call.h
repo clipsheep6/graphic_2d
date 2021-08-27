@@ -21,6 +21,7 @@
 #include "vsync_helper_impl.h"
 
 namespace OHOS {
+namespace Vsync {
 class StaticCall : public RefBase {
 public:
     static sptr<StaticCall> GetInstance();
@@ -38,6 +39,7 @@ private:
     virtual ~StaticCall() = default;
     static inline sptr<StaticCall> instance = nullptr;
 };
+} // namespace Vsync
 } // namespace OHOS
 
 #endif // FRAMEWORKS_WM_INCLUDE_STATIC_CALL_H

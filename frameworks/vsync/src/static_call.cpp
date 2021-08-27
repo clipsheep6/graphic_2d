@@ -18,6 +18,7 @@
 #include <mutex>
 
 namespace OHOS {
+namespace Vsync {
 sptr<StaticCall> StaticCall::GetInstance()
 {
     if (instance == nullptr) {
@@ -70,4 +71,5 @@ std::shared_ptr<AppExecFwk::EventHandler> StaticCall::Current()
 {
     return AppExecFwk::EventHandler::Current();
 }
+} // namespace Vsync
 } // namespace OHOS

@@ -29,6 +29,7 @@
 #include "vsync_callback_stub.h"
 
 namespace OHOS {
+namespace Vsync {
 struct VsyncElement {
     SyncFunc callback_;
     int64_t activeTime_;
@@ -97,6 +98,7 @@ public:
         ~VsyncManagerDeathRecipient() = default;
         void OnRemoteDied(const wptr<IRemoteObject> &remote);
 };
+} // namespace Vsync
 } // namespace OHOS
 
 #endif // FRAMEWORKS_VSYNC_INCLUDE_VSYNC_HELPER_IMPL_H

@@ -15,6 +15,7 @@
 
 #include "return_value_tester.h"
 namespace OHOS {
+namespace Vsync {
 sptr<ReturnValueTester> ReturnValueTester::GetInstance()
 {
     if (instance == nullptr) {
@@ -43,4 +44,5 @@ std::any ReturnValueTester::GetValue()
     anyMap.erase(id - 1);
     return ret;
 }
+} // namespace Vsync
 } // namespace OHOS

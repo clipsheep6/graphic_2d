@@ -23,11 +23,13 @@
 #include "ivsync_callback.h"
 
 namespace OHOS {
+namespace Vsync {
 class VsyncCallbackStub : public IRemoteStub<IVsyncCallback> {
 public:
     virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel& data,
                                     MessageParcel& reply, MessageOption& option) override;
 };
+} // namespace Vsync
 } // namespace OHOS
 
 #endif // FRAMEWORKS_VSYNC_INCLUDE_VSYNC_CALLBACK_STUB_H

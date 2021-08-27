@@ -19,6 +19,7 @@
 #include "vsync_log.h"
 
 namespace OHOS {
+namespace Vsync {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "VsyncCallbackProxy" };
 }
@@ -60,4 +61,5 @@ VsyncError VsyncCallbackProxy::OnVsync(int64_t timestamp)
     }
     return VSYNC_ERROR_OK;
 }
+} // namespace Vsync
 } // namespace OHOS

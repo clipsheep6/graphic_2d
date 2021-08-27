@@ -26,6 +26,7 @@
 #include "vsync_module_impl.h"
 
 namespace OHOS {
+namespace Vsync {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "VsyncModuleImpl" };
 constexpr int USLEEP_TIME = 100 * 1000;
@@ -204,4 +205,5 @@ VsyncError VsyncModuleImpl::InitSA(int32_t vsyncSystemAbilityId)
 
     return VSYNC_ERROR_OK;
 }
+} // namespace Vsync
 } // namespace OHOS

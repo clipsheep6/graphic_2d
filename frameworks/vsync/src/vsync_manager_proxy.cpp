@@ -22,6 +22,7 @@
 #include "vsync_log.h"
 
 namespace OHOS {
+namespace Vsync {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "VsyncManagerProxy" };
 }
@@ -92,4 +93,5 @@ VsyncError VsyncManagerProxy::GetVsyncFrequency(uint32_t& freq)
     freq = ret.ReadUint32();
     return VSYNC_ERROR_OK;
 }
+} // namespace Vsync
 } // namespace OHOS

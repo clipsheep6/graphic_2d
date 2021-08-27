@@ -17,9 +17,11 @@
 
 #include "vsync_module_c.h"
 
+using namespace OHOS;
+
 int VsyncModuleStart()
 {
-    auto ret = OHOS::VsyncModule::GetInstance()->Start();
+    auto ret = VsyncModule::GetInstance()->Start();
     if (ret != 0) {
         return ret;
     }
@@ -28,7 +30,7 @@ int VsyncModuleStart()
 
 int VsyncModuleStop()
 {
-    auto ret = OHOS::VsyncModule::GetInstance()->Stop();
+    auto ret = VsyncModule::GetInstance()->Stop();
     if (ret != 0) {
         return ret;
     }
@@ -37,5 +39,5 @@ int VsyncModuleStop()
 
 void VsyncModuleSetDrmFd(int32_t Fd)
 {
-    OHOS::VsyncModule::GetInstance()->SetDrmFd(Fd);
+    VsyncModule::GetInstance()->SetDrmFd(Fd);
 }

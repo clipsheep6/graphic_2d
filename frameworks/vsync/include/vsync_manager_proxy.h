@@ -21,6 +21,7 @@
 #include "ivsync_manager.h"
 
 namespace OHOS {
+namespace Vsync {
 class VsyncManagerProxy : public IRemoteProxy<IVsyncManager> {
 public:
     VsyncManagerProxy(const sptr<IRemoteObject>& impl);
@@ -32,6 +33,7 @@ public:
 private:
     static inline BrokerDelegator<VsyncManagerProxy> delegator_;
 };
+} // namespace Vsync
 } // namespace OHOS
 
 #endif // FRAMEWORKS_VSYNC_INCLUDE_VSYNC_MANAGER_PROXY_H

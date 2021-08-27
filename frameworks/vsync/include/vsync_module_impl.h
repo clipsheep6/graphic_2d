@@ -24,6 +24,7 @@
 #include "vsync_manager.h"
 
 namespace OHOS {
+namespace Vsync {
 class VsyncModuleImpl : public VsyncModule {
 public:
     static sptr<VsyncModuleImpl> GetInstance();
@@ -57,6 +58,7 @@ private:
     sptr<VsyncManager> vsyncManager_;
     sptr<DrmModule> sc = nullptr;
 };
+} // namespace Vsync
 } // namespace OHOS
 
 #endif // FRAMEWORKS_VSYNC_INCLUDE_VSYNC_MODULE_IMPL_H

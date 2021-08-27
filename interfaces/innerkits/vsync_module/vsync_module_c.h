@@ -22,15 +22,18 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
 int VsyncModuleStart();
+int VsyncModuleTrigger();
 int VsyncModuleStop();
-void VsyncModuleSetDrmFd(int32_t Fd);
+int VsyncModuleIsRunning();
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-

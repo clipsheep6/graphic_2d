@@ -21,23 +21,20 @@ using namespace OHOS;
 
 int VsyncModuleStart()
 {
-    auto ret = VsyncModule::GetInstance()->Start();
-    if (ret != 0) {
-        return ret;
-    }
-    return ret;
+    return VsyncModule::GetInstance()->Start();
 }
 
 int VsyncModuleStop()
 {
-    auto ret = VsyncModule::GetInstance()->Stop();
-    if (ret != 0) {
-        return ret;
-    }
-    return ret;
+    return VsyncModule::GetInstance()->Stop();
 }
 
-void VsyncModuleSetDrmFd(int32_t Fd)
+int VsyncModuleTrigger()
 {
-    VsyncModule::GetInstance()->SetDrmFd(Fd);
+    return VsyncModule::GetInstance()->Trigger();
+}
+
+int VsyncModuleIsRunning()
+{
+    return VsyncModule::GetInstance()->IsRunning() ? 1 : 0;
 }

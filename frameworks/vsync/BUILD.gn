@@ -39,12 +39,12 @@ config("libvsync_client_public_config") {
 
 ohos_shared_library("libvsync_client") {
   sources = [
+    "src/return_value_tester.cpp",
+    "src/static_call.cpp",
     "src/vsync_callback_stub.cpp",
     "src/vsync_helper.cpp",
     "src/vsync_helper_impl.cpp",
     "src/vsync_manager_proxy.cpp",
-    "src/return_value_tester.cpp",
-    "src/static_call.cpp",
   ]
 
   configs = [ ":libvsync_client_config" ]
@@ -87,20 +87,20 @@ config("libvsync_module_config") {
 
 config("libvsync_module_public_config") {
   include_dirs = [
-    "//foundation/graphic/standard/interfaces/innerkits/vsync_module",
     "//foundation/graphic/standard/interfaces/innerkits/common",
+    "//foundation/graphic/standard/interfaces/innerkits/vsync_module",
   ]
 }
 
 ohos_shared_library("libvsync_module") {
   sources = [
+    "src/drm_module.cpp",
+    "src/return_value_tester.cpp",
     "src/vsync_callback_proxy.cpp",
     "src/vsync_manager.cpp",
     "src/vsync_module.cpp",
+    "src/vsync_module_c.cpp",
     "src/vsync_module_impl.cpp",
-    "src/return_value_tester.cpp",
-    "src/drm_module.cpp",
-    "src/vsync_module_export.cpp"
   ]
 
   configs = [ ":libvsync_module_config" ]
@@ -115,6 +115,7 @@ ohos_shared_library("libvsync_module") {
   ]
 
   public_deps = [
+    "//foundation/graphic/standard/utils:semaphore",
     "//utils/native/base:utils",
   ]
 
@@ -128,9 +129,7 @@ ohos_shared_library("libvsync_module") {
 ohos_executable("vsync_server") {
   install_enable = true
 
-  sources = [
-    "src/module_main.cpp",
-  ]
+  sources = [ "src/module_main.cpp" ]
 
   deps = [
     ":libvsync_module",

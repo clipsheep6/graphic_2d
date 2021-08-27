@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_VSYNC_INCLUDE_VSYNC_MODULE_H
-#define FRAMEWORKS_VSYNC_INCLUDE_VSYNC_MODULE_H
+#ifndef INTERFACES_INNERKITS_VSYNC_MODULE_VSYNC_MODULE_H
+#define INTERFACES_INNERKITS_VSYNC_MODULE_VSYNC_MODULE_H
 
+#include <promise.h>
 #include <refbase.h>
 
 #include <graphic_common.h>
@@ -33,10 +34,10 @@ public:
     static sptr<VsyncModule> GetInstance();
 
     virtual VsyncError Start() = 0;
+    virtual VsyncError Trigger() = 0;
     virtual VsyncError Stop() = 0;
-
-    virtual void SetDrmFd(int32_t Fd) = 0;
+    virtual bool IsRunning() = 0;
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_VSYNC_INCLUDE_VSYNC_MODULE_H
+#endif // INTERFACES_INNERKITS_VSYNC_MODULE_VSYNC_MODULE_H

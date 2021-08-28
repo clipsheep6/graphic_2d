@@ -21,6 +21,7 @@
 #include <iservice_registry.h>
 
 namespace OHOS {
+namespace Vsync {
 void VsyncCallbackStubTest::SetUp()
 {
 }
@@ -87,4 +88,5 @@ VsyncError VsyncCallback::OnVsync(int64_t timestamp)
 {
     return VSYNC_ERROR_OK;
 }
+} // namespace Vsync
 } // namespace OHOS

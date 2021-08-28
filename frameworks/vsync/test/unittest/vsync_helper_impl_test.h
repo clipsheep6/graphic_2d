@@ -17,12 +17,10 @@
 #define FRAMEWORKS_VSYNC_TEST_UNITTEST_VSYNC_HELPER_IMPL_TEST_H
 
 #include <gtest/gtest.h>
-#include <memory>
-
-#include "mock_static_call.h"
-#include "vsync_helper_impl.h"
+#include <event_handler.h>
 
 namespace OHOS {
+namespace Vsync {
 class VsyncHelperImplTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -33,6 +31,7 @@ public:
 private:
     static inline std::shared_ptr<AppExecFwk::EventHandler> handler = nullptr;
 };
-}
+} // namespace Vsync
+} // namespace OHOS
 
 #endif // FRAMEWORKS_VSYNC_TEST_UNITTEST_VSYNC_HELPER_IMPL_TEST_H

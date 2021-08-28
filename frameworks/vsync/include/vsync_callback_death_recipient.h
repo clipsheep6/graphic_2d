@@ -24,22 +24,10 @@ namespace OHOS {
 namespace Vsync {
 class VsyncCallbackDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
-    VsyncCallbackDeathRecipient(VsyncManager *vm)
-    {
-        manager = vm;
-    }
+    VsyncCallbackDeathRecipient(VsyncManager *vm);
     virtual ~VsyncCallbackDeathRecipient() = default;
 
-    void OnRemoteDied(const wptr<IRemoteObject> &remote) override
-    {
-        std::lock_guard<std::mutex> lock(manager->callbacksMutex_);
-        for (auto it = manager->callbacks_.begin(); it != manager->callbacks_.end(); it++) {
-            if ((*it)->AsObject() == remote.promote()) {
-                manager->callbacks_.erase(it);
-                break;
-            }
-        }
-    }
+    void OnRemoteDied(const wptr<IRemoteObject> &remote) override;
 
 private:
     VsyncManager *manager = nullptr;

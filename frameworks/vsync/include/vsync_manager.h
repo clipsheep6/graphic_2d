@@ -27,7 +27,10 @@
 
 namespace OHOS {
 namespace Vsync {
+class VsyncCallbackDeathRecipient;
 class VsyncManager : public IRemoteStub<IVsyncManager> {
+    friend class VsyncCallbackDeathRecipient;
+
 public:
     virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel& data,
                                     MessageParcel& reply, MessageOption& option) override;

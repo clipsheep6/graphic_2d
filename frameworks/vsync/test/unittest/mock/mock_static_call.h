@@ -19,6 +19,7 @@
 #include "static_call.h"
 
 namespace OHOS {
+namespace Vsync {
 class MockStaticCall : public StaticCall {
 public:
      MOCK_METHOD0(GetSystemAbilityManager, sptr<ISystemAbilityManager>());
@@ -28,5 +29,5 @@ public:
      MOCK_METHOD2(ListenVsync, VsyncError(sptr<IVsyncManager>& server, sptr<IVsyncCallback>& cb));
      MOCK_METHOD0(Current, std::shared_ptr<AppExecFwk::EventHandler>());
 };
+} // namespace Vsync
 } // namespace OHOS
-

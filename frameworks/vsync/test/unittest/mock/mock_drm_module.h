@@ -18,6 +18,7 @@
 #include <iservice_registry.h>
 
 namespace OHOS {
+namespace Vsync {
 class MockDrmModule : public DrmModule {
 public:
      MOCK_METHOD0(GetSystemAbilityManager, sptr<ISystemAbilityManager>());
@@ -26,5 +27,5 @@ public:
      MOCK_METHOD1(DrmClose, int(int32_t drmFd_));
      MOCK_METHOD2(DrmWaitBlank, int(int32_t drmFd, drmVBlank vblank));
 };
+} // namespace Vsync
 } // namespace OHOS
-

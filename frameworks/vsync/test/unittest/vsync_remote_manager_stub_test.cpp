@@ -21,6 +21,7 @@
 #include "return_value_tester.h"
 
 namespace OHOS {
+namespace Vsync {
 void VsyncManagerStubTest::SetUp()
 {
 }
@@ -130,7 +131,7 @@ HWTEST_F(VsyncManagerStubTest, Callback2, testing::ext::TestSize.Level0)
 }
 } // namespace
 
-VsyncCallback::VsyncCallback(int& count) : count_(&count)
+VsyncCallback::VsyncCallback(const int& count) : count_(const_cast<int *>(&count))
 {
 }
 
@@ -142,4 +143,5 @@ VsyncError VsyncCallback::OnVsync(int64_t timestamp)
     *count_ = *count_ + 1;
     return VSYNC_ERROR_OK;
 }
+} // namespace Vsync
 } // namespace OHOS

@@ -19,9 +19,11 @@
 #include <system_ability_definition.h>
 #include <unistd.h>
 
+#include "mock/mock_static_call.h"
 #include "vsync_helper_impl.h"
 
 namespace OHOS {
+namespace Vsync {
 void VsyncHelperImplTest::SetUp()
 {
 }
@@ -185,4 +187,5 @@ HWTEST_F(VsyncHelperImplTest, Current, testing::ext::TestSize.Level0)
     StaticCall::SetInstance(origin);
 }
 } // namespace
+} // namespace Vsync
 } // namespace OHOS

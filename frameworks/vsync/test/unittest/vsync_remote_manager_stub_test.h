@@ -23,6 +23,7 @@
 #include "vsync_manager.h"
 
 namespace OHOS {
+namespace Vsync {
 namespace {
 constexpr int32_t IPC_VSYNCMANAGER_SAID = 664321;
 }
@@ -39,12 +40,13 @@ private:
 
 class VsyncCallback : public VsyncCallbackStub {
 public:
-    explicit VsyncCallback(int& count);
+    explicit VsyncCallback(const int& count);
     virtual ~VsyncCallback() = default;
     virtual VsyncError OnVsync(int64_t timestamp) override;
 private:
     int *count_ = nullptr;
 };
-}
+} // namespace Vsync
+} // namespace OHOS
 
 #endif // FRAMEWORKS_VSYNC_TEST_UNITTEST_VSYNC_REMOTE_MANAGER_STUB_TEST_H

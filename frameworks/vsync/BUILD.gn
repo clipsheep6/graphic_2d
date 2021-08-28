@@ -96,6 +96,7 @@ ohos_shared_library("libvsync_module") {
   sources = [
     "src/drm_module.cpp",
     "src/return_value_tester.cpp",
+    "src/vsync_callback_death_recipient.cpp",
     "src/vsync_callback_proxy.cpp",
     "src/vsync_manager.cpp",
     "src/vsync_module.cpp",

@@ -14,6 +14,8 @@
  */
 
 #include "vsync_manager.h"
+
+#include "vsync_callback_death_recipient.h"
 #include "vsync_callback_proxy.h"
 #include "vsync_log.h"
 
@@ -73,6 +75,11 @@ VsyncError VsyncManager::ListenVsync(sptr<IVsyncCallback>& cb)
         return VSYNC_ERROR_NULLPTR;
     }
     VLOGI("add callbacks %{public}d", GetCallingPid());
+
+    sptr<IRemoteObject::DeathRecipient> deathRecipient = new VsyncCallbackDeathRecipient(this);
+    if (cb->AsObject()->AddDeathRecipient(deathRecipient) == false) {
+        VLOGW("Failed to add death recipient");
+    }
 
     std::lock_guard<std::mutex> lock(callbacksMutex_);
     callbacks_.push_back(cb);

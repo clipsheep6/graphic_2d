@@ -72,8 +72,9 @@ VsyncError VsyncManager::ListenVsync(sptr<IVsyncCallback>& cb)
         VLOG_FAILURE_NO(VSYNC_ERROR_NULLPTR);
         return VSYNC_ERROR_NULLPTR;
     }
+    VLOGI("add callbacks %{public}d", GetCallingPid());
 
-    std::unique_lock<std::mutex> lockGuard(callbacksMutex_);
+    std::lock_guard<std::mutex> lock(callbacksMutex_);
     callbacks_.push_back(cb);
     return VSYNC_ERROR_OK;
 }
@@ -87,7 +88,8 @@ VsyncError VsyncManager::GetVsyncFrequency(uint32_t& freq)
 
 void VsyncManager::Callback(int64_t timestamp)
 {
-    std::unique_lock<std::mutex> lockGuard(callbacksMutex_);
+    VLOGI("call callback");
+    std::lock_guard<std::mutex> lock(callbacksMutex_);
 
     std::list<sptr<IVsyncCallback>> okcbs;
     for (const auto& cb : callbacks_) {

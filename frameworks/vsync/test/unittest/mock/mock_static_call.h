@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
+#ifndef FRAMEWORKS_VSYNC_TEST_UNITTEST_MOCK_MOCK_STATIC_CALL_H
+#define FRAMEWORKS_VSYNC_TEST_UNITTEST_MOCK_MOCK_STATIC_CALL_H
+
 #include <gmock/gmock.h>
-#include <iservice_registry.h>
 
 #include "static_call.h"
 
@@ -31,3 +33,5 @@ public:
 };
 } // namespace Vsync
 } // namespace OHOS
+
+#endif // FRAMEWORKS_VSYNC_TEST_UNITTEST_MOCK_MOCK_STATIC_CALL_H

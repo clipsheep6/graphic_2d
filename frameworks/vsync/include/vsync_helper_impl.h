@@ -58,6 +58,7 @@ private:
     static inline sptr<VsyncClient> instance = nullptr;
 
     VsyncError InitService();
+    VsyncError InitVsyncFrequency();
 
     void DispatchMain(int64_t timestamp);
 

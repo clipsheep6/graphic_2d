@@ -83,6 +83,29 @@ VsyncError VsyncClient::InitService()
     return VSYNC_ERROR_OK;
 }
 
+VsyncError VsyncClient::InitVsyncFrequency()
+{
+    if (vsyncFrequency_ == 0) {
+        VsyncError vret;
+        {
+            std::lock_guard<std::mutex> lock(serviceMutex_);
+            vret = StaticCall::GetInstance()->GetVsyncFrequency(service_, vsyncFrequency_);
+            if (vret == VSYNC_ERROR_BINDER_ERROR) {
+                service_ = nullptr;
+                listener_ = nullptr;
+            }
+        }
+        if (vret != VSYNC_ERROR_OK) {
+            VLOG_FAILURE_RET(vret);
+        }
+        if (vsyncFrequency_ == 0) {
+            VLOG_FAILURE_RET(VSYNC_ERROR_INNER);
+        }
+        VLOG_SUCCESS("Get Frequency: %{public}u", vsyncFrequency_);
+    }
+    return VSYNC_ERROR_OK;
+}
+
 VsyncError VsyncClient::Init(bool restart)
 {
     if (restart == true) {
@@ -107,24 +130,12 @@ VsyncError VsyncClient::Init(bool restart)
             }
         }
 
-        if (vsyncFrequency_ == 0) {
-            {
-                std::lock_guard<std::mutex> lock(serviceMutex_);
-                vret = StaticCall::GetInstance()->GetVsyncFrequency(service_, vsyncFrequency_);
-                if (vret == VSYNC_ERROR_BINDER_ERROR) {
-                    service_ = nullptr;
-                    listener_ = nullptr;
-                    restart = true;
-                    continue;
-                }
-            }
-            if (vret != VSYNC_ERROR_OK) {
-                VLOG_FAILURE_RET(vret);
-            }
-            if (vsyncFrequency_ == 0) {
-                VLOG_FAILURE_RET(VSYNC_ERROR_INNER);
-            }
-            VLOG_SUCCESS("Get Frequency: %{public}u", vsyncFrequency_);
+        vret = InitVsyncFrequency();
+        if (vret == VSYNC_ERROR_BINDER_ERROR) {
+            restart = true;
+            continue;
+        } else if (vret != VSYNC_ERROR_OK) {
+            return vret;
         }
 
         if (listener_ == nullptr) {

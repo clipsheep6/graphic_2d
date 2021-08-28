@@ -16,8 +16,8 @@
 #ifndef FRAMEWORKS_VSYNC_TEST_UNITTEST_VSYNC_HELPER_IMPL_TEST_H
 #define FRAMEWORKS_VSYNC_TEST_UNITTEST_VSYNC_HELPER_IMPL_TEST_H
 
-#include <gtest/gtest.h>
 #include <event_handler.h>
+#include <gtest/gtest.h>
 
 namespace OHOS {
 namespace Vsync {

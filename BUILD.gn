@@ -42,10 +42,6 @@ group("libvsync_client") {
   public_deps = [ "frameworks/vsync:libvsync_client" ]
 }
 
-group("libwms_client") {
-  public_deps = [ "frameworks/wm:wms_client" ]
-}
-
 group("libwmclient") {
   public_deps = [ "frameworks/wm:libwmclient" ]
 }

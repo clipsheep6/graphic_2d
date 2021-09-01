@@ -26,6 +26,7 @@
 #include "libweston-internal.h"
 #include "screen_info.h"
 #include "weston.h"
+#include "wm_common.h"
 
 #define LOG_LABEL "wms-controller"
 
@@ -45,17 +46,22 @@
 #define WINDOW_ID_INVALID 0
 
 #define LAYER_ID_TYPE_BASE 5000
-#define LAYER_ID_TYPE_OFFSET 1000
+#define LAYER_ID_TYPE_OFFSET 10
 
 #define BAR_WIDTH_PERCENT 0.07
 #define ALARM_WINDOW_WIDTH 400
 #define ALARM_WINDOW_HEIGHT 300
 #define ALARM_WINDOW_WIDTH_HALF 200
 #define ALARM_WINDOW_HEIGHT_HALF 150
-#define ALARM_WINDOW_HALF 2
+#define INPUT_WINDOW_THIRD 3
+#define INPUT_SELECTOR_WINDOW_BORDER 30
+#define FLOAT_WINDOW_BORDER 80
+#define VOLUME_OVERLAY_WINDOW_BORDER 15
+
 #define SCREEN_SHOT_FILE_PATH "/data/screenshot-XXXXXX"
 #define TIMER_INTERVAL_MS 300
-#define HEIRHT_AVERAGE 2
+#define HEIGHT_AVERAGE 2
+#define WIDTH_AVERAGE 2
 #define PIXMAN_FORMAT_AVERAGE 8
 #define BYTE_SPP_SIZE 4
 #define ASSERT assert
@@ -96,6 +102,13 @@ struct WmsController {
     struct wl_list wlListLinkRes;
     struct WmsContext *pWmsCtx;
     struct ScreenshotFrameListener stListener;
+};
+
+typedef void (*CalcWindowInfoFunc)(struct WindowSurface *, int32_t, int32_t, int32_t, int32_t);
+
+struct CalcWindowInfoStrategy {
+    uint32_t type;
+    CalcWindowInfoFunc func;
 };
 
 static struct WmsContext g_wmsCtx = {0};
@@ -370,8 +383,8 @@ static uint32_t GetWindowId(struct WmsController *pController)
 
 static void SurfaceDestroy(const struct WindowSurface *surface)
 {
-    LOGD("surfaceId:%{public}d start.", surface->surfaceId);
     ASSERT(surface != NULL);
+    LOGD("surfaceId:%{public}d start.", surface->surfaceId);
 
     wl_list_remove(&surface->surfaceDestroyListener.link);
     wl_list_remove(&surface->propertyChangedListener.link);
@@ -457,53 +470,142 @@ static struct WmsScreen *GetScreen(const struct WindowSurface *windowSurface)
     return NULL;
 }
 
+static void CalcWindowInfoNormal(struct WindowSurface *surface,
+    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
+{
+    surface->x = 0;
+    surface->y = topBarHeight;
+    surface->width = maxWidth;
+    surface->height = maxHeight - topBarHeight - bottomBarsHeight;
+}
+
+static void CalcWindowInfoStatusBar(struct WindowSurface *surface,
+    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
+{
+    surface->x = 0;
+    surface->y = 0;
+    surface->width = maxWidth;
+    surface->height = topBarHeight;
+}
+
+static void CalcWindowInfoNaviBar(struct WindowSurface *surface,
+    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
+{
+    surface->x = 0;
+    surface->y = maxHeight - bottomBarsHeight;
+    surface->width = maxWidth;
+    surface->height = bottomBarsHeight;
+}
+
+static void CalcWindowInfoAlarmScreen(struct WindowSurface *surface,
+    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
+{
+    surface->x = maxWidth / WIDTH_AVERAGE - ALARM_WINDOW_WIDTH_HALF;
+    surface->y = maxHeight / HEIGHT_AVERAGE - ALARM_WINDOW_HEIGHT_HALF;
+    surface->width = ALARM_WINDOW_WIDTH;
+    surface->height = ALARM_WINDOW_HEIGHT;
+}
+
+static void CalcWindowInfoLauncher(struct WindowSurface *surface,
+    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
+{
+    surface->x = 0;
+    surface->y = topBarHeight;
+    surface->width = maxWidth;
+    surface->height = maxHeight - topBarHeight - bottomBarsHeight;
+}
+
+static void CalcWindowInfoInputMethod(struct WindowSurface *surface,
+    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
+{
+    surface->x = 0;
+    surface->y = maxHeight - (maxHeight / INPUT_WINDOW_THIRD);
+    surface->width = maxWidth;
+    surface->height = maxHeight / INPUT_WINDOW_THIRD - topBarHeight;
+}
+
+static void CalcWindowInfoInputMethodSelector(struct WindowSurface *surface,
+    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
+{
+    surface->x = INPUT_SELECTOR_WINDOW_BORDER;
+    surface->y = maxHeight - (maxHeight / INPUT_WINDOW_THIRD);
+    surface->width = maxWidth - (INPUT_SELECTOR_WINDOW_BORDER + INPUT_SELECTOR_WINDOW_BORDER);
+    surface->height = maxHeight / INPUT_WINDOW_THIRD - topBarHeight - INPUT_SELECTOR_WINDOW_BORDER;
+}
+
+static void CalcWindowInfoVolumeOverlay(struct WindowSurface *surface,
+    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
+{
+    surface->x = VOLUME_OVERLAY_WINDOW_BORDER;
+    surface->y = VOLUME_OVERLAY_WINDOW_BORDER;
+    surface->width = maxWidth - (VOLUME_OVERLAY_WINDOW_BORDER + VOLUME_OVERLAY_WINDOW_BORDER);
+    surface->height = (maxHeight - topBarHeight) / HEIGHT_AVERAGE;
+}
+
+static void CalcWindowInfoNotificationShade(struct WindowSurface *surface,
+    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
+{
+    surface->x = 0;
+    surface->y = 0;
+    surface->width = maxWidth;
+    surface->height = (maxHeight - topBarHeight) / HEIGHT_AVERAGE;
+}
+
+static void CalcWindowInfoFloat(struct WindowSurface *surface,
+    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
+{
+    surface->x = FLOAT_WINDOW_BORDER;
+    surface->y = topBarHeight + FLOAT_WINDOW_BORDER;
+    surface->width = maxWidth - (FLOAT_WINDOW_BORDER + FLOAT_WINDOW_BORDER);
+    surface->height = maxHeight / HEIGHT_AVERAGE - topBarHeight;
+}
+
+static struct CalcWindowInfoStrategy g_calcWindowInfoStrategyList[] = {
+    {WINDOW_TYPE_NORMAL, CalcWindowInfoNormal},
+    {WINDOW_TYPE_STATUS_BAR, CalcWindowInfoStatusBar},
+    {WINDOW_TYPE_NAVI_BAR, CalcWindowInfoNaviBar},
+    {WINDOW_TYPE_ALARM_SCREEN, CalcWindowInfoAlarmScreen},
+    {WINDOW_TYPE_LAUNCHER, CalcWindowInfoLauncher},
+    {WINDOW_TYPE_INPUT_METHOD, CalcWindowInfoInputMethod},
+    {WINDOW_TYPE_INPUT_METHOD_SELECTOR, CalcWindowInfoInputMethodSelector},
+    {WINDOW_TYPE_VOLUME_OVERLAY, CalcWindowInfoVolumeOverlay},
+    {WINDOW_TYPE_NOTIFICATION_SHADE, CalcWindowInfoNotificationShade},
+    {WINDOW_TYPE_FLOAT, CalcWindowInfoFloat},
+};
+
+static CalcWindowInfoFunc GetCalcWindowInfoFunc(uint32_t type)
+{
+    for (int i = 0; i < sizeof(g_calcWindowInfoStrategyList); i++) {
+        if (g_calcWindowInfoStrategyList[i].type == type) {
+            return g_calcWindowInfoStrategyList[i].func;
+        }
+    }
+    return CalcWindowInfoNormal;
+}
+
 static void CalcWindowInfo(struct WindowSurface *surface)
 {
-    int32_t maxWitdh, maxHeight, barHeight, allBarsHeight;
+    int32_t maxWidth, maxHeight, topBarHeight, bottomBarsHeight;
 #ifdef USE_DUMMY_SCREEN
-    maxWitdh = DUMMY_SCREEN_WIDTH;
+    maxWidth = DUMMY_SCREEN_WIDTH;
     maxHeight = DUMMY_SCREEN_HEIGHT;
-    barHeight = (BAR_WIDTH_PERCENT * maxHeight);
-    allBarsHeight = barHeight + barHeight;
+    topBarHeight = (BAR_WIDTH_PERCENT * maxHeight);
+    bottomBarsHeight = topBarHeight;
 #else
     struct WmsScreen *screen = GetScreen(surface);
     if (!screen) {
         LOGE("GetScreen error.");
         return;
     }
-    maxWitdh = screen->westonOutput->width;
+    maxWidth = screen->westonOutput->width;
     maxHeight = screen->westonOutput->height;
-    barHeight = (BAR_WIDTH_PERCENT * maxHeight);
-    allBarsHeight = barHeight + barHeight;
+    topBarHeight = (BAR_WIDTH_PERCENT * maxHeight);
+    bottomBarsHeight = topBarHeight;
 #endif /* USE_DUMMY_SCREEN */
 
-    surface->width = maxWitdh;
-    surface->x = 0;
-
-    switch (surface->type) {
-        case WMS_WINDOW_TYPE_NORMAL:
-            surface->height = maxHeight - allBarsHeight;
-            surface->y = barHeight;
-            break;
-        case WMS_WINDOW_TYPE_STATUS_BAR:
-            surface->height = barHeight;
-            surface->y = 0;
-            break;
-        case WMS_WINDOW_TYPE_NAVI_BAR:
-            surface->height = barHeight;
-            surface->y = maxHeight - surface->height;
-            break;
-        case WMS_WINDOW_TYPE_ALARM:
-            surface->width = ALARM_WINDOW_WIDTH;
-            surface->height = ALARM_WINDOW_HEIGHT;
-            surface->x = maxWitdh / ALARM_WINDOW_HALF - ALARM_WINDOW_WIDTH_HALF;
-            surface->y = maxHeight / ALARM_WINDOW_HALF - ALARM_WINDOW_HEIGHT_HALF;
-            break;
-        default:
-            LOGI("default branch.");
-            surface->height = maxHeight - allBarsHeight;
-            surface->y = barHeight;
-            break;
+    CalcWindowInfoFunc func = GetCalcWindowInfoFunc(surface->type);
+    if (func) {
+        func(surface, maxWidth, maxHeight, topBarHeight, bottomBarsHeight);
     }
 
     return;
@@ -655,7 +757,7 @@ static void ControllerSetWindowType(const struct wl_client* pWlClient,
         return;
     }
 
-    if (windowType >= WMS_WINDOW_TYPE_MAX_COUNT) {
+    if (windowType >= WINDOW_TYPE_MAX) {
         LOGE("windowType %{public}d error.", windowType);
         wms_send_reply_error(pWlResource, WMS_ERROR_INVALID_PARAM);
         return;
@@ -856,7 +958,7 @@ static bool FocusUpdate(const struct WindowSurface *surface)
     LOGD("start.");
     int flag = INPUT_DEVICE_ALL;
 
-    if ((surface->type == WMS_WINDOW_TYPE_STATUS_BAR) || (surface->type == WMS_WINDOW_TYPE_NAVI_BAR)) {
+    if ((surface->type == WINDOW_TYPE_STATUS_BAR) || (surface->type == WINDOW_TYPE_NAVI_BAR)) {
         flag = INPUT_DEVICE_POINTER | INPUT_DEVICE_TOUCH;
     }
 
@@ -1047,8 +1149,14 @@ static void ControllerCreateWindow(const struct wl_client* pWlClient,
     struct WmsContext *pWmsCtx = pWmsController->pWmsCtx;
     struct weston_surface *westonSurface = wl_resource_get_user_data(pWlSurfaceResource);
     
-    if (windowType >= WMS_WINDOW_TYPE_MAX_COUNT) {
+    if (windowType >= WINDOW_TYPE_MAX) {
         LOGE("windowType %{public}d error.", windowType);
+        wms_send_window_status(pWlResource, WMS_WINDOW_STATUS_FAILED, WINDOW_ID_INVALID, 0, 0, 0, 0);
+        return;
+    }
+
+    if (!GetScreenFromId(pWmsCtx, screenId)) {
+        LOGE("screen is not found[%{public}d].", screenId);
         wms_send_window_status(pWlResource, WMS_WINDOW_STATUS_FAILED, WINDOW_ID_INVALID, 0, 0, 0, 0);
         return;
     }
@@ -1167,7 +1275,7 @@ static void FlipY(int32_t stride, int32_t height, uint32_t *data)
     int i, y, p, q;
     // assuming stride aligned to 4 bytes
     int pitch = stride / sizeof(*data);
-    for (y = 0; y < height / HEIRHT_AVERAGE; ++y) {
+    for (y = 0; y < height / HEIGHT_AVERAGE; ++y) {
         p = y * pitch;
         q = (height - y - 1) * pitch;
         for (i = 0; i < pitch; ++i) {
@@ -1369,9 +1477,6 @@ static void UnbindWmsController(const struct wl_resource *pResource)
     struct WmsContext *pWmsCtx = pController->pWmsCtx;
     struct WindowSurface *pWindowSurface = NULL;
     struct WindowSurface *pNext = NULL;
-
-    struct WmsController *pControllerTemp = NULL;
-    struct WmsController *pControllerNext = NULL;
 
     wl_list_remove(&pController->wlListLinkRes);
 

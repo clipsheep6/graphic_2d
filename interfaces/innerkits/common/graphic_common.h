@@ -17,6 +17,7 @@
 #define INTERFACES_INNERKITS_COMMON_GRAPHIC_COMMON_H
 
 #include <cstdint>
+#include <cstring>
 #include <map>
 #include <string>
 
@@ -47,13 +48,35 @@ static const std::map<GSError, std::string> GSErrorStrs = {
     {GSERROR_BINDER,                "<504 binder occur error>"},
 };
 
+static inline std::string LowErrorStrSpecial(GSError err)
+{
+    if (err == LOWERROR_INVALID) {
+        char num[] = {err / 0x64 % 0xa, err / 0xa % 0xa, err % 0xa, 0}; // int to string (in 1000)
+        return std::string("with low error <") + num + ">";
+    } else if (err == LOWERROR_FAILURE) {
+        return "with low error <failure>";
+    }
+    return "";
+}
+
+static inline std::string LowErrorStr(GSError lowerr)
+{
+    std::string lowError = LowErrorStrSpecial(lowerr);
+    if (lowError == "" && lowerr != 0) {
+        lowError = std::strerror(lowerr);
+        lowError = std::string("with low error <") + lowError + ">";
+    }
+    return lowError;
+}
+
 static inline std::string GSErrorStr(GSError err)
 {
-    auto it = GSErrorStrs.find(err);
+    GSError diff = static_cast<GSError>(err % LOWERROR_MAX);
+    auto it = GSErrorStrs.find(static_cast<GSError>(err - diff));
     if (it == GSErrorStrs.end()) {
         return "<GSError error index out of range>";
     }
-    return it->second;
+    return it->second + LowErrorStr(diff);
 }
 
 enum WMError {

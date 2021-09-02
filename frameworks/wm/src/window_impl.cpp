@@ -15,6 +15,8 @@
 
 #include "window_impl.h"
 
+#include <display_type.h>
+
 #include "singleton_delegator.h"
 #include "static_call.h"
 #include "tester.h"
@@ -125,8 +127,7 @@ WMError WindowImpl::CreateConsumerSurface(sptr<WindowImpl> &wi,
     }
 
     wi->csurface->SetDefaultWidthAndHeight(wi->attr.GetWidth(), wi->attr.GetHeight());
-    wi->csurface->SetDefaultUsage(
-        Surface::USAGE_CPU_READ | Surface::USAGE_CPU_WRITE | Surface::USAGE_MEM_DMA);
+    wi->csurface->SetDefaultUsage(HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA);
     return WM_OK;
 }
 

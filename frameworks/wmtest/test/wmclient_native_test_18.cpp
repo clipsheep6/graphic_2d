@@ -73,7 +73,7 @@ public:
         config.height = subpsurface->GetDefaultHeight();
         config.strideAlignment = sizeof(void *);
         config.format = PIXEL_FMT_RGBA_8888;
-        config.usage = Surface::USAGE_CPU_READ | Surface::USAGE_CPU_WRITE | Surface::USAGE_MEM_DMA;
+        config.usage = subpsurface->GetDefaultUsage();
         subwindowSync = NativeTestSync::CreateSync(NativeTestDraw::RainbowDraw, subpsurface, &config);
 
         std::vector<struct WMDisplayInfo> displays;

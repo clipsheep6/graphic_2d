@@ -15,7 +15,7 @@
 
 #include "buffer_manager.h"
 
-#include <errno.h>
+#include <cerrno>
 #include <sys/mman.h>
 
 #include <display_gralloc.h>
@@ -50,7 +50,7 @@ namespace OHOS {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "BufferManager" };
 
-inline SurfaceError GenerateError(SurfaceError err, DispErrCode code)
+SurfaceError GenerateError(SurfaceError err, DispErrCode code)
 {
     switch (code) {
         case DISPLAY_SUCCESS: return static_cast<SurfaceError>(err + 0);

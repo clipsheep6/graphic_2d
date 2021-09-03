@@ -88,6 +88,8 @@ public:
     virtual WMError OnTouchCancel(TouchCancelFunc func) override;
     virtual WMError OnTouchShape(TouchShapeFunc func) override;
     virtual WMError OnTouchOrientation(TouchOrientationFunc func) override;
+    int32_t GetPosX() const;
+    int32_t GetPosY() const;
 
 private:
     WindowImpl() = default;

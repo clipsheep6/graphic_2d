@@ -48,6 +48,7 @@ WMError SubwindowVideoImpl::CheckAndNew(sptr<SubwindowVideoImpl> &svi,
         WMLOGFE("new SubwindowVideoImpl return nullptr");
         return WM_ERROR_NEW;
     }
+    svi->parentWindow = window;
     return WM_OK;
 }
 
@@ -185,8 +186,15 @@ WMError SubwindowVideoImpl::Move(int32_t x, int32_t y)
     }
 
     attr.SetXY(x, y);
-    rect.x = x;
-    rect.y = y;
+    auto windowImpl = static_cast<WindowImpl *>(parentWindow.GetRefPtr());
+    if (windowImpl == nullptr) {
+        WMLOGFE("WindowImpl is nullptr");
+        return WM_ERROR_NULLPTR;
+    }
+
+    rect.x = x + windowImpl->GetPosX();
+    rect.y = y + windowImpl->GetPosY();
+    WMLOGFI("(subwindow video) rect.x: %{public}d, rect.y: %{public}d", rect.x, rect.y);
     ret = display->SetRect(layerId, rect);
     if (ret != DISPLAY_SUCCESS) {
         WMLOGFE("set rect fail, ret:%{public}d", ret);

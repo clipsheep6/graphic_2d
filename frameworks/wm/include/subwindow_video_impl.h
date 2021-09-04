@@ -58,6 +58,7 @@ private:
 
     // base attribute
     WindowAttribute attr;
+    sptr<Window> parentWindow = nullptr;
     uint32_t layerId = 0;
 
     // functional member

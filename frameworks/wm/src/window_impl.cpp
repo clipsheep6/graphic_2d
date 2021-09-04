@@ -500,6 +500,16 @@ WMError WindowImpl::OnTouchOrientation(TouchOrientationFunc func)
     return WM_OK;
 }
 
+int32_t WindowImpl::GetPosX() const
+{
+    return attr.GetX();
+}
+
+int32_t WindowImpl::GetPosY() const
+{
+    return attr.GetY();
+}
+
 namespace {
 void BufferRelease(struct wl_buffer *wbuffer)
 {

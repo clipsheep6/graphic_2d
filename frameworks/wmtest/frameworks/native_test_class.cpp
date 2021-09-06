@@ -42,6 +42,7 @@ sptr<Window> NativeTestFactory::CreateWindow(WindowType type, sptr<Surface> csur
     option->SetConsumerSurface(csurface);
     wm->CreateWindow(window, option);
     if (window == nullptr) {
+        printf("NativeTestFactory::CreateWindow return nullptr\n");
         return nullptr;
     }
 

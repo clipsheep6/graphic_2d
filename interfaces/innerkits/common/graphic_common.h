@@ -16,14 +16,17 @@
 #ifndef INTERFACES_INNERKITS_COMMON_GRAPHIC_COMMON_H
 #define INTERFACES_INNERKITS_COMMON_GRAPHIC_COMMON_H
 
+#ifdef __cplusplus
 #include <cstdint>
 #include <cstring>
 #include <map>
 #include <string>
 
 namespace OHOS {
+#endif
 #include "graphic_common_c.h"
 
+#ifdef __cplusplus
 static const std::map<GSError, std::string> GSErrorStrs = {
     {GSERROR_OK,                    "<200 ok>"},
     {GSERROR_INVALID_ARGUMENTS,     "<400 invalid arguments>"},
@@ -78,6 +81,7 @@ static inline std::string GSErrorStr(GSError err)
     }
     return it->second + LowErrorStr(diff);
 }
+#endif // __cplusplus
 
 enum WMError {
     WM_OK = GSERROR_OK,
@@ -95,6 +99,7 @@ enum WMError {
     WM_ERROR_DESTROYED_OBJECT = GSERROR_DESTROYED_OBJECT,
 };
 
+#ifdef __cplusplus
 static inline std::string WMErrorStr(WMError err)
 {
     auto it = GSErrorStrs.find(static_cast<GSError>(err));
@@ -103,6 +108,7 @@ static inline std::string WMErrorStr(WMError err)
     }
     return it->second;
 }
+#endif // __cplusplus
 
 enum SurfaceError {
     SURFACE_ERROR_OK = GSERROR_OK,
@@ -122,6 +128,7 @@ enum SurfaceError {
     SURFACE_ERROR_NO_CONSUMER = GSERROR_NO_CONSUMER,
 };
 
+#ifdef __cplusplus
 static inline std::string SurfaceErrorStr(SurfaceError err)
 {
     auto it = GSErrorStrs.find(static_cast<GSError>(err));
@@ -130,6 +137,7 @@ static inline std::string SurfaceErrorStr(SurfaceError err)
     }
     return it->second;
 }
+#endif // __cplusplus
 
 enum VsyncError {
     VSYNC_ERROR_OK = GSERROR_OK,
@@ -144,6 +152,7 @@ enum VsyncError {
     VSYNC_ERROR_INVALID_ARGUMENTS = GSERROR_INVALID_ARGUMENTS,
 };
 
+#ifdef __cplusplus
 static inline std::string VsyncErrorStr(VsyncError err)
 {
     auto it = GSErrorStrs.find(static_cast<GSError>(err));
@@ -153,5 +162,6 @@ static inline std::string VsyncErrorStr(VsyncError err)
     return it->second;
 }
 } // namespace OHOS
+#endif // __cplusplus
 
 #endif // INTERFACES_INNERKITS_COMMON_GRAPHIC_COMMON_H

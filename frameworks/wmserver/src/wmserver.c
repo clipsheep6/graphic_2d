@@ -21,12 +21,13 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include <window_manager_type.h>
+
 #include "backend.h"
 #include "ivi-layout-private.h"
 #include "libweston-internal.h"
 #include "screen_info.h"
 #include "weston.h"
-#include "wm_common.h"
 
 #define LOG_LABEL "wms-controller"
 

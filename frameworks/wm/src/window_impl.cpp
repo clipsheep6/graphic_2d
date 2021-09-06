@@ -241,7 +241,8 @@ sptr<Promise<WMError>> WindowImpl::SetWindowMode(WindowMode mode)
         return new Promise<WMError>(WM_ERROR_INVALID_PARAM);
     }
 
-    return new Promise<WMError>(WM_ERROR_NOT_SUPPORT);
+    attr.SetMode(mode);
+    return wms->SetWindowMode(attr.GetID(), mode);
 }
 
 sptr<Promise<WMError>> WindowImpl::Resize(uint32_t width, uint32_t height)
@@ -330,6 +331,11 @@ void WindowImpl::OnVisibilityChange(WindowVisibilityChangeFunc func)
 void WindowImpl::OnTypeChange(WindowTypeChangeFunc func)
 {
     attr.OnTypeChange(func);
+}
+
+void WindowImpl::OnModeChange(WindowModeChangeFunc func)
+{
+    attr.OnModeChange(func);
 }
 
 WMError WindowImpl::OnTouch(OnTouchFunc cb)

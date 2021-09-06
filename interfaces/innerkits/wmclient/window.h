@@ -45,6 +45,7 @@ public:
     virtual void OnSizeChange(WindowSizeChangeFunc func) = 0;
     virtual void OnVisibilityChange(WindowVisibilityChangeFunc func) = 0;
     virtual void OnTypeChange(WindowTypeChangeFunc func) = 0;
+    virtual void OnModeChange(WindowModeChangeFunc func) = 0;
 
     // listener
     virtual WMError OnTouch(OnTouchFunc cb) = 0;

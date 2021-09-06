@@ -81,4 +81,7 @@ void WMClientNativeTest7::AfterRun()
         ExitTest();
         return;
     }
+
+    printf("subwindow default width = %d\n", subwindow->GetSurface()->GetDefaultWidth());
+    printf("subwindow default height = %d\n", subwindow->GetSurface()->GetDefaultHeight());
 }

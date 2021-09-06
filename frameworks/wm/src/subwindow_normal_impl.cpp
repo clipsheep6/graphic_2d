@@ -239,11 +239,8 @@ void SubwindowNormalImpl::OnBufferAvailable()
     auto bc = SingletonContainer::Get<WlBufferCache>();
     auto wbuffer = bc->GetWlBuffer(csurface, sbuffer);
     if (wbuffer == nullptr) {
-        int32_t fd = sbuffer->GetFileDescriptor();
-        uint32_t width = sbuffer->GetWidth();
-        uint32_t height = sbuffer->GetHeight();
         auto dmaBufferFactory = SingletonContainer::Get<WlDMABufferFactory>();
-        auto dmaWlBuffer = dmaBufferFactory->Create(fd, width, height, sbuffer->GetFormat());
+        auto dmaWlBuffer = dmaBufferFactory->Create(sbuffer->GetBufferHandle());
         dmaWlBuffer->OnRelease(BufferRelease);
 
         wbuffer = dmaWlBuffer;

@@ -15,6 +15,8 @@
 
 #include "subwindow_video_impl.h"
 
+#include <display_type.h>
+
 #include "window_impl.h"
 #include "window_manager_hilog.h"
 #include "wl_shm_buffer_factory.h"
@@ -86,6 +88,13 @@ WMError SubwindowVideoImpl::CreateLayer(sptr<SubwindowVideoImpl> &svi)
     if (ret) {
         WMLOGFE("SubwindowVideoImpl::CreateLayer return nullptr");
         return WM_ERROR_API_FAILED;
+    }
+
+    if (svi->csurface != nullptr) {
+        svi->csurface->SetDefaultWidthAndHeight(svi->attr.GetWidth(), svi->attr.GetHeight());
+        svi->csurface->SetDefaultUsage(HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA);
+    } else {
+        WMLOGFE("SubwindowVideoImpl::CreateLayer csurface is nullptr");
     }
     return WM_OK;
 }

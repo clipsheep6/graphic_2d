@@ -46,8 +46,22 @@
 #define WINDOW_ID_NUM_MAX 1024
 #define WINDOW_ID_INVALID 0
 
-#define LAYER_ID_TYPE_BASE 5000
-#define LAYER_ID_TYPE_OFFSET 10
+// int32_t max 2147483647, use 1e9, as AAAABBBCD
+// HIGH | SCREEN use AAAA | TYPE use BBB | MODE use C | RESERVED use D | LOW
+#define LAYER_ID_RESERVED_LENGTH 10
+#define LAYER_ID_RESERVED_BASE 1
+#define LAYER_ID_MODE_LENGTH 10
+#define LAYER_ID_MODE_BASE 10
+#define LAYER_ID_TYPE_LENGTH 1000
+#define LAYER_ID_TYPE_BASE 100
+#define LAYER_ID_SCREEN_LENGTH 10000
+#define LAYER_ID_SCREEN_BASE 100000
+
+enum {
+    MODE_UNSET = 0,
+    MODE_FULL = 0,
+    MODE_FREE = 1,
+};
 
 #define BAR_WIDTH_PERCENT 0.07
 #define ALARM_WINDOW_WIDTH 400
@@ -77,6 +91,8 @@ struct WindowSurface {
     uint32_t surfaceId;
     uint32_t screenId;
     uint32_t type;
+    uint32_t mode; // MODE_*
+    uint32_t externalMode; // WINDOW_MODE_*
     int32_t x;
     int32_t y;
     int32_t width;
@@ -182,9 +198,9 @@ static inline void ClearBit(uint32_t *flags, int32_t n)
     (*flags) &= ~(1 << (n));
 }
 
-static inline int GetLayerId(uint32_t type, uint32_t screenId)
+static inline int GetLayerId(uint32_t screenId, uint32_t type, uint32_t mode)
 {
-    return ((LAYER_ID_TYPE_BASE) + (LAYER_ID_TYPE_OFFSET * type) + (screenId));
+    return mode * LAYER_ID_MODE_BASE + type * LAYER_ID_TYPE_BASE + screenId * LAYER_ID_SCREEN_BASE;
 }
 
 static void WindowSurfaceCommitted(struct weston_surface *surface, int32_t sx, int32_t sy);
@@ -624,7 +640,7 @@ static bool AddWindow(struct WindowSurface *windowSurface)
     wl_list_for_each(screen, &ctx->wlListScreen, wlListLink) {
         if (screen->screenId == windowSurface->screenId
             ||  ctx->displayMode == WMS_DISPLAY_MODE_CLONE) {
-            layerId = GetLayerId(windowSurface->type, screen->screenId);
+            layerId = GetLayerId(screen->screenId, windowSurface->type, windowSurface->mode);
             layoutLayer = GetLayer(screen->westonOutput, ctx->pLayoutInterface, layerId);
             if (!layoutLayer) {
                 LOGE("GetLayer failed.");
@@ -701,45 +717,86 @@ static void ControllerSetDisplayMode(const struct wl_client* client,
     LOGD("end. displayMode %{public}d", ctx->displayMode);
 }
 
-static void SetWindowType(const struct WmsContext *pCtx,
-                          const struct WindowSurface *pWindowSurface,
-                          const struct wl_resource* pWlResource,
-                          uint32_t windowType)
+static void MoveWindowToLayerId(const struct WmsContext *wc,
+                                const struct WindowSurface *ws,
+                                const struct wl_resource* wr,
+                                uint32_t layerIdNew)
 {
-    struct WmsScreen *pScreen = NULL;
     uint32_t layerIdOld;
-    uint32_t layerIdNew;
     struct ivi_layout_layer *pLayoutLayerOld = NULL;
     struct ivi_layout_layer *pLayoutLayerNew = NULL;
-    struct ivi_layout_interface_for_wms *pLayoutInterface = pCtx->pLayoutInterface;
+    struct ivi_layout_interface_for_wms *pLayoutInterface = wc->pLayoutInterface;
+    struct WmsScreen *screen = NULL;
 
-    wl_list_for_each(pScreen, &pCtx->wlListScreen, wlListLink) {
-        if (pScreen->screenId == pWindowSurface->screenId
-            || pCtx->displayMode == WMS_DISPLAY_MODE_CLONE) {
-            layerIdOld = GetLayerId(pWindowSurface->type, pScreen->screenId);
+    wl_list_for_each(screen, &wc->wlListScreen, wlListLink) {
+        if (screen->screenId == ws->screenId
+            || wc->displayMode == WMS_DISPLAY_MODE_CLONE) {
+            layerIdOld = GetLayerId(screen->screenId, ws->type, ws->mode);
             pLayoutLayerOld = pLayoutInterface->get_layer_from_id(layerIdOld);
             if (!pLayoutLayerOld) {
-                if (pScreen->screenId == pWindowSurface->screenId) {
+                if (screen->screenId == ws->screenId) {
                     LOGE("get_layer_from_id failed. layerId=%{public}d", layerIdOld);
-                    wms_send_reply_error(pWlResource, WMS_ERROR_INNER_ERROR);
+                    wms_send_reply_error(wr, WMS_ERROR_INNER_ERROR);
                     return;
                 } else {
                     continue;
                 }
             }
 
-            layerIdNew = GetLayerId(windowType, pScreen->screenId);
-
-            pLayoutLayerNew = GetLayer(pScreen->westonOutput, pLayoutInterface, layerIdNew);
+            pLayoutLayerNew = GetLayer(screen->westonOutput, pLayoutInterface, layerIdNew);
             if (!pLayoutLayerNew) {
                 LOGE("GetLayer failed.");
-                wms_send_reply_error(pWlResource, WMS_ERROR_INNER_ERROR);
+                wms_send_reply_error(wr, WMS_ERROR_INNER_ERROR);
                 return;
             }
 
-            pLayoutInterface->layer_remove_surface(pLayoutLayerOld, pWindowSurface->layoutSurface);
-            pLayoutInterface->layer_add_surface(pLayoutLayerNew, pWindowSurface->layoutSurface);
+            pLayoutInterface->layer_remove_surface(pLayoutLayerOld, ws->layoutSurface);
+            pLayoutInterface->layer_add_surface(pLayoutLayerNew, ws->layoutSurface);
         }
+    }
+}
+
+static void SetWindowPosition(struct WindowSurface *ws,
+                              int32_t x, int32_t y)
+{
+    SetDestinationRectangle(ws, x, y, ws->width, ws->height);
+    ws->x = x;
+    ws->y = y;
+}
+
+static void SetWindowSize(struct WindowSurface *ws,
+                          uint32_t width, uint32_t height)
+{
+    SetSourceRectangle(ws, 0, 0, width, height);
+    SetDestinationRectangle(ws, ws->x, ws->y, width, height);
+    ws->width = width;
+    ws->height = height;
+}
+
+static void SetWindowType(const struct WmsContext *wc,
+                          const struct WindowSurface *ws,
+                          const struct wl_resource* wr,
+                          uint32_t windowType)
+{
+    MoveWindowToLayerId(wc, ws, wr, GetLayerId(ws->screenId, windowType, ws->mode));
+}
+
+static void SetWindowMode(const struct WmsContext *wc,
+                          struct WindowSurface *ws,
+                          const struct wl_resource* wr,
+                          uint32_t windowMode)
+{
+    if (windowMode == WINDOW_MODE_UNSET) {
+        MoveWindowToLayerId(wc, ws, wr, GetLayerId(ws->screenId, ws->type, MODE_UNSET));
+        ws->mode = MODE_UNSET;
+    }
+    if (windowMode == WINDOW_MODE_FULL) {
+        MoveWindowToLayerId(wc, ws, wr, GetLayerId(ws->screenId, ws->type, MODE_FULL));
+        ws->mode = MODE_FULL;
+    }
+    if (windowMode == WINDOW_MODE_FREE) {
+        MoveWindowToLayerId(wc, ws, wr, GetLayerId(ws->screenId, ws->type, MODE_FREE));
+        ws->mode = MODE_FREE;
     }
 }
 
@@ -780,6 +837,48 @@ static void ControllerSetWindowType(const struct wl_client* pWlClient,
     SetWindowType(pWmsCtx, pWindowSurface, pWlResource, windowType);
 
     pWindowSurface->type = windowType;
+
+    wms_send_reply_error(pWlResource, WMS_ERROR_OK);
+    LOGD("end.");
+}
+
+static void ControllerSetWindowMode(const struct wl_client* pWlClient,
+                                    const struct wl_resource* pWlResource,
+                                    uint32_t windowId, uint32_t windowMode)
+{
+    LOGD("start. windowId=%{public}d, windowMode=%{public}d", windowId, windowMode);
+    struct WmsController *pWmsController = wl_resource_get_user_data(pWlResource);
+    struct WmsContext *pWmsCtx = pWmsController->pWmsCtx;
+    struct WindowSurface *pWindowSurface = NULL;
+
+    if (!CheckWindowId(pWlClient, windowId)) {
+        LOGE("CheckWindowId failed [%{public}d].", windowId);
+        wms_send_reply_error(pWlResource, WMS_ERROR_PID_CHECK);
+        return;
+    }
+
+    if (windowMode >= WINDOW_MODE_MAX) {
+        LOGE("windowMode %{public}d error.", windowMode);
+        wms_send_reply_error(pWlResource, WMS_ERROR_INVALID_PARAM);
+        return;
+    }
+
+    pWindowSurface = GetSurface(&pWmsCtx->wlListWindow, windowId);
+    if (!pWindowSurface) {
+        LOGE("pWindowSurface is not found[%{public}d].", windowId);
+        wms_send_reply_error(pWlResource, WMS_ERROR_INVALID_PARAM);
+        return;
+    }
+
+    if (pWindowSurface->externalMode == windowMode) {
+        LOGE("window type is not need change.");
+        wms_send_reply_error(pWlResource, WMS_ERROR_INVALID_PARAM);
+        return;
+    }
+
+    SetWindowMode(pWmsCtx, pWindowSurface, pWlResource, windowMode);
+
+    pWindowSurface->externalMode = windowMode;
 
     wms_send_reply_error(pWlResource, WMS_ERROR_OK);
     LOGD("end.");
@@ -835,11 +934,7 @@ static void ControllerSetWindowSize(const struct wl_client* client,
         return;
     }
 
-    SetSourceRectangle(windowSurface, 0, 0, width, height);
-    SetDestinationRectangle(windowSurface, windowSurface->x, windowSurface->y, width, height);
-
-    windowSurface->width = width;
-    windowSurface->height = height;
+    SetWindowSize(windowSurface, width, height);
     wms_send_reply_error(resource, WMS_ERROR_OK);
 
     LOGD("end.");
@@ -896,9 +991,7 @@ static void ControllerSetWindowPosition(const struct wl_client *client,
         return;
     }
 
-    SetDestinationRectangle(windowSurface, x, y, windowSurface->width, windowSurface->height);
-    windowSurface->x = x;
-    windowSurface->y = y;
+    SetWindowPosition(windowSurface, x, y);
 
     wms_send_reply_error(resource, WMS_ERROR_OK);
     LOGD("end.");
@@ -968,7 +1061,7 @@ static bool FocusUpdate(const struct WindowSurface *surface)
     struct ivi_layout_surface **surfaceList = NULL;
     struct ivi_layout_interface_for_wms *layoutInterface = surface->controller->pWmsCtx->pLayoutInterface;
     struct ivi_input_interface_for_wms *pInputInterface = surface->controller->pWmsCtx->pInputInterface;
-    int32_t layerId = GetLayerId(surface->type, surface->screenId);
+    int32_t layerId = GetLayerId(surface->screenId, surface->type, surface->mode);
     struct ivi_layout_layer *layoutLayer = layoutInterface->get_layer_from_id(layerId);
     if (!layoutLayer) {
         LOGE("get_layer_from_id failed.");
@@ -1110,6 +1203,8 @@ static void CreateWindow(struct WmsController *pWmsController,
     pWindow->surface = pWestonSurface;
     pWindow->surfaceId = windowId;
     pWindow->type = windowType;
+    pWindow->mode = MODE_UNSET;
+    pWindow->externalMode = WINDOW_MODE_UNSET;
     pWindow->screenId = screenId;
 
     if (!AddWindow(pWindow)) {
@@ -1464,6 +1559,7 @@ static const struct wms_interface g_controllerImplementation = {
     ControllerSetWindowPosition,
     ControllerSetWindowVisibility,
     ControllerSetWindowType,
+    ControllerSetWindowMode,
     ControllerSetDisplayMode,
     ControllerCommitChanges,
     ControllerSetGlobalWindowStatus,

@@ -62,7 +62,7 @@ public:
             return;
         }
 
-        window = NativeTestFactory::CreateWindow(WINDOW_TYPE_ALARM_SCREEN);
+        window = NativeTestFactory::CreateWindow(WINDOW_TYPE_NORMAL);
         if (window == nullptr) {
             ExitTest();
             return;
@@ -82,7 +82,7 @@ public:
         config.format = PIXEL_FMT_RGBA_8888;
         config.usage = surface->GetDefaultUsage();
         window->OnSizeChange(onSizeChange);
-        windowSync = NativeTestSync::CreateSync(NativeTestDraw::FlushDraw, surface, &config);
+        windowSync = NativeTestSync::CreateSync(NativeTestDraw::BoxDraw, surface, &config);
 
         std::vector<struct WMDisplayInfo> displays;
         WindowManager::GetInstance()->GetDisplays(displays);

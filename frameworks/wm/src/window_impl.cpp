@@ -188,6 +188,60 @@ int32_t WindowImpl::GetID() const
     return attr.GetID();
 }
 
+int32_t WindowImpl::GetX() const
+{
+    CHECK_DESTROY_CONST(-1);
+    return attr.GetX();
+}
+
+int32_t WindowImpl::GetY() const
+{
+    CHECK_DESTROY_CONST(-1);
+    return attr.GetY();
+}
+
+uint32_t WindowImpl::GetWidth() const
+{
+    CHECK_DESTROY_CONST(0);
+    return attr.GetWidth();
+}
+
+uint32_t WindowImpl::GetHeight() const
+{
+    CHECK_DESTROY_CONST(0);
+    return attr.GetHeight();
+}
+
+uint32_t WindowImpl::GetDestWidth() const
+{
+    CHECK_DESTROY_CONST(0);
+    return attr.GetDestWidth();
+}
+
+uint32_t WindowImpl::GetDestHeight() const
+{
+    CHECK_DESTROY_CONST(0);
+    return attr.GetDestHeight();
+}
+
+bool WindowImpl::GetVisibility() const
+{
+    CHECK_DESTROY_CONST(false);
+    return attr.GetVisibility();
+}
+
+WindowType WindowImpl::GetType() const
+{
+    CHECK_DESTROY_CONST(static_cast<WindowType>(-1));
+    return attr.GetType();
+}
+
+WindowMode WindowImpl::GetMode() const
+{
+    CHECK_DESTROY_CONST(static_cast<WindowMode>(-1));
+    return attr.GetMode();
+}
+
 sptr<Promise<WMError>> WindowImpl::Show()
 {
     WMLOGFI("(%{public}d)", attr.GetID());
@@ -504,16 +558,6 @@ WMError WindowImpl::OnTouchOrientation(TouchOrientationFunc func)
     CHECK_DESTROY(WM_ERROR_DESTROYED_OBJECT);
     exportListener->touchOrientation = func;
     return WM_OK;
-}
-
-int32_t WindowImpl::GetPosX() const
-{
-    return attr.GetX();
-}
-
-int32_t WindowImpl::GetPosY() const
-{
-    return attr.GetY();
 }
 
 namespace {

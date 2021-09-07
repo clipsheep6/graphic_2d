@@ -27,7 +27,16 @@ namespace OHOS {
 class Window : public RefBase {
 public:
     virtual sptr<Surface> GetSurface() const = 0;
-    virtual int32_t GetID() const = 0;
+    virtual int32_t       GetID() const = 0;
+    virtual int32_t       GetX() const = 0;
+    virtual int32_t       GetY() const = 0;
+    virtual uint32_t      GetWidth() const = 0;
+    virtual uint32_t      GetHeight() const = 0;
+    virtual uint32_t      GetDestWidth() const = 0;
+    virtual uint32_t      GetDestHeight() const = 0;
+    virtual bool          GetVisibility() const = 0;
+    virtual WindowType    GetType() const = 0;
+    virtual WindowMode    GetMode() const = 0;
 
     virtual sptr<Promise<WMError>> Show() = 0;
     virtual sptr<Promise<WMError>> Hide() = 0;

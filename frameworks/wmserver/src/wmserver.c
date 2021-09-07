@@ -259,12 +259,6 @@ static void SetDestinationRectangle(
     layoutInterface->surface_set_transition(layoutSurface,
         IVI_LAYOUT_TRANSITION_NONE, TIMER_INTERVAL_MS); // ms
 
-    if (x < 0) {
-        x = prop->dest_x;
-    }
-    if (y < 0) {
-        y = prop->dest_y;
-    }
     if (width < 0) {
         width = prop->dest_width;
     }

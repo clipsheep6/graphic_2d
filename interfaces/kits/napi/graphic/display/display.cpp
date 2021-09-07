@@ -320,14 +320,14 @@ napi_value NAPI_GetAllDisplay(napi_env env, napi_callback_info info)
         NAPI_CALL(env, napi_create_int32(env, 1, &result));
         return result;
     } else {
-        GNAPI_LOG("DisplayMgr::GetDefaultDisplays promise.");
+        GNAPI_LOG("GetAllDisplay promise.");
         napi_deferred deferred;
         napi_value promise;
         NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
         asyncDisplayInfosCallbackInfo->deferred = deferred;
 
         napi_value resourceName;
-        napi_create_string_latin1(env, "GetDefaultDisplays", NAPI_AUTO_LENGTH, &resourceName);
+        napi_create_string_latin1(env, "GetDefaultDisplay", NAPI_AUTO_LENGTH, &resourceName);
         napi_create_async_work(
             env,
             nullptr,

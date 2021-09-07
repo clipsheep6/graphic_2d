@@ -11,9 +11,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("napi_packages") {
-  deps = [ 
-    "graphic/window:window",
-    "graphic/display:display",
+import("//build/ohos.gni")
+
+## Build display.so {{{
+ohos_shared_library("display") {
+  sources = [
+    "native_display_module.cpp",
   ]
+
+  deps = [
+    "../common:graphic_napi_common",
+    # "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
+    "//foundation/graphic/standard:libwmservice",
+  ]
+
+  relative_install_dir = "module"
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }
+## Build display.so }}}

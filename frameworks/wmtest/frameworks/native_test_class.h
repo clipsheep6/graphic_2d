@@ -47,6 +47,7 @@ public:
     static void ColorDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
     static void BlackDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
     static void RainbowDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
+    static void BoxDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
 };
 } // namespace OHOS
 

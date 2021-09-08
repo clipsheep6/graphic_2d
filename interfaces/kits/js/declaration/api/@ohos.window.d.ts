@@ -40,6 +40,25 @@ declare namespace window {
   }
 
   /**
+   * The mode of a window.
+   * @devices tv, phone, tablet, wearable.
+   */
+   enum WindowMode {
+    /**
+     * Unset.
+     */
+    MODE_UNSET = 0,
+    /**
+     * Full.
+     */
+    MODE_FULL = 1,
+    /**
+     * Free.
+     */
+    MODE_FREE = 2,
+  }
+
+  /**
    * The interface of window.
    */
   interface Window {
@@ -65,6 +84,13 @@ declare namespace window {
      * @devices tv, phone, tablet, wearable, liteWearable.
      */
     setWindowType(type: WindowType): Promise<void>;
+
+    /**
+     * Set the mode of a window.
+     * @param type Indicate the type of a window.
+     * @devices tv, phone, tablet, wearable, liteWearable.
+     */
+    setWindowMode(type: WindowMode): Promise<void>;
   }
 }
 

@@ -20,7 +20,7 @@
 #include <stdlib.h>
 
 #include <wayland-client.h>
-#include "wm_common.h"
+#include <window_manager_type.h>
 
 // for debug.
 #define LOG(fmt, ...)  // printf("wmserver_test " fmt "\n", ##__VA_ARGS__)

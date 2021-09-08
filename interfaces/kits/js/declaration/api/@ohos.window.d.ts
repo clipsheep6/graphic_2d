@@ -47,15 +47,23 @@ declare namespace window {
     /**
      * Unset.
      */
-    MODE_UNSET = 0,
+    UNDEFINED = 1,
     /**
-     * Full.
+     * Full screen.
      */
-    MODE_FULL = 1,
+    FULLSCREEN,
     /**
-     * Free.
+     * primary.
      */
-    MODE_FREE = 2,
+    PRIMARY,
+    /**
+     * Secondary.
+     */
+    SECONDARY,
+    /**
+     * Floating.
+     */
+    FLOATING,
   }
 
   /**

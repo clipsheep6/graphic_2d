@@ -83,7 +83,6 @@ export default {
         console.info('wnd.SetWindowMode(1): ' + wnd.SetWindowMode(1))
         console.info('wnd.moveTo(0, 0): ' + wnd.moveTo(0, 0))
         console.info('wnd.resetSize(200, 200): ' + wnd.resetSize(200, 200))
-        
 
         console.info('onCreate end')
     },

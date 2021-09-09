@@ -14,6 +14,7 @@
  */
 
 import window from 'libwindow.z.so'
+import window from 'libdisplay.z.so'
 
 export default {
     async onCreate() {

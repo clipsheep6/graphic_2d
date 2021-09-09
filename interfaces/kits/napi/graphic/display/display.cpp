@@ -413,13 +413,13 @@ napi_value NAPI_RegisterDisplayChange(napi_env env, napi_callback_info info)
 {
     GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
 
-    napi_value _this = nullptr;
-    napi_get_undefined(env, &_this);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
 
     size_t argc = ARGS_SIZE_THR;
     napi_value args[ARGS_SIZE_THR] = {0};
 
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &_this, nullptr));
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &result, nullptr));
     napi_valuetype type;
     NAPI_CALL(env, napi_typeof(env, args[0], &type));
     NAPI_ASSERT(env, type == napi_string, "key not string type");
@@ -436,20 +436,26 @@ napi_value NAPI_RegisterDisplayChange(napi_env env, napi_callback_info info)
     auto wret = wmsc->Init();
     if (wret != WM_OK) {
         GNAPI_LOG("WindowManagerServiceClient::Init() return %{public}s", WMErrorStr(wret).c_str());
-        return _this;
+        NAPI_CALL(env, napi_create_int32(env, wret, &result));
+        return result;
     }
 
     auto iWindowManagerService = wmsc->GetService();
     if (!iWindowManagerService) {
         GNAPI_LOG("can not get iWindowManagerService");
-        return _this;
+        return result;
     }
 
-    iWindowManagerService->AddDisplayChangeListener(callback_);
+    wret = iWindowManagerService->AddDisplayChangeListener(callback_);
+    if (wret != WM_OK) {
+        GNAPI_LOG("WindowManagerServiceClient::Init() return %{public}s", WMErrorStr(wret).c_str());
+        NAPI_CALL(env, napi_create_int32(env, wret, &result));
+        return result;
+    }
 
     GNAPI_LOG("%{public}s end", __PRETTY_FUNCTION__);
 
-    return _this;
+    return result;
 }
 
 napi_value NAPI_UnRegisterDisplayChange(napi_env env, napi_callback_info info)
@@ -458,6 +464,9 @@ napi_value NAPI_UnRegisterDisplayChange(napi_env env, napi_callback_info info)
 
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+
+    callback_ = nullptr;
+
     GNAPI_LOG("%{public}s end", __PRETTY_FUNCTION__);
     return result;
 }

@@ -95,10 +95,10 @@ declare namespace window {
 
     /**
      * Set the mode of a window.
-     * @param type Indicate the type of a window.
+     * @param mode Indicate the type of a window.
      * @devices tv, phone, tablet, wearable, liteWearable.
      */
-    setWindowMode(type: WindowMode): Promise<void>;
+    setWindowMode(mode: WindowMode): Promise<void>;
   }
 }
 

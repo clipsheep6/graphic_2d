@@ -92,10 +92,22 @@ export default {
         console.info('display.getAllDisplay(): ' + display.getAllDisplay())
 
         // console.info('16')
-        // console.info('display.on(add, event): ' + display.on('add', 1))
+        // console.info('display.on(add, event): ' + display.on('add', ???))
 
         // console.info('17')
-        // console.info('display.on(add, event): ' + display.off('add', 1))
+        // console.info('display.on(add, event): ' + display.on('remove', ???))
+
+        // console.info('18')
+        // console.info('display.on(add, event): ' + display.on('change', ???))
+
+        // console.info('19')
+        // console.info('display.on(add, event): ' + display.on('add', ???))
+
+        // console.info('20')
+        // console.info('display.on(add, event): ' + display.on('remove', ???))
+
+        // console.info('21')
+        // console.info('display.on(add, event): ' + display.on('change', ???))
         
         console.info('onCreate end')
     },

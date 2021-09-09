@@ -39,6 +39,14 @@ struct AsyncDisplayInfosCallbackInfo {
     bool ret = false;
 };
 
+struct EventListener {
+    napi_env env;
+    napi_value thisVar;
+    napi_ref callbackOnScreenPlugin = nullptr;
+    napi_ref callbackonScreenPlugout = nullptr;
+    napi_deferred deferred = nullptr;
+};
+
 napi_value DisplayInit(napi_env env, napi_value exports);
 napi_value NAPI_GetDefaultDisplay(napi_env env, napi_callback_info info);
 napi_value NAPI_GetAllDisplay(napi_env env, napi_callback_info info);
@@ -50,6 +58,7 @@ napi_value GetCallbackErrorValue(napi_env env, int errCode);
 void ConvertDisplayInfo(napi_env env, napi_value objDisplayInfo, const OHOS::WMDisplayInfo &displayInfo);
 bool GetDisplayInfos(napi_env env, std::vector<OHOS::WMDisplayInfo> &displayInfos);
 void ProcessDisplayInfos(napi_env env, napi_value result, const std::vector<OHOS::WMDisplayInfo> &displayInfos);
+bool MatchValueType(napi_env env, napi_value value, napi_valuetype targetType);
 
 class DisplayCallBack : public OHOS::IWindowManagerDisplayListenerClazz {
 public:

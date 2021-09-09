@@ -14,7 +14,7 @@
  */
 
 import window from 'libwindow.z.so'
-import window from 'libdisplay.z.so'
+import display from 'libdisplay.z.so'
 
 export default {
     async onCreate() {
@@ -85,6 +85,18 @@ export default {
         console.info('wnd.moveTo(0, 0): ' + wnd.moveTo(0, 0))
         console.info('wnd.resetSize(200, 200): ' + wnd.resetSize(200, 200))
 
+        console.info('14')
+        console.info('display.getDefaultDisplay(): ' + display.getDefaultDisplay())
+        
+        console.info('15')
+        console.info('display.getAllDisplay(): ' + display.getAllDisplay())
+
+        // console.info('16')
+        // console.info('display.on(add, event): ' + display.on('add', 1))
+
+        // console.info('17')
+        // console.info('display.on(add, event): ' + display.off('add', 1))
+        
         console.info('onCreate end')
     },
     onDestroy() {

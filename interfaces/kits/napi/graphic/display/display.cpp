@@ -30,15 +30,16 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "DisplayNAPILayer" };
 constexpr size_t CALLBACK_SIZE = 1;
 constexpr size_t ARGS_SIZE_ONE = 1;
 constexpr size_t ARGS_SIZE_TWO = 2;
+constexpr size_t ARGS_SIZE_THR = 3;
 constexpr int32_t PARAM0 = 0;
 constexpr int32_t PARAM1 = 1;
 constexpr int32_t CODE_SUCCESS = 0;
 constexpr int32_t CODE_FAILED = -1;
-std::map<std::string, std::shared_ptr<WMSEventListener>> eventMap_;
 
 const std::string WMS_NAPI_EVENT_DISPLAY_ADD = "add";
 const std::string WMS_NAPI_EVENT_DISPLAY_REM = "remove";
 const std::string WMS_NAPI_EVENT_DISPLAY_CHG = "change";
+DisplayCallBack *callback_;
 }
 
 napi_value DisplayInit(napi_env env, napi_value exports)
@@ -47,11 +48,10 @@ napi_value DisplayInit(napi_env env, napi_value exports)
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("getDefaultDisplay", NAPI_GetDefaultDisplay),
         DECLARE_NAPI_FUNCTION("getAllDisplay", NAPI_GetAllDisplay),
-        DECLARE_NAPI_FUNCTION("on", NAPI_On),
-        DECLARE_NAPI_FUNCTION("off", NAPI_Off),
+        DECLARE_NAPI_FUNCTION("on", NAPI_RegisterDisplayChange),
+        DECLARE_NAPI_FUNCTION("off", NAPI_UnRegisterDisplayChange),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties));
-
     return exports;
 }
 
@@ -293,7 +293,7 @@ napi_value NAPI_GetAllDisplay(napi_env env, napi_callback_info info)
                 napi_value callResult = 0;
                 napi_get_undefined(env, &undefined);
                 napi_create_array(env, &result[PARAM1]);
-                //ProcessDisplayInfos(env, result[PARAM1], asyncDisplayInfosCallbackInfo->DisplayInfos);
+                ProcessDisplayInfos(env, result[PARAM1], asyncDisplayInfosCallbackInfo->displayInfos);
                 result[PARAM0] = GetCallbackErrorValue(env, asyncDisplayInfosCallbackInfo->ret ? CODE_SUCCESS : CODE_FAILED);
                 napi_get_reference_value(env, asyncDisplayInfosCallbackInfo->callback, &callback);
                 napi_call_function(env, undefined, callback, ARGS_SIZE_TWO, &result[PARAM0], &callResult);
@@ -341,7 +341,7 @@ napi_value NAPI_GetAllDisplay(napi_env env, napi_callback_info info)
                 AsyncDisplayInfosCallbackInfo *asyncDisplayInfosCallbackInfo = (AsyncDisplayInfosCallbackInfo *)data;
                 napi_value result;
                 napi_create_array(env, &result);
-                //ProcessDisplayInfos(env, result, asyncDisplayInfosCallbackInfo->DisplayInfos);
+                ProcessDisplayInfos(env, result, asyncDisplayInfosCallbackInfo->displayInfos);
                 napi_resolve_deferred(asyncDisplayInfosCallbackInfo->env, asyncDisplayInfosCallbackInfo->deferred, result);
                 napi_delete_async_work(env, asyncDisplayInfosCallbackInfo->asyncWork);
                 delete asyncDisplayInfosCallbackInfo;
@@ -409,132 +409,99 @@ void ProcessDisplayInfos(
     }
 }
 
-napi_value NAPI_On(napi_env env, napi_callback_info info)
+napi_value NAPI_RegisterDisplayChange(napi_env env, napi_callback_info info)
 {
     GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
 
-    size_t argc = ARGS_SIZE_TWO;
-    napi_value argv[ARGS_SIZE_TWO] = { nullptr };
-    napi_value thisVar = nullptr;
-    void *data = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVar, &data));
+    napi_value _this = nullptr;
+    napi_get_undefined(env, &_this);
 
-    NAPI_ASSERT(env, argc >= ARGS_SIZE_TWO, "Wrong number of arguments, required 2");
+    size_t argc = ARGS_SIZE_THR;
+    napi_value args[ARGS_SIZE_THR] = {0};
 
-    napi_valuetype eventValueType = napi_undefined;
-    napi_typeof(env, argv[0], &eventValueType);
-    NAPI_ASSERT(env, eventValueType == napi_string, "type mismatch for parameter 1");
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, &_this, nullptr));
+    napi_valuetype type;
+    NAPI_CALL(env, napi_typeof(env, args[0], &type));
+    NAPI_ASSERT(env, type == napi_string, "key not string type");
 
-    napi_valuetype eventHandleType = napi_undefined;
-    napi_typeof(env, argv[1], &eventHandleType);
-    NAPI_ASSERT(env, eventHandleType == napi_function, "type mismatch for parameter 2");
+    NAPI_CALL(env, napi_typeof(env, args[1], &type));
+    NAPI_ASSERT(env, type == napi_function, "observer not function type");
 
-    size_t typeLen = 0;
-    napi_get_value_string_utf8(env, argv[0], nullptr, 0, &typeLen);
+    NAPI_CALL(env, napi_typeof(env, args[2], &type));
+    NAPI_ASSERT(env, type == napi_function, "observer not function type");
+    callback_ = new DisplayCallBack(env, args[1], args[2]);
 
-    NAPI_ASSERT(env, typeLen > 0, "typeLen == 0");
-    std::unique_ptr<char[]> type = std::make_unique<char[]>(typeLen + 1);
-    napi_get_value_string_utf8(env, argv[0], type.get(), typeLen + 1, &typeLen);
+    // save
+    const auto &wmsc = WindowManagerServiceClient::GetInstance();
+    auto wret = wmsc->Init();
+    if (wret != WM_OK) {
+        GNAPI_LOG("WindowManagerServiceClient::Init() return %{public}s", WMErrorStr(wret).c_str());
+        return _this;
+    }
 
-    std::string eventType = type.get();
-    auto listener = std::make_shared<WMSEventListener>();
-    listener->eventType = eventType;
-    napi_create_reference(env, argv[1], 1, &listener->handlerRef);
-    eventMap_[eventType] = listener;
+    auto iWindowManagerService = wmsc->GetService();
+    if (!iWindowManagerService) {
+        GNAPI_LOG("can not get iWindowManagerService");
+        return _this;
+    }
 
-    CreateWmsCallback(eventType);
+    iWindowManagerService->AddDisplayChangeListener(callback_);
 
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-    return result;
+    GNAPI_LOG("%{public}s end", __PRETTY_FUNCTION__);
+
+    return _this;
 }
 
-void CreateWmsCallback(std::string &eventType)
-{
-    GNAPI_LOG("CreateWmsCallback for eventType %s", eventType.c_str());
-
-    if (eventType == WMS_NAPI_EVENT_DISPLAY_ADD) {
-        return;
-    }
-
-    if (eventType == WMS_NAPI_EVENT_DISPLAY_REM) {
-        return;
-    }
-
-    if (eventType == WMS_NAPI_EVENT_DISPLAY_CHG) {
-        return;
-    }
-}
-
-napi_value NAPI_Off(napi_env env, napi_callback_info info)
+napi_value NAPI_UnRegisterDisplayChange(napi_env env, napi_callback_info info)
 {
     GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
-    
+
     napi_value result = nullptr;
-    size_t argc = ARGS_SIZE_TWO;
-    napi_value argv[ARGS_SIZE_TWO] = { nullptr };
-    napi_value thisVar = nullptr;
-    void *data = nullptr;
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVar, &data));
-
-    size_t requireArgc = 1;
-    NAPI_ASSERT(env, argc >= requireArgc, "Wrong number of arguments, required 1");
-
-    napi_valuetype eventValueType = napi_undefined;
-    napi_typeof(env, argv[0], &eventValueType);
-    NAPI_ASSERT(env, eventValueType == napi_string, "type mismatch for parameter 1");
-
-    if (argc > requireArgc) {
-        napi_valuetype eventHandleType = napi_undefined;
-        napi_typeof(env, argv[1], &eventHandleType);
-        NAPI_ASSERT(env, eventValueType == napi_function, "type mismatch for parameter 2");
-    }
-
-    size_t typeLen = 0;
-    napi_get_value_string_utf8(env, argv[0], nullptr, 0, &typeLen);
-
-    NAPI_ASSERT(env, typeLen > 0, "typeLen == 0");
-    std::unique_ptr<char[]> type = std::make_unique<char[]>(typeLen + 1);
-    napi_get_value_string_utf8(env, argv[0], type.get(), typeLen + 1, &typeLen);
-    std::string eventType = type.get();
-
-    GNAPI_LOG("WMSEventListener Off in for event: %s", eventType.c_str());
-    napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(env, &scope);
-    if (scope == nullptr) {
-        GNAPI_LOG("scope is nullptr");
-        napi_get_undefined(env, &result);
-        return result;
-    }
-
-    auto iter = eventMap_.find(eventType);
-    if (iter == eventMap_.end()) {
-        GNAPI_LOG("eventType %s not find", eventType.c_str());
-        napi_get_undefined(env, &result);
-        return result;
-    }
-    auto listener = iter->second;
-    napi_delete_reference(env, listener->handlerRef);
-    eventMap_.erase(eventType);
-    napi_close_handle_scope(env, scope);
-
-    ReleaseWmsCallback(eventType);
-
     napi_get_undefined(env, &result);
+    GNAPI_LOG("%{public}s end", __PRETTY_FUNCTION__);
     return result;
 }
 
-void ReleaseWmsCallback(std::string &eventType)
+DisplayCallBack::DisplayCallBack(napi_env env, napi_value callbackOnScreenPlugin, napi_value callbackOnScreenPlugout)
+    : onScreenPlugin(nullptr), onScreenPlugout(nullptr)
 {
-    if (eventType == WMS_NAPI_EVENT_DISPLAY_ADD) {
-        return;
-    }
+    this->env_ = env;
+    napi_create_reference(env_, callbackOnScreenPlugin, 1, &onScreenPlugin);
+    napi_create_reference(env_, callbackOnScreenPlugout, 1, &onScreenPlugout);
+}
 
-    if (eventType == WMS_NAPI_EVENT_DISPLAY_REM) {
-        return;
-    }
+DisplayCallBack::~DisplayCallBack()
+{
+    napi_delete_reference(env_, onScreenPlugin);
+    napi_delete_reference(env_, onScreenPlugout);
+}
 
-    if (eventType == WMS_NAPI_EVENT_DISPLAY_CHG) {
-        return;
-    }
+void DisplayCallBack::OnScreenPlugin(int32_t did)
+{
+    GNAPI_LOG("%{public}s called. did:%{public}d", __PRETTY_FUNCTION__, did);
+    napi_value callback = nullptr;
+    napi_value args[1] = {0};
+
+    napi_create_uint32(env_, did, &args[0]);
+    napi_get_reference_value(env_, onScreenPlugin, &callback);
+
+    napi_value global = nullptr;
+    napi_get_global(env_, &global);
+    napi_call_function(env_, global, callback, 1, args, nullptr);
+    GNAPI_LOG("%{public}s end", __PRETTY_FUNCTION__);
+}
+
+void DisplayCallBack::OnScreenPlugout(int32_t did)
+{
+    GNAPI_LOG("%{public}s called. did:%{public}d", __PRETTY_FUNCTION__, did);
+    napi_value callback = nullptr;
+    napi_value args[1] = {0};
+
+    napi_create_uint32(env_, did, &args[0]);
+    napi_get_reference_value(env_, onScreenPlugout, &callback);
+
+    napi_value global = nullptr;
+    napi_get_global(env_, &global);
+    napi_call_function(env_, global, callback, 1, args, nullptr);
+    GNAPI_LOG("%{public}s end", __PRETTY_FUNCTION__);
 }

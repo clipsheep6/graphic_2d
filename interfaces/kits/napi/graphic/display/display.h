@@ -39,16 +39,11 @@ struct AsyncDisplayInfosCallbackInfo {
     bool ret = false;
 };
 
-struct WMSEventListener {
-    std::string eventType;
-    napi_ref handlerRef = nullptr;
-};
-
 napi_value DisplayInit(napi_env env, napi_value exports);
 napi_value NAPI_GetDefaultDisplay(napi_env env, napi_callback_info info);
 napi_value NAPI_GetAllDisplay(napi_env env, napi_callback_info info);
-napi_value NAPI_On(napi_env env, napi_callback_info info);
-napi_value NAPI_Off(napi_env env, napi_callback_info info);
+napi_value NAPI_RegisterDisplayChange(napi_env env, napi_callback_info info);
+napi_value NAPI_UnRegisterDisplayChange(napi_env env, napi_callback_info info);
 
 bool GetDefaultDisplay(OHOS::WMDisplayInfo &displayInfo);
 napi_value GetCallbackErrorValue(napi_env env, int errCode);
@@ -56,6 +51,17 @@ void ConvertDisplayInfo(napi_env env, napi_value objDisplayInfo, const OHOS::WMD
 bool GetDisplayInfos(napi_env env, std::vector<OHOS::WMDisplayInfo> &displayInfos);
 void ProcessDisplayInfos(napi_env env, napi_value result, const std::vector<OHOS::WMDisplayInfo> &displayInfos);
 
-void CreateWmsCallback(std::string &eventType);
-void ReleaseWmsCallback(std::string &eventType);
+class DisplayCallBack : public OHOS::IWindowManagerDisplayListenerClazz {
+public:
+    DisplayCallBack(napi_env env, napi_value callbackOnScreenPlugin, napi_value callbackOnScreenPlugout);
+    virtual ~DisplayCallBack();
+    void OnScreenPlugin(int32_t did) override;
+    void OnScreenPlugout(int32_t did) override;
+
+private:
+    napi_env env_;
+    napi_ref onScreenPlugin;
+    napi_ref onScreenPlugout;
+};
+
 #endif // INTERFACES_KITS_NAPI_GRAPHIC_DISPLAY_DISPLAY_H

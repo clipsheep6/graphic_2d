@@ -21,6 +21,11 @@
         "//third_party/weston:weston",
         "//third_party/weston:weston.ini",
         "//third_party/weston:weston.rc",
+        "//third_party/wayland_standard:libwayland_client.0",
+        "//third_party/wayland_standard:libwayland_server.0",
+        "//third_party/weston:gl-renderer",
+        "//third_party/weston:simple-dmabuf-egl-hos",
+        "//third_party/weston:simple-egl-hos",
 
         "//foundation/graphic/standard/frameworks/vsync:vsync_server",
         "//foundation/graphic/standard/frameworks/wmserver:wmserver",

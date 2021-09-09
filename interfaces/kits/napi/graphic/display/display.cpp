@@ -27,13 +27,8 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "DisplayNAPILayer" };
 #define GNAPI_LOG(fmt, ...) HiviewDFX::HiLog::Info(LABEL, \
     "%{public}s:%{public}d " fmt, __func__, __LINE__, ##__VA_ARGS__)
 
-constexpr size_t CALLBACK_SIZE = 1;
 constexpr size_t ARGS_SIZE_ONE = 1;
-constexpr size_t ARGS_SIZE_TWO = 2;
-constexpr int32_t PARAM0 = 0;
-constexpr int32_t PARAM1 = 1;
 constexpr int32_t CODE_SUCCESS = 0;
-constexpr int32_t CODE_FAILED = -1;
 }
 
 napi_value DisplayInit(napi_env env, napi_value exports)
@@ -65,99 +60,46 @@ napi_value NAPI_GetDefaultDisplay(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
     AsyncDisplayInfosCallbackInfo *asyncDisplayInfosCallbackInfo = new AsyncDisplayInfosCallbackInfo{
         .env = env, .asyncWork = nullptr, .deferred = nullptr};
-    if (argc > (ARGS_SIZE_ONE - CALLBACK_SIZE)) {
-        GNAPI_LOG("NAPI_GetDefaultDisplay asyncCallback.");
-        napi_value resourceName;
-        napi_create_string_latin1(env, "NAPI_GetDefaultDisplay", NAPI_AUTO_LENGTH, &resourceName);
-        napi_valuetype valuetype = napi_undefined;
-        napi_typeof(env, argv[0], &valuetype);
-        NAPI_ASSERT(env, valuetype == napi_function, "Wrong argument type. Function expected.");
-        NAPI_CALL(env, napi_create_reference(env, argv[0], 1, &asyncDisplayInfosCallbackInfo->callback));
 
-        napi_create_async_work(
-            env,
-            nullptr,
-            resourceName,
-            [](napi_env env, void *data) {
-                AsyncDisplayInfosCallbackInfo *asyncDisplayInfosCallbackInfo = (AsyncDisplayInfosCallbackInfo *)data;
-                asyncDisplayInfosCallbackInfo->ret =
-                    GetDisplayInfos(env, asyncDisplayInfosCallbackInfo->displayInfos);
-            },
-            [](napi_env env, napi_status status, void *data) {
-                AsyncDisplayInfosCallbackInfo *asyncDisplayInfosCallbackInfo = (AsyncDisplayInfosCallbackInfo *)data;
-                napi_value result[ARGS_SIZE_TWO] = {0};
-                napi_value callback = 0;
-                napi_value undefined = 0;
-                napi_value callResult = 0;
-                napi_get_undefined(env, &undefined);
-                napi_create_array(env, &result[PARAM1]);
-                ProcessDisplayInfos(env, result[PARAM1], asyncDisplayInfosCallbackInfo->displayInfos);
-                result[PARAM0] = GetCallbackErrorValue(env, asyncDisplayInfosCallbackInfo->ret ? CODE_SUCCESS : CODE_FAILED);
-                napi_get_reference_value(env, asyncDisplayInfosCallbackInfo->callback, &callback);
-                napi_call_function(env, undefined, callback, ARGS_SIZE_TWO, &result[PARAM0], &callResult);
+    GNAPI_LOG("NAPI_GetDefaultDisplay promise.");
+    napi_deferred deferred;
+    napi_value promise;
+    NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
+    asyncDisplayInfosCallbackInfo->deferred = deferred;
 
-                if (asyncDisplayInfosCallbackInfo->callback != nullptr) {
-                    napi_delete_reference(env, asyncDisplayInfosCallbackInfo->callback);
-                }
-                napi_delete_async_work(env, asyncDisplayInfosCallbackInfo->asyncWork);
-                delete asyncDisplayInfosCallbackInfo;
-            },
-            (void *)asyncDisplayInfosCallbackInfo,
-            &asyncDisplayInfosCallbackInfo->asyncWork);
-        NAPI_CALL(env, napi_queue_async_work(env, asyncDisplayInfosCallbackInfo->asyncWork));
+    napi_value resourceName;
+    napi_create_string_latin1(env, "GetDefaultDisplay", NAPI_AUTO_LENGTH, &resourceName);
+    napi_create_async_work(
+        env,
+        nullptr,
+        resourceName,
+        [](napi_env env, void *data) {
+            AsyncDisplayInfosCallbackInfo *asyncDisplayInfosCallbackInfo = (AsyncDisplayInfosCallbackInfo *)data;
+            GetDisplayInfos(env, asyncDisplayInfosCallbackInfo->displayInfos);
+        },
+        [](napi_env env, napi_status status, void *data) {
+            GNAPI_LOG("=================load=================");
+            AsyncDisplayInfosCallbackInfo *asyncDisplayInfosCallbackInfo = (AsyncDisplayInfosCallbackInfo *)data;
+            napi_value result;
+            napi_create_array(env, &result);
+            ProcessDisplayInfos(env, result, asyncDisplayInfosCallbackInfo->displayInfos);
+            napi_resolve_deferred(asyncDisplayInfosCallbackInfo->env, asyncDisplayInfosCallbackInfo->deferred, result);
+            napi_delete_async_work(env, asyncDisplayInfosCallbackInfo->asyncWork);
+            delete asyncDisplayInfosCallbackInfo;
+        },
+        (void *)asyncDisplayInfosCallbackInfo,
+        &asyncDisplayInfosCallbackInfo->asyncWork);
+    napi_queue_async_work(env, asyncDisplayInfosCallbackInfo->asyncWork);
 
-        napi_value ret = nullptr;
-        NAPI_CALL(env, napi_get_null(env, &ret));
-        if (ret == nullptr) {
-            if (asyncDisplayInfosCallbackInfo != nullptr) {
-                delete asyncDisplayInfosCallbackInfo;
-                asyncDisplayInfosCallbackInfo = nullptr;
-            }
+    napi_value ret = nullptr;
+    NAPI_CALL(env, napi_get_null(env, &ret));
+    if (ret == nullptr) {
+        if (asyncDisplayInfosCallbackInfo != nullptr) {
+            delete asyncDisplayInfosCallbackInfo;
+            asyncDisplayInfosCallbackInfo = nullptr;
         }
-        napi_value result;
-        NAPI_CALL(env, napi_create_int32(env, 1, &result));
-        return result;
-    } else {
-        GNAPI_LOG("NAPI_GetDefaultDisplay promise.");
-        napi_deferred deferred;
-        napi_value promise;
-        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
-        asyncDisplayInfosCallbackInfo->deferred = deferred;
-
-        napi_value resourceName;
-        napi_create_string_latin1(env, "GetDefaultDisplay", NAPI_AUTO_LENGTH, &resourceName);
-        napi_create_async_work(
-            env,
-            nullptr,
-            resourceName,
-            [](napi_env env, void *data) {
-                AsyncDisplayInfosCallbackInfo *asyncDisplayInfosCallbackInfo = (AsyncDisplayInfosCallbackInfo *)data;
-                GetDisplayInfos(env, asyncDisplayInfosCallbackInfo->displayInfos);
-            },
-            [](napi_env env, napi_status status, void *data) {
-                GNAPI_LOG("=================load=================");
-                AsyncDisplayInfosCallbackInfo *asyncDisplayInfosCallbackInfo = (AsyncDisplayInfosCallbackInfo *)data;
-                napi_value result;
-                napi_create_array(env, &result);
-                ProcessDisplayInfos(env, result, asyncDisplayInfosCallbackInfo->displayInfos);
-                napi_resolve_deferred(asyncDisplayInfosCallbackInfo->env, asyncDisplayInfosCallbackInfo->deferred, result);
-                napi_delete_async_work(env, asyncDisplayInfosCallbackInfo->asyncWork);
-                delete asyncDisplayInfosCallbackInfo;
-            },
-            (void *)asyncDisplayInfosCallbackInfo,
-            &asyncDisplayInfosCallbackInfo->asyncWork);
-        napi_queue_async_work(env, asyncDisplayInfosCallbackInfo->asyncWork);
-
-        napi_value ret = nullptr;
-        NAPI_CALL(env, napi_get_null(env, &ret));
-        if (ret == nullptr) {
-            if (asyncDisplayInfosCallbackInfo != nullptr) {
-                delete asyncDisplayInfosCallbackInfo;
-                asyncDisplayInfosCallbackInfo = nullptr;
-            }
-        }
-        return promise;
     }
+    return promise;
 }
 
 bool GetDisplayInfos(

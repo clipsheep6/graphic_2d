@@ -76,38 +76,12 @@ export default {
         console.info(ret)
 
         console.info('12')
-        console.info('await wnd.setWindowType(1): ')
+        console.info('await wnd.setWindowType(3): ')
         ret = await wnd.setWindowType(3)
         console.info(ret)
 
         console.info('13')
-        console.info('wnd.SetWindowMode(1): ' + wnd.SetWindowMode(1))
-        console.info('wnd.moveTo(0, 0): ' + wnd.moveTo(0, 0))
-        console.info('wnd.resetSize(200, 200): ' + wnd.resetSize(200, 200))
-
-        console.info('14')
         console.info('display.getDefaultDisplay(): ' + display.getDefaultDisplay())
-        
-        console.info('15')
-        console.info('display.getAllDisplay(): ' + display.getAllDisplay())
-
-        // console.info('16')
-        // console.info('display.on(add, event): ' + display.on('add', ???))
-
-        // console.info('17')
-        // console.info('display.on(add, event): ' + display.on('remove', ???))
-
-        // console.info('18')
-        // console.info('display.on(add, event): ' + display.on('change', ???))
-
-        // console.info('19')
-        // console.info('display.on(add, event): ' + display.on('add', ???))
-
-        // console.info('20')
-        // console.info('display.on(add, event): ' + display.on('remove', ???))
-
-        // console.info('21')
-        // console.info('display.on(add, event): ' + display.on('change', ???))
         
         console.info('onCreate end')
     },

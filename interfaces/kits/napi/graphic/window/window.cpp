@@ -232,38 +232,6 @@ napi_value MainFunc(napi_env env, napi_callback_info info)
     return CreatePromise<Param>(env, __PRETTY_FUNCTION__, Async, nullptr, param);
 }
 } // namespace NAPIWindow.SetWindowType }}}
-
-// Window.SetWindowMode {{{
-namespace SetWindowMode {
-struct Param {
-    ::OHOS::AppExecFwk::Ability *ability;
-    int windowMode;
-};
-
-void Async(napi_env env, std::unique_ptr<Param>& param)
-{
-    param->ability->GetWindow()->SetWindowMode(static_cast<WindowMode>(param->windowMode));
-}
-
-napi_value MainFunc(napi_env env, napi_callback_info info)
-{
-    GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
-    constexpr int argumentSize = 1;
-    size_t argc = argumentSize;
-    napi_value argv[argc];
-
-    GNAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
-
-    GNAPI_ASSERT(env, argc < argumentSize, "SetWindowMode need %{public}d arguments", argumentSize);
-
-    auto param = std::make_unique<Param>();
-    GNAPI_CALL(env, GetAbility(env, info, param->ability));
-    GNAPI_CALL(env, napi_get_value_int32(env, argv[0], &param->windowMode));
-
-    return CreatePromise<Param>(env, __PRETTY_FUNCTION__, Async, nullptr, param);
-}
-} // namespace NAPIWindow.SetWindowMode }}}
-
 } // namespace NAPIWindow
 
 // getTopWindow {{{
@@ -293,7 +261,6 @@ napi_status WindowInit(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("resetSize", NAPIWindow::ResetSize::MainFunc),
         DECLARE_NAPI_FUNCTION("moveTo", NAPIWindow::MoveTo::MainFunc),
         DECLARE_NAPI_FUNCTION("setWindowType", NAPIWindow::SetWindowType::MainFunc),
-        DECLARE_NAPI_FUNCTION("setWindowMode", NAPIWindow::SetWindowMode::MainFunc),
     };
 
     GNAPI_INNER(napi_define_class(env, "Window", NAPI_AUTO_LENGTH, NAPIWindow::WindowConstructor,

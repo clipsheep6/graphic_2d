@@ -1,5 +1,3 @@
-import { AsyncCallback } from './basic';
-
 /**
  * interface of display manager
  * @devices tv, phone, tablet, wearable
@@ -9,29 +7,7 @@ declare namespace display {
    * get the default display
    * @devices tv, phone, tablet, wearable
    */
-  function getDefaultDisplay(callback: AsyncCallback<Display>): void;
   function getDefaultDisplay(): Promise<Display>;
-
-  /**
-   * get all displays
-   * @devices tv, phone, tablet, wearable
-   */
-  function getAllDisplay(callback: AsyncCallback<Array<Display>>): void;
-  function getAllDisplay(): Promise<Array<Display>>;
-
-  /**
-   * register the callback of display change
-   * @param type：type of callback
-   * @devices tv, phone, tablet, wearable
-   */
-  function on(type: 'add'|'remove'|'change', callback: AsyncCallback<number>): void;
-
-  /**
-   * unregister the callback of display change
-   * @param type：type of callback
-   * @devices tv, phone, tablet, wearable
-   */
-  function off(type: 'add'|'remove'|'change', callback?: AsyncCallback<number>): void;
 
   /**
   /**

@@ -34,8 +34,8 @@ napi_value DisplayInit(napi_env env, napi_value exports);
 napi_value NAPI_GetDefaultDisplay(napi_env env, napi_callback_info info);
 
 napi_value GetCallbackErrorValue(napi_env env, int errCode);
-void ConvertDisplayInfo(napi_env env, napi_value objDisplayInfo, const OHOS::WMDisplayInfo &displayInfo);
 bool GetDisplayInfos(napi_env env, std::vector<OHOS::WMDisplayInfo> &displayInfos);
 void ProcessDisplayInfos(napi_env env, napi_value result, const std::vector<OHOS::WMDisplayInfo> &displayInfos);
+void ConvertDisplayInfo(napi_env env, napi_value objDisplayInfo, const OHOS::WMDisplayInfo &displayInfo);
 
 #endif // INTERFACES_KITS_NAPI_GRAPHIC_DISPLAY_DISPLAY_H

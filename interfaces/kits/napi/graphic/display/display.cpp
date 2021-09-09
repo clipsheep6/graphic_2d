@@ -56,82 +56,6 @@ napi_value GetCallbackErrorValue(napi_env env, int errCode)
     return result;
 }
 
-void ConvertDisplayInfo(napi_env env, napi_value objDisplayInfo, const OHOS::WMDisplayInfo &displayInfo)
-{
-
-    /**
-     * display id
-     */
-    napi_value nId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, displayInfo.id, &nId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "id", nId));
-
-    /**
-     * display name
-     */
-    // Todo set : name: string;
-
-    /**
-     * the display is alive
-     */
-    // Todo set : alive: boolean;
-
-    /**
-     * the state of display
-     */
-    // Todo set : state: DisplayState;
-
-    /**
-     * refresh rate, unit: Hz
-     */
-    // Todo set : refreshRate: number;
-
-    /**
-     * the rotation degrees of the display
-     */
-    // Todo set : rotation: number;
-
-    /**
-     * the width of display, unit: pixel
-     */
-    napi_value width;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, displayInfo.width, &width));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "width", width));
-    
-    /**
-     * the height of display, unit: pixel
-     */
-    napi_value height;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, displayInfo.height, &height));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "height", height));
-
-    /**
-     * indicates the display resolution.
-     */
-    // Todo set : densityDPI: number;
-
-    /**
-     * indicates the display density in pixels. The value of a low-resolution display is 1.0
-     */
-    // Todo set : densityPixels: number;
-
-    /**
-     * indicates the text scale density of a display.
-     */
-    // Todo set : scaledDensity: number;
-
-    /**
-     * the DPI on X-axis.
-     */
-    // Todo set : xDPI: number;
-
-    /**
-     * the DPI on Y-axis.
-     */
-    // Todo set : yDPI: number;
-
-}
-
 napi_value NAPI_GetDefaultDisplay(napi_env env, napi_callback_info info)
 {
     size_t argc = ARGS_SIZE_ONE;
@@ -142,9 +66,9 @@ napi_value NAPI_GetDefaultDisplay(napi_env env, napi_callback_info info)
     AsyncDisplayInfosCallbackInfo *asyncDisplayInfosCallbackInfo = new AsyncDisplayInfosCallbackInfo{
         .env = env, .asyncWork = nullptr, .deferred = nullptr};
     if (argc > (ARGS_SIZE_ONE - CALLBACK_SIZE)) {
-        GNAPI_LOG("NAPI_GetAllDisplay asyncCallback.");
+        GNAPI_LOG("NAPI_GetDefaultDisplay asyncCallback.");
         napi_value resourceName;
-        napi_create_string_latin1(env, "NAPI_GetAllDisplay", NAPI_AUTO_LENGTH, &resourceName);
+        napi_create_string_latin1(env, "NAPI_GetDefaultDisplay", NAPI_AUTO_LENGTH, &resourceName);
         napi_valuetype valuetype = napi_undefined;
         napi_typeof(env, argv[0], &valuetype);
         NAPI_ASSERT(env, valuetype == napi_function, "Wrong argument type. Function expected.");
@@ -194,7 +118,7 @@ napi_value NAPI_GetDefaultDisplay(napi_env env, napi_callback_info info)
         NAPI_CALL(env, napi_create_int32(env, 1, &result));
         return result;
     } else {
-        GNAPI_LOG("GetAllDisplay promise.");
+        GNAPI_LOG("NAPI_GetDefaultDisplay promise.");
         napi_deferred deferred;
         napi_value promise;
         NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
@@ -239,7 +163,6 @@ napi_value NAPI_GetDefaultDisplay(napi_env env, napi_callback_info info)
 bool GetDisplayInfos(
     napi_env env, std::vector<OHOS::WMDisplayInfo> &displayInfos)
 {
-
     const auto &wmsc = WindowManagerServiceClient::GetInstance();
     auto wret = wmsc->Init();
     if (wret != WM_OK) {
@@ -253,9 +176,7 @@ bool GetDisplayInfos(
         return false;
     }
 
-    int ret = iWindowManagerService->GetDisplays(displayInfos);
-
-    return ret == CODE_SUCCESS ? true : false;
+    return iWindowManagerService->GetDisplays(displayInfos) == CODE_SUCCESS ? true : false;
 }
 
 void ProcessDisplayInfos(
@@ -264,18 +185,8 @@ void ProcessDisplayInfos(
     napi_value objDisplayInfo = nullptr;
     napi_create_object(env, &objDisplayInfo);
 
-    if (displayInfos.size() > 0) {
-        GNAPI_LOG("-----displayInfos is not null-----");
-
-        GNAPI_LOG("id        : %{public}d", displayInfos[0].id);
-        GNAPI_LOG("width     : %{public}d", displayInfos[0].width);
-        GNAPI_LOG("height    : %{public}d", displayInfos[0].height);
-        GNAPI_LOG("phyWidth  : %{public}d", displayInfos[0].phyWidth);
-        GNAPI_LOG("phyHeight : %{public}d", displayInfos[0].phyHeight);
-        GNAPI_LOG("vsync     : %{public}d", displayInfos[0].vsync);
-        ConvertDisplayInfo(env, objDisplayInfo, displayInfos[0]);
-    } else {
-        
+    if (displayInfos.empty() || displayInfos.size() <= 0) {
+        GNAPI_LOG("-----displayInfos is null-----");
         OHOS::WMDisplayInfo displayInfo;
         displayInfo.id = 0;
         displayInfo.height = 0;
@@ -285,5 +196,113 @@ void ProcessDisplayInfos(
         displayInfo.vsync = 0;
         ConvertDisplayInfo(env, objDisplayInfo, displayInfo);
     }
+    else
+    {
+        GNAPI_LOG("-----displayInfos is not null-----");
+        GNAPI_LOG("id        : %{public}d", displayInfos[0].id);
+        GNAPI_LOG("width     : %{public}d", displayInfos[0].width);
+        GNAPI_LOG("height    : %{public}d", displayInfos[0].height);
+        GNAPI_LOG("phyWidth  : %{public}d", displayInfos[0].phyWidth);
+        GNAPI_LOG("phyHeight : %{public}d", displayInfos[0].phyHeight);
+        GNAPI_LOG("vsync     : %{public}d", displayInfos[0].vsync);
+        ConvertDisplayInfo(env, objDisplayInfo, displayInfos[0]);
+    }
     napi_set_element(env, result, 0, objDisplayInfo);
+}
+
+
+void ConvertDisplayInfo(napi_env env, napi_value objDisplayInfo, const OHOS::WMDisplayInfo &displayInfo)
+{
+
+    /**
+     * display id
+     */
+    napi_value nId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, displayInfo.id, &nId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "id", nId));
+
+    /**
+     * display name
+     */
+    napi_value name;
+    napi_get_undefined(env, &name);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "name", name));
+
+    /**
+     * the display is alive
+     */
+    napi_value alive;
+    napi_get_undefined(env, &alive);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "alive", alive));
+
+    /**
+     * the state of display
+     */
+    napi_value state;
+    napi_get_undefined(env, &state);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "state", state));
+
+    /**
+     * refresh rate, unit: Hz
+     */
+    napi_value refreshRate;
+    napi_get_undefined(env, &refreshRate);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "refreshRate", refreshRate));
+
+    /**
+     * the rotation degrees of the display
+     */
+    napi_value rotation;
+    napi_get_undefined(env, &rotation);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "rotation", rotation));
+
+    /**
+     * the width of display, unit: pixel
+     */
+    napi_value width;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, displayInfo.width, &width));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "width", width));
+    
+    /**
+     * the height of display, unit: pixel
+     */
+    napi_value height;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, displayInfo.height, &height));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "height", height));
+
+    /**
+     * indicates the display resolution.
+     */
+    napi_value densityDPI;
+    napi_get_undefined(env, &densityDPI);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "densityDPI", densityDPI));
+
+    /**
+     * indicates the display density in pixels. The value of a low-resolution display is 1.0
+     */
+    napi_value densityPixels;
+    napi_get_undefined(env, &densityPixels);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "densityPixels", densityPixels));
+
+    /**
+     * indicates the text scale density of a display.
+     */
+    napi_value scaledDensity;
+    napi_get_undefined(env, &scaledDensity);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "scaledDensity", state));
+
+    /**
+     * the DPI on X-axis.
+     */
+    napi_value xDPI;
+    napi_get_undefined(env, &xDPI);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "xDPI", xDPI));
+
+    /**
+     * the DPI on Y-axis.
+     */
+    napi_value yDPI;
+    napi_get_undefined(env, &yDPI);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objDisplayInfo, "yDPI", yDPI));
+
 }

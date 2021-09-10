@@ -1,0 +1,56 @@
+import("//foundation/graphic/standard/utils/lex_yacc/lex_yacc.gni")
+
+## Build libwmlayout_scss_parser.so {{{
+lex_yacc("libwmlayout_scss_parser_parser") {
+  lex = "lexer.l"
+  yacc = "parser.y"
+}
+
+config("libwmlayout_scss_parser_config") {
+  visibility = [ ":*" ]
+
+  include_dirs = []
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-g3",
+  ]
+}
+
+config("libwmlayout_scss_parser_public_config") {
+  include_dirs = []
+}
+
+ohos_shared_library("libwmlayout_scss_parser") {
+  sources = [
+    "driver.cpp",
+    "scanner.cpp",
+  ]
+
+  configs = [ ":libwmlayout_scss_parser_config" ]
+
+  public_configs = [ ":libwmlayout_scss_parser_public_config" ]
+
+  deps = [ ":libwmlayout_scss_parser_parser" ]
+
+  public_deps = []
+
+  subsystem_name = "graphic"
+  part_name = "graphic_standard"
+}
+
+## Build libwmlayout_scss_parser.so }}}
+
+## Build wmlayout_scss_parser {{{
+ohos_executable("wmlayout_scss_parser") {
+  install_enable = false
+
+  sources = [ "main.cpp" ]
+
+  deps = [ ":libwmlayout_scss_parser" ]
+
+  subsystem_name = "graphic"
+  part_name = "graphic_standard"
+}
+## Build wmlayout_scss_parser }}}

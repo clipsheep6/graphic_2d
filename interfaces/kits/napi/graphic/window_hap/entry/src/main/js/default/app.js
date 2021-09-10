@@ -97,7 +97,7 @@ export default {
         console.info('display.scaledDensity : ' + displayInfo.scaledDensity)
         console.info('display.xDPI          : ' + displayInfo.xDPI)
         console.info('display.yDPI          : ' + displayInfo.yDPI)
-        
+
         console.info('onCreate end')
     },
     onDestroy() {

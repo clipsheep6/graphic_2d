@@ -13,29 +13,32 @@
  * limitations under the License.
  */
 
-#include <string>
-#include <hilog/log.h>
 #include "graphic_napi_common.h"
 
-using namespace OHOS;
-void ConvertInfoForInt32(napi_env env, napi_value result, const char* key, int32_t value)
+#include <hilog/log.h>
+
+namespace OHOS {
+napi_status SetMemberInt32(napi_env env, napi_value result, const char* key, int32_t value)
 {
-    GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
     napi_value num;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, value, &num));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, key, num));
+    GNAPI_INNER(napi_create_int32(env, value, &num));
+    GNAPI_INNER(napi_set_named_property(env, result, key, num));
+    return napi_ok;
 }
-void ConvertInfoForUint32(napi_env env, napi_value result, const char* key, uint32_t value)
+
+napi_status SetMemberUint32(napi_env env, napi_value result, const char* key, uint32_t value)
 {
-    GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
     napi_value num;
-    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, value, &num));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, key, num));
+    GNAPI_INNER(napi_create_uint32(env, value, &num));
+    GNAPI_INNER(napi_set_named_property(env, result, key, num));
+    return napi_ok;
 }
-void ConvertInfoForUndefined(napi_env env, napi_value result, const char* key)
+
+napi_status SetMemberUndefined(napi_env env, napi_value result, const char* key)
 {
-    GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
     napi_value undefined;
-    napi_get_undefined(env, &undefined);
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, key, undefined));
+    GNAPI_INNER(napi_get_undefined(env, &undefined));
+    GNAPI_INNER(napi_set_named_property(env, result, key, undefined));
+    return napi_ok;
 }
+} // namespace OHOS

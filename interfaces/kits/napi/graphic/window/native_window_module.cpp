@@ -13,27 +13,13 @@
  * limitations under the License.
  */
 
-
-#include <string>
-#include <ability.h>
-#include <hilog/log.h>
-
 #include "native_window_module.h"
+
+#include <ability.h>
+
 #include "graphic_napi_common.h"
 
-using namespace OHOS;
-
-namespace {
-static napi_value WindowModuleInit(napi_env env, napi_value exports)
-{
-    napi_status ret = WindowInit(env, exports);
-    if (ret != napi_ok) {
-        GNAPI_LOG("WindowInit failed");
-    }
-
-    return exports;
-}
-
+namespace OHOS {
 namespace {
 napi_value g_classWindow;
 napi_status GetAbility(napi_env env, napi_callback_info info, AppExecFwk::Ability* &pAbility)
@@ -48,14 +34,13 @@ napi_status GetAbility(napi_env env, napi_callback_info info, AppExecFwk::Abilit
 
     return napi_ok;
 }
-
 } // namespace
 
 namespace NAPIWindow {
 napi_value WindowConstructor(napi_env env, napi_callback_info info)
 {
     napi_value jsthis = nullptr;
-    GNAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr));
+    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr));
     return jsthis;
 }
 
@@ -79,14 +64,14 @@ napi_value MainFunc(napi_env env, napi_callback_info info)
     size_t argc = argumentSize;
     napi_value argv[argc];
 
-    GNAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
 
     GNAPI_ASSERT(env, argc < argumentSize, "ResetSize need %{public}d arguments", argumentSize);
 
     auto param = std::make_unique<Param>();
-    GNAPI_CALL(env, GetAbility(env, info, param->ability));
-    GNAPI_CALL(env, napi_get_value_int32(env, argv[0], &param->width));
-    GNAPI_CALL(env, napi_get_value_int32(env, argv[1], &param->height));
+    NAPI_CALL(env, GetAbility(env, info, param->ability));
+    NAPI_CALL(env, napi_get_value_int32(env, argv[0], &param->width));
+    NAPI_CALL(env, napi_get_value_int32(env, argv[1], &param->height));
 
     return CreatePromise<Param>(env, __PRETTY_FUNCTION__, Async, nullptr, param);
 }
@@ -112,14 +97,14 @@ napi_value MainFunc(napi_env env, napi_callback_info info)
     size_t argc = argumentSize;
     napi_value argv[argc];
 
-    GNAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
 
     GNAPI_ASSERT(env, argc < argumentSize, "MoveTo need %{public}d arguments", argumentSize);
 
     auto param = std::make_unique<Param>();
-    GNAPI_CALL(env, GetAbility(env, info, param->ability));
-    GNAPI_CALL(env, napi_get_value_int32(env, argv[0], &param->x));
-    GNAPI_CALL(env, napi_get_value_int32(env, argv[1], &param->y));
+    NAPI_CALL(env, GetAbility(env, info, param->ability));
+    NAPI_CALL(env, napi_get_value_int32(env, argv[0], &param->x));
+    NAPI_CALL(env, napi_get_value_int32(env, argv[1], &param->y));
 
     return CreatePromise<Param>(env, __PRETTY_FUNCTION__, Async, nullptr, param);
 }
@@ -144,13 +129,13 @@ napi_value MainFunc(napi_env env, napi_callback_info info)
     size_t argc = argumentSize;
     napi_value argv[argc];
 
-    GNAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
 
     GNAPI_ASSERT(env, argc < argumentSize, "SetWindowType need %{public}d arguments", argumentSize);
 
     auto param = std::make_unique<Param>();
-    GNAPI_CALL(env, GetAbility(env, info, param->ability));
-    GNAPI_CALL(env, napi_get_value_int32(env, argv[0], &param->windowType));
+    NAPI_CALL(env, GetAbility(env, info, param->ability));
+    NAPI_CALL(env, napi_get_value_int32(env, argv[0], &param->windowType));
 
     return CreatePromise<Param>(env, __PRETTY_FUNCTION__, Async, nullptr, param);
 }
@@ -165,7 +150,7 @@ struct Param {
 napi_value Resolve(napi_env env, std::unique_ptr<Param>& userdata)
 {
     napi_value ret;
-    GNAPI_CALL(env, napi_new_instance(env, g_classWindow, 0, nullptr, &ret));
+    NAPI_CALL(env, napi_new_instance(env, g_classWindow, 0, nullptr, &ret));
     return ret;
 }
 
@@ -177,7 +162,7 @@ napi_value MainFunc(napi_env env, napi_callback_info info)
 }
 } // namespace getTopWindow }}}
 
-napi_status WindowInit(napi_env env, napi_value exports)
+napi_value WindowModuleInit(napi_env env, napi_value exports)
 {
     GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
     napi_property_descriptor desc[] = {
@@ -186,31 +171,30 @@ napi_status WindowInit(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setWindowType", NAPIWindow::SetWindowType::MainFunc),
     };
 
-    GNAPI_INNER(napi_define_class(env, "Window", NAPI_AUTO_LENGTH, NAPIWindow::WindowConstructor,
-        nullptr, sizeof(desc) / sizeof(*desc), desc, &g_classWindow));
+    NAPI_CALL(env, napi_define_class(env, "Window", NAPI_AUTO_LENGTH,
+        NAPIWindow::WindowConstructor, nullptr,
+        sizeof(desc) / sizeof(*desc), desc, &g_classWindow));
 
     napi_property_descriptor exportFuncs[] = {
         DECLARE_NAPI_FUNCTION("getTopWindow", getTopWindow::MainFunc),
         DECLARE_NAPI_PROPERTY("Window", g_classWindow),
     };
 
-    GNAPI_INNER(napi_define_properties(env, exports,
-        sizeof(exportFuncs) / sizeof(*exportFuncs), exportFuncs));
-
-    return napi_ok;
+    NAPI_CALL(env, napi_define_properties(env,
+        exports, sizeof(exportFuncs) / sizeof(*exportFuncs), exportFuncs));
+    return exports;
 }
-}
+} // namespace OHOS
 
 extern "C" __attribute__((constructor)) void RegisterModule(void)
 {
-    napi_module module = {
+    napi_module windowModule = {
         .nm_version = 1, // NAPI v1
         .nm_flags = 0, // normal
         .nm_filename = nullptr,
-        .nm_register_func = WindowModuleInit,
+        .nm_register_func = OHOS::WindowModuleInit,
         .nm_modname = "window",
         .nm_priv = nullptr,
-        .reserved = {}
     };
-    napi_module_register(&module);
+    napi_module_register(&windowModule);
 }

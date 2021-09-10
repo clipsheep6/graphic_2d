@@ -16,27 +16,18 @@
 #ifndef INTERFACES_KITS_NAPI_GRAPHIC_COMMON_COMMON_H
 #define INTERFACES_KITS_NAPI_GRAPHIC_COMMON_COMMON_H
 
+#include <memory>
+#include <string>
+
 #include <hilog/log.h>
-#include "napi/native_api.h"
-#include "napi/native_common.h"
-#include "napi/native_node_api.h"
-
-namespace {
-
-constexpr size_t ARGS_SIZE_ONE = 1;
-constexpr int32_t CODE_SUCCESS = 0;
+#include <napi/native_api.h>
+#include <napi/native_common.h>
+#include <napi/native_node_api.h>
 
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "NapiGraphicCommonLayer" };
+
 #define GNAPI_LOG(fmt, ...) OHOS::HiviewDFX::HiLog::Info(LABEL, \
     "%{public}s:%{public}d " fmt, __func__, __LINE__, ##__VA_ARGS__)
-#define GNAPI_CALL(env, call)                     \
-    do {                                          \
-        napi_status s = (call);                   \
-        if (s != napi_ok) {                       \
-            GNAPI_LOG(#call " is %{public}d", s); \
-            return nullptr;                       \
-        }                                         \
-    } while (0)
 
 #define GNAPI_ASSERT(env, assertion, fmt, ...)  \
     do {                                        \
@@ -54,24 +45,24 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "NapiGraphicCommonL
             return s;                             \
         }                                         \
     } while (0)
-}
 
-void ConvertInfoForInt32(napi_env env, napi_value result, const char* key, int32_t value);
-void ConvertInfoForUint32(napi_env env, napi_value result, const char* key, uint32_t value);
-void ConvertInfoForUndefined(napi_env env, napi_value result, const char* key);
+namespace OHOS {
+napi_status SetMemberInt32(napi_env env, napi_value result, const char* key, int32_t value);
+napi_status SetMemberUint32(napi_env env, napi_value result, const char* key, uint32_t value);
+napi_status SetMemberUndefined(napi_env env, napi_value result, const char* key);
 
 template<typename ParamT>
 napi_value CreatePromise(napi_env env,
                          std::string funcname,
-                         void(* async)(napi_env env, std::unique_ptr<ParamT>& param),
-                         napi_value(* resolve)(napi_env env, std::unique_ptr<ParamT>& param),
+                         void(*async)(napi_env env, std::unique_ptr<ParamT>& param),
+                         napi_value(*resolve)(napi_env env, std::unique_ptr<ParamT>& param),
                          std::unique_ptr<ParamT>& param)
 {
     struct AsyncCallbackInfo {
         napi_async_work asyncWork;
         napi_deferred deferred;
-        void (* async)(napi_env env, std::unique_ptr<ParamT>& param);
-        napi_value (* resolve)(napi_env env, std::unique_ptr<ParamT>& param);
+        void (*async)(napi_env env, std::unique_ptr<ParamT>& param);
+        napi_value (*resolve)(napi_env env, std::unique_ptr<ParamT>& param);
         std::unique_ptr<ParamT> param;
     };
 
@@ -82,11 +73,11 @@ napi_value CreatePromise(napi_env env,
     };
 
     napi_value resourceName;
-    GNAPI_CALL(env, napi_create_string_latin1(env,
+    NAPI_CALL(env, napi_create_string_latin1(env,
         funcname.c_str(), NAPI_AUTO_LENGTH, &resourceName));
 
     napi_value promise;
-    GNAPI_CALL(env, napi_create_promise(env, &info->deferred, &promise));
+    NAPI_CALL(env, napi_create_promise(env, &info->deferred, &promise));
 
     auto asyncFunc = [](napi_env env, void *data) {
         AsyncCallbackInfo *info = reinterpret_cast<AsyncCallbackInfo *>(data);
@@ -109,11 +100,12 @@ napi_value CreatePromise(napi_env env,
         delete info;
     };
 
-    GNAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, asyncFunc, completeFunc,
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, asyncFunc, completeFunc,
         reinterpret_cast<void *>(info), &info->asyncWork));
 
-    GNAPI_CALL(env, napi_queue_async_work(env, info->asyncWork));
+    NAPI_CALL(env, napi_queue_async_work(env, info->asyncWork));
     return promise;
 };
+} // namespace OHOS
 
 #endif // INTERFACES_KITS_NAPI_GRAPHIC_COMMON_COMMON_H

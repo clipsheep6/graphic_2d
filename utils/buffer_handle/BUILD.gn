@@ -11,14 +11,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("buffer_handle") {
-  public_deps = [ "buffer_handle:buffer_handle" ]
+import("//build/ohos.gni")
+
+## buffer_handle.a {{{
+config("buffer_handle_public_config") {
+  include_dirs = [
+    "export",
+    "//drivers/peripheral/base",
+  ]
 }
 
-group("promise") {
-  public_deps = [ "promise:promise" ]
-}
+ohos_static_library("buffer_handle") {
+  sources = [ "src/buffer_handle.cpp" ]
 
-group("semaphore") {
-  public_deps = [ "semaphore:semaphore" ]
+  configs = [ "//utils/native/base:utils_config" ]
+
+  public_configs = [ ":buffer_handle_public_config" ]
+
+  deps = [
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
+  ]
+
+  public_deps = [ "//utils/native/base:utils" ]
 }
+## buffer_handle.a }}}

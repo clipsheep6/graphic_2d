@@ -14,7 +14,7 @@ public:
     Driver();
     virtual ~Driver() = default;
 
-    int parse();
+    int parse(std::istream &infile);
 
     struct CSSBlock {
         std::map<std::string, std::string> declares;
@@ -24,8 +24,8 @@ public:
     struct CSSBlock *current = &global;
 
 private:
-    Parser _parser;
-    Scanner _scanner;
+    Parser parser;
+    Scanner scanner;
 };
 } // namespace OHOS
 #endif //FLEX_BISON_DRIVER_H

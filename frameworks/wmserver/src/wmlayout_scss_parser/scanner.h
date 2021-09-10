@@ -3,14 +3,14 @@
 
 #ifndef yyFlexLexerOnce
 #undef yyFlexLexer
-#define yyFlexLexer OHOS_FlexLexer
+#define yyFlexLexer OHOSFlexLexer
 
 #include <FlexLexer.h>
 
 #endif // yyFlexLexerOnce
 
 #undef YY_DECL
-#define YY_DECL ::OHOS::Parser::symbol_type ::OHOS::Scanner::nextToken()
+#define YY_DECL OHOS::Parser::symbol_type OHOS::Scanner::nextToken()
 
 #include "parser.hpp"
 

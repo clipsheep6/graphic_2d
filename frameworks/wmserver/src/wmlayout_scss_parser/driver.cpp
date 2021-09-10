@@ -4,13 +4,13 @@
 
 namespace OHOS {
 Driver::Driver() :
-    _parser(_scanner, *this), _scanner(*this)
+    parser(scanner, *this), scanner(*this)
 {
 }
 
-int Driver::parse()
+int Driver::parse(std::istream &infile)
 {
-  _scanner.switch_streams(std::cin, std::cout);
-  return _parser.parse();
+    scanner.switch_streams(infile, std::cout);
+    return parser.parse();
 }
 } // namespace OHOS

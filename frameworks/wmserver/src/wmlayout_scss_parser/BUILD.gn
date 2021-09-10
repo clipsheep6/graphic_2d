@@ -22,7 +22,7 @@ config("libwmlayout_scss_parser_public_config") {
   include_dirs = []
 }
 
-ohos_shared_library("libwmlayout_scss_parser") {
+ohos_static_library("libwmlayout_scss_parser") {
   sources = [
     "driver.cpp",
     "scanner.cpp",
@@ -32,12 +32,7 @@ ohos_shared_library("libwmlayout_scss_parser") {
 
   public_configs = [ ":libwmlayout_scss_parser_public_config" ]
 
-  deps = [ ":libwmlayout_scss_parser_parser" ]
-
-  public_deps = []
-
-  subsystem_name = "graphic"
-  part_name = "graphic_standard"
+  public_deps = [ ":libwmlayout_scss_parser_parser" ]
 }
 
 ## Build libwmlayout_scss_parser.so }}}

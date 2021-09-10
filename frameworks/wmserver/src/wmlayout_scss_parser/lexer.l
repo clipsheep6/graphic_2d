@@ -13,7 +13,7 @@ static OHOS::location loc;
 #define YY_USER_ACTION       \
     do {                     \
         loc.columns(yyleng); \
-    } while (0)
+    } while (0);
 
 #undef yywrap
 #define yywrap() 1
@@ -21,7 +21,7 @@ static OHOS::location loc;
 %option c++
 %option noyywrap debug
 %option yyclass="Scanner"
-%option prefix="OHOS_"
+%option prefix="OHOS"
 
 %x COMMENT
 
@@ -46,14 +46,14 @@ other_attribute  (z-index|position)
 
 /* value */
 number_value     ({number}(%|px)?)
-h_align_value    (left|mid|right)
-v_align_value    (top|mid|bottom)
-position_value   (relative|fixed|header|footer)
+h_align_value    (left|middle|right)
+v_align_value    (top|middle|bottom)
+position_value   (relative|fixed|static)
 
 /* export for parser.y */
 selector         ({type_selector}|{mode_selector})
-attribute        ({layout_attribute}|{align_attribute}|{other_attribute})
-value            (initial|{number_value}|{h_align_value}|{v_align_value}|{position_value})
+attribute        (({layout_attribute}|{align_attribute}|{other_attribute}):)
+value            ((initial|{number_value}|{h_align_value}|{v_align_value}|{position_value});)
 
 %%
 
@@ -73,23 +73,18 @@ value            (initial|{number_value}|{h_align_value}|{v_align_value}|{positi
     return OHOS::Parser::make_CHAR_R_BRACE(loc);
 }
 
-":" {
-    return OHOS::Parser::make_CHAR_COLON(loc);
-}
-
-";" {
-    return OHOS::Parser::make_CHAR_SEMICOLON(loc);
-}
-
 {selector} {
+    printf("selector: %s\n", yytext);
     return OHOS::Parser::make_SELECTOR(yytext, loc);
 }
 
 {attribute} {
+    printf("attribute: %s\n", yytext);
     return OHOS::Parser::make_ATTRIBUTE(yytext, loc);
 }
 
 {value} {
+    printf("value: %s\n", yytext);
     return OHOS::Parser::make_VALUE(yytext, loc);
 }
 

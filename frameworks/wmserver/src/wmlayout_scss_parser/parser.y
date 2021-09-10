@@ -1,10 +1,10 @@
 %skeleton "lalr1.cc"
 %require "3.0.4"
-%define api.namespace { OHOS }
-%define api.parser.class { Parser }
+%define api.namespace {OHOS}
+%define api.parser.class {Parser}
 %define api.token.constructor
 %define api.value.type variant
-%define api.token.prefix { TOKEN_ }
+%define api.token.prefix {TOKEN_}
 %define parse.assert
 %defines
 %code requires
@@ -37,10 +37,10 @@
     using namespace OHOS;
 }
 
-%lex-param { OHOS::Scanner& scanner }
-%lex-param { OHOS::Driver& driver }
-%parse-param { OHOS::Scanner& scanner }
-%parse-param { OHOS::Driver& driver }
+%lex-param {OHOS::Scanner& scanner}
+%lex-param {OHOS::Driver& driver}
+%parse-param {OHOS::Scanner& scanner}
+%parse-param {OHOS::Driver& driver}
 
 %locations
 // %define parse-trace
@@ -54,8 +54,6 @@
 %token<string> VALUE
 %token CHAR_L_BRACE              /* ( */
 %token CHAR_R_BRACE              /* ) */
-%token CHAR_COLON                /* : */
-%token CHAR_SEMICOLON            /* ; */
 
 /* non-terminate-symbol */
 %start statements
@@ -82,8 +80,15 @@ css_block: css_block_begin css_block_end
 
 css_block_begin: SELECTOR CHAR_L_BRACE
 {
-    driver.current->blocks[$1].parent = driver.current;
-    driver.current = &driver.current->blocks[$1];
+    std::string selector;
+    if ($1.substr(0, 1) == "#") {
+        selector = $1.substr(1);
+    }
+    if ($1.substr(0, 2) == "&:") {
+        selector = $1.substr(2);
+    }
+    driver.current->blocks[selector].parent = driver.current;
+    driver.current = &driver.current->blocks[selector];
 }
 
 css_block_end: statements CHAR_R_BRACE
@@ -91,18 +96,28 @@ css_block_end: statements CHAR_R_BRACE
     driver.current = driver.current->parent;
 }
 
-declare: ATTRIBUTE CHAR_COLON VALUE CHAR_SEMICOLON
+declare: ATTRIBUTE VALUE
 {
-    $$ = $1 + ": " + $3 + ";";
-    driver.current->declares[$1] = $3;
+    $$ = $1 + $2;
+    std::string attribute = $1;
+    std::string value = $2;
+
+    // remove end :
+    attribute = attribute.substr(0, attribute.length() - 1);
+
+    // remove end ;
+    value = value.substr(0, value.length() - 1);
+    driver.current->declares[attribute] = value;
 }
 
 %%
 
 void OHOS::Parser::error(const OHOS::location& location,const std::string& message)
 {
-    printf("error: (%d,%d) - (%d,%d): %s\n",
-          location.begin.line, location.begin.column,
-          location.end.line, location.end.column,
-          message.c_str());
+    for (int i = 0; i < 5; i++) {
+        fprintf(stderr, "wmlayout scss parse error: (%d,%d) - (%d,%d): %s\n",
+                location.begin.line, location.begin.column,
+                location.end.line, location.end.column,
+                message.c_str());
+    }
 }

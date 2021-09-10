@@ -53,6 +53,8 @@ napi_value GetCallbackErrorValue(napi_env env, int errCode)
 
 napi_value NAPI_GetDefaultDisplay(napi_env env, napi_callback_info info)
 {
+    GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
+
     size_t argc = ARGS_SIZE_ONE;
     napi_value argv[ARGS_SIZE_ONE] = {0};
     napi_value thisArg = nullptr;
@@ -61,7 +63,6 @@ napi_value NAPI_GetDefaultDisplay(napi_env env, napi_callback_info info)
     AsyncDisplayInfosCallbackInfo *asyncDisplayInfosCallbackInfo = new AsyncDisplayInfosCallbackInfo{
         .env = env, .asyncWork = nullptr, .deferred = nullptr};
 
-    GNAPI_LOG("NAPI_GetDefaultDisplay promise.");
     napi_deferred deferred;
     napi_value promise;
     NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
@@ -75,13 +76,13 @@ napi_value NAPI_GetDefaultDisplay(napi_env env, napi_callback_info info)
         resourceName,
         [](napi_env env, void *data) {
             AsyncDisplayInfosCallbackInfo *asyncDisplayInfosCallbackInfo = (AsyncDisplayInfosCallbackInfo *)data;
-            GetDisplayInfos(env, asyncDisplayInfosCallbackInfo->displayInfos);
+            asyncDisplayInfosCallbackInfo->ret = GetDisplayInfos(env, asyncDisplayInfosCallbackInfo->displayInfos);
         },
         [](napi_env env, napi_status status, void *data) {
             GNAPI_LOG("=================load=================");
             AsyncDisplayInfosCallbackInfo *asyncDisplayInfosCallbackInfo = (AsyncDisplayInfosCallbackInfo *)data;
             napi_value result;
-            napi_create_array(env, &result);
+            napi_create_object(env, &result);
             ProcessDisplayInfos(env, result, asyncDisplayInfosCallbackInfo->displayInfos);
             napi_resolve_deferred(asyncDisplayInfosCallbackInfo->env, asyncDisplayInfosCallbackInfo->deferred, result);
             napi_delete_async_work(env, asyncDisplayInfosCallbackInfo->asyncWork);
@@ -99,6 +100,8 @@ napi_value NAPI_GetDefaultDisplay(napi_env env, napi_callback_info info)
             asyncDisplayInfosCallbackInfo = nullptr;
         }
     }
+
+    GNAPI_LOG("%{public}s end", __PRETTY_FUNCTION__);
     return promise;
 }
 
@@ -124,9 +127,6 @@ bool GetDisplayInfos(
 void ProcessDisplayInfos(
     napi_env env, napi_value result, const std::vector<OHOS::WMDisplayInfo> &displayInfos)
 {
-    napi_value objDisplayInfo = nullptr;
-    napi_create_object(env, &objDisplayInfo);
-
     if (displayInfos.empty() || displayInfos.size() <= 0) {
         GNAPI_LOG("-----displayInfos is null-----");
         OHOS::WMDisplayInfo displayInfo;
@@ -136,7 +136,7 @@ void ProcessDisplayInfos(
         displayInfo.phyHeight = 0;
         displayInfo.phyWidth = 0;
         displayInfo.vsync = 0;
-        ConvertDisplayInfo(env, objDisplayInfo, displayInfo);
+        ConvertDisplayInfo(env, result, displayInfo);
     }
     else
     {
@@ -147,9 +147,8 @@ void ProcessDisplayInfos(
         GNAPI_LOG("phyWidth  : %{public}d", displayInfos[0].phyWidth);
         GNAPI_LOG("phyHeight : %{public}d", displayInfos[0].phyHeight);
         GNAPI_LOG("vsync     : %{public}d", displayInfos[0].vsync);
-        ConvertDisplayInfo(env, objDisplayInfo, displayInfos[0]);
+        ConvertDisplayInfo(env, result, displayInfos[0]);
     }
-    napi_set_element(env, result, 0, objDisplayInfo);
 }
 
 

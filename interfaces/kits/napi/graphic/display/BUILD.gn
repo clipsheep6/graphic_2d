@@ -17,7 +17,10 @@ import("//build/ohos.gni")
 config("display_config") {
   visibility = [ ":*" ]
 
-  include_dirs = [ "//third_party/node/src" ]
+  include_dirs = [ 
+    "//third_party/node/src",
+    "../common/",
+  ]
 
   cflags = []
 }
@@ -29,7 +32,7 @@ config("display_public_config") {
 ohos_shared_library("display") {
   sources = [
     "native_display_module.cpp",
-    "display.cpp",
+    "../common/graphic_napi_common.cpp",
   ]
 
   configs = [

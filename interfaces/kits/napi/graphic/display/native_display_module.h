@@ -16,4 +16,19 @@
 #ifndef INTERFACES_KITS_NAPI_GRAPHIC_DISPLAY_NATIVE_MODULE_H
 #define INTERFACES_KITS_NAPI_GRAPHIC_DISPLAY_NATIVE_MODULE_H
 
+#include "napi/native_api.h"
+#include "napi/native_common.h"
+#include "napi/native_node_api.h"
+
+#include "window_manager.h"
+#include "window_manager_service_client.h"
+
+namespace {
+napi_value DisplayInit(napi_env env, napi_value exports);
+
+bool GetDisplayInfos(napi_env env, std::vector<OHOS::WMDisplayInfo> &displayInfos);
+void ProcessDisplayInfos(napi_env env, napi_value result, const std::vector<OHOS::WMDisplayInfo> &displayInfos);
+void ConvertDisplayInfo(napi_env env, napi_value objDisplayInfo, const OHOS::WMDisplayInfo &displayInfo);
+}
+
 #endif // INTERFACES_KITS_NAPI_GRAPHIC_DISPLAY_NATIVE_MODULE_H

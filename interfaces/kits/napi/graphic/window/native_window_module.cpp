@@ -13,51 +13,29 @@
  * limitations under the License.
  */
 
-#include "window.h"
 
 #include <string>
-
 #include <ability.h>
 #include <hilog/log.h>
-#include <window_manager.h>
+
+#include "native_window_module.h"
+#include "graphic_napi_common.h"
 
 using namespace OHOS;
 
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "WindowNAPILayer" };
-#define GNAPI_LOG(fmt, ...) HiviewDFX::HiLog::Info(LABEL, \
-    "%{public}s:%{public}d " fmt, __func__, __LINE__, ##__VA_ARGS__)
+static napi_value WindowModuleInit(napi_env env, napi_value exports)
+{
+    napi_status ret = WindowInit(env, exports);
+    if (ret != napi_ok) {
+        GNAPI_LOG("WindowInit failed");
+    }
+
+    return exports;
 }
-
-#define GNAPI_CALL(env, call)                     \
-    do {                                          \
-        napi_status s = (call);                   \
-        if (s != napi_ok) {                       \
-            GNAPI_LOG(#call " is %{public}d", s); \
-            return nullptr;                       \
-        }                                         \
-    } while (0)
-
-#define GNAPI_ASSERT(env, assertion, fmt, ...)  \
-    do {                                        \
-        if (assertion) {                        \
-            GNAPI_LOG(fmt, ##__VA_ARGS__);      \
-            return nullptr;                     \
-        }                                       \
-    } while (0)
-
-#define GNAPI_INNER(call)                         \
-    do {                                          \
-        napi_status s = (call);                   \
-        if (s != napi_ok) {                       \
-            GNAPI_LOG(#call " is %{public}d", s); \
-            return s;                             \
-        }                                         \
-    } while (0)
 
 namespace {
 napi_value g_classWindow;
-
 napi_status GetAbility(napi_env env, napi_callback_info info, AppExecFwk::Ability* &pAbility)
 {
     napi_value global;
@@ -71,61 +49,6 @@ napi_status GetAbility(napi_env env, napi_callback_info info, AppExecFwk::Abilit
     return napi_ok;
 }
 
-template<typename ParamT>
-napi_value CreatePromise(napi_env env,
-                         std::string funcname,
-                         void(* async)(napi_env env, std::unique_ptr<ParamT>& param),
-                         napi_value(* resolve)(napi_env env, std::unique_ptr<ParamT>& param),
-                         std::unique_ptr<ParamT>& param)
-{
-    struct AsyncCallbackInfo {
-        napi_async_work asyncWork;
-        napi_deferred deferred;
-        void (* async)(napi_env env, std::unique_ptr<ParamT>& param);
-        napi_value (* resolve)(napi_env env, std::unique_ptr<ParamT>& param);
-        std::unique_ptr<ParamT> param;
-    };
-
-    AsyncCallbackInfo *info = new AsyncCallbackInfo {
-        .async = async,
-        .resolve = resolve,
-        .param = std::move(param),
-    };
-
-    napi_value resourceName;
-    GNAPI_CALL(env, napi_create_string_latin1(env,
-        funcname.c_str(), NAPI_AUTO_LENGTH, &resourceName));
-
-    napi_value promise;
-    GNAPI_CALL(env, napi_create_promise(env, &info->deferred, &promise));
-
-    auto asyncFunc = [](napi_env env, void *data) {
-        AsyncCallbackInfo *info = reinterpret_cast<AsyncCallbackInfo *>(data);
-        if (info->async) {
-            info->async(env, info->param);
-        }
-    };
-
-    auto completeFunc = [](napi_env env, napi_status status, void *data) {
-        AsyncCallbackInfo *info = reinterpret_cast<AsyncCallbackInfo *>(data);
-        napi_value resolveValue;
-        if (info->resolve) {
-            resolveValue = info->resolve(env, info->param);
-        } else {
-            napi_get_undefined(env, &resolveValue);
-        }
-
-        napi_resolve_deferred(env, info->deferred, resolveValue);
-        napi_delete_async_work(env, info->asyncWork);
-        delete info;
-    };
-
-    GNAPI_CALL(env, napi_create_async_work(env, nullptr, resourceName, asyncFunc, completeFunc,
-        reinterpret_cast<void *>(info), &info->asyncWork));
-
-    GNAPI_CALL(env, napi_queue_async_work(env, info->asyncWork));
-    return promise;
-}
 } // namespace
 
 namespace NAPIWindow {
@@ -275,4 +198,19 @@ napi_status WindowInit(napi_env env, napi_value exports)
         sizeof(exportFuncs) / sizeof(*exportFuncs), exportFuncs));
 
     return napi_ok;
+}
+}
+
+extern "C" __attribute__((constructor)) void RegisterModule(void)
+{
+    napi_module module = {
+        .nm_version = 1, // NAPI v1
+        .nm_flags = 0, // normal
+        .nm_filename = nullptr,
+        .nm_register_func = WindowModuleInit,
+        .nm_modname = "window",
+        .nm_priv = nullptr,
+        .reserved = {}
+    };
+    napi_module_register(&module);
 }

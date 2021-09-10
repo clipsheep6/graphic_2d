@@ -42,6 +42,7 @@ sptr<Window> NativeTestFactory::CreateWindow(WindowType type, sptr<Surface> csur
     option->SetConsumerSurface(csurface);
     wm->CreateWindow(window, option);
     if (window == nullptr) {
+        printf("NativeTestFactory::CreateWindow return nullptr\n");
         return nullptr;
     }
 
@@ -236,5 +237,59 @@ void NativeTestDraw::RainbowDraw(void *vaddr, uint32_t width, uint32_t height, u
         auto color = selectColor(offset + i);
         drawOneLine(i, color);
     }
+}
+
+void NativeTestDraw::BoxDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
+{
+    auto addr = static_cast<uint32_t *>(vaddr);
+    if (addr == nullptr) {
+        return;
+    }
+
+    auto selectColor = [](int32_t index, int32_t total) {
+        auto func = [](int32_t x, int32_t total) {
+            int32_t h = total;
+            x = ((x % h) + h) % h;
+
+            constexpr double b = 3.0;
+            constexpr double k = -1.0;
+            auto ret = b + k * x / (total / 0x6);
+            ret = abs(ret) - 1.0;
+            ret = fmax(ret, 0.0);
+            ret = fmin(ret, 1.0);
+            return uint32_t(ret * 0xff);
+        };
+
+        constexpr uint32_t bShift = 0;
+        constexpr uint32_t gShift = 8;
+        constexpr uint32_t rShift = 16;
+        constexpr uint32_t bOffset = 0;
+        constexpr uint32_t gOffset = -2;
+        constexpr uint32_t rOffset = +2;
+        return 0xff000000 +
+            (func(index + bOffset * (total / 0x6), total) << bShift) +
+            (func(index + gOffset * (total / 0x6), total) << gShift) +
+            (func(index + rOffset * (total / 0x6), total) << rShift);
+    };
+    constexpr int32_t framecount = 50;
+    uint32_t color = selectColor(count % (framecount * 0x6 * 0x2), framecount * 0x6 * 0x2);
+    auto drawOnce = [&addr, &width, &height](int32_t percent, uint32_t color) {
+        int32_t x1 = width / 0x2 * percent / framecount;
+        int32_t x2 = width - 1 - x1;
+        int32_t y1 = height / 0x2 * percent / framecount;
+        int32_t y2 = height - 1 - y1;
+        for (int32_t i = x1; i < x2; i++) {
+            addr[y1 * width + i] = color;
+            addr[y2 * width + i] = color;
+        }
+        for (int32_t j = y1; j < y2; j++) {
+            addr[j * width + x1] = color;
+            addr[j * width + x2] = color;
+        }
+    };
+    auto abs = [](int32_t x) { return x < 0 ? -x : x; };
+    drawOnce(abs((count - 1) % (framecount * 0x2 - 1) - framecount), color);
+    drawOnce(abs((count + 0) % (framecount * 0x2 - 1) - framecount), color);
+    drawOnce(abs((count + 1) % (framecount * 0x2 - 1) - framecount), color);
 }
 } // namespace OHOS

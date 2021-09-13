@@ -47,9 +47,9 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "NapiGraphicCommonL
     } while (0)
 
 namespace OHOS {
-napi_status SetMemberInt32(napi_env env, napi_value result, const char* key, int32_t value);
-napi_status SetMemberUint32(napi_env env, napi_value result, const char* key, uint32_t value);
-napi_status SetMemberUndefined(napi_env env, napi_value result, const char* key);
+napi_status SetMemberInt32(napi_env env, napi_value result, const char *key, int32_t value);
+napi_status SetMemberUint32(napi_env env, napi_value result, const char *key, uint32_t value);
+napi_status SetMemberUndefined(napi_env env, napi_value result, const char *key);
 
 template<typename ParamT>
 napi_value CreatePromise(napi_env env,

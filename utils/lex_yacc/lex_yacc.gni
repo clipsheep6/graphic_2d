@@ -89,6 +89,7 @@ template("lex_yacc") {
     public_configs += [
       ":$gen_config_name",
       "//build/config/compiler:rtti",
+      "//build/config/compiler:exceptions",
     ]
 
     deps = [

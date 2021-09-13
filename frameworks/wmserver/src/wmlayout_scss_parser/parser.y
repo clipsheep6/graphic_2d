@@ -1,7 +1,7 @@
 %skeleton "lalr1.cc"
 %require "3.0.4"
 %define api.namespace {OHOS}
-%define api.parser.class {Parser}
+%define parser_class_name {Parser}
 %define api.token.constructor
 %define api.value.type variant
 %define api.token.prefix {TOKEN_}
@@ -43,8 +43,6 @@
 %parse-param {OHOS::Driver& driver}
 
 %locations
-// %define parse-trace
-%define parse.error verbose
 
 %token END 0
 

@@ -25,6 +25,7 @@
 
 #include "backend.h"
 #include "ivi-layout-private.h"
+#include "layout.h"
 #include "libweston-internal.h"
 #include "screen_info.h"
 #include "weston.h"
@@ -91,8 +92,7 @@ struct WindowSurface {
     uint32_t surfaceId;
     uint32_t screenId;
     uint32_t type;
-    uint32_t mode; // MODE_*
-    uint32_t externalMode; // WINDOW_MODE_*
+    uint32_t mode;
     int32_t x;
     int32_t y;
     int32_t width;
@@ -200,7 +200,9 @@ static inline void ClearBit(uint32_t *flags, int32_t n)
 
 static inline int GetLayerId(uint32_t screenId, uint32_t type, uint32_t mode)
 {
-    return mode * LAYER_ID_MODE_BASE + type * LAYER_ID_TYPE_BASE + screenId * LAYER_ID_SCREEN_BASE;
+    uint32_t z = 0;
+    LayoutControllerCalcWindowDefaultLayout(type, mode, &z, NULL);
+    return z + screenId * LAYER_ID_SCREEN_BASE;
 }
 
 static void WindowSurfaceCommitted(struct weston_surface *surface, int32_t sx, int32_t sy);
@@ -481,119 +483,6 @@ static struct WmsScreen *GetScreen(const struct WindowSurface *windowSurface)
     return NULL;
 }
 
-static void CalcWindowInfoNormal(struct WindowSurface *surface,
-    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
-{
-    surface->x = 0;
-    surface->y = topBarHeight;
-    surface->width = maxWidth;
-    surface->height = maxHeight - topBarHeight - bottomBarsHeight;
-}
-
-static void CalcWindowInfoStatusBar(struct WindowSurface *surface,
-    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
-{
-    surface->x = 0;
-    surface->y = 0;
-    surface->width = maxWidth;
-    surface->height = topBarHeight;
-}
-
-static void CalcWindowInfoNaviBar(struct WindowSurface *surface,
-    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
-{
-    surface->x = 0;
-    surface->y = maxHeight - bottomBarsHeight;
-    surface->width = maxWidth;
-    surface->height = bottomBarsHeight;
-}
-
-static void CalcWindowInfoAlarmScreen(struct WindowSurface *surface,
-    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
-{
-    surface->x = maxWidth / WIDTH_AVERAGE - ALARM_WINDOW_WIDTH_HALF;
-    surface->y = maxHeight / HEIGHT_AVERAGE - ALARM_WINDOW_HEIGHT_HALF;
-    surface->width = ALARM_WINDOW_WIDTH;
-    surface->height = ALARM_WINDOW_HEIGHT;
-}
-
-static void CalcWindowInfoLauncher(struct WindowSurface *surface,
-    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
-{
-    surface->x = 0;
-    surface->y = topBarHeight;
-    surface->width = maxWidth;
-    surface->height = maxHeight - topBarHeight - bottomBarsHeight;
-}
-
-static void CalcWindowInfoInputMethod(struct WindowSurface *surface,
-    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
-{
-    surface->x = 0;
-    surface->y = maxHeight - (maxHeight / INPUT_WINDOW_THIRD);
-    surface->width = maxWidth;
-    surface->height = maxHeight / INPUT_WINDOW_THIRD - topBarHeight;
-}
-
-static void CalcWindowInfoInputMethodSelector(struct WindowSurface *surface,
-    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
-{
-    surface->x = INPUT_SELECTOR_WINDOW_BORDER;
-    surface->y = maxHeight - (maxHeight / INPUT_WINDOW_THIRD);
-    surface->width = maxWidth - (INPUT_SELECTOR_WINDOW_BORDER + INPUT_SELECTOR_WINDOW_BORDER);
-    surface->height = maxHeight / INPUT_WINDOW_THIRD - topBarHeight - INPUT_SELECTOR_WINDOW_BORDER;
-}
-
-static void CalcWindowInfoVolumeOverlay(struct WindowSurface *surface,
-    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
-{
-    surface->x = VOLUME_OVERLAY_WINDOW_BORDER;
-    surface->y = VOLUME_OVERLAY_WINDOW_BORDER;
-    surface->width = maxWidth - (VOLUME_OVERLAY_WINDOW_BORDER + VOLUME_OVERLAY_WINDOW_BORDER);
-    surface->height = (maxHeight - topBarHeight) / HEIGHT_AVERAGE;
-}
-
-static void CalcWindowInfoNotificationShade(struct WindowSurface *surface,
-    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
-{
-    surface->x = 0;
-    surface->y = 0;
-    surface->width = maxWidth;
-    surface->height = (maxHeight - topBarHeight) / HEIGHT_AVERAGE;
-}
-
-static void CalcWindowInfoFloat(struct WindowSurface *surface,
-    int32_t maxWidth, int32_t maxHeight, int32_t topBarHeight, int32_t bottomBarsHeight)
-{
-    surface->x = FLOAT_WINDOW_BORDER;
-    surface->y = topBarHeight + FLOAT_WINDOW_BORDER;
-    surface->width = maxWidth - (FLOAT_WINDOW_BORDER + FLOAT_WINDOW_BORDER);
-    surface->height = maxHeight / HEIGHT_AVERAGE - topBarHeight;
-}
-
-static struct CalcWindowInfoStrategy g_calcWindowInfoStrategyList[] = {
-    {WINDOW_TYPE_NORMAL, CalcWindowInfoNormal},
-    {WINDOW_TYPE_STATUS_BAR, CalcWindowInfoStatusBar},
-    {WINDOW_TYPE_NAVI_BAR, CalcWindowInfoNaviBar},
-    {WINDOW_TYPE_ALARM_SCREEN, CalcWindowInfoAlarmScreen},
-    {WINDOW_TYPE_LAUNCHER, CalcWindowInfoLauncher},
-    {WINDOW_TYPE_INPUT_METHOD, CalcWindowInfoInputMethod},
-    {WINDOW_TYPE_INPUT_METHOD_SELECTOR, CalcWindowInfoInputMethodSelector},
-    {WINDOW_TYPE_VOLUME_OVERLAY, CalcWindowInfoVolumeOverlay},
-    {WINDOW_TYPE_NOTIFICATION_SHADE, CalcWindowInfoNotificationShade},
-    {WINDOW_TYPE_FLOAT, CalcWindowInfoFloat},
-};
-
-static CalcWindowInfoFunc GetCalcWindowInfoFunc(uint32_t type)
-{
-    for (int i = 0; i < sizeof(g_calcWindowInfoStrategyList); i++) {
-        if (g_calcWindowInfoStrategyList[i].type == type) {
-            return g_calcWindowInfoStrategyList[i].func;
-        }
-    }
-    return CalcWindowInfoNormal;
-}
-
 static void CalcWindowInfo(struct WindowSurface *surface)
 {
     int32_t maxWidth, maxHeight, topBarHeight, bottomBarsHeight;
@@ -614,12 +503,13 @@ static void CalcWindowInfo(struct WindowSurface *surface)
     bottomBarsHeight = topBarHeight;
 #endif /* USE_DUMMY_SCREEN */
 
-    CalcWindowInfoFunc func = GetCalcWindowInfoFunc(surface->type);
-    if (func) {
-        func(surface, maxWidth, maxHeight, topBarHeight, bottomBarsHeight);
-    }
-
-    return;
+    LayoutControllerInit(maxWidth, maxHeight);
+    struct layout layout = {};
+    LayoutControllerCalcWindowDefaultLayout(surface->type, surface->mode, NULL, &layout);
+    surface->x = layout.x;
+    surface->y = layout.y;
+    surface->width = layout.w;
+    surface->height = layout.h;
 }
 
 static bool AddWindow(struct WindowSurface *windowSurface)
@@ -780,18 +670,7 @@ static void SetWindowMode(const struct WmsContext *wc,
                           const struct wl_resource* wr,
                           uint32_t windowMode)
 {
-    if (windowMode == WINDOW_MODE_UNSET) {
-        MoveWindowToLayerId(wc, ws, wr, GetLayerId(ws->screenId, ws->type, MODE_UNSET));
-        ws->mode = MODE_UNSET;
-    }
-    if (windowMode == WINDOW_MODE_FULL) {
-        MoveWindowToLayerId(wc, ws, wr, GetLayerId(ws->screenId, ws->type, MODE_FULL));
-        ws->mode = MODE_FULL;
-    }
-    if (windowMode == WINDOW_MODE_FREE) {
-        MoveWindowToLayerId(wc, ws, wr, GetLayerId(ws->screenId, ws->type, MODE_FREE));
-        ws->mode = MODE_FREE;
-    }
+    MoveWindowToLayerId(wc, ws, wr, GetLayerId(ws->screenId, ws->type, windowMode));
 }
 
 static void ControllerSetWindowType(const struct wl_client* pWlClient,
@@ -864,16 +743,14 @@ static void ControllerSetWindowMode(const struct wl_client* pWlClient,
         return;
     }
 
-    if (pWindowSurface->externalMode == windowMode) {
+    if (pWindowSurface->mode == windowMode) {
         LOGE("window type is not need change.");
         wms_send_reply_error(pWlResource, WMS_ERROR_INVALID_PARAM);
         return;
     }
 
     SetWindowMode(pWmsCtx, pWindowSurface, pWlResource, windowMode);
-
-    pWindowSurface->externalMode = windowMode;
-
+    pWindowSurface->mode = windowMode;
     wms_send_reply_error(pWlResource, WMS_ERROR_OK);
     LOGD("end.");
 }
@@ -1197,8 +1074,7 @@ static void CreateWindow(struct WmsController *pWmsController,
     pWindow->surface = pWestonSurface;
     pWindow->surfaceId = windowId;
     pWindow->type = windowType;
-    pWindow->mode = MODE_UNSET;
-    pWindow->externalMode = WINDOW_MODE_UNSET;
+    pWindow->mode = WINDOW_MODE_UNSET;
     pWindow->screenId = screenId;
 
     if (!AddWindow(pWindow)) {
@@ -1836,6 +1712,8 @@ static int WmsContextInit(struct WmsContext *ctx, struct weston_compositor *comp
     ctx->displayMode = WMS_DISPLAY_MODE_SINGLE;
 #endif
     wl_signal_add(&compositor->destroy_signal, &ctx->wlListenerDestroy);
+
+    LayoutControllerInit(0, 0);
     return 0;
 }
 

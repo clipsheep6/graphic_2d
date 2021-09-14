@@ -102,9 +102,10 @@
 #WINDOW_TYPE_VOLUME_OVERLAY {
     z-index: 70;
     position: fixed;
-    left: 2.5%;
-    top: 2.5%;
+    horizon-align: middle;
     width: 95.0%;
+
+    top: 2.5%;
     height: 40.0%;
 }
 

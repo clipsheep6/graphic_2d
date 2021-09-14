@@ -121,6 +121,8 @@ int32_t LayoutController::CalcWindowDefaultLayout(uint32_t type, uint32_t mode, 
 
     constexpr double full = 100.0; // 100%
     constexpr int32_t half = 2;
+    outLayout.layout.x = rect.w * outLayout.layout.x / full;
+    outLayout.layout.y = rect.h * outLayout.layout.y / full;
     outLayout.layout.w = rect.w * outLayout.layout.w / full;
     outLayout.layout.h = rect.h * outLayout.layout.h / full;
     if (outLayout.pTypeX == Layout::XPositionType::LFT) {
@@ -129,7 +131,7 @@ int32_t LayoutController::CalcWindowDefaultLayout(uint32_t type, uint32_t mode, 
         outLayout.layout.x = rect.x + (rect.w - outLayout.layout.w) / half;
     } else if (outLayout.pTypeX == Layout::XPositionType::RGH) {
         outLayout.layout.x = rect.x + rect.w - outLayout.layout.w;
-    } else if (outLayout.positionType == Layout::PositionType::RELATIVE) {
+    } else {
         outLayout.layout.x += rect.x;
     }
 
@@ -139,7 +141,7 @@ int32_t LayoutController::CalcWindowDefaultLayout(uint32_t type, uint32_t mode, 
         outLayout.layout.y = rect.y + (rect.h - outLayout.layout.h) / half;
     } else if (outLayout.pTypeY == Layout::YPositionType::BTM) {
         outLayout.layout.y = rect.y + rect.h - outLayout.layout.h;
-    } else if (outLayout.positionType == Layout::PositionType::RELATIVE) {
+    } else {
         outLayout.layout.y += rect.y;
     }
     return 0;

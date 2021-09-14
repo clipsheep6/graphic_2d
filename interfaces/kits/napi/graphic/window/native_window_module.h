@@ -13,12 +13,7 @@
  * limitations under the License.
  */
 
-#ifndef INTERFACES_KITS_NAPI_GRAPHIC_WINDOW_WINDOW_H
-#define INTERFACES_KITS_NAPI_GRAPHIC_WINDOW_WINDOW_H
+#ifndef INTERFACES_KITS_NAPI_GRAPHIC_WINDOW_NATIVE_WINDOW_MODULE_H
+#define INTERFACES_KITS_NAPI_GRAPHIC_WINDOW_NATIVE_WINDOW_MODULE_H
 
-#include "napi/native_common.h"
-#include "napi/native_node_api.h"
-
-napi_status WindowInit(napi_env env, napi_value exports);
-
-#endif // INTERFACES_KITS_NAPI_GRAPHIC_WINDOW_WINDOW_H
+#endif // INTERFACES_KITS_NAPI_GRAPHIC_WINDOW_NATIVE_WINDOW_MODULE_H

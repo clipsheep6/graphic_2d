@@ -44,7 +44,7 @@ declare namespace window {
     /**
      * System panel.
      */
-     TYPE_SYSTEM_PANEL = 90,
+    TYPE_SYSTEM_PANEL = 90,
   }
 
   /**

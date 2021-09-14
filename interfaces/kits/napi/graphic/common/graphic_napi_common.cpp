@@ -18,7 +18,7 @@
 #include <hilog/log.h>
 
 namespace OHOS {
-napi_status SetMemberInt32(napi_env env, napi_value result, const char *key, int32_t value)
+napi_status SetMemberInt32(napi_env env, napi_value result, const char* key, int32_t value)
 {
     napi_value num;
     GNAPI_INNER(napi_create_int32(env, value, &num));
@@ -26,7 +26,7 @@ napi_status SetMemberInt32(napi_env env, napi_value result, const char *key, int
     return napi_ok;
 }
 
-napi_status SetMemberUint32(napi_env env, napi_value result, const char *key, uint32_t value)
+napi_status SetMemberUint32(napi_env env, napi_value result, const char* key, uint32_t value)
 {
     napi_value num;
     GNAPI_INNER(napi_create_uint32(env, value, &num));
@@ -34,19 +34,11 @@ napi_status SetMemberUint32(napi_env env, napi_value result, const char *key, ui
     return napi_ok;
 }
 
-napi_status SetMemberUndefined(napi_env env, napi_value result, const char *key)
+napi_status SetMemberUndefined(napi_env env, napi_value result, const char* key)
 {
     napi_value undefined;
     GNAPI_INNER(napi_get_undefined(env, &undefined));
     GNAPI_INNER(napi_set_named_property(env, result, key, undefined));
     return napi_ok;
-}
-
-void CreateWindowTypeObject(napi_env env, napi_value value)
-{
-    SetMemberInt32(env, value, "TYPE_APP", static_cast<int32_t>(WindowType::WINDOW_TYPE_NORMAL));
-    SetMemberInt32(env, value, "TYPE_SYSTEM_ALERT", static_cast<int32_t>(WindowType::WINDOW_TYPE_ALARM_SCREEN));
-    SetMemberInt32(env, value, "TYPE_SYSTEM_VOLUME", static_cast<int32_t>(WindowType::WINDOW_TYPE_VOLUME_OVERLAY));
-    SetMemberInt32(env, value, "TYPE_SYSTEM_PANEL", static_cast<int32_t>(WindowType::WINDOW_TYPE_NOTIFICATION_SHADE));
 }
 } // namespace OHOS

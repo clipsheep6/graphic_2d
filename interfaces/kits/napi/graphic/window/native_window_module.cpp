@@ -122,6 +122,14 @@ void Async(napi_env env, std::unique_ptr<Param>& param)
     param->ability->GetWindow()->SetWindowType(static_cast<WindowType>(param->windowType));
 }
 
+void CreateWindowTypeObject(napi_env env, napi_value value)
+{
+    SetMemberInt32(env, value, "TYPE_APP", static_cast<int32_t>(WindowType::WINDOW_TYPE_NORMAL));
+    SetMemberInt32(env, value, "TYPE_SYSTEM_ALERT", static_cast<int32_t>(WindowType::WINDOW_TYPE_ALARM_SCREEN));
+    SetMemberInt32(env, value, "TYPE_SYSTEM_VOLUME", static_cast<int32_t>(WindowType::WINDOW_TYPE_VOLUME_OVERLAY));
+    SetMemberInt32(env, value, "TYPE_SYSTEM_PANEL", static_cast<int32_t>(WindowType::WINDOW_TYPE_NOTIFICATION_SHADE));
+}
+
 napi_value MainFunc(napi_env env, napi_callback_info info)
 {
     GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
@@ -168,7 +176,7 @@ napi_value WindowModuleInit(napi_env env, napi_value exports)
 
     napi_value nWindowType = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nWindowType));
-    CreateWindowTypeObject(env, nWindowType);
+    NAPIWindow::SetWindowType::CreateWindowTypeObject(env, nWindowType);
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("resetSize", NAPIWindow::ResetSize::MainFunc),

@@ -20,6 +20,7 @@
 #include <sys/mman.h>
 
 #include <wayland-client.h>
+#include <window_manager_type.h>
 
 // for debug.
 #define LOG(fmt, ...)  // printf("wmserver_test " fmt "\n", ##__VA_ARGS__)
@@ -654,6 +655,252 @@ HWTEST_F(WMServerTest, CreateWindow007, testing::ext::TestSize.Level0)
     ASSERT_EQ(windowStatus.y, 0) << "CaseDescription: 5. check it (y = 0)";
     ASSERT_EQ(windowStatus.width, 0u) << "CaseDescription: 5. check it (width = 0)";
     ASSERT_EQ(windowStatus.height, 0u) << "CaseDescription: 5. check it (height = 0)";
+}
+
+/*
+ * Feature: wms_create_window by normal arguments
+ * Function: WMSServer
+ * SubFunction: wms_create_window
+ * FunctionPoints: wms_create_window(WINDOW_TYPE_LAUNCHER)
+ * EnvConditions: display, compositor, wms init success.
+ * CaseDescription: 1. Create WlSurface
+ *                  2. Create Window by normal arguments
+ *                  3. check it
+ */
+HWTEST_F(WMServerTest, CreateWindow008, testing::ext::TestSize.Level0)
+{
+    // WMSServer init success.
+    ASSERT_NE(ctx.display, nullptr) << "EnvConditions: wl_display init success..";
+    ASSERT_NE(ctx.compositor, nullptr) << "EnvConditions: wl_compositor init success..";
+    ASSERT_NE(ctx.wms, nullptr) << "EnvConditions: wms init success..";
+
+    // 1. create WlSurface
+    struct wl_surface* wlSurface = wl_compositor_create_surface(ctx.compositor);
+    ASSERT_NE(wlSurface, nullptr) << "CaseDescription: 1. create WlSurface (wlSurface != nullptr)";
+
+    // 2. Create a Window (WINDOW_TYPE_LAUNCHER)
+    {
+        std::unique_lock<std::mutex> lck(syncMutex);
+        replyFlag = false;
+        wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_LAUNCHER);
+        wl_display_flush(ctx.display);
+        syncVariable.wait(lck, [&](){ return replyFlag; });
+    }
+
+    // 3. check it
+    ASSERT_EQ(windowStatus.status, WMS_WINDOW_STATUS_CREATED)
+        << "CaseDescription: 3. check it (status == WMS_WINDOW_STATUS_CREATED)";
+    ASSERT_GT(windowStatus.wid, 0) << "CaseDescription: 3. check it (wid > 0)";
+    ASSERT_GE(windowStatus.x, 0) << "CaseDescription: 3. check it (x >= 0)";
+    ASSERT_GE(windowStatus.y, 0) << "CaseDescription: 3. check it (y >= 0)";
+    ASSERT_GT(windowStatus.width, 0u) << "CaseDescription: 3. check it (width > 0)";
+    ASSERT_GT(windowStatus.height, 0u) << "CaseDescription: 3. check it (height > 0)";
+
+}
+
+/*
+ * Feature: wms_create_window by normal arguments
+ * Function: WMSServer
+ * SubFunction: wms_create_window
+ * FunctionPoints: wms_create_window(WINDOW_TYPE_INPUT_METHOD)
+ * EnvConditions: display, compositor, wms init success.
+ * CaseDescription: 1. Create WlSurface
+ *                  2. Create Window by normal arguments
+ *                  3. check it
+ */
+HWTEST_F(WMServerTest, CreateWindow009, testing::ext::TestSize.Level0)
+{
+    // WMSServer init success.
+    ASSERT_NE(ctx.display, nullptr) << "EnvConditions: wl_display init success..";
+    ASSERT_NE(ctx.compositor, nullptr) << "EnvConditions: wl_compositor init success..";
+    ASSERT_NE(ctx.wms, nullptr) << "EnvConditions: wms init success..";
+
+    // 1. create WlSurface
+    struct wl_surface* wlSurface = wl_compositor_create_surface(ctx.compositor);
+    ASSERT_NE(wlSurface, nullptr) << "CaseDescription: 1. create WlSurface (wlSurface != nullptr)";
+
+    // 2. Create a Window (WINDOW_TYPE_INPUT_METHOD)
+    {
+        std::unique_lock<std::mutex> lck(syncMutex);
+        replyFlag = false;
+        wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_INPUT_METHOD);
+        wl_display_flush(ctx.display);
+        syncVariable.wait(lck, [&](){ return replyFlag; });
+    }
+
+    // 3. check it
+    ASSERT_EQ(windowStatus.status, WMS_WINDOW_STATUS_CREATED)
+        << "CaseDescription: 3. check it (status == WMS_WINDOW_STATUS_CREATED)";
+    ASSERT_GT(windowStatus.wid, 0) << "CaseDescription: 3. check it (wid > 0)";
+    ASSERT_GE(windowStatus.x, 0) << "CaseDescription: 3. check it (x >= 0)";
+    ASSERT_GE(windowStatus.y, 0) << "CaseDescription: 3. check it (y >= 0)";
+    ASSERT_GT(windowStatus.width, 0u) << "CaseDescription: 3. check it (width > 0)";
+    ASSERT_GT(windowStatus.height, 0u) << "CaseDescription: 3. check it (height > 0)";
+
+}
+
+/*
+ * Feature: wms_create_window by normal arguments
+ * Function: WMSServer
+ * SubFunction: wms_create_window
+ * FunctionPoints: wms_create_window(WINDOW_TYPE_INPUT_METHOD_SELECTOR)
+ * EnvConditions: display, compositor, wms init success.
+ * CaseDescription: 1. Create WlSurface
+ *                  2. Create Window by normal arguments
+ *                  3. check it
+ */
+HWTEST_F(WMServerTest, CreateWindow010, testing::ext::TestSize.Level0)
+{
+    // WMSServer init success.
+    ASSERT_NE(ctx.display, nullptr) << "EnvConditions: wl_display init success..";
+    ASSERT_NE(ctx.compositor, nullptr) << "EnvConditions: wl_compositor init success..";
+    ASSERT_NE(ctx.wms, nullptr) << "EnvConditions: wms init success..";
+
+    // 1. create WlSurface
+    struct wl_surface* wlSurface = wl_compositor_create_surface(ctx.compositor);
+    ASSERT_NE(wlSurface, nullptr) << "CaseDescription: 1. create WlSurface (wlSurface != nullptr)";
+
+    // 2. Create a Window (WINDOW_TYPE_INPUT_METHOD_SELECTOR)
+    {
+        std::unique_lock<std::mutex> lck(syncMutex);
+        replyFlag = false;
+        wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_INPUT_METHOD_SELECTOR);
+        wl_display_flush(ctx.display);
+        syncVariable.wait(lck, [&](){ return replyFlag; });
+    }
+
+    // 3. check it
+    ASSERT_EQ(windowStatus.status, WMS_WINDOW_STATUS_CREATED)
+        << "CaseDescription: 3. check it (status == WMS_WINDOW_STATUS_CREATED)";
+    ASSERT_GT(windowStatus.wid, 0) << "CaseDescription: 3. check it (wid > 0)";
+    ASSERT_GE(windowStatus.x, 0) << "CaseDescription: 3. check it (x >= 0)";
+    ASSERT_GE(windowStatus.y, 0) << "CaseDescription: 3. check it (y >= 0)";
+    ASSERT_GT(windowStatus.width, 0u) << "CaseDescription: 3. check it (width > 0)";
+    ASSERT_GT(windowStatus.height, 0u) << "CaseDescription: 3. check it (height > 0)";
+
+}
+
+/*
+ * Feature: wms_create_window by normal arguments
+ * Function: WMSServer
+ * SubFunction: wms_create_window
+ * FunctionPoints: wms_create_window(WINDOW_TYPE_VOLUME_OVERLAY)
+ * EnvConditions: display, compositor, wms init success.
+ * CaseDescription: 1. Create WlSurface
+ *                  2. Create Window by normal arguments
+ *                  3. check it
+ */
+HWTEST_F(WMServerTest, CreateWindow011, testing::ext::TestSize.Level0)
+{
+    // WMSServer init success.
+    ASSERT_NE(ctx.display, nullptr) << "EnvConditions: wl_display init success..";
+    ASSERT_NE(ctx.compositor, nullptr) << "EnvConditions: wl_compositor init success..";
+    ASSERT_NE(ctx.wms, nullptr) << "EnvConditions: wms init success..";
+
+    // 1. create WlSurface
+    struct wl_surface* wlSurface = wl_compositor_create_surface(ctx.compositor);
+    ASSERT_NE(wlSurface, nullptr) << "CaseDescription: 1. create WlSurface (wlSurface != nullptr)";
+
+    // 2. Create a Window (WINDOW_TYPE_VOLUME_OVERLAY)
+    {
+        std::unique_lock<std::mutex> lck(syncMutex);
+        replyFlag = false;
+        wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_VOLUME_OVERLAY);
+        wl_display_flush(ctx.display);
+        syncVariable.wait(lck, [&](){ return replyFlag; });
+    }
+
+    // 3. check it
+    ASSERT_EQ(windowStatus.status, WMS_WINDOW_STATUS_CREATED)
+        << "CaseDescription: 3. check it (status == WMS_WINDOW_STATUS_CREATED)";
+    ASSERT_GT(windowStatus.wid, 0) << "CaseDescription: 3. check it (wid > 0)";
+    ASSERT_GE(windowStatus.x, 0) << "CaseDescription: 3. check it (x >= 0)";
+    ASSERT_GE(windowStatus.y, 0) << "CaseDescription: 3. check it (y >= 0)";
+    ASSERT_GT(windowStatus.width, 0u) << "CaseDescription: 3. check it (width > 0)";
+    ASSERT_GT(windowStatus.height, 0u) << "CaseDescription: 3. check it (height > 0)";
+
+}
+
+/*
+ * Feature: wms_create_window by normal arguments
+ * Function: WMSServer
+ * SubFunction: wms_create_window
+ * FunctionPoints: wms_create_window(WINDOW_TYPE_NOTIFICATION_SHADE)
+ * EnvConditions: display, compositor, wms init success.
+ * CaseDescription: 1. Create WlSurface
+ *                  2. Create Window by normal arguments
+ *                  3. check it
+ */
+HWTEST_F(WMServerTest, CreateWindow012, testing::ext::TestSize.Level0)
+{
+    // WMSServer init success.
+    ASSERT_NE(ctx.display, nullptr) << "EnvConditions: wl_display init success..";
+    ASSERT_NE(ctx.compositor, nullptr) << "EnvConditions: wl_compositor init success..";
+    ASSERT_NE(ctx.wms, nullptr) << "EnvConditions: wms init success..";
+
+    // 1. create WlSurface
+    struct wl_surface* wlSurface = wl_compositor_create_surface(ctx.compositor);
+    ASSERT_NE(wlSurface, nullptr) << "CaseDescription: 1. create WlSurface (wlSurface != nullptr)";
+
+    // 2. Create a Window (WINDOW_TYPE_NOTIFICATION_SHADE)
+    {
+        std::unique_lock<std::mutex> lck(syncMutex);
+        replyFlag = false;
+        wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NOTIFICATION_SHADE);
+        wl_display_flush(ctx.display);
+        syncVariable.wait(lck, [&](){ return replyFlag; });
+    }
+
+    // 3. check it
+    ASSERT_EQ(windowStatus.status, WMS_WINDOW_STATUS_CREATED)
+        << "CaseDescription: 3. check it (status == WMS_WINDOW_STATUS_CREATED)";
+    ASSERT_GT(windowStatus.wid, 0) << "CaseDescription: 3. check it (wid > 0)";
+    ASSERT_GE(windowStatus.x, 0) << "CaseDescription: 3. check it (x >= 0)";
+    ASSERT_GE(windowStatus.y, 0) << "CaseDescription: 3. check it (y >= 0)";
+    ASSERT_GT(windowStatus.width, 0u) << "CaseDescription: 3. check it (width > 0)";
+    ASSERT_GT(windowStatus.height, 0u) << "CaseDescription: 3. check it (height > 0)";
+
+}
+
+/*
+ * Feature: wms_create_window by normal arguments
+ * Function: WMSServer
+ * SubFunction: wms_create_window
+ * FunctionPoints: wms_create_window(WINDOW_TYPE_FLOAT)
+ * EnvConditions: display, compositor, wms init success.
+ * CaseDescription: 1. Create WlSurface
+ *                  2. Create Window by normal arguments
+ *                  3. check it
+ */
+HWTEST_F(WMServerTest, CreateWindow013, testing::ext::TestSize.Level0)
+{
+    // WMSServer init success.
+    ASSERT_NE(ctx.display, nullptr) << "EnvConditions: wl_display init success..";
+    ASSERT_NE(ctx.compositor, nullptr) << "EnvConditions: wl_compositor init success..";
+    ASSERT_NE(ctx.wms, nullptr) << "EnvConditions: wms init success..";
+
+    // 1. create WlSurface
+    struct wl_surface* wlSurface = wl_compositor_create_surface(ctx.compositor);
+    ASSERT_NE(wlSurface, nullptr) << "CaseDescription: 1. create WlSurface (wlSurface != nullptr)";
+
+    // 2. Create a Window (WINDOW_TYPE_FLOAT)
+    {
+        std::unique_lock<std::mutex> lck(syncMutex);
+        replyFlag = false;
+        wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_FLOAT);
+        wl_display_flush(ctx.display);
+        syncVariable.wait(lck, [&](){ return replyFlag; });
+    }
+
+    // 3. check it
+    ASSERT_EQ(windowStatus.status, WMS_WINDOW_STATUS_CREATED)
+        << "CaseDescription: 3. check it (status == WMS_WINDOW_STATUS_CREATED)";
+    ASSERT_GT(windowStatus.wid, 0) << "CaseDescription: 3. check it (wid > 0)";
+    ASSERT_GE(windowStatus.x, 0) << "CaseDescription: 3. check it (x >= 0)";
+    ASSERT_GE(windowStatus.y, 0) << "CaseDescription: 3. check it (y >= 0)";
+    ASSERT_GT(windowStatus.width, 0u) << "CaseDescription: 3. check it (width > 0)";
+    ASSERT_GT(windowStatus.height, 0u) << "CaseDescription: 3. check it (height > 0)";
+
 }
 
 /*

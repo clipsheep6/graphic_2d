@@ -27,11 +27,11 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "VsyncManagerProxy" };
 }
 
-VsyncManagerProxy::VsyncManagerProxy(const sptr<IRemoteObject>& impl) : IRemoteProxy<IVsyncManager>(impl)
+VsyncManagerProxy::VsyncManagerProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IVsyncManager>(impl)
 {
 }
 
-VsyncError VsyncManagerProxy::ListenVsync(sptr<IVsyncCallback>& cb)
+VsyncError VsyncManagerProxy::ListenVsync(sptr<IVsyncCallback> &cb)
 {
     if (cb == nullptr) {
         VLOG_FAILURE_NO(VSYNC_ERROR_NULLPTR);

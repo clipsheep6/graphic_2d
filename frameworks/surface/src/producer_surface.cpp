@@ -23,7 +23,7 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "ProducerSurface" };
 }
 
-ProducerSurface::ProducerSurface(sptr<IBufferProducer>& producer)
+ProducerSurface::ProducerSurface(sptr<IBufferProducer> &producer)
 {
     producer_ = producer;
     auto sret = producer_->GetName(name_);
@@ -62,7 +62,7 @@ sptr<IBufferProducer> ProducerSurface::GetProducer() const
     return producer_;
 }
 
-SurfaceError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
+SurfaceError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer> &buffer,
                                             int32_t &fence, BufferRequestConfig &config)
 {
     IBufferProducer::RequestBufferReturnValue retval;
@@ -110,7 +110,7 @@ SurfaceError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError ProducerSurface::CancelBuffer(sptr<SurfaceBuffer>& buffer)
+SurfaceError ProducerSurface::CancelBuffer(sptr<SurfaceBuffer> &buffer)
 {
     if (buffer == nullptr) {
         return SURFACE_ERROR_NULLPTR;
@@ -122,7 +122,7 @@ SurfaceError ProducerSurface::CancelBuffer(sptr<SurfaceBuffer>& buffer)
     return GetProducer()->CancelBuffer(bufferImpl->GetSeqNum(), bedataimpl);
 }
 
-SurfaceError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
+SurfaceError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer> &buffer,
     int32_t fence, BufferFlushConfig &config)
 {
     if (buffer == nullptr) {
@@ -135,13 +135,13 @@ SurfaceError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
     return GetProducer()->FlushBuffer(bufferImpl->GetSeqNum(), bedataimpl, fence, config);
 }
 
-SurfaceError ProducerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
+SurfaceError ProducerSurface::AcquireBuffer(sptr<SurfaceBuffer> &buffer, int32_t &fence,
                                             int64_t &timestamp, Rect &damage)
 {
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
-SurfaceError ProducerSurface::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence)
+SurfaceError ProducerSurface::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, int32_t fence)
 {
     return SURFACE_ERROR_NOT_SUPPORT;
 }
@@ -206,7 +206,7 @@ std::string ProducerSurface::GetUserData(const std::string &key)
     return "";
 }
 
-SurfaceError ProducerSurface::RegisterConsumerListener(sptr<IBufferConsumerListener>& listener)
+SurfaceError ProducerSurface::RegisterConsumerListener(sptr<IBufferConsumerListener> &listener)
 {
     return SURFACE_ERROR_NOT_SUPPORT;
 }

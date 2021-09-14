@@ -64,24 +64,24 @@ sptr<IBufferProducer> ConsumerSurface::GetProducer() const
     return producer_;
 }
 
-SurfaceError ConsumerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
+SurfaceError ConsumerSurface::RequestBuffer(sptr<SurfaceBuffer> &buffer,
                                             int32_t &fence, BufferRequestConfig &config)
 {
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
-SurfaceError ConsumerSurface::CancelBuffer(sptr<SurfaceBuffer>& buffer)
+SurfaceError ConsumerSurface::CancelBuffer(sptr<SurfaceBuffer> &buffer)
 {
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
-SurfaceError ConsumerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
+SurfaceError ConsumerSurface::FlushBuffer(sptr<SurfaceBuffer> &buffer,
                                           int32_t fence, BufferFlushConfig &config)
 {
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
-SurfaceError ConsumerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
+SurfaceError ConsumerSurface::AcquireBuffer(sptr<SurfaceBuffer> &buffer, int32_t &fence,
                                             int64_t &timestamp, Rect &damage)
 {
     SurfaceError ret;
@@ -91,7 +91,7 @@ SurfaceError ConsumerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t
     return ret;
 }
 
-SurfaceError ConsumerSurface::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence)
+SurfaceError ConsumerSurface::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, int32_t fence)
 {
     SurfaceError ret;
     sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
@@ -159,7 +159,7 @@ std::string ConsumerSurface::GetUserData(const std::string &key)
     return "";
 }
 
-SurfaceError ConsumerSurface::RegisterConsumerListener(sptr<IBufferConsumerListener>& listener)
+SurfaceError ConsumerSurface::RegisterConsumerListener(sptr<IBufferConsumerListener> &listener)
 {
     return consumer_->RegisterConsumerListener(listener);
 }

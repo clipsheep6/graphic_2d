@@ -199,7 +199,7 @@ VsyncError VsyncClient::RequestFrameCallback(const struct FrameCallback &cb)
     return VSYNC_ERROR_OK;
 }
 
-VsyncError VsyncClient::GetSupportedVsyncFrequencys(std::vector<uint32_t>& freqs)
+VsyncError VsyncClient::GetSupportedVsyncFrequencys(std::vector<uint32_t> &freqs)
 {
     VsyncError ret = Init();
     if (ret != VSYNC_ERROR_OK) {
@@ -296,7 +296,7 @@ sptr<VsyncHelperImpl> VsyncHelperImpl::Current()
     return currentHelper_;
 }
 
-VsyncHelperImpl::VsyncHelperImpl(std::shared_ptr<AppExecFwk::EventHandler>& handler)
+VsyncHelperImpl::VsyncHelperImpl(std::shared_ptr<AppExecFwk::EventHandler> &handler)
 {
     handler_ = handler;
     std::lock_guard<std::mutex> lock(g_handlersMutex);
@@ -319,7 +319,7 @@ VsyncError VsyncHelperImpl::RequestFrameCallback(const struct FrameCallback &cb)
     return VsyncClient::GetInstance()->RequestFrameCallback(cb);
 }
 
-VsyncError VsyncHelperImpl::GetSupportedVsyncFrequencys(std::vector<uint32_t>& freqs)
+VsyncError VsyncHelperImpl::GetSupportedVsyncFrequencys(std::vector<uint32_t> &freqs)
 {
     return VsyncClient::GetInstance()->GetSupportedVsyncFrequencys(freqs);
 }

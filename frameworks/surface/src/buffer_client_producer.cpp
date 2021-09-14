@@ -60,7 +60,7 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "BufferClientProducer" };
 }
 
-BufferClientProducer::BufferClientProducer(const sptr<IRemoteObject>& impl)
+BufferClientProducer::BufferClientProducer(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IBufferProducer>(impl)
 {
     BLOGNI("ctor");

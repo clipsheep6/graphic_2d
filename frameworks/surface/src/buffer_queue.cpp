@@ -69,7 +69,7 @@ uint32_t BufferQueue::GetUsedSize()
     return used_size;
 }
 
-SurfaceError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl>& buffer,
+SurfaceError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl> &buffer,
     const BufferRequestConfig &config)
 {
     for (auto it = freeList_.begin(); it != freeList_.end(); it++) {
@@ -90,7 +90,7 @@ SurfaceError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl>& buffer,
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::PopFromDirtyList(sptr<SurfaceBufferImpl>& buffer)
+SurfaceError BufferQueue::PopFromDirtyList(sptr<SurfaceBufferImpl> &buffer)
 {
     if (!dirtyList_.empty()) {
         buffer = bufferQueueCache_[dirtyList_.front()].buffer;
@@ -131,12 +131,6 @@ SurfaceError BufferQueue::CheckRequestConfig(const BufferRequestConfig &config)
 
     if (config.format < 0 || config.format > PIXEL_FMT_BUTT) {
         BLOGN_INVALID("config.format [0, %{public}d], now is %{public}d", PIXEL_FMT_BUTT, config.format);
-        return SURFACE_ERROR_INVALID_PARAM;
-    }
-
-    constexpr int32_t usageMax = HBM_USE_MEM_DMA * 2;
-    if (config.usage < 0 || config.usage >= usageMax) {
-        BLOGN_INVALID("config.usage [0, %{public}d), now is %{public}d", usageMax, config.usage);
         return SURFACE_ERROR_INVALID_PARAM;
     }
 
@@ -319,7 +313,7 @@ SurfaceError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData 
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl>& buffer,
+SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer,
                                         int32_t &fence, int64_t &timestamp, Rect &damage)
 {
     // dequeue from dirty list
@@ -345,7 +339,7 @@ SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl>& buffer,
     return ret;
 }
 
-SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t fence)
+SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl> &buffer, int32_t fence)
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
 
@@ -371,7 +365,7 @@ SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl>& buffer,
+SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
     const BufferRequestConfig &config)
 {
     buffer = new SurfaceBufferImpl();
@@ -413,7 +407,7 @@ SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl>& buffer,
     return ret;
 }
 
-SurfaceError BufferQueue::FreeBuffer(sptr<SurfaceBufferImpl>& buffer)
+SurfaceError BufferQueue::FreeBuffer(sptr<SurfaceBufferImpl> &buffer)
 {
     BLOGND("Free [%{public}d]", buffer->GetSeqNum());
     BufferManager::GetInstance()->Unmap(buffer);
@@ -499,7 +493,7 @@ SurfaceError BufferQueue::GetName(std::string &name)
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::RegisterConsumerListener(sptr<IBufferConsumerListener>& listener)
+SurfaceError BufferQueue::RegisterConsumerListener(sptr<IBufferConsumerListener> &listener)
 {
     listener_ = listener;
     return SURFACE_ERROR_OK;

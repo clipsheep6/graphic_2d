@@ -26,7 +26,7 @@ namespace Vsync {
 class MockDrmModule : public DrmModule {
 public:
     MOCK_METHOD0(GetSystemAbilityManager, sptr<ISystemAbilityManager>());
-    MOCK_METHOD2(GetSystemAbility, sptr<IRemoteObject>(sptr<ISystemAbilityManager>& sm, int32_t systemAbilityId));
+    MOCK_METHOD2(GetSystemAbility, sptr<IRemoteObject>(sptr<ISystemAbilityManager>& sam, int32_t systemAbilityId));
     MOCK_METHOD2(DrmOpen, int(std::string name, std::string busid));
     MOCK_METHOD1(DrmClose, int(int32_t drmFd_));
     MOCK_METHOD2(DrmWaitBlank, int(int32_t drmFd, drmVBlank vblank));

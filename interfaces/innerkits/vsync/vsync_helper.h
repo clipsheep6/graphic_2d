@@ -39,10 +39,10 @@ struct FrameCallback {
 class VsyncHelper : public RefBase {
 public:
     static sptr<VsyncHelper> Current();
-    static sptr<VsyncHelper> FromHandler(std::shared_ptr<AppExecFwk::EventHandler>& handler);
+    static sptr<VsyncHelper> FromHandler(std::shared_ptr<AppExecFwk::EventHandler> &handler);
 
     virtual VsyncError RequestFrameCallback(const struct FrameCallback &cb) = 0;
-    virtual VsyncError GetSupportedVsyncFrequencys(std::vector<uint32_t>& freqs) = 0;
+    virtual VsyncError GetSupportedVsyncFrequencys(std::vector<uint32_t> &freqs) = 0;
 };
 } // namespace OHOS
 

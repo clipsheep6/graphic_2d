@@ -219,6 +219,9 @@ bool DoubleEqual(double a, double b)
 
 bool RectSubtract(struct layout &rect, struct layout other)
 {
+    if (other.w == 0 || other.h == 0) {
+        return true;
+    }
     if (DoubleEqual(other.w, rect.w) && DoubleEqual(other.x, rect.x)) {
         if (DoubleEqual(other.y, rect.y)) {
             rect.y += other.h;
@@ -268,29 +271,36 @@ bool LayoutController::CalcNormalRect(struct layout &layout)
 namespace {
 bool IntegerParser(const std::string &value, int32_t &retval)
 {
-    std::stringstream ss;
-    ss << value;
-    ss >> retval;
-    return ss.good();
+    std::regex numberRegex{"([0-9]+)"};
+    std::smatch result;
+    if (std::regex_match(value, result, numberRegex)) {
+        std::stringstream ss;
+        ss << result[1];
+        ss >> retval;
+        return true;
+    }
+    LOGE("invalid number (%{public}s)", value.c_str());
+    return false;
 }
 
 bool NumberUnitParser(const std::string &value, int32_t total, double &retval)
 {
-    std::stringstream ss;
-    std::string unit;
-    ss << value;
-    ss >> retval >> unit;
-    if (ss.good()) {
-        if (unit == "px") {
+    std::regex numberUnitRegex{"([0-9]+(\\.[0-9]+)?)(px|%)"};
+    std::smatch result;
+    if (std::regex_match(value, result, numberUnitRegex)) {
+        std::stringstream ss;
+        ss << result[1];
+        ss >> retval;
+        if (result[3] == "px") {
             constexpr double full = 100.0; // 100%
             retval = retval / total * full;
             return true;
         }
-        if (unit == "%") {
+        if (result[3] == "%") {
             return true;
         }
     }
-    LOGE("warning invalid number unit (%{public}s)", value.c_str());
+    LOGE("invalid number unit (%{public}s)", value.c_str());
     return false;
 }
 
@@ -306,7 +316,7 @@ bool PositionTypeParser(const std::string &value, Layout::PositionType &retval)
         retval = Layout::PositionType::FIXED;
         return true;
     }
-    LOGE("warning invalid position type (%{public}s)", value.c_str());
+    LOGE("invalid position type (%{public}s)", value.c_str());
     return false;
 }
 
@@ -325,7 +335,7 @@ bool XPositionTypeParser(const std::string &value, Layout::XPositionType &retval
         retval = Layout::XPositionType::UNSET;
         return true;
     }
-    LOGE("warning invalid x position type (%{public}s)", value.c_str());
+    LOGE("invalid x position type (%{public}s)", value.c_str());
     return false;
 }
 
@@ -344,7 +354,7 @@ bool YPositionTypeParser(const std::string &value, Layout::YPositionType &retval
         retval = Layout::YPositionType::UNSET;
         return true;
     }
-    LOGE("warning invalid y position type (%{public}s)", value.c_str());
+    LOGE("invalid y position type (%{public}s)", value.c_str());
     return false;
 }
 
@@ -357,7 +367,7 @@ WindowMode WindowModeParser(const std::string &value)
     } else if (value == "full") {
         return WINDOW_MODE_FULL;
     }
-    LOGE("warning invalid window mode (%{public}s)", value.c_str());
+    LOGE("invalid window mode (%{public}s)", value.c_str());
     return WINDOW_MODE_UNSET;
 }
 
@@ -491,12 +501,12 @@ void LayoutController::ParseAttr(const struct Driver::CSSBlock &block, struct La
         }
         auto it = attrProcessFuncs.find(attribute);
         if (it == attrProcessFuncs.end()) {
-            LOGE("warning attr is invalid (%{public}s)", attribute.c_str());
+            LOGE("attr is invalid (%{public}s)", attribute.c_str());
         }
 
         auto ret = it->second(value, layout, displayWidth, displayHeight);
         if (ret != 0) {
-            LOGI("warning value (%{public}s: %{public}s) return %{public}d",
+            LOGI("value (%{public}s: %{public}s) return %{public}d",
                  attribute.c_str(), value.c_str(), ret);
         }
     }

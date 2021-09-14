@@ -1,9 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 # Copyright (c) 2021 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -11,14 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("buffer_handle") {
-  public_deps = [ "buffer_handle:buffer_handle" ]
-}
+import optparse
+import subprocess
+import sys
 
-group("promise") {
-  public_deps = [ "promise:promise" ]
-}
+def parse_args(args):
+    parser = optparse.OptionParser()
+    parser.add_option("--input")
+    parser.add_option("--output")
+    options, _ = parser.parse_args(args)
+    return options
 
-group("semaphore") {
-  public_deps = [ "semaphore:semaphore" ]
-}
+if __name__ == '__main__':
+    options = parse_args(sys.argv[1:])
+    parse_scripts = subprocess.check_call(
+        ["flex", "--c++", "-o", options.output, options.input])

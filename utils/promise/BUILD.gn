@@ -11,14 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("buffer_handle") {
-  public_deps = [ "buffer_handle:buffer_handle" ]
+import("//build/ohos.gni")
+
+config("promise_public_config") {
+  include_dirs = [ "export" ]
 }
 
 group("promise") {
-  public_deps = [ "promise:promise" ]
-}
-
-group("semaphore") {
-  public_deps = [ "semaphore:semaphore" ]
+  public_configs = [ ":promise_public_config" ]
 }

@@ -169,6 +169,11 @@ WMError SubwindowVideoImpl::Create(sptr<Subwindow> &subwindow,
         return wret;
     }
 
+    wret = svi->Move(option->GetX(), option->GetY());
+    if (wret != WM_OK) {
+        return wret;
+    }
+
     subwindow = svi;
     WMLOGFI("Create Video Subwindow Success");
     return WM_OK;
@@ -201,7 +206,7 @@ WMError SubwindowVideoImpl::Move(int32_t x, int32_t y)
     auto parentWindow = pw.promote();
     if (parentWindow != nullptr) {
         rect.x += parentWindow->GetX();
-        rect.x += parentWindow->GetY();
+        rect.y += parentWindow->GetY();
     }
 
     WMLOGFI("(subwindow video) rect.x: %{public}d, rect.y: %{public}d", rect.x, rect.y);

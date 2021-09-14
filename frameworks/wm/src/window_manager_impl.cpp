@@ -315,47 +315,4 @@ WMError WindowManagerImpl::ListenNextWindowShot(const sptr<Window> &window, IWin
     return WM_OK;
 }
 
-WMError WindowManagerImpl::ListenContinueNextWindowShot(int32_t id, IWindowShotCallback *cb)
-{
-    if (wmservice == nullptr) {
-        WMLOGFE("wmservice is nullptr");
-        return WM_ERROR_NOT_INIT;
-    }
-
-    if (cb == nullptr) {
-        WMLOGFE("callback is nullptr");
-        return WM_ERROR_NULLPTR;
-    }
-
-    auto promise = wmservice->ShotWindow(id);
-    if (promise == nullptr) {
-        WMLOGFE("promise is nullptr");
-        return WM_ERROR_NEW;
-    }
-
-    auto then = [cb](const auto& wmsinfo) {
-        WMImageInfo wminfo = {
-            .wret = wmsinfo.wret,
-            .width = wmsinfo.width,
-            .height = wmsinfo.height,
-            .format = wmsinfo.format,
-            .size = wmsinfo.stride * wmsinfo.height,
-            .data = nullptr,
-        };
-        auto data = mmap(nullptr, wminfo.size, PROT_READ, MAP_SHARED, wmsinfo.fd, 0);
-        wminfo.data = data;
-
-        cb->OnWindowShot(wminfo);
-
-        // 0xffffffff
-        uint8_t *errPtr = nullptr;
-        errPtr--;
-        if (data != errPtr) {
-            munmap(data, wminfo.size);
-        }
-    };
-    promise->Then(then);
-    return WM_OK;
-}
-
 } // namespace OHOS

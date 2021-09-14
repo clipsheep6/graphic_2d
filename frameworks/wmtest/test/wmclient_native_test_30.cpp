@@ -18,6 +18,7 @@
 #include <atomic>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/mman.h>
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
@@ -82,21 +83,62 @@ public:
             ExitTest();
             return;
         }
-        std::signal(SIGINT, signalHandler);
         WMClientNativeTest19::Run(argc, argv);
+        auto wmsc = WindowManagerServiceClient::GetInstance();
+        wmsc->Init();
+        wmservice = wmsc->GetService();
+        std::signal(SIGINT, signalHandler);
         printf("Run\n");
         constexpr uint32_t delayTime = 1000;
         PostTask(std::bind(&WMClientNativeTest30::AfterRun, this), delayTime);
     }
+
+    void ShotCurrentWindow(int32_t wid, IWindowShotCallback *cb)
+    {
+        if (wmservice == nullptr) {
+            printf("wmservice is nullptr");
+        }
+
+        if (cb == nullptr) {
+            printf("callback is nullptr");
+        }
+
+        auto promise = wmservice->ShotWindow(wid);
+        if (promise == nullptr) {
+            printf("promise is nullptr");
+        }
+
+        auto then = [cb](const auto& wmsinfo) {
+            WMImageInfo wminfo = {
+                .wret = wmsinfo.wret,
+                .width = wmsinfo.width,
+                .height = wmsinfo.height,
+                .format = wmsinfo.format,
+                .size = wmsinfo.stride * wmsinfo.height,
+                .data = nullptr,
+            };
+            auto data = mmap(nullptr, wminfo.size, PROT_READ, MAP_SHARED, wmsinfo.fd, 0);
+            wminfo.data = data;
+
+            cb->OnWindowShot(wminfo);
+
+            // 0xffffffff
+            uint8_t *errPtr = nullptr;
+            errPtr--;
+            if (data != errPtr) {
+                munmap(data, wminfo.size);
+            }
+        };
+        promise->Then(then);
+    }
+
     void AfterRun()
     {
         printf("wid == %u \n",windowId);
         do {
-            auto wm = WindowManager::GetInstance();
             if(windowId != 0 && Isover != false){
                 printf("windowId == %u \n",windowId);
-                WMError wmerror = wm->ListenContinueNextWindowShot(windowId, this);
-                printf("wmerror == %d \n",wmerror);
+                ShotCurrentWindow(windowId,this);
                 Isover = false;
             }
         } while (running);
@@ -142,11 +184,13 @@ public:
             ExitTest();
         }
     }
+
+private:
     static inline std::atomic<bool> running = true;
     static inline std::atomic<bool> Isover = true;
     uint32_t times = 0;
     sptr<Promise<bool>> promise = nullptr;
-    sptr<Window> window = nullptr;
+    sptr<IWindowManagerService> wmservice;
 } g_autoload;
 } // namespace
 

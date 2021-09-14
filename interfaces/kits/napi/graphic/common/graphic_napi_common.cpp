@@ -41,4 +41,12 @@ napi_status SetMemberUndefined(napi_env env, napi_value result, const char *key)
     GNAPI_INNER(napi_set_named_property(env, result, key, undefined));
     return napi_ok;
 }
+
+void CreateWindowTypeObject(napi_env env, napi_value value)
+{
+    SetMemberInt32(env, value, "TYPE_APP", static_cast<int32_t>(WindowType::WINDOW_TYPE_NORMAL));
+    SetMemberInt32(env, value, "TYPE_SYSTEM_ALERT", static_cast<int32_t>(WindowType::WINDOW_TYPE_ALARM_SCREEN));
+    SetMemberInt32(env, value, "TYPE_SYSTEM_VOLUME", static_cast<int32_t>(WindowType::WINDOW_TYPE_VOLUME_OVERLAY));
+    SetMemberInt32(env, value, "TYPE_SYSTEM_PANEL", static_cast<int32_t>(WindowType::WINDOW_TYPE_NOTIFICATION_SHADE));
+}
 } // namespace OHOS

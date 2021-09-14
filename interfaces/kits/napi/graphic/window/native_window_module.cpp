@@ -165,6 +165,11 @@ napi_value MainFunc(napi_env env, napi_callback_info info)
 napi_value WindowModuleInit(napi_env env, napi_value exports)
 {
     GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
+
+    napi_value nWindowType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nWindowType));
+    CreateWindowTypeObject(env, nWindowType);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("resetSize", NAPIWindow::ResetSize::MainFunc),
         DECLARE_NAPI_FUNCTION("moveTo", NAPIWindow::MoveTo::MainFunc),
@@ -177,6 +182,7 @@ napi_value WindowModuleInit(napi_env env, napi_value exports)
 
     napi_property_descriptor exportFuncs[] = {
         DECLARE_NAPI_FUNCTION("getTopWindow", getTopWindow::MainFunc),
+        DECLARE_NAPI_PROPERTY("WindowType", nWindowType),
         DECLARE_NAPI_PROPERTY("Window", g_classWindow),
     };
 

@@ -23,6 +23,7 @@
 #include <napi/native_api.h>
 #include <napi/native_common.h>
 #include <napi/native_node_api.h>
+#include <window_manager_type.h>
 
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "NapiGraphicCommonLayer" };
 
@@ -50,6 +51,7 @@ namespace OHOS {
 napi_status SetMemberInt32(napi_env env, napi_value result, const char *key, int32_t value);
 napi_status SetMemberUint32(napi_env env, napi_value result, const char *key, uint32_t value);
 napi_status SetMemberUndefined(napi_env env, napi_value result, const char *key);
+void CreateWindowTypeObject(napi_env env, napi_value value);
 
 template<typename ParamT>
 napi_value CreatePromise(napi_env env,

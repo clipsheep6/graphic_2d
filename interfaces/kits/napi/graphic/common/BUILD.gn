@@ -28,6 +28,7 @@ config("graphic_napi_common_public_config") {
   include_dirs = [
     ".",
     "//third_party/node/src",
+    "//foundation/graphic/standard/interfaces/innerkits/wmclient",
   ]
 }
 

@@ -314,5 +314,4 @@ WMError WindowManagerImpl::ListenNextWindowShot(const sptr<Window> &window, IWin
     promise->Then(then);
     return WM_OK;
 }
-
 } // namespace OHOS

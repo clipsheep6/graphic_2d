@@ -16,8 +16,7 @@
 #include "wmclient_native_test_19.h"
 
 #include <cstdio>
-
-#include <window_manager_service_client.h>
+#include <securec.h>
 
 #include "inative_test.h"
 #include "native_test_class.h"
@@ -26,56 +25,54 @@
 using namespace OHOS;
 
 namespace {
-class WMClientNativeTest19 : public INativeTest, public IWindowChangeListenerClazz {
-public:
-    std::string GetDescription() const override
-    {
-        constexpr const char *desc = "listen global window event";
-        return desc;
-    }
-
-    std::string GetDomain() const override
-    {
-        constexpr const char *domain = "wmclient";
-        return domain;
-    }
-
-    int32_t GetID() const override
-    {
-        constexpr int32_t id = 19;
-        return id;
-    }
-
-    uint32_t GetLastTime() const override
-    {
-        constexpr uint32_t lastTime = LAST_TIME_FOREVER;
-        return lastTime;
-    }
-
-    void Run(int32_t argc, const char **argv) override
-    {
-        auto wmsc = WindowManagerServiceClient::GetInstance();
-        wmsc->Init();
-        auto wms = wmsc->GetService();
-        auto wretPromise = wms->OnWindowListChange(this);
-        auto wret = wretPromise->Await();
-        if (wret != WM_OK) {
-            printf("Register Window Change Listener failed\n");
-            ExitTest();
-            return;
-        }
-    }
-
-    void OnWindowCreate(int32_t pid, int32_t wid) override
-    {
-        printf("process%d %d window created\n", pid, wid);
-    }
-
-    void OnWindowDestroy(int32_t pid, int32_t wid) override
-    {
-        printf("process%d %d window destroyed\n", pid, wid);
-    }
-
-private:
-} g_autoload;
+WMClientNativeTest19 g_autoload;
 } // namespace
+
+std::string WMClientNativeTest19::GetDescription() const 
+{
+    constexpr const char *desc = "listen global window event";
+    return desc;
+}
+
+std::string WMClientNativeTest19::GetDomain() const 
+{
+    constexpr const char *domain = "wmclient";
+    return domain;
+}
+
+int32_t WMClientNativeTest19::GetID() const 
+{
+    constexpr int32_t id = 19;
+    return id;
+}
+
+uint32_t WMClientNativeTest19::GetLastTime() const 
+{
+    constexpr uint32_t lastTime = LAST_TIME_FOREVER;
+    return lastTime;
+}
+
+void WMClientNativeTest19::Run(int32_t argc, const char **argv) 
+{
+    auto wmsc = WindowManagerServiceClient::GetInstance();
+    wmsc->Init();
+    auto wms = wmsc->GetService();
+    auto wretPromise = wms->OnWindowListChange(this);
+    auto wret = wretPromise->Await();
+    if (wret != WM_OK) {
+        printf("Register Window Change Listener failed\n");
+        ExitTest();
+        return;
+    }
+}
+
+void WMClientNativeTest19::OnWindowCreate(int32_t pid, int32_t wid)
+{
+    windowId = wid;
+    printf("process%d %d window created\n", pid, wid);
+}
+
+void WMClientNativeTest19::OnWindowDestroy(int32_t pid, int32_t wid)
+{
+    printf("process%d %d window destroyed\n", pid, wid);
+}

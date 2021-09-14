@@ -45,6 +45,7 @@ public:
 
     virtual WMError ListenNextScreenShot(int32_t id, IScreenShotCallback *cb) = 0;
     virtual WMError ListenNextWindowShot(const sptr<Window> &window, IWindowShotCallback *cb) = 0;
+    virtual WMError ListenContinueNextWindowShot(int32_t id, IWindowShotCallback *cb) =0;
 };
 } // namespace OHOS
 

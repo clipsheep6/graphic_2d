@@ -16,4 +16,32 @@
 #ifndef FRAMEWORKS_WMTEST_TEST_WMCLIENT_WMCLIENT_NATIVE_TEST_19_H
 #define FRAMEWORKS_WMTEST_TEST_WMCLIENT_WMCLIENT_NATIVE_TEST_19_H
 
+#include <cstdint>
+#include <string>
+
+#include <refbase.h>
+#include <window.h>
+#include <window_manager_service_client.h>
+#include "inative_test.h"
+#include "native_test_class.h"
+
+namespace OHOS {
+class WMClientNativeTest19 : public INativeTest, public IWindowChangeListenerClazz{
+public:
+    virtual ~WMClientNativeTest19() = default;
+    virtual std::string GetDescription() const override;
+    virtual std::string GetDomain() const override;
+    virtual int32_t GetID() const override;
+    virtual uint32_t GetLastTime() const override;
+
+    virtual void Run(int32_t argc, const char **argv) override;
+
+    virtual void OnWindowCreate(int32_t pid, int32_t wid) override;
+    virtual void OnWindowDestroy(int32_t pid, int32_t wid) override;
+
+protected:
+    int32_t windowId = 0;
+};
+}
+
 #endif // FRAMEWORKS_WMTEST_TEST_WMCLIENT_WMCLIENT_NATIVE_TEST_19_H

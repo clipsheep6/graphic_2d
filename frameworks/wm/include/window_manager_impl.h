@@ -52,6 +52,8 @@ public:
 
     virtual WMError ListenNextScreenShot(int32_t id, IScreenShotCallback *cb) override;
     virtual WMError ListenNextWindowShot(const sptr<Window> &window, IWindowShotCallback *cb) override;
+    virtual WMError ListenContinueNextWindowShot(int32_t id, IWindowShotCallback *cb) override;
+    
 
 private:
     WindowManagerImpl();

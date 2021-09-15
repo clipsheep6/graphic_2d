@@ -182,6 +182,12 @@ sptr<Surface> WindowImpl::GetSurface() const
     return psurface;
 }
 
+sptr<IBufferProducer> WindowImpl::GetProducer() const
+{
+    CHECK_DESTROY_CONST(nullptr);
+    return csurface->GetProducer();
+}
+
 int32_t WindowImpl::GetID() const
 {
     CHECK_DESTROY_CONST(-1);

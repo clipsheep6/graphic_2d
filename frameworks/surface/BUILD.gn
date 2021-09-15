@@ -23,6 +23,8 @@ config("surface_config") {
     "-Wall",
     "-Werror",
     "-g3",
+    "-DENABLE_EGL",
+    "-DEGL_NO_X11",
   ]
 }
 
@@ -30,6 +32,8 @@ config("surface_public_config") {
   include_dirs = [
     "//foundation/graphic/standard/interfaces/innerkits/surface",
     "//foundation/graphic/standard/interfaces/innerkits/common",
+    "//third_party/weston/include",
+    "//device/rockchip/hardware/gpu/include",
   ]
 }
 
@@ -43,12 +47,19 @@ ohos_shared_library("surface") {
     "src/buffer_queue_producer.cpp",
     "src/buffer_utils.cpp",
     "src/consumer_surface.cpp",
+    "src/egl_data_impl.cpp",
+    "src/egl_manager.cpp",
     "src/producer_surface.cpp",
+    "src/producer_egl_surface.cpp",
+    "src/egl_surface.cpp",
     "src/surface.cpp",
     "src/surface_buffer_impl.cpp",
   ]
 
-  configs = [ ":surface_config" ]
+  configs = [
+    ":surface_config",
+    "//third_party/libdrm:libdrm_public_config",
+  ]
 
   public_configs = [
     ":surface_public_config",
@@ -57,6 +68,7 @@ ohos_shared_library("surface") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//device/rockchip/hardware/gpu:mali-bifrost-g52-g2p0-wayland",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
   ]
 

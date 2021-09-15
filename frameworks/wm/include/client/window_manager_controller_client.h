@@ -58,7 +58,7 @@ struct InnerWindowInfo {
     int32_t pos_x;
     int32_t pos_y;
     funcWindowInfoChange windowInfoChangeCb;
-    void (* onWindowCreateCb)(uint32_t pid);
+    void (*onWindowCreateCb)(uint32_t pid);
     sptr<InputListener> logListener;
     sptr<MultimodalListener> mmiListener;
 
@@ -76,7 +76,7 @@ public:
 
     InnerWindowInfo *CreateWindow(int32_t id, WindowConfig &config);
     InnerWindowInfo *CreateSubWindow(int32_t subid, int32_t parentid, WindowConfig &config);
-    void CreateWlBuffer(sptr<Surface>& surface, uint32_t id);
+    void CreateWlBuffer(sptr<Surface> &surface, uint32_t id);
     void DestroyWindow(int32_t id);
     void Move(int32_t id, int32_t x, int32_t y);
     void Show(int32_t id);
@@ -89,7 +89,7 @@ public:
     void RegistOnTouchCb(int id, funcOnTouch cb);
     void RegistOnKeyCb(int id, funcOnKey cb);
     void RegistWindowInfoChangeCb(int id, funcWindowInfoChange cb);
-    void RegistOnWindowCreateCb(int32_t id, void(* cb)(uint32_t pid));
+    void RegistOnWindowCreateCb(int32_t id, void(*cb)(uint32_t pid));
     void SendWindowCreate(uint32_t pid);
 
     InnerWindowInfo *GetInnerWindowInfoFromId(uint32_t windowid);
@@ -119,7 +119,7 @@ private:
 
 class SurfaceListener : public IBufferConsumerListener {
 public:
-    SurfaceListener(sptr<Surface>& surface, uint32_t windowid);
+    SurfaceListener(sptr<Surface> &surface, uint32_t windowid);
     virtual ~SurfaceListener();
 
     virtual void OnBufferAvailable() override;

@@ -57,7 +57,7 @@ SurfaceBufferImpl::~SurfaceBufferImpl()
     }
 }
 
-SurfaceBufferImpl *SurfaceBufferImpl::FromBase(const sptr<SurfaceBuffer>& buffer)
+SurfaceBufferImpl *SurfaceBufferImpl::FromBase(const sptr<SurfaceBuffer> &buffer)
 {
     return static_cast<SurfaceBufferImpl*>(buffer.GetRefPtr());
 }

@@ -37,7 +37,7 @@ void StaticCall::SetInstance(sptr<StaticCall> &mockInstance)
     instance = mockInstance;
 }
 
-sptr<IVsyncManager> StaticCall::GetCast(sptr<IRemoteObject>& remoteObject)
+sptr<IVsyncManager> StaticCall::GetCast(sptr<IRemoteObject> &remoteObject)
 {
     auto cast = iface_cast<IVsyncManager>(remoteObject);
     return cast;
@@ -48,17 +48,17 @@ sptr<ISystemAbilityManager> StaticCall::GetSystemAbilityManager()
     return SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
 }
 
-sptr<IRemoteObject> StaticCall::GetSystemAbility(sptr<ISystemAbilityManager>& sm, int32_t systemAbilityId)
+sptr<IRemoteObject> StaticCall::GetSystemAbility(sptr<ISystemAbilityManager> &sam, int32_t systemAbilityId)
 {
-    return sm->GetSystemAbility(systemAbilityId);
+    return sam->GetSystemAbility(systemAbilityId);
 }
 
-VsyncError StaticCall::GetVsyncFrequency(sptr<IVsyncManager>& server, uint32_t &freq)
+VsyncError StaticCall::GetVsyncFrequency(sptr<IVsyncManager> &server, uint32_t &freq)
 {
     return server->GetVsyncFrequency(freq);
 }
 
-VsyncError StaticCall::ListenVsync(sptr<IVsyncManager>& server, sptr<IVsyncCallback>& cb)
+VsyncError StaticCall::ListenVsync(sptr<IVsyncManager> &server, sptr<IVsyncCallback> &cb)
 {
     return server->ListenVsync(cb);
 }

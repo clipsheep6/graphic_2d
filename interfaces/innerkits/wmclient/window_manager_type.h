@@ -18,32 +18,9 @@
 
 #include "wm_common.h"
 
+#ifdef __cplusplus
 namespace OHOS {
-enum SubwindowType {
-    SUBWINDOW_TYPE_NORMAL = 0,
-    SUBWINDOW_TYPE_VIDEO = 1,
-    SUBWINDOW_TYPE_MAX,
-};
-
-enum WindowRotateType {
-    WINDOW_ROTATE_TYPE_NORMAL = 0,
-    WINDOW_ROTATE_TYPE_90 = 1,
-    WINDOW_ROTATE_TYPE_180 = 2,
-    WINDOW_ROTATE_TYPE_270 = 3,
-    WINDOW_ROTATE_TYPE_FLIPPED = 4,
-    WINDOW_ROTATE_TYPE_FLIPPED_90 = 5,
-    WINDOW_ROTATE_TYPE_FLIPPED_180 = 6,
-    WINDOW_ROTATE_TYPE_FLIPPED_270 = 7,
-    WINDOW_ROTATE_TYPE_MAX,
-};
-
-enum WindowMode {
-    WINDOW_MODE_UNSET = 0,
-    WINDOW_MODE_FREE = 1,
-    WINDOW_MODE_TOP = 2,
-    WINDOW_MODE_MAX,
-};
-
+#endif
 struct WMDisplayInfo {
     int32_t id;
     uint32_t width;
@@ -52,6 +29,8 @@ struct WMDisplayInfo {
     uint32_t phyHeight;
     uint32_t vsync;
 };
+#ifdef __cplusplus
 } // namespace OHOS
+#endif
 
 #endif // INTERFACES_INNERKITS_WMCLIENT_WINDOW_MANAGER_TYPE_H

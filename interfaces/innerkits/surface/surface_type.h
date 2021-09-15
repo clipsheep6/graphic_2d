@@ -54,7 +54,7 @@ using BufferRequestConfig = struct BufferRequestConfig {
                format == config.format &&
                usage == config.usage;
     }
-    bool operator != (const struct BufferRequestConfig &config) const
+    bool operator !=(const struct BufferRequestConfig &config) const
     {
         return !(*this == config);
     }

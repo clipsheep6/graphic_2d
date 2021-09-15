@@ -42,11 +42,7 @@ namespace {
         layerId_(winInfo.voLayerId), surface_(winInfo.surface), producer(nullptr)
     {
         VIDEO_WINDOW_ENTER();
-#ifdef TARGET_CPU_ARM
         display = new (std::nothrow) VideoDisplayManager();
-#else
-        display = nullptr;
-#endif
         if (display == nullptr) {
             WMLOGFE("new video display manager fail");
         }
@@ -58,11 +54,9 @@ namespace {
     VideoWindow::~VideoWindow()
     {
         VIDEO_WINDOW_ENTER();
-#ifdef TARGET_CPU_ARM
         if (display != nullptr) {
             display->DetachLayer(layerId_);
         }
-#endif
         DestroyLayer(layerId_);
         VIDEO_WINDOW_EXIT();
     }
@@ -75,11 +69,7 @@ namespace {
         if (winInfo.windowconfig.type == -1) {
             layerInfo.type = LAYER_TYPE_OVERLAY;
         }
-#ifdef TARGET_CPU_ARM
         int32_t ret = VideoDisplayManager::CreateLayer(layerInfo, layerId, surface);
-#else
-        int32_t ret = DISPLAY_FAILURE;
-#endif
         VIDEO_WINDOW_EXIT();
         return ret;
     }
@@ -87,9 +77,7 @@ namespace {
     void VideoWindow::DestroyLayer(uint32_t layerId)
     {
         VIDEO_WINDOW_ENTER();
-#ifdef TARGET_CPU_ARM
         VideoDisplayManager::DestroyLayer(layerId);
-#endif
         VIDEO_WINDOW_EXIT();
     }
 
@@ -101,13 +89,11 @@ namespace {
             WMLOGFE("display layer is not create");
             return DISPLAY_FAILURE;
         }
-#ifdef TARGET_CPU_ARM
         producer = display->AttachLayer(surface_, layerId_);
         if (producer == nullptr) {
             WMLOGFE("attach layer fail");
             ret = DISPLAY_FAILURE;
         }
-#endif
         VIDEO_WINDOW_EXIT();
         return ret;
     }
@@ -131,7 +117,6 @@ namespace {
             return;
         }
 
-#ifdef TARGET_CPU_ARM
         int32_t ret = display->GetRect(layerId_, rect);
         if (ret != DISPLAY_SUCCESS) {
             WMLOGFW("get rect fail, ret:%{public}d", ret);
@@ -148,7 +133,6 @@ namespace {
             return;
         }
         SubWindow::Move(x, y);
-#endif
         VIDEO_WINDOW_EXIT();
     }
 
@@ -161,7 +145,6 @@ namespace {
             return;
         }
 
-#ifdef TARGET_CPU_ARM
         int32_t ret = display->GetRect(layerId_, rect);
         if (ret != DISPLAY_SUCCESS) {
             WMLOGFW("get rect fail, ret:%d", ret);
@@ -177,7 +160,6 @@ namespace {
             return;
         }
         SubWindow::SetSubWindowSize(width, height);
-#endif
         VIDEO_WINDOW_EXIT();
     }
 
@@ -188,14 +170,10 @@ namespace {
             WMLOGFE("display layer is not create");
             return DISPLAY_FAILURE;
         }
-#ifdef TARGET_CPU_ARM
         int32_t ret = display->SetZorder(layerId, zorder);
         if (ret != DISPLAY_SUCCESS) {
             WMLOGFW("set zorder fail, ret:%{public}d", ret);
         }
-#else
-        int32_t ret = DISPLAY_FAILURE;
-#endif
         VIDEO_WINDOW_EXIT();
         return ret;
     }
@@ -207,14 +185,10 @@ namespace {
             WMLOGFE("display layer is not create");
             return DISPLAY_FAILURE;
         }
-#ifdef TARGET_CPU_ARM
         int32_t ret = display->SetTransformMode(layerId, type);
         if (ret != DISPLAY_SUCCESS) {
             WMLOGFW("set transform mode fail, ret:%{public}d", ret);
         }
-#else
-        int32_t ret = DISPLAY_FAILURE;
-#endif
         VIDEO_WINDOW_EXIT();
         return ret;
     }

@@ -213,6 +213,7 @@ void Main::OnWindowDestroy(int32_t, int32_t)
 
 int main(int argc, const char *argv[])
 {
+    LOG("test");
     const auto &wmi = WindowManager::GetInstance();
     auto wret = wmi->Init();
     if (wret != WM_OK) {

@@ -81,6 +81,7 @@ enum {
 #define PIXMAN_FORMAT_AVERAGE 8
 #define BYTE_SPP_SIZE 4
 #define ASSERT assert
+#define DEFAULT_SEAT_NAME "default"
 
 struct WindowSurface {
     struct WmsController *controller;
@@ -392,48 +393,6 @@ static uint32_t GetWindowId(struct WmsController *pController)
     LOGD("success, windowId = %{public}d", windowId);
 
     return windowId;
-}
-
-static void SurfaceDestroy(const struct WindowSurface *surface)
-{
-    ASSERT(surface != NULL);
-    LOGD("surfaceId:%{public}d start.", surface->surfaceId);
-
-    wl_list_remove(&surface->surfaceDestroyListener.link);
-    wl_list_remove(&surface->propertyChangedListener.link);
-
-    if (surface->layoutSurface != NULL) {
-        surface->controller->pWmsCtx->pLayoutInterface->surface_destroy(
-            surface->layoutSurface);
-    }
-
-    ClearWindowId(surface->controller, surface->surfaceId);
-    wl_list_remove(&surface->link);
-
-    if (surface->surface) {
-        surface->surface->committed = NULL;
-        surface->surface->committed_private = NULL;
-    }
-
-    wms_send_window_status(surface->controller->pWlResource,
-        WMS_WINDOW_STATUS_DESTROYED, surface->surfaceId, 0, 0, 0, 0);
-
-    SendGlobalWindowStatus(surface->controller, surface->surfaceId, WMS_WINDOW_STATUS_DESTROYED);
-
-    free(surface);
-
-    LOGD(" end.");
-}
-
-static void WindowSurfaceDestroy(const struct wl_listener *listener, 
-    const struct weston_compositor *data)
-{
-    LOGD("start.");
-
-    struct WindowSurface *windowSurface = wl_container_of(listener, windowSurface, surfaceDestroyListener);
-    SurfaceDestroy(windowSurface);
-
-    LOGD("end.");
 }
 
 static struct ivi_layout_layer *GetLayer(
@@ -918,7 +877,53 @@ static void PointerSetFocus(const struct WmsSeat *seat)
 }
 #endif
 
-static bool FocusUpdate(const struct WindowSurface *surface)
+static struct WmsSeat *GetWmsSeat(const char *seatName)
+{
+    struct WmsContext *pWmsCtx = GetWmsInstance();
+    struct WmsSeat *pSeat = NULL;
+    wl_list_for_each(pSeat, &pWmsCtx->wlListSeat, wlListLink) {
+        if (!strcmp(pSeat->pWestonSeat->seat_name, seatName)) {
+            return pSeat;
+        }
+    }
+    return NULL;
+}
+
+static struct WindowSurface *GetDefaultFocusableWindow(uint32_t screenId)
+{
+    struct WmsContext *pWmsCtx = GetWmsInstance();
+    struct WmsScreen *pWmsScreen = GetScreenFromId(pWmsCtx, screenId);
+
+    if (!pWmsScreen) {
+        LOGE("GetScreenFromId failed.");
+        return NULL;
+    }
+
+    int layerCount = 0;
+    struct ivi_layout_layer **layerList = NULL;
+    struct ivi_layout_interface_for_wms *pLayoutInterface = pWmsCtx->pLayoutInterface;
+    pLayoutInterface->get_layers_on_screen(pWmsScreen->westonOutput, &layerCount, &layerList);
+
+    for (int i = layerCount - 1; i >= 0; i--) {
+        int surfaceCnt = 0;
+        struct ivi_layout_surface **surfaceList = NULL;
+        pLayoutInterface->get_surfaces_on_layer(layerList[i], &surfaceCnt, &surfaceList);
+
+        for (int j = surfaceCnt - 1; j >= 0; j--) {
+            struct WindowSurface *pWindow = GetSurface(&pWmsCtx->wlListWindow, surfaceList[j]->id_surface);
+            if (pWindow && pWindow->type != WINDOW_TYPE_STATUS_BAR
+                && pWindow->type != WINDOW_TYPE_NAVI_BAR) {
+                LOGI("DefaultFocusableWindow found %{public}d.", pWindow->surfaceId);
+                return pWindow;
+            }
+        }
+    }
+
+    LOGI("DefaultFocusableWindow not found.");
+    return NULL;
+}
+
+static bool SetWindowFocus(const struct WindowSurface *surface)
 {
     LOGD("start.");
     int flag = INPUT_DEVICE_ALL;
@@ -950,26 +955,40 @@ static bool FocusUpdate(const struct WindowSurface *surface)
     pInputInterface->set_focus(surface->surfaceId, flag, true);
 
     free(surfaceList);
-#else
-    struct WmsContext *pWmsCtx = surface->controller->pWmsCtx;
-    struct WmsScreen *pScreen = GetScreen(surface);
-    if (!pScreen) {
-        LOGE("GetScreen error.");
+#endif
+    struct WmsSeat *pSeat = GetWmsSeat(DEFAULT_SEAT_NAME);
+    if (!pSeat) {
+        LOGE("GetWmsSeat error.");
+        return false;
+    }
+    pSeat->deviceFlags = flag;
+    pSeat->focusWindowId = surface->surfaceId;
+
+#ifndef USE_IVI_INPUT_FOCUS
+    PointerSetFocus(pSeat);
+#endif
+    SeatInfoChangerNotify();
+
+    LOGD("end.");
+    return true;
+}
+
+static bool FocusWindowUpdate(const struct WindowSurface *surface)
+{
+    struct WmsSeat *pSeat = GetWmsSeat(DEFAULT_SEAT_NAME);
+    if (!pSeat) {
+        LOGE("GetWmsSeat error.");
         return false;
     }
 
-    struct WmsSeat *pSeat = NULL;
-    wl_list_for_each(pSeat, &pWmsCtx->wlListSeat, wlListLink) {
-        if (!strcmp(pSeat->pWestonSeat->seat_name, "default")) {
-            pSeat->deviceFlags = flag;
-            pSeat->focusWindowId = surface->surfaceId;
-            PointerSetFocus(pSeat);
+    if (pSeat->focusWindowId == surface->surfaceId) {
+        struct WindowSurface *focus = GetDefaultFocusableWindow(surface->screenId);
+        if (focus && !SetWindowFocus(focus)) {
+            LOGE("SetWindowFocus failed.");
+            return false;
         }
     }
-    SeatInfoChangerNotify();
-#endif
 
-    LOGD("end.");
     return true;
 }
 
@@ -996,14 +1015,51 @@ static void ControllerSetWindowTop(const struct wl_client* client,
 
     ctx->pLayoutInterface->surface_change_top(windowSurface->layoutSurface);
     
-    if (!FocusUpdate(windowSurface)) {
-        LOGE("FocusUpdate failed.");
+    if (!SetWindowFocus(windowSurface)) {
+        LOGE("SetWindowFocus failed.");
         wms_send_reply_error(resource, WMS_ERROR_INNER_ERROR);
         return;
     }
 
     wms_send_reply_error(resource, WMS_ERROR_OK);
     LOGD("end.");
+}
+
+static void SurfaceDestroy(const struct WindowSurface *surface)
+{
+    ASSERT(surface != NULL);
+    LOGD("surfaceId:%{public}d start.", surface->surfaceId);
+
+    wl_list_remove(&surface->surfaceDestroyListener.link);
+    wl_list_remove(&surface->propertyChangedListener.link);
+
+    if (surface->layoutSurface != NULL) {
+        surface->controller->pWmsCtx->pLayoutInterface->surface_destroy(
+            surface->layoutSurface);
+    }
+
+    ClearWindowId(surface->controller, surface->surfaceId);
+    wl_list_remove(&surface->link);
+
+    if (surface->surface) {
+        surface->surface->committed = NULL;
+        surface->surface->committed_private = NULL;
+    }
+
+    if (!FocusWindowUpdate(surface)) {
+        LOGE("FocusWindowUpdate failed.");
+    }
+
+    wms_send_window_status(surface->controller->pWlResource,
+        WMS_WINDOW_STATUS_DESTROYED, surface->surfaceId, 0, 0, 0, 0);
+
+    SendGlobalWindowStatus(surface->controller, surface->surfaceId, WMS_WINDOW_STATUS_DESTROYED);
+
+    ScreenInfoChangerNotify();
+
+    free(surface);
+
+    LOGD(" end.");
 }
 
 static void ControllerDestroyWindow(const struct wl_client* client,
@@ -1036,6 +1092,17 @@ static void WindowPropertyChanged(const struct wl_listener *listener, const stru
 {
     LOGD("start.");
     ScreenInfoChangerNotify();
+    LOGD("end.");
+}
+
+static void WindowSurfaceDestroy(const struct wl_listener *listener,
+    const struct weston_compositor *data)
+{
+    LOGD("start.");
+
+    struct WindowSurface *windowSurface = wl_container_of(listener, windowSurface, surfaceDestroyListener);
+    SurfaceDestroy(windowSurface);
+
     LOGD("end.");
 }
 

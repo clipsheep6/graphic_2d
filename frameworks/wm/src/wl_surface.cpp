@@ -15,14 +15,20 @@
 
 #include "wl_surface.h"
 
+#include <unistd.h>
+
 namespace OHOS {
-WlSurface::WlSurface(struct wl_surface *surface)
+WlSurface::WlSurface(struct wl_surface *ws, struct zwp_linux_surface_synchronization_v1 *zlssv)
 {
-    this->surface = surface;
+    surface = ws;
+    sync = zlssv;
 }
 
 WlSurface::~WlSurface()
 {
+    if (sync) {
+        zwp_linux_surface_synchronization_v1_destroy(sync);
+    }
     wl_surface_destroy(surface);
 }
 
@@ -64,5 +70,18 @@ void WlSurface::SetSurfaceType(wl_surface_type type)
 void WlSurface::SetBufferTransform(wl_output_transform type)
 {
     wl_surface_set_buffer_transform(surface, type);
+}
+
+struct zwp_linux_buffer_release_v1 *WlSurface::GetBufferRelease()
+{
+    return zwp_linux_surface_synchronization_v1_get_release(sync);
+}
+
+void WlSurface::SetAcquireFence(int32_t fence)
+{
+    if (fence >= 0) {
+        zwp_linux_surface_synchronization_v1_set_acquire_fence(sync, fence);
+        close(fence);
+    }
 }
 } // namespace OHOS

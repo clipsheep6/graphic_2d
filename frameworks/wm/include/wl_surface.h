@@ -16,6 +16,7 @@
 #ifndef FRAMEWORKS_WM_INCLUDE_WL_SURFACE_H
 #define FRAMEWORKS_WM_INCLUDE_WL_SURFACE_H
 
+#include <linux-explicit-synchronization-unstable-v1-client-protocol.h>
 #include <refbase.h>
 #include <wayland-client-protocol.h>
 
@@ -24,7 +25,7 @@
 namespace OHOS {
 class WlSurface : public RefBase {
 public:
-    WlSurface(struct wl_surface *surface);
+    WlSurface(struct wl_surface *ws, struct zwp_linux_surface_synchronization_v1 *zlssv);
     virtual ~WlSurface() override;
 
     struct wl_surface *GetRawPtr() const;
@@ -36,9 +37,12 @@ public:
     void Commit();
     void SetSurfaceType(wl_surface_type type);
     void SetBufferTransform(wl_output_transform type);
+    struct zwp_linux_buffer_release_v1 *GetBufferRelease();
+    void SetAcquireFence(int32_t fence);
 
 private:
-    struct wl_surface *surface;
+    struct wl_surface *surface = nullptr;
+    struct zwp_linux_surface_synchronization_v1 *sync = nullptr;
 };
 } // namespace OHOS
 

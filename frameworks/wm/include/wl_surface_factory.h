@@ -16,6 +16,7 @@
 #ifndef FRAMEWORKS_WM_INCLUDE_WL_SURFACE_FACTORY_H
 #define FRAMEWORKS_WM_INCLUDE_WL_SURFACE_FACTORY_H
 
+#include <linux-explicit-synchronization-unstable-v1-client-protocol.h>
 #include <refbase.h>
 #include <wayland-client-protocol.h>
 
@@ -40,6 +41,7 @@ private:
 
     static void OnAppear(const GetServiceFunc get, const std::string &iname, uint32_t ver);
     static inline struct wl_compositor *compositor = nullptr;
+    static inline struct zwp_linux_explicit_synchronization_v1 *synchronization = nullptr;
 };
 } // namespace OHOS
 

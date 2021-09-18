@@ -118,13 +118,13 @@ void LayerControllerClient::ChangeWindowType(int32_t id, WindowType type)
     wms->SetWindowType(id, type);
 }
 
-void BufferRelease(struct wl_buffer *wbuffer)
+void BufferRelease(struct wl_buffer *wbuffer, int32_t fence)
 {
     sptr<Surface> surface = nullptr;
     sptr<SurfaceBuffer> sbuffer = nullptr;
     if (WlBufferCache::GetInstance()->GetSurfaceBuffer(wbuffer, surface, sbuffer)) {
         if (surface != nullptr && sbuffer != nullptr) {
-            surface->ReleaseBuffer(sbuffer, -1);
+            surface->ReleaseBuffer(sbuffer, fence);
         }
     }
 }
@@ -157,7 +157,10 @@ void LayerControllerClient::CreateWlBuffer(sptr<Surface>& surface, uint32_t wind
     }
 
     if (wbuffer) {
+        auto br = windowInfo->wlSurface->GetBufferRelease();
+        wbuffer->SetBufferRelease(br);
         windowInfo->wlSurface->Attach(wbuffer, 0, 0);
+        windowInfo->wlSurface->SetAcquireFence(flushFence);
         windowInfo->wlSurface->Damage(damage.x, damage.y, damage.w, damage.h);
         windowInfo->wlSurface->Commit();
         WlDisplay::GetInstance()->Flush();

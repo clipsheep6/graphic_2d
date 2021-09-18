@@ -567,14 +567,14 @@ WMError WindowImpl::OnTouchOrientation(TouchOrientationFunc func)
 }
 
 namespace {
-void BufferRelease(struct wl_buffer *wbuffer)
+void BufferRelease(struct wl_buffer *wbuffer, int32_t fence)
 {
     WMLOGFI("BufferRelease");
     sptr<Surface> surface = nullptr;
     sptr<SurfaceBuffer> sbuffer = nullptr;
     if (SingletonContainer::Get<WlBufferCache>()->GetSurfaceBuffer(wbuffer, surface, sbuffer)) {
         if (surface != nullptr && sbuffer != nullptr) {
-            surface->ReleaseBuffer(sbuffer, -1);
+            surface->ReleaseBuffer(sbuffer, fence);
         }
     }
 }
@@ -615,7 +615,10 @@ void WindowImpl::OnBufferAvailable()
     }
 
     if (wbuffer) {
+        auto br = wlSurface->GetBufferRelease();
+        wbuffer->SetBufferRelease(br);
         wlSurface->Attach(wbuffer, 0, 0);
+        wlSurface->SetAcquireFence(flushFence);
         wlSurface->Damage(damage.x, damage.y, damage.w, damage.h);
         wlSurface->Commit();
         SingletonContainer::Get<WlDisplay>()->Flush();

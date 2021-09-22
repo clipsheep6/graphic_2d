@@ -171,10 +171,10 @@ void WlDMABufferFactory::SendBufferHandle(zwp_linux_buffer_params_v1 *param, Buf
     WMLOGFI("BufferHandle->height = %{public}d", handle->height);
     WMLOGFI("BufferHandle->size = %{public}d", handle->size);
     WMLOGFI("BufferHandle->format = %{public}d", handle->format);
-    WMLOGFI("BufferHandle->usage = %{public}llu, %{public}u, %{public}u",
-        handle->usage, (uint32_t)(handle->usage >> BITS_OFFSET_32), (uint32_t)(handle->usage & 0xFFFFFFFF));
-    WMLOGFI("BufferHandle->phyAddr = %{public}llu, %{public}u, %{public}u",
-        handle->phyAddr, (uint32_t)(handle->phyAddr >> BITS_OFFSET_32), (uint32_t)(handle->phyAddr & 0xFFFFFFFF));
+    WMLOGFI("BufferHandle->usage = %{public}llu, %{public}u, %{public}u", (unsigned long long)handle->usage,
+        (uint32_t)(handle->usage >> BITS_OFFSET_32), (uint32_t)(handle->usage & 0xFFFFFFFF));
+    WMLOGFI("BufferHandle->phyAddr = %{public}llu, %{public}u, %{public}u", (unsigned long long)handle->phyAddr,
+        (uint32_t)(handle->phyAddr >> BITS_OFFSET_32), (uint32_t)(handle->phyAddr & 0xFFFFFFFF));
     WMLOGFI("BufferHandle->key = %{public}d", handle->key);
 
     WMLOGFI("BufferHandle->reserveFds = %{public}u", handle->reserveFds);

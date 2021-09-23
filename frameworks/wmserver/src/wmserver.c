@@ -25,7 +25,7 @@
 
 #include "backend.h"
 #include "ivi-layout-private.h"
-#include "layout.h"
+#include "layout_controller.h"
 #include "libweston-internal.h"
 #include "screen_info.h"
 #include "weston.h"
@@ -57,12 +57,6 @@
 #define LAYER_ID_TYPE_BASE 100
 #define LAYER_ID_SCREEN_LENGTH 10000
 #define LAYER_ID_SCREEN_BASE 100000
-
-enum {
-    MODE_UNSET = 0,
-    MODE_FULL = 0,
-    MODE_FREE = 1,
-};
 
 #define BAR_WIDTH_PERCENT 0.07
 #define ALARM_WINDOW_WIDTH 400
@@ -133,7 +127,7 @@ static struct WmsContext g_wmsCtx = {0};
 static ScreenInfoChangeListener g_screenInfoChangeListener = NULL;
 static SeatInfoChangeListener g_seatInfoChangeListener = NULL;
 
-static void SendGlobalWindowStatus(const struct WmsController *pController, uint32_t windowId, uint32_t status)
+static void SendGlobalWindowStatus(const struct WmsController *pController, uint32_t window_id, uint32_t status)
 {
     LOGD("start.");
     struct WmsContext *pWmsCtx = pController->pWmsCtx;
@@ -143,7 +137,7 @@ static void SendGlobalWindowStatus(const struct WmsController *pController, uint
     wl_client_get_credentials(pController->pWlClient, &pid, NULL, NULL);
 
     wl_list_for_each(pControllerTemp, &pWmsCtx->wlListGlobalEventResource, wlListLinkRes) {
-        wms_send_global_window_status(pControllerTemp->pWlResource, pid, windowId, status);
+        wms_send_global_window_status(pControllerTemp->pWlResource, pid, window_id, status);
     }
     LOGD("end.");
 }
@@ -183,19 +177,19 @@ struct WmsContext *GetWmsInstance(void)
     return &g_wmsCtx;
 }
 
-static inline uint32_t GetBit(uint32_t flags, int32_t n)
+static inline uint32_t GetBit(uint32_t flags, uint32_t n)
 {
-    return ((flags) & (1 << (n)));
+    return flags & (1u << n);
 }
 
-static inline void SetBit(uint32_t *flags, int32_t n)
+static inline void SetBit(uint32_t *flags, uint32_t n)
 {
-    (*flags) |= (1 << (n));
+    *flags |= (1u << n);
 }
 
-static inline void ClearBit(uint32_t *flags, int32_t n)
+static inline void ClearBit(uint32_t *flags, uint32_t n)
 {
-    (*flags) &= ~(1 << (n));
+    *flags &= ~(1u << n);
 }
 
 static inline int GetLayerId(uint32_t screenId, uint32_t type, uint32_t mode)
@@ -222,7 +216,8 @@ static struct WindowSurface *GetWindowSurface(const struct weston_surface *surfa
     return windowSurface;
 }
 
-static void SetSourceRectangle(const struct WindowSurface *windowSurface,
+static void SetSourceRectangle(
+    const struct WindowSurface *windowSurface,
     int32_t x, int32_t y, int32_t width, int32_t height)
 {
     struct ivi_layout_interface_for_wms *layoutInterface = windowSurface->controller->pWmsCtx->pLayoutInterface;
@@ -303,7 +298,7 @@ static void WindowSurfaceCommitted(struct weston_surface *surface, int32_t sx, i
     }
 }
 
-static uint32_t GetDisplayModeFlag(struct WmsContext *ctx)
+static uint32_t GetDisplayModeFlag(const struct WmsContext *ctx)
 {
     uint32_t screen_num = wl_list_length(&ctx->wlListScreen);
     uint32_t flag = WMS_DISPLAY_MODE_SINGLE;
@@ -899,7 +894,7 @@ static void PointerSetFocus(const struct WmsSeat *seat)
 
     struct weston_surface *forcedSurface = forcedWindow->surface;
     LOGI("weston_pointer_set_focus0.");
-    if (forcedSurface != NULL && !wl_list_empty(&forcedSurface->views)) {
+    if ((forcedSurface != NULL) && !wl_list_empty(&forcedSurface->views)) {
         LOGI("weston_pointer_set_focus1.");
         struct weston_view *view = wl_container_of(forcedSurface->views.next, view, surface_link);
         wl_fixed_t sx, sy;
@@ -994,7 +989,6 @@ static void ControllerSetWindowTop(const struct wl_client *client,
     }
 
     ctx->pLayoutInterface->surface_change_top(windowSurface->layoutSurface);
-
     if (!FocusUpdate(windowSurface)) {
         LOGE("FocusUpdate failed.");
         wms_send_reply_error(resource, WMS_ERROR_INNER_ERROR);
@@ -1262,7 +1256,7 @@ static void Screenshot(const struct ScreenshotFrameListener *pFrameListener, uin
     int32_t width = westonOutput->current_mode->width;
     int32_t height = westonOutput->current_mode->height;
     pixman_format_code_t format = westonOutput->compositor->read_format;
-    int32_t stride = width * (PIXMAN_FORMAT_BPP(format) / PIXMAN_FORMAT_AVERAGE);
+    int32_t stride = width * PIXMAN_FORMAT_BPP((uint32_t)format) / PIXMAN_FORMAT_AVERAGE;
     size_t size = stride * height;
 
     int fd = CreateScreenshotFile(size);

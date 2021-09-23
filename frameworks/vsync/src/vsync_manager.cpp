@@ -70,7 +70,7 @@ int32_t VsyncManager::OnRemoteRequest(uint32_t code, MessageParcel &data,
     return 0;
 }
 
-VsyncError VsyncManager::ListenVsync(sptr<IVsyncCallback> &cb)
+VsyncError VsyncManager::ListenVsync(sptr<IVsyncCallback>& cb)
 {
     if (cb == nullptr) {
         VLOG_FAILURE_NO(VSYNC_ERROR_NULLPTR);

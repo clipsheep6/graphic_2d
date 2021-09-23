@@ -26,6 +26,7 @@
 #ifdef __cplusplus
 namespace OHOS {
 #endif
+
 enum WindowType {
     WINDOW_TYPE_NORMAL = 0,
     WINDOW_TYPE_STATUS_BAR = 10,
@@ -42,21 +43,10 @@ enum WindowType {
     WINDOW_TYPE_MAX,
 };
 
-enum SubwindowType {
-    SUBWINDOW_TYPE_NORMAL = 0,
-    SUBWINDOW_TYPE_VIDEO = 1,
-    SUBWINDOW_TYPE_MAX,
-};
-
 enum SubWindowType {
     WM_WINDOW_TYPE_SUB_NORMAL = 0,
     WM_WINDOW_TYPE_SUB_VIDEO = 1,
 };
-
-#ifdef __cplusplus
-class TouchEvent;
-class KeyEvent;
-#endif
 
 enum rotateType {
     /**
@@ -93,32 +83,13 @@ enum rotateType {
     WM_ROTATE_TYPE_FLIPPED_270 = 7,
 };
 
-enum WindowMode {
-    WINDOW_MODE_UNSET = 0,
-    WINDOW_MODE_FULL = 1,
-    WINDOW_MODE_FREE = 2,
-    WINDOW_MODE_MAX,
-};
-
-enum WindowRotateType {
-    WINDOW_ROTATE_TYPE_NORMAL = 0,
-    WINDOW_ROTATE_TYPE_90 = 1,
-    WINDOW_ROTATE_TYPE_180 = 2,
-    WINDOW_ROTATE_TYPE_270 = 3,
-    WINDOW_ROTATE_TYPE_FLIPPED = 4,
-    WINDOW_ROTATE_TYPE_FLIPPED_90 = 5,
-    WINDOW_ROTATE_TYPE_FLIPPED_180 = 6,
-    WINDOW_ROTATE_TYPE_FLIPPED_270 = 7,
-    WINDOW_ROTATE_TYPE_MAX,
-};
-
 struct WMImageInfo {
     enum WMError wret;
     uint32_t width;
     uint32_t height;
     uint32_t format;
     uint32_t size;
-    const void* data;
+    const void *data;
 };
 
 struct WindowInfo {
@@ -129,26 +100,25 @@ struct WindowInfo {
 };
 
 #ifdef __cplusplus
+class TouchEvent;
+class KeyEvent;
+
 using funcWindowInfoChange = std::function<void(WindowInfo &info)>;
-#endif
 
-typedef void (*FuncSync)(uint64_t timestamp);
-
-#ifdef __cplusplus
 using funcOnKey = std::function<bool(KeyEvent)>;
 using funcOnTouch = std::function<bool(TouchEvent)>;
 
 using WindowInfoChangeFunc = std::function<void(WindowInfo &info)>;
+using OnKeyFunc = std::function<bool(KeyEvent)>;
+using OnTouchFunc = std::function<bool(TouchEvent)>;
 
-using OnKeyFunc                  = std::function<bool(KeyEvent)>;
-using OnTouchFunc                = std::function<bool(TouchEvent)>;
 using WindowPositionChangeFunc   = std::function<void(int32_t x, int32_t y)>;
 using WindowSizeChangeFunc       = std::function<void(uint32_t width, uint32_t height)>;
 using WindowVisibilityChangeFunc = std::function<void(bool visibility)>;
 using WindowTypeChangeFunc       = std::function<void(WindowType type)>;
-using WindowModeChangeFunc       = std::function<void(WindowMode mode)>;
 #endif
 
+typedef void (*FuncSync)(uint64_t timestamp);
 struct WindowConfig {
     int32_t width;
     int32_t height;
@@ -163,6 +133,6 @@ struct WindowConfig {
 };
 #ifdef __cplusplus
 } // namespace OHOS
-#endif
+#endif // __cplusplus
 
 #endif // INTERFACES_INNERKITS_WMCLIENT_WM_COMMON_H

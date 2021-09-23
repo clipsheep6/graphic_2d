@@ -27,24 +27,24 @@ namespace OHOS {
 class Surface : public RefBase {
 public:
     static sptr<Surface> CreateSurfaceAsConsumer(std::string name = "noname");
-    static sptr<Surface> CreateSurfaceAsProducer(sptr<IBufferProducer> &producer);
+    static sptr<Surface> CreateSurfaceAsProducer(sptr<IBufferProducer>& producer);
 
     virtual ~Surface() = default;
 
     virtual bool IsConsumer() const = 0;
     virtual sptr<IBufferProducer> GetProducer() const = 0;
 
-    virtual SurfaceError RequestBuffer(sptr<SurfaceBuffer> &buffer,
+    virtual SurfaceError RequestBuffer(sptr<SurfaceBuffer>& buffer,
                                        int32_t &fence, BufferRequestConfig &config) = 0;
 
-    virtual SurfaceError CancelBuffer(sptr<SurfaceBuffer> &buffer) = 0;
+    virtual SurfaceError CancelBuffer(sptr<SurfaceBuffer>& buffer) = 0;
 
-    virtual SurfaceError FlushBuffer(sptr<SurfaceBuffer> &buffer,
+    virtual SurfaceError FlushBuffer(sptr<SurfaceBuffer>& buffer,
                                      int32_t fence, BufferFlushConfig &config) = 0;
 
-    virtual SurfaceError AcquireBuffer(sptr<SurfaceBuffer> &buffer, int32_t &fence,
+    virtual SurfaceError AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                        int64_t &timestamp, Rect &damage) = 0;
-    virtual SurfaceError ReleaseBuffer(sptr<SurfaceBuffer> &buffer, int32_t fence) = 0;
+    virtual SurfaceError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence) = 0;
 
     virtual uint32_t     GetQueueSize() = 0;
     virtual SurfaceError SetQueueSize(uint32_t queueSize) = 0;
@@ -61,7 +61,7 @@ public:
 
     virtual SurfaceError GetName(std::string &name) = 0;
 
-    virtual SurfaceError RegisterConsumerListener(sptr<IBufferConsumerListener> &listener) = 0;
+    virtual SurfaceError RegisterConsumerListener(sptr<IBufferConsumerListener>& listener) = 0;
     virtual SurfaceError RegisterConsumerListener(IBufferConsumerListenerClazz *listener) = 0;
     virtual SurfaceError UnregisterConsumerListener() = 0;
 

@@ -35,7 +35,7 @@ struct VsyncElement {
     int64_t activeTime_;
     void *userdata_;
 
-    bool operator < (const struct VsyncElement &other) const
+    bool operator <(const struct VsyncElement &other) const
     {
         return activeTime_ < other.activeTime_;
     }
@@ -48,7 +48,7 @@ public:
     virtual VsyncError Init(bool restart = false);
 
     VsyncError RequestFrameCallback(const struct FrameCallback &cb);
-    VsyncError GetSupportedVsyncFrequencys(std::vector<uint32_t> &freqs);
+    VsyncError GetSupportedVsyncFrequencys(std::vector<uint32_t>& freqs);
 
     virtual void DispatchFrameCallback(int64_t timestamp);
 
@@ -77,11 +77,11 @@ class VsyncHelperImpl : public VsyncHelper {
 public:
     static sptr<VsyncHelperImpl> Current();
 
-    VsyncHelperImpl(std::shared_ptr<AppExecFwk::EventHandler> &handler);
+    VsyncHelperImpl(std::shared_ptr<AppExecFwk::EventHandler>& handler);
     virtual ~VsyncHelperImpl() override;
 
     virtual VsyncError RequestFrameCallback(const struct FrameCallback &cb) override;
-    virtual VsyncError GetSupportedVsyncFrequencys(std::vector<uint32_t> &freqs) override;
+    virtual VsyncError GetSupportedVsyncFrequencys(std::vector<uint32_t>& freqs) override;
 
 private:
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;

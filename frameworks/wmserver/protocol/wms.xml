@@ -18,16 +18,6 @@
   <interface name="wms" version="1">
     <description summary="interface for window manager server."/>
 
-    <enum name="window_type">
-      <description summary="window type">
-      </description>
-      <entry name="normal"  value="0"/>
-      <entry name="status_bar" value="1"/>
-      <entry name="navi_bar" value="2"/>
-      <entry name="alarm" value="3"/>
-      <entry name="max_count" value="4"/>
-    </enum>
-
     <request name="create_window">
       <arg name="surface" type="object" interface="wl_surface"/>
       <arg name="screen_id" type="uint"/>

@@ -75,9 +75,10 @@ namespace {
         if (winInfo.windowconfig.type == -1) {
             layerInfo.type = LAYER_TYPE_OVERLAY;
         }
-        int32_t ret = DISPLAY_FAILURE;
 #ifdef TARGET_CPU_ARM
-        ret = VideoDisplayManager::CreateLayer(layerInfo, layerId, surface);
+        int32_t ret = VideoDisplayManager::CreateLayer(layerInfo, layerId, surface);
+#else
+        int32_t ret = DISPLAY_FAILURE;
 #endif
         VIDEO_WINDOW_EXIT();
         return ret;
@@ -102,14 +103,11 @@ namespace {
         }
 #ifdef TARGET_CPU_ARM
         producer = display->AttachLayer(surface_, layerId_);
-#else
-        producer = nullptr;
-#endif
         if (producer == nullptr) {
             WMLOGFE("attach layer fail");
             ret = DISPLAY_FAILURE;
         }
-
+#endif
         VIDEO_WINDOW_EXIT();
         return ret;
     }
@@ -125,7 +123,6 @@ namespace {
     void VideoWindow::Move(int32_t x, int32_t y)
     {
         VIDEO_WINDOW_ENTER();
-#ifdef TARGET_CPU_ARM
         int maxHeight = LayerControllerClient::GetInstance()->GetMaxHeight();
         constexpr float BAR_WIDTH_PERCENT = 0.07;
         IRect rect = {};
@@ -134,6 +131,7 @@ namespace {
             return;
         }
 
+#ifdef TARGET_CPU_ARM
         int32_t ret = display->GetRect(layerId_, rect);
         if (ret != DISPLAY_SUCCESS) {
             WMLOGFW("get rect fail, ret:%{public}d", ret);
@@ -157,13 +155,13 @@ namespace {
     void VideoWindow::SetSubWindowSize(int32_t width, int32_t height)
     {
         VIDEO_WINDOW_ENTER();
-#ifdef TARGET_CPU_ARM
         IRect rect = {};
         if (display == nullptr) {
             WMLOGFE("display layer is not create");
             return;
         }
 
+#ifdef TARGET_CPU_ARM
         int32_t ret = display->GetRect(layerId_, rect);
         if (ret != DISPLAY_SUCCESS) {
             WMLOGFW("get rect fail, ret:%d", ret);
@@ -190,14 +188,15 @@ namespace {
             WMLOGFE("display layer is not create");
             return DISPLAY_FAILURE;
         }
-        int32_t ret = DISPLAY_FAILURE;
 #ifdef TARGET_CPU_ARM
-        ret = display->SetZorder(layerId, zorder);
+        int32_t ret = display->SetZorder(layerId, zorder);
         if (ret != DISPLAY_SUCCESS) {
             WMLOGFW("set zorder fail, ret:%{public}d", ret);
         }
-        VIDEO_WINDOW_EXIT();
+#else
+        int32_t ret = DISPLAY_FAILURE;
 #endif
+        VIDEO_WINDOW_EXIT();
         return ret;
     }
 
@@ -208,12 +207,13 @@ namespace {
             WMLOGFE("display layer is not create");
             return DISPLAY_FAILURE;
         }
-        int32_t ret = DISPLAY_FAILURE;
 #ifdef TARGET_CPU_ARM
-        ret = display->SetTransformMode(layerId, type);
+        int32_t ret = display->SetTransformMode(layerId, type);
         if (ret != DISPLAY_SUCCESS) {
             WMLOGFW("set transform mode fail, ret:%{public}d", ret);
         }
+#else
+        int32_t ret = DISPLAY_FAILURE;
 #endif
         VIDEO_WINDOW_EXIT();
         return ret;

@@ -56,7 +56,7 @@ void ReadRequestConfig(MessageParcel &parcel, BufferRequestConfig &config)
     config.timeout = parcel.ReadInt32();
 }
 
-void WriteRequestConfig(MessageParcel &parcel, BufferRequestConfig const &config)
+void WriteRequestConfig(MessageParcel &parcel, BufferRequestConfig const & config)
 {
     parcel.WriteInt32(config.width);
     parcel.WriteInt32(config.height);
@@ -75,7 +75,7 @@ void ReadFlushConfig(MessageParcel &parcel, BufferFlushConfig &config)
     config.timestamp = parcel.ReadInt64();
 }
 
-void WriteFlushConfig(MessageParcel &parcel, BufferFlushConfig const &config)
+void WriteFlushConfig(MessageParcel &parcel, BufferFlushConfig const & config)
 {
     parcel.WriteInt32(config.damage.x);
     parcel.WriteInt32(config.damage.y);
@@ -85,7 +85,7 @@ void WriteFlushConfig(MessageParcel &parcel, BufferFlushConfig const &config)
 }
 
 void ReadSurfaceBufferImpl(MessageParcel &parcel,
-                           int32_t &sequence, sptr<SurfaceBuffer> &buffer)
+                           int32_t &sequence, sptr<SurfaceBuffer>& buffer)
 {
     sequence = parcel.ReadInt32();
     if (parcel.ReadBool()) {

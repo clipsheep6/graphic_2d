@@ -25,13 +25,13 @@ namespace Vsync {
 class StaticCall : public RefBase {
 public:
     static sptr<StaticCall> GetInstance();
-    static void SetInstance(sptr<StaticCall> &mockInstance);
+    static void SetInstance(sptr<StaticCall>& mockInstance);
 
     virtual sptr<ISystemAbilityManager> GetSystemAbilityManager();
-    virtual sptr<IRemoteObject> GetSystemAbility(sptr<ISystemAbilityManager> &sam, int32_t systemAbilityId);
-    virtual sptr<IVsyncManager> GetCast(sptr<IRemoteObject> &remoteObject);
-    virtual VsyncError GetVsyncFrequency(sptr<IVsyncManager> &server, uint32_t &freq);
-    virtual VsyncError ListenVsync(sptr<IVsyncManager> &server, sptr<IVsyncCallback> &cb);
+    virtual sptr<IRemoteObject> GetSystemAbility(sptr<ISystemAbilityManager>& sm, int32_t systemAbilityId);
+    virtual sptr<IVsyncManager> GetCast(sptr<IRemoteObject>& remoteObject);
+    virtual VsyncError GetVsyncFrequency(sptr<IVsyncManager>& server, uint32_t &freq);
+    virtual VsyncError ListenVsync(sptr<IVsyncManager>& server, sptr<IVsyncCallback>& cb);
     virtual std::shared_ptr<AppExecFwk::EventHandler> Current();
     virtual void Sync(int64_t, void *data);
 private:

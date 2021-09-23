@@ -22,16 +22,16 @@
 #include "buffer_log.h"
 #include "buffer_manager.h"
 
-#define CHECK_SEQ_CACHE_AND_STATE(sequence, cache, state_)      \
-    do {                                                        \
-        if (cache.find(sequence) == cache.end()) {              \
+#define CHECK_SEQ_CACHE_AND_STATE(sequence, cache, state_)       \
+    do {                                                         \
+        if ((cache).find(sequence) == (cache).end()) {           \
             BLOGN_FAILURE_ID(sequence, "not found in cache");    \
-            return SURFACE_ERROR_NO_ENTRY;                      \
-        }                                                       \
-        if (cache[sequence].state != state_) {                  \
+            return SURFACE_ERROR_NO_ENTRY;                       \
+        }                                                        \
+        if ((cache)[sequence].state != (state_)) {               \
             BLOGN_FAILURE_ID(sequence, "state is not " #state_); \
-            return SURFACE_ERROR_INVALID_OPERATING;             \
-        }                                                       \
+            return SURFACE_ERROR_INVALID_OPERATING;              \
+        }                                                        \
     } while (0)
 
 #define SET_SEQ_STATE(sequence, cache, state_) \
@@ -69,7 +69,7 @@ uint32_t BufferQueue::GetUsedSize()
     return used_size;
 }
 
-SurfaceError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl> &buffer,
+SurfaceError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl>& buffer,
     const BufferRequestConfig &config)
 {
     for (auto it = freeList_.begin(); it != freeList_.end(); it++) {
@@ -90,7 +90,7 @@ SurfaceError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl> &buffer,
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::PopFromDirtyList(sptr<SurfaceBufferImpl> &buffer)
+SurfaceError BufferQueue::PopFromDirtyList(sptr<SurfaceBufferImpl>& buffer)
 {
     if (!dirtyList_.empty()) {
         buffer = bufferQueueCache_[dirtyList_.front()].buffer;
@@ -313,7 +313,7 @@ SurfaceError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData 
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer,
+SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl>& buffer,
                                         int32_t &fence, int64_t &timestamp, Rect &damage)
 {
     // dequeue from dirty list
@@ -339,7 +339,7 @@ SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer,
     return ret;
 }
 
-SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl> &buffer, int32_t fence)
+SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t fence)
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
 
@@ -365,7 +365,7 @@ SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl> &buffer, int32_t
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
+SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl>& buffer,
     const BufferRequestConfig &config)
 {
     buffer = new SurfaceBufferImpl();
@@ -407,7 +407,7 @@ SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
     return ret;
 }
 
-SurfaceError BufferQueue::FreeBuffer(sptr<SurfaceBufferImpl> &buffer)
+SurfaceError BufferQueue::FreeBuffer(sptr<SurfaceBufferImpl>& buffer)
 {
     BLOGND("Free [%{public}d]", buffer->GetSeqNum());
     buffer->SetEglData(nullptr);
@@ -494,7 +494,7 @@ SurfaceError BufferQueue::GetName(std::string &name)
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::RegisterConsumerListener(sptr<IBufferConsumerListener> &listener)
+SurfaceError BufferQueue::RegisterConsumerListener(sptr<IBufferConsumerListener>& listener)
 {
     listener_ = listener;
     return SURFACE_ERROR_OK;
@@ -515,12 +515,12 @@ SurfaceError BufferQueue::UnregisterConsumerListener()
 
 SurfaceError BufferQueue::SetDefaultWidthAndHeight(int32_t width, int32_t height)
 {
-    if (0 >= width || width > SURFACE_MAX_WIDTH) {
+    if (width <= 0 || width > SURFACE_MAX_WIDTH) {
         BLOGN_INVALID("defaultWidth (0, %{public}d], now is %{public}d", SURFACE_MAX_WIDTH, width);
         return SURFACE_ERROR_INVALID_PARAM;
     }
 
-    if (0 >= height || height > SURFACE_MAX_HEIGHT) {
+    if (height <= 0 || height > SURFACE_MAX_HEIGHT) {
         BLOGN_INVALID("defaultHeight (0, %{public}d], now is %{public}d", SURFACE_MAX_HEIGHT, height);
         return SURFACE_ERROR_INVALID_PARAM;
     }
@@ -542,11 +542,6 @@ int32_t BufferQueue::GetDefaultHeight()
 
 SurfaceError BufferQueue::SetDefaultUsage(uint32_t usage)
 {
-    constexpr int32_t usageMax = HBM_USE_MEM_DMA * 2;
-    if (0 > usage || usage >= usageMax) {
-        BLOGN_INVALID("usage [0, %{public}d), now is %{public}d", usageMax, usage);
-        return SURFACE_ERROR_INVALID_PARAM;
-    }
     defaultUsage = usage;
     return SURFACE_ERROR_OK;
 }

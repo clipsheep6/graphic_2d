@@ -19,31 +19,53 @@
 #include <cstdint>
 #include <functional>
 
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include <refbase.h>
 #include <window_manager.h>
+#include <egl_surface.h>
 
 namespace OHOS {
+typedef struct {
+    GLuint program;
+    GLuint pos;
+    GLuint color;
+    GLuint offsetUniform;
+} GlContext;
+
 class NativeTestFactory {
 public:
     static sptr<Window> CreateWindow(WindowType, sptr<Surface> csurface = nullptr);
 };
 
 using DrawFunc = std::function<void(void *, uint32_t, uint32_t, uint32_t)>;
+using DrawFuncEgl = std::function<void(GlContext *, sptr<EglRenderSurface> &psurface)>;
+
 class NativeTestSync : public RefBase {
 public:
     static sptr<NativeTestSync> CreateSync(DrawFunc drawFunc, sptr<Surface> &psurface, void *data = nullptr);
+    static sptr<NativeTestSync> CreateSyncEgl(DrawFuncEgl drawFunc,
+        sptr<EglRenderSurface> &psurface, void *data = nullptr);
 
 private:
     void Sync(int64_t, void *);
+    void SyncEgl(int64_t, void *);
+    bool GLContextInit();
 
     sptr<Surface> surface = nullptr;
+    sptr<EglRenderSurface> eglsurface = nullptr;
     DrawFunc draw = nullptr;
+    DrawFuncEgl drawEgl = nullptr;
     uint32_t count = 0;
+    GlContext glCtx;
+    bool bInit = false;
+    SurfaceError sret = SURFACE_ERROR_OK;
 };
 
 class NativeTestDraw {
 public:
     static void FlushDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
+    static void FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsurface);
     static void ColorDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
     static void BlackDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
     static void RainbowDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);

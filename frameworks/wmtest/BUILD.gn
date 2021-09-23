@@ -23,6 +23,8 @@ config("wmtest_config") {
     "-Wall",
     "-Werror",
     "-g3",
+    "-DENABLE_EGL",
+    "-DEGL_NO_X11",
   ]
 }
 
@@ -60,6 +62,7 @@ ohos_executable("wmtest") {
     "test/wmclient_native_test_26.cpp",
     "test/wmclient_native_test_27.cpp",
     "test/wmclient_native_test_28.cpp",
+    "test/wmclient_native_test_31.cpp",
     "test/wmclient_native_test_3.cpp",
     "test/wmclient_native_test_4.cpp",
     "test/wmclient_native_test_5.cpp",
@@ -77,6 +80,7 @@ ohos_executable("wmtest") {
     "//foundation/graphic/standard:libwmclient",
     "//foundation/graphic/standard:libwmservice",
     "//third_party/zlib:libz",
+    "//device/rockchip/hardware/gpu:mali-bifrost-g52-g2p0-wayland"
   ]
 
   part_name = "graphic_standard"

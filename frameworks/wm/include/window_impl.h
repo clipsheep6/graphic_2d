@@ -38,6 +38,7 @@ public:
     sptr<WlSurface> GetWlSurface() const;
 
     virtual sptr<Surface> GetSurface() const override;
+    virtual sptr<IBufferProducer> GetProducer() const override;
     virtual int32_t       GetID() const override;
     virtual int32_t       GetX() const override;
     virtual int32_t       GetY() const override;

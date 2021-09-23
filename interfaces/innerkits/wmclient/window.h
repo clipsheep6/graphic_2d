@@ -27,6 +27,7 @@ namespace OHOS {
 class Window : public RefBase {
 public:
     virtual sptr<Surface> GetSurface() const = 0;
+    virtual sptr<IBufferProducer> GetProducer() const = 0;
     virtual int32_t       GetID() const = 0;
     virtual int32_t       GetX() const = 0;
     virtual int32_t       GetY() const = 0;

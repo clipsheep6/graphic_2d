@@ -410,6 +410,7 @@ SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
 SurfaceError BufferQueue::FreeBuffer(sptr<SurfaceBufferImpl> &buffer)
 {
     BLOGND("Free [%{public}d]", buffer->GetSeqNum());
+    buffer->SetEglData(nullptr);
     BufferManager::GetInstance()->Unmap(buffer);
     BufferManager::GetInstance()->Free(buffer);
     return SURFACE_ERROR_OK;

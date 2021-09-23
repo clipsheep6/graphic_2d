@@ -16,11 +16,44 @@
 #ifndef INTERFACES_INNERKITS_WMCLIENT_WINDOW_MANAGER_TYPE_H
 #define INTERFACES_INNERKITS_WMCLIENT_WINDOW_MANAGER_TYPE_H
 
+#ifdef __cplusplus
+#include <functional>
+#include <string>
+#endif
+
 #include "wm_common.h"
+
+#include "../common/graphic_common.h"
 
 #ifdef __cplusplus
 namespace OHOS {
 #endif
+
+enum SubwindowType {
+    SUBWINDOW_TYPE_NORMAL = 0,
+    SUBWINDOW_TYPE_VIDEO = 1,
+    SUBWINDOW_TYPE_MAX,
+};
+
+enum WindowRotateType {
+    WINDOW_ROTATE_TYPE_NORMAL = 0,
+    WINDOW_ROTATE_TYPE_90 = 1,
+    WINDOW_ROTATE_TYPE_180 = 2,
+    WINDOW_ROTATE_TYPE_270 = 3,
+    WINDOW_ROTATE_TYPE_FLIPPED = 4,
+    WINDOW_ROTATE_TYPE_FLIPPED_90 = 5,
+    WINDOW_ROTATE_TYPE_FLIPPED_180 = 6,
+    WINDOW_ROTATE_TYPE_FLIPPED_270 = 7,
+    WINDOW_ROTATE_TYPE_MAX,
+};
+
+enum WindowMode {
+    WINDOW_MODE_UNSET = 0,
+    WINDOW_MODE_FULL = 1,
+    WINDOW_MODE_FREE = 2,
+    WINDOW_MODE_MAX,
+};
+
 struct WMDisplayInfo {
     int32_t id;
     uint32_t width;
@@ -29,7 +62,9 @@ struct WMDisplayInfo {
     uint32_t phyHeight;
     uint32_t vsync;
 };
+
 #ifdef __cplusplus
+using WindowModeChangeFunc       = std::function<void(WindowMode mode)>;
 } // namespace OHOS
 #endif
 

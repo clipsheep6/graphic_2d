@@ -35,7 +35,7 @@ public:
     virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,
                                     MessageParcel &reply, MessageOption &option) override;
 
-    virtual VsyncError ListenVsync(sptr<IVsyncCallback> &cb) override;
+    virtual VsyncError ListenVsync(sptr<IVsyncCallback>& cb) override;
     virtual VsyncError GetVsyncFrequency(uint32_t &freq) override;
 
     virtual void Callback(int64_t timestamp);

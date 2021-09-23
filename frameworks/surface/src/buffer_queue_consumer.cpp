@@ -22,7 +22,7 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "BufferQueueConsumer" };
 }
 
-BufferQueueConsumer::BufferQueueConsumer(sptr<BufferQueue> &bufferQueue)
+BufferQueueConsumer::BufferQueueConsumer(sptr<BufferQueue>& bufferQueue)
 {
     bufferQueue_ = bufferQueue;
     if (bufferQueue_ != nullptr) {
@@ -36,7 +36,7 @@ BufferQueueConsumer::~BufferQueueConsumer()
     BLOGNI("dtor");
 }
 
-SurfaceError BufferQueueConsumer::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer, int32_t &fence,
+SurfaceError BufferQueueConsumer::AcquireBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t &fence,
                                                 int64_t &timestamp, Rect &damage)
 {
     if (bufferQueue_ == nullptr) {
@@ -45,7 +45,7 @@ SurfaceError BufferQueueConsumer::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer,
     return bufferQueue_->AcquireBuffer(buffer, fence, timestamp, damage);
 }
 
-SurfaceError BufferQueueConsumer::ReleaseBuffer(sptr<SurfaceBufferImpl> &buffer, int32_t fence)
+SurfaceError BufferQueueConsumer::ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t fence)
 {
     if (bufferQueue_ == nullptr) {
         return SURFACE_ERROR_NULLPTR;
@@ -53,7 +53,7 @@ SurfaceError BufferQueueConsumer::ReleaseBuffer(sptr<SurfaceBufferImpl> &buffer,
     return bufferQueue_->ReleaseBuffer(buffer, fence);
 }
 
-SurfaceError BufferQueueConsumer::RegisterConsumerListener(sptr<IBufferConsumerListener> &listener)
+SurfaceError BufferQueueConsumer::RegisterConsumerListener(sptr<IBufferConsumerListener>& listener)
 {
     if (bufferQueue_ == nullptr) {
         return SURFACE_ERROR_NULLPTR;

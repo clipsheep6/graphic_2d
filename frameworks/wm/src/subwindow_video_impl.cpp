@@ -238,7 +238,6 @@ WMError SubwindowVideoImpl::Resize(uint32_t width, uint32_t height)
         WMLOGFE("display layer is not create");
         return WM_ERROR_NOT_INIT;
     }
-
 #ifdef TARGET_CPU_ARM
     IRect rect = {};
     int32_t ret = display->GetRect(layerId, rect);

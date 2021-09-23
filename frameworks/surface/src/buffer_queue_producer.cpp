@@ -27,7 +27,7 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "BufferQueueProducer" };
 }
 
-BufferQueueProducer::BufferQueueProducer(sptr<BufferQueue> &bufferQueue)
+BufferQueueProducer::BufferQueueProducer(sptr<BufferQueue>& bufferQueue)
 {
     bufferQueue_ = bufferQueue;
     if (bufferQueue_ != nullptr) {

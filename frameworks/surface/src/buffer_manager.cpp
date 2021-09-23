@@ -118,9 +118,7 @@ SurfaceError BufferManager::Alloc(const BufferRequestConfig &config, sptr<Surfac
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = nullptr;
-    int32_t align = config.strideAlignment;
-    align = 64; // glrender
-    int32_t width = (config.width + align - 1) / align * align;
+    int32_t width = (config.width + 63) / 64 * 64;
     AllocInfo info = {width, config.height, config.usage, (PixelFormat)config.format};
 
     auto dret = grallocFuncs_->AllocMem(&info, &handle);

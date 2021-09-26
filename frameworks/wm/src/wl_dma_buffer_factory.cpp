@@ -224,7 +224,7 @@ sptr<WlBuffer> WlDMABufferFactory::Create(BufferHandle *handle)
     g_bufferPromises[param] = new Promise<struct wl_buffer *>();
     auto dl = display->AddDispatchDeathListener([&]() { g_bufferPromises[param]->Resolve(nullptr); });
 
-    constexpr uint32_t flags = 0;
+    constexpr uint32_t flags = ZWP_LINUX_BUFFER_PARAMS_V1_FLAGS_Y_INVERT;
     zwp_linux_buffer_params_v1_create(param, handle->width, handle->height, drmFormat, flags);
     display->Flush(); // send request
 

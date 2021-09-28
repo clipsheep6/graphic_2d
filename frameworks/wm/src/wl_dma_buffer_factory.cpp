@@ -100,7 +100,7 @@ struct zwp_linux_buffer_params_v1 *WlDMABufferFactory::CreateParam(BufferHandle 
 
     uint64_t modifier = 0;
     zwp_linux_buffer_params_v1_add(param, handle->fd, 0, 0,
-        handle->width * STRIDE_NUM, modifier >> MODIFY_OFFSET, modifier & 0xffffffff);
+        handle->stride, modifier >> MODIFY_OFFSET, modifier & 0xffffffff);
 
     SendBufferHandle(param, handle);
 
@@ -148,6 +148,9 @@ bool PixelFormatToDrmFormat(int32_t pixelFormat, uint32_t &drmFormat)
         {PIXEL_FMT_UYVY_422_PKG, DRM_FORMAT_UYVY},
         {PIXEL_FMT_YVYU_422_PKG, DRM_FORMAT_YVYU},
         {PIXEL_FMT_VYUY_422_PKG, DRM_FORMAT_VYUY},
+        {PIXEL_FMT_YCBCR_420_SP, DRM_FORMAT_NV12},
+        {PIXEL_FMT_YCRCB_420_SP, DRM_FORMAT_NV21},
+        {PIXEL_FMT_YCBCR_420_P, DRM_FORMAT_YUV420},
     };
 
     for (const auto &fmt : formatTable) {

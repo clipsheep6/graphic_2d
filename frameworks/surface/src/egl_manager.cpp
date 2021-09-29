@@ -53,12 +53,12 @@ constexpr const char *GBM_DEVICE_PATH = "/dev/dri/card0";
 constexpr int32_t EGL_CONTEXT_CLIENT_VERSION_NUM = 2;
 constexpr char CHARACTER_WHITESPACE = ' ';
 constexpr const char *CHARACTER_STRING_WHITESPACE = " ";
-// constexpr const char *EGL_EXT_PLATFORM_WAYLAND = "EGL_EXT_platform_wayland";
-// constexpr const char *EGL_KHR_PLATFORM_WAYLAND = "EGL_KHR_platform_wayland";
-// constexpr const char *EGL_GET_PLATFORM_DISPLAY_EXT = "eglGetPlatformDisplayEXT";
+constexpr const char *EGL_EXT_PLATFORM_WAYLAND = "EGL_EXT_platform_wayland";
+constexpr const char *EGL_KHR_PLATFORM_WAYLAND = "EGL_KHR_platform_wayland";
+constexpr const char *EGL_GET_PLATFORM_DISPLAY_EXT = "eglGetPlatformDisplayEXT";
 constexpr const char *EGL_EXT_IMAGE_DMA_BUF_IMPORT = "EGL_EXT_image_dma_buf_import";
 constexpr const char *EGL_KHR_SURFACELESS_CONTEXT = "EGL_KHR_surfaceless_context";
-// constexpr const char *EGL_KHR_NO_CONFIG_CONTEXT = "EGL_KHR_no_config_context";
+constexpr const char *EGL_KHR_NO_CONFIG_CONTEXT = "EGL_KHR_no_config_context";
 constexpr const char *EGL_CREATE_IMAGE_KHR = "eglCreateImageKHR";
 constexpr const char *EGL_DESTROY_IMAGE_KHR = "eglDestroyImageKHR";
 constexpr const char *EGL_IMAGE_TARGET_TEXTURE2DOES = "glEGLImageTargetTexture2DOES";
@@ -169,23 +169,22 @@ static bool CheckEglExtension(const char *extensions, const char *extension)
 
 static EGLDisplay GetPlatformEglDisplay(EGLenum platform, void *native_display, const EGLint *attrib_list)
 {
-	// static GetPlatformDisplayExt eglGetPlatformDisplayExt = NULL;
+	static GetPlatformDisplayExt eglGetPlatformDisplayExt = NULL;
 
-	// if (!eglGetPlatformDisplayExt) {
-    //     const char *extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
-    //     if (extensions &&
-    //         (CheckEglExtension(extensions, EGL_EXT_PLATFORM_WAYLAND) ||
-    //          CheckEglExtension(extensions, EGL_KHR_PLATFORM_WAYLAND))) {
-    //         eglGetPlatformDisplayExt =
-    //             (GetPlatformDisplayExt)eglGetProcAddress(EGL_GET_PLATFORM_DISPLAY_EXT);
-    //     }
-	// }
+	if (!eglGetPlatformDisplayExt) {
+        const char *extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
+        if (extensions &&
+            (CheckEglExtension(extensions, EGL_EXT_PLATFORM_WAYLAND) ||
+             CheckEglExtension(extensions, EGL_KHR_PLATFORM_WAYLAND))) {
+            eglGetPlatformDisplayExt =
+                (GetPlatformDisplayExt)eglGetProcAddress(EGL_GET_PLATFORM_DISPLAY_EXT);
+        }
+	}
 
-	// if (eglGetPlatformDisplayExt) {
-    //     return eglGetPlatformDisplayExt(platform, native_display, attrib_list);
-    // }
-	// return eglGetDisplay((EGLNativeDisplayType) native_display);
-    return eglGetDisplay(EGL_DEFAULT_DISPLAY);
+	if (eglGetPlatformDisplayExt) {
+        return eglGetPlatformDisplayExt(platform, native_display, attrib_list);
+    }
+	return eglGetDisplay((EGLNativeDisplayType) native_display);
 }
 }
 
@@ -204,25 +203,25 @@ SurfaceError EglManager::EglCheckExt()
         return SURFACE_ERROR_INIT;
     }
 
-    BLOGW("EGL_KHR_no_config_context not supported");
-    EGLint ret, count;
-    EGLint config_attribs[] = {
-      // clang-format off
-      EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-      EGL_SURFACE_TYPE,    EGL_WINDOW_BIT,
-      EGL_RED_SIZE,        8,
-      EGL_GREEN_SIZE,      8, 
-      EGL_BLUE_SIZE,       8,
-      EGL_ALPHA_SIZE,      8,
-      EGL_DEPTH_SIZE,      0,
-      EGL_STENCIL_SIZE,    0,
-      EGL_NONE,            // termination sentinel
-      // clang-format on
-    };
-    ret = eglChooseConfig(display_, config_attribs, &conf_, 1, &count);
-    if (!(ret && count >= 1)) {
-        BLOGE("Failed to eglChooseConfig %d", eglGetError());
-        return SURFACE_ERROR_INIT;
+    if (CheckEglExtension(eglExtensions, EGL_KHR_NO_CONFIG_CONTEXT)) {
+        conf_ = EGL_NO_CONFIG_KHR;
+    } else {
+        BLOGW("EGL_KHR_no_config_context not supported");
+        EGLint ret, count;
+        EGLint config_attribs[] = {
+            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+            EGL_RED_SIZE, 1,
+            EGL_GREEN_SIZE, 1,
+            EGL_BLUE_SIZE, 1,
+            EGL_ALPHA_SIZE, 1,
+            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+            EGL_NONE
+        };
+        ret = eglChooseConfig(display_, config_attribs, &conf_, 1, &count);
+        if (!(ret && count >= 1)) {
+            BLOGE("Failed to eglChooseConfig");
+            return SURFACE_ERROR_INIT;
+        }
     }
     return SURFACE_ERROR_OK;
 }

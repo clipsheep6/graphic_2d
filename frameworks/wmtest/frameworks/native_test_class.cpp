@@ -16,7 +16,7 @@
 #include "native_test_class.h"
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <cstdio>
 #include <securec.h>
 #include <sys/time.h>
@@ -26,8 +26,6 @@
 
 #include "inative_test.h"
 #include "util.h"
-
-#define MAX_LOG_LENGTH 1000
 
 namespace OHOS {
 sptr<Window> NativeTestFactory::CreateWindow(WindowType type, sptr<Surface> csurface)
@@ -66,6 +64,7 @@ sptr<NativeTestSync> NativeTestSync::CreateSync(DrawFunc drawFunc, sptr<Surface>
     return nullptr;
 }
 
+#ifdef ACE_ENABLE_GPU
 sptr<NativeTestSync> NativeTestSync::CreateSyncEgl(DrawFuncEgl drawFunc, sptr<EglRenderSurface> &peglsurface, void *data)
 {
     if (drawFunc != nullptr && peglsurface != nullptr) {
@@ -101,9 +100,11 @@ void NativeTestSync::SyncEgl(int64_t, void *data)
 
     RequestSync(std::bind(&NativeTestSync::SyncEgl, this, SYNC_FUNC_ARG), data);
 }
+#endif
 
+#ifdef ACE_ENABLE_GPU
 namespace {
-static const char *g_vertShaderText =
+const char *g_vertShaderText =
     "uniform float offset;\n"
     "attribute vec4 pos;\n"
     "attribute vec4 color;\n"
@@ -113,7 +114,7 @@ static const char *g_vertShaderText =
     "  v_color = color;\n"
     "}\n";
 
-static const char *g_fragShaderText =
+const char *g_fragShaderText =
     "precision mediump float;\n"
     "varying vec4 v_color;\n"
     "void main() {\n"
@@ -133,9 +134,10 @@ static GLuint CreateShader(const char *source, GLenum shaderType)
 
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
     if (!status) {
-        char log[MAX_LOG_LENGTH];
+		constexpr int32_t maxLogLength = 1000;
+        char log[maxLogLength];
         GLsizei len;
-        glGetShaderInfoLog(shader, MAX_LOG_LENGTH, &len, log);
+        glGetShaderInfoLog(shader, maxLogLength, &len, log);
         fprintf(stderr, "Error: compiling %s: %.*s\n",
             shaderType == GL_VERTEX_SHADER ? "vertex" : "fragment", len, log);
         return 0;
@@ -155,9 +157,10 @@ static GLuint CreateAndLinkProgram(GLuint vert, GLuint frag)
 
     glGetProgramiv(program, GL_LINK_STATUS, &status);
     if (!status) {
-        char log[MAX_LOG_LENGTH];
+		constexpr int32_t maxLogLength = 1000;
+        char log[maxLogLength];
         GLsizei len;
-        glGetProgramInfoLog(program, MAX_LOG_LENGTH, &len, log);
+        glGetProgramInfoLog(program, maxLogLength, &len, log);
         fprintf(stderr, "Error: linking:\n%.*s\n", len, log);
         return 0;
     }
@@ -204,6 +207,7 @@ bool NativeTestSync::GLContextInit()
     }
     return bInit;
 }
+#endif
 
 void NativeTestSync::Sync(int64_t, void *data)
 {
@@ -433,6 +437,7 @@ void NativeTestDraw::BoxDraw(void *vaddr, uint32_t width, uint32_t height, uint3
     drawOnce(abs((count + 1) % (framecount * 0x2 - 1) - framecount), color);
 }
 
+#ifdef ACE_ENABLE_GPU
 void NativeTestDraw::FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsurface)
 {
     /* Complete a movement iteration in 5000 ms. */
@@ -476,8 +481,6 @@ void NativeTestDraw::FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsur
 
     glDisableVertexAttribArray(ctx->pos);
     glDisableVertexAttribArray(ctx->color);
-
-    // glFinish();
 }
-
+#endif
 } // namespace OHOS

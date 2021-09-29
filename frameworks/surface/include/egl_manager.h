@@ -70,13 +70,16 @@ private:
     SurfaceError EglCheckExt();
     SurfaceError EglFuncInit();
 
-    static inline sptr<EglManager> instance_ = nullptr;
+    thread_local static inline sptr<EglManager> instance_ = nullptr;
     bool initFlag_ = false;
     int drmFd_ = -1;
     struct gbm_device *device_ = nullptr;
 
     EGLDisplay display_;
     EGLContext context_;
+
+    std::map<uint32_t, EGLContext> sharedContextCache;
+
     bool ctxReleaseFlg_ = false;
     EGLConfig conf_;
     EglCreateImageFunc createImage_;

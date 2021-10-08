@@ -50,8 +50,8 @@ private:
     struct wms *wms = nullptr;
     struct wl_display *display = nullptr;
     struct wl_registry *registry = nullptr;
-    sptr<IWindowManagerService> wmservice;
-    std::unique_ptr<std::thread> dispatchThread;
+    sptr<IWindowManagerService> wmservice = nullptr;
+    std::unique_ptr<std::thread> dispatchThread = nullptr;
 };
 } // namespace OHOS
 

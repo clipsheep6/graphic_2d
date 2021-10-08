@@ -50,6 +50,8 @@ public:
     VsyncError RequestFrameCallback(const struct FrameCallback &cb);
     VsyncError GetSupportedVsyncFrequencys(std::vector<uint32_t>& freqs);
 
+    void AddContext(std::shared_ptr<AppExecFwk::EventHandler> &handler);
+    void RemoveContext(std::shared_ptr<AppExecFwk::EventHandler> &handler);
     virtual void DispatchFrameCallback(int64_t timestamp);
 
 private:
@@ -62,14 +64,17 @@ private:
 
     void DispatchMain(int64_t timestamp);
 
-    std::map<uint32_t, std::priority_queue<struct VsyncElement>> callbacksMap_;
     std::mutex callbacksMapMutex_;
+    std::map<uint32_t, std::priority_queue<struct VsyncElement>> callbacksMap_;
+
+    std::mutex handlersMutex_;
+    std::list<std::shared_ptr<AppExecFwk::EventHandler>> handlers_;
 
     std::atomic<uint32_t> lastID_ = 0;
 
     uint32_t vsyncFrequency_ = 0;
-    sptr<IVsyncManager> service_ = nullptr;
     std::mutex serviceMutex_;
+    sptr<IVsyncManager> service_ = nullptr;
     sptr<IVsyncCallback> listener_ = nullptr;
 };
 

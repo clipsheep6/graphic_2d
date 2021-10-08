@@ -61,6 +61,23 @@ public:
         SingletonContainer::GetInstance()->SetSingleton(nameT, ptr);
     }
 
+    void SetGlobalData(const std::string &dataName, const std::any &data);
+    const std::any &GetGlobalData(const std::string &dataName);
+
+    template<class T>
+    static void SetData(const std::string &dataName, const std::shared_ptr<T> &ptr)
+    {
+        SingletonContainer::GetInstance()->SetGlobalData(dataName, ptr);
+    }
+
+    template<class T>
+    static std::shared_ptr<T> GetData(const std::string &dataName)
+    {
+        using sharedPtrT = std::shared_ptr<T>;
+        const auto &data = SingletonContainer::GetInstance()->GetGlobalData(dataName);
+        return std::any_cast<sharedPtrT>(data);
+    }
+
 private:
     SingletonContainer() = default;
     virtual ~SingletonContainer() override;
@@ -73,6 +90,8 @@ private:
     std::map<std::string, int32_t> stringMap;
     std::map<int32_t, SingletonContainer::Singleton> singletonMap;
     std::map<int32_t, std::set<int32_t>> dependencySetMap;
+
+    std::map<std::string, std::any> dataMap;
 };
 } // namespace OHOS
 

@@ -33,9 +33,6 @@ namespace OHOS {
 namespace Vsync {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "VsyncHelperImpl" };
-std::list<std::shared_ptr<AppExecFwk::EventHandler>> g_handlers;
-std::mutex g_handlersMutex;
-
 int64_t GetNowTime()
 {
     auto now = std::chrono::steady_clock::now().time_since_epoch();
@@ -222,16 +219,31 @@ VsyncError VsyncClient::GetSupportedVsyncFrequencys(std::vector<uint32_t>& freqs
     return VSYNC_ERROR_OK;
 }
 
+void VsyncClient::AddContext(std::shared_ptr<AppExecFwk::EventHandler> &handler)
+{
+    std::lock_guard<std::mutex> lock(handlersMutex_);
+    handlers_.push_back(handler);
+}
+
+void VsyncClient::RemoveContext(std::shared_ptr<AppExecFwk::EventHandler> &handler)
+{
+    std::lock_guard<std::mutex> lock(handlersMutex_);
+    auto it = std::find(handlers_.begin(), handlers_.end(), handler);
+    if (it != handlers_.end()) {
+        handlers_.erase(it);
+    }
+}
+
 void VsyncClient::DispatchFrameCallback(int64_t timestamp)
 {
-    std::lock_guard<std::mutex> lock(g_handlersMutex);
-    if (g_handlers.empty() == true) {
-        VLOGD("g_handlers is empty, cannot exec");
+    std::lock_guard<std::mutex> lock(handlersMutex_);
+    if (handlers_.empty() == true) {
+        VLOGD("handlers_ is empty, cannot exec");
         return;
     }
 
     auto func = std::bind(&VsyncClient::DispatchMain, this, timestamp);
-    g_handlers.front()->PostTask(func, "VsyncClient::DispatchFrameCallback");
+    handlers_.front()->PostTask(func, "VsyncClient::DispatchFrameCallback");
 }
 
 void VsyncClient::DispatchMain(int64_t timestamp)
@@ -300,19 +312,12 @@ sptr<VsyncHelperImpl> VsyncHelperImpl::Current()
 VsyncHelperImpl::VsyncHelperImpl(std::shared_ptr<AppExecFwk::EventHandler>& handler)
 {
     handler_ = handler;
-    std::lock_guard<std::mutex> lock(g_handlersMutex);
-    g_handlers.push_back(handler_);
+    VsyncClient::GetInstance()->AddContext(handler_);
 }
 
 VsyncHelperImpl::~VsyncHelperImpl()
 {
-    std::lock_guard<std::mutex> lock(g_handlersMutex);
-    for (auto it = g_handlers.begin(); it != g_handlers.end(); it++) {
-        if (handler_ == *it) {
-            g_handlers.erase(it);
-            break;
-        }
-    }
+    VsyncClient::GetInstance()->RemoveContext(handler_);
 }
 
 VsyncError VsyncHelperImpl::RequestFrameCallback(const struct FrameCallback &cb)

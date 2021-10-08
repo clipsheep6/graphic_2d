@@ -107,4 +107,18 @@ const std::any &SingletonContainer::DependOn(const std::string &instance, const 
     }
     return GetSingleton(name);
 }
+
+void SingletonContainer::SetGlobalData(const std::string &dataName, const std::any &data)
+{
+    dataMap[dataName] = data;
+}
+
+const std::any &SingletonContainer::GetGlobalData(const std::string &dataName)
+{
+    auto it = dataMap.find(dataName);
+    if (it == dataMap.end()) {
+        return nullptr;
+    }
+    return it->second;
+}
 } // namespace OHOS

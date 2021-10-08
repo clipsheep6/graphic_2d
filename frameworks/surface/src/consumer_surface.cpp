@@ -29,8 +29,6 @@ ConsumerSurface::ConsumerSurface(const std::string &name)
     : name_(name)
 {
     BLOGNI("ctor");
-    consumer_ = nullptr;
-    producer_ = nullptr;
 }
 
 ConsumerSurface::~ConsumerSurface()

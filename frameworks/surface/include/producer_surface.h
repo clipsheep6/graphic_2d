@@ -22,6 +22,7 @@
 #include <surface.h>
 #include <ibuffer_producer.h>
 
+#include "buffer_extra_data_impl.h"
 #include "buffer_queue.h"
 #include "buffer_queue_consumer.h"
 #include "surface_buffer_impl.h"

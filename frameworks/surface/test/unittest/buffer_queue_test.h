@@ -49,7 +49,7 @@ public:
     static inline Rect damage = {};
     static inline sptr<BufferQueue> bq = nullptr;
     static inline std::map<int32_t, sptr<SurfaceBuffer>> cache;
-    static inline BufferExtraDataImpl bedata;
+    static inline std::shared_ptr<BufferExtraData> bedata = std::make_shared<BufferExtraDataImpl>();
 };
 } // namespace OHOS
 

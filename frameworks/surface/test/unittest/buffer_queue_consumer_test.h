@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include <surface.h>
 
+#include "buffer_extra_data_impl.h"
 #include "buffer_queue_consumer.h"
 
 namespace OHOS {
@@ -46,7 +47,7 @@ public:
     static inline Rect damage = {};
     static inline sptr<BufferQueue> bq = nullptr;
     static inline sptr<BufferQueueConsumer> bqc = nullptr;
-    static inline BufferExtraDataImpl bedata;
+    static inline std::shared_ptr<BufferExtraData> bedata = std::make_shared<BufferExtraDataImpl>();
 };
 } // namespace OHOS
 

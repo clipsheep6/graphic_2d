@@ -150,7 +150,7 @@ SurfaceError BufferQueue::CheckFlushConfig(const BufferFlushConfig &config)
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, std::shared_ptr<BufferExtraData> &bedata,
                                         struct IBufferProducer::RequestBufferReturnValue &retval)
 {
     if (listener_ == nullptr && listenerClazz_ == nullptr) {
@@ -190,7 +190,7 @@ SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, Buffe
     return ret;
 }
 
-SurfaceError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+SurfaceError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, std::shared_ptr<BufferExtraData> &bedata,
                                       struct IBufferProducer::RequestBufferReturnValue &retval)
 {
     sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
@@ -229,7 +229,7 @@ SurfaceError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferE
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::CancelBuffer(int32_t sequence, const BufferExtraData &bedata)
+SurfaceError BufferQueue::CancelBuffer(int32_t sequence, const std::shared_ptr<BufferExtraData> &bedata)
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
 
@@ -243,7 +243,7 @@ SurfaceError BufferQueue::CancelBuffer(int32_t sequence, const BufferExtraData &
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::FlushBuffer(int32_t sequence, const BufferExtraData &bedata,
+SurfaceError BufferQueue::FlushBuffer(int32_t sequence, const std::shared_ptr<BufferExtraData> &bedata,
                                       int32_t fence, const BufferFlushConfig &config)
 {
     // check param
@@ -281,7 +281,7 @@ SurfaceError BufferQueue::FlushBuffer(int32_t sequence, const BufferExtraData &b
     return sret;
 }
 
-SurfaceError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData &bedata,
+SurfaceError BufferQueue::DoFlushBuffer(int32_t sequence, const std::shared_ptr<BufferExtraData> &bedata,
                                         int32_t fence, const BufferFlushConfig &config)
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);

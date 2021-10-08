@@ -52,18 +52,18 @@ public:
     virtual ~BufferQueue();
     SurfaceError Init();
 
-    SurfaceError RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+    SurfaceError RequestBuffer(const BufferRequestConfig &config, std::shared_ptr<BufferExtraData> &bedata,
                                struct IBufferProducer::RequestBufferReturnValue &retval);
 
-    SurfaceError ReuseBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+    SurfaceError ReuseBuffer(const BufferRequestConfig &config, std::shared_ptr<BufferExtraData> &bedata,
                              struct IBufferProducer::RequestBufferReturnValue &retval);
 
-    SurfaceError CancelBuffer(int32_t sequence, const BufferExtraData &bedata);
+    SurfaceError CancelBuffer(int32_t sequence, const std::shared_ptr<BufferExtraData> &bedata);
 
-    SurfaceError FlushBuffer(int32_t sequence, const BufferExtraData &bedata,
+    SurfaceError FlushBuffer(int32_t sequence, const std::shared_ptr<BufferExtraData> &bedata,
                              int32_t fence, const BufferFlushConfig &config);
 
-    SurfaceError DoFlushBuffer(int32_t sequence, const BufferExtraData &bedata,
+    SurfaceError DoFlushBuffer(int32_t sequence, const std::shared_ptr<BufferExtraData> &bedata,
                                int32_t fence, const BufferFlushConfig &config);
 
     SurfaceError AcquireBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t &fence,

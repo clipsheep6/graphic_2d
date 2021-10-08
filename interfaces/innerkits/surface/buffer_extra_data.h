@@ -24,6 +24,8 @@ namespace OHOS {
 class MessageParcel;
 class BufferExtraData {
 public:
+    virtual ~BufferExtraData() = default;
+
     virtual SurfaceError ReadFromParcel(MessageParcel &parcel) = 0;
     virtual SurfaceError WriteToParcel(MessageParcel &parcel) = 0;
     virtual SurfaceError ExtraGet(std::string &key, int32_t &value) const = 0;

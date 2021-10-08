@@ -238,56 +238,54 @@ SurfaceError SurfaceBufferImpl::GetData(uint32_t key, ExtraData &data)
     return SURFACE_ERROR_OK;
 }
 
-void SurfaceBufferImpl::SetExtraData(const BufferExtraData &bedata)
+void SurfaceBufferImpl::SetExtraData(const std::shared_ptr<BufferExtraData> &bedata)
 {
-    auto bedatai = static_cast<const BufferExtraDataImpl*>(&bedata);
-    bedataimpl = *bedatai;
+    bedata_ = bedata;
 }
 
-void SurfaceBufferImpl::GetExtraData(BufferExtraData &bedata) const
+void SurfaceBufferImpl::GetExtraData(std::shared_ptr<BufferExtraData> &bedata) const
 {
-    auto bedatai = static_cast<BufferExtraDataImpl*>(&bedata);
-    *bedatai = bedataimpl;
+    bedata = bedata_;
 }
 
 SurfaceError SurfaceBufferImpl::ExtraGet(std::string key, int32_t &value) const
 {
-    return bedataimpl.ExtraGet(key, value);
+    return bedata_->ExtraGet(key, value);
 }
 
 SurfaceError SurfaceBufferImpl::ExtraGet(std::string key, int64_t &value) const
 {
-    return bedataimpl.ExtraGet(key, value);
+    return bedata_->ExtraGet(key, value);
 }
 
 SurfaceError SurfaceBufferImpl::ExtraGet(std::string key, double &value) const
 {
-    return bedataimpl.ExtraGet(key, value);
+    return bedata_->ExtraGet(key, value);
 }
 
 SurfaceError SurfaceBufferImpl::ExtraGet(std::string key, std::string &value) const
 {
-    return bedataimpl.ExtraGet(key, value);
+    return bedata_->ExtraGet(key, value);
 }
 
 SurfaceError SurfaceBufferImpl::ExtraSet(std::string key, int32_t value)
 {
-    return bedataimpl.ExtraSet(key, value);
+    return bedata_->ExtraSet(key, value);
 }
 
 SurfaceError SurfaceBufferImpl::ExtraSet(std::string key, int64_t value)
 {
-    return bedataimpl.ExtraSet(key, value);
+    return bedata_->ExtraSet(key, value);
 }
 
 SurfaceError SurfaceBufferImpl::ExtraSet(std::string key, double value)
 {
-    return bedataimpl.ExtraSet(key, value);
+    return bedata_->ExtraSet(key, value);
 }
 
 SurfaceError SurfaceBufferImpl::ExtraSet(std::string key, std::string value)
 {
-    return bedataimpl.ExtraSet(key, value);
+    return bedata_->ExtraSet(key, value);
 }
 
 void SurfaceBufferImpl::SetBufferHandle(BufferHandle *handle)

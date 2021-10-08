@@ -24,7 +24,6 @@
 #include <buffer_handle_utils.h>
 #include <surface_buffer.h>
 
-#include "buffer_extra_data_impl.h"
 #include "egl_data.h"
 
 namespace OHOS {
@@ -68,8 +67,8 @@ public:
     SurfaceError SetInt64(uint32_t key, int64_t val) override;
     SurfaceError GetInt64(uint32_t key, int64_t &val) override;
 
-    void SetExtraData(const BufferExtraData &bedata);
-    void GetExtraData(BufferExtraData &bedata) const;
+    void SetExtraData(const std::shared_ptr<BufferExtraData> &bedata);
+    void GetExtraData(std::shared_ptr<BufferExtraData> &bedata) const;
     virtual SurfaceError ExtraGet(std::string key, int32_t &value) const override;
     virtual SurfaceError ExtraGet(std::string key, int64_t &value) const override;
     virtual SurfaceError ExtraGet(std::string key, double &value) const override;
@@ -90,7 +89,7 @@ private:
 
     BufferHandle *handle_ = nullptr;
     int32_t sequenceNumber = -1;
-    BufferExtraDataImpl bedataimpl;
+    std::shared_ptr<BufferExtraData> bedata_ = nullptr;
     sptr<EglData> eglData_ = nullptr;
 };
 } // namespace OHOS

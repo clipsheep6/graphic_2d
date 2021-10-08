@@ -66,7 +66,7 @@ SurfaceError ProducerEglSurface::RequestBuffer(sptr<SurfaceBuffer> &buffer,
     int32_t& fence, BufferRequestConfig &config)
 {
     IBufferProducer::RequestBufferReturnValue retval;
-    BufferExtraDataImpl bedataimpl;
+    std::shared_ptr<BufferExtraData> bedataimpl = std::make_shared<BufferExtraDataImpl>();
     retval.fence = EGL_NO_NATIVE_FENCE_FD_ANDROID;
     SurfaceError ret = producer_->RequestBuffer(config, bedataimpl, retval);
     if (ret != SURFACE_ERROR_OK) {
@@ -122,7 +122,7 @@ SurfaceError ProducerEglSurface::FlushBuffer(sptr<SurfaceBuffer> &buffer,
     }
 
     auto bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    BufferExtraDataImpl bedataimpl;
+    std::shared_ptr<BufferExtraData> bedataimpl = std::make_shared<BufferExtraDataImpl>();
     bufferImpl->GetExtraData(bedataimpl);
     return producer_->FlushBuffer(bufferImpl->GetSeqNum(), bedataimpl, fence, config);
 }

@@ -44,18 +44,18 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "BufferManager" };
 SurfaceError GenerateError(SurfaceError err, DispErrCode code)
 {
     switch (code) {
-        case DISPLAY_SUCCESS: return static_cast<SurfaceError>(err + 0);
-        case DISPLAY_FAILURE: return static_cast<SurfaceError>(err + LOWERROR_FAILURE);
-        case DISPLAY_FD_ERR: return static_cast<SurfaceError>(err + EBADF);
-        case DISPLAY_PARAM_ERR: return static_cast<SurfaceError>(err + EINVAL);
-        case DISPLAY_NULL_PTR: return static_cast<SurfaceError>(err + EINVAL);
-        case DISPLAY_NOT_SUPPORT: return static_cast<SurfaceError>(err + EOPNOTSUPP);
-        case DISPLAY_NOMEM: return static_cast<SurfaceError>(err + ENOMEM);
-        case DISPLAY_SYS_BUSY: return static_cast<SurfaceError>(err + EBUSY);
-        case DISPLAY_NOT_PERM: return static_cast<SurfaceError>(err + EPERM);
+        case DISPLAY_SUCCESS: return static_cast<enum SurfaceError>(err + 0);
+        case DISPLAY_FAILURE: return static_cast<enum SurfaceError>(err + LOWERROR_FAILURE);
+        case DISPLAY_FD_ERR: return static_cast<enum SurfaceError>(err + EBADF);
+        case DISPLAY_PARAM_ERR: return static_cast<enum SurfaceError>(err + EINVAL);
+        case DISPLAY_NULL_PTR: return static_cast<enum SurfaceError>(err + EINVAL);
+        case DISPLAY_NOT_SUPPORT: return static_cast<enum SurfaceError>(err + EOPNOTSUPP);
+        case DISPLAY_NOMEM: return static_cast<enum SurfaceError>(err + ENOMEM);
+        case DISPLAY_SYS_BUSY: return static_cast<enum SurfaceError>(err + EBUSY);
+        case DISPLAY_NOT_PERM: return static_cast<enum SurfaceError>(err + EPERM);
         default: break;
     }
-    return static_cast<SurfaceError>(err + LOWERROR_INVALID);
+    return static_cast<enum SurfaceError>(err + LOWERROR_INVALID);
 }
 
 inline SurfaceError GenerateError(SurfaceError err, int32_t code)

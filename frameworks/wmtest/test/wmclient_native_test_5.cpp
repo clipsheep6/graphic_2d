@@ -77,7 +77,7 @@ public:
 
         printf("writing to /data/wmtest5.raw\n");
         std::ofstream rawDataFile("/data/wmtest5.raw", std::ofstream::binary);
-        rawDataFile.write(static_cast<const char *>(info.data), info.size);
+        rawDataFile.write(reinterpret_cast<const char *>(info.data), info.size);
         rawDataFile.close();
         printf("write completed\n");
 

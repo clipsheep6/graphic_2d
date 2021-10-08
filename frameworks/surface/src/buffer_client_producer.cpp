@@ -150,14 +150,14 @@ SurfaceError BufferClientProducer::GetName(std::string &name)
     int32_t ret = reply.ReadInt32();
     if (ret != SURFACE_ERROR_OK) {
         BLOGN_FAILURE("Remote return %{public}d", ret);
-        return static_cast<SurfaceError>(ret);
+        return static_cast<enum SurfaceError>(ret);
     }
     if (reply.ReadString(name) == false) {
         BLOGN_FAILURE("reply.ReadString return false");
         return SURFACE_ERROR_BINDER_ERROR;
     }
     name_ = name;
-    return static_cast<SurfaceError>(ret);
+    return static_cast<enum SurfaceError>(ret);
 }
 
 int32_t BufferClientProducer::GetDefaultWidth()

@@ -106,8 +106,7 @@ HWTEST_F(VsyncManagerStubTest, GetVsyncFrequency, testing::ext::TestSize.Level0)
 {
     uint32_t freq = 30;
     vc_->GetVsyncFrequency(freq);
-    int result = static_cast<int>(freq);
-    ASSERT_EQ(result, 60);
+    ASSERT_EQ(freq, 60u);
 }
 
 HWTEST_F(VsyncManagerStubTest, Callback1, testing::ext::TestSize.Level0)

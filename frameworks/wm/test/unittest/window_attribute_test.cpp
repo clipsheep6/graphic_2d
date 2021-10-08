@@ -132,8 +132,8 @@ HWTEST_F(WindowAttributeTest, GetterSetter2, testing::ext::TestSize.Level0)
     ASSERT_EQ(attribute.GetVisibility(), visibility2) << "CaseDescription: "
         << "1. set all attribute and check (GetVisibility() == visibility2)";
 
-    constexpr auto type1 = static_cast<WindowType>(1);
-    constexpr auto type2 = static_cast<WindowType>(2);
+    constexpr auto type1 = static_cast<enum WindowType>(1);
+    constexpr auto type2 = static_cast<enum WindowType>(2);
     attribute.SetType(type1);
     ASSERT_EQ(attribute.GetType(), type1) << "CaseDescription: "
         << "1. set all attribute and check (GetType() == type1)";
@@ -184,7 +184,7 @@ HWTEST_F(WindowAttributeTest, AddListeners, testing::ext::TestSize.Level0)
         << "2. change attr, check (callCount == callVisibility)";
 
     callCount = 0;
-    attribute.SetType(static_cast<WindowType>(1));
+    attribute.SetType(static_cast<enum WindowType>(1));
     ASSERT_EQ(callCount, callType) << "CaseDescription: "
         << "2. change attr, check (callCount == callType)";
 }

@@ -168,7 +168,7 @@ std::unique_ptr<Window> WindowManager::CreateWindow(WindowConfig *config)
     }
 
     auto wms = WindowManagerServer::GetInstance();
-    auto promise = wms->CreateWindow(wlSurface, 0, static_cast<WindowType>(config->type));
+    auto promise = wms->CreateWindow(wlSurface, 0, static_cast<enum WindowType>(config->type));
     auto wminfo = promise->Await();
     if (wminfo.wret != WM_OK) {
         WMLOG_E("Error: wms->CreateWindow failed, %{public}s", WMErrorStr(wminfo.wret).c_str());
@@ -424,7 +424,7 @@ void Window::ReSize(int32_t width, int32_t height)
 void Window::Rotate(rotateType type)
 {
     WMLOG_I("Window::Rotate start");
-    LayerControllerClient::GetInstance()->Rotate(m_windowid, static_cast<int32_t>(type));
+    LayerControllerClient::GetInstance()->Rotate(m_windowid, type);
     WMLOG_I("Window::Rotate end");
 }
 

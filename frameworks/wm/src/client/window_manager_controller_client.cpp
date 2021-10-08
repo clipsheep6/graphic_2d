@@ -489,7 +489,7 @@ void LayerControllerClient::Rotate(int32_t id, int32_t type)
     LOCK(mutex);
     WMLOG_I("LayerControllerClient::Rotate id=%{public}d type=%{public}d start", id, type);
     GET_WINDOWINFO_VOID(wininfo, id);
-    wininfo->wlSurface->SetBufferTransform(static_cast<wl_output_transform>(type));
+    wininfo->wlSurface->SetBufferTransform(static_cast<enum wl_output_transform>(type));
     wininfo->wlSurface->Commit();
 }
 

@@ -50,8 +50,8 @@ HWTEST_F(SubwindowOptionImplTest, Create, testing::ext::TestSize.Level0)
     SubwindowOptionImpl soi;
 
     // 1. Check Set and Get WindowType
-    constexpr SubwindowType type1 = static_cast<SubwindowType>(0);
-    constexpr SubwindowType type2 = static_cast<SubwindowType>(1);
+    constexpr SubwindowType type1 = static_cast<enum SubwindowType>(0);
+    constexpr SubwindowType type2 = static_cast<enum SubwindowType>(1);
     soi.SetWindowType(type1);
     ASSERT_EQ(soi.GetWindowType(), type1) << "CaseDescription: "
         << "1. Check Set and Get WindowType (soi.GetWindowType() == type1)";
@@ -115,7 +115,7 @@ HWTEST_F(SubwindowOptionImplTest, InvalidSet, testing::ext::TestSize.Level0)
     SubwindowOptionImpl soi;
 
     // 1. set invalid WindowType, check
-    constexpr auto invalidWindowType = static_cast<SubwindowType>(-1);
+    constexpr auto invalidWindowType = static_cast<enum SubwindowType>(-1);
     ASSERT_EQ(soi.SetWindowType(invalidWindowType), WM_ERROR_INVALID_PARAM) << "CaseDescription: "
         << "1. set invalid WindowType, check (soi.SetWindowType() == WM_ERROR_INVALID_PARAM)";
 

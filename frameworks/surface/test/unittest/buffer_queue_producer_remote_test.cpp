@@ -128,18 +128,11 @@ HWTEST_F(BufferQueueProducerRemoteTest, ReqReqReqCanCan, testing::ext::TestSize.
 
 HWTEST_F(BufferQueueProducerRemoteTest, SetQueueSizeDeleting, testing::ext::TestSize.Level0)
 {
-    sptr<SurfaceBuffer> buffer;
-
-    sptr<BufferQueueProducer> bqp = static_cast<BufferQueueProducer*>(bp.GetRefPtr());
-    ASSERT_EQ(bqp->bufferQueue_->freeList_.size(), 2u);
-
     SurfaceError ret = bp->SetQueueSize(1);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
-    ASSERT_EQ(bqp->bufferQueue_->freeList_.size(), 1u);
 
     ret = bp->SetQueueSize(2);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
-    ASSERT_EQ(bqp->bufferQueue_->freeList_.size(), 1u);
 }
 
 HWTEST_F(BufferQueueProducerRemoteTest, ReqFlu, testing::ext::TestSize.Level0)

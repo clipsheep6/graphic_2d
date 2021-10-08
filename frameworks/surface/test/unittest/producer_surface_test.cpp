@@ -158,18 +158,11 @@ HWTEST_F(ProducerSurfaceTest, ReqReqReqCanCan, testing::ext::TestSize.Level0)
 
 HWTEST_F(ProducerSurfaceTest, SetQueueSizeDeleting, testing::ext::TestSize.Level0)
 {
-    sptr<ConsumerSurface> cs = static_cast<ConsumerSurface*>(csurface.GetRefPtr());
-    sptr<BufferQueueProducer> bqp = static_cast<BufferQueueProducer*>(cs->producer_.GetRefPtr());
-    ASSERT_EQ(bqp->bufferQueue_->queueSize_, 2u);
-    ASSERT_EQ(bqp->bufferQueue_->freeList_.size(), 2u);
-
     SurfaceError ret = psurface->SetQueueSize(1);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
-    ASSERT_EQ(bqp->bufferQueue_->freeList_.size(), 1u);
 
     ret = psurface->SetQueueSize(2);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
-    ASSERT_EQ(bqp->bufferQueue_->freeList_.size(), 1u);
 }
 
 HWTEST_F(ProducerSurfaceTest, ReqRel, testing::ext::TestSize.Level0)

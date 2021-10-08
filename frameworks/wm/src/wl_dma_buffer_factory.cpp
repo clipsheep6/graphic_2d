@@ -65,7 +65,7 @@ void WlDMABufferFactory::OnAppear(const GetServiceFunc get, const std::string &i
     if (iname == "zwp_linux_dmabuf_v1") {
         constexpr uint32_t dmabufVersion = 3;
         auto ret = get(&zwp_linux_dmabuf_v1_interface, dmabufVersion);
-        dmabuf = static_cast<struct zwp_linux_dmabuf_v1 *>(ret);
+        dmabuf = reinterpret_cast<struct zwp_linux_dmabuf_v1 *>(ret);
     }
 }
 

@@ -237,13 +237,13 @@ bool WindowImpl::GetVisibility() const
 
 WindowType WindowImpl::GetType() const
 {
-    CHECK_DESTROY_CONST(static_cast<WindowType>(-1));
+    CHECK_DESTROY_CONST(static_cast<enum WindowType>(-1));
     return attr.GetType();
 }
 
 WindowMode WindowImpl::GetMode() const
 {
-    CHECK_DESTROY_CONST(static_cast<WindowMode>(-1));
+    CHECK_DESTROY_CONST(static_cast<enum WindowMode>(-1));
     return attr.GetMode();
 }
 
@@ -339,7 +339,7 @@ WMError WindowImpl::Rotate(WindowRotateType type)
         return WM_ERROR_INVALID_PARAM;
     }
 
-    wlSurface->SetBufferTransform(static_cast<wl_output_transform>(type));
+    wlSurface->SetBufferTransform(static_cast<enum wl_output_transform>(type));
     display->Sync();
     if (display->GetError() != 0) {
         return WM_ERROR_API_FAILED;

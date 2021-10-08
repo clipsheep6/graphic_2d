@@ -39,7 +39,7 @@ public:
     virtual sptr<Surface> GetConsumerSurface() const override;
 
 private:
-    SubwindowType type = static_cast<SubwindowType>(0);
+    SubwindowType type = static_cast<enum SubwindowType>(0);
     int32_t x = 0;
     int32_t y = 0;
     uint32_t width = 1;

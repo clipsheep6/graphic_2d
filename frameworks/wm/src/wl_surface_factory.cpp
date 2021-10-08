@@ -56,7 +56,7 @@ void WlSurfaceFactory::OnAppear(const GetServiceFunc get, const std::string &ina
     constexpr uint32_t wlCompositorVersion = 2;
     if (iname == "wl_compositor") {
         auto ret = get(&wl_compositor_interface, wlCompositorVersion);
-        compositor = static_cast<struct wl_compositor *>(ret);
+        compositor = reinterpret_cast<struct wl_compositor *>(ret);
     }
 
     constexpr uint32_t syncVersion = 1;

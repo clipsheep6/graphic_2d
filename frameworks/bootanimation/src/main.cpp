@@ -110,7 +110,7 @@ void Main::Draw()
         }
 
         static uint32_t count = 0;
-        auto addr = static_cast<uint8_t *>(buffer->GetVirAddr());
+        auto addr = reinterpret_cast<uint8_t *>(buffer->GetVirAddr());
         while (true) {
             int32_t drawRet = DoDraw(addr, buffer->GetWidth(), buffer->GetHeight(), count);
             if (drawRet && count == 0) {

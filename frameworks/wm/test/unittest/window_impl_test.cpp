@@ -217,7 +217,7 @@ HWTEST_F(WindowImplTest, Create06, Reliability | SmallTest | Level3)
         using Mocker = SingletonMocker<WindowManagerServer, MockWindowManagerServer>;
         std::unique_ptr<Mocker> m = nullptr;
 
-        constexpr WMError anyError = static_cast<WMError>(-1);
+        constexpr WMError anyError = static_cast<enum WMError>(-1);
         STEP("1. Mock WindowManagerServer, CreateWindow return Promise(-1)") {
             m = std::make_unique<Mocker>();
             struct WMSWindowInfo info = { .wret = anyError };
@@ -378,25 +378,24 @@ HWTEST_F(WindowImplTest, Create10, Function | SmallTest | Level2)
             STEP_ASSERT_EQ(wret, WM_OK);
         }
 
-        sptr<WindowImpl> wi = static_cast<WindowImpl *>(window.GetRefPtr());
         STEP("2. check type") {
-            STEP_ASSERT_EQ(wi->attr.GetType(), WINDOW_TYPE_ALARM_SCREEN);
+            STEP_ASSERT_EQ(window->GetType(), WINDOW_TYPE_ALARM_SCREEN);
         }
         STEP("3. check visibility") {
-            STEP_ASSERT_EQ(wi->attr.GetVisibility(), true);
+            STEP_ASSERT_EQ(window->GetVisibility(), true);
         }
         STEP("4. check xywh") {
-            STEP_ASSERT_EQ(wi->attr.GetX(), 1);
-            STEP_ASSERT_EQ(wi->attr.GetY(), 1);
-            STEP_ASSERT_EQ(wi->attr.GetWidth(), 1u);
-            STEP_ASSERT_EQ(wi->attr.GetHeight(), 1u);
+            STEP_ASSERT_EQ(window->GetX(), 1);
+            STEP_ASSERT_EQ(window->GetY(), 1);
+            STEP_ASSERT_EQ(window->GetWidth(), 1u);
+            STEP_ASSERT_EQ(window->GetHeight(), 1u);
         }
         STEP("5. check dest_width, dest_height") {
-            STEP_ASSERT_EQ(wi->attr.GetDestWidth(), 1u);
-            STEP_ASSERT_EQ(wi->attr.GetDestHeight(), 1u);
+            STEP_ASSERT_EQ(window->GetDestWidth(), 1u);
+            STEP_ASSERT_EQ(window->GetDestHeight(), 1u);
         }
         STEP("6. check id") {
-            STEP_ASSERT_GE(wi->attr.GetID(), 0);
+            STEP_ASSERT_GE(window->GetID(), 0);
         }
     }
 }
@@ -824,7 +823,7 @@ HWTEST_F(WindowImplTest, SetWindowType03, Reliability | SmallTest | Level3)
 {
     PART("CaseDescription") {
         STEP("1. call NormalWindow SetWindowType with -1, check WM_ERROR_INVALID_PARAM") {
-            auto wret = normalWindow->SetWindowType(static_cast<WindowType>(-1))->Await();
+            auto wret = normalWindow->SetWindowType(static_cast<enum WindowType>(-1))->Await();
             STEP_ASSERT_EQ(wret, WM_ERROR_INVALID_PARAM);
         }
     }
@@ -875,7 +874,7 @@ HWTEST_F(WindowImplTest, SetWindowMode03, Reliability | SmallTest | Level3)
 {
     PART("CaseDescription") {
         STEP("1. call NormalWindow SetWindowMode with -1, check WM_ERROR_INVALID_PARAM") {
-            auto wret = normalWindow->SetWindowMode(static_cast<WindowMode>(-1))->Await();
+            auto wret = normalWindow->SetWindowMode(static_cast<enum WindowMode>(-1))->Await();
             STEP_ASSERT_EQ(wret, WM_ERROR_INVALID_PARAM);
         }
     }
@@ -1086,7 +1085,7 @@ HWTEST_F(WindowImplTest, Rotate03, Reliability | SmallTest | Level3)
 {
     PART("CaseDescription") {
         STEP("1. call NormalWindow Rotate with 0 0, check WM_ERROR_INVALID_PARAM") {
-            auto wret = normalWindow->Rotate(static_cast<WindowRotateType>(-1));
+            auto wret = normalWindow->Rotate(static_cast<enum WindowRotateType>(-1));
             STEP_ASSERT_EQ(wret, WM_ERROR_INVALID_PARAM);
         }
     }

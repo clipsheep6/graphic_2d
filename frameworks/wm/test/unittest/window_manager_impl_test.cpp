@@ -480,7 +480,7 @@ HWTEST_F(WindowManagerImplTest, CreateSubwindow03, Reliability | SmallTest | Lev
         STEP("2. GetWindowType return -1, -1") {
             EXPECT_CALL(*mockSubwindowOption, GetWindowType())
                 .Times(2)
-                .WillRepeatedly(Return(static_cast<SubwindowType>(-1)));
+                .WillRepeatedly(Return(static_cast<enum SubwindowType>(-1)));
         }
 
         WMError wret;

@@ -249,7 +249,7 @@ void NativeTestSync::Sync(int64_t, void *data)
 
 void NativeTestDraw::FlushDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
 {
-    auto addr = static_cast<uint8_t *>(vaddr);
+    auto addr = reinterpret_cast<uint8_t *>(vaddr);
     if (addr == nullptr) {
         return;
     }
@@ -291,7 +291,7 @@ void NativeTestDraw::FlushDraw(void *vaddr, uint32_t width, uint32_t height, uin
 
 void NativeTestDraw::ColorDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
 {
-    auto addr = static_cast<uint32_t *>(vaddr);
+    auto addr = reinterpret_cast<uint32_t *>(vaddr);
     if (addr == nullptr) {
         return;
     }
@@ -322,7 +322,7 @@ void NativeTestDraw::ColorDraw(void *vaddr, uint32_t width, uint32_t height, uin
 
 void NativeTestDraw::BlackDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
 {
-    auto addr = static_cast<uint32_t *>(vaddr);
+    auto addr = reinterpret_cast<uint32_t *>(vaddr);
     if (addr == nullptr) {
         return;
     }
@@ -334,7 +334,7 @@ void NativeTestDraw::BlackDraw(void *vaddr, uint32_t width, uint32_t height, uin
 
 void NativeTestDraw::RainbowDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
 {
-    auto addr = static_cast<uint32_t *>(vaddr);
+    auto addr = reinterpret_cast<uint32_t *>(vaddr);
     if (addr == nullptr) {
         return;
     }
@@ -380,7 +380,7 @@ void NativeTestDraw::RainbowDraw(void *vaddr, uint32_t width, uint32_t height, u
 
 void NativeTestDraw::BoxDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
 {
-    auto addr = static_cast<uint32_t *>(vaddr);
+    auto addr = reinterpret_cast<uint32_t *>(vaddr);
     if (addr == nullptr) {
         return;
     }

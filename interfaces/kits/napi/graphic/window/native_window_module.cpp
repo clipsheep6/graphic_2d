@@ -175,7 +175,7 @@ napi_value MainFunc(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_value_int32(env, argv[0], &windowType));
 
     auto param = std::make_unique<Param>();
-    param->promise = ability->GetWindow()->SetWindowType(static_cast<WindowType>(windowType));
+    param->promise = ability->GetWindow()->SetWindowType(static_cast<enum WindowType>(windowType));
 
     return CreatePromise<Param>(env, __PRETTY_FUNCTION__, Async, Resolve, param);
 }
@@ -291,10 +291,10 @@ napi_value CreateWindowTypeEnum(napi_env env)
 {
     napi_value value = nullptr;
     NAPI_CALL(env, napi_create_object(env, &value));
-    SetMemberInt32(env, value, "TYPE_APP", static_cast<int32_t>(WINDOW_TYPE_NORMAL));
-    SetMemberInt32(env, value, "TYPE_SYSTEM_ALERT", static_cast<int32_t>(WINDOW_TYPE_ALARM_SCREEN));
-    SetMemberInt32(env, value, "TYPE_SYSTEM_VOLUME", static_cast<int32_t>(WINDOW_TYPE_VOLUME_OVERLAY));
-    SetMemberInt32(env, value, "TYPE_SYSTEM_PANEL", static_cast<int32_t>(WINDOW_TYPE_NOTIFICATION_SHADE));
+    SetMemberInt32(env, value, "TYPE_APP", WINDOW_TYPE_NORMAL);
+    SetMemberInt32(env, value, "TYPE_SYSTEM_ALERT", WINDOW_TYPE_ALARM_SCREEN);
+    SetMemberInt32(env, value, "TYPE_SYSTEM_VOLUME", WINDOW_TYPE_VOLUME_OVERLAY);
+    SetMemberInt32(env, value, "TYPE_SYSTEM_PANEL", WINDOW_TYPE_NOTIFICATION_SHADE);
     return value;
 }
 

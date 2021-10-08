@@ -40,11 +40,6 @@ namespace {
 HWTEST_F(ConsumerSurfaceTest, ConsumerSurface, testing::ext::TestSize.Level0)
 {
     ASSERT_NE(cs, nullptr);
-
-    sptr<ConsumerSurface> qs = static_cast<ConsumerSurface*>(cs.GetRefPtr());
-    ASSERT_NE(qs, nullptr);
-    ASSERT_NE(qs->producer_, nullptr);
-    ASSERT_NE(qs->consumer_, nullptr);
 }
 
 HWTEST_F(ConsumerSurfaceTest, QueueSize, testing::ext::TestSize.Level0)
@@ -131,18 +126,11 @@ HWTEST_F(ConsumerSurfaceTest, ReqCan, testing::ext::TestSize.Level0)
 
 HWTEST_F(ConsumerSurfaceTest, SetQueueSizeDeleting, testing::ext::TestSize.Level0)
 {
-    sptr<ConsumerSurface> qs = static_cast<ConsumerSurface*>(cs.GetRefPtr());
-    sptr<BufferQueueProducer> bqp = static_cast<BufferQueueProducer*>(qs->producer_.GetRefPtr());
-    ASSERT_EQ(bqp->bufferQueue_->queueSize_, 2u);
-    ASSERT_EQ(bqp->bufferQueue_->freeList_.size(), 2u);
-
     SurfaceError ret = cs->SetQueueSize(1);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
-    ASSERT_EQ(bqp->bufferQueue_->freeList_.size(), 1u);
 
     ret = cs->SetQueueSize(2);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
-    ASSERT_EQ(bqp->bufferQueue_->freeList_.size(), 1u);
 }
 
 HWTEST_F(ConsumerSurfaceTest, UserData, testing::ext::TestSize.Level0)

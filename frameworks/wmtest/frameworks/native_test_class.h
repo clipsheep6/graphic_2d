@@ -45,7 +45,8 @@ public:
 
 using DrawFunc = std::function<void(void *, uint32_t, uint32_t, uint32_t)>;
 #ifdef ACE_ENABLE_GPU
-using DrawFuncEgl = std::function<void(GlContext *, sptr<EglRenderSurface> &psurface)>;
+using DrawFuncEgl = std::function<void(GlContext *,
+    sptr<EglRenderSurface> &psurface, uint32_t width, uint32_t height)>;
 #endif
 
 class NativeTestSync : public RefBase {
@@ -53,7 +54,7 @@ public:
     static sptr<NativeTestSync> CreateSync(DrawFunc drawFunc, sptr<Surface> &psurface, void *data = nullptr);
 #ifdef ACE_ENABLE_GPU
     static sptr<NativeTestSync> CreateSyncEgl(DrawFuncEgl drawFunc,
-        sptr<EglRenderSurface> &psurface, void *data = nullptr);
+        sptr<EglRenderSurface> &psurface, uint32_t width, uint32_t height, void *data = nullptr);
 #endif
 
 private:
@@ -71,6 +72,8 @@ private:
     GlContext glCtx;
     bool bInit = false;
     SurfaceError sret = SURFACE_ERROR_OK;
+    uint32_t width_ = 0;
+    uint32_t height_ = 0;
 #endif
 };
 
@@ -82,7 +85,7 @@ public:
     static void RainbowDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
     static void BoxDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
 #ifdef ACE_ENABLE_GPU
-    static void FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsurface);
+    static void FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsurface, uint32_t width, uint32_t height);
 #endif
 };
 } // namespace OHOS

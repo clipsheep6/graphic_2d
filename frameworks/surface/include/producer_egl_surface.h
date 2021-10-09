@@ -35,16 +35,15 @@ public:
     EGLContext GetEglContext() const override;
     EGLSurface GetEglSurface() const override;
     GLuint GetEglFbo() const override;
-    SurfaceError SwapBuffers(const Rect &damage) override;
-    int32_t GetDefaultWidth() override;
-    int32_t GetDefaultHeight() override;
+    SurfaceError SwapBuffers() override;
+    SurfaceError SetWidthAndHeight(int32_t width, int32_t height) override;
 
 private:
     bool IsRemote();
     SurfaceError RequestBufferProc();
     SurfaceError RequestBuffer(sptr<SurfaceBuffer> &buffer, int32_t &fence, BufferRequestConfig &config);
 
-    SurfaceError FlushBufferProc(const Rect &damage);
+    SurfaceError FlushBufferProc();
     SurfaceError FlushBuffer(sptr<SurfaceBuffer> &buffer, int32_t fence, BufferFlushConfig &config);
     SurfaceError AddEglData(sptr<SurfaceBuffer> &buffer);
     SurfaceError CreateEglFenceFd(int32_t &fd);
@@ -56,6 +55,9 @@ private:
     bool initFlag_ = false;
     sptr<EglManager> sEglManager_ = nullptr;
     sptr<SurfaceBuffer> currentBuffer_ = nullptr;
+    std::mutex mutex_;
+    int32_t width_;
+    int32_t height_;
 };
 } // namespace OHOS
 

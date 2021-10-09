@@ -65,12 +65,15 @@ sptr<NativeTestSync> NativeTestSync::CreateSync(DrawFunc drawFunc, sptr<Surface>
 }
 
 #ifdef ACE_ENABLE_GPU
-sptr<NativeTestSync> NativeTestSync::CreateSyncEgl(DrawFuncEgl drawFunc, sptr<EglRenderSurface> &peglsurface, void *data)
+sptr<NativeTestSync> NativeTestSync::CreateSyncEgl(DrawFuncEgl drawFunc,
+    sptr<EglRenderSurface> &peglsurface, uint32_t width, uint32_t height, void *data)
 {
     if (drawFunc != nullptr && peglsurface != nullptr) {
         sptr<NativeTestSync> nts = new NativeTestSync();
         nts->drawEgl = drawFunc;
         nts->eglsurface = peglsurface;
+        nts->width_ = width;
+        nts->height_ = height;
         RequestSync(std::bind(&NativeTestSync::SyncEgl, nts, SYNC_FUNC_ARG), data);
         return nts;
     }
@@ -85,18 +88,11 @@ void NativeTestSync::SyncEgl(int64_t, void *data)
     }
 
     if (sret == SURFACE_ERROR_OK) {
-        drawEgl(&glCtx, eglsurface);
+        drawEgl(&glCtx, eglsurface, width_, height_);
         count++;
     }
 
-    Rect damage = {
-        .x = 0,
-        .y = 0,
-        .w = eglsurface->GetDefaultWidth(),
-        .h = eglsurface->GetDefaultHeight()
-    };
-
-    sret = eglsurface->SwapBuffers(damage);
+    sret = eglsurface->SwapBuffers();
 
     RequestSync(std::bind(&NativeTestSync::SyncEgl, this, SYNC_FUNC_ARG), data);
 }
@@ -438,7 +434,7 @@ void NativeTestDraw::BoxDraw(void *vaddr, uint32_t width, uint32_t height, uint3
 }
 
 #ifdef ACE_ENABLE_GPU
-void NativeTestDraw::FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsurface)
+void NativeTestDraw::FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsurface, uint32_t width, uint32_t height)
 {
     /* Complete a movement iteration in 5000 ms. */
     static const uint64_t iterationMs = 5000;
@@ -465,7 +461,7 @@ void NativeTestDraw::FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsur
      * to offsets in the [-0.5, 0.5) range. */
     offset = (timeMs % iterationMs) / (float) iterationMs - 0.5;
 
-    glViewport(0, 0, eglsurface->GetDefaultWidth(), eglsurface->GetDefaultHeight());
+    glViewport(0, 0, width, height);
 
     glUniform1f(ctx->offsetUniform, offset);
 

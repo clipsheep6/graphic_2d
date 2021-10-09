@@ -34,9 +34,8 @@ public:
     virtual EGLContext GetEglContext() const = 0;
     virtual EGLSurface GetEglSurface() const = 0;
     virtual GLuint GetEglFbo() const = 0;
-    virtual SurfaceError SwapBuffers(const Rect &damage) = 0;
-    virtual int32_t GetDefaultWidth() = 0;
-    virtual int32_t GetDefaultHeight() = 0;
+    virtual SurfaceError SwapBuffers() = 0;
+    virtual SurfaceError SetWidthAndHeight(int32_t width, int32_t height) = 0;
 
 protected:
     EglRenderSurface() = default;

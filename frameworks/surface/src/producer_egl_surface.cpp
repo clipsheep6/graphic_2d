@@ -15,6 +15,8 @@
 
 #include "producer_egl_surface.h"
 
+#include <mutex>
+
 #include "buffer_log.h"
 #include "buffer_manager.h"
 #include "egl_data_impl.h"
@@ -33,6 +35,8 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "ProducerEglSurface" };
 ProducerEglSurface::ProducerEglSurface(sptr<IBufferProducer>& producer)
 {
     producer_ = producer;
+    width_ = producer_->GetDefaultWidth();
+    height_ = producer_->GetDefaultHeight();
     auto sret = producer_->GetName(name_);
     if (sret != SURFACE_ERROR_OK) {
         BLOGNE("GetName failed, %{public}s", SurfaceErrorStr(sret).c_str());
@@ -179,14 +183,14 @@ GLuint ProducerEglSurface::GetEglFbo() const
     return 0;
 }
 
-SurfaceError ProducerEglSurface::SwapBuffers(const Rect &damage)
+SurfaceError ProducerEglSurface::SwapBuffers()
 {
     if (!initFlag_) {
         BLOGNE("ProducerEglSurface is not init.");
         return SURFACE_ERROR_INIT;
     }
 
-    if (FlushBufferProc(damage) != SURFACE_ERROR_OK) {
+    if (FlushBufferProc() != SURFACE_ERROR_OK) {
         BLOGNE("FlushBufferProc failed.");
     }
 
@@ -195,6 +199,14 @@ SurfaceError ProducerEglSurface::SwapBuffers(const Rect &damage)
         return SURFACE_ERROR_ERROR;
     }
 
+    return SURFACE_ERROR_OK;
+}
+
+SurfaceError ProducerEglSurface::SetWidthAndHeight(int32_t width, int32_t height)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    width_ = width;
+    height_ = height;
     return SURFACE_ERROR_OK;
 }
 
@@ -230,14 +242,18 @@ SurfaceError ProducerEglSurface::WaitForReleaseFence(int32_t fd)
 SurfaceError ProducerEglSurface::RequestBufferProc()
 {
     int32_t releaseFence;
-    BufferRequestConfig rconfig = {
-        .width = producer_->GetDefaultWidth(),
-        .height = producer_->GetDefaultHeight(),
-        .strideAlignment = 0x8,
-        .format = PIXEL_FMT_RGBA_8888,
-        .usage = producer_->GetDefaultUsage(),
-        .timeout = 0,
-    };
+    BufferRequestConfig rconfig;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        rconfig = {
+            .width = width_,
+            .height = height_,
+            .strideAlignment = 0x8,
+            .format = PIXEL_FMT_RGBA_8888,
+            .usage = producer_->GetDefaultUsage(),
+            .timeout = 0,
+        };
+    }
 
     currentBuffer_ = nullptr;
     if (RequestBuffer(currentBuffer_, releaseFence, rconfig) != SURFACE_ERROR_OK) {
@@ -280,7 +296,7 @@ SurfaceError ProducerEglSurface::CreateEglFenceFd(int32_t &fd)
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError ProducerEglSurface::FlushBufferProc(const Rect &damage)
+SurfaceError ProducerEglSurface::FlushBufferProc()
 {
     int32_t fd = EGL_NO_NATIVE_FENCE_FD_ANDROID;
     if (currentBuffer_ == nullptr) {
@@ -296,10 +312,10 @@ SurfaceError ProducerEglSurface::FlushBufferProc(const Rect &damage)
 
     BufferFlushConfig fconfig = {
         .damage = {
-            .x = damage.x,
-            .y = damage.y,
-            .w = damage.w,
-            .h = damage.h,
+            .x = 0,
+            .y = 0,
+            .w = currentBuffer_->GetWidth(),
+            .h = currentBuffer_->GetHeight(),
         },
     };
 
@@ -335,16 +351,6 @@ SurfaceError ProducerEglSurface::AddEglData(sptr<SurfaceBuffer> &buffer)
         BLOGI("bufferImpl FBO=%{public}d.", sEglDataImpl->GetFrameBufferObj());
     }
     return sret;
-}
-
-int32_t ProducerEglSurface::GetDefaultWidth()
-{
-    return producer_->GetDefaultWidth();
-}
-
-int32_t ProducerEglSurface::GetDefaultHeight()
-{
-    return producer_->GetDefaultHeight();
 }
 
 } // namespace OHOS

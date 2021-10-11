@@ -478,8 +478,6 @@ static void CalcWindowInfo(struct WindowSurface *surface)
 #ifdef USE_DUMMY_SCREEN
     int maxWidth = DUMMY_SCREEN_WIDTH;
     int maxHeight = DUMMY_SCREEN_HEIGHT;
-    int topBarHeight = (BAR_WIDTH_PERCENT * maxHeight);
-    int bottomBarsHeight = topBarHeight;
 #else
     struct WmsScreen *screen = GetScreen(surface);
     if (!screen) {
@@ -488,8 +486,6 @@ static void CalcWindowInfo(struct WindowSurface *surface)
     }
     int maxWidth = screen->westonOutput->width;
     int maxHeight = screen->westonOutput->height;
-    int topBarHeight = (BAR_WIDTH_PERCENT * maxHeight);
-    int bottomBarsHeight = topBarHeight;
 #endif /* USE_DUMMY_SCREEN */
 
     LayoutControllerInit(maxWidth, maxHeight);

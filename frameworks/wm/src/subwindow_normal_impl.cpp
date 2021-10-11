@@ -42,12 +42,11 @@ WMError SubwindowNormalImpl::CheckAndNew(sptr<SubwindowNormalImpl> &si,
         return WM_ERROR_NULLPTR;
     }
 
-    auto windowImpl = static_cast<WindowImpl *>(window.GetRefPtr());
-    if (windowImpl == nullptr) {
+    if (window == nullptr) {
         WMLOGFE("WindowImpl is nullptr");
         return WM_ERROR_NULLPTR;
     }
-    parent = windowImpl->GetWlSurface();
+    parent = WindowImpl::GetWlSurface(window);
 
     si = TESTER_NEW(SubwindowNormalImpl);
     if (si == nullptr) {

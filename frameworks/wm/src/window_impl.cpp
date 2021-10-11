@@ -169,10 +169,14 @@ WMError WindowImpl::Create(sptr<Window> &window,
     return WM_OK;
 }
 
-sptr<WlSurface> WindowImpl::GetWlSurface() const
+sptr<WlSurface> WindowImpl::GetWlSurface(const sptr<Window> &window)
 {
-    CHECK_DESTROY_CONST(nullptr);
-    return wlSurface;
+    auto wi = reinterpret_cast<WindowImpl *>(window.GetRefPtr());
+    if (wi == nullptr || wi->isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return nullptr;
+    }
+    return wi->wlSurface;
 }
 
 sptr<Surface> WindowImpl::GetSurface() const

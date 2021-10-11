@@ -34,7 +34,7 @@ public:
                           const sptr<WindowOption> &option,
                           const sptr<IWindowManagerService> &wms);
 
-    sptr<WlSurface> GetWlSurface() const;
+    static sptr<WlSurface> GetWlSurface(const sptr<Window> &window);
 
     virtual sptr<Surface> GetSurface() const override;
     virtual sptr<IBufferProducer> GetProducer() const override;

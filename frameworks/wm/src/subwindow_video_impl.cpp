@@ -38,12 +38,11 @@ WMError SubwindowVideoImpl::CheckAndNew(sptr<SubwindowVideoImpl> &svi,
         return WM_ERROR_NULLPTR;
     }
 
-    auto windowImpl = static_cast<WindowImpl *>(window.GetRefPtr());
-    if (windowImpl == nullptr) {
+    if (window == nullptr) {
         WMLOGFE("WindowImpl is nullptr");
         return WM_ERROR_NULLPTR;
     }
-    parent = windowImpl->GetWlSurface();
+    parent = WindowImpl::GetWlSurface(window);
 
     svi = new SubwindowVideoImpl();
     if (svi == nullptr) {

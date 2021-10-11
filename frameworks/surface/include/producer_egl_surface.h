@@ -49,7 +49,7 @@ private:
     SurfaceError CreateEglFenceFd(int32_t &fd);
     SurfaceError WaitForReleaseFence(int32_t fd);
 
-    std::map<int32_t, sptr<SurfaceBufferImpl>> bufferProducerCache_;
+    std::map<int32_t, sptr<SurfaceBuffer>> bufferProducerCache_;
     sptr<IBufferProducer> producer_ = nullptr;
     std::string name_ = "not init";
     bool initFlag_ = false;

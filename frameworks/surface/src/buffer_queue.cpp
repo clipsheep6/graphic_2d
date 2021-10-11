@@ -69,7 +69,7 @@ uint32_t BufferQueue::GetUsedSize()
     return used_size;
 }
 
-SurfaceError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl>& buffer,
+SurfaceError BufferQueue::PopFromFreeList(sptr<SurfaceBuffer>& buffer,
     const BufferRequestConfig &config)
 {
     for (auto it = freeList_.begin(); it != freeList_.end(); it++) {
@@ -90,7 +90,7 @@ SurfaceError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl>& buffer,
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::PopFromDirtyList(sptr<SurfaceBufferImpl>& buffer)
+SurfaceError BufferQueue::PopFromDirtyList(sptr<SurfaceBuffer>& buffer)
 {
     if (!dirtyList_.empty()) {
         buffer = bufferQueueCache_[dirtyList_.front()].buffer;
@@ -166,10 +166,8 @@ SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, std::
 
     // dequeue from free list
     std::lock_guard<std::mutex> lockGuard(mutex_);
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-    ret = PopFromFreeList(bufferImpl, config);
+    ret = PopFromFreeList(retval.buffer, config);
     if (ret == SURFACE_ERROR_OK) {
-        retval.buffer = bufferImpl;
         return ReuseBuffer(config, bedata, retval);
     }
 
@@ -179,13 +177,12 @@ SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, std::
         return SURFACE_ERROR_NO_BUFFER;
     }
 
-    ret = AllocBuffer(bufferImpl, config);
+    ret = AllocBuffer(retval.buffer, config);
     if (ret == SURFACE_ERROR_OK) {
-        retval.sequence = bufferImpl->GetSeqNum();
+        retval.sequence = SurfaceBufferImpl::GetSeqNum(retval.buffer);
         BLOGN_SUCCESS_ID(retval.sequence, "alloc");
     }
-    bufferImpl->GetExtraData(bedata);
-    retval.buffer = bufferImpl;
+    SurfaceBufferImpl::GetExtraData(retval.buffer, bedata);
     retval.fence = bufferQueueCache_[retval.sequence].fence;
     return ret;
 }
@@ -193,27 +190,26 @@ SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, std::
 SurfaceError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, std::shared_ptr<BufferExtraData> &bedata,
                                       struct IBufferProducer::RequestBufferReturnValue &retval)
 {
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-    retval.sequence = bufferImpl->GetSeqNum();
+    retval.sequence = SurfaceBufferImpl::GetSeqNum(retval.buffer);
     bool needRealloc = (config != bufferQueueCache_[retval.sequence].config);
     // config, realloc
     if (needRealloc) {
         DeleteBufferInCache(retval.sequence);
 
-        auto sret = AllocBuffer(bufferImpl, config);
+        auto sret = AllocBuffer(retval.buffer, config);
         if (sret != SURFACE_ERROR_OK) {
             BLOGN_FAILURE("realloc failed");
             return sret;
         }
 
-        retval.buffer = bufferImpl;
-        retval.sequence = bufferImpl->GetSeqNum();
+        retval.buffer = retval.buffer;
+        retval.sequence = SurfaceBufferImpl::GetSeqNum(retval.buffer);
         bufferQueueCache_[retval.sequence].config = config;
     }
 
     SET_SEQ_STATE(retval.sequence, bufferQueueCache_, BUFFER_STATE_REQUESTED);
     retval.fence = bufferQueueCache_[retval.sequence].fence;
-    bufferImpl->GetExtraData(bedata);
+    SurfaceBufferImpl::GetExtraData(retval.buffer, bedata);
 
     auto &dbs = retval.deletingBuffers;
     dbs.insert(dbs.end(), deletingList_.begin(), deletingList_.end());
@@ -236,7 +232,7 @@ SurfaceError BufferQueue::CancelBuffer(int32_t sequence, const std::shared_ptr<B
     CHECK_SEQ_CACHE_AND_STATE(sequence, bufferQueueCache_, BUFFER_STATE_REQUESTED);
     SET_SEQ_STATE(sequence, bufferQueueCache_, BUFFER_STATE_RELEASED);
     freeList_.push_back(sequence);
-    bufferQueueCache_[sequence].buffer->SetExtraData(bedata);
+    SurfaceBufferImpl::SetExtraData(bufferQueueCache_[sequence].buffer, bedata);
 
     BLOGN_SUCCESS_ID(sequence, "cancel");
 
@@ -293,7 +289,7 @@ SurfaceError BufferQueue::DoFlushBuffer(int32_t sequence, const std::shared_ptr<
 
     SET_SEQ_STATE(sequence, bufferQueueCache_, BUFFER_STATE_FLUSHED);
     dirtyList_.push_back(sequence);
-    bufferQueueCache_[sequence].buffer->SetExtraData(bedata);
+    SurfaceBufferImpl::SetExtraData(bufferQueueCache_[sequence].buffer, bedata);
     bufferQueueCache_[sequence].fence = fence;
     bufferQueueCache_[sequence].damage = config.damage;
 
@@ -314,14 +310,14 @@ SurfaceError BufferQueue::DoFlushBuffer(int32_t sequence, const std::shared_ptr<
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl>& buffer,
+SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBuffer>& buffer,
                                         int32_t &fence, int64_t &timestamp, Rect &damage)
 {
     // dequeue from dirty list
     std::lock_guard<std::mutex> lockGuard(mutex_);
     SurfaceError ret = PopFromDirtyList(buffer);
     if (ret == SURFACE_ERROR_OK) {
-        int32_t sequence = buffer->GetSeqNum();
+        int32_t sequence = SurfaceBufferImpl::GetSeqNum(buffer);
         if (bufferQueueCache_[sequence].state != BUFFER_STATE_FLUSHED) {
             BLOGNW("Warning [%{public}d], Reason: state is not BUFFER_STATE_FLUSHED", sequence);
         }
@@ -340,7 +336,7 @@ SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl>& buffer,
     return ret;
 }
 
-SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t fence)
+SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence)
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
 
@@ -349,8 +345,7 @@ SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t
         return SURFACE_ERROR_NULLPTR;
     }
 
-    int32_t sequence = buffer->GetSeqNum();
-
+    int32_t sequence = SurfaceBufferImpl::GetSeqNum(buffer);
     CHECK_SEQ_CACHE_AND_STATE(sequence, bufferQueueCache_, BUFFER_STATE_ACQUIRED);
     SET_SEQ_STATE(sequence, bufferQueueCache_, BUFFER_STATE_RELEASED);
     bufferQueueCache_[sequence].fence = fence;
@@ -366,11 +361,11 @@ SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl>& buffer,
+SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBuffer>& buffer,
     const BufferRequestConfig &config)
 {
     buffer = new SurfaceBufferImpl();
-    int32_t sequence = buffer->GetSeqNum();
+    int32_t sequence = SurfaceBufferImpl::GetSeqNum(buffer);
 
     SurfaceError ret = BufferManager::GetInstance()->Alloc(config, buffer);
     if (ret != SURFACE_ERROR_OK) {
@@ -408,10 +403,10 @@ SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl>& buffer,
     return ret;
 }
 
-SurfaceError BufferQueue::FreeBuffer(sptr<SurfaceBufferImpl>& buffer)
+SurfaceError BufferQueue::FreeBuffer(sptr<SurfaceBuffer>& buffer)
 {
-    BLOGND("Free [%{public}d]", buffer->GetSeqNum());
-    buffer->SetEglData(nullptr);
+    BLOGND("Free [%{public}d]", SurfaceBufferImpl::GetSeqNum(buffer));
+    SurfaceBufferImpl::SetEglData(buffer, nullptr);
     BufferManager::GetInstance()->Unmap(buffer);
     BufferManager::GetInstance()->Free(buffer);
     return SURFACE_ERROR_OK;

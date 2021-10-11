@@ -110,11 +110,10 @@ HWTEST_F(BufferQueueProducerTest, ReqFlu, testing::ext::TestSize.Level0)
     ret = bqp->FlushBuffer(retval.sequence, bedata, -1, flushConfig);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-    ret = bq->AcquireBuffer(bufferImpl, retval.fence, timestamp, damage);
+    ret = bq->AcquireBuffer(retval.buffer, retval.fence, timestamp, damage);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
-    ret = bq->ReleaseBuffer(bufferImpl, -1);
+    ret = bq->ReleaseBuffer(retval.buffer, -1);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 }
 
@@ -130,11 +129,10 @@ HWTEST_F(BufferQueueProducerTest, ReqFluFlu, testing::ext::TestSize.Level0)
     ret = bqp->FlushBuffer(retval.sequence, bedata, -1, flushConfig);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
 
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-    ret = bq->AcquireBuffer(bufferImpl, retval.fence, timestamp, damage);
+    ret = bq->AcquireBuffer(retval.buffer, retval.fence, timestamp, damage);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
-    ret = bq->ReleaseBuffer(bufferImpl, -1);
+    ret = bq->ReleaseBuffer(retval.buffer, -1);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 }
 }

@@ -80,7 +80,7 @@ public:
 private:
     bool IsRemote();
 
-    std::map<int32_t, sptr<SurfaceBufferImpl>> bufferProducerCache_;
+    std::map<int32_t, sptr<SurfaceBuffer>> bufferProducerCache_;
     std::map<std::string, std::string> userData_;
     sptr<IBufferProducer> producer_ = nullptr;
     std::string name_ = "not init";

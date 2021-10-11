@@ -46,8 +46,6 @@ public:
     SurfaceBufferImpl(int seqNum);
     virtual ~SurfaceBufferImpl();
 
-    static SurfaceBufferImpl *FromBase(const sptr<SurfaceBuffer>& buffer);
-
     BufferHandle *GetBufferHandle() const override;
     int32_t GetWidth() const override;
     int32_t GetHeight() const override;
@@ -58,17 +56,12 @@ public:
     void *GetVirAddr() const override;
     int32_t GetFileDescriptor() const override;
     uint32_t GetSize() const override;
-    sptr<EglData> GetEglData() const;
-    void SetEglData(const sptr<EglData>& data);
 
-    int32_t GetSeqNum();
     SurfaceError SetInt32(uint32_t key, int32_t val) override;
     SurfaceError GetInt32(uint32_t key, int32_t &val) override;
     SurfaceError SetInt64(uint32_t key, int64_t val) override;
     SurfaceError GetInt64(uint32_t key, int64_t &val) override;
 
-    void SetExtraData(const std::shared_ptr<BufferExtraData> &bedata);
-    void GetExtraData(std::shared_ptr<BufferExtraData> &bedata) const;
     virtual SurfaceError ExtraGet(std::string key, int32_t &value) const override;
     virtual SurfaceError ExtraGet(std::string key, int64_t &value) const override;
     virtual SurfaceError ExtraGet(std::string key, double &value) const override;
@@ -78,9 +71,13 @@ public:
     virtual SurfaceError ExtraSet(std::string key, double value) override;
     virtual SurfaceError ExtraSet(std::string key, std::string value) override;
 
-    void SetBufferHandle(BufferHandle *handle);
-
-    void WriteToMessageParcel(MessageParcel &parcel);
+    static int32_t GetSeqNum(const sptr<SurfaceBuffer> &buffer);
+    static void SetExtraData(sptr<SurfaceBuffer> &buffer, const std::shared_ptr<BufferExtraData> &bedata);
+    static void GetExtraData(const sptr<SurfaceBuffer> &buffer, std::shared_ptr<BufferExtraData> &bedata);
+    static void SetBufferHandle(sptr<SurfaceBuffer> &buffer, BufferHandle *handle);
+    static void WriteToMessageParcel(const sptr<SurfaceBuffer> &buffer, MessageParcel &parcel);
+    static sptr<EglData> GetEglData(const sptr<SurfaceBuffer> &buffer);
+    static void SetEglData(sptr<SurfaceBuffer> &buffer, const sptr<EglData>& data);
 
 private:
     SurfaceError SetData(uint32_t key, ExtraData data);

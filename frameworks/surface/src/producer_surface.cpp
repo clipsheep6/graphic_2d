@@ -94,8 +94,7 @@ SurfaceError ProducerSurface::RequestBufferWithFence(sptr<SurfaceBuffer>& buffer
 
     // add cache
     if (retval.buffer != nullptr && IsRemote()) {
-        sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-        ret = BufferManager::GetInstance()->Map(bufferImpl);
+        ret = BufferManager::GetInstance()->Map(retval.buffer);
         if (ret != SURFACE_ERROR_OK) {
             BLOGN_FAILURE_ID(retval.sequence, "Map failed");
         } else {
@@ -103,22 +102,21 @@ SurfaceError ProducerSurface::RequestBufferWithFence(sptr<SurfaceBuffer>& buffer
         }
     }
 
-    if (retval.buffer != nullptr) {
-        bufferProducerCache_[retval.sequence] = SurfaceBufferImpl::FromBase(retval.buffer);
-    } else {
-        retval.buffer = bufferProducerCache_[retval.sequence];
-    }
     buffer = retval.buffer;
     fence = retval.fence;
+    if (buffer != nullptr) {
+        bufferProducerCache_[retval.sequence] = buffer;
+    } else {
+        buffer = bufferProducerCache_[retval.sequence];
+    }
 
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-    ret = BufferManager::GetInstance()->InvalidateCache(bufferImpl);
+    ret = BufferManager::GetInstance()->InvalidateCache(buffer);
     if (ret != SURFACE_ERROR_OK) {
         BLOGNW("Warning [%{public}d], InvalidateCache failed", retval.sequence);
     }
 
-    if (bufferImpl != nullptr) {
-        bufferImpl->SetExtraData(bedataimpl);
+    if (buffer != nullptr) {
+        SurfaceBufferImpl::SetExtraData(buffer, bedataimpl);
     }
 
     for (auto it = retval.deletingBuffers.begin(); it != retval.deletingBuffers.end(); it++) {
@@ -136,10 +134,9 @@ SurfaceError ProducerSurface::CancelBuffer(sptr<SurfaceBuffer>& buffer)
         return SURFACE_ERROR_NULLPTR;
     }
 
-    auto bufferImpl = SurfaceBufferImpl::FromBase(buffer);
     std::shared_ptr<BufferExtraData> bedataimpl = std::make_shared<BufferExtraDataImpl>();
-    bufferImpl->GetExtraData(bedataimpl);
-    return GetProducer()->CancelBuffer(bufferImpl->GetSeqNum(), bedataimpl);
+    SurfaceBufferImpl::GetExtraData(buffer, bedataimpl);
+    return GetProducer()->CancelBuffer(SurfaceBufferImpl::GetSeqNum(buffer), bedataimpl);
 }
 
 SurfaceError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
@@ -149,10 +146,9 @@ SurfaceError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
         return SURFACE_ERROR_NULLPTR;
     }
 
-    auto bufferImpl = SurfaceBufferImpl::FromBase(buffer);
     std::shared_ptr<BufferExtraData> bedataimpl = std::make_shared<BufferExtraDataImpl>();
-    bufferImpl->GetExtraData(bedataimpl);
-    return GetProducer()->FlushBuffer(bufferImpl->GetSeqNum(), bedataimpl, fence, config);
+    SurfaceBufferImpl::GetExtraData(buffer, bedataimpl);
+    return GetProducer()->FlushBuffer(SurfaceBufferImpl::GetSeqNum(buffer), bedataimpl, fence, config);
 }
 
 SurfaceError ProducerSurface::FlushBufferNoFence(sptr<SurfaceBuffer>& buffer,

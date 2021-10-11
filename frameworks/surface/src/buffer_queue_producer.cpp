@@ -89,7 +89,7 @@ int32_t BufferQueueProducer::RequestBufferRemote(MessageParcel &arguments, Messa
 
     reply.WriteInt32(sret);
     if (sret == SURFACE_ERROR_OK) {
-        WriteSurfaceBufferImpl(reply, retval.sequence, retval.buffer);
+        WriteSurfaceBuffer(reply, retval.sequence, retval.buffer);
         bedataimpl->WriteToParcel(reply);
         WriteFence(reply, retval.fence);
         reply.WriteInt32Vector(retval.deletingBuffers);

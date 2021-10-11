@@ -194,7 +194,7 @@ HWTEST_F(BufferManagerTest, CMALeak, testing::ext::TestSize.Level0)
     int32_t first = getCmaFree();
 
     // 2. alloc
-    sptr<SurfaceBufferImpl> buffer = new SurfaceBufferImpl();
+    sptr<SurfaceBuffer> buffer = new SurfaceBufferImpl();
     SurfaceError ret = BufferManager::GetInstance()->Alloc(requestConfig, buffer);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 

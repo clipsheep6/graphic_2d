@@ -82,7 +82,7 @@ SurfaceError BufferClientProducer::RequestBuffer(const BufferRequestConfig &conf
     SEND_REQUEST(BUFFER_PRODUCER_REQUEST_BUFFER, arguments, reply, option);
     CHECK_RETVAL_WITH_SEQ(reply, retval.sequence);
 
-    ReadSurfaceBufferImpl(reply, retval.sequence, retval.buffer);
+    ReadSurfaceBuffer(reply, retval.sequence, retval.buffer);
     bedata->ReadFromParcel(reply);
     ReadFence(reply, retval.fence);
     reply.ReadInt32Vector(&retval.deletingBuffers);

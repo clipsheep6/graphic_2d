@@ -171,7 +171,7 @@ WMError WindowImpl::Create(sptr<Window> &window,
 
 sptr<WlSurface> WindowImpl::GetWlSurface(const sptr<Window> &window)
 {
-    auto wi = reinterpret_cast<WindowImpl *>(window.GetRefPtr());
+    auto wi = reinterpret_cast<const WindowImpl *>(window.GetRefPtr());
     if (wi == nullptr || wi->isDestroyed == true) {
         WMLOGFE("find attempt to use a destroyed object");
         return nullptr;

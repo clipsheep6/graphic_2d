@@ -85,7 +85,7 @@ SurfaceError BufferManager::Init()
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferManager::Alloc(const BufferRequestConfig &config, sptr<SurfaceBufferImpl> &buffer)
+SurfaceError BufferManager::Alloc(const BufferRequestConfig &config, sptr<SurfaceBuffer> &buffer)
 {
     CHECK_INIT();
     CHECK_BUFFER(buffer);
@@ -95,7 +95,7 @@ SurfaceError BufferManager::Alloc(const BufferRequestConfig &config, sptr<Surfac
     AllocInfo info = {width, config.height, config.usage, (PixelFormat)config.format};
     auto dret = displayGralloc_->AllocMem(info, handle);
     if (dret == DISPLAY_SUCCESS) {
-        buffer->SetBufferHandle(handle);
+        SurfaceBufferImpl::SetBufferHandle(buffer, handle);
         return SURFACE_ERROR_OK;
     }
     BLOGW("Failed with %{public}d", dret);
@@ -103,7 +103,7 @@ SurfaceError BufferManager::Alloc(const BufferRequestConfig &config, sptr<Surfac
     return GenerateError(SURFACE_ERROR_API_FAILED, dret);
 }
 
-SurfaceError BufferManager::Map(sptr<SurfaceBufferImpl> &buffer)
+SurfaceError BufferManager::Map(sptr<SurfaceBuffer> &buffer)
 {
     CHECK_INIT();
     CHECK_BUFFER(buffer);
@@ -116,7 +116,7 @@ SurfaceError BufferManager::Map(sptr<SurfaceBufferImpl> &buffer)
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferManager::Unmap(sptr<SurfaceBufferImpl> &buffer)
+SurfaceError BufferManager::Unmap(sptr<SurfaceBuffer> &buffer)
 {
     CHECK_INIT();
     CHECK_BUFFER(buffer);
@@ -135,7 +135,7 @@ SurfaceError BufferManager::Unmap(sptr<SurfaceBufferImpl> &buffer)
     return GenerateError(SURFACE_ERROR_API_FAILED, dret);
 }
 
-SurfaceError BufferManager::FlushCache(sptr<SurfaceBufferImpl> &buffer)
+SurfaceError BufferManager::FlushCache(sptr<SurfaceBuffer> &buffer)
 {
     CHECK_INIT();
     CHECK_BUFFER(buffer);
@@ -149,7 +149,7 @@ SurfaceError BufferManager::FlushCache(sptr<SurfaceBufferImpl> &buffer)
     return GenerateError(SURFACE_ERROR_API_FAILED, dret);
 }
 
-SurfaceError BufferManager::InvalidateCache(sptr<SurfaceBufferImpl> &buffer)
+SurfaceError BufferManager::InvalidateCache(sptr<SurfaceBuffer> &buffer)
 {
     CHECK_INIT();
     CHECK_BUFFER(buffer);
@@ -163,7 +163,7 @@ SurfaceError BufferManager::InvalidateCache(sptr<SurfaceBufferImpl> &buffer)
     return GenerateError(SURFACE_ERROR_API_FAILED, dret);
 }
 
-SurfaceError BufferManager::Free(sptr<SurfaceBufferImpl> &buffer)
+SurfaceError BufferManager::Free(sptr<SurfaceBuffer> &buffer)
 {
     CHECK_INIT();
     CHECK_BUFFER(buffer);
@@ -174,7 +174,7 @@ SurfaceError BufferManager::Free(sptr<SurfaceBufferImpl> &buffer)
     }
 
     displayGralloc_->FreeMem(*handle);
-    buffer->SetBufferHandle(nullptr);
+    SurfaceBufferImpl::SetBufferHandle(buffer, nullptr);
     return SURFACE_ERROR_OK;
 }
 } // namespace OHOS

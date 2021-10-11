@@ -76,8 +76,7 @@ SurfaceError ProducerEglSurface::RequestBuffer(sptr<SurfaceBuffer> &buffer,
 
     // add cache
     if (retval.buffer != nullptr && IsRemote()) {
-        sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-        ret = BufferManager::GetInstance()->Map(bufferImpl);
+        ret = BufferManager::GetInstance()->Map(retval.buffer);
         if (ret != SURFACE_ERROR_OK) {
             BLOGN_FAILURE_ID(retval.sequence, "Map failed");
         } else {
@@ -85,32 +84,30 @@ SurfaceError ProducerEglSurface::RequestBuffer(sptr<SurfaceBuffer> &buffer,
         }
     }
 
-    if (retval.buffer != nullptr) {
-        bufferProducerCache_[retval.sequence] = SurfaceBufferImpl::FromBase(retval.buffer);
-    } else {
-        retval.buffer = bufferProducerCache_[retval.sequence];
-    }
     buffer = retval.buffer;
+    fence = retval.fence;
+    if (buffer != nullptr) {
+        bufferProducerCache_[retval.sequence] = buffer;
+    } else {
+        buffer = bufferProducerCache_[retval.sequence];
+    }
 
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-    ret = BufferManager::GetInstance()->InvalidateCache(bufferImpl);
+    ret = BufferManager::GetInstance()->InvalidateCache(buffer);
     if (ret != SURFACE_ERROR_OK) {
         BLOGNW("Warning [%{public}d], InvalidateCache failed", retval.sequence);
     }
 
-    if (bufferImpl != nullptr) {
-        bufferImpl->SetExtraData(bedataimpl);
+    if (buffer != nullptr) {
+        SurfaceBufferImpl::SetExtraData(buffer, bedataimpl);
     }
 
     for (auto it = retval.deletingBuffers.begin(); it != retval.deletingBuffers.end(); it++) {
         if (IsRemote() && bufferProducerCache_[*it]->GetVirAddr() != nullptr) {
-            bufferProducerCache_[*it]->SetEglData(nullptr);
+            SurfaceBufferImpl::SetEglData(bufferProducerCache_[*it], nullptr);
             BufferManager::GetInstance()->Unmap(bufferProducerCache_[*it]);
         }
         bufferProducerCache_.erase(*it);
     }
-
-    fence = retval.fence;
     return SURFACE_ERROR_OK;
 }
 
@@ -121,10 +118,9 @@ SurfaceError ProducerEglSurface::FlushBuffer(sptr<SurfaceBuffer> &buffer,
         return SURFACE_ERROR_NULLPTR;
     }
 
-    auto bufferImpl = SurfaceBufferImpl::FromBase(buffer);
     std::shared_ptr<BufferExtraData> bedataimpl = std::make_shared<BufferExtraDataImpl>();
-    bufferImpl->GetExtraData(bedataimpl);
-    return producer_->FlushBuffer(bufferImpl->GetSeqNum(), bedataimpl, fence, config);
+    SurfaceBufferImpl::GetExtraData(buffer, bedataimpl);
+    return producer_->FlushBuffer(SurfaceBufferImpl::GetSeqNum(buffer), bedataimpl, fence, config);
 }
 
 SurfaceError ProducerEglSurface::InitContext(EGLContext context)
@@ -175,8 +171,7 @@ EGLSurface ProducerEglSurface::GetEglSurface() const
 GLuint ProducerEglSurface::GetEglFbo() const
 {
     if (initFlag_ && currentBuffer_ != nullptr) {
-        auto bufferImpl = SurfaceBufferImpl::FromBase(currentBuffer_);
-        return bufferImpl->GetEglData()->GetFrameBufferObj();
+        return SurfaceBufferImpl::GetEglData(currentBuffer_)->GetFrameBufferObj();
     }
 
     BLOGNE("ProducerEglSurface is not init.");
@@ -334,8 +329,7 @@ bool ProducerEglSurface::IsRemote()
 
 SurfaceError ProducerEglSurface::AddEglData(sptr<SurfaceBuffer> &buffer)
 {
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    sptr<EglData> sEglData = bufferImpl->GetEglData();
+    auto sEglData = SurfaceBufferImpl::GetEglData(buffer);
     if (sEglData != nullptr) {
         // sEglManager_->EglMakeCurrent();
         glBindFramebuffer(GL_FRAMEBUFFER, sEglData->GetFrameBufferObj());
@@ -347,7 +341,7 @@ SurfaceError ProducerEglSurface::AddEglData(sptr<SurfaceBuffer> &buffer)
     CHECK_NULLPTR(sEglDataImpl);
     auto sret = sEglDataImpl->CreateEglData(bufferImpl);
     if (sret == SURFACE_ERROR_OK) {
-        bufferImpl->SetEglData(sEglDataImpl);
+        SurfaceBufferImpl::SetEglData(buffer, sEglDataImpl);
         BLOGI("bufferImpl FBO=%{public}d.", sEglDataImpl->GetFrameBufferObj());
     }
     return sret;

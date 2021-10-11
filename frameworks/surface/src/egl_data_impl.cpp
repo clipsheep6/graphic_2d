@@ -98,7 +98,7 @@ bool PixelFormatToDrmFormat(int32_t pixelFormat, uint32_t &drmFormat)
 }
 } // namespace
 
-SurfaceError EglDataImpl::CreateEglData(const sptr<SurfaceBufferImpl> &buffer)
+SurfaceError EglDataImpl::CreateEglData(const sptr<SurfaceBuffer> &buffer)
 {
     EGLint attribs[(GENERAL_ATTRIBS + PLANE_ATTRIBS * MAX_BUFFER_PLANES) * ENTRIES_PER_ATTRIB + 1];
     unsigned int index = 0;

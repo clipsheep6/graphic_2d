@@ -29,12 +29,12 @@ public:
     static BufferManager *GetInstance();
 
     SurfaceError Init();
-    SurfaceError Alloc(const BufferRequestConfig &config, sptr<SurfaceBufferImpl>& buffer);
-    SurfaceError Map(sptr<SurfaceBufferImpl>& buffer);
-    SurfaceError Unmap(sptr<SurfaceBufferImpl>& buffer);
-    SurfaceError FlushCache(sptr<SurfaceBufferImpl>& buffer);
-    SurfaceError InvalidateCache(sptr<SurfaceBufferImpl>& buffer);
-    SurfaceError Free(sptr<SurfaceBufferImpl>& buffer);
+    SurfaceError Alloc(const BufferRequestConfig &config, sptr<SurfaceBuffer>& buffer);
+    SurfaceError Map(sptr<SurfaceBuffer>& buffer);
+    SurfaceError Unmap(sptr<SurfaceBuffer>& buffer);
+    SurfaceError FlushCache(sptr<SurfaceBuffer>& buffer);
+    SurfaceError InvalidateCache(sptr<SurfaceBuffer>& buffer);
+    SurfaceError Free(sptr<SurfaceBuffer>& buffer);
 
 private:
     BufferManager() = default;

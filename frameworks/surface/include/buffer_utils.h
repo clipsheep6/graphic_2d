@@ -32,8 +32,8 @@ void WriteRequestConfig(MessageParcel &parcel, const BufferRequestConfig  &confi
 void ReadFlushConfig(MessageParcel &parcel, BufferFlushConfig &config);
 void WriteFlushConfig(MessageParcel &parcel, const BufferFlushConfig &config);
 
-void ReadSurfaceBufferImpl(MessageParcel &parcel, int32_t &sequence, sptr<SurfaceBuffer> &buffer);
-void WriteSurfaceBufferImpl(MessageParcel &parcel, int32_t sequence, const sptr<SurfaceBuffer> &buffer);
+void ReadSurfaceBuffer(MessageParcel &parcel, int32_t &sequence, sptr<SurfaceBuffer> &buffer);
+void WriteSurfaceBuffer(MessageParcel &parcel, int32_t sequence, const sptr<SurfaceBuffer> &buffer);
 } // namespace OHOS
 
 #endif // FRAMEWORKS_SURFACE_INCLUDE_BUFFER_UTILS_H

@@ -28,10 +28,10 @@ public:
     BufferQueueConsumer(sptr<BufferQueue>& bufferQueue);
     virtual ~BufferQueueConsumer();
 
-    SurfaceError AcquireBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t &fence,
+    SurfaceError AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                int64_t &timestamp, Rect &damage);
 
-    SurfaceError ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t fence);
+    SurfaceError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence);
 
     SurfaceError RegisterConsumerListener(sptr<IBufferConsumerListener>& listener);
     SurfaceError RegisterConsumerListener(IBufferConsumerListenerClazz *listener);

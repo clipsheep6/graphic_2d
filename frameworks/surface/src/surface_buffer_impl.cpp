@@ -59,11 +59,6 @@ SurfaceBufferImpl::~SurfaceBufferImpl()
     eglData_ = nullptr;
 }
 
-SurfaceBufferImpl *SurfaceBufferImpl::FromBase(const sptr<SurfaceBuffer>& buffer)
-{
-    return static_cast<SurfaceBufferImpl*>(buffer.GetRefPtr());
-}
-
 BufferHandle *SurfaceBufferImpl::GetBufferHandle() const
 {
     return handle_;
@@ -238,16 +233,6 @@ SurfaceError SurfaceBufferImpl::GetData(uint32_t key, ExtraData &data)
     return SURFACE_ERROR_OK;
 }
 
-void SurfaceBufferImpl::SetExtraData(const std::shared_ptr<BufferExtraData> &bedata)
-{
-    bedata_ = bedata;
-}
-
-void SurfaceBufferImpl::GetExtraData(std::shared_ptr<BufferExtraData> &bedata) const
-{
-    bedata = bedata_;
-}
-
 SurfaceError SurfaceBufferImpl::ExtraGet(std::string key, int32_t &value) const
 {
     return bedata_->ExtraGet(key, value);
@@ -288,25 +273,61 @@ SurfaceError SurfaceBufferImpl::ExtraSet(std::string key, std::string value)
     return bedata_->ExtraSet(key, value);
 }
 
-void SurfaceBufferImpl::SetBufferHandle(BufferHandle *handle)
+int32_t SurfaceBufferImpl::GetSeqNum(const sptr<SurfaceBuffer> &buffer)
 {
-    handle_ = handle;
+    if (buffer == nullptr) {
+        return -1;
+    }
+    auto bi = reinterpret_cast<const SurfaceBufferImpl *>(buffer.GetRefPtr());
+    return bi->sequenceNumber;
 }
 
-void SurfaceBufferImpl::WriteToMessageParcel(MessageParcel &parcel)
+void SurfaceBufferImpl::SetExtraData(sptr<SurfaceBuffer> &buffer, const std::shared_ptr<BufferExtraData> &bedata)
 {
-    if (handle_ == nullptr) {
+    if (buffer == nullptr) {
+        return;
+    }
+    auto bi = reinterpret_cast<SurfaceBufferImpl *>(buffer.GetRefPtr());
+    bi->bedata_ = bedata;
+}
+
+void SurfaceBufferImpl::GetExtraData(const sptr<SurfaceBuffer> &buffer, std::shared_ptr<BufferExtraData> &bedata)
+{
+    if (buffer == nullptr) {
+        return;
+    }
+    auto bi = reinterpret_cast<const SurfaceBufferImpl *>(buffer.GetRefPtr());
+    bedata = bi->bedata_;
+}
+
+void SurfaceBufferImpl::SetBufferHandle(sptr<SurfaceBuffer> &buffer, BufferHandle *handle)
+{
+    if (buffer == nullptr) {
+        return;
+    }
+    auto bi = reinterpret_cast<SurfaceBufferImpl *>(buffer.GetRefPtr());
+    bi->handle_ = handle;
+}
+
+void SurfaceBufferImpl::WriteToMessageParcel(const sptr<SurfaceBuffer> &buffer, MessageParcel &parcel)
+{
+    if (buffer == nullptr) {
+        return;
+    }
+    auto bi = reinterpret_cast<const SurfaceBufferImpl *>(buffer.GetRefPtr());
+
+    if (bi->handle_ == nullptr) {
         BLOGE("Failure, Reason: handle_ is nullptr");
         return;
     }
 
-    bool ret = WriteBufferHandle(parcel, *handle_);
+    bool ret = WriteBufferHandle(parcel, *bi->handle_);
     if (ret == false) {
         BLOGE("Failure, Reason: WriteBufferHandle return false");
     }
 
-    parcel.WriteInt32(extraDatas_.size());
-    for (const auto &[k, v] : extraDatas_) {
+    parcel.WriteInt32(bi->extraDatas_.size());
+    for (const auto &[k, v] : bi->extraDatas_) {
         parcel.WriteUint32(k);
         parcel.WriteInt32(v.type);
         if (v.type == EXTRA_DATA_TYPE_INT32) {
@@ -328,19 +349,21 @@ void SurfaceBufferImpl::WriteToMessageParcel(MessageParcel &parcel)
     }
 }
 
-int32_t SurfaceBufferImpl::GetSeqNum()
+sptr<EglData> SurfaceBufferImpl::GetEglData(const sptr<SurfaceBuffer> &buffer)
 {
-    return sequenceNumber;
+    if (buffer == nullptr) {
+        return;
+    }
+    auto bi = reinterpret_cast<const SurfaceBufferImpl *>(buffer.GetRefPtr());
+    return bi->eglData_;
 }
 
-sptr<EglData> SurfaceBufferImpl::GetEglData() const
+void SurfaceBufferImpl::SetEglData(sptr<SurfaceBuffer> &buffer, const sptr<EglData>& data)
 {
-    return eglData_;
+    if (buffer == nullptr) {
+        return;
+    }
+    auto bi = reinterpret_cast<const SurfaceBufferImpl *>(buffer.GetRefPtr());
+    bi->eglData_ = data;
 }
-
-void SurfaceBufferImpl::SetEglData(const sptr<EglData>& data)
-{
-    eglData_ = data;
-}
-
 } // namespace OHOS

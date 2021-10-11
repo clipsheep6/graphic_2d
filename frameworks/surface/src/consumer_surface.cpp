@@ -100,20 +100,12 @@ SurfaceError ConsumerSurface::FlushBufferNoFence(sptr<SurfaceBuffer>& buffer,
 SurfaceError ConsumerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                             int64_t &timestamp, Rect &damage)
 {
-    SurfaceError ret;
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    ret = consumer_->AcquireBuffer(bufferImpl, fence, timestamp, damage);
-    buffer = bufferImpl;
-    return ret;
+    return consumer_->AcquireBuffer(buffer, fence, timestamp, damage);
 }
 
 SurfaceError ConsumerSurface::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence)
 {
-    SurfaceError ret;
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    ret = consumer_->ReleaseBuffer(bufferImpl, fence);
-    buffer = bufferImpl;
-    return ret;
+    return consumer_->ReleaseBuffer(buffer, fence);
 }
 
 uint32_t     ConsumerSurface::GetQueueSize()

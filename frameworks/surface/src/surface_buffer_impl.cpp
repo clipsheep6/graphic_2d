@@ -315,7 +315,6 @@ void SurfaceBufferImpl::WriteToMessageParcel(const sptr<SurfaceBuffer> &buffer, 
         return;
     }
     auto bi = reinterpret_cast<const SurfaceBufferImpl *>(buffer.GetRefPtr());
-
     if (bi->handle_ == nullptr) {
         BLOGE("Failure, Reason: handle_ is nullptr");
         return;

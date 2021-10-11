@@ -22,7 +22,7 @@
 
 #define DEFINE_GLOBAL_DATA(name, ...) \
     using Type##name = __VA_ARGS__; \
-    static inline SingletonDataDelegator<Type##name> name{#name}
+    static inline SingletonDataDelegator<Type##name> name { #name }
 
 namespace OHOS {
 template<class T>

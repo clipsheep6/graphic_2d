@@ -107,9 +107,7 @@ ohos_shared_library("wms_client") {
     "samgr_L2:samgr_proxy",
   ]
 
-  public_deps = [
-    "//foundation/graphic/standard:libsurface",
-  ]
+  public_deps = [ "//foundation/graphic/standard:libsurface" ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

@@ -147,7 +147,6 @@ ohos_shared_library("libwmclient") {
   sources = [
     "src/input_listener_manager.cpp",
     "src/log_listener.cpp",
-    "src/multimodal_listener_manager.cpp",
     "src/singleton_container.cpp",
     "src/static_call.cpp",
     "src/subwindow_normal_impl.cpp",
@@ -221,7 +220,6 @@ ohos_shared_library("libwmclient") {
   public_deps = [
     "//foundation/graphic/standard:libsurface",
     "//foundation/graphic/standard/utils:promise",
-    "//foundation/multimodalinput/input/interfaces/native/innerkits/event:mmi_event",
   ]
 
   part_name = "graphic_standard"

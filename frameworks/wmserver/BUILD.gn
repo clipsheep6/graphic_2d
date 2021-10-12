@@ -62,7 +62,7 @@ ohos_shared_library("wmserver") {
   deps = [
     "src/wmlayout_scss_parser:libwmlayout_scss_parser",
     "//drivers/peripheral/display/hal:hdi_display_device",  # hdi device
-    "//third_party/libinput:libinput-third",
+    "//foundation/multimodalinput/input/patch/diff_libinput_mmi:libinput-third-mmi",
     "//third_party/wayland_standard:wayland_core_protocol",
     "//third_party/weston:drm-backend",
     "//third_party/weston:libweston",
@@ -95,7 +95,7 @@ ohos_executable("screen-info-test") {
 
   deps = [
     ":wms_protocol",
-    "//third_party/libinput:libinput-third",
+    "//foundation/multimodalinput/input/patch/diff_libinput_mmi:libinput-third-mmi",
     "//third_party/wayland_standard:libwayland_client",
   ]
 

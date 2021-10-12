@@ -60,7 +60,6 @@ struct InnerWindowInfo {
     funcWindowInfoChange windowInfoChangeCb;
     void (* onWindowCreateCb)(uint32_t pid);
     sptr<InputListener> logListener;
-    sptr<MultimodalListener> mmiListener;
 
     bool operator ==(const InnerWindowInfo &other) const
     {

@@ -60,7 +60,10 @@ int32_t RawParser::Parse(int32_t width, int32_t height)
     if (strstr(magic, "RAW.diff") == nullptr) {
         constexpr uint32_t magicHeaderStringLength = magicHeaderLength + 2;
         char fileMagic[magicHeaderStringLength];
-        (void)memcpy_s(fileMagic, sizeof(fileMagic) - 1, magic, magicHeaderLength);
+        if (memcpy_s(fileMagic, sizeof(fileMagic) - 1, magic, magicHeaderLength)) {
+            LOG("memcpy_s failed");
+            return -1;
+        }
         LOG("file magic is wrong, %{public}s", fileMagic);
         return -1;
     }
@@ -143,7 +146,7 @@ int32_t RawParser::ReadFile(int32_t width, int32_t height)
     clength = ftell(fp);
     (void)fseek(fp, 0, SEEK_SET);
 
-    if (clength < magicHeaderLength) {
+    if (clength <= 0 || clength < magicHeaderLength) {
         LOG("%{public}s is too small", ss.str().c_str());
         fclose(fp);
         return -1;

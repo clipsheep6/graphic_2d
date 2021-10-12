@@ -26,7 +26,6 @@
 
 #include "input_listener_manager.h"
 #include "log_listener.h"
-#include "multimodal_listener_manager.h"
 #include "wayland_service.h"
 #include "window_manager_server.h"
 #include "wl_buffer_cache.h"

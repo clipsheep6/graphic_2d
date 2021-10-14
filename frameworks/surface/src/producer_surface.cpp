@@ -72,9 +72,10 @@ SurfaceError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
 SurfaceError ProducerSurface::RequestBufferNoFence(sptr<SurfaceBuffer>& buffer,
                                                    BufferRequestConfig &config)
 {
-    int32_t releaseFence;
+    int32_t releaseFence = -1;
     auto sret = RequestBufferWithFence(buffer, releaseFence, config);
-    if (releaseFence >= 0) {
+    if (sret == SURFACE_ERROR_OK && releaseFence >= 0) {
+        BLOGI("closing fence: %{public}d", releaseFence);
         close(releaseFence);
     }
     return sret;

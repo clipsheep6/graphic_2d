@@ -186,6 +186,7 @@ SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, Buffe
     }
     bufferImpl->GetExtraData(bedata);
     retval.buffer = bufferImpl;
+    retval.fence = bufferQueueCache_[retval.sequence].fence;
     return ret;
 }
 

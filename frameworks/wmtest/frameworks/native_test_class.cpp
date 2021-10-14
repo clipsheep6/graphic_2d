@@ -90,6 +90,9 @@ void NativeTestSync::Sync(int64_t, void *data)
         printf("NativeTestSync surface request buffer failed\n");
         return;
     }
+    if (releaseFence >= 0) {
+        close(releaseFence);
+    }
 
     draw(buffer->GetVirAddr(), rconfig.width, rconfig.height, count);
     count++;

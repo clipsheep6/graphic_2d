@@ -44,6 +44,7 @@ void WriteFence(MessageParcel &parcel, int32_t fence)
     }
 
     parcel.WriteFileDescriptor(fence);
+    close(fence);
 }
 
 void ReadRequestConfig(MessageParcel &parcel, BufferRequestConfig &config)

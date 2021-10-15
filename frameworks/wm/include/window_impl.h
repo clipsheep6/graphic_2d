@@ -67,6 +67,7 @@ public:
     virtual void OnVisibilityChange(WindowVisibilityChangeFunc func) override;
     virtual void OnTypeChange(WindowTypeChangeFunc func) override;
     virtual void OnModeChange(WindowModeChangeFunc func) override;
+    virtual void OnBeforeFrameSubmit(BeforeFrameSubmitFunc func) override;
 
     // listener
     virtual WMError OnTouch(OnTouchFunc cb) override;
@@ -130,6 +131,7 @@ private:
     sptr<InputListener> logListener = nullptr;
     sptr<MultimodalListener> mmiListener = nullptr;
     sptr<InputListener> exportListener = nullptr;
+    BeforeFrameSubmitFunc onBeforeFrameSubmitFunc = nullptr;
 };
 } // namespace OHOS
 

@@ -398,6 +398,11 @@ void WindowImpl::OnModeChange(WindowModeChangeFunc func)
     attr.OnModeChange(func);
 }
 
+void WindowImpl::OnBeforeFrameSubmit(BeforeFrameSubmitFunc func)
+{
+    onBeforeFrameSubmitFunc = func;
+}
+
 WMError WindowImpl::OnTouch(OnTouchFunc cb)
 {
     CHECK_DESTROY(WM_ERROR_DESTROYED_OBJECT);
@@ -584,6 +589,10 @@ void WindowImpl::OnBufferAvailable()
 {
     WMLOGFI("OnBufferAvailable enter");
     CHECK_DESTROY();
+
+    if (onBeforeFrameSubmitFunc != nullptr) {
+        onBeforeFrameSubmitFunc();
+    }
 
     sptr<SurfaceBuffer> sbuffer;
     int32_t flushFence;

@@ -91,7 +91,6 @@ bool LayerControllerClient::init(sptr<IWindowManagerService> &service)
     WlSurfaceFactory::GetInstance()->Init();
     WlSubsurfaceFactory::GetInstance()->Init();
     WindowManagerServer::GetInstance()->Init();
-    WpViewportFactory::GetInstance()->Init();
 
     WaylandService::GetInstance()->Start();
     WlDisplay::GetInstance()->Roundtrip();
@@ -390,10 +389,6 @@ void LayerControllerClient::SetSubSurfaceSize(int32_t id, int32_t width, int32_t
 
     GET_WINDOWINFO_VOID(windowInfo, id);
     if (windowInfo->subwidow == true) {
-        windowInfo->wpViewport = WpViewportFactory::GetInstance()->Create(windowInfo->wlSurface);
-        if (windowInfo->wpViewport) {
-            windowInfo->wpViewport->SetSource(windowInfo->pos_x, windowInfo->pos_y, width, height);
-        }
         windowInfo->wlSurface->Commit();
     }
 }

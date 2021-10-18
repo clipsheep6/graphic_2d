@@ -629,6 +629,8 @@ void WindowImpl::OnBufferAvailable()
         wlSurface->Attach(wbuffer, 0, 0);
         wlSurface->SetAcquireFence(flushFence);
         wlSurface->Damage(damage.x, damage.y, damage.w, damage.h);
+        wlSurface->SetSource(0, 0, sbuffer->GetWidth(), sbuffer->GetHeight());
+        wlSurface->SetDestination(attr.GetWidth(), attr.GetHeight());
         wlSurface->Commit();
         SingletonContainer::Get<WlDisplay>()->Flush();
     }

@@ -18,6 +18,7 @@
 
 #include <linux-explicit-synchronization-unstable-v1-client-protocol.h>
 #include <refbase.h>
+#include <viewporter-client-protocol.h>
 #include <wayland-client-protocol.h>
 
 #include "wl_buffer.h"
@@ -25,7 +26,9 @@
 namespace OHOS {
 class WlSurface : public RefBase {
 public:
-    WlSurface(struct wl_surface *ws, struct zwp_linux_surface_synchronization_v1 *zlssv);
+    WlSurface(struct wl_surface *ws,
+              struct zwp_linux_surface_synchronization_v1 *zlssv,
+              struct wp_viewport *wv);
     virtual ~WlSurface() override;
 
     struct wl_surface *GetRawPtr() const;
@@ -39,10 +42,13 @@ public:
     void SetBufferTransform(wl_output_transform type);
     struct zwp_linux_buffer_release_v1 *GetBufferRelease();
     void SetAcquireFence(int32_t fence);
+    void SetSource(double x, double y, double w, double h);
+    void SetDestination(uint32_t w, uint32_t h);
 
 private:
     struct wl_surface *surface = nullptr;
     struct zwp_linux_surface_synchronization_v1 *sync = nullptr;
+    struct wp_viewport *viewport = nullptr;
 };
 } // namespace OHOS
 

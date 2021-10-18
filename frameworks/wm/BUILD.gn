@@ -60,8 +60,6 @@ ohos_shared_library("wms_client") {
     "src/wl_subsurface_factory.cpp",
     "src/wl_surface.cpp",
     "src/wl_surface_factory.cpp",
-    "src/wp_viewport.cpp",
-    "src/wp_viewport_factory.cpp",
   ]
 
   configs = [
@@ -171,8 +169,6 @@ ohos_shared_library("libwmclient") {
     "src/wl_subsurface_factory.cpp",
     "src/wl_surface.cpp",
     "src/wl_surface_factory.cpp",
-    "src/wp_viewport.cpp",
-    "src/wp_viewport_factory.cpp",
   ]
 
   configs = [

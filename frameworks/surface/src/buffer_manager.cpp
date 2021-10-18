@@ -91,7 +91,7 @@ SurfaceError BufferManager::Alloc(const BufferRequestConfig &config, sptr<Surfac
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = nullptr;
-    int32_t width = (config.width + 63) / 64 * 64;
+    int32_t width = (config.width + 15) / 16 * 16;
     AllocInfo info = {width, config.height, config.usage, (PixelFormat)config.format};
     auto dret = displayGralloc_->AllocMem(info, handle);
     if (dret == DISPLAY_SUCCESS) {

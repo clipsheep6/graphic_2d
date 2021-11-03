@@ -43,9 +43,7 @@ config("surface_public_config") {
     ]
   }
 
-  cflags = [
-    "-Wno-error=deprecated-declarations",
-  ]
+  cflags = [ "-Wno-error=deprecated-declarations" ]
 }
 
 ohos_shared_library("surface") {
@@ -67,8 +65,8 @@ ohos_shared_library("surface") {
     sources += [
       "src/egl_data_impl.cpp",
       "src/egl_manager.cpp",
-      "src/producer_egl_surface.cpp",
       "src/egl_surface.cpp",
+      "src/producer_egl_surface.cpp",
     ]
   }
 
@@ -95,9 +93,8 @@ ohos_shared_library("surface") {
   ]
 
   if (ace_enable_gpu) {
-    public_deps += [
-      "//device/rockchip/hardware/gpu:mali-bifrost-g52-g2p0-wayland",
-    ]
+    public_deps +=
+        [ "//device/rockchip/hardware/gpu:mali-bifrost-g52-g2p0-wayland" ]
   }
 
   part_name = "graphic_standard"

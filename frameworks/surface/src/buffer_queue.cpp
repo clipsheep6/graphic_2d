@@ -47,6 +47,7 @@ BufferQueue::BufferQueue(const std::string &name)
     : name_(name)
 {
     BLOGNI("ctor");
+    buffer_manager = BufferManager::GetInstance();
 }
 
 BufferQueue::~BufferQueue()

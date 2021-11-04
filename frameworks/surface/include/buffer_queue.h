@@ -25,6 +25,7 @@
 #include <ibuffer_producer.h>
 #include <surface_type.h>
 
+#include "buffer_manager.h"
 #include "surface_buffer_impl.h"
 
 namespace OHOS {
@@ -113,6 +114,7 @@ private:
     sptr<IBufferConsumerListener> listener_ = nullptr;
     IBufferConsumerListenerClazz *listenerClazz_ = nullptr;
     std::mutex mutex_;
+    sptr<BufferManager> buffer_manager = nullptr;
 };
 }; // namespace OHOS
 

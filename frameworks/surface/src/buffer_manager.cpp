@@ -20,26 +20,30 @@
 
 #include "buffer_log.h"
 
-#define CHECK_INIT() \
-    do { \
-        if (displayGralloc_ == nullptr) { \
-            SurfaceError ret = Init(); \
-            if (ret != SURFACE_ERROR_OK) { \
-                return ret; \
-            } \
-        } \
-    } while (0)
-
-#define CHECK_BUFFER(buffer) \
-    do { \
-        if (buffer == nullptr) { \
-            return SURFACE_ERROR_NULLPTR; \
-        } \
-    } while (0)
-
 namespace OHOS {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "BufferManager" };
+
+int CHECK_INIT()
+{
+    do {
+        if (displayGralloc_ == nullptr) {
+            SurfaceError ret = Init();
+            if (ret != SURFACE_ERROR_OK) {
+                return ret;
+            }
+        }
+    } while (0);
+}
+
+SurfaceError CHECK_BUFFER(sptr<SurfaceBufferImpl> &buffer)
+{
+    do {
+        if ((buffer) == nullptr) {
+            return SURFACE_ERROR_NULLPTR;
+        }
+    } while (0);
+}
 
 SurfaceError GenerateError(SurfaceError err, DispErrCode code)
 {

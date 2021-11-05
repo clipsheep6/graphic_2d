@@ -47,28 +47,32 @@ constexpr const char *EGL_WAIT_SYNC_KHR = "eglWaitSyncKHR";
 constexpr const char *GL_OES_EGL_IMAGE = "GL_OES_EGL_image";
 } // namespace
 
-int CHECK_NOT_INIT(int ret) {
+int CHECK_NOT_INIT(int ret)
+{
     if (!initFlag_) {
         BLOGE("EglManager is not init.");
         return ret;
     }
 }
 
-void CHECK_NOT_INIT_VOID() {
+void CHECK_NOT_INIT_VOID()
+{
     if (!initFlag_) {
         BLOGE("EglManager is not init.");
         return;
     }
 }
 
-int CHECK_PARAM_NULLPTR(char *param) {
+int CHECK_PARAM_NULLPTR(char *param)
+{
     if (param == nullptr) {
         BLOGE("param is nullptr.");
         return SURFACE_ERROR_INIT;
     }
 }
 
-int CHECK_PARAM_NULLPTR_RET(char *param, int ret) {
+int CHECK_PARAM_NULLPTR_RET(char *param, int ret)
+{
     if (param == nullptr) {
         BLOGE("param is nullptr.");
         return ret;
@@ -161,7 +165,7 @@ static bool CheckEglExtension(const char *extensions, const char *extension)
         if (n == extlen && strncmp(extension, extensions, n) == 0) {
             return true; /* Found */
         }
-	extensions += n;
+        extensions += n;
     }
     /* Not found */
     return false;

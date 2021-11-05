@@ -191,7 +191,7 @@ void Main::Init(int32_t width, int32_t height)
     PostTask(std::bind(exit, 0), exitTime);
 }
 
-void Main::OnWindowCreate(int32_t pid, int32_t)
+void Main::OnWindowCreate(int32_t pid, int32_t wid)
 {
     std::stringstream ss;
     ss << "/proc/" << pid << "/cmdline";
@@ -212,7 +212,7 @@ void Main::OnWindowCreate(int32_t pid, int32_t)
     }
 }
 
-void Main::OnWindowDestroy(int32_t, int32_t)
+void Main::OnWindowDestroy(int32_t pid, int32_t wid)
 {
 }
 

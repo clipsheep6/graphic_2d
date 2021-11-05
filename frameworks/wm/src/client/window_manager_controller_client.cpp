@@ -27,29 +27,37 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "WindowManagerClient" };
 } // namespace
 
-#define LOCK(mutexName) \
-    std::lock_guard<std::mutex> lock(mutexName)
+void LOCK(std::mutex mutexName)
+{
+    std::lock_guard<std::mutex> lock(mutexName);
+}
 
-#define GET_WINDOWINFO(info, id, ret) \
-    InnerWindowInfo *info = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id); \
-    if (info == nullptr) { \
-        WMLOGFE("id: %{public}d, window info is nullptr", id); \
-        return ret; \
+int GET_WINDOWINFO(InnerWindowInfo info, uint32_t id, int ret)
+{
+    InnerWindowInfo *info = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)(id));
+    if ((info) == nullptr) {
+        WMLOGFE("id: %{public}d, window info is nullptr", id);
+        return ret;
     }
+}
 
-#define GET_WINDOWINFO_VOID(info, id) \
-    InnerWindowInfo *info = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id); \
-    if (info == nullptr) { \
-        WMLOGFE("id: %{public}d, window info is nullptr", id); \
-        return; \
+void GET_WINDOWINFO_VOID(InnerWindowInfo info, uint32_t id)
+{
+    InnerWindowInfo *info = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)(id));
+    if ((info) == nullptr) {
+        WMLOGFE("id: %{public}d, window info is nullptr", id);
+        return;
     }
+}
 
-#define GET_WINDOWINFO_INNER_VOID(info, id) \
-    InnerWindowInfo *info = GetInnerWindowInfoFromId((uint32_t)id); \
-    if (info == nullptr) { \
-        WMLOGFE("id: %{public}d, window info is nullptr", id); \
-        return; \
+void GET_WINDOWINFO_INNER_VOID(InnerWindowInfo info, uint32_t id)
+{
+    InnerWindowInfo *info = GetInnerWindowInfoFromId((uint32_t)(id));
+    if ((info) == nullptr) {
+        WMLOGFE("id: %{public}d, window info is nullptr", id);
+        return;
     }
+}
 
 sptr<LayerControllerClient> LayerControllerClient::GetInstance()
 {

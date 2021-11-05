@@ -30,7 +30,7 @@
 #define TIMEMS_RANGER 0.5
 #define SIZE_POS_VERTEX_ATTRIBUTE 2
 #define SIZE_COLORS_VERTEX_ATTRIBUTE 3
-#define NUMBER_VERTICES 4 
+#define NUMBER_VERTICES 4
 
 namespace OHOS {
 sptr<Window> NativeTestFactory::CreateWindow(WindowType type, sptr<Surface> csurface)

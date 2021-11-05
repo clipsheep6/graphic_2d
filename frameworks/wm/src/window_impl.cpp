@@ -28,22 +28,25 @@
 #include "wl_dma_buffer_factory.h"
 #include "wl_surface_factory.h"
 
-#define CHECK_DESTROY_CONST(ret)                           \
-    if (isDestroyed == true) {                             \
-        WMLOGFE("find attempt to use a destroyed object"); \
-        return ret;                                        \
-    }
-
-#define CHECK_DESTROY(ret)                                 \
-{                                                          \
-    std::lock_guard<std::mutex> lock(mutex);               \
-    CHECK_DESTROY_CONST(ret);                              \
-}
-
 namespace OHOS {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, 0, "WMWindowImpl"};
 }
+
+int CHECK_DESTROY_CONST(int ret)
+{
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return ret;
+    }
+}
+
+void CHECK_DESTROY(int ret)
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    CHECK_DESTROY_CONST(ret);
+}
+
 
 WMError WindowImpl::CheckAndNew(sptr<WindowImpl> &wi,
                                 const sptr<WindowOption> &option,

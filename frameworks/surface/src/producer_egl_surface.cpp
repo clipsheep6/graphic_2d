@@ -21,15 +21,17 @@
 #include "buffer_manager.h"
 #include "egl_data_impl.h"
 
-#define CHECK_NULLPTR(ptr)                  \
-    if ((ptr) == nullptr) {                   \
-        BLOGNE("new failed.");              \
-        return SURFACE_ERROR_NOMEM;         \
-    }
-
 namespace OHOS {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "ProducerEglSurface" };
+}
+
+int CHECK_NULLPTR(sptr<EglDataImpl> ptr)
+{
+    if ((ptr) == nullptr) {
+        BLOGNE("new failed.");
+        return SURFACE_ERROR_NOMEM;
+    }
 }
 
 ProducerEglSurface::ProducerEglSurface(sptr<IBufferProducer>& producer)

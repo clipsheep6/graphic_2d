@@ -70,7 +70,7 @@ public:
 
         window->SwitchTop();
         auto producer = window->GetProducer();
-        sptr<EglRenderSurface> pEglSurface = EglRenderSurface::CreateEglRenderSurfaceAsProducer(producer);
+        sptr<EglSurface> pEglSurface = EglSurface::CreateEglSurfaceAsProducer(producer);
         windowSync = NativeTestSync::CreateSyncEgl(NativeTestDraw::FlushDrawEgl,
             pEglSurface, window->GetWidth(), window->GetHeight());
     }

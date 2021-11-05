@@ -21,12 +21,6 @@
 #include "buffer_manager.h"
 #include "egl_data_impl.h"
 
-#define CHECK_NULLPTR(ptr)                  \
-    if (ptr == nullptr) {                   \
-        BLOGNE("new failed.");              \
-        return SURFACE_ERROR_NOMEM;         \
-    }
-
 namespace OHOS {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "ProducerEglSurface" };
@@ -143,7 +137,7 @@ SurfaceError ProducerEglSurface::InitContext(EGLContext context)
     if (RequestBufferProc() != SURFACE_ERROR_OK) {
         BLOGNE("RequestBufferProc failed.");
         return SURFACE_ERROR_INIT;
-    }    
+    }
 
     initFlag_ = true;
     return SURFACE_ERROR_OK;
@@ -290,7 +284,7 @@ SurfaceError ProducerEglSurface::CreateEglFenceFd(int32_t &fd)
     }
 
     if (fd == EGL_NO_NATIVE_FENCE_FD_ANDROID) {
-        BLOGNE("EglDupNativeFenceFd failed."); 
+        BLOGNE("EglDupNativeFenceFd failed.");
         return SURFACE_ERROR_ERROR;
     }
     return SURFACE_ERROR_OK;
@@ -306,7 +300,6 @@ SurfaceError ProducerEglSurface::FlushBufferProc()
 
     if (CreateEglFenceFd(fd) != SURFACE_ERROR_OK) {
         BLOGNE("CreateEglFenceFd failed.");
-        // return SURFACE_ERROR_ERROR;
     }
     BLOGNE("flush fence fd %{public}d.", fd);
 
@@ -318,7 +311,6 @@ SurfaceError ProducerEglSurface::FlushBufferProc()
             .h = currentBuffer_->GetHeight(),
         },
     };
-
     if (FlushBuffer(currentBuffer_, fd, fconfig) != SURFACE_ERROR_OK) {
         BLOGNE("FlushBuffer failed.");
         return SURFACE_ERROR_ERROR;
@@ -337,14 +329,16 @@ SurfaceError ProducerEglSurface::AddEglData(sptr<SurfaceBuffer> &buffer)
     sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
     sptr<EglData> sEglData = bufferImpl->GetEglData();
     if (sEglData != nullptr) {
-        // sEglManager_->EglMakeCurrent();
         glBindFramebuffer(GL_FRAMEBUFFER, sEglData->GetFrameBufferObj());
         BLOGI("bufferImpl is reused return.");
         return SURFACE_ERROR_OK;
     }
 
     sptr<EglDataImpl> sEglDataImpl = new EglDataImpl();
-    CHECK_NULLPTR(sEglDataImpl);
+    if (sEglDataImpl == nullptr) {
+        BLOGNE("new failed.");
+        return SURFACE_ERROR_NOMEM;
+    }
     auto sret = sEglDataImpl->CreateEglData(bufferImpl);
     if (sret == SURFACE_ERROR_OK) {
         bufferImpl->SetEglData(sEglDataImpl);
@@ -352,5 +346,4 @@ SurfaceError ProducerEglSurface::AddEglData(sptr<SurfaceBuffer> &buffer)
     }
     return sret;
 }
-
 } // namespace OHOS

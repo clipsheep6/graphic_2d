@@ -25,7 +25,7 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "EglSurface" };
 }
 
-sptr<EglRenderSurface> EglRenderSurface::CreateEglRenderSurfaceAsProducer(sptr<IBufferProducer>& producer)
+sptr<EglSurface> EglSurface::CreateEglSurfaceAsProducer(sptr<IBufferProducer>& producer)
 {
     sptr<ProducerEglSurface> surface = new ProducerEglSurface(producer);
     if (surface == nullptr) {
@@ -33,5 +33,4 @@ sptr<EglRenderSurface> EglRenderSurface::CreateEglRenderSurfaceAsProducer(sptr<I
     }
     return surface;
 }
-
 } // namespace OHOS

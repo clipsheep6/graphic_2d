@@ -20,21 +20,21 @@
 
 #include "buffer_log.h"
 
-#define CHECK_INIT()\
-    do {\
-        if (displayGralloc_ == nullptr) {\
-            SurfaceError ret = Init();\
-            if (ret != SURFACE_ERROR_OK) {\
-                return ret;\
-            }\
-        }\
+#define CHECK_INIT() \
+    do { \
+        if (displayGralloc_ == nullptr) { \
+            SurfaceError ret = Init(); \
+            if (ret != SURFACE_ERROR_OK) { \
+                return ret; \
+            } \
+        } \
     } while (0)
 
-#define CHECK_BUFFER(buffer)\
-    do {\
-        if (buffer == nullptr) {\
-            return SURFACE_ERROR_NULLPTR;\
-        }\
+#define CHECK_BUFFER(buffer) \
+    do { \
+        if ((buffer) == nullptr) { \
+            return SURFACE_ERROR_NULLPTR; \
+        } \
     } while (0)
 
 namespace OHOS {
@@ -66,7 +66,7 @@ inline SurfaceError GenerateError(SurfaceError err, int32_t code)
 
 BufferManager *BufferManager::GetInstance()
 {
-    static BufferManager instance{};
+    static BufferManager instance {};
     return &instance;
 }
 

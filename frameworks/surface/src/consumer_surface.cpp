@@ -77,7 +77,7 @@ SurfaceError ConsumerSurface::RequestBufferNoFence(sptr<SurfaceBuffer>& buffer,
 }
 
 SurfaceError ConsumerSurface::RequestBufferWithFence(sptr<SurfaceBuffer>& buffer,
-                                                  int32_t &fence, BufferRequestConfig &config)
+                                                     int32_t &fence, BufferRequestConfig &config)
 {
     return SURFACE_ERROR_NOT_SUPPORT;
 }

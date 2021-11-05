@@ -25,8 +25,8 @@ public:
     virtual GLuint GetFrameBufferObj() const = 0;
 
 protected:
-    EglData(){}
-    virtual ~EglData(){}
+    EglData() {}
+    virtual ~EglData() {}
 };
 } // namespace OHOS
 

@@ -28,17 +28,19 @@
 #include "wl_dma_buffer_factory.h"
 #include "wl_surface_factory.h"
 
-#define CHECK_DESTROY_CONST(ret)                           \
-    if (isDestroyed == true) {                             \
-        WMLOGFE("find attempt to use a destroyed object"); \
-        return ret;                                        \
-    }
+#define CHECK_DESTROY_CONST(ret)                               \
+    do {                                                       \
+        if (isDestroyed == true) {                             \
+            WMLOGFE("find attempt to use a destroyed object"); \
+            return ret;                                        \
+        }                                                      \
+    }while (0)
 
-#define CHECK_DESTROY(ret)                                 \
-{                                                          \
-    std::lock_guard<std::mutex> lock(mutex);               \
-    CHECK_DESTROY_CONST(ret);                              \
-}
+#define CHECK_DESTROY(ret)                                 \                                                       \
+    do {                                                   \
+        std::lock_guard<std::mutex> lock(mutex);           \
+        CHECK_DESTROY_CONST(ret);                          \
+    }while (0)
 
 namespace OHOS {
 namespace {

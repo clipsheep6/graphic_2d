@@ -35,7 +35,7 @@
     } while (0)
 
 #define SET_SEQ_STATE(sequence, cache, state_) \
-    cache[sequence].state = state_
+    cache[sequence].state = (state_)
 
 namespace OHOS {
 namespace {

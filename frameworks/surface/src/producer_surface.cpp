@@ -82,7 +82,7 @@ SurfaceError ProducerSurface::RequestBufferNoFence(sptr<SurfaceBuffer>& buffer,
 }
 
 SurfaceError ProducerSurface::RequestBufferWithFence(sptr<SurfaceBuffer>& buffer,
-                                                  int32_t &fence, BufferRequestConfig &config)
+                                                     int32_t &fence, BufferRequestConfig &config)
 {
     IBufferProducer::RequestBufferReturnValue retval;
     BufferExtraDataImpl bedataimpl;

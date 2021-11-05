@@ -344,5 +344,4 @@ void SurfaceBufferImpl::SetEglData(const sptr<EglData>& data)
 {
     eglData_ = data;
 }
-
 } // namespace OHOS

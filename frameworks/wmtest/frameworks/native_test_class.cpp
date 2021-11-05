@@ -26,6 +26,12 @@
 #include "inative_test.h"
 #include "util.h"
 
+#define TIME_BASE 1000
+#define TIMEMS_RANGER 0.5
+#define SIZE_POS_VERTEX_ATTRIBUTE 2
+#define SIZE_COLORS_VERTEX_ATTRIBUTE 3
+#define NUMBER_VERTICES 4
+
 namespace OHOS {
 sptr<Window> NativeTestFactory::CreateWindow(WindowType type, sptr<Surface> csurface)
 {
@@ -65,7 +71,7 @@ sptr<NativeTestSync> NativeTestSync::CreateSync(DrawFunc drawFunc, sptr<Surface>
 
 #ifdef ACE_ENABLE_GPU
 sptr<NativeTestSync> NativeTestSync::CreateSyncEgl(DrawFuncEgl drawFunc,
-    sptr<EglRenderSurface> &peglsurface, uint32_t width, uint32_t height, void *data)
+    sptr<EglSurface> &peglsurface, uint32_t width, uint32_t height, void *data)
 {
     if (drawFunc != nullptr && peglsurface != nullptr) {
         sptr<NativeTestSync> nts = new NativeTestSync();
@@ -80,7 +86,7 @@ sptr<NativeTestSync> NativeTestSync::CreateSyncEgl(DrawFuncEgl drawFunc,
 }
 
 void NativeTestSync::SyncEgl(int64_t, void *data)
-{    
+{
     if (!GLContextInit()) {
         printf("GLContextInit failed.\n");
         return;
@@ -129,7 +135,7 @@ static GLuint CreateShader(const char *source, GLenum shaderType)
 
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
     if (!status) {
-		constexpr int32_t maxLogLength = 1000;
+        constexpr int32_t maxLogLength = 1000;
         char log[maxLogLength];
         GLsizei len;
         glGetShaderInfoLog(shader, maxLogLength, &len, log);
@@ -152,7 +158,7 @@ static GLuint CreateAndLinkProgram(GLuint vert, GLuint frag)
 
     glGetProgramiv(program, GL_LINK_STATUS, &status);
     if (!status) {
-		constexpr int32_t maxLogLength = 1000;
+        constexpr int32_t maxLogLength = 1000;
         char log[maxLogLength];
         GLsizei len;
         glGetProgramInfoLog(program, maxLogLength, &len, log);
@@ -432,7 +438,7 @@ void NativeTestDraw::BoxDraw(void *vaddr, uint32_t width, uint32_t height, uint3
 }
 
 #ifdef ACE_ENABLE_GPU
-void NativeTestDraw::FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsurface, uint32_t width, uint32_t height)
+void NativeTestDraw::FlushDrawEgl(GlContext *ctx, sptr<EglSurface> &eglsurface, uint32_t width, uint32_t height)
 {
     /* Complete a movement iteration in 5000 ms. */
     static const uint64_t iterationMs = 5000;
@@ -453,11 +459,11 @@ void NativeTestDraw::FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsur
     uint64_t timeMs;
 
     gettimeofday(&tv, NULL);
-    timeMs = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    timeMs = tv.tv_sec * TIME_BASE + tv.tv_usec / TIME_BASE;
 
     /* Split time_ms in repeating windows of [0, iterationMs) and map them
      * to offsets in the [-0.5, 0.5) range. */
-    offset = (timeMs % iterationMs) / (float) iterationMs - 0.5;
+    offset = (timeMs % iterationMs) / (float) iterationMs - TIMEMS_RANGER;
 
     glViewport(0, 0, width, height);
 
@@ -466,12 +472,12 @@ void NativeTestDraw::FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsur
     glClearColor(0.0, 1.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glVertexAttribPointer(ctx->pos, 2, GL_FLOAT, GL_FALSE, 0, verts);
-    glVertexAttribPointer(ctx->color, 3, GL_FLOAT, GL_FALSE, 0, colors);
+    glVertexAttribPointer(ctx->pos, SIZE_POS_VERTEX_ATTRIBUTE, GL_FLOAT, GL_FALSE, 0, verts);
+    glVertexAttribPointer(ctx->color, SIZE_COLORS_VERTEX_ATTRIBUTE, GL_FLOAT, GL_FALSE, 0, colors);
     glEnableVertexAttribArray(ctx->pos);
     glEnableVertexAttribArray(ctx->color);
 
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, NUMBER_VERTICES);
 
     glDisableVertexAttribArray(ctx->pos);
     glDisableVertexAttribArray(ctx->color);

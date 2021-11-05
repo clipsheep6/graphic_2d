@@ -19,13 +19,14 @@
 #include <map>
 #include <string>
 
-#include "egl_manager.h"
 #include <egl_surface.h>
 #include <ibuffer_producer.h>
+
+#include "egl_manager.h"
 #include "surface_buffer_impl.h"
 
 namespace OHOS {
-class ProducerEglSurface : public EglRenderSurface {
+class ProducerEglSurface : public EglSurface {
 public:
     ProducerEglSurface(sptr<IBufferProducer>& producer);
     virtual ~ProducerEglSurface();

@@ -325,7 +325,7 @@ napi_value WindowModuleInit(napi_env env, napi_value exports)
 }
 } // namespace OHOS
 
-extern "C"{
+extern "C" {
 __attribute__((constructor)) static void RegisterModule(void)
 {
     napi_module windowModule = {

@@ -15,9 +15,10 @@
 
 #include "egl_data_impl.h"
 
-#include "buffer_log.h"
 #include <display_gralloc.h>
 #include <drm_fourcc.h>
+
+#include "buffer_log.h"
 
 namespace OHOS {
 namespace {
@@ -154,5 +155,4 @@ SurfaceError EglDataImpl::CreateEglData(const sptr<SurfaceBufferImpl> &buffer)
     }
     return SURFACE_ERROR_OK;
 }
-
 } // namespace OHOS

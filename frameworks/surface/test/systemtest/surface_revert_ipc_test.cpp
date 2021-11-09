@@ -59,8 +59,7 @@ pid_t SurfaceRevertIPCTest::ChildProcessMain()
 
     int64_t data;
     sptr<SurfaceBuffer> buffer = nullptr;
-    int32_t fence;
-    auto sret = psurface->RequestBuffer(buffer, fence, requestConfig);
+    auto sret = psurface->RequestBufferNoFence(buffer, requestConfig);
     if (sret != SURFACE_ERROR_OK) {
         data = sret;
         write(pipeFd[1], &data, sizeof(data));
@@ -112,8 +111,7 @@ HWTEST_F(SurfaceRevertIPCTest, Fork, testing::ext::TestSize.Level0)
     auto psurface = Surface::CreateSurfaceAsProducer(producer);
 
     sptr<SurfaceBuffer> buffer = nullptr;
-    int32_t fence;
-    auto sret = psurface->RequestBuffer(buffer, fence, requestConfig);
+    auto sret = psurface->RequestBufferNoFence(buffer, requestConfig);
     EXPECT_EQ(sret, SURFACE_ERROR_OK);
     EXPECT_NE(buffer, nullptr);
     if (buffer != nullptr) {

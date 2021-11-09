@@ -434,8 +434,8 @@ void LayerControllerClient::Move(int32_t id, int32_t x, int32_t y)
 {
     LOCK(mutex);
 
-    InnerWindowInfo *windowInfo = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
-    if (windowInfo == nullptr) {
+    InnerWindowInfo *wininfo = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
+    if (wininfo == nullptr) {
         WMLOGFE("id: %{public}d, window info is nullptr", id);
         return;
     }
@@ -468,8 +468,8 @@ void LayerControllerClient::ReSize(int32_t id, int32_t width, int32_t height)
     WMLOG_I("LayerControllerClient::ReSize id(%{public}d) width(%{public}d) width(%{public}d)", id, width, height);
     LOCK(mutex);
 
-    InnerWindowInfo *windowInfo = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
-    if (windowInfo == nullptr) {
+    InnerWindowInfo *wininfo = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
+    if (wininfo == nullptr) {
         WMLOGFE("id: %{public}d, window info is nullptr", id);
         return;
     }
@@ -514,8 +514,8 @@ void LayerControllerClient::Rotate(int32_t id, int32_t type)
 {
     LOCK(mutex);
     WMLOG_I("LayerControllerClient::Rotate id=%{public}d type=%{public}d start", id, type);
-    InnerWindowInfo *windowInfo = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
-    if (windowInfo == nullptr) {
+    InnerWindowInfo *wininfo = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
+    if (wininfo == nullptr) {
         WMLOGFE("id: %{public}d, window info is nullptr", id);
         return;
     }

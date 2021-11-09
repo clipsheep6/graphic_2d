@@ -36,7 +36,7 @@
         }                                                      \
     }while (0)
 
-#define CHECK_DESTROY(ret)                                 \                                                       \
+#define CHECK_DESTROY(ret)                                 \
     do {                                                   \
         std::lock_guard<std::mutex> lock(mutex);           \
         CHECK_DESTROY_CONST(ret);                          \

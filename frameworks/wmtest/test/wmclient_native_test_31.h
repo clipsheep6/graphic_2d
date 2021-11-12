@@ -13,22 +13,7 @@
  * limitations under the License.
  */
 
-#include <vsync_helper.h>
+#ifndef FRAMEWORKS_WMTEST_TEST_WMCLIENT_WMCLIENT_NATIVE_TEST_31_H
+#define FRAMEWORKS_WMTEST_TEST_WMCLIENT_WMCLIENT_NATIVE_TEST_31_H
 
-#include "vsync_helper_impl.h"
-
-namespace OHOS {
-sptr<VsyncHelper> VsyncHelper::Current()
-{
-    return Vsync::VsyncHelperImpl::Current();
-}
-
-sptr<VsyncHelper> VsyncHelper::FromHandler(std::shared_ptr<AppExecFwk::EventHandler>& handler)
-{
-    if (handler == nullptr) {
-        return nullptr;
-    }
-    sptr<VsyncHelper> helper = new Vsync::VsyncHelperImpl(handler);
-    return helper;
-}
-} // namespace OHOS
+#endif // FRAMEWORKS_WMTEST_TEST_WMCLIENT_WMCLIENT_NATIVE_TEST_31_H

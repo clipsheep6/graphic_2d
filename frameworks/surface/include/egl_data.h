@@ -13,22 +13,21 @@
  * limitations under the License.
  */
 
-#include <vsync_helper.h>
+#ifndef INTERFACES_INNERKITS_SURFACE_EGL_DATA_H
+#define INTERFACES_INNERKITS_SURFACE_EGL_DATA_H
 
-#include "vsync_helper_impl.h"
+#include <refbase.h>
+#include <GLES2/gl2.h>
 
 namespace OHOS {
-sptr<VsyncHelper> VsyncHelper::Current()
-{
-    return Vsync::VsyncHelperImpl::Current();
-}
+class EglData : public RefBase {
+public:
+    virtual GLuint GetFrameBufferObj() const = 0;
 
-sptr<VsyncHelper> VsyncHelper::FromHandler(std::shared_ptr<AppExecFwk::EventHandler>& handler)
-{
-    if (handler == nullptr) {
-        return nullptr;
-    }
-    sptr<VsyncHelper> helper = new Vsync::VsyncHelperImpl(handler);
-    return helper;
-}
+protected:
+    EglData(){}
+    virtual ~EglData(){}
+};
 } // namespace OHOS
+
+#endif // INTERFACES_INNERKITS_SURFACE_EGL_DATA_H

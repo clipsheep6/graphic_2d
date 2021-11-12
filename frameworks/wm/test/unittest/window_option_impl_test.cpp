@@ -49,8 +49,8 @@ HWTEST_F(WindowOptionImplTest, Create, testing::ext::TestSize.Level0)
     WindowOptionImpl woi;
 
     // 1. Check Set and Get WindowType
-    constexpr WindowType type1 = static_cast<WindowType>(0);
-    constexpr WindowType type2 = static_cast<WindowType>(1);
+    constexpr WindowType type1 = static_cast<enum WindowType>(0);
+    constexpr WindowType type2 = static_cast<enum WindowType>(1);
     woi.SetWindowType(type1);
     ASSERT_EQ(woi.GetWindowType(), type1) << "CaseDescription: "
         << "1. Check Set and Get WindowType (woi.GetWindowType() == type1)";
@@ -59,8 +59,8 @@ HWTEST_F(WindowOptionImplTest, Create, testing::ext::TestSize.Level0)
         << "1. Check Set and Get WindowType (woi.GetWindowType() == type2)";
 
     // 2. Check Set and Get WindowMode
-    constexpr WindowMode mode1 = static_cast<WindowMode>(0);
-    constexpr WindowMode mode2 = static_cast<WindowMode>(1);
+    constexpr WindowMode mode1 = static_cast<enum WindowMode>(0);
+    constexpr WindowMode mode2 = static_cast<enum WindowMode>(1);
     woi.SetWindowMode(mode1);
     ASSERT_EQ(woi.GetWindowMode(), mode1) << "CaseDescription: "
         << "2. Check Set and Get WindowMode (woi.GetWindowMode() == mode1)";
@@ -105,12 +105,12 @@ HWTEST_F(WindowOptionImplTest, InvalidSet, testing::ext::TestSize.Level0)
     WindowOptionImpl woi;
 
     // 1. set invalid WindowType, check
-    constexpr auto invalidWindowType = static_cast<WindowType>(-1);
+    constexpr auto invalidWindowType = static_cast<enum WindowType>(-1);
     ASSERT_EQ(woi.SetWindowType(invalidWindowType), WM_ERROR_INVALID_PARAM) << "CaseDescription: "
         << "1. set invalid WindowType, check (woi.SetWindowType() == WM_ERROR_INVALID_PARAM)";
 
     // 2. set invalid WindowMode, check
-    constexpr auto invalidWindowMode = static_cast<WindowMode>(-1);
+    constexpr auto invalidWindowMode = static_cast<enum WindowMode>(-1);
     ASSERT_EQ(woi.SetWindowMode(invalidWindowMode), WM_ERROR_INVALID_PARAM) << "CaseDescription: "
         << "2. set invalid WindowMode, check (woi.SetWindowMode() == WM_ERROR_INVALID_PARAM)";
 

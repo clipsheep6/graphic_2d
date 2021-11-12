@@ -32,12 +32,13 @@ public:
     BufferClientProducer(const sptr<IRemoteObject>& impl);
     virtual ~BufferClientProducer();
 
-    virtual SurfaceError RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+    virtual SurfaceError RequestBuffer(const BufferRequestConfig &config,
+                                       std::shared_ptr<BufferExtraData> &bedata,
                                        RequestBufferReturnValue &retval) override;
 
-    SurfaceError CancelBuffer(int32_t sequence, BufferExtraData &bedata) override;
+    SurfaceError CancelBuffer(int32_t sequence, std::shared_ptr<BufferExtraData> &bedata) override;
 
-    SurfaceError FlushBuffer(int32_t sequence, BufferExtraData &bedata,
+    SurfaceError FlushBuffer(int32_t sequence, std::shared_ptr<BufferExtraData> &bedata,
                              int32_t fence, BufferFlushConfig &config) override;
 
     uint32_t     GetQueueSize() override;

@@ -87,8 +87,7 @@ HWTEST_F(BufferQueueTest, ReqFluAcqRel, testing::ext::TestSize.Level0)
     ret = bq->FlushBuffer(retval.sequence, bedata, -1, flushConfig);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-    ret = bq->AcquireBuffer(bufferImpl, retval.fence, timestamp, damage);
+    ret = bq->AcquireBuffer(retval.buffer, retval.fence, timestamp, damage);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
     ASSERT_NE(retval.buffer, nullptr);
 
@@ -98,7 +97,7 @@ HWTEST_F(BufferQueueTest, ReqFluAcqRel, testing::ext::TestSize.Level0)
         ASSERT_EQ(addr2[0], 5u);
     }
 
-    ret = bq->ReleaseBuffer(bufferImpl, -1);
+    ret = bq->ReleaseBuffer(retval.buffer, -1);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 }
 
@@ -152,7 +151,7 @@ HWTEST_F(BufferQueueTest, ReqFluFlu, testing::ext::TestSize.Level0)
 
 HWTEST_F(BufferQueueTest, AcqRelRel, testing::ext::TestSize.Level0)
 {
-    sptr<SurfaceBufferImpl> buffer;
+    sptr<SurfaceBuffer> buffer;
     int32_t flushFence;
 
     SurfaceError ret = bq->AcquireBuffer(buffer, flushFence, timestamp, damage);
@@ -213,8 +212,7 @@ HWTEST_F(BufferQueueTest, ReqRel, testing::ext::TestSize.Level0)
 
     retval.buffer = cache[retval.sequence];
 
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-    ret = bq->ReleaseBuffer(bufferImpl, -1);
+    ret = bq->ReleaseBuffer(retval.buffer, -1);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
 
     ret = bq->FlushBuffer(retval.sequence, bedata, -1, flushConfig);
@@ -223,16 +221,16 @@ HWTEST_F(BufferQueueTest, ReqRel, testing::ext::TestSize.Level0)
 
 HWTEST_F(BufferQueueTest, AcqFlu, testing::ext::TestSize.Level0)
 {
-    sptr<SurfaceBufferImpl> bufferImpl;
+    sptr<SurfaceBuffer> buffer;
     int32_t flushFence;
 
     // acq from last test
-    SurfaceError ret = bq->AcquireBuffer(bufferImpl, flushFence, timestamp, damage);
+    SurfaceError ret = bq->AcquireBuffer(buffer, flushFence, timestamp, damage);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
     int32_t sequence;
     for (auto it = cache.begin(); it != cache.end(); it++) {
-        if (it->second.GetRefPtr() == bufferImpl.GetRefPtr()) {
+        if (it->second.GetRefPtr() == buffer.GetRefPtr()) {
             sequence = it->first;
         }
     }
@@ -241,7 +239,7 @@ HWTEST_F(BufferQueueTest, AcqFlu, testing::ext::TestSize.Level0)
     ret = bq->FlushBuffer(sequence, bedata, -1, flushConfig);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
 
-    ret = bq->ReleaseBuffer(bufferImpl, -1);
+    ret = bq->ReleaseBuffer(buffer, -1);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 }
 

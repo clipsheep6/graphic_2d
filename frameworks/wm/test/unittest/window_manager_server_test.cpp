@@ -90,7 +90,7 @@ HWTEST_F(WindowManagerServerTest, CreateAbnormal, testing::ext::TestSize.Level0)
     sptr<WlSurface> wlSurfaceNullptr = nullptr;
     auto promise1 = WindowManagerServer::GetInstance()->CreateWindow(wlSurfaceNullptr, 0, WINDOW_TYPE_NORMAL);
     auto promise2 = WindowManagerServer::GetInstance()->CreateWindow(wlSurface, -1, WINDOW_TYPE_NORMAL);
-    auto promise3 = WindowManagerServer::GetInstance()->CreateWindow(wlSurface, 0, static_cast<WindowType>(-1));
+    auto promise3 = WindowManagerServer::GetInstance()->CreateWindow(wlSurface, 0, static_cast<enum WindowType>(-1));
 
     // 3. check they
     auto wminfo1 = promise1->Await();

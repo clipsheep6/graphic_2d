@@ -55,9 +55,9 @@ protected:
     int32_t ReadFile(int32_t width, int32_t height);
 
 private:
-    static sptr<RawParser> instance;
-    RawParser();
-    virtual ~RawParser();
+    RawParser() = default;
+    virtual ~RawParser() = default;
+    static inline sptr<RawParser> instance = nullptr;
 
     std::unique_ptr<uint8_t[]> compressed = nullptr;
     uint32_t clength = 0;

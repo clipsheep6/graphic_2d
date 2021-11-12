@@ -74,8 +74,8 @@ static inline std::string LowErrorStr(GSError lowerr)
 
 static inline std::string GSErrorStr(GSError err)
 {
-    GSError diff = static_cast<GSError>(err % LOWERROR_MAX);
-    auto it = GSErrorStrs.find(static_cast<GSError>(err - diff));
+    GSError diff = static_cast<enum GSError>(err % LOWERROR_MAX);
+    auto it = GSErrorStrs.find(static_cast<enum GSError>(err - diff));
     if (it == GSErrorStrs.end()) {
         return "<GSError error index out of range>";
     }
@@ -102,7 +102,7 @@ enum WMError {
 #ifdef __cplusplus
 static inline std::string WMErrorStr(WMError err)
 {
-    return GSErrorStr(static_cast<GSError>(err));
+    return GSErrorStr(static_cast<enum GSError>(err));
 }
 #endif // __cplusplus
 
@@ -127,7 +127,7 @@ enum SurfaceError {
 #ifdef __cplusplus
 static inline std::string SurfaceErrorStr(SurfaceError err)
 {
-    return GSErrorStr(static_cast<GSError>(err));
+    return GSErrorStr(static_cast<enum GSError>(err));
 }
 #endif // __cplusplus
 
@@ -147,7 +147,7 @@ enum VsyncError {
 #ifdef __cplusplus
 static inline std::string VsyncErrorStr(VsyncError err)
 {
-    return GSErrorStr(static_cast<GSError>(err));
+    return GSErrorStr(static_cast<enum GSError>(err));
 }
 } // namespace OHOS
 #endif // __cplusplus

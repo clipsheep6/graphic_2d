@@ -35,10 +35,10 @@ namespace {
 HWTEST_F(SurfaceBufferImplTest, NewSeqIncrease, testing::ext::TestSize.Level0)
 {
     buffer = new SurfaceBufferImpl();
-    int oldSeq = buffer->GetSeqNum();
+    int oldSeq = SurfaceBufferImpl::GetSeqNum(buffer);
 
     buffer = new SurfaceBufferImpl();
-    ASSERT_EQ(oldSeq + 1, buffer->GetSeqNum());
+    ASSERT_EQ(oldSeq + 1, SurfaceBufferImpl::GetSeqNum(buffer));
 }
 
 HWTEST_F(SurfaceBufferImplTest, NewState, testing::ext::TestSize.Level0)
@@ -135,7 +135,7 @@ HWTEST_F(SurfaceBufferImplTest, NormalState, testing::ext::TestSize.Level0)
 
 HWTEST_F(SurfaceBufferImplTest, Parcel, testing::ext::TestSize.Level0)
 {
-    sptr<SurfaceBufferImpl> sbi = new SurfaceBufferImpl(0);
+    sptr<SurfaceBuffer> sbi = new SurfaceBufferImpl(0);
     const auto &bm = BufferManager::GetInstance();
     auto sret = bm->Alloc(requestConfig, sbi);
     ASSERT_EQ(sret, SURFACE_ERROR_OK);
@@ -144,11 +144,11 @@ HWTEST_F(SurfaceBufferImplTest, Parcel, testing::ext::TestSize.Level0)
     sbi->SetInt64(64, 64);
 
     MessageParcel parcel;
-    WriteSurfaceBufferImpl(parcel, sbi->GetSeqNum(), sbi);
+    WriteSurfaceBuffer(parcel, SurfaceBufferImpl::GetSeqNum(sbi), sbi);
 
     sptr<SurfaceBuffer> buffer = nullptr;
     int32_t seq;
-    ReadSurfaceBufferImpl(parcel, seq, buffer);
+    ReadSurfaceBuffer(parcel, seq, buffer);
     ASSERT_NE(buffer, nullptr);
 
     int32_t val32 = 0;

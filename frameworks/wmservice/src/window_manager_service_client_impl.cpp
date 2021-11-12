@@ -44,13 +44,13 @@ sptr<WindowManagerServiceClientImpl> WindowManagerServiceClientImpl::GetInstance
 namespace {
 void OnReply(void *, struct wms *, uint32_t a)
 {
-    WindowManagerServiceProxy::OnReply(static_cast<wms_error>(a));
+    WindowManagerServiceProxy::OnReply(static_cast<enum wms_error>(a));
 }
 
 void OnDisplayChange(void *, struct wms *,
     uint32_t a, const char *b, uint32_t c, int32_t d, int32_t e)
 {
-    WindowManagerServiceProxy::OnDisplayChange(a, b, static_cast<wms_screen_status>(c), d, e);
+    WindowManagerServiceProxy::OnDisplayChange(a, b, static_cast<enum wms_screen_status>(c), d, e);
 }
 
 void OnDisplayPower(void *, struct wms *, uint32_t a, int32_t b)
@@ -81,7 +81,7 @@ void OnScreenShotDone(void *, struct wms *,
 
 void OnScreenShotError(void *, struct wms *, uint32_t a, uint32_t b)
 {
-    WindowManagerServiceProxy::OnScreenShot(static_cast<wms_error>(a), b, -1, 0, 0, 0, 0, 0, 0);
+    WindowManagerServiceProxy::OnScreenShot(static_cast<enum wms_error>(a), b, -1, 0, 0, 0, 0, 0, 0);
 }
 
 void OnWindowShotDone(void *, struct wms *,
@@ -92,7 +92,7 @@ void OnWindowShotDone(void *, struct wms *,
 
 void OnWindowShotError(void *, struct wms *, uint32_t a, uint32_t b)
 {
-    WindowManagerServiceProxy::OnWindowShot(static_cast<wms_error>(a), b, -1, 0, 0, 0, 0, 0, 0);
+    WindowManagerServiceProxy::OnWindowShot(static_cast<enum wms_error>(a), b, -1, 0, 0, 0, 0, 0, 0);
 }
 
 void RegistryGlobal(void *ppwms, struct wl_registry *registry,
@@ -103,7 +103,7 @@ void RegistryGlobal(void *ppwms, struct wl_registry *registry,
     }
 
     if (strcmp(interface, "wms") == 0) {
-        auto &pwms = *static_cast<struct wms**>(ppwms);
+        auto &pwms = *reinterpret_cast<struct wms**>(ppwms);
         constexpr uint32_t wmsVersion = 1;
         pwms = (struct wms *)wl_registry_bind(registry, id, &wms_interface, wmsVersion);
         const struct wms_listener listener = {

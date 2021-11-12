@@ -48,7 +48,7 @@ void WlSubsurfaceFactory::OnAppear(const GetServiceFunc get, const std::string &
     constexpr uint32_t wlSubcompositorVersion = 1;
     if (iname == "wl_subcompositor") {
         auto ret = get(&wl_subcompositor_interface, wlSubcompositorVersion);
-        subcompositor = static_cast<struct wl_subcompositor *>(ret);
+        subcompositor = reinterpret_cast<struct wl_subcompositor *>(ret);
     }
 }
 

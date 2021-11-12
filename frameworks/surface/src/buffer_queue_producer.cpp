@@ -80,7 +80,7 @@ int BufferQueueProducer::OnRemoteRequest(uint32_t code, MessageParcel &arguments
 int32_t BufferQueueProducer::RequestBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
 {
     RequestBufferReturnValue retval;
-    BufferExtraDataImpl bedataimpl;
+    std::shared_ptr<BufferExtraData> bedataimpl = std::make_shared<BufferExtraDataImpl>();
     BufferRequestConfig config = {};
 
     ReadRequestConfig(arguments, config);
@@ -89,8 +89,8 @@ int32_t BufferQueueProducer::RequestBufferRemote(MessageParcel &arguments, Messa
 
     reply.WriteInt32(sret);
     if (sret == SURFACE_ERROR_OK) {
-        WriteSurfaceBufferImpl(reply, retval.sequence, retval.buffer);
-        bedataimpl.WriteToParcel(reply);
+        WriteSurfaceBuffer(reply, retval.sequence, retval.buffer);
+        bedataimpl->WriteToParcel(reply);
         WriteFence(reply, retval.fence);
         reply.WriteInt32Vector(retval.deletingBuffers);
     }
@@ -100,10 +100,10 @@ int32_t BufferQueueProducer::RequestBufferRemote(MessageParcel &arguments, Messa
 int BufferQueueProducer::CancelBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
 {
     int32_t sequence;
-    BufferExtraDataImpl bedataimpl;
+    std::shared_ptr<BufferExtraData> bedataimpl = std::make_shared<BufferExtraDataImpl>();
 
     sequence = arguments.ReadInt32();
-    bedataimpl.ReadFromParcel(arguments);
+    bedataimpl->ReadFromParcel(arguments);
 
     SurfaceError sret = CancelBuffer(sequence, bedataimpl);
     reply.WriteInt32(sret);
@@ -115,10 +115,10 @@ int BufferQueueProducer::FlushBufferRemote(MessageParcel &arguments, MessageParc
     int32_t fence;
     int32_t sequence;
     BufferFlushConfig config;
-    BufferExtraDataImpl bedataimpl;
+    std::shared_ptr<BufferExtraData> bedataimpl = std::make_shared<BufferExtraDataImpl>();
 
     sequence = arguments.ReadInt32();
-    bedataimpl.ReadFromParcel(arguments);
+    bedataimpl->ReadFromParcel(arguments);
     ReadFence(arguments, fence);
     ReadFlushConfig(arguments, config);
 
@@ -177,7 +177,8 @@ int BufferQueueProducer::CleanCacheRemote(MessageParcel &arguments, MessageParce
     return 0;
 }
 
-SurfaceError BufferQueueProducer::RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+SurfaceError BufferQueueProducer::RequestBuffer(const BufferRequestConfig &config,
+                                                std::shared_ptr<BufferExtraData> &bedata,
                                                 RequestBufferReturnValue &retval)
 {
     static std::map<int32_t, wptr<SurfaceBuffer>> cache;
@@ -219,7 +220,8 @@ SurfaceError BufferQueueProducer::RequestBuffer(const BufferRequestConfig &confi
     return sret;
 }
 
-SurfaceError BufferQueueProducer::CancelBuffer(int32_t sequence, BufferExtraData &bedata)
+SurfaceError BufferQueueProducer::CancelBuffer(int32_t sequence,
+                                               std::shared_ptr<BufferExtraData> &bedata)
 {
     if (bufferQueue_ == nullptr) {
         return SURFACE_ERROR_NULLPTR;
@@ -227,7 +229,8 @@ SurfaceError BufferQueueProducer::CancelBuffer(int32_t sequence, BufferExtraData
     return bufferQueue_->CancelBuffer(sequence, bedata);
 }
 
-SurfaceError BufferQueueProducer::FlushBuffer(int32_t sequence, BufferExtraData &bedata,
+SurfaceError BufferQueueProducer::FlushBuffer(int32_t sequence,
+                                              std::shared_ptr<BufferExtraData> &bedata,
                                               int32_t fence, BufferFlushConfig &config)
 {
     if (bufferQueue_ == nullptr) {

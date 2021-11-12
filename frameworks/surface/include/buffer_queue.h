@@ -36,7 +36,7 @@ enum BufferState {
 };
 
 typedef struct {
-    sptr<SurfaceBufferImpl> buffer;
+    sptr<SurfaceBuffer> buffer;
     BufferState state;
     bool isDeleting;
 
@@ -52,23 +52,23 @@ public:
     virtual ~BufferQueue();
     SurfaceError Init();
 
-    SurfaceError RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+    SurfaceError RequestBuffer(const BufferRequestConfig &config, std::shared_ptr<BufferExtraData> &bedata,
                                struct IBufferProducer::RequestBufferReturnValue &retval);
 
-    SurfaceError ReuseBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+    SurfaceError ReuseBuffer(const BufferRequestConfig &config, std::shared_ptr<BufferExtraData> &bedata,
                              struct IBufferProducer::RequestBufferReturnValue &retval);
 
-    SurfaceError CancelBuffer(int32_t sequence, const BufferExtraData &bedata);
+    SurfaceError CancelBuffer(int32_t sequence, const std::shared_ptr<BufferExtraData> &bedata);
 
-    SurfaceError FlushBuffer(int32_t sequence, const BufferExtraData &bedata,
+    SurfaceError FlushBuffer(int32_t sequence, const std::shared_ptr<BufferExtraData> &bedata,
                              int32_t fence, const BufferFlushConfig &config);
 
-    SurfaceError DoFlushBuffer(int32_t sequence, const BufferExtraData &bedata,
+    SurfaceError DoFlushBuffer(int32_t sequence, const std::shared_ptr<BufferExtraData> &bedata,
                                int32_t fence, const BufferFlushConfig &config);
 
-    SurfaceError AcquireBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t &fence,
+    SurfaceError AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                int64_t &timestamp, Rect &damage);
-    SurfaceError ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t fence);
+    SurfaceError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence);
 
     uint32_t GetQueueSize();
     SurfaceError SetQueueSize(uint32_t queueSize);
@@ -88,15 +88,15 @@ public:
     SurfaceError CleanCache();
 
 private:
-    SurfaceError AllocBuffer(sptr<SurfaceBufferImpl>& buffer, const BufferRequestConfig &config);
-    SurfaceError FreeBuffer(sptr<SurfaceBufferImpl>& buffer);
+    SurfaceError AllocBuffer(sptr<SurfaceBuffer>& buffer, const BufferRequestConfig &config);
+    SurfaceError FreeBuffer(sptr<SurfaceBuffer>& buffer);
     void DeleteBufferInCache(int sequence);
 
     uint32_t GetUsedSize();
     void DeleteBuffers(int32_t count);
 
-    SurfaceError PopFromFreeList(sptr<SurfaceBufferImpl>& buffer, const BufferRequestConfig &config);
-    SurfaceError PopFromDirtyList(sptr<SurfaceBufferImpl>& buffer);
+    SurfaceError PopFromFreeList(sptr<SurfaceBuffer>& buffer, const BufferRequestConfig &config);
+    SurfaceError PopFromDirtyList(sptr<SurfaceBuffer>& buffer);
 
     SurfaceError CheckRequestConfig(const BufferRequestConfig &config);
     SurfaceError CheckFlushConfig(const BufferFlushConfig &config);

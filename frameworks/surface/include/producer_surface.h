@@ -22,6 +22,7 @@
 #include <surface.h>
 #include <ibuffer_producer.h>
 
+#include "buffer_extra_data_impl.h"
 #include "buffer_queue.h"
 #include "buffer_queue_consumer.h"
 #include "surface_buffer_impl.h"
@@ -38,10 +39,19 @@ public:
     SurfaceError RequestBuffer(sptr<SurfaceBuffer>& buffer,
                                int32_t &fence, BufferRequestConfig &config) override;
 
+    SurfaceError RequestBufferNoFence(sptr<SurfaceBuffer>& buffer,
+                                      BufferRequestConfig &config) override;
+
+    SurfaceError RequestBufferWithFence(sptr<SurfaceBuffer>& buffer,
+                                     int32_t &fence, BufferRequestConfig &config) override;
+
     SurfaceError CancelBuffer(sptr<SurfaceBuffer>& buffer) override;
 
     SurfaceError FlushBuffer(sptr<SurfaceBuffer>& buffer,
                              int32_t fence, BufferFlushConfig &config) override;
+
+    SurfaceError FlushBufferNoFence(sptr<SurfaceBuffer>& buffer,
+                                    BufferFlushConfig &config) override;
 
     SurfaceError AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                int64_t &timestamp, Rect &damage) override;
@@ -70,7 +80,7 @@ public:
 private:
     bool IsRemote();
 
-    std::map<int32_t, sptr<SurfaceBufferImpl>> bufferProducerCache_;
+    std::map<int32_t, sptr<SurfaceBuffer>> bufferProducerCache_;
     std::map<std::string, std::string> userData_;
     sptr<IBufferProducer> producer_ = nullptr;
     std::string name_ = "not init";

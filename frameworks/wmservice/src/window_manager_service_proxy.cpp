@@ -33,23 +33,23 @@ WMError WMServerErrorToWMError(int32_t error)
 {
     switch (error) {
         case WMS_ERROR_OK:
-            return static_cast<WMError>(WM_OK);
+            return static_cast<enum WMError>(WM_OK);
         case WMS_ERROR_INVALID_PARAM:
-            return static_cast<WMError>(WM_ERROR_INVALID_PARAM);
+            return static_cast<enum WMError>(WM_ERROR_INVALID_PARAM);
         case WMS_ERROR_PID_CHECK:
-            return static_cast<WMError>(WM_ERROR_API_FAILED + EACCES);
+            return static_cast<enum WMError>(WM_ERROR_API_FAILED + EACCES);
         case WMS_ERROR_NO_MEMORY:
-            return static_cast<WMError>(WM_ERROR_API_FAILED + ENOMEM);
+            return static_cast<enum WMError>(WM_ERROR_API_FAILED + ENOMEM);
         case WMS_ERROR_INNER_ERROR:
-            return static_cast<WMError>(WM_ERROR_SERVER);
+            return static_cast<enum WMError>(WM_ERROR_SERVER);
         case WMS_ERROR_OTHER:
-            return static_cast<WMError>(WM_ERROR_SERVER);
+            return static_cast<enum WMError>(WM_ERROR_SERVER);
         case WMS_ERROR_API_FAILED:
-            return static_cast<WMError>(WM_ERROR_API_FAILED);
+            return static_cast<enum WMError>(WM_ERROR_API_FAILED);
         default:
-            return static_cast<WMError>(WM_ERROR_INNER);
+            return static_cast<enum WMError>(WM_ERROR_INNER);
     }
-    return static_cast<WMError>(WM_ERROR_INNER);
+    return static_cast<enum WMError>(WM_ERROR_INNER);
 }
 } // namespace
 
@@ -175,7 +175,7 @@ void WindowManagerServiceProxy::OnScreenShot(wms_error reply,
         constexpr int64_t NSEC_TO_MSEC = 1000 * 1000;
         int64_t timestampMillSec = timestampSec * SEC_TO_MSEC + timestampNanoSec / NSEC_TO_MSEC;
         WMSImageInfo info = {
-            .wret = static_cast<WMError>(reply),
+            .wret = static_cast<enum WMError>(reply),
             .fd = fd,
             .width = width,
             .height = height,
@@ -212,7 +212,7 @@ void WindowManagerServiceProxy::OnWindowShot(wms_error reply,
         constexpr int64_t NSEC_TO_MSEC = 1000 * 1000;
         int64_t timestampMillSec = timestampSec * SEC_TO_MSEC + timestampNanoSec / NSEC_TO_MSEC;
         WMSImageInfo info = {
-            .wret = static_cast<WMError>(reply),
+            .wret = static_cast<enum WMError>(reply),
             .fd = fd,
             .width = width,
             .height = height,
@@ -248,7 +248,7 @@ sptr<PromiseWMError> WindowManagerServiceProxy::SetDisplayPower(int32_t did, Dis
     sptr<PromiseWMError> ret = new PromiseWMError();
     std::lock_guard<std::mutex> lock(promiseQueueMutex);
     promiseQueue.push(ret);
-    wms_set_display_power(wms, did, static_cast<int32_t>(status));
+    wms_set_display_power(wms, did, status);
     wl_display_flush(display);
     return ret;
 }

@@ -23,8 +23,8 @@
 namespace OHOS {
 void ReadFence(MessageParcel &parcel, int32_t &fence)
 {
-    int32_t retFence = parcel.ReadInt32();
-    if (retFence < 0) {
+    fence = parcel.ReadInt32();
+    if (fence < 0) {
         return;
     }
 
@@ -44,6 +44,7 @@ void WriteFence(MessageParcel &parcel, int32_t fence)
     }
 
     parcel.WriteFileDescriptor(fence);
+    close(fence);
 }
 
 void ReadRequestConfig(MessageParcel &parcel, BufferRequestConfig &config)
@@ -84,14 +85,14 @@ void WriteFlushConfig(MessageParcel &parcel, BufferFlushConfig const & config)
     parcel.WriteInt64(config.timestamp);
 }
 
-void ReadSurfaceBufferImpl(MessageParcel &parcel,
-                           int32_t &sequence, sptr<SurfaceBuffer>& buffer)
+void ReadSurfaceBuffer(MessageParcel &parcel,
+                       int32_t &sequence, sptr<SurfaceBuffer>& buffer)
 {
     sequence = parcel.ReadInt32();
     if (parcel.ReadBool()) {
-        sptr<SurfaceBufferImpl> bufferImpl = new SurfaceBufferImpl(sequence);
+        sptr<SurfaceBuffer> bufferImpl = new SurfaceBufferImpl(sequence);
         auto handle = ReadBufferHandle(parcel);
-        bufferImpl->SetBufferHandle(handle);
+        SurfaceBufferImpl::SetBufferHandle(bufferImpl, handle);
         int32_t size = parcel.ReadInt32();
         for (int32_t i = 0; i < size; i++) {
             uint32_t key = parcel.ReadUint32();
@@ -107,15 +108,14 @@ void ReadSurfaceBufferImpl(MessageParcel &parcel,
     }
 }
 
-void WriteSurfaceBufferImpl(MessageParcel &parcel,
+void WriteSurfaceBuffer(MessageParcel &parcel,
     int32_t sequence, const sptr<SurfaceBuffer> &buffer)
 {
     parcel.WriteInt32(sequence);
-    auto bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    parcel.WriteBool(bufferImpl != nullptr);
-    if (bufferImpl == nullptr) {
+    parcel.WriteBool(buffer != nullptr);
+    if (buffer == nullptr) {
         return;
     }
-    bufferImpl->WriteToMessageParcel(parcel);
+    SurfaceBufferImpl::WriteToMessageParcel(buffer, parcel);
 }
 } // namespace OHOS

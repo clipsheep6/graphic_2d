@@ -34,12 +34,13 @@ public:
         int32_t fence;
         std::vector<int32_t> deletingBuffers;
     };
-    virtual SurfaceError RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+    virtual SurfaceError RequestBuffer(const BufferRequestConfig &config,
+                                       std::shared_ptr<BufferExtraData> &bedata,
                                        RequestBufferReturnValue &retval) = 0;
 
-    virtual SurfaceError CancelBuffer(int32_t sequence, BufferExtraData &bedata) = 0;
+    virtual SurfaceError CancelBuffer(int32_t sequence, std::shared_ptr<BufferExtraData> &bedata) = 0;
 
-    virtual SurfaceError FlushBuffer(int32_t sequence, BufferExtraData &bedata,
+    virtual SurfaceError FlushBuffer(int32_t sequence, std::shared_ptr<BufferExtraData> &bedata,
                                      int32_t fence, BufferFlushConfig &config) = 0;
 
     virtual uint32_t     GetQueueSize() = 0;

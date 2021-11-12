@@ -71,8 +71,7 @@ HWTEST_F(BufferQueueProducerRemoteTest, ReqCan, testing::ext::TestSize.Level0)
     ret = bp->CancelBuffer(retval.sequence, bedata);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
-    sptr<SurfaceBufferImpl> bufferImpl = static_cast<SurfaceBufferImpl*>(retval.buffer.GetRefPtr());
-    ret = bq->AcquireBuffer(bufferImpl, retval.fence, timestamp, damage);
+    ret = bq->AcquireBuffer(retval.buffer, retval.fence, timestamp, damage);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
 }
 
@@ -88,8 +87,7 @@ HWTEST_F(BufferQueueProducerRemoteTest, ReqCanCan, testing::ext::TestSize.Level0
     ret = bp->CancelBuffer(retval.sequence, bedata);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
 
-    sptr<SurfaceBufferImpl> bufferImpl = static_cast<SurfaceBufferImpl*>(retval.buffer.GetRefPtr());
-    ret = bq->AcquireBuffer(bufferImpl, retval.fence, timestamp, damage);
+    ret = bq->AcquireBuffer(retval.buffer, retval.fence, timestamp, damage);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
 }
 
@@ -121,25 +119,17 @@ HWTEST_F(BufferQueueProducerRemoteTest, ReqReqReqCanCan, testing::ext::TestSize.
     ret = bp->CancelBuffer(retval3.sequence, bedata);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
 
-    sptr<SurfaceBufferImpl> bufferImpl = static_cast<SurfaceBufferImpl*>(retval1.buffer.GetRefPtr());
-    ret = bq->AcquireBuffer(bufferImpl, retval1.fence, timestamp, damage);
+    ret = bq->AcquireBuffer(retval1.buffer, retval1.fence, timestamp, damage);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
 }
 
 HWTEST_F(BufferQueueProducerRemoteTest, SetQueueSizeDeleting, testing::ext::TestSize.Level0)
 {
-    sptr<SurfaceBuffer> buffer;
-
-    sptr<BufferQueueProducer> bqp = static_cast<BufferQueueProducer*>(bp.GetRefPtr());
-    ASSERT_EQ(bqp->bufferQueue_->freeList_.size(), 2u);
-
     SurfaceError ret = bp->SetQueueSize(1);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
-    ASSERT_EQ(bqp->bufferQueue_->freeList_.size(), 1u);
 
     ret = bp->SetQueueSize(2);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
-    ASSERT_EQ(bqp->bufferQueue_->freeList_.size(), 1u);
 }
 
 HWTEST_F(BufferQueueProducerRemoteTest, ReqFlu, testing::ext::TestSize.Level0)
@@ -151,14 +141,13 @@ HWTEST_F(BufferQueueProducerRemoteTest, ReqFlu, testing::ext::TestSize.Level0)
     ret = bp->FlushBuffer(retval.sequence, bedata, -1, flushConfig);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
-    sptr<SurfaceBufferImpl> bufferImpl = static_cast<SurfaceBufferImpl*>(retval.buffer.GetRefPtr());
-    ret = bq->AcquireBuffer(bufferImpl, retval.fence, timestamp, damage);
+    ret = bq->AcquireBuffer(retval.buffer, retval.fence, timestamp, damage);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
-    ret = bq->ReleaseBuffer(bufferImpl, -1);
+    ret = bq->ReleaseBuffer(retval.buffer, -1);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
-    ret = bq->AcquireBuffer(bufferImpl, retval.fence, timestamp, damage);
+    ret = bq->AcquireBuffer(retval.buffer, retval.fence, timestamp, damage);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
 }
 
@@ -174,14 +163,13 @@ HWTEST_F(BufferQueueProducerRemoteTest, ReqFluFlu, testing::ext::TestSize.Level0
     ret = bp->FlushBuffer(retval.sequence, bedata, -1, flushConfig);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
 
-    sptr<SurfaceBufferImpl> bufferImpl = static_cast<SurfaceBufferImpl*>(retval.buffer.GetRefPtr());
-    ret = bq->AcquireBuffer(bufferImpl, retval.fence, timestamp, damage);
+    ret = bq->AcquireBuffer(retval.buffer, retval.fence, timestamp, damage);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
-    ret = bq->ReleaseBuffer(bufferImpl, -1);
+    ret = bq->ReleaseBuffer(retval.buffer, -1);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
-    ret = bq->AcquireBuffer(bufferImpl, retval.fence, timestamp, damage);
+    ret = bq->AcquireBuffer(retval.buffer, retval.fence, timestamp, damage);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
 }
 }

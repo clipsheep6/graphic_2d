@@ -36,7 +36,7 @@ BufferQueueConsumer::~BufferQueueConsumer()
     BLOGNI("dtor");
 }
 
-SurfaceError BufferQueueConsumer::AcquireBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t &fence,
+SurfaceError BufferQueueConsumer::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                                 int64_t &timestamp, Rect &damage)
 {
     if (bufferQueue_ == nullptr) {
@@ -45,7 +45,7 @@ SurfaceError BufferQueueConsumer::AcquireBuffer(sptr<SurfaceBufferImpl>& buffer,
     return bufferQueue_->AcquireBuffer(buffer, fence, timestamp, damage);
 }
 
-SurfaceError BufferQueueConsumer::ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t fence)
+SurfaceError BufferQueueConsumer::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence)
 {
     if (bufferQueue_ == nullptr) {
         return SURFACE_ERROR_NULLPTR;

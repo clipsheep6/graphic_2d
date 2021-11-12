@@ -26,7 +26,6 @@
 #include "util.h"
 
 namespace OHOS {
-sptr<RawParser> RawParser::instance = nullptr;
 sptr<RawParser> RawParser::GetInstance()
 {
     if (instance == nullptr) {
@@ -38,14 +37,6 @@ sptr<RawParser> RawParser::GetInstance()
     }
 
     return instance;
-}
-
-RawParser::RawParser() : infos()
-{
-}
-
-RawParser::~RawParser()
-{
 }
 
 int32_t RawParser::Parse(int32_t width, int32_t height)

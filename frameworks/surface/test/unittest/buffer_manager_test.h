@@ -36,7 +36,7 @@ public:
         .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
         .timeout = 0,
     };
-    static inline sptr<SurfaceBufferImpl> buffer = nullptr;
+    static inline sptr<SurfaceBuffer> buffer = nullptr;
 };
 } // namespace OHOS
 

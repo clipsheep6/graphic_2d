@@ -58,8 +58,8 @@ private:
     uint32_t        winDestWidth = 0;
     uint32_t        winDestHeight = 0;
     bool            winVisibility = false;
-    WindowType winType = static_cast<WindowType>(0);
-    WindowMode winMode = static_cast<WindowMode>(0);
+    WindowType winType = static_cast<enum WindowType>(0);
+    WindowMode winMode = static_cast<enum WindowMode>(0);
 
     WindowPositionChangeFunc   positionChangeListener = nullptr;
     WindowSizeChangeFunc       sizeChangeListener = nullptr;

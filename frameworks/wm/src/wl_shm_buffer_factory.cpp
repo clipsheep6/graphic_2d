@@ -62,7 +62,7 @@ void WlSHMBufferFactory::OnAppear(const GetServiceFunc get, const std::string &i
     if (iname == "wl_shm") {
         constexpr uint32_t wlShmVersion = 1;
         auto ret = get(&wl_shm_interface, wlShmVersion);
-        shmbuf = static_cast<struct wl_shm *>(ret);
+        shmbuf = reinterpret_cast<struct wl_shm *>(ret);
     }
 }
 

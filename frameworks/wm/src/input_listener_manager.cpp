@@ -138,7 +138,7 @@ void InputListenerManager::OnAppear(const GetServiceFunc get, const std::string 
 {
     if (iname == "wl_seat") {
         constexpr uint32_t wlSeatVersion = 1;
-        seat = static_cast<struct wl_seat *>(get(&wl_seat_interface, wlSeatVersion));
+        seat = reinterpret_cast<struct wl_seat *>(get(&wl_seat_interface, wlSeatVersion));
         if (seat == nullptr) {
             return;
         }
@@ -162,7 +162,7 @@ void OnPointerEnter(void *, struct wl_pointer *,
     double x = wl_fixed_to_double(sx);
     double y = wl_fixed_to_double(sy);
 
-    auto window = static_cast<void *>(wl_surface_get_user_data(surface));
+    auto window = wl_surface_get_user_data(surface);
     g_setFocus(window);
 
     const auto &inputListeners = g_getFocus();
@@ -176,7 +176,7 @@ void OnPointerEnter(void *, struct wl_pointer *,
 void OnPointerLeave(void *, struct wl_pointer *,
                     uint32_t serial, struct wl_surface *surface)
 {
-    auto window = static_cast<void *>(wl_surface_get_user_data(surface));
+    auto window = wl_surface_get_user_data(surface);
     const auto &inputListeners = g_getInputCallback(window);
     for (const auto &listener : inputListeners) {
         if (listener->pointerLeave) {
@@ -202,7 +202,7 @@ void OnPointerMotion(void *, struct wl_pointer *,
 void OnPointerButton(void *, struct wl_pointer *,
                      uint32_t serial, uint32_t time, uint32_t button, uint32_t s)
 {
-    auto state = static_cast<PointerButtonState>(s);
+    auto state = static_cast<enum PointerButtonState>(s);
 
     const auto &inputListeners = g_getFocus();
     for (const auto &listener : inputListeners) {
@@ -216,7 +216,7 @@ void OnPointerAxis(void *, struct wl_pointer *,
                    uint32_t time, uint32_t a, wl_fixed_t v)
 {
     auto value = wl_fixed_to_double(v);
-    auto axis = static_cast<PointerAxis>(a);
+    auto axis = static_cast<enum PointerAxis>(a);
 
     const auto &inputListeners = g_getFocus();
     for (const auto &listener : inputListeners) {
@@ -239,7 +239,7 @@ void OnPointerFrame(void *, struct wl_pointer *)
 void OnPointerAxisSource(void *, struct wl_pointer *,
                          uint32_t as)
 {
-    auto axisSource = static_cast<PointerAxisSource>(as);
+    auto axisSource = static_cast<enum PointerAxisSource>(as);
 
     const auto &inputListeners = g_getFocus();
     for (const auto &listener : inputListeners) {
@@ -252,7 +252,7 @@ void OnPointerAxisSource(void *, struct wl_pointer *,
 void OnPointerAxisStop(void *, struct wl_pointer *,
                        uint32_t time, uint32_t a)
 {
-    auto axis = static_cast<PointerAxis>(a);
+    auto axis = static_cast<enum PointerAxis>(a);
 
     const auto &inputListeners = g_getFocus();
     for (const auto &listener : inputListeners) {
@@ -265,7 +265,7 @@ void OnPointerAxisStop(void *, struct wl_pointer *,
 void OnPointerAxisDiscrete(void *, struct wl_pointer *,
                            uint32_t a, int32_t discrete)
 {
-    auto axis = static_cast<PointerAxis>(a);
+    auto axis = static_cast<enum PointerAxis>(a);
 
     const auto &inputListeners = g_getFocus();
     for (const auto &listener : inputListeners) {
@@ -278,7 +278,7 @@ void OnPointerAxisDiscrete(void *, struct wl_pointer *,
 void OnKeyboardKeymap(void *, struct wl_keyboard *,
                       uint32_t f, int32_t fd, uint32_t size)
 {
-    auto format = static_cast<KeyboardKeymapFormat>(f);
+    auto format = static_cast<enum KeyboardKeymapFormat>(f);
 
     const auto &inputListeners = g_getFocus();
     for (const auto &listener : inputListeners) {
@@ -292,12 +292,12 @@ void OnKeyboardEnter(void *, struct wl_keyboard *,
                      uint32_t serial, struct wl_surface *surface, struct wl_array *ks)
 {
     std::vector<uint32_t> keys;
-    auto k = static_cast<uint32_t *>(ks->data);
+    auto k = reinterpret_cast<uint32_t *>(ks->data);
     while (reinterpret_cast<const char *>(k) < reinterpret_cast<const char *>(ks->data) + ks->size) {
         keys.push_back(*k++);
     }
 
-    auto window = static_cast<void *>(wl_surface_get_user_data(surface));
+    auto window = wl_surface_get_user_data(surface);
     g_setFocus(window);
 
     const auto &inputListeners = g_getFocus();
@@ -311,7 +311,7 @@ void OnKeyboardEnter(void *, struct wl_keyboard *,
 void OnKeyboardLeave(void *, struct wl_keyboard *,
                      uint32_t serial, struct wl_surface *surface)
 {
-    auto window = static_cast<void *>(wl_surface_get_user_data(surface));
+    auto window = wl_surface_get_user_data(surface);
     const auto &inputListeners = g_getInputCallback(window);
     for (const auto &listener : inputListeners) {
         if (listener->keyboardLeave) {
@@ -323,7 +323,7 @@ void OnKeyboardLeave(void *, struct wl_keyboard *,
 void OnKeyboardKey(void *, struct wl_keyboard *,
                    uint32_t serial, uint32_t time, uint32_t key, uint32_t s)
 {
-    auto state = static_cast<KeyboardKeyState>(s);
+    auto state = static_cast<enum KeyboardKeyState>(s);
 
     const auto &inputListeners = g_getFocus();
     for (const auto &listener : inputListeners) {
@@ -364,7 +364,7 @@ void OnTouchDown(void *, struct wl_touch *,
     double x = wl_fixed_to_double(tx);
     double y = wl_fixed_to_double(ty);
 
-    auto window = static_cast<void *>(wl_surface_get_user_data(surface));
+    auto window = wl_surface_get_user_data(surface);
     g_setFocus(window);
 
     const auto &inputListeners = g_getFocus();

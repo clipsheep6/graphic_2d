@@ -48,8 +48,8 @@ public:
     virtual bool IsSettingHeight() const override;
 
 private:
-    WindowType type = static_cast<WindowType>(0);
-    WindowMode mode = static_cast<WindowMode>(0);
+    WindowType type = static_cast<enum WindowType>(0);
+    WindowMode mode = static_cast<enum WindowMode>(0);
     int32_t displayId = 0;
     sptr<Surface> consumerSurface = nullptr;
 

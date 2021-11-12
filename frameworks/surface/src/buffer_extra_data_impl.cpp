@@ -37,7 +37,7 @@ SurfaceError BufferExtraDataImpl::ReadFromParcel(MessageParcel &parcel)
     BLOGD("read %{public}d", size);
     for (int32_t i = 0; i < size; i++) {
         auto key = parcel.ReadString();
-        auto type = static_cast<ExtraDataType>(parcel.ReadInt32());
+        auto type = static_cast<enum ExtraDataType>(parcel.ReadInt32());
         switch (type) {
             case ExtraDataType::i32: {
                 ExtraSet(key, type, parcel.ReadInt32());

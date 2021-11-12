@@ -74,11 +74,11 @@ class InputListenerManager : public RefBase {
 public:
     static sptr<InputListenerManager> GetInstance();
 
-    MOCKABLE void Init();
-    MOCKABLE void Deinit();
+    virtual void Init();
+    virtual void Deinit();
 
-    MOCKABLE sptr<InputListener> AddListener(void *window);
-    MOCKABLE void RemoveListener(sptr<InputListener> &listener);
+    virtual sptr<InputListener> AddListener(void *window);
+    virtual void RemoveListener(sptr<InputListener> &listener);
 
 protected:
     InputListeners GetFocus();
@@ -90,7 +90,7 @@ protected:
 
 private:
     InputListenerManager() = default;
-    MOCKABLE ~InputListenerManager() override;
+    virtual ~InputListenerManager() override;
     static inline sptr<InputListenerManager> instance = nullptr;
     static inline SingletonDelegator<InputListenerManager> delegator;
 

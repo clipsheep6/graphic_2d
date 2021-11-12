@@ -241,6 +241,10 @@ void SubwindowNormalImpl::OnBufferAvailable()
     if (wbuffer == nullptr) {
         auto dmaBufferFactory = SingletonContainer::Get<WlDMABufferFactory>();
         auto dmaWlBuffer = dmaBufferFactory->Create(sbuffer->GetBufferHandle());
+        if (dmaWlBuffer == nullptr) {
+            WMLOGFE("Create dmaWlBuffer failed");
+            return;
+        }
         dmaWlBuffer->OnRelease(BufferRelease);
 
         wbuffer = dmaWlBuffer;

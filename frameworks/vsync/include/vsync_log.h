@@ -28,28 +28,35 @@
 #define VPUBU64  "%{public}llu"
 #endif
 
-#define __VLOG(func, fmt, ...) \
-    func(LABEL, "%{public}s: " fmt "\033[0m", __func__, ##__VA_ARGS__)
+#define __VLOG_B(func, fmt, ...) \
+    func(LABEL, "%{public}s: " fmt, __func__, ##__VA_ARGS__)
 
-#define VLOGD(fmt, ...) __VLOG(::OHOS::HiviewDFX::HiLog::Debug, "\033[0m" fmt, ##__VA_ARGS__)
-#define VLOGI(fmt, ...) __VLOG(::OHOS::HiviewDFX::HiLog::Info,  "\033[36m" fmt, ##__VA_ARGS__)
-#define VLOGW(fmt, ...) __VLOG(::OHOS::HiviewDFX::HiLog::Warn,  "\033[1;33m" fmt, ##__VA_ARGS__)
-#define VLOGE(fmt, ...) __VLOG(::OHOS::HiviewDFX::HiLog::Error, "\033[1;31m" fmt, ##__VA_ARGS__)
+#define VLOGD(fmt, ...) __VLOG_B(::OHOS::HiviewDFX::HiLog::Debug, fmt, ##__VA_ARGS__)
+#define VLOGI(fmt, ...) __VLOG_B(::OHOS::HiviewDFX::HiLog::Info, fmt, ##__VA_ARGS__)
+#define VLOGW(fmt, ...) __VLOG_B(::OHOS::HiviewDFX::HiLog::Warn, fmt, ##__VA_ARGS__)
+#define VLOGE(fmt, ...) __VLOG_B(::OHOS::HiviewDFX::HiLog::Error, fmt, ##__VA_ARGS__)
 
 #define VLOG_SUCCESS(fmt, ...) VLOGI("Success, Way: " fmt, ##__VA_ARGS__)
 #define VLOG_FAILURE(fmt, ...) VLOGE("Failure, Reason: " fmt, ##__VA_ARGS__)
-#define VLOG_FAILURE_NO(vsync_error) VLOG_FAILURE("%{public}s", VsyncErrorStr(vsync_error).c_str())
-#define VLOG_FAILURE_RET(vsync_error) \
-    do {                              \
-        VLOG_FAILURE_NO(vsync_error); \
-        return vsync_error;           \
-    } while (0)
-#define VLOG_FAILURE_API(api, ret) VLOG_FAILURE(#api " failed with %{public}s", VsyncErrorStr(ret).c_str())
 
 #define VLOG_ERROR(errno, fmt, ...) \
     VLOGE(fmt ", means %{public}s", ##__VA_ARGS__, strerror(errno))
 
 #define VLOG_ERROR_API(ret, api) \
     VLOG_ERROR(ret, #api " failed with %{public}d", ret)
+#define VLOG_FAILURE_API(api, ret) VLOG_FAILURE(#api " failed with %{public}s", VsyncErrorStr(ret).c_str())
+
+void VLOG_FAILURE_NO(VsyncError vsync_error)
+{
+    VLOG_FAILURE("%{public}s", VsyncErrorStr(vsync_error).c_str());
+}
+
+VsyncError VLOG_FAILURE_RET(VsyncError vsync_error)
+{
+    do {
+        VLOG_FAILURE_NO(vsync_error);
+        return vsync_error;
+    } while (0);
+}
 
 #endif // FRAMEWORKS_VSYNC_INCLUDE_VSYNC_LOG_H

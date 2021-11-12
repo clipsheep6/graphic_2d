@@ -28,22 +28,25 @@
 #include "wl_dma_buffer_factory.h"
 #include "wl_surface_factory.h"
 
-#define CHECK_DESTROY_CONST(ret)                           \
-    if (isDestroyed == true) {                             \
-        WMLOGFE("find attempt to use a destroyed object"); \
-        return ret;                                        \
-    }
-
-#define CHECK_DESTROY(ret)                                 \
-{                                                          \
-    std::lock_guard<std::mutex> lock(mutex);               \
-    CHECK_DESTROY_CONST(ret);                              \
-}
-
 namespace OHOS {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, 0, "WMWindowImpl"};
 }
+
+int CHECK_DESTROY_CONST(int ret)
+{
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return ret;
+    }
+}
+
+void CHECK_DESTROY(int ret)
+{
+    std::lock_guard<std::mutex> lock(mutex);
+    CHECK_DESTROY_CONST(ret);
+}
+
 
 WMError WindowImpl::CheckAndNew(sptr<WindowImpl> &wi,
                                 const sptr<WindowOption> &option,
@@ -179,6 +182,12 @@ sptr<Surface> WindowImpl::GetSurface() const
 {
     CHECK_DESTROY_CONST(nullptr);
     return psurface;
+}
+
+sptr<IBufferProducer> WindowImpl::GetProducer() const
+{
+    CHECK_DESTROY_CONST(nullptr);
+    return csurface->GetProducer();
 }
 
 int32_t WindowImpl::GetID() const
@@ -391,6 +400,11 @@ void WindowImpl::OnModeChange(WindowModeChangeFunc func)
     attr.OnModeChange(func);
 }
 
+void WindowImpl::OnBeforeFrameSubmit(BeforeFrameSubmitFunc func)
+{
+    onBeforeFrameSubmitFunc = func;
+}
+
 WMError WindowImpl::OnTouch(OnTouchFunc cb)
 {
     CHECK_DESTROY(WM_ERROR_DESTROYED_OBJECT);
@@ -558,14 +572,14 @@ WMError WindowImpl::OnTouchOrientation(TouchOrientationFunc func)
 }
 
 namespace {
-void BufferRelease(struct wl_buffer *wbuffer)
+void BufferRelease(struct wl_buffer *wbuffer, int32_t fence)
 {
     WMLOGFI("BufferRelease");
     sptr<Surface> surface = nullptr;
     sptr<SurfaceBuffer> sbuffer = nullptr;
     if (SingletonContainer::Get<WlBufferCache>()->GetSurfaceBuffer(wbuffer, surface, sbuffer)) {
         if (surface != nullptr && sbuffer != nullptr) {
-            surface->ReleaseBuffer(sbuffer, -1);
+            surface->ReleaseBuffer(sbuffer, fence);
         }
     }
 }
@@ -575,6 +589,10 @@ void WindowImpl::OnBufferAvailable()
 {
     WMLOGFI("OnBufferAvailable enter");
     CHECK_DESTROY();
+
+    if (onBeforeFrameSubmitFunc != nullptr) {
+        onBeforeFrameSubmitFunc();
+    }
 
     sptr<SurfaceBuffer> sbuffer;
     int32_t flushFence;
@@ -606,8 +624,13 @@ void WindowImpl::OnBufferAvailable()
     }
 
     if (wbuffer) {
+        auto br = wlSurface->GetBufferRelease();
+        wbuffer->SetBufferRelease(br);
         wlSurface->Attach(wbuffer, 0, 0);
+        wlSurface->SetAcquireFence(flushFence);
         wlSurface->Damage(damage.x, damage.y, damage.w, damage.h);
+        wlSurface->SetSource(0, 0, sbuffer->GetWidth(), sbuffer->GetHeight());
+        wlSurface->SetDestination(attr.GetWidth(), attr.GetHeight());
         wlSurface->Commit();
         SingletonContainer::Get<WlDisplay>()->Flush();
     }

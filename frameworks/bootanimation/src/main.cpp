@@ -89,7 +89,6 @@ void Main::Draw()
 
     do {
         sptr<SurfaceBuffer> buffer;
-        int32_t releaseFence;
         BufferRequestConfig config = {
             .width = surface->GetDefaultWidth(),
             .height = surface->GetDefaultHeight(),
@@ -98,7 +97,7 @@ void Main::Draw()
             .usage = surface->GetDefaultUsage(),
         };
 
-        SurfaceError ret = surface->RequestBuffer(buffer, releaseFence, config);
+        SurfaceError ret = surface->RequestBufferNoFence(buffer, config);
         if (ret == SURFACE_ERROR_NO_BUFFER) {
             break;
         }
@@ -192,7 +191,7 @@ void Main::Init(int32_t width, int32_t height)
     PostTask(std::bind(exit, 0), exitTime);
 }
 
-void Main::OnWindowCreate(int32_t pid, int32_t)
+void Main::OnWindowCreate(int32_t pid, int32_t wid)
 {
     std::stringstream ss;
     ss << "/proc/" << pid << "/cmdline";
@@ -213,7 +212,7 @@ void Main::OnWindowCreate(int32_t pid, int32_t)
     }
 }
 
-void Main::OnWindowDestroy(int32_t, int32_t)
+void Main::OnWindowDestroy(int32_t pid, int32_t wid)
 {
 }
 

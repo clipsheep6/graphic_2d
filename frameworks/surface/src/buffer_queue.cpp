@@ -22,25 +22,29 @@
 #include "buffer_log.h"
 #include "buffer_manager.h"
 
-#define CHECK_SEQ_CACHE_AND_STATE(sequence, cache, state_)       \
-    do {                                                         \
-        if ((cache).find(sequence) == (cache).end()) {           \
-            BLOGN_FAILURE_ID(sequence, "not found in cache");    \
-            return SURFACE_ERROR_NO_ENTRY;                       \
-        }                                                        \
-        if ((cache)[sequence].state != (state_)) {               \
-            BLOGN_FAILURE_ID(sequence, "state is not " #state_); \
-            return SURFACE_ERROR_INVALID_OPERATING;              \
-        }                                                        \
-    } while (0)
-
-#define SET_SEQ_STATE(sequence, cache, state_) \
-    cache[sequence].state = state_
-
 namespace OHOS {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "BufferQueue" };
 constexpr int32_t SEC_TO_USEC = 1000000;
+}
+
+SurfaceError CHECK_SEQ_CACHE_AND_STATE(int sequence, std::map<int32_t, BufferElement> cache, int state_)
+{
+    do {
+        if ((cache).find(sequence) == (cache).end()) {
+            BLOGN_FAILURE_ID(sequence, "not found in cache");
+            return SURFACE_ERROR_NO_ENTRY;
+        }
+        if ((cache)[sequence].state != (state_)) {
+            BLOGN_FAILURE_ID(sequence, "state is not " #state_);
+            return SURFACE_ERROR_INVALID_OPERATING;
+        }
+    } while (0);
+}
+
+void SET_SEQ_STATE(int sequence, std::map<int32_t, BufferElement> cache, int state_)
+{
+    cache[sequence].state = (state_);
 }
 
 BufferQueue::BufferQueue(const std::string &name)
@@ -186,6 +190,7 @@ SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, Buffe
     }
     bufferImpl->GetExtraData(bedata);
     retval.buffer = bufferImpl;
+    retval.fence = bufferQueueCache_[retval.sequence].fence;
     return ret;
 }
 
@@ -410,6 +415,7 @@ SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl>& buffer,
 SurfaceError BufferQueue::FreeBuffer(sptr<SurfaceBufferImpl>& buffer)
 {
     BLOGND("Free [%{public}d]", buffer->GetSeqNum());
+    buffer->SetEglData(nullptr);
     BufferManager::GetInstance()->Unmap(buffer);
     BufferManager::GetInstance()->Free(buffer);
     return SURFACE_ERROR_OK;

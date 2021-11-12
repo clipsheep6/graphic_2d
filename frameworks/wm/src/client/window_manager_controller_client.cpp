@@ -27,29 +27,37 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "WindowManagerClient" };
 } // namespace
 
-#define LOCK(mutexName) \
-    std::lock_guard<std::mutex> lock(mutexName)
+void LOCK(std::mutex mutexName)
+{
+    std::lock_guard<std::mutex> lock(mutexName);
+}
 
-#define GET_WINDOWINFO(info, id, ret) \
-    InnerWindowInfo *info = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id); \
-    if (info == nullptr) { \
-        WMLOGFE("id: %{public}d, window info is nullptr", id); \
-        return ret; \
+int GET_WINDOWINFO(InnerWindowInfo info, uint32_t id, int ret)
+{
+    InnerWindowInfo *info = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)(id));
+    if ((info) == nullptr) {
+        WMLOGFE("id: %{public}d, window info is nullptr", id);
+        return ret;
     }
+}
 
-#define GET_WINDOWINFO_VOID(info, id) \
-    InnerWindowInfo *info = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id); \
-    if (info == nullptr) { \
-        WMLOGFE("id: %{public}d, window info is nullptr", id); \
-        return; \
+void GET_WINDOWINFO_VOID(InnerWindowInfo info, uint32_t id)
+{
+    InnerWindowInfo *info = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)(id));
+    if ((info) == nullptr) {
+        WMLOGFE("id: %{public}d, window info is nullptr", id);
+        return;
     }
+}
 
-#define GET_WINDOWINFO_INNER_VOID(info, id) \
-    InnerWindowInfo *info = GetInnerWindowInfoFromId((uint32_t)id); \
-    if (info == nullptr) { \
-        WMLOGFE("id: %{public}d, window info is nullptr", id); \
-        return; \
+void GET_WINDOWINFO_INNER_VOID(InnerWindowInfo info, uint32_t id)
+{
+    InnerWindowInfo *info = GetInnerWindowInfoFromId((uint32_t)(id));
+    if ((info) == nullptr) {
+        WMLOGFE("id: %{public}d, window info is nullptr", id);
+        return;
     }
+}
 
 sptr<LayerControllerClient> LayerControllerClient::GetInstance()
 {
@@ -91,7 +99,6 @@ bool LayerControllerClient::init(sptr<IWindowManagerService> &service)
     WlSurfaceFactory::GetInstance()->Init();
     WlSubsurfaceFactory::GetInstance()->Init();
     WindowManagerServer::GetInstance()->Init();
-    WpViewportFactory::GetInstance()->Init();
 
     WaylandService::GetInstance()->Start();
     WlDisplay::GetInstance()->Roundtrip();
@@ -118,13 +125,13 @@ void LayerControllerClient::ChangeWindowType(int32_t id, WindowType type)
     wms->SetWindowType(id, type);
 }
 
-void BufferRelease(struct wl_buffer *wbuffer)
+void BufferRelease(struct wl_buffer *wbuffer, int32_t fence)
 {
     sptr<Surface> surface = nullptr;
     sptr<SurfaceBuffer> sbuffer = nullptr;
     if (WlBufferCache::GetInstance()->GetSurfaceBuffer(wbuffer, surface, sbuffer)) {
         if (surface != nullptr && sbuffer != nullptr) {
-            surface->ReleaseBuffer(sbuffer, -1);
+            surface->ReleaseBuffer(sbuffer, fence);
         }
     }
 }
@@ -165,7 +172,10 @@ void LayerControllerClient::CreateWlBuffer(sptr<Surface>& surface, uint32_t wind
     }
 
     if (wbuffer) {
+        auto br = windowInfo->wlSurface->GetBufferRelease();
+        wbuffer->SetBufferRelease(br);
         windowInfo->wlSurface->Attach(wbuffer, 0, 0);
+        windowInfo->wlSurface->SetAcquireFence(flushFence);
         windowInfo->wlSurface->Damage(damage.x, damage.y, damage.w, damage.h);
         windowInfo->wlSurface->Commit();
         WlDisplay::GetInstance()->Flush();
@@ -384,10 +394,6 @@ void LayerControllerClient::SetSubSurfaceSize(int32_t id, int32_t width, int32_t
 
     GET_WINDOWINFO_VOID(windowInfo, id);
     if (windowInfo->subwidow == true) {
-        windowInfo->wpViewport = WpViewportFactory::GetInstance()->Create(windowInfo->wlSurface);
-        if (windowInfo->wpViewport) {
-            windowInfo->wpViewport->SetSource(windowInfo->pos_x, windowInfo->pos_y, width, height);
-        }
         windowInfo->wlSurface->Commit();
     }
 }

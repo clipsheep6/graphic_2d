@@ -17,7 +17,9 @@
 
 #include <algorithm>
 #include <display_type.h>
+#include <sstream>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "buffer_log.h"
 #include "buffer_manager.h"
@@ -280,6 +282,39 @@ SurfaceError BufferQueue::FlushBuffer(int32_t sequence, const BufferExtraData &b
     return sret;
 }
 
+void BufferQueue::DumpToFile(int32_t sequence)
+{
+    if (access("/data/bq_dump", F_OK) == -1) {
+        return;
+    }
+
+    struct timeval now;
+    gettimeofday(&now, nullptr);
+    constexpr int secToUsec = 1000 * 1000;
+    int64_t nowVal = (int64_t)now.tv_sec * secToUsec + (int64_t)now.tv_usec;
+
+    std::stringstream ss;
+    ss << "/data/dumpimage-" << getpid() << "-" << name_ << "-" << nowVal << ".raw";
+
+    auto fp = fopen(ss.str().c_str(), "w");
+    if (fp == nullptr) {
+        BLOGE("fopen failed: (%{public}d)%{public}s", errno, strerror(errno));
+        return;
+    }
+
+    sptr<SurfaceBufferImpl>& buffer = bufferQueueCache_[sequence].buffer;
+    void *viraddr = buffer->GetVirAddr();
+
+    int size = buffer->GetSize();
+    size_t wroteByteNum = fwrite(viraddr, size, 1, fp);
+    BLOGI("fwrite wrote %{public}u byte(s)", wroteByteNum);
+
+    int ret = fclose(fp);
+    if (ret) {
+        BLOGE("fclose failed: (%{public}d)%{public}s", errno, strerror(errno));
+    }
+}
+
 SurfaceError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData &bedata,
                                         int32_t fence, const BufferFlushConfig &config)
 {
@@ -310,6 +345,9 @@ SurfaceError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData 
     } else {
         bufferQueueCache_[sequence].timestamp = config.timestamp;
     }
+#if 1
+    DumpToFile(sequence);
+#endif
     return SURFACE_ERROR_OK;
 }
 

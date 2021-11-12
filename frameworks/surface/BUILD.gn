@@ -31,6 +31,18 @@ config("surface_public_config") {
     "//foundation/graphic/standard/interfaces/innerkits/surface",
     "//foundation/graphic/standard/interfaces/innerkits/common",
   ]
+
+  if (ace_enable_gpu) {
+    defines = [
+      "ACE_ENABLE_GPU",
+      "ENABLE_EGL",
+      "EGL_NO_X11",
+    ]
+  }
+
+  cflags = [
+    "-Wno-error=deprecated-declarations",
+  ]
 }
 
 ohos_shared_library("surface") {

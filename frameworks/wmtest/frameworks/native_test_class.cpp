@@ -69,7 +69,6 @@ void NativeTestSync::Sync(int64_t, void *data)
     }
 
     sptr<SurfaceBuffer> buffer;
-    int32_t releaseFence;
     BufferRequestConfig rconfig = {
         .width = surface->GetDefaultWidth(),
         .height = surface->GetDefaultHeight(),
@@ -82,7 +81,7 @@ void NativeTestSync::Sync(int64_t, void *data)
         rconfig = *reinterpret_cast<BufferRequestConfig *>(data);
     }
 
-    SurfaceError ret = surface->RequestBuffer(buffer, releaseFence, rconfig);
+    SurfaceError ret = surface->RequestBufferNoFence(buffer, rconfig);
     if (ret == SURFACE_ERROR_NO_BUFFER) {
         RequestSync(std::bind(&NativeTestSync::Sync, this, SYNC_FUNC_ARG), data);
         return;

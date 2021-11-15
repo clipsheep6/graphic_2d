@@ -18,3 +18,5 @@ if ("${product_name}" == "rk3566" || "${product_name}" == "rk3568") {
 } else {
   ace_enable_gpu = false
 }
+
+libgl="//device/rockchip/hardware/gpu:mali-bifrost-g52-g2p0-wayland"

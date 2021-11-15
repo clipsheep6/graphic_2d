@@ -93,8 +93,7 @@ ohos_shared_library("surface") {
   ]
 
   if (ace_enable_gpu) {
-    public_deps +=
-        [ "//device/rockchip/hardware/gpu:mali-bifrost-g52-g2p0-wayland" ]
+    public_deps += [ libgl ]
   }
 
   part_name = "graphic_standard"

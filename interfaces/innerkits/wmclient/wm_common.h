@@ -142,6 +142,18 @@ struct WindowConfig {
     bool subwindow;
     FuncSync sync;
 };
+
+enum AnimationType {
+    TRANSLATION_X = 0,
+    TRANSLATION_Y = 1,
+    SCALE_X = 2,
+    ACALE_Y = 3,
+    HIDE = 4,
+    SHOW = 5,
+    ALPHA = 6,
+    BLUR = 7
+};
+
 #ifdef __cplusplus
 } // namespace OHOS
 #endif // __cplusplus

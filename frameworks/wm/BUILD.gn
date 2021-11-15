@@ -59,8 +59,6 @@ ohos_shared_library("wms_client") {
     "src/wl_subsurface_factory.cpp",
     "src/wl_surface.cpp",
     "src/wl_surface_factory.cpp",
-    "src/wp_viewport.cpp",
-    "src/wp_viewport_factory.cpp",
   ]
 
   configs = [
@@ -139,6 +137,8 @@ config("libwmclient_public_config") {
 
 ohos_shared_library("libwmclient") {
   sources = [
+    "src/animation_impl.cpp",
+    "src/animation_set_impl.cpp",
     "src/input_listener_manager.cpp",
     "src/log_listener.cpp",
     "src/singleton_container.cpp",
@@ -166,8 +166,6 @@ ohos_shared_library("libwmclient") {
     "src/wl_subsurface_factory.cpp",
     "src/wl_surface.cpp",
     "src/wl_surface_factory.cpp",
-    "src/wp_viewport.cpp",
-    "src/wp_viewport_factory.cpp",
   ]
 
   configs = [

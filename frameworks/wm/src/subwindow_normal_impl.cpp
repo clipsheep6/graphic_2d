@@ -37,11 +37,6 @@ WMError SubwindowNormalImpl::CheckAndNew(sptr<SubwindowNormalImpl> &si,
                                          const sptr<SubwindowOption> &option,
                                          sptr<WlSurface> &parent)
 {
-    if (option == nullptr) {
-        WMLOGFE("SubwindowOption is nullptr");
-        return WM_ERROR_NULLPTR;
-    }
-
     auto windowImpl = static_cast<WindowImpl *>(window.GetRefPtr());
     if (windowImpl == nullptr) {
         WMLOGFE("WindowImpl is nullptr");
@@ -74,6 +69,7 @@ WMError SubwindowNormalImpl::CreateWlSurface(sptr<SubwindowNormalImpl> &si,
     }
 
     si->wlSubsurface->SetPosition(si->attr.GetX(), si->attr.GetY());
+    si->wlSubsurface->PlaceBelow(parentWlSurface);
     si->wlSubsurface->SetDesync();
     return WM_OK;
 }
@@ -198,15 +194,20 @@ void SubwindowNormalImpl::OnSizeChange(WindowSizeChangeFunc func)
     attr.OnSizeChange(func);
 }
 
+void SubwindowNormalImpl::OnBeforeFrameSubmit(BeforeFrameSubmitFunc func)
+{
+    onBeforeFrameSubmitFunc = func;
+}
+
 namespace {
-void BufferRelease(struct wl_buffer *wbuffer)
+void BufferRelease(struct wl_buffer *wbuffer, int32_t fence)
 {
     WMLOGFI("(subwindow normal) BufferRelease");
     sptr<Surface> surface = nullptr;
     sptr<SurfaceBuffer> sbuffer = nullptr;
     if (SingletonContainer::Get<WlBufferCache>()->GetSurfaceBuffer(wbuffer, surface, sbuffer)) {
         if (surface != nullptr && sbuffer != nullptr) {
-            surface->ReleaseBuffer(sbuffer, -1);
+            surface->ReleaseBuffer(sbuffer, fence);
         }
     }
 }
@@ -219,6 +220,10 @@ void SubwindowNormalImpl::OnBufferAvailable()
     if (isDestroy == true) {
         WMLOGFI("object destroyed");
         return;
+    }
+
+    if (onBeforeFrameSubmitFunc != nullptr) {
+        onBeforeFrameSubmitFunc();
     }
 
     if (csurface == nullptr || wlSurface == nullptr) {
@@ -248,8 +253,15 @@ void SubwindowNormalImpl::OnBufferAvailable()
     }
 
     if (wbuffer) {
+        auto br = wlSurface->GetBufferRelease();
+        wbuffer->SetBufferRelease(br);
         wlSurface->Attach(wbuffer, 0, 0);
+        wlSurface->SetAcquireFence(flushFence);
         wlSurface->Damage(damage.x, damage.y, damage.w, damage.h);
+        wlSurface->SetSource(0, 0, sbuffer->GetWidth(), sbuffer->GetHeight());
+        wlSurface->SetDestination(attr.GetWidth(), attr.GetHeight());
+        WMLOGFI("(subwindow normal) Source[%{public}d x %{public}d] Dest[%{public}d x %{public}d]",
+                sbuffer->GetWidth(), sbuffer->GetHeight(), attr.GetWidth(), attr.GetHeight());
         wlSurface->Commit();
         SingletonContainer::Get<WlDisplay>()->Flush();
     }

@@ -67,8 +67,7 @@ pid_t SurfaceIPCTest::ChildProcessMain() const
     auto psurface = Surface::CreateSurfaceAsProducer(producer);
 
     sptr<SurfaceBuffer> buffer = nullptr;
-    int32_t fence;
-    auto sret = psurface->RequestBuffer(buffer, fence, requestConfig);
+    auto sret = psurface->RequestBufferNoFence(buffer, requestConfig);
     if (sret != SURFACE_ERROR_OK) {
         data = sret;
         write(pipeFd[1], &data, sizeof(data));
@@ -148,8 +147,7 @@ HWTEST_F(SurfaceIPCTest, Cache, testing::ext::TestSize.Level0)
     auto psurface = Surface::CreateSurfaceAsProducer(producer);
 
     sptr<SurfaceBuffer> buffer = nullptr;
-    int32_t fence;
-    auto sret = psurface->RequestBuffer(buffer, fence, requestConfig);
+    auto sret = psurface->RequestBufferNoFence(buffer, requestConfig);
     ASSERT_EQ(sret, SURFACE_ERROR_OK);
     ASSERT_NE(buffer, nullptr);
     int32_t int32;
@@ -163,7 +161,7 @@ HWTEST_F(SurfaceIPCTest, Cache, testing::ext::TestSize.Level0)
     ASSERT_EQ(int64, 0x345);
     ASSERT_EQ(str, "567");
 
-    sret = psurface->FlushBuffer(buffer, fence, flushConfig);
+    sret = psurface->FlushBuffer(buffer, -1, flushConfig);
     ASSERT_EQ(sret, SURFACE_ERROR_OK);
 }
 } // namespace

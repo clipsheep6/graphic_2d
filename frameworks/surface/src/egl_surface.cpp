@@ -13,25 +13,30 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_TEST_UNITTEST_WP_VIEWPORT_FACTORY_TEST_H
-#define FRAMEWORKS_WM_TEST_UNITTEST_WP_VIEWPORT_FACTORY_TEST_H
+#include <surface.h>
 
-#include <gtest/gtest.h>
-#include <window_manager.h>
+#include <hilog/log.h>
 
-#include "wp_viewport_factory.h"
+#include "buffer_log.h"
+#include "producer_egl_surface.h"
 
 namespace OHOS {
-class WpViewportFactoryTest : public testing::Test {
-public:
-    static void SetUpTestCase();
-    static void TearDownTestCase();
-    virtual void SetUp() override;
-    virtual void TearDown() override;
-
-private:
-    static inline WMError initRet = WM_ERROR_NOT_INIT;
-};
+namespace {
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "EglSurface" };
 }
 
-#endif // FRAMEWORKS_WM_TEST_UNITTEST_WP_VIEWPORT_FACTORY_TEST_H
+sptr<EglRenderSurface> EglRenderSurface::CreateEglRenderSurfaceAsProducer(sptr<IBufferProducer>& producer)
+{
+    if (producer == nullptr) {
+        BLOGE("Failure, Reason: producer is nullptr.");
+        return nullptr;
+    }
+
+    sptr<ProducerEglSurface> surface = new ProducerEglSurface(producer);
+    if (surface == nullptr) {
+        BLOGE("Failure, Reason: no memory.");
+    }
+    return surface;
+}
+
+} // namespace OHOS

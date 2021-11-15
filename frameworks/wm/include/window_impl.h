@@ -22,6 +22,7 @@
 
 #include <window_manager_service_client.h>
 
+#include "animation_impl.h"
 #include "log_listener.h"
 #include "wl_surface.h"
 #include "window_attribute.h"
@@ -37,6 +38,7 @@ public:
     sptr<WlSurface> GetWlSurface() const;
 
     virtual sptr<Surface> GetSurface() const override;
+    virtual sptr<IBufferProducer> GetProducer() const override;
     virtual int32_t       GetID() const override;
     virtual int32_t       GetX() const override;
     virtual int32_t       GetY() const override;
@@ -65,6 +67,7 @@ public:
     virtual void OnVisibilityChange(WindowVisibilityChangeFunc func) override;
     virtual void OnTypeChange(WindowTypeChangeFunc func) override;
     virtual void OnModeChange(WindowModeChangeFunc func) override;
+    virtual void OnBeforeFrameSubmit(BeforeFrameSubmitFunc func) override;
 
     // listener
     virtual WMError OnTouch(OnTouchFunc cb) override;
@@ -97,6 +100,12 @@ public:
     virtual WMError OnTouchCancel(TouchCancelFunc func) override;
     virtual WMError OnTouchShape(TouchShapeFunc func) override;
     virtual WMError OnTouchOrientation(TouchOrientationFunc func) override;
+    
+    // animation
+    virtual GSError CreateAnimation(std::shared_ptr<Animation> &animation, AnimationType type) override;
+    virtual GSError SetBorderRadius(uint32_t radius) override;
+    virtual GSError CancelAnimation() override;
+
 
 private:
     WindowImpl() = default;
@@ -127,6 +136,7 @@ private:
 
     sptr<InputListener> logListener = nullptr;
     sptr<InputListener> exportListener = nullptr;
+    BeforeFrameSubmitFunc onBeforeFrameSubmitFunc = nullptr;
 };
 } // namespace OHOS
 

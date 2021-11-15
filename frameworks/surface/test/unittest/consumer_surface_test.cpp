@@ -62,12 +62,11 @@ HWTEST_F(ConsumerSurfaceTest, QueueSize, testing::ext::TestSize.Level0)
 HWTEST_F(ConsumerSurfaceTest, ReqFluReqFlu, testing::ext::TestSize.Level0)
 {
     sptr<SurfaceBuffer> buffer;
-    int32_t releaseFence;
 
-    SurfaceError ret = cs->RequestBuffer(buffer, releaseFence, requestConfig);
+    SurfaceError ret = cs->RequestBufferNoFence(buffer, requestConfig);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
 
-    ret = ps->RequestBuffer(buffer, releaseFence, requestConfig);
+    ret = ps->RequestBufferNoFence(buffer, requestConfig);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
     ASSERT_NE(buffer, nullptr);
 
@@ -77,7 +76,7 @@ HWTEST_F(ConsumerSurfaceTest, ReqFluReqFlu, testing::ext::TestSize.Level0)
     ret = ps->FlushBuffer(buffer, -1, flushConfig);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
-    ret = ps->RequestBuffer(buffer, releaseFence, requestConfig);
+    ret = ps->RequestBufferNoFence(buffer, requestConfig);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
     ret = ps->FlushBuffer(buffer, -1, flushConfig);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
@@ -117,10 +116,10 @@ HWTEST_F(ConsumerSurfaceTest, ReqCan, testing::ext::TestSize.Level0)
     sptr<SurfaceBuffer> buffer;
     int releaseFence;
 
-    SurfaceError ret = cs->RequestBuffer(buffer, releaseFence, requestConfig);
+    SurfaceError ret = cs->RequestBufferNoFence(buffer, requestConfig);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
 
-    ret = ps->RequestBuffer(buffer, releaseFence, requestConfig);
+    ret = ps->RequestBufferNoFence(buffer, requestConfig);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
     ret = cs->CancelBuffer(buffer);
@@ -199,7 +198,7 @@ HWTEST_F(ConsumerSurfaceTest, RegisterConsumerListener, testing::ext::TestSize.L
     sptr<SurfaceBuffer> buffer;
     int releaseFence;
 
-    ret = ps->RequestBuffer(buffer, releaseFence, requestConfig);
+    ret = ps->RequestBufferNoFence(buffer, requestConfig);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
     ASSERT_NE(buffer, nullptr);
 
@@ -223,7 +222,7 @@ HWTEST_F(ConsumerSurfaceTest, RegisterConsumerListenerWithParam, testing::ext::T
     sptr<SurfaceBuffer> buffer;
     int releaseFence;
 
-    ret = ps->RequestBuffer(buffer, releaseFence, requestConfig);
+    ret = ps->RequestBufferNoFence(buffer, requestConfig);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
     ASSERT_NE(buffer, nullptr);
 

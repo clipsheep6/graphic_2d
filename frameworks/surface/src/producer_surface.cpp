@@ -90,6 +90,7 @@ SurfaceError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
         retval.buffer = bufferProducerCache_[retval.sequence];
     }
     buffer = retval.buffer;
+    fence = retval.fence;
 
     sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
     ret = BufferManager::GetInstance()->InvalidateCache(bufferImpl);

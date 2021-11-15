@@ -137,6 +137,8 @@ config("libwmclient_public_config") {
 
 ohos_shared_library("libwmclient") {
   sources = [
+    "src/animation_impl.cpp",
+    "src/animation_set_impl.cpp",
     "src/input_listener_manager.cpp",
     "src/log_listener.cpp",
     "src/singleton_container.cpp",

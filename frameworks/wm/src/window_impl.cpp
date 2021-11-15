@@ -564,6 +564,26 @@ WMError WindowImpl::OnTouchOrientation(TouchOrientationFunc func)
     return WM_OK;
 }
 
+GSError WindowImpl::CreateAnimation(std::shared_ptr<Animation> &animation, AnimationType type)
+{
+    animation = std::make_shared<AnimationImpl>(type);
+    if (animation == nullptr)
+        return GSERROR_SERVER_ERROR;
+    return GSERROR_OK;
+}
+
+GSError WindowImpl::SetBorderRadius(uint32_t radius)
+{
+    //TODO
+    return GSERROR_OK;
+}
+
+GSError WindowImpl::CancelAnimation()
+{
+    //TODO
+    return GSERROR_OK;
+}
+
 namespace {
 void BufferRelease(struct wl_buffer *wbuffer, int32_t fence)
 {

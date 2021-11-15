@@ -24,6 +24,8 @@
 #include "window_manager_type.h"
 
 namespace OHOS {
+class Animation;
+class AnimationSet;
 class Window : public RefBase {
 public:
     virtual sptr<Surface> GetSurface() const = 0;
@@ -89,6 +91,11 @@ public:
     virtual WMError OnTouchCancel(TouchCancelFunc func) = 0;
     virtual WMError OnTouchShape(TouchShapeFunc func) = 0;
     virtual WMError OnTouchOrientation(TouchOrientationFunc func) = 0;
+
+    // animation
+    virtual GSError CreateAnimation(std::shared_ptr<Animation> &animation, AnimationType type) = 0;
+    virtual GSError SetBorderRadius(uint32_t radius) = 0;
+    virtual GSError CancelAnimation() = 0;
 };
 } // namespace OHOS
 

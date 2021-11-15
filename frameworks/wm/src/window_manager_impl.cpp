@@ -214,6 +214,10 @@ WMError WindowManagerImpl::CreateSubwindow(sptr<Subwindow> &subwindow,
                                            const sptr<SubwindowOption> &option)
 {
     auto staticCall = SingletonContainer::Get<StaticCall>();
+    if (option == nullptr) {
+        return WM_ERROR_NULLPTR;
+    }
+
     if (option->GetWindowType() == SUBWINDOW_TYPE_NORMAL) {
         return staticCall->SubwindowNormalImplCreate(subwindow, window, option);
     }

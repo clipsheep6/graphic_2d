@@ -140,3 +140,12 @@
     top: 7.5%;
     height: 50%;
 }
+
+#WINDOW_TYPE_POPUP {
+    z-index: 91;
+    position: relative;
+    horizon-align: middle;
+    vertical-align: top;
+    width: 80%;
+    height: 18%;
+}

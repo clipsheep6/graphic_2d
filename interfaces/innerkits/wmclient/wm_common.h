@@ -41,6 +41,7 @@ namespace OHOS {
     macro(WINDOW_TYPE_VOLUME_OVERLAY), \
     macro(WINDOW_TYPE_NOTIFICATION_SHADE), \
     macro(WINDOW_TYPE_FLOAT), \
+    macro(WINDOW_TYPE_POPUP), \
     macro(WINDOW_TYPE_MAX),
 
 #define DEFINE_ENUM_WINDOW_TYPE(id) id

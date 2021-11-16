@@ -54,6 +54,11 @@ enum WindowMode {
     WINDOW_MODE_MAX,
 };
 
+enum DisplayType {
+    DISPLAY_TYPE_PHYSICAL = 0,
+    DISPLAY_TYPE_VIRTUAL,
+    DISPLAY_TYPE_MAX,
+};
 struct WMDisplayInfo {
     int32_t id;
     uint32_t width;
@@ -61,6 +66,7 @@ struct WMDisplayInfo {
     uint32_t phyWidth;
     uint32_t phyHeight;
     uint32_t vsync;
+    enum DisplayType type;
 };
 
 #ifdef __cplusplus

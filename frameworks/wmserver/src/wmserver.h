@@ -63,6 +63,7 @@ struct WmsScreen {
     struct wl_list wlListLink;
     struct WmsContext *pWmsCtx;
     uint32_t screenId;
+    uint32_t screenType;
     struct weston_output *westonOutput;
 };
 

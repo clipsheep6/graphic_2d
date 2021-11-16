@@ -101,6 +101,11 @@ static struct WmsContext g_wmsCtx = {0};
 static ScreenInfoChangeListener g_screenInfoChangeListener = NULL;
 static SeatInfoChangeListener g_seatInfoChangeListener = NULL;
 
+static int32_t CreateScreen(struct WmsContext *pCtx,
+                            struct weston_output *pOutput,
+                            uint32_t screenType);
+static void DestroyScreen(struct WmsScreen *pScreen);
+
 static void SendGlobalWindowStatus(const struct WmsController *pController, uint32_t window_id, uint32_t status)
 {
     LOGD("start.");
@@ -410,10 +415,6 @@ static struct WmsScreen *GetScreen(const struct WindowSurface *windowSurface)
 
 static void CalcWindowInfo(struct WindowSurface *surface)
 {
-#ifdef USE_DUMMY_SCREEN
-    int maxWidth = DUMMY_SCREEN_WIDTH;
-    int maxHeight = DUMMY_SCREEN_HEIGHT;
-#else
     struct WmsScreen *screen = GetScreen(surface);
     if (!screen) {
         LOGE("GetScreen error.");
@@ -421,7 +422,6 @@ static void CalcWindowInfo(struct WindowSurface *surface)
     }
     int maxWidth = screen->westonOutput->width;
     int maxHeight = screen->westonOutput->height;
-#endif /* USE_DUMMY_SCREEN */
 
     LayoutControllerInit(maxWidth, maxHeight);
     struct layout layout = {};
@@ -605,6 +605,84 @@ static void ControllerSetDisplayMode(struct wl_client *client,
 
     LOGD("end. displayMode %{public}d", ctx->displayMode);
 }
+
+static void ControllerCreateVirtualDisplay(struct wl_client *pWlClient,
+                                            struct wl_resource *pWlResource,
+                                            int32_t x, int32_t y,
+                                            int32_t width, int32_t height)
+{
+    LOGD("start. CreateVirtualDisplay, x:%{public}d, y:%{public}d, "
+                        "w:%{public}d, h:%{public}d", x, y, width, height);
+    struct WmsController *pWmsController = wl_resource_get_user_data(pWlResource);
+    struct WmsContext *pWmsCtx = pWmsController->pWmsCtx;
+    struct ivi_layout_interface_for_wms *pLayoutInterface = pWmsCtx->pLayoutInterface;
+    struct weston_output *pOutput = NULL;
+    struct WmsScreen *pScreen = NULL;
+
+    wl_list_for_each(pScreen, &pWmsCtx->wlListScreen, wlListLink) {
+        if (pScreen->screenType == WMS_SCREEN_TYPE_VIRTUAL) {
+            LOGE("virtual display already exists.");
+            wms_send_reply_error(pWlResource, WMS_ERROR_INVALID_PARAM);
+            return;
+        }
+    }
+    pOutput = pLayoutInterface->create_virtual_screen(x, y, width, height);
+    if (pOutput == NULL) {
+        LOGE("layout create_virtual_screen failed.");
+        wms_send_reply_error(pWlResource, WMS_ERROR_NO_MEMORY);
+        return;
+    }
+
+    if (CreateScreen(pWmsCtx, pOutput, WMS_SCREEN_TYPE_VIRTUAL) < 0) {
+        pLayoutInterface->destroy_virtual_screen(pOutput->id);
+        wms_send_reply_error(pWlResource, WMS_ERROR_NO_MEMORY);
+        return;
+    }
+
+    wms_send_screen_status(pWlResource, pOutput->id, pOutput->name, WMS_SCREEN_STATUS_ADD,
+                           pOutput->width, pOutput->height, WMS_SCREEN_TYPE_VIRTUAL);
+    wms_send_reply_error(pWlResource, WMS_ERROR_OK);
+
+    wl_list_for_each(pWmsController, &pWmsCtx->wlListController, wlListLink) {
+        wms_send_screen_status(pWmsController->pWlResource, pOutput->id, pOutput->name,
+                            WMS_SCREEN_STATUS_ADD, pOutput->width, pOutput->height,
+                            WMS_SCREEN_TYPE_VIRTUAL);
+    }
+    LOGD("end. CreateVirtualDisplay");
+}
+
+static void ControllerDestroyVirtualDisplay(struct wl_client *pWlClient,
+                                            struct wl_resource *pWlResource,
+                                            uint32_t screenID)
+{
+    LOGD("start. DestroyVirtualDisplay, screen id:%{public}d", screenID);
+    struct WmsController *pWmsController = wl_resource_get_user_data(pWlResource);
+    struct WmsContext *pWmsCtx = pWmsController->pWmsCtx;
+    struct ivi_layout_interface_for_wms *pLayoutInterface = pWmsCtx->pLayoutInterface;
+    struct WmsScreen *pScreen = NULL;
+
+    pScreen = GetScreenFromId(pWmsCtx, screenID);
+    if (!pScreen || pScreen->screenType != WMS_SCREEN_TYPE_VIRTUAL) {
+        LOGE("screen is not found[%{public}d].", screenID);
+        wms_send_reply_error(pWlResource, WMS_ERROR_INVALID_PARAM);
+        return;
+    }
+
+    pLayoutInterface->destroy_virtual_screen(screenID);
+
+    DestroyScreen(pScreen);
+
+    wms_send_screen_status(pWlResource, screenID, "", WMS_SCREEN_STATUS_REMOVE,
+                           0, 0, 0);
+    wms_send_reply_error(pWlResource, WMS_ERROR_OK);
+
+    wl_list_for_each(pWmsController, &pWmsCtx->wlListController, wlListLink) {
+        wms_send_screen_status(pWmsController->pWlResource, screenID, "",
+                            WMS_SCREEN_STATUS_REMOVE, 0, 0, 0);
+    }
+    LOGD("end. DestroyVirtualDisplay");
+}
+
 
 static void MoveWindowToLayerId(const struct WmsContext *wc,
                                 const struct WindowSurface *ws,
@@ -1671,6 +1749,8 @@ static const struct wms_interface g_controllerImplementation = {
     ControllerCommitChanges,
     ControllerScreenshot,
     ControllerWindowshot,
+    ControllerCreateVirtualDisplay,
+    ControllerDestroyVirtualDisplay,
 };
 
 static void UnbindWmsController(struct wl_resource *pResource)
@@ -1730,23 +1810,13 @@ static void BindWmsController(struct wl_client *pClient,
     wl_list_init(&pController->stListener.frameListener.link);
     wl_list_init(&pController->stListener.outputDestroyed.link);
 
+    struct WmsScreen *pScreen = NULL;
     struct weston_output *pOutput = NULL;
-    wl_list_for_each(pOutput, &pCtx->pCompositor->output_list, link) {
+    wl_list_for_each(pScreen, &pCtx->wlListScreen, wlListLink) {
+        pOutput = pScreen->westonOutput;
         wms_send_screen_status(pController->pWlResource, pOutput->id, pOutput->name, WMS_SCREEN_STATUS_ADD,
-#ifdef USE_DUMMY_SCREEN
-            DUMMY_SCREEN_WIDTH, DUMMY_SCREEN_HEIGHT);
-#else
-            pOutput->width, pOutput->height);
-#endif /* USE_DUMMY_SCREEN */
-            wl_client_flush(wl_resource_get_client(pController->pWlResource));
+                pOutput->width, pOutput->height, pScreen->screenType);
     }
-
-#ifdef USE_DUMMY_SCREEN
-    pOutput = pCtx->pLayoutInterface->get_dummy_output();
-    wms_send_screen_status(pController->pWlResource, pOutput->id, pOutput->name, WMS_SCREEN_STATUS_ADD,
-                           pOutput->width, pOutput->height);
-    wl_client_flush(wl_resource_get_client(pController->pWlResource));
-#endif /* USE_DUMMY_SCREEN */
 
     uint32_t flag = GetDisplayModeFlag(pController->pWmsCtx);
     wms_send_display_mode(pController->pWlResource, flag);
@@ -1822,7 +1892,8 @@ static void WmsControllerDestroy(struct wl_listener *listener, void *data)
 }
 
 static int32_t CreateScreen(struct WmsContext *pCtx,
-                            struct weston_output *pOutput)
+                            struct weston_output *pOutput,
+                            uint32_t screenType)
 {
     struct WmsScreen *pScreen = NULL;
 
@@ -1834,6 +1905,7 @@ static int32_t CreateScreen(struct WmsContext *pCtx,
     pScreen->pWmsCtx = pCtx;
     pScreen->westonOutput = pOutput;
     pScreen->screenId = pOutput->id;
+    pScreen->screenType = screenType;
 
     wl_list_insert(&pCtx->wlListScreen, &pScreen->wlListLink);
 
@@ -1868,7 +1940,7 @@ static void OutputCreatedEvent(struct wl_listener *listener, void *data)
     struct WmsContext *ctx = wl_container_of(listener, ctx, wlListenerOutputCreated);
     struct weston_output *createdOutput = (struct weston_output*)data;
 
-    CreateScreen(ctx, createdOutput);
+    CreateScreen(ctx, createdOutput, WMS_SCREEN_TYPE_PHYSICAL);
 
     DisplayModeUpdate(ctx);
 
@@ -1953,11 +2025,9 @@ static int WmsContextInit(struct WmsContext *ctx, struct weston_compositor *comp
     }
 
     ctx->wlListenerDestroy.notify = WmsControllerDestroy;
-#ifdef USE_DUMMY_SCREEN
-    ctx->displayMode = WMS_DISPLAY_MODE_CLONE;
-#else
-    ctx->displayMode = WMS_DISPLAY_MODE_SINGLE;
-#endif
+
+    ctx->displayMode = WMS_DISPLAY_MODE_EXPAND;
+
     wl_signal_add(&compositor->destroy_signal, &ctx->wlListenerDestroy);
 
     LayoutControllerInit(0, 0);
@@ -1977,21 +2047,12 @@ WL_EXPORT int wet_module_init(struct weston_compositor *compositor,
     }
 
     wl_list_for_each(output, &compositor->output_list, link) {
-        if (CreateScreen(ctx, output) < 0) {
+        if (CreateScreen(ctx, output, WMS_SCREEN_TYPE_PHYSICAL) < 0) {
             WmsScreenDestroy(ctx);
             free(ctx);
             return -1;
         }
     }
-
-#ifdef USE_DUMMY_SCREEN
-    output = ctx->pLayoutInterface->get_dummy_output();
-    if (CreateScreen(ctx, output) < 0) {
-        WmsScreenDestroy(ctx);
-        free(ctx);
-        return -1;
-    }
-#endif /* USE_DUMMY_SCREEN */
 
     ScreenInfoInit(compositor);
 

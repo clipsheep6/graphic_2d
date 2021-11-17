@@ -235,6 +235,27 @@ WMError WindowManagerImpl::DestroyVirtualDisplay(uint32_t did)
     return WM_OK;
 }
 
+WMError WindowManagerImpl::SetDisplayMode(WMSDisplayMode mode)
+{
+    if (wmservice == nullptr) {
+        return WM_ERROR_NOT_INIT;
+    }
+
+    auto promise = wmservice->SetDisplayMode(mode);
+    if (promise == nullptr) {
+        WMLOGFE("SetDisplayMode return nullptr promise");
+        return WM_ERROR_NEW;
+    }
+
+    auto wret = promise->Await();
+    if (wret != WM_OK) {
+        WMLOGFE("wms->SetDisplayMode failed %{public}s", WMErrorStr(wret).c_str());
+        return wret;
+    }
+
+    return WM_OK;
+}
+
 WMError WindowManagerImpl::CreateWindow(sptr<Window> &window, const sptr<WindowOption> &option)
 {
     if (option == nullptr) {

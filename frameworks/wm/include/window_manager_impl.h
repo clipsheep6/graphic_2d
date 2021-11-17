@@ -54,6 +54,7 @@ public:
 
     virtual WMError CreateVirtualDisplay(const sptr<VirtualDisplayOption> &option) override;
     virtual WMError DestroyVirtualDisplay(uint32_t did) override;
+    virtual WMError SetDisplayMode(WMSDisplayMode mode) override;
 
 private:
     WindowManagerImpl();

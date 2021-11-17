@@ -49,6 +49,7 @@ public:
 
     virtual WMError CreateVirtualDisplay(const sptr<VirtualDisplayOption> &option) = 0;
     virtual WMError DestroyVirtualDisplay(uint32_t did) = 0;
+    virtual WMError SetDisplayMode(WMSDisplayMode mode) = 0;
 };
 } // namespace OHOS
 

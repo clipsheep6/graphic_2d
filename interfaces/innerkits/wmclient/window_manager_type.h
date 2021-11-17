@@ -54,6 +54,14 @@ enum WindowMode {
     WINDOW_MODE_MAX,
 };
 
+// bitmask
+enum WMSDisplayMode {
+    WM_DISPLAY_MODE_SINGLE = 1,
+    WM_DISPLAY_MODE_CLONE = 2,
+    WM_DISPLAY_MODE_EXTEND = 4,
+    WM_DISPLAY_MODE_EXPAND = 8,
+};
+
 enum DisplayType {
     DISPLAY_TYPE_PHYSICAL = 0,
     DISPLAY_TYPE_VIRTUAL,

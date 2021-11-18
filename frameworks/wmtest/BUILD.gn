@@ -78,6 +78,7 @@ ohos_executable("wmtest") {
   if (ace_enable_gpu) {
     sources += [
       "test/wmclient_native_test_31.cpp",
+      "test/wmclient_native_test_32.cpp",
     ]
   }
 

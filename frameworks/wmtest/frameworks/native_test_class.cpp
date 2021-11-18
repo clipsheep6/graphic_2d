@@ -78,6 +78,21 @@ sptr<NativeTestSync> NativeTestSync::CreateSyncEgl(DrawFuncEgl drawFunc,
     }
     return nullptr;
 }
+sptr<NativeTestSync> NativeTestSync::CreateSyncEglRotate(DrawFuncEgl drawFunc,
+    sptr<EglRenderSurface> &peglsurface, uint32_t width, uint32_t height, void *data)
+{
+    if (drawFunc != nullptr && peglsurface != nullptr) {
+        sptr<NativeTestSync> nts = new NativeTestSync();
+        nts->drawEgl = drawFunc;
+        nts->eglsurface = peglsurface;
+        nts->width_ = width;
+        nts->height_ = height;
+        RequestSync(std::bind(&NativeTestSync::SyncEglRotate, nts, SYNC_FUNC_ARG), data);
+        return nts;
+    }
+
+    return nullptr;
+}
 
 void NativeTestSync::SyncEgl(int64_t, void *data)
 {    
@@ -94,6 +109,24 @@ void NativeTestSync::SyncEgl(int64_t, void *data)
     sret = eglsurface->SwapBuffers();
 
     RequestSync(std::bind(&NativeTestSync::SyncEgl, this, SYNC_FUNC_ARG), data);
+}
+void NativeTestSync::SyncEglRotate(int64_t, void *data)
+{
+    if (!GLContextInitRotate()) {
+        printf("GLContextInitRotate failed.\n");
+        return;
+    }
+    if (sret == SURFACE_ERROR_OK) {
+        drawEgl(&glCtx, eglsurface, width_, height_);
+        count++;
+    }
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    sret = eglsurface->SwapBuffers();
+
+    RequestSync(std::bind(&NativeTestSync::SyncEglRotate, this, SYNC_FUNC_ARG), data);
+
 }
 #endif
 
@@ -114,6 +147,24 @@ const char *g_fragShaderText =
     "varying vec4 v_color;\n"
     "void main() {\n"
     "  gl_FragColor = v_color;\n"
+    "}\n";
+
+const char *g_vertShaderTextRotate =
+    "attribute vec4 pos;\n"
+    "attribute vec4 color;\n"
+    "varying vec4 v_color;\n"
+    "uniform mat4 transform;\n"
+    "void main() {\n"
+    "  gl_Position = transform * pos;\n"
+    "  v_color = color;\n"
+    "}\n";
+
+const char *g_fragShaderTextRotate =
+    "precision mediump float;\n"
+    "varying vec4 v_color;\n"
+    "uniform float alpha;\n"
+    "void main() {\n"
+    "  gl_FragColor = v_color * alpha;\n"
     "}\n";
 
 static GLuint CreateShader(const char *source, GLenum shaderType)
@@ -201,6 +252,48 @@ bool NativeTestSync::GLContextInit()
         bInit = true;
     }
     return bInit;
+}
+
+bool NativeTestSync::GLContextInitRotate()
+{
+    if (bInitRotate) {
+        return bInitRotate;
+    }
+
+    if (eglsurface == nullptr) {
+        printf("GLContextInitRotate eglsurface is nullptr\n");
+        return bInitRotate;
+    }
+
+    if (eglsurface->InitContext() != SURFACE_ERROR_OK) {
+        printf("GLContextInitRotate InitContext failed\n");
+        return bInitRotate;
+    }
+
+    GLuint vert = CreateShader(g_vertShaderTextRotate, GL_VERTEX_SHADER);
+    GLuint frag = CreateShader(g_fragShaderTextRotate, GL_FRAGMENT_SHADER);
+    
+    glCtx.program =  CreateAndLinkProgram(vert, frag);
+
+    glDeleteShader(vert);
+    glDeleteShader(frag);
+
+    glCtx.pos = glGetAttribLocation(glCtx.program, "pos");
+    glCtx.color = glGetAttribLocation(glCtx.program, "color");
+
+    glUseProgram(glCtx.program);
+
+    glCtx.transform = glGetUniformLocation(glCtx.program, "transform");
+    glCtx.alpha = glGetUniformLocation(glCtx.program, "alpha");
+
+   if (glCtx.program == 0) {
+        printf("glCtx.program = 0.\n");
+   } else {
+       bInitRotate = true;
+   }
+
+   return bInitRotate;
+ 
 }
 #endif
 
@@ -476,5 +569,98 @@ void NativeTestDraw::FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsur
     glDisableVertexAttribArray(ctx->pos);
     glDisableVertexAttribArray(ctx->color);
 }
+namespace{
+GLfloat matrix[][4] = {
+    {1.0f, 0.0f, 0.0f, 0.0f},
+    {0.0f, 1.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 1.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f, 1.0f},
+};
+
+static const GLfloat PI = 3.14159265359;
+GLfloat angle = 0.0f;
+GLfloat alphaValue = 1.0f;
+bool right = true;
+
+void rotate(GLfloat angle)
+{
+    GLfloat const a = angle * (PI / 180.f);
+    GLfloat const c = cos(a);
+    GLfloat const s = sin(a);
+    GLfloat omc = 1.0f - cos(a);
+
+    GLfloat x = 0.0f;
+    GLfloat y = 0.0f;
+    GLfloat z = 1.0f;
+     
+    matrix[0][0] = c + x * x * omc;
+    matrix[0][1] = x * y * omc - z * s;
+    matrix[0][2] = z * x * omc + y * s;
+    matrix[0][3] = 0;
+
+    matrix[1][0] = x * y * omc + z * s;
+    matrix[1][1] = c + y * y * omc;
+    matrix[1][2] = z * y * omc - x * s;
+    matrix[2][3] = 0;
+    
+    matrix[2][0] = x * z * omc - y * s;
+    matrix[2][1] = y * z * omc + x * s;
+    matrix[2][2] = c + z * z * omc;
+    matrix[2][3] = 0;
+
+    matrix[3][0] = 0;
+    matrix[3][1] = 0;
+    matrix[3][2] = 0;
+    matrix[3][3] = 1;
+}
+} //namespace
+
+void NativeTestDraw::FlushDrawEglRotate(GlContext *ctx, sptr<EglRenderSurface> &eglsurface, uint32_t width, uint32_t height)
+{
+
+    static const GLfloat verts[4][2] = {
+        { -0.5, -0.5 },
+        { -0.5,  0.5 },
+        {  0.5, -0.5 },
+        {  0.5,  0.5 }
+    };
+    static const GLfloat colors[4][3] = {
+        { 1, 0, 0 },
+        { 0, 1, 0 },
+        { 0, 0, 1 },
+        { 1, 1, 0 }
+    };
+    
+    glViewport(0, 0, width, height);
+
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glVertexAttribPointer(ctx->pos, 2, GL_FLOAT, GL_FALSE, 0, verts);
+    glVertexAttribPointer(ctx->color, 3, GL_FLOAT, GL_FALSE, 0, colors);
+    glEnableVertexAttribArray(ctx->pos);
+    glEnableVertexAttribArray(ctx->color);
+
+    if (right) {
+        rotate(angle);
+        angle += 2.0f;
+        alphaValue -= 0.022f;
+        if (angle >= 92.0f) right = false;
+    } else {
+        rotate(angle);
+        angle -= 2.0f;
+        alphaValue += 0.022f;
+        if (angle <= -2.0f) right = true;
+    }
+
+    glUniformMatrix4fv(ctx->transform, 1, GL_FALSE, &matrix[0][0]);
+    glUniform1f(ctx->alpha, alphaValue);
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glDisableVertexAttribArray(ctx->pos);
+    glDisableVertexAttribArray(ctx->color);
+}
+
 #endif
 } // namespace OHOS

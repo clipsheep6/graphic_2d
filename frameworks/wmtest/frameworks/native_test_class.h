@@ -35,6 +35,8 @@ typedef struct {
     GLuint pos;
     GLuint color;
     GLuint offsetUniform;
+    GLuint transform;
+    GLuint alpha;
 } GlContext;
 #endif
 
@@ -55,6 +57,8 @@ public:
 #ifdef ACE_ENABLE_GPU
     static sptr<NativeTestSync> CreateSyncEgl(DrawFuncEgl drawFunc,
         sptr<EglRenderSurface> &psurface, uint32_t width, uint32_t height, void *data = nullptr);
+    static sptr<NativeTestSync> CreateSyncEglRotate(DrawFuncEgl drawFunc,
+        sptr<EglRenderSurface> &psurface, uint32_t width, uint32_t height, void *data = nullptr);
 #endif
 
 private:
@@ -66,11 +70,14 @@ private:
 
 #ifdef ACE_ENABLE_GPU
     void SyncEgl(int64_t, void *);
+    void SyncEglRotate(int64_t, void *);
     bool GLContextInit();
+    bool GLContextInitRotate();
     sptr<EglRenderSurface> eglsurface = nullptr;
     DrawFuncEgl drawEgl = nullptr;
     GlContext glCtx;
     bool bInit = false;
+    bool bInitRotate = false;
     SurfaceError sret = SURFACE_ERROR_OK;
     uint32_t width_ = 0;
     uint32_t height_ = 0;
@@ -86,6 +93,7 @@ public:
     static void BoxDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
 #ifdef ACE_ENABLE_GPU
     static void FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsurface, uint32_t width, uint32_t height);
+    static void FlushDrawEglRotate(GlContext *ctx, sptr<EglRenderSurface> &eglsurface, uint32_t width, uint32_t height);
 #endif
 };
 } // namespace OHOS

@@ -57,6 +57,7 @@ int32_t main(int32_t argc, const char **argv)
     int32_t testcase = -1;
     constexpr int32_t domainIndex = 1;
     constexpr int32_t idIndex = 2;
+    constexpr int32_t idDisplay = 3;
     std::stringstream ss(argv[idIndex]);
     ss >> testcase;
     if (!ss || testcase == -1) {
@@ -74,6 +75,11 @@ int32_t main(int32_t argc, const char **argv)
     if (found == nullptr) {
         printf("not found test %d\n", testcase);
         return 1;
+    }
+
+    if (argc == 4){
+        std::stringstream s(argv[idDisplay]);
+        s >> INativeTest::displayID;
     }
 
     auto runner = AppExecFwk::EventRunner::Create(false);

@@ -38,7 +38,7 @@ public:
 
 private:
     BufferManager() = default;
-    virtual ~BufferManager();
+    ~BufferManager() = default;
     static inline sptr<BufferManager> instance = nullptr;
 
     std::unique_ptr<::OHOS::HDI::Display::V1_0::IDisplayGralloc> displayGralloc_ = nullptr;

@@ -45,6 +45,10 @@ public:
     SurfaceError FlushBuffer(int32_t sequence, BufferExtraData &bedata,
                              int32_t fence, BufferFlushConfig &config) override;
 
+    SurfaceError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
+    SurfaceError DetachBuffer(sptr<SurfaceBuffer>& buffer) override;
+    SurfaceError RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> func) override;
+
     uint32_t     GetQueueSize() override;
     SurfaceError SetQueueSize(uint32_t queueSize) override;
 
@@ -67,7 +71,9 @@ private:
     int32_t GetDefaultHeightRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetDefaultUsageRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t CleanCacheRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
-
+    int32_t AttachBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
+    int32_t DetachBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
+    int32_t RegisterReleaseListenerRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     using BufferQueueProducerFunc = int32_t (BufferQueueProducer::*)(MessageParcel &arguments,
         MessageParcel &reply, MessageOption &option);
     std::map<uint32_t, BufferQueueProducerFunc> memberFuncMap_;

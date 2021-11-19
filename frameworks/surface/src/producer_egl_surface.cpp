@@ -65,6 +65,7 @@ ProducerEglSurface::~ProducerEglSurface()
 SurfaceError ProducerEglSurface::RequestBuffer(sptr<SurfaceBuffer> &buffer,
     int32_t& fence, BufferRequestConfig &config)
 {
+    BLOGNW("ProducerEglSurface-REQUESTBUFFER===%{public}s, %{public}d", __func__, __LINE__);
     IBufferProducer::RequestBufferReturnValue retval;
     BufferExtraDataImpl bedataimpl;
     retval.fence = EGL_NO_NATIVE_FENCE_FD_ANDROID;

@@ -34,6 +34,7 @@ void WlBuffer::FencedRelease(void *data, struct zwp_linux_buffer_release_v1 *rel
 {
     auto wb = reinterpret_cast<WlBuffer *>(data);
     if (wb->onRelease != nullptr) {
+        WMLOG_D("+++++ FencedRelease %{public}d +++++", fence);
         wb->onRelease(wb->buffer, fence);
         zwp_linux_buffer_release_v1_destroy(release);
         wb->release = nullptr;

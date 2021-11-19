@@ -34,6 +34,8 @@ enum BufferState {
     BUFFER_STATE_REQUESTED,
     BUFFER_STATE_FLUSHED,
     BUFFER_STATE_ACQUIRED,
+    BUFFER_STATE_ATTACHED,
+    BUFFER_STATE_DETACHED,
 };
 
 typedef struct {
@@ -78,6 +80,7 @@ public:
 
     SurfaceError RegisterConsumerListener(sptr<IBufferConsumerListener>& listener);
     SurfaceError RegisterConsumerListener(IBufferConsumerListenerClazz *listener);
+    SurfaceError RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> func);
     SurfaceError UnregisterConsumerListener();
 
     SurfaceError SetDefaultWidthAndHeight(int32_t width, int32_t height);
@@ -87,6 +90,9 @@ public:
     uint32_t GetDefaultUsage();
 
     SurfaceError CleanCache();
+
+    SurfaceError DetachBuffer(sptr<SurfaceBufferImpl>& buffer);
+    SurfaceError AttachBuffer(sptr<SurfaceBufferImpl>& buffer);
 
 private:
     SurfaceError AllocBuffer(sptr<SurfaceBufferImpl>& buffer, const BufferRequestConfig &config);
@@ -114,7 +120,8 @@ private:
     sptr<IBufferConsumerListener> listener_ = nullptr;
     IBufferConsumerListenerClazz *listenerClazz_ = nullptr;
     std::mutex mutex_;
-    sptr<BufferManager> buffer_manager = nullptr;
+    sptr<BufferManager> bufferManager = nullptr;
+    std::function<SurfaceError(sptr<SurfaceBuffer>)> onBufferRelease = nullptr;
 };
 }; // namespace OHOS
 

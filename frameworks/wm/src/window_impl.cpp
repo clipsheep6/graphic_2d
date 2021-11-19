@@ -579,6 +579,7 @@ void BufferRelease(struct wl_buffer *wbuffer, int32_t fence)
     sptr<SurfaceBuffer> sbuffer = nullptr;
     if (SingletonContainer::Get<WlBufferCache>()->GetSurfaceBuffer(wbuffer, surface, sbuffer)) {
         if (surface != nullptr && sbuffer != nullptr) {
+            WMLOG_D("+++++ flushFence BUFFERRELEASE : %{public}d +++++", fence);
             surface->ReleaseBuffer(sbuffer, fence);
         }
     }
@@ -599,6 +600,7 @@ void WindowImpl::OnBufferAvailable()
     int64_t timestamp;
     Rect damage;
     auto sret = csurface->AcquireBuffer(sbuffer, flushFence, timestamp, damage);
+    WMLOG_D("+++++ flushFence1 : %{public}d +++++", flushFence);
     if (sret != SURFACE_ERROR_OK) {
         WMLOGFE("AcquireBuffer failed");
         return;
@@ -627,6 +629,7 @@ void WindowImpl::OnBufferAvailable()
         auto br = wlSurface->GetBufferRelease();
         wbuffer->SetBufferRelease(br);
         wlSurface->Attach(wbuffer, 0, 0);
+        WMLOG_D("+++++ flushFence1 : %{public}d +++++", flushFence);
         wlSurface->SetAcquireFence(flushFence);
         wlSurface->Damage(damage.x, damage.y, damage.w, damage.h);
         wlSurface->SetSource(0, 0, sbuffer->GetWidth(), sbuffer->GetHeight());

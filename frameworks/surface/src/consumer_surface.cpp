@@ -109,6 +109,24 @@ SurfaceError ConsumerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t
     return ret;
 }
 
+SurfaceError ConsumerSurface::DetachBuffer(sptr<SurfaceBuffer>& buffer){
+    SurfaceError ret;
+    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
+    BLOGND("======= ConsumerSurface::DetachBuffer ======");
+    ret = consumer_->DetachBuffer(bufferImpl);
+    buffer = bufferImpl;
+    return ret;
+}
+
+SurfaceError ConsumerSurface::AttachBuffer(sptr<SurfaceBuffer>& buffer){
+    SurfaceError ret;
+    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
+    BLOGND("======= ConsumerSurface::AttachBuffer ======");
+    ret = consumer_->AttachBuffer(bufferImpl);
+    buffer = bufferImpl;
+    return ret;
+}
+
 SurfaceError ConsumerSurface::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence)
 {
     SurfaceError ret;
@@ -118,7 +136,7 @@ SurfaceError ConsumerSurface::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t
     return ret;
 }
 
-uint32_t     ConsumerSurface::GetQueueSize()
+uint32_t ConsumerSurface::GetQueueSize()
 {
     return producer_->GetQueueSize();
 }
@@ -187,6 +205,11 @@ SurfaceError ConsumerSurface::RegisterConsumerListener(IBufferConsumerListenerCl
     return consumer_->RegisterConsumerListener(listener);
 }
 
+SurfaceError ConsumerSurface::RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> func)
+{
+    BLOGND("====== ConsumerSurface::RegisterReleaseListener======");
+    return consumer_->RegisterReleaseListener(func);
+}
 SurfaceError ConsumerSurface::UnregisterConsumerListener()
 {
     return consumer_->UnregisterConsumerListener();

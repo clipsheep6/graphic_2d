@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <functional>
 
 #include <iremote_broker.h>
 
@@ -42,6 +43,10 @@ public:
     virtual SurfaceError FlushBuffer(int32_t sequence, BufferExtraData &bedata,
                                      int32_t fence, BufferFlushConfig &config) = 0;
 
+    virtual SurfaceError DetachBuffer(sptr<SurfaceBuffer>& buffer) =0;
+    virtual SurfaceError AttachBuffer(sptr<SurfaceBuffer>& buffer) = 0;
+    virtual SurfaceError RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> func) = 0;
+    
     virtual uint32_t     GetQueueSize() = 0;
     virtual SurfaceError SetQueueSize(uint32_t queueSize) = 0;
 
@@ -67,6 +72,9 @@ protected:
         BUFFER_PRODUCER_GET_DEFAULT_HEIGHT = 7,
         BUFFER_PRODUCER_GET_DEFAULT_USAGE = 8,
         BUFFER_PRODUCER_CLEAN_CACHE = 9,
+        BUFFER_PRODUCER_DETACH_BUFFER = 10,
+        BUFFER_PRODUCER_ATTACH_BUFFER = 11,
+        BUFFER_PRODUCER_REGISTER_RELEASE_LISTENER = 12,
     };
 };
 } // namespace OHOS

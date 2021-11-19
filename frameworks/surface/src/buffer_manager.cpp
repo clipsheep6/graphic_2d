@@ -17,6 +17,7 @@
 
 #include <cerrno>
 #include <sys/mman.h>
+#include <mutex>
 
 #include "buffer_log.h"
 
@@ -63,11 +64,17 @@ inline SurfaceError GenerateError(SurfaceError err, int32_t code)
     return GenerateError(err, static_cast<DispErrCode>(code));
 }
 } // namespace
-
-BufferManager *BufferManager::GetInstance()
+sptr<BufferManager> BufferManager::GetInstance()
 {
-    static BufferManager instance {};
-    return &instance;
+    if (instance == nullptr) {
+        static std::mutex mutex;
+        std::lock_guard<std::mutex> lock(mutex);
+        if (instance == nullptr) {
+            instance = new BufferManager();
+        }
+    }
+
+    return instance;
 }
 
 SurfaceError BufferManager::Init()

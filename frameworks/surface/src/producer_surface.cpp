@@ -65,6 +65,7 @@ sptr<IBufferProducer> ProducerSurface::GetProducer() const
 SurfaceError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
                                             int32_t &fence, BufferRequestConfig &config)
 {
+    BLOGNI("ProducerSurface-REQUESTBUFFER===%{public}s, %{public}d", __func__, __LINE__);
     fence = -1;
     return RequestBufferNoFence(buffer, config);
 }
@@ -72,6 +73,7 @@ SurfaceError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
 SurfaceError ProducerSurface::RequestBufferNoFence(sptr<SurfaceBuffer>& buffer,
                                                    BufferRequestConfig &config)
 {
+    BLOGNI("ProducerSurface-REQUESTBUFFERNoFENCE===%{public}s, %{public}d", __func__, __LINE__);
     int32_t releaseFence = -1;
     auto sret = RequestBufferWithFence(buffer, releaseFence, config);
     if (sret == SURFACE_ERROR_OK && releaseFence >= 0) {
@@ -84,6 +86,7 @@ SurfaceError ProducerSurface::RequestBufferNoFence(sptr<SurfaceBuffer>& buffer,
 SurfaceError ProducerSurface::RequestBufferWithFence(sptr<SurfaceBuffer>& buffer,
                                                      int32_t &fence, BufferRequestConfig &config)
 {
+    BLOGNI("ProducerSurface-REQUESTBUFFERWITHFENCE===%{public}s, %{public}d", __func__, __LINE__);
     IBufferProducer::RequestBufferReturnValue retval;
     BufferExtraDataImpl bedataimpl;
     SurfaceError ret = GetProducer()->RequestBuffer(config, bedataimpl, retval);
@@ -172,6 +175,32 @@ SurfaceError ProducerSurface::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
+SurfaceError ProducerSurface::DetachBuffer(sptr<SurfaceBuffer>& buffer)
+{
+    //return SURFACE_ERROR_NOT_SUPPORT;
+    if (buffer == nullptr) {
+        return SURFACE_ERROR_NULLPTR;
+    }
+    SurfaceError ret;
+    // sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
+    ret = GetProducer()->DetachBuffer(buffer);
+    // buffer = bufferImpl;
+    return ret;
+}
+
+SurfaceError ProducerSurface::AttachBuffer(sptr<SurfaceBuffer>& buffer)
+{
+    //return SURFACE_ERROR_NOT_SUPPORT;
+    if (buffer == nullptr) {
+        return SURFACE_ERROR_NULLPTR;
+    }
+
+    // auto bufferImpl = SurfaceBufferImpl::FromBase(buffer);
+    // BufferExtraDataImpl bedataimpl;
+    // bufferImpl->GetExtraData(bedataimpl);
+    return GetProducer()->AttachBuffer(buffer);
+}
+
 uint32_t     ProducerSurface::GetQueueSize()
 {
     return producer_->GetQueueSize();
@@ -242,6 +271,11 @@ SurfaceError ProducerSurface::RegisterConsumerListener(IBufferConsumerListenerCl
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
+SurfaceError ProducerSurface::RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> fun)
+{
+    BLOGND("======= ProducerSurface::RegisterReleaseListener======");
+    return GetProducer()->RegisterReleaseListener(fun);
+}
 SurfaceError ProducerSurface::UnregisterConsumerListener()
 {
     return SURFACE_ERROR_NOT_SUPPORT;

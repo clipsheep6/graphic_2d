@@ -13,62 +13,73 @@
  * limitations under the License.
  */
 
-#include "graphic_dumper_client_listener_proxy.h"
+#include "ipc/graphic_dumper_service_proxy.h"
 
 #include <message_option.h>
 #include <message_parcel.h>
 
 #include "graphic_dumper_hilog.h"
-#include "graphic_dumper_type.h"
+
 
 namespace OHOS {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "GraphicDumperClientListenerProxy" };
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "GraphicDumperServiceProxy" };
 }
 
-GraphicDumperClientListenerProxy::GraphicDumperClientListenerProxy(const sptr<IRemoteObject>& impl)
-    : IRemoteProxy<IGraphicDumperClientListener>(impl)
+GraphicDumperServiceProxy::GraphicDumperServiceProxy(const sptr<IRemoteObject>& impl)
+    : IRemoteProxy<IGraphicDumperService>(impl)
 {
 }
 
-void GraphicDumperClientListenerProxy::OnConfigChange(const std::string &tag, const std::string &val)
+GDError GraphicDumperServiceProxy::AddClientListener(const std::string &tag,
+                                                     sptr<IGraphicDumperClientListener> &listener)
 {
+    if (listener == nullptr) {
+        GDLOG_FAILURE_NO(GD_ERROR_NULLPTR);
+        return GD_ERROR_NULLPTR;
+    }
+
     MessageOption opt;
     MessageParcel arg;
     MessageParcel ret;
-    GDLOGFI("%{public}s -> %{public}s", tag.c_str(), val.c_str());
 
     if (!arg.WriteInterfaceToken(GetDescriptor())) {
         GDLOGE("write interface token failed");
     }
-
     arg.WriteString(tag);
-    arg.WriteString(val);
-    int result = Remote()->SendRequest(IGRAPHIC_DUMPER_CLIENT_LISTENER_ON_CONFIG_CHANGE, arg, ret, opt);
+    arg.WriteRemoteObject(listener->AsObject());
+
+    int result = Remote()->SendRequest(IGRAPHIC_DUMPER_SERVICE_ADD_CLIENT_LISTENER, arg, ret, opt);
     if (result) {
         GDLOG_ERROR_API(result, SendRequest);
-        return;
+        return GD_ERROR_BINDER_ERROR;
     }
-    return;
+
+    GDError err = (GDError)ret.ReadInt32();
+    if (err != GD_OK) {
+        GDLOG_FAILURE_NO(err);
+    }
+
+    return err;
 }
 
-void GraphicDumperClientListenerProxy::OnDump(const std::string &tag)
+GDError GraphicDumperServiceProxy::SendInfo(const std::string &tag, const std::string &info)
 {
     MessageOption opt;
     MessageParcel arg;
     MessageParcel ret;
-    GDLOGFI("%{public}s", tag.c_str());
 
     if (!arg.WriteInterfaceToken(GetDescriptor())) {
         GDLOGE("write interface token failed");
     }
-
     arg.WriteString(tag);
-    int result = Remote()->SendRequest(IGRAPHIC_DUMPER_CLIENT_LISTENER_ON_DUMP, arg, ret, opt);
+    arg.WriteString(info);
+    GDLOGE("SendInfo SendRequest !!!!!");
+    int result = Remote()->SendRequest(IGRAPHIC_DUMPER_SERVICE_SEND_INFO, arg, ret, opt);
     if (result) {
         GDLOG_ERROR_API(result, SendRequest);
-        return;
+        return GD_ERROR_BINDER_ERROR;
     }
-    return;
+    return GD_OK;
 }
 } // namespace OHOS

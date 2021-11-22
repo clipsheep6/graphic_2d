@@ -26,9 +26,10 @@
 #include <unistd.h>
 #include <zlib.h>
 
-#include "graphic_dumper_command.h"
+#include "ipc/graphic_dumper_command.h"
+#include "ipc/graphic_dumper_death_recipient.h"
 #include "graphic_dumper_hilog.h"
-#include "graphic_dumper_service.h"
+#include "ipc/graphic_dumper_service.h"
 #include "graphic_dumper_util.h"
 
 namespace OHOS {

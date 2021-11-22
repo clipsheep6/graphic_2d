@@ -23,7 +23,7 @@
 
 #include <refbase.h>
 
-#include "igraphic_dumper_client_listener.h"
+#include "ipc/igraphic_dumper_client_listener.h"
 
 namespace OHOS {
 class TreeNode;

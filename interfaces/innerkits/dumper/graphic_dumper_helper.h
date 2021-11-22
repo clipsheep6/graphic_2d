@@ -18,7 +18,8 @@
 
 #include <refbase.h>
 
-#include "graphic_dumper_type.h"
+//#include "graphic_dumper_type.h"
+#include "graphic_common.h"
 
 namespace OHOS {
 using OnConfigChangeFunc = std::function<void(const std::string &, const std::string &)>;

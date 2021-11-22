@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "graphic_dumper_service.h"
+#include "ipc/graphic_dumper_service.h"
 
 #include "graphic_dumper_hilog.h"
 #include "graphic_dumper_server.h"

@@ -19,8 +19,8 @@
 #include <promise.h>
 #include <string>
 
-#include "graphic_dumper_info_listener_stub.h"
-#include "igraphic_dumper_command.h"
+#include "ipc/graphic_dumper_info_listener_stub.h"
+#include "ipc/igraphic_dumper_command.h"
 
 namespace OHOS {
 using DumperArgs = struct {

@@ -39,11 +39,11 @@ config("graphic_dumper_client_public_config") {
 
 ohos_shared_library("libgraphic_dumper_client") {
   sources = [
-    "src/graphic_dumper_client_listener_stub.cpp",
+    "src/ipc/graphic_dumper_client_listener_stub.cpp",
     "src/graphic_dumper_helper.cpp",
     "src/graphic_dumper_helper_c.cpp",
     "src/graphic_dumper_helper_impl.cpp",
-    "src/graphic_dumper_service_proxy.cpp",
+    "src/ipc/graphic_dumper_service_proxy.cpp",
 ]
 
   configs = [ ":graphic_dumper_client_config" ]
@@ -87,12 +87,13 @@ ohos_executable("graphic_dumper_server") {
   install_enable = true
 
   sources = [
-    "src/graphic_dumper_client_listener_proxy.cpp",
-    "src/graphic_dumper_command.cpp",
-    "src/graphic_dumper_info_listener_proxy.cpp",
+    "src/ipc/graphic_dumper_client_listener_proxy.cpp",
+    "src/ipc/graphic_dumper_command.cpp",
+    "src/ipc/graphic_dumper_death_recipient.cpp",
+    "src/ipc/graphic_dumper_info_listener_proxy.cpp",
     "src/graphic_dumper_server_main.cpp",
     "src/graphic_dumper_server.cpp",
-    "src/graphic_dumper_service.cpp",
+    "src/ipc/graphic_dumper_service.cpp",
     "src/graphic_dumper_tree.cpp",
     "src/graphic_dumper_util.cpp",
   ]
@@ -141,8 +142,8 @@ ohos_executable("gdumper") {
   sources = [
     "src/graphic_dumper_command_line.cpp",
     "src/graphic_dumper_command_line_main.cpp",
-    "src/graphic_dumper_command_proxy.cpp",
-    "src/graphic_dumper_info_listener_stub.cpp",
+    "src/ipc/graphic_dumper_command_proxy.cpp",
+    "src/ipc/graphic_dumper_info_listener_stub.cpp",
     "src/graphic_dumper_util.cpp",
   ]
 

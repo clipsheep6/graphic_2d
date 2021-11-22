@@ -16,17 +16,22 @@
 #ifndef FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_CLIENT_LISTENER_STUB_H
 #define FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_CLIENT_LISTENER_STUB_H
 
-#include <iremote_stub.h>
-#include <message_parcel.h>
-#include <message_option.h>
+#include <iremote_object.h>
+#include <iremote_proxy.h>
 
-#include "igraphic_dumper_client_listener.h"
+#include "ipc/igraphic_dumper_client_listener.h"
 
 namespace OHOS {
-class GraphicDumperClientListenerStub : public IRemoteStub<IGraphicDumperClientListener> {
+class GraphicDumperClientListenerProxy : public IRemoteProxy<IGraphicDumperClientListener> {
 public:
-    virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel& data,
-                            MessageParcel& reply, MessageOption& option) override;
+    GraphicDumperClientListenerProxy(const sptr<IRemoteObject>& impl);
+    virtual ~GraphicDumperClientListenerProxy() = default;
+
+    void OnConfigChange(const std::string &tag, const std::string &val) override;
+    void OnDump(const std::string &tag) override;
+
+private:
+    static inline BrokerDelegator<GraphicDumperClientListenerProxy> delegator_;
 };
 } // namespace OHOS
 

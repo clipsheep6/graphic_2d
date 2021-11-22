@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
-#include "graphic_dumper_client_listener_stub.h"
+#include "ipc/graphic_dumper_info_listener_stub.h"
 
 #include "graphic_dumper_hilog.h"
-#include "graphic_dumper_type.h"
+//#include "graphic_dumper_type.h"
+#include "graphic_common.h"
 
 #define REMOTE_RETURN(reply, gd_error) \
     reply.WriteInt32(gd_error);        \
@@ -27,10 +28,10 @@
 
 namespace OHOS {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "GraphicDumperClientListenerStub" };
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "GraphicDumperInfoListenerStub" };
 }
 
-int32_t GraphicDumperClientListenerStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
+int32_t GraphicDumperInfoListenerStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
                             MessageParcel& reply, MessageOption& option)
 {
     auto remoteDescriptor = data.ReadInterfaceToken();
@@ -39,16 +40,9 @@ int32_t GraphicDumperClientListenerStub::OnRemoteRequest(uint32_t code, MessageP
     }
 
     switch (code) {
-        case IGRAPHIC_DUMPER_CLIENT_LISTENER_ON_CONFIG_CHANGE: {
-            std::string tag = data.ReadString();
-            std::string val = data.ReadString();
-            GDLOGI("%{public}s -> %{public}s", tag.c_str(), val.c_str());
-            OnConfigChange(tag, val);
-            REMOTE_RETURN(reply, GD_OK);
-        } break;
-        case IGRAPHIC_DUMPER_CLIENT_LISTENER_ON_DUMP: {
-            std::string val = data.ReadString();
-            OnDump(val);
+        case IGRAPHIC_DUMPER_INFO_LISTENER_ON_INFO_COMING: {
+            std::string info = data.ReadString();
+            OnInfoComing(info);
             REMOTE_RETURN(reply, GD_OK);
         } break;
 

@@ -13,13 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef INTERFACES_INNERKITS_DUMPER_GRAPHIC_DUMPER_TYPE_H
-#define INTERFACES_INNERKITS_DUMPER_GRAPHIC_DUMPER_TYPE_H
-
-#include <graphic_common.h>
+#include "ipc/graphic_dumper_death_recipient.h"
+#include "graphic_dumper_server.h"
+#include "ipc/igraphic_dumper_command.h"
+#include "graphic_common.h"
+#include "graphic_dumper_hilog.h"
 
 namespace OHOS {
-constexpr int LOG_SIZE_MAX = 1024;
-} // namespace OHOS
 
-#endif // INTERFACES_INNERKITS_DUMPER_GRAPHIC_DUMPER_TYPE_H
+void GDumperInfoListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
+{
+    if (object == nullptr) {
+        return;
+    }
+    GraphicDumperServer::GetInstance()->RemoveInfoListener(object);
+}
+} // namespace OHOS

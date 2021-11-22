@@ -27,10 +27,10 @@
 #include <refbase.h>
 
 #include "graphic_dumper_tree.h"
-#include "igraphic_dumper_client_listener.h"
-#include "igraphic_dumper_command.h"
-#include "igraphic_dumper_info_listener.h"
-#include "igraphic_dumper_service.h"
+#include "ipc/igraphic_dumper_client_listener.h"
+#include "ipc/igraphic_dumper_command.h"
+#include "ipc/igraphic_dumper_info_listener.h"
+#include "ipc/igraphic_dumper_service.h"
 
 namespace OHOS {
 struct LogBuffer {

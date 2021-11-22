@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
-#include "graphic_dumper_command.h"
+#include "ipc/graphic_dumper_command.h"
 
 #include "graphic_dumper_hilog.h"
 #include "graphic_dumper_server.h"
-#include "graphic_dumper_type.h"
-#include "igraphic_dumper_command.h"
+//#include "graphic_dumper_type.h"
+#include "ipc/igraphic_dumper_command.h"
+#include "graphic_common.h"
 
 #define REMOTE_RETURN(reply, gd_error) \
     reply.WriteInt32(gd_error);        \
@@ -125,14 +126,5 @@ GDError GraphicDumperCommand::AddInfoListener(const std::string &tag, sptr<IGrap
         return GD_ERROR_NULLPTR;
     }
     return GraphicDumperServer::GetInstance()->AddInfoListener(listener);
-}
-
-void GDumperInfoListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
-{
-    if (object == nullptr) {
-        return;
-    }
-    GDLOGFE("");
-    GraphicDumperServer::GetInstance()->RemoveInfoListener(object);
 }
 } // namespace OHOS

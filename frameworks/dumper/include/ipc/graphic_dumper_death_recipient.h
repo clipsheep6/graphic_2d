@@ -13,21 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_INFO_LISTENER_STUB_H
-#define FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_INFO_LISTENER_STUB_H
+#ifndef FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_DEATH_RECIPIENT_H
+#define FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_DEATH_RECIPIENT_H
 
 #include <iremote_stub.h>
 #include <message_parcel.h>
 #include <message_option.h>
 
-#include "igraphic_dumper_info_listener.h"
+#include "ipc/igraphic_dumper_command.h"
 
 namespace OHOS {
-class GraphicDumperInfoListenerStub : public IRemoteStub<IGraphicDumperInfoListener> {
+class GDumperInfoListenerDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
-    virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel& data,
-                            MessageParcel& reply, MessageOption& option) override;
+    GDumperInfoListenerDeathRecipient() = default;
+    virtual ~GDumperInfoListenerDeathRecipient() = default;
+    void OnRemoteDied(const wptr<IRemoteObject> &object) override;
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_INFO_LISTENER_STUB_H
+#endif // FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_COMMAND_H

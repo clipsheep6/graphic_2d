@@ -23,7 +23,7 @@
 #include <message_parcel.h>
 #include <message_option.h>
 
-#include "igraphic_dumper_service.h"
+#include "ipc/igraphic_dumper_service.h"
 
 namespace OHOS {
 class GraphicDumperService : public IRemoteStub<IGraphicDumperService> {

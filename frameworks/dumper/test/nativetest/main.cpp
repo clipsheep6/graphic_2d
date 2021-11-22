@@ -20,7 +20,8 @@
 
 #include "graphic_dumper_helper.h"
 #include "graphic_dumper_hilog.h"
-#include "graphic_dumper_type.h"
+//#include "graphic_dumper_type.h"
+#include "graphic_common.h"
 
 using namespace OHOS;
 

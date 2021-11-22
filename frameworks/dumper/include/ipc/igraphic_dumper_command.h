@@ -20,7 +20,8 @@
 
 #include <iremote_broker.h>
 
-#include "graphic_dumper_type.h"
+//#include "graphic_dumper_type.h"
+#include "graphic_common.h"
 #include "igraphic_dumper_info_listener.h"
 
 namespace OHOS {

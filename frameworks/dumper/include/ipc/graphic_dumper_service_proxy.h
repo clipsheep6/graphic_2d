@@ -19,7 +19,7 @@
 #include <iremote_object.h>
 #include <iremote_proxy.h>
 
-#include "igraphic_dumper_service.h"
+#include "ipc/igraphic_dumper_service.h"
 
 namespace OHOS {
 class GraphicDumperServiceProxy : public IRemoteProxy<IGraphicDumperService> {

@@ -25,7 +25,7 @@
 #include <unistd.h>
 
 #include "graphic_dumper_hilog.h"
-#include "igraphic_dumper_command.h"
+#include "ipc/igraphic_dumper_command.h"
 
 #define RET_IF_NOT_OK(ret)    \
     do {                      \

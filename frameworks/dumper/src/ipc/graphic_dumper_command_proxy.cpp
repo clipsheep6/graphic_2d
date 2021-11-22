@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "graphic_dumper_command_proxy.h"
+#include "ipc/graphic_dumper_command_proxy.h"
 
 #include <message_option.h>
 #include <message_parcel.h>

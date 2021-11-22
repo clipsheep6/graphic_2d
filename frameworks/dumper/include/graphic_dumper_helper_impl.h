@@ -24,8 +24,8 @@
 
 #include <graphic_dumper_helper.h>
 
-#include "graphic_dumper_service_proxy.h"
-#include "graphic_dumper_client_listener_stub.h"
+#include "ipc/graphic_dumper_service_proxy.h"
+#include "ipc/graphic_dumper_client_listener_stub.h"
 
 namespace OHOS {
 namespace {

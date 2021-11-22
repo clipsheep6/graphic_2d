@@ -20,8 +20,9 @@
 
 #include <iremote_broker.h>
 
-#include "graphic_dumper_type.h"
-#include "igraphic_dumper_client_listener.h"
+//#include "graphic_dumper_type.h"
+#include "graphic_common.h"
+#include "ipc/igraphic_dumper_client_listener.h"
 
 namespace OHOS {
 class IGraphicDumperService : public IRemoteBroker {

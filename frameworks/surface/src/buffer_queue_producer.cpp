@@ -186,6 +186,16 @@ int BufferQueueProducer::GetNameRemote(MessageParcel &arguments, MessageParcel &
     return 0;
 }
 
+int32_t BufferQueueProducer::GetSharedRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
+{
+    return 0;
+}
+
+int32_t BufferQueueProducer::SetSharedRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
+{
+    return 0;
+}
+
 int BufferQueueProducer::GetDefaultWidthRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
 {
     reply.WriteInt32(GetDefaultWidth());
@@ -321,6 +331,23 @@ SurfaceError BufferQueueProducer::GetName(std::string &name)
         return SURFACE_ERROR_NULLPTR;
     }
     return bufferQueue_->GetName(name);
+}
+
+bool BufferQueueProducer::GetShared()
+{
+    if (bufferQueue_ == nullptr) {
+        return SURFACE_ERROR_NULLPTR;
+    }
+    return bufferQueue_->GetShared();
+}
+
+SurfaceError BufferQueueProducer::SetShared(bool isShared)
+{
+    BLOGD("BufferQueueProducer::SetShared");
+    if (bufferQueue_ == nullptr) {
+        return SURFACE_ERROR_NULLPTR;
+    }
+    return bufferQueue_->SetShared(isShared);
 }
 
 int32_t BufferQueueProducer::GetDefaultWidth()

@@ -184,6 +184,18 @@ SurfaceError BufferClientProducer::GetName(std::string &name)
     return static_cast<SurfaceError>(ret);
 }
 
+bool BufferClientProducer::GetShared()
+{
+    BLOGND("BufferClientProducer::GetShared");
+    return SURFACE_ERROR_NOT_SUPPORT;
+}
+
+SurfaceError BufferClientProducer::SetShared(bool isShared)
+{
+    BLOGND("BufferClientProducer::SetShared");
+    return SURFACE_ERROR_NOT_SUPPORT;
+}
+
 int32_t BufferClientProducer::GetDefaultWidth()
 {
     DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);

@@ -36,6 +36,7 @@ enum BufferState {
     BUFFER_STATE_ACQUIRED,
     BUFFER_STATE_ATTACHED,
     BUFFER_STATE_DETACHED,
+    BUFFER_STATE_SHARED,
 };
 
 typedef struct {
@@ -77,6 +78,9 @@ public:
     SurfaceError SetQueueSize(uint32_t queueSize);
 
     SurfaceError GetName(std::string &name);
+
+    SurfaceError SetShared(bool isShared);
+    bool GetShared();
 
     SurfaceError RegisterConsumerListener(sptr<IBufferConsumerListener>& listener);
     SurfaceError RegisterConsumerListener(IBufferConsumerListenerClazz *listener);
@@ -122,6 +126,7 @@ private:
     std::mutex mutex_;
     sptr<BufferManager> bufferManager = nullptr;
     std::function<SurfaceError(sptr<SurfaceBuffer>)> onBufferRelease = nullptr;
+    bool isShared_ = false;
 };
 }; // namespace OHOS
 

@@ -152,6 +152,17 @@ SurfaceError ConsumerSurface::GetName(std::string &name)
     return SURFACE_ERROR_OK;
 }
 
+bool ConsumerSurface::GetShared()
+{
+    return producer_->GetShared();
+}
+
+SurfaceError ConsumerSurface::SetShared(bool isShared)
+{
+    BLOGD("ConsumerSurface::SetShared");
+    return producer_->SetShared(isShared);
+}
+
 SurfaceError ConsumerSurface::SetDefaultWidthAndHeight(int32_t width, int32_t height)
 {
     return consumer_->SetDefaultWidthAndHeight(width, height);

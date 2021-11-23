@@ -114,7 +114,7 @@ HWTEST_F(ConsumerSurfaceTest, AcqRelRel, testing::ext::TestSize.Level0)
 HWTEST_F(ConsumerSurfaceTest, ReqCan, testing::ext::TestSize.Level0)
 {
     sptr<SurfaceBuffer> buffer;
-    int releaseFence;
+    //int releaseFence;
 
     SurfaceError ret = cs->RequestBufferNoFence(buffer, requestConfig);
     ASSERT_NE(ret, SURFACE_ERROR_OK);
@@ -196,7 +196,7 @@ HWTEST_F(ConsumerSurfaceTest, RegisterConsumerListener, testing::ext::TestSize.L
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
     sptr<SurfaceBuffer> buffer;
-    int releaseFence;
+    //int releaseFence;
 
     ret = ps->RequestBufferNoFence(buffer, requestConfig);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
@@ -220,7 +220,7 @@ HWTEST_F(ConsumerSurfaceTest, RegisterConsumerListenerWithParam, testing::ext::T
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 
     sptr<SurfaceBuffer> buffer;
-    int releaseFence;
+    //int releaseFence;
 
     ret = ps->RequestBufferNoFence(buffer, requestConfig);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);

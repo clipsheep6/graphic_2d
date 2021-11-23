@@ -51,7 +51,9 @@ public:
     virtual SurfaceError SetQueueSize(uint32_t queueSize) = 0;
 
     virtual SurfaceError GetName(std::string &name) = 0;
-
+    
+    virtual bool GetShared() = 0;
+    virtual SurfaceError SetShared(bool isShared) = 0;
     virtual int32_t      GetDefaultWidth() = 0;
     virtual int32_t      GetDefaultHeight() = 0;
     virtual uint32_t     GetDefaultUsage() = 0;

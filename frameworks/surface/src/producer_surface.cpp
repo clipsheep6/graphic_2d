@@ -218,6 +218,19 @@ SurfaceError ProducerSurface::GetName(std::string &name)
     return sret;
 }
 
+bool ProducerSurface::GetShared()
+{
+    return producer_->GetShared();
+}
+
+SurfaceError ProducerSurface::SetShared(bool isShared)
+{
+    BLOGD("ProducerSurface::SetShared");
+    auto sret = producer_->SetShared(isShared);
+    isShared_ = isShared;
+    return sret;
+}
+
 SurfaceError ProducerSurface::SetDefaultWidthAndHeight(int32_t width, int32_t height)
 {
     return SURFACE_ERROR_NOT_SUPPORT;

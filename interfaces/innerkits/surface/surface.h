@@ -28,6 +28,7 @@ class Surface : public RefBase {
 public:
     static sptr<Surface> CreateSurfaceAsConsumer(std::string name = "noname");
     static sptr<Surface> CreateSurfaceAsProducer(sptr<IBufferProducer>& producer);
+    static sptr<Surface> CreateSurfaceAsShared(std::string name, bool isShared);
 
     virtual ~Surface() = default;
 
@@ -76,6 +77,9 @@ public:
     virtual std::string GetUserData(const std::string &key) = 0;
 
     virtual SurfaceError GetName(std::string &name) = 0;
+
+    virtual bool GetShared() = 0;
+    virtual SurfaceError SetShared(bool isShared) = 0;
 
     virtual SurfaceError RegisterConsumerListener(sptr<IBufferConsumerListener>& listener) = 0;
     virtual SurfaceError RegisterConsumerListener(IBufferConsumerListenerClazz *listener) = 0;

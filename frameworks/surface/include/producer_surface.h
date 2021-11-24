@@ -65,9 +65,6 @@ public:
 
     SurfaceError GetName(std::string &name) override;
 
-    bool GetShared() override;
-    SurfaceError SetShared(bool isShared) override;
-
     SurfaceError SetDefaultWidthAndHeight(int32_t width, int32_t height) override;
     int32_t GetDefaultWidth() override;
     int32_t GetDefaultHeight() override;
@@ -92,7 +89,6 @@ private:
     sptr<IBufferProducer> producer_ = nullptr;
     sptr<BufferQueueConsumer> consumer_ = nullptr;
     std::string name_ = "not init";
-    bool isShared_ = false;
 };
 } // namespace OHOS
 

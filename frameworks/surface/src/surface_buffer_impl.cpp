@@ -332,7 +332,6 @@ void SurfaceBufferImpl::WriteToMessageParcel(MessageParcel &parcel)
 
 int32_t SurfaceBufferImpl::GetSeqNum()
 {
-    BLOGD("3333333333");
     return sequenceNumber;
 }
 

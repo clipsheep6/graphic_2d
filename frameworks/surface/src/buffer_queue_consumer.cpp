@@ -58,7 +58,6 @@ SurfaceError BufferQueueConsumer::DetachBuffer(sptr<SurfaceBufferImpl>& buffer)
     if (bufferQueue_ == nullptr) {
         return SURFACE_ERROR_NULLPTR;
     }
-    BLOGND("====== BufferQueueConsumer::DetachBuffer =======");
     return bufferQueue_->DetachBuffer(buffer);
 }
 
@@ -67,7 +66,6 @@ SurfaceError BufferQueueConsumer::AttachBuffer(sptr<SurfaceBufferImpl>& buffer)
     if (bufferQueue_ == nullptr) {
         return SURFACE_ERROR_NULLPTR;
     }
-    BLOGND("====== BufferQueueConsumer::AttachBuffer =======");
     return bufferQueue_->AttachBuffer(buffer);
 }
 
@@ -89,7 +87,6 @@ SurfaceError BufferQueueConsumer::RegisterConsumerListener(IBufferConsumerListen
 
 SurfaceError BufferQueueConsumer::RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> func)
 {
-    BLOGND("====== BufferQueueConsumer::RegisterReleaseListener======");
     if (bufferQueue_ == nullptr) {
         return SURFACE_ERROR_NULLPTR;
     }

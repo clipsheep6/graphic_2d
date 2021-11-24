@@ -28,7 +28,7 @@
 namespace OHOS {
 class ConsumerSurface : public Surface {
 public:
-    ConsumerSurface(const std::string &name);
+    ConsumerSurface(const std::string &name, bool isShared = false);
     virtual ~ConsumerSurface();
     SurfaceError Init();
 
@@ -64,8 +64,6 @@ public:
 
     SurfaceError GetName(std::string &name) override;
 
-    bool GetShared() override;
-    SurfaceError SetShared(bool isShared) override;
 
     SurfaceError SetDefaultWidthAndHeight(int32_t width, int32_t height) override;
     int32_t GetDefaultWidth() override;
@@ -88,7 +86,7 @@ private:
     sptr<BufferQueueProducer> producer_ = nullptr;
     sptr<BufferQueueConsumer> consumer_ = nullptr;
     std::string name_ = "not init";
-    //bool isShared = false;
+    bool isShared_ = false;
 };
 } // namespace OHOS
 

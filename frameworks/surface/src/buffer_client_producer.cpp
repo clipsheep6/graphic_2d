@@ -68,29 +68,19 @@ BufferClientProducer::BufferClientProducer(const sptr<IRemoteObject>& impl)
 
 BufferClientProducer::~BufferClientProducer()
 {
-    BLOGNI("~BufferClientProducer======dtor");
 }
 
 SurfaceError BufferClientProducer::RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
                                                  RequestBufferReturnValue &retval)
 {
-    BLOGNI("BUFFERCLIENTPRODUCER-REQUESTBUFFER===%{public}s, %{public}d", __func__, __LINE__);
     DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
-    BLOGNI("BUFFERCLIENTPRODUCER2-REQUESTBUFFER===%{public}s, %{public}d", __func__, __LINE__);
     WriteRequestConfig(arguments, config);
-    BLOGNI("BUFFERCLIENTPRODUCER3-REQUESTBUFFER===%{public}s, %{public}d", __func__, __LINE__);
     SEND_REQUEST(BUFFER_PRODUCER_REQUEST_BUFFER, arguments, reply, option);
-    BLOGNI("BUFFERCLIENTPRODUCER4-REQUESTBUFFER===%{public}s, %{public}d", __func__, __LINE__);
     CHECK_RETVAL_WITH_SEQ(reply, retval.sequence);
-    BLOGNI("BUFFERCLIENTPRODUCER5-REQUESTBUFFER===%{public}s, %{public}d", __func__, __LINE__);
     ReadSurfaceBufferImpl(reply, retval.sequence, retval.buffer);
-    BLOGNI("BUFFERCLIENTPRODUCER6-REQUESTBUFFER===%{public}s, %{public}d", __func__, __LINE__);
     bedata.ReadFromParcel(reply);
-    BLOGNI("BUFFERCLIENTPRODUCER7-REQUESTBUFFER===%{public}s, %{public}d", __func__, __LINE__);
     ReadFence(reply, retval.fence);
-    BLOGNI("BUFFERCLIENTPRODUCER8-REQUESTBUFFER===%{public}s, %{public}d", __func__, __LINE__);
     reply.ReadInt32Vector(&retval.deletingBuffers);
-    BLOGNI("BUFFERCLIENTPRODUCER9-REQUESTBUFFER===%{public}s, %{public}d", __func__, __LINE__);
     return SURFACE_ERROR_OK;
 }
 
@@ -125,19 +115,16 @@ SurfaceError BufferClientProducer::FlushBuffer(int32_t sequence, BufferExtraData
 
 SurfaceError BufferClientProducer::DetachBuffer(sptr<SurfaceBuffer>& buffer)
 {
-    BLOGND("====== BufferClientProducer::DetachBuffer ======");
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
 SurfaceError BufferClientProducer::AttachBuffer(sptr<SurfaceBuffer>& buffer)
 {
-    BLOGND("====== BufferClientProducer::AttachBuffer ======");
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
 SurfaceError BufferClientProducer::RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> func)
 {
-    BLOGND("BufferClientProducer::RegisterReleaseListener");
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
@@ -182,18 +169,6 @@ SurfaceError BufferClientProducer::GetName(std::string &name)
     }
     name_ = name;
     return static_cast<SurfaceError>(ret);
-}
-
-bool BufferClientProducer::GetShared()
-{
-    BLOGND("BufferClientProducer::GetShared");
-    return SURFACE_ERROR_NOT_SUPPORT;
-}
-
-SurfaceError BufferClientProducer::SetShared(bool isShared)
-{
-    BLOGND("BufferClientProducer::SetShared");
-    return SURFACE_ERROR_NOT_SUPPORT;
 }
 
 int32_t BufferClientProducer::GetDefaultWidth()

@@ -48,8 +48,6 @@ public:
 
     SurfaceError GetName(std::string &name) override;
 
-    SurfaceError SetShared(bool isShared) override;
-    bool GetShared() override;
 
     int32_t      GetDefaultWidth() override;
     int32_t      GetDefaultHeight() override;

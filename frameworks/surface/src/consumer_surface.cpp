@@ -25,8 +25,8 @@ namespace {
 static constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "ConsumerSurface" };
 }
 
-ConsumerSurface::ConsumerSurface(const std::string &name)
-    : name_(name)
+ConsumerSurface::ConsumerSurface(const std::string &name, bool isShared)
+    : name_(name), isShared_(isShared)
 {
     BLOGNI("ctor");
     consumer_ = nullptr;
@@ -42,7 +42,7 @@ ConsumerSurface::~ConsumerSurface()
 
 SurfaceError ConsumerSurface::Init()
 {
-    sptr<BufferQueue> queue_ = new BufferQueue(name_);
+    sptr<BufferQueue> queue_ = new BufferQueue(name_, isShared_);
     SurfaceError ret = queue_->Init();
     if (ret != SURFACE_ERROR_OK) {
         BLOGN_FAILURE("queue init failed");
@@ -112,7 +112,6 @@ SurfaceError ConsumerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t
 SurfaceError ConsumerSurface::DetachBuffer(sptr<SurfaceBuffer>& buffer){
     SurfaceError ret;
     sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    BLOGND("======= ConsumerSurface::DetachBuffer ======");
     ret = consumer_->DetachBuffer(bufferImpl);
     buffer = bufferImpl;
     return ret;
@@ -121,7 +120,6 @@ SurfaceError ConsumerSurface::DetachBuffer(sptr<SurfaceBuffer>& buffer){
 SurfaceError ConsumerSurface::AttachBuffer(sptr<SurfaceBuffer>& buffer){
     SurfaceError ret;
     sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    BLOGND("======= ConsumerSurface::AttachBuffer ======");
     ret = consumer_->AttachBuffer(bufferImpl);
     buffer = bufferImpl;
     return ret;
@@ -150,17 +148,6 @@ SurfaceError ConsumerSurface::GetName(std::string &name)
 {
     name = name_;
     return SURFACE_ERROR_OK;
-}
-
-bool ConsumerSurface::GetShared()
-{
-    return producer_->GetShared();
-}
-
-SurfaceError ConsumerSurface::SetShared(bool isShared)
-{
-    BLOGD("ConsumerSurface::SetShared");
-    return producer_->SetShared(isShared);
 }
 
 SurfaceError ConsumerSurface::SetDefaultWidthAndHeight(int32_t width, int32_t height)
@@ -218,7 +205,6 @@ SurfaceError ConsumerSurface::RegisterConsumerListener(IBufferConsumerListenerCl
 
 SurfaceError ConsumerSurface::RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> func)
 {
-    BLOGND("====== ConsumerSurface::RegisterReleaseListener======");
     return consumer_->RegisterReleaseListener(func);
 }
 SurfaceError ConsumerSurface::UnregisterConsumerListener()

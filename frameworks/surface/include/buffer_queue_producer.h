@@ -54,8 +54,6 @@ public:
 
     SurfaceError GetName(std::string &name) override;
 
-    bool GetShared() override;
-    SurfaceError SetShared(bool isShared) override;
 
     int32_t      GetDefaultWidth() override;
     int32_t      GetDefaultHeight() override;
@@ -70,8 +68,6 @@ private:
     int32_t GetQueueSizeRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t SetQueueSizeRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetNameRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
-    int32_t GetSharedRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
-    int32_t SetSharedRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetDefaultWidthRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetDefaultHeightRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetDefaultUsageRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
@@ -85,7 +81,6 @@ private:
 
     sptr<BufferQueue> bufferQueue_ = nullptr;
     std::string name_ = "not init";
-    //bool isShared_ = false;
 };
 }; // namespace OHOS
 

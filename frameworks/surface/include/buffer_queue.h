@@ -51,7 +51,7 @@ typedef struct {
 
 class BufferQueue : public RefBase {
 public:
-    BufferQueue(const std::string &name);
+    BufferQueue(const std::string &name, bool isShared = false);
     virtual ~BufferQueue();
     SurfaceError Init();
 
@@ -77,9 +77,6 @@ public:
     SurfaceError SetQueueSize(uint32_t queueSize);
 
     SurfaceError GetName(std::string &name);
-
-    SurfaceError SetShared(bool isShared);
-    bool GetShared();
 
     SurfaceError RegisterConsumerListener(sptr<IBufferConsumerListener>& listener);
     SurfaceError RegisterConsumerListener(IBufferConsumerListenerClazz *listener);

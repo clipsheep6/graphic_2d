@@ -38,21 +38,21 @@ Promise<int> signalPromise;
 
 static void Helper()
 {
-    fprintf(stderr,
-            "Usage: [options]\n"
-            "options include:\n"
-            "  -h --help          show this message.\n"
-            "  -w --wait          wait mode; listen for new prints.\n"
-            "  -g <key>, --get <key>\n"
-            "                     get config with key.\n"
-            "  -s <key>=<value>, --set <key>=<value>\n"
-            "                     set config of key is equal to value.\n"
-            "  -l <tag> --log <tag>\n"
-            "                     read log with tag.\n"
-            "  -d <tag> --dump <tag>\n"
-            "                     read dump info with tag.\n"
-            "                     read all dump info with --all.\n"
-    );
+    std::cerr <<
+    "Usage: [options]\n"
+    "options include:\n"
+    "  -h --help          show this message.\n"
+    "  -w --wait          wait mode; listen for new prints.\n"
+    "  -g <key>, --get <key>\n"
+    "                     get config with key.\n"
+    "  -s <key>=<value>, --set <key>=<value>\n"
+    "                     set config of key is equal to value.\n"
+    "  -l <tag> --log <tag>\n"
+    "                     read log with tag.\n"
+    "  -d <tag> --dump <tag>\n"
+    "                     read dump info with tag.\n"
+    "                     read all dump info with --all.\n"
+    << std::endl;
 }
 } // namespace
 
@@ -70,7 +70,7 @@ sptr<GraphicDumperCommandLine> GraphicDumperCommandLine::GetInstance()
 
 void GraphicDumperCommandLine::OnInfoComing(const std::string &info)
 {
-    fprintf(stderr, "%s", info.c_str());
+    std::cerr << info.c_str() << std::endl;
 }
 
 void Handler(int signal)
@@ -82,7 +82,8 @@ void Handler(int signal)
         case SIGQUIT:
         case SIGHUP: {
             signalPromise.Resolve(signal);
-        } break;
+            break;
+        }
         default:
             break;
     }
@@ -98,103 +99,111 @@ void SignalInit()
     std::signal(SIGHUP, Handler);
 }
 
-GDError GraphicDumperCommandLine::Main(int32_t argc, char *argv[])
+GSError GraphicDumperCommandLine::Main(int32_t argc, char *argv[])
 {
-    GDError iRet = GD_OK;
+    GSError iRet = GSERROR_OK;
     if (argc <= 1) {
         Helper();
         return iRet;
     }
 
     iRet = Parse(argc, argv);
-    if (iRet != GD_OK) {
+    if (iRet != GSERROR_OK) {
         return iRet;
     }
 
     SignalInit();
 
     iRet = InitSA(GRAPHIC_DUMPER_COMMAND_SA_ID);
-    if (iRet != GD_OK) {
-        fprintf(stderr, "Init SA failed:%d\n", iRet);
+    if (iRet != GSERROR_OK) {
+        std::cerr << "Init SA failed: " << iRet << std::endl;
         return iRet;
     }
 
     sptr<IGraphicDumperInfoListener> listener = this;
     iRet = service_->AddInfoListener("", listener);
-    if (iRet != GD_OK) {
-        fprintf(stderr, "Add info listener failed:%d\n", iRet);
+    if (iRet != GSERROR_OK) {
+        std::cerr << "Add info listener failed: " << iRet << std::endl;
         return iRet;
     }
 
     HandlerOfArgs();
     usleep(SLEEP_TIME);
-    return GD_OK;
+    return GSERROR_OK;
 }
 
 void GraphicDumperCommandLine::HandlerOfArgs()
 {
     if (!dumperArgs_.dumpTag.empty()) {
         service_->Dump("*#dp#*." + dumperArgs_.dumpTag);
-        fprintf(stderr, "get dump with tag:%s\n", dumperArgs_.dumpTag.c_str());
+        std::cerr << "get dump with tag:" << dumperArgs_.dumpTag.c_str() << std::endl;
     }
     if (!dumperArgs_.logTag.empty()) {
         std::string getLog = {};
-        fprintf(stderr, "get log with tag:%s\n", dumperArgs_.logTag.c_str());
+        std::cerr << "get log with tag:" << dumperArgs_.logTag.c_str() << std::endl;
         service_->GetLog(dumperArgs_.logTag, getLog);
-        fprintf(stderr, "log is %s\n", getLog.c_str());
+        std::cerr << "log is" << getLog.c_str() << std::endl;
     }
     if (!dumperArgs_.getCfgKey.empty()) {
         std::string getCfgValue = {};
         service_->GetConfig(dumperArgs_.getCfgKey, getCfgValue);
-        fprintf(stderr, "get cfg with key:%s is value:%s\n", dumperArgs_.getCfgKey.c_str(), getCfgValue.c_str());
+        std::cerr << "get cfg with key:" << dumperArgs_.getCfgKey.c_str() << "value is:"
+        << getCfgValue.c_str() << std::endl;
     }
     if ((!dumperArgs_.setCfgKey.empty()) && (!dumperArgs_.setCfgKey.empty())) {
         service_->SetConfig(dumperArgs_.setCfgKey, dumperArgs_.setCfgValue);
-        fprintf(stderr, "set cfg with key:%s  value:%s\n",
-                dumperArgs_.setCfgKey.c_str(), dumperArgs_.setCfgValue.c_str());
+        std::cerr << "set cfg with key:" << dumperArgs_.setCfgKey.c_str() << "value is:"
+        << dumperArgs_.setCfgValue.c_str() << std::endl;
     }
     if (dumperArgs_.wait) {
         signalPromise.Await();
     }
 }
 
-GDError GraphicDumperCommandLine::OptionParse(const char option)
+GSError GraphicDumperCommandLine::OptionParse(const char option)
 {
     switch (option) {
         case 'h': {
             Helper();
-            return GD_OK;
-        } break;
+            return GSERROR_OK;
+            break;
+        }
         case 'w': {
             dumperArgs_.wait = true;
-        } break;
+            break;
+        }
         case 'g': {
             dumperArgs_.getCfgKey = optarg;
-        } break;
+            break;
+        }
         case 's': {
             auto ret = Split(optarg, "=");
             if (ret.size() != CFGTERMSIZE) {
-                fprintf(stderr, "Parameter format error.\n");
-                return GD_ERROR_INVALID_OPERATING;
+                std::cerr << "Parameter format error." << std::endl;
+                return GSERROR_INVALID_OPERATING;
             }
             dumperArgs_.setCfgKey = ret[0];
             dumperArgs_.setCfgValue = ret[1];
-        } break;
+            break;
+        }
         case 'l': {
             dumperArgs_.logTag = optarg;
-        } break;
+            break;
+        }
         case 'd': {
             dumperArgs_.dumpTag = optarg;
-        } break;
+            break;
+        }
         default: {
-            fprintf(stderr, "Command not found.\n");
-            return GD_ERROR_INVALID_OPERATING;
-        } break;
+            std::cerr << "Command not found." << std::endl;
+            return GSERROR_INVALID_OPERATING;
+            break;
+        }
     } // switch
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperCommandLine::Parse(int32_t argc, char *argv[])
+GSError GraphicDumperCommandLine::Parse(int32_t argc, char *argv[])
 {
     int optIndex = 0;
     static const struct option longOptions[] = {
@@ -213,28 +222,28 @@ GDError GraphicDumperCommandLine::Parse(int32_t argc, char *argv[])
             break;
         }
         auto ret = OptionParse(opt);
-        if (ret != GD_OK) {
+        if (ret != GSERROR_OK) {
             return ret;
         }
     } // while
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperCommandLine::InitSA(int32_t systemAbilityId)
+GSError GraphicDumperCommandLine::InitSA(int32_t systemAbilityId)
 {
     if (service_ != nullptr) {
         GDLOG_SUCCESS("_instance != nullptr");
-        return GD_OK;
+        return GSERROR_OK;
     }
 
     auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sm == nullptr) {
-        GDLOG_FAILURE_RET(GD_ERROR_SAMGR);
+        GDLOG_FAILURE_RET(GSERROR_CONNOT_CONNECT_SAMGR);
     }
 
     auto remoteObject = sm->GetSystemAbility(systemAbilityId);
     if (remoteObject == nullptr) {
-        GDLOG_FAILURE_RET(GD_ERROR_SERVICE_NOT_FOUND);
+        GDLOG_FAILURE_RET(GSERROR_CONNOT_CONNECT_SERVER);
     }
 
     sptr<IRemoteObject::DeathRecipient> deathRecipient = new GDumperCommandDeathRecipient();
@@ -244,11 +253,11 @@ GDError GraphicDumperCommandLine::InitSA(int32_t systemAbilityId)
 
     service_ = iface_cast<IGraphicDumperCommand>(remoteObject);
     if (service_ == nullptr) {
-        GDLOG_FAILURE_RET(GD_ERROR_PROXY_NOT_INCLUDE);
+        GDLOG_FAILURE_RET(GSERROR_PROXY_NOT_INCLUDE);
     }
 
     GDLOG_SUCCESS("service_ = iface_cast");
-    return GD_OK;
+    return GSERROR_OK;
 }
 
 void GDumperCommandDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)

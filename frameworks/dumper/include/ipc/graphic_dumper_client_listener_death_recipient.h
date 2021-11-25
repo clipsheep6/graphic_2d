@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_SERVICE_H
-#define FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_SERVICE_H
+#ifndef FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_CLIENT_LISTENER_DEATH_RECIPIENT_H
+#define FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_CLIENT_LISTENER_DEATH_RECIPIENT_H
 
 #include <vector>
 
@@ -26,18 +26,10 @@
 #include "ipc/igraphic_dumper_service.h"
 
 namespace OHOS {
-class GraphicDumperService : public IRemoteStub<IGraphicDumperService> {
+class GraphicDumperClientListenerDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
-    virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel& data,
-                            MessageParcel& reply, MessageOption& option) override;
-    GDError AddClientListener(const std::string &tag, sptr<IGraphicDumperClientListener> &listener) override;
-    GDError SendInfo(const std::string &tag, const std::string &info) override;
-};
-
-class GDumperClientListenerDeathRecipient : public IRemoteObject::DeathRecipient {
-public:
-    GDumperClientListenerDeathRecipient() = default;
-    virtual ~GDumperClientListenerDeathRecipient() = default;
+    GraphicDumperClientListenerDeathRecipient() = default;
+    virtual ~GraphicDumperClientListenerDeathRecipient() = default;
     void OnRemoteDied(const wptr<IRemoteObject> &object) override;
 };
 } // namespace OHOS

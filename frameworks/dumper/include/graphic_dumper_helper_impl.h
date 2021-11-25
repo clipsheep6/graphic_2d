@@ -40,11 +40,11 @@ class GraphicDumperHelperImpl : public GraphicDumperHelper {
 public:
     static sptr<GraphicDumperHelper> GetInstance();
 
-    virtual GDError SendInfo(const std::string &tag, const char *fmt, ...) override;
+    virtual GSError SendInfo(const std::string &tag, const char *fmt, ...) override;
     virtual int32_t AddConfigChangeListener(const std::string &tag, OnConfigChangeFunc func) override;
-    virtual GDError RemoveConfigChangeListener(const int32_t listenerId) override;
+    virtual GSError RemoveConfigChangeListener(const int32_t listenerId) override;
     virtual int32_t AddDumpListener(const std::string &tag, OnDumpFunc func) override;
-    virtual GDError RemoveDumpListener(const int32_t listenerId) override;
+    virtual GSError RemoveDumpListener(const int32_t listenerId) override;
 
     void SetConnectState(bool state);
 
@@ -54,9 +54,9 @@ private:
     static inline sptr<GraphicDumperHelper> currentHelper = nullptr;
     static void SetNoopInstance();
 
-    GDError Init();
-    GDError InitSA(int32_t systemAbilityId);
-    GDError AddClientListener(const std::string &tag);
+    GSError Init();
+    GSError InitSA(int32_t systemAbilityId);
+    GSError AddClientListener(const std::string &tag);
     void DispenseOnConfigChange(const std::string &tag, const std::string &val);
     void DispenseOnDump(const std::string &tag);
 
@@ -93,25 +93,25 @@ public:
 
 class GraphicDumperHelperNoop : public GraphicDumperHelper {
 public:
-    virtual GDError SendInfo(const std::string &tag, const char *fmt, ...)
+    virtual GSError SendInfo(const std::string &tag, const char *fmt, ...)
     {
-        return GD_ERROR_SERVICE_NOT_FOUND;
+        return GSERROR_CONNOT_CONNECT_SERVER;
     }
     virtual int32_t AddConfigChangeListener(const std::string &tag, OnConfigChangeFunc func)
     {
         return 0;
     }
-    virtual GDError RemoveConfigChangeListener(const int32_t listenerId)
+    virtual GSError RemoveConfigChangeListener(const int32_t listenerId)
     {
-        return GD_ERROR_SERVICE_NOT_FOUND;
+        return GSERROR_CONNOT_CONNECT_SERVER;
     }
     virtual int32_t AddDumpListener(const std::string &tag, OnDumpFunc func)
     {
         return 0;
     }
-    virtual GDError RemoveDumpListener(const int32_t listenerId)
+    virtual GSError RemoveDumpListener(const int32_t listenerId)
     {
-        return GD_ERROR_SERVICE_NOT_FOUND;
+        return GSERROR_CONNOT_CONNECT_SERVER;
     }
 };
 

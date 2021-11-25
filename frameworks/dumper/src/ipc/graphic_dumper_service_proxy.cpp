@@ -31,14 +31,13 @@ GraphicDumperServiceProxy::GraphicDumperServiceProxy(const sptr<IRemoteObject>& 
 {
 }
 
-GDError GraphicDumperServiceProxy::AddClientListener(const std::string &tag,
+GSError GraphicDumperServiceProxy::AddClientListener(const std::string &tag,
                                                      sptr<IGraphicDumperClientListener> &listener)
 {
     if (listener == nullptr) {
-        GDLOG_FAILURE_NO(GD_ERROR_NULLPTR);
-        return GD_ERROR_NULLPTR;
+        GDLOG_FAILURE_NO(GSERROR_INVALID_ARGUMENTS);
+        return GSERROR_INVALID_ARGUMENTS;
     }
-
     MessageOption opt;
     MessageParcel arg;
     MessageParcel ret;
@@ -52,18 +51,18 @@ GDError GraphicDumperServiceProxy::AddClientListener(const std::string &tag,
     int result = Remote()->SendRequest(IGRAPHIC_DUMPER_SERVICE_ADD_CLIENT_LISTENER, arg, ret, opt);
     if (result) {
         GDLOG_ERROR_API(result, SendRequest);
-        return GD_ERROR_BINDER_ERROR;
+        return GSERROR_BINDER;
     }
 
-    GDError err = (GDError)ret.ReadInt32();
-    if (err != GD_OK) {
+    GSError err = (GSError)ret.ReadInt32();
+    if (err != GSERROR_OK) {
         GDLOG_FAILURE_NO(err);
     }
 
     return err;
 }
 
-GDError GraphicDumperServiceProxy::SendInfo(const std::string &tag, const std::string &info)
+GSError GraphicDumperServiceProxy::SendInfo(const std::string &tag, const std::string &info)
 {
     MessageOption opt;
     MessageParcel arg;
@@ -78,8 +77,8 @@ GDError GraphicDumperServiceProxy::SendInfo(const std::string &tag, const std::s
     int result = Remote()->SendRequest(IGRAPHIC_DUMPER_SERVICE_SEND_INFO, arg, ret, opt);
     if (result) {
         GDLOG_ERROR_API(result, SendRequest);
-        return GD_ERROR_BINDER_ERROR;
+        return GSERROR_BINDER;
     }
-    return GD_OK;
+    return GSERROR_OK;
 }
 } // namespace OHOS

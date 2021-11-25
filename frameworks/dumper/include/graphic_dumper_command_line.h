@@ -36,7 +36,7 @@ class GraphicDumperCommandLine : public GraphicDumperInfoListenerStub {
 public:
     static sptr<GraphicDumperCommandLine> GetInstance();
     virtual void OnInfoComing(const std::string &info) override;
-    GDError Main(int32_t argc, char *argv[]);
+    GSError Main(int32_t argc, char *argv[]);
 
 private:
     GraphicDumperCommandLine() = default;
@@ -44,9 +44,9 @@ private:
     static inline sptr<GraphicDumperCommandLine> instance_;
 
     void HandlerOfArgs();
-    GDError OptionParse(const char option);
-    GDError Parse(int32_t argc, char *argv[]);
-    GDError InitSA(int32_t systemAbilityId);
+    GSError OptionParse(const char option);
+    GSError Parse(int32_t argc, char *argv[]);
+    GSError InitSA(int32_t systemAbilityId);
 
     sptr<IGraphicDumperCommand> service_;
     DumperArgs dumperArgs_ = {};

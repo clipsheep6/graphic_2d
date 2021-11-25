@@ -20,7 +20,14 @@
 extern "C" {
 #endif
 
+typedef void(*OnDumpFuncPtr)(void);
+typedef void(*OnConfigChangeFuncPtr)(const char *, const char *);
+
 int SendInfo(const char* tag, const char *fmt, ...);
+int AddConfigChangeListener(const char* tag, OnConfigChangeFuncPtr func);
+int RemoveConfigChangeListener(const int listenerId);
+int AddDumpListener(const char* tag, OnDumpFuncPtr func);
+int RemoveDumpListener(const int listenerId);
 
 #ifdef __cplusplus
 }

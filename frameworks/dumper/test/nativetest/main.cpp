@@ -20,7 +20,6 @@
 
 #include "graphic_dumper_helper.h"
 #include "graphic_dumper_hilog.h"
-//#include "graphic_dumper_type.h"
 #include "graphic_common.h"
 
 using namespace OHOS;
@@ -55,7 +54,6 @@ void DumpFunc()
     GDLOGFI("OnDump");
     GraphicDumperHelper::GetInstance()->SendInfo(tagInfo, "pid[%d] send dump info \n", getpid());
 }
-} // namespace
 
 void Handler(int signal)
 {
@@ -67,16 +65,15 @@ void Handler(int signal)
         case SIGQUIT:
         case SIGHUP: {
             g_exitFlag = true;
-        } break;
+            break;
+        }
         default:
             break;
     }
 }
-
+} // namespace
 int main(int argc, const char** argv)
 {
-    GDLOGFI("graphic dumper test start!");
-
     std::signal(SIGINT, Handler);
     std::signal(SIGKILL, Handler);
     std::signal(SIGTERM, Handler);
@@ -87,7 +84,7 @@ int main(int argc, const char** argv)
     int ret = 0;
     constexpr int ARGC_NUM = 2;
     if (argc == ARGC_NUM) {
-        tagInfo = std::string{ argv[1] };
+        tagInfo = std::string { argv[1] };
     } else {
         tagInfo = "A.B.info";
     }
@@ -100,7 +97,6 @@ int main(int argc, const char** argv)
         if (printInfo) {
             ret = GraphicDumperHelper::GetInstance()->SendInfo(tagInfo,
                 "********** !!! just for test send info !!! **********\n");
-                GDLOGFE("graphic dumper ret = %{public}d",ret);
             if (ret != 0) {
                 GDLOGFE("graphic dumper service died!");
                 break;
@@ -108,9 +104,7 @@ int main(int argc, const char** argv)
         }
 
         ret = GraphicDumperHelper::GetInstance()->SendInfo("log." + tagInfo,
-            "[%d]ABCEDFGHIG0123456789ABCEDFGHIG0123456789ABCEDFGHIG0123456789 just for test log %d!!!\n",
-            getpid(),
-            count++);
+            "[%d]ABCEDFGHIG0123456789ABCEDFGHIG\n just for test log %d!!!\n", getpid(), count++);
         if (ret != 0) {
             GDLOGFE("graphic dumper service died!");
             break;
@@ -118,9 +112,7 @@ int main(int argc, const char** argv)
 
         usleep(SLEEP_TIME);
         ret = GraphicDumperHelper::GetInstance()->SendInfo("log." + tagInfo + ".1",
-            "[%d]ABCEDFGHIG0123456789ABCEDFGHIG0123456789ABCEDFGHIG0123456789\njust for test2 log %d!!!\n",
-            getpid(),
-            count++);
+            "[%d]ABCEDFGHIG0123456789ABCEDFGHIG\njust for test2 log %d!!!\n", getpid(), count++);
         if (ret != 0) {
             GDLOGFE("graphic dumper service died!");
             break;

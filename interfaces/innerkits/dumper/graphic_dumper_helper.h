@@ -18,7 +18,6 @@
 
 #include <refbase.h>
 
-//#include "graphic_dumper_type.h"
 #include "graphic_common.h"
 
 namespace OHOS {
@@ -27,12 +26,12 @@ using OnDumpFunc = std::function<void()>;
 class GraphicDumperHelper : public RefBase {
 public:
     static sptr<GraphicDumperHelper> GetInstance();
-    virtual GDError SendInfo(const std::string &tag, const char *fmt, ...) = 0;
+    virtual GSError SendInfo(const std::string &tag, const char *fmt, ...) = 0;
 
     virtual int32_t AddConfigChangeListener(const std::string &tag, OnConfigChangeFunc func) = 0;
-    virtual GDError RemoveConfigChangeListener(const int32_t listenerId) = 0;
+    virtual GSError RemoveConfigChangeListener(const int32_t listenerId) = 0;
     virtual int32_t AddDumpListener(const std::string &tag, OnDumpFunc func) = 0;
-    virtual GDError RemoveDumpListener(const int32_t listenerId) = 0;
+    virtual GSError RemoveDumpListener(const int32_t listenerId) = 0;
 };
 } // namespace OHOS
 

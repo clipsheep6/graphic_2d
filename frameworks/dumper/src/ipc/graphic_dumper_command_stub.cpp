@@ -13,117 +13,117 @@
  * limitations under the License.
  */
 
-#include "ipc/graphic_dumper_command.h"
+#include "ipc/graphic_dumper_command_stub.h"
 
 #include "graphic_dumper_hilog.h"
 #include "graphic_dumper_server.h"
-//#include "graphic_dumper_type.h"
 #include "ipc/igraphic_dumper_command.h"
-#include "graphic_common.h"
 
-#define REMOTE_RETURN(reply, gd_error) \
-    reply.WriteInt32(gd_error);        \
-    if (gd_error != GD_OK) {     \
-        GDLOG_FAILURE_NO(gd_error);    \
+#define REMOTE_RETURN(reply, gs_error) \
+    reply.WriteInt32(gs_error);        \
+    if ((gs_error) != GSERROR_OK) {     \
+        GDLOG_FAILURE_NO(gs_error);    \
     }                                  \
     break
 
 namespace OHOS {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "GraphicDumperCommand" };
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "GraphicDumperCommandStub" };
 }
 
-int32_t GraphicDumperCommand::OnRemoteRequest(uint32_t code, MessageParcel& data,
-                            MessageParcel& reply, MessageOption& option)
+int32_t GraphicDumperCommandStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
+    MessageParcel& reply, MessageOption& option)
 {
-    GDLOGFE("code %{public}d ", code);
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (GetDescriptor() != remoteDescriptor) {
         return 1;
     }
-
     switch (code) {
         case IGRAPHIC_DUMPER_COMMAND_GET_CONFIG: {
             std::string k = data.ReadString();
             std::string v = data.ReadString();
-            GDError ret = GetConfig(k, v);
+            GSError ret = GetConfig(k, v);
             reply.WriteInt32(ret);
             reply.WriteString(v);
-        } break;
+            break;
+        }
 
         case IGRAPHIC_DUMPER_COMMAND_SET_CONFIG: {
             std::string k = data.ReadString();
             std::string v = data.ReadString();
-            GDError ret = SetConfig(k, v);
+            GSError ret = SetConfig(k, v);
             reply.WriteInt32(ret);
-        } break;
+            break;
+        }
 
         case IGRAPHIC_DUMPER_COMMAND_DUMP: {
             std::string v = data.ReadString();
-            GDError ret = Dump(v);
+            GSError ret = Dump(v);
             reply.WriteInt32(ret);
-        } break;
+            break;
+        }
 
         case IGRAPHIC_DUMPER_COMMAND_GET_LOG: {
             std::string tag = data.ReadString();
             std::string log = "";
-            GDError ret = GetLog(tag, log);
+            GSError ret = GetLog(tag, log);
             reply.WriteInt32(ret);
-        } break;
+            break;
+        }
         case IGRAPHIC_DUMPER_COMMAND_ADD_INFO_LISTENER: {
             auto tag = data.ReadString();
             auto remoteObject = data.ReadRemoteObject();
             if (remoteObject == nullptr) {
-                REMOTE_RETURN(reply, GD_ERROR_NULLPTR);
+                REMOTE_RETURN(reply, GSERROR_INVALID_ARGUMENTS);
             }
 
             auto l = iface_cast<IGraphicDumperInfoListener>(remoteObject);
-            GDError ret = AddInfoListener(tag, l);
+            GSError ret = AddInfoListener(tag, l);
             REMOTE_RETURN(reply, ret);
-        } break;
-
+            break;
+        }
         default: {
-            GDLOGFE("code %{public}d cannot process", code);
             return 1;
-        } break;
+            break;
+        }
     }
     return 0;
 }
 
-GDError GraphicDumperCommand::GetConfig(const std::string &k, std::string &v)
+GSError GraphicDumperCommandStub::GetConfig(const std::string &k, std::string &v)
 {
     GDLOGFE("%{public}s -> %{public}s", k.c_str(), v.c_str());
     GraphicDumperServer::GetInstance()->GetConfig(k, v);
     GDLOGFE("%{public}s -> %{public}s", k.c_str(), v.c_str());
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperCommand::SetConfig(const std::string &k, const std::string &v)
+GSError GraphicDumperCommandStub::SetConfig(const std::string &k, const std::string &v)
 {
     GDLOGFE("%{public}s -> %{public}s", k.c_str(), v.c_str());
     GraphicDumperServer::GetInstance()->SetConfig(k, v);
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperCommand::Dump(const std::string &tag)
+GSError GraphicDumperCommandStub::Dump(const std::string &tag)
 {
     GDLOGFE("%{public}s", tag.c_str());
     GraphicDumperServer::GetInstance()->Dump(tag);
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperCommand::GetLog(const std::string &tag, std::string &log)
+GSError GraphicDumperCommandStub::GetLog(const std::string &tag, std::string &log)
 {
     GDLOGFE("%{public}s -> %{public}s", tag.c_str(), log.c_str());
     GraphicDumperServer::GetInstance()->GetLog(tag, log);
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperCommand::AddInfoListener(const std::string &tag, sptr<IGraphicDumperInfoListener> &listener)
+GSError GraphicDumperCommandStub::AddInfoListener(const std::string &tag, sptr<IGraphicDumperInfoListener> &listener)
 {
     GDLOGFE("");
     if (listener == nullptr) {
-        return GD_ERROR_NULLPTR;
+        return GSERROR_INVALID_ARGUMENTS;
     }
     return GraphicDumperServer::GetInstance()->AddInfoListener(listener);
 }

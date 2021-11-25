@@ -20,15 +20,14 @@
 
 #include <iremote_broker.h>
 
-//#include "graphic_dumper_type.h"
 #include "graphic_common.h"
 #include "ipc/igraphic_dumper_client_listener.h"
 
 namespace OHOS {
 class IGraphicDumperService : public IRemoteBroker {
 public:
-    virtual GDError AddClientListener(const std::string &tag, sptr<IGraphicDumperClientListener> &listener) = 0;
-    virtual GDError SendInfo(const std::string &tag, const std::string &info) = 0;
+    virtual GSError AddClientListener(const std::string &tag, sptr<IGraphicDumperClientListener> &listener) = 0;
+    virtual GSError SendInfo(const std::string &tag, const std::string &info) = 0;
     DECLARE_INTERFACE_DESCRIPTOR(u"IGraphicDumperService");
 
 protected:

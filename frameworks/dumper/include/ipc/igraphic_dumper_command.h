@@ -20,18 +20,17 @@
 
 #include <iremote_broker.h>
 
-//#include "graphic_dumper_type.h"
 #include "graphic_common.h"
-#include "igraphic_dumper_info_listener.h"
+#include "ipc/igraphic_dumper_info_listener.h"
 
 namespace OHOS {
 class IGraphicDumperCommand : public IRemoteBroker {
 public:
-    virtual GDError GetConfig(const std::string &k, std::string &v) = 0;
-    virtual GDError SetConfig(const std::string &k, const std::string &v) = 0;
-    virtual GDError Dump(const std::string &tag) = 0;
-    virtual GDError GetLog(const std::string &tag, std::string &log) = 0;
-    virtual GDError AddInfoListener(const std::string &tag, sptr<IGraphicDumperInfoListener> &listener) = 0;
+    virtual GSError GetConfig(const std::string &k, std::string &v) = 0;
+    virtual GSError SetConfig(const std::string &k, const std::string &v) = 0;
+    virtual GSError Dump(const std::string &tag) = 0;
+    virtual GSError GetLog(const std::string &tag, std::string &log) = 0;
+    virtual GSError AddInfoListener(const std::string &tag, sptr<IGraphicDumperInfoListener> &listener) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IGraphicDumperCommand");
 

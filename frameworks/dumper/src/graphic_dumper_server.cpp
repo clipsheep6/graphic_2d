@@ -26,10 +26,11 @@
 #include <unistd.h>
 #include <zlib.h>
 
-#include "ipc/graphic_dumper_command.h"
-#include "ipc/graphic_dumper_death_recipient.h"
+#include "ipc/graphic_dumper_info_listener_death_recipient.h"
+#include "ipc/graphic_dumper_client_listener_death_recipient.h"
+#include "ipc/graphic_dumper_service_stub.h"
+#include "ipc/graphic_dumper_command_stub.h"
 #include "graphic_dumper_hilog.h"
-#include "ipc/graphic_dumper_service.h"
 #include "graphic_dumper_util.h"
 
 namespace OHOS {
@@ -91,14 +92,14 @@ int32_t GraphicDumperServer::Init()
         logBuf_.vec.push_back(std::make_unique<std::vector<std::string>>());
     }
 
-    sptr<IRemoteObject> service = new GraphicDumperService();
+    sptr<IRemoteObject> service = new GraphicDumperServiceStub();
     ret = StartServer(GRAPHIC_DUMPER_SERVICE_SA_ID, service);
     if (ret) {
         GDLOGI("Start graphic dumper service failed: %d\n", ret);
         return ret;
     }
 
-    sptr<IRemoteObject> command = new GraphicDumperCommand();
+    sptr<IRemoteObject> command = new GraphicDumperCommandStub();
     ret = StartServer(GRAPHIC_DUMPER_COMMAND_SA_ID, command);
     if (ret) {
         GDLOGI("Start graphic dumper command failed: %d\n", ret);
@@ -107,11 +108,11 @@ int32_t GraphicDumperServer::Init()
     return ret;
 }
 
-GDError GraphicDumperServer::AddConfigListener(const std::string &tag,
+GSError GraphicDumperServer::AddConfigListener(const std::string &tag,
                                                sptr<IGraphicDumperClientListener> &listener)
 {
     if (listener == nullptr) {
-        return GD_ERROR_NULLPTR;
+        return GSERROR_INVALID_ARGUMENTS;
     }
     GDLOGFE("%{public}s", tag.c_str());
 
@@ -127,7 +128,7 @@ GDError GraphicDumperServer::AddConfigListener(const std::string &tag,
     auto &configTags = configTagsMap_[objectId];
     for (const auto &iter : configTags.tags) {
         if (iter == tag) {
-            return GD_OK;
+            return GSERROR_OK;
         }
     }
     configTags.tags.push_back(tag);
@@ -143,15 +144,14 @@ GDError GraphicDumperServer::AddConfigListener(const std::string &tag,
     }
     sub->AddListenerId(configTags.id);
 
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperServer::RemoveConfigListener(sptr<IRemoteObject> object)
+GSError GraphicDumperServer::RemoveConfigListener(sptr<IRemoteObject> object)
 {
     if (object == nullptr) {
-        return GD_ERROR_NULLPTR;
+        return GSERROR_INVALID_ARGUMENTS;
     }
-
     auto &deathRecipient = configListenerDeathRecipientMap_[object];
     if (deathRecipient != nullptr) {
         object->RemoveDeathRecipient(deathRecipient);
@@ -170,10 +170,10 @@ GDError GraphicDumperServer::RemoveConfigListener(sptr<IRemoteObject> object)
     }
 
     object = nullptr;
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperServer::GetConfig(const std::string &k, std::string &v)
+GSError GraphicDumperServer::GetConfig(const std::string &k, std::string &v)
 {
     GDLOGI("%{public}s -> %{public}s", k.c_str(), v.c_str());
     std::lock_guard<std::mutex> lock(treeMutex_);
@@ -183,15 +183,15 @@ GDError GraphicDumperServer::GetConfig(const std::string &k, std::string &v)
         if (sub->HasNode(iter)) {
             sub = sub->GetSetNode(iter);
         } else {
-            return GD_ERROR_NULLPTR;
+            return GSERROR_INVALID_ARGUMENTS;
         }
     }
     v = sub->GetValue();
     GDLOGI("%{public}s -> %{public}s", k.c_str(), v.c_str());
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperServer::SetConfig(const std::string &k, const std::string &v)
+GSError GraphicDumperServer::SetConfig(const std::string &k, const std::string &v)
 {
     GDLOGI("%{public}s -> %{public}s", k.c_str(), v.c_str());
     std::lock_guard<std::mutex> lock(treeMutex_);
@@ -205,10 +205,10 @@ GDError GraphicDumperServer::SetConfig(const std::string &k, const std::string &
         DispenseConfig(sub, k, v);
     }
     GDLOGI("%{public}s -> %{public}s", k.c_str(), v.c_str());
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperServer::Dump(const std::string &tag)
+GSError GraphicDumperServer::Dump(const std::string &tag)
 {
     std::lock_guard<std::mutex> lock(treeMutex_);
     std::vector<std::string> nodes = Split(tag, ".");
@@ -219,24 +219,25 @@ GDError GraphicDumperServer::Dump(const std::string &tag)
         }
         GDLOGFE("%{public}s", iter.c_str());
         sub = sub->GetSetNode(iter);
-    }    DispenseDump(sub, tag);
+    }
+    DispenseDump(sub, tag);
     GDLOGFE("%{public}s", tag.c_str());
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperServer::AddInfoListener(sptr<IGraphicDumperInfoListener> &listener)
+GSError GraphicDumperServer::AddInfoListener(sptr<IGraphicDumperInfoListener> &listener)
 {
     if (listener == nullptr) {
-        return GD_ERROR_NULLPTR;
+        return GSERROR_INVALID_ARGUMENTS;
     }
     std::lock_guard<std::mutex> guard(infoListenersMutex_);
     auto object = listener->AsObject();
     AddInfoDeathRecipient(object);
     infoListeners_[object] = listener;
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperServer::RemoveInfoListener(const wptr<IRemoteObject> &object)
+GSError GraphicDumperServer::RemoveInfoListener(const wptr<IRemoteObject> &object)
 {
     std::lock_guard<std::mutex> guard(infoListenersMutex_);
     auto sObject = object.promote();
@@ -247,10 +248,10 @@ GDError GraphicDumperServer::RemoveInfoListener(const wptr<IRemoteObject> &objec
         logBuf_.sync = false;
         logBuf_.mask.clear();
     }
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperServer::InfoHandle(const std::string &tag, const std::string &info)
+GSError GraphicDumperServer::InfoHandle(const std::string &tag, const std::string &info)
 {
     GDLOGFE("GraphicDumperServer::InfoHandle --start!!!!!!!!!");
     std::string logFlag = {"log."};
@@ -261,10 +262,9 @@ GDError GraphicDumperServer::InfoHandle(const std::string &tag, const std::strin
     }
     GDLOGFE("InfoHandle to SendToInfoListener");
     SendToInfoListener(tag + " : " + info);
-    return GD_OK;
+    return GSERROR_OK;
 }
-
-GDError GraphicDumperServer::GetLog(const std::string &tag, const std::string &info)
+GSError GraphicDumperServer::GetLog(const std::string &tag, const std::string &info)
 {
     GDLOGFE("%{public}s -> %{public}s", tag.c_str(), info.c_str());
     bool getAll = false;
@@ -276,9 +276,7 @@ GDError GraphicDumperServer::GetLog(const std::string &tag, const std::string &i
     }
 
     {
-        GDLOGFE("logBlockVectorMutex_ is start");
         std::lock_guard<std::mutex> lock(logBlockVectorMutex_);
-        GDLOGFE("logBlockVectorMutex_->size = %{public}d", logBlockVector_.size());
         for (const auto& array : logBlockVector_) {
             auto logBlock = reinterpret_cast<LogBlock *>(array.get());
             std::string toSendStr = {};
@@ -295,12 +293,9 @@ GDError GraphicDumperServer::GetLog(const std::string &tag, const std::string &i
     }
 
     std::string logStr = {};
-    GDLOGFE("logBuf_.canSave = %{public}d , logBuf_.needSave = %{public}d", logBuf_.canSave,logBuf_.needSave);
     if (logBuf_.canSave || logBuf_.needSave) {
         uint32_t index = (logBuf_.index + 1) % LOG_VEC_SIZE;
-        GDLOGFE("%{public}d\n", __LINE__);
         std::lock_guard<std::mutex> guard(logBuf_.mutex[index]);
-        GDLOGFE("%{public}d\n", __LINE__);
         for (const auto& str : *logBuf_.vec[index]) {
             GDLOGFE("logBuf_cansave = %{public}s", str.c_str());
             StrLogRomveTag(getAll, tag, str, logStr);
@@ -311,11 +306,8 @@ GDError GraphicDumperServer::GetLog(const std::string &tag, const std::string &i
     logStr.clear();
 
     {
-        GDLOGFE("logBuf_.index is %{public}d",logBuf_.index);
         uint32_t index = logBuf_.index;
-        GDLOGFE("%{public}d\n", __LINE__);
         std::lock_guard<std::mutex> guard(logBuf_.mutex[index]);
-        GDLOGFE("%{public}d\n", __LINE__);
         for (const auto& str : *logBuf_.vec[index]) {
             GDLOGFE("logBuf_ = %{public}s", str.c_str());
             StrLogRomveTag(getAll, tag, str, logStr);
@@ -324,8 +316,7 @@ GDError GraphicDumperServer::GetLog(const std::string &tag, const std::string &i
     SendToInfoListener(logStr);
 
     logBuf_.sync = true;
-    GDLOGFE("server is over \n");
-    return GD_OK;
+    return GSERROR_OK;
 }
 
 int32_t GraphicDumperServer::StartServer(int32_t systemAbility, sptr<IRemoteObject> obj)
@@ -394,11 +385,11 @@ int32_t GraphicDumperServer::ReadDefaultConfig()
 void GraphicDumperServer::AddConfigDeathRecipient(sptr<IRemoteObject> &object)
 {
     if (!HaveConfigDeathRecipient(object)) {
-        sptr<IRemoteObject::DeathRecipient> deathRecipient = new GDumperClientListenerDeathRecipient();
+        sptr<IRemoteObject::DeathRecipient> deathRecipient = new GraphicDumperClientListenerDeathRecipient();
         if ((object->IsProxyObject()) && (!object->AddDeathRecipient(deathRecipient))) {
             GDLOGFE("Failed to add death recipient");
         }
-        configListenerDeathRecipientMap_.insert({ object, deathRecipient });
+        configListenerDeathRecipientMap_[object] = deathRecipient;
     }
 }
 
@@ -480,7 +471,7 @@ void GraphicDumperServer::DispenseDump(const TreeNodePtr &node, const std::strin
 void GraphicDumperServer::AddInfoDeathRecipient(sptr<IRemoteObject> &object)
 {
     if (!HaveInfoDeathRecipient(object)) {
-        sptr<IRemoteObject::DeathRecipient> deathRecipient = new GDumperInfoListenerDeathRecipient();
+        sptr<IRemoteObject::DeathRecipient> deathRecipient = new GraphicDumperInfoListenerDeathRecipient();
         if ((object->IsProxyObject()) && (!object->AddDeathRecipient(deathRecipient))) {
             GDLOGFE("Failed to add death recipient");
         }
@@ -497,7 +488,6 @@ bool GraphicDumperServer::HaveInfoDeathRecipient(sptr<IRemoteObject> &object)
 void GraphicDumperServer::SendToInfoListener(const std::string &info)
 {
     std::lock_guard<std::mutex> guard(infoListenersMutex_);
-    GDLOGFI("%{public}d", infoListeners_.size());
     for (const auto& [k, v] : infoListeners_) {
         v->OnInfoComing(info);
     }
@@ -516,7 +506,11 @@ void GraphicDumperServer::SaveLog(std::any server)
     logBlock->length = serverPtr->logBuf_.size[index];
     uint32_t offset = 0;
     for (const auto& str : *serverPtr->logBuf_.vec[index]) {
-        memcpy_s(logBlock->data + offset, serverPtr->logBuf_.size[index] - offset, str.c_str(), (str.size() + 1));
+        int ret = memcpy_s(logBlock->data + offset, serverPtr->logBuf_.size[index] - offset,
+        str.c_str(), (str.size() + 1));
+        if (ret < 0) {
+        return ;
+        }
         offset += (str.size() + 1);
     }
     std::lock_guard<std::mutex> lock(serverPtr->logBlockVectorMutex_);
@@ -531,7 +525,7 @@ void GraphicDumperServer::SaveLog(std::any server)
     serverPtr->logBuf_.size[index] = 0;
 }
 
-GDError GraphicDumperServer::LogHandle(const std::string &tag, const std::string &info)
+GSError GraphicDumperServer::LogHandle(const std::string &tag, const std::string &info)
 {
     std::string log = tag + " | " + info;
     GDLOGFI("%{public}s -> %{public}s", tag.c_str(), info.c_str());
@@ -554,10 +548,9 @@ GDError GraphicDumperServer::LogHandle(const std::string &tag, const std::string
             logBuf_.canSave = true;
         }
     }
-    GDLOGFI("logBuf_.size[logBuf_.index] = %{public}d",logBuf_.size[logBuf_.index] );
     if (logBuf_.sync) {
         if ((!logBuf_.mask.empty()) && (log.compare(0, logBuf_.mask.size(), logBuf_.mask) != 0)) {
-            return GD_OK;
+            return GSERROR_OK;
         }
         auto pos = log.find_first_of("| [");
         constexpr int offset = 2;
@@ -568,6 +561,6 @@ GDError GraphicDumperServer::LogHandle(const std::string &tag, const std::string
         }
         SendToInfoListener(log.substr(pos));
     }
-    return GD_OK;
+    return GSERROR_OK;
 }
 } // namespace OHOS

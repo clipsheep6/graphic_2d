@@ -30,7 +30,7 @@ GraphicDumperCommandProxy::GraphicDumperCommandProxy(const sptr<IRemoteObject>& 
 {
 }
 
-GDError GraphicDumperCommandProxy::GetConfig(const std::string &k, std::string &v)
+GSError GraphicDumperCommandProxy::GetConfig(const std::string &k, std::string &v)
 {
     MessageOption opt;
     MessageParcel arg;
@@ -46,17 +46,17 @@ GDError GraphicDumperCommandProxy::GetConfig(const std::string &k, std::string &
     int result = Remote()->SendRequest(IGRAPHIC_DUMPER_COMMAND_GET_CONFIG, arg, ret, opt);
     if (result) {
         GDLOG_ERROR_API(result, SendRequest);
-        return GD_ERROR_API_FAILED;
+        return GSERROR_API_FAILED;
     }
-    GDError retCode = static_cast<GDError>(ret.ReadInt32());
-    if (retCode == GD_OK) {
+    GSError retCode = static_cast<GSError>(ret.ReadInt32());
+    if (retCode == GSERROR_OK) {
         v = ret.ReadString();
         GDLOGFE("%{public}s -> %{public}s", k.c_str(), v.c_str());
     }
     return retCode;
 }
 
-GDError GraphicDumperCommandProxy::SetConfig(const std::string &k, const std::string &v)
+GSError GraphicDumperCommandProxy::SetConfig(const std::string &k, const std::string &v)
 {
     MessageOption opt;
     MessageParcel arg;
@@ -72,12 +72,12 @@ GDError GraphicDumperCommandProxy::SetConfig(const std::string &k, const std::st
     int result = Remote()->SendRequest(IGRAPHIC_DUMPER_COMMAND_SET_CONFIG, arg, ret, opt);
     if (result) {
         GDLOG_ERROR_API(result, SendRequest);
-        return GD_ERROR_API_FAILED;
+        return GSERROR_API_FAILED;
     }
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperCommandProxy::Dump(const std::string &tag)
+GSError GraphicDumperCommandProxy::Dump(const std::string &tag)
 {
     MessageOption opt;
     MessageParcel arg;
@@ -92,12 +92,12 @@ GDError GraphicDumperCommandProxy::Dump(const std::string &tag)
     int result = Remote()->SendRequest(IGRAPHIC_DUMPER_COMMAND_DUMP, arg, ret, opt);
     if (result) {
         GDLOG_ERROR_API(result, SendRequest);
-        return GD_ERROR_API_FAILED;
+        return GSERROR_API_FAILED;
     }
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperCommandProxy::GetLog(const std::string &tag, std::string &log)
+GSError GraphicDumperCommandProxy::GetLog(const std::string &tag, std::string &log)
 {
     MessageOption opt;
     MessageParcel arg;
@@ -112,18 +112,17 @@ GDError GraphicDumperCommandProxy::GetLog(const std::string &tag, std::string &l
     int result = Remote()->SendRequest(IGRAPHIC_DUMPER_COMMAND_GET_LOG, arg, ret, opt);
     if (result) {
         GDLOG_ERROR_API(result, SendRequest);
-        return GD_ERROR_API_FAILED;
+        return GSERROR_API_FAILED;
     }
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperCommandProxy::AddInfoListener(const std::string &tag, sptr<IGraphicDumperInfoListener> &listener)
+GSError GraphicDumperCommandProxy::AddInfoListener(const std::string &tag, sptr<IGraphicDumperInfoListener> &listener)
 {
     if (listener == nullptr) {
-        GDLOG_FAILURE_NO(GD_ERROR_NULLPTR);
-        return GD_ERROR_NULLPTR;
+        GDLOG_FAILURE_NO(GSERROR_INVALID_ARGUMENTS);
+        return GSERROR_INVALID_ARGUMENTS;
     }
-
     MessageOption opt;
     MessageParcel arg;
     MessageParcel ret;
@@ -137,11 +136,11 @@ GDError GraphicDumperCommandProxy::AddInfoListener(const std::string &tag, sptr<
     int result = Remote()->SendRequest(IGRAPHIC_DUMPER_COMMAND_ADD_INFO_LISTENER, arg, ret, opt);
     if (result) {
         GDLOG_ERROR_API(result, SendRequest);
-        return GD_ERROR_BINDER_ERROR;
+        return GSERROR_BINDER;
     }
 
-    GDError err = (GDError)ret.ReadInt32();
-    if (err != GD_OK) {
+    GSError err = (GSError)ret.ReadInt32();
+    if (err != GSERROR_OK) {
         GDLOG_FAILURE_NO(err);
     }
     return err;

@@ -26,12 +26,12 @@
 #include "ipc/igraphic_dumper_client_listener.h"
 
 namespace OHOS {
-class TreeNode;
-using TreeNodePtr = std::shared_ptr<TreeNode>;
+class GraphicDumperTree;
+using TreeNodePtr = std::shared_ptr<GraphicDumperTree>;
 using TreeNodeVisitFunc = std::function<void(const TreeNodePtr &v)>;
 using TreeNodeMap = std::map<const std::string, TreeNodePtr>;
 
-class TreeNode {
+class GraphicDumperTree {
 public:
     TreeNodePtr GetSetNode(const std::string str);
     bool HasNode(const std::string str);

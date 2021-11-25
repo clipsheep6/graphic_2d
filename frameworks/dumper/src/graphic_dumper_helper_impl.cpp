@@ -29,10 +29,10 @@
 
 #define RET_IF_NOT_OK(ret)    \
     do {                      \
-        if (ret != GD_OK) {   \
+        if (ret != GSERROR_OK) {   \
             return ret;       \
         }                     \
-    } while(0)                \
+    } while (0)                \
 
 namespace OHOS {
 namespace {
@@ -87,26 +87,26 @@ void GraphicDumperHelperImpl::SetNoopInstance()
         currentHelper = new GraphicDumperHelperNoop();
 }
 
-GDError GraphicDumperHelperImpl::Init()
+GSError GraphicDumperHelperImpl::Init()
 {
     std::lock_guard<std::mutex> lock(initMutex_);
     if (serverConnected) {
-        return GD_OK;
+        return GSERROR_OK;
     }
     if (access("/data/gdumper_enable", F_OK) != 0) {
         SetNoopInstance();
-        return GD_ERROR_NOT_SUPPORT;
+        return GSERROR_NOT_SUPPORT;
     }
 
     auto now = std::chrono::steady_clock::now().time_since_epoch();
     auto nowTime = (int64_t)std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
     constexpr int64_t reconnectTime = 1000;
     if ((nowTime - requestConnectTime) < reconnectTime) {
-        return GD_ERROR_OUT_OF_RANGE;
+        return GSERROR_OUT_OF_RANGE;
     }
     requestConnectTime = nowTime;
-    GDError ret = InitSA(GRAPHIC_DUMPER_SERVICE_SA_ID);
-    if (ret == GD_OK) {
+    GSError ret = InitSA(GRAPHIC_DUMPER_SERVICE_SA_ID);
+    if (ret == GSERROR_OK) {
         {
             std::lock_guard<std::mutex> guard(onConfigChangeMutex_);
             for (const auto& iter : onConfigChangeMap_) {
@@ -136,20 +136,20 @@ GDError GraphicDumperHelperImpl::Init()
     return ret;
 }
 
-GDError GraphicDumperHelperImpl::InitSA(int32_t systemAbilityId)
+GSError GraphicDumperHelperImpl::InitSA(int32_t systemAbilityId)
 {
     if (serverConnected) {
-        return GD_OK;
+        return GSERROR_OK;
     }
 
     auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sam == nullptr) {
-        GDLOG_FAILURE_RET(GD_ERROR_SAMGR);
+        GDLOG_FAILURE_RET(GSERROR_CONNOT_CONNECT_SAMGR);
     }
 
     auto remoteObject = sam->GetSystemAbility(systemAbilityId);
     if (remoteObject == nullptr) {
-        GDLOG_FAILURE_RET(GD_ERROR_SERVICE_NOT_FOUND);
+        GDLOG_FAILURE_RET(GSERROR_CONNOT_CONNECT_SERVER);
     }
 
     sptr<IRemoteObject::DeathRecipient> deathRecipient = new GDumperServiceDeathRecipient();
@@ -159,17 +159,17 @@ GDError GraphicDumperHelperImpl::InitSA(int32_t systemAbilityId)
 
     service_ = iface_cast<IGraphicDumperService>(remoteObject);
     if (service_ == nullptr) {
-        GDLOG_FAILURE_RET(GD_ERROR_PROXY_NOT_INCLUDE);
+        GDLOG_FAILURE_RET(GSERROR_PROXY_NOT_INCLUDE);
     }
     serverConnected = true;
     GDLOG_SUCCESS("service_ = iface_cast");
-    return GD_OK;
+    return GSERROR_OK;
 }
 
-GDError GraphicDumperHelperImpl::AddClientListener(const std::string &tag)
+GSError GraphicDumperHelperImpl::AddClientListener(const std::string &tag)
 {
-    if (Init() != GD_OK) {
-        return GD_ERROR_SERVICE_NOT_FOUND;
+    if (Init() != GSERROR_OK) {
+        return GSERROR_CONNOT_CONNECT_SERVER;
     }
 
     if (listener_ == nullptr) {
@@ -182,30 +182,25 @@ GDError GraphicDumperHelperImpl::AddClientListener(const std::string &tag)
     return service_->AddClientListener(tag, listener_);
 }
 
-GDError GraphicDumperHelperImpl::SendInfo(const std::string &tag, const char *fmt, ... )
+GSError GraphicDumperHelperImpl::SendInfo(const std::string &tag, const char *fmt, ...)
 {
-    GDLOGFE("SendInfo is start");
     char info[INFO_SIZE_MAX]; // clear by vsnprintf
     {
         static std::mutex sprintfMutex_;
         std::lock_guard<std::mutex> lock(sprintfMutex_);
-
         va_list args;
         va_start(args, fmt);
         int ret = vsnprintf_s(info, sizeof(info), (sizeof(info) - 1), fmt, args);
-        GDLOGFE("SendInfo is ret = %{public}d",ret);
-        va_end(args);
         if (ret < 0) {
-            return GD_ERROR_INVALID_PARAM;
+            return GSERROR_INVALID_ARGUMENTS;
         }
+        va_end(args);
     }
-
-    GDError retInit = Init();
-    GDLOGFE("SendInfo is retInit = %{public}d",retInit);
-    if (retInit == GD_OK) {
+    GSError retInit = Init();
+    if (retInit == GSERROR_OK) {
         return service_->SendInfo(tag, std::string(info));
         GDLOGFE("SendInfo is ok");
-    } else if (retInit == GD_ERROR_NOT_SUPPORT) {
+    } else if (retInit == GSERROR_NOT_SUPPORT) {
         return retInit;
     } else {
         struct InfoStruct infoStruct = {
@@ -214,7 +209,7 @@ GDError GraphicDumperHelperImpl::SendInfo(const std::string &tag, const char *fm
         };
         std::lock_guard<std::mutex> guard(cacheInfoMutex_);
         cacheInfo_.push_back(infoStruct);
-        return GD_OK;
+        return GSERROR_OK;
     }
 }
 
@@ -223,60 +218,60 @@ int32_t GraphicDumperHelperImpl::AddConfigChangeListener(const std::string &tag,
     {
         std::lock_guard<std::mutex> guard(onConfigChangeMutex_);
         if (onConfigChangeMap_.find(tag) != onConfigChangeMap_.end()) {
-            onConfigChangeMap_[tag]->insert({ ++onConfigChangeFuncId_, func });
+            (*onConfigChangeMap_[tag])[++onConfigChangeFuncId_] = func;
             return onConfigChangeFuncId_;
         }
     }
     int ret = AddClientListener(tag);
-    if (ret != GD_OK) {
+    if (ret != GSERROR_OK) {
         return 0;
     }
     auto onConfigChangeFuncs = std::make_unique<std::map<int32_t, OnConfigChangeFunc>>();
-    onConfigChangeFuncs->insert({ ++onConfigChangeFuncId_, func });
+    (*onConfigChangeFuncs)[++onConfigChangeFuncId_] = func;
     onConfigChangeMap_[tag] = std::move(onConfigChangeFuncs);
     return onConfigChangeFuncId_;
 }
 
-GDError GraphicDumperHelperImpl::RemoveConfigChangeListener(const int32_t listenerId)
+GSError GraphicDumperHelperImpl::RemoveConfigChangeListener(const int32_t listenerId)
 {
     std::lock_guard<std::mutex> guard(onConfigChangeMutex_);
     for (auto& [k, v] : onConfigChangeMap_) {
         if (v->find(listenerId) != v->end()) {
             v->erase(listenerId);
-            return GD_OK;
+            return GSERROR_OK;
         }
     }
-    return GD_ERROR_INVALID_PARAM;
+    return GSERROR_INVALID_ARGUMENTS;
 }
 
 int32_t GraphicDumperHelperImpl::AddDumpListener(const std::string &tag, OnDumpFunc func)
 {
     std::lock_guard<std::mutex> guard(onDumperFuncsMutex_);
     if (onDumpFuncsMap_.find(tag) != onDumpFuncsMap_.end()) {
-        onDumpFuncsMap_[tag]->insert({ ++onDumperFuncId_, func });
+        (*onDumpFuncsMap_[tag])[++onDumperFuncId_] = func;
         return onDumperFuncId_;
     }
     auto dumpTag = "*#dp#*." + tag;
     int ret = AddClientListener(dumpTag);
-    if (ret != GD_OK) {
+    if (ret != GSERROR_OK) {
         return 0;
     }
     auto onDumpFuncs = std::make_unique<std::map<int32_t, OnDumpFunc>>();
-    onDumpFuncs->insert({ ++onDumperFuncId_, func });
+    (*onDumpFuncs)[++onDumperFuncId_] = func;
     onDumpFuncsMap_[tag] = std::move(onDumpFuncs);
     return onDumperFuncId_;
 }
 
-GDError GraphicDumperHelperImpl::RemoveDumpListener(const int32_t listenerId)
+GSError GraphicDumperHelperImpl::RemoveDumpListener(const int32_t listenerId)
 {
     std::lock_guard<std::mutex> guard(onDumperFuncsMutex_);
     for (auto& [k, v] : onDumpFuncsMap_) {
         if (v->find(listenerId) != v->end()) {
             v->erase(listenerId);
-            return GD_OK;
+            return GSERROR_OK;
         }
     }
-    return GD_ERROR_INVALID_PARAM;
+    return GSERROR_INVALID_ARGUMENTS;
 }
 
 void GraphicDumperHelperImpl::SetConnectState(bool state)

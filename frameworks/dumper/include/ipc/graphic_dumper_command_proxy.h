@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_COMMAND_STUB_H
-#define FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_COMMAND_STUB_H
+#ifndef FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_COMMAND_PROXY_H
+#define FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_COMMAND_PROXY_H
 
 #include <iremote_object.h>
 #include <iremote_proxy.h>
@@ -27,11 +27,11 @@ public:
     GraphicDumperCommandProxy(const sptr<IRemoteObject>& impl);
     virtual ~GraphicDumperCommandProxy() = default;
 
-    virtual GDError GetConfig(const std::string &k, std::string &v) override;
-    virtual GDError SetConfig(const std::string &k, const std::string &v) override;
-    virtual GDError Dump(const std::string &key) override;
-    virtual GDError GetLog(const std::string &tag, std::string &log) override;
-    virtual GDError AddInfoListener(const std::string &tag, sptr<IGraphicDumperInfoListener> &listener) override;
+    GSError GetConfig(const std::string &k, std::string &v) override;
+    GSError SetConfig(const std::string &k, const std::string &v) override;
+    GSError Dump(const std::string &key) override;
+    GSError GetLog(const std::string &tag, std::string &log) override;
+    GSError AddInfoListener(const std::string &tag, sptr<IGraphicDumperInfoListener> &listener) override;
 
 private:
     static inline BrokerDelegator<GraphicDumperCommandProxy> delegator_;

@@ -61,16 +61,16 @@ public:
     static sptr<GraphicDumperServer> GetInstance();
     int32_t Init();
 
-    GDError AddConfigListener(const std::string &tag, sptr<IGraphicDumperClientListener> &listener);
-    GDError RemoveConfigListener(sptr<IRemoteObject> object);
-    GDError GetConfig(const std::string &k, std::string &v);
-    GDError SetConfig(const std::string &k, const std::string &v);
-    GDError Dump(const std::string &tag);
+    GSError AddConfigListener(const std::string &tag, sptr<IGraphicDumperClientListener> &listener);
+    GSError RemoveConfigListener(sptr<IRemoteObject> object);
+    GSError GetConfig(const std::string &k, std::string &v);
+    GSError SetConfig(const std::string &k, const std::string &v);
+    GSError Dump(const std::string &tag);
 
-    GDError AddInfoListener(sptr<IGraphicDumperInfoListener> &listener);
-    GDError RemoveInfoListener(const wptr<IRemoteObject> &object);
-    GDError InfoHandle(const std::string &tag, const std::string &info);
-    GDError GetLog(const std::string &tag, const std::string &info);
+    GSError AddInfoListener(sptr<IGraphicDumperInfoListener> &listener);
+    GSError RemoveInfoListener(const wptr<IRemoteObject> &object);
+    GSError InfoHandle(const std::string &tag, const std::string &info);
+    GSError GetLog(const std::string &tag, const std::string &info);
 
 private:
     GraphicDumperServer() = default;
@@ -91,7 +91,7 @@ private:
     bool HaveInfoDeathRecipient(sptr<IRemoteObject> &object);
     void SendToInfoListener(const std::string &info);
     static void SaveLog(std::any server);
-    GDError LogHandle(const std::string &tag, const std::string &info);
+    GSError LogHandle(const std::string &tag, const std::string &info);
 
 private:
     std::mutex infoListenersMutex_;
@@ -102,7 +102,7 @@ private:
     std::map<uint32_t, ConfigTags> configTagsMap_;
     std::map<sptr<IRemoteObject>, uint32_t> objectIdMap_;
     std::mutex treeMutex_;
-    const TreeNodePtr root = std::make_shared<TreeNode>();
+    const TreeNodePtr root = std::make_shared<GraphicDumperTree>();
 
     LogBuffer logBuf_;
     uint32_t logBlockSize_ = 0;

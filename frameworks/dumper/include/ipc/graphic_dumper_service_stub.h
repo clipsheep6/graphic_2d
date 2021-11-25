@@ -13,25 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_SERVICE_PROXY_H
-#define FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_SERVICE_PROXY_H
+#ifndef FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_SERVICE_STUB_H
+#define FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_SERVICE_STUB_H
 
-#include <iremote_object.h>
+#include <vector>
+
+#include <iremote_stub.h>
 #include <iremote_proxy.h>
+#include <message_parcel.h>
+#include <message_option.h>
 
 #include "ipc/igraphic_dumper_service.h"
 
 namespace OHOS {
-class GraphicDumperServiceProxy : public IRemoteProxy<IGraphicDumperService> {
+class GraphicDumperServiceStub : public IRemoteStub<IGraphicDumperService> {
 public:
-    GraphicDumperServiceProxy(const sptr<IRemoteObject>& impl);
-    virtual ~GraphicDumperServiceProxy() = default;
+    virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel& data,
+                            MessageParcel& reply, MessageOption& option) override;
     GSError AddClientListener(const std::string &tag, sptr<IGraphicDumperClientListener> &listener) override;
     GSError SendInfo(const std::string &tag, const std::string &info) override;
-
-private:
-    static inline BrokerDelegator<GraphicDumperServiceProxy> delegator_;
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_SERVICE_PROXY_H
+#endif // FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_SERVICE_H

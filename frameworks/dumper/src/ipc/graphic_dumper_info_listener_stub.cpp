@@ -16,13 +16,12 @@
 #include "ipc/graphic_dumper_info_listener_stub.h"
 
 #include "graphic_dumper_hilog.h"
-//#include "graphic_dumper_type.h"
 #include "graphic_common.h"
 
-#define REMOTE_RETURN(reply, gd_error) \
-    reply.WriteInt32(gd_error);        \
-    if (gd_error != GD_OK) {     \
-        GDLOG_FAILURE_NO(gd_error);    \
+#define REMOTE_RETURN(reply, gs_error) \
+    reply.WriteInt32(gs_error);        \
+    if ((gs_error) != GSERROR_OK) {     \
+        GDLOG_FAILURE_NO(gs_error);    \
     }                                  \
     break
 
@@ -32,7 +31,7 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "GraphicDumperInfoListene
 }
 
 int32_t GraphicDumperInfoListenerStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
-                            MessageParcel& reply, MessageOption& option)
+    MessageParcel& reply, MessageOption& option)
 {
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (GetDescriptor() != remoteDescriptor) {
@@ -43,13 +42,15 @@ int32_t GraphicDumperInfoListenerStub::OnRemoteRequest(uint32_t code, MessagePar
         case IGRAPHIC_DUMPER_INFO_LISTENER_ON_INFO_COMING: {
             std::string info = data.ReadString();
             OnInfoComing(info);
-            REMOTE_RETURN(reply, GD_OK);
-        } break;
+            REMOTE_RETURN(reply, GSERROR_OK);
+            break;
+        }
 
         default: {
             GDLOGFE("code %{public}d cannot process", code);
             return 1;
-        } break;
+            break;
+        }
     }
     return 0;
 }

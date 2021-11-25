@@ -45,15 +45,15 @@ static constexpr OHOS::HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, 0, "GD" };
 #define GDLOGFW(fmt, ...) GDLOGW("%{public}s: " fmt, _GD_FUNC, ##__VA_ARGS__)
 #define GDLOGFE(fmt, ...) GDLOGE("%{public}s: " fmt, _GD_FUNC, ##__VA_ARGS__)
 
-#define GDLOG_SUCCESS(fmt, ...) GDLOGI("Success, Way: " fmt, ##__VA_ARGS__);
-#define GDLOG_FAILURE(fmt, ...) GDLOGE("Failure, Reason: " fmt, ##__VA_ARGS__);
-#define GDLOG_FAILURE_NO(vsync_error) GDLOG_FAILURE("%{public}s", GErrorStr(vsync_error).c_str())
-#define GDLOG_FAILURE_RET(vsync_error) \
+#define GDLOG_SUCCESS(fmt, ...) GDLOGI("Success, Way: " fmt, ##__VA_ARGS__)
+#define GDLOG_FAILURE(fmt, ...) GDLOGE("Failure, Reason: " fmt, ##__VA_ARGS__)
+#define GDLOG_FAILURE_NO(gs_error) GDLOG_FAILURE("%{public}s", GSErrorStr(gs_error).c_str())
+#define GDLOG_FAILURE_RET(gs_error) \
     do {                              \
-        GDLOG_FAILURE_NO(vsync_error); \
-        return vsync_error;           \
+        GDLOG_FAILURE_NO(gs_error); \
+        return gs_error;           \
     } while (0)
-#define GDLOG_FAILURE_API(api, ret) GDLOG_FAILURE(#api " failed with %{public}s", GErrorStr(ret).c_str())
+#define GDLOG_FAILURE_API(api, ret) GDLOG_FAILURE(#api " failed with %{public}s", GSErrorStr(ret).c_str())
 
 #define GDLOG_ERROR(errno, fmt, ...) \
     GDLOGE(fmt ", means %{public}s", ##__VA_ARGS__, strerror(errno))

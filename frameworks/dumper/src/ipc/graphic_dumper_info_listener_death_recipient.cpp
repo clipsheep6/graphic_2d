@@ -13,15 +13,13 @@
  * limitations under the License.
  */
 
-#include "ipc/graphic_dumper_death_recipient.h"
+#include "ipc/graphic_dumper_info_listener_death_recipient.h"
 #include "graphic_dumper_server.h"
 #include "ipc/igraphic_dumper_command.h"
 #include "graphic_common.h"
 #include "graphic_dumper_hilog.h"
-
 namespace OHOS {
-
-void GDumperInfoListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
+void GraphicDumperInfoListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
     if (object == nullptr) {
         return;

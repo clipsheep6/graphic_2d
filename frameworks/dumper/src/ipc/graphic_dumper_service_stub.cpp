@@ -13,25 +13,25 @@
  * limitations under the License.
  */
 
-#include "ipc/graphic_dumper_service.h"
+#include "ipc/graphic_dumper_service_stub.h"
 
 #include "graphic_dumper_hilog.h"
 #include "graphic_dumper_server.h"
 
-#define REMOTE_RETURN(reply, gd_error) \
-    reply.WriteInt32(gd_error);        \
-    if (gd_error != GD_OK) {     \
-        GDLOG_FAILURE_NO(gd_error);    \
+#define REMOTE_RETURN(reply, gs_error) \
+    reply.WriteInt32(gs_error);        \
+    if ((gs_error) != GSERROR_OK) {     \
+        GDLOG_FAILURE_NO(gs_error);    \
     }                                  \
     break
 
 namespace OHOS {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "GraphicDumperService" };
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "GraphicDumperServiceStub" };
 }
 
-int32_t GraphicDumperService::OnRemoteRequest(uint32_t code, MessageParcel &data,
-                                      MessageParcel &reply, MessageOption &option)
+int32_t GraphicDumperServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
+    MessageParcel &reply, MessageOption &option)
 {
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (GetDescriptor() != remoteDescriptor) {
@@ -44,47 +44,38 @@ int32_t GraphicDumperService::OnRemoteRequest(uint32_t code, MessageParcel &data
             GDLOGFE("%{public}s", tag.c_str());
             auto remoteObject = data.ReadRemoteObject();
             if (remoteObject == nullptr) {
-                REMOTE_RETURN(reply, GD_ERROR_NULLPTR);
+                REMOTE_RETURN(reply, GSERROR_INVALID_ARGUMENTS);
             }
             auto l = iface_cast<IGraphicDumperClientListener>(remoteObject);
-            GDError ret = AddClientListener(tag, l);
+            GSError ret = AddClientListener(tag, l);
             REMOTE_RETURN(reply, ret);
-        } break;
+            break;
+        }
         case IGRAPHIC_DUMPER_SERVICE_SEND_INFO: {
             std::string tag = data.ReadString();
             std::string info = data.ReadString();
-            GDError ret = SendInfo(tag, info);
-            GDLOGFE(" IGRAPHIC_DUMPER_SERVICE_SEND_INFO is %{public}s , %{public}s", tag.c_str() , info.c_str());
+            GSError ret = SendInfo(tag, info);
             REMOTE_RETURN(reply, ret);
-        } break;
-
+            break;
+        }
         default: {
             GDLOGFE("code %{public}d cannot process", code);
             return 1;
-        } break;
+            break;
+        }
     }
     return 0;
 }
-
-GDError GraphicDumperService::AddClientListener(const std::string &tag, sptr<IGraphicDumperClientListener> &listener)
+GSError GraphicDumperServiceStub::AddClientListener(const std::string &tag,
+    sptr<IGraphicDumperClientListener> &listener)
 {
     if (listener == nullptr) {
-        return GD_ERROR_NULLPTR;
+        return GSERROR_INVALID_ARGUMENTS;
     }
     return GraphicDumperServer::GetInstance()->AddConfigListener(tag, listener);
 }
-
-GDError GraphicDumperService::SendInfo(const std::string &tag, const std::string &info)
+GSError GraphicDumperServiceStub::SendInfo(const std::string &tag, const std::string &info)
 {
     return GraphicDumperServer::GetInstance()->InfoHandle(tag, info);
-}
-
-void GDumperClientListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
-{
-    if (object == nullptr) {
-        return;
-    }
-    GDLOGFE("");
-    GraphicDumperServer::GetInstance()->RemoveConfigListener(object.promote());
 }
 } // namespace OHOS

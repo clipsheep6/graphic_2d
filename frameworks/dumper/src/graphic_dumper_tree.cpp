@@ -22,24 +22,24 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "GraphicDumperTree" };
 } // namespace
 
-TreeNodePtr TreeNode::GetSetNode(const std::string s)
+TreeNodePtr GraphicDumperTree::GetSetNode(const std::string s)
 {
     if (nodeMap_ == nullptr) {
         nodeMap_ = std::make_unique<TreeNodeMap>();
     }
     if (!HasNode(s)) {
-        (*nodeMap_)[s] = std::make_shared<TreeNode>();
+        (*nodeMap_)[s] = std::make_shared<GraphicDumperTree>();
         (*nodeMap_)[s]->tag_ = s;
     }
     return (*nodeMap_)[s];
 }
 
-bool TreeNode::HasNode(const std::string s)
+bool GraphicDumperTree::HasNode(const std::string s)
 {
     return nodeMap_->find(s) != nodeMap_->end();
 }
 
-bool TreeNode::IsEmptyNode()
+bool GraphicDumperTree::IsEmptyNode()
 {
     if (nodeMap_->empty() && listenerIds_.empty()) {
         return true;
@@ -47,34 +47,34 @@ bool TreeNode::IsEmptyNode()
     return false;
 }
 
-void TreeNode::EraseNode(const std::string &s)
+void GraphicDumperTree::EraseNode(const std::string &s)
 {
     (*nodeMap_)[s] = nullptr;
     nodeMap_->erase(s);
 }
 
-std::string TreeNode::GetTag()
+std::string GraphicDumperTree::GetTag()
 {
     return tag_;
 }
 
-void TreeNode::SetValue(const std::string s)
+void GraphicDumperTree::SetValue(const std::string s)
 {
     value_ = s;
 }
 
-std::string TreeNode::GetValue()
+std::string GraphicDumperTree::GetValue()
 {
     return value_;
 }
 
-void TreeNode::AddListenerId(uint32_t &listenerId)
+void GraphicDumperTree::AddListenerId(uint32_t &listenerId)
 {
     GDLOGFI("");
     listenerIds_.push_back(listenerId);
 }
 
-void TreeNode::RemoveListenerId(uint32_t &listenerId)
+void GraphicDumperTree::RemoveListenerId(uint32_t &listenerId)
 {
     GDLOGFI("%{public}u", listenerId);
     for (auto iter = listenerIds_.begin(); iter != listenerIds_.end(); ++iter) {
@@ -86,13 +86,13 @@ void TreeNode::RemoveListenerId(uint32_t &listenerId)
     }
 }
 
-std::vector<uint32_t> TreeNode::GetListenerIds() const
+std::vector<uint32_t> GraphicDumperTree::GetListenerIds() const
 {
     GDLOGFI("");
     return listenerIds_;
 }
 
-void TreeNode::Foreach(TreeNodeVisitFunc func) const
+void GraphicDumperTree::Foreach(TreeNodeVisitFunc func) const
 {
     GDLOGFI("");
     if (nodeMap_ == nullptr) {

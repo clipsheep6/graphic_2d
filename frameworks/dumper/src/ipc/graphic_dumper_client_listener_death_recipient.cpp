@@ -13,22 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_DEATH_RECIPIENT_H
-#define FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_DEATH_RECIPIENT_H
+#include "ipc/graphic_dumper_client_listener_death_recipient.h"
 
-#include <iremote_stub.h>
-#include <message_parcel.h>
-#include <message_option.h>
-
-#include "ipc/igraphic_dumper_command.h"
+#include "graphic_dumper_server.h"
 
 namespace OHOS {
-class GDumperInfoListenerDeathRecipient : public IRemoteObject::DeathRecipient {
-public:
-    GDumperInfoListenerDeathRecipient() = default;
-    virtual ~GDumperInfoListenerDeathRecipient() = default;
-    void OnRemoteDied(const wptr<IRemoteObject> &object) override;
-};
+void GraphicDumperClientListenerDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
+{
+    if (object == nullptr) {
+        return;
+    }
+    GraphicDumperServer::GetInstance()->RemoveConfigListener(object.promote());
+}
 } // namespace OHOS
-
-#endif // FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_COMMAND_H

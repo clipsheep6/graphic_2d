@@ -53,6 +53,25 @@ SurfaceError BufferQueueConsumer::ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer,
     return bufferQueue_->ReleaseBuffer(buffer, fence);
 }
 
+SurfaceError BufferQueueConsumer::DetachBuffer(sptr<SurfaceBufferImpl>& buffer)
+{
+    if (bufferQueue_ == nullptr) {
+        return SURFACE_ERROR_NULLPTR;
+    }
+    return bufferQueue_->DetachBuffer(buffer);
+}
+
+SurfaceError BufferQueueConsumer::AttachBuffer(sptr<SurfaceBufferImpl>& buffer)
+{
+    if (bufferQueue_ == nullptr) {
+        return SURFACE_ERROR_NULLPTR;
+    }
+    
+    BLOGND("the addr : %{public}p", buffer.GetRefPtr());
+    BLOGND("the addr bufferQueue_: %{public}p", bufferQueue_.GetRefPtr());
+    return bufferQueue_->AttachBuffer(buffer);
+}
+
 SurfaceError BufferQueueConsumer::RegisterConsumerListener(sptr<IBufferConsumerListener>& listener)
 {
     if (bufferQueue_ == nullptr) {
@@ -69,6 +88,13 @@ SurfaceError BufferQueueConsumer::RegisterConsumerListener(IBufferConsumerListen
     return bufferQueue_->RegisterConsumerListener(listener);
 }
 
+SurfaceError BufferQueueConsumer::RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> func)
+{
+    if (bufferQueue_ == nullptr) {
+        return SURFACE_ERROR_NULLPTR;
+    }
+    return bufferQueue_->RegisterReleaseListener(func);
+}
 SurfaceError BufferQueueConsumer::UnregisterConsumerListener()
 {
     if (bufferQueue_ == nullptr) {

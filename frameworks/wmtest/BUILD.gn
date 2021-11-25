@@ -12,12 +12,13 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/graphic/standard/graphic_config.gni")
 
 ## Build wmtest {{{
 config("wmtest_config") {
   visibility = [ ":*" ]
 
-  include_dirs = [ "frameworks" ]
+  include_dirs = [ "frameworks"]
 
   cflags = [
     "-Wall",
@@ -60,6 +61,7 @@ ohos_executable("wmtest") {
     "test/wmclient_native_test_26.cpp",
     "test/wmclient_native_test_27.cpp",
     "test/wmclient_native_test_28.cpp",
+    "test/wmclient_native_test_32.cpp",
     "test/wmclient_native_test_3.cpp",
     "test/wmclient_native_test_4.cpp",
     "test/wmclient_native_test_5.cpp",
@@ -73,6 +75,10 @@ ohos_executable("wmtest") {
     "test/wmservice_native_test_4.cpp",
     "test/wmservice_native_test_5.cpp",
   ]
+
+  if (ace_enable_gpu) {
+    sources += [ "test/wmclient_native_test_31.cpp" ]
+  }
 
   configs = [ ":wmtest_config" ]
 

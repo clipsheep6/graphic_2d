@@ -24,6 +24,7 @@
 #include <ibuffer_consumer_listener.h>
 #include <ibuffer_producer.h>
 #include <surface_type.h>
+#include <buffer_manager.h>
 
 #include "surface_buffer_impl.h"
 
@@ -33,6 +34,9 @@ enum BufferState {
     BUFFER_STATE_REQUESTED,
     BUFFER_STATE_FLUSHED,
     BUFFER_STATE_ACQUIRED,
+    BUFFER_STATE_ATTACHED,
+    BUFFER_STATE_DETACHED,
+    BUFFER_STATE_SHARED,
 };
 
 typedef struct {
@@ -48,7 +52,7 @@ typedef struct {
 
 class BufferQueue : public RefBase {
 public:
-    BufferQueue(const std::string &name);
+    BufferQueue(const std::string &name, bool isShared = false);
     virtual ~BufferQueue();
     SurfaceError Init();
 
@@ -57,6 +61,9 @@ public:
 
     SurfaceError ReuseBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
                              struct IBufferProducer::RequestBufferReturnValue &retval);
+
+    SurfaceError SharedRequest(const BufferRequestConfig &config, BufferExtraData &bedata,
+                               struct IBufferProducer::RequestBufferReturnValue &retval);
 
     SurfaceError CancelBuffer(int32_t sequence, const BufferExtraData &bedata);
 
@@ -77,6 +84,7 @@ public:
 
     SurfaceError RegisterConsumerListener(sptr<IBufferConsumerListener>& listener);
     SurfaceError RegisterConsumerListener(IBufferConsumerListenerClazz *listener);
+    SurfaceError RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> func);
     SurfaceError UnregisterConsumerListener();
 
     SurfaceError SetDefaultWidthAndHeight(int32_t width, int32_t height);
@@ -87,10 +95,14 @@ public:
 
     SurfaceError CleanCache();
 
+    SurfaceError DetachBuffer(sptr<SurfaceBufferImpl>& buffer);
+    SurfaceError AttachBuffer(sptr<SurfaceBufferImpl>& buffer);
+
 private:
     SurfaceError AllocBuffer(sptr<SurfaceBufferImpl>& buffer, const BufferRequestConfig &config);
     SurfaceError FreeBuffer(sptr<SurfaceBufferImpl>& buffer);
     void DeleteBufferInCache(int sequence);
+    void DumpToFile(int32_t sequence);
 
     uint32_t GetUsedSize();
     void DeleteBuffers(int32_t count);
@@ -113,6 +125,9 @@ private:
     sptr<IBufferConsumerListener> listener_ = nullptr;
     IBufferConsumerListenerClazz *listenerClazz_ = nullptr;
     std::mutex mutex_;
+    sptr<BufferManager> bufferManager = nullptr;
+    std::function<SurfaceError(sptr<SurfaceBuffer>)> onBufferRelease = nullptr;
+    bool isShared_ = false;
 };
 }; // namespace OHOS
 

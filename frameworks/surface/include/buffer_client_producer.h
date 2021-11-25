@@ -40,10 +40,14 @@ public:
     SurfaceError FlushBuffer(int32_t sequence, BufferExtraData &bedata,
                              int32_t fence, BufferFlushConfig &config) override;
 
+    virtual SurfaceError DetachBuffer(sptr<SurfaceBuffer>& buffer) override;
+    virtual SurfaceError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
+    virtual SurfaceError RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> fun) override;
     uint32_t     GetQueueSize() override;
     SurfaceError SetQueueSize(uint32_t queueSize) override;
 
     SurfaceError GetName(std::string &name) override;
+
 
     int32_t      GetDefaultWidth() override;
     int32_t      GetDefaultHeight() override;

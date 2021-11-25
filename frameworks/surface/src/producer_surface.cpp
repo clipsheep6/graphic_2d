@@ -65,6 +65,25 @@ sptr<IBufferProducer> ProducerSurface::GetProducer() const
 SurfaceError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
                                             int32_t &fence, BufferRequestConfig &config)
 {
+    fence = -1;
+    return RequestBufferNoFence(buffer, config);
+}
+
+SurfaceError ProducerSurface::RequestBufferNoFence(sptr<SurfaceBuffer>& buffer,
+                                                   BufferRequestConfig &config)
+{
+    int32_t releaseFence = -1;
+    auto sret = RequestBufferWithFence(buffer, releaseFence, config);
+    if (sret == SURFACE_ERROR_OK && releaseFence >= 0) {
+        BLOGI("closing fence: %{public}d", releaseFence);
+        close(releaseFence);
+    }
+    return sret;
+}
+
+SurfaceError ProducerSurface::RequestBufferWithFence(sptr<SurfaceBuffer>& buffer,
+                                                     int32_t &fence, BufferRequestConfig &config)
+{
     IBufferProducer::RequestBufferReturnValue retval;
     BufferExtraDataImpl bedataimpl;
     SurfaceError ret = GetProducer()->RequestBuffer(config, bedataimpl, retval);
@@ -90,6 +109,7 @@ SurfaceError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
         retval.buffer = bufferProducerCache_[retval.sequence];
     }
     buffer = retval.buffer;
+    fence = retval.fence;
 
     sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
     ret = BufferManager::GetInstance()->InvalidateCache(bufferImpl);
@@ -135,6 +155,12 @@ SurfaceError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
     return GetProducer()->FlushBuffer(bufferImpl->GetSeqNum(), bedataimpl, fence, config);
 }
 
+SurfaceError ProducerSurface::FlushBufferNoFence(sptr<SurfaceBuffer>& buffer,
+                                                 BufferFlushConfig &config)
+{
+    return FlushBuffer(buffer, -1, config);
+}
+
 SurfaceError ProducerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                             int64_t &timestamp, Rect &damage)
 {
@@ -144,6 +170,25 @@ SurfaceError ProducerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t
 SurfaceError ProducerSurface::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence)
 {
     return SURFACE_ERROR_NOT_SUPPORT;
+}
+
+SurfaceError ProducerSurface::DetachBuffer(sptr<SurfaceBuffer>& buffer)
+{
+    if (buffer == nullptr) {
+        return SURFACE_ERROR_NULLPTR;
+    }
+    SurfaceError ret;
+    ret = GetProducer()->DetachBuffer(buffer);
+    return ret;
+}
+
+SurfaceError ProducerSurface::AttachBuffer(sptr<SurfaceBuffer>& buffer)
+{
+    if (buffer == nullptr) {
+        return SURFACE_ERROR_NULLPTR;
+    }
+    BLOGND("the addr : %{public}p", buffer.GetRefPtr());
+    return GetProducer()->AttachBuffer(buffer);
 }
 
 uint32_t     ProducerSurface::GetQueueSize()
@@ -216,6 +261,10 @@ SurfaceError ProducerSurface::RegisterConsumerListener(IBufferConsumerListenerCl
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
+SurfaceError ProducerSurface::RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> fun)
+{
+    return GetProducer()->RegisterReleaseListener(fun);
+}
 SurfaceError ProducerSurface::UnregisterConsumerListener()
 {
     return SURFACE_ERROR_NOT_SUPPORT;

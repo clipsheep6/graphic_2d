@@ -65,7 +65,7 @@ void WMClientNativeTest6::AfterRun()
         return;
     }
 
-    subcsurface = Surface::CreateSurfaceAsConsumer();
+    subcsurface = Surface::CreateSurfaceAsShared("shared", true);
     constexpr uint32_t x = 100;
     constexpr uint32_t y = 200;
     constexpr uint32_t w = 300;

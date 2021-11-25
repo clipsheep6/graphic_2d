@@ -47,4 +47,15 @@ sptr<Surface> Surface::CreateSurfaceAsProducer(sptr<IBufferProducer>& producer)
     }
     return surface;
 }
+
+sptr<Surface> Surface::CreateSurfaceAsShared(std::string name, bool isShared)
+{
+    sptr<ConsumerSurface> surface = new ConsumerSurface(name, isShared);
+    SurfaceError ret = surface->Init();
+    if (ret != SURFACE_ERROR_OK) {
+        BLOGE("Failure, Reason: shared consumer surface init failed");
+        return nullptr;
+    }
+    return surface;
+}
 } // namespace OHOS

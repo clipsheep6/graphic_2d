@@ -68,19 +68,15 @@ BufferClientProducer::BufferClientProducer(const sptr<IRemoteObject>& impl)
 
 BufferClientProducer::~BufferClientProducer()
 {
-    BLOGNI("dtor");
 }
 
 SurfaceError BufferClientProducer::RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
                                                  RequestBufferReturnValue &retval)
 {
     DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
-
     WriteRequestConfig(arguments, config);
-
     SEND_REQUEST(BUFFER_PRODUCER_REQUEST_BUFFER, arguments, reply, option);
     CHECK_RETVAL_WITH_SEQ(reply, retval.sequence);
-
     ReadSurfaceBufferImpl(reply, retval.sequence, retval.buffer);
     bedata.ReadFromParcel(reply);
     ReadFence(reply, retval.fence);
@@ -117,7 +113,22 @@ SurfaceError BufferClientProducer::FlushBuffer(int32_t sequence, BufferExtraData
     return SURFACE_ERROR_OK;
 }
 
-uint32_t     BufferClientProducer::GetQueueSize()
+SurfaceError BufferClientProducer::DetachBuffer(sptr<SurfaceBuffer>& buffer)
+{
+    return SURFACE_ERROR_NOT_SUPPORT;
+}
+
+SurfaceError BufferClientProducer::AttachBuffer(sptr<SurfaceBuffer>& buffer)
+{
+    return SURFACE_ERROR_NOT_SUPPORT;
+}
+
+SurfaceError BufferClientProducer::RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> func)
+{
+    return SURFACE_ERROR_NOT_SUPPORT;
+}
+
+uint32_t BufferClientProducer::GetQueueSize()
 {
     DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
 

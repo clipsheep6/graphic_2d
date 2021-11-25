@@ -45,6 +45,10 @@ BufferQueueProducer::BufferQueueProducer(sptr<BufferQueue>& bufferQueue)
     memberFuncMap_[BUFFER_PRODUCER_GET_DEFAULT_HEIGHT] = &BufferQueueProducer::GetDefaultHeightRemote;
     memberFuncMap_[BUFFER_PRODUCER_GET_DEFAULT_USAGE] = &BufferQueueProducer::GetDefaultUsageRemote;
     memberFuncMap_[BUFFER_PRODUCER_CLEAN_CACHE] = &BufferQueueProducer::CleanCacheRemote;
+    memberFuncMap_[BUFFER_PRODUCER_ATTACH_BUFFER] = &BufferQueueProducer::AttachBufferRemote;
+    memberFuncMap_[BUFFER_PRODUCER_DETACH_BUFFER] = &BufferQueueProducer::DetachBufferRemote;
+    memberFuncMap_[BUFFER_PRODUCER_REGISTER_RELEASE_LISTENER] = &BufferQueueProducer::RegisterReleaseListenerRemote;;
+
 }
 
 BufferQueueProducer::~BufferQueueProducer()
@@ -84,7 +88,7 @@ int32_t BufferQueueProducer::RequestBufferRemote(MessageParcel &arguments, Messa
     BufferRequestConfig config = {};
 
     ReadRequestConfig(arguments, config);
-
+    BLOGND("in RequestBufferRemote, before RequestBuffer");
     SurfaceError sret = RequestBuffer(config, bedataimpl, retval);
 
     reply.WriteInt32(sret);
@@ -125,6 +129,29 @@ int BufferQueueProducer::FlushBufferRemote(MessageParcel &arguments, MessageParc
     SurfaceError sret = FlushBuffer(sequence, bedataimpl, fence, config);
 
     reply.WriteInt32(sret);
+    return 0;
+}
+
+int32_t BufferQueueProducer::AttachBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
+{
+    sptr<SurfaceBuffer> buffer= nullptr;
+    int32_t sequence;
+    //RequestBufferReturnValue retval;
+    ReadSurfaceBufferImpl(arguments, sequence, buffer);
+    AttachBuffer(buffer);
+    return 0;
+}
+
+int32_t BufferQueueProducer::DetachBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
+{
+    sptr<SurfaceBuffer> buffer= nullptr;
+    int32_t sequence;
+    ReadSurfaceBufferImpl(arguments, sequence, buffer);
+    DetachBuffer(buffer);
+    return 0;
+}
+
+int32_t BufferQueueProducer::RegisterReleaseListenerRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option) {
     return 0;
 }
 
@@ -188,6 +215,7 @@ SurfaceError BufferQueueProducer::RequestBuffer(const BufferRequestConfig &confi
 
     auto callingPid = GetCallingPid();
     auto &sended = sendeds[callingPid];
+    BLOGND("in RequestBuffer, before bufferQueue_->RequestBuffer ");
     auto sret = bufferQueue_->RequestBuffer(config, bedata, retval);
     if (sret == SURFACE_ERROR_OK) {
         if (retval.buffer != nullptr) {
@@ -236,6 +264,34 @@ SurfaceError BufferQueueProducer::FlushBuffer(int32_t sequence, BufferExtraData 
     return bufferQueue_->FlushBuffer(sequence, bedata, fence, config);
 }
 
+SurfaceError BufferQueueProducer::DetachBuffer(sptr<SurfaceBuffer>& buffer)
+{
+    if (bufferQueue_ == nullptr) {
+        return SURFACE_ERROR_NULLPTR;
+    }
+    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
+    return bufferQueue_->DetachBuffer(bufferImpl);
+}
+
+SurfaceError BufferQueueProducer::AttachBuffer(sptr<SurfaceBuffer>& buffer)
+{
+    if (bufferQueue_ == nullptr) {
+        return SURFACE_ERROR_NULLPTR;
+    }
+    BLOGND("the addr : %{public}p", buffer.GetRefPtr());
+    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
+    BLOGND("the addr : %{public}p", bufferImpl.GetRefPtr());
+    return bufferQueue_->AttachBuffer(bufferImpl);
+}
+
+SurfaceError BufferQueueProducer::RegisterReleaseListener(std::function<SurfaceError(sptr<SurfaceBuffer>)> func)
+{
+    if (bufferQueue_ == nullptr) {
+        return SURFACE_ERROR_NULLPTR;
+    }
+    return bufferQueue_->RegisterReleaseListener(func);
+    return SURFACE_ERROR_OK;
+}
 uint32_t BufferQueueProducer::GetQueueSize()
 {
     if (bufferQueue_ == nullptr) {

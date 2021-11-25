@@ -24,6 +24,7 @@
 #include <ibuffer_consumer_listener.h>
 #include <ibuffer_producer.h>
 #include <surface_type.h>
+#include <buffer_manager.h>
 
 #include "surface_buffer_impl.h"
 
@@ -60,6 +61,9 @@ public:
 
     SurfaceError ReuseBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
                              struct IBufferProducer::RequestBufferReturnValue &retval);
+
+    SurfaceError SharedRequest(const BufferRequestConfig &config, BufferExtraData &bedata,
+                               struct IBufferProducer::RequestBufferReturnValue &retval);
 
     SurfaceError CancelBuffer(int32_t sequence, const BufferExtraData &bedata);
 

@@ -49,10 +49,7 @@ constexpr int32_t SEC_TO_USEC = 1000000;
 BufferQueue::BufferQueue(const std::string &name, bool isShared)
     : name_(name), isShared_(isShared) {
     BLOGNI("ctor");
-<<<<<<< HEAD
-=======
     bufferManager = BufferManager::GetInstance();
->>>>>>> a1166c9... Attach/Detach
 }
 
 BufferQueue::~BufferQueue() {
@@ -77,6 +74,7 @@ SurfaceError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl> &buffer,
     for (auto it = freeList_.begin(); it != freeList_.end(); it++) {
         if (bufferQueueCache_[*it].config == config) {
             buffer = bufferQueueCache_[*it].buffer;
+            BLOGND("1111111111111111, IT: %{public}d", *it);
             freeList_.erase(it);
             return SURFACE_ERROR_OK;
         }
@@ -88,6 +86,8 @@ SurfaceError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl> &buffer,
     }
 
     buffer = bufferQueueCache_[freeList_.front()].buffer;
+    BLOGND("the addr buffer in PopFromFreeList: %{public}p", buffer.GetRefPtr());
+    BLOGND("2222222222222222222%{public}d", freeList_.front());
     freeList_.pop_front();
     return SURFACE_ERROR_OK;
 }
@@ -156,60 +156,7 @@ SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, Buffe
                                         struct IBufferProducer::RequestBufferReturnValue &retval) {                                      
     
     if (isShared_) {
-        if (GetUsedSize() == 0) {
-            SetQueueSize(1);
-
-            if (listener_ == nullptr && listenerClazz_ == nullptr) {
-                BLOGN_FAILURE_RET(SURFACE_ERROR_NO_CONSUMER);
-            }
-
-            // check param
-            SurfaceError ret = CheckRequestConfig(config);
-            if (ret != SURFACE_ERROR_OK) {
-                BLOGN_FAILURE_API(CheckRequestConfig, ret);
-                return ret;
-            }
-
-            // dequeue from free list
-            std::lock_guard<std::mutex> lockGuard(mutex_);
-            sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-            ret = PopFromFreeList(bufferImpl, config);
-            if (ret == SURFACE_ERROR_OK) {
-                retval.buffer = bufferImpl;
-                return ReuseBuffer(config, bedata, retval);
-            }
-
-            // check queue size
-            if (GetUsedSize() >= GetQueueSize()) {
-                BLOGN_FAILURE("all buffer are using");
-                return SURFACE_ERROR_NO_BUFFER;
-            }
-
-            ret = AllocBuffer(bufferImpl, config);
-            if (ret == SURFACE_ERROR_OK) {
-                retval.sequence = bufferImpl->GetSeqNum();
-                BLOGN_SUCCESS_ID(retval.sequence, "alloc");
-            }
-
-            bufferImpl->GetExtraData(bedata);
-            retval.buffer = bufferImpl;
-            retval.fence = bufferQueueCache_[retval.sequence].fence;
-            bufferQueueCache_[retval.sequence].state = BUFFER_STATE_SHARED;
-            return ret;
-        } else {
-            //check shared config
-            if (config.width != bufferQueueCache_[0].config.width || config.height != bufferQueueCache_[0].config.height
-                    || config.strideAlignment != bufferQueueCache_[0].config.strideAlignment || config.format != bufferQueueCache_[0].config.format
-                    || config.usage != bufferQueueCache_[0].config.usage) {
-                BLOGN_INVALID("the shared config not equal buffer congfig");
-                return SURFACE_ERROR_INVALID_PARAM;
-            }
-
-            retval.buffer = bufferQueueCache_[0].buffer;
-            retval.fence = bufferQueueCache_[0].fence;
-            bufferQueueCache_[0].state = BUFFER_STATE_SHARED;
-            return SURFACE_ERROR_OK;
-        }
+        return SharedRequest(config, bedata, retval);
     } else {
         if (listener_ == nullptr && listenerClazz_ == nullptr) {
             BLOGN_FAILURE_RET(SURFACE_ERROR_NO_CONSUMER);
@@ -217,7 +164,6 @@ SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, Buffe
 
         // check param
         SurfaceError ret = CheckRequestConfig(config);
-
         if (ret != SURFACE_ERROR_OK) {
             BLOGN_FAILURE_API(CheckRequestConfig, ret);
             return ret;
@@ -237,9 +183,10 @@ SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, Buffe
             BLOGN_FAILURE("all buffer are using");
             return SURFACE_ERROR_NO_BUFFER;
         }
-
+        BLOGND("BEFORE ALLOC BUFFER");
         ret = AllocBuffer(bufferImpl, config);
         if (ret == SURFACE_ERROR_OK) {
+            BLOGND("the addr bufferImpl in request: %{public}p", bufferImpl.GetRefPtr());
             retval.sequence = bufferImpl->GetSeqNum();
             BLOGN_SUCCESS_ID(retval.sequence, "alloc");
         }
@@ -251,15 +198,76 @@ SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, Buffe
     }
 }
 
+SurfaceError BufferQueue::SharedRequest(const BufferRequestConfig &config, BufferExtraData &bedata,
+                                      struct IBufferProducer::RequestBufferReturnValue &retval) {
+    if (GetUsedSize() == 0) {
+        SetQueueSize(1);
+
+        if (listener_ == nullptr && listenerClazz_ == nullptr) {
+            BLOGN_FAILURE_RET(SURFACE_ERROR_NO_CONSUMER);
+        }
+
+        // check param
+        SurfaceError ret = CheckRequestConfig(config);
+        if (ret != SURFACE_ERROR_OK) {
+            BLOGN_FAILURE_API(CheckRequestConfig, ret);
+            return ret;
+        }
+
+        // dequeue from free list
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
+        ret = PopFromFreeList(bufferImpl, config);
+        if (ret == SURFACE_ERROR_OK) {
+            retval.buffer = bufferImpl;
+            return ReuseBuffer(config, bedata, retval);
+        }
+
+        // check queue size
+        if (GetUsedSize() >= GetQueueSize()) {
+            BLOGN_FAILURE("all buffer are using");
+            return SURFACE_ERROR_NO_BUFFER;
+        }
+        BLOGND("BEFORE ALLOC BUFFER");
+        ret = AllocBuffer(bufferImpl, config);
+        if (ret == SURFACE_ERROR_OK) {
+            BLOGND("the addr bufferImpl in RequestBuffer: %{public}p", bufferImpl.GetRefPtr());
+            retval.sequence = bufferImpl->GetSeqNum();
+            BLOGN_SUCCESS_ID(retval.sequence, "alloc");
+        }
+
+        bufferImpl->GetExtraData(bedata);
+        retval.buffer = bufferImpl;
+        retval.fence = bufferQueueCache_[retval.sequence].fence;
+        bufferQueueCache_[retval.sequence].state = BUFFER_STATE_SHARED;
+        return ret;
+    } else {
+        //check shared config
+        if (config.width != bufferQueueCache_[0].config.width || config.height != bufferQueueCache_[0].config.height
+                || config.strideAlignment != bufferQueueCache_[0].config.strideAlignment || config.format != bufferQueueCache_[0].config.format
+                || config.usage != bufferQueueCache_[0].config.usage) {
+            BLOGN_INVALID("the shared config not equal buffer congfig");
+            return SURFACE_ERROR_INVALID_PARAM;
+        }
+
+        retval.buffer = bufferQueueCache_[0].buffer;
+        retval.fence = bufferQueueCache_[0].fence;
+        bufferQueueCache_[0].state = BUFFER_STATE_SHARED;
+        return SURFACE_ERROR_OK;
+    }
+
+}
 SurfaceError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
                                       struct IBufferProducer::RequestBufferReturnValue &retval) {
     sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
+    BLOGND("the addr bufferImpl in ReuseBuffer: %{public}p", bufferImpl.GetRefPtr());
     retval.sequence = bufferImpl->GetSeqNum();
     bool needRealloc = (config != bufferQueueCache_[retval.sequence].config);
 
     // config, realloc
     if (needRealloc) {
         DeleteBufferInCache(retval.sequence);
+        BLOGND("BEFORE ALLOC BUFFER");
         auto sret = AllocBuffer(bufferImpl, config);
         if (sret != SURFACE_ERROR_OK) {
             BLOGN_FAILURE("realloc failed");
@@ -267,6 +275,7 @@ SurfaceError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferE
         }
 
         retval.buffer = bufferImpl;
+        BLOGND("the addr bufferImpl in ReuseBuffer: %{public}p", bufferImpl.GetRefPtr());
         retval.sequence = bufferImpl->GetSeqNum();
         bufferQueueCache_[retval.sequence].config = config;
     }
@@ -299,6 +308,7 @@ SurfaceError BufferQueue::CancelBuffer(int32_t sequence, const BufferExtraData &
     CHECK_SEQ_CACHE_AND_STATE(sequence, bufferQueueCache_, BUFFER_STATE_REQUESTED);
     SET_SEQ_STATE(sequence, bufferQueueCache_, BUFFER_STATE_RELEASED);
     freeList_.push_back(sequence);
+    BLOGND("CancelBuffer CancelBuffer CancelBuffer, SEQUNCE: %{public}d", sequence);
     bufferQueueCache_[sequence].buffer->SetExtraData(bedata);
     BLOGN_SUCCESS_ID(sequence, "cancel");
     return SURFACE_ERROR_OK;
@@ -400,7 +410,6 @@ SurfaceError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData 
         SET_SEQ_STATE(sequence, bufferQueueCache_, BUFFER_STATE_FLUSHED);
     }
 
-    SET_SEQ_STATE(sequence, bufferQueueCache_, BUFFER_STATE_FLUSHED);
     dirtyList_.push_back(sequence);
     bufferQueueCache_[sequence].buffer->SetExtraData(bedata);
     bufferQueueCache_[sequence].fence = fence;
@@ -433,6 +442,7 @@ SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer,
     SurfaceError ret = PopFromDirtyList(buffer);
 
     if (ret == SURFACE_ERROR_OK) {
+        BLOGND("the addr bufferImpl in AcquireBuffer: %{public}p", buffer.GetRefPtr());
         int32_t sequence = buffer->GetSeqNum();
         if (bufferQueueCache_[sequence].state != BUFFER_STATE_FLUSHED && bufferQueueCache_[sequence].state != BUFFER_STATE_SHARED) {
             BLOGNW("Warning [%{public}d], Reason: state is not BUFFER_STATE_FLUSHED or BUFFER_STATE_SHARED", sequence);
@@ -458,64 +468,66 @@ SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer,
 }
 
 SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl> &buffer, int32_t fence) {
-
+    BLOGND("the addr bufferImpl in ReleaseBuffer: %{public}p", buffer.GetRefPtr());
     int32_t sequence = buffer->GetSeqNum();
-
+    BLOGND("before lock, %{public}d", sequence);
     {
         std::lock_guard<std::mutex> lockGuard(mutex_);
+        int32_t sequence = buffer->GetSeqNum();
+        BLOGND("in lock, %{public}d", sequence);
+        if ((bufferQueueCache_).find(sequence) == (bufferQueueCache_).end()) {
+            BLOGN_FAILURE_ID(sequence, "not find in cache");
+            return SURFACE_ERROR_NO_ENTRY;
+        }
 
-        {
-            do {
-                if ((bufferQueueCache_).find(sequence) == (bufferQueueCache_).end()) {
-                    BLOGN_FAILURE_ID(sequence, "not find in cache");
-                    return SURFACE_ERROR_NO_ENTRY;
-                }
-
-                if ((bufferQueueCache_)[sequence].state != BUFFER_STATE_ACQUIRED && (bufferQueueCache_)[sequence].state != BUFFER_STATE_ATTACHED
-                        && (bufferQueueCache_)[sequence].state != BUFFER_STATE_SHARED) {
-                    BLOGN_FAILURE_ID(sequence, "state is not BUFFER_STATE_ATTACHED OR BUFFER_STATE_ACQUIRED");
-                    return SURFACE_ERROR_NO_ENTRY;
-                }
-            } while (0);
+        if ((bufferQueueCache_)[sequence].state != BUFFER_STATE_ACQUIRED && (bufferQueueCache_)[sequence].state != BUFFER_STATE_ATTACHED
+                && (bufferQueueCache_)[sequence].state != BUFFER_STATE_SHARED) {
+            BLOGN_FAILURE_ID(sequence, "state is not BUFFER_STATE_ATTACHED OR BUFFER_STATE_ACQUIRED");
+            return SURFACE_ERROR_NO_ENTRY;
         }
     }
 
     if (onBufferRelease != nullptr) {
+        BLOGND("ONBUFFERRELEASE OK");
         sptr<SurfaceBuffer> rbuffer = static_cast<SurfaceBuffer *>(buffer);
         auto sret = onBufferRelease(rbuffer);
+        BLOGND("BEGIN TEST RELEASE LXY");
 
         if (sret == SURFACE_ERROR_OK) {
             BLOGND("onBufferRelease OK");
             return sret;
         } else {
             BLOGND("onBufferRelease failed");
-            return sret;
         }
-    } else {
-        if (isShared_){
+    }
+    
+    {
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        if (isShared_) {
             SET_SEQ_STATE(sequence, bufferQueueCache_, BUFFER_STATE_SHARED);
         } else {
             SET_SEQ_STATE(sequence, bufferQueueCache_, BUFFER_STATE_RELEASED);
         }
-
+        sequence = buffer->GetSeqNum();
+        BLOGND("after lock, %{public}d", sequence);
         bufferQueueCache_[sequence].fence = fence;
         if (bufferQueueCache_[sequence].isDeleting) {
             DeleteBufferInCache(sequence);
             BLOGN_SUCCESS_ID(sequence, "delete");
         } else {
+            BLOGND("add to freeList_, %{public}d,%{public}p", sequence,bufferQueueCache_[sequence].buffer.GetRefPtr());
             freeList_.push_back(sequence);
             BLOGN_SUCCESS_ID(sequence, "push to free list");
         }
 
         return SURFACE_ERROR_OK;
-    }
-
-    return SURFACE_ERROR_OK;
+        }
 }
 
 SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
                                       const BufferRequestConfig &config) {
     buffer = new SurfaceBufferImpl();
+    BLOGND("the addr bufferImpl in AllocBuffer: %{public}p", buffer.GetRefPtr());
     int32_t sequence = buffer->GetSeqNum();
     SurfaceError ret = bufferManager->Alloc(config, buffer);
 
@@ -555,6 +567,7 @@ SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
 }
 
 SurfaceError BufferQueue::FreeBuffer(sptr<SurfaceBufferImpl> &buffer) {
+    BLOGND("the addr bufferImpl in FreeBuffer: %{public}p", buffer.GetRefPtr());
     BLOGND("Free [%{public}d]", buffer->GetSeqNum());
     buffer->SetEglData(nullptr);
     bufferManager->Unmap(buffer);
@@ -619,42 +632,45 @@ void BufferQueue::DeleteBuffers(int32_t count) {
 }
 
 SurfaceError BufferQueue::DetachBuffer(sptr<SurfaceBufferImpl> &buffer) {
-
-    int32_t bufferSequnce = buffer->GetSeqNum();
-    {
-        std::lock_guard<std::mutex> lockGuard(mutex_);
-
-        if (bufferQueueCache_[bufferSequnce].state == BUFFER_STATE_SHARED) {
-            BLOGND("share buffer can not detach");
-            return SURFACE_ERROR_INVALID_OPERATING;
-        }
-
-        if (buffer == nullptr) {
-            BLOGN_FAILURE("buffer is nullptr");
-            return SURFACE_ERROR_NULLPTR;
-        }
-
-        do {
-            if ((bufferQueueCache_).find(bufferSequnce) == (bufferQueueCache_).end()) {
-                BLOGN_FAILURE_ID(bufferSequnce, "not find in cache");
-                return SURFACE_ERROR_NO_ENTRY;
-            }
-
-            if ((bufferQueueCache_)[bufferSequnce].state != BUFFER_STATE_ACQUIRED && (bufferQueueCache_)[bufferSequnce].state != BUFFER_STATE_REQUESTED) {
-                BLOGN_FAILURE_ID(bufferSequnce, "state is not BUFFER_STATE_ATTACHED OR BUFFER_STATE_REQUESTED");
-                return SURFACE_ERROR_NO_ENTRY;
-            }
-        } while (0);
+    BLOGND("BEGIN DETACH LXY");
+    std::lock_guard<std::mutex> lockGuard(mutex_);
+    if (buffer == nullptr) {
+        BLOGN_FAILURE("buffer is nullptr");
+        return SURFACE_ERROR_NULLPTR;
     }
+    BLOGND("the addr bufferImpl in DetachBuffer: %{public}p", buffer.GetRefPtr());
+    int32_t bufferSequnce = buffer->GetSeqNum();
+
+    if (bufferQueueCache_[bufferSequnce].state == BUFFER_STATE_SHARED) {
+        BLOGND("share buffer can not detach");
+        return SURFACE_ERROR_INVALID_OPERATING;
+    }
+
+    if ((bufferQueueCache_).find(bufferSequnce) == (bufferQueueCache_).end()) {
+        BLOGN_FAILURE_ID(bufferSequnce, "not find in cache");
+        return SURFACE_ERROR_NO_ENTRY;
+    }
+
+    if ((bufferQueueCache_)[bufferSequnce].state != BUFFER_STATE_ACQUIRED && (bufferQueueCache_)[bufferSequnce].state != BUFFER_STATE_REQUESTED) {
+        BLOGN_FAILURE_ID(bufferSequnce, "state is not BUFFER_STATE_ATTACHED OR BUFFER_STATE_REQUESTED");
+        return SURFACE_ERROR_NO_ENTRY;
+    }
+
     SET_SEQ_STATE(bufferSequnce, bufferQueueCache_, BUFFER_STATE_DETACHED);
     bufferQueueCache_.erase(bufferSequnce);
-    
+    BLOGND("END DETACH");
     return SURFACE_ERROR_OK;
 }
 
 SurfaceError BufferQueue::AttachBuffer(sptr<SurfaceBufferImpl> &buffer) {
+    BLOGD("BEGIN ATTACH LXY");
     std::lock_guard<std::mutex> lockGuard(mutex_);
-  
+    BLOGND("the addr : %{public}p", buffer.GetRefPtr());
+    if (buffer == nullptr) {
+        BLOGD("attach nullptr");
+        return SURFACE_ERROR_NULLPTR;
+    }
+    BLOGND("the addr bufferImpl in AttachBuffer: %{public}p", buffer.GetRefPtr());
     int32_t sequnce = buffer->GetSeqNum();
 
     // share buffer can not attach
@@ -681,28 +697,22 @@ SurfaceError BufferQueue::AttachBuffer(sptr<SurfaceBufferImpl> &buffer) {
         }
     };
 
-    if (size_ > GetQueueSize()) {
-        BLOGN_FAILURE("all buffer are using");
-        return SURFACE_ERROR_NO_BUFFER;
-    } else if (size_ == GetQueueSize()) {
-        for (auto it = bufferQueueCache_.begin(); it != bufferQueueCache_.end(); it++) {
-            if (it->second.state == BUFFER_STATE_RELEASED) {
-                bufferQueueCache_.erase(it->first);
-                bufferQueueCache_[sequnce] = ele;
-                BLOGND("attach buffer success");
-                return SURFACE_ERROR_OK;
-            }
+    if (size_ >= GetQueueSize()) {
+        int32_t count =  dirtyList_.size() + freeList_.size();
+        if (count > (size_+1)-GetQueueSize()) {
+            DeleteBuffers((size_+1)-GetQueueSize());
+            bufferQueueCache_[sequnce] = ele;
+            return SURFACE_ERROR_OK;
+        } else {
+            BLOGND("the queue to attach is full");
+            return SURFACE_ERROR_OUT_OF_RANGE;
         }
-
-        BLOGN_FAILURE("all buffer are using");
-        return SURFACE_ERROR_NO_BUFFER;
     } else {
         bufferQueueCache_[sequnce] = ele;
         BLOGND("attach buffer success");
         return SURFACE_ERROR_OK;
     }
-
-    return SURFACE_ERROR_OK;
+    
 }
 
 SurfaceError BufferQueue::SetQueueSize(uint32_t queueSize) {

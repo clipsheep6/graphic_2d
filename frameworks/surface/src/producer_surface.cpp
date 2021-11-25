@@ -187,6 +187,7 @@ SurfaceError ProducerSurface::AttachBuffer(sptr<SurfaceBuffer>& buffer)
     if (buffer == nullptr) {
         return SURFACE_ERROR_NULLPTR;
     }
+    BLOGND("the addr : %{public}p", buffer.GetRefPtr());
     return GetProducer()->AttachBuffer(buffer);
 }
 

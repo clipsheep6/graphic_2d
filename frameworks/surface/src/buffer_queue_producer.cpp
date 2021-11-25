@@ -88,7 +88,7 @@ int32_t BufferQueueProducer::RequestBufferRemote(MessageParcel &arguments, Messa
     BufferRequestConfig config = {};
 
     ReadRequestConfig(arguments, config);
-
+    BLOGND("in RequestBufferRemote, before RequestBuffer");
     SurfaceError sret = RequestBuffer(config, bedataimpl, retval);
 
     reply.WriteInt32(sret);
@@ -215,6 +215,7 @@ SurfaceError BufferQueueProducer::RequestBuffer(const BufferRequestConfig &confi
 
     auto callingPid = GetCallingPid();
     auto &sended = sendeds[callingPid];
+    BLOGND("in RequestBuffer, before bufferQueue_->RequestBuffer ");
     auto sret = bufferQueue_->RequestBuffer(config, bedata, retval);
     if (sret == SURFACE_ERROR_OK) {
         if (retval.buffer != nullptr) {
@@ -277,7 +278,9 @@ SurfaceError BufferQueueProducer::AttachBuffer(sptr<SurfaceBuffer>& buffer)
     if (bufferQueue_ == nullptr) {
         return SURFACE_ERROR_NULLPTR;
     }
+    BLOGND("the addr : %{public}p", buffer.GetRefPtr());
     sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
+    BLOGND("the addr : %{public}p", bufferImpl.GetRefPtr());
     return bufferQueue_->AttachBuffer(bufferImpl);
 }
 

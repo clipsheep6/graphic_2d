@@ -83,29 +83,36 @@ public:
     
     SurfaceError OnReleaseBuffer(sptr<SurfaceBuffer> rbuffer)
     {
+        printf("%p\n", rbuffer.GetRefPtr());
         auto sret = bq2->DetachBuffer(rbuffer);
         if (sret != SURFACE_ERROR_OK) {
             printf("OnReleaseBuffer, Detach failed!\n");
             return SURFACE_ERROR_NO_ENTRY;
         }
-        sret = bq1->AttachBuffer(rbuffer);
+        printf("====rbuffer%p, %d\n", rbuffer.GetRefPtr(), __LINE__);
+        printf("====bq1%p, %d\n", bq1.GetRefPtr(), __LINE__);
+        do {
+            sret = bq1->AttachBuffer(rbuffer);
+        } while (sret != SURFACE_ERROR_OK);
+        
+        printf("====rbuffer%p, %d\n", rbuffer.GetRefPtr(), __LINE__);
         if (sret == SURFACE_ERROR_OK) {
             auto ret = bq1->ReleaseBuffer(rbuffer, -1);
             if (ret != SURFACE_ERROR_OK) {
-                bq2->RegisterReleaseListener(nullptr);
+                //bq2->RegisterReleaseListener(nullptr);
                 printf("release buffer failed!\n");
                 return SURFACE_ERROR_TYPE_ERROR;
             }
             if (ret == SURFACE_ERROR_OK) {
-                bq2->RegisterReleaseListener(nullptr);
+                //bq2->RegisterReleaseListener(nullptr);
                 return SURFACE_ERROR_OK;
             }
-        }
-        if (sret == SURFACE_ERROR_NO_BUFFER) {
-            printf("No Buffer!\n");
-            return SURFACE_ERROR_NO_BUFFER;
         } else {
-            return SURFACE_ERROR_NO_ENTRY;
+            printf("bq1 attach failed %d\n",__LINE__);
+            bq2->RegisterReleaseListener(nullptr);
+            bq2->AttachBuffer(rbuffer);
+            bq2->ReleaseBuffer(rbuffer, -1);
+            bq2->RegisterReleaseListener([this](sptr<SurfaceBuffer> rbuffer){this->OnReleaseBuffer(rbuffer);return SURFACE_ERROR_OK;});
         }
         return SURFACE_ERROR_OK;
     }
@@ -126,14 +133,22 @@ public:
             printf("Detach buffer failed!\n");
             return;
         }
-
-        sret = bq2->AttachBuffer(sbuffer);
+        if (sbuffer == nullptr) {
+            printf("sbuffer is null\n");
+        }
+        printf("=====sbuffer:%p, %d\n", sbuffer.GetRefPtr(), __LINE__);
+        do {
+            sret = bq2->AttachBuffer(sbuffer);
+        } while (sret != SURFACE_ERROR_OK);
         if (sret != SURFACE_ERROR_OK) {
             if (sret == SURFACE_ERROR_NO_BUFFER) {
-                printf("No Buffer!\n");
+                printf("No Buffer!, %d\n", __LINE__);
+                bq1->AttachBuffer(sbuffer);
+                bq1->ReleaseBuffer(sbuffer,-1);
                 return;
             } else {
                 printf("Attach buffer failed!\n");
+                return;
             }
         }
 
@@ -168,7 +183,7 @@ private:
             return;
         }
 
-        bq1 = Surface::CreateSurfaceAsConsumer("ipc_2");
+        bq1 = Surface::CreateSurfaceAsConsumer("bq1");
         bq1->SetDefaultWidthAndHeight(window->GetWidth(), window->GetHeight());
         bq1->SetDefaultUsage(bq2->GetDefaultUsage());
         bq1->RegisterConsumerListener(this);

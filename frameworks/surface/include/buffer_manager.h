@@ -24,9 +24,9 @@
 #include "surface_buffer_impl.h"
 
 namespace OHOS {
-class BufferManager {
+class BufferManager : public RefBase{
 public:
-    static BufferManager *GetInstance();
+    static sptr<BufferManager> GetInstance();
 
     SurfaceError Init();
     SurfaceError Alloc(const BufferRequestConfig &config, sptr<SurfaceBufferImpl>& buffer);

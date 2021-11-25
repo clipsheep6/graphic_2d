@@ -66,6 +66,9 @@ SurfaceError BufferQueueConsumer::AttachBuffer(sptr<SurfaceBufferImpl>& buffer)
     if (bufferQueue_ == nullptr) {
         return SURFACE_ERROR_NULLPTR;
     }
+    
+    BLOGND("the addr : %{public}p", buffer.GetRefPtr());
+    BLOGND("the addr bufferQueue_: %{public}p", bufferQueue_.GetRefPtr());
     return bufferQueue_->AttachBuffer(buffer);
 }
 

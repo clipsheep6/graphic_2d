@@ -119,7 +119,10 @@ SurfaceError ConsumerSurface::DetachBuffer(sptr<SurfaceBuffer>& buffer){
 
 SurfaceError ConsumerSurface::AttachBuffer(sptr<SurfaceBuffer>& buffer){
     SurfaceError ret;
+    BLOGND("the addr : %{public}p", buffer.GetRefPtr());
     sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
+    BLOGND("the addr : %{public}p", bufferImpl.GetRefPtr());
+    BLOGND("the addr consumer: %{public}p", consumer_.GetRefPtr());
     ret = consumer_->AttachBuffer(bufferImpl);
     buffer = bufferImpl;
     return ret;

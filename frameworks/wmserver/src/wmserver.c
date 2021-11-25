@@ -843,6 +843,7 @@ static bool SetDisplayMode(struct WmsContext *ctx, uint32_t displayMode)
                         ctx->pMainScreen->screenId, screen->screenId, ret);
             } else {
                 ret = ScreenExpand(ctx->pMainScreen, screen, x, 0);
+                x += screen->westonOutput->width;
                 LOGI("screen_expand from %{public}d to %{public}d, ret = %{public}d",
                         ctx->pMainScreen->screenId, screen->screenId, ret);
             }
@@ -2156,7 +2157,7 @@ static int32_t CreateScreen(struct WmsContext *pCtx,
         pCtx->pMainScreen = pScreen;
     }
 
-    wl_list_insert(&pCtx->wlListScreen, &pScreen->wlListLink);
+    wl_list_insert(pCtx->wlListScreen.prev, &pScreen->wlListLink);
 
     return 0;
 }
@@ -2192,6 +2193,8 @@ static void OutputCreatedEvent(struct wl_listener *listener, void *data)
     CreateScreen(ctx, createdOutput, WMS_SCREEN_TYPE_PHYSICAL);
 
     DisplayModeUpdate(ctx);
+
+    SetDisplayMode(ctx, ctx->displayMode);
 
     ScreenInfoChangerNotify();
 

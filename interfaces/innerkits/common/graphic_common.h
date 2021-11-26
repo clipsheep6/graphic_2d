@@ -102,7 +102,11 @@ enum WMError {
 #ifdef __cplusplus
 static inline std::string WMErrorStr(WMError err)
 {
-    return GSErrorStr(static_cast<GSError>(err));
+    auto it = GSErrorStrs.find(static_cast<GSError>(err));
+    if (it == GSErrorStrs.end()) {
+        return "<WMError error index out of range>";
+    }
+    return it->second;
 }
 #endif // __cplusplus
 
@@ -127,7 +131,11 @@ enum SurfaceError {
 #ifdef __cplusplus
 static inline std::string SurfaceErrorStr(SurfaceError err)
 {
-    return GSErrorStr(static_cast<GSError>(err));
+    auto it = GSErrorStrs.find(static_cast<GSError>(err));
+    if (it == GSErrorStrs.end()) {
+        return "<SurfaceError error index out of range>";
+    }
+    return it->second;
 }
 #endif // __cplusplus
 
@@ -147,7 +155,34 @@ enum VsyncError {
 #ifdef __cplusplus
 static inline std::string VsyncErrorStr(VsyncError err)
 {
-    return GSErrorStr(static_cast<GSError>(err));
+    auto it = GSErrorStrs.find(static_cast<GSError>(err));
+    if (it == GSErrorStrs.end()) {
+        return "<VsyncError error index out of range>";
+    }
+    return it->second;
+}
+
+enum GDError {
+    GD_OK = GSERROR_OK,
+    GD_ERROR_API_FAILED = GSERROR_API_FAILED,
+    GD_ERROR_INVALID_OPERATING = GSERROR_INVALID_OPERATING,
+    GD_ERROR_INVALID_PARAM = GSERROR_INVALID_ARGUMENTS,
+    GD_ERROR_NULLPTR = GSERROR_INVALID_ARGUMENTS,
+    GD_ERROR_BINDER_ERROR = GSERROR_BINDER,
+    GD_ERROR_SAMGR = GSERROR_CONNOT_CONNECT_SAMGR,
+    GD_ERROR_SERVICE_NOT_FOUND = GSERROR_CONNOT_CONNECT_SERVER,
+    GD_ERROR_PROXY_NOT_INCLUDE = GSERROR_PROXY_NOT_INCLUDE,
+    GD_ERROR_OUT_OF_RANGE = GSERROR_OUT_OF_RANGE,
+    GD_ERROR_NOT_SUPPORT = GSERROR_NOT_SUPPORT,
+};
+
+static inline std::string GErrorStr(GDError err)
+{
+    auto it = GSErrorStrs.find(static_cast<GSError>(err));
+    if (it == GSErrorStrs.end()) {
+        return "<GDError error index out of range>";
+    }
+    return it->second;
 }
 } // namespace OHOS
 #endif // __cplusplus

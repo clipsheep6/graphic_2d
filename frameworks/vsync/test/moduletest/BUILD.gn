@@ -11,12 +11,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("test") {
+import("//build/test.gni")
+
+ohos_moduletest("vsync_it_test") {
+  module_out_path = "graphic_standard/vsync"
+  sources = [
+    "vsync_it_test.cpp",
+  ]
+
+  deps = [
+    "//foundation/graphic/standard:libvsync_client",
+  ]
+
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+  ]
+}
+
+group("moduletest") {
   testonly = true
 
   deps = [
-    "systemtest:systemtest",
-    "unittest:unittest",
-    "moduletest:moduletest",
+    ":vsync_it_test"
   ]
 }

@@ -33,7 +33,6 @@
 #include "wl_shm_buffer_factory.h"
 #include "wl_subsurface_factory.h"
 #include "wl_surface_factory.h"
-#include "wp_viewport_factory.h"
 
 namespace OHOS {
 class WindowManagerImpl : public WindowManager {
@@ -52,6 +51,10 @@ public:
 
     virtual WMError ListenNextScreenShot(int32_t id, IScreenShotCallback *cb) override;
     virtual WMError ListenNextWindowShot(const sptr<Window> &window, IWindowShotCallback *cb) override;
+
+    virtual WMError CreateVirtualDisplay(const sptr<VirtualDisplayOption> &option) override;
+    virtual WMError DestroyVirtualDisplay(uint32_t did) override;
+    virtual WMError SetDisplayMode(WMSDisplayMode mode) override;
 
 private:
     WindowManagerImpl();
@@ -80,7 +83,6 @@ private:
     sptr<WlSubsurfaceFactory> wlSubsurfaceFactory = nullptr;
     sptr<WlSurfaceFactory> wlSurfaceFactory = nullptr;
     sptr<WindowManagerServer> windowManagerServer = nullptr;
-    sptr<WpViewportFactory> wpViewportFactory = nullptr;
     sptr<WaylandService> waylandService = nullptr;
     sptr<WindowManagerServiceClient> wmsc = nullptr;
 };

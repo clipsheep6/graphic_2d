@@ -68,7 +68,6 @@ void WindowManagerImpl::InitSingleton()
         wlSHMBufferFactory = SingletonContainer::Get<WlSHMBufferFactory>();
         wlSubsurfaceFactory = SingletonContainer::Get<WlSubsurfaceFactory>();
         wlSurfaceFactory = SingletonContainer::Get<WlSurfaceFactory>();
-        wpViewportFactory = SingletonContainer::Get<WpViewportFactory>();
 
         inputListenerManager->Init();
         windowManagerServer->Init();
@@ -77,7 +76,6 @@ void WindowManagerImpl::InitSingleton()
         wlSHMBufferFactory->Init();
         wlSubsurfaceFactory->Init();
         wlSurfaceFactory->Init();
-        wpViewportFactory->Init();
 
         waylandService = SingletonContainer::Get<WaylandService>();
         waylandService->Start();
@@ -132,7 +130,6 @@ void WindowManagerImpl::DeinitSingleton()
         initSingleton = false;
         waylandService->Stop();
 
-        wpViewportFactory->Deinit();
         wlSurfaceFactory->Deinit();
         wlSubsurfaceFactory->Deinit();
         wlSHMBufferFactory->Deinit();
@@ -142,7 +139,6 @@ void WindowManagerImpl::DeinitSingleton()
         inputListenerManager->Deinit();
 
         waylandService = nullptr;
-        wpViewportFactory = nullptr;
         wlSurfaceFactory = nullptr;
         wlSubsurfaceFactory = nullptr;
         wlSHMBufferFactory = nullptr;
@@ -196,8 +192,77 @@ sptr<Window> WindowManagerImpl::GetWindowByID(int32_t wid)
     return ret;
 }
 
+WMError WindowManagerImpl::CreateVirtualDisplay(const sptr<VirtualDisplayOption> &option)
+{
+    if (wmservice == nullptr) {
+        return WM_ERROR_NOT_INIT;
+    }
+
+    auto promise = wmservice->CreateVirtualDisplay(option->GetX(), option->GetY(),
+        option->GetWidth(), option->GetHeight());
+    if (promise == nullptr) {
+        WMLOGFE("CreateVirtualDisplay return nullptr promise");
+        return WM_ERROR_NEW;
+    }
+
+    auto wret = promise->Await();
+    if (wret != WM_OK) {
+        WMLOGFE("wms->CreateVirtualDisplay failed %{public}s", WMErrorStr(wret).c_str());
+        return wret;
+    }
+
+    return WM_OK;
+}
+
+WMError WindowManagerImpl::DestroyVirtualDisplay(uint32_t did)
+{
+    if (wmservice == nullptr) {
+        return WM_ERROR_NOT_INIT;
+    }
+
+    auto promise = wmservice->DestroyVirtualDisplay(did);
+    if (promise == nullptr) {
+        WMLOGFE("DestroyVirtualDisplay return nullptr promise");
+        return WM_ERROR_NEW;
+    }
+
+    auto wret = promise->Await();
+    if (wret != WM_OK) {
+        WMLOGFE("wms->DestroyVirtualDisplay failed %{public}s", WMErrorStr(wret).c_str());
+        return wret;
+    }
+
+    return WM_OK;
+}
+
+WMError WindowManagerImpl::SetDisplayMode(WMSDisplayMode mode)
+{
+    if (wmservice == nullptr) {
+        return WM_ERROR_NOT_INIT;
+    }
+
+    auto promise = wmservice->SetDisplayMode(mode);
+    if (promise == nullptr) {
+        WMLOGFE("SetDisplayMode return nullptr promise");
+        return WM_ERROR_NEW;
+    }
+
+    auto wret = promise->Await();
+    if (wret != WM_OK) {
+        WMLOGFE("wms->SetDisplayMode failed %{public}s", WMErrorStr(wret).c_str());
+        return wret;
+    }
+
+    return WM_OK;
+}
+
 WMError WindowManagerImpl::CreateWindow(sptr<Window> &window, const sptr<WindowOption> &option)
 {
+    if (option == nullptr) {
+        WMLOGFE("WindowOption is nullptr");
+        return WM_ERROR_NULLPTR;
+    }
+
     if (wmservice == nullptr) {
         return WM_ERROR_NOT_INIT;
     }
@@ -213,7 +278,21 @@ WMError WindowManagerImpl::CreateSubwindow(sptr<Subwindow> &subwindow,
                                            const sptr<Window> &window,
                                            const sptr<SubwindowOption> &option)
 {
+    if (window == nullptr) {
+        WMLOGFE("Window is nullptr");
+        return WM_ERROR_NULLPTR;
+    }
+
+    if (option == nullptr) {
+        WMLOGFE("WindowOption is nullptr");
+        return WM_ERROR_NULLPTR;
+    }
+
     auto staticCall = SingletonContainer::Get<StaticCall>();
+    if (option == nullptr) {
+        return WM_ERROR_NULLPTR;
+    }
+
     if (option->GetWindowType() == SUBWINDOW_TYPE_NORMAL) {
         return staticCall->SubwindowNormalImplCreate(subwindow, window, option);
     }

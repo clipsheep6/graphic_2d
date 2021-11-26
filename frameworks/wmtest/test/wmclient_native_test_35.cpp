@@ -29,7 +29,12 @@
 using namespace OHOS;
 
 namespace {
-class WMClientNativeTest35 : public INativeTest{
+constexpr int32_t ARG_COUNT = 2;
+constexpr int32_t DISPLAY_MODE_SINGLE = 1;
+constexpr int32_t DISPLAY_MODE_CLONE = 2;
+constexpr int32_t DISPLAY_MODE_EXTEND = 3;
+constexpr int32_t DISPLAY_MODE_EXPAND = 4;
+class WMClientNativeTest35 : public INativeTest {
 public:
     std::string GetDescription() const
     {
@@ -55,7 +60,8 @@ public:
         return lastTime;
     }
 
-    void inputExplain(){
+    void inputExplain()
+    {
         printf("please input set display mode: wmtest wmclient 35 [parameter] \n");
         printf("[parameter] : 1 , 2 , 3 , 4 \n");
         printf("1 : set display mode to SINGLE \n");
@@ -66,7 +72,7 @@ public:
 
     void Run(int32_t argc, const char **argv)
     {
-        if (argc != 2){
+        if (argc != ARG_COUNT) {
             inputExplain();
             return;
         }
@@ -82,21 +88,20 @@ public:
         uint32_t displayMode = 0;
         std::stringstream s(argv[1]);
         s >> displayMode;
-        switch (displayMode)
-        {
-            case 1:
+        switch (displayMode) {
+            case DISPLAY_MODE_SINGLE:
                 wmRet = wm->SetDisplayMode(WM_DISPLAY_MODE_SINGLE);
                 printf("1 : set display mode to SINGLE \n");
                 break;
-            case 2:
+            case DISPLAY_MODE_CLONE:
                 wmRet = wm->SetDisplayMode(WM_DISPLAY_MODE_CLONE);
                 printf("2 : set display mode to CLONE\n");
                 break;
-            case 3:
+            case DISPLAY_MODE_EXTEND:
                 wmRet = wm->SetDisplayMode(WM_DISPLAY_MODE_EXTEND);
                 printf("3 : set display mode to EXTEND\n");
                 break;
-            case 4:
+            case DISPLAY_MODE_EXPAND:
                 wmRet = wm->SetDisplayMode(WM_DISPLAY_MODE_EXPAND);
                 printf("4 : set display mode to EXPAND\n");
                 break;

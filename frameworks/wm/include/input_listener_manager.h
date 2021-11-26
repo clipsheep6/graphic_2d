@@ -106,9 +106,9 @@ private:
     static uint32_t FindSeatNum(struct wl_seat *seat);
 
     static inline void SeatHandleCapabilities(void *, struct wl_seat *, uint32_t caps);
-    static inline void RegisterPointerListener(uint32_t caps, struct wl_seat * seat);
-    static inline void RegisterKeyboardListener(uint32_t caps, struct wl_seat * seat);
-    static inline void RegisterTouchListener(uint32_t caps, struct wl_seat * seat);
+    static inline void RegisterPointerListener(uint32_t caps, struct wl_seat *seat);
+    static inline void RegisterKeyboardListener(uint32_t caps, struct wl_seat *seat);
+    static inline void RegisterTouchListener(uint32_t caps, struct wl_seat *seat);
 };
 } // namespace OHOS
 

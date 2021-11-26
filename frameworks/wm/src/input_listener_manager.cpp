@@ -42,7 +42,7 @@ void InputListenerManager::Init()
 
 void InputListenerManager::Deinit()
 {
-    while (!seats.empty()){
+    while (!seats.empty()) {
         if (seats.back().seat != nullptr) {
             wl_seat_destroy(seats.back().seat);
             seats.back().seat = nullptr;
@@ -455,10 +455,11 @@ void OnTouchOrientation(void *, struct wl_touch *,
 }
 } // namespace
 
-uint32_t InputListenerManager::FindSeatNum(struct wl_seat *seat){
+uint32_t InputListenerManager::FindSeatNum(struct wl_seat *seat)
+{
     uint32_t num = 1;
-    for(uint32_t i = 0; i < seats.size(); i++){
-        if(seat == seats[i].seat){
+    for (uint32_t i = 0; i < seats.size(); i++) {
+        if (seat == seats[i].seat) {
             num = i;
             break;
         }

@@ -41,10 +41,10 @@ sptr<Window> NativeTestFactory::CreateWindow(WindowType type, sptr<Surface> csur
     }
 
     std::vector<struct WMDisplayInfo> displays;
-    if (did == 0){
+    if (did == 0) {
         wm->GetDisplays(displays);
         did = INativeTest::displayID;
-        if (did >= displays.size()){
+        if (did >= displays.size()) {
             printf("dispaly : %d non-existent;\n", did);
             return nullptr;
         }

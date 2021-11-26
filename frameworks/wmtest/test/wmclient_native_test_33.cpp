@@ -28,6 +28,11 @@
 using namespace OHOS;
 
 namespace {
+constexpr int32_t VIRTUAL_DISPLAY_X = 100;
+constexpr int32_t VIRTUAL_DISPLAY_Y = 10;
+constexpr int32_t VIRTUAL_DISPLAY_W = 500;
+constexpr int32_t VIRTUAL_DISPLAY_H = 500;
+
 class WMClientNativeTest33 : public INativeTest {
 public:
     std::string GetDescription() const override
@@ -83,13 +88,13 @@ public:
                 printf("VirtualDisplayOption::Get failed.\n");
                 return;
             }
-            virtualDisplayOption->SetX(100);
-            virtualDisplayOption->SetY(10);
-            virtualDisplayOption->SetWidth(500);
-            virtualDisplayOption->SetHeight(500);
+            virtualDisplayOption->SetX(VIRTUAL_DISPLAY_X);
+            virtualDisplayOption->SetY(VIRTUAL_DISPLAY_Y);
+            virtualDisplayOption->SetWidth(VIRTUAL_DISPLAY_W);
+            virtualDisplayOption->SetHeight(VIRTUAL_DISPLAY_H);
 
             auto ret = wm->CreateVirtualDisplay(virtualDisplayOption);
-            if (ret != WM_OK){
+            if (ret != WM_OK) {
                 printf("create virtual display failed.\n");
                 return;
             }

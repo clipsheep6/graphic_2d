@@ -199,7 +199,7 @@ WMError WindowManagerImpl::CreateVirtualDisplay(const sptr<VirtualDisplayOption>
     }
 
     auto promise = wmservice->CreateVirtualDisplay(option->GetX(), option->GetY(),
-                                        option->GetWidth(), option->GetHeight());
+        option->GetWidth(), option->GetHeight());
     if (promise == nullptr) {
         WMLOGFE("CreateVirtualDisplay return nullptr promise");
         return WM_ERROR_NEW;

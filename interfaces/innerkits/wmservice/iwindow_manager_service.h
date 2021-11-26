@@ -62,7 +62,6 @@ public:
     virtual sptr<PromiseWMError> SetWindowMode(int32_t wid, WindowMode mode) = 0;
     virtual sptr<PromiseWMError> CreateVirtualDisplay(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
     virtual sptr<PromiseWMError> DestroyVirtualDisplay(uint32_t did) = 0;
-
 };
 } // namespace OHOS
 

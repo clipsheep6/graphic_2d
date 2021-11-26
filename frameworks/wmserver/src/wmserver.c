@@ -451,7 +451,7 @@ static void CalcWindowInfo(struct WindowSurface *surface)
 }
 
 static bool AddSurface(struct WindowSurface *windowSurface,
-                        uint32_t windowType, uint32_t windowMode)
+    uint32_t windowType, uint32_t windowMode)
 {
     struct WmsContext *ctx = windowSurface->controller->pWmsCtx;
     struct ivi_layout_interface_for_wms *layoutInterface = ctx->pLayoutInterface;
@@ -469,7 +469,7 @@ static bool AddSurface(struct WindowSurface *windowSurface,
             struct weston_output *westonOutput = screen->westonOutput;
             uint32_t layerId = GetLayerId(screen->screenId, windowType, windowMode);
             struct ivi_layout_layer *layoutLayer = GetLayer(screen->westonOutput,
-                                            layoutInterface, layerId, &isNewLayer);
+                layoutInterface, layerId, &isNewLayer);
             if (!layoutLayer) {
                 LOGE("GetLayer failed.");
                 return false;
@@ -478,10 +478,10 @@ static bool AddSurface(struct WindowSurface *windowSurface,
             if (screen->screenId != mainWestonOutput->id && isNewLayer) {
                 if (ctx->displayMode == WMS_DISPLAY_MODE_CLONE) {
                     layoutInterface->layer_set_source_rectangle(layoutLayer, 0, 0,
-                            mainWestonOutput->width, mainWestonOutput->height);
+                        mainWestonOutput->width, mainWestonOutput->height);
                 } else if (ctx->displayMode == WMS_DISPLAY_MODE_EXPAND) {
                     layoutInterface->layer_set_source_rectangle(layoutLayer, x, 0,
-                            westonOutput->width, mainWestonOutput->height);
+                        westonOutput->width, mainWestonOutput->height);
                     x += westonOutput->width;
                 }
             }
@@ -530,10 +530,10 @@ static bool AddWindow(struct WindowSurface *windowSurface)
 
     LOGD("start.");
 
-   if (!AddSurface(windowSurface, windowSurface->type, windowSurface->mode)) {
+    if (!AddSurface(windowSurface, windowSurface->type, windowSurface->mode)) {
         LOGE("AddSurface failed.");
         return false;
-   }
+    }
 
     // window position,size calc.
     CalcWindowInfo(windowSurface);
@@ -637,7 +637,7 @@ static void ControllerCommitChanges(struct wl_client *client,
 }
 
 static bool LayerCopySurfaces(struct WmsContext *ctx, struct ivi_layout_layer *layerFrom,
-            struct ivi_layout_layer *layerTo)
+    struct ivi_layout_layer *layerTo)
 {
     LOGD("start.");
     struct ivi_layout_surface **surfaces = NULL;
@@ -655,15 +655,16 @@ static bool LayerCopySurfaces(struct WmsContext *ctx, struct ivi_layout_layer *l
         ctx->pLayoutInterface->layer_add_surface(layerTo, surfaces[surf_i]);
     }
 
-    if (surfaces != NULL)
+    if (surfaces != NULL) {
         free(surfaces);
+    }
 
     LOGD("end.");
     return true;
 }
 
 static bool ScreenCopyLayers(struct WmsContext *ctx, struct WmsScreen *screenFrom,
-            struct WmsScreen *screenTo)
+    struct WmsScreen *screenTo)
 {
     LOGD("start.");
     struct ivi_layout_layer **layers = NULL;
@@ -679,7 +680,7 @@ static bool ScreenCopyLayers(struct WmsContext *ctx, struct WmsScreen *screenFro
         uint32_t layerIdOld = ctx->pLayoutInterface->get_id_of_layer(layers[layer_i]);
         uint32_t layerIdNew = ChangeLayerId(layerIdOld, screenFrom->screenId, screenTo->screenId);
         struct ivi_layout_layer *layerNew = GetLayer(screenTo->westonOutput,
-                                            ctx->pLayoutInterface, layerIdNew, NULL);
+            ctx->pLayoutInterface, layerIdNew, NULL);
         if (!layerNew) {
             LOGE("GetLayer failed.");
             free(layers);
@@ -692,18 +693,20 @@ static bool ScreenCopyLayers(struct WmsContext *ctx, struct WmsScreen *screenFro
             return false;
         }
     }
-    if (layers != NULL)
+    if (layers != NULL) {
         free(layers);
+    }
 
     ctx->pLayoutInterface->commit_changes();
     LOGD("end.");
     return true;
 }
 
-static bool ScreenSetLayersSourceRect(struct WmsContext *ctx, struct WmsScreen *screen,
-            int32_t x, int32_t y, int32_t w, int32_t h)
+static bool ScreenSetLayersSourceRect(struct WmsScreen *screen,
+    int32_t x, int32_t y, int32_t w, int32_t h)
 {
     LOGD("start.");
+    struct WmsContext *ctx = screen->pWmsCtx;
     struct ivi_layout_layer **layers = NULL;
     int32_t layersCount = 0;
     int32_t ret;
@@ -720,8 +723,9 @@ static bool ScreenSetLayersSourceRect(struct WmsContext *ctx, struct WmsScreen *
             return false;
         }
     }
-    if (layers != NULL)
+    if (layers != NULL) {
         free(layers);
+    }
 
     LOGD("end.");
     return true;
@@ -739,8 +743,8 @@ static bool ScreenClone(struct WmsScreen *screenFrom, struct WmsScreen *screenTo
         return ret;
     }
 
-    ret = ScreenSetLayersSourceRect(ctx, screenTo, 0, 0,
-                screenFrom->westonOutput->width, screenFrom->westonOutput->height);
+    ret = ScreenSetLayersSourceRect(screenTo, 0, 0,
+        screenFrom->westonOutput->width, screenFrom->westonOutput->height);
     if (!ret) {
         LOGE("ScreenSetLayersSourceRect failed.");
         return ret;
@@ -751,7 +755,7 @@ static bool ScreenClone(struct WmsScreen *screenFrom, struct WmsScreen *screenTo
 }
 
 static bool ScreenExpand(struct WmsScreen *screenMain, struct WmsScreen *screenExpand,
-        int32_t expandX, int32_t expandY)
+    int32_t expandX, int32_t expandY)
 {
     LOGD("start.");
     struct WmsContext *ctx = screenMain->pWmsCtx;
@@ -763,8 +767,8 @@ static bool ScreenExpand(struct WmsScreen *screenMain, struct WmsScreen *screenE
         return ret;
     }
 
-    ret = ScreenSetLayersSourceRect(ctx, screenExpand, expandX, expandY,
-                screenExpand->westonOutput->width, screenMain->westonOutput->height);
+    ret = ScreenSetLayersSourceRect(screenExpand, expandX, expandY,
+        screenExpand->westonOutput->width, screenMain->westonOutput->height);
     if (!ret) {
         LOGE("ScreenSetLayersSourceRect failed.");
         return ret;
@@ -799,15 +803,17 @@ static bool ScreenClear(struct WmsScreen *screen)
         for (int32_t surf_i = 0; surf_i < surfacesCount; surf_i++) {
             ctx->pLayoutInterface->layer_remove_surface(layers[layer_i], surfaces[surf_i]);
         }
-        if (surfaces != NULL)
+        if (surfaces != NULL) {
             free(surfaces);
+        }
 
         ctx->pLayoutInterface->layer_set_source_rectangle(layers[layer_i], 0, 0,
-                screen->westonOutput->width, screen->westonOutput->height);
+            screen->westonOutput->width, screen->westonOutput->height);
     }
 
-    if (layers != NULL)
+    if (layers != NULL) {
         free(layers);
+    }
 
     LOGD("end.");
     return true;
@@ -881,7 +887,6 @@ static void ControllerSetDisplayMode(struct wl_client *client,
     }
 
     ret = SetDisplayMode(ctx, displayMode);
-
     if (ret == true) {
         ctx->displayMode = displayMode;
         wms_send_reply_error(resource, WMS_ERROR_OK);
@@ -896,9 +901,7 @@ static void ControllerSetDisplayMode(struct wl_client *client,
 }
 
 static void ControllerCreateVirtualDisplay(struct wl_client *pWlClient,
-                                            struct wl_resource *pWlResource,
-                                            int32_t x, int32_t y,
-                                            int32_t width, int32_t height)
+    struct wl_resource *pWlResource, int32_t x, int32_t y, int32_t width, int32_t height)
 {
     LOGD("start. CreateVirtualDisplay, x:%{public}d, y:%{public}d, "
                         "w:%{public}d, h:%{public}d", x, y, width, height);
@@ -934,8 +937,7 @@ static void ControllerCreateVirtualDisplay(struct wl_client *pWlClient,
 
     wl_list_for_each(pWmsController, &pWmsCtx->wlListController, wlListLink) {
         wms_send_screen_status(pWmsController->pWlResource, pOutput->id, pOutput->name,
-                            WMS_SCREEN_STATUS_ADD, pOutput->width, pOutput->height,
-                            WMS_SCREEN_TYPE_VIRTUAL);
+            WMS_SCREEN_STATUS_ADD, pOutput->width, pOutput->height, WMS_SCREEN_TYPE_VIRTUAL);
     }
     LOGD("end. CreateVirtualDisplay");
 }
@@ -967,7 +969,7 @@ static void ControllerDestroyVirtualDisplay(struct wl_client *pWlClient,
 
     wl_list_for_each(pWmsController, &pWmsCtx->wlListController, wlListLink) {
         wms_send_screen_status(pWmsController->pWlResource, screenID, "",
-                            WMS_SCREEN_STATUS_REMOVE, 0, 0, 0);
+            WMS_SCREEN_STATUS_REMOVE, 0, 0, 0);
     }
     LOGD("end. DestroyVirtualDisplay");
 }
@@ -2061,7 +2063,7 @@ static void BindWmsController(struct wl_client *pClient,
     wl_list_for_each(pScreen, &pCtx->wlListScreen, wlListLink) {
         pOutput = pScreen->westonOutput;
         wms_send_screen_status(pController->pWlResource, pOutput->id, pOutput->name, WMS_SCREEN_STATUS_ADD,
-                pOutput->width, pOutput->height, pScreen->screenType);
+            pOutput->width, pOutput->height, pScreen->screenType);
     }
 
     uint32_t flag = GetDisplayModeFlag(pController->pWmsCtx);

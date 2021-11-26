@@ -28,6 +28,7 @@
 using namespace OHOS;
 
 namespace {
+constexpr int32_t ARG_DISPLAY_ID_INDEX = 4;
 void Usage(const char *argv0)
 {
     printf("Usage: %s type id\n", argv0);
@@ -77,7 +78,7 @@ int32_t main(int32_t argc, const char **argv)
         return 1;
     }
 
-    if (argc == 4){
+    if (argc == ARG_DISPLAY_ID_INDEX) {
         std::stringstream s(argv[idDisplay]);
         s >> INativeTest::displayID;
     }

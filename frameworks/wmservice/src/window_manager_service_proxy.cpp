@@ -478,7 +478,7 @@ sptr<PromiseWMError> WindowManagerServiceProxy::SetWindowMode(int32_t wid, Windo
 }
 
 sptr<PromiseWMError> WindowManagerServiceProxy::CreateVirtualDisplay(
-            int32_t x, int32_t y, int32_t width, int32_t height)
+    int32_t x, int32_t y, int32_t width, int32_t height)
 {
     sptr<PromiseWMError> ret = new PromiseWMError();
     std::lock_guard<std::mutex> lock(promiseQueueMutex);

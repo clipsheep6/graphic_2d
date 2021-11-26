@@ -28,7 +28,6 @@
 using namespace OHOS;
 
 namespace {
-
 class WMClientNativeTest34 : public INativeTest {
 public:
     std::string GetDescription() const override
@@ -80,7 +79,7 @@ public:
         printf("virtual display non-existent.\n");
         } else {
             auto ret = wm->DestroyVirtualDisplay(display->id);
-            if (ret != WM_OK){
+            if (ret != WM_OK) {
                 printf("destroy virtual display failed.\n");
                 return;
             }

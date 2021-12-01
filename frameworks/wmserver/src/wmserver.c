@@ -1272,12 +1272,19 @@ static void PointerSetFocus(const struct WmsSeat *seat)
 }
 #endif
 
-static struct WmsSeat *GetWmsSeat(const char *seatName)
+static struct WmsSeat *GetWmsSeat(const uint32_t screenId)
 {
     struct WmsContext *pWmsCtx = GetWmsInstance();
+    struct WmsScreen *pScreen = GetScreenFromId(pWmsCtx, screenId);
     struct WmsSeat *pSeat = NULL;
+
     wl_list_for_each(pSeat, &pWmsCtx->wlListSeat, wlListLink) {
-        if (!strcmp(pSeat->pWestonSeat->seat_name, seatName)) {
+        if (pSeat->pWestonSeat->output == pScreen->westonOutput) {
+            return pSeat;
+        }
+    }
+    wl_list_for_each(pSeat, &pWmsCtx->wlListSeat, wlListLink) {
+        if (!strcmp(pSeat->pWestonSeat->seat_name, DEFAULT_SEAT_NAME)) {
             return pSeat;
         }
     }
@@ -1361,7 +1368,7 @@ static bool SetWindowFocus(const struct WindowSurface *surface)
         free(surfaceList);
     }
 #endif
-    struct WmsSeat *pSeat = GetWmsSeat(DEFAULT_SEAT_NAME);
+    struct WmsSeat *pSeat = GetWmsSeat(surface->screenId);
     if (!pSeat) {
         LOGE("GetWmsSeat error.");
         return false;
@@ -1409,7 +1416,7 @@ static void ControllerSetStatusBarVisibility(const struct wl_client *client,
 
 static bool FocusWindowUpdate(const struct WindowSurface *surface)
 {
-    struct WmsSeat *pSeat = GetWmsSeat(DEFAULT_SEAT_NAME);
+    struct WmsSeat *pSeat = GetWmsSeat(surface->screenId);
     if (!pSeat) {
         LOGE("GetWmsSeat error.");
         return false;
@@ -1578,6 +1585,31 @@ static void WindowSurfaceDestroy(const struct wl_listener *listener,
     LOGD("end.");
 }
 
+static void SetWindowInputSeat(const struct WmsContext *pWmsCtx,
+    uint32_t windowId, uint32_t screenId)
+{
+    LOGD("start.");
+#ifdef USE_IVI_INPUT_FOCUS
+    struct WmsScreen *pScreen = GetScreenFromId(pWmsCtx, screenId);
+    if (!pScreen) {
+        LOGE("screen is not found[%{public}d].", screenId);
+        return;
+    }
+
+    struct WmsSeat *pSeat = NULL;
+    wl_list_for_each(pSeat, &pWmsCtx->wlListSeat, wlListLink) {
+        LOGD("pSeat->pWestonSeat->seat_name: [%{public}s]\n", pSeat->pWestonSeat->seat_name);
+        if (pSeat->pWestonSeat->output == pScreen->westonOutput) {
+            LOGD("set_input_seat\n");
+            pWmsCtx->pInputInterface->set_input_seat(windowId, pSeat->pWestonSeat->seat_name);
+        }
+    }
+
+#endif
+    LOGD("end.");
+    return;
+}
+
 static void CreateWindow(struct WmsController *pWmsController,
     struct weston_surface *pWestonSurface,
     uint32_t windowId, uint32_t screenId, uint32_t windowType)
@@ -1641,6 +1673,7 @@ static void CreateWindow(struct WmsController *pWmsController,
     pWindow->propertyChangedListener.notify = WindowPropertyChanged;
     wl_signal_add(&pWindow->layoutSurface->property_changed, &pWindow->propertyChangedListener);
 
+    SetWindowInputSeat(pWmsCtx, windowId, screenId);
     wms_send_window_status(pWlResource, WMS_WINDOW_STATUS_CREATED, windowId,
                            pWindow->x, pWindow->y, pWindow->width, pWindow->height);
     wl_client_flush(wl_resource_get_client(pWlResource));

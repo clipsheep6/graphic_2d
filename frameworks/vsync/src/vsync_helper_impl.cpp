@@ -232,14 +232,17 @@ void VsyncClient::DispatchFrameCallback(int64_t timestamp)
         return;
     }
 
-    auto func = std::bind(&VsyncClient::DispatchMain, this, timestamp);
-    g_handlers.front()->PostTask(func, "VsyncClient::DispatchFrameCallback");
+    ++lastID_;
+    if (callbacksMap_.size() > 0) {
+        auto func = std::bind(&VsyncClient::DispatchMain, this, timestamp);
+        g_handlers.front()->PostTask(func, "VsyncClient::DispatchFrameCallback");
+    }
 }
 
 void VsyncClient::DispatchMain(int64_t timestamp)
 {
     ScopedBytrace func(__func__);
-    uint32_t id = ++lastID_;
+    uint32_t id = lastID_;
     int64_t now = GetNowTime();
 
     std::list<struct VsyncElement> vsyncElements;

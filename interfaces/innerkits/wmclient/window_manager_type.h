@@ -84,7 +84,7 @@ enum WindowAdjMode {
 
 enum AdjacentMode {
     ADJ_MODE_NULL = 0,
-    ADJ_MODE_UNENABEL = 1,
+    ADJ_MODE_UNENABLE = 1,
 
     ADJ_MODE_SINGLE = 11,
     ADJ_MODE_SELECT = 12,

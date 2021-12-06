@@ -67,64 +67,46 @@ void GetAdjacentModeShowArea(struct WmsContext *ctx,
     *height = layout.h;
 }
 
-static void SetAdjacentModeNullProp(struct wl_resource *resource)
+static void SendAdjacentModeChangeToWindowSurafce(struct WindowSurface *windowSurface,
+    enum AdjacentModeStatus status)
 {
-    LOGD("start.");
-    struct WmsContext *ctx = GetWmsInstance();
-    struct WindowSurface *windowSurface = NULL;
-    int32_t defX = 0, defY = 0, defWidth = 0, defHeight = 0;
-    GetAdjacentModeShowArea(ctx, &defX, &defY, &defWidth, &defHeight);
-    wl_list_for_each(windowSurface, &ctx->wlListWindow, link) {
-        if (windowSurface->adjMode == WMS_ADJACENT_MODE_MEMBER || 
-            windowSurface->adjMode == WMS_ADJACENT_MODE_BACK || 
-            windowSurface->adjMode == WMS_ADJACENT_MODE_LINE)
-        {
-
-            windowSurface->adjMode = WMS_ADJACENT_MODE_UNSET;
-            wms_send_adjacent_mode_change(resource,
-                                          windowSurface->surfaceId,
-                                          windowSurface->x,
-                                          windowSurface->y,
-                                          windowSurface->width,
-                                          windowSurface->height,
-                                          ADJACENT_MODE_STATUS_DESTROY);
-        }
-    }
-    LOGD("end.");
+    wms_send_adjacent_mode_change(windowSurface->controller->pWlResource,
+        windowSurface->surfaceId, windowSurface->x, windowSurface->y,
+        windowSurface->width, windowSurface->height, mode);
 }
 
-
-static void SetAdjacentModeUnenabelProp(struct wl_resource *resource)
+static void SetAdjacentModeNullProp(struct wl_resource *resource)
 {
-    LOGD("start.");
+    struct WmsContext *ctx = GetWmsInstance();
+    struct WindowSurface *windowSurface = NULL;
+    wl_list_for_each(windowSurface, &ctx->wlListWindow, link) {
+        if (windowSurface->adjMode != WMS_ADJACENT_MODE_UNSET) {
+            windowSurface->adjMode = WMS_ADJACENT_MODE_UNSET;
+            SendAdjacentModeChangeToWindowSurafce(windowSurface, ADJACENT_MODE_STATUS_DESTROY);
+        }
+    }
+}
+
+static void SetAdjacentModeUnenableProp(struct wl_resource *resource)
+{
     struct WmsContext *ctx = GetWmsInstance();
     struct WindowSurface *windowSurface = NULL;
     int32_t defX = 0, defY = 0, defWidth = 0, defHeight = 0;
     GetAdjacentModeShowArea(ctx, &defX, &defY, &defWidth, &defHeight);
     wl_list_for_each(windowSurface, &ctx->wlListWindow, link) {
-        if (windowSurface->type == WINDOW_TYPE_NORMAL)
-        {
+        if (windowSurface->type == WINDOW_TYPE_NORMAL) {
             SetWindowPosition(windowSurface, defX, defY);
             SetWindowSize(windowSurface, defWidth, defHeight);
             windowSurface->adjMode = WMS_ADJACENT_MODE_MEMBER;
-
-            wms_send_adjacent_mode_change(resource,
-                                          windowSurface->surfaceId,
-                                          windowSurface->x,
-                                          windowSurface->y,
-                                          windowSurface->width,
-                                          windowSurface->height,
-                                          ADJACENT_MODE_STATUS_VAGUE);
+            SendAdjacentModeChangeToWindowSurafce(windowSurface, ADJACENT_MODE_STATUS_VAGUE);
             break;
         }
     }
-    LOGD("end.");
     return;
 }
 
 static void SetAdjacentModeSingleProp(struct wl_resource *resource)
 {
-    LOGD("start.");
     struct WmsContext *ctx = GetWmsInstance();
     struct WindowSurface *windowSurface = NULL;
     int32_t defX = 0, defY = 0, defWidth = 0, defHeight = 0;
@@ -136,65 +118,44 @@ static void SetAdjacentModeSingleProp(struct wl_resource *resource)
                 defWidth, defHeight / 2);
             windowSurface->adjMode = WMS_ADJACENT_MODE_MEMBER;
 
-            wms_send_adjacent_mode_change(windowSurface->controller->pWlResource,
-                                          windowSurface->surfaceId,
-                                          windowSurface->x,
-                                          windowSurface->y,
-                                          windowSurface->width,
-                                          windowSurface->height,
-                                          ADJACENT_MODE_STATUS_VAGUE);
+            SendAdjacentModeChangeToWindowSurafce(windowSurface, ADJACENT_MODE_STATUS_VAGUE);
             break;
         }
     }
-
-    LOGD("end.");
     return;
 }
 
 static void SetAdjacentModeSelectProp(struct wl_resource *resource, int32_t x, int32_t y)
 {
-    LOGD("start.");
     struct WmsContext *ctx = GetWmsInstance();
     struct WindowSurface *windowSurface = NULL;
     int32_t defX = 0, defY = 0, defWidth = 0, defHeight = 0;
     GetAdjacentModeShowArea(ctx, &defX, &defY, &defWidth, &defHeight);
 
     wl_list_for_each(windowSurface, &ctx->wlListWindow, link) {
-        if (windowSurface->adjMode == WMS_ADJACENT_MODE_MEMBER)
-        {
+        if (windowSurface->adjMode == WMS_ADJACENT_MODE_MEMBER) {
             break;
         }
     }
 
-    if(y > defY + defHeight * ADJ_MODE_HALF_PERCENT)
-    {
+    if (y > defY + defHeight * ADJ_MODE_HALF_PERCENT) {
         SetWindowPosition(windowSurface, defX, defY);
         SetWindowSize(windowSurface, defWidth, 
             defHeight * (1 - ADJ_MODE_MIDLINE_HEIGHT_PERCENT) * ADJ_MODE_HALF_PERCENT);
-    }
-    else
-    {
+    } else {
         SetWindowPosition(windowSurface, defX, 
             defY + defHeight * (1 + ADJ_MODE_MIDLINE_HEIGHT_PERCENT) * ADJ_MODE_HALF_PERCENT);
         SetWindowSize(windowSurface, defWidth,
             defHeight * (1 - ADJ_MODE_MIDLINE_HEIGHT_PERCENT) * ADJ_MODE_HALF_PERCENT);
     }
 
-    wms_send_adjacent_mode_change(resource,
-                                  windowSurface->surfaceId,
-                                  windowSurface->x,
-                                  windowSurface->y,
-                                  windowSurface->width,
-                                  windowSurface->height,
-                                  ADJACENT_MODE_STATUS_VAGUE);
+    SendAdjacentModeChangeToWindowSurafce(windowSurface, ADJACENT_MODE_STATUS_VAGUE);
 
-    LOGD("end.");
     return;
 }
 
 static void SetAdjacentModeConfirmProp(struct wl_resource *resource)
 {
-    LOGD("start.");
     struct WmsContext *ctx = GetWmsInstance();
     struct WindowSurface *winOther = NULL;
     struct WindowSurface *pWindowSurface = NULL;
@@ -202,23 +163,18 @@ static void SetAdjacentModeConfirmProp(struct wl_resource *resource)
     GetAdjacentModeShowArea(ctx, &defX, &defY, &defWidth, &defHeight);
 
     wl_list_for_each(winOther, &ctx->wlListWindow, link) {
-        if (winOther->type == WINDOW_TYPE_NORMAL)
-        {
+        if (winOther->type == WINDOW_TYPE_NORMAL) {
             break;
         }
     }
 
     wl_list_for_each(pWindowSurface, &ctx->wlListWindow, link) {
-        if (pWindowSurface->adjMode == WMS_ADJACENT_MODE_MEMBER)
-        {
+        if (pWindowSurface->adjMode == WMS_ADJACENT_MODE_MEMBER) {
             int x = 0, y = 0, w = 0, h = 0;
-            if(pWindowSurface->y > defY + defHeight * ADJ_MODE_HALF_PERCENT)
-            {
+            if (pWindowSurface->y > defY + defHeight * ADJ_MODE_HALF_PERCENT) {
                 x = defX;
                 y = defY;
-            }
-            else
-            {
+            } else {
                 x = defX;
                 y = defY + defHeight * (1 + ADJ_MODE_MIDLINE_HEIGHT_PERCENT) * ADJ_MODE_HALF_PERCENT;
             }
@@ -231,14 +187,8 @@ static void SetAdjacentModeConfirmProp(struct wl_resource *resource)
 
             SetWindowPosition(winOther, x, y);
             SetWindowSize(winOther, w, h);
-            
-            wms_send_adjacent_mode_change(resource,
-                                        winOther->surfaceId,
-                                        winOther->x,
-                                        winOther->y,
-                                        winOther->width,
-                                        winOther->height,
-                                        ADJACENT_MODE_STATUS_VAGUE);
+
+            SendAdjacentModeChangeToWindowSurafce(winOther, ADJACENT_MODE_STATUS_VAGUE);
             break;
         }
     }
@@ -248,59 +198,30 @@ static void SetAdjacentModeConfirmProp(struct wl_resource *resource)
 
 static void SetAdjacentModeFinalProp(struct wl_resource *resource)
 {
-    LOGD("start.");
     struct WmsContext *ctx = GetWmsInstance();
     struct WindowSurface *windowSurface = NULL;
-    int32_t defX = 0, defY = 0, defWidth = 0, defHeight = 0;
-    GetAdjacentModeShowArea(ctx, &defX, &defY, &defWidth, &defHeight);
-
     wl_list_for_each(windowSurface, &ctx->wlListWindow, link) {
-        if (windowSurface->adjMode == WMS_ADJACENT_MODE_MEMBER ||
-            windowSurface->adjMode == WMS_ADJACENT_MODE_BACK ||
-            windowSurface->adjMode == WMS_ADJACENT_MODE_LINE)
-        {
-                wms_send_adjacent_mode_change(resource,
-                                  windowSurface->surfaceId,
-                                  windowSurface->x,
-                                  windowSurface->y,
-                                  windowSurface->width,
-                                  windowSurface->height,
-                                  ADJACENT_MODE_STATUS_CLEAR);
+        if (windowSurface->adjMode != WMS_ADJACENT_MODE_UNSET) {
+            SendAdjacentModeChangeToWindowSurafce(windowSurface, ADJACENT_MODE_STATUS_CLEAR);
         }
     }
-
     return;
 }
 
 static void SetAdjacentModeMidTouchDown(struct wl_resource *resource)
 {
-    LOGD("start.");
     struct WmsContext *ctx = GetWmsInstance();
     struct WindowSurface *windowSurface = NULL;
-    int32_t defX = 0, defY = 0, defWidth = 0, defHeight = 0;
-    GetAdjacentModeShowArea(ctx, &defX, &defY, &defWidth, &defHeight);
     wl_list_for_each(windowSurface, &ctx->wlListWindow, link) {
-        if (windowSurface->adjMode == WMS_ADJACENT_MODE_MEMBER ||
-            windowSurface->adjMode == WMS_ADJACENT_MODE_BACK ||
-            windowSurface->adjMode == WMS_ADJACENT_MODE_LINE)
-        {
-                wms_send_adjacent_mode_change(resource,
-                                  windowSurface->surfaceId,
-                                  windowSurface->x,
-                                  windowSurface->y,
-                                  windowSurface->width,
-                                  windowSurface->height,
-                                  ADJACENT_MODE_STATUS_VAGUE);
+        if (windowSurface->adjMode != WMS_ADJACENT_MODE_UNSET) {
+            SendAdjacentModeChangeToWindowSurafce(windowSurface, ADJACENT_MODE_STATUS_VAGUE);
         }
     }
-
-    LOGD("end.");
     return;
 }
 
 static void SetAdjacentModeMidTouchMove(struct wl_resource *resource, int32_t x, int32_t y)
 {
-    LOGD("start.");
     struct WmsContext *ctx = GetWmsInstance();
     struct WindowSurface *windowDefault = NULL;
     struct WindowSurface *windowOther = NULL;
@@ -310,17 +231,14 @@ static void SetAdjacentModeMidTouchMove(struct wl_resource *resource, int32_t x,
     GetAdjacentModeShowArea(ctx, &defX, &defY, &defWidth, &defHeight);
 
     wl_list_for_each(windowLineSurface, &ctx->wlListWindow, link) {
-        if (windowLineSurface->adjMode == WMS_ADJACENT_MODE_LINE)
-        {
+        if (windowLineSurface->adjMode == WMS_ADJACENT_MODE_LINE) {
             break;
         }
     }
 
     wl_list_for_each(windowDefault, &ctx->wlListWindow, link) {
-        if (windowDefault->adjMode == WMS_ADJACENT_MODE_MEMBER)
-        {
-            if(windowDefault->y < windowLineSurface->y)
-            {
+        if (windowDefault->adjMode == WMS_ADJACENT_MODE_MEMBER) {
+            if (windowDefault->y < windowLineSurface->y) {
                 SetWindowSize(windowDefault, defWidth, y - defY);
 
                 windowDefault->x = defX;
@@ -328,23 +246,15 @@ static void SetAdjacentModeMidTouchMove(struct wl_resource *resource, int32_t x,
                 windowDefault->width = defWidth;
                 windowDefault->height = y - defY;
 
-                wms_send_adjacent_mode_change(resource,
-                                            windowDefault->surfaceId,
-                                            windowDefault->x,
-                                            windowDefault->y,
-                                            windowDefault->width,
-                                            windowDefault->height,
-                                            ADJACENT_MODE_STATUS_VAGUE);
+                SendAdjacentModeChangeToWindowSurafce(windowDefault, ADJACENT_MODE_STATUS_VAGUE);
                 break;
             }
         }
     }
 
     wl_list_for_each(windowOther, &ctx->wlListWindow, link) {
-        if (windowOther->adjMode == WMS_ADJACENT_MODE_MEMBER)
-        {
-            if(windowOther->y >= windowLineSurface->y)
-            {
+        if (windowOther->adjMode == WMS_ADJACENT_MODE_MEMBER) {
+            if (windowOther->y >= windowLineSurface->y) {
                 SetWindowPosition(windowOther, defX, y + defHeight * ADJ_MODE_MIDLINE_HEIGHT_PERCENT);
                 SetWindowSize(windowOther, defWidth,
                     defHeight - (y - defY)  - defHeight * ADJ_MODE_MIDLINE_HEIGHT_PERCENT);
@@ -354,27 +264,18 @@ static void SetAdjacentModeMidTouchMove(struct wl_resource *resource, int32_t x,
                 windowOther->width = defWidth;
                 windowOther->height = defHeight - (y - defY)  - defHeight * ADJ_MODE_MIDLINE_HEIGHT_PERCENT;
 
-                wms_send_adjacent_mode_change(resource,
-                                            windowOther->surfaceId,
-                                            windowOther->x,
-                                            windowOther->y,
-                                            windowOther->width,
-                                            windowOther->height,
-                                            ADJACENT_MODE_STATUS_VAGUE);
+                SendAdjacentModeChangeToWindowSurafce(windowOther, ADJACENT_MODE_STATUS_VAGUE);
                 break;
             }
         }
     }
 
     SetWindowPosition(windowLineSurface, windowLineSurface->x, y);
-
-    LOGD("end.");
     return;
 }
 
 static void SetAdjacentModeMidTouchUp(struct wl_resource *resource)
 {
-    LOGD("start.");
     struct WmsContext *ctx = GetWmsInstance();
 
     struct WindowSurface *winBak = NULL;
@@ -386,9 +287,8 @@ static void SetAdjacentModeMidTouchUp(struct wl_resource *resource)
     GetAdjacentModeShowArea(ctx, &defX, &defY, &defWidth, &defHeight);
 
     wl_list_for_each(winLin, &ctx->wlListWindow, link) {
-        if (winLin->adjMode == WMS_ADJACENT_MODE_LINE)
-        {
-            if(winLin->y - defY > defHeight * (1 - ADJ_MODE_MIDLINE_EXIT_PERCENT) || 
+        if (winLin->adjMode == WMS_ADJACENT_MODE_LINE) {
+            if (winLin->y - defY > defHeight * (1 - ADJ_MODE_MIDLINE_EXIT_PERCENT) ||
                winLin->y - defY < defHeight * ADJ_MODE_MIDLINE_EXIT_PERCENT)
             {
                 bExit = true;
@@ -398,90 +298,43 @@ static void SetAdjacentModeMidTouchUp(struct wl_resource *resource)
     }
 
     wl_list_for_each(winBak, &ctx->wlListWindow, link) {
-        if (winBak->adjMode == WMS_ADJACENT_MODE_BACK)
-        {
+        if (winBak->adjMode == WMS_ADJACENT_MODE_BACK) {
             break;
         }
     }
 
     wl_list_for_each(winDef, &ctx->wlListWindow, link) {
-        if (winDef->adjMode == WMS_ADJACENT_MODE_MEMBER)
-        {
-            if(winDef->height + 1 >= defHeight * ADJ_MODE_HALF_PERCENT)
-            {
+        if (winDef->adjMode == WMS_ADJACENT_MODE_MEMBER) {
+            if (winDef->height + 1 >= defHeight * ADJ_MODE_HALF_PERCENT) {
                 break;
             }
-            
         }
     }
 
     wl_list_for_each(winOth, &ctx->wlListWindow, link) {
-        if (winOth->adjMode == WMS_ADJACENT_MODE_MEMBER)
-        {
-            if(winOth->height < defHeight * ADJ_MODE_HALF_PERCENT)
+        if (winOth->adjMode == WMS_ADJACENT_MODE_MEMBER) {
+            if (winOth->height < defHeight * ADJ_MODE_HALF_PERCENT)
             {
                 break;
             }
         }
     }
 
-    if(!bExit)
-    {
-
-        wms_send_adjacent_mode_change(resource,
-                            winBak->surfaceId,
-                            winBak->x,
-                            winBak->y,
-                            winBak->width,
-                            winBak->height,
-                            ADJACENT_MODE_STATUS_VAGUE);
-        wms_send_adjacent_mode_change(resource,
-                            winOth->surfaceId,
-                            winOth->x,
-                            winOth->y,
-                            winOth->width,
-                            winOth->height,
-                            ADJACENT_MODE_STATUS_VAGUE);
-    }
-    else
-    {
-        wms_send_adjacent_mode_change(resource,
-                            winBak->surfaceId,
-                            winBak->x,
-                            winBak->y,
-                            winBak->width,
-                            winBak->height,
-                            ADJACENT_MODE_STATUS_DESTROY);
-        wms_send_adjacent_mode_change(resource,
-                            winLin->surfaceId,
-                            winLin->x,
-                            winLin->y,
-                            winLin->width,
-                            winLin->height,
-                            ADJACENT_MODE_STATUS_DESTROY);
-        wms_send_adjacent_mode_change(resource,
-                            winOth->surfaceId,
-                            winOth->x,
-                            winOth->y,
-                            winOth->width,
-                            winOth->height,
-                            ADJACENT_MODE_STATUS_DESTROY);
+    if (!bExit) {
+        SendAdjacentModeChangeToWindowSurafce(winBak, ADJACENT_MODE_STATUS_VAGUE);
+        SendAdjacentModeChangeToWindowSurafce(winOth, ADJACENT_MODE_STATUS_VAGUE);
+    } else {
+        SendAdjacentModeChangeToWindowSurafce(winBak, ADJACENT_MODE_STATUS_DESTROY);
+        SendAdjacentModeChangeToWindowSurafce(winLin, ADJACENT_MODE_STATUS_DESTROY);
+        SendAdjacentModeChangeToWindowSurafce(winOth, ADJACENT_MODE_STATUS_DESTROY);
 
         ctx->adjacentMode = ADJ_MODE_NULL;
         winDef->adjMode = WMS_ADJACENT_MODE_UNSET;
         SetWindowPosition(winDef, defX, defY);
         SetWindowSize(winDef, defWidth, defHeight);
-        wms_send_adjacent_mode_change(resource,
-                            winDef->surfaceId,
-                            winDef->x,
-                            winDef->y,
-                            winDef->width,
-                            winDef->height,
-                            ADJACENT_MODE_STATUS_RETAIN);
+        SendAdjacentModeChangeToWindowSurafce(winDef, ADJACENT_MODE_STATUS_RETAIN);
         ctx->pLayoutInterface->surface_change_top(winDef->layoutSurface);
     }
-
-    LOGD("end.");
     return;
 }
 
@@ -493,15 +346,14 @@ void ControllerSetAdjacentMode(struct wl_client *client,
     IAnimationServiceInit();
     struct WmsContext *ctx = GetWmsInstance();
 
-    switch (type)
-    {
+    switch (type) {
         case ADJ_MODE_NULL:
             ctx->adjacentMode = ADJ_MODE_NULL;
             SetAdjacentModeNullProp(resource);
             break;
         case ADJ_MODE_UNENABEL:
             ctx->adjacentMode = ADJ_MODE_UNENABEL;
-            SetAdjacentModeUnenabelProp(resource);
+            SetAdjacentModeUnenableProp(resource);
             break;
         case ADJ_MODE_SINGLE:
             ctx->adjacentMode = ADJ_MODE_SINGLE;
@@ -547,7 +399,7 @@ bool ResetAdjacentWindowProp(struct wl_resource *resource, struct WindowSurface 
     int32_t defX = 0, defY = 0, defWidth = 0, defHeight = 0;
     GetAdjacentModeShowArea(ctx, &defX, &defY, &defWidth, &defHeight);
 
-    if(ctx->adjacentMode  ==  ADJ_MODE_SINGLE)
+    if (ctx->adjacentMode  ==  ADJ_MODE_SINGLE)
     {
         ctx->pLayoutInterface->surface_change_top(windowSurface->layoutSurface);
 
@@ -569,17 +421,13 @@ bool ResetAdjacentWindowProp(struct wl_resource *resource, struct WindowSurface 
         return true;
     }
 
-    if (ctx->adjacentMode  == ADJ_MODE_SELECT)
-    {
-        
+    if (ctx->adjacentMode  == ADJ_MODE_SELECT) {
         return true;
     }
 
-    if(ctx->adjacentMode  ==  ADJ_MODE_FINAL)
-    {
+    if (ctx->adjacentMode  ==  ADJ_MODE_FINAL) {
         wl_list_for_each(pWindowSurface, &ctx->wlListWindow, link) {
-            if (pWindowSurface->type == WMS_ADJACENT_MODE_LINE)
-            {
+            if (pWindowSurface->type == WMS_ADJACENT_MODE_LINE) {
                 LOGD("WMS_ADJACENT_MODE_MEMBER test2");
                 return true;
             }
@@ -589,9 +437,7 @@ bool ResetAdjacentWindowProp(struct wl_resource *resource, struct WindowSurface 
         windowSurface->y = defY + defHeight * (1 - ADJ_MODE_MIDLINE_HEIGHT_PERCENT) * ADJ_MODE_HALF_PERCENT;
         windowSurface->width = defWidth;
         windowSurface->height = defHeight * ADJ_MODE_MIDLINE_HEIGHT_PERCENT;
-        return true;
     }
-
     return true;
 }
 } // namespace OHOS

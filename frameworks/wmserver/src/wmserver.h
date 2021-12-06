@@ -24,6 +24,10 @@
 #include <ivi-layout-export.h>
 #include <wms-server-protocol.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef USE_IVI_INPUT_FOCUS
 #define INPUT_DEVICE_KEYBOARD   ((unsigned int) 1 << 0)
 #define INPUT_DEVICE_POINTER    ((unsigned int) 1 << 1)
@@ -82,7 +86,6 @@ struct WindowSurface {
     uint32_t screenId;
     uint32_t type;
     uint32_t mode;
-    uint32_t adjMode;
     int32_t x;
     int32_t y;
     int32_t width;
@@ -90,6 +93,7 @@ struct WindowSurface {
     int32_t lastSurfaceWidth;
     int32_t lastSurfaceHeight;
     int32_t firstCommit;
+    bool isSplited;
 
     struct wl_list link;
 };
@@ -118,5 +122,9 @@ void SetSourceRectangle(const struct WindowSurface *windowSurface,
     int32_t x, int32_t y, int32_t width, int32_t height);
 void SetWindowPosition(struct WindowSurface *ws, int32_t x, int32_t y);
 void SetWindowSize(struct WindowSurface *ws, uint32_t width, uint32_t height);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // FRAMEWORKS_WMSERVER_SRC_WMSERVER_H

@@ -1584,21 +1584,10 @@ static void CreateWindow(struct WmsController *pWmsController,
     pWindow->surfaceId = windowId;
     pWindow->type = windowType;
     pWindow->mode = WINDOW_MODE_UNSET;
-    pWindow->adjMode = WMS_ADJACENT_MODE_UNSET;
+    pWindow->isSplited = false;
     pWindow->screenId = screenId;
 
     if (!AddWindow(pWindow)) {
-        LOGE("AddWindow failed.");
-        wms_send_window_status(pWlResource, WMS_WINDOW_STATUS_FAILED, WINDOW_ID_INVALID, 0, 0, 0, 0);
-        wl_client_flush(wl_resource_get_client(pWlResource));
-
-        pWmsCtx->pLayoutInterface->surface_destroy(pWindow->layoutSurface);
-        ClearWindowId(pWmsController, windowId);
-        free(pWindow);
-        return;
-    }
-
-    if (!ResetAdjacentWindowProp(pWlResource, pWindow)) {
         LOGE("AddWindow failed.");
         wms_send_window_status(pWlResource, WMS_WINDOW_STATUS_FAILED, WINDOW_ID_INVALID, 0, 0, 0, 0);
         wl_client_flush(wl_resource_get_client(pWlResource));

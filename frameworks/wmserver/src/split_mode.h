@@ -22,18 +22,16 @@
 extern "C" {
 #endif
 
-int32_t IAnimationServiceInit();
-int32_t IAnimationServiceSplitModeCreateBackground();
-int32_t IAnimationServiceSplitModeCreateMiddleLine();
-
 struct wl_client;
 struct wl_resource;
 struct WindowSurface;
 void ControllerSetAdjacentMode(struct wl_client *client,
                                struct wl_resource *resource,
                                uint32_t type, int32_t x, int32_t y);
-bool ResetAdjacentWindowProp(struct wl_resource *resource,
-                             struct WindowSurface *windowSurface);
+
+int32_t IAnimationServiceInit();
+int32_t IAnimationServiceSplitModeCreateBackground();
+int32_t IAnimationServiceSplitModeCreateMiddleLine();
 
 #ifdef __cplusplus
 }

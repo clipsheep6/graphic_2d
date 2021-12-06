@@ -29,19 +29,6 @@ namespace {
 DEFINE_HILOG_LABEL("AnimationServer");
 } // namespace
 
-GSError AnimationServer::StartRotationAnimation(int32_t did, int32_t degree)
-{
-    if (isAnimationRunning == false) {
-        struct Animation animation {
-            .degree = degree,
-            .retval = new Promise<GSError>(),
-        };
-        handler->PostTask(std::bind(&AnimationServer::StartAnimation, this, std::ref(animation)));
-        return animation.retval->Await();
-    }
-    return GSERROR_ANIMATION_RUNNING;
-}
-
 GSError AnimationServer::Init()
 {
     handler = AppExecFwk::EventHandler::Current();
@@ -52,6 +39,18 @@ GSError AnimationServer::Init()
         GSLOG2HI(ERROR) << "WindowManager::Init failed: " << WMErrorStr(wret);
         return static_cast<enum GSError>(wret);
     }
+
+    WindowManagerServiceClient::GetInstance()->Init();
+    WindowManagerServiceClient::GetInstance()->GetService()->OnAdjacentModeChange(this);
+
+    auto splitOption = WindowOption::Get();
+    splitOption->SetWindowType(WINDOW_TYPE_NORMAL);
+    wret = wm->CreateWindow(splitWindow, splitOption);
+    if (wret != WM_OK || splitWindow == nullptr) {
+        GSLOG2HI(ERROR) << "WindowManager::CreateWindow failed: " << WMErrorStr(wret);
+        return static_cast<enum GSError>(wret);
+    }
+    splitWindow->Hide();
 
     auto option = WindowOption::Get();
     option->SetWindowType(WINDOW_TYPE_ANIMATION);
@@ -65,6 +64,29 @@ GSError AnimationServer::Init()
     auto producer = window->GetProducer();
     eglSurface = EglRenderSurface::CreateEglSurfaceAsProducer(producer);
     return GSERROR_OK;
+}
+
+GSError AnimationServer::StartRotationAnimation(int32_t did, int32_t degree)
+{
+    if (isAnimationRunning == false) {
+        struct Animation animation {
+            .degree = degree,
+            .retval = new Promise<GSError>(),
+        };
+        handler->PostTask(std::bind(&AnimationServer::StartAnimation, this, std::ref(animation)));
+        return animation.retval->Await();
+    }
+    return GSERROR_ANIMATION_RUNNING;
+}
+
+GSError AnimationServer::SplitModeCreateBackground()
+{
+    SplitWindowUpdate();
+}
+
+GSError AnimationServer::SplitModeCreateMiddleLine()
+{
+    SplitWindowUpdate(50);
 }
 
 void AnimationServer::StartAnimation(struct Animation &animation)
@@ -139,6 +161,60 @@ void AnimationServer::AnimationSync(int64_t time, void *data)
     }
 }
 
+void AnimationServer::SplitWindowUpdate(int32_t midline)
+{
+    sptr<SurfaceBuffer> buffer;
+    BufferRequestConfig rconfig = {
+        .width = surface->GetDefaultWidth(),
+        .height = surface->GetDefaultHeight(),
+        .strideAlignment = 0x8,
+        .format = PIXEL_FMT_RGBA_8888,
+        .usage = surface->GetDefaultUsage(),
+        .timeout = 0,
+    };
+    if (data != nullptr) {
+        rconfig = *reinterpret_cast<BufferRequestConfig *>(data);
+    }
+
+    SurfaceError ret = surface->RequestBufferNoFence(buffer, rconfig);
+    if (ret == SURFACE_ERROR_NO_BUFFER) {
+        return;
+    } else if (ret != SURFACE_ERROR_OK || buffer == nullptr) {
+        return;
+    }
+
+    auto addr = static_cast<uint32_t *>(buffer->GetVirAddr());
+    if (addr == nullptr) {
+        surface->CancelBuffer(buffer);
+        return;
+    }
+
+    for (uint32_t j = 0; j < rconfig.height; j++) {
+        constexpr int32_t percent = 100;
+        int32_t diff = j - rconfig.height * midline / percent;
+        if (diff < 0) {
+            diff = -diff;
+        }
+
+        if (diff < rconfig.height / percent / 0x2) {
+            for (uint32_t i = 0; i < rconfig.width; i++) {
+                addr[j * rconfig.width + i] = 0xffaaaaaa;
+            }
+        }
+        for (uint32_t i = 0; i < rconfig.width; i++) {
+            addr[j * rconfig.width + i] = 0xff000000;
+        }
+    }
+
+    BufferFlushConfig fconfig = {
+        .damage = {
+            .w = rconfig.width,
+            .h = rconfig.height,
+        },
+    };
+    surface->FlushBuffer(buffer, -1, fconfig);
+}
+
 VsyncError AnimationServer::RequestNextVsync()
 {
     struct FrameCallback cb = {
@@ -170,5 +246,12 @@ void AnimationServer::OnScreenShot(const struct WMImageInfo &info)
     }
 
     screenshotPromise->Resolve(ainfo);
+}
+
+void AnimationServer::OnAdjacentModeChange(int32_t wid, int32_t x, int32_t y, int32_t width, int32_t height, AdjacentModeStatus status)
+{
+    if (status ==  ADJACENT_MODE_STATUS_DESTROY) {
+        splitWindow->Hide();
+    }
 }
 } // namespace OHOS

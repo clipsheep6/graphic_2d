@@ -47,12 +47,14 @@ ohos_shared_library("libanimation_service") {
   public_configs = [ ":libanimation_service_public_config" ]
 
   deps = [
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//foundation/graphic/standard/utils:libgslogger",
   ]
 
-  public_deps = [ "//utils/native/base:utils" ]
+  public_deps = [
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
+    "//utils/native/base:utils",
+  ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

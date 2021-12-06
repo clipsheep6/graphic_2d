@@ -146,6 +146,12 @@
       <arg name="width" type="int"/>
       <arg name="height" type="int"/>
     </event>
+
+    <event name="window_size_change">
+      <description summary="window size change"/>
+      <arg name="width" type="int"/>
+      <arg name="height" type="int"/>
+    </event>
     <!-- Window Ctor Dtor }}} -->
 
     <!-- Global Window Event {{{ -->
@@ -298,6 +304,32 @@
     </request>
     <!-- Virtual Display }}}-->
 
+    <!-- Adjacent Mode {{{ -->
+    <request name="set_adjacent_mode">
+      <description summary="set adjacent mode"/>
+      <arg name="mode" type="uint" summary="adjacent mode"/>
+      <arg name="x" type="int" summary="x"/>
+      <arg name="y" type="int" summary="y"/>
+    </request>
+
+    <enum name="adjacent_mode">
+      <description summary="screen_info type"/>
+      <entry name="unset"  value="0" summary="unset"/>
+      <entry name="member" value="1" summary="set"/>
+      <entry name="back" value="2" summary="set"/>
+      <entry name="line" value="2" summary="set"/>
+    </enum>
+
+    <event name="adjacent_mode_change">
+      <description summary="adjacent_mode return value"/>
+      <arg name="wid" type="int" summary="wid"/>
+      <arg name="x" type="int" summary="x"/>
+      <arg name="y" type="int" summary="y"/>
+      <arg name="width" type="int" summary="width"/>
+      <arg name="height" type="int" summary="height"/>
+      <arg name="status" type="uint" summary="status "/>
+    </event>
+    <!-- Adjacent Mode }}} -->
   </interface>
 
   <interface name="screen_info" version="1">

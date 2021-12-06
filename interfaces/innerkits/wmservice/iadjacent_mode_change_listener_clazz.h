@@ -13,25 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef ANIMATION_SERVICE_PROXY_H
-#define ANIMATION_SERVICE_PROXY_H
-
-#include <iremote_proxy.h>
-
-#include <ianimation_service.h>
+#ifndef INTERFACES_INNERKITS_WMSERVICE_IADJACENT_MODE_CHANGE_LISTENER_CLAZZ_H
+#define INTERFACES_INNERKITS_WMSERVICE_IADJACENT_MODE_CHANGE_LISTENER_CLAZZ_H
 
 namespace OHOS {
-class AnimationServiceProxy : public IRemoteProxy<IAnimationService> {
+class IAdjacentModeChangeListenerClazz {
 public:
-    AnimationServiceProxy(const sptr<IRemoteObject>& impl);
+    virtual ~IAdjacentModeChangeListenerClazz() = default;
 
-    GSError StartRotationAnimation(int32_t did, int32_t degree) override;
-    GSError SplitModeCreateBackground() override;
-    GSError SplitModeCreateMiddleLine() override;
-
-private:
-    static inline BrokerDelegator<AnimationServiceProxy> delegator_;
+    virtual void OnAdjacentModeChange(int32_t wid, int32_t x, int32_t y, int32_t width, int32_t height, AdjacentModeStatus status) = 0;
 };
 } // namespace OHOS
 
-#endif // ANIMATION_SERVICE_PROXY_H
+#endif // INTERFACES_INNERKITS_WMSERVICE_IADJACENT_MODE_CHANGE_LISTENER_CLAZZ_H

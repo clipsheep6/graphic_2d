@@ -64,6 +64,9 @@ public:
 
     virtual GSError StartRotationAnimation(uint32_t did, int32_t degree) override;
 
+    virtual sptr<PromiseWMError> SetAdjacentMode(AdjacentMode mode, int32_t x, int32_t y) override;
+    virtual WMError OnAdjacentModeChange(IAdjacentModeChangeListenerClazz *listener) override;
+
     static void OnReply(wms_error);
     static void OnDisplayChange(uint32_t, const char *, wms_screen_status, int32_t, int32_t, wms_screen_type type);
     static void OnDisplayPower(uint32_t, int32_t);
@@ -72,6 +75,7 @@ public:
     static void OnGlobalWindowStatus(uint32_t pid, uint32_t wid, uint32_t status);
     static void OnScreenShot(wms_error, uint32_t, int32_t, int32_t, int32_t, int32_t, uint32_t, uint32_t, uint32_t);
     static void OnWindowShot(wms_error, uint32_t, int32_t, int32_t, int32_t, int32_t, uint32_t, uint32_t, uint32_t);
+    static void OnAdjacentModeChange(int32_t, int32_t, int32_t, int32_t, int32_t, uint32_t);
 
 private:
     struct wms *wms = nullptr;
@@ -79,6 +83,7 @@ private:
     sptr<IAnimationService> as = nullptr;
     static inline IWindowManagerDisplayListenerClazz *displayListener = nullptr;
     static inline IWindowChangeListenerClazz *globalWindowChangeListener = nullptr;
+    static inline IAdjacentModeChangeListenerClazz *adjacentModeChangeListener = nullptr;
 
     using SptrPromiseWMError = sptr<PromiseWMError>;
     using SptrPromiseWMSImageInfo = sptr<PromiseWMSImageInfo>;

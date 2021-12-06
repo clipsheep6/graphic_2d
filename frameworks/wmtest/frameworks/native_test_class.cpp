@@ -341,6 +341,79 @@ void NativeTestDraw::BlackDraw(void *vaddr, uint32_t width, uint32_t height, uin
     }
 }
 
+void NativeTestDraw::RedDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
+{
+    auto addr = static_cast<uint32_t *>(vaddr);
+    if (addr == nullptr) {
+        return;
+    }
+
+    for (uint32_t i = 0; i < width * height; i++) {
+        addr[i] = 0xff0000ff;
+    }
+}
+
+void NativeTestDraw::OrangeDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
+{
+    auto addr = static_cast<uint32_t *>(vaddr);
+    if (addr == nullptr) {
+        return;
+    }
+
+    for (uint32_t i = 0; i < width * height; i++) {
+        addr[i] = 0xff007fff;
+    }
+}
+
+void NativeTestDraw::YellowDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
+{
+    auto addr = static_cast<uint32_t *>(vaddr);
+    if (addr == nullptr) {
+        return;
+    }
+
+    for (uint32_t i = 0; i < width * height; i++) {
+        addr[i] = 0xff00ffff;
+    }
+}
+
+void NativeTestDraw::GreenDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
+{
+    auto addr = static_cast<uint32_t *>(vaddr);
+    if (addr == nullptr) {
+        return;
+    }
+
+    for (uint32_t i = 0; i < width * height; i++) {
+        addr[i] = 0xff00ff00;
+    }
+}
+
+void NativeTestDraw::BlueDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
+{
+    auto addr = static_cast<uint32_t *>(vaddr);
+    if (addr == nullptr) {
+        return;
+    }
+
+    for (uint32_t i = 0; i < width * height; i++) {
+        addr[i] = 0xffff0000;
+    }
+}
+
+void NativeTestDraw::LineDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
+{
+    auto addr = static_cast<uint32_t *>(vaddr);
+    if (addr == nullptr) {
+        return;
+    }
+
+    for (uint32_t i = 0; i < width * height; i++) {
+        addr[i] = 0xffaaaaaa;
+    }
+}
+
+
 void NativeTestDraw::RainbowDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
 {
     auto addr = static_cast<uint32_t *>(vaddr);

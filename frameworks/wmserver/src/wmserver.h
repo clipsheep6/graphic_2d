@@ -49,6 +49,7 @@ struct WmsContext {
     const struct ivi_input_interface_for_wms *pInputInterface;
 #endif
     DeviceFuncs *deviceFuncs;
+    uint32_t adjacentMode;
 };
 
 struct WmsSeat {
@@ -69,5 +70,53 @@ struct WmsScreen {
 };
 
 struct WmsContext *GetWmsInstance(void);
+
+struct WindowSurface {
+    struct WmsController *controller;
+    struct ivi_layout_surface *layoutSurface;
+    struct weston_surface *surface;
+    struct wl_listener surfaceDestroyListener;
+    struct wl_listener propertyChangedListener;
+
+    uint32_t surfaceId;
+    uint32_t screenId;
+    uint32_t type;
+    uint32_t mode;
+    uint32_t adjMode;
+    int32_t x;
+    int32_t y;
+    int32_t width;
+    int32_t height;
+    int32_t lastSurfaceWidth;
+    int32_t lastSurfaceHeight;
+    int32_t firstCommit;
+
+    struct wl_list link;
+};
+
+struct ScreenshotFrameListener {
+    struct wl_listener frameListener;
+    struct wl_listener outputDestroyed;
+    uint32_t idScreen;
+    struct weston_output *output;
+};
+
+struct WmsController {
+    struct wl_resource *pWlResource;
+    uint32_t id;
+    uint32_t windowIdFlags;
+    struct wl_client *pWlClient;
+    struct wl_list wlListLink;
+    struct wl_list wlListLinkRes;
+    struct WmsContext *pWmsCtx;
+    struct ScreenshotFrameListener stListener;
+};
+
+void SetDestinationRectangle(struct WindowSurface *windowSurface,
+    int32_t x, int32_t y, int32_t width, int32_t height);
+void SetSourceRectangle(const struct WindowSurface *windowSurface,
+    int32_t x, int32_t y, int32_t width, int32_t height);
+void SetWindowPosition(struct WindowSurface *ws, int32_t x, int32_t y);
+void SetWindowSize(struct WindowSurface *ws, uint32_t width, uint32_t height);
 
 #endif // FRAMEWORKS_WMSERVER_SRC_WMSERVER_H

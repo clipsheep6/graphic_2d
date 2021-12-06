@@ -88,6 +88,15 @@ public:
     static void BlackDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
     static void RainbowDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
     static void BoxDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
+
+    static void RedDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
+    static void OrangeDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
+    static void YellowDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
+    static void GreenDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
+    static void BlueDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
+    static void NullDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
+    static void LineDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
+
 #ifdef ACE_ENABLE_GPU
     static void FlushDrawEgl(GlContext *ctx, sptr<EglSurface> &eglsurface, uint32_t width, uint32_t height);
 #endif

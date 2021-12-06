@@ -47,6 +47,8 @@ public:
     MOCKABLE sptr<Promise<struct WMSWindowInfo>> CreateWindow(
         const sptr<WlSurface> &wlSurface, int32_t did, WindowType type);
 
+    virtual void RegisterWindowSizeChange(WindowSizeChangeFunc func);
+
 private:
     WindowManagerServer() = default;
     MOCKABLE ~WindowManagerServer() = default;
@@ -58,8 +60,10 @@ private:
 
     static void OnWindowChange(void *, struct wms *,
         uint32_t status, uint32_t wid, int32_t x, int32_t y, int32_t width, int32_t height);
+    static void OnWindowSizeChange(void *, struct wms *, int32_t width, int32_t height);
 
     static inline std::queue<sptr<Promise<struct WMSWindowInfo>>> promiseQueue;
+    static inline WindowSizeChangeFunc onWindowSizeChange;
 };
 } // namespace OHOS
 

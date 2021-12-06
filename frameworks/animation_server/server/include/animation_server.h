@@ -24,6 +24,7 @@
 #include <promise.h>
 #include <vsync_helper.h>
 #include <window_manager.h>
+#include <window_manager_service_client.h>
 
 #include "animation_service_stub.h"
 #include "rotation_animation.h"
@@ -42,18 +43,24 @@ struct AnimationScreenshotInfo {
 };
 using PromiseAnimationScreenshotInfo = Promise<struct AnimationScreenshotInfo>;
 
-class AnimationServer : public IScreenShotCallback, public AnimationServiceStub {
+class AnimationServer : public IScreenShotCallback, public AnimationServiceStub, public IAdjacentModeChangeListenerClazz {
 public:
     GSError Init();
 
     GSError StartRotationAnimation(int32_t did, int32_t degree) override;
+    GSError SplitModeCreateBackground() override;
+    GSError SplitModeCreateMiddleLine() override;
+
     void OnScreenShot(const struct WMImageInfo &info) override;
+    void OnAdjacentModeChange(int32_t wid, int32_t x, int32_t y, int32_t width, int32_t height, AdjacentModeStatus status) override;
 
 private:
     void StartAnimation(struct Animation &animation);
     void AnimationSync(int64_t time, void *data);
     void RotationDraw();
     VsyncError RequestNextVsync();
+
+    void SplitWindowUpdate(int32_t midline = -1);
 
     std::shared_ptr<AppExecFwk::EventHandler> handler = nullptr;
     sptr<VsyncHelper> vhelper = nullptr;
@@ -63,6 +70,8 @@ private:
     std::atomic<bool> isAnimationRunning = false;
     sptr<PromiseAnimationScreenshotInfo> screenshotPromise = nullptr;
     std::unique_ptr<RotationAnimation> ranimation = nullptr;
+
+    sptr<Window> splitWindow = nullptr;
 };
 } // namespace OHOS
 

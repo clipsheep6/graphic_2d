@@ -510,4 +510,32 @@ GSError WindowManagerServiceProxy::StartRotationAnimation(uint32_t did, int32_t 
 
     return as->StartRotationAnimation(did, degree);
 }
+
+sptr<PromiseWMError> WindowManagerServiceProxy::SetAdjacentMode(AdjacentMode mode, int32_t x, int32_t y)
+{
+    WMLOGFI("mode: %{public}d, x: %{public}d, y: %{public}d", mode, x, y);
+    sptr<PromiseWMError> ret = new PromiseWMError();
+    std::lock_guard<std::mutex> lock(promiseQueueMutex);
+    promiseQueue.push(ret);
+    wms_set_adjacent_mode(wms, mode, x, y);
+
+    wms_commit_changes(wms);
+    wl_display_flush(display);
+    return ret;
+}
+
+WMError WindowManagerServiceProxy::OnAdjacentModeChange(IAdjacentModeChangeListenerClazz *listener)
+{
+    WMLOGFI("listener: %{public}s", (listener != nullptr) ? "Yes" : "No");
+    adjacentModeChangeListener = listener;
+    return WM_OK;
+}
+
+void WindowManagerServiceProxy::OnAdjacentModeChange(int32_t wid, int32_t x, int32_t y, int32_t width, int32_t height, uint32_t definition)
+{
+    WMLOGFI("window status: wid=%{public}u x=%{public}d y=%{public}d width=%{public}d height=%{public}d", wid, x, y, width, height);
+    if (adjacentModeChangeListener != nullptr) {
+        adjacentModeChangeListener->OnAdjacentModeChange(wid, x, y, width, height, static_cast<AdjacentModeStatus>(definition));
+    }
+}
 } // namespace OHOS

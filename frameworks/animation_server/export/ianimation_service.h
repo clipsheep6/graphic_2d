@@ -26,12 +26,16 @@ public:
     static sptr<IAnimationService> Get();
 
     virtual GSError StartRotationAnimation(int32_t did, int32_t degree) = 0;
+    virtual GSError SplitModeCreateBackground() = 0;
+    virtual GSError SplitModeCreateMiddleLine() = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IAnimationService");
 
 protected:
     enum {
         START_ROTATION_ANIMATION = 0,
+        SPLIT_MODE_CREATE_BACKGOUND = 1,
+        SPLIT_MODE_CREATE_MIDDLE_LINE = 2,
     };
 
 private:

@@ -20,14 +20,18 @@
 #include <functional>
 #include <unistd.h>
 
-#include <egl_surface.h>
 #include <promise.h>
+#include <touch_event_handler.h>
 #include <vsync_helper.h>
 #include <window_manager.h>
 #include <window_manager_service_client.h>
 
 #include "animation_service_stub.h"
 #include "rotation_animation.h"
+
+#ifdef ACE_ENABLE_GPU
+#include <egl_surface.h>
+#endif
 
 namespace OHOS {
 using PromiseGSError = Promise<GSError>;
@@ -52,26 +56,43 @@ public:
     GSError SplitModeCreateMiddleLine() override;
 
     void OnScreenShot(const struct WMImageInfo &info) override;
-    void OnAdjacentModeChange(int32_t wid, int32_t x, int32_t y, int32_t width, int32_t height, AdjacentModeStatus status) override;
+    void OnAdjacentModeChange(AdjacentModeStatus status) override;
+    bool OnTouch(const TouchEvent &event);
 
 private:
     void StartAnimation(struct Animation &animation);
     void AnimationSync(int64_t time, void *data);
-    void RotationDraw();
-    VsyncError RequestNextVsync();
 
     void SplitWindowUpdate(int32_t midline = -1);
 
     std::shared_ptr<AppExecFwk::EventHandler> handler = nullptr;
     sptr<VsyncHelper> vhelper = nullptr;
     sptr<Window> window = nullptr;
+#ifdef ACE_ENABLE_GPU
     sptr<EglRenderSurface> eglSurface = nullptr;
 
     std::atomic<bool> isAnimationRunning = false;
     sptr<PromiseAnimationScreenshotInfo> screenshotPromise = nullptr;
     std::unique_ptr<RotationAnimation> ranimation = nullptr;
+#endif
 
     sptr<Window> splitWindow = nullptr;
+
+    class TouchEventHandler : public MMI::TouchEventHandler {
+    public:
+        explicit TouchEventHandler(AnimationServer *server) : server_(server)
+        {
+        }
+
+        virtual bool OnTouch(const TouchEvent &event) override
+        {
+            return server_->OnTouch(event);
+        }
+
+    private:
+        AnimationServer *server_ = nullptr;
+    };
+    sptr<TouchEventHandler> thandler = new TouchEventHandler(this);
 };
 } // namespace OHOS
 

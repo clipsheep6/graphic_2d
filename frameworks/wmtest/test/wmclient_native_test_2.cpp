@@ -141,6 +141,6 @@ public:
 private:
     sptr<Window> window = nullptr;
     sptr<NativeTestSync> windowSync = nullptr;
-    BufferRequestConfig config;
+    BufferRequestConfig config = {};
 } g_autoload;
 } // namespace

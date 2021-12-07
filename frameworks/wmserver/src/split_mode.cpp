@@ -42,8 +42,7 @@ void GetAdjacentModeShowArea(int32_t &x, int32_t &y, int32_t &width, int32_t &he
 
 void ChangeAdjacentMode(struct WindowSurface *ws, enum AdjacentModeStatus status)
 {
-    wms_send_adjacent_mode_change(ws->controller->pWlResource,
-        ws->surfaceId, ws->x, ws->y, ws->width, ws->height, status);
+    wms_send_adjacent_mode_change(ws->controller->pWlResource, status);
 }
 
 void ChangeWindowSize(struct WindowSurface *ws, int32_t w, int32_t h)
@@ -121,7 +120,7 @@ void SetAdjacentModeUnenableProp()
     GetAdjacentModeShowArea(defX, defY, defWidth, defHeight);
 
     SetWindowPosition(ws, defX, defY);
-    SetWindowSize(ws, defWidth, defHeight);
+    wms_send_window_size_change(ws->controller->pWlResource, defWidth, defHeight);
     ChangeWindowSize(ws, defWidth, defHeight);
     ws->isSplited = true;
     ChangeAdjacentMode(ws, ADJACENT_MODE_STATUS_VAGUE);
@@ -138,7 +137,7 @@ void SetAdjacentModeSingleProp()
     GetAdjacentModeShowArea(defX, defY, defWidth, defHeight);
 
     SetWindowPosition(ws, defX, defY + defHeight * 0.07);
-    wms_send_window_size_change(ws->controller->pWlResource, defWidth, defHeight / 2);
+    wms_send_window_size_change(ws->controller->pWlResource, defWidth, defHeight * 0.86);
     ws->isSplited = true;
     ChangeAdjacentMode(ws, ADJACENT_MODE_STATUS_VAGUE);
 }
@@ -151,10 +150,10 @@ void SetAdjacentModeSelectProp()
 
     if (g_lineY > defY + defHeight * 0.5) {
         SetWindowPosition(ws, defX, defY);
-        SetWindowSize(ws, defWidth, defHeight * (1 - 0.04) * 0.5);
+        wms_send_window_size_change(ws->controller->pWlResource, defWidth, defHeight * 0.48);
     } else {
         SetWindowPosition(ws, defX, defY + defHeight * (1 + 0.04) * 0.5);
-        SetWindowSize(ws, defWidth, defHeight * (1 - 0.04) * 0.5);
+        wms_send_window_size_change(ws->controller->pWlResource, defWidth, defHeight * 0.48);
     }
 
     ChangeAdjacentMode(ws, ADJACENT_MODE_STATUS_VAGUE);
@@ -186,7 +185,7 @@ void SetAdjacentModeConfirmProp()
     h = win2->height;
 
     SetWindowPosition(win1, x, y);
-    SetWindowSize(win1, w, h);
+    wms_send_window_size_change(win1->controller->pWlResource, w, h);
 
     ChangeAdjacentMode(win1, ADJACENT_MODE_STATUS_CLEAR);
     ChangeAdjacentMode(win2, ADJACENT_MODE_STATUS_CLEAR);
@@ -213,12 +212,12 @@ void SetAdjacentModeMidTouchMove()
     int32_t defX = 0, defY = 0, defWidth = 0, defHeight = 0;
     GetAdjacentModeShowArea(defX, defY, defWidth, defHeight);
 
-    SetWindowSize(topWindow, defWidth, g_lineY - defY);
+    wms_send_window_size_change(topWindow->controller->pWlResource, defWidth, g_lineY - defY);
     ChangeAdjacentMode(topWindow, ADJACENT_MODE_STATUS_VAGUE);
 
     SetWindowPosition(bottomWindow, defX, g_lineY + defHeight * 0.04);
-    SetWindowSize(bottomWindow, defWidth,
-            defHeight - (g_lineY - defY)  - defHeight * 0.04);
+    wms_send_window_size_change(bottomWindow->controller->pWlResource, defWidth,
+                                defHeight - (g_lineY - defY)  - defHeight * 0.04);
     ChangeAdjacentMode(bottomWindow, ADJACENT_MODE_STATUS_VAGUE);
     return;
 }
@@ -249,7 +248,7 @@ void SetAdjacentModeMidTouchUp()
 
     longWindow->isSplited = false;
     SetWindowPosition(longWindow, x, y);
-    SetWindowSize(longWindow, w, h);
+    wms_send_window_size_change(longWindow->controller->pWlResource, w, h);
     ChangeAdjacentMode(longWindow, ADJACENT_MODE_STATUS_RETAIN);
 
     struct WmsContext *ctx = GetWmsInstance();

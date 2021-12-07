@@ -16,7 +16,10 @@
 #include "inative_test.h"
 
 #include <algorithm>
+#include <sys/shm.h>
+#include <sys/ipc.h>
 #include <vector>
+#include <unistd.h>
 
 namespace OHOS {
 void INativeTest::VisitTests(VisitTestFunc func)

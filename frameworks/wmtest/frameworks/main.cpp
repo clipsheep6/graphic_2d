@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <vector>
 
+#include <gslogger.h>
 #include <vsync_helper.h>
 #include <window_manager.h>
 
@@ -74,6 +75,7 @@ int32_t main(int32_t argc, const char **argv)
 
     // default value assign
     NativeTestFactory::defaultDisplayID = option.displayID;
+    found->processSequence = option.processID;
 
     // run test
     auto runner = AppExecFwk::EventRunner::Create(false);

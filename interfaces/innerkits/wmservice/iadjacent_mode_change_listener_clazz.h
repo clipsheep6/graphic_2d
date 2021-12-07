@@ -21,7 +21,7 @@ class IAdjacentModeChangeListenerClazz {
 public:
     virtual ~IAdjacentModeChangeListenerClazz() = default;
 
-    virtual void OnAdjacentModeChange(int32_t wid, int32_t x, int32_t y, int32_t width, int32_t height, AdjacentModeStatus status) = 0;
+    virtual void OnAdjacentModeChange(AdjacentModeStatus status) = 0;
 };
 } // namespace OHOS
 

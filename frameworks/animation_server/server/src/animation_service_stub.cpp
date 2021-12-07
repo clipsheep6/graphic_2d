@@ -57,15 +57,17 @@ int32_t AnimationServiceStub::StartRotationAnimationRemote(MessageParcel& data,
     return 0;
 }
 
-int32_t SplitModeCreateBackgroundRemote(MessageParcel& data, MessageParcel& reply, MessageOption& options)
+int32_t AnimationServiceStub::SplitModeCreateBackgroundRemote(MessageParcel& data,
+    MessageParcel& reply, MessageOption& options)
 {
     reply.WriteInt32(SplitModeCreateBackground());
     return 0;
 }
 
-int32_t SplitModeCreateMiddleLineRemote(MessageParcel& data, MessageParcel& reply, MessageOption& options)
+int32_t AnimationServiceStub::SplitModeCreateMiddleLineRemote(MessageParcel& data,
+    MessageParcel& reply, MessageOption& options)
 {
-    reply.WriteInt32(SplitModeCreateBackground());
+    reply.WriteInt32(SplitModeCreateMiddleLine());
     return 0;
 }
 } // namespace OHOS

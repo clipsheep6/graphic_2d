@@ -96,9 +96,9 @@ void OnWindowShotError(void *, struct wms *, uint32_t a, uint32_t b)
     WindowManagerServiceProxy::OnWindowShot(static_cast<wms_error>(a), b, -1, 0, 0, 0, 0, 0, 0);
 }
 
-void OnAdjacentModeChange(void *, struct wms *, int32_t a, int32_t b, int32_t c, int32_t d, int32_t e, uint32_t f)
+void OnAdjacentModeChange(void *, struct wms *, uint32_t a)
 {
-    WindowManagerServiceProxy::OnAdjacentModeChange(a, b, c, d, e, f);
+    WindowManagerServiceProxy::OnAdjacentModeChange(a);
 }
 
 void RegistryGlobal(void *ppwms, struct wl_registry *registry,

@@ -18,8 +18,9 @@
 #include <cassert>
 #include <chrono>
 #include <fstream>
-#include <sys/time.h>
+#include <multimodal_event_handler.h>
 #include <securec.h>
+#include <sys/time.h>
 
 #include <graphic_bytrace.h>
 #include <gslogger.h>
@@ -51,6 +52,7 @@ GSError AnimationServer::Init()
         return static_cast<enum GSError>(wret);
     }
     splitWindow->Hide();
+    MMIEventHdl.RegisterStandardizedEventHandle(this, splitWindow->GetID(), thandler);
 
     auto option = WindowOption::Get();
     option->SetWindowType(WINDOW_TYPE_ANIMATION);
@@ -61,13 +63,16 @@ GSError AnimationServer::Init()
     }
 
     window->Hide();
+#ifdef ACE_ENABLE_GPU
     auto producer = window->GetProducer();
     eglSurface = EglRenderSurface::CreateEglSurfaceAsProducer(producer);
+#endif
     return GSERROR_OK;
 }
 
 GSError AnimationServer::StartRotationAnimation(int32_t did, int32_t degree)
 {
+#ifdef ACE_ENABLE_GPU
     if (isAnimationRunning == false) {
         struct Animation animation {
             .degree = degree,
@@ -77,18 +82,24 @@ GSError AnimationServer::StartRotationAnimation(int32_t did, int32_t degree)
         return animation.retval->Await();
     }
     return GSERROR_ANIMATION_RUNNING;
+#else
+    return GSERROR_NOT_SUPPORT;
+#endif
 }
 
 GSError AnimationServer::SplitModeCreateBackground()
 {
     SplitWindowUpdate();
+    return GSERROR_OK;
 }
 
 GSError AnimationServer::SplitModeCreateMiddleLine()
 {
     SplitWindowUpdate(50);
+    return GSERROR_OK;
 }
 
+#ifdef ACE_ENABLE_GPU
 void AnimationServer::StartAnimation(struct Animation &animation)
 {
     if (isAnimationRunning) {
@@ -143,7 +154,8 @@ void AnimationServer::StartAnimation(struct Animation &animation)
         return;
     }
 
-    animation.retval->Resolve(static_cast<enum GSError>(RequestNextVsync()));
+    struct FrameCallback cb = { .callback_ = std::bind(&AnimationServer::AnimationSync, this, SYNC_FUNC_ARG) };
+    animation.retval->Resolve(static_cast<enum GSError>(vhelper->RequestFrameCallback(cb)));
 }
 
 void AnimationServer::AnimationSync(int64_t time, void *data)
@@ -151,7 +163,8 @@ void AnimationServer::AnimationSync(int64_t time, void *data)
     ScopedBytrace sb(__func__);
     if (ranimation->Draw()) {
         eglSurface->SwapBuffers();
-        RequestNextVsync();
+        struct FrameCallback cb = { .callback_ = std::bind(&AnimationServer::AnimationSync, this, SYNC_FUNC_ARG) };
+        vhelper->RequestFrameCallback(cb);
         sb.End();
     } else {
         sb.End();
@@ -159,68 +172,6 @@ void AnimationServer::AnimationSync(int64_t time, void *data)
         window->Hide();
         isAnimationRunning = false;
     }
-}
-
-void AnimationServer::SplitWindowUpdate(int32_t midline)
-{
-    sptr<SurfaceBuffer> buffer;
-    BufferRequestConfig rconfig = {
-        .width = surface->GetDefaultWidth(),
-        .height = surface->GetDefaultHeight(),
-        .strideAlignment = 0x8,
-        .format = PIXEL_FMT_RGBA_8888,
-        .usage = surface->GetDefaultUsage(),
-        .timeout = 0,
-    };
-    if (data != nullptr) {
-        rconfig = *reinterpret_cast<BufferRequestConfig *>(data);
-    }
-
-    SurfaceError ret = surface->RequestBufferNoFence(buffer, rconfig);
-    if (ret == SURFACE_ERROR_NO_BUFFER) {
-        return;
-    } else if (ret != SURFACE_ERROR_OK || buffer == nullptr) {
-        return;
-    }
-
-    auto addr = static_cast<uint32_t *>(buffer->GetVirAddr());
-    if (addr == nullptr) {
-        surface->CancelBuffer(buffer);
-        return;
-    }
-
-    for (uint32_t j = 0; j < rconfig.height; j++) {
-        constexpr int32_t percent = 100;
-        int32_t diff = j - rconfig.height * midline / percent;
-        if (diff < 0) {
-            diff = -diff;
-        }
-
-        if (diff < rconfig.height / percent / 0x2) {
-            for (uint32_t i = 0; i < rconfig.width; i++) {
-                addr[j * rconfig.width + i] = 0xffaaaaaa;
-            }
-        }
-        for (uint32_t i = 0; i < rconfig.width; i++) {
-            addr[j * rconfig.width + i] = 0xff000000;
-        }
-    }
-
-    BufferFlushConfig fconfig = {
-        .damage = {
-            .w = rconfig.width,
-            .h = rconfig.height,
-        },
-    };
-    surface->FlushBuffer(buffer, -1, fconfig);
-}
-
-VsyncError AnimationServer::RequestNextVsync()
-{
-    struct FrameCallback cb = {
-        .callback_ = std::bind(&AnimationServer::AnimationSync, this, SYNC_FUNC_ARG),
-    };
-    return vhelper->RequestFrameCallback(cb);
 }
 
 void AnimationServer::OnScreenShot(const struct WMImageInfo &info)
@@ -247,11 +198,94 @@ void AnimationServer::OnScreenShot(const struct WMImageInfo &info)
 
     screenshotPromise->Resolve(ainfo);
 }
-
-void AnimationServer::OnAdjacentModeChange(int32_t wid, int32_t x, int32_t y, int32_t width, int32_t height, AdjacentModeStatus status)
+#else
+void AnimationServer::StartAnimation(struct Animation &animation)
 {
-    if (status ==  ADJACENT_MODE_STATUS_DESTROY) {
+}
+
+void AnimationServer::AnimationSync(int64_t time, void *data)
+{
+}
+
+void AnimationServer::OnScreenShot(const struct WMImageInfo &info)
+{
+}
+#endif
+
+void AnimationServer::SplitWindowUpdate(int32_t midline)
+{
+    sptr<SurfaceBuffer> buffer;
+    auto surface = splitWindow->GetSurface();
+    BufferRequestConfig rconfig = {
+        .width = surface->GetDefaultWidth(),
+        .height = surface->GetDefaultHeight(),
+        .strideAlignment = 0x8,
+        .format = PIXEL_FMT_RGBA_8888,
+        .usage = surface->GetDefaultUsage(),
+        .timeout = 0,
+    };
+
+    SurfaceError ret = surface->RequestBufferNoFence(buffer, rconfig);
+    if (ret == SURFACE_ERROR_NO_BUFFER) {
+        return;
+    } else if (ret != SURFACE_ERROR_OK || buffer == nullptr) {
+        return;
+    }
+
+    auto addr = static_cast<uint32_t *>(buffer->GetVirAddr());
+    if (addr == nullptr) {
+        surface->CancelBuffer(buffer);
+        return;
+    }
+
+    for (int32_t j = 0; j < rconfig.height; j++) {
+        constexpr int32_t percent = 100;
+        int32_t diff = j - rconfig.height * midline / percent;
+        if (diff < 0) {
+            diff = -diff;
+        }
+
+        if (diff < rconfig.height / percent / 0x2) {
+            for (int32_t i = 0; i < rconfig.width; i++) {
+                addr[j * rconfig.width + i] = 0xffaaaaaa;
+            }
+        }
+        for (int32_t i = 0; i < rconfig.width; i++) {
+            addr[j * rconfig.width + i] = 0xff000000;
+        }
+    }
+
+    BufferFlushConfig fconfig = {
+        .damage = {
+            .w = rconfig.width,
+            .h = rconfig.height,
+        },
+    };
+    surface->FlushBuffer(buffer, -1, fconfig);
+}
+
+void AnimationServer::OnAdjacentModeChange(AdjacentModeStatus status)
+{
+    if (status == ADJACENT_MODE_STATUS_DESTROY) {
         splitWindow->Hide();
     }
+}
+
+bool AnimationServer::OnTouch(const TouchEvent &event)
+{
+    auto wms = WindowManagerServiceClient::GetInstance()->GetService();
+    int32_t index = event.GetIndex();
+    int32_t x = event.GetPointerPosition(index).GetX();
+    int32_t y = event.GetPointerPosition(index).GetY();
+    if (event.GetAction() == TouchEnum::PRIMARY_POINT_DOWN) {
+        wms->SetAdjacentMode(ADJ_MODE_DIVIDER_TOUCH_DOWN);
+    } else if (event.GetAction() == TouchEnum::POINT_MOVE) {
+        wms->SetAdjacentMode(ADJ_MODE_DIVIDER_TOUCH_MOVE, x, y);
+    } else if (event.GetAction() == TouchEnum::PRIMARY_POINT_UP) {
+        wms->SetAdjacentMode(ADJ_MODE_DIVIDER_TOUCH_UP);
+    } else {
+        return false;
+    }
+    return true;
 }
 } // namespace OHOS

@@ -31,7 +31,7 @@
 using namespace OHOS;
 
 namespace {
-class WMClientNativeTest47 : public INativeTest, IAdjacentModeChangeListenerClazz{
+class WMClientNativeTest47 : public INativeTest {
 public:
     std::string GetDescription() const override
     {
@@ -57,15 +57,15 @@ public:
         return lastTime;
     }
 
-    void OnAdjacentModeChange(int32_t wid, int32_t x, int32_t y, int32_t width, int32_t height, AdjacentModeStatus status) override
-    {
-
-        printf("OnAdjacentModeChange47");
-        if(status ==  ADJACENT_MODE_STATUS_DESTROY)
-        {
-            wms->DestroyWindow(wid);
-        }
-    }
+    // void OnAdjacentModeChange(int32_t wid, int32_t x, int32_t y, int32_t width, int32_t height, AdjacentModeStatus status) override
+    // {
+    //
+    //     printf("OnAdjacentModeChange47");
+    //     if(status ==  ADJACENT_MODE_STATUS_DESTROY)
+    //     {
+    //         wms->DestroyWindow(wid);
+    //     }
+    // }
 
     // *********************************************************************************************** //
     void Run(int32_t argc, const char **argv) override
@@ -80,7 +80,7 @@ public:
         auto wmsc = WindowManagerServiceClient::GetInstance();
         wmsc->Init();
         wms = wmsc->GetService();
-        wms->OnAdjacentModeChange(this);
+        // wms->OnAdjacentModeChange(this);
         auto wretPromiseFinal = wms->SetAdjacentMode(ADJ_MODE_NULL);
         auto wretFinal = wretPromiseFinal->Await();
         if (wretFinal != WM_OK) {

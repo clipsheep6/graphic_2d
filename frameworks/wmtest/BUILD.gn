@@ -57,6 +57,7 @@ ohos_executable("wmtest") {
     "test/wmclient_native_test_18.cpp",
     "test/wmclient_native_test_19.cpp",
     "test/wmclient_native_test_2.cpp",
+    "test/wmclient_native_test_20.cpp",
     "test/wmclient_native_test_26.cpp",
     "test/wmclient_native_test_27.cpp",
     "test/wmclient_native_test_28.cpp",
@@ -68,12 +69,13 @@ ohos_executable("wmtest") {
     "test/wmclient_native_test_34.cpp",
     "test/wmclient_native_test_35.cpp",
     "test/wmclient_native_test_4.cpp",
-    "test/wmclient_native_test_42.cpp",
-    "test/wmclient_native_test_43.cpp",
-    "test/wmclient_native_test_44.cpp",
-    "test/wmclient_native_test_45.cpp",
-    "test/wmclient_native_test_46.cpp",
-    "test/wmclient_native_test_47.cpp",
+
+    #"test/wmclient_native_test_42.cpp",
+    #"test/wmclient_native_test_43.cpp",
+    #"test/wmclient_native_test_44.cpp",
+    #"test/wmclient_native_test_45.cpp",
+    #"test/wmclient_native_test_46.cpp",
+    #"test/wmclient_native_test_47.cpp",
     "test/wmclient_native_test_5.cpp",
     "test/wmclient_native_test_6.cpp",
     "test/wmclient_native_test_7.cpp",
@@ -88,6 +90,7 @@ ohos_executable("wmtest") {
 
   if (ace_enable_gpu) {
     sources += [
+      "frameworks/egl_native_test_class.cpp",
       "test/wmclient_native_test_31.cpp",
       "test/wmservice_native_test_6.cpp",
     ]

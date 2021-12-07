@@ -31,7 +31,7 @@
 using namespace OHOS;
 
 namespace {
-class WMClientNativeTest46 : public INativeTest , IAdjacentModeChangeListenerClazz{
+class WMClientNativeTest46 : public INativeTest {
 public:
     std::string GetDescription() const override
     {
@@ -57,14 +57,14 @@ public:
         return lastTime;
     }
 
-    void OnAdjacentModeChange(int32_t wid, int32_t x, int32_t y, int32_t width, int32_t height, AdjacentModeStatus status) override
-    {
-        printf("OnAdjacentModeChange46");
-        if(status ==  ADJACENT_MODE_STATUS_DESTROY)
-        {
-            wms->DestroyWindow(wid);
-        }
-    }
+    // void OnAdjacentModeChange(int32_t wid, int32_t x, int32_t y, int32_t width, int32_t height, AdjacentModeStatus status) override
+    // {
+    //     printf("OnAdjacentModeChange46");
+    //     if(status ==  ADJACENT_MODE_STATUS_DESTROY)
+    //     {
+    //         wms->DestroyWindow(wid);
+    //     }
+    // }
 
     // *********************************************************************************************** //
     void Run(int32_t argc, const char **argv) override
@@ -80,7 +80,7 @@ public:
         wmsc->Init();
         wms = wmsc->GetService();
 
-        wms->OnAdjacentModeChange(this);
+        // wms->OnAdjacentModeChange(this);
         int count = 0;
 
         constexpr uint32_t delayTime = 2000;

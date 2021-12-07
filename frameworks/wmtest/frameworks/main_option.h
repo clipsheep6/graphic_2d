@@ -27,6 +27,7 @@ public:
     std::string domain = "";
     int32_t testcase = -1;
     int32_t displayID = 0;
+    int32_t processID = 0;
 };
 
 #endif // FRAMEWORKS_WMTEST_FRAMEWORKS_MAIN_OPTION_H

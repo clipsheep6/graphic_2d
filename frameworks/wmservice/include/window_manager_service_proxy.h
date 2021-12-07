@@ -75,7 +75,7 @@ public:
     static void OnGlobalWindowStatus(uint32_t pid, uint32_t wid, uint32_t status);
     static void OnScreenShot(wms_error, uint32_t, int32_t, int32_t, int32_t, int32_t, uint32_t, uint32_t, uint32_t);
     static void OnWindowShot(wms_error, uint32_t, int32_t, int32_t, int32_t, int32_t, uint32_t, uint32_t, uint32_t);
-    static void OnAdjacentModeChange(int32_t, int32_t, int32_t, int32_t, int32_t, uint32_t);
+    static void OnAdjacentModeChange(uint32_t);
 
 private:
     struct wms *wms = nullptr;

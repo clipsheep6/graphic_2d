@@ -13,18 +13,7 @@
  * limitations under the License.
  */
 
-#include "main_option.h"
+#ifndef FRAMEWORKS_WMTEST_TEST_WMCLIENT_WMCLIENT_NATIVE_TEST_20_H
+#define FRAMEWORKS_WMTEST_TEST_WMCLIENT_WMCLIENT_NATIVE_TEST_20_H
 
-MainOption::MainOption()
-{
-    AddArguments(domain);
-    AddArguments(testcase);
-    AddOption("d", "display", displayID);
-    AddOption("p", "process", processID);
-}
-
-int32_t MainOption::Parse(int32_t argc, const char **argv)
-{
-    // ignore wmtest(argv0)
-    return OptionParser::Parse(argc - 1, argv + 1);
-}
+#endif // FRAMEWORKS_WMTEST_TEST_WMCLIENT_WMCLIENT_NATIVE_TEST_20_H

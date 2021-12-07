@@ -40,6 +40,9 @@ public:
     virtual int32_t GetID() const = 0;
     virtual uint32_t GetLastTime() const = 0;
     virtual void Run(int32_t argc, const char **argv) = 0;
+
+    int32_t processSequence = 0;
+
 private:
     static inline std::vector<INativeTest *> tests;
 };

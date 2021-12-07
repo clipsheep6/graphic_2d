@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/graphic/standard/graphic_config.gni")
 
 ## Build libanimation_service.so {{{
 config("libanimation_service_config") {
@@ -86,10 +87,15 @@ ohos_executable("animation_server") {
     "server/src/animation_server.cpp",
     "server/src/animation_service_stub.cpp",
     "server/src/main.cpp",
-    "server/src/rotation_animation.cpp",
-    "server/src/shader.cpp",
-    "server/src/texture.cpp",
   ]
+
+  if (ace_enable_gpu) {
+    sources += [
+      "server/src/rotation_animation.cpp",
+      "server/src/shader.cpp",
+      "server/src/texture.cpp",
+    ]
+  }
 
   configs = [ ":animation_server_config" ]
 
@@ -102,6 +108,7 @@ ohos_executable("animation_server") {
     "//foundation/graphic/standard/utils:graphic_bytrace",
     "//foundation/graphic/standard/utils:libgslogger",
     "//foundation/graphic/standard/utils:matrix",
+    "//foundation/multimodalinput/input/frameworks/proxy:libmmi-client",
   ]
 
   part_name = "graphic_standard"

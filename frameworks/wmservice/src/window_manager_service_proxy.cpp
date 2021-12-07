@@ -531,11 +531,11 @@ WMError WindowManagerServiceProxy::OnAdjacentModeChange(IAdjacentModeChangeListe
     return WM_OK;
 }
 
-void WindowManagerServiceProxy::OnAdjacentModeChange(int32_t wid, int32_t x, int32_t y, int32_t width, int32_t height, uint32_t definition)
+void WindowManagerServiceProxy::OnAdjacentModeChange(uint32_t status)
 {
-    WMLOGFI("window status: wid=%{public}u x=%{public}d y=%{public}d width=%{public}d height=%{public}d", wid, x, y, width, height);
+    WMLOGFI("adjacent mode status: %{public}u", status);
     if (adjacentModeChangeListener != nullptr) {
-        adjacentModeChangeListener->OnAdjacentModeChange(wid, x, y, width, height, static_cast<AdjacentModeStatus>(definition));
+        adjacentModeChangeListener->OnAdjacentModeChange(static_cast<AdjacentModeStatus>(status));
     }
 }
 } // namespace OHOS

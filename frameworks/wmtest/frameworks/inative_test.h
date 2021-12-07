@@ -42,6 +42,8 @@ public:
     virtual void Run(int32_t argc, const char **argv) = 0;
 
     int32_t processSequence = 0;
+    int32_t processArgc = 0;
+    const char **processArgv = nullptr;
 
 private:
     static inline std::vector<INativeTest *> tests;

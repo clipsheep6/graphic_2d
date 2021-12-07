@@ -42,7 +42,6 @@ GSError AnimationServer::Init()
     }
 
     WindowManagerServiceClient::GetInstance()->Init();
-    WindowManagerServiceClient::GetInstance()->GetService()->OnAdjacentModeChange(this);
 
     auto splitOption = WindowOption::Get();
     splitOption->SetWindowType(WINDOW_TYPE_NORMAL);
@@ -52,6 +51,8 @@ GSError AnimationServer::Init()
         return static_cast<enum GSError>(wret);
     }
     splitWindow->Hide();
+    auto func = std::bind(&AnimationServer::OnAdjacentModeChange, this, std::placeholders::_1);
+    splitWindow->OnAdjacentModeChange(func);
     MMIEventHdl.RegisterStandardizedEventHandle(this, splitWindow->GetID(), thandler);
 
     auto option = WindowOption::Get();
@@ -89,13 +90,16 @@ GSError AnimationServer::StartRotationAnimation(int32_t did, int32_t degree)
 
 GSError AnimationServer::SplitModeCreateBackground()
 {
-    SplitWindowUpdate();
+    GSLOG2HI(DEBUG);
+    splitWindow->SwitchTop();
+    handler->PostTask(std::bind(&AnimationServer::SplitWindowUpdate, this, -1));
     return GSERROR_OK;
 }
 
 GSError AnimationServer::SplitModeCreateMiddleLine()
 {
-    SplitWindowUpdate(50);
+    GSLOG2HI(DEBUG);
+    handler->PostTask(std::bind(&AnimationServer::SplitWindowUpdate, this, 50));
     return GSERROR_OK;
 }
 
@@ -214,6 +218,7 @@ void AnimationServer::OnScreenShot(const struct WMImageInfo &info)
 
 void AnimationServer::SplitWindowUpdate(int32_t midline)
 {
+    GSLOG2HI(DEBUG) << "midline: " << midline;
     sptr<SurfaceBuffer> buffer;
     auto surface = splitWindow->GetSurface();
     BufferRequestConfig rconfig = {

@@ -518,24 +518,7 @@ sptr<PromiseWMError> WindowManagerServiceProxy::SetAdjacentMode(AdjacentMode mod
     std::lock_guard<std::mutex> lock(promiseQueueMutex);
     promiseQueue.push(ret);
     wms_set_adjacent_mode(wms, mode, x, y);
-
-    wms_commit_changes(wms);
     wl_display_flush(display);
     return ret;
-}
-
-WMError WindowManagerServiceProxy::OnAdjacentModeChange(IAdjacentModeChangeListenerClazz *listener)
-{
-    WMLOGFI("listener: %{public}s", (listener != nullptr) ? "Yes" : "No");
-    adjacentModeChangeListener = listener;
-    return WM_OK;
-}
-
-void WindowManagerServiceProxy::OnAdjacentModeChange(uint32_t status)
-{
-    WMLOGFI("adjacent mode status: %{public}u", status);
-    if (adjacentModeChangeListener != nullptr) {
-        adjacentModeChangeListener->OnAdjacentModeChange(static_cast<AdjacentModeStatus>(status));
-    }
 }
 } // namespace OHOS

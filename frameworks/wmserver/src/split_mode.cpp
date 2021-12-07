@@ -24,9 +24,11 @@
 #include "wmserver.h"
 #include "layout_controller.h"
 
+#include <trace.h>
+DEFINE_LOG_LABEL("SplitMode");
+
 using namespace OHOS;
 
-namespace {
 int32_t g_lineX = 0;
 int32_t g_lineY = 0;
 
@@ -43,6 +45,7 @@ void GetAdjacentModeShowArea(int32_t &x, int32_t &y, int32_t &width, int32_t &he
 void ChangeAdjacentMode(struct WindowSurface *ws, enum AdjacentModeStatus status)
 {
     wms_send_adjacent_mode_change(ws->controller->pWlResource, status);
+    LOG_INFO("%d", status);
 }
 
 void ChangeWindowSize(struct WindowSurface *ws, int32_t w, int32_t h)
@@ -97,20 +100,25 @@ void GetSplitedWindows(struct WindowSurface *&top, struct WindowSurface *&bottom
     }
 }
 
-void SetAdjacentModeNullProp()
+bool SetAdjacentModeNullProp()
 {
     auto condition = [](struct WindowSurface *ws) {
         return ws->isSplited;
     };
     auto action = [](struct WindowSurface *ws) {
         ws->isSplited = false;
-        ChangeAdjacentMode(ws, ADJACENT_MODE_STATUS_DESTROY);
+        int32_t defX = 0, defY = 0, defWidth = 0, defHeight = 0;
+        GetAdjacentModeShowArea(defX, defY, defWidth, defHeight);
+        SetWindowPosition(ws, defX, defY);
+        wms_send_window_size_change(ws->controller->pWlResource, defWidth, defHeight);
+        ChangeAdjacentMode(ws, ADJACENT_MODE_STATUS_RETAIN);
         return false;
     };
     ForeachWindow(condition, action);
+    return true;
 }
 
-void SetAdjacentModeUnenableProp()
+bool SetAdjacentModeUnenableProp()
 {
     auto condition = [](struct WindowSurface *ws) {
         return ws->type == WINDOW_TYPE_NORMAL;
@@ -124,15 +132,32 @@ void SetAdjacentModeUnenableProp()
     ChangeWindowSize(ws, defWidth, defHeight);
     ws->isSplited = true;
     ChangeAdjacentMode(ws, ADJACENT_MODE_STATUS_VAGUE);
+    return true;
 }
 
-void SetAdjacentModeSingleProp()
+bool SetAdjacentModeSingleProp()
 {
-    IAnimationServiceSplitModeCreateBackground();
-    auto condition = [](struct WindowSurface *ws) {
-        return ws->type == WINDOW_TYPE_NORMAL;
-    };
-    auto ws = GetWindow(condition);
+    LOG_SCOPE();
+    struct WindowSurface *ws = nullptr;
+    struct WmsContext *ctx = GetWmsInstance();
+    if (ctx->adjacentMode == ADJ_MODE_SINGLE) {
+        return true;
+    } else if (ctx->adjacentMode == ADJ_MODE_NULL) {
+        if (IAnimationService::Get()) {
+            IAnimationService::Get()->SplitModeCreateBackground();
+        }
+        auto condition = [](struct WindowSurface *ws) {
+            return ws->type == WINDOW_TYPE_NORMAL;
+        };
+        ws = GetWindow(condition);
+    } else if (ctx->adjacentMode == ADJ_MODE_SELECT) {
+        ws = GetSplitedWindow();
+    } else {
+        LOG_ERROR("cannot from %d", ctx->adjacentMode);
+        return false;
+    }
+    LOG_INFO("operation from %d", ctx->adjacentMode);
+
     int32_t defX = 0, defY = 0, defWidth = 0, defHeight = 0;
     GetAdjacentModeShowArea(defX, defY, defWidth, defHeight);
 
@@ -140,28 +165,43 @@ void SetAdjacentModeSingleProp()
     wms_send_window_size_change(ws->controller->pWlResource, defWidth, defHeight * 0.86);
     ws->isSplited = true;
     ChangeAdjacentMode(ws, ADJACENT_MODE_STATUS_VAGUE);
+    return true;
 }
 
-void SetAdjacentModeSelectProp()
+bool SetAdjacentModeSelectProp()
 {
+    LOG_SCOPE();
+    struct WmsContext *ctx = GetWmsInstance();
+    if (ctx->adjacentMode != ADJ_MODE_SINGLE && ctx->adjacentMode != ADJ_MODE_SELECT) {
+        LOG_ERROR("cannot from %d", ctx->adjacentMode);
+        return false;
+    }
+
     auto ws = GetSplitedWindow();
     int32_t defX = 0, defY = 0, defWidth = 0, defHeight = 0;
     GetAdjacentModeShowArea(defX, defY, defWidth, defHeight);
 
+    weston_log("Select g_lineY: %{public}d %{public}p", g_lineY, ws);
     if (g_lineY > defY + defHeight * 0.5) {
+        weston_log("Select bottom %{public}d", defY);
         SetWindowPosition(ws, defX, defY);
         wms_send_window_size_change(ws->controller->pWlResource, defWidth, defHeight * 0.48);
     } else {
-        SetWindowPosition(ws, defX, defY + defHeight * (1 + 0.04) * 0.5);
+        weston_log("Select top %{public}f", defY + defHeight * 0.52);
+        SetWindowPosition(ws, defX, defY + defHeight * 0.52);
         wms_send_window_size_change(ws->controller->pWlResource, defWidth, defHeight * 0.48);
     }
 
+    ctx->pLayoutInterface->commit_changes();
     ChangeAdjacentMode(ws, ADJACENT_MODE_STATUS_VAGUE);
+    return true;
 }
 
-void SetAdjacentModeConfirmProp()
+bool SetAdjacentModeConfirmProp()
 {
-    IAnimationServiceSplitModeCreateMiddleLine();
+    if (IAnimationService::Get()) {
+        IAnimationService::Get()->SplitModeCreateMiddleLine();
+    }
     auto condition = [](struct WindowSurface *ws) {
         return ws->type == WINDOW_TYPE_NORMAL;
     };
@@ -189,9 +229,10 @@ void SetAdjacentModeConfirmProp()
 
     ChangeAdjacentMode(win1, ADJACENT_MODE_STATUS_CLEAR);
     ChangeAdjacentMode(win2, ADJACENT_MODE_STATUS_CLEAR);
+    return true;
 }
 
-void SetAdjacentModeMidTouchDown()
+bool SetAdjacentModeMidTouchDown()
 {
     auto condition = [](struct WindowSurface *ws) {
         return ws->isSplited;
@@ -200,10 +241,10 @@ void SetAdjacentModeMidTouchDown()
         ChangeAdjacentMode(ws, ADJACENT_MODE_STATUS_VAGUE);
     };
     ForeachWindow(condition, action);
-    return;
+    return true;
 }
 
-void SetAdjacentModeMidTouchMove()
+bool SetAdjacentModeMidTouchMove()
 {
     struct WindowSurface *topWindow;
     struct WindowSurface *bottomWindow;
@@ -219,10 +260,10 @@ void SetAdjacentModeMidTouchMove()
     wms_send_window_size_change(bottomWindow->controller->pWlResource, defWidth,
                                 defHeight - (g_lineY - defY)  - defHeight * 0.04);
     ChangeAdjacentMode(bottomWindow, ADJACENT_MODE_STATUS_VAGUE);
-    return;
+    return true;
 }
 
-void SetAdjacentModeMidTouchUp()
+bool SetAdjacentModeMidTouchUp()
 {
     struct WindowSurface *topWindow;
     struct WindowSurface *bottomWindow;
@@ -235,7 +276,7 @@ void SetAdjacentModeMidTouchUp()
     if (0.2 * h <= diff && diff <= h * 0.8) {
         ChangeAdjacentMode(topWindow, ADJACENT_MODE_STATUS_VAGUE);
         ChangeAdjacentMode(bottomWindow, ADJACENT_MODE_STATUS_VAGUE);
-        return;
+        return true;
     }
 
     auto longWindow = topWindow;
@@ -254,9 +295,10 @@ void SetAdjacentModeMidTouchUp()
     struct WmsContext *ctx = GetWmsInstance();
     ctx->adjacentMode = ADJ_MODE_NULL;
     ctx->pLayoutInterface->surface_change_top(longWindow->layoutSurface);
+    return true;
 }
 
-std::map<uint32_t, void(*)()> g_calls = {
+std::map<uint32_t, bool(*)()> g_calls = {
     {ADJ_MODE_NULL, SetAdjacentModeNullProp},
     {ADJ_MODE_UNENABLE, SetAdjacentModeUnenableProp},
     {ADJ_MODE_SINGLE, SetAdjacentModeSingleProp},
@@ -266,14 +308,13 @@ std::map<uint32_t, void(*)()> g_calls = {
     {ADJ_MODE_DIVIDER_TOUCH_MOVE, SetAdjacentModeMidTouchMove},
     {ADJ_MODE_DIVIDER_TOUCH_UP, SetAdjacentModeMidTouchUp},
 };
-} // namespace
 
 void ControllerSetAdjacentMode(struct wl_client *client,
                                struct wl_resource *resource,
                                uint32_t type, int32_t x, int32_t y)
 {
     weston_log("%{public}s start, type=%{public}d", __func__, type);
-    IAnimationServiceInit();
+    IAnimationService::Init();
 
     if (g_calls.find(type) == g_calls.end()) {
         wms_send_reply_error(resource, WMS_ERROR_INVALID_PARAM);
@@ -285,31 +326,13 @@ void ControllerSetAdjacentMode(struct wl_client *client,
         g_lineY = y;
     }
 
-    struct WmsContext *ctx = GetWmsInstance();
-    ctx->adjacentMode = type;
-    g_calls[type]();
-    wms_send_reply_error(resource, WMS_ERROR_OK);
+    if (g_calls[type]()) {
+        struct WmsContext *ctx = GetWmsInstance();
+        ctx->adjacentMode = type;
+        wms_send_reply_error(resource, WMS_ERROR_OK);
+    } else {
+        wms_send_reply_error(resource, WMS_ERROR_INVALID_PARAM);
+    }
     weston_log("%{public}s end", __func__);
     return;
-}
-
-int32_t IAnimationServiceInit()
-{
-    return static_cast<int32_t>(IAnimationService::Init());
-}
-
-int32_t IAnimationServiceSplitModeCreateBackground()
-{
-    if (IAnimationService::Get() == nullptr) {
-        return 1;
-    }
-    return static_cast<int32_t>(IAnimationService::Get()->SplitModeCreateBackground());
-}
-
-int32_t IAnimationServiceSplitModeCreateMiddleLine()
-{
-    if (IAnimationService::Get() == nullptr) {
-        return 1;
-    }
-    return static_cast<int32_t>(IAnimationService::Get()->SplitModeCreateMiddleLine());
 }

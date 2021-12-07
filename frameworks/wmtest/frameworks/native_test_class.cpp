@@ -122,7 +122,10 @@ sptr<NativeTestDrawer> NativeTestDrawer::CreateDrawer(DrawFunc drawFunc, sptr<Su
 
 void NativeTestDrawer::DrawOnce(void *data)
 {
-    RequestSync(std::bind(&NativeTestDrawer::Sync, this, SYNC_FUNC_ARG), data);
+    if (isDrawing == false) {
+        RequestSync(std::bind(&NativeTestDrawer::Sync, this, SYNC_FUNC_ARG), data);
+        isDrawing = true;
+    }
 }
 
 void NativeTestDrawer::Sync(int64_t, void *data)
@@ -130,6 +133,10 @@ void NativeTestDrawer::Sync(int64_t, void *data)
     if (surface == nullptr) {
         printf("NativeTestDrawer surface is nullptr\n");
         return;
+    }
+
+    if (isDrawing == true) {
+        isDrawing = false;
     }
 
     sptr<SurfaceBuffer> buffer;
@@ -251,79 +258,6 @@ void NativeTestDraw::BlackDraw(void *vaddr, uint32_t width, uint32_t height, uin
     }
 }
 
-void NativeTestDraw::RedDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
-{
-    auto addr = static_cast<uint32_t *>(vaddr);
-    if (addr == nullptr) {
-        return;
-    }
-
-    for (uint32_t i = 0; i < width * height; i++) {
-        addr[i] = 0xff0000ff;
-    }
-}
-
-void NativeTestDraw::OrangeDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
-{
-    auto addr = static_cast<uint32_t *>(vaddr);
-    if (addr == nullptr) {
-        return;
-    }
-
-    for (uint32_t i = 0; i < width * height; i++) {
-        addr[i] = 0xff007fff;
-    }
-}
-
-void NativeTestDraw::YellowDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
-{
-    auto addr = static_cast<uint32_t *>(vaddr);
-    if (addr == nullptr) {
-        return;
-    }
-
-    for (uint32_t i = 0; i < width * height; i++) {
-        addr[i] = 0xff00ffff;
-    }
-}
-
-void NativeTestDraw::GreenDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
-{
-    auto addr = static_cast<uint32_t *>(vaddr);
-    if (addr == nullptr) {
-        return;
-    }
-
-    for (uint32_t i = 0; i < width * height; i++) {
-        addr[i] = 0xff00ff00;
-    }
-}
-
-void NativeTestDraw::BlueDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
-{
-    auto addr = static_cast<uint32_t *>(vaddr);
-    if (addr == nullptr) {
-        return;
-    }
-
-    for (uint32_t i = 0; i < width * height; i++) {
-        addr[i] = 0xffff0000;
-    }
-}
-
-void NativeTestDraw::LineDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
-{
-    auto addr = static_cast<uint32_t *>(vaddr);
-    if (addr == nullptr) {
-        return;
-    }
-
-    for (uint32_t i = 0; i < width * height; i++) {
-        addr[i] = 0xffaaaaaa;
-    }
-}
-
-
 void NativeTestDraw::RainbowDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
 {
     auto addr = static_cast<uint32_t *>(vaddr);
@@ -423,42 +357,16 @@ void NativeTestDraw::BoxDraw(void *vaddr, uint32_t width, uint32_t height, uint3
     drawOnce(abs((count + 1) % (framecount * 0x2 - 1) - framecount), color);
 }
 
-void NativeTestDraw::BlurDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
+void NativeTestDraw::PureColorDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count, uint32_t *color)
 {
-    std::unique_ptr<uint32_t[]> offscreenAddr = std::make_unique<uint32_t[]>(width * height);
-    for (uint32_t i = 0; i < width * height; i++) {
-        offscreenAddr[i] = 0xff000000;
+    auto addr = static_cast<uint32_t *>(vaddr);
+    if (addr == nullptr || color == nullptr) {
+        return;
     }
 
-    int32_t w = static_cast<int32_t>(width);
-    int32_t h = static_cast<int32_t>(height);
-
-    auto addr = reinterpret_cast<uint32_t *>(vaddr);
-    auto addWeight = [&offscreenAddr, w, h](int32_t &r,
-        int32_t &g, int32_t &b, int32_t &i, int32_t &j) {
-        for (int32_t jj = -1; jj <= 1; jj++) {
-            for (int32_t ii = -1; ii <= 1; ii++) {
-                if (j + jj < 0 || j + jj >= h) {
-                    continue;
-                }
-                if (i + ii < 0 || i + ii >= w) {
-                    continue;
-                }
-                offscreenAddr[(jj + j) * w + ii + i] +=
-                    ((r / 9) << 0x10) + ((g / 9) << 0x8) + ((b / 9) << 0x0);
-            }
-        }
-    };
-    for (int32_t j = 0; j < h; j++) {
-        for (int32_t i = 0; i < w; i++) {
-            int32_t r = (addr[j * w + i] & 0x00ff0000) >> 0x10;
-            int32_t g = (addr[j * w + i] & 0x0000ff00) >> 0x08;
-            int32_t b = (addr[j * w + i] & 0x000000ff) >> 0x00;
-            addWeight(r, g, b, i, j);
-        }
-    }
+    uint32_t c = *color;
     for (uint32_t i = 0; i < width * height; i++) {
-        addr[i] = offscreenAddr[i];
+        addr[i] = c;
     }
 }
 } // namespace OHOS

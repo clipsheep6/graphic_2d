@@ -58,6 +58,7 @@ private:
     sptr<Surface> surface = nullptr;
     DrawFunc draw = nullptr;
     uint32_t count = 0;
+    bool isDrawing = false;
 };
 
 class NativeTestDraw {
@@ -67,15 +68,7 @@ public:
     static void BlackDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
     static void RainbowDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
     static void BoxDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
-    static void BlurDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
-
-    static void RedDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
-    static void OrangeDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
-    static void YellowDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
-    static void GreenDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
-    static void BlueDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
-    static void NullDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
-    static void LineDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count);
+    static void PureColorDraw(void *vaddr, uint32_t width, uint32_t height, uint32_t count, uint32_t *color);
 };
 } // namespace OHOS
 

@@ -47,7 +47,7 @@ struct AnimationScreenshotInfo {
 };
 using PromiseAnimationScreenshotInfo = Promise<struct AnimationScreenshotInfo>;
 
-class AnimationServer : public IScreenShotCallback, public AnimationServiceStub, public IAdjacentModeChangeListenerClazz {
+class AnimationServer : public IScreenShotCallback, public AnimationServiceStub {
 public:
     GSError Init();
 
@@ -56,7 +56,7 @@ public:
     GSError SplitModeCreateMiddleLine() override;
 
     void OnScreenShot(const struct WMImageInfo &info) override;
-    void OnAdjacentModeChange(AdjacentModeStatus status) override;
+    void OnAdjacentModeChange(AdjacentModeStatus status);
     bool OnTouch(const TouchEvent &event);
 
 private:

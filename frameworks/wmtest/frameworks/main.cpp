@@ -76,6 +76,8 @@ int32_t main(int32_t argc, const char **argv)
     // default value assign
     NativeTestFactory::defaultDisplayID = option.displayID;
     found->processSequence = option.processID;
+    found->processArgc = argc;
+    found->processArgv = argv;
 
     // run test
     auto runner = AppExecFwk::EventRunner::Create(false);

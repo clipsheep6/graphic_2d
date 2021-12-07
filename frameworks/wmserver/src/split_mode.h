@@ -29,10 +29,6 @@ void ControllerSetAdjacentMode(struct wl_client *client,
                                struct wl_resource *resource,
                                uint32_t type, int32_t x, int32_t y);
 
-int32_t IAnimationServiceInit();
-int32_t IAnimationServiceSplitModeCreateBackground();
-int32_t IAnimationServiceSplitModeCreateMiddleLine();
-
 #ifdef __cplusplus
 }
 #endif

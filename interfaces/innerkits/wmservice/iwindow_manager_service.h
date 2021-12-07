@@ -25,7 +25,6 @@
 
 #include "iwindow_change_listener_clazz.h"
 #include "iwindow_manager_display_listener_clazz.h"
-#include "iadjacent_mode_change_listener_clazz.h"
 
 #include "window_manager_service_type.h"
 
@@ -69,7 +68,6 @@ public:
     virtual GSError StartRotationAnimation(uint32_t did, int32_t degree) = 0;
 
     virtual sptr<PromiseWMError> SetAdjacentMode(AdjacentMode mode, int32_t x = 0, int32_t y = 0) = 0;
-    virtual WMError OnAdjacentModeChange(IAdjacentModeChangeListenerClazz *listener) = 0;
 };
 } // namespace OHOS
 

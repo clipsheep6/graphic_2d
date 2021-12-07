@@ -406,6 +406,12 @@ void WindowImpl::OnModeChange(WindowModeChangeFunc func)
     attr.OnModeChange(func);
 }
 
+void WindowImpl::OnAdjacentModeChange(AdjacentModeChangeFunc func)
+{
+    auto windowManagerServer = SingletonContainer::Get<WindowManagerServer>();
+    windowManagerServer->RegisterAdjacentModeChange(func);
+}
+
 WMError WindowImpl::OnTouch(OnTouchFunc cb)
 {
     CHECK_DESTROY(WM_ERROR_DESTROYED_OBJECT);

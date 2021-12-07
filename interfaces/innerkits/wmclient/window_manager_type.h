@@ -85,15 +85,12 @@ enum WindowAdjMode {
 enum AdjacentMode {
     ADJ_MODE_NULL = 0,
     ADJ_MODE_UNENABLE = 1,
-
-    ADJ_MODE_SINGLE = 11,
-    ADJ_MODE_SELECT = 12,
-    ADJ_MODE_CONFIRM = 13,
-
-    ADJ_MODE_DIVIDER_TOUCH_DOWN = 21,
-    ADJ_MODE_DIVIDER_TOUCH_MOVE = 22,
-    ADJ_MODE_DIVIDER_TOUCH_UP = 23,
-
+    ADJ_MODE_SINGLE = 2,
+    ADJ_MODE_SELECT = 3,
+    ADJ_MODE_CONFIRM = 4,
+    ADJ_MODE_DIVIDER_TOUCH_DOWN = 5,
+    ADJ_MODE_DIVIDER_TOUCH_MOVE = 6,
+    ADJ_MODE_DIVIDER_TOUCH_UP = 7,
     ADJ_MODE_MAX,
 };
 
@@ -120,8 +117,9 @@ struct AdjacentModeInfo {
 };
 
 #ifdef __cplusplus
-using WindowModeChangeFunc       = std::function<void(WindowMode mode)>;
-using BeforeFrameSubmitFunc      = std::function<void()>;
+using WindowModeChangeFunc = std::function<void(WindowMode mode)>;
+using BeforeFrameSubmitFunc = std::function<void()>;
+using AdjacentModeChangeFunc = std::function<void(AdjacentModeStatus status)>;
 } // namespace OHOS
 #endif
 

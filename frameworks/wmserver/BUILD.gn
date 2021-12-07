@@ -67,6 +67,7 @@ ohos_shared_library("wmserver") {
     "//foundation/multimodalinput/input/patch/diff_libinput_mmi:libinput-third-mmi",
     "//third_party/wayland_standard:wayland_core_protocol",
     "//third_party/weston:libexec_weston",
+    "//third_party/weston:trace",
     "//utils/native/base:utils",
   ]
 

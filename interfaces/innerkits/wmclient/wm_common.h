@@ -30,6 +30,10 @@ namespace OHOS {
 
 #define WINDOW_TYPE_LIST(macro) \
     macro(WINDOW_TYPE_NORMAL), \
+    macro(WINDOW_TYPE_APPLICATION_BASE), \
+    macro(WINDOW_TYPE_APPLICATION_FIRST), \
+    macro(WINDOW_TYPE_APPLICATION_NORMAL), \
+    macro(WINDOW_TYPE_APPLICATION_WELCOME), \
     macro(WINDOW_TYPE_STATUS_BAR), \
     macro(WINDOW_TYPE_NAVI_BAR), \
     macro(WINDOW_TYPE_ALARM_SCREEN), \
@@ -53,6 +57,7 @@ namespace OHOS {
     macro(WINDOW_TYPE_SYSTEM_ERROR), \
     macro(WINDOW_TYPE_TOAST), \
     macro(WINDOW_TYPE_WALLPAPER), \
+    macro(WINDOW_TYPE_TOP), \
     macro(WINDOW_TYPE_MAX),
 
 #define DEFINE_ENUM_WINDOW_TYPE(id) id

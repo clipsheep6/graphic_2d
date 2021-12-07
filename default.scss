@@ -50,6 +50,11 @@
     }
 }
 
+#WINDOW_TYPE_SPLIT_LINE {
+    z-index: 0;
+    position: relative;
+}
+
 #WINDOW_TYPE_STATUS_BAR {
     z-index: 10;
     position: static;

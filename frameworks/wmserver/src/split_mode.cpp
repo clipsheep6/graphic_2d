@@ -157,6 +157,7 @@ bool SetAdjacentModeSingleProp()
         return false;
     }
     LOG_INFO("operation from %d", ctx->adjacentMode);
+    LOG_INFO("operation to %d", ws->surfaceId);
 
     int32_t defX = 0, defY = 0, defWidth = 0, defHeight = 0;
     GetAdjacentModeShowArea(defX, defY, defWidth, defHeight);
@@ -295,6 +296,7 @@ bool SetAdjacentModeMidTouchUp()
     struct WmsContext *ctx = GetWmsInstance();
     ctx->adjacentMode = ADJ_MODE_NULL;
     ctx->pLayoutInterface->surface_change_top(longWindow->layoutSurface);
+    ctx->pLayoutInterface->commit_changes();
     return true;
 }
 
@@ -313,7 +315,8 @@ void ControllerSetAdjacentMode(struct wl_client *client,
                                struct wl_resource *resource,
                                uint32_t type, int32_t x, int32_t y)
 {
-    weston_log("%{public}s start, type=%{public}d", __func__, type);
+    LOG_SCOPE();
+    LOG_INFO("type: %d", type);
     IAnimationService::Init();
 
     if (g_calls.find(type) == g_calls.end()) {
@@ -333,6 +336,5 @@ void ControllerSetAdjacentMode(struct wl_client *client,
     } else {
         wms_send_reply_error(resource, WMS_ERROR_INVALID_PARAM);
     }
-    weston_log("%{public}s end", __func__);
     return;
 }

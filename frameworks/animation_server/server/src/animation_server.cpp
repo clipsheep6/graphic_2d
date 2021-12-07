@@ -91,6 +91,7 @@ GSError AnimationServer::StartRotationAnimation(int32_t did, int32_t degree)
 GSError AnimationServer::SplitModeCreateBackground()
 {
     GSLOG2HI(DEBUG);
+    splitWindow->Show();
     splitWindow->SwitchTop();
     handler->PostTask(std::bind(&AnimationServer::SplitWindowUpdate, this, -1));
     return GSERROR_OK;

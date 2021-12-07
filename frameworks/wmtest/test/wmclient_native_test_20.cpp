@@ -15,8 +15,10 @@
 
 #include "wmclient_native_test_20.h"
 
+#include <chrono>
 #include <cstdio>
 #include <sstream>
+#include <thread>
 #include <unistd.h>
 
 #include <gslogger.h>
@@ -31,8 +33,9 @@
 #include "inative_test.h"
 #include "native_test_class.h"
 #include "util.h"
-#define _ GSLOG2SO(INFO);
+
 using namespace OHOS;
+using namespace std::chrono_literals;
 
 namespace {
 class WMClientNativeTest20 : public INativeTest {
@@ -90,7 +93,7 @@ public:
 
     void Run0(int32_t argc, const char **argv)
     {
-        GSLOG2SO(INFO) << getpid() << " run0";
+        GSLOG7SO(INFO) << getpid() << " run0";
         window = NativeTestFactory::CreateWindow(WINDOW_TYPE_NORMAL);
         if (window == nullptr) {
             printf("NativeTestFactory::CreateWindow return nullptr\n");
@@ -131,7 +134,8 @@ public:
                 NativeTestDraw::RainbowDraw(vaddr, width, height, 0);
             }
         } else if (adjStatus == ADJACENT_MODE_STATUS_VAGUE) {
-            NativeTestDraw::BlackDraw(vaddr, width, height, count);
+            color = 0xff777777;
+            NativeTestDraw::PureColorDraw(vaddr, width, height, count, &color);
         } else {
             NativeTestDraw::RainbowDraw(vaddr, width, height, count);
         }
@@ -169,7 +173,7 @@ public:
 
     void Draw1(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
     {
-        GSLOG2SO(INFO) << "currentIcon: " << currentIcon;
+        GSLOG7SO(INFO) << "currentIcon: " << currentIcon;
         auto addr = reinterpret_cast<uint32_t *>(vaddr);
 
         // background color: 0x00000000
@@ -233,13 +237,13 @@ public:
                 if (icon.x <= x && x <= icon.x + icon.w && icon.y <= y && y <= icon.y + icon.h) {
                     currentIcon = &icon;
                     backupIcon = icon;
-                    GSLOG2SO(INFO) << "selected: " << currentIcon
+                    GSLOG7SO(INFO) << "selected: " << currentIcon
                         << " " << currentIcon->x << ", " << currentIcon->y;
                     if (currentIcon != &icons[0]) {
-                        GSLOG2SO(INFO) << "ADJ_MODE_SINGLE";
+                        GSLOG7SO(INFO) << "ADJ_MODE_SINGLE";
                         wms->SetAdjacentMode(ADJ_MODE_SINGLE);
                     } else {
-                        GSLOG2SO(INFO) << "ADJ_MODE_UNENABLE";
+                        GSLOG7SO(INFO) << "ADJ_MODE_UNENABLE";
                         wms->SetAdjacentMode(ADJ_MODE_UNENABLE);
                     }
                     break;
@@ -252,14 +256,14 @@ public:
             currentIcon->x = backupIcon.x + x - downX;
             currentIcon->y = backupIcon.y + y - downY;
             handler->PostTask(std::bind(&NativeTestDrawer::DrawOnce, windowDrawer, nullptr));
-            GSLOG2SO(INFO) << "move: " << currentIcon->x << ", " << currentIcon->y;
+            GSLOG7SO(INFO) << "move: " << currentIcon->x << ", " << currentIcon->y;
 
             if (currentIcon != &icons[0]) {
                 if (InSystemUIBox(x, y)) {
-                    GSLOG2SO(INFO) << "ADJ_MODE_SINGLE";
+                    GSLOG7SO(INFO) << "ADJ_MODE_SINGLE";
                     wms->SetAdjacentMode(ADJ_MODE_SINGLE);
                 } else {
-                    GSLOG2SO(INFO) << "ADJ_MODE_SELECT";
+                    GSLOG7SO(INFO) << "ADJ_MODE_SELECT";
                     static int32_t lastX = -1;
                     static int32_t lastY = -1;
                     if (lastX != x || lastY != y) {
@@ -275,15 +279,13 @@ public:
         if (event.GetAction() == TouchEnum::PRIMARY_POINT_UP && currentIcon) {
             if (currentIcon != &icons[0]) {
                 if (InSystemUIBox(currentIcon->x, currentIcon->y)) {
-                    GSLOG2SO(INFO) << "ADJ_MODE_NULL";
+                    GSLOG7SO(INFO) << "ADJ_MODE_NULL";
                     wms->SetAdjacentMode(ADJ_MODE_NULL);
                 } else {
-                    GSLOG2SO(INFO) << "ADJ_MODE_CONFIRM";
-                    wms->SetAdjacentMode(ADJ_MODE_CONFIRM);
                     StartProcess2();
                 }
             } else {
-                GSLOG2SO(INFO) << "ADJ_MODE_NULL";
+                GSLOG7SO(INFO) << "ADJ_MODE_NULL";
                 wms->SetAdjacentMode(ADJ_MODE_NULL);
             }
             *currentIcon = backupIcon;
@@ -294,21 +296,27 @@ public:
 
     void StartProcess2()
     {
-        GSLOG2SO(INFO) << "execvp";
-        std::vector<const char *> args;
-        for (const char **p = processArgv; *p != nullptr; p++) {
-            args.push_back(*p);
-            GSLOG2SO(INFO) << *p;
-        }
+        if (fork() == 0) {
+            std::vector<const char *> args;
+            for (const char **p = processArgv; *p != nullptr; p++) {
+                args.push_back(*p);
+            }
 
-        args.push_back("--process=2");
-        args.push_back("--use_color");
-        std::stringstream ss("--color=");
-        ss << currentIcon->c;
-        args.push_back(ss.str().c_str());
-        args.push_back(nullptr);
-        auto ret = execvp(args[0], const_cast<char *const *>(args.data()));
-        GSLOG2SO(INFO) << "execvp return: " << ret << ", " << errno;
+            args.push_back("--process=2");
+            args.push_back("--use_color");
+            std::stringstream ss;
+            ss << "--color=" << currentIcon->c;
+            GSLOG7SO(INFO) << ss.str();
+            args.push_back(ss.str().c_str());
+            args.push_back(nullptr);
+            auto ret = execvp(args[0], const_cast<char *const *>(args.data()));
+            GSLOG7SO(INFO) << "execvp return: " << ret << ", " << errno;
+        }
+        std::this_thread::sleep_for(1s);
+        GSLOG7SO(INFO) << "ADJ_MODE_CONFIRM";
+        wms->SetAdjacentMode(ADJ_MODE_CONFIRM);
+        ExitTest();
+        return;
     }
 
     bool InSystemUIBox(int32_t x, int32_t y)
@@ -322,7 +330,7 @@ public:
         parser.AddOption("u", "use_color", useColor);
         parser.AddOption("c", "color", color);
         if (parser.Parse(argc, argv)) {
-            GSLOG2SE(ERROR) << parser.GetErrorString();
+            GSLOG7SE(ERROR) << parser.GetErrorString();
             ExitTest();
             return;
         }
@@ -333,11 +341,14 @@ public:
     void OnAdjacentModeChange(AdjacentModeStatus status)
     {
         if (status == ADJACENT_MODE_STATUS_DESTROY) {
+            GSLOG7SO(ERROR) << "ADJACENT_MODE_STATUS_DESTROY";
             handler->PostTask(ExitTest);
         } else if (status == ADJACENT_MODE_STATUS_RETAIN) {
+            GSLOG7SO(ERROR) << "ADJACENT_MODE_STATUS_RETAIN";
             adjStatus = ADJACENT_MODE_STATUS_CLEAR;
             handler->PostTask(std::bind(&NativeTestDrawer::DrawOnce, windowDrawer, nullptr));
         } else {
+            GSLOG7SO(ERROR) << "ADJACENT_MODE_STATUS_" << status;
             adjStatus = status;
             handler->PostTask(std::bind(&NativeTestDrawer::DrawOnce, windowDrawer, nullptr));
         }

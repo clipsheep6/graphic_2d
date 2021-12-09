@@ -107,4 +107,59 @@ GSError AnimationServiceProxy::SplitModeCreateMiddleLine()
 
     return ret;
 }
+
+GSError AnimationServiceProxy::CreateLaunchPage(const std::string &filename)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    auto retval = data.WriteInterfaceToken(GetDescriptor());
+
+    if (!retval) {
+        GSLOG2HI(ERROR) << "WriteInterfaceToken failed";
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
+    data.WriteString(filename);
+
+    int32_t res = Remote()->SendRequest(CREATE_START_PAGE, data, reply, option);
+    if (res) {
+        GSLOG2HI(ERROR) << "SendRequest failed, retval=" << res;
+        return GSERROR_BINDER;
+    }
+
+    GSError ret = static_cast<enum GSError>(reply.ReadInt32());
+    if (ret != GSERROR_OK) {
+        GSLOG2HI(ERROR) << "Call return failed: " << ret;
+    }
+
+    return ret;
+}
+
+GSError AnimationServiceProxy::CancelLaunchPage()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    auto retval = data.WriteInterfaceToken(GetDescriptor());
+    if (!retval) {
+        GSLOG2HI(ERROR) << "WriteInterfaceToken failed";
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
+    int32_t res = Remote()->SendRequest(DESTROY_START_PAGE, data, reply, option);
+    if (res) {
+        GSLOG2HI(ERROR) << "SendRequest failed, retval=" << res;
+        return GSERROR_BINDER;
+    }
+
+    GSError ret = static_cast<enum GSError>(reply.ReadInt32());
+    if (ret != GSERROR_OK) {
+        GSLOG2HI(ERROR) << "Call return failed: " << ret;
+    }
+
+    return ret;
+}
 } // namespace OHOS

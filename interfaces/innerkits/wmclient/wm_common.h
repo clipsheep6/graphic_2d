@@ -30,6 +30,7 @@ namespace OHOS {
 
 #define WINDOW_TYPE_LIST(macro) \
     macro(WINDOW_TYPE_NORMAL), \
+    macro(WINDOW_TYPE_START_PAGE),\
     macro(WINDOW_TYPE_STATUS_BAR), \
     macro(WINDOW_TYPE_NAVI_BAR), \
     macro(WINDOW_TYPE_ALARM_SCREEN), \

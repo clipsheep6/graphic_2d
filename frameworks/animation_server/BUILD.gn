@@ -110,6 +110,7 @@ ohos_executable("animation_server") {
     "//foundation/graphic/standard/utils:matrix",
     "//foundation/graphic/standard/utils:scoped_bytrace",
     "//foundation/multimodalinput/input/frameworks/proxy:libmmi-client",
+    "//foundation/graphic/standard/utils:raw_parser",
   ]
 
   part_name = "graphic_standard"

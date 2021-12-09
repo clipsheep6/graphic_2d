@@ -55,6 +55,15 @@ GSError AnimationServer::Init()
     auto func = std::bind(&AnimationServer::OnSplitStatusChange, this, std::placeholders::_1);
     splitWindow->OnSplitStatusChange(func);
 
+    auto startPageOption = WindowOption::Get();
+    startPageOption->SetWindowType(WINDOW_TYPE_START_PAGE);
+    wret = wm->CreateWindow(startPageWindow, startPageOption);
+    if (wret != WM_OK || startPageWindow == nullptr) {
+        GSLOG2HI(ERROR) << "WindowManager::CreateWindow failed: " << WMErrorStr(wret);
+        return static_cast<enum GSError>(wret);
+    }
+    startPageWindow->Hide();
+
     auto option = WindowOption::Get();
     option->SetWindowType(WINDOW_TYPE_ANIMATION);
     wret = wm->CreateWindow(window, option);
@@ -109,6 +118,33 @@ GSError AnimationServer::SplitModeCreateMiddleLine()
     midlineY = splitWindow->GetHeight() / 0x2 + splitWindow->GetY();
     haveMiddleLine = true;
     handler->PostTask(std::bind(&AnimationServer::SplitWindowUpdate, this));
+    return GSERROR_OK;
+}
+
+GSError AnimationServer::CreateLaunchPage(const std::string &filename)
+{
+    GSLOG2HI(DEBUG);
+    auto ret = resource.Parse(filename);
+    if (ret) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
+    int32_t width = startPageWindow->GetDestWidth();
+    int32_t height = startPageWindow->GetDestHeight();
+
+    startPageWindow->SwitchTop();
+    startPageWindow->Show();
+    startPageWindow->Resize(resource.GetWidth(), resource.GetHeight());
+    startPageWindow->ScaleTo(width, height);
+
+    handler->PostTask(std::bind(&AnimationServer::StartPageWindowUpdate, this, resource.GetWidth(), resource.GetHeight()));
+    return GSERROR_OK;
+}
+
+GSError AnimationServer::CancelLaunchPage()
+{
+    GSLOG2HI(DEBUG);
+    startPageWindow->Hide();
     return GSERROR_OK;
 }
 
@@ -328,5 +364,41 @@ bool AnimationServer::OnTouch(const TouchEvent &event)
     }
 
     return false;
+}
+
+void AnimationServer::StartPageWindowUpdate(int32_t width, int32_t height)
+{
+    auto surface = startPageWindow->GetSurface();
+    sptr<SurfaceBuffer> buffer;
+    BufferRequestConfig rconfig = {
+        .width = width,
+        .height = height,
+        .strideAlignment = 0x8,
+        .format = PIXEL_FMT_RGBA_8888,
+        .usage = surface->GetDefaultUsage(),
+        .timeout = 0,
+    };
+
+    SurfaceError ret = surface->RequestBufferNoFence(buffer, rconfig);
+    if (ret == SURFACE_ERROR_NO_BUFFER) {
+        return;
+    } else if (ret != SURFACE_ERROR_OK || buffer == nullptr) {
+        return;
+    }
+
+    auto addr = buffer->GetVirAddr();
+    if (addr == nullptr) {
+        surface->CancelBuffer(buffer);
+        return;
+    }
+
+    resource.GetNextData(reinterpret_cast<uint32_t *>(addr));
+    BufferFlushConfig fconfig = {
+        .damage = {
+            .w = rconfig.width,
+            .h = rconfig.height,
+        },
+    };
+    surface->FlushBuffer(buffer, -1, fconfig);
 }
 } // namespace OHOS

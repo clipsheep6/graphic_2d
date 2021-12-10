@@ -5,6 +5,8 @@
       "module_list": [
         "//foundation/graphic/standard/interfaces/kits/js/declaration:window",
         "//foundation/graphic/standard/interfaces/kits/napi:napi_packages",
+        
+        "//foundation/graphic/standard/frameworks/cursor:cursor",
 
         "//third_party/wayland-ivi-extension:ivi-controller",
         "//third_party/wayland-ivi-extension:ivi-input-controller",

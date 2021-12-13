@@ -77,6 +77,15 @@
     height: 100%;
 }
 
+#WINDOW_TYPE_START_PAGE {
+    z-index: 4;
+    position: fixed;
+    horizon-align: middle;
+    vertical-align: middle;
+    width: 100.0%;
+    height: 93.0%;
+}
+
 #WINDOW_TYPE_STATUS_BAR {
     z-index: 10;
     position: static;

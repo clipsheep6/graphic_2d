@@ -30,6 +30,7 @@ namespace OHOS {
 
 #define WINDOW_TYPE_LIST(macro) \
     macro(WINDOW_TYPE_NORMAL), \
+    macro(WINDOW_TYPE_START_PAGE),\
     macro(WINDOW_TYPE_STATUS_BAR), \
     macro(WINDOW_TYPE_NAVI_BAR), \
     macro(WINDOW_TYPE_ALARM_SCREEN), \
@@ -53,6 +54,8 @@ namespace OHOS {
     macro(WINDOW_TYPE_SYSTEM_ERROR), \
     macro(WINDOW_TYPE_TOAST), \
     macro(WINDOW_TYPE_WALLPAPER), \
+    macro(WINDOW_TYPE_ANIMATION), \
+    macro(WINDOW_TYPE_SPLIT_LINE), \
     macro(WINDOW_TYPE_MAX),
 
 #define DEFINE_ENUM_WINDOW_TYPE(id) id
@@ -107,7 +110,7 @@ enum rotateType {
 };
 
 struct WMImageInfo {
-    enum WMError wret;
+    enum GSError wret;
     uint32_t width;
     uint32_t height;
     uint32_t format;
@@ -127,14 +130,8 @@ class TouchEvent;
 class KeyEvent;
 
 using funcWindowInfoChange = std::function<void(WindowInfo &info)>;
-
-using funcOnKey = std::function<bool(KeyEvent)>;
-using funcOnTouch = std::function<bool(TouchEvent)>;
-
-using WindowInfoChangeFunc = std::function<void(WindowInfo &info)>;
 using OnKeyFunc = std::function<bool(KeyEvent)>;
 using OnTouchFunc = std::function<bool(TouchEvent)>;
-
 using WindowPositionChangeFunc   = std::function<void(int32_t x, int32_t y)>;
 using WindowSizeChangeFunc       = std::function<void(uint32_t width, uint32_t height)>;
 using WindowVisibilityChangeFunc = std::function<void(bool visibility)>;

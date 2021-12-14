@@ -27,35 +27,34 @@
 namespace OHOS {
 class SubwindowVideoImpl : public Subwindow {
 public:
-    static WMError Create(sptr<Subwindow> &subwindow,
+    static GSError Create(sptr<Subwindow> &subwindow,
                           const sptr<Window> &window,
                           const sptr<SubwindowOption> &option);
 
     virtual sptr<Surface> GetSurface() const override;
 
-    virtual WMError Move(int32_t x, int32_t y) override;
-    virtual WMError Resize(uint32_t width, uint32_t height) override;
-    virtual WMError Destroy() override;
+    virtual GSError Move(int32_t x, int32_t y) override;
+    virtual GSError Resize(uint32_t width, uint32_t height) override;
+    virtual GSError Destroy() override;
 
     virtual void OnPositionChange(WindowPositionChangeFunc func) override;
     virtual void OnSizeChange(WindowSizeChangeFunc func) override;
-    virtual void OnBeforeFrameSubmit(BeforeFrameSubmitFunc func) override;
 
 private:
     SubwindowVideoImpl() = default;
     virtual ~SubwindowVideoImpl() override;
 
-    static WMError CheckAndNew(sptr<SubwindowVideoImpl> &svi,
+    static GSError CheckAndNew(sptr<SubwindowVideoImpl> &svi,
                                const sptr<Window> &window,
                                const sptr<SubwindowOption> &option,
                                sptr<WlSurface> &parent);
 
-    static WMError CreateWlSurface(sptr<SubwindowVideoImpl> &svi,
+    static GSError CreateWlSurface(sptr<SubwindowVideoImpl> &svi,
                                    const sptr<WlSurface> &parentWlSurface);
 
-    static WMError CreateLayer(sptr<SubwindowVideoImpl> &svi);
-    static WMError CreateSHMBuffer(sptr<SubwindowVideoImpl> &svi);
-    static WMError CreateSurface(sptr<SubwindowVideoImpl> &svi);
+    static GSError CreateLayer(sptr<SubwindowVideoImpl> &svi);
+    static GSError CreateSHMBuffer(sptr<SubwindowVideoImpl> &svi);
+    static GSError CreateSurface(sptr<SubwindowVideoImpl> &svi);
 
     // base attribute
     WindowAttribute attr;
@@ -64,9 +63,9 @@ private:
 
     // functional member
     sptr<VideoDisplayManager> display = nullptr;
-    sptr<Surface> csurface = nullptr;
-    sptr<Surface> psurface = nullptr;
-    sptr<WlSubsurface> wlSubsurface = nullptr;
+    sptr<Surface> csurf = nullptr;
+    sptr<Surface> psurf = nullptr;
+    sptr<WlSubsurface> wlSubsurf = nullptr;
     sptr<WlSurface> wlSurface = nullptr;
     sptr<WlBuffer> wlBuffer = nullptr;
     BeforeFrameSubmitFunc onBeforeFrameSubmitFunc = nullptr;

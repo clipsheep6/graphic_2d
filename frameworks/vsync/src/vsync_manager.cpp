@@ -21,7 +21,7 @@
 
 #define REMOTE_RETURN(reply, vsync_error) \
     reply.WriteInt32(vsync_error);        \
-    if (vsync_error != VSYNC_ERROR_OK) {  \
+    if (vsync_error != GSERROR_OK) {  \
         VLOG_FAILURE_NO(vsync_error);     \
     }                                     \
     break
@@ -45,19 +45,19 @@ int32_t VsyncManager::OnRemoteRequest(uint32_t code, MessageParcel &data,
         case IVSYNC_MANAGER_LISTEN_VSYNC: {
             auto remoteObject = data.ReadRemoteObject();
             if (remoteObject == nullptr) {
-                REMOTE_RETURN(reply, VSYNC_ERROR_NULLPTR);
+                REMOTE_RETURN(reply, GSERROR_INVALID_ARGUMENTS);
             }
 
             auto cb = iface_cast<IVsyncCallback>(remoteObject);
 
-            VsyncError ret = ListenVsync(cb);
+            GSError ret = ListenVsync(cb);
 
             REMOTE_RETURN(reply, ret);
             break;
         }
         case IVSYNC_MANAGER_GET_VSYNC_FREQUENCY: {
             uint32_t freq = 0;
-            VsyncError ret = GetVsyncFrequency(freq);
+            GSError ret = GetVsyncFrequency(freq);
             reply.WriteInt32(ret);
             reply.WriteUint32(freq);
             break;
@@ -70,11 +70,11 @@ int32_t VsyncManager::OnRemoteRequest(uint32_t code, MessageParcel &data,
     return 0;
 }
 
-VsyncError VsyncManager::ListenVsync(sptr<IVsyncCallback>& cb)
+GSError VsyncManager::ListenVsync(sptr<IVsyncCallback>& cb)
 {
     if (cb == nullptr) {
-        VLOG_FAILURE_NO(VSYNC_ERROR_NULLPTR);
-        return VSYNC_ERROR_NULLPTR;
+        VLOG_FAILURE_NO(GSERROR_INVALID_ARGUMENTS);
+        return GSERROR_INVALID_ARGUMENTS;
     }
     VLOGI("add callbacks %{public}d", GetCallingPid());
 
@@ -85,14 +85,14 @@ VsyncError VsyncManager::ListenVsync(sptr<IVsyncCallback>& cb)
 
     std::lock_guard<std::mutex> lock(callbacksMutex_);
     callbacks_.push_back(cb);
-    return VSYNC_ERROR_OK;
+    return GSERROR_OK;
 }
 
-VsyncError VsyncManager::GetVsyncFrequency(uint32_t &freq)
+GSError VsyncManager::GetVsyncFrequency(uint32_t &freq)
 {
     constexpr uint32_t defaultVsyncFrequency = 60;
     freq = defaultVsyncFrequency;
-    return VSYNC_ERROR_OK;
+    return GSERROR_OK;
 }
 
 void VsyncManager::Callback(int64_t timestamp)
@@ -103,7 +103,7 @@ void VsyncManager::Callback(int64_t timestamp)
     using sptrIVsyncCallback = sptr<IVsyncCallback>;
     std::list<sptrIVsyncCallback> okcbs;
     for (const auto &cb : callbacks_) {
-        if (cb->OnVsync(timestamp) != VSYNC_ERROR_BINDER_ERROR) {
+        if (cb->OnVsync(timestamp) != GSERROR_BINDER) {
             okcbs.push_back(cb);
         }
     }

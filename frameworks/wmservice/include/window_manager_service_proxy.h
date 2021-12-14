@@ -18,6 +18,7 @@
 
 #include <iwindow_manager_service.h>
 
+#include <ianimation_service.h>
 #include <map>
 #include <mutex>
 #include <queue>
@@ -26,7 +27,7 @@
 namespace OHOS {
 class WindowManagerServiceProxy : public IWindowManagerService {
 public:
-    WindowManagerServiceProxy(struct wms *wms, struct wl_display *display);
+    WindowManagerServiceProxy(struct wms *wms, struct wl_display *display, sptr<IAnimationService> &as);
     virtual ~WindowManagerServiceProxy() = default;
 
     virtual WMError GetDisplays(std::vector<struct WMDisplayInfo> &displays) override;
@@ -58,8 +59,15 @@ public:
     virtual sptr<PromiseWMError> SetWindowType(int32_t wid, WindowType type) override;
     virtual sptr<PromiseWMError> SetWindowMode(int32_t wid, WindowMode mode) override;
 
+    virtual sptr<PromiseWMError> CreateVirtualDisplay(int32_t x, int32_t y, int32_t width, int32_t height) override;
+    virtual sptr<PromiseWMError> DestroyVirtualDisplay(uint32_t did) override;
+
+    virtual GSError StartRotationAnimation(uint32_t did, int32_t degree) override;
+
+    virtual sptr<PromiseWMError> SetAdjacentMode(AdjacentMode mode, int32_t x, int32_t y) override;
+
     static void OnReply(wms_error);
-    static void OnDisplayChange(uint32_t, const char *, wms_screen_status, int32_t, int32_t);
+    static void OnDisplayChange(uint32_t, const char *, wms_screen_status, int32_t, int32_t, wms_screen_type type);
     static void OnDisplayPower(uint32_t, int32_t);
     static void OnDisplayBacklight(uint32_t, uint32_t);
     static void OnDisplayModeChange(uint32_t);
@@ -70,6 +78,7 @@ public:
 private:
     struct wms *wms = nullptr;
     struct wl_display *display = nullptr;
+    sptr<IAnimationService> as = nullptr;
     static inline IWindowManagerDisplayListenerClazz *displayListener = nullptr;
     static inline IWindowChangeListenerClazz *globalWindowChangeListener = nullptr;
 

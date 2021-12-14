@@ -76,7 +76,8 @@ WMError WindowImpl::CreateRemoteWindow(sptr<WindowImpl> &wi,
     }
 
     auto windowManagerServer = SingletonContainer::Get<WindowManagerServer>();
-    auto promise = windowManagerServer->CreateWindow(wi->wlSurface, 0, option->GetWindowType());
+    auto promise = windowManagerServer->CreateWindow(wi->wlSurface,
+        option->GetDisplay(), option->GetWindowType());
     if (promise == nullptr) {
         WMLOGFE("CreateWindow return nullptr promise");
         return WM_ERROR_NEW;
@@ -87,6 +88,11 @@ WMError WindowImpl::CreateRemoteWindow(sptr<WindowImpl> &wi,
         WMLOGFE("wms->CreateWindow failed %{public}s", WMErrorStr(wminfo.wret).c_str());
         return wminfo.wret;
     }
+
+    auto onWindowSizeChange = [&attr = wi->attr](int32_t width, int32_t height) {
+        attr.SetWidthHeight(width, height);
+    };
+    windowManagerServer->RegisterWindowSizeChange(onWindowSizeChange);
 
     wi->attr.SetID(wminfo.wid);
     wi->attr.SetType(option->GetWindowType());
@@ -152,6 +158,11 @@ WMError WindowImpl::Create(sptr<Window> &window,
     if (option->IsSettingWidth() || option->IsSettingHeight()) {
         wi->attr.SetWidthHeight(option->GetWidth(), option->GetHeight());
         wi->Resize(option->GetWidth(), option->GetHeight())->Await();
+    }
+
+    if (option->GetWindowMode() != WINDOW_MODE_UNSET) {
+        wi->attr.SetMode(option->GetWindowMode());
+        wi->SetWindowMode(option->GetWindowMode());
     }
 
     wret = CreateConsumerSurface(wi, option);
@@ -395,9 +406,10 @@ void WindowImpl::OnModeChange(WindowModeChangeFunc func)
     attr.OnModeChange(func);
 }
 
-void WindowImpl::OnBeforeFrameSubmit(BeforeFrameSubmitFunc func)
+void WindowImpl::OnAdjacentModeChange(AdjacentModeChangeFunc func)
 {
-    onBeforeFrameSubmitFunc = func;
+    auto windowManagerServer = SingletonContainer::Get<WindowManagerServer>();
+    windowManagerServer->RegisterAdjacentModeChange(func);
 }
 
 WMError WindowImpl::OnTouch(OnTouchFunc cb)
@@ -584,10 +596,6 @@ void WindowImpl::OnBufferAvailable()
 {
     WMLOGFI("OnBufferAvailable enter");
     CHECK_DESTROY();
-
-    if (onBeforeFrameSubmitFunc != nullptr) {
-        onBeforeFrameSubmitFunc();
-    }
 
     sptr<SurfaceBuffer> sbuffer;
     int32_t flushFence;

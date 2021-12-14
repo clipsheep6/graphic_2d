@@ -22,10 +22,12 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, 0, "WMServiceProxy"};
 }
 
-WindowManagerServiceProxy::WindowManagerServiceProxy(struct wms *wms, struct wl_display *display)
+WindowManagerServiceProxy::WindowManagerServiceProxy(struct wms *wms, struct wl_display *display,
+    sptr<IAnimationService> &as)
 {
     this->wms = wms;
     this->display = display;
+    this->as = as;
 }
 
 namespace {
@@ -66,7 +68,7 @@ void WindowManagerServiceProxy::OnReply(wms_error error)
 }
 
 void WindowManagerServiceProxy::OnDisplayChange(uint32_t did,
-    const char *name, wms_screen_status state, int32_t width, int32_t height)
+    const char *name, wms_screen_status state, int32_t width, int32_t height, wms_screen_type type)
 {
     WMLOGFI("state: %{public}d, did: %{public}d, %{public}s(%{public}dx%{public}d)",
         state, did, name, width, height);
@@ -84,6 +86,7 @@ void WindowManagerServiceProxy::OnDisplayChange(uint32_t did,
                 .phyWidth = width,
                 .phyHeight = height,
                 .vsync = tmpVsyncFreq,
+                .type = static_cast<enum DisplayType>(type),
             };
             displays.push_back(info);
         }
@@ -472,6 +475,49 @@ sptr<PromiseWMError> WindowManagerServiceProxy::SetWindowMode(int32_t wid, Windo
     promiseQueue.push(ret);
     wms_set_window_mode(wms, wid, mode);
     wms_commit_changes(wms);
+    wl_display_flush(display);
+    return ret;
+}
+
+sptr<PromiseWMError> WindowManagerServiceProxy::CreateVirtualDisplay(
+    int32_t x, int32_t y, int32_t width, int32_t height)
+{
+    sptr<PromiseWMError> ret = new PromiseWMError();
+    std::lock_guard<std::mutex> lock(promiseQueueMutex);
+    promiseQueue.push(ret);
+    wms_create_virtual_display(wms, x, y, width, height);
+    wms_commit_changes(wms);
+    wl_display_flush(display);
+    return ret;
+}
+
+sptr<PromiseWMError> WindowManagerServiceProxy::DestroyVirtualDisplay(uint32_t did)
+{
+    sptr<PromiseWMError> ret = new PromiseWMError();
+    std::lock_guard<std::mutex> lock(promiseQueueMutex);
+    promiseQueue.push(ret);
+    wms_destroy_virtual_display(wms, did);
+    wms_commit_changes(wms);
+    wl_display_flush(display);
+    return ret;
+}
+
+GSError WindowManagerServiceProxy::StartRotationAnimation(uint32_t did, int32_t degree)
+{
+    if (as == nullptr) {
+        return GSERROR_CONNOT_CONNECT_SERVER;
+    }
+
+    return as->StartRotationAnimation(did, degree);
+}
+
+sptr<PromiseWMError> WindowManagerServiceProxy::SetAdjacentMode(AdjacentMode mode, int32_t x, int32_t y)
+{
+    WMLOGFI("mode: %{public}d, x: %{public}d, y: %{public}d", mode, x, y);
+    sptr<PromiseWMError> ret = new PromiseWMError();
+    std::lock_guard<std::mutex> lock(promiseQueueMutex);
+    promiseQueue.push(ret);
+    wms_set_adjacent_mode(wms, mode, x, y);
     wl_display_flush(display);
     return ret;
 }

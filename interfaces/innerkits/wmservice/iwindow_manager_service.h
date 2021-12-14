@@ -25,6 +25,7 @@
 
 #include "iwindow_change_listener_clazz.h"
 #include "iwindow_manager_display_listener_clazz.h"
+
 #include "window_manager_service_type.h"
 
 namespace OHOS {
@@ -60,6 +61,13 @@ public:
     virtual sptr<PromiseWMError> ScaleTo(int32_t wid, uint32_t width, uint32_t height) = 0;
     virtual sptr<PromiseWMError> SetWindowType(int32_t wid, WindowType type) = 0;
     virtual sptr<PromiseWMError> SetWindowMode(int32_t wid, WindowMode mode) = 0;
+
+    virtual sptr<PromiseWMError> CreateVirtualDisplay(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
+    virtual sptr<PromiseWMError> DestroyVirtualDisplay(uint32_t did) = 0;
+
+    virtual GSError StartRotationAnimation(uint32_t did, int32_t degree) = 0;
+
+    virtual sptr<PromiseWMError> SetAdjacentMode(AdjacentMode mode, int32_t x = 0, int32_t y = 0) = 0;
 };
 } // namespace OHOS
 

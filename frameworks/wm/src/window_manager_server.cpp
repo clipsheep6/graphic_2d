@@ -56,6 +56,8 @@ void WindowManagerServer::OnAppear(const GetServiceFunc get, const std::string &
         wms = static_cast<struct wms *>(ret);
         const struct wms_listener listener = {
             .window_status = &WindowManagerServer::OnWindowChange,
+            .window_size_change = &WindowManagerServer::OnWindowSizeChange,
+            .adjacent_mode_change = &WindowManagerServer::OnAdjacentModeChange,
         };
         wms_add_listener(wms, &listener, nullptr);
     }
@@ -87,6 +89,22 @@ void WindowManagerServer::OnWindowChange(void *, struct wms *,
     }
 }
 
+void WindowManagerServer::OnWindowSizeChange(void *, struct wms *, int32_t width, int32_t height)
+{
+    WMLOGFI("%{public}dx%{public}d", width, height);
+    if (onWindowSizeChange) {
+        onWindowSizeChange(width, height);
+    }
+}
+
+void WindowManagerServer::OnAdjacentModeChange(void *, struct wms *, uint32_t status)
+{
+    WMLOGFI("OnAdjacentModeChange status: %{public}u", status);
+    if (onAdjacentModeChange) {
+        onAdjacentModeChange(static_cast<enum AdjacentModeStatus>(status));
+    }
+}
+
 sptr<Promise<struct WMSWindowInfo>> WindowManagerServer::CreateWindow(
     const sptr<WlSurface> &wlSurface, int32_t did, WindowType type)
 {
@@ -103,5 +121,15 @@ sptr<Promise<struct WMSWindowInfo>> WindowManagerServer::CreateWindow(
     wms_create_window(wms, wlSurface->GetRawPtr(), did, type);
     delegator.Dep<WlDisplay>()->Flush();
     return ret;
+}
+
+void WindowManagerServer::RegisterAdjacentModeChange(AdjacentModeChangeFunc func)
+{
+    onAdjacentModeChange = func;
+}
+
+void WindowManagerServer::RegisterWindowSizeChange(WindowSizeChangeFunc func)
+{
+    onWindowSizeChange = func;
 }
 } // namespace OHOS

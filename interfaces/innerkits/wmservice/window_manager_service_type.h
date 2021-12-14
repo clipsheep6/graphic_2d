@@ -23,14 +23,6 @@
 #include <window_manager_type.h>
 
 namespace OHOS {
-// bitmask
-enum WMSDisplayMode {
-    WM_DISPLAY_MODE_SINGLE = 1,
-    WM_DISPLAY_MODE_CLONE = 2,
-    WM_DISPLAY_MODE_EXTEND = 4,
-    WM_DISPLAY_MODE_EXPAND = 8,
-};
-
 enum WMSDisplayDirection {
     WMS_DISPLAY_DIRECTION_DOWN = 0,
     WMS_DISPLAY_DIRECTION_LEFT = 1,
@@ -64,6 +56,7 @@ using PromiseWMError = Promise<WMError>;
 using PromiseWMSImageInfo = Promise<WMSImageInfo>;
 using PromisePowerStatus = Promise<PowerStatus>;
 using PromiseBacklight = Promise<Backlight>;
+
 } // namespace OHOS
 
 #endif // INTERFACES_INNERKITS_WMSERVICE_WINDOW_MANAGER_SERVICE_TYPE_H

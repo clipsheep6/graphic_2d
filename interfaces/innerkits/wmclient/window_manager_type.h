@@ -54,6 +54,46 @@ enum WindowMode {
     WINDOW_MODE_MAX,
 };
 
+// bitmask
+enum WMSDisplayMode {
+    WM_DISPLAY_MODE_SINGLE = 1,
+    WM_DISPLAY_MODE_CLONE = 2,
+    WM_DISPLAY_MODE_EXTEND = 4,
+    WM_DISPLAY_MODE_EXPAND = 8,
+};
+
+enum DisplayType {
+    DISPLAY_TYPE_PHYSICAL = 0,
+    DISPLAY_TYPE_VIRTUAL,
+    DISPLAY_TYPE_MAX,
+};
+
+enum AdjacentModeStatus {
+    ADJACENT_MODE_STATUS_CLEAR = 0,
+    ADJACENT_MODE_STATUS_VAGUE = 1,
+    ADJACENT_MODE_STATUS_RETAIN = 2,
+    ADJACENT_MODE_STATUS_DESTROY = 3,
+    ADJACENT_MODE_STATUS_MAX,
+};
+
+enum WindowAdjMode {
+    WINDOW_ADJ_MODE_UNSET = 0,
+    WINDOW_ADJ_MODE_SET = 1,
+    WINDOW_ADJ_MODE_MAX,
+};
+
+enum AdjacentMode {
+    ADJ_MODE_NULL = 0,
+    ADJ_MODE_UNENABLE = 1,
+    ADJ_MODE_SINGLE = 2,
+    ADJ_MODE_SELECT = 3,
+    ADJ_MODE_CONFIRM = 4,
+    ADJ_MODE_DIVIDER_TOUCH_DOWN = 5,
+    ADJ_MODE_DIVIDER_TOUCH_MOVE = 6,
+    ADJ_MODE_DIVIDER_TOUCH_UP = 7,
+    ADJ_MODE_MAX,
+};
+
 struct WMDisplayInfo {
     int32_t id;
     uint32_t width;
@@ -61,11 +101,25 @@ struct WMDisplayInfo {
     uint32_t phyWidth;
     uint32_t phyHeight;
     uint32_t vsync;
+    enum DisplayType type;
+};
+
+struct AdjacentModeInfo {
+    int32_t widBackground;
+    int32_t widMiddleLine;
+    int32_t widDefault;
+    int32_t widDefaultIcon;
+    int32_t widDefaultLine;
+    int32_t widOther;
+    int32_t widOtherIcon;
+    int32_t widOtherLine;
+    int32_t widThirdIcon;
 };
 
 #ifdef __cplusplus
-using WindowModeChangeFunc       = std::function<void(WindowMode mode)>;
-using BeforeFrameSubmitFunc      = std::function<void()>;
+using WindowModeChangeFunc = std::function<void(WindowMode mode)>;
+using BeforeFrameSubmitFunc = std::function<void()>;
+using AdjacentModeChangeFunc = std::function<void(AdjacentModeStatus status)>;
 } // namespace OHOS
 #endif
 

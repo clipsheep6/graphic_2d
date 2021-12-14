@@ -48,9 +48,10 @@ void OnReply(void *, struct wms *, uint32_t a)
 }
 
 void OnDisplayChange(void *, struct wms *,
-    uint32_t a, const char *b, uint32_t c, int32_t d, int32_t e)
+    uint32_t a, const char *b, uint32_t c, int32_t d, int32_t e, uint32_t f)
 {
-    WindowManagerServiceProxy::OnDisplayChange(a, b, static_cast<wms_screen_status>(c), d, e);
+    WindowManagerServiceProxy::OnDisplayChange(a, b, static_cast<wms_screen_status>(c), d, e,
+                                                    static_cast<wms_screen_type>(f));
 }
 
 void OnDisplayPower(void *, struct wms *, uint32_t a, int32_t b)
@@ -113,11 +114,13 @@ void RegistryGlobal(void *ppwms, struct wl_registry *registry,
             OnDisplayBacklight,
             OnDisplayModeChange,
             nullptr,
+            nullptr,
             OnGlobalWindowStatus,
             OnScreenShotDone,
             OnScreenShotError,
             OnWindowShotDone,
             OnWindowShotError,
+            nullptr,
         };
         if (pwms != nullptr) {
             wms_add_listener(pwms, &listener, nullptr);
@@ -259,7 +262,13 @@ WMError WindowManagerServiceClientImpl::Init()
         return WM_ERROR_WMS_NOT_FOUND;
     }
 
-    wmservice = new WindowManagerServiceProxy(wms, display);
+    auto gret = IAnimationService::Init();
+    if (gret != GSERROR_OK) {
+        WMLOGFW("animationService init failed: %{public}s", GSErrorStr(gret).c_str());
+    }
+
+    auto as = IAnimationService::Get();
+    wmservice = new WindowManagerServiceProxy(wms, display, as);
     StartDispatchThread();
     return WM_OK;
 }

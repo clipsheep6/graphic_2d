@@ -80,19 +80,6 @@ public:
         }
 
         auto wm = WindowManager::GetInstance();
-        std::string command;
-        std::string filePath = "/data/screencap/";
-        command = "mkdir -p " + filePath;
-        auto fp = fopen(filePath.c_str(), "w");
-
-        if (!fp) {
-            system(command.c_str());
-        }
-
-        finalPath = filePath.append("rec.raw");
-        std::ofstream rawDataFile_1(finalPath, std::ofstream::binary | std::ofstream::app);
-        rawDataFile_1.write("RAW.diff", 8);
-        rawDataFile_1.close();
 
         while (true) {
             time = time + s;
@@ -138,6 +125,20 @@ public:
         }
 
         if (!flag) {
+            std::string command;
+            std::string filePath = "/data/screencap/";
+            command = "mkdir -p " + filePath;
+            auto fp = fopen(filePath.c_str(), "w");
+
+            if (!fp) {
+                system(command.c_str());
+            }
+
+            finalPath = filePath.append("rec.raw");
+            std::ofstream rawDataFile_1(finalPath, std::ofstream::binary | std::ofstream::out);
+            rawDataFile_1.write("RAW.diff", 8);
+            rawDataFile_1.close();
+
             std::ofstream rawDataFile_2(finalPath, std::ofstream::binary | std::ofstream::app);
             rawDataFile_2.write(reinterpret_cast<const char *>(&info.width), 4);
             rawDataFile_2.write(reinterpret_cast<const char *>(&info.height), 4);

@@ -103,7 +103,17 @@ public:
         window->SwitchTop();
         auto surface = window->GetSurface();
         windowSync = NativeTestSync::CreateSync(std::bind(&WMClientNativeTest3::Draw, this,
-            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), surface);
+            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4), surface, &config);
+        config.width = surface->GetDefaultWidth();
+        config.height = surface->GetDefaultHeight();
+        config.strideAlignment = 0x8;
+        config.format = PIXEL_FMT_RGBA_8888;
+        config.usage = surface->GetDefaultUsage();
+        auto onSizeChange = [this](uint32_t w, uint32_t h) {
+            config.width = w;
+            config.height = h;
+        };
+        window->OnSizeChange(onSizeChange);
     }
 
     void Draw(void *vaddr, uint32_t width, uint32_t height, uint32_t count)
@@ -138,5 +148,6 @@ private:
     WindowRotateType rotateType;
     int32_t vsyncRate = 0;
     int64_t rotationTime = 0;
+    BufferRequestConfig config = {};
 } g_autoload;
 } // namespace

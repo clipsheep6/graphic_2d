@@ -30,6 +30,7 @@ group("default") {
     "frameworks/wmserver:wmserver",
     "frameworks/wmservice:wmservice_test",
     "frameworks/wmtest:wmtest",
+    "frameworks/cursor:cursor",
   ]
 }
 

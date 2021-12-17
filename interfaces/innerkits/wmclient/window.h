@@ -57,6 +57,13 @@ public:
     virtual void OnModeChange(WindowModeChangeFunc func) = 0;
     virtual void OnSplitStatusChange(SplitStatusChangeFunc func) = 0;
 
+    // pip Mode
+    virtual bool GetPIPMode() const = 0;
+    virtual GSError EnterPIPMode(int32_t x, int32_t y, 
+                                 uint32_t width, uint32_t height) = 0;
+    virtual GSError ExitPIPMode() = 0;
+    virtual GSError OnPIPModeChange(WindowPIPModeChangeFunc func) = 0;
+
     // listener
     virtual GSError OnTouch(OnTouchFunc cb) = 0;
     virtual GSError OnKey(OnKeyFunc cb) = 0;

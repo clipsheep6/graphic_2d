@@ -467,6 +467,7 @@ static void ControllerGetDisplayPower(const struct wl_client *client,
                                       const struct wl_resource *resource,
                                       int32_t displayId)
 {
+    LOGE("");
     struct WmsContext *ctx = GetWmsInstance();
     if (ctx->deviceFuncs == NULL) {
         wms_send_display_power(resource, WMS_ERROR_API_FAILED, 0);
@@ -474,14 +475,19 @@ static void ControllerGetDisplayPower(const struct wl_client *client,
     }
 
     DispPowerStatus status;
+    LOGE("");
     int32_t ret = ctx->deviceFuncs->GetDisplayPowerStatus(displayId, &status);
+    LOGE("");
     if (ret != 0) {
         LOGE("GetDisplayPowerStatus failed, return %{public}d", ret);
         wms_send_display_power(resource, WMS_ERROR_API_FAILED, 0);
         wl_client_flush(wl_resource_get_client(resource));
     }
+    LOGE("");
     wms_send_display_power(resource, WMS_ERROR_OK, status);
+    LOGE("");
     wl_client_flush(wl_resource_get_client(resource));
+    LOGE("");
 }
 
 static void ControllerSetDisplayPower(const struct wl_client *client,

@@ -28,39 +28,25 @@
 namespace OHOS {
 class SubwindowNormalImpl : public Subwindow, public IBufferConsumerListenerClazz {
 public:
-    static WMError Create(sptr<Subwindow> &subwindow,
-                          const sptr<Window> &window,
-                          const sptr<SubwindowOption> &option);
+    GSError Init(const sptr<Window> &window, const sptr<SubwindowOption> &option);
 
     virtual sptr<Surface> GetSurface() const override;
 
-    virtual WMError Move(int32_t x, int32_t y) override;
-    virtual WMError Resize(uint32_t width, uint32_t height) override;
-    virtual WMError Destroy() override;
+    virtual GSError Move(int32_t x, int32_t y) override;
+    virtual GSError Resize(uint32_t width, uint32_t height) override;
+    virtual GSError Destroy() override;
 
     virtual void OnPositionChange(WindowPositionChangeFunc func) override;
     virtual void OnSizeChange(WindowSizeChangeFunc func) override;
-    virtual void OnBeforeFrameSubmit(BeforeFrameSubmitFunc func) override;
 
-private:
-    SubwindowNormalImpl() = default;
-    virtual ~SubwindowNormalImpl() = default;
-
+protected:
     virtual void OnBufferAvailable() override;
     void SendBufferToServer(sptr<WlBuffer> &wbuffer,
                             sptr<SurfaceBuffer> &sbuffer,
                             int32_t fence, Rect &damage);
 
-    static WMError CheckAndNew(sptr<SubwindowNormalImpl> &si,
-                               const sptr<Window> &window,
-                               const sptr<SubwindowOption> &option,
-                               sptr<WlSurface> &parent);
-
-    static WMError CreateWlSurface(sptr<SubwindowNormalImpl> &si,
-                               const sptr<WlSurface> &parentWlSurface);
-
-    static WMError CreateConsumerSurface(sptr<SubwindowNormalImpl> &si,
-                                         const sptr<SubwindowOption> &option);
+    GSError CreateWlSurface(const sptr<WlSurface> &parentWlSurface);
+    virtual GSError CreateConsumerSurface(const sptr<SubwindowOption> &option);
 
     // base attribute
     std::mutex publicMutex;
@@ -68,9 +54,9 @@ private:
     WindowAttribute attr;
 
     // functional member
-    sptr<Surface> csurface = nullptr;
-    sptr<Surface> psurface = nullptr;
-    sptr<WlSubsurface> wlSubsurface = nullptr;
+    sptr<Surface> csurf = nullptr;
+    sptr<Surface> psurf = nullptr;
+    sptr<WlSubsurface> wlSubsurf = nullptr;
     sptr<WlSurface> wlSurface = nullptr;
     BeforeFrameSubmitFunc onBeforeFrameSubmitFunc = nullptr;
 };

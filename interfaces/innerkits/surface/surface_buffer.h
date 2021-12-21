@@ -16,10 +16,7 @@
 #ifndef INTERFACES_INNERKITS_SURFACE_SURFACE_BUFFER_H
 #define INTERFACES_INNERKITS_SURFACE_SURFACE_BUFFER_H
 
-#include <functional>
-
 #include <refbase.h>
-
 #include "buffer_handle_utils.h"
 #include "surface_type.h"
 
@@ -54,8 +51,6 @@ protected:
     SurfaceBuffer(){}
     virtual ~SurfaceBuffer(){}
 };
-
-using OnReleaseFunc = std::function<SurfaceError(sptr<SurfaceBuffer> &)>;
 } // namespace OHOS
 
 #endif // INTERFACES_INNERKITS_SURFACE_SURFACE_BUFFER_H

@@ -39,7 +39,9 @@ SurfaceBufferImpl::SurfaceBufferImpl()
         mutex.unlock();
     }
     handle_ = nullptr;
+#ifdef ACE_ENABLE_GL
     eglData_ = nullptr;
+#endif
     BLOGD("ctor +[%{public}d]", sequenceNumber);
 }
 
@@ -56,7 +58,9 @@ SurfaceBufferImpl::~SurfaceBufferImpl()
     if (handle_) {
         FreeBufferHandle(handle_);
     }
+#ifdef ACE_ENABLE_GL
     eglData_ = nullptr;
+#endif
 }
 
 SurfaceBufferImpl *SurfaceBufferImpl::FromBase(const sptr<SurfaceBuffer>& buffer)
@@ -335,6 +339,7 @@ int32_t SurfaceBufferImpl::GetSeqNum()
     return sequenceNumber;
 }
 
+#ifdef ACE_ENABLE_GL
 sptr<EglData> SurfaceBufferImpl::GetEglData() const
 {
     return eglData_;
@@ -344,4 +349,5 @@ void SurfaceBufferImpl::SetEglData(const sptr<EglData>& data)
 {
     eglData_ = data;
 }
+#endif
 } // namespace OHOS

@@ -26,7 +26,7 @@
 namespace OHOS {
 class Surface : public RefBase {
 public:
-    static sptr<Surface> CreateSurfaceAsConsumer(std::string name = "noname", bool isShared = false);
+    static sptr<Surface> CreateSurfaceAsConsumer(std::string name = "noname");
     static sptr<Surface> CreateSurfaceAsProducer(sptr<IBufferProducer>& producer);
 
     virtual ~Surface() = default;
@@ -34,33 +34,17 @@ public:
     virtual bool IsConsumer() const = 0;
     virtual sptr<IBufferProducer> GetProducer() const = 0;
 
-    // use RequestBufferNoFence or RequestBufferWithFence
-    __attribute__((deprecated))
     virtual SurfaceError RequestBuffer(sptr<SurfaceBuffer>& buffer,
                                        int32_t &fence, BufferRequestConfig &config) = 0;
-
-    virtual SurfaceError RequestBufferNoFence(sptr<SurfaceBuffer>& buffer,
-                                              BufferRequestConfig &config) = 0;
-
-    // need close fence, or destroy fence
-    virtual SurfaceError RequestBufferWithFence(sptr<SurfaceBuffer>& buffer,
-                                             int32_t &fence, BufferRequestConfig &config) = 0;
 
     virtual SurfaceError CancelBuffer(sptr<SurfaceBuffer>& buffer) = 0;
 
     virtual SurfaceError FlushBuffer(sptr<SurfaceBuffer>& buffer,
                                      int32_t fence, BufferFlushConfig &config) = 0;
 
-    virtual SurfaceError FlushBufferNoFence(sptr<SurfaceBuffer>& buffer,
-                                            BufferFlushConfig &config) = 0;
-
     virtual SurfaceError AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                        int64_t &timestamp, Rect &damage) = 0;
     virtual SurfaceError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence) = 0;
-
-    virtual SurfaceError AttachBuffer(sptr<SurfaceBuffer>& buffer) = 0;
-
-    virtual SurfaceError DetachBuffer(sptr<SurfaceBuffer>& buffer) = 0;
 
     virtual uint32_t     GetQueueSize() = 0;
     virtual SurfaceError SetQueueSize(uint32_t queueSize) = 0;
@@ -79,8 +63,11 @@ public:
 
     virtual SurfaceError RegisterConsumerListener(sptr<IBufferConsumerListener>& listener) = 0;
     virtual SurfaceError RegisterConsumerListener(IBufferConsumerListenerClazz *listener) = 0;
-    virtual SurfaceError RegisterReleaseListener(OnReleaseFunc func) = 0;
     virtual SurfaceError UnregisterConsumerListener() = 0;
+
+    virtual uint64_t GetUniqueId() const = 0;
+
+    virtual void Dump(std::string &result) const = 0;
 
     virtual SurfaceError CleanCache() = 0;
 

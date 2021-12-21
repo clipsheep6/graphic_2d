@@ -28,13 +28,13 @@ public:
     virtual ~EglDataImpl();
 
     virtual GLuint GetFrameBufferObj() const override;
-    SurfaceError CreateEglData(const sptr<SurfaceBufferImpl> &buffer);
+    SurfaceError CreateEglData(sptr<SurfaceBufferImpl> &buffer);
 
 private:
     sptr<EglManager> sEglManager_;
     EGLImageKHR eglImage_;
     GLuint glTexture_;
-    GLuint glFbo_;
+    GLuint glFbo_ = 0;
 };
 } // namespace OHOS
 

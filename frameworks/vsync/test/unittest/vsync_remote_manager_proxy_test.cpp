@@ -14,16 +14,11 @@
  */
 
 #include "vsync_remote_manager_proxy_test.h"
+#include "return_value_tester.h"
 
-#include <chrono>
-#include <thread>
 #include <unistd.h>
 
 #include <iservice_registry.h>
-
-#include "return_value_tester.h"
-
-using namespace std::chrono_literals;
 
 namespace OHOS {
 namespace Vsync {
@@ -45,13 +40,13 @@ void VsyncManagerTest::SetUpTestCase()
     }
 
     if (pid_ == 0) {
-        std::this_thread::sleep_for(50ms);
         sptr<VsyncManager> vcqp = new VsyncManager();
         ASSERT_NE(vcqp, nullptr);
         auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         sam->AddSystemAbility(IPC_VSYNCMANAGER_SAID, vcqp);
         char buf[10] = "start";
         write(pipeFd[1], buf, sizeof(buf));
+
         sleep(0);
 
         read(pipeFd[0], buf, sizeof(buf));
@@ -76,10 +71,7 @@ void VsyncManagerTest::TearDownTestCase()
     char buf[10] = "over";
     write(pipeFd[1], buf, sizeof(buf));
 
-    int32_t ret = 0;
-    do {
-        waitpid(pid_, nullptr, 0);
-    } while (ret == -1 && errno == EINTR);
+    waitpid(pid_, nullptr, 0);
 }
 
 namespace {
@@ -145,7 +137,6 @@ HWTEST_F(VsyncManagerTest, GetVsyncFrequency3, testing::ext::TestSize.Level0)
 } // namespace
 VsyncError VsyncCallback::OnVsync(int64_t timestamp)
 {
-    (void)timestamp;
     return VSYNC_ERROR_OK;
 }
 } // namespace Vsync

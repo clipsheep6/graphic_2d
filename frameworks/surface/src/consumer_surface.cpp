@@ -25,8 +25,8 @@ namespace {
 static constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "ConsumerSurface" };
 }
 
-ConsumerSurface::ConsumerSurface(const std::string &name, bool isShared)
-    : name_(name), isShared_(isShared)
+ConsumerSurface::ConsumerSurface(const std::string &name)
+    : name_(name)
 {
     BLOGNI("ctor");
     consumer_ = nullptr;
@@ -42,7 +42,7 @@ ConsumerSurface::~ConsumerSurface()
 
 SurfaceError ConsumerSurface::Init()
 {
-    sptr<BufferQueue> queue_ = new BufferQueue(name_, isShared_);
+    sptr<BufferQueue> queue_ = new BufferQueue(name_);
     SurfaceError ret = queue_->Init();
     if (ret != SURFACE_ERROR_OK) {
         BLOGN_FAILURE("queue init failed");
@@ -70,18 +70,6 @@ SurfaceError ConsumerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
-SurfaceError ConsumerSurface::RequestBufferNoFence(sptr<SurfaceBuffer>& buffer,
-                                                   BufferRequestConfig &config)
-{
-    return SURFACE_ERROR_NOT_SUPPORT;
-}
-
-SurfaceError ConsumerSurface::RequestBufferWithFence(sptr<SurfaceBuffer>& buffer,
-                                                     int32_t &fence, BufferRequestConfig &config)
-{
-    return SURFACE_ERROR_NOT_SUPPORT;
-}
-
 SurfaceError ConsumerSurface::CancelBuffer(sptr<SurfaceBuffer>& buffer)
 {
     return SURFACE_ERROR_NOT_SUPPORT;
@@ -93,46 +81,26 @@ SurfaceError ConsumerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
-SurfaceError ConsumerSurface::FlushBufferNoFence(sptr<SurfaceBuffer>& buffer,
-                                                 BufferFlushConfig &config)
-{
-    return SURFACE_ERROR_NOT_SUPPORT;
-}
-
 SurfaceError ConsumerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                             int64_t &timestamp, Rect &damage)
 {
+    SurfaceError ret;
     sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    SurfaceError ret = consumer_->AcquireBuffer(bufferImpl, fence, timestamp, damage);
+    ret = consumer_->AcquireBuffer(bufferImpl, fence, timestamp, damage);
     buffer = bufferImpl;
     return ret;
 }
 
 SurfaceError ConsumerSurface::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence)
 {
+    SurfaceError ret;
     sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    SurfaceError ret = consumer_->ReleaseBuffer(bufferImpl, fence);
+    ret = consumer_->ReleaseBuffer(bufferImpl, fence);
     buffer = bufferImpl;
     return ret;
 }
 
-SurfaceError ConsumerSurface::AttachBuffer(sptr<SurfaceBuffer>& buffer)
-{
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    SurfaceError ret = consumer_->AttachBuffer(bufferImpl);
-    buffer = bufferImpl;
-    return ret;
-}
-
-SurfaceError ConsumerSurface::DetachBuffer(sptr<SurfaceBuffer>& buffer)
-{
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    SurfaceError ret = consumer_->DetachBuffer(bufferImpl);
-    buffer = bufferImpl;
-    return ret;
-}
-
-uint32_t ConsumerSurface::GetQueueSize()
+uint32_t     ConsumerSurface::GetQueueSize()
 {
     return producer_->GetQueueSize();
 }
@@ -201,11 +169,6 @@ SurfaceError ConsumerSurface::RegisterConsumerListener(IBufferConsumerListenerCl
     return consumer_->RegisterConsumerListener(listener);
 }
 
-SurfaceError ConsumerSurface::RegisterReleaseListener(OnReleaseFunc func)
-{
-    return consumer_->RegisterReleaseListener(func);
-}
-
 SurfaceError ConsumerSurface::UnregisterConsumerListener()
 {
     return consumer_->UnregisterConsumerListener();
@@ -214,5 +177,15 @@ SurfaceError ConsumerSurface::UnregisterConsumerListener()
 SurfaceError ConsumerSurface::CleanCache()
 {
     return producer_->CleanCache();
+}
+
+uint64_t ConsumerSurface::GetUniqueId() const
+{
+    return producer_->GetUniqueId();
+}
+
+void ConsumerSurface::Dump(std::string &result) const
+{
+    return consumer_->Dump(result);
 }
 } // namespace OHOS

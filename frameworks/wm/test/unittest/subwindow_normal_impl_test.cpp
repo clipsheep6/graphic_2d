@@ -15,9 +15,6 @@
 
 #include "subwindow_normal_impl_test.h"
 
-#include <thread>
-#include <unistd.h>
-
 #include <window_manager.h>
 
 #include "mock/mock_static_call.h"

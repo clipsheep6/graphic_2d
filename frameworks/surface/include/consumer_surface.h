@@ -28,7 +28,7 @@
 namespace OHOS {
 class ConsumerSurface : public Surface {
 public:
-    ConsumerSurface(const std::string &name, bool isShared = false);
+    ConsumerSurface(const std::string &name);
     virtual ~ConsumerSurface();
     SurfaceError Init();
 
@@ -37,27 +37,14 @@ public:
     SurfaceError RequestBuffer(sptr<SurfaceBuffer>& buffer,
                                int32_t &fence, BufferRequestConfig &config) override;
 
-    SurfaceError RequestBufferNoFence(sptr<SurfaceBuffer>& buffer,
-                                      BufferRequestConfig &config) override;
-
-    SurfaceError RequestBufferWithFence(sptr<SurfaceBuffer>& buffer,
-                                     int32_t &fence, BufferRequestConfig &config) override;
-
     SurfaceError CancelBuffer(sptr<SurfaceBuffer>& buffer) override;
 
     SurfaceError FlushBuffer(sptr<SurfaceBuffer>& buffer,
                              int32_t fence, BufferFlushConfig &config) override;
 
-    SurfaceError FlushBufferNoFence(sptr<SurfaceBuffer>& buffer,
-                                    BufferFlushConfig &config) override;
-
     SurfaceError AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                int64_t &timestamp, Rect &damage) override;
     SurfaceError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence) override;
-
-    SurfaceError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
-
-    SurfaceError DetachBuffer(sptr<SurfaceBuffer>& buffer) override;
 
     uint32_t     GetQueueSize() override;
     SurfaceError SetQueueSize(uint32_t queueSize) override;
@@ -75,8 +62,11 @@ public:
 
     SurfaceError RegisterConsumerListener(sptr<IBufferConsumerListener>& listener) override;
     SurfaceError RegisterConsumerListener(IBufferConsumerListenerClazz *listener) override;
-    SurfaceError RegisterReleaseListener(OnReleaseFunc func) override;
     SurfaceError UnregisterConsumerListener() override;
+
+    uint64_t GetUniqueId() const override;
+
+    void Dump(std::string &result) const override;
 
     SurfaceError CleanCache() override;
 
@@ -85,7 +75,6 @@ private:
     sptr<BufferQueueProducer> producer_ = nullptr;
     sptr<BufferQueueConsumer> consumer_ = nullptr;
     std::string name_ = "not init";
-    bool isShared_ = false;
 };
 } // namespace OHOS
 

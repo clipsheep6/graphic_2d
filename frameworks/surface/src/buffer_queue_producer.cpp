@@ -15,7 +15,6 @@
 
 #include "buffer_queue_producer.h"
 
-#include <cassert>
 #include <set>
 
 #include "buffer_extra_data_impl.h"
@@ -39,16 +38,14 @@ BufferQueueProducer::BufferQueueProducer(sptr<BufferQueue>& bufferQueue)
     memberFuncMap_[BUFFER_PRODUCER_REQUEST_BUFFER] = &BufferQueueProducer::RequestBufferRemote;
     memberFuncMap_[BUFFER_PRODUCER_CANCEL_BUFFER] = &BufferQueueProducer::CancelBufferRemote;
     memberFuncMap_[BUFFER_PRODUCER_FLUSH_BUFFER] = &BufferQueueProducer::FlushBufferRemote;
-    memberFuncMap_[BUFFER_PRODUCER_ATTACH_BUFFER] = &BufferQueueProducer::AttachBufferRemote;
-    memberFuncMap_[BUFFER_PRODUCER_DETACH_BUFFER] = &BufferQueueProducer::DetachBufferRemote;
     memberFuncMap_[BUFFER_PRODUCER_GET_QUEUE_SIZE] = &BufferQueueProducer::GetQueueSizeRemote;
     memberFuncMap_[BUFFER_PRODUCER_SET_QUEUE_SIZE] = &BufferQueueProducer::SetQueueSizeRemote;
     memberFuncMap_[BUFFER_PRODUCER_GET_NAME] = &BufferQueueProducer::GetNameRemote;
     memberFuncMap_[BUFFER_PRODUCER_GET_DEFAULT_WIDTH] = &BufferQueueProducer::GetDefaultWidthRemote;
     memberFuncMap_[BUFFER_PRODUCER_GET_DEFAULT_HEIGHT] = &BufferQueueProducer::GetDefaultHeightRemote;
     memberFuncMap_[BUFFER_PRODUCER_GET_DEFAULT_USAGE] = &BufferQueueProducer::GetDefaultUsageRemote;
+    memberFuncMap_[BUFFER_PRODUCER_GET_UNIQUE_ID] = &BufferQueueProducer::GetUniqueIdRemote;
     memberFuncMap_[BUFFER_PRODUCER_CLEAN_CACHE] = &BufferQueueProducer::CleanCacheRemote;
-    memberFuncMap_[BUFFER_PRODUCER_REGISTER_RELEASE_LISTENER] = &BufferQueueProducer::RegisterReleaseListenerRemote;
 }
 
 BufferQueueProducer::~BufferQueueProducer()
@@ -132,18 +129,6 @@ int BufferQueueProducer::FlushBufferRemote(MessageParcel &arguments, MessageParc
     return 0;
 }
 
-int32_t BufferQueueProducer::AttachBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
-{
-    assert(!"not support remote");
-    return 0;
-}
-
-int32_t BufferQueueProducer::DetachBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
-{
-    assert(!"not support remote");
-    return 0;
-}
-
 int BufferQueueProducer::GetQueueSizeRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
 {
     reply.WriteInt32(GetQueueSize());
@@ -187,16 +172,15 @@ int BufferQueueProducer::GetDefaultUsageRemote(MessageParcel &arguments, Message
     return 0;
 }
 
-int BufferQueueProducer::CleanCacheRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
+int BufferQueueProducer::GetUniqueIdRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
 {
-    reply.WriteInt32(CleanCache());
+    reply.WriteUint64(GetUniqueId());
     return 0;
 }
 
-int32_t BufferQueueProducer::RegisterReleaseListenerRemote(MessageParcel &arguments,
-    MessageParcel &reply, MessageOption &option)
+int BufferQueueProducer::CleanCacheRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
 {
-    assert(!"not support remote");
+    reply.WriteInt32(CleanCache());
     return 0;
 }
 
@@ -259,24 +243,6 @@ SurfaceError BufferQueueProducer::FlushBuffer(int32_t sequence, BufferExtraData 
     return bufferQueue_->FlushBuffer(sequence, bedata, fence, config);
 }
 
-SurfaceError BufferQueueProducer::AttachBuffer(sptr<SurfaceBuffer>& buffer)
-{
-    if (bufferQueue_ == nullptr) {
-        return SURFACE_ERROR_NULLPTR;
-    }
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    return bufferQueue_->AttachBuffer(bufferImpl);
-}
-
-SurfaceError BufferQueueProducer::DetachBuffer(sptr<SurfaceBuffer>& buffer)
-{
-    if (bufferQueue_ == nullptr) {
-        return SURFACE_ERROR_NULLPTR;
-    }
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    return bufferQueue_->DetachBuffer(bufferImpl);
-}
-
 uint32_t BufferQueueProducer::GetQueueSize()
 {
     if (bufferQueue_ == nullptr) {
@@ -325,19 +291,19 @@ uint32_t BufferQueueProducer::GetDefaultUsage()
     return bufferQueue_->GetDefaultUsage();
 }
 
+uint64_t BufferQueueProducer::GetUniqueId()
+{
+    if (bufferQueue_ == nullptr) {
+        return 0;
+    }
+    return bufferQueue_->GetUniqueId();
+}
+
 SurfaceError BufferQueueProducer::CleanCache()
 {
     if (bufferQueue_ == nullptr) {
         return SURFACE_ERROR_NULLPTR;
     }
     return bufferQueue_->CleanCache();
-}
-
-SurfaceError BufferQueueProducer::RegisterReleaseListener(OnReleaseFunc func)
-{
-    if (bufferQueue_ == nullptr) {
-        return SURFACE_ERROR_NULLPTR;
-    }
-    return bufferQueue_->RegisterReleaseListener(func);
 }
 }; // namespace OHOS

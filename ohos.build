@@ -3,31 +3,49 @@
   "parts": {
     "graphic_standard": {
       "module_list": [
-        "//foundation/graphic/standard/interfaces/kits/js/declaration:window",
-        "//foundation/graphic/standard/interfaces/kits/napi:napi_packages",
-
         "//third_party/wayland-ivi-extension:ivi-controller",
         "//third_party/wayland-ivi-extension:ivi-input-controller",
         "//third_party/wayland-ivi-extension:libscreen-info-module",
+        "//third_party/wayland-ivi-extension:libtest-screen-info-module",
         "//third_party/wayland-ivi-extension:layer-add-surfaces",
         "//third_party/wayland-ivi-extension:LayerManagerControl",
         "//third_party/wayland-ivi-extension:simple-weston-client",
 
         "//third_party/weston:default",
+        "//third_party/skia_canvaskit0310:skia",
 
         "//foundation/graphic/standard/frameworks/vsync:vsync_server",
         "//foundation/graphic/standard/frameworks/wmserver:wmserver",
+        "//foundation/graphic/standard/frameworks/wmserver:screen-info-test",
+        "//foundation/graphic/standard/frameworks/wmservice:wmservice_test",
 
         "//foundation/graphic/standard/frameworks/bootanimation:bootanimation",
         "//foundation/graphic/standard/frameworks/bootanimation:bootanimation-480x960.raw",
+        "//foundation/graphic/standard/frameworks/wmtest:wmtest",
         "//foundation/graphic/standard:default.scss",
-        "//foundation/graphic/standard:graphic.rc"
+        "//foundation/graphic/standard:graphic.rc",
+
+        "//foundation/graphic/standard/rosen/samples:hello_rosen",
+        "//foundation/graphic/standard/rosen/modules/2d_graphics:2d_graphics",
+        "//foundation/graphic/standard/rosen/samples/2d_graphics:drawing_sample",
+        "//foundation/graphic/standard/rosen/samples/2d_graphics:render_context_sample",
+        "//foundation/graphic/standard/rosen/samples/composer:hello_composer",
+        "//foundation/graphic/standard/rosen/modules/composer:libcomposer",
+
+        "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
+        "//foundation/graphic/standard/rosen/modules/render_service_base/test:render_service_client",
+        "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
+        "//foundation/graphic/standard/rosen/modules/render_service:librender_service",
+        "//foundation/graphic/standard/rosen/modules/render_service:render_service",
+        "//foundation/graphic/standard/rosen/modules/render_service_client:render_service_client_demo",
+
+        "//foundation/graphic/standard/rosen/modules/backstore:libbackstore"
       ],
       "test_list": [
-        "//foundation/graphic/standard/frameworks/surface:test",
         "//foundation/graphic/standard/frameworks/vsync:test",
         "//foundation/graphic/standard/frameworks/wm:test",
-        "//foundation/graphic/standard/frameworks/fence:test"
+        "//foundation/graphic/standard/rosen/modules/render_service_client/core/animation/test:unittest",
+        "//foundation/graphic/standard/rosen/test/render_service:test"
       ]
     }
   }

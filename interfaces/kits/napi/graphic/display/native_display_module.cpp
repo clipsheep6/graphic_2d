@@ -27,31 +27,32 @@ struct Param {
     std::vector<WMDisplayInfo> displayInfos;
 };
 
-bool Async(napi_env env, std::unique_ptr<Param> &param)
+void Async(napi_env env, std::unique_ptr<Param> &param)
 {
     const auto &wmsc = WindowManagerServiceClient::GetInstance();
     auto wret = wmsc->Init();
     if (wret != WM_OK) {
         GNAPI_LOG("WindowManagerServiceClient::Init() return %{public}s", WMErrorStr(wret).c_str());
         param->wret = wret;
-        return false;
+        return;
     }
 
     auto iWindowManagerService = wmsc->GetService();
     if (!iWindowManagerService) {
         GNAPI_LOG("can not get iWindowManagerService");
         param->wret = wret;
-        return false;
+        return;
     }
 
     param->wret = iWindowManagerService->GetDisplays(param->displayInfos);
-    return true;
 }
 
 napi_value Resolve(napi_env env, std::unique_ptr<Param> &param)
 {
+    napi_value result;
     if (param->wret != WM_OK) {
-        return CreateError(env, "failed with %s", WMErrorStr(param->wret).c_str());
+        NAPI_CALL(env, napi_get_undefined(env, &result));
+        return result;
     }
 
     if (param->displayInfos.empty()) {
@@ -68,7 +69,6 @@ napi_value Resolve(napi_env env, std::unique_ptr<Param> &param)
     GNAPI_LOG("phyHeight : %{public}d", param->displayInfos[0].phyHeight);
     GNAPI_LOG("vsync     : %{public}d", param->displayInfos[0].vsync);
 
-    napi_value result;
     NAPI_CALL(env, napi_create_object(env, &result));
     NAPI_CALL(env, SetMemberInt32(env, result, "id", displayInfo.id));
     NAPI_CALL(env, SetMemberUndefined(env, result, "name"));
@@ -108,8 +108,7 @@ napi_value DisplayModuleInit(napi_env env, napi_value exports)
 }
 } // namespace OHOS
 
-extern "C" {
-__attribute__((constructor)) static void RegisterModule(void)
+extern "C" __attribute__((constructor)) void RegisterModule(void)
 {
     napi_module displayModule = {
         .nm_version = 1, // NAPI v1
@@ -120,5 +119,4 @@ __attribute__((constructor)) static void RegisterModule(void)
         .nm_priv = nullptr,
     };
     napi_module_register(&displayModule);
-}
 }

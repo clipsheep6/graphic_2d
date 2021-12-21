@@ -20,17 +20,12 @@
 #include <cstdio>
 #include <securec.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include <display_type.h>
 
 #include "inative_test.h"
 #include "util.h"
-
-#define TIME_BASE 1000
-#define TIMEMS_RANGER 0.5
-#define SIZE_POS_VERTEX_ATTRIBUTE 2
-#define SIZE_COLORS_VERTEX_ATTRIBUTE 3
-#define NUMBER_VERTICES 4
 
 namespace OHOS {
 sptr<Window> NativeTestFactory::CreateWindow(WindowType type, sptr<Surface> csurface)
@@ -70,15 +65,12 @@ sptr<NativeTestSync> NativeTestSync::CreateSync(DrawFunc drawFunc, sptr<Surface>
 }
 
 #ifdef ACE_ENABLE_GPU
-sptr<NativeTestSync> NativeTestSync::CreateSyncEgl(DrawFuncEgl drawFunc,
-    sptr<EglSurface> &peglsurface, uint32_t width, uint32_t height, void *data)
+sptr<NativeTestSync> NativeTestSync::CreateSyncEgl(DrawFuncEgl drawFunc, sptr<EglRenderSurface> &peglsurface, void *data)
 {
     if (drawFunc != nullptr && peglsurface != nullptr) {
         sptr<NativeTestSync> nts = new NativeTestSync();
         nts->drawEgl = drawFunc;
         nts->eglsurface = peglsurface;
-        nts->width_ = width;
-        nts->height_ = height;
         RequestSync(std::bind(&NativeTestSync::SyncEgl, nts, SYNC_FUNC_ARG), data);
         return nts;
     }
@@ -93,9 +85,11 @@ void NativeTestSync::SyncEgl(int64_t, void *data)
     }
 
     if (sret == SURFACE_ERROR_OK) {
-        drawEgl(&glCtx, eglsurface, width_, height_);
+        drawEgl(&glCtx, eglsurface);
         count++;
     }
+
+
 
     sret = eglsurface->SwapBuffers();
 
@@ -135,7 +129,7 @@ static GLuint CreateShader(const char *source, GLenum shaderType)
 
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
     if (!status) {
-        constexpr int32_t maxLogLength = 1000;
+		constexpr int32_t maxLogLength = 1000;
         char log[maxLogLength];
         GLsizei len;
         glGetShaderInfoLog(shader, maxLogLength, &len, log);
@@ -158,7 +152,7 @@ static GLuint CreateAndLinkProgram(GLuint vert, GLuint frag)
 
     glGetProgramiv(program, GL_LINK_STATUS, &status);
     if (!status) {
-        constexpr int32_t maxLogLength = 1000;
+		constexpr int32_t maxLogLength = 1000;
         char log[maxLogLength];
         GLsizei len;
         glGetProgramInfoLog(program, maxLogLength, &len, log);
@@ -218,6 +212,7 @@ void NativeTestSync::Sync(int64_t, void *data)
     }
 
     sptr<SurfaceBuffer> buffer;
+    int32_t releaseFence;
     BufferRequestConfig rconfig = {
         .width = surface->GetDefaultWidth(),
         .height = surface->GetDefaultHeight(),
@@ -230,7 +225,7 @@ void NativeTestSync::Sync(int64_t, void *data)
         rconfig = *reinterpret_cast<BufferRequestConfig *>(data);
     }
 
-    SurfaceError ret = surface->RequestBufferNoFence(buffer, rconfig);
+    SurfaceError ret = surface->RequestBuffer(buffer, releaseFence, rconfig);
     if (ret == SURFACE_ERROR_NO_BUFFER) {
         RequestSync(std::bind(&NativeTestSync::Sync, this, SYNC_FUNC_ARG), data);
         return;
@@ -431,14 +426,14 @@ void NativeTestDraw::BoxDraw(void *vaddr, uint32_t width, uint32_t height, uint3
             addr[j * width + x2] = color;
         }
     };
-    auto abs = [](int32_t x) { return (x < 0) ? -x : x; };
+    auto abs = [](int32_t x) { return x < 0 ? -x : x; };
     drawOnce(abs((count - 1) % (framecount * 0x2 - 1) - framecount), color);
     drawOnce(abs((count + 0) % (framecount * 0x2 - 1) - framecount), color);
     drawOnce(abs((count + 1) % (framecount * 0x2 - 1) - framecount), color);
 }
 
 #ifdef ACE_ENABLE_GPU
-void NativeTestDraw::FlushDrawEgl(GlContext *ctx, sptr<EglSurface> &eglsurface, uint32_t width, uint32_t height)
+void NativeTestDraw::FlushDrawEgl(GlContext *ctx, sptr<EglRenderSurface> &eglsurface)
 {
     /* Complete a movement iteration in 5000 ms. */
     static const uint64_t iterationMs = 5000;
@@ -459,25 +454,25 @@ void NativeTestDraw::FlushDrawEgl(GlContext *ctx, sptr<EglSurface> &eglsurface, 
     uint64_t timeMs;
 
     gettimeofday(&tv, NULL);
-    timeMs = tv.tv_sec * TIME_BASE + tv.tv_usec / TIME_BASE;
+    timeMs = tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
     /* Split time_ms in repeating windows of [0, iterationMs) and map them
      * to offsets in the [-0.5, 0.5) range. */
-    offset = (timeMs % iterationMs) / (float) iterationMs - TIMEMS_RANGER;
+    offset = (timeMs % iterationMs) / (float) iterationMs - 0.5;
 
-    glViewport(0, 0, width, height);
+    glViewport(0, 0, 100, 100);
 
     glUniform1f(ctx->offsetUniform, offset);
 
     glClearColor(0.0, 1.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glVertexAttribPointer(ctx->pos, SIZE_POS_VERTEX_ATTRIBUTE, GL_FLOAT, GL_FALSE, 0, verts);
-    glVertexAttribPointer(ctx->color, SIZE_COLORS_VERTEX_ATTRIBUTE, GL_FLOAT, GL_FALSE, 0, colors);
+    glVertexAttribPointer(ctx->pos, 2, GL_FLOAT, GL_FALSE, 0, verts);
+    glVertexAttribPointer(ctx->color, 3, GL_FLOAT, GL_FALSE, 0, colors);
     glEnableVertexAttribArray(ctx->pos);
     glEnableVertexAttribArray(ctx->color);
 
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, NUMBER_VERTICES);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     glDisableVertexAttribArray(ctx->pos);
     glDisableVertexAttribArray(ctx->color);

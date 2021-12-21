@@ -33,6 +33,7 @@
 #include "wl_shm_buffer_factory.h"
 #include "wl_subsurface_factory.h"
 #include "wl_surface_factory.h"
+#include "wp_viewport_factory.h"
 
 namespace OHOS {
 class WindowManagerImpl : public WindowManager {
@@ -79,6 +80,7 @@ private:
     sptr<WlSubsurfaceFactory> wlSubsurfaceFactory = nullptr;
     sptr<WlSurfaceFactory> wlSurfaceFactory = nullptr;
     sptr<WindowManagerServer> windowManagerServer = nullptr;
+    sptr<WpViewportFactory> wpViewportFactory = nullptr;
     sptr<WaylandService> waylandService = nullptr;
     sptr<WindowManagerServiceClient> wmsc = nullptr;
 };

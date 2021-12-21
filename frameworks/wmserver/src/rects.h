@@ -16,6 +16,7 @@
 #ifndef FRAMEWORKS_WMSERVER_SRC_RECTS_H
 #define FRAMEWORKS_WMSERVER_SRC_RECTS_H
 
+#include <cstdint>
 #include <vector>
 
 class Rects {
@@ -41,7 +42,7 @@ private:
         int32_t h;
     };
     static void Intersect(const struct Rect &a, const struct Rect &b, struct Rect &out);
-    static void Subtrace(const struct Rect &rect, const struct Rect &inner, std::vector<struct Rect> &result);
+    static void Subtrace(const struct Rect &rect, const struct Rect &inner, std::vector<struct Rect> &rects);
     static void RectsSubtrace(std::vector<struct Rect> &lrects, std::vector<struct Rect> rrects);
 
     std::vector<struct Rect> rects;

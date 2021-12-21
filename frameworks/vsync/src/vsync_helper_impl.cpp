@@ -18,17 +18,14 @@
 #include <algorithm>
 #include <chrono>
 #include <list>
-#include <thread>
+#include <sys/time.h>
 #include <unistd.h>
 
-#include <graphic_bytrace.h>
 #include <iservice_registry.h>
 #include <system_ability_definition.h>
 
 #include "static_call.h"
 #include "vsync_log.h"
-
-using namespace std::chrono_literals;
 
 namespace OHOS {
 namespace Vsync {
@@ -123,7 +120,8 @@ VsyncError VsyncClient::Init(bool restart)
         if (service_ == nullptr) {
             vret = InitService();
             if (vret == VSYNC_ERROR_SERVICE_NOT_FOUND && restart == true) {
-                std::this_thread::sleep_for(5ms);
+                constexpr int sleepTime = 5 * 1000;
+                usleep(sleepTime);
                 continue;
             }
             if (vret != VSYNC_ERROR_OK) {
@@ -184,7 +182,6 @@ VsyncError VsyncClient::RequestFrameCallback(const struct FrameCallback &cb)
         VLOG_FAILURE_RET(VSYNC_ERROR_INVALID_ARGUMENTS);
     }
 
-    ScopedBytrace func(__func__);
     int64_t delayTime = cb.timestamp_;
     uint32_t vsyncID = lastID_ + vsyncFrequency_ / frequency;
     struct VsyncElement ele = {
@@ -238,7 +235,6 @@ void VsyncClient::DispatchFrameCallback(int64_t timestamp)
 
 void VsyncClient::DispatchMain(int64_t timestamp)
 {
-    ScopedBytrace func(__func__);
     uint32_t id = ++lastID_;
     int64_t now = GetNowTime();
 

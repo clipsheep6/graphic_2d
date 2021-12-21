@@ -65,25 +65,6 @@ sptr<IBufferProducer> ProducerSurface::GetProducer() const
 SurfaceError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
                                             int32_t &fence, BufferRequestConfig &config)
 {
-    fence = -1;
-    return RequestBufferNoFence(buffer, config);
-}
-
-SurfaceError ProducerSurface::RequestBufferNoFence(sptr<SurfaceBuffer>& buffer,
-                                                   BufferRequestConfig &config)
-{
-    int32_t releaseFence = -1;
-    auto sret = RequestBufferWithFence(buffer, releaseFence, config);
-    if (sret == SURFACE_ERROR_OK && releaseFence >= 0) {
-        BLOGI("closing fence: %{public}d", releaseFence);
-        close(releaseFence);
-    }
-    return sret;
-}
-
-SurfaceError ProducerSurface::RequestBufferWithFence(sptr<SurfaceBuffer>& buffer,
-                                                     int32_t &fence, BufferRequestConfig &config)
-{
     IBufferProducer::RequestBufferReturnValue retval;
     BufferExtraDataImpl bedataimpl;
     SurfaceError ret = GetProducer()->RequestBuffer(config, bedataimpl, retval);
@@ -98,6 +79,8 @@ SurfaceError ProducerSurface::RequestBufferWithFence(sptr<SurfaceBuffer>& buffer
         ret = BufferManager::GetInstance()->Map(bufferImpl);
         if (ret != SURFACE_ERROR_OK) {
             BLOGN_FAILURE_ID(retval.sequence, "Map failed");
+            (void)GetProducer()->CancelBuffer(retval.sequence, bedataimpl);
+            return ret;
         } else {
             BLOGN_SUCCESS_ID(retval.sequence, "Map");
         }
@@ -155,12 +138,6 @@ SurfaceError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
     return GetProducer()->FlushBuffer(bufferImpl->GetSeqNum(), bedataimpl, fence, config);
 }
 
-SurfaceError ProducerSurface::FlushBufferNoFence(sptr<SurfaceBuffer>& buffer,
-                                                 BufferFlushConfig &config)
-{
-    return FlushBuffer(buffer, -1, config);
-}
-
 SurfaceError ProducerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                             int64_t &timestamp, Rect &damage)
 {
@@ -172,24 +149,7 @@ SurfaceError ProducerSurface::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
-SurfaceError ProducerSurface::AttachBuffer(sptr<SurfaceBuffer>& buffer)
-{
-    if (buffer == nullptr) {
-        return SURFACE_ERROR_NULLPTR;
-    }
-    BLOGND("the addr : %{public}p", buffer.GetRefPtr());
-    return GetProducer()->AttachBuffer(buffer);
-}
-
-SurfaceError ProducerSurface::DetachBuffer(sptr<SurfaceBuffer>& buffer)
-{
-    if (buffer == nullptr) {
-        return SURFACE_ERROR_NULLPTR;
-    }
-    return GetProducer()->DetachBuffer(buffer);
-}
-
-uint32_t     ProducerSurface::GetQueueSize()
+uint32_t ProducerSurface::GetQueueSize()
 {
     return producer_->GetQueueSize();
 }
@@ -264,11 +224,6 @@ SurfaceError ProducerSurface::UnregisterConsumerListener()
     return SURFACE_ERROR_NOT_SUPPORT;
 }
 
-SurfaceError ProducerSurface::RegisterReleaseListener(OnReleaseFunc func)
-{
-    return producer_->RegisterReleaseListener(func);
-}
-
 bool ProducerSurface::IsRemote()
 {
     return producer_->AsObject()->IsProxyObject();
@@ -277,5 +232,10 @@ bool ProducerSurface::IsRemote()
 SurfaceError ProducerSurface::CleanCache()
 {
     return producer_->CleanCache();
+}
+
+uint64_t ProducerSurface::GetUniqueId() const
+{
+    return producer_->GetUniqueId();
 }
 } // namespace OHOS

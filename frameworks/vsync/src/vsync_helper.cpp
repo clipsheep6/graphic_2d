@@ -25,9 +25,6 @@ sptr<VsyncHelper> VsyncHelper::Current()
 
 sptr<VsyncHelper> VsyncHelper::FromHandler(std::shared_ptr<AppExecFwk::EventHandler>& handler)
 {
-    if (handler == nullptr) {
-        return nullptr;
-    }
     sptr<VsyncHelper> helper = new Vsync::VsyncHelperImpl(handler);
     return helper;
 }

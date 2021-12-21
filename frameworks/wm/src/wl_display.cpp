@@ -15,17 +15,12 @@
 
 #include "wl_display.h"
 
-#include <cerrno>
-#include <chrono>
 #include <mutex>
 #include <poll.h>
 #include <sys/eventfd.h>
-#include <thread>
 #include <unistd.h>
 
 #include "window_manager_hilog.h"
-
-using namespace std::chrono_literals;
 
 namespace OHOS {
 namespace {
@@ -54,16 +49,6 @@ sptr<WlDisplay> WlDisplay::GetInstance()
     return instance;
 }
 
-void WlDisplayError(void *, struct wl_display *, void *, uint32_t code, const char *message)
-{
-    printf("wldisplay occur error: %d, %s\n", code, message);
-    printf("wldisplay occur error: %d, %s\n", code, message);
-    printf("wldisplay occur error: %d, %s\n", code, message);
-    WMLOGFE("wldisplay occur error: %{public}d, %{public}s\n", code, message);
-    WMLOGFE("wldisplay occur error: %{public}d, %{public}s\n", code, message);
-    WMLOGFE("wldisplay occur error: %{public}d, %{public}s\n", code, message);
-}
-
 bool WlDisplay::Connect(const char *name)
 {
     // retry to connect
@@ -72,13 +57,14 @@ bool WlDisplay::Connect(const char *name)
         display = wl_display_connect(name);
         if (display != nullptr) {
             WMLOGFI("connect");
-            struct wl_display_listener listener = {WlDisplayError};
-            wl_display_add_listener(display, &listener, nullptr);
             break;
         } else {
             WMLOGFW("create display failed! (%{public}d/%{public}d)", i + 1, retryTimes);
         }
-        std::this_thread::sleep_for(50ms * i);
+
+        constexpr int32_t sleepTimeFactor = 50 * 1000;
+        int32_t sleepTime = i * sleepTimeFactor;
+        usleep(sleepTime);
     }
     return display != nullptr;
 }
@@ -212,8 +198,11 @@ void WlDisplay::Sync()
 void WlDisplay::StartDispatchThread()
 {
     if (dispatchThread == nullptr) {
+        startOnceFlag = std::make_unique<std::once_flag>();
         startPromise = new Promise<bool>();
+
         dispatchThread = std::make_unique<std::thread>(std::bind(&WlDisplay::DispatchThreadMain, this));
+
         startPromise->Await();
     } else {
         WMLOGFW("dispatch loop already started");
@@ -237,12 +226,17 @@ void WlDisplay::DispatchThreadMain()
         return;
     }
 
-    interruptFd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
-    if (startPromise != nullptr) {
-        startPromise->Resolve(true);
+    if (startOnceFlag != nullptr) {
+        static const auto onceFunc = [this]() {
+            if (startPromise != nullptr) {
+                startPromise->Resolve(true);
+            }
+        };
+        std::call_once(*startOnceFlag, onceFunc);
     }
-    WMLOGFI("dispatch loop start");
 
+    WMLOGFI("dispatch loop start");
+    interruptFd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
     while (DispatchThreadCoreProcess()) {
     }
 
@@ -276,11 +270,7 @@ bool WlDisplay::DispatchThreadCoreProcess()
         { .fd = interruptFd, .events = POLLIN, },
     };
 
-    int32_t ret = 0;
-    do {
-        ret = poll(pfd, sizeof(pfd) / sizeof(*pfd), -1);
-    } while (ret == -1 && errno == EINTR);
-
+    int32_t ret = poll(pfd, sizeof(pfd) / sizeof(*pfd), -1);
     if (ret == -1) {
         WMLOGFE("poll return -1");
         CancelRead();

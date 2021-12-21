@@ -24,10 +24,10 @@
 #include "surface_type.h"
 
 namespace OHOS {
-class EglSurface : public RefBase {
+class EglRenderSurface : public RefBase {
 public:
-    static sptr<EglSurface> CreateEglSurfaceAsProducer(sptr<IBufferProducer>& producer);
-    virtual ~EglSurface() = default;
+    static sptr<EglRenderSurface> CreateEglRenderSurfaceAsProducer(sptr<IBufferProducer>& producer);
+    virtual ~EglRenderSurface() = default;
 
     virtual SurfaceError InitContext(EGLContext context = EGL_NO_CONTEXT) = 0;
     virtual EGLDisplay GetEglDisplay() const = 0;
@@ -38,9 +38,8 @@ public:
     virtual SurfaceError SetWidthAndHeight(int32_t width, int32_t height) = 0;
 
 protected:
-    EglSurface() = default;
+    EglRenderSurface() = default;
 };
-typedef EglSurface EglRenderSurface;
 } // namespace OHOS
 
 #endif // INTERFACES_INNERKITS_SURFACE_EGL_RENDER_SURFACE_H

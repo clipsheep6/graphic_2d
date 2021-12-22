@@ -47,9 +47,12 @@ public:
 
     static void OnVsync(uint32_t sequence, uint64_t ns, void *data);
 
+    /* only used for mock tests */
+    void SetHdiDevice(Base::HdiDevice* device);
+
 private:
     uint32_t screenId_;
-    HdiDevice *device_ = nullptr;
+    Base::HdiDevice *device_ = nullptr;
 
     void Destory();
 };

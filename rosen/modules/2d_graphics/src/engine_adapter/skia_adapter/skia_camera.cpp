@@ -17,6 +17,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 SkiaCamera::SkiaCamera() noexcept : view_() {}
 
 void SkiaCamera::Save()
@@ -76,6 +77,7 @@ void SkiaCamera::ApplyToMatrix(Matrix& m)
     m.SetMatrix(matrix.getScaleX(), matrix.getSkewX(), matrix.getTranslateX(),
                 matrix.getScaleY(), matrix.getSkewY(), matrix.getTranslateY(),
                 matrix.getPerspX(), matrix.getPerspY(), matrix.get(SkMatrix::kMPersp2));
+}
 }
 }
 }

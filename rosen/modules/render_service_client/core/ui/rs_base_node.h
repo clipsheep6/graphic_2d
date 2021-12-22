@@ -41,11 +41,6 @@ public:
         return id_;
     }
 
-    const std::vector<NodeId>& GetChildren() const
-    {
-        return children_;
-    }
-
 protected:
     RSBaseNode(bool isRenderServiceNode);
     RSBaseNode(const RSBaseNode&) = delete;
@@ -57,7 +52,7 @@ protected:
     virtual void OnRemoveChildren() {}
     SharedPtr GetParent();
 
-    virtual void SetId(const NodeId& id)
+    void SetId(const NodeId& id)
     {
         id_ = id;
     }
@@ -70,15 +65,14 @@ protected:
     }
 
 private:
-    static inline pid_t pid_ = getpid();
-    static inline std::atomic<uint32_t> currentId_ = 1;
-    NodeId GenerateNodeId();
+    static NodeId GenerateId();
     NodeId id_;
     const bool isRenderServiceNode_;
 
     NodeId parent_ = 0;
     std::vector<NodeId> children_;
     void SetParent(NodeId parent);
+    void RemoveChildById(NodeId childId);
 
     friend class RSUIDirector;
 };

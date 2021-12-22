@@ -19,6 +19,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 
 using EngineImplFactory = SkiaImplFactory;
 
@@ -74,6 +75,7 @@ std::unique_ptr<MatrixImpl> ImplFactory::CreateMatrixImpl()
 std::unique_ptr<CameraImpl> ImplFactory::CreateCameraImpl()
 {
     return EngineImplFactory::CreateCamera();
+}
 }
 }
 }

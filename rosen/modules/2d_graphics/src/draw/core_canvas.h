@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class CoreCanvas {
 public:
     CoreCanvas();
@@ -43,6 +44,7 @@ public:
 
     // image
     void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py);
+    void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py);
     void DrawImage(); // TODO...
 
     // text
@@ -77,6 +79,7 @@ public:
 private:
     std::unique_ptr<CoreCanvasImpl> impl_;
 };
+}
 }
 }
 #endif

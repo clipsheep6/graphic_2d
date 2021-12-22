@@ -30,6 +30,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class ImplFactory {
 public:
     static std::unique_ptr<CoreCanvasImpl> CreateCoreCanvasImpl();
@@ -44,6 +45,7 @@ public:
     static std::unique_ptr<MatrixImpl> CreateMatrixImpl();
     static std::unique_ptr<CameraImpl> CreateCameraImpl();
 };
+}
 }
 }
 #endif

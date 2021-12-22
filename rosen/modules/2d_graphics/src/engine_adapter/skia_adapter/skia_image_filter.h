@@ -23,6 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class SkiaImageFilter : public ImageFilterImpl {
 public:
     SkiaImageFilter() noexcept;
@@ -37,6 +38,7 @@ public:
 private:
     sk_sp<SkImageFilter> MutableImageFilter();
 };
+}
 }
 }
 #endif

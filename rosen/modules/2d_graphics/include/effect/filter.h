@@ -23,6 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class Filter {
 public:
     enum class FilterQuality {
@@ -55,6 +56,7 @@ private:
     std::shared_ptr<MaskFilter> maskFilter_;
     FilterQuality filterQuality_;
 };
+}
 }
 }
 #endif

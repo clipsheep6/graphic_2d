@@ -27,8 +27,62 @@
 
 namespace OHOS {
 namespace Rosen {
-
+namespace Base {
 class HdiDevice {
+public:
+    HdiDevice() = default;
+    virtual ~HdiDevice() = default;
+
+    /* set & get device screen info begin */
+    virtual int32_t RegHotPlugCallback(HotPlugCallback callback, void *data) = 0;
+    virtual int32_t RegScreenVBlankCallback(uint32_t screenId, VBlankCallback callback, void *data) = 0;
+    virtual int32_t GetScreenCapability(uint32_t screenId, DisplayCapability &info) = 0;
+    virtual int32_t GetScreenSuppportedModes(uint32_t screenId, std::vector<DisplayModeInfo> &modes) = 0;
+    virtual int32_t GetScreenMode(uint32_t screenId, uint32_t &modeId) = 0;
+    virtual int32_t SetScreenMode(uint32_t screenId, uint32_t modeId) = 0;
+    virtual int32_t GetScreenPowerStatus(uint32_t screenId, DispPowerStatus &status) = 0;
+    virtual int32_t SetScreenPowerStatus(uint32_t screenId, DispPowerStatus status) = 0;
+    virtual int32_t GetScreenBacklight(uint32_t screenId, uint32_t &level) = 0;
+    virtual int32_t SetScreenBacklight(uint32_t screenId, uint32_t level) = 0;
+    virtual int32_t PrepareScreenLayers(uint32_t screenId, bool &needFlushFb) = 0;
+    virtual int32_t GetScreenCompChange(uint32_t screenId, std::vector<uint32_t> &layersId,
+                                std::vector<int32_t> &types) = 0;
+    virtual int32_t SetScreenClientBuffer(uint32_t screenId, const BufferHandle *buffer,
+                                  const sptr<SyncFence> &fence) = 0;
+    virtual int32_t SetScreenClientDamage(uint32_t screenId, uint32_t num, IRect &damageRect) = 0;
+    virtual int32_t SetScreenVsyncEnabled(uint32_t screenId, bool enabled) = 0;
+    virtual int32_t GetScreenReleaseFence(uint32_t screenId, std::vector<uint32_t> &layersId,
+                                  std::vector<sptr<SyncFence>> &fences) = 0;
+    virtual int32_t Commit(uint32_t screenId, sptr<SyncFence> &fence) = 0;
+    /* set & get device screen info end */
+
+    /* set & get device layer info begin */
+    virtual int32_t SetLayerAlpha(uint32_t screenId, uint32_t layerId, LayerAlpha &alpha) = 0;
+    virtual int32_t SetLayerSize(uint32_t screenId, uint32_t layerId, IRect &layerRect) = 0;
+    virtual int32_t SetTransformMode(uint32_t screenId, uint32_t layerId, TransformType type) = 0;
+    virtual int32_t SetLayerVisibleRegion(uint32_t screenId, uint32_t layerId, uint32_t num, IRect &visable) = 0;
+    virtual int32_t SetLayerDirtyRegion(uint32_t screenId, uint32_t layerId, IRect &dirty) = 0;
+    virtual int32_t SetLayerBuffer(uint32_t screenId, uint32_t layerId, const BufferHandle *handle,
+                           const sptr<SyncFence> &acquireFence) = 0;
+    virtual int32_t SetLayerCompositionType(uint32_t screenId, uint32_t layerId, CompositionType type) = 0;
+    virtual int32_t SetLayerBlendType(uint32_t screenId, uint32_t layerId, BlendType type) = 0;
+    virtual int32_t SetLayerCrop(uint32_t screenId, uint32_t layerId, IRect &crop) = 0;
+    virtual int32_t SetLayerZorder(uint32_t screenId, uint32_t layerId, uint32_t zorder) = 0;
+    virtual int32_t SetLayerPreMulti(uint32_t screenId, uint32_t layerId, bool isPreMulti) = 0;
+    /* set & get device layer info end */
+
+    virtual int32_t CreateLayer(uint32_t screenId, const LayerInfo &layerInfo, uint32_t &layerId) = 0;
+    virtual int32_t CloseLayer(uint32_t screenId, uint32_t layerId) = 0;
+
+private:
+    HdiDevice(const HdiDevice& rhs) = delete;
+    HdiDevice& operator=(const HdiDevice& rhs) = delete;
+    HdiDevice(HdiDevice&& rhs) = delete;
+    HdiDevice& operator=(HdiDevice&& rhs) = delete;
+};
+} // namespace Base
+
+class HdiDevice : public Base::HdiDevice {
 public:
     HdiDevice();
     virtual ~HdiDevice();
@@ -36,45 +90,45 @@ public:
     static HdiDevice* GetInstance();
 
     /* set & get device screen info begin */
-    int32_t RegHotPlugCallback(HotPlugCallback callback, void *data);
-    int32_t RegScreenVBlankCallback(uint32_t screenId, VBlankCallback callback, void *data);
-    int32_t GetScreenCapability(uint32_t screenId, DisplayCapability &info);
-    int32_t GetScreenSuppportedModes(uint32_t screenId, std::vector<DisplayModeInfo> &modes);
-    int32_t GetScreenMode(uint32_t screenId, uint32_t &modeId);
-    int32_t SetScreenMode(uint32_t screenId, uint32_t modeId);
-    int32_t GetScreenPowerStatus(uint32_t screenId, DispPowerStatus &status);
-    int32_t SetScreenPowerStatus(uint32_t screenId, DispPowerStatus status);
-    int32_t GetScreenBacklight(uint32_t screenId, uint32_t &level);
-    int32_t SetScreenBacklight(uint32_t screenId, uint32_t level);
-    int32_t PrepareScreenLayers(uint32_t screenId, bool &needFlushFb);
+    int32_t RegHotPlugCallback(HotPlugCallback callback, void *data) override;
+    int32_t RegScreenVBlankCallback(uint32_t screenId, VBlankCallback callback, void *data) override;
+    int32_t GetScreenCapability(uint32_t screenId, DisplayCapability &info) override;
+    int32_t GetScreenSuppportedModes(uint32_t screenId, std::vector<DisplayModeInfo> &modes) override;
+    int32_t GetScreenMode(uint32_t screenId, uint32_t &modeId) override;
+    int32_t SetScreenMode(uint32_t screenId, uint32_t modeId) override;
+    int32_t GetScreenPowerStatus(uint32_t screenId, DispPowerStatus &status) override;
+    int32_t SetScreenPowerStatus(uint32_t screenId, DispPowerStatus status) override;
+    int32_t GetScreenBacklight(uint32_t screenId, uint32_t &level) override;
+    int32_t SetScreenBacklight(uint32_t screenId, uint32_t level) override;
+    int32_t PrepareScreenLayers(uint32_t screenId, bool &needFlushFb) override;
     int32_t GetScreenCompChange(uint32_t screenId, std::vector<uint32_t> &layersId,
-                                std::vector<int32_t> &types);
+                                std::vector<int32_t> &types) override;
     int32_t SetScreenClientBuffer(uint32_t screenId, const BufferHandle *buffer,
-                                  const sptr<SyncFence> &fence);
-    int32_t SetScreenClientDamage(uint32_t screenId, uint32_t num, IRect &damageRect);
-    int32_t SetScreenVsyncEnabled(uint32_t screenId, bool enabled);
+                                  const sptr<SyncFence> &fence) override;
+    int32_t SetScreenClientDamage(uint32_t screenId, uint32_t num, IRect &damageRect) override;
+    int32_t SetScreenVsyncEnabled(uint32_t screenId, bool enabled) override;
     int32_t GetScreenReleaseFence(uint32_t screenId, std::vector<uint32_t> &layersId,
-                                  std::vector<sptr<SyncFence>> &fences);
-    int32_t Commit(uint32_t screenId, sptr<SyncFence> &fence);
+                                  std::vector<sptr<SyncFence>> &fences) override;
+    int32_t Commit(uint32_t screenId, sptr<SyncFence> &fence) override;
     /* set & get device screen info end */
 
     /* set & get device layer info begin */
-    int32_t SetLayerAlpha(uint32_t screenId, uint32_t layerId, LayerAlpha &alpha);
-    int32_t SetLayerSize(uint32_t screenId, uint32_t layerId, IRect &layerRect);
-    int32_t SetTransformMode(uint32_t screenId, uint32_t layerId, TransformType type);
-    int32_t SetLayerVisibleRegion(uint32_t screenId, uint32_t layerId, uint32_t num, IRect &visable);
-    int32_t SetLayerDirtyRegion(uint32_t screenId, uint32_t layerId, IRect &dirty);
+    int32_t SetLayerAlpha(uint32_t screenId, uint32_t layerId, LayerAlpha &alpha) override;
+    int32_t SetLayerSize(uint32_t screenId, uint32_t layerId, IRect &layerRect) override;
+    int32_t SetTransformMode(uint32_t screenId, uint32_t layerId, TransformType type) override;
+    int32_t SetLayerVisibleRegion(uint32_t screenId, uint32_t layerId, uint32_t num, IRect &visable) override;
+    int32_t SetLayerDirtyRegion(uint32_t screenId, uint32_t layerId, IRect &dirty) override;
     int32_t SetLayerBuffer(uint32_t screenId, uint32_t layerId, const BufferHandle *handle,
-                           const sptr<SyncFence> &acquireFence);
-    int32_t SetLayerCompositionType(uint32_t screenId, uint32_t layerId, CompositionType type);
-    int32_t SetLayerBlendType(uint32_t screenId, uint32_t layerId, BlendType type);
-    int32_t SetLayerCrop(uint32_t screenId, uint32_t layerId, IRect &crop);
-    int32_t SetLayerZorder(uint32_t screenId, uint32_t layerId, uint32_t zorder);
-    int32_t SetLayerPreMulti(uint32_t screenId, uint32_t layerId, bool isPreMulti);
+                           const sptr<SyncFence> &acquireFence) override;
+    int32_t SetLayerCompositionType(uint32_t screenId, uint32_t layerId, CompositionType type) override;
+    int32_t SetLayerBlendType(uint32_t screenId, uint32_t layerId, BlendType type) override;
+    int32_t SetLayerCrop(uint32_t screenId, uint32_t layerId, IRect &crop) override;
+    int32_t SetLayerZorder(uint32_t screenId, uint32_t layerId, uint32_t zorder) override;
+    int32_t SetLayerPreMulti(uint32_t screenId, uint32_t layerId, bool isPreMulti) override;
     /* set & get device layer info end */
 
-    int32_t CreateLayer(uint32_t screenId, const LayerInfo &layerInfo, uint32_t &layerId);
-    int32_t CloseLayer(uint32_t screenId, uint32_t layerId);
+    int32_t CreateLayer(uint32_t screenId, const LayerInfo &layerInfo, uint32_t &layerId) override;
+    int32_t CloseLayer(uint32_t screenId, uint32_t layerId) override;
 
 private:
     HdiDevice(const HdiDevice& rhs) = delete;

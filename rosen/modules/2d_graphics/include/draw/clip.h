@@ -18,6 +18,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 enum class ClipOp {
     DIFFERENCE,
     INTERSECT,
@@ -26,6 +27,7 @@ enum class ClipOp {
     REVERSE_DIFFERENCE,
     REPLACE,
 };
+}
 }
 }
 #endif

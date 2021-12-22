@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class Pen {
 public:
     enum class JoinStyle {
@@ -95,6 +96,7 @@ private:
 
     Brush brush_;
 };
+}
 }
 }
 #endif

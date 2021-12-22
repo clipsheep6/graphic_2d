@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct SkiaPathEffectData : PathEffectData {
 public:
     SkiaPathEffectData() noexcept : PathEffectData(), effect(nullptr) {}
@@ -29,6 +30,7 @@ public:
     void* GetPathEffect() const override { return effect.get(); }
     sk_sp<SkPathEffect> effect;
 };
+}
 }
 }
 #endif

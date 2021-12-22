@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class PathImpl;
 struct PathData;
 
@@ -88,6 +89,7 @@ public:
 private:
     std::unique_ptr<PathImpl> impl_;
 };
+}
 }
 }
 #endif

@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class ImageFilterImpl {
 public:
     ImageFilterImpl() noexcept {}
@@ -39,6 +40,7 @@ public:
 protected:
     std::shared_ptr<ImageFilterData> imageFilterData_;
 };
+}
 }
 }
 #endif

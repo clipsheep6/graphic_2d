@@ -19,6 +19,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 SkiaCanvas::SkiaCanvas() : skiaCanvas_(nullptr), skiaPaint_() {}
 
 SkiaCanvas::~SkiaCanvas() {}
@@ -175,6 +176,97 @@ void SkiaCanvas::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar 
     }
 }
 
+static sk_sp<SkColorSpace> ColorSpaceToSkColorSpace(Media::PixelMap& pixmap)
+{
+    return SkColorSpace::MakeSRGB();
+}
+
+static SkAlphaType AlphaTypeToSkAlphaType(Media::AlphaType alphaType)
+{
+    switch (alphaType) {
+        case Media::AlphaType::IMAGE_ALPHA_TYPE_UNKNOWN:
+            return SkAlphaType::kUnknown_SkAlphaType;
+        case Media::AlphaType::IMAGE_ALPHA_TYPE_OPAQUE:
+            return SkAlphaType::kOpaque_SkAlphaType;
+        case Media::AlphaType::IMAGE_ALPHA_TYPE_PREMUL:
+            return SkAlphaType::kPremul_SkAlphaType;
+        case Media::AlphaType::IMAGE_ALPHA_TYPE_UNPREMUL:
+            return SkAlphaType::kUnpremul_SkAlphaType;
+        default:
+            return SkAlphaType::kUnknown_SkAlphaType;
+    }
+}
+
+static SkColorType PixelFormatToSkColorType(Media::PixelFormat format)
+{
+    switch (format) {
+        case Media::PixelFormat::RGB_565:
+            return SkColorType::kRGB_565_SkColorType;
+        case Media::PixelFormat::RGBA_8888:
+            return SkColorType::kRGBA_8888_SkColorType;
+        case Media::PixelFormat::BGRA_8888:
+            return SkColorType::kBGRA_8888_SkColorType;
+        case Media::PixelFormat::ALPHA_8:
+            return SkColorType::kAlpha_8_SkColorType;
+        case Media::PixelFormat::RGBA_F16:
+            return SkColorType::kRGBA_F16_SkColorType;
+        case Media::PixelFormat::UNKNOWN:
+        case Media::PixelFormat::ARGB_8888:
+        case Media::PixelFormat::RGB_888:
+        case Media::PixelFormat::NV21:
+        case Media::PixelFormat::NV12:
+        case Media::PixelFormat::CMYK:
+        default:
+            return SkColorType::kUnknown_SkColorType;
+    }
+}
+
+static SkImageInfo MakeSkImageInfoFromPixelMap(Media::PixelMap& pixelMap)
+{
+    SkColorType ct = PixelFormatToSkColorType(pixelMap.GetPixelFormat());
+    SkAlphaType at = AlphaTypeToSkAlphaType(pixelMap.GetAlphaType());
+    sk_sp<SkColorSpace> cs = ColorSpaceToSkColorSpace(pixelMap);
+    LOGI("SkColorType %{pubilic}d, SkAlphaType %{public}d", ct, at);
+    return SkImageInfo::Make(pixelMap.GetWidth(), pixelMap.GetHeight(), ct, at, cs);
+}
+
+void SkiaCanvas::DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py)
+{
+    uint32_t bufferSize = pixelMap.GetByteCount();
+    if (pixelMap.GetPixels() == nullptr) {
+        LOGE("PutPixelMap failed, pixelMap data invalid");
+        return;
+    }
+    if (bufferSize <= 0) {
+        LOGE("PutPixelMap failed, malloc parameter buffersize %{public}d error", bufferSize);
+        return;
+    }
+    uint8_t* dstPixels = static_cast<uint8_t*>(malloc(bufferSize));
+    if (dstPixels == nullptr) {
+        LOGE("PutPixelMap failed, allocate memory size %{public}u fail", bufferSize);
+        return;
+    }
+    errno_t errRet = memcpy_s(dstPixels, bufferSize, pixelMap.GetPixels(), bufferSize);
+    if (errRet != 0) {
+        LOGE("PutPixelMap failed, copy source memory size %{public}u fail, errorCode = %{public}d", bufferSize, errRet);
+        free(dstPixels);
+        dstPixels = nullptr;
+        return;
+    }
+    SkBitmap bitmap;
+    auto imageInfo = MakeSkImageInfoFromPixelMap(pixelMap);
+    bitmap.allocPixels(imageInfo);
+    bitmap.setPixels(dstPixels);
+    for (auto d : skiaPaint_.GetSortedPaints()) {
+        if (d != nullptr) {
+            skiaCanvas_->drawBitmap(bitmap, px, py, &d->paint);
+        }
+    }
+
+    free(dstPixels);
+    dstPixels = nullptr;
+}
+
 void SkiaCanvas::DrawImage() {} // TODO...
 
 void SkiaCanvas::DrawText(const Text& text) {} // TODO...
@@ -306,6 +398,7 @@ void SkiaCanvas::RoundRectCastToSkRRect(const RoundRect& roundRect, SkRRect& skR
     radii[SkRRect::kLowerLeft_Corner] = { p.GetX(), p.GetY() };
 
     skRRect.setRectRadii(outer, radii);
+}
 }
 }
 }

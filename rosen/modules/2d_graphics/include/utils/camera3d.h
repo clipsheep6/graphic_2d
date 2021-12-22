@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class Camera3D {
 public:
     Camera3D() noexcept;
@@ -44,6 +45,7 @@ public:
 private:
     std::unique_ptr<CameraImpl> impl_;
 };
+}
 }
 }
 #endif

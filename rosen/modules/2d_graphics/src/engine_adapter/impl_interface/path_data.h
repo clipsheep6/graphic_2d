@@ -18,6 +18,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct PathData {
 public:
     enum PathDataType {
@@ -28,6 +29,7 @@ public:
     virtual void* GetPath() const { return nullptr; }
     PathDataType type;
 };
+}
 }
 }
 #endif

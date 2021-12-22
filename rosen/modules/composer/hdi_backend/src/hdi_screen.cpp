@@ -80,6 +80,20 @@ bool HdiScreen::Init()
     return true;
 }
 
+void HdiScreen::SetHdiDevice(Base::HdiDevice* device)
+{
+    if (device == nullptr) {
+        HLOGE("Input HdiDevice is null");
+        return;
+    }
+
+    if (device_ != nullptr) {
+        HLOGW("HdiDevice has been changed");
+        return;
+    }
+    device_ = device;
+}
+
 int32_t HdiScreen::GetScreenCapability(DisplayCapability &dcap) const
 {
     if (device_ == nullptr) {

@@ -25,15 +25,21 @@
 namespace OHOS {
 namespace Rosen {
 
-RSAnimation::RSAnimation()
+AnimationId RSAnimation::GenerateId()
 {
+    static pid_t pid_ = getpid();
+    static std::atomic<uint32_t> currentId_ = 0;
+
     ++currentId_;
     if (currentId_ == UINT32_MAX) {
         // TODO:handle the overflow situation
         ROSEN_LOGE("Animation Id overflow");
     }
-    id_ = ((AnimationId)pid_ << 32) | (currentId_);
+
+    return ((AnimationId)pid_ << 32) | (currentId_);
 }
+
+RSAnimation::RSAnimation() : id_(GenerateId()) {}
 
 void RSAnimation::SetFinishCallback(const std::function<void()>& finishCallback)
 {

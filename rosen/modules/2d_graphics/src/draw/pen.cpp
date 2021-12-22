@@ -19,6 +19,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 Pen::Pen() noexcept
     : width_(0), miterLimit_(), join_(Pen::JoinStyle::MITER_JOIN),
     cap_(Pen::CapStyle::FLAT_CAP), pathEffect_(nullptr), brush_() {}
@@ -183,6 +184,7 @@ bool operator!=(const Pen &p1, const Pen &p2)
 {
     return p1.width_ != p2.width_ || p1.miterLimit_ != p2.miterLimit_ ||
         p1.join_ != p2.join_ || p1.cap_ != p2.cap_ || p1.pathEffect_ != p2.pathEffect_ || p1.brush_ != p2.brush_;
+}
 }
 }
 }

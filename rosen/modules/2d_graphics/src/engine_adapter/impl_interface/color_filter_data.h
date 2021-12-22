@@ -18,6 +18,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct ColorFilterData {
 public:
     enum ColorFilterDataType {
@@ -29,6 +30,7 @@ public:
     virtual void* GetColorFilter() const { return nullptr; }
     ColorFilterDataType type;
 };
+}
 }
 }
 #endif

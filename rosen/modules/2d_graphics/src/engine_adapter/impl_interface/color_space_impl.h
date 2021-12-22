@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class ColorSpaceImpl {
 public:
     ColorSpaceImpl() noexcept {}
@@ -31,6 +32,7 @@ public:
 protected:
     std::shared_ptr<ColorSpaceData> colorSpaceData_;
 };
+}
 }
 }
 #endif

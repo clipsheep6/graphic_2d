@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct PathData;
 class PathImpl {
 public:
@@ -63,6 +64,7 @@ public:
 protected:
     std::shared_ptr<PathData> pathData_;
 };
+}
 }
 }
 #endif

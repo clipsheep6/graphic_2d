@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 enum class BlurType;
 class MaskFilterImpl {
 public:
@@ -36,6 +37,7 @@ public:
 protected:
     std::shared_ptr<MaskFilterData> maskFilterData_;
 };
+}
 }
 }
 #endif

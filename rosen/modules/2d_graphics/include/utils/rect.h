@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class RectF;
 
 typedef RectF Rect;
@@ -258,6 +259,7 @@ inline bool operator!=(const RectI &r1, const RectI &r2)
 {
     return r1.left_ != r2.left_ || r1.right_ != r2.right_ ||
         r1.top_ != r2.top_ || r1.bottom_ != r2.bottom_;
+}
 }
 }
 }

@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 ShaderEffect::ShaderEffect(ShaderEffectType t, ColorQuad color ) noexcept : ShaderEffect()
 {
     type_ = t;
@@ -116,6 +117,7 @@ std::shared_ptr<ShaderEffect> CreateSweepGradient(const Point& centerPt,
 {
     return std::make_shared<ShaderEffect>(ShaderEffect::ShaderEffectType::SWEEP_GRADIENT, centerPt,
         colors, pos, mode, startAngle, endAngle);
+}
 }
 }
 }

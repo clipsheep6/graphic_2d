@@ -17,6 +17,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 Color::Color() noexcept
     : alpha_(RGB_MAX), red_(0), green_(0), blue_(0) {}
 
@@ -152,6 +153,7 @@ bool operator!=(const Color &c1, const Color &c2)
 {
     return c1.alpha_ != c2.alpha_ || c1.red_ != c2.red_ ||
         c1.green_ != c2.green_ || c1.blue_ != c2.blue_;
+}
 }
 }
 }

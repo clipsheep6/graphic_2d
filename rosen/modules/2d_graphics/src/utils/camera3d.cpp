@@ -19,6 +19,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 Camera3D::Camera3D() noexcept : impl_(ImplFactory::CreateCameraImpl()) {}
 Camera3D::~Camera3D() {}
 
@@ -75,6 +76,7 @@ scalar Camera3D::GetCameraPosZ() const
 void Camera3D::ApplyToMatrix(Matrix& m)
 {
     impl_->ApplyToMatrix(m);
+}
 }
 }
 }

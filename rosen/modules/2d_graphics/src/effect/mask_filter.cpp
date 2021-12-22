@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 MaskFilter::MaskFilter(FilterType t, BlurType blurType, scalar radius) noexcept : MaskFilter()
 {
     type_ = t;
@@ -54,6 +55,7 @@ std::shared_ptr<MaskFilter> MaskFilter::CreateBlurMaskFilter(BlurType blurType, 
 std::shared_ptr<MaskFilter> MaskFilter::CreateComposeMaskFilter(MaskFilter& f1, MaskFilter& f2)
 {
     return std::make_shared<MaskFilter>(MaskFilter::FilterType::COMPOSE, f1, f2);
+}
 }
 }
 }

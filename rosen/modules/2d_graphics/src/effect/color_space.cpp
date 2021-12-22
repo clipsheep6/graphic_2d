@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 ColorSpace::ColorSpace(ColorSpaceType t) noexcept : ColorSpace()
 {
     type_ = t;
@@ -57,6 +58,7 @@ std::shared_ptr<ColorSpace> ColorSpace::CreateSRGB()
 std::shared_ptr<ColorSpace> ColorSpace::CreateSRGBLinear()
 {
     return std::make_shared<ColorSpace>(ColorSpace::ColorSpaceType::SRGB_LINEAR);
+}
 }
 }
 }

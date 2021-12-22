@@ -21,6 +21,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 CoreCanvas::CoreCanvas() : impl_(ImplFactory::CreateCoreCanvasImpl()) {}
 
 void CoreCanvas::Bind(const Bitmap& bitmap)
@@ -92,6 +93,11 @@ void CoreCanvas::DrawShadow(const Path& path, const Point3& planeParams, const P
 void CoreCanvas::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py)
 {
     impl_->DrawBitmap(bitmap, px, py);
+}
+
+void CoreCanvas::DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py)
+{
+    impl_->DrawBitmap(pixelMap, px, py);
 }
 
 void CoreCanvas::DrawImage()
@@ -197,6 +203,7 @@ void CoreCanvas::DetachPen()
 void CoreCanvas::DetachBrush()
 {
     impl_->DetachBrush();
+}
 }
 }
 }

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include "common/rs_trace.h"
 #include "pipeline/rs_main_thread.h"
 
 #include "pipeline/rs_base_render_node.h"
@@ -34,8 +34,10 @@ void RSMainThread::Start()
 {
     mainLoop_ = [&]() {
         ROSEN_LOGI("RsDebug mainLoop start");
+        ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
         ProcessCommand();
         Draw();
+        ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
         ROSEN_LOGI("RsDebug mainLoop end");
     };
 
@@ -80,19 +82,23 @@ void RSMainThread::Draw()
 
 void RSMainThread::RequestNextVSync()
 {
+    ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSMainThread::RequestNextVSync");
     if (vsyncClient_ != nullptr) {
         vsyncClient_->RequestNextVsync();
     }
+    ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }
 
 void RSMainThread::OnVsync(uint64_t timestamp)
 {
+    ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSMainThread::OnVsync");
     if (threadHandler_) {
         if (!taskHandle_) {
             taskHandle_ = RSThreadHandler::StaticCreateTask(mainLoop_);
         }
         threadHandler_->PostTaskDelay(taskHandle_, 0);
     }
+    ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }
 
 void RSMainThread::RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData)

@@ -140,12 +140,6 @@ protected:
     void OnAddChildren() override;
     void OnRemoveChildren() override;
     void AnimationFinish(long long animationId);
-    void SetId(const NodeId& id) override
-    {
-        RSBaseNode::SetId(id);
-        stagingProperties_.SetId(id);
-        showingProperties_.SetId(id);
-    }
 
 private:
     bool HasPropertyAnimation(const RSAnimatableProperty& property);
@@ -159,7 +153,6 @@ private:
     std::shared_ptr<RSMotionPathOption> motionPathOption_;
 
     RSProperties stagingProperties_;
-    RSProperties showingProperties_;
 
     friend class RSAnimation;
     template<typename T>

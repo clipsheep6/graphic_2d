@@ -18,12 +18,14 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 enum class ShadowFlags {
     NONE,
     TRANSPARENT_OCCLUDER,
     GEOMETRIC_ONLY,
     ALL,
 };
+}
 }
 }
 #endif

@@ -24,11 +24,13 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class Canvas : public CoreCanvas {
 public:
     Canvas() {}
     virtual ~Canvas() {};
 };
+}
 }
 }
 #endif

@@ -21,6 +21,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 SkiaBitmap::SkiaBitmap()
 {
     skiaBitmap_ = std::make_unique<SkBitmap>();
@@ -137,6 +138,7 @@ void SkiaBitmap::Free()
 bool SkiaBitmap::IsValid()
 {
     return skiaBitmap_->drawsNothing();
+}
 }
 }
 }

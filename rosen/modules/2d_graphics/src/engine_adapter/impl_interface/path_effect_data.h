@@ -18,6 +18,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct PathEffectData {
 public:
     enum PathEffectDataType {
@@ -29,6 +30,7 @@ public:
     virtual void* GetPathEffect() const { return nullptr; }
     PathEffectDataType type;
 };
+}
 }
 }
 #endif

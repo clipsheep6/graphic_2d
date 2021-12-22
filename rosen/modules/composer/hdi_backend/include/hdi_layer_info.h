@@ -37,12 +37,12 @@ public:
         return std::make_shared<HdiLayerInfo>();
     }
 
-    void SetSurface(sptr<Surface> &surface)
+    void SetSurface(const sptr<Surface> &surface)
     {
         cSurface_ = surface;
     }
 
-    void SetBuffer(sptr<SurfaceBuffer> &sbuffer, int32_t acquireFence)
+    void SetBuffer(const sptr<SurfaceBuffer> &sbuffer, int32_t acquireFence)
     {
         sbuffer_ = sbuffer;
         acquireFence_ = new SyncFence(acquireFence);

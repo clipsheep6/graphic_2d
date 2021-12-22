@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 SkiaPathEffect::SkiaPathEffect() noexcept
 {
     pathEffectData_ = std::make_shared<SkiaPathEffectData>();
@@ -70,6 +71,7 @@ void SkiaPathEffect::InitWithCompose(const PathEffectData* d1, const PathEffectD
 sk_sp<SkPathEffect> SkiaPathEffect::MutablePathEffect()
 {
     return sk_sp<SkPathEffect>(static_cast<SkPathEffect*>(pathEffectData_->GetPathEffect()));
+}
 }
 }
 }

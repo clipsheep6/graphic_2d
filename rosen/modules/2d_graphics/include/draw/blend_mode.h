@@ -19,6 +19,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 enum class BlendMode {
     CLEAR,
     SRC,
@@ -50,6 +51,7 @@ enum class BlendMode {
     COLOR,
     LUMINOSITY,
 };
+}
 }
 }
 #endif

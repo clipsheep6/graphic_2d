@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct SkiaShaderEffectData : ShaderEffectData {
 public:
     SkiaShaderEffectData() noexcept : ShaderEffectData(), shader(nullptr) {}
@@ -29,6 +30,7 @@ public:
     void* GetShader() const override { return shader.get(); }
     sk_sp<SkShader> shader;
 };
+}
 }
 }
 #endif

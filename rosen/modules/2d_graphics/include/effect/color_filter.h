@@ -23,6 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class ColorFilterImpl;
 struct ColorFilterData;
 class ColorFilter {
@@ -57,6 +58,7 @@ private:
     FilterType type_;
     std::unique_ptr<ColorFilterImpl> impl_;
 };
+}
 }
 }
 #endif

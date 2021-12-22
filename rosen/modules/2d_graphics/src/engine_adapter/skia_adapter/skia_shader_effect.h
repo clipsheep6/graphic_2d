@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class SkiaShaderEffect : public ShaderEffectImpl {
 public:
     SkiaShaderEffect() noexcept;
@@ -41,6 +42,7 @@ public:
 private:
     sk_sp<SkShader> MutableShaderEffect();
 };
+}
 }
 }
 #endif

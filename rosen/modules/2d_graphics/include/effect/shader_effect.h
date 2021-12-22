@@ -23,6 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct ShaderEffectData;
 enum class TileMode {
     CLAMP,
@@ -76,6 +77,7 @@ private:
     ShaderEffectType type_;
     std::unique_ptr<ShaderEffectImpl> impl_;
 };
+}
 }
 }
 #endif

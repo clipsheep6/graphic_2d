@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct SkiaImageFilterData : ImageFilterData {
 public:
     SkiaImageFilterData() noexcept : ImageFilterData(), filter(nullptr) {}
@@ -29,6 +30,7 @@ public:
     void* GetImageFilter() const override { return filter.get(); }
     sk_sp<SkImageFilter> filter;
 };
+}
 }
 }
 #endif

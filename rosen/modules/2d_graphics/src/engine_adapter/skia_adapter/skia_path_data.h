@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct SkiaPathData : PathData {
 public:
     enum PathDataType {
@@ -32,6 +33,7 @@ public:
     void* GetPath() const override { return path.get(); };
     std::shared_ptr<SkPath> path;
 };
+}
 }
 }
 #endif

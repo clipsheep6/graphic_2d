@@ -21,6 +21,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class ColorSpaceImpl;
 struct ColorSpaceData;
 class ColorSpace {
@@ -45,6 +46,7 @@ private:
     ColorSpaceType type_;
     std::unique_ptr<ColorSpaceImpl> impl_;
 };
+}
 }
 }
 #endif

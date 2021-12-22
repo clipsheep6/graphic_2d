@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class SkiaColorFilter : public ColorFilterImpl {
 public:
     SkiaColorFilter() noexcept;
@@ -36,6 +37,7 @@ public:
 private:
     sk_sp<SkColorFilter> MutableColorFilter();
 };
+}
 }
 }
 #endif

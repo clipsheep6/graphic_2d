@@ -17,6 +17,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 Brush::Brush() noexcept : color_(), blendMode_(BlendMode::SRC_OVER),
     filter_(), colorSpace_(nullptr), shaderEffect_(nullptr), antiAlias_(false) {}
 
@@ -134,6 +135,7 @@ bool operator!=(const Brush &b1, const Brush &b2)
 {
     return b1.color_ != b2.color_ || b1.blendMode_ == b2.blendMode_ || b1.shaderEffect_ != b2.shaderEffect_ ||
         b1.colorSpace_ == b2.colorSpace_ || b1.filter_ != b2.filter_ || b1.antiAlias_ == b2.antiAlias_;
+}
 }
 }
 }

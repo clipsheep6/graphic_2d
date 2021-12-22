@@ -23,6 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class Brush {
 public:
     Brush() noexcept;
@@ -70,6 +71,7 @@ private:
 
     bool antiAlias_;
 };
+}
 }
 }
 #endif

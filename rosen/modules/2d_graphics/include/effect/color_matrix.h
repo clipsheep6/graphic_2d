@@ -25,6 +25,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class ColorMatrix {
 public:
     ColorMatrix() noexcept
@@ -110,6 +111,7 @@ public:
 private:
     scalar array_[20] = {0};
 };
+}
 }
 }
 #endif

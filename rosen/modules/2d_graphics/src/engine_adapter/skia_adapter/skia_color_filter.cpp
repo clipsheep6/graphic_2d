@@ -18,6 +18,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 SkiaColorFilter::SkiaColorFilter() noexcept
 {
     colorFilterData_ = std::make_shared<SkiaColorFilterData>();
@@ -68,6 +69,7 @@ void SkiaColorFilter::Compose(const ColorFilterData * d)
 sk_sp<SkColorFilter> SkiaColorFilter::MutableColorFilter()
 {
     return sk_sp<SkColorFilter>(static_cast<SkColorFilter*>(colorFilterData_->GetColorFilter()));
+}
 }
 }
 }

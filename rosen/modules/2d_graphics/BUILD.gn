@@ -58,12 +58,14 @@ ohos_shared_library("2d_graphics") {
     "src/engine_adapter",
     "//foundation/graphic/standard/interfaces/innerkits/surface",
     "//foundation/graphic/standard/prebuilts/librarys/gpu/include",
+    "//foundation/multimedia/image_standard/interfaces/innerkits/include",
   ]
 
   deps = [
     "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_ohos",
     "//foundation/graphic/standard/prebuilts/librarys/gpu:gpu_libs",
     "//utils/native/base:utils",
+    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
   ]
 
   public_deps = [

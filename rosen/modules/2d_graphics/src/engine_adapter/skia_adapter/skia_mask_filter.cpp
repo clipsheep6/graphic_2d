@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 SkiaMaskFilter::SkiaMaskFilter() noexcept
 {
     maskFilterData_ = std::make_shared<SkiaMaskFilterData>();
@@ -46,6 +47,7 @@ void SkiaMaskFilter::InitWithCompose(const MaskFilterData* d1, const MaskFilterD
 sk_sp<SkMaskFilter> SkiaMaskFilter::MutableMaskFilter()
 {
     return sk_sp<SkMaskFilter>(static_cast<SkMaskFilter*>(maskFilterData_->GetMaskFilter()));
+}
 }
 }
 }

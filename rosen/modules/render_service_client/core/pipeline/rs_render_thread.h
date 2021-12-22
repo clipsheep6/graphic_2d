@@ -27,6 +27,7 @@
 #include "common/rs_thread_looper.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "pipeline/rs_render_node.h"
+#include "pipeline/rs_render_thread_visitor.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "transaction/rs_transaction_data.h"
 
@@ -50,7 +51,7 @@ public:
 
     std::string DumpRenderTree() const;
 
-    RenderContext& GetRenderContext()
+    RenderContext* GetRenderContext()
     {
         return renderContext_;
     }
@@ -85,6 +86,7 @@ private:
     std::mutex cmdMutex_;
     std::vector<std::unique_ptr<RSTransactionData>> cmds_;
     bool hasRunningAnimation_ = false;
+    std::shared_ptr<RSNodeVisitor> visitor_;
 
     std::unique_ptr<RSVsyncClient> vsyncClient_ = nullptr;
     uint64_t timestamp_ = 0;
@@ -94,7 +96,7 @@ private:
 
     RSContext context_;
 
-    RenderContext renderContext_;
+    RenderContext* renderContext_;
 };
 } // namespace Rosen
 } // namespace OHOS

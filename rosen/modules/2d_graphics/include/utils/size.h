@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class SizeF {
 public:
     inline SizeF() noexcept;

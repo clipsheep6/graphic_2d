@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 ColorFilter::ColorFilter(FilterType t, ColorQuad c, BlendMode mode) noexcept : ColorFilter()
 {
     type_ = t;
@@ -95,6 +96,7 @@ std::shared_ptr<ColorFilter> ColorFilter::CreateLinearToSrgbGamma()
 std::shared_ptr<ColorFilter> ColorFilter::CreateSrgbGammaToLinear()
 {
     return std::make_shared<ColorFilter>(ColorFilter::FilterType::SRGB_GAMMA_TO_LINEAR);
+}
 }
 }
 }

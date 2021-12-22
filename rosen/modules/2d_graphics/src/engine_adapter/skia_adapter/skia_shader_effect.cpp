@@ -25,6 +25,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 SkiaShaderEffect::SkiaShaderEffect() noexcept
 {
     shaderEffectData_ = std::make_shared<SkiaShaderEffectData>();
@@ -124,6 +125,7 @@ void SkiaShaderEffect::InitWithSweepGradient(const Point& centerPt,
 sk_sp<SkShader> SkiaShaderEffect::MutableShaderEffect()
 {
     return sk_sp<SkShader>(static_cast<SkShader*>(shaderEffectData_->GetShader()));
+}
 }
 }
 }

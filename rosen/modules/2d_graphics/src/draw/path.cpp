@@ -19,6 +19,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 Path::Path() noexcept : impl_(ImplFactory::CreatePathImpl()) {}
 
 Path::~Path()
@@ -135,6 +136,7 @@ void Path::Close()
 const PathData* Path::GetPathData() const
 {
     return impl_->GetPathData();
+}
 }
 }
 }

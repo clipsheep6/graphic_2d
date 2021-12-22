@@ -23,6 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class Matrix {
 public:
     Matrix();
@@ -43,6 +44,7 @@ public:
 private:
     std::shared_ptr<MatrixImpl> matrixImplPtr;
 };
+}
 }
 }
 #endif

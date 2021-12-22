@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct SkiaColorSpaceData : ColorSpaceData {
 public:
     SkiaColorSpaceData() noexcept : ColorSpaceData(), space(nullptr) {}
@@ -29,6 +30,7 @@ public:
     void* GetColorSpace() const override { return space.get(); }
     sk_sp<SkColorSpace> space;
 };
+}
 }
 }
 #endif

@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class SkiaPathEffect : public PathEffectImpl {
 public:
     SkiaPathEffect() noexcept;
@@ -35,6 +36,7 @@ public:
 private:
     sk_sp<SkPathEffect> MutablePathEffect();
 };
+}
 }
 }
 #endif

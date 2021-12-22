@@ -23,6 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class SkiaBitmap : public BitmapImpl {
 public:
     SkiaBitmap();
@@ -41,6 +42,7 @@ public:
 private:
     std::unique_ptr<SkBitmap> skiaBitmap_;
 };
+}
 }
 }
 #endif

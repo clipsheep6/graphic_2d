@@ -21,6 +21,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class CameraImpl {
 public:
     CameraImpl() {}
@@ -41,6 +42,7 @@ public:
 
     virtual void ApplyToMatrix(Matrix& m) = 0;
 };
+}
 }
 }
 #endif

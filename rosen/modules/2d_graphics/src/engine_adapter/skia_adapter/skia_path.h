@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class SkiaPath : public PathImpl {
 public:
     SkiaPath() noexcept;
@@ -57,6 +58,7 @@ public:
 private:
     SkPath& MutablePath();
 };
+}
 }
 }
 #endif

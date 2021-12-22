@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 ImageFilter::ImageFilter(FilterType t, scalar x, scalar y, ImageFilter& input) noexcept : ImageFilter()
 {
     type_ = t;
@@ -88,6 +89,7 @@ std::shared_ptr<ImageFilter> ImageFilter::CreateArithmeticImageFilter(scalar k1,
 std::shared_ptr<ImageFilter> ImageFilter::CreateComposeImageFilter(ImageFilter& f1, ImageFilter& f2)
 {
     return std::make_shared<ImageFilter>(ImageFilter::FilterType::COMPOSE, f1, f2);
+}
 }
 }
 }

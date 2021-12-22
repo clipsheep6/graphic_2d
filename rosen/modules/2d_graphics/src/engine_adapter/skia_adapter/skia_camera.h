@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class SkiaCamera : public CameraImpl {
 public:
     SkiaCamera() noexcept;
@@ -46,6 +47,7 @@ public:
 private:
     Sk3DView view_;
 };
+}
 }
 }
 #endif

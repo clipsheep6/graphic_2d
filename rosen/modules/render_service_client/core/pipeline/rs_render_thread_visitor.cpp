@@ -27,8 +27,6 @@
 
 #include "pipeline/rs_render_thread.h"
 
-#include <include/core/SkFont.h>
-
 namespace OHOS {
 namespace Rosen {
 RSRenderThreadVisitor::RSRenderThreadVisitor() : canvas_(nullptr) {}
@@ -46,10 +44,16 @@ void RSRenderThreadVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 
 void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
-    dirtyManager_.Clear();
-    parent_ = nullptr;
-    dirtyFlag_ = false;
-    PrepareRenderNode(node);
+    if (isIdle_) {
+        dirtyManager_.Clear();
+        parent_ = nullptr;
+        dirtyFlag_ = false;
+        isIdle_ = false;
+        PrepareRenderNode(node);
+        isIdle_ = true;
+    } else {
+        PrepareRenderNode(node);
+    }
 }
 
 void RSRenderThreadVisitor::PrepareRenderNode(RSRenderNode& node)
@@ -80,10 +84,15 @@ void RSRenderThreadVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
 void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 {
     auto rsSurface = node.GetSurface();
+    if (!isIdle_) {
+        ProcessRenderNode(node);
+        return;
+    }
     if (rsSurface == nullptr) {
         // TODO: remove this branch after replace weston with RSSurface
         auto platformCanvas = node.GetPlatformCanvas();
         if (platformCanvas != nullptr) {
+            isIdle_ = false;
             canvas_ = new RSPaintFilterCanvas(platformCanvas->AcquireCanvas());
             ProcessRenderNode(node);
             platformCanvas->FlushBuffer();
@@ -97,10 +106,9 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
             return;
         }
 #ifdef ACE_ENABLE_GL
-        RenderContext* rc = &(RSRenderThread::Instance().GetRenderContext());
+        RenderContext* rc = RSRenderThread::Instance().GetRenderContext();
         rsSurface->SetRenderContext(rc);
 #endif
-
         auto surfaceFrame = rsSurface->RequestFrame(node.GetWidth(), node.GetHeight());
         if (surfaceFrame == nullptr) {
             ROSEN_LOGE("Request Frame Failed");
@@ -108,38 +116,20 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         }
         canvas_ = new RSPaintFilterCanvas(surfaceFrame->GetCanvas());
 
-#if 0
-    canvas_->clear(SkColorSetARGB(0x80, 0x00, 0xFF, 0x00));
-    SkPaint paint;
-    SkFont font;
-    float textSizes[] = { 12, 18, 24, 36 };
-    for (auto size: textSizes ) {
-    font.setSize(size);
-    canvas_->drawString("Aa", 10, 20, font, paint);
-    canvas_->translate(0, size * 2);
-    }
-    font = SkFont();
-    float yPos = 20;
-    for (auto size: textSizes ) {
-    float scale = size / 12.f;
-    canvas_->resetMatrix();
-    canvas_->translate(100, 0);
-    canvas_->scale(scale, scale);
-    canvas_->drawString("Aa", 10 / scale, yPos / scale, font, paint);
-    yPos += size * 2;
-    }
-#endif
+        isIdle_ = false;
         ProcessRenderNode(node);
 
         rsSurface->FlushFrame(surfaceFrame);
+
         delete canvas_;
         canvas_ = nullptr;
     }
+    isIdle_ = true;
 }
 
 void RSRenderThreadVisitor::ProcessRenderNode(RSRenderNode& node)
 {
-    if (!canvas_) {
+    if (!canvas_ || !node.GetRenderProperties().GetVisible()) {
         return;
     }
     node.ProcessRenderBeforeChildren(*canvas_);

@@ -12,7 +12,6 @@
         "//third_party/wayland-ivi-extension:simple-weston-client",
 
         "//third_party/weston:default",
-        "//third_party/skia_canvaskit0310:skia",
 
         "//foundation/graphic/standard/frameworks/vsync:vsync_server",
         "//foundation/graphic/standard/frameworks/wmserver:wmserver",

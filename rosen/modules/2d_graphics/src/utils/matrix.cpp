@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 Matrix::Matrix() : matrixImplPtr(ImplFactory::CreateMatrixImpl())
 {
 }
@@ -61,6 +62,7 @@ void Matrix::SetMatrix(scalar scaleX, scalar skewX,  scalar transX,
 scalar Matrix::Get(int index)
 {
     return matrixImplPtr->Get(index);
+}
 }
 }
 }

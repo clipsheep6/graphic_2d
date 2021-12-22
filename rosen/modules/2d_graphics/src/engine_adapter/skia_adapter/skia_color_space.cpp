@@ -18,6 +18,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 SkiaColorSpace::SkiaColorSpace() noexcept
 {
     colorSpaceData_ = std::make_shared<SkiaColorSpaceData>();
@@ -39,6 +40,7 @@ void SkiaColorSpace::InitWithSRGBLinear()
 sk_sp<SkColorSpace> SkiaColorSpace::MutableColorSpace()
 {
     return sk_sp<SkColorSpace>(static_cast<SkColorSpace*>(colorSpaceData_->GetColorSpace()));
+}
 }
 }
 }

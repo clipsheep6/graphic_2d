@@ -34,6 +34,7 @@ public:
 
     SkCanvas* BeginRecording(int width, int height);
     bool IsRecording() const;
+    void FinishRecording();
     void SetPaintOrder(bool drawContentLast);
 
 protected:
@@ -44,9 +45,6 @@ protected:
     RSNode& operator=(const RSNode&&) = delete;
 
 private:
-    void OnUpdateRecording();
-    void UpdateRecording();
-
     SkCanvas* recordingCanvas_ = nullptr;
     bool drawContentLast_ = false;
 

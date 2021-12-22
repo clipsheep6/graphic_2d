@@ -3791,32 +3791,6 @@ HWTEST_F(RSNodeTest, GetId001, TestSize.Level1)
 }
 
 /**
- * @tc.name: GetChildren001
- * @tc.desc:
- * @tc.type:FUNC
- * @tc.require:AR000GGR40
- * @tc.author:
- */
-HWTEST_F(RSNodeTest, GetChildren001, TestSize.Level1)
-{
-    RSNode::SharedPtr rsNode = RSNode::Create();
-    auto c = rsNode->GetChildren();
-}
-
-/**
- * @tc.name: GetChildren002
- * @tc.desc:
- * @tc.type:FUNC
- * @tc.require:AR000GGR40
- * @tc.author:
- */
-HWTEST_F(RSNodeTest, GetChildren002, TestSize.Level1)
-{
-    RSNode::SharedPtr rsNode = RSNode::Create();
-    const auto c = rsNode->GetChildren();
-}
-
-/**
  * @tc.name: GetStagingProperties001
  * @tc.desc:
  * @tc.type:FUNC
@@ -3840,19 +3814,6 @@ HWTEST_F(RSNodeTest, GetMotionPathOption002, TestSize.Level1)
 {
     RSNode::SharedPtr rsNode = RSNode::Create();
     rsNode->GetMotionPathOption();
-}
-
-/**
- * @tc.name: GetShowingProperties001
- * @tc.desc:
- * @tc.type:FUNC
- * @tc.require:AR000GGR40
- * @tc.author:
- */
-HWTEST_F(RSNodeTest, GetShowingProperties001, TestSize.Level1)
-{
-    RSNode::SharedPtr rsNode = RSNode::Create();
-    rsNode->GetShowingProperties();
 }
 
 /**

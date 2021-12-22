@@ -40,12 +40,15 @@
 #include "effect/path_effect.h"
 #include "effect/shader_effect.h"
 #include "utils/rect.h"
-
 #include "utils/matrix.h"
 #include "utils/camera3d.h"
 
+#include "image_type.h"
+#include "pixel_map.h"
+
 using namespace OHOS;
-using namespace Rosen;
+using namespace Media;
+using namespace Rosen::Drawing;
 
 using TestFunc = std::function<void(Canvas&, uint32_t, uint32_t)>;
 
@@ -64,6 +67,7 @@ public:
     static void TestDrawBase(Canvas &canvas, uint32_t width, uint32_t height);
     static void TestDrawPathEffect(Canvas &canvas, uint32_t width, uint32_t height);
     static void TestDrawBitmap(Canvas &canvas, uint32_t width, uint32_t height);
+    static void TestDrawPixelmap(Canvas &canvas, uint32_t width, uint32_t height);
     static void TestDrawPath(Canvas &canvas, uint32_t width, uint32_t height);
     static void TestDrawFilter(Canvas &canvas, uint32_t width, uint32_t height);
     static void TestMatrix(Canvas &canvas, uint32_t width, uint32_t height);
@@ -139,7 +143,7 @@ void Main::TestDrawFilter(Canvas &canvas, uint32_t width, uint32_t height)
     Pen pen;
     pen.SetAntiAlias(true);
     pen.SetColor(Color::COLOR_BLUE);
-    pen.SetColor(pen.GetColor4f(), ColorSpace::CreateSRGBLinear());
+    pen.SetColor(pen.GetColor4f(), Rosen::Drawing::ColorSpace::CreateSRGBLinear());
     // pen.SetARGB(0x00, 0xFF, 0x00, 0x80);
     pen.SetAlpha(0x44);
     pen.SetWidth(10);
@@ -152,7 +156,7 @@ void Main::TestDrawFilter(Canvas &canvas, uint32_t width, uint32_t height)
 
     Brush brush;
     brush.SetColor(Color::COLOR_BLUE);
-    brush.SetColor(brush.GetColor4f(), ColorSpace::CreateSRGBLinear());
+    brush.SetColor(brush.GetColor4f(), Rosen::Drawing::ColorSpace::CreateSRGBLinear());
     // brush.SetARGB(0x00, 0xFF, 0x00, 0x80);
     brush.SetAlpha(0x44);
     brush.SetBlendMode(BlendMode::SRC_ATOP);
@@ -211,6 +215,53 @@ void Main::TestDrawBitmap(Canvas &canvas, uint32_t width, uint32_t height)
     //canvas.DrawRect({1200, 100, 1500, 700});
 
     LOGI("------- TestDrawBitmap");
+}
+
+std::unique_ptr<PixelMap> ConstructPixmap()
+{
+    int32_t pixelMapWidth = 50;
+    int32_t pixelMapHeight = 50;
+    std::unique_ptr<PixelMap> pixelMap = std::make_unique<PixelMap>();
+    ImageInfo info;
+    info.size.width = pixelMapWidth;
+    info.size.height = pixelMapHeight;
+    info.pixelFormat = Media::PixelFormat::RGBA_8888;
+    info.alphaType = Media::AlphaType::IMAGE_ALPHA_TYPE_OPAQUE;
+    info.colorSpace = Media::ColorSpace::SRGB;
+    pixelMap->SetImageInfo(info);
+    LOGI("Constructed pixelMap info: width = %{public}d, height = %{public}d, pixelformat = %{public}d, alphatype = %{public}d, colorspace = %{public}d",
+        info.size.width, info.size.height, info.pixelFormat, info.alphaType, info.colorSpace);
+
+    int32_t rowDataSize = pixelMapWidth;
+    uint32_t bufferSize = rowDataSize * pixelMapHeight;
+    void *buffer = malloc(bufferSize);
+    char *ch = (char *)buffer;
+    for (unsigned int i = 0; i < bufferSize; i++) {
+        *(ch++) = (char)i;
+    }
+
+    pixelMap->SetPixelsAddr(buffer, nullptr, bufferSize, AllocatorType::HEAP_ALLOC, nullptr);
+
+    return pixelMap;
+}
+
+void Main::TestDrawPixelmap(Canvas &canvas, uint32_t width, uint32_t height)
+{
+    LOGI("+++++++ TestDrawPixelmap");
+    std::unique_ptr<PixelMap> pixelmap = ConstructPixmap();
+
+    Pen pen;
+    pen.SetAntiAlias(true);
+    pen.SetColor(Color::COLOR_BLUE);
+    pen.SetWidth(10);
+    canvas.AttachPen(pen);
+
+    Brush brush;
+    brush.SetColor(Color::COLOR_RED);
+    canvas.AttachBrush(brush);
+
+    canvas.DrawBitmap(*pixelmap.get(), 500, 500);
+    LOGI("------- TestDrawPixelmap");
 }
 
 void Main::TestMatrix(Canvas &canvas, uint32_t width, uint32_t height)
@@ -284,7 +335,7 @@ void Main::TestCamera(Canvas &canvas, uint32_t width, uint32_t height)
     camera.RotateXDegrees(-25);
     camera.RotateYDegrees(45);
     camera.Translate(-50, 50, 50);
-    Rosen::Rect r(0, 0, 500, 500);
+    Rosen::Drawing::Rect r(0, 0, 500, 500);
 
     canvas.Save();
     camera.Save();
@@ -448,6 +499,7 @@ void Main::Init(int32_t width, int32_t height)
     testFuncVec.push_back(Main::TestDrawPath);
     testFuncVec.push_back(Main::TestDrawPathEffect);
     testFuncVec.push_back(Main::TestDrawBitmap);
+    testFuncVec.push_back(Main::TestDrawPixelmap);
     testFuncVec.push_back(Main::TestMatrix);
     testFuncVec.push_back(Main::TestDrawFilter);
     testFuncVec.push_back(Main::TestDrawShader);

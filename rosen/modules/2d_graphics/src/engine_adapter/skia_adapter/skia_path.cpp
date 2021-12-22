@@ -21,6 +21,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 SkiaPath::SkiaPath() noexcept
 {
     pathData_ = std::make_shared<SkiaPathData>();
@@ -143,5 +144,6 @@ SkPath& SkiaPath::MutablePath()
     SkPath* p = static_cast<SkPath*>(pathData_->GetPath());
     return *p;
 };
+}
 }
 }

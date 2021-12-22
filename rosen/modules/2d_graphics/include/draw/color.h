@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 enum ColorType {
     COLORTYPE_UNKNOWN = 0,
     COLORTYPE_ALPHA_8,
@@ -129,6 +130,7 @@ private:
     int green_;
     int blue_;
 };
+}
 }
 }
 #endif

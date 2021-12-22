@@ -24,7 +24,6 @@
 #endif
 #include "common/rs_trace.h"
 #include "pipeline/rs_render_node_map.h"
-#include "pipeline/rs_render_thread_visitor.h"
 #include "platform/common/rs_log.h"
 #include "ui/rs_ui_director.h"
 #ifdef USE_FLUTTER_TEXTURE
@@ -52,18 +51,18 @@ RSRenderThread::RSRenderThread()
 {
 #ifdef ACE_ENABLE_GL
     //renderContext_ = *(RenderContextFactory::GetInstance().CreateEngine());
-    renderContext_ = *(new RenderContext());
+    renderContext_ = new RenderContext();
+    ROSEN_LOGI("Create RenderContext, its pointer is %{public}p", renderContext_);
 #endif
     mainFunc_ = [&]() {
+        ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSRenderThread::DrawFrame");
         {
-            std::unique_lock<std::mutex> cmdLock(cmdMutex_);
             if (timestamp_ == prevTimestamp_) {
                 if (hasRunningAnimation_) {
                     RSRenderThread::Instance().RequestNextVSync();
                 }
                 return;
             }
-            ROSEN_TRACE_BEGIN("", "DrawFrame");
             prevTimestamp_ = timestamp_;
             if (!cmds_.empty()) {
                 ProcessCommands();
@@ -73,11 +72,18 @@ RSRenderThread::RSRenderThread()
         Animate(prevTimestamp_);
         Render();
         SendCommands();
-        ROSEN_TRACE_END("");
+        ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
     };
 }
 
-RSRenderThread::~RSRenderThread() {}
+RSRenderThread::~RSRenderThread()
+{
+    if (renderContext_ != nullptr) {
+        ROSEN_LOGI("Destory renderContext!!");
+        delete renderContext_;
+        renderContext_ = nullptr;
+    }
+}
 
 void RSRenderThread::Start()
 {
@@ -121,10 +127,12 @@ void RSRenderThread::RecvTransactionData(std::unique_ptr<RSTransactionData>& tra
 
 void RSRenderThread::RequestNextVSync()
 {
+    ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSRenderThread::RequestNextVSync");
     if (vsyncClient_ != nullptr) {
         ROSEN_LOGI("RSRenderThread RequestNextVSync.");
         vsyncClient_->RequestNextVsync();
     }
+    ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }
 
 int32_t RSRenderThread::GetTid()
@@ -146,7 +154,7 @@ void RSRenderThread::RenderLoop()
     }
 #endif
 #ifdef ACE_ENABLE_GL
-    renderContext_.InitilizeEglContext(); // init egl context on RT
+    renderContext_->InitilizeEglContext(); // init egl context on RT
 #endif
 
     while (running_.load()) {
@@ -172,12 +180,11 @@ void RSRenderThread::RenderLoop()
 
 void RSRenderThread::OnVsync(uint64_t timestamp)
 {
+    ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSRenderThread::OnVsync");
     ROSEN_LOGI("RSRenderThread OnVsync(%lld).", timestamp);
-    {
-        std::unique_lock<std::mutex> cmdLock(cmdMutex_);
-        timestamp_ = timestamp;
-    }
+    timestamp_ = timestamp;
     StartTimer(0); // start render-loop now
+    ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }
 
 void RSRenderThread::StartTimer(uint64_t interval)
@@ -204,17 +211,22 @@ void RSRenderThread::StopTimer()
 void RSRenderThread::ProcessCommands()
 {
     ROSEN_LOGI("RSRenderThread::ProcessCommands() size: %lu\n", cmds_.size());
-    ROSEN_TRACE_BEGIN("", "ProcessCommands");
-    for (auto& cmdData : cmds_) {
+    ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "ProcessCommands");
+    std::vector<std::unique_ptr<RSTransactionData>> cmds;
+    {
+        std::unique_lock<std::mutex> cmdLock(cmdMutex_);
+        std::swap(cmds, cmds_);
+    }
+    for (auto& cmdData : cmds) {
         cmdData->Process(context_);
     }
     cmds_.clear();
-    ROSEN_TRACE_END("");
+    ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }
 
 void RSRenderThread::Animate(uint64_t timestamp)
 {
-    ROSEN_TRACE_BEGIN("", "Animate");
+    ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "Animate");
     hasRunningAnimation_ = false;
     for (const auto& [id, node] : context_.GetNodeMap().renderNodeMap_) {
         if (auto renderNode = RSBaseRenderNode::ReinterpretCast<RSPropertyRenderNode>(node)) {
@@ -225,25 +237,29 @@ void RSRenderThread::Animate(uint64_t timestamp)
     if (hasRunningAnimation_) {
         RSRenderThread::Instance().RequestNextVSync();
     }
-    ROSEN_TRACE_END("");
+    ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }
 
 void RSRenderThread::Render()
 {
-    ROSEN_TRACE_BEGIN("", "Render");
+    ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSRenderThread::Render");
     const auto& rootNode = context_.GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
         return;
     }
-    std::shared_ptr<RSNodeVisitor> visitor = std::make_shared<RSRenderThreadVisitor>();
-    rootNode->Prepare(visitor);
-    rootNode->Process(visitor);
-    ROSEN_TRACE_END("");
+    if (visitor_ == nullptr) {
+        visitor_ = std::make_shared<RSRenderThreadVisitor>();
+    }
+    rootNode->Prepare(visitor_);
+    rootNode->Process(visitor_);
+    ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }
 
 void RSRenderThread::SendCommands()
 {
+    ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSRenderThread::SendCommands");
     RSUIDirector::RecvMessages();
+    ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }
 
 void RSRenderThread::Detach(NodeId id)

@@ -19,6 +19,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 SkiaMatrix::SkiaMatrix()
 {
     skMatrix_ = std::make_unique<SkMatrix>();
@@ -77,6 +78,7 @@ void SkiaMatrix::SetMatrix(scalar scaleX, scalar skewX, scalar transX,
 scalar SkiaMatrix::Get(int index)
 {
     return skMatrix_->get(index);
+}
 }
 }
 }

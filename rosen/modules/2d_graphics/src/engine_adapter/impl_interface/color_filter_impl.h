@@ -23,6 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class ColorFilterImpl {
 public:
     ColorFilterImpl() noexcept {}
@@ -38,6 +39,7 @@ public:
 protected:
     std::shared_ptr<ColorFilterData> colorFilterData_;
 };
+}
 }
 }
 #endif

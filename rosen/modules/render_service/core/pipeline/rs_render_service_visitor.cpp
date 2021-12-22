@@ -61,11 +61,15 @@ void RSRenderServiceVisitor::ProcessBaseRenderNode(RSBaseRenderNode &node)
     }
 }
 
-
 void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode &node)
 {
     SortZOrder(node);
     PrepareBaseRenderNode(node);
+}
+
+void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node)
+{
+    ROSEN_LOGI("RsDebug RSRenderServiceVisitor::ProcessDisplayRenderNode child size:%d", node.GetChildren().size());
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
         ROSEN_LOGE("RSHardwareProcessor::Init ScreenManager is nullptr");
@@ -73,11 +77,12 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode &node)
     }
     ScreenState state = screenManager->QueryScreenState(node.GetScreenId());
     processor_ = RSProcessorFactory::CreateProcessor(state);
-}
 
-void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node)
-{
-    ROSEN_LOGI("RsDebug RSRenderServiceVisitor::ProcessDisplayRenderNode child size:%d", node.GetChildren().size());
+    if (processor_ == nullptr) {
+        ROSEN_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode: RSProcessor is null!");
+        return;
+    }
+
     processor_->Init(node.GetScreenId());
     ProcessBaseRenderNode(node);
     processor_->PostProcess();
@@ -110,6 +115,5 @@ void RSRenderServiceVisitor::SortZOrder(RSBaseRenderNode &node)
     };
     std::stable_sort(children.begin(), children.end(), compare);
 }
-
 } // namespace Rosen
 } // namespace OHOS

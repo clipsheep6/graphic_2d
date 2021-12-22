@@ -156,10 +156,13 @@ private:
     void ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &output);
     void ProcessScreenDisConnectedLocked(std::shared_ptr<HdiOutput> &output);
     void HandleDefaultScreenDisConnectedLocked();
+
     void GetScreenActiveModeLocked(ScreenId id, RSScreenModeInfo& screenModeInfo) const;
     std::vector<RSScreenModeInfo> GetScreenSupportedModesLocked(ScreenId id) const;
     RSScreenCapability GetScreenCapabilityLocked(ScreenId id) const;
     ScreenPowerStatus GetScreenPowerStatuslocked(ScreenId id) const;
+
+    void RemoveVirtualScreenLocked(ScreenId id);
     ScreenId GenerateVirtualScreenIdLocked();
     void ReuseVirtualScreenIdLocked(ScreenId id);
 

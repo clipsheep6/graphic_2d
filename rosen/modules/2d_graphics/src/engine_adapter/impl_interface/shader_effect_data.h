@@ -18,6 +18,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct ShaderEffectData {
 public:
     enum ShaderEffectDataType {
@@ -29,6 +30,7 @@ public:
     virtual void* GetShader() const { return nullptr; }
     ShaderEffectDataType type;
 };
+}
 }
 }
 #endif

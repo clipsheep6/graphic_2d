@@ -26,6 +26,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 enum class TileMode;
 class ShaderEffectImpl {
 public:
@@ -48,6 +49,7 @@ public:
 protected:
     std::shared_ptr<ShaderEffectData> shaderEffectData_;
 };
+}
 }
 }
 #endif

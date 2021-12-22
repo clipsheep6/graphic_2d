@@ -55,6 +55,7 @@ ohos_shared_library("librender_service") {
   external_deps = [
     "ipc:ipc_core",
     "samgr_L2:samgr_proxy",
+    "bytrace_standard:bytrace_core",
   ]
 
   part_name = "graphic_standard"

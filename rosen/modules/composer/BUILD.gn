@@ -61,7 +61,6 @@ ohos_shared_library("libcomposer") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/graphic/standard/rosen/modules/backstore:libbackstore",
     "//foundation/graphic/standard/frameworks/vsync:libvsync_module",
     "//foundation/graphic/standard:libsurface",
     "//drivers/peripheral/display/hal:hdi_display",

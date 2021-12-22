@@ -18,6 +18,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct MaskFilterData {
 public:
     enum MaskFilterDataType {
@@ -29,6 +30,7 @@ public:
     virtual void* GetMaskFilter() const { return nullptr; }
     MaskFilterDataType type;
 };
+}
 }
 }
 #endif

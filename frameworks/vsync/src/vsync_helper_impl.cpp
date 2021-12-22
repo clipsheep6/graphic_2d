@@ -26,6 +26,7 @@
 
 #include "static_call.h"
 #include "vsync_log.h"
+#include "common/rs_trace.h"
 
 namespace OHOS {
 namespace Vsync {
@@ -326,7 +327,9 @@ VsyncError VsyncHelperImpl::GetSupportedVsyncFrequencys(std::vector<uint32_t>& f
 
 VsyncError VsyncCallback::OnVsync(int64_t timestamp)
 {
+    ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, " VsyncCallback::OnVsync");
     VsyncClient::GetInstance()->DispatchFrameCallback(timestamp);
+    ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
     return VSYNC_ERROR_OK;
 }
 

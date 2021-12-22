@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class SkiaColorSpace : public ColorSpaceImpl {
 public:
     SkiaColorSpace() noexcept;
@@ -32,6 +33,7 @@ public:
 private:
     sk_sp<SkColorSpace> MutableColorSpace();
 };
+}
 }
 }
 #endif

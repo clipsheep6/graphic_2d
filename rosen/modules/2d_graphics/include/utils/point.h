@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class PointF;
 
 typedef PointF Point;
@@ -288,6 +289,7 @@ inline bool operator==(const PointI &p1, const PointI &p2)
 inline bool operator!=(const PointI &p1, const PointI &p2)
 {
     return p1.x_ != p2.x_ || p1.y_ != p2.y_;
+}
 }
 }
 }

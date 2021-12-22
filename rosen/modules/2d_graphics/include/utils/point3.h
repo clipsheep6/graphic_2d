@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class Point3 {
 public:
     inline Point3() noexcept;
@@ -168,6 +169,7 @@ inline bool operator==(const Point3 &p1, const Point3 &p2)
 inline bool operator!=(const Point3 &p1, const Point3 &p2)
 {
     return !IsScalarAlmostEqual(p1.x_, p2.x_) || !IsScalarAlmostEqual(p1.y_, p2.y_) || !IsScalarAlmostEqual(p1.z_, p2.z_);
+}
 }
 }
 }

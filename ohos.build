@@ -36,9 +36,7 @@
         "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
         "//foundation/graphic/standard/rosen/modules/render_service:librender_service",
         "//foundation/graphic/standard/rosen/modules/render_service:render_service",
-        "//foundation/graphic/standard/rosen/modules/render_service_client:render_service_client_demo",
-
-        "//foundation/graphic/standard/rosen/modules/backstore:libbackstore"
+        "//foundation/graphic/standard/rosen/modules/render_service_client:render_service_client_demo"
       ],
       "test_list": [
         "//foundation/graphic/standard/frameworks/vsync:test",

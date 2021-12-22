@@ -17,6 +17,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 Filter::Filter() noexcept : colorFilter_(nullptr), imageFilter_(nullptr),
     maskFilter_(nullptr), filterQuality_(FilterQuality::NONE) {}
 
@@ -70,6 +71,7 @@ bool operator!=(const Filter &f1, const Filter &f2)
 {
     return f1.colorFilter_ != f2.colorFilter_ || f1.imageFilter_ != f2.imageFilter_ ||
         f1.maskFilter_ != f2.maskFilter_ || f1.filterQuality_ != f2.filterQuality_;
+}
 }
 }
 }

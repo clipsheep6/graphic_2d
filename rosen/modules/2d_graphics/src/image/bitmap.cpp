@@ -19,6 +19,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 Bitmap::Bitmap()
     : bmpImplPtr(ImplFactory::CreateBitmapImpl()), pixels_(nullptr),
       width_(0), height_(0), format_({COLORTYPE_UNKNOWN, ALPHATYPE_UNKNOWN})
@@ -89,6 +90,7 @@ BitmapFormat Bitmap::GetFormat()
 std::shared_ptr<BitmapImpl> Bitmap::GetBitmapData() const
 {
     return bmpImplPtr;
+}
 }
 }
 }

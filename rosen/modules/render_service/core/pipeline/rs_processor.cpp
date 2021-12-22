@@ -20,9 +20,13 @@ namespace Rosen {
 
 std::unique_ptr<SkCanvas> RSProcessor::CreateCanvas(sptr<Surface> producerSurface, BufferRequestConfig requestConfig)
 {
-    auto retRequestBuffer = producerSurface->RequestBuffer(buffer_, releaseFence_, requestConfig);
+    auto ret = producerSurface->RequestBuffer(buffer_, releaseFence_, requestConfig);
+    if (ret != SURFACE_ERROR_OK || buffer_ == nullptr) {
+        return nullptr;
+    }
+
     auto addr = static_cast<uint32_t*>(buffer_->GetVirAddr());
-    if (addr == nullptr || retRequestBuffer != SURFACE_ERROR_OK) {
+    if (addr == nullptr) {
         return nullptr;
     }
     SkImageInfo info = SkImageInfo::Make(buffer_->GetWidth(), buffer_->GetHeight(),

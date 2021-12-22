@@ -40,6 +40,11 @@ void RSHardwareProcessor::Init(ScreenId id)
 
 void RSHardwareProcessor::PostProcess()
 {
+    if (output_ == nullptr) {
+        ROSEN_LOGE("RSHardwareProcessor::PostProcess output is nullptr");
+        return;
+    }
+
     output_->SetLayerInfo(layers_);
     std::vector<std::shared_ptr<HdiOutput>> outputs{output_};
     if (backend_) {
@@ -66,7 +71,7 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
 
     if (node.GetAvailableBufferCount() >= 1) {
         OHOS::sptr<SurfaceBuffer> cbuffer = nullptr;
-        int32_t fence = 0;
+        int32_t fence = -1;
         int64_t timestamp;
         Rect damage;
         auto sret = surfaceConsumer->AcquireBuffer(cbuffer, fence, timestamp, damage);

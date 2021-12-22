@@ -18,6 +18,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct ImageFilterData {
 public:
     enum ImageFilterDataType {
@@ -29,6 +30,7 @@ public:
     virtual void* GetImageFilter() const { return nullptr; }
     ImageFilterDataType type;
 };
+}
 }
 }
 #endif

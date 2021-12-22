@@ -149,13 +149,9 @@ void RSUIDirector::SetUITaskRunner(const TaskRunner& uiTaskRunner)
 
 void RSUIDirector::SendMessages()
 {
-    ROSEN_TRACE_BEGIN("", "SendCommands");
-    auto nodePtr = std::static_pointer_cast<RSNode>(RSNodeMap::Instance().GetNode(root_).lock());
-    if (nodePtr != nullptr) {
-        nodePtr->UpdateRecording();
-    }
+    ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "SendCommands");
     RSTransactionProxy::GetInstance().FlushImplicitTransaction();
-    ROSEN_TRACE_END("");
+    ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }
 
 void RSUIDirector::RecvMessages()

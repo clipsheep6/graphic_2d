@@ -26,6 +26,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct PaintData
 {
     SkPaint paint;
@@ -56,6 +57,7 @@ private:
     std::shared_ptr<PaintData> fill_;
     bool isStrokeFirst_;
 };
+}
 }
 }
 #endif

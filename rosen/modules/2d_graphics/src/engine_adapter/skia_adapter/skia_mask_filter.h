@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class SkiaMaskFilter : public MaskFilterImpl {
 public:
     SkiaMaskFilter() noexcept;
@@ -32,6 +33,7 @@ public:
 private:
     sk_sp<SkMaskFilter> MutableMaskFilter();
 };
+}
 }
 }
 #endif

@@ -18,6 +18,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct ColorSpaceData {
 public:
     enum ColorSpaceDataType {
@@ -29,6 +30,7 @@ public:
     virtual void* GetColorSpace() const { return nullptr; }
     ColorSpaceDataType type;
 };
+}
 }
 }
 #endif

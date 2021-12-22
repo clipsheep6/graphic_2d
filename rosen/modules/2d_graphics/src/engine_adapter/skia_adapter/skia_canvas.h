@@ -32,6 +32,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class SkiaCanvas : public CoreCanvasImpl {
 public:
     SkiaCanvas();
@@ -55,6 +56,7 @@ public:
 
     // image
     void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py) override;
+    void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py) override;
     void DrawImage() override; // TODO...
 
     // text
@@ -91,6 +93,7 @@ private:
     std::shared_ptr<SkCanvas> skiaCanvas_;
     SkiaPaint skiaPaint_;
 };
+}
 }
 }
 #endif

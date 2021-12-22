@@ -29,6 +29,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 SkiaPaint::SkiaPaint() noexcept
     : stroke_(std::make_shared<PaintData>()), fill_(std::make_shared<PaintData>()), isStrokeFirst_(false) {}
 
@@ -217,6 +218,7 @@ void SkiaPaint::ApplyFilter(SkPaint &paint, const Filter& filter)
     } else {
         paint.setMaskFilter(nullptr);
     }
+}
 }
 }
 }

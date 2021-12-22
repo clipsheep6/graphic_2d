@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct BitmapFormat {
     ColorType colorType;
     AlphaType alphaType;
@@ -49,6 +50,7 @@ private:
     int height_;
     BitmapFormat format_;
 };
+}
 }
 }
 #endif

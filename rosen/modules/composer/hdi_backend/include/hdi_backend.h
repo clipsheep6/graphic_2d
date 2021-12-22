@@ -59,7 +59,7 @@ private:
     HdiBackend(HdiBackend&& rhs) = delete;
     HdiBackend& operator=(HdiBackend&& rhs) = delete;
 
-    HdiDevice *device_ = nullptr;
+    Base::HdiDevice *device_ = nullptr;
     void* onHotPlugCbData_ = nullptr;
     void* onPrepareCompleteCbData_ = nullptr;
     OnScreenHotplugFunc onScreenHotplugCb_ = nullptr;

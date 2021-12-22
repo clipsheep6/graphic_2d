@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class Matrix;
 class MatrixImpl {
 public:
@@ -35,6 +36,7 @@ public:
         scalar persp0, scalar persp1, scalar persp2) = 0;
     virtual scalar Get(int index) = 0;
 };
+}
 }
 }
 #endif

@@ -23,6 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class RoundRect {
 public:
     enum CornerPos {
@@ -100,6 +101,7 @@ inline Rect RoundRect::GetRect() const
 inline void RoundRect::Offset(scalar dx, scalar dy)
 {
     rect_.Offset(dx, dy);
+}
 }
 }
 }

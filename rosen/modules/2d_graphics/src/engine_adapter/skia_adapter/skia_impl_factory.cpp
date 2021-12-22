@@ -29,6 +29,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 std::unique_ptr<CoreCanvasImpl> SkiaImplFactory::CreateCoreCanvas()
 {
     return std::make_unique<SkiaCanvas>();
@@ -82,6 +83,7 @@ std::unique_ptr<MatrixImpl> SkiaImplFactory::CreateMatrix()
 std::unique_ptr<CameraImpl> SkiaImplFactory::CreateCamera()
 {
     return std::make_unique<SkiaCamera>();
+}
 }
 }
 }

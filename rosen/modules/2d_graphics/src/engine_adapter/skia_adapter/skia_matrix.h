@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class SkiaMatrix : public MatrixImpl {
 public:
     SkiaMatrix();
@@ -41,6 +42,7 @@ public:
 private:
     std::unique_ptr<SkMatrix> skMatrix_;
 };
+}
 }
 }
 #endif

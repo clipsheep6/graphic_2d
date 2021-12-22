@@ -58,7 +58,7 @@ bool RSNode::IsRecording() const
     return recordingCanvas_ != nullptr;
 }
 
-void RSNode::OnUpdateRecording()
+void RSNode::FinishRecording()
 {
 #ifdef ROSEN_OHOS
     if (!IsRecording()) {
@@ -76,17 +76,6 @@ void RSNode::OnUpdateRecording()
 void RSNode::SetPaintOrder(bool drawContentLast)
 {
     drawContentLast_ = drawContentLast;
-}
-
-void RSNode::UpdateRecording()
-{
-    OnUpdateRecording();
-    for (auto child : GetChildren()) {
-        auto childPtr = std::static_pointer_cast<RSNode>(RSNodeMap::Instance().GetNode(child).lock());
-        if (childPtr != nullptr) {
-            childPtr->UpdateRecording();
-        }
-    }
 }
 
 } // namespace Rosen

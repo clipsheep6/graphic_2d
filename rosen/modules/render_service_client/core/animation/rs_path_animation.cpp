@@ -206,7 +206,7 @@ void RSPathAnimation::OnUpdateStagingValue(bool isFirstStart)
         }
     }
 
-    target->stagingProperties_.SetRotation(targetRotation, false);
+    target->stagingProperties_.SetRotation(targetRotation);
 }
 
 void RSPathAnimation::ReplaceSubString(

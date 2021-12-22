@@ -18,9 +18,11 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class Picture {
 
 };
+}
 }
 }
 #endif

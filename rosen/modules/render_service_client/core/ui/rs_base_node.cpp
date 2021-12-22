@@ -26,21 +26,21 @@
 namespace OHOS {
 namespace Rosen {
 
-NodeId RSBaseNode::GenerateNodeId()
+NodeId RSBaseNode::GenerateId()
 {
+    static pid_t pid_ = getpid();
+    static std::atomic<uint32_t> currentId_ = 0;
+
     ++currentId_;
-    // TODO:process the overflow situations
     if (currentId_ == UINT32_MAX) {
+        // TODO:process the overflow situations
         ROSEN_LOGE("Node Id overflow");
     }
-    pid_t pid_ = getpid();
+
     return ((NodeId)pid_ << 32) | currentId_;
 }
 
-RSBaseNode::RSBaseNode(bool isRenderServiceNode) : isRenderServiceNode_(isRenderServiceNode)
-{
-    id_ = GenerateNodeId();
-}
+RSBaseNode::RSBaseNode(bool isRenderServiceNode) : id_(GenerateId()), isRenderServiceNode_(isRenderServiceNode) {}
 
 RSBaseNode::~RSBaseNode()
 {
@@ -74,17 +74,13 @@ void RSBaseNode::AddChild(SharedPtr child, int index)
 
 void RSBaseNode::RemoveChild(SharedPtr child)
 {
-    if (child == nullptr) {
+    if (child == nullptr || child->parent_ != id_) {
         ROSEN_LOGE("RSBaseNode::RemoveChild: nullptr target");
         return;
     }
     NodeId childId = child->GetId();
-    auto itr = std::find(children_.begin(), children_.end(), childId);
-    if (itr == children_.end()) {
-        return;
-    }
+    RemoveChildById(childId);
     child->OnRemoveChildren();
-    children_.erase(itr);
     child->SetParent(0);
     ROSEN_LOGI("RSBaseNode::RemoveChild %llu -/-> %llu", id_, childId);
 
@@ -92,13 +88,20 @@ void RSBaseNode::RemoveChild(SharedPtr child)
     RSTransactionProxy::GetInstance().AddCommand(command, IsRenderServiceNode());
 }
 
+void RSBaseNode::RemoveChildById(NodeId childId)
+{
+    auto itr = std::find(children_.begin(), children_.end(), childId);
+    if (itr != children_.end()) {
+        children_.erase(itr);
+    }
+}
+
 void RSBaseNode::RemoveFromTree()
 {
-    auto parentPtr = RSNodeMap::Instance().GetNode(parent_).lock();
-    if (parentPtr != nullptr) {
-        if (auto ptr = RSNodeMap::Instance().GetNode(id_).lock()) {
-            parentPtr->RemoveChild(ptr);
-        }
+    if (auto parentPtr = RSNodeMap::Instance().GetNode(parent_).lock()) {
+        parentPtr->RemoveChildById(id_);
+        OnRemoveChildren();
+        SetParent(0);
     }
     // always send Remove-From-Tree command
     std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveFromTree>(id_);

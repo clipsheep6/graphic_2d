@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class Bitmap;
 struct BitmapFormat;
 class BitmapImpl {
@@ -37,6 +38,7 @@ public:
     virtual void Free() = 0;
     virtual bool IsValid() = 0;
 };
+}
 }
 }
 #endif

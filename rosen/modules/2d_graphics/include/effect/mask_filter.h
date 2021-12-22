@@ -23,6 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class MaskFilterImpl;
 struct MaskFilterData;
 
@@ -56,6 +57,7 @@ private:
     FilterType type_;
     std::unique_ptr<MaskFilterImpl> impl_;
 };
+}
 }
 }
 #endif

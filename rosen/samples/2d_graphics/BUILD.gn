@@ -43,6 +43,7 @@ ohos_static_library("libexec_drawing") {
     "//foundation/graphic/standard/frameworks/vsync:libvsync_module",
     "//foundation/graphic/standard/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
+    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
   ]
 
   public_deps = [
@@ -73,7 +74,8 @@ config("sample_config") {
     "//foundation/graphic/standard/interfaces/innerkits/vsync_module",
     "//foundation/graphic/standard/utils/sync_fence/export",
     "//foundation/graphic/standard/rosen/include/common",
-    "//foundation/graphic/standard/rosen/modules/render_service_base/include"
+    "//foundation/graphic/standard/rosen/modules/render_service_base/include",
+    "//foundation/multimedia/image_standard/interfaces/innerkits/include",
     ]
 
   cflags = [

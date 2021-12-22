@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 enum class PathDashStyle;
 class PathEffectImpl {
 public:
@@ -39,6 +40,7 @@ public:
 protected:
     std::shared_ptr<PathEffectData> pathEffectData_;
 };
+}
 }
 }
 #endif

@@ -30,6 +30,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class SkiaImplFactory {
 public:
     static std::unique_ptr<CoreCanvasImpl> CreateCoreCanvas();
@@ -44,6 +45,7 @@ public:
     static std::unique_ptr<MatrixImpl> CreateMatrix();
     static std::unique_ptr<CameraImpl> CreateCamera();
 };
+}
 }
 }
 #endif

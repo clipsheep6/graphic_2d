@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 SkiaImageFilter::SkiaImageFilter() noexcept
 {
     imageFilterData_ = std::make_shared<SkiaImageFilterData>();
@@ -70,6 +71,7 @@ void SkiaImageFilter::InitWithCompose(const ImageFilterData* d1, const ImageFilt
 sk_sp<SkImageFilter> SkiaImageFilter::MutableImageFilter()
 {
     return sk_sp<SkImageFilter>(static_cast<SkImageFilter*>(imageFilterData_->GetImageFilter()));
+}
 }
 }
 }

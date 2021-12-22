@@ -16,6 +16,8 @@
 #ifndef CORECANVASIMPL_H
 #define CORECANVASIMPL_H
 
+#include "securec.h"
+
 #include "draw/brush.h"
 #include "draw/clip.h"
 #include "draw/path.h"
@@ -26,6 +28,7 @@
 #include "effect/filter.h"
 #include "image/bitmap.h"
 #include "text/text.h"
+#include "utils/log.h"
 #include "utils/matrix.h"
 #include "utils/point.h"
 #include "utils/point3.h"
@@ -33,8 +36,11 @@
 #include "utils/round_rect.h"
 #include "utils/scalar.h"
 
+#include "pixel_map.h"
+
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 class CoreCanvasImpl {
 public:
     CoreCanvasImpl() {};
@@ -58,6 +64,7 @@ public:
 
     // image
     virtual void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py) = 0;
+    virtual void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py) = 0;
     virtual void DrawImage() = 0; // TODO...
 
     // text
@@ -90,6 +97,7 @@ public:
     virtual void DetachPen() = 0;
     virtual void DetachBrush() = 0;
 };
+}
 }
 }
 #endif

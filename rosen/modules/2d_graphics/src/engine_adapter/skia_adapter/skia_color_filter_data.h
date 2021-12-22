@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct SkiaColorFilterData : ColorFilterData {
 public:
     SkiaColorFilterData() noexcept : ColorFilterData(), filter(nullptr) {}
@@ -29,6 +30,7 @@ public:
     void* GetColorFilter() const override { return filter.get(); }
     sk_sp<SkColorFilter> filter;
 };
+}
 }
 }
 #endif

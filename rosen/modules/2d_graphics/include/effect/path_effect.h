@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Drawing {
 struct PathEffectData;
 enum class PathDashStyle{
     TRANSLATE,
@@ -59,6 +60,7 @@ private:
     PathEffectType type_;
     std::unique_ptr<PathEffectImpl> impl_;
 };
+}
 }
 }
 #endif

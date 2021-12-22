@@ -109,7 +109,7 @@ ohos_shared_library("wms_client") {
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "samgr_L2:samgr_proxy",
+    "samgr_standard:samgr_proxy",
   ]
 
   public_deps = [ "//foundation/graphic/standard:libsurface" ]
@@ -218,7 +218,7 @@ ohos_shared_library("libwmclient") {
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "samgr_L2:samgr_proxy",
+    "samgr_standard:samgr_proxy",
   ]
 
   public_deps = [

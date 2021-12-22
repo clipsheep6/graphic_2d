@@ -23,8 +23,8 @@
 namespace OHOS {
 void ReadFence(MessageParcel &parcel, int32_t &fence)
 {
-    fence = parcel.ReadInt32();
-    if (fence < 0) {
+    int32_t retFence = parcel.ReadInt32();
+    if (retFence < 0) {
         return;
     }
 
@@ -44,7 +44,6 @@ void WriteFence(MessageParcel &parcel, int32_t fence)
     }
 
     parcel.WriteFileDescriptor(fence);
-    close(fence);
 }
 
 void ReadRequestConfig(MessageParcel &parcel, BufferRequestConfig &config)

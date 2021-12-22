@@ -29,7 +29,28 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "WindowManagerClient" };
 
 #define LOCK(mutexName) \
     std::lock_guard<std::mutex> lock(mutexName)
-    
+
+#define GET_WINDOWINFO(info, id, ret) \
+    InnerWindowInfo *info = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id); \
+    if (info == nullptr) { \
+        WMLOGFE("id: %{public}d, window info is nullptr", id); \
+        return ret; \
+    }
+
+#define GET_WINDOWINFO_VOID(info, id) \
+    InnerWindowInfo *info = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id); \
+    if (info == nullptr) { \
+        WMLOGFE("id: %{public}d, window info is nullptr", id); \
+        return; \
+    }
+
+#define GET_WINDOWINFO_INNER_VOID(info, id) \
+    InnerWindowInfo *info = GetInnerWindowInfoFromId((uint32_t)id); \
+    if (info == nullptr) { \
+        WMLOGFE("id: %{public}d, window info is nullptr", id); \
+        return; \
+    }
+
 sptr<LayerControllerClient> LayerControllerClient::GetInstance()
 {
     if (instance == nullptr) {
@@ -70,6 +91,7 @@ bool LayerControllerClient::init(sptr<IWindowManagerService> &service)
     WlSurfaceFactory::GetInstance()->Init();
     WlSubsurfaceFactory::GetInstance()->Init();
     WindowManagerServer::GetInstance()->Init();
+    WpViewportFactory::GetInstance()->Init();
 
     WaylandService::GetInstance()->Start();
     WlDisplay::GetInstance()->Roundtrip();
@@ -86,11 +108,7 @@ void LayerControllerClient::ChangeWindowType(int32_t id, WindowType type)
     LOCK(mutex);
     WMLOG_I("LayerControllerClient::ChangeWindowType id=%{public}d,type=%{public}d", id, type);
 
-    InnerWindowInfo *wininfo = GetInnerWindowInfoFromId((uint32_t)id);
-    if (wininfo == nullptr) {
-        WMLOGFE("id: %{public}d, window info is nullptr", id);
-        return;
-    }
+    GET_WINDOWINFO_INNER_VOID(wininfo, id);
 
     if (type == wininfo->windowconfig.type) {
         WMLOG_E("LayerControllerClient::ChangeWindowType window type is no need change");
@@ -100,13 +118,13 @@ void LayerControllerClient::ChangeWindowType(int32_t id, WindowType type)
     wms->SetWindowType(id, type);
 }
 
-void BufferRelease(struct wl_buffer *wbuffer, int32_t fence)
+void BufferRelease(struct wl_buffer *wbuffer)
 {
     sptr<Surface> surface = nullptr;
     sptr<SurfaceBuffer> sbuffer = nullptr;
     if (WlBufferCache::GetInstance()->GetSurfaceBuffer(wbuffer, surface, sbuffer)) {
         if (surface != nullptr && sbuffer != nullptr) {
-            surface->ReleaseBuffer(sbuffer, fence);
+            surface->ReleaseBuffer(sbuffer, -1);
         }
     }
 }
@@ -126,11 +144,7 @@ void LayerControllerClient::CreateWlBuffer(sptr<Surface>& surface, uint32_t wind
         return;
     }
 
-    InnerWindowInfo *windowInfo = GetInnerWindowInfoFromId((uint32_t)windowId);
-    if (windowInfo == nullptr) {
-        WMLOGFE("id: %{public}d, window info is nullptr", windowId);
-        return;
-    }
+    GET_WINDOWINFO_INNER_VOID(windowInfo, windowId);
 
     auto bc = WlBufferCache::GetInstance();
     auto wbuffer = bc->GetWlBuffer(surface, buffer);
@@ -151,10 +165,7 @@ void LayerControllerClient::CreateWlBuffer(sptr<Surface>& surface, uint32_t wind
     }
 
     if (wbuffer) {
-        auto br = windowInfo->wlSurface->GetBufferRelease();
-        wbuffer->SetBufferRelease(br);
         windowInfo->wlSurface->Attach(wbuffer, 0, 0);
-        windowInfo->wlSurface->SetAcquireFence(flushFence);
         windowInfo->wlSurface->Damage(damage.x, damage.y, damage.w, damage.h);
         windowInfo->wlSurface->Commit();
         WlDisplay::GetInstance()->Flush();
@@ -179,12 +190,7 @@ bool LayerControllerClient::CreateSurface(int32_t id)
 {
     WMLOG_I("CreateSurface (windowid = %{public}d) start", id);
 
-    InnerWindowInfo *windowInfo
-        = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
-    if (windowInfo == nullptr) {
-        WMLOGFE("id: %{public}d, window info is nullptr", id);
-        return false;
-    }
+    GET_WINDOWINFO(windowInfo, id, false);
 
     windowInfo->surface = Surface::CreateSurfaceAsConsumer();
     if (windowInfo->surface) {
@@ -263,7 +269,6 @@ bool CreateVideoSubWindow(InnerWindowInfo &newSubInfo)
         if (newSubInfo.windowconfig.type == WINDOW_TYPE_VIDEO) {
             newSubInfo.wlSurface->SetSurfaceType(WL_SURFACE_TYPE_VIDEO);
         }
-
         newSubInfo.wlSurface->Attach(newSubInfo.wlBuffer, 0, 0);
         newSubInfo.wlSurface->Damage(0, 0, newSubInfo.width, newSubInfo.height);
         newSubInfo.wlSurface->Commit();
@@ -281,13 +286,7 @@ InnerWindowInfo *LayerControllerClient::CreateSubWindow(int32_t subid, int32_t p
     WMLOG_I("%{public}s start parentID is %{public}d, subid is %{public}d",
         "LayerControllerClient::CreateSubWindow", parentid, subid);
 
-    InnerWindowInfo *parentInnerWindowInfo
-        = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)parentid);
-    if (parentInnerWindowInfo == nullptr) {
-        WMLOGFE("id: %{public}d, window info is nullptr", parentid);
-        return nullptr;
-    }
-
+    GET_WINDOWINFO(parentInnerWindowInfo, parentid, nullptr);
     InnerWindowInfo newSubInfo = {};
     GetSubInnerWindowInfo(newSubInfo, subid, parentid, config);
 
@@ -336,11 +335,7 @@ void LayerControllerClient::RegistOnTouchCb(int id, funcOnTouch cb)
     WMLOG_I("LayerControllerClient::%{public}s", __func__);
     if (cb) {
         WMLOG_I("LayerControllerClient::RegistOnTouchCb OK");
-        InnerWindowInfo *windowInfo = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
-        if (windowInfo == nullptr) {
-            WMLOGFE("id: %{public}d, window info is nullptr", id);
-            return;
-        }
+        GET_WINDOWINFO_VOID(windowInfo, id);
     }
 }
 
@@ -350,11 +345,7 @@ void LayerControllerClient::RegistOnKeyCb(int id, funcOnKey cb)
     WMLOG_I("LayerControllerClient::RegistOnKeyCb start");
     if (cb) {
         WMLOG_I("LayerControllerClient::RegistOnKeyCb OK");
-        InnerWindowInfo *windowInfo = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
-        if (windowInfo == nullptr) {
-            WMLOGFE("id: %{public}d, window info is nullptr", id);
-            return;
-        }
+        GET_WINDOWINFO_VOID(windowInfo, id);
     }
 }
 
@@ -364,11 +355,7 @@ void LayerControllerClient::RegistWindowInfoChangeCb(int id, funcWindowInfoChang
     WMLOG_I("LayerControllerClient::%{public}s begin",  __func__);
     if (cb) {
         WMLOG_I("LayerControllerClient::RegistWindowInfoChangeCb OK");
-        InnerWindowInfo *windowInfo = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
-        if (windowInfo == nullptr) {
-            WMLOGFE("id: %{public}d, window info is nullptr", id);
-            return;
-        }
+        GET_WINDOWINFO_VOID(windowInfo, id);
         windowInfo->windowInfoChangeCb = cb;
     }
 }
@@ -376,11 +363,7 @@ void LayerControllerClient::RegistWindowInfoChangeCb(int id, funcWindowInfoChang
 void LayerControllerClient::RegistOnWindowCreateCb(int32_t id, void(* cb)(uint32_t pid))
 {
     LOCK(mutex);
-    InnerWindowInfo *info = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
-    if (info == nullptr) {
-        WMLOGFE("id: %{public}d, window info is nullptr", id);
-        return;
-    }
+    GET_WINDOWINFO_VOID(info, id);
     info->onWindowCreateCb = cb;
 }
 
@@ -398,12 +381,12 @@ void LayerControllerClient::SetSubSurfaceSize(int32_t id, int32_t width, int32_t
     WMLOG_E("%{public}s start id(%{public}d) width(%{public}d) height(%{public}d)",
         "LayerControllerClient::SetSubSurfaceSize", id, width, height);
 
-    InnerWindowInfo *windowInfo = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
-    if (windowInfo == nullptr) {
-        WMLOGFE("id: %{public}d, window info is nullptr", id);
-        return;
-    }
+    GET_WINDOWINFO_VOID(windowInfo, id);
     if (windowInfo->subwidow == true) {
+        windowInfo->wpViewport = WpViewportFactory::GetInstance()->Create(windowInfo->wlSurface);
+        if (windowInfo->wpViewport) {
+            windowInfo->wpViewport->SetSource(windowInfo->pos_x, windowInfo->pos_y, width, height);
+        }
         windowInfo->wlSurface->Commit();
     }
 }
@@ -434,11 +417,7 @@ void LayerControllerClient::Move(int32_t id, int32_t x, int32_t y)
 {
     LOCK(mutex);
 
-    InnerWindowInfo *wininfo = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
-    if (wininfo == nullptr) {
-        WMLOGFE("id: %{public}d, window info is nullptr", id);
-        return;
-    }
+    GET_WINDOWINFO_VOID(wininfo, id);
     wininfo->pos_x = x;
     wininfo->pos_y = y;
     wininfo->windowconfig.pos_x = x;
@@ -468,11 +447,7 @@ void LayerControllerClient::ReSize(int32_t id, int32_t width, int32_t height)
     WMLOG_I("LayerControllerClient::ReSize id(%{public}d) width(%{public}d) width(%{public}d)", id, width, height);
     LOCK(mutex);
 
-    InnerWindowInfo *wininfo = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
-    if (wininfo == nullptr) {
-        WMLOGFE("id: %{public}d, window info is nullptr", id);
-        return;
-    }
+    GET_WINDOWINFO_VOID(wininfo, id);
     wininfo->windowconfig.width = width;
     wininfo->windowconfig.height = height;
     wininfo->width = width;
@@ -514,11 +489,7 @@ void LayerControllerClient::Rotate(int32_t id, int32_t type)
 {
     LOCK(mutex);
     WMLOG_I("LayerControllerClient::Rotate id=%{public}d type=%{public}d start", id, type);
-    InnerWindowInfo *wininfo = LayerControllerClient::GetInstance()->GetInnerWindowInfoFromId((uint32_t)id);
-    if (wininfo == nullptr) {
-        WMLOGFE("id: %{public}d, window info is nullptr", id);
-        return;
-    }
+    GET_WINDOWINFO_VOID(wininfo, id);
     wininfo->wlSurface->SetBufferTransform(static_cast<wl_output_transform>(type));
     wininfo->wlSurface->Commit();
 }

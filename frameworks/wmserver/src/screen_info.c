@@ -39,7 +39,8 @@
 
 void SetLibInputEventListener(const LibInputEventListener listener)
 {
-    set_libinput_event_listener(listener);
+    set_event_listener(listener);
+    // set_libinput_event_listener(listener);
 }
 
 void FreeSeatsInfo(struct SeatInfo **seats)
@@ -413,7 +414,7 @@ static void OnSeatInfoChange(void)
     LOGD("OnSeatInfoChange is called.");
 }
 
-static void OnLibInputEvent(struct multimodal_libinput_event *event)
+static void OnLibInputEvent(struct libinput_event *event)
 {
     LOGD("OnLibInputEvent is called.");
 }

@@ -16,26 +16,34 @@
 #include "buffer_manager.h"
 
 #include <cerrno>
-#include <mutex>
 #include <sys/mman.h>
+
+#include <display_gralloc.h>
 
 #include "buffer_log.h"
 
-#define CHECK_INIT() \
-    do { \
-        if (displayGralloc_ == nullptr) { \
-            SurfaceError ret = Init(); \
+#define CHECK_INIT()                       \
+    do {                                   \
+        if (grallocFuncs_ == nullptr) {    \
+            SurfaceError ret = Init();     \
             if (ret != SURFACE_ERROR_OK) { \
-                return ret; \
-            } \
-        } \
+                return ret;                \
+            }                              \
+        }                                  \
     } while (0)
 
-#define CHECK_BUFFER(buffer) \
-    do { \
-        if ((buffer) == nullptr) { \
+#define CHECK_FUNC(func)                      \
+    do {                                      \
+        if (func == nullptr) {                \
+            return SURFACE_ERROR_NOT_SUPPORT; \
+        }                                     \
+    } while (0)
+
+#define CHECK_BUFFER(buffer)              \
+    do {                                  \
+        if (buffer == nullptr) {          \
             return SURFACE_ERROR_NULLPTR; \
-        } \
+        }                                 \
     } while (0)
 
 namespace OHOS {
@@ -63,44 +71,56 @@ inline SurfaceError GenerateError(SurfaceError err, int32_t code)
 {
     return GenerateError(err, static_cast<DispErrCode>(code));
 }
-} // namespace
-
-sptr<BufferManager> BufferManager::GetInstance()
-{
-    if (instance == nullptr) {
-        static std::mutex mutex;
-        std::lock_guard<std::mutex> lock(mutex);
-        if (instance == nullptr) {
-            instance = new BufferManager();
-        }
-    }
-    return instance;
 }
 
+BufferManager BufferManager::instance_;
 SurfaceError BufferManager::Init()
 {
-    if (displayGralloc_ != nullptr) {
+    if (grallocFuncs_ != nullptr) {
         BLOGD("BufferManager has been initialized successfully.");
         return SURFACE_ERROR_OK;
     }
 
-    displayGralloc_.reset(::OHOS::HDI::Display::V1_0::IDisplayGralloc::Get());
-    if (displayGralloc_ == nullptr) {
-        BLOGE("IDisplayGralloc::Get return nullptr.");
+    auto dret = GrallocInitialize(&grallocFuncs_);
+    if (dret != DISPLAY_SUCCESS) {
+        BLOGW("GrallocInitialize failed.");
+        return GenerateError(SURFACE_ERROR_INIT, dret);
+    }
+
+    if (grallocFuncs_ == nullptr) {
+        BLOGW("GrallocInitialize failed.");
         return SURFACE_ERROR_INIT;
     }
+
+    BLOGD("funcs.AllocMem            0x%{public}s", grallocFuncs_->AllocMem ? "Yes" : "No");
+    BLOGD("funcs.FreeMem             0x%{public}s", grallocFuncs_->FreeMem ? "Yes" : "No");
+    BLOGD("funcs.Mmap                0x%{public}s", grallocFuncs_->Mmap ? "Yes" : "No");
+    BLOGD("funcs.MmapCache           0x%{public}s", grallocFuncs_->MmapCache ? "Yes" : "No");
+    BLOGD("funcs.Unmap               0x%{public}s", grallocFuncs_->Unmap ? "Yes" : "No");
+    BLOGD("funcs.FlushCache          0x%{public}s", grallocFuncs_->FlushCache ? "Yes" : "No");
+    BLOGD("funcs.FlushMCache         0x%{public}s", grallocFuncs_->FlushMCache ? "Yes" : "No");
+    BLOGD("funcs.InvalidateCache     0x%{public}s", grallocFuncs_->InvalidateCache ? "Yes" : "No");
     return SURFACE_ERROR_OK;
+}
+
+BufferManager::~BufferManager()
+{
+    int32_t ret = GrallocUninitialize(grallocFuncs_);
+    if (ret != DISPLAY_SUCCESS) {
+        BLOGE("Failure, Reason: GrallocUninitialize failed with %{public}d", ret);
+    }
 }
 
 SurfaceError BufferManager::Alloc(const BufferRequestConfig &config, sptr<SurfaceBufferImpl> &buffer)
 {
     CHECK_INIT();
+    CHECK_FUNC(grallocFuncs_->AllocMem);
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = nullptr;
-    int32_t width = (config.width + 15) / 16 * 16;
-    AllocInfo info = {width, config.height, config.usage, (PixelFormat)config.format};
-    auto dret = displayGralloc_->AllocMem(info, handle);
+    AllocInfo info = {config.width, config.height, config.usage, (PixelFormat)config.format};
+
+    auto dret = grallocFuncs_->AllocMem(&info, &handle);
     if (dret == DISPLAY_SUCCESS) {
         buffer->SetBufferHandle(handle);
         return SURFACE_ERROR_OK;
@@ -113,10 +133,11 @@ SurfaceError BufferManager::Alloc(const BufferRequestConfig &config, sptr<Surfac
 SurfaceError BufferManager::Map(sptr<SurfaceBufferImpl> &buffer)
 {
     CHECK_INIT();
+    CHECK_FUNC(grallocFuncs_->Mmap);
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = buffer->GetBufferHandle();
-    void *virAddr = displayGralloc_->Mmap(*handle);
+    void *virAddr = grallocFuncs_->Mmap(reinterpret_cast<BufferHandle*>(handle));
     if (virAddr == nullptr || virAddr == MAP_FAILED) {
         return SURFACE_ERROR_API_FAILED;
     }
@@ -126,6 +147,7 @@ SurfaceError BufferManager::Map(sptr<SurfaceBufferImpl> &buffer)
 SurfaceError BufferManager::Unmap(sptr<SurfaceBufferImpl> &buffer)
 {
     CHECK_INIT();
+    CHECK_FUNC(grallocFuncs_->Unmap);
     CHECK_BUFFER(buffer);
 
     if (buffer->GetVirAddr() == nullptr) {
@@ -133,7 +155,7 @@ SurfaceError BufferManager::Unmap(sptr<SurfaceBufferImpl> &buffer)
     }
 
     BufferHandle *handle = buffer->GetBufferHandle();
-    auto dret = displayGralloc_->Unmap(*handle);
+    auto dret = grallocFuncs_->Unmap(reinterpret_cast<BufferHandle*>(handle));
     if (dret == DISPLAY_SUCCESS) {
         handle->virAddr = nullptr;
         return SURFACE_ERROR_OK;
@@ -145,10 +167,11 @@ SurfaceError BufferManager::Unmap(sptr<SurfaceBufferImpl> &buffer)
 SurfaceError BufferManager::FlushCache(sptr<SurfaceBufferImpl> &buffer)
 {
     CHECK_INIT();
+    CHECK_FUNC(grallocFuncs_->FlushCache);
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = buffer->GetBufferHandle();
-    auto dret = displayGralloc_->FlushCache(*handle);
+    auto dret = grallocFuncs_->FlushCache(reinterpret_cast<BufferHandle*>(handle));
     if (dret == DISPLAY_SUCCESS) {
         return SURFACE_ERROR_OK;
     }
@@ -159,10 +182,11 @@ SurfaceError BufferManager::FlushCache(sptr<SurfaceBufferImpl> &buffer)
 SurfaceError BufferManager::InvalidateCache(sptr<SurfaceBufferImpl> &buffer)
 {
     CHECK_INIT();
+    CHECK_FUNC(grallocFuncs_->InvalidateCache);
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = buffer->GetBufferHandle();
-    auto dret = displayGralloc_->InvalidateCache(*handle);
+    auto dret = grallocFuncs_->InvalidateCache(reinterpret_cast<BufferHandle*>(handle));
     if (dret == DISPLAY_SUCCESS) {
         return SURFACE_ERROR_OK;
     }
@@ -173,6 +197,7 @@ SurfaceError BufferManager::InvalidateCache(sptr<SurfaceBufferImpl> &buffer)
 SurfaceError BufferManager::Free(sptr<SurfaceBufferImpl> &buffer)
 {
     CHECK_INIT();
+    CHECK_FUNC(grallocFuncs_->FreeMem);
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = buffer->GetBufferHandle();
@@ -180,7 +205,7 @@ SurfaceError BufferManager::Free(sptr<SurfaceBufferImpl> &buffer)
         return SURFACE_ERROR_NULLPTR;
     }
 
-    displayGralloc_->FreeMem(*handle);
+    grallocFuncs_->FreeMem(reinterpret_cast<BufferHandle*>(handle));
     buffer->SetBufferHandle(nullptr);
     return SURFACE_ERROR_OK;
 }

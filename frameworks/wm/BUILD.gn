@@ -28,6 +28,11 @@ config("wms_client_config") {
     "-Werror",
     "-g3",
   ]
+  if ("${product_name}" == "Hi3516DV300") {
+    cflags += [
+      "-DHI3516_TEMP_ADAPTER",
+    ]
+  }
 }
 
 config("wms_client_public_config") {
@@ -59,6 +64,8 @@ ohos_shared_library("wms_client") {
     "src/wl_subsurface_factory.cpp",
     "src/wl_surface.cpp",
     "src/wl_surface_factory.cpp",
+    "src/wp_viewport.cpp",
+    "src/wp_viewport_factory.cpp",
   ]
 
   configs = [
@@ -72,7 +79,6 @@ ohos_shared_library("wms_client") {
   ]
 
   deps = [
-    "//developtools/bytrace_standard/interfaces/innerkits/native:bytrace_core",
     "//foundation/graphic/standard:libwmservice",
     "//foundation/graphic/standard/frameworks/wmserver:wms_protocol",
     "//third_party/wayland-ivi-extension:libilmClient",
@@ -80,7 +86,6 @@ ohos_shared_library("wms_client") {
     "//third_party/wayland-ivi-extension:libilmControl",
     "//third_party/wayland-ivi-extension:libilmInput",
     "//third_party/wayland-protocols_standard:linux_dmabuf_unstable_v1_protocol",
-    "//third_party/wayland-protocols_standard:linux_explicit_synchronization_unstable_v1_protocol",
     "//third_party/wayland-protocols_standard:viewporter_protocol",
     "//third_party/wayland_standard:libwayland_cursor",
     "//third_party/wayland_standard:wayland_core_protocol",
@@ -104,7 +109,7 @@ ohos_shared_library("wms_client") {
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "samgr_standard:samgr_proxy",
+    "samgr_L2:samgr_proxy",
   ]
 
   public_deps = [ "//foundation/graphic/standard:libsurface" ]
@@ -130,6 +135,11 @@ config("libwmclient_config") {
     "-Werror",
     "-g3",
   ]
+  if ("${product_name}" == "Hi3516DV300") {
+    cflags += [
+      "-DHI3516_TEMP_ADAPTER",
+    ]
+  }
 }
 
 config("libwmclient_public_config") {
@@ -166,6 +176,8 @@ ohos_shared_library("libwmclient") {
     "src/wl_subsurface_factory.cpp",
     "src/wl_surface.cpp",
     "src/wl_surface_factory.cpp",
+    "src/wp_viewport.cpp",
+    "src/wp_viewport_factory.cpp",
   ]
 
   configs = [
@@ -176,7 +188,6 @@ ohos_shared_library("libwmclient") {
   public_configs = [ ":libwmclient_public_config" ]
 
   deps = [
-    "//developtools/bytrace_standard/interfaces/innerkits/native:bytrace_core",
     "//foundation/graphic/standard:libwmservice",
     "//foundation/graphic/standard/frameworks/wmserver:wms_protocol",
     "//third_party/wayland-ivi-extension:libilmClient",
@@ -184,7 +195,6 @@ ohos_shared_library("libwmclient") {
     "//third_party/wayland-ivi-extension:libilmControl",
     "//third_party/wayland-ivi-extension:libilmInput",
     "//third_party/wayland-protocols_standard:linux_dmabuf_unstable_v1_protocol",
-    "//third_party/wayland-protocols_standard:linux_explicit_synchronization_unstable_v1_protocol",
     "//third_party/wayland-protocols_standard:viewporter_protocol",
     "//third_party/wayland_standard:libwayland_cursor",
     "//third_party/wayland_standard:wayland_core_protocol",
@@ -208,7 +218,7 @@ ohos_shared_library("libwmclient") {
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "samgr_standard:samgr_proxy",
+    "samgr_L2:samgr_proxy",
   ]
 
   public_deps = [

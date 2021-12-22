@@ -16,7 +16,6 @@
 #include "native_window_module.h"
 
 #include <ability.h>
-#include <window_manager_service_client.h>
 
 #include "graphic_napi_common.h"
 
@@ -48,22 +47,14 @@ napi_value WindowConstructor(napi_env env, napi_callback_info info)
 // Window.ResetSize {{{
 namespace ResetSize {
 struct Param {
-    sptr<PromiseWMError> promise;
-    WMError wret;
+    ::OHOS::AppExecFwk::Ability *ability;
+    int width;
+    int height;
 };
 
-bool Async(napi_env env, std::unique_ptr<Param> &param)
+void Async(napi_env env, std::unique_ptr<Param>& param)
 {
-    param->wret = param->promise->Await();
-    return param->wret == WM_OK;
-}
-
-napi_value Resolve(napi_env env, std::unique_ptr<Param> &param)
-{
-    if (param->wret != WM_OK) {
-        return CreateError(env, "failed with %s", WMErrorStr(param->wret).c_str());
-    }
-    return nullptr;
+    param->ability->GetWindow()->Resize(param->width, param->height);
 }
 
 napi_value MainFunc(napi_env env, napi_callback_info info)
@@ -75,41 +66,28 @@ napi_value MainFunc(napi_env env, napi_callback_info info)
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
 
-    GNAPI_ASSERT(env, argc >= argumentSize, "ResetSize need %d arguments", argumentSize);
-
-    ::OHOS::AppExecFwk::Ability *ability;
-    int width;
-    int height;
-    NAPI_CALL(env, GetAbility(env, info, ability));
-    NAPI_CALL(env, napi_get_value_int32(env, argv[0], &width));
-    NAPI_CALL(env, napi_get_value_int32(env, argv[1], &height));
+    GNAPI_ASSERT(env, argc < argumentSize, "ResetSize need %{public}d arguments", argumentSize);
 
     auto param = std::make_unique<Param>();
-    param->promise = ability->GetWindow()->Resize(width, height);
+    NAPI_CALL(env, GetAbility(env, info, param->ability));
+    NAPI_CALL(env, napi_get_value_int32(env, argv[0], &param->width));
+    NAPI_CALL(env, napi_get_value_int32(env, argv[1], &param->height));
 
-    return CreatePromise<Param>(env, __PRETTY_FUNCTION__, Async, Resolve, param);
+    return CreatePromise<Param>(env, __PRETTY_FUNCTION__, Async, nullptr, param);
 }
 } // namespace NAPIWindow.ResetSize }}}
 
 // Window.MoveTo {{{
 namespace MoveTo {
 struct Param {
-    sptr<PromiseWMError> promise;
-    WMError wret;
+    ::OHOS::AppExecFwk::Ability *ability;
+    int x;
+    int y;
 };
 
-bool Async(napi_env env, std::unique_ptr<Param> &param)
+void Async(napi_env env, std::unique_ptr<Param>& param)
 {
-    param->wret = param->promise->Await();
-    return param->wret == WM_OK;
-}
-
-napi_value Resolve(napi_env env, std::unique_ptr<Param> &param)
-{
-    if (param->wret != WM_OK) {
-        return CreateError(env, "failed with %s", WMErrorStr(param->wret).c_str());
-    }
-    return nullptr;
+    param->ability->GetWindow()->MoveTo(param->x, param->y);
 }
 
 napi_value MainFunc(napi_env env, napi_callback_info info)
@@ -121,41 +99,37 @@ napi_value MainFunc(napi_env env, napi_callback_info info)
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
 
-    GNAPI_ASSERT(env, argc >= argumentSize, "MoveTo need %d arguments", argumentSize);
-
-    ::OHOS::AppExecFwk::Ability *ability;
-    int x;
-    int y;
-    NAPI_CALL(env, GetAbility(env, info, ability));
-    NAPI_CALL(env, napi_get_value_int32(env, argv[0], &x));
-    NAPI_CALL(env, napi_get_value_int32(env, argv[1], &y));
+    GNAPI_ASSERT(env, argc < argumentSize, "MoveTo need %{public}d arguments", argumentSize);
 
     auto param = std::make_unique<Param>();
-    param->promise = ability->GetWindow()->Move(x, y);
+    NAPI_CALL(env, GetAbility(env, info, param->ability));
+    NAPI_CALL(env, napi_get_value_int32(env, argv[0], &param->x));
+    NAPI_CALL(env, napi_get_value_int32(env, argv[1], &param->y));
 
-    return CreatePromise<Param>(env, __PRETTY_FUNCTION__, Async, Resolve, param);
+    return CreatePromise<Param>(env, __PRETTY_FUNCTION__, Async, nullptr, param);
 }
 } // namespace NAPIWindow.MoveTo }}}
 
 // Window.SetWindowType {{{
 namespace SetWindowType {
 struct Param {
-    sptr<PromiseWMError> promise;
-    WMError wret;
+    ::OHOS::AppExecFwk::Ability *ability;
+    int windowType;
 };
 
-bool Async(napi_env env, std::unique_ptr<Param> &param)
+void Async(napi_env env, std::unique_ptr<Param>& param)
 {
-    param->wret = param->promise->Await();
-    return param->wret == WM_OK;
+    param->ability->GetWindow()->SetWindowType(static_cast<Rosen::WindowType>(param->windowType));
 }
 
-napi_value Resolve(napi_env env, std::unique_ptr<Param> &param)
+void CreateWindowTypeObject(napi_env env, napi_value value)
 {
-    if (param->wret != WM_OK) {
-        return CreateError(env, "failed with %s", WMErrorStr(param->wret).c_str());
-    }
-    return nullptr;
+    SetMemberInt32(env, value, "TYPE_APP", static_cast<int32_t>(Rosen::WindowType::WINDOW_TYPE_APP_MAIN_WINDOW));
+    SetMemberInt32(env, value, "TYPE_SYSTEM_ALERT",
+        static_cast<int32_t>(Rosen::WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW));
+    SetMemberInt32(env, value, "TYPE_SYSTEM_VOLUME",
+        static_cast<int32_t>(Rosen::WindowType::WINDOW_TYPE_VOLUME_OVERLAY));
+    SetMemberInt32(env, value, "TYPE_SYSTEM_PANEL", static_cast<int32_t>(Rosen::WindowType::WINDOW_TYPE_PANEL));
 }
 
 napi_value MainFunc(napi_env env, napi_callback_info info)
@@ -167,29 +141,23 @@ napi_value MainFunc(napi_env env, napi_callback_info info)
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
 
-    GNAPI_ASSERT(env, argc >= argumentSize, "SetWindowType need %d arguments", argumentSize);
-
-    ::OHOS::AppExecFwk::Ability *ability;
-    int windowType;
-    NAPI_CALL(env, GetAbility(env, info, ability));
-    NAPI_CALL(env, napi_get_value_int32(env, argv[0], &windowType));
+    GNAPI_ASSERT(env, argc < argumentSize, "SetWindowType need %{public}d arguments", argumentSize);
 
     auto param = std::make_unique<Param>();
-    param->promise = ability->GetWindow()->SetWindowType(static_cast<WindowType>(windowType));
+    NAPI_CALL(env, GetAbility(env, info, param->ability));
+    NAPI_CALL(env, napi_get_value_int32(env, argv[0], &param->windowType));
 
-    return CreatePromise<Param>(env, __PRETTY_FUNCTION__, Async, Resolve, param);
+    return CreatePromise<Param>(env, __PRETTY_FUNCTION__, Async, nullptr, param);
 }
 } // namespace NAPIWindow.SetWindowType }}}
 } // namespace NAPIWindow
 
 // getTopWindow {{{
-namespace GetTopWindow {
+namespace getTopWindow {
 struct Param {
-    sptr<PromiseWMError> promise;
-    WMError wret;
 };
 
-napi_value Resolve(napi_env env, std::unique_ptr<Param> &userdata)
+napi_value Resolve(napi_env env, std::unique_ptr<Param>& userdata)
 {
     napi_value ret;
     NAPI_CALL(env, napi_new_instance(env, g_classWindow, 0, nullptr, &ret));
@@ -204,103 +172,13 @@ napi_value MainFunc(napi_env env, napi_callback_info info)
 }
 } // namespace getTopWindow }}}
 
-// setSystemBarEnable {{{
-namespace SetSystemBarEnable {
-struct Param {
-    sptr<IWindowManagerService> wms;
-    sptr<PromiseWMError> statusPromise;
-    WMError statusWret;
-    sptr<PromiseWMError> navigationPromise;
-    WMError navigationWret;
-};
-
-bool Async(napi_env env, std::unique_ptr<Param> &param)
-{
-    bool retval = true;
-    if (param->statusPromise != nullptr) {
-        param->statusWret = param->statusPromise->Await();
-        retval = retval && param->statusWret == WM_OK;
-    }
-    if (param->navigationPromise != nullptr) {
-        param->navigationWret = param->navigationPromise->Await();
-        retval = retval && param->navigationWret == WM_OK;
-    }
-    return retval;
-}
-
-napi_value Resolve(napi_env env, std::unique_ptr<Param> &param)
-{
-    if (param->statusWret != WM_OK) {
-        return CreateError(env, "failed with %s", WMErrorStr(param->statusWret).c_str());
-    }
-    if (param->navigationWret != WM_OK) {
-        return CreateError(env, "failed with %s", WMErrorStr(param->navigationWret).c_str());
-    }
-    return nullptr;
-}
-
-napi_value MainFunc(napi_env env, napi_callback_info info)
-{
-    GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
-    constexpr int argumentSize = 1;
-    size_t argc = argumentSize;
-    napi_value argv[argc];
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
-    GNAPI_ASSERT(env, argc >= argumentSize, "setSystemBarEnable need %d arguments", argumentSize);
-
-    auto param = std::make_unique<Param>();
-    auto wmsc = WindowManagerServiceClient::GetInstance();
-    auto wret = wmsc->Init();
-    GNAPI_ASSERT(env, wret == WM_OK,
-                 "WindowManagerServiceClient::Init failed with %s", WMErrorStr(wret).c_str());
-    param->wms = wmsc->GetService();
-
-    bool isArray = false;
-    NAPI_CALL(env, napi_is_array(env, argv[0], &isArray));
-    GNAPI_ASSERT(env, isArray, "setSystemBarEnable first param need Array");
-
-    uint32_t arrayLength = 0;
-    NAPI_CALL(env, napi_get_array_length(env, argv[0], &arrayLength));
-    bool haveStatus = false;
-    bool haveNavigation = false;
-    for (uint32_t i = 0; i < arrayLength; i++) {
-        napi_value elem;
-        napi_valuetype vtype;
-        NAPI_CALL(env, napi_get_element(env, argv[0], i, &elem));
-        NAPI_CALL(env, napi_typeof(env, elem, &vtype));
-        if (vtype == napi_string) {
-            char stringElem[0x10];
-            size_t stringLen;
-            NAPI_CALL(env, napi_get_value_string_utf8(env, elem, stringElem, sizeof(stringElem), &stringLen));
-            if (strcmp(stringElem, "status") == 0) {
-                haveStatus = true;
-            }
-            if (strcmp(stringElem, "navigation") == 0) {
-                haveNavigation = true;
-            }
-        }
-    }
-    param->statusPromise = param->wms->SetStatusBarVisibility(haveStatus);
-    param->navigationPromise = param->wms->SetNavigationBarVisibility(haveNavigation);
-    return CreatePromise<Param>(env, __PRETTY_FUNCTION__, Async, nullptr, param);
-}
-} // setSystemBarEnable }}}
-
-napi_value CreateWindowTypeEnum(napi_env env)
-{
-    napi_value value = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &value));
-    SetMemberInt32(env, value, "TYPE_APP", static_cast<int32_t>(WINDOW_TYPE_NORMAL));
-    SetMemberInt32(env, value, "TYPE_SYSTEM_ALERT", static_cast<int32_t>(WINDOW_TYPE_ALARM_SCREEN));
-    SetMemberInt32(env, value, "TYPE_SYSTEM_VOLUME", static_cast<int32_t>(WINDOW_TYPE_VOLUME_OVERLAY));
-    SetMemberInt32(env, value, "TYPE_SYSTEM_PANEL", static_cast<int32_t>(WINDOW_TYPE_NOTIFICATION_SHADE));
-    return value;
-}
-
 napi_value WindowModuleInit(napi_env env, napi_value exports)
 {
     GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
+
+    napi_value nWindowType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nWindowType));
+    NAPIWindow::SetWindowType::CreateWindowTypeObject(env, nWindowType);
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("resetSize", NAPIWindow::ResetSize::MainFunc),
@@ -313,10 +191,9 @@ napi_value WindowModuleInit(napi_env env, napi_value exports)
         sizeof(desc) / sizeof(*desc), desc, &g_classWindow));
 
     napi_property_descriptor exportFuncs[] = {
-        DECLARE_NAPI_FUNCTION("getTopWindow", GetTopWindow::MainFunc),
-        DECLARE_NAPI_PROPERTY("WindowType", CreateWindowTypeEnum(env)),
+        DECLARE_NAPI_FUNCTION("getTopWindow", getTopWindow::MainFunc),
+        DECLARE_NAPI_PROPERTY("WindowType", nWindowType),
         DECLARE_NAPI_PROPERTY("Window", g_classWindow),
-        DECLARE_NAPI_FUNCTION("setSystemBarEnable", SetSystemBarEnable::MainFunc),
     };
 
     NAPI_CALL(env, napi_define_properties(env,
@@ -325,8 +202,7 @@ napi_value WindowModuleInit(napi_env env, napi_value exports)
 }
 } // namespace OHOS
 
-extern "C" {
-__attribute__((constructor)) static void RegisterModule(void)
+extern "C" __attribute__((constructor)) void RegisterModule(void)
 {
     napi_module windowModule = {
         .nm_version = 1, // NAPI v1
@@ -337,5 +213,4 @@ __attribute__((constructor)) static void RegisterModule(void)
         .nm_priv = nullptr,
     };
     napi_module_register(&windowModule);
-}
 }

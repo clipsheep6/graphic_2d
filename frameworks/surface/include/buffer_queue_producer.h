@@ -45,10 +45,6 @@ public:
     SurfaceError FlushBuffer(int32_t sequence, BufferExtraData &bedata,
                              int32_t fence, BufferFlushConfig &config) override;
 
-    SurfaceError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
-
-    SurfaceError DetachBuffer(sptr<SurfaceBuffer>& buffer) override;
-
     uint32_t     GetQueueSize() override;
     SurfaceError SetQueueSize(uint32_t queueSize) override;
 
@@ -58,24 +54,22 @@ public:
     int32_t      GetDefaultHeight() override;
     uint32_t     GetDefaultUsage() override;
 
-    SurfaceError CleanCache() override;
+    uint64_t     GetUniqueId() override;
 
-    SurfaceError RegisterReleaseListener(OnReleaseFunc func) override;
+    SurfaceError CleanCache() override;
 
 private:
     int32_t RequestBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t CancelBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t FlushBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
-    int32_t AttachBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
-    int32_t DetachBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetQueueSizeRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t SetQueueSizeRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetNameRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetDefaultWidthRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetDefaultHeightRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetDefaultUsageRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
+    int32_t GetUniqueIdRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t CleanCacheRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
-    int32_t RegisterReleaseListenerRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
 
     using BufferQueueProducerFunc = int32_t (BufferQueueProducer::*)(MessageParcel &arguments,
         MessageParcel &reply, MessageOption &option);

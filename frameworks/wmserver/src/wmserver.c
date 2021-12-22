@@ -47,11 +47,31 @@
 #define WINDOW_ID_NUM_MAX 1024
 #define WINDOW_ID_INVALID 0
 
+// int32_t max 2147483647, use 1e9, as AAAABBBCD
+// HIGH | SCREEN use AAAA | TYPE use BBB | MODE use C | RESERVED use D | LOW
+#define LAYER_ID_RESERVED_LENGTH 10
+#define LAYER_ID_RESERVED_BASE 1
+#define LAYER_ID_MODE_LENGTH 10
+#define LAYER_ID_MODE_BASE 10
+#define LAYER_ID_TYPE_LENGTH 1000
+#define LAYER_ID_TYPE_BASE 100
+#define LAYER_ID_SCREEN_LENGTH 10000
 #define LAYER_ID_SCREEN_BASE 100000
+
 #define BAR_WIDTH_PERCENT 0.07
+#define ALARM_WINDOW_WIDTH 400
+#define ALARM_WINDOW_HEIGHT 300
+#define ALARM_WINDOW_WIDTH_HALF 200
+#define ALARM_WINDOW_HEIGHT_HALF 150
+#define INPUT_WINDOW_THIRD 3
+#define INPUT_SELECTOR_WINDOW_BORDER 30
+#define FLOAT_WINDOW_BORDER 80
+#define VOLUME_OVERLAY_WINDOW_BORDER 15
+
 #define SCREEN_SHOT_FILE_PATH "/data/screenshot-XXXXXX"
 #define TIMER_INTERVAL_MS 300
 #define HEIGHT_AVERAGE 2
+#define WIDTH_AVERAGE 2
 #define PIXMAN_FORMAT_AVERAGE 8
 #define BYTE_SPP_SIZE 4
 #define ASSERT assert
@@ -96,6 +116,13 @@ struct WmsController {
     struct ScreenshotFrameListener stListener;
 };
 
+typedef void (*CalcWindowInfoFunc)(struct WindowSurface *, int32_t, int32_t, int32_t, int32_t);
+
+struct CalcWindowInfoStrategy {
+    uint32_t type;
+    CalcWindowInfoFunc func;
+};
+
 static struct WmsContext g_wmsCtx = {0};
 
 static ScreenInfoChangeListener g_screenInfoChangeListener = NULL;
@@ -112,7 +139,6 @@ static void SendGlobalWindowStatus(const struct WmsController *pController, uint
 
     wl_list_for_each(pControllerTemp, &pWmsCtx->wlListGlobalEventResource, wlListLinkRes) {
         wms_send_global_window_status(pControllerTemp->pWlResource, pid, window_id, status);
-        wl_client_flush(wl_resource_get_client(pControllerTemp->pWlResource));
     }
     LOGD("end.");
 }
@@ -226,7 +252,7 @@ static void SetDestinationRectangle(const struct WindowSurface *windowSurface,
 
     const struct ivi_layout_surface_properties *prop = layoutInterface->get_properties_of_surface(layoutSurface);
     layoutInterface->surface_set_transition(layoutSurface,
-        IVI_LAYOUT_TRANSITION_VIEW_DEFAULT, TIMER_INTERVAL_MS); // ms
+        IVI_LAYOUT_TRANSITION_NONE, TIMER_INTERVAL_MS); // ms
 
     if (width < 0) {
         width = prop->dest_width;
@@ -291,7 +317,6 @@ static void DisplayModeUpdate(const struct WmsContext *pCtx)
 
     wl_list_for_each(pController, &pCtx->wlListController, wlListLink) {
         wms_send_display_mode(pController->pWlResource, flag);
-        wl_client_flush(wl_resource_get_client(pController->pWlResource));
     }
 }
 
@@ -463,88 +488,6 @@ static bool AddWindow(struct WindowSurface *windowSurface)
     return true;
 }
 
-static void ControllerGetDisplayPower(const struct wl_client *client,
-                                      const struct wl_resource *resource,
-                                      int32_t displayId)
-{
-    struct WmsContext *ctx = GetWmsInstance();
-    if (ctx->deviceFuncs == NULL) {
-        wms_send_display_power(resource, WMS_ERROR_API_FAILED, 0);
-        wl_client_flush(wl_resource_get_client(resource));
-    }
-
-    DispPowerStatus status;
-    int32_t ret = ctx->deviceFuncs->GetDisplayPowerStatus(displayId, &status);
-    if (ret != 0) {
-        LOGE("GetDisplayPowerStatus failed, return %{public}d", ret);
-        wms_send_display_power(resource, WMS_ERROR_API_FAILED, 0);
-        wl_client_flush(wl_resource_get_client(resource));
-    }
-    wms_send_display_power(resource, WMS_ERROR_OK, status);
-    wl_client_flush(wl_resource_get_client(resource));
-}
-
-static void ControllerSetDisplayPower(const struct wl_client *client,
-                                      const struct wl_resource *resource,
-                                      int32_t displayId, int32_t status)
-{
-    struct WmsContext *ctx = GetWmsInstance();
-    if (ctx->deviceFuncs == NULL) {
-        wms_send_reply_error(resource, WMS_ERROR_API_FAILED);
-        wl_client_flush(wl_resource_get_client(resource));
-    }
-
-    int32_t ret = ctx->deviceFuncs->SetDisplayPowerStatus(displayId, status);
-    if (ret != 0) {
-        LOGE("SetDisplayPowerStatus failed, return %{public}d", ret);
-        wms_send_reply_error(resource, WMS_ERROR_API_FAILED);
-        wl_client_flush(wl_resource_get_client(resource));
-    }
-    wms_send_reply_error(resource, WMS_ERROR_OK);
-    wl_client_flush(wl_resource_get_client(resource));
-}
-
-static void ControllerGetDisplayBacklight(const struct wl_client *client,
-                                          const struct wl_resource *resource,
-                                          int32_t displayId)
-{
-    struct WmsContext *ctx = GetWmsInstance();
-    if (ctx->deviceFuncs == NULL) {
-        wms_send_display_backlight(resource, WMS_ERROR_API_FAILED, 0);
-        wl_client_flush(wl_resource_get_client(resource));
-    }
-
-    uint32_t level;
-    int32_t ret = ctx->deviceFuncs->GetDisplayBacklight(displayId, &level);
-    if (ret != 0) {
-        LOGE("GetDisplayBacklight failed, return %{public}d", ret);
-        wms_send_display_backlight(resource, WMS_ERROR_API_FAILED, 0);
-        wl_client_flush(wl_resource_get_client(resource));
-    }
-    wms_send_display_backlight(resource, WMS_ERROR_OK, level);
-    wl_client_flush(wl_resource_get_client(resource));
-}
-
-static void ControllerSetDisplayBacklight(const struct wl_client *client,
-                                          const struct wl_resource *resource,
-                                          int32_t displayId, uint32_t level)
-{
-    struct WmsContext *ctx = GetWmsInstance();
-    if (ctx->deviceFuncs == NULL) {
-        wms_send_reply_error(resource, WMS_ERROR_API_FAILED);
-        wl_client_flush(wl_resource_get_client(resource));
-    }
-
-    int32_t ret = ctx->deviceFuncs->SetDisplayBacklight(displayId, level);
-    if (ret != 0) {
-        LOGE("SetDisplayBacklight failed, return %{public}d", ret);
-        wms_send_reply_error(resource, WMS_ERROR_API_FAILED);
-        wl_client_flush(wl_resource_get_client(resource));
-    }
-    wms_send_reply_error(resource, WMS_ERROR_OK);
-    wl_client_flush(wl_resource_get_client(resource));
-}
-
 static void ControllerCommitChanges(struct wl_client *client,
                                     struct wl_resource *resource)
 {
@@ -571,14 +514,12 @@ static void ControllerSetDisplayMode(struct wl_client *client,
         displayMode != WMS_DISPLAY_MODE_EXPAND) {
         LOGE("displayMode %{public}d erorr.", displayMode);
         wms_send_reply_error(resource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
     if (ctx->displayMode == displayMode) {
         LOGE("current displayMode is the same.");
         wms_send_reply_error(resource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
@@ -596,11 +537,9 @@ static void ControllerSetDisplayMode(struct wl_client *client,
     if (ret == IVI_SUCCEEDED) {
         ctx->displayMode = displayMode;
         wms_send_reply_error(resource, WMS_ERROR_OK);
-        wl_client_flush(wl_resource_get_client(resource));
         ScreenInfoChangerNotify();
     } else {
         wms_send_reply_error(resource, WMS_ERROR_INNER_ERROR);
-        wl_client_flush(wl_resource_get_client(resource));
     }
 
     LOGD("end. displayMode %{public}d", ctx->displayMode);
@@ -625,7 +564,6 @@ static void MoveWindowToLayerId(const struct WmsContext *wc,
                 if (screen->screenId == ws->screenId) {
                     LOGE("get_layer_from_id failed. layerId=%{public}d", layerIdOld);
                     wms_send_reply_error(wr, WMS_ERROR_INNER_ERROR);
-                    wl_client_flush(wl_resource_get_client(wr));
                     return;
                 } else {
                     continue;
@@ -636,7 +574,6 @@ static void MoveWindowToLayerId(const struct WmsContext *wc,
             if (!pLayoutLayerNew) {
                 LOGE("GetLayer failed.");
                 wms_send_reply_error(wr, WMS_ERROR_INNER_ERROR);
-                wl_client_flush(wl_resource_get_client(wr));
                 return;
             }
 
@@ -691,14 +628,12 @@ static void ControllerSetWindowType(struct wl_client *pWlClient,
     if (!CheckWindowId(pWlClient, windowId)) {
         LOGE("CheckWindowId failed [%{public}d].", windowId);
         wms_send_reply_error(pWlResource, WMS_ERROR_PID_CHECK);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
     if (windowType >= WINDOW_TYPE_MAX) {
         LOGE("windowType %{public}d error.", windowType);
         wms_send_reply_error(pWlResource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
@@ -706,14 +641,12 @@ static void ControllerSetWindowType(struct wl_client *pWlClient,
     if (!pWindowSurface) {
         LOGE("pWindowSurface is not found[%{public}d].", windowId);
         wms_send_reply_error(pWlResource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
     if (pWindowSurface->type == windowType) {
         LOGE("window type is not need change.");
         wms_send_reply_error(pWlResource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
@@ -722,7 +655,6 @@ static void ControllerSetWindowType(struct wl_client *pWlClient,
     pWindowSurface->type = windowType;
 
     wms_send_reply_error(pWlResource, WMS_ERROR_OK);
-    wl_client_flush(wl_resource_get_client(pWlResource));
     LOGD("end.");
 }
 
@@ -738,14 +670,12 @@ static void ControllerSetWindowMode(struct wl_client *pWlClient,
     if (!CheckWindowId(pWlClient, windowId)) {
         LOGE("CheckWindowId failed [%{public}d].", windowId);
         wms_send_reply_error(pWlResource, WMS_ERROR_PID_CHECK);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
     if (windowMode >= WINDOW_MODE_MAX) {
         LOGE("windowMode %{public}d error.", windowMode);
         wms_send_reply_error(pWlResource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
@@ -753,21 +683,18 @@ static void ControllerSetWindowMode(struct wl_client *pWlClient,
     if (!pWindowSurface) {
         LOGE("pWindowSurface is not found[%{public}d].", windowId);
         wms_send_reply_error(pWlResource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
     if (pWindowSurface->mode == windowMode) {
         LOGE("window type is not need change.");
         wms_send_reply_error(pWlResource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
     SetWindowMode(pWmsCtx, pWindowSurface, pWlResource, windowMode);
     pWindowSurface->mode = windowMode;
     wms_send_reply_error(pWlResource, WMS_ERROR_OK);
-    wl_client_flush(wl_resource_get_client(pWlResource));
     LOGD("end.");
 }
 
@@ -783,7 +710,6 @@ static void ControllerSetWindowVisibility(
     if (!CheckWindowId(client, windowId)) {
         LOGE("CheckWindowId failed [%{public}d].", windowId);
         wms_send_reply_error(resource, WMS_ERROR_PID_CHECK);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
@@ -791,14 +717,12 @@ static void ControllerSetWindowVisibility(
     if (!windowSurface) {
         LOGE("windowSurface is not found[%{public}d].", windowId);
         wms_send_reply_error(resource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
     ctx->pLayoutInterface->surface_set_visibility(windowSurface->layoutSurface, visibility);
 
     wms_send_reply_error(resource, WMS_ERROR_OK);
-    wl_client_flush(wl_resource_get_client(resource));
     LOGD("end.");
 }
 
@@ -814,7 +738,6 @@ static void ControllerSetWindowSize(struct wl_client *client,
     if (!CheckWindowId(client, windowId)) {
         LOGE("CheckWindowId failed [%{public}d].", windowId);
         wms_send_reply_error(resource, WMS_ERROR_PID_CHECK);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
@@ -822,13 +745,11 @@ static void ControllerSetWindowSize(struct wl_client *client,
     if (!windowSurface) {
         LOGE("windowSurface is not found[%{public}d].", windowId);
         wms_send_reply_error(resource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
     SetWindowSize(windowSurface, width, height);
     wms_send_reply_error(resource, WMS_ERROR_OK);
-    wl_client_flush(wl_resource_get_client(resource));
 
     LOGD("end.");
 }
@@ -845,7 +766,6 @@ static void ControllerSetWindowScale(struct wl_client *client,
     if (!CheckWindowId(client, windowId)) {
         LOGE("CheckWindowId failed [%{public}d].", windowId);
         wms_send_reply_error(resource, WMS_ERROR_PID_CHECK);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
@@ -853,7 +773,6 @@ static void ControllerSetWindowScale(struct wl_client *client,
     if (!windowSurface) {
         LOGE("windowSurface is not found[%{public}d].", windowId);
         wms_send_reply_error(resource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
@@ -862,7 +781,6 @@ static void ControllerSetWindowScale(struct wl_client *client,
     windowSurface->height = height;
 
     wms_send_reply_error(resource, WMS_ERROR_OK);
-    wl_client_flush(wl_resource_get_client(resource));
 
     LOGD("end.");
 }
@@ -877,7 +795,6 @@ static void ControllerSetWindowPosition(struct wl_client *client,
     if (!CheckWindowId(client, windowId)) {
         LOGE("CheckWindowId failed [%{public}d].", windowId);
         wms_send_reply_error(resource, WMS_ERROR_PID_CHECK);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
@@ -885,14 +802,12 @@ static void ControllerSetWindowPosition(struct wl_client *client,
     if (!windowSurface) {
         LOGE("windowSurface is not found[%{public}d].", windowId);
         wms_send_reply_error(resource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
     SetWindowPosition(windowSurface, x, y);
 
     wms_send_reply_error(resource, WMS_ERROR_OK);
-    wl_client_flush(wl_resource_get_client(resource));
     LOGD("end.");
 }
 
@@ -1051,36 +966,6 @@ static bool SetWindowFocus(const struct WindowSurface *surface)
     return true;
 }
 
-static void ControllerSetStatusBarVisibility(const struct wl_client *client,
-                                             const struct wl_resource *resource,
-                                             uint32_t visibility)
-{
-    LOGD("start. visibility=%{public}d", visibility);
-    struct WmsController *controller = wl_resource_get_user_data(resource);
-    struct WmsContext *ctx = controller->pWmsCtx;
-
-    struct WindowSurface *windowSurface = NULL;
-    bool have = false;
-    wl_list_for_each(windowSurface, (&ctx->wlListWindow), link) {
-        if (windowSurface->type == WINDOW_TYPE_STATUS_BAR) {
-            have = true;
-            break;
-        }
-    }
-    if (!have) {
-        LOGE("StatusBar is not found");
-        wms_send_reply_error(resource, WMS_ERROR_INNER_ERROR);
-        wl_client_flush(wl_resource_get_client(resource));
-        return;
-    }
-
-    ctx->pLayoutInterface->surface_set_visibility(windowSurface->layoutSurface, visibility);
-    ctx->pLayoutInterface->commit_changes();
-    wms_send_reply_error(resource, WMS_ERROR_OK);
-    wl_client_flush(wl_resource_get_client(resource));
-    LOGD("end.");
-}
-
 static bool FocusWindowUpdate(const struct WindowSurface *surface)
 {
     struct WmsSeat *pSeat = GetWmsSeat(DEFAULT_SEAT_NAME);
@@ -1099,38 +984,6 @@ static bool FocusWindowUpdate(const struct WindowSurface *surface)
 
     return true;
 }
-
-static void ControllerSetNavigationBarVisibility(const struct wl_client *client,
-                                                 const struct wl_resource *resource,
-                                                 uint32_t visibility)
-{
-    (void)client;
-    LOGD("start. visibility=%{public}d", visibility);
-    struct WmsController *controller = wl_resource_get_user_data(resource);
-    struct WmsContext *ctx = controller->pWmsCtx;
-
-    struct WindowSurface *windowSurface = NULL;
-    bool have = false;
-    wl_list_for_each(windowSurface, (&ctx->wlListWindow), link) {
-        if (windowSurface->type == WINDOW_TYPE_NAVI_BAR) {
-            have = true;
-            break;
-        }
-    }
-    if (!have) {
-        LOGE("NavigationBar is not found");
-        wms_send_reply_error(resource, WMS_ERROR_INNER_ERROR);
-        wl_client_flush(wl_resource_get_client(resource));
-        return;
-    }
-
-    ctx->pLayoutInterface->surface_set_visibility(windowSurface->layoutSurface, visibility);
-    ctx->pLayoutInterface->commit_changes();
-    wms_send_reply_error(resource, WMS_ERROR_OK);
-    wl_client_flush(wl_resource_get_client(resource));
-    LOGD("end.");
-}
-
 static void ControllerSetWindowTop(struct wl_client *client,
     struct wl_resource *resource, uint32_t windowId)
 {
@@ -1142,7 +995,6 @@ static void ControllerSetWindowTop(struct wl_client *client,
     if (!CheckWindowId(client, windowId)) {
         LOGE("CheckWindowId failed [%{public}d].", windowId);
         wms_send_reply_error(resource, WMS_ERROR_PID_CHECK);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
@@ -1150,7 +1002,6 @@ static void ControllerSetWindowTop(struct wl_client *client,
     if (!windowSurface) {
         LOGE("windowSurface is not found[%{public}d].", windowId);
         wms_send_reply_error(resource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
@@ -1159,16 +1010,14 @@ static void ControllerSetWindowTop(struct wl_client *client,
     if (!SetWindowFocus(windowSurface)) {
         LOGE("SetWindowFocus failed.");
         wms_send_reply_error(resource, WMS_ERROR_INNER_ERROR);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
     wms_send_reply_error(resource, WMS_ERROR_OK);
-    wl_client_flush(wl_resource_get_client(resource));
     LOGD("end.");
 }
 
-static void SurfaceDestroy(const struct WindowSurface *surface)
+static void SurfaceDestroy(struct WindowSurface *surface)
 {
     ASSERT(surface != NULL);
     LOGD("surfaceId:%{public}d start.", surface->surfaceId);
@@ -1195,7 +1044,6 @@ static void SurfaceDestroy(const struct WindowSurface *surface)
 
     wms_send_window_status(surface->controller->pWlResource,
         WMS_WINDOW_STATUS_DESTROYED, surface->surfaceId, 0, 0, 0, 0);
-    wl_client_flush(wl_resource_get_client(surface->controller->pWlResource));
 
     SendGlobalWindowStatus(surface->controller, surface->surfaceId, WMS_WINDOW_STATUS_DESTROYED);
 
@@ -1216,7 +1064,6 @@ static void ControllerDestroyWindow(struct wl_client *client,
     if (!CheckWindowId(client, windowId)) {
         LOGE("CheckWindowId failed [%{public}d].", windowId);
         wms_send_reply_error(resource, WMS_ERROR_PID_CHECK);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
@@ -1224,13 +1071,11 @@ static void ControllerDestroyWindow(struct wl_client *client,
     if (!windowSurface) {
         LOGE("windowSurface is not found[%{public}d].", windowId);
         wms_send_reply_error(resource, WMS_ERROR_INVALID_PARAM);
-        wl_client_flush(wl_resource_get_client(resource));
         return;
     }
 
     SurfaceDestroy(windowSurface);
     wms_send_reply_error(resource, WMS_ERROR_OK);
-    wl_client_flush(wl_resource_get_client(resource));
     LOGD("end.");
 }
 
@@ -1241,8 +1086,7 @@ static void WindowPropertyChanged(struct wl_listener *listener, void *data)
     LOGD("end.");
 }
 
-static void WindowSurfaceDestroy(const struct wl_listener *listener,
-    const struct weston_compositor *data)
+static void WindowSurfaceDestroy(struct wl_listener *listener, void *data)
 {
     LOGD("start.");
 
@@ -1266,7 +1110,6 @@ static void CreateWindow(struct WmsController *pWmsController,
         wl_client_post_no_memory(pWmsController->pWlClient);
         wms_send_window_status(pWlResource,
             WMS_WINDOW_STATUS_FAILED, WINDOW_ID_INVALID, 0, 0, 0, 0);
-        wl_client_flush(wl_resource_get_client(pWlResource));
 
         ClearWindowId(pWmsController, windowId);
         return;
@@ -1278,7 +1121,6 @@ static void CreateWindow(struct WmsController *pWmsController,
         LOGE("layoutInterface->surface_create failed.");
         wms_send_window_status(pWlResource,
             WMS_WINDOW_STATUS_FAILED, WINDOW_ID_INVALID, 0, 0, 0, 0);
-        wl_client_flush(wl_resource_get_client(pWlResource));
 
         ClearWindowId(pWmsController, windowId);
         free(pWindow);
@@ -1295,7 +1137,6 @@ static void CreateWindow(struct WmsController *pWmsController,
     if (!AddWindow(pWindow)) {
         LOGE("AddWindow failed.");
         wms_send_window_status(pWlResource, WMS_WINDOW_STATUS_FAILED, WINDOW_ID_INVALID, 0, 0, 0, 0);
-        wl_client_flush(wl_resource_get_client(pWlResource));
 
         pWmsCtx->pLayoutInterface->surface_destroy(pWindow->layoutSurface);
         ClearWindowId(pWmsController, windowId);
@@ -1317,7 +1158,6 @@ static void CreateWindow(struct WmsController *pWmsController,
 
     wms_send_window_status(pWlResource, WMS_WINDOW_STATUS_CREATED, windowId,
                            pWindow->x, pWindow->y, pWindow->width, pWindow->height);
-    wl_client_flush(wl_resource_get_client(pWlResource));
     SendGlobalWindowStatus(pWmsController, windowId, WMS_WINDOW_STATUS_CREATED);
 }
 
@@ -1335,21 +1175,18 @@ static void ControllerCreateWindow(struct wl_client *pWlClient,
     if (windowType >= WINDOW_TYPE_MAX) {
         LOGE("windowType %{public}d error.", windowType);
         wms_send_window_status(pWlResource, WMS_WINDOW_STATUS_FAILED, WINDOW_ID_INVALID, 0, 0, 0, 0);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
     if (!GetScreenFromId(pWmsCtx, screenId)) {
         LOGE("screen is not found[%{public}d].", screenId);
         wms_send_window_status(pWlResource, WMS_WINDOW_STATUS_FAILED, WINDOW_ID_INVALID, 0, 0, 0, 0);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
     if (screenId > 0 && pWmsCtx->displayMode != WMS_DISPLAY_MODE_EXPAND) {
         LOGE("screenId %{public}d error.", screenId);
         wms_send_window_status(pWlResource, WMS_WINDOW_STATUS_FAILED, WINDOW_ID_INVALID, 0, 0, 0, 0);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
@@ -1357,7 +1194,6 @@ static void ControllerCreateWindow(struct wl_client *pWlClient,
         westonSurface->committed_private != NULL) {
         LOGE("the westonSurface is using by other window.");
         wms_send_window_status(pWlResource, WMS_WINDOW_STATUS_FAILED, WINDOW_ID_INVALID, 0, 0, 0, 0);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
@@ -1367,7 +1203,6 @@ static void ControllerCreateWindow(struct wl_client *pWlClient,
     } else {
         LOGE("create window restriction..");
         wms_send_window_status(pWlResource, WMS_WINDOW_STATUS_FAILED, WINDOW_ID_INVALID, 0, 0, 0, 0);
-        wl_client_flush(wl_resource_get_client(pWlResource));
     }
 
     LOGD("end.");
@@ -1400,14 +1235,12 @@ static void ControllerWindowshot(struct wl_client *pWlClient,
     if (!pWindowSurface) {
         LOGE("pWindowSurface is not found[%{public}d].", windowId);
         wms_send_windowshot_error(pWlResource, WMS_ERROR_INVALID_PARAM, windowId);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
     if (!pWindowSurface->surface) {
         LOGE("pWindowSurface->surface is NULL.");
         wms_send_windowshot_error(pWlResource, WMS_ERROR_INNER_ERROR, windowId);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
@@ -1419,7 +1252,6 @@ static void ControllerWindowshot(struct wl_client *pWlClient,
     if (!width || !height || !stride) {
         LOGE("weston_surface_get_content_size error.");
         wms_send_windowshot_error(pWlResource, WMS_ERROR_INNER_ERROR, windowId);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
@@ -1428,7 +1260,6 @@ static void ControllerWindowshot(struct wl_client *pWlClient,
     if (fd < 0) {
         LOGE("CreateScreenshotFile error.");
         wms_send_windowshot_error(pWlResource, WMS_ERROR_INNER_ERROR, windowId);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         return;
     }
 
@@ -1436,7 +1267,6 @@ static void ControllerWindowshot(struct wl_client *pWlClient,
     if (pBuffer == MAP_FAILED) {
         LOGE("mmap error.");
         wms_send_windowshot_error(pWlResource, WMS_ERROR_INNER_ERROR, windowId);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         close(fd);
         return;
     }
@@ -1444,7 +1274,6 @@ static void ControllerWindowshot(struct wl_client *pWlClient,
     if (weston_surface_copy_content(pWindowSurface->surface, pBuffer, size, 0, 0, width, height) != 0) {
         LOGE("weston_surface_copy_content error.");
         wms_send_windowshot_error(pWlResource, WMS_ERROR_INNER_ERROR, windowId);
-        wl_client_flush(wl_resource_get_client(pWlResource));
         munmap(pBuffer, size);
         close(fd);
         return;
@@ -1455,7 +1284,6 @@ static void ControllerWindowshot(struct wl_client *pWlClient,
 
     wms_send_windowshot_done(pWlResource, windowId, fd, width, height,
         stride, WL_SHM_FORMAT_ABGR8888, timeStamp.tv_sec, timeStamp.tv_nsec);
-    wl_client_flush(wl_resource_get_client(pWlResource));
 
     munmap(pBuffer, size);
     close(fd);
@@ -1498,7 +1326,6 @@ static void Screenshot(const struct ScreenshotFrameListener *pFrameListener, uin
     if (fd < 0) {
         LOGE("CreateScreenshotFile error.");
         wms_send_screenshot_error(pWmsController->pWlResource, WMS_ERROR_INNER_ERROR, pFrameListener->idScreen);
-        wl_client_flush(wl_resource_get_client(pWmsController->pWlResource));
         return;
     }
 
@@ -1506,7 +1333,6 @@ static void Screenshot(const struct ScreenshotFrameListener *pFrameListener, uin
     if (readPixs == MAP_FAILED) {
         LOGE("mmap error.");
         wms_send_screenshot_error(pWmsController->pWlResource, WMS_ERROR_INNER_ERROR, pFrameListener->idScreen);
-        wl_client_flush(wl_resource_get_client(pWmsController->pWlResource));
         close(fd);
         return;
     }
@@ -1514,7 +1340,6 @@ static void Screenshot(const struct ScreenshotFrameListener *pFrameListener, uin
     if (westonOutput->compositor->renderer->read_pixels(westonOutput, format, readPixs, 0, 0, width, height) < 0) {
         LOGE("read_pixels error.");
         wms_send_screenshot_error(pWmsController->pWlResource, WMS_ERROR_INNER_ERROR, pFrameListener->idScreen);
-        wl_client_flush(wl_resource_get_client(pWmsController->pWlResource));
         munmap(readPixs, size);
         close(fd);
         return;
@@ -1526,7 +1351,6 @@ static void Screenshot(const struct ScreenshotFrameListener *pFrameListener, uin
 
     wms_send_screenshot_done(pWmsController->pWlResource, pFrameListener->idScreen, fd, width, height, stride,
         shmFormat, westonOutput->frame_time.tv_sec, westonOutput->frame_time.tv_nsec);
-    wl_client_flush(wl_resource_get_client(pWmsController->pWlResource));
 
     munmap(readPixs, size);
     close(fd);
@@ -1559,7 +1383,6 @@ static void ScreenshotNotify(struct wl_listener *pWlListener, void *pCompositor)
         default:
             LOGE("unsupported pixel format = %{public}d", format);
             wms_send_screenshot_error(pWmsController->pWlResource, WMS_ERROR_INNER_ERROR, pFrameListener->idScreen);
-            wl_client_flush(wl_resource_get_client(pWmsController->pWlResource));
             return;
     }
 
@@ -1577,7 +1400,6 @@ static void ScreenshotOutputDestroyed(struct wl_listener *pListener, void *pData
 
     LOGE("screen[%{public}d] output destroyed.", pFrameListener->idScreen);
     wms_send_screenshot_error(pController->pWlResource, WMS_ERROR_INNER_ERROR, pFrameListener->idScreen);
-    wl_client_flush(wl_resource_get_client(pController->pWlResource));
     ClearFrameListener(pFrameListener);
 
     LOGD("end.");
@@ -1593,7 +1415,6 @@ static void ControllerScreenshot(struct wl_client *pClient,
     if (!pWmsScreen) {
         LOGE("screen is not found[%{public}d].", screenId);
         wms_send_screenshot_error(pResource, WMS_ERROR_INVALID_PARAM, screenId);
-        wl_client_flush(wl_resource_get_client(pResource));
         return;
     }
 
@@ -1645,22 +1466,13 @@ static void ControllerSetGlobalWindowStatus(struct wl_client *pClient,
     }
 
     wms_send_reply_error(pResource, WMS_ERROR_OK);
-    wl_client_flush(wl_resource_get_client(pResource));
     LOGD("end.");
 }
 
 // wms controller interface implementation
 static const struct wms_interface g_controllerImplementation = {
-    ControllerGetDisplayPower,
-    ControllerSetDisplayPower,
-    ControllerGetDisplayBacklight,
-    ControllerSetDisplayBacklight,
-    ControllerSetDisplayMode,
     ControllerCreateWindow,
     ControllerDestroyWindow,
-    ControllerSetGlobalWindowStatus,
-    ControllerSetStatusBarVisibility,
-    ControllerSetNavigationBarVisibility,
     ControllerSetWindowTop,
     ControllerSetWindowSize,
     ControllerSetWindowScale,
@@ -1668,7 +1480,9 @@ static const struct wms_interface g_controllerImplementation = {
     ControllerSetWindowVisibility,
     ControllerSetWindowType,
     ControllerSetWindowMode,
+    ControllerSetDisplayMode,
     ControllerCommitChanges,
+    ControllerSetGlobalWindowStatus,
     ControllerScreenshot,
     ControllerWindowshot,
 };
@@ -1738,19 +1552,16 @@ static void BindWmsController(struct wl_client *pClient,
 #else
             pOutput->width, pOutput->height);
 #endif /* USE_DUMMY_SCREEN */
-            wl_client_flush(wl_resource_get_client(pController->pWlResource));
     }
 
 #ifdef USE_DUMMY_SCREEN
     pOutput = pCtx->pLayoutInterface->get_dummy_output();
     wms_send_screen_status(pController->pWlResource, pOutput->id, pOutput->name, WMS_SCREEN_STATUS_ADD,
                            pOutput->width, pOutput->height);
-    wl_client_flush(wl_resource_get_client(pController->pWlResource));
 #endif /* USE_DUMMY_SCREEN */
 
     uint32_t flag = GetDisplayModeFlag(pController->pWmsCtx);
     wms_send_display_mode(pController->pWlResource, flag);
-    wl_client_flush(wl_resource_get_client(pController->pWlResource));
 
     LOGD("end.");
 }
@@ -1903,12 +1714,6 @@ int ScreenInfoInit(const struct weston_compositor *pCompositor);
 
 static int WmsContextInit(struct WmsContext *ctx, struct weston_compositor *compositor)
 {
-    int32_t ret = DeviceInitialize(&ctx->deviceFuncs);
-    if (ret != 0) {
-        LOGE("DeviceInitialize failed, return %{public}d", ret);
-        ctx->deviceFuncs = NULL;
-    }
-
     wl_list_init(&ctx->wlListController);
     wl_list_init(&ctx->wlListWindow);
     wl_list_init(&ctx->wlListScreen);

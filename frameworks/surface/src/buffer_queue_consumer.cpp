@@ -53,22 +53,6 @@ SurfaceError BufferQueueConsumer::ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer,
     return bufferQueue_->ReleaseBuffer(buffer, fence);
 }
 
-SurfaceError BufferQueueConsumer::AttachBuffer(sptr<SurfaceBufferImpl>& buffer)
-{
-    if (bufferQueue_ == nullptr) {
-        return SURFACE_ERROR_NULLPTR;
-    }
-    return bufferQueue_->AttachBuffer(buffer);
-}
-
-SurfaceError BufferQueueConsumer::DetachBuffer(sptr<SurfaceBufferImpl>& buffer)
-{
-    if (bufferQueue_ == nullptr) {
-        return SURFACE_ERROR_NULLPTR;
-    }
-    return bufferQueue_->DetachBuffer(buffer);
-}
-
 SurfaceError BufferQueueConsumer::RegisterConsumerListener(sptr<IBufferConsumerListener>& listener)
 {
     if (bufferQueue_ == nullptr) {
@@ -85,13 +69,6 @@ SurfaceError BufferQueueConsumer::RegisterConsumerListener(IBufferConsumerListen
     return bufferQueue_->RegisterConsumerListener(listener);
 }
 
-SurfaceError BufferQueueConsumer::RegisterReleaseListener(OnReleaseFunc func)
-{
-    if (bufferQueue_ == nullptr) {
-        return SURFACE_ERROR_NULLPTR;
-    }
-    return bufferQueue_->RegisterReleaseListener(func);
-}
 SurfaceError BufferQueueConsumer::UnregisterConsumerListener()
 {
     if (bufferQueue_ == nullptr) {
@@ -114,5 +91,13 @@ SurfaceError BufferQueueConsumer::SetDefaultUsage(uint32_t usage)
         return SURFACE_ERROR_NULLPTR;
     }
     return bufferQueue_->SetDefaultUsage(usage);
+}
+
+void BufferQueueConsumer::Dump(std::string &result) const
+{
+    if (bufferQueue_ == nullptr) {
+        return;
+    }
+    return bufferQueue_->Dump(result);
 }
 } // namespace OHOS

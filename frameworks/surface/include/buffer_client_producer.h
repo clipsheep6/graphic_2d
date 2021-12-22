@@ -48,12 +48,9 @@ public:
     int32_t      GetDefaultWidth() override;
     int32_t      GetDefaultHeight() override;
     uint32_t     GetDefaultUsage() override;
+    uint64_t     GetUniqueId() override;
 
     SurfaceError CleanCache() override;
-
-    virtual SurfaceError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
-    virtual SurfaceError DetachBuffer(sptr<SurfaceBuffer>& buffer) override;
-    virtual SurfaceError RegisterReleaseListener(OnReleaseFunc func) override;
 
 private:
     static inline BrokerDelegator<BufferClientProducer> delegator_;

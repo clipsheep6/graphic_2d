@@ -15,11 +15,9 @@
 
 #include "wmclient_native_test_14.h"
 
-#include <chrono>
 #include <cstdio>
 #include <securec.h>
 #include <thread>
-#include <unistd.h>
 
 #include <display_type.h>
 #include <iservice_registry.h>
@@ -29,7 +27,6 @@
 #include "native_test_class.h"
 #include "util.h"
 
-using namespace std::chrono_literals;
 using namespace OHOS;
 
 namespace {
@@ -77,7 +74,6 @@ public:
         }
 
         if (pid == 0) {
-            std::this_thread::sleep_for(50ms);
             ChildProcess();
         } else {
             MainProcess();
@@ -127,6 +123,7 @@ private:
 
         uint32_t msg = 0;
         write(pipeFd[1], &msg, sizeof(msg));
+
         sleep(0);
 
         char buf[10];

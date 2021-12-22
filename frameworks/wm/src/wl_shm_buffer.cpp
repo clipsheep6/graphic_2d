@@ -15,6 +15,7 @@
 
 #include "wl_shm_buffer.h"
 
+#include <map>
 #include <sys/mman.h>
 
 #include "window_manager_hilog.h"

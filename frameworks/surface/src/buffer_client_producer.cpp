@@ -117,21 +117,6 @@ SurfaceError BufferClientProducer::FlushBuffer(int32_t sequence, BufferExtraData
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferClientProducer::AttachBuffer(sptr<SurfaceBuffer>& buffer)
-{
-    return SURFACE_ERROR_NOT_SUPPORT;
-}
-
-SurfaceError BufferClientProducer::DetachBuffer(sptr<SurfaceBuffer>& buffer)
-{
-    return SURFACE_ERROR_NOT_SUPPORT;
-}
-
-SurfaceError BufferClientProducer::RegisterReleaseListener(OnReleaseFunc func)
-{
-    return SURFACE_ERROR_NOT_SUPPORT;
-}
-
 uint32_t BufferClientProducer::GetQueueSize()
 {
     DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
@@ -200,6 +185,15 @@ uint32_t BufferClientProducer::GetDefaultUsage()
     SEND_REQUEST(BUFFER_PRODUCER_GET_DEFAULT_USAGE, arguments, reply, option);
 
     return reply.ReadUint32();
+}
+
+uint64_t BufferClientProducer::GetUniqueId()
+{
+    DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
+
+    SEND_REQUEST(BUFFER_PRODUCER_GET_UNIQUE_ID, arguments, reply, option);
+
+    return reply.ReadUint64();
 }
 
 SurfaceError BufferClientProducer::CleanCache()

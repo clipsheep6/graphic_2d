@@ -16,7 +16,7 @@
 #ifndef INTERFACES_INNERKITS_SURFACE_SURFACE_TYPE_H
 #define INTERFACES_INNERKITS_SURFACE_SURFACE_TYPE_H
 
-#include <cstdint>
+#include <stdint.h>
 #include <string>
 
 #include <graphic_common.h>

@@ -12,16 +12,10 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/graphic/standard/utils/wmlayout/wmlayout.gni")
-import("graphic_config.gni")
 
 ## Install graphic.rc to /system/etc/init/graphic.rc {{{
 ohos_prebuilt_etc("graphic.rc") {
-  if (use_musl) {
-    source = "graphic.cfg"
-  } else {
-    source = "graphic.rc"
-  }
+  source = "graphic.cfg"
   relative_install_dir = "init"
   part_name = "graphic_standard"
   subsystem_name = "graphic"
@@ -30,8 +24,9 @@ ohos_prebuilt_etc("graphic.rc") {
 ## Install graphic.rc to /system/etc/init/graphic.rc }}}
 
 ## Install default.scss to /system/etc/wmlayout.d/default.scss {{{
-wmlayout_scss("default.scss") {
-  scss = "default.scss"
+ohos_prebuilt_etc("default.scss") {
+  source = "default.scss"
+  relative_install_dir = "wmlayout.d"
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
@@ -56,16 +51,4 @@ group("libwmclient") {
 
 group("libwmservice") {
   public_deps = [ "frameworks/wmservice:libwmservice" ]
-}
-
-group("libfence") {
-  public_deps = [ "frameworks/fence:libfence" ]
-}
-
-group("libgl") {
-  public_deps = [
-    "//third_party/EGL:libEGL",
-    "//third_party/openGLES:libGLES",
-  ]
-  public_deps += libgl
 }

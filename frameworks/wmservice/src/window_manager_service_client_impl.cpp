@@ -15,7 +15,6 @@
 
 #include "window_manager_service_client_impl.h"
 
-#include <cerrno>
 #include <mutex>
 #include <poll.h>
 #include <sys/eventfd.h>
@@ -42,25 +41,10 @@ sptr<WindowManagerServiceClientImpl> WindowManagerServiceClientImpl::GetInstance
 }
 
 namespace {
-void OnReply(void *, struct wms *, uint32_t a)
-{
-    WindowManagerServiceProxy::OnReply(static_cast<wms_error>(a));
-}
-
 void OnDisplayChange(void *, struct wms *,
     uint32_t a, const char *b, uint32_t c, int32_t d, int32_t e)
 {
     WindowManagerServiceProxy::OnDisplayChange(a, b, static_cast<wms_screen_status>(c), d, e);
-}
-
-void OnDisplayPower(void *, struct wms *, uint32_t a, int32_t b)
-{
-    WindowManagerServiceProxy::OnDisplayPower(a, b);
-}
-
-void OnDisplayBacklight(void *, struct wms *, uint32_t a, uint32_t b)
-{
-    WindowManagerServiceProxy::OnDisplayBacklight(a, b);
 }
 
 void OnDisplayModeChange(void *, struct wms *, uint32_t a)
@@ -68,9 +52,9 @@ void OnDisplayModeChange(void *, struct wms *, uint32_t a)
     WindowManagerServiceProxy::OnDisplayModeChange(a);
 }
 
-void OnGlobalWindowStatus(void *, struct wms *, uint32_t a, uint32_t b, uint32_t c)
+void OnReply(void *, struct wms *, uint32_t a)
 {
-    WindowManagerServiceProxy::OnGlobalWindowStatus(a, b, c);
+    WindowManagerServiceProxy::OnReply(static_cast<wms_error>(a));
 }
 
 void OnScreenShotDone(void *, struct wms *,
@@ -95,6 +79,11 @@ void OnWindowShotError(void *, struct wms *, uint32_t a, uint32_t b)
     WindowManagerServiceProxy::OnWindowShot(static_cast<wms_error>(a), b, -1, 0, 0, 0, 0, 0, 0);
 }
 
+void OnGlobalWindowStatus(void *, struct wms *, uint32_t a, uint32_t b, uint32_t c)
+{
+    WindowManagerServiceProxy::OnGlobalWindowStatus(a, b, c);
+}
+
 void RegistryGlobal(void *ppwms, struct wl_registry *registry,
     uint32_t id, const char *interface, uint32_t version)
 {
@@ -107,17 +96,15 @@ void RegistryGlobal(void *ppwms, struct wl_registry *registry,
         constexpr uint32_t wmsVersion = 1;
         pwms = (struct wms *)wl_registry_bind(registry, id, &wms_interface, wmsVersion);
         const struct wms_listener listener = {
-            OnReply,
-            OnDisplayChange,
-            OnDisplayPower,
-            OnDisplayBacklight,
-            OnDisplayModeChange,
             nullptr,
-            OnGlobalWindowStatus,
+            OnDisplayChange,
+            OnDisplayModeChange,
+            OnReply,
             OnScreenShotDone,
             OnScreenShotError,
             OnWindowShotDone,
             OnWindowShotError,
+            OnGlobalWindowStatus,
         };
         if (pwms != nullptr) {
             wms_add_listener(pwms, &listener, nullptr);
@@ -173,11 +160,7 @@ void WindowManagerServiceClientImpl::DispatchThreadMain()
             { .fd = interruptFd, .events = POLLIN, },
         };
 
-        int32_t ret = 0;
-        do {
-            ret = poll(pfd, sizeof(pfd) / sizeof(*pfd), -1);
-        } while (ret == -1 && errno == EINTR);
-
+        int32_t ret = poll(pfd, sizeof(pfd) / sizeof(*pfd), -1);
         if (ret == -1) {
             WMLOGFE("poll return -1");
             wl_display_cancel_read(display);

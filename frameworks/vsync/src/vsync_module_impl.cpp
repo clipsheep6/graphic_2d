@@ -16,17 +16,13 @@
 
 #include <chrono>
 #include <mutex>
-#include <thread>
 #include <unistd.h>
 
-#include <graphic_bytrace.h>
 #include <iservice_registry.h>
 #include <system_ability_definition.h>
 
 #include "vsync_log.h"
 #include "vsync_module_impl.h"
-
-using namespace std::chrono_literals;
 
 namespace OHOS {
 namespace Vsync {
@@ -68,7 +64,6 @@ VsyncError VsyncModuleImpl::Trigger()
         return VSYNC_ERROR_INVALID_OPERATING;
     }
 
-    VLOG_SUCCESS("Trigger");
     const auto &now = std::chrono::steady_clock::now().time_since_epoch();
     int64_t occurTimestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
 
@@ -123,7 +118,8 @@ VsyncError VsyncModuleImpl::InitSA(int32_t vsyncSystemAbilityId)
             return VSYNC_ERROR_SERVICE_NOT_FOUND;
         } else {
             VLOGE("RegisterSystemAbility failed, try again:%{public}d", tryCount);
-            std::this_thread::sleep_for(100ms);
+            constexpr int sleepTime = 100 * 1000;
+            usleep(sleepTime);
         }
     }
 
@@ -153,7 +149,6 @@ void VsyncModuleImpl::VsyncMainThread()
             VLOGE("WaitNextVsync return negative time");
             continue;
         }
-        ScopedBytrace vsyncSending("VsyncSending");
         vsyncManager_.Callback(timestamp);
     }
 }

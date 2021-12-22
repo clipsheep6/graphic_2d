@@ -15,7 +15,6 @@
 
 #include "log_listener.h"
 
-#include <bytrace.h>
 #include <mutex>
 
 #include "window_manager_hilog.h"

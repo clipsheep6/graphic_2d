@@ -54,9 +54,7 @@ void WindowManagerServer::OnAppear(const GetServiceFunc get, const std::string &
     if (iname == "wms") {
         auto ret = get(&wms_interface, wmsVersion);
         wms = static_cast<struct wms *>(ret);
-        const struct wms_listener listener = {
-            .window_status = &WindowManagerServer::OnWindowChange,
-        };
+        const struct wms_listener listener = { &WindowManagerServer::OnWindowChange, };
         wms_add_listener(wms, &listener, nullptr);
     }
 }

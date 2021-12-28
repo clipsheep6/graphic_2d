@@ -168,7 +168,9 @@ int32_t HdiDevice::SetScreenBacklight(uint32_t screenId, uint32_t level)
 
 int32_t HdiDevice::PrepareScreenLayers(uint32_t screenId, bool &needFlush)
 {
+    HLOGE("HdiDevice PrepareScreenLayers begin");
     CHECK_FUNC(deviceFuncs_, deviceFuncs_->PrepareDisplayLayers);
+    HLOGE("HdiDevice PrepareScreenLayers doing");
     return deviceFuncs_->PrepareDisplayLayers(screenId, &needFlush);
 }
 

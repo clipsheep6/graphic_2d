@@ -14,6 +14,7 @@
  */
 
 #include <cinttypes>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -30,9 +31,12 @@
 #include "hdi_layer_info.h"
 #include "hdi_output.h"
 #include "hdi_screen.h"
+#include <iostream>
+#include <string>
 
 using namespace OHOS;
 using namespace OHOS::Rosen;
+using namespace std;
 
 namespace {
 #define LOG(fmt, ...) ::OHOS::HiviewDFX::HiLog::Info(             \
@@ -47,6 +51,7 @@ public:
     void Draw();
     void Sync(int64_t, void *data);
     void CreatePyhsicalScreen(std::shared_ptr<HdiOutput> &output);
+    void DoPrepareCompleted(OHOS::sptr<Surface> &surface, const struct PrepareCompleteParam &param);
     virtual void OnBufferAvailable() override;
     SurfaceError ProduceBuffer(OHOS::sptr<Surface> &produceSurface, int width, int height);
     bool FillLayer(std::shared_ptr<HdiLayerInfo> &showLayer, OHOS::sptr<Surface> &pSurface,
@@ -55,6 +60,8 @@ public:
     int32_t freq = 30;
     int width = 0;
     int height = 0;
+    int display_w = 0;
+    int display_h = 0;
 
 private:
     uint32_t currentModeIndex = 0;
@@ -67,6 +74,8 @@ private:
     std::shared_ptr<HdiOutput> output = nullptr;
     std::vector<std::shared_ptr<HdiOutput>> outputs;
     HdiBackend* backend = nullptr;
+    sptr<SurfaceBuffer> fbBuffer = nullptr;
+    bool ready = false;
 };
 
 void HelloComposer::OnBufferAvailable()
@@ -75,13 +84,12 @@ void HelloComposer::OnBufferAvailable()
 
 void HelloComposer::DoDrawData(void *image, int width, int height)
 {
-    static uint32_t value = 0x00;
-    value++;
+    static uint32_t value = 0xff0000ff;
 
     uint32_t *pixel = static_cast<uint32_t *>(image);
     for (int x = 0; x < width; x++) {
         for (int y = 0;  y < height; y++) {
-            *pixel++ = value++;
+            *pixel++ = value;
         }
     }
 }
@@ -109,7 +117,9 @@ SurfaceError HelloComposer::ProduceBuffer(OHOS::sptr<Surface> &produceSurface, i
     }
 
     auto addr = static_cast<uint8_t *>(buffer->GetVirAddr());
-    DoDrawData(addr, width, height);
+    LOG("buffer w:%{public}d h:%{public}d stride:%{public}d", buffer->GetWidth(), buffer->GetHeight(), buffer->GetBufferHandle()->stride);
+    DoDrawData(addr, buffer->GetWidth(), buffer->GetHeight());
+    cout <<"addr:"<<static_cast<const void *>(addr) <<  " ProduceBuffer1: width: "<<buffer->GetWidth()<<" height:"<<buffer->GetHeight()<<" stride:"<< buffer->GetBufferHandle()->stride<<" size:"<<buffer->GetSize() <<endl;
 
     BufferFlushConfig flushConfig = {
         .damage = {
@@ -125,6 +135,7 @@ SurfaceError HelloComposer::ProduceBuffer(OHOS::sptr<Surface> &produceSurface, i
 
 void HelloComposer::Draw()
 {
+    cout << "Draw begin" << std::endl;
     do {
         static int count = 0;
 
@@ -136,6 +147,7 @@ void HelloComposer::Draw()
         std::shared_ptr<HdiLayerInfo> showLayer = HdiLayerInfo::CreateHdiLayerInfo();
         std::shared_ptr<HdiLayerInfo> showLayer1 = HdiLayerInfo::CreateHdiLayerInfo();
 
+        /*
         if (count <= 50 || count >= 500) {
             int32_t zorder = 0;
             IRect dstRect;
@@ -148,11 +160,12 @@ void HelloComposer::Draw()
             }
             layerVec.emplace_back(showLayer);
         }
+        */
 
         if (count <= 100 || count >= 1000) {
-            int zorder1 = 0;
+            int zorder1 = 10;
             IRect dstRect1;
-            dstRect1.x = width * 2;  // Absolute coordinates, with offset
+            dstRect1.x = width;  // Absolute coordinates, with offset
             dstRect1.y = width;
             dstRect1.w = width;
             dstRect1.h = height;
@@ -161,8 +174,10 @@ void HelloComposer::Draw()
             }
             layerVec.emplace_back(showLayer1);
         }
-
+        LOG("Draw count:%{public}d layer size %{public}d", count, (int32_t)layerVec.size());
+        cout << "Draw SetLayerInfo" << std::endl;
         output->SetLayerInfo(layerVec);
+        cout << "Draw Repaint" << std::endl;
         backend->Repaint(outputs);
         count++;
     } while (false);
@@ -186,6 +201,7 @@ bool HelloComposer::FillLayer(std::shared_ptr<HdiLayerInfo> &showLayer, OHOS::sp
         return false;
     }
 
+    cout << "FillLayer 2" <<  std::endl;
     IRect srcRect;
     srcRect.x = 0;
     srcRect.y = 0;
@@ -194,17 +210,29 @@ bool HelloComposer::FillLayer(std::shared_ptr<HdiLayerInfo> &showLayer, OHOS::sp
 
     LayerAlpha alpha = { .enPixelAlpha = true };
 
+cout << "FillLayer 3" <<  std::endl;
     showLayer->SetSurface(cSurface);
+    cout << "FillLayer 4" <<  std::endl;
     showLayer->SetBuffer(cbuffer, fence);
+    cout << "FillLayer 5" <<  std::endl;
     showLayer->SetZorder(zorder);
+    cout << "FillLayer 6" <<  std::endl;
     showLayer->SetAlpha(alpha);
+    cout << "FillLayer 7" <<  std::endl;
     showLayer->SetTransform(TransformType::ROTATE_NONE);
+    cout << "FillLayer 8" <<  std::endl;
     showLayer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
+    cout << "FillLayer 9" <<  std::endl;
     showLayer->SetVisibleRegion(1, srcRect);
+    cout << "FillLayer 10" <<  std::endl;
     showLayer->SetDirtyRegion(srcRect);
+    cout << "FillLayer 11" <<  std::endl;
     showLayer->SetLayerSize(dstRect);
-    showLayer->SetBlendType(BlendType::BLEND_ADD);
+    cout << "FillLayer 12" <<  std::endl;
+    showLayer->SetBlendType(BlendType::BLEND_SRCOVER);
+    cout << "FillLayer 13" <<  std::endl;
     showLayer->SetCropRect(srcRect);
+    cout << "FillLayer 14" <<  std::endl;
     showLayer->SetPreMulti(false);
 
     return true;
@@ -212,7 +240,7 @@ bool HelloComposer::FillLayer(std::shared_ptr<HdiLayerInfo> &showLayer, OHOS::sp
 
 void HelloComposer::Sync(int64_t, void *data)
 {
-    Draw();
+    cout << "hello Sync: ready" << ready << std::endl;
     struct OHOS::FrameCallback cb = {
         .frequency_ = freq,
         .timestamp_ = 0,
@@ -224,6 +252,12 @@ void HelloComposer::Sync(int64_t, void *data)
     if (ret) {
         LOG("RequestFrameCallback inner %{public}d\n", ret);
     }
+
+    if (!ready) {
+        return;
+    }
+
+    Draw();
 }
 
 void HelloComposer::Init(int32_t width, int32_t height, HdiBackend* backend)
@@ -253,6 +287,7 @@ void HelloComposer::Init(int32_t width, int32_t height, HdiBackend* backend)
 
 void HelloComposer::CreatePyhsicalScreen(std::shared_ptr<HdiOutput> &output)
 {
+    std::cout << "CreatePyhsicalScreen begin" << std::endl;
     screen = HdiScreen::CreateHdiScreen(output->GetScreenId());
     screen->Init();
     screen->GetScreenSuppportedModes(displayModeInfos);
@@ -261,31 +296,69 @@ void HelloComposer::CreatePyhsicalScreen(std::shared_ptr<HdiOutput> &output)
     int supportModeNum = displayModeInfos.size();
     if (supportModeNum > 0) {
         screen->GetScreenMode(currentModeIndex);
-        LOG("currentModeIndex:%d", currentModeIndex);
+        LOG("currentModeIndex:%{public}d", currentModeIndex);
         for (int i = 0; i < supportModeNum; i++) {
-            LOG("modes(%d) %dx%d freq:%d", displayModeInfos[i].id, displayModeInfos[i].width,
+            LOG("modes(%{public}d) %{public}dx%{public}d freq:%{public}d", displayModeInfos[i].id, displayModeInfos[i].width,
                 displayModeInfos[i].height, displayModeInfos[i].freshRate);
             if (displayModeInfos[i].id == static_cast<int32_t>(currentModeIndex)) {
-                this->freq = displayModeInfos[i].freshRate;
+                this->freq = 30;
+                this->display_w =  displayModeInfos[i].width;
+                this->display_h = displayModeInfos[i].height;
                 break;
             }
         }
         screen->SetScreenPowerStatus(DispPowerStatus::POWER_STATUS_ON);
     }
+    ready = true;
+    std::cout << "CreatePyhsicalScreen end " << std::endl;
 }
+
+void HelloComposer::DoPrepareCompleted(OHOS::sptr<Surface> &surface, const struct PrepareCompleteParam &param)
+{
+    if (param.needFlushFramebuffer) {
+        BufferRequestConfig requestConfig = {
+            .width = display_w,
+            .height = display_h,
+            .strideAlignment = 0x08,
+            .format = PIXEL_FMT_RGBA_8888,
+            .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
+            .timeout = 0,
+        };
+        std::cout << "DoPrepareCompleted display_w : " <<display_w <<" display_h :"<<display_h << std::endl;
+        BufferFlushConfig flushConfig = {
+            .damage = {
+                .w = display_w,
+                .h = display_h,
+            }
+        };
+        int releaseFence = -1;
+        surface->RequestBuffer(fbBuffer, releaseFence, requestConfig);
+        auto addr = static_cast<uint8_t *>(fbBuffer->GetVirAddr());
+
+        memset_s(addr, fbBuffer->GetSize(), 0, fbBuffer->GetSize());
+        surface->FlushBuffer(fbBuffer, -1, flushConfig);
+    }
+}
+
 
 static void OnScreenPlug(std::shared_ptr<HdiOutput> &output, bool connected, void* data)
 {
-    LOG("enter OnScreenPlug, connected is %d", connected);
+    LOG("enter OnScreenPlug, connected is %{public}d", connected);
+    std::cout << "OnScreenPlug begin " << std::endl;
     auto* thisPtr = static_cast<HelloComposer *>(data);
     if (connected) {
+        std::cout << "OnScreenPlug connetcted " << std::endl;
         thisPtr->CreatePyhsicalScreen(output);
     }
+    //std::cout << "OnScreenPlug not connetected " << std::endl;
 }
+
 
 static void OnPrepareCompleted(OHOS::sptr<Surface> &surface, const struct PrepareCompleteParam &param, void* data)
 {
     LOG("enter OnPrepareCompleted");
+    auto *thisPtr = static_cast<HelloComposer *> (data);
+    thisPtr->DoPrepareCompleted(surface, param);
 }
 
 int main(int argc, const char *argv[])
@@ -293,19 +366,21 @@ int main(int argc, const char *argv[])
     HelloComposer m;
 
     LOG("start to HdiBackend::GetInstance");
+    std::cout << "main begin " << std::endl;
     HdiBackend* backend = OHOS::Rosen::HdiBackend::GetInstance();
     if (backend == nullptr) {
         LOG("HdiBackend::GetInstance fail");
         return -1;
     }
-
+    std::cout << "main RegScreenHotplug " << std::endl;
     backend->RegScreenHotplug(OnScreenPlug, &m);
-    backend->RegPrepareComplete(OnPrepareCompleted, nullptr);
+    std::cout << "main RegPrepareComplete " << std::endl;
+    backend->RegPrepareComplete(OnPrepareCompleted, &m);
 
-    m.width = 480;
-    m.height = 960;
-    sleep(1);
-
+    m.width = 360;
+    m.height = 640;
+    // sleep(1);
+    std::cout << "main EventRunner " << std::endl;
     auto runner = OHOS::AppExecFwk::EventRunner::Create(false);
     auto handler = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
     handler->PostTask(std::bind(&HelloComposer::Init, &m, m.width, m.height, backend));

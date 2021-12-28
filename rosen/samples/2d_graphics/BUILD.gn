@@ -13,6 +13,7 @@
 
 import("//build/ohos.gni")
 import("//third_party/wayland_standard/wayland_protocol.gni")
+import("//foundation/graphic/standard/graphic_config.gni")
 
 ## Build libexec_drawing.a {{{
 config("libexec_drawing_config") {
@@ -101,19 +102,21 @@ ohos_executable("drawing_sample") {
   part_name = "graphic_standard"
 }
 
-ohos_executable("render_context_sample") {
-  install_enable = true
+if (ace_enable_gpu) {
+  ohos_executable("render_context_sample") {
+    install_enable = true
 
-  sources = [ "render_context_sample.cpp" ]
+      sources = [ "render_context_sample.cpp" ]
 
-  configs = [ ":sample_config" ]
+      configs = [ ":sample_config" ]
 
-  deps = [
-    ":libexec_drawing",
-  ]
+      deps = [
+        ":libexec_drawing",
+      ]
 
-  public_deps = []
+    public_deps = []
 
-  subsystem_name = "graphic"
-  part_name = "graphic_standard"
+    subsystem_name = "graphic"
+    part_name = "graphic_standard"
+  }
 }

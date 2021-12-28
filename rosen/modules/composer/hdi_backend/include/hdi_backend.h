@@ -83,6 +83,9 @@ private:
         const std::unordered_map<uint32_t, LayerPtr> &layersMap);
 
     inline void CheckRet(int32_t ret, const char* func);
+    int32_t newScreenId_ = -1;
+    void UpdateScreenId(uint32_t screenId);
+    int32_t GetScreenId();
 };
 } // namespace Rosen
 } // namespace OHOS

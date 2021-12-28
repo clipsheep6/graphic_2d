@@ -107,7 +107,7 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
     layer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
     layer->SetVisibleRegion(1, srcRect);
     layer->SetDirtyRegion(srcRect);
-    layer->SetBlendType(BlendType::BLEND_ADD);
+    layer->SetBlendType(BlendType::BLEND_SRCOVER);
     layer->SetCropRect(srcRect);
     ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface surfaceNode [%d %d %d %d] buffer [%d %d] buffaddr:%p, z:%d",
         dstRect.x, dstRect.y, dstRect.w, dstRect.h, srcRect.w, srcRect.h,

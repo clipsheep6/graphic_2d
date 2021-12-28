@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_BOOTANIMATION_INCLUDE_RAW_PARSER_H
-#define FRAMEWORKS_BOOTANIMATION_INCLUDE_RAW_PARSER_H
+#ifndef UTILS_RAW_PARSER_EXPORT_RAW_PARSER_H
+#define UTILS_RAW_PARSER_EXPORT_RAW_PARSER_H
 
 #include <memory>
 #include <string>
@@ -100,4 +100,4 @@ private:
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_BOOTANIMATION_INCLUDE_RAW_PARSER_H
+#endif // UTILS_RAW_PARSER_EXPORT_RAW_PARSER_H

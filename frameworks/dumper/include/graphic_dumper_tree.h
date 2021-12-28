@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_TREE_H
-#define FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_TREE_H
+#ifndef _FRAMEWORKS_DUMPER_INCLUDE_GRAPHIC_DUMPER_TREE_H
+#define _FRAMEWORKS_DUMPER_INCLUDE_GRAPHIC_DUMPER_TREE_H
 
 #include <functional>
 #include <map>
@@ -53,4 +53,4 @@ private:
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_DUMPRE_INCLUDE_GRAPHIC_DUMPER_TREE_H
+#endif // _FRAMEWORKS_DUMPER_INCLUDE_GRAPHIC_DUMPER_TREE_H

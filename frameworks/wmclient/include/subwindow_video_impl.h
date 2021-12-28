@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_INCLUDE_SUBWINDOW_VIDEO_IMPL_H
-#define FRAMEWORKS_WM_INCLUDE_SUBWINDOW_VIDEO_IMPL_H
+#ifndef FRAMEWORKS_WMCLIENT_INCLUDE_SUBWINDOW_VIDEO_IMPL_H
+#define FRAMEWORKS_WMCLIENT_INCLUDE_SUBWINDOW_VIDEO_IMPL_H
 
 #include <subwindow.h>
 #include <videodisplaymanager.h>
@@ -63,4 +63,4 @@ private:
     BeforeFrameSubmitFunc onBeforeFrameSubmitFunc = nullptr;
 };
 } // namespace OHOS
-#endif // FRAMEWORKS_WM_INCLUDE_SUBWINDOW_VIDEO_IMPL_H
+#endif // FRAMEWORKS_WMCLIENT_INCLUDE_SUBWINDOW_VIDEO_IMPL_H

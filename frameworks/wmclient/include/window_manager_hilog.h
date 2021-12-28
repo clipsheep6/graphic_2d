@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_INCLUDE_WINDOW_MANAGER_HILOG_H
-#define FRAMEWORKS_WM_INCLUDE_WINDOW_MANAGER_HILOG_H
+#ifndef FRAMEWORKS_WMCLIENT_INCLUDE_WINDOW_MANAGER_HILOG_H
+#define FRAMEWORKS_WMCLIENT_INCLUDE_WINDOW_MANAGER_HILOG_H
 
 #include "hilog/log.h"
 namespace OHOS {
@@ -46,4 +46,4 @@ static constexpr OHOS::HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, 0, "WM" };
 #define WMLOGFE(fmt, ...) WMLOGE("%{public}s: " fmt, _WM_FUNC, ##__VA_ARGS__)
 } // namespace OHOS
 
-#endif // FRAMEWORKS_WM_INCLUDE_WINDOW_MANAGER_HILOG_H
+#endif // FRAMEWORKS_WMCLIENT_INCLUDE_WINDOW_MANAGER_HILOG_H

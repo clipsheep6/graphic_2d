@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_INCLUDE_WL_SUBSURFACE_H
-#define FRAMEWORKS_WM_INCLUDE_WL_SUBSURFACE_H
+#ifndef FRAMEWORKS_WMCLIENT_INCLUDE_WL_SUBSURFACE_H
+#define FRAMEWORKS_WMCLIENT_INCLUDE_WL_SUBSURFACE_H
 
 #include <refbase.h>
 #include <wayland-client-protocol.h>
@@ -40,4 +40,4 @@ private:
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_WM_INCLUDE_WL_SUBSURFACE_H
+#endif // FRAMEWORKS_WMCLIENT_INCLUDE_WL_SUBSURFACE_H

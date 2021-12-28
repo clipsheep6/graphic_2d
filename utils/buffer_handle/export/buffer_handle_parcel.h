@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_INCLUDE_BUFFER_HANDLE_PARCEL_H
-#define UTILS_INCLUDE_BUFFER_HANDLE_PARCEL_H
+#ifndef UTILS_BUFFER_HANDLE_EXPORT_BUFFER_HANDLE_PARCEL_H
+#define UTILS_BUFFER_HANDLE_EXPORT_BUFFER_HANDLE_PARCEL_H
 
 #ifdef __cplusplus
 #include "buffer_handle.h"
@@ -37,4 +37,4 @@ BufferHandle *ReadBufferHandle(MessageParcel &parcel);
 } // namespace OHO
 #endif // __cplusplus
 
-#endif // UTILS_INCLUDE_BUFFER_HANDLE_PARCEL_H
+#endif // UTILS_BUFFER_HANDLE_EXPORT_BUFFER_HANDLE_PARCEL_H

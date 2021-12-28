@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_INCLUDE_LOGGER_EXPORT_GSLOGGER_H
-#define UTILS_INCLUDE_LOGGER_EXPORT_GSLOGGER_H
+#ifndef UTILS_GSLOGGER_EXPORT_GSLOGGER_H
+#define UTILS_GSLOGGER_EXPORT_GSLOGGER_H
 
 #include <any>
 #include <cstdarg>
@@ -158,4 +158,4 @@ private:
 #define GSLOG9F(level) Gslogger(LOGGER_ARG(level), \
                                  Gslogger::PidTid, Gslogger::FileFuncLine, Gslogger::FileLog, FILE_LABEL, NULL)
 
-#endif // UTILS_INCLUDE_LOGGER_EXPORT_GSLOGGER_H
+#endif // UTILS_GSLOGGER_EXPORT_GSLOGGER_H

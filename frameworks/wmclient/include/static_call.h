@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_INCLUDE_STATIC_CALL_H
-#define FRAMEWORKS_WM_INCLUDE_STATIC_CALL_H
+#ifndef FRAMEWORKS_WMCLIENT_INCLUDE_STATIC_CALL_H
+#define FRAMEWORKS_WMCLIENT_INCLUDE_STATIC_CALL_H
 
 #include <refbase.h>
 #include <surface.h>
@@ -52,4 +52,4 @@ private:
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_WM_INCLUDE_STATIC_CALL_H
+#endif // FRAMEWORKS_WMCLIENT_INCLUDE_STATIC_CALL_H

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_INCLUDE_WL_SURFACE_FACTORY_H
-#define FRAMEWORKS_WM_INCLUDE_WL_SURFACE_FACTORY_H
+#ifndef FRAMEWORKS_WMCLIENT_INCLUDE_WL_SURFACE_FACTORY_H
+#define FRAMEWORKS_WMCLIENT_INCLUDE_WL_SURFACE_FACTORY_H
 
 #include <linux-explicit-synchronization-unstable-v1-client-protocol.h>
 #include <refbase.h>
@@ -47,4 +47,4 @@ private:
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_WM_INCLUDE_WL_SURFACE_FACTORY_H
+#endif // FRAMEWORKS_WMCLIENT_INCLUDE_WL_SURFACE_FACTORY_H

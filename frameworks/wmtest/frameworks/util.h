@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_SRC_TEST_UTIL_H
-#define FRAMEWORKS_WM_SRC_TEST_UTIL_H
+#ifndef FRAMEWORKS_WMTEST_FRAMEWORKS_UTIL_H
+#define FRAMEWORKS_WMTEST_FRAMEWORKS_UTIL_H
 
 #include <cstdint>
 #include <functional>
@@ -27,4 +27,4 @@ uint32_t RequestSync(const SyncFunc syncFunc, void *data = nullptr);
 int64_t GetNowTime();
 } // namespace OHOS
 
-#endif // FRAMEWORKS_WM_SRC_TEST_UTIL_H
+#endif // FRAMEWORKS_WMTEST_FRAMEWORKS_UTIL_H

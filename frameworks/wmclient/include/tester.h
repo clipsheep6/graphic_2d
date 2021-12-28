@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_INCLUDE_TESTER_H
-#define FRAMEWORKS_WM_INCLUDE_TESTER_H
+#ifndef FRAMEWORKS_WMCLIENT_INCLUDE_TESTER_H
+#define FRAMEWORKS_WMCLIENT_INCLUDE_TESTER_H
 
 #include <map>
 #include <set>
@@ -49,4 +49,4 @@ private:
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_WM_INCLUDE_TESTER_H
+#endif // FRAMEWORKS_WMCLIENT_INCLUDE_TESTER_H

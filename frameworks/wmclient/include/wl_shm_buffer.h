@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_INCLUDE_WL_SHM_BUFFER_H
-#define FRAMEWORKS_WM_INCLUDE_WL_SHM_BUFFER_H
+#ifndef FRAMEWORKS_WMCLIENT_INCLUDE_WL_SHM_BUFFER_H
+#define FRAMEWORKS_WMCLIENT_INCLUDE_WL_SHM_BUFFER_H
 
 #include "wl_buffer.h"
 
@@ -32,4 +32,4 @@ protected:
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_WM_INCLUDE_WL_SHM_BUFFER_H
+#endif // FRAMEWORKS_WMCLIENT_INCLUDE_WL_SHM_BUFFER_H

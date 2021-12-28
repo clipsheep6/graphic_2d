@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_SRC_TEST_INATIVE_TEST_H
-#define FRAMEWORKS_WM_SRC_TEST_INATIVE_TEST_H
+#ifndef FRAMEWORKS_WMTEST_FRAMEWORKS_INATIVE_TEST_H
+#define FRAMEWORKS_WMTEST_FRAMEWORKS_INATIVE_TEST_H
 
 #include <cstdint>
 #include <functional>
@@ -112,4 +112,4 @@ private:
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_WM_SRC_TEST_INATIVE_TEST_H
+#endif // FRAMEWORKS_WMTEST_FRAMEWORKS_INATIVE_TEST_H

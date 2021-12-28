@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_INCLUDE_WL_DISPLAY_H
-#define FRAMEWORKS_WM_INCLUDE_WL_DISPLAY_H
+#ifndef FRAMEWORKS_WMCLIENT_INCLUDE_WL_DISPLAY_H
+#define FRAMEWORKS_WMCLIENT_INCLUDE_WL_DISPLAY_H
 
 #include <functional>
 #include <map>
@@ -81,4 +81,4 @@ private:
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_WM_INCLUDE_WL_DISPLAY_H
+#endif // FRAMEWORKS_WMCLIENT_INCLUDE_WL_DISPLAY_H

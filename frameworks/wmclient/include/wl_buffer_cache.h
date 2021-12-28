@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_INCLUDE_WL_BUFFER_CACHE_H
-#define FRAMEWORKS_WM_INCLUDE_WL_BUFFER_CACHE_H
+#ifndef FRAMEWORKS_WMCLIENT_INCLUDE_WL_BUFFER_CACHE_H
+#define FRAMEWORKS_WMCLIENT_INCLUDE_WL_BUFFER_CACHE_H
 
 #include <refbase.h>
 #include <surface.h>
@@ -62,4 +62,4 @@ private:
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_WM_INCLUDE_WL_BUFFER_CACHE_H
+#endif // FRAMEWORKS_WMCLIENT_INCLUDE_WL_BUFFER_CACHE_H

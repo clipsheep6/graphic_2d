@@ -40,7 +40,7 @@ group("test") {
     "frameworks/fence:test",
     "frameworks/surface:test",
     "frameworks/vsync:test",
-    "frameworks/wm:test",
+    "frameworks/wmclient:test",
     "frameworks/wmtest:wmtest",
   ]
 }
@@ -76,12 +76,8 @@ group("libvsync_client") {
   public_deps = [ "frameworks/vsync:libvsync_client" ]
 }
 
-group("libwms_client") {
-  public_deps = [ "frameworks/wm:wms_client" ]
-}
-
 group("libwmclient") {
-  public_deps = [ "frameworks/wm:libwmclient" ]
+  public_deps = [ "frameworks/wmclient:libwmclient" ]
 }
 
 group("libwmservice") {

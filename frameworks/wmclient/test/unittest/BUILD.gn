@@ -192,7 +192,7 @@ ohos_unittest("wl_surface_factory_test") {
 
 ## Build wm_test_common.a {{{
 config("wm_test_common_public_config") {
-  include_dirs = [ "//foundation/graphic/standard/frameworks/wm/include" ]
+  include_dirs = [ "../../include" ]
 
   cflags = [
     "-Wall",

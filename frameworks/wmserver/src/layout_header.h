@@ -16,8 +16,6 @@
 #ifndef FRAMEWORKS_WMSERVER_SRC_LAYOUT_HEADER_H
 #define FRAMEWORKS_WMSERVER_SRC_LAYOUT_HEADER_H
 
-#include <stdint.h>
-
 struct layout {
     double x;
     double y;
@@ -27,6 +25,7 @@ struct layout {
 
 #ifdef __cplusplus
 #include <cstddef>
+#include <cstdint>
 #include <fstream>
 
 namespace OHOS::WMServer {

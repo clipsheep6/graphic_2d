@@ -1720,6 +1720,24 @@ static int CreateScreenshotFile(off_t size)
     return fd;
 }
 
+static int32_t ControllerWindowshotAfter(struct weston_surface *surf, int32_t fd, int32_t size, int32_t width, int32_t height)
+{
+    char *pBuffer = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (pBuffer == MAP_FAILED) {
+        LOGE("mmap error.");
+        return WMS_ERROR_INNER_ERROR;
+    }
+
+    if (weston_surface_copy_content(surf, pBuffer, size, 0, 0, width, height) != 0) {
+        LOGE("weston_surface_copy_content error.");
+        munmap(pBuffer, size);
+        return WMS_ERROR_INNER_ERROR;
+    }
+
+    munmap(pBuffer, size);
+    return WMS_ERROR_OK;
+}
+
 static void ControllerWindowshot(struct wl_client *pWlClient,
     struct wl_resource *pWlResource, uint32_t windowId)
 {
@@ -1746,7 +1764,7 @@ static void ControllerWindowshot(struct wl_client *pWlClient,
     weston_surface_get_content_size(pWindowSurface->surf, &width, &height);
     int32_t stride = width * BYTE_SPP_SIZE;
 
-    if (!width || !height || !stride) {
+    if (!width || !height) {
         LOGE("weston_surface_get_content_size error.");
         wms_send_windowshot_error(pWlResource, WMS_ERROR_INNER_ERROR, windowId);
         wl_client_flush(wl_resource_get_client(pWlResource));
@@ -1762,20 +1780,10 @@ static void ControllerWindowshot(struct wl_client *pWlClient,
         return;
     }
 
-    char *pBuffer = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (pBuffer == MAP_FAILED) {
-        LOGE("mmap error.");
-        wms_send_windowshot_error(pWlResource, WMS_ERROR_INNER_ERROR, windowId);
+    int32_t ret = ControllerWindowshotAfter(pWindowSurface->surf, fd, size, width, height);
+    if (ret) {
+        wms_send_windowshot_error(pWlResource, ret, windowId);
         wl_client_flush(wl_resource_get_client(pWlResource));
-        close(fd);
-        return;
-    }
-
-    if (weston_surface_copy_content(pWindowSurface->surf, pBuffer, size, 0, 0, width, height) != 0) {
-        LOGE("weston_surface_copy_content error.");
-        wms_send_windowshot_error(pWlResource, WMS_ERROR_INNER_ERROR, windowId);
-        wl_client_flush(wl_resource_get_client(pWlResource));
-        munmap(pBuffer, size);
         close(fd);
         return;
     }
@@ -1786,8 +1794,6 @@ static void ControllerWindowshot(struct wl_client *pWlClient,
     wms_send_windowshot_done(pWlResource, windowId, fd, width, height,
         stride, WL_SHM_FORMAT_ABGR8888, timeStamp.tv_sec, timeStamp.tv_nsec);
     wl_client_flush(wl_resource_get_client(pWlResource));
-
-    munmap(pBuffer, size);
     close(fd);
 }
 

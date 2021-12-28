@@ -162,7 +162,7 @@ bool VsyncModuleImpl::RegisterSystemAbility()
     if (isRegisterSA_ == true) {
         return true;
     }
-    auto sam = DrmModule::GetInstance()->GetSystemAbilityManager();
+    auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sam) {
         if (sam->AddSystemAbility(vsyncSystemAbilityId_, &vsyncManager_) != ERR_OK) {
             VLOGW("AddSystemAbility failed");
@@ -175,7 +175,7 @@ bool VsyncModuleImpl::RegisterSystemAbility()
 
 void VsyncModuleImpl::UnregisterSystemAbility()
 {
-    auto sam = DrmModule::GetInstance()->GetSystemAbilityManager();
+    auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sam) {
         sam->RemoveSystemAbility(vsyncSystemAbilityId_);
         isRegisterSA_ = false;

@@ -15,8 +15,6 @@
 
 #include "vsync_callback_death_recipient.h"
 
-#include <mutex>
-
 namespace OHOS {
 namespace Vsync {
 VsyncCallbackDeathRecipient::VsyncCallbackDeathRecipient(VsyncManager *vm)

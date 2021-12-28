@@ -28,7 +28,7 @@
 #define LOG_LABEL "screen-info"
 #define MAX_LENGTH 1024
 
-#define LOGD(fmt, ...) weston_log("%{public}s debug %{public}d:%{public}s " fmt "\n", \
+#define LOG_DEBUG(fmt, ...) weston_log("%{public}s debug %{public}d:%{public}s " fmt "\n", \
     LOG_LABEL, __LINE__, __func__, ##__VA_ARGS__)
 
 #define LOGI(fmt, ...) weston_log("%{public}s info %{public}d:%{public}s " fmt "\n", \
@@ -61,6 +61,11 @@ struct SeatInfo **GetSeatsInfo(void)
 {
     struct WmsContext *pWmsCtx = GetWmsInstance();
     uint32_t seatNum = wl_list_length(&pWmsCtx->wlListSeat);
+    if (seatNum + 1 <= 0) {
+        LOGE("calloc error!");
+        return NULL;
+    }
+
     struct SeatInfo **seats = (struct SeatInfo **)calloc(seatNum + 1, sizeof(intptr_t));
     if (!seats) {
         LOGE("calloc error!");
@@ -405,17 +410,17 @@ void GetScreenInformation(struct wl_client *client, struct wl_resource *resource
 
 static void OnScreenInfoChange(void)
 {
-    LOGD("OnScreenInfoChange is called.");
+    LOG_DEBUG("OnScreenInfoChange is called.");
 }
 
 static void OnSeatInfoChange(void)
 {
-    LOGD("OnSeatInfoChange is called.");
+    LOG_DEBUG("OnSeatInfoChange is called.");
 }
 
 static void OnLibInputEvent(struct multimodal_libinput_event *event)
 {
-    LOGD("OnLibInputEvent is called.");
+    LOG_DEBUG("OnLibInputEvent is called.");
 }
 
 void SetListener(struct wl_client *client, struct wl_resource *resource, uint32_t type)
@@ -452,11 +457,11 @@ static void BindScreenInfo(struct wl_client *client, void *data, uint32_t versio
 
 int ScreenInfoInit(const struct weston_compositor *pCompositor)
 {
-    LOGD("start. ");
+    LOG_DEBUG("start. ");
     if (!wl_global_create(pCompositor->wl_display, &screen_info_interface, 1, NULL, BindScreenInfo)) {
         LOGE("wl_global_create failed");
         return 1;
     }
-    LOGD("end. ");
+    LOG_DEBUG("end. ");
     return 0;
 }

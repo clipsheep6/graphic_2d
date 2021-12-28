@@ -173,20 +173,20 @@ void LayoutController::InitByDefaultValue()
 
 void LayoutController::InitByParseSCSS()
 {
-    fs::path dir{searchCSSDirectory};
+    fs::path dir(searchCSSDirectory);
     if (!fs::exists(dir)) {
         LOGE("%{public}s not exist dir", searchCSSDirectory.c_str());
         return;
     }
 
-    fs::directory_entry entry{dir};
+    fs::directory_entry entry(dir);
     if (entry.status().type() != fs::file_type::directory) {
         LOGE("%{public}s is not dir", searchCSSDirectory.c_str());
         return;
     }
 
     std::vector<fs::path> orderedFiles;
-    fs::directory_iterator files{dir};
+    fs::directory_iterator files(dir);
     for (const auto &file : files) {
         LOGI("found file: %{public}s", file.path().string().c_str());
         if (file.is_regular_file() && file.path().extension().string() == ".scss") {
@@ -232,7 +232,7 @@ bool LayoutController::CalcNormalRect(struct layout &layout)
 
 void LayoutController::ParseSCSS(const fs::path &file)
 {
-    std::ifstream ifs{file};
+    std::ifstream ifs(file);
     int32_t size = 0;
     ifs >> size;
 

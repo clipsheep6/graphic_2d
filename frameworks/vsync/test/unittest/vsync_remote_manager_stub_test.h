@@ -24,7 +24,6 @@
 
 namespace OHOS {
 namespace Vsync {
-constexpr int32_t IPC_VSYNCMANAGER_SAID = 664321;
 class VsyncManagerStubTest : public testing::Test {
 public:
     static void SetUpTestCase();

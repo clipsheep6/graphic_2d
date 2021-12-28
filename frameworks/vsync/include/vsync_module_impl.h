@@ -22,7 +22,6 @@
 #include <local_semaphore.h>
 #include <vsync_module.h>
 
-#include "drm_module.h"
 #include "vsync_manager.h"
 
 namespace OHOS {

@@ -26,10 +26,8 @@ group("default") {
     "frameworks/dumper:gdumper",
     "frameworks/dumper:gdumper.ini",
     "frameworks/dumper:graphic_dumper_server",
-    "frameworks/vsync:vsync_server",
     "frameworks/wmserver:screen-info-test",
     "frameworks/wmserver:wmserver",
-    "frameworks/wmservice:wmservice_test",
   ]
 }
 

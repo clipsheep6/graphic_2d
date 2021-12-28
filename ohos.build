@@ -27,7 +27,6 @@
         "//foundation/graphic/standard/rosen/samples:hello_rosen",
         "//foundation/graphic/standard/rosen/modules/2d_graphics:2d_graphics",
         "//foundation/graphic/standard/rosen/samples/2d_graphics:drawing_sample",
-        "//foundation/graphic/standard/rosen/samples/2d_graphics:render_context_sample",
         "//foundation/graphic/standard/rosen/samples/composer:hello_composer",
         "//foundation/graphic/standard/rosen/modules/composer:libcomposer",
 

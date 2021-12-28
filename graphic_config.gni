@@ -17,8 +17,8 @@ import("//build/ohos_var.gni")
 
 if ("${product_name}" == "rk3566" || "${product_name}" == "rk3568"
   || "${product_name}" == "m40") {
-  gpu_defines = ["ACE_ENABLE_GL"]
-  ace_enable_gpu = true    # temporary gpu
+  gpu_defines = ["ACE_DISABLE_GL"]
+  ace_enable_gpu = false    # temporary gpu
 } else {
   gpu_defines = ["ACE_DISABLE_GL"]
   ace_enable_gpu = false

@@ -57,6 +57,7 @@ void WindowManagerServer::OnAppear(const GetServiceFunc get, const std::string &
         const struct wms_listener listener = {
             .window_status = &WindowManagerServer::OnWindowChange,
             .window_size_change = &WindowManagerServer::OnWindowSizeChange,
+            .window_position_change = &WindowManagerServer::OnWindowPositionChange,
             .split_mode_change = &WindowManagerServer::OnSplitStatusChange,
         };
         wms_add_listener(wms, &listener, nullptr);
@@ -89,19 +90,27 @@ void WindowManagerServer::OnWindowChange(void *, struct wms *,
     }
 }
 
-void WindowManagerServer::OnWindowSizeChange(void *, struct wms *, int32_t width, int32_t height)
+void WindowManagerServer::OnWindowSizeChange(void *, struct wms *, int32_t wid, int32_t width, int32_t height)
 {
     WMLOGFI("%{public}dx%{public}d", width, height);
-    if (onWindowSizeChange) {
-        onWindowSizeChange(width, height);
+    if (onWindowServiceChanges.find(wid) != onWindowServiceChanges.end()) {
+        onWindowServiceChanges[wid]->OnWindowSizeChange(width, height);
     }
 }
 
-void WindowManagerServer::OnSplitStatusChange(void *, struct wms *, uint32_t status)
+void WindowManagerServer::OnWindowPositionChange(void *, struct wms *, int32_t wid, int32_t x, int32_t y)
+{
+    WMLOGFI("(%{public}d, %{public}d)", x, y);
+    if (onWindowServiceChanges.find(wid) != onWindowServiceChanges.end()) {
+        onWindowServiceChanges[wid]->OnWindowPositionChange(x, y);
+    }
+}
+
+void WindowManagerServer::OnSplitStatusChange(void *, struct wms *, int32_t wid, uint32_t status)
 {
     WMLOGFI("OnSplitStatusChange status: %{public}u", status);
-    if (onSplitModeChange) {
-        onSplitModeChange(static_cast<enum SplitStatus>(status));
+    if (onWindowServiceChanges.find(wid) != onWindowServiceChanges.end()) {
+        onWindowServiceChanges[wid]->OnSplitStatusChange(static_cast<enum SplitStatus>(status));
     }
 }
 
@@ -123,13 +132,8 @@ sptr<Promise<struct WMSWindowInfo>> WindowManagerServer::CreateWindow(
     return ret;
 }
 
-void WindowManagerServer::RegisterSplitModeChange(SplitStatusChangeFunc func)
+void WindowManagerServer::RegisterWindowServerChange(int32_t wid, IWindowServerChange *change)
 {
-    onSplitModeChange = func;
-}
-
-void WindowManagerServer::RegisterWindowSizeChange(WindowSizeChangeFunc func)
-{
-    onWindowSizeChange = func;
+    onWindowServiceChanges[wid] = change;
 }
 } // namespace OHOS

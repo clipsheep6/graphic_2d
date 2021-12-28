@@ -11,11 +11,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("test") {
+import("//build/test.gni")
+
+group("moduletest") {
   testonly = true
 
   deps = [
-    "moduletest:moduletest",
-    "unittest:unittest",
+    ":scene_test"
+  ]
+}
+
+ohos_moduletest("scene_test") {
+  module_out_path = "graphic_standard/wm"
+
+  sources = [
+    "scene_test.cpp",
+  ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-g3",
+  ]
+
+  deps = [
+    "//foundation/graphic/standard:libwmclient",
+    "//foundation/graphic/standard:libwmservice",
+    "//foundation/graphic/standard/utils:libgraphic_utils",
   ]
 }

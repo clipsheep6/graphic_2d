@@ -25,9 +25,11 @@
 #include "wl_surface.h"
 #include "window_attribute.h"
 #include "window_option_impl.h"
+#include "window_manager_server.h"
 
 namespace OHOS {
-class WindowImpl : public Window, public IBufferConsumerListenerClazz, public IWlBufferReleaseClazz {
+class WindowImpl : public Window, public IBufferConsumerListenerClazz, public IWlBufferReleaseClazz,
+    public IWindowServerChange {
 public:
     static GSError Create(sptr<Window> &window,
                           const sptr<WindowOption> &option,
@@ -85,6 +87,9 @@ private:
 
     virtual void OnWlBufferRelease(struct wl_buffer *buffer, int32_t fence) override;
     virtual void OnBufferAvailable() override;
+    virtual void OnWindowSizeChange(int32_t width, int32_t height) override;
+    virtual void OnWindowPositionChange(int32_t x, int32_t y) override;
+    virtual void OnSplitStatusChange(SplitStatus status) override;
 
     static GSError CheckAndNew(sptr<WindowImpl> &wi,
                                const sptr<WindowOption> &option,
@@ -117,6 +122,7 @@ private:
     sptr<Surface> psurf = nullptr;
 
     BeforeFrameSubmitFunc onBeforeFrameSubmitFunc = nullptr;
+    SplitStatusChangeFunc onSplitStatusChange = nullptr;
 };
 } // namespace OHOS
 

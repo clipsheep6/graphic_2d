@@ -95,10 +95,7 @@ GSError WindowImpl::CreateRemoteWindow(sptr<WindowImpl> &wi,
         return wminfo.wret;
     }
 
-    auto onWindowSizeChange = [&attr = wi->attr](int32_t width, int32_t height) {
-        attr.SetWidthHeight(width, height);
-    };
-    windowManagerServer->RegisterWindowSizeChange(onWindowSizeChange);
+    windowManagerServer->RegisterWindowServerChange(wminfo.wid, wi);
 
     wi->attr.SetID(wminfo.wid);
     wi->attr.SetType(option->GetWindowType());
@@ -415,8 +412,7 @@ void WindowImpl::OnModeChange(WindowModeChangeFunc func)
 
 void WindowImpl::OnSplitStatusChange(SplitStatusChangeFunc func)
 {
-    auto windowManagerServer = SingletonContainer::Get<WindowManagerServer>();
-    windowManagerServer->RegisterSplitModeChange(func);
+    onSplitStatusChange = func;
 }
 
 bool WindowImpl::GetPIPMode() const
@@ -563,6 +559,23 @@ void WindowImpl::OnBufferAvailable()
         SingletonContainer::Get<WlDisplay>()->Flush();
     }
     WMLOGFI("OnBufferAvailable exit");
+}
+
+void WindowImpl::OnWindowSizeChange(int32_t width, int32_t height)
+{
+    attr.SetWidthHeight(width, height);
+}
+
+void WindowImpl::OnWindowPositionChange(int32_t x, int32_t y)
+{
+    attr.SetXY(x, y);
+}
+
+void WindowImpl::OnSplitStatusChange(SplitStatus status)
+{
+    if (onSplitStatusChange != nullptr) {
+        onSplitStatusChange(status);
+    }
 }
 
 WindowImpl::~WindowImpl()

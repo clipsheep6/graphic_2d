@@ -108,19 +108,16 @@ void RegistryGlobal(void *ppwms, struct wl_registry *registry,
         constexpr uint32_t wmsVersion = 1;
         pwms = (struct wms *)wl_registry_bind(registry, id, &wms_interface, wmsVersion);
         const struct wms_listener listener = {
-            OnReply,
-            OnDisplayChange,
-            OnDisplayPower,
-            OnDisplayBacklight,
-            OnDisplayModeChange,
-            nullptr,
-            nullptr,
-            OnGlobalWindowStatus,
-            OnScreenShotDone,
-            OnScreenShotError,
-            OnWindowShotDone,
-            OnWindowShotError,
-            nullptr,
+            .reply_error = OnReply,
+            .screen_status = OnDisplayChange,
+            .display_power = OnDisplayPower,
+            .display_backlight = OnDisplayBacklight,
+            .display_mode = OnDisplayModeChange,
+            .global_window_status = OnGlobalWindowStatus,
+            .screenshot_done = OnScreenShotDone,
+            .screenshot_error = OnScreenShotError,
+            .windowshot_done = OnWindowShotDone,
+            .windowshot_error = OnWindowShotError,
         };
         if (pwms != nullptr) {
             wms_add_listener(pwms, &listener, nullptr);

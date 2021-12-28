@@ -36,6 +36,9 @@ void RSHardwareProcessor::Init(ScreenId id)
         return;
     }
     output_ = screenManager_->GetOutput(id);
+    screenManager_->GetScreenActiveMode(id, curScreenInfo);
+    ROSEN_LOGI("RSHardwareProcessor::Init screen w:%{public}d, w:%{public}d",
+        curScreenInfo.GetScreenWidth(), curScreenInfo.GetScreenHeight());
 }
 
 void RSHardwareProcessor::PostProcess()
@@ -120,12 +123,12 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
     if (!param.needFlushFramebuffer) {
         return;
     }
-    //TODO config size update
+
     BufferRequestConfig requestConfig = {
-        .width = 0x100,
-        .height = 0x100,
+        .width = curScreenInfo.GetScreenWidth(),
+        .height = curScreenInfo.GetScreenHeight(),
         .strideAlignment = 0x8,
-        .format = PIXEL_FMT_RGBA_8888,
+        .format = PIXEL_FMT_BGRA_8888,      // [TODO] different soc need different format
         .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
         .timeout = 0,
     };
@@ -140,8 +143,8 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
         .damage = {
             .x = 0,
             .y = 0,
-            .w = 0x100,
-            .h = 0x100,
+            .w = curScreenInfo.GetScreenWidth(),
+            .h = curScreenInfo.GetScreenHeight(),
         },
     };
     FlushBuffer(surface, flushConfig);

@@ -16,6 +16,7 @@
 #ifndef RS_HARDWARE_PROCESSOR_H
 #define RS_HARDWARE_PROCESSOR_H
 
+#include <unordered_map>
 #include <vector>
 
 #include "display_type.h"
@@ -47,6 +48,7 @@ private:
     HdiBackend* backend_ = nullptr;
     sptr<RSScreenManager> screenManager_;
     std::shared_ptr<HdiOutput> output_;
+    RSScreenModeInfo curScreenInfo;
     LayerAlpha alpha_ = { .enPixelAlpha = true };
     std::vector<LayerInfoPtr> layers_;
 };

@@ -86,11 +86,18 @@ public:
     virtual void AddScreenChangeCallback(const sptr<RSIScreenChangeCallback> &callback) = 0;
 
     virtual void OnRemoteScreenChangeCallbackDied(const wptr<IRemoteObject> &remote) = 0;
+
+    virtual void ProcessScreenHotPlugEvents() = 0;
 };
 
 sptr<RSScreenManager> CreateOrGetScreenManager();
 
 namespace impl {
+struct ScreenHotPlugEvent {
+    std::shared_ptr<HdiOutput> output;
+    bool connected = false;
+};
+
 class RSScreenManager : public OHOS::Rosen::RSScreenManager {
 public:
     static sptr<OHOS::Rosen::RSScreenManager> GetInstance() noexcept;
@@ -144,6 +151,8 @@ public:
 
     void OnRemoteScreenChangeCallbackDied(const wptr<IRemoteObject> &remote) override;
 
+    void ProcessScreenHotPlugEvents() override;
+
 private:
     RSScreenManager();
     ~RSScreenManager() noexcept override;
@@ -156,6 +165,7 @@ private:
     void ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &output);
     void ProcessScreenDisConnectedLocked(std::shared_ptr<HdiOutput> &output);
     void HandleDefaultScreenDisConnectedLocked();
+    std::vector<ScreenHotPlugEvent> pendingHotPlugEvents_;
 
     void GetScreenActiveModeLocked(ScreenId id, RSScreenModeInfo& screenModeInfo) const;
     std::vector<RSScreenModeInfo> GetScreenSupportedModesLocked(ScreenId id) const;

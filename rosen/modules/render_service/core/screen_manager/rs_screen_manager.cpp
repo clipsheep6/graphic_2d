@@ -15,8 +15,10 @@
 
 #include "rs_screen_manager.h"
 #include "rs_screen_change_callback_death_recipient.h"
+#include "pipeline/rs_main_thread.h"
 
 #include <cinttypes>
+#include <thread>
 
 namespace OHOS {
 namespace Rosen {
@@ -55,6 +57,8 @@ bool RSScreenManager::Init() noexcept
         return false;
     }
 
+    ProcessScreenHotPlugEvents();
+
     return true;
 }
 
@@ -82,13 +86,30 @@ void RSScreenManager::OnHotPlug(std::shared_ptr<HdiOutput> &output, bool connect
 
 void RSScreenManager::OnHotPlugEvent(std::shared_ptr<HdiOutput> &output, bool connected)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    if (connected) {
-        ProcessScreenConnectedLocked(output);
-    } else {
-        ProcessScreenDisConnectedLocked(output);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        pendingHotPlugEvents_.emplace_back(ScreenHotPlugEvent{output, connected});
     }
+
+    auto mainThread = RSMainThread::Instance();
+    if (mainThread == nullptr) {
+        return;
+    }
+    mainThread->RequestNextVSync();
+}
+
+void RSScreenManager::ProcessScreenHotPlugEvents()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto &event : pendingHotPlugEvents_) {
+        if (event.connected) {
+            ProcessScreenConnectedLocked(event.output);
+        } else {
+            ProcessScreenDisConnectedLocked(event.output);
+        }
+    }
+
+    pendingHotPlugEvents_.clear();
 }
 
 void RSScreenManager::ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &output)

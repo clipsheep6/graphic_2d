@@ -114,6 +114,7 @@ void RSUIDirector::SetSurfaceNodeSize(int width, int height)
 
 void RSUIDirector::SetRoot(NodeId root)
 {
+    ROSEN_LOGE("mengkun SetRoot");
     if (root_ == root) {
         return;
     }

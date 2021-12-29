@@ -19,6 +19,7 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <thread>
 
 #include "common/rs_thread_handler.h"
 #include "common/rs_thread_looper.h"
@@ -47,9 +48,13 @@ public:
         return context_;
     }
 
+    std::thread::id Id() const
+    {
+        return mainThreadId_;
+    }
 private:
-    RSMainThread() = default;
-    ~RSMainThread() = default;
+    RSMainThread();
+    ~RSMainThread() noexcept;
     RSMainThread(const RSMainThread&) = delete;
     RSMainThread(const RSMainThread&&) = delete;
     RSMainThread& operator=(const RSMainThread&) = delete;
@@ -68,6 +73,8 @@ private:
     std::queue<std::unique_ptr<RSTransactionData>> effectCommandQueue_;
 
     RSContext context_;
+
+    std::thread::id mainThreadId_;
 };
 } // namespace Rosen
 } // namespace OHOS

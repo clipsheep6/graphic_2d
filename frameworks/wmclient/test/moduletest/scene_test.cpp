@@ -772,19 +772,19 @@ HWTEST_F(SceneTest, Scene9, testing::ext::TestSize.Level0)
  */
 HWTEST_F(SceneTest, Scene10, testing::ext::TestSize.Level0)
 {
+    auto win1Draw = [=](uint32_t *addr, uint32_t width, uint32_t height, uint32_t count) {
+        PureColorDraw(addr, width, height, count, ColorRed);
+        Cpudraw draw(addr, width, height);
+        draw.SetColor(ColorTransparent);
+        draw.DrawRect(0, 0, screenWidth / 0x4, screenHeight / 0x4);
+    };
     Init(InitWM | InitDisplay);
     int32_t result1 = 0;
     int32_t result2 = 0;
     PART("CreateScene") {
         STEP("win1: normal red but not subwindow") {
             win1 = CreateWindow(WINDOW_TYPE_NORMAL);
-            auto func = [=](uint32_t *addr, uint32_t width, uint32_t height, uint32_t count) {
-                PureColorDraw(addr, width, height, count, ColorRed);
-                Cpudraw draw(addr, width, height);
-                draw.SetColor(ColorTransparent);
-                draw.DrawRect(0, 0, screenWidth / 0x4, screenHeight / 0x4);
-            };
-            result1 = DrawWindow(win1, func);
+            DrawWindow(win1, win1Draw);
         }
 
         STEP("sub1: normal yellow") {
@@ -803,6 +803,7 @@ HWTEST_F(SceneTest, Scene10, testing::ext::TestSize.Level0)
             sub1->Resize(screenWidth / 0x4, screenHeight / 0x4);
             auto func = std::bind(PureColorDraw, DRAW_ARGS, ColorYellow);
             result2 = DrawSurface(sub1->GetSurface(), func, screenWidth / 0x4, screenHeight / 0x4);
+            result1 = DrawWindow(win1, win1Draw);
         }
     }
 

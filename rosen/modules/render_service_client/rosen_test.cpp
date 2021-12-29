@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <surface.h>
+#include <vector>
 
 #include "command/rs_base_node_command.h"
 #include "command/rs_display_node_command.h"
@@ -186,9 +187,11 @@ int main()
     displayNode->AddChild(surfaceNode1, -1);
     // displayNode->AddChild(surfaceNode2, -1);
     RSTransactionProxy::GetInstance().FlushImplicitTransaction();
-    sleep(2);
+    sleep(1);
     // int positionX = 80;
     // int positionY = 80;
+    std::vector<uint32_t> colors = {0xff0000ff, 0xff00ffff, 0xffff00ff};
+    uint32_t index = 0;
     while (1) {
         // displayNode->RemoveChild(surfaceLauncher);
         // RSTransactionProxy::GetInstance().FlushImplicitTransaction();
@@ -203,11 +206,14 @@ int main()
         //     positionY -= 80;
         // }
         // displayNode->AddChild(surfaceLauncher, -1);
-        uint32_t color = 0xff0000ff;
-        DrawSurface(SkRect::MakeXYWH(0, 0, 200, 200), color += 0xff, SkRect::MakeXYWH(0, 0, 200, 200),
+        DrawSurface(SkRect::MakeXYWH(0, 0, 200, 200), colors[index], SkRect::MakeXYWH(0, 0, 200, 200),
              surfaceLauncher);
         RSTransactionProxy::GetInstance().FlushImplicitTransaction();
         sleep(1);
+        index++;
+        if (index == colors.size()) {
+            index = 0;
+        }
     }
     return 0;
 }

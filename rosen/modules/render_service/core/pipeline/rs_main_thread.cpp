@@ -15,12 +15,15 @@
 #include "common/rs_trace.h"
 #include "pipeline/rs_main_thread.h"
 
+#include <thread>
+
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_render_service_visitor.h"
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_platform_canvas.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "transaction/rs_transaction_proxy.h"
+#include "screen_manager/rs_screen_manager.h"
 
 using namespace OHOS::Rosen;
 
@@ -28,6 +31,14 @@ RSMainThread* RSMainThread::Instance()
 {
     static RSMainThread instance;
     return &instance;
+}
+
+RSMainThread::RSMainThread() : mainThreadId_(std::this_thread::get_id())
+{
+}
+
+RSMainThread::~RSMainThread() noexcept
+{
 }
 
 void RSMainThread::Start()
@@ -97,6 +108,12 @@ void RSMainThread::OnVsync(uint64_t timestamp)
             taskHandle_ = RSThreadHandler::StaticCreateTask(mainLoop_);
         }
         threadHandler_->PostTaskDelay(taskHandle_, 0);
+    }
+    auto screenManager_ = CreateOrGetScreenManager();
+    if (screenManager_ != nullptr) {
+        PostTask([=](){
+            screenManager_->ProcessScreenHotPlugEvents();
+        });
     }
     ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }

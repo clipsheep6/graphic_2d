@@ -39,14 +39,14 @@ RSRenderService::~RSRenderService() noexcept {}
 
 void RSRenderService::Init()
 {
-    mainThread_ = RSMainThread::Instance();
-    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    samgr->AddSystemAbility(RENDER_SERVICE, &GetInstance());
-
     screenManager_ = CreateOrGetScreenManager();
     if (screenManager_ == nullptr || !screenManager_->Init()) {
         ROSEN_LOGI("RSRenderService CreateOrGetScreenManager fail");
     }
+
+    mainThread_ = RSMainThread::Instance();
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    samgr->AddSystemAbility(RENDER_SERVICE, &GetInstance());
 }
 
 void RSRenderService::Run()

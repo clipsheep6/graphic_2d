@@ -115,7 +115,9 @@ bool SceneTest::CheckResultAndScreenshot(int32_t result, Rect area)
     uint32_t *screen = screenshot.Get();
     for (int32_t j = 0; j < h; j++) {
         for (int32_t i = 0; i < w; i++) {
-            auto &color = screen[(y + j) * screenshotInfo.width + x + i];
+            auto color = screen[(y + j) * screenshotInfo.width + x + i];
+            // RGBA -> BGRA
+            color = (color & 0xff00ff00) | ((color & 0x00ff0000) >> 0x10) | ((color & 0x000000ff) << 0x10);
             if (buffer[k++] != color) {
                 GSLOG2SE(ERROR) << "area: (" << x << ", " << y << ") " << w << "x" << h;
                 GSLOG2SE(ERROR) << "i: " << i << ", j: " << j << ", k: " << (k - 1);
@@ -153,7 +155,9 @@ bool SceneTest::CheckResultAndScreenshot(int32_t result, Rect area, Rect without
                 continue;
             }
 
-            auto &color = screen[(y + j) * screenshotInfo.width + x + i];
+            auto color = screen[(y + j) * screenshotInfo.width + x + i];
+            // RGBA -> BGRA
+            color = (color & 0xff00ff00) | ((color & 0x00ff0000) >> 0x10) | ((color & 0x000000ff) << 0x10);
             if (buffer[k++] != color) {
                 GSLOG2SE(ERROR) << "area: (" << x << ", " << y << ") " << w << "x" << h;
                 GSLOG2SE(ERROR) << "without: (" << withoutX << ", " << withoutY << ") "

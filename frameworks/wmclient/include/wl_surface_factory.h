@@ -16,6 +16,8 @@
 #ifndef FRAMEWORKS_WMCLIENT_INCLUDE_WL_SURFACE_FACTORY_H
 #define FRAMEWORKS_WMCLIENT_INCLUDE_WL_SURFACE_FACTORY_H
 
+#include <mutex>
+
 #include <linux-explicit-synchronization-unstable-v1-client-protocol.h>
 #include <refbase.h>
 #include <viewporter-client-protocol.h>

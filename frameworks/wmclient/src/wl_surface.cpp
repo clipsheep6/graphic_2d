@@ -15,8 +15,6 @@
 
 #include "wl_surface.h"
 
-#include <unistd.h>
-
 namespace OHOS {
 WlSurface::WlSurface(struct wl_surface *ws,
                      struct zwp_linux_surface_synchronization_v1 *zlssv,

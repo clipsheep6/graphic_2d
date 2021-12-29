@@ -26,24 +26,17 @@ static constexpr OHOS::HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, 0, "WM" };
 #define WMLOG_I(...)  (void)OHOS::HiviewDFX::HiLog::Info(LOG_LABEL, __VA_ARGS__)
 #define WMLOG_D(...)  (void)OHOS::HiviewDFX::HiLog::Debug(LOG_LABEL, __VA_ARGS__)
 
-#define _WM_DFUNC HiviewDFX::HiLog::Debug
-#define _WM_IFUNC HiviewDFX::HiLog::Info
-#define _WM_WFUNC HiviewDFX::HiLog::Warn
-#define _WM_EFUNC HiviewDFX::HiLog::Error
+#define WM_CPRINTF(func, fmt, ...) func(LABEL, "<%{public}d>" fmt, __LINE__, ##__VA_ARGS__)
 
-#define _WM_CPRINTF(func, fmt, ...) func(LABEL, "<%{public}d>" fmt, __LINE__, ##__VA_ARGS__)
+#define WMLOGD(fmt, ...) WM_CPRINTF(HiviewDFX::HiLog::Debug, fmt, ##__VA_ARGS__)
+#define WMLOGI(fmt, ...) WM_CPRINTF(HiviewDFX::HiLog::Info, fmt, ##__VA_ARGS__)
+#define WMLOGW(fmt, ...) WM_CPRINTF(HiviewDFX::HiLog::Warn, fmt, ##__VA_ARGS__)
+#define WMLOGE(fmt, ...) WM_CPRINTF(HiviewDFX::HiLog::Error, fmt, ##__VA_ARGS__)
 
-#define WMLOGD(fmt, ...) _WM_CPRINTF(_WM_DFUNC, fmt, ##__VA_ARGS__)
-#define WMLOGI(fmt, ...) _WM_CPRINTF(_WM_IFUNC, fmt, ##__VA_ARGS__)
-#define WMLOGW(fmt, ...) _WM_CPRINTF(_WM_WFUNC, fmt, ##__VA_ARGS__)
-#define WMLOGE(fmt, ...) _WM_CPRINTF(_WM_EFUNC, fmt, ##__VA_ARGS__)
-
-#define _WM_FUNC __func__
-
-#define WMLOGFD(fmt, ...) WMLOGD("%{public}s: " fmt, _WM_FUNC, ##__VA_ARGS__)
-#define WMLOGFI(fmt, ...) WMLOGI("%{public}s: " fmt, _WM_FUNC, ##__VA_ARGS__)
-#define WMLOGFW(fmt, ...) WMLOGW("%{public}s: " fmt, _WM_FUNC, ##__VA_ARGS__)
-#define WMLOGFE(fmt, ...) WMLOGE("%{public}s: " fmt, _WM_FUNC, ##__VA_ARGS__)
+#define WMLOGFD(fmt, ...) WMLOGD("%{public}s: " fmt, __func__, ##__VA_ARGS__)
+#define WMLOGFI(fmt, ...) WMLOGI("%{public}s: " fmt, __func__, ##__VA_ARGS__)
+#define WMLOGFW(fmt, ...) WMLOGW("%{public}s: " fmt, __func__, ##__VA_ARGS__)
+#define WMLOGFE(fmt, ...) WMLOGE("%{public}s: " fmt, __func__, ##__VA_ARGS__)
 } // namespace OHOS
 
 #endif // FRAMEWORKS_WMCLIENT_INCLUDE_WINDOW_MANAGER_HILOG_H

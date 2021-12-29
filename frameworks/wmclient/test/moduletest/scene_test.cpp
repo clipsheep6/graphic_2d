@@ -34,7 +34,7 @@ void SceneTest::OnScreenShot(const struct WMImageInfo &info)
 {
     screenshotInfo = info;
     if (info.data == nullptr || info.width * info.height == 0) {
-        screenshotPromise->Resolve(nullptr);
+        screenshotPromise->Resolve(Buffer(nullptr));
     }
 
     Buffer buffer(info.width * info.height);
@@ -118,7 +118,7 @@ bool SceneTest::CheckResultAndScreenshot(int32_t result, Rect area)
             auto &color = screen[(y + j) * screenshotInfo.width + x + i];
             if (buffer[k++] != color) {
                 GSLOG2SE(ERROR) << "area: (" << x << ", " << y << ") " << w << "x" << h;
-                GSLOG2SE(ERROR) << "i: " << i << ", j: " << j << ", k: " << k - 1;
+                GSLOG2SE(ERROR) << "i: " << i << ", j: " << j << ", k: " << (k - 1);
                 GSLOG2SE(ERROR) << "buffer: " << std::showbase << std::hex
                     << buffer[k - 1] << ", screen: " << color << std::noshowbase << std::dec;
                 DumpToFile("buffer", buffer, w * h * 0x4);
@@ -158,7 +158,7 @@ bool SceneTest::CheckResultAndScreenshot(int32_t result, Rect area, Rect without
                 GSLOG2SE(ERROR) << "area: (" << x << ", " << y << ") " << w << "x" << h;
                 GSLOG2SE(ERROR) << "without: (" << withoutX << ", " << withoutY << ") "
                     << withoutW << "x" << withoutH;
-                GSLOG2SE(ERROR) << "i: " << i << ", j: " << j << ", k: " << k - 1;
+                GSLOG2SE(ERROR) << "i: " << i << ", j: " << j << ", k: " << (k - 1);
                 GSLOG2SE(ERROR) << "buffer: " << std::showbase << std::hex
                     << buffer[k - 1] << ", screen: " << color << std::noshowbase << std::dec;
                 DumpToFile("buffer", buffer, w * h * 0x4);

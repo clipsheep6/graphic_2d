@@ -16,17 +16,13 @@ import("//build/test.gni")
 group("moduletest") {
   testonly = true
 
-  deps = [
-    ":scene_test"
-  ]
+  deps = [ ":scene_test" ]
 }
 
 ohos_moduletest("scene_test") {
   module_out_path = "graphic_standard/wm"
 
-  sources = [
-    "scene_test.cpp",
-  ]
+  sources = [ "scene_test.cpp" ]
 
   cflags = [
     "-Wall",

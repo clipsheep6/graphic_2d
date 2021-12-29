@@ -15,8 +15,6 @@
 
 #include "wl_shm_buffer.h"
 
-#include <sys/mman.h>
-
 #include "window_manager_hilog.h"
 
 namespace OHOS {

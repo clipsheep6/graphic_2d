@@ -16,6 +16,8 @@
 #ifndef FRAMEWORKS_WMCLIENT_INCLUDE_WL_SUBSURFACE_FACTORY_H
 #define FRAMEWORKS_WMCLIENT_INCLUDE_WL_SUBSURFACE_FACTORY_H
 
+#include <mutex>
+
 #include <refbase.h>
 #include <wayland-client-protocol.h>
 

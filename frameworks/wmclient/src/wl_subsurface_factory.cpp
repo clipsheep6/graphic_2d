@@ -15,8 +15,6 @@
 
 #include "wl_subsurface_factory.h"
 
-#include <mutex>
-
 namespace OHOS {
 sptr<WlSubsurfaceFactory> WlSubsurfaceFactory::GetInstance()
 {

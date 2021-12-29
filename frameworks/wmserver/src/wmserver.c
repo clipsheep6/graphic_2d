@@ -1720,7 +1720,8 @@ static int CreateScreenshotFile(off_t size)
     return fd;
 }
 
-static int32_t ControllerWindowshotAfter(struct weston_surface *surf, int32_t fd, int32_t size, int32_t width, int32_t height)
+static int32_t ControllerWindowshotAfter(struct weston_surface *surf,
+    int32_t fd, int32_t size, int32_t width, int32_t height)
 {
     char *pBuffer = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (pBuffer == MAP_FAILED) {

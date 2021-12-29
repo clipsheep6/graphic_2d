@@ -15,8 +15,6 @@
 
 #include "static_call.h"
 
-#include <mutex>
-
 #include "subwindow_normal_impl.h"
 #include "subwindow_video_impl.h"
 #include "subwindow_offscreen_impl.h"

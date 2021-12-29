@@ -29,20 +29,6 @@
 #include "wl_dma_buffer_factory.h"
 #include "wl_surface_factory.h"
 
-#define CHECK_DESTROY_CONST(ret)                               \
-    do {                                                       \
-        if (isDestroyed == true) {                             \
-            WMLOGFE("find attempt to use a destroyed object"); \
-            return ret;                                        \
-        }                                                      \
-    }while (0)
-
-#define CHECK_DESTROY(ret)                                 \
-    do {                                                   \
-        std::lock_guard<std::mutex> lock(mutex);           \
-        CHECK_DESTROY_CONST(ret);                          \
-    }while (0)
-
 namespace OHOS {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, 0, "WMWindowImpl"};
@@ -180,86 +166,131 @@ GSError WindowImpl::Create(sptr<Window> &window,
 
 sptr<WlSurface> WindowImpl::GetWlSurface() const
 {
-    CHECK_DESTROY_CONST(nullptr);
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return nullptr;
+    }
     return wlSurface;
 }
 
 sptr<Surface> WindowImpl::GetSurface() const
 {
-    CHECK_DESTROY_CONST(nullptr);
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return nullptr;
+    }
     return psurf;
 }
 
 sptr<IBufferProducer> WindowImpl::GetProducer() const
 {
-    CHECK_DESTROY_CONST(nullptr);
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return nullptr;
+    }
     return csurf->GetProducer();
 }
 
 int32_t WindowImpl::GetID() const
 {
-    CHECK_DESTROY_CONST(-1);
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return -1;
+    }
     return attr.GetID();
 }
 
 int32_t WindowImpl::GetX() const
 {
-    CHECK_DESTROY_CONST(-1);
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return -1;
+    }
     return attr.GetX();
 }
 
 int32_t WindowImpl::GetY() const
 {
-    CHECK_DESTROY_CONST(-1);
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return -1;
+    }
     return attr.GetY();
 }
 
 uint32_t WindowImpl::GetWidth() const
 {
-    CHECK_DESTROY_CONST(0);
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return 0;
+    }
     return attr.GetWidth();
 }
 
 uint32_t WindowImpl::GetHeight() const
 {
-    CHECK_DESTROY_CONST(0);
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return 0;
+    }
     return attr.GetHeight();
 }
 
 uint32_t WindowImpl::GetDestWidth() const
 {
-    CHECK_DESTROY_CONST(0);
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return 0;
+    }
     return attr.GetDestWidth();
 }
 
 uint32_t WindowImpl::GetDestHeight() const
 {
-    CHECK_DESTROY_CONST(0);
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return 0;
+    }
     return attr.GetDestHeight();
 }
 
 bool WindowImpl::GetVisibility() const
 {
-    CHECK_DESTROY_CONST(false);
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return false;
+    }
     return attr.GetVisibility();
 }
 
 WindowType WindowImpl::GetType() const
 {
-    CHECK_DESTROY_CONST(static_cast<WindowType>(-1));
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return static_cast<WindowType>(-1);
+    }
     return attr.GetType();
 }
 
 WindowMode WindowImpl::GetMode() const
 {
-    CHECK_DESTROY_CONST(static_cast<WindowMode>(-1));
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return static_cast<WindowMode>(-1);
+    }
     return attr.GetMode();
 }
 
 sptr<Promise<GSError>> WindowImpl::Show()
 {
     WMLOGFI("(%{public}d)", attr.GetID());
-    CHECK_DESTROY(new Promise<GSError>(GSERROR_DESTROYED_OBJECT));
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return new Promise<GSError>(GSERROR_DESTROYED_OBJECT);
+        }
+    }
     attr.SetVisibility(true);
     return wms->Show(attr.GetID());
 }
@@ -267,7 +298,13 @@ sptr<Promise<GSError>> WindowImpl::Show()
 sptr<Promise<GSError>> WindowImpl::Hide()
 {
     WMLOGFI("(%{public}d)", attr.GetID());
-    CHECK_DESTROY(new Promise<GSError>(GSERROR_DESTROYED_OBJECT));
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return new Promise<GSError>(GSERROR_DESTROYED_OBJECT);
+        }
+    }
     attr.SetVisibility(false);
     return wms->Hide(attr.GetID());
 }
@@ -275,7 +312,13 @@ sptr<Promise<GSError>> WindowImpl::Hide()
 sptr<Promise<GSError>> WindowImpl::Move(int32_t x, int32_t y)
 {
     WMLOGFI("(%{public}d) x: %{public}d, y: %{public}d", attr.GetID(), x, y);
-    CHECK_DESTROY(new Promise<GSError>(GSERROR_DESTROYED_OBJECT));
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return new Promise<GSError>(GSERROR_DESTROYED_OBJECT);
+        }
+    }
     attr.SetXY(x, y);
     return wms->Move(attr.GetID(), attr.GetX(), attr.GetY());
 }
@@ -283,14 +326,26 @@ sptr<Promise<GSError>> WindowImpl::Move(int32_t x, int32_t y)
 sptr<Promise<GSError>> WindowImpl::SwitchTop()
 {
     WMLOGFI("(%{public}d)", attr.GetID());
-    CHECK_DESTROY(new Promise<GSError>(GSERROR_DESTROYED_OBJECT));
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return new Promise<GSError>(GSERROR_DESTROYED_OBJECT);
+        }
+    }
     return wms->SwitchTop(attr.GetID());
 }
 
 sptr<Promise<GSError>> WindowImpl::SetWindowType(WindowType type)
 {
     WMLOGFI("(%{public}d)type: %{public}d", attr.GetID(), type);
-    CHECK_DESTROY(new Promise<GSError>(GSERROR_DESTROYED_OBJECT));
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return new Promise<GSError>(GSERROR_DESTROYED_OBJECT);
+        }
+    }
     static sptr<WindowOption> testParam = WindowOption::Get();
     if (testParam->SetWindowType(type) != GSERROR_OK) {
         return new Promise<GSError>(GSERROR_INVALID_ARGUMENTS);
@@ -303,7 +358,13 @@ sptr<Promise<GSError>> WindowImpl::SetWindowType(WindowType type)
 sptr<Promise<GSError>> WindowImpl::SetWindowMode(WindowMode mode)
 {
     WMLOGFI("(%{public}d)mode: %{public}d", attr.GetID(), mode);
-    CHECK_DESTROY(new Promise<GSError>(GSERROR_DESTROYED_OBJECT));
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return new Promise<GSError>(GSERROR_DESTROYED_OBJECT);
+        }
+    }
     static sptr<WindowOption> testParam = WindowOption::Get();
     if (testParam->SetWindowMode(mode) != GSERROR_OK) {
         return new Promise<GSError>(GSERROR_INVALID_ARGUMENTS);
@@ -316,7 +377,13 @@ sptr<Promise<GSError>> WindowImpl::SetWindowMode(WindowMode mode)
 sptr<Promise<GSError>> WindowImpl::Resize(uint32_t width, uint32_t height)
 {
     WMLOGFI("(%{public}d)%{public}u x %{public}u", attr.GetID(), width, height);
-    CHECK_DESTROY(new Promise<GSError>(GSERROR_DESTROYED_OBJECT));
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return new Promise<GSError>(GSERROR_DESTROYED_OBJECT);
+        }
+    }
     static sptr<WindowOption> testParam = WindowOption::Get();
     if (testParam->SetWidth(width) != GSERROR_OK || testParam->SetHeight(height) != GSERROR_OK) {
         return new Promise<GSError>(GSERROR_INVALID_ARGUMENTS);
@@ -330,7 +397,13 @@ sptr<Promise<GSError>> WindowImpl::Resize(uint32_t width, uint32_t height)
 sptr<Promise<GSError>> WindowImpl::ScaleTo(uint32_t width, uint32_t height)
 {
     WMLOGFI("(%{public}d)%{public}u x %{public}u", attr.GetID(), width, height);
-    CHECK_DESTROY(new Promise<GSError>(GSERROR_DESTROYED_OBJECT));
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return new Promise<GSError>(GSERROR_DESTROYED_OBJECT);
+        }
+    }
     if (width == 0 || height == 0) {
         return new Promise<GSError>(GSERROR_INVALID_ARGUMENTS);
     }
@@ -342,7 +415,13 @@ sptr<Promise<GSError>> WindowImpl::ScaleTo(uint32_t width, uint32_t height)
 GSError WindowImpl::Rotate(WindowRotateType type)
 {
     WMLOGFI("(%{public}d)type: %{public}d", attr.GetID(), type);
-    CHECK_DESTROY(GSERROR_DESTROYED_OBJECT);
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return GSERROR_DESTROYED_OBJECT;
+        }
+    }
     auto display = SingletonContainer::Get<WlDisplay>();
     if (!(type >= 0 && type < WINDOW_ROTATE_TYPE_MAX)) {
         return GSERROR_INVALID_ARGUMENTS;
@@ -366,7 +445,13 @@ GSError WindowImpl::Rotate(WindowRotateType type)
 GSError WindowImpl::Destroy()
 {
     WMLOGFI("(%{public}d)", attr.GetID());
-    CHECK_DESTROY(GSERROR_DESTROYED_OBJECT);
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return GSERROR_DESTROYED_OBJECT;
+        }
+    }
     GSError wret;
     {
         std::lock_guard<std::mutex> lock(mutex);
@@ -417,7 +502,10 @@ void WindowImpl::OnSplitStatusChange(SplitStatusChangeFunc func)
 
 bool WindowImpl::GetPIPMode() const
 {
-    CHECK_DESTROY_CONST(false);
+    if (isDestroyed == true) {
+        WMLOGFE("find attempt to use a destroyed object");
+        return false;
+    }
     return attr.GetPIPMode();
 }
 
@@ -426,7 +514,13 @@ GSError WindowImpl::EnterPIPMode(int32_t x, int32_t y,
 {
     WMLOGFI("(%{public}d) %{public}d %{public}d %{public}u %{public}u",
             attr.GetID(), x, y, width, height);
-    CHECK_DESTROY(GSERROR_DESTROYED_OBJECT);
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return GSERROR_DESTROYED_OBJECT;
+        }
+    }
     if (GetPIPMode()) {
         return GSERROR_INVALID_OPERATING;
     }
@@ -459,7 +553,13 @@ GSError WindowImpl::EnterPIPMode(int32_t x, int32_t y,
 GSError WindowImpl::ExitPIPMode()
 {
     WMLOGFI("(%{public}d)", attr.GetID());
-    CHECK_DESTROY(GSERROR_DESTROYED_OBJECT);
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return GSERROR_DESTROYED_OBJECT;
+        }
+    }
     if (!GetPIPMode()) {
         return GSERROR_INVALID_OPERATING;
     }
@@ -485,13 +585,25 @@ void WindowImpl::OnBeforeFrameSubmit(BeforeFrameSubmitFunc func)
 
 GSError WindowImpl::OnTouch(OnTouchFunc cb)
 {
-    CHECK_DESTROY(GSERROR_DESTROYED_OBJECT);
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return GSERROR_DESTROYED_OBJECT;
+        }
+    }
     return GSERROR_OK;
 }
 
 GSError WindowImpl::OnKey(OnKeyFunc cb)
 {
-    CHECK_DESTROY(GSERROR_DESTROYED_OBJECT);
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return GSERROR_DESTROYED_OBJECT;
+        }
+    }
     return GSERROR_OK;
 }
 
@@ -499,7 +611,13 @@ void WindowImpl::OnWlBufferRelease(struct wl_buffer *wbuffer, int32_t fence)
 {
     ScopedBytrace bytrace("OnWlBufferRelease");
     WMLOGFI("BufferRelease");
-    CHECK_DESTROY();
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return;
+        }
+    }
     sptr<Surface> surf = nullptr;
     sptr<SurfaceBuffer> sbuffer = nullptr;
     if (SingletonContainer::Get<WlBufferCache>()->GetSurfaceBuffer(wbuffer, surf, sbuffer)) {
@@ -512,7 +630,13 @@ void WindowImpl::OnWlBufferRelease(struct wl_buffer *wbuffer, int32_t fence)
 void WindowImpl::OnBufferAvailable()
 {
     WMLOGFI("OnBufferAvailable enter");
-    CHECK_DESTROY();
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (isDestroyed == true) {
+            WMLOGFE("find attempt to use a destroyed object");
+            return;
+        }
+    }
 
     if (onBeforeFrameSubmitFunc != nullptr) {
         onBeforeFrameSubmitFunc();

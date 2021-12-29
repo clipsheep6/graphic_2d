@@ -97,11 +97,11 @@ public:
         {
         }
 
-        Buffer(std::nullptr_t p)
+        explicit Buffer(std::nullptr_t p)
         {
         }
 
-        Buffer(int32_t size)
+        explicit Buffer(int32_t size)
         {
             ptr = std::make_shared<std::unique_ptr<uint32_t[]>>();
             *ptr = std::make_unique<uint32_t[]>(size);

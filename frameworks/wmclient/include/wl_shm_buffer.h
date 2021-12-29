@@ -16,6 +16,8 @@
 #ifndef FRAMEWORKS_WMCLIENT_INCLUDE_WL_SHM_BUFFER_H
 #define FRAMEWORKS_WMCLIENT_INCLUDE_WL_SHM_BUFFER_H
 
+#include <sys/mman.h>
+
 #include "wl_buffer.h"
 
 namespace OHOS {

@@ -16,6 +16,8 @@
 #ifndef FRAMEWORKS_WMCLIENT_INCLUDE_STATIC_CALL_H
 #define FRAMEWORKS_WMCLIENT_INCLUDE_STATIC_CALL_H
 
+#include <mutex>
+
 #include <refbase.h>
 #include <surface.h>
 #include <window_manager.h>

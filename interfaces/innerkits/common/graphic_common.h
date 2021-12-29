@@ -109,11 +109,17 @@ static inline std::ostream &operator <<(std::ostream &os, const GSError &err)
 
 static inline bool operator ==(GSError a, GSError b)
 {
+    if (static_cast<int32_t>(a) / LOWERROR_MAX == 0) {
+        return static_cast<int32_t>(a) == static_cast<int32_t>(b);
+    }
     return static_cast<int32_t>(a) / LOWERROR_MAX == static_cast<int32_t>(b) / LOWERROR_MAX;
 }
 
 static inline bool operator !=(GSError a, GSError b)
 {
+    if (static_cast<int32_t>(a) / LOWERROR_MAX == 0) {
+        return static_cast<int32_t>(a) != static_cast<int32_t>(b);
+    }
     return static_cast<int32_t>(a) / LOWERROR_MAX != static_cast<int32_t>(b) / LOWERROR_MAX;
 }
 

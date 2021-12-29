@@ -90,7 +90,7 @@ public:
     void OnPIPModeChange(bool isOnPIPMode)
     {
         if (isOnPIPMode) {
-            drawptr = NativeTestDraw::ColorDraw;
+            drawptr = NativeTestDraw::RainbowDraw;
         } else {
             drawptr = NativeTestDraw::FlushDraw;
         }

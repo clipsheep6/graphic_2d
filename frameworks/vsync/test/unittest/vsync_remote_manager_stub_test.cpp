@@ -92,6 +92,7 @@ HWTEST_F(VsyncManagerStubTest, ListenVsync1, testing::ext::TestSize.Level0)
     sptr<IVsyncCallback> cb = nullptr;
     auto ret = vc_->ListenVsync(cb);
     ASSERT_EQ(ret, GSERROR_INVALID_ARGUMENTS);
+    vc_->RemoveVsync(cb);
 }
 
 HWTEST_F(VsyncManagerStubTest, ListenVsync2, testing::ext::TestSize.Level0)
@@ -100,6 +101,7 @@ HWTEST_F(VsyncManagerStubTest, ListenVsync2, testing::ext::TestSize.Level0)
     sptr<IVsyncCallback> cb = new VsyncCallback(count);
     auto ret = vc_->ListenVsync(cb);
     ASSERT_EQ(ret, GSERROR_OK);
+    vc_->RemoveVsync(cb);
 }
 
 HWTEST_F(VsyncManagerStubTest, GetVsyncFrequency, testing::ext::TestSize.Level0)
@@ -119,6 +121,7 @@ HWTEST_F(VsyncManagerStubTest, Callback1, testing::ext::TestSize.Level0)
     int64_t timestamp = (int64_t)std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
     vc_->Callback(timestamp);
     ASSERT_EQ(count, 1);
+    vc_->RemoveVsync(cb);
 }
 
 HWTEST_F(VsyncManagerStubTest, Callback2, testing::ext::TestSize.Level0)
@@ -128,6 +131,7 @@ HWTEST_F(VsyncManagerStubTest, Callback2, testing::ext::TestSize.Level0)
     vc_->ListenVsync(cb);
     vc_->Callback(0);
     ASSERT_EQ(count, 0);
+    vc_->RemoveVsync(cb);
 }
 } // namespace
 

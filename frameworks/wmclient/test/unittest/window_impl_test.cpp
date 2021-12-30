@@ -158,6 +158,7 @@ HWTEST_F(WindowImplTest, Create04, Reliability | SmallTest | Level4)
         STEP("2. call WindowImpl::Create") {
             sptr<Window> window = nullptr;
             sptr<MockIWindowManagerService> wms = new MockIWindowManagerService();
+            EXPECT_CALL(*wms, DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
             wret = WindowImpl::Create(window, wo, wms);
             STEP_ASSERT_EQ(window, nullptr);
         }
@@ -192,6 +193,7 @@ HWTEST_F(WindowImplTest, Create05, Reliability | SmallTest | Level4)
         STEP("2. call WindowImpl::Create") {
             sptr<Window> window = nullptr;
             sptr<MockIWindowManagerService> wms = new MockIWindowManagerService();
+            EXPECT_CALL(*wms, DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
             wret = WindowImpl::Create(window, wo, wms);
             STEP_ASSERT_EQ(window, nullptr);
         }
@@ -228,6 +230,7 @@ HWTEST_F(WindowImplTest, Create06, Reliability | SmallTest | Level3)
         STEP("2. call WindowImpl::Create") {
             sptr<Window> window = nullptr;
             sptr<MockIWindowManagerService> wms = new MockIWindowManagerService();
+            EXPECT_CALL(*wms, DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
             wret = WindowImpl::Create(window, wo, wms);
             STEP_ASSERT_EQ(window, nullptr);
         }
@@ -263,6 +266,7 @@ HWTEST_F(WindowImplTest, Create07, Reliability | SmallTest | Level4)
         STEP("2. call WindowImpl::Create") {
             sptr<Window> window = nullptr;
             sptr<MockIWindowManagerService> wms = new MockIWindowManagerService();
+            EXPECT_CALL(*wms, DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
             wret = WindowImpl::Create(window, wo, wms);
             STEP_ASSERT_EQ(window, nullptr);
         }
@@ -301,6 +305,7 @@ HWTEST_F(WindowImplTest, Create08, Reliability | SmallTest | Level4)
         STEP("2. call WindowImpl::Create") {
             sptr<Window> window = nullptr;
             sptr<MockIWindowManagerService> wms = new MockIWindowManagerService();
+            EXPECT_CALL(*wms, DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
             wret = WindowImpl::Create(window, wo, wms);
             STEP_ASSERT_EQ(window, nullptr);
         }
@@ -326,6 +331,7 @@ HWTEST_F(WindowImplTest, Create09, Function | SmallTest | Level1)
         STEP("1. call WindowImpl::Create") {
             sptr<Window> window = nullptr;
             sptr<MockIWindowManagerService> wms = new MockIWindowManagerService();
+            EXPECT_CALL(*wms, DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
             wret = WindowImpl::Create(window, wo, wms);
             STEP_ASSERT_NE(window, nullptr);
         }
@@ -370,6 +376,7 @@ HWTEST_F(WindowImplTest, Create10, Function | SmallTest | Level2)
             STEP_ASSERT_EQ(wret, GSERROR_OK);
 
             sptr<MockIWindowManagerService> wms = new MockIWindowManagerService();
+            EXPECT_CALL(*wms, DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
             EXPECT_CALL(*wms, Move(_, _, _)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
             EXPECT_CALL(*wms, Resize(_, _, _)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
             wret = WindowImpl::Create(window, wo, wms);
@@ -469,6 +476,7 @@ HWTEST_F(WindowImplTest, GetID01, Function | SmallTest | Level1)
         sptr<Window> window = nullptr;
         STEP("2. call WindowImpl::Create") {
             sptr<MockIWindowManagerService> wms = new MockIWindowManagerService();
+            EXPECT_CALL(*wms, DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
             auto wret = WindowImpl::Create(window, wo, wms);
             STEP_ASSERT_NE(window, nullptr);
             STEP_ASSERT_EQ(wret, GSERROR_OK);
@@ -533,6 +541,7 @@ HWTEST_F(WindowImplTest, Show01, Function | SmallTest | Level2)
 
         STEP("3. expect wms->Show called 2 times") {
             EXPECT_CALL(*m->Mock(), Show(_)).Times(2).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
+            EXPECT_CALL(*m->Mock(), DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
         }
 
         STEP("4. call Show, check GSERROR_OK") {
@@ -585,6 +594,7 @@ HWTEST_F(WindowImplTest, Hide01, Function | SmallTest | Level2)
         STEP("1. mock IWindowManagerService as wms") {
             m = std::make_unique<Mocker>();
             EXPECT_CALL(*m->Mock(), Show(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
+            EXPECT_CALL(*m->Mock(), DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
         }
 
         sptr<Window> window = nullptr;
@@ -663,6 +673,7 @@ HWTEST_F(WindowImplTest, Move01, Function | SmallTest | Level2)
         STEP("3. expect wms->Move called 2 times") {
             EXPECT_CALL(*m->Mock(), Move(_, _, _))
                 .Times(2).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
+            EXPECT_CALL(*m->Mock(), DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
         }
 
         STEP("4. call Move 1 1, check GSERROR_OK") {
@@ -724,6 +735,7 @@ HWTEST_F(WindowImplTest, SwitchTop01, Function | SmallTest | Level2)
         STEP("3. expect wms->SwitchTop called 1 times") {
             EXPECT_CALL(*m->Mock(), SwitchTop(_))
                 .Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
+            EXPECT_CALL(*m->Mock(), DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
         }
 
         STEP("4. call SwitchTop, check GSERROR_OK") {
@@ -781,6 +793,7 @@ HWTEST_F(WindowImplTest, SetWindowType01, Function | SmallTest | Level2)
         STEP("3. expect wms->SetWindowType called 2 times") {
             EXPECT_CALL(*m->Mock(), SetWindowType(_, _))
                 .Times(2).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
+            EXPECT_CALL(*m->Mock(), DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
         }
 
         STEP("4. call SetWindowType WINDOW_TYPE_ALARM_SCREEN, check GSERROR_OK") {
@@ -911,6 +924,7 @@ HWTEST_F(WindowImplTest, Resize01, Function | SmallTest | Level2)
         STEP("3. expect wms->Resize called 2 times") {
             EXPECT_CALL(*m->Mock(), Resize(_, _, _))
                 .Times(2).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
+            EXPECT_CALL(*m->Mock(), DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
         }
 
         constexpr int32_t xy = 2;
@@ -991,6 +1005,7 @@ HWTEST_F(WindowImplTest, ScaleTo01, Function | SmallTest | Level2)
         STEP("3. expect wms->ScaleTo called 2 times") {
             EXPECT_CALL(*m->Mock(), ScaleTo(_, _, _))
                 .Times(2).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
+            EXPECT_CALL(*m->Mock(), DestroyWindow(_)).Times(1).WillRepeatedly(Return(new Promise<GSError>(GSERROR_OK)));
         }
 
         constexpr int32_t xy = 2;

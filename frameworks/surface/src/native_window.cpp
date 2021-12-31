@@ -128,12 +128,6 @@ int32_t NativeWindowFlushBuffer(struct NativeWindow *window, struct NativeWindow
         config.timestamp = 0;
     }
 
-    BufferHandle *nBufferHandle = buffer->sfbuffer->GetBufferHandle();
-    BLOGD("RequestBuffer handle info : fd = %{public}d, width = %{public}d, stride = %{public}d, height = %{public}d, \
-            size = %{public}d, format = %{public}d, usage = %{public}lld, virAddr = %{public}p, phyAddr = %{public}lld", 
-            nBufferHandle->fd, nBufferHandle->width, nBufferHandle->stride, nBufferHandle->height, nBufferHandle->size,
-            nBufferHandle->format, nBufferHandle->usage, nBufferHandle->virAddr, nBufferHandle->phyAddr);
-
     window->surface->FlushBuffer(buffer->sfbuffer, fenceFd, config);
 
     // unreference nativewindowbuffer object

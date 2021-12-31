@@ -62,6 +62,9 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
     int32_t ret = DISPLAY_SUCCESS;
     for (auto &output : outputs) {
         const std::unordered_map<uint32_t, LayerPtr> layersMap = output->GetLayers();
+        if (layersMap.empty()) {
+            continue;
+        }
         uint32_t screenId = output->GetScreenId();
         for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {
             const LayerPtr &layer = iter->second;

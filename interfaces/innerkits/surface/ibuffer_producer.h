@@ -42,6 +42,9 @@ public:
     virtual SurfaceError FlushBuffer(int32_t sequence, BufferExtraData &bedata,
                                      int32_t fence, BufferFlushConfig &config) = 0;
 
+    virtual SurfaceError AttachBuffer(sptr<SurfaceBuffer>& buffer) = 0;
+    virtual SurfaceError DetachBuffer(sptr<SurfaceBuffer>& buffer) = 0;
+
     virtual uint32_t     GetQueueSize() = 0;
     virtual SurfaceError SetQueueSize(uint32_t queueSize) = 0;
 
@@ -54,6 +57,8 @@ public:
     virtual uint64_t     GetUniqueId() = 0;
 
     virtual SurfaceError CleanCache() = 0;
+
+    virtual SurfaceError RegisterReleaseListener(OnReleaseFunc func) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"surface.IBufferProducer");
 
@@ -69,7 +74,10 @@ protected:
         BUFFER_PRODUCER_GET_DEFAULT_HEIGHT = 7,
         BUFFER_PRODUCER_GET_DEFAULT_USAGE = 8,
         BUFFER_PRODUCER_CLEAN_CACHE = 9,
-        BUFFER_PRODUCER_GET_UNIQUE_ID = 10,
+        BUFFER_PRODUCER_ATTACH_BUFFER = 10,
+        BUFFER_PRODUCER_DETACH_BUFFER = 11,
+        BUFFER_PRODUCER_REGISTER_RELEASE_LISTENER = 12,
+		BUFFER_PRODUCER_GET_UNIQUE_ID = 13,
     };
 };
 } // namespace OHOS

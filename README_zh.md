@@ -149,11 +149,11 @@ foundation/graphic/standard/
 | GetPhyAddr      | 获得SurfaceBuffer的物理地址         |
 | GetKey          | 获得SurfaceBuffer的key              |
 | GetVirAddr      | 获得SurfaceBuffer的虚拟地址         |
-| GetSize         | 获得SurfaceBuffer的文件句柄         |
-| SetInt32        | 获得SurfaceBuffer的缓冲区大小       |
-| GetInt32        | 设置SurfaceBuffer的32位整数         |
-| SetInt64        | 获得SurfaceBuffer的32位整数         |
-| GetInt64        | 设置SurfaceBuffer的64位整数         |
+| GetSize         | 获得SurfaceBuffer的缓冲区大小         |
+| SetInt32        | 设置SurfaceBuffer的32位整数       |
+| GetInt32        | 获得SurfaceBuffer的32位整数         |
+| SetInt64        | 设置SurfaceBuffer的64位整数         |
+| GetInt64        | 获得SurfaceBuffer的64位整数         |
 
 ### VsyncHelper
 | 接口名               | 职责                              |

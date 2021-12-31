@@ -30,13 +30,9 @@ config("public_config") {
 }
 
 ohos_executable("hello_rosen") {
-  sources = [
-    "HelloRosen.cpp",
-  ]
+  sources = [ "HelloRosen.cpp" ]
 
-  configs = [
-    ":config",
-  ]
+  configs = [ ":config" ]
 
   public_configs = [
     ":public_config",
@@ -56,5 +52,4 @@ ohos_executable("hello_rosen") {
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
-
 ## Build 2d_graphics.so }}}

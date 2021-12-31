@@ -36,32 +36,30 @@ config("libwmadaptertest_config") {
 }
 
 config("libwmadaptertest_public_config") {
-  include_dirs =
-      [ "//foundation/graphic/standard/interfaces/innerkits/wmclient",
-        "//foundation/graphic/standard/rosen/modules/window/interfaces/innerkits/wm",
-        ]
+  include_dirs = [
+    "//foundation/graphic/standard/interfaces/innerkits/wmclient",
+    "//foundation/graphic/standard/rosen/modules/window/interfaces/innerkits/wm",
+  ]
 }
 
 ohos_shared_library("libwmadaptertest") {
-  sources = [
-    "src/adapter.cpp",
-  ]
+  sources = [ "src/adapter.cpp" ]
 
   configs = [ ":libwmadaptertest_config" ]
 
   public_configs = [ ":libwmadaptertest_public_config" ]
 
   deps = [
-    "//foundation/graphic/standard:libwmclient",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/graphic/standard:libwmclient",
     "//utils/native/base:utils",
   ]
 
   public_deps = [
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
-    "//utils/native/base:utils",
     "//foundation/graphic/standard:libsurface",
     "//foundation/graphic/standard/utils:promise",
+    "//utils/native/base:utils",
   ]
 
   part_name = "graphic_standard"

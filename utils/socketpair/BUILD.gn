@@ -41,9 +41,9 @@ ohos_shared_library("socketpair") {
   public_configs = [ ":socketpair_public_config" ]
 
   public_deps = [
-    "//utils/native/base:utils",
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
+    "//utils/native/base:utils",
   ]
 
   part_name = "graphic_standard"

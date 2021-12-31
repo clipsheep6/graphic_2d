@@ -40,19 +40,17 @@ config("composer_public_config") {
 ohos_shared_library("libcomposer") {
   sources = [
     "hdi_backend/src/hdi_backend.cpp",
-    "hdi_backend/src/hdi_screen.cpp",
-    "hdi_backend/src/hdi_output.cpp",
     "hdi_backend/src/hdi_device.cpp",
-    "hdi_backend/src/hdi_layer.cpp",
     "hdi_backend/src/hdi_framebuffer_surface.cpp",
+    "hdi_backend/src/hdi_layer.cpp",
+    "hdi_backend/src/hdi_output.cpp",
+    "hdi_backend/src/hdi_screen.cpp",
     "vsync/src/vsync.cpp",
   ]
 
   include_dirs = []
 
-  configs = [
-    ":composer_config",
-  ]
+  configs = [ ":composer_config" ]
 
   public_configs = [
     ":composer_public_config",
@@ -61,21 +59,20 @@ ohos_shared_library("libcomposer") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/graphic/standard/frameworks/vsync:libvsync_module",
-    "//foundation/graphic/standard:libsurface",
     "//drivers/peripheral/display/hal:hdi_display",
+    "//foundation/graphic/standard:libsurface",
+    "//foundation/graphic/standard/frameworks/vsync:libvsync_module",
   ]
 
   public_deps = [
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
+    "//foundation/graphic/standard/utils:buffer_handle",
     "//foundation/graphic/standard/utils:semaphore",
     "//foundation/graphic/standard/utils:sync_fence",
-    "//foundation/graphic/standard/utils:buffer_handle",
     "//utils/native/base:utils",
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
   ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
-
 ## Build libcomposer.so

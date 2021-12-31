@@ -12,11 +12,12 @@
 # limitations under the License.
 
 import("//build/test.gni")
-import("//foundation/graphic/standard/rosen/modules/render_service_client/render_service_client.gni")
+import(
+    "//foundation/graphic/standard/rosen/modules/render_service_client/render_service_client.gni")
+
 #import("//foundation/graphic/standard/rosen/modules/render_service_base/config.gni")
 
 module_output_path = "graphic_standard/rosen/modules/render_service_client"
-
 
 ohos_unittest("RSAnimationTest") {
   module_out_path = module_output_path
@@ -25,9 +26,9 @@ ohos_unittest("RSAnimationTest") {
     "rs_animation_test.cpp",
 
     #client_animation
+    "$rosen_root/modules/render_service_client/core/animation/rs_animation.cpp",
     "$rosen_root/modules/render_service_client/core/animation/rs_animation_callback.cpp",
     "$rosen_root/modules/render_service_client/core/animation/rs_animation_group.cpp",
-    "$rosen_root/modules/render_service_client/core/animation/rs_animation.cpp",
     "$rosen_root/modules/render_service_client/core/animation/rs_curve_animation.cpp",
     "$rosen_root/modules/render_service_client/core/animation/rs_implicit_animation_param.cpp",
     "$rosen_root/modules/render_service_client/core/animation/rs_implicit_animator.cpp",
@@ -115,16 +116,14 @@ ohos_unittest("RSAnimationTest") {
     #"$rosen_root/modules/render_service_client/core/animation/rs_animation_timing_curve.cpp",
   ]
 
-  configs = [
-    ":rs_animation_test_config",
-  ]
+  configs = [ ":rs_animation_test_config" ]
 
   deps = [
+    "$rosen_root/modules/render_service_base:librender_service_base",
+    "$rosen_root/modules/render_service_base/src/platform:platform",
+    "$rosen_root/modules/render_service_client:librender_service_client",
     "//third_party/googletest:gtest_main",
     "//utils/native/base:utils",
-    "$rosen_root/modules/render_service_base:librender_service_base",
-    "$rosen_root/modules/render_service_client:librender_service_client",
-    "$rosen_root/modules/render_service_base/src/platform:platform",
   ]
 }
 
@@ -142,7 +141,5 @@ config("rs_animation_test_config") {
 
 group("unittest") {
   testonly = true
-  deps = [
-    ":RSAnimationTest"
-  ]
+  deps = [ ":RSAnimationTest" ]
 }

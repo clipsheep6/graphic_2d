@@ -20,9 +20,7 @@ module_output_path = "graphic/rosen_engine/render_service_client/transaction"
 ohos_unittest("RSRenderTransactionTest") {
   module_out_path = module_output_path
 
-  sources = [
-    "rs_transaction_test.cpp"
-  ]
+  sources = [ "rs_transaction_test.cpp" ]
 
   configs = [
     ":ui_test",

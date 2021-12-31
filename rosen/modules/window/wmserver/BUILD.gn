@@ -42,15 +42,13 @@ ohos_shared_library("libwms") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-    "//utils/native/base:utils",
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//foundation/graphic/standard/rosen/modules/window/wm:libwmutil",
+    "//utils/native/base:utils",
   ]
 
-  external_deps = [
-    "ipc:ipc_core",
-  ]
+  external_deps = [ "ipc:ipc_core" ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

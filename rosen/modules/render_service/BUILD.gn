@@ -17,19 +17,18 @@ import("//build/ohos.gni")
 ohos_shared_library("librender_service") {
   defines = [ "ROSEN_DEBUG" ]
   sources = [
-    "core/pipeline/rs_processor.cpp",
     "core/pipeline/rs_hardware_processor.cpp",
-    "core/pipeline/rs_software_processor.cpp",
+    "core/pipeline/rs_main_thread.cpp",
+    "core/pipeline/rs_processor.cpp",
     "core/pipeline/rs_processor_factory.cpp",
     "core/pipeline/rs_render_service.cpp",
-    "core/pipeline/rs_main_thread.cpp",
     "core/pipeline/rs_render_service_listener.cpp",
     "core/pipeline/rs_render_service_visitor.cpp",
-    "core/transaction/rs_render_service_stub.cpp",
-
+    "core/pipeline/rs_software_processor.cpp",
     "core/screen_manager/rs_screen.cpp",
-    "core/screen_manager/rs_screen_manager.cpp",
     "core/screen_manager/rs_screen_change_callback_death_recipient.cpp",
+    "core/screen_manager/rs_screen_manager.cpp",
+    "core/transaction/rs_render_service_stub.cpp",
   ]
 
   include_dirs = [
@@ -41,21 +40,19 @@ ohos_shared_library("librender_service") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//utils/native/base:utils",
-    "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
-    "//foundation/graphic/standard/rosen/modules/composer:libcomposer",
-    "//foundation/graphic/standard:libwmclient",
     "//foundation/graphic/standard:libsurface",
+    "//foundation/graphic/standard:libwmclient",
+    "//foundation/graphic/standard/rosen/modules/composer:libcomposer",
+    "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
+    "//utils/native/base:utils",
   ]
 
-  public_deps = [
-    "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_ohos",
-  ]
+  public_deps = [ "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_ohos" ]
 
   external_deps = [
+    "bytrace_standard:bytrace_core",
     "ipc:ipc_core",
     "samgr_standard:samgr_proxy",
-    "bytrace_standard:bytrace_core",
   ]
 
   part_name = "graphic_standard"
@@ -74,13 +71,11 @@ ohos_executable("render_service") {
   deps = [
     ":librender_service",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/standard/rosen/modules/composer:libcomposer",
+    "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
   ]
 
-  external_deps = [
-    "ipc:ipc_core",
-  ]
+  external_deps = [ "ipc:ipc_core" ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
@@ -89,7 +84,5 @@ ohos_executable("render_service") {
 group("test") {
   testonly = true
 
-  deps = [
-    "core/screen_manager/test:test",
-  ]
+  deps = [ "core/screen_manager/test:test" ]
 }

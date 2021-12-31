@@ -11,18 +11,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//foundation/graphic/standard/rosen/modules/render_service_base/config.gni")
+import(
+    "//foundation/graphic/standard/rosen/modules/render_service_base/config.gni")
 
 group("platform") {
-    if (rosen_is_ohos) {
-        public_deps = [ "ohos" ]
-    } else if (rosen_is_win) {
-        public_deps = [ "windows" ]
-    } else if (rosen_is_mac || rosen_is_ios) {
-        public_deps = [ "darwin" ]
-    } else {
-        assert(false, "Unsupported platform")
-    }
+  if (rosen_is_ohos) {
+    public_deps = [ "ohos" ]
+  } else if (rosen_is_win) {
+    public_deps = [ "windows" ]
+  } else if (rosen_is_mac || rosen_is_ios) {
+    public_deps = [ "darwin" ]
+  } else {
+    assert(false, "Unsupported platform")
+  }
 }
-
-

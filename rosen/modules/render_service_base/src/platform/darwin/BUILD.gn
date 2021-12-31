@@ -12,14 +12,11 @@
 # limitations under the License.
 
 group("darwin") {
-  deps = [
-    ":rosen_darwin_sources"
-  ]
+  deps = [ ":rosen_darwin_sources" ]
 }
 
 config("export_config") {
-  include_dirs = [
-  ]
+  include_dirs = []
 }
 
 source_set("rosen_darwin_sources") {
@@ -34,6 +31,5 @@ source_set("rosen_darwin_sources") {
     "//foundation/graphic/standard/rosen/modules/render_service_base/include",
   ]
 
-  deps = [
-  ]
+  deps = []
 }

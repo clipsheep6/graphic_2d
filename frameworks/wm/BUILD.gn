@@ -29,9 +29,7 @@ config("wms_client_config") {
     "-g3",
   ]
   if ("${product_name}" == "Hi3516DV300") {
-    cflags += [
-      "-DHI3516_TEMP_ADAPTER",
-    ]
+    cflags += [ "-DHI3516_TEMP_ADAPTER" ]
   }
 }
 
@@ -136,9 +134,7 @@ config("libwmclient_config") {
     "-g3",
   ]
   if ("${product_name}" == "Hi3516DV300") {
-    cflags += [
-      "-DHI3516_TEMP_ADAPTER",
-    ]
+    cflags += [ "-DHI3516_TEMP_ADAPTER" ]
   }
 }
 

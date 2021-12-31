@@ -46,4 +46,3 @@ ohos_prebuilt_shared_library("gpu_libs") {
     "libGLESv3.so",
   ]
 }
-

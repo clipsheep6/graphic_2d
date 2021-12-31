@@ -56,9 +56,9 @@ ohos_shared_library("surface") {
     "src/buffer_queue_producer.cpp",
     "src/buffer_utils.cpp",
     "src/consumer_surface.cpp",
+    "src/native_window.cpp",
     "src/producer_surface.cpp",
     "src/surface.cpp",
-    "src/native_window.cpp",
     "src/surface_buffer_impl.cpp",
     "src/surface_utils.cpp",
   ]
@@ -95,13 +95,10 @@ ohos_shared_library("surface") {
   ]
 
   if (ace_enable_gpu) {
-    deps += [
-      "//foundation/graphic/standard/prebuilts/librarys/gpu:gpu_libs",
-    ]
+    deps += [ "//foundation/graphic/standard/prebuilts/librarys/gpu:gpu_libs" ]
   }
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
-
 ## Build surface.so }}}

@@ -20,7 +20,7 @@ config("rosenwmtest_config") {
   include_dirs = [
     "frameworks",
 
-# for abilityContext
+    # for abilityContext
     "//foundation/aafwk/standard/frameworks/kits/ability/ability_runtime/include",
     "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include",
     "//base/global/resmgr_standard/interfaces/innerkits/include",
@@ -54,10 +54,10 @@ ohos_executable("rosenwmtest") {
     "//foundation/graphic/standard:libvsync_client",
     "//foundation/graphic/standard:libwmclient",
     "//foundation/graphic/standard:libwmservice",
-    "//third_party/zlib:libz",
     "//foundation/graphic/standard/rosen/modules/window/adapter:libwmadaptertest",
     "//foundation/graphic/standard/rosen/modules/window/wm:libwm",
     "//foundation/graphic/standard/rosen/modules/window/wmserver:libwms",
+    "//third_party/zlib:libz",
   ]
 
   part_name = "graphic_standard"

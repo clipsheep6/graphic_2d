@@ -31,8 +31,8 @@ ohos_shared_library("2d_graphics") {
     "src/effect/shader_effect.cpp",
     "src/engine_adapter/impl_factory.cpp",
     "src/engine_adapter/skia_adapter/skia_bitmap.cpp",
-    "src/engine_adapter/skia_adapter/skia_canvas.cpp",
     "src/engine_adapter/skia_adapter/skia_camera.cpp",
+    "src/engine_adapter/skia_adapter/skia_canvas.cpp",
     "src/engine_adapter/skia_adapter/skia_color_filter.cpp",
     "src/engine_adapter/skia_adapter/skia_color_space.cpp",
     "src/engine_adapter/skia_adapter/skia_image_filter.cpp",
@@ -45,14 +45,12 @@ ohos_shared_library("2d_graphics") {
     "src/engine_adapter/skia_adapter/skia_shader_effect.cpp",
     "src/image/bitmap.cpp",
     "src/text/text.cpp",
-    "src/utils/matrix.cpp",
     "src/utils/camera3d.cpp",
+    "src/utils/matrix.cpp",
   ]
 
   if (ace_enable_gpu) {
-    sources += [
-      "src/render_context/render_context.cpp",
-    ]
+    sources += [ "src/render_context/render_context.cpp" ]
   }
 
   include_dirs = [
@@ -64,21 +62,18 @@ ohos_shared_library("2d_graphics") {
   ]
 
   if (ace_enable_gpu) {
-      include_dirs = [
-        "//foundation/graphic/standard/prebuilts/librarys/gpu/include",
-      ]
+    include_dirs =
+        [ "//foundation/graphic/standard/prebuilts/librarys/gpu/include" ]
   }
 
   deps = [
     "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_ohos",
-    "//utils/native/base:utils",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
+    "//utils/native/base:utils",
   ]
 
   if (ace_enable_gpu) {
-      deps = [
-        "//foundation/graphic/standard/prebuilts/librarys/gpu:gpu_libs",
-      ]
+    deps = [ "//foundation/graphic/standard/prebuilts/librarys/gpu:gpu_libs" ]
   }
 
   public_deps = [
@@ -89,5 +84,4 @@ ohos_shared_library("2d_graphics") {
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
-
 ## Build 2d_graphics.so

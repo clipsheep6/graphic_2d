@@ -25,6 +25,7 @@ void WlDMABufferFactoryTest::SetUp()
         csurface->RegisterConsumerListener(this);
         auto producer = csurface->GetProducer();
         psurface = Surface::CreateSurfaceAsProducer(producer);
+        int32_t fence;
         BufferRequestConfig config = {
             .width = 0x100,  // any value just small
             .height = 0x100, // any value just small
@@ -32,7 +33,7 @@ void WlDMABufferFactoryTest::SetUp()
             .format = PIXEL_FMT_RGBA_8888,
             .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
         };
-        psurface->RequestBufferNoFence(sbuffer, config);
+        psurface->RequestBuffer(sbuffer, fence, config);
     }
 }
 

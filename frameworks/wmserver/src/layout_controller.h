@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WMSERVER_SRC_LAYOUT_CONTROLLER_H
-#define FRAMEWORKS_WMSERVER_SRC_LAYOUT_CONTROLLER_H
+#ifndef FRAMEWORKS_WMSERVER_SRC_LAYOUT_H
+#define FRAMEWORKS_WMSERVER_SRC_LAYOUT_H
 
-#include "layout_header.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 #include <filesystem>
@@ -25,8 +25,45 @@
 #include <string>
 
 #include <window_manager_type.h>
+#endif
 
+struct layout {
+    double x;
+    double y;
+    double w;
+    double h;
+};
+
+#ifdef __cplusplus
+// C++ interface, Singleton
 namespace OHOS::WMServer {
+using AttributeProcessFunction = std::function<int32_t(const std::string &value,
+    struct Layout &layout, int32_t displayWidth, int32_t displayHeight)>;
+
+struct Layout {
+    uint32_t windowType;
+    std::string windowTypeString;
+    int zIndex;
+    enum class PositionType {
+        RELATIVE,
+        STATIC, // as status bar
+        FIXED,
+    } positionType;
+    enum class XPositionType {
+        UNSET, // unset
+        LFT,   // left
+        MID,   // middle
+        RGH,   // right
+    } pTypeX;
+    enum class YPositionType {
+        UNSET, // unset
+        TOP,   // top
+        MID,   // middle
+        BTM,   // bottom
+    } pTypeY;
+    struct layout layout;
+};
+
 class LayoutController {
 public:
     static LayoutController &GetInstance();
@@ -39,11 +76,8 @@ private:
     ~LayoutController() = default;
 
     void InitByDefaultValue();
-    void InitByParseSCSS();
     bool CalcNormalRect(struct layout &layout);
     const std::string searchCSSDirectory = "/system/etc/wmlayout.d";
-
-    void ParseSCSS(const std::filesystem::path &file);
 
     bool init = false;
     int32_t displayWidth = 0;
@@ -65,4 +99,4 @@ int32_t LayoutControllerCalcWindowDefaultLayout(uint32_t type,
 }
 #endif
 
-#endif // FRAMEWORKS_WMSERVER_SRC_LAYOUT_CONTROLLER_H
+#endif // FRAMEWORKS_WMSERVER_SRC_LAYOUT_H

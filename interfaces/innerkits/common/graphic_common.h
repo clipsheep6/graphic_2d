@@ -102,7 +102,11 @@ enum WMError {
 #ifdef __cplusplus
 static inline std::string WMErrorStr(WMError err)
 {
-    return GSErrorStr(static_cast<GSError>(err));
+    auto it = GSErrorStrs.find(static_cast<GSError>(err));
+    if (it == GSErrorStrs.end()) {
+        return "<WMError error index out of range>";
+    }
+    return it->second;
 }
 #endif // __cplusplus
 
@@ -127,7 +131,11 @@ enum SurfaceError {
 #ifdef __cplusplus
 static inline std::string SurfaceErrorStr(SurfaceError err)
 {
-    return GSErrorStr(static_cast<GSError>(err));
+    auto it = GSErrorStrs.find(static_cast<GSError>(err));
+    if (it == GSErrorStrs.end()) {
+        return "<SurfaceError error index out of range>";
+    }
+    return it->second;
 }
 #endif // __cplusplus
 
@@ -147,7 +155,11 @@ enum VsyncError {
 #ifdef __cplusplus
 static inline std::string VsyncErrorStr(VsyncError err)
 {
-    return GSErrorStr(static_cast<GSError>(err));
+    auto it = GSErrorStrs.find(static_cast<GSError>(err));
+    if (it == GSErrorStrs.end()) {
+        return "<VsyncError error index out of range>";
+    }
+    return it->second;
 }
 } // namespace OHOS
 #endif // __cplusplus

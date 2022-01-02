@@ -215,4 +215,14 @@ SurfaceError ConsumerSurface::CleanCache()
 {
     return producer_->CleanCache();
 }
+
+uint64_t ConsumerSurface::GetUniqueId() const
+{
+    return producer_->GetUniqueId();
+}
+
+void ConsumerSurface::Dump(std::string &result) const
+{
+    return consumer_->Dump(result);
+}
 } // namespace OHOS

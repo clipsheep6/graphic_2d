@@ -40,16 +40,12 @@ public:
 
     virtual void OnPositionChange(WindowPositionChangeFunc func) override;
     virtual void OnSizeChange(WindowSizeChangeFunc func) override;
-    virtual void OnBeforeFrameSubmit(BeforeFrameSubmitFunc func) override;
 
 private:
     SubwindowNormalImpl() = default;
     virtual ~SubwindowNormalImpl() = default;
 
     virtual void OnBufferAvailable() override;
-    void SendBufferToServer(sptr<WlBuffer> &wbuffer,
-                            sptr<SurfaceBuffer> &sbuffer,
-                            int32_t fence, Rect &damage);
 
     static WMError CheckAndNew(sptr<SubwindowNormalImpl> &si,
                                const sptr<Window> &window,
@@ -72,7 +68,6 @@ private:
     sptr<Surface> psurface = nullptr;
     sptr<WlSubsurface> wlSubsurface = nullptr;
     sptr<WlSurface> wlSurface = nullptr;
-    BeforeFrameSubmitFunc onBeforeFrameSubmitFunc = nullptr;
 };
 } // namespace OHOS
 

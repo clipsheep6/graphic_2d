@@ -20,6 +20,7 @@ config("libvsync_client_config") {
   include_dirs = [
     "include",
     "//utils/system/safwk/native/include",
+    "//foundation/graphic/standard/rosen/modules/render_service_base/include",
   ]
 
   cflags = [
@@ -54,10 +55,12 @@ ohos_shared_library("libvsync_client") {
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-    "//foundation/graphic/standard/utils/bytrace:graphic_bytrace",
   ]
 
-  external_deps = [ "ipc:ipc_core" ]
+  external_deps = [
+    "bytrace_standard:bytrace_core",
+    "ipc:ipc_core",
+  ]
 
   public_deps = [
     "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler:libeventhandler",
@@ -113,7 +116,6 @@ ohos_shared_library("libvsync_module") {
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-    "//foundation/graphic/standard/utils/bytrace:graphic_bytrace",
     "//third_party/libdrm:libdrm",
   ]
 

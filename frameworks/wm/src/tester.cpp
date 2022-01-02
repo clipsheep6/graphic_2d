@@ -15,7 +15,6 @@
 
 #include "tester.h"
 
-#include <thread>
 #include <unistd.h>
 
 #include "window_manager_hilog.h"

@@ -94,6 +94,10 @@ public:
 
     SurfaceError CleanCache();
 
+    uint64_t GetUniqueId() const;
+
+    void Dump(std::string &result);
+
 private:
     SurfaceError AllocBuffer(sptr<SurfaceBufferImpl>& buffer, const BufferRequestConfig &config);
     SurfaceError FreeBuffer(sptr<SurfaceBufferImpl>& buffer);
@@ -109,6 +113,8 @@ private:
     SurfaceError CheckRequestConfig(const BufferRequestConfig &config);
     SurfaceError CheckFlushConfig(const BufferFlushConfig &config);
 
+    void DumpCache(const std::list<int32_t> &dumpList, std::string &result);
+
     int32_t defaultWidth = 0;
     int32_t defaultHeight = 0;
     uint32_t defaultUsage = 0;
@@ -121,6 +127,7 @@ private:
     sptr<IBufferConsumerListener> listener_ = nullptr;
     IBufferConsumerListenerClazz *listenerClazz_ = nullptr;
     std::mutex mutex_;
+	const uint64_t uniqueId_;
     sptr<BufferManager> bufferManager_ = nullptr;
     OnReleaseFunc onBufferRelease = nullptr;
     bool isShared_ = false;

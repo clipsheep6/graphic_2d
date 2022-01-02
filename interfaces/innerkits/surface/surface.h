@@ -82,6 +82,10 @@ public:
     virtual SurfaceError RegisterReleaseListener(OnReleaseFunc func) = 0;
     virtual SurfaceError UnregisterConsumerListener() = 0;
 
+    virtual uint64_t GetUniqueId() const = 0;
+
+    virtual void Dump(std::string &result) const = 0;
+
     virtual SurfaceError CleanCache() = 0;
 
 protected:

@@ -23,6 +23,10 @@ group("semaphore") {
   public_deps = [ "semaphore:semaphore" ]
 }
 
-group("test_header") {
-  public_deps = [ "test_header:test_header" ]
+group("socketpair") {
+  public_deps = [ "socketpair:socketpair" ]
+}
+
+group("sync_fence") {
+  public_deps = [ "sync_fence:sync_fence" ]
 }

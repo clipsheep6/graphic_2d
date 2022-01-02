@@ -25,13 +25,7 @@
 #include <GLES2/gl2ext.h>
 #include <refbase.h>
 #include "surface_type.h"
-
-// gbm.h
-extern "C" {
-    struct gbm_device;
-    struct gbm_device *gbm_create_device(int32_t fd);
-    void gbm_device_destroy(struct gbm_device *);
-}
+#include "surface.h"
 
 using EglCreateImageFunc = PFNEGLCREATEIMAGEKHRPROC;
 using EglDestroyImageFunc = PFNEGLDESTROYIMAGEKHRPROC;
@@ -50,6 +44,7 @@ public:
 
     EGLDisplay GetEGLDisplay() const;
     EGLContext GetEGLContext() const;
+    EGLSurface GetEglSurface() const;
 
     EGLImageKHR EglCreateImage(EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attribList);
     EGLImageKHR EglCreateImage(EGLenum target, EGLClientBuffer buffer, const EGLint *attribList);
@@ -65,6 +60,8 @@ public:
     EGLBoolean EglMakeCurrent();
 
     SurfaceError Init(EGLContext ctx = EGL_NO_CONTEXT);
+    SurfaceError Init(EGLContext ctx, sptr<Surface> &surface);
+    void SwapBuffer();
     bool IsInit() const;
 
 private:
@@ -73,13 +70,14 @@ private:
     void Deinit();
     SurfaceError GbmInit();
     SurfaceError EglInit(EGLContext ctx = EGL_NO_CONTEXT);
+    SurfaceError EglInit(EGLContext ctx, sptr<Surface> &surface);
     SurfaceError EglCheckExt();
     SurfaceError EglFuncInit();
-
+    EGLSurface CreateEglSurface(sptr<Surface> &surface);
     thread_local static inline sptr<EglManager> instance_ = nullptr;
     bool initFlag_ = false;
     int drmFd_ = -1;
-    struct gbm_device *device_ = nullptr;
+    void *device_ = nullptr;
 
     EGLDisplay display_;
     EGLContext context_;
@@ -96,6 +94,7 @@ private:
     EglWaitSyncFunc waitSync_;
     EglClientWaitSyncFunc clientWaitSync_;
     EglDupNativeFenceFdFunc dupNativeFenceFd_;
+    EGLSurface eglSurface_ = EGL_NO_SURFACE;
 };
 } // namespace OHOS
 

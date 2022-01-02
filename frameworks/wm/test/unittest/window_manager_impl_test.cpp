@@ -405,10 +405,6 @@ HWTEST_F(WindowManagerImplTest, CreateSubwindow01, Reliability | SmallTest | Lev
         std::unique_ptr<Mocker> m = nullptr;
         sptr<WindowManagerImpl> wmi = WindowManagerImpl::GetInstance();
 
-        sptr<Window> window = nullptr;
-        auto woption = WindowOption::Get();
-        wmi->CreateWindow(window, woption);
-
         STEP("1. mock StaticCall") {
             m = std::make_unique<Mocker>();
         }
@@ -419,6 +415,7 @@ HWTEST_F(WindowManagerImplTest, CreateSubwindow01, Reliability | SmallTest | Lev
 
         STEP("3. call CreateSubwindow") {
             sptr<Subwindow> subwindow = nullptr;
+            sptr<Window> window = nullptr;
             auto option = SubwindowOption::Get();
             option->SetWindowType(SUBWINDOW_TYPE_NORMAL);
             wmi->CreateSubwindow(subwindow, window, option);
@@ -442,10 +439,6 @@ HWTEST_F(WindowManagerImplTest, CreateSubwindow02, Reliability | SmallTest | Lev
         std::unique_ptr<Mocker> m = nullptr;
         sptr<WindowManagerImpl> wmi = WindowManagerImpl::GetInstance();
 
-        sptr<Window> window = nullptr;
-        auto woption = WindowOption::Get();
-        wmi->CreateWindow(window, woption);
-
         STEP("1. mock StaticCall") {
             m = std::make_unique<Mocker>();
         }
@@ -456,6 +449,7 @@ HWTEST_F(WindowManagerImplTest, CreateSubwindow02, Reliability | SmallTest | Lev
 
         STEP("3. call CreateSubwindow") {
             sptr<Subwindow> subwindow = nullptr;
+            sptr<Window> window = nullptr;
             auto option = SubwindowOption::Get();
             option->SetWindowType(SUBWINDOW_TYPE_VIDEO);
             wmi->CreateSubwindow(subwindow, window, option);
@@ -493,8 +487,6 @@ HWTEST_F(WindowManagerImplTest, CreateSubwindow03, Reliability | SmallTest | Lev
         STEP("3. call CreateSubwindow") {
             sptr<Subwindow> subwindow = nullptr;
             sptr<Window> window = nullptr;
-            auto woption = WindowOption::Get();
-            wmi->CreateWindow(window, woption);
             wret = wmi->CreateSubwindow(subwindow, window, mockSubwindowOption);
         }
 

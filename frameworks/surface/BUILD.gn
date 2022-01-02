@@ -25,16 +25,24 @@ config("surface_config") {
     "-Werror",
     "-g3",
   ]
+  defines = gpu_defines
 }
 
 config("surface_public_config") {
   include_dirs = [
     "//foundation/graphic/standard/interfaces/innerkits/surface",
     "//foundation/graphic/standard/interfaces/innerkits/common",
+    "//foundation/graphic/standard/rosen/include/common",
+    "//third_party/weston/include",
+    "//foundation/graphic/standard/prebuilts/librarys/gpu/include",
   ]
 
   if (ace_enable_gpu) {
-    defines = [ "ACE_ENABLE_GPU" ]
+    defines = [
+      "ACE_ENABLE_GPU",
+      "ENABLE_EGL",
+      "EGL_NO_X11",
+    ]
   }
 
   cflags = [ "-Wno-error=deprecated-declarations" ]
@@ -50,9 +58,11 @@ ohos_shared_library("surface") {
     "src/buffer_queue_producer.cpp",
     "src/buffer_utils.cpp",
     "src/consumer_surface.cpp",
+    "src/native_window.cpp",
     "src/producer_surface.cpp",
     "src/surface.cpp",
     "src/surface_buffer_impl.cpp",
+    "src/surface_utils.cpp",
   ]
 
   if (ace_enable_gpu) {
@@ -77,25 +87,20 @@ ohos_shared_library("surface") {
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-    "//foundation/graphic/standard/utils/bytrace:graphic_bytrace",
   ]
 
   public_deps = [
     "//drivers/peripheral/display/hdi_service/gralloc/client:hdi_gralloc_client",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
-    "//foundation/graphic/standard:libgl",
     "//foundation/graphic/standard/utils:buffer_handle",
     "//utils/native/base:utils",
   ]
 
+  if (ace_enable_gpu) {
+    deps += [ "//foundation/graphic/standard/prebuilts/librarys/gpu:gpu_libs" ]
+  }
+
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
-
 ## Build surface.so }}}
-
-group("test") {
-  testonly = true
-
-  deps = [ "test:test" ]
-}

@@ -68,6 +68,7 @@ void WindowManagerImpl::InitSingleton()
         wlSHMBufferFactory = SingletonContainer::Get<WlSHMBufferFactory>();
         wlSubsurfaceFactory = SingletonContainer::Get<WlSubsurfaceFactory>();
         wlSurfaceFactory = SingletonContainer::Get<WlSurfaceFactory>();
+        wpViewportFactory = SingletonContainer::Get<WpViewportFactory>();
 
         inputListenerManager->Init();
         windowManagerServer->Init();
@@ -76,6 +77,7 @@ void WindowManagerImpl::InitSingleton()
         wlSHMBufferFactory->Init();
         wlSubsurfaceFactory->Init();
         wlSurfaceFactory->Init();
+        wpViewportFactory->Init();
 
         waylandService = SingletonContainer::Get<WaylandService>();
         waylandService->Start();
@@ -130,6 +132,7 @@ void WindowManagerImpl::DeinitSingleton()
         initSingleton = false;
         waylandService->Stop();
 
+        wpViewportFactory->Deinit();
         wlSurfaceFactory->Deinit();
         wlSubsurfaceFactory->Deinit();
         wlSHMBufferFactory->Deinit();
@@ -139,6 +142,7 @@ void WindowManagerImpl::DeinitSingleton()
         inputListenerManager->Deinit();
 
         waylandService = nullptr;
+        wpViewportFactory = nullptr;
         wlSurfaceFactory = nullptr;
         wlSubsurfaceFactory = nullptr;
         wlSHMBufferFactory = nullptr;
@@ -194,11 +198,6 @@ sptr<Window> WindowManagerImpl::GetWindowByID(int32_t wid)
 
 WMError WindowManagerImpl::CreateWindow(sptr<Window> &window, const sptr<WindowOption> &option)
 {
-    if (option == nullptr) {
-        WMLOGFE("WindowOption is nullptr");
-        return WM_ERROR_NULLPTR;
-    }
-
     if (wmservice == nullptr) {
         return WM_ERROR_NOT_INIT;
     }
@@ -214,16 +213,6 @@ WMError WindowManagerImpl::CreateSubwindow(sptr<Subwindow> &subwindow,
                                            const sptr<Window> &window,
                                            const sptr<SubwindowOption> &option)
 {
-    if (window == nullptr) {
-        WMLOGFE("Window is nullptr");
-        return WM_ERROR_NULLPTR;
-    }
-
-    if (option == nullptr) {
-        WMLOGFE("WindowOption is nullptr");
-        return WM_ERROR_NULLPTR;
-    }
-
     auto staticCall = SingletonContainer::Get<StaticCall>();
     if (option->GetWindowType() == SUBWINDOW_TYPE_NORMAL) {
         return staticCall->SubwindowNormalImplCreate(subwindow, window, option);

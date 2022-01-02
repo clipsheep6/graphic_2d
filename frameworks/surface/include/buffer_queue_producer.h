@@ -58,6 +58,8 @@ public:
     int32_t      GetDefaultHeight() override;
     uint32_t     GetDefaultUsage() override;
 
+    uint64_t     GetUniqueId() override;
+
     SurfaceError CleanCache() override;
 
     SurfaceError RegisterReleaseListener(OnReleaseFunc func) override;
@@ -74,6 +76,7 @@ private:
     int32_t GetDefaultWidthRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetDefaultHeightRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetDefaultUsageRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
+    int32_t GetUniqueIdRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t CleanCacheRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t RegisterReleaseListenerRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
 

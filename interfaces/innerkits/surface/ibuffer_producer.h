@@ -54,6 +54,8 @@ public:
     virtual int32_t      GetDefaultHeight() = 0;
     virtual uint32_t     GetDefaultUsage() = 0;
 
+    virtual uint64_t     GetUniqueId() = 0;
+
     virtual SurfaceError CleanCache() = 0;
 
     virtual SurfaceError RegisterReleaseListener(OnReleaseFunc func) = 0;
@@ -75,6 +77,7 @@ protected:
         BUFFER_PRODUCER_ATTACH_BUFFER = 10,
         BUFFER_PRODUCER_DETACH_BUFFER = 11,
         BUFFER_PRODUCER_REGISTER_RELEASE_LISTENER = 12,
+		BUFFER_PRODUCER_GET_UNIQUE_ID = 13,
     };
 };
 } // namespace OHOS

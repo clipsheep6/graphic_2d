@@ -16,9 +16,7 @@
 #ifndef FRAMEWORKS_WM_INCLUDE_WL_SURFACE_FACTORY_H
 #define FRAMEWORKS_WM_INCLUDE_WL_SURFACE_FACTORY_H
 
-#include <linux-explicit-synchronization-unstable-v1-client-protocol.h>
 #include <refbase.h>
-#include <viewporter-client-protocol.h>
 #include <wayland-client-protocol.h>
 
 #include "singleton_delegator.h"
@@ -30,20 +28,18 @@ class WlSurfaceFactory : public RefBase {
 public:
     static sptr<WlSurfaceFactory> GetInstance();
 
-    virtual void Init();
-    virtual void Deinit();
-    virtual sptr<WlSurface> Create();
+    MOCKABLE void Init();
+    MOCKABLE void Deinit();
+    MOCKABLE sptr<WlSurface> Create();
 
 private:
     WlSurfaceFactory() = default;
-    virtual ~WlSurfaceFactory() = default;
+    MOCKABLE ~WlSurfaceFactory() = default;
     static inline sptr<WlSurfaceFactory> instance = nullptr;
     static inline SingletonDelegator<WlSurfaceFactory> delegator;
 
     static void OnAppear(const GetServiceFunc get, const std::string &iname, uint32_t ver);
     static inline struct wl_compositor *compositor = nullptr;
-    static inline struct zwp_linux_explicit_synchronization_v1 *synchronization = nullptr;
-    static inline struct wp_viewporter *viewporter = nullptr;
 };
 } // namespace OHOS
 

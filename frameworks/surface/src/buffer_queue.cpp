@@ -18,11 +18,12 @@
 #include <algorithm>
 #include <fstream>
 #include <sstream>
+#include <memory>
+#include <unistd.h>
 #include <sys/time.h>
 #include <unistd.h>
 
 #include <display_type.h>
-#include <graphic_bytrace.h>
 
 #include "buffer_log.h"
 #include "buffer_manager.h"
@@ -30,10 +31,17 @@
 namespace OHOS {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "BufferQueue" };
+constexpr uint32_t UNIQUE_ID_OFFSET = 32;
 }
 
+static uint64_t GetUniqueIdImpl()
+{
+    static std::atomic<uint32_t> counter { 0 };
+    static uint64_t id = static_cast<uint64_t>(::getpid()) << UNIQUE_ID_OFFSET;
+    return id | counter++;
+}
 BufferQueue::BufferQueue(const std::string &name, bool isShared)
-    : name_(name), isShared_(isShared)
+    : name_(name), uniqueId_(GetUniqueIdImpl()), isShared_(isShared)
 {
     BLOGNI("ctor");
     bufferManager_ = BufferManager::GetInstance();
@@ -156,7 +164,6 @@ SurfaceError BufferQueue::CheckFlushConfig(const BufferFlushConfig &config)
 SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
                                         struct IBufferProducer::RequestBufferReturnValue &retval)
 {
-    ScopedBytrace func(__func__);
     if (listener_ == nullptr && listenerClazz_ == nullptr) {
         BLOGN_FAILURE_RET(SURFACE_ERROR_NO_CONSUMER);
     }
@@ -191,14 +198,12 @@ SurfaceError BufferQueue::RequestBuffer(const BufferRequestConfig &config, Buffe
     bufferImpl->GetExtraData(bedata);
     retval.buffer = bufferImpl;
     retval.fence = -1;
-    GraphicBytrace::BytraceBegin("ProducerUseBuffer");
     return ret;
 }
 
 SurfaceError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
                                       struct IBufferProducer::RequestBufferReturnValue &retval)
 {
-    ScopedBytrace func(__func__);
     sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
     retval.sequence = bufferImpl->GetSeqNum();
     bool needRealloc = (config != bufferQueueCache_[retval.sequence].config);
@@ -236,13 +241,11 @@ SurfaceError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferE
         retval.buffer = nullptr;
     }
 
-    GraphicBytrace::BytraceBegin("ProducerUseBuffer");
     return SURFACE_ERROR_OK;
 }
 
 SurfaceError BufferQueue::CancelBuffer(int32_t sequence, const BufferExtraData &bedata)
 {
-    ScopedBytrace func(__func__);
     if (isShared_) {
         BLOGN_FAILURE_RET(SURFACE_ERROR_INVALID_OPERATING);
     }
@@ -263,14 +266,12 @@ SurfaceError BufferQueue::CancelBuffer(int32_t sequence, const BufferExtraData &
 
     BLOGN_SUCCESS_ID(sequence, "cancel");
 
-    GraphicBytrace::BytraceEnd("ProducerUseBuffer");
     return SURFACE_ERROR_OK;
 }
 
 SurfaceError BufferQueue::FlushBuffer(int32_t sequence, const BufferExtraData &bedata,
                                       int32_t fence, const BufferFlushConfig &config)
 {
-    ScopedBytrace func(__func__);
     // check param
     auto sret = CheckFlushConfig(config);
     if (sret != SURFACE_ERROR_OK) {
@@ -299,8 +300,6 @@ SurfaceError BufferQueue::FlushBuffer(int32_t sequence, const BufferExtraData &b
         return SURFACE_ERROR_NO_CONSUMER;
     }
 
-    GraphicBytrace::BytraceEnd("ProducerUseBuffer");
-    ScopedBytrace bufferIPCSend("BufferIPCSend");
     sret = DoFlushBuffer(sequence, bedata, fence, config);
     if (sret != SURFACE_ERROR_OK) {
         return sret;
@@ -310,10 +309,8 @@ SurfaceError BufferQueue::FlushBuffer(int32_t sequence, const BufferExtraData &b
     if (sret == SURFACE_ERROR_OK) {
         BLOGN_SUCCESS_ID(sequence, "OnBufferAvailable Start");
         if (listener_ != nullptr) {
-            ScopedBytrace bufferIPCSend("OnBufferAvailable");
             listener_->OnBufferAvailable();
         } else if (listenerClazz_ != nullptr) {
-            ScopedBytrace bufferIPCSend("OnBufferAvailable");
             listenerClazz_->OnBufferAvailable();
         }
         BLOGN_SUCCESS_ID(sequence, "OnBufferAvailable End");
@@ -327,7 +324,6 @@ void BufferQueue::DumpToFile(int32_t sequence)
         return;
     }
 
-    ScopedBytrace func(__func__);
     struct timeval now;
     gettimeofday(&now, nullptr);
     constexpr int secToUsec = 1000 * 1000;
@@ -349,7 +345,6 @@ void BufferQueue::DumpToFile(int32_t sequence)
 SurfaceError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData &bedata,
                                         int32_t fence, const BufferFlushConfig &config)
 {
-    ScopedBytrace func(__func__);
     std::lock_guard<std::mutex> lockGuard(mutex_);
     if (bufferQueueCache_[sequence].isDeleting) {
         DeleteBufferInCache(sequence);
@@ -383,10 +378,9 @@ SurfaceError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData 
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer,
+SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl>& buffer,
                                         int32_t &fence, int64_t &timestamp, Rect &damage)
 {
-    ScopedBytrace func(__func__);
     // dequeue from dirty list
     std::lock_guard<std::mutex> lockGuard(mutex_);
     SurfaceError ret = PopFromDirtyList(buffer);
@@ -410,9 +404,8 @@ SurfaceError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer,
     return ret;
 }
 
-SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl> &buffer, int32_t fence)
+SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t fence)
 {
-    ScopedBytrace func(__func__);
     int32_t sequence = buffer->GetSeqNum();
     {
         std::lock_guard<std::mutex> lockGuard(mutex_);
@@ -431,7 +424,6 @@ SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl> &buffer, int32_t
     }
 
     if (onBufferRelease != nullptr) {
-        ScopedBytrace func("OnBufferRelease");
         sptr<SurfaceBuffer> buf = buffer;
         BLOGNI("onBufferRelease start");
         auto sret = onBufferRelease(buf);
@@ -460,7 +452,6 @@ SurfaceError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl> &buffer, int32_t
 SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
     const BufferRequestConfig &config)
 {
-    ScopedBytrace func(__func__);
     buffer = new SurfaceBufferImpl();
     int32_t sequence = buffer->GetSeqNum();
 
@@ -503,7 +494,9 @@ SurfaceError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
 SurfaceError BufferQueue::FreeBuffer(sptr<SurfaceBufferImpl> &buffer)
 {
     BLOGND("Free [%{public}d]", buffer->GetSeqNum());
+#ifdef ACE_ENABLE_GL
     buffer->SetEglData(nullptr);
+#endif
     bufferManager_->Unmap(buffer);
     bufferManager_->Free(buffer);
     return SURFACE_ERROR_OK;
@@ -526,7 +519,6 @@ uint32_t BufferQueue::GetQueueSize()
 
 void BufferQueue::DeleteBuffers(int32_t count)
 {
-    ScopedBytrace func(__func__);
     if (count <= 0) {
         return;
     }
@@ -565,7 +557,7 @@ void BufferQueue::DeleteBuffers(int32_t count)
 
 SurfaceError BufferQueue::AttachBuffer(sptr<SurfaceBufferImpl> &buffer)
 {
-    ScopedBytrace func(__func__);
+
     if (isShared_) {
         BLOGN_FAILURE_RET(SURFACE_ERROR_INVALID_OPERATING);
     }
@@ -614,7 +606,7 @@ SurfaceError BufferQueue::AttachBuffer(sptr<SurfaceBufferImpl> &buffer)
 
 SurfaceError BufferQueue::DetachBuffer(sptr<SurfaceBufferImpl> &buffer)
 {
-    ScopedBytrace func(__func__);
+
     if (isShared_) {
         BLOGN_FAILURE_RET(SURFACE_ERROR_INVALID_OPERATING);
     }
@@ -672,7 +664,7 @@ SurfaceError BufferQueue::GetName(std::string &name)
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError BufferQueue::RegisterConsumerListener(sptr<IBufferConsumerListener> &listener)
+SurfaceError BufferQueue::RegisterConsumerListener(sptr<IBufferConsumerListener>& listener)
 {
     listener_ = listener;
     return SURFACE_ERROR_OK;
@@ -739,5 +731,45 @@ SurfaceError BufferQueue::CleanCache()
 {
     DeleteBuffers(queueSize_);
     return SURFACE_ERROR_OK;
+}
+
+uint64_t BufferQueue::GetUniqueId() const
+{
+    return uniqueId_;
+}
+
+void BufferQueue::DumpCache(const std::list<int32_t> &dumpList, std::string &result)
+{
+    for (auto it = dumpList.begin(); it != dumpList.end(); it++) {
+        BufferElement element = bufferQueueCache_.at(*it);
+        result += "    state = " + std::to_string(element.state) +
+            ", timestamp = " + std::to_string(element.timestamp);
+        result += ", damageRect = [" + std::to_string(element.damage.x) + ", " +
+            std::to_string(element.damage.y) + ", " +
+            std::to_string(element.damage.w) + ", " +
+            std::to_string(element.damage.h) + "],";
+        result += " config = [" + std::to_string(element.config.width) + "x" +
+            std::to_string(element.config.height) + ":" +
+            std::to_string(element.config.strideAlignment) + ", " +
+            std::to_string(element.config.format) +", " +
+            std::to_string(element.config.usage) + ", " +
+            std::to_string(element.config.timeout) + "]\n";
+    }
+}
+
+void BufferQueue::Dump(std::string &result)
+{
+    std::lock_guard<std::mutex> lockGuard(mutex_);
+    result.append("-- BufferQueue\n");
+    result += "  default-size = [" + std::to_string(defaultWidth) + "x" + std::to_string(defaultHeight) + "]\n";
+    result += "  FIFO = " + std::to_string(queueSize_) + "\n";
+    result += "  name = " + name_ + "\n";
+
+    result.append("  FreeList:\n");
+    DumpCache(freeList_, result);
+    result.append("  DirtyList:\n");
+    DumpCache(dirtyList_, result);
+    result.append("  DeletingList:\n");
+    DumpCache(deletingList_, result);
 }
 }; // namespace OHOS

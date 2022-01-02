@@ -278,4 +278,9 @@ SurfaceError ProducerSurface::CleanCache()
 {
     return producer_->CleanCache();
 }
+
+uint64_t ProducerSurface::GetUniqueId() const
+{
+    return producer_->GetUniqueId();
+}
 } // namespace OHOS

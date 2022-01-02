@@ -78,6 +78,10 @@ public:
     SurfaceError RegisterReleaseListener(OnReleaseFunc func) override;
     SurfaceError UnregisterConsumerListener() override;
 
+    uint64_t GetUniqueId() const override;
+
+    void Dump(std::string &result) const override;
+
     SurfaceError CleanCache() override;
 
 private:

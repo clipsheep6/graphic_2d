@@ -19,14 +19,13 @@
 #include <map>
 #include <string>
 
+#include "egl_manager.h"
 #include <egl_surface.h>
 #include <ibuffer_producer.h>
-
-#include "egl_manager.h"
 #include "surface_buffer_impl.h"
 
 namespace OHOS {
-class ProducerEglSurface : public EglSurface {
+class ProducerEglSurface : public EglRenderSurface {
 public:
     ProducerEglSurface(sptr<IBufferProducer>& producer);
     virtual ~ProducerEglSurface();
@@ -52,6 +51,7 @@ private:
 
     std::map<int32_t, sptr<SurfaceBufferImpl>> bufferProducerCache_;
     sptr<IBufferProducer> producer_ = nullptr;
+    sptr<Surface> surface_ = nullptr;
     std::string name_ = "not init";
     bool initFlag_ = false;
     sptr<EglManager> sEglManager_ = nullptr;

@@ -16,7 +16,7 @@
 #ifndef BS_NATIVE_WINDOW_H
 #define BS_NATIVE_WINDOW_H
 
-#include "window.h"
+#include "surface_window.h"
 
 #include <refbase.h>
 #include <surface.h>

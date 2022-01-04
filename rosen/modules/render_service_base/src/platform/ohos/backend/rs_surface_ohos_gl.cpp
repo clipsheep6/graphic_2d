@@ -16,7 +16,7 @@
 #include "rs_surface_frame_ohos_gl.h"
 #include "rs_surface_ohos_gl.h"
 #include "platform/common/rs_log.h"
-#include "window.h"
+#include "surface_window.h"
 #include <hilog/log.h>
 #include <display_type.h>
 #include "pipeline/rs_render_thread.h"

@@ -65,7 +65,7 @@ private:
 
     int32_t CreateLayer(uint64_t surfaceId, const LayerInfoPtr &layerInfo);
     void ClosePrevLayers();
-    void CloseLayer(LayerPtr &layer);
+    void CloseLayer(const LayerPtr &layer);
     void ResetLayerStatus();
 
     inline bool CheckFbSurface();

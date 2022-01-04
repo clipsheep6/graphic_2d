@@ -137,10 +137,11 @@ void HdiLayer::UpdateLayerInfo(const LayerInfoPtr &layerInfo)
 
 void HdiLayer::ReleaseBuffer()
 {
+    // check gpu buffer release
     if (currSbuffer_->sbuffer_ != prevSbuffer_->sbuffer_) {
         SurfaceError ret = ReleasePrevBuffer();
         if (ret != SURFACE_ERROR_OK) {
-            HLOGE("ReleaseBuffer failed, ret is %{public}d", ret);
+            HLOGW("ReleaseBuffer failed, ret is %{public}d", ret);
         }
 
         /* copy currSbuffer to prevSbuffer */
@@ -169,6 +170,7 @@ SurfaceError HdiLayer::ReleasePrevBuffer()
     }
 
     int32_t fenceFd = prevSbuffer_->releaseFence_->Dup();
+
     SurfaceError ret = layerInfo_->GetSurface()->ReleaseBuffer(prevSbuffer_->sbuffer_, fenceFd);
     if (ret != SURFACE_ERROR_OK) {
         return ret;
@@ -192,6 +194,15 @@ void HdiLayer::MergeWithLayerFence(const sptr<SyncFence> &layerReleaseFence)
     if (layerReleaseFence != nullptr) {
         prevSbuffer_->releaseFence_ = Merge(prevSbuffer_->releaseFence_, layerReleaseFence);
     }
+}
+
+void HdiLayer::UpdateCompositionType(CompositionType type)
+{
+    if (layerInfo_ == nullptr) {
+        return;
+    }
+
+    layerInfo_->SetCompositionType(type);
 }
 /* backend get layer info end */
 

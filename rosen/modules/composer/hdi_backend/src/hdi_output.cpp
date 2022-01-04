@@ -76,7 +76,7 @@ void HdiOutput::ClosePrevLayers()
 {
     auto surfaceIter = surfaceIdMap_.begin();
     while (surfaceIter != surfaceIdMap_.end()) {
-        LayerPtr &layer = surfaceIter->second;
+        const LayerPtr &layer = surfaceIter->second;
         if (!layer->GetLayerStatus()) {
             CloseLayer(layer);
             surfaceIdMap_.erase(surfaceIter++);
@@ -87,7 +87,7 @@ void HdiOutput::ClosePrevLayers()
 
     auto layerIter = layerIdMap_.begin();
     while (layerIter != layerIdMap_.end()) {
-        LayerPtr &layer = layerIter->second;
+        const LayerPtr &layer = layerIter->second;
         if (!layer->GetLayerStatus()) {
             layerIdMap_.erase(layerIter++);
         } else {
@@ -126,12 +126,18 @@ int32_t HdiOutput::CreateLayer(uint64_t surfaceId, const LayerInfoPtr &layerInfo
     layer->UpdateLayerInfo(layerInfo);
 
     layerIdMap_[layerId] = layer;
+
+    auto iter = surfaceIdMap_.find(surfaceId);
+    if (iter != surfaceIdMap_.end()) {
+        /* same surface id, but layer size is different */
+        CloseLayer(iter->second);
+    }
     surfaceIdMap_[surfaceId] = layer;
 
     return DISPLAY_SUCCESS;
 }
 
-void HdiOutput::CloseLayer(std::shared_ptr<HdiLayer> &layer)
+void HdiOutput::CloseLayer(const std::shared_ptr<HdiLayer> &layer)
 {
     uint32_t layerId = layer->GetLayerId();
     if (layerId == INT_MAX) {

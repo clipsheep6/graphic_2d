@@ -67,7 +67,7 @@ public:
     HdiLayerInfo() = default;
     virtual ~HdiLayerInfo() = default;
 
-    /* rs create and set layer info begin */
+    /* rs create and set/get layer info begin */
     static std::shared_ptr<HdiLayerInfo> CreateHdiLayerInfo()
     {
         return std::make_shared<HdiLayerInfo>();
@@ -134,7 +134,17 @@ public:
     {
         layerRect_ = layerRect;
     }
-    /* rs create and set layer info end */
+
+    void SetLayerAdditionalInfo(void *info)
+    {
+        additionalInfo_ = info;
+    }
+
+    void* GetLayerAdditionalInfo()
+    {
+        return additionalInfo_;
+    }
+    /* rs create and set/get layer info end */
 
     /* hdiLayer get layer info begin */
     sptr<Surface> GetSurface() const
@@ -253,6 +263,7 @@ private:
     CompositionType compositionType_;
     BlendType blendType_;
 
+    void *additionalInfo_ = nullptr;
     sptr<Surface> cSurface_ = nullptr;
     sptr<SurfaceBuffer> sbuffer_ = nullptr;
 

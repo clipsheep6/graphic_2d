@@ -41,6 +41,7 @@ public:
     void ReleaseBuffer();
     void MergeWithFramebufferFence(const sptr<SyncFence> &fbAcquireFence);
     void MergeWithLayerFence(const sptr<SyncFence> &layerReleaseFence);
+    void UpdateCompositionType(CompositionType type);
 
     const LayerInfoPtr& GetLayerInfo();
     void SetLayerStatus(bool inUsing);

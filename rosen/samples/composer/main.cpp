@@ -37,7 +37,10 @@ using namespace OHOS::Rosen;
 using namespace std;
 
 namespace {
-#define LOG(fmt, ...) ::OHOS::HiviewDFX::HiLog::Info(             \
+#define LOGI(fmt, ...) ::OHOS::HiviewDFX::HiLog::Info(            \
+    ::OHOS::HiviewDFX::HiLogLabel {LOG_CORE, 0, "Hellocomposer"}, \
+    "%{public}s: " fmt, __func__, ##__VA_ARGS__)
+#define LOGE(fmt, ...) ::OHOS::HiviewDFX::HiLog::Error(           \
     ::OHOS::HiviewDFX::HiLogLabel {LOG_CORE, 0, "Hellocomposer"}, \
     "%{public}s: " fmt, __func__, ##__VA_ARGS__)
 }
@@ -106,16 +109,16 @@ SurfaceError HelloComposer::ProduceBuffer(OHOS::sptr<Surface> &produceSurface, i
 
     SurfaceError ret = produceSurface->RequestBufferWithFence(buffer, releaseFence, config);
     if (ret != 0) {
-        LOG("RequestBuffer failed: %{public}s", SurfaceErrorStr(ret).c_str());
+        LOGE("RequestBuffer failed: %{public}s", SurfaceErrorStr(ret).c_str());
         return ret;
     }
     if (buffer == nullptr) {
-        LOG("%s: buffer is nullptr", __func__);
+        LOGE("%s: buffer is nullptr", __func__);
         return SURFACE_ERROR_NULLPTR;
     }
 
     auto addr = static_cast<uint8_t *>(buffer->GetVirAddr());
-    LOG("buffer w:%{public}d h:%{public}d stride:%{public}d", buffer->GetWidth(), buffer->GetHeight(), buffer->GetBufferHandle()->stride);
+    LOGI("buffer w:%{public}d h:%{public}d stride:%{public}d", buffer->GetWidth(), buffer->GetHeight(), buffer->GetBufferHandle()->stride);
     DoDrawData(addr, buffer->GetWidth(), buffer->GetHeight());
 
     BufferFlushConfig flushConfig = {
@@ -126,7 +129,7 @@ SurfaceError HelloComposer::ProduceBuffer(OHOS::sptr<Surface> &produceSurface, i
     };
     ret = produceSurface->FlushBuffer(buffer, -1, flushConfig);
 
-    LOG("Sync %{public}s", SurfaceErrorStr(ret).c_str());
+    LOGI("Sync %{public}s", SurfaceErrorStr(ret).c_str());
     return SURFACE_ERROR_OK;
 }
 
@@ -168,10 +171,15 @@ void HelloComposer::Draw()
             }
             layerVec.emplace_back(showLayer1);
         }
-        LOG("Draw count:%{public}d layer size %{public}d", count, (int32_t)layerVec.size());
+        LOGI("Draw count:%{public}d layer size %{public}d", count, (int32_t)layerVec.size());
         output->SetLayerInfo(layerVec);
         backend->Repaint(outputs);
         count++;
+#ifdef DEBUG_DUMP
+        std::string result;
+        output->Dump(result);
+        LOGI("Dump layer result after ReleaseBuffer : %{public}s", result.c_str());
+#endif
     } while (false);
 }
 
@@ -179,17 +187,21 @@ bool HelloComposer::FillLayer(std::shared_ptr<HdiLayerInfo> &showLayer, OHOS::sp
         OHOS::sptr<Surface> &cSurface, uint32_t zorder, IRect &dstRect)
 {
     if (ProduceBuffer(pSurface, width, height) != SURFACE_ERROR_OK) {
-        LOG("Produce cBuffer failed");
+        LOGE("Produce cBuffer failed");
         return false;
     }
-
+#ifdef DEBUG_DUMP
+    std::string result;
+    output->Dump(result);
+    LOGI("Dump layer result after flushBuffer : %{public}s", result.c_str());
+#endif
     OHOS::sptr<SurfaceBuffer> cbuffer = nullptr;
     int32_t fence;
     int64_t timestamp;
     Rect damage;
     SurfaceError ret = cSurface->AcquireBuffer(cbuffer, fence, timestamp, damage);
     if (ret != SURFACE_ERROR_OK) {
-        LOG("Acquire cBuffer failed");
+        LOGE("Acquire cBuffer failed");
         return false;
     }
 
@@ -229,7 +241,7 @@ void HelloComposer::Sync(int64_t, void *data)
 
     OHOS::VsyncError ret = OHOS::VsyncHelper::Current()->RequestFrameCallback(cb);
     if (ret) {
-        LOG("RequestFrameCallback inner %{public}d\n", ret);
+        LOGI("RequestFrameCallback inner %{public}d\n", ret);
     }
 
     if (!ready) {
@@ -250,7 +262,7 @@ void HelloComposer::Init(int32_t width, int32_t height, HdiBackend* backend)
     OHOS::sptr<IBufferProducer> producer = cSurface->GetProducer();
     pSurface = Surface::CreateSurfaceAsProducer(producer);
     cSurface->RegisterConsumerListener(this);
-    LOG("%s: create surface", __func__);
+    LOGI("create surface");
 
     cSurface1 = Surface::CreateSurfaceAsConsumer();
     cSurface1->SetDefaultWidthAndHeight(width, height);
@@ -259,7 +271,7 @@ void HelloComposer::Init(int32_t width, int32_t height, HdiBackend* backend)
     OHOS::sptr<IBufferProducer> producer1 = cSurface1->GetProducer();
     pSurface1 = Surface::CreateSurfaceAsProducer(producer1);
     cSurface1->RegisterConsumerListener(this);
-    LOG("%s: create surface1", __func__);
+    LOGI("create surface1");
 
     Sync(0, nullptr);
 }
@@ -275,9 +287,9 @@ void HelloComposer::CreatePyhsicalScreen(std::shared_ptr<HdiOutput> &output)
     int supportModeNum = displayModeInfos.size();
     if (supportModeNum > 0) {
         screen->GetScreenMode(currentModeIndex);
-        LOG("currentModeIndex:%{public}d", currentModeIndex);
+        LOGI("currentModeIndex:%{public}d", currentModeIndex);
         for (int i = 0; i < supportModeNum; i++) {
-            LOG("modes(%{public}d) %{public}dx%{public}d freq:%{public}d", displayModeInfos[i].id, displayModeInfos[i].width,
+            LOGI("modes(%{public}d) %{public}dx%{public}d freq:%{public}d", displayModeInfos[i].id, displayModeInfos[i].width,
                 displayModeInfos[i].height, displayModeInfos[i].freshRate);
             if (displayModeInfos[i].id == static_cast<int32_t>(currentModeIndex)) {
                 this->freq = 30;
@@ -286,8 +298,22 @@ void HelloComposer::CreatePyhsicalScreen(std::shared_ptr<HdiOutput> &output)
                 break;
             }
         }
+        screen->SetScreenMode(currentModeIndex);
+        LOGI("SetScreenMode: currentModeIndex(%{public}d)", currentModeIndex);
+
+        DispPowerStatus powerState;
         screen->SetScreenPowerStatus(DispPowerStatus::POWER_STATUS_ON);
+        screen->GetScreenPowerStatus(powerState);
+        LOGI("get poweState:%{public}d", powerState);
     }
+
+    DisplayCapability info;
+    screen->GetScreenCapability(info);
+    LOGI("GetScreenCapability: name(%{public}s), type(%{public}d), phyWidth(%{public}d), phyHeight(%{public}d)",
+        info.name, info.type, info.phyWidth, info.phyHeight);
+    LOGI("GetScreenCapability: supportLayers(%{public}d), virtualDispCount(%{public}d), supportWriteBack(%{public}d), propertyCount(%{public}d)",
+        info.supportLayers, info.virtualDispCount, info.supportWriteBack, info.propertyCount);
+
     ready = true;
     std::cout << "CreatePyhsicalScreen end " << std::endl;
 }
@@ -322,7 +348,7 @@ void HelloComposer::DoPrepareCompleted(OHOS::sptr<Surface> &surface, const struc
 
 static void OnScreenPlug(std::shared_ptr<HdiOutput> &output, bool connected, void* data)
 {
-    LOG("enter OnScreenPlug, connected is %{public}d", connected);
+    LOGI("enter OnScreenPlug, connected is %{public}d", connected);
     std::cout << "OnScreenPlug begin " << std::endl;
     auto* thisPtr = static_cast<HelloComposer *>(data);
     if (connected) {
@@ -335,7 +361,7 @@ static void OnScreenPlug(std::shared_ptr<HdiOutput> &output, bool connected, voi
 
 static void OnPrepareCompleted(OHOS::sptr<Surface> &surface, const struct PrepareCompleteParam &param, void* data)
 {
-    LOG("enter OnPrepareCompleted");
+    LOGI("enter OnPrepareCompleted");
     auto *thisPtr = static_cast<HelloComposer *> (data);
     thisPtr->DoPrepareCompleted(surface, param);
 }
@@ -344,11 +370,11 @@ int main(int argc, const char *argv[])
 {
     HelloComposer m;
 
-    LOG("start to HdiBackend::GetInstance");
+    LOGI("start to HdiBackend::GetInstance");
     std::cout << "begin " << std::endl;
     HdiBackend* backend = OHOS::Rosen::HdiBackend::GetInstance();
     if (backend == nullptr) {
-        LOG("HdiBackend::GetInstance fail");
+        LOGE("HdiBackend::GetInstance fail");
         return -1;
     }
     std::cout << "RegScreenHotplug " << std::endl;

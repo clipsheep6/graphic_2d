@@ -25,10 +25,11 @@ group("unittest") {
     ":buffer_queue_producer_remote_test",
     ":buffer_queue_producer_test",
     ":buffer_queue_test",
-    ":buffer_shared_test",
     ":consumer_surface_test",
+    ":nativewindow_test"
     ":producer_surface_test",
     ":surface_buffer_impl_test",
+    ":surface_utils_test",
   ]
 }
 
@@ -54,7 +55,7 @@ ohos_unittest("buffer_manager_test") {
 
 ## UnitTest buffer_manager_test }}}
 
-## UnitTest buffer_queue_consumer_test {{{
+## UnitTest bs_buffer_queue_consumer_test {{{
 ohos_unittest("buffer_queue_consumer_test") {
   module_out_path = module_out_path
 
@@ -131,20 +132,34 @@ ohos_unittest("surface_buffer_impl_test") {
 
 ## UnitTest surface_buffer_impl_test }}}
 
-## UnitTest buffer_shared_test {{{
-ohos_unittest("buffer_shared_test") {
+## UnitTest surface_utils_test {{{
+ohos_unittest("surface_utils_test") {
   module_out_path = module_out_path
 
-  sources = [ "buffer_shared_test.cpp" ]
+  sources = [ "surface_utils_test.cpp" ]
 
   deps = [ ":surface_test_common" ]
 }
 
-## UnitTest surface_buffer_impl_test }}}
+## UnitTest surface_utils_test }}}
+
+## UnitTest nativewindow_test {{{
+ohos_unittest("nativewindow_test") {
+  module_out_path = module_out_path
+
+  sources = [ "nativewindow_test.cpp" ]
+
+  deps = [ ":surface_test_common" ]
+}
+
+## UnitTest nativewindow_test }}}
 
 ## Build surface_test_common.a {{{
 config("surface_test_common_public_config") {
-  include_dirs = [ "//foundation/graphic/standard/frameworks/surface/include" ]
+  include_dirs = [
+    "//foundation/graphic/standard/frameworks/surface/include",
+    "//drivers/peripheral/display/interfaces/include",
+  ]
 
   cflags = [
     "-Wall",
@@ -162,10 +177,9 @@ ohos_static_library("surface_test_common") {
   public_configs = [ ":surface_test_common_public_config" ]
 
   public_deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//foundation/graphic/standard:libsurface",
-    "//foundation/graphic/standard/utils:libgraphic_utils",
+    "//third_party/googletest:gtest_main",
   ]
 }
 ## Build surface_test_common.a }}}

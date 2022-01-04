@@ -31,6 +31,12 @@ namespace OHOS {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "BufferQueue" };
 constexpr uint32_t UNIQUE_ID_OFFSET = 32;
+static const std::map<BufferState, std::string> BufferStateStrs = {
+    {BUFFER_STATE_RELEASED,                    "0 <released>"},
+    {BUFFER_STATE_REQUESTED,                   "1 <requested>"},
+    {BUFFER_STATE_FLUSHED,                     "2 <flushed>"},
+    {BUFFER_STATE_ACQUIRED,                    "3 <acquired>"},
+};
 }
 
 static uint64_t GetUniqueIdImpl()
@@ -750,38 +756,36 @@ uint64_t BufferQueue::GetUniqueId() const
     return uniqueId_;
 }
 
-void BufferQueue::DumpCache(const std::list<int32_t> &dumpList, std::string &result)
+void BufferQueue::DumpCache(std::string &result)
 {
-    for (auto it = dumpList.begin(); it != dumpList.end(); it++) {
-        BufferElement element = bufferQueueCache_.at(*it);
-        result += "    state = " + std::to_string(element.state) +
+    for (auto it = bufferQueueCache_.begin(); it != bufferQueueCache_.end(); it++) {
+        BufferElement element = it->second;
+        result += "        sequence = " + std::to_string(it->first) +
+            ", state = " + BufferStateStrs.at(element.state) +
             ", timestamp = " + std::to_string(element.timestamp);
         result += ", damageRect = [" + std::to_string(element.damage.x) + ", " +
             std::to_string(element.damage.y) + ", " +
             std::to_string(element.damage.w) + ", " +
             std::to_string(element.damage.h) + "],";
         result += " config = [" + std::to_string(element.config.width) + "x" +
-            std::to_string(element.config.height) + ":" +
+            std::to_string(element.config.height) + ", " +
             std::to_string(element.config.strideAlignment) + ", " +
             std::to_string(element.config.format) +", " +
             std::to_string(element.config.usage) + ", " +
-            std::to_string(element.config.timeout) + "]\n";
+            std::to_string(element.config.timeout) + "].\n";
     }
 }
 
 void BufferQueue::Dump(std::string &result)
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
-    result.append("-- BufferQueue\n");
-    result += "  default-size = [" + std::to_string(defaultWidth) + "x" + std::to_string(defaultHeight) + "]\n";
-    result += "  FIFO = " + std::to_string(queueSize_) + "\n";
-    result += "  name = " + name_ + "\n";
+    result.append("    BufferQueue:\n");
+    result += "      default-size = [" + std::to_string(defaultWidth) + "x" + std::to_string(defaultHeight) + "]" +
+        ", FIFO = " + std::to_string(queueSize_) +
+        ", name = " + name_ +
+        ", uniqueId = " + std::to_string(uniqueId_) + ".\n";
 
-    result.append("  FreeList:\n");
-    DumpCache(freeList_, result);
-    result.append("  DirtyList:\n");
-    DumpCache(dirtyList_, result);
-    result.append("  DeletingList:\n");
-    DumpCache(deletingList_, result);
+    result.append("      bufferQueueCache:\n");
+    DumpCache(result);
 }
 }; // namespace OHOS

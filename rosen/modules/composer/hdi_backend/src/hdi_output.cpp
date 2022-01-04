@@ -226,5 +226,17 @@ bool HdiOutput::CheckFbSurface()
     return true;
 }
 
+void HdiOutput::Dump(std::string &result) const
+{
+    result.append("\n");
+    result.append("-- LayerInfo\n");
+    for (auto iter = surfaceIdMap_.begin(); iter != surfaceIdMap_.end(); ++iter) {
+        iter->second->SetLayerStatus(false);
+        const LayerPtr &layer = iter->second;
+        const LayerInfoPtr &info = layer->GetLayerInfo();
+        result += "  surfaceId[" + std::to_string(iter->first) + "]:\n";
+        info->Dump(result);
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -51,6 +51,7 @@ public:
     sptr<SyncFence> GetFramebufferFence();
     int32_t ReleaseFramebuffer(const sptr<SyncFence> &releaseFence);
     void FramebufferSemWait();
+    void Dump(std::string &result) const;
 
 private:
     sptr<HdiFramebufferSurface> fbSurface_ = nullptr;

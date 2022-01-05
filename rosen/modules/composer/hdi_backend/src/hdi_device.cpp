@@ -246,12 +246,6 @@ int32_t HdiDevice::GetScreenReleaseFence(uint32_t screenId, std::vector<uint32_t
                 tempFence->Wait(msWait);
             }
             fences[i] = new SyncFence(-1);
-
-            // if (fenceFds[i] >= 0) {
-            //     fences[i] = new SyncFence(fenceFds[i]);
-            // } else {
-            //     fences[i] = new SyncFence(-1);
-            // }
         }
     }
 
@@ -270,12 +264,6 @@ int32_t HdiDevice::Commit(uint32_t screenId, sptr<SyncFence> &fence)
         tempFence->Wait(msWait);
     }
     fence = new SyncFence(-1);
-
-    // if (fenceFd >= 0) {
-    //     fence = new SyncFence(fenceFd);
-    // } else {
-    //     fence = new SyncFence(-1);
-    // }
 
     return ret;
 }

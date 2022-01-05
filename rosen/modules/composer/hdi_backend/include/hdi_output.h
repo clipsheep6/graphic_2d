@@ -64,8 +64,7 @@ private:
     uint32_t outputDamageNum_;
 
     int32_t CreateLayer(uint64_t surfaceId, const LayerInfoPtr &layerInfo);
-    void ClosePrevLayers();
-    void CloseLayer(const LayerPtr &layer);
+    void DeletePrevLayers();
     void ResetLayerStatus();
 
     inline bool CheckFbSurface();

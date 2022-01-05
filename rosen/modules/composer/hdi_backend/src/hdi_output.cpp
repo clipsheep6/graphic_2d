@@ -68,17 +68,16 @@ void HdiOutput::SetLayerInfo(const std::vector<LayerInfoPtr> &layerInfos)
         }
     }
 
-    ClosePrevLayers();
+    DeletePrevLayers();
     ResetLayerStatus();
 }
 
-void HdiOutput::ClosePrevLayers()
+void HdiOutput::DeletePrevLayers()
 {
     auto surfaceIter = surfaceIdMap_.begin();
     while (surfaceIter != surfaceIdMap_.end()) {
         const LayerPtr &layer = surfaceIter->second;
         if (!layer->GetLayerStatus()) {
-            CloseLayer(layer);
             surfaceIdMap_.erase(surfaceIter++);
         } else {
             ++surfaceIter;
@@ -105,50 +104,18 @@ void HdiOutput::ResetLayerStatus()
 
 int32_t HdiOutput::CreateLayer(uint64_t surfaceId, const LayerInfoPtr &layerInfo)
 {
-    LayerInfo hdiLayerInfo = {
-        .width = layerInfo->GetLayerSize().w,
-        .height = layerInfo->GetLayerSize().h,
-        .type = LAYER_TYPE_GRAPHIC,
-        .pixFormat = PIXEL_FMT_RGBA_8888,
-    };
-
-    uint32_t layerId = 0;
-    int32_t ret = HdiDevice::GetInstance()->CreateLayer(screenId_, hdiLayerInfo, layerId);
-    if (ret != DISPLAY_SUCCESS) {
-        HLOGE("Create hwc layer failed, ret is %{public}d", ret);
-        return ret;
+    LayerPtr layer = HdiLayer::CreateHdiLayer(screenId_);
+    if (!layer->Init(layerInfo)) {
+        HLOGE("Init hdiLayer failed");
+        return DISPLAY_FAILURE;
     }
 
-    HLOGD("Create hwc layer succeed, layerId is %{public}u", layerId);
-
-    LayerPtr layer = HdiLayer::CreateHdiLayer(layerId);
-    layer->Init();
     layer->UpdateLayerInfo(layerInfo);
-
+    uint32_t layerId = layer->GetLayerId();
     layerIdMap_[layerId] = layer;
-
-    auto iter = surfaceIdMap_.find(surfaceId);
-    if (iter != surfaceIdMap_.end()) {
-        /* same surface id, but layer size is different */
-        CloseLayer(iter->second);
-    }
     surfaceIdMap_[surfaceId] = layer;
 
     return DISPLAY_SUCCESS;
-}
-
-void HdiOutput::CloseLayer(const std::shared_ptr<HdiLayer> &layer)
-{
-    uint32_t layerId = layer->GetLayerId();
-    if (layerId == INT_MAX) {
-        HLOGI("this layer has not been created");
-        return;
-    }
-
-    int32_t ret = HdiDevice::GetInstance()->CloseLayer(screenId_, layerId);
-    if (ret != DISPLAY_SUCCESS) {
-        HLOGE("Close hwc layer[%{public}u] failed, ret is %{public}d", layerId, ret);
-    }
 }
 
 void HdiOutput::SetOutputDamage(uint32_t num, const IRect &outputDamage)

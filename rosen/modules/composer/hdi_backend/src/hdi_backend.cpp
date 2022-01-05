@@ -14,7 +14,7 @@
  */
 
 #include "hdi_backend.h"
-#include <cinttypes>
+#include <scoped_bytrace.h>
 
 namespace OHOS {
 namespace Rosen {
@@ -54,6 +54,7 @@ RosenError HdiBackend::RegPrepareComplete(OnPrepareCompleteFunc func, void* data
 
 void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
 {
+    ScopedBytrace bytrace(__func__);
     if (device_ == nullptr) {
         HLOGE("device has not been initialized");
         return;
@@ -96,7 +97,7 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
 
         if (compClientLayers.size() > 0) {
             needFlush = true;
-            HLOGD("Need flush framebuffer, client composition layer num is %{public}" PRIu32 "", compClientLayers.size());
+            HLOGD("Need flush framebuffer, client composition layer num is %{public}zu", compClientLayers.size());
         }
 
         OnPrepareComplete(needFlush, output, newLayerInfos);
@@ -147,7 +148,7 @@ int32_t HdiBackend::UpdateLayerCompType(uint32_t screenId, const std::unordered_
 }
 
 void HdiBackend::OnPrepareComplete(bool needFlush, OutputPtr &output,
-        std::vector<LayerInfoPtr> &newLayerInfos)
+    std::vector<LayerInfoPtr> &newLayerInfos)
 {
     HLOGD("OnPrepareComplete begin");
     struct PrepareCompleteParam param = {
@@ -164,7 +165,7 @@ void HdiBackend::OnPrepareComplete(bool needFlush, OutputPtr &output,
 }
 
 int32_t HdiBackend::FlushScreen(uint32_t screenId, OutputPtr &output,
-        std::vector<LayerPtr> &compClientLayers)
+    std::vector<LayerPtr> &compClientLayers)
 {
     /*
      * We may not be able to get the framebuffer at this time, so we
@@ -182,7 +183,7 @@ int32_t HdiBackend::FlushScreen(uint32_t screenId, OutputPtr &output,
 }
 
 int32_t HdiBackend::SetScreenClientInfo(uint32_t screenId, const sptr<SyncFence> &fbAcquireFence,
-        OutputPtr &output)
+    OutputPtr &output)
 {
     int32_t ret = device_->SetScreenClientBuffer(screenId,
                         output->GetFramebuffer()->GetBufferHandle(), fbAcquireFence);
@@ -202,14 +203,14 @@ int32_t HdiBackend::SetScreenClientInfo(uint32_t screenId, const sptr<SyncFence>
 }
 
 void HdiBackend::ReleaseLayerBuffer(uint32_t screenId, const std::unordered_map<uint32_t,
-                                    LayerPtr> &layersMap)
+    LayerPtr> &layersMap)
 {
     std::vector<uint32_t> layersId;
     std::vector<sptr<SyncFence>> fences;
     int32_t ret = device_->GetScreenReleaseFence(screenId, layersId, fences);
     if (ret != DISPLAY_SUCCESS || layersId.size() != fences.size()) {
-        HLOGE("GetScreenReleaseFence failed, ret is %{public}d, layerId size[%{public}" PRIu32 "], fence size[%{public}" PRIu32 "]",
-               ret, layersId.size(), fences.size());
+        HLOGE("GetScreenReleaseFence failed, ret is %{public}d, layerId size[%{public}zu], fence size[%{public}zu]",
+            ret, layersId.size(), fences.size());
         return;
     }
 

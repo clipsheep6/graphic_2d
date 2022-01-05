@@ -92,7 +92,8 @@ HWTEST_F(VsyncManagerTest, IsProxy, testing::ext::TestSize.Level0)
 HWTEST_F(VsyncManagerTest, ListenVsync1, testing::ext::TestSize.Level0)
 {
     sptr<IVsyncCallback> cb = nullptr;
-    auto ret = vc_ ->ListenVsync(cb);
+    int32_t cbid;
+    auto ret = vc_ ->ListenVsync(cb, cbid);
     ASSERT_EQ(ret, GSERROR_INVALID_ARGUMENTS);
 }
 
@@ -100,7 +101,8 @@ HWTEST_F(VsyncManagerTest, ListenVsync2, testing::ext::TestSize.Level0)
 {
     sptr<IVsyncCallback> cb = new VsyncCallback();
     ReturnValueTester::Set<bool>(0, false);
-    auto ret = vc_ ->ListenVsync(cb);
+    int32_t cbid;
+    auto ret = vc_ ->ListenVsync(cb, cbid);
     ASSERT_EQ(ret, GSERROR_INVALID_ARGUMENTS);
 }
 
@@ -108,7 +110,8 @@ HWTEST_F(VsyncManagerTest, ListenVsync3, testing::ext::TestSize.Level0)
 {
     sptr<IVsyncCallback> cb = new VsyncCallback();
     ReturnValueTester::Set<int>(1, GSERROR_BINDER);
-    auto ret = vc_ ->ListenVsync(cb);
+    int32_t cbid;
+    auto ret = vc_ ->ListenVsync(cb, cbid);
     ASSERT_EQ(ret, GSERROR_BINDER);
 }
 
@@ -116,7 +119,8 @@ HWTEST_F(VsyncManagerTest, ListenVsync4, testing::ext::TestSize.Level0)
 {
     sptr<IVsyncCallback> cb = new VsyncCallback();
     ReturnValueTester::Set<int>(2, GSERROR_API_FAILED);
-    auto ret = vc_ ->ListenVsync(cb);
+    int32_t cbid;
+    auto ret = vc_ ->ListenVsync(cb, cbid);
     ASSERT_EQ(ret, GSERROR_API_FAILED);
 }
 

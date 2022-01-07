@@ -12,19 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "surface_ipc_test.h"
-
-#include <chrono>
-#include <thread>
-#include <unistd.h>
-
-#include <display_type.h>
+#include <gtest/gtest.h>
 #include <iservice_registry.h>
+#include <surface.h>
+#include <display_type.h>
 
-using namespace std::chrono_literals;
+using namespace testing;
+using namespace testing::ext;
 
-namespace OHOS {
+namespace OHOS::Rosen {
+class SurfaceIPCTest : public testing::Test, public IBufferConsumerListenerClazz {
+public:
+    static void SetUpTestCase();
+    virtual void OnBufferAvailable() override;
+    pid_t ChildProcessMain();
+
+    static inline sptr<Surface> csurface = nullptr;
+    static inline int32_t pipeFd[2] = {};
+    static inline int32_t ipcSystemAbilityID = 34156;
+    static inline BufferRequestConfig requestConfig = {};
+    static inline BufferFlushConfig flushConfig = {};
+};
+
 void SurfaceIPCTest::SetUpTestCase()
 {
     GTEST_LOG_(INFO) << getpid();
@@ -46,7 +55,7 @@ void SurfaceIPCTest::OnBufferAvailable()
 {
 }
 
-pid_t SurfaceIPCTest::ChildProcessMain() const
+pid_t SurfaceIPCTest::ChildProcessMain()
 {
     pipe(pipeFd);
     pid_t pid = fork();
@@ -54,7 +63,7 @@ pid_t SurfaceIPCTest::ChildProcessMain() const
         return pid;
     }
 
-    std::this_thread::sleep_for(50ms);
+    std::this_thread::sleep_for(50);
     int64_t data;
     read(pipeFd[0], &data, sizeof(data));
 
@@ -73,7 +82,7 @@ pid_t SurfaceIPCTest::ChildProcessMain() const
 
     sptr<SurfaceBuffer> buffer = nullptr;
     auto sret = psurf->RequestBufferNoFence(buffer, requestConfig);
-    if (sret != GSERROR_OK) {
+    if (sret != OHOS::GSERROR_OK) {
         data = sret;
         write(pipeFd[1], &data, sizeof(data));
         exit(0);
@@ -94,8 +103,15 @@ pid_t SurfaceIPCTest::ChildProcessMain() const
     return 0;
 }
 
-namespace {
-HWTEST_F(SurfaceIPCTest, BufferIPC, testing::ext::TestSize.Level0)
+/*
+* Function: produce and consumer surface by IPC
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. produce surface, fill buffer
+*                  2. consume surface and check buffer
+ */
+HWTEST_F(SurfaceIPCTest, BufferIPC001, Function | MediumTest | Level2)
 {
     auto pid = ChildProcessMain();
     ASSERT_GE(pid, 0);
@@ -110,14 +126,14 @@ HWTEST_F(SurfaceIPCTest, BufferIPC, testing::ext::TestSize.Level0)
     write(pipeFd[1], &data, sizeof(data));
     sleep(0);
     read(pipeFd[0], &data, sizeof(data));
-    EXPECT_EQ(data, GSERROR_OK);
+    EXPECT_EQ(data, OHOS::GSERROR_OK);
 
     sptr<SurfaceBuffer> buffer = nullptr;
     int32_t fence;
     int64_t timestamp;
     Rect damage;
     auto sret = csurf->AcquireBuffer(buffer, fence, timestamp, damage);
-    EXPECT_EQ(sret, GSERROR_OK);
+    EXPECT_EQ(sret, OHOS::GSERROR_OK);
     EXPECT_NE(buffer, nullptr);
     if (buffer != nullptr) {
         int32_t int32;
@@ -133,7 +149,7 @@ HWTEST_F(SurfaceIPCTest, BufferIPC, testing::ext::TestSize.Level0)
     }
 
     sret = csurf->ReleaseBuffer(buffer, -1);
-    EXPECT_EQ(sret, GSERROR_OK);
+    EXPECT_EQ(sret, OHOS::GSERROR_OK);
 
     write(pipeFd[1], &data, sizeof(data));
     close(pipeFd[0]);
@@ -145,7 +161,15 @@ HWTEST_F(SurfaceIPCTest, BufferIPC, testing::ext::TestSize.Level0)
     } while (ret == -1 && errno == EINTR);
 }
 
-HWTEST_F(SurfaceIPCTest, Cache, testing::ext::TestSize.Level0)
+/*
+* Function: RequestBufferNoFence and flush buffer
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call RequestBufferNoFence, check sret and buffer
+*                  2. call flushbuffer and check sret
+ */
+HWTEST_F(SurfaceIPCTest, Cache001, Function | MediumTest | Level2)
 {
     csurf->RegisterConsumerListener(this);
     auto producer = csurf->GetProducer();
@@ -153,7 +177,7 @@ HWTEST_F(SurfaceIPCTest, Cache, testing::ext::TestSize.Level0)
 
     sptr<SurfaceBuffer> buffer = nullptr;
     auto sret = psurf->RequestBufferNoFence(buffer, requestConfig);
-    ASSERT_EQ(sret, GSERROR_OK);
+    ASSERT_EQ(sret, OHOS::GSERROR_OK);
     ASSERT_NE(buffer, nullptr);
     int32_t int32;
     int64_t int64;
@@ -167,7 +191,6 @@ HWTEST_F(SurfaceIPCTest, Cache, testing::ext::TestSize.Level0)
     ASSERT_EQ(str, "567");
 
     sret = psurf->FlushBuffer(buffer, -1, flushConfig);
-    ASSERT_EQ(sret, GSERROR_OK);
+    ASSERT_EQ(sret, OHOS::GSERROR_OK);
 }
-} // namespace
-} // namespace OHOS
+}

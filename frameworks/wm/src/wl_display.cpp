@@ -78,7 +78,7 @@ bool WlDisplay::Connect(const char *name)
         } else {
             WMLOGFW("create display failed! (%{public}d/%{public}d)", i + 1, retryTimes);
         }
-        std::this_thread::sleep_for(50ms * i);
+        std::this_thread::sleep_for(50 * i);
     }
     return display != nullptr;
 }

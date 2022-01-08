@@ -25,25 +25,25 @@ rosen_is_linux = current_os == "linux"
 rs_common_define = []
 
 if (rosen_is_ohos) {
-  rs_common_define += [ "ROSEN_OHOS" ]
+    rs_common_define += [ "ROSEN_OHOS" ]
 }
 
 if (rosen_is_android) {
-  rs_common_define += [ "ROSEN_ANDROID" ]
+    rs_common_define += [ "ROSEN_ANDROID" ]
 }
 
 if (rosen_is_ios) {
-  rs_common_define += [ "ROSEN_IOS" ]
+    rs_common_define += [ "ROSEN_IOS" ]
 }
 
 if (rosen_is_mac) {
-  rs_common_define += [ "ROSEN_MAC" ]
+    rs_common_define += [ "ROSEN_MAC" ]
 }
 
 if (rosen_is_win) {
-  rs_common_define += [ "ROSEN_WIN" ]
+    rs_common_define += [ "ROSEN_WIN" ]
 }
 
 if (rosen_is_linux) {
-  rs_common_define += [ "ROSEN_LINUX" ]
+    rs_common_define += [ "ROSEN_LINUX" ]
 }

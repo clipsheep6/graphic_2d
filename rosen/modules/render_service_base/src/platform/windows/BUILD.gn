@@ -12,11 +12,14 @@
 # limitations under the License.
 
 group("windows") {
-  deps = [ ":rosen_windows_sources" ]
+  deps = [
+    ":rosen_windows_sources"
+  ]
 }
 
 config("export_config") {
-  include_dirs = []
+  include_dirs = [
+  ]
 }
 
 source_set("rosen_windows_sources") {
@@ -31,5 +34,6 @@ source_set("rosen_windows_sources") {
     "//foundation/graphic/standard/rosen/modules/render_service_base/include",
   ]
 
-  deps = []
+  deps = [
+  ]
 }

@@ -15,7 +15,9 @@ import("//build/ohos.gni")
 import("//foundation/graphic/standard/graphic_config.gni")
 
 group("ohos") {
-  public_deps = [ ":rosen_ohos_sources" ]
+    public_deps = [
+      ":rosen_ohos_sources"
+    ]
 }
 
 config("export_config") {
@@ -24,6 +26,8 @@ config("export_config") {
     "//utils/native/base/include",
     "//utils/system/safwk/native/include",
     "//foundation/graphic/standard/frameworks/surface/src",
+    "//foundation/graphic/standard/rosen/modules/2d_graphics/src",
+    "//foundation/multimedia/image_standard/interfaces/innerkits/include",
   ]
 }
 
@@ -34,26 +38,20 @@ ohos_source_set("rosen_ohos_sources") {
   defines += gpu_defines
 
   sources = [
-    "backend/rs_surface_frame_ohos_raster.cpp",
-    "backend/rs_surface_ohos_raster.cpp",
     "rs_log.cpp",
-    "rs_platform_canvas.cpp",
     "rs_render_service_client.cpp",
     "rs_render_service_connect.cpp",
     "rs_render_service_proxy.cpp",
     "rs_surface_frame_ohos.cpp",
     "rs_surface_ohos.cpp",
-    "rs_surface_ohos_converter.cpp",
     "rs_system_properties.cpp",
     "rs_vsync_client_ohos.cpp",
+    "rs_surface_ohos_converter.cpp",
+    "backend/rs_surface_frame_ohos_raster.cpp",
+    "backend/rs_surface_ohos_raster.cpp",
+    "backend/rs_surface_frame_ohos_gl.cpp",
+    "backend/rs_surface_ohos_gl.cpp",
   ]
-
-  if (ace_enable_gpu) {
-    sources += [
-      "backend/rs_surface_frame_ohos_gl.cpp",
-      "backend/rs_surface_ohos_gl.cpp",
-    ]
-  }
 
   include_dirs = [
     "//foundation/graphic/standard/rosen/modules/render_service_base/include",
@@ -70,6 +68,8 @@ ohos_source_set("rosen_ohos_sources") {
     "//foundation/graphic/standard:libsurface",
     "//foundation/graphic/standard:libvsync_client",
     "//utils/native/base:utils",
+    "//foundation/graphic/standard/rosen/modules/2d_graphics:2d_graphics",
+    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
   ]
 
   external_deps = [

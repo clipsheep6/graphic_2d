@@ -99,6 +99,7 @@ int32_t NativeWindowRequestBuffer(struct NativeWindow *window,
         sfbuffer == nullptr) {
         return OHOS::GSERROR_NO_BUFFER;
     }
+
     NativeWindowBuffer *nwBuffer = new NativeWindowBuffer();
     nwBuffer->sfbuffer = sfbuffer;
     // reference nativewindowbuffer object

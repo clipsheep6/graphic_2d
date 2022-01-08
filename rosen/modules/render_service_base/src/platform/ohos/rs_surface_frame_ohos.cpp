@@ -19,11 +19,9 @@
 
 namespace OHOS {
 namespace Rosen {
-#ifdef ACE_ENABLE_GL
-void RSSurfaceFrameOhos::SetRenderContext(RenderContext* context)
-{
-    renderContext_ = context;
-}
-#endif
+// void RSSurfaceFrameOhos::SetRenderContext(RenderContext* context)
+// {
+//     renderContext_ = context;
+// }
 } // namespace Rosen
 } // namespace OHOS

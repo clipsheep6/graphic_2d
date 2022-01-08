@@ -35,12 +35,8 @@ void RSRenderServiceListener::OnBufferAvailable()
         return;
     }
     ROSEN_LOGI("RsDebug RSRenderServiceListener::OnBufferAvailable node id:%llu", node->GetId());
-    std::function<void()> task = [node]() -> void {
-        ROSEN_LOGI("RsDebug RSRenderServiceListener::OnBufferAvailable node id:%llu", node->GetId());
-        node->IncreaseAvailableBuffer();
-        RSMainThread::Instance()->RequestNextVSync();
-    };
-    RSMainThread::Instance()->PostTask(task);
+    node->IncreaseAvailableBuffer();
+    RSMainThread::Instance()->RequestNextVSync();
 }
 
 } // namespace Rosen

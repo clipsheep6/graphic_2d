@@ -175,7 +175,10 @@ int32_t HdiBackend::FlushScreen(uint32_t screenId, OutputPtr &output,
     output->FramebufferSemWait();
 
     sptr<SyncFence> fbAcquireFence = output->GetFramebufferFence();
-    for (auto &layer : compClientLayers) {
+    for (auto &layer : changedLayers) {
+        if (layer == nullptr) {
+            continue;
+        }
         layer->MergeWithFramebufferFence(fbAcquireFence);
     }
 

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//pengpeng test
+
 #include "surface_buffer_impl_test.h"
 
 #include "buffer_manager.h"

@@ -45,7 +45,7 @@ void VsyncCallbackTest::SetUpTestCase()
     }
 
     if (pid_ == 0) {
-        std::this_thread::sleep_for(50ms);
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         sptr<VsyncCallback> vcqp = new VsyncCallback();
         ASSERT_NE(vcqp, nullptr);
         auto sam = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();

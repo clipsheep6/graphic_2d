@@ -69,6 +69,7 @@ ohos_executable("surface_capture_demo") {
     "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
     "//third_party/zlib:libz",
+    "//third_party/libpng:libpng", # png
   ]
 
   public_deps = [ "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_ohos" ]
@@ -89,6 +90,7 @@ ohos_executable("virtual_display_demo") {
     "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
     "//third_party/zlib:libz",
+    "//third_party/libpng:libpng", # png
   ]
 
   public_deps = [ "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_ohos" ]

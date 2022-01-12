@@ -12,11 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <cstddef>
+#include <iostream>
 #include "command/rs_display_node_command.h"
-
+#include "platform/common/rs_log.h"
 #include "pipeline/rs_display_render_node.h"
-
+#include <cinttypes>
 namespace OHOS {
 namespace Rosen {
 
@@ -24,8 +25,26 @@ void DisplayNodeCommandHelper::Create(RSContext& context, NodeId id, const RSDis
 {
     std::shared_ptr<RSBaseRenderNode> node = std::make_shared<RSDisplayRenderNode>(id, config);
     auto& nodeMap = context.GetNodeMap();
+    auto nodeList = context.GetGlobalRootRenderNode()->GetChildren();
+    uint64_t mirrorId = 0;
+    for (unsigned i = 0; i < nodeList.size(); ++i) {
+        auto c = nodeList[i].lock();
+        if (c != nullptr) {
+            mirrorId = c->GetId();
+            break;
+        }
+    }
     nodeMap.RegisterRenderNode(node);
     context.GetGlobalRootRenderNode()->AddChild(node);
+    if (config.isMirrored) {
+        auto mirrorSourceNode = nodeMap.GetRenderNode<RSDisplayRenderNode>(mirrorId);
+        if (mirrorSourceNode == nullptr) {
+            //TODO: ERROR
+            return;
+        }
+        auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(node);
+        displayNode->SetMirrorSource(mirrorSourceNode);
+    }
 }
 
 void DisplayNodeCommandHelper::SetScreenId(RSContext& context, NodeId id, uint64_t screenId)

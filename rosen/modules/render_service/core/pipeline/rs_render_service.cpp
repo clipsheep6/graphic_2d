@@ -27,6 +27,7 @@
 #include "pipeline/rs_surface_capture_task.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
+#include "rs_trace.h"
 #include "screen_manager/screen_types.h"
 
 namespace OHOS {
@@ -212,9 +213,12 @@ void RSRenderService::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status
 void RSRenderService::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback)
 {
     std::function<void()> captureTask = [callback, id]() -> void {
+        ROSEN_LOGD("RSRenderService::TakeSurfaceCapture callback->OnSurfaceCapture nodeId:[%llu]", id);
+        ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSRenderService::TakeSurfaceCapture");
         RSSurfaceCaptureTask task(id);
         std::unique_ptr<Media::PixelMap> pixelmap = task.Run();
         callback->OnSurfaceCapture(id, pixelmap.get());
+        ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
     };
     mainThread_->PostTask(captureTask);
 }
@@ -276,6 +280,26 @@ RSScreenData RSRenderService::GetScreenData(ScreenId id)
     return mainThread_->ScheduleTask([=]() {
         return screenManager_->GetScreenData(id);
     }).get();
+}
+
+int32_t RSRenderService::GetScreenBacklight(ScreenId id)
+{
+    if (screenManager_ == nullptr) {
+        return INVALID_BACKLIGHT_VALUE;
+    }
+    return mainThread_->ScheduleTask([=]() {
+        return screenManager_->GetScreenBacklight(id);
+    }).get();
+}
+
+void RSRenderService::SetScreenBacklight(ScreenId id, uint32_t level)
+{
+    if (screenManager_ == nullptr) {
+        return;
+    }
+    mainThread_->ScheduleTask([=]() {
+        screenManager_->SetScreenBacklight(id, level);
+    }).wait();
 }
 } // namespace Rosen
 } // namespace OHOS

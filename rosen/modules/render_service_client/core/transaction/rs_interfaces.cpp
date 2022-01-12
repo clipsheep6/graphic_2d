@@ -63,6 +63,12 @@ bool RSInterfaces::TakeSurfaceCapture(std::shared_ptr<RSSurfaceNode> node,
     return renderServiceClient_->TakeSurfaceCapture(node->GetId(), callback);
 }
 
+bool RSInterfaces::TakeSurfaceCapture(std::shared_ptr<RSDisplayNode> node,
+    std::shared_ptr<SurfaceCaptureCallback> callback)
+{
+    return renderServiceClient_->TakeSurfaceCapture(node->GetId(), callback);
+}
+
 void RSInterfaces::SetScreenActiveMode(ScreenId id, uint32_t modeId)
 {
     renderServiceClient_->SetScreenActiveMode(id, modeId);
@@ -96,6 +102,16 @@ ScreenPowerStatus RSInterfaces::GetScreenPowerStatus(ScreenId id)
 RSScreenData RSInterfaces::GetScreenData(ScreenId id)
 {
     return renderServiceClient_->GetScreenData(id);
+}
+
+int32_t RSInterfaces::GetScreenBacklight(ScreenId id)
+{
+    return renderServiceClient_->GetScreenBacklight(id);
+}
+
+void RSInterfaces::SetScreenBacklight(ScreenId id, uint32_t level)
+{
+    renderServiceClient_->SetScreenBacklight(id, level);
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -29,6 +29,7 @@
 #include "platform/drawing/rs_surface.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "screen_manager/screen_types.h"
+#include <cinttypes>
 
 namespace OHOS {
 namespace Rosen {
@@ -63,13 +64,27 @@ void RSRenderServiceVisitor::ProcessBaseRenderNode(RSBaseRenderNode &node)
 
 void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode &node)
 {
+    if (node.GetIsMirrorDisplay()) {
+        auto mirrorSource = node.GetMirrorSource();
+        auto existingSource = mirrorSource.lock();
+        if (!existingSource) {
+            ROSEN_LOGI("RSRenderServiceVisitor::PrepareDisplayRenderNode mirrorSource haven't existed");
+            return;
+        }
+        SortZOrder(*existingSource);
+        PrepareBaseRenderNode(*existingSource);
+    } else {
     SortZOrder(node);
     PrepareBaseRenderNode(node);
+    }
 }
 
 void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node)
 {
-    ROSEN_LOGI("RsDebug RSRenderServiceVisitor::ProcessDisplayRenderNode child size:%d", node.GetChildren().size());
+    ROSEN_LOGI("RsDebug RSRenderServiceVisitor::ProcessDisplayRenderNode child size:%d, id:%" PRIu64 ", isMirror:%d, isForce:%d", node.GetChildren().size(), node.GetId(), node.GetIsMirrorDisplay(), node.IsForceSoftComposite());
+    auto child = node.GetChildren()[0];
+    auto eChild = child.lock();
+    ROSEN_LOGI("RSRenderServiceVisitor:: child id is % " PRIu64 "", eChild->GetId());
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
         ROSEN_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode ScreenManager is nullptr");
@@ -97,7 +112,19 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node)
     }
 
     processor_->Init(node.GetScreenId());
-    ProcessBaseRenderNode(node);
+
+    if (node.GetIsMirrorDisplay()) {
+        auto mirrorSource = node.GetMirrorSource();
+        auto existingSource = mirrorSource.lock();
+        ROSEN_LOGI("RSRenderServiceVisitor:: mirrorSource id is % " PRIu64 "", existingSource->GetId());
+        if (!existingSource) {
+            ROSEN_LOGI("RSRenderServiceVisitor::ProcessDisplayRenderNode mirrorSource haven't existed");
+            return;
+        }
+        ProcessBaseRenderNode(*existingSource);
+    } else {
+        ProcessBaseRenderNode(node);
+    }
     processor_->PostProcess();
 }
 

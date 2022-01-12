@@ -88,6 +88,8 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
         .alpha = alpha_,
         .buffer = node.GetBuffer(),
         .fence = node.GetFence(),
+        .preBuffer = node.GetPreBuffer(),
+        .preFence = node.GetPreFence(),
     };
     std::shared_ptr<HdiLayerInfo> layer = HdiLayerInfo::CreateHdiLayerInfo();
     ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface surfaceNode id:%llu [%d %d %d %d]"\
@@ -130,6 +132,7 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
         matrix.reset();
         RsRenderServiceUtil::DrawBuffer(canvas.get(), matrix, layer->GetBuffer(), layer->GetLayerSize().x, layer->GetLayerSize().y,
             layer->GetLayerSize().w, layer->GetLayerSize().h);
+        ROSEN_LOGI("RsDebug RSHardwareProcessor::Redraw flush frame buffer layer end");
     }
     BufferFlushConfig flushConfig = {
         .damage = {

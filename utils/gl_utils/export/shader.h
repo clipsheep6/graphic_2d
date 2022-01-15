@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_ANIMATION_SERVER_SERVER_INCLUDE_SHADER_H
-#define FRAMEWORKS_ANIMATION_SERVER_SERVER_INCLUDE_SHADER_H
+#ifndef UTILS_GL_UTILS_EXPORT_SHADER_H
+#define UTILS_GL_UTILS_EXPORT_SHADER_H
 
 #include <cstdint>
 #include <unordered_map>
@@ -48,4 +48,4 @@ private:
     std::unordered_map<std::string, int32_t> uniformLocationCache_;
 };
 
-#endif // FRAMEWORKS_ANIMATION_SERVER_SERVER_INCLUDE_SHADER_H
+#endif // UTILS_GL_UTILS_EXPORT_SHADER_H

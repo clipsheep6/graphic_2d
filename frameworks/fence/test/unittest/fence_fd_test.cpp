@@ -59,7 +59,7 @@ HWTEST_F(FenceFdTest, BufferQueueFenceItem, testing::ext::TestSize.Level0) {
         GSError ret = GSERROR_INTERNEL;
 
         STEP("1. Check release fence fd") {
-            ret = psurf->RequestBuffer(buffer, releaseFence, requestConfig);
+            ret = psurf->RequestBufferWithFence(buffer, releaseFence, requestConfig);
             STEP_ASSERT_EQ(ret, GSERROR_OK);
             STEP_ASSERT_EQ(releaseFence, -1);
             STEP_ASSERT_NE(buffer, nullptr);
@@ -76,13 +76,13 @@ HWTEST_F(FenceFdTest, BufferQueueFenceItem, testing::ext::TestSize.Level0) {
             STEP_ASSERT_EQ(outAcquireFence, acquireFence);
         }
 
-        STEP("3. Check this release fence and the release fence of the next RequestBuffer") {
+        STEP("3. Check this release fence and the release fence of the next RequestBufferWithFence") {
             int32_t newReleaseFence = 2;
             ret = csurf->ReleaseBuffer(buffer, newReleaseFence);
             STEP_ASSERT_EQ(ret, GSERROR_OK);
 
             int32_t outReleaseFence = 0;
-            ret = psurf->RequestBuffer(buffer, outReleaseFence, requestConfig);
+            ret = psurf->RequestBufferWithFence(buffer, outReleaseFence, requestConfig);
             STEP_ASSERT_EQ(ret, GSERROR_OK);
             STEP_ASSERT_NE(buffer, nullptr);
             STEP_ASSERT_EQ(outReleaseFence, newReleaseFence);

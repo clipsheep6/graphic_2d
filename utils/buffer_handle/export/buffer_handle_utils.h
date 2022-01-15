@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef INCLUDE_BUFFER_HANDLE_UTILS_H
-#define INCLUDE_BUFFER_HANDLE_UTILS_H
+#ifndef UTILS_BUFFER_HANDLE_EXPORT_BUFFER_HANDLE_UTILS_H
+#define UTILS_BUFFER_HANDLE_EXPORT_BUFFER_HANDLE_UTILS_H
 
 #include <stdint.h>
 #include <buffer_handle.h>
@@ -49,4 +49,4 @@ BufferHandle *CloneBufferHandle(const BufferHandle *handle);
 }
 #endif
 
-#endif // INCLUDE_BUFFER_HANDLE_UTILS_H
+#endif // UTILS_BUFFER_HANDLE_EXPORT_BUFFER_HANDLE_UTILS_H

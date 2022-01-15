@@ -54,8 +54,8 @@ public:
     virtual GSError ExtraSet(std::string key, std::string value) = 0;
 
 protected:
-    SurfaceBuffer(){}
-    virtual ~SurfaceBuffer(){}
+    SurfaceBuffer() = default;
+    virtual ~SurfaceBuffer() = default;
 };
 
 using OnReleaseFunc = std::function<GSError(sptr<SurfaceBuffer> &)>;

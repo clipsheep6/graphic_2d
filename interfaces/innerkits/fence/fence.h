@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_FENCE_INCLUDE_FENCE_H
-#define FRAMEWORKS_FENCE_INCLUDE_FENCE_H
+#ifndef INTERFACES_INNERKITS_FENCE_FENCE_H
+#define INTERFACES_INNERKITS_FENCE_FENCE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,4 +36,4 @@ int FenceMerge(const char* name, int fd1, int fd2);
 }
 
 #endif
-#endif // FRAMEWORKS_FENCE_INCLUDE_FENCE_H
+#endif // INTERFACES_INNERKITS_FENCE_FENCE_H

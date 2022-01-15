@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_TRACE_SCOPED_BYTRACE_H
-#define UTILS_TRACE_SCOPED_BYTRACE_H
+#ifndef UTILS_SCOPED_BYTRACE_EXPORT_SCOPED_BYTRACE_H
+#define UTILS_SCOPED_BYTRACE_EXPORT_SCOPED_BYTRACE_H
 
 #include <string>
 
@@ -30,4 +30,4 @@ private:
     bool isEnd = false;
 };
 
-#endif // UTILS_TRACE_SCOPED_BYTRACE_H
+#endif // UTILS_SCOPED_BYTRACE_EXPORT_SCOPED_BYTRACE_H

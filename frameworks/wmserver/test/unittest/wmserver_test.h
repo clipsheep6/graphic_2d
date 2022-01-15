@@ -73,6 +73,9 @@ public:
     virtual void TearDown() override;
 
 private:
+    void WaitReply(std::unique_lock<std::mutex> &lck);
+    void WaitDestroy(std::unique_lock<std::mutex> &lck);
+
     static inline struct WMSContext ctx;
     static inline pthread_t tid;
 

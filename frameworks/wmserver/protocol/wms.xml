@@ -150,8 +150,16 @@
 
     <event name="window_size_change">
       <description summary="window size change"/>
+      <arg name="window_id" type="int"/>
       <arg name="width" type="int"/>
       <arg name="height" type="int"/>
+    </event>
+
+    <event name="window_position_change">
+      <description summary="window position change"/>
+      <arg name="window_id" type="int"/>
+      <arg name="x" type="int"/>
+      <arg name="y" type="int"/>
     </event>
     <!-- Window Ctor Dtor }}} -->
 
@@ -315,6 +323,7 @@
 
     <event name="split_mode_change">
       <description summary="split_mode return value"/>
+      <arg name="window_id" type="int"/>
       <arg name="status" type="uint" summary="status"/>
     </event>
     <!-- Split Mode }}} -->

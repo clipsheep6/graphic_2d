@@ -53,13 +53,14 @@ void GetSplitModeShowArea(int32_t &x, int32_t &y, int32_t &width, int32_t &heigh
 void ChangeSplitMode(struct WindowSurface *ws, SplitStatus status)
 {
     ScopedBytrace trace(__func__);
-    wms_send_split_mode_change(ws->controller->pWlResource, status);
+    wms_send_split_mode_change(ws->controller->pWlResource, ws->surfaceId, status);
     LOG_INFO("%d", status);
 }
 
 void ChangeWindowPosition(struct WindowSurface *ws, int32_t x, int32_t y)
 {
     ScopedBytrace trace(__func__);
+    wms_send_window_position_change(ws->controller->pWlResource, ws->surfaceId, x, y);
     SetWindowPosition(ws, x, y);
     LOG_INFO("%d move to (%d, %d)", ws->surfaceId, x, y);
 }
@@ -73,7 +74,7 @@ void ChangeWindowSize(struct WindowSurface *ws, int32_t w, int32_t h)
     if (h < 0) {
         h = 0;
     }
-    wms_send_window_size_change(ws->controller->pWlResource, w, h);
+    wms_send_window_size_change(ws->controller->pWlResource, ws->surfaceId, w, h);
     SetWindowSize(ws, w, h);
     LOG_INFO("%d resize to %dx%d", ws->surfaceId, w, h);
 }

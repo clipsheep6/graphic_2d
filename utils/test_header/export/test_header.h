@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_INCLUDE_TEST_HEADER_H
-#define UTILS_INCLUDE_TEST_HEADER_H
+#ifndef UTILS_TEST_HEADER_EXPORT_TEST_HEADER_H
+#define UTILS_TEST_HEADER_EXPORT_TEST_HEADER_H
 
 #include "hilog/log.h"
 
@@ -40,4 +40,4 @@ static inline ::OHOS::HiviewDFX::HiLogLabel TEST_HEADER_HILOG_LABEL = { LOG_CORE
 #define STEP_ASSERT_LT(l, r) STEP_ASSERT_(l, r, LT, "<")
 } // namespace OHOS
 
-#endif // UTILS_INCLUDE_TEST_HEADER_H
+#endif // UTILS_TEST_HEADER_EXPORT_TEST_HEADER_H

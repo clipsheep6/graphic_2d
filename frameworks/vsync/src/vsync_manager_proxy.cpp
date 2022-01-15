@@ -31,7 +31,7 @@ VsyncManagerProxy::VsyncManagerProxy(const sptr<IRemoteObject>& impl) : IRemoteP
 {
 }
 
-GSError VsyncManagerProxy::ListenVsync(sptr<IVsyncCallback>& cb)
+GSError VsyncManagerProxy::ListenVsync(sptr<IVsyncCallback>& cb, int32_t &cbid)
 {
     if (cb == nullptr) {
         VLOG_FAILURE_NO(GSERROR_INVALID_ARGUMENTS);
@@ -61,16 +61,12 @@ GSError VsyncManagerProxy::ListenVsync(sptr<IVsyncCallback>& cb)
         return err;
     }
 
+    cbid = ret.ReadInt32();
     return GSERROR_OK;
 }
 
-GSError VsyncManagerProxy::RemoveVsync(sptr<IVsyncCallback>& cb)
+GSError VsyncManagerProxy::RemoveVsync(int32_t cbid)
 {
-    if (cb == nullptr) {
-        VLOG_FAILURE_NO(GSERROR_INVALID_ARGUMENTS);
-        return GSERROR_INVALID_ARGUMENTS;
-    }
-
     MessageOption opt;
     MessageParcel arg;
     MessageParcel ret;
@@ -80,7 +76,7 @@ GSError VsyncManagerProxy::RemoveVsync(sptr<IVsyncCallback>& cb)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    arg.WriteRemoteObject(cb->AsObject());
+    arg.WriteInt32(cbid);
     int result = Remote()->SendRequest(IVSYNC_MANAGER_REMOVE_VSYNC, arg, ret, opt);
     if (ReturnValueTester::Get<int>(result)) {
         VLOG_ERROR_API(result, SendRequest);

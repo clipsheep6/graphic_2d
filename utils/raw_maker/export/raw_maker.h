@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_BOOTANIMATION_INCLUDE_RAW_MAKER_H
-#define FRAMEWORKS_BOOTANIMATION_INCLUDE_RAW_MAKER_H
+#ifndef UTILS_RAW_MAKER_EXPORT_RAW_MAKER_H
+#define UTILS_RAW_MAKER_EXPORT_RAW_MAKER_H
 
 #include <raw_parser.h>
 
@@ -61,4 +61,4 @@ private:
 };
 } // namespace OHOS
 
-#endif // FRAMEWORKS_BOOTANIMATION_INCLUDE_RAW_MAKER_H
+#endif // UTILS_RAW_MAKER_EXPORT_RAW_MAKER_H

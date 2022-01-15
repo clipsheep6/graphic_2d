@@ -356,6 +356,22 @@ void WMServerTest::TearDownTestCase()
 {
 }
 
+void WMServerTest::WaitReply(std::unique_lock<std::mutex> &lck)
+{
+    auto func = [&replyFlag]() {
+        return replyFlag;
+    };
+    syncVariable.wait(lck, func);
+}
+
+void WMServerTest::WaitDestroy(std::unique_lock<std::mutex> &lck)
+{
+    auto func = [&destroyReplyFlag]() {
+        return destroyReplyFlag;
+    };
+    destroyVariable.wait(lck, func);
+}
+
 namespace {
 /*
  * Feature: wms_create_window by normal arguments
@@ -384,7 +400,7 @@ HWTEST_F(WMServerTest, CreateWindow001, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -424,7 +440,7 @@ HWTEST_F(WMServerTest, CreateWindow002, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_STATUS_BAR);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -464,7 +480,7 @@ HWTEST_F(WMServerTest, CreateWindow003, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NAVI_BAR);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -504,7 +520,7 @@ HWTEST_F(WMServerTest, CreateWindow004, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_ALARM_SCREEN);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -544,7 +560,7 @@ HWTEST_F(WMServerTest, CreateWindow005, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, -1, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -584,7 +600,7 @@ HWTEST_F(WMServerTest, CreateWindow006, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_MAX);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -626,7 +642,7 @@ HWTEST_F(WMServerTest, CreateWindow007, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -644,7 +660,7 @@ HWTEST_F(WMServerTest, CreateWindow007, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -684,7 +700,7 @@ HWTEST_F(WMServerTest, CreateWindow008, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_LAUNCHER);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -724,7 +740,7 @@ HWTEST_F(WMServerTest, CreateWindow009, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_INPUT_METHOD);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -764,7 +780,7 @@ HWTEST_F(WMServerTest, CreateWindow010, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_INPUT_METHOD_SELECTOR);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -804,7 +820,7 @@ HWTEST_F(WMServerTest, CreateWindow011, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_VOLUME_OVERLAY);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -844,7 +860,7 @@ HWTEST_F(WMServerTest, CreateWindow012, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NOTIFICATION_SHADE);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -884,7 +900,7 @@ HWTEST_F(WMServerTest, CreateWindow013, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_FLOAT);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -926,7 +942,7 @@ HWTEST_F(WMServerTest, DestroyWindow001, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -944,7 +960,7 @@ HWTEST_F(WMServerTest, DestroyWindow001, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_destroy_window(ctx.wms, windowStatus.wid);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -984,7 +1000,7 @@ HWTEST_F(WMServerTest, DestroyWindow002, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -1002,7 +1018,7 @@ HWTEST_F(WMServerTest, DestroyWindow002, testing::ext::TestSize.Level0)
         destroyReplyFlag = false;
         wl_surface_destroy(wlSurface);
         wl_display_flush(ctx.display);
-        destroyVariable.wait(lck, [&](){ return destroyReplyFlag; });
+        WaitDestroy(lck);
     }
 
     // 5. check it
@@ -1033,7 +1049,7 @@ HWTEST_F(WMServerTest, DestroyWindow003, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_destroy_window(ctx.wms, 0);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 2. check it
@@ -1070,7 +1086,7 @@ HWTEST_F(WMServerTest, SetWindowTop001, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -1089,7 +1105,7 @@ HWTEST_F(WMServerTest, SetWindowTop001, testing::ext::TestSize.Level0)
         wms_set_window_top(ctx.wms, windowStatus.wid);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -1120,7 +1136,7 @@ HWTEST_F(WMServerTest, SetWindowTop002, testing::ext::TestSize.Level0)
         wms_set_window_top(ctx.wms, 0);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -1157,7 +1173,7 @@ HWTEST_F(WMServerTest, SetWindowSize001, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -1176,7 +1192,7 @@ HWTEST_F(WMServerTest, SetWindowSize001, testing::ext::TestSize.Level0)
         wms_set_window_size(ctx.wms, windowStatus.wid, 100, 100);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -1207,7 +1223,7 @@ HWTEST_F(WMServerTest, SetWindowSize002, testing::ext::TestSize.Level0)
         wms_set_window_size(ctx.wms, 0, 100, 100);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -1244,7 +1260,7 @@ HWTEST_F(WMServerTest, SetWindowScale001, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -1263,7 +1279,7 @@ HWTEST_F(WMServerTest, SetWindowScale001, testing::ext::TestSize.Level0)
         wms_set_window_scale(ctx.wms, windowStatus.wid, 100, 100);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -1294,7 +1310,7 @@ HWTEST_F(WMServerTest, SetWindowScale002, testing::ext::TestSize.Level0)
         wms_set_window_scale(ctx.wms, 0, 100, 100);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -1331,7 +1347,7 @@ HWTEST_F(WMServerTest, SetWindowPosition001, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -1350,7 +1366,7 @@ HWTEST_F(WMServerTest, SetWindowPosition001, testing::ext::TestSize.Level0)
         wms_set_window_position(ctx.wms, windowStatus.wid, 100, 100);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -1381,7 +1397,7 @@ HWTEST_F(WMServerTest, SetWindowPosition002, testing::ext::TestSize.Level0)
         wms_set_window_position(ctx.wms, 0, 100, 100);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -1418,7 +1434,7 @@ HWTEST_F(WMServerTest, SetWindowVisibility001, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -1437,7 +1453,7 @@ HWTEST_F(WMServerTest, SetWindowVisibility001, testing::ext::TestSize.Level0)
         wms_set_window_visibility(ctx.wms, windowStatus.wid, false);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -1468,7 +1484,7 @@ HWTEST_F(WMServerTest, SetWindowVisibility002, testing::ext::TestSize.Level0)
         wms_set_window_visibility(ctx.wms, 0, true);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 2. check it
@@ -1507,7 +1523,7 @@ HWTEST_F(WMServerTest, SetWindowType001, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -1526,7 +1542,7 @@ HWTEST_F(WMServerTest, SetWindowType001, testing::ext::TestSize.Level0)
         wms_set_window_type(ctx.wms, windowStatus.wid, WINDOW_TYPE_ALARM_SCREEN);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -1540,7 +1556,7 @@ HWTEST_F(WMServerTest, SetWindowType001, testing::ext::TestSize.Level0)
         wms_set_window_type(ctx.wms, windowStatus.wid, WINDOW_TYPE_ALARM_SCREEN);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 7. check it
@@ -1579,7 +1595,7 @@ HWTEST_F(WMServerTest, SetWindowType002, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -1598,7 +1614,7 @@ HWTEST_F(WMServerTest, SetWindowType002, testing::ext::TestSize.Level0)
         wms_set_window_type(ctx.wms, 0, WINDOW_TYPE_ALARM_SCREEN);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -1612,7 +1628,7 @@ HWTEST_F(WMServerTest, SetWindowType002, testing::ext::TestSize.Level0)
         wms_set_window_type(ctx.wms, windowStatus.wid, WINDOW_TYPE_MAX);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 7. check it
@@ -1643,7 +1659,7 @@ HWTEST_F(WMServerTest, SetDisplayMode001, testing::ext::TestSize.Level0)
         wms_set_display_mode(ctx.wms, WMS_DISPLAY_MODE_SINGLE);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 2. check it
@@ -1657,7 +1673,7 @@ HWTEST_F(WMServerTest, SetDisplayMode001, testing::ext::TestSize.Level0)
         wms_set_display_mode(ctx.wms, WMS_DISPLAY_MODE_CLONE);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 2. check it
@@ -1671,7 +1687,7 @@ HWTEST_F(WMServerTest, SetDisplayMode001, testing::ext::TestSize.Level0)
         wms_set_display_mode(ctx.wms, WMS_DISPLAY_MODE_EXTEND);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 2. check it
@@ -1685,7 +1701,7 @@ HWTEST_F(WMServerTest, SetDisplayMode001, testing::ext::TestSize.Level0)
         wms_set_display_mode(ctx.wms, WMS_DISPLAY_MODE_EXPAND);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 2. check it
@@ -1716,7 +1732,7 @@ HWTEST_F(WMServerTest, SetDisplayMode002, testing::ext::TestSize.Level0)
         wms_set_display_mode(ctx.wms, -1);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 2. check it
@@ -1747,7 +1763,7 @@ HWTEST_F(WMServerTest, ScreenShot001, testing::ext::TestSize.Level0)
         wms_screenshot(ctx.wms, 0);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 2. check it
@@ -1786,7 +1802,7 @@ HWTEST_F(WMServerTest, ScreenShot002, testing::ext::TestSize.Level0)
         wms_screenshot(ctx.wms, 2);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 2. check it
@@ -1825,7 +1841,7 @@ HWTEST_F(WMServerTest, WindowShot001, testing::ext::TestSize.Level0)
         replyFlag = false;
         wms_create_window(ctx.wms, wlSurface, 0, WINDOW_TYPE_NORMAL);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 3. check it
@@ -1852,7 +1868,7 @@ HWTEST_F(WMServerTest, WindowShot001, testing::ext::TestSize.Level0)
         wms_windowshot(ctx.wms, windowStatus.wid);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 5. check it
@@ -1894,7 +1910,7 @@ HWTEST_F(WMServerTest, WindowShot002, testing::ext::TestSize.Level0)
         wms_windowshot(ctx.wms, 0);
         wms_commit_changes(ctx.wms);
         wl_display_flush(ctx.display);
-        syncVariable.wait(lck, [&](){ return replyFlag; });
+        WaitReply(lck);
     }
 
     // 2. check it

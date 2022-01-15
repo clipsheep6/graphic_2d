@@ -96,7 +96,6 @@ config("libvsync_module_public_config") {
 
 ohos_shared_library("libvsync_module") {
   sources = [
-    "src/drm_module.cpp",
     "src/return_value_tester.cpp",
     "src/vsync_callback_death_recipient.cpp",
     "src/vsync_callback_proxy.cpp",
@@ -128,37 +127,6 @@ ohos_shared_library("libvsync_module") {
 }
 
 ## Build libvsync_module.z.so }}}
-
-## Build vsync_server {{{
-ohos_executable("vsync_server") {
-  install_enable = false
-
-  sources = [ "src/module_main.cpp" ]
-
-  deps = [
-    ":libvsync_module",
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
-  ]
-
-  part_name = "graphic_standard"
-  subsystem_name = "graphic"
-}
-
-## Build vsync_server }}}
-
-## Build vsync_test {{{
-ohos_executable("vsync_test") {
-  install_enable = false
-
-  sources = [ "test/nativetest/main.cpp" ]
-
-  deps = [ ":libvsync_client" ]
-
-  part_name = "graphic_standard"
-  subsystem_name = "graphic"
-}
-
-## Build vsync_test }}}
 
 group("test") {
   testonly = true

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_INCLUDE_CPUDRAW_EXPORT_CPUDRAW_H
-#define UTILS_INCLUDE_CPUDRAW_EXPORT_CPUDRAW_H
+#ifndef UTILS_CPUDRAW_EXPORT_CPUDRAW_H
+#define UTILS_CPUDRAW_EXPORT_CPUDRAW_H
 
 #include <cstdint>
 
@@ -51,4 +51,4 @@ private:
     int32_t border = 0;
 };
 
-#endif // UTILS_INCLUDE_CPUDRAW_EXPORT_CPUDRAW_H
+#endif // UTILS_CPUDRAW_EXPORT_CPUDRAW_H

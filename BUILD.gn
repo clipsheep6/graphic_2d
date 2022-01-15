@@ -26,10 +26,8 @@ group("default") {
     "frameworks/dumper:gdumper",
     "frameworks/dumper:gdumper.ini",
     "frameworks/dumper:graphic_dumper_server",
-    "frameworks/vsync:vsync_server",
     "frameworks/wmserver:screen-info-test",
     "frameworks/wmserver:wmserver",
-    "frameworks/wmservice:wmservice_test",
   ]
 }
 
@@ -40,7 +38,7 @@ group("test") {
     "frameworks/fence:test",
     "frameworks/surface:test",
     "frameworks/vsync:test",
-    "frameworks/wm:test",
+    "frameworks/wmclient:test",
     "frameworks/wmtest:wmtest",
   ]
 }
@@ -76,12 +74,8 @@ group("libvsync_client") {
   public_deps = [ "frameworks/vsync:libvsync_client" ]
 }
 
-group("libwms_client") {
-  public_deps = [ "frameworks/wm:wms_client" ]
-}
-
 group("libwmclient") {
-  public_deps = [ "frameworks/wm:libwmclient" ]
+  public_deps = [ "frameworks/wmclient:libwmclient" ]
 }
 
 group("libwmservice") {

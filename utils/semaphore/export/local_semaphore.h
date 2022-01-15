@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_INCLUDE_LOCAL_SEMAPHORE_H
-#define UTILS_INCLUDE_LOCAL_SEMAPHORE_H
+#ifndef UTILS_SEMAPHORE_EXPORT_LOCAL_SEMAPHORE_H
+#define UTILS_SEMAPHORE_EXPORT_LOCAL_SEMAPHORE_H
 
 #include <semaphore.h>
 
@@ -32,4 +32,4 @@ private:
 };
 } // namespace OHOS
 
-#endif // UTILS_INCLUDE_LOCAL_SEMAPHORE_H
+#endif // UTILS_SEMAPHORE_EXPORT_LOCAL_SEMAPHORE_H

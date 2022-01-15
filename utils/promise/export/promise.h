@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef UTILS_INCLUDE_PROMISE_H
-#define UTILS_INCLUDE_PROMISE_H
+#ifndef UTILS_PROMISE_EXPORT_PROMISE_H
+#define UTILS_PROMISE_EXPORT_PROMISE_H
 
 #include <condition_variable>
 #include <thread>
@@ -38,7 +38,7 @@ private:
     bool resolved = false;
     std::mutex mutex;
     std::condition_variable cv;
-    T value{};
+    T value;
 
     std::function<void(const T &t)> onComplete = nullptr;
 };
@@ -96,4 +96,4 @@ bool Promise<T>::Resolve(const T &t)
 }
 } // namespace OHOS
 
-#endif // UTILS_INCLUDE_PROMISE_H
+#endif // UTILS_PROMISE_EXPORT_PROMISE_H

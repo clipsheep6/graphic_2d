@@ -84,12 +84,14 @@ pid_t NativeWindowBufferTest::ChildProcessMain()
     int32_t stride = 0x8;
     NativeWindowHandleOpt(nativeWindow, code, stride);
 
-    int32_t fenceFd;
+    int32_t fenceFd = -1;
     auto ret = NativeWindowRequestBuffer(nativeWindow, &nativeWindowBuffer, &fenceFd);
     if (ret != OHOS::GSERROR_OK) {
+        std::cout << "NativeWindowRequestBuffer failed" << std::endl;
         data = ret;
         write(pipeFd[1], &data, sizeof(data));
         exit(0);
+        return -1;
     }
     nativeWindowBuffer->sfbuffer->ExtraSet("123", 0x123);
     nativeWindowBuffer->sfbuffer->ExtraSet("345", (int64_t)0x345);
@@ -101,7 +103,13 @@ pid_t NativeWindowBufferTest::ChildProcessMain()
     rect->h = 0x100;
     region->rects = rect;
     ret = NativeWindowFlushBuffer(nativeWindow, nativeWindowBuffer, -1, *region);
-
+    if (ret != OHOS::GSERROR_OK) {
+        std::cout << "NativeWindowFlushBuffer failed" << std::endl;
+        data = ret;
+        write(pipeFd[1], &data, sizeof(data));
+        exit(0);
+        return -1;
+    }
     data = ret;
     write(pipeFd[1], &data, sizeof(data));
     sleep(0);
@@ -138,7 +146,7 @@ HWTEST_F(NativeWindowBufferTest, Surface001, Function | MediumTest | Level2)
     EXPECT_EQ(data, OHOS::GSERROR_OK);
 
     OHOS::sptr<SurfaceBuffer> buffer = nullptr;
-    int32_t fence;
+    int32_t fence = -1;
     int64_t timestamp;
     Rect damage;
     auto ret = cSurface->AcquireBuffer(buffer, fence, timestamp, damage);

@@ -97,7 +97,7 @@ VsyncError VsyncManager::GetVsyncFrequency(uint32_t &freq)
 
 void VsyncManager::Callback(int64_t timestamp)
 {
-    VLOGI("call callback");
+    //VLOGI("call callback");
     std::lock_guard<std::mutex> lock(callbacksMutex_);
 
     using sptrIVsyncCallback = sptr<IVsyncCallback>;

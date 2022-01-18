@@ -77,3 +77,9 @@ ohos_shared_library("libcomposer") {
   subsystem_name = "graphic"
 }
 ## Build libcomposer.so
+
+group("test") {
+  testonly = true
+
+  deps = [ "hdi_backend/test:test" ]
+}

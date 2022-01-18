@@ -17,6 +17,7 @@
 
 #include "hdi_log.h"
 #include "vsync_module.h"
+#include "soft_vsync.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -37,6 +38,7 @@ HdiScreen::~HdiScreen()
 
 void HdiScreen::OnVsync(uint32_t sequence, uint64_t ns, void *data)
 {
+    SoftVsync::GetInstance().SoftVsyncStop();
     // trigger vsync
     OHOS::VsyncError ret = OHOS::VsyncModule::GetInstance()->Trigger();
     if (ret != OHOS::VSYNC_ERROR_OK) {
@@ -53,13 +55,6 @@ bool HdiScreen::Init()
 
     device_ = HdiDevice::GetInstance();
     if (device_ == nullptr) {
-        return false;
-    }
-
-    // start vsync
-    OHOS::VsyncError vsyncRet = VsyncModule::GetInstance()->Start();
-    if (vsyncRet != OHOS::VSYNC_ERROR_OK) {
-        HLOGE("vsync start failed, ret is %{public}d", vsyncRet);
         return false;
     }
 

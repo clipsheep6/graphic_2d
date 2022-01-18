@@ -14,7 +14,7 @@
  */
 
 #include "hdi_backend.h"
-
+#include "soft_vsync.h"
 #include <scoped_bytrace.h>
 
 namespace OHOS {
@@ -23,6 +23,8 @@ namespace Rosen {
 HdiBackend* HdiBackend::GetInstance()
 {
     static HdiBackend instance;
+
+    SoftVsync::GetInstance().SoftVsyncStart();
 
     return &instance;
 }

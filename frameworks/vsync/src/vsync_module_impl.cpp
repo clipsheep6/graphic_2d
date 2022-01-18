@@ -64,7 +64,7 @@ VsyncError VsyncModuleImpl::Trigger()
         return VSYNC_ERROR_INVALID_OPERATING;
     }
 
-    //VLOG_SUCCESS("Trigger");
+    VLOG_SUCCESS("Trigger");
     const auto &now = std::chrono::steady_clock::now().time_since_epoch();
     int64_t occurTimestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
 

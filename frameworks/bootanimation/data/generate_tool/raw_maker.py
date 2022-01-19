@@ -162,6 +162,7 @@ class RawMaker:
             print("=" * proc)
             print("%s|" % (" " * (30 - proc)))
             print("%.2f%%" % processing)
+            print("\r|%s%s|%.2f%%" % ("=" * proc, " " * (30 - proc), (num / frame_count * 100)), end='')
             if start_pos == 3 or end_pos == 6:
                 output_bytes[offset:offset + 16] = struct.pack("IIII", 0, 0, 0, 0)
                 offset += 16

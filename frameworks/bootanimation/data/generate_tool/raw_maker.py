@@ -156,7 +156,7 @@ class RawMaker:
                         break
                 screen_old_bytes = screen_now_bytes
             proc = int(num / frame_count * 30)
-            print("|" , ("=" * proc), end="")
+            print("|", ("=" * proc), end="")
             print("%s|" % (" " * (30 - proc)), end="")
             print("%.2f%%" % (num / frame_count * 100), end="", flush=True)
             if start_pos == 3 or end_pos == 6:

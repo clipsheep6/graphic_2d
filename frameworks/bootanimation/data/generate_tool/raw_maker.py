@@ -160,11 +160,13 @@ class RawMaker:
                 screen_old_bytes = screen_now_bytes
             proc = int(num / frame_count * 30)
             processing = (num / frame_count * 100)
-            print("|")
-            print("=" * proc)
-            print("%s|" % (" " * (30 - proc)))
-            print("%.2f%%" % processing)
-            print("\r|%s%s|%.2f%%" % ("=" * proc, " " * (30 - proc), (num / frame_count * 100)), end='')
+            # print("|")
+            # print("=" * proc)
+            # print("%s|" % (" " * (30 - proc)))
+            # print("%.2f%%" % processing)
+            # print("\r|%s%s|%.2f%%" % ("=" * proc, " " * (30 - proc), (num / frame_count * 100)), end='')
+            print("\r|%s%s|" % ("=" * int(num / frame_count * 30), " " * (30 - int(num / frame_count * 30))), 
+			        "%.2f%%" % (num / frame_count * 100), end="", flush=True)
             if start_pos == 3 or end_pos == 6:
                 output_bytes[offset:offset + 16] = struct.pack("IIII", 0, 0, 0, 0)
                 offset += 16

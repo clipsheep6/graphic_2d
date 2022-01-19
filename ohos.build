@@ -9,7 +9,7 @@
         "//third_party/wayland-ivi-extension:layer-add-surfaces",
         "//third_party/wayland-ivi-extension:LayerManagerControl",
         "//third_party/wayland-ivi-extension:simple-weston-client",
-
+	nice
         "//third_party/weston:default",
         "//foundation/graphic/standard:default",
         "//foundation/graphic/standard/rosen/samples/composer:hello_composer",

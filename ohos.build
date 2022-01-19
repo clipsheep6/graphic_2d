@@ -12,6 +12,7 @@
         "//third_party/wayland-ivi-extension:layer-add-surfaces",
         "//third_party/wayland-ivi-extension:LayerManagerControl",
         "//third_party/wayland-ivi-extension:simple-weston-client",
+	"//third_party/weston:fbdev-backend",
 
         "//third_party/weston:default",
 

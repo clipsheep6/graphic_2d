@@ -160,7 +160,7 @@ class RawMaker:
             print("|")
             print("=" * proc)
             print("%s|" % (" " * (30 - proc)))
-            print("%.2f%%" % processing, flush=True)
+            print("%.2f%%" % processing)
             if start_pos == 3 or end_pos == 6:
                 output_bytes[offset:offset + 16] = struct.pack("IIII", 0, 0, 0, 0)
                 offset += 16

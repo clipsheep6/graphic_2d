@@ -53,6 +53,13 @@ public:
     virtual int32_t SetScreenVsyncEnabled(uint32_t screenId, bool enabled) = 0;
     virtual int32_t GetScreenReleaseFence(uint32_t screenId, std::vector<uint32_t> &layersId,
                                   std::vector<sptr<SyncFence>> &fences) = 0;
+    virtual int32_t GetScreenSupportedColorModes(uint32_t screenId, std::vector<ColorGamutMode> &modes) = 0;
+    virtual int32_t SetScreenColorMode(uint32_t screenId, ColorGamutMode mode) = 0;
+    virtual int32_t GetScreenColorMode(uint32_t screenId, ColorGamutMode &mode) = 0;
+    virtual int32_t SetGamutMap(uint32_t screenId, GamutMap mode) = 0;
+    virtual int32_t GetGamutMap(uint32_t screenId, GamutMap &mode) = 0;
+    virtual int32_t SetColorTransform(uint32_t screenId, const mat4 &matrix) = 0;
+    virtual int32_t GetHDRCapability(uint32_t screenId, HDRCapability *info) = 0;
     virtual int32_t Commit(uint32_t screenId, sptr<SyncFence> &fence) = 0;
     /* set & get device screen info end */
 
@@ -69,6 +76,12 @@ public:
     virtual int32_t SetLayerCrop(uint32_t screenId, uint32_t layerId, IRect &crop) = 0;
     virtual int32_t SetLayerZorder(uint32_t screenId, uint32_t layerId, uint32_t zorder) = 0;
     virtual int32_t SetLayerPreMulti(uint32_t screenId, uint32_t layerId, bool isPreMulti) = 0;
+    virtual int32_t SetLayerColorTransform(uint32_t screenId, uint32_t layerId, const mat4 &matrix) = 0;
+    virtual int32_t SetLayerColorDataSpace(uint32_t screenId, uint32_t layerId, ColorDataSpace colorSpace) = 0;
+    virtual int32_t GetlayerColorDataSpace(uint32_t screenId, uint32_t layerId, ColorDataSpace *colorSpace) = 0;
+    virtual int32_t SetLayerMetaData(uint32_t screenId, uint32_t layerId, const std::vector<MetaData> &metaData) = 0;
+    virtual int32_t SetLayerMetaDataBlob(uint32_t screenId, uint32_t layerId, MetadataKey key, std::vector<uint8_t> &metaData) = 0;
+    virtual int32_t GetLayerMetaData(uint32_t screenId, uint32_t layerId, std::vector<MetaData> *metaData) = 0;
     /* set & get device layer info end */
 
     virtual int32_t CreateLayer(uint32_t screenId, const LayerInfo &layerInfo, uint32_t &layerId) = 0;
@@ -109,6 +122,13 @@ public:
     int32_t SetScreenVsyncEnabled(uint32_t screenId, bool enabled) override;
     int32_t GetScreenReleaseFence(uint32_t screenId, std::vector<uint32_t> &layersId,
                                   std::vector<sptr<SyncFence>> &fences) override;
+    int32_t GetScreenSupportedColorModes(uint32_t screenId, std::vector<ColorGamutMode> &modes) override;
+    int32_t SetScreenColorMode(uint32_t screenId, ColorGamutMode mode) override;
+    int32_t GetScreenColorMode(uint32_t screenId, ColorGamutMode &mode) override;
+    int32_t SetGamutMap(uint32_t screenId, GamutMap mode) override;
+    int32_t GetGamutMap(uint32_t screenId, GamutMap &mode) override;
+    int32_t SetColorTransform(uint32_t screenId, const mat4 &matrix) override;
+    int32_t GetHDRCapability(uint32_t screenId, HDRCapability *info) override;
     int32_t Commit(uint32_t screenId, sptr<SyncFence> &fence) override;
     /* set & get device screen info end */
 
@@ -125,6 +145,12 @@ public:
     int32_t SetLayerCrop(uint32_t screenId, uint32_t layerId, IRect &crop) override;
     int32_t SetLayerZorder(uint32_t screenId, uint32_t layerId, uint32_t zorder) override;
     int32_t SetLayerPreMulti(uint32_t screenId, uint32_t layerId, bool isPreMulti) override;
+    int32_t SetLayerColorTransform(uint32_t screenId, uint32_t layerId, const mat4 &matrix) override;
+    int32_t SetLayerColorDataSpace(uint32_t screenId, uint32_t layerId, ColorDataSpace colorSpace) override;
+    int32_t GetlayerColorDataSpace(uint32_t screenId, uint32_t layerId, ColorDataSpace &colorSpace) override;
+    int32_t SetLayerMetaData(uint32_t screenId, uint32_t layerId, const std::vector<MetaData> &metaData) override;
+    int32_t SetLayerMetaDataBlob(uint32_t screenId, uint32_t layerId, MetadataKey key, std::vector<uint8_t> &metaData) override;
+    int32_t GetLayerMetaData(uint32_t screenId, uint32_t layerId, std::vector<MetaData> *metaData) override;
     /* set & get device layer info end */
 
     int32_t CreateLayer(uint32_t screenId, const LayerInfo &layerInfo, uint32_t &layerId) override;

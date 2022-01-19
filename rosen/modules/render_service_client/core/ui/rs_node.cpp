@@ -16,7 +16,8 @@
 #include "ui/rs_node.h"
 
 #include <algorithm>
-#include <string>
+#include <securec.h>
+#include <sstream>
 
 #include "animation/rs_animation.h"
 #include "animation/rs_curve_animation.h"
@@ -30,6 +31,9 @@
 #include "render/rs_path.h"
 #include "transaction/rs_transaction_proxy.h"
 
+namespace {
+    const int MAX_LENGTH = 128;
+}
 namespace OHOS {
 namespace Rosen {
 
@@ -182,7 +186,7 @@ const std::shared_ptr<RSMotionPathOption> RSNode::GetMotionPathOption() const
     return motionPathOption_;
 }
 
-bool RSNode::HasPropertyAnimation(const RSAnimatableProperty& property)
+bool RSNode::HasPropertyAnimation(const RSAnimatableProperty& property) const
 {
     auto pred = [property](const auto& it) {
         return it.second > 0 && (static_cast<unsigned long long>(it.first) & static_cast<unsigned long long>(property));
@@ -266,7 +270,7 @@ void RSNode::SetAlpha(float alpha)
     SET_ANIMATABLE_PROPERTY(Alpha, alpha, RSAnimatableProperty::ALPHA);
 }
 
-float RSNode::GetAlpha()
+float RSNode::GetAlpha() const
 {
     GET_ANIMATABLE_PROPERTY(Alpha, RSAnimatableProperty::ALPHA);
 }
@@ -322,37 +326,37 @@ void RSNode::SetBoundsPositionY(float positionY)
     SET_ANIMATABLE_PROPERTY(BoundsPositionY, positionY, RSAnimatableProperty::BOUNDS_POSITION_Y);
 }
 
-Vector4f RSNode::GetBounds()
+Vector4f RSNode::GetBounds() const
 {
     GET_ANIMATABLE_PROPERTY(Bounds, RSAnimatableProperty::BOUNDS);
 }
 
-Vector2f RSNode::GetBoundsSize()
+Vector2f RSNode::GetBoundsSize() const
 {
     GET_ANIMATABLE_PROPERTY(BoundsSize, RSAnimatableProperty::BOUNDS_SIZE);
 }
 
-float RSNode::GetBoundsWidth()
+float RSNode::GetBoundsWidth() const
 {
     GET_ANIMATABLE_PROPERTY(BoundsWidth, RSAnimatableProperty::BOUNDS_WIDTH);
 }
 
-float RSNode::GetBoundsHeight()
+float RSNode::GetBoundsHeight() const
 {
     GET_ANIMATABLE_PROPERTY(BoundsHeight, RSAnimatableProperty::BOUNDS_HEIGHT);
 }
 
-Vector2f RSNode::GetBoundsPosition()
+Vector2f RSNode::GetBoundsPosition() const
 {
     GET_ANIMATABLE_PROPERTY(BoundsPosition, RSAnimatableProperty::BOUNDS_POSITION);
 }
 
-float RSNode::GetBoundsPositionX()
+float RSNode::GetBoundsPositionX() const
 {
     GET_ANIMATABLE_PROPERTY(BoundsPositionX, RSAnimatableProperty::BOUNDS_POSITION_X);
 }
 
-float RSNode::GetBoundsPositionY()
+float RSNode::GetBoundsPositionY() const
 {
     GET_ANIMATABLE_PROPERTY(BoundsPositionY, RSAnimatableProperty::BOUNDS_POSITION_Y);
 }
@@ -408,37 +412,37 @@ void RSNode::SetFramePositionY(float positionY)
     SET_ANIMATABLE_PROPERTY(FramePositionY, positionY, RSAnimatableProperty::FRAME_POSITION_Y);
 }
 
-Vector4f RSNode::GetFrame()
+Vector4f RSNode::GetFrame() const
 {
     GET_ANIMATABLE_PROPERTY(Frame, RSAnimatableProperty::FRAME);
 }
 
-Vector2f RSNode::GetFrameSize()
+Vector2f RSNode::GetFrameSize() const
 {
     GET_ANIMATABLE_PROPERTY(FrameSize, RSAnimatableProperty::FRAME_SIZE);
 }
 
-float RSNode::GetFrameWidth()
+float RSNode::GetFrameWidth() const
 {
     GET_ANIMATABLE_PROPERTY(FrameWidth, RSAnimatableProperty::FRAME_WIDTH);
 }
 
-float RSNode::GetFrameHeight()
+float RSNode::GetFrameHeight() const
 {
     GET_ANIMATABLE_PROPERTY(FrameHeight, RSAnimatableProperty::FRAME_HEIGHT);
 }
 
-Vector2f RSNode::GetFramePosition()
+Vector2f RSNode::GetFramePosition() const
 {
     GET_ANIMATABLE_PROPERTY(FramePosition, RSAnimatableProperty::FRAME_POSITION);
 }
 
-float RSNode::GetFramePositionX()
+float RSNode::GetFramePositionX() const
 {
     GET_ANIMATABLE_PROPERTY(FramePositionX, RSAnimatableProperty::FRAME_POSITION_X);
 }
 
-float RSNode::GetFramePositionY()
+float RSNode::GetFramePositionY() const
 {
     GET_ANIMATABLE_PROPERTY(FramePositionY, RSAnimatableProperty::FRAME_POSITION_Y);
 }
@@ -448,7 +452,7 @@ void RSNode::SetPositionZ(float positionZ)
     SET_ANIMATABLE_PROPERTY(PositionZ, positionZ, RSAnimatableProperty::POSITION_Z);
 }
 
-float RSNode::GetPositionZ()
+float RSNode::GetPositionZ() const
 {
     GET_ANIMATABLE_PROPERTY(PositionZ, RSAnimatableProperty::POSITION_Z);
 }
@@ -474,17 +478,17 @@ void RSNode::SetPivotY(float pivotY)
     SET_ANIMATABLE_PROPERTY(PivotY, pivotY, RSAnimatableProperty::PIVOT_Y);
 }
 
-Vector2f RSNode::GetPivot()
+Vector2f RSNode::GetPivot() const
 {
     GET_ANIMATABLE_PROPERTY(Pivot, RSAnimatableProperty::PIVOT);
 }
 
-float RSNode::GetPivotX()
+float RSNode::GetPivotX() const
 {
     GET_ANIMATABLE_PROPERTY(PivotX, RSAnimatableProperty::PIVOT_X);
 }
 
-float RSNode::GetPivotY()
+float RSNode::GetPivotY() const
 {
     GET_ANIMATABLE_PROPERTY(PivotY, RSAnimatableProperty::PIVOT_Y);
 }
@@ -494,7 +498,7 @@ void RSNode::SetCornerRadius(float cornerRadius)
     SET_ANIMATABLE_PROPERTY(CornerRadius, cornerRadius, RSAnimatableProperty::CORNER_RADIUS);
 }
 
-float RSNode::GetCornerRadius()
+float RSNode::GetCornerRadius() const
 {
     GET_ANIMATABLE_PROPERTY(CornerRadius, RSAnimatableProperty::CORNER_RADIUS);
 }
@@ -527,22 +531,22 @@ void RSNode::SetRotationY(float degree)
     SET_ANIMATABLE_PROPERTY(RotationY, degree, RSAnimatableProperty::ROTATION_Y);
 }
 
-Quaternion RSNode::GetQuaternion()
+Quaternion RSNode::GetQuaternion() const
 {
     GET_ANIMATABLE_PROPERTY(Quaternion, RSAnimatableProperty::ROTATION_3D);
 }
 
-float RSNode::GetRotation()
+float RSNode::GetRotation() const
 {
     GET_ANIMATABLE_PROPERTY(Rotation, RSAnimatableProperty::ROTATION);
 }
 
-float RSNode::GetRotationX()
+float RSNode::GetRotationX() const
 {
     GET_ANIMATABLE_PROPERTY(RotationX, RSAnimatableProperty::ROTATION_X);
 }
 
-float RSNode::GetRotationY()
+float RSNode::GetRotationY() const
 {
     GET_ANIMATABLE_PROPERTY(RotationY, RSAnimatableProperty::ROTATION_Y);
 }
@@ -573,22 +577,22 @@ void RSNode::SetTranslateZ(float translate)
     SET_ANIMATABLE_PROPERTY(TranslateZ, translate, RSAnimatableProperty::TRANSLATE);
 }
 
-Vector2f RSNode::GetTranslate()
+Vector2f RSNode::GetTranslate() const
 {
     GET_ANIMATABLE_PROPERTY(Translate, RSAnimatableProperty::TRANSLATE);
 }
 
-float RSNode::GetTranslateX()
+float RSNode::GetTranslateX() const
 {
     GET_ANIMATABLE_PROPERTY(TranslateX, RSAnimatableProperty::TRANSLATE_X);
 }
 
-float RSNode::GetTranslateY()
+float RSNode::GetTranslateY() const
 {
     GET_ANIMATABLE_PROPERTY(TranslateY, RSAnimatableProperty::TRANSLATE_Y);
 }
 
-float RSNode::GetTranslateZ()
+float RSNode::GetTranslateZ() const
 {
     GET_ANIMATABLE_PROPERTY(TranslateZ, RSAnimatableProperty::TRANSLATE_Z);
 }
@@ -618,17 +622,17 @@ void RSNode::SetScaleY(float scale)
     SET_ANIMATABLE_PROPERTY(ScaleY, scale, RSAnimatableProperty::SCALE_Y);
 }
 
-Vector2f RSNode::GetScale()
+Vector2f RSNode::GetScale() const
 {
     GET_ANIMATABLE_PROPERTY(Scale, RSAnimatableProperty::SCALE);
 }
 
-float RSNode::GetScaleX()
+float RSNode::GetScaleX() const
 {
     GET_ANIMATABLE_PROPERTY(ScaleX, RSAnimatableProperty::SCALE_X);
 }
 
-float RSNode::GetScaleY()
+float RSNode::GetScaleY() const
 {
     GET_ANIMATABLE_PROPERTY(ScaleY, RSAnimatableProperty::SCALE_Y);
 }
@@ -649,17 +653,17 @@ void RSNode::SetBackgroundShader(std::shared_ptr<RSShader> shader)
     SET_NONANIMATABLE_PROPERTY(BackgroundShader, shader);
 }
 
-RSColor RSNode::GetForegroundColor()
+RSColor RSNode::GetForegroundColor() const
 {
     GET_ANIMATABLE_PROPERTY(ForegroundColor, RSAnimatableProperty::FOREGROUND_COLOR);
 }
 
-RSColor RSNode::GetBackgroundColor()
+RSColor RSNode::GetBackgroundColor() const
 {
     GET_ANIMATABLE_PROPERTY(BackgroundColor, RSAnimatableProperty::BACKGROUND_COLOR);
 }
 
-std::shared_ptr<RSShader> RSNode::GetBackgroundShader()
+std::shared_ptr<RSShader> RSNode::GetBackgroundShader() const
 {
     GET_NONANIMATABLE_PROPERTY(BackgroundShader);
 }
@@ -670,7 +674,7 @@ void RSNode::SetBgImage(std::shared_ptr<RSImage> image)
     SET_NONANIMATABLE_PROPERTY(BgImage, image);
 }
 
-std::shared_ptr<RSImage> RSNode::GetBgImage()
+std::shared_ptr<RSImage> RSNode::GetBgImage() const
 {
     GET_NONANIMATABLE_PROPERTY(BgImage);
 }
@@ -686,7 +690,7 @@ void RSNode::SetBgImageWidth(float width)
     SET_ANIMATABLE_PROPERTY(BgImageWidth, width, RSAnimatableProperty::BGIMAGE_WIDTH);
 }
 
-float RSNode::GetBgImageWidth()
+float RSNode::GetBgImageWidth() const
 {
     GET_NONANIMATABLE_PROPERTY(BgImageWidth);
 }
@@ -696,7 +700,7 @@ void RSNode::SetBgImageHeight(float height)
     SET_ANIMATABLE_PROPERTY(BgImageHeight, height, RSAnimatableProperty::BGIMAGE_HEIGHT);
 }
 
-float RSNode::GetBgImageHeight()
+float RSNode::GetBgImageHeight() const
 {
     GET_NONANIMATABLE_PROPERTY(BgImageHeight);
 }
@@ -712,7 +716,7 @@ void RSNode::SetBgImagePositionX(float positionX)
     SET_ANIMATABLE_PROPERTY(BgImagePositionX, positionX, RSAnimatableProperty::BGIMAGE_POSITION_X);
 }
 
-float RSNode::GetBgImagePositionX()
+float RSNode::GetBgImagePositionX() const
 {
     GET_NONANIMATABLE_PROPERTY(BgImagePositionX);
 }
@@ -722,7 +726,7 @@ void RSNode::SetBgImagePositionY(float positionY)
     SET_ANIMATABLE_PROPERTY(BgImagePositionY, positionY, RSAnimatableProperty::BGIMAGE_POSITION_Y);
 }
 
-float RSNode::GetBgImagePositionY()
+float RSNode::GetBgImagePositionY() const
 {
     GET_NONANIMATABLE_PROPERTY(BgImagePositionY);
 }
@@ -733,7 +737,7 @@ void RSNode::SetBorderColor(uint32_t colorValue)
     SET_ANIMATABLE_PROPERTY(BorderColor, Color::FromArgbInt(colorValue), RSAnimatableProperty::BORDER_COLOR);
 }
 
-RSColor RSNode::GetBorderColor()
+RSColor RSNode::GetBorderColor() const
 {
     GET_ANIMATABLE_PROPERTY(BorderColor, RSAnimatableProperty::BORDER_COLOR);
 }
@@ -743,7 +747,7 @@ void RSNode::SetBorderWidth(float width)
     SET_ANIMATABLE_PROPERTY(BorderWidth, width, RSAnimatableProperty::BORDER_WIDTH);
 }
 
-float RSNode::GetBorderWidth()
+float RSNode::GetBorderWidth() const
 {
     GET_ANIMATABLE_PROPERTY(BorderWidth, RSAnimatableProperty::BORDER_WIDTH);
 }
@@ -754,7 +758,7 @@ void RSNode::SetBorderStyle(uint32_t styleValue)
     SET_NONANIMATABLE_PROPERTY(BorderStyle, style);
 }
 
-BorderStyle RSNode::GetBorderStyle()
+BorderStyle RSNode::GetBorderStyle() const
 {
     GET_NONANIMATABLE_PROPERTY(BorderStyle);
 }
@@ -765,7 +769,7 @@ void RSNode::SetSublayerTransform(Matrix3f sublayerTransform)
     SET_ANIMATABLE_PROPERTY(SublayerTransform, sublayerTransform, RSAnimatableProperty::SUB_LAYER_TRANSFORM);
 }
 
-Matrix3f RSNode::GetSublayerTransform()
+Matrix3f RSNode::GetSublayerTransform() const
 {
     GET_ANIMATABLE_PROPERTY(SublayerTransform, RSAnimatableProperty::SUB_LAYER_TRANSFORM);
 }
@@ -775,7 +779,7 @@ void RSNode::SetBackgroundFilter(std::shared_ptr<RSFilter> backgroundFilter)
     SET_ANIMATABLE_PROPERTY(BackgroundFilter, backgroundFilter, RSAnimatableProperty::BACKGROUND_FILTER);
 }
 
-std::shared_ptr<RSFilter> RSNode::GetBackgroundFilter()
+std::shared_ptr<RSFilter> RSNode::GetBackgroundFilter() const
 {
     GET_ANIMATABLE_PROPERTY(BackgroundFilter, RSAnimatableProperty::BACKGROUND_FILTER);
 }
@@ -785,14 +789,14 @@ void RSNode::SetFilter(std::shared_ptr<RSFilter> filter)
     SET_ANIMATABLE_PROPERTY(Filter, filter, RSAnimatableProperty::FILTER);
 }
 
-std::shared_ptr<RSFilter> RSNode::GetFilter()
+std::shared_ptr<RSFilter> RSNode::GetFilter() const
 {
     GET_ANIMATABLE_PROPERTY(Filter, RSAnimatableProperty::FILTER);
 }
 
 void RSNode::SetCompositingFilter(std::shared_ptr<RSFilter> compositingFilter) {}
 
-std::shared_ptr<RSFilter> RSNode::GetCompositingFilter()
+std::shared_ptr<RSFilter> RSNode::GetCompositingFilter() const
 {
     return nullptr;
 }
@@ -802,7 +806,7 @@ void RSNode::SetShadowColor(uint32_t colorValue)
     SET_ANIMATABLE_PROPERTY(ShadowColor, Color::FromArgbInt(colorValue), RSAnimatableProperty::SHADOW_COLOR);
 }
 
-RSColor RSNode::GetShadowColor()
+RSColor RSNode::GetShadowColor() const
 {
     GET_ANIMATABLE_PROPERTY(ShadowColor, RSAnimatableProperty::SHADOW_COLOR);
 }
@@ -819,7 +823,7 @@ void RSNode::SetShadowOffsetX(float offsetX)
     SET_ANIMATABLE_PROPERTY(ShadowOffsetX, offsetX, RSAnimatableProperty::SHADOW_OFFSET_X);
 }
 
-float RSNode::GetShadowOffsetX()
+float RSNode::GetShadowOffsetX() const
 {
     GET_ANIMATABLE_PROPERTY(ShadowOffsetX, RSAnimatableProperty::SHADOW_OFFSET_X);
 }
@@ -829,7 +833,7 @@ void RSNode::SetShadowOffsetY(float offsetY)
     SET_ANIMATABLE_PROPERTY(ShadowOffsetY, offsetY, RSAnimatableProperty::SHADOW_OFFSET_Y);
 }
 
-float RSNode::GetShadowOffsetY()
+float RSNode::GetShadowOffsetY() const
 {
     GET_ANIMATABLE_PROPERTY(ShadowOffsetY, RSAnimatableProperty::SHADOW_OFFSET_Y);
 }
@@ -840,7 +844,7 @@ void RSNode::SetShadowAlpha(float alpha)
     SET_ANIMATABLE_PROPERTY(ShadowAlpha, alpha, RSAnimatableProperty::SHADOW_ALPHA);
 }
 
-float RSNode::GetShadowAlpha()
+float RSNode::GetShadowAlpha() const
 {
     GET_ANIMATABLE_PROPERTY(ShadowAlpha, RSAnimatableProperty::SHADOW_ALPHA);
 }
@@ -851,7 +855,7 @@ void RSNode::SetShadowElevation(float elevation)
     SET_ANIMATABLE_PROPERTY(ShadowElevation, elevation, RSAnimatableProperty::SHADOW_ELEVATION);
 }
 
-float RSNode::GetShadowElevation()
+float RSNode::GetShadowElevation() const
 {
     GET_ANIMATABLE_PROPERTY(ShadowElevation, RSAnimatableProperty::SHADOW_ELEVATION);
 }
@@ -862,7 +866,7 @@ void RSNode::SetShadowRadius(float radius)
     SET_ANIMATABLE_PROPERTY(ShadowRadius, radius, RSAnimatableProperty::SHADOW_RADIUS);
 }
 
-float RSNode::GetShadowRadius()
+float RSNode::GetShadowRadius() const
 {
     GET_ANIMATABLE_PROPERTY(ShadowRadius, RSAnimatableProperty::SHADOW_RADIUS);
 }
@@ -872,7 +876,7 @@ void RSNode::SetShadowPath(std::shared_ptr<RSPath> shadowpath)
     SET_NONANIMATABLE_PROPERTY(ShadowPath, shadowpath);
 }
 
-std::shared_ptr<RSPath> RSNode::GetShadowPath()
+std::shared_ptr<RSPath> RSNode::GetShadowPath() const
 {
     GET_NONANIMATABLE_PROPERTY(ShadowPath);
 }
@@ -882,7 +886,7 @@ void RSNode::SetFrameGravity(Gravity gravity)
     SET_NONANIMATABLE_PROPERTY(FrameGravity, gravity);
 }
 
-Gravity RSNode::GetFrameGravity()
+Gravity RSNode::GetFrameGravity() const
 {
     GET_NONANIMATABLE_PROPERTY(FrameGravity);
 }
@@ -892,7 +896,7 @@ void RSNode::SetClipBounds(std::shared_ptr<RSPath> path)
     SET_NONANIMATABLE_PROPERTY(ClipBounds, path);
 }
 
-std::shared_ptr<RSPath> RSNode::GetClipBounds()
+std::shared_ptr<RSPath> RSNode::GetClipBounds() const
 {
     GET_NONANIMATABLE_PROPERTY(ClipBounds);
 }
@@ -902,7 +906,7 @@ void RSNode::SetClipToBounds(bool clipToBounds)
     SET_NONANIMATABLE_PROPERTY(ClipToBounds, clipToBounds);
 }
 
-bool RSNode::GetClipToBounds()
+bool RSNode::GetClipToBounds() const
 {
     GET_NONANIMATABLE_PROPERTY(ClipToBounds);
 }
@@ -913,7 +917,7 @@ void RSNode::SetClipToFrame(bool clipToFrame)
     SET_NONANIMATABLE_PROPERTY(ClipToFrame, clipToFrame);
 }
 
-bool RSNode::GetClipToFrame()
+bool RSNode::GetClipToFrame() const
 {
     GET_NONANIMATABLE_PROPERTY(ClipToFrame);
 }
@@ -926,7 +930,7 @@ void RSNode::SetVisible(bool visible)
     NotifyTransition({ RSTransitionEffect(type) }, GetId());
 }
 
-bool RSNode::GetVisible()
+bool RSNode::GetVisible() const
 {
     GET_NONANIMATABLE_PROPERTY(Visible);
 }
@@ -985,5 +989,19 @@ void RSNode::SetPaintOrder(bool drawContentLast)
     drawContentLast_ = drawContentLast;
 }
 
+std::string RSNode::DumpNode(int depth) const
+{
+    std::stringstream ss;
+    ss << RSBaseNode::DumpNode(depth) << "\n        ";
+    for (int i = 0; i < depth; i++) {
+        ss << "  ";
+    }
+    char buffer[MAX_LENGTH];
+    if (sprintf_s(buffer, MAX_LENGTH, "Bounds[%.2f %.2f %.2f %.2f] bgcolor[%x]",
+        GetBoundsPositionX(), GetBoundsPositionY(), GetBoundsWidth(), GetBoundsHeight(), GetBackgroundColor()) != -1) {
+        ss << buffer;
+    }
+    return ss.str();
+}
 } // namespace Rosen
 } // namespace OHOS

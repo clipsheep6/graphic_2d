@@ -73,45 +73,46 @@ class RawMaker:
         self._rotate = args.rotate
         self._flip = args.flip
         self._fnp = 0
+        self._vdo = None
+        self._image_files = []
+
+    def _iter_img(self):
+        if self._mp4:
+            success, frame = self._vdo.read()
+            if success:
+                image = Image.fromarray(frame)
+                return success, image
+            else:
+                return False, None
+        else:
+            if self._fnp >= len(self._image_files):
+                return False, None
+            image = Image.open(os.path.join(self._image, self._image_files[self._fnp]))
+            self._fnp += 1
+            return True, image
 
     def make(self):
-        iter_img = None
         frame_count, width, height = 0, 0, 0
         if self._mp4:
             if not os.path.exists(self._mp4):
                 print("mp4 file %s is not exist" % self._mp4)
                 exit()
-            vdo = cv2.VideoCapture(self._mp4)
-            fps = int(vdo.get(cv2.CAP_PROP_FPS))
-            w = int(vdo.get(cv2.CAP_PROP_FRAME_WIDTH))
-            h = int(vdo.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            frame_count = int(vdo.get(cv2.CAP_PROP_FRAME_COUNT))
+            self._vdo = cv2.VideoCapture(self._mp4)
+            fps = int(self._vdo.get(cv2.CAP_PROP_FPS))
+            w = int(self._vdo.get(cv2.CAP_PROP_FRAME_WIDTH))
+            h = int(self._vdo.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            frame_count = int(self._vdo.get(cv2.CAP_PROP_FRAME_COUNT))
             if fps != 30:
                 print("video fps :", fps, ", width :", w, ", height :", h, ", frame count :", frame_count)
             if frame_count <= 0:
                 exit()
-
-            def iter_img():
-                success, frame = vdo.read()
-                if success:
-                    image = Image.fromarray(frame)
-                    return success, image
-                return False, None
         elif self._image:
-            fns = []
             for fn in os.listdir(self._image):
-                fns.append(fn)
-            frame_count = len(fns)
+                self._image_files.append(fn)
+            frame_count = len(self._image_files)
             if frame_count <= 0:
                 exit()
-            fns.sort()
-
-            def iter_img():
-                if self._fnp >= len(fns):
-                    return False, None
-                image = Image.open(os.path.join(self._image, fns[self._fnp]))
-                self._fnp += 1
-                return True, image
+            self._image_files.sort()
         else:
             exit()
 
@@ -120,7 +121,7 @@ class RawMaker:
         screen_old_bytes = None
         num = 0
         while True:
-            ret, img = iter_img()
+            ret, img = self._iter_img()
             if not ret:
                 break
             num += 1

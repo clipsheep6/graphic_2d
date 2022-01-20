@@ -13,16 +13,28 @@
  * limitations under the License.
  */
 
-#ifndef REGION_H
-#define REGION_H
+#include "hdi_framebuffer_surface.h"
+
+#include <gtest/gtest.h>
+
+using namespace testing;
+using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
-namespace Drawing {
-class Region {
+class HdiFramebufferSurfaceTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
 
+    static inline sptr<HdiFramebufferSurface> hdiFramebufferSurface_ = nullptr;
 };
+
+void HdiFramebufferSurfaceTest::SetUpTestCase()
+{
+    hdiFramebufferSurface_ = HdiFramebufferSurface::CreateFramebufferSurface();
 }
-}
-}
-#endif
+
+void HdiFramebufferSurfaceTest::TearDownTestCase() {}
+} // namespace Rosen
+} // namespace OHOS

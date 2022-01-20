@@ -126,13 +126,27 @@ HWTEST_F(RSInterfacesTest, CreateVirtualScreen003, Function | SmallTest | Level2
 * CaseDescription: 1. call GetScreenSupportedModes
 *                  2. check ret
 */
-HWTEST_F(RSInterfacesTest, GetScreenSupportedModes, Function | SmallTest | Level2)
+HWTEST_F(RSInterfacesTest, GetScreenSupportedModes001, Function | SmallTest | Level2)
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
 
     auto supportedScreenModes = rsInterfaces->GetScreenSupportedModes(screenId);
     EXPECT_GT(supportedScreenModes.size(), 0);
+}
+
+/*
+* Function: GetScreenSupportedModes
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetScreenSupportedModes with INVALID_SCREEN_ID
+*                  2. check ret
+*/
+HWTEST_F(RSInterfacesTest, GetScreenSupportedModes002, Function | SmallTest | Level2)
+{
+    auto supportedScreenModes = rsInterfaces->GetScreenSupportedModes(INVALID_SCREEN_ID);
+    EXPECT_EQ(supportedScreenModes.size(), 0);
 }
 
 /*
@@ -169,15 +183,9 @@ HWTEST_F(RSInterfacesTest, SetScreenActiveMode002, Function | SmallTest | Level2
     auto supportedScreenModes = rsInterfaces->GetScreenSupportedModes(screenId);
     EXPECT_GT(supportedScreenModes.size(), 0);
 
-    if (supportedScreenModes.size() > 1) {
-        rsInterfaces->SetScreenActiveMode(screenId, supportedScreenModes.size() - 1);
-        auto modeInfo = rsInterfaces->GetScreenActiveMode(screenId);
-        EXPECT_EQ(modeInfo.GetScreenModeId(), supportedScreenModes.size() - 1);
-    } else {
-        rsInterfaces->SetScreenActiveMode(screenId, 0);
-        auto modeInfo = rsInterfaces->GetScreenActiveMode(screenId);
-        EXPECT_EQ(modeInfo.GetScreenModeId(), 0);
-    }
+    rsInterfaces->SetScreenActiveMode(screenId, 0);
+    auto modeInfo = rsInterfaces->GetScreenActiveMode(screenId);
+    EXPECT_EQ(modeInfo.GetScreenModeId(), 0);
 }
 
 /*
@@ -188,7 +196,7 @@ HWTEST_F(RSInterfacesTest, SetScreenActiveMode002, Function | SmallTest | Level2
 * CaseDescription: 1. call SetScreenActiveMode
 *                  2. check
 */
-HWTEST_F(RSInterfacesTest, GetScreenActiveMode, Function | SmallTest | Level2)
+HWTEST_F(RSInterfacesTest, GetScreenActiveMode001, Function | SmallTest | Level2)
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
@@ -203,14 +211,29 @@ HWTEST_F(RSInterfacesTest, GetScreenActiveMode, Function | SmallTest | Level2)
 }
 
 /*
+* Function: GetScreenActiveMode
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScreenActiveMode with INVALID_SCREEN_ID
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, GetScreenActiveMode002, Function | SmallTest | Level2)
+{
+    auto modeInfo = rsInterfaces->GetScreenActiveMode(INVALID_SCREEN_ID);
+    EXPECT_EQ(modeInfo.GetScreenHeight(), -1);
+    EXPECT_EQ(modeInfo.GetScreenWidth(), -1);
+}
+
+/*
 * Function: SetScreenPowerStatus
 * Type: Function
 * Rank: Important(2)
 * EnvConditions: N/A
-* CaseDescription: 1. call SetScreenPowerStatus
+* CaseDescription: 1. call SetScreenPowerStatus with value of POWER_STATUS_STANDBY
 *                  2. check
 */
-HWTEST_F(RSInterfacesTest, SetScreenPowerStatus, Function | SmallTest | Level2)
+HWTEST_F(RSInterfacesTest, SetScreenPowerStatus001, Function | SmallTest | Level2)
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
@@ -219,10 +242,24 @@ HWTEST_F(RSInterfacesTest, SetScreenPowerStatus, Function | SmallTest | Level2)
     usleep(50000); // wait 50000us to ensure SetScreenPowerStatus done.
     auto powerStatus = rsInterfaces->GetScreenPowerStatus(screenId);
     EXPECT_EQ(powerStatus, ScreenPowerStatus::POWER_STATUS_STANDBY);
+}
+
+/*
+* Function: SetScreenPowerStatus
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScreenPowerStatus with value of POWER_STATUS_ON
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, SetScreenPowerStatus002, Function | SmallTest | Level2)
+{
+    auto screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
 
     rsInterfaces->SetScreenPowerStatus(screenId, ScreenPowerStatus::POWER_STATUS_ON);
     usleep(50000); // wait 50000us to ensure SetScreenPowerStatus done.
-    powerStatus = rsInterfaces->GetScreenPowerStatus(screenId);
+    auto powerStatus = rsInterfaces->GetScreenPowerStatus(screenId);
     EXPECT_EQ(powerStatus, ScreenPowerStatus::POWER_STATUS_ON);
 }
 
@@ -231,10 +268,10 @@ HWTEST_F(RSInterfacesTest, SetScreenPowerStatus, Function | SmallTest | Level2)
 * Type: Function
 * Rank: Important(2)
 * EnvConditions: N/A
-* CaseDescription: 1. call GetScreenPowerStatus
+* CaseDescription: 1. call GetScreenPowerStatus when set POWER_STATUS_STANDBY
 *                  2. check
 */
-HWTEST_F(RSInterfacesTest, GetScreenPowerStatus, Function | SmallTest | Level2)
+HWTEST_F(RSInterfacesTest, GetScreenPowerStatus001, Function | SmallTest | Level2)
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
@@ -243,16 +280,58 @@ HWTEST_F(RSInterfacesTest, GetScreenPowerStatus, Function | SmallTest | Level2)
     usleep(50000); // wait 50000us to ensure SetScreenPowerStatus done.
     auto powerStatus = rsInterfaces->GetScreenPowerStatus(screenId);
     EXPECT_EQ(powerStatus, ScreenPowerStatus::POWER_STATUS_STANDBY);
+}
+
+/*
+* Function: GetScreenPowerStatus
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetScreenPowerStatus when set POWER_STATUS_OFF
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, GetScreenPowerStatus002, Function | SmallTest | Level2)
+{
+    auto screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
 
     rsInterfaces->SetScreenPowerStatus(screenId, ScreenPowerStatus::POWER_STATUS_OFF);
     usleep(50000); // wait 50000us to ensure SetScreenPowerStatus done.
-    powerStatus = rsInterfaces->GetScreenPowerStatus(screenId);
+    auto powerStatus = rsInterfaces->GetScreenPowerStatus(screenId);
     EXPECT_EQ(powerStatus, ScreenPowerStatus::POWER_STATUS_OFF);
+}
+
+/*
+* Function: GetScreenPowerStatus
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetScreenPowerStatus when set POWER_STATUS_ON
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, GetScreenPowerStatus003, Function | SmallTest | Level2)
+{
+    auto screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
 
     rsInterfaces->SetScreenPowerStatus(screenId, ScreenPowerStatus::POWER_STATUS_ON);
     usleep(50000); // wait 50000us to ensure SetScreenPowerStatus done.
-    powerStatus = rsInterfaces->GetScreenPowerStatus(screenId);
+    auto powerStatus = rsInterfaces->GetScreenPowerStatus(screenId);
     EXPECT_EQ(powerStatus, ScreenPowerStatus::POWER_STATUS_ON);
+}
+
+/*
+* Function: GetScreenPowerStatus
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetScreenPowerStatus when INVALID screenID
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, GetScreenPowerStatus004, Function | SmallTest | Level2)
+{
+    auto powerStatus = rsInterfaces->GetScreenPowerStatus(INVALID_SCREEN_ID);
+    EXPECT_EQ(powerStatus, ScreenPowerStatus::INVALID_POWER_STATUS);
 }
 
 /*
@@ -263,7 +342,7 @@ HWTEST_F(RSInterfacesTest, GetScreenPowerStatus, Function | SmallTest | Level2)
 * CaseDescription: 1. call GetScreenCapability
 *                  2. check
 */
-HWTEST_F(RSInterfacesTest, GetScreenCapability, Function | SmallTest | Level2)
+HWTEST_F(RSInterfacesTest, GetScreenCapability001, Function | SmallTest | Level2)
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
@@ -272,8 +351,22 @@ HWTEST_F(RSInterfacesTest, GetScreenCapability, Function | SmallTest | Level2)
     std::string emptyName;
     EXPECT_GT(screenCapability.GetPhyWidth(), 0);
     EXPECT_GT(screenCapability.GetPhyHeight(), 0);
-    EXPECT_NE(screenCapability.GetName(), emptyName);
     EXPECT_NE(screenCapability.GetType(), DISP_INVALID);
+}
+
+/*
+* Function: GetScreenCapability
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetScreenCapability with INVALID_SCREEN_ID
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, GetScreenCapability002, Function | SmallTest | Level2)
+{
+    auto screenCapability = rsInterfaces->GetScreenCapability(INVALID_SCREEN_ID);
+    EXPECT_EQ(screenCapability.GetPhyWidth(), 0);
+    EXPECT_EQ(screenCapability.GetPhyHeight(), 0);
 }
 
 /*
@@ -284,7 +377,7 @@ HWTEST_F(RSInterfacesTest, GetScreenCapability, Function | SmallTest | Level2)
 * CaseDescription: 1. call GetScreenData
 *                  2. check
 */
-HWTEST_F(RSInterfacesTest, GetScreenData, Function | SmallTest | Level2)
+HWTEST_F(RSInterfacesTest, GetScreenData001, Function | SmallTest | Level2)
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
@@ -296,7 +389,6 @@ HWTEST_F(RSInterfacesTest, GetScreenData, Function | SmallTest | Level2)
     std::string emptyName;
     EXPECT_GT(screenCapability.GetPhyWidth(), 0);
     EXPECT_GT(screenCapability.GetPhyHeight(), 0);
-    EXPECT_NE(screenCapability.GetName(), emptyName);
     EXPECT_NE(screenCapability.GetType(), DISP_INVALID);
 
     auto modeInfo = screenData.GetActivityModeInfo();
@@ -308,14 +400,36 @@ HWTEST_F(RSInterfacesTest, GetScreenData, Function | SmallTest | Level2)
 }
 
 /*
+* Function: GetScreenData
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetScreenData with INVALID_SCREEN_ID
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, GetScreenData002, Function | SmallTest | Level2)
+{
+    auto screenData = rsInterfaces->GetScreenData(INVALID_SCREEN_ID);
+    EXPECT_EQ(screenData.GetSupportModeInfo().size(), 0);
+
+    auto screenCapability = screenData.GetCapability();
+    EXPECT_EQ(screenCapability.GetPhyWidth(), 0);
+    EXPECT_EQ(screenCapability.GetPhyHeight(), 0);
+
+    auto modeInfo = screenData.GetActivityModeInfo();
+    EXPECT_EQ(modeInfo.GetScreenHeight(), -1);
+    EXPECT_EQ(modeInfo.GetScreenWidth(), -1);
+}
+
+/*
 * Function: SetScreenBacklight
 * Type: Function
 * Rank: Important(2)
 * EnvConditions: N/A
-* CaseDescription: 1. call SetScreenBacklight
+* CaseDescription: 1. call SetScreenBacklight with value:0
 *                  2. check
 */
-HWTEST_F(RSInterfacesTest, SetScreenBacklight, Function | SmallTest | Level2)
+HWTEST_F(RSInterfacesTest, SetScreenBacklight001, Function | SmallTest | Level2)
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
@@ -323,21 +437,77 @@ HWTEST_F(RSInterfacesTest, SetScreenBacklight, Function | SmallTest | Level2)
     rsInterfaces->SetScreenBacklight(screenId, 0);
     auto backLight = rsInterfaces->GetScreenBacklight(screenId);
     EXPECT_EQ(backLight, 0);
+}
+
+/*
+* Function: SetScreenBacklight
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScreenBacklight with value:50
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, SetScreenBacklight002, Function | SmallTest | Level2)
+{
+    auto screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
 
     rsInterfaces->SetScreenBacklight(screenId, 50);
-    backLight = rsInterfaces->GetScreenBacklight(screenId);
+    auto backLight = rsInterfaces->GetScreenBacklight(screenId);
     EXPECT_EQ(backLight, 50);
+}
+
+/*
+* Function: SetScreenBacklight
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScreenBacklight with value:100
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, SetScreenBacklight003, Function | SmallTest | Level2)
+{
+    auto screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
 
     rsInterfaces->SetScreenBacklight(screenId, 100);
-    backLight = rsInterfaces->GetScreenBacklight(screenId);
+    auto backLight = rsInterfaces->GetScreenBacklight(screenId);
     EXPECT_EQ(backLight, 100);
+}
+
+/*
+* Function: SetScreenBacklight
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScreenBacklight with value:200
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, SetScreenBacklight004, Function | SmallTest | Level2)
+{
+    auto screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
 
     rsInterfaces->SetScreenBacklight(screenId, 200);
-    backLight = rsInterfaces->GetScreenBacklight(screenId);
+    auto backLight = rsInterfaces->GetScreenBacklight(screenId);
     EXPECT_EQ(backLight, 100);
+}
+
+/*
+* Function: SetScreenBacklight
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScreenBacklight with value:UINT32_MAX
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, SetScreenBacklight005, Function | SmallTest | Level2)
+{
+    auto screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
 
     rsInterfaces->SetScreenBacklight(screenId, UINT32_MAX);
-    backLight = rsInterfaces->GetScreenBacklight(screenId);
+    auto backLight = rsInterfaces->GetScreenBacklight(screenId);
     EXPECT_EQ(backLight, 100);
 }
 
@@ -346,10 +516,10 @@ HWTEST_F(RSInterfacesTest, SetScreenBacklight, Function | SmallTest | Level2)
 * Type: Function
 * Rank: Important(2)
 * EnvConditions: N/A
-* CaseDescription: 1. call GetScreenBacklight
+* CaseDescription: 1. call GetScreenBacklight with value: 0
 *                  2. check
 */
-HWTEST_F(RSInterfacesTest, GetScreenBacklight, Function | SmallTest | Level2)
+HWTEST_F(RSInterfacesTest, GetScreenBacklight001, Function | SmallTest | Level2)
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
@@ -357,21 +527,77 @@ HWTEST_F(RSInterfacesTest, GetScreenBacklight, Function | SmallTest | Level2)
     rsInterfaces->SetScreenBacklight(screenId, 0);
     auto backLight = rsInterfaces->GetScreenBacklight(screenId);
     EXPECT_EQ(backLight, 0);
+}
+
+/*
+* Function: GetScreenBacklight
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetScreenBacklight with value: 50
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, GetScreenBacklight002, Function | SmallTest | Level2)
+{
+    auto screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
 
     rsInterfaces->SetScreenBacklight(screenId, 50);
-    backLight = rsInterfaces->GetScreenBacklight(screenId);
+    auto backLight = rsInterfaces->GetScreenBacklight(screenId);
     EXPECT_EQ(backLight, 50);
+}
+
+/*
+* Function: GetScreenBacklight
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetScreenBacklight with value: 100
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, GetScreenBacklight003, Function | SmallTest | Level2)
+{
+    auto screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
 
     rsInterfaces->SetScreenBacklight(screenId, 100);
-    backLight = rsInterfaces->GetScreenBacklight(screenId);
+    auto backLight = rsInterfaces->GetScreenBacklight(screenId);
     EXPECT_EQ(backLight, 100);
+}
+
+/*
+* Function: GetScreenBacklight
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetScreenBacklight with value: 200
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, GetScreenBacklight004, Function | SmallTest | Level2)
+{
+    auto screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
 
     rsInterfaces->SetScreenBacklight(screenId, 200);
-    backLight = rsInterfaces->GetScreenBacklight(screenId);
+    auto backLight = rsInterfaces->GetScreenBacklight(screenId);
     EXPECT_EQ(backLight, 100);
+}
+
+/*
+* Function: GetScreenBacklight
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetScreenBacklight with value: UINT32_MAX
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, GetScreenBacklight005, Function | SmallTest | Level2)
+{
+    auto screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
 
     rsInterfaces->SetScreenBacklight(screenId, UINT32_MAX);
-    backLight = rsInterfaces->GetScreenBacklight(screenId);
+    auto backLight = rsInterfaces->GetScreenBacklight(screenId);
     EXPECT_EQ(backLight, 100);
 }
 

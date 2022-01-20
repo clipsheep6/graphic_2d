@@ -116,6 +116,8 @@ void HdiLayer::SetHdiLayerInfo()
     if (layerInfo_->GetTransformType() != TransformType::ROTATE_BUTT) {
         ret = device->SetTransformMode(screenId_, layerId_, layerInfo_->GetTransformType());
         CheckRet(ret, "SetTransformMode");
+    } else {
+        HLOE("TransformType is %{public}d", layerInfo_->GetTransformType());
     }
 
     ret = device->SetLayerVisibleRegion(screenId_, layerId_, layerInfo_->GetVisibleNum(),

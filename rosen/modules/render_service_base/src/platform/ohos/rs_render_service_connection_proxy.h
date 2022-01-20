@@ -51,6 +51,8 @@ public:
 
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) override;
 
+    void SetUITransactionCallback(uint32_t pid, sptr<RSIUITransactionCallback> callback) override;
+
     void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback) override;
 
     RSScreenModeInfo GetScreenActiveMode(ScreenId id) override;

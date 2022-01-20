@@ -48,6 +48,13 @@ void RSUIDirector::Init()
     if (transactionProxy != nullptr) {
         transactionProxy->SetRenderThreadClient(renderThreadClient);
     }
+
+    auto renderClient = RSIRenderClient::CreateRenderServiceClient();
+    if (renderClient != nullptr) {
+        auto renderServiceClient = std::static_pointer_cast<RSRenderServiceClient>(renderClient);
+        renderServiceClient->SetUITransactionCallback(
+            [](std::shared_ptr<RSTransactionData> transaction) { RSUIDirector::RecvMessages(transaction); });
+    }
     RSRenderThread::Instance().Start();
 }
 

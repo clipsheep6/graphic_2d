@@ -60,12 +60,12 @@ bool RSAnimationManager::Animate(int64_t time)
 
     std::__libcpp_erase_if_container(animations_, [this, &hasRunningAnimation, time](auto& iter) {
         auto& animation = iter.second;
+        hasRunningAnimation = animation->IsRunning() || hasRunningAnimation ;
         bool isFinished = animation->Animate(time);
         if (isFinished) {
             OnAnimationFinished(animation);
             return true;
         } else {
-            hasRunningAnimation = animation->IsRunning() || hasRunningAnimation ;
             return false;
         }
     });
@@ -104,6 +104,7 @@ void RSAnimationManager::OnAnimationFinished(const std::shared_ptr<RSRenderAnima
 {
     NodeId targetId = animation->GetTarget() ? animation->GetTarget()->GetId() : 0;
     AnimationId animationId = animation->GetAnimationId();
+
     std::unique_ptr<RSCommand> command =
         std::make_unique<RSAnimationFinishCallback>(targetId, animationId);
     RSMessageProcessor::Instance().AddUIMessage(ExtractPid(animationId), command);

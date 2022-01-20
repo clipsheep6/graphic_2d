@@ -20,6 +20,7 @@
 #include "command/rs_command.h"
 #include "ipc_callbacks/screen_change_callback_stub.h"
 #include "ipc_callbacks/surface_capture_callback_stub.h"
+#include "ipc_callbacks/ui_transaction_callback_stub.h"
 #include "platform/common/rs_log.h"
 #include "rs_render_service_connect_hub.h"
 #include "rs_surface_ohos.h"
@@ -127,6 +128,38 @@ bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<Surfac
     }
     renderService->TakeSurfaceCapture(id, surfaceCaptureCbDirector_);
     return true;
+}
+
+class UICallbackDirector : public RSUITransactionCallbackStub
+{
+public:
+    UICallbackDirector(const UITransactionCallback& callback) : cb_(callback) {}
+    ~UICallbackDirector() override {};
+    void OnTransaction(std::shared_ptr<RSTransactionData> transactionData) override
+    {
+        if (cb_ != nullptr) {
+            cb_(transactionData);
+        }
+    }
+
+private:
+    UITransactionCallback cb_;
+};
+
+void RSRenderServiceClient::SetUITransactionCallback(const UITransactionCallback& callback)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::SetUITransactionCallback renderService == nullptr!");
+        return;
+    }
+    if (callback == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::SetUITransactionCallback callback == nullptr!");
+        return;
+    }
+
+    UICallbackDirector_ = new UICallbackDirector(callback);
+    renderService->SetUITransactionCallback(getpid(), UICallbackDirector_);
 }
 
 ScreenId RSRenderServiceClient::GetDefaultScreenId()

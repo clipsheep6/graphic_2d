@@ -24,6 +24,7 @@
 
 #include "common/rs_thread_handler.h"
 #include "common/rs_thread_looper.h"
+#include "ipc_callbacks/ui_transaction_callback.h"
 #include "pipeline/rs_context.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "refbase.h"
@@ -77,13 +78,13 @@ public:
     {
         return context_;
     }
-    const RSContext& GetContext() const
-    {
-        return context_;
-    }
     std::thread::id Id() const
     {
         return mainThreadId_;
+    }
+    void SetUITransactionCallback(uint32_t pid, sptr<RSIUITransactionCallback> callback)
+    {
+        uiCallbackMap_.emplace(pid, callback);
     }
 
 private:
@@ -105,6 +106,10 @@ private:
     std::unique_ptr<RSVsyncClient> vsyncClient_ = nullptr;
     std::queue<std::unique_ptr<RSTransactionData>> cacheCommandQueue_;
     std::queue<std::unique_ptr<RSTransactionData>> effectCommandQueue_;
+    void Animate(uint64_t timestamp);
+    uint64_t timestamp_ = 0;
+
+    std::unordered_map<uint32_t, sptr<RSIUITransactionCallback>> uiCallbackMap_;
 
     RSContext context_;
     std::thread::id mainThreadId_;

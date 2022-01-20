@@ -235,6 +235,14 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
     mainThread_->PostTask(captureTask);
 }
 
+void RSRenderServiceConnection::SetUITransactionCallback(uint32_t pid, sptr<RSIUITransactionCallback> callback)
+{
+    auto captureTask = [=]() -> void {
+        mainThread_->SetUITransactionCallback(pid, callback);
+    };
+    mainThread_->PostTask(captureTask);
+}
+
 RSScreenModeInfo RSRenderServiceConnection::GetScreenActiveMode(ScreenId id)
 {
     RSScreenModeInfo screenModeInfo;

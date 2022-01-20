@@ -13,16 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef PICTURE_H
-#define PICTURE_H
+#include "mock_hdi_device_systest.h"
 
 namespace OHOS {
 namespace Rosen {
-namespace Drawing {
-class Picture {
+namespace MockSys {
+HdiDevice::HdiDevice() = default;
+HdiDevice::~HdiDevice() = default;
 
-};
+HdiDevice* HdiDevice::GetInstance()
+{
+    static HdiDevice instance;
+    return &instance;
 }
-}
-}
-#endif
+} // namespace MockSys
+} // namespace Rosen
+} // namespace OHOS

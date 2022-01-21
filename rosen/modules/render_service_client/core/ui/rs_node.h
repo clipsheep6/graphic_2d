@@ -46,6 +46,8 @@ public:
 
     virtual ~RSNode();
 
+    std::string DumpNode(int depth) const override;
+
     static std::vector<std::shared_ptr<RSAnimation>> Animate(const RSAnimationTimingProtocol& timingProtocol,
         const RSAnimationTimingCurve& timingCurve, const PropertyCallback& callback,
         const std::function<void()>& finshCallback = nullptr);
@@ -75,13 +77,13 @@ public:
     void SetBoundsPosition(float positionX, float positionY);
     void SetBoundsPositionX(float positionX);
     void SetBoundsPositionY(float positionY);
-    Vector4f GetBounds();
-    Vector2f GetBoundsSize();
-    float GetBoundsWidth();
-    float GetBoundsHeight();
-    Vector2f GetBoundsPosition();
-    float GetBoundsPositionX();
-    float GetBoundsPositionY();
+    Vector4f GetBounds() const;
+    Vector2f GetBoundsSize() const;
+    float GetBoundsWidth() const;
+    float GetBoundsHeight() const;
+    Vector2f GetBoundsPosition() const;
+    float GetBoundsPositionX() const;
+    float GetBoundsPositionY() const;
 
     void SetFrame(const Vector4f& frame);
     void SetFrame(float positionX, float positionY, float width, float height);
@@ -93,66 +95,66 @@ public:
     void SetFramePosition(float positionX, float positionY);
     void SetFramePositionX(float positionX);
     void SetFramePositionY(float positionY);
-    Vector4f GetFrame();
-    Vector2f GetFrameSize();
-    float GetFrameWidth();
-    float GetFrameHeight();
-    Vector2f GetFramePosition();
-    float GetFramePositionX();
-    float GetFramePositionY();
+    Vector4f GetFrame() const;
+    Vector2f GetFrameSize() const;
+    float GetFrameWidth() const;
+    float GetFrameHeight() const;
+    Vector2f GetFramePosition() const;
+    float GetFramePositionX() const;
+    float GetFramePositionY() const;
 
     void SetPositionZ(float positionZ);
-    float GetPositionZ();
+    float GetPositionZ() const;
 
     void SetPivot(const Vector2f& pivot);
     void SetPivot(float pivotX, float pivotY);
     void SetPivotX(float pivotX);
     void SetPivotY(float pivotY);
-    Vector2f GetPivot();
-    float GetPivotX();
-    float GetPivotY();
+    Vector2f GetPivot() const;
+    float GetPivotX() const;
+    float GetPivotY() const;
 
     void SetCornerRadius(float cornerRadius);
-    float GetCornerRadius();
+    float GetCornerRadius() const;
 
     void SetRotation(const Quaternion& quaternion);
     void SetRotation(float degreeX, float degreeY, float degreeZ);
     void SetRotation(float degree);
     void SetRotationX(float degree);
     void SetRotationY(float degree);
-    Quaternion GetQuaternion();
-    float GetRotation();
-    float GetRotationX();
-    float GetRotationY();
+    Quaternion GetQuaternion() const;
+    float GetRotation() const;
+    float GetRotationX() const;
+    float GetRotationY() const;
 
     void SetTranslate(const Vector2f& translate);
     void SetTranslate(float translateX, float translateY, float translateZ);
     void SetTranslateX(float translate);
     void SetTranslateY(float translate);
     void SetTranslateZ(float translate);
-    Vector2f GetTranslate();
-    float GetTranslateX();
-    float GetTranslateY();
-    float GetTranslateZ();
+    Vector2f GetTranslate() const;
+    float GetTranslateX() const;
+    float GetTranslateY() const;
+    float GetTranslateZ() const;
 
     void SetScale(float scale);
     void SetScale(float scaleX, float scaleY);
     void SetScale(const Vector2f& scale);
     void SetScaleX(float scale);
     void SetScaleY(float scale);
-    Vector2f GetScale();
-    float GetScaleX();
-    float GetScaleY();
+    Vector2f GetScale() const;
+    float GetScaleX() const;
+    float GetScaleY() const;
 
     void SetAlpha(float alpha);
-    float GetAlpha();
+    float GetAlpha() const;
 
     void SetForegroundColor(uint32_t colorValue);
     void SetBackgroundColor(uint32_t colorValue);
     void SetBackgroundShader(std::shared_ptr<RSShader> shader);
-    RSColor GetForegroundColor();
-    RSColor GetBackgroundColor();
-    std::shared_ptr<RSShader> GetBackgroundShader();
+    RSColor GetForegroundColor() const;
+    RSColor GetBackgroundColor() const;
+    std::shared_ptr<RSShader> GetBackgroundShader() const;
 
     void SetBgImage(std::shared_ptr<RSImage> image);
     void SetBgImageSize(float width, float height);
@@ -161,28 +163,28 @@ public:
     void SetBgImagePosition(float positionX, float positionY);
     void SetBgImagePositionX(float positionX);
     void SetBgImagePositionY(float positionY);
-    std::shared_ptr<RSImage> GetBgImage();
-    float GetBgImageWidth();
-    float GetBgImageHeight();
-    float GetBgImagePositionX();
-    float GetBgImagePositionY();
+    std::shared_ptr<RSImage> GetBgImage() const;
+    float GetBgImageWidth() const;
+    float GetBgImageHeight() const;
+    float GetBgImagePositionX() const;
+    float GetBgImagePositionY() const;
 
     void SetBorderColor(uint32_t colorValue);
     void SetBorderWidth(float width);
     void SetBorderStyle(uint32_t styleValue);
-    RSColor GetBorderColor();
-    float GetBorderWidth();
-    BorderStyle GetBorderStyle();
+    RSColor GetBorderColor() const;
+    float GetBorderWidth() const;
+    BorderStyle GetBorderStyle() const;
 
     void SetSublayerTransform(Matrix3f sublayerTransform);
-    Matrix3f GetSublayerTransform();
+    Matrix3f GetSublayerTransform() const;
 
     void SetBackgroundFilter(std::shared_ptr<RSFilter> backgroundFilter);
     void SetFilter(std::shared_ptr<RSFilter> filter);
     void SetCompositingFilter(std::shared_ptr<RSFilter> compositingFilter);
-    std::shared_ptr<RSFilter> GetBackgroundFilter();
-    std::shared_ptr<RSFilter> GetFilter();
-    std::shared_ptr<RSFilter> GetCompositingFilter();
+    std::shared_ptr<RSFilter> GetBackgroundFilter() const;
+    std::shared_ptr<RSFilter> GetFilter() const;
+    std::shared_ptr<RSFilter> GetCompositingFilter() const;
 
     void SetShadowColor(uint32_t colorValue);
     void SetShadowOffset(float offsetX, float offsetY);
@@ -192,29 +194,29 @@ public:
     void SetShadowElevation(float elevation);
     void SetShadowRadius(float radius);
     void SetShadowPath(std::shared_ptr<RSPath> shadowpath);
-    RSColor GetShadowColor();
-    float GetShadowOffset();
-    float GetShadowOffsetX();
-    float GetShadowOffsetY();
-    float GetShadowAlpha();
-    float GetShadowElevation();
-    float GetShadowRadius();
-    std::shared_ptr<RSPath> GetShadowPath();
+    RSColor GetShadowColor() const;
+    float GetShadowOffset() const;
+    float GetShadowOffsetX() const;
+    float GetShadowOffsetY() const;
+    float GetShadowAlpha() const;
+    float GetShadowElevation() const;
+    float GetShadowRadius() const;
+    std::shared_ptr<RSPath> GetShadowPath() const;
 
     void SetFrameGravity(Gravity gravity);
-    Gravity GetFrameGravity();
+    Gravity GetFrameGravity() const;
 
     void SetClipBounds(std::shared_ptr<RSPath> clipToBounds);
     void SetClipToBounds(bool clipToBounds);
     void SetClipToFrame(bool clipToFrame);
-    std::shared_ptr<RSPath> GetClipBounds();
-    bool GetClipToBounds();
-    bool GetClipToFrame();
+    std::shared_ptr<RSPath> GetClipBounds() const;
+    bool GetClipToBounds() const;
+    bool GetClipToFrame() const;
 
     void SetVisible(bool visible);
     void SetPaintOrder(bool drawContentLast);
-    bool GetVisible();
-    bool GetPaintOrder();
+    bool GetVisible() const;
+    bool GetPaintOrder() const;
 
     RSUINodeType GetType() const override
     {
@@ -240,7 +242,7 @@ protected:
     }
 
 private:
-    bool HasPropertyAnimation(const RSAnimatableProperty& property);
+    bool HasPropertyAnimation(const RSAnimatableProperty& property) const;
     void FallbackAnimationsToRoot();
     void AddAnimationInner(const std::shared_ptr<RSAnimation>& animation);
     void RemoveAnimationInner(const std::shared_ptr<RSAnimation>& animation);

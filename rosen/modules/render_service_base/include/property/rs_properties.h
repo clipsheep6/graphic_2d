@@ -27,6 +27,7 @@
 #include "render/rs_path.h"
 #include "render/rs_shader.h"
 #include "render/rs_shadow.h"
+#include "render/rs_mask.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -177,6 +178,10 @@ public:
     bool GetVisible() const;
     bool SetId(NodeId id);
 
+    // mask properties
+    void SetMask(std::shared_ptr<RSMask> mask);
+    std::shared_ptr<RSMask> GetMask() const;
+
     const std::shared_ptr<RSObjGeometry>& GetBoundsGeometry() const;
     const std::shared_ptr<RSObjGeometry>& GetFrameGeometry() const;
     bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag);
@@ -219,6 +224,7 @@ private:
     std::shared_ptr<RSFilter> backgroundFilter_ = nullptr;
     std::shared_ptr<RSFilter> filter_ = nullptr;
     std::shared_ptr<RSPath> clipPath_ = nullptr;
+    std::shared_ptr<RSMask> mask_ = nullptr;
 
     friend class RSPropertiesPainter;
     friend class RSTextureRenderNode;

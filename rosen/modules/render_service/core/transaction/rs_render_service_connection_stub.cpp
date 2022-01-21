@@ -133,6 +133,17 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             TakeSurfaceCapture(id, cb);
             break;
         }
+        case SET_UI_TRANSACTION_CALLBACK: {
+            uint32_t pid = data.ReadUint32();
+            auto remoteObject = data.ReadRemoteObject();
+            if (remoteObject == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            sptr<RSIUITransactionCallback> cb = iface_cast<RSIUITransactionCallback>(remoteObject);
+            SetUITransactionCallback(pid, cb);
+            break;
+        }
         case GET_SCREEN_ACTIVE_MODE: {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {

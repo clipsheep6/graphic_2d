@@ -17,26 +17,28 @@
 #define ROSEN_RENDER_SERVICE_BASE_TRANSACTION_RS_RENDER_SERVICE_CLIENT_H
 
 #include <functional>
-#include <memory>
 #include <map>
+#include <memory>
 #include <mutex>
-
 #include <refbase.h>
 #include <surface.h>
 
 #include "ipc_callbacks/screen_change_callback.h"
 #include "ipc_callbacks/surface_capture_callback.h"
+#include "ipc_callbacks/ui_transaction_callback.h"
 #include "platform/drawing/rs_surface.h"
 #include "rs_irender_client.h"
-#include "screen_manager/screen_types.h"
-#include "screen_manager/rs_screen_mode_info.h"
 #include "screen_manager/rs_screen_capability.h"
 #include "screen_manager/rs_screen_data.h"
+#include "screen_manager/rs_screen_mode_info.h"
+#include "screen_manager/screen_types.h"
+
 
 namespace OHOS {
 namespace Rosen {
 // normal callback functor for client users.
 using ScreenChangeCallback = std::function<void(ScreenId, ScreenEvent)>;
+using UITransactionCallback = std::function<void(std::shared_ptr<RSTransactionData>)>;
 class SurfaceCaptureCallback {
 public:
     SurfaceCaptureCallback() {}
@@ -61,17 +63,14 @@ public:
 
     ScreenId GetDefaultScreenId();
 
-    ScreenId CreateVirtualScreen(
-        const std::string &name,
-        uint32_t width,
-        uint32_t height,
-        sptr<Surface> surface,
-        ScreenId mirrorId,
-        int32_t flags);
+    ScreenId CreateVirtualScreen(const std::string& name, uint32_t width, uint32_t height, sptr<Surface> surface,
+        ScreenId mirrorId, int32_t flags);
 
     void RemoveVirtualScreen(ScreenId id);
 
-    void SetScreenChangeCallback(const ScreenChangeCallback &callback);
+    void SetScreenChangeCallback(const ScreenChangeCallback& callback);
+
+    void SetUITransactionCallback(const UITransactionCallback& callback);
 
     void SetScreenActiveMode(ScreenId id, uint32_t modeId);
 
@@ -93,11 +92,13 @@ public:
 
 private:
     void TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap);
-    friend class SurfaceCaptureCallbackDirector;
     std::mutex mutex_;
     sptr<RSIScreenChangeCallback> screenChangeCb_;
     sptr<RSISurfaceCaptureCallback> surfaceCaptureCbDirector_;
+    sptr<RSIUITransactionCallback> UICallbackDirector_;
     std::map<NodeId, std::shared_ptr<SurfaceCaptureCallback>> surfaceCaptureCbMap_;
+
+    friend class SurfaceCaptureCallbackDirector;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -69,6 +69,8 @@ private:
 
     void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback) override;
 
+    void SetUITransactionCallback(uint32_t pid, sptr<RSIUITransactionCallback> callback) override;
+
     RSScreenModeInfo GetScreenActiveMode(ScreenId id) override;
 
     std::vector<RSScreenModeInfo> GetScreenSupportedModes(ScreenId id) override;

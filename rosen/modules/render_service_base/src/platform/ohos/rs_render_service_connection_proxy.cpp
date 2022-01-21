@@ -226,6 +226,26 @@ void RSRenderServiceConnectionProxy::SetScreenPowerStatus(ScreenId id, ScreenPow
     }
 }
 
+void RSRenderServiceConnectionProxy::SetUITransactionCallback(uint32_t pid, sptr<RSIUITransactionCallback> callback)
+{
+    if (callback == nullptr) {
+        ROSEN_LOGE("RSRenderServiceProxy: callback == nullptr\n");
+        return;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    option.SetFlags(MessageOption::TF_ASYNC);
+    data.WriteUint32(pid);
+    data.WriteRemoteObject(callback->AsObject());
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::SET_UI_TRANSACTION_CALLBACK, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceProxy: Remote()->SendRequest() error.\n");
+        return;
+    }
+}
+
 void RSRenderServiceConnectionProxy::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback)
 {
     if (callback == nullptr) {

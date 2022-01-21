@@ -14,6 +14,7 @@
  */
 #include "pipeline/rs_main_thread.h"
 
+#include "command/rs_message_processor.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_render_service_visitor.h"
 #include "platform/common/rs_log.h"
@@ -44,6 +45,7 @@ void RSMainThread::Init()
         ROSEN_LOGE("RsDebug mainLoop start");
         ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
         ProcessCommand();
+        Animate(timestamp_);
         Draw();
         ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
         ROSEN_LOGE("RsDebug mainLoop end");
@@ -103,6 +105,7 @@ void RSMainThread::RequestNextVSync()
 void RSMainThread::OnVsync(uint64_t timestamp)
 {
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSMainThread::OnVsync");
+    timestamp_ = timestamp;
     if (threadHandler_) {
         if (!taskHandle_) {
             taskHandle_ = RSThreadHandler::StaticCreateTask(mainLoop_);
@@ -117,6 +120,38 @@ void RSMainThread::OnVsync(uint64_t timestamp)
         }
     }
     ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
+}
+
+void RSMainThread::Animate(uint64_t timestamp)
+{
+    RS_TRACE_FUNC();
+    bool hasAnimate = false;
+    for (const auto& [id, node] : context_.GetNodeMap().renderNodeMap_) {
+        hasAnimate = node->Animate(timestamp) | hasAnimate;
+    }
+    if (hasAnimate) {
+        RequestNextVSync();
+    }
+
+    if (!RSMessageProcessor::Instance().HasTransaction()) {
+        return;
+    }
+    auto transactionMapPtr = std::make_shared<std::unordered_map<uint32_t, RSTransactionData>>(
+        RSMessageProcessor::Instance().GetAllTransactions());
+    if (transactionMapPtr == nullptr) {
+        return;
+    }
+    PostTask([this, transactionMapPtr]() mutable {
+        for (auto& transactionIter : *transactionMapPtr) {
+            auto pid = transactionIter.first;
+            auto callbackIter = uiCallbackMap_.find(pid);
+            if (callbackIter == uiCallbackMap_.end()) {
+                continue;
+            }
+            auto transactionPtr = std::make_shared<RSTransactionData>(std::move(transactionIter.second));
+            callbackIter->second->OnTransaction(transactionPtr);
+        }
+    });
 }
 
 void RSMainThread::RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData)

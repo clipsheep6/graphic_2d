@@ -14,15 +14,14 @@
  */
 
 #include "rs_render_service_connection.h"
-#include "rs_main_thread.h"
-#include "rs_trace.h"
 
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_render_service_listener.h"
-#include "pipeline/rs_surface_render_node.h"
-#include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_surface_capture_task.h"
+#include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
+#include "rs_main_thread.h"
+#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -136,7 +135,8 @@ void RSRenderServiceConnection::ExecuteSynchronousTask(const std::shared_ptr<RSS
 
 sptr<Surface> RSRenderServiceConnection::CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config)
 {
-    std::shared_ptr<RSSurfaceRenderNode> node = std::make_shared<RSSurfaceRenderNode>(config);
+    std::shared_ptr<RSSurfaceRenderNode> node =
+        std::make_shared<RSSurfaceRenderNode>(config, mainThread_->GetContext().weak_from_this());
     if (node == nullptr) {
         ROSEN_LOGE("RSRenderService::CreateNodeAndSurface CreateNode fail");
         return nullptr;
@@ -231,6 +231,14 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
         std::unique_ptr<Media::PixelMap> pixelmap = task.Run();
         callback->OnSurfaceCapture(id, pixelmap.get());
         ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
+    };
+    mainThread_->PostTask(captureTask);
+}
+
+void RSRenderServiceConnection::SetUITransactionCallback(uint32_t pid, sptr<RSIUITransactionCallback> callback)
+{
+    auto captureTask = [=]() -> void {
+        mainThread_->SetUITransactionCallback(pid, callback);
     };
     mainThread_->PostTask(captureTask);
 }

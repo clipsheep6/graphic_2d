@@ -55,6 +55,9 @@ void RSUIDirector::Init()
         renderServiceClient->SetUITransactionCallback(
             [](std::shared_ptr<RSTransactionData> transaction) { RSUIDirector::RecvMessages(transaction); });
     }
+
+    AnimationCommandHelper::SetFinisCallbackProcessor(AnimationCallbackProcessor);
+
     RSRenderThread::Instance().Start();
 }
 
@@ -151,6 +154,9 @@ void RSUIDirector::SendMessages()
 void RSUIDirector::RecvMessages()
 {
     static const uint32_t pid = getpid();
+    if (!RSMessageProcessor::Instance().HasTransaction(pid)) {
+        return;
+    }
     auto transactionDataPtr = std::make_shared<RSTransactionData>(RSMessageProcessor::Instance().GetTransaction(pid));
     RecvMessages(transactionDataPtr);
 }
@@ -171,10 +177,6 @@ void RSUIDirector::RecvMessages(std::shared_ptr<RSTransactionData> cmds)
 void RSUIDirector::ProcessMessages(std::shared_ptr<RSTransactionData> cmds)
 {
     static RSContext context; // RSCommand->process() needs it
-    static std::once_flag callbackFlag;
-    std::call_once(
-        callbackFlag, []() { AnimationCommandHelper::SetFinisCallbackProcessor(AnimationCallbackProcessor); });
-
     cmds->Process(context);
 }
 

@@ -90,9 +90,7 @@ void RSRenderServiceClient::TriggerSurfaceCaptureCallback(NodeId id, Media::Pixe
 class SurfaceCaptureCallbackDirector : public RSSurfaceCaptureCallbackStub
 {
 public:
-    SurfaceCaptureCallbackDirector(RSRenderServiceClient* client) : client_(client)
-    {
-    }
+    explicit SurfaceCaptureCallbackDirector(RSRenderServiceClient* client) : client_(client) {}
     ~SurfaceCaptureCallbackDirector() override {};
     void OnSurfaceCapture(NodeId id, Media::PixelMap* pixelmap) override
     {
@@ -133,7 +131,7 @@ bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<Surfac
 class UICallbackDirector : public RSUITransactionCallbackStub
 {
 public:
-    UICallbackDirector(const UITransactionCallback& callback) : cb_(callback) {}
+    explicit UICallbackDirector(const UITransactionCallback& callback) : cb_(callback) {}
     ~UICallbackDirector() override {};
     void OnTransaction(std::shared_ptr<RSTransactionData> transactionData) override
     {
@@ -201,7 +199,7 @@ void RSRenderServiceClient::RemoveVirtualScreen(ScreenId id)
 class CustomScreenChangeCallback : public RSScreenChangeCallbackStub
 {
 public:
-    CustomScreenChangeCallback(const ScreenChangeCallback &callback) : cb_(callback) {}
+    explicit CustomScreenChangeCallback(const ScreenChangeCallback &callback) : cb_(callback) {}
     ~CustomScreenChangeCallback() override {};
 
     void OnScreenChanged(ScreenId id, ScreenEvent event) override

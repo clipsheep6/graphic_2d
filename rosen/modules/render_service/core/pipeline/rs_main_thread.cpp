@@ -129,15 +129,16 @@ void RSMainThread::Animate(uint64_t timestamp)
     for (const auto& [id, node] : context_.GetNodeMap().renderNodeMap_) {
         hasAnimate = node->Animate(timestamp) | hasAnimate;
     }
-    if (!hasAnimate) {
-        return;
+    if (hasAnimate) {
+        RequestNextVSync();
     }
 
-    RequestNextVSync();
-
+    if (!RSMessageProcessor::Instance().HasTransaction()) {
+        return;
+    }
     auto transactionMapPtr = std::make_shared<std::unordered_map<uint32_t, RSTransactionData>>(
         RSMessageProcessor::Instance().GetAllTransactions());
-    if (transactionMapPtr == nullptr || transactionMapPtr->empty()) {
+    if (transactionMapPtr == nullptr) {
         return;
     }
     PostTask([this, transactionMapPtr]() mutable {

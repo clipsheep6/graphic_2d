@@ -35,7 +35,7 @@ void RSUITransactionCallbackProxy::OnTransaction(std::shared_ptr<RSTransactionDa
     MessageParcel reply;
     MessageOption option;
 
-    if(!data.WriteInterfaceToken(RSIUITransactionCallback::GetDescriptor())) {
+    if (!data.WriteInterfaceToken(RSIUITransactionCallback::GetDescriptor())) {
         return;
     }
 

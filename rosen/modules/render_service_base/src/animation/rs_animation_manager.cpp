@@ -60,12 +60,12 @@ bool RSAnimationManager::Animate(int64_t time)
 
     std::__libcpp_erase_if_container(animations_, [this, &hasRunningAnimation, time](auto& iter) {
         auto& animation = iter.second;
-        hasRunningAnimation = animation->IsRunning() || hasRunningAnimation ;
         bool isFinished = animation->Animate(time);
         if (isFinished) {
             OnAnimationFinished(animation);
             return true;
         } else {
+            hasRunningAnimation = animation->IsRunning() || hasRunningAnimation ;
             return false;
         }
     });

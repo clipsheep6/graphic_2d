@@ -28,14 +28,15 @@ Mesh::Mesh()
         0, 1, 3, 1, 2, 3
     };
     int size = 3;
+    int onceNum = 5;
     glGenBuffers(1, &mVBO_);
     glBindBuffer(GL_ARRAY_BUFFER, mVBO_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, size, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, size, GL_FLOAT, GL_FALSE, onceNum * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, size, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, size, GL_FLOAT, GL_FALSE, onceNum * sizeof(float), (void*)(size * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     glGenBuffers(1, &mEBO_);

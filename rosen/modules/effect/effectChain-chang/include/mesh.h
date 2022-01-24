@@ -13,17 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef VWETICAL_BLUR_FILTER_H
-#define VWETICAL_BLUR_FILTER_H
+#ifndef MESH_H
+#define MESH_H
 
-#include "base_blur_filter.h"
+#include <GLES2/gl2.h>
 
-class VerticalBlurFilter : public BaseBlurFilter
-{
+class Mesh {
 public:
-    VerticalBlurFilter();
-    std::string GetFragmentShader() override;
-    std::string GetVertexShader() override;
+    Mesh();
+    ~Mesh();
+    void Use();
+    void SetVertices(float* newVertices, int size = 20);
+    void SetIndices(unsigned int* newIndices, int size = 6);
+    void Delete();
+private:
+    unsigned int mVBO_;
+    unsigned int mEBO_;
+    int verticesSize_;
+    int indicesSize_;
+    float* mVertices_ = nullptr;
+    unsigned int* mIndices_ = nullptr;
 };
 
 #endif

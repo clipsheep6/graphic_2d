@@ -13,25 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef PROGRAM_H
-#define PROGRAM_H
+#ifndef IMAGE_CHAIN_H
+#define IMAGE_CHAIN_H
 
-#include <string>
-#include <GLES2/gl2.h>
+#include "algo_filter.h"
+#include "input.h"
 
-class Program
-{
+class ImageChain {
 public:
-    void Compile(std::string vertexShader, std::string fragmentShader);
-    void UseProgram() const;
-    unsigned int programID_;
+    ImageChain(std::vector< Input* > inputs);
+    void Render();
 private:
-    bool initFlag_ = false;
-    unsigned int vertexID_;
-    unsigned int fragmentID_;
-    GLuint CreateShader(GLuint type, const std::string& shaderCode);
-    void CheckShaderCompileErrors(GLuint shader);
-    void CheckProgramCompileErrors(GLuint program);
+    void CreatTexture(unsigned int& TextureID);
+    void SeriesRendering();
+    void ParallelRendering();
+    bool _flagSeries = false;
+    unsigned int _frameBuffer;
+    unsigned int _srcTexture;
+    unsigned int _outputTexture;
+    unsigned int _resultTexture;
+    std::vector< Input* > myInputs_;
 };
 
 #endif

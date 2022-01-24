@@ -60,7 +60,7 @@ void Output::RenderOnScreen(GLuint& RenderTextureID)
     glClear(GL_COLOR_BUFFER_BIT);
     Use();
     glBindTexture(GL_TEXTURE_2D, RenderTextureID);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, verticesNum, GL_UNSIGNED_INT, 0);
 }
 
 Output::Output()

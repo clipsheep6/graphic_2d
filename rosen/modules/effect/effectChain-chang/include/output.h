@@ -13,33 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef ALGO_FILTER_H
-#define ALGO_FILTER_H
+#ifndef OUTPUT_H
+#define OUTPUT_H
 
-#include <GLES2/gl2.h>
-#include "filter.h"
-#include "mesh.h"
+#include "algo_filter.h"
 
-class AlgoFilter : public Filter
-{
+class Output : public AlgoFilter {
 public:
-    AlgoFilter();
-    virtual ~AlgoFilter();
-
+    Output();
+    std::string GetVertexShader() override;
+    std::string GetFragmentShader() override;
     virtual filter_type GetFilterType()override;
-
-    virtual void SetValue(std::string key, void* value, int size = -1);
+    void SaveRenderResultToImage(std::string name, int width = -1, int height = -1);
 protected:
-    void Use();
-    virtual std::string GetVertexShader() = 0;
-    virtual std::string GetFragmentShader() = 0;
-    virtual void Prepare(ProcessDate& data);
-    virtual void Draw(ProcessDate& data);
-    virtual void CreateProgram(std::string vertexString, std::string fragmentString);
-    Program* mProgram_ = nullptr;
-    Mesh* myMesh_ = nullptr;
-private:
-    friend class ImageChain;
+    void RenderOnScreen(GLuint& RenderTextureID);
+    bool saveResult_ = false;
+    int imageWidth_;
+    int imageHeight_;
+    std::string imageName_;
 };
 
 #endif

@@ -24,8 +24,7 @@ using WORD = unsigned short;
 using DWORD = unsigned long;
 using LONG = long;
 
-struct  BITMAPFILEHEADER
-{
+struct  BITMAPFILEHEADER {
     WORD  bfType;
     DWORD bfSize;
     WORD  bfReserved1;
@@ -33,8 +32,7 @@ struct  BITMAPFILEHEADER
     DWORD bfOffBits;
 };
 
-struct BITMAPINFOHEADER
-{
+struct BITMAPINFOHEADER {
     DWORD biSize;
     LONG  biWidth;
     LONG  biHeight;
@@ -48,8 +46,7 @@ struct BITMAPINFOHEADER
     DWORD biClrImportant;
 };
 
-struct RGBColor
-{
+struct RGBColor {
     char B;
     char G;
     char R;
@@ -57,8 +54,7 @@ struct RGBColor
 };
 #pragma pack()
 
-class OutputBMP : public Output
-{
+class OutputBMP : public Output {
 public:
     OutputBMP();
     void DoProcess(ProcessDate& data) override;

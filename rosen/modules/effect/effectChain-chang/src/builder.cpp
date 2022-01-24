@@ -61,6 +61,7 @@ Filter* Builder::CreatBlurFilters(cJSON* filters, std::string filterName)
 {
     float weights[ 3 ] { 0 };
     float offsets[ 3 ] { 0 };
+    int blurArraySize = 3;
     cJSON* weight = cJSON_GetObjectItemCaseSensitive(filters, "weight");
     if (weight) {
         for (int i = 0; i < RADIUS; i++) {
@@ -84,21 +85,21 @@ Filter* Builder::CreatBlurFilters(cJSON* filters, std::string filterName)
     Filter* result = nullptr;
     if (filterName == "GaussianBlur") {
         GaussianBlurFilter* gaussianBlur = new GaussianBlurFilter();
-        gaussianBlur->SetValue("weights", weights, 3);
-        gaussianBlur->SetValue("offsets", offsets, 3);
+        gaussianBlur->SetValue("weights", weights, blurArraySize);
+        gaussianBlur->SetValue("offsets", offsets, blurArraySize);
         result = (Filter*)gaussianBlur;
     }
 
     if (filterName == "HorizontalBlur") {
         HorizontalBlurFilter* horizontalBlur = new HorizontalBlurFilter();
-        horizontalBlur->SetValue("weights", weights, 3);
-        horizontalBlur->SetValue("offsets", offsets, 3);
+        horizontalBlur->SetValue("weights", weights, blurArraySize);
+        horizontalBlur->SetValue("offsets", offsets, blurArraySize);
         result = (Filter*)horizontalBlur;
     }
     if (filterName == "VerticalBlur") {
         VerticalBlurFilter* verticalBlur = new VerticalBlurFilter();
-        verticalBlur->SetValue("weights", weights, 3);
-        verticalBlur->SetValue("offsets", offsets, 3);
+        verticalBlur->SetValue("weights", weights, blurArraySize);
+        verticalBlur->SetValue("offsets", offsets, blurArraySize);
         result = (Filter*)verticalBlur;
     }
     return result;

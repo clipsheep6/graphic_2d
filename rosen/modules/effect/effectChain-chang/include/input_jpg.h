@@ -13,25 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef OUTPUT_H
-#define OUTPUT_H
+#ifndef INPUT_JPG_H
+#define INPUT_JPG_H
 
-#include "algo_filter.h"
-
-class Output : public AlgoFilter
-{
+#include "input.h"
+class InputJPG : public Input {
 public:
-    Output();
-    std::string GetVertexShader() override;
-    std::string GetFragmentShader() override;
-    virtual filter_type GetFilterType()override;
-    void SaveRenderResultToImage(std::string name, int width = -1, int height = -1);
-protected:
-    void RenderOnScreen(GLuint& RenderTextureID);
-    bool saveResult_ = false;
-    int imageWidth_;
-    int imageHeight_;
-    std::string imageName_;
+    InputJPG() = default;
+    InputJPG(std::string imageURL);
+private:
+    void BindImageOnTexture(GLuint TextureID) override;
 };
 
 #endif

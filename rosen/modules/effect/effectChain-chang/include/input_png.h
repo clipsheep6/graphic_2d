@@ -13,27 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef MESH_H
-#define MESH_H
+#ifndef INPUT_PNG_H
+#define INPUT_PNG_H
 
-#include <GLES2/gl2.h>
+#include "input.h"
 
-class Mesh
-{
+class InputPNG : public Input {
 public:
-    Mesh();
-    ~Mesh();
-    void Use();
-    void SetVertices(float* newVertices, int size = 20);
-    void SetIndices(unsigned int* newIndices, int size = 6);
-    void Delete();
+    InputPNG() = default;
+    InputPNG(std::string imageURL);
 private:
-    unsigned int mVBO_;
-    unsigned int mEBO_;
-    int verticesSize_;
-    int indicesSize_;
-    float* mVertices_ = nullptr;
-    unsigned int* mIndices_ = nullptr;
+    void BindImageOnTexture(GLuint TextureID) override;
 };
 
 #endif

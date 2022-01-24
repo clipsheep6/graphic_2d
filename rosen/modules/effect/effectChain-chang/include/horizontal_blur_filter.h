@@ -18,8 +18,7 @@
 
 #include "base_blur_filter.h"
 
-class HorizontalBlurFilter : public BaseBlurFilter
-{
+class HorizontalBlurFilter : public BaseBlurFilter {
 public:
     HorizontalBlurFilter();
     std::string GetFragmentShader() override;

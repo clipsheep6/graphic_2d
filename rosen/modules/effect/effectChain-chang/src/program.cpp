@@ -54,7 +54,8 @@ void Program::CheckShaderCompileErrors(GLuint shader)
     GLchar infoLog[1024];
     glGetShaderiv(shader, GL_COMPILE_STATUS, &complete);
     if (!complete) {
-        glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
+        int buffSize = 1024;
+        glGetShaderInfoLog(shader, buffSize, nullptr, infoLog);
     }
 }
 
@@ -64,6 +65,7 @@ void Program::CheckProgramCompileErrors(GLuint program)
     GLchar infoLog[1024];
     glGetProgramiv(program, GL_COMPILE_STATUS, &complete);
     if (!complete) {
-        glGetProgramInfoLog(program, 1024, nullptr, infoLog);
+        int buffSize = 1024;
+        glGetProgramInfoLog(program, buffSize, nullptr, infoLog);
     }
 }

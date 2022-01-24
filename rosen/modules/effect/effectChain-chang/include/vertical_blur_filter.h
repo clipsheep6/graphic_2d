@@ -13,18 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef INPUT_PNG_H
-#define INPUT_PNG_H
+#ifndef VWETICAL_BLUR_FILTER_H
+#define VWETICAL_BLUR_FILTER_H
 
-#include "input.h"
+#include "base_blur_filter.h"
 
-class InputPNG : public Input
-{
+class VerticalBlurFilter : public BaseBlurFilter {
 public:
-    InputPNG() = default;
-    InputPNG(std::string imageURL);
-private:
-    void BindImageOnTexture(GLuint TextureID) override;
+    VerticalBlurFilter();
+    std::string GetFragmentShader() override;
+    std::string GetVertexShader() override;
 };
 
 #endif

@@ -13,27 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef IMAGE_CHAIN_H
-#define IMAGE_CHAIN_H
+#ifndef SCALE_FILTER_H
+#define SCALE_FILTER_H
 
 #include "algo_filter.h"
-#include "input.h"
 
-class ImageChain
-{
+class ScaleFilter : public AlgoFilter {
 public:
-    ImageChain(std::vector< Input* > inputs);
-    void Render();
+    ScaleFilter();
+    std::string GetVertexShader() override;
+    std::string GetFragmentShader() override;
+    void SetScale(float scale);
 private:
-    void CreatTexture(unsigned int& TextureID);
-    void SeriesRendering();
-    void ParallelRendering();
-    bool _flagSeries = false;
-    unsigned int _frameBuffer;
-    unsigned int _srcTexture;
-    unsigned int _outputTexture;
-    unsigned int _resultTexture;
-    std::vector< Input* > myInputs_;
+    virtual void Prepare(ProcessDate& data) override;
+    float scale_ = 1.0f;
+    friend class GaussianBlurFilter;
+    void DoProcess(ProcessDate& data) override;
 };
 
 #endif

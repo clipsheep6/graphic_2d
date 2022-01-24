@@ -13,30 +13,28 @@
  * limitations under the License.
  */
 
-#ifndef GAUSSIAN_BLUR_FILTER_H
-#define GAUSSIAN_BLUR_FILTER_H
+#ifndef BASE_BLUR_FILTER_H
+#define BASE_BLUR_FILTER_H
 
-#include <algorithm>
 #include "algo_filter.h"
-#include "horizontal_blur_filter.h"
-#include "vertical_blur_filter.h"
-#include "scale_filter.h"
 
+struct GaussianBlurFilterParams {
+    float weights_[3];
+    float offsets_[3];
+};
 
-class GaussianBlurFilter : public AlgoFilter
-{
+class BaseBlurFilter : public AlgoFilter {
 public:
-    GaussianBlurFilter();
-    ~GaussianBlurFilter();
     void SetValue(std::string key, void* value, int size = -1) override;
-private:
-    std::string GetVertexShader() override;
-    std::string GetFragmentShader() override;
+protected:
+    virtual void CreateProgram(std::string vertexString, std::string fragmentString) override;
+    GaussianBlurFilterParams params_;
+    void LoadFilterParams();
     void DoProcess(ProcessDate& data) override;
-    ScaleFilter* enlargeFilter_ = nullptr;
-    ScaleFilter* narrowFilter_ = nullptr;
-    HorizontalBlurFilter* horizontalBlurFilter_ = nullptr;
-    VerticalBlurFilter* verticalBlurFilter_ = nullptr;
+    GLuint weightsID_;
+    GLuint offsetID_;
+    const int RADIUS = 3;
+    friend class GaussianBlurFilter;
 };
 
 #endif

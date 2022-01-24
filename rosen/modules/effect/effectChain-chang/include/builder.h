@@ -25,8 +25,7 @@
 #include "input_png.h"
 #include "output_bmp.h"
 
-class Builder
-{
+class Builder {
 public:
     ImageChain* CreatFromConfig(std::string path);
 private:

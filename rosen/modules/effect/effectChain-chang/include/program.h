@@ -13,23 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef SCALE_FILTER_H
-#define SCALE_FILTER_H
+#ifndef PROGRAM_H
+#define PROGRAM_H
 
-#include "algo_filter.h"
+#include <string>
+#include <GLES2/gl2.h>
 
-class ScaleFilter : public AlgoFilter
-{
+class Program {
 public:
-    ScaleFilter();
-    std::string GetVertexShader() override;
-    std::string GetFragmentShader() override;
-    void SetScale(float scale);
+    void Compile(std::string vertexShader, std::string fragmentShader);
+    void UseProgram() const;
+    unsigned int programID_;
 private:
-    virtual void Prepare(ProcessDate& data) override;
-    float scale_ = 1.0f;
-    friend class GaussianBlurFilter;
-    void DoProcess(ProcessDate& data) override;
+    bool initFlag_ = false;
+    unsigned int vertexID_;
+    unsigned int fragmentID_;
+    GLuint CreateShader(GLuint type, const std::string& shaderCode);
+    void CheckShaderCompileErrors(GLuint shader);
+    void CheckProgramCompileErrors(GLuint program);
 };
 
 #endif

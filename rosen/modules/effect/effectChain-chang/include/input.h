@@ -22,8 +22,7 @@
 #include "stb_image.h"
 #include "mesh.h"
 
-class Input : public Filter
-{
+class Input : public Filter {
 public:
     Input() = default;
     Input(std::string imageURL);

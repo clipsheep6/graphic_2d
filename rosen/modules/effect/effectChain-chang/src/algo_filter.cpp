@@ -35,7 +35,7 @@ void AlgoFilter::Draw(ProcessDate& data)
 {
     Use();
     glBindTexture(GL_TEXTURE_2D, data.srcTextureID);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, verticesNum, GL_UNSIGNED_INT, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 

@@ -36,8 +36,7 @@ struct ProcessDate {
     int textureHeight;
 };
 
-class Filter
-{
+class Filter {
 public:
     virtual filter_type GetFilterType() = 0;
 

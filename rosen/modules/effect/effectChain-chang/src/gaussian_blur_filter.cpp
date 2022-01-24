@@ -18,9 +18,9 @@
 GaussianBlurFilter::GaussianBlurFilter()
 {
     narrowFilter_ = new ScaleFilter();
-    narrowFilter_->SetScale(0.5);
+    narrowFilter_->SetScale(multiNarrow);
     enlargeFilter_ = new ScaleFilter();
-    enlargeFilter_->SetScale(2.0);
+    enlargeFilter_->SetScale(multiEnlarge);
     horizontalBlurFilter_ = new HorizontalBlurFilter();
     verticalBlurFilter_ = new VerticalBlurFilter();
 }

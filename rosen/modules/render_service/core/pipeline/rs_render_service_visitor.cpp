@@ -100,6 +100,7 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         return;
     }
     ScreenState state = screenManager->QueryScreenInfo(node.GetScreenId()).state;
+    ScreenInfo mirrorInfo = screenManager->QueryScreenInfo(node.GetScreenId());
     switch (state) {
         case ScreenState::PRODUCER_SURFACE_ENABLE:
             node.SetCompositeType(RSDisplayRenderNode::CompositeType::SOFTWARE_COMPOSITE);
@@ -126,6 +127,15 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         if (!existingSource) {
             ROSEN_LOGI("RSRenderServiceVisitor::ProcessDisplayRenderNode mirrorSource haven't existed");
             return;
+        }
+        ScreenInfo sourceInfo = screenManager->QueryScreenInfo(existingSource->GetScreenId());
+        if (sourceInfo.width > 0 && sourceInfo.height > 0) {
+            float layerSizeScaleW = float(mirrorInfo.width) / float(sourceInfo.width);
+            float layerSizeScaleH = float(mirrorInfo.height) / float(sourceInfo.height);
+            processor_->SetLayerSizeScaleW(layerSizeScaleW);
+            processor_->SetLayerSizeScaleH(layerSizeScaleH);
+        } else {
+            ROSEN_LOGI("RSRenderServiceVisitor::The value of sourceWidth or sourceHeight is equal to 0 ");
         }
         ProcessBaseRenderNode(*existingSource);
     } else {

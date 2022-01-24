@@ -63,13 +63,16 @@ public:
     static void ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
         std::vector<LayerInfoPtr>& layers, ComposeInfo info, RSSurfaceRenderNode* node = nullptr);
     static void DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer, RSSurfaceRenderNode& node,
-        bool isDrawnOnDisplay = true);
+        float layerSizeScaleW = 1.0f, float layerSizeScaleH = 1.0f, bool isDrawnOnDisplay = true);
     static void DrawBuffer(SkCanvas& canvas, const sptr<OHOS::SurfaceBuffer>& buffer,
-        RSSurfaceRenderNode& node, ColorGamut dstGamut, bool isDrawnOnDisplay = true);
+        RSSurfaceRenderNode& node, ColorGamut dstGamut, float layerSizeScaleW = 1.0f,
+        float layerSizeScaleH = 1.0f, bool isDrawnOnDisplay = true);
 private:
-    static void Draw(SkCanvas& canvas, BufferDrawParameters& params, RSSurfaceRenderNode& node);
+    static void Draw(SkCanvas& canvas, BufferDrawParameters& params, RSSurfaceRenderNode& node,
+        float layerSizeScaleW = 1.0f, float layerSizeScaleH = 1.0f);
     static void DealAnimation(SkCanvas& canvas, SkPaint& paint, RSSurfaceRenderNode& node);
     static bool IsNeedClient(RSSurfaceRenderNode* node);
+    static void UpdateSkMatrix(SkMatrix& matrix, float layerSizeScaleW, float layerSizeScaleH);
 };
 } // Rosen
 } // OHOS

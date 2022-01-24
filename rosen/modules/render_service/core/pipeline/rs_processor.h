@@ -36,11 +36,15 @@ public:
     virtual void ProcessSurface(RSSurfaceRenderNode &node) = 0;
     virtual void Init(ScreenId id) = 0;
     virtual void PostProcess() = 0;
+    void SetLayerSizeScaleW(float layerSizeScaleW);
+    void SetLayerSizeScaleH(float layerSizeScaleH);
 
 protected:
     std::unique_ptr<SkCanvas> CreateCanvas(sptr<Surface> producerSurface, BufferRequestConfig requestConfig);
     void FlushBuffer(sptr<Surface> surface, BufferFlushConfig flushConfig);
     bool ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask& task, sptr<SurfaceBuffer>& buffer);
+    float layerSizeScaleW_ = 1.0f;
+    float layerSizeScaleH_ = 1.0f;
 
 private:
     sptr<SurfaceBuffer> buffer_;

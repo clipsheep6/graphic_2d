@@ -222,6 +222,7 @@ void Main::OnWindowDestroy(int32_t pid, int32_t wid)
 
 int main(int argc, const char *argv[])
 {
+    LOG("test");
     const auto &wmi = WindowManager::GetInstance();
     auto wret = wmi->Init();
     if (wret != GSERROR_OK) {

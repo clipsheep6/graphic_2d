@@ -108,7 +108,7 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
             .w = geoPtr->GetAbsRect().width_,
             .h = geoPtr->GetAbsRect().height_,
         },
-        .zOrder = node.GetRenderProperties().GetPositionZ(),
+        .zOrder = node.GetGlobalZOrder(),
         .alpha = alpha_,
         .buffer = node.GetBuffer(),
         .fence = node.GetFence(),
@@ -117,10 +117,10 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
     };
     std::shared_ptr<HdiLayerInfo> layer = HdiLayerInfo::CreateHdiLayerInfo();
     ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface surfaceNode id:%llu name:[%s] [%d %d %d %d]"\
-        "buffer [%d %d] requestSize [%d %d] buffaddr:%p, z:%d", node.GetId(), node.GetName().c_str(),
+        "buffer [%d %d] requestSize [%d %d] buffaddr:%p, z:%f, globalZOrder:%d", node.GetId(), node.GetName().c_str(),
         info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h, info.srcRect.w, info.srcRect.h,
         node.GetBuffer()->GetWidth(), node.GetBuffer()->GetHeight(), node.GetBuffer().GetRefPtr(),
-        info.zOrder);
+        node.GetRenderProperties().GetPositionZ(), info.zOrder);
     RsRenderServiceUtil::ComposeSurface(layer, node.GetConsumer(), layers_, info);
 }
 
@@ -140,7 +140,7 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
         .width = curScreenInfo_.GetScreenWidth(),
         .height = curScreenInfo_.GetScreenHeight(),
         .strideAlignment = 0x8,
-        .format = PIXEL_FMT_BGRA_8888,      // [TODO] different soc need different format
+        .format = PIXEL_FMT_RGBA_8888,      // [TODO] different soc need different format
         .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
         .timeout = 0,
     };
@@ -160,7 +160,8 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
         ROSEN_LOGE("RsDebug RSHardwareProcessor::Redraw layer [%d %d %d %d]", (*iter)->GetLayerSize().x,
             (*iter)->GetLayerSize().y, (*iter)->GetLayerSize().w, (*iter)->GetLayerSize().h);
         RsRenderServiceUtil::DrawBuffer(canvas.get(), matrix, (*iter)->GetBuffer(), (*iter)->GetLayerSize().x,
-            (*iter)->GetLayerSize().y, (*iter)->GetLayerSize().w, (*iter)->GetLayerSize().h);
+            (*iter)->GetLayerSize().y, (*iter)->GetLayerSize().w, (*iter)->GetLayerSize().h,
+            (*iter)->GetDirtyRegion().w, (*iter)->GetDirtyRegion().h);
     }
     BufferFlushConfig flushConfig = {
         .damage = {

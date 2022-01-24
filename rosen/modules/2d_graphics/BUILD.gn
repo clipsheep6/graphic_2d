@@ -43,16 +43,15 @@ ohos_shared_library("2d_graphics") {
     "src/engine_adapter/skia_adapter/skia_paint.cpp",
     "src/engine_adapter/skia_adapter/skia_path.cpp",
     "src/engine_adapter/skia_adapter/skia_path_effect.cpp",
+    "src/engine_adapter/skia_adapter/skia_picture.cpp",
     "src/engine_adapter/skia_adapter/skia_shader_effect.cpp",
     "src/image/bitmap.cpp",
     "src/image/image.cpp",
+    "src/image/picture.cpp",
     "src/text/text.cpp",
     "src/utils/camera3d.cpp",
     "src/utils/matrix.cpp",
   ]
-  if (ace_enable_gpu) {
-    sources += [ "src/render_context/render_context.cpp" ]
-  }
 
   include_dirs = [
     "include",
@@ -74,10 +73,6 @@ ohos_shared_library("2d_graphics") {
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/standard:libsurface",
   ]
-
-  if (ace_enable_gpu) {
-    public_deps += [ "//foundation/graphic/standard:libgl" ]
-  }
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
@@ -112,9 +107,11 @@ ohos_shared_library("2d_graphics_canvaskit0310") {
     "src/engine_adapter/skia_adapter/skia_paint.cpp",
     "src/engine_adapter/skia_adapter/skia_path.cpp",
     "src/engine_adapter/skia_adapter/skia_path_effect.cpp",
+    "src/engine_adapter/skia_adapter/skia_picture.cpp",
     "src/engine_adapter/skia_adapter/skia_shader_effect.cpp",
     "src/image/bitmap.cpp",
     "src/image/image.cpp",
+    "src/image/picture.cpp",
     "src/text/text.cpp",
     "src/utils/camera3d.cpp",
     "src/utils/matrix.cpp",

@@ -38,6 +38,11 @@ std::unique_ptr<ImageImpl> ImplFactory::CreateImageImpl()
     return EngineImplFactory::CreateImage();
 }
 
+std::unique_ptr<PictureImpl> ImplFactory::CreatePictureImpl()
+{
+    return EngineImplFactory::CreatePicture();
+}
+
 std::unique_ptr<PathImpl> ImplFactory::CreatePathImpl()
 {
     return EngineImplFactory::CreatePath();
@@ -81,6 +86,6 @@ std::unique_ptr<CameraImpl> ImplFactory::CreateCameraImpl()
 {
     return EngineImplFactory::CreateCamera();
 }
-}
-}
-}
+} // namespace Drawing
+} // namespace Rosen
+} // namespace OHOS

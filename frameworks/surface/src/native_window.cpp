@@ -16,9 +16,10 @@
 #include "native_window.h"
 
 #include <map>
-#include "surface_type.h"
-#include "display_type.h"
 #include "buffer_log.h"
+#include "display_type.h"
+#include "external_window.h"
+#include "surface_type.h"
 
 #ifndef weak_alias
     #define weak_alias(old, new) \
@@ -47,6 +48,7 @@ struct NativeWindow* CreateNativeWindowFromSurface(void* pSuface)
     nativeWindow->config.usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA;
     nativeWindow->config.format = PIXEL_FMT_RGBA_8888;
     nativeWindow->config.stride = 8; // default stride is 8
+    nativeWindow->config.timeout = 3000; // default timout is 3s
 
     BLOGD("CreateNativeWindowFromSurface width is %{public}d, height is %{public}d", nativeWindow->config.width, \
         nativeWindow->config.height);

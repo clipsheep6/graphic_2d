@@ -43,16 +43,15 @@ ohos_shared_library("2d_graphics") {
     "src/engine_adapter/skia_adapter/skia_paint.cpp",
     "src/engine_adapter/skia_adapter/skia_path.cpp",
     "src/engine_adapter/skia_adapter/skia_path_effect.cpp",
+    "src/engine_adapter/skia_adapter/skia_picture.cpp",
     "src/engine_adapter/skia_adapter/skia_shader_effect.cpp",
     "src/image/bitmap.cpp",
     "src/image/image.cpp",
+    "src/image/picture.cpp",
     "src/text/text.cpp",
     "src/utils/camera3d.cpp",
     "src/utils/matrix.cpp",
   ]
-  if (ace_enable_gpu) {
-    sources += [ "src/render_context/render_context.cpp" ]
-  }
 
   include_dirs = [
     "include",
@@ -61,10 +60,6 @@ ohos_shared_library("2d_graphics") {
     "//foundation/graphic/standard/interfaces/innerkits/surface",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
   ]
-  if (ace_enable_gpu) {
-    include_dirs +=
-        [ "//foundation/graphic/standard/prebuilts/librarys/gpu/include" ]
-  }
 
   defines = [ "USE_ACE_SKIA" ]
 
@@ -73,10 +68,6 @@ ohos_shared_library("2d_graphics") {
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
     "//utils/native/base:utils",
   ]
-
-  if (ace_enable_gpu) {
-    deps += [ "//foundation/graphic/standard/prebuilts/librarys/gpu:gpu_libs" ]
-  }
 
   public_deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
@@ -116,9 +107,11 @@ ohos_shared_library("2d_graphics_canvaskit0310") {
     "src/engine_adapter/skia_adapter/skia_paint.cpp",
     "src/engine_adapter/skia_adapter/skia_path.cpp",
     "src/engine_adapter/skia_adapter/skia_path_effect.cpp",
+    "src/engine_adapter/skia_adapter/skia_picture.cpp",
     "src/engine_adapter/skia_adapter/skia_shader_effect.cpp",
     "src/image/bitmap.cpp",
     "src/image/image.cpp",
+    "src/image/picture.cpp",
     "src/text/text.cpp",
     "src/utils/camera3d.cpp",
     "src/utils/matrix.cpp",
@@ -132,13 +125,11 @@ ohos_shared_library("2d_graphics_canvaskit0310") {
     "src/engine_adapter",
     "//foundation/graphic/standard/interfaces/innerkits/surface",
 
-    # "//foundation/graphic/standard/prebuilts/librarys/gpu/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
   ]
 
   deps = [
     # "//third_party/skia_canvaskit0310:skia",
-    # "//foundation/graphic/standard/prebuilts/librarys/gpu:gpu_libs",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
     "//utils/native/base:utils",
   ]

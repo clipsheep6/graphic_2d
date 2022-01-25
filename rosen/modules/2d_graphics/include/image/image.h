@@ -21,20 +21,32 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+enum class BitDepth {
+    KU8,
+    KF16,
+};
+
 class Image {
 public:
     Image() noexcept;
     virtual ~Image() {};
     Image* BuildFromBitmap(const Bitmap& bitmap);
+    Image* BuildFromPicture(const Picture& picture, const SizeI& dimensions, const Matrix& matrix, const Brush& brush,
+        BitDepth bitDepth, std::shared_ptr<ColorSpace> colorSpace);
     int GetWidth();
     int GetHeight();
-    template<typename T> const std::shared_ptr<T> GetImpl() const { return imageImplPtr->DowncastingTo<T>(); }
+    template<typename T>
+    const std::shared_ptr<T> GetImpl() const
+    {
+        return imageImplPtr->DowncastingTo<T>();
+    }
+
 private:
     std::shared_ptr<ImageImpl> imageImplPtr;
     int width_;
     int height_;
 };
-}
-}
-}
+} // namespace Drawing
+} // namespace Rosen
+} // namespace OHOS
 #endif

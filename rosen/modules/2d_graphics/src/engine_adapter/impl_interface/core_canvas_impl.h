@@ -16,19 +16,18 @@
 #ifndef CORECANVASIMPL_H
 #define CORECANVASIMPL_H
 
+#include "base_impl.h"
 #include "securec.h"
 
-#include "base_impl.h"
 #include "draw/brush.h"
 #include "draw/clip.h"
 #include "draw/path.h"
-#include "draw/picture.h"
 #include "draw/pen.h"
-#include "draw/region.h"
 #include "draw/shadow.h"
 #include "effect/filter.h"
 #include "image/bitmap.h"
 #include "image/image.h"
+#include "image/picture.h"
 #include "text/text.h"
 #include "utils/log.h"
 #include "utils/matrix.h"
@@ -50,7 +49,10 @@ public:
     static inline constexpr AdapterType TYPE = AdapterType::BASE_INTERFACE;
     CoreCanvasImpl() {};
     virtual ~CoreCanvasImpl() {};
-    AdapterType GetType() const override { return AdapterType::BASE_INTERFACE; }
+    AdapterType GetType() const override
+    {
+        return AdapterType::BASE_INTERFACE;
+    }
 
     virtual void Bind(const Bitmap& bitmap) = 0;
 
@@ -66,13 +68,14 @@ public:
     virtual void DrawCircle(const Point& centerPt, scalar radius) = 0;
     virtual void DrawPath(const Path& path) = 0;
     virtual void DrawBackground(const Brush& brush) = 0;
-    virtual void DrawShadow(const Path& path, const Point3& planeParams, const Point3& devLightPos,
-                    scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag) = 0;
+    virtual void DrawShadow(const Path& path, const Point3& planeParams, const Point3& devLightPos, scalar lightRadius,
+        Color ambientColor, Color spotColor, ShadowFlags flag) = 0;
 
     // image
     virtual void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py) = 0;
     virtual void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py) = 0;
     virtual void DrawImage(const Image& image, const scalar px, const scalar p, const SamplingOptions& sampling) = 0;
+    virtual void DrawPicture(const Picture& picture) = 0;
 
     // text
     virtual void DrawText(const Text& text) = 0; // TODO...
@@ -104,7 +107,7 @@ public:
     virtual void DetachPen() = 0;
     virtual void DetachBrush() = 0;
 };
-}
-}
-}
+} // namespace Drawing
+} // namespace Rosen
+} // namespace OHOS
 #endif

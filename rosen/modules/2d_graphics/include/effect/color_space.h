@@ -17,12 +17,12 @@
 #define COLOR_SPACE_H
 
 #include <string>
+
 #include "engine_adapter/impl_interface/color_space_impl.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class Image;
 class ColorSpace {
 public:
     enum class ColorSpaceType {
@@ -38,17 +38,23 @@ public:
 
     ~ColorSpace() {}
     ColorSpaceType GetType() const;
-    template<typename T> const std::shared_ptr<T> GetImpl() const { return impl_->DowncastingTo<T>(); }
+    template<typename T>
+    const std::shared_ptr<T> GetImpl() const
+    {
+        return impl_->DowncastingTo<T>();
+    }
 
     ColorSpace(ColorSpaceType t) noexcept;
     ColorSpace(ColorSpaceType t, const Image& image) noexcept;
+
 protected:
     ColorSpace() noexcept;
+
 private:
     ColorSpaceType type_;
     std::shared_ptr<ColorSpaceImpl> impl_;
 };
-}
-}
-}
+} // namespace Drawing
+} // namespace Rosen
+} // namespace OHOS
 #endif

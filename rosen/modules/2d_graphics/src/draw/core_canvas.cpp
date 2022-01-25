@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
+#include "core_canvas.h"
+
 #include <iostream>
 #include <string>
 
-#include "core_canvas.h"
 #include "impl_factory.h"
 
 namespace OHOS {
@@ -84,8 +85,8 @@ void CoreCanvas::DrawBackground(const Brush& brush)
     impl_->DrawBackground(brush);
 }
 
-void CoreCanvas::DrawShadow(const Path& path, const Point3& planeParams, const Point3& devLightPos,
-                scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag)
+void CoreCanvas::DrawShadow(const Path& path, const Point3& planeParams, const Point3& devLightPos, scalar lightRadius,
+    Color ambientColor, Color spotColor, ShadowFlags flag)
 {
     impl_->DrawShadow(path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag);
 }
@@ -103,6 +104,11 @@ void CoreCanvas::DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const sc
 void CoreCanvas::DrawImage(const Image& image, const scalar px, const scalar py, const SamplingOptions& sampling)
 {
     impl_->DrawImage(image, px, py, sampling);
+}
+
+void CoreCanvas::DrawPicture(const Picture& picture)
+{
+    impl_->DrawPicture(picture);
 }
 
 void CoreCanvas::DrawText(const Text& text)
@@ -208,6 +214,6 @@ CoreCanvas& CoreCanvas::DetachBrush()
     impl_->DetachBrush();
     return *this;
 }
-}
-}
-}
+} // namespace Drawing
+} // namespace Rosen
+} // namespace OHOS

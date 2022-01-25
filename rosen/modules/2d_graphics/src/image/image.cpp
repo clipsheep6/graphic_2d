@@ -14,18 +14,24 @@
  */
 
 #include "image/image.h"
+
 #include "impl_factory.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-Image::Image() noexcept : imageImplPtr(ImplFactory::CreateImageImpl()), width_(0), height_(0)
-{
-}
+Image::Image() noexcept : imageImplPtr(ImplFactory::CreateImageImpl()), width_(0), height_(0) {}
 
 Image* Image::BuildFromBitmap(const Bitmap& bitmap)
 {
     return static_cast<Image*>(imageImplPtr->BuildFromBitmap(bitmap));
+}
+
+Image* Image::BuildFromPicture(const Picture& picture, const SizeI& dimensions, const Matrix& matrix,
+    const Brush& brush, BitDepth bitDepth, std::shared_ptr<ColorSpace> colorSpace)
+{
+    return static_cast<Image*>(
+        imageImplPtr->BuildFromPicture(picture, dimensions, matrix, brush, bitDepth, colorSpace));
 }
 
 int Image::GetWidth()
@@ -39,6 +45,6 @@ int Image::GetHeight()
     height_ = imageImplPtr->GetHeight();
     return height_;
 }
-}
-}
-}
+} // namespace Drawing
+} // namespace Rosen
+} // namespace OHOS

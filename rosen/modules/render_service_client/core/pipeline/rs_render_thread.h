@@ -25,6 +25,7 @@
 
 #include "common/rs_thread_handler.h"
 #include "common/rs_thread_looper.h"
+#include "ipc_callbacks/rs_application_render_thread_stub.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_render_thread_visitor.h"
 #include "platform/drawing/rs_vsync_client.h"
@@ -33,7 +34,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSRenderThread final {
+class RSRenderThread final : public RSApplicationRenderThreadStub {
 public:
     static RSRenderThread& Instance();
 
@@ -45,6 +46,7 @@ public:
     void RecvTransactionData(std::unique_ptr<RSTransactionData>& transactionData);
     void RequestNextVSync();
     void PostTask(RSTaskMessage::RSTask task);
+    void SetBackgroundStatus(bool status);
 
     int32_t GetTid();
 
@@ -63,6 +65,8 @@ public:
     {
         return context_;
     }
+
+    void OnTransaction(std::shared_ptr<RSTransactionData> transactionData) override;
 
 private:
     RSRenderThread();
@@ -84,6 +88,7 @@ private:
     void SendCommands();
 
     std::atomic_bool running_ = false;
+    std::atomic_bool backgroundStatus_ = false;
     std::unique_ptr<std::thread> thread_ = nullptr;
     std::unique_ptr<RSThreadLooper> rendererLooper_ = nullptr;
     std::unique_ptr<RSThreadHandler> threadHandler_ = nullptr;

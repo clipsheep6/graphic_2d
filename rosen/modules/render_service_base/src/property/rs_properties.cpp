@@ -910,5 +910,17 @@ void RSProperties::ResetBounds()
         boundsGeo_->SetRect(0.f, 0.f, 0.f, 0.f);
     }
 }
+
+// mask properties
+void RSProperties::SetMask(std::shared_ptr<RSMask> mask)
+{
+    mask_ = mask;
+    SetDirty();
+}
+
+std::shared_ptr<RSMask> RSProperties::GetMask() const
+{
+    return mask_;
+}
 } // namespace Rosen
 } // namespace OHOS

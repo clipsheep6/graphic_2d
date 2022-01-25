@@ -34,6 +34,7 @@ public:
         std::shared_ptr<RSSkiaFilter>& filter);
     static void RestoreForFilter(SkCanvas& canvas);
     static void DrawForegroundColor(RSProperties& properties, SkCanvas& canvas);
+    static void DrawMask(RSProperties& properties, SkCanvas& canvas);
 };
 } // namespace Rosen
 } // namespace OHOS

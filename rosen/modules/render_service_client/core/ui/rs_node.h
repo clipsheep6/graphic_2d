@@ -215,6 +215,7 @@ public:
     void SetPaintOrder(bool drawContentLast);
     bool GetVisible();
     bool GetPaintOrder();
+    void SetMask(std::shared_ptr<RSMask> mask);
 
     RSUINodeType GetType() const override
     {

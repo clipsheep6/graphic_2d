@@ -20,6 +20,7 @@
 #include "include/core/SkRRect.h"
 #include "include/effects/Sk1DPathEffect.h"
 #include "include/effects/SkDashPathEffect.h"
+#include "include/effects/SkLumaColorFilter.h"
 #include "include/core/SkColorFilter.h"
 #include "include/core/SkPoint3.h"
 #include "include/utils/SkShadowUtils.h"
@@ -33,6 +34,7 @@
 #include "render/rs_image.h"
 #include "render/rs_path.h"
 #include "render/rs_shader.h"
+#include "render/rs_mask.h"
 #include "render/rs_blur_filter.h"
 #include "render/rs_skia_filter.h"
 
@@ -333,6 +335,58 @@ void RSPropertiesPainter::DrawForegroundColor(RSProperties& properties, SkCanvas
     paint.setColor(bgColor.AsArgbInt());
     paint.setAntiAlias(true);
     canvas.drawRRect(RRect2SkRRect(properties.GetRRect()), paint);
+}
+
+void RSPropertiesPainter::DrawMask(RSProperties& properties, SkCanvas& canvas)
+{
+    std::shared_ptr<RSMask> mask = properties.GetMask();
+    if (mask == nullptr) {
+        ROSEN_LOGD("RSPropertiesPainter::DrawMask not has mask property");
+        return;
+    }
+    if (mask->IsSvgMask() && !mask->GetSvgDom()) {
+        ROSEN_LOGD("RSPropertiesPainter::DrawMask not has Svg Mask property");
+        return;
+    }
+
+    SkAutoCanvasRestore save(&canvas, true);
+    SkRect maskBounds = Rect2SkRect(properties.GetBoundsRect());
+    canvas.saveLayer(maskBounds, nullptr);
+    int tmpLayer = canvas.getSaveCount();
+
+    SkPaint maskfilter;
+#ifdef USE_SYSTEM_SKIA
+    auto filter = SkColorFilter::MakeComposeFilter(SkLumaColorFilter::Make(),
+        SkColorFilter::MakeSRGBToLinearGamma());
+#else
+    auto filter = SkColorFilters::Compose(SkLumaColorFilter::Make(),
+        SkColorFilters::SRGBToLinearGamma());
+#endif
+    maskfilter.setColorFilter(filter);
+    canvas.saveLayer(maskBounds, &maskfilter);
+    if (mask->IsSvgMask()) {
+        SkAutoCanvasRestore maskSave(&canvas, true);
+        canvas.translate(maskBounds.fLeft + mask->GetSvgX(), maskBounds.fTop + mask->GetSvgY());
+        canvas.scale(mask->GetScaleX(), mask->GetScaleY());
+        mask->GetSvgDom()->render(&canvas);
+    } else if (mask->IsGradientMask()) {
+        SkAutoCanvasRestore maskSave(&canvas, true);
+        canvas.translate(maskBounds.fLeft, maskBounds.fTop);
+        SkRect skRect = SkRect::MakeIWH(maskBounds.fRight - maskBounds.fLeft, maskBounds.fBottom - maskBounds.fTop);
+        canvas.drawRect(skRect, mask->GetMaskPaint());
+    } else if (mask->IsPathMask()) {
+        SkAutoCanvasRestore maskSave(&canvas, true);
+        canvas.translate(maskBounds.fLeft, maskBounds.fTop);
+        canvas.drawPath(mask->GetMaskPath(), mask->GetMaskPaint());
+    }
+
+    // back to mask layer
+    canvas.restoreToCount(tmpLayer);
+    // create content layer
+    SkPaint maskPaint;
+    maskPaint.setBlendMode(SkBlendMode::kSrcIn);
+    canvas.saveLayer(maskBounds, &maskPaint);
+    canvas.clipRect(maskBounds, true);
 }
 } // namespace Rosen
 } // namespace OHOS

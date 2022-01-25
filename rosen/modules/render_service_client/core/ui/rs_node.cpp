@@ -985,5 +985,10 @@ void RSNode::SetPaintOrder(bool drawContentLast)
     drawContentLast_ = drawContentLast;
 }
 
+void RSNode::SetMask(std::shared_ptr<RSMask> mask)
+{
+    SET_NONANIMATABLE_PROPERTY(Mask, mask);
+}
+
 } // namespace Rosen
 } // namespace OHOS

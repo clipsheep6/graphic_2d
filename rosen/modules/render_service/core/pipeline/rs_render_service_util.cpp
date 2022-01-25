@@ -56,7 +56,7 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, const SkMatrix& matrix, s
     }
 
     SkImageInfo layerInfo = SkImageInfo::Make(bufferWidth, bufferHeight,
-        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+        kBGRA_8888_SkColorType, kPremul_SkAlphaType);
     SkPixmap pixmap(layerInfo, addr, layerInfo.bytesPerPixel() * bufferWidth);
     SkBitmap bitmap;
     float scaleX = width / static_cast<float>(bufferWidth);

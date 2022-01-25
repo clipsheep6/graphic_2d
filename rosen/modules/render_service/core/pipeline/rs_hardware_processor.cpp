@@ -67,6 +67,17 @@ void RSHardwareProcessor::PostProcess()
     if (backend_) {
         backend_->Repaint(outputs);
     }
+
+    static int count = 0;
+    ROSEN_LOGE("RSHardwareProcessor::PostProcess count is %{public}d", count);
+    if (count == 1000) {
+        ROSEN_LOGE("RSHardwareProcessor::PostProcess set off");
+        screenManager_->SetScreenPowerStatus(output_->GetScreenId(), ScreenPowerStatus::POWER_STATUS_OFF);
+        sleep(5);
+        ROSEN_LOGE("RSHardwareProcessor::PostProcess set on");
+        screenManager_->SetScreenPowerStatus(output_->GetScreenId(), ScreenPowerStatus::POWER_STATUS_ON);
+    }
+    count++;
 }
 
 void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
@@ -126,6 +137,18 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
 
 void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCompleteParam& param, void* data)
 {
+    static int count = 0;
+    ROSEN_LOGD("RSHardwareProcessor::Redraw count is %{public}d", count);
+    ROSEN_LOGE("RSHardwareProcessor::Redraw count xxx is %{public}d", count);
+    if (count == 2000) {
+        ROSEN_LOGD("RSHardwareProcessor::Redraw set off");
+        screenManager_->SetScreenPowerStatus(output_->GetScreenId(), ScreenPowerStatus::POWER_STATUS_OFF);
+        sleep(5);
+        ROSEN_LOGD("RSHardwareProcessor::Redraw set on");
+        screenManager_->SetScreenPowerStatus(output_->GetScreenId(), ScreenPowerStatus::POWER_STATUS_ON);
+    }
+    count++;
+
     if (!param.needFlushFramebuffer) {
         ROSEN_LOGI("RsDebug RSHardwareProcessor::Redraw no need to flush frame buffer");
         return;

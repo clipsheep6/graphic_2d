@@ -31,6 +31,8 @@ public:
 
     static SharedPtr Create(const RSDisplayNodeConfig& displayNodeConfig);
 
+    void SetOffset(int32_t offsetX, int32_t offsetY);
+    
     RSUINodeType GetType() const override
     {
         return RSUINodeType::DISPLAY_NODE;

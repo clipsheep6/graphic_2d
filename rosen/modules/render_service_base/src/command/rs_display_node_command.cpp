@@ -45,5 +45,14 @@ void DisplayNodeCommandHelper::SetScreenId(RSContext& context, NodeId id, uint64
     }
 }
 
+void DisplayNodeCommandHelper::SetOffset(RSContext& context, NodeId id, int32_t offsetX, int32_t offsetY)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSDisplayRenderNode>(id)) {
+        node->SetOffsetX(offsetX);
+        node->SetOffsetY(offsetY);
+    }
+}
+
+
 } // namespace Rosen
 } // namespace OHOS

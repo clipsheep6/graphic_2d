@@ -24,18 +24,22 @@ namespace Rosen {
 enum RSDisplayNodeCommandType : uint16_t {
     DISPLAY_NODE_CREATE,
     DISPLAY_NODE_SET_SCREEN_ID,
+    DISPLAY_NODE_SET_OFFSET,
 };
 
 class DisplayNodeCommandHelper {
 public:
     static void Create(RSContext&, NodeId, const RSDisplayNodeConfig&);
     static void SetScreenId(RSContext&, NodeId, uint64_t);
+    static void SetOffset(RSContext&, NodeId, int32_t, int32_t);
 };
 
 ADD_COMMAND(RSDisplayNodeCreate,
     ARG(DISPLAY_NODE, DISPLAY_NODE_CREATE, DisplayNodeCommandHelper::Create, NodeId, RSDisplayNodeConfig))
 ADD_COMMAND(RSDisplayNodeSetScreenId,
     ARG(DISPLAY_NODE, DISPLAY_NODE_SET_SCREEN_ID, DisplayNodeCommandHelper::SetScreenId, NodeId, uint64_t))
+ADD_COMMAND(RSDisplayNodeSetOffset,
+    ARG(DISPLAY_NODE, DISPLAY_NODE_SET_OFFSET, DisplayNodeCommandHelper::SetOffset, NodeId, int32_t, int32_t))
 } // namespace Rosen
 } // namespace OHOS
 

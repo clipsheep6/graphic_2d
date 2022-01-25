@@ -356,6 +356,7 @@ int main()
     cout << "------------------------------------------------------------------" << endl;
     RSDisplayNodeConfig mirrorConfig {virtualDisplayId, true, sourceDisplayNode->GetId()};
     RSDisplayNode::SharedPtr displayNode = RSDisplayNode::Create(mirrorConfig);
+    displayNode->SetOffset(0, 0);
     sleep(1);
     
     int frameCnt = 5; // test 5 frames.

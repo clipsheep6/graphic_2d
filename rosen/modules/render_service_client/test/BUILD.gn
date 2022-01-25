@@ -107,6 +107,9 @@ ohos_executable("surface_capture_demo") {
 ohos_executable("mirror_display_demo") {
   sources = [ "mirror_display_test.cpp" ]
 
+  include_dirs =
+      [ "//foundation/graphic/standard/rosen/modules/render_service_base/src" ]
+
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/standard:libvsync_client",

@@ -36,6 +36,15 @@ RSDisplayNode::SharedPtr RSDisplayNode::Create(const RSDisplayNodeConfig& displa
     return node;
 }
 
+void RSDisplayNode::SetOffset(int32_t offsetX, int32_t offsetY)
+{
+    std::unique_ptr<RSCommand> command = std::make_unique<RSDisplayNodeSetOffset>(GetId(), offsetX, offsetY);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, true);
+    }
+}
+
 RSDisplayNode::RSDisplayNode(const RSDisplayNodeConfig& config)
     : RSBaseNode(true), screenId_(config.screenId)
 {

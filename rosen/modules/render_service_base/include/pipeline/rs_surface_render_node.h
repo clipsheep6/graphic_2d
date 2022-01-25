@@ -29,8 +29,8 @@ public:
     using SharedPtr = std::shared_ptr<RSSurfaceRenderNode>;
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::SURFACE_NODE;
 
-    explicit RSSurfaceRenderNode(NodeId id);
-    explicit RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config);
+    explicit RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
+    explicit RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, std::weak_ptr<RSContext> context = {});
     virtual ~RSSurfaceRenderNode();
 
     void SetConsumer(const sptr<Surface>& consumer);
@@ -75,6 +75,11 @@ public:
         return bufferAvailableCount_;
     }
 
+    std::string GetName() const
+    {
+        return name_;
+    }
+
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
@@ -88,6 +93,10 @@ public:
 
     void SetAlpha(float alpha, bool sendMsg = true);
     float GetAlpha() const;
+
+    // Only use in Render Service
+    void SetGlobalZOrder(float globalZOrder);
+    float GetGlobalZOrder() const;
 
     void SetParentId(NodeId parentId, bool sendMsg = true);
     NodeId GetParentId() const;
@@ -103,12 +112,14 @@ private:
     std::atomic<int> bufferAvailableCount_ = 0;
     SkMatrix matrix_;
     float alpha_ = 0.0f;
+    float globalZOrder_ = 0.0f;
     NodeId parentId_ = 0;
     sptr<SurfaceBuffer> buffer_;
     sptr<SurfaceBuffer> preBuffer_;
     int32_t fence_ = -1;
     int32_t preFence_ = -1;
     Rect damageRect_;
+    std::string name_;
 };
 } // namespace Rosen
 } // namespace OHOS

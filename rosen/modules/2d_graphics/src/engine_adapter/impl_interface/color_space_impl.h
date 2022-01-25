@@ -22,19 +22,21 @@ namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 class Image;
-class ColorSpace;
 class ColorSpaceImpl : public BaseImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::BASE_INTERFACE;
     ColorSpaceImpl() noexcept {}
     virtual ~ColorSpaceImpl() {}
-    AdapterType GetType() const override { return AdapterType::BASE_INTERFACE; }
+    AdapterType GetType() const override
+    {
+        return AdapterType::BASE_INTERFACE;
+    }
 
     virtual void InitWithSRGB() = 0;
     virtual void InitWithSRGBLinear() = 0;
     virtual void InitWithImage(const Image& image) = 0;
 };
-}
-}
-}
+} // namespace Drawing
+} // namespace Rosen
+} // namespace OHOS
 #endif

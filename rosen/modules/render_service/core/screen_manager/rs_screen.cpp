@@ -152,8 +152,16 @@ void RSScreen::SetActiveMode(uint32_t modeId)
 
 void RSScreen::SetPowerStatus(uint32_t powerStatus)
 {
+    HiLog::Info(LOG_LABEL, "SetPowerStatus, status is %{public}u", powerStatus);
     if (hdiScreen_->SetScreenPowerStatus(static_cast<DispPowerStatus>(powerStatus)) < 0) {
         return;
+    }
+
+    if (powerStatus == DispPowerStatus::POWER_STATUS_ON) {
+        HiLog::Info(LOG_LABEL, "Enable hardware vsync");
+        if (hdiScreen_->SetScreenVsyncEnabled(true) != DISPLAY_SUCCESS) {
+            HiLog::Error(LOG_LABEL, "SetScreenVsyncEnabled failed");
+        }
     }
 }
 
@@ -330,6 +338,9 @@ void RSScreen::DisplayDump(int32_t screenIndex, std::string& dumpString)
 
 void RSScreen::SurfaceDump(int32_t screenIndex, std::string& dumpString)
 {
+    if (hdiOutput_ == nullptr) {
+        return;
+    }
     hdiOutput_->Dump(dumpString);
 }
 

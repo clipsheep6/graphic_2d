@@ -33,7 +33,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         }
         case CREATE_NODE_AND_SURFACE: {
             auto nodeId = data.ReadUint64();
-            RSSurfaceRenderNodeConfig config = {.id = nodeId};
+            auto surfaceName = data.ReadString();
+            RSSurfaceRenderNodeConfig config = {.id = nodeId, .name = surfaceName};
             sptr<Surface> surface = CreateNodeAndSurface(config);
             auto producer = surface->GetProducer();
             reply.WriteRemoteObject(producer->AsObject());
@@ -131,6 +132,17 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             sptr<RSISurfaceCaptureCallback> cb = iface_cast<RSISurfaceCaptureCallback>(remoteObject);
             TakeSurfaceCapture(id, cb);
+            break;
+        }
+        case REGISTER_APPLICATION_RENDER_THREAD: {
+            uint32_t pid = data.ReadUint32();
+            auto remoteObject = data.ReadRemoteObject();
+            if (remoteObject == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            sptr<IApplicationRenderThread> app = iface_cast<IApplicationRenderThread>(remoteObject);
+            RegisterApplicationRenderThread(pid, app);
             break;
         }
         case GET_SCREEN_ACTIVE_MODE: {

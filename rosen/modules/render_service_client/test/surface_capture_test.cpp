@@ -29,9 +29,9 @@
 #include "ui/rs_node.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_ui_director.h"
-#include "core/transaction/rs_interfaces.h"
-#include "core/ui/rs_display_node.h"
-#include "core/ui/rs_surface_node.h"
+#include "transaction/rs_interfaces.h"
+#include "ui/rs_display_node.h"
+#include "ui/rs_surface_node.h"
 #include "pixel_map.h"
 
 using namespace OHOS;
@@ -70,8 +70,8 @@ void DrawSurface(
 
 void DrawSurfaceToCapture(std::shared_ptr<RSSurfaceNode> surfaceNode)
 {
-    SkRect surfaceGeometry = SkRect::MakeXYWH(100, 100, 256, 256);
-    SkRect shapeGeometry = SkRect::MakeXYWH(40, 60, 100, 120);
+    SkRect surfaceGeometry = SkRect::MakeXYWH(50, 50, 128, 128);
+    SkRect shapeGeometry = SkRect::MakeXYWH(10, 20, 40, 48);
     auto x = surfaceGeometry.x();
     auto y = surfaceGeometry.y();
     auto width = surfaceGeometry.width();
@@ -93,15 +93,15 @@ void DrawSurfaceToCapture(std::shared_ptr<RSSurfaceNode> surfaceNode)
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setStyle(SkPaint::kFill_Style);
-    paint.setStrokeWidth(20);
+    paint.setStrokeWidth(4);
     paint.setStrokeJoin(SkPaint::kRound_Join);
     paint.setColor(0xffff0000);
     SkPath path;
-    path.cubicTo(20, 20, 50, 160, 120, 160);
+    path.cubicTo(10, 10, 25, 80, 60, 80);
     SkPaint pathPaint;
     pathPaint.setAntiAlias(true);
     pathPaint.setStyle(SkPaint::kFill_Style);
-    pathPaint.setStrokeWidth(5);
+    pathPaint.setStrokeWidth(2);
     pathPaint.setStrokeJoin(SkPaint::kRound_Join);
     pathPaint.setColor(0xffFFD700);
     canvas->drawRect(shapeGeometry, paint);
@@ -158,6 +158,7 @@ void DrawPixelmap(std::shared_ptr<RSSurfaceNode> surfaceNode, std::shared_ptr<Me
 std::shared_ptr<RSSurfaceNode> CreateSurface()
 {
     RSSurfaceNodeConfig config;
+    config.SurfaceNodeName = "ThisIsSurfaceCaptureName";
     return RSSurfaceNode::Create(config);
 }
 
@@ -255,9 +256,9 @@ int main()
     auto surfaceNode1 = CreateSurface();
     auto surfaceNode2 = CreateSurface();
     auto surfaceNode3 = CreateSurface();
-    DrawSurface(SkRect::MakeXYWH(0, 0, 1400, 1200), 0xFFF0FFF0, SkRect::MakeXYWH(0, 0, 1400, 1200), surfaceLauncher);
-    DrawSurface(SkRect::MakeXYWH(500, 100, 512, 512), 0xFF8B008B, SkRect::MakeXYWH(20, 20, 230, 230), surfaceNode1);
-    DrawSurface(SkRect::MakeXYWH(1700, 100, 512, 512), 0xFF00FF40, SkRect::MakeXYWH(20, 20, 230, 230), surfaceNode3);
+    DrawSurface(SkRect::MakeXYWH(0, 0, 700, 1000), 0xFFF0FFF0, SkRect::MakeXYWH(0, 0, 7000, 1000), surfaceLauncher);
+    DrawSurface(SkRect::MakeXYWH(100, 300, 128, 128), 0xFF8B008B, SkRect::MakeXYWH(20, 20, 100, 100), surfaceNode1);
+    DrawSurface(SkRect::MakeXYWH(100, 600, 256, 256), 0xFF00FF40, SkRect::MakeXYWH(20, 20, 100, 100), surfaceNode3);
     DrawSurfaceToCapture(surfaceNode2);
     RSDisplayNodeConfig config;
     config.screenId = id;
@@ -266,7 +267,7 @@ int main()
     displayNode->AddChild(surfaceNode1, -1);
     displayNode->AddChild(surfaceNode2, -1);
     displayNode->AddChild(surfaceNode3, -1);
-    RSTransactionProxy::GetInstance().FlushImplicitTransaction();
+    RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
 
     class TestSurfaceCapture : public SurfaceCaptureCallback {
     public:

@@ -21,12 +21,13 @@
 #include "impl_interface/color_filter_impl.h"
 #include "impl_interface/color_space_impl.h"
 #include "impl_interface/core_canvas_impl.h"
-#include "impl_interface/image_impl.h"
 #include "impl_interface/image_filter_impl.h"
+#include "impl_interface/image_impl.h"
 #include "impl_interface/mask_filter_impl.h"
 #include "impl_interface/matrix_impl.h"
 #include "impl_interface/path_effect_impl.h"
 #include "impl_interface/path_impl.h"
+#include "impl_interface/picture_impl.h"
 #include "impl_interface/shader_effect_impl.h"
 
 namespace OHOS {
@@ -37,6 +38,7 @@ public:
     static std::unique_ptr<CoreCanvasImpl> CreateCoreCanvas();
     static std::unique_ptr<BitmapImpl> CreateBitmap();
     static std::unique_ptr<ImageImpl> CreateImage();
+    static std::unique_ptr<PictureImpl> CreatePicture();
     static std::unique_ptr<PathImpl> CreatePath();
     static std::unique_ptr<ColorFilterImpl> CreateColorFilter();
     static std::unique_ptr<MaskFilterImpl> CreateMaskFilter();
@@ -47,7 +49,7 @@ public:
     static std::unique_ptr<MatrixImpl> CreateMatrix();
     static std::unique_ptr<CameraImpl> CreateCamera();
 };
-}
-}
-}
+} // namespace Drawing
+} // namespace Rosen
+} // namespace OHOS
 #endif

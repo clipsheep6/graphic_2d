@@ -53,6 +53,7 @@ enum class RSRenderNodeType {
 
 struct RSSurfaceRenderNodeConfig {
     NodeId id = 0;
+    std::string name = "SurfaceNode";
 };
 
 struct RSDisplayNodeConfig {
@@ -66,16 +67,6 @@ const float PI = M_PI;
 #else
 const float PI = std::atanf(1.0) * 4;
 #endif
-
-#define ROSEN_DEFINE_GETTER(type, funcName, memberName) \
-public:                                                 \
-    type Get##funcName() const                          \
-    {                                                   \
-        return memberName##_;                           \
-    }                                                   \
-                                                        \
-protected:                                              \
-    type memberName##_;
 
 template<typename T>
 inline bool ROSEN_EQ(const T& x, const T& y)
@@ -105,6 +96,12 @@ template<typename T>
 inline bool ROSEN_EQ(T x, T y, T epsilon)
 {
     return (std::abs((x) - (y)) <= (epsilon));
+}
+
+template<typename T>
+inline bool ROSEN_EQ(const std::weak_ptr<T>& x, const std::weak_ptr<T>& y)
+{
+    return !(x.owner_before(y) || y.owner_before(x));
 }
 
 class MemAllocater final {

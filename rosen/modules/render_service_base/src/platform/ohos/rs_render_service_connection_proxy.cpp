@@ -81,7 +81,9 @@ sptr<Surface> RSRenderServiceConnectionProxy::CreateNodeAndSurface(const RSSurfa
     if (!data.WriteUint64(config.id)) {
         return nullptr;
     }
-
+    if (!data.WriteString(config.name)) {
+        return nullptr;
+    }
     option.SetFlags(MessageOption::TF_SYNC);
     int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::CREATE_NODE_AND_SURFACE, data, reply, option);
     if (err != NO_ERROR) {
@@ -222,6 +224,26 @@ void RSRenderServiceConnectionProxy::SetScreenPowerStatus(ScreenId id, ScreenPow
     data.WriteUint32(static_cast<uint32_t>(status));
     int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::SET_SCREEN_POWER_STATUS, data, reply, option);
     if (err != NO_ERROR) {
+        return;
+    }
+}
+
+void RSRenderServiceConnectionProxy::RegisterApplicationRenderThread(uint32_t pid, sptr<IApplicationRenderThread> app)
+{
+    if (app == nullptr) {
+        ROSEN_LOGE("RSRenderServiceProxy: callback == nullptr\n");
+        return;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    option.SetFlags(MessageOption::TF_ASYNC);
+    data.WriteUint32(pid);
+    data.WriteRemoteObject(app->AsObject());
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::REGISTER_APPLICATION_RENDER_THREAD, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceProxy: Remote()->SendRequest() error.\n");
         return;
     }
 }

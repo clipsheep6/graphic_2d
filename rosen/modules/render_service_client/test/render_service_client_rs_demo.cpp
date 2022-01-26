@@ -28,9 +28,9 @@
 #include "ui/rs_canvas_node.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_ui_director.h"
-#include "core/transaction/rs_interfaces.h"
-#include "core/ui/rs_display_node.h"
-#include "core/ui/rs_surface_node.h"
+#include "transaction/rs_interfaces.h"
+#include "ui/rs_display_node.h"
+#include "ui/rs_surface_node.h"
 #include "render_context/render_context.h"
 // temporary debug
 #include "foundation/graphic/standard/rosen/modules/render_service_base/src/platform/ohos/rs_surface_frame_ohos.h"
@@ -41,7 +41,6 @@ using namespace OHOS::Rosen;
 using namespace std;
 
 std::unique_ptr<RSSurfaceFrame> framePtr;
-RenderContext* rc_ = nullptr;
 
 void DrawSurface(
     SkRect surfaceGeometry, uint32_t color, SkRect shapeGeometry, std::shared_ptr<RSSurfaceNode> surfaceNode)
@@ -55,9 +54,7 @@ void DrawSurface(
     if (rsSurface == nullptr) {
         return;
     }
-    if (rc_) {
-        rsSurface->SetRenderContext(rc_);
-    }
+
     auto frame = rsSurface->RequestFrame(width, height);
     framePtr = std::move(frame);
     if (!framePtr) {
@@ -186,55 +183,55 @@ int main()
         cout << "Display " << id << " has no active mode!\n";
     }
     cout << "-------------------------------------------------------" << endl;
-
     auto surfaceLauncher = CreateSurface();
     auto surfaceNode1 = CreateSurface();
-    surfaceNode1->SetAlpha(0.5);
-    auto surfaceNode2 = CreateSurface();
-    surfaceNode2->SetAlpha(0.3);
-    rc_ = RenderContextFactory::GetInstance().CreateEngine();
-    if (rc_) {
-        rc_->InitializeEglContext();
-    }
-    DrawSurface(SkRect::MakeXYWH(0, 0, 2800, 1600), 0xffffe4c4, SkRect::MakeXYWH(0, 0, 2800, 1600), surfaceLauncher);
-    DrawSurface(SkRect::MakeXYWH(80, 80, 200, 200), 0xffff0000, SkRect::MakeXYWH(0, 0, 200, 200), surfaceNode1);
-    DrawSurface(SkRect::MakeXYWH(300, 300, 200, 200), 0xff00ff00, SkRect::MakeXYWH(40, 40, 150, 150), surfaceNode2);
+    //surfaceNode1->SetAlpha(0.5);
+    //auto surfaceNode2 = CreateSurface();
+    //surfaceNode2->SetAlpha(0.3);
+
+    DrawSurface(SkRect::MakeXYWH(0, 0, 720, 1280), 0xffffe4c4, SkRect::MakeXYWH(0, 0, 720, 1280), surfaceLauncher);
+    DrawSurface(SkRect::MakeXYWH(80, 80, 200, 300), 0xffff0000, SkRect::MakeXYWH(0, 0, 200, 200), surfaceNode1);
+    //DrawSurface(SkRect::MakeXYWH(300, 300, 200, 200), 0xff00ff00, SkRect::MakeXYWH(40, 40, 150, 150), surfaceNode2);
     RSDisplayNodeConfig config;
     RSDisplayNode::SharedPtr displayNode = RSDisplayNode::Create(config);
     displayNode->AddChild(surfaceLauncher, -1);
     displayNode->AddChild(surfaceNode1, -1);
-    displayNode->AddChild(surfaceNode2, -1);
+    //displayNode->AddChild(surfaceNode2, -1);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->FlushImplicitTransaction();
     }
-    sleep(4);
-    int positionX = 80;
-    int positionY = 80;
-    while (1) {
-        displayNode->RemoveChild(surfaceNode1);
-        auto transactionProxy = RSTransactionProxy::GetInstance();
+    std::cout<<"9";
+    for (float alpha = 0 ; alpha < 1.f ; alpha += 0.2f)
+    {
+        std::cout<<"cout alpha="<<alpha<<" \n";
+        printf("printf alpha=%f \n",alpha);
+        surfaceNode1->SetAlpha(alpha);
         if (transactionProxy != nullptr) {
             transactionProxy->FlushImplicitTransaction();
         }
-        sleep(4);
-        if (positionY == 80 && (positionX >= 80 && positionX <= 2160)) {
-            positionX += 80;
-        } else if ((positionX == 2240) && (positionY >= 80 && positionY <= 1200)) {
-            positionY += 80;
-        } else if ((positionX >= 160 && positionX <= 2240) && (positionY == 1280)) {
-            positionX -= 80;
-        } else if ((positionX == 80) && (positionY >= 160 && positionY <= 1280)) {
-            positionY -= 80;
-        }
-        displayNode->AddChild(surfaceNode1, -1);
-        DrawSurface(SkRect::MakeXYWH(positionX, positionY, 200, 200), 0xffff0000, SkRect::MakeXYWH(0, 0, 200, 200),
-            surfaceNode1);
-        auto transactionProxy = RSTransactionProxy::GetInstance();
-        if (transactionProxy != nullptr) {
-            transactionProxy->FlushImplicitTransaction();
-        }
-        sleep(4);
+        sleep(2);
     }
+    cout<<"10 "<<endl;
+    for (float roate = 0 ; roate < 360.f ; roate += 15)
+    {
+        printf("roate=%f\n",roate);
+        surfaceNode1->SetRotation(roate);
+        if (transactionProxy != nullptr) {
+            transactionProxy->FlushImplicitTransaction();
+        }
+        sleep(2);
+    }
+    cout<<"11 "<<endl;
+    for (float scale = 0 ; scale < 2.f ; scale += 0.2f)
+    {
+        printf("scale=%f\n",scale);
+        surfaceNode1->SetScaleX(scale);
+        if (transactionProxy != nullptr) {
+            transactionProxy->FlushImplicitTransaction();
+        }
+        sleep(2);
+    }
+
     return 0;
 }

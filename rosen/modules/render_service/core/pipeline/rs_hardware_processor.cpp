@@ -94,35 +94,37 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
         ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface geoPtr == nullptr");
         return;
     }
-    bool needUseBufferRegion = node.GetDamageRegion().w <= 0 || node.GetDamageRegion().h <= 0;
+    ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface alpha = %f id:%llu", node.GetAlpha(), node.GetId());
     ComposeInfo info = {
         .srcRect = {
             .x = 0,
             .y = 0,
-            .w = needUseBufferRegion ? node.GetBuffer()->GetWidth() : node.GetDamageRegion().w,
-            .h = needUseBufferRegion ? node.GetBuffer()->GetHeight() : node.GetDamageRegion().h,
+            .w = node.GetDamageRegion().w,
+            .h = node.GetDamageRegion().h,
         },
         .dstRect = {
             .x = geoPtr->GetAbsRect().left_,
             .y = geoPtr->GetAbsRect().top_,
-            .w = geoPtr->GetAbsRect().width_,
-            .h = geoPtr->GetAbsRect().height_,
+            .w = geoPtr->GetAbsRect().width_ * node.GetRenderProperties().GetScaleX(),  //TODO deal with rotate
+            .h = geoPtr->GetAbsRect().height_ * node.GetRenderProperties().GetScaleY(),
         },
         .zOrder = node.GetGlobalZOrder(),
-        .alpha = alpha_,
+        .alpha = {
+            .enGlobalAlpha = true,
+            .gAlpha = node.GetAlpha() * 255,
+        },
         .buffer = node.GetBuffer(),
         .fence = node.GetFence(),
         .preBuffer = node.GetPreBuffer(),
         .preFence = node.GetPreFence(),
     };
     std::shared_ptr<HdiLayerInfo> layer = HdiLayerInfo::CreateHdiLayerInfo();
-    ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface surfaceNode id:%llu name:[%s] [%d %d %d %d]"\
-        "SrcRect [%d %d] bufferSize [%d %d] DamageSize [%d %d] buffaddr:%p, z:%f, globalZOrder:%d", node.GetId(),
-        node.GetName().c_str(), info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h,
-        info.srcRect.w, info.srcRect.h, node.GetBuffer()->GetWidth(), node.GetBuffer()->GetHeight(),
-        node.GetDamageRegion().w, node.GetDamageRegion().h, node.GetBuffer().GetRefPtr(),
+    ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface surfaceNode id:%llu [%d %d %d %d]"\
+        "buffer [%d %d] requestSize [%d %d] buffaddr:%p, z:%f, globalZOrder:%d", node.GetId(), info.dstRect.x,
+        info.dstRect.y, info.dstRect.w, info.dstRect.h, info.srcRect.w, info.srcRect.h,
+        node.GetBuffer()->GetWidth(), node.GetBuffer()->GetHeight(), node.GetBuffer().GetRefPtr(),
         node.GetRenderProperties().GetPositionZ(), info.zOrder);
-    RsRenderServiceUtil::ComposeSurface(layer, node.GetConsumer(), layers_, info);
+    RsRenderServiceUtil::ComposeSurface(layer, node.GetConsumer(), layers_, info, node.GetRenderProperties().GetRotation());
 }
 
 void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCompleteParam& param, void* data)
@@ -142,7 +144,7 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
         .height = curScreenInfo_.GetScreenHeight(),
         .strideAlignment = 0x8,
         .format = PIXEL_FMT_RGBA_8888,      // [TODO] different soc need different format
-        .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA | HBM_USE_MEM_FB,
+        .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
         .timeout = 0,
     };
     auto canvas = CreateCanvas(surface, requestConfig);
@@ -158,6 +160,8 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
         }
         SkMatrix matrix;
         matrix.reset();
+        matrix.setRotate(*
+            static_cast<float *>(((*iter)->GetLayerAdditionalInfo())));
         ROSEN_LOGE("RsDebug RSHardwareProcessor::Redraw layer [%d %d %d %d]", (*iter)->GetLayerSize().x,
             (*iter)->GetLayerSize().y, (*iter)->GetLayerSize().w, (*iter)->GetLayerSize().h);
         RsRenderServiceUtil::DrawBuffer(canvas.get(), matrix, (*iter)->GetBuffer(), (*iter)->GetLayerSize().x,

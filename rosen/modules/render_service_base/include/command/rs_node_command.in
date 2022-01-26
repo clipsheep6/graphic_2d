@@ -179,3 +179,5 @@ DECLARE_SET_COMMAND(RSNodeSetShadowRadius, SET_SHADOW_RADIUS, float, SetShadowRa
 DECLARE_DELTA_COMMAND(RSNodeSetShadowRadiusDelta, SET_SHADOW_RADIUS_DELTA, float, SetShadowRadius, GetShadowRadius)
 
 DECLARE_SET_COMMAND(RSNodeSetShadowPath, SET_SHADOW_PATH, std::shared_ptr<RSPath>, SetShadowPath)
+
+DECLARE_SET_COMMAND(RSNodeSetMask, SET_MASK, std::shared_ptr<RSMask>, SetMask)

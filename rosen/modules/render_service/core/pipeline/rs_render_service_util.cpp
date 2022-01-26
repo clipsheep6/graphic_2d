@@ -13,24 +13,32 @@
  * limitations under the License.
  */
 
+#include "common/rs_common_def.h"
 #include "include/core/SkPixmap.h"
 #include "include/core/SkBitmap.h"
 #include "pipeline/rs_render_service_util.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS {
-
 namespace Rosen {
 
 void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
-    std::vector<LayerInfoPtr>& layers,  ComposeInfo info)
+    std::vector<LayerInfoPtr>& layers,  ComposeInfo info, float rotation)
 {
     layer->SetSurface(consumerSurface);
     layer->SetBuffer(info.buffer, info.fence, info.preBuffer, info.preFence);
     layer->SetZorder(info.zOrder);
     layer->SetAlpha(info.alpha);
     layer->SetLayerSize(info.dstRect);
-    layer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
+    if (ROSEN_EQ(rotation, 0.f)) {
+        layer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);        
+    } else if (ROSEN_EQ(rotation, 90.f) || ROSEN_EQ(rotation, 180.f) || ROSEN_EQ(rotation, 270.f)) {
+        layer->SetTransform(static_cast<TransformType>(rotation / 90));
+        layer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
+    } else {
+        layer->SetLayerAdditionalInfo(&rotation);
+        layer->SetCompositionType(CompositionType::COMPOSITION_CLIENT);
+    }
     layer->SetVisibleRegion(1, info.srcRect);
     layer->SetDirtyRegion(info.srcRect);
     layer->SetBlendType(BlendType::BLEND_SRCOVER);
@@ -54,10 +62,9 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, const SkMatrix& matrix, s
         ROSEN_LOGE("RsRenderServiceUtil::DrawBuffer this buffer have no vir add or width or height is negative");
         return;
     }
-    SkColorType colorType;
-    colorType = buffer->GetFormat() == PIXEL_FMT_BGRA_8888 ? kBGRA_8888_SkColorType : kRGBA_8888_SkColorType;
+
     SkImageInfo layerInfo = SkImageInfo::Make(bufferWidth, bufferHeight,
-        colorType, kPremul_SkAlphaType);
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
     SkPixmap pixmap(layerInfo, addr, layerInfo.bytesPerPixel() * bufferWidth);
     SkBitmap bitmap;
     float scaleX = width / static_cast<float>(bufferWidth);

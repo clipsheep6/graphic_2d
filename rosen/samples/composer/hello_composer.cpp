@@ -103,10 +103,12 @@ void HelloComposer::Init()
          statusHeight, launcherHeight, navigationY);
 
     // status bar
+    /*
     drawLayers.emplace_back(std::make_unique<LayerContext>(
         IRect { 0, 0, displayWidth_, statusHeight },
         IRect { 0, 0, displayWidth_, statusHeight },
         1, LayerType::LAYER_STATUS));
+        */
 
     // launcher
     drawLayers.emplace_back(std::make_unique<LayerContext>(
@@ -114,21 +116,24 @@ void HelloComposer::Init()
         IRect { 0, 0, displayWidth_, launcherHeight },
         0, LayerType::LAYER_LAUNCHER));
 
+    /*
     // navigation bar
     drawLayers.emplace_back(std::make_unique<LayerContext>(
         IRect { 0, navigationY, displayWidth_, statusHeight },
         IRect { 0, 0, displayWidth_, statusHeight },
         1, LayerType::LAYER_NAVIGATION));
-
+*/
     uint32_t extraLayerWidth = displayWidth_ / 4; // layer width is 1 / 4 displayWidth
     uint32_t extraLayerHeight = displayHeight_ / 4; // layer height is 1 / 4 of displayHeight
     LOGI("extraLayerWidth[%{public}d], extraLayerHeight[%{public}d]", extraLayerWidth, extraLayerHeight);
 
     // extra layer 1
+    /*
     drawLayers.emplace_back(std::make_unique<LayerContext>(
         IRect { 300, 300, extraLayerWidth, extraLayerHeight }, // 300 is position
         IRect { 0, 0, extraLayerWidth, extraLayerHeight },
         1, LayerType::LAYER_EXTRA)); // 2 is zorder
+        */
 
     Sync(0, nullptr);
 }
@@ -156,11 +161,12 @@ void HelloComposer::Sync(int64_t, void *data)
 
 void HelloComposer::Draw()
 {
+    LOGE("Draw begin");
     std::vector<LayerInfoPtr> layerVec;
     for (auto &drawLayer : drawLayers) { // producer
         drawLayer->DrawBufferColor();
     }
-
+    LOGE("FillHDILayer begin");
     for (auto &drawLayer : drawLayers) { // consumer
         drawLayer->FillHDILayer();
         layerVec.emplace_back(drawLayer->GetHdiLayer());

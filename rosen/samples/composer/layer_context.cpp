@@ -19,8 +19,10 @@
 #include <sync_fence.h>
 #include "hdi_log.h"
 
+
 using namespace OHOS;
 using namespace OHOS::Rosen;
+using namespace std;
 
 namespace {
 #define LOGI(fmt, ...) ::OHOS::HiviewDFX::HiLog::Info(            \
@@ -63,8 +65,78 @@ const std::shared_ptr<HdiLayerInfo> LayerContext::GetHdiLayer()
     return hdiLayer_;
 }
 
+SurfaceError LayerContext::InitContext()
+{
+    sEglManager_ = EglManager::GetInstance();
+    if (sEglManager_ == nullptr) {
+        LOGE("EglManager::GetInstance Failed.");
+        return SURFACE_ERROR_INIT;
+    }
+
+    if (sEglManager_->Init(EGL_NO_CONTEXT,pSurface_) != SURFACE_ERROR_OK) {
+        LOGE("EglManager init failed.");
+        return SURFACE_ERROR_INIT;
+    }
+/*
+    if (GetEglSurface() == EGL_NO_SURFACE) {
+        LOGE("use offscreen render first resqueset the buffer");
+        if (RequestBufferProc() != SURFACE_ERROR_OK) {
+            LOGE("RequestBufferProc failed.");
+            return SURFACE_ERROR_INIT;
+        }
+    }*/
+    return SURFACE_ERROR_OK;
+}
+
+SurfaceError LayerContext::InitEGL()
+{
+    if (isEglInit){
+        LOGE("EGL INITED");
+        return SURFACE_ERROR_OK;
+    }
+    if (InitContext() != SURFACE_ERROR_OK){
+        LOGE("failed to init Contex");
+        return SURFACE_ERROR_INIT;
+    }
+    isEglInit = true;
+    return SURFACE_ERROR_OK;
+
+}
+
+SurfaceError LayerContext::SwapBuffers()
+{
+    if (!isEglInit) {
+        LOGE("egl init is not init.");
+        return SURFACE_ERROR_INIT;
+    }
+    LOGE("use onscreen swap");
+    sEglManager_->SwapBuffer();
+    LOGE("SwapBuffer end");
+
+    return SURFACE_ERROR_OK;
+}
+
+SurfaceError LayerContext::DrawColorWithEGL()
+{
+    LOGE("DrawColorWithEGL begain");
+    SurfaceError ret = InitEGL();
+    if (ret != SURFACE_ERROR_OK) {
+        LOGE("failed to InitEGL");
+        return SURFACE_ERROR_INIT;
+    }
+    glClearColor(1.0,1.0,0.0,1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    LOGE("swap buffer begain");
+    SwapBuffers();
+    LOGE("swap buffer end");
+    return SURFACE_ERROR_OK;
+
+}
+
 SurfaceError LayerContext::DrawBufferColor()
 {
+    LOGE("DrawBufferColor start");
+    return DrawColorWithEGL();
     OHOS::sptr<SurfaceBuffer> buffer;
     int32_t releaseFence = -1;
     BufferRequestConfig config = {
@@ -111,6 +183,7 @@ SurfaceError LayerContext::DrawBufferColor()
 
 SurfaceError LayerContext::FillHDILayer()
 {
+    LOGE("FillHDILayer start");
     OHOS::sptr<SurfaceBuffer> buffer = nullptr;
     int32_t acquireFence = -1;
     int64_t timestamp;

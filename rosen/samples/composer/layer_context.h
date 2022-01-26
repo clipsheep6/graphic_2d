@@ -19,6 +19,7 @@
 #include <display_type.h>
 #include <surface.h>
 #include "hdi_layer_info.h"
+#include "egl_manager.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -53,10 +54,16 @@ private:
     OHOS::sptr<SurfaceBuffer> prevBuffer_;
     std::shared_ptr<HdiLayerInfo> hdiLayer_;
     LayerType layerType_ = LayerType::LAYER_EXTRA;
+    OHOS::sptr<EglManager> sEglManager_;
 
     void DrawColor(void *image, int width, int height);
     void DrawExtraColor(void *image, uint32_t width, uint32_t height);
     void DrawBaseColor(void *image, uint32_t width, uint32_t height);
+    SurfaceError DrawColorWithEGL();
+    SurfaceError InitContext();
+    SurfaceError SwapBuffers();
+    SurfaceError InitEGL();
+    bool isEglInit = false;
 };
 } // namespace Rosen
 } // namespace OHOS

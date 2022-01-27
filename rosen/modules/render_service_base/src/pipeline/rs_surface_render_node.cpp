@@ -105,6 +105,7 @@ const SkMatrix& RSSurfaceRenderNode::GetMatrix() const
 
 void RSSurfaceRenderNode::SetAlpha(float alpha, bool sendMsg)
 {
+    ROSEN_LOGE("RsDebug RSSurfaceRenderNode::SetAlpha(float %f %d) id %llu",alpha, sendMsg, GetId());
     if (alpha_ == alpha) {
         return;
     }
@@ -115,6 +116,7 @@ void RSSurfaceRenderNode::SetAlpha(float alpha, bool sendMsg)
     // send a Command
     std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetAlpha>(GetId(), alpha);
     SendPropertyCommand(command);
+    ROSEN_LOGE("RsDebug RSSurfaceRenderNode::SetAlpha alpha = %f", alpha);
 }
 
 float RSSurfaceRenderNode::GetAlpha() const

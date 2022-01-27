@@ -13,29 +13,54 @@
  * limitations under the License.
  */
 
+#include "common/rs_common_def.h"
 #include "include/core/SkPixmap.h"
 #include "include/core/SkBitmap.h"
 #include "pipeline/rs_render_service_util.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS {
-
 namespace Rosen {
 
 void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
-    std::vector<LayerInfoPtr>& layers,  ComposeInfo info)
+    std::vector<LayerInfoPtr>& layers,  ComposeInfo info, float rotation)
 {
     layer->SetSurface(consumerSurface);
     layer->SetBuffer(info.buffer, info.fence, info.preBuffer, info.preFence);
     layer->SetZorder(info.zOrder);
     layer->SetAlpha(info.alpha);
     layer->SetLayerSize(info.dstRect);
-    layer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
+    if (ROSEN_EQ(rotation, 0.f)) {
+        ROSEN_LOGE("RsRenderServiceUtil::ComposeSurface 1 rotation %f", rotation);
+        layer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
+    } else if (ROSEN_EQ(rotation, 180.f)) {
+        layer->SetTransform(static_cast<TransformType>(rotation / 90));
+        layer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
+        ROSEN_LOGE("RsRenderServiceUtil::ComposeSurface 2 rotation %f", rotation);
+    } else {
+        ROSEN_LOGE("RsRenderServiceUtil::ComposeSurface 3 rotation %f", rotation);
+        layer->SetLayerAdditionalInfo(&rotation);
+        layer->SetCompositionType(CompositionType::COMPOSITION_CLIENT);
+    }
     layer->SetVisibleRegion(1, info.srcRect);
     layer->SetDirtyRegion(info.srcRect);
     layer->SetBlendType(info.blendType);
     layer->SetCropRect(info.srcRect);
     layers.emplace_back(layer);
+}
+
+void RsRenderServiceUtil::RotationSetHelper(float rotation)
+{
+    /*
+    constexpr float NearAngle = .05f;
+    float rotation += NearAngle;
+    if (!ROSEN_EQ(fmod(rotation, 90, NearAngle), 0.f)) {
+        //RotationByClient(rotation);
+        return;
+    }
+    int Orientation = rotation / 90;
+    if mod(Orientation, 2) == 1 &&  
+    */
 }
 
 void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, const SkMatrix& matrix, sptr<OHOS::SurfaceBuffer> buffer,
@@ -56,6 +81,7 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, const SkMatrix& matrix, s
     }
     SkColorType colorType;
     colorType = buffer->GetFormat() == PIXEL_FMT_BGRA_8888 ? kBGRA_8888_SkColorType : kRGBA_8888_SkColorType;
+
     SkImageInfo layerInfo = SkImageInfo::Make(bufferWidth, bufferHeight,
         colorType, kPremul_SkAlphaType);
     SkPixmap pixmap(layerInfo, addr, layerInfo.bytesPerPixel() * bufferWidth);

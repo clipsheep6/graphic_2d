@@ -151,6 +151,7 @@ public:
     static void SetPropertyDelta(RSContext& context, NodeId nodeId, const T& value)
     {
         if (auto node = context.GetNodeMap().GetRenderNode<RSRenderNode>(nodeId)) {
+
             T newValue = (node->GetRenderProperties().*getter)() + value;
             (node->GetRenderProperties().*setter)(newValue);
         }

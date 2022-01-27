@@ -99,6 +99,9 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
         return;
     }
     bool needUseBufferRegion = node.GetDamageRegion().w <= 0 || node.GetDamageRegion().h <= 0;
+    ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface node alpha = %f %f id:%llu", node.GetRenderProperties().GetAlpha(), node.GetAlpha(), node.GetId());
+    ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface node scale = %f %f id:%llu", node.GetRenderProperties().GetScaleX() , node.GetRenderProperties().GetScaleY(), node.GetId());
+    ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface node rotation = %f id:%llu", node.GetRenderProperties().GetRotation(), node.GetId());
     ComposeInfo info = {
         .srcRect = {
             .x = 0,
@@ -109,11 +112,14 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
         .dstRect = {
             .x = geoPtr->GetAbsRect().left_,
             .y = geoPtr->GetAbsRect().top_,
-            .w = geoPtr->GetAbsRect().width_,
-            .h = geoPtr->GetAbsRect().height_,
+            .w = geoPtr->GetAbsRect().width_ * node.GetRenderProperties().GetScaleX(),  //TODO deal with rotate
+            .h = geoPtr->GetAbsRect().height_ * node.GetRenderProperties().GetScaleY(),
         },
         .zOrder = node.GetGlobalZOrder(),
-        .alpha = alpha_,
+        .alpha = {
+            .enGlobalAlpha = true,
+            .gAlpha = node.GetAlpha() * 255,
+        },
         .buffer = node.GetBuffer(),
         .fence = node.GetFence(),
         .preBuffer = node.GetPreBuffer(),
@@ -128,7 +134,7 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
         info.srcRect.w, info.srcRect.h, node.GetBuffer()->GetWidth(), node.GetBuffer()->GetHeight(),
         node.GetDamageRegion().w, node.GetDamageRegion().h, node.GetBuffer().GetRefPtr(),
         node.GetRenderProperties().GetPositionZ(), info.zOrder, info.blendType);
-    RsRenderServiceUtil::ComposeSurface(layer, node.GetConsumer(), layers_, info);
+    RsRenderServiceUtil::ComposeSurface(layer, node.GetConsumer(), layers_, info, node.GetRenderProperties().GetRotation());
 }
 
 void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCompleteParam& param, void* data)
@@ -164,6 +170,9 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
         }
         SkMatrix matrix;
         matrix.reset();
+        ROSEN_LOGE("RsDebug RSHardwareProcessor::Redraw matrix.setRotate=%f", (*iter)->GetLayerAdditionalInfo());
+        matrix.setRotate(*
+            static_cast<float *>(((*iter)->GetLayerAdditionalInfo())));
         ROSEN_LOGE("RsDebug RSHardwareProcessor::Redraw layer [%d %d %d %d]", (*iter)->GetLayerSize().x,
             (*iter)->GetLayerSize().y, (*iter)->GetLayerSize().w, (*iter)->GetLayerSize().h);
         RsRenderServiceUtil::DrawBuffer(canvas.get(), matrix, (*iter)->GetBuffer(), (*iter)->GetLayerSize().x,

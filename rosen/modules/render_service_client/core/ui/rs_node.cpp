@@ -239,7 +239,7 @@ bool IsValid(const Vector4f& value)
         } else {                                                                                                                    \
             std::unique_ptr<RSCommand> command = std::make_unique<RSNodeSet##propertyName>(GetId(), value);                         \
             auto transactionProxy = RSTransactionProxy::GetInstance();                                                              \
-            if (transactionProxy != nullptr) {                                                                                      \
+            if (transactionProxy != nullptr) {                                                                    \
                 transactionProxy->AddCommand(command, IsRenderServiceNode());                                                       \
                 if (NeedForcedSendToRemote()) {                                                                                     \
                     std::unique_ptr<RSCommand> commandForRemote = std::make_unique<RSNodeSet##propertyName>(GetId(), value);        \
@@ -271,6 +271,7 @@ bool IsValid(const Vector4f& value)
 // alpha
 void RSNode::SetAlpha(float alpha)
 {
+    ROSEN_LOGE("RsDebug RSNode::SetAlpha(float %f)",alpha);
     SET_ANIMATABLE_PROPERTY(Alpha, alpha, RSAnimatableProperty::ALPHA);
 }
 
@@ -415,6 +416,7 @@ void RSNode::SetRotation(const Quaternion& quaternion)
 
 void RSNode::SetRotation(float degree)
 {
+    ROSEN_LOGE("RSDebug RSNode::SetRotation(%f)", degree);
     SET_ANIMATABLE_PROPERTY(Rotation, degree, RSAnimatableProperty::ROTATION);
 }
 
@@ -463,11 +465,13 @@ void RSNode::SetTranslateZ(float translate)
 
 void RSNode::SetScale(float scale)
 {
+    ROSEN_LOGE("RSDebug RSNode::SetScale(%f)", scale);
     SetScale({ scale, scale });
 }
 
 void RSNode::SetScale(float scaleX, float scaleY)
 {
+    ROSEN_LOGE("RSDebug RSNode::SetScale(%f %f)", scaleX, scaleY);
     SetScale({ scaleX, scaleY });
 }
 
@@ -478,11 +482,13 @@ void RSNode::SetScale(const Vector2f& scale)
 
 void RSNode::SetScaleX(float scale)
 {
+    ROSEN_LOGE("RSDebug RSNode::SetScaleX(%f)", scale);
     SET_ANIMATABLE_PROPERTY(ScaleX, scale, RSAnimatableProperty::SCALE_X);
 }
 
 void RSNode::SetScaleY(float scale)
 {
+    ROSEN_LOGE("RSDebug RSNode::SetScaleY(%f)", scale);
     SET_ANIMATABLE_PROPERTY(ScaleY, scale, RSAnimatableProperty::SCALE_Y);
 }
 

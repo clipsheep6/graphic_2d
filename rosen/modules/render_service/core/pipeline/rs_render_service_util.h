@@ -16,6 +16,7 @@
 #ifndef RENDER_SERVICE_CORE_PIPELINE_RS_RENDER_SERVICE_UTIL_H
 #define RENDER_SERVICE_CORE_PIPELINE_RS_RENDER_SERVICE_UTIL_H
 
+#include "display_type.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkMatrix.h"
 #include "hdi_layer_info.h"
@@ -33,6 +34,7 @@ struct ComposeInfo {
     IRect dstRect;
     int32_t zOrder{0};
     LayerAlpha alpha;
+    TransformType rotate{TransformType::ROTATE_BUTT};
     sptr<SurfaceBuffer> buffer;
     int32_t fence;
     sptr<SurfaceBuffer> preBuffer;
@@ -43,11 +45,13 @@ struct ComposeInfo {
 class RsRenderServiceUtil {
 public:
     static void ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
-        std::vector<LayerInfoPtr>& layers, ComposeInfo info);
+        std::vector<LayerInfoPtr>& layers, ComposeInfo info, float rotation = 0.0f);
     static void DrawBuffer(SkCanvas* canvas, const SkMatrix& matrix, sptr<OHOS::SurfaceBuffer> buffer,
         float tranX, float tranY, float width, float height, int32_t bufferWidth, int32_t bufferHeight);
     static void DrawBuffer(SkCanvas* canvas, const SkMatrix& matrix, sptr<OHOS::SurfaceBuffer> buffer,
         RSSurfaceRenderNode& node);
+private:
+    static void RotationSetHelper(float rotation);
 };
 
 } // Rosen

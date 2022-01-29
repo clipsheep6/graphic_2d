@@ -459,6 +459,7 @@ float RSProperties::GetTranslateZ() const
 
 void RSProperties::SetAlpha(float alpha)
 {
+    ROSEN_LOGE("RsDebug RSProperties::SetAlpha(%f)",alpha); 
     alpha_ = alpha;
     SetDirty();
 }

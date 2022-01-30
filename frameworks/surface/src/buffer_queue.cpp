@@ -193,6 +193,20 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtr
         return ReuseBuffer(config, bedata, retval);
     }
 
+    auto iter = bufferQueueCache_.begin();
+    for (; iter != bufferQueueCache_.end();) {
+        if (iter->second.isDeleting) {
+            BLOGD("DeleteBufferInCache buffer sequence id: %{public}d Queue id: %{public}" PRIu64 "",
+                iter->first, uniqueId_);
+            FreeBuffer(iter->second.buffer);
+            deletingList_.push_back(iter->first);
+            bufferQueueCache_.erase(iter++);
+        } else {
+            iter++;
+        }
+    }
+
+    BLOGD("DeleteBufferInCache buffer used sz: %{public}d Queue sz: %{public}d", GetUsedSize(), GetQueueSize());
     // check queue size
     if (GetUsedSize() >= GetQueueSize()) {
         waitReqCon_.wait_for(lock, std::chrono::milliseconds(config.timeout));
@@ -231,7 +245,11 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferExtraD
         if (isShared_) {
             BLOGN_FAILURE_RET(GSERROR_INVALID_ARGUMENTS);
         }
-        DeleteBufferInCache(retval.sequence);
+        if (bufferQueueCache_.count(retval.sequence) > 0) {
+            bufferQueueCache_[retval.sequence].isDeleting = true;
+            BLOGD("bufferQueueCache_ seq [%{public}d] need to deleting sz:[%{public}d]",
+                retval.sequence, (int32_t)bufferQueueCache_.size());
+        }
 
         auto sret = AllocBuffer(bufferImpl, config);
         if (sret != GSERROR_OK) {
@@ -505,11 +523,10 @@ GSError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
         .fence = -1
     };
 
-    bufferQueueCache_[sequence] = ele;
-
     ret = bufferManager_->Map(buffer);
     if (ret == GSERROR_OK) {
         BLOGN_SUCCESS_ID(sequence, "Map");
+        bufferQueueCache_[sequence] = ele;
         return GSERROR_OK;
     }
 

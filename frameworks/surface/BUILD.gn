@@ -28,8 +28,10 @@ config("surface_config") {
 }
 
 config("surface_public_config") {
-  include_dirs =
-      [ "//foundation/graphic/standard/interfaces/innerkits/surface" ]
+  include_dirs = [
+    "//foundation/graphic/standard/interfaces/innerkits/surface",
+    "//foundation/graphic/standard/interfaces/innerkits/common",
+  ]
 
   if (ace_enable_gpu) {
     defines = [ "ACE_ENABLE_GPU" ]
@@ -85,9 +87,11 @@ ohos_shared_library("surface") {
   public_deps = [
     "//drivers/peripheral/display/hdi_service/gralloc/client:hdi_gralloc_client",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
-    "//foundation/graphic/standard:libgl",
-    "//foundation/graphic/standard/utils:buffer_handle",
-    "//foundation/graphic/standard/utils:libgraphic_utils",
+    "//foundation/graphic/standard/utils/buffer_handle:buffer_handle",
+    "//foundation/graphic/standard/utils/gslogger:libgslogger",
+    "//foundation/graphic/standard/utils/scoped_bytrace:scoped_bytrace",
+    "//third_party/EGL:libEGL",
+    "//third_party/openGLES:libGLES",
     "//utils/native/base:utils",
   ]
 
@@ -99,8 +103,3 @@ ohos_shared_library("surface") {
 
 ## Build surface.so }}}
 
-group("test") {
-  testonly = true
-
-  deps = [ "test:test" ]
-}

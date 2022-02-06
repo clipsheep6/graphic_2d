@@ -38,7 +38,7 @@ group("graphic_standard_test") {
 
   public_deps = [
     "frameworks/fence:test",
-    "frameworks/surface:test",
+    "frameworks/surface/test:test",
     "frameworks/vsync:test",
     "frameworks/wmtest:wmtest",
     "rosen/modules/composer:test",

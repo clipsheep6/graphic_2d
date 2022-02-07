@@ -12,90 +12,268 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/graphic/standard/utils/wmlayout/wmlayout.gni")
-import("graphic_config.gni")
 
-group("default") {
-  public_deps = [
-    ":default.scss",
-    ":graphic.rc",
-    "frameworks/animation_server:animation_server",
-    "frameworks/animation_server:cursor.raw",
-    "frameworks/bootanimation:bootanimation",
-    "frameworks/bootanimation:bootanimation_pics",
-    "frameworks/dumper:gdumper",
-    "frameworks/dumper:gdumper.ini",
-    "frameworks/dumper:graphic_dumper_server",
-    "frameworks/vsync:vsync_server",
-    "frameworks/wmserver:screen-info-test",
-    "frameworks/wmserver:wmserver",
-    "frameworks/wmservice:wmservice_test",
+ohos_prebuilt_etc("launcher_hap") {
+  source = "Launcher.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("launcher_recents_hap") {
+  source = "Launcher_Recents.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("launcher_settings_hap") {
+  source = "Launcher_Settings.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("settings_hap") {
+  source = "Settings.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("settingsData_hap") {
+  source = "SettingsData.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("navigationBar_hap") {
+  source = "SystemUI-NavigationBar.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("statusBar_hap") {
+  source = "SystemUI-StatusBar.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("notificationManagement_hap") {
+  source = "SystemUI-NotificationManagement.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("clock_demo_hap") {
+  source = "Clock_Demo.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("airquality_demo_hap") {
+  source = "Airquality_Demo.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("calc_demo_hap") {
+  source = "Calc_Demo.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("shopping_demo_hap") {
+  source = "Shopping_Demo.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("flashlight_demo_hap") {
+  source = "Flashlight_Demo.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("ecg_demo_hap") {
+  source = "Ecg_Demo.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("photos_hap") {
+  source = "Photos.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("music_demo_hap") {
+  source = "Music_Demo.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("demo.wav") {
+  source = "resources/demo.wav"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("dynamic.wav") {
+  source = "resources/dynamic.wav"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("camera_hap") {
+  source = "Camera.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("capture.ogg") {
+  source = "resources/capture.ogg"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("device_manager_ui_hap") {
+  source = "DeviceManager_UI.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("kika_input_hap") {
+  source = "kikaInput.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("media_library_hap") {
+  source = "Media_Library.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("media_scanner_hap") {
+  source = "Media_Scanner.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("callUI_hap") {
+  source = "CallUI.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("mms_hap") {
+  source = "Mms.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("contacts_hap") {
+  source = "Contacts.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("contacts_data_ability_hap") {
+  source = "Contacts_DataAbility.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("permission_manager_hap") {
+  source = "PermissionManager.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+ohos_prebuilt_etc("settings_faceauth_hap") {
+  source = "Settings_FaceAuth.hap"
+  module_install_dir = "app"
+  part_name = "prebuilt_hap"
+  subsystem_name = "applications"
+}
+
+group("hap") {
+  deps = [
+    "//applications/standard/hap:airquality_demo_hap",
+    "//applications/standard/hap:calc_demo_hap",
+    "//applications/standard/hap:callUI_hap",
+    "//applications/standard/hap:camera_hap",
+    "//applications/standard/hap:capture.ogg",
+    "//applications/standard/hap:clock_demo_hap",
+    "//applications/standard/hap:contacts_data_ability_hap",
+    "//applications/standard/hap:contacts_hap",
+    "//applications/standard/hap:demo.wav",
+    "//applications/standard/hap:device_manager_ui_hap",
+    "//applications/standard/hap:dynamic.wav",
+    "//applications/standard/hap:ecg_demo_hap",
+    "//applications/standard/hap:flashlight_demo_hap",
+    "//applications/standard/hap:kika_input_hap",
+    "//applications/standard/hap:launcher_hap",
+    "//applications/standard/hap:launcher_recents_hap",
+    "//applications/standard/hap:launcher_settings_hap",
+    "//applications/standard/hap:mms_hap",
+    "//applications/standard/hap:music_demo_hap",
+    "//applications/standard/hap:navigationBar_hap",
+    "//applications/standard/hap:notificationManagement_hap",
+    "//applications/standard/hap:permission_manager_hap",
+    "//applications/standard/hap:photos_hap",
+    "//applications/standard/hap:settingsData_hap",
+    "//applications/standard/hap:settings_faceauth_hap",
+    "//applications/standard/hap:settings_hap",
+    "//applications/standard/hap:shopping_demo_hap",
+    "//applications/standard/hap:statusBar_hap",
   ]
-}
-
-group("graphic_standard_test") {
-  testonly = true
-
-  public_deps = [
-    "frameworks/fence:test",
-    "frameworks/surface:test",
-    "frameworks/vsync:test",
-    "frameworks/wmtest:wmtest",
-    "rosen/modules/composer:test",
-  ]
-}
-
-## Install graphic.rc to /system/etc/init/graphic.rc {{{
-ohos_prebuilt_etc("graphic.rc") {
-  source = "graphic.cfg"
-  relative_install_dir = "init"
-  part_name = "graphic_standard"
-  subsystem_name = "graphic"
-}
-
-## Install graphic.rc to /system/etc/init/graphic.rc }}}
-
-## Install default.scss to /system/etc/wmlayout.d/default.scss {{{
-wmlayout_scss("default.scss") {
-  scss = "default.scss"
-  part_name = "graphic_standard"
-  subsystem_name = "graphic"
-}
-
-## Install default.scss to /system/etc/wmlayout.d/default.scss }}}
-
-group("libsurface") {
-  public_deps = [ "frameworks/surface:surface" ]
-}
-
-group("libvsync_client") {
-  public_deps = [ "frameworks/vsync:libvsync_client" ]
-}
-
-group("libwms_client") {
-  public_deps = [ "frameworks/wm:wms_client" ]
-}
-
-group("libwmclient") {
-  public_deps = [ "frameworks/wm:libwmclient" ]
-}
-
-group("libwmservice") {
-  public_deps = [ "frameworks/wmservice:libwmservice" ]
-}
-
-group("libfence") {
-  public_deps = [ "frameworks/fence:libfence" ]
-}
-
-group("libgl") {
-  public_deps = [
-    "//third_party/EGL:libEGL",
-    "//third_party/openGLES:libGLES",
-  ]
-  public_deps += libgl
-}
-
-group("libgraphic_dumper_client") {
-  public_deps = [ "frameworks/dumper:libgraphic_dumper_client" ]
+  if (defined(product_name) && product_name == "watchos") {
+    deps -= [
+      "//applications/standard/hap:airquality_demo_hap",
+      "//applications/standard/hap:calc_demo_hap",
+      "//applications/standard/hap:callUI_hap",
+      "//applications/standard/hap:camera_hap",
+      "//applications/standard/hap:capture.ogg",
+      "//applications/standard/hap:contacts_data_ability_hap",
+      "//applications/standard/hap:contacts_hap",
+      "//applications/standard/hap:demo.wav",
+      "//applications/standard/hap:dynamic.wav",
+      "//applications/standard/hap:ecg_demo_hap",
+      "//applications/standard/hap:flashlight_demo_hap",
+      "//applications/standard/hap:kika_input_hap",
+      "//applications/standard/hap:mms_hap",
+      "//applications/standard/hap:music_demo_hap",
+      "//applications/standard/hap:navigationBar_hap",
+      "//applications/standard/hap:photos_hap",
+      "//applications/standard/hap:settingsData_hap",
+      "//applications/standard/hap:settings_faceauth_hap",
+      "//applications/standard/hap:settings_hap",
+      "//applications/standard/hap:shopping_demo_hap",
+      "//applications/standard/hap:statusBar_hap",
+    ]
+  }
 }

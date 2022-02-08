@@ -33,6 +33,7 @@
       },
       "build": {
         "sub_component": [
+          "//third_party/skia:skia",
           "//third_party/wayland-ivi-extension:ivi-controller",
           "//third_party/wayland-ivi-extension:ivi-input-controller",
           "//third_party/wayland-ivi-extension:libscreen-info-module",

@@ -160,7 +160,7 @@ void RSPropertiesPainter::Clip(SkCanvas& canvas, RectF rect)
     canvas.clipRect(Rect2SkRect(rect), true);
 }
 
-void RSPropertiesPainter::DrawShadow(RSProperties& properties, SkCanvas& canvas)
+void RSPropertiesPainter::DrawShadow(const RSProperties& properties, SkCanvas& canvas)
 {
     if (properties.shadow_ && properties.shadow_->IsValid()) {
         canvas.save();
@@ -187,13 +187,14 @@ void RSPropertiesPainter::DrawShadow(RSProperties& properties, SkCanvas& canvas)
             SkPaint paint;
             paint.setColor(spotColor);
             paint.setAntiAlias(true);
+            paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, properties.GetShadowRadius()));
             canvas.drawPath(skPath, paint);
         }
         canvas.restore();
     }
 }
 
-void RSPropertiesPainter::SaveLayerForFilter(RSProperties& properties, SkCanvas& canvas,
+void RSPropertiesPainter::SaveLayerForFilter(const RSProperties& properties, SkCanvas& canvas,
     std::shared_ptr<RSSkiaFilter>& filter)
 {
     SkPaint paint;
@@ -213,7 +214,7 @@ void RSPropertiesPainter::RestoreForFilter(SkCanvas& canvas)
     canvas.restore();
 }
 
-void RSPropertiesPainter::DrawBackground(RSProperties& properties, SkCanvas& canvas)
+void RSPropertiesPainter::DrawBackground(const RSProperties& properties, SkCanvas& canvas)
 {
     auto filter = std::static_pointer_cast<RSSkiaFilter>(properties.GetBackgroundFilter());
     DrawShadow(properties, canvas);
@@ -251,7 +252,7 @@ void RSPropertiesPainter::DrawBackground(RSProperties& properties, SkCanvas& can
 }
 
 void RSPropertiesPainter::DrawFrame(
-    RSProperties& properties, RSPaintFilterCanvas& canvas, std::shared_ptr<DrawCmdList>& cmds)
+    const RSProperties& properties, RSPaintFilterCanvas& canvas, std::shared_ptr<DrawCmdList>& cmds)
 {
     if (cmds != nullptr) {
         SkMatrix mat;
@@ -265,7 +266,7 @@ void RSPropertiesPainter::DrawFrame(
     }
 }
 
-void RSPropertiesPainter::DrawBorder(RSProperties& properties, SkCanvas& canvas)
+void RSPropertiesPainter::DrawBorder(const RSProperties& properties, SkCanvas& canvas)
 {
     if (properties.GetBorderWidth() > 0.f) {
         auto borderWidth = properties.GetBorderWidth();
@@ -316,7 +317,7 @@ void RSPropertiesPainter::DrawBorder(RSProperties& properties, SkCanvas& canvas)
     }
 }
 
-void RSPropertiesPainter::DrawForegroundColor(RSProperties& properties, SkCanvas& canvas)
+void RSPropertiesPainter::DrawForegroundColor(const RSProperties& properties, SkCanvas& canvas)
 {
     auto bgColor = properties.GetForegroundColor();
     if (bgColor == RgbPalette::Transparent()) {

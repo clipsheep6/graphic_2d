@@ -23,26 +23,26 @@
 #include "platform/drawing/rs_surface.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "screen_manager/rs_screen_mode_info.h"
+#include <memory>
 
 namespace OHOS {
 namespace Rosen {
 std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
 {
-    std::shared_ptr<RSBaseRenderNode> node =
-        RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode<RSBaseRenderNode>(nodeId_);
+    auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(nodeId_);
     if (node == nullptr) {
         ROSEN_LOGE("RSSurfaceCaptureTask::Run: node is nullptr");
         return nullptr;
     }
     std::unique_ptr<Media::PixelMap> pixelmap;
     std::shared_ptr<RSSurfaceCaptureVisitor> visitor = std::make_shared<RSSurfaceCaptureVisitor>();
-    if (node->GetType() == RSRenderNodeType::SURFACE_NODE) {
+    if (auto surfaceNode = node->ReinterpretCastTo<RSSurfaceRenderNode>()) {
         ROSEN_LOGI("RSSurfaceCaptureTask::Run: Into SURFACE_NODE SurfaceRenderNodeId:[%llu]", node->GetId());
-        pixelmap = CreatePixelMapBySurfaceNode(std::static_pointer_cast<RSSurfaceRenderNode>(node));
+        pixelmap = CreatePixelMapBySurfaceNode(surfaceNode);
         visitor->IsDisplayNode(false);
-    } else if (node->GetType() == RSRenderNodeType::DISPLAY_NODE) {
+    } else if (auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>()) {
         ROSEN_LOGI("RSSurfaceCaptureTask::Run: Into DISPLAY_NODE DisplayRenderNodeId:[%llu]", node->GetId());
-        pixelmap = CreatePixelMapByDisplayNode(std::static_pointer_cast<RSDisplayRenderNode>(node));
+        pixelmap = CreatePixelMapByDisplayNode(displayNode);
         visitor->IsDisplayNode(true);
     } else {
         ROSEN_LOGE("RSSurfaceCaptureTask::Run: Invalid RSRenderNodeType!");
@@ -144,16 +144,15 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSD
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node)
 {
+    if (node.GetBuffer() == nullptr) {
+        ROSEN_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode: node Buffer is nullptr!");
+        return;
+    }
     if (isDisplayNode_) {
-        RsRenderServiceUtil::DrawBuffer(canvas_.get(), node.GetMatrix(), node.GetBuffer(), node);
+        RsRenderServiceUtil::DrawBuffer(canvas_.get(), node.GetBuffer(), node);
     } else {
-        float scaleX = node.GetRenderProperties().GetBoundsWidth();
-        float scaleY = node.GetRenderProperties().GetBoundsHeight();
-        bool needUseBufferRegion = node.GetDamageRegion().w <= 0 || node.GetDamageRegion().h <= 0;
-        int32_t damageRegionWidth = needUseBufferRegion ? node.GetBuffer()->GetWidth() : node.GetDamageRegion().w;
-        int32_t damageRegionHeight = needUseBufferRegion ? node.GetBuffer()->GetHeight() : node.GetDamageRegion().h;
-        RsRenderServiceUtil::DrawBuffer(canvas_.get(), node.GetMatrix(), node.GetBuffer(), 0, 0, scaleX, scaleY,
-            damageRegionWidth, damageRegionHeight);
+        std::shared_ptr<RSObjAbsGeometry> geotry = std::make_shared<RSObjAbsGeometry>();
+        RsRenderServiceUtil::DrawBuffer(canvas_.get(), node.GetBuffer(), geotry);
     }
     for (auto child : node.GetChildren()) {
         auto existingChild = child.lock();

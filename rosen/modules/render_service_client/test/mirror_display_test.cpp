@@ -14,39 +14,16 @@
  */
 
 #include <chrono>
-#include <cstdint>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-#include <string>
-#include <surface.h>
-#include <unistd.h>
 
-#include "command/rs_base_node_command.h"
-#include "command/rs_display_node_command.h"
-#include "command/rs_surface_node_command.h"
-#include "common/rs_common_def.h"
-#include "display_type.h"
-#include "include/core/SkCanvas.h"
-#include "include/core/SkImageInfo.h"
-#include "pipeline/rs_render_result.h"
-#include "pipeline/rs_render_thread.h"
 #include "png.h"
-#include "render_context/render_context.h"
-#include "string_ex.h"
-#include "surface_buffer.h"
-#include "ui/rs_node.h"
-#include "ui/rs_surface_extractor.h"
-#include "ui/rs_ui_director.h"
-#include "unique_fd.h"
 #include "transaction/rs_interfaces.h"
 #include "ui/rs_display_node.h"
+#include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
-// temporary debug
-#include "foundation/graphic/standard/rosen/modules/render_service_base/src/platform/ohos/rs_surface_frame_ohos.h"
-#include "foundation/graphic/standard/rosen/modules/render_service_base/src/platform/ohos/rs_surface_ohos.h"
-
+#include "unique_fd.h"
 
 using namespace OHOS;
 using namespace OHOS::Rosen;
@@ -351,7 +328,7 @@ int main()
         cout << "ImgReader init failed!" << endl;
     }
     DisplayId virtualDisplayId = RSInterfaces::GetInstance().CreateVirtualScreen("virtualDisplay",
-        modeInfo.GetScreenWidth(), modeInfo.GetScreenHeight(), imgReader.GetSurface());
+        modeInfo.GetScreenWidth(), modeInfo.GetScreenHeight(), nullptr);
     cout << "VirtualScreenId: " << virtualDisplayId << endl;
     cout << "------------------------------------------------------------------" << endl;
     RSDisplayNodeConfig mirrorConfig {virtualDisplayId, true, sourceDisplayNode->GetId()};
@@ -359,6 +336,15 @@ int main()
     sleep(1);
     
     int frameCnt = 5; // test 5 frames.
+    for (int i = 0; i < frameCnt; ++i) {
+        DrawSurface(SkRect::MakeXYWH(SKSCALAR_X, SKSCALAR_Y, SKSCALAR_W, SKSCALAR_H), 0xFFF0FFF0,
+            SkRect::MakeXYWH(SKSCALAR_X, SKSCALAR_Y, SKSCALAR_W, SKSCALAR_H), surfaceLauncher);
+        RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
+        sleep(detail::SLEEP_TIME);
+    }
+
+    int32_t flag = RSInterfaces::GetInstance().SetVirtualScreenSurface(virtualDisplayId, imgReader.GetSurface());
+    cout<< "The flag of SetVirtualScreenSurface is "<< flag << endl;
     for (int i = 0; i < frameCnt; ++i) {
         DrawSurface(SkRect::MakeXYWH(SKSCALAR_X, SKSCALAR_Y, SKSCALAR_W, SKSCALAR_H), 0xFFF0FFF0,
             SkRect::MakeXYWH(SKSCALAR_X, SKSCALAR_Y, SKSCALAR_W, SKSCALAR_H), surfaceLauncher);

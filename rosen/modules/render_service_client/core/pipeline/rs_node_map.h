@@ -27,24 +27,26 @@ class RSNode;
 
 class RSNodeMap final {
 public:
-    static RSNodeMap& Instance();
+    static const RSNodeMap& Instance();
+    static RSNodeMap& MutableInstance();
 
     bool RegisterNode(const std::shared_ptr<RSBaseNode>& nodePtr);
     void UnregisterNode(NodeId id);
 
-    // Get RSNode with type T, return nullptr if node not found or wrong type
+    // Get RSNode with type T, return nullptr if not found or type mismatch
     template<typename T = RSBaseNode>
-    std::shared_ptr<T> GetNode(NodeId id)
+    const std::shared_ptr<T> GetNode(NodeId id) const
     {
         return RSBaseNode::ReinterpretCast<T>(GetNode<RSBaseNode>(id));
     }
     template<>
-    std::shared_ptr<RSBaseNode> GetNode(NodeId id);
+    const std::shared_ptr<RSBaseNode> GetNode(NodeId id) const;
 
-    std::shared_ptr<RSNode> GetAnimationFallbackNode();
+    const std::shared_ptr<RSNode> GetAnimationFallbackNode() const;
+
 private:
     explicit RSNodeMap();
-    ~RSNodeMap() = default;
+    ~RSNodeMap() noexcept;
     RSNodeMap(const RSNodeMap&) = delete;
     RSNodeMap(const RSNodeMap&&) = delete;
     RSNodeMap& operator=(const RSNodeMap&) = delete;

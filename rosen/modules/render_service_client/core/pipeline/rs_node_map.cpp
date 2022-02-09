@@ -20,7 +20,6 @@
 
 namespace OHOS {
 namespace Rosen {
-
 RSNodeMap::RSNodeMap()
 {
     // add animation fallback node
@@ -29,10 +28,22 @@ RSNodeMap::RSNodeMap()
     nodeMap_.emplace(0, fallback_node);
 }
 
-RSNodeMap& RSNodeMap::Instance()
+RSNodeMap::~RSNodeMap()  noexcept
 {
-    static RSNodeMap renderThread;
-    return renderThread;
+    for (auto &[id, node] : nodeMap_) {
+        node = nullptr;
+    }
+}
+
+RSNodeMap& RSNodeMap::MutableInstance()
+{
+    static RSNodeMap nodeMap;
+    return nodeMap;
+}
+
+const RSNodeMap& RSNodeMap::Instance()
+{
+    return MutableInstance();
 }
 
 bool RSNodeMap::RegisterNode(const RSBaseNode::SharedPtr& nodePtr)
@@ -56,7 +67,7 @@ void RSNodeMap::UnregisterNode(NodeId id)
 }
 
 template<>
-std::shared_ptr<RSBaseNode> RSNodeMap::GetNode<RSBaseNode>(NodeId id)
+const std::shared_ptr<RSBaseNode> RSNodeMap::GetNode<RSBaseNode>(NodeId id) const
 {
     auto itr = nodeMap_.find(id);
     if (itr == nodeMap_.end()) {
@@ -65,8 +76,12 @@ std::shared_ptr<RSBaseNode> RSNodeMap::GetNode<RSBaseNode>(NodeId id)
     return itr->second;
 }
 
-std::shared_ptr<RSNode> RSNodeMap::GetAnimationFallbackNode()
+const std::shared_ptr<RSNode> RSNodeMap::GetAnimationFallbackNode() const
 {
+    auto itr = nodeMap_.find(0);
+    if (itr == nodeMap_.end()) {
+        return nullptr;
+    }
     return std::static_pointer_cast<RSNode>(nodeMap_.at(0));
 }
 

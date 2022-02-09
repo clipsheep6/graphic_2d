@@ -13,24 +13,30 @@
  * limitations under the License.
  */
 
+#include "common/rs_common_def.h"
+#include "include/core/SkPaint.h"
 #include "include/core/SkPixmap.h"
 #include "include/core/SkBitmap.h"
 #include "pipeline/rs_render_service_util.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS {
-
 namespace Rosen {
 
 void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
-    std::vector<LayerInfoPtr>& layers,  ComposeInfo info)
+    std::vector<LayerInfoPtr>& layers,  ComposeInfo info, RSSurfaceRenderNode* node)
 {
     layer->SetSurface(consumerSurface);
     layer->SetBuffer(info.buffer, info.fence, info.preBuffer, info.preFence);
     layer->SetZorder(info.zOrder);
     layer->SetAlpha(info.alpha);
     layer->SetLayerSize(info.dstRect);
-    layer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
+    layer->SetLayerAdditionalInfo(node);
+    if (node == nullptr || ROSEN_EQ(node->GetRenderProperties().GetRotation(), 0.f)) {
+        layer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
+    } else {
+        layer->SetCompositionType(CompositionType::COMPOSITION_CLIENT);
+    }
     layer->SetVisibleRegion(1, info.srcRect);
     layer->SetDirtyRegion(info.srcRect);
     layer->SetBlendType(info.blendType);
@@ -38,8 +44,8 @@ void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sp
     layers.emplace_back(layer);
 }
 
-void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, const SkMatrix& matrix, sptr<OHOS::SurfaceBuffer> buffer,
-    float tranX, float tranY, float width, float height, int32_t bufferWidth, int32_t bufferHeight)
+void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer,
+    const std::shared_ptr<RSObjAbsGeometry> geotry, float alpha)
 {
     if (!canvas) {
         ROSEN_LOGE("RsRenderServiceUtil::DrawBuffer canvas is nullptr");
@@ -50,38 +56,35 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, const SkMatrix& matrix, s
         return;
     }
     auto addr = static_cast<uint32_t*>(buffer->GetVirAddr());
-    if (addr == nullptr || bufferWidth <= 0 || bufferHeight <= 0) {
+    if (addr == nullptr || buffer->GetWidth() <= 0 || buffer->GetHeight() <= 0) {
         ROSEN_LOGE("RsRenderServiceUtil::DrawBuffer this buffer have no vir add or width or height is negative");
         return;
     }
     SkColorType colorType;
     colorType = buffer->GetFormat() == PIXEL_FMT_BGRA_8888 ? kBGRA_8888_SkColorType : kRGBA_8888_SkColorType;
-    SkImageInfo layerInfo = SkImageInfo::Make(bufferWidth, bufferHeight,
+    SkImageInfo layerInfo = SkImageInfo::Make(buffer->GetWidth(), buffer->GetHeight(),
         colorType, kPremul_SkAlphaType);
-    SkPixmap pixmap(layerInfo, addr, layerInfo.bytesPerPixel() * bufferWidth);
+    SkPixmap pixmap(layerInfo, addr, buffer->GetStride());
     SkBitmap bitmap;
-    float scaleX = width / static_cast<float>(bufferWidth);
-    float scaleY = height / static_cast<float>(bufferHeight);
+    SkPaint paint;
+    paint.setAntiAlias(true);
+    paint.setAlphaf(alpha);
     if (bitmap.installPixels(pixmap)) {
         canvas->save();
-        canvas->setMatrix(matrix);
-        canvas->translate(tranX, tranY);
-        canvas->scale(scaleX, scaleY);
-        canvas->drawBitmapRect(bitmap, SkRect::MakeXYWH(0, 0, bufferWidth, bufferHeight), nullptr);
+        if (geotry) {
+            canvas->setMatrix(geotry->GetAbsMatrix());
+        }
+        canvas->drawBitmapRect(bitmap, SkRect::MakeXYWH(0, 0, buffer->GetWidth(), buffer->GetHeight()), &paint);
         canvas->restore();
     }
 }
 
-void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, const SkMatrix& matrix, sptr<OHOS::SurfaceBuffer> buffer,
+void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer,
         RSSurfaceRenderNode& node)
 {
-    bool needUseBufferRegion = node.GetDamageRegion().w <= 0 || node.GetDamageRegion().h <= 0;
-    int32_t damageRegionWidth = needUseBufferRegion ? node.GetBuffer()->GetWidth() : node.GetDamageRegion().w;
-    int32_t damageRegionHeight = needUseBufferRegion ? node.GetBuffer()->GetHeight() : node.GetDamageRegion().h;
-    DrawBuffer(canvas, matrix, node.GetBuffer(),
-        node.GetRenderProperties().GetBoundsPositionX(), node.GetRenderProperties().GetBoundsPositionY(),
-        node.GetRenderProperties().GetBoundsWidth(), node.GetRenderProperties().GetBoundsHeight(),
-        damageRegionWidth, damageRegionHeight);
+    DrawBuffer(canvas, node.GetBuffer(),
+        std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry()),
+        node.GetAlpha() * node.GetRenderProperties().GetAlpha());
 }
 
 } // namespace Rosen

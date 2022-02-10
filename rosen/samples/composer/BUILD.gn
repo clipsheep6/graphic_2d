@@ -40,6 +40,7 @@ ohos_executable("hello_composer") {
   sources = [
     "hello_composer.cpp",
     "layer_context.cpp",
+    "egl_manager.cpp",
     "main.cpp",
   ]
 
@@ -54,8 +55,8 @@ ohos_executable("hello_composer") {
     "//foundation/graphic/standard/rosen/modules/composer:libcomposer",
     "//foundation/graphic/standard/utils:libgraphic_utils",
     "//foundation/graphic/standard/utils:sync_fence",
+    "//foundation/graphic/standard:libgl",
   ]
-
   external_deps = [ "ipc:ipc_core" ]
 
   part_name = "graphic_standard"

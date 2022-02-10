@@ -29,5 +29,5 @@ if ("${product_name}" == "rk3566" || "${product_name}" == "rk3568" ||
 if (ace_enable_gpu) {
   libgl = [ "//device/hisilicon/hardware/gpu:gpu_libs" ]
 } else {
-  libgl = []
+  libgl = ["//device/hihope/hardware/gpu:gpu_libs"]
 }

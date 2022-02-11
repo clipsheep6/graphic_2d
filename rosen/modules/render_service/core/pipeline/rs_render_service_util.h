@@ -46,7 +46,7 @@ public:
     static void ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
         std::vector<LayerInfoPtr>& layers, ComposeInfo info, RSSurfaceRenderNode* node = nullptr);
     static void DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer,
-        const std::shared_ptr<RSObjAbsGeometry> geotry, float alpha = 1.0f);
+        const std::shared_ptr<RSObjAbsGeometry> geotry, const RSProperties& properties, float alpha = 1.0f);
     static void DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer,
         RSSurfaceRenderNode& node);
 };

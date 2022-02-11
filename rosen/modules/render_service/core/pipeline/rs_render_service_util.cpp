@@ -19,6 +19,8 @@
 #include "include/core/SkBitmap.h"
 #include "pipeline/rs_render_service_util.h"
 #include "platform/common/rs_log.h"
+#include "property/rs_properties_painter.h"
+#include "render/rs_blur_filter.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -32,7 +34,8 @@ void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sp
     layer->SetAlpha(info.alpha);
     layer->SetLayerSize(info.dstRect);
     layer->SetLayerAdditionalInfo(node);
-    if (node == nullptr || ROSEN_EQ(node->GetRenderProperties().GetRotation(), 0.f)) {
+    if (node == nullptr || ROSEN_EQ(node->GetRenderProperties().GetRotation(), 0.f) ||
+        std::static_pointer_cast<RSBlurFilter>(node->GetRenderProperties().GetFilter()) == nullptr) {
         layer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
     } else {
         layer->SetCompositionType(CompositionType::COMPOSITION_CLIENT);
@@ -45,7 +48,7 @@ void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sp
 }
 
 void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer,
-    const std::shared_ptr<RSObjAbsGeometry> geotry, float alpha)
+    const std::shared_ptr<RSObjAbsGeometry> geotry, const RSProperties& properties, float alpha)
 {
     if (!canvas) {
         ROSEN_LOGE("RsRenderServiceUtil::DrawBuffer canvas is nullptr");
@@ -74,7 +77,14 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer>
         if (geotry) {
             canvas->setMatrix(geotry->GetAbsMatrix());
         }
-        canvas->drawBitmapRect(bitmap, SkRect::MakeXYWH(0, 0, buffer->GetWidth(), buffer->GetHeight()), &paint);
+        std::unique_ptr<SkRect> rect =
+            std::make_unique<SkRect>(SkRect::MakeXYWH(0, 0, buffer->GetWidth(), buffer->GetHeight()));
+        auto filter = std::static_pointer_cast<RSSkiaFilter>(properties.GetBackgroundFilter());
+        if (filter != nullptr) {
+            RSPropertiesPainter::SaveLayerForFilter(properties, (*canvas), filter, rect);
+            RSPropertiesPainter::RestoreForFilter(*canvas);
+        }
+        canvas->drawBitmapRect(bitmap, (*rect), &paint);
         canvas->restore();
     }
 }

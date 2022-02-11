@@ -152,7 +152,7 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode(RSS
         RsRenderServiceUtil::DrawBuffer(canvas_.get(), node.GetBuffer(), node);
     } else {
         std::shared_ptr<RSObjAbsGeometry> geotry = std::make_shared<RSObjAbsGeometry>();
-        RsRenderServiceUtil::DrawBuffer(canvas_.get(), node.GetBuffer(), geotry);
+        RsRenderServiceUtil::DrawBuffer(canvas_.get(), node.GetBuffer(), geotry, node.GetRenderProperties());
     }
     for (auto child : node.GetChildren()) {
         auto existingChild = child.lock();

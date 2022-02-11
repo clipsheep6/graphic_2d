@@ -46,6 +46,7 @@ ohos_shared_library("libcomposer") {
     "hdi_backend/src/hdi_output.cpp",
     "hdi_backend/src/hdi_screen.cpp",
     "vsync/src/vsync.cpp",
+    "vsync/src/soft_vsync.cpp",
   ]
 
   include_dirs = [ "//foundation/graphic/standard/utils/log" ]

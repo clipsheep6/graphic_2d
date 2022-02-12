@@ -17,6 +17,8 @@
 #include <cmath>
 #include "vsync_generator.h"
 
+#include <iostream>
+
 namespace OHOS {
 namespace Rosen {
 namespace impl {
@@ -102,6 +104,8 @@ bool VSyncSampler::AddSample(int64_t timeStamp)
         ResetErrorLocked();
     }
 
+    std::cout << "VSyncSampler::AddSample: updatemode:"<<modeUpdated_<<std::endl;
+
     // 1/2 just a empirical value
     return modeUpdated_ & (error_ < g_errorThreshold / 2);
 }
@@ -109,6 +113,7 @@ bool VSyncSampler::AddSample(int64_t timeStamp)
 
 void VSyncSampler::UpdateModeLocked()
 {
+    std::cout << "VSyncSampler::UpdateModeLocked: numSamples_:"<<numSamples_<<std::endl;
     if (numSamples_ >= MIN_SAMPLES_FOR_UPDATE) {
         int64_t sum = 0;
         int64_t min = INT64_MAX;

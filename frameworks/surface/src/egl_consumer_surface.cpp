@@ -22,6 +22,9 @@
 #include "egl_manager.h"
 
 namespace OHOS {
+namespace {
+DEFINE_HILOG_LABEL("Bufferqueue");
+}
 EglConsumerSurface::EglConsumerSurface(const std::string &name, bool isShared)
     : ConsumerSurface(name, isShared)
 {

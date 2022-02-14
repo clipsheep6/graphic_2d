@@ -191,10 +191,10 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
     }
     std::vector<LayerInfoPtr>::const_reverse_iterator iter = param.layers.rbegin();
     for (; iter != param.layers.rend(); ++iter) {
-        ROSEN_LOGD("RsDebug RSHardwareProcessor::Redraw layer composition Type:%d", (*iter)->GetCompositionType());
         if ((*iter) == nullptr || (*iter)->GetCompositionType() == CompositionType::COMPOSITION_DEVICE) {
             continue;
         }
+        ROSEN_LOGD("RsDebug RSHardwareProcessor::Redraw layer composition Type:%d", (*iter)->GetCompositionType());
         ROSEN_LOGE("RsDebug RSHardwareProcessor::Redraw layer [%d %d %d %d]", (*iter)->GetLayerSize().x,
             (*iter)->GetLayerSize().y, (*iter)->GetLayerSize().w, (*iter)->GetLayerSize().h);
         RsRenderServiceUtil::DrawBuffer(canvas.get(), (*iter)->GetBuffer(),

@@ -47,8 +47,11 @@ void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sp
 bool RsRenderServiceUtil::IsNeedClient(RSSurfaceRenderNode* node)
 {
     if (node == nullptr) {
-        ROSEN_LOGE("RsRenderServiceUtil::ComposeSurface node is empty");
+        ROSEN_LOGI("RsRenderServiceUtil::ComposeSurface node is empty");
         return false;
+    }
+    if (node->GetRenderProperties().GetFrameGravity() != Gravity::RESIZE) {
+        return true;
     }
     auto filter = std::static_pointer_cast<RSBlurFilter>(node->GetRenderProperties().GetBackgroundFilter());
     if (filter != nullptr && filter->GetBlurRadiusX() > 0 && filter->GetBlurRadiusY() > 0) {
@@ -112,15 +115,22 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer>
     paint.setAlphaf(node.GetAlpha() * node.GetRenderProperties().GetAlpha());
     if (bitmap.installPixels(pixmap)) {
         canvas->save();
-        std::unique_ptr<SkRect> rect =
-            std::make_unique<SkRect>(SkRect::MakeXYWH(0, 0, buffer->GetWidth(), buffer->GetHeight()));
+        std::unique_ptr<SkRect> rect = std::make_unique<SkRect>(SkRect::MakeXYWH(0, 0, buffer->GetSurfaceBufferWidth(),
+            buffer->GetSurfaceBufferHeight()));
         if (isDrawnOnDisplay) {
             const RSProperties& property = node.GetRenderProperties();
             auto geoptr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
             if (geoptr) {
-                canvas->setMatrix(geoptr->GetAbsMatrix());
-                canvas->scale(static_cast<double>(geoptr->GetAbsRect().width_)/static_cast<double>(buffer->GetWidth()),
-                              static_cast<double>(geoptr->GetAbsRect().height_)/static_cast<double>(buffer->GetHeight()));
+                auto left = geoptr->GetAbsRect().left_;
+                auto top = geoptr->GetAbsRect().top_;
+                auto width = geoptr->GetAbsRect().width_;
+                auto height = geoptr->GetAbsRect().height_;
+                RectF dstRect = { left, top, width, height };
+                canvas->clipRect(SkRect::MakeXYWH(left, top, width, height), false);
+                SkMatrix matrix = SkMatrix::I();
+                RSPropertiesPainter::GetGravityMatrix(property.GetFrameGravity(), dstRect,
+                    buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight(), matrix);
+                canvas->setMatrix(matrix.postConcat(geoptr->GetAbsMatrix()));
             }
             DealAnimation(canvas, paint, property, node.GetAnimationManager().GetTransitionProperties());
             auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
@@ -129,7 +139,7 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer>
                 RSPropertiesPainter::RestoreForFilter(*canvas);
             }
         }
-        canvas->drawBitmapRect(bitmap, (*rect), &paint);
+        canvas->drawBitmapRect(bitmap, (*rect), (*rect), &paint);
         canvas->restore();
     }
 }

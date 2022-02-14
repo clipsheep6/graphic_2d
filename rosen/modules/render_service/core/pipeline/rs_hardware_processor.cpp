@@ -17,11 +17,10 @@
 
 #include <iterator>
 
+#include "common/rs_obj_abs_geometry.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_render_service_util.h"
 #include "platform/common/rs_log.h"
-
-#include "common/rs_obj_abs_geometry.h"
 namespace OHOS {
 namespace Rosen {
 
@@ -46,8 +45,8 @@ void RSHardwareProcessor::Init(ScreenId id)
         return;
     }
     screenManager_->GetScreenActiveMode(id, curScreenInfo_);
-    ROSEN_LOGI("RSHardwareProcessor::Init screen w:%{public}d, w:%{public}d",
-        curScreenInfo_.GetScreenWidth(), curScreenInfo_.GetScreenHeight());
+    ROSEN_LOGI("RSHardwareProcessor::Init screen w:%d, h:%d", curScreenInfo_.GetScreenWidth(),
+        curScreenInfo_.GetScreenHeight());
     IRect damageRect;
     damageRect.x = 0;
     damageRect.y = 0;
@@ -74,7 +73,7 @@ void RSHardwareProcessor::PostProcess()
 
 void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
 {
-    ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface start node id:%llu available buffer:%d", node.GetId(),
+    ROSEN_LOGI("RsDebug RSHardwareProcessor::ProcessSurface start node id:%llu available buffer:%d", node.GetId(),
         node.GetAvailableBufferCount());
     if (!output_) {
         ROSEN_LOGE("RSHardwareProcessor::ProcessSurface output is nullptr");
@@ -89,7 +88,7 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
     RSProcessor::SpecialTask task = [] () -> void{};
     bool ret = ConsumeAndUpdateBuffer(node, task, cbuffer);
     if (!ret) {
-        ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface consume buffer fail");
+        ROSEN_LOGI("RsDebug RSHardwareProcessor::ProcessSurface consume buffer fail");
         return;
     }
     if (node.IsBufferAvailable() == false) {
@@ -153,10 +152,10 @@ void RSHardwareProcessor::CalculateInfo(const std::unique_ptr<RSTransitionProper
     float paddingX = (1 - transitionProperties->GetScale().x_) * geoPtr->GetAbsRect().width_ / 2;
     float paddingY = (1 - transitionProperties->GetScale().y_) * geoPtr->GetAbsRect().height_ / 2;
     info.dstRect = {
-        .x = geoPtr->GetAbsRect().left_ + transitionProperties->GetTranslate().x_ + paddingX,
-        .y = geoPtr->GetAbsRect().top_ + transitionProperties->GetTranslate().y_ + paddingY,
-        .w = geoPtr->GetAbsRect().width_ * transitionProperties->GetScale().x_,
-        .h = geoPtr->GetAbsRect().height_ * transitionProperties->GetScale().y_,
+        .x = info.dstRect.x + transitionProperties->GetTranslate().x_ + paddingX,
+        .y = info.dstRect.y + transitionProperties->GetTranslate().y_ + paddingY,
+        .w = info.dstRect.w * transitionProperties->GetScale().x_,
+        .h = info.dstRect.h * transitionProperties->GetScale().y_,
     };
     info.alpha = {
         .enGlobalAlpha = true,

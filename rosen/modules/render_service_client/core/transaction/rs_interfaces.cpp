@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define TEST_MODE
 
 #include "rs_interfaces.h"
 
@@ -74,9 +75,15 @@ bool RSInterfaces::TakeSurfaceCapture(std::shared_ptr<RSDisplayNode> node,
     return renderServiceClient_->TakeSurfaceCapture(node->GetId(), callback);
 }
 
+
+
 void RSInterfaces::SetScreenActiveMode(ScreenId id, uint32_t modeId)
 {
+#ifdef TEST_MODE
+    modeId_ = modeId;
+#else
     renderServiceClient_->SetScreenActiveMode(id, modeId);
+#endif
 }
 
 void RSInterfaces::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status)
@@ -86,12 +93,28 @@ void RSInterfaces::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status)
 
 RSScreenModeInfo RSInterfaces::GetScreenActiveMode(ScreenId id)
 {
+#ifdef TEST_MODE
+    return modes_[modeId_];
+#else
     return renderServiceClient_->GetScreenActiveMode(id);
+#endif
 }
 
 std::vector<RSScreenModeInfo> RSInterfaces::GetScreenSupportedModes(ScreenId id)
 {
+#ifdef TEST_MODE
+    modes_ = renderServiceClient_->GetScreenSupportedModes(id);
+    if (modes_.size() > 0 && modes_.size() < 2) {
+        auto mode = modes_[modes_.size() - 1];
+        mode.SetScreenWidth(mode.GetScreenWidth() / 2);
+        mode.SetScreenHeight(mode.GetScreenHeight() / 2);
+        mode.SetScreenModeId(mode.GetScreenModeId() + 1);
+        modes_.push_back(mode);
+    }
+    return modes_;
+#else
     return renderServiceClient_->GetScreenSupportedModes(id);
+# endif
 }
 
 RSScreenCapability RSInterfaces::GetScreenCapability(ScreenId id)

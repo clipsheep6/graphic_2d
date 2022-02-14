@@ -16,6 +16,8 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_TRANSACTION_RS_INTERFACES_H
 #define RENDER_SERVICE_CLIENT_CORE_TRANSACTION_RS_INTERFACES_H
 
+#define TEST_MODE
+
 #include <memory>
 
 #include "transaction/rs_render_service_client.h"
@@ -92,6 +94,10 @@ private:
     ~RSInterfaces() noexcept;
 
     std::unique_ptr<RSRenderServiceClient> renderServiceClient_;
+#ifdef TEST_MODE
+    std::vector<RSScreenModeInfo> modes_;
+    uint32_t modeId_ = 0;
+#endif
 };
 } // namespace Rosen
 } // namespace OHOS

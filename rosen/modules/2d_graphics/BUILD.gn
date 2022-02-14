@@ -16,14 +16,7 @@ import("//foundation/graphic/standard/graphic_config.gni")
 
 ## Build 2d_graphics.so
 ohos_shared_library("2d_graphics") {
-  symlink_target_name = [ "libnative_graphics.so" ]
-
   sources = [
-    "src/c/drawing_bitmap.cpp",
-    "src/c/drawing_brush.cpp",
-    "src/c/drawing_canvas.cpp",
-    "src/c/drawing_path.cpp",
-    "src/c/drawing_pen.cpp",
     "src/draw/brush.cpp",
     "src/draw/color.cpp",
     "src/draw/core_canvas.cpp",
@@ -58,6 +51,14 @@ ohos_shared_library("2d_graphics") {
     "src/text/text.cpp",
     "src/utils/camera3d.cpp",
     "src/utils/matrix.cpp",
+  ]
+
+  sources += [
+    "src/render_engine/canvas_context.cpp",
+    "src/render_engine/egl_manager.cpp",
+    "src/render_engine/gles_render_backend.cpp",
+    "src/render_engine/render_manager.cpp",
+    "src/render_engine/software_render_backend.cpp",
   ]
 
   include_dirs = [

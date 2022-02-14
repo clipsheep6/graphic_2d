@@ -30,6 +30,7 @@
 #include "screen_manager/rs_screen_mode_info.h"
 #include "screen_manager/screen_types.h"
 #include "transaction/rs_transaction_data.h"
+#include "ivsync_connection.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -68,6 +69,9 @@ public:
         SET_SCREEN_GAMUT,
         SET_SCREEN_GAMUT_MAP,
         GET_SCREEN_GAMUT_MAP,
+        CREATE_VSYNC_CONNECTION,
+        REQUEST_ROTATION,
+        GET_ROTATION,
     };
 
     virtual void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) = 0;
@@ -75,6 +79,8 @@ public:
     virtual void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) = 0;
 
     virtual sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) = 0;
+
+    virtual sptr<IVSyncConnection> CreateVSyncConnection(const std::string& name) = 0;
 
     virtual ScreenId GetDefaultScreenId() = 0;
 
@@ -126,6 +132,10 @@ public:
     virtual int32_t SetScreenGamutMap(ScreenId id, ScreenGamutMap mode) = 0;
 
     virtual int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) = 0;
+    
+    virtual bool RequestRotation(ScreenId id, ScreenRotation rotation) = 0;
+
+    virtual ScreenRotation GetRotation(ScreenId id) = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

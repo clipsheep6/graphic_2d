@@ -23,6 +23,7 @@
 #include "pipeline/rs_render_service.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "transaction/rs_render_service_connection_stub.h"
+#include "vsync_distributor.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -33,7 +34,8 @@ public:
         wptr<RSRenderService> renderService,
         RSMainThread* mainThread,
         sptr<RSScreenManager> screenManager,
-        sptr<IRemoteObject> token);
+        sptr<IRemoteObject> token,
+        sptr<VSyncDistributor> distributor);
     ~RSRenderServiceConnection() noexcept;
     RSRenderServiceConnection(const RSRenderServiceConnection&) = delete;
     RSRenderServiceConnection& operator=(const RSRenderServiceConnection&) = delete;
@@ -53,6 +55,8 @@ private:
     void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) override;
 
     sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) override;
+
+    sptr<IVSyncConnection> CreateVSyncConnection(const std::string& name) override;
 
     ScreenId GetDefaultScreenId() override;
 
@@ -105,6 +109,10 @@ private:
     int32_t SetScreenGamutMap(ScreenId id, ScreenGamutMap mode) override;
 
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) override;
+    
+    bool RequestRotation(ScreenId id, ScreenRotation rotation) override;
+
+    ScreenRotation GetRotation(ScreenId id) override;
 
     pid_t remotePid_;
     wptr<RSRenderService> renderService_;
@@ -144,6 +152,8 @@ private:
     // save all virtual screenIds created by this connection.
     std::unordered_set<ScreenId> virtualScreenIds_;
     sptr<RSIScreenChangeCallback> screenChangeCallback_;
+    sptr<VSyncDistributor> appVSyncDistributor_;
+    sptr<VSyncConnection> conn_;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -95,6 +95,24 @@ sptr<Surface> RSRenderServiceConnectionProxy::CreateNodeAndSurface(const RSSurfa
     return surface;
 }
 
+sptr<IVSyncConnection> RSRenderServiceConnectionProxy::CreateVSyncConnection(const std::string& name)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteString(name);
+    option.SetFlags(MessageOption::TF_SYNC);
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::CREATE_VSYNC_CONNECTION, data, reply, option);
+    if (err != NO_ERROR) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> rObj = reply.ReadRemoteObject();
+    sptr<IVSyncConnection> conn = iface_cast<IVSyncConnection>(rObj);
+    return conn;
+}
+
 ScreenId RSRenderServiceConnectionProxy::GetDefaultScreenId()
 {
     MessageParcel data;
@@ -582,6 +600,45 @@ int32_t RSRenderServiceConnectionProxy::GetScreenGamutMap(ScreenId id, ScreenGam
         mode = static_cast<ScreenGamutMap>(reply.ReadUint32());
     }
     return result;
+}
+
+bool RSRenderServiceConnectionProxy::RequestRotation(ScreenId id, ScreenRotation rotation)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return false;
+    }
+    option.SetFlags(MessageOption::TF_SYNC);
+    data.WriteUint64(id);
+    data.WriteUint32(static_cast<uint32_t>(rotation));
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::REQUEST_ROTATION, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::RequestRotation: Send Request err.");
+        return false;
+    }
+    bool res = reply.ReadBool();
+    return res;
+}
+
+ScreenRotation RSRenderServiceConnectionProxy::GetRotation(ScreenId id)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return ScreenRotation::INVALID_SCREEN_ROTATION;
+    }
+    option.SetFlags(MessageOption::TF_SYNC);
+    data.WriteUint64(id);
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::GET_ROTATION, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetRotation: Send Request err.");
+        return ScreenRotation::INVALID_SCREEN_ROTATION;
+    }
+    ScreenRotation rotation = static_cast<ScreenRotation>(reply.ReadUint32());
+    return rotation;
 }
 } // namespace Rosen
 } // namespace OHOS

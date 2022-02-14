@@ -19,9 +19,12 @@
 
 #include "animation/rs_render_animation.h"
 #include "common/rs_obj_abs_geometry.h"
+#include "pipeline/rs_context.h"
 #include "platform/common/rs_log.h"
 #ifdef ROSEN_OHOS
 #include "pipeline/rs_paint_filter_canvas.h"
+#include "property/rs_properties_painter.h"
+#include "property/rs_transition_properties.h"
 #endif
 
 namespace OHOS {
@@ -61,14 +64,6 @@ bool RSRenderNode::Animate(int64_t timestamp)
 
 bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty)
 {
-    GetDisappearingChildren().remove_if([this](std::shared_ptr<RSBaseRenderNode>& child) {
-        bool needToDelete = !child->HasTransition();
-        if (needToDelete && ROSEN_EQ<RSBaseRenderNode>(child->GetParent(), weak_from_this())) {
-            child->ResetParent();
-        }
-        return needToDelete;
-    });
-
     if (!renderProperties_.GetVisible()) {
         return false;
     }
@@ -116,7 +111,8 @@ void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
     if (boundsGeo && !boundsGeo->IsEmpty()) {
         canvas.concat(boundsGeo->GetMatrix());
     }
-    GetAnimationManager().DoTransition(canvas, GetRenderProperties());
+    auto transitionProperties = GetAnimationManager().GetTransitionProperties();
+    RSPropertiesPainter::DrawTransitionProperties(transitionProperties, GetRenderProperties(), canvas);
 #endif
 }
 

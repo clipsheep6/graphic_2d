@@ -67,6 +67,18 @@ std::shared_ptr<RSSurface> RSRenderServiceClient::CreateNodeAndSurface(const RSS
     return producer;
 }
 
+std::shared_ptr<VSyncReceiver> RSRenderServiceClient::CreateVSyncReceiver(
+    const std::string& name,
+    const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return nullptr;
+    }
+    sptr<IVSyncConnection> conn = renderService->CreateVSyncConnection(name);
+    return std::make_shared<VSyncReceiver>(conn, looper);
+}
+
 void RSRenderServiceClient::TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap)
 {
     ROSEN_LOGI("RSRenderServiceClient::Into TriggerSurfaceCaptureCallback nodeId:[%llu]", id);
@@ -368,6 +380,26 @@ int32_t RSRenderServiceClient::GetScreenGamutMap(ScreenId id, ScreenGamutMap& mo
         return RENDER_SERVICE_NULL;
     }
     return renderService->GetScreenGamutMap(id, mode);
+}
+
+bool RSRenderServiceClient::RequestRotation(ScreenId id, ScreenRotation rotation)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::RequestRotation renderService == nullptr!");
+        return false;
+    }
+    return renderService->RequestRotation(id, rotation);
+}
+
+ScreenRotation RSRenderServiceClient::GetRotation(ScreenId id)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::GetRotation renderService == nullptr!");
+        return ScreenRotation::INVALID_SCREEN_ROTATION;
+    }
+    return renderService->GetRotation(id);
 }
 } // namespace Rosen
 } // namespace OHOS

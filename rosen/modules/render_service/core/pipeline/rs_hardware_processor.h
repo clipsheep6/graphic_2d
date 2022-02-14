@@ -27,6 +27,7 @@
 
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_processor.h"
+#include "pipeline/rs_render_service_util.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "screen_manager/rs_screen_manager.h"
 
@@ -43,11 +44,15 @@ public:
 
 private:
     void Redraw(sptr<Surface>& surface, const struct PrepareCompleteParam& param, void* data);
+    void OnRotate();
+    void CalculateInfo(const std::unique_ptr<RSTransitionProperties>& transitionProperties, ComposeInfo& info,
+        RSSurfaceRenderNode& node);
     HdiBackend* backend_ = nullptr;
     sptr<RSScreenManager> screenManager_;
     RSScreenModeInfo curScreenInfo_;
     std::shared_ptr<HdiOutput> output_;
     std::vector<LayerInfoPtr> layers_;
+    ScreenRotation rotation_ {ScreenRotation::ROTATION_0};
 };
 } // namespace Rosen
 } // namespace OHOS

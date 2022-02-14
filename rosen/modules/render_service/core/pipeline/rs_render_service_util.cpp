@@ -53,10 +53,12 @@ bool RsRenderServiceUtil::IsNeedClient(RSSurfaceRenderNode* node)
         ROSEN_LOGE("RsRenderServiceUtil::ComposeSurface node is empty");
         return false;
     }
+#ifdef ACE_ENABLE_GL
     auto filter = node->GetRenderProperties().GetBackgroundFilter();
     if (filter != nullptr) {
         return true;
     }
+#endif
     auto transitionProperties = node->GetAnimationManager().GetTransitionProperties();
     if (!transitionProperties) {
         return false;
@@ -124,11 +126,13 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer>
                 canvas->setMatrix(geotry->GetAbsMatrix());
             }
             DealAnimation(canvas, paint, property, node.GetAnimationManager().GetTransitionProperties());
+#ifdef ACE_ENABLE_GL
             auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
             if (filter != nullptr) {
                 RSPropertiesPainter::SaveLayerForFilter(property, (*canvas), filter, rect);
                 RSPropertiesPainter::RestoreForFilter(*canvas);
             }
+#endif
         }
         canvas->drawBitmapRect(bitmap, (*rect), &paint);
         canvas->restore();

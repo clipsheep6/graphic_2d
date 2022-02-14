@@ -40,6 +40,16 @@ public:
         screenId_ = screenId;
     }
 
+    void SetOffsetX(int32_t offsetX)
+    {
+        offsetX_ = offsetX;
+    }
+
+    void SetOffsetY(int32_t offsetY)
+    {
+        offsetY_ = offsetY;
+    }
+
     uint64_t GetScreenId() const
     {
         return screenId_;
@@ -70,6 +80,8 @@ private:
     CompositeType compositeType_ { HARDWARE_COMPOSITE };
     uint64_t screenId_;
     bool forceSoftComposite_ { false };
+    int32_t offsetX_ = 0;
+    int32_t offsetY_ = 0;
     bool isMirroredDisplay_ = false;
     WeakPtr mirrorSource_;
 };

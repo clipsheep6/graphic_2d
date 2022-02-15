@@ -50,6 +50,9 @@ VsyncError VSyncReceiver::Init()
     if (init_) {
         return VSYNC_ERROR_OK;
     }
+    if (connection_ == nullptr) {
+        return VSYNC_ERROR_NULLPTR;
+    }
 
     VsyncError ret = connection_->GetReceiveFd(fd_);
     if (ret != VSYNC_ERROR_OK) {
@@ -76,16 +79,24 @@ VSyncReceiver::~VSyncReceiver()
     }
 }
 
-void VSyncReceiver::RequestNextVSync(FrameCallback callback)
+VsyncError VSyncReceiver::RequestNextVSync(FrameCallback callback)
 {
+    std::lock_guard<std::mutex> locker(initMutex_);
+    if (!init_) {
+        return VSYNC_ERROR_API_FAILED;
+    }
     listener_->SetCallback(callback);
-    connection_->RequestNextVSync();
+    return connection_->RequestNextVSync();
 }
 
-void VSyncReceiver::SetVSyncRate(FrameCallback callback, int32_t rate)
+VsyncError VSyncReceiver::SetVSyncRate(FrameCallback callback, int32_t rate)
 {
+    std::lock_guard<std::mutex> locker(initMutex_);
+    if (!init_) {
+        return VSYNC_ERROR_API_FAILED;
+    }
     listener_->SetCallback(callback);
-    connection_->SetVSyncRate(rate);
+    return connection_->SetVSyncRate(rate);
 }
 } // namespace Rosen
 } // namespace OHOS

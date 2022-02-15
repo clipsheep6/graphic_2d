@@ -40,8 +40,7 @@ VsyncError VSyncConnection::RequestNextVSync()
     if (distributor == nullptr) {
         return VSYNC_ERROR_NULLPTR;
     }
-    distributor->RequestNextVSync(this);
-    return VSYNC_ERROR_OK;
+    return distributor->RequestNextVSync(this);
 }
 
 VsyncError VSyncConnection::GetReceiveFd(int32_t &fd)
@@ -81,21 +80,28 @@ VSyncDistributor::~VSyncDistributor()
     }
 }
 
-void VSyncDistributor::AddConnection(const sptr<VSyncConnection>& connection)
+VsyncError VSyncDistributor::AddConnection(const sptr<VSyncConnection>& connection)
 {
-    if (connection != nullptr) {
-        std::lock_guard<std::mutex> locker(mutex_);
-        connections_.push_back(connection);
+    if (connection == nullptr) {
+        return VSYNC_ERROR_NULLPTR;
     }
+    std::lock_guard<std::mutex> locker(mutex_);
+    connections_.push_back(connection);
+    return VSYNC_ERROR_OK;
 }
 
-void VSyncDistributor::RemoveConnection(const sptr<VSyncConnection>& connection)
+VsyncError VSyncDistributor::RemoveConnection(const sptr<VSyncConnection>& connection)
 {
+    if (connection == nullptr) {
+        return VSYNC_ERROR_NULLPTR;
+    }
     std::lock_guard<std::mutex> locker(mutex_);
     auto it = find(connections_.begin(), connections_.end(), connection);
-    if (it != connections_.end()) {
-        connections_.erase(it);
+    if (it == connections_.end()) {
+        return VSYNC_ERROR_INVALID_ARGUMENTS;
     }
+    connections_.erase(it);
+    return VSYNC_ERROR_OK;
 }
 
 void VSyncDistributor::ThreadMain()
@@ -181,21 +187,33 @@ void VSyncDistributor::OnVSyncEvent(int64_t now)
     con_.notify_all();
 }
 
-void VSyncDistributor::RequestNextVSync(const sptr<VSyncConnection>& connection)
+VsyncError VSyncDistributor::RequestNextVSync(const sptr<VSyncConnection>& connection)
 {
+    if (connection == nullptr) {
+        return VSYNC_ERROR_NULLPTR;
+    }
     std::lock_guard<std::mutex> locker(mutex_);
+    auto it = find(connections_.begin(), connections_.end(), connection);
+    if (it == connections_.end()) {
+        return VSYNC_ERROR_INVALID_ARGUMENTS;
+    }
     if (connection->rate_ < 0) {
         connection->rate_ = 0;
         con_.notify_all();
     }
+    return VSYNC_ERROR_OK;
 }
 
 VsyncError VSyncDistributor::SetVSyncRate(int32_t rate, const sptr<VSyncConnection>& connection)
 {
-    if (rate <= 0) {
+    if (rate <= 0 || connection == nullptr) {
         return VSYNC_ERROR_INVALID_ARGUMENTS;
     }
     std::lock_guard<std::mutex> locker(mutex_);
+    auto it = find(connections_.begin(), connections_.end(), connection);
+    if (it == connections_.end()) {
+        return VSYNC_ERROR_INVALID_ARGUMENTS;
+    }
     if (connection->rate_ == rate) {
         return VSYNC_ERROR_INVALID_ARGUMENTS;
     }

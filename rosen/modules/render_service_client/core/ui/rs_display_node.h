@@ -31,8 +31,6 @@ public:
 
     static SharedPtr Create(const RSDisplayNodeConfig& displayNodeConfig);
 
-    void SetScreenId(uint64_t screenId);
-
     RSUINodeType GetType() const override
     {
         return RSUINodeType::DISPLAY_NODE;

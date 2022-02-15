@@ -53,11 +53,10 @@ void RSMainThread::Init()
 
     threadLooper_ = RSThreadLooper::Create();
     threadHandler_ = RSThreadHandler::Create();
-
-    sptr<VSyncConnection> conn = new VSyncConnection(rsVSyncDistributor_, "rs");
-    rsVSyncDistributor_->AddConnection(conn);
-    receiver_ = std::make_shared<VSyncReceiver>(conn);
-    receiver_->Init();
+    vsyncClient_ = RSVsyncClient::Create();
+    if (vsyncClient_) {
+        vsyncClient_->SetVsyncCallback(std::bind(&RSMainThread::OnVsync, this, std::placeholders::_1));
+    }
 }
 
 void RSMainThread::Start()
@@ -98,16 +97,12 @@ void RSMainThread::Draw()
 void RSMainThread::RequestNextVSync()
 {
     RS_TRACE_FUNC();
-    VSyncReceiver::FrameCallback fcb = {
-        .userData_ = this,
-        .callback_ = std::bind(&RSMainThread::OnVsync, this, ::std::placeholders::_1, ::std::placeholders::_2),
-    };
-    if (receiver_ != nullptr) {
-        receiver_->RequestNextVSync(fcb);
+    if (vsyncClient_ != nullptr) {
+        vsyncClient_->RequestNextVsync();
     }
 }
 
-void RSMainThread::OnVsync(uint64_t timestamp, void *data)
+void RSMainThread::OnVsync(uint64_t timestamp)
 {
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSMainThread::OnVsync");
     timestamp_ = timestamp;

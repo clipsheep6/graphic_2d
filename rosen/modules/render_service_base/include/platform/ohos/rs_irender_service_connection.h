@@ -30,7 +30,6 @@
 #include "screen_manager/rs_screen_mode_info.h"
 #include "screen_manager/screen_types.h"
 #include "transaction/rs_transaction_data.h"
-#include "ivsync_connection.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -79,8 +78,6 @@ public:
     virtual void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) = 0;
 
     virtual sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) = 0;
-
-    virtual sptr<IVSyncConnection> CreateVSyncConnection(const std::string& name) = 0;
 
     virtual ScreenId GetDefaultScreenId() = 0;
 

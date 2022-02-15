@@ -48,6 +48,8 @@ public:
         std::vector<LayerInfoPtr>& layers, ComposeInfo info, RSSurfaceRenderNode* node = nullptr);
     static void DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer, RSSurfaceRenderNode& node,
         bool isDrawnOnDisplay = true);
+    static void ConvertBufferColorGamut(const sptr<OHOS::SurfaceBuffer>& buffer,
+        ColorGamut srcGamut, ColorGamut dstGamut);
 private:
     static void DealAnimation(SkCanvas* canvas, SkPaint& paint, const RSProperties& property,
         const std::unique_ptr<RSTransitionProperties>& transitionProperties);

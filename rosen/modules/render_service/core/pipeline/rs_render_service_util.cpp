@@ -12,22 +12,68 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "pipeline/rs_render_service_util.h"
+#include "rs_render_service_util.h"
 
-#include <cmath>
+#include <unordered_set>
 
-#include "common/rs_common_def.h"
-#include "include/core/SkMatrix.h"
-#include "include/core/SkPaint.h"
-#include "include/core/SkPixmap.h"
-#include "include/core/SkBitmap.h"
 #include "platform/common/rs_log.h"
-#include "property/rs_properties.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_blur_filter.h"
+#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
+namespace Detail {
+bool IsSupportedFormatForGamutConvertion(int32_t pixelFormat)
+{
+    static std::unordered_set<PixelFormat> supportedFormats = {
+        PixelFormat::PIXEL_FMT_RGBX_8888,
+        PixelFormat::PIXEL_FMT_RGBA_8888,
+        PixelFormat::PIXEL_FMT_RGB_888,
+        PixelFormat::PIXEL_FMT_BGRX_8888,
+        PixelFormat::PIXEL_FMT_BGRA_8888
+    };
+    return supportedFormats.count(static_cast<PixelFormat>(pixelFormat)) > 0;
+}
+
+float RGBUint8ToFloat(uint8_t val)
+{
+    return val * 1.0f / 255.0f; // 255.0f is the max value.
+}
+
+uint8_t ConvertColorGamut(uint8_t* buf, int32_t pixelFormat, ColorGamut srcGamut, ColorGamut dstGamut)
+{
+    uint8_t len = 0;
+    Vector3f color; // rgb color.
+    switch (static_cast<PixelFormat>(pixelFormat)) {
+        case PixelFormat::PIXEL_FMT_RGBX_8888:
+        case PixelFormat::PIXEL_FMT_RGBA_8888: {
+            color.SetValues(RGBUint8ToFloat(buf[0]), RGBUint8ToFloat(buf[1]), RGBUint8ToFloat(buf[2]));
+            len = 4; // 4 bytes per pixel.
+            break;
+        }
+        case PixelFormat::PIXEL_FMT_RGB_888: {
+            color.SetValues(RGBUint8ToFloat(buf[0]), RGBUint8ToFloat(buf[1]), RGBUint8ToFloat(buf[2]));
+            len = 3; // 3 bytes per pixel.
+            break;
+        }
+        case PixelFormat::PIXEL_FMT_BGRX_8888:
+        case PixelFormat::PIXEL_FMT_BGRA_8888: {
+            color.SetValues(RGBUint8ToFloat(buf[2]), RGBUint8ToFloat(buf[1]), RGBUint8ToFloat(buf[0]));
+            len = 4; // 4 bytes per pixel.
+            break;
+        }
+        default: {
+            ROSEN_LOGE("ConvertColorGamut: unexpected pixelFormat(%d).", pixelFormat);
+            return 0;
+        }
+    }
+
+    // TODO: convert ColorGamut.
+
+    return len;
+}
+} // namespace Detail
 
 void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
     std::vector<LayerInfoPtr>& layers,  ComposeInfo info, RSSurfaceRenderNode* node)
@@ -135,5 +181,40 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer>
     }
 }
 
+void RsRenderServiceUtil::ConvertBufferColorGamut(const sptr<OHOS::SurfaceBuffer>& buffer,
+    ColorGamut srcGamut, ColorGamut dstGamut)
+{
+    RS_TRACE_NAME("ConvertBufferColorGamut");
+
+    if (buffer == nullptr || buffer->GetHeight() < 0 || buffer->GetWidth() < 0 ||
+        buffer->GetStride() < 0 || buffer->GetSize() == 0) {
+        ROSEN_LOGE("RsRenderServiceUtil::ConvertBufferColorGamut: buffer is not valid!");
+        return;
+    }
+
+    int32_t pixelFormat = buffer->GetFormat();
+    if (!Detail::IsSupportedFormatForGamutConvertion(pixelFormat)) {
+        ROSEN_LOGE("RsRenderServiceUtil::ConvertBufferColorGamut: the buffer's format is not supported.");
+        return;
+    }
+
+    if (srcGamut == dstGamut) {
+        ROSEN_LOGW("RsRenderServiceUtil::ConvertBufferColorGamut: srcGamut == dstGamut, do nothing.");
+        return;
+    }
+
+    void* bufferAddr = buffer->GetVirAddr();
+    uint32_t bufferSize = buffer->GetSize();
+    uint8_t* start = static_cast<uint8_t*>(bufferAddr);
+    uint8_t* end = start + bufferSize;
+    while (start != end) {
+        uint8_t len = Detail::ConvertColorGamut(start, pixelFormat, srcGamut, dstGamut);
+        if (len == 0) {
+            ROSEN_LOGE("RsRenderServiceUtil::ConvertBufferColorGamut: ConvertColorGamut error!");
+            break;
+        }
+        start += len;
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

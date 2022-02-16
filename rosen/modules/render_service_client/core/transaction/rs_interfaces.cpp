@@ -144,13 +144,6 @@ int32_t RSInterfaces::GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode)
     return renderServiceClient_->GetScreenGamutMap(id, mode);
 }
 
-std::shared_ptr<VSyncReceiver> RSInterfaces::CreateVSyncReceiver(
-    const std::string& name,
-    const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper)
-{
-    return renderServiceClient_->CreateVSyncReceiver(name, looper);
-}
-
 bool RSInterfaces::RequestRotation(ScreenId id, ScreenRotation rotation)
 {
     return renderServiceClient_->RequestRotation(id, rotation);

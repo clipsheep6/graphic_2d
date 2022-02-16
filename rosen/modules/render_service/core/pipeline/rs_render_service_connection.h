@@ -34,8 +34,7 @@ public:
         wptr<RSRenderService> renderService,
         RSMainThread* mainThread,
         sptr<RSScreenManager> screenManager,
-        sptr<IRemoteObject> token,
-        sptr<VSyncDistributor> distributor);
+        sptr<IRemoteObject> token);
     ~RSRenderServiceConnection() noexcept;
     RSRenderServiceConnection(const RSRenderServiceConnection&) = delete;
     RSRenderServiceConnection& operator=(const RSRenderServiceConnection&) = delete;
@@ -55,8 +54,6 @@ private:
     void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) override;
 
     sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) override;
-
-    sptr<IVSyncConnection> CreateVSyncConnection(const std::string& name) override;
 
     ScreenId GetDefaultScreenId() override;
 
@@ -152,8 +149,6 @@ private:
     // save all virtual screenIds created by this connection.
     std::unordered_set<ScreenId> virtualScreenIds_;
     sptr<RSIScreenChangeCallback> screenChangeCallback_;
-    sptr<VSyncDistributor> appVSyncDistributor_;
-    sptr<VSyncConnection> conn_;
 };
 } // namespace Rosen
 } // namespace OHOS

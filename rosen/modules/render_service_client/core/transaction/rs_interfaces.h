@@ -83,10 +83,6 @@ public:
 
     ScreenRotation GetRotation(ScreenId id);
 
-    std::shared_ptr<VSyncReceiver> CreateVSyncReceiver(
-        const std::string& name,
-        const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper = nullptr);
-
 private:
     RSInterfaces();
     ~RSInterfaces() noexcept;

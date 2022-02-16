@@ -28,8 +28,6 @@
 #include "pipeline/rs_context.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "refbase.h"
-#include "vsync_receiver.h"
-#include "vsync_distributor.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -87,7 +85,6 @@ public:
     void RegisterApplicationRenderThread(uint32_t pid, sptr<IApplicationRenderThread> app);
     void UnregisterApplicationRenderThread(sptr<IApplicationRenderThread> app);
 
-    sptr<VSyncDistributor> rsVSyncDistributor_;
 private:
     RSMainThread();
     ~RSMainThread() noexcept;
@@ -96,7 +93,7 @@ private:
     RSMainThread& operator=(const RSMainThread&) = delete;
     RSMainThread& operator=(const RSMainThread&&) = delete;
 
-    void OnVsync(uint64_t timestamp, void *data);
+    void OnVsync(uint64_t timestamp);
     void ProcessCommand();
     void Draw();
     std::mutex transitionDataMutex_;
@@ -114,7 +111,6 @@ private:
 
     RSContext context_;
     std::thread::id mainThreadId_;
-    std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -37,12 +37,11 @@
 #include <window.h>
 #include <window_option.h>
 #include <window_scene.h>
-#include "vsync_receiver.h"
 
 namespace OHOS {
 class BootAnimation {
 public:
-    void Init(int32_t width, int32_t height, const std::shared_ptr<AppExecFwk::EventHandler>& handler);
+    void Init(int32_t width, int32_t height);
     void Draw();
     void CheckExitAnimation();
 private:
@@ -66,7 +65,6 @@ private:
     int32_t pointY_ = 0;
     int32_t maxPicNum_ = 0;
     bool needCheckExit = false;
-    std::shared_ptr<OHOS::Rosen::VSyncReceiver> receiver_ = nullptr;
 };
 } // namespace OHOS
 

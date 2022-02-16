@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +16,7 @@
 #ifndef COLORSPACE
 #define COLORSPACE
 
-#include "core/SkColorSpace.h"
-#include "core/SkImageInfo.h"
+#include "../skia/src/core/SkColorSpaceXformSteps.h"
 
 namespace OHOS {
 namespace ColorManager 
@@ -57,14 +55,24 @@ namespace ColorManager
     };
 
     struct ColorSpacePrimaries {
-        float xR;
-        float yR;
-        float xG;
-        float yG;
-        float xB;
-        float yB;
-        float xW;
-        float yW;
+        float fRX;
+        float fRY;
+        float fGX;
+        float fGY;
+        float fBX;
+        float fBY;
+        float fWX;
+        float fWY;
+    };
+
+    struct TransferFunc {
+        float g;
+        float a; 
+        float b;
+        float c;
+        float d;
+        float e;
+        float f;
     };
 
     static constexpr Matrix3x3 OHSRGB = {{{0.436065674f, 0.385147095f, 0.143066406f},
@@ -89,24 +97,67 @@ namespace ColorManager
 
 class ColorSpace {
 public:
-    ColorSpace(ColorSpaceName name, int64_t nativeHandle);
-    ColorSpaceName GetColorSpaceName() const { return colorSpaceName;};
-    int64_t GetNativeHandle() const { return nativeHandle;};
-    /*
-    * implenment colorSpace() and alphaType() will let skia directly
-    * use OHOS ColorSpace
-    */  
-    // OHOS ColorSpce -> Skia ColorSpace
-    SkColorSpace* colorSpace() const { return skColorSpace;};
 
-    // OHOS AlphaType -> Skia AlphaType
-    SkAlphaType alphaType() const { return kUnpremul_SkAlphaType; };
+    ColorSpace(ColorSpaceName name, int64_t nativeHandle);
+
+    ColorSpace(const ColorSpaceName name,
+               const int64_t nativeHandle, 
+               const ColorSpacePrimaries primaries,
+               const Matrix3x3 toXYZ,
+               const float gamma,
+               const TransferFunc transferFunc);
+
+    ColorSpace(const ColorSpaceName name,
+               const int64_t nativeHandle,
+               const ColorSpacePrimaries primaries,
+               const float gamma,
+               const TransferFunc transferFunc);
+
+    ColorSpace(const ColorSpaceName name,
+               const int64_t nativeHandle,
+               const ColorSpacePrimaries primaries);
+
+    ColorSpace(const ColorSpaceName name,
+               const ColorSpacePrimaries primaries,
+               const TransferFunc transferFunc);
+
+
+    ColorSpaceName GetColorSpaceName() const { return colorSpaceName;};
+
+    // remained for multimedia 
+    int64_t GetNativeHandle() const { return nativeHandle;};
+    
+    // some common color gamut constructor
+    static const ColorSpace SRGB();
+    static const ColorSpace LinearSRGB();
+    static const ColorSpace ExtendedSRGB();
+    static const ColorSpace LinearExtendedSRGB();
+    static const ColorSpace NTSC();
+    static const ColorSpace BT709();
+    static const ColorSpace BT2020();
+    static const ColorSpace AdobeRGB();
+    static const ColorSpace ProPhotoRGB();
+    static const ColorSpace DCIP3();
+    static const ColorSpace DisplayP3();
+    static const ColorSpace ACES();
+    static const ColorSpace ACEScg();
+
+    // OHOS ColorSpce -> Skia ColorSpace
+    SkColorSpace* colorSpace() const;
+
 
 private:
     friend class SkColorSpaceXformSteps;
-    SkColorSpace* skColorSpace = SkColorSpace::MakeSRGB().get();
-    int64_t nativeHandle;
-    ColorSpaceName colorSpaceName;
+    // SkColorSpace* skColorSpace = SkColorSpace::MakeSRGB().get();
+
+    // Compute a toXYZD50 matrics from a given rgb and white point; D50??
+    Matrix3x3 ComputeXYZD50(const ColorSpacePrimaries primaries); 
+    
+    ColorSpaceName       colorSpaceName;  
+    ColorSpacePrimaries  primaries;
+    TransferFunc         transferFunc;
+    int64_t              nativeHandle;  // ??
+    Matrix3x3            toXYZ;
 };
 
 } // namespace ColorSpace

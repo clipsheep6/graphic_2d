@@ -30,7 +30,7 @@ public:
     Color GetInstanceOf(float r, float g, float b, float a, ColorSpaceName name);
     Color GetInstanceOf(int color);
     Color GetInstanceOf(int64_t color);
-    int packValue(int color);
+    int PackValue(int color);
 
     /**
      * Packs the 3 component color defined by the specified red, green, blue and

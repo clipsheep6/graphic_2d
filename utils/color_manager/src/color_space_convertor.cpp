@@ -19,18 +19,21 @@ namespace OHOS {
 namespace ColorManager {
 
 ColorSpaceConvertor::ColorSpaceConvertor(ColorSpaceName src, ColorSpaceName dst, GamutMappingMode mapingMode)
-	: srcColorSpace(src), dstColorSpace(dst), mappingMode(mapingMode){
-	ColorSpace srcCS = ColorSpace(src, 3);
-	ColorSpace dstCS = ColorSpace(dst, 3);
-	// OH ColorSpace can be transfer to skColorSpace by 
-	// func colorSpace() & alphaType()
-	SkConvertor = SkColorSpaceXformSteps(srcCS, dstCS);
+	: srcColorSpace(src), dstColorSpace(dst), mappingMode(mapingMode)
+{
 };
 
-std::vector<float> ColorSpaceConvertor::Convert(float r, float g, float b){
-	
-	float rgba[4] = {r, g, b, 0.0f}; 
-	SkConvertor.apply(rgba);
+SkColorSpaceXformSteps* ColorSpaceConvertor::ToSkiaCnvertor() const
+{
+    ColorSpace srcCS = ColorSpace(srcColorSpace, 3);
+    ColorSpace dstCS = ColorSpace(dstColorSpace, 3);
+    return &SkColorSpaceXformSteps(srcCS, dstCS);
+}
+
+std::vector<float> ColorSpaceConvertor::Convert(float r, float g, float b)
+{
+    float rgba[4] = {r, g, b, 0.0f}; 
+	// SkConvertor.apply(rgba);
 	std::vector<float> dstColor(3);
 	
 	dstColor[0] = rgba[0];

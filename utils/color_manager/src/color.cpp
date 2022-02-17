@@ -22,10 +22,12 @@ namespace OHOS
 namespace ColorManager 
 {
 
-    Color Color::GetInstanceOf(float r, float g, float b, float a, ColorSpaceName convertor) 
+    Color Color::GetInstanceOf(float r, float g, float b, float a, ColorSpaceName name) 
     {          
-        return Color(r, g, b, a, convertor);
+        return Color(r, g, b, a, name);
     }
+
+    Color Color::GetInstanceOf(int64_t color) { return GetInstanceOf((int)color); }
 
     static float Alpha(int color) { return ((color >> 24) & 0xff) / 255.0f; }
 
@@ -35,18 +37,13 @@ namespace ColorManager
 
     static float Blue(int color) { return (color & 0xff) / 255.0f; }
 
-    Color Color::GetInstanceOf(int color) 
-    { 
+ 
+    Color Color::GetInstanceOf(int color) {
         float r = Red(color);
         float g = Green(color);
         float b = Blue(color);
         float a = Alpha(color);
         return Color(r, g, b, a, ColorSpaceName::SRGB);
-    }
-
-    Color Color::GetInstanceOf(int64_t color) 
-    { 
-        return GetInstanceOf((int)color);
     }
 
     int Color::PackValue(float r, float g, float b, float a, ColorSpaceName name) 

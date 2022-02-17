@@ -33,19 +33,25 @@ namespace ColorManager {
     */
 class ColorSpaceConvertor {
 public:
-    ColorSpaceConvertor(ColorSpaceName src, ColorSpaceName dst);
+    ColorSpaceConvertor(ColorSpaceName src, ColorSpaceName dst, GamutMappingMode mappingMode);
+
+    // use convert func to transfer a color from one gamut to another.
+    std::vector<float> Convert(float r, float g, float b);
+
+    ColorSpaceName GetSrcColorSpace() const { srcName; }
+
     // OHOS ColorSpace Convertor -> Skis ColorSpace convertor
     SkColorSpaceXformSteps* ToSkiaCnvertor() const;
 
-    const ColorSpace& getSource() const { return srcColorSpace; }
-    const ColorSpace& getDestination() const { return dstColorSpace; }
-    const mat3& getTransform() const { return transferMatrix; }
-
-    std::array<float,3> transform(const std::array<float,3>& v) const;
-
-    std::array<float,3> transformLinear(const std::array<float,3>& v) const;
+    const ColorSpaceName getSource() const { return srcName; }
+    const ColorSpaceName getDestination() const { return dstName; }
+    const Matrix3x3& getTransform() const { return transferMatrix; }
+    std::array<float, 3> Transform(const std::array<float, 3>& v);
+    std::array<float, 3> TransformLinear(const std::array<float, 3>& v);
 
 private:
+    bool AnyGreatThan(std::array<float, 2> vec1, std::array<float, 2> vec2);
+    bool AllLessThan(std::array<float, 2> vec1, std::array<float, 2> vec2);
     ColorSpaceName srcName;
     ColorSpaceName dstName;
     ColorSpace srcColorSpace;
@@ -56,10 +62,9 @@ private:
      * transferMatrix = step1 * step2
      * Namely: 
      * transferMatrix = (source space to XYZ matrix) * (XYZ matrix to destination matrix)
-     */
+     */ 
+    GamutMappingMode mappingMode;
     Matrix3x3 transferMatrix;
-
-    
 };
 }  // namespace ColorManager
 }  // namespace OHOS

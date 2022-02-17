@@ -17,6 +17,7 @@
 #define COLORSPACE
 
 #include "../skia/src/core/SkColorSpaceXformSteps.h"
+#include "include/third_party/skcms/skcms.h"
 
 namespace OHOS {
 namespace ColorManager 
@@ -50,19 +51,17 @@ namespace ColorManager
         GAMUT_MAP_HDR_EXPENSION,
     };
 
-    struct Matrix3x3 {
-        float vals[3][3];
-    };
+    using Matrix3x3 = std::array<std::array<float, 3>, 3>;
 
     struct ColorSpacePrimaries {
-        float fRX;
-        float fRY;
-        float fGX;
-        float fGY;
-        float fBX;
-        float fBY;
-        float fWX;
-        float fWY;
+        float RX;
+        float RY;
+        float GX;
+        float GY;
+        float BX;
+        float BY;
+        float WX;
+        float WY;
     };
 
     struct TransferFunc {
@@ -75,25 +74,51 @@ namespace ColorManager
         float f;
     };
 
-    static constexpr Matrix3x3 OHSRGB = {{{0.436065674f, 0.385147095f, 0.143066406f},
-                                          {0.222488403f, 0.716873169f, 0.060607910f},
-                                          {0.013916016f, 0.097076416f, 0.714096069f}}};
+    std::array<std::array<float, 3>, 3> operator*(const std::array<std::array<float, 3>, 3>& a,
+                                                  const std::array<std::array<float, 3>, 3>& b) {
+        std::array<std::array<float, 3>, 3> c{};
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                for (int k = 0; k < 3; ++k) {
+                    c[i][j] += a[i][k] * b[k][j];
+                }
+            }
+        }
+        return c;
+    }
 
-    static constexpr Matrix3x3 OHAdobeRGB = {{{0.60974, 0.20528, 0.14919,},
-                                              {0.31111, 0.62567, 0.06322,},
-                                              {0.01947, 0.06087, 0.74457,}}};
+    std::array<float, 3> operator*(const std::array<float, 3>& x,
+                                   const std::array<std::array<float, 3>, 3>& a) {
+        std::array<float, 3> b{};
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                b[i] += x[j] * a[j][i];
+            }
+        }
+        return b;
+    }
 
-    static constexpr Matrix3x3 OHP3 = {{{0.515102f, 0.291965f, 0.157153f},
-                                        {0.241182f, 0.692236f, 0.0665819f},
-                                        {-0.00104941f, 0.0418818f, 0.784378f}}};
+    std::array<float, 3> operator*(const std::array<std::array<float, 3>, 3>& a,
+                                   const std::array<float, 3>& x) {
+        std::array<float, 3> b{};
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                b[i] += a[i][j] * x[j];
+            }
+        }
+        return b;
+    }
 
-    static constexpr Matrix3x3 OHRec2020 = {{{0.673459f, 0.165661f, 0.125100f},
-                                             {0.279033f, 0.675338f, 0.0456288f},
-                                             {-0.00193139f, 0.0299794f, 0.797162f}}};
+    
+    std::array<std::array<float, 3>, 3> operator/(const std::array<float, 3>& a,
+                                   const std::array<float, 3>& b) {
+        std::array<std::array<float, 3>, 3> diag{};
+        for (int i = 0; i < 3; ++i) {
+            diag[i][i] += a[i] / b[i];
+        }
+        return diag;
+    }
 
-    static constexpr Matrix3x3 OHXYZ = {{{1.0f, 0.0f, 0.0f}, 
-                                         {0.0f, 1.0f, 0.0f},
-                                         {0.0f, 0.0f, 1.0f}}};
 
 class ColorSpace {
 public:
@@ -104,29 +129,22 @@ public:
                const int64_t nativeHandle, 
                const ColorSpacePrimaries primaries,
                const Matrix3x3 toXYZ,
-               const float gamma,
                const TransferFunc transferFunc);
 
     ColorSpace(const ColorSpaceName name,
                const int64_t nativeHandle,
                const ColorSpacePrimaries primaries,
-               const float gamma,
-               const TransferFunc transferFunc);
+               const Matrix3x3 toXYZ,
+               const float gamma);
 
     ColorSpace(const ColorSpaceName name,
                const int64_t nativeHandle,
-               const ColorSpacePrimaries primaries);
-
-    ColorSpace(const ColorSpaceName name,
                const ColorSpacePrimaries primaries,
                const TransferFunc transferFunc);
 
     ColorSpace(const ColorSpaceName name,
                const ColorSpacePrimaries primaries,
-               const TransferFunc transferFunc,
-               float clampMin,
-               float clampMax);
-
+               const TransferFunc transferFunc);
 
     ColorSpaceName GetColorSpaceName() const { return colorSpaceName;};
 
@@ -138,7 +156,7 @@ public:
     static const ColorSpace LinearSRGB();
     static const ColorSpace ExtendedSRGB();
     static const ColorSpace LinearExtendedSRGB();
-    static const ColorSpace NTSC();  
+    static const ColorSpace NTSC();
     static const ColorSpace BT709();
     static const ColorSpace BT2020();
     static const ColorSpace AdobeRGB();
@@ -148,38 +166,47 @@ public:
     static const ColorSpace ACES();
     static const ColorSpace ACEScg();
 
-    const Matrix3x3 getRGBToXYZ() const {
-        return toXYZ;
+    const Matrix3x3 getRGBToXYZ() { return toXYZ; }
+
+    const Matrix3x3 getXYZToRGB() {
+        Matrix3x3 toRGB = invert(toXYZ);
+        return toRGB;
     }
 
-    const Matrix3x3 getXYZToRGB() const {
-        return inverse(toXYZ);
+    std::array<float, 2> getWhitePoint();  
+
+    float GetGamma() { return transferFunc.g; }
+
+    static std::array<float, 3> XYZ(const std::array<float, 3>& xyY) {
+        return std::array<float, 3>{
+                (xyY[0] * xyY[2]) / xyY[1], xyY[2], ((1 - xyY[0] - xyY[1]) * xyY[2]) / xyY[1]};
     }
 
+    // invert
+    static Matrix3x3 invert(const Matrix3x3& src);
+    std::array<float, 3> toLinear(std::array<float, 3>, float gamma);
+    std::array<float, 3> toLinear(std::array<float, 3>, const TransferFunc& p);
+    std::array<float, 3> toNonLinear(std::array<float, 3>, float gamma);
+    std::array<float, 3> toNonLinear(std::array<float, 3>, const TransferFunc& p);  
 
-    // OHOS ColorSpce -> Skia ColorSpace
-    SkColorSpace* colorSpace() const;
-
+    float clampMin = 0.0f;
+    float clampMax = 1.0f;
 
 private:
     friend class SkColorSpaceXformSteps;
     // SkColorSpace* skColorSpace = SkColorSpace::MakeSRGB().get();
-
+    // OHOS ColorSpce -> Skia ColorSpace
+    SkColorSpace* colorSpace() const;
+    SkAlphaType alphaType() const { return SkAlphaType::kUnpremul_SkAlphaType; };
+    skcms_Matrix3x3 ToSkiaXYZ() const; 
     // Compute a toXYZD50 matrics from a given rgb and white point; D50??
-    Matrix3x3 ComputeXYZD50(const ColorSpacePrimaries primaries); 
-    std::array<float, 3> toLinear(std::array<float, 3>, float gamma);
-    std::array<float, 3> toLinear(std::array<float, 3>, ColorSpacePrimaries primaries);
-    std::array<float, 3> toNonLinear(std::array<float, 3>, float gamma);
-    std::array<float, 3> toNonLinear(std::array<float, 3>, ColorSpacePrimaries primaries);
-    
+    Matrix3x3 ComputeXYZ(const ColorSpacePrimaries& primaries); 
+
     ColorSpaceName       colorSpaceName;  
     ColorSpacePrimaries  primaries;
     TransferFunc         transferFunc;
-    
+    int64_t              nativeHandle;  // ??
     Matrix3x3            toXYZ;
-    int64_t              nativeHandle = 0;  // ??
-    float                clampMin = 0.0f;
-    float                clampMax = 1.0f;
 };
 
 } // namespace ColorSpace

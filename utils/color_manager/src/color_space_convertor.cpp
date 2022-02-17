@@ -43,5 +43,18 @@ std::vector<float> ColorSpaceConvertor::Convert(float r, float g, float b)
 	return dstColor;
 };
 
+// GreatThan
+bool ColorSpaceConvertor::AnyGreatThan(std::array<float, 2> vec1,
+                                                  std::array<float, 2> vec2) 
+{
+    std::array<bool, 2> result;
+    for (int i = 0; i < vec1.size(); i++) {
+        if (vec1[i] > vec2[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
 }
 }

@@ -18,36 +18,46 @@
 
 #include "src/core/SkVM.h"
 #include "color_space_convertor.h"
+#include <vector>
 
 namespace OHOS {
 namespace ColorManager {
+    /**
+    * @brief use this convertor to transfer a color from one color space to another
+    *
+    * @param src source color space of the input color
+    * @param dst the destination color space
+    * The underlying color space converting strategy is based on skia SkColorSpaceXformSteps,
+    * while we omite the alpha argument. Alpha should not involved in color management.
+    * always unpremultiply -> unpremultiply.
+    */
+class ColorSpaceConvertor {
+public:
+    ColorSpaceConvertor(ColorSpaceName src, ColorSpaceName dst, GamutMappingMode mappingMode);
 
-ColorSpaceConvertor::ColorSpaceConvertor(ColorSpaceName src, ColorSpaceName dst, GamutMappingMode mapingMode)
-	: srcColorSpace(src), dstColorSpace(dst), mappingMode(mapingMode)
-{
+    // use convert func to transfer a color from one gamut to another.
+    std::vector<float> Convert(float r, float g, float b);
+
+    ColorSpaceName GetSrcColorSpace() const { return srcColorSpace; }
+
+    // OHOS ColorSpace Convertor -> Skis ColorSpace convertor
+    SkColorSpaceXformSteps* ToSkiaCnvertor() const;
+
+private:
+    bool AnyGreatThan(std::array<float, 2> vec1, std::array<float, 2> vec2);
+    ColorSpaceName srcColorSpace;
+    ColorSpaceName dstColorSpace;
+    /*
+     * 1. convert those unpremultiplied, linear source colors to XYZ D50 gamut by multiplying by a 3x3 matrix
+     * 2. convert those XYZ D50 colors to the destination gamut by multiplying by a 3x3 matrix
+     * transferMatrix = step1 * step2
+     * Namely: 
+     * transferMatrix = (source space to XYZ matrix) * (XYZ matrix to destination matrix)
+     */
+    Matrix3x3 transferMatrix;
+    GamutMappingMode mappingMode;
 };
+}  // namespace ColorManager
+}  // namespace OHOS
 
-SkColorSpaceXformSteps* ColorSpaceConvertor::ToSkiaCnvertor() const
-{
-    ColorSpace srcCS = ColorSpace(srcColorSpace, 3);
-    ColorSpace dstCS = ColorSpace(dstColorSpace, 3);
-    return &SkColorSpaceXformSteps(srcCS, dstCS);
-}
-
-std::vector<float> ColorSpaceConvertor::Convert(float r, float g, float b)
-{
-    float rgba[4] = {r, g, b, 0.0f}; 
-	// SkConvertor.apply(rgba);
-	std::vector<float> dstColor(3);
-	
-	dstColor[0] = rgba[0];
-	dstColor[1] = rgba[1];
-	dstColor[2] = rgba[2];
-
-	return dstColor;
-};
-
-}
-}
-
-#endif // COLORSPACECONVERTOR
+#endif

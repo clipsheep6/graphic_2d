@@ -16,10 +16,11 @@
 #ifndef COLORSPACE
 #define COLORSPACE
 
-#include "../skia/src/core/SkColorSpaceXformSteps.h"
-#include "include/third_party/skcms/skcms.h"
+#include "src/core/SkColorSpaceXformSteps.h"
+#include "third_party/skcms/skcms.h"
 
-namespace OHOS {
+namespace OHOS 
+{
 namespace ColorManager 
 {
     enum ColorSpaceName
@@ -74,50 +75,18 @@ namespace ColorManager
         float f;
     };
 
-    std::array<std::array<float, 3>, 3> operator*(const std::array<std::array<float, 3>, 3>& a,
-                                                  const std::array<std::array<float, 3>, 3>& b) {
-        std::array<std::array<float, 3>, 3> c{};
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                for (int k = 0; k < 3; ++k) {
-                    c[i][j] += a[i][k] * b[k][j];
-                }
-            }
-        }
-        return c;
-    }
+std::array<std::array<float, 3>, 3> operator*(const std::array<std::array<float, 3>, 3>& a,
+                                                const std::array<std::array<float, 3>, 3>& b);
 
-    std::array<float, 3> operator*(const std::array<float, 3>& x,
-                                   const std::array<std::array<float, 3>, 3>& a) {
-        std::array<float, 3> b{};
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                b[i] += x[j] * a[j][i];
-            }
-        }
-        return b;
-    }
+std::array<float, 3> operator*(const std::array<float, 3>& x,
+                                const std::array<std::array<float, 3>, 3>& a);
 
-    std::array<float, 3> operator*(const std::array<std::array<float, 3>, 3>& a,
-                                   const std::array<float, 3>& x) {
-        std::array<float, 3> b{};
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                b[i] += a[i][j] * x[j];
-            }
-        }
-        return b;
-    }
+std::array<float, 3> operator*(const std::array<std::array<float, 3>, 3>& a,
+                                const std::array<float, 3>& x);
 
-    
-    std::array<std::array<float, 3>, 3> operator/(const std::array<float, 3>& a,
-                                   const std::array<float, 3>& b) {
-        std::array<std::array<float, 3>, 3> diag{};
-        for (int i = 0; i < 3; ++i) {
-            diag[i][i] += a[i] / b[i];
-        }
-        return diag;
-    }
+
+std::array<std::array<float, 3>, 3> operator/(const std::array<float, 3>& a,
+                                const std::array<float, 3>& b);
 
 
 class ColorSpace {
@@ -173,6 +142,8 @@ public:
         return toRGB;
     }
 
+    
+
     std::array<float, 2> getWhitePoint();  
 
     float GetGamma() { return transferFunc.g; }
@@ -196,7 +167,7 @@ private:
     friend class SkColorSpaceXformSteps;
     // SkColorSpace* skColorSpace = SkColorSpace::MakeSRGB().get();
     // OHOS ColorSpce -> Skia ColorSpace
-    SkColorSpace* colorSpace() const;
+    SkColorSpace* ToSkColorSpace() const;
     SkAlphaType alphaType() const { return SkAlphaType::kUnpremul_SkAlphaType; };
     skcms_Matrix3x3 ToSkiaXYZ() const; 
     // Compute a toXYZD50 matrics from a given rgb and white point; D50??

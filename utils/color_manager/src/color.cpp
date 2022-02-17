@@ -75,7 +75,7 @@ namespace ColorManager
     // alpha value not involved in convert
     int Color::Convert(float r, float g, float b, float a, ColorSpaceConvertor convertor)
     {
-        std::vector<float> dstColor = convertor.Convert(r, g, b);
+        std::array<float, 3>  dstColor = convertor.Convert(r, g, b);
 
         return PackValue(dstColor[0], dstColor[1], dstColor[2], a);
     };

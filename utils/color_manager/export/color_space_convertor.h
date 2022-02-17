@@ -36,15 +36,12 @@ public:
     ColorSpaceConvertor(ColorSpaceName src, ColorSpaceName dst, GamutMappingMode mappingMode);
 
     // use convert func to transfer a color from one gamut to another.
-    std::vector<float> Convert(float r, float g, float b);
+    std::array<float, 3> Convert(float r, float g, float b);
 
-    ColorSpaceName GetSrcColorSpace() const { srcName; }
+    ColorSpaceName GetSrcColorSpace() { return srcName; }
 
-    // OHOS ColorSpace Convertor -> Skis ColorSpace convertor
-    SkColorSpaceXformSteps* ToSkiaCnvertor() const;
-
-    const ColorSpaceName getSource() const { return srcName; }
-    const ColorSpaceName getDestination() const { return dstName; }
+    ColorSpaceName getSource() { return srcName; }
+    ColorSpaceName getDestination() { return dstName; }
     const Matrix3x3& getTransform() const { return transferMatrix; }
     std::array<float, 3> Transform(const std::array<float, 3>& v);
     std::array<float, 3> TransformLinear(const std::array<float, 3>& v);

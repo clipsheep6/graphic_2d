@@ -129,6 +129,51 @@ const ColorSpace ColorSpace::DCIP3() {
             {2.6f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
 }
 
+std::array<std::array<float, 3>, 3> operator*(const std::array<std::array<float, 3>, 3>& a,
+                                                const std::array<std::array<float, 3>, 3>& b) {
+    std::array<std::array<float, 3>, 3> c{};
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            for (int k = 0; k < 3; ++k) {
+                c[i][j] += a[i][k] * b[k][j];
+            }
+        }
+    }
+    return c;
+}
+
+std::array<float, 3> operator*(const std::array<float, 3>& x,
+                                const std::array<std::array<float, 3>, 3>& a) {
+    std::array<float, 3> b{};
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            b[i] += x[j] * a[j][i];
+        }
+    }
+    return b;
+}
+
+std::array<float, 3> operator*(const std::array<std::array<float, 3>, 3>& a,
+                                const std::array<float, 3>& x) {
+    std::array<float, 3> b{};
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            b[i] += a[i][j] * x[j];
+        }
+    }
+    return b;
+}
+
+
+std::array<std::array<float, 3>, 3> operator/(const std::array<float, 3>& a,
+                                const std::array<float, 3>& b) {
+    std::array<std::array<float, 3>, 3> diag{};
+    for (int i = 0; i < 3; ++i) {
+        diag[i][i] += a[i] / b[i];
+    }
+    return diag;
+}
+
 
 Matrix3x3 ColorSpace::ComputeXYZ(const ColorSpacePrimaries& primaries) {
     float oneRxRy = (1 - primaries.RX) / primaries.RY;
@@ -205,7 +250,7 @@ Matrix3x3 ColorSpace::invert(const Matrix3x3& src) {
     return dst;
 }
 
-SkColorSpace* ColorSpace::colorSpace() const {
+SkColorSpace* ColorSpace::ToSkColorSpace() const {
     skcms_Matrix3x3 toXYZ = ToSkiaXYZ();
 
     return SkColorSpace::MakeRGB(

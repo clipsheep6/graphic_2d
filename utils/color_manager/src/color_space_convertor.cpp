@@ -94,27 +94,20 @@ std::array<float, 3> ColorSpaceConvertor::TransformLinear(const std::array<float
     return dstLinear;
 }
 
-SkColorSpaceXformSteps* ColorSpaceConvertor::ToSkiaCnvertor() const {
-    ColorSpace srcCS = ColorSpace(srcName, 3);
-    ColorSpace dstCS = ColorSpace(dstName, 3);
-    return &SkColorSpaceXformSteps(srcCS, dstCS);
-}
 
-std::vector<float> ColorSpaceConvertor::Convert(float r, float g, float b) {
-    float rgba[4] = {r, g, b, 0.0f};
-    // SkConvertor.apply(rgba);
-    std::vector<float> dstColor(3);
+std::array<float, 3> ColorSpaceConvertor::Convert(float r, float g, float b) {
+    std::array<float, 3> tempRes{};
+    std::array<float, 3> dst = Transform(std::array<float, 3> {r, g, b});
+    tempRes[0] = dst[0];
+    tempRes[1] = dst[1];
+    tempRes[2] = dst[2];
 
-    dstColor[0] = rgba[0];
-    dstColor[1] = rgba[1];
-    dstColor[2] = rgba[2];
-
-    return dstColor;
+    return tempRes;
 };
 
 // AnyGreatThan
 bool ColorSpaceConvertor::AnyGreatThan(std::array<float, 2> vecA, std::array<float, 2> vecB) {
-    for (int i = 0; i < vecA.size(); i++) {
+    for (unsigned int i = 0; i < vecA.size(); i++) {
         if (std::abs(vecA[i]) - std::abs(vecB[i]) > 1e-3f) {
             return true;
         }
@@ -124,7 +117,7 @@ bool ColorSpaceConvertor::AnyGreatThan(std::array<float, 2> vecA, std::array<flo
 
 // AllLessThan
 bool ColorSpaceConvertor::AllLessThan(std::array<float, 2> vecA, std::array<float, 2> vecB) {
-    for (int i = 0; i < vecA.size(); i++) {
+    for (unsigned i = 0; i < vecA.size(); i++) {
         if (std::abs(vecA[i]) - std::abs(vecB[i]) > 1e-3f) {
             return false;
         }

@@ -40,16 +40,10 @@ public:
     const ColorSpace& getSource() const { return srcColorSpace; }
     const ColorSpace& getDestination() const { return dstColorSpace; }
     const mat3& getTransform() const { return transferMatrix; }
-    std::array<float,3> transform(const std::array<float,3>& v) const {
-        std::array<float,3> linear = srcColorSpace.toLinear(std::for_each(v.begin(), v.end(), [](int &n){n = std::clamp(n, 0, 1)}));
-        std::array<float,3> dstLinear = dstColorSpace.toNoneLinear(transferMatrix * linear);
-        return std::for_each(dstLinear.begin(), dstLinear.end(), [](int &n){n = std::clamp(n, 0, 1)});
-    }
-    std::array<float,3> transformLinear(const std::array<float,3>& v) const {
-        std::array<float,3> linear = std::for_each(v.begin(), v.end(), [](int &n){n = std::clamp(n, 0, 1)});
-        std::array<float, 3>dstLinear = transferMatrix * linear;
-        return std::for_each(dstLinear.begin(), dstLinear.end(), [](int &n){n = std::clamp(n, 0, 1)});
-    }
+
+    std::array<float,3> transform(const std::array<float,3>& v) const;
+
+    std::array<float,3> transformLinear(const std::array<float,3>& v) const;
 
 private:
     ColorSpaceName srcName;
@@ -64,6 +58,8 @@ private:
      * transferMatrix = (source space to XYZ matrix) * (XYZ matrix to destination matrix)
      */
     Matrix3x3 transferMatrix;
+
+    
 };
 }  // namespace ColorManager
 }  // namespace OHOS

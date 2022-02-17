@@ -121,6 +121,12 @@ public:
                const ColorSpacePrimaries primaries,
                const TransferFunc transferFunc);
 
+    ColorSpace(const ColorSpaceName name,
+               const ColorSpacePrimaries primaries,
+               const TransferFunc transferFunc,
+               float clampMin,
+               float clampMax);
+
 
     ColorSpaceName GetColorSpaceName() const { return colorSpaceName;};
 
@@ -169,8 +175,11 @@ private:
     ColorSpaceName       colorSpaceName;  
     ColorSpacePrimaries  primaries;
     TransferFunc         transferFunc;
-    int64_t              nativeHandle;  // ??
+    
     Matrix3x3            toXYZ;
+    int64_t              nativeHandle = 0;  // ??
+    float                clampMin = 0.0f;
+    float                clampMax = 1.0f;
 };
 
 } // namespace ColorSpace

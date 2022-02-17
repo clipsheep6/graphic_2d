@@ -19,69 +19,82 @@ namespace OHOS
 {
 namespace ColorManager 
 {
-    ColorSpace::ColorSpace(ColorSpaceName name, int64_t nativeHandle) 
-    { 
+ColorSpace::ColorSpace(ColorSpaceName name, int64_t nativeHandle) 
+{ 
         switch (name) { 
-        case ColorSpaceName::SRGB:
-            SRGB();
-            break;
-        case ColorSpaceName::DISPLAY_P3:
-            DisplayP3();
-            break;
-        case ColorSpaceName::ADOBE_RGB:
-            AdobeRGB();
-            break;
-        default:
-            SRGB();
-            break;
-        }
-    }
+                case ColorSpaceName::SRGB:
+                        SRGB();
+                        break;
+                case ColorSpaceName::DISPLAY_P3:
+                        DisplayP3();
+                        break;
+                case ColorSpaceName::ADOBE_RGB:
+                        AdobeRGB();
+                        break;
+                default:
+                        SRGB();
+                        break;
+}
+}
 
-    ColorSpace::ColorSpace(ColorSpaceName name,
-                           int64_t nativeHandle, 
-                           ColorSpacePrimaries primaries,
-                           Matrix3x3 toXYZ,
-                           TransferFunc transferFunc)
+ColorSpace::ColorSpace(ColorSpaceName name,
+                        int64_t nativeHandle, 
+                        ColorSpacePrimaries primaries,
+                        Matrix3x3 toXYZ,
+                        TransferFunc transferFunc)
         : colorSpaceName(name)
         , nativeHandle(nativeHandle)
         , primaries(primaries)
         , toXYZ(toXYZ)
         , transferFunc(transferFunc)
-    {}
+        {}
 
-    ColorSpace::ColorSpace(ColorSpaceName name,
-                           int64_t nativeHandle,
-                           ColorSpacePrimaries primaries,
-                           Matrix3x3 toXYZ,
-                           float gamma)
-            : colorSpaceName(name)
-            , nativeHandle(nativeHandle)
-            , primaries(primaries)
-            , toXYZ(toXYZ)
-            , transferFunc({gamma, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0})
-    {}
+ColorSpace::ColorSpace(ColorSpaceName name,
+                        int64_t nativeHandle,
+                        ColorSpacePrimaries primaries,
+                        Matrix3x3 toXYZ,
+                        float gamma)
+        : colorSpaceName(name)
+        , nativeHandle(nativeHandle)
+        , primaries(primaries)
+        , toXYZ(toXYZ)
+        , transferFunc({gamma, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0})
+        {}
 
-    ColorSpace::ColorSpace(ColorSpaceName name,
-                           int64_t nativeHandle,
-                           ColorSpacePrimaries primaries,
-                           TransferFunc transferFunc)
-            : colorSpaceName(name)
-            , nativeHandle(nativeHandle)
-            , primaries(primaries)
-            , toXYZ(ComputeXYZ(primaries))
-            , transferFunc(transferFunc)
-    {}
+ColorSpace::ColorSpace(ColorSpaceName name,
+                        int64_t nativeHandle,
+                        ColorSpacePrimaries primaries,
+                        TransferFunc transferFunc)
+        : colorSpaceName(name)
+        , nativeHandle(nativeHandle)
+        , primaries(primaries)
+        , toXYZ(ComputeXYZ(primaries))
+        , transferFunc(transferFunc)
+        {}
 
-    ColorSpace::ColorSpace(ColorSpaceName name,
-                           ColorSpacePrimaries primaries,
-                           TransferFunc transferFunc)
-            : colorSpaceName(name)
-            , nativeHandle(0)
-            , primaries(primaries)
-            , toXYZ(ComputeXYZ(primaries))
-            , transferFunc(transferFunc)
-    {}
+ColorSpace::ColorSpace(ColorSpaceName name,
+                        ColorSpacePrimaries primaries,
+                        TransferFunc transferFunc)
+        : colorSpaceName(name)
+        , nativeHandle(0)
+        , primaries(primaries)
+        , toXYZ(ComputeXYZ(primaries))
+        , transferFunc(transferFunc)
+{}
 
+
+ColorSpace::ColorSpace(ColorSpaceName name,
+                        ColorSpacePrimaries primaries,
+                        TransferFunc transferFunc,
+                        float clampMin,
+                        float clampMax)
+        : colorSpaceName(name)
+        , primaries(primaries)
+        , toXYZ(ComputeXYZ(primaries))
+        , transferFunc(transferFunc)
+        , clampMin(clampMin)
+        , clampMax(clampMax)
+{}
 
 
 const ColorSpace ColorSpace::SRGB()
@@ -97,25 +110,21 @@ const ColorSpace ColorSpace::LinearSRGB() {
                 {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
 }
 
-const ColorSpace ColorSpace::LinearSRGB() {
-        return {ColorSpaceName::LINEAR_SRGB,
-                {0.640f, 0.330f, 0.300f, 0.600f, 0.150f, 0.060f, 0.3127f, 0.3290f},
-                {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
-}
 
 // const ColorSpace ColorSpace::extendedSRGB() {
-// return {ColorSpaceName::EXTENDED_SRGB,
-//         {0.640f, 0.330f, 0.300f, 0.600f, 0.150f, 0.060f, 0.3127f, 0.3290f},
-//         std::bind(absRcpResponse, _1, 2.4f, 1 / 1.055f, 0.055f / 1.055f, 1 / 12.92f, 0.04045f),
-//         std::bind(absResponse,    _1, 2.4f, 1 / 1.055f, 0.055f / 1.055f, 1 / 12.92f, 0.04045f),
-//         std::bind(clamp<float>, _1, -0.799f, 2.399f)
-// };
+//         return {ColorSpaceName::EXTENDED_SRGB,
+//                 {0.640f, 0.330f, 0.300f, 0.600f, 0.150f, 0.060f, 0.3127f, 0.3290f},
+//                 std::bind(absRcpResponse, _1, 2.4f, 1 / 1.055f, 0.055f / 1.055f, 1 / 12.92f, 0.04045f),
+//                 std::bind(absResponse,    _1, 2.4f, 1 / 1.055f, 0.055f / 1.055f, 1 / 12.92f, 0.04045f),
+//                 -0.799f,
+//                 2.399f)};
 // }
-const ColorSpace ColorSpace::linearExtendedSRGB() {
-        return {ColorSpaceName::LINEAR_EXTENDED_SRGB
-                {0.640f, 0.330f, 0.300f, 0.600f, 0.150f, 0.060f, 0.3127f, 0.3290f},
-                {1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
-}
+
+// const ColorSpace ColorSpace::linearExtendedSRGB() {
+//         return {ColorSpaceName::LINEAR_EXTENDED_SRGB
+//                 {0.640f, 0.330f, 0.300f, 0.600f, 0.150f, 0.060f, 0.3127f, 0.3290f},
+//                 {1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
+// }
 
 const ColorSpace ColorSpace::NTSC() {
         return {ColorSpaceName::NTSC_1953
@@ -141,14 +150,11 @@ const ColorSpace ColorSpace::AdobeRGB() {
                 {2.2f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
 }
 
-// const ColorSpace ColorSpace::ProPhotoRGB() {
-// return {ColorSpaceName::
-//         "ROMM RGB ISO 22028-2:2013",
-//         {{float2{0.7347f, 0.2653f}, {0.1596f, 0.8404f}, {0.0366f, 0.0001f}}},
-//         {0.34567f, 0.35850f},
-//         {1.8f, 1.0f, 0.0f, 1 / 16.0f, 0.031248f, 0.0f, 0.0f}
-// };
-// }
+const ColorSpace ColorSpace::ProPhotoRGB() {
+        return {ColorSpaceName::PRO_PHOTO_RGB,
+                {0.7347f, 0.2653f, 0.1596f, 0.8404f, 0.0366f, 0.0001f, 0.34567f, 0.35850f},
+                {1.8f, 1.0f, 0.0f, 1 / 16.0f, 0.031248f, 0.0f, 0.0f}};
+}
 
 const ColorSpace ColorSpace::DisplayP3() {
         return {ColorSpaceName::DISPLAY_P3,
@@ -162,18 +168,18 @@ const ColorSpace ColorSpace::DCIP3() {
                 {2.6f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
 }
 
-const ColorSpace ColorSpace::ACES() {
-        return {ColorSpaceName::ACES,
-                {0.73470f, 0.26530f, 0.0f, 1.0f, 0.00010f, -0.0770f, 0.32168f, 0.33767f},
-                {1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
+// const ColorSpace ColorSpace::ACES() {
+//         return {ColorSpaceName::ACES,
+//                 {0.73470f, 0.26530f, 0.0f, 1.0f, 0.00010f, -0.0770f, 0.32168f, 0.33767f},
+//                 {1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
 
-}
+// }
 
-const ColorSpace ColorSpace::ACEScg() {
-        return {ColorSpaceName::ACESCG,
-                {0.713f, 0.293f, 0.165f, 0.830f, 0.128f, 0.044f, 0.32168f, 0.33767f},
-                {1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
-}
+// const ColorSpace ColorSpace::ACEScg() {
+//         return {ColorSpaceName::ACESCG,
+//                 {0.713f, 0.293f, 0.165f, 0.830f, 0.128f, 0.044f, 0.32168f, 0.33767f},
+//                 {1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
+// }
 
 Matrix3x3 ColorSpace::ComputeXYZ(const ColorSpacePrimaries& primaries) 
 { 
@@ -284,34 +290,45 @@ skcms_Matrix3x3 ColorSpace::ToSkiaXYZ() const
         return skToXYZMatrix;
 }
 
-static std::array<float, 3> ColorSpace::toLinear(std array<float, 3> rgb, float gamma)
+static std::array<float, 3> ColorSpace::toLinear(std::array<float, 3> v, float g)
 {
-    if (gamma == 1.0f) {
+    if (g == 1.0f) {
         return v;
     }
-    return std::pow(v, gamma);
+    std::array<float, 3> res = v;
+    for(auto &n:res) {
+        n = std::pow(n, g);
+    }
+    return res;
 }
 
-static std::array<float, 3> ColorSpace::toNonLinear(float v,float gamma)
+static std::array<float, 3> ColorSpace::toNonLinear(std::array<float, 3> v,float g)
 {
-    if (gamma == 1.0f) {
+    if (g == 1.0f) {
         return v;
     }
-    return std::pow(v, 1.0f/gamma);
+    std::array<float, 3> res = v;
+    for(auto &n:res) {
+        n = std::pow(n, 1.0f/g);
+    }
+
+    return res;
 }
 
-static std::array<float, 3> ColorSpace::toLinear(float x, const ColorSpace::TransferFunc& transferFunc) {
-    if (transferFunc.e == 0.0f && transferFunc.f == 0.0f) {
-        return x >= p.d ? std::pow(p.a * x + p.b, p.g) : p.c * x;;
+static std::array<float, 3> ColorSpace::toLinear(std::array<float, 3> v, const ColorSpace::TransferFunc& p) {
+    std::array<float, 3> res = v;
+    for(auto &n:res) {
+        n = n >= p.d ? std::pow(p.a * n + p.b, p.g) + p.e : p.c * n + p.f;
     }
-    return x >= p.d ? std::pow(p.a * x + p.b, p.g) + p.e : p.c * x + p.f;
+    return res;
 }
 
-static std::array<float, 3> ColorSpace::toNonLinear(float x, const ColorSpace::TransferFunc& transferFunc) {
-    if (transferFunc.e == 0.0f && transferFunc.f == 0.0f) {
-        return x >= p.d * p.c ? (std::pow(x, 1.0f / p.g) - p.b) / p.a : x / p.c;
+static std::array<float, 3> ColorSpace::toNonLinear(std::array<float, 3> v, const ColorSpace::TransferFunc& p) {
+    std::array<float, 3> res = v;
+    for(auto &n:res) {
+        n = n >= p.d * p.c ? (std::pow(n - p.e, 1.0f / p.g) - p.b) / p.a : (n - p.f) / p.c;
     }
-    return x >= p.d * p.c ? (std::pow(x - p.e, 1.0f / p.g) - p.b) / p.a : (x - p.f) / p.c;
+    return res;
 }
 
 }

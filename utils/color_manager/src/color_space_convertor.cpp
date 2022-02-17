@@ -66,9 +66,41 @@ bool ColorSpaceConvertor::AnyGreatThan(std::array<float, 2> vec1, std::array<flo
         if (vec1[i] > vec2[i]) {
             return true;
         }
-    }
+    }  
+    
     return false;
 }
+
+std::array<float,3> transform(const std::array<float,3>& v) const {
+    std::array<float,3> srcLinear = v;
+    for(auto &n : srcLinear) {
+        n = std::clamp(n, srcColorSpace.clampMin, srcColorSpace.clampMax);   
+    }
+    srcLinear = srcColorSpace.toLinear(srcLinear);
+
+    std::array<float,3> dstNonLinear = dstColorSpace.toNoneLinear(transferMatrix * srcLinear);
+    for(auto &n : dstNonLinear) {
+        n = std::clamp(n, dstColorSpace.clampMin, dstColorSpace.clampMax);   
+    }
+    return dstNonLinear;
+}
+
+std::array<float,3> transformLinear(const std::array<float,3>& v) const {
+
+    std::array<float,3> srcLinear = v;
+    for(auto &n : srcLinear) {
+        n = std::clamp(n, srcColorSpace.clampMin, srcColorSpace.clampMax);   
+    }
+
+    std::array<float,3> dstLinear = transferMatrix * srcLinear;
+    for(auto &n : dstLinear) {
+        n = std::clamp(n, dstColorSpace.clampMin, dstColorSpace.clampMax);   
+    }
+    return dstLinear;
+
+}
+
+
 
 ColorSpaceConvertor::ColorSpaceConvertor(ColorSpace& src, ColorSpace& dst): src(src), dst(dst) 
 {

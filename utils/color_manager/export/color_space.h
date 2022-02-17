@@ -17,7 +17,6 @@
 #define COLORSPACE
 
 #include "../skia/src/core/SkColorSpaceXformSteps.h"
-#include "include/third_party/skcms/skcms.h"
 
 namespace OHOS {
 namespace ColorManager 
@@ -56,14 +55,14 @@ namespace ColorManager
     };
 
     struct ColorSpacePrimaries {
-        float RX;
-        float RY;
-        float GX;
-        float GY;
-        float BX;
-        float BY;
-        float WX;
-        float WY;
+        float fRX;
+        float fRY;
+        float fGX;
+        float fGY;
+        float fBX;
+        float fBY;
+        float fWX;
+        float fWY;
     };
 
     struct TransferFunc {
@@ -105,22 +104,23 @@ public:
                const int64_t nativeHandle, 
                const ColorSpacePrimaries primaries,
                const Matrix3x3 toXYZ,
+               const float gamma,
                const TransferFunc transferFunc);
 
     ColorSpace(const ColorSpaceName name,
                const int64_t nativeHandle,
                const ColorSpacePrimaries primaries,
-               const Matrix3x3 toXYZ,
-               const float gamma);
+               const float gamma,
+               const TransferFunc transferFunc);
 
     ColorSpace(const ColorSpaceName name,
                const int64_t nativeHandle,
-               const ColorSpacePrimaries primaries,
-               const TransferFunc transferFunc);
+               const ColorSpacePrimaries primaries);
 
     ColorSpace(const ColorSpaceName name,
                const ColorSpacePrimaries primaries,
                const TransferFunc transferFunc);
+
 
     ColorSpaceName GetColorSpaceName() const { return colorSpaceName;};
 
@@ -130,28 +130,46 @@ public:
     // some common color gamut constructor
     static const ColorSpace SRGB();
     static const ColorSpace LinearSRGB();
-    static const ColorSpace ExtendedSRGB(){};
-    static const ColorSpace LinearExtendedSRGB(){};
-    static const ColorSpace NTSC() {};
-    static const ColorSpace BT709(){};
-    static const ColorSpace BT2020(){};
-    static const ColorSpace AdobeRGB(){};
-    static const ColorSpace ProPhotoRGB(){};
-    static const ColorSpace DCIP3(){};
-    static const ColorSpace DisplayP3(){};
-    static const ColorSpace ACES(){};
-    static const ColorSpace ACEScg(){};
+    static const ColorSpace ExtendedSRGB();
+    static const ColorSpace LinearExtendedSRGB();
+    static const ColorSpace NTSC();
+    static const ColorSpace BT709();
+    static const ColorSpace BT2020();
+    static const ColorSpace AdobeRGB();
+    static const ColorSpace ProPhotoRGB();
+    static const ColorSpace DCIP3();
+    static const ColorSpace DisplayP3();
+    static const ColorSpace ACES();
+    static const ColorSpace ACEScg();
+
+    const Matrix3x3 getRGBToXYZ() const {
+        return toXYZ;
+    }
+
+    const Matrix3x3 getXYZToRGB() const {
+        return inverse(toXYZ);
+    }
+
+    static constexpr float2 xyY(const float3& XYZ) {
+        return XYZ.xy / dot(XYZ, float3{1});
+    }
+
+    
+
+    // OHOS ColorSpce -> Skia ColorSpace
+    SkColorSpace* colorSpace() const;
+
 
 private:
     friend class SkColorSpaceXformSteps;
     // SkColorSpace* skColorSpace = SkColorSpace::MakeSRGB().get();
-    // OHOS ColorSpce -> Skia ColorSpace
-    SkColorSpace* colorSpace() const;
-    SkAlphaType alphaType() const { return SkAlphaType::kUnpremul_SkAlphaType; };
-    skcms_Matrix3x3 ToSkiaXYZ() const; 
 
     // Compute a toXYZD50 matrics from a given rgb and white point; D50??
-    Matrix3x3 ComputeXYZ(const ColorSpacePrimaries& primaries); 
+    Matrix3x3 ComputeXYZD50(const ColorSpacePrimaries primaries); \
+    auto toLinear(float gamma);
+    auto toLinear(ColorSpacePrimaries primaries);
+    auto toNonLinear(float gamma);
+    auto toNonLinear(ColorSpacePrimaries primaries);
     
     ColorSpaceName       colorSpaceName;  
     ColorSpacePrimaries  primaries;

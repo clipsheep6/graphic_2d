@@ -284,20 +284,7 @@ skcms_Matrix3x3 ColorSpace::ToSkiaXYZ() const
         return skToXYZMatrix;
 }
 
-static float rcpResponse(float x, const ColorSpace::TransferFunc& p) {
-    return x >= p.d * p.c ? (std::pow(x, 1.0f / p.g) - p.b) / p.a : x / p.c;
-}
-static float response(float x, const ColorSpace::TransferFunc& p) {
-    return x >= p.d ? std::pow(p.a * x + p.b, p.g) : p.c * x;
-}
-static float rcpFullResponse(float x, const ColorSpace::TransferFunc& p) {
-    return x >= p.d * p.c ? (std::pow(x - p.e, 1.0f / p.g) - p.b) / p.a : (x - p.f) / p.c;
-}
-static float fullResponse(float x, const ColorSpace::TransferFunc& p) {
-    return x >= p.d ? std::pow(p.a * x + p.b, p.g) + p.e : p.c * x + p.f;
-}
-
-auto ColorSpace::toLinear(float v, float gamma)
+static std::array<float, 3> ColorSpace::toLinear(std array<float, 3> rgb, float gamma)
 {
     if (gamma == 1.0f) {
         return v;
@@ -305,14 +292,7 @@ auto ColorSpace::toLinear(float v, float gamma)
     return std::pow(v, gamma);
 }
 
-static ColorSpace::toNonLinear(float x, const ColorSpace::TransferFunc& transferFunc) {
-    if (transferFunc.e == 0.0f && transferFunc.f == 0.0f) {
-        return x >= p.d * p.c ? (std::pow(x, 1.0f / p.g) - p.b) / p.a : x / p.c;
-    }
-    return x >= p.d * p.c ? (std::pow(x - p.e, 1.0f / p.g) - p.b) / p.a : (x - p.f) / p.c;
-}
-
-float ColorSpace::toNonLinear(float v,float gamma)
+static std::array<float, 3> ColorSpace::toNonLinear(float v,float gamma)
 {
     if (gamma == 1.0f) {
         return v;
@@ -320,12 +300,20 @@ float ColorSpace::toNonLinear(float v,float gamma)
     return std::pow(v, 1.0f/gamma);
 }
 
-static ColorSpace::toLinear(float x, const ColorSpace::TransferFunc& transferFunc) {
+static std::array<float, 3> ColorSpace::toLinear(float x, const ColorSpace::TransferFunc& transferFunc) {
     if (transferFunc.e == 0.0f && transferFunc.f == 0.0f) {
         return x >= p.d ? std::pow(p.a * x + p.b, p.g) : p.c * x;;
     }
     return x >= p.d ? std::pow(p.a * x + p.b, p.g) + p.e : p.c * x + p.f;
 }
+
+static std::array<float, 3> ColorSpace::toNonLinear(float x, const ColorSpace::TransferFunc& transferFunc) {
+    if (transferFunc.e == 0.0f && transferFunc.f == 0.0f) {
+        return x >= p.d * p.c ? (std::pow(x, 1.0f / p.g) - p.b) / p.a : x / p.c;
+    }
+    return x >= p.d * p.c ? (std::pow(x - p.e, 1.0f / p.g) - p.b) / p.a : (x - p.f) / p.c;
+}
+
 }
 
 }

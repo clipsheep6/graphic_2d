@@ -132,7 +132,7 @@ public:
     static const ColorSpace LinearSRGB();
     static const ColorSpace ExtendedSRGB();
     static const ColorSpace LinearExtendedSRGB();
-    static const ColorSpace NTSC();
+    static const ColorSpace NTSC();  
     static const ColorSpace BT709();
     static const ColorSpace BT2020();
     static const ColorSpace AdobeRGB();
@@ -150,11 +150,6 @@ public:
         return inverse(toXYZ);
     }
 
-    static constexpr float2 xyY(const float3& XYZ) {
-        return XYZ.xy / dot(XYZ, float3{1});
-    }
-
-    
 
     // OHOS ColorSpce -> Skia ColorSpace
     SkColorSpace* colorSpace() const;
@@ -165,11 +160,11 @@ private:
     // SkColorSpace* skColorSpace = SkColorSpace::MakeSRGB().get();
 
     // Compute a toXYZD50 matrics from a given rgb and white point; D50??
-    Matrix3x3 ComputeXYZD50(const ColorSpacePrimaries primaries); \
-    auto toLinear(float gamma);
-    auto toLinear(ColorSpacePrimaries primaries);
-    auto toNonLinear(float gamma);
-    auto toNonLinear(ColorSpacePrimaries primaries);
+    Matrix3x3 ComputeXYZD50(const ColorSpacePrimaries primaries); 
+    std::array<float, 3> toLinear(std::array<float, 3>, float gamma);
+    std::array<float, 3> toLinear(std::array<float, 3>, ColorSpacePrimaries primaries);
+    std::array<float, 3> toNonLinear(std::array<float, 3>, float gamma);
+    std::array<float, 3> toNonLinear(std::array<float, 3>, ColorSpacePrimaries primaries);
     
     ColorSpaceName       colorSpaceName;  
     ColorSpacePrimaries  primaries;

@@ -16,8 +16,8 @@
 #ifndef COLORSPACECONVERTOR
 #define COLORSPACECONVERTOR
 
-#include "src/core/SkVM.h"
-#include "color_space_convertor.h"
+#include "src/core/SkColorSpaceXformSteps.h"
+#include "color_space.h"
 #include <vector>
 
 namespace OHOS {
@@ -33,20 +33,29 @@ namespace ColorManager {
     */
 class ColorSpaceConvertor {
 public:
-    ColorSpaceConvertor(ColorSpaceName src, ColorSpaceName dst, GamutMappingMode mappingMode);
-
-    // use convert func to transfer a color from one gamut to another.
-    std::vector<float> Convert(float r, float g, float b);
-
-    ColorSpaceName GetSrcColorSpace() const { return srcColorSpace; }
-
+    ColorSpaceConvertor(ColorSpaceName src, ColorSpaceName dst);
     // OHOS ColorSpace Convertor -> Skis ColorSpace convertor
     SkColorSpaceXformSteps* ToSkiaCnvertor() const;
 
+    const ColorSpace& getSource() const { return srcColorSpace; }
+    const ColorSpace& getDestination() const { return dstColorSpace; }
+    const mat3& getTransform() const { return transferMatrix; }
+    std::array<float,3> transform(const std::array<float,3>& v) const {
+        std::array<float,3> linear = srcColorSpace.toLinear(std::for_each(v.begin(), v.end(), [](int &n){n = std::clamp(n, 0, 1)}));
+        std::array<float,3> dstLinear = dstColorSpace.toNoneLinear(transferMatrix * linear);
+        return std::for_each(dstLinear.begin(), dstLinear.end(), [](int &n){n = std::clamp(n, 0, 1)});
+    }
+    std::array<float,3> transformLinear(const std::array<float,3>& v) const {
+        std::array<float,3> linear = std::for_each(v.begin(), v.end(), [](int &n){n = std::clamp(n, 0, 1)});
+        std::array<float, 3>dstLinear = transferMatrix * linear;
+        return std::for_each(dstLinear.begin(), dstLinear.end(), [](int &n){n = std::clamp(n, 0, 1)});
+    }
+
 private:
-    bool AnyGreatThan(std::array<float, 2> vec1, std::array<float, 2> vec2);
-    ColorSpaceName srcColorSpace;
-    ColorSpaceName dstColorSpace;
+    ColorSpaceName srcName;
+    ColorSpaceName dstName;
+    ColorSpace srcColorSpace;
+    ColorSpace dstColorSpace;
     /*
      * 1. convert those unpremultiplied, linear source colors to XYZ D50 gamut by multiplying by a 3x3 matrix
      * 2. convert those XYZ D50 colors to the destination gamut by multiplying by a 3x3 matrix
@@ -55,9 +64,7 @@ private:
      * transferMatrix = (source space to XYZ matrix) * (XYZ matrix to destination matrix)
      */
     Matrix3x3 transferMatrix;
-    GamutMappingMode mappingMode;
 };
 }  // namespace ColorManager
 }  // namespace OHOS
-
 #endif

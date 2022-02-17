@@ -26,6 +26,7 @@
 
 #include "platform/ohos/rs_render_service_connect_hub.h"
 #endif
+#include "frame_ui_intf.h"
 #ifdef USE_FLUTTER_TEXTURE
 #include "pipeline/rs_texture_render_node.h"
 #endif
@@ -62,6 +63,10 @@ RSRenderThread::RSRenderThread()
         }
 
         ROSEN_LOGD("RSRenderThread DrawFrame(%llu) in %s", prevTimestamp_, renderContext_ ? "GPU" : "CPU");
+/*        int pid = getpid();
+        int tid = gettid();
+        std::string payload = std::to_string(pid) + "," + std::string(tid);
+        ResourceSchedule::ResSchedClient::GetInstance().ReportData(ResType::RES_TYPE_RENDER_STATE. 0, payload);*/
         Animate(prevTimestamp_);
         Render();
         RS_ASYNC_TRACE_BEGIN("waiting GPU running", 1111); // 1111 means async trace code for gpu
@@ -231,6 +236,9 @@ void RSRenderThread::ProcessCommands()
     if (cmds_.empty()) {
         return;
     }
+	if (RME::FrameUiIntf::GetInstance().GetSenseSchedEnable()) {
+        RME::FrameUiIntf::GetInstance().ProcessCommandsStart();
+    }
 
     ROSEN_LOGD("RSRenderThread ProcessCommands size: %lu\n", cmds_.size());
     std::vector<std::unique_ptr<RSTransactionData>> cmds;
@@ -247,6 +255,9 @@ void RSRenderThread::ProcessCommands()
 void RSRenderThread::Animate(uint64_t timestamp)
 {
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "Animate");
+    if (RME::FrameUiIntf::GetInstance().GetSenseSchedEnable()) {
+        RME::FrameUiIntf::GetInstance().AnimateStart();
+    }
     hasRunningAnimation_ = false;
     for (const auto& [id, node] : context_.GetNodeMap().renderNodeMap_) {
         hasRunningAnimation_ = node->Animate(timestamp) || hasRunningAnimation_;
@@ -261,6 +272,9 @@ void RSRenderThread::Animate(uint64_t timestamp)
 void RSRenderThread::Render()
 {
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSRenderThread::Render");
+    if (RME::FrameUiIntf::GetInstance().GetSenseSchedEnable()) {
+        RME::FrameUiIntf::GetInstance().RenderStart();
+    }
     std::unique_lock<std::mutex> lock(mutex_);
     const auto& rootNode = context_.GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
@@ -278,6 +292,10 @@ void RSRenderThread::Render()
 void RSRenderThread::SendCommands()
 {
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSRenderThread::SendCommands");
+    if (RME::FrameUiIntf::GetInstance().GetSenseSchedEnable()) {
+        RME::FrameUiIntf::GetInstance().SendCommandsStart();
+    }
+
     RSUIDirector::RecvMessages();
     ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }

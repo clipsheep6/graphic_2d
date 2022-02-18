@@ -51,16 +51,16 @@ Color::Color(float r, float g, float b, float a, const ColorSpaceName name)
     : r(r), g(g), b(b), a(a), colorSpaceName(name) {}
 
 Color::Color(int color)
-    : r(Red((int64_t)color<<32)), 
-      g(Green((int64_t)color<<32)), 
-      b(Blue((int64_t)color<<32)), 
+    : r(Red((int64_t)color<<32)),
+      g(Green((int64_t)color<<32)),
+      b(Blue((int64_t)color<<32)),
       a(Alpha((int64_t)color<<32)) {}
 
 Color::Color(int64_t color)
-    : r(Red(color)), 
-      g(Green(color)), 
-      b(Blue(color)), 
-      a(Alpha(color)), 
+    : r(Red(color)),
+      g(Green(color)),
+      b(Blue(color)),
+      a(Alpha(color)),
       colorSpaceName(Name(color)) {}
 
 int64_t Color::PackValue() const
@@ -77,7 +77,7 @@ int64_t Color::PackValue() const
 // alpha value not involved in convert
 Color Color::Convert(ColorSpaceConvertor &convertor) const
 {
-    Vector3 dstColor = convertor.Convert({r, g, b});
+    Vector3 dstColor = convertor.Convert( {r, g, b} );
     // dstColor[0], dstColor[1], dstColor[2] : rgb
     return Color(dstColor[0], dstColor[1], dstColor[2], a, convertor.GetDstColorSpace().GetColorSpaceName());
 }

@@ -80,11 +80,13 @@ ColorSpace::ColorSpace(ColorSpaceName name)
 
 ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries,
     const TransferFunc &transferFunc) : colorSpaceName(ColorSpaceName::CUSTOM),
-    whitePoint({primaries.wX, primaries.wY}), transferFunc(transferFunc),
+    whitePoint( {primaries.wX, primaries.wY}), transferFunc(transferFunc),
     toXYZ(ComputeXYZ(primaries)) {}
 
-ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries, float gamma) :
-    colorSpaceName(ColorSpaceName::CUSTOM), whitePoint({primaries.wX, primaries.wY}), toXYZ(ComputeXYZ(primaries))
+ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries, float gamma)
+    :colorSpaceName(ColorSpaceName::CUSTOM),
+     whitePoint( {primaries.wX, primaries.wY}),
+     toXYZ(ComputeXYZ(primaries))
 {
     transferFunc = {};
     transferFunc.g = gamma;
@@ -198,7 +200,7 @@ Matrix3x3 Invert(const Matrix3x3& src)
         return {};
     }
 
-    Matrix3x3 dst{};
+    Matrix3x3 dst {};
 
     b0 *= invdet;
     b1 *= invdet;
@@ -230,7 +232,7 @@ Matrix3x3 Invert(const Matrix3x3& src)
 SkColorSpace* ColorSpace::ToSkColorSpace() const
 {
     skcms_Matrix3x3 toXYZ = ToSkiaXYZ();
-    auto result = SkColorSpace::MakeRGB({
+    auto result = SkColorSpace::MakeRGB( {
         transferFunc.g,
         transferFunc.a,
         transferFunc.b,

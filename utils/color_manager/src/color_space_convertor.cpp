@@ -50,14 +50,13 @@ ColorSpaceConvertor::ColorSpaceConvertor(const ColorSpace &src,
 {
     if (Equal(srcColorSpace.GetWhitePoint(), dstColorSpace.GetWhitePoint())) {
         transferMatrix = srcColorSpace.GetRGBToXYZ() * dstColorSpace.GetXYZToRGB();
-    } 
-    else {
+    } else {
         Matrix3x3 rgbToXYZ(srcColorSpace.GetRGBToXYZ());
         Matrix3x3 xyzToRGB(dstColorSpace.GetXYZToRGB());
 
-        Vector3 srcXYZ = ColorSpace::XYZ(Vector3{srcColorSpace.GetWhitePoint()[0],
+        Vector3 srcXYZ = ColorSpace::XYZ(Vector3 {srcColorSpace.GetWhitePoint()[0],
             srcColorSpace.GetWhitePoint()[0], 1});
-        Vector3 dstXYZ = ColorSpace::XYZ(Vector3{dstColorSpace.GetWhitePoint()[0],
+        Vector3 dstXYZ = ColorSpace::XYZ(Vector3 {dstColorSpace.GetWhitePoint()[0],
             dstColorSpace.GetWhitePoint()[1], 1});
 
         if (!Equal(dstColorSpace.GetWhitePoint(), ILLUMINANT_D50_XY)) {

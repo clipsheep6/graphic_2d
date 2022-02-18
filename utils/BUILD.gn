@@ -70,10 +70,6 @@ group("sync_fence") {
   public_deps = [ "sync_fence:sync_fence" ]
 }
 
-group("color_manager") {
-  public_deps = [ "color_manager:colormanager" ]
-}
-
 ## Build libgraphic_utils.so {{{
 config("libgraphic_utils_public_config") {
   include_dirs = [ "//foundation/graphic/standard/interfaces/innerkits/common" ]
@@ -83,7 +79,6 @@ ohos_shared_library("libgraphic_utils") {
   public_configs = [ ":libgraphic_utils_public_config" ]
 
   public_deps = [
-    "color_manager:colormanager",
     "buffer_handle:buffer_handle",
     "cpudraw:cpudraw",
     "gl_utils:gl_utils",

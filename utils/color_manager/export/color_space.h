@@ -129,7 +129,7 @@ public:
 
     static Vector3 XYZ(const Vector3& xyY)
     {
-        return Vector3{(xyY[0] * xyY[2]) / xyY[1], xyY[2],
+        return Vector3 {(xyY[0] * xyY[2]) / xyY[1], xyY[2],
             ((1 - xyY[0] - xyY[1]) * xyY[2]) / xyY[1]};
     }
 
@@ -149,8 +149,6 @@ private:
     TransferFunc transferFunc;
     Matrix3x3 toXYZ;
 };
-
 } // namespace ColorSpace
 } // namespace OHOS
-
 #endif  // COLORSPACE

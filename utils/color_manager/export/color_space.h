@@ -148,7 +148,6 @@ private:
     Matrix3x3 toXYZ;
     std::array<float, DIMES_2> whitePoint;
     TransferFunc transferFunc;
-
 };
 } // namespace ColorSpace
 } // namespace OHOS

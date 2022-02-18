@@ -245,7 +245,7 @@ SkColorSpace* ColorSpace::ToSkColorSpace() const
         transferFunc.d,
         transferFunc.e,
         transferFunc.f,
-    };  
+    };
     return SkColorSpace::MakeRGB(skTransferFun, toXYZ).get();
 }
 

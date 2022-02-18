@@ -22,7 +22,17 @@
 extern "C" {
 #endif
 
-OH_Drawing_Color OH_Drawing_ColorSetArgb(uint32_t alpha, uint32_t red, uint32_t green, uint32_t blue);
+/**
+ * @brief Returns a 32-bit ARGB color quantity.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param alpha alpha, which range is 0x00~0xFF
+ * @param red red, which range is 0x00~0xFF
+ * @param green green, which range is 0x00~0xFF
+ * @param blue blue, which range is 0x00~0xFF
+ * @return a 32-bit ARGB color quantity
+ */
+uint32_t OH_Drawing_ColorSetArgb(uint32_t alpha, uint32_t red, uint32_t green, uint32_t blue);
 
 #ifdef __cplusplus
 }

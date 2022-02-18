@@ -41,6 +41,7 @@ public:
     void ProcessSurface(RSSurfaceRenderNode& node) override;
     void Init(ScreenId id) override;
     void PostProcess() override;
+    void CropLayers();
 
 private:
     void Redraw(sptr<Surface>& surface, const struct PrepareCompleteParam& param, void* data);
@@ -57,4 +58,4 @@ private:
 } // namespace Rosen
 } // namespace OHOS
 
- #endif
+#endif

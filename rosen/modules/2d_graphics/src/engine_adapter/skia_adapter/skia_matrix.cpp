@@ -67,6 +67,20 @@ void SkiaMatrix::SetMatrix(scalar scaleX, scalar skewX, scalar transX, scalar sk
     skMatrix_.setAll(scaleX, skewX, transX, skewY, scaleY, transY, persp0, persp1, persp2);
 }
 
+void SkiaMatrix::MapPoints(std::vector<Point>& dst, const std::vector<Point>& src, int count) const
+{
+    SkPoint pt1[count];
+    SkPoint pt2[count];
+    for (auto i = 0; i < count; i++) {
+        pt2[i] = SkPoint::Make(src[i].GetX(), src[i].GetY());
+    }
+    skMatrix_.mapPoints(pt1, pt2, count);
+    dst.clear();
+    for (auto i = 0; i < count; i++) {
+        dst.emplace_back(Point(pt1[i].fX, pt1[i].fY));
+    }
+}
+
 scalar SkiaMatrix::Get(int index) const
 {
     return skMatrix_.get(index);

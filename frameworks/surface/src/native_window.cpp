@@ -48,7 +48,8 @@ struct NativeWindow* CreateNativeWindowFromSurface(void* pSuface)
     nativeWindow->config.usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA;
     nativeWindow->config.format = PIXEL_FMT_RGBA_8888;
     nativeWindow->config.stride = 8; // default stride is 8
-    nativeWindow->config.timeout = 3000; // default timout is 3s
+    nativeWindow->config.timeout = 3000; // default timout is 3000 ms
+    nativeWindow->config.colorGamut = OHOS::SurfaceColorGamut::COLOR_GAMUT_SRGB;
 
     BLOGD("CreateNativeWindowFromSurface width is %{public}d, height is %{public}d", nativeWindow->config.width, \
         nativeWindow->config.height);
@@ -99,6 +100,7 @@ int32_t NativeWindowRequestBuffer(struct NativeWindow *window,
         .format = window->config.format,
         .usage = window->config.usage,
         .timeout = window->config.timeout,
+        .colorGamut = window->config.colorGamut,
     };
     OHOS::sptr<OHOS::SurfaceBuffer> sfbuffer;
     if (window->surface->RequestBuffer(sfbuffer, *fenceFd, config) != OHOS::GSError::GSERROR_OK ||
@@ -117,7 +119,7 @@ int32_t NativeWindowFlushBuffer(struct NativeWindow *window, struct NativeWindow
     int fenceFd, struct Region region)
 {
     if (window == nullptr || buffer == nullptr || window->surface == nullptr) {
-         BLOGD("NativeWindowFlushBuffer window,buffer  is nullptr");
+        BLOGD("NativeWindowFlushBuffer window,buffer  is nullptr");
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
 
@@ -157,57 +159,59 @@ int32_t NativeWindowCancelBuffer(struct NativeWindow *window, struct NativeWindo
 static int32_t InternalHanleNativeWindowOpt(struct NativeWindow *window, int code, va_list args)
 {
     switch (code) {
-        case SET_USAGE:
-        {
+        case SET_USAGE: {
             int32_t usage = va_arg(args, int32_t);
             window->config.usage = usage;
             break;
         }
-        case SET_BUFFER_GEOMETRY:
-        {
+        case SET_BUFFER_GEOMETRY: {
             int32_t width = va_arg(args, int32_t);
             int32_t height = va_arg(args, int32_t);
             window->config.height = height;
             window->config.width = width;
             break;
         }
-        case SET_FORMAT:
-        {
+        case SET_FORMAT: {
             int32_t format = va_arg(args, int32_t);
             window->config.format = format;
             break;
         }
-        case SET_STRIDE:
-        {
+        case SET_STRIDE: {
             int32_t stride = va_arg(args, int32_t);
             window->config.stride = stride;
             break;
         }
-        case GET_USAGE:
-        {
+        case SET_COLOR_GAMUT: {
+            int32_t colorGamut = va_arg(args, int32_t);
+            window->config.colorGamut = static_cast<OHOS::SurfaceColorGamut>(colorGamut);
+            break;
+        }
+        case GET_USAGE: {
             int32_t *value = va_arg(args, int32_t*);
             int32_t usage = window->config.usage;
             *value = usage;
             break;
         }
-        case GET_BUFFER_GEOMETRY:
-        {
+        case GET_BUFFER_GEOMETRY: {
             int32_t *height = va_arg(args, int32_t*);
             int32_t *width = va_arg(args, int32_t*);
             *height = window->config.height;
             *width = window->config.width;
             break;
         }
-        case GET_FORMAT:
-        {
+        case GET_FORMAT: {
             int32_t *format = va_arg(args, int32_t*);
             *format = window->config.format;
             break;
         }
-        case GET_STRIDE:
-        {
+        case GET_STRIDE: {
             int32_t *stride = va_arg(args, int32_t*);
             *stride = window->config.stride;
+            break;
+        }
+        case GET_COLOR_GAMUT: {
+            int32_t *colorGamut = va_arg(args, int32_t*);
+            *colorGamut = static_cast<int32_t>(window->config.colorGamut);
             break;
         }
         default:
@@ -250,7 +254,7 @@ int32_t NativeObjectReference(void *obj)
     if (obj == nullptr) {
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
-    switch(GetNativeObjectMagic(obj)) {
+    switch (GetNativeObjectMagic(obj)) {
         case NATIVE_OBJECT_MAGIC_WINDOW:
         case NATIVE_OBJECT_MAGIC_WINDOW_BUFFER:
             break;
@@ -267,7 +271,7 @@ int32_t NativeObjectUnreference(void *obj)
     if (obj == nullptr) {
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
-    switch(GetNativeObjectMagic(obj)) {
+    switch (GetNativeObjectMagic(obj)) {
         case NATIVE_OBJECT_MAGIC_WINDOW:
         case NATIVE_OBJECT_MAGIC_WINDOW_BUFFER:
             break;
@@ -300,9 +304,9 @@ NativeWindowBuffer::NativeWindowBuffer() : NativeWindowMagic(NATIVE_OBJECT_MAGIC
 }
 
 weak_alias(CreateNativeWindowFromSurface, OH_NativeWindow_CreateNativeWindowFromSurface);
-weak_alias(DestoryNativeWindow, OH_NativeWindow_DestoryNativeWindow);
+weak_alias(DestoryNativeWindow, OH_NativeWindow_DestroyNativeWindow);
 weak_alias(CreateNativeWindowBufferFromSurfaceBuffer, OH_NativeWindow_CreateNativeWindowBufferFromSurfaceBuffer);
-weak_alias(DestoryNativeWindowBuffer, OH_NativeWindow_DestoryNativeWindowBuffer);
+weak_alias(DestoryNativeWindowBuffer, OH_NativeWindow_DestroyNativeWindowBuffer);
 weak_alias(NativeWindowRequestBuffer, OH_NativeWindow_NativeWindowRequestBuffer);
 weak_alias(NativeWindowFlushBuffer, OH_NativeWindow_NativeWindowFlushBuffer);
 weak_alias(NativeWindowCancelBuffer, OH_NativeWindow_NativeWindowCancelBuffer);

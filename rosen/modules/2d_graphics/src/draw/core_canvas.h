@@ -23,6 +23,10 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+enum class SrcRectConstraint {
+    STRICT_SRC_RECT_CONSTRAINT,
+    FAST_SRC_RECT_CONSTRAINT,
+};
 class CoreCanvas {
 public:
     CoreCanvas();
@@ -48,10 +52,10 @@ public:
     void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py);
     void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py);
     void DrawImage(const Image& image, const scalar px, const scalar py, const SamplingOptions& sampling);
+    void DrawImageRect(const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling,
+        SrcRectConstraint constraint = SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT);
+    void DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling);
     void DrawPicture(const Picture& picture);
-
-    // text
-    void DrawText(const Text& text); // TODO...
 
     // clip
     void ClipRect(const Rect& rect, ClipOp op);

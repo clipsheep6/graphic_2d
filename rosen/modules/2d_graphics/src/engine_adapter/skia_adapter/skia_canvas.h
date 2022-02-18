@@ -41,7 +41,7 @@ class SkiaCanvas : public CoreCanvasImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
     SkiaCanvas();
-    virtual ~SkiaCanvas();
+    ~SkiaCanvas() override {};
     AdapterType GetType() const override
     {
         return AdapterType::SKIA_ADAPTER;
@@ -68,10 +68,10 @@ public:
     void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py) override;
     void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py) override;
     void DrawImage(const Image& image, const scalar px, const scalar py, const SamplingOptions& sampling) override;
+    void DrawImageRect(const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling,
+        SrcRectConstraint constraint) override;
+    void DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling) override;
     void DrawPicture(const Picture& picture) override;
-
-    // text
-    void DrawText(const Text& text) override; // TODO...
 
     // clip
     void ClipRect(const Rect& rect, ClipOp op) override;

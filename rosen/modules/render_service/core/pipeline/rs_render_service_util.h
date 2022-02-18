@@ -33,6 +33,7 @@ namespace Rosen {
 struct ComposeInfo {
     IRect srcRect;
     IRect dstRect;
+    IRect visableRect;
     int32_t zOrder{0};
     LayerAlpha alpha;
     sptr<SurfaceBuffer> buffer;
@@ -53,7 +54,6 @@ private:
         const std::unique_ptr<RSTransitionProperties>& transitionProperties);
     static bool IsNeedClient(RSSurfaceRenderNode* node);
 };
-
 } // Rosen
 } // OHOS
 #endif

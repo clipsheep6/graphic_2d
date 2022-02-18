@@ -106,14 +106,6 @@ SurfaceError LayerContext::DrawBufferColor()
         LOGE("FlushBuffer failed");
     }
 
-    SurfaceColorGamut colorgamut = SurfaceColorGamut::COLOR_GAMUT_DCI_P3;
-    ret = pSurface_->SetColorGamut(colorgamut);
-    if (ret != 0) {
-        LOGE("SetColorGamut failed: %{public}s", SurfaceErrorStr(ret).c_str());
-    } else {
-        LOGI("SetColorGamut : %{public}d", colorgamut);
-    }
-
     return ret;
 }
 
@@ -129,17 +121,11 @@ SurfaceError LayerContext::FillHDILayer()
         return ret;
     }
 
-    SurfaceColorGamut colorgamut;
-    ret = cSurface_->GetColorGamut(colorgamut);
-    if (ret == 0) {
-        LOGI("GetColorGamut : %{public}d", colorgamut);
-    }
-
     LayerAlpha alpha = { .enPixelAlpha = true };
 
     hdiLayer_->SetSurface(cSurface_);
     hdiLayer_->SetBuffer(buffer, acquireFence, prevBuffer_, prevFence_);
-    hdiLayer_->SetZorder(zorder_);
+    hdiLayer_->SetZorder(static_cast<int32_t>(zorder_));
     hdiLayer_->SetAlpha(alpha);
     hdiLayer_->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
     hdiLayer_->SetVisibleRegion(1, src_);
@@ -158,9 +144,9 @@ SurfaceError LayerContext::FillHDILayer()
 void LayerContext::DrawColor(void *image, int width, int height)
 {
     if (layerType_ >= LayerType::LAYER_EXTRA) {
-        DrawExtraColor(image, width, height);
+        DrawExtraColor(image, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
     } else {
-        DrawBaseColor(image, width, height);
+        DrawBaseColor(image, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
     }
 }
 

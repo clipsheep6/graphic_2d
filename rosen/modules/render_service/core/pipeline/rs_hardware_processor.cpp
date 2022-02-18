@@ -62,13 +62,58 @@ void RSHardwareProcessor::PostProcess()
         ROSEN_LOGE("RSHardwareProcessor::PostProcess output is nullptr");
         return;
     }
+    // Rotaion must be executed before CropLayers.
     if (rotation_ != ScreenRotation::ROTATION_0) {
         OnRotate();
     }
+    CropLayers();
     output_->SetLayerInfo(layers_);
     std::vector<std::shared_ptr<HdiOutput>> outputs{output_};
     if (backend_) {
         backend_->Repaint(outputs);
+    }
+}
+
+void RSHardwareProcessor::CropLayers()
+{
+    for (auto layer : layers_) {
+        bool cut = false;
+        IRect dstRect = layer->GetLayerSize();
+        IRect srcRect = layer->GetVisibleRegion();
+        IRect orgSrcRect = srcRect;
+        int32_t screenWidth = curScreenInfo_.GetScreenWidth();
+        int32_t screenHeight = curScreenInfo_.GetScreenHeight();
+        if (dstRect.x < 0 && dstRect.x + dstRect.w > 0) {
+            srcRect.w = srcRect.w * (dstRect.w + dstRect.x) / dstRect.w;
+            srcRect.x = orgSrcRect.w - srcRect.w;
+            dstRect.w = dstRect.w + dstRect.x;
+            dstRect.x = 0;
+            cut = true;
+        }
+        if (dstRect.x + dstRect.w > screenWidth) {
+            srcRect.w = srcRect.w * (screenWidth - dstRect.x) / dstRect.w;
+            dstRect.w = screenWidth - dstRect.x;
+            cut = true;
+        }
+        if (dstRect.y < 0 && dstRect.y + dstRect.h > 0) {
+            srcRect.h = srcRect.h * (dstRect.h + dstRect.y) / dstRect.h;
+            srcRect.y = orgSrcRect.h - srcRect.h;
+            dstRect.h = dstRect.h + dstRect.y;
+            dstRect.y = 0;
+            cut = true;
+        }
+        if (dstRect.y + dstRect.h > screenHeight) {
+            srcRect.h = srcRect.h * (screenHeight - dstRect.y) / dstRect.h;
+            dstRect.h = screenHeight - dstRect.y;
+            cut = true;
+        }
+        if (cut) {
+            layer->SetLayerSize(dstRect);
+            layer->SetVisibleRegion(1, srcRect);
+            layer->SetDirtyRegion(srcRect);
+            layer->SetCropRect(srcRect);
+            ROSEN_LOGD("RsDebug RSHardwareProcessor::PostProcess: layer has been cropped to fit the Screen");
+        }
     }
 }
 
@@ -114,6 +159,12 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
             .y = geoPtr->GetAbsRect().top_,
             .w = geoPtr->GetAbsRect().width_,
             .h = geoPtr->GetAbsRect().height_,
+        },
+        .visableRect = {
+            .x = 0,
+            .y = 0,
+            .w = curScreenInfo_.GetScreenWidth(),
+            .h = curScreenInfo_.GetScreenHeight(),
         },
         .zOrder = node.GetGlobalZOrder(),
         .alpha = {
@@ -180,7 +231,7 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
         .width = curScreenInfo_.GetScreenWidth(),
         .height = curScreenInfo_.GetScreenHeight(),
         .strideAlignment = 0x8,
-        .format = PIXEL_FMT_RGBA_8888,      // [TODO] different soc need different format
+        .format = PIXEL_FMT_RGBA_8888,      // [PLANNING] different soc need different format
         .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA | HBM_USE_MEM_FB,
         .timeout = 0,
     };
@@ -222,20 +273,20 @@ void RSHardwareProcessor::OnRotate()
         switch (rotation_) {
             case ScreenRotation::ROTATION_90: {
                 ROSEN_LOGI("RsDebug RSHardwareProcessor::OnRotate 90.");
-                layer->SetLayerSize({ width - rect.y - rect.h, rect.x, rect.h, rect.w });
-                layer->SetTransform(TransformType::ROTATE_90);
+                layer->SetLayerSize({rect.y, height - rect.x - rect.w, rect.h, rect.w});
+                layer->SetTransform(TransformType::ROTATE_270);
                 break;
             }
             case ScreenRotation::ROTATION_180: {
                 ROSEN_LOGI("RsDebug RSHardwareProcessor::OnRotate 180.");
-                layer->SetLayerSize({ width - rect.x - rect.w, height - rect.y - rect.h, rect.w, rect.h });
+                layer->SetLayerSize({width - rect.x - rect.w, height - rect.y - rect.h, rect.w, rect.h});
                 layer->SetTransform(TransformType::ROTATE_180);
                 break;
             }
             case ScreenRotation::ROTATION_270: {
                 ROSEN_LOGI("RsDebug RSHardwareProcessor::OnRotate 270.");
-                layer->SetLayerSize({ rect.y, height - rect.x - rect.w, rect.h, rect.w });
-                layer->SetTransform(TransformType::ROTATE_270);
+                layer->SetLayerSize({width - rect.y - rect.h, rect.x, rect.h, rect.w});
+                layer->SetTransform(TransformType::ROTATE_90);
                 break;
             }
             case ScreenRotation::INVALID_SCREEN_ROTATION: {

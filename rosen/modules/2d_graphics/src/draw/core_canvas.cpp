@@ -15,9 +15,6 @@
 
 #include "core_canvas.h"
 
-#include <iostream>
-#include <string>
-
 #include "impl_factory.h"
 
 namespace OHOS {
@@ -106,14 +103,20 @@ void CoreCanvas::DrawImage(const Image& image, const scalar px, const scalar py,
     impl_->DrawImage(image, px, py, sampling);
 }
 
+void CoreCanvas::DrawImageRect(
+    const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling, SrcRectConstraint constraint)
+{
+    impl_->DrawImageRect(image, src, dst, sampling, constraint);
+}
+
+void CoreCanvas::DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling)
+{
+    impl_->DrawImageRect(image, dst, sampling);
+}
+
 void CoreCanvas::DrawPicture(const Picture& picture)
 {
     impl_->DrawPicture(picture);
-}
-
-void CoreCanvas::DrawText(const Text& text)
-{
-    impl_->DrawText(text);
 }
 
 void CoreCanvas::ClipRect(const Rect& rect, ClipOp op)

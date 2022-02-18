@@ -13,9 +13,6 @@
  * limitations under the License.
  */
 #include "pipeline/rs_render_service_util.h"
-
-#include <cmath>
-
 #include "common/rs_common_def.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPaint.h"
@@ -28,7 +25,6 @@
 
 namespace OHOS {
 namespace Rosen {
-
 void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
     std::vector<LayerInfoPtr>& layers,  ComposeInfo info, RSSurfaceRenderNode* node)
 {
@@ -40,7 +36,7 @@ void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sp
     layer->SetLayerAdditionalInfo(node);
     layer->SetCompositionType(IsNeedClient(node) ?
         CompositionType::COMPOSITION_CLIENT : CompositionType::COMPOSITION_DEVICE);
-    layer->SetVisibleRegion(1, info.srcRect);
+    layer->SetVisibleRegion(1, info.visableRect);
     layer->SetDirtyRegion(info.srcRect);
     layer->SetBlendType(info.blendType);
     layer->SetCropRect(info.srcRect);
@@ -89,7 +85,7 @@ void RsRenderServiceUtil::DealAnimation(SkCanvas* canvas, SkPaint& paint, const 
 }
 
 void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer,
-        RSSurfaceRenderNode& node, bool isDrawnOnDisplay)
+    RSSurfaceRenderNode& node, bool isDrawnOnDisplay)
 {
     if (!canvas) {
         ROSEN_LOGE("RsRenderServiceUtil::DrawBuffer canvas is nullptr");
@@ -104,8 +100,8 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer>
         ROSEN_LOGE("RsRenderServiceUtil::DrawBuffer this buffer have no vir add or width or height is negative");
         return;
     }
-    SkColorType colorType;
-    colorType = buffer->GetFormat() == PIXEL_FMT_BGRA_8888 ? kBGRA_8888_SkColorType : kRGBA_8888_SkColorType;
+    SkColorType colorType = (buffer->GetFormat() == PIXEL_FMT_BGRA_8888) ?
+        kBGRA_8888_SkColorType : kRGBA_8888_SkColorType;
     SkImageInfo layerInfo = SkImageInfo::Make(buffer->GetWidth(), buffer->GetHeight(),
         colorType, kPremul_SkAlphaType);
     SkPixmap pixmap(layerInfo, addr, buffer->GetStride());
@@ -119,9 +115,11 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer>
             std::make_unique<SkRect>(SkRect::MakeXYWH(0, 0, buffer->GetWidth(), buffer->GetHeight()));
         if (isDrawnOnDisplay) {
             const RSProperties& property = node.GetRenderProperties();
-            auto geotry = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
-            if (geotry) {
-                canvas->setMatrix(geotry->GetAbsMatrix());
+            auto geoptr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+            if (geoptr) {
+                canvas->setMatrix(geoptr->GetAbsMatrix());
+                canvas->scale(static_cast<double>(geoptr->GetAbsRect().width_)/static_cast<double>(buffer->GetWidth()),
+                              static_cast<double>(geoptr->GetAbsRect().height_)/static_cast<double>(buffer->GetHeight()));
             }
             DealAnimation(canvas, paint, property, node.GetAnimationManager().GetTransitionProperties());
             auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
@@ -134,6 +132,5 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer>
         canvas->restore();
     }
 }
-
 } // namespace Rosen
 } // namespace OHOS

@@ -32,6 +32,8 @@ ohos_source_set("render_service_client_src") {
     "$rosen_root/modules/2d_graphics/src",
     "//foundation/graphic/utils/log",
     "//foundation/graphic/standard/utils/log",
+#    "//foundation/resourceschedule/resource_schedule_service/ressched/interfaces/innerkits/ressched_client/include",
+    "//foundation/resourceschedule/plugins/frame_aware_sched/interfaces/innerkits/frameintf",
   ]
 
   sources = [
@@ -89,9 +91,14 @@ ohos_source_set("render_service_client_src") {
     defines += [ "ENABLE_EXPORT_MACRO" ]
   }
 
-  external_deps = [ "bytrace_standard:bytrace_core" ]
-  public_deps =
-      [ "$rosen_root/modules/render_service_base:librender_service_base" ]
+  external_deps = [ 
+    "bytrace_standard:bytrace_core",
+    "frame_aware_sched:frame_ui_intf",
+  ]
+  public_deps = [
+    "$rosen_root/modules/render_service_base:librender_service_base",
+#    "//foundation/resourceschedule/resource_schedule_service/ressched/interfaces/innerkits/ressched_client:ressched_client",
+  ]
 }
 
 ohos_shared_library("librender_service_client") {

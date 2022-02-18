@@ -16,50 +16,24 @@
 #ifndef COLORSPACECONVERTOR
 #define COLORSPACECONVERTOR
 
-#include "src/core/SkColorSpaceXformSteps.h"
 #include "color_space.h"
 #include <vector>
 
 namespace OHOS {
 namespace ColorManager {
-    /**
-    * @brief use this convertor to transfer a color from one color space to another
-    *
-    * @param src source color space of the input color
-    * @param dst the destination color space
-    * The underlying color space converting strategy is based on skia SkColorSpaceXformSteps,
-    * while we omite the alpha argument. Alpha should not involved in color management.
-    * always unpremultiply -> unpremultiply.
-    */
 class ColorSpaceConvertor {
 public:
-    ColorSpaceConvertor(ColorSpaceName src, ColorSpaceName dst, GamutMappingMode mappingMode);
+    ColorSpaceConvertor(const ColorSpace &src, const ColorSpace &dst, GamutMappingMode mappingMode);
 
-    // use convert func to transfer a color from one gamut to another.
-    std::array<float, 3> Convert(float r, float g, float b);
-
-    ColorSpaceName GetSrcColorSpace() { return srcName; }
-
-    ColorSpaceName getSource() { return srcName; }
-    ColorSpaceName getDestination() { return dstName; }
-    const Matrix3x3& getTransform() const { return transferMatrix; }
-    std::array<float, 3> Transform(const std::array<float, 3>& v);
-    std::array<float, 3> TransformLinear(const std::array<float, 3>& v);
+    ColorSpace GetSrcColorSpace() const { return srcColorSpace; }
+    ColorSpace GetDstColorSpace() const { return dstColorSpace; }
+    Matrix3x3 GetTransform() const { return transferMatrix; }
+    Vector3 Convert(const Vector3& v) const;
+    Vector3 ConvertLinear(const Vector3& v) const;
 
 private:
-    bool AnyGreatThan(std::array<float, 2> vec1, std::array<float, 2> vec2);
-    bool AllLessThan(std::array<float, 2> vec1, std::array<float, 2> vec2);
-    ColorSpaceName srcName;
-    ColorSpaceName dstName;
     ColorSpace srcColorSpace;
     ColorSpace dstColorSpace;
-    /*
-     * 1. convert those unpremultiplied, linear source colors to XYZ D50 gamut by multiplying by a 3x3 matrix
-     * 2. convert those XYZ D50 colors to the destination gamut by multiplying by a 3x3 matrix
-     * transferMatrix = step1 * step2
-     * Namely: 
-     * transferMatrix = (source space to XYZ matrix) * (XYZ matrix to destination matrix)
-     */ 
     GamutMappingMode mappingMode;
     Matrix3x3 transferMatrix;
 };

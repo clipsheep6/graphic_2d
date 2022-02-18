@@ -14,99 +14,19 @@
  */
 #include "src/core/SkVM.h"
 #include "color_space_convertor.h"
+#include <algorithm>
 
 namespace OHOS {
 namespace ColorManager {
-
 static const std::array<float, 2> ILLUMINANT_D50_XY = {0.34567f, 0.35850f};
-static const std::array<float, 3> ILLUMINANT_D50_XYZ = {0.964212f, 1.0f, 0.825188f};
-static const Matrix3x3 BRADFORD = {{{0.8951f, -0.7502f, 0.0389f},
-                                    {0.2664f, 1.7135f, -0.0685f},
-                                    {-0.1614f, 0.0367f, 1.0296f}}};
+static const Vector3 ILLUMINANT_D50_XYZ = {0.964212f, 1.0f, 0.825188f};
+static const Matrix3x3 BRADFORD = {{
+    {0.8951f, -0.7502f, 0.0389f},
+    {0.2664f, 1.7135f, -0.0685f},
+    {-0.1614f, 0.0367f, 1.0296f}}};
 
-
-static Matrix3x3 adaptation(const Matrix3x3& matrix,
-                            const std::array<float, 3>& srcWhitePoint,
-                            const std::array<float, 3>& dstWhitePoint) {
-    std::array<float, 3> srcLMS = matrix * srcWhitePoint;
-    std::array<float, 3> dstLMS = matrix * dstWhitePoint;
-    return ColorSpace::invert(matrix) * (dstLMS / srcLMS) * matrix;
-}
-
-ColorSpaceConvertor::ColorSpaceConvertor(ColorSpaceName srcName,
-                                         ColorSpaceName dstName,
-                                         GamutMappingMode gamutMappingMode)
-        : srcName(srcName)
-        , dstName(dstName)
-        , srcColorSpace(ColorSpace(srcName, 0))
-        , dstColorSpace(ColorSpace(srcName, 0))
-        , mappingMode(gamutMappingMode) {
-
-    if (AllLessThan(srcColorSpace.getWhitePoint(), dstColorSpace.getWhitePoint())) {
-        transferMatrix = dstColorSpace.getXYZToRGB() * srcColorSpace.getRGBToXYZ();
-    }else {
-        Matrix3x3 rgbToXYZ(srcColorSpace.getRGBToXYZ());
-        Matrix3x3 xyzToRGB(dstColorSpace.getXYZToRGB());
-
-        std::array<float, 3> srcXYZ = ColorSpace::XYZ(std::array<float, 3>{
-                srcColorSpace.getWhitePoint()[0], srcColorSpace.getWhitePoint()[0], 1});
-        std::array<float, 3> dstXYZ = ColorSpace::XYZ(std::array<float, 3>{
-                dstColorSpace.getWhitePoint()[0], dstColorSpace.getWhitePoint()[1], 1});
-
-        if (AnyGreatThan(dstColorSpace.getWhitePoint(), ILLUMINANT_D50_XY)) {
-            rgbToXYZ = adaptation(BRADFORD, srcXYZ, ILLUMINANT_D50_XYZ) * srcColorSpace.getRGBToXYZ();
-        }
-
-        if (AnyGreatThan(srcColorSpace.getWhitePoint(), ILLUMINANT_D50_XY)) {
-            xyzToRGB = ColorSpace::invert(adaptation(BRADFORD, dstXYZ, ILLUMINANT_D50_XYZ) *
-                                       dstColorSpace.getRGBToXYZ());
-        }
-
-        transferMatrix = xyzToRGB * rgbToXYZ;
-    }
-}
-
-std::array<float, 3> ColorSpaceConvertor::Transform(const std::array<float, 3>& v) {
-    std::array<float, 3> srcLinear = v;
-    for (auto& n : srcLinear) {
-        n = std::clamp(n, srcColorSpace.clampMin, srcColorSpace.clampMax);
-    }
-    srcLinear = srcColorSpace.toLinear(srcLinear, srcColorSpace.GetGamma());
-
-    std::array<float, 3> dstNonLinear =
-            dstColorSpace.toNonLinear(transferMatrix * srcLinear, dstColorSpace.GetGamma());
-    for (auto& n : dstNonLinear) {
-        n = std::clamp(n, dstColorSpace.clampMin, dstColorSpace.clampMax);
-    }
-    return dstNonLinear;
-}
-
-std::array<float, 3> ColorSpaceConvertor::TransformLinear(const std::array<float, 3>& v) {
-    std::array<float, 3> srcLinear = v;
-    for (auto& n : srcLinear) {
-        n = std::clamp(n, srcColorSpace.clampMin, srcColorSpace.clampMax);
-    }
-
-    std::array<float, 3> dstLinear = transferMatrix * srcLinear;
-    for (auto& n : dstLinear) {
-        n = std::clamp(n, dstColorSpace.clampMin, dstColorSpace.clampMax);
-    }
-    return dstLinear;
-}
-
-
-std::array<float, 3> ColorSpaceConvertor::Convert(float r, float g, float b) {
-    std::array<float, 3> tempRes{};
-    std::array<float, 3> dst = Transform(std::array<float, 3> {r, g, b});
-    tempRes[0] = dst[0];
-    tempRes[1] = dst[1];
-    tempRes[2] = dst[2];
-
-    return tempRes;
-};
-
-// AnyGreatThan
-bool ColorSpaceConvertor::AnyGreatThan(std::array<float, 2> vecA, std::array<float, 2> vecB) {
+static bool AnyGreatThan(std::array<float, 2> vecA, std::array<float, 2> vecB)
+{
     for (unsigned int i = 0; i < vecA.size(); i++) {
         if (std::abs(vecA[i]) - std::abs(vecB[i]) > 1e-3f) {
             return true;
@@ -115,8 +35,8 @@ bool ColorSpaceConvertor::AnyGreatThan(std::array<float, 2> vecA, std::array<flo
     return false;
 }
 
-// AllLessThan
-bool ColorSpaceConvertor::AllLessThan(std::array<float, 2> vecA, std::array<float, 2> vecB) {
+static bool AllLessThan(std::array<float, 2> vecA, std::array<float, 2> vecB)
+{
     for (unsigned i = 0; i < vecA.size(); i++) {
         if (std::abs(vecA[i]) - std::abs(vecB[i]) > 1e-3f) {
             return false;
@@ -125,5 +45,73 @@ bool ColorSpaceConvertor::AllLessThan(std::array<float, 2> vecA, std::array<floa
     return true;
 }
 
+static Matrix3x3 adaptation(const Matrix3x3& matrix,
+                            const Vector3& srcWhitePoint,
+                            const Vector3& dstWhitePoint)
+{
+    Vector3 srcLMS = matrix * srcWhitePoint;
+    Vector3 dstLMS = matrix * dstWhitePoint;
+    return invert(matrix) * (dstLMS / srcLMS) * matrix;
+}
+
+ColorSpaceConvertor::ColorSpaceConvertor(const ColorSpace &src,
+    const ColorSpace &dst, GamutMappingMode mappingMode)
+    : srcColorSpace(src)
+    , dstColorSpace(dst)
+    , mappingMode(mappingMode)
+{
+    if (AllLessThan(srcColorSpace.GetWhitePoint(), dstColorSpace.GetWhitePoint())) {
+        transferMatrix = dstColorSpace.GetXYZToRGB() * srcColorSpace.GetRGBToXYZ();
+    }else {
+        Matrix3x3 rgbToXYZ(srcColorSpace.GetRGBToXYZ());
+        Matrix3x3 xyzToRGB(dstColorSpace.GetXYZToRGB());
+
+        Vector3 srcXYZ = ColorSpace::XYZ(Vector3{
+            srcColorSpace.GetWhitePoint()[0], srcColorSpace.GetWhitePoint()[0], 1});
+        Vector3 dstXYZ = ColorSpace::XYZ(Vector3{
+            dstColorSpace.GetWhitePoint()[0], dstColorSpace.GetWhitePoint()[1], 1});
+
+        if (AnyGreatThan(dstColorSpace.GetWhitePoint(), ILLUMINANT_D50_XY)) {
+            rgbToXYZ = adaptation(BRADFORD, srcXYZ, ILLUMINANT_D50_XYZ) * srcColorSpace.GetRGBToXYZ();
+        }
+
+        if (AnyGreatThan(srcColorSpace.GetWhitePoint(), ILLUMINANT_D50_XY)) {
+            xyzToRGB = invert(adaptation(BRADFORD, dstXYZ, ILLUMINANT_D50_XYZ) *
+                dstColorSpace.GetRGBToXYZ());
+        }
+
+        transferMatrix = xyzToRGB * rgbToXYZ;
+    }
+}
+
+Vector3 ColorSpaceConvertor::Convert(const Vector3& v) const
+{
+    Vector3 srcLinear = v;
+    for (auto& n : srcLinear) {
+        n = std::clamp(n, srcColorSpace.clampMin, srcColorSpace.clampMax);
+    }
+    srcLinear = srcColorSpace.ToLinear(srcLinear);
+
+    Vector3 dstNonLinear =
+        dstColorSpace.ToNonLinear(transferMatrix * srcLinear);
+    for (auto& n : dstNonLinear) {
+        n = std::clamp(n, dstColorSpace.clampMin, dstColorSpace.clampMax);
+    }
+    return dstNonLinear;
+}
+
+Vector3 ColorSpaceConvertor::ConvertLinear(const Vector3& v) const
+{
+    Vector3 srcLinear = v;
+    for (auto& n : srcLinear) {
+        n = std::clamp(n, srcColorSpace.clampMin, srcColorSpace.clampMax);
+    }
+
+    Vector3 dstLinear = transferMatrix * srcLinear;
+    for (auto& n : dstLinear) {
+        n = std::clamp(n, dstColorSpace.clampMin, dstColorSpace.clampMax);
+    }
+    return dstLinear;
+}
 }  // namespace ColorManager
 }  // namespace OHOS

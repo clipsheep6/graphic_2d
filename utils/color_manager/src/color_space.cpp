@@ -14,124 +14,97 @@
  */
 
 #include "color_space.h"
+#include <map>
+#include <utility>
 
 namespace OHOS {
 namespace ColorManager {
-ColorSpace::ColorSpace(ColorSpaceName name, int64_t nativeHandle) {
-    switch (name) {
-        case ColorSpaceName::SRGB:
-            SRGB();
-            break;
-        case ColorSpaceName::DISPLAY_P3:
-            DisplayP3();
-            break;
-        case ColorSpaceName::ADOBE_RGB:
-            AdobeRGB();
-            break;
-        default:
-            SRGB();
-            break;
+const ColorSpace CS_SRGB = {
+    ColorSpacePrimaries {0.640f, 0.330f, 0.300f, 0.600f, 0.150f, 0.060f, 0.3127f, 0.3290f},
+    {2.4f, 1 / 1.055f, 0.055f / 1.055f, 1 / 12.92f, 0.04045f, 0.0f, 0.0f}};
+
+const ColorSpace CS_LINEAR_SRGB = {
+    ColorSpacePrimaries {0.640f, 0.330f, 0.300f, 0.600f, 0.150f, 0.060f, 0.3127f, 0.3290f},
+    {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
+
+const ColorSpace CS_NTSC_1953 = {
+    ColorSpacePrimaries {0.67f, 0.33f, 0.21f, 0.71f, 0.14f, 0.08f, 0.310f, 0.316f},
+    {1 / 0.45f, 1 / 1.099f, 0.099f / 1.099f, 1 / 4.5f, 0.081f, 0.0f, 0.0f}};
+
+const ColorSpace CS_BT709 = {
+    ColorSpacePrimaries {0.640f, 0.330f, 0.300f, 0.600f, 0.150f, 0.060f, 0.3127f, 0.3290f},
+    {1 / 0.45f, 1 / 1.099f, 0.099f / 1.099f, 1 / 4.5f, 0.081f, 0.0f, 0.0f}};
+
+const ColorSpace CS_BT2020 = {
+    ColorSpacePrimaries {0.708f, 0.292f, 0.170f, 0.797f, 0.131f, 0.046f, 0.3127f, 0.3290f},
+    {1 / 0.45f, 1 / 1.099f, 0.099f / 1.099f, 1 / 4.5f, 0.081f, 0.0f, 0.0f}};
+
+const ColorSpace CS_ADOBE_RGB = {
+    ColorSpacePrimaries {0.640f, 0.330f, 0.300f, 0.600f, 0.150f, 0.060f, 0.3127f, 0.3290f},
+    {2.2f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
+
+const ColorSpace CS_PRO_PHOTO_RGB = {
+    ColorSpacePrimaries {0.7347f, 0.2653f, 0.1596f, 0.8404f, 0.0366f, 0.0001f, 0.34567f, 0.35850f},
+    {1.8f, 1.0f, 0.0f, 1 / 16.0f, 0.031248f, 0.0f, 0.0f}};
+
+const ColorSpace CS_DISPLAY_P3 = {
+    ColorSpacePrimaries {0.680f, 0.320f, 0.265f, 0.690f, 0.150f, 0.060f, 0.3127f, 0.3290f},
+    {2.4f, 1 / 1.055f, 0.055f / 1.055f, 1 / 12.92f, 0.039f, 0.0f, 0.0f}};
+
+const ColorSpace CS_DCI_P3 = {
+    ColorSpacePrimaries {0.680f, 0.320f, 0.265f, 0.690f, 0.150f, 0.060f, 0.314f, 0.351f},
+    {2.6f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
+
+const std::map<ColorSpaceName, ColorSpace> NamedColorSpace = {
+    {ColorSpaceName::SRGB, CS_SRGB},
+    {ColorSpaceName::LINEAR_SRGB, CS_LINEAR_SRGB},
+    {ColorSpaceName::NTSC_1953, CS_NTSC_1953},
+    {ColorSpaceName::BT709, CS_BT709},
+    {ColorSpaceName::BT2020, CS_BT2020},
+    {ColorSpaceName::ADOBE_RGB, CS_ADOBE_RGB},
+    {ColorSpaceName::PRO_PHOTO_RGB, CS_PRO_PHOTO_RGB},
+    {ColorSpaceName::DISPLAY_P3, CS_DISPLAY_P3},
+    {ColorSpaceName::DCI_P3, CS_DCI_P3},
+};
+
+ColorSpace::ColorSpace(ColorSpaceName name)
+{
+    if (NamedColorSpace.find(name) != NamedColorSpace.end()) {
+        const ColorSpace &colorSpace = NamedColorSpace.at(name);
+        colorSpaceName = name;
+        primaries = colorSpace.primaries;
+        toXYZ = colorSpace.toXYZ;
+        transferFunc = colorSpace.transferFunc;
     }
 }
 
-ColorSpace::ColorSpace(ColorSpaceName name,
-                       int64_t nativeHandle,
-                       ColorSpacePrimaries primaries,
-                       Matrix3x3 toXYZ,
-                       TransferFunc transferFunc)
-        : colorSpaceName(name)
-        , nativeHandle(nativeHandle)
-        , primaries(primaries)
-        , toXYZ(toXYZ)
-        , transferFunc(transferFunc) {}
+ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries,
+    const TransferFunc &transferFunc) : colorSpaceName(ColorSpaceName::CUSTOM), primaries(primaries), transferFunc(transferFunc) {}
 
-ColorSpace::ColorSpace(ColorSpaceName name,
-                       int64_t nativeHandle,
-                       ColorSpacePrimaries primaries,
-                       Matrix3x3 toXYZ,
-                       float gamma)
-        : colorSpaceName(name)
-        , nativeHandle(nativeHandle)
-        , primaries(primaries)
-        , toXYZ(toXYZ)
-        , transferFunc({gamma, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0}) {}
-
-ColorSpace::ColorSpace(ColorSpaceName name,
-                       int64_t nativeHandle,
-                       ColorSpacePrimaries primaries,
-                       TransferFunc transferFunc)
-        : colorSpaceName(name)
-        , nativeHandle(nativeHandle)
-        , primaries(primaries)
-        , toXYZ(ComputeXYZ(primaries))
-        , transferFunc(transferFunc) {}
-
-ColorSpace::ColorSpace(ColorSpaceName name,
-                       ColorSpacePrimaries primaries,
-                       TransferFunc transferFunc)
-        : colorSpaceName(name)
-        , nativeHandle(0)
-        , primaries(primaries)
-        , toXYZ(ComputeXYZ(primaries))
-        , transferFunc(transferFunc) {}
-
-const ColorSpace ColorSpace::SRGB() {
-    return {ColorSpaceName::SRGB,
-            {0.640f, 0.330f, 0.300f, 0.600f, 0.150f, 0.060f, 0.3127f, 0.3290f},
-            {2.4f, 1 / 1.055f, 0.055f / 1.055f, 1 / 12.92f, 0.04045f, 0.0f, 0.0f}};
+ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries,
+    float gamma): colorSpaceName(ColorSpaceName::CUSTOM), primaries(primaries)
+{
+    transferFunc = {};
+    transferFunc.g = gamma;
+    transferFunc.a = 1.0f;
 }
 
-const ColorSpace ColorSpace::LinearSRGB() {
-    return {ColorSpaceName::LINEAR_SRGB,
-            {0.640f, 0.330f, 0.300f, 0.600f, 0.150f, 0.060f, 0.3127f, 0.3290f},
-            {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
+ColorSpace::ColorSpace(const Matrix3x3 &toXYZ,
+    const TransferFunc &transferFunc) : colorSpaceName(ColorSpaceName::CUSTOM), toXYZ(toXYZ), transferFunc(transferFunc) {}
+
+ColorSpace::ColorSpace(const Matrix3x3 &toXYZ,
+    float gamma) : colorSpaceName(ColorSpaceName::CUSTOM), toXYZ(toXYZ)
+{
+    transferFunc = {};
+    transferFunc.g = gamma;
+    transferFunc.a = 1.0f;
 }
 
-const ColorSpace ColorSpace::NTSC() {
-    return {ColorSpaceName::NTSC_1953,
-            {0.67f, 0.33f, 0.21f, 0.71f, 0.14f, 0.08f, 0.310f, 0.316f},
-            {1 / 0.45f, 1 / 1.099f, 0.099f / 1.099f, 1 / 4.5f, 0.081f, 0.0f, 0.0f}};
-}
 
-const ColorSpace ColorSpace::BT709() {
-    return {ColorSpaceName::BT709,
-            {0.640f, 0.330f, 0.300f, 0.600f, 0.150f, 0.060f, 0.3127f, 0.3290f},
-            {1 / 0.45f, 1 / 1.099f, 0.099f / 1.099f, 1 / 4.5f, 0.081f, 0.0f, 0.0f}};
-}
 
-const ColorSpace ColorSpace::BT2020() {
-    return {ColorSpaceName::BT2020,
-            {0.708f, 0.292f, 0.170f, 0.797f, 0.131f, 0.046f, 0.3127f, 0.3290f},
-            {1 / 0.45f, 1 / 1.099f, 0.099f / 1.099f, 1 / 4.5f, 0.081f, 0.0f, 0.0f}};
-}
-
-const ColorSpace ColorSpace::AdobeRGB() {
-    return {ColorSpaceName::ADOBE_RGB,
-            {0.640f, 0.330f, 0.300f, 0.600f, 0.150f, 0.060f, 0.3127f, 0.3290f},
-            {2.2f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
-}
-
-const ColorSpace ColorSpace::ProPhotoRGB() {
-    return {ColorSpaceName::PRO_PHOTO_RGB,
-            {0.7347f, 0.2653f, 0.1596f, 0.8404f, 0.0366f, 0.0001f, 0.34567f, 0.35850f},
-            {1.8f, 1.0f, 0.0f, 1 / 16.0f, 0.031248f, 0.0f, 0.0f}};
-}
-
-const ColorSpace ColorSpace::DisplayP3() {
-    return {ColorSpaceName::DISPLAY_P3,
-            {0.680f, 0.320f, 0.265f, 0.690f, 0.150f, 0.060f, 0.3127f, 0.3290f},
-            {2.4f, 1 / 1.055f, 0.055f / 1.055f, 1 / 12.92f, 0.039f, 0.0f, 0.0f}};
-}
-
-const ColorSpace ColorSpace::DCIP3() {
-    return {ColorSpaceName::DCI_P3,
-            {0.680f, 0.320f, 0.265f, 0.690f, 0.150f, 0.060f, 0.314f, 0.351f},
-            {2.6f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}};
-}
-
-std::array<std::array<float, 3>, 3> operator*(const std::array<std::array<float, 3>, 3>& a,
-                                                const std::array<std::array<float, 3>, 3>& b) {
-    std::array<std::array<float, 3>, 3> c{};
+Matrix3x3 operator*(const Matrix3x3& a, const Matrix3x3& b)
+{
+    Matrix3x3 c{};
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             for (int k = 0; k < 3; ++k) {
@@ -142,9 +115,9 @@ std::array<std::array<float, 3>, 3> operator*(const std::array<std::array<float,
     return c;
 }
 
-std::array<float, 3> operator*(const std::array<float, 3>& x,
-                                const std::array<std::array<float, 3>, 3>& a) {
-    std::array<float, 3> b{};
+Vector3 operator*(const Vector3& x, const Matrix3x3& a)
+{
+    Vector3 b{};
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             b[i] += x[j] * a[j][i];
@@ -153,9 +126,9 @@ std::array<float, 3> operator*(const std::array<float, 3>& x,
     return b;
 }
 
-std::array<float, 3> operator*(const std::array<std::array<float, 3>, 3>& a,
-                                const std::array<float, 3>& x) {
-    std::array<float, 3> b{};
+Vector3 operator*(const Matrix3x3& a, const Vector3& x)
+{
+    Vector3 b{};
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             b[i] += a[i][j] * x[j];
@@ -164,10 +137,9 @@ std::array<float, 3> operator*(const std::array<std::array<float, 3>, 3>& a,
     return b;
 }
 
-
-std::array<std::array<float, 3>, 3> operator/(const std::array<float, 3>& a,
-                                const std::array<float, 3>& b) {
-    std::array<std::array<float, 3>, 3> diag{};
+Matrix3x3 operator/(const Vector3& a, const Vector3& b)
+{
+    Matrix3x3 diag{};
     for (int i = 0; i < 3; ++i) {
         diag[i][i] += a[i] / b[i];
     }
@@ -175,54 +147,59 @@ std::array<std::array<float, 3>, 3> operator/(const std::array<float, 3>& a,
 }
 
 
-Matrix3x3 ColorSpace::ComputeXYZ(const ColorSpacePrimaries& primaries) {
-    float oneRxRy = (1 - primaries.RX) / primaries.RY;
-    float oneGxGy = (1 - primaries.GX) / primaries.GY;
-    float oneBxBy = (1 - primaries.BX) / primaries.BY;
-    float oneWxWy = (1 - primaries.WX) / primaries.WY;
+Matrix3x3 ComputeXYZ(const ColorSpacePrimaries& primaries)
+{
+    float oneRxRy = (1 - primaries.rX) / primaries.rY;
+    float oneGxGy = (1 - primaries.gX) / primaries.gY;
+    float oneBxBy = (1 - primaries.bX) / primaries.bY;
+    float oneWxWy = (1 - primaries.wX) / primaries.wY;
 
-    float RxRy = primaries.RX / primaries.RY;
-    float GxGy = primaries.GX / primaries.GY;
-    float BxBy = primaries.BX / primaries.BY;
-    float WxWy = primaries.WX / primaries.WY;
+    float RxRy = primaries.rX / primaries.rY;
+    float GxGy = primaries.gX / primaries.gY;
+    float BxBy = primaries.bX / primaries.bY;
+    float WxWy = primaries.wX / primaries.wY;
 
     float BY = ((oneWxWy - oneRxRy) * (GxGy - RxRy) - (WxWy - RxRy) * (oneGxGy - oneRxRy)) /
-               ((oneBxBy - oneRxRy) * (GxGy - RxRy) - (BxBy - RxRy) * (oneGxGy - oneRxRy));
+        ((oneBxBy - oneRxRy) * (GxGy - RxRy) - (BxBy - RxRy) * (oneGxGy - oneRxRy));
     float GY = (WxWy - RxRy - BY * (BxBy - RxRy)) / (GxGy - RxRy);
     float RY = 1 - GY - BY;
 
-    float RYRy = RY / primaries.RY;
-    float GYGy = GY / primaries.GY;
-    float BYBy = BY / primaries.BY;
+    float RYRy = RY / primaries.rY;
+    float GYGy = GY / primaries.gY;
+    float BYBy = BY / primaries.bY;
 
-    return {{{RYRy * primaries.RX, RY, RYRy * (1 - primaries.RX - primaries.RY)},
-             {GYGy * primaries.GX, GY, GYGy * (1 - primaries.GX - primaries.GY)},
-             {BYBy * primaries.BX, BY, BYBy * (1 - primaries.BX - primaries.BY)}}};
+    return {{{RYRy * primaries.rX, RY, RYRy * (1 - primaries.rX - primaries.rY)},
+        {GYGy * primaries.gX, GY, GYGy * (1 - primaries.gX - primaries.gY)},
+        {BYBy * primaries.bX, BY, BYBy * (1 - primaries.bX - primaries.bY)}}};
 }
 
-static bool isfinitef_(float x) { return 0 == x * 0; }
+static bool isfinitef_(float x)
+{
+    return 0 == x * 0;
+}
 
 // inverse src Matrix to dst Matrix
-Matrix3x3 ColorSpace::invert(const Matrix3x3& src) {
-    Matrix3x3 dst{};
-
+Matrix3x3 invert(const Matrix3x3& src)
+{
     double a00 = src[0][0], a01 = src[1][0], a02 = src[2][0],
-           a10 = src[0][1], a11 = src[1][1], a12 = src[2][1],
-           a20 = src[0][2], a21 = src[1][2], a22 = src[2][2];
+        a10 = src[0][1], a11 = src[1][1], a12 = src[2][1],
+        a20 = src[0][2], a21 = src[1][2], a22 = src[2][2];
 
     double b0 = a00 * a11 - a01 * a10, b1 = a00 * a12 - a02 * a10, b2 = a01 * a12 - a02 * a11,
-           b3 = a20, b4 = a21, b5 = a22;
+        b3 = a20, b4 = a21, b5 = a22;
 
     double determinant = b0 * b5 - b1 * b4 + b2 * b3;
 
     if (determinant == 0) {
-        return dst;
+        return {};
     }
 
     double invdet = 1.0 / determinant;
     if (invdet > +FLT_MAX || invdet < -FLT_MAX || !isfinitef_((float)invdet)) {
-        return dst;
+        return {};
     }
+
+    Matrix3x3 dst{};
 
     b0 *= invdet;
     b1 *= invdet;
@@ -244,87 +221,68 @@ Matrix3x3 ColorSpace::invert(const Matrix3x3& src) {
     for (int r = 0; r < 3; ++r)
         for (int c = 0; c < 3; ++c) {
             if (!isfinitef_(dst[r][c])) {
-                return dst;
+                return {};
             }
         }
     return dst;
 }
 
-SkColorSpace* ColorSpace::ToSkColorSpace() const {
+SkColorSpace* ColorSpace::ToSkColorSpace() const
+{
     skcms_Matrix3x3 toXYZ = ToSkiaXYZ();
 
-    return SkColorSpace::MakeRGB(
-                   {
-                           transferFunc.g,
-                           transferFunc.a,
-                           transferFunc.b,
-                           transferFunc.c,
-                           transferFunc.d,
-                           transferFunc.e,
-                           transferFunc.f,
-                   },toXYZ).get();
+    return SkColorSpace::MakeRGB({
+        transferFunc.g,
+        transferFunc.a,
+        transferFunc.b,
+        transferFunc.c,
+        transferFunc.d,
+        transferFunc.e,
+        transferFunc.f,
+        }, toXYZ).get();
 }
 
-skcms_Matrix3x3 ColorSpace::ToSkiaXYZ() const {
+skcms_Matrix3x3 ColorSpace::ToSkiaXYZ() const
+{
     skcms_Matrix3x3 skToXYZMatrix;
     SkColorSpacePrimaries skPrimaries = {
-            transferFunc.g,
-            transferFunc.a,
-            transferFunc.b,
-            transferFunc.c,
-            transferFunc.d,
-            transferFunc.e,
-            transferFunc.f,
+        transferFunc.g,
+        transferFunc.a,
+        transferFunc.b,
+        transferFunc.c,
+        transferFunc.d,
+        transferFunc.e,
+        transferFunc.f,
     };
     skPrimaries.toXYZD50(&skToXYZMatrix);
 
     return skToXYZMatrix;
 }
 
-std::array<float, 2> ColorSpace::getWhitePoint() {
-    return std::array<float, 2>{primaries.WX, primaries.WY};
+std::array<float, 2> ColorSpace::GetWhitePoint() const
+{
+    return std::array<float, 2>{primaries.wX, primaries.wY};
 }
 
 
-std::array<float, 3> ColorSpace::toLinear(std::array<float, 3> v, float g) {
-    if (g == 1.0f) {
-        return v;
-    }
-    std::array<float, 3> res = v;
-    for (auto& n : res) {
-        n = std::pow(n, g);
-    }
-    return res;
-}
-
-std::array<float, 3> ColorSpace::toNonLinear(std::array<float, 3> v, float g) {
-    if (g == 1.0f) {
-        return v;
-    }
-    std::array<float, 3> res = v;
-    for (auto& n : res) {
-        n = std::pow(n, 1.0f / g);
-    }
-
-    return res;
-}
-
-std::array<float, 3> ColorSpace::toLinear(std::array<float, 3> v,
-                                          const TransferFunc& p) {
-    std::array<float, 3> res = v;
+Vector3 ColorSpace::ToLinear(Vector3 v) const
+{
+    auto &p = transferFunc;
+    Vector3 res = v;
     for (auto& n : res) {
         n = n >= p.d ? std::pow(p.a * n + p.b, p.g) + p.e : p.c * n + p.f;
     }
     return res;
 }
 
-std::array<float, 3> ColorSpace::toNonLinear(std::array<float, 3> v, const TransferFunc& p) {
-    std::array<float, 3> res = v;
+Vector3 ColorSpace::ToNonLinear(Vector3 v) const
+{
+    auto &p = transferFunc;
+    Vector3 res = v;
     for (auto& n : res) {
         n = n >= p.d * p.c ? (std::pow(n - p.e, 1.0f / p.g) - p.b) / p.a : (n - p.f) / p.c;
     }
     return res;
 }
-
-}
-}
+} //! namespace ColorManager
+} //! namespace OHOS

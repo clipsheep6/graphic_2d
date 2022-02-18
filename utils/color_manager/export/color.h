@@ -24,33 +24,26 @@ namespace ColorManager {
 class Color {
 public:
     Color() {};
-    Color(float r, float g, float b, float a, const ColorSpaceName name = ColorSpaceName::SRGB)
-            : R(r), G(g), B(b), A(a), colorSpace(name){};
-    
-    Color GetInstanceOf(float r, float g, float b, float a, ColorSpaceName name);
-    Color GetInstanceOf(int color);
-    Color GetInstanceOf(int64_t color);
-    int PackValue(int color);
+    Color(float r, float g, float b, float a);
+    Color(float r, float g, float b, float a, const ColorSpaceName name);
+    Color(int color);
+    Color(int64_t color);
+    // int PackValue(int color); 
 
     /**
      * Packs the 3 component color defined by the specified red, green, blue and
      * alpha component values into a color int in the specified color space.
      */ 
-    int PackValue(float r, float g, float b, float a);
-    int PackValue(float r, float g, float b, float a, ColorSpaceName name);
+    int64_t PackValue() const;
 
-    int Convert(float r, float g, float b, float a, ColorSpaceConvertor convertor);
-    int Convert(int color, ColorSpaceConvertor convertor);
-    int Convert(float r, float g, float b, float a, ColorSpaceName src, ColorSpaceName dst);
-    int Convert(int color, ColorSpaceName dst);
-    int Convert(int64_t color, ColorSpaceName dst);
+    Color Convert(ColorSpaceConvertor &convertor) const;
+    Color Convert(const ColorSpace &dst) const;
 
-private:
-    float R = 0.0f;
-    float G = 0.0f;
-    float B = 0.0f;
-    float A = 0.0f;
-    ColorSpaceName colorSpace = ColorSpaceName::SRGB;
+    float r = 0.0f;
+    float g = 0.0f;
+    float b = 0.0f;
+    float a = 0.0f;
+    ColorSpaceName colorSpaceName = ColorSpaceName::SRGB;
 };
 }  // namespace ColorManager
 }  // namespace OHOS

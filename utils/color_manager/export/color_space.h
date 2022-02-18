@@ -145,9 +145,10 @@ public:
 private:
     skcms_Matrix3x3 ToSkiaXYZ() const;
     ColorSpaceName colorSpaceName;
+    Matrix3x3 toXYZ;
     std::array<float, DIMES_2> whitePoint;
     TransferFunc transferFunc;
-    Matrix3x3 toXYZ;
+
 };
 } // namespace ColorSpace
 } // namespace OHOS

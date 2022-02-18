@@ -78,26 +78,31 @@ ColorSpace::ColorSpace(ColorSpaceName name)
     }
 }
 
-ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries,
-    const TransferFunc &transferFunc) : colorSpaceName(ColorSpaceName::CUSTOM),
-    whitePoint( {primaries.wX, primaries.wY}), transferFunc(transferFunc),
-    toXYZ(ComputeXYZ(primaries)) {}
+ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries, const TransferFunc &transferFunc)
+    : colorSpaceName(ColorSpaceName::CUSTOM),
+      toXYZ(ComputeXYZ(primaries)),
+      transferFunc(transferFunc)
+{
+    std::array<float, 2> whiteP = {primaries.wX, primaries.wY};
+    whitePoint = whiteP;
+}
 
 ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries, float gamma)
-    :colorSpaceName(ColorSpaceName::CUSTOM),
-     whitePoint( {primaries.wX, primaries.wY}),
-     toXYZ(ComputeXYZ(primaries))
+    : colorSpaceName(ColorSpaceName::CUSTOM),
+      toXYZ(ComputeXYZ(primaries))
 {
+    std::array<float, 2> whiteP = {primaries.wX, primaries.wY};
+    whitePoint = whiteP;
     transferFunc = {};
     transferFunc.g = gamma;
     transferFunc.a = 1.0f;
 }
 
 ColorSpace::ColorSpace(const Matrix3x3& toXYZ, const std::array<float, 2>& whitePoint, const TransferFunc &transferFunc)
-    : colorSpaceName(ColorSpaceName::CUSTOM), whitePoint(whitePoint), transferFunc(transferFunc), toXYZ(toXYZ) {}
+    : colorSpaceName(ColorSpaceName::CUSTOM), toXYZ(toXYZ), whitePoint(whitePoint), transferFunc(transferFunc) {}
 
 ColorSpace::ColorSpace(const Matrix3x3 &toXYZ, const std::array<float, 2>& whitePoint, float gamma)
-    : colorSpaceName(ColorSpaceName::CUSTOM), whitePoint(whitePoint), toXYZ(toXYZ)
+    : colorSpaceName(ColorSpaceName::CUSTOM), toXYZ(toXYZ), whitePoint(whitePoint)
 {
     transferFunc = {};
     transferFunc.g = gamma;
@@ -232,7 +237,7 @@ Matrix3x3 Invert(const Matrix3x3& src)
 SkColorSpace* ColorSpace::ToSkColorSpace() const
 {
     skcms_Matrix3x3 toXYZ = ToSkiaXYZ();
-    auto result = SkColorSpace::MakeRGB( {
+    skcms_TransferFunction skTransferFun = {
         transferFunc.g,
         transferFunc.a,
         transferFunc.b,
@@ -240,8 +245,8 @@ SkColorSpace* ColorSpace::ToSkColorSpace() const
         transferFunc.d,
         transferFunc.e,
         transferFunc.f,
-        }, toXYZ).get();
-    return result;
+    };  
+    return SkColorSpace::MakeRGB(skTransferFun, toXYZ).get();
 }
 
 skcms_Matrix3x3 ColorSpace::ToSkiaXYZ() const

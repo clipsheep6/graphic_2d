@@ -77,7 +77,8 @@ int64_t Color::PackValue() const
 // alpha value not involved in convert
 Color Color::Convert(ColorSpaceConvertor &convertor) const
 {
-    Vector3 dstColor = convertor.Convert( {r, g, b} );
+    Vector3 srcColor = {r, g, b};
+    Vector3 dstColor = convertor.Convert(srcColor);
     // dstColor[0], dstColor[1], dstColor[2] : rgb
     return Color(dstColor[0], dstColor[1], dstColor[2], a, convertor.GetDstColorSpace().GetColorSpaceName());
 }

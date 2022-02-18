@@ -83,8 +83,8 @@ ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries,
     whitePoint({primaries.wX, primaries.wY}), transferFunc(transferFunc),
     toXYZ(ComputeXYZ(primaries)) {}
 
-ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries, float gamma)
-    : colorSpaceName(ColorSpaceName::CUSTOM), whitePoint({primaries.wX, primaries.wY}), toXYZ(ComputeXYZ(primaries))
+ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries, float gamma) :
+    colorSpaceName(ColorSpaceName::CUSTOM), whitePoint({primaries.wX, primaries.wY}), toXYZ(ComputeXYZ(primaries))
 {
     transferFunc = {};
     transferFunc.g = gamma;
@@ -102,14 +102,12 @@ ColorSpace::ColorSpace(const Matrix3x3 &toXYZ, const std::array<float, 2>& white
     transferFunc.a = 1.0f;
 }
 
-
-
 Matrix3x3 operator*(const Matrix3x3& a, const Matrix3x3& b)
 {
-    Matrix3x3 c{};
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            for (int k = 0; k < 3; ++k) {
+    Matrix3x3 c = {};
+    for (int i = 0; i < a.size(); ++i) {
+        for (int j = 0; j < b.size(); ++j) {
+            for (int k = 0; k < b[0].size(); ++k) {
                 c[i][j] += a[i][k] * b[k][j];
             }
         }
@@ -119,9 +117,9 @@ Matrix3x3 operator*(const Matrix3x3& a, const Matrix3x3& b)
 
 Vector3 operator*(const Vector3& x, const Matrix3x3& a)
 {
-    Vector3 b{};
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
+    Vector3 b = {};
+    for (int i = 0; i < x.size(); ++i) {
+        for (int j = 0; j < a.size(); ++j) {
             b[i] += x[j] * a[j][i];
         }
     }
@@ -130,9 +128,9 @@ Vector3 operator*(const Vector3& x, const Matrix3x3& a)
 
 Vector3 operator*(const Matrix3x3& a, const Vector3& x)
 {
-    Vector3 b{};
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
+    Vector3 b = {};
+    for (int i = 0; i < a.size(); ++i) {
+        for (int j = 0; j < x.size(); ++j) {
             b[i] += a[i][j] * x[j];
         }
     }
@@ -141,13 +139,12 @@ Vector3 operator*(const Matrix3x3& a, const Vector3& x)
 
 Matrix3x3 operator/(const Vector3& a, const Vector3& b)
 {
-    Matrix3x3 diag{};
-    for (int i = 0; i < 3; ++i) {
+    Matrix3x3 diag = {};
+    for (int i = 0; i < a.size(); ++i) {
         diag[i][i] += a[i] / b[i];
     }
     return diag;
 }
-
 
 Matrix3x3 ComputeXYZ(const ColorSpacePrimaries& primaries)
 {
@@ -175,9 +172,9 @@ Matrix3x3 ComputeXYZ(const ColorSpacePrimaries& primaries)
         {BYBy * primaries.bX, BY, BYBy * (1 - primaries.bX - primaries.bY)}}};
 }
 
-static bool isfinitef_(float x)
+static bool IsFinite(float x)
 {
-    return 0 == x * 0;
+    return x * 0 == 0;
 }
 
 // inverse src Matrix to dst Matrix
@@ -197,7 +194,7 @@ Matrix3x3 Invert(const Matrix3x3& src)
     }
 
     double invdet = 1.0 / determinant;
-    if (invdet > +FLT_MAX || invdet < -FLT_MAX || !isfinitef_((float)invdet)) {
+    if (invdet > +FLT_MAX || invdet < -FLT_MAX || !IsFinite((float)invdet)) {
         return {};
     }
 
@@ -211,30 +208,29 @@ Matrix3x3 Invert(const Matrix3x3& src)
     b5 *= invdet;
 
     dst[0][0] = (float)(a11 * b5 - a12 * b4); // compute dst[0][0] value
-    dst[1][0] = (float)(a02 * b4 - a01 * b5);
-    dst[2][0] = (float)(+b2);
-    dst[0][1] = (float)(a12 * b3 - a10 * b5);
-    dst[1][1] = (float)(a00 * b5 - a02 * b3);
+    dst[1][0] = (float)(a02 * b4 - a01 * b5); // compute dst[1][0] value
+    dst[2][0] = (float)(+b2); // compute dst[2][0] value
+    dst[0][1] = (float)(a12 * b3 - a10 * b5); // compute dst[0][1] value
+    dst[1][1] = (float)(a00 * b5 - a02 * b3); // compute dst[1][1] value
     dst[2][1] = (float)(-b1); // compute dst[2][1] value
     dst[0][2] = (float)(a10 * b4 - a11 * b3); // compute dst[0][2] value
-    dst[1][2] = (float)(a01 * b3 - a00 * b4);
-    dst[2][2] = (float)(+b0);
+    dst[1][2] = (float)(a01 * b3 - a00 * b4); // compute dst[1][2] value
+    dst[2][2] = (float)(+b0); // compute dst[2][2] value
 
-    // the num 3 is the size of dst matrix
-    for (int r = 0; r < 3; ++r)
-        for (int c = 0; c < 3; ++c) {
-            if (!isfinitef_(dst[r][c])) {
+    for (int r = 0; r < dst.size(); ++r) {
+        for (int c = 0; c < dst[0].size(); ++c) {
+            if (!IsFinite(dst[r][c])) {
                 return {};
             }
         }
+    }
     return dst;
 }
 
 SkColorSpace* ColorSpace::ToSkColorSpace() const
 {
     skcms_Matrix3x3 toXYZ = ToSkiaXYZ();
-
-    return SkColorSpace::MakeRGB({
+    auto result = SkColorSpace::MakeRGB({
         transferFunc.g,
         transferFunc.a,
         transferFunc.b,
@@ -243,6 +239,7 @@ SkColorSpace* ColorSpace::ToSkColorSpace() const
         transferFunc.e,
         transferFunc.f,
         }, toXYZ).get();
+    return result;
 }
 
 skcms_Matrix3x3 ColorSpace::ToSkiaXYZ() const

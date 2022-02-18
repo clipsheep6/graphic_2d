@@ -17,7 +17,6 @@
 #define COLORSPACECONVERTOR
 
 #include "color_space.h"
-#include <vector>
 
 namespace OHOS {
 namespace ColorManager {
@@ -25,9 +24,21 @@ class ColorSpaceConvertor {
 public:
     ColorSpaceConvertor(const ColorSpace &src, const ColorSpace &dst, GamutMappingMode mappingMode);
 
-    ColorSpace GetSrcColorSpace() const { return srcColorSpace; }
-    ColorSpace GetDstColorSpace() const { return dstColorSpace; }
-    Matrix3x3 GetTransform() const { return transferMatrix; }
+    ColorSpace GetSrcColorSpace() const
+    {
+        return srcColorSpace;
+    }
+
+    ColorSpace GetDstColorSpace() const
+    {
+        return dstColorSpace;
+    }
+
+    Matrix3x3 GetTransform() const
+    {
+        return transferMatrix;
+    }
+    
     Vector3 Convert(const Vector3& v) const;
     Vector3 ConvertLinear(const Vector3& v) const;
 

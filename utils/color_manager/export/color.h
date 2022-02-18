@@ -20,7 +20,6 @@
 
 namespace OHOS {
 namespace ColorManager {
-
 class Color {
 public:
     Color() {};
@@ -28,12 +27,8 @@ public:
     Color(float r, float g, float b, float a, const ColorSpaceName name);
     Color(int color);
     Color(int64_t color);
-    // int PackValue(int color); 
 
-    /**
-     * Packs the 3 component color defined by the specified red, green, blue and
-     * alpha component values into a color int in the specified color space.
-     */ 
+    // Packs the 3 RGBA into a color int in the specified color space.
     int64_t PackValue() const;
 
     Color Convert(ColorSpaceConvertor &convertor) const;

@@ -12,20 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "src/core/SkVM.h"
 #include "color_space_convertor.h"
 #include <algorithm>
+#include "src/core/SkVM.h"
 
 namespace OHOS {
 namespace ColorManager {
-static const std::array<float, 2> ILLUMINANT_D50_XY = {0.34567f, 0.35850f};
+static const std::array<float, DIMES_2> ILLUMINANT_D50_XY = {0.34567f, 0.35850f};
 static const Vector3 ILLUMINANT_D50_XYZ = {0.964212f, 1.0f, 0.825188f};
 static const Matrix3x3 BRADFORD = {{
     {0.8951f, -0.7502f, 0.0389f},
     {0.2664f, 1.7135f, -0.0685f},
     {-0.1614f, 0.0367f, 1.0296f}}};
 
-static bool Equal(std::array<float, 2> vecA, std::array<float, 2> vecB)
+static bool Equal(std::array<float, DIMES_2> vecA, std::array<float, DIMES_2> vecB)
 {
     for (unsigned i = 0; i < vecA.size(); i++) {
         if (std::abs(vecA[i] - vecB[i]) > 1e-3f) {
@@ -46,20 +46,19 @@ static Matrix3x3 Adaptation(const Matrix3x3& matrix,
 
 ColorSpaceConvertor::ColorSpaceConvertor(const ColorSpace &src,
     const ColorSpace &dst, GamutMappingMode mappingMode)
-    : srcColorSpace(src)
-    , dstColorSpace(dst)
-    , mappingMode(mappingMode)
+    : srcColorSpace(src), dstColorSpace(dst), mappingMode(mappingMode)
 {
     if (Equal(srcColorSpace.GetWhitePoint(), dstColorSpace.GetWhitePoint())) {
         transferMatrix = srcColorSpace.GetRGBToXYZ() * dstColorSpace.GetXYZToRGB();
-    }else {
+    } 
+    else {
         Matrix3x3 rgbToXYZ(srcColorSpace.GetRGBToXYZ());
         Matrix3x3 xyzToRGB(dstColorSpace.GetXYZToRGB());
 
-        Vector3 srcXYZ = ColorSpace::XYZ(Vector3{
-            srcColorSpace.GetWhitePoint()[0], srcColorSpace.GetWhitePoint()[0], 1});
-        Vector3 dstXYZ = ColorSpace::XYZ(Vector3{
-            dstColorSpace.GetWhitePoint()[0], dstColorSpace.GetWhitePoint()[1], 1});
+        Vector3 srcXYZ = ColorSpace::XYZ(Vector3{srcColorSpace.GetWhitePoint()[0],
+            srcColorSpace.GetWhitePoint()[0], 1});
+        Vector3 dstXYZ = ColorSpace::XYZ(Vector3{dstColorSpace.GetWhitePoint()[0],
+            dstColorSpace.GetWhitePoint()[1], 1});
 
         if (!Equal(dstColorSpace.GetWhitePoint(), ILLUMINANT_D50_XY)) {
             rgbToXYZ = srcColorSpace.GetRGBToXYZ() * Adaptation(BRADFORD, srcXYZ, ILLUMINANT_D50_XYZ);

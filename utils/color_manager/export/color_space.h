@@ -21,8 +21,12 @@
 
 namespace OHOS {
 namespace ColorManager {
-using Vector3 = std::array<float, 3>;
-using Matrix3x3 = std::array<Vector3, 3>;
+#define DIMES_3 3
+#define DIMES_2 2
+
+using Vector3 = std::array<float, DIMES_3>;
+using Matrix3x3 = std::array<Vector3, DIMES_3>;
+
 enum ColorSpaceName : int32_t {
     NONE = 0,
     ACES,
@@ -64,7 +68,7 @@ struct ColorSpacePrimaries {
 
 struct TransferFunc {
     float g;
-    float a; 
+    float a;
     float b;
     float c;
     float d;
@@ -83,11 +87,10 @@ Matrix3x3 operator/(const Vector3& a, const Vector3& b);
 Matrix3x3 Invert(const Matrix3x3& src);
 
 // Compute a toXYZD50 matrix from a given rgb and white point
-Matrix3x3 ComputeXYZ(const ColorSpacePrimaries& primaries); 
+Matrix3x3 ComputeXYZ(const ColorSpacePrimaries& primaries);
 
 class ColorSpace {
 public:
-
     ColorSpace(ColorSpaceName name);
 
     ColorSpace(const ColorSpacePrimaries &primaries, const TransferFunc &transferFunc);
@@ -114,8 +117,8 @@ public:
         return toRGB;
     }
 
-    std::array<float, 2> GetWhitePoint() const
-    { 
+    std::array<float, DIMES_2> GetWhitePoint() const
+    {
         return whitePoint;
     }
 
@@ -126,14 +129,11 @@ public:
 
     static Vector3 XYZ(const Vector3& xyY)
     {
-        return Vector3{
-            (xyY[0] * xyY[2]) / xyY[1],
-            xyY[2],
-            ((1 - xyY[0] - xyY[1]) * xyY[2]) / xyY[1]
-        };
+        return Vector3{(xyY[0] * xyY[2]) / xyY[1], xyY[2],
+            ((1 - xyY[0] - xyY[1]) * xyY[2]) / xyY[1]};
     }
 
-    // OHOS ColorSpce -> Skia ColorSpace
+    // convert OHOS ColorSpce to SKColorSpace
     SkColorSpace* ToSkColorSpace() const;
 
     Vector3 ToLinear(Vector3 color) const;
@@ -145,7 +145,7 @@ public:
 private:
     skcms_Matrix3x3 ToSkiaXYZ() const;
     ColorSpaceName colorSpaceName;
-    std::array<float, 2> whitePoint;
+    std::array<float, DIMES_2> whitePoint;
     TransferFunc transferFunc;
     Matrix3x3 toXYZ;
 };

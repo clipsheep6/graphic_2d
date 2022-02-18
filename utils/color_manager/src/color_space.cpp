@@ -181,7 +181,7 @@ static bool isfinitef_(float x)
 }
 
 // inverse src Matrix to dst Matrix
-Matrix3x3 invert(const Matrix3x3& src)
+Matrix3x3 Invert(const Matrix3x3& src)
 {
     double a00 = src[0][0], a01 = src[1][0], a02 = src[2][0],
         a10 = src[0][1], a11 = src[1][1], a12 = src[2][1],
@@ -210,16 +210,17 @@ Matrix3x3 invert(const Matrix3x3& src)
     b4 *= invdet;
     b5 *= invdet;
 
-    dst[0][0] = (float)(a11 * b5 - a12 * b4);
+    dst[0][0] = (float)(a11 * b5 - a12 * b4); // compute dst[0][0] value
     dst[1][0] = (float)(a02 * b4 - a01 * b5);
     dst[2][0] = (float)(+b2);
     dst[0][1] = (float)(a12 * b3 - a10 * b5);
     dst[1][1] = (float)(a00 * b5 - a02 * b3);
-    dst[2][1] = (float)(-b1);
-    dst[0][2] = (float)(a10 * b4 - a11 * b3);
+    dst[2][1] = (float)(-b1); // compute dst[2][1] value
+    dst[0][2] = (float)(a10 * b4 - a11 * b3); // compute dst[0][2] value
     dst[1][2] = (float)(a01 * b3 - a00 * b4);
     dst[2][2] = (float)(+b0);
 
+    // the num 3 is the size of dst matrix
     for (int r = 0; r < 3; ++r)
         for (int c = 0; c < 3; ++c) {
             if (!isfinitef_(dst[r][c])) {

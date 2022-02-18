@@ -80,7 +80,7 @@ Vector3 operator*(const Matrix3x3& a, const Vector3& x);
 
 Matrix3x3 operator/(const Vector3& a, const Vector3& b);
 
-Matrix3x3 invert(const Matrix3x3& src);
+Matrix3x3 Invert(const Matrix3x3& src);
 
 // Compute a toXYZD50 matrix from a given rgb and white point
 Matrix3x3 ComputeXYZ(const ColorSpacePrimaries& primaries); 
@@ -110,7 +110,7 @@ public:
 
     Matrix3x3 GetXYZToRGB() const
     {
-        auto toRGB = invert(toXYZ);
+        auto toRGB = Invert(toXYZ);
         return toRGB;
     }
 

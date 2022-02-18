@@ -60,7 +60,7 @@ ColorSpaceConvertor::ColorSpaceConvertor(const ColorSpace &src,
     , dstColorSpace(dst)
     , mappingMode(mappingMode)
 {
-    if (AllLessThan(srcColorSpace.GetWhitePoint(), dstColorSpace.GetWhitePoint())) {
+    if (!AllLessThan(srcColorSpace.GetWhitePoint(), dstColorSpace.GetWhitePoint())) {
         transferMatrix = dstColorSpace.GetXYZToRGB() * srcColorSpace.GetRGBToXYZ();
     }else {
         Matrix3x3 rgbToXYZ(srcColorSpace.GetRGBToXYZ());

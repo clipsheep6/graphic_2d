@@ -17,7 +17,7 @@
 #define COLORSPACE
 
 #include "src/core/SkColorSpaceXformSteps.h"
-#include "third_party/skcms/skcms.h"
+#include "../include/third_party/skcms/skcms.h"
 
 namespace OHOS {
 namespace ColorManager {
@@ -94,9 +94,9 @@ public:
 
     ColorSpace(const ColorSpacePrimaries &primaries, float gamma);
 
-    ColorSpace(const Matrix3x3 &toXYZ, const TransferFunc &transferFunc);
+    ColorSpace(const Matrix3x3& toXYZ, const std::array<float, 2> &whitePoint, const TransferFunc& transferFunc);
 
-    ColorSpace(const Matrix3x3 &toXYZ, float gamma);
+    ColorSpace(const Matrix3x3& toXYZ, const std::array<float, 2>& whitePoint, float gamma);
 
     ColorSpaceName GetColorSpaceName() const
     {
@@ -114,7 +114,10 @@ public:
         return toRGB;
     }
 
-    std::array<float, 2> GetWhitePoint() const;
+    std::array<float, 2> GetWhitePoint() const
+    { 
+        return whitePoint;
+    }
 
     float GetGamma() const
     {
@@ -140,9 +143,9 @@ public:
     float clampMax = 1.0f;
 
 private:
-    skcms_Matrix3x3 ToSkiaXYZ() const; 
-    ColorSpaceName colorSpaceName;  
-    ColorSpacePrimaries primaries;
+    skcms_Matrix3x3 ToSkiaXYZ() const;
+    ColorSpaceName colorSpaceName;
+    std::array<float, 2> whitePoint;
     TransferFunc transferFunc;
     Matrix3x3 toXYZ;
 };

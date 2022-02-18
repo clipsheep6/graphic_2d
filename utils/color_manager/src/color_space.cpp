@@ -72,28 +72,30 @@ ColorSpace::ColorSpace(ColorSpaceName name)
     if (NamedColorSpace.find(name) != NamedColorSpace.end()) {
         const ColorSpace &colorSpace = NamedColorSpace.at(name);
         colorSpaceName = name;
-        primaries = colorSpace.primaries;
+        whitePoint = colorSpace.whitePoint;
         toXYZ = colorSpace.toXYZ;
         transferFunc = colorSpace.transferFunc;
     }
 }
 
 ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries,
-    const TransferFunc &transferFunc) : colorSpaceName(ColorSpaceName::CUSTOM), primaries(primaries), transferFunc(transferFunc) {}
+    const TransferFunc &transferFunc) : colorSpaceName(ColorSpaceName::CUSTOM),
+    whitePoint({primaries.wX, primaries.wY}), transferFunc(transferFunc),
+    toXYZ(ComputeXYZ(primaries)) {}
 
-ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries,
-    float gamma): colorSpaceName(ColorSpaceName::CUSTOM), primaries(primaries)
+ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries, float gamma)
+    : colorSpaceName(ColorSpaceName::CUSTOM), whitePoint({primaries.wX, primaries.wY}), toXYZ(ComputeXYZ(primaries))
 {
     transferFunc = {};
     transferFunc.g = gamma;
     transferFunc.a = 1.0f;
 }
 
-ColorSpace::ColorSpace(const Matrix3x3 &toXYZ,
-    const TransferFunc &transferFunc) : colorSpaceName(ColorSpaceName::CUSTOM), toXYZ(toXYZ), transferFunc(transferFunc) {}
+ColorSpace::ColorSpace(const Matrix3x3& toXYZ, const std::array<float, 2>& whitePoint, const TransferFunc &transferFunc)
+    : colorSpaceName(ColorSpaceName::CUSTOM), whitePoint(whitePoint), transferFunc(transferFunc), toXYZ(toXYZ) {}
 
-ColorSpace::ColorSpace(const Matrix3x3 &toXYZ,
-    float gamma) : colorSpaceName(ColorSpaceName::CUSTOM), toXYZ(toXYZ)
+ColorSpace::ColorSpace(const Matrix3x3 &toXYZ, const std::array<float, 2>& whitePoint, float gamma)
+    : colorSpaceName(ColorSpaceName::CUSTOM), whitePoint(whitePoint), toXYZ(toXYZ)
 {
     transferFunc = {};
     transferFunc.g = gamma;
@@ -258,12 +260,6 @@ skcms_Matrix3x3 ColorSpace::ToSkiaXYZ() const
 
     return skToXYZMatrix;
 }
-
-std::array<float, 2> ColorSpace::GetWhitePoint() const
-{
-    return std::array<float, 2>{primaries.wX, primaries.wY};
-}
-
 
 Vector3 ColorSpace::ToLinear(Vector3 v) const
 {

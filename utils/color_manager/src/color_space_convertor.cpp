@@ -14,7 +14,6 @@
  */
 #include "color_space_convertor.h"
 #include <algorithm>
-#include "src/core/SkVM.h"
 
 namespace OHOS {
 namespace ColorManager {

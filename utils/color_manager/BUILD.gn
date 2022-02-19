@@ -13,8 +13,8 @@
 
 import("//build/ohos.gni")
 
-## Build colormanager_config.a {{{
-config("colormanager_config") {
+## Build color_manager_config.a {{{
+config("color_manager_config") {
   visibility = [ ":*" ]
 
   cflags = [
@@ -25,28 +25,24 @@ config("colormanager_config") {
   ]
 }
 
-config("colormanager_public_config") {
+config("color_manager_public_config") {
   include_dirs = [
     "export",
-    "//third_party/skia/include",
-    "//third_party/skia",
+    "//third_party/flutter/skia",
   ]
 }
 
-ohos_static_library("colormanager") {
+ohos_static_library("color_manager") {
   sources = [
     "src/color.cpp",
     "src/color_space.cpp",
     "src/color_space_convertor.cpp",
   ]
 
-  configs = [ ":colormanager_config" ]
+  configs = [ ":color_manager_config" ]
 
-  public_configs = [ ":colormanager_public_config" ]
+  public_configs = [ ":color_manager_public_config" ]
 
-  deps = [
-    "..:scoped_bytrace",
-    "//third_party/skia:skia",
-  ]
+  deps = [ "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_ohos" ]
 }
-## Build colormanager_config.a }}}
+## Build color_manager_config.a }}}

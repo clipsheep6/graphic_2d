@@ -16,8 +16,9 @@
 #ifndef COLORSPACE
 #define COLORSPACE
 
-#include "src/core/SkColorSpaceXformSteps.h"
-#include "third_party/skcms/skcms.h"
+#include <array>
+#include "include/core/SkColorSpace.h"
+#include "include/third_party/skcms/skcms.h"
 
 namespace OHOS {
 namespace ColorManager {

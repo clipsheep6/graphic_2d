@@ -344,22 +344,22 @@ public:
         pipelineTestUtils::ToDrawSurface()
             .SetSurfaceNode(surfaceNode1)
             .SetShapeColor(0xff00ffff)
-            .SetSurfaceNodeSize(SkRect::MakeXYWH(screenWidth_ * 0.4f, screenheight_ * 0.4f, 500, 300))
+            .SetSurfaceNodeSize(SkRect::MakeXYWH(screenWidth_ * 0.3f, screenheight_ * 0.3f, screenWidth_ * 0.2f, screenheight_ * 0.2f))
             .SetBufferSizeAuto()
             .SetDraw([&](SkCanvas &canvas, SkPaint &paint) -> void {
                 canvas.drawRect(
-                    SkRect::MakeXYWH(0, 0, 500, 300),
+                    SkRect::MakeXYWH(0, 0, screenWidth_ * 0.2f, screenheight_ * 0.2f),
                     paint);
             })
             .Run();
         pipelineTestUtils::ToDrawSurface()
             .SetSurfaceNode(surfaceNode2)
             .SetShapeColor(0xffff0000)
-            .SetSurfaceNodeSize(SkRect::MakeXYWH(screenWidth_ * 0.6f, screenheight_ * 0.6f, 500, 300))
+            .SetSurfaceNodeSize(SkRect::MakeXYWH(screenWidth_ * 0.6f, screenheight_ * 0.6f, screenWidth_ * 0.2f, screenheight_ * 0.2f))
             .SetBufferSizeAuto()
             .SetDraw([&](SkCanvas &canvas, SkPaint &paint) -> void {
                 canvas.drawRect(
-                    SkRect::MakeXYWH(0, 0, 400, 100),
+                    SkRect::MakeXYWH(0, 0, screenWidth_ * 0.2f, screenheight_ * 0.2f),
                     paint);
             })
             .Run();
@@ -368,7 +368,7 @@ public:
         RSDisplayNode::SharedPtr displayNode = RSDisplayNode::Create(config);
         displayNode->AddChild(surfaceNode1, -1);
         displayNode->AddChild(surfaceNode2, -1);
-
+        std::cout << "Hardware Processer test start\n";
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
             transactionProxy->FlushImplicitTransaction();
@@ -379,7 +379,7 @@ public:
             if (transactionProxy != nullptr) {
                 transactionProxy->FlushImplicitTransaction();
             }
-            usleep(300000);
+            sleep(1);
         }
         for (float scale = 0; scale < 2.f; scale += 0.2f) {
             printf("scale=%f\n", scale);
@@ -387,23 +387,89 @@ public:
             if (transactionProxy != nullptr) {
                 transactionProxy->FlushImplicitTransaction();
             }
-            usleep(300000);
+            sleep(1);
         }
         surfaceNode2->SetScaleX(1.f);
-        std::cout << "Compatible rotation test start\n";
-        for (float rotate = 0; rotate <= 360.f; rotate += 15) {
+        std::cout << "Hardware Processer test end\n";
+        std::cout << "Compatible Processer test start\n";
+        for (float rotate = 0; rotate <= 180.f; rotate += 15) {
+            displayNode->RemoveChild(surfaceNode2);
+            if (transactionProxy != nullptr) {
+                transactionProxy->FlushImplicitTransaction();
+            }
+            displayNode->AddChild(surfaceNode2, -1);
+            pipelineTestUtils::ToDrawSurface()
+                .SetSurfaceNode(surfaceNode2)
+                .SetShapeColor(0xffff0000)
+                .SetSurfaceNodeSize(SkRect::MakeXYWH(screenWidth_ * 0.6f, screenheight_ * 0.6f, screenWidth_ * 0.2f, screenheight_ * 0.2f))
+                .SetBufferSizeAuto()
+                .SetDraw([&](SkCanvas &canvas, SkPaint &paint) -> void {
+                    canvas.drawRect(
+                        SkRect::MakeXYWH(0, 0, screenWidth_ * 0.2f, screenheight_ * 0.2f),
+                        paint);
+                })
+            .Run();
             printf("roate=%f\n", rotate);
             surfaceNode2->SetRotation(rotate);
             if (transactionProxy != nullptr) {
                 transactionProxy->FlushImplicitTransaction();
             }
-            usleep(300000);
+            sleep(1);
         }
+        surfaceNode2->SetRotation(180.f);
+        for (float alpha = 0; alpha <= 1.f; alpha += 0.2f) {
+            displayNode->RemoveChild(surfaceNode2);
+            if (transactionProxy != nullptr) {
+                transactionProxy->FlushImplicitTransaction();
+            }
+            displayNode->AddChild(surfaceNode2, -1);
+            pipelineTestUtils::ToDrawSurface()
+                .SetSurfaceNode(surfaceNode2)
+                .SetShapeColor(0xffff0000)
+                .SetSurfaceNodeSize(SkRect::MakeXYWH(screenWidth_ * 0.6f, screenheight_ * 0.6f, screenWidth_ * 0.2f, screenheight_ * 0.2f))
+                .SetBufferSizeAuto()
+                .SetDraw([&](SkCanvas &canvas, SkPaint &paint) -> void {
+                    canvas.drawRect(
+                        SkRect::MakeXYWH(0, 0, screenWidth_ * 0.2f, screenheight_ * 0.2f),
+                        paint);
+                })
+            .Run();
+            printf("printf alpha=%f \n", alpha);
+            surfaceNode2->SetAlpha(alpha);
+            if (transactionProxy != nullptr) {
+                transactionProxy->FlushImplicitTransaction();
+            }
+            sleep(1);
+        }
+        for (float scale = 0; scale < 2.f; scale += 0.2f) {
+            displayNode->RemoveChild(surfaceNode2);
+            if (transactionProxy != nullptr) {
+                transactionProxy->FlushImplicitTransaction();
+            }
+            displayNode->AddChild(surfaceNode2, -1);
+            pipelineTestUtils::ToDrawSurface()
+                .SetSurfaceNode(surfaceNode2)
+                .SetShapeColor(0xffff0000)
+                .SetSurfaceNodeSize(SkRect::MakeXYWH(screenWidth_ * 0.6f, screenheight_ * 0.6f, screenWidth_ * 0.2f, screenheight_ * 0.2f))
+                .SetBufferSizeAuto()
+                .SetDraw([&](SkCanvas &canvas, SkPaint &paint) -> void {
+                    canvas.drawRect(
+                        SkRect::MakeXYWH(0, 0, screenWidth_ * 0.2f, screenheight_ * 0.2f),
+                        paint);
+                })
+            .Run();
+            printf("scale=%f\n", scale);
+            surfaceNode2->SetScaleX(scale);
+            if (transactionProxy != nullptr) {
+                transactionProxy->FlushImplicitTransaction();
+            }
+            sleep(1);
+        }
+        std::cout << "Compatible Processer test end\n";
         displayNode->RemoveFromTree();
         if (transactionProxy != nullptr) {
             transactionProxy->FlushImplicitTransaction();
         }
-        std::cout << "Compatible rotation test end\n";
         std::cout << "Render service Client rs Demo.cpp testCaseDefault end\n";
         std::cout << "-------------------------------------------------------\n";
     }

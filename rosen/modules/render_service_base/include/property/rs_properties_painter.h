@@ -39,6 +39,7 @@ public:
     static void DrawForegroundColor(const RSProperties& properties, SkCanvas& canvas);
     static void DrawTransitionProperties(const std::unique_ptr<RSTransitionProperties>& transitionProperties,
         const RSProperties& properties, RSPaintFilterCanvas& canvas);
+    static bool GetGravityMatrix(Gravity gravity, RectF rect, float w, float h, SkMatrix& mat);    
 };
 } // namespace Rosen
 } // namespace OHOS

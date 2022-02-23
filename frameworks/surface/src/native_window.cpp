@@ -138,7 +138,7 @@ int32_t NativeWindowFlushBuffer(struct NativeWindow *window, struct NativeWindow
         config.timestamp = 0;
     }
 
-    window->surface->FlushBuffer(buffer->sfbuffer, fenceFd, config);
+    window->surface->FlushBuffer(buffer->sfbuffer, -1, config);
 
     // unreference nativewindowbuffer object
     return OHOS::GSERROR_OK;

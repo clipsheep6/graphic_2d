@@ -37,17 +37,23 @@ struct RGBAColor {
 class Output : public AlgoFilter {
 public:
     Output();
-    virtual ~Output();
-    void SetValue(const std::string& key, void *value, int size) override;
+    virtual ~Output() {};
+    void SetValue(const std::string& key, std::shared_ptr<void> value, int size) override;
     void DoProcess(ProcessData& data) override;
+    void EncodeToFile(ProcessData& data);
+    void EncodeToPixelMap(ProcessData& data);
+    void WriteToBuffer(ProcessData& data);
     std::string GetVertexShader() override;
     std::string GetFragmentShader() override;
     virtual FILTER_TYPE GetFilterType() override;
+    std::unique_ptr<OHOS::Media::PixelMap> GetPixelMap();
+    std::unique_ptr<RGBAColor[]> GetColorBuffer();
 
 protected:
     std::string format_;
     std::string dstImagePath_;
-    RGBAColor* colorBuffer = nullptr;
+    std::unique_ptr<OHOS::Media::PixelMap> pixelMap_ = nullptr;
+    std::unique_ptr<RGBAColor[]> colorBuffer_ = nullptr;
 
 private:
     void LoadFilterParams() override {};

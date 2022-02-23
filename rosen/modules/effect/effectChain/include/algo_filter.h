@@ -28,7 +28,7 @@ public:
     AlgoFilter();
     virtual ~AlgoFilter();
     virtual FILTER_TYPE GetFilterType() override;
-    virtual void SetValue(const std::string& key, void* value, int size) override {};
+    virtual void SetValue(const std::string& key, std::shared_ptr<void> value, int size) override {};
 
 protected:
     void Use();

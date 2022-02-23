@@ -63,7 +63,7 @@ void Builder::AnalyseFilters(cJSON* filters)
         cJSON* params = cJSON_GetObjectItem(item, "params");
         if (type != nullptr && name != nullptr) {
             nameType_[name->valuestring] = type->valuestring;
-            auto tempFilter = algoFilterFactory->GetFilter(type);
+            auto tempFilter = filterFactory->GetFilter(type->valuestring);
             if (tempFilter != nullptr) {
                 ParseParams(tempFilter, params);
                 nameFilter_[name->valuestring] = tempFilter;

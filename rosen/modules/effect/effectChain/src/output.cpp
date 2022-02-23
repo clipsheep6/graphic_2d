@@ -36,8 +36,8 @@ FILTER_TYPE Output::GetFilterType()
 
 void Output::DoProcess(ProcessData& data)
 {
-    uint32_t bufferSize = data.textureWidth * data.textureHeight;
-    colorBuffer = new RGBAColor[bufferSize];
+    uint32_t bufferSize = data.textureWidth * data.textureHeight * COLOR_CHANNEL;
+    colorBuffer = new uint8_t[bufferSize];
     glBindFramebuffer(GL_FRAMEBUFFER, data.frameBufferID);
     glBindTexture(GL_TEXTURE_2D, data.dstTextureID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, data.textureWidth, data.textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);

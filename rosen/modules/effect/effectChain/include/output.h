@@ -23,19 +23,9 @@
 
 namespace OHOS {
 namespace Rosen {
-#pragma pack(2)
-
-struct RGBAColor {
-    unsigned char R;
-    unsigned char G;
-    unsigned char B;
-    unsigned char A;
-};
-
-#pragma pack()
-
 class Output : public AlgoFilter {
 public:
+    static constexpr int COLOR_CHANNEL = 4;
     Output();
     virtual ~Output();
     void SetValue(const std::string& key, void *value, int size) override;
@@ -47,7 +37,7 @@ public:
 protected:
     std::string format_;
     std::string dstImagePath_;
-    RGBAColor* colorBuffer = nullptr;
+    uint8_t* colorBuffer = nullptr;
 
 private:
     void LoadFilterParams() override {};

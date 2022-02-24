@@ -21,6 +21,17 @@
 
 namespace OHOS {
 namespace Rosen {
+const float VERTICES[] = {
+    1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+    1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+    -1.0f, 1.0f, 0.0f, 0.0f, 1.0f
+};
+const unsigned int INDICES[] = {
+    0, 1, 3,
+    1, 2, 3
+};
+
 class Mesh {
 public:
     static constexpr int DEFAULT_STRIDE = 5;
@@ -37,12 +48,6 @@ public:
 private:
     unsigned int VBO_;
     unsigned int EBO_;
-    int verticesSize_;
-    int indicesSize_;
-    int verticesNumber_;
-    int indicesNumber_;
-    float* mVertices_ = nullptr;
-    unsigned int* mIndices_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

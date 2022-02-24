@@ -19,14 +19,8 @@ namespace OHOS {
 namespace Rosen {
 AlgoFilter::AlgoFilter()
 {
-    mesh_ = new Mesh();
+    mesh_ = std::make_shared<Mesh>();
     mesh_->Use();
-}
-
-AlgoFilter::~AlgoFilter()
-{
-    delete program_;
-    delete mesh_;
 }
 
 void AlgoFilter::Prepare(ProcessData& data)
@@ -51,7 +45,7 @@ void AlgoFilter::Draw(ProcessData& data)
 
 void AlgoFilter::CreateProgram(const std::string& vertexString, const std::string& fragmentString)
 {
-    program_ = new Program();
+    program_ = std::make_shared<Program>();
     program_->Compile(vertexString, fragmentString);
 }
 

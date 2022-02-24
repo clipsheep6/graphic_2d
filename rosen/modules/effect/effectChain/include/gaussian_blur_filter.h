@@ -31,7 +31,7 @@ public:
     static constexpr float INVERSE_DOWNSAMPLE_FACTOR = 1.0f / DOWNSAMPLE_FACTOR;
     GaussianBlurFilter();
     ~GaussianBlurFilter();
-    void SetValue(const std::string& key, void* value, int size) override;
+    void SetValue(const std::string& key, std::shared_ptr<void> value, int size) override;
 
 private:
     std::string GetVertexShader() override;

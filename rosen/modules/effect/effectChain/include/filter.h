@@ -54,7 +54,7 @@ public:
     virtual int GetOutputNumber();
     virtual int GetMaxInputNumber();
     virtual int GetMaxOutputNumber();
-    virtual void SetValue(const std::string& key, void* value, int size) {};
+    virtual void SetValue(const std::string& key, std::shared_ptr<void> value, int size) {};
 
 protected:
     int nextNum_ = 0;

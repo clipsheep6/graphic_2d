@@ -25,7 +25,7 @@ class ScaleFilter : public AlgoFilter {
 public:
     static constexpr float DEFAULT_SACLE = 1.0f;
     ScaleFilter();
-    void SetValue(const std::string& key, void* value, int size) override;
+    void SetValue(const std::string& key, std::shared_ptr<void> value, int size) override;
     std::string GetVertexShader() override;
     std::string GetFragmentShader() override;
     void SetScale(float scale);

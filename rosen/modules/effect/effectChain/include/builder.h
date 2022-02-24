@@ -44,7 +44,7 @@ private:
     std::vector<std::shared_ptr<Input>> inputs_;
     cJSON* filters_ = nullptr;
     cJSON* connections_ = nullptr;
-    std::shared_ptr<FilterFactory> algoFilterFactory = std::make_shared<FilterFactory>();
+    std::shared_ptr<FilterFactory> filterFactory = std::make_shared<FilterFactory>();
 };
 } // namespace Rosen
 } // namespace OHOS

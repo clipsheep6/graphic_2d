@@ -24,20 +24,70 @@ Output::Output()
     CreateProgram(GetVertexShader(), GetFragmentShader());
 }
 
-Output::~Output()
-{
-    delete[] colorBuffer;
-}
-
 FILTER_TYPE Output::GetFilterType()
 {
     return FILTER_TYPE::OUTPUT;
 }
 
+std::unique_ptr<OHOS::Media::PixelMap> Output::GetPixelMap()
+{
+    return std::move(pixelMap_);
+}
+
+std::unique_ptr<RGBAColor[]> Output::GetColorBuffer()
+{
+    return std::move(colorBuffer_);
+}
+
 void Output::DoProcess(ProcessData& data)
 {
+    if (format_ == "image/jpeg" || format_ == "image/png") {
+        EncodeToFile(data);
+    } else if (format_ == "pixelMap") {
+        EncodeToPixelMap(data);
+    } else if (format_ == "buffer") {
+        WriteToBuffer(data);
+    }
+}
+
+void Output::EncodeToFile(ProcessData& data)
+{
+    EncodeToPixelMap(data);
+    OHOS::Media::ImagePacker imagePacker;
+    OHOS::Media::PackOption option;
+    option.format = format_;
+    std::set<std::string> formats;
+    uint32_t ret = imagePacker.GetSupportedFormats(formats);
+    if (ret != 0) {
+        return;
+    }
+    imagePacker.StartPacking(dstImagePath_, option);
+    imagePacker.AddImage(*pixelMap_);
+    int64_t packedSize = 0;
+    imagePacker.FinalizePacking(packedSize);
+}
+
+void Output::EncodeToPixelMap(ProcessData& data)
+{
+    WriteToBuffer(data);
+    pixelMap_ = std::make_unique<OHOS::Media::PixelMap>();
+    OHOS::Media::ImageInfo info;
+    info.size.width = data.textureWidth;
+    info.size.height = data.textureHeight;
+    info.pixelFormat = OHOS::Media::PixelFormat::RGB_888;
+    info.colorSpace = OHOS::Media::ColorSpace::SRGB;
     uint32_t bufferSize = data.textureWidth * data.textureHeight;
-    colorBuffer = new RGBAColor[bufferSize];
+    pixelMap_->SetImageInfo(info);
+    pixelMap_->SetPixelsAddr(colorBuffer_.get(), nullptr, bufferSize, OHOS::Media::AllocatorType::HEAP_ALLOC, nullptr);
+}
+
+void Output::WriteToBuffer(ProcessData& data)
+{
+    uint32_t bufferSize = data.textureWidth * data.textureHeight * COLOR_CHANNEL;
+    std::shared_ptr<uint8_t> colorBuffer(new uint8_t[bufferSize], [](uint8_t *ptr){
+        delete[] ptr;
+    });
+    colorBuffer_ = std::move(colorBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, data.frameBufferID);
     glBindTexture(GL_TEXTURE_2D, data.dstTextureID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, data.textureWidth, data.textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -48,44 +98,26 @@ void Output::DoProcess(ProcessData& data)
     glBindTexture(GL_TEXTURE_2D, data.srcTextureID);
     glDrawElements(GL_TRIANGLES, AlgoFilter::DRAW_ELEMENTS_NUMBER, GL_UNSIGNED_INT, 0);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glReadPixels(0, 0, data.textureWidth, data.textureHeight, GL_RGB, GL_UNSIGNED_BYTE, colorBuffer);
-
-    std::unique_ptr<OHOS::Media::PixelMap> pixelMap = std::make_unique<OHOS::Media::PixelMap>();
-    OHOS::Media::ImageInfo info;
-    info.size.width = data.textureWidth;
-    info.size.height = data.textureHeight;
-    info.pixelFormat = OHOS::Media::PixelFormat::RGB_888;
-    info.colorSpace = OHOS::Media::ColorSpace::SRGB;
-    pixelMap->SetImageInfo(info);
-    pixelMap->SetPixelsAddr(colorBuffer, nullptr, bufferSize, OHOS::Media::AllocatorType::HEAP_ALLOC, nullptr);
-
-    OHOS::Media::ImagePacker imagePacker;
-    OHOS::Media::PackOption option;
-    option.format = format_;
-    std::set<std::string> formats;
-    uint32_t ret = imagePacker.GetSupportedFormats(formats);
-    if (ret != 0) {
-        return;
-    }
-    imagePacker.StartPacking(dstImagePath_, option);
-    imagePacker.AddImage(*pixelMap);
-    int64_t packedSize = 0;
-    imagePacker.FinalizePacking(packedSize);
+    glReadPixels(0, 0, data.textureWidth, data.textureHeight, GL_RGB, GL_UNSIGNED_BYTE, colorBuffer_.get());
 }
 
-void Output::SetValue(const std::string& key, void* value, int size)
+void Output::SetValue(const std::string& key, std::shared_ptr<void> value, int size)
 {
     if (key == "format" && size > 0) {
-        std::string format = (char*)value;
-        if (format == "jpg" || format == "jpeg") {
+        std::shared_ptr<std::string> format = std::static_pointer_cast<std::string>(value);
+        format_ = *(format.get());
+        if (format_ == "jpg" || format_ == "jpeg") {
             format_ = "image/jpeg";
-        } else if (format == "png") {
+        } else if (format_ == "png") {
             format_ = "image/png";
         }
         LOGD("The output format is %{public}s.", format_.c_str());
-    } else if (key == "path" && size > 0) {
-        dstImagePath_ = (char*)value;
-        LOGD("The ouput source image path is %{public}s.", dstImagePath_.c_str());
+    } else if (key == "dst" && size > 0) {
+        if (format_ == "image/jpeg" || format_ == "image/png") {
+            std::shared_ptr<std::string> dstImagePath = std::static_pointer_cast<std::string>(value);
+            dstImagePath_ = *(dstImagePath.get());
+            LOGD("The ouput source image path is %{public}s.", dstImagePath_.c_str());
+        }
     }
 }
 

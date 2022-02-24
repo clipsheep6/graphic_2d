@@ -26,7 +26,7 @@ public:
     static constexpr float DEFAULT_SATURATION = 1.0f;
 
     SaturationFilter();
-    void SetValue(const std::string& key, void* value, int size) override;
+    void SetValue(const std::string& key, std::shared_ptr<void> value, int size) override;
     std::string GetVertexShader() override;
     std::string GetFragmentShader() override;
     

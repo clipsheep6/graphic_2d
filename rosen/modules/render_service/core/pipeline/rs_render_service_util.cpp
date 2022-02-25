@@ -28,6 +28,8 @@ namespace Detail {
 // [PLANNING]: Use GPU to do the gamut convertion instead of these following works.
 using PixelTransformFunc = std::function<float(float)>;
 
+bool RsRenderServiceUtil::enableClient = false;
+
 inline constexpr float PassThrough(float v)
 {
     return v;
@@ -435,6 +437,9 @@ void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sp
 
 bool RsRenderServiceUtil::IsNeedClient(RSSurfaceRenderNode* node)
 {
+    if (enableClient) {
+        return true;
+    }
     if (node == nullptr) {
         ROSEN_LOGE("RsRenderServiceUtil::ComposeSurface node is empty");
         return false;
@@ -563,6 +568,15 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas& canvas, const sptr<OHOS::SurfaceB
     }
 
     DrawBuffer(&canvas, buffer, node, isDrawnOnDisplay);
+}
+
+void RsRenderServiceUtil::InitEnableClient()
+{
+    if (access("/etc/disable_window_animation", F_OK) == 0) {
+        enableClient = true;
+    } else {
+        enableClient = false;
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

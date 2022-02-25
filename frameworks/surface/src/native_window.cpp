@@ -112,6 +112,7 @@ int32_t NativeWindowRequestBuffer(struct NativeWindow *window,
 int32_t NativeWindowFlushBuffer(struct NativeWindow *window, struct NativeWindowBuffer *buffer,
     int fenceFd, struct Region region)
 {
+    RS ASYNC TRACE END("waiting GPU running",111); //111 means async trace code for gpu
     if (window == nullptr || buffer == nullptr || window->surface == nullptr) {
         BLOGD("NativeWindowFlushBuffer window,buffer  is nullptr");
         return OHOS::GSERROR_INVALID_ARGUMENTS;

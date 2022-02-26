@@ -19,7 +19,7 @@
 /**
  * @file drawing_text_convertor.h
  *
- * @brief provide convertors. It does not declare ndk C api, but used by ndk C api.
+ * @brief provide convertors.
  *
  * @since 8
  * @version 1.0

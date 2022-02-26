@@ -24,6 +24,7 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
+#include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "property/rs_transition_properties.h"
 
@@ -62,6 +63,8 @@ class RsRenderServiceUtil {
 public:
     static void ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
         std::vector<LayerInfoPtr>& layers, ComposeInfo info, RSSurfaceRenderNode* node = nullptr);
+    static void ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
+        std::vector<LayerInfoPtr>& layers, ComposeInfo info, RSDisplayRenderNode* node);
     static void DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer, RSSurfaceRenderNode& node,
         bool isDrawnOnDisplay = true);
     static void DrawBuffer(SkCanvas& canvas, const sptr<OHOS::SurfaceBuffer>& buffer,

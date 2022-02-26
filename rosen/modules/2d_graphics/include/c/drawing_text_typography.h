@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,63 +28,100 @@ extern "C" {
 #endif
 
 /**
- * @brief OH_Drawing_TextDirection used to the direction of text.
+ * @brief direction of text.
  */
 enum OH_Drawing_TextDirection {
+    /** direction: from right to left */
     TEXT_DIRECTION_RTL,
+    /** direction: from left to right */
     TEXT_DIRECTION_LTR,
 };
 
 /**
- * @brief OH_Drawing_TextAlign used to describe layout.
+ * @brief text layout.
  */
 enum OH_Drawing_TextAlign {
+    /** Lines start at the left edge */
     TEXT_ALIGN_LEFT,
+    /** Lines start at the right edge */
     TEXT_ALIGN_RIGHT,
+    /** Lines are centered within the the line box */
     TEXT_ALIGN_CENTER,
+    /** 
+     * Lines are justified.
+     * Text is spaced to line up its left and right edges,
+     * except for the last line.
+     */
     TEXT_ALIGN_JUSTIFY,
+    /** 
+     * The same as TEXT_ALIGN_LEFT if OH_Drawing_TextDirection
+     * is TEXT_DIRECTION_LTR. Similarly, it is TEXT_ALIGN_RIGHT
+     * if OH_Drawing_TextDirection is TEXT_DIRECTION_RTL.
+     */
     TEXT_ALIGN_START,
+    /** 
+     * The same as TEXT_ALIGN_RIGHT if OH_Drawing_TextDirection
+     * is TEXT_DIRECTION_LTR. Similarly, it is TEXT_ALIGN_LEFT
+     * if OH_Drawing_TextDirection is TEXT_DIRECTION_RTL.
+     */
     TEXT_ALIGN_END,
 };
 
 /**
- * @brief OH_Drawing_FontWeight used to describe font weight.
+ * @brief font weight.
  */
 enum OH_Drawing_FontWeight {
-    FONT_WEIGHT_100, // Thin
-    FONT_WEIGHT_200, // Extra-Light
-    FONT_WEIGHT_300, // Light
-    FONT_WEIGHT_400, // Normal/Regular
-    FONT_WEIGHT_500, // Medium
-    FONT_WEIGHT_600, // Semi-bold
-    FONT_WEIGHT_700, // Bold
-    FONT_WEIGHT_800, // Extra-Bold
-    FONT_WEIGHT_900, // Black
+    /** font weight is thin */
+    FONT_WEIGHT_100,
+    /** font weight is extra-light */
+    FONT_WEIGHT_200,
+    /** font weight is light */
+    FONT_WEIGHT_300,
+    /** font weight is normal/regular */
+    FONT_WEIGHT_400,
+    /** font weight is medium */
+    FONT_WEIGHT_500,
+    /** font weight is semi-bold */
+    FONT_WEIGHT_600,
+    /** font weight is bold */
+    FONT_WEIGHT_700,
+    /** font weight is extra-bold */
+    FONT_WEIGHT_800,
+    /** font weight is black */
+    FONT_WEIGHT_900,
 };
 
 /**
- * @brief OH_Drawing_TextBaseline used to distinguish baseline position.
+ * @brief baseline position.
  */
 enum OH_Drawing_TextBaseline {
+    /** It is used by alphabetic language, baseline is at the lower center */
     TEXT_BASELINE_ALPHABETIC,
+    /** It is used by ideographic language, baseline is at the bottom */
     TEXT_BASELINE_IDEOGRAPHIC,
 };
 
 /**
- * @brief OH_Drawing_TextDecoration used to describe decorations.
+ * @brief text decoration.
  */
 enum OH_Drawing_TextDecoration {
+    /** no decorations */
     TEXT_DECORATION_NONE = 0x0,
+    /** a line at the bottom of text */
     TEXT_DECORATION_UNDERLINE = 0x1,
+    /** a line at the top of text */
     TEXT_DECORATION_OVERLINE = 0x2,
+    /** a line through the text */
     TEXT_DECORATION_LINE_THROUGH = 0x4,
 };
 
 /**
- * @brief OH_Drawing_FontStyle used to describe if fonts are italic.
+ * @brief to distinguish if fonts are italic.
  */
 enum OH_Drawing_FontStyle {
+    /** font is normal */
     FONT_STYLE_NORMAL,
+    /** font is italic */
     FONT_STYLE_ITALIC,
 };
 

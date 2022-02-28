@@ -415,6 +415,8 @@ void FillDrawParameters(BufferDrawParameters& params, const sptr<OHOS::SurfaceBu
 }
 } // namespace Detail
 
+bool RsRenderServiceUtil::enableClient = false;
+
 void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
     std::vector<LayerInfoPtr>& layers,  ComposeInfo info, RSSurfaceRenderNode* node)
 {
@@ -435,6 +437,9 @@ void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sp
 
 bool RsRenderServiceUtil::IsNeedClient(RSSurfaceRenderNode* node)
 {
+    if (enableClient) {
+        return true;
+    }
     if (node == nullptr) {
         ROSEN_LOGE("RsRenderServiceUtil::ComposeSurface node is empty");
         return false;
@@ -563,6 +568,15 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas& canvas, const sptr<OHOS::SurfaceB
     }
 
     DrawBuffer(&canvas, buffer, node, isDrawnOnDisplay);
+}
+
+void RsRenderServiceUtil::InitEnableClient()
+{
+    if (access("/etc/enable_client", F_OK) == 0) {
+        enableClient = true;
+    } else {
+        enableClient = false;
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

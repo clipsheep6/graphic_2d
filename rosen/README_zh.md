@@ -76,3 +76,4 @@ foundation/graphic/standard/
 - aafwk_standard
 - multimedia_media_standard
 - multimedia_camera_standard
+- Window Manager

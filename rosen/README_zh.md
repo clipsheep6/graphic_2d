@@ -36,6 +36,13 @@ OpenHarmony 图形栈的分层说明如下：
 ```
 foundation/graphic/standard/
 ├── figures                 # Markdown引用的图片目录
+├── frameworks              # 框架代码目录
+│   ├── animation_server    # AnimationServer代码
+│   ├── bootanimation       # 开机动画目录
+│   ├── dumper              # graphic dumper代码
+│   ├── fence               # fence代码
+│   ├── surface             # Surface代码
+│   ├── vsync               # Vsync代码
 ├── rosen                   # 框架代码目录
 │   ├── build               # 构建说明
 │   ├── doc                 # doc
@@ -45,9 +52,9 @@ foundation/graphic/standard/
 │   ├── samples             # 实例代码
 │   ├── test                # 开发测试代码
 │   ├── tools               # 工具代码
-├── interfaces              # 对外接口存放目录
-│   ├── innerkits           # native接口存放目录
-│   └── kits                # js/napi接口存放目录
+├── interfaces              # 图形接口存放目录
+│   ├── innerkits           # 内部native接口存放目录
+│   └── kits                # js/napi外部接口存放目录
 └── utils                   # 小部件存放目录
 ```
 

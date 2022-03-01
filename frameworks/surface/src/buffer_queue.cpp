@@ -399,11 +399,11 @@ GSError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData &beda
     bufferQueueCache_[sequence].damage = config.damage;
 
     // api flush
-    auto sret = bufferManager_->FlushCache(bufferQueueCache_[sequence].buffer);
+    /*auto sret = bufferManager_->FlushCache(bufferQueueCache_[sequence].buffer);
     if (sret != GSERROR_OK) {
         BLOGN_FAILURE_ID_API(sequence, FlushCache, sret);
         return sret;
-    }
+    }*/
 
     if (config.timestamp == 0) {
         struct timeval tv = {};

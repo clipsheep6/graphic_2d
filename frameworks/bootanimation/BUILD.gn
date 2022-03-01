@@ -61,12 +61,12 @@ ohos_executable("bootanimation") {
     "//foundation/graphic/standard/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/standard/rosen/modules/render_service_base/src/platform:platform",
     "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media:media_client",
     "//foundation/windowmanager/dm:libdm",
     "//foundation/windowmanager/dmserver:libdms",
     "//foundation/windowmanager/wm:libwm",
     "//foundation/windowmanager/wmserver:libwms",
     "//third_party/zlib:libz",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media:media_client",
   ]
 
   external_deps = [
@@ -100,5 +100,4 @@ ohos_prebuilt_etc("bootanimation_sounds") {
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
-
 ## Install data/*.jpg to /system/etc/init/ }}}

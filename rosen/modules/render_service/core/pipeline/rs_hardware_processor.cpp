@@ -84,7 +84,7 @@ void RSHardwareProcessor::CropLayers()
             dstRect.x = 0;
             cut = true;
         }
-        if (dstRect.x + dstRect.w > screenWidth) {
+        if (dstRect.x + dstRect.w > screenWidth && dstRect.x < screenWidth && dstRect.x >= 0) {
             srcRect.w = srcRect.w * (screenWidth - dstRect.x) / dstRect.w;
             dstRect.w = screenWidth - dstRect.x;
             cut = true;
@@ -96,7 +96,7 @@ void RSHardwareProcessor::CropLayers()
             dstRect.y = 0;
             cut = true;
         }
-        if (dstRect.y + dstRect.h > screenHeight) {
+        if (dstRect.y + dstRect.h > screenHeight && dstRect.y < screenHeight && dstRect.y >= 0) {
             srcRect.h = srcRect.h * (screenHeight - dstRect.y) / dstRect.h;
             dstRect.h = screenHeight - dstRect.y;
             cut = true;

@@ -182,9 +182,13 @@ BitmapRectOpItem::BitmapRectOpItem(
     const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst, const SkPaint* paint)
     : OpItemWithPaint(sizeof(BitmapRectOpItem)), rectDst_(rectDst)
 {
-    rectSrc_ = (rectSrc == nullptr) ? SkRect::MakeWH(bitmapInfo->width(), bitmapInfo->height()) : *rectSrc;
     if (bitmapInfo != nullptr) {
         bitmapInfo_ = bitmapInfo;
+        rectSrc_ = (rectSrc == nullptr) ? SkRect::MakeWH(bitmapInfo->width(), bitmapInfo->height()) : *rectSrc;
+    } else {
+        if (rectSrc != nullptr) {
+            rectSrc_ = *rectSrc;
+        }
     }
     if (paint) {
         paint_ = *paint;

@@ -117,7 +117,7 @@ void RSSoftwareProcessor::ProcessSurface(RSSurfaceRenderNode& node)
         ROSEN_LOGE("RSSoftwareProcessor::ProcessSurface: surface buffer is null!");
         return;
     }
-    RsRenderServiceUtil::DrawBuffer(canvas_.get(), cbuffer, node);
+    RsRenderServiceUtil::DrawBuffer(canvas_.get(), cbuffer, node, layerSizeScaleW_, layerSizeScaleH_);
 }
 } // namespace Rosen
 } // namespace OHOS

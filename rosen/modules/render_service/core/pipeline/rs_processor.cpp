@@ -89,5 +89,15 @@ bool RSProcessor::ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask&
     }
     return true;
 }
+
+void RSProcessor::SetLayerSizeScaleW(float layerSizeScaleW)
+{
+    layerSizeScaleW_  = layerSizeScaleW;
+}
+
+void RSProcessor::SetLayerSizeScaleH(float layerSizeScaleH)
+{
+    layerSizeScaleH_ = layerSizeScaleH;
+}
 } // namespace Rosen
 } // namespace OHOS

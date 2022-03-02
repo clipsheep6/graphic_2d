@@ -177,6 +177,49 @@ static void DrawSurface(
     rsSurface->FlushFrame(framPtr1);
 }
 
+std::unique_ptr<RSSurfaceFrame> framePtr;
+
+void DrawSurfaceToCapture(std::shared_ptr<RSSurfaceNode> surfaceNode)
+{
+    SkRect surfaceGeometry = SkRect::MakeXYWH(200, 200, 300, 300);
+    SkRect shapeGeometry = SkRect::MakeXYWH(40, 80, 160, 160);
+    auto x = surfaceGeometry.x();
+    auto y = surfaceGeometry.y();
+    auto width = surfaceGeometry.width();
+    auto height = surfaceGeometry.height();
+    surfaceNode->SetBounds(x, y, width, height);
+    std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
+    if (rsSurface == nullptr) {
+        return;
+    }
+    auto frame = rsSurface->RequestFrame(width, height);
+    framePtr = std::move(frame);
+
+    auto canvas = framePtr->GetCanvas();
+    if (canvas == nullptr) {
+        return;
+    }
+    SkPaint paint;
+    paint.setAntiAlias(true);
+    paint.setStyle(SkPaint::kFill_Style);
+    paint.setStrokeWidth(4);
+    paint.setStrokeJoin(SkPaint::kRound_Join);
+    paint.setColor(0xffff0000);
+    SkPath path;
+    path.cubicTo(40, 40, 100, 320, 240, 320);
+    SkPaint pathPaint;
+    pathPaint.setAntiAlias(true);
+    pathPaint.setStyle(SkPaint::kFill_Style);
+    pathPaint.setStrokeWidth(2);
+    pathPaint.setStrokeJoin(SkPaint::kRound_Join);
+    pathPaint.setColor(0xffFFD700);
+    canvas->drawRect(shapeGeometry, paint);
+    canvas->drawPath(path, pathPaint);
+    framePtr->SetDamageRegion(0, 0, width, height);
+    auto framePtr1 = std::move(framePtr);
+    rsSurface->FlushFrame(framePtr1);
+}
+
 static std::shared_ptr<RSSurfaceNode> CreateSurface()
 {
     RSSurfaceNodeConfig config;
@@ -313,12 +356,15 @@ int main()
     cout << "RS default screen id is " << id << ".\n";
 
     auto surfaceLauncher = CreateSurface();
+    auto surfaceNode1 = CreateSurface();
     DrawSurface(SkRect::MakeXYWH(SKSCALAR_X, SKSCALAR_Y, SKSCALAR_W, SKSCALAR_H), 0xFFF0FFF0,
         SkRect::MakeXYWH(SKSCALAR_X, SKSCALAR_Y, SKSCALAR_W, SKSCALAR_H), surfaceLauncher);
+    DrawSurfaceToCapture(surfaceNode1);
     RSDisplayNodeConfig config;
     config.screenId = id;
     RSDisplayNode::SharedPtr sourceDisplayNode = RSDisplayNode::Create(config);
     sourceDisplayNode->AddChild(surfaceLauncher, -1);
+    sourceDisplayNode->AddChild(surfaceNode1, -1);
     RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
 
     RSScreenModeInfo modeInfo = RSInterfaces::GetInstance().GetScreenActiveMode(id);
@@ -328,7 +374,7 @@ int main()
         cout << "ImgReader init failed!" << endl;
     }
     DisplayId virtualDisplayId = RSInterfaces::GetInstance().CreateVirtualScreen("virtualDisplay",
-        modeInfo.GetScreenWidth(), modeInfo.GetScreenHeight(), nullptr);
+        100, 200, imgReader.GetSurface());
     cout << "VirtualScreenId: " << virtualDisplayId << endl;
     cout << "------------------------------------------------------------------" << endl;
     RSDisplayNodeConfig mirrorConfig {virtualDisplayId, true, sourceDisplayNode->GetId()};
@@ -339,15 +385,7 @@ int main()
     for (int i = 0; i < frameCnt; ++i) {
         DrawSurface(SkRect::MakeXYWH(SKSCALAR_X, SKSCALAR_Y, SKSCALAR_W, SKSCALAR_H), 0xFFF0FFF0,
             SkRect::MakeXYWH(SKSCALAR_X, SKSCALAR_Y, SKSCALAR_W, SKSCALAR_H), surfaceLauncher);
-        RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
-        sleep(detail::SLEEP_TIME);
-    }
-
-    int32_t flag = RSInterfaces::GetInstance().SetVirtualScreenSurface(virtualDisplayId, imgReader.GetSurface());
-    cout<< "The flag of SetVirtualScreenSurface is "<< flag << endl;
-    for (int i = 0; i < frameCnt; ++i) {
-        DrawSurface(SkRect::MakeXYWH(SKSCALAR_X, SKSCALAR_Y, SKSCALAR_W, SKSCALAR_H), 0xFFF0FFF0,
-            SkRect::MakeXYWH(SKSCALAR_X, SKSCALAR_Y, SKSCALAR_W, SKSCALAR_H), surfaceLauncher);
+        DrawSurfaceToCapture(surfaceNode1);
         RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
         sleep(detail::SLEEP_TIME);
     }

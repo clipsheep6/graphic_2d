@@ -484,8 +484,23 @@ void RsRenderServiceUtil::DealAnimation(SkCanvas& canvas, SkPaint& paint, RSSurf
     canvas.translate(-center.x_, -center.y_);
 }
 
+void RsRenderServiceUtil::UpdateSkMatrix(SkMatrix& matrix, float layerSizeScaleW, float layerSizeScaleH)
+{
+    if (layerSizeScaleW != 1.0f || layerSizeScaleH != 1.0f) {
+        float scaleX = matrix.getScaleX()*layerSizeScaleW;
+        float scaleY = matrix.getScaleY()*layerSizeScaleH;
+        float translateX = matrix.getTranslateX()*layerSizeScaleW;
+        float translateY = matrix.getTranslateY()*layerSizeScaleH;
+        matrix.setTranslateX(translateX);
+        matrix.setTranslateY(translateY);
+        matrix.setScaleX(scaleX);
+        matrix.setScaleY(scaleY);
+    }
+}
+
 // inner interface
-void RsRenderServiceUtil::Draw(SkCanvas& canvas, BufferDrawParameters& params, RSSurfaceRenderNode& node)
+void RsRenderServiceUtil::Draw(SkCanvas& canvas, BufferDrawParameters& params, RSSurfaceRenderNode& node,
+    float layerSizeScaleW, float layerSizeScaleH)
 {
     SkPaint paint;
     paint.setAntiAlias(params.antiAlias);
@@ -496,6 +511,7 @@ void RsRenderServiceUtil::Draw(SkCanvas& canvas, BufferDrawParameters& params, R
         canvas.save();
         if (params.onDisplay) {
             canvas.clipRect(SkRect::MakeXYWH(params.dstLeft, params.dstTop, params.dstWidth, params.dstHeight));
+            UpdateSkMatrix(params.transform, layerSizeScaleW, layerSizeScaleH);
             canvas.setMatrix(params.transform);
             DealAnimation(canvas, paint, node);
             const RSProperties& property = node.GetRenderProperties();
@@ -514,7 +530,7 @@ void RsRenderServiceUtil::Draw(SkCanvas& canvas, BufferDrawParameters& params, R
 }
 
 void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer,
-    RSSurfaceRenderNode& node, bool isDrawnOnDisplay)
+    RSSurfaceRenderNode& node, float layerSizeScaleW, float layerSizeScaleH, bool isDrawnOnDisplay)
 {
     if (!canvas) {
         ROSEN_LOGE("RsRenderServiceUtil::DrawBuffer canvas is nullptr");
@@ -541,11 +557,12 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer>
     Detail::FillDrawParameters(params, buffer, node);
     params.onDisplay = isDrawnOnDisplay;
 
-    Draw(*canvas, params, node);
+    Draw(*canvas, params, node, layerSizeScaleW, layerSizeScaleH);
 }
 
 void RsRenderServiceUtil::DrawBuffer(SkCanvas& canvas, const sptr<OHOS::SurfaceBuffer>& buffer,
-    RSSurfaceRenderNode& node, ColorGamut dstGamut, bool isDrawnOnDisplay)
+    RSSurfaceRenderNode& node, ColorGamut dstGamut, float layerSizeScaleW,
+    float layerSizeScaleH, bool isDrawnOnDisplay)
 {
     if (buffer == nullptr || buffer->GetHeight() < 0 || buffer->GetWidth() < 0 ||
         buffer->GetStride() < 0 || buffer->GetSize() == 0 || buffer->GetVirAddr() == nullptr) {
@@ -563,12 +580,12 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas& canvas, const sptr<OHOS::SurfaceB
             params.pixmap = SkPixmap(imageInfo, newBuffer.data(), buffer->GetStride());
             Detail::FillDrawParameters(params, buffer, node);
             params.onDisplay = isDrawnOnDisplay;
-            Draw(canvas, params, node);
+            Draw(canvas, params, node, layerSizeScaleW, layerSizeScaleH);
             return;
         }
     }
 
-    DrawBuffer(&canvas, buffer, node, isDrawnOnDisplay);
+    DrawBuffer(&canvas, buffer, node, layerSizeScaleW, layerSizeScaleH, isDrawnOnDisplay);
 }
 } // namespace Rosen
 } // namespace OHOS

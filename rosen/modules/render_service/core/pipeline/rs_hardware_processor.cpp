@@ -17,7 +17,6 @@
 #include "display_type.h"
 #include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
-
 namespace OHOS {
 namespace Rosen {
 RSHardwareProcessor::RSHardwareProcessor() {}
@@ -200,10 +199,10 @@ void RSHardwareProcessor::CalculateInfo(const std::unique_ptr<RSTransitionProper
     float paddingX = (1 - transitionProperties->GetScale().x_) * geoPtr->GetAbsRect().width_ / 2;
     float paddingY = (1 - transitionProperties->GetScale().y_) * geoPtr->GetAbsRect().height_ / 2;
     info.dstRect = {
-        .x = geoPtr->GetAbsRect().left_ + transitionProperties->GetTranslate().x_ + paddingX,
-        .y = geoPtr->GetAbsRect().top_ + transitionProperties->GetTranslate().y_ + paddingY,
-        .w = geoPtr->GetAbsRect().width_ * transitionProperties->GetScale().x_,
-        .h = geoPtr->GetAbsRect().height_ * transitionProperties->GetScale().y_,
+        .x = info.dstRect.x + transitionProperties->GetTranslate().x_ + paddingX,
+        .y = info.dstRect.y + transitionProperties->GetTranslate().y_ + paddingY,
+        .w = info.dstRect.w * transitionProperties->GetScale().x_,
+        .h = info.dstRect.h * transitionProperties->GetScale().y_,
     };
     info.alpha = {
         .enGlobalAlpha = true,

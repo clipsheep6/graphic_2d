@@ -17,12 +17,16 @@
 #include <surface.h>
 
 #include "display_type.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPaint.h"
+#include "property/rs_properties_def.h"
 #include "wm/window.h"
 
 #include "include/core/SkCanvas.h"
 #include "include/core/SkImageInfo.h"
 #include "transaction/rs_transaction.h"
 #include "ui/rs_root_node.h"
+#include "ui/rs_canvas_node.h"
 #include "ui/rs_display_node.h"
 #include "ui/rs_surface_node.h"
 #include "ui/rs_surface_extractor.h"
@@ -42,94 +46,47 @@ void Init(std::shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
     rootNode = RSRootNode::Create();
     rootNode->SetBounds(0, 0, width, height);
     rootNode->SetFrame(0, 0, width, height);
-    rootNode->SetBackgroundColor(SK_ColorRED);
+    rootNode->SetBackgroundColor(SK_ColorBLUE);
 
     rsUiDirector->SetRoot(rootNode->GetId());
+    auto node = RSCanvasNode::Create();
+    node->SetBounds(0, 0, width, height);
+    node->SetFrame(0, 0, width, height);
+
+    auto canvas = node->BeginRecording(width, height);
+
+    SkPaint paint;
+    paint.setColor(SK_ColorYELLOW);
+    canvas->drawRect({100, 100, 200, 200}, paint);
+
+    node->FinishRecording();
+    rootNode->AddChild(node, -1);
+    nodes.push_back(node);
 }
 
 int main()
 {
     std::cout << "rs app demo start!" << std::endl;
     sptr<WindowOption> option = new WindowOption();
-    option->SetWindowType(WindowType::WINDOW_TYPE_STATUS_BAR);
+    option->SetWindowType(WindowType::WINDOW_TYPE_FLOAT);
     option->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-    option->SetWindowRect({0, 0, 2560, 112});
+    option->SetWindowRect({0, 112, 2560, 1396});
     auto window = Window::Create("app_demo", option);
     
     window->Show();
-    auto rect = window->GetRect();
-    std::cout << "rs app demo create window " << rect.width_ << " " << rect.height_ << std::endl;
     auto surfaceNode = window->GetSurfaceNode();
 
-    auto rsUiDirector = RSUIDirector::Create();
-    rsUiDirector->Init();
+    surfaceNode->SetFrameGravity(Gravity::CENTER);
     RSTransaction::FlushImplicitTransaction();
     sleep(1);
 
+    auto rsUiDirector = RSUIDirector::Create();
+    rsUiDirector->Init();
     std::cout << "rs app demo stage 1 " << std::endl;
     rsUiDirector->SetRSSurfaceNode(surfaceNode);
-    Init(rsUiDirector, rect.width_, rect.height_);
+    Init(rsUiDirector, 100, 200);
     rsUiDirector->SendMessages();
-    sleep(1);
-
-    std::cout << "rs app demo stage 2 " << std::endl;
-    int resizeH = 1600;
-    window->Resize(2560, resizeH);
-    rootNode->SetBounds(0, 0, 2560, resizeH);
-    rootNode->SetBackgroundColor(SK_ColorYELLOW);
-    rsUiDirector->SendMessages();
-    sleep(4);
-
-    std::cout << "rs app demo stage 3 " << std::endl;
-    rootNode->SetBackgroundColor(SK_ColorBLUE);
-    rsUiDirector->SendMessages();
-    sleep(1);
-
-    std::cout << "rs app demo stage 3 " << std::endl;
-    rootNode->SetBackgroundColor(SK_ColorYELLOW);
-    rsUiDirector->SendMessages();
-    sleep(1);
-    
-    std::cout << "rs app demo stage 3 " << std::endl;
-    rootNode->SetBackgroundColor(SK_ColorBLUE);
-    rsUiDirector->SendMessages();
-    sleep(1);
-
-    // std::cout << "rs app demo stage 4 " << std::endl;
-    // resizeH = 112;
-    // window->Resize(2560, resizeH);
-    // rootNode->SetBounds(0, 0, 2560, resizeH);
-    // rootNode->SetBackgroundColor(SK_ColorYELLOW);
-    // rsUiDirector->SendMessages();
-    // sleep(4);
-
-    // std::cout << "rs app demo stage 5 " << std::endl;
-    // rootNode->SetBackgroundColor(SK_ColorBLUE);
-    // rsUiDirector->SendMessages();
-    // sleep(1);
-
-    // std::cout << "rs app demo stage 5 " << std::endl;
-    // rootNode->SetBackgroundColor(SK_ColorYELLOW);
-    // rsUiDirector->SendMessages();
-    // sleep(1);
-    
-    // std::cout << "rs app demo stage 5 " << std::endl;
-    // rootNode->SetBackgroundColor(SK_ColorBLUE);
-    // rsUiDirector->SendMessages();
-    // sleep(1);
-
-    std::cout << "rs app demo start dump test --> " << std::endl;
-    rootNode->SetRotation(20.f);
-    rootNode->SetAlpha(0.5f);
-    rootNode->SetForegroundColor(SK_ColorRED);
-    rsUiDirector->SendMessages();
-    sleep(1);
-
-    const RSProperties& prop = rootNode->GetStagingProperties();
-    std::string dumpInfo = prop.Dump();
-    std::cout << "dumpInfo: " << dumpInfo.c_str() << std::endl;
-    sleep(1);
-
+    sleep(10);
     std::cout << "rs app demo end!" << std::endl;
     window->Hide();
     window->Destroy();

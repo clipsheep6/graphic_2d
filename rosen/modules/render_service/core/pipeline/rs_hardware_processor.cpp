@@ -15,8 +15,13 @@
 
 #include "pipeline/rs_hardware_processor.h"
 
-#include "common/rs_vector4.h"
+#include <algorithm>
+#include <securec.h>
+#include <string>
+
 #include "display_type.h"
+#include "rs_trace.h"
+#include "common/rs_vector4.h"
 #include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
 
@@ -114,6 +119,7 @@ void RSHardwareProcessor::CropLayers()
 
 void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
 {
+    RS_TRACE_NAME(std::string("ProcessSurfaceNode Name:") + node.GetName().c_str());
     ROSEN_LOGI("RsDebug RSHardwareProcessor::ProcessSurface start node id:%llu available buffer:%d name:[%s]",
         node.GetId(), node.GetAvailableBufferCount(), node.GetName().c_str());
     if (!output_) {
@@ -268,31 +274,39 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
         .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA | HBM_USE_MEM_FB,
         .timeout = 0,
     };
+    RS_TRACE_NAME("Redraw");
     auto canvas = CreateCanvas(surface, requestConfig);
     if (canvas == nullptr) {
         ROSEN_LOGE("RSHardwareProcessor::Redraw: canvas is null.");
         return;
     }
-
     for (auto it = param.layers.begin(); it != param.layers.end(); ++it) {
         LayerInfoPtr layerInfo = *it;
-        if (layerInfo == nullptr || layerInfo->GetCompositionType() == CompositionType::COMPOSITION_DEVICE) {
+        if (layerInfo == nullptr) {
+            continue;
+        }
+        auto& node = *(static_cast<RSSurfaceRenderNode *>(layerInfo->GetLayerAdditionalInfo()));
+        std::string info;
+        char strBuffer[UINT8_MAX] = { 0 };
+        if (sprintf_s(strBuffer, UINT8_MAX, "Node name:%s DstRect[%d %d %d %d]", node.GetName().c_str(),
+            layerInfo->GetLayerSize().x, layerInfo->GetLayerSize().y, layerInfo->GetLayerSize().w,
+            layerInfo->GetLayerSize().h) != -1) {
+            info.append(strBuffer);
+        }
+        RS_TRACE_NAME(info.c_str());
+        if (layerInfo->GetCompositionType() == CompositionType::COMPOSITION_DEVICE) {
             continue;
         }
         ROSEN_LOGD("RsDebug RSHardwareProcessor::Redraw layer composition Type:%d, [%d %d %d %d]",
             layerInfo->GetCompositionType(), layerInfo->GetLayerSize().x, layerInfo->GetLayerSize().y,
             layerInfo->GetLayerSize().w, layerInfo->GetLayerSize().h);
-
         sptr<SurfaceBuffer> buffer = layerInfo->GetBuffer();
         SurfaceColorGamut bufferColorGamut = buffer->GetSurfaceBufferColorGamut();
         if (bufferColorGamut == static_cast<SurfaceColorGamut>(currScreenInfo_.colorGamut)) {
-            RsRenderServiceUtil::DrawBuffer(canvas.get(), buffer,
-                *(static_cast<RSSurfaceRenderNode *>(layerInfo->GetLayerAdditionalInfo())));
+            RsRenderServiceUtil::DrawBuffer(canvas.get(), buffer, node);
         } else {
             ROSEN_LOGW("RSHardwareProcessor::Redraw: need to convert color gamut.");
-            RsRenderServiceUtil::DrawBuffer(*canvas, buffer,
-                *(static_cast<RSSurfaceRenderNode *>(layerInfo->GetLayerAdditionalInfo())),
-                static_cast<ColorGamut>(currScreenInfo_.colorGamut));
+            RsRenderServiceUtil::DrawBuffer(*canvas, buffer, node, static_cast<ColorGamut>(currScreenInfo_.colorGamut));
         }
     }
     BufferFlushConfig flushConfig = {

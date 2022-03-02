@@ -33,7 +33,7 @@ public:
 private:
     void LoadFilterParams() override;
     float saturation_ = DEFAULT_SATURATION;
-    GLuint saturationID_;
+    GLint saturationID_ = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

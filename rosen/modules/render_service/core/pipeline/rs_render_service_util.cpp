@@ -16,6 +16,7 @@
 
 #include <unordered_set>
 
+#include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
@@ -397,7 +398,7 @@ SkImageInfo GenerateSkImageInfo(const sptr<OHOS::SurfaceBuffer>& buffer)
 }
 
 void FillDrawParameters(BufferDrawParameters& params, const sptr<OHOS::SurfaceBuffer>& buffer,
-    const RSSurfaceRenderNode& node)
+    const RSSurfaceRenderNode& node, SkMatrix transform)
 {
     params.bitmap = SkBitmap();
     params.antiAlias = true;
@@ -412,6 +413,7 @@ void FillDrawParameters(BufferDrawParameters& params, const sptr<OHOS::SurfaceBu
         params.dstWidth = geoPtr->GetAbsRect().width_;
         params.dstHeight = geoPtr->GetAbsRect().height_;
     }
+    params.transform = transform;
 }
 } // namespace Detail
 
@@ -514,7 +516,7 @@ void RsRenderServiceUtil::Draw(SkCanvas& canvas, BufferDrawParameters& params, R
 }
 
 void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer,
-    RSSurfaceRenderNode& node, bool isDrawnOnDisplay)
+    RSSurfaceRenderNode& node, bool isDrawnOnDisplay, SkMatrix transform)
 {
     if (!canvas) {
         ROSEN_LOGE("RsRenderServiceUtil::DrawBuffer canvas is nullptr");
@@ -538,14 +540,14 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer>
     BufferDrawParameters params;
     SkImageInfo imageInfo = Detail::GenerateSkImageInfo(buffer);
     params.pixmap = SkPixmap(imageInfo, buffer->GetVirAddr(), buffer->GetStride());
-    Detail::FillDrawParameters(params, buffer, node);
+    Detail::FillDrawParameters(params, buffer, node, transform);
     params.onDisplay = isDrawnOnDisplay;
 
     Draw(*canvas, params, node);
 }
 
 void RsRenderServiceUtil::DrawBuffer(SkCanvas& canvas, const sptr<OHOS::SurfaceBuffer>& buffer,
-    RSSurfaceRenderNode& node, ColorGamut dstGamut, bool isDrawnOnDisplay)
+    RSSurfaceRenderNode& node, ColorGamut dstGamut, bool isDrawnOnDisplay, SkMatrix transform)
 {
     if (buffer == nullptr || buffer->GetHeight() < 0 || buffer->GetWidth() < 0 ||
         buffer->GetStride() < 0 || buffer->GetSize() == 0 || buffer->GetVirAddr() == nullptr) {
@@ -561,14 +563,14 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas& canvas, const sptr<OHOS::SurfaceB
             BufferDrawParameters params;
             SkImageInfo imageInfo = Detail::GenerateSkImageInfo(buffer);
             params.pixmap = SkPixmap(imageInfo, newBuffer.data(), buffer->GetStride());
-            Detail::FillDrawParameters(params, buffer, node);
+            Detail::FillDrawParameters(params, buffer, node, transform);
             params.onDisplay = isDrawnOnDisplay;
             Draw(canvas, params, node);
             return;
         }
     }
 
-    DrawBuffer(&canvas, buffer, node, isDrawnOnDisplay);
+    DrawBuffer(&canvas, buffer, node, isDrawnOnDisplay, transform);
 }
 } // namespace Rosen
 } // namespace OHOS

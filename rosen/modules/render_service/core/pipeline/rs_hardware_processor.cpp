@@ -15,8 +15,10 @@
 
 #include "pipeline/rs_hardware_processor.h"
 #include "display_type.h"
+#include "include/core/SkMatrix.h"
 #include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
+#include <type_traits>
 
 namespace OHOS {
 namespace Rosen {
@@ -118,8 +120,13 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
         ROSEN_LOGE("RSHardwareProcessor::ProcessSurface output is nullptr");
         return;
     }
-    if (node.GetRenderProperties().GetBoundsPositionX() >= currScreenInfo_.width ||
-        node.GetRenderProperties().GetBoundsPositionY() >= currScreenInfo_.height) {
+    uint32_t boundWidth = currScreenInfo_.width;
+    uint32_t boundHeight = currScreenInfo_.height;
+    if (rotation_ == ScreenRotation::ROTATION_90 || rotation_ == ScreenRotation::ROTATION_270) {
+        std::swap(boundWidth, boundHeight);
+    }
+    if (node.GetRenderProperties().GetBoundsPositionX() >= boundWidth ||
+        node.GetRenderProperties().GetBoundsPositionY() >= boundHeight) {
         ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface this node:%llu no need to composite", node.GetId());
         return;
     }
@@ -246,16 +253,48 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
         ROSEN_LOGD("RsDebug RSHardwareProcessor::Redraw layer composition Type:%d, [%d %d %d %d]",
             layerInfo->GetCompositionType(), layerInfo->GetLayerSize().x, layerInfo->GetLayerSize().y,
             layerInfo->GetLayerSize().w, layerInfo->GetLayerSize().h);
-
+        
+        SkMatrix transform;
+        if (rotation_ != ScreenRotation::ROTATION_0) {
+            SkMatrix geoMat;
+            auto sufaceNode = static_cast<RSSurfaceRenderNode *>(layerInfo->GetLayerAdditionalInfo());
+            auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(surfaceNode.GetRenderProperties().GetBoundsGeometry());
+            geoMat[2] = geoPtr->GetAbsRect().left_;
+            geoMat[5] = geoPtr->GetAbsRect().top_;
+            switch (rotation_) {
+                case ScreenRotation::ROTATION_90: {
+                    transform.preRotate(-90.0f);
+                    transform.postTranslate(0.0, static_cast<float>(currScreenInfo_.height));
+                    std::swap(geoMat[2], geoMat[5]);
+                    break;
+                }
+                case ScreenRotation::ROTATION_180: {
+                    transform.preRotate(180.0f);
+                    transform.postTranslate(static_cast<float>(currScreenInfo_.width), static_cast<float>(currScreenInfo_.height));
+                    geoMat[5] = -geoMat[5];
+                    break;
+                }
+                case ScreenRotation::ROTATION_270: {
+                    transform.preRotate(-270.0f);
+                    transform.postTranslate(static_cast<float>(currScreenInfo_.width), 0.0);
+                    std::swap(geoMat[2], geoMat[5]);
+                    geoMat[2] = -geoMat[2];
+                    break;
+                }
+                default:
+                    break;
+            }
+            transform.postConcat(geoMat);
+        }
         sptr<SurfaceBuffer> buffer = layerInfo->GetBuffer();
         SurfaceColorGamut bufferColorGamut = buffer->GetSurfaceBufferColorGamut();
         if (bufferColorGamut == static_cast<SurfaceColorGamut>(currScreenInfo_.colorGamut)) {
             RsRenderServiceUtil::DrawBuffer(canvas.get(), buffer,
-                *(static_cast<RSSurfaceRenderNode *>(layerInfo->GetLayerAdditionalInfo())));
+                *(static_cast<RSSurfaceRenderNode *>(layerInfo->GetLayerAdditionalInfo())), true, transform);
         } else {
             ROSEN_LOGW("RSHardwareProcessor::Redraw: need to convert color gamut.");
             RsRenderServiceUtil::DrawBuffer(*canvas, buffer,
-                *(static_cast<RSSurfaceRenderNode *>(layerInfo->GetLayerAdditionalInfo())),
+                *(static_cast<RSSurfaceRenderNode *>(layerInfo->GetLayerAdditionalInfo()), true, transform),
                 static_cast<ColorGamut>(currScreenInfo_.colorGamut));
         }
     }

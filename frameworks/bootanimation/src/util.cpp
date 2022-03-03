@@ -16,6 +16,7 @@
 #include "util.h"
 
 #include <ctime>
+#include <securec.h>
 #include <sys/time.h>
 
 #include <vsync_helper.h>
@@ -64,7 +65,7 @@ bool UnzipFile(const std::string& srcFilePath, const std::string& dstFilePath)
         return true;
     }
 
-    for (int i = 0; i < globalInfo.number_entry; ++i) {
+    for (unsigned long i = 0; i < globalInfo.number_entry; ++i) {
         unz_file_info fileInfo;
         char filename[MAX_FILE_NAME];
         if (unzGetCurrentFileInfo(
@@ -90,8 +91,14 @@ bool UnzipFile(const std::string& srcFilePath, const std::string& dstFilePath)
                 unzClose(zipfile);
                 return false;
             }
-
-            FILE *out = fopen(fileStr.c_str(), "wb");
+            char newpath[PATH_MAX + 1] = {0x00};
+            if (strlen(fileStr.c_str()) > PATH_MAX || realpath(fileStr.c_str(), newpath) == NULL) {
+                LOG("destination file path error");
+                unzCloseCurrentFile(zipfile);
+                unzClose(zipfile);
+                return false;
+            }
+            FILE *out = fopen(newpath, "wb");
             if (out == nullptr) {
                 LOG("could not open destination file");
                 unzCloseCurrentFile(zipfile);
@@ -153,9 +160,18 @@ int RemoveDir(const char *dir)
             if ((strcmp(curDir, dp->d_name) == 0) || (strcmp(upDir, dp->d_name) == 0)) {
                 continue;
             }
-            strcpy(dirName, dir);
-            strcat(dirName, "/");
-            strcat(dirName, dp->d_name);
+            if (strcpy_s(dirName, sizeof(dirName), dir)) {
+                LOG("remove strcpy_s: %{public}s", strerror(errno));
+                continue;
+            }
+            if (strcat_s(dirName, sizeof(dirName), "/")) {
+                LOG("remove strcat_s: %{public}s", strerror(errno));
+                continue;
+            }
+            if (strcat_s(dirName, sizeof(dirName), dp->d_name)) {
+                LOG("remove strcat_s: %{public}s", strerror(errno));
+                continue;
+            }
             RemoveDir(dirName);
         }
         closedir(dirp);
@@ -193,9 +209,18 @@ int CountPicNum(const char *dir, int32_t& picNum)
             if ((strcmp(curDir, dp->d_name) == 0) || (strcmp(upDir, dp->d_name) == 0)) {
                 continue;
             }
-            strcpy(dirName, dir);
-            strcat(dirName, "/");
-            strcat(dirName, dp->d_name);
+            if (strcpy_s(dirName, sizeof(dirName), dir)) {
+                LOG("strcpy_s: %{public}s", strerror(errno));
+                continue;
+            }
+            if (strcat_s(dirName, sizeof(dirName), "/")) {
+                LOG("strcat_s: %{public}s", strerror(errno));
+                continue;
+            }
+            if (strcat_s(dirName, sizeof(dirName), dp->d_name)) {
+                LOG("strcat_s: %{public}s", strerror(errno));
+                continue;
+            }
             CountPicNum(dirName, picNum);
         }
         closedir(dirp);

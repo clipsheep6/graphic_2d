@@ -25,6 +25,7 @@
 #include "command/rs_canvas_node_command.h"
 #include "command/rs_display_node_command.h"
 #include "command/rs_node_command.h"
+#include "command/rs_root_node_command.h"
 #include "command/rs_surface_node_command.h"
 // animation
 #include "command/rs_animation_command.h"

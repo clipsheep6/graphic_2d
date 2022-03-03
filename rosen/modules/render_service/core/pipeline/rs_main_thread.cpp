@@ -17,6 +17,7 @@
 #include "command/rs_message_processor.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_render_service_visitor.h"
+#include "pipeline/rs_unified_render_visitor.h"
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "rs_trace.h"
@@ -90,7 +91,8 @@ void RSMainThread::Draw()
         ROSEN_LOGE("RSMainThread::Draw GetGlobalRootRenderNode fail");
         return;
     }
-    std::shared_ptr<RSNodeVisitor> visitor = std::make_shared<RSRenderServiceVisitor>();
+    ROSEN_LOGI("cqx RSMainThread::Draw RSUnifiedRenderVisitor");
+    std::shared_ptr<RSNodeVisitor> visitor = std::make_shared<RSUnifiedRenderVisitor>();
     rootNode->Prepare(visitor);
     rootNode->Process(visitor);
 }
@@ -132,7 +134,7 @@ void RSMainThread::Animate(uint64_t timestamp)
     RS_TRACE_FUNC();
     bool hasAnimate = false;
     for (const auto& [id, node] : context_.GetNodeMap().renderNodeMap_) {
-        hasAnimate = node->Animate(timestamp) | hasAnimate;
+        hasAnimate = node->Animate(timestamp) || hasAnimate;
     }
     if (hasAnimate) {
         RequestNextVSync();

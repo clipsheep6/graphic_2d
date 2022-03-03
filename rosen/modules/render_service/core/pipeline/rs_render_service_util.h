@@ -24,6 +24,7 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
+#include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "property/rs_transition_properties.h"
 
@@ -35,8 +36,10 @@ struct BufferDrawParameters {
     bool antiAlias = true;
     bool onDisplay = true;
     float alpha = 1.0f;
-    double widthScale = 1.0f;
-    double heightScale = 1.0f;
+    uint32_t dstLeft = 0;
+    uint32_t dstTop = 0;
+    uint32_t dstWidth = 0;
+    uint32_t dstHeight = 0;
     SkPixmap pixmap;
     SkBitmap bitmap;
     SkMatrix transform;
@@ -60,6 +63,8 @@ class RsRenderServiceUtil {
 public:
     static void ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
         std::vector<LayerInfoPtr>& layers, ComposeInfo info, RSSurfaceRenderNode* node = nullptr);
+    static void ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
+        std::vector<LayerInfoPtr>& layers, ComposeInfo info, RSDisplayRenderNode* node);
     static void DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer, RSSurfaceRenderNode& node,
         bool isDrawnOnDisplay = true);
     static void DrawBuffer(SkCanvas& canvas, const sptr<OHOS::SurfaceBuffer>& buffer,

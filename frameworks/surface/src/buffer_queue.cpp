@@ -30,7 +30,6 @@
 
 namespace OHOS {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "BufferQueue" };
 constexpr uint32_t UNIQUE_ID_OFFSET = 32;
 }
 
@@ -219,11 +218,15 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtr
     if (ret == GSERROR_OK) {
         retval.sequence = bufferImpl->GetSeqNum();
         BLOGN_SUCCESS_ID(retval.sequence, "alloc");
+
+        bufferImpl->GetExtraData(bedata);
+        retval.buffer = bufferImpl;
+        retval.fence = -1;
+        BLOGD("Success alloc Buffer id: %{public}d Queue id: %{public}" PRIu64 "", retval.sequence, uniqueId_);
+    } else {
+        BLOGE("Fail to alloc or map buffer ret: %{public}d", ret);
     }
-    bufferImpl->GetExtraData(bedata);
-    retval.buffer = bufferImpl;
-    retval.fence = -1;
-    BLOGD("Success alloc Buffer id: %{public}d Queue id: %{public}" PRIu64 "", retval.sequence, uniqueId_);
+
     return ret;
 }
 
@@ -623,10 +626,10 @@ GSError BufferQueue::AttachBuffer(sptr<SurfaceBufferImpl> &buffer)
     };
 
     int32_t sequence = buffer->GetSeqNum();
-    int32_t usedSize = GetUsedSize();
-    int32_t queueSize = GetQueueSize();
+    int32_t usedSize = static_cast<int32_t>(GetUsedSize());
+    int32_t queueSize = static_cast<int32_t>(GetQueueSize());
     if (usedSize >= queueSize) {
-        int32_t freeSize = dirtyList_.size() + freeList_.size();
+        int32_t freeSize = static_cast<int32_t>(dirtyList_.size() + freeList_.size());
         if (freeSize >= usedSize - queueSize + 1) {
             DeleteBuffers(usedSize - queueSize + 1);
             bufferQueueCache_[sequence] = ele;

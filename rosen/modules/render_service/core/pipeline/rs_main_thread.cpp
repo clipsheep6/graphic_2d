@@ -92,6 +92,7 @@ void RSMainThread::Draw()
         return;
     }
     ROSEN_LOGI("cqx RSMainThread::Draw RSUnifiedRenderVisitor");
+//    ROSEN_LOGI("cqx RSMainThread::Draw RSRenderServiceVisitor");
     std::shared_ptr<RSNodeVisitor> visitor = std::make_shared<RSUnifiedRenderVisitor>();
     rootNode->Prepare(visitor);
     rootNode->Process(visitor);

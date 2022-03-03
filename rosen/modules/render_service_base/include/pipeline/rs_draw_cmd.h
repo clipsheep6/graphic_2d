@@ -30,8 +30,10 @@
 #include "include/core/SkTextBlob.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "render/rs_image.h"
-#include <parcel.h>
 #include "transaction/rs_marshalling_helper.h"
+#ifdef ROSEN_OHOS
+#include <parcel.h>
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -76,7 +78,11 @@ enum RSOpType : uint16_t {
     RESTOREALPHAOPITEM,
 };
 
+#ifdef ROSEN_OHOS
 class OpItem : public MemObject, public Parcelable {
+#else
+class OpItem : public MemObject {
+#endif
 public:
     explicit OpItem(size_t size) : MemObject(size) {}
     virtual ~OpItem() {}
@@ -86,10 +92,12 @@ public:
     virtual RSOpType GetType() const {
         return RSOpType::OPITEM;
     }
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         return RSMarshallingHelper::Marshalling(parcel, GetType());
     }
+#endif
 };
 
 class OpItemWithPaint : public OpItem {
@@ -101,10 +109,12 @@ public:
     RSOpType GetType() const override {
         return RSOpType::OPITEMWITHPAINT;
     }
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         return OpItem::Marshalling(parcel);
     }
+#endif
 
 protected:
     SkPaint paint_;
@@ -222,6 +232,7 @@ public:
         return RSOpType::SAVEOPITEM;
     }
 
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         return OpItem::Marshalling(parcel);
@@ -230,6 +241,7 @@ public:
     {
         return new SaveOpItem();
     }
+#endif
 };
 
 class RestoreOpItem : public OpItem {
@@ -242,6 +254,7 @@ public:
         return RSOpType::RESTOREOPITEM;
     }
 
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         return OpItem::Marshalling(parcel);
@@ -250,6 +263,7 @@ public:
     {
         return new RestoreOpItem();
     }
+#endif
 };
 
 class FlushOpItem : public OpItem {
@@ -349,6 +363,7 @@ public:
     RSOpType GetType() const override{
         return RSOpType::TEXTBLOBOPITEM;
     }
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         bool success = true;
@@ -376,6 +391,7 @@ public:
         SkPaint paint;
         return new TextBlobOpItem(textBlob, x, y, paint);
     }
+#endif
 
 private:
     sk_sp<SkTextBlob> textBlob_;
@@ -631,6 +647,7 @@ public:
         return RSOpType::MULTIPLYALPHAOPITEM;
     }
 
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         bool success = true;
@@ -646,6 +663,7 @@ public:
         }
         return new MultiplyAlphaOpItem(alpha);
     }
+#endif
 private:
     float alpha_;
 };
@@ -656,6 +674,7 @@ public:
     ~SaveAlphaOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 
+#ifdef ROSEN_OHOS
     RSOpType GetType() const override {
         return RSOpType::SAVEALPHAOPITEM;
     }
@@ -668,6 +687,7 @@ public:
     {
         return new SaveAlphaOpItem();
     }
+#endif
 };
 
 class RestoreAlphaOpItem : public OpItem {
@@ -680,6 +700,7 @@ public:
         return RSOpType::RESTOREALPHAOPITEM;
     }
 
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         return OpItem::Marshalling(parcel);
@@ -688,6 +709,7 @@ public:
     {
         return new RestoreAlphaOpItem();
     }
+#endif
 };
 
 } // namespace Rosen

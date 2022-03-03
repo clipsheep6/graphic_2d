@@ -19,6 +19,7 @@
 
 #include "base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include/hisysevent.h"
 
+#include "animation/rs_animation_log.h"
 #include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_root_render_node.h"
@@ -164,6 +165,7 @@ void RSRenderThread::RecvTransactionData(std::unique_ptr<RSTransactionData>& tra
         cmds_.emplace_back(std::move(transactionData));
     }
     // todo process in next vsync (temporarily)
+    RSAnimationLog::Instance().InitNodeAndPropertyInfo();
     RSRenderThread::Instance().RequestNextVSync();
 }
 
@@ -295,6 +297,8 @@ void RSRenderThread::Animate(uint64_t timestamp)
 
     if (hasRunningAnimation_) {
         RSRenderThread::Instance().RequestNextVSync();
+    } else {
+        RSAnimationLog::Instance().ClearNodeAndPropertyInfo();
     }
     ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }

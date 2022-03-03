@@ -16,6 +16,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_PROPERTY_ANIMATION_H
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_PROPERTY_ANIMATION_H
 
+#include "animation/rs_animation_log.h"
 #include "animation/rs_property_accessors.h"
 #include "animation/rs_render_animation.h"
 #include "common/rs_common_def.h"
@@ -140,6 +141,7 @@ protected:
 
         lastValue_ = value;
         SetPropertyValue(animationValue);
+        WriteAnimationValueToLog(animationValue);
     }
 
     void OnRemoveOnCompletion() override
@@ -154,11 +156,28 @@ protected:
         SetPropertyValue(backwardValue);
     }
 
+    void WriteAnimationValueToLog(const T& value)
+    {
+        auto node = GetTarget();
+        if (node == nullptr) {
+            return;
+        }
+        if (!hasUpdateNeedWriteLog_) {
+            hasUpdateNeedWriteLog_ = true;
+            needWritePropertyToLog_ = RSAnimationLog::Instance().IsNeedWriteLog(property_, node->GetId());
+        }
+        if (needWritePropertyToLog_) {
+            RSAnimationLog::Instance().WritePropertyValueToLog(value, property_, node->GetId());
+        }
+    }
+
 private:
     RSAnimatableProperty property_ { RSAnimatableProperty::INVALID };
     T originValue_;
     T lastValue_;
     bool isAdditive_ { true };
+    bool needWritePropertyToLog_ { false };
+    bool hasUpdateNeedWriteLog_ {false};
     std::shared_ptr<RSPropertyAccessors<T>> propertyAccessor_;
 };
 } // namespace Rosen

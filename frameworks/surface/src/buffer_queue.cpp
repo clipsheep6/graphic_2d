@@ -122,13 +122,13 @@ GSError BufferQueue::PopFromDirtyList(sptr<SurfaceBufferImpl> &buffer)
 
 GSError BufferQueue::CheckRequestConfig(const BufferRequestConfig &config)
 {
-    if (config.width <= 0) {
-        BLOGN_INVALID("config.width is greater than 0, now is %{public}d", config.width);
+    if (config.width <= 0 || config.width > SURFACE_MAX_WIDTH) {
+        BLOGN_INVALID("config.width (0, %{public}d], now is %{public}d", SURFACE_MAX_WIDTH, config.width);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    if (config.height <= 0) {
-        BLOGN_INVALID("config.height is greater than 0, now is %{public}d", config.height);
+    if (config.height <= 0 || config.height > SURFACE_MAX_HEIGHT) {
+        BLOGN_INVALID("config.height (0, %{public}d], now is %{public}d", SURFACE_MAX_HEIGHT, config.height);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
@@ -187,7 +187,8 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtr
     // check param
     GSError ret = CheckRequestConfig(config);
     if (ret != GSERROR_OK) {
-        BLOGN_FAILURE_API(CheckRequestConfig, ret);
+        BLOGN_FAILURE_API(Check
+        RequestConfig, ret);
         return ret;
     }
 
@@ -625,10 +626,10 @@ GSError BufferQueue::AttachBuffer(sptr<SurfaceBufferImpl> &buffer)
     };
 
     int32_t sequence = buffer->GetSeqNum();
-    int32_t usedSize = static_cast<int32_t>(GetUsedSize());
-    int32_t queueSize = static_cast<int32_t>(GetQueueSize());
+    int32_t usedSize = GetUsedSize();
+    int32_t queueSize = GetQueueSize();
     if (usedSize >= queueSize) {
-        int32_t freeSize = static_cast<int32_t>(dirtyList_.size() + freeList_.size());
+        int32_t freeSize = dirtyList_.size() + freeList_.size();
         if (freeSize >= usedSize - queueSize + 1) {
             DeleteBuffers(usedSize - queueSize + 1);
             bufferQueueCache_[sequence] = ele;
@@ -731,13 +732,13 @@ GSError BufferQueue::RegisterReleaseListener(OnReleaseFunc func)
 
 GSError BufferQueue::SetDefaultWidthAndHeight(int32_t width, int32_t height)
 {
-    if (width <= 0) {
-        BLOGN_INVALID("defaultWidth is greater than 0, now is %{public}d", width);
+    if (width <= 0 || width > SURFACE_MAX_WIDTH) {
+        BLOGN_INVALID("defaultWidth (0, %{public}d], now is %{public}d", SURFACE_MAX_WIDTH, width);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    if (height <= 0) {
-        BLOGN_INVALID("defaultHeight is greater than 0, now is %{public}d", height);
+    if (height <= 0 || height > SURFACE_MAX_HEIGHT) {
+        BLOGN_INVALID("defaultHeight (0, %{public}d], now is %{public}d", SURFACE_MAX_HEIGHT, height);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
@@ -769,7 +770,14 @@ uint32_t BufferQueue::GetDefaultUsage()
 
 GSError BufferQueue::CleanCache()
 {
-    DeleteBuffers(queueSize_);
+    auto it = bufferQueueCache_.begin();
+    while (it != bufferQueueCache_.end()) {
+        FreeBuffer(it->Second.buffer);
+        bufferQueueCache_.erase(it++);
+    }
+    freeList.clear();
+    dirtyList_.clear();
+    deletingList_.clear();
     return GSERROR_OK;
 }
 

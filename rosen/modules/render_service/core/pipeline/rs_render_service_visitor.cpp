@@ -92,7 +92,7 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
 
 void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 {
-    ROSEN_LOGI("RsDebug RSRenderServiceVisitor::ProcessDisplayRenderNode child size:%d", node.GetChildren().size());
+    ROSEN_LOGI("unirender: RSRenderServiceVisitor::ProcessDisplayRenderNode child size:%d", node.GetChildren().size());
     globalZOrder_ = 0.0f;
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
@@ -174,6 +174,7 @@ void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 
 void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
+    ROSEN_LOGI("unirender: RSRenderServiceVisitor::ProcessSurfaceRenderNode child size: %d", node.GetChildren().size());
     if (!processor_) {
         ROSEN_LOGE("RSRenderServiceVisitor::ProcessSurfaceRenderNode processor is nullptr");
         return;

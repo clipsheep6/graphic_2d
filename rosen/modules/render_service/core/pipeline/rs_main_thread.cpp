@@ -47,6 +47,7 @@ void RSMainThread::Init()
         ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
         ProcessCommand();
         Animate(timestamp_);
+        ROSEN_LOGI("unirender: render_service RSMainThread start");
         Draw();
         ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
         ROSEN_LOGI("RsDebug mainLoop end");

@@ -57,6 +57,14 @@ RSBaseNode::~RSBaseNode()
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, IsRenderServiceNode());
     }
+
+    if (isUni_) {
+        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeDestroy>(id_);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(command, isUni_);
+        }
+    }
 }
 
 void RSBaseNode::AddChild(SharedPtr child, int index)
@@ -82,6 +90,14 @@ void RSBaseNode::AddChild(SharedPtr child, int index)
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, IsRenderServiceNode());
     }
+
+    if (isUni_) {
+        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeAddChild>(id_, childId, index);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(command, isUni_);
+        }
+    }
 }
 
 void RSBaseNode::RemoveChild(SharedPtr child)
@@ -100,6 +116,15 @@ void RSBaseNode::RemoveChild(SharedPtr child)
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, IsRenderServiceNode());
     }
+
+    if (isUni_) {
+        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveChild>(id_, childId);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(command, isUni_);
+        }
+    }
+
 }
 
 void RSBaseNode::RemoveChildById(NodeId childId)
@@ -123,6 +148,15 @@ void RSBaseNode::RemoveFromTree()
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, IsRenderServiceNode());
     }
+
+    if (isUni_) {
+        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveFromTree>(id_);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(command, isUni_);
+        }
+    }
+
 }
 
 void RSBaseNode::ClearChildren()
@@ -139,6 +173,15 @@ void RSBaseNode::ClearChildren()
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, IsRenderServiceNode());
     }
+
+    if (isUni_) {
+        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearChild>(id_);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(command, isUni_);
+        }
+    }
+
 }
 
 void RSBaseNode::SetParent(NodeId parentId)

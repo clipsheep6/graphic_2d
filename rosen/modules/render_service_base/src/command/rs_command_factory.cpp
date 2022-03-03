@@ -25,6 +25,7 @@
 #include "command/rs_canvas_node_command.h"
 #include "command/rs_display_node_command.h"
 #include "command/rs_node_command.h"
+#include "command/rs_root_node_command.h"
 #include "command/rs_surface_node_command.h"
 // animation
 #include "command/rs_animation_command.h"
@@ -61,7 +62,7 @@ UnmarshallingFunc RSCommandFactory::GetUnmarshallingFunc(uint16_t type, uint16_t
 {
     auto it = unmarshallingFuncLUT_.find(MakeKey(type, subtype));
     if (it == unmarshallingFuncLUT_.end()) {
-        ROSEN_LOGE("RSCommandFactory::GetUnmarshallingFunc, Func is not found");
+        ROSEN_LOGE("unirender: RSCommandFactory::GetUnmarshallingFunc, Func is not found, type=%d subtype=%d", type, subtype);
         return nullptr;
     }
     return it->second;

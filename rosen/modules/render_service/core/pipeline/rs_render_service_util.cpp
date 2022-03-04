@@ -397,23 +397,53 @@ SkImageInfo GenerateSkImageInfo(const sptr<OHOS::SurfaceBuffer>& buffer)
 }
 
 void FillDrawParameters(BufferDrawParameters& params, const sptr<OHOS::SurfaceBuffer>& buffer,
-    const RSSurfaceRenderNode& node)
+    const RSSurfaceRenderNode& node, bool replaceTransfrom = false, SkMatrix transform = SkMatrix())
 {
     params.bitmap = SkBitmap();
     params.antiAlias = true;
     const RSProperties& property = node.GetRenderProperties();
     params.alpha = node.GetAlpha() * property.GetAlpha();
-    params.dstRect = SkRect::MakeXYWH(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
+    params.srcRect = SkRect::MakeXYWH(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
     if (geoPtr) {
-        params.transform = geoPtr->GetAbsMatrix();
-        params.dstLeft = geoPtr->GetAbsRect().left_;
-        params.dstTop = geoPtr->GetAbsRect().top_;
-        params.dstWidth = geoPtr->GetAbsRect().width_;
-        params.dstHeight = geoPtr->GetAbsRect().height_;
+        params.transform = (replaceTransfrom ? transform : geoPtr->GetAbsMatrix());
+        params.dstRect = SkRect::MakeXYWH(
+            geoPtr->GetAbsRect().left_,
+            geoPtr->GetAbsRect().top_,
+            geoPtr->GetAbsRect().width_,
+            geoPtr->GetAbsRect().height_);
+        params.scaleX = static_cast<float>(params.dstRect.width() * 1.0 / params.srcRect.width());
+        params.scaleY = static_cast<float>(params.dstRect.height() * 1.0 / params.srcRect.height());
     }
 }
 } // namespace Detail
+
+SkMatrix RsRenderServiceUtil::GetCanvasTransform(ScreenRotation screenRotation, ScreenInfo screenInfo)
+{
+    SkMatrix canvasTransform;
+    switch (screenRotation) {
+        case ScreenRotation::ROTATION_90: {
+            canvasTransform.postRotate(-90.0f); // rotate 90 degrees anticlockwise
+            canvasTransform.postTranslate(0.0, static_cast<float>(screenInfo.height));
+            break;
+        }
+        case ScreenRotation::ROTATION_180: {
+            canvasTransform.postRotate(180.0f);  // rotate 180 degrees
+            canvasTransform.postTranslate(static_cast<float>(screenInfo.width), static_cast<float>(screenInfo.height));
+            break;
+        }
+        case ScreenRotation::ROTATION_270: {
+            canvasTransform.postRotate(-270.0f);  // rotate 270 degrees anticlockwise
+            canvasTransform.postTranslate(static_cast<float>(screenInfo.width), 0.0);
+            break;
+        }
+        default: {
+            break;
+        }
+    };
+
+    return canvasTransform;
+}
 
 void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
     std::vector<LayerInfoPtr>& layers,  ComposeInfo info, RSSurfaceRenderNode* node)
@@ -495,26 +525,83 @@ void RsRenderServiceUtil::Draw(SkCanvas& canvas, BufferDrawParameters& params, R
     if (bitmap.installPixels(pixmap)) {
         canvas.save();
         if (params.onDisplay) {
-            canvas.clipRect(SkRect::MakeXYWH(params.dstLeft, params.dstTop, params.dstWidth, params.dstHeight));
+            canvas.clipRect(SkRect::MakeXYWH(
+                floor(params.dstRect.left() * params.scaleX),
+                floor(params.dstRect.top() * params.scaleY),
+                ceil(params.dstRect.width() * params.scaleX),
+                ceil(params.dstRect.height() * params.scaleY)));
             canvas.setMatrix(params.transform);
+            canvas.translate(
+                floor(params.dstRect.left() * params.scaleX - params.dstRect.left()),
+                floor(params.dstRect.top() * params.scaleY - params.dstRect.top()));
+            canvas.scale(params.scaleX, params.scaleY);
             DealAnimation(canvas, paint, node);
             const RSProperties& property = node.GetRenderProperties();
             auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
             if (filter != nullptr) {
                 auto skRectPtr = std::make_unique<SkRect>();
-                skRectPtr->setXYWH(0, 0, params.dstRect.width(), params.dstRect.height());
+                skRectPtr->setXYWH(0, 0, params.srcRect.width(), params.srcRect.height());
                 RSPropertiesPainter::SaveLayerForFilter(property, canvas, filter, skRectPtr);
                 RSPropertiesPainter::RestoreForFilter(canvas);
             }
+            canvas.drawBitmapRect(bitmap, params.srcRect, SkRect::MakeXYWH(0, 0,
+                node.GetRenderProperties().GetBoundsWidth(), node.GetRenderProperties().GetBoundsHeight()), &paint);
+        } else {
+            canvas.drawBitmapRect(bitmap, params.srcRect, SkRect::MakeXYWH(0, 0,
+                node.GetRenderProperties().GetBoundsWidth() * params.scaleX,
+                node.GetRenderProperties().GetBoundsHeight() * params.scaleY), &paint);
         }
-        canvas.drawBitmapRect(bitmap, params.dstRect, SkRect::MakeXYWH(0, 0, params.dstWidth, params.dstHeight),
-            &paint);
+
         canvas.restore();
     }
 }
 
+void RsRenderServiceUtil::DrawLayer(SkCanvas& canvas, const LayerInfoPtr& layer, const SkMatrix& layerTransform,
+    ColorGamut dstGamut, bool isDrawnOnDisplay)
+{
+    if (layer == nullptr) {
+        ROSEN_LOGE("RsRenderServiceUtil::DrawLayer: layer is nullptr!");
+        return;
+    }
+
+    RSSurfaceRenderNode *surfaceNode = static_cast<RSSurfaceRenderNode *>(layer->GetLayerAdditionalInfo());
+    if (surfaceNode == nullptr) {
+        ROSEN_LOGE("RsRenderServiceUtil::DrawLayer: layer's surfaceNode is nullptr!");
+        return;
+    }
+
+    sptr<SurfaceBuffer> buffer = layer->GetBuffer();
+    if (buffer == nullptr || buffer->GetHeight() < 0 || buffer->GetWidth() < 0 ||
+        buffer->GetStride() < 0 || buffer->GetSize() == 0 || buffer->GetVirAddr() == nullptr) {
+        ROSEN_LOGE("RsRenderServiceUtil::DrawLayer: layer's buffer is not valid!");
+        return;
+    }
+
+    ColorGamut srcGamut = static_cast<ColorGamut>(buffer->GetSurfaceBufferColorGamut());
+    BufferDrawParameters params;
+    SkImageInfo imageInfo = Detail::GenerateSkImageInfo(buffer);
+    std::vector<uint8_t> newGamutBuffer;
+    bool colorGamutConverted = false;
+    if (srcGamut != dstGamut) {
+        ROSEN_LOGW("RsRenderServiceUtil::DrawLayer: need to convert color gamut.");
+        colorGamutConverted = Detail::ConvertBufferColorGamut(newGamutBuffer, buffer, srcGamut, dstGamut);
+    }
+
+    if (colorGamutConverted) {
+        ROSEN_LOGI("RsRenderServiceUtil::DrawLayer: convert color gamut succeed.");
+        // use newGamutBuffer to draw.
+        params.pixmap = SkPixmap(imageInfo, newGamutBuffer.data(), buffer->GetStride());
+    } else {
+        params.pixmap = SkPixmap(imageInfo, buffer->GetVirAddr(), buffer->GetStride());
+    }
+
+    Detail::FillDrawParameters(params, buffer, *surfaceNode, true, layerTransform);
+    params.onDisplay = isDrawnOnDisplay;
+    Draw(canvas, params, *surfaceNode);
+}
+
 void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer,
-    RSSurfaceRenderNode& node, bool isDrawnOnDisplay)
+    RSSurfaceRenderNode& node, bool isDrawnOnDisplay, float scaleX, float scaleY)
 {
     if (!canvas) {
         ROSEN_LOGE("RsRenderServiceUtil::DrawBuffer canvas is nullptr");
@@ -540,35 +627,9 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer>
     params.pixmap = SkPixmap(imageInfo, buffer->GetVirAddr(), buffer->GetStride());
     Detail::FillDrawParameters(params, buffer, node);
     params.onDisplay = isDrawnOnDisplay;
-
+    params.scaleX = scaleX;
+    params.scaleY = scaleY;
     Draw(*canvas, params, node);
-}
-
-void RsRenderServiceUtil::DrawBuffer(SkCanvas& canvas, const sptr<OHOS::SurfaceBuffer>& buffer,
-    RSSurfaceRenderNode& node, ColorGamut dstGamut, bool isDrawnOnDisplay)
-{
-    if (buffer == nullptr || buffer->GetHeight() < 0 || buffer->GetWidth() < 0 ||
-        buffer->GetStride() < 0 || buffer->GetSize() == 0 || buffer->GetVirAddr() == nullptr) {
-        ROSEN_LOGE("RsRenderServiceUtil::DrawBuffer: buffer is not valid!");
-        return;
-    }
-
-    ColorGamut srcGamut = static_cast<ColorGamut>(buffer->GetSurfaceBufferColorGamut());
-    if (srcGamut != dstGamut) {
-        std::vector<uint8_t> newBuffer;
-        if (Detail::ConvertBufferColorGamut(newBuffer, buffer, srcGamut, dstGamut)) {
-            // use newBuffer to draw.
-            BufferDrawParameters params;
-            SkImageInfo imageInfo = Detail::GenerateSkImageInfo(buffer);
-            params.pixmap = SkPixmap(imageInfo, newBuffer.data(), buffer->GetStride());
-            Detail::FillDrawParameters(params, buffer, node);
-            params.onDisplay = isDrawnOnDisplay;
-            Draw(canvas, params, node);
-            return;
-        }
-    }
-
-    DrawBuffer(&canvas, buffer, node, isDrawnOnDisplay);
 }
 } // namespace Rosen
 } // namespace OHOS

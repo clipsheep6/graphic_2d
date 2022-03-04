@@ -131,7 +131,7 @@ void RSScreenManager::ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &o
     if (screens_.count(id) == 1) {
         HiLog::Warn(LOG_LABEL, "%{public}s: The screen for id %{public}" PRIu64 " already existed.", __func__, id);
 
-        // TODO: should we erase it and create a new one?
+        // [PLANNING]: should we erase it and create a new one?
         for (auto &cb : screenChangeCallbacks_) {
             cb->OnScreenChanged(id, ScreenEvent::DISCONNECTED);
         }
@@ -235,7 +235,7 @@ void RSScreenManager::GetScreenActiveModeLocked(ScreenId id, RSScreenModeInfo& s
 
     screenModeInfo.SetScreenWidth(modeInfo->width);
     screenModeInfo.SetScreenHeight(modeInfo->height);
-    screenModeInfo.SetScreenFreshRate(modeInfo->freshRate);
+    screenModeInfo.SetScreenRefreshRate(modeInfo->freshRate);
     screenModeInfo.SetScreenModeId(modeInfo->id);
 }
 
@@ -252,7 +252,7 @@ std::vector<RSScreenModeInfo> RSScreenManager::GetScreenSupportedModesLocked(Scr
     for (decltype(displaySupportedModes.size()) idx = 0; idx < displaySupportedModes.size(); ++idx) {
         screenSupportedModes[idx].SetScreenWidth(displaySupportedModes[idx].width);
         screenSupportedModes[idx].SetScreenHeight(displaySupportedModes[idx].height);
-        screenSupportedModes[idx].SetScreenFreshRate(displaySupportedModes[idx].freshRate);
+        screenSupportedModes[idx].SetScreenRefreshRate(displaySupportedModes[idx].freshRate);
         screenSupportedModes[idx].SetScreenModeId(displaySupportedModes[idx].id);
     }
     return screenSupportedModes;
@@ -263,6 +263,11 @@ RSScreenCapability RSScreenManager::GetScreenCapabilityLocked(ScreenId id) const
     RSScreenCapability screenCapability;
     if (screens_.count(id) == 0) {
         HiLog::Error(LOG_LABEL, "%{public}s: There is no screen for id %{public}" PRIu64 ".\n", __func__, id);
+        return screenCapability;
+    }
+    if (screens_.at(id)->IsVirtual()) {
+        HiLog::Warn(LOG_LABEL, "%{public}s: only name attribute is valid for virtual screen.\n", __func__);
+        screenCapability.SetName(screens_.at(id)->Name());
         return screenCapability;
     }
 

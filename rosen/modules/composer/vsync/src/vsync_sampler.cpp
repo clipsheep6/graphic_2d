@@ -56,6 +56,7 @@ void VSyncSampler::Reset()
     firstSampleIndex_ = 0;
     numSamples_ = 0;
     modeUpdated_ = false;
+    hardwareVSyncStatus_ = true;
 }
 
 void VSyncSampler::ResetErrorLocked()
@@ -72,14 +73,23 @@ void VSyncSampler::BeginSample()
     std::lock_guard<std::mutex> lock(mutex_);
     numSamples_ = 0;
     modeUpdated_ = false;
+    hardwareVSyncStatus_ = true;
+}
+
+void VSyncSampler::SetHardwareVSyncStatus(bool enabled)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    hardwareVSyncStatus_ = enabled;
+}
+
+bool VSyncSampler::GetHardwareVSyncStatus() const
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return hardwareVSyncStatus_;
 }
 
 bool VSyncSampler::AddSample(int64_t timeStamp)
 {
-    if (modeUpdated_) {
-        return false;
-    }
-
     std::lock_guard<std::mutex> lock(mutex_);
     if (numSamples_ == 0) {
         firstSampleIndex_ = 0;
@@ -103,7 +113,8 @@ bool VSyncSampler::AddSample(int64_t timeStamp)
     }
 
     // 1/2 just a empirical value
-    return modeUpdated_ & (error_ < g_errorThreshold / 2);
+    bool ret = modeUpdated_ & (error_ < g_errorThreshold / 2);
+    return !ret;
 }
 
 
@@ -199,16 +210,19 @@ bool VSyncSampler::AddPresentFenceTime(int64_t timestamp)
 
 int64_t VSyncSampler::GetPeriod() const
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     return period_;
 }
 
 int64_t VSyncSampler::GetPhase() const 
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     return phase_;
 }
 
 int64_t VSyncSampler::GetRefrenceTime() const
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     return referenceTime_;
 }
 

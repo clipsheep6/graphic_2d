@@ -68,10 +68,12 @@ public:
         bool isDrawnOnDisplay = true, float scaleX = 1.0f, float scaleY = 1.0f);
     static void DrawBuffer(SkCanvas& canvas, const sptr<OHOS::SurfaceBuffer>& buffer,
         RSSurfaceRenderNode& node, ColorGamut dstGamut, bool isDrawnOnDisplay = true);
+    static void InitEnableClient();
 private:
     static void Draw(SkCanvas& canvas, BufferDrawParameters& params, RSSurfaceRenderNode& node);
     static void DealAnimation(SkCanvas& canvas, SkPaint& paint, RSSurfaceRenderNode& node);
     static bool IsNeedClient(RSSurfaceRenderNode* node);
+    static bool enableClient;
 };
 } // Rosen
 } // OHOS

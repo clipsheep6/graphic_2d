@@ -23,30 +23,19 @@ ohos_executable("rendertest") {
   include_dirs = [
     "//foundation/graphic/standard/rosen/modules/2d_graphics/include",
     "//foundation/graphic/standard/rosen/modules/2d_graphics/src",
-    "//foundation/graphic/standard/rosen/modules/render_service_base",
-    "//foundation/graphic/standard/rosen/modules/render_service_base/src",
-    "//foundation/graphic/standard/rosen/modules/render_service_base/include",
     "//foundation/graphic/standard/rosen/modules/render_service_client",
-    "//foundation/graphic/standard/interfaces/innerkits/vsync_module",
-    "//foundation/graphic/standard/rosen/include/common",
-    "//foundation/windowmanager/interfaces/innerkits/wm",
     "//foundation/graphic/standard/rosen/2d_engine/ui",
   ]
 
   configs = [ "//foundation/graphic/standard/rosen/modules/2d_engine/rosen_text/ui:rosen_text_ui_config" ]
 
   deps = [
-    "//foundation/graphic/standard:libvsync_client",
     "//foundation/graphic/standard/rosen/modules/2d_graphics:2d_graphics",
-    "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/windowmanager/wm:libwm",
-    "//third_party/zlib:libz",
   ]
 
   external_deps = [
     "hilog_native:libhilog",
-    "multimedia_image_standard:image_native",
   ]
 
   subsystem_name = "graphic"

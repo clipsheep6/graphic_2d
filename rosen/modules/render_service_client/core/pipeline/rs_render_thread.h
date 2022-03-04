@@ -68,6 +68,8 @@ public:
 
     void OnTransaction(std::shared_ptr<RSTransactionData> transactionData) override;
 
+    bool isUni_ = false;
+
 private:
     RSRenderThread();
     ~RSRenderThread();

@@ -38,11 +38,11 @@ public:
     virtual void Init(ScreenId id) = 0;
     virtual void PostProcess() = 0;
     bool ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask& task, sptr<SurfaceBuffer>& buffer);
+    bool ConsumeAndUpdateBuffer(RSDisplayRenderNode& node, SpecialTask& task, sptr<SurfaceBuffer>& buffer);
 
 protected:
     std::unique_ptr<SkCanvas> CreateCanvas(sptr<Surface> producerSurface, BufferRequestConfig requestConfig);
     void FlushBuffer(sptr<Surface> surface, BufferFlushConfig flushConfig);
-    bool ConsumeAndUpdateBuffer(RSDisplayRenderNode& node, SpecialTask& task, sptr<SurfaceBuffer>& buffer);
 
 private:
     sptr<SurfaceBuffer> buffer_;

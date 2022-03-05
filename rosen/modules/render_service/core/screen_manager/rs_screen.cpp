@@ -143,8 +143,13 @@ void RSScreen::SetActiveMode(uint32_t modeId)
         return;
     }
 
-    if (hdiScreen_->SetScreenMode(modeId) < 0) {
-        HiLog::Error(LOG_LABEL, "%{public}s: SetScreenMode fails.\n", __func__);
+    if (modeId >= supportedModes_.size()) {
+        HiLog::Error(LOG_LABEL, "%{public}s: set fails because the index is out of bounds.\n", __func__);
+        return;
+    }
+    int32_t selectModeId = supportedModes_[modeId].id;
+    if (hdiScreen_->SetScreenMode(static_cast<uint32_t>(selectModeId)) < 0) {
+        HiLog::Error(LOG_LABEL, "%{public}s: Hdi SetScreenMode fails.\n", __func__);
         return;
     }
     auto activeMode = GetActiveMode();

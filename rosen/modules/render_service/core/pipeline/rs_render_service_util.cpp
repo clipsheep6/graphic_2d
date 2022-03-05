@@ -418,6 +418,8 @@ void FillDrawParameters(BufferDrawParameters& params, const sptr<OHOS::SurfaceBu
 }
 } // namespace Detail
 
+bool RsRenderServiceUtil::enableClient = false;
+
 SkMatrix RsRenderServiceUtil::GetCanvasTransform(ScreenRotation screenRotation, ScreenInfo screenInfo)
 {
     SkMatrix canvasTransform;
@@ -465,6 +467,9 @@ void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sp
 
 bool RsRenderServiceUtil::IsNeedClient(RSSurfaceRenderNode* node)
 {
+    if (enableClient) {
+        return true;
+    }
     if (node == nullptr) {
         ROSEN_LOGE("RsRenderServiceUtil::ComposeSurface node is empty");
         return false;
@@ -630,6 +635,15 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer>
     params.scaleX = scaleX;
     params.scaleY = scaleY;
     Draw(*canvas, params, node);
+}
+
+void RsRenderServiceUtil::InitEnableClient()
+{
+    if (access("/etc/enable_client", F_OK) == 0) {
+        enableClient = true;
+    } else {
+        enableClient = false;
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

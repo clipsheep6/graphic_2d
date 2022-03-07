@@ -163,9 +163,11 @@ void RSImage::SetRadius(float radius)
     bool RSImage::Marshalling(Parcel& parcel) const
     {
         bool success = true;
+        int imageFit = static_cast<int>(imageFit_);
+        int imageRepeat = static_cast<int>(imageRepeat_);
         success &= RSMarshallingHelper::Marshalling(parcel, image_);
-        success &= RSMarshallingHelper::Marshalling(parcel, imageFit_);
-        success &= RSMarshallingHelper::Marshalling(parcel, imageRepeat_);
+        success &= RSMarshallingHelper::Marshalling(parcel, imageFit);
+        success &= RSMarshallingHelper::Marshalling(parcel, imageRepeat);
         success &= RSMarshallingHelper::Marshalling(parcel, cornerRadius_);
         return success;
     }

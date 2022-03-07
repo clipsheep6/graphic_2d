@@ -314,7 +314,7 @@ void OH_Drawing_SetTextStyleFontFamilies(OH_Drawing_TextStyle*,
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_TextStyle a pointer to OH_Drawing_TextStyle object
- * @param int fontStyle
+ * @param int enum OH_Drawing_FontStyle
  * @since 8
  * @version 1.0
  */

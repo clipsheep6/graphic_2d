@@ -34,9 +34,7 @@ ohos_executable("rendertest") {
     "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
   ]
 
-  external_deps = [
-    "hilog_native:libhilog",
-  ]
+  external_deps = [ "hilog_native:libhilog" ]
 
   subsystem_name = "graphic"
   part_name = "graphic_standard"

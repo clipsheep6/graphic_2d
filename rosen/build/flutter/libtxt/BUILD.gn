@@ -102,6 +102,8 @@ template("thirdparty_lib_txt_rosen") {
     } else if (platform == "android") {
       sources += [ "$flutter_root/engine/flutter/third_party/txt/src/txt/platform_android.cc" ]
     }
+    part_name = "graphic_standard"
+    subsystem_name = "graphic"
   }
 }
 

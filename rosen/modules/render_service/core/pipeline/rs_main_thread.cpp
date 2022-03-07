@@ -91,8 +91,8 @@ void RSMainThread::Draw()
         ROSEN_LOGE("RSMainThread::Draw GetGlobalRootRenderNode fail");
         return;
     }
-    ROSEN_LOGI("cqx1659 RSMainThread::Draw RSUnifiedRenderVisitor");
-//    ROSEN_LOGI("cqx RSMainThread::Draw RSRenderServiceVisitor");
+    ROSEN_LOGI("RSMainThread::Draw with RSUnifiedRenderVisitor");
+//    ROSEN_LOGI("RSMainThread::Draw RSRenderServiceVisitor");
     std::shared_ptr<RSNodeVisitor> visitor = std::make_shared<RSUnifiedRenderVisitor>();
     rootNode->Prepare(visitor);
     rootNode->Process(visitor);

@@ -68,7 +68,11 @@ napi_value AssertFailedPromise(napi_env env, const char *fmt, ...)
     auto &errormsg = param->errormsg;
     va_list ap;
     va_start(ap, fmt);
-    (void)vsnprintf_s(errormsg, sizeof(errormsg), sizeof(errormsg) - 1, fmt, ap);
+    int ret = vsnprintf_s(errormsg, sizeof(errormsg), sizeof(errormsg) - 1, fmt, ap);
+    if (ret < 0) {
+       va_end(ap);
+       return CreateError(env, "failed to prepare msg");
+    }
     va_end(ap);
     GNAPI_LOG("AssertFailedPromise %{public}s", errormsg);
     return CreatePromise<AssertFailedParam>(env, __PRETTY_FUNCTION__, AssertFailedAsync, AssertFailedResolve, param);
@@ -79,7 +83,11 @@ napi_value CreateError(napi_env env, const char *fmt, ...)
     char errormsg[0x100];
     va_list ap;
     va_start(ap, fmt);
-    (void)vsnprintf_s(errormsg, sizeof(errormsg), sizeof(errormsg) - 1, fmt, ap);
+    int ret = vsnprintf_s(errormsg, sizeof(errormsg), sizeof(errormsg) - 1, fmt, ap);
+    if (ret < 0) {
+        va_end(ap);
+        return CreateError(env, "failed to prepare msg");
+    }
     va_end(ap);
     GNAPI_LOG("CreateError %{public}s", errormsg);
 

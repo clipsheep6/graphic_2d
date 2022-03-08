@@ -1,5 +1,5 @@
-# !/usr/bin/env python3
-# coding=utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 * Copyright (c) 2022 Shenzhen Kaihong Digital Industry Development Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,7 @@ import os
 import argparse
 import re
 import pip
+from __future__ import print_function
 
 
 def lost_module(module_name):

@@ -232,7 +232,12 @@ void RSHardwareProcessor::CalculateInfoWithVideo(ComposeInfo& info, RSSurfaceRen
 void RSHardwareProcessor::CalculateInfoWithAnimation(
     const std::unique_ptr<RSTransitionProperties>& transitionProperties, ComposeInfo& info, RSSurfaceRenderNode& node)
 {
-    if (!transitionProperties) {
+    auto existedParent = node.GetParent().lock();
+    bool flag = existedParent && existedParent->IsInstanceOf<RSSurfaceRenderNode>();
+    auto parentTransitionProperties = std::static_pointer_cast<RSSurfaceRenderNode>(existedParent)->
+        GetAnimationManager().GetTransitionProperties();
+    flag &= parentTransitionProperties == nullptr;
+    if (!transitionProperties && !flag) {
         return;
     }
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
@@ -240,13 +245,15 @@ void RSHardwareProcessor::CalculateInfoWithAnimation(
         ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface geoPtr == nullptr");
         return;
     }
-    float paddingX = (1 - transitionProperties->GetScale().x_) * geoPtr->GetAbsRect().width_ / 2;
-    float paddingY = (1 - transitionProperties->GetScale().y_) * geoPtr->GetAbsRect().height_ / 2;
+    auto scale = transitionProperties ? transitionProperties->GetScale() : parentTransitionProperties->GetScale();
+    auto translate = transitionProperties ? transitionProperties->GetTranslate() : parentTransitionProperties->GetTranslate();
+    float paddingX = (1 - scale.x_) * geoPtr->GetAbsRect().width_ / 2;
+    float paddingY = (1 - scale.y_) * geoPtr->GetAbsRect().height_ / 2;
     info.dstRect = {
-        .x = info.dstRect.x + transitionProperties->GetTranslate().x_ + paddingX,
-        .y = info.dstRect.y + transitionProperties->GetTranslate().y_ + paddingY,
-        .w = info.dstRect.w * transitionProperties->GetScale().x_,
-        .h = info.dstRect.h * transitionProperties->GetScale().y_,
+        .x = info.dstRect.x + translate.x_ + paddingX,
+        .y = info.dstRect.y + translate.y_ + paddingY,
+        .w = info.dstRect.w * scale.x_,
+        .h = info.dstRect.h * scale.y_,
     };
     info.alpha = {
         .enGlobalAlpha = true,

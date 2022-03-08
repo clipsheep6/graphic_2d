@@ -184,6 +184,9 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
     auto transitionProperties = node.GetAnimationManager().GetTransitionProperties();
     CalculateInfoWithAnimation(transitionProperties, info, node);
     node.SetDstRect({info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h});
+    if (node.GetDstRect().IsEmpty()) {
+        return;
+    }
     std::shared_ptr<HdiLayerInfo> layer = HdiLayerInfo::CreateHdiLayerInfo();
     ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface surfaceNode id:%llu name:[%s] dst [%d %d %d %d]"\
         "SrcRect [%d %d] rawbuffer [%d %d] surfaceBuffer [%d %d] buffaddr:%p, z:%f, globalZOrder:%d, blendType = %d",

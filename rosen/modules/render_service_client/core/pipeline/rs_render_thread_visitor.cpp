@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,13 +40,7 @@ RSRenderThreadVisitor::~RSRenderThreadVisitor() {}
 
 void RSRenderThreadVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 {
-    for (auto& child : node.GetChildren()) {
-        if (auto c = child.lock()) {
-            c->Prepare(shared_from_this());
-        }
-    }
-
-    for (auto& child : node.GetDisappearingChildren()) {
+    for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
     }
 }
@@ -87,15 +81,11 @@ void RSRenderThreadVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 
 void RSRenderThreadVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
 {
-    for (auto& child : node.GetChildren()) {
-        if (auto c = child.lock()) {
-            c->Process(shared_from_this());
-        }
-    }
-
-    for (auto& child : node.GetDisappearingChildren()) {
+    for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
+    // clear SortedChildren, it will be generated again in next frame
+    node.ResetSortedChildren();
 }
 
 void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
@@ -140,11 +130,31 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         ROSEN_LOGE("Request Frame Failed");
         return;
     }
-    canvas_ = new RSPaintFilterCanvas(surfaceFrame->GetCanvas());
+
+    sk_sp<SkSurface> skSurface = nullptr;
+    if (RSRootRenderNode::NeedForceRaster()) {
+        ROSEN_LOGD("Force Raster draw");
+        RSRootRenderNode::MarkForceRaster(false);
+        SkImageInfo imageInfo = SkImageInfo::Make(node.GetSurfaceWidth(), node.GetSurfaceHeight(),
+            kRGBA_8888_SkColorType, kOpaque_SkAlphaType, SkColorSpace::MakeSRGB());
+        skSurface = SkSurface::MakeRaster(imageInfo);
+        canvas_ = new RSPaintFilterCanvas(skSurface->getCanvas());
+    } else {
+        canvas_ = new RSPaintFilterCanvas(surfaceFrame->GetCanvas());
+    }
     canvas_->clear(SK_ColorTRANSPARENT);
+
 
     isIdle_ = false;
     ProcessCanvasRenderNode(node);
+
+    if (skSurface) {
+        canvas_->flush();
+        surfaceFrame->GetCanvas()->clear(SK_ColorTRANSPARENT);
+        skSurface->draw(surfaceFrame->GetCanvas(), 0.f, 0.f, nullptr);
+    } else if (RSRootRenderNode::NeedForceRaster()) {
+        RSRenderThread::Instance().RequestNextVSync();
+    }
 
     RS_TRACE_BEGIN("rsSurface->FlushFrame");
     rsSurface->FlushFrame(surfaceFrame);

@@ -14,7 +14,7 @@
  */
 
 #include "producer_surface.h"
-
+#include <cinttypes>
 #include "buffer_log.h"
 #include "buffer_manager.h"
 
@@ -54,6 +54,10 @@ sptr<IBufferProducer> ProducerSurface::GetProducer() const
 GSError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
     int32_t &fence, BufferRequestConfig &config)
 {
+    if (uniqueID_ == 0) {
+        uniqueID_ = GetUniqueId();
+    }
+    BLOGNW("uniqueID:%{public}" PRIu64 "", uniqueID_);
     IBufferProducer::RequestBufferReturnValue retval;
     BufferExtraDataImpl bedataimpl;
     GSError ret = GetProducer()->RequestBuffer(config, bedataimpl, retval);
@@ -105,6 +109,10 @@ GSError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
 
 GSError ProducerSurface::CancelBuffer(sptr<SurfaceBuffer>& buffer)
 {
+    if (uniqueID_ == 0) {
+        uniqueID_ = GetUniqueId();
+    }
+    BLOGNW("uniqueID:%{public}" PRIu64 "", uniqueID_);
     if (buffer == nullptr) {
         return GSERROR_INVALID_ARGUMENTS;
     }
@@ -118,6 +126,10 @@ GSError ProducerSurface::CancelBuffer(sptr<SurfaceBuffer>& buffer)
 GSError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
     int32_t fence, BufferFlushConfig &config)
 {
+    if (uniqueID_ == 0) {
+        uniqueID_ = GetUniqueId();
+    }
+    BLOGNW("uniqueID:%{public}" PRIu64 "", uniqueID_);
     if (buffer == nullptr) {
         return GSERROR_INVALID_ARGUMENTS;
     }
@@ -158,11 +170,19 @@ GSError ProducerSurface::DetachBuffer(sptr<SurfaceBuffer>& buffer)
 
 uint32_t ProducerSurface::GetQueueSize()
 {
+    if (uniqueID_ == 0) {
+        uniqueID_ = GetUniqueId();
+    }
+    BLOGNW("uniqueID:%{public}" PRIu64 "", uniqueID_);
     return producer_->GetQueueSize();
 }
 
 GSError ProducerSurface::SetQueueSize(uint32_t queueSize)
 {
+    if (uniqueID_ == 0) {
+        uniqueID_ = GetUniqueId();
+    }
+    BLOGNW("uniqueID:%{public}" PRIu64 "", uniqueID_);
     return producer_->SetQueueSize(queueSize);
 }
 
@@ -243,12 +263,17 @@ bool ProducerSurface::IsRemote()
 
 GSError ProducerSurface::CleanCache()
 {
+    if (uniqueID_ == 0) {
+        uniqueID_ = GetUniqueId();
+    }
+    BLOGNW("uniqueID:%{public}" PRIu64 "", uniqueID_);
     if (IsRemote()) {
         for (auto it = bufferProducerCache_.begin(); it != bufferProducerCache_.end(); it++) {
             if (it->second != nullptr && it->second->GetVirAddr() != nullptr) {
                 BufferManager::GetInstance()->Unmap(it->second);
             }
         }
+        bufferProducerCache_.clear();
     }
     return producer_->CleanCache();
 }

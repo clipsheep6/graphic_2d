@@ -179,6 +179,7 @@ GSError BufferQueue::CheckFlushConfig(const BufferFlushConfig &config)
 GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
     struct IBufferProducer::RequestBufferReturnValue &retval)
 {
+    BLOGD("Queue id: %{public}" PRIu64 "",uniqueId_);
     ScopedBytrace func(__func__);
     if (listener_ == nullptr && listenerClazz_ == nullptr) {
         BLOGN_FAILURE_RET(GSERROR_NO_CONSUMER);
@@ -210,6 +211,10 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtr
             return ReuseBuffer(config, bedata, retval);
         } else {
             BLOGN_FAILURE("all buffer are using");
+            for (auto it = bufferQueueCache_.begin(); it != bufferQueueCache_.end(); it++) {
+                BufferElement element = it->second;
+                BLOGN_FAILURE("sequence:%{public}d, state:%{public}s", it->first, BufferStateStrs.at(element.state).c_str());
+            }
             return GSERROR_NO_BUFFER;
         }
     }
@@ -278,6 +283,7 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferExtraD
 
 GSError BufferQueue::CancelBuffer(int32_t sequence, const BufferExtraData &bedata)
 {
+    BLOGD("Queue id: %{public}" PRIu64 "",uniqueId_);
     ScopedBytrace func(__func__);
     if (isShared_) {
         BLOGN_FAILURE_RET(GSERROR_INVALID_OPERATING);
@@ -306,6 +312,7 @@ GSError BufferQueue::CancelBuffer(int32_t sequence, const BufferExtraData &bedat
 GSError BufferQueue::FlushBuffer(int32_t sequence, const BufferExtraData &bedata,
     int32_t fence, const BufferFlushConfig &config)
 {
+    BLOGD("Queue id: %{public}" PRIu64 "",uniqueId_);
     ScopedBytrace func(__func__);
     // check param
     auto sret = CheckFlushConfig(config);
@@ -553,6 +560,7 @@ void BufferQueue::DeleteBufferInCache(int32_t sequence)
 
 uint32_t BufferQueue::GetQueueSize()
 {
+    BLOGD("Queue id: %{public}" PRIu64 "",uniqueId_);
     return queueSize_;
 }
 
@@ -676,6 +684,7 @@ GSError BufferQueue::DetachBuffer(sptr<SurfaceBufferImpl> &buffer)
 
 GSError BufferQueue::SetQueueSize(uint32_t queueSize)
 {
+    BLOGD("Queue id: %{public}" PRIu64 "",uniqueId_);
     if (isShared_ == true && queueSize != 1) {
         BLOGN_INVALID("shared queue, size must be 1");
         return GSERROR_INVALID_ARGUMENTS;
@@ -769,10 +778,12 @@ uint32_t BufferQueue::GetDefaultUsage()
 
 GSError BufferQueue::CleanCache()
 {
+    BLOGD("Queue id: %{public}" PRIu64 "",uniqueId_);
     auto it = bufferQueueCache_.begin();
     while (it != bufferQueueCache_.end()) {
         bufferQueueCache_.erase(it++);
     }
+    bufferQueueCache_.clear();
     freeList_.clear();
     dirtyList_.clear();
     deletingList_.clear();

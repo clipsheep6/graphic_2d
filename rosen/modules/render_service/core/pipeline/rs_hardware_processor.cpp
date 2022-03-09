@@ -15,9 +15,11 @@
 
 #include "pipeline/rs_hardware_processor.h"
 
+#include "common/rs_vector3.h"
 #include "common/rs_vector4.h"
 #include "display_type.h"
 #include "pipeline/rs_main_thread.h"
+#include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #include "rs_render_service_util.h"
 
@@ -182,6 +184,9 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
     auto transitionProperties = node.GetAnimationManager().GetTransitionProperties();
     CalculateInfoWithAnimation(transitionProperties, info, node);
     node.SetDstRect({info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h});
+    if (node.GetDstRect().IsEmpty()) {
+        return;
+    }
     std::shared_ptr<HdiLayerInfo> layer = HdiLayerInfo::CreateHdiLayerInfo();
     ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface surfaceNode id:%llu name:[%s] dst [%d %d %d %d]"\
         "SrcRect [%d %d] rawbuffer [%d %d] surfaceBuffer [%d %d] buffaddr:%p, z:%f, globalZOrder:%d, blendType = %d",
@@ -232,25 +237,24 @@ void RSHardwareProcessor::CalculateInfoWithVideo(ComposeInfo& info, RSSurfaceRen
 void RSHardwareProcessor::CalculateInfoWithAnimation(
     const std::unique_ptr<RSTransitionProperties>& transitionProperties, ComposeInfo& info, RSSurfaceRenderNode& node)
 {
-    if (!transitionProperties) {
-        return;
-    }
+    AnimationInfo animationInfo;
+    RsRenderServiceUtil::ExtractAnimationInfo(transitionProperties, node, animationInfo);
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
     if (geoPtr == nullptr) {
         ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface geoPtr == nullptr");
         return;
     }
-    float paddingX = (1 - transitionProperties->GetScale().x_) * geoPtr->GetAbsRect().width_ / 2;
-    float paddingY = (1 - transitionProperties->GetScale().y_) * geoPtr->GetAbsRect().height_ / 2;
+    float paddingX = (1 - animationInfo.scale.x_) * geoPtr->GetAbsRect().width_ / 2;
+    float paddingY = (1 - animationInfo.scale.y_) * geoPtr->GetAbsRect().height_ / 2;
     info.dstRect = {
-        .x = info.dstRect.x + transitionProperties->GetTranslate().x_ + paddingX,
-        .y = info.dstRect.y + transitionProperties->GetTranslate().y_ + paddingY,
-        .w = info.dstRect.w * transitionProperties->GetScale().x_,
-        .h = info.dstRect.h * transitionProperties->GetScale().y_,
+        .x = info.dstRect.x + animationInfo.translate.x_ + paddingX,
+        .y = info.dstRect.y + animationInfo.translate.y_ + paddingY,
+        .w = info.dstRect.w * animationInfo.scale.x_,
+        .h = info.dstRect.h * animationInfo.scale.y_,
     };
     info.alpha = {
         .enGlobalAlpha = true,
-        .gAlpha = node.GetAlpha() * node.GetRenderProperties().GetAlpha() * transitionProperties->GetAlpha() * 255,
+        .gAlpha = node.GetAlpha() * node.GetRenderProperties().GetAlpha() * animationInfo.alpha * 255,
     };
 }
 

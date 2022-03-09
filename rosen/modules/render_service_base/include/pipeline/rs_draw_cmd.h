@@ -30,7 +30,6 @@
 #include "include/core/SkTextBlob.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "render/rs_image.h"
-#include <parcel.h>
 #include "transaction/rs_marshalling_helper.h"
 
 namespace OHOS {
@@ -58,7 +57,7 @@ enum RSOpType : uint16_t {
     TEXTBLOBOPITEM,
     BITMAPOPITEM,
     BITMAPRECTOPITEM,
-    BITMAPLATTICEOPITEM,
+    BITMAPLATTICEOPITEM, // TODO
     BITMAPNINEOPITEM,
     ADAPTIVERRECTOPITEM,
     CLIPADAPTIVERRECTOPITEM,
@@ -76,7 +75,11 @@ enum RSOpType : uint16_t {
     RESTOREALPHAOPITEM,
 };
 
+#ifdef ROSEN_OHOS
 class OpItem : public MemObject, public Parcelable {
+#else
+class OpItem : public MemObject {
+#endif
 public:
     explicit OpItem(size_t size) : MemObject(size) {}
     virtual ~OpItem() {}
@@ -86,10 +89,12 @@ public:
     virtual RSOpType GetType() const {
         return RSOpType::OPITEM;
     }
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
-        return RSMarshallingHelper::Marshalling(parcel, GetType());
+        return true;
     }
+#endif
 };
 
 class OpItemWithPaint : public OpItem {
@@ -100,10 +105,6 @@ public:
 
     RSOpType GetType() const override {
         return RSOpType::OPITEMWITHPAINT;
-    }
-    bool Marshalling(Parcel& parcel) const override
-    {
-        return OpItem::Marshalling(parcel);
     }
 
 protected:
@@ -120,6 +121,11 @@ public:
         return RSOpType::RECTOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     SkRect rect_;
 };
@@ -133,6 +139,11 @@ public:
     RSOpType GetType() const override {
         return RSOpType::ROUNDRECTOPITEM;
     }
+
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     SkRRect rrect_;
@@ -148,6 +159,11 @@ public:
         return RSOpType::IMAGEWITHPARMOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     std::shared_ptr<RSImage> rsImage_;
 };
@@ -161,6 +177,11 @@ public:
     RSOpType GetType() const override {
         return RSOpType::DRRECTOPITEM;
     }
+
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     SkRRect outer_;
@@ -177,6 +198,11 @@ public:
         return RSOpType::OVALOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     SkRect rect_;
 };
@@ -191,6 +217,11 @@ public:
         return RSOpType::REGIONOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     SkRegion region_;
 };
@@ -204,6 +235,11 @@ public:
     RSOpType GetType() const override {
         return RSOpType::ARCOPITEM;
     }
+
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     SkRect rect_;
@@ -222,14 +258,9 @@ public:
         return RSOpType::SAVEOPITEM;
     }
 
-    bool Marshalling(Parcel& parcel) const override
-    {
-        return OpItem::Marshalling(parcel);
-    }
-    static SaveOpItem* Unmarshalling(Parcel& parcel)
-    {
-        return new SaveOpItem();
-    }
+#ifdef ROSEN_OHOS
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 };
 
 class RestoreOpItem : public OpItem {
@@ -242,14 +273,9 @@ public:
         return RSOpType::RESTOREOPITEM;
     }
 
-    bool Marshalling(Parcel& parcel) const override
-    {
-        return OpItem::Marshalling(parcel);
-    }
-    static RestoreOpItem* Unmarshalling(Parcel& parcel)
-    {
-        return new RestoreOpItem();
-    }
+#ifdef ROSEN_OHOS
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 };
 
 class FlushOpItem : public OpItem {
@@ -262,6 +288,9 @@ public:
         return RSOpType::FLUSHOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 };
 
 class MatrixOpItem : public OpItem {
@@ -273,6 +302,11 @@ public:
     RSOpType GetType() const override {
         return RSOpType::MATRIXOPITEM;
     }
+
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     SkMatrix matrix_;
@@ -287,6 +321,11 @@ public:
     RSOpType GetType() const override {
         return RSOpType::CLIPRECTOPITEM;
     }
+
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     SkRect rect_;
@@ -304,6 +343,11 @@ public:
         return RSOpType::CLIPRRECTOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     SkRRect rrect_;
     SkClipOp clipOp_;
@@ -320,6 +364,11 @@ public:
         return RSOpType::CLIPREGIONOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     SkRegion region_;
     SkClipOp clipOp_;
@@ -335,6 +384,11 @@ public:
         return RSOpType::TRANSLATEOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     float distanceX_;
     float distanceY_;
@@ -349,33 +403,10 @@ public:
     RSOpType GetType() const override{
         return RSOpType::TEXTBLOBOPITEM;
     }
-    bool Marshalling(Parcel& parcel) const override
-    {
-        bool success = true;
-        success &= OpItemWithPaint::Marshalling(parcel);
-        success &= RSMarshallingHelper::Marshalling(parcel, textBlob_);
-        success &= RSMarshallingHelper::Marshalling(parcel, x_);
-        success &= RSMarshallingHelper::Marshalling(parcel, y_);
-        return success;
-    }
-    static TextBlobOpItem* Unmarshalling(Parcel& parcel)
-    {
-        sk_sp<SkTextBlob> textBlob;
-        float x;
-        float y;
-        if (!RSMarshallingHelper::Unmarshalling(parcel, textBlob)) {
-            return nullptr;
-        }
-        if (!RSMarshallingHelper::Unmarshalling(parcel, x)) {
-            return nullptr;
-        }
-        if (!RSMarshallingHelper::Unmarshalling(parcel, y)) {
-            return nullptr;
-        }
-
-        SkPaint paint;
-        return new TextBlobOpItem(textBlob, x, y, paint);
-    }
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     sk_sp<SkTextBlob> textBlob_;
@@ -393,6 +424,11 @@ public:
         return RSOpType::BITMAPOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     float left_;
     float top_;
@@ -409,6 +445,11 @@ public:
     RSOpType GetType() const override {
         return RSOpType::BITMAPRECTOPITEM;
     }
+
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     SkRect rectSrc_;
@@ -444,6 +485,11 @@ public:
         return RSOpType::BITMAPNINEOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     SkIRect center_;
     SkRect rectDst_;
@@ -460,6 +506,11 @@ public:
         return RSOpType::ADAPTIVERRECTOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     float radius_;
     SkPaint paint_;
@@ -475,6 +526,11 @@ public:
         return RSOpType::CLIPADAPTIVERRECTOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     float radius_;
 };
@@ -489,6 +545,11 @@ public:
         return RSOpType::PATHOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     SkPath path_;
 };
@@ -502,6 +563,11 @@ public:
     RSOpType GetType() const override {
         return RSOpType::CLIPPATHOPITEM;
     }
+
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     SkPath path_;
@@ -519,6 +585,10 @@ public:
         return RSOpType::PAINTOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 };
 
 class ConcatOpItem : public OpItem {
@@ -530,6 +600,11 @@ public:
     RSOpType GetType() const override {
         return RSOpType::CONCATOPITEM;
     }
+
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     SkMatrix matrix_;
@@ -544,6 +619,11 @@ public:
     RSOpType GetType() const override {
         return RSOpType::SAVELAYEROPITEM;
     }
+
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     SkRect* rectPtr_ = nullptr;
@@ -564,6 +644,11 @@ public:
         return RSOpType::DRAWABLEOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     sk_sp<SkDrawable> drawable_;
     SkMatrix matrix_ = SkMatrix::I();
@@ -578,6 +663,11 @@ public:
     RSOpType GetType() const override {
         return RSOpType::PICTUREOPITEM;
     }
+
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     sk_sp<SkPicture> picture_ { nullptr };
@@ -597,6 +687,11 @@ public:
         return RSOpType::POINTSOPITEM;
     }
 
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     SkCanvas::PointMode mode_;
     int count_;
@@ -613,6 +708,11 @@ public:
     RSOpType GetType() const override {
         return RSOpType::VERTICESOPITEM;
     }
+
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     sk_sp<SkVertices> vertices_;
@@ -631,21 +731,11 @@ public:
         return RSOpType::MULTIPLYALPHAOPITEM;
     }
 
-    bool Marshalling(Parcel& parcel) const override
-    {
-        bool success = true;
-        success &= OpItem::Marshalling(parcel);
-        success &= RSMarshallingHelper::Marshalling(parcel, alpha_);
-        return success;
-    }
-    static MultiplyAlphaOpItem* Unmarshalling(Parcel& parcel)
-    {
-        float alpha;
-        if (!RSMarshallingHelper::Unmarshalling(parcel, alpha)) {
-            return nullptr;
-        }
-        return new MultiplyAlphaOpItem(alpha);
-    }
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
 private:
     float alpha_;
 };
@@ -660,14 +750,9 @@ public:
         return RSOpType::SAVEALPHAOPITEM;
     }
 
-    bool Marshalling(Parcel& parcel) const override
-    {
-        return OpItem::Marshalling(parcel);
-    }
-    static SaveAlphaOpItem* Unmarshalling(Parcel& parcel)
-    {
-        return new SaveAlphaOpItem();
-    }
+#ifdef ROSEN_OHOS
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 };
 
 class RestoreAlphaOpItem : public OpItem {
@@ -680,14 +765,9 @@ public:
         return RSOpType::RESTOREALPHAOPITEM;
     }
 
-    bool Marshalling(Parcel& parcel) const override
-    {
-        return OpItem::Marshalling(parcel);
-    }
-    static RestoreAlphaOpItem* Unmarshalling(Parcel& parcel)
-    {
-        return new RestoreAlphaOpItem();
-    }
+#ifdef ROSEN_OHOS
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
 };
 
 } // namespace Rosen

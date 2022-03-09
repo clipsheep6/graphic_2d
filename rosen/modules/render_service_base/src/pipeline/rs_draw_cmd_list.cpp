@@ -18,9 +18,59 @@
 #include "platform/common/rs_log.h"
 #include "pipeline/rs_draw_cmd.h"
 #include "pipeline/rs_paint_filter_canvas.h"
+#include "transaction/rs_marshalling_helper.h"
+#include <unordered_map>
 
 namespace OHOS {
 namespace Rosen {
+
+using OpUnmarshallingFunc = OpItem* (*)(Parcel& parcel);
+
+static std::unordered_map<RSOpType, OpUnmarshallingFunc> opUnmarshallingFuncLUT = {
+    { RECTOPITEM,               RectOpItem::Unmarshalling },
+    { ROUNDRECTOPITEM,          RoundRectOpItem::Unmarshalling },
+    { IMAGEWITHPARMOPITEM,      ImageWithParmOpItem::Unmarshalling },
+    { DRRECTOPITEM,             DRRectOpItem::Unmarshalling },
+    { OVALOPITEM,               OvalOpItem::Unmarshalling },
+    { REGIONOPITEM,             RegionOpItem::Unmarshalling },
+    { ARCOPITEM,                ArcOpItem::Unmarshalling },
+    { SAVEOPITEM,               SaveOpItem::Unmarshalling },
+    { RESTOREOPITEM,            RestoreOpItem::Unmarshalling },
+    { FLUSHOPITEM,              FlushOpItem::Unmarshalling },
+    { MATRIXOPITEM,             MatrixOpItem::Unmarshalling },
+    { CLIPRECTOPITEM,           ClipRectOpItem::Unmarshalling },
+    { CLIPRRECTOPITEM,          ClipRRectOpItem::Unmarshalling },
+    { CLIPREGIONOPITEM,         ClipRegionOpItem::Unmarshalling },
+    { TRANSLATEOPITEM,          TranslateOpItem::Unmarshalling },
+    { TEXTBLOBOPITEM,           TextBlobOpItem::Unmarshalling },
+    { BITMAPOPITEM,             BitmapOpItem::Unmarshalling },
+    { BITMAPRECTOPITEM,         BitmapRectOpItem::Unmarshalling },
+    // { BITMAPLATTICEOPITEM,      BitmapLatticeOpItem::Unmarshalling },
+    { BITMAPNINEOPITEM,         BitmapNineOpItem::Unmarshalling },
+    { ADAPTIVERRECTOPITEM,      AdaptiveRRectOpItem::Unmarshalling },
+    { CLIPADAPTIVERRECTOPITEM,  ClipAdaptiveRRectOpItem::Unmarshalling },
+    { PATHOPITEM,               PathOpItem::Unmarshalling },
+    { CLIPPATHOPITEM,           ClipPathOpItem::Unmarshalling },
+    { PAINTOPITEM,              PaintOpItem::Unmarshalling },
+    { CONCATOPITEM,             ConcatOpItem::Unmarshalling },
+    { SAVELAYEROPITEM,          SaveLayerOpItem::Unmarshalling },
+    { DRAWABLEOPITEM,           DrawableOpItem::Unmarshalling },
+    { PICTUREOPITEM,            PictureOpItem::Unmarshalling },
+    { POINTSOPITEM,             PointsOpItem::Unmarshalling },
+    { VERTICESOPITEM,           VerticesOpItem::Unmarshalling },
+    { MULTIPLYALPHAOPITEM,      MultiplyAlphaOpItem::Unmarshalling },
+    { SAVEALPHAOPITEM,          SaveAlphaOpItem::Unmarshalling },
+    { RESTOREALPHAOPITEM,       RestoreAlphaOpItem::Unmarshalling },
+};
+
+static OpUnmarshallingFunc GetOpUnmarshallingFunc(RSOpType type) {
+    auto it = opUnmarshallingFuncLUT.find(type);
+    if (it == opUnmarshallingFuncLUT.end()) {
+        return nullptr;
+    }
+    return it->second;
+}
+
 DrawCmdList::DrawCmdList(int w, int h) : width_(w), height_(h) {}
 
 DrawCmdList::~DrawCmdList()
@@ -81,33 +131,23 @@ int DrawCmdList::GetHeight() const
     return height_;
 }
 
+#ifdef ROSEN_OHOS
 bool DrawCmdList::Marshalling(Parcel& parcel) const
 {
     bool success = true;
     success &= RSMarshallingHelper::Marshalling(parcel, width_);
     success &= RSMarshallingHelper::Marshalling(parcel, height_);
     success &= RSMarshallingHelper::Marshalling(parcel, GetSize());
-    ROSEN_LOGI("unirender: DrawCmdList::Marshalling start, sussess = %d", success);
+    ROSEN_LOGE("unirender: DrawCmdList::Marshalling start, size = %d", GetSize());
     for (const auto& item : ops_) {
         auto type = item->GetType();
-        bool funcDefine = false;
-        switch (type) {
-            case RSOpType::TEXTBLOBOPITEM :
-            case RSOpType::SAVEALPHAOPITEM :
-            case RSOpType::RESTOREALPHAOPITEM :
-            case RSOpType::SAVEOPITEM :
-            case RSOpType::RESTOREOPITEM :
-            case RSOpType::MULTIPLYALPHAOPITEM :
-                funcDefine = true;
-                break;
-            default :
-                funcDefine = false;
-        }
+        success &= RSMarshallingHelper::Marshalling(parcel, type);
         bool result = item->Marshalling(parcel);
         success &= result;
-        ROSEN_LOGI("unirender: opItem Marshalling, result = %d, optype = %d, funcDefine = %d", result, type, funcDefine);
+        ROSEN_LOGE("unirender: opItem Marshalling, optype = %d, result = %d, funcDefine = %d",
+                   type, result, GetOpUnmarshallingFunc(type) != nullptr);
     }
-    ROSEN_LOGI("unirender: DrawCmdList::Marshalling end, sussess = %d", success);
+    ROSEN_LOGE("unirender: DrawCmdList::Marshalling end, sussess = %d", success);
     return success;
 }
 
@@ -125,43 +165,29 @@ DrawCmdList* DrawCmdList::Unmarshalling(Parcel& parcel)
     if (!RSMarshallingHelper::Unmarshalling(parcel, size)) {
         return nullptr;
     }
-    
+
+    ROSEN_LOGE("unirender: DrawCmdList::Unmarshalling start");
     DrawCmdList* drawCmdList = new DrawCmdList(width, height);
     for (int i = 0; i < size; ++i) {
         RSOpType type;
         if (!RSMarshallingHelper::Unmarshalling(parcel, type)) {
             return nullptr;
         }
-        OpItem* item = nullptr;
-        switch (type) {
-            case RSOpType::TEXTBLOBOPITEM :
-                item = TextBlobOpItem::Unmarshalling(parcel);
-                break;
-            case RSOpType::SAVEALPHAOPITEM : 
-                item = SaveAlphaOpItem::Unmarshalling(parcel);
-                break;
-            case RSOpType::RESTOREALPHAOPITEM : 
-                item = RestoreAlphaOpItem::Unmarshalling(parcel);
-                break;
-            case RSOpType::SAVEOPITEM :
-                item = SaveOpItem::Unmarshalling(parcel);
-                break;
-            case RSOpType::RESTOREOPITEM :
-                item = RestoreOpItem::Unmarshalling(parcel);
-                break;
-            case RSOpType::MULTIPLYALPHAOPITEM :
-                item = MultiplyAlphaOpItem::Unmarshalling(parcel);
-                break;
-            default :
-                item = nullptr;
-                ROSEN_LOGE("unirender: no Unmarshalling func, RSOpType = %d", type);
+        auto func = GetOpUnmarshallingFunc(type);
+        if (!func) {
+            ROSEN_LOGE("unirender: opItem Unmarshalling no funcDefine, optype = %d", type);
+            continue;
         }
+        OpItem* item = (*func)(parcel);
         if (item) {
             drawCmdList->AddOp(std::unique_ptr<OpItem>(item));
         }
+        ROSEN_LOGE("unirender: opItem Unmarshalling, optype = %d, result = %d", type, item != nullptr);
     }
+    ROSEN_LOGE("unirender: DrawCmdList::Unmarshalling finish.");
     return drawCmdList;
 }
+#endif
 
 } // namespace Rosen
 } // namespace OHOS

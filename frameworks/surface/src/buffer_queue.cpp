@@ -771,7 +771,8 @@ GSError BufferQueue::CleanCache()
 {
     auto it = bufferQueueCache_.begin();
     while (it != bufferQueueCache_.end()) {
-        bufferQueueCache_.erase(it++);
+        FreeBuffer(it->second.buffer);
+	bufferQueueCache_.erase(it++);
     }
     freeList_.clear();
     dirtyList_.clear();

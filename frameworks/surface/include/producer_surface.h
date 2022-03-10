@@ -83,6 +83,7 @@ private:
     std::map<std::string, std::string> userData_;
     sptr<IBufferProducer> producer_ = nullptr;
     std::string name_ = "not init";
+    uint64_t uniqueID_ = 0;
 };
 } // namespace OHOS
 

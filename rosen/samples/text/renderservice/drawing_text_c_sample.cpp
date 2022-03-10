@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,40 +16,15 @@
 #include "c/drawing_canvas.h"
 #include "c/drawing_color.h"
 #include "c/drawing_bitmap.h"
-#include "c/drawing_brush.h"
 #include "c/drawing_font_collection.h"
-#include "c/drawing_path.h"
-#include "c/drawing_pen.h"
 #include "c/drawing_text_declaration.h"
 #include "c/drawing_types.h"
 #include "c/drawing_text_typography.h"
 
-#include <cinttypes>
-#include <cstdio>
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
 #include <memory>
 #include <securec.h>
-#include <sstream>
-#include <surface.h>
-#include <unistd.h>
 
-#include "command/rs_base_node_command.h"
-#include "common/rs_common_def.h"
-#include "command/rs_display_node_command.h"
-#include "command/rs_surface_node_command.h"
 #include "core/transaction/rs_interfaces.h"
-#include "core/ui/rs_display_node.h"
-#include "core/ui/rs_surface_node.h"
-#include "display_type.h"
-#include "render_service_base/src/platform/ohos/rs_surface_frame_ohos.h"
-#include "render_service_base/src/platform/ohos/rs_surface_ohos.h"
-#include "pipeline/rs_render_result.h"
-#include "pipeline/rs_render_thread.h"
-#include "ui/rs_node.h"
-#include "ui/rs_surface_extractor.h"
-#include "ui/rs_ui_director.h"
 #include "utils/log.h"
 
 using namespace OHOS;

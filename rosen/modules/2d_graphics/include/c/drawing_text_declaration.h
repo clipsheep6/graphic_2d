@@ -20,7 +20,7 @@
  * @addtogroup Drawing
  * @{
  *
- * @brief Provides 2d drawing functions.
+ * @brief Provides 2d drawing text declarations.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  *

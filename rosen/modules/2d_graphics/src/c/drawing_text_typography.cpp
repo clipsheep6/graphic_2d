@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -341,4 +341,39 @@ void OH_Drawing_TypographyPaint(OH_Drawing_Typography* typography, OH_Drawing_Ca
 {
     ConvertToOriginalText(typography)->Paint(reinterpret_cast<OHOS::Rosen::Drawing::Canvas*>(canvas),
         potisionX, potisionY);
+}
+
+double OH_Drawing_TypographyGetMaxWidth(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetMaxWidth();
+}
+
+double OH_Drawing_TypographyGetHeight(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetHeight();
+}
+
+double OH_Drawing_TypographyGetLongestLine(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetLongestLine();
+}
+
+double OH_Drawing_TypographyGetMinIntrinsicWidth(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetMinIntrinsicWidth();
+}
+
+double OH_Drawing_TypographyGetMaxIntrinsicWidth(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetMaxIntrinsicWidth();
+}
+
+double OH_Drawing_TypographyGetAlphabeticBaseline(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetAlphabeticBaseline();
+}
+
+double OH_Drawing_TypographyGetIdeographicBaseline(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetIdeographicBaseline();
 }

@@ -48,6 +48,11 @@ class RSCommandTemplate<commandType, commandSubType, processFunc> : public RSCom
 public:
     RSCommandTemplate() {}
     virtual ~RSCommandTemplate() = default;
+    std::string PrintType() const override
+    {
+        return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
+            (commandSubType) + "], ";
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
@@ -79,6 +84,11 @@ class RSCommandTemplate<commandType, commandSubType, processFunc, T1> : public R
 public:
     RSCommandTemplate(const T1& p1) : parameter1_(p1) {}
     virtual ~RSCommandTemplate() = default;
+    std::string PrintType() const override
+    {
+        return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
+            (commandSubType) + "], ";
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
@@ -116,6 +126,11 @@ class RSCommandTemplate<commandType, commandSubType, processFunc, T1, T2> : publ
 public:
     RSCommandTemplate(const T1& p1, const T2& p2) : parameter1_(p1), parameter2_(p2) {}
     virtual ~RSCommandTemplate() = default;
+    std::string PrintType() const override
+    {
+        return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
+            (commandSubType) + "], ";
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
@@ -157,6 +172,11 @@ class RSCommandTemplate<commandType, commandSubType, processFunc, T1, T2, T3> : 
 public:
     RSCommandTemplate(const T1& p1, const T2& p2, const T3& p3) : parameter1_(p1), parameter2_(p2), parameter3_(p3) {}
     virtual ~RSCommandTemplate() = default;
+    std::string PrintType() const override
+    {
+        return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
+            (commandSubType) + "], ";
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
@@ -209,6 +229,11 @@ public:
         : parameter1_(p1), parameter2_(p2), parameter3_(p3), parameter4_(p4)
     {}
     virtual ~RSCommandTemplate() = default;
+    std::string PrintType() const override
+    {
+        return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
+            (commandSubType) + "], ";
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
@@ -267,6 +292,11 @@ public:
         : parameter1_(p1), parameter2_(p2), parameter3_(p3), parameter4_(p4), parameter5_(p5)
     {}
     virtual ~RSCommandTemplate() = default;
+    std::string PrintType() const override
+    {
+        return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
+            (commandSubType) + "], ";
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
@@ -331,6 +361,11 @@ public:
         : parameter1_(p1), parameter2_(p2), parameter3_(p3), parameter4_(p4), parameter5_(p5), parameter6_(p6)
     {}
     virtual ~RSCommandTemplate() = default;
+    std::string PrintType() const override
+    {
+        return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
+            (commandSubType) + "], ";
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override

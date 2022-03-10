@@ -244,10 +244,11 @@ bool ProducerSurface::IsRemote()
 GSError ProducerSurface::CleanCache()
 {
     if (IsRemote()) {
-        for (auto it = bufferProducerCache_.begin(); it != bufferProducerCache_.end(); it++) {
+        for (auto it = bufferProducerCache_.begin(); it != bufferProducerCache_.end();) {
             if (it->second != nullptr && it->second->GetVirAddr() != nullptr) {
                 BufferManager::GetInstance()->Unmap(it->second);
             }
+            bufferProducerCache_.erase(it++);
         }
     }
     return producer_->CleanCache();

@@ -27,6 +27,7 @@ public:
     RSSoftwareProcessor();
     ~RSSoftwareProcessor() override;
     void ProcessSurface(RSSurfaceRenderNode& node) override;
+    void ProcessSurface(RSDisplayRenderNode &node) override {}
     void Init(ScreenId id) override;
     void PostProcess() override;
 

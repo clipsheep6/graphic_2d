@@ -17,6 +17,7 @@
 #include "command/rs_message_processor.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_render_service_visitor.h"
+#include "pipeline/rs_unified_render_visitor.h"
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "rs_trace.h"
@@ -46,6 +47,7 @@ void RSMainThread::Init()
         ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
         ProcessCommand();
         Animate(timestamp_);
+        ROSEN_LOGI("unirender: render_service RSMainThread start");
         Draw();
         ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
         ROSEN_LOGI("RsDebug mainLoop end");
@@ -90,7 +92,9 @@ void RSMainThread::Draw()
         ROSEN_LOGE("RSMainThread::Draw GetGlobalRootRenderNode fail");
         return;
     }
-    std::shared_ptr<RSNodeVisitor> visitor = std::make_shared<RSRenderServiceVisitor>();
+    ROSEN_LOGI("RSMainThread::Draw with RSUnifiedRenderVisitor");
+//    ROSEN_LOGI("RSMainThread::Draw RSRenderServiceVisitor");
+    std::shared_ptr<RSNodeVisitor> visitor = std::make_shared<RSUnifiedRenderVisitor>();
     rootNode->Prepare(visitor);
     rootNode->Process(visitor);
 }

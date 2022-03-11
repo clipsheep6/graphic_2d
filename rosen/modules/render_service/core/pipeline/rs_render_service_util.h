@@ -24,6 +24,7 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
+#include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "property/rs_transition_properties.h"
 
@@ -70,6 +71,8 @@ public:
     static void DealAnimation(SkCanvas& canvas, RSSurfaceRenderNode& node, BufferDrawParam& params);
     static void ExtractAnimationInfo(const std::unique_ptr<RSTransitionProperties>& transitionProperties,
         RSSurfaceRenderNode& node, AnimationInfo& info);
+    static void ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
+        std::vector<LayerInfoPtr>& layers, ComposeInfo info, RSDisplayRenderNode* node);
 private:
     static bool IsNeedClient(RSSurfaceRenderNode* node);
     static bool CreateBitmap(sptr<OHOS::SurfaceBuffer> buffer, SkBitmap& bitmap);

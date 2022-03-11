@@ -57,6 +57,11 @@ public:
         return isOnTheTree_;
     }
 
+    std::vector<WeakPtr>& GetChildren()
+    {
+        return children_;
+    }
+
     const std::list<SharedPtr>& GetSortedChildren();
 
     void ResetSortedChildren()

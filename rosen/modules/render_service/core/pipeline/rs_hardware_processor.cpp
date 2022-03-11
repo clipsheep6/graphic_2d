@@ -183,6 +183,10 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
     auto transitionProperties = node.GetAnimationManager().GetTransitionProperties();
     CalculateInfoWithAnimation(transitionProperties, info, node);
     node.SetDstRect({info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h});
+    if (node.GetDstRect().IsEmpty()) {
+        ReleaseBuffer(node);
+        return;
+    }
     std::shared_ptr<HdiLayerInfo> layer = HdiLayerInfo::CreateHdiLayerInfo();
     ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface surfaceNode id:%llu name:[%s] dst [%d %d %d %d]"\
         "SrcRect [%d %d] rawbuffer [%d %d] surfaceBuffer [%d %d] buffaddr:%p, z:%f, globalZOrder:%d, blendType = %d",
@@ -194,6 +198,18 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
     RsRenderServiceUtil::ComposeSurface(layer, node.GetConsumer(), layers_, info, &node);
     if (info.buffer->GetSurfaceBufferColorGamut() != static_cast<SurfaceColorGamut>(currScreenInfo_.colorGamut)) {
         layer->SetCompositionType(CompositionType::COMPOSITION_CLIENT);
+    }
+}
+
+void RSHardwareProcessor::ReleaseBuffer(RSSurfaceRenderNode& node)
+{
+    auto& surfaceConsumer = node.GetConsumer();
+    if (surfaceConsumer == nullptr) {
+        ROSEN_LOGE("RsDebug RSHardwareProcessor::ReleaseBuffer: consumer is null!");
+        return;
+    }
+    if (node.GetBuffer() != nullptr && node.GetBuffer() != node.GetPreBuffer()) {
+        (void)surfaceConsumer->ReleaseBuffer(node.GetPreBuffer(), -1);
     }
 }
 

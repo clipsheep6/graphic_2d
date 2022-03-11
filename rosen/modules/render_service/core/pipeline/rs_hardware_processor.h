@@ -50,6 +50,7 @@ private:
         ComposeInfo& info, RSSurfaceRenderNode& node);
     void CalculateInfoWithVideo(ComposeInfo& info, RSSurfaceRenderNode& node);
     SkMatrix GetLayerTransform(const SkMatrix& canvasTransform, const LayerInfoPtr& layer);
+    void ReleaseBuffer(RSSurfaceRenderNode& node);
     HdiBackend* backend_ = nullptr;
     sptr<RSScreenManager> screenManager_;
     ScreenInfo currScreenInfo_;

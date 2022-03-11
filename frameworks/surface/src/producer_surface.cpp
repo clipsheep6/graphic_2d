@@ -54,6 +54,7 @@ sptr<IBufferProducer> ProducerSurface::GetProducer() const
 GSError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
     int32_t &fence, BufferRequestConfig &config)
 {
+    std::lock_guard<std::mutex> lockGuard(mutex_);
     IBufferProducer::RequestBufferReturnValue retval;
     BufferExtraDataImpl bedataimpl;
     GSError ret = GetProducer()->RequestBuffer(config, bedataimpl, retval);
@@ -243,11 +244,13 @@ bool ProducerSurface::IsRemote()
 
 GSError ProducerSurface::CleanCache()
 {
+    std::lock_guard<std::mutex> lockGuard(mutex_);
     if (IsRemote()) {
-        for (auto it = bufferProducerCache_.begin(); it != bufferProducerCache_.end(); it++) {
+        for (auto it = bufferProducerCache_.begin(); it != bufferProducerCache_.end();) {
             if (it->second != nullptr && it->second->GetVirAddr() != nullptr) {
                 BufferManager::GetInstance()->Unmap(it->second);
             }
+            bufferProducerCache_.erase(it++);
         }
     }
     return producer_->CleanCache();

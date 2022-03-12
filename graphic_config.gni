@@ -21,6 +21,10 @@ if ("${product_name}" == "watchos" || "${product_name}" == "Hi3516DV300" ||
   gpu_defines = [ "ACE_ENABLE_GL" ]
   ace_enable_gpu = true
   libgl = [ "//device/soc/rockchip/hardware/gpu:mali-bifrost-g52-g2p0-ohos" ]
+} else if ("${product_name}" == "T507" || "${product_name}" == "R818") {
+  gpu_defines = [ "ACE_ENABLE_GL" ]
+  ace_enable_gpu = true
+  libgl = [ "//device/soc/allwinner/T507/gpu:gpu_libs" ]
 } else {
   gpu_defines = [ "ACE_ENABLE_GL" ]
   ace_enable_gpu = true

@@ -91,7 +91,10 @@ VSyncDistributor::VSyncDistributor(sptr<VSyncController> controller, std::string
 
 VSyncDistributor::~VSyncDistributor()
 {
-    vsyncThreadRunning_ = false;
+    {
+        std::unique_lock<std::mutex> locker(mutex_);
+        vsyncThreadRunning_ = false;
+    }
     if (threadLoop_.joinable()) {
         con_.notify_all();
         threadLoop_.join();

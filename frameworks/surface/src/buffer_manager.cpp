@@ -96,8 +96,7 @@ GSError BufferManager::Alloc(const BufferRequestConfig &config, sptr<SurfaceBuff
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = nullptr;
-    int32_t width = (config.width + 15) / 16 * 16;
-    AllocInfo info = {width, config.height, config.usage, (PixelFormat)config.format};
+    AllocInfo info = {config.width, config.height, config.usage, (PixelFormat)config.format};
     auto dret = displayGralloc_->AllocMem(info, handle);
     if (dret == DISPLAY_SUCCESS) {
         buffer->SetBufferHandle(handle);

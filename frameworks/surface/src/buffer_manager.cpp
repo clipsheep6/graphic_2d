@@ -40,8 +40,6 @@
 
 namespace OHOS {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "BufferManager" };
-
 GSError GenerateError(GSError err, DispErrCode code)
 {
     switch (code) {
@@ -120,6 +118,10 @@ GSError BufferManager::Map(sptr<SurfaceBufferImpl> &buffer)
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = buffer->GetBufferHandle();
+    if (handle == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
     void *virAddr = displayGralloc_->Mmap(*handle);
     if (virAddr == nullptr || virAddr == MAP_FAILED) {
         return GSERROR_API_FAILED;
@@ -137,9 +139,31 @@ GSError BufferManager::Unmap(sptr<SurfaceBufferImpl> &buffer)
     }
 
     BufferHandle *handle = buffer->GetBufferHandle();
+    if (handle == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
     auto dret = displayGralloc_->Unmap(*handle);
     if (dret == DISPLAY_SUCCESS) {
         handle->virAddr = nullptr;
+        return GSERROR_OK;
+    }
+    BLOGW("Failed with %{public}d", dret);
+    return GenerateError(GSERROR_API_FAILED, dret);
+}
+
+GSError BufferManager::Unmap(BufferHandle *bufferHandle)
+{
+    CHECK_INIT();
+    if (bufferHandle == nullptr) {
+        return GSERROR_OK;
+    }
+    if (bufferHandle->virAddr == nullptr) {
+        return GSERROR_OK;
+    }
+    auto dret = displayGralloc_->Unmap(*bufferHandle);
+    if (dret == DISPLAY_SUCCESS) {
+        bufferHandle->virAddr = nullptr;
         return GSERROR_OK;
     }
     BLOGW("Failed with %{public}d", dret);
@@ -152,6 +176,10 @@ GSError BufferManager::FlushCache(sptr<SurfaceBufferImpl> &buffer)
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = buffer->GetBufferHandle();
+    if (handle == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
     auto dret = displayGralloc_->FlushCache(*handle);
     if (dret == DISPLAY_SUCCESS) {
         return GSERROR_OK;
@@ -166,6 +194,10 @@ GSError BufferManager::InvalidateCache(sptr<SurfaceBufferImpl> &buffer)
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = buffer->GetBufferHandle();
+    if (handle == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
     auto dret = displayGralloc_->InvalidateCache(*handle);
     if (dret == DISPLAY_SUCCESS) {
         return GSERROR_OK;

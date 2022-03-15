@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,13 +40,7 @@ RSRenderThreadVisitor::~RSRenderThreadVisitor() {}
 
 void RSRenderThreadVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 {
-    for (auto& child : node.GetChildren()) {
-        if (auto c = child.lock()) {
-            c->Prepare(shared_from_this());
-        }
-    }
-
-    for (auto& child : node.GetDisappearingChildren()) {
+    for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
     }
 }
@@ -87,15 +81,11 @@ void RSRenderThreadVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 
 void RSRenderThreadVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
 {
-    for (auto& child : node.GetChildren()) {
-        if (auto c = child.lock()) {
-            c->Process(shared_from_this());
-        }
-    }
-
-    for (auto& child : node.GetDisappearingChildren()) {
+    for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
+    // clear SortedChildren, it will be generated again in next frame
+    node.ResetSortedChildren();
 }
 
 void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
@@ -113,11 +103,22 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         ROSEN_LOGE("No valid RSSurfaceNode");
         return;
     }
+
+    auto surfaceNodeColorSpace = ptr->GetColorSpace();
+
     std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(ptr);
     if (rsSurface == nullptr) {
         ROSEN_LOGE("No RSSurface found");
         return;
     }
+
+    auto rsSurfaceColorSpace = rsSurface->GetColorSpace();
+
+    if (surfaceNodeColorSpace != rsSurfaceColorSpace) {
+        ROSEN_LOGD("Set new colorspace %d to rsSurface", surfaceNodeColorSpace);
+        rsSurface->SetColorSpace(surfaceNodeColorSpace);
+    }
+
 #ifdef ACE_ENABLE_GL
     RenderContext* rc = RSRenderThread::Instance().GetRenderContext();
     rsSurface->SetRenderContext(rc);
@@ -129,11 +130,31 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         ROSEN_LOGE("Request Frame Failed");
         return;
     }
-    canvas_ = new RSPaintFilterCanvas(surfaceFrame->GetCanvas());
+
+    sk_sp<SkSurface> skSurface = nullptr;
+    if (RSRootRenderNode::NeedForceRaster()) {
+        ROSEN_LOGD("Force Raster draw");
+        RSRootRenderNode::MarkForceRaster(false);
+        SkImageInfo imageInfo = SkImageInfo::Make(node.GetSurfaceWidth(), node.GetSurfaceHeight(),
+            kRGBA_8888_SkColorType, kOpaque_SkAlphaType, SkColorSpace::MakeSRGB());
+        skSurface = SkSurface::MakeRaster(imageInfo);
+        canvas_ = new RSPaintFilterCanvas(skSurface->getCanvas());
+    } else {
+        canvas_ = new RSPaintFilterCanvas(surfaceFrame->GetCanvas());
+    }
     canvas_->clear(SK_ColorTRANSPARENT);
+
 
     isIdle_ = false;
     ProcessCanvasRenderNode(node);
+
+    if (skSurface) {
+        canvas_->flush();
+        surfaceFrame->GetCanvas()->clear(SK_ColorTRANSPARENT);
+        skSurface->draw(surfaceFrame->GetCanvas(), 0.f, 0.f, nullptr);
+    } else if (RSRootRenderNode::NeedForceRaster()) {
+        RSRenderThread::Instance().RequestNextVSync();
+    }
 
     RS_TRACE_BEGIN("rsSurface->FlushFrame");
     rsSurface->FlushFrame(surfaceFrame);
@@ -171,22 +192,33 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     node.SetMatrix(canvas_->getTotalMatrix());
     node.SetAlpha(canvas_->GetAlpha());
     node.SetParentId(node.GetParent().lock()->GetId());
+    auto clipRect = canvas_->getDeviceClipBounds();
+    node.SetClipRegion({clipRect.left(), clipRect.top(), clipRect.width(), clipRect.height()});
 
+    auto x = node.GetRenderProperties().GetBoundsPositionX();
+    auto y = node.GetRenderProperties().GetBoundsPositionY();
+    auto width = node.GetRenderProperties().GetBoundsWidth();
+    auto height = node.GetRenderProperties().GetBoundsHeight();
     canvas_->save();
-    canvas_->clipRect(SkRect::MakeXYWH(
-                            node.GetRenderProperties().GetBoundsPositionX(), node.GetRenderProperties().GetBoundsPositionY(),
-                            node.GetRenderProperties().GetBoundsWidth(), node.GetRenderProperties().GetBoundsHeight()));
+    canvas_->clipRect(SkRect::MakeXYWH(x, y, width, height));
     if (node.IsBufferAvailable() == true) {
-        ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode CILP (set transparent)");
+        ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode CILP (set transparent) [%f, %f, %f, %f]",
+            x, y, width, height);
         canvas_->clear(SK_ColorTRANSPARENT);
     } else {
-        ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode NOT CILP (set black)");
+        ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode NOT CILP (set black) [%f, %f, %f, %f]",
+            x, y, width, height);
         if (node.NeedSetCallbackForRenderThreadRefresh() == true) {
             node.SetCallbackForRenderThreadRefresh([] {
                 RSRenderThread::Instance().RequestNextVSync();
             });
         }
-        canvas_->clear(SK_ColorBLACK);
+        auto backgroundColor = node.GetRenderProperties().GetBackgroundColor();
+        if (backgroundColor != RgbPalette::Transparent()) {
+            canvas_->clear(backgroundColor.AsArgbInt());
+        } else {
+            canvas_->clear(SK_ColorBLACK);
+        }
     }
     canvas_->restore();
 

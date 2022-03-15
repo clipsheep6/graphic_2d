@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,16 +23,35 @@
 #include "common/rs_obj_abs_geometry.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkMatrix.h"
+#include "include/core/SkRect.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "property/rs_transition_properties.h"
 
 namespace OHOS {
 
 namespace Rosen {
+struct BufferDrawParam {
+    sptr<OHOS::SurfaceBuffer> buffer;
+    SkMatrix matrix;
+    SkRect srcRect;
+    SkRect dstRect;
+    SkRect clipRect;
+    SkPaint paint;
+    ColorGamut targetColorGamut = ColorGamut::COLOR_GAMUT_SRGB;
+};
+
+struct AnimationInfo {
+    Vector2f pivot = { 0.0f, 0.0f };
+    Vector3f scale = { 1.0f, 1.0f, 1.0f };
+    Vector3f translate = { 0.0f, 0.0f, 0.0f };
+    float alpha = 1.0f;
+    SkMatrix44 rotateMatrix = SkMatrix44::I();
+};
 
 struct ComposeInfo {
     IRect srcRect;
     IRect dstRect;
+    IRect visibleRect;
     int32_t zOrder{0};
     LayerAlpha alpha;
     sptr<SurfaceBuffer> buffer;
@@ -44,16 +63,24 @@ struct ComposeInfo {
 
 class RsRenderServiceUtil {
 public:
+    using CanvasPostProcess = std::function<void(SkCanvas&, BufferDrawParam&)>;
     static void ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
         std::vector<LayerInfoPtr>& layers, ComposeInfo info, RSSurfaceRenderNode* node = nullptr);
-    static void DrawBuffer(SkCanvas* canvas, sptr<OHOS::SurfaceBuffer> buffer, RSSurfaceRenderNode& node,
-        bool isDrawnOnDisplay = true);
+    static void DrawBuffer(SkCanvas& canvas, BufferDrawParam& bufferDrawParam, CanvasPostProcess process = nullptr);
+    static BufferDrawParam CreateBufferDrawParam(RSSurfaceRenderNode& node);
+    static void DealAnimation(SkCanvas& canvas, RSSurfaceRenderNode& node, BufferDrawParam& params);
+    static void ExtractAnimationInfo(const std::unique_ptr<RSTransitionProperties>& transitionProperties,
+        RSSurfaceRenderNode& node, AnimationInfo& info);
+    static void InitEnableClient();
 private:
-    static void DealAnimation(SkCanvas* canvas, SkPaint& paint, const RSProperties& property,
-        const std::unique_ptr<RSTransitionProperties>& transitionProperties);
     static bool IsNeedClient(RSSurfaceRenderNode* node);
+    static bool CreateBitmap(sptr<OHOS::SurfaceBuffer> buffer, SkBitmap& bitmap);
+    static bool CreateYuvToRGBABitMap(sptr<OHOS::SurfaceBuffer> buffer, std::vector<uint8_t>& newBuffer,
+        SkBitmap& bitmap);
+    static bool CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffer, std::vector<uint8_t>& newGamutBuffer,
+        SkBitmap& bitmap, ColorGamut srcGamut, ColorGamut dstGamut);
+    static bool enableClient;
 };
-
 } // Rosen
 } // OHOS
 #endif

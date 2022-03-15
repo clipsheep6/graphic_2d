@@ -17,6 +17,7 @@
 
 #include <ctime>
 #include <sys/time.h>
+#include <string>
 
 #include <vsync_helper.h>
 
@@ -64,7 +65,7 @@ bool UnzipFile(const std::string& srcFilePath, const std::string& dstFilePath)
         return true;
     }
 
-    for (int i = 0; i < globalInfo.number_entry; ++i) {
+    for (unsigned long i = 0; i < globalInfo.number_entry; ++i) {
         unz_file_info fileInfo;
         char filename[MAX_FILE_NAME];
         if (unzGetCurrentFileInfo(
@@ -105,6 +106,7 @@ bool UnzipFile(const std::string& srcFilePath, const std::string& dstFilePath)
                     LOG("unzReadCurrentFile error %{public}d", error);
                     unzCloseCurrentFile(zipfile);
                     unzClose(zipfile);
+                    fclose(out);
                     return false;
                 }
                 if (error > 0) {
@@ -130,7 +132,6 @@ int RemoveDir(const char *dir)
 {
     char curDir[] = ".";
     char upDir[] = "..";
-    char dirName[128];
     DIR *dirp;
     struct dirent *dp;
     struct stat dirStat;
@@ -153,10 +154,11 @@ int RemoveDir(const char *dir)
             if ((strcmp(curDir, dp->d_name) == 0) || (strcmp(upDir, dp->d_name) == 0)) {
                 continue;
             }
-            strcpy(dirName, dir);
-            strcat(dirName, "/");
-            strcat(dirName, dp->d_name);
-            RemoveDir(dirName);
+
+            std::string dirName = dir;
+            dirName += "/";
+            dirName += dp->d_name;
+            RemoveDir(dirName.c_str());
         }
         closedir(dirp);
         LOG("remove empty dir finally");
@@ -171,7 +173,6 @@ int CountPicNum(const char *dir, int32_t& picNum)
 {
     char curDir[] = ".";
     char upDir[] = "..";
-    char dirName[128];
     DIR *dirp;
     struct dirent *dp;
     struct stat dirStat;
@@ -193,14 +194,15 @@ int CountPicNum(const char *dir, int32_t& picNum)
             if ((strcmp(curDir, dp->d_name) == 0) || (strcmp(upDir, dp->d_name) == 0)) {
                 continue;
             }
-            strcpy(dirName, dir);
-            strcat(dirName, "/");
-            strcat(dirName, dp->d_name);
-            CountPicNum(dirName, picNum);
+
+            std::string dirName = dir;
+            dirName += "/";
+            dirName += dp->d_name;
+            CountPicNum(dirName.c_str(), picNum);
         }
         closedir(dirp);
-        return picNum;
         LOG("remove empty dir finally");
+        return picNum;
     } else {
         LOG("unknown file type");
     }

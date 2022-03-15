@@ -28,9 +28,9 @@ std::unique_ptr<RSVsyncClient> RSVsyncClient::Create()
 RSVsyncClientOhos::RSVsyncClientOhos()
     : runner_(AppExecFwk::EventRunner::Create(true)), handler_(std::make_shared<AppExecFwk::EventHandler>(runner_))
 {
-    static int i = 0;
+    static int sequence = 0;
     std::string name = "RSVsyncClientOhos";
-    name += "_" + std::to_string(::getpid()) + "_" + std::to_string(i);
+    name += "_" + std::to_string(::getpid()) + "_" + std::to_string(sequence);
     auto rsClient = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
     while (receiver_ == nullptr) {
         receiver_ = rsClient->CreateVSyncReceiver(name, handler_);
@@ -43,13 +43,15 @@ RSVsyncClientOhos::RSVsyncClientOhos()
 
 void RSVsyncClientOhos::RequestNextVsync()
 {
-    if (!requestFlag_) {
+    if (!requestFlag_.load()) {
         requestFlag_.store(true);
-        VSyncReceiver::FrameCallback fcb = {
-            .userData_ = this,
-            .callback_ = OnVsync,
-        };
-        receiver_->RequestNextVSync(fcb);
+        handler_->PostTask([this]() {
+            VSyncReceiver::FrameCallback fcb = {
+                .userData_ = this,
+                .callback_ = OnVsync,
+            };
+            receiver_->RequestNextVSync(fcb);
+        });
     }
 }
 

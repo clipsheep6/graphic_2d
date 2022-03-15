@@ -14,7 +14,10 @@
  */
 
 #include "hello_composer.h"
-
+#include <vsync_generator.h>
+#include <vsync_controller.h>
+#include <vsync_distributor.h>
+#include <vsync_receiver.h>
 #include <securec.h>
 #include <sync_fence.h>
 
@@ -28,10 +31,18 @@ namespace {
 #define LOGE(fmt, ...) ::OHOS::HiviewDFX::HiLog::Error(           \
     ::OHOS::HiviewDFX::HiLogLabel {LOG_CORE, 0, "HelloComposer"}, \
     "%{public}s: " fmt, __func__, ##__VA_ARGS__)
+
+sptr<VSyncReceiver> g_receiver = nullptr;
 }
 
 void HelloComposer::Run(std::vector<std::string> &runArgs)
 {
+    auto generator = CreateVSyncGenerator();
+    sptr<VSyncController> vsyncController = new VSyncController(generator, 0);
+    sptr<VSyncDistributor> vsyncDistributor = new VSyncDistributor(vsyncController, "HelloComposer");
+    sptr<VSyncConnection> vsyncConnection = new VSyncConnection(vsyncDistributor, "HelloComposer");
+    vsyncDistributor->AddConnection(vsyncConnection);
+
     LOGI("start to run hello composer");
     backend_ = OHOS::Rosen::HdiBackend::GetInstance();
     if (backend_ == nullptr) {
@@ -63,9 +74,10 @@ void HelloComposer::Run(std::vector<std::string> &runArgs)
     }
 
     sleep(1);
-
     std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::Create(false);
     mainThreadHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    g_receiver = new VSyncReceiver(vsyncConnection, mainThreadHandler_);
+    g_receiver->Init();
     mainThreadHandler_->PostTask(std::bind(&HelloComposer::RequestSync, this));
     runner->Run();
 }
@@ -157,18 +169,13 @@ void HelloComposer::InitLayers(uint32_t screenId)
 
 void HelloComposer::Sync(int64_t, void *data)
 {
-    struct OHOS::FrameCallback cb = {
-        .frequency_ = freq_,
-        .timestamp_ = 0,
-        .userdata_ = data,
-        .callback_ = std::bind(&HelloComposer::Sync, this, SYNC_FUNC_ARG),
+    VSyncReceiver::FrameCallback fcb = {
+        .userData_ = data,
+        .callback_ = std::bind(&HelloComposer::Sync, this, ::std::placeholders::_1, ::std::placeholders::_2),
     };
-
-    OHOS::VsyncError ret = OHOS::VsyncHelper::Current()->RequestFrameCallback(cb);
-    if (ret) {
-        LOGE("RequestFrameCallback inner %{public}d\n", ret);
+    if (g_receiver != nullptr) {
+        g_receiver->RequestNextVSync(fcb);
     }
-
     if (!ready_) {
         return;
     }
@@ -199,8 +206,8 @@ void HelloComposer::Draw()
         IRect damageRect;
         damageRect.x = 0;
         damageRect.y = 0;
-        damageRect.w = displayWidthsMap_[screenId];
-        damageRect.h = displayHeightsMap_[screenId];
+        damageRect.w = static_cast<int32_t>(displayWidthsMap_[screenId]);
+        damageRect.h = static_cast<int32_t>(displayHeightsMap_[screenId]);
         curOutput_->SetOutputDamage(1, damageRect);
 
         if (dump_) {
@@ -229,8 +236,8 @@ uint32_t HelloComposer::CreatePhysicalScreen()
                 displayModeInfos_[i].height, displayModeInfos_[i].freshRate);
             if (displayModeInfos_[i].id == static_cast<int32_t>(currentModeIndex_)) {
                 freq_ = 30; // 30 freq
-                displayWidthsMap_[screenId] = displayModeInfos_[i].width;
-                displayHeightsMap_[screenId] = displayModeInfos_[i].height;
+                displayWidthsMap_[screenId] = static_cast<uint32_t>(displayModeInfos_[i].width);
+                displayHeightsMap_[screenId] = static_cast<uint32_t>(displayModeInfos_[i].height);
                 break;
             }
         }
@@ -331,7 +338,8 @@ void HelloComposer::DoPrepareCompleted(sptr<Surface> &surface, const struct Prep
 
     auto addr = static_cast<uint8_t *>(fbBuffer->GetVirAddr());
     if (hasClient) {
-        DrawFrameBufferData(addr, fbBuffer->GetWidth(), fbBuffer->GetHeight());
+        DrawFrameBufferData(addr, static_cast<uint32_t>(fbBuffer->GetWidth()),
+            static_cast<uint32_t>(fbBuffer->GetHeight()));
     } else {
         int32_t ret = memset_s(addr, fbBuffer->GetSize(), 0, fbBuffer->GetSize());
         if (ret != 0) {

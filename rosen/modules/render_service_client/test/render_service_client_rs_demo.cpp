@@ -176,11 +176,11 @@ namespace pipelineTestUtils {
                 })
                 .Run();
         }
-        SkRect surfaceGeometry_;
-        SkRect bufferSize_;
+        SkRect surfaceGeometry_ = {0.f, 0.f, 0.f, 0.f};
+        SkRect bufferSize_ = {0.f, 0.f, 0.f, 0.f};
         drawFun drawShape_;
         uint32_t color_ = 0;
-        std::shared_ptr<RSSurfaceNode> surfaceNode_;
+        std::shared_ptr<RSSurfaceNode> surfaceNode_ = nullptr;
     }; // class ToDrawSurface
 
     static std::shared_ptr<RSSurfaceNode> CreateSurface()
@@ -211,7 +211,7 @@ private:
     void Init()
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
-        rsInterface_.SetScreenChangeCallback([this](ScreenId id, ScreenEvent event) {
+        (void)rsInterface_.SetScreenChangeCallback([this](ScreenId id, ScreenEvent event) {
             switch (event) {
                 case ScreenEvent::CONNECTED: {
                     this->OnDisplayConnected(id);
@@ -321,10 +321,10 @@ public:
         if (activeModeInfo) {
             screenWidth_ = activeModeInfo->GetScreenWidth();
             screenheight_ = activeModeInfo->GetScreenHeight();
-            screenFreshRate_ = activeModeInfo->GetScreenFreshRate();
+            screenRefreshRate_ = static_cast<int>(activeModeInfo->GetScreenRefreshRate());
             std::cout << "Display " << id << " active mode info:\n";
             std::cout << "Width: " << screenWidth_ << ", Height: " << screenheight_;
-            std::cout << ", FreshRate: " << screenFreshRate_ << "Hz.\n";
+            std::cout << ", RefreshRate: " << screenRefreshRate_ << "Hz.\n";
         } else {
             std::cout << "Display " << id << " has no active mode!\n";
         }
@@ -373,25 +373,31 @@ public:
         if (transactionProxy != nullptr) {
             transactionProxy->FlushImplicitTransaction();
         }
-        for (float alpha = 0; alpha <= 1.f; alpha += 0.2f) {
+        float alpha = 0;
+        for (int index = 0; index <= 10; index += 2) { // 10 is boundary, 2 is step
             printf("printf alpha=%f \n", alpha);
             surfaceNode2->SetAlpha(alpha);
             if (transactionProxy != nullptr) {
                 transactionProxy->FlushImplicitTransaction();
             }
             usleep(300000);
+            alpha += 0.2f;
         }
-        for (float scale = 0; scale < 2.f; scale += 0.2f) {
+        float scale = 0;
+        for (int index = 0; index < 20; index += 2) { // 20 is boundary, 2 is step
             printf("scale=%f\n", scale);
             surfaceNode2->SetScaleX(scale);
             if (transactionProxy != nullptr) {
                 transactionProxy->FlushImplicitTransaction();
             }
             usleep(300000);
+            scale += 0.2f;
         }
         surfaceNode2->SetScaleX(1.f);
         std::cout << "Compatible rotation test start\n";
-        for (float rotate = 0; rotate <= 360.f; rotate += 15) {
+        float rotate = 0;
+        for (int index = 0; index <= 360; index += 15) { // 360 is boundary, 15 is step
+            rotate = static_cast<float>(index);
             printf("roate=%f\n", rotate);
             surfaceNode2->SetRotation(rotate);
             if (transactionProxy != nullptr) {
@@ -429,7 +435,7 @@ private:
     bool isGPU_ = false;
     int screenWidth_ = 0;
     int screenheight_ = 0;
-    int screenFreshRate_ = 0;
+    int screenRefreshRate_ = 0;
 }; // class RSDemoTestCase
 } // namespace OHOS::Rosen
 

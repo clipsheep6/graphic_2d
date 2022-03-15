@@ -30,6 +30,9 @@ RSSurfaceOhosGl::RSSurfaceOhosGl(const sptr<Surface>& producer) : RSSurfaceOhos(
 RSSurfaceOhosGl::~RSSurfaceOhosGl()
 {
     DestoryNativeWindow(mWindow);
+    if (context_ != nullptr) {
+        context_->DestroyEGLSurface(mEglSurface);
+    }
     mWindow = nullptr;
     mEglSurface = EGL_NO_SURFACE;
 }
@@ -41,11 +44,11 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int
         ROSEN_LOGE("RSSurfaceOhosGl::RequestFrame, GetRenderContext failed!");
         return nullptr;
     }
-
+    context->SetColorSpace(colorSpace_);
     if (mWindow == nullptr) {
         mWindow = CreateNativeWindowFromSurface(&producer_);
         mEglSurface = context->CreateEGLSurface((EGLNativeWindowType)mWindow);
-        ROSEN_LOGI("RSSurfaceOhosGl: Init EglSurface %{public}p", mEglSurface);
+        ROSEN_LOGI("RSSurfaceOhosGl: create and Init EglSurface %p", mEglSurface);
     }
 
     if (mEglSurface == EGL_NO_SURFACE) {
@@ -57,6 +60,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int
 
     NativeWindowHandleOpt(mWindow, SET_BUFFER_GEOMETRY, width, height);
     NativeWindowHandleOpt(mWindow, GET_BUFFER_GEOMETRY, &mHeight, &mWidth);
+    NativeWindowHandleOpt(mWindow, SET_COLOR_GAMUT, colorSpace_);
 
     context->MakeCurrent(mEglSurface);
 

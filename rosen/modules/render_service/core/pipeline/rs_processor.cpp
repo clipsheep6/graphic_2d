@@ -13,18 +13,20 @@
  * limitations under the License.
  */
 
+#include "pipeline/rs_processor.h"
+
 #include "unique_fd.h"
 #include <sync_fence.h>
+#include "rs_trace.h"
 
 #include "pipeline/rs_main_thread.h"
-#include "pipeline/rs_processor.h"
-#include "display_type.h"
 #include "platform/common/rs_log.h"
+
 namespace OHOS {
 namespace Rosen {
-
 std::unique_ptr<SkCanvas> RSProcessor::CreateCanvas(sptr<Surface> producerSurface, BufferRequestConfig requestConfig)
 {
+    RS_TRACE_NAME("CreateCanvas");
     auto ret = producerSurface->RequestBuffer(buffer_, releaseFence_, requestConfig);
     if (ret != SURFACE_ERROR_OK || buffer_ == nullptr) {
         return nullptr;
@@ -33,7 +35,7 @@ std::unique_ptr<SkCanvas> RSProcessor::CreateCanvas(sptr<Surface> producerSurfac
     int res = tempFence->Wait(3000);
     if (res < 0) {
         ROSEN_LOGE("RsDebug RSProcessor::CreateCanvas this buffer is not available");
-        //TODO deal with the buffer is not available
+        //[PLANNING]: deal with the buffer is not available
     }
     auto addr = static_cast<uint32_t*>(buffer_->GetVirAddr());
     if (addr == nullptr) {
@@ -71,7 +73,10 @@ bool RSProcessor::ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask&
         Rect damage;
         auto sret = surfaceConsumer->AcquireBuffer(buffer, fence, timestamp, damage);
         if (!buffer || sret != OHOS::SURFACE_ERROR_OK) {
-            ROSEN_LOGE("RSProcessor::ProcessSurface: AcquireBuffer failed!");
+            ROSEN_LOGE("RSProcessor::ProcessSurface: AcquireBuffer failed! sret: %{public}d", sret);
+            if (sret == OHOS::GSERROR_NO_BUFFER) {
+                node.ReduceAvailableBuffer();
+            }
             return false;
         }
         task();
@@ -90,6 +95,5 @@ bool RSProcessor::ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask&
     }
     return true;
 }
-
-}
-}
+} // namespace Rosen
+} // namespace OHOS

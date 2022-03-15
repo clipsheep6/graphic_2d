@@ -41,15 +41,18 @@ public:
     void ProcessSurface(RSSurfaceRenderNode& node) override;
     void Init(ScreenId id) override;
     void PostProcess() override;
+    void CropLayers();
 
 private:
     void Redraw(sptr<Surface>& surface, const struct PrepareCompleteParam& param, void* data);
     void OnRotate();
-    void CalculateInfo(const std::unique_ptr<RSTransitionProperties>& transitionProperties, ComposeInfo& info,
-        RSSurfaceRenderNode& node);
+    void CalculateInfoWithAnimation(const std::unique_ptr<RSTransitionProperties>& transitionProperties,
+        ComposeInfo& info, RSSurfaceRenderNode& node);
+    void CalculateInfoWithVideo(ComposeInfo& info, RSSurfaceRenderNode& node);
+    SkMatrix GetLayerTransform(const SkMatrix& canvasTransform, const LayerInfoPtr& layer);
     HdiBackend* backend_ = nullptr;
     sptr<RSScreenManager> screenManager_;
-    RSScreenModeInfo curScreenInfo_;
+    ScreenInfo currScreenInfo_;
     std::shared_ptr<HdiOutput> output_;
     std::vector<LayerInfoPtr> layers_;
     ScreenRotation rotation_ {ScreenRotation::ROTATION_0};
@@ -57,4 +60,4 @@ private:
 } // namespace Rosen
 } // namespace OHOS
 
- #endif
+#endif

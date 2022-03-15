@@ -48,7 +48,9 @@ enum class ScreenState : uint8_t {
 struct ScreenInfo {
     uint32_t width = 0;
     uint32_t height = 0;
+    ScreenColorGamut colorGamut = ScreenColorGamut::COLOR_GAMUT_SRGB;
     ScreenState state = ScreenState::UNKNOWN;
+    SkMatrix rotationMatrix; // Screen rotation matrix for canvas.
 };
 
 class RSScreenManager : public RefBase {
@@ -99,7 +101,7 @@ public:
     // Can only be called after QueryScreenState and the state is ScreenState::HDI_OUTPUT_ENABLE;
     virtual std::shared_ptr<HdiOutput> GetOutput(ScreenId id) const = 0;
 
-    virtual void AddScreenChangeCallback(const sptr<RSIScreenChangeCallback> &callback) = 0;
+    virtual int32_t AddScreenChangeCallback(const sptr<RSIScreenChangeCallback> &callback) = 0;
 
     virtual void RemoveScreenChangeCallback(const sptr<RSIScreenChangeCallback> &callback) = 0;
 
@@ -108,6 +110,8 @@ public:
     virtual void DisplayDump(std::string& dumpString) = 0;
 
     virtual void SurfaceDump(std::string& dumpString) = 0;
+
+    virtual void FpsDump(std::string& dumpString, std::string& arg) = 0;
 
     virtual int32_t GetScreenBacklight(ScreenId id) = 0;
 
@@ -187,7 +191,7 @@ public:
 
     std::shared_ptr<HdiOutput> GetOutput(ScreenId id) const override;
 
-    void AddScreenChangeCallback(const sptr<RSIScreenChangeCallback> &callback) override;
+    int32_t AddScreenChangeCallback(const sptr<RSIScreenChangeCallback> &callback) override;
 
     void RemoveScreenChangeCallback(const sptr<RSIScreenChangeCallback> &callback) override;
 
@@ -196,6 +200,8 @@ public:
     void DisplayDump(std::string& dumpString) override;
 
     void SurfaceDump(std::string& dumpString) override;
+
+    void FpsDump(std::string& dumpString, std::string& arg) override;
 
     int32_t GetScreenBacklight(ScreenId id) override;
 
@@ -218,7 +224,7 @@ private:
     RSScreenManager();
     ~RSScreenManager() noexcept override;
 
-    // TODO: fixme -- domain 0 only for debug.
+    // [PLANNING]: fixme -- domain 0 only for debug.
     static constexpr HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, 0, "RSScreenManager" };
 
     static void OnHotPlug(std::shared_ptr<HdiOutput> &output, bool connected, void *data);

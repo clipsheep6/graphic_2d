@@ -17,6 +17,7 @@
 
 #include "platform/common/rs_log.h"
 #include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_root_render_node.h"
 #include "securec.h"
 namespace OHOS {
 namespace Rosen {
@@ -182,9 +183,13 @@ BitmapRectOpItem::BitmapRectOpItem(
     const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst, const SkPaint* paint)
     : OpItemWithPaint(sizeof(BitmapRectOpItem)), rectDst_(rectDst)
 {
-    rectSrc_ = (rectSrc == nullptr) ? SkRect::MakeWH(bitmapInfo->width(), bitmapInfo->height()) : *rectSrc;
     if (bitmapInfo != nullptr) {
+        rectSrc_ = (rectSrc == nullptr) ? SkRect::MakeWH(bitmapInfo->width(), bitmapInfo->height()) : *rectSrc;
         bitmapInfo_ = bitmapInfo;
+    } else {
+        if (rectSrc != nullptr) {
+            rectSrc_ = *rectSrc;
+        }
     }
     if (paint) {
         paint_ = *paint;
@@ -337,6 +342,9 @@ void SaveLayerOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
     canvas.saveLayer(
         { rectPtr_, &paint_, backdrop_.get(), mask_.get(), matrix_.isIdentity() ? nullptr : &matrix_, flags_ });
+    if (paint_.getImageFilter() || paint_.getColorFilter()) {
+        RSRootRenderNode::MarkForceRaster();
+    }
 }
 
 DrawableOpItem::DrawableOpItem(SkDrawable* drawable, const SkMatrix* matrix) : OpItem(sizeof(DrawableOpItem))
@@ -371,7 +379,10 @@ void PictureOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 PointsOpItem::PointsOpItem(SkCanvas::PointMode mode, int count, const SkPoint processedPoints[], const SkPaint& paint)
     : OpItemWithPaint(sizeof(PointsOpItem)), mode_(mode), count_(count), processedPoints_(new SkPoint[count])
 {
-    memcpy_s(processedPoints_, count * sizeof(SkPoint), processedPoints, count * sizeof(SkPoint));
+    errno_t ret = memcpy_s(processedPoints_, count * sizeof(SkPoint), processedPoints, count * sizeof(SkPoint));
+    if (ret != EOK) {
+        ROSEN_LOGE("PointsOpItem: memcpy failed!");
+    }
     paint_ = paint;
 }
 
@@ -385,7 +396,10 @@ VerticesOpItem::VerticesOpItem(const SkVertices* vertices, const SkVertices::Bon
     : OpItemWithPaint(sizeof(VerticesOpItem)), vertices_(sk_ref_sp(const_cast<SkVertices*>(vertices))),
       bones_(new SkVertices::Bone[boneCount]), boneCount_(boneCount), mode_(mode)
 {
-    memcpy_s(bones_, boneCount * sizeof(SkVertices::Bone), bones, boneCount * sizeof(SkVertices::Bone));
+    errno_t ret = memcpy_s(bones_, boneCount * sizeof(SkVertices::Bone), bones, boneCount * sizeof(SkVertices::Bone));
+    if (ret != EOK) {
+        ROSEN_LOGE("VerticesOpItem: memcpy failed!");
+    }
     paint_ = paint;
 }
 

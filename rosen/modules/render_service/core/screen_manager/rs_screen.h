@@ -19,6 +19,7 @@
 #include <memory>
 #include <optional>
 
+#include <include/core/SkMatrix.h>
 #include <display_type.h>
 #include <hdi_output.h>
 #include <hdi_screen.h>
@@ -61,6 +62,7 @@ public:
     virtual void SetProducerSurface(sptr<Surface> producerSurface) = 0;
     virtual void DisplayDump(int32_t screenIndex, std::string& dumpString) = 0;
     virtual void SurfaceDump(int32_t screenIndex, std::string& dumpString) = 0;
+    virtual void FpsDump(int32_t screenIndex, std::string& dumpString, std::string& arg) = 0;
     virtual void SetScreenBacklight(uint32_t level) = 0;
     virtual int32_t GetScreenBacklight() const = 0;
     virtual int32_t GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut> &mode) const = 0;
@@ -69,6 +71,7 @@ public:
     virtual int32_t SetScreenGamutMap(ScreenGamutMap mode) = 0;
     virtual int32_t GetScreenGamutMap(ScreenGamutMap &mode) const = 0;
     virtual bool SetRotation(ScreenRotation rotation) = 0;
+    virtual SkMatrix GetRotationMatrix() const = 0;
     virtual ScreenRotation GetRotation() const = 0;
 };
 
@@ -105,6 +108,7 @@ public:
     void SetProducerSurface(sptr<Surface> producerSurface) override;
     void DisplayDump(int32_t screenIndex, std::string& dumpString) override;
     void SurfaceDump(int32_t screenIndex, std::string& dumpString) override;
+    void FpsDump(int32_t screenIndex, std::string& dumpString, std::string& arg) override;
     void SetScreenBacklight(uint32_t level) override;
     int32_t GetScreenBacklight() const override;
     int32_t GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut> &mode) const override;
@@ -113,10 +117,11 @@ public:
     int32_t SetScreenGamutMap(ScreenGamutMap mode) override;
     int32_t GetScreenGamutMap(ScreenGamutMap &mode) const override;
     bool SetRotation(ScreenRotation rotation) override;
+    SkMatrix GetRotationMatrix() const override;
     ScreenRotation GetRotation() const override;
 
 private:
-    // TODO: fixme -- domain 0 only for debug.
+    // [PLANNING]: fixme -- domain 0 only for debug.
     static constexpr HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, 0, "RSScreen" };
 
     // create hdiScreen and get some information from drivers.
@@ -132,6 +137,8 @@ private:
 
     void CapabilityTypeDump(InterfaceType capabilityType, std::string& dumpString);
 
+    void UpdateRotationMatrix();
+
     // ScreenId for this screen.
     ScreenId id_ = INVALID_SCREEN_ID;
     // If this screen is the mirror of other screen, this member would be a valid id.
@@ -142,14 +149,15 @@ private:
     int32_t width_ = 0;
     int32_t height_ = 0;
     ScreenRotation rotation_ = ScreenRotation::ROTATION_0;
+    SkMatrix rotationMatrix_; // rotation matrix for canvas.
 
     bool isVirtual_ = true;
     std::shared_ptr<HdiOutput> hdiOutput_; // has value if the screen is physical
     std::unique_ptr<HdiScreen> hdiScreen_; // has value if the screen is physical
     std::vector<DisplayModeInfo> supportedModes_;
-    DisplayCapability capability_;
+    DisplayCapability capability_ = {"", ::DISP_INTF_HDMI, 0, 0, 0, 0, true, 0, nullptr};
     sptr<Surface> producerSurface_;  // has value if the screen is virtual
-    DispPowerStatus powerStatus_;
+    DispPowerStatus powerStatus_ = ::POWER_STATUS_ON;
 
     std::vector<ScreenColorGamut> supportedVirtualColorGamuts_ = {
         COLOR_GAMUT_SRGB,

@@ -24,7 +24,6 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkImageInfo.h"
 #include "pipeline/rs_render_result.h"
-#include "pipeline/rs_render_thread.h"
 #include "platform/common/rs_log.h"
 #include "ui/rs_node.h"
 #include "ui/rs_surface_extractor.h"
@@ -224,7 +223,7 @@ public:
     void Init()
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
-        rsInterface_.SetScreenChangeCallback([this](ScreenId id, ScreenEvent event) {
+        (void)rsInterface_.SetScreenChangeCallback([this](ScreenId id, ScreenEvent event) {
             switch (event) {
                 case ScreenEvent::CONNECTED: {
                     this->OnDisplayConnected(id);

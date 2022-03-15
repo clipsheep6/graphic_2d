@@ -107,6 +107,12 @@ void HdiLayer::SetHdiLayerInfo()
         return;
     }
 
+    const auto rect = layerInfo_->GetLayerSize();
+    if (rect.w <= 0 || rect.h <= 0) {
+        HLOGE("SetHdiLayerInfo: empty layer size!");
+        return;
+    }
+
     int32_t ret = device->SetLayerAlpha(screenId_, layerId_, layerInfo_->GetAlpha());
     CheckRet(ret, "SetLayerAlpha");
 
@@ -279,6 +285,14 @@ SurfaceError HdiLayer::ReleasePrevBuffer()
     return ret;
 }
 
+void HdiLayer::RecordPresentTime(const sptr<SyncFence> &fbFence)
+{
+    if (currSbuffer_->sbuffer_ != prevSbuffer_->sbuffer_) {
+        presentTimeRecords[count].presentFence = fbFence;
+        count = (count + 1) % FRAME_RECORDS_NUM;
+    }
+}
+
 void HdiLayer::MergeWithFramebufferFence(const sptr<SyncFence> &fbAcquireFence)
 {
     if (fbAcquireFence != nullptr) {
@@ -312,6 +326,19 @@ void HdiLayer::CheckRet(int32_t ret, const char* func)
 {
     if (ret != DISPLAY_SUCCESS) {
         HLOGD("call hdi %{public}s failed, ret is %{public}d", func, ret);
+    }
+}
+
+void HdiLayer::Dump(std::string &result)
+{
+    const uint32_t offset = count;
+    for (uint32_t i = 0; i < FRAME_RECORDS_NUM; i++) {
+        uint32_t order = (offset + i) % FRAME_RECORDS_NUM;
+        if (presentTimeRecords[order].presentFence != SyncFence::INVALID_FENCE) {
+            presentTimeRecords[order].presentTime = presentTimeRecords[order].presentFence->SyncFileReadTimestamp();
+            presentTimeRecords[order].presentFence = SyncFence::INVALID_FENCE;
+        }
+        result += std::to_string(presentTimeRecords[order].presentTime) + "\n";
     }
 }
 

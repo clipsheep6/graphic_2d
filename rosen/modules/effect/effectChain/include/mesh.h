@@ -43,11 +43,11 @@ public:
     ~Mesh();
     void Use();
     void Delete();
-    unsigned int VAO_;
+    unsigned int VAO_ = 0;
 
 private:
-    unsigned int VBO_;
-    unsigned int EBO_;
+    unsigned int VBO_ = 0;
+    unsigned int EBO_ = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

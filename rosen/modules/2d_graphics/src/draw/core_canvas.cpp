@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,9 +14,6 @@
  */
 
 #include "core_canvas.h"
-
-#include <iostream>
-#include <string>
 
 #include "impl_factory.h"
 
@@ -106,14 +103,20 @@ void CoreCanvas::DrawImage(const Image& image, const scalar px, const scalar py,
     impl_->DrawImage(image, px, py, sampling);
 }
 
+void CoreCanvas::DrawImageRect(
+    const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling, SrcRectConstraint constraint)
+{
+    impl_->DrawImageRect(image, src, dst, sampling, constraint);
+}
+
+void CoreCanvas::DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling)
+{
+    impl_->DrawImageRect(image, dst, sampling);
+}
+
 void CoreCanvas::DrawPicture(const Picture& picture)
 {
     impl_->DrawPicture(picture);
-}
-
-void CoreCanvas::DrawText(const Text& text)
-{
-    impl_->DrawText(text);
 }
 
 void CoreCanvas::ClipRect(const Rect& rect, ClipOp op)
@@ -213,6 +216,11 @@ CoreCanvas& CoreCanvas::DetachBrush()
 {
     impl_->DetachBrush();
     return *this;
+}
+
+std::shared_ptr<CoreCanvasImpl> CoreCanvas::GetCanvasData() const
+{
+    return impl_;
 }
 } // namespace Drawing
 } // namespace Rosen

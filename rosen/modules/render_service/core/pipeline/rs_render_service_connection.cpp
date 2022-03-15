@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,14 +25,6 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace Detail {
-static inline bool BelongThisConnection(const std::shared_ptr<RSBaseRenderNode>& node, pid_t remotePid)
-{
-    auto nodePid = static_cast<pid_t>(node->GetId() >> 32); // High 32 bits is the remote pid of this node.
-    return nodePid == remotePid;
-}
-} // namespace Detail
-
 // we guarantee that when constructing this object,
 // all these pointers are valid, so will not check them.
 RSRenderServiceConnection::RSRenderServiceConnection(
@@ -79,40 +71,9 @@ void RSRenderServiceConnection::CleanVirtualScreens() noexcept
 void RSRenderServiceConnection::CleanRenderNodes() noexcept
 {
     auto& context = mainThread_->GetContext();
-    auto rootNode = context.GetGlobalRootRenderNode();
-    if (rootNode == nullptr) {
-        return;
-    }
-
-    std::vector<RSBaseRenderNode::SharedPtr> nodesToRemove;
-    std::queue<RSBaseRenderNode::SharedPtr> nodes;
-
-    // Traversal the RenderNode tree and find all nodes that were created by this connection,
-    // then store them with the vector "nodesToRemove" and remove them from the tree later.
-    nodes.push(rootNode);
-    while (!nodes.empty()) {
-        auto tmpNode = nodes.front();
-        nodes.pop();
-
-        for (const auto& child : tmpNode->GetChildren()) {
-            auto existingChild = child.lock();
-            if (existingChild == nullptr) {
-                continue;
-            }
-
-            if (Detail::BelongThisConnection(existingChild, remotePid_)) {
-                nodesToRemove.push_back(existingChild);
-            }
-            nodes.push(existingChild);
-        }
-    }
-
-    // remove the nodes from the tree and unregister them from the nodeMap.
     auto& nodeMap = context.GetMutableNodeMap();
-    for (auto& node : nodesToRemove) {
-        node->RemoveFromTree();
-        nodeMap.UnregisterRenderNode(node->GetId());
-    }
+
+    nodeMap.FilterNodeByPid(remotePid_);
 }
 
 void RSRenderServiceConnection::CleanAll(bool toDelete) noexcept
@@ -129,8 +90,13 @@ void RSRenderServiceConnection::CleanAll(bool toDelete) noexcept
         CleanRenderNodes();
     }).wait();
 
+    for (auto& conn : vsyncConnections_) {
+        appVSyncDistributor_->RemoveConnection(conn);
+    }
+
     {
         std::lock_guard<std::mutex> lock(mutex_);
+        vsyncConnections_.clear();
         cleanDone_ = true;
     }
 
@@ -142,7 +108,6 @@ void RSRenderServiceConnection::CleanAll(bool toDelete) noexcept
             renderService->RemoveConnection(GetToken());
         }
     }
-    appVSyncDistributor_->RemoveConnection(conn_);
 
     ROSEN_LOGD("RSRenderServiceConnection::CleanAll() end.");
 }
@@ -228,6 +193,10 @@ sptr<Surface> RSRenderServiceConnection::CreateNodeAndSurface(const RSSurfaceRen
         ROSEN_LOGE("RSRenderService::CreateNodeAndSurface get consumer surface fail");
         return nullptr;
     }
+    std::string surfaceName;
+    surface->GetName(surfaceName);
+    ROSEN_LOGE("RsDebug RSRenderService::CreateNodeAndSurface node id:%llu name:%s surface id:%llu name:%s",
+        node->GetId(), node->GetName().c_str(), surface->GetUniqueId(), surfaceName.c_str());
     node->SetConsumer(surface);
     std::function<void()> registerNode = [node, this]() -> void {
         this->mainThread_->GetContext().GetMutableNodeMap().RegisterRenderNode(node);
@@ -243,11 +212,15 @@ sptr<Surface> RSRenderServiceConnection::CreateNodeAndSurface(const RSSurfaceRen
     return surface;
 }
 
+
 sptr<IVSyncConnection> RSRenderServiceConnection::CreateVSyncConnection(const std::string& name)
 {
     sptr<VSyncConnection> conn = new VSyncConnection(appVSyncDistributor_, name);
-    conn_ = conn;
     appVSyncDistributor_->AddConnection(conn);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        vsyncConnections_.push_back(conn);
+    }
     return conn;
 }
 
@@ -285,11 +258,11 @@ void RSRenderServiceConnection::RemoveVirtualScreen(ScreenId id)
     virtualScreenIds_.erase(id);
 }
 
-void RSRenderServiceConnection::SetScreenChangeCallback(sptr<RSIScreenChangeCallback> callback)
+int32_t RSRenderServiceConnection::SetScreenChangeCallback(sptr<RSIScreenChangeCallback> callback)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     if (screenChangeCallback_ == callback) {
-        return;
+        return INVALID_ARGUMENTS;
     }
 
     if (screenChangeCallback_ != nullptr) {
@@ -298,10 +271,11 @@ void RSRenderServiceConnection::SetScreenChangeCallback(sptr<RSIScreenChangeCall
     }
 
     // update
-    screenManager_->AddScreenChangeCallback(callback);
+    int32_t status = screenManager_->AddScreenChangeCallback(callback);
     auto tmp = screenChangeCallback_;
     screenChangeCallback_ = callback;
     lock.unlock();
+    return status;
 }
 
 void RSRenderServiceConnection::SetScreenActiveMode(ScreenId id, uint32_t modeId)
@@ -318,12 +292,13 @@ void RSRenderServiceConnection::SetScreenPowerStatus(ScreenId id, ScreenPowerSta
     }).wait();
 }
 
-void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback)
+void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback,
+    float scaleX, float scaleY)
 {
-    std::function<void()> captureTask = [callback, id]() -> void {
+    std::function<void()> captureTask = [scaleY, scaleX, callback, id]() -> void {
         ROSEN_LOGD("RSRenderService::TakeSurfaceCapture callback->OnSurfaceCapture nodeId:[%llu]", id);
         ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSRenderService::TakeSurfaceCapture");
-        RSSurfaceCaptureTask task(id);
+        RSSurfaceCaptureTask task(id, scaleX, scaleY);
         std::unique_ptr<Media::PixelMap> pixelmap = task.Run();
         callback->OnSurfaceCapture(id, pixelmap.get());
         ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);

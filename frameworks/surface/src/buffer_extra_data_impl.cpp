@@ -21,7 +21,6 @@
 
 namespace OHOS {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "BufferExtraDataImpl" };
 constexpr int32_t BUFFER_EXTRA_DATA_MAGIC = 0x4567;
 } // namespace
 
@@ -34,7 +33,6 @@ GSError BufferExtraDataImpl::ReadFromParcel(MessageParcel &parcel)
     }
 
     int32_t size = parcel.ReadInt32();
-    BLOGD("read %{public}d", size);
     for (int32_t i = 0; i < size; i++) {
         auto key = parcel.ReadString();
         auto type = static_cast<ExtraDataType>(parcel.ReadInt32());

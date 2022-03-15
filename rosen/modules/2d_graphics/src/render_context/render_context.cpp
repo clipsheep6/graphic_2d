@@ -18,6 +18,7 @@
 #include <sstream>
 #include <string>
 
+#include "EGL/egl.h"
 #include "window.h"
 
 #include "utils/log.h"
@@ -128,12 +129,13 @@ void RenderContext::InitializeEglContext()
         return;
     }
 
-    EGLint ret, count;
+    unsigned int ret;
+    EGLint count;
     EGLint config_attribs[] = { EGL_SURFACE_TYPE, EGL_WINDOW_BIT, EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8, EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT, EGL_NONE };
 
     ret = eglChooseConfig(eglDisplay_, config_attribs, &config_, 1, &count);
-    if (!(ret && count >= 1)) {
+    if (!(ret && static_cast<unsigned int>(count) >= 1)) {
         LOGE("Failed to eglChooseConfig");
         return;
     }
@@ -165,6 +167,13 @@ void RenderContext::SwapBuffers(EGLSurface surface) const
     }
 }
 
+void RenderContext::DestroyEGLSurface(EGLSurface surface)
+{
+    if (!eglDestroySurface(eglDisplay_, surface)) {
+        LOGE("Failed to DestroyEGLSurface surface %{public}p, error is %{public}x", surface, eglGetError());
+    }
+}
+
 EGLSurface RenderContext::CreateEGLSurface(EGLNativeWindowType eglNativeWindow)
 {
     if (!IsEglContextReady()) {
@@ -186,6 +195,11 @@ EGLSurface RenderContext::CreateEGLSurface(EGLNativeWindowType eglNativeWindow)
 
     eglSurface_ = surface;
     return surface;
+}
+
+void RenderContext::SetColorSpace(SurfaceColorGamut colorSpace)
+{
+    colorSpace_ = colorSpace;
 }
 
 bool RenderContext::SetUpGrContext()
@@ -232,8 +246,26 @@ SkCanvas* RenderContext::AcquireCanvas(int width, int height)
     GrBackendRenderTarget backendRenderTarget(width, height, 0, 8, framebufferInfo);
     SkSurfaceProps surfaceProps = SkSurfaceProps::kLegacyFontHost_InitType;
 
+    sk_sp<SkColorSpace> skColorSpace = nullptr;
+
+    switch (colorSpace_) {
+        // [planning] in order to stay consistant with the colorspace used before, we disabled
+        // COLOR_GAMUT_SRGB to let the branch to default, then skColorSpace is set to nullptr
+        case COLOR_GAMUT_DISPLAY_P3:
+            skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDCIP3);
+            break;
+        case COLOR_GAMUT_ADOBE_RGB:
+            skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kAdobeRGB);
+            break;
+        case COLOR_GAMUT_BT2020:
+            skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kRec2020);
+            break;
+        default:
+            break;
+    }
+
     skSurface_ = SkSurface::MakeFromBackendRenderTarget(
-        GetGrContext(), backendRenderTarget, kBottomLeft_GrSurfaceOrigin, colorType, nullptr, &surfaceProps);
+        GetGrContext(), backendRenderTarget, kBottomLeft_GrSurfaceOrigin, colorType, skColorSpace, &surfaceProps);
     if (skSurface_ == nullptr) {
         LOGW("skSurface is nullptr");
         return nullptr;

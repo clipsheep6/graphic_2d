@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,10 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+enum class SrcRectConstraint {
+    STRICT_SRC_RECT_CONSTRAINT,
+    FAST_SRC_RECT_CONSTRAINT,
+};
 class CoreCanvas {
 public:
     CoreCanvas();
@@ -48,10 +52,10 @@ public:
     void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py);
     void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py);
     void DrawImage(const Image& image, const scalar px, const scalar py, const SamplingOptions& sampling);
+    void DrawImageRect(const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling,
+        SrcRectConstraint constraint = SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT);
+    void DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling);
     void DrawPicture(const Picture& picture);
-
-    // text
-    void DrawText(const Text& text); // TODO...
 
     // clip
     void ClipRect(const Rect& rect, ClipOp op);
@@ -85,6 +89,7 @@ public:
     {
         return impl_->DowncastingTo<T>();
     }
+    std::shared_ptr<CoreCanvasImpl> GetCanvasData() const;
 
 private:
     std::shared_ptr<CoreCanvasImpl> impl_;

@@ -27,7 +27,7 @@ int main(int argc, const char *argv[])
     WaitRenderServiceInit();
 
     auto& dms = OHOS::Rosen::DisplayManager::GetInstance();
-    std::vector<const sptr<OHOS::Rosen::Display>> displays = dms.GetAllDisplays();
+    auto displays = dms.GetAllDisplays();
     while (displays.empty()) {
         LOG("displays is empty, retry to get displays");
         displays = dms.GetAllDisplays();
@@ -39,6 +39,7 @@ int main(int argc, const char *argv[])
     auto handler = std::make_shared<AppExecFwk::EventHandler>(runner);
     handler->PostTask(std::bind(&BootAnimation::Init, &bootAnimation,
                                 displays[0]->GetWidth(), displays[0]->GetHeight(), handler));
+    handler->PostTask(std::bind(&BootAnimation::PlaySound, &bootAnimation));
     runner->Run();
     return 0;
 }

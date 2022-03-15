@@ -14,12 +14,16 @@
       "subsystem": "graphic",
       "syscap": [
         "SystemCapability.Graphic.Graphic2D.NativeWindow",
+        "SystemCapability.Graphic.Graphic2D.NativeDrawing",
         "SystemCapability.Graphic.Graphic2D.WebGL",
         "SystemCapability.Graphic.Graphic2D.WebGL2"
       ],
       "adapted_system_type": [ "standard" ],
       "rom": "10000KB",
       "ram": "10000KB",
+      "hisysevent_config": [
+        "//foundation/graphic/standard/hisysevent.yaml"
+      ],
       "deps": {
         "components": [
           "libhilog",
@@ -90,6 +94,16 @@
                 "vsync_helper.h"
               ],
               "header_base": "//foundation/graphic/standard/interfaces/innerkits/vsync"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/standard/rosen/modules/composer:libcomposer",
+            "header": {
+              "header_files": [
+                "vsync_receiver.h"
+              ],
+              "header_base": "//foundation/graphic/standard/interfaces/innerkits/composer"
             }
           },
           {

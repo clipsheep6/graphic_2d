@@ -17,6 +17,9 @@
 #include <chrono>
 #include <condition_variable>
 #include <algorithm>
+#include <sched.h>
+#include <sys/resource.h>
+#include <scoped_bytrace.h>
 #include "vsync_log.h"
 
 namespace OHOS {
@@ -26,6 +29,8 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "VsyncDistributor" };
 constexpr int32_t SOFT_VSYNC_PERIOD = 16;
 constexpr int32_t ERRNO_EAGAIN = -1;
 constexpr int32_t ERRNO_OTHER = -2;
+constexpr int32_t THREAD_PRIORTY = -6;
+constexpr int32_t SCHED_PRIORITY = 2;
 }
 VSyncConnection::VSyncConnection(const sptr<VSyncDistributor>& distributor, std::string name)
     : rate_(-1), distributor_(distributor), name_(name)
@@ -47,6 +52,7 @@ VsyncError VSyncConnection::RequestNextVSync()
     if (distributor == nullptr) {
         return VSYNC_ERROR_NULLPTR;
     }
+    ScopedBytrace func(name_ + "RequestNextVSync");
     return distributor->RequestNextVSync(this);
 }
 
@@ -75,16 +81,20 @@ VsyncError VSyncConnection::SetVSyncRate(int32_t rate)
 
 VSyncDistributor::VSyncDistributor(sptr<VSyncController> controller, std::string name)
     : controller_(controller), mutex_(), con_(), connections_(),
-    vsyncEnabled_(false), name_(name), vsyncThreadRunning_(false)
+    vsyncEnabled_(false), name_(name)
 {
     event_.timestamp = 0;
     event_.vsyncCount = 0;
+    vsyncThreadRunning_ = true;
     threadLoop_ = std::thread(std::bind(&VSyncDistributor::ThreadMain, this));
 }
 
 VSyncDistributor::~VSyncDistributor()
 {
-    vsyncThreadRunning_ = false;
+    {
+        std::unique_lock<std::mutex> locker(mutex_);
+        vsyncThreadRunning_ = false;
+    }
     if (threadLoop_.joinable()) {
         con_.notify_all();
         threadLoop_.join();
@@ -97,6 +107,10 @@ VsyncError VSyncDistributor::AddConnection(const sptr<VSyncConnection>& connecti
         return VSYNC_ERROR_NULLPTR;
     }
     std::lock_guard<std::mutex> locker(mutex_);
+    auto it = find(connections_.begin(), connections_.end(), connection);
+    if (it != connections_.end()) {
+        return VSYNC_ERROR_INVALID_ARGUMENTS;
+    }
     connections_.push_back(connection);
     return VSYNC_ERROR_OK;
 }
@@ -117,7 +131,12 @@ VsyncError VSyncDistributor::RemoveConnection(const sptr<VSyncConnection>& conne
 
 void VSyncDistributor::ThreadMain()
 {
-    vsyncThreadRunning_ = true;
+    // set thread priorty
+    setpriority(PRIO_PROCESS, 0, THREAD_PRIORTY);
+    struct sched_param param = {0};
+    param.sched_priority = SCHED_PRIORITY;
+    sched_setscheduler(0, SCHED_FIFO, &param);
+
     int64_t timestamp;
     int64_t vsyncCount;
     while (vsyncThreadRunning_ == true) {
@@ -129,8 +148,6 @@ void VSyncDistributor::ThreadMain()
             event_.timestamp = 0;
             vsyncCount = event_.vsyncCount;
             for (uint32_t i = 0; i <connections_.size(); i++) {
-                VLOGI("conn name:%{public}s, rate:%{public}d",
-                    connections_[i]->GetName().c_str(), connections_[i]->rate_);
                 if (connections_[i]->rate_ == 0) {
                     waitForVSync = true;
                     if (timestamp > 0) {
@@ -142,14 +159,11 @@ void VSyncDistributor::ThreadMain()
                     waitForVSync = true;
                 }
             }
-
-            VLOGI("Distributor name:%{public}s, WaitforVSync:%{public}d, timestamp:" VPUBI64 "",
-                name_.c_str(), waitForVSync, timestamp);
             // no vsync signal
             if (timestamp == 0) {
                 // there is some connections request next vsync, enable vsync if vsync disable and
                 // and start the software vsync with wait_for function
-                if (waitForVSync == true) {
+                if (waitForVSync == true && vsyncEnabled_ == false) {
                     EnableVSync();
                     if (con_.wait_for(locker, std::chrono::milliseconds(SOFT_VSYNC_PERIOD)) ==
                         std::cv_status::timeout) {
@@ -160,16 +174,19 @@ void VSyncDistributor::ThreadMain()
                     }
                 } else {
                     // just wait request or vsync signal
-                    con_.wait(locker);
+                    if (vsyncThreadRunning_ == true) {
+                        con_.wait(locker);
+                    }
                 }
                 continue;
             } else if ((timestamp > 0) && (waitForVSync == false)) {
-                // if there is a vsync signal but no vaild connections, we will disable vsync
-                DisableVSync();
+                // if there is a vsync signal but no vaild connections, we should disable vsync,
+                // but the system was unstable, so we didn't choose to disable it
+                // DisableVSync()
                 continue;
             }
         }
-
+        ScopedBytrace func(name_ + "_SendVsync");
         for (uint32_t i = 0; i < conns.size(); i++) {
             int32_t ret = conns[i]->PostEvent(timestamp);
             VLOGI("Distributor name:%{public}s, connection name:%{public}s, ret:%{public}d",
@@ -215,6 +232,7 @@ VsyncError VSyncDistributor::RequestNextVSync(const sptr<VSyncConnection>& conne
         VLOGE("connection is nullptr");
         return VSYNC_ERROR_NULLPTR;
     }
+    ScopedBytrace func(connection->GetName() + "_RequestNextVSync");
     std::lock_guard<std::mutex> locker(mutex_);
     auto it = find(connections_.begin(), connections_.end(), connection);
     if (it == connections_.end()) {

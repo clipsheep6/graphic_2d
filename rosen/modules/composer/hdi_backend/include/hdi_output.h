@@ -30,6 +30,12 @@ namespace Rosen {
 
 using LayerPtr = std::shared_ptr<HdiLayer>;
 
+// dump layer
+struct LayerDumpInfo {
+    uint64_t surfaceId;
+    LayerPtr layer;
+};
+
 class HdiOutput {
 public:
     HdiOutput(uint32_t screenId);
@@ -52,6 +58,7 @@ public:
     int32_t ReleaseFramebuffer(const sptr<SyncFence> &releaseFence);
     void FramebufferSemWait();
     void Dump(std::string &result) const;
+    void DumpFps(std::string &result, const std::string &arg) const;
 
 private:
     sptr<HdiFramebufferSurface> fbSurface_ = nullptr;
@@ -66,6 +73,7 @@ private:
     int32_t CreateLayer(uint64_t surfaceId, const LayerInfoPtr &layerInfo);
     void DeletePrevLayers();
     void ResetLayerStatus();
+    void ReorderLayerInfo(std::vector<LayerDumpInfo> &dumpLayerInfos) const;
 
     inline bool CheckFbSurface();
 };

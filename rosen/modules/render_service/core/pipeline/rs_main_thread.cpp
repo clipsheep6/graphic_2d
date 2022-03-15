@@ -16,6 +16,7 @@
 
 #include "command/rs_message_processor.h"
 #include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_service_util.h"
 #include "pipeline/rs_render_service_visitor.h"
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_vsync_client.h"
@@ -42,13 +43,13 @@ RSMainThread::~RSMainThread() noexcept
 void RSMainThread::Init()
 {
     mainLoop_ = [&]() {
-        ROSEN_LOGE("RsDebug mainLoop start");
+        ROSEN_LOGI("RsDebug mainLoop start");
         ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
         ProcessCommand();
         Animate(timestamp_);
         Draw();
         ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
-        ROSEN_LOGE("RsDebug mainLoop end");
+        ROSEN_LOGI("RsDebug mainLoop end");
     };
 
     threadLooper_ = RSThreadLooper::Create();
@@ -58,6 +59,7 @@ void RSMainThread::Init()
     rsVSyncDistributor_->AddConnection(conn);
     receiver_ = std::make_shared<VSyncReceiver>(conn);
     receiver_->Init();
+    RsRenderServiceUtil::InitEnableClient();
 }
 
 void RSMainThread::Start()
@@ -132,7 +134,7 @@ void RSMainThread::Animate(uint64_t timestamp)
     RS_TRACE_FUNC();
     bool hasAnimate = false;
     for (const auto& [id, node] : context_.GetNodeMap().renderNodeMap_) {
-        hasAnimate = node->Animate(timestamp) | hasAnimate;
+        hasAnimate = node->Animate(timestamp) || hasAnimate;
     }
     if (hasAnimate) {
         RequestNextVSync();

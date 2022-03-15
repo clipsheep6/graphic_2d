@@ -30,7 +30,6 @@
 
 namespace OHOS {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "BufferQueue" };
 constexpr uint32_t UNIQUE_ID_OFFSET = 32;
 }
 
@@ -51,7 +50,7 @@ static uint64_t GetUniqueIdImpl()
 BufferQueue::BufferQueue(const std::string &name, bool isShared)
     : name_(name), uniqueId_(GetUniqueIdImpl()), isShared_(isShared)
 {
-    BLOGNI("ctor");
+    BLOGNI("ctor, Queue id: %{public}" PRIu64 "", uniqueId_);
     bufferManager_ = BufferManager::GetInstance();
     if (isShared_ == true) {
         queueSize_ = 1;
@@ -60,7 +59,7 @@ BufferQueue::BufferQueue(const std::string &name, bool isShared)
 
 BufferQueue::~BufferQueue()
 {
-    BLOGNI("dtor");
+    BLOGNI("dtor, Queue id: %{public}" PRIu64 "", uniqueId_);
     std::lock_guard<std::mutex> lockGuard(mutex_);
     for (auto it = bufferQueueCache_.begin(); it != bufferQueueCache_.end(); it++) {
         FreeBuffer(it->second.buffer);
@@ -123,13 +122,13 @@ GSError BufferQueue::PopFromDirtyList(sptr<SurfaceBufferImpl> &buffer)
 
 GSError BufferQueue::CheckRequestConfig(const BufferRequestConfig &config)
 {
-    if (config.width <= 0 || config.width > SURFACE_MAX_WIDTH) {
-        BLOGN_INVALID("config.width (0, %{public}d], now is %{public}d", SURFACE_MAX_WIDTH, config.width);
+    if (config.width <= 0) {
+        BLOGN_INVALID("config.width is greater than 0, now is %{public}d", config.width);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    if (config.height <= 0 || config.height > SURFACE_MAX_HEIGHT) {
-        BLOGN_INVALID("config.height (0, %{public}d], now is %{public}d", SURFACE_MAX_HEIGHT, config.height);
+    if (config.height <= 0) {
+        BLOGN_INVALID("config.height is greater than 0, now is %{public}d", config.height);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
@@ -203,14 +202,15 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtr
 
     // check queue size
     if (GetUsedSize() >= GetQueueSize()) {
-        waitReqCon_.wait_for(lock, std::chrono::milliseconds(config.timeout));
+        waitReqCon_.wait_for(lock, std::chrono::milliseconds(config.timeout),
+            [this]() { return !freeList_.empty() || (GetUsedSize() < GetQueueSize()); });
         // try dequeue from free list again
         ret = PopFromFreeList(bufferImpl, config);
         if (ret == GSERROR_OK) {
             retval.buffer = bufferImpl;
             return ReuseBuffer(config, bedata, retval);
-        } else {
-            BLOGN_FAILURE("all buffer are using");
+        } else if (GetUsedSize() >= GetQueueSize()) {
+            BLOGN_FAILURE("all buffer are using, Queue id: %{public}" PRIu64 "", uniqueId_);
             return GSERROR_NO_BUFFER;
         }
     }
@@ -218,12 +218,15 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtr
     ret = AllocBuffer(bufferImpl, config);
     if (ret == GSERROR_OK) {
         retval.sequence = bufferImpl->GetSeqNum();
-        BLOGN_SUCCESS_ID(retval.sequence, "alloc");
+
+        bufferImpl->GetExtraData(bedata);
+        retval.buffer = bufferImpl;
+        retval.fence = -1;
+        BLOGD("Success alloc Buffer id: %{public}d Queue id: %{public}" PRIu64 "", retval.sequence, uniqueId_);
+    } else {
+        BLOGE("Fail to alloc or map buffer ret: %{public}d, Queue id: %{public}" PRIu64 "", ret, uniqueId_);
     }
-    bufferImpl->GetExtraData(bedata);
-    retval.buffer = bufferImpl;
-    retval.fence = -1;
-    BLOGD("Success alloc Buffer id: %{public}d Queue id: %{public}" PRIu64 "", retval.sequence, uniqueId_);
+
     return ret;
 }
 
@@ -395,11 +398,14 @@ GSError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData &beda
     bufferQueueCache_[sequence].fence = fence;
     bufferQueueCache_[sequence].damage = config.damage;
 
-    // api flush
-    auto sret = bufferManager_->FlushCache(bufferQueueCache_[sequence].buffer);
-    if (sret != GSERROR_OK) {
-        BLOGN_FAILURE_ID_API(sequence, FlushCache, sret);
-        return sret;
+    uint32_t usage = static_cast<uint32_t>(bufferQueueCache_[sequence].config.usage);
+    if (usage & HBM_USE_CPU_WRITE) {
+        // api flush
+        auto sret = bufferManager_->FlushCache(bufferQueueCache_[sequence].buffer);
+        if (sret != GSERROR_OK) {
+            BLOGN_FAILURE_ID_API(sequence, FlushCache, sret);
+            return sret;
+        }
     }
 
     if (config.timestamp == 0) {
@@ -499,10 +505,6 @@ GSError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
     if (ret != GSERROR_OK) {
         BLOGN_FAILURE_ID_API(sequence, Alloc, ret);
         return ret;
-    }
-
-    if (buffer == nullptr) {
-        BLOGN_FAILURE_ID_RET(sequence, GSERROR_INVALID_ARGUMENTS);
     }
 
     BufferElement ele = {
@@ -623,10 +625,10 @@ GSError BufferQueue::AttachBuffer(sptr<SurfaceBufferImpl> &buffer)
     };
 
     int32_t sequence = buffer->GetSeqNum();
-    int32_t usedSize = GetUsedSize();
-    int32_t queueSize = GetQueueSize();
+    int32_t usedSize = static_cast<int32_t>(GetUsedSize());
+    int32_t queueSize = static_cast<int32_t>(GetQueueSize());
     if (usedSize >= queueSize) {
-        int32_t freeSize = dirtyList_.size() + freeList_.size();
+        int32_t freeSize = static_cast<int32_t>(dirtyList_.size() + freeList_.size());
         if (freeSize >= usedSize - queueSize + 1) {
             DeleteBuffers(usedSize - queueSize + 1);
             bufferQueueCache_[sequence] = ele;
@@ -692,7 +694,7 @@ GSError BufferQueue::SetQueueSize(uint32_t queueSize)
     DeleteBuffers(queueSize_ - queueSize);
     queueSize_ = queueSize;
 
-    BLOGN_SUCCESS("queue size: %{public}d", queueSize);
+    BLOGN_SUCCESS("queue size: %{public}d, Queue id: %{public}" PRIu64 "", queueSize, uniqueId_);
     return GSERROR_OK;
 }
 
@@ -729,13 +731,13 @@ GSError BufferQueue::RegisterReleaseListener(OnReleaseFunc func)
 
 GSError BufferQueue::SetDefaultWidthAndHeight(int32_t width, int32_t height)
 {
-    if (width <= 0 || width > SURFACE_MAX_WIDTH) {
-        BLOGN_INVALID("defaultWidth (0, %{public}d], now is %{public}d", SURFACE_MAX_WIDTH, width);
+    if (width <= 0) {
+        BLOGN_INVALID("defaultWidth is greater than 0, now is %{public}d", width);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    if (height <= 0 || height > SURFACE_MAX_HEIGHT) {
-        BLOGN_INVALID("defaultHeight (0, %{public}d], now is %{public}d", SURFACE_MAX_HEIGHT, height);
+    if (height <= 0) {
+        BLOGN_INVALID("defaultHeight is greater than 0, now is %{public}d", height);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
@@ -767,7 +769,15 @@ uint32_t BufferQueue::GetDefaultUsage()
 
 GSError BufferQueue::CleanCache()
 {
-    DeleteBuffers(queueSize_);
+    std::lock_guard<std::mutex> lockGuard(mutex_);
+    auto it = bufferQueueCache_.begin();
+    while (it != bufferQueueCache_.end()) {
+        bufferQueueCache_.erase(it++);
+    }
+    freeList_.clear();
+    dirtyList_.clear();
+    deletingList_.clear();
+    waitReqCon_.notify_all();
     return GSERROR_OK;
 }
 

@@ -1,0 +1,349 @@
+/*
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, Hardware
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "gtest/gtest.h"
+#include "utils/matrix.h"
+#include "utils/scalar.h"
+#include "utils/point.h"
+ 
+using namespace testing;
+using namespace testing::ext;
+
+namespace OHOS {
+namespace Rosen {
+namespace Drawing {
+class MatrixTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp() override;
+    void TearDown() override;
+};
+
+void MatrixTest::SetUpTestCase() {}
+void MatrixTest::TearDownTestCase() {}
+void MatrixTest::SetUp() {}
+void MatrixTest::TearDown() {}
+
+/**
+ * @tc.name: CreateAndDestory001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, CreateAndDestory001, TestSize.Level1)
+{
+    // The best way to create Matrix.
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+}
+
+/**
+ * @tc.name: MatrixRotateTest001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixRotateTest001, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    matrixPtr->Rotate(0.1f, 150.1f, 650.9f);
+}
+
+/**
+ * @tc.name: MatrixRotateTest002
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixRotateTest002, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    matrixPtr->Rotate(20.8f, 133.0f, 100);
+}
+
+/**
+ * @tc.name: MatrixRotateTest003
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixRotateTest003, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    matrixPtr->Rotate(300, 250, 55);
+}
+
+/**
+ * @tc.name: MatrixTranslateTest001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixTranslateTest001, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    matrixPtr->Translate(20.8f, 100);
+}
+
+/**
+ * @tc.name: MatrixTranslateTest002
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixTranslateTest002, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    matrixPtr->Translate(77.7f, 190.2f);
+}
+
+/**
+ * @tc.name: MatrixTranslateTest003
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixTranslateTest003, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    matrixPtr->Translate(30, 10);
+}
+
+/**
+ * @tc.name: MatrixScaleTest001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixScaleTest001, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    matrixPtr->Scale(32.1f, 10.6f, 800, 90.1f);
+}
+
+/**
+ * @tc.name: MatrixScaleTest002
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixScaleTest002, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    matrixPtr->Scale(16.5f, 50.6f, 150.8f, 560.9f);
+}
+
+/**
+ * @tc.name: MatrixScaleTest003
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixScaleTest003, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    matrixPtr->Scale(200, 150, 800, 60);
+}
+
+/**
+ * @tc.name: OperatorMultiply001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, OperatorMultiply001, TestSize.Level1)
+{
+    Matrix matrix1;
+    Matrix matrix2;
+    matrix1.Rotate(3.0f, 2.0f, 1.0f);
+    matrix2.Rotate(1.5f, 2.5f, 3.5f);
+    Matrix matrix3 = matrix1 * matrix2;
+    EXPECT_FALSE(matrix3 == matrix1);
+    EXPECT_FALSE(matrix3 == matrix2);
+}
+
+/**
+ * @tc.name: OperatorMultiply002
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, OperatorMultiply002, TestSize.Level1)
+{
+    Matrix matrix1;
+    Matrix matrix2;
+    matrix1.Rotate(3.7f, 6.0f, 1.9f);
+    matrix2.Rotate(5.5f, 12.5f, 30.5f);
+    Matrix matrix3 = matrix1 * matrix2;
+    EXPECT_FALSE(matrix3 == matrix1);
+    EXPECT_FALSE(matrix3 == matrix2);
+}
+
+/**
+ * @tc.name: OperatorEqual001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, OperatorEqual001, TestSize.Level1)
+{
+    Matrix matrix1;
+    Matrix matrix2 = matrix1;
+    EXPECT_TRUE(matrix1 == matrix2);
+}
+
+/**
+ * @tc.name: SetMatrixTest001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, SetMatrixTest001, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    matrixPtr->SetMatrix(200, 150, 800, 60, 200, 150, 800, 60, 90);
+}
+
+/**
+ * @tc.name: SetMatrixTest002
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, SetMatrixTest002, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    matrixPtr->SetMatrix(20.9f, 15.8f, 80.8f, 60, 2.4f, 99.9f, 60, 60, 900);
+}
+
+/**
+ * @tc.name: SetMatrixTest003
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, SetMatrixTest003, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    matrixPtr->SetMatrix(20.9f, 15.8f, 80.8f, 60.6f, 2.4f, 99.9f, 60.5f, 60.1f, 90.5f);
+}
+
+/**
+ * @tc.name: MapPointsTest001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MapPointsTest001, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    std::vector<Point> dst;
+    std::vector<Point> src;
+    matrixPtr->MapPoints(dst, src, 100);
+}
+
+/**
+ * @tc.name: MapPointsTest002
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MapPointsTest002, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    std::vector<Point> dst;
+    std::vector<Point> src;
+    matrixPtr->MapPoints(dst, src, 191);
+}
+
+/**
+ * @tc.name: MapPointsTest003
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MapPointsTest003, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    std::vector<Point> dst;
+    std::vector<Point> src;
+    matrixPtr->MapPoints(dst, src, 500);
+}
+
+/**
+ * @tc.name: MatrixGetTest001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixGetTest001, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    ASSERT_EQ(0, matrixPtr->Get(102));
+}
+
+/**
+ * @tc.name: MatrixGetTest002
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixGetTest002, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrixPtr = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrixPtr != nullptr);
+    ASSERT_EQ(0, matrixPtr->Get(264));
+}
+} // namespace Drawing
+} // namespace Rosen
+} // namespace OHOS

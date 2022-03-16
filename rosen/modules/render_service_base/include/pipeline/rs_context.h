@@ -41,14 +41,23 @@ public:
         return globalRootRenderNode_;
     }
 
+    void RegisterAnimatingRenderNode(const std::shared_ptr<RSBaseRenderNode>& nodePtr)
+    {
+        NodeId id = nodePtr->GetId();
+        animatingNodeList_.emplace(id, nodePtr);
+    }
+
 private:
     RSRenderNodeMap nodeMap;
     std::shared_ptr<RSBaseRenderNode> globalRootRenderNode_ = std::make_shared<RSBaseRenderNode>(0);
+    std::unordered_map<NodeId, std::weak_ptr<RSBaseRenderNode>> animatingNodeList_;
 
     RSContext(const RSContext&) = delete;
     RSContext(const RSContext&&) = delete;
     RSContext& operator=(const RSContext&) = delete;
     RSContext& operator=(const RSContext&&) = delete;
+
+    friend class RSRenderThread;
 };
 
 } // namespace Rosen

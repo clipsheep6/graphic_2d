@@ -53,6 +53,10 @@ void RSRenderNode::FallbackAnimationsToRoot()
 
     for (const auto& [animationId, animation] : animationManager_.animations_) {
         animation->Detach();
+        auto context = GetContext().lock();
+        if (context != nullptr) {
+            context->RegisterAnimatingRenderNode(target);
+        }
         target->animationManager_.AddAnimation(animation);
     }
 }

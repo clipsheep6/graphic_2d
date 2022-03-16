@@ -111,6 +111,7 @@ protected:
                 auto interpolationValue = RSValueEstimator::Estimate(
                     keyframeInterpolator->Interpolate(intervalFraction), preKeyframeValue, keyframeValue);
                 RSRenderPropertyAnimation<T>::SetAnimationValue(interpolationValue);
+                RSRenderPropertyAnimation<T>::WriteAnimationValueToLog(interpolationValue, preKeyframeValue, keyframeValue);
                 break;
             }
 

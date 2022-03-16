@@ -114,9 +114,14 @@ GSError ProducerSurface::CancelBuffer(sptr<SurfaceBuffer>& buffer)
     }
 
     auto bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    BufferExtraDataImpl bedataimpl;
-    bufferImpl->GetExtraData(bedataimpl);
-    return GetProducer()->CancelBuffer(bufferImpl->GetSeqNum(), bedataimpl);
+    if (bufferImpl ! = nullptr) {
+        BufferExtraDataImpl bedataimpl;
+        bufferImpl->GetExtraData(bedataimpl);
+        return GetProducer()->CancelBuffer(bufferImpl->GetSeqNum(), bedataimpl);
+    } else {
+        BLOGNW("ProducerSurface::CancelBuffer get SurfaceBufferImpl form base failed");
+        return GSERROR_INVALID_ARGUMENTS;
+    }
 }
 
 GSError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,

@@ -84,5 +84,11 @@ float RSValueEstimator::EstimateFraction(const std::shared_ptr<RSInterpolator>& 
 {
     return 0.0f;
 }
+
+float RSValueEstimator::EstimateFraction(const std::shared_ptr<RSInterpolator>& interpolator, const Vector4<Color>& value,
+    const Vector4<Color>& startValue, const Vector4<Color>& endValue)
+{
+    return 0.0f;
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -94,6 +94,7 @@ template class RSKeyframeAnimation<Vector2f>;
 template class RSKeyframeAnimation<Vector4f>;
 template class RSKeyframeAnimation<Quaternion>;
 template class RSKeyframeAnimation<std::shared_ptr<RSFilter>>;
+template class RSKeyframeAnimation<Vector4<Color>>;
 
 } // namespace Rosen
 } // namespace OHOS

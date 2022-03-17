@@ -103,5 +103,11 @@ void RSKeyframeAnimation<std::shared_ptr<RSFilter>>::OnStart()
 {
     // START_KEYFRAME_ANIMATION(RSAnimationCreateKeyframeFilter, std::shared_ptr<RSFilter>);
 }
+
+template<>
+void RSKeyframeAnimation<Vector4<Color>>::OnStart()
+{
+    START_KEYFRAME_ANIMATION(RSAnimationCreateKeyframeVec4Color, Vector4<Color>);
+}
 } // namespace Rosen
 } // namespace OHOS

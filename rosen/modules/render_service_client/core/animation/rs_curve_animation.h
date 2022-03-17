@@ -72,6 +72,7 @@ template class RSCurveAnimation<Vector2f>;
 template class RSCurveAnimation<Vector4f>;
 template class RSCurveAnimation<Quaternion>;
 template class RSCurveAnimation<std::shared_ptr<RSFilter>>;
+template class RSCurveAnimation<Vector4<Color>>;
 
 } // namespace Rosen
 } // namespace OHOS

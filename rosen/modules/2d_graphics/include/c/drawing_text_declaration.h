@@ -66,7 +66,8 @@ typedef struct OH_Drawing_Typography OH_Drawing_Typography;
 typedef struct OH_Drawing_TextStyle OH_Drawing_TextStyle;
 
 /**
- * @brief Defines an <b>OH_Drawing_TypographyStyle</b>, which is used to manage the typography style, such as the text direction.
+ * @brief Defines an <b>OH_Drawing_TypographyStyle</b>, which is used to manage the typography style,
+ * such as the text direction.
  *
  * @since 8
  * @version 1.0

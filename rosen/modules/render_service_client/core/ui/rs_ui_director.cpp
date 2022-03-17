@@ -66,6 +66,7 @@ void RSUIDirector::GoForeground()
         if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
             node->SetVisible(true);
         }
+        SendMessages();
     }
 }
 
@@ -73,11 +74,12 @@ void RSUIDirector::GoBackground()
 {
     ROSEN_LOGI("RSUIDirector::GoBackground");
     if (isActive_) {
-        RSRenderThread::Instance().UpdateWindowStatus(false);
-        isActive_ = false;
         if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
             node->SetVisible(false);
         }
+        SendMessages();
+        RSRenderThread::Instance().UpdateWindowStatus(false);
+        isActive_ = false;
     }
 }
 
@@ -131,7 +133,7 @@ void RSUIDirector::SendMessages()
 {
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "SendCommands");
     auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
+    if (transactionProxy != nullptr && isActive_) {
         transactionProxy->FlushImplicitTransaction();
     }
     ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);

@@ -103,6 +103,16 @@ public:
 
     const Vector4f& GetClipRegion() const
     {
+        return clipRegion_;
+    }
+
+    void SetClipRect(const RectI& clipRect)
+    {
+        clipRect_ = clipRect;
+    }
+
+    const RectI& GetClipRect() const
+    {
         return clipRect_;
     }
 
@@ -163,8 +173,9 @@ private:
     int32_t fence_ = -1;
     int32_t preFence_ = -1;
     Rect damageRect_ = {0, 0, 0, 0};
+    RectI clipRect_;
     RectI dstRect_;
-    Vector4f clipRect_;
+    Vector4f clipRegion_;
     std::string name_;
     BlendType blendType_ = BlendType::BLEND_SRCOVER;
     std::atomic<bool> isBufferAvailable_ = false;

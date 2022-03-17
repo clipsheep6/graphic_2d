@@ -178,13 +178,13 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode(RSS
         if (existedParent && existedParent->IsInstanceOf<RSSurfaceRenderNode>()) {
             auto matrix = node.GetMatrix();
             param.matrix = matrix;
-            auto parentRect = std::static_pointer_cast<RSSurfaceRenderNode>(existedParent)->GetDstRect();
+            auto parentRect = std::static_pointer_cast<RSSurfaceRenderNode>(existedParent)->GetClipRect();
             //Changes the clip area from absolute to relative to the parent window and deal with clip area with scale
             //Based on the origin of the parent window. 
-            param.clipRect.offsetTo(param.clipRect.left() - parentRect.left_, param.clipRect.top() - parentRect.top_);
-            SkMatrix scaleMatrix = SkMatrix::I();
-            scaleMatrix.preScale(scaleX_, scaleY_, 0, 0);
-            param.clipRect = scaleMatrix.mapRect(param.clipRect);
+            auto clipRect = node.GetClipRect();
+            param.clipRect = SkRect::MakeXYWH(clipRect.left_ - parentRect.left_, clipRect.top_ - parentRect.top_,
+                clipRect.width_, clipRect.height_);
+            param.clipRect = SkMatrix::MakeScale(scaleX_, scaleY_).mapRect(param.clipRect);
 
             param.dstRect = SkRect::MakeXYWH(
                 node.GetRenderProperties().GetBoundsPositionX(), node.GetRenderProperties().GetBoundsPositionY(),
@@ -196,7 +196,7 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode(RSS
                 });
         } else {
             param.matrix = SkMatrix::I();
-            param.clipRect.offsetTo(0, 0);
+            param.clipRect = SkRect::MakeWH(node.GetClipRect().width_ * scaleX_, node.GetClipRect().height_ * scaleY_);
             param.dstRect = SkRect::MakeXYWH(0, 0, node.GetRenderProperties().GetBoundsWidth(),
                 node.GetRenderProperties().GetBoundsHeight());
             RsRenderServiceUtil::DrawBuffer(*canvas_, param, [this](SkCanvas& canvas, BufferDrawParam& params) -> void {

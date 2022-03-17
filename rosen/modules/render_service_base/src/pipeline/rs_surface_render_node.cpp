@@ -124,10 +124,10 @@ float RSSurfaceRenderNode::GetAlpha() const
 
 void RSSurfaceRenderNode::SetClipRegion(Vector4f clipRegion, bool sendMsg)
 {
-    if (clipRect_ == clipRegion) {
+    if (clipRegion_ == clipRegion) {
         return;
     }
-    clipRect_ = clipRegion;
+    clipRegion_ = clipRegion;
     if (!sendMsg) {
         return;
     }

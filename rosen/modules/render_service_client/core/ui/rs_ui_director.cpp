@@ -122,6 +122,24 @@ void RSUIDirector::SetTimeStamp(uint64_t timeStamp)
     timeStamp_ = timeStamp;
 }
 
+void RSUIDirector::SetWindowBlur(bool isWindowBlur)
+{
+    auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_);
+    if (node != nullptr) {
+        node->SetWindowBlur(isWindowBlur);
+    }
+}
+
+bool RSUIDirector::IsWindowBlur()
+{
+    auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_);
+    if (node != nullptr) {
+        return node->IsWindowBlur();
+    } else {
+        return false;
+    }
+}
+
 void RSUIDirector::SetUITaskRunner(const TaskRunner& uiTaskRunner)
 {
     g_uiTaskRunner = uiTaskRunner;

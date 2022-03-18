@@ -96,5 +96,25 @@ bool RSRootRenderNode::NeedForceRaster()
     return false;
 #endif
 }
+
+void RSRootRenderNode::SetWindowBlur(bool isWindowBlur)
+{
+    isWindowBlur_ = isWindowBlur;
+}
+
+bool RSRootRenderNode::IsWindowBlur()
+{
+    return isWindowBlur_;
+}
+
+void  RSRootRenderNode::SetWindowBlurImage(std::shared_ptr<Media::PixelMap> pixelmap)
+{
+    pixelmap_ = pixelmap;
+}
+
+std::shared_ptr<Media::PixelMap>  RSRootRenderNode::GetWindowBlurImage()
+{
+    return pixelmap_;
+}
 } // namespace Rosen
 } // namespace OHOS

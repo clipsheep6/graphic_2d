@@ -18,6 +18,7 @@
 #include <include/core/SkColor.h>
 #include <include/core/SkFont.h>
 #include <include/core/SkPaint.h>
+#include <include/effects/SkImageFilters.h>
 
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_dirty_region_manager.h"
@@ -28,12 +29,15 @@
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_surface.h"
 #include "rs_trace.h"
+#include "transaction/rs_interfaces.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
 
 namespace OHOS {
 namespace Rosen {
+static std::condition_variable cv;
+
 RSRenderThreadVisitor::RSRenderThreadVisitor() : canvas_(nullptr) {}
 
 RSRenderThreadVisitor::~RSRenderThreadVisitor() {}
@@ -49,13 +53,33 @@ void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
     if (isIdle_) {
         curTreeRoot_ = &node;
+        class WindowBlurSurfaceCapture : public SurfaceCaptureCallback {
+        public:
+            WindowBlurSurfaceCapture(RSRootRenderNode* node) : node_(node){}
+            ~WindowBlurSurfaceCapture() override {}
+            void OnSurfaceCapture(std::shared_ptr<Media::PixelMap> pixelMap) override
+            {
+                node_->SetWindowBlurImage(pixelMap);
+                cv.notify_one();
+            }
+        private:
+            RSRootRenderNode* node_;
+        };
+        if (node.IsWindowBlur()) {
+            std::unique_lock<std::mutex> captureLock(mutexForCapture_);
+            std::shared_ptr<SurfaceCaptureCallback> callback = std::make_shared<WindowBlurSurfaceCapture>(curTreeRoot_);
+            RSInterfaces::GetInstance().TakeSurfaceCapture(node.GetRSSurfaceNodeId(), callback);
+            cv.wait(captureLock, [&node]{return node.GetWindowBlurImage();});
+        }
         curTreeRoot_->ClearSurfaceNodeInRS();
 
         dirtyManager_.Clear();
         parent_ = nullptr;
         dirtyFlag_ = false;
         isIdle_ = false;
-        PrepareCanvasRenderNode(node);
+        if (!node.IsWindowBlur()) {
+            PrepareCanvasRenderNode(node);
+        }
         isIdle_ = true;
     } else {
         PrepareCanvasRenderNode(node);
@@ -146,7 +170,28 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 
 
     isIdle_ = false;
-    ProcessCanvasRenderNode(node);
+    if (!node.IsWindowBlur()) {
+        ProcessCanvasRenderNode(node);    
+    } else {
+        int32_t pixmapWidth = node.GetWindowBlurImage()->GetWidth();
+        int32_t pixmapHeight = node.GetWindowBlurImage()->GetHeight();
+        SkImageInfo layerInfo = SkImageInfo::Make(pixmapWidth, pixmapHeight,
+            kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+        auto addr = const_cast<uint32_t*>(node.GetWindowBlurImage()->GetPixel32(0, 0));
+        if (addr == nullptr) {
+            ROSEN_LOGE("rootNode : addr == nullptr");
+            return;
+        }
+        SkPixmap pixmap(layerInfo, addr, node.GetWindowBlurImage()->GetRowBytes());
+        SkBitmap bitmap;
+        if (bitmap.installPixels(pixmap)) {
+            SkRect srcRect = SkRect::MakeXYWH(0, 0, pixmapWidth, pixmapHeight);
+            SkRect dstRect = SkRect::MakeXYWH(0, 0, node.GetSurfaceWidth(), node.GetSurfaceHeight());
+            SkPaint paint;
+            paint.setImageFilter(SkImageFilters::Blur(10, 10, nullptr, nullptr));
+            canvas_->drawBitmapRect(bitmap, srcRect, dstRect, &paint);
+        }
+    }
 
     if (skSurface) {
         canvas_->flush();

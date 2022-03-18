@@ -48,5 +48,20 @@ void RSRootNode::AttachRSSurfaceNode(std::shared_ptr<RSSurfaceNode> surfaceNode)
     }
 }
 
+void RSRootNode::SetWindowBlur(bool isWindowBlur)
+{
+    std::unique_ptr<RSCommand> command = std::make_unique<RSRootNodeSetWindowBlur>(GetId(), isWindowBlur);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    }
+    isWindowBlur_ = isWindowBlur;
+}
+
+bool RSRootNode::IsWindowBlur()
+{
+    return isWindowBlur_;
+}
+
 } // namespace Rosen
 } // namespace OHOS

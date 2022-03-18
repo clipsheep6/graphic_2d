@@ -35,5 +35,12 @@ void RootNodeCommandHelper::AttachRSSurfaceNode(RSContext& context, NodeId id, N
     }
 }
 
+void RootNodeCommandHelper::SetWindowBlur(RSContext& context, NodeId id, bool isWindowBlur)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSRootRenderNode>(id)) {
+        node->SetWindowBlur(isWindowBlur);
+    }
+}
+
 } // namespace Rosen
 } // namespace OHOS

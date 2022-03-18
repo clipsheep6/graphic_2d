@@ -25,17 +25,21 @@ namespace Rosen {
 enum RSRootNodeCommandType : uint16_t {
     ROOT_NODE_CREATE,
     ROOT_NODE_ATTACH,
+    ROOT_NODE_SET_WINDOW_BLUR,
 };
 
 class RootNodeCommandHelper {
 public:
     static void Create(RSContext& context, NodeId id);
     static void AttachRSSurfaceNode(RSContext& context, NodeId id, NodeId surfaceNodeId);
+    static void SetWindowBlur(RSContext& context, NodeId id, bool isWindowBlur);
 };
 
 ADD_COMMAND(RSRootNodeCreate, ARG(ROOT_NODE, ROOT_NODE_CREATE, RootNodeCommandHelper::Create, NodeId))
 ADD_COMMAND(RSRootNodeAttachRSSurfaceNode,
     ARG(ROOT_NODE, ROOT_NODE_ATTACH, RootNodeCommandHelper::AttachRSSurfaceNode, NodeId, NodeId))
+ADD_COMMAND(RSRootNodeSetWindowBlur,
+    ARG(ROOT_NODE, ROOT_NODE_SET_WINDOW_BLUR, RootNodeCommandHelper::SetWindowBlur, NodeId, bool))
 
 } // namespace Rosen
 } // namespace OHOS

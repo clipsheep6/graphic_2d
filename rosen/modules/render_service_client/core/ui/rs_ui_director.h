@@ -43,6 +43,9 @@ public:
 
     void SetTimeStamp(uint64_t timeStamp);
 
+    void SetWindowBlur(bool isWindowBlur);
+    bool IsWindowBlur();
+
 private:
     void Destroy();
     void AttachSurface();

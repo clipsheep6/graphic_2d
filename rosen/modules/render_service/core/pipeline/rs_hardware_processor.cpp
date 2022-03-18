@@ -188,6 +188,7 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
     };
     CalculateInfoWithVideo(info, node);
     auto transitionProperties = node.GetAnimationManager().GetTransitionProperties();
+    node.SetClipRect({info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h});
     CalculateInfoWithAnimation(transitionProperties, info, node);
     node.SetDstRect({info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h});
     std::shared_ptr<HdiLayerInfo> layer = HdiLayerInfo::CreateHdiLayerInfo();

@@ -103,7 +103,6 @@ void RSHardwareProcessor::CropLayers()
             originSrcRect.h / dstRectI.height_);
         srcRect.w = dstRectI.IsEmpty() ? 0 : originSrcRect.w * resDstRect.width_ / dstRectI.width_;
         srcRect.h = dstRectI.IsEmpty() ? 0 : originSrcRect.h * resDstRect.height_ / dstRectI.height_;
-
         layer->SetLayerSize(dstRect);
         layer->SetDirtyRegion(srcRect);
         layer->SetCropRect(srcRect);

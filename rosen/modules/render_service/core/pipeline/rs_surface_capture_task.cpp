@@ -163,6 +163,9 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode(RSS
         ROSEN_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode: node Buffer is nullptr!");
         return;
     }
+    if (node.GetName() == "SystemUi_ControlPanel") {
+        return;
+    }
     for (auto child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }

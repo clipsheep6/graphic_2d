@@ -68,6 +68,12 @@ bool RSInterfaces::TakeSurfaceCapture(std::shared_ptr<RSSurfaceNode> node,
     return renderServiceClient_->TakeSurfaceCapture(node->GetId(), callback, scaleX, scaleY);
 }
 
+bool RSInterfaces::TakeSurfaceCapture(NodeId nodeId,
+    std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY)
+{
+    return renderServiceClient_->TakeSurfaceCapture(nodeId, callback, scaleX, scaleY);
+}
+
 bool RSInterfaces::TakeSurfaceCapture(std::shared_ptr<RSDisplayNode> node,
     std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY)
 {

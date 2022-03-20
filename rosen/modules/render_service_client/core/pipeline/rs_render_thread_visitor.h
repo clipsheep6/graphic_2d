@@ -53,6 +53,8 @@ private:
     bool isIdle_ = true;
     RSPaintFilterCanvas* canvas_;
     RSRootRenderNode* curTreeRoot_ = nullptr;
+    std::mutex mutexForCapture_;
+    std::condition_variable cv_;
 };
 } // namespace Rosen
 } // namespace OHOS

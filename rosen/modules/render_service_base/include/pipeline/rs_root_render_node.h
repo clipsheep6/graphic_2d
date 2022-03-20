@@ -16,6 +16,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_ROOT_RENDER_NODE_H
 
 #include "pipeline/rs_canvas_render_node.h"
+#include "pixel_map.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -47,12 +48,19 @@ public:
     static void MarkForceRaster(bool flag = true);
     static bool NeedForceRaster();
 
+    void SetWindowBlur(bool isWindowBlur);
+    bool IsWindowBlur();
+    
+    void SetWindowBlurImage(std::shared_ptr<Media::PixelMap> pixelmap);
+    std::shared_ptr<Media::PixelMap> GetWindowBlurImage();
 private:
     std::shared_ptr<RSSurface> rsSurface_ = nullptr;
     NodeId surfaceNodeId_ = 0;
     std::vector<NodeId> childSurfaceNodeId_;
 
     static bool forceRaster_;
+    bool isWindowBlur_ = false;
+    std::shared_ptr<Media::PixelMap> pixelmap_;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -36,6 +36,9 @@ public:
         return RSUINodeType::ROOT_NODE;
     }
 
+    void SetWindowBlur(bool isWindowBlur);
+    bool IsWindowBlur();
+
 protected:
     void AttachRSSurfaceNode(std::shared_ptr<RSSurfaceNode> surfaceNode) const;
 
@@ -46,6 +49,9 @@ protected:
     RSRootNode& operator=(const RSRootNode&&) = delete;
 
     friend class RSUIDirector;
+
+private:
+    bool isWindowBlur_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

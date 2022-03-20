@@ -67,9 +67,7 @@ void RSHardwareProcessor::PostProcess()
         return;
     }
     // Rotaion must be executed before CropLayers.
-    if (rotation_ != ScreenRotation::ROTATION_0) {
-        OnRotate();
-    }
+    OnRotate();
     CropLayers();
     output_->SetLayerInfo(layers_);
     std::vector<std::shared_ptr<HdiOutput>> outputs{output_};
@@ -269,23 +267,103 @@ SkMatrix RSHardwareProcessor::GetLayerTransform(const SkMatrix& canvasTransform,
     if (geoPtr == nullptr) {
         return transform;
     }
+    sptr<Surface> surface = node->GetConsumer();
+    if (surface == nullptr) {
+        return transform;
+    }
 
     const auto &geoAbsRect = geoPtr->GetAbsRect();
     switch (rotation_) {
         case ScreenRotation::ROTATION_90: {
             transform.postTranslate(geoAbsRect.top_, -geoAbsRect.left_);
+            switch (surface->GetTransform()) {
+                case TransformType::ROTATE_90: {
+                    transform.postRotate(-90);
+                    transform.postTranslate(geoAbsRect.height_, 0);
+                    break;
+                }
+                case TransformType::ROTATE_180: {
+                    transform.postRotate(180);
+                    transform.postTranslate(geoAbsRect.height_, -geoAbsRect.width_);
+                    break;
+                }
+                case TransformType::ROTATE_270: {
+                    transform.postRotate(-270);
+                    transform.postTranslate(0, -geoAbsRect.width_);
+                    break;
+                }
+                default:
+                    break;
+            }
             break;
         }
         case ScreenRotation::ROTATION_180: {
             transform.postTranslate(-geoAbsRect.left_, -geoAbsRect.top_);
+            switch (surface->GetTransform()) {
+                case TransformType::ROTATE_90: {
+                    transform.postRotate(-90);
+                    transform.postTranslate(0, -geoAbsRect.height_);
+                    break;
+                }
+                case TransformType::ROTATE_180: {
+                    transform.postRotate(180);
+                    transform.postTranslate(-geoAbsRect.width_, -geoAbsRect.height_);
+                    break;
+                }
+                case TransformType::ROTATE_270: {
+                    transform.postRotate(-270);
+                    transform.postTranslate(-geoAbsRect.width_, 0);
+                    break;
+                }
+                default:
+                    break;
+            }
             break;
         }
         case ScreenRotation::ROTATION_270: {
             transform.postTranslate(-geoAbsRect.top_, geoAbsRect.left_);
+            switch (surface->GetTransform()) {
+                case TransformType::ROTATE_90: {
+                    transform.postRotate(-90);
+                    transform.postTranslate(-geoAbsRect.height_, 0);
+                    break;
+                }
+                case TransformType::ROTATE_180: {
+                    transform.postRotate(180);
+                    transform.postTranslate(-geoAbsRect.height_, geoAbsRect.width_);
+                    break;
+                }
+                case TransformType::ROTATE_270: {
+                    transform.postRotate(-270);
+                    transform.postTranslate(0, geoAbsRect.width_);
+                    break;
+                }
+                default:
+                    break;
+            }
             break;
         }
         default: {
             transform = geoPtr->GetAbsMatrix();
+            switch (surface->GetTransform()) {
+                case TransformType::ROTATE_90: {
+                    transform.postRotate(-90);
+                    transform.postTranslate(0, geoAbsRect.height_);
+                    break;
+                }
+                case TransformType::ROTATE_180: {
+                    transform.postRotate(180);
+                    transform.postTranslate(geoAbsRect.width_, geoAbsRect.height_);
+                    break;
+                }
+                case TransformType::ROTATE_270: {
+                    transform.postRotate(-270);
+                    transform.postTranslate(geoAbsRect.width_, 0);
+                    break;
+                }
+                default:
+                    break;
+            }
             break;
         }
     }
@@ -375,32 +453,108 @@ void RSHardwareProcessor::OnRotate()
         IRect rect = layer->GetLayerSize();
         ROSEN_LOGI("RsDebug RSHardwareProcessor::OnRotate Before Rotate layer size [%d %d %d %d]",
             rect.x, rect.y, rect.w, rect.h);
+        RSSurfaceRenderNode *node = static_cast<RSSurfaceRenderNode *>(layer->GetLayerAdditionalInfo());
+        if (node == nullptr) {
+            ROSEN_LOGE("RsRenderServiceUtil::DrawLayer: layer's surfaceNode is nullptr!");
+            continue;
+        }
+        sptr<Surface> surface = node->GetConsumer();
+        if (surface == nullptr) {
+            continue;
+        }
+        //buffer->SetSurfaceBufferTransform(TransformType::ROTATE_270);
         switch (rotation_) {
             case ScreenRotation::ROTATION_90: {
                 ROSEN_LOGI("RsDebug RSHardwareProcessor::OnRotate 90.");
                 layer->SetLayerSize({rect.y, height - rect.x - rect.w, rect.h, rect.w});
-                layer->SetTransform(TransformType::ROTATE_270);
+                switch (surface->GetTransform()) {
+                    case TransformType::ROTATE_90: {
+                        layer->SetTransform(TransformType::ROTATE_180);
+                        break;
+                    }
+                    case TransformType::ROTATE_180: {
+                        layer->SetTransform(TransformType::ROTATE_90);
+                        break;
+                    }
+                    case TransformType::ROTATE_270: {
+                        layer->SetTransform(TransformType::ROTATE_NONE);
+                        break;
+                    }
+                    default: {
+                        layer->SetTransform(TransformType::ROTATE_270);
+                        break;
+                    }
+                }
                 break;
             }
             case ScreenRotation::ROTATION_180: {
                 ROSEN_LOGI("RsDebug RSHardwareProcessor::OnRotate 180.");
                 layer->SetLayerSize({width - rect.x - rect.w, height - rect.y - rect.h, rect.w, rect.h});
-                layer->SetTransform(TransformType::ROTATE_180);
+                switch (surface->GetTransform()) {
+                    case TransformType::ROTATE_90: {
+                        layer->SetTransform(TransformType::ROTATE_90);
+                        break;
+                    }
+                    case TransformType::ROTATE_180: {
+                        layer->SetTransform(TransformType::ROTATE_NONE);
+                        break;
+                    }
+                    case TransformType::ROTATE_270: {
+                        layer->SetTransform(TransformType::ROTATE_270);
+                        break;
+                    }
+                    default: {
+                        layer->SetTransform(TransformType::ROTATE_180);
+                        break;
+                    }
+                }
                 break;
             }
             case ScreenRotation::ROTATION_270: {
                 ROSEN_LOGI("RsDebug RSHardwareProcessor::OnRotate 270.");
                 layer->SetLayerSize({width - rect.y - rect.h, rect.x, rect.h, rect.w});
-                layer->SetTransform(TransformType::ROTATE_90);
+                switch (surface->GetTransform()) {
+                    case TransformType::ROTATE_90: {
+                        layer->SetTransform(TransformType::ROTATE_NONE);
+                        break;
+                    }
+                    case TransformType::ROTATE_180: {
+                        layer->SetTransform(TransformType::ROTATE_270);
+                        break;
+                    }
+                    case TransformType::ROTATE_270: {
+                        layer->SetTransform(TransformType::ROTATE_180);
+                        break;
+                    }
+                    default: {
+                        layer->SetTransform(TransformType::ROTATE_90);
+                        break;
+                    }
+                }
                 break;
             }
-            case ScreenRotation::INVALID_SCREEN_ROTATION: {
+            default:  {
                 ROSEN_LOGE("RsDebug RSHardwareProcessor::OnRotate Failed.");
-                layer->SetTransform(TransformType::ROTATE_BUTT);
+                switch (surface->GetTransform()) {
+                    case TransformType::ROTATE_90: {
+                        layer->SetTransform(TransformType::ROTATE_270);
+                        break;
+                    }
+                    case TransformType::ROTATE_180: {
+                        layer->SetTransform(TransformType::ROTATE_180);
+                        break;
+                    }
+                    case TransformType::ROTATE_270: {
+                        layer->SetTransform(TransformType::ROTATE_90);
+                        break;
+                    }
+                    default: {
+                        layer->SetTransform(TransformType::ROTATE_NONE);
+                        break;
+                    }
+                }
                 break;
             }
-            default:
-                break;
         }
         ROSEN_LOGI("RsDebug RSHardwareProcessor::OnRotate After Rotate layer size [%d %d %d %d]",
             layer->GetLayerSize().x, layer->GetLayerSize().y, layer->GetLayerSize().w, layer->GetLayerSize().h);

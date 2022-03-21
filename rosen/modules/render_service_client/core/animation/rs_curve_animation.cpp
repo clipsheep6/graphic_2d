@@ -101,5 +101,11 @@ void RSCurveAnimation<std::shared_ptr<RSFilter>>::OnStart()
 {
     // START_CURVE_ANIMATION(RSAnimationCreateCurveFilter, std::shared_ptr<RSFilter>);
 }
+
+template<>
+void RSCurveAnimation<Vector4<Color>>::OnStart()
+{
+    START_CURVE_ANIMATION(RSAnimationCreateCurveVec4Color, Vector4<Color>);
+}
 } // namespace Rosen
 } // namespace OHOS

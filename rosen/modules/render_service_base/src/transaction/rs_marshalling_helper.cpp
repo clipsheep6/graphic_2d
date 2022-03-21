@@ -238,14 +238,15 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderKeyframeAnimation)
     template bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<TEMPLATE<TYPE>>& val); \
     template bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<TEMPLATE<TYPE>>& val);
 
-#define BATCH_EXPLICIT_INSTANTIATION(TEMPLATE) \
-    EXPLICIT_INSTANTIATION(TEMPLATE, int)      \
-    EXPLICIT_INSTANTIATION(TEMPLATE, float)    \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Color)    \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Matrix3f) \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Vector2f) \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f) \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Quaternion)
+#define BATCH_EXPLICIT_INSTANTIATION(TEMPLATE)       \
+    EXPLICIT_INSTANTIATION(TEMPLATE, int)            \
+    EXPLICIT_INSTANTIATION(TEMPLATE, float)          \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Color)          \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Matrix3f)       \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector2f)       \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)       \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Quaternion)     \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<Color>)
     // [PLANNING]:complete the marshing and unmarshalling
 // EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSFilter>)
 

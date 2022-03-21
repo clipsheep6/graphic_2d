@@ -153,6 +153,9 @@ ADD_COMMAND(RSAnimationCreateCurveQuaternion,
 // ADD_COMMAND(
 //     RSAnimationCreateCurveFilter, ARG(ANIMATION, ANIMATION_CREATE_CURVE_FILTER, AnimationCommandHelper::CreateAnimation,
 //                                      NodeId, std::shared_ptr<RSRenderCurveAnimation<std::shared_ptr<RSFilter>>>))
+ADD_COMMAND(
+    RSAnimationCreateCurveVec4Color, ARG(ANIMATION, ANIMATION_CREATE_CURVE_VEC4F, AnimationCommandHelper::CreateAnimation,
+                                     NodeId, std::shared_ptr<RSRenderCurveAnimation<Vector4<Color>>>))
 
 // create keyframe animation
 ADD_COMMAND(
@@ -179,6 +182,9 @@ ADD_COMMAND(RSAnimationCreateKeyframeQuaternion,
 // ADD_COMMAND(RSAnimationCreateKeyframeFilter,
 //     ARG(ANIMATION, ANIMATION_CREATE_KEYFRAME_FILTER, AnimationCommandHelper::CreateAnimation, NodeId,
 //         std::shared_ptr<RSRenderKeyframeAnimation<std::shared_ptr<RSFilter>>>))
+ADD_COMMAND(RSAnimationCreateKeyframeVec4Color,
+    ARG(ANIMATION, ANIMATION_CREATE_KEYFRAME_VEC4F, AnimationCommandHelper::CreateAnimation, NodeId,
+        std::shared_ptr<RSRenderKeyframeAnimation<Vector4<Color>>>))
 
 // create path animation
 ADD_COMMAND(RSAnimationCreatePath, ARG(ANIMATION, ANIMATION_CREATE_PATH, AnimationCommandHelper::CreateAnimation,

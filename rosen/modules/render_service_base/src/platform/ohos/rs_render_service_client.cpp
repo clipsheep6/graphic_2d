@@ -33,11 +33,12 @@ std::shared_ptr<RSIRenderClient> RSIRenderClient::CreateRenderServiceClient()
     return client;
 }
 
-void RSRenderServiceClient::CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData)
+void RSRenderServiceClient::CommitTransaction(
+    std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService != nullptr) {
-        renderService->CommitTransaction(transactionData);
+        renderService->CommitTransaction(transactionDataWithTimeStamp);
     }
 }
 

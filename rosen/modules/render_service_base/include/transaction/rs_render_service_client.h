@@ -55,7 +55,8 @@ public:
     RSRenderServiceClient(const RSRenderServiceClient&) = delete;
     void operator=(const RSRenderServiceClient&) = delete;
 
-    void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) override;
+    void CommitTransaction(
+        std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp) override;
     void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) override;
 
     std::shared_ptr<RSSurface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config);

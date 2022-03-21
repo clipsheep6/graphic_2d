@@ -132,7 +132,7 @@ void RSUIDirector::SendMessages()
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "SendCommands");
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->FlushImplicitTransaction();
+        transactionProxy->FlushImplicitTransaction(timeStamp_);
     }
     ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }

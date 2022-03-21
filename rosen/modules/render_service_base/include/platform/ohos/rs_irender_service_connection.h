@@ -74,7 +74,8 @@ public:
         GET_ROTATION,
     };
 
-    virtual void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) = 0;
+    virtual void CommitTransaction(
+        std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp) = 0;
 
     virtual void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) = 0;
 

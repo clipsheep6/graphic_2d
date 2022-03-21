@@ -111,13 +111,13 @@ int32_t NativeWindowFlushBuffer(struct NativeWindow *window, struct NativeWindow
         config.damage.y = region.rects->y;
         config.damage.w = static_cast<int32_t>(region.rects->w);
         config.damage.h = static_cast<int32_t>(region.rects->h);
-        config.timestamp = 0;
+        config.timestamp = window->UITimestamp;
     } else {
         config.damage.x = 0;
         config.damage.y = 0;
         config.damage.w = window->config.width;
         config.damage.h = window->config.height;
-        config.timestamp = 0;
+        config.timestamp = window->UITimestamp;
     }
 
     BLOGD("NativeWindowFlushBuffer damage w is %{public}d, h is %{public}d, acquire fence: %{public}d",
@@ -170,6 +170,11 @@ static int32_t InternalHanleNativeWindowOpt(struct NativeWindow *window, int cod
         case SET_TRANSFORM : {
             int32_t transform = va_arg(args, int32_t);
             window->config.transform = static_cast<TransformType>(transform);
+            break;
+        }
+        case SET_UI_TIMESTAMP : {
+            uint64_t UITimestamp = va_arg(args, uint64_t);
+            window->UITimestamp = static_cast<int64_t>(UITimestamp);
             break;
         }
         case GET_USAGE: {

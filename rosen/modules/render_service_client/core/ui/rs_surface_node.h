@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,16 +15,15 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_NODE_H
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_NODE_H
 
-#include <string>
-
 #include <parcel.h>
 #include <refbase.h>
-#include "surface.h"
-
+#include <string>
 #include <transaction/rs_transaction_proxy.h>
+
 #include "platform/drawing/rs_surface.h"
-#include "ui/rs_node.h"
+#include "surface.h"
 #include "surface_type.h"
+#include "ui/rs_node.h"
 
 class SkCanvas;
 
@@ -35,7 +34,7 @@ struct RSSurfaceNodeConfig {
     std::string SurfaceNodeName = "SurfaceNode";
 };
 
-class RS_EXPORT RSSurfaceNode : public RSNode, public Parcelable {
+class RS_EXPORT RSSurfaceNode : public RSNode {
 public:
     using WeakPtr = std::weak_ptr<RSSurfaceNode>;
     using SharedPtr = std::shared_ptr<RSSurfaceNode>;
@@ -53,9 +52,7 @@ public:
     void SetBoundsHeight(float height) override;
     void SetColorSpace(ColorGamut colorSpace);
 
-    bool Marshalling(Parcel& parcel) const override;
-    static RSSurfaceNode* Unmarshalling(Parcel& parcel);
-    sptr<OHOS::Surface> GetSurface() const;
+    virtual sptr<OHOS::Surface> GetSurface() const;
     RSUINodeType GetType() const override
     {
         return RSUINodeType::SURFACE_NODE;
@@ -64,19 +61,27 @@ public:
     {
         return colorSpace_;
     }
+    const std::string& GetName() const {
+        return name_;
+    }
 protected:
     bool NeedForcedSendToRemote() const override;
+    // only for unmarshalling
     explicit RSSurfaceNode(const RSSurfaceNodeConfig& config, bool isRenderServiceNode);
+    // only for RSSurfaceAliasedNode, name will be changed after create
+    explicit RSSurfaceNode() : RSNode(true) {}
+
     RSSurfaceNode(const RSSurfaceNode&) = delete;
     RSSurfaceNode(const RSSurfaceNode&&) = delete;
     RSSurfaceNode& operator=(const RSSurfaceNode&) = delete;
     RSSurfaceNode& operator=(const RSSurfaceNode&&) = delete;
 
+    std::string name_;
+
 private:
     bool CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config);
     void UpdateSurfaceDefaultSize(float width, float height);
     std::shared_ptr<RSSurface> surface_;
-    std::string name_;
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
 
     friend class RSUIDirector;

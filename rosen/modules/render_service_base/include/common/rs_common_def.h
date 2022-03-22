@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,23 +32,25 @@ using NodeId = uint64_t;
 // types in the same layer should be 0/1/2/4/8
 // types for UINode
 enum class RSUINodeType {
-    BASE_NODE    = 0x00010,
-    DISPLAY_NODE = 0x00110,
-    RS_NODE      = 0x00210,   // formerly RSPropertyNode
-    SURFACE_NODE = 0x01210,
-    CANVAS_NODE  = 0x02210,   // formerly RSNode
-    ROOT_NODE    = 0x12210,
-    TEXTURE_NODE = 0x22210,
+    BASE_NODE          = 0x00010,
+    DISPLAY_NODE       = 0x00110,
+    RS_NODE            = 0x00210,   // formerly RSPropertyNode
+    SURFACE_NODE       = 0x01210,
+    SURFACE_ALIAS_NODE = 0x11210,
+    CANVAS_NODE        = 0x02210,   // formerly RSNode
+    ROOT_NODE          = 0x12210,
+    TEXTURE_NODE       = 0x22210,
 };
 
 static const std::map<RSUINodeType, std::string> RSUINodeTypeStrs = {
-    {RSUINodeType::BASE_NODE,    "BaseNode"},
-    {RSUINodeType::DISPLAY_NODE, "DisplayNode"},
-    {RSUINodeType::RS_NODE,      "RsNode"},
-    {RSUINodeType::SURFACE_NODE, "SurfaceNode"},
-    {RSUINodeType::CANVAS_NODE,  "CanvasNode"},
-    {RSUINodeType::ROOT_NODE,    "RootNode"},
-    {RSUINodeType::TEXTURE_NODE, "TextureNode"},
+    {RSUINodeType::BASE_NODE,          "BaseNode"},
+    {RSUINodeType::DISPLAY_NODE,       "DisplayNode"},
+    {RSUINodeType::RS_NODE,            "RsNode"},
+    {RSUINodeType::SURFACE_NODE,       "SurfaceNode"},
+    {RSUINodeType::SURFACE_ALIAS_NODE, "SurfaceAliasNode"},
+    {RSUINodeType::CANVAS_NODE,        "CanvasNode"},
+    {RSUINodeType::ROOT_NODE,          "RootNode"},
+    {RSUINodeType::TEXTURE_NODE,       "TextureNode"},
 };
 
 // types for RenderNode

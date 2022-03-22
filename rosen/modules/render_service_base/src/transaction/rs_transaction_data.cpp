@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -62,14 +62,19 @@ void RSTransactionData::Clear()
     commands_.clear();
 }
 
-void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>& command)
+void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>& command, bool insertFront)
 {
-    commands_.emplace_back(std::move(command));
+    AddCommand(std::move(command), insertFront);
 }
 
-void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>&& command)
+void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>&& command, bool insertFront)
 {
-    commands_.emplace_back(std::move(command));
+    // insert into front of vector, should only be used for command that order is important (i.e. CreateNodeAlias)
+    if (insertFront) {
+        commands_.insert(commands_.begin(), std::move(command));
+    } else {
+        commands_.push_back(std::move(command));
+    }
 }
 
 #ifdef ROSEN_OHOS

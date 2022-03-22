@@ -27,7 +27,8 @@ class RSRenderNode;
 
 class RSRenderNodeMap final {
 public:
-    bool RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>& nodePtr);
+    void RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>& nodePtr);
+    void RegisterAliasNode(NodeId aliasId, NodeId targetId);
     void UnregisterRenderNode(NodeId id);
 
     // Get RenderNode with type T, return nullptr if not found or type mismatch
@@ -53,6 +54,7 @@ private:
 
 private:
     std::unordered_map<NodeId, std::shared_ptr<RSBaseRenderNode>> renderNodeMap_;
+    std::unordered_map<NodeId, std::weak_ptr<RSBaseRenderNode>> aliasNodeMap_;
 
     friend class RSContext;
     friend class RSMainThread;

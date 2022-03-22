@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,7 @@ enum RSSurfaceNodeCommandType : uint16_t {
     SURFACE_NODE_REMOVE_SELF,
     SURFACE_NODE_UPDATE_SURFACE_SIZE,
     SURFACE_NODE_CONNECT_TO_NODE_IN_RENDER_SERVICE,
+    SURFACE_NODE_ADD_ALIAS,
 };
 
 class SurfaceNodeCommandHelper {
@@ -45,6 +46,7 @@ public:
     static void RemoveSelf(RSContext& context, NodeId nodeId);
     static void UpdateSurfaceDefaultSize(RSContext& context, NodeId nodeId, float width, float height);
     static void ConnectToNodeInRenderService(RSContext& context, NodeId id);
+    static void AddAliasNode(RSContext& context, NodeId aliasId, NodeId targetId);
 };
 
 ADD_COMMAND(RSSurfaceNodeCreate, ARG(SURFACE_NODE, SURFACE_NODE_CREATE, SurfaceNodeCommandHelper::Create, NodeId))
@@ -63,6 +65,8 @@ ADD_COMMAND(RSSurfaceNodeUpdateSurfaceDefaultSize, ARG(SURFACE_NODE, SURFACE_NOD
 ADD_COMMAND(RSSurfaceNodeConnectToNodeInRenderService,
     ARG(SURFACE_NODE, SURFACE_NODE_CONNECT_TO_NODE_IN_RENDER_SERVICE,
     SurfaceNodeCommandHelper::ConnectToNodeInRenderService, NodeId))
+ADD_COMMAND(RSSurfaceNodeAddAlias,
+    ARG(SURFACE_NODE, SURFACE_NODE_ADD_ALIAS, SurfaceNodeCommandHelper::AddAliasNode, NodeId, NodeId))
 
 } // namespace Rosen
 } // namespace OHOS

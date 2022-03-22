@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@
 #include "ui/rs_canvas_node.h"
 #include "ui/rs_display_node.h"
 #include "ui/rs_root_node.h"
+#include "ui/rs_surface_alias_node.h"
 #include "ui/rs_surface_node.h"
 #include "ui/rs_texture_node.h"
 
@@ -178,6 +179,7 @@ template bool RSBaseNode::IsInstanceOf<RSBaseNode>();
 template bool RSBaseNode::IsInstanceOf<RSDisplayNode>();
 template bool RSBaseNode::IsInstanceOf<RSNode>();
 template bool RSBaseNode::IsInstanceOf<RSSurfaceNode>();
+template bool RSBaseNode::IsInstanceOf<RSSurfaceAliasNode>();
 template bool RSBaseNode::IsInstanceOf<RSCanvasNode>();
 template bool RSBaseNode::IsInstanceOf<RSRootNode>();
 template bool RSBaseNode::IsInstanceOf<RSTextureNode>();

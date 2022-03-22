@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,16 +16,15 @@
 #include "ui/rs_surface_node.h"
 
 #include <algorithm>
-#include <string>
 
-#include "command/rs_surface_node_command.h"
 #include "command/rs_base_node_command.h"
+#include "command/rs_surface_node_command.h"
 #include "pipeline/rs_node_map.h"
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_surface_converter.h"
+#include "render_context/render_context.h"
 #include "transaction/rs_render_service_client.h"
 #include "transaction/rs_transaction_proxy.h"
-#include "render_context/render_context.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -109,28 +107,6 @@ void RSSurfaceNode::UpdateSurfaceDefaultSize(float width, float height)
 void RSSurfaceNode::SetColorSpace(ColorGamut colorSpace)
 {
     colorSpace_ = colorSpace;
-}
-
-bool RSSurfaceNode::Marshalling(Parcel& parcel) const
-{
-    return parcel.WriteUint64(GetId()) && parcel.WriteString(name_) && parcel.WriteBool(IsRenderServiceNode());
-}
-
-RSSurfaceNode* RSSurfaceNode::Unmarshalling(Parcel& parcel)
-{
-    uint64_t id = UINT64_MAX;
-    std::string name;
-    bool isRenderServiceNode = false;
-    if (!(parcel.ReadUint64(id) && parcel.ReadString(name) && parcel.ReadBool(isRenderServiceNode))) {
-        ROSEN_LOGE("RSSurfaceNode::Unmarshalling, read param failed");
-        return nullptr;
-    }
-    RSSurfaceNodeConfig config = { name };
-
-    RSSurfaceNode* surfaceNode = new RSSurfaceNode(config, isRenderServiceNode);
-    surfaceNode->SetId(id);
-
-    return surfaceNode;
 }
 
 bool RSSurfaceNode::CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config)

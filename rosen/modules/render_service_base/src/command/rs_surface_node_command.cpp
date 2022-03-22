@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -80,6 +80,12 @@ void SurfaceNodeCommandHelper::ConnectToNodeInRenderService(RSContext& context, 
     if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
         node->ConnectToNodeInRenderService();
     }
+}
+
+void SurfaceNodeCommandHelper::AddAliasNode(RSContext& context, NodeId aliasId, NodeId targetId)
+{
+    auto& nodeMap = context.GetMutableNodeMap();
+    nodeMap.RegisterAliasNode(aliasId, targetId);
 }
 
 } // namespace Rosen

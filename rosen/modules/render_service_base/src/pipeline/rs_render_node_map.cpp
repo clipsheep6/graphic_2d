@@ -28,19 +28,34 @@ RSRenderNodeMap::RSRenderNodeMap()
     renderNodeMap_.emplace(0, new RSCanvasRenderNode(0));
 }
 
-bool RSRenderNodeMap::RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>& nodePtr)
+void RSRenderNodeMap::RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>& nodePtr)
 {
+    if (nodePtr == nullptr) {
+        ROSEN_LOGE("RSRenderNodeMap::RegisterRenderNode: nodePtr is nullptr");
+        return;
+    }
     NodeId id = nodePtr->GetId();
     if (renderNodeMap_.find(id) != renderNodeMap_.end()) {
-        return false;
+        return;
     }
     renderNodeMap_.emplace(id, nodePtr);
-    return true;
+}
+
+void RSRenderNodeMap::RegisterAliasNode(NodeId aliasId, NodeId targetId)
+{
+    auto nodePtr = GetRenderNode(targetId);
+    if (nodePtr == nullptr) {
+        ROSEN_LOGE("RSRenderNodeMap::RegisterAliasNode: target node does not exist");
+        return;
+    }
+    aliasNodeMap_.emplace(aliasId, nodePtr);
 }
 
 void RSRenderNodeMap::UnregisterRenderNode(NodeId id)
 {
-    renderNodeMap_.erase(id);
+    // std::unordered_map::erase() will return 0 if the key is not found.
+    // if no node is found in renderNodeMap_, try to erase in aliasNodeMap_
+    renderNodeMap_.erase(id) || aliasNodeMap_.erase(id);
 }
 
 void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
@@ -48,10 +63,22 @@ void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
     ROSEN_LOGI("RSRenderNodeMap::FilterNodeByPid removing all nodes belong to pid %d", pid);
     // remove all nodes belong to given pid (by matching higher 32 bits of node id)
     std::__libcpp_erase_if_container(renderNodeMap_, [pid](const auto& pair) -> bool {
-        if (static_cast<pid_t>(pair.first >> 32) != pid) {
+        auto& nodePtr = pair.second;
+        if (static_cast<pid_t>(nodePtr->GetId() >> 32) != pid) {
             return false;
         }
-        pair.second->RemoveFromTree();
+        nodePtr->RemoveFromTree();
+        return true;
+    });
+    std::__libcpp_erase_if_container(aliasNodeMap_, [pid](const auto& pair) -> bool {
+        auto nodePtr = pair.second.lock();
+        if (nodePtr == nullptr) {
+            return true;
+        }
+        if (static_cast<pid_t>(nodePtr->GetId() >> 32) != pid) {
+            return false;
+        }
+        nodePtr->RemoveFromTree();
         return true;
     });
 }
@@ -60,18 +87,18 @@ template<>
 const std::shared_ptr<RSBaseRenderNode> RSRenderNodeMap::GetRenderNode(NodeId id) const
 {
     auto itr = renderNodeMap_.find(id);
-    if (itr == renderNodeMap_.end()) {
-        return nullptr;
+    if (itr != renderNodeMap_.end()) {
+        return itr->second;
     }
-    return itr->second;
+    auto aliasItr = aliasNodeMap_.find(id);
+    if (aliasItr != aliasNodeMap_.end()) {
+        return aliasItr->second.lock();
+    }
+    return nullptr;
 }
 
 const std::shared_ptr<RSRenderNode> RSRenderNodeMap::GetAnimationFallbackNode() const
 {
-    auto itr = renderNodeMap_.find(0);
-    if (itr == renderNodeMap_.end()) {
-        return nullptr;
-    }
     return std::static_pointer_cast<RSRenderNode>(renderNodeMap_.at(0));
 }
 

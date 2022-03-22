@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,7 +34,7 @@ public:
     void SetRenderThreadClient(std::unique_ptr<RSIRenderClient>& renderThreadClient);
     void SetRenderServiceClient(const std::shared_ptr<RSIRenderClient>& renderServiceClient);
 
-    void AddCommand(std::unique_ptr<RSCommand>& command, bool isRenderServiceCommand = false);
+    void AddCommand(std::unique_ptr<RSCommand>& command, bool isRenderServiceCommand = false, bool insertFront = false);
     void AddCommandFromRT(std::unique_ptr<RSCommand>& command);
 
     void FlushImplicitTransaction();
@@ -52,8 +52,8 @@ private:
     RSTransactionProxy& operator=(const RSTransactionProxy&) = delete;
     RSTransactionProxy& operator=(const RSTransactionProxy&&) = delete;
 
-    void AddCommonCommand(std::unique_ptr<RSCommand>& command);
-    void AddRemoteCommand(std::unique_ptr<RSCommand>& command);
+    void AddCommonCommand(std::unique_ptr<RSCommand>& command, bool insertFront);
+    void AddRemoteCommand(std::unique_ptr<RSCommand>& command, bool insertFront);
 
     // Command Transaction Triggered by UI Thread.
     std::mutex mutex_;

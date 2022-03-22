@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,7 +60,7 @@ void RSTransactionProxy::SetRenderServiceClient(const std::shared_ptr<RSIRenderC
     }
 }
 
-void RSTransactionProxy::AddCommand(std::unique_ptr<RSCommand>& command, bool isRenderServiceCommand)
+void RSTransactionProxy::AddCommand(std::unique_ptr<RSCommand>& command, bool isRenderServiceCommand, bool insertFront)
 {
     if ((renderServiceClient_ == nullptr && renderThreadClient_ == nullptr) || command == nullptr) {
         return;
@@ -69,12 +69,12 @@ void RSTransactionProxy::AddCommand(std::unique_ptr<RSCommand>& command, bool is
     std::unique_lock<std::mutex> cmdLock(mutex_);
 
     if (renderThreadClient_ == nullptr || isRenderServiceCommand) {
-        AddRemoteCommand(command);
+        AddRemoteCommand(command, insertFront);
         return;
     }
 
     if (renderServiceClient_ == nullptr || !isRenderServiceCommand) {
-        AddCommonCommand(command);
+        AddCommonCommand(command, insertFront);
         return;
     }
 }
@@ -130,14 +130,14 @@ void RSTransactionProxy::FlushImplicitTransactionFromRT()
     }
 }
 
-void RSTransactionProxy::AddCommonCommand(std::unique_ptr<RSCommand> &command)
+void RSTransactionProxy::AddCommonCommand(std::unique_ptr<RSCommand> &command, bool insertFront)
 {
-    implicitCommonTransactionData_->AddCommand(command);
+    implicitCommonTransactionData_->AddCommand(command, insertFront);
 }
 
-void RSTransactionProxy::AddRemoteCommand(std::unique_ptr<RSCommand>& command)
+void RSTransactionProxy::AddRemoteCommand(std::unique_ptr<RSCommand>& command, bool insertFront)
 {
-    implicitRemoteTransactionData_->AddCommand(command);
+    implicitRemoteTransactionData_->AddCommand(command, insertFront);
 }
 
 } // namespace Rosen

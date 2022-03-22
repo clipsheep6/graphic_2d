@@ -92,7 +92,7 @@ RSRenderThread::RSRenderThread()
         SendCommands();
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
-            transactionProxy->FlushImplicitTransactionFromRT();
+            transactionProxy->FlushImplicitTransactionFromRT(UITimestamp_);
         }
         ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
         clock_t endTime = clock();
@@ -157,11 +157,14 @@ void RSRenderThread::WakeUp()
     }
 }
 
-void RSRenderThread::RecvTransactionData(std::unique_ptr<RSTransactionData>& transactionData)
+void RSRenderThread::RecvTransactionData(
+    std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp)
 {
     {
         std::unique_lock<std::mutex> cmdLock(cmdMutex_);
-        cmds_.emplace_back(std::move(transactionData));
+        UITimestamp_ = transactionDataWithTimeStamp.first;
+        cmds_.emplace_back(std::move(transactionDataWithTimeStamp.second));
+        transactionDataWithTimeStamp.second = nullptr;
     }
     // [PLANNING]: process in next vsync (temporarily)
     RSRenderThread::Instance().RequestNextVSync();

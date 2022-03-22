@@ -64,7 +64,8 @@ public:
 
     void Init();
     void Start();
-    void RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
+    void RecvRSTransactionData(
+        std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp);
     void RequestNextVSync();
     void PostTask(RSTaskMessage::RSTask task);
 

@@ -43,7 +43,8 @@ public:
     void WakeUp();
 
     void Detach(NodeId id);
-    void RecvTransactionData(std::unique_ptr<RSTransactionData>& transactionData);
+    void RecvTransactionData(
+        std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp);
     void RequestNextVSync();
     void PostTask(RSTaskMessage::RSTask task);
     void UpdateWindowStatus(bool active);
@@ -68,6 +69,7 @@ public:
 
     void OnTransaction(std::shared_ptr<RSTransactionData> transactionData) override;
 
+    uint64_t UITimestamp_ = 0;
 private:
     RSRenderThread();
     ~RSRenderThread();

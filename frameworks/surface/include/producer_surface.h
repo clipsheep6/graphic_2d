@@ -76,6 +76,9 @@ public:
 
     GSError CleanCache() override;
 
+    GSError SetTransform(const TransformType transform) override;
+    TransformType GetTransform() const override;
+
 private:
     bool IsRemote();
 

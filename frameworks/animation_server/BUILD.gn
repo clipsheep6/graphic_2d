@@ -110,6 +110,7 @@ ohos_executable("animation_server") {
   deps = [
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//foundation/graphic/standard:libgl",
     "//foundation/graphic/standard:libvsync_client",
     "//foundation/graphic/standard:libwmclient",
     "//foundation/graphic/standard:libwmservice",

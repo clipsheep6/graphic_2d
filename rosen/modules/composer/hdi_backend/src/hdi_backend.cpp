@@ -55,6 +55,7 @@ RosenError HdiBackend::RegPrepareComplete(OnPrepareCompleteFunc func, void* data
 
 void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
 {
+    static char loop = 0;
     ScopedBytrace bytrace(__func__);
     HLOGD("%{public}s: start", __func__);
 
@@ -68,7 +69,9 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
     }
 
     int32_t ret = DISPLAY_SUCCESS;
+    loop = 0;
     for (auto &output : outputs) {
+        loop++;
         const std::unordered_map<uint32_t, LayerPtr> &layersMap = output->GetLayers();
         if (layersMap.empty()) {
             continue;
@@ -111,9 +114,7 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
                 HLOGE("compositionType === OTHER");
             }
 
-            HLOGE("compositionType === %d", layer->GetLayerInfo()->GetCompositionType());
             if (layer->GetLayerInfo()->GetCompositionType() == CompositionType::COMPOSITION_CLIENT) {
-                HLOGE("compositionType === COMPOSITION_CLIENT");
                 compClientLayers.emplace_back(layer);
             }
         }
@@ -123,7 +124,7 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
             HLOGD("Need flush framebuffer, client composition layer num is %{public}zu", compClientLayers.size());
         }
 
-        OnPrepareComplete(needFlush, output, newLayerInfos);
+        // OnPrepareComplete(needFlush, output, newLayerInfos);
 
         if (needFlush) {
             if (FlushScreen(screenId, output, compClientLayers) != DISPLAY_SUCCESS) {
@@ -158,6 +159,7 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
         lastPresentFence_ = fbFence;
         HLOGD("%{public}s: end", __func__);
     }
+    HLOGE("ZXC===loop:%{public}d", loop);
 }
 
 int32_t HdiBackend::UpdateLayerCompType(uint32_t screenId, const std::unordered_map<uint32_t, LayerPtr> &layersMap)
@@ -225,6 +227,7 @@ int32_t HdiBackend::FlushScreen(uint32_t screenId, OutputPtr &output,
 
     sptr<SyncFence> fbAcquireFence = output->GetFramebufferFence();
     for (auto &layer : compClientLayers) {
+        HLOGE("ZXC===FlushScreen merge with FrameBufferFence", ret);
         layer->MergeWithFramebufferFence(fbAcquireFence);
     }
 
@@ -244,7 +247,7 @@ int32_t HdiBackend::SetScreenClientInfo(uint32_t screenId, const sptr<SyncFence>
     ret = device_->SetScreenClientDamage(screenId, output->GetOutputDamageNum(),
                                          output->GetOutputDamage());
     if (ret != DISPLAY_SUCCESS) {
-        HLOGE("SetScreenClientDamage failed, ret is %{public}d", ret);
+        HLOGE("ZXC===SetScreenClientDamage failed, ret is %{public}d", ret);
         return ret;
     }
 

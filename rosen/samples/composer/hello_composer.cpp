@@ -317,14 +317,21 @@ void HelloComposer::DoPrepareCompleted(sptr<Surface> &surface, const struct Prep
 
     int32_t releaseFence = -1;
     sptr<SurfaceBuffer> fbBuffer = nullptr;
+
+    LOGE("ZXC=== RequestBuffer start");
+
     SurfaceError ret = surface->RequestBuffer(fbBuffer, releaseFence, requestConfig);
     if (ret != 0) {
         LOGE("RequestBuffer failed: %{public}s", SurfaceErrorStr(ret).c_str());
         return;
     }
 
+    LOGE("ZXC=== RequestBuffer end & wait sync fence start");
+
     sptr<SyncFence> tempFence = new SyncFence(releaseFence);
     tempFence->Wait(100); // 100 ms
+
+    LOGE("ZXC=== RequestBuffer end & wait fence end");
 
     uint32_t clientCount = 0;
     bool hasClient = false;
@@ -357,10 +364,12 @@ void HelloComposer::DoPrepareCompleted(sptr<Surface> &surface, const struct Prep
     /*
      * if use GPU produce data, flush with gpu fence
      */
+    LOGE("ZXC=== Flush Buffer start");
     ret = surface->FlushBuffer(fbBuffer, -1, flushConfig);
     if (ret != 0) {
         LOGE("FlushBuffer failed: %{public}s", SurfaceErrorStr(ret).c_str());
     }
+    LOGE("ZXC=== Flush Buffer end");
 }
 
 void HelloComposer::DrawFrameBufferData(void *image, uint32_t width, uint32_t height)

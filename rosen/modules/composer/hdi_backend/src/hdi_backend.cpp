@@ -124,7 +124,11 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
             HLOGD("Need flush framebuffer, client composition layer num is %{public}zu", compClientLayers.size());
         }
 
-        // OnPrepareComplete(needFlush, output, newLayerInfos);
+        HLOGE("ZXC===OnPrepareComplete before");
+
+        OnPrepareComplete(needFlush, output, newLayerInfos);
+
+        HLOGE("ZXC===OnPrepareComplete end");
 
         if (needFlush) {
             if (FlushScreen(screenId, output, compClientLayers) != DISPLAY_SUCCESS) {
@@ -139,10 +143,14 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
             // return
         }
 
+        HLOGE("ZXC===release buffer before");
+
         ReleaseLayerBuffer(screenId, layersMap);
 
         // wrong check
         output->ReleaseFramebuffer(fbFence);
+
+        HLOGE("ZXC===release buffer end");
 
         int64_t timestamp = lastPresentFence_->SyncFileReadTimestamp();
         bool ret = false;

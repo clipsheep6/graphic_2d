@@ -49,7 +49,8 @@ public:
     }
 
     template<typename T>
-    bool IsInstanceOf();
+    bool IsInstanceOf() const;
+    bool IsInstanceOf(RSUINodeType type) const;
 
     // type-safe reinterpret_cast
     template<typename T>

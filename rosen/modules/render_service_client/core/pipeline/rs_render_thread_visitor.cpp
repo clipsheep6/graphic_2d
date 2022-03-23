@@ -186,14 +186,17 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         ROSEN_LOGE("RSRenderThreadVisitor::ProcessSurfaceRenderNode, canvas is nullptr");
         return;
     }
+    bool isVisible = node.GetRenderProperties().GetVisible();
     // RSSurfaceRenderNode in RSRenderThreadVisitor do not have information of property.
     // We only get parent's matrix and send it to RenderService
 #ifdef ROSEN_OHOS
-    node.SetMatrix(canvas_->getTotalMatrix());
-    node.SetAlpha(canvas_->GetAlpha());
-    node.SetParentId(node.GetParent().lock()->GetId());
-    auto clipRect = canvas_->getDeviceClipBounds();
-    node.SetClipRegion({clipRect.left(), clipRect.top(), clipRect.width(), clipRect.height()});
+    if (isVisible) {
+        node.SetMatrix(canvas_->getTotalMatrix());
+        node.SetAlpha(canvas_->GetAlpha());
+        node.SetParentId(node.GetParent().lock()->GetId());
+        auto clipRect = canvas_->getDeviceClipBounds();
+        node.SetClipRegion({clipRect.left(), clipRect.top(), clipRect.width(), clipRect.height()});
+    }
 
     auto x = node.GetRenderProperties().GetBoundsPositionX();
     auto y = node.GetRenderProperties().GetBoundsPositionY();
@@ -201,7 +204,7 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     auto height = node.GetRenderProperties().GetBoundsHeight();
     canvas_->save();
     canvas_->clipRect(SkRect::MakeXYWH(x, y, width, height));
-    if (node.IsBufferAvailable() == true) {
+    if (node.IsBufferAvailable() == true && isVisible) {
         ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode CILP (set transparent) [%f, %f, %f, %f]",
             x, y, width, height);
         canvas_->clear(SK_ColorTRANSPARENT);

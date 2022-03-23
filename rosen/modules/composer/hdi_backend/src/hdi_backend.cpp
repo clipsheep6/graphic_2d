@@ -97,6 +97,20 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
         for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {
             const LayerPtr &layer = iter->second;
             newLayerInfos.emplace_back(layer->GetLayerInfo());
+            if (layer->GetLayerInfo()->GetCompositionType() == CompositionType::COMPOSITION_DEVICE) {
+                HLOGE("compositionType === COMPOSITION_DEVICE");
+            } else if (layer->GetLayerInfo()->GetCompositionType() == CompositionType::COMPOSITION_CLIENT) {
+                HLOGE("compositionType === COMPOSITION_CLIENT");
+            } else if (layer->GetLayerInfo()->GetCompositionType() == CompositionType::COMPOSITION_CURSOR) {
+                HLOGE("compositionType === COMPOSITION_CURSOR");
+            } else if (layer->GetLayerInfo()->GetCompositionType() == CompositionType::COMPOSITION_VIDEO) {
+                HLOGE("compositionType === VIDEO");
+            } else if (layer->GetLayerInfo()->GetCompositionType() == CompositionType::COMPOSITION_BUTT) {
+                HLOGE("compositionType === BUTT");
+            } else {
+                HLOGE("compositionType === OTHER");
+            }
+
             HLOGE("compositionType === %d", layer->GetLayerInfo()->GetCompositionType());
             if (layer->GetLayerInfo()->GetCompositionType() == CompositionType::COMPOSITION_CLIENT) {
                 HLOGE("compositionType === COMPOSITION_CLIENT");

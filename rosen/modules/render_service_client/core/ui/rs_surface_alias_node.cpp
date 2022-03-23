@@ -22,7 +22,6 @@
 
 namespace OHOS {
 namespace Rosen {
-
 RSSurfaceAliasNode::SharedPtr RSSurfaceAliasNode::Create()
 {
     SharedPtr node(new RSSurfaceAliasNode());
@@ -43,7 +42,6 @@ RSSurfaceAliasNode::SharedPtr RSSurfaceAliasNode::Create(NodeId targetNodeId, st
     ROSEN_LOGD("RsDebug RSSurfaceAliasNode::Create id:%llu, target id:%llu", node->GetId(), targetNodeId);
     return node;
 }
-
 
 RSSurfaceAliasNode::RSSurfaceAliasNode() : RSSurfaceNode() {}
 
@@ -66,6 +64,5 @@ void RSSurfaceAliasNode::SetTargetNodeName(const std::string& name)
 {
     name_ = name;
 }
-
 } // namespace Rosen
 } // namespace OHOS

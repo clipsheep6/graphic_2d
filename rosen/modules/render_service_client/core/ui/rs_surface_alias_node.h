@@ -21,7 +21,6 @@ class SkCanvas;
 
 namespace OHOS {
 namespace Rosen {
-
 class RS_EXPORT RSSurfaceAliasNode : public RSSurfaceNode {
 public:
     using WeakPtr = std::weak_ptr<RSSurfaceAliasNode>;
@@ -52,7 +51,7 @@ protected:
     RSSurfaceAliasNode& operator=(const RSSurfaceAliasNode&&) = delete;
 
 private:
-    NodeId targetNodeId_{0};
+    NodeId targetNodeId_ {0};
 
     friend class RSUIDirector;
     friend class RSAnimation;

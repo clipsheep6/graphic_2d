@@ -61,26 +61,24 @@ void RSRenderNodeMap::UnregisterRenderNode(NodeId id)
 void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
 {
     ROSEN_LOGI("RSRenderNodeMap::FilterNodeByPid removing all nodes belong to pid %d", pid);
-    // remove all nodes belong to given pid (by matching higher 32 bits of node id)
-    std::__libcpp_erase_if_container(renderNodeMap_, [pid](const auto& pair) -> bool {
-        auto& nodePtr = pair.second;
-        if (static_cast<pid_t>(nodePtr->GetId() >> 32) != pid) {
-            return false;
-        }
-        nodePtr->RemoveFromTree();
-        return true;
-    });
-    std::__libcpp_erase_if_container(aliasNodeMap_, [pid](const auto& pair) -> bool {
-        auto nodePtr = pair.second.lock();
+
+    auto filter = [pid](const RSBaseRenderNode::SharedPtr& nodePtr) -> bool {
         if (nodePtr == nullptr) {
             return true;
         }
+        // filter by matching higher 32 bits of node id
         if (static_cast<pid_t>(nodePtr->GetId() >> 32) != pid) {
             return false;
         }
         nodePtr->RemoveFromTree();
         return true;
-    });
+    };
+
+    // remove all nodes belong to given pid
+    std::__libcpp_erase_if_container(
+        renderNodeMap_, [&filter](const auto& pair) -> bool { return filter(pair.second); });
+    std::__libcpp_erase_if_container(
+        aliasNodeMap_, [&filter](const auto& pair) -> bool { return filter(pair.second.lock()); });
 }
 
 template<>

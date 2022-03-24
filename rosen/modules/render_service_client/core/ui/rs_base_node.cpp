@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -166,21 +166,28 @@ std::string RSBaseNode::DumpNode(int depth) const
     return ss.str();
 }
 
-template<typename T>
-bool RSBaseNode::IsInstanceOf()
+bool RSBaseNode::IsInstanceOf(RSUINodeType type) const
 {
-    constexpr uint32_t targetType = static_cast<uint32_t>(T::Type);
-    return (static_cast<uint32_t>(GetType()) & targetType) == targetType;
+    uint32_t targetType = static_cast<uint32_t>(type);
+    uint32_t instanceType = static_cast<uint32_t>(GetType());
+    // use bitmask to check whether the instance is a subclass of the target type
+    return (instanceType & targetType) == targetType;
+}
+
+template<typename T>
+bool RSBaseNode::IsInstanceOf() const
+{
+    return IsInstanceOf(T::Type);
 }
 
 // explicit instantiation with all rendernode types
-template bool RSBaseNode::IsInstanceOf<RSBaseNode>();
-template bool RSBaseNode::IsInstanceOf<RSDisplayNode>();
-template bool RSBaseNode::IsInstanceOf<RSNode>();
-template bool RSBaseNode::IsInstanceOf<RSSurfaceNode>();
-template bool RSBaseNode::IsInstanceOf<RSCanvasNode>();
-template bool RSBaseNode::IsInstanceOf<RSRootNode>();
-template bool RSBaseNode::IsInstanceOf<RSTextureNode>();
+template bool RSBaseNode::IsInstanceOf<RSBaseNode>() const;
+template bool RSBaseNode::IsInstanceOf<RSDisplayNode>() const;
+template bool RSBaseNode::IsInstanceOf<RSNode>() const;
+template bool RSBaseNode::IsInstanceOf<RSSurfaceNode>() const;
+template bool RSBaseNode::IsInstanceOf<RSCanvasNode>() const;
+template bool RSBaseNode::IsInstanceOf<RSRootNode>() const;
+template bool RSBaseNode::IsInstanceOf<RSTextureNode>() const;
 
 } // namespace Rosen
 } // namespace OHOS

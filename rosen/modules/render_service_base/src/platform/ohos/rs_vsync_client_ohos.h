@@ -39,7 +39,6 @@ private:
 
     void VsyncCallback(int64_t nanoTimestamp);
 
-    std::atomic_bool requestFlag_ = false;
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     RSVsyncClient::VsyncCallback vsyncCallback_ = nullptr;

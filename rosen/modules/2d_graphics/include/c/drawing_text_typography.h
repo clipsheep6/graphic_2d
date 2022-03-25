@@ -43,6 +43,7 @@
 #include "drawing_types.h"
 
 #include "stdint.h"
+#include "cstddef"
 
 #ifdef __cplusplus
 extern "C" {
@@ -433,6 +434,42 @@ void OH_Drawing_TypographyLayout(OH_Drawing_Typography*, double /* maxWidth */);
 void OH_Drawing_TypographyPaint(OH_Drawing_Typography*, OH_Drawing_Canvas*,
     double /* potisionX */, double /* potisionY */);
 
+
+// temp addition
+double OH_Drawing_TypographyGetMaxWidth(OH_Drawing_Typography*);
+
+double OH_Drawing_TypographyGetHeight(OH_Drawing_Typography*);
+
+double OH_Drawing_TypographyGetLongestLine(OH_Drawing_Typography*);
+
+double OH_Drawing_TypographyGetMinIntrinsicWidth(OH_Drawing_Typography*);
+
+double OH_Drawing_TypographyGetMaxIntrinsicWidth(OH_Drawing_Typography*);
+
+double OH_Drawing_TypographyGetAlphabeticBaseline(OH_Drawing_Typography*);
+
+double OH_Drawing_TypographyGetIdeographicBaseline(OH_Drawing_Typography*);
+
+bool OH_Drawing_TypographyDidExceedMaxLines(OH_Drawing_Typography*);
+
+enum OH_Drawing_Affinity {
+    AFFINITY_UP_STREAM,
+    AFFINITY_DOWN_STREAM,
+};
+
+typedef struct OH_Drawing_PositionAndAffinity {
+    const size_t pos_;
+    const OH_Drawing_Affinity affinity_;
+    // OH_Drawing_PositionAndAffinity(size_t pos, OH_Drawing_Affinity affinity) : pos_(pos), affinity_(affinity) {}
+} OH_Drawing_PositionAndAffinity;
+
+OH_Drawing_PositionAndAffinity OH_Drawing_GetGlyphPositionAtCoordinate(OH_Drawing_Typography*,
+    double /* x */, double /* y */);
+
+OH_Drawing_PositionAndAffinity OH_Drawing_GetGlyphPositionAtCoordinateWithCluster(OH_Drawing_Typography*,
+    double /* x */, double /* y */);
+
+size_t OH_Drawing_GetWordWidth(OH_Drawing_Typography*, size_t offset = 0);
 #ifdef __cplusplus
 }
 #endif

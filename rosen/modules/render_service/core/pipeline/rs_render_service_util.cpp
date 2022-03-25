@@ -18,6 +18,7 @@
 
 #include "include/core/SkRect.h"
 #include "platform/common/rs_log.h"
+#include "property/rs_properties_def.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_blur_filter.h"
 #include "rs_trace.h"
@@ -550,6 +551,10 @@ bool RsRenderServiceUtil::IsNeedClient(RSSurfaceRenderNode* node)
     if (node == nullptr) {
         ROSEN_LOGE("RsRenderServiceUtil::IsNeedClient node is empty");
         return false;
+    }
+    if (node->GetRenderProperties().GetFrameGravity() != Gravity::RESIZE) {
+        ROSEN_LOGI("RsDebug RsRenderServiceUtil::IsNeedClient enable composition client need set gravity");
+        return true;
     }
     auto filter = std::static_pointer_cast<RSBlurFilter>(node->GetRenderProperties().GetBackgroundFilter());
     if (filter != nullptr && filter->GetBlurRadiusX() > 0 && filter->GetBlurRadiusY() > 0) {

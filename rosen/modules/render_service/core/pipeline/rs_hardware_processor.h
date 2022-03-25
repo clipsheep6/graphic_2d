@@ -46,6 +46,7 @@ public:
 private:
     void Redraw(sptr<Surface>& surface, const struct PrepareCompleteParam& param, void* data);
     void OnRotate();
+    SkMatrix ExtractGravityMatrix(RSSurfaceRenderNode& node, IRect dstRect);
     void CalculateInfoWithAnimation(const std::unique_ptr<RSTransitionProperties>& transitionProperties,
         ComposeInfo& info, RSSurfaceRenderNode& node);
     void CalculateInfoWithVideo(ComposeInfo& info, RSSurfaceRenderNode& node);

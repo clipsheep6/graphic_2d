@@ -22,6 +22,8 @@
 #include "common/rs_vector3.h"
 #include "common/rs_vector4.h"
 #include "display_type.h"
+#include "include/core/SkMatrix.h"
+#include "property/rs_properties_painter.h"
 #include "rs_trace.h"
 #include "common/rs_vector4.h"
 #include "pipeline/rs_main_thread.h"
@@ -185,7 +187,7 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
     CalculateInfoWithAnimation(transitionProperties, info, node);
     node.SetDstRect({info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h});
     std::shared_ptr<HdiLayerInfo> layer = HdiLayerInfo::CreateHdiLayerInfo();
-    ROSEN_LOGE("RsDebug RSHardwareProcessor::ProcessSurface surfaceNode id:%llu name:[%s] dst [%d %d %d %d]"\
+    ROSEN_LOGI("RsDebug RSHardwareProcessor::ProcessSurface surfaceNode id:%llu name:[%s] dst [%d %d %d %d]"\
         "SrcRect [%d %d] rawbuffer [%d %d] surfaceBuffer [%d %d] buffaddr:%p, z:%f, globalZOrder:%d, blendType = %d",
         node.GetId(), node.GetName().c_str(),
         info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h, info.srcRect.w, info.srcRect.h,
@@ -352,10 +354,14 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
         params.targetColorGamut = static_cast<ColorGamut>(currScreenInfo_.colorGamut);
         const auto& clipRect = layerInfo->GetLayerSize();
         params.clipRect = SkRect::MakeXYWH(clipRect.x, clipRect.y, clipRect.w, clipRect.h);
+        params.dstRect = params.srcRect;
         RsRenderServiceUtil::DrawBuffer(*canvas, params, [this, &node, &canvasTransform, &layerInfo](SkCanvas& canvas,
             BufferDrawParam& params) -> void {
             RsRenderServiceUtil::DealAnimation(canvas, node, params);
-            canvas.setMatrix(GetLayerTransform(canvasTransform, layerInfo));
+            SkMatrix transformMatrix = GetLayerTransform(canvasTransform, layerInfo);
+            SkMatrix gravityMatrix = ExtractGravityMatrix(node, layerInfo->GetLayerSize());
+            auto matrix = transformMatrix.preConcat(gravityMatrix);
+            canvas.setMatrix(matrix);
         });
     }
     BufferFlushConfig flushConfig = {
@@ -367,6 +373,23 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
         },
     };
     FlushBuffer(surface, flushConfig);
+}
+
+SkMatrix RSHardwareProcessor::ExtractGravityMatrix(RSSurfaceRenderNode& node, IRect dstRect)
+{
+    SkMatrix gravityMatrix = SkMatrix::I();
+    const RSProperties& property = node.GetRenderProperties();
+    RectF targetRect = {dstRect.x, dstRect.y, dstRect.w, dstRect.h};
+    auto buffer = node.GetBuffer();
+    if (!buffer) {
+        return gravityMatrix;
+    }
+    bool flag = RSPropertiesPainter::GetGravityMatrix(property.GetFrameGravity(), targetRect, buffer->GetSurfaceBufferWidth(),
+        buffer->GetSurfaceBufferHeight(), gravityMatrix);
+    if (!flag) {
+        ROSEN_LOGI("RSHardwareProcessor::ExtractGravityMatrix did not obtain gravity matrix");
+    }
+    return gravityMatrix;
 }
 
 void RSHardwareProcessor::OnRotate()

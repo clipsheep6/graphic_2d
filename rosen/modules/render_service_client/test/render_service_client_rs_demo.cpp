@@ -25,6 +25,7 @@
 #include "include/core/SkImageInfo.h"
 #include "pipeline/rs_render_result.h"
 #include "pipeline/rs_render_thread.h"
+#include "property/rs_properties_def.h"
 #include "ui/rs_canvas_node.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_ui_director.h"
@@ -373,38 +374,81 @@ public:
         if (transactionProxy != nullptr) {
             transactionProxy->FlushImplicitTransaction();
         }
-        float alpha = 0;
-        for (int index = 0; index <= 10; index += 2) { // 10 is boundary, 2 is step
-            printf("printf alpha=%f \n", alpha);
-            surfaceNode2->SetAlpha(alpha);
-            if (transactionProxy != nullptr) {
-                transactionProxy->FlushImplicitTransaction();
-            }
-            usleep(300000);
-            alpha += 0.2f;
-        }
-        float scale = 0;
-        for (int index = 0; index < 20; index += 2) { // 20 is boundary, 2 is step
-            printf("scale=%f\n", scale);
-            surfaceNode2->SetScaleX(scale);
-            if (transactionProxy != nullptr) {
-                transactionProxy->FlushImplicitTransaction();
-            }
-            usleep(300000);
-            scale += 0.2f;
-        }
-        surfaceNode2->SetScaleX(1.f);
-        std::cout << "Compatible rotation test start\n";
-        float rotate = 0;
-        for (int index = 0; index <= 360; index += 15) { // 360 is boundary, 15 is step
-            rotate = static_cast<float>(index);
-            printf("roate=%f\n", rotate);
-            surfaceNode2->SetRotation(rotate);
-            if (transactionProxy != nullptr) {
-                transactionProxy->FlushImplicitTransaction();
-            }
-            usleep(300000);
-        }
+        surfaceNode2->SetFrameGravity(Gravity::CENTER);
+        transactionProxy->FlushImplicitTransaction();
+        usleep(300000);
+
+        surfaceNode2->SetFrameGravity(Gravity::TOP);
+        transactionProxy->FlushImplicitTransaction();
+        usleep(300000);
+
+        surfaceNode2->SetFrameGravity(Gravity::BOTTOM);
+        transactionProxy->FlushImplicitTransaction();
+        usleep(300000);
+
+        surfaceNode2->SetFrameGravity(Gravity::LEFT);
+        transactionProxy->FlushImplicitTransaction();
+        usleep(300000);
+
+        surfaceNode2->SetFrameGravity(Gravity::RIGHT);
+        transactionProxy->FlushImplicitTransaction();
+        usleep(300000);
+
+        surfaceNode2->SetFrameGravity(Gravity::TOP_LEFT);
+        transactionProxy->FlushImplicitTransaction();
+        usleep(300000);
+
+        surfaceNode2->SetFrameGravity(Gravity::TOP_RIGHT);
+        transactionProxy->FlushImplicitTransaction();
+        usleep(300000);
+
+        surfaceNode2->SetFrameGravity(Gravity::BOTTOM_LEFT);
+        transactionProxy->FlushImplicitTransaction();
+        usleep(300000);
+
+        surfaceNode2->SetFrameGravity(Gravity::BOTTOM_RIGHT);
+        transactionProxy->FlushImplicitTransaction();
+        usleep(300000);
+
+        surfaceNode2->SetFrameGravity(Gravity::RESIZE_ASPECT);
+        transactionProxy->FlushImplicitTransaction();
+        usleep(300000);
+
+        surfaceNode2->SetFrameGravity(Gravity::RESIZE_ASPECT_FILL);
+        transactionProxy->FlushImplicitTransaction();
+        usleep(300000);
+        // float alpha = 0;
+        // for (int index = 0; index <= 10; index += 2) { // 10 is boundary, 2 is step
+        //     printf("printf alpha=%f \n", alpha);
+        //     surfaceNode2->SetAlpha(alpha);
+        //     if (transactionProxy != nullptr) {
+        //         transactionProxy->FlushImplicitTransaction();
+        //     }
+        //     usleep(300000);
+        //     alpha += 0.2f;
+        // }
+        // float scale = 0;
+        // for (int index = 0; index < 20; index += 2) { // 20 is boundary, 2 is step
+        //     printf("scale=%f\n", scale);
+        //     surfaceNode2->SetScaleX(scale);
+        //     if (transactionProxy != nullptr) {
+        //         transactionProxy->FlushImplicitTransaction();
+        //     }
+        //     usleep(300000);
+        //     scale += 0.2f;
+        // }
+        // surfaceNode2->SetScaleX(1.f);
+        // std::cout << "Compatible rotation test start\n";
+        // float rotate = 0;
+        // for (int index = 0; index <= 360; index += 15) { // 360 is boundary, 15 is step
+        //     rotate = static_cast<float>(index);
+        //     printf("roate=%f\n", rotate);
+        //     surfaceNode2->SetRotation(rotate);
+        //     if (transactionProxy != nullptr) {
+        //         transactionProxy->FlushImplicitTransaction();
+        //     }
+        //     usleep(300000);
+        // }
         displayNode->RemoveFromTree();
         if (transactionProxy != nullptr) {
             transactionProxy->FlushImplicitTransaction();

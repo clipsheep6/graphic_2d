@@ -19,6 +19,7 @@
 #include "display_type.h"
 #include "include/core/SkRect.h"
 #include "platform/common/rs_log.h"
+#include "property/rs_properties_def.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_blur_filter.h"
 #include "rs_trace.h"
@@ -552,6 +553,10 @@ bool RsRenderServiceUtil::IsNeedClient(RSSurfaceRenderNode* node)
         RS_LOGE("RsRenderServiceUtil::IsNeedClient node is empty");
         return false;
     }
+    if (node->GetRenderProperties().GetFrameGravity() != Gravity::RESIZE) {
+        ROSEN_LOGI("RsDebug RsRenderServiceUtil::IsNeedClient enable composition client need set gravity");
+        return true;
+    }
     auto filter = std::static_pointer_cast<RSBlurFilter>(node->GetRenderProperties().GetBackgroundFilter());
     if (filter != nullptr && filter->GetBlurRadiusX() > 0 && filter->GetBlurRadiusY() > 0) {
         RS_LOGI("RsDebug RsRenderServiceUtil::IsNeedClient enable composition client need filter");
@@ -592,7 +597,7 @@ void RsRenderServiceUtil::ExtractAnimationInfo(const std::unique_ptr<RSTransitio
             GetAnimationManager().GetTransitionProperties();
         auto& parentProperties = std::static_pointer_cast<RSSurfaceRenderNode>(existedParent)->GetRenderProperties();
         if (!parentTransitionProperties) {
-            RS_LOGI("RsDebug RSHardwareProcessor::CalculateInfoWithAnimation this node[%s] parent have no effect",
+            RS_LOGI("RsDebug RsRenderServiceUtil::CalculateInfoWithAnimation this node[%s] parent have no effect",
                 node.GetName().c_str());
             return;
         }
@@ -603,8 +608,6 @@ void RsRenderServiceUtil::ExtractAnimationInfo(const std::unique_ptr<RSTransitio
         info.pivot = parentProperties.GetBoundsPosition() + parentProperties.GetBoundsSize() * 0.5f;
     } else {
         if (!transitionProperties) {
-            RS_LOGI("RsDebug RSHardwareProcessor::CalculateInfoWithAnimation this node have no effect",
-                node.GetName().c_str());
             return;
         }
         info.scale = transitionProperties->GetScale();

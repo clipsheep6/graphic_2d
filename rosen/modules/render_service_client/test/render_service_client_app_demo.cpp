@@ -55,7 +55,7 @@ int main()
     option->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     option->SetWindowRect({0, 0, 2560, 112});
     auto window = Window::Create("app_demo", option);
-    
+
     window->Show();
     auto rect = window->GetRect();
     std::cout << "rs app demo create window " << rect.width_ << " " << rect.height_ << std::endl;
@@ -89,34 +89,11 @@ int main()
     rootNode->SetBackgroundColor(SK_ColorYELLOW);
     rsUiDirector->SendMessages();
     sleep(1);
-    
+
     std::cout << "rs app demo stage 3 " << std::endl;
     rootNode->SetBackgroundColor(SK_ColorBLUE);
     rsUiDirector->SendMessages();
     sleep(1);
-
-    // std::cout << "rs app demo stage 4 " << std::endl;
-    // resizeH = 112;
-    // window->Resize(2560, resizeH);
-    // rootNode->SetBounds(0, 0, 2560, resizeH);
-    // rootNode->SetBackgroundColor(SK_ColorYELLOW);
-    // rsUiDirector->SendMessages();
-    // sleep(4);
-
-    // std::cout << "rs app demo stage 5 " << std::endl;
-    // rootNode->SetBackgroundColor(SK_ColorBLUE);
-    // rsUiDirector->SendMessages();
-    // sleep(1);
-
-    // std::cout << "rs app demo stage 5 " << std::endl;
-    // rootNode->SetBackgroundColor(SK_ColorYELLOW);
-    // rsUiDirector->SendMessages();
-    // sleep(1);
-    
-    // std::cout << "rs app demo stage 5 " << std::endl;
-    // rootNode->SetBackgroundColor(SK_ColorBLUE);
-    // rsUiDirector->SendMessages();
-    // sleep(1);
 
     std::cout << "rs app demo start dump test --> " << std::endl;
     rootNode->SetRotation(20.f);

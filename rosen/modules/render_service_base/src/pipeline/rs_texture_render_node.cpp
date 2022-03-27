@@ -26,7 +26,6 @@
 #include "pipeline/rs_render_thread.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
-//#include "rs_trace.h"
 
 namespace {
 std::shared_ptr<flutter::OHOS::TextureRegistry> g_textureRegistry;
@@ -41,7 +40,6 @@ RSTextureRenderNode::~RSTextureRenderNode() {}
 void RSTextureRenderNode::SetTextureRegistry(std::shared_ptr<flutter::OHOS::TextureRegistry> registry)
 {
     g_textureRegistry = registry;
-    // RSRenderThread::Instance().RequestNextVSync();
 }
 
 void RSTextureRenderNode::UpdateTexture(int64_t textureId, bool freeze, RectF drawRect)

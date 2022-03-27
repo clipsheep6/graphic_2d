@@ -46,9 +46,7 @@ public:
     }
     ~TestSurfaceCapture() override {}
     void OnSurfaceCapture(std::shared_ptr<Media::PixelMap> pixelmap) override
-    {
-        //testSuccess = pipeTestUtils::DrawPixelmap(showNode_, pixelmap);
-    }
+    {}
     bool IsTestSuccess()
     {
         return testSuccess;

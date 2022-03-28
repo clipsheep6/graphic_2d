@@ -39,6 +39,7 @@
 #include <window_scene.h>
 #include "player.h"
 #include "vsync_receiver.h"
+#include "util.h"
 
 namespace OHOS {
 class BootAnimation {
@@ -70,6 +71,7 @@ private:
     bool needCheckExit = false;
     std::shared_ptr<OHOS::Rosen::VSyncReceiver> receiver_ = nullptr;
     std::shared_ptr<Media::Player> soundPlayer_ = nullptr;
+    std::vector<ImageStruct> bgImageVector_;
 };
 } // namespace OHOS
 

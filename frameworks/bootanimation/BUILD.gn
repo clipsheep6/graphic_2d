@@ -22,6 +22,7 @@ config("bootanimation_config") {
     "include",
     "//foundation/graphic/standard/utils/log",
     "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
+    "//third_party/cJSON"
   ]
 
   cflags = [
@@ -41,6 +42,7 @@ ohos_executable("bootanimation") {
     "src/boot_animation.cpp",
     "src/main.cpp",
     "src/util.cpp",
+    "//third_party/cJSON/cJSON.c"
   ]
 
   configs = [

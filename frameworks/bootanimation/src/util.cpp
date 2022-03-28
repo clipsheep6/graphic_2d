@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "cJSON.h"
 #include "util.h"
 
 #include <ctime>
@@ -20,10 +21,15 @@
 #include <string>
 
 #include <vsync_helper.h>
+#include <securec.h>
+#include <sstream>
+#include <include/codec/SkCodec.h>
+#include <string.h>
 
 namespace OHOS {
 static const int MAX_FILE_NAME = 512;
 static const int READ_SIZE = 8192;
+static const std::string BOOT_PIC_CONFIGFILE = "config.json";
 int64_t GetNowTime()
 {
     struct timeval start = {};
@@ -40,7 +46,26 @@ void PostTask(std::function<void()> func, uint32_t delayTime)
     }
 }
 
-bool UnzipFile(const std::string& srcFilePath, const std::string& dstFilePath)
+int GetFreqFromConfig(const char* filestream, int length)
+{
+    int result = 0;
+    std::string JParamsString;
+    JParamsString.assign(filestream, length);
+    cJSON* overallData = cJSON_Parse(JParamsString.c_str());
+    if (overallData == nullptr) {
+        LOG("The config json file fails to compile.");
+        return -1;
+    }
+    cJSON* frameRate = cJSON_GetObjectItem(overallData, "FrameRate");
+    if (frameRate != nullptr) {
+        result = frameRate->valueint;
+        LOG("freq: %{public}d", result);
+    }
+    cJSON_Delete(overallData);
+    return result;
+}
+
+bool ReadzipFile(const std::string& srcFilePath, std::vector<ImageStruct>& outBgImgVec, int32_t& outReq)
 {
     zlib_filefunc_def *zipFuncPtrs = nullptr;
     unzFile zipfile = unzOpen2(srcFilePath.c_str(), zipFuncPtrs);
@@ -57,14 +82,14 @@ bool UnzipFile(const std::string& srcFilePath, const std::string& dstFilePath)
     }
 
     char readBuffer[READ_SIZE];
-    RemoveDir(dstFilePath.c_str());
-    int ret = mkdir(dstFilePath.c_str(), 0700);
-    LOG("create dir bootpic, ret: %{public}d", ret);
-    if (ret == -1) {
-        LOG("pic dir is already exist");
-        return true;
+    int  bufsize = READ_SIZE * 3;
+    char* buffer = static_cast<char *>(malloc(bufsize));
+    if (buffer == nullptr) {
+        LOG("malloc memory size:[%{public}d] error.", bufsize);
+        unzClose(zipfile);
+        return false;
     }
-
+    char* destBuffer = buffer;
     for (unsigned long i = 0; i < globalInfo.number_entry; ++i) {
         unz_file_info fileInfo;
         char filename[MAX_FILE_NAME];
@@ -76,44 +101,68 @@ bool UnzipFile(const std::string& srcFilePath, const std::string& dstFilePath)
             nullptr, 0, nullptr, 0) != UNZ_OK) {
             LOG("could not read file info");
             unzClose(zipfile);
+            free(destBuffer);
             return false;
         }
 
         const size_t fileNameLength = strlen(filename);
-
-        std::string fileStr(dstFilePath + "/" + filename);
-        if (filename[fileNameLength - 1] == '/') {
-            LOG("mkdir: %{public}s", filename);
-            mkdir(fileStr.c_str(), 0700);
-        } else {
+        if (filename[fileNameLength - 1] != '/') {
             if (unzOpenCurrentFile(zipfile) != UNZ_OK) {
                 LOG("could not open file");
                 unzClose(zipfile);
-                return false;
-            }
-
-            FILE *out = fopen(fileStr.c_str(), "wb");
-            if (out == nullptr) {
-                LOG("could not open destination file");
-                unzCloseCurrentFile(zipfile);
-                unzClose(zipfile);
+                free(destBuffer);
                 return false;
             }
             int error = UNZ_OK;
+            int totalLen = 0;
             do {
                 error = unzReadCurrentFile(zipfile, readBuffer, READ_SIZE);
                 if (error < 0) {
                     LOG("unzReadCurrentFile error %{public}d", error);
                     unzCloseCurrentFile(zipfile);
                     unzClose(zipfile);
-                    fclose(out);
+                    free(destBuffer);
                     return false;
                 }
                 if (error > 0) {
-                    fwrite(readBuffer, error, 1, out);
+                    if (totalLen + error > bufsize) {
+                        bufsize += READ_SIZE;
+                        destBuffer = static_cast<char *>(realloc(buffer, bufsize));
+                        if (destBuffer == nullptr) {
+                            LOG("realloc memory size:[%{public}d] error.", bufsize);
+                            unzCloseCurrentFile(zipfile);
+                            unzClose(zipfile);
+                            free(buffer);
+                            return false;
+                        }
+                    }
+                    auto tmpret = memcpy_s(destBuffer + totalLen, bufsize - error, readBuffer, error);
+                    if (tmpret != EOK) {
+                        LOG("memcpy_s error %{public}d", tmpret);
+                    }
+                    totalLen += error;
                 }
             } while (error > 0);
-            fclose(out);
+
+            if (totalLen > 0) {
+                if (strstr(filename, BOOT_PIC_CONFIGFILE.c_str()) != nullptr) {
+                    outReq = GetFreqFromConfig(destBuffer, totalLen);
+                } else {
+                    auto skData = SkData::MakeWithCopy(destBuffer, totalLen);
+                    if (!skData) {
+                        LOG("skdata memory data is null. update data failed");
+                        unzCloseCurrentFile(zipfile);
+                        unzClose(zipfile);
+                        free(destBuffer);
+                        return false;
+                    }
+                    auto codec = SkCodec::MakeFromData(skData);
+                    ImageStruct tmpstruct;
+                    tmpstruct.fileName = filename;
+                    tmpstruct.imageData = SkImage::MakeFromEncoded(skData);
+                    outBgImgVec.push_back(tmpstruct);
+                }
+            }
         }
         unzCloseCurrentFile(zipfile);
 
@@ -121,10 +170,12 @@ bool UnzipFile(const std::string& srcFilePath, const std::string& dstFilePath)
             if (unzGoToNextFile(zipfile) != UNZ_OK) {
                 LOG("could not read next file");
                 unzClose(zipfile);
+                free(destBuffer);
                 return false;
             }
         }
     }
+
     return true;
 }
 

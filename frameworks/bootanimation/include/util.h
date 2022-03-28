@@ -36,17 +36,25 @@
 #include <iremote_object.h>
 #include <platform/ohos/rs_irender_service.h>
 #include <system_ability_definition.h>
+#include <include/core/SkImage.h>
+#include <include/core/SkRefCnt.h>
 
 namespace OHOS {
+using ImageStruct = struct {
+public:
+    std::string fileName = {};
+    sk_sp<SkImage> imageData = nullptr;
+};
 #define LOG(fmt, ...) ::OHOS::HiviewDFX::HiLog::Info(             \
     ::OHOS::HiviewDFX::HiLogLabel {LOG_CORE, 0, "BootAnimation"}, \
     "%{public}s: " fmt, __func__, ##__VA_ARGS__)
 int64_t GetNowTime();
 void PostTask(std::function<void()> func, uint32_t delayTime = 0);
-bool UnzipFile(const std::string& srcFilePath, const std::string& dstFilePath);
+bool ReadzipFile(const std::string& srcFilePath, std::vector<ImageStruct>& outBgImgVec, int32_t& outReq);
 int RemoveDir(const char *dir);
 int CountPicNum(const char *dir, int32_t& picNo);
 void WaitRenderServiceInit();
+int GetFreqFromConfig(const char* filestream, int length);
 } // namespace OHOS
 
 #endif // FRAMEWORKS_BOOTANIMATION_INCLUDE_UTIL_H

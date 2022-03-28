@@ -47,7 +47,7 @@ extern "C" {
  * @since 8
  * @version 1.0
  */
-typedef struct OH_Drawing_FontCollection OH_Drawing_FontCollection;
+typedef struct _OH_Drawing_FontCollection OH_Drawing_FontCollection;
 
 /**
  * @brief Defines an <b>OH_Drawing_Typography</b>, which is used to manage the typography layout and display.
@@ -80,7 +80,7 @@ typedef struct OH_Drawing_TypographyStyle OH_Drawing_TypographyStyle;
  * @since 8
  * @version 1.0
  */
-typedef struct OH_Drawing_TypographyCreate OH_Drawing_TypographyCreate;
+typedef struct _OH_Drawing_TypographyCreate OH_Drawing_TypographyCreate;
 
 #ifdef __cplusplus
 }

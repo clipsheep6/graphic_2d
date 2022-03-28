@@ -25,24 +25,9 @@
 
 using namespace rosen;
 
-static FontCollection* ConvertToOriginalText(OH_Drawing_FontCollection* fontCollection)
-{
-    return reinterpret_cast<FontCollection*>(fontCollection);
-}
-
 static TypographyStyle* ConvertToOriginalText(OH_Drawing_TypographyStyle* style)
 {
     return reinterpret_cast<TypographyStyle*>(style);
-}
-
-static TypographyCreate* ConvertToOriginalText(OH_Drawing_TypographyCreate* handler)
-{
-    return reinterpret_cast<TypographyCreate*>(handler);
-}
-
-static OH_Drawing_TypographyCreate* ConvertToNDKText(TypographyCreate* handler)
-{
-    return reinterpret_cast<OH_Drawing_TypographyCreate*>(handler);
 }
 
 static TextStyle* ConvertToOriginalText(OH_Drawing_TextStyle* style)
@@ -287,42 +272,50 @@ void OH_Drawing_SetTextStyleLocale(OH_Drawing_TextStyle* style, const char* loca
     ConvertToOriginalText(style)->locale_ = locale;
 }
 
+struct _OH_Drawing_TypographyCreate {
+    std::unique_ptr<TypographyCreate> builder = nullptr;
+};
+
+struct _OH_Drawing_FontCollection {
+    std::shared_ptr<FontCollection> rosenFontCollection = nullptr;
+};
+
 OH_Drawing_TypographyCreate* OH_Drawing_CreateTypographyHandler(OH_Drawing_TypographyStyle* style,
     OH_Drawing_FontCollection* fontCollection)
 {
     const TypographyStyle* typoStyle = ConvertToOriginalText(style);
-    std::unique_ptr<TypographyCreate> handler = TypographyCreate::CreateRosenBuilder(*typoStyle,
-        std::shared_ptr<FontCollection>(ConvertToOriginalText(fontCollection)));
-    return ConvertToNDKText(handler.release());
+    OH_Drawing_TypographyCreate* handler = nullptr;
+    handler->builder = TypographyCreate::CreateRosenBuilder(*typoStyle,
+        fontCollection->rosenFontCollection);
+    return handler;
 }
 
 void OH_Drawing_DestroyTypographyHandler(OH_Drawing_TypographyCreate* handler)
 {
-    delete ConvertToOriginalText(handler);
+    delete handler;
 }
 
 void OH_Drawing_TypographyHandlerPushTextStyle(OH_Drawing_TypographyCreate* handler, OH_Drawing_TextStyle* style)
 {
     const TextStyle* rosenTextStyle = ConvertToOriginalText(style);
-    ConvertToOriginalText(handler)->PushStyle(*rosenTextStyle);
+    handler->builder->PushStyle(*rosenTextStyle);
 }
 
 void OH_Drawing_TypographyHandlerAddText(OH_Drawing_TypographyCreate* handler, const char* text)
 {
     const std::u16string wideText =
         std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.from_bytes(text);
-    ConvertToOriginalText(handler)->AddText(wideText);
+    handler->builder->AddText(wideText);
 }
 
 void OH_Drawing_TypographyHandlerPopTextStyle(OH_Drawing_TypographyCreate* handler)
 {
-    ConvertToOriginalText(handler)->Pop();
+    handler->builder->Pop();
 }
 
 OH_Drawing_Typography* OH_Drawing_CreateTypography(OH_Drawing_TypographyCreate* handler)
 {
-    TypographyCreate* rosenHandler = ConvertToOriginalText(handler);
-    std::unique_ptr<Typography> typography = rosenHandler->Build();
+    std::unique_ptr<Typography> typography = handler->builder->Build();
     return ConvertToNDKText(typography.release());
 }
 

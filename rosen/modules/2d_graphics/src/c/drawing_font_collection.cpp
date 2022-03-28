@@ -16,8 +16,20 @@
 #include "c/drawing_font_collection.h"
 #include "rosen_text/ui/font_collection.h"
 
+using namespace rosen;
+
+struct _OH_Drawing_FontCollection {
+    std::shared_ptr<FontCollection> rosenFontCollection = nullptr;
+};
+
 OH_Drawing_FontCollection* OH_Drawing_CreateFontCollection(void)
 {
-    return (OH_Drawing_FontCollection*)new rosen::FontCollection;
+    OH_Drawing_FontCollection* fontCollection = nullptr;
+    fontCollection->rosenFontCollection = FontCollection::GetInstance();
+    return fontCollection;
 }
 
+void OH_Drawing_DestroyFontCollection(OH_Drawing_FontCollection* fontCollection)
+{
+    delete fontCollection;
+}

@@ -33,12 +33,12 @@
 #include <render_context/render_context.h>
 #include <system_ability_definition.h>
 #include <ui/rs_surface_extractor.h>
-#include <vsync_helper.h>
 #include <window.h>
 #include <window_option.h>
 #include <window_scene.h>
 #include "player.h"
 #include "vsync_receiver.h"
+#include "util.h"
 
 namespace OHOS {
 class BootAnimation {
@@ -47,6 +47,7 @@ public:
     void Draw();
     void CheckExitAnimation();
     void PlaySound();
+    bool CheckFrameRateValid(int32_t ratevalue);
 private:
     void OnDraw(SkCanvas* canvas);
     void InitBootWindow();
@@ -70,6 +71,7 @@ private:
     bool needCheckExit = false;
     std::shared_ptr<OHOS::Rosen::VSyncReceiver> receiver_ = nullptr;
     std::shared_ptr<Media::Player> soundPlayer_ = nullptr;
+    ImageStructVec bgImageVector_;
 };
 } // namespace OHOS
 

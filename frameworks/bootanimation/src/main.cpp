@@ -13,23 +13,23 @@
  * limitations under the License.
  */
 
-#include "boot_animation.h"
-#include "util.h"
-
+#include <vsync_helper.h>
 #include <display_type.h>
 #include <display_manager.h>
+#include "boot_animation.h"
+#include "util.h"
 
 using namespace OHOS;
 
 int main(int argc, const char *argv[])
 {
-    LOG("main enter");
+    LOGI("main enter");
     WaitRenderServiceInit();
 
     auto& dms = OHOS::Rosen::DisplayManager::GetInstance();
     auto displays = dms.GetAllDisplays();
     while (displays.empty()) {
-        LOG("displays is empty, retry to get displays");
+        LOGI("displays is empty, retry to get displays");
         displays = dms.GetAllDisplays();
         sleep(1);
     }

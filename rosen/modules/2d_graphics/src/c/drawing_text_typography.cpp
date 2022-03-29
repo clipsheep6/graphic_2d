@@ -25,6 +25,11 @@
 
 using namespace rosen;
 
+static FontCollection* ConvertToOriginalText(OH_Drawing_FontCollection* fontCollection)
+{
+    return reinterpret_cast<FontCollection*>(fontCollection);
+}
+
 static TypographyStyle* ConvertToOriginalText(OH_Drawing_TypographyStyle* style)
 {
     return reinterpret_cast<TypographyStyle*>(style);
@@ -276,17 +281,13 @@ struct _OH_Drawing_TypographyCreate {
     std::unique_ptr<TypographyCreate> builder = nullptr;
 };
 
-struct _OH_Drawing_FontCollection {
-    std::shared_ptr<FontCollection> rosenFontCollection = nullptr;
-};
-
 OH_Drawing_TypographyCreate* OH_Drawing_CreateTypographyHandler(OH_Drawing_TypographyStyle* style,
     OH_Drawing_FontCollection* fontCollection)
 {
     const TypographyStyle* typoStyle = ConvertToOriginalText(style);
     OH_Drawing_TypographyCreate* handler = nullptr;
     handler->builder = TypographyCreate::CreateRosenBuilder(*typoStyle,
-        fontCollection->rosenFontCollection);
+        std::shared_ptr<FontCollection>(ConvertToOriginalText(fontCollection)));
     return handler;
 }
 

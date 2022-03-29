@@ -103,3 +103,7 @@ group("libgl") {
 group("libgraphic_dumper_client") {
   public_deps = [ "frameworks/dumper:libgraphic_dumper_client" ]
 }
+
+group("rendertest") {
+  public_deps = [ "rosen/samples/text/renderservice:rendertest" ]
+}

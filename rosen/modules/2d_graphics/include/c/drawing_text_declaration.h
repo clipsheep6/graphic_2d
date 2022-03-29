@@ -80,7 +80,7 @@ typedef struct OH_Drawing_TypographyStyle OH_Drawing_TypographyStyle;
  * @since 8
  * @version 1.0
  */
-typedef struct _OH_Drawing_TypographyCreate OH_Drawing_TypographyCreate;
+typedef struct OH_Drawing_TypographyCreate OH_Drawing_TypographyCreate;
 
 #ifdef __cplusplus
 }

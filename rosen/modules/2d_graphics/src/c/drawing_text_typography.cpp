@@ -35,6 +35,16 @@ static TypographyStyle* ConvertToOriginalText(OH_Drawing_TypographyStyle* style)
     return reinterpret_cast<TypographyStyle*>(style);
 }
 
+static TypographyCreate* ConvertToOriginalText(OH_Drawing_TypographyCreate* handler)
+{
+    return reinterpret_cast<TypographyCreate*>(handler);
+}
+
+static OH_Drawing_TypographyCreate* ConvertToNDKText(TypographyCreate* handler)
+{
+    return reinterpret_cast<OH_Drawing_TypographyCreate*>(handler);
+}
+
 static TextStyle* ConvertToOriginalText(OH_Drawing_TextStyle* style)
 {
     return reinterpret_cast<TextStyle*>(style);
@@ -277,46 +287,42 @@ void OH_Drawing_SetTextStyleLocale(OH_Drawing_TextStyle* style, const char* loca
     ConvertToOriginalText(style)->locale_ = locale;
 }
 
-struct _OH_Drawing_TypographyCreate {
-    std::unique_ptr<TypographyCreate> builder = nullptr;
-};
-
 OH_Drawing_TypographyCreate* OH_Drawing_CreateTypographyHandler(OH_Drawing_TypographyStyle* style,
     OH_Drawing_FontCollection* fontCollection)
 {
     const TypographyStyle* typoStyle = ConvertToOriginalText(style);
-    OH_Drawing_TypographyCreate* handler = new OH_Drawing_TypographyCreate;
-    handler->builder = TypographyCreate::CreateRosenBuilder(*typoStyle,
+    std::unique_ptr<TypographyCreate> handler = TypographyCreate::CreateRosenBuilder(*typoStyle,
         std::shared_ptr<FontCollection>(ConvertToOriginalText(fontCollection)));
-    return handler;
+    return ConvertToNDKText(handler.release());
 }
 
 void OH_Drawing_DestroyTypographyHandler(OH_Drawing_TypographyCreate* handler)
 {
-    delete handler;
+    delete ConvertToOriginalText(handler);
 }
 
 void OH_Drawing_TypographyHandlerPushTextStyle(OH_Drawing_TypographyCreate* handler, OH_Drawing_TextStyle* style)
 {
     const TextStyle* rosenTextStyle = ConvertToOriginalText(style);
-    handler->builder->PushStyle(*rosenTextStyle);
+    ConvertToOriginalText(handler)->PushStyle(*rosenTextStyle);
 }
 
 void OH_Drawing_TypographyHandlerAddText(OH_Drawing_TypographyCreate* handler, const char* text)
 {
     const std::u16string wideText =
         std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.from_bytes(text);
-    handler->builder->AddText(wideText);
+    ConvertToOriginalText(handler)->AddText(wideText);
 }
 
 void OH_Drawing_TypographyHandlerPopTextStyle(OH_Drawing_TypographyCreate* handler)
 {
-    handler->builder->Pop();
+    ConvertToOriginalText(handler)->Pop();
 }
 
 OH_Drawing_Typography* OH_Drawing_CreateTypography(OH_Drawing_TypographyCreate* handler)
 {
-    std::unique_ptr<Typography> typography = handler->builder->Build();
+    TypographyCreate* rosenHandler = ConvertToOriginalText(handler);
+    std::unique_ptr<Typography> typography = rosenHandler->Build();
     return ConvertToNDKText(typography.release());
 }
 

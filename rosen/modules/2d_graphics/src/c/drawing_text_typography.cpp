@@ -285,7 +285,7 @@ OH_Drawing_TypographyCreate* OH_Drawing_CreateTypographyHandler(OH_Drawing_Typog
     OH_Drawing_FontCollection* fontCollection)
 {
     const TypographyStyle* typoStyle = ConvertToOriginalText(style);
-    OH_Drawing_TypographyCreate* handler = nullptr;
+    OH_Drawing_TypographyCreate* handler = new OH_Drawing_TypographyCreate;
     handler->builder = TypographyCreate::CreateRosenBuilder(*typoStyle,
         std::shared_ptr<FontCollection>(ConvertToOriginalText(fontCollection)));
     return handler;

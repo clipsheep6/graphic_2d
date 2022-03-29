@@ -20,4 +20,3 @@ OH_Drawing_FontCollection* OH_Drawing_CreateFontCollection(void)
 {
     return (OH_Drawing_FontCollection*)new rosen::FontCollection;
 }
-

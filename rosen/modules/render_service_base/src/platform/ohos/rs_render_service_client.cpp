@@ -328,13 +328,8 @@ bool RSRenderServiceClient::RegisterBufferAvailableListener(NodeId id, const Buf
     if (renderService == nullptr) {
         return false;
     }
-    auto iter = bufferAvailableCbMap_.find(id);
-    if (iter != bufferAvailableCbMap_.end()) {
-        return true;
-    }
-    sptr<RSIBufferAvailableCallback> bufferAvailableCb = new CustomBufferAvailableCallback(callback);
-    renderService->RegisterBufferAvailableListener(id, bufferAvailableCb);
-    bufferAvailableCbMap_.emplace(id, bufferAvailableCb);
+    bufferAvailableCb_ = new CustomBufferAvailableCallback(callback);
+    renderService->RegisterBufferAvailableListener(id, bufferAvailableCb_);
     return true;
 }
 

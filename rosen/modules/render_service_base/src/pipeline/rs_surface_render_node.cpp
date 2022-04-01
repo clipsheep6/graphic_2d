@@ -206,7 +206,9 @@ void RSSurfaceRenderNode::RegisterBufferAvailableListener(sptr<RSIBufferAvailabl
 {
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        callback_ = callback;
+        if (!callback_) {
+            callback_ = callback;
+        }
     }
 }
 

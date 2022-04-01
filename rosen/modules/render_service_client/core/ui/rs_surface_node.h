@@ -31,6 +31,7 @@ class SkCanvas;
 namespace OHOS {
 namespace Rosen {
 
+using FirstTimeOnScreenCallback = std::function<void()>;
 struct RSSurfaceNodeConfig {
     std::string SurfaceNodeName = "SurfaceNode";
 };
@@ -52,6 +53,8 @@ public:
     void SetBoundsWidth(float width) override;
     void SetBoundsHeight(float height) override;
     void SetColorSpace(ColorGamut colorSpace);
+
+    bool SetFirstTimeOnScreenCallback(const FirstTimeOnScreenCallback &callback);
 
     bool Marshalling(Parcel& parcel) const override;
     static RSSurfaceNode* Unmarshalling(Parcel& parcel);

@@ -39,7 +39,7 @@ namespace OHOS {
 namespace Rosen {
 // normal callback functor for client users.
 using ScreenChangeCallback = std::function<void(ScreenId, ScreenEvent)>;
-using BufferAvailableCallback = std::function<void(bool)>;
+using BufferAvailableCallback = std::function<void()>;
 class SurfaceCaptureCallback {
 public:
     SurfaceCaptureCallback() {}
@@ -114,7 +114,7 @@ public:
 private:
     void TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap);
     std::mutex mutex_;
-    std::map<NodeId, sptr<RSIBufferAvailableCallback>> bufferAvailableCbMap_;
+    sptr<RSIBufferAvailableCallback> bufferAvailableCb_;
     sptr<RSIScreenChangeCallback> screenChangeCb_;
     sptr<RSISurfaceCaptureCallback> surfaceCaptureCbDirector_;
     std::map<NodeId, std::shared_ptr<SurfaceCaptureCallback>> surfaceCaptureCbMap_;

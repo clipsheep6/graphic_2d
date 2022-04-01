@@ -111,6 +111,17 @@ void RSSurfaceNode::SetColorSpace(ColorGamut colorSpace)
     colorSpace_ = colorSpace;
 }
 
+bool RSSurfaceNode::SetFirstTimeOnScreenCallback(const FirstTimeOnScreenCallback &callback)
+{
+    auto renderServiceClient =
+        std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
+    if (renderServiceClient != nullptr) {
+        return renderServiceClient->RegisterBufferAvailableListener(GetId(), callback);
+    } else {
+        return false;
+    }
+}
+
 bool RSSurfaceNode::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteUint64(GetId()) && parcel.WriteString(name_) && parcel.WriteBool(IsRenderServiceNode());

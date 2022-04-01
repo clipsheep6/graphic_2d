@@ -65,6 +65,11 @@ void RSRenderServiceListener::OnBufferAvailable()
             node->SetFence(acquireFence);
         });
     } else {
+        if (!node->IsBufferAvailable()) {
+            // Only ipc for one time.
+            RS_LOGI("RsDebug RSRenderServiceListener::OnBufferAvailable id = %llu Notify RT buffer available", node->GetId());
+            node->NotifyBufferAvailable();
+        }
         node->IncreaseAvailableBuffer();
     }
 

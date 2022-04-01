@@ -53,6 +53,8 @@ public:
     void SetBoundsHeight(float height) override;
     void SetColorSpace(ColorGamut colorSpace);
 
+    bool SetFirstTimeOnScreenCallback(const BufferAvailableCallback &callback);
+
     bool Marshalling(Parcel& parcel) const override;
     static RSSurfaceNode* Unmarshalling(Parcel& parcel);
     sptr<OHOS::Surface> GetSurface() const;

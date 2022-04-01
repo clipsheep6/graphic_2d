@@ -16,7 +16,6 @@
 #include "buffer_client_producer.h"
 
 #include "buffer_log.h"
-#include "buffer_manager.h"
 #include "buffer_utils.h"
 
 #define DEFINE_MESSAGE_VARIABLES(arg, ret, opt, LOGE) \
@@ -66,7 +65,7 @@ BufferClientProducer::~BufferClientProducer()
     BLOGNI("dtor");
 }
 
-GSError BufferClientProducer::RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+GSError BufferClientProducer::RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
                                             RequestBufferReturnValue &retval)
 {
     DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
@@ -77,18 +76,18 @@ GSError BufferClientProducer::RequestBuffer(const BufferRequestConfig &config, B
     CHECK_RETVAL_WITH_SEQ(reply, retval.sequence);
 
     ReadSurfaceBufferImpl(reply, retval.sequence, retval.buffer);
-    bedata.ReadFromParcel(reply);
+    bedata->ReadFromParcel(reply);
     ReadFence(reply, retval.fence);
     reply.ReadInt32Vector(&retval.deletingBuffers);
     return GSERROR_OK;
 }
 
-GSError BufferClientProducer::CancelBuffer(int32_t sequence, BufferExtraData &bedata)
+GSError BufferClientProducer::CancelBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata)
 {
     DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
 
     arguments.WriteInt32(sequence);
-    bedata.WriteToParcel(arguments);
+    bedata->WriteToParcel(arguments);
 
     SEND_REQUEST_WITH_SEQ(BUFFER_PRODUCER_CANCEL_BUFFER, arguments, reply, option, sequence);
     CHECK_RETVAL_WITH_SEQ(reply, sequence);
@@ -96,13 +95,13 @@ GSError BufferClientProducer::CancelBuffer(int32_t sequence, BufferExtraData &be
     return GSERROR_OK;
 }
 
-GSError BufferClientProducer::FlushBuffer(int32_t sequence, BufferExtraData &bedata,
+GSError BufferClientProducer::FlushBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata,
                                           int32_t fence, BufferFlushConfig &config)
 {
     DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
 
     arguments.WriteInt32(sequence);
-    bedata.WriteToParcel(arguments);
+    bedata->WriteToParcel(arguments);
     WriteFence(arguments, fence);
     WriteFlushConfig(arguments, config);
 

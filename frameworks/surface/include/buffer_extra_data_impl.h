@@ -17,7 +17,6 @@
 #define FRAMEWORKS_SURFACE_INCLUDE_BUFFER_EXTRA_DATA_IMPL_H
 
 #include <buffer_extra_data.h>
-
 #include <any>
 
 namespace OHOS {
@@ -25,14 +24,14 @@ class BufferExtraDataImpl : public BufferExtraData {
 public:
     virtual GSError ReadFromParcel(MessageParcel &parcel) override;
     virtual GSError WriteToParcel(MessageParcel &parcel) override;
-    virtual GSError ExtraGet(std::string &key, int32_t &value) const override;
-    virtual GSError ExtraGet(std::string &key, int64_t &value) const override;
-    virtual GSError ExtraGet(std::string &key, double &value) const override;
-    virtual GSError ExtraGet(std::string &key, std::string &value) const override;
-    virtual GSError ExtraSet(std::string &key, int32_t value) override;
-    virtual GSError ExtraSet(std::string &key, int64_t value) override;
-    virtual GSError ExtraSet(std::string &key, double value) override;
-    virtual GSError ExtraSet(std::string &key, std::string value) override;
+    virtual GSError ExtraGet(const std::string &key, int32_t &value) const override;
+    virtual GSError ExtraGet(const std::string &key, int64_t &value) const override;
+    virtual GSError ExtraGet(const std::string &key, double &value) const override;
+    virtual GSError ExtraGet(const std::string &key, std::string &value) const override;
+    virtual GSError ExtraSet(const std::string &key, int32_t value) override;
+    virtual GSError ExtraSet(const std::string &key, int64_t value) override;
+    virtual GSError ExtraSet(const std::string &key, double value) override;
+    virtual GSError ExtraSet(const std::string &key, const  std::string value) override;
 
 private:
     enum class ExtraDataType : int32_t {
@@ -42,8 +41,8 @@ private:
         string,
     };
     template<class T>
-    GSError ExtraGet(std::string &key, ExtraDataType type, T &value) const;
-    GSError ExtraSet(std::string &key, ExtraDataType type, std::any val);
+    GSError ExtraGet(const std::string &key, ExtraDataType type, T &value) const;
+    GSError ExtraSet(const std::string &key, ExtraDataType type, std::any val);
 
     struct ExtraData {
         std::any val;

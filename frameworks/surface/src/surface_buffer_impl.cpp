@@ -22,6 +22,7 @@
 
 #include "buffer_log.h"
 #include "buffer_manager.h"
+#include "buffer_extra_data_impl.h"
 
 namespace OHOS {
 SurfaceBufferImpl::SurfaceBufferImpl()
@@ -30,29 +31,30 @@ SurfaceBufferImpl::SurfaceBufferImpl()
         static std::mutex mutex;
         mutex.lock();
 
-        static int sequence_number_ = 0;
-        sequenceNumber = sequence_number_++;
+        static int sequence_number = 0;
+        sequenceNumber_ = sequence_number++;
 
         mutex.unlock();
     }
+    bedata_ = new BufferExtraDataImpl;
     handle_ = nullptr;
     eglData_ = nullptr;
-    BLOGD("ctor +[%{public}d]", sequenceNumber);
+    BLOGD("ctor +[%{public}d]", sequenceNumber_);
 }
 
 SurfaceBufferImpl::SurfaceBufferImpl(int seqNum)
 {
-    sequenceNumber = seqNum;
+    sequenceNumber_ = seqNum;
     handle_ = nullptr;
-    BLOGD("ctor =[%{public}d]", sequenceNumber);
+    BLOGD("ctor =[%{public}d]", sequenceNumber_);
 }
 
 SurfaceBufferImpl::~SurfaceBufferImpl()
 {
-    BLOGD("dtor ~[%{public}d] handle_ %{public}p", sequenceNumber, handle_);
+    BLOGD("dtor ~[%{public}d] handle_ %{public}p", sequenceNumber_, handle_);
     if (handle_) {
         if (handle_->virAddr != nullptr) {
-            BLOGD("dtor ~[%{public}d] virAddr %{public}p", sequenceNumber, handle_->virAddr);
+            BLOGD("dtor ~[%{public}d] virAddr %{public}p", sequenceNumber_, handle_->virAddr);
             BufferManager::GetInstance()->Unmap(handle_);
         }
         FreeBufferHandle(handle_);
@@ -204,139 +206,14 @@ uint32_t SurfaceBufferImpl::GetSize() const
     return handle_->size;
 }
 
-GSError SurfaceBufferImpl::SetInt32(uint32_t key, int32_t val)
+void SurfaceBufferImpl::SetExtraData(const sptr<BufferExtraData> &bedata)
 {
-    ExtraData data = {
-        .value = val,
-        .type = EXTRA_DATA_TYPE_INT32,
-    };
-    return SetData(key, data);
+    bedata_ = bedata;
 }
 
-GSError SurfaceBufferImpl::GetInt32(uint32_t key, int32_t &val)
+void SurfaceBufferImpl::GetExtraData(sptr<BufferExtraData> &bedata) const
 {
-    ExtraData data;
-    GSError ret = GetData(key, data);
-    if (ret == GSERROR_OK) {
-        if (data.type == EXTRA_DATA_TYPE_INT32) {
-            auto pVal = std::any_cast<int32_t>(&data.value);
-            if (pVal != nullptr) {
-                val = *pVal;
-            } else {
-                BLOGE("unexpected: INT32, any_cast failed");
-            }
-        } else {
-            return GSERROR_TYPE_ERROR;
-        }
-    }
-    return ret;
-}
-
-GSError SurfaceBufferImpl::SetInt64(uint32_t key, int64_t val)
-{
-    ExtraData data = {
-        .value = val,
-        .type = EXTRA_DATA_TYPE_INT64,
-    };
-    return SetData(key, data);
-}
-
-GSError SurfaceBufferImpl::GetInt64(uint32_t key, int64_t &val)
-{
-    ExtraData data;
-    GSError ret = GetData(key, data);
-    if (ret == GSERROR_OK) {
-        if (data.type == EXTRA_DATA_TYPE_INT64) {
-            auto pVal = std::any_cast<int64_t>(&data.value);
-            if (pVal != nullptr) {
-                val = *pVal;
-            } else {
-                BLOGE("unexpected: INT64, any_cast failed");
-            }
-        } else {
-            return GSERROR_TYPE_ERROR;
-        }
-    }
-    return ret;
-}
-
-GSError SurfaceBufferImpl::SetData(uint32_t key, ExtraData data)
-{
-    if (data.type <= EXTRA_DATA_TYPE_MIN || data.type >= EXTRA_DATA_TYPE_MAX) {
-        BLOGW("Invalid, data.type is out of range");
-        return GSERROR_INVALID_ARGUMENTS;
-    }
-
-    if (extraDatas_.size() > SURFACE_MAX_USER_DATA_COUNT) {
-        BLOGW("SurfaceBuffer has too many extra data, cannot save one more!!!");
-        return GSERROR_OUT_OF_RANGE;
-    }
-
-    extraDatas_[key] = data;
-    return GSERROR_OK;
-}
-
-GSError SurfaceBufferImpl::GetData(uint32_t key, ExtraData &data)
-{
-    auto it = extraDatas_.find(key);
-    if (it == extraDatas_.end()) {
-        return GSERROR_NO_ENTRY;
-    }
-
-    data = it->second;
-    return GSERROR_OK;
-}
-
-void SurfaceBufferImpl::SetExtraData(const BufferExtraData &bedata)
-{
-    auto bedatai = static_cast<const BufferExtraDataImpl*>(&bedata);
-    bedataimpl = *bedatai;
-}
-
-void SurfaceBufferImpl::GetExtraData(BufferExtraData &bedata) const
-{
-    auto bedatai = static_cast<BufferExtraDataImpl*>(&bedata);
-    *bedatai = bedataimpl;
-}
-
-GSError SurfaceBufferImpl::ExtraGet(std::string key, int32_t &value) const
-{
-    return bedataimpl.ExtraGet(key, value);
-}
-
-GSError SurfaceBufferImpl::ExtraGet(std::string key, int64_t &value) const
-{
-    return bedataimpl.ExtraGet(key, value);
-}
-
-GSError SurfaceBufferImpl::ExtraGet(std::string key, double &value) const
-{
-    return bedataimpl.ExtraGet(key, value);
-}
-
-GSError SurfaceBufferImpl::ExtraGet(std::string key, std::string &value) const
-{
-    return bedataimpl.ExtraGet(key, value);
-}
-
-GSError SurfaceBufferImpl::ExtraSet(std::string key, int32_t value)
-{
-    return bedataimpl.ExtraSet(key, value);
-}
-
-GSError SurfaceBufferImpl::ExtraSet(std::string key, int64_t value)
-{
-    return bedataimpl.ExtraSet(key, value);
-}
-
-GSError SurfaceBufferImpl::ExtraSet(std::string key, double value)
-{
-    return bedataimpl.ExtraSet(key, value);
-}
-
-GSError SurfaceBufferImpl::ExtraSet(std::string key, std::string value)
-{
-    return bedataimpl.ExtraSet(key, value);
+    bedata = bedata_;
 }
 
 void SurfaceBufferImpl::SetBufferHandle(BufferHandle *handle)
@@ -355,33 +232,11 @@ void SurfaceBufferImpl::WriteToMessageParcel(MessageParcel &parcel)
     if (ret == false) {
         BLOGE("Failure, Reason: WriteBufferHandle return false");
     }
-
-    parcel.WriteInt32(extraDatas_.size());
-    for (const auto &[k, v] : extraDatas_) {
-        parcel.WriteUint32(k);
-        parcel.WriteInt32(v.type);
-        if (v.type == EXTRA_DATA_TYPE_INT32) {
-            auto pVal = std::any_cast<int32_t>(&v.value);
-            if (pVal != nullptr) {
-                parcel.WriteInt32(*pVal);
-            } else {
-                BLOGE("unexpected: INT32, any_cast failed");
-            }
-        }
-        if (v.type == EXTRA_DATA_TYPE_INT64) {
-            auto pVal = std::any_cast<int64_t>(&v.value);
-            if (pVal != nullptr) {
-                parcel.WriteInt64(*pVal);
-            } else {
-                BLOGE("unexpected: INT64, any_cast failed");
-            }
-        }
-    }
 }
 
-int32_t SurfaceBufferImpl::GetSeqNum()
+int32_t SurfaceBufferImpl::GetSeqNum() const
 {
-    return sequenceNumber;
+    return sequenceNumber_;
 }
 
 sptr<EglData> SurfaceBufferImpl::GetEglData() const
@@ -392,5 +247,26 @@ sptr<EglData> SurfaceBufferImpl::GetEglData() const
 void SurfaceBufferImpl::SetEglData(const sptr<EglData>& data)
 {
     eglData_ = data;
+}
+
+GSError SurfaceBufferImpl::Alloc(const BufferRequestConfig &config)
+{
+    return GSERROR_OK;
+}
+GSError SurfaceBufferImpl::Map()
+{
+    return GSERROR_OK;
+}
+GSError SurfaceBufferImpl::Unmap()
+{
+    return GSERROR_OK;
+}
+GSError SurfaceBufferImpl::FlushCache()
+{
+    return GSERROR_OK;
+}
+GSError SurfaceBufferImpl::InvalidateCache()
+{
+    return GSERROR_OK;
 }
 } // namespace OHOS

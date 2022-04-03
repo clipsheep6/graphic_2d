@@ -21,6 +21,7 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColorFilter.h"
 #include "include/core/SkImage.h"
+#include "transaction/rs_marshalling_helper.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -52,6 +53,10 @@ public:
     void SetImageFit(int fitNum);
     void SetImageRepeat(int repeatNum);
     void SetRadius(float radius);
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const;
+    static RSImage* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     void ApplyImageFit();

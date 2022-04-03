@@ -90,6 +90,7 @@ RSRenderThread::RSRenderThread()
         Animate(prevTimestamp_);
         Render();
         RS_ASYNC_TRACE_BEGIN("waiting GPU running", 1111); // 1111 means async trace code for gpu
+        ROSEN_LOGI("unirender: RSRenderThread mainFunc_");
         SendCommands();
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
@@ -120,7 +121,7 @@ RSRenderThread::~RSRenderThread()
 
 void RSRenderThread::Start()
 {
-    ROSEN_LOGD("RSRenderThread start.");
+    ROSEN_LOGI("unirender: RSRenderThread start.");
     running_.store(true);
     if (thread_ == nullptr) {
         thread_ = std::make_unique<std::thread>(&RSRenderThread::RenderLoop, this);

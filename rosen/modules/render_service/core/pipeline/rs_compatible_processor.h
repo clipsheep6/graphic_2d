@@ -33,6 +33,7 @@ public:
     ~RSCompatibleProcessor() override;
     void ProcessSurface(RSSurfaceRenderNode& node) override;
     void Init(ScreenId id, int32_t offsetX, int32_t offsetY) override;
+    void ProcessSurface(RSDisplayRenderNode &node) override {}
     void PostProcess() override;
     void DoComposeSurfaces();
 

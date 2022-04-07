@@ -33,6 +33,7 @@ using FirstTimeOnScreenCallback = std::function<void()>;
 class RSSurface;
 struct RSSurfaceNodeConfig {
     std::string SurfaceNodeName = "SurfaceNode";
+    UseSurfaceToRenderFunc onRender = nullptr;
 };
 
 class RS_EXPORT RSSurfaceNode : public RSNode, public Parcelable {

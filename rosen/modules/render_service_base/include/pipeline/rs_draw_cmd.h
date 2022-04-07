@@ -42,6 +42,7 @@ public:
     virtual ~OpItem() {}
 
     virtual void Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const {};
+    virtual const char *Name() const { return __PRETTY_FUNCTION__; };
 };
 
 class OpItemWithPaint : public OpItem {
@@ -49,6 +50,7 @@ public:
     explicit OpItemWithPaint(size_t size) : OpItem(size) {}
 
     ~OpItemWithPaint() override {}
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 protected:
     SkPaint paint_;
@@ -59,6 +61,7 @@ public:
     RectOpItem(SkRect rect, const SkPaint& paint);
     ~RectOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkRect rect_;
@@ -69,6 +72,7 @@ public:
     RoundRectOpItem(const SkRRect& rrect, const SkPaint& paint);
     ~RoundRectOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkRRect rrect_;
@@ -81,6 +85,7 @@ public:
 
     ~ImageWithParmOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     std::shared_ptr<RSImage> rsImage_;
@@ -91,6 +96,7 @@ public:
     DRRectOpItem(const SkRRect& outer, const SkRRect& inner, const SkPaint& paint);
     ~DRRectOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkRRect outer_;
@@ -102,6 +108,7 @@ public:
     OvalOpItem(SkRect rect, const SkPaint& paint);
     ~OvalOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkRect rect_;
@@ -112,6 +119,7 @@ public:
     RegionOpItem(SkRegion region, const SkPaint& paint);
     ~RegionOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkRegion region_;
@@ -122,6 +130,7 @@ public:
     ArcOpItem(const SkRect& rect, float startAngle, float sweepAngle, bool useCenter, const SkPaint& paint);
     ~ArcOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkRect rect_;
@@ -135,6 +144,7 @@ public:
     SaveOpItem();
     ~SaveOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 };
 
 class RestoreOpItem : public OpItem {
@@ -142,6 +152,7 @@ public:
     RestoreOpItem();
     ~RestoreOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 };
 
 class FlushOpItem : public OpItem {
@@ -149,6 +160,7 @@ public:
     FlushOpItem();
     ~FlushOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 };
 
 class MatrixOpItem : public OpItem {
@@ -156,6 +168,7 @@ public:
     MatrixOpItem(const SkMatrix& matrix);
     ~MatrixOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkMatrix matrix_;
@@ -166,6 +179,7 @@ public:
     ClipRectOpItem(const SkRect& rect, SkClipOp op, bool doAA);
     ~ClipRectOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkRect rect_;
@@ -178,6 +192,7 @@ public:
     ClipRRectOpItem(const SkRRect& rrect, SkClipOp op, bool doAA);
     ~ClipRRectOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkRRect rrect_;
@@ -190,6 +205,7 @@ public:
     ClipRegionOpItem(const SkRegion& region, SkClipOp op);
     ~ClipRegionOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkRegion region_;
@@ -201,6 +217,7 @@ public:
     TranslateOpItem(float distanceX, float distanceY);
     ~TranslateOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     float distanceX_;
@@ -212,6 +229,7 @@ public:
     TextBlobOpItem(const sk_sp<SkTextBlob> textBlob, float x, float y, const SkPaint& paint);
     ~TextBlobOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     sk_sp<SkTextBlob> textBlob_;
@@ -224,6 +242,7 @@ public:
     BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top, const SkPaint* paint);
     ~BitmapOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     float left_;
@@ -237,6 +256,7 @@ public:
         const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst, const SkPaint* paint);
     ~BitmapRectOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkRect rectSrc_;
@@ -250,6 +270,7 @@ public:
         const sk_sp<SkImage> bitmapInfo, const SkCanvas::Lattice& lattice, const SkRect& rect, const SkPaint* paint);
     ~BitmapLatticeOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkRect rect_;
@@ -263,6 +284,7 @@ public:
         const sk_sp<SkImage> bitmapInfo, const SkIRect& center, const SkRect& rectDst, const SkPaint* paint);
     ~BitmapNineOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkIRect center_;
@@ -275,6 +297,7 @@ public:
     AdaptiveRRectOpItem(float radius, const SkPaint& paint);
     ~AdaptiveRRectOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     float radius_;
@@ -286,6 +309,7 @@ public:
     ClipAdaptiveRRectOpItem(float radius);
     ~ClipAdaptiveRRectOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     float radius_;
@@ -296,6 +320,7 @@ public:
     PathOpItem(const SkPath& path, const SkPaint& paint);
     ~PathOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkPath path_;
@@ -306,6 +331,7 @@ public:
     ClipPathOpItem(const SkPath& path, SkClipOp clipOp, bool doAA);
     ~ClipPathOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkPath path_;
@@ -318,6 +344,7 @@ public:
     PaintOpItem(const SkPaint& paint);
     ~PaintOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 };
 
 class ConcatOpItem : public OpItem {
@@ -325,6 +352,7 @@ public:
     ConcatOpItem(const SkMatrix& matrix);
     ~ConcatOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkMatrix matrix_;
@@ -335,6 +363,7 @@ public:
     SaveLayerOpItem(const SkCanvas::SaveLayerRec& rec);
     ~SaveLayerOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkRect* rectPtr_ = nullptr;
@@ -350,6 +379,7 @@ public:
     DrawableOpItem(SkDrawable* drawable, const SkMatrix* matrix);
     ~DrawableOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     sk_sp<SkDrawable> drawable_;
@@ -361,6 +391,7 @@ public:
     PictureOpItem(const sk_sp<SkPicture> picture, const SkMatrix* matrix, const SkPaint* paint);
     ~PictureOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     sk_sp<SkPicture> picture_ { nullptr };
@@ -375,6 +406,7 @@ public:
         delete[] processedPoints_;
     }
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     SkCanvas::PointMode mode_;
@@ -388,6 +420,7 @@ public:
         int boneCount, SkBlendMode mode, const SkPaint& paint);
     ~VerticesOpItem() override;
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     sk_sp<SkVertices> vertices_;
@@ -401,6 +434,7 @@ public:
     MultiplyAlphaOpItem(float alpha);
     ~MultiplyAlphaOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 
 private:
     float alpha_;
@@ -411,6 +445,7 @@ public:
     SaveAlphaOpItem();
     ~SaveAlphaOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 };
 
 class RestoreAlphaOpItem : public OpItem {
@@ -418,6 +453,7 @@ public:
     RestoreAlphaOpItem();
     ~RestoreAlphaOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+    const char *Name() const override { return __PRETTY_FUNCTION__; };
 };
 
 } // namespace Rosen

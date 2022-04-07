@@ -45,7 +45,7 @@ public:
     int GetWidth() const;
     int GetHeight() const;
 
-private:
+public:
     std::vector<std::unique_ptr<OpItem>> ops_;
     std::recursive_mutex mutex_;
     int width_;

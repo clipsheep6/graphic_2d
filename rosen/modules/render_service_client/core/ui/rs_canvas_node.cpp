@@ -24,6 +24,7 @@
 #include "common/rs_obj_geometry.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "pipeline/rs_node_map.h"
+#include "pipeline/rs_draw_cmd.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -63,6 +64,10 @@ void RSCanvasNode::FinishRecording()
         return;
     }
     auto recording = static_cast<RSRecordingCanvas*>(recordingCanvas_)->GetDrawCmdList();
+    ROSEN_LOGI("FinishRecording, ops size: %d", recording->GetSize());
+    for (const auto &op : recording->ops_) {
+        ROSEN_LOGI("  op: %s\n", op->Name());
+    }
     delete recordingCanvas_;
     recordingCanvas_ = nullptr;
     std::unique_ptr<RSCommand> command =

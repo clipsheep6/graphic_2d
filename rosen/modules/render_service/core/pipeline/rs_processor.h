@@ -20,10 +20,15 @@
 #include "include/core/SkMatrix.h"
 #include <surface.h>
 
+#include "hdi_output.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "screen_manager/screen_types.h"
+
+#ifdef RS_ENABLE_GL
+#include "pipeline/rs_paint_filter_canvas.h"
+#endif // RS_ENABLE_GL
 
 namespace OHOS {
 namespace Rosen {
@@ -39,6 +44,11 @@ public:
 
 protected:
     std::unique_ptr<SkCanvas> CreateCanvas(sptr<Surface> producerSurface, BufferRequestConfig requestConfig);
+#ifdef RS_ENABLE_GL
+    std::unique_ptr<RSPaintFilterCanvas> CreateCanvas(
+        const sptr<HdiFramebufferSurface>& fbSurface,
+        const BufferRequestConfig& config);
+#endif // RS_ENABLE_GL
     void FlushBuffer(sptr<Surface> surface, BufferFlushConfig flushConfig);
     bool ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask& task, sptr<SurfaceBuffer>& buffer);
     void SetBufferTimeStamp();

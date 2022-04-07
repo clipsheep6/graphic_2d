@@ -122,6 +122,13 @@ void RSScreenManager::ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &o
         return;
     }
 
+#ifdef RS_ENABLE_GL
+    auto mainThread = RSMainThread::Instance();
+    if (mainThread != nullptr) {
+        (void)output->SetupRenderContext(mainThread->GetRenderContext());
+    }
+#endif // RS_ENABLE_GL
+
     bool isVirtual = false;
     ScreenId id = ToScreenId(output->GetScreenId());
     if (defaultScreenId_ == INVALID_SCREEN_ID) {

@@ -22,6 +22,10 @@
 #include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
 
+#ifdef RS_ENABLE_GL
+#include "window.h"
+#endif //RS_ENABLE_GL
+
 namespace OHOS {
 namespace Rosen {
 std::unique_ptr<SkCanvas> RSProcessor::CreateCanvas(sptr<Surface> producerSurface, BufferRequestConfig requestConfig)
@@ -45,6 +49,43 @@ std::unique_ptr<SkCanvas> RSProcessor::CreateCanvas(sptr<Surface> producerSurfac
                                         kRGBA_8888_SkColorType, kPremul_SkAlphaType);
     return SkCanvas::MakeRasterDirect(info, addr, buffer_->GetStride());
 }
+
+#ifdef RS_ENABLE_GL
+std::unique_ptr<RSPaintFilterCanvas> RSProcessor::CreateCanvas(
+    const sptr<HdiFramebufferSurface>& fbSurface,
+    const BufferRequestConfig& config)
+{
+    if (fbSurface == nullptr) {
+        RS_LOGE("RsDebug RSProcessor::CreateCanvas fbSurface is null.");
+        return nullptr;
+    }
+
+    auto renderContext = fbSurface->GetRenderContext();
+    if (renderContext == nullptr) {
+        RS_LOGE("RsDebug RSProcessor::CreateCanvas fbSurface's render_context is null.");
+        return nullptr;
+    }
+
+    auto nativeWindow = fbSurface->GetNativeWindow();
+    if (nativeWindow == nullptr) {
+        RS_LOGE("RsDebug RSProcessor::CreateCanvas fbSurface's native_window is null.");
+        return nullptr;
+    }
+
+    auto eglSurface = fbSurface->GetEGLSurface();
+    if (eglSurface == nullptr) {
+        RS_LOGE("RsDebug RSProcessor::CreateCanvas fbSurface's eglSurface is null.");
+        return nullptr;
+    }
+
+    renderContext->SetColorSpace(config.colorGamut);
+    NativeWindowHandleOpt(nativeWindow, SET_BUFFER_GEOMETRY, config.width, config.height);
+    NativeWindowHandleOpt(nativeWindow, SET_COLOR_GAMUT, config.colorGamut);
+    renderContext->MakeCurrent(eglSurface);
+
+    return std::make_unique<RSPaintFilterCanvas>(renderContext->AcquireCanvas(config.width, config.height));
+}
+#endif // RS_ENABLE_GL
 
 void RSProcessor::FlushBuffer(sptr<Surface> surface, BufferFlushConfig flushConfig)
 {

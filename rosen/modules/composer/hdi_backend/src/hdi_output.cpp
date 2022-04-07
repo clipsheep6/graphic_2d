@@ -180,6 +180,17 @@ int32_t HdiOutput::ReleaseFramebuffer(const sptr<SyncFence> &releaseFence)
     return fbSurface_->ReleaseFramebuffer(releaseFence);
 }
 
+#ifdef RS_ENABLE_GL
+bool HdiOutput::SetupRenderContext(const std::shared_ptr<RenderContext> &renderContext)
+{
+    if (fbSurface_ == nullptr) {
+        return false;
+    }
+
+    return fbSurface_->SetupRenderContext(renderContext);
+}
+#endif // RS_ENABLE_GL
+
 bool HdiOutput::CheckFbSurface()
 {
     if (fbSurface_ == nullptr) {

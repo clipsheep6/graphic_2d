@@ -14,15 +14,17 @@
 if ("${product_name}" == "watchos" || "${product_name}" == "Hi3516DV300" ||
     "${product_name}" == "ohos-arm64" || "${product_name}" == "ohos-sdk" ||
     "${product_name}" == "qemu-arm-linux-min") {
-  gpu_defines = [ "ACE_DISABLE_GL" ]
+  gpu_defines = [ "ACE_DISABLE_GL", "RS_DISABLE_GL" ]
   ace_enable_gpu = false
+  rs_enable_gpu = false
   libgl = []
 } else if ("${product_name}" == "rk3566" || "${product_name}" == "rk3568") {
-  gpu_defines = [ "ACE_ENABLE_GL" ]
+  gpu_defines = [ "ACE_ENABLE_GL", "RS_ENABLE_GL" ]
   ace_enable_gpu = true
+  rs_enable_gpu = true
   libgl = [ "//device/soc/rockchip/hardware/gpu:mali-bifrost-g52-g2p0-ohos" ]
 } else {
-  gpu_defines = [ "ACE_ENABLE_GL" ]
-  ace_enable_gpu = true
+  gpu_defines = [ "ACE_ENABLE_GL", "RS_ENABLE_GL" ]
+  rs_enable_gpu = true
   libgl = [ "//device/hisilicon/hardware/gpu:gpu_libs" ]
 }

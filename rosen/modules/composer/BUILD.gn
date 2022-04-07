@@ -32,6 +32,8 @@ config("composer_public_config") {
     "//drivers/peripheral/display/interfaces/include",
     "//foundation/graphic/standard/interfaces/innerkits/vsync_module",
     "//foundation/graphic/standard/interfaces/innerkits/common",
+    "//foundation/graphic/standard/rosen/modules/2d_graphics/include",
+    "//foundation/graphic/standard/rosen/modules/2d_graphics/src",
     "//foundation/graphic/standard/rosen/modules/composer/hdi_backend/include",
     "//foundation/graphic/standard/rosen/modules/composer/vsync/include",
     "//foundation/graphic/standard/frameworks/vsync/include",
@@ -57,6 +59,13 @@ ohos_shared_library("libcomposer") {
     "vsync/src/vsync_sampler.cpp",
   ]
 
+  defines = []
+  defines += gpu_defines
+
+  if (rs_enable_gpu) {
+    sources += [ "//foundation/graphic/standard/rosen/modules/2d_graphics/src/render_context/render_context.cpp" ]
+  }
+
   include_dirs = [ "//foundation/graphic/standard/utils/log" ]
 
   configs = [ ":composer_config" ]
@@ -81,6 +90,7 @@ ohos_shared_library("libcomposer") {
     "//foundation/graphic/standard/utils:scoped_bytrace",
     "//foundation/graphic/standard/utils:socketpair",
     "//foundation/graphic/standard/utils:sync_fence",
+    "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_ohos",
     "//utils/native/base:utils",
   ]
 

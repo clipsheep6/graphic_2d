@@ -38,6 +38,11 @@ config("surface_public_config") {
   cflags = [ "-Wno-error=deprecated-declarations" ]
 }
 
+config("surface_mingw_public_config") {
+  visibility = [ ":surface" ]
+  include_dirs = [ "//drivers/peripheral/display/interfaces/include" ]
+}
+
 ohos_shared_library("surface") {
   sources = [
     "src/buffer_client_producer.cpp",
@@ -91,6 +96,16 @@ ohos_shared_library("surface") {
     "//foundation/graphic/standard/utils:libgraphic_utils",
     "//utils/native/base:utils",
   ]
+
+  if (current_os == "mingw") {
+    sources -= [ "src/buffer_manager.cpp" ]
+    sources += [ "src/mock/buffer_manager.cpp" ]
+    public_deps -= [
+      "//drivers/peripheral/display/hal:hdi_display_gralloc",
+      "//drivers/peripheral/display/hdi_service/gralloc/client:hdi_gralloc_client",
+    ]
+    public_configs += [ ":surface_mingw_public_config" ]
+  }
 
   symlink_target_name = [ "libnative_window.so" ]
 

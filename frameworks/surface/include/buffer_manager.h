@@ -19,7 +19,9 @@
 #include <memory>
 
 #include <surface_type.h>
+#ifndef OS_mingw
 #include <idisplay_gralloc.h>
+#endif
 
 #include "surface_buffer.h"
 
@@ -42,7 +44,9 @@ private:
     ~BufferManager() = default;
     static inline sptr<BufferManager> instance = nullptr;
 
+#ifndef OS_mingw
     std::unique_ptr<::OHOS::HDI::Display::V1_0::IDisplayGralloc> displayGralloc_ = nullptr;
+#endif
 };
 } // namespace OHOS
 

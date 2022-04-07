@@ -20,6 +20,10 @@
 
 #include "surface_buffer_impl.h"
 
+#ifdef OS_mingw
+#define fcntl(...) -1
+#endif
+
 namespace OHOS {
 void ReadFence(MessageParcel &parcel, int32_t &fence)
 {

@@ -25,6 +25,7 @@ config("render_service_client_config") {
     "//foundation/graphic/standard/interfaces/innerkits/composer",
     "//drivers/peripheral/display/interfaces/include",
     "//drivers/peripheral/base",
+    "//utils/native/base/include",
   ]
 }
 
@@ -95,10 +96,21 @@ ohos_source_set("render_service_client_src") {
     defines += [ "ENABLE_EXPORT_MACRO" ]
   }
 
-  external_deps = [
-    "bytrace_standard:bytrace_core",
-    "hisysevent_native:libhisysevent",
-  ]
+  if (current_os != "mingw") {
+    external_deps = [
+      "bytrace_standard:bytrace_core",
+      "hisysevent_native:libhisysevent",
+    ]
+  } else {
+    deps += [
+      "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent:libhisysevent",
+      "//developtools/bytrace_standard/interfaces/innerkits/native:bytrace_core",
+      "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler:libeventhandler",
+      "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
+      "//foundation/graphic/standard:libgl",
+    ]
+  }
+
   public_deps =
       [ "$rosen_root/modules/render_service_base:librender_service_base" ]
 }
@@ -108,6 +120,11 @@ ohos_shared_library("librender_service_client") {
     ":render_service_client_src",
     "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_ohos",
   ]
+
+  if (current_os == "mingw") {
+    public_deps -= [ "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_ohos" ]
+    public_deps += [ "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_windows" ]
+  }
 
   public_configs = [ ":render_service_client_config" ]
 

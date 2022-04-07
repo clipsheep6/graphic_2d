@@ -66,6 +66,10 @@ static inline std::string LowErrorStrSpecial(GSError err)
     return "";
 }
 
+#ifdef OS_mingw
+#define strerror_r(err, buf, len) strerror_s((buf), (len), (err))
+#endif
+
 static inline std::string LowErrorStr(GSError lowerr)
 {
     std::string lowError = LowErrorStrSpecial(lowerr);

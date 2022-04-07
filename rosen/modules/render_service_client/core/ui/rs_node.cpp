@@ -30,6 +30,10 @@
 #include "render/rs_path.h"
 #include "transaction/rs_transaction_proxy.h"
 
+#ifdef OS_mingw
+#define gettid getpid
+#endif
+
 namespace OHOS {
 namespace Rosen {
 

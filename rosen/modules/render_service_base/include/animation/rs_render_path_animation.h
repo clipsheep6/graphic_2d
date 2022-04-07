@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSRenderPathAnimation : public RSRenderPropertyAnimation<Vector2f> {
+class RS_EXPORT RSRenderPathAnimation : public RSRenderPropertyAnimation<Vector2f> {
 static constexpr float UNDEFINED_FLOAT = 0.0f;
 public:
     RSRenderPathAnimation(AnimationId id, const RSAnimatableProperty& property, const Vector2f& originPosition,

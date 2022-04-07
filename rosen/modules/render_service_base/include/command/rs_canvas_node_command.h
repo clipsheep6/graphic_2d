@@ -28,7 +28,7 @@ enum RSCanvasNodeCommandType : uint16_t {
 
 class DrawCmdList;
 
-class RSCanvasNodeCommandHelper {
+class RS_EXPORT RSCanvasNodeCommandHelper {
 public:
     static void Create(RSContext& context, NodeId id);
     static void UpdateRecording(

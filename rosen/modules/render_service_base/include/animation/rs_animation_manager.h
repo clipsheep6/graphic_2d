@@ -32,7 +32,7 @@ class RSRenderAnimation;
 class RSRenderNode;
 class RSTransitionProperties;
 
-class RSAnimationManager {
+class RS_EXPORT RSAnimationManager {
 public:
     using TransitionCallback = std::function<void(const std::unique_ptr<RSTransitionProperties>& transitionProperties)>;
     RSAnimationManager() = default;

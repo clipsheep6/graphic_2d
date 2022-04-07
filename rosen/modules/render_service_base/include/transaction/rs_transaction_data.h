@@ -29,7 +29,7 @@
 namespace OHOS {
 namespace Rosen {
 #ifdef ROSEN_OHOS
-class RSTransactionData : public Parcelable {
+class RS_EXPORT RSTransactionData : public Parcelable {
 #else
 class RSTransactionData {
 #endif

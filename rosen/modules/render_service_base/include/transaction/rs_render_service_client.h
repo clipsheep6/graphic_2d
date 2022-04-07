@@ -48,7 +48,7 @@ public:
     virtual void OnSurfaceCapture(std::shared_ptr<Media::PixelMap> pixelmap) = 0;
 };
 
-class RSRenderServiceClient : public RSIRenderClient {
+class RS_EXPORT RSRenderServiceClient : public RSIRenderClient {
 public:
     RSRenderServiceClient() = default;
     virtual ~RSRenderServiceClient() = default;

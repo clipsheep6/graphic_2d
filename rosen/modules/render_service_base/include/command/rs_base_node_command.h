@@ -29,13 +29,13 @@ enum RSBaseNodeCommandType : uint16_t {
     BASE_NODE_CLEAR_CHILDREN,
 };
 
-class BaseNodeCommandHelper {
+class RS_EXPORT BaseNodeCommandHelper {
 public:
-    static void Destroy(RSContext& context, NodeId nodeId);
-    static void AddChild(RSContext& context, NodeId nodeId, NodeId childNodeId, int32_t index);
-    static void RemoveChild(RSContext& context, NodeId nodeId, NodeId childNodeId);
-    static void RemoveFromTree(RSContext& context, NodeId nodeId);
-    static void ClearChildren(RSContext& context, NodeId nodeId);
+    static RS_EXPORT void Destroy(RSContext& context, NodeId nodeId);
+    static RS_EXPORT void AddChild(RSContext& context, NodeId nodeId, NodeId childNodeId, int32_t index);
+    static RS_EXPORT void RemoveChild(RSContext& context, NodeId nodeId, NodeId childNodeId);
+    static RS_EXPORT void RemoveFromTree(RSContext& context, NodeId nodeId);
+    static RS_EXPORT void ClearChildren(RSContext& context, NodeId nodeId);
 };
 
 ADD_COMMAND(RSBaseNodeDestroy, ARG(BASE_NODE, BASE_NODE_DESTROY, BaseNodeCommandHelper::Destroy, NodeId))

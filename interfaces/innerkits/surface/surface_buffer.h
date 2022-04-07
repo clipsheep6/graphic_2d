@@ -17,20 +17,38 @@
 #define INTERFACES_INNERKITS_SURFACE_SURFACE_BUFFER_H
 
 #include <functional>
+#include <any>
 
 #include <refbase.h>
 
 #include "buffer_handle_utils.h"
+#include <buffer_extra_data.h>
 #include "surface_type.h"
 #include "egl_data.h"
 
 namespace OHOS {
+
+#ifndef DELETE_COPY_AND_ASSIGN
+#define DELETE_COPY_AND_ASSIGN(TypeName) \
+ TypeName(const TypeName&) = delete; \
+ TypeName& operator=(const TypeName&) = delete;
+#endif
+
+class MessageParcel;
 class SurfaceBuffer : public RefBase {
 public:
     virtual BufferHandle *GetBufferHandle() const = 0;
     virtual int32_t GetWidth() const = 0;
     virtual int32_t GetHeight() const = 0;
     virtual int32_t GetStride() const = 0;
+    virtual int32_t GetFormat() const = 0;
+    virtual int64_t GetUsage() const = 0;
+    virtual uint64_t GetPhyAddr() const = 0;
+    virtual int32_t GetKey() const = 0;
+    virtual void *GetVirAddr() const = 0;
+    virtual int GetFileDescriptor() const = 0;
+    virtual uint32_t GetSize() const = 0;
+
     virtual int32_t GetSurfaceBufferWidth() const = 0;
     virtual int32_t GetSurfaceBufferHeight() const = 0;
     virtual ColorGamut GetSurfaceBufferColorGamut() const = 0;
@@ -39,28 +57,25 @@ public:
     virtual GSError SetSurfaceBufferHeight(int32_t height) = 0;
     virtual GSError SetSurfaceBufferColorGamut(ColorGamut colorGamut) = 0;
     virtual GSError SetSurfaceBufferTransform(TransformType transform) = 0;
-    virtual int32_t GetFormat() const = 0;
-    virtual int64_t GetUsage() const = 0;
-    virtual uint64_t GetPhyAddr() const = 0;
-    virtual int32_t GetKey() const = 0;
-    virtual void *GetVirAddr() const = 0;
-    virtual int GetFileDescriptor() const = 0;
-    virtual uint32_t GetSize() const = 0;
-    virtual GSError SetInt32(uint32_t key, int32_t value) = 0;
-    virtual GSError GetInt32(uint32_t key, int32_t &value) = 0;
-    virtual GSError SetInt64(uint32_t key, int64_t value) = 0;
-    virtual GSError GetInt64(uint32_t key, int64_t &value) = 0;
-    virtual sptr<EglData> GetEglData() const = 0;
 
-    // support ipc data
-    virtual GSError ExtraGet(std::string key, int32_t &value) const = 0;
-    virtual GSError ExtraGet(std::string key, int64_t &value) const = 0;
-    virtual GSError ExtraGet(std::string key, double &value) const = 0;
-    virtual GSError ExtraGet(std::string key, std::string &value) const = 0;
-    virtual GSError ExtraSet(std::string key, int32_t value) = 0;
-    virtual GSError ExtraSet(std::string key, int64_t value) = 0;
-    virtual GSError ExtraSet(std::string key, double value) = 0;
-    virtual GSError ExtraSet(std::string key, std::string value) = 0;
+    virtual int32_t GetSeqNum() const = 0;
+
+    // opt EglData
+    virtual sptr<EglData> GetEglData() const = 0;
+    virtual void SetEglData(const sptr<EglData>& data) = 0;
+
+    virtual void SetExtraData(const sptr<BufferExtraData> &bedata) = 0;
+    virtual void GetExtraData(sptr<BufferExtraData> &bedata) const = 0;
+
+    virtual void WriteToMessageParcel(MessageParcel &parcel) = 0;
+    virtual void SetBufferHandle(BufferHandle *handle) = 0;
+
+    // gralloc
+    virtual GSError Alloc(const BufferRequestConfig &config) = 0;
+    virtual GSError Map() = 0;
+    virtual GSError Unmap() = 0;
+    virtual GSError FlushCache() = 0;
+    virtual GSError InvalidateCache() = 0;
 
 protected:
     SurfaceBuffer(){}

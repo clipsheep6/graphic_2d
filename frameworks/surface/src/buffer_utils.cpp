@@ -18,7 +18,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "surface_buffer_impl.h"
+#include "surface_buffer_impl_refactor.h"
 
 namespace OHOS {
 void ReadFence(MessageParcel &parcel, int32_t &fence)
@@ -94,20 +94,20 @@ void ReadSurfaceBufferImpl(MessageParcel &parcel,
 {
     sequence = parcel.ReadInt32();
     if (parcel.ReadBool()) {
-        sptr<SurfaceBufferImpl> bufferImpl = new SurfaceBufferImpl(sequence);
+        sptr<SurfaceBuffer> bufferImpl = new SurfaceBufferImplRefactor(sequence);
         auto handle = ReadBufferHandle(parcel);
         bufferImpl->SetBufferHandle(handle);
-        int32_t size = parcel.ReadInt32();
-        for (int32_t i = 0; i < size; i++) {
-            uint32_t key = parcel.ReadUint32();
-            int32_t type = parcel.ReadInt32();
-            if (type == EXTRA_DATA_TYPE_INT32) {
-                bufferImpl->SetInt32(key, parcel.ReadInt32());
-            }
-            if (type == EXTRA_DATA_TYPE_INT64) {
-                bufferImpl->SetInt64(key, parcel.ReadInt64());
-            }
-        }
+        //int32_t size = parcel.ReadInt32();
+        //for (int32_t i = 0; i < size; i++) {
+        //    uint32_t key = parcel.ReadUint32();
+        //    int32_t type = parcel.ReadInt32();
+        //    if (type == EXTRA_DATA_TYPE_INT32) {
+        //        bufferImpl->SetInt32(key, parcel.ReadInt32());
+        //    }
+        //    if (type == EXTRA_DATA_TYPE_INT64) {
+        //        bufferImpl->SetInt64(key, parcel.ReadInt64());
+        //    }
+        //}
         buffer = bufferImpl;
     }
 }
@@ -116,11 +116,10 @@ void WriteSurfaceBufferImpl(MessageParcel &parcel,
     int32_t sequence, const sptr<SurfaceBuffer> &buffer)
 {
     parcel.WriteInt32(sequence);
-    auto bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    parcel.WriteBool(bufferImpl != nullptr);
-    if (bufferImpl == nullptr) {
+    parcel.WriteBool(buffer != nullptr);
+    if (buffer == nullptr) {
         return;
     }
-    bufferImpl->WriteToMessageParcel(parcel);
+    buffer->WriteToMessageParcel(parcel);
 }
 } // namespace OHOS

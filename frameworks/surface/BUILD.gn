@@ -53,6 +53,7 @@ ohos_shared_library("surface") {
     "src/surface.cpp",
     "src/surface_buffer_impl.cpp",
     "src/surface_utils.cpp",
+    "src/surface_buffer_impl_refactor.cpp",
   ]
 
   if (ace_enable_gpu) {

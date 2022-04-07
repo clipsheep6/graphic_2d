@@ -27,6 +27,8 @@
 
 #include "buffer_log.h"
 #include "buffer_manager.h"
+#include "surface_buffer_impl.h"
+#include "surface_buffer_impl_refactor.h"
 
 namespace OHOS {
 namespace {
@@ -61,9 +63,10 @@ BufferQueue::~BufferQueue()
 {
     BLOGNI("dtor, Queue id: %{public}" PRIu64 "", uniqueId_);
     std::lock_guard<std::mutex> lockGuard(mutex_);
-    for (auto it = bufferQueueCache_.begin(); it != bufferQueueCache_.end(); it++) {
-        FreeBuffer(it->second.buffer);
-    }
+    //for (auto it = bufferQueueCache_.begin(); it != bufferQueueCache_.end(); it++) {
+    //    FreeBuffer(it->second.buffer);
+    //}
+    bufferQueueCache_.clear();
 }
 
 GSError BufferQueue::Init()
@@ -77,7 +80,7 @@ uint32_t BufferQueue::GetUsedSize()
     return used_size;
 }
 
-GSError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl> &buffer,
+GSError BufferQueue::PopFromFreeList(sptr<SurfaceBuffer> &buffer,
     const BufferRequestConfig &config)
 {
     if (isShared_ == true && GetUsedSize() > 0) {
@@ -103,7 +106,7 @@ GSError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl> &buffer,
     return GSERROR_OK;
 }
 
-GSError BufferQueue::PopFromDirtyList(sptr<SurfaceBufferImpl> &buffer)
+GSError BufferQueue::PopFromDirtyList(sptr<SurfaceBuffer> &buffer)
 {
     if (isShared_ == true && GetUsedSize() > 0) {
         buffer = bufferQueueCache_.begin()->second.buffer;
@@ -177,7 +180,7 @@ GSError BufferQueue::CheckFlushConfig(const BufferFlushConfig &config)
     return GSERROR_OK;
 }
 
-GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
     struct IBufferProducer::RequestBufferReturnValue &retval)
 {
     ScopedBytrace func(__func__);
@@ -194,10 +197,9 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtr
 
     std::unique_lock<std::mutex> lock(mutex_);
     // dequeue from free list
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-    ret = PopFromFreeList(bufferImpl, config);
+    sptr<SurfaceBuffer>& buffer = retval.buffer;
+    ret = PopFromFreeList(buffer, config);
     if (ret == GSERROR_OK) {
-        retval.buffer = bufferImpl;
         return ReuseBuffer(config, bedata, retval);
     }
 
@@ -206,9 +208,8 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtr
         waitReqCon_.wait_for(lock, std::chrono::milliseconds(config.timeout),
             [this]() { return !freeList_.empty() || (GetUsedSize() < GetQueueSize()); });
         // try dequeue from free list again
-        ret = PopFromFreeList(bufferImpl, config);
+        ret = PopFromFreeList(buffer, config);
         if (ret == GSERROR_OK) {
-            retval.buffer = bufferImpl;
             return ReuseBuffer(config, bedata, retval);
         } else if (GetUsedSize() >= GetQueueSize()) {
             BLOGN_FAILURE("all buffer are using, Queue id: %{public}" PRIu64 "", uniqueId_);
@@ -216,12 +217,11 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtr
         }
     }
 
-    ret = AllocBuffer(bufferImpl, config);
+    ret = AllocBuffer(buffer, config);
     if (ret == GSERROR_OK) {
-        retval.sequence = bufferImpl->GetSeqNum();
+        retval.sequence = buffer->GetSeqNum();
 
-        bufferImpl->GetExtraData(bedata);
-        retval.buffer = bufferImpl;
+        buffer->GetExtraData(bedata);
         retval.fence = -1;
         BLOGD("Success alloc Buffer id: %{public}d Queue id: %{public}" PRIu64 "", retval.sequence, uniqueId_);
     } else {
@@ -231,12 +231,11 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtr
     return ret;
 }
 
-GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
     struct IBufferProducer::RequestBufferReturnValue &retval)
 {
     ScopedBytrace func(__func__);
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-    retval.sequence = bufferImpl->GetSeqNum();
+    retval.sequence = retval.buffer->GetSeqNum();
     bool needRealloc = (config != bufferQueueCache_[retval.sequence].config);
     // config, realloc
     if (needRealloc) {
@@ -244,15 +243,14 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferExtraD
             BLOGN_FAILURE_RET(GSERROR_INVALID_ARGUMENTS);
         }
         DeleteBufferInCache(retval.sequence);
-
-        auto sret = AllocBuffer(bufferImpl, config);
+        sptr<SurfaceBuffer> buffer = nullptr;
+        auto sret = AllocBuffer(buffer, config);
         if (sret != GSERROR_OK) {
             BLOGN_FAILURE("realloc failed");
             return sret;
         }
-
-        retval.buffer = bufferImpl;
-        retval.sequence = bufferImpl->GetSeqNum();
+        retval.buffer = buffer;
+        retval.sequence = buffer->GetSeqNum();
         bufferQueueCache_[retval.sequence].config = config;
     }
 
@@ -261,7 +259,7 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferExtraD
 
     // Prevent releasefence from being repeatedly closed after cancel.
     bufferQueueCache_[retval.sequence].fence = -1;
-    bufferImpl->GetExtraData(bedata);
+    retval.buffer->GetExtraData(bedata);
 
     auto &dbs = retval.deletingBuffers;
     dbs.insert(dbs.end(), deletingList_.begin(), deletingList_.end());
@@ -279,7 +277,7 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferExtraD
     return GSERROR_OK;
 }
 
-GSError BufferQueue::CancelBuffer(int32_t sequence, const BufferExtraData &bedata)
+GSError BufferQueue::CancelBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata)
 {
     ScopedBytrace func(__func__);
     if (isShared_) {
@@ -306,7 +304,7 @@ GSError BufferQueue::CancelBuffer(int32_t sequence, const BufferExtraData &bedat
     return GSERROR_OK;
 }
 
-GSError BufferQueue::FlushBuffer(int32_t sequence, const BufferExtraData &bedata,
+GSError BufferQueue::FlushBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata,
     int32_t fence, const BufferFlushConfig &config)
 {
     ScopedBytrace func(__func__);
@@ -374,7 +372,7 @@ void BufferQueue::DumpToFile(int32_t sequence)
     std::stringstream ss;
     ss << "/data/bq_" << getpid() << "_" << name_ << "_" << nowVal << ".raw";
 
-    sptr<SurfaceBufferImpl> &buffer = bufferQueueCache_[sequence].buffer;
+    sptr<SurfaceBuffer> &buffer = bufferQueueCache_[sequence].buffer;
     std::ofstream rawDataFile(ss.str(), std::ofstream::binary);
     if (!rawDataFile.good()) {
         BLOGE("open failed: (%{public}d)%{public}s", errno, strerror(errno));
@@ -384,7 +382,7 @@ void BufferQueue::DumpToFile(int32_t sequence)
     rawDataFile.close();
 }
 
-GSError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData &bedata,
+GSError BufferQueue::DoFlushBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata,
     int32_t fence, const BufferFlushConfig &config)
 {
     ScopedBytrace func(__func__);
@@ -424,7 +422,7 @@ GSError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData &beda
     return GSERROR_OK;
 }
 
-GSError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer,
+GSError BufferQueue::AcquireBuffer(sptr<SurfaceBuffer> &buffer,
     int32_t &fence, int64_t &timestamp, Rect &damage)
 {
     ScopedBytrace func(__func__);
@@ -451,7 +449,7 @@ GSError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer,
     return ret;
 }
 
-GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl> &buffer, int32_t fence)
+GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, int32_t fence)
 {
     ScopedBytrace func(__func__);
     int32_t sequence = buffer->GetSeqNum();
@@ -498,45 +496,46 @@ GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl> &buffer, int32_t fenc
     return GSERROR_OK;
 }
 
-GSError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
+GSError BufferQueue::AllocBuffer(sptr<SurfaceBuffer> &buffer,
     const BufferRequestConfig &config)
 {
     ScopedBytrace func(__func__);
-    buffer = new SurfaceBufferImpl();
+    buffer = new SurfaceBufferImplRefactor();
     int32_t sequence = buffer->GetSeqNum();
 
-    GSError ret = bufferManager_->Alloc(config, buffer);
+    //GSError ret = bufferManager_->Alloc(config, buffer);
+    GSError ret = buffer->Alloc(config);
     if (ret != GSERROR_OK) {
         BLOGN_FAILURE_ID_API(sequence, Alloc, ret);
         return ret;
     }
 
-    BufferElement ele = {
-        .buffer = buffer,
-        .state = BUFFER_STATE_REQUESTED,
-        .isDeleting = false,
-        .config = config,
-        .fence = -1
-    };
-
-    ret = bufferManager_->Map(buffer);
+    //ret = bufferManager_->Map(buffer);
+    ret = buffer->Map();
     if (ret == GSERROR_OK) {
+        BufferElement ele = {
+            .buffer = buffer,
+            .state = BUFFER_STATE_REQUESTED,
+            .isDeleting = false,
+            .config = config,
+            .fence = -1
+        };
         BLOGN_SUCCESS_ID(sequence, "Map");
         bufferQueueCache_[sequence] = ele;
         return GSERROR_OK;
     }
 
-    GSError freeRet = bufferManager_->Free(buffer);
-    if (freeRet != GSERROR_OK) {
-        BLOGN_FAILURE_ID(sequence, "Map failed, Free failed");
-    } else {
+    //GSError freeRet = bufferManager_->Free(buffer);
+    //if (freeRet != GSERROR_OK) {
+    //    BLOGN_FAILURE_ID(sequence, "Map failed, Free failed");
+    //} else {
         BLOGN_FAILURE_ID(sequence, "Map failed, Free success");
-    }
+    //}
 
     return ret;
 }
 
-GSError BufferQueue::FreeBuffer(sptr<SurfaceBufferImpl> &buffer)
+GSError BufferQueue::FreeBuffer(sptr<SurfaceBuffer> &buffer)
 {
     BLOGND("Free [%{public}d]", buffer->GetSeqNum());
     buffer->SetEglData(nullptr);
@@ -549,7 +548,7 @@ void BufferQueue::DeleteBufferInCache(int32_t sequence)
 {
     auto it = bufferQueueCache_.find(sequence);
     if (it != bufferQueueCache_.end()) {
-        FreeBuffer(it->second.buffer);
+        //FreeBuffer(it->second.buffer);
         if (it->second.fence > 0) {
             close(it->second.fence);
         }
@@ -602,7 +601,7 @@ void BufferQueue::DeleteBuffers(int32_t count)
     }
 }
 
-GSError BufferQueue::AttachBuffer(sptr<SurfaceBufferImpl> &buffer)
+GSError BufferQueue::AttachBuffer(sptr<SurfaceBuffer> &buffer)
 {
     ScopedBytrace func(__func__);
     if (isShared_) {
@@ -651,7 +650,7 @@ GSError BufferQueue::AttachBuffer(sptr<SurfaceBufferImpl> &buffer)
     }
 }
 
-GSError BufferQueue::DetachBuffer(sptr<SurfaceBufferImpl> &buffer)
+GSError BufferQueue::DetachBuffer(sptr<SurfaceBuffer> &buffer)
 {
     ScopedBytrace func(__func__);
     if (isShared_) {

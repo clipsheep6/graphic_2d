@@ -13,24 +13,32 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_SURFACE_INCLUDE_SURFACE_BUFFER_IMPL_H
-#define FRAMEWORKS_SURFACE_INCLUDE_SURFACE_BUFFER_IMPL_H
+#ifndef FRAMEWORKS_SURFACE_INCLUDE_SURFACE_BUFFER_IMPL_REFACTOR_H
+#define FRAMEWORKS_SURFACE_INCLUDE_SURFACE_BUFFER_IMPL_REFACTOR_H
 
 #include <map>
 #include <buffer_handle_parcel.h>
 #include <buffer_handle_utils.h>
 #include <surface_buffer.h>
 #include "egl_data.h"
+#include <idisplay_gralloc.h>
 
 namespace OHOS {
-class SurfaceBufferImpl : public SurfaceBuffer {
+class MessageParcel;
+class SurfaceBufferImplRefactor : public SurfaceBuffer {
 public:
-    SurfaceBufferImpl();
-    SurfaceBufferImpl(int seqNum);
-    DELETE_COPY_AND_ASSIGN(SurfaceBufferImpl);
-    virtual ~SurfaceBufferImpl();
+    SurfaceBufferImplRefactor();
+    SurfaceBufferImplRefactor(int seqNum);
+    DELETE_COPY_AND_ASSIGN(SurfaceBufferImplRefactor);
+    virtual ~SurfaceBufferImplRefactor();
 
-    static SurfaceBufferImpl *FromBase(const sptr<SurfaceBuffer>& buffer);
+    static SurfaceBufferImplRefactor *FromBase(const sptr<SurfaceBuffer>& buffer);
+
+    GSError Alloc(const BufferRequestConfig &config) override;
+    GSError Map() override;
+    GSError Unmap() override;
+    GSError FlushCache() override;
+    GSError InvalidateCache() override;
 
     BufferHandle *GetBufferHandle() const override;
     int32_t GetWidth() const override;
@@ -64,21 +72,19 @@ public:
     void SetBufferHandle(BufferHandle *handle) override;
     void WriteToMessageParcel(MessageParcel &parcel) override;
 
-    GSError Alloc(const BufferRequestConfig &config) override;
-    GSError Map() override;
-    GSError Unmap() override;
-    GSError FlushCache() override;
-    GSError InvalidateCache() override;
-
 private:
+    GSError InitDisplayGralloc();
+    void FreeBufferHandleLocked();
+
     BufferHandle *handle_ = nullptr;
     int32_t sequenceNumber_ = -1;
-    sptr<BufferExtraData> bedata_ = nullptr;
+    sptr<BufferExtraData> bedata_;
     sptr<EglData> eglData_ = nullptr;
-    int32_t surfaceBufferWidth_ = 0;
-    int32_t surfaceBufferHeight_ = 0;
     ColorGamut surfaceBufferColorGamut_ = ColorGamut::COLOR_GAMUT_SRGB;
     TransformType transform_ = TransformType::ROTATE_NONE;
+
+    std::unique_ptr<::OHOS::HDI::Display::V1_0::IDisplayGralloc> displayGralloc_ = nullptr;
+    mutable std::mutex mutex_;
 };
 } // namespace OHOS
 

@@ -16,9 +16,7 @@
 #include "render/rs_filter.h"
 
 #include "platform/common/rs_log.h"
-#ifdef ROSEN_OHOS
 #include "render/rs_blur_filter.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -30,11 +28,7 @@ RSFilter::~RSFilter() {}
 
 std::shared_ptr<RSFilter> RSFilter::CreateBlurFilter(float blurRadiusX, float blurRadiusY)
 {
-#ifdef ROSEN_OHOS
     return std::make_shared<RSBlurFilter>(blurRadiusX, blurRadiusY);
-#else
-    return nullptr;
-#endif
 }
 
 std::shared_ptr<RSFilter> operator+(const std::shared_ptr<RSFilter>& lhs, const std::shared_ptr<RSFilter>& rhs)

@@ -203,7 +203,6 @@ bool RSSurfaceNode::CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config
     return (surface_ != nullptr);
 }
 
-#ifdef ROSEN_OHOS
 sptr<OHOS::Surface> RSSurfaceNode::GetSurface() const
 {
     if (surface_ == nullptr) {
@@ -213,7 +212,6 @@ sptr<OHOS::Surface> RSSurfaceNode::GetSurface() const
     auto ohosSurface = RSSurfaceConverter::ConvertToOhosSurface(surface_);
     return ohosSurface;
 }
-#endif
 
 bool RSSurfaceNode::NeedForcedSendToRemote() const
 {

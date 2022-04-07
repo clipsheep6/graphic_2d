@@ -49,7 +49,6 @@ public:
     {
         return isAdditive_;
     }
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         if (!RSRenderAnimation::Marshalling(parcel)) {
@@ -67,7 +66,6 @@ public:
         }
         return true;
     }
-#endif
 protected:
     RSRenderPropertyAnimation(AnimationId id, const RSAnimatableProperty& property, const T& originValue)
         : RSRenderAnimation(id), property_(property), originValue_(originValue), lastValue_(originValue)
@@ -76,7 +74,6 @@ protected:
             RSBasePropertyAccessors::GetAccessor(property));
     }
     RSRenderPropertyAnimation() =default;
-#ifdef ROSEN_OHOS
     bool ParseParam(Parcel& parcel) override
     {
         if (!RSRenderAnimation::ParseParam(parcel)) {
@@ -97,7 +94,6 @@ protected:
 
         return true;
     }
-#endif
     void SetPropertyValue(const T& value)
     {
         auto target = GetTarget();

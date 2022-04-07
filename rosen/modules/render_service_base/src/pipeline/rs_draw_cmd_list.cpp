@@ -53,7 +53,6 @@ void DrawCmdList::Playback(SkCanvas& canvas, const SkRect* rect) const
 
 void DrawCmdList::Playback(RSPaintFilterCanvas& canvas, const SkRect* rect) const
 {
-#ifdef ROSEN_OHOS
     if (width_ <= 0 || height_ <= 0) {
         return;
     }
@@ -63,7 +62,6 @@ void DrawCmdList::Playback(RSPaintFilterCanvas& canvas, const SkRect* rect) cons
         }
         it->Draw(canvas, rect);
     }
-#endif
 }
 
 int DrawCmdList::GetSize() const

@@ -21,10 +21,8 @@
 #include <memory>
 #include <vector>
 
-#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <refbase.h>
-#endif
 
 #include "common/rs_macros.h"
 
@@ -38,20 +36,14 @@ enum InterpolatorType : uint16_t {
     SPRING,
 };
 
-#ifdef ROSEN_OHOS
 class RSInterpolator : public Parcelable {
-#else
-class RSInterpolator {
-#endif
 public:
     static RS_EXPORT const std::shared_ptr<RSInterpolator> DEFAULT;
     RSInterpolator() = default;
     virtual ~RSInterpolator() = default;
 
-#ifdef ROSEN_OHOS
     virtual bool Marshalling(Parcel& parcel) const override = 0;
     static RS_EXPORT RSInterpolator* Unmarshalling(Parcel& parcel);
-#endif
 
     virtual float Interpolate(float input) const = 0;
 };
@@ -61,7 +53,6 @@ public:
     LinearInterpolator() = default;
     virtual ~LinearInterpolator() = default;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         if (!parcel.WriteUint16(InterpolatorType::LINEAR)) {
@@ -69,7 +60,6 @@ public:
         }
         return true;
     }
-#endif
 
     float Interpolate(float input) const override
     {
@@ -84,7 +74,6 @@ public:
 
     float Interpolate(float input) const override;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         if (!(parcel.WriteUint16(InterpolatorType::CUSTOM) && parcel.WriteFloatVector(times_) &&
@@ -94,7 +83,6 @@ public:
         return true;
     }
     static RSCustomInterpolator* Unmarshalling(Parcel& parcel);
-#endif
 
 private:
     RSCustomInterpolator(const std::vector<float>&& times, const std::vector<float>&& values);

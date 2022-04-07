@@ -95,7 +95,6 @@ public:
     {}
     virtual ~RSGetPropertyTask() = default;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         if (!(RSMarshallingHelper::Marshalling(parcel, commandType) &&
@@ -151,7 +150,6 @@ public:
     }
 
     static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
-#endif // ROSEN_OHOS
 
     void Process(RSContext& context) override
     {

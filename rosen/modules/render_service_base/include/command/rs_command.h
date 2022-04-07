@@ -16,10 +16,8 @@
 #ifndef ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_COMMAND_H
 #define ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_COMMAND_H
 
-#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <refbase.h>
-#endif
 
 #include "common/rs_common_def.h"
 #include "pipeline/rs_context.h"
@@ -41,11 +39,7 @@ enum RSCommandType : uint16_t {
     RS_NODE_SYNCHRONOUS_READ_PROPERTY,
 };
 
-#ifdef ROSEN_OHOS
 class RSCommand : public Parcelable {
-#else
-class RSCommand {
-#endif
 public:
     virtual ~RSCommand() noexcept = default;
     virtual void Process(RSContext& context) = 0;
@@ -55,10 +49,8 @@ class RSSyncTask : public RSCommand {
 public:
     RSSyncTask(uint64_t timeoutNS) : timeoutNS_(timeoutNS) {}
 
-#ifdef ROSEN_OHOS
     virtual bool CheckHeader(Parcel& parcel) const = 0;
     virtual bool ReadFromParcel(Parcel& parcel) = 0;
-#endif
 
     inline uint64_t GetTimeout() const
     {

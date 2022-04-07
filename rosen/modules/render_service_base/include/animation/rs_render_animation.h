@@ -16,10 +16,8 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_ANIMATION_H
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_ANIMATION_H
 
-#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <refbase.h>
-#endif
 #include "animation/rs_animatable_property.h"
 #include "animation/rs_animation_common.h"
 #include "animation/rs_animation_fraction.h"
@@ -35,11 +33,7 @@ enum class AnimationState {
     FINISHED,
 };
 
-#ifdef ROSEN_OHOS
-class RSRenderAnimation : public Parcelable {
-#else
-class RSRenderAnimation {
-#endif
+class RS_EXPORT RSRenderAnimation : public Parcelable {
 public:
     virtual ~RSRenderAnimation() = default;
     AnimationId GetAnimationId() const;
@@ -49,9 +43,7 @@ public:
     void Resume();
     void SetFraction(float fraction);
     void SetReversed(bool isReversed);
-#ifdef ROSEN_OHOS
     virtual bool Marshalling(Parcel& parcel) const override;
-#endif
     bool Animate(int64_t time);
 
     bool IsStarted() const;
@@ -138,9 +130,7 @@ public:
 protected:
     explicit RSRenderAnimation(AnimationId id);
     RSRenderAnimation() = default;
-#ifdef ROSEN_OHOS
     virtual bool ParseParam(Parcel& parcel);
-#endif
     void SetFractionInner(float fraction);
 
     virtual void OnSetFraction(float fraction);

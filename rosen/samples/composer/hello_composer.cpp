@@ -32,7 +32,7 @@ namespace {
     ::OHOS::HiviewDFX::HiLogLabel {LOG_CORE, 0, "HelloComposer"}, \
     "%{public}s: " fmt, __func__, ##__VA_ARGS__)
 
-sptr<VSyncReceiver> g_receiver = nullptr;
+sptr<IVSyncReceiver> g_receiver = nullptr;
 }
 
 void HelloComposer::Run(std::vector<std::string> &runArgs)

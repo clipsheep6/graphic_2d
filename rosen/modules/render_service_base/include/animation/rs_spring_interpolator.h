@@ -34,9 +34,7 @@ public:
         return InterpolateImpl(input * duration_);
     }
     bool Marshalling(Parcel& parcel) const override;
-#ifdef ROSEN_OHOS
     static RSSpringInterpolator* Unmarshalling(Parcel& parcel);
-#endif
 protected:
     explicit RSSpringInterpolator(float response, float dampingRatio, float initialOffset, float minimumAmplitude,
         float initialVelocity, float duration);

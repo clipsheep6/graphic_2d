@@ -25,7 +25,6 @@ RSTransactionData::~RSTransactionData() noexcept
 {
 }
 
-#ifdef ROSEN_OHOS
 RSTransactionData* RSTransactionData::Unmarshalling(Parcel& parcel)
 {
     auto transactionData = new RSTransactionData();
@@ -46,7 +45,6 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
 
     return success;
 }
-#endif // ROSEN_OHOS
 
 void RSTransactionData::Process(RSContext& context)
 {
@@ -72,7 +70,6 @@ void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>&& command)
     commands_.emplace_back(std::move(command));
 }
 
-#ifdef ROSEN_OHOS
 bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
 {
     uint16_t commandType = 0;
@@ -97,7 +94,6 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
     return !isNotFinished;
 }
 
-#endif // ROSEN_OHOS
 
 } // namespace Rosen
 } // namespace OHOS

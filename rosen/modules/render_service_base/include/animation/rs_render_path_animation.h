@@ -45,10 +45,8 @@ public:
 
     float GetEndFraction() const;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderPathAnimation* Unmarshalling(Parcel& parcel);
-#endif
 
 protected:
     void OnAnimate(float fraction) override;
@@ -56,9 +54,7 @@ protected:
     void OnRemoveOnCompletion() override;
 
 private:
-#ifdef ROSEN_OHOS
     bool ParseParam(Parcel& parcel) override;
-#endif
     void SetPathValue(const Vector2f& position, float tangent);
     RSRenderPathAnimation() = default;
 

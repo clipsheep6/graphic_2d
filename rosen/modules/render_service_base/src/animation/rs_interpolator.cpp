@@ -27,7 +27,6 @@ namespace Rosen {
 const std::shared_ptr<RSInterpolator> RSInterpolator::DEFAULT =
     std::make_shared<RSCubicBezierInterpolator>(0.42f, 0.0f, 0.58f, 1.0f);
 
-#ifdef ROSEN_OHOS
 RSInterpolator* RSInterpolator::Unmarshalling(Parcel& parcel)
 {
     uint16_t interpolatorType = parcel.ReadUint16();
@@ -60,7 +59,6 @@ RSCustomInterpolator* RSCustomInterpolator::Unmarshalling(Parcel& parcel)
     }
     return new RSCustomInterpolator(std::move(times), std::move(values));
 }
-#endif
 
 RSCustomInterpolator::RSCustomInterpolator(const std::vector<float>&& times, const std::vector<float>&& values)
     : times_(times), values_(values)

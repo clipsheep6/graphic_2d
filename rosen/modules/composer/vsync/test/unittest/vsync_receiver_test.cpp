@@ -33,7 +33,7 @@ public:
     static inline sptr<VSyncDistributor> vsyncDistributor = nullptr;
     static inline sptr<VSyncGenerator> vsyncGenerator = nullptr;
     static inline sptr<VSyncConnection> conn = nullptr;
-    static inline sptr<VSyncReceiver> vsyncReceiver = nullptr;
+    static inline sptr<IVSyncReceiver> vsyncReceiver = nullptr;
 };
 
 void vsyncReceiverTest::SetUpTestCase()

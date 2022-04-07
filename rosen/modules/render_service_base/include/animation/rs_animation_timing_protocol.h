@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
-enum class RS_EXPORT FillMode { FORWARDS = 0, BACKWARDS, BOTH, NONE };
+enum class FillMode { FORWARDS = 0, BACKWARDS, BOTH, NONE };
 
 class RS_EXPORT RSAnimationTimingProtocol {
 public:

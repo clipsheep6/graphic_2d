@@ -18,8 +18,6 @@
 
 #include <string>
 
-#define EXPORT __attribute__((visibility("default")))
-
 namespace OHOS {
 namespace Rosen {
 using FrameGetEnableFunc = int (*)();
@@ -28,9 +26,9 @@ using AnimateStartFunc = void(*)();
 using RenderStartFunc = void(*)();
 using SendCommandsStartFunc = void(*)();
 
-class EXPORT RsFrameReport final {
+class OHOS_EXPORT RsFrameReport final {
 public:
-    static RsFrameReport& GetInstance();
+    static OHOS_EXPORT RsFrameReport& GetInstance();
     void Init();
     int GetEnable();
 
@@ -48,11 +46,11 @@ private:
     void *frameSchedHandle_ = nullptr;
     bool frameSchedSoLoaded_ = false;
 
-    EXPORT FrameGetEnableFunc frameGetEnableFunc_ = nullptr;
-    EXPORT ProcessCommandsStartFunc processCommandsStartFun_ = nullptr;
-    EXPORT AnimateStartFunc animateStartFunc_ = nullptr;
-    EXPORT RenderStartFunc renderStartRunc_ = nullptr;
-    EXPORT SendCommandsStartFunc sendCommandsStartFunc_ = nullptr;
+    FrameGetEnableFunc frameGetEnableFunc_ = nullptr;
+    ProcessCommandsStartFunc processCommandsStartFun_ = nullptr;
+    AnimateStartFunc animateStartFunc_ = nullptr;
+    RenderStartFunc renderStartRunc_ = nullptr;
+    SendCommandsStartFunc sendCommandsStartFunc_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

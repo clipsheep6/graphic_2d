@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSApplicationRenderThreadStub : public IRemoteStub<IApplicationRenderThread> {
+class RS_EXPORT RSApplicationRenderThreadStub : public IRemoteStub<IApplicationRenderThread> {
 public:
     RSApplicationRenderThreadStub() = default;
     ~RSApplicationRenderThreadStub() = default;

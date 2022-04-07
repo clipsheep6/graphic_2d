@@ -27,13 +27,13 @@
 class SkPath;
 namespace OHOS {
 namespace Rosen {
-class RSPath {
+class RS_EXPORT RSPath {
 public:
     RSPath();
     virtual ~RSPath();
-    static std::shared_ptr<RSPath> CreateRSPath();
-    static std::shared_ptr<RSPath> CreateRSPath(const SkPath& skPath);
-    static std::shared_ptr<RSPath> CreateRSPath(const std::string& path);
+    static RS_EXPORT std::shared_ptr<RSPath> CreateRSPath();
+    static RS_EXPORT std::shared_ptr<RSPath> CreateRSPath(const SkPath& skPath);
+    static RS_EXPORT std::shared_ptr<RSPath> CreateRSPath(const std::string& path);
     float GetDistance() const;
     bool GetPosTan(float distance, Vector2f& pos, float& degrees) const;
 

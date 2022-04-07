@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSDirtyRegionManager final {
+class RS_EXPORT RSDirtyRegionManager final {
 public:
     RSDirtyRegionManager();
     ~RSDirtyRegionManager() = default;

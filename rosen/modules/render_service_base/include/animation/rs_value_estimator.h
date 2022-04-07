@@ -28,21 +28,21 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSValueEstimator {
+class RS_EXPORT RSValueEstimator {
 public:
     template<typename T>
-    static T Estimate(float fraction, const T& startValue, const T& endValue)
+    static RS_EXPORT T Estimate(float fraction, const T& startValue, const T& endValue)
     {
         return startValue * (1.0f - fraction) + endValue * fraction;
     }
 
     static Quaternion Estimate(float fraction, const Quaternion& startValue, const Quaternion& endValue);
 
-    static std::shared_ptr<RSFilter> Estimate(
+    static RS_EXPORT std::shared_ptr<RSFilter> Estimate(
         float fraction, const std::shared_ptr<RSFilter>& startValue, const std::shared_ptr<RSFilter>& endValue);
 
     template<typename T>
-    static float EstimateFraction(
+    static RS_EXPORT float EstimateFraction(
         const std::shared_ptr<RSInterpolator>& interpolator, const T& value, const T& startValue, const T& endValue)
     {
         float start = FRACTION_MIN;
@@ -66,22 +66,22 @@ public:
         return FRACTION_MIN;
     }
 
-    static float EstimateFraction(const std::shared_ptr<RSInterpolator>& interpolator, const Vector2f& value,
+    static RS_EXPORT float EstimateFraction(const std::shared_ptr<RSInterpolator>& interpolator, const Vector2f& value,
         const Vector2f& startValue, const Vector2f& endValue);
 
-    static float EstimateFraction(const std::shared_ptr<RSInterpolator>& interpolator, const Vector4f& value,
+    static RS_EXPORT float EstimateFraction(const std::shared_ptr<RSInterpolator>& interpolator, const Vector4f& value,
         const Vector4f& startValue, const Vector4f& endValue);
 
-    static float EstimateFraction(const std::shared_ptr<RSInterpolator>& interpolator, const Quaternion& value,
+    static RS_EXPORT float EstimateFraction(const std::shared_ptr<RSInterpolator>& interpolator, const Quaternion& value,
         const Quaternion& startValue, const Quaternion& endValue);
 
-    static float EstimateFraction(const std::shared_ptr<RSInterpolator>& interpolator, const RSColor& value,
+    static RS_EXPORT float EstimateFraction(const std::shared_ptr<RSInterpolator>& interpolator, const RSColor& value,
         const RSColor& startValue, const RSColor& endValue);
 
-    static float EstimateFraction(const std::shared_ptr<RSInterpolator>& interpolator, const Matrix3f& value,
+    static RS_EXPORT float EstimateFraction(const std::shared_ptr<RSInterpolator>& interpolator, const Matrix3f& value,
         const Matrix3f& startValue, const Matrix3f& endValue);
 
-    static float EstimateFraction(const std::shared_ptr<RSInterpolator>& interpolator,
+    static RS_EXPORT float EstimateFraction(const std::shared_ptr<RSInterpolator>& interpolator,
         const std::shared_ptr<RSFilter>& value, const std::shared_ptr<RSFilter>& startValue,
         const std::shared_ptr<RSFilter>& endValue);
 };

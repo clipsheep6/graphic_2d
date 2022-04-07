@@ -30,7 +30,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSProperties final {
+class RS_EXPORT RSProperties final {
 public:
     RSProperties(bool inRenderNode);
     virtual ~RSProperties();

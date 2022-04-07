@@ -25,7 +25,7 @@ namespace OHOS {
 namespace Rosen {
 class RSRenderNode;
 
-class RSRenderNodeMap final {
+class RS_EXPORT RSRenderNodeMap final {
 public:
     bool RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>& nodePtr);
     void UnregisterRenderNode(NodeId id);

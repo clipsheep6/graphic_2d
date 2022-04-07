@@ -17,11 +17,7 @@
 
 namespace OHOS {
 namespace Rosen {
-#ifdef ENABLE_EXPORT_MACRO
-#define RS_EXPORT __attribute__((visibility("default")))
-#else
-#define RS_EXPORT
-#endif
+#define RS_EXPORT OHOS_EXPORT
 } // namespace Rosen
 } // namespace OHOS
 #endif // RENDER_SERVICE_CLIENT_CORE_COMMON_RS_MACROS_H

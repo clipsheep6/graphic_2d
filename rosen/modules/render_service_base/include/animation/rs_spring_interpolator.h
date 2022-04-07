@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSSpringInterpolator : public RSInterpolator {
+class RS_EXPORT RSSpringInterpolator : public RSInterpolator {
 public:
     RSSpringInterpolator(float response, float dampingRatio, float initialVelocity)
         // initialOffset: 1, minimumAmplitude: 0.001

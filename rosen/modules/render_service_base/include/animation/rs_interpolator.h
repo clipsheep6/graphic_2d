@@ -26,6 +26,8 @@
 #include <refbase.h>
 #endif
 
+#include "common/rs_macros.h"
+
 namespace OHOS {
 namespace Rosen {
 
@@ -42,13 +44,13 @@ class RSInterpolator : public Parcelable {
 class RSInterpolator {
 #endif
 public:
-    static const std::shared_ptr<RSInterpolator> DEFAULT;
+    static RS_EXPORT const std::shared_ptr<RSInterpolator> DEFAULT;
     RSInterpolator() = default;
     virtual ~RSInterpolator() = default;
 
 #ifdef ROSEN_OHOS
     virtual bool Marshalling(Parcel& parcel) const override = 0;
-    static RSInterpolator* Unmarshalling(Parcel& parcel);
+    static RS_EXPORT RSInterpolator* Unmarshalling(Parcel& parcel);
 #endif
 
     virtual float Interpolate(float input) const = 0;
@@ -75,7 +77,7 @@ public:
     }
 };
 
-class RSCustomInterpolator : public RSInterpolator {
+class RS_EXPORT RSCustomInterpolator : public RSInterpolator {
 public:
     RSCustomInterpolator(const std::function<float(float)>& func, int duration);
     virtual ~RSCustomInterpolator() = default;

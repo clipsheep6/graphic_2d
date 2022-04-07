@@ -63,6 +63,7 @@ void RSCanvasNode::FinishRecording()
         return;
     }
     auto recording = static_cast<RSRecordingCanvas*>(recordingCanvas_)->GetDrawCmdList();
+    ROSEN_LOGI("FinishRecording, ops size: %d", recording->GetSize());
     delete recordingCanvas_;
     recordingCanvas_ = nullptr;
     std::unique_ptr<RSCommand> command =

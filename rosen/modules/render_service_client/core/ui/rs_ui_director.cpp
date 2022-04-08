@@ -15,6 +15,7 @@
 
 #include "ui/rs_ui_director.h"
 
+#include "animation/rs_implicit_animator.h"
 #include "command/rs_animation_command.h"
 #include "command/rs_message_processor.h"
 #include "pipeline/rs_frame_report.h"
@@ -55,6 +56,7 @@ void RSUIDirector::Init()
     RsFrameReport::GetInstance().Init();
     RSRenderThread::Instance().Start();
     GoForeground();
+    implicitAnimator_ = std::make_shared<RSImplicitAnimator>();
 }
 
 void RSUIDirector::GoForeground()
@@ -120,6 +122,14 @@ void RSUIDirector::AttachSurface()
 void RSUIDirector::SetTimeStamp(uint64_t timeStamp)
 {
     timeStamp_ = timeStamp;
+}
+
+const std::shared_ptr<RSImplicitAnimator>& RSUIDirector::GetImplicitAnimator()
+{
+    if (implicitAnimator_ == nullptr) {
+        implicitAnimator_ = std::make_shared<RSImplicitAnimator>();
+    }
+    return implicitAnimator_;
 }
 
 void RSUIDirector::SetUITaskRunner(const TaskRunner& uiTaskRunner)

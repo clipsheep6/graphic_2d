@@ -819,6 +819,8 @@ BufferDrawParam RsRenderServiceUtil::CreateBufferDrawParam(RSSurfaceRenderNode& 
     params.clipRect = SkRect::MakeXYWH(node.GetDstRect().left_, node.GetDstRect().top_, node.GetDstRect().width_,
         node.GetDstRect().height_);
     params.paint = paint;
+    params.cornerRadius = property.GetCornerRadius();
+    params.isNeedClip = property.GetClipToFrame();
     return params;
 }
 
@@ -861,7 +863,16 @@ void RsRenderServiceUtil::DrawBuffer(SkCanvas& canvas, BufferDrawParam& bufferDr
     }
 
     canvas.save();
-    canvas.clipRect(bufferDrawParam.clipRect);
+    if (bufferDrawParam.isNeedClip) {
+        SkRect clipRect = bufferDrawParam.clipRect;
+        if (bufferDrawParam.cornerRadius > std::numeric_limits<float>::epsilon()) {
+            RectF rect(clipRect.left(), clipRect.top(), clipRect.width(), clipRect.height());
+            RRect rrect = RRect(rect, bufferDrawParam.cornerRadius, bufferDrawParam.cornerRadius);
+            canvas.clipRRect(RSPropertiesPainter::RRect2SkRRect(rrect), true);
+        } else {
+            canvas.clipRect(bufferDrawParam.clipRect);
+        }
+    }
     canvas.setMatrix(bufferDrawParam.matrix);
     if (process) {
         process(canvas, bufferDrawParam);

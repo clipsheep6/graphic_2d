@@ -123,14 +123,14 @@ namespace pipelineTestUtils {
             if (rsSurface == nullptr) {
                 return wrongExit;
             }
-#ifdef ACE_ENABLE_GPU
-            // SetRenderContext must before rsSurface->RequestFrame, or it will failed.
-            if (rc_) {
-                rsSurface->SetRenderContext(rc_);
-            } else {
-                printf("DrawSurface: RenderContext is nullptr\n");
-            }
-#endif
+// #ifdef ACE_ENABLE_GPU
+//             // SetRenderContext must before rsSurface->RequestFrame, or it will failed.
+//             if (rc_) {
+//                 rsSurface->SetRenderContext(rc_);
+//             } else {
+//                 printf("DrawSurface: RenderContext is nullptr\n");
+//             }
+// #endif
             auto framePtr = rsSurface->RequestFrame(bufferSize_.width(), bufferSize_.height());
             if (!framePtr) {
                 // SetRenderContext must before rsSurface->RequestFrame,
@@ -344,7 +344,7 @@ public:
         pipelineTestUtils::ToDrawSurface()
             .SetSurfaceNode(surfaceNode1)
             .SetShapeColor(0xff00ffff)
-            .SetSurfaceNodeSize(SkRect::MakeXYWH(screenWidth_ * 0.4f, screenheight_ * 0.4f, 500, 300))
+            .SetSurfaceNodeSize(SkRect::MakeXYWH(screenWidth_ * 0.6f, screenheight_ * 0.6f, 500, 300))
             .SetBufferSizeAuto()
             .SetDraw([&](SkCanvas &canvas, SkPaint &paint) -> void {
                 canvas.drawRect(
@@ -355,11 +355,11 @@ public:
         pipelineTestUtils::ToDrawSurface()
             .SetSurfaceNode(surfaceNode2)
             .SetShapeColor(0xffff0000)
-            .SetSurfaceNodeSize(SkRect::MakeXYWH(screenWidth_ * 0.6f, screenheight_ * 0.6f, 500, 300))
+            .SetSurfaceNodeSize(SkRect::MakeXYWH(screenWidth_ * 0.6f, screenheight_ * 0.6f, 200, 200))
             .SetBufferSizeAuto()
             .SetDraw([&](SkCanvas &canvas, SkPaint &paint) -> void {
                 canvas.drawRect(
-                    SkRect::MakeXYWH(0, 0, 400, 100),
+                    SkRect::MakeXYWH(0, 0, 200, 200),
                     paint);
             })
             .Run();
@@ -373,38 +373,73 @@ public:
         if (transactionProxy != nullptr) {
             transactionProxy->FlushImplicitTransaction();
         }
-        float alpha = 0;
-        for (int index = 0; index <= 10; index += 2) { // 10 is boundary, 2 is step
-            printf("printf alpha=%f \n", alpha);
-            surfaceNode2->SetAlpha(alpha);
-            if (transactionProxy != nullptr) {
-                transactionProxy->FlushImplicitTransaction();
-            }
-            usleep(300000);
-            alpha += 0.2f;
+        printf("cll set pivot 100 100 , start rotate 45");
+        surfaceNode2->SetPivot(100, 100);
+        surfaceNode2->SetRotationX(45);
+        if (transactionProxy != nullptr) {
+            transactionProxy->FlushImplicitTransaction();
         }
-        float scale = 0;
-        for (int index = 0; index < 20; index += 2) { // 20 is boundary, 2 is step
-            printf("scale=%f\n", scale);
-            surfaceNode2->SetScaleX(scale);
-            if (transactionProxy != nullptr) {
-                transactionProxy->FlushImplicitTransaction();
-            }
-            usleep(300000);
-            scale += 0.2f;
+        sleep(3);
+
+        printf("cll set radius 10 , start clip rradius");
+        surfaceNode2->SetCornerRadius(10);
+        if (transactionProxy != nullptr) {
+            transactionProxy->FlushImplicitTransaction();
         }
-        surfaceNode2->SetScaleX(1.f);
-        std::cout << "Compatible rotation test start\n";
-        float rotate = 0;
-        for (int index = 0; index <= 360; index += 15) { // 360 is boundary, 15 is step
-            rotate = static_cast<float>(index);
-            printf("roate=%f\n", rotate);
-            surfaceNode2->SetRotation(rotate);
-            if (transactionProxy != nullptr) {
-                transactionProxy->FlushImplicitTransaction();
-            }
-            usleep(300000);
+        sleep(3);
+
+        printf("cll set alpha 0.5 , start alpha");
+        surfaceNode2->SetAlpha(0.5f);
+        if (transactionProxy != nullptr) {
+            transactionProxy->FlushImplicitTransaction();
         }
+        sleep(3);
+
+        printf("cll stop clip rradius");
+        surfaceNode2->SetClipToFrame(false);
+        if (transactionProxy != nullptr) {
+            transactionProxy->FlushImplicitTransaction();
+        }
+        sleep(3);
+
+        printf("cll set pivot 100 100 , start rotate -45");
+        surfaceNode2->SetRotationX(-45);
+        if (transactionProxy != nullptr) {
+            transactionProxy->FlushImplicitTransaction();
+        }
+        sleep(3);
+        // float alpha = 0;
+        // for (int index = 0; index <= 10; index += 2) { // 10 is boundary, 2 is step
+        //     printf("printf alpha=%f \n", alpha);
+        //     surfaceNode2->SetAlpha(alpha);
+        //     if (transactionProxy != nullptr) {
+        //         transactionProxy->FlushImplicitTransaction();
+        //     }
+        //     usleep(300000);
+        //     alpha += 0.2f;
+        // }
+        // float scale = 0;
+        // for (int index = 0; index < 20; index += 2) { // 20 is boundary, 2 is step
+        //     printf("scale=%f\n", scale);
+        //     surfaceNode2->SetScaleX(scale);
+        //     if (transactionProxy != nullptr) {
+        //         transactionProxy->FlushImplicitTransaction();
+        //     }
+        //     usleep(300000);
+        //     scale += 0.2f;
+        // }
+        // surfaceNode2->SetScaleX(1.f);
+        // std::cout << "Compatible rotation test start\n";
+        // float rotate = 0;
+        // for (int index = 0; index <= 360; index += 15) { // 360 is boundary, 15 is step
+        //     rotate = static_cast<float>(index);
+        //     printf("roate=%f\n", rotate);
+        //     surfaceNode2->SetRotation(rotate);
+        //     if (transactionProxy != nullptr) {
+        //         transactionProxy->FlushImplicitTransaction();
+        //     }
+        //     usleep(300000);
+        // }
         displayNode->RemoveFromTree();
         if (transactionProxy != nullptr) {
             transactionProxy->FlushImplicitTransaction();
@@ -417,18 +452,18 @@ private:
     RSDemoTestCase() = default;
     void RenderContextInit()
     {
-#ifdef ACE_ENABLE_GPU
-        std::cout << "ACE_ENABLE_GPU is true. \n";
-        std::cout << "Init RenderContext start. \n";
-            rc_ = RenderContextFactory::GetInstance().CreateEngine();
-            if (rc_) {
-                std::cout << "Init RenderContext success.\n";
-                rc_->InitializeEglContext();
-            } else {
-                std::cout << "Init RenderContext failed, RenderContext is nullptr.\n";
-            }
-        std::cout << "Init RenderContext start.\n";
-#endif
+// #ifdef ACE_ENABLE_GPU
+//         std::cout << "ACE_ENABLE_GPU is true. \n";
+//         std::cout << "Init RenderContext start. \n";
+//             rc_ = RenderContextFactory::GetInstance().CreateEngine();
+//             if (rc_) {
+//                 std::cout << "Init RenderContext success.\n";
+//                 rc_->InitializeEglContext();
+//             } else {
+//                 std::cout << "Init RenderContext failed, RenderContext is nullptr.\n";
+//             }
+//         std::cout << "Init RenderContext start.\n";
+// #endif
     }
 
     bool isInit_ = false;

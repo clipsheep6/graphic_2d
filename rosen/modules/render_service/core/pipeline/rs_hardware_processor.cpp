@@ -26,6 +26,7 @@
 #include "common/rs_vector4.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_surface_render_node.h"
+#include "property/rs_properties_painter.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS {
@@ -336,9 +337,11 @@ void RSHardwareProcessor::Redraw(sptr<Surface>& surface, const struct PrepareCom
         params.targetColorGamut = static_cast<ColorGamut>(currScreenInfo_.colorGamut);
         const auto& clipRect = layerInfo->GetLayerSize();
         params.clipRect = SkRect::MakeXYWH(clipRect.x, clipRect.y, clipRect.w, clipRect.h);
-        RsRenderServiceUtil::DrawBuffer(*canvas, params, [this, &node](SkCanvas& canvas,
+        RsRenderServiceUtil::DrawBuffer(*canvas, params, [this, &node, &clipRect](SkCanvas& canvas,
             BufferDrawParam& params) -> void {
             RsRenderServiceUtil::DealAnimation(canvas, node, params);
+            RectF maskBounds(clipRect.x, clipRect.y, clipRect.w, clipRect.h);
+            RSPropertiesPainter::DrawMask(node.GetRenderProperties(), canvas, RSPropertiesPainter::Rect2SkRect(maskBounds));
         });
     }
     BufferFlushConfig flushConfig = {

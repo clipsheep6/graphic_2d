@@ -20,7 +20,7 @@
 #include <ibuffer_consumer_listener.h>
 
 #include "pipeline/rs_base_render_node.h"
-#include "platform/drawing/rs_surface.h"
+#include "drawing_engine/drawing_surface/rs_surface_ohos.h"
 #include "sync_fence.h"
 
 namespace OHOS {

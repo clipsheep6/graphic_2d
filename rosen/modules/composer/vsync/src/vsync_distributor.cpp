@@ -189,8 +189,6 @@ void VSyncDistributor::ThreadMain()
         ScopedBytrace func(name_ + "_SendVsync");
         for (uint32_t i = 0; i < conns.size(); i++) {
             int32_t ret = conns[i]->PostEvent(timestamp);
-            VLOGI("Distributor name:%{public}s, connection name:%{public}s, ret:%{public}d",
-                name_.c_str(), conns[i]->GetName().c_str(), ret);
             if (ret == 0 || ret == ERRNO_OTHER) {
                 RemoveConnection(conns[i]);
             } else if (ret == ERRNO_EAGAIN) {

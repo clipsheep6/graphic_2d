@@ -118,7 +118,6 @@ void GLESRenderBackend::RenderFrame()
 {
     // flush commands
     if (skSurface_->getCanvas() != nullptr) {
-        LOGW("RenderFrame: Canvas is %{public}p", skSurface_->getCanvas());
         skSurface_->getCanvas()->flush();
     } else {
         LOGW("canvas is nullptr!!!");
@@ -155,8 +154,6 @@ SkCanvas* GLESRenderBackend::AcquireCanvas(std::unique_ptr<RSSurfaceFrame>& fram
         LOGW("skSurface is nullptr");
         return nullptr;
     }
-
-    LOGI("CreateCanvas successfully!!! (%{public}p)", skSurface_->getCanvas());
 
     return skSurface_->getCanvas();
 }

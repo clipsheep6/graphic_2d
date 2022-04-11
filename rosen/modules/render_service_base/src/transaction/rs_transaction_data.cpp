@@ -41,7 +41,13 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
 {
     bool success = true;
     for (auto& command : commands_) {
-        success = success && command->Marshalling(parcel);
+        bool result = command->Marshalling(parcel);
+        if (result) {
+            ROSEN_LOGD("jincm: RSTransactionData::Marshalling: result = %d, %s", result, command->PrintType().c_str());
+        } else {
+            ROSEN_LOGD("jincm: RSTransactionData::Marshalling: result fail = %d, %s", result, command->PrintType().c_str());
+        }
+        success = success && result;
     }
 
     return success;
@@ -84,6 +90,7 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
             isNotFinished = false;
             break;
         }
+        ROSEN_LOGE("unirender: RSTransactionData::UnmarshallingCommand, type=%d subtype=%d", commandType, commandSubType);
         auto func = RSCommandFactory::Instance().GetUnmarshallingFunc(commandType, commandSubType);
         if (func == nullptr) {
             break;

@@ -35,12 +35,14 @@ public:
     virtual ~RSProcessor() {}
     virtual void ProcessSurface(RSSurfaceRenderNode &node) = 0;
     virtual void Init(ScreenId id, int32_t offsetX, int32_t offsetY) = 0;
+    virtual void ProcessSurface(RSDisplayRenderNode &node) = 0;
     virtual void PostProcess() = 0;
+    bool ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask& task, sptr<SurfaceBuffer>& buffer);
+    bool ConsumeAndUpdateBuffer(RSDisplayRenderNode& node, SpecialTask& task, sptr<SurfaceBuffer>& buffer);
 
 protected:
     std::unique_ptr<SkCanvas> CreateCanvas(sptr<Surface> producerSurface, BufferRequestConfig requestConfig);
     void FlushBuffer(sptr<Surface> surface, BufferFlushConfig flushConfig);
-    bool ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask& task, sptr<SurfaceBuffer>& buffer);
     void SetBufferTimeStamp();
     int32_t GetOffsetX();
     int32_t GetOffsetY();

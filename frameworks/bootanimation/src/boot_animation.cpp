@@ -12,52 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "boot_animation.h"
-#include "util.h"
 #include "rs_trace.h"
 #include "transaction/rs_render_service_client.h"
 #include "transaction/rs_interfaces.h"
 
 using namespace OHOS;
 static const std::string BOOT_PIC_ZIP = "/system/etc/init/bootpic.zip";
-static const std::string DST_FILE_PATH = "/data/media/bootpic";
-static const std::string BOOT_PIC_DIR = "/data/media/bootpic/OpenHarmony_";
 static const int32_t EXIT_TIME = 10 * 1000;
 static const std::string BOOT_SOUND_URI = "file://system/etc/init/bootsound.wav";
 
 void BootAnimation::OnDraw(SkCanvas* canvas)
 {
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "BootAnimation::OnDraw before codec");
-    std::string imgPath = BOOT_PIC_DIR + std::to_string(bootPicCurNo_) + ".jpg";
-    // pic is named from 0
-    if (bootPicCurNo_ != (maxPicNum_ - 1)) {
+    if (bootPicCurNo_ < (maxPicNum_ - 1)) {
         bootPicCurNo_ = bootPicCurNo_ + 1;
-    }
-    char newpath[PATH_MAX + 1] = { 0x00 };
-    if (strlen(imgPath.c_str()) > PATH_MAX || realpath(imgPath.c_str(), newpath) == NULL) {
-        LOG("OnDraw imgPath is invalid");
+    } else {
+        LOGI("BootAnimation::OnDraw curNo Exceed max pic num");
         return;
     }
-    FILE *fp = fopen(newpath, "rb");
-    if (fp == nullptr) {
-        LOG("OnDraw fopen image file is nullptr");
-        return;
-    }
-    std::unique_ptr<FILE, decltype(&fclose)> file(fp, fclose);
-    if (file == nullptr) {
-        LOG("OnDraw file is nullptr");
-        return;
-    }
-    ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
-    ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "BootAnimation::OnDraw in codec");
-    auto skData = SkData::MakeFromFILE(file.get());
-    if (!skData) {
-        LOG("skdata memory data is null. update data failed");
-        return;
-    }
-    auto codec = SkCodec::MakeFromData(skData);
-    sk_sp<SkImage> image = SkImage::MakeFromEncoded(skData);
+    LOGD("BootAnimation::OnDraw: %{public}d", bootPicCurNo_);
+    std::shared_ptr<ImageStruct> imgstruct = bgImageVector_[bootPicCurNo_];
+    sk_sp<SkImage> image = imgstruct->imageData;
+
     ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "BootAnimation::OnDraw in drawimage");
     SkPaint backPaint;
@@ -79,7 +56,7 @@ void BootAnimation::Draw()
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "BootAnimation::Draw");
     auto frame = rsSurface_->RequestFrame(windowWidth_, windowHeight_);
     if (frame == nullptr) {
-        LOG("OnDraw frame is nullptr");
+        LOGI("OnDraw frame is nullptr");
         RequestNextVsync();
         return;
     }
@@ -87,7 +64,18 @@ void BootAnimation::Draw()
     auto canvas = rsSurface_->GetCanvas(framePtr_);
     ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
     OnDraw(canvas);
+
     RequestNextVsync();
+}
+
+bool BootAnimation::CheckFrameRateValid(int32_t ratevalue)
+{
+    std::vector<int> freqs = {60, 30, 120};
+    int nCount = std::count(freqs.begin(), freqs.end(), ratevalue);
+    if (nCount <= 0) {
+        return false;
+    }
+    return true;
 }
 
 void BootAnimation::Init(int32_t width, int32_t height, const std::shared_ptr<AppExecFwk::EventHandler>& handler)
@@ -95,30 +83,50 @@ void BootAnimation::Init(int32_t width, int32_t height, const std::shared_ptr<Ap
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "BootAnimation::Init");
     windowWidth_ = width;
     windowHeight_ = height;
-    LOG("Init enter, width: %{public}d, height: %{public}d", width, height);
+    LOGI("Init enter, width: %{public}d, height: %{public}d", width, height);
 
     auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
     while (receiver_ == nullptr) {
         receiver_ = rsClient.CreateVSyncReceiver("BootAnimation", handler);
     }
-    receiver_->Init();
+    VsyncError ret = receiver_->Init();
+    if (ret) {
+        LOGE("vsync receiver init failed: %{public}d", ret);
+        return;
+    } else {
+        LOGI("vsync receiver init ok");
+    }
 
     InitBootWindow();
     InitRsSurface();
     InitPicCoordinates();
-
-    std::vector<int32_t> freqs = {60, 30};
-    if (freqs.size() >= 0x2) {
-        freq_ = freqs[0];
+    LOGI("begin to Readzip pics");
+    ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
+    ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "BootAnimation::preload");
+    BootAniConfig jsonConfig;
+    ReadZipFile(BOOT_PIC_ZIP, bgImageVector_, jsonConfig);
+    SortZipFile(bgImageVector_);
+    maxPicNum_ = bgImageVector_.size();
+    if (CheckFrameRateValid(jsonConfig.frameRate)) {
+        freq_ = jsonConfig.frameRate;
+    } else {
+        LOGI("Only Support 30, 60, 120 frame rate: %{public}d", jsonConfig.frameRate);
     }
-
-    LOG("ready to unzip pics, freq is %{public}d", freq_);
-    UnzipFile(BOOT_PIC_ZIP, DST_FILE_PATH);
-    CountPicNum(DST_FILE_PATH.c_str(), maxPicNum_);
-    LOG("unzip pics finish, maxPicNum: %{public}d", maxPicNum_);
+    LOGI("end to Readzip pics freq: %{public}d totalPicNum: %{public}d", freq_, maxPicNum_);
     ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 
-    Draw();
+    OHOS::Rosen::VSyncReceiver::FrameCallback fcb = {};
+    ret = receiver_->SetVSyncRate(fcb, freq_);
+    if (ret) {
+        LOGE("SetVSyncRate failed: %{public}d", ret);
+    } else {
+        LOGI("SetVSyncRate success: %{public}d", freq_);
+    }
+    if (maxPicNum_ > 0) {
+        Draw();
+    } else {
+        LOGE("zip pic num is 0.");
+    }
     PostTask(std::bind(&BootAnimation::CheckExitAnimation, this), EXIT_TIME);
 }
 
@@ -134,7 +142,7 @@ void BootAnimation::InitBootWindow()
     scene_->Init(displayId, nullptr, listener, option);
     window_ = scene_->GetMainWindow();
     while (window_ == nullptr) {
-        LOG("window is nullptr, continue to init window");
+        LOGI("window is nullptr, continue to init window");
         scene_->Init(displayId, nullptr, listener, option);
         window_ = scene_->GetMainWindow();
         sleep(1);
@@ -146,17 +154,17 @@ void BootAnimation::InitRsSurface()
 {
     rsSurface_ = OHOS::Rosen::RSSurfaceExtractor::ExtractRSSurface(window_->GetSurfaceNode());
     if (rsSurface_ == nullptr) {
-        LOG("rsSurface is nullptr");
+        LOGE("rsSurface is nullptr");
         return;
     }
 
     dp_ = new OHOS::Rosen::DrawingProxy();
     if (dp_ != nullptr) {
-        LOG("init draw context");
+        LOGI("init draw context");
         dp_->InitDrawContext();
         rsSurface_->SetDrawingProxy(dp_);
     } else {
-        LOG("dp_ is nullptr");
+        LOGE("dp_ is nullptr");
     }
 }
 
@@ -173,6 +181,7 @@ void BootAnimation::InitPicCoordinates()
     }
 }
 
+
 void BootAnimation::RequestNextVsync()
 {
     if (needCheckExit) {
@@ -183,18 +192,19 @@ void BootAnimation::RequestNextVsync()
         .userData_ = this,
         .callback_ = std::bind(&BootAnimation::Draw, this),
     };
-    receiver_->RequestNextVSync(fcb);
+    VsyncError ret = receiver_->RequestNextVSync(fcb);
+    if (ret) {
+        LOGE("RequestNextVSync failed: %{public}d", ret);
+    }
 }
 
 void BootAnimation::CheckExitAnimation()
 {
-    LOG("CheckExitAnimation enter");
+    LOGI("CheckExitAnimation enter");
     std::string windowInit = system::GetParameter("persist.window.boot.inited", "0");
     if (windowInit == "1") {
-        LOG("CheckExitAnimation read windowInit is 1");
+        LOGI("CheckExitAnimation read windowInit is 1");
         window_->Destroy();
-        int delRet = RemoveDir(DST_FILE_PATH.c_str());
-        LOG("clean resources and exit animation, delRet: %{public}d", delRet);
         exit(0);
     }
     needCheckExit = true;
@@ -202,7 +212,7 @@ void BootAnimation::CheckExitAnimation()
 
 void BootAnimation::PlaySound()
 {
-    LOG("PlaySound start");
+    LOGI("PlaySound start");
     if (soundPlayer_ == nullptr) {
         soundPlayer_ = Media::PlayerFactory::CreatePlayer();
     }
@@ -211,5 +221,5 @@ void BootAnimation::PlaySound()
     soundPlayer_->SetLooping(false);
     soundPlayer_->Prepare();
     soundPlayer_->Play();
-    LOG("PlaySound end");
+    LOGI("PlaySound end");
 }

@@ -19,6 +19,7 @@
 #include <display_type.h>
 #include <surface.h>
 #include "hdi_layer_info.h"
+#include "sync_fence.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -38,6 +39,9 @@ public:
     SurfaceError DrawBufferColor();
     SurfaceError FillHDILayer();
     const std::shared_ptr<HdiLayerInfo> GetHdiLayer();
+    void SetTestClientStatus(bool status);
+    void SetTestRotateStatus(bool status);
+    LayerType GetLayerType() const;
 
 private:
     const std::vector<uint32_t> colors_ = {0xff0000ff, 0xffff00ff, 0xaa00ff00, 0xff00ffaa, 0xff0f0f00};
@@ -47,16 +51,20 @@ private:
     uint32_t frameCounter_ = 0;
     uint32_t color_ = 0xffff1111;
     uint32_t zorder_ = 0;
-    int32_t prevFence_ = -1;
+    sptr<SyncFence> prevFence_;
     OHOS::sptr<Surface> pSurface_;
     OHOS::sptr<Surface> cSurface_;
     OHOS::sptr<SurfaceBuffer> prevBuffer_;
     std::shared_ptr<HdiLayerInfo> hdiLayer_;
     LayerType layerType_ = LayerType::LAYER_EXTRA;
+    bool testClient_ = false;
+    bool testRotate_ = false;
 
     void DrawColor(void *image, int width, int height);
     void DrawExtraColor(void *image, uint32_t width, uint32_t height);
     void DrawBaseColor(void *image, uint32_t width, uint32_t height);
+    void SetLayerTransformType();
+    void SetLayerCompositionType();
 };
 } // namespace Rosen
 } // namespace OHOS

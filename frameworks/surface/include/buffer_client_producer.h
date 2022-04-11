@@ -32,12 +32,12 @@ public:
     BufferClientProducer(const sptr<IRemoteObject>& impl);
     virtual ~BufferClientProducer();
 
-    virtual GSError RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+    virtual GSError RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
                                        RequestBufferReturnValue &retval) override;
 
-    GSError CancelBuffer(int32_t sequence, BufferExtraData &bedata) override;
+    GSError CancelBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata) override;
 
-    GSError FlushBuffer(int32_t sequence, BufferExtraData &bedata,
+    GSError FlushBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata,
                              int32_t fence, BufferFlushConfig &config) override;
 
     uint32_t GetQueueSize() override;
@@ -48,6 +48,7 @@ public:
     int32_t GetDefaultWidth() override;
     int32_t GetDefaultHeight() override;
     uint32_t GetDefaultUsage() override;
+    GSError SetTransform(TransformType transform) override;
     uint64_t GetUniqueId() override;
 
     GSError CleanCache() override;

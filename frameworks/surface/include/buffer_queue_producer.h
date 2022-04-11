@@ -37,12 +37,12 @@ public:
     virtual int OnRemoteRequest(uint32_t code, MessageParcel &arguments,
                                 MessageParcel &reply, MessageOption &option) override;
 
-    virtual GSError RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+    virtual GSError RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
                                        RequestBufferReturnValue &retval) override;
 
-    GSError CancelBuffer(int32_t sequence, BufferExtraData &bedata) override;
+    GSError CancelBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata) override;
 
-    GSError FlushBuffer(int32_t sequence, BufferExtraData &bedata,
+    GSError FlushBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata,
                              int32_t fence, BufferFlushConfig &config) override;
 
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
@@ -64,6 +64,8 @@ public:
 
     GSError RegisterReleaseListener(OnReleaseFunc func) override;
 
+    GSError SetTransform(TransformType transform) override;
+
 private:
     int32_t RequestBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t CancelBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
@@ -79,6 +81,7 @@ private:
     int32_t GetUniqueIdRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t CleanCacheRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t RegisterReleaseListenerRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
+    int32_t SetTransformRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
 
     using BufferQueueProducerFunc = int32_t (BufferQueueProducer::*)(MessageParcel &arguments,
         MessageParcel &reply, MessageOption &option);

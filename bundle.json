@@ -54,6 +54,7 @@
           "//foundation/graphic/standard/rosen/modules/composer:libcomposer",
           "//foundation/graphic/standard/rosen/modules/2d_graphics:2d_graphics",
           "//foundation/graphic/standard/rosen/samples/2d_graphics:drawing_sample_rs",
+          "//foundation/graphic/standard/rosen/samples/2d_graphics/test:drawing_sample",
           "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
           "//foundation/graphic/standard/rosen/modules/render_service_base/test:render_service_client",
           "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
@@ -164,7 +165,8 @@
         ],
         "test": [
           "//foundation/graphic/standard:graphic_standard_test",
-          "//foundation/graphic/standard/rosen/test/render_service:unittest"
+          "//foundation/graphic/standard/rosen/test/render_service:unittest",
+          "//foundation/graphic/standard/rosen/test/2d_graphics:unittest"
         ]
       }
     }

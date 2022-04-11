@@ -28,7 +28,7 @@
 #include "pipeline/rs_processor_factory.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
-#include "platform/drawing/rs_surface.h"
+#include "drawing_engine/drawing_surface/rs_surface.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "screen_manager/screen_types.h"
 
@@ -61,7 +61,7 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
         auto mirrorSource = node.GetMirrorSource();
         auto existingSource = mirrorSource.lock();
         if (!existingSource) {
-            ROSEN_LOGI("RSRenderServiceVisitor::PrepareDisplayRenderNode mirrorSource haven't existed");
+            RS_LOGI("RSRenderServiceVisitor::PrepareDisplayRenderNode mirrorSource haven't existed");
             return;
         }
         UpdateGeometry(*existingSource);
@@ -74,12 +74,12 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
 
 void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 {
-    ROSEN_LOGD("RsDebug RSRenderServiceVisitor::ProcessDisplayRenderNode child size:[%d] total size:[%d]",
+    RS_LOGD("RsDebug RSRenderServiceVisitor::ProcessDisplayRenderNode child size:[%d] total size:[%d]",
         node.GetChildrenCount(), node.GetSortedChildren().size());
     globalZOrder_ = 0.0f;
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
-        ROSEN_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode ScreenManager is nullptr");
+        RS_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode ScreenManager is nullptr");
         return;
     }
     ScreenState state = screenManager->QueryScreenInfo(node.GetScreenId()).state;
@@ -92,22 +92,21 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                                                               : RSDisplayRenderNode::CompositeType::HARDWARE_COMPOSITE);
             break;
         default:
-            ROSEN_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode State is unusual");
+            RS_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode State is unusual");
             return;
     }
     processor_ = RSProcessorFactory::CreateProcessor(node.GetCompositeType());
     if (processor_ == nullptr) {
-        ROSEN_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode: RSProcessor is null!");
+        RS_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode: RSProcessor is null!");
         return;
     }
-
-    processor_->Init(node.GetScreenId());
+    processor_->Init(node.GetScreenId(), node.GetDisplayOffsetX(), node.GetDisplayOffsetY());
 
     if (node.IsMirrorDisplay()) {
         auto mirrorSource = node.GetMirrorSource();
         auto existingSource = mirrorSource.lock();
         if (!existingSource) {
-            ROSEN_LOGI("RSRenderServiceVisitor::ProcessDisplayRenderNode mirrorSource haven't existed");
+            RS_LOGI("RSRenderServiceVisitor::ProcessDisplayRenderNode mirrorSource haven't existed");
             return;
         }
         ProcessBaseRenderNode(*existingSource);
@@ -119,6 +118,10 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 
 void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
+    if (!node.GetRenderProperties().GetVisible()) {
+        RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : %llu is unvisible", node.GetId());
+        return;
+    }
     auto currentGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
     if (currentGeoPtr != nullptr) {
         currentGeoPtr->UpdateByMatrixFromRenderThread(node.GetMatrix());
@@ -127,15 +130,14 @@ void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     const auto updateGeometryFunc = [&](const std::shared_ptr<RSBaseRenderNode>& node) {
         if (!node) {
-            ROSEN_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode this child haven't existed");
+            RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode this child haven't existed");
             return;
         }
         auto surfaceChild = node->ReinterpretCastTo<RSSurfaceRenderNode>();
         if (!surfaceChild) {
-            ROSEN_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode this child is not SurfaceNode");
+            RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode this child is not SurfaceNode");
             return;
         }
-        surfaceChild->SetBlendType(BlendType::BLEND_SRC);
         auto childGeoPtr =
             std::static_pointer_cast<RSObjAbsGeometry>(surfaceChild->GetRenderProperties().GetBoundsGeometry());
         if (childGeoPtr != nullptr) {
@@ -152,7 +154,11 @@ void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
     if (!processor_) {
-        ROSEN_LOGE("RSRenderServiceVisitor::ProcessSurfaceRenderNode processor is nullptr");
+        RS_LOGE("RSRenderServiceVisitor::ProcessSurfaceRenderNode processor is nullptr");
+        return;
+    }
+    if (!node.GetRenderProperties().GetVisible()) {
+        RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node : %llu is unvisible", node.GetId());
         return;
     }
     ProcessBaseRenderNode(node);
@@ -165,12 +171,12 @@ void RSRenderServiceVisitor::UpdateGeometry(RSBaseRenderNode& displayNode)
 {
     static const auto updateGeometryFunc = [&](const std::shared_ptr<RSBaseRenderNode>& child) {
         if (!child) {
-            ROSEN_LOGI("RSRenderServiceVisitor::PrepareDisplayRenderNode this child haven't existed");
+            RS_LOGI("RSRenderServiceVisitor::PrepareDisplayRenderNode this child haven't existed");
             return;
         }
         auto surfaceChild = child->ReinterpretCastTo<RSSurfaceRenderNode>();
         if (!surfaceChild) {
-            ROSEN_LOGI("RSRenderServiceVisitor::PrepareDisplayRenderNode this child is not SurfaceNode");
+            RS_LOGI("RSRenderServiceVisitor::PrepareDisplayRenderNode this child is not SurfaceNode");
             return;
         }
         auto childGeoPtr =

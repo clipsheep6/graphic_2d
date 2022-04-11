@@ -18,6 +18,7 @@
 #include <include/core/SkColor.h>
 #include <include/core/SkFont.h>
 #include <include/core/SkPaint.h>
+#include <include/core/SkSurface.h>
 
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_dirty_region_manager.h"
@@ -26,7 +27,7 @@
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
-#include "platform/drawing/rs_surface.h"
+#include "drawing_engine/drawing_surface/rs_surface.h"
 #include "rs_trace.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_surface_extractor.h"
@@ -94,8 +95,13 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         ProcessCanvasRenderNode(node);
         return;
     }
-    if (!node.GetRenderProperties().GetVisible() || node.GetSurfaceWidth() <= 0 || node.GetSurfaceHeight() <= 0) {
+    if (!node.GetRenderProperties().GetVisible()) {
         ROSEN_LOGE("No valid RSRootRenderNode");
+        return;
+    }
+    if (node.GetSurfaceWidth() <= 0 || node.GetSurfaceHeight() <= 0) {
+        ROSEN_LOGE("RSRootRenderNode have negative width or height [%d %d]", node.GetSurfaceWidth(),
+            node.GetSurfaceHeight());
         return;
     }
     auto ptr = RSNodeMap::Instance().GetNode<RSSurfaceNode>(node.GetRSSurfaceNodeId());
@@ -112,17 +118,8 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         return;
     }
 
-    auto rsSurfaceColorSpace = rsSurface->GetColorSpace();
+    rsSurface->SetDrawingProxy(RSRenderThread::Instance().GetDrawingProxy());
 
-    if (surfaceNodeColorSpace != rsSurfaceColorSpace) {
-        ROSEN_LOGD("Set new colorspace %d to rsSurface", surfaceNodeColorSpace);
-        rsSurface->SetColorSpace(surfaceNodeColorSpace);
-    }
-
-#ifdef ACE_ENABLE_GL
-    RenderContext* rc = RSRenderThread::Instance().GetRenderContext();
-    rsSurface->SetRenderContext(rc);
-#endif
     RS_TRACE_BEGIN("rsSurface->RequestFrame");
     auto surfaceFrame = rsSurface->RequestFrame(node.GetSurfaceWidth(), node.GetSurfaceHeight());
     RS_TRACE_END();
@@ -131,29 +128,39 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         return;
     }
 
+    auto rsSurfaceColorSpace = surfaceFrame->GetColorSpace();
+    if (surfaceNodeColorSpace != rsSurfaceColorSpace) {
+        ROSEN_LOGD("Set new colorspace %d to rsSurface", surfaceNodeColorSpace);
+        surfaceFrame->SetColorSpace(surfaceNodeColorSpace);
+    }
+
     sk_sp<SkSurface> skSurface = nullptr;
-    if (RSRootRenderNode::NeedForceRaster()) {
+    auto iter = forceRasterNodes.find(node.GetId());
+    if (iter != forceRasterNodes.end()) {
         ROSEN_LOGD("Force Raster draw");
-        RSRootRenderNode::MarkForceRaster(false);
+        forceRasterNodes.erase(iter);
         SkImageInfo imageInfo = SkImageInfo::Make(node.GetSurfaceWidth(), node.GetSurfaceHeight(),
             kRGBA_8888_SkColorType, kOpaque_SkAlphaType, SkColorSpace::MakeSRGB());
         skSurface = SkSurface::MakeRaster(imageInfo);
         canvas_ = new RSPaintFilterCanvas(skSurface->getCanvas());
     } else {
-        canvas_ = new RSPaintFilterCanvas(surfaceFrame->GetCanvas());
+        canvas_ = new RSPaintFilterCanvas(rsSurface->GetCanvas(surfaceFrame));
     }
     canvas_->clear(SK_ColorTRANSPARENT);
-
-
     isIdle_ = false;
     ProcessCanvasRenderNode(node);
 
     if (skSurface) {
         canvas_->flush();
-        surfaceFrame->GetCanvas()->clear(SK_ColorTRANSPARENT);
-        skSurface->draw(surfaceFrame->GetCanvas(), 0.f, 0.f, nullptr);
-    } else if (RSRootRenderNode::NeedForceRaster()) {
-        RSRenderThread::Instance().RequestNextVSync();
+        rsSurface->GetCanvas(surfaceFrame)->clear(SK_ColorTRANSPARENT);
+        skSurface->draw(rsSurface->GetCanvas(surfaceFrame), 0.f, 0.f, nullptr);
+    }
+    if (RSRootRenderNode::NeedForceRaster()) {
+        RSRootRenderNode::MarkForceRaster(false);
+        forceRasterNodes.insert(node.GetId());
+        if (!skSurface) {
+            RSRenderThread::Instance().RequestNextVSync();
+        }
     }
 
     RS_TRACE_BEGIN("rsSurface->FlushFrame");
@@ -186,6 +193,10 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         ROSEN_LOGE("RSRenderThreadVisitor::ProcessSurfaceRenderNode, canvas is nullptr");
         return;
     }
+    if (!node.GetRenderProperties().GetVisible()) {
+        ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode node : %llu is unvisible", node.GetId());
+        return;
+    }
     // RSSurfaceRenderNode in RSRenderThreadVisitor do not have information of property.
     // We only get parent's matrix and send it to RenderService
 #ifdef ROSEN_OHOS
@@ -193,7 +204,7 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     node.SetAlpha(canvas_->GetAlpha());
     node.SetParentId(node.GetParent().lock()->GetId());
     auto clipRect = canvas_->getDeviceClipBounds();
-    node.SetClipRegion({clipRect.left(), clipRect.top(), clipRect.width(), clipRect.height()});
+    node.SetClipRegion({ clipRect.left(), clipRect.top(), clipRect.width(), clipRect.height() });
 
     auto x = node.GetRenderProperties().GetBoundsPositionX();
     auto y = node.GetRenderProperties().GetBoundsPositionY();
@@ -202,24 +213,28 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     canvas_->save();
     canvas_->clipRect(SkRect::MakeXYWH(x, y, width, height));
     if (node.IsBufferAvailable() == true) {
-        ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode CILP (set transparent) [%f, %f, %f, %f]",
-            x, y, width, height);
+        ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode node : %llu, clip [%f, %f, %f, %f]",
+            node.GetId(), x, y, width, height);
         canvas_->clear(SK_ColorTRANSPARENT);
     } else {
-        ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode NOT CILP (set black) [%f, %f, %f, %f]",
-            x, y, width, height);
+        ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode node : %llu, not clip [%f, %f, %f, %f]",
+            node.GetId(), x, y, width, height);
         if (node.NeedSetCallbackForRenderThreadRefresh() == true) {
             node.SetCallbackForRenderThreadRefresh([] {
                 RSRenderThread::Instance().RequestNextVSync();
             });
         }
-        canvas_->clear(SK_ColorBLACK);
+        auto backgroundColor = node.GetRenderProperties().GetBackgroundColor();
+        if (backgroundColor != RgbPalette::Transparent()) {
+            canvas_->clear(backgroundColor.AsArgbInt());
+        } else {
+            canvas_->clear(SK_ColorBLACK);
+        }
     }
     canvas_->restore();
 
 #endif
     ProcessBaseRenderNode(node);
 }
-
 } // namespace Rosen
 } // namespace OHOS

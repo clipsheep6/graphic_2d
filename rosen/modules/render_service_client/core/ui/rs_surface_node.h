@@ -22,7 +22,6 @@
 #include "surface.h"
 
 #include <transaction/rs_transaction_proxy.h>
-#include "platform/drawing/rs_surface.h"
 #include "ui/rs_node.h"
 #include "surface_type.h"
 
@@ -30,7 +29,8 @@ class SkCanvas;
 
 namespace OHOS {
 namespace Rosen {
-
+using FirstTimeOnScreenCallback = std::function<void()>;
+class RSSurface;
 struct RSSurfaceNodeConfig {
     std::string SurfaceNodeName = "SurfaceNode";
 };
@@ -51,7 +51,11 @@ public:
     void SetBoundsSize(float width, float height) override;
     void SetBoundsWidth(float width) override;
     void SetBoundsHeight(float height) override;
-    void SetColorSpace(SurfaceColorGamut colorSpace);
+    void SetColorSpace(ColorGamut colorSpace);
+    void SetSecurityLayer(bool isSecurityLayer);
+    bool GetSecurityLayer() const;
+
+    bool SetFirstTimeOnScreenCallback(FirstTimeOnScreenCallback callback);
 
     bool Marshalling(Parcel& parcel) const override;
     static RSSurfaceNode* Unmarshalling(Parcel& parcel);
@@ -60,7 +64,7 @@ public:
     {
         return RSUINodeType::SURFACE_NODE;
     }
-    SurfaceColorGamut GetColorSpace()
+    ColorGamut GetColorSpace()
     {
         return colorSpace_;
     }
@@ -77,7 +81,10 @@ private:
     void UpdateSurfaceDefaultSize(float width, float height);
     std::shared_ptr<RSSurface> surface_;
     std::string name_;
-    SurfaceColorGamut colorSpace_ = SurfaceColorGamut::COLOR_GAMUT_SRGB;
+    std::mutex mutex_;
+    FirstTimeOnScreenCallback callback_;
+    ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
+    bool isSecurityLayer_ = false;
 
     friend class RSUIDirector;
     friend class RSAnimation;

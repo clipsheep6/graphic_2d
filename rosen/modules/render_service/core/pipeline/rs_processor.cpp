@@ -13,17 +13,20 @@
  * limitations under the License.
  */
 
-#include "unique_fd.h"
+#include "pipeline/rs_processor.h"
+
+#include <ctime>
 #include <sync_fence.h>
+#include "rs_trace.h"
 
 #include "pipeline/rs_main_thread.h"
-#include "pipeline/rs_processor.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
 std::unique_ptr<SkCanvas> RSProcessor::CreateCanvas(sptr<Surface> producerSurface, BufferRequestConfig requestConfig)
 {
+    RS_TRACE_NAME("CreateCanvas");
     auto ret = producerSurface->RequestBuffer(buffer_, releaseFence_, requestConfig);
     if (ret != SURFACE_ERROR_OK || buffer_ == nullptr) {
         return nullptr;
@@ -31,7 +34,7 @@ std::unique_ptr<SkCanvas> RSProcessor::CreateCanvas(sptr<Surface> producerSurfac
     sptr<SyncFence> tempFence = new SyncFence(releaseFence_);
     int res = tempFence->Wait(3000);
     if (res < 0) {
-        ROSEN_LOGE("RsDebug RSProcessor::CreateCanvas this buffer is not available");
+        RS_LOGE("RsDebug RSProcessor::CreateCanvas this buffer is not available");
         //[PLANNING]: deal with the buffer is not available
     }
     auto addr = static_cast<uint32_t*>(buffer_->GetVirAddr());
@@ -46,22 +49,38 @@ std::unique_ptr<SkCanvas> RSProcessor::CreateCanvas(sptr<Surface> producerSurfac
 void RSProcessor::FlushBuffer(sptr<Surface> surface, BufferFlushConfig flushConfig)
 {
     if (!surface || !buffer_) {
-        ROSEN_LOGE("RSProcessor::FlushBuffer surface or buffer is nullptr");
+        RS_LOGE("RSProcessor::FlushBuffer surface or buffer is nullptr");
         return;
     }
     surface->FlushBuffer(buffer_, -1, flushConfig);
 }
 
+void RSProcessor::SetBufferTimeStamp()
+{
+    if (!buffer_) {
+        RS_LOGE("RSProcessor::SetBufferTimeStamp buffer is nullptr");
+        return;
+    }
+    struct timespec curTime = {0, 0};
+    clock_gettime(CLOCK_MONOTONIC, &curTime);
+    // 1000000000 is used for transfer second to nsec
+    uint64_t duration = curTime.tv_sec * 1000000000 + curTime.tv_nsec;
+    GSError ret = buffer_->ExtraSet("timeStamp", static_cast<int64_t>(duration));
+    if (ret != GSERROR_OK) {
+        RS_LOGE("RSProcessor::SetBufferTimeStamp buffer ExtraSet failed");
+    }
+}
+
 bool RSProcessor::ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask& task, sptr<SurfaceBuffer>& buffer)
 {
     if (node.GetAvailableBufferCount() == 0 && !node.GetBuffer()) {
-        ROSEN_LOGI("RsDebug RSProcessor::ProcessSurface have no Available Buffer and"\
-        "Node have no buffer node id:%llu", node.GetId());
+        RS_LOGI("RsDebug RSProcessor::ProcessSurface have no Available Buffer and"\
+            "Node have no buffer node id:%llu", node.GetId());
         return false;
     }
     auto& surfaceConsumer = node.GetConsumer();
     if (!surfaceConsumer) {
-        ROSEN_LOGI("RSProcessor::ProcessSurface output is nullptr");
+        RS_LOGI("RSProcessor::ProcessSurface output is nullptr");
         return false;
     }
     if (node.GetAvailableBufferCount() >= 1) {
@@ -69,8 +88,9 @@ bool RSProcessor::ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask&
         int64_t timestamp = 0;
         Rect damage;
         auto sret = surfaceConsumer->AcquireBuffer(buffer, fence, timestamp, damage);
+        sptr<SyncFence> acquireFence = new SyncFence(fence);
         if (!buffer || sret != OHOS::SURFACE_ERROR_OK) {
-            ROSEN_LOGE("RSProcessor::ProcessSurface: AcquireBuffer failed! sret: %{public}d", sret);
+            RS_LOGE("RSProcessor::ProcessSurface: AcquireBuffer failed! sret: %{public}d", sret);
             if (sret == OHOS::GSERROR_NO_BUFFER) {
                 node.ReduceAvailableBuffer();
             }
@@ -78,7 +98,7 @@ bool RSProcessor::ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask&
         }
         task();
         node.SetBuffer(buffer);
-        node.SetFence(fence);
+        node.SetFence(acquireFence);
         node.SetDamageRegion(damage);
         if (node.ReduceAvailableBuffer() >= 1) {
             if (auto mainThread = RSMainThread::Instance()) {

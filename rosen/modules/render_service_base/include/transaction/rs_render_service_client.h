@@ -27,7 +27,7 @@
 #include "ipc_callbacks/iapplication_render_thread.h"
 #include "ipc_callbacks/screen_change_callback.h"
 #include "ipc_callbacks/surface_capture_callback.h"
-#include "platform/drawing/rs_surface.h"
+#include "drawing_engine/drawing_surface/rs_surface.h"
 #include "rs_irender_client.h"
 #include "screen_manager/rs_screen_capability.h"
 #include "screen_manager/rs_screen_data.h"
@@ -39,7 +39,7 @@ namespace OHOS {
 namespace Rosen {
 // normal callback functor for client users.
 using ScreenChangeCallback = std::function<void(ScreenId, ScreenEvent)>;
-using BufferAvailableCallback = std::function<void(bool)>;
+using BufferAvailableCallback = std::function<void()>;
 class SurfaceCaptureCallback {
 public:
     SurfaceCaptureCallback() {}
@@ -96,6 +96,7 @@ public:
     void SetScreenBacklight(ScreenId id, uint32_t level);
 
     bool RegisterBufferAvailableListener(NodeId id, const BufferAvailableCallback &callback);
+    bool UnregisterBufferAvailableListener(NodeId id);
 
     int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode);
 

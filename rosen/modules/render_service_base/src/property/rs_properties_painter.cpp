@@ -366,7 +366,6 @@ void RSPropertiesPainter::DrawMask(const RSProperties& properties, SkCanvas& can
 {
     std::shared_ptr<RSMask> mask = properties.GetMask();
     if (mask == nullptr) {
-        ROSEN_LOGD("RSPropertiesPainter::DrawMask not has mask property");
         return;
     }
     if (mask->IsSvgMask() && !mask->GetSvgDom()) {
@@ -374,7 +373,7 @@ void RSPropertiesPainter::DrawMask(const RSProperties& properties, SkCanvas& can
         return;
     }
 
-    SkAutoCanvasRestore save(&canvas, true);
+    canvas.save();
     SkRect maskBounds = Rect2SkRect(properties.GetBoundsRect());
     canvas.saveLayer(maskBounds, nullptr);
     int tmpLayer = canvas.getSaveCount();

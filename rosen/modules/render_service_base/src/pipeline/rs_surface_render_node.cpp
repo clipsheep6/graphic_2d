@@ -47,10 +47,10 @@ void RSSurfaceRenderNode::SetBuffer(const sptr<SurfaceBuffer>& buffer)
     }
 }
 
-void RSSurfaceRenderNode::SetFence(int32_t fence)
+void RSSurfaceRenderNode::SetFence(sptr<SyncFence> fence)
 {
     preFence_ = fence_;
-    fence_ = fence;
+    fence_ = std::move(fence);
 }
 
 void RSSurfaceRenderNode::SetDamageRegion(const Rect& damage)
@@ -136,6 +136,16 @@ void RSSurfaceRenderNode::SetClipRegion(Vector4f clipRegion, bool sendMsg)
     SendPropertyCommand(command);
 }
 
+void RSSurfaceRenderNode::SetSecurityLayer(bool isSecurityLayer)
+{
+    isSecurityLayer_ = isSecurityLayer;
+}
+
+bool RSSurfaceRenderNode::GetSecurityLayer() const
+{
+    return isSecurityLayer_;
+}
+
 void RSSurfaceRenderNode::SetGlobalZOrder(float globalZOrder)
 {
     globalZOrder_ = globalZOrder;
@@ -217,33 +227,37 @@ void RSSurfaceRenderNode::ConnectToNodeInRenderService()
         std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
     if (renderServiceClient != nullptr) {
         renderServiceClient->RegisterBufferAvailableListener(
-            GetId(), [weakThis = weak_from_this()](bool isBufferAvailable) {
+            GetId(), [weakThis = weak_from_this()]() {
                 auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(weakThis.lock());
                 if (node == nullptr) {
                     return;
                 }
-                node->NotifyBufferAvailable(isBufferAvailable);
+                node->NotifyBufferAvailable();
             });
     }
 }
 
-void RSSurfaceRenderNode::NotifyBufferAvailable(bool isBufferAvailable)
+void RSSurfaceRenderNode::NotifyBufferAvailable()
 {
     ROSEN_LOGI("RSSurfaceRenderNode::NotifyBufferAvailable nodeId = %llu", this->GetId());
 
     // In RS, "isBufferAvailable_ = true" means buffer is ready and need to trigger ipc callback.
     // In RT, "isBufferAvailable_ = true" means RT know that RS have had available buffer
     // and ready to trigger "callbackForRenderThreadRefresh_" to "clip" on parent surface.
-    isBufferAvailable_ = isBufferAvailable;
+    if (isBufferAvailable_) {
+        return;
+    }
 
-    if (isBufferAvailable == true && callbackForRenderThreadRefresh_ != nullptr) {
+    isBufferAvailable_ = true;
+
+    if (callbackForRenderThreadRefresh_) {
         callbackForRenderThreadRefresh_();
     }
 
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (callback_ != nullptr) {
-            callback_->OnBufferAvailable(true);
+        if (callback_) {
+            callback_->OnBufferAvailable();
         }
     }
 }

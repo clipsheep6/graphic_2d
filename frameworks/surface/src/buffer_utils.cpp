@@ -55,7 +55,8 @@ void ReadRequestConfig(MessageParcel &parcel, BufferRequestConfig &config)
     config.format = parcel.ReadInt32();
     config.usage = parcel.ReadInt32();
     config.timeout = parcel.ReadInt32();
-    config.colorGamut = static_cast<SurfaceColorGamut>(parcel.ReadInt32());
+    config.colorGamut = static_cast<ColorGamut>(parcel.ReadInt32());
+    config.transform = static_cast<TransformType>(parcel.ReadInt32());
 }
 
 void WriteRequestConfig(MessageParcel &parcel, BufferRequestConfig const & config)
@@ -67,6 +68,7 @@ void WriteRequestConfig(MessageParcel &parcel, BufferRequestConfig const & confi
     parcel.WriteInt32(config.usage);
     parcel.WriteInt32(config.timeout);
     parcel.WriteInt32(static_cast<int32_t>(config.colorGamut));
+    parcel.WriteInt32(static_cast<int32_t>(config.transform));
 }
 
 void ReadFlushConfig(MessageParcel &parcel, BufferFlushConfig &config)
@@ -92,7 +94,7 @@ void ReadSurfaceBufferImpl(MessageParcel &parcel,
 {
     sequence = parcel.ReadInt32();
     if (parcel.ReadBool()) {
-        sptr<SurfaceBufferImpl> bufferImpl = new SurfaceBufferImpl(sequence);
+        sptr<SurfaceBuffer> bufferImpl = new SurfaceBufferImpl(sequence);
         auto handle = ReadBufferHandle(parcel);
         bufferImpl->SetBufferHandle(handle);
         int32_t size = parcel.ReadInt32();
@@ -114,11 +116,10 @@ void WriteSurfaceBufferImpl(MessageParcel &parcel,
     int32_t sequence, const sptr<SurfaceBuffer> &buffer)
 {
     parcel.WriteInt32(sequence);
-    auto bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    parcel.WriteBool(bufferImpl != nullptr);
-    if (bufferImpl == nullptr) {
+    parcel.WriteBool(buffer != nullptr);
+    if (buffer == nullptr) {
         return;
     }
-    bufferImpl->WriteToMessageParcel(parcel);
+    buffer->WriteToMessageParcel(parcel);
 }
 } // namespace OHOS

@@ -19,7 +19,7 @@
 #include <refbase.h>
 
 #include <surface_type.h>
-#include "surface_buffer_impl.h"
+#include "surface_buffer.h"
 #include "buffer_queue.h"
 
 namespace OHOS {
@@ -28,14 +28,14 @@ public:
     BufferQueueConsumer(sptr<BufferQueue>& bufferQueue);
     virtual ~BufferQueueConsumer();
 
-    GSError AcquireBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t &fence,
+    GSError AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                int64_t &timestamp, Rect &damage);
 
-    GSError ReleaseBuffer(sptr<SurfaceBufferImpl>& buffer, int32_t fence);
+    GSError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence);
 
-    GSError AttachBuffer(sptr<SurfaceBufferImpl>& buffer);
+    GSError AttachBuffer(sptr<SurfaceBuffer>& buffer);
 
-    GSError DetachBuffer(sptr<SurfaceBufferImpl>& buffer);
+    GSError DetachBuffer(sptr<SurfaceBuffer>& buffer);
 
     GSError RegisterConsumerListener(sptr<IBufferConsumerListener>& listener);
     GSError RegisterConsumerListener(IBufferConsumerListenerClazz *listener);
@@ -45,6 +45,7 @@ public:
     GSError SetDefaultWidthAndHeight(int32_t width, int32_t height);
     GSError SetDefaultUsage(uint32_t usage);
     void Dump(std::string &result) const;
+    TransformType GetTransform() const;
 
 private:
     sptr<BufferQueue> bufferQueue_ = nullptr;

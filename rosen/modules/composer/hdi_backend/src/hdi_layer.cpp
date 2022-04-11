@@ -274,15 +274,14 @@ SurfaceError HdiLayer::ReleasePrevBuffer()
     }
 
     prevSbuffer_->sbuffer_ = nullptr;
-    prevSbuffer_->releaseFence_ = nullptr;
 
     return ret;
 }
 
-void HdiLayer::RecordPresentTime(const sptr<SyncFence> &fbFence)
+void HdiLayer::RecordPresentTime(int64_t timestamp)
 {
     if (currSbuffer_->sbuffer_ != prevSbuffer_->sbuffer_) {
-        presentTimeRecords[count].presentFence = fbFence;
+        presentTimeRecords[count] = timestamp;
         count = (count + 1) % FRAME_RECORDS_NUM;
     }
 }
@@ -328,11 +327,7 @@ void HdiLayer::Dump(std::string &result)
     const uint32_t offset = count;
     for (uint32_t i = 0; i < FRAME_RECORDS_NUM; i++) {
         uint32_t order = (offset + i) % FRAME_RECORDS_NUM;
-        if (presentTimeRecords[order].presentFence != SyncFence::INVALID_FENCE) {
-            presentTimeRecords[order].presentTime = presentTimeRecords[order].presentFence->SyncFileReadTimestamp();
-            presentTimeRecords[order].presentFence = SyncFence::INVALID_FENCE;
-        }
-        result += std::to_string(presentTimeRecords[order].presentTime) + "\n";
+        result += std::to_string(presentTimeRecords[order]) + "\n";
     }
 }
 

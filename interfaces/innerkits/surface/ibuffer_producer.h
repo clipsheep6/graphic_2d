@@ -34,12 +34,12 @@ public:
         int32_t fence;
         std::vector<int32_t> deletingBuffers;
     };
-    virtual GSError RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+    virtual GSError RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
                                        RequestBufferReturnValue &retval) = 0;
 
-    virtual GSError CancelBuffer(int32_t sequence, BufferExtraData &bedata) = 0;
+    virtual GSError CancelBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata) = 0;
 
-    virtual GSError FlushBuffer(int32_t sequence, BufferExtraData &bedata,
+    virtual GSError FlushBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata,
                                      int32_t fence, BufferFlushConfig &config) = 0;
 
     virtual GSError AttachBuffer(sptr<SurfaceBuffer>& buffer) = 0;
@@ -59,6 +59,8 @@ public:
 
     virtual GSError RegisterReleaseListener(OnReleaseFunc func) = 0;
 
+    virtual GSError SetTransform(TransformType transform) = 0;
+
     DECLARE_INTERFACE_DESCRIPTOR(u"surf.IBufferProducer");
 
 protected:
@@ -77,6 +79,7 @@ protected:
         BUFFER_PRODUCER_DETACH_BUFFER = 11,
         BUFFER_PRODUCER_REGISTER_RELEASE_LISTENER = 12,
         BUFFER_PRODUCER_GET_UNIQUE_ID = 13,
+        BUFFER_PRODUCER_SET_TRANSFORM = 14,
     };
 };
 } // namespace OHOS

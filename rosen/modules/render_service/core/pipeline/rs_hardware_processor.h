@@ -39,7 +39,7 @@ public:
     RSHardwareProcessor();
     ~RSHardwareProcessor() override;
     void ProcessSurface(RSSurfaceRenderNode& node) override;
-    void Init(ScreenId id) override;
+    void Init(ScreenId id, int32_t offsetX, int32_t offsetY) override;
     void PostProcess() override;
     void CropLayers();
 
@@ -49,13 +49,15 @@ private:
     void CalculateInfoWithAnimation(const std::unique_ptr<RSTransitionProperties>& transitionProperties,
         ComposeInfo& info, RSSurfaceRenderNode& node);
     void CalculateInfoWithVideo(ComposeInfo& info, RSSurfaceRenderNode& node);
-    SkMatrix GetLayerTransform(const SkMatrix& canvasTransform, const LayerInfoPtr& layer);
+    void ReleaseNodePrevBuffer(RSSurfaceRenderNode& node);
     HdiBackend* backend_ = nullptr;
     sptr<RSScreenManager> screenManager_;
     ScreenInfo currScreenInfo_;
     std::shared_ptr<HdiOutput> output_;
     std::vector<LayerInfoPtr> layers_;
     ScreenRotation rotation_ {ScreenRotation::ROTATION_0};
+    int32_t offsetX_ = 0;
+    int32_t offsetY_ = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

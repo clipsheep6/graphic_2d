@@ -194,8 +194,6 @@ void EGLManager::SwapBuffers()
 {
     if (!eglSwapBuffers(eglDisplay_, eglSurface_)) {
         LOGE("Failed to SwapBuffers on surface %{public}p, error=%{public}x", eglSurface_, eglGetError());
-    } else {
-        LOGW("SwapBuffers successfully, surface is %{public}p", eglSurface_);
     }
 }
 

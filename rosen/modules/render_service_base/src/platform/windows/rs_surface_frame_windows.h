@@ -18,6 +18,7 @@
 
 #include "platform/drawing/rs_surface_frame.h"
 
+#include <include/core/SkSurface.h>
 #include <surface_buffer.h>
 
 namespace OHOS {
@@ -38,6 +39,7 @@ private:
     sptr<SurfaceBuffer> buffer_;
     BufferRequestConfig requestConfig_ = {};
     BufferFlushConfig flushConfig_ = {};
+    sk_sp<SkSurface> surface_ = nullptr;
 };
 
 } // namespace Rosen

@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/ace/ace_engine/ace_config.gni")
 
 group("windows") {
   deps = [ ":rosen_windows_sources" ]
@@ -32,6 +33,11 @@ ohos_source_set("rosen_windows_sources") {
     "//foundation/graphic/standard/rosen/modules/render_service_base/include",
   ]
 
+  defines = []
+  if (enable_glfw_window) {
+    defines += [ "USE_GLFW_WINDOW" ]
+  }
+
   configs = [
     "//foundation/graphic/standard/rosen/modules/composer:composer_public_config",
     "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler:public_libeventhandler_config",
@@ -40,6 +46,7 @@ ohos_source_set("rosen_windows_sources") {
   deps = [
     "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_windows",
     "//foundation/graphic/standard:libsurface",
+    "//foundation/graphic/standard/rosen/modules/glfw_render_context:libglfw_render_context",
     "//foundation/graphic/standard/utils:sync_fence",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
   ]

@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include <include/gpu/GrContext.h>
 #include <surface.h>
 
 #include "platform/drawing/rs_surface.h"
@@ -43,9 +44,14 @@ public:
     void SetColorSpace(ColorGamut colorSpace) override;
 
 private:
+    void YInvert(void *addr, int32_t width, int32_t height);
+    bool SetupGrContext();
+
     sptr<Surface> producer_ = nullptr;
     RenderContext* renderContext_ = nullptr;
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
+    sk_sp<GrContext> grContext_ = nullptr;
+    sk_sp<SkColorSpace> skColorSpace_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

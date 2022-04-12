@@ -38,6 +38,7 @@ class RSAnimation;
 class RSCommand;
 class RSImplicitAnimParam;
 class RSBasePropertyAccessors;
+class RSImplicitAnimator;
 
 class RS_EXPORT RSNode : public RSBaseNode {
 public:
@@ -50,13 +51,17 @@ public:
 
     static std::vector<std::shared_ptr<RSAnimation>> Animate(const RSAnimationTimingProtocol& timingProtocol,
         const RSAnimationTimingCurve& timingCurve, const PropertyCallback& callback,
+        const std::shared_ptr<RSImplicitAnimator>& implicitAnimator,
         const std::function<void()>& finshCallback = nullptr);
     static void OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
-        const RSAnimationTimingCurve& timingCurve, const std::function<void()>& finishCallback = nullptr);
-    static std::vector<std::shared_ptr<RSAnimation>> CloseImplicitAnimation();
-    static void AddKeyFrame(
-        float fraction, const RSAnimationTimingCurve& timingCurve, const PropertyCallback& callback);
-    static void AddKeyFrame(float fraction, const PropertyCallback& callback);
+        const RSAnimationTimingCurve& timingCurve, const std::shared_ptr<RSImplicitAnimator>& implicitAnimator,
+        const std::function<void()>& finishCallback = nullptr);
+    static std::vector<std::shared_ptr<RSAnimation>> CloseImplicitAnimation(
+        const std::shared_ptr<RSImplicitAnimator>& implicitAnimator);
+    static void AddKeyFrame(float fraction, const RSAnimationTimingCurve& timingCurve,
+        const std::shared_ptr<RSImplicitAnimator>& implicitAnimator, const PropertyCallback& callback);
+    static void AddKeyFrame(float fraction, const std::shared_ptr<RSImplicitAnimator>& implicitAnimator,
+        const PropertyCallback& callback);
 
     void NotifyTransition(const std::shared_ptr<const RSTransitionEffect>& effect, bool isTransitionIn);
 
@@ -160,6 +165,10 @@ public:
     void SetPaintOrder(bool drawContentLast);
     void SetMask(std::shared_ptr<RSMask> mask);
 
+    void SetImplicitAnimator(const std::shared_ptr<RSImplicitAnimator>& implicitAnimator);
+    const std::shared_ptr<RSImplicitAnimator>& GetImplicitAnimator();
+    const std::shared_ptr<RSImplicitAnimator>& MakeImplicitAnimator();
+
     void SetTransitionEffect(const std::shared_ptr<const RSTransitionEffect>& effect)
     {
         transitionEffect_ = effect;
@@ -198,6 +207,7 @@ private:
     std::unordered_map<AnimationId, std::shared_ptr<RSAnimation>> animations_;
     std::unordered_map<RSAnimatableProperty, uint32_t> animatingPropertyNum_;
     std::shared_ptr<RSMotionPathOption> motionPathOption_;
+    std::shared_ptr<RSImplicitAnimator> implicitAnimator_ = nullptr;
 
     std::shared_ptr<const RSTransitionEffect> transitionEffect_ = nullptr;
 

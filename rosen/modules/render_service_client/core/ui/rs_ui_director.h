@@ -25,6 +25,7 @@ class Surface;
 namespace Rosen {
 class RSSurfaceNode;
 class RSTransactionData;
+class RSImplicitAnimator;
 using TaskRunner = std::function<void(const std::function<void()>&)>;
 
 class RS_EXPORT RSUIDirector final {
@@ -42,6 +43,8 @@ public:
     void SendMessages(); // post messages to render thread
 
     void SetTimeStamp(uint64_t timeStamp);
+
+    const std::shared_ptr<RSImplicitAnimator>& GetImplicitAnimator();
 
 private:
     void Destroy();
@@ -64,6 +67,7 @@ private:
     uint64_t refreshPeriod_ = 16666667;
     uint64_t timeStamp_ = 0;
     std::shared_ptr<RSSurfaceNode> surfaceNode_ = nullptr;
+    std::shared_ptr<RSImplicitAnimator> implicitAnimator_ = nullptr;
     int surfaceWidth_ = 0;
     int surfaceHeight_ = 0;
 

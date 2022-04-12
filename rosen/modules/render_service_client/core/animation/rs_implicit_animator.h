@@ -28,7 +28,6 @@ namespace Rosen {
 class RSImplicitAnimator {
 public:
     virtual ~RSImplicitAnimator() = default;
-    static RSImplicitAnimator& Instance();
 
     void OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
         const RSAnimationTimingCurve& timingCurve, const std::function<void()>& finishCallback);
@@ -47,8 +46,6 @@ public:
     std::shared_ptr<RSAnimation> CreateImplicitTransition(RSNode& target, bool isTransitionIn);
 
 private:
-    RSImplicitAnimator() = default;
-
     void BeginImplicitCurveAnimation();
     void EndImplicitCurveAnimation();
     void BeginImplicitPathAnimation(const std::shared_ptr<RSMotionPathOption>& motionPathOption);

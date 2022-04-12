@@ -40,52 +40,94 @@ RSNode::~RSNode()
 }
 
 void RSNode::OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
-    const RSAnimationTimingCurve& timingCurve, const std::function<void()>& finishCallback)
+    const RSAnimationTimingCurve& timingCurve, const std::shared_ptr<RSImplicitAnimator>& implicitAnimator,
+    const std::function<void()>& finishCallback)
 {
-    RSImplicitAnimator::Instance().OpenImplicitAnimation(timingProtocol, timingCurve, finishCallback);
+    if (implicitAnimator == nullptr) {
+        return;
+    }
+
+    implicitAnimator->OpenImplicitAnimation(timingProtocol, timingCurve, finishCallback);
 }
 
-std::vector<std::shared_ptr<RSAnimation>> RSNode::CloseImplicitAnimation()
+std::vector<std::shared_ptr<RSAnimation>> RSNode::CloseImplicitAnimation(
+    const std::shared_ptr<RSImplicitAnimator>& implicitAnimator)
 {
-    return RSImplicitAnimator::Instance().CloseImplicitAnimation();
+    if (implicitAnimator == nullptr) {
+        return {};
+    }
+
+    return implicitAnimator->CloseImplicitAnimation();
 }
 
-void RSNode::AddKeyFrame(
-    float fraction, const RSAnimationTimingCurve& timingCurve, const PropertyCallback& propertyCallback)
+
+void RSNode::AddKeyFrame(float fraction, const RSAnimationTimingCurve& timingCurve,
+    const std::shared_ptr<RSImplicitAnimator>& implicitAnimator,
+    const PropertyCallback& propertyCallback)
 {
+    if (implicitAnimator == nullptr) {
+        return;
+    }
+
     if (propertyCallback == nullptr) {
         ROSEN_LOGE("Failed to add keyframe animation, property callback is null!");
         return;
     }
 
-    RSImplicitAnimator::Instance().BeginImplicitKeyFrameAnimation(fraction, timingCurve);
+    implicitAnimator->BeginImplicitKeyFrameAnimation(fraction, timingCurve);
     propertyCallback();
-    RSImplicitAnimator::Instance().EndImplicitKeyFrameAnimation();
+    implicitAnimator->EndImplicitKeyFrameAnimation();
 }
 
-void RSNode::AddKeyFrame(float fraction, const PropertyCallback& propertyCallback)
+void RSNode::AddKeyFrame(float fraction, const std::shared_ptr<RSImplicitAnimator>& implicitAnimator,
+    const PropertyCallback& propertyCallback)
 {
+    if (implicitAnimator == nullptr) {
+        return;
+    }
+
     if (propertyCallback == nullptr) {
         ROSEN_LOGE("Failed to add keyframe animation, property callback is null!");
         return;
     }
 
-    RSImplicitAnimator::Instance().BeginImplicitKeyFrameAnimation(fraction);
+    implicitAnimator->BeginImplicitKeyFrameAnimation(fraction);
     propertyCallback();
-    RSImplicitAnimator::Instance().EndImplicitKeyFrameAnimation();
+    implicitAnimator->EndImplicitKeyFrameAnimation();
 }
 
 std::vector<std::shared_ptr<RSAnimation>> RSNode::Animate(const RSAnimationTimingProtocol& timingProtocol,
     const RSAnimationTimingCurve& timingCurve, const PropertyCallback& propertyCallback,
+    const std::shared_ptr<RSImplicitAnimator>& implicitAnimator,
     const std::function<void()>& finshCallback)
 {
+    if (implicitAnimator == nullptr) {
+        return {};
+    }
+
     if (propertyCallback == nullptr) {
         ROSEN_LOGE("Failed to add curve animation, property callback is null!");
         return {};
     }
-    OpenImplicitAnimation(timingProtocol, timingCurve, finshCallback);
+    OpenImplicitAnimation(timingProtocol, timingCurve, implicitAnimator, finshCallback);
     propertyCallback();
-    return CloseImplicitAnimation();
+    return CloseImplicitAnimation(implicitAnimator);
+}
+
+void RSNode::SetImplicitAnimator(const std::shared_ptr<RSImplicitAnimator>& implicitAnimator)
+{
+    implicitAnimator_ = implicitAnimator;
+}
+
+const std::shared_ptr<RSImplicitAnimator>& RSNode::GetImplicitAnimator()
+{
+    return implicitAnimator_;
+}
+
+const std::shared_ptr<RSImplicitAnimator>& RSNode::MakeImplicitAnimator()
+{
+    implicitAnimator_ = std::make_shared<RSImplicitAnimator>();
+    return implicitAnimator_;
 }
 
 void RSNode::FallbackAnimationsToRoot()
@@ -96,6 +138,8 @@ void RSNode::FallbackAnimationsToRoot()
         ROSEN_LOGE("Failed to move animation to root, root node is null!");
         return;
     }
+
+    target->SetImplicitAnimator(implicitAnimator_);
     for (const auto& [animationId, animation] : animations_) {
         target->AddAnimationInner(animation);
     }
@@ -219,8 +263,8 @@ bool IsValid(const Vector4f& value)
         if (ROSEN_EQ(value, currentValue)) {                                                                \
             return;                                                                                         \
         }                                                                                                   \
-        if (RSImplicitAnimator::Instance().NeedImplicitAnimaton() && IsValid(currentValue)) {               \
-            RSImplicitAnimator::Instance().CreateImplicitAnimation(*this, property, currentValue, value);   \
+        if (implicitAnimator_ && implicitAnimator_->NeedImplicitAnimaton() && IsValid(currentValue)) {      \
+            implicitAnimator_->CreateImplicitAnimation(*this, property, currentValue, value);               \
         } else if (HasPropertyAnimation(property)) {                                                        \
             std::unique_ptr<RSCommand> command =                                                            \
                 std::make_unique<RSNodeSet##propertyName##Delta>(GetId(), (value)-currentValue);            \
@@ -650,12 +694,16 @@ void RSNode::SetVisible(bool visible)
 
 void RSNode::NotifyTransition(const std::shared_ptr<const RSTransitionEffect>& effect, bool isTransitionIn)
 {
-    if (!RSImplicitAnimator::Instance().NeedImplicitAnimaton()) {
+    if (implicitAnimator_ == nullptr) {
         return;
     }
-    RSImplicitAnimator::Instance().BeginImplicitTransition(effect);
-    RSImplicitAnimator::Instance().CreateImplicitTransition(*this, isTransitionIn);
-    RSImplicitAnimator::Instance().EndImplicitTransition();
+
+    if (!implicitAnimator_->NeedImplicitAnimaton()) {
+        return;
+    }
+    implicitAnimator_->BeginImplicitTransition(effect);
+    implicitAnimator_->CreateImplicitTransition(*this, isTransitionIn);
+    implicitAnimator_->EndImplicitTransition();
 }
 
 void RSNode::OnAddChildren()

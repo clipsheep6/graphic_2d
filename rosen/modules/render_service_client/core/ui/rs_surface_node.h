@@ -58,7 +58,7 @@ public:
     bool SetFirstTimeOnScreenCallback(FirstTimeOnScreenCallback callback);
 
     bool Marshalling(Parcel& parcel) const override;
-    static RSSurfaceNode* Unmarshalling(Parcel& parcel);
+    static std::shared_ptr<RSSurfaceNode> Unmarshalling(Parcel& parcel);
     sptr<OHOS::Surface> GetSurface() const;
     RSUINodeType GetType() const override
     {

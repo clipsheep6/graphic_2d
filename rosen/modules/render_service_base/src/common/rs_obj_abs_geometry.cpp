@@ -188,6 +188,13 @@ RectI RSObjAbsGeometry::MapAbsRect(const RectF& rect) const
         absRect.width_ = static_cast<int>(std::ceil(right - absRect.left_));
         absRect.height_ = static_cast<int>(std::ceil(bottom - absRect.top_));
     }
+    if ((absRect.left_ & 1) == 1) {
+        absRect.left_ += 1;
+    }
+
+    if ((absRect.top_ & 1) == 1) {
+        absRect.top_ += 1;
+    }
     return absRect;
 }
 Vector2f RSObjAbsGeometry::GetDataRange(float d0, float d1, float d2, float d3) const

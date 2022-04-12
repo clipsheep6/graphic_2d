@@ -18,16 +18,16 @@
 
 #include <memory>
 
+#include <include/core/SkSurface.h>
 #include <include/gpu/GrContext.h>
 #include <surface.h>
 
-#include "platform/drawing/rs_surface.h"
-#include "platform/drawing/rs_surface_frame.h"
+#include "rs_surface.h"
+#include "rs_surface_frame.h"
 
 namespace OHOS {
 namespace Rosen {
-class RenderContext;
-class RSSurfaceWindows : public RSSurface {
+class OHOS_EXPORT RSSurfaceWindows : public RSSurface {
 public:
     RSSurfaceWindows(const sptr<Surface> &producer);
     ~RSSurfaceWindows() override = default;
@@ -36,22 +36,17 @@ public:
     sptr<Surface> GetSurface() const;
 
     std::unique_ptr<RSSurfaceFrame> RequestFrame(int32_t width, int32_t height) override;
-
     bool FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame) override;
-    RenderContext* GetRenderContext() override;
-    void SetRenderContext(RenderContext* context) override;
-    ColorGamut GetColorSpace() override;
-    void SetColorSpace(ColorGamut colorSpace) override;
+    SkCanvas* GetCanvas(std::unique_ptr<RSSurfaceFrame>& frame) override;
 
 private:
     void YInvert(void *addr, int32_t width, int32_t height);
     bool SetupGrContext();
 
     sptr<Surface> producer_ = nullptr;
-    RenderContext* renderContext_ = nullptr;
-    ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
+    sk_sp<SkSurface> surface_ = nullptr;
     sk_sp<GrContext> grContext_ = nullptr;
-    sk_sp<SkColorSpace> skColorSpace_ = nullptr;
+    std::shared_ptr<SkCanvas> canvas_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

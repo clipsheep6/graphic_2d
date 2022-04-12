@@ -18,6 +18,10 @@ import(
     "//foundation/graphic/standard/rosen/modules/2d_engine/rosen_text/config.gni")
 
 ## Build 2d_graphics.so
+config("2d_graphics_public_config") {
+  include_dirs = [ "src" ]
+}
+
 ohos_shared_library("2d_graphics") {
   symlink_target_name = [ "libnative_drawing.so" ]
 
@@ -97,6 +101,31 @@ ohos_shared_library("2d_graphics") {
     ]
   }
 
+  if (current_os == "mingw") {
+    sources -= [
+      "src/drawing_engine/drawing_surface/rs_surface_frame_ohos_raster.cpp",
+      "src/drawing_engine/drawing_surface/rs_surface_ohos.cpp",
+      "src/drawing_engine/drawing_surface/rs_surface_ohos_raster.cpp",
+    ]
+    sources += [
+      "src/drawing_engine/drawing_surface/rs_surface_frame_windows.cpp",
+      "src/drawing_engine/drawing_surface/rs_surface_windows.cpp",
+    ]
+    cflags_cc = [
+      "-Wno-ignored-attributes",
+      "-Wno-inconsistent-dllimport",
+    ]
+  }
+
+  if (current_os == "mingw" && ace_enable_gpu) {
+    sources -= [
+      "src/drawing_engine/drawing_surface/rs_surface_frame_ohos_gl.cpp",
+      "src/drawing_engine/drawing_surface/rs_surface_ohos_gl.cpp",
+      "src/drawing_engine/egl_manager.cpp",
+      "src/drawing_engine/gles_render_backend.cpp",
+    ]
+  }
+
   include_dirs = [
     "include",
     "src",
@@ -112,24 +141,45 @@ ohos_shared_library("2d_graphics") {
     "//foundation/graphic/standard/utils/sync_fence/export",
   ]
 
+  public_configs = [ ":2d_graphics_public_config" ]
+
   defines = [ "USE_ACE_SKIA" ]
   defines += gpu_defines
 
+  if (current_os == "mingw" && enable_glfw_window) {
+    defines += [ "USE_GLFW_WINDOW" ]
+  }
+
+  if (current_os == "mingw") {
+    platform = "windows"
+  } else {
+    platform = current_os
+  }
+
   deps = [
-    "$ace_flutter_engine_root:flutter_engine_fml_$current_os",
+    "$ace_flutter_engine_root:flutter_engine_fml_$platform",
     "//foundation/graphic/standard:libgl",
     "//foundation/graphic/standard:libsurface",
-    "//foundation/graphic/standard/rosen/build/flutter/icu:rosen_libicu_$current_os",
-    "//foundation/graphic/standard/rosen/build/flutter/libtxt:thirdparty_lib_txt_rosen_$current_os",
+    # "//foundation/graphic/standard/rosen/build/flutter/icu:rosen_libicu_$platform",
+    "//foundation/graphic/standard/rosen/build/flutter/libtxt:thirdparty_lib_txt_rosen_$platform",
     "//foundation/graphic/standard/utils:sync_fence",
-    "//third_party/bounds_checking_function:libsec_static",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
 
-  external_deps = [
-    "hilog_native:libhilog",
-    "multimedia_image_standard:image_native",
-    "utils_base:utils",
-  ]
+  if (current_os == "mingw") {
+    deps += [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+      "//foundation/graphic/standard/rosen/modules/glfw_render_context:libglfw_render_context",
+      "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
+      "//utils/native/base:utils",
+    ]
+  } else {
+    external_deps = [
+      "hilog_native:libhilog",
+      "multimedia_image_standard:image_native",
+      "utils_base:utils",
+    ]
+  }
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

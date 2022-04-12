@@ -43,6 +43,7 @@ enum class BlendMode {
     COLOR_BURN,
     HARD_LIGHT,
     SOFT_LIGHT,
+#undef DIFFERENCE
     DIFFERENCE,
     EXCLUSION,
     MULTIPLY,

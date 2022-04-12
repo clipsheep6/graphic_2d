@@ -15,7 +15,7 @@
 
 #include "rs_surface_frame_windows.h"
 
-#include "platform/common/rs_log.h"
+#include "drawing_engine/drawing_utils.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -47,37 +47,29 @@ void RSSurfaceFrameWindows::SetDamageRegion(int32_t left, int32_t top, int32_t w
     flushConfig_.damage.h = height;
 }
 
-SkCanvas* RSSurfaceFrameWindows::GetCanvas()
+ColorGamut RSSurfaceFrameWindows::GetColorSpace() const
 {
-    if (surface_ != nullptr) {
-        return surface_->getCanvas();
-    }
-
-    if (canvas_ == nullptr) {
-        if (buffer_ == nullptr) {
-            ROSEN_LOGW("RSSurfaceFrameWindows::GetCanvas buffer is nullptr");
-            return nullptr;
-        }
-
-        const auto &addr = reinterpret_cast<uint32_t *>(buffer_->GetVirAddr());
-        if (addr == nullptr) {
-            ROSEN_LOGW("RSSurfaceFrameWindows::GetCanvas buffer.addr is nullptr");
-            return nullptr;
-        }
-
-        const auto &width = buffer_->GetWidth();
-        const auto &height = buffer_->GetHeight();
-        const auto &size = buffer_->GetSize();
-        const auto &info = SkImageInfo::Make(width, height, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-        canvas_ = SkCanvas::MakeRasterDirect(info, addr, size / height);
-    }
-
-    return canvas_.get();
+    return colorSpace_;
 }
 
-void RSSurfaceFrameWindows::SetRenderContext(RenderContext* context)
+void RSSurfaceFrameWindows::SetColorSpace(ColorGamut colorSpace)
 {
-    renderContext_ = context;
+    colorSpace_ = colorSpace;
+    switch (colorSpace_) {
+        // [planning] in order to stay consistant with the colorspace used before, we disabled
+        // COLOR_GAMUT_SRGB to let the branch to default, then skColorSpace is set to nullptr
+        case COLOR_GAMUT_DISPLAY_P3:
+            skColorSpace_ = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDCIP3);
+            break;
+        case COLOR_GAMUT_ADOBE_RGB:
+            skColorSpace_ = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kAdobeRGB);
+            break;
+        case COLOR_GAMUT_BT2020:
+            skColorSpace_ = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kRec2020);
+            break;
+        default:
+            break;
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -15,7 +15,7 @@
 
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_surface_converter.h"
-#include "rs_surface_windows.h"
+#include "drawing_engine/drawing_surface/rs_surface_windows.h"
 
 namespace OHOS::Rosen {
 sptr<Surface> RSSurfaceConverter::ConvertToOhosSurface(std::shared_ptr<RSSurface> surface)

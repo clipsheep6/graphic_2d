@@ -33,6 +33,7 @@ enum class PathDirection {
 };
 
 enum class PathFillType {
+#undef WINDING
     WINDING,
     EVENTODD,
     INVERSE_WINDING,

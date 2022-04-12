@@ -16,30 +16,29 @@
 #ifndef RENDER_SERVICE_BASE_SRC_PLATFORM_WINDOWS_RS_SURFACE_FRAME_WINDOWS_H
 #define RENDER_SERVICE_BASE_SRC_PLATFORM_WINDOWS_RS_SURFACE_FRAME_WINDOWS_H
 
-#include "platform/drawing/rs_surface_frame.h"
+#include "drawing_engine/drawing_surface/rs_surface_frame.h"
 
-#include <include/core/SkSurface.h>
 #include <surface_buffer.h>
 
 namespace OHOS {
 namespace Rosen {
 class RSSurfaceFrameWindows : public RSSurfaceFrame {
-public:
-    RSSurfaceFrameWindows(int32_t width, int32_t height);
-    virtual ~RSSurfaceFrameWindows() = default;
-
-    virtual void SetDamageRegion(int32_t left, int32_t top, int32_t width, int32_t height) override;
-    virtual SkCanvas* GetCanvas() override;
-    virtual void SetRenderContext(RenderContext* context) override;
-
-private:
     friend class RSSurfaceWindows;
 
-    RenderContext *renderContext_ = nullptr;
-    sptr<SurfaceBuffer> buffer_;
+public:
+    RSSurfaceFrameWindows(int32_t width, int32_t height);
+    ~RSSurfaceFrameWindows() override = default;
+
+    void SetDamageRegion(int32_t left, int32_t top, int32_t width, int32_t height) override;
+    ColorGamut GetColorSpace() const override;
+    void SetColorSpace(ColorGamut colorSpace) override;
+
+private:
+    sptr<SurfaceBuffer> buffer_ = nullptr;
     BufferRequestConfig requestConfig_ = {};
     BufferFlushConfig flushConfig_ = {};
-    sk_sp<SkSurface> surface_ = nullptr;
+    ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
+    sk_sp<SkColorSpace> skColorSpace_ = nullptr;
 };
 
 } // namespace Rosen

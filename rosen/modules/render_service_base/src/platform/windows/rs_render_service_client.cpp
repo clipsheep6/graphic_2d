@@ -16,7 +16,7 @@
 #include "transaction/rs_render_service_client.h"
 
 #include "platform/common/rs_log.h"
-#include "rs_surface_windows.h"
+#include "drawing_engine/drawing_surface/rs_surface_windows.h"
 #include "rs_vsync_client_windows.h"
 
 namespace OHOS {
@@ -69,8 +69,7 @@ std::shared_ptr<RSSurface> RSRenderServiceClient::CreateNodeAndSurface(const RSS
 
     auto produer = csurface_->GetProducer();
     auto psurface = Surface::CreateSurfaceAsProducer(produer);
-    std::shared_ptr<RSSurface> rssurface = std::make_shared<RSSurfaceWindows>(psurface);
-    return rssurface;
+    return std::make_shared<RSSurfaceWindows>(psurface);
 }
 
 class VSyncReceiverWindows : public IVSyncReceiver {

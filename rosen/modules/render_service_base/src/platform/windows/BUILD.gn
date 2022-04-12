@@ -43,7 +43,6 @@ ohos_source_set("rosen_windows_sources") {
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
   ]
 
-  public_deps = [
-    "//foundation/graphic/standard/rosen/modules/2d_graphics:2d_graphics",
-  ]
+  public_deps =
+      [ "//foundation/graphic/standard/rosen/modules/2d_graphics:2d_graphics" ]
 }

@@ -160,6 +160,7 @@ ohos_shared_library("2d_graphics") {
     "$ace_flutter_engine_root:flutter_engine_fml_$platform",
     "//foundation/graphic/standard:libgl",
     "//foundation/graphic/standard:libsurface",
+
     # "//foundation/graphic/standard/rosen/build/flutter/icu:rosen_libicu_$platform",
     "//foundation/graphic/standard/rosen/build/flutter/libtxt:thirdparty_lib_txt_rosen_$platform",
     "//foundation/graphic/standard/utils:sync_fence",

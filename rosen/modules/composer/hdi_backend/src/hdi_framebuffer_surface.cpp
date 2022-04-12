@@ -17,6 +17,10 @@
 
 #include "hdi_log.h"
 
+#ifdef RS_ENABLE_GL
+#include "window.h"
+#endif // RS_ENABLE_GL
+
 using namespace OHOS;
 
 namespace OHOS {
@@ -28,6 +32,14 @@ HdiFramebufferSurface::HdiFramebufferSurface()
 
 HdiFramebufferSurface::~HdiFramebufferSurface()
 {
+#ifdef RS_ENABLE_GL
+    DestoryNativeWindow(nativeWindow_);
+    if (renderContext_ != nullptr) {
+        renderContext_->DestroyEGLSurface(eglSurface_);
+    }
+    nativeWindow_ = nullptr;
+    eglSurface_ = EGL_NO_SURFACE;
+#endif // RS_ENABLE_GL
 }
 
 sptr<HdiFramebufferSurface> HdiFramebufferSurface::CreateFramebufferSurface()
@@ -48,6 +60,29 @@ sptr<HdiFramebufferSurface> HdiFramebufferSurface::CreateFramebufferSurface()
 
     return fbSurface;
 }
+
+#ifdef RS_ENABLE_GL
+bool HdiFramebufferSurface::SetupRenderContext(const std::shared_ptr<RenderContext> &context)
+{
+    if (context == nullptr) {
+        HLOGE("HdiFramebufferSurface::SetupRenderContext: context is null!");
+        return false;
+    }
+
+    renderContext_ = context;
+    if (nativeWindow_ == nullptr) {
+        nativeWindow_ = CreateNativeWindowFromSurface(producerSurface_);
+        eglSurface_ = renderContext_->CreateEGLSurface((EGLNativeWindowType)nativeWindow_);
+    }
+
+    if (nativeWindow_ == nullptr || eglSurface_ == EGL_NO_SURFACE) {
+        HLOGE("HdiFramebufferSurface::SetupRenderContext: CreateEGLSurface failed.");
+        return false;
+    }
+
+    return true;
+}
+#endif // RS_ENABLE_GL
 
 SurfaceError HdiFramebufferSurface::CreateSurface(sptr<HdiFramebufferSurface> &fbSurface)
 {

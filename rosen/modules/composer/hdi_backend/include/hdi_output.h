@@ -56,6 +56,15 @@ public:
     sptr<SurfaceBuffer> GetFramebuffer();
     sptr<SyncFence> GetFramebufferFence();
     int32_t ReleaseFramebuffer(const sptr<SyncFence> &releaseFence);
+
+#ifdef RS_ENABLE_GL
+    bool SetupRenderContext(const std::shared_ptr<RenderContext> &renderContext);
+    sptr<HdiFramebufferSurface> GetFramebufferSurface() const
+    {
+        return fbSurface_;
+    }
+#endif // RS_ENABLE_GL
+
     void Dump(std::string &result) const;
     void DumpFps(std::string &result, const std::string &arg) const;
 

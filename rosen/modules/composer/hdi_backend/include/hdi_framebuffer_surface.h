@@ -21,6 +21,11 @@
 #include <surface.h>
 #include <sync_fence.h>
 
+#ifdef RS_ENABLE_GL
+#include "egl_surface.h"
+#include "render_context/render_context.h"
+#endif // RS_ENABLE_GL
+
 namespace OHOS {
 namespace Rosen {
 
@@ -31,6 +36,22 @@ public:
     sptr<OHOS::SurfaceBuffer> GetFramebuffer();
     sptr<SyncFence> GetFramebufferFence();
     int32_t ReleaseFramebuffer(const sptr<SyncFence> &releaseFence);
+
+#ifdef RS_ENABLE_GL
+    bool SetupRenderContext(const std::shared_ptr<RenderContext> &context);
+    std::shared_ptr<RenderContext> GetRenderContext() const
+    {
+        return renderContext_;
+    }
+    NativeWindow* GetNativeWindow() const
+    {
+        return nativeWindow_;
+    }
+    EGLSurface GetEGLSurface() const
+    {
+        return eglSurface_;
+    }
+#endif // RS_ENABLE_GL
 
 private:
     sptr<OHOS::Surface> consumerSurface_ = nullptr;
@@ -46,6 +67,12 @@ private:
     void OnBufferAvailable() override;
     OHOS::SurfaceError SetBufferQueueSize(uint32_t bufferSize);
     OHOS::SurfaceError CreateSurface(sptr<HdiFramebufferSurface> &fbSurface);
+
+#ifdef RS_ENABLE_GL
+    std::shared_ptr<RenderContext> renderContext_;
+    NativeWindow* nativeWindow_ = nullptr;
+    EGLSurface eglSurface_ = EGL_NO_SURFACE;
+#endif // RS_ENABLE_GL
 };
 } // namespace Rosen
 } // namespace OHOS

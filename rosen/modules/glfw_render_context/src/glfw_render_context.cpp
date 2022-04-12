@@ -53,11 +53,12 @@ int GlfwRenderContext::CreateWindow(int32_t width, int32_t height, bool visible)
     glfwWindowHint(GLFW_DECORATED, flag);
     glfwWindowHint(GLFW_VISIBLE, flag);
     window_ = glfwCreateWindow(width, height, "glfw window", nullptr, nullptr);
-    if (window_ != nullptr) {
-        return 0;
+    if (window_ == nullptr) {
+        return 1;
     }
 
-    return 1;
+    glfwSetWindowUserPointer(window_, this);
+    return 0;
 }
 
 void GlfwRenderContext::DestroyWindow()
@@ -100,5 +101,33 @@ void GlfwRenderContext::MakeCurrent()
 void GlfwRenderContext::SwapBuffers()
 {
     glfwSwapBuffers(window_);
+}
+
+void GlfwRenderContext::OnMouseButton(const OnMouseButtonFunc &onMouseBotton)
+{
+    onMouseBotton_ = onMouseBotton;
+    glfwSetMouseButtonCallback(window_, GlfwRenderContext::OnMouseButton);
+}
+
+void GlfwRenderContext::OnCursorPos(const OnCursorPosFunc &onCursorPos)
+{
+    onCursorPos_ = onCursorPos;
+    glfwSetCursorPosCallback(window_, GlfwRenderContext::OnCursorPos);
+}
+
+void GlfwRenderContext::OnMouseButton(GLFWwindow *window, int button, int action, int mods)
+{
+    const auto &that = reinterpret_cast<GlfwRenderContext *>(glfwGetWindowUserPointer(window));
+    if (that->onMouseBotton_) {
+        that->onMouseBotton_(button, action == GLFW_PRESS, mods);
+    }
+}
+
+void GlfwRenderContext::OnCursorPos(GLFWwindow *window, double x, double y)
+{
+    const auto &that = reinterpret_cast<GlfwRenderContext *>(glfwGetWindowUserPointer(window));
+    if (that->onCursorPos_) {
+        that->onCursorPos_(x, y);
+    }
 }
 } // namespace OHOS::Rosen

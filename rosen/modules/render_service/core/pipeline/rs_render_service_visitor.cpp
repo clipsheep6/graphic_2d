@@ -96,6 +96,7 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             return;
     }
     processor_ = RSProcessorFactory::CreateProcessor(node.GetCompositeType());
+
     if (processor_ == nullptr) {
         RS_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode: RSProcessor is null!");
         return;

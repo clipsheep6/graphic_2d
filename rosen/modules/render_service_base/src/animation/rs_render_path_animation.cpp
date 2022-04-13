@@ -25,7 +25,6 @@ RSRenderPathAnimation::RSRenderPathAnimation(AnimationId id, const RSAnimatableP
     : RSRenderPropertyAnimation(id, property, originPosition), originRotation_(originRotation),
       animationPath_(animationPath)
 {}
-#ifdef ROSEN_OHOS
 bool RSRenderPathAnimation::Marshalling(Parcel& parcel) const
 {
     if (!RSRenderPropertyAnimation<Vector2f>::Marshalling(parcel)) {
@@ -77,7 +76,6 @@ bool RSRenderPathAnimation::ParseParam(Parcel& parcel)
     SetRotationMode(static_cast<RotationMode>(rotationMode));
     return true;
 }
-#endif
 void RSRenderPathAnimation::SetInterpolator(const std::shared_ptr<RSInterpolator>& interpolator)
 {
     interpolator_ = interpolator;
@@ -150,14 +148,12 @@ void RSRenderPathAnimation::OnAnimate(float fraction)
         return;
     }
 
-#ifdef ROSEN_OHOS
     float distance = animationPath_->GetDistance();
     float progress = GetBeginFraction() * (FRACTION_MAX - fraction) + GetEndFraction() * fraction;
     Vector2f position;
     float tangent = 0;
     animationPath_->GetPosTan(distance * progress, position, tangent);
     SetPathValue(position, tangent);
-#endif
 }
 
 void RSRenderPathAnimation::OnRemoveOnCompletion()

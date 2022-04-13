@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSSpringInterpolator : public RSInterpolator {
+class RS_EXPORT RSSpringInterpolator : public RSInterpolator {
 public:
     RSSpringInterpolator(float response, float dampingRatio, float initialVelocity)
         // initialOffset: 1, minimumAmplitude: 0.001
@@ -34,9 +34,7 @@ public:
         return InterpolateImpl(input * duration_);
     }
     bool Marshalling(Parcel& parcel) const override;
-#ifdef ROSEN_OHOS
     static RSSpringInterpolator* Unmarshalling(Parcel& parcel);
-#endif
 protected:
     explicit RSSpringInterpolator(float response, float dampingRatio, float initialOffset, float minimumAmplitude,
         float initialVelocity, float duration);

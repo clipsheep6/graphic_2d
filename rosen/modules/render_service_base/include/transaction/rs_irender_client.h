@@ -25,7 +25,7 @@ namespace OHOS {
 namespace Rosen {
 class RSSyncTask;
 
-class RSIRenderClient {
+class OHOS_EXPORT RSIRenderClient {
 public:
     RSIRenderClient() = default;
     virtual ~RSIRenderClient() = default;
@@ -33,8 +33,8 @@ public:
     virtual void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) = 0;
     virtual void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) = 0;
 
-    static std::shared_ptr<RSIRenderClient> CreateRenderServiceClient();
-    static std::unique_ptr<RSIRenderClient> CreateRenderThreadClient();
+    static OHOS_EXPORT std::shared_ptr<RSIRenderClient> CreateRenderServiceClient();
+    static OHOS_EXPORT std::unique_ptr<RSIRenderClient> CreateRenderThreadClient();
 };
 
 } // namespace Rosen

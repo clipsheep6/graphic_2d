@@ -49,7 +49,6 @@ public:
     RSCommandTemplate() {}
     virtual ~RSCommandTemplate() = default;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         return RSMarshallingHelper::Marshalling(parcel, commandType) &&
@@ -62,7 +61,6 @@ public:
     }
 
     static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
-#endif // ROSEN_OHOS
 
     void Process(RSContext& context) override
     {
@@ -78,7 +76,6 @@ public:
     RSCommandTemplate(const T1& p1) : parameter1_(p1) {}
     virtual ~RSCommandTemplate() = default;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         return RSMarshallingHelper::Marshalling(parcel, commandType) &&
@@ -96,7 +93,6 @@ public:
     }
 
     static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
-#endif // ROSEN_OHOS
 
     void Process(RSContext& context) override
     {
@@ -113,7 +109,6 @@ public:
     RSCommandTemplate(const T1& p1, const T2& p2) : parameter1_(p1), parameter2_(p2) {}
     virtual ~RSCommandTemplate() = default;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         return RSMarshallingHelper::Marshalling(parcel, commandType) &&
@@ -136,7 +131,6 @@ public:
     }
 
     static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
-#endif // ROSEN_OHOS
 
     void Process(RSContext& context) override
     {
@@ -154,7 +148,6 @@ public:
     RSCommandTemplate(const T1& p1, const T2& p2, const T3& p3) : parameter1_(p1), parameter2_(p2), parameter3_(p3) {}
     virtual ~RSCommandTemplate() = default;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         return RSMarshallingHelper::Marshalling(parcel, commandType) &&
@@ -182,7 +175,6 @@ public:
     }
 
     static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
-#endif // ROSEN_OHOS
 
     void Process(RSContext& context) override
     {
@@ -204,7 +196,6 @@ public:
     {}
     virtual ~RSCommandTemplate() = default;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         return RSMarshallingHelper::Marshalling(parcel, commandType) &&
@@ -237,7 +228,6 @@ public:
     }
 
     static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
-#endif // ROSEN_OHOS
 
     void Process(RSContext& context) override
     {
@@ -260,7 +250,6 @@ public:
     {}
     virtual ~RSCommandTemplate() = default;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         return RSMarshallingHelper::Marshalling(parcel, commandType) &&
@@ -298,7 +287,6 @@ public:
     }
 
     static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
-#endif // ROSEN_OHOS
 
     void Process(RSContext& context) override
     {
@@ -322,7 +310,6 @@ public:
     {}
     virtual ~RSCommandTemplate() = default;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         return RSMarshallingHelper::Marshalling(parcel, commandType) &&
@@ -365,7 +352,6 @@ public:
     }
 
     static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
-#endif // ROSEN_OHOS
 
     void Process(RSContext& context) override
     {

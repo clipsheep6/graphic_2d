@@ -29,7 +29,7 @@ class SkCanvas;
 namespace OHOS {
 namespace Rosen {
 class RSCommand;
-class RSSurfaceRenderNode : public RSRenderNode {
+class RS_EXPORT RSSurfaceRenderNode : public RSRenderNode {
 public:
     using WeakPtr = std::weak_ptr<RSSurfaceRenderNode>;
     using SharedPtr = std::shared_ptr<RSSurfaceRenderNode>;

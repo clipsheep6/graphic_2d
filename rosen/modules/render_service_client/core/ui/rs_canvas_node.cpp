@@ -18,9 +18,7 @@
 #include <algorithm>
 #include <string>
 
-#ifdef ROSEN_OHOS
 #include "common/rs_obj_abs_geometry.h"
-#endif
 #include "command/rs_canvas_node_command.h"
 #include "platform/common/rs_log.h"
 #include "common/rs_obj_geometry.h"
@@ -49,9 +47,7 @@ RSCanvasNode::~RSCanvasNode() {}
 
 SkCanvas* RSCanvasNode::BeginRecording(int width, int height)
 {
-#ifdef ROSEN_OHOS
     recordingCanvas_ = new RSRecordingCanvas(width, height);
-#endif
     return recordingCanvas_;
 }
 
@@ -62,12 +58,12 @@ bool RSCanvasNode::IsRecording() const
 
 void RSCanvasNode::FinishRecording()
 {
-#ifdef ROSEN_OHOS
     if (!IsRecording()) {
         ROSEN_LOGW("RSCanvasNode::FinishRecording, IsRecording = false");
         return;
     }
     auto recording = static_cast<RSRecordingCanvas*>(recordingCanvas_)->GetDrawCmdList();
+    ROSEN_LOGI("FinishRecording, ops size: %d", recording->GetSize());
     delete recordingCanvas_;
     recordingCanvas_ = nullptr;
     std::unique_ptr<RSCommand> command =
@@ -76,7 +72,6 @@ void RSCanvasNode::FinishRecording()
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, IsRenderServiceNode());
     }
-#endif
 }
 
 } // namespace Rosen

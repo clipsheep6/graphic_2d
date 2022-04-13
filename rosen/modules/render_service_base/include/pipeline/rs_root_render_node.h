@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace Rosen {
 class RSSurface;
-class RSRootRenderNode : public RSCanvasRenderNode {
+class RS_EXPORT RSRootRenderNode : public RSCanvasRenderNode {
 public:
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::ROOT_NODE;
     explicit RSRootRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
@@ -44,8 +44,8 @@ public:
     void AddSurfaceRenderNode(NodeId id);
     void ClearSurfaceNodeInRS();
 
-    static void MarkForceRaster(bool flag = true);
-    static bool NeedForceRaster();
+    static RS_EXPORT void MarkForceRaster(bool flag = true);
+    static RS_EXPORT bool NeedForceRaster();
 
 private:
     std::shared_ptr<RSSurface> rsSurface_ = nullptr;

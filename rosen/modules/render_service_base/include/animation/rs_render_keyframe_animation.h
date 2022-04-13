@@ -55,7 +55,6 @@ public:
 
         keyframes_ = keyframes;
     }
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         if (!RSRenderPropertyAnimation<T>::Marshalling(parcel)) {
@@ -86,7 +85,6 @@ public:
         }
         return renderKeyframeAnimation;
     }
-#endif
 protected:
     void OnAnimate(float fraction) override
     {
@@ -121,7 +119,6 @@ protected:
 
 private:
     RSRenderKeyframeAnimation() = default;
-#ifdef ROSEN_OHOS
     bool ParseParam(Parcel& parcel) override
     {
         if (!RSRenderPropertyAnimation<T>::ParseParam(parcel)) {
@@ -137,7 +134,7 @@ private:
         T tupValue1;
         std::shared_ptr<RSInterpolator> interpolator;
         keyframes_.clear();
-        for (u_int32_t i = 0; i < size; i++) {
+        for (uint32_t i = 0; i < size; i++) {
             if (!(parcel.ReadFloat(tupValue0) && RSMarshallingHelper::Unmarshalling(parcel, tupValue1))) {
                 ROSEN_LOGE("RSRenderKeyframeAnimation::ParseParam, Unmarshalling value failed");
                 return false;
@@ -147,7 +144,6 @@ private:
         }
         return true;
     }
-#endif
     std::vector<std::tuple<float, T, std::shared_ptr<RSInterpolator>>> keyframes_;
 };
 } // namespace Rosen

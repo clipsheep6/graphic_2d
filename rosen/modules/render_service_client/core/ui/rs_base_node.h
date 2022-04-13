@@ -49,7 +49,7 @@ public:
     }
 
     template<typename T>
-    bool IsInstanceOf();
+    RS_EXPORT bool IsInstanceOf();
 
     // type-safe reinterpret_cast
     template<typename T>

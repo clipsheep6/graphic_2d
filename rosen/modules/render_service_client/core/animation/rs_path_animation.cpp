@@ -159,11 +159,9 @@ void RSPathAnimation::InitInterpolationValue()
         return;
     }
 
-#ifdef ROSEN_OHOS
     animationPath_->GetPosTan(0.0f, startValue_, startTangent_);
     animationPath_->GetPosTan(animationPath_->GetDistance(), endValue_, endTangent_);
     byValue_ = endValue_ - startValue_;
-#endif
 }
 
 void RSPathAnimation::OnUpdateStagingValue(bool isFirstStart)
@@ -236,11 +234,7 @@ const std::shared_ptr<RSPath> RSPathAnimation::PreProcessPath(
     ReplaceSubString(animationPath, "start.y", std::to_string(startValue[1]));
     ReplaceSubString(animationPath, "end.x", std::to_string(endValue[0]));
     ReplaceSubString(animationPath, "end.y", std::to_string(endValue[1]));
-#ifdef ROSEN_OHOS
     return RSPath::CreateRSPath(animationPath);
-#else
-    return nullptr;
-#endif
 }
 
 bool RSPathAnimation::IsAnimatablePathProperty(const RSAnimatableProperty& property)

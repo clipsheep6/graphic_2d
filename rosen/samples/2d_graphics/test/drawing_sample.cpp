@@ -27,7 +27,7 @@ using namespace Rosen;
 using namespace Drawing;
 
 namespace {
-sptr<VSyncReceiver> g_receiver = nullptr;
+sptr<IVSyncReceiver> g_receiver = nullptr;
 }
 
 void DrawingSample::Run()

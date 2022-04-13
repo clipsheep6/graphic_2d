@@ -117,7 +117,7 @@ private:
 
     RSContext context_;
     std::thread::id mainThreadId_;
-    std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
+    std::shared_ptr<IVSyncReceiver> receiver_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

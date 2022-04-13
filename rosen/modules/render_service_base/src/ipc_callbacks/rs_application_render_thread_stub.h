@@ -16,14 +16,13 @@
 #ifndef ROSEN_RENDER_SERVICE_BASE_RS_APPLICATION_RENDER_THREAD_STUB_H
 #define ROSEN_RENDER_SERVICE_BASE_RS_APPLICATION_RENDER_THREAD_STUB_H
 
-#ifdef ROSEN_OHOS
 #include <iremote_stub.h>
 
 #include "ipc_callbacks/iapplication_render_thread.h"
 
 namespace OHOS {
 namespace Rosen {
-class RSApplicationRenderThreadStub : public IRemoteStub<IApplicationRenderThread> {
+class RS_EXPORT RSApplicationRenderThreadStub : public IRemoteStub<IApplicationRenderThread> {
 public:
     RSApplicationRenderThreadStub() = default;
     ~RSApplicationRenderThreadStub() = default;
@@ -32,6 +31,5 @@ public:
 };
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS
 
 #endif // ROSEN_RENDER_SERVICE_BASE_RS_APPLICATION_RENDER_THREAD_STUB_H

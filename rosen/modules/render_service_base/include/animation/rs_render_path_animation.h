@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSRenderPathAnimation : public RSRenderPropertyAnimation<Vector2f> {
+class RS_EXPORT RSRenderPathAnimation : public RSRenderPropertyAnimation<Vector2f> {
 static constexpr float UNDEFINED_FLOAT = 0.0f;
 public:
     RSRenderPathAnimation(AnimationId id, const RSAnimatableProperty& property, const Vector2f& originPosition,
@@ -45,10 +45,8 @@ public:
 
     float GetEndFraction() const;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderPathAnimation* Unmarshalling(Parcel& parcel);
-#endif
 
 protected:
     void OnAnimate(float fraction) override;
@@ -56,9 +54,7 @@ protected:
     void OnRemoveOnCompletion() override;
 
 private:
-#ifdef ROSEN_OHOS
     bool ParseParam(Parcel& parcel) override;
-#endif
     void SetPathValue(const Vector2f& position, float tangent);
     RSRenderPathAnimation() = default;
 

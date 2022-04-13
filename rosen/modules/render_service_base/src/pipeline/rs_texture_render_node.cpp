@@ -53,7 +53,6 @@ void RSTextureRenderNode::UpdateTexture(int64_t textureId, bool freeze, RectF dr
 
 void RSTextureRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canvas)
 {
-#ifdef ROSEN_OHOS
     if (g_textureRegistry == nullptr) {
         return;
     }
@@ -89,7 +88,6 @@ void RSTextureRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canvas)
     SkPaint paint;
     canvas.drawImage(layerImage.get(), 0, 0, &paint);
     canvas.restore();
-#endif
 }
 
 bool RSTextureRenderNode::IsDirty() const

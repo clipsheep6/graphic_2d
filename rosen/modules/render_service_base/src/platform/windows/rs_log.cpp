@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
-int RSLog::Output(RSLog::Level level, const char* format, ...)
+int RSLog::Output(RSLog::Level level, const char *func, int line, const char* format, ...)
 {
     std::string levelStr;
     switch (level) {
@@ -42,12 +42,13 @@ int RSLog::Output(RSLog::Level level, const char* format, ...)
         default:
             break;
     }
-    printf("[%s][%s](%s)(%d)", levelStr.c_str(), tag_.c_str(), __FUNCTION__, __LINE__);
+    printf("[RS %s][%s](%s)(%d)", levelStr.c_str(), tag_.c_str(), func, line);
     va_list args;
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
-    printf("\n");
+    printf("\r\n");
+    fflush(stdout);
     return 0;
 }
 } // namespace Rosen

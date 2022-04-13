@@ -19,7 +19,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class DrawingProxy {
+class OHOS_EXPORT DrawingProxy {
 public:
     DrawingProxy();
     virtual ~DrawingProxy();

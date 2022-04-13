@@ -43,7 +43,6 @@ public:
         return interpolator_;
     }
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         if (!RSRenderPropertyAnimation<T>::Marshalling(parcel)) {
@@ -68,7 +67,6 @@ public:
         }
         return renderCurveAnimation;
     }
-#endif
 protected:
     void OnSetFraction(float fraction) override
     {
@@ -83,7 +81,6 @@ protected:
     }
 
 private:
-#ifdef ROSEN_OHOS
     bool ParseParam(Parcel& parcel) override
     {
         if (!RSRenderPropertyAnimation<T>::ParseParam(parcel)) {
@@ -100,7 +97,6 @@ private:
         SetInterpolator(interpolator);
         return true;
     }
-#endif
     RSRenderCurveAnimation() = default;
     void OnAnimateInner(float fraction, const std::shared_ptr<RSInterpolator>& interpolator)
     {

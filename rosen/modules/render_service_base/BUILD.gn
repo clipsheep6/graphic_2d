@@ -127,6 +127,18 @@ ohos_shared_library("librender_service_base") {
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
   ]
 
+  if (current_os == "mingw") {
+    sources -= [ "src/pipeline/rs_frame_report.cpp" ]
+    sources += [ "src/pipeline/rs_frame_report_mingw.cpp" ]
+    configs = [ "//foundation/appexecfwk/standard/interfaces/innerkits/libeventhandler:public_libeventhandler_config" ]
+    public_configs += [ "//foundation/graphic/standard/rosen/modules/composer:composer_public_config" ]
+    deps = [ "//utils/native/base:utils" ]
+    public_deps += [
+      "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_windows",
+      "//foundation/graphic/standard/utils:sync_fence",
+    ]
+  }
+
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 

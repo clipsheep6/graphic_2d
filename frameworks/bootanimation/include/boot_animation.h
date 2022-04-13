@@ -68,7 +68,7 @@ private:
     int32_t pointY_ = 0;
     int32_t maxPicNum_ = 0;
     bool needCheckExit = false;
-    std::shared_ptr<OHOS::Rosen::VSyncReceiver> receiver_ = nullptr;
+    std::shared_ptr<OHOS::Rosen::IVSyncReceiver> receiver_ = nullptr;
     std::shared_ptr<Media::Player> soundPlayer_ = nullptr;
 };
 } // namespace OHOS

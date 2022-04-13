@@ -29,7 +29,7 @@ namespace Rosen {
 class OpItem;
 class RSPaintFilterCanvas;
 
-class DrawCmdList {
+class RS_EXPORT DrawCmdList {
 public:
     DrawCmdList(int w, int h);
     DrawCmdList& operator=(DrawCmdList&& that);

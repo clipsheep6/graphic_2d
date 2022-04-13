@@ -27,7 +27,7 @@ enum RSRootNodeCommandType : uint16_t {
     ROOT_NODE_ATTACH,
 };
 
-class RootNodeCommandHelper {
+class RS_EXPORT RootNodeCommandHelper {
 public:
     static void Create(RSContext& context, NodeId id);
     static void AttachRSSurfaceNode(RSContext& context, NodeId id, NodeId surfaceNodeId);

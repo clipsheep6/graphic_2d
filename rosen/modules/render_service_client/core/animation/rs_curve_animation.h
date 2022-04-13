@@ -63,16 +63,6 @@ protected:
 private:
     RSAnimationTimingCurve timingCurve_ { RSAnimationTimingCurve::DEFAULT };
 };
-
-template class RSCurveAnimation<int>;
-template class RSCurveAnimation<float>;
-template class RSCurveAnimation<Color>;
-template class RSCurveAnimation<Matrix3f>;
-template class RSCurveAnimation<Vector2f>;
-template class RSCurveAnimation<Vector4f>;
-template class RSCurveAnimation<Quaternion>;
-template class RSCurveAnimation<std::shared_ptr<RSFilter>>;
-
 } // namespace Rosen
 } // namespace OHOS
 

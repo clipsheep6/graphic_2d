@@ -25,7 +25,7 @@ namespace Rosen {
 class RSContext;
 class RSNodeVisitor;
 
-class RSBaseRenderNode : public std::enable_shared_from_this<RSBaseRenderNode> {
+class RS_EXPORT RSBaseRenderNode : public std::enable_shared_from_this<RSBaseRenderNode> {
 public:
     using WeakPtr = std::weak_ptr<RSBaseRenderNode>;
     using SharedPtr = std::shared_ptr<RSBaseRenderNode>;
@@ -92,11 +92,11 @@ public:
     }
 
     template<typename T>
-    bool IsInstanceOf();
+    RS_EXPORT bool IsInstanceOf();
 
     // type-safe reinterpret_cast
     template<typename T>
-    static std::shared_ptr<T> ReinterpretCast(const std::shared_ptr<RSBaseRenderNode>& node)
+    static RS_EXPORT std::shared_ptr<T> ReinterpretCast(const std::shared_ptr<RSBaseRenderNode>& node)
     {
         return node ? node->ReinterpretCastTo<T>() : nullptr;
     }

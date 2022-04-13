@@ -94,7 +94,7 @@ void RSTextureRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canvas)
 
 bool RSTextureRenderNode::IsDirty() const
 {
-    return ((textureId_ >= 0) && (g_textureRegistry != nullptr) && GetRenderProperties().GetVisible()) ||
+    return ((textureId_ >= 0) && (g_textureRegistry != nullptr) && ShouldPaint()) ||
            RSCanvasRenderNode::IsDirty();
 }
 } // namespace Rosen

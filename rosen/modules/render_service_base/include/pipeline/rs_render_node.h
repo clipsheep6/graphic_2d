@@ -57,10 +57,8 @@ public:
         return RSRenderNodeType::RS_NODE;
     }
 
-    bool HasTransition(bool recursive) const override
-    {
-        return animationManager_.HasTransition() || RSBaseRenderNode::HasTransition(recursive);
-    }
+    bool HasTransition(bool recursive) const override;
+    bool ShouldPaint() const;
 
 protected:
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});

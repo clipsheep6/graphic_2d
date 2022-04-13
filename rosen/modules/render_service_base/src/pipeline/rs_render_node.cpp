@@ -71,7 +71,7 @@ bool RSRenderNode::Animate(int64_t timestamp)
 
 bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty)
 {
-    if (!renderProperties_.GetVisible()) {
+    if (!ShouldPaint()) {
         return false;
     }
     bool dirty = renderProperties_.UpdateGeometry(parent, parentDirty);
@@ -106,6 +106,20 @@ void RSRenderNode::UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager)
 bool RSRenderNode::IsDirty() const
 {
     return RSBaseRenderNode::IsDirty() || renderProperties_.IsDirty();
+}
+
+bool RSRenderNode::HasTransition(bool recursive) const
+{
+    // node is in transition if it or its parent has transition animation
+    // if recursive is false, do not check parent
+    return animationManager_.HasTransition() || RSBaseRenderNode::HasTransition(recursive);
+}
+
+bool RSRenderNode::ShouldPaint() const
+{
+    // node should be paint if it is visible or during transition animation
+    // if alpha is 0, node should not be paint
+    return (renderProperties_.GetVisible() || HasTransition(false)) && (renderProperties_.GetAlpha() > 0.0f);
 }
 
 void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)

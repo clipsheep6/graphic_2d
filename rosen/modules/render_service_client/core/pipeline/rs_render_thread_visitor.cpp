@@ -95,7 +95,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         ProcessCanvasRenderNode(node);
         return;
     }
-    if (!node.GetRenderProperties().GetVisible()) {
+    if (!node.ShouldPaint()) {
         ROSEN_LOGE("No valid RSRootRenderNode");
         return;
     }
@@ -175,7 +175,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 
 void RSRenderThreadVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
 {
-    if (!node.GetRenderProperties().GetVisible()) {
+    if (!node.ShouldPaint()) {
         return;
     }
     if (!canvas_) {
@@ -193,8 +193,8 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         ROSEN_LOGE("RSRenderThreadVisitor::ProcessSurfaceRenderNode, canvas is nullptr");
         return;
     }
-    if (!node.GetRenderProperties().GetVisible()) {
-        ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode node : %llu is unvisible", node.GetId());
+    if (!node.ShouldPaint()) {
+        ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode node : %llu is invisible", node.GetId());
         return;
     }
     // RSSurfaceRenderNode in RSRenderThreadVisitor do not have information of property.

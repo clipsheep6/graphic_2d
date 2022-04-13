@@ -118,8 +118,8 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 
 void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
-    if (!node.GetRenderProperties().GetVisible()) {
-        RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : %llu is unvisible", node.GetId());
+    if (!node.ShouldPaint()) {
+        RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : %llu is invisible", node.GetId());
         return;
     }
     auto currentGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
@@ -157,8 +157,8 @@ void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         RS_LOGE("RSRenderServiceVisitor::ProcessSurfaceRenderNode processor is nullptr");
         return;
     }
-    if (!node.GetRenderProperties().GetVisible()) {
-        RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node : %llu is unvisible", node.GetId());
+    if (!node.ShouldPaint()) {
+        RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node : %llu is invisible", node.GetId());
         return;
     }
     ProcessBaseRenderNode(node);

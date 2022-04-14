@@ -57,7 +57,9 @@ bool RSWindowAnimationTarget::ReadFromParcel(Parcel& parcel)
     windowBounds_.rect_.height_ = parcel.ReadFloat();
     windowBounds_.radius_[0].x_ = parcel.ReadFloat();
     windowId_ = parcel.ReadUint32();
-    surfaceNode_ = parcel.ReadParcelable<RSSurfaceNode>();
+    // surfaceNode_ = parcel.ReadParcelable<RSSurfaceNode>();
+    [[maybe_unused]] auto junkdata = parcel.ReadUint32();
+    std::shared_ptr<RSSurfaceNode> surfaceNode_ = RSSurfaceNode::Unmarshalling(parcel);
     return true;
 }
 } // namespace Rosen

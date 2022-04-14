@@ -53,6 +53,16 @@ public:
     Color backgroundColor_ = RgbPalette::Transparent();
     Color foregroundColor_ = RgbPalette::Transparent();
 };
+
+class RsImageInfo final {
+    public:
+    RsImageInfo() {}
+    ~RsImageInfo() {}
+    int fitNum_ = 0;
+    int repeatNum_ = 0;
+    float radius_ = 0.f;
+    double scale_ = 0.0;
+};
 } // namespace Rosen
 } // namespace OHOS
 

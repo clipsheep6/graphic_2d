@@ -45,14 +45,14 @@ RSMainThread::~RSMainThread() noexcept
 void RSMainThread::Init()
 {
     mainLoop_ = [&]() {
-        RS_LOGI("cqx0401 RsDebug mainLoop start");
+        RS_LOGI("RsDebug mainLoop start");
         ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
         ProcessCommand();
         Animate(timestamp_);
         Render();
         SendCommands();
         ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
-        RS_LOGI("cqx0401 RsDebug mainLoop end");
+        RS_LOGI("RsDebug mainLoop end");
     };
 
     threadLooper_ = RSThreadLooper::Create();

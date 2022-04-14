@@ -19,8 +19,9 @@
 #include <surface.h>
 #include <ibuffer_consumer_listener.h>
 
-#include "pipeline/rs_base_render_node.h"
 #include "drawing_engine/drawing_surface/rs_surface_ohos.h"
+#include "drawing_engine/drawing_proxy.h"
+#include "pipeline/rs_base_render_node.h"
 #include "sync_fence.h"
 
 namespace OHOS {
@@ -171,6 +172,7 @@ private:
     sptr<SyncFence> preFence_;
     bool surfaceCreated_ { false };
     sptr<IBufferConsumerListener> consumerListener_;
+    DrawingProxy* drawingProxy_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

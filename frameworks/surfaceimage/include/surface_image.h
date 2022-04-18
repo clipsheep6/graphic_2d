@@ -59,7 +59,7 @@ public:
     SurfaceError SetDefaultSize(int32_t width, int32_t height);
 
     SurfaceError UpdateSurfaceImage();
-    uint64_t GetTimeStamp();
+    int64_t GetTimeStamp();
 
     // update buffer available state, updateSurfaceImage_ and a private mutex
     void OnUpdateBufferAvailableState(bool updated)
@@ -100,7 +100,7 @@ private:
     int32_t currentSurfaceImage_;
     sptr<SurfaceBuffer> currentSurfaceBuffer_;
     int32_t currentSurfaceBufferFence_;
-    uint64_t currentTimeStamp_;
+    int64_t currentTimeStamp_;
 };
 
 class SurfaceImageListener : public IBufferConsumerListener {

@@ -53,14 +53,20 @@ public:
         return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
             (commandSubType) + "], ";
     }
+    uint16_t GetType() const override
+    {
+        return commandType;
+    }
+    uint16_t GetSubType() const override
+    {
+        return commandSubType;
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
-        bool success = true;
-        success &= RSMarshallingHelper::Marshalling(parcel, commandType);
-        success &= RSMarshallingHelper::Marshalling(parcel, commandSubType);
-        return success;
+        return RSMarshallingHelper::Marshalling(parcel, commandType) &&
+            RSMarshallingHelper::Marshalling(parcel, commandSubType);
     }
 
     static RSCommand* Unmarshalling(Parcel& parcel)
@@ -89,15 +95,21 @@ public:
         return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
             (commandSubType) + "], ";
     }
+    uint16_t GetType() const override
+    {
+        return commandType;
+    }
+    uint16_t GetSubType() const override
+    {
+        return commandSubType;
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
-        bool success = true;
-        success &= RSMarshallingHelper::Marshalling(parcel, commandType);
-        success &= RSMarshallingHelper::Marshalling(parcel, commandSubType);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter1_);
-        return success;
+        return RSMarshallingHelper::Marshalling(parcel, commandType) &&
+            RSMarshallingHelper::Marshalling(parcel, commandSubType) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter1_);
     }
 
     static RSCommand* Unmarshalling(Parcel& parcel)
@@ -130,6 +142,14 @@ public:
     {
         return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
             (commandSubType) + "], ";
+    }
+    uint16_t GetType() const override
+    {
+        return commandType;
+    }
+    uint16_t GetSubType() const override
+    {
+        return commandSubType;
     }
 
 #ifdef ROSEN_OHOS
@@ -177,17 +197,23 @@ public:
         return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
             (commandSubType) + "], ";
     }
+    uint16_t GetType() const override
+    {
+        return commandType;
+    }
+    uint16_t GetSubType() const override
+    {
+        return commandSubType;
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
-        bool success = true;
-        success &= RSMarshallingHelper::Marshalling(parcel, commandType);
-        success &= RSMarshallingHelper::Marshalling(parcel, commandSubType);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter1_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter2_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter3_);
-        return success;
+        return RSMarshallingHelper::Marshalling(parcel, commandType) &&
+            RSMarshallingHelper::Marshalling(parcel, commandSubType) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter1_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter2_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter3_);
     }
 
     static RSCommand* Unmarshalling(Parcel& parcel)
@@ -234,18 +260,24 @@ public:
         return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
             (commandSubType) + "], ";
     }
+    uint16_t GetType() const override
+    {
+        return commandType;
+    }
+    uint16_t GetSubType() const override
+    {
+        return commandSubType;
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
-        bool success = true;
-        success &= RSMarshallingHelper::Marshalling(parcel, commandType);
-        success &= RSMarshallingHelper::Marshalling(parcel, commandSubType);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter1_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter2_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter3_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter4_);
-        return success;
+        return RSMarshallingHelper::Marshalling(parcel, commandType) &&
+            RSMarshallingHelper::Marshalling(parcel, commandSubType) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter1_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter2_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter3_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter4_);
     }
 
     static RSCommand* Unmarshalling(Parcel& parcel)
@@ -297,19 +329,25 @@ public:
         return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
             (commandSubType) + "], ";
     }
+    uint16_t GetType() const override
+    {
+        return commandType;
+    }
+    uint16_t GetSubType() const override
+    {
+        return commandSubType;
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
-        bool success = true;
-        success &= RSMarshallingHelper::Marshalling(parcel, commandType);
-        success &= RSMarshallingHelper::Marshalling(parcel, commandSubType);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter1_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter2_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter3_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter4_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter5_);
-        return success;
+        return RSMarshallingHelper::Marshalling(parcel, commandType) &&
+            RSMarshallingHelper::Marshalling(parcel, commandSubType) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter1_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter2_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter3_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter4_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter5_);
     }
 
     static RSCommand* Unmarshalling(Parcel& parcel)
@@ -366,20 +404,26 @@ public:
         return "commandType:[" + std::to_string(commandType) + ", " + std::to_string
             (commandSubType) + "], ";
     }
+    uint16_t GetType() const override
+    {
+        return commandType;
+    }
+    uint16_t GetSubType() const override
+    {
+        return commandSubType;
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
-        bool success = true;
-        success &= RSMarshallingHelper::Marshalling(parcel, commandType);
-        success &= RSMarshallingHelper::Marshalling(parcel, commandSubType);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter1_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter2_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter3_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter4_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter5_);
-        success &= RSMarshallingHelper::Marshalling(parcel, parameter6_);
-        return success;
+        return RSMarshallingHelper::Marshalling(parcel, commandType) &&
+            RSMarshallingHelper::Marshalling(parcel, commandSubType) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter1_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter2_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter3_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter4_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter5_) &&
+            RSMarshallingHelper::Marshalling(parcel, parameter6_);
     }
 
     static RSCommand* Unmarshalling(Parcel& parcel)

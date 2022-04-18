@@ -24,7 +24,7 @@
 
 #include "buffer_queue.h"
 #include "buffer_queue_consumer.h"
-#include "surface_buffer_impl.h"
+#include "surface_buffer.h"
 
 namespace OHOS {
 class ProducerSurface : public Surface {
@@ -76,10 +76,14 @@ public:
 
     GSError CleanCache() override;
 
+    GSError SetTransform(TransformType transform) override;
+    TransformType GetTransform() const override;
+
 private:
     bool IsRemote();
 
-    std::map<int32_t, sptr<SurfaceBufferImpl>> bufferProducerCache_;
+    std::mutex mutex_;
+    std::map<int32_t, sptr<SurfaceBuffer>> bufferProducerCache_;
     std::map<std::string, std::string> userData_;
     sptr<IBufferProducer> producer_ = nullptr;
     std::string name_ = "not init";

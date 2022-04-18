@@ -190,11 +190,11 @@ const std::shared_ptr<RSMotionPathOption> RSNode::GetMotionPathOption() const
 
 bool RSNode::HasPropertyAnimation(const RSAnimatableProperty& property)
 {
-    auto pred = [property](const auto& it) {
+    // check if any animation matches the property bitmask
+    auto pred = [property](const auto& it) -> bool {
         return it.second > 0 && (static_cast<unsigned long long>(it.first) & static_cast<unsigned long long>(property));
     };
-    auto it = std::find_if(animatingPropertyNum_.begin(), animatingPropertyNum_.end(), pred);
-    return it != animatingPropertyNum_.end();
+    return std::any_of(animatingPropertyNum_.begin(), animatingPropertyNum_.end(), pred);
 }
 
 namespace {
@@ -455,17 +455,17 @@ void RSNode::SetTranslate(float translateX, float translateY, float translateZ)
 
 void RSNode::SetTranslateX(float translate)
 {
-    SET_ANIMATABLE_PROPERTY(TranslateX, translate, RSAnimatableProperty::TRANSLATE);
+    SET_ANIMATABLE_PROPERTY(TranslateX, translate, RSAnimatableProperty::TRANSLATE_X);
 }
 
 void RSNode::SetTranslateY(float translate)
 {
-    SET_ANIMATABLE_PROPERTY(TranslateY, translate, RSAnimatableProperty::TRANSLATE);
+    SET_ANIMATABLE_PROPERTY(TranslateY, translate, RSAnimatableProperty::TRANSLATE_Y);
 }
 
 void RSNode::SetTranslateZ(float translate)
 {
-    SET_ANIMATABLE_PROPERTY(TranslateZ, translate, RSAnimatableProperty::TRANSLATE);
+    SET_ANIMATABLE_PROPERTY(TranslateZ, translate, RSAnimatableProperty::TRANSLATE_Z);
 }
 
 void RSNode::SetScale(float scale)

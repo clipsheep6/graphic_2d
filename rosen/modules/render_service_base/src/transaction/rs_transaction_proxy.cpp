@@ -39,10 +39,10 @@ RSTransactionProxy::~RSTransactionProxy()
 void RSTransactionProxy::Init()
 {
     instance_ = new RSTransactionProxy();
-    ::atexit(&RSTransactionProxy::Destory);
+    ::atexit(&RSTransactionProxy::Destroy);
 }
 
-void RSTransactionProxy::Destory()
+void RSTransactionProxy::Destroy()
 {
     instance_ = nullptr;
 }
@@ -98,13 +98,13 @@ void RSTransactionProxy::ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask
         return;
     }
 
-    if (renderThreadClient_ == nullptr || isRenderServiceTask) {
-        renderServiceClient_->ExecuteSynchronousTask(task);
+    if (renderThreadClient_ != nullptr && !isRenderServiceTask) {
+        renderThreadClient_->ExecuteSynchronousTask(task);
         return;
     }
 
-    if (renderServiceClient_ == nullptr || !isRenderServiceTask) {
-        renderThreadClient_->ExecuteSynchronousTask(task);
+    if (renderServiceClient_ != nullptr && isRenderServiceTask) {
+        renderServiceClient_->ExecuteSynchronousTask(task);
         return;
     }
 }

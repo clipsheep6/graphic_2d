@@ -59,7 +59,7 @@ public:
     static const void* ReadFromParcel(Parcel& parcel, size_t size);
 
     // default marshalling and unmarshalling method for POD types
-    // TODO: implement marshalling & unmarshalling methods for other types (e.g. RSImage, drawCMDList)
+    // [PLANNING]: implement marshalling & unmarshalling methods for other types (e.g. RSImage, drawCMDList)
     template<typename T>
     static bool Marshalling(Parcel& parcel, const T& val)
     {
@@ -81,7 +81,7 @@ public:
         return parcel.WriteUnpadBuffer(val, count * sizeof(T));
     }
     template<typename T>
-    static bool Unmarshalling(Parcel& parcel, T* val, int count)
+    static bool Unmarshalling(Parcel& parcel, T*& val, int count)
     {
         if (const uint8_t* buff = parcel.ReadUnpadBuffer(count * sizeof(T))) {
             val = reinterpret_cast<const T*>(buff);
@@ -120,8 +120,6 @@ public:
     DECLARE_FUNCTION_OVERLOAD(sk_sp<SkImage>)
     DECLARE_FUNCTION_OVERLOAD(sk_sp<SkVertices>)
     // RS types
-    DECLARE_FUNCTION_OVERLOAD(RSShader)
-    DECLARE_FUNCTION_OVERLOAD(RSPath)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSShader>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSPath>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSFilter>)

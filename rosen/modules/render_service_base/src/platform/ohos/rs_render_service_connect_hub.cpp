@@ -43,15 +43,12 @@ RSRenderServiceConnectHub* RSRenderServiceConnectHub::GetInstance()
 void RSRenderServiceConnectHub::Init()
 {
     instance_ = new RSRenderServiceConnectHub();
-    ::atexit(&RSRenderServiceConnectHub::Destory);
+    ::atexit(&RSRenderServiceConnectHub::Destroy);
 }
 
-void RSRenderServiceConnectHub::Destory()
+void RSRenderServiceConnectHub::Destroy()
 {
-    if (instance_ != nullptr) {
-        delete instance_;
-        instance_ = nullptr;
-    }
+    instance_ = nullptr;
 }
 
 RSRenderServiceConnectHub::RSRenderServiceConnectHub()

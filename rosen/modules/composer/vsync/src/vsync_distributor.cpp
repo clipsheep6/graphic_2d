@@ -17,6 +17,8 @@
 #include <chrono>
 #include <condition_variable>
 #include <algorithm>
+#include <sched.h>
+#include <sys/resource.h>
 #include <scoped_bytrace.h>
 #include "vsync_log.h"
 
@@ -27,6 +29,8 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "VsyncDistributor" };
 constexpr int32_t SOFT_VSYNC_PERIOD = 16;
 constexpr int32_t ERRNO_EAGAIN = -1;
 constexpr int32_t ERRNO_OTHER = -2;
+constexpr int32_t THREAD_PRIORTY = -6;
+constexpr int32_t SCHED_PRIORITY = 2;
 }
 VSyncConnection::VSyncConnection(const sptr<VSyncDistributor>& distributor, std::string name)
     : rate_(-1), distributor_(distributor), name_(name)
@@ -48,6 +52,7 @@ VsyncError VSyncConnection::RequestNextVSync()
     if (distributor == nullptr) {
         return VSYNC_ERROR_NULLPTR;
     }
+    ScopedBytrace func(name_ + "RequestNextVSync");
     return distributor->RequestNextVSync(this);
 }
 
@@ -86,7 +91,10 @@ VSyncDistributor::VSyncDistributor(sptr<VSyncController> controller, std::string
 
 VSyncDistributor::~VSyncDistributor()
 {
-    vsyncThreadRunning_ = false;
+    {
+        std::unique_lock<std::mutex> locker(mutex_);
+        vsyncThreadRunning_ = false;
+    }
     if (threadLoop_.joinable()) {
         con_.notify_all();
         threadLoop_.join();
@@ -123,6 +131,12 @@ VsyncError VSyncDistributor::RemoveConnection(const sptr<VSyncConnection>& conne
 
 void VSyncDistributor::ThreadMain()
 {
+    // set thread priorty
+    setpriority(PRIO_PROCESS, 0, THREAD_PRIORTY);
+    struct sched_param param = {0};
+    param.sched_priority = SCHED_PRIORITY;
+    sched_setscheduler(0, SCHED_FIFO, &param);
+
     int64_t timestamp;
     int64_t vsyncCount;
     while (vsyncThreadRunning_ == true) {
@@ -134,8 +148,6 @@ void VSyncDistributor::ThreadMain()
             event_.timestamp = 0;
             vsyncCount = event_.vsyncCount;
             for (uint32_t i = 0; i <connections_.size(); i++) {
-                VLOGI("conn name:%{public}s, rate:%{public}d",
-                    connections_[i]->GetName().c_str(), connections_[i]->rate_);
                 if (connections_[i]->rate_ == 0) {
                     waitForVSync = true;
                     if (timestamp > 0) {
@@ -147,9 +159,6 @@ void VSyncDistributor::ThreadMain()
                     waitForVSync = true;
                 }
             }
-
-            VLOGI("Distributor name:%{public}s, WaitforVSync:%{public}d, timestamp:" VPUBI64 "",
-                name_.c_str(), waitForVSync, timestamp);
             // no vsync signal
             if (timestamp == 0) {
                 // there is some connections request next vsync, enable vsync if vsync disable and
@@ -165,12 +174,15 @@ void VSyncDistributor::ThreadMain()
                     }
                 } else {
                     // just wait request or vsync signal
-                    con_.wait(locker);
+                    if (vsyncThreadRunning_ == true) {
+                        con_.wait(locker);
+                    }
                 }
                 continue;
             } else if ((timestamp > 0) && (waitForVSync == false)) {
-                // if there is a vsync signal but no vaild connections, we will disable vsync
-                DisableVSync();
+                // if there is a vsync signal but no vaild connections, we should disable vsync,
+                // but the system was unstable, so we didn't choose to disable it
+                // DisableVSync()
                 continue;
             }
         }
@@ -183,7 +195,10 @@ void VSyncDistributor::ThreadMain()
                 RemoveConnection(conns[i]);
             } else if (ret == ERRNO_EAGAIN) {
                 std::unique_lock<std::mutex> locker(mutex_);
-                conns[i]->rate_ = 0;
+                // Exclude SetVSyncRate
+                if (conns[i]->rate_ < 0) {
+                    conns[i]->rate_ = 0;
+                }
             }
         }
     }
@@ -249,6 +264,7 @@ VsyncError VSyncDistributor::SetVSyncRate(int32_t rate, const sptr<VSyncConnecti
         return VSYNC_ERROR_INVALID_ARGUMENTS;
     }
     connection->rate_ = rate;
+    VLOGI("in, conn name:%{public}s", connection->GetName().c_str());
     con_.notify_all();
     return VSYNC_ERROR_OK;
 }

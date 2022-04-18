@@ -25,7 +25,11 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
+#ifdef __aarch64__
+    const std::string FRAME_AWARE_SO_PATH = "/system/lib64/libframe_ui_intf.z.so";
+#else
     const std::string FRAME_AWARE_SO_PATH = "/system/lib/libframe_ui_intf.z.so";
+#endif
 }
 RsFrameReport& RsFrameReport::GetInstance()
 {
@@ -45,6 +49,7 @@ void RsFrameReport::Init()
     int ret = LoadLibrary();
     if (!ret) {
         ROSEN_LOGE("RsFrameReport:[Init] dlopen libframe_ui_intf.so failed!");
+        return;
     }
     ROSEN_LOGI("RsFrameReport:[Init] dlopen libframe_ui_intf.so success!");
 }
@@ -90,6 +95,9 @@ void *RsFrameReport::LoadSymbol(const char *symName)
 
 int RsFrameReport::GetEnable()
 {
+    if (!frameSchedSoLoaded_) {
+        return 0;
+    }
     frameGetEnableFunc_ = (FrameGetEnableFunc)LoadSymbol("GetSenseSchedEnable");
     if (frameGetEnableFunc_ != nullptr) {
         return frameGetEnableFunc_();

@@ -38,7 +38,7 @@ NodeId RSBaseNode::GenerateId()
 
     ++currentId_;
     if (currentId_ == UINT32_MAX) {
-        // TODO:process the overflow situations
+        // [PLANNING]:process the overflow situations
         ROSEN_LOGE("Node Id overflow");
     }
 
@@ -103,7 +103,7 @@ void RSBaseNode::AddChild(SharedPtr child, int index)
 void RSBaseNode::RemoveChild(SharedPtr child)
 {
     if (child == nullptr || child->parent_ != id_) {
-        ROSEN_LOGE("RSBaseNode::RemoveChild, child is nullptr");
+        ROSEN_LOGI("RSBaseNode::RemoveChild, child is nullptr");
         return;
     }
     NodeId childId = child->GetId();

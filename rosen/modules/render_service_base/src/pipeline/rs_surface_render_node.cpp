@@ -47,10 +47,10 @@ void RSSurfaceRenderNode::SetBuffer(const sptr<SurfaceBuffer>& buffer)
     }
 }
 
-void RSSurfaceRenderNode::SetFence(int32_t fence)
+void RSSurfaceRenderNode::SetFence(sptr<SyncFence> fence)
 {
     preFence_ = fence_;
-    fence_ = fence;
+    fence_ = std::move(fence);
 }
 
 void RSSurfaceRenderNode::SetDamageRegion(const Rect& damage)
@@ -120,6 +120,20 @@ void RSSurfaceRenderNode::SetAlpha(float alpha, bool sendMsg)
 float RSSurfaceRenderNode::GetAlpha() const
 {
     return alpha_;
+}
+
+void RSSurfaceRenderNode::SetClipRegion(Vector4f clipRegion, bool sendMsg)
+{
+    if (clipRect_ == clipRegion) {
+        return;
+    }
+    clipRect_ = clipRegion;
+    if (!sendMsg) {
+        return;
+    }
+    // send a Command
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetClipRegion>(GetId(), clipRegion);
+    SendPropertyCommand(command);
 }
 
 void RSSurfaceRenderNode::SetGlobalZOrder(float globalZOrder)
@@ -199,33 +213,41 @@ void RSSurfaceRenderNode::RegisterBufferAvailableListener(sptr<RSIBufferAvailabl
 void RSSurfaceRenderNode::ConnectToNodeInRenderService()
 {
     ROSEN_LOGI("RSSurfaceRenderNode::ConnectToNodeInRenderService nodeId = %llu", this->GetId());
-    auto renderServiceClinet =
+    auto renderServiceClient =
         std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
-    if (renderServiceClinet != nullptr) {
-        renderServiceClinet->RegisterBufferAvailableListener(GetId(),
-            [this](bool isBufferAvailable) {
-                this->NotifyBufferAvailable(isBufferAvailable);
+    if (renderServiceClient != nullptr) {
+        renderServiceClient->RegisterBufferAvailableListener(
+            GetId(), [weakThis = weak_from_this()]() {
+                auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(weakThis.lock());
+                if (node == nullptr) {
+                    return;
+                }
+                node->NotifyBufferAvailable();
             });
     }
 }
 
-void RSSurfaceRenderNode::NotifyBufferAvailable(bool isBufferAvailable)
+void RSSurfaceRenderNode::NotifyBufferAvailable()
 {
     ROSEN_LOGI("RSSurfaceRenderNode::NotifyBufferAvailable nodeId = %llu", this->GetId());
 
     // In RS, "isBufferAvailable_ = true" means buffer is ready and need to trigger ipc callback.
     // In RT, "isBufferAvailable_ = true" means RT know that RS have had available buffer
     // and ready to trigger "callbackForRenderThreadRefresh_" to "clip" on parent surface.
-    isBufferAvailable_ = isBufferAvailable;
+    if (isBufferAvailable_) {
+        return;
+    }
 
-    if (isBufferAvailable == true && callbackForRenderThreadRefresh_ != nullptr) {
+    isBufferAvailable_ = true;
+
+    if (callbackForRenderThreadRefresh_) {
         callbackForRenderThreadRefresh_();
     }
 
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (callback_ != nullptr) {
-            callback_->OnBufferAvailable(true);
+        if (callback_) {
+            callback_->OnBufferAvailable();
         }
     }
 }

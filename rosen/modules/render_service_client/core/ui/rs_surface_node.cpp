@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +26,6 @@
 #include "platform/drawing/rs_surface_converter.h"
 #include "transaction/rs_render_service_client.h"
 #include "transaction/rs_transaction_proxy.h"
-#include "render_context/render_context.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -105,9 +105,36 @@ void RSSurfaceNode::UpdateSurfaceDefaultSize(float width, float height)
     }
 }
 
-void RSSurfaceNode::SetColorSpace(SurfaceColorGamut colorSpace)
+void RSSurfaceNode::SetColorSpace(ColorGamut colorSpace)
 {
     colorSpace_ = colorSpace;
+}
+
+bool RSSurfaceNode::SetFirstTimeOnScreenCallback(FirstTimeOnScreenCallback callback)
+{
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        callback_ = callback;
+    }
+    auto renderServiceClient =
+        std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
+    if (renderServiceClient != nullptr) {
+        return renderServiceClient->RegisterBufferAvailableListener(GetId(), [weakThis = weak_from_this()]() {
+            auto rsSurfaceNode = RSBaseNode::ReinterpretCast<RSSurfaceNode>(weakThis.lock());
+            if (rsSurfaceNode) {
+                FirstTimeOnScreenCallback actualCallback;
+                {
+                    std::lock_guard<std::mutex> lock(rsSurfaceNode->mutex_);
+                    actualCallback = rsSurfaceNode->callback_;
+                }
+                actualCallback();
+            } else {
+                ROSEN_LOGE("RSSurfaceNode::SetFirstTimeOnScreenCallback this == null");
+            }
+        });
+    } else {
+        return false;
+    }
 }
 
 bool RSSurfaceNode::Marshalling(Parcel& parcel) const

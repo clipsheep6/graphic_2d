@@ -39,14 +39,13 @@ struct NativeWindow* CreateNativeWindowFromSurface(void* pSuface)
                 *reinterpret_cast<OHOS::sptr<OHOS::Surface> *>(pSuface);
     nativeWindow->config.width = nativeWindow->surface->GetDefaultWidth();
     nativeWindow->config.height = nativeWindow->surface->GetDefaultHeight();
-    nativeWindow->config.usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA;
+    nativeWindow->config.usage = HBM_USE_CPU_READ | HBM_USE_MEM_DMA;
     nativeWindow->config.format = PIXEL_FMT_RGBA_8888;
-    nativeWindow->config.stride = 8; // default stride is 8
-    nativeWindow->config.timeout = 3000; // default timout is 3000 ms
-    nativeWindow->config.colorGamut = OHOS::SurfaceColorGamut::COLOR_GAMUT_SRGB;
+    nativeWindow->config.strideAlignment = 8;   // default stride is 8
+    nativeWindow->config.timeout = 3000;        // default timout is 3000 ms
+    nativeWindow->config.colorGamut = ColorGamut::COLOR_GAMUT_SRGB;
+    nativeWindow->config.transform = TransformType::ROTATE_NONE;
 
-    BLOGD("CreateNativeWindowFromSurface width is %{public}d, height is %{public}d", nativeWindow->config.width, \
-        nativeWindow->config.height);
     NativeObjectReference(nativeWindow);
     return nativeWindow;
 }
@@ -87,24 +86,13 @@ int32_t NativeWindowRequestBuffer(struct NativeWindow *window,
     }
     BLOGD("NativeWindowRequestBuffer width is %{public}d, height is %{public}d",
         window->config.width, window->config.height);
-    OHOS::BufferRequestConfig config = {
-        .width = window->config.width,
-        .height = window->config.height,
-        .strideAlignment = window->config.stride,
-        .format = window->config.format,
-        .usage = window->config.usage,
-        .timeout = window->config.timeout,
-        .colorGamut = window->config.colorGamut,
-    };
     OHOS::sptr<OHOS::SurfaceBuffer> sfbuffer;
-    if (window->surface->RequestBuffer(sfbuffer, *fenceFd, config) != OHOS::GSError::GSERROR_OK ||
+    if (window->surface->RequestBuffer(sfbuffer, *fenceFd, window->config) != OHOS::GSError::GSERROR_OK ||
         sfbuffer == nullptr) {
         return OHOS::GSERROR_NO_BUFFER;
     }
     NativeWindowBuffer *nwBuffer = new NativeWindowBuffer();
     nwBuffer->sfbuffer = sfbuffer;
-    // reference nativewindowbuffer object
-    NativeObjectReference(nwBuffer);
     *buffer = nwBuffer;
     return OHOS::GSERROR_OK;
 }
@@ -124,7 +112,7 @@ int32_t NativeWindowFlushBuffer(struct NativeWindow *window, struct NativeWindow
         config.damage.w = static_cast<int32_t>(region.rects->w);
         config.damage.h = static_cast<int32_t>(region.rects->h);
         config.timestamp = 0;
-    }  else {
+    } else {
         config.damage.x = 0;
         config.damage.y = 0;
         config.damage.w = window->config.width;
@@ -134,9 +122,8 @@ int32_t NativeWindowFlushBuffer(struct NativeWindow *window, struct NativeWindow
 
     BLOGD("NativeWindowFlushBuffer damage w is %{public}d, h is %{public}d, acquire fence: %{public}d",
         config.damage.w, config.damage.h, fenceFd);
-    window->surface->FlushBuffer(buffer->sfbuffer, -1, config);
+    window->surface->FlushBuffer(buffer->sfbuffer, fenceFd, config);
 
-    // unreference nativewindowbuffer object
     return OHOS::GSERROR_OK;
 }
 
@@ -147,8 +134,6 @@ int32_t NativeWindowCancelBuffer(struct NativeWindow *window, struct NativeWindo
     }
     window->surface->CancelBuffer(buffer->sfbuffer);
 
-    // unreference nativewindowbuffer object
-    NativeObjectUnreference(buffer);
     return OHOS::GSERROR_OK;
 }
 
@@ -174,12 +159,17 @@ static int32_t InternalHanleNativeWindowOpt(struct NativeWindow *window, int cod
         }
         case SET_STRIDE: {
             int32_t stride = va_arg(args, int32_t);
-            window->config.stride = stride;
+            window->config.strideAlignment = stride;
             break;
         }
         case SET_COLOR_GAMUT: {
             int32_t colorGamut = va_arg(args, int32_t);
-            window->config.colorGamut = static_cast<OHOS::SurfaceColorGamut>(colorGamut);
+            window->config.colorGamut = static_cast<ColorGamut>(colorGamut);
+            break;
+        }
+        case SET_TRANSFORM : {
+            int32_t transform = va_arg(args, int32_t);
+            window->config.transform = static_cast<TransformType>(transform);
             break;
         }
         case GET_USAGE: {
@@ -202,12 +192,17 @@ static int32_t InternalHanleNativeWindowOpt(struct NativeWindow *window, int cod
         }
         case GET_STRIDE: {
             int32_t *stride = va_arg(args, int32_t*);
-            *stride = window->config.stride;
+            *stride = window->config.strideAlignment;
             break;
         }
         case GET_COLOR_GAMUT: {
             int32_t *colorGamut = va_arg(args, int32_t*);
             *colorGamut = static_cast<int32_t>(window->config.colorGamut);
+            break;
+        }
+        case GET_TRANSFORM: {
+            int32_t *transform = va_arg(args, int32_t*);
+            *transform = static_cast<int32_t>(window->config.transform);
             break;
         }
         default:
@@ -281,31 +276,27 @@ int32_t NativeObjectUnreference(void *obj)
 
 NativeWindow::NativeWindow() : NativeWindowMagic(NATIVE_OBJECT_MAGIC_WINDOW)
 {
-    BLOGD("NativeWindow %{public}p", this);
 }
 
 NativeWindow::~NativeWindow()
 {
-    BLOGD("~NativeWindow %{public}p", this);
 }
 
 NativeWindowBuffer::~NativeWindowBuffer()
 {
-    BLOGD("~NativeWindowBuffer %{public}p", this);
 }
 
 NativeWindowBuffer::NativeWindowBuffer() : NativeWindowMagic(NATIVE_OBJECT_MAGIC_WINDOW_BUFFER)
 {
-    BLOGD("NativeWindowBuffer %{public}p", this);
 }
 
-weak_alias(CreateNativeWindowFromSurface, OH_NativeWindow_CreateNativeWindowFromSurface);
+weak_alias(CreateNativeWindowFromSurface, OH_NativeWindow_CreateNativeWindow);
 weak_alias(DestoryNativeWindow, OH_NativeWindow_DestroyNativeWindow);
 weak_alias(CreateNativeWindowBufferFromSurfaceBuffer, OH_NativeWindow_CreateNativeWindowBufferFromSurfaceBuffer);
 weak_alias(DestoryNativeWindowBuffer, OH_NativeWindow_DestroyNativeWindowBuffer);
 weak_alias(NativeWindowRequestBuffer, OH_NativeWindow_NativeWindowRequestBuffer);
 weak_alias(NativeWindowFlushBuffer, OH_NativeWindow_NativeWindowFlushBuffer);
-weak_alias(NativeWindowCancelBuffer, OH_NativeWindow_NativeWindowCancelBuffer);
+weak_alias(NativeWindowCancelBuffer, OH_NativeWindow_NativeWindowAbortBuffer);
 weak_alias(NativeWindowHandleOpt, OH_NativeWindow_NativeWindowHandleOpt);
 weak_alias(GetBufferHandleFromNative, OH_NativeWindow_GetBufferHandleFromNative);
 weak_alias(NativeObjectReference, OH_NativeWindow_NativeObjectReference);

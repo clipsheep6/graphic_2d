@@ -15,15 +15,13 @@
 
 #include "transaction/rs_render_service_client.h"
 
-#include "backend/rs_surface_ohos_gl.h"
-#include "backend/rs_surface_ohos_raster.h"
 #include "command/rs_command.h"
 #include "ipc_callbacks/screen_change_callback_stub.h"
 #include "ipc_callbacks/surface_capture_callback_stub.h"
 #include "ipc_callbacks/buffer_available_callback_stub.h"
 #include "platform/common/rs_log.h"
 #include "rs_render_service_connect_hub.h"
-#include "rs_surface_ohos.h"
+#include "drawing_engine/drawing_surface/rs_surface_ohos.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -60,13 +58,7 @@ std::shared_ptr<RSSurface> RSRenderServiceClient::CreateNodeAndSurface(const RSS
     }
     sptr<Surface> surface = renderService->CreateNodeAndSurface(config);
 
-#ifdef ACE_ENABLE_GL
-    // GPU render
-    std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosGl>(surface);
-#else
-    // CPU render
-    std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosRaster>(surface);
-#endif
+    std::shared_ptr<RSSurface> producer = OHOS::Rosen::RSSurfaceOhos::CreateSurface(surface);
     return producer;
 }
 
@@ -79,7 +71,7 @@ std::shared_ptr<VSyncReceiver> RSRenderServiceClient::CreateVSyncReceiver(
         return nullptr;
     }
     sptr<IVSyncConnection> conn = renderService->CreateVSyncConnection(name);
-    return std::make_shared<VSyncReceiver>(conn, looper);
+    return std::make_shared<VSyncReceiver>(conn, looper, name);
 }
 
 void RSRenderServiceClient::TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap)
@@ -116,7 +108,8 @@ private:
     RSRenderServiceClient* client_;
 };
 
-bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<SurfaceCaptureCallback> callback)
+bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<SurfaceCaptureCallback> callback,
+    float scaleX, float scaleY)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
@@ -139,7 +132,7 @@ bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<Surfac
     if (surfaceCaptureCbDirector_ == nullptr) {
         surfaceCaptureCbDirector_ = new SurfaceCaptureCallbackDirector(this);
     }
-    renderService->TakeSurfaceCapture(id, surfaceCaptureCbDirector_);
+    renderService->TakeSurfaceCapture(id, surfaceCaptureCbDirector_, scaleX, scaleY);
     return true;
 }
 
@@ -206,15 +199,15 @@ private:
     ScreenChangeCallback cb_;
 };
 
-void RSRenderServiceClient::SetScreenChangeCallback(const ScreenChangeCallback &callback)
+int32_t RSRenderServiceClient::SetScreenChangeCallback(const ScreenChangeCallback &callback)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
-        return;
+        return RENDER_SERVICE_NULL;
     }
 
     screenChangeCb_ = new CustomScreenChangeCallback(callback);
-    renderService->SetScreenChangeCallback(screenChangeCb_);
+    return renderService->SetScreenChangeCallback(screenChangeCb_);
 }
 
 void RSRenderServiceClient::SetScreenActiveMode(ScreenId id, uint32_t modeId)
@@ -313,10 +306,10 @@ public:
     explicit CustomBufferAvailableCallback(const BufferAvailableCallback &callback) : cb_(callback) {}
     ~CustomBufferAvailableCallback() override {};
 
-    void OnBufferAvailable(bool isBufferAvailable) override
+    void OnBufferAvailable() override
     {
         if (cb_ != nullptr) {
-            cb_(isBufferAvailable);
+            cb_();
         }
     }
 
@@ -338,6 +331,19 @@ bool RSRenderServiceClient::RegisterBufferAvailableListener(NodeId id, const Buf
     renderService->RegisterBufferAvailableListener(id, bufferAvailableCb);
     bufferAvailableCbMap_.emplace(id, bufferAvailableCb);
     return true;
+}
+
+bool RSRenderServiceClient::UnregisterBufferAvailableListener(NodeId id)
+{
+    auto iter = bufferAvailableCbMap_.find(id);
+    if (iter != bufferAvailableCbMap_.end()) {
+        bufferAvailableCbMap_.erase(iter);
+        return true;
+    } else {
+        ROSEN_LOGI("RSRenderServiceClient::UnregisterBufferAvailableListener "\
+            "Node %llu has not regiatered callback", id);
+        return false;
+    }
 }
 
 int32_t RSRenderServiceClient::GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode)

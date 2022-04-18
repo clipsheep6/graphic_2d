@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +17,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_RENDER_THREAD_VISITOR_H
 
 #include <memory>
-#include <stack>
+#include <set>
 
 #include "visitor/rs_node_visitor.h"
 #include "pipeline/rs_dirty_region_manager.h"
@@ -28,6 +28,7 @@ namespace Rosen {
 class RSDirtyRegionManager;
 class RSProperties;
 class RSRenderNode;
+
 class RSRenderThreadVisitor : public RSNodeVisitor {
 public:
     RSRenderThreadVisitor();
@@ -44,6 +45,7 @@ public:
     virtual void ProcessCanvasRenderNode(RSCanvasRenderNode& node) override;
     virtual void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
     virtual void ProcessRootRenderNode(RSRootRenderNode& node) override;
+
 private:
     RSDirtyRegionManager dirtyManager_;
     RSRenderNode* parent_ = nullptr;
@@ -51,6 +53,7 @@ private:
     bool isIdle_ = true;
     RSPaintFilterCanvas* canvas_;
     RSRootRenderNode* curTreeRoot_ = nullptr;
+    std::set<NodeId> forceRasterNodes;
 };
 } // namespace Rosen
 } // namespace OHOS

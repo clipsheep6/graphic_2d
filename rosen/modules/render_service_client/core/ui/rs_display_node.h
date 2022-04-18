@@ -33,6 +33,8 @@ public:
 
     void SetScreenId(uint64_t screenId);
 
+    void SetDisplayOffset(int32_t offsetX, int32_t offsetY);
+
     RSUINodeType GetType() const override
     {
         return RSUINodeType::DISPLAY_NODE;
@@ -47,6 +49,8 @@ protected:
 
 private:
     uint64_t screenId_;
+    int32_t offsetX_;
+    int32_t offsetY_;
 };
 } // namespace Rosen
 } // namespace OHOS

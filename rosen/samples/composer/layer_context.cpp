@@ -16,7 +16,6 @@
 #include "layer_context.h"
 
 #include <securec.h>
-#include <sync_fence.h>
 #include "hdi_log.h"
 
 using namespace OHOS;
@@ -56,6 +55,21 @@ LayerContext::~LayerContext()
 
 void LayerContext::OnBufferAvailable()
 {
+}
+
+void LayerContext::SetTestClientStatus(bool status)
+{
+    testClient_ = status;
+}
+
+void LayerContext::SetTestRotateStatus(bool status)
+{
+    testRotate_ = status;
+}
+
+OHOS::Rosen::LayerType LayerContext::GetLayerType() const
+{
+    return layerType_;
 }
 
 const std::shared_ptr<HdiLayerInfo> LayerContext::GetHdiLayer()
@@ -116,6 +130,7 @@ SurfaceError LayerContext::FillHDILayer()
     int64_t timestamp;
     Rect damage;
     SurfaceError ret = cSurface_->AcquireBuffer(buffer, acquireFence, timestamp, damage);
+    sptr<SyncFence> acquireSyncFence = new SyncFence(acquireFence);
     if (ret != SURFACE_ERROR_OK) {
         LOGE("Acquire buffer failed");
         return ret;
@@ -124,10 +139,15 @@ SurfaceError LayerContext::FillHDILayer()
     LayerAlpha alpha = { .enPixelAlpha = true };
 
     hdiLayer_->SetSurface(cSurface_);
-    hdiLayer_->SetBuffer(buffer, acquireFence, prevBuffer_, prevFence_);
+    hdiLayer_->SetBuffer(buffer, acquireSyncFence, prevBuffer_, prevFence_);
     hdiLayer_->SetZorder(static_cast<int32_t>(zorder_));
     hdiLayer_->SetAlpha(alpha);
-    hdiLayer_->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
+    if (layerType_ >= LayerType::LAYER_EXTRA) {
+        SetLayerTransformType();
+    }
+
+    SetLayerCompositionType();
+
     hdiLayer_->SetVisibleRegion(1, src_);
     hdiLayer_->SetDirtyRegion(src_);
     hdiLayer_->SetLayerSize(dst_);
@@ -136,9 +156,42 @@ SurfaceError LayerContext::FillHDILayer()
     hdiLayer_->SetPreMulti(false);
 
     prevBuffer_ = buffer;
-    prevFence_ = acquireFence;
+    prevFence_ = acquireSyncFence;
 
     return ret;
+}
+
+void LayerContext::SetLayerTransformType()
+{
+    if (!testRotate_) {
+        return;
+    }
+
+    static int32_t count = 0;
+    if (count >= 2000) { // 2000 is max cycle num
+        count = 0;
+    }
+
+    if (count >= 100 && count <= 200) { // 100-200 ROTATE_90
+        hdiLayer_->SetTransform(TransformType::ROTATE_90);
+    } else if (count >= 500 && count <= 600) { // 500-600 ROTATE_180
+        hdiLayer_->SetTransform(TransformType::ROTATE_180);
+    } else if (count >= 900 && count <= 1000) { // 900-1000 ROTATE_270
+        hdiLayer_->SetTransform(TransformType::ROTATE_270);
+    } else if (count >= 1300 && count <= 1400) { // 1300-1400 ROTATE_NONE
+        hdiLayer_->SetTransform(TransformType::ROTATE_NONE);
+    }
+
+    count++;
+}
+
+void LayerContext::SetLayerCompositionType()
+{
+    if (layerType_ >= LayerType::LAYER_EXTRA && testClient_) {
+        hdiLayer_->SetCompositionType(CompositionType::COMPOSITION_CLIENT);
+    } else {
+        hdiLayer_->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
+    }
 }
 
 void LayerContext::DrawColor(void *image, int width, int height)
@@ -162,7 +215,11 @@ void LayerContext::DrawExtraColor(void *image, uint32_t width, uint32_t height)
     uint32_t *pixel = static_cast<uint32_t *>(image);
     for (uint32_t x = 0; x < width; x++) {
         for (uint32_t y = 0;  y < height; y++) {
-            *pixel++ = color_;
+            if (testRotate_ && x >= 0 && x <= 50) { // 0-50 is different color
+                *pixel++ = 0xffff1111;
+            } else {
+                *pixel++ = color_;
+            }
         }
     }
 

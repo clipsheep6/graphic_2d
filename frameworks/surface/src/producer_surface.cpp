@@ -17,6 +17,7 @@
 
 #include "buffer_log.h"
 #include "buffer_manager.h"
+#include "buffer_extra_data_impl.h"
 
 namespace OHOS {
 ProducerSurface::ProducerSurface(sptr<IBufferProducer>& producer)
@@ -32,14 +33,7 @@ ProducerSurface::ProducerSurface(sptr<IBufferProducer>& producer)
 ProducerSurface::~ProducerSurface()
 {
     BLOGND("dtor");
-    if (IsRemote()) {
-        for (auto it = bufferProducerCache_.begin(); it != bufferProducerCache_.end(); it++) {
-            if (it->second->GetVirAddr() != nullptr) {
-                BufferManager::GetInstance()->Unmap(it->second);
-            }
-        }
-    }
-
+    CleanCache();
     producer_ = nullptr;
 }
 
@@ -62,44 +56,49 @@ GSError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
     int32_t &fence, BufferRequestConfig &config)
 {
     IBufferProducer::RequestBufferReturnValue retval;
-    BufferExtraDataImpl bedataimpl;
+    sptr<BufferExtraData> bedataimpl = new BufferExtraDataImpl;
     GSError ret = GetProducer()->RequestBuffer(config, bedataimpl, retval);
     if (ret != GSERROR_OK) {
         BLOGN_FAILURE("Producer report %{public}s", GSErrorStr(ret).c_str());
         return ret;
     }
 
+    std::lock_guard<std::mutex> lockGuard(mutex_);
     // add cache
     if (retval.buffer != nullptr && IsRemote()) {
-        sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-        ret = BufferManager::GetInstance()->Map(bufferImpl);
+        ret = BufferManager::GetInstance()->Map(retval.buffer);
         if (ret != GSERROR_OK) {
             BLOGN_FAILURE_ID(retval.sequence, "Map failed");
+            return GSERROR_API_FAILED;
         } else {
             BLOGN_SUCCESS_ID(retval.sequence, "Map");
         }
     }
 
     if (retval.buffer != nullptr) {
-        bufferProducerCache_[retval.sequence] = SurfaceBufferImpl::FromBase(retval.buffer);
+        bufferProducerCache_[retval.sequence] = retval.buffer;
+    } else if (bufferProducerCache_.find(retval.sequence) == bufferProducerCache_.end()) {
+        return GSERROR_API_FAILED;
     } else {
         retval.buffer = bufferProducerCache_[retval.sequence];
     }
     buffer = retval.buffer;
     fence = retval.fence;
 
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-    ret = BufferManager::GetInstance()->InvalidateCache(bufferImpl);
-    if (ret != GSERROR_OK) {
-        BLOGNW("Warning [%{public}d], InvalidateCache failed", retval.sequence);
+    if (static_cast<uint32_t>(config.usage) & HBM_USE_CPU_WRITE) {
+        ret = BufferManager::GetInstance()->InvalidateCache(buffer);
+        if (ret != GSERROR_OK) {
+            BLOGNW("Warning [%{public}d], InvalidateCache failed", retval.sequence);
+        }
     }
 
-    if (bufferImpl != nullptr) {
-        bufferImpl->SetExtraData(bedataimpl);
+    if (buffer != nullptr) {
+        buffer->SetExtraData(bedataimpl);
     }
 
     for (auto it = retval.deletingBuffers.begin(); it != retval.deletingBuffers.end(); it++) {
-        if (IsRemote() && bufferProducerCache_[*it]->GetVirAddr() != nullptr) {
+        if (IsRemote() && bufferProducerCache_.find(*it) != bufferProducerCache_.end() &&
+                bufferProducerCache_[*it]->GetVirAddr() != nullptr) {
             BufferManager::GetInstance()->Unmap(bufferProducerCache_[*it]);
         }
         bufferProducerCache_.erase(*it);
@@ -113,10 +112,9 @@ GSError ProducerSurface::CancelBuffer(sptr<SurfaceBuffer>& buffer)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    auto bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    BufferExtraDataImpl bedataimpl;
-    bufferImpl->GetExtraData(bedataimpl);
-    return GetProducer()->CancelBuffer(bufferImpl->GetSeqNum(), bedataimpl);
+    sptr<BufferExtraData> bedata = nullptr;
+    buffer->GetExtraData(bedata);
+    return GetProducer()->CancelBuffer(buffer->GetSeqNum(), bedata);
 }
 
 GSError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
@@ -126,10 +124,9 @@ GSError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    auto bufferImpl = SurfaceBufferImpl::FromBase(buffer);
-    BufferExtraDataImpl bedataimpl;
-    bufferImpl->GetExtraData(bedataimpl);
-    return GetProducer()->FlushBuffer(bufferImpl->GetSeqNum(), bedataimpl, fence, config);
+    sptr<BufferExtraData> bedata = nullptr;
+    buffer->GetExtraData(bedata);
+    return GetProducer()->FlushBuffer(buffer->GetSeqNum(), bedata, fence, config);
 }
 
 GSError ProducerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
@@ -247,11 +244,30 @@ bool ProducerSurface::IsRemote()
 
 GSError ProducerSurface::CleanCache()
 {
+    if (IsRemote()) {
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        for (auto it = bufferProducerCache_.begin(); it != bufferProducerCache_.end();) {
+            if (it->second != nullptr && it->second->GetVirAddr() != nullptr) {
+                BufferManager::GetInstance()->Unmap(it->second);
+            }
+            bufferProducerCache_.erase(it++);
+        }
+    }
     return producer_->CleanCache();
 }
 
 uint64_t ProducerSurface::GetUniqueId() const
 {
     return producer_->GetUniqueId();
+}
+
+GSError ProducerSurface::SetTransform(TransformType transform)
+{
+    return producer_->SetTransform(transform);
+}
+
+TransformType ProducerSurface::GetTransform() const
+{
+    return TransformType::ROTATE_BUTT;
 }
 } // namespace OHOS

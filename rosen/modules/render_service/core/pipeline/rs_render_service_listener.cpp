@@ -17,6 +17,7 @@
 
 #include "platform/common/rs_log.h"
 #include "pipeline/rs_main_thread.h"
+#include "sync_fence.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -31,18 +32,20 @@ void RSRenderServiceListener::OnBufferAvailable()
 {
     auto node = surfaceRenderNode_.lock();
     if (node == nullptr) {
-        ROSEN_LOGE("RSRenderServiceListener::OnBufferAvailable node is nullptr");
+        RS_LOGE("RSRenderServiceListener::OnBufferAvailable node is nullptr");
         return;
     }
-    ROSEN_LOGE("RsDebug RSRenderServiceListener::OnBufferAvailable node id:%llu", node->GetId());
+    RS_LOGI("RsDebug RSRenderServiceListener::OnBufferAvailable node id:%llu", node->GetId());
 
-    if (!node->IsOnTheTree()) {
+    if (!node->IsOnTheTree() || !node->GetRenderProperties().GetVisible()) {
         RSMainThread::Instance()->PostTask([node]() {
-            ROSEN_LOGI("RsDebug RSRenderServiceListener::OnBufferAvailable node id:%llu: is not on the tree",
-                node->GetId());
+            RS_LOGI("RsDebug RSRenderServiceListener::OnBufferAvailable node id:%llu:"\
+                "IsOnTheTree = %s, IsVisible = %s",
+                node->GetId(), node->IsOnTheTree() ? "true" : "false",
+                node->GetRenderProperties().GetVisible() ? "true" : "false");
             auto& surfaceConsumer = node->GetConsumer();
             if (surfaceConsumer == nullptr) {
-                ROSEN_LOGE("RsDebug RSRenderServiceListener::OnBufferAvailable: consumer is null!");
+                RS_LOGE("RsDebug RSRenderServiceListener::OnBufferAvailable: consumer is null!");
                 return;
             }
             sptr<SurfaceBuffer> buffer;
@@ -50,16 +53,16 @@ void RSRenderServiceListener::OnBufferAvailable()
             int64_t timestamp = 0;
             Rect damage;
             auto ret = surfaceConsumer->AcquireBuffer(buffer, fence, timestamp, damage);
+            sptr<SyncFence> acquireFence = new SyncFence(fence);
             if (buffer == nullptr || ret != SURFACE_ERROR_OK) {
-                ROSEN_LOGE("RsDebug RSRenderServiceListener::OnBufferAvailable: AcquireBuffer failed!");
+                RS_LOGE("RsDebug RSRenderServiceListener::OnBufferAvailable: AcquireBuffer failed!");
                 return;
             }
-
             if (node->GetBuffer() != nullptr && node->GetBuffer() != buffer) {
                 (void)surfaceConsumer->ReleaseBuffer(node->GetBuffer(), -1);
             }
             node->SetBuffer(buffer);
-            node->SetFence(fence);
+            node->SetFence(acquireFence);
         });
     } else {
         node->IncreaseAvailableBuffer();

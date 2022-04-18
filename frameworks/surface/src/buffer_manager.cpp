@@ -90,21 +90,24 @@ GSError BufferManager::Init()
     return GSERROR_OK;
 }
 
-GSError BufferManager::Alloc(const BufferRequestConfig &config, sptr<SurfaceBufferImpl> &buffer)
+GSError BufferManager::Alloc(const BufferRequestConfig &config, sptr<SurfaceBuffer> &buffer)
 {
     CHECK_INIT();
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = nullptr;
-    int32_t width = (config.width + 15) / 16 * 16;
-    AllocInfo info = {width, config.height, config.usage, (PixelFormat)config.format};
+    int32_t allocWidth = config.width;
+    int32_t allocHeight = config.height;
+    AllocInfo info = {allocWidth, allocHeight, config.usage, (PixelFormat)config.format};
     auto dret = displayGralloc_->AllocMem(info, handle);
     if (dret == DISPLAY_SUCCESS) {
         buffer->SetBufferHandle(handle);
-        buffer->SetSurfaceBufferWidth(config.width);
-        buffer->SetSurfaceBufferHeight(config.height);
+        buffer->SetSurfaceBufferWidth(allocWidth);
+        buffer->SetSurfaceBufferHeight(allocHeight);
         buffer->SetSurfaceBufferColorGamut(config.colorGamut);
-        BLOGI("buffer handle %{public}p w: %{public}d h: %{public}d", handle, config.width, config.height);
+        buffer->SetSurfaceBufferTransform(config.transform);
+        BLOGI("buffer handle %{public}p w: %{public}d h: %{public}d t: %{public}d", handle,
+            allocWidth, allocHeight, config.transform);
         return GSERROR_OK;
     }
     BLOGW("Failed with %{public}d", dret);
@@ -112,12 +115,16 @@ GSError BufferManager::Alloc(const BufferRequestConfig &config, sptr<SurfaceBuff
     return GenerateError(GSERROR_API_FAILED, dret);
 }
 
-GSError BufferManager::Map(sptr<SurfaceBufferImpl> &buffer)
+GSError BufferManager::Map(sptr<SurfaceBuffer> &buffer)
 {
     CHECK_INIT();
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = buffer->GetBufferHandle();
+    if (handle == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
     void *virAddr = displayGralloc_->Mmap(*handle);
     if (virAddr == nullptr || virAddr == MAP_FAILED) {
         return GSERROR_API_FAILED;
@@ -125,7 +132,7 @@ GSError BufferManager::Map(sptr<SurfaceBufferImpl> &buffer)
     return GSERROR_OK;
 }
 
-GSError BufferManager::Unmap(sptr<SurfaceBufferImpl> &buffer)
+GSError BufferManager::Unmap(sptr<SurfaceBuffer> &buffer)
 {
     CHECK_INIT();
     CHECK_BUFFER(buffer);
@@ -135,6 +142,10 @@ GSError BufferManager::Unmap(sptr<SurfaceBufferImpl> &buffer)
     }
 
     BufferHandle *handle = buffer->GetBufferHandle();
+    if (handle == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
     auto dret = displayGralloc_->Unmap(*handle);
     if (dret == DISPLAY_SUCCESS) {
         handle->virAddr = nullptr;
@@ -144,12 +155,34 @@ GSError BufferManager::Unmap(sptr<SurfaceBufferImpl> &buffer)
     return GenerateError(GSERROR_API_FAILED, dret);
 }
 
-GSError BufferManager::FlushCache(sptr<SurfaceBufferImpl> &buffer)
+GSError BufferManager::Unmap(BufferHandle *bufferHandle)
+{
+    CHECK_INIT();
+    if (bufferHandle == nullptr) {
+        return GSERROR_OK;
+    }
+    if (bufferHandle->virAddr == nullptr) {
+        return GSERROR_OK;
+    }
+    auto dret = displayGralloc_->Unmap(*bufferHandle);
+    if (dret == DISPLAY_SUCCESS) {
+        bufferHandle->virAddr = nullptr;
+        return GSERROR_OK;
+    }
+    BLOGW("Failed with %{public}d", dret);
+    return GenerateError(GSERROR_API_FAILED, dret);
+}
+
+GSError BufferManager::FlushCache(sptr<SurfaceBuffer> &buffer)
 {
     CHECK_INIT();
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = buffer->GetBufferHandle();
+    if (handle == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
     auto dret = displayGralloc_->FlushCache(*handle);
     if (dret == DISPLAY_SUCCESS) {
         return GSERROR_OK;
@@ -158,12 +191,16 @@ GSError BufferManager::FlushCache(sptr<SurfaceBufferImpl> &buffer)
     return GenerateError(GSERROR_API_FAILED, dret);
 }
 
-GSError BufferManager::InvalidateCache(sptr<SurfaceBufferImpl> &buffer)
+GSError BufferManager::InvalidateCache(sptr<SurfaceBuffer> &buffer)
 {
     CHECK_INIT();
     CHECK_BUFFER(buffer);
 
     BufferHandle *handle = buffer->GetBufferHandle();
+    if (handle == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
     auto dret = displayGralloc_->InvalidateCache(*handle);
     if (dret == DISPLAY_SUCCESS) {
         return GSERROR_OK;
@@ -172,7 +209,7 @@ GSError BufferManager::InvalidateCache(sptr<SurfaceBufferImpl> &buffer)
     return GenerateError(GSERROR_API_FAILED, dret);
 }
 
-GSError BufferManager::Free(sptr<SurfaceBufferImpl> &buffer)
+GSError BufferManager::Free(sptr<SurfaceBuffer> &buffer)
 {
     CHECK_INIT();
     CHECK_BUFFER(buffer);

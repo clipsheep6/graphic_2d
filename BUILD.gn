@@ -23,6 +23,7 @@ group("default") {
     "frameworks/animation_server:cursor.raw",
     "frameworks/bootanimation:bootanimation",
     "frameworks/bootanimation:bootanimation_pics",
+    "frameworks/bootanimation:bootanimation_sounds",
     "frameworks/dumper:gdumper",
     "frameworks/dumper:gdumper.ini",
     "frameworks/dumper:graphic_dumper_server",
@@ -39,7 +40,6 @@ group("graphic_standard_test") {
   public_deps = [
     "frameworks/fence:test",
     "frameworks/surface:test",
-    "frameworks/vsync:test",
     "frameworks/wmtest:wmtest",
     "rosen/modules/composer:test",
     "rosen/modules/effect/test/unittest:test",
@@ -102,8 +102,4 @@ group("libgl") {
 
 group("libgraphic_dumper_client") {
   public_deps = [ "frameworks/dumper:libgraphic_dumper_client" ]
-}
-
-group("rendertest") {
-  public_deps = [ "rosen/samples/text/renderservice:rendertest" ]
 }

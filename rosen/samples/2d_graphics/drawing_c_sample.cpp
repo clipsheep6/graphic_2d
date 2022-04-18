@@ -32,8 +32,8 @@
 #include "core/ui/rs_display_node.h"
 #include "core/ui/rs_surface_node.h"
 // temporary debug
-#include "foundation/graphic/standard/rosen/modules/render_service_base/src/platform/ohos/rs_surface_frame_ohos.h"
-#include "foundation/graphic/standard/rosen/modules/render_service_base/src/platform/ohos/rs_surface_ohos.h"
+#include "drawing_engine/drawing_surface/rs_surface_frame_ohos.h"
+#include "drawing_engine/drawing_surface/rs_surface_ohos.h"
 
 #include "c/drawing_canvas.h"
 #include "c/drawing_color.h"
@@ -139,7 +139,7 @@ static void DoDraw(uint8_t *addr, uint32_t width, uint32_t height, size_t index)
 
     // 4 means stride
     constexpr uint32_t stride = 4;
-    int32_t addrSize = width * height * stride;
+    uint32_t addrSize = width * height * stride;
     void* bitmapAddr = OH_Drawing_BitmapGetPixels(cBitmap);
     auto ret = memcpy_s(addr, addrSize, bitmapAddr, addrSize);
     if (ret != EOK) {

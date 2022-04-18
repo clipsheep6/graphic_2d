@@ -19,8 +19,10 @@
 #include <surface.h>
 #include <ibuffer_consumer_listener.h>
 
+#include "drawing_engine/drawing_surface/rs_surface_ohos.h"
+#include "drawing_engine/drawing_proxy.h"
 #include "pipeline/rs_base_render_node.h"
-#include "platform/drawing/rs_surface.h"
+#include "sync_fence.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -48,6 +50,22 @@ public:
         return screenId_;
     }
 
+    void SetDisplayOffset(int32_t offsetX, int32_t offsetY)
+    {
+        offsetX_ = offsetX;
+        offsetY_ = offsetY;
+    }
+
+    int32_t GetDisplayOffsetX() const
+    {
+        return offsetX_;
+    }
+
+    int32_t GetDisplayOffsetY() const
+    {
+        return offsetY_;
+    }
+
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
@@ -70,13 +88,18 @@ public:
     float GetGlobalZOrder() const;
     void SetConsumer(const sptr<Surface>& consumer);
     void SetBuffer(const sptr<SurfaceBuffer>& buffer);
-    void SetFence(const int32_t fence);
+    void SetFence(sptr<SyncFence> fence);
     void IncreaseAvailableBuffer();
     int32_t ReduceAvailableBuffer();
 
     WeakPtr GetMirrorSource() const
     {
         return mirrorSource_;
+    }
+
+    bool HasTransition(bool) const override
+    {
+        return false;
     }
 
     const sptr<Surface>& GetConsumer() const
@@ -89,7 +112,7 @@ public:
         return buffer_;
     }
 
-    int32_t GetFence() const
+    sptr<SyncFence> GetFence() const
     {
         return fence_;
     }
@@ -99,7 +122,7 @@ public:
         return preBuffer_;
     }
 
-    int32_t GetPreFence() const
+    sptr<SyncFence> GetPreFence() const
     {
         return preFence_;
     }
@@ -119,9 +142,21 @@ public:
         return damageRect_;
     }
 
+    sptr<IBufferConsumerListener> GetConsumerListener() const
+    {
+        return consumerListener_;
+    }
+
+    bool IsSurfaceCreated() const
+    {
+        return surfaceCreated_;
+    }
+
 private:
     CompositeType compositeType_ { HARDWARE_COMPOSITE };
     uint64_t screenId_;
+    int32_t offsetX_;
+    int32_t offsetY_;
     bool forceSoftComposite_ { false };
     bool isMirroredDisplay_ = false;
     WeakPtr mirrorSource_;
@@ -133,8 +168,11 @@ private:
     std::atomic<int> bufferAvailableCount_ = 0;
     sptr<SurfaceBuffer> buffer_;
     sptr<SurfaceBuffer> preBuffer_;
-    int32_t fence_ = -1;
-    int32_t preFence_ = -1;
+    sptr<SyncFence> fence_;
+    sptr<SyncFence> preFence_;
+    bool surfaceCreated_ { false };
+    sptr<IBufferConsumerListener> consumerListener_;
+    DrawingProxy* drawingProxy_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

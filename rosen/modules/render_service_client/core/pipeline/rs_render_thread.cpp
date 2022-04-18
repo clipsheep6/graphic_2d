@@ -25,6 +25,7 @@
 #include "platform/common/rs_log.h"
 #include "rs_trace.h"
 #include "ui/rs_ui_director.h"
+#include "transaction/rs_render_service_client.h"
 #ifdef ROSEN_OHOS
 #include <sys/prctl.h>
 #include <unistd.h>
@@ -34,6 +35,7 @@
 #ifdef USE_FLUTTER_TEXTURE
 #include "pipeline/rs_texture_render_node.h"
 #endif
+#include "drawing_engine/drawing_proxy.h"
 
 static void SystemCallSetThreadName(const std::string& name)
 {
@@ -48,7 +50,7 @@ namespace {
 void DrawEventReport(float frameLength)
 {
     int32_t pid = getpid();
-    int32_t uid = getuid();
+    uint32_t uid = getuid();
     std::string domain = "GRAPHIC";
     std::string stringId = "NO_DRAW";
     std::string processName = "RS_THREAD";
@@ -73,11 +75,7 @@ RSRenderThread& RSRenderThread::Instance()
 
 RSRenderThread::RSRenderThread()
 {
-#ifdef ACE_ENABLE_GL
-    // renderContext_ = *(RenderContextFactory::GetInstance().CreateEngine());
-    renderContext_ = new RenderContext();
-    ROSEN_LOGD("Create RenderContext, its pointer is %p", renderContext_);
-#endif
+    DrawingProxy_ = new DrawingProxy();
     mainFunc_ = [&]() {
         clock_t startTime = clock();
         ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSRenderThread::DrawFrame");
@@ -86,7 +84,7 @@ RSRenderThread::RSRenderThread()
             ProcessCommands();
         }
 
-        ROSEN_LOGD("RSRenderThread DrawFrame(%llu) in %s", prevTimestamp_, renderContext_ ? "GPU" : "CPU");
+        ROSEN_LOGD("RSRenderThread DrawFrame(%llu)", prevTimestamp_);
         Animate(prevTimestamp_);
         Render();
         RS_ASYNC_TRACE_BEGIN("waiting GPU running", 1111); // 1111 means async trace code for gpu
@@ -100,29 +98,22 @@ RSRenderThread::RSRenderThread()
         clock_t endTime = clock();
         float drawTime = endTime - startTime;
         // Due to the calibration problem, there is a larger error on the windows.
-        if (CLOCKS_PER_SEC < drawTime * 60) { // 60FPS
+        if (drawTime > CLOCKS_PER_SEC * 6) { // The drawing timeout reaches 6 seconds.
             drawTime = static_cast<float>(drawTime) / CLOCKS_PER_SEC;
             DrawEventReport(drawTime);
             ROSEN_LOGD("RSRenderThread DrawFrame took %fs.", drawTime);
         }
     };
-
-#ifdef ROSEN_OHOS
-    RSRenderServiceConnectHub::SetOnConnectCallback([this](sptr<RSIRenderServiceConnection>& conn) {
-        sptr<IApplicationRenderThread> renderThreadSptr = sptr<RSRenderThread>(this);
-        conn->RegisterApplicationRenderThread(getpid(), renderThreadSptr);
-    });
-#endif
 }
 
 RSRenderThread::~RSRenderThread()
 {
     Stop();
 
-    if (renderContext_ != nullptr) {
-        ROSEN_LOGD("Destory renderContext!!");
-        delete renderContext_;
-        renderContext_ = nullptr;
+    if (DrawingProxy_  != nullptr) {
+        ROSEN_LOGD("Destroy renderContext!!");
+        delete DrawingProxy_ ;
+        DrawingProxy_  = nullptr;
     }
 }
 
@@ -133,12 +124,26 @@ void RSRenderThread::Start()
     if (thread_ == nullptr) {
         thread_ = std::make_unique<std::thread>(&RSRenderThread::RenderLoop, this);
     }
+
+#ifdef ROSEN_OHOS
+    RSRenderServiceConnectHub::SetOnConnectCallback(
+        [weakThis = wptr<RSRenderThread>(this)](sptr<RSIRenderServiceConnection>& conn) {
+            sptr<IApplicationRenderThread> renderThreadSptr = weakThis.promote();
+            if (renderThreadSptr == nullptr) {
+                return;
+            }
+            conn->RegisterApplicationRenderThread(getpid(), renderThreadSptr);
+        });
+#endif
 }
 
 void RSRenderThread::Stop()
 {
     running_.store(false);
-    WakeUp();
+
+    if (runner_ != nullptr) {
+        runner_->Stop();
+    }
 
     if (thread_ != nullptr && thread_->joinable()) {
         thread_->join();
@@ -148,29 +153,25 @@ void RSRenderThread::Stop()
     ROSEN_LOGD("RSRenderThread stopped.");
 }
 
-void RSRenderThread::WakeUp()
-{
-    if (rendererLooper_ != nullptr) {
-        rendererLooper_->WakeUp();
-    }
-}
-
 void RSRenderThread::RecvTransactionData(std::unique_ptr<RSTransactionData>& transactionData)
 {
-    // StopTimer();
     {
         std::unique_lock<std::mutex> cmdLock(cmdMutex_);
         cmds_.emplace_back(std::move(transactionData));
     }
-    // todo process in next vsync (temporarily)
+    // [PLANNING]: process in next vsync (temporarily)
     RSRenderThread::Instance().RequestNextVSync();
 }
 
 void RSRenderThread::RequestNextVSync()
 {
     RS_TRACE_FUNC();
-    if (vsyncClient_ != nullptr) {
-        vsyncClient_->RequestNextVsync();
+    VSyncReceiver::FrameCallback fcb = {
+        .userData_ = this,
+        .callback_ = std::bind(&RSRenderThread::OnVsync, this, std::placeholders::_1),
+    };
+    if (receiver_ != nullptr) {
+        receiver_->RequestNextVSync(fcb);
     }
 }
 
@@ -182,49 +183,34 @@ int32_t RSRenderThread::GetTid()
 void RSRenderThread::RenderLoop()
 {
     SystemCallSetThreadName("RSRenderThread");
-    rendererLooper_ = RSThreadLooper::Create();
-    threadHandler_ = RSThreadHandler::Create();
 
 #ifdef ROSEN_OHOS
     tid_ = gettid();
-    vsyncClient_ = RSVsyncClient::Create();
-    if (vsyncClient_) {
-        vsyncClient_->SetVsyncCallback(std::bind(&RSRenderThread::OnVsync, this, std::placeholders::_1));
-    }
 #endif
-#ifdef ACE_ENABLE_GL
-    renderContext_->InitializeEglContext(); // init egl context on RT
-#endif
-
-    while (running_.load()) {
-        if (rendererLooper_ == nullptr) {
-            break;
-        }
-        {
-            if (preTask_ != nullptr) {
-                threadHandler_->PostTask(preTask_);
-                preTask_ = nullptr;
-            }
-        }
-        if (running_.load()) {
-            rendererLooper_->ProcessAllMessages(-1);
-        }
+    DrawingProxy_->InitDrawContext();
+    std::string name = "RSRenderThread_" + std::to_string(::getpid());
+    runner_ = AppExecFwk::EventRunner::Create(false);
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+    auto rsClient = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
+    receiver_ = rsClient->CreateVSyncReceiver(name, handler_);
+    if (receiver_ == nullptr) {
+        ROSEN_LOGE("RSRenderThread CreateVSyncReceiver Error");
+        return;
     }
-
-    StopTimer();
-    vsyncClient_ = nullptr;
-    rendererLooper_ = nullptr;
-    threadHandler_ = nullptr;
+    receiver_->Init();
+    if (runner_) {
+        runner_->Run();
+    }
 }
 
 void RSRenderThread::OnVsync(uint64_t timestamp)
 {
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSRenderThread::OnVsync");
-    mValue = (mValue + 1) % 2;
+    mValue = (mValue + 1) % 2; // 1 and 2 is Calculated parameters
     RS_TRACE_INT("Vsync-client", mValue);
     timestamp_ = timestamp;
     if (activeWindowCnt_.load() > 0) {
-        StartTimer(0); // start render-loop now
+        mainFunc_(); // start render-loop now
     }
     ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }
@@ -237,26 +223,6 @@ void RSRenderThread::UpdateWindowStatus(bool active)
         activeWindowCnt_--;
     }
     ROSEN_LOGD("RSRenderThread UpdateWindowStatus %d, cur activeWindowCnt_ %d", active, activeWindowCnt_.load());
-}
-
-void RSRenderThread::StartTimer(uint64_t interval)
-{
-    if (threadHandler_ != nullptr) {
-        if (timeHandle_ == nullptr) {
-            timeHandle_ = RSThreadHandler::StaticCreateTask(mainFunc_);
-        }
-        threadHandler_->PostTaskDelay(timeHandle_, interval);
-    }
-}
-
-void RSRenderThread::StopTimer()
-{
-    ROSEN_LOGD("RSRenderThread StopTimer.");
-    if (threadHandler_ != nullptr) {
-        if (timeHandle_ != nullptr) {
-            threadHandler_->CancelTask(timeHandle_);
-        }
-    }
 }
 
 void RSRenderThread::ProcessCommands()
@@ -283,19 +249,31 @@ void RSRenderThread::ProcessCommands()
 
 void RSRenderThread::Animate(uint64_t timestamp)
 {
-    ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "Animate");
+    RS_TRACE_FUNC();
+
     if (RsFrameReport::GetInstance().GetEnable()) {
         RsFrameReport::GetInstance().AnimateStart();
     }
-    hasRunningAnimation_ = false;
-    for (const auto& [id, node] : context_.GetNodeMap().renderNodeMap_) {
-        hasRunningAnimation_ = node->Animate(timestamp) || hasRunningAnimation_;
+
+    if (context_.animatingNodeList_.empty()) {
+        return;
     }
 
-    if (hasRunningAnimation_) {
-        RSRenderThread::Instance().RequestNextVSync();
-    }
-    ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
+    // iterate and animate all animating nodes, remove if animation finished
+    std::__libcpp_erase_if_container(context_.animatingNodeList_, [timestamp](const auto& iter) -> bool {
+        auto node = iter.second.lock();
+        if (node == nullptr) {
+            ROSEN_LOGD("RSRenderThread::Animate removing expired animating node");
+            return true;
+        }
+        bool animationFinished = !node->Animate(timestamp);
+        if (animationFinished) {
+            ROSEN_LOGD("RSRenderThread::Animate removing finished animating node %llu", node->GetId());
+        }
+        return animationFinished;
+    });
+
+    RSRenderThread::Instance().RequestNextVSync();
 }
 
 void RSRenderThread::Render()
@@ -346,11 +324,16 @@ void RSRenderThread::Detach(NodeId id)
 
 void RSRenderThread::PostTask(RSTaskMessage::RSTask task)
 {
-    if (threadHandler_) {
-        auto taskHandle = threadHandler_->CreateTask(task);
-        threadHandler_->PostTask(taskHandle, 0);
+    if (handler_) {
+        handler_->PostTask(task);
     }
 }
 
+void RSRenderThread::PostPreTask()
+{
+    if (handler_ && preTask_) {
+        handler_->PostTask(preTask_);
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

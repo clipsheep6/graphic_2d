@@ -71,6 +71,7 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
     for (auto &output : outputs) {
         const std::unordered_map<uint32_t, LayerPtr> &layersMap = output->GetLayers();
         if (layersMap.empty()) {
+            HLOGI("layer map is empty, drop this frame");
             continue;
         }
 
@@ -122,11 +123,6 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
             // return
         }
 
-        for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {
-            const LayerPtr &layer = iter->second;
-            layer->RecordPresentTime(fbFence);
-        }
-
         ReleaseLayerBuffer(screenId, layersMap);
 
         // wrong check
@@ -136,6 +132,10 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
         bool ret = false;
         if (timestamp > 0) {
             ret = sampler_->AddPresentFenceTime(timestamp);
+            for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {
+                const LayerPtr &layer = iter->second;
+                layer->RecordPresentTime(timestamp);
+            }
         }
         if (ret) {
             sampler_->BeginSample();
@@ -201,13 +201,6 @@ void HdiBackend::ReorderLayerInfo(std::vector<LayerInfoPtr> &newLayerInfos)
 int32_t HdiBackend::FlushScreen(uint32_t screenId, OutputPtr &output,
         std::vector<LayerPtr> &compClientLayers)
 {
-    /*
-     * We may not be able to get the framebuffer at this time, so we
-     * have to wait here. If the framebuffer is available, it'll signal us.
-     */
-
-    output->FramebufferSemWait();
-
     sptr<SyncFence> fbAcquireFence = output->GetFramebufferFence();
     for (auto &layer : compClientLayers) {
         layer->MergeWithFramebufferFence(fbAcquireFence);
@@ -258,6 +251,9 @@ void HdiBackend::ReleaseLayerBuffer(uint32_t screenId, const std::unordered_map<
 
         const LayerPtr &layer = iter->second;
         layer->MergeWithLayerFence(fences[i]);
+    }
+    for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {
+        const LayerPtr &layer = iter->second;
         layer->ReleaseBuffer();
     }
 }

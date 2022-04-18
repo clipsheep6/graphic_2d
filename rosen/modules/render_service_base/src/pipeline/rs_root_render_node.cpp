@@ -16,7 +16,7 @@
 #include "pipeline/rs_root_render_node.h"
 
 #include "command/rs_surface_node_command.h"
-#include "platform/drawing/rs_surface.h"
+#include "drawing_engine/drawing_surface/rs_surface.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
 #ifdef ROSEN_OHOS
@@ -79,6 +79,22 @@ void RSRootRenderNode::Prepare(const std::shared_ptr<RSNodeVisitor>& visitor)
 void RSRootRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
 {
     visitor->ProcessRootRenderNode(*this);
+}
+
+bool RSRootRenderNode::forceRaster_ = false;
+
+void RSRootRenderNode::MarkForceRaster(bool flag)
+{
+    forceRaster_ = flag;
+}
+
+bool RSRootRenderNode::NeedForceRaster()
+{
+#ifdef ACE_ENABLE_GL
+    return forceRaster_;
+#else
+    return false;
+#endif
 }
 } // namespace Rosen
 } // namespace OHOS

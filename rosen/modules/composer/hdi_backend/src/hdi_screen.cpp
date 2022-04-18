@@ -29,24 +29,30 @@ std::unique_ptr<HdiScreen> HdiScreen::CreateHdiScreen(uint32_t screenId)
 
 HdiScreen::HdiScreen(uint32_t screenId) : screenId_(screenId)
 {
+    HLOGI("Create screen, screenId is %{public}d", screenId);
 }
 
 HdiScreen::~HdiScreen()
 {
-    Destory();
+    HLOGI("Destroy screen, screenId is %{public}d", screenId_);
+
+    Destroy();
 }
 
 void HdiScreen::OnVsync(uint32_t sequence, uint64_t ns, void *data)
 {
-    // trigger vsync
-    const auto &now = std::chrono::steady_clock::now().time_since_epoch();
-    int64_t occurTimestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
-    CreateVSyncSampler()->AddSample(occurTimestamp);
+    if (ns == 0) {
+        HLOGW("Vsync ns is 0, drop this callback");
+        return;
+    }
 
-    // this old version will be removed
-    OHOS::VsyncError ret = OHOS::VsyncModule::GetInstance()->Trigger();
-    if (ret != OHOS::VSYNC_ERROR_OK) {
-        HLOGE("vsync trigger failed, ret is %{public}d", ret);
+    // trigger vsync
+    // if the sampler->GetHardwareVSyncStatus() is false, this OnVsync callback will be disable
+    // we need to add this process
+    auto sampler = CreateVSyncSampler();
+    if (sampler->GetHardwareVSyncStatus()) {
+        bool enable = sampler->AddSample(ns);
+        sampler->SetHardwareVSyncStatus(enable);
     }
 }
 
@@ -62,24 +68,16 @@ bool HdiScreen::Init()
         return false;
     }
 
-    // start vsync
-    // this old version will be removed
-    OHOS::VsyncError vsyncRet = VsyncModule::GetInstance()->Start();
-    if (vsyncRet != OHOS::VSYNC_ERROR_OK) {
-        HLOGE("vsync start failed, ret is %{public}d", vsyncRet);
-        return false;
-    }
-
     int32_t ret = device_->RegScreenVBlankCallback(screenId_, HdiScreen::OnVsync, this);
     if (ret != DISPLAY_SUCCESS) {
-        Destory();
+        Destroy();
         HLOGE("RegScreenVBlankCallback failed, ret is %{public}d", ret);
         return false;
     }
 
     ret = device_->SetScreenVsyncEnabled(screenId_, true);
     if (ret != DISPLAY_SUCCESS) {
-        Destory();
+        Destroy();
         HLOGE("SetScreenVsyncEnabled failed, ret is %{public}d", ret);
         return false;
     }
@@ -256,7 +254,7 @@ int32_t HdiScreen::GetSupportedMetaDataKey(std::vector<HDRMetadataKey> &keys) co
     return device_->GetSupportedMetaDataKey(screenId_, keys);
 }
 
-void HdiScreen::Destory()
+void HdiScreen::Destroy()
 {
     // stop vsync
     OHOS::VsyncError ret = VsyncModule::GetInstance()->Stop();

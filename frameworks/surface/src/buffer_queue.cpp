@@ -27,6 +27,7 @@
 
 #include "buffer_log.h"
 #include "buffer_manager.h"
+#include "surface_buffer_impl.h"
 
 namespace OHOS {
 namespace {
@@ -50,7 +51,7 @@ static uint64_t GetUniqueIdImpl()
 BufferQueue::BufferQueue(const std::string &name, bool isShared)
     : name_(name), uniqueId_(GetUniqueIdImpl()), isShared_(isShared)
 {
-    BLOGNI("ctor");
+    BLOGNI("ctor, Queue id: %{public}" PRIu64 "", uniqueId_);
     bufferManager_ = BufferManager::GetInstance();
     if (isShared_ == true) {
         queueSize_ = 1;
@@ -59,7 +60,7 @@ BufferQueue::BufferQueue(const std::string &name, bool isShared)
 
 BufferQueue::~BufferQueue()
 {
-    BLOGNI("dtor");
+    BLOGNI("dtor, Queue id: %{public}" PRIu64 "", uniqueId_);
     std::lock_guard<std::mutex> lockGuard(mutex_);
     for (auto it = bufferQueueCache_.begin(); it != bufferQueueCache_.end(); it++) {
         FreeBuffer(it->second.buffer);
@@ -77,7 +78,7 @@ uint32_t BufferQueue::GetUsedSize()
     return used_size;
 }
 
-GSError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl> &buffer,
+GSError BufferQueue::PopFromFreeList(sptr<SurfaceBuffer> &buffer,
     const BufferRequestConfig &config)
 {
     if (isShared_ == true && GetUsedSize() > 0) {
@@ -103,7 +104,7 @@ GSError BufferQueue::PopFromFreeList(sptr<SurfaceBufferImpl> &buffer,
     return GSERROR_OK;
 }
 
-GSError BufferQueue::PopFromDirtyList(sptr<SurfaceBufferImpl> &buffer)
+GSError BufferQueue::PopFromDirtyList(sptr<SurfaceBuffer> &buffer)
 {
     if (isShared_ == true && GetUsedSize() > 0) {
         buffer = bufferQueueCache_.begin()->second.buffer;
@@ -122,13 +123,8 @@ GSError BufferQueue::PopFromDirtyList(sptr<SurfaceBufferImpl> &buffer)
 
 GSError BufferQueue::CheckRequestConfig(const BufferRequestConfig &config)
 {
-    if (config.width <= 0 || config.width > SURFACE_MAX_WIDTH) {
-        BLOGN_INVALID("config.width (0, %{public}d], now is %{public}d", SURFACE_MAX_WIDTH, config.width);
-        return GSERROR_INVALID_ARGUMENTS;
-    }
-
-    if (config.height <= 0 || config.height > SURFACE_MAX_HEIGHT) {
-        BLOGN_INVALID("config.height (0, %{public}d], now is %{public}d", SURFACE_MAX_HEIGHT, config.height);
+    if (config.width <= 0 || config.height <= 0) {
+        BLOGN_INVALID("w or h is greater than 0, now is w %{public}d h %{public}d", config.width, config.height);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
@@ -152,11 +148,17 @@ GSError BufferQueue::CheckRequestConfig(const BufferRequestConfig &config)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    if (config.colorGamut <= SurfaceColorGamut::COLOR_GAMUT_INVALID ||
-        config.colorGamut > SurfaceColorGamut::COLOR_GAMUT_DISPLAY_BT2020 + 1) {
+    if (config.colorGamut <= ColorGamut::COLOR_GAMUT_INVALID ||
+        config.colorGamut > ColorGamut::COLOR_GAMUT_DISPLAY_BT2020 + 1) {
         BLOGN_INVALID("config.colorGamut [0, %{public}d], now is %{public}d",
-            static_cast<uint32_t>(SurfaceColorGamut::COLOR_GAMUT_DISPLAY_BT2020),
+            static_cast<uint32_t>(ColorGamut::COLOR_GAMUT_DISPLAY_BT2020),
             static_cast<uint32_t>(config.colorGamut));
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
+    if (config.transform < TransformType::ROTATE_NONE || config.transform >= TransformType::ROTATE_BUTT) {
+        BLOGN_INVALID("config.transform [0, %{public}d), now is %{public}d",
+            TransformType::ROTATE_BUTT, config.transform);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
@@ -176,7 +178,7 @@ GSError BufferQueue::CheckFlushConfig(const BufferFlushConfig &config)
     return GSERROR_OK;
 }
 
-GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
     struct IBufferProducer::RequestBufferReturnValue &retval)
 {
     ScopedBytrace func(__func__);
@@ -193,49 +195,44 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, BufferExtr
 
     std::unique_lock<std::mutex> lock(mutex_);
     // dequeue from free list
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-    ret = PopFromFreeList(bufferImpl, config);
+    sptr<SurfaceBuffer>& buffer = retval.buffer;
+    ret = PopFromFreeList(buffer, config);
     if (ret == GSERROR_OK) {
-        retval.buffer = bufferImpl;
         return ReuseBuffer(config, bedata, retval);
     }
 
     // check queue size
     if (GetUsedSize() >= GetQueueSize()) {
-        waitReqCon_.wait_for(lock, std::chrono::milliseconds(config.timeout));
+        waitReqCon_.wait_for(lock, std::chrono::milliseconds(config.timeout),
+            [this]() { return !freeList_.empty() || (GetUsedSize() < GetQueueSize()); });
         // try dequeue from free list again
-        ret = PopFromFreeList(bufferImpl, config);
+        ret = PopFromFreeList(buffer, config);
         if (ret == GSERROR_OK) {
-            retval.buffer = bufferImpl;
             return ReuseBuffer(config, bedata, retval);
-        } else {
-            BLOGN_FAILURE("all buffer are using");
+        } else if (GetUsedSize() >= GetQueueSize()) {
+            BLOGN_FAILURE("all buffer are using, Queue id: %{public}" PRIu64 "", uniqueId_);
             return GSERROR_NO_BUFFER;
         }
     }
 
-    ret = AllocBuffer(bufferImpl, config);
+    ret = AllocBuffer(buffer, config);
     if (ret == GSERROR_OK) {
-        retval.sequence = bufferImpl->GetSeqNum();
-        BLOGN_SUCCESS_ID(retval.sequence, "alloc");
-
-        bufferImpl->GetExtraData(bedata);
-        retval.buffer = bufferImpl;
+        retval.sequence = buffer->GetSeqNum();
+        buffer->GetExtraData(bedata);
         retval.fence = -1;
         BLOGD("Success alloc Buffer id: %{public}d Queue id: %{public}" PRIu64 "", retval.sequence, uniqueId_);
     } else {
-        BLOGE("Fail to alloc or map buffer ret: %{public}d", ret);
+        BLOGE("Fail to alloc or map buffer ret: %{public}d, Queue id: %{public}" PRIu64 "", ret, uniqueId_);
     }
 
     return ret;
 }
 
-GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferExtraData &bedata,
+GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
     struct IBufferProducer::RequestBufferReturnValue &retval)
 {
     ScopedBytrace func(__func__);
-    sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-    retval.sequence = bufferImpl->GetSeqNum();
+    retval.sequence = retval.buffer->GetSeqNum();
     bool needRealloc = (config != bufferQueueCache_[retval.sequence].config);
     // config, realloc
     if (needRealloc) {
@@ -244,21 +241,24 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferExtraD
         }
         DeleteBufferInCache(retval.sequence);
 
-        auto sret = AllocBuffer(bufferImpl, config);
+        sptr<SurfaceBuffer> buffer = nullptr;
+        auto sret = AllocBuffer(buffer, config);
         if (sret != GSERROR_OK) {
             BLOGN_FAILURE("realloc failed");
             return sret;
         }
 
-        retval.buffer = bufferImpl;
-        retval.sequence = bufferImpl->GetSeqNum();
-        retval.fence = -1;
+        retval.buffer = buffer;
+        retval.sequence = buffer->GetSeqNum();
         bufferQueueCache_[retval.sequence].config = config;
     }
 
     bufferQueueCache_[retval.sequence].state = BUFFER_STATE_REQUESTED;
     retval.fence = bufferQueueCache_[retval.sequence].fence;
-    bufferImpl->GetExtraData(bedata);
+
+    // Prevent releasefence from being repeatedly closed after cancel.
+    bufferQueueCache_[retval.sequence].fence = -1;
+    retval.buffer->GetExtraData(bedata);
 
     auto &dbs = retval.deletingBuffers;
     dbs.insert(dbs.end(), deletingList_.begin(), deletingList_.end());
@@ -276,7 +276,7 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, BufferExtraD
     return GSERROR_OK;
 }
 
-GSError BufferQueue::CancelBuffer(int32_t sequence, const BufferExtraData &bedata)
+GSError BufferQueue::CancelBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata)
 {
     ScopedBytrace func(__func__);
     if (isShared_) {
@@ -303,7 +303,7 @@ GSError BufferQueue::CancelBuffer(int32_t sequence, const BufferExtraData &bedat
     return GSERROR_OK;
 }
 
-GSError BufferQueue::FlushBuffer(int32_t sequence, const BufferExtraData &bedata,
+GSError BufferQueue::FlushBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata,
     int32_t fence, const BufferFlushConfig &config)
 {
     ScopedBytrace func(__func__);
@@ -371,7 +371,7 @@ void BufferQueue::DumpToFile(int32_t sequence)
     std::stringstream ss;
     ss << "/data/bq_" << getpid() << "_" << name_ << "_" << nowVal << ".raw";
 
-    sptr<SurfaceBufferImpl> &buffer = bufferQueueCache_[sequence].buffer;
+    sptr<SurfaceBuffer>& buffer = bufferQueueCache_[sequence].buffer;
     std::ofstream rawDataFile(ss.str(), std::ofstream::binary);
     if (!rawDataFile.good()) {
         BLOGE("open failed: (%{public}d)%{public}s", errno, strerror(errno));
@@ -381,7 +381,7 @@ void BufferQueue::DumpToFile(int32_t sequence)
     rawDataFile.close();
 }
 
-GSError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData &bedata,
+GSError BufferQueue::DoFlushBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata,
     int32_t fence, const BufferFlushConfig &config)
 {
     ScopedBytrace func(__func__);
@@ -398,11 +398,14 @@ GSError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData &beda
     bufferQueueCache_[sequence].fence = fence;
     bufferQueueCache_[sequence].damage = config.damage;
 
-    // api flush
-    auto sret = bufferManager_->FlushCache(bufferQueueCache_[sequence].buffer);
-    if (sret != GSERROR_OK) {
-        BLOGN_FAILURE_ID_API(sequence, FlushCache, sret);
-        return sret;
+    uint32_t usage = static_cast<uint32_t>(bufferQueueCache_[sequence].config.usage);
+    if (usage & HBM_USE_CPU_WRITE) {
+        // api flush
+        auto sret = bufferManager_->FlushCache(bufferQueueCache_[sequence].buffer);
+        if (sret != GSERROR_OK) {
+            BLOGN_FAILURE_ID_API(sequence, FlushCache, sret);
+            return sret;
+        }
     }
 
     if (config.timestamp == 0) {
@@ -418,7 +421,7 @@ GSError BufferQueue::DoFlushBuffer(int32_t sequence, const BufferExtraData &beda
     return GSERROR_OK;
 }
 
-GSError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer,
+GSError BufferQueue::AcquireBuffer(sptr<SurfaceBuffer> &buffer,
     int32_t &fence, int64_t &timestamp, Rect &damage)
 {
     ScopedBytrace func(__func__);
@@ -433,6 +436,7 @@ GSError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer,
         bufferQueueCache_[sequence].state = BUFFER_STATE_ACQUIRED;
 
         fence = bufferQueueCache_[sequence].fence;
+        bufferQueueCache_[sequence].fence = -1;
         timestamp = bufferQueueCache_[sequence].timestamp;
         damage = bufferQueueCache_[sequence].damage;
 
@@ -444,7 +448,7 @@ GSError BufferQueue::AcquireBuffer(sptr<SurfaceBufferImpl> &buffer,
     return ret;
 }
 
-GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl> &buffer, int32_t fence)
+GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, int32_t fence)
 {
     ScopedBytrace func(__func__);
     int32_t sequence = buffer->GetSeqNum();
@@ -491,7 +495,7 @@ GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBufferImpl> &buffer, int32_t fenc
     return GSERROR_OK;
 }
 
-GSError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
+GSError BufferQueue::AllocBuffer(sptr<SurfaceBuffer> &buffer,
     const BufferRequestConfig &config)
 {
     ScopedBytrace func(__func__);
@@ -502,10 +506,6 @@ GSError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
     if (ret != GSERROR_OK) {
         BLOGN_FAILURE_ID_API(sequence, Alloc, ret);
         return ret;
-    }
-
-    if (buffer == nullptr) {
-        BLOGN_FAILURE_ID_RET(sequence, GSERROR_INVALID_ARGUMENTS);
     }
 
     BufferElement ele = {
@@ -533,7 +533,7 @@ GSError BufferQueue::AllocBuffer(sptr<SurfaceBufferImpl> &buffer,
     return ret;
 }
 
-GSError BufferQueue::FreeBuffer(sptr<SurfaceBufferImpl> &buffer)
+GSError BufferQueue::FreeBuffer(sptr<SurfaceBuffer> &buffer)
 {
     BLOGND("Free [%{public}d]", buffer->GetSeqNum());
     buffer->SetEglData(nullptr);
@@ -547,6 +547,9 @@ void BufferQueue::DeleteBufferInCache(int32_t sequence)
     auto it = bufferQueueCache_.find(sequence);
     if (it != bufferQueueCache_.end()) {
         FreeBuffer(it->second.buffer);
+        if (it->second.fence > 0) {
+            close(it->second.fence);
+        }
         bufferQueueCache_.erase(it);
         deletingList_.push_back(sequence);
     }
@@ -596,7 +599,7 @@ void BufferQueue::DeleteBuffers(int32_t count)
     }
 }
 
-GSError BufferQueue::AttachBuffer(sptr<SurfaceBufferImpl> &buffer)
+GSError BufferQueue::AttachBuffer(sptr<SurfaceBuffer> &buffer)
 {
     ScopedBytrace func(__func__);
     if (isShared_) {
@@ -645,7 +648,7 @@ GSError BufferQueue::AttachBuffer(sptr<SurfaceBufferImpl> &buffer)
     }
 }
 
-GSError BufferQueue::DetachBuffer(sptr<SurfaceBufferImpl> &buffer)
+GSError BufferQueue::DetachBuffer(sptr<SurfaceBuffer> &buffer)
 {
     ScopedBytrace func(__func__);
     if (isShared_) {
@@ -688,14 +691,15 @@ GSError BufferQueue::SetQueueSize(uint32_t queueSize)
     }
 
     if (queueSize > SURFACE_MAX_QUEUE_SIZE) {
-        BLOGN_INVALID("queue size (%{public}d) > %{public}d", queueSize, SURFACE_MAX_QUEUE_SIZE);
+        BLOGN_INVALID("invalid queueSize[%{public}d] > SURFACE_MAX_QUEUE_SIZE[%{public}d]",
+            queueSize, SURFACE_MAX_QUEUE_SIZE);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
     DeleteBuffers(queueSize_ - queueSize);
     queueSize_ = queueSize;
 
-    BLOGN_SUCCESS("queue size: %{public}d", queueSize);
+    BLOGN_SUCCESS("queue size: %{public}d, Queue id: %{public}" PRIu64 "", queueSize_, uniqueId_);
     return GSERROR_OK;
 }
 
@@ -732,13 +736,13 @@ GSError BufferQueue::RegisterReleaseListener(OnReleaseFunc func)
 
 GSError BufferQueue::SetDefaultWidthAndHeight(int32_t width, int32_t height)
 {
-    if (width <= 0 || width > SURFACE_MAX_WIDTH) {
-        BLOGN_INVALID("defaultWidth (0, %{public}d], now is %{public}d", SURFACE_MAX_WIDTH, width);
+    if (width <= 0) {
+        BLOGN_INVALID("defaultWidth is greater than 0, now is %{public}d", width);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    if (height <= 0 || height > SURFACE_MAX_HEIGHT) {
-        BLOGN_INVALID("defaultHeight (0, %{public}d], now is %{public}d", SURFACE_MAX_HEIGHT, height);
+    if (height <= 0) {
+        BLOGN_INVALID("defaultHeight is greater than 0, now is %{public}d", height);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
@@ -770,13 +774,35 @@ uint32_t BufferQueue::GetDefaultUsage()
 
 GSError BufferQueue::CleanCache()
 {
-    DeleteBuffers(queueSize_);
+    std::lock_guard<std::mutex> lockGuard(mutex_);
+    auto it = bufferQueueCache_.begin();
+    while (it != bufferQueueCache_.end()) {
+        if (it->second.fence > 0) {
+            close(it->second.fence);
+        }
+        bufferQueueCache_.erase(it++);
+    }
+    freeList_.clear();
+    dirtyList_.clear();
+    deletingList_.clear();
+    waitReqCon_.notify_all();
     return GSERROR_OK;
 }
 
 uint64_t BufferQueue::GetUniqueId() const
 {
     return uniqueId_;
+}
+
+GSError BufferQueue::SetTransform(TransformType transform)
+{
+    transform_ = transform;
+    return GSERROR_OK;
+}
+
+TransformType BufferQueue::GetTransform() const
+{
+    return transform_;
 }
 
 void BufferQueue::DumpCache(std::string &result)

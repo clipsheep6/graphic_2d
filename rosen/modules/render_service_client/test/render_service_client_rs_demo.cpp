@@ -31,19 +31,29 @@
 #include "transaction/rs_interfaces.h"
 #include "ui/rs_display_node.h"
 #include "ui/rs_surface_node.h"
-#include "render_context/render_context.h"
+#include "drawing_engine/drawing_proxy.h"
 // temporary debug
-#include "foundation/graphic/standard/rosen/modules/render_service_base/src/platform/ohos/rs_surface_frame_ohos.h"
-#include "foundation/graphic/standard/rosen/modules/render_service_base/src/platform/ohos/rs_surface_ohos.h"
+#include "drawing_engine/drawing_surface/rs_surface_frame_ohos.h"
+#include "drawing_engine/drawing_surface/rs_surface_ohos.h"
 
+#include "include/core/SkFont.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkTypeface.h"
+#include "include/private/SkTo.h"
+#include "include/utils/SkRandom.h"
+#include "src/core/SkAutoMalloc.h"
+#include "src/core/SkBlurMask.h"
+#include "src/core/SkPaintPriv.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/utils/SkUTF.h"
 using namespace OHOS;
 using namespace OHOS::Rosen;
 using namespace std;
 
 namespace OHOS::Rosen {
-#ifdef ACE_ENABLE_GPU
-    RenderContext* rc_ = nullptr;
-#endif
+    DrawingProxy* dp_ = nullptr;
 
 namespace pipelineTestUtils {
     constexpr bool wrongExit = false;
@@ -123,14 +133,13 @@ namespace pipelineTestUtils {
             if (rsSurface == nullptr) {
                 return wrongExit;
             }
-#ifdef ACE_ENABLE_GPU
-            // SetRenderContext must before rsSurface->RequestFrame, or it will failed.
-            if (rc_) {
-                rsSurface->SetRenderContext(rc_);
+            // SetDrawingProxy must before rsSurface->RequestFrame, or it will failed.
+            if (dp_) {
+                rsSurface->SetDrawingProxy(dp_);
             } else {
-                printf("DrawSurface: RenderContext is nullptr\n");
+                printf("DrawSurface: DrawingProxy is nullptr\n");
             }
-#endif
+
             auto framePtr = rsSurface->RequestFrame(bufferSize_.width(), bufferSize_.height());
             if (!framePtr) {
                 // SetRenderContext must before rsSurface->RequestFrame,
@@ -138,7 +147,7 @@ namespace pipelineTestUtils {
                 printf("DrawSurface: frameptr is nullptr\n");
                 return wrongExit;
             }
-            auto canvas = framePtr->GetCanvas();
+            auto canvas = rsSurface->GetCanvas(framePtr);
             if (!canvas) {
                 printf("DrawSurface: canvas is nullptr\n");
                 return wrongExit;
@@ -150,11 +159,22 @@ namespace pipelineTestUtils {
             paint.setStrokeWidth(20);
             paint.setStrokeJoin(SkPaint::kRound_Join);
             paint.setColor(color_);
+
+            SkBinaryWriteBuffer writer;
+            SkPaintPriv::Flatten(paint, writer);
+
+            SkAutoMalloc buf(writer.bytesWritten());
+            writer.writeToMemory(buf.get());
+            SkReadBuffer reader(buf.get(), writer.bytesWritten());
+
+//            SkPaint other = reader.readPaint();
+            SkPaint other;
+            SkPaintPriv::Unflatten(&other, reader, nullptr);
             if (!drawShape_) {
                 printf("DrawSurface: drawShape_ is nullptr\n");
                 return wrongExit;
             }
-            drawShape_(*(canvas), paint);
+            drawShape_(*(canvas), other);
             framePtr->SetDamageRegion(0, 0, surfaceGeometry_.width(), surfaceGeometry_.height());
             rsSurface->FlushFrame(framePtr);
             return successExit;
@@ -211,7 +231,7 @@ private:
     void Init()
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
-        rsInterface_.SetScreenChangeCallback([this](ScreenId id, ScreenEvent event) {
+        (void)rsInterface_.SetScreenChangeCallback([this](ScreenId id, ScreenEvent event) {
             switch (event) {
                 case ScreenEvent::CONNECTED: {
                     this->OnDisplayConnected(id);
@@ -321,10 +341,10 @@ public:
         if (activeModeInfo) {
             screenWidth_ = activeModeInfo->GetScreenWidth();
             screenheight_ = activeModeInfo->GetScreenHeight();
-            screenFreshRate_ = static_cast<int>(activeModeInfo->GetScreenFreshRate());
+            screenRefreshRate_ = static_cast<int>(activeModeInfo->GetScreenRefreshRate());
             std::cout << "Display " << id << " active mode info:\n";
             std::cout << "Width: " << screenWidth_ << ", Height: " << screenheight_;
-            std::cout << ", FreshRate: " << screenFreshRate_ << "Hz.\n";
+            std::cout << ", RefreshRate: " << screenRefreshRate_ << "Hz.\n";
         } else {
             std::cout << "Display " << id << " has no active mode!\n";
         }
@@ -417,25 +437,23 @@ private:
     RSDemoTestCase() = default;
     void RenderContextInit()
     {
-#ifdef ACE_ENABLE_GPU
         std::cout << "ACE_ENABLE_GPU is true. \n";
-        std::cout << "Init RenderContext start. \n";
-            rc_ = RenderContextFactory::GetInstance().CreateEngine();
-            if (rc_) {
-                std::cout << "Init RenderContext success.\n";
-                rc_->InitializeEglContext();
+        std::cout << "Init DrawContext start. \n";
+            dp_ = new DrawingProxy();
+            if (dp_) {
+                std::cout << "Init DrawContext success.\n";
+                dp_->InitDrawContext();
             } else {
-                std::cout << "Init RenderContext failed, RenderContext is nullptr.\n";
+                std::cout << "Init DrawContext failed, DrawContext is nullptr.\n";
             }
-        std::cout << "Init RenderContext start.\n";
-#endif
+        std::cout << "Init DrawContext start.\n";
     }
 
     bool isInit_ = false;
     bool isGPU_ = false;
     int screenWidth_ = 0;
     int screenheight_ = 0;
-    int screenFreshRate_ = 0;
+    int screenRefreshRate_ = 0;
 }; // class RSDemoTestCase
 } // namespace OHOS::Rosen
 

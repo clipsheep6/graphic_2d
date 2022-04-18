@@ -30,13 +30,14 @@
 #include <iservice_registry.h>
 #include <platform/ohos/rs_irender_service.h>
 #include <parameters.h>
-#include <render_context/render_context.h>
+#include <drawing_engine/drawing_proxy.h>
 #include <system_ability_definition.h>
 #include <ui/rs_surface_extractor.h>
 #include <vsync_helper.h>
 #include <window.h>
 #include <window_option.h>
 #include <window_scene.h>
+#include "player.h"
 #include "vsync_receiver.h"
 
 namespace OHOS {
@@ -45,6 +46,7 @@ public:
     void Init(int32_t width, int32_t height, const std::shared_ptr<AppExecFwk::EventHandler>& handler);
     void Draw();
     void CheckExitAnimation();
+    void PlaySound();
 private:
     void OnDraw(SkCanvas* canvas);
     void InitBootWindow();
@@ -57,7 +59,7 @@ private:
     sptr<OHOS::Rosen::WindowScene> scene_;
     std::unique_ptr<OHOS::Rosen::RSSurfaceFrame> framePtr_;
     std::shared_ptr<OHOS::Rosen::RSSurface> rsSurface_;
-    OHOS::Rosen::RenderContext* rc_;
+    OHOS::Rosen::DrawingProxy* dp_;
     int32_t freq_ = 30;
     int32_t bootPicCurNo_ = 0;
     int32_t realHeight_ = 0;
@@ -67,6 +69,7 @@ private:
     int32_t maxPicNum_ = 0;
     bool needCheckExit = false;
     std::shared_ptr<OHOS::Rosen::VSyncReceiver> receiver_ = nullptr;
+    std::shared_ptr<Media::Player> soundPlayer_ = nullptr;
 };
 } // namespace OHOS
 

@@ -78,6 +78,21 @@ public:
         }
         (*animation.*OP)();
     }
+    template<void (RSRenderAnimation::*OP)()>
+    static void AnimOpReg(RSContext& context, NodeId nodeId, AnimationId animId)
+    {
+        auto node = context.GetNodeMap().GetRenderNode<RSRenderNode>(nodeId);
+        if (node == nullptr) {
+            return;
+        }
+        auto animation = node->GetAnimationManager().GetAnimation(animId);
+        if (animation == nullptr) {
+            return;
+        }
+        (*animation.*OP)();
+        // register node on animation start or resume
+        context.RegisterAnimatingRenderNode(node);
+    }
     template<typename T, void (RSRenderAnimation::*OP)(T)>
     static void AnimOp(RSContext& context, NodeId nodeId, AnimationId animId, T param)
     {
@@ -101,6 +116,8 @@ public:
         node->GetAnimationManager().AddAnimation(animation);
         animation->Attach(node.get());
         animation->Start();
+        // register node on animation add
+        context.RegisterAnimatingRenderNode(node);
     }
 
     using FinishCallbackProcessor = void (*)(NodeId, AnimationId);
@@ -110,11 +127,11 @@ public:
 
 // animation operation
 ADD_COMMAND(RSAnimationStart,
-    ARG(ANIMATION, ANIMATION_START, AnimationCommandHelper::AnimOp<&RSRenderAnimation::Start>, NodeId, AnimationId))
+    ARG(ANIMATION, ANIMATION_START, AnimationCommandHelper::AnimOpReg<&RSRenderAnimation::Start>, NodeId, AnimationId))
 ADD_COMMAND(RSAnimationPause,
     ARG(ANIMATION, ANIMATION_PAUSE, AnimationCommandHelper::AnimOp<&RSRenderAnimation::Pause>, NodeId, AnimationId))
-ADD_COMMAND(RSAnimationResume,
-    ARG(ANIMATION, ANIMATION_RESUME, AnimationCommandHelper::AnimOp<&RSRenderAnimation::Resume>, NodeId, AnimationId))
+ADD_COMMAND(RSAnimationResume, ARG(ANIMATION, ANIMATION_RESUME,
+                                   AnimationCommandHelper::AnimOpReg<&RSRenderAnimation::Resume>, NodeId, AnimationId))
 ADD_COMMAND(RSAnimationFinish,
     ARG(ANIMATION, ANIMATION_FINISH, AnimationCommandHelper::AnimOp<&RSRenderAnimation::Finish>, NodeId, AnimationId))
 ADD_COMMAND(RSAnimationReverse,
@@ -149,9 +166,9 @@ ADD_COMMAND(
 ADD_COMMAND(RSAnimationCreateCurveQuaternion,
     ARG(ANIMATION, ANIMATION_CREATE_CURVE_QUATERNION, AnimationCommandHelper::CreateAnimation, NodeId,
         std::shared_ptr<RSRenderCurveAnimation<Quaternion>>))
-// ADD_COMMAND(
-//     RSAnimationCreateCurveFilter, ARG(ANIMATION, ANIMATION_CREATE_CURVE_FILTER, AnimationCommandHelper::CreateAnimation,
-//                                      NodeId, std::shared_ptr<RSRenderCurveAnimation<std::shared_ptr<RSFilter>>>))
+ADD_COMMAND(
+    RSAnimationCreateCurveFilter, ARG(ANIMATION, ANIMATION_CREATE_CURVE_FILTER, AnimationCommandHelper::CreateAnimation,
+                                     NodeId, std::shared_ptr<RSRenderCurveAnimation<std::shared_ptr<RSFilter>>>))
 
 // create keyframe animation
 ADD_COMMAND(
@@ -175,9 +192,9 @@ ADD_COMMAND(RSAnimationCreateKeyframeVec4f,
 ADD_COMMAND(RSAnimationCreateKeyframeQuaternion,
     ARG(ANIMATION, ANIMATION_CREATE_KEYFRAME_QUATERNION, AnimationCommandHelper::CreateAnimation, NodeId,
         std::shared_ptr<RSRenderKeyframeAnimation<Quaternion>>))
-// ADD_COMMAND(RSAnimationCreateKeyframeFilter,
-//     ARG(ANIMATION, ANIMATION_CREATE_KEYFRAME_FILTER, AnimationCommandHelper::CreateAnimation, NodeId,
-//         std::shared_ptr<RSRenderKeyframeAnimation<std::shared_ptr<RSFilter>>>))
+ADD_COMMAND(RSAnimationCreateKeyframeFilter,
+    ARG(ANIMATION, ANIMATION_CREATE_KEYFRAME_FILTER, AnimationCommandHelper::CreateAnimation, NodeId,
+        std::shared_ptr<RSRenderKeyframeAnimation<std::shared_ptr<RSFilter>>>))
 
 // create path animation
 ADD_COMMAND(RSAnimationCreatePath, ARG(ANIMATION, ANIMATION_CREATE_PATH, AnimationCommandHelper::CreateAnimation,

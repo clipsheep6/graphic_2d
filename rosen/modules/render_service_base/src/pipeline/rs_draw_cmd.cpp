@@ -17,6 +17,7 @@
 
 #include "platform/common/rs_log.h"
 #include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_root_render_node.h"
 #include "securec.h"
 namespace OHOS {
 namespace Rosen {
@@ -182,9 +183,13 @@ BitmapRectOpItem::BitmapRectOpItem(
     const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst, const SkPaint* paint)
     : OpItemWithPaint(sizeof(BitmapRectOpItem)), rectDst_(rectDst)
 {
-    rectSrc_ = (rectSrc == nullptr) ? SkRect::MakeWH(bitmapInfo->width(), bitmapInfo->height()) : *rectSrc;
     if (bitmapInfo != nullptr) {
+        rectSrc_ = (rectSrc == nullptr) ? SkRect::MakeWH(bitmapInfo->width(), bitmapInfo->height()) : *rectSrc;
         bitmapInfo_ = bitmapInfo;
+    } else {
+        if (rectSrc != nullptr) {
+            rectSrc_ = *rectSrc;
+        }
     }
     if (paint) {
         paint_ = *paint;
@@ -337,6 +342,9 @@ void SaveLayerOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
     canvas.saveLayer(
         { rectPtr_, &paint_, backdrop_.get(), mask_.get(), matrix_.isIdentity() ? nullptr : &matrix_, flags_ });
+    if (paint_.getImageFilter() || paint_.getColorFilter()) {
+        RSRootRenderNode::MarkForceRaster();
+    }
 }
 
 DrawableOpItem::DrawableOpItem(SkDrawable* drawable, const SkMatrix* matrix) : OpItem(sizeof(DrawableOpItem))
@@ -436,6 +444,7 @@ bool RectOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* RectOpItem::Unmarshalling(Parcel& parcel)
 {
     SkRect rect;
@@ -458,6 +467,7 @@ bool RoundRectOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* RoundRectOpItem::Unmarshalling(Parcel& parcel)
 {
     SkRRect rrect;
@@ -480,6 +490,7 @@ bool ImageWithParmOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* ImageWithParmOpItem::Unmarshalling(Parcel& parcel)
 {
     sk_sp<SkImage> img;
@@ -515,6 +526,7 @@ bool DRRectOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* DRRectOpItem::Unmarshalling(Parcel& parcel)
 {
     SkRRect outer;
@@ -541,6 +553,7 @@ bool OvalOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* OvalOpItem::Unmarshalling(Parcel& parcel)
 {
     SkRect rect;
@@ -563,6 +576,7 @@ bool RegionOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* RegionOpItem::Unmarshalling(Parcel& parcel)
 {
     SkRegion region;
@@ -588,6 +602,7 @@ bool ArcOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* ArcOpItem::Unmarshalling(Parcel& parcel)
 {
     SkRect rect;
@@ -638,6 +653,7 @@ bool MatrixOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, matrix_);
     return success;
 }
+
 OpItem* MatrixOpItem::Unmarshalling(Parcel& parcel)
 {
     SkMatrix matrix;
@@ -656,6 +672,7 @@ bool ClipRectOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, doAA_);
     return success;
 }
+
 OpItem* ClipRectOpItem::Unmarshalling(Parcel& parcel)
 {
     SkRect rect;
@@ -682,6 +699,7 @@ bool ClipRRectOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, doAA_);
     return success;
 }
+
 OpItem* ClipRRectOpItem::Unmarshalling(Parcel& parcel)
 {
     SkRRect rrect;
@@ -707,6 +725,7 @@ bool ClipRegionOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, clipOp_);
     return success;
 }
+
 OpItem* ClipRegionOpItem::Unmarshalling(Parcel& parcel)
 {
     SkRegion region;
@@ -728,6 +747,7 @@ bool TranslateOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, distanceY_);
     return success;
 }
+
 OpItem* TranslateOpItem::Unmarshalling(Parcel& parcel)
 {
     float distanceX;
@@ -751,6 +771,7 @@ bool TextBlobOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* TextBlobOpItem::Unmarshalling(Parcel& parcel)
 {
     sk_sp<SkTextBlob> textBlob;
@@ -783,6 +804,7 @@ bool BitmapOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* BitmapOpItem::Unmarshalling(Parcel& parcel)
 {
     sk_sp<SkImage> bitmapInfo;
@@ -815,6 +837,7 @@ bool BitmapRectOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* BitmapRectOpItem::Unmarshalling(Parcel& parcel)
 {
     sk_sp<SkImage> bitmapInfo;
@@ -847,6 +870,7 @@ bool BitmapNineOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* BitmapNineOpItem::Unmarshalling(Parcel& parcel)
 {
     sk_sp<SkImage> bitmapInfo;
@@ -877,6 +901,7 @@ bool AdaptiveRRectOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* AdaptiveRRectOpItem::Unmarshalling(Parcel& parcel)
 {
     float radius;
@@ -898,6 +923,7 @@ bool ClipAdaptiveRRectOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, radius_);
     return success;
 }
+
 OpItem* ClipAdaptiveRRectOpItem::Unmarshalling(Parcel& parcel)
 {
     float radius;
@@ -915,6 +941,7 @@ bool PathOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* PathOpItem::Unmarshalling(Parcel& parcel)
 {
     SkPath path;
@@ -938,6 +965,7 @@ bool ClipPathOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, doAA_);
     return success;
 }
+
 OpItem* ClipPathOpItem::Unmarshalling(Parcel& parcel)
 {
     SkPath path;
@@ -963,6 +991,7 @@ bool PaintOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* PaintOpItem::Unmarshalling(Parcel& parcel)
 {
     SkPaint paint;
@@ -980,6 +1009,7 @@ bool ConcatOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, matrix_);
     return success;
 }
+
 OpItem* ConcatOpItem::Unmarshalling(Parcel& parcel)
 {
     SkMatrix matrix;
@@ -1002,6 +1032,7 @@ bool SaveLayerOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* SaveLayerOpItem::Unmarshalling(Parcel& parcel)
 {
     SkRect rect;
@@ -1041,6 +1072,7 @@ bool DrawableOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, matrix_);
     return success;
 }
+
 OpItem* DrawableOpItem::Unmarshalling(Parcel& parcel)
 {
     sk_sp<SkDrawable> drawable;
@@ -1064,6 +1096,7 @@ bool PictureOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* PictureOpItem::Unmarshalling(Parcel& parcel)
 {
     sk_sp<SkPicture> picture;
@@ -1092,6 +1125,7 @@ bool PointsOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* PointsOpItem::Unmarshalling(Parcel& parcel)
 {
     SkCanvas::PointMode mode;
@@ -1125,6 +1159,7 @@ bool VerticesOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
+
 OpItem* VerticesOpItem::Unmarshalling(Parcel& parcel)
 {
     sk_sp<SkVertices> vertices;
@@ -1158,6 +1193,7 @@ bool MultiplyAlphaOpItem::Marshalling(Parcel& parcel) const
     success &= RSMarshallingHelper::Marshalling(parcel, alpha_);
     return success;
 }
+
 OpItem* MultiplyAlphaOpItem::Unmarshalling(Parcel& parcel)
 {
     float alpha;

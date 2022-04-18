@@ -15,7 +15,6 @@
 
 #include "animation_server.h"
 
-#include <multimodal_event_handler.h>
 #include <securec.h>
 
 #include <cpudraw.h>
@@ -39,7 +38,6 @@ GSError AnimationServer::Init()
 
     WindowManagerServiceClient::GetInstance()->Init();
     animationModule.Init();
-    cursorModule.Init();
 
     auto splitOption = WindowOption::Get();
     splitOption->SetWindowType(WINDOW_TYPE_SPLIT_LINE);
@@ -74,11 +72,6 @@ GSError AnimationServer::SplitModeCreateBackground()
     GSLOG2HI(DEBUG);
     splitWindow->Show();
     splitWindow->SwitchTop();
-    if (thandler == nullptr) {
-        thandler = new TouchEventHandler(this);
-        MMIEventHdl.RegisterStandardizedEventHandle(token, splitWindow->GetID(), thandler);
-    }
-    handler->PostTask(std::bind(&AnimationServer::SplitWindowUpdate, this));
     return GSERROR_OK;
 }
 
@@ -182,7 +175,7 @@ void AnimationServer::SplitWindowDraw(uint32_t *vaddr, uint32_t width, uint32_t 
         auto midlineYlocal = midlineY - splitWindow->GetY();
         draw.SetColor(midlineDown ? 0xffffffff : 0xffcccccc);
         constexpr double lineHeight = 0.1;
-        draw.DrawRect(0, midlineYlocal - height * lineHeight / 0x2, width, height * lineHeight);
+        draw.DrawRect(0, midlineYlocal - (int32_t)(height * lineHeight / 0x2), width, height * lineHeight);
     }
 }
 
@@ -193,36 +186,6 @@ void AnimationServer::OnSplitStatusChange(SplitStatus status)
         splitWindow->Hide();
         haveMiddleLine = false;
     }
-}
-
-bool AnimationServer::OnTouch(const TouchEvent &event)
-{
-    ScopedBytrace trace(__func__);
-    auto wms = WindowManagerServiceClient::GetInstance()->GetService();
-    int32_t index = event.GetIndex();
-    int32_t x = event.GetPointerPosition(index).GetX();
-    int32_t y = event.GetPointerPosition(index).GetY();
-    GSLOG2HI(DEBUG) << "touch event: " << event.GetAction() << " " << x << " " << y;
-    if (event.GetAction() == TouchEnum::PRIMARY_POINT_DOWN) {
-        wms->SetSplitMode(SPLIT_MODE_DIVIDER_TOUCH_DOWN);
-        midlineDown = true;
-        downX = x;
-        downY = y;
-        midlineYBackup = midlineY;
-        handler->PostTask(std::bind(&AnimationServer::SplitWindowUpdate, this));
-    } else if (event.GetAction() == TouchEnum::POINT_MOVE) {
-        midlineY = midlineYBackup + y - downY;
-        wms->SetSplitMode(SPLIT_MODE_DIVIDER_TOUCH_MOVE, x, midlineY);
-        handler->PostTask(std::bind(&AnimationServer::SplitWindowUpdate, this));
-    } else if (event.GetAction() == TouchEnum::PRIMARY_POINT_UP) {
-        wms->SetSplitMode(SPLIT_MODE_DIVIDER_TOUCH_UP);
-        midlineDown = false;
-        handler->PostTask(std::bind(&AnimationServer::SplitWindowUpdate, this));
-    } else {
-        return true;
-    }
-
-    return false;
 }
 
 void AnimationServer::LaunchPageWindowUpdate()

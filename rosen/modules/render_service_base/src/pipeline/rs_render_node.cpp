@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,6 +40,10 @@ RSRenderNode::~RSRenderNode()
 
 void RSRenderNode::FallbackAnimationsToRoot()
 {
+    if (animationManager_.animations_.empty()) {
+        return;
+    }
+
     auto context = GetContext().lock();
     if (!context) {
         ROSEN_LOGE("Invalid context");
@@ -51,6 +55,9 @@ void RSRenderNode::FallbackAnimationsToRoot()
         return;
     }
 
+    if (context != nullptr) {
+        context->RegisterAnimatingRenderNode(target);
+    }
     for (const auto& [animationId, animation] : animationManager_.animations_) {
         animation->Detach();
         target->animationManager_.AddAnimation(animation);
@@ -59,7 +66,7 @@ void RSRenderNode::FallbackAnimationsToRoot()
 
 bool RSRenderNode::Animate(int64_t timestamp)
 {
-    return animationManager_.Animate(timestamp) || RSBaseRenderNode::Animate(timestamp);
+    return animationManager_.Animate(timestamp);
 }
 
 bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty)
@@ -104,6 +111,7 @@ bool RSRenderNode::IsDirty() const
 void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 {
 #ifdef ROSEN_OHOS
+    saveCount_ = canvas.getSaveCount();
     canvas.save();
     canvas.SaveAlpha();
     canvas.MultiplyAlpha(GetRenderProperties().GetAlpha());
@@ -113,6 +121,7 @@ void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
     }
     auto transitionProperties = GetAnimationManager().GetTransitionProperties();
     RSPropertiesPainter::DrawTransitionProperties(transitionProperties, GetRenderProperties(), canvas);
+    RSPropertiesPainter::DrawMask(GetRenderProperties(), canvas);
 #endif
 }
 
@@ -121,7 +130,7 @@ void RSRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 #ifdef ROSEN_OHOS
     GetMutableRenderProperties().ResetBounds();
     canvas.RestoreAlpha();
-    canvas.restore();
+    canvas.restoreToCount(saveCount_);
 #endif
 }
 } // namespace Rosen

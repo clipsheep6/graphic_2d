@@ -43,10 +43,15 @@ namespace Rosen {
     animation->SetDirection(GetDirection());                                                                       \
     animation->SetFillMode(GetFillMode());                                                                         \
     animation->SetInterpolator(interpolator);                                                                      \
-    std::unique_ptr<RSCommand> command = std::make_unique<RSRenderCommand>(target->GetId(), std::move(animation)); \
+    std::unique_ptr<RSCommand> command = std::make_unique<RSRenderCommand>(target->GetId(), animation);            \
     auto transactionProxy = RSTransactionProxy::GetInstance();                                                     \
     if (transactionProxy != nullptr) {                                                                             \
         transactionProxy->AddCommand(command, target->IsRenderServiceNode());                                      \
+        if (target->NeedForcedSendToRemote()) {                                                                    \
+            std::unique_ptr<RSCommand> commandForRemote =                                                          \
+                std::make_unique<RSRenderCommand>(target->GetId(), animation);                                     \
+            transactionProxy->AddCommand(commandForRemote, true);                                                  \
+        }                                                                                                          \
     }
 
 template<>
@@ -94,7 +99,7 @@ void RSCurveAnimation<Quaternion>::OnStart()
 template<>
 void RSCurveAnimation<std::shared_ptr<RSFilter>>::OnStart()
 {
-    // START_CURVE_ANIMATION(RSAnimationCreateCurveFilter, std::shared_ptr<RSFilter>);
+    START_CURVE_ANIMATION(RSAnimationCreateCurveFilter, std::shared_ptr<RSFilter>);
 }
 } // namespace Rosen
 } // namespace OHOS

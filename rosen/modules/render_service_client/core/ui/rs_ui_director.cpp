@@ -45,7 +45,7 @@ std::shared_ptr<RSUIDirector> RSUIDirector::Create()
 
 RSUIDirector::~RSUIDirector()
 {
-    Destory();
+    Destroy();
 }
 
 void RSUIDirector::Init()
@@ -87,7 +87,7 @@ void RSUIDirector::GoBackground()
     }
 }
 
-void RSUIDirector::Destory()
+void RSUIDirector::Destroy()
 {
     if (root_ != 0) {
         RSRenderThread::Instance().Detach(root_);
@@ -188,6 +188,5 @@ void RSUIDirector::AnimationCallbackProcessor(NodeId nodeId, AnimationId animId)
         nodePtr->AnimationFinish(animId);
     }
 }
-
 } // namespace Rosen
 } // namespace OHOS

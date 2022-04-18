@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/graphic/standard/graphic_config.gni")
 import(
     "//foundation/graphic/standard/rosen/modules/render_service_base/config.gni")
 

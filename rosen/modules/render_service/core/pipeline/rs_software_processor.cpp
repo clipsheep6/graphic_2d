@@ -22,7 +22,7 @@
 #include "include/core/SkMatrix.h"
 #include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
-#include "unique_fd.h"
+#include "sync_fence.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -31,17 +31,19 @@ RSSoftwareProcessor::RSSoftwareProcessor() {}
 
 RSSoftwareProcessor::~RSSoftwareProcessor() {}
 
-void RSSoftwareProcessor::Init(ScreenId id)
+void RSSoftwareProcessor::Init(ScreenId id, int32_t offsetX, int32_t offsetY)
 {
+    offsetX_ = offsetX;
+    offsetY_ = offsetY;
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (screenManager == nullptr) {
-        ROSEN_LOGE("RSSoftwareProcessor::Init: failed to get screen manager!");
+        RS_LOGE("RSSoftwareProcessor::Init: failed to get screen manager!");
         return;
     }
 
     producerSurface_ = screenManager->GetProducerSurface(id);
     if (producerSurface_ == nullptr) {
-        ROSEN_LOGE("RSSoftwareProcessor::Init for Screen(id %{public}" PRIu64 "): ProducerSurface is null!", id);
+        RS_LOGE("RSSoftwareProcessor::Init for Screen(id %{public}" PRIu64 "): ProducerSurface is null!", id);
         return;
     }
     currScreenInfo_ = screenManager->QueryScreenInfo(id);
@@ -66,18 +68,19 @@ void RSSoftwareProcessor::PostProcess()
             .h = currScreenInfo_.height,
         },
     };
+    SetBufferTimeStamp();
     FlushBuffer(producerSurface_, flushConfig);
 }
 
 void RSSoftwareProcessor::ProcessSurface(RSSurfaceRenderNode& node)
 {
     if (!canvas_) {
-        ROSEN_LOGE("RSSoftwareProcessor::ProcessSurface: Canvas is null!");
+        RS_LOGE("RSSoftwareProcessor::ProcessSurface: Canvas is null!");
         return;
     }
     auto consumerSurface = node.GetConsumer();
     if (!consumerSurface) {
-        ROSEN_LOGE("RSSoftwareProcessor::ProcessSurface: node's consumerSurface is null!");
+        RS_LOGE("RSSoftwareProcessor::ProcessSurface: node's consumerSurface is null!");
         return;
     }
 
@@ -87,22 +90,22 @@ void RSSoftwareProcessor::ProcessSurface(RSSurfaceRenderNode& node)
         int32_t fence = -1;
         int64_t timestamp = 0;
         auto sret = consumerSurface->AcquireBuffer(cbuffer, fence, timestamp, damage);
-        UniqueFd fenceFd(fence);
+        sptr<SyncFence> acquireFence = new SyncFence(fence);
         if (sret != OHOS::SURFACE_ERROR_OK) {
-            ROSEN_LOGE("RSSoftwareProcessor::ProcessSurface: AcquireBuffer failed!");
+            RS_LOGE("RSSoftwareProcessor::ProcessSurface: AcquireBuffer failed!");
             return;
         }
 
         if (cbuffer != node.GetBuffer() && node.GetBuffer() != nullptr) {
             SurfaceError ret = consumerSurface->ReleaseBuffer(node.GetBuffer(), -1);
             if (ret != SURFACE_ERROR_OK) {
-                ROSEN_LOGE("RSSoftwareProcessor::ProcessSurface: ReleaseBuffer buffer error! error: %{public}d.", ret);
+                RS_LOGE("RSSoftwareProcessor::ProcessSurface: ReleaseBuffer buffer error! error: %{public}d.", ret);
                 return;
             }
         }
 
         node.SetBuffer(cbuffer);
-        node.SetFence(fenceFd.Release());
+        node.SetFence(acquireFence);
 
         if (node.ReduceAvailableBuffer() > 0) {
             if (auto mainThread = RSMainThread::Instance()) {
@@ -114,10 +117,11 @@ void RSSoftwareProcessor::ProcessSurface(RSSurfaceRenderNode& node)
     }
 
     if (cbuffer == nullptr) {
-        ROSEN_LOGE("RSSoftwareProcessor::ProcessSurface: surface buffer is null!");
+        RS_LOGE("RSSoftwareProcessor::ProcessSurface: surface buffer is null!");
         return;
     }
-    RsRenderServiceUtil::DrawBuffer(canvas_.get(), cbuffer, node);
+    auto params = RsRenderServiceUtil::CreateBufferDrawParam(node);
+    RsRenderServiceUtil::DrawBuffer(*canvas_, params);
 }
 } // namespace Rosen
 } // namespace OHOS

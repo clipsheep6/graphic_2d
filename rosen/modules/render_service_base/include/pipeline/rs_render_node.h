@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -57,13 +57,9 @@ public:
         return RSRenderNodeType::RS_NODE;
     }
 
-    bool HasTransition() const override
+    bool HasTransition(bool recursive) const override
     {
-        if (animationManager_.HasTransition()) {
-            return true;
-        }
-        auto parent = GetParent().lock();
-        return parent ? parent->HasTransition() : false;
+        return animationManager_.HasTransition() || RSBaseRenderNode::HasTransition(recursive);
     }
 
 protected:
@@ -73,7 +69,7 @@ protected:
 
 private:
     void FallbackAnimationsToRoot();
-
+    int32_t saveCount_ = 0;
     RectI oldDirty_;
     RSProperties renderProperties_;
     RSAnimationManager animationManager_;

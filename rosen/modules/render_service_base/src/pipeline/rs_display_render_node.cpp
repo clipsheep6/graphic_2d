@@ -15,20 +15,24 @@
 
 #include "pipeline/rs_display_render_node.h"
 
-#include "platform/ohos/backend/rs_surface_ohos_gl.h"
-#include "platform/ohos/backend/rs_surface_ohos_raster.h"
-
-//#include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
 #include "visitor/rs_node_visitor.h"
 
 namespace OHOS {
 namespace Rosen {
 RSDisplayRenderNode::RSDisplayRenderNode(NodeId id, const RSDisplayNodeConfig& config, std::weak_ptr<RSContext> context)
-    : RSBaseRenderNode(id, context), screenId_(config.screenId), isMirroredDisplay_(config.isMirrored)
+    : RSBaseRenderNode(id, context), screenId_(config.screenId), offsetX_(0), offsetY_(0),
+    isMirroredDisplay_(config.isMirrored)
 {}
 
-RSDisplayRenderNode::~RSDisplayRenderNode() {}
+RSDisplayRenderNode::~RSDisplayRenderNode()
+{
+    if (drawingProxy_ != nullptr) {
+        RS_LOGD("Destroy drawingProxy_!!");
+        delete drawingProxy_ ;
+        drawingProxy_  = nullptr;
+    }
+}
 
 void RSDisplayRenderNode::Prepare(const std::shared_ptr<RSNodeVisitor>& visitor)
 {
@@ -109,7 +113,7 @@ void RSDisplayRenderNode::SetBuffer(const sptr<SurfaceBuffer>& buffer)
     }
 }
 
-void RSDisplayRenderNode::SetFence(int32_t fence)
+void RSDisplayRenderNode::SetFence(sptr<SyncFence> fence)
 {
     preFence_ = fence_;
     fence_ = fence;
@@ -128,29 +132,29 @@ int32_t RSDisplayRenderNode::ReduceAvailableBuffer()
 bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
 {
     if (consumer_ != nullptr && surface_ != nullptr) {
-        ROSEN_LOGI("RSDisplayRenderNode::CreateSurface already created, return");
-        return consumer_->RegisterConsumerListener(listener) == SURFACE_ERROR_OK;
+        RS_LOGI("RSDisplayRenderNode::CreateSurface already created, return");
+        return true;
     }
     consumer_ = Surface::CreateSurfaceAsConsumer("DisplayNode");
     if (consumer_ == nullptr) {
-        ROSEN_LOGE("RSDisplayRenderNode::CreateSurface get consumer surface fail");
+        RS_LOGE("RSDisplayRenderNode::CreateSurface get consumer surface fail");
         return false;
     }
     SurfaceError ret = consumer_->RegisterConsumerListener(listener);
     if (ret != SURFACE_ERROR_OK) {
-        ROSEN_LOGE("RSRenderService::CreateNodeAndSurface Register Consumer Listener fail");
+        RS_LOGE("RSDisplayRenderNode::CreateSurface RegisterConsumerListener fail");
         return false;
     }
+
     auto producer = consumer_->GetProducer();
     sptr<Surface> surface = Surface::CreateSurfaceAsProducer(producer);
-#ifdef ACE_ENABLE_GL
-    // GPU render
-    surface_ = std::make_shared<RSSurfaceOhosGl>(surface);
-#else
-    // CPU render
-    surface_ = std::make_shared<RSSurfaceOhosRaster>(surface);
-#endif
-    ROSEN_LOGI("RSDisplayRenderNode::CreateSurface end");
+    drawingProxy_ = new DrawingProxy();
+    drawingProxy_->InitDrawContext();
+    surface_ = OHOS::Rosen::RSSurfaceOhos::CreateSurface(surface);
+    surface_->SetDrawingProxy(drawingProxy_);
+
+    RS_LOGI("RSDisplayRenderNode::CreateSurface end");
+    surfaceCreated_ = true;
     return true;
 }
 } // namespace Rosen

@@ -53,9 +53,10 @@ public:
     void SetImageFit(int fitNum);
     void SetImageRepeat(int repeatNum);
     void SetRadius(float radius);
-
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const;
     static RSImage* Unmarshalling(Parcel& parcel);
+#endif
 
 private:
     void ApplyImageFit();

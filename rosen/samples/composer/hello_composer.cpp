@@ -59,7 +59,7 @@ void HelloComposer::Run(std::vector<std::string> &runArgs)
 
     if (!initDeviceFinished_) {
         if (deviceConnected_) {
-            CreateShowLayers();
+            CreateLayers();
         }
         initDeviceFinished_ = true;
     }
@@ -67,11 +67,7 @@ void HelloComposer::Run(std::vector<std::string> &runArgs)
 
     backend_->RegPrepareComplete(HelloComposer::OnPrepareCompleted, this);
 
-    for (std::string &arg : runArgs) {
-        if (arg == "--dump") {
-            dump_ = true;
-        }
-    }
+    ParseArgs(runArgs);
 
     sleep(1);
     std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::Create(false);
@@ -80,6 +76,19 @@ void HelloComposer::Run(std::vector<std::string> &runArgs)
     g_receiver->Init();
     mainThreadHandler_->PostTask(std::bind(&HelloComposer::RequestSync, this));
     runner->Run();
+}
+
+void HelloComposer::ParseArgs(std::vector<std::string> &runArgs)
+{
+    for (std::string &arg : runArgs) {
+        if (arg == "--dump") {
+            dump_ = true;
+        } else if (arg == "--testClient") {
+            testClient_ = true;
+        } else if (arg == "--testLayerRotate") {
+            testLayerRotate_ = true;
+        }
+    }
 }
 
 void HelloComposer::OnScreenPlug(std::shared_ptr<HdiOutput> &output, bool connected, void* data)
@@ -109,11 +118,24 @@ void HelloComposer::OnPrepareCompleted(sptr<Surface> &surface, const struct Prep
     thisPtr->DoPrepareCompleted(surface, param);
 }
 
+void HelloComposer::CreateLayers()
+{
+    for (auto iter = outputMap_.begin(); iter != outputMap_.end(); ++iter) {
+        currScreenId_ = iter->first;
+        CreateShowLayers();
+    }
+}
+
 void HelloComposer::CreateShowLayers()
 {
+    if (screensMap_.count(currScreenId_) != 0) {
+        LOGI("Screen[%{public}d] has already created", currScreenId_);
+        return;
+    }
+
     uint32_t screenId = CreatePhysicalScreen();
 
-    LOGI("Create %{public}zu screens", screens_.size());
+    LOGI("Create screen[%{public}d], and created a total of %{public}zu screens", screenId, screensMap_.size());
 
     InitLayers(screenId);
 }
@@ -156,14 +178,17 @@ void HelloComposer::InitLayers(uint32_t screenId)
         IRect { 0, 0, displayWidth, statusHeight },
         1, LayerType::LAYER_NAVIGATION));
 
-    uint32_t extraLayerWidth = displayWidth / 4; // layer width is 1 / 4 displayWidth
-    uint32_t extraLayerHeight = displayHeight / 4; // layer height is 1 / 4 of displayHeight
-    LOGI("extraLayerWidth[%{public}d], extraLayerHeight[%{public}d]", extraLayerWidth, extraLayerHeight);
+    uint32_t layerWidth = displayWidth / 4; // layer width is 1/4 displayWidth
+    uint32_t layerHeight = displayHeight / 4; // layer height is 1/4 of displayHeight
+    uint32_t layerPositionX = displayWidth / 2 - layerWidth / 2; // x is (displayWidth - layerWidth) / 2
+    uint32_t layerPositionY = displayHeight / 2 - layerHeight / 2; // y is (displayHeight - layerHeight) / 2
+    LOGI("Layer position is: [x, y, w, h: [%{public}d, %{public}d, %{public}d, %{public}d]]",
+          layerPositionX, layerPositionY, layerWidth, layerHeight);
 
     // extra layer 1
     drawLayers.emplace_back(std::make_unique<LayerContext>(
-        IRect { 300, 300, extraLayerWidth, extraLayerHeight }, // 300 is position
-        IRect { 0, 0, extraLayerWidth, extraLayerHeight },
+        IRect { layerPositionX, layerPositionY, layerWidth, layerHeight },
+        IRect { 0, 0, layerWidth, layerHeight },
         1, LayerType::LAYER_EXTRA)); // 2 is zorder
 }
 
@@ -173,14 +198,34 @@ void HelloComposer::Sync(int64_t, void *data)
         .userData_ = data,
         .callback_ = std::bind(&HelloComposer::Sync, this, ::std::placeholders::_1, ::std::placeholders::_2),
     };
+
     if (g_receiver != nullptr) {
         g_receiver->RequestNextVSync(fcb);
     }
+
     if (!ready_) {
+        LOGE("hdi screen is not ready");
         return;
     }
 
     Draw();
+}
+
+void HelloComposer::SetRunArgs(const std::unique_ptr<LayerContext> &drawLayer)
+{
+    if (testClient_) {
+        LayerType type = drawLayer->GetLayerType();
+        if (type >= LayerType::LAYER_EXTRA) {
+            drawLayer->SetTestClientStatus(true);
+        }
+    }
+
+    if (testLayerRotate_) {
+        LayerType type = drawLayer->GetLayerType();
+        if (type >= LayerType::LAYER_EXTRA) {
+            drawLayer->SetTestRotateStatus(true);
+        }
+    }
 }
 
 void HelloComposer::Draw()
@@ -191,6 +236,7 @@ void HelloComposer::Draw()
         std::vector<std::unique_ptr<LayerContext>> &drawLayers = drawLayersMap_[screenId];
         std::vector<LayerInfoPtr> layerVec;
         for (auto &drawLayer : drawLayers) { // producer
+            SetRunArgs(drawLayer);
             drawLayer->DrawBufferColor();
         }
 
@@ -222,28 +268,30 @@ void HelloComposer::Draw()
 
 uint32_t HelloComposer::CreatePhysicalScreen()
 {
+    uint32_t currentModeIndex = 0;
+    std::vector<DisplayModeInfo> displayModeInfos;
     uint32_t screenId = currScreenId_;
     std::unique_ptr<HdiScreen> screen = HdiScreen::CreateHdiScreen(screenId);
     screen->Init();
-    screen->GetScreenSupportedModes(displayModeInfos_);
-    size_t supportModeNum = displayModeInfos_.size();
+    screen->GetScreenSupportedModes(displayModeInfos);
+    size_t supportModeNum = displayModeInfos.size();
     if (supportModeNum > 0) {
-        screen->GetScreenMode(currentModeIndex_);
-        LOGI("currentModeIndex:%{public}d", currentModeIndex_);
+        screen->GetScreenMode(currentModeIndex);
+        LOGI("currentModeIndex:%{public}d", currentModeIndex);
         for (size_t i = 0; i < supportModeNum; i++) {
             LOGI("modes(%{public}d) %{public}dx%{public}d freq:%{public}d",
-                displayModeInfos_[i].id, displayModeInfos_[i].width,
-                displayModeInfos_[i].height, displayModeInfos_[i].freshRate);
-            if (displayModeInfos_[i].id == static_cast<int32_t>(currentModeIndex_)) {
+                displayModeInfos[i].id, displayModeInfos[i].width,
+                displayModeInfos[i].height, displayModeInfos[i].freshRate);
+            if (displayModeInfos[i].id == static_cast<int32_t>(currentModeIndex)) {
                 freq_ = 30; // 30 freq
-                displayWidthsMap_[screenId] = static_cast<uint32_t>(displayModeInfos_[i].width);
-                displayHeightsMap_[screenId] = static_cast<uint32_t>(displayModeInfos_[i].height);
+                displayWidthsMap_[screenId] = static_cast<uint32_t>(displayModeInfos[i].width);
+                displayHeightsMap_[screenId] = static_cast<uint32_t>(displayModeInfos[i].height);
                 break;
             }
         }
         screen->SetScreenPowerStatus(DispPowerStatus::POWER_STATUS_ON);
-        screen->SetScreenMode(currentModeIndex_);
-        LOGI("SetScreenMode: currentModeIndex(%{public}d)", currentModeIndex_);
+        screen->SetScreenMode(currentModeIndex);
+        LOGI("SetScreenMode: currentModeIndex(%{public}d)", currentModeIndex);
 
         DispPowerStatus powerState;
         screen->GetScreenPowerStatus(powerState);
@@ -260,9 +308,9 @@ uint32_t HelloComposer::CreatePhysicalScreen()
 
     ready_ = true;
 
-    screens_.emplace_back(std::move(screen));
+    screensMap_[screenId] = std::move(screen);
 
-    LOGE("CreatePhysicalScreen, screenId is %{public}d", screenId);
+    LOGI("CreatePhysicalScreen, screenId is %{public}d", screenId);
 
     return screenId;
 }
@@ -288,15 +336,74 @@ void HelloComposer::OnHotPlug(std::shared_ptr<HdiOutput> &output, bool connected
     outputMap_[currScreenId_] = output;
     deviceConnected_ = connected;
 
+    if (!connected) {
+        RemoveOffScreenData(currScreenId_);
+    }
+
     if (!initDeviceFinished_) {
         LOGI("Init the device has not finished yet");
         return;
     }
 
-    LOGI("Callback HotPlugEvent, connected is %{public}u", connected);
+    LOGI("Callback HotPlugEvent, screenId is %{public}d, connected is %{public}u", currScreenId_, connected);
 
     if (connected) {
         CreateShowLayers();
+    }
+}
+
+void HelloComposer::RemoveOffScreenData(uint32_t offScreenId)
+{
+    LOGI("Screen[%{public}d] is unplugged, and remove data", offScreenId);
+
+    auto widthIter = displayWidthsMap_.begin();
+    while (widthIter != displayWidthsMap_.end()) {
+        uint32_t screenId = widthIter->first;
+        if (screenId == offScreenId) {
+            displayWidthsMap_.erase(widthIter++);
+        } else {
+            ++widthIter;
+        }
+    }
+
+    auto heightIter = displayHeightsMap_.begin();
+    while (heightIter != displayHeightsMap_.end()) {
+        uint32_t screenId = heightIter->first;
+        if (screenId == offScreenId) {
+            displayHeightsMap_.erase(heightIter++);
+        } else {
+            ++heightIter;
+        }
+    }
+
+    auto outputIter = outputMap_.begin();
+    while (outputIter != outputMap_.end()) {
+        uint32_t screenId = outputIter->first;
+        if (screenId == offScreenId) {
+            outputMap_.erase(outputIter++);
+        } else {
+            ++outputIter;
+        }
+    }
+
+    auto screenIter = screensMap_.begin();
+    while (screenIter != screensMap_.end()) {
+        uint32_t screenId = screenIter->first;
+        if (screenId == offScreenId) {
+            screensMap_.erase(screenIter++);
+        } else {
+            ++screenIter;
+        }
+    }
+
+    auto layerIter = drawLayersMap_.begin();
+    while (layerIter != drawLayersMap_.end()) {
+        uint32_t screenId = layerIter->first;
+        if (screenId == offScreenId) {
+            drawLayersMap_.erase(layerIter++);
+        } else {
+            ++layerIter;
+        }
     }
 }
 

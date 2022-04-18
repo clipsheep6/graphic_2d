@@ -23,6 +23,7 @@
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "pipeline/rs_render_node.h"
 #include "refbase.h"
+#include "sync_fence.h"
 
 class SkCanvas;
 namespace OHOS {
@@ -40,7 +41,7 @@ public:
 
     void SetConsumer(const sptr<Surface>& consumer);
     void SetBuffer(const sptr<SurfaceBuffer>& buffer);
-    void SetFence(const int32_t fence);
+    void SetFence(sptr<SyncFence> fence);
     void SetDamageRegion(const Rect& damage);
     void IncreaseAvailableBuffer();
     int32_t ReduceAvailableBuffer();
@@ -50,7 +51,7 @@ public:
         return buffer_;
     }
 
-    int32_t GetFence() const
+    sptr<SyncFence> GetFence() const
     {
         return fence_;
     }
@@ -60,7 +61,7 @@ public:
         return preBuffer_;
     }
 
-    int32_t GetPreFence() const
+    sptr<SyncFence> GetPreFence() const
     {
         return preFence_;
     }
@@ -99,6 +100,23 @@ public:
     void SetAlpha(float alpha, bool sendMsg = true);
     float GetAlpha() const;
 
+    void SetClipRegion(Vector4f clipRegion, bool sendMsg = true);
+
+    const Vector4f& GetClipRegion() const
+    {
+        return clipRect_;
+    }
+
+    void SetDstRect(const RectI& dstRect)
+    {
+        dstRect_ = dstRect;
+    }
+
+    const RectI& GetDstRect() const
+    {
+        return dstRect_;
+    }
+
     // Only use in Render Service
     void SetGlobalZOrder(float globalZOrder);
     float GetGlobalZOrder() const;
@@ -119,7 +137,7 @@ public:
     // Only SurfaceNode in RT calls "ConnectToNodeInRenderService" to send callback method to RS
     void ConnectToNodeInRenderService();
 
-    void NotifyBufferAvailable(bool isBufferAvailable);
+    void NotifyBufferAvailable();
     bool IsBufferAvailable() const;
 
     // UI Thread would not be notified when SurfaceNode created by Video/Camera in RenderService has available buffer.
@@ -143,9 +161,11 @@ private:
     NodeId parentId_ = 0;
     sptr<SurfaceBuffer> buffer_;
     sptr<SurfaceBuffer> preBuffer_;
-    int32_t fence_ = -1;
-    int32_t preFence_ = -1;
+    sptr<SyncFence> fence_;
+    sptr<SyncFence> preFence_;
     Rect damageRect_ = {0, 0, 0, 0};
+    RectI dstRect_;
+    Vector4f clipRect_;
     std::string name_;
     BlendType blendType_ = BlendType::BLEND_SRCOVER;
     std::atomic<bool> isBufferAvailable_ = false;

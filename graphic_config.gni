@@ -13,7 +13,7 @@
 
 if ("${product_name}" == "watchos" || "${product_name}" == "Hi3516DV300" ||
     "${product_name}" == "ohos-arm64" || "${product_name}" == "ohos-sdk" ||
-    "${product_name}" == "qemu-arm-linux-min") {
+    "${product_name}" == "qemu-arm-linux-min" || "${product_name}" == "imx8mm") {
   gpu_defines = [ "ACE_DISABLE_GL" ]
   ace_enable_gpu = false
   libgl = []

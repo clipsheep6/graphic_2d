@@ -27,6 +27,7 @@
 #include "ui/rs_root_node.h"
 #include "ui/rs_surface_node.h"
 #include "ui/rs_texture_node.h"
+#include "platform/common/rs_system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -45,6 +46,9 @@ NodeId RSBaseNode::GenerateId()
     // concat two 32-bit numbers to one 64-bit number
     return ((NodeId)pid_ << 32) | currentId_;
 }
+
+bool RSBaseNode::isUni_ = 
+    RSSystemProperties::GetUniRenderEnabledType() != UniRenderEnabledType::UNI_RENDER_DISABLED;
 
 RSBaseNode::RSBaseNode(bool isRenderServiceNode) : id_(GenerateId()), isRenderServiceNode_(isRenderServiceNode) {}
 

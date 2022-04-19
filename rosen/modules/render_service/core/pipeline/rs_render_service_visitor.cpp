@@ -75,9 +75,9 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
 void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 {
     isSecurityDisplay_ = node.GetSecurityDisplay();
-    RS_LOGD("RsDebug RSRenderServiceVisitor::ProcessDisplayRenderNode: isSecurityDisplay:[%s] child size:[%d] \
-        total size:[%d]", isSecurityDisplay_ ? "true" : "false", node.GetChildrenCount(),
-        node.GetSortedChildren().size());
+    RS_LOGD("RsDebug RSRenderServiceVisitor::ProcessDisplayRenderNode: nodeid:[%llu] screenid:[%llu] \
+        isSecurityDisplay:[%s] child size:[%d] total size:[%d]", node.GetId(), node.GetScreenId(),
+        isSecurityDisplay_ ? "true" : "false", node.GetChildrenCount(), node.GetSortedChildren().size());
     globalZOrder_ = 0.0f;
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
@@ -98,7 +98,6 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             return;
     }
     processor_ = RSProcessorFactory::CreateProcessor(node.GetCompositeType());
-
     if (processor_ == nullptr) {
         RS_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode: RSProcessor is null!");
         return;

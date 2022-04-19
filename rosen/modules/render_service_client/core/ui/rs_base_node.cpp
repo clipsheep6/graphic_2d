@@ -21,13 +21,12 @@
 #include "command/rs_base_node_command.h"
 #include "pipeline/rs_node_map.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_canvas_node.h"
 #include "ui/rs_display_node.h"
 #include "ui/rs_root_node.h"
 #include "ui/rs_surface_node.h"
-#include "ui/rs_texture_node.h"
-#include "platform/common/rs_system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -227,7 +226,6 @@ template bool RSBaseNode::IsInstanceOf<RSNode>();
 template bool RSBaseNode::IsInstanceOf<RSSurfaceNode>();
 template bool RSBaseNode::IsInstanceOf<RSCanvasNode>();
 template bool RSBaseNode::IsInstanceOf<RSRootNode>();
-template bool RSBaseNode::IsInstanceOf<RSTextureNode>();
 
 } // namespace Rosen
 } // namespace OHOS

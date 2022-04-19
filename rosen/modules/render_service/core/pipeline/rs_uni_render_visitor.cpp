@@ -15,17 +15,13 @@
 
 #include "pipeline/rs_uni_render_visitor.h"
 
-#include <window.h>
-#include <window_manager.h>
-#include <window_option.h>
-
 #include "common/rs_obj_abs_geometry.h"
 #include "display_type.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_processor_factory.h"
+#include "pipeline/rs_render_service_util.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
-#include "pipeline/rs_render_service_util.h"
 #include "pipeline/rs_uni_render_listener.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
@@ -194,7 +190,6 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         isUniRender_ = true;
     }
     if (isUniRender_) {
-        // for window surface node - whose parent is display node
         if (IsChildOfDisplayNode(node)) {
             if (!node.GetRenderProperties().GetVisible()) {
                 RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode node: %llu invisible", node.GetId());

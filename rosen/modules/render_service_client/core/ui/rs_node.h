@@ -37,6 +37,7 @@ using PropertyCallback = std::function<void()>;
 class RSAnimation;
 class RSCommand;
 class RSImplicitAnimParam;
+class RSImplicitAnimator;
 class RSBasePropertyAccessors;
 
 class RS_EXPORT RSNode : public RSBaseNode {
@@ -98,6 +99,7 @@ public:
     void SetPivotY(float pivotY);
 
     void SetCornerRadius(float cornerRadius);
+    void SetCornerRadius(const Vector4f& cornerRadius);
 
     void SetRotation(const Quaternion& quaternion);
     void SetRotation(float degreeX, float degreeY, float degreeZ);
@@ -134,6 +136,9 @@ public:
     void SetBorderColor(uint32_t colorValue);
     void SetBorderWidth(float width);
     void SetBorderStyle(uint32_t styleValue);
+    void SetBorderColor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom);
+    void SetBorderWidth(float left, float top, float right, float bottom);
+    void SetBorderStyle(uint32_t left, uint32_t top, uint32_t right, uint32_t bottomalue);
 
     void SetSublayerTransform(Matrix3f sublayerTransform);
 
@@ -195,6 +200,7 @@ private:
     std::unordered_map<AnimationId, std::shared_ptr<RSAnimation>> animations_;
     std::unordered_map<RSAnimatableProperty, uint32_t> animatingPropertyNum_;
     std::shared_ptr<RSMotionPathOption> motionPathOption_;
+    std::shared_ptr<RSImplicitAnimator> implicitAnimator_;
 
     std::shared_ptr<const RSTransitionEffect> transitionEffect_ = nullptr;
 

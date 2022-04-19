@@ -53,6 +53,7 @@ public:
     void SetImageFit(int fitNum);
     void SetImageRepeat(int repeatNum);
     void SetRadius(float radius);
+    void SetScale(double scale);
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const;
     static RSImage* Unmarshalling(Parcel& parcel);
@@ -70,6 +71,7 @@ private:
     RectF srcRect_;
     RectF dstRect_;
     RectF frameRect_;
+    double scale_ = 1.0;
 };
 } // namespace Rosen
 } // namespace OHOS

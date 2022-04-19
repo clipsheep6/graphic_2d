@@ -21,7 +21,6 @@
 #include "display_type.h"
 #include "hdi_backend.h"
 #include "hdi_layer_info.h"
-#include "hdi_output.h"
 #include "hdi_screen.h"
 #include <surface.h>
 

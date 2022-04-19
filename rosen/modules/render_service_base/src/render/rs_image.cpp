@@ -37,8 +37,8 @@ void RSImage::CanvasDrawImage(SkCanvas& canvas, const SkRect& rect, const SkPain
 
 void RSImage::ApplyImageFit()
 {
-    const float srcW = srcRect_.width_;
-    const float srcH = srcRect_.height_;
+    const float srcW = srcRect_.width_ / scale_;
+    const float srcH = srcRect_.height_ / scale_;
     const float frameW = frameRect_.width_;
     const float frameH = frameRect_.height_;
     float dstW = frameW;
@@ -159,45 +159,52 @@ void RSImage::SetRadius(float radius)
     cornerRadius_ = radius;
 }
 
+void RSImage::SetScale(double scale)
+{
+    if (scale > 0.0) {
+        scale_ = scale;
+    }
+}
+
 #ifdef ROSEN_OHOS
-    bool RSImage::Marshalling(Parcel& parcel) const
-    {
-        bool success = true;
-        int imageFit = static_cast<int>(imageFit_);
-        int imageRepeat = static_cast<int>(imageRepeat_);
-        success &= RSMarshallingHelper::Marshalling(parcel, image_);
-        success &= RSMarshallingHelper::Marshalling(parcel, imageFit);
-        success &= RSMarshallingHelper::Marshalling(parcel, imageRepeat);
-        success &= RSMarshallingHelper::Marshalling(parcel, cornerRadius_);
-        return success;
+bool RSImage::Marshalling(Parcel& parcel) const
+{
+    bool success = true;
+    int imageFit = static_cast<int>(imageFit_);
+    int imageRepeat = static_cast<int>(imageRepeat_);
+    success &= RSMarshallingHelper::Marshalling(parcel, image_);
+    success &= RSMarshallingHelper::Marshalling(parcel, imageFit);
+    success &= RSMarshallingHelper::Marshalling(parcel, imageRepeat);
+    success &= RSMarshallingHelper::Marshalling(parcel, cornerRadius_);
+    return success;
+}
+RSImage* RSImage::Unmarshalling(Parcel& parcel)
+{
+    sk_sp<SkImage> img;
+    int fitNum;
+    int repeatNum;
+    float radius;
+    if (!RSMarshallingHelper::Unmarshalling(parcel, img)) {
+        return nullptr;
     }
-    RSImage* RSImage::Unmarshalling(Parcel& parcel)
-    {
-        sk_sp<SkImage> img;
-        int fitNum;
-        int repeatNum;
-        float radius;
-        if (!RSMarshallingHelper::Unmarshalling(parcel, img)) {
-            return nullptr;
-        }
-        if (!RSMarshallingHelper::Unmarshalling(parcel, fitNum)) {
-            return nullptr;
-        }
-        if (!RSMarshallingHelper::Unmarshalling(parcel, repeatNum)) {
-            return nullptr;
-        }
-        if (!RSMarshallingHelper::Unmarshalling(parcel, radius)) {
-            return nullptr;
-        }
-
-        RSImage* rsImage = new RSImage();
-        rsImage->SetImage(img);
-        rsImage->SetImageFit(fitNum);
-        rsImage->SetImageRepeat(repeatNum);
-        rsImage->SetRadius(radius);
-
-        return rsImage;
+    if (!RSMarshallingHelper::Unmarshalling(parcel, fitNum)) {
+        return nullptr;
     }
+    if (!RSMarshallingHelper::Unmarshalling(parcel, repeatNum)) {
+        return nullptr;
+    }
+    if (!RSMarshallingHelper::Unmarshalling(parcel, radius)) {
+        return nullptr;
+    }
+
+    RSImage* rsImage = new RSImage();
+    rsImage->SetImage(img);
+    rsImage->SetImageFit(fitNum);
+    rsImage->SetImageRepeat(repeatNum);
+    rsImage->SetRadius(radius);
+
+    return rsImage;
+}
 #endif
 } // namespace Rosen
 } // namespace OHOS

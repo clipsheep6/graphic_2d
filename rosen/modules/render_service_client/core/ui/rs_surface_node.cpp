@@ -26,6 +26,7 @@
 #include "platform/drawing/rs_surface_converter.h"
 #include "transaction/rs_render_service_client.h"
 #include "transaction/rs_transaction_proxy.h"
+#include "render_context/render_context.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -103,6 +104,22 @@ void RSSurfaceNode::UpdateSurfaceDefaultSize(float width, float height)
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, true);
     }
+}
+
+void RSSurfaceNode::SetSecurityLayer(bool isSecurityLayer)
+{
+    isSecurityLayer_ = isSecurityLayer;
+    std::unique_ptr<RSCommand> command =
+        std::make_unique<RSSurfaceNodeSetSecurityLayer>(GetId(), isSecurityLayer);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, true);
+    }
+}
+
+bool RSSurfaceNode::GetSecurityLayer() const
+{
+    return isSecurityLayer_;
 }
 
 void RSSurfaceNode::SetColorSpace(ColorGamut colorSpace)

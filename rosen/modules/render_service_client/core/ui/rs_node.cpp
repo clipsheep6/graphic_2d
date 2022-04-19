@@ -21,6 +21,7 @@
 
 #include "animation/rs_animation.h"
 #include "animation/rs_implicit_animator.h"
+#include "animation/rs_implicit_animator_map.h"
 #include "command/rs_node_command.h"
 #include "common/rs_color.h"
 #include "common/rs_obj_geometry.h"
@@ -34,7 +35,10 @@
 namespace OHOS {
 namespace Rosen {
 
-RSNode::RSNode(bool isRenderServiceNode) : RSBaseNode(isRenderServiceNode), stagingProperties_(false) {}
+RSNode::RSNode(bool isRenderServiceNode) : RSBaseNode(isRenderServiceNode), stagingProperties_(false)
+{
+    implicitAnimator_ = RSImplicitAnimatorMap::Instance().GetAnimator(gettid());
+}
 
 RSNode::~RSNode()
 {
@@ -49,37 +53,51 @@ bool RSNode::NeedForcedSendToRemote() const
 void RSNode::OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
     const RSAnimationTimingCurve& timingCurve, const std::function<void()>& finishCallback)
 {
-    RSImplicitAnimator::Instance().OpenImplicitAnimation(timingProtocol, timingCurve, finishCallback);
+    auto implicitAnimator = RSImplicitAnimatorMap::Instance().GetAnimator(gettid());
+    if (implicitAnimator == nullptr) {
+        ROSEN_LOGE("Failed to open implicit animation, implicit animator is null!");
+        return;
+    }
+
+    implicitAnimator->OpenImplicitAnimation(timingProtocol, timingCurve, finishCallback);
 }
 
 std::vector<std::shared_ptr<RSAnimation>> RSNode::CloseImplicitAnimation()
 {
-    return RSImplicitAnimator::Instance().CloseImplicitAnimation();
+    auto implicitAnimator = RSImplicitAnimatorMap::Instance().GetAnimator(gettid());
+    if (implicitAnimator == nullptr) {
+        ROSEN_LOGE("Failed to close implicit animation, implicit animator is null!");
+        return {};
+    }
+
+    return implicitAnimator->CloseImplicitAnimation();
 }
 
 void RSNode::AddKeyFrame(
     float fraction, const RSAnimationTimingCurve& timingCurve, const PropertyCallback& propertyCallback)
 {
-    if (propertyCallback == nullptr) {
-        ROSEN_LOGE("Failed to add keyframe animation, property callback is null!");
-        return;
+    auto implicitAnimator = RSImplicitAnimatorMap::Instance().GetAnimator(gettid());
+    if (implicitAnimator == nullptr) {
+        ROSEN_LOGE("Failed to add keyframe, implicit animator is null!");
+        return ;
     }
 
-    RSImplicitAnimator::Instance().BeginImplicitKeyFrameAnimation(fraction, timingCurve);
+    implicitAnimator->BeginImplicitKeyFrameAnimation(fraction, timingCurve);
     propertyCallback();
-    RSImplicitAnimator::Instance().EndImplicitKeyFrameAnimation();
+    implicitAnimator->EndImplicitKeyFrameAnimation();
 }
 
 void RSNode::AddKeyFrame(float fraction, const PropertyCallback& propertyCallback)
 {
-    if (propertyCallback == nullptr) {
-        ROSEN_LOGE("Failed to add keyframe animation, property callback is null!");
-        return;
+    auto implicitAnimator = RSImplicitAnimatorMap::Instance().GetAnimator(gettid());
+    if (implicitAnimator == nullptr) {
+        ROSEN_LOGE("Failed to add keyframe, implicit animator is null!");
+        return ;
     }
 
-    RSImplicitAnimator::Instance().BeginImplicitKeyFrameAnimation(fraction);
+    implicitAnimator->BeginImplicitKeyFrameAnimation(fraction);
     propertyCallback();
-    RSImplicitAnimator::Instance().EndImplicitKeyFrameAnimation();
+    implicitAnimator->EndImplicitKeyFrameAnimation();
 }
 
 std::vector<std::shared_ptr<RSAnimation>> RSNode::Animate(const RSAnimationTimingProtocol& timingProtocol,
@@ -90,6 +108,12 @@ std::vector<std::shared_ptr<RSAnimation>> RSNode::Animate(const RSAnimationTimin
         ROSEN_LOGE("Failed to add curve animation, property callback is null!");
         return {};
     }
+
+    if (RSImplicitAnimatorMap::Instance().GetAnimator(gettid()) == nullptr) {
+        ROSEN_LOGE("Failed to add curve animation, implicit animator is null!");
+        return {};
+    }
+
     OpenImplicitAnimation(timingProtocol, timingCurve, finshCallback);
     propertyCallback();
     return CloseImplicitAnimation();
@@ -226,8 +250,8 @@ bool IsValid(const Vector4f& value)
         if (ROSEN_EQ(value, currentValue)) {                                                                \
             return;                                                                                         \
         }                                                                                                   \
-        if (RSImplicitAnimator::Instance().NeedImplicitAnimaton() && IsValid(currentValue)) {               \
-            RSImplicitAnimator::Instance().CreateImplicitAnimation(*this, property, currentValue, value);   \
+        if (implicitAnimator_ && implicitAnimator_->NeedImplicitAnimaton() && IsValid(currentValue)) {      \
+            implicitAnimator_->CreateImplicitAnimation(*this, property, currentValue, value);               \
         } else if (HasPropertyAnimation(property)) {                                                        \
             std::unique_ptr<RSCommand> command =                                                            \
                 std::make_unique<RSNodeSet##propertyName##Delta>(GetId(), (value)-currentValue);            \
@@ -411,6 +435,11 @@ void RSNode::SetPivotY(float pivotY)
 
 void RSNode::SetCornerRadius(float cornerRadius)
 {
+    SetCornerRadius(Vector4f(cornerRadius));
+}
+
+void RSNode::SetCornerRadius(const Vector4f& cornerRadius)
+{
     SET_ANIMATABLE_PROPERTY(CornerRadius, cornerRadius, RSAnimatableProperty::CORNER_RADIUS);
 }
 
@@ -552,18 +581,38 @@ void RSNode::SetBgImagePositionY(float positionY)
 // border
 void RSNode::SetBorderColor(uint32_t colorValue)
 {
-    auto color = Color::FromArgbInt(colorValue);
+    Vector4<Color> color(Color::FromArgbInt(colorValue));
     SET_ANIMATABLE_PROPERTY(BorderColor, color, RSAnimatableProperty::BORDER_COLOR);
 }
 
 void RSNode::SetBorderWidth(float width)
 {
-    SET_ANIMATABLE_PROPERTY(BorderWidth, width, RSAnimatableProperty::BORDER_WIDTH);
+    SET_ANIMATABLE_PROPERTY(BorderWidth, Vector4f(width), RSAnimatableProperty::BORDER_WIDTH);
 }
 
 void RSNode::SetBorderStyle(uint32_t styleValue)
 {
-    BorderStyle style = static_cast<BorderStyle>(styleValue);
+    Vector4<BorderStyle> style(static_cast<BorderStyle>(styleValue));
+    SET_NONANIMATABLE_PROPERTY(BorderStyle, style);
+}
+
+void RSNode::SetBorderColor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom)
+{
+    Vector4<Color> color(Color::FromArgbInt(left), Color::FromArgbInt(top),
+                         Color::FromArgbInt(right), Color::FromArgbInt(bottom));
+    SET_ANIMATABLE_PROPERTY(BorderColor, color, RSAnimatableProperty::BORDER_COLOR);
+}
+
+void RSNode::SetBorderWidth(float left, float top, float right, float bottom)
+{
+    Vector4f width(left, top, right, bottom);
+    SET_ANIMATABLE_PROPERTY(BorderWidth, width, RSAnimatableProperty::BORDER_WIDTH);
+}
+
+void RSNode::SetBorderStyle(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom)
+{
+    Vector4<BorderStyle> style(static_cast<BorderStyle>(left), static_cast<BorderStyle>(top),
+                               static_cast<BorderStyle>(right), static_cast<BorderStyle>(bottom));
     SET_NONANIMATABLE_PROPERTY(BorderStyle, style);
 }
 
@@ -657,12 +706,18 @@ void RSNode::SetVisible(bool visible)
 
 void RSNode::NotifyTransition(const std::shared_ptr<const RSTransitionEffect>& effect, bool isTransitionIn)
 {
-    if (!RSImplicitAnimator::Instance().NeedImplicitAnimaton()) {
+    if (implicitAnimator_ == nullptr) {
+        ROSEN_LOGE("Failed to notify transition, implicit animator is null!");
         return;
     }
-    RSImplicitAnimator::Instance().BeginImplicitTransition(effect);
-    RSImplicitAnimator::Instance().CreateImplicitTransition(*this, isTransitionIn);
-    RSImplicitAnimator::Instance().EndImplicitTransition();
+
+    if (!implicitAnimator_->NeedImplicitAnimaton()) {
+        return;
+    }
+
+    implicitAnimator_->BeginImplicitTransition(effect);
+    implicitAnimator_->CreateImplicitTransition(*this, isTransitionIn);
+    implicitAnimator_->EndImplicitTransition();
 }
 
 void RSNode::OnAddChildren()

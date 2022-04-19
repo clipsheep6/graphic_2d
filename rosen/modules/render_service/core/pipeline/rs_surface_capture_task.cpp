@@ -27,7 +27,7 @@
 #include "pipeline/rs_render_service_connection.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
-#include "drawing_engine/drawing_surface/rs_surface.h"
+#include "platform/drawing/rs_surface.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "screen_manager/rs_screen_mode_info.h"
 
@@ -190,6 +190,11 @@ static void AdjustSurfaceTransform(BufferDrawParam &param, TransformType surface
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node)
 {
+    if (node.GetSecurityLayer()) {
+        RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode: \
+            process RSSurfaceRenderNode(id:[%llu]) paused, because surfaceNode is the security layer.", node.GetId());
+        return;
+    }
     if (node.GetBuffer() == nullptr) {
         RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode: node Buffer is nullptr!");
         return;

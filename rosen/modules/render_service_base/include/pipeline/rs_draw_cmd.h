@@ -30,6 +30,7 @@
 #include "include/core/SkTextBlob.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "render/rs_image.h"
+#include "property/rs_properties_def.h"
 #include "transaction/rs_marshalling_helper.h"
 
 namespace OHOS {
@@ -152,6 +153,8 @@ private:
 class ImageWithParmOpItem : public OpItemWithPaint {
 public:
     ImageWithParmOpItem(const sk_sp<SkImage> img, int fitNum, int repeatNum, float radius, const SkPaint& paint);
+    ImageWithParmOpItem(const sk_sp<SkImage> img, const Rosen::RsImageInfo& rsimageInfo, const SkPaint& paint);
+
     ~ImageWithParmOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 

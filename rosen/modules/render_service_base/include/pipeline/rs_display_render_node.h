@@ -19,9 +19,9 @@
 #include <surface.h>
 #include <ibuffer_consumer_listener.h>
 
-#include "drawing_engine/drawing_surface/rs_surface_ohos.h"
-#include "drawing_engine/drawing_proxy.h"
+#include "platform/drawing/rs_surface.h"
 #include "pipeline/rs_base_render_node.h"
+#include "render_context/render_context.h"
 #include "sync_fence.h"
 
 namespace OHOS {
@@ -81,6 +81,8 @@ public:
     void SetForceSoftComposite(bool flag);
     bool IsForceSoftComposite() const;
     void SetMirrorSource(SharedPtr node);
+    void SetSecurityDisplay(bool isSecurityDisplay);
+    bool GetSecurityDisplay() const;
 
     bool CreateSurface(sptr<IBufferConsumerListener> listener);
     void SetDamageRegion(const Rect& damage);
@@ -159,6 +161,7 @@ private:
     int32_t offsetY_;
     bool forceSoftComposite_ { false };
     bool isMirroredDisplay_ = false;
+    bool isSecurityDisplay_ = false;
     WeakPtr mirrorSource_;
 
     Rect damageRect_;
@@ -172,7 +175,7 @@ private:
     sptr<SyncFence> preFence_;
     bool surfaceCreated_ { false };
     sptr<IBufferConsumerListener> consumerListener_;
-    DrawingProxy* drawingProxy_ = nullptr;
+    RenderContext* renderContext_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

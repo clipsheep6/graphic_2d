@@ -15,7 +15,6 @@
 
 #include "pipeline/rs_uni_render_visitor.h"
 
-#include <surface.h>
 #include <window.h>
 #include <window_manager.h>
 #include <window_option.h>
@@ -168,7 +167,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             RS_LOGE("RSUniRenderVisitor Request Frame Failed");
             return;
         }
-        canvas_ = new RSPaintFilterCanvas(rsSurface->GetCanvas(surfaceFrame));
+        canvas_ = new RSPaintFilterCanvas(surfaceFrame->GetCanvas());
         canvas_->clear(SK_ColorTRANSPARENT);
 
         ProcessBaseRenderNode(node);

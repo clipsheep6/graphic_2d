@@ -11,18 +11,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if ("${product_name}" == "watchos" || "${product_name}" == "Hi3516DV300" ||
-    "${product_name}" == "ohos-arm64" || "${product_name}" == "ohos-sdk" ||
-    "${product_name}" == "qemu-arm-linux-min") {
+declare_args() {
+  graphic_standard_feature_ace_enable_gpu = false
+}
+
+if (graphic_standard_feature_ace_enable_gpu) {
+  gpu_defines = [ "ACE_ENABLE_GL" ]
+  ace_enable_gpu = true
+
+  # libgl is a native stub for decoupling system.img and vendor.img
+  # real libgl installed in /vendor/lib/chipsetsdk
+  libgl = [
+    "//foundation/graphic/standard/frameworks/opengl/libs/EGL:libEGL_stub",
+    "//foundation/graphic/standard/frameworks/opengl/libs/GLES3:libGLESv3_stub",
+  ]
+} else {
   gpu_defines = [ "ACE_DISABLE_GL" ]
   ace_enable_gpu = false
   libgl = []
-} else if ("${product_name}" == "rk3566" || "${product_name}" == "rk3568") {
-  gpu_defines = [ "ACE_ENABLE_GL" ]
-  ace_enable_gpu = true
-  libgl = [ "//device/soc/rockchip/hardware/gpu:mali-bifrost-g52-g2p0-ohos" ]
-} else {
-  gpu_defines = [ "ACE_ENABLE_GL" ]
-  ace_enable_gpu = true
-  libgl = [ "//device/hisilicon/hardware/gpu:gpu_libs" ]
 }

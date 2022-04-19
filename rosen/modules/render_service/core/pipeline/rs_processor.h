@@ -20,6 +20,7 @@
 #include "include/core/SkMatrix.h"
 #include <surface.h>
 
+#include "hdi_output.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"

@@ -78,7 +78,8 @@ void DrawingSample::OnScreenPlug(std::shared_ptr<HdiOutput>& output, bool connec
     thisPtr->OnHotPlugEvent(output, connected);
 }
 
-void DrawingSample::OnPrepareCompleted(sptr<Surface>& surface, const struct PrepareCompleteParam& param, void* data)
+void DrawingSample::OnPrepareCompleted(
+    sptr<Surface>& surface, const struct PrepareCompleteParam& param, void* data)
 {
     if (!param.needFlushFramebuffer) {
         return;

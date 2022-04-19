@@ -91,7 +91,6 @@ void RSHardwareProcessor::CropLayers()
         RectI screenRectI(0, 0, screenWidth, screenHeight);
         RectI resDstRect = dstRectI.IntersectRect(screenRectI);
         if (resDstRect == dstRectI) {
-            RS_LOGD("RsDebug RSHardwareProcessor::CropLayers this layer no need to crop");
             continue;
         }
         dstRect = {
@@ -127,14 +126,12 @@ void RSHardwareProcessor::ReleaseNodePrevBuffer(RSSurfaceRenderNode& node)
 
 void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
 {
+    RS_LOGI("RsDebug RSHardwareProcessor::ProcessSurface start node id:%llu available buffer:%d name:[%s]",
+        node.GetId(), node.GetAvailableBufferCount(), node.GetName().c_str());
     if (!RsRenderServiceUtil::ConsumeAndUpdateBuffer(node)) {
         RS_LOGI("RsDebug RSHardwareProcessor::ProcessSurface consume buffer fail");
         return;
     }
-
-    RS_TRACE_NAME(std::string("ProcessSurfaceNode Name:") + node.GetName().c_str());
-    RS_LOGI("RsDebug RSHardwareProcessor::ProcessSurface start node id:%llu available buffer:%d name:[%s]",
-        node.GetId(), node.GetAvailableBufferCount(), node.GetName().c_str());
     if (!output_) {
         RS_LOGE("RSHardwareProcessor::ProcessSurface output is nullptr");
         ReleaseNodePrevBuffer(node);
@@ -203,7 +200,7 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
         ReleaseNodePrevBuffer(node);
         return;
     }
-
+    RS_TRACE_NAME(std::string("ProcessSurfaceNode Name:") + node.GetName().c_str());
     std::shared_ptr<HdiLayerInfo> layer = HdiLayerInfo::CreateHdiLayerInfo();
     RS_LOGI("RsDebug RSHardwareProcessor::ProcessSurface surfaceNode id:%llu name:[%s] dst [%d %d %d %d]"\
         "SrcRect [%d %d] rawbuffer [%d %d] surfaceBuffer [%d %d] buffaddr:%p, z:%f, globalZOrder:%d, blendType = %d",
@@ -408,8 +405,6 @@ void RSHardwareProcessor::OnRotate()
     int32_t height = static_cast<int32_t>(currScreenInfo_.height);
     for (auto& layer: layers_) {
         IRect rect = layer->GetLayerSize();
-        RS_LOGI("RsDebug RSHardwareProcessor::OnRotate Before Rotate layer size [%d %d %d %d]",
-            rect.x, rect.y, rect.w, rect.h);
         RSSurfaceRenderNode *node = static_cast<RSSurfaceRenderNode *>(layer->GetLayerAdditionalInfo());
         if (node == nullptr) {
             RS_LOGE("RsRenderServiceUtil::DrawLayer: layer's surfaceNode is nullptr!");
@@ -421,7 +416,8 @@ void RSHardwareProcessor::OnRotate()
         }
         switch (rotation_) {
             case ScreenRotation::ROTATION_90: {
-                RS_LOGI("RsDebug RSHardwareProcessor::OnRotate 90.");
+                RS_LOGI("RsDebug RSHardwareProcessor::OnRotate 90 Before Rotate layer size [%d %d %d %d]",
+                    rect.x, rect.y, rect.w, rect.h);
                 layer->SetLayerSize({rect.y, height - rect.x - rect.w, rect.h, rect.w});
                 switch (surface->GetTransform()) {
                     case TransformType::ROTATE_90: {
@@ -441,10 +437,13 @@ void RSHardwareProcessor::OnRotate()
                         break;
                     }
                 }
+                RS_LOGI("RsDebug RSHardwareProcessor::OnRotate After Rotate layer size [%d %d %d %d]",
+                    layer->GetLayerSize().x, layer->GetLayerSize().y, layer->GetLayerSize().w, layer->GetLayerSize().h);
                 break;
             }
             case ScreenRotation::ROTATION_180: {
-                RS_LOGI("RsDebug RSHardwareProcessor::OnRotate 180.");
+                RS_LOGI("RsDebug RSHardwareProcessor::OnRotate 180 Before Rotate layer size [%d %d %d %d]",
+                    rect.x, rect.y, rect.w, rect.h);
                 layer->SetLayerSize({width - rect.x - rect.w, height - rect.y - rect.h, rect.w, rect.h});
                 switch (surface->GetTransform()) {
                     case TransformType::ROTATE_90: {
@@ -464,10 +463,13 @@ void RSHardwareProcessor::OnRotate()
                         break;
                     }
                 }
+                RS_LOGI("RsDebug RSHardwareProcessor::OnRotate After Rotate layer size [%d %d %d %d]",
+                    layer->GetLayerSize().x, layer->GetLayerSize().y, layer->GetLayerSize().w, layer->GetLayerSize().h);
                 break;
             }
             case ScreenRotation::ROTATION_270: {
-                RS_LOGI("RsDebug RSHardwareProcessor::OnRotate 270.");
+                RS_LOGI("RsDebug RSHardwareProcessor::OnRotate 270 Before Rotate layer size [%d %d %d %d]",
+                    rect.x, rect.y, rect.w, rect.h);
                 layer->SetLayerSize({width - rect.y - rect.h, rect.x, rect.h, rect.w});
                 switch (surface->GetTransform()) {
                     case TransformType::ROTATE_90: {
@@ -487,10 +489,11 @@ void RSHardwareProcessor::OnRotate()
                         break;
                     }
                 }
+                RS_LOGI("RsDebug RSHardwareProcessor::OnRotate After Rotate layer size [%d %d %d %d]",
+                    layer->GetLayerSize().x, layer->GetLayerSize().y, layer->GetLayerSize().w, layer->GetLayerSize().h);
                 break;
             }
             default:  {
-                RS_LOGE("RsDebug RSHardwareProcessor::OnRotate Failed.");
                 switch (surface->GetTransform()) {
                     case TransformType::ROTATE_90: {
                         layer->SetTransform(TransformType::ROTATE_270);
@@ -512,8 +515,6 @@ void RSHardwareProcessor::OnRotate()
                 break;
             }
         }
-        RS_LOGI("RsDebug RSHardwareProcessor::OnRotate After Rotate layer size [%d %d %d %d]",
-            layer->GetLayerSize().x, layer->GetLayerSize().y, layer->GetLayerSize().w, layer->GetLayerSize().h);
     }
 }
 } // namespace Rosen

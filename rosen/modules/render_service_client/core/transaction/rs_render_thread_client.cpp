@@ -30,6 +30,7 @@ void RSRenderThreadClient::CommitTransaction(std::unique_ptr<RSTransactionData>&
 {
     // test dco
     // test dco2
+    // test dco3
     RSRenderThread::Instance().RecvTransactionData(transactionData);
 }
 

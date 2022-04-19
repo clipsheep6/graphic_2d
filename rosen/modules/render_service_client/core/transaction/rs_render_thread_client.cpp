@@ -29,6 +29,7 @@ std::unique_ptr<RSIRenderClient> RSIRenderClient::CreateRenderThreadClient()
 void RSRenderThreadClient::CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData)
 {
     // test dco
+    // test dco2
     RSRenderThread::Instance().RecvTransactionData(transactionData);
 }
 

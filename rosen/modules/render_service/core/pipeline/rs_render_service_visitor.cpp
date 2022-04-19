@@ -28,7 +28,7 @@
 #include "pipeline/rs_processor_factory.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
-#include "drawing_engine/drawing_surface/rs_surface.h"
+#include "platform/drawing/rs_surface.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "screen_manager/screen_types.h"
 
@@ -74,8 +74,10 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
 
 void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 {
-    RS_LOGD("RsDebug RSRenderServiceVisitor::ProcessDisplayRenderNode child size:[%d] total size:[%d]",
-        node.GetChildrenCount(), node.GetSortedChildren().size());
+    isSecurityDisplay_ = node.GetSecurityDisplay();
+    RS_LOGD("RsDebug RSRenderServiceVisitor::ProcessDisplayRenderNode: nodeid:[%llu] screenid:[%llu] \
+        isSecurityDisplay:[%s] child size:[%d] total size:[%d]", node.GetId(), node.GetScreenId(),
+        isSecurityDisplay_ ? "true" : "false", node.GetChildrenCount(), node.GetSortedChildren().size());
     globalZOrder_ = 0.0f;
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
@@ -118,6 +120,11 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 
 void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
+    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
+        RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node[%llu] prepare paused because of \
+            security DisplayNode.", node.GetId());
+        return;
+    }
     if (!node.GetRenderProperties().GetVisible()) {
         RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : %llu is unvisible", node.GetId());
         return;
@@ -155,6 +162,11 @@ void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
     if (!processor_) {
         RS_LOGE("RSRenderServiceVisitor::ProcessSurfaceRenderNode processor is nullptr");
+        return;
+    }
+    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
+        RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node[%llu] process paused because of \
+            security DisplayNode.", node.GetId());
         return;
     }
     if (!node.GetRenderProperties().GetVisible()) {

@@ -281,11 +281,9 @@ SimpleColorSpace& GetColorSpaceOfCertainGamut(ColorGamut colorGamut)
         case ColorGamut::COLOR_GAMUT_ADOBE_RGB: {
             return GetAdobeRGBColorSpace();
         }
-        case ColorGamut::COLOR_GAMUT_DISPLAY_P3: {
-            return GetDisplayP3ColorSpace();
-        }
+        case ColorGamut::COLOR_GAMUT_DISPLAY_P3:
         case ColorGamut::COLOR_GAMUT_DCI_P3: {
-            return GetDCIP3ColorSpace();
+            return GetDisplayP3ColorSpace(); // Currently p3 colorspace is displayP3
         }
         default: {
             return GetSRGBColorSpace();
@@ -603,7 +601,7 @@ void RsRenderServiceUtil::ExtractAnimationInfo(const std::unique_ptr<RSTransitio
         info.pivot = parentProperties.GetBoundsPosition() + parentProperties.GetBoundsSize() * 0.5f;
     } else {
         if (!transitionProperties) {
-            RS_LOGI("RsDebug RSHardwareProcessor::CalculateInfoWithAnimation this node have no effect",
+            RS_LOGI("RsDebug RSHardwareProcessor::CalculateInfoWithAnimation this node[%s] have no effect",
                 node.GetName().c_str());
             return;
         }
@@ -695,9 +693,9 @@ SkMatrix RsRenderServiceUtil::GetCanvasTransform(const RSSurfaceRenderNode& node
     }
 
     const auto &geoAbsRect = node.GetDstRect();
+    transform.preTranslate(geoAbsRect.left_, geoAbsRect.top_);
     switch (rotation) {
         case ScreenRotation::ROTATION_90: {
-            transform.preTranslate(geoAbsRect.top_, -geoAbsRect.left_);
             switch (surface->GetTransform()) {
                 case TransformType::ROTATE_90: {
                     transform.preTranslate(geoAbsRect.height_, 0);
@@ -720,7 +718,6 @@ SkMatrix RsRenderServiceUtil::GetCanvasTransform(const RSSurfaceRenderNode& node
             break;
         }
         case ScreenRotation::ROTATION_180: {
-            transform.preTranslate(-geoAbsRect.left_, -geoAbsRect.top_);
             switch (surface->GetTransform()) {
                 case TransformType::ROTATE_90: {
                     transform.preTranslate(0, -geoAbsRect.height_);
@@ -743,7 +740,6 @@ SkMatrix RsRenderServiceUtil::GetCanvasTransform(const RSSurfaceRenderNode& node
             break;
         }
         case ScreenRotation::ROTATION_270: {
-            transform.preTranslate(-geoAbsRect.top_, geoAbsRect.left_);
             switch (surface->GetTransform()) {
                 case TransformType::ROTATE_90: {
                     transform.preTranslate(-geoAbsRect.height_, 0);
@@ -798,12 +794,13 @@ BufferDrawParam RsRenderServiceUtil::CreateBufferDrawParam(RSSurfaceRenderNode& 
 {
     const RSProperties& property = node.GetRenderProperties();
     BufferDrawParam params;
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+
     auto buffer = node.GetBuffer();
     sptr<Surface> surface = node.GetConsumer();
-    if (!geoPtr || !buffer || !surface) {
+    if (!buffer || !surface) {
         return params;
     }
+
     SkPaint paint;
     paint.setAlphaf(node.GetAlpha() * property.GetAlpha());
 
@@ -812,9 +809,11 @@ BufferDrawParam RsRenderServiceUtil::CreateBufferDrawParam(RSSurfaceRenderNode& 
     params.srcRect = SkRect::MakeXYWH(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
     const auto surfaceTransform = surface->GetTransform();
     if (surfaceTransform == TransformType::ROTATE_90 || surfaceTransform == TransformType::ROTATE_270) {
-        params.dstRect = SkRect::MakeXYWH(0, 0, property.GetBoundsHeight(), property.GetBoundsWidth());
+        params.dstRect = SkRect::MakeXYWH(node.GetDstRect().left_, node.GetDstRect().top_,
+            node.GetDstRect().height_, node.GetDstRect().width_);
     } else {
-        params.dstRect = SkRect::MakeXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
+        params.dstRect = SkRect::MakeXYWH(node.GetDstRect().left_, node.GetDstRect().top_,
+            node.GetDstRect().width_, node.GetDstRect().height_);
     }
     params.clipRect = SkRect::MakeXYWH(node.GetDstRect().left_, node.GetDstRect().top_, node.GetDstRect().width_,
         node.GetDstRect().height_);

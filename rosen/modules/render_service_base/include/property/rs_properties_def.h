@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,10 +16,9 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PROPERTY_RS_PROPERTIES_DEF_H
 #define RENDER_SERVICE_CLIENT_CORE_PROPERTY_RS_PROPERTIES_DEF_H
 
-#include <vector>
-
 #include "common/rs_color_palette.h"
 #include "common/rs_rect.h"
+#include "common/rs_vector4.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -44,8 +43,6 @@ enum class Gravity {
     DEFAULT = TOP_LEFT
 };
 
-enum class BorderStyle { SOLID, DASHED, DOTTED, NONE };
-
 class Decoration final {
 public:
     Decoration() {}
@@ -57,14 +54,15 @@ public:
     Color foregroundColor_ = RgbPalette::Transparent();
 };
 
-class Border final {
+class RsImageInfo final {
 public:
-    Border() {}
-    ~Border() {}
-    BorderStyle borderStyle_ = BorderStyle::SOLID;
-    float cornerRadius_ = 0.f;
-    float borderWidth_ = 0.f;
-    Color borderColor_ = RgbPalette::Transparent();
+    RsImageInfo(int fitNum, int repeatNum, float radius, double scale) : fitNum_(fitNum),
+        repeatNum_(repeatNum), radius_(radius), scale_(scale) {};
+    ~RsImageInfo() {}
+    int fitNum_ = 0;
+    int repeatNum_ = 0;
+    float radius_ = 0.f;
+    double scale_ = 0.0;
 };
 } // namespace Rosen
 } // namespace OHOS

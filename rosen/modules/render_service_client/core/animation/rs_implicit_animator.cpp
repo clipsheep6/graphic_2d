@@ -27,12 +27,6 @@ static constexpr int TIMING_CURVE_INDEX = 1;
 static constexpr int FINISH_INDEX = 2;
 } // namespace
 
-RSImplicitAnimator& RSImplicitAnimator::Instance()
-{
-    static RSImplicitAnimator instance;
-    return instance;
-}
-
 void RSImplicitAnimator::OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
     const RSAnimationTimingCurve& timingCurve, const std::function<void()>& finishCallback)
 {
@@ -347,5 +341,7 @@ template std::shared_ptr<RSAnimation> RSImplicitAnimator::CreateImplicitAnimatio
 template std::shared_ptr<RSAnimation> RSImplicitAnimator::CreateImplicitAnimation(RSNode& target,
     const RSAnimatableProperty& property, const std::shared_ptr<RSFilter>& startValue,
     const std::shared_ptr<RSFilter>& endValue);
+template std::shared_ptr<RSAnimation> RSImplicitAnimator::CreateImplicitAnimation(RSNode& target,
+    const RSAnimatableProperty& property, const Vector4<Color>& startValue, const Vector4<Color>& endValue);
 } // namespace Rosen
 } // namespace OHOS

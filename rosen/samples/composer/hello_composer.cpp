@@ -14,6 +14,7 @@
  */
 
 #include "hello_composer.h"
+
 #include <vsync_generator.h>
 #include <vsync_controller.h>
 #include <vsync_distributor.h>
@@ -28,6 +29,7 @@ namespace {
 #define LOGI(fmt, ...) ::OHOS::HiviewDFX::HiLog::Info(            \
     ::OHOS::HiviewDFX::HiLogLabel {LOG_CORE, 0, "HelloComposer"}, \
     "%{public}s: " fmt, __func__, ##__VA_ARGS__)
+
 #define LOGE(fmt, ...) ::OHOS::HiviewDFX::HiLog::Error(           \
     ::OHOS::HiviewDFX::HiLogLabel {LOG_CORE, 0, "HelloComposer"}, \
     "%{public}s: " fmt, __func__, ##__VA_ARGS__)
@@ -98,7 +100,8 @@ void HelloComposer::OnScreenPlug(std::shared_ptr<HdiOutput> &output, bool connec
     thisPtr->OnHotPlugEvent(output, connected);
 }
 
-void HelloComposer::OnPrepareCompleted(sptr<Surface> &surface, const struct PrepareCompleteParam &param, void* data)
+void HelloComposer::OnPrepareCompleted(
+    sptr<Surface> &surface, const struct PrepareCompleteParam &param, void* data)
 {
     if (!param.needFlushFramebuffer) {
         return;

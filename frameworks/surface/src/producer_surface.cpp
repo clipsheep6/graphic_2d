@@ -112,8 +112,7 @@ GSError ProducerSurface::CancelBuffer(sptr<SurfaceBuffer>& buffer)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    sptr<BufferExtraData> bedata = nullptr;
-    buffer->GetExtraData(bedata);
+    const sptr<BufferExtraData>& bedata = buffer->GetExtraData();
     return GetProducer()->CancelBuffer(buffer->GetSeqNum(), bedata);
 }
 
@@ -124,8 +123,7 @@ GSError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    sptr<BufferExtraData> bedata = nullptr;
-    buffer->GetExtraData(bedata);
+    const sptr<BufferExtraData>& bedata = buffer->GetExtraData();
     return GetProducer()->FlushBuffer(buffer->GetSeqNum(), bedata, fence, config);
 }
 
@@ -269,5 +267,14 @@ GSError ProducerSurface::SetTransform(TransformType transform)
 TransformType ProducerSurface::GetTransform() const
 {
     return TransformType::ROTATE_BUTT;
+}
+
+GSError ProducerSurface::IsSupportedAlloc(const std::vector<VerifyAllocInfo> &infos,
+                                          std::vector<bool> &supporteds)
+{
+    if (infos.size() == 0 || infos.size() != supporteds.size()) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    return producer_->IsSupportedAlloc(infos, supporteds);
 }
 } // namespace OHOS

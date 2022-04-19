@@ -61,6 +61,9 @@ ohos_shared_library("libcomposer") {
 
   configs = [ ":composer_config" ]
 
+  defines = []
+  defines += gpu_defines
+
   public_configs = [
     ":composer_public_config",
     "//utils/native/base:utils_config",

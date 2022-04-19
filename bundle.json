@@ -19,6 +19,9 @@
         "SystemCapability.Graphic.Graphic2D.WebGL2"
       ],
       "adapted_system_type": [ "standard" ],
+      "features": [
+        "graphic_standard_feature_ace_enable_gpu"
+      ],
       "rom": "10000KB",
       "ram": "10000KB",
       "hisysevent_config": [
@@ -50,10 +53,12 @@
           "//third_party/wayland-ivi-extension:simple-weston-client",
           "//third_party/weston:default",
           "//foundation/graphic/standard:default",
+          "//foundation/graphic/standard/interfaces/kits/napi:napi_packages",
           "//foundation/graphic/standard/rosen/samples/composer:hello_composer",
           "//foundation/graphic/standard/rosen/modules/composer:libcomposer",
           "//foundation/graphic/standard/rosen/modules/2d_graphics:2d_graphics",
           "//foundation/graphic/standard/rosen/samples/2d_graphics:drawing_sample_rs",
+          "//foundation/graphic/standard/rosen/samples/2d_graphics:drawing_engine_sample",
           "//foundation/graphic/standard/rosen/samples/2d_graphics/test:drawing_sample",
           "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
           "//foundation/graphic/standard/rosen/modules/render_service_base/test:render_service_client",
@@ -62,7 +67,6 @@
           "//foundation/graphic/standard/rosen/modules/render_service:librender_service",
           "//foundation/graphic/standard/rosen/modules/render_service:render_service",
           "//foundation/graphic/standard/rosen/modules/render_service:render_service_dump",
-          "//foundation/graphic/standard/interfaces/kits/napi/graphic/webgl:libwebglnapi",
           "//foundation/graphic/standard/rosen/modules/effect/effectChain:libeffectchain",
           "//foundation/graphic/standard/rosen/modules/effect/egl:libegl_effect"
         ],
@@ -160,6 +164,21 @@
                 "window_manager_service_type.h"
               ],
               "header_base": "//foundation/graphic/standard/interfaces/innerkits/wmservice"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/standard/rosen/modules/animation/window_animation:window_animation",
+            "header": {
+              "header_files": [
+                "rs_iwindow_animation_controller.h",
+                "rs_iwindow_animation_finished_callback.h",
+                "rs_window_animation_finished_callback_stub.h",
+                "rs_window_animation_finished_callback.h",
+                "rs_window_animation_stub.h",
+                "rs_window_animation_target.h"
+              ],
+              "header_base": "//foundation/graphic/standard/rosen/modules/animation/window_animation/include"
             }
           }
         ],

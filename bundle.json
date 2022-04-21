@@ -45,13 +45,6 @@
       },
       "build": {
         "sub_component": [
-          "//third_party/wayland-ivi-extension:ivi-controller",
-          "//third_party/wayland-ivi-extension:ivi-input-controller",
-          "//third_party/wayland-ivi-extension:libscreen-info-module",
-          "//third_party/wayland-ivi-extension:layer-add-surfaces",
-          "//third_party/wayland-ivi-extension:LayerManagerControl",
-          "//third_party/wayland-ivi-extension:simple-weston-client",
-          "//third_party/weston:default",
           "//foundation/graphic/standard:default",
           "//foundation/graphic/standard/interfaces/kits/napi:napi_packages",
           "//foundation/graphic/standard/rosen/samples/composer:hello_composer",
@@ -131,39 +124,6 @@
                 "graphic_common_c.h"
               ],
               "header_base": "//foundation/graphic/standard/interfaces/innerkits/common"
-            }
-          },
-          {
-            "type": "so",
-            "name": "//foundation/graphic/standard/frameworks/wm:libwmclient",
-            "header": {
-              "header_files": [
-                "iscreen_shot_callback.h",
-                "iwindow_shot_callback.h",
-                "subwindow.h",
-                "subwindow_option.h",
-                "virtual_display_option.h",
-                "window.h",
-                "window_manager.h",
-                "window_manager_type.h",
-                "window_option.h",
-                "wm_common.h"
-              ],
-              "header_base": "//foundation/graphic/standard/interfaces/innerkits/wmclient"
-            }
-          },
-          {
-            "type": "so",
-            "name": "//foundation/graphic/standard/frameworks/wmservice:libwmservice",
-            "header": {
-              "header_files": [
-                "iwindow_change_listener_clazz.h",
-                "iwindow_manager_display_listener_clazz.h",
-                "iwindow_manager_service.h",
-                "window_manager_service_client.h",
-                "window_manager_service_type.h"
-              ],
-              "header_base": "//foundation/graphic/standard/interfaces/innerkits/wmservice"
             }
           },
           {

@@ -108,7 +108,7 @@ private:
     RSMainThread& operator=(const RSMainThread&) = delete;
     RSMainThread& operator=(const RSMainThread&&) = delete;
 
-    void OnVsync(uint64_t timestamp, void *data);
+    void OnVsync(uint64_t timestamp);
     void ProcessCommand();
     void Animate(uint64_t timestamp);
     void Render();

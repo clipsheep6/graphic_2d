@@ -108,14 +108,14 @@ void RSMainThread::RequestNextVSync()
     RS_TRACE_FUNC();
     VSyncReceiver::FrameCallback fcb = {
         .userData_ = this,
-        .callback_ = std::bind(&RSMainThread::OnVsync, this, ::std::placeholders::_1, ::std::placeholders::_2),
+        .callback_ = std::bind(&RSMainThread::OnVsync, this, ::std::placeholders::_1),
     };
     if (receiver_ != nullptr) {
         receiver_->RequestNextVSync(fcb);
     }
 }
 
-void RSMainThread::OnVsync(uint64_t timestamp, void *data)
+void RSMainThread::OnVsync(uint64_t timestamp)
 {
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "RSMainThread::OnVsync");
     timestamp_ = timestamp;

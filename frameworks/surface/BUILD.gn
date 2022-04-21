@@ -28,8 +28,10 @@ config("surface_config") {
 }
 
 config("surface_public_config") {
-  include_dirs =
-      [ "//foundation/graphic/standard/interfaces/innerkits/surface" ]
+  include_dirs = [
+    "//foundation/graphic/standard/interfaces/innerkits/surface",
+    "//foundation/graphic/standard/interfaces/innerkits/common",
+  ]
 
   if (ace_enable_gpu) {
     defines = [ "ACE_ENABLE_GPU" ]

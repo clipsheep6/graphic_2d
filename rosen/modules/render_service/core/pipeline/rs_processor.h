@@ -41,7 +41,8 @@ public:
     using SpecialTask = std::function<void()>;
     RSProcessor() {}
     virtual ~RSProcessor() {}
-    virtual void ProcessSurface(RSSurfaceRenderNode &node) = 0;
+    virtual void ProcessSurface(RSSurfaceRenderNode& node) = 0;
+    virtual void ProcessSurface(RSDisplayRenderNode& node) = 0;
     virtual void Init(ScreenId id, int32_t offsetX, int32_t offsetY) = 0;
     virtual void PostProcess() = 0;
 
@@ -53,8 +54,6 @@ protected:
     // [PLANNING] use new CreateCanvas above and delete these two old interfaces: CreateCanvas and FlushBuffer.
     std::unique_ptr<SkCanvas> CreateCanvas(sptr<Surface> producerSurface, BufferRequestConfig requestConfig);
     void FlushBuffer(sptr<Surface> surface, BufferFlushConfig flushConfig);
-
-    bool ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask& task, sptr<SurfaceBuffer>& buffer);
     void SetBufferTimeStamp();
     int32_t GetOffsetX();
     int32_t GetOffsetY();

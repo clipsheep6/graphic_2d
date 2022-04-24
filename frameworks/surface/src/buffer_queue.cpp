@@ -849,7 +849,10 @@ void BufferQueue::Dump(std::string &result)
     result += "      default-size = [" + std::to_string(defaultWidth) + "x" + std::to_string(defaultHeight) + "]" +
         ", FIFO = " + std::to_string(queueSize_) +
         ", name = " + name_ +
-        ", uniqueId = " + std::to_string(uniqueId_) + ".\n";
+        ", uniqueId = " + std::to_string(uniqueId_) + 
+        ", usedBufferList Size = " + std::to_string(GetUsedSize()) +
+        ", freeBufferList Size = " + std::to_string(freeList_.size()) +
+        ", dirtyBufferList Size = " + std::to_string(dirtyList_.size()) + ".\n";
 
     result.append("      bufferQueueCache:\n");
     DumpCache(result);

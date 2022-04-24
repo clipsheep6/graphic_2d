@@ -838,18 +838,29 @@ void BufferQueue::DumpCache(std::string &result)
             std::to_string(element.config.strideAlignment) + ", " +
             std::to_string(element.config.format) +", " +
             std::to_string(element.config.usage) + ", " +
-            std::to_string(element.config.timeout) + "].\n";
+            std::to_string(element.config.timeout) + "],";
+        result += " bufferMemSize = " + std::to_string(element.buffer->GetSize()) + "(Bits).\n";
     }
 }
 
 void BufferQueue::Dump(std::string &result)
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
+    uint32_t totalBufferListSize = 0;
     result.append("    BufferQueue:\n");
     result += "      default-size = [" + std::to_string(defaultWidth) + "x" + std::to_string(defaultHeight) + "]" +
         ", FIFO = " + std::to_string(queueSize_) +
         ", name = " + name_ +
-        ", uniqueId = " + std::to_string(uniqueId_) + ".\n";
+        ", uniqueId = " + std::to_string(uniqueId_) +
+        ", usedBufferListLen = " + std::to_string(GetUsedSize()) +
+        ", freeBufferListLen = " + std::to_string(freeList_.size()) +
+        ", dirtyBufferListLen = " + std::to_string(dirtyList_.size());
+
+    for (auto it = bufferQueueCache_.begin(); it != bufferQueueCache_.end(); it++) {
+        BufferElement element = it->second;
+        totalBufferListSize += element.buffer->GetSize();
+    }
+    result += ", totalBuffersMemSize = " + std::to_string(totalBufferListSize) + "(Bits).\n";
 
     result.append("      bufferQueueCache:\n");
     DumpCache(result);

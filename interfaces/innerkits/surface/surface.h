@@ -74,7 +74,7 @@ public:
     virtual uint64_t GetUniqueId() const = 0;
 
     virtual void Dump(std::string &result) const = 0;
-
+    virtual uint32_t GetMemSize() const = 0;
     virtual GSError CleanCache() = 0;
 
     virtual GSError SetTransform(TransformType transform) = 0;

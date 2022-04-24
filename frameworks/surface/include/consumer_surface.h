@@ -71,7 +71,7 @@ public:
     uint64_t GetUniqueId() const override;
 
     void Dump(std::string &result) const override;
-
+    uint32_t GetMemSize() const override;
     GSError CleanCache() override;
 
     GSError SetTransform(TransformType transform) override;

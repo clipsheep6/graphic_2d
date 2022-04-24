@@ -121,6 +121,14 @@ void BufferQueueConsumer::Dump(std::string &result) const
     return bufferQueue_->Dump(result);
 }
 
+uint32_t BufferQueueConsumer::GetMemSize()
+{
+    if (bufferQueue_ == nullptr) {
+        return 0;
+    }
+    return bufferQueue_->GetMemSize();
+}
+
 TransformType BufferQueueConsumer::GetTransform() const
 {
     if (bufferQueue_ == nullptr) {

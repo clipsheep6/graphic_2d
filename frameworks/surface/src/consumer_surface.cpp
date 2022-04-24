@@ -190,6 +190,12 @@ void ConsumerSurface::Dump(std::string &result) const
     return consumer_->Dump(result);
 }
 
+
+uint32_t ConsumerSurface::GetMemSize() const
+{
+    return consumer_->GetMemSize();
+}
+
 GSError ConsumerSurface::SetTransform(TransformType transform)
 {
     return producer_->SetTransform(transform);

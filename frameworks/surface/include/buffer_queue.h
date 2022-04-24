@@ -97,7 +97,7 @@ public:
     uint64_t GetUniqueId() const;
 
     void Dump(std::string &result);
-
+    uint32_t GetMemSize();
     GSError SetTransform(TransformType transform);
     TransformType GetTransform() const;
 

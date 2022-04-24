@@ -46,7 +46,7 @@ public:
     GSError SetDefaultUsage(uint32_t usage);
     void Dump(std::string &result) const;
     TransformType GetTransform() const;
-
+    uint32_t GetMemSize();
 private:
     sptr<BufferQueue> bufferQueue_ = nullptr;
     std::string name_ = "not init";

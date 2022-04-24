@@ -74,6 +74,26 @@ void RSRenderNodeMap::DumpNodeNotOnTree(std::string& dumpString) const
     }
 }
 
+void RSRenderNodeMap::DumpAllNodeMemSize(std::string& dumpString) const
+{
+    uint32_t allSurfacesMemSize = 0;
+    dumpString.append("\n");
+    dumpString.append("-- All Surfaces Memory Size\n");
+    for (auto it = renderNodeMap_.begin(); it != renderNodeMap_.end(); it++) {
+        if ((*it).second->GetType() != RSRenderNodeType::SURFACE_NODE) {
+            continue;
+        }
+        auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>((*it).second);
+        auto& surfaceConsumer = node->GetConsumer();
+        if (surfaceConsumer == nullptr) {
+            continue;
+        }
+        allSurfacesMemSize += surfaceConsumer->GetMemSize();
+    }
+    dumpString += "the memory size of all surfaces buffer is :" +
+                  std::to_string(static_cast<double>(allSurfacesMemSize) / 1024) + "KiB.\n";
+}
+
 template<>
 const std::shared_ptr<RSBaseRenderNode> RSRenderNodeMap::GetRenderNode(NodeId id) const
 {

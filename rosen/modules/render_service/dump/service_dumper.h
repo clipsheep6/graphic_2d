@@ -16,6 +16,7 @@
 #ifndef ROSEN_SERVICE_DUMPER_H
 #define ROSEN_SERVICE_DUMPER_H
 
+#include <iostream>
 #include <chrono>
 #include <cstdio>
 #include <fcntl.h>
@@ -26,6 +27,11 @@
 #include "ipc_types.h"
 #include "iservice_registry.h"
 #include "unique_fd.h"
+
+namespace { 
+    constexpr const int32_t DUMP_COMMAND_RET_CODE = -1;
+    constexpr const int32_t DUMP_HELP_RET_CODE = 1;
+}
 
 namespace OHOS {
 namespace Detail {
@@ -82,6 +88,28 @@ public:
         }
 
         return ReadAndWriteDumpInfo();
+    }
+
+    int PrintHelpInfo(int argc, char *argv[])
+    {
+        int retCode = DUMP_COMMAND_RET_CODE;
+        if (argc <= 1) {
+            return retCode;
+        }
+
+        std::string param1(argv[1]);
+        if (param1 == "--help") {
+            std::cout << "-- help info:" << std::endl;
+            std::cout << "display:           Show the screens info." << std::endl;
+            std::cout << "surface:           Show the foreground surfaces info." << std::endl;
+            std::cout << "fps:               Show the fps info." << std::endl;
+            std::cout << "nodeNotOnTree:     Show the surfaces info which are not on the tree." << std::endl;
+            std::cout << "allSurfacesMem:    Show the memory size of all surfaces buffer." << std::endl;
+            std::cout << "NULL:              Show all of the information above." << std::endl;
+            retCode = DUMP_HELP_RET_CODE;
+        }
+
+        return retCode;
     }
 
 private:

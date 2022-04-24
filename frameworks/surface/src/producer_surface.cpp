@@ -259,6 +259,11 @@ uint64_t ProducerSurface::GetUniqueId() const
     return producer_->GetUniqueId();
 }
 
+uint32_t ProducerSurface::GetMemSize() const
+{
+    return 0;
+}
+
 GSError ProducerSurface::SetTransform(TransformType transform)
 {
     return producer_->SetTransform(transform);

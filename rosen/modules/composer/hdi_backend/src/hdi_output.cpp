@@ -203,7 +203,8 @@ void HdiOutput::Dump(std::string &result) const
         std::string name;
         layer->GetLayerInfo()->GetSurface()->GetName(name);
         const LayerInfoPtr &info = layer->GetLayerInfo();
-        result += "\n surface [" + name + "] Id[" + std::to_string(layerInfo.surfaceId) + "]:\n";
+        result += "\n surface [" + name + "] NodeId[" + std::to_string(layerInfo.surfaceId) + "]";
+        result +=  " LayerId[" + std::to_string(layer->GetLayerId()) + "]:\n";
         info->Dump(result);
     }
 }

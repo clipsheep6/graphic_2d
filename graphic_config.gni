@@ -12,6 +12,7 @@
 # limitations under the License.
 
 declare_args() {
+  # just declare, define in productdefine/common/products xxxx.json
   graphic_standard_feature_ace_enable_gpu = false
 }
 
@@ -24,9 +25,10 @@ if (graphic_standard_feature_ace_enable_gpu) {
   rs_enable_gpu = true
 
   # libgl is a native stub for decoupling system.img and vendor.img
-  # real libgl installed in /vendor/lib/chipsetsdk
   libgl = [
     "//foundation/graphic/standard/frameworks/opengl/libs/EGL:libEGL_stub",
+    "//foundation/graphic/standard/frameworks/opengl/libs/GLES:libGLES_stub",
+    "//foundation/graphic/standard/frameworks/opengl/libs/GLES2:libGLESv2_stub",
     "//foundation/graphic/standard/frameworks/opengl/libs/GLES3:libGLESv3_stub",
   ]
 } else {

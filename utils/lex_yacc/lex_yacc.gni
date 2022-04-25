@@ -122,6 +122,9 @@ template("lex_yacc") {
       ":${gen_lex_name}",
       ":${gen_yacc_name}",
     ]
+
+    subsystem_name = "graphic"
+    part_name = "graphic_standard"
   }
 
   group(target_name) {

@@ -29,5 +29,9 @@ int main(int argc, char *argv[])
     }
 
     Detail::ServiceDumper dumper(renderService, "Render_Service", 10000); // timeout: 10000 ms.
+    int retCode = dumper.PrintHelpInfo(argc, argv);
+    if (retCode == 1) {
+        return retCode;
+    }
     return dumper.Run(argc, argv);
 }

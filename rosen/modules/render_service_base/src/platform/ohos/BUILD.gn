@@ -28,6 +28,7 @@ config("export_config") {
     "//foundation/graphic/standard/rosen/modules/2d_graphics/src",
     "//foundation/graphic/standard/rosen/modules/2d_graphics/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
+    "//foundation/graphic/standard/frameworks/surface/include"
   ]
 }
 

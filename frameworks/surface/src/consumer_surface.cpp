@@ -78,7 +78,26 @@ GSError ConsumerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
 GSError ConsumerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                        int64_t &timestamp, Rect &damage)
 {
-    return consumer_->AcquireBuffer(buffer, fence, timestamp, damage);
+    bool queueBlockFlag = false;
+    auto retQueueBlockFlag = consumer_->GetQueueBlockFlag(queueBlockFlag);
+
+    if(retQueueBlockFlag == GSERROR_OK&&queueBlockFlag == true){
+        BLOGNI("Now QueueBlock ");
+        auto bufferRet = consumer_->AcquireBuffer(buffer, fence, timestamp, damage);
+        if (bufferRet != GSERROR_OK) {
+            BLOGNI("AcquireBuffer first buff failed");
+            return bufferRet;
+        }
+        BLOGNI("Acquire first buff success");
+        if(consumer_->ReleaseBuffer(buffer,fence)!= GSERROR_OK){
+            BLOGNI("Release Buffer failed");
+            return bufferRet;
+        }
+        BLOGNI("Release Buffer success");
+        return consumer_->AcquireBuffer(buffer, fence, timestamp, damage);
+    }else{
+        return consumer_->AcquireBuffer(buffer, fence, timestamp, damage);
+    } 
 }
 
 GSError ConsumerSurface::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence)

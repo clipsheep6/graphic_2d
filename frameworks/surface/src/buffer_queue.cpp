@@ -832,4 +832,25 @@ void BufferQueue::Dump(std::string &result)
     result.append("      bufferQueueCache:\n");
     DumpCache(result);
 }
+
+GSError BufferQueue::GetQueueBlockFlag(bool &queueBlockFlag) 
+{
+    if(GetUsedSize() <= 0){
+        return GSERROR_NOT_INIT;
+    }
+
+    if (isShared_ == true) {
+        queueBlockFlag = false;
+        return GSERROR_OK;
+    }
+
+    if(!freeList_.empty() || (GetUsedSize() < GetQueueSize())){
+        queueBlockFlag = false;
+        return GSERROR_OK;
+    }
+
+    queueBlockFlag = true;
+    return GSERROR_OK;
+}
+
 }; // namespace OHOS

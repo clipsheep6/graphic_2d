@@ -104,6 +104,8 @@ public:
     GSError IsSupportedAlloc(const std::vector<VerifyAllocInfo> &infos,
                              std::vector<bool> &supporteds) const;
 
+    GSError GetQueueBlockFlag(bool &queueBlockFlag);
+
 private:
     GSError AllocBuffer(sptr<SurfaceBuffer>& buffer, const BufferRequestConfig &config);
     void DeleteBufferInCache(int sequence);

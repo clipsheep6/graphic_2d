@@ -128,4 +128,13 @@ TransformType BufferQueueConsumer::GetTransform() const
     }
     return bufferQueue_->GetTransform();
 }
+
+GSError BufferQueueConsumer::GetQueueBlockFlag(bool &queueBlockFlag)
+{
+    if (bufferQueue_ == nullptr) {
+        return GSERROR_NOT_INIT;
+    }
+    return bufferQueue_->GetQueueBlockFlag(queueBlockFlag);
+}
+
 } // namespace OHOS

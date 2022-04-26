@@ -47,6 +47,8 @@ public:
     void Dump(std::string &result) const;
     TransformType GetTransform() const;
 
+    GSError GetQueueBlockFlag(bool &queueBlockFlag);
+
 private:
     sptr<BufferQueue> bufferQueue_ = nullptr;
     std::string name_ = "not init";

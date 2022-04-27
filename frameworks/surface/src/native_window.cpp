@@ -46,6 +46,7 @@ struct NativeWindow* CreateNativeWindowFromSurface(void* pSuface)
     nativeWindow->config.timeout = 3000;        // default timout is 3000 ms
     nativeWindow->config.colorGamut = ColorGamut::COLOR_GAMUT_SRGB;
     nativeWindow->config.transform = TransformType::ROTATE_NONE;
+    nativeWindow->config.scalingMode = ScalingMode::SCALING_MODE_SCALE_TO_WINDOW;
 
     NativeObjectReference(nativeWindow);
     return nativeWindow;
@@ -166,6 +167,11 @@ static int32_t InternalHanleNativeWindowOpt(struct NativeWindow *window, int cod
             window->config.strideAlignment = stride;
             break;
         }
+        case SET_TIMEOUT: {
+            int32_t timeout = va_arg(args, int32_t);
+            window->config.timeout = timeout;
+            break;
+        }
         case SET_COLOR_GAMUT: {
             int32_t colorGamut = va_arg(args, int32_t);
             window->config.colorGamut = static_cast<ColorGamut>(colorGamut);
@@ -174,6 +180,11 @@ static int32_t InternalHanleNativeWindowOpt(struct NativeWindow *window, int cod
         case SET_TRANSFORM : {
             int32_t transform = va_arg(args, int32_t);
             window->config.transform = static_cast<TransformType>(transform);
+            break;
+        }
+        case SET_SCALING_MODE : {
+            int32_t scalingMode = va_arg(args, int32_t);
+            window->config.scalingMode = static_cast<ScalingMode>(scalingMode);
             break;
         }
         case GET_USAGE: {
@@ -199,6 +210,11 @@ static int32_t InternalHanleNativeWindowOpt(struct NativeWindow *window, int cod
             *stride = window->config.strideAlignment;
             break;
         }
+        case GET_TIMEOUT : {
+            int32_t *timeout = va_arg(args, int32_t*);
+            *timeout = window->config.timeout;
+            break;
+        }
         case GET_COLOR_GAMUT: {
             int32_t *colorGamut = va_arg(args, int32_t*);
             *colorGamut = static_cast<int32_t>(window->config.colorGamut);
@@ -207,6 +223,11 @@ static int32_t InternalHanleNativeWindowOpt(struct NativeWindow *window, int cod
         case GET_TRANSFORM: {
             int32_t *transform = va_arg(args, int32_t*);
             *transform = static_cast<int32_t>(window->config.transform);
+            break;
+        }
+        case GET_SCALING_MODE: {
+            int32_t *scalingMode = va_arg(args, int32_t*);
+            *scalingMode = static_cast<int32_t>(window->config.scalingMode);
             break;
         }
         default:

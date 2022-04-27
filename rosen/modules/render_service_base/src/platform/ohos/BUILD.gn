@@ -91,4 +91,7 @@ ohos_source_set("rosen_ohos_sources") {
     "samgr_standard:samgr_proxy",
     "startup_l2:syspara",
   ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }

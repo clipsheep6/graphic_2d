@@ -58,6 +58,8 @@ protected:
     void SetBufferTimeStamp();
     int32_t GetOffsetX();
     int32_t GetOffsetY();
+    
+    void DropFrameProcess(RSSurfaceRenderNode& node);
 
 #ifdef RS_ENABLE_GL
     std::shared_ptr<RenderContext> renderContext_;

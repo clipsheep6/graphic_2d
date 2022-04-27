@@ -113,8 +113,8 @@ void RSProcessor::DropFrameProcess(RSSurfaceRenderNode& node)
         return;
     }
     
-    // if queuesiza ==1, we don't need to dropframe 
-    // availableBufferCnt>=2 means QueueSize >=2 too
+    // if queuesize equal 1, we don't need to dropframe 
+    // availableBufferCnt>= 2 means QueueSize >=2 too
     if (availableBufferCnt >= 2 && surfaceConsumer->GetQueueSize() == availableBufferCnt) {
         RS_LOGI("RsDebug RSProcessor::DropFrameProcess (node: %lld) queueBlock, start to drop one frame", node.GetId());
         int32_t fenceFd = -1;
@@ -129,8 +129,8 @@ void RSProcessor::DropFrameProcess(RSSurfaceRenderNode& node)
         }
 
         ret = surfaceConsumer->ReleaseBuffer(cbuffer, -1);
-        if (ret != SURFACE_ERROR_OK) {
-            RS_LOGE("RSProcessor::DropFrameProcess(node: %lld): ReleaseBuffer buffer error! ret: %d.", 
+        if (ret != OHOS::SURFACE_ERROR_OK) {
+            RS_LOGW("RSProcessor::DropFrameProcess(node: %lld): ReleaseBuffer failed(ret: %d), do nothing ",
                 node.GetId(), ret);
             return;
         }

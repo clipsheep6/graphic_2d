@@ -43,6 +43,9 @@ static void SystemCallSetThreadName(const std::string& name)
 }
 
 namespace {
+const std::string TASK_NAME = "DrawFrame";
+const std::string DELAY_TASK_NAME = "DrawFrameDelay";
+
 void DrawEventReport(float frameLength)
 {
     int32_t pid = getpid();
@@ -76,6 +79,9 @@ RSRenderThread::RSRenderThread()
     ROSEN_LOGD("Create RenderContext, its pointer is %p", renderContext_);
 #endif
     mainFunc_ = [&]() {
+        if (activeWindowCnt_.load() == 0) {
+            return;
+        }
         clock_t startTime = clock();
         std::string str = "RSRenderThread DrawFrame: " + std::to_string(timestamp_);
         ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, str.c_str());
@@ -161,8 +167,16 @@ void RSRenderThread::RecvTransactionData(std::unique_ptr<RSTransactionData>& tra
         cmds_.emplace_back(std::move(transactionData));
         ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
     }
-    // [PLANNING]: process in next vsync (temporarily)
-    RSRenderThread::Instance().RequestNextVSync();
+    if (!handler_) {
+        return;
+    }
+    if (context_.animatingNodeList_.empty()) {
+        auto now = std::chrono::steady_clock::now().time_since_epoch();
+        timestamp_ = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+    } else {
+        handler_->RemoveTask(DELAY_TASK_NAME);
+    }
+    handler_->PostTask(mainFunc_, TASK_NAME);
 }
 
 void RSRenderThread::RequestNextVSync()
@@ -217,9 +231,7 @@ void RSRenderThread::OnVsync(uint64_t timestamp)
     mValue = (mValue + 1) % 2; // 1 and 2 is Calculated parameters
     RS_TRACE_INT("Vsync-client", mValue);
     timestamp_ = timestamp;
-    if (activeWindowCnt_.load() > 0) {
-        mainFunc_(); // start render-loop now
-    }
+    handler_->PostTask(mainFunc_, DELAY_TASK_NAME, refreshPeriod_ / 4);
     ROSEN_TRACE_END(BYTRACE_TAG_GRAPHIC_AGP);
 }
 

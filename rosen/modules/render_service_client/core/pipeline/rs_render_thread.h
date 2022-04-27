@@ -92,19 +92,18 @@ private:
     std::unique_ptr<std::thread> thread_ = nullptr;
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
+    AppExecFwk::EventHandler::Callback mainFunc_ = nullptr;
     std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
     RSTaskMessage::RSTask preTask_ = nullptr;
-    RSTaskMessage::RSTask mainFunc_;
 
     std::mutex mutex_;
     std::mutex cmdMutex_;
     std::vector<std::unique_ptr<RSTransactionData>> cmds_;
-    bool hasRunningAnimation_ = false;
     std::shared_ptr<RSNodeVisitor> visitor_;
 
     uint64_t timestamp_ = 0;
     uint64_t prevTimestamp_ = 0;
-    uint64_t refreshPeriod_ = 16666667;
+    int64_t refreshPeriod_ = 16;
     int32_t tid_ = -1;
     uint64_t mValue = 0;
 

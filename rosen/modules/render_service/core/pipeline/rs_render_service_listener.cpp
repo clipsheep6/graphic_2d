@@ -41,13 +41,15 @@ void RSRenderServiceListener::DropFrameProcess()
 
     const auto& surfaceConsumer = node->GetConsumer();
     if (surfaceConsumer == nullptr) {
-        RS_LOGE("RsDebug RSRenderServiceListener::DropFrameProcess (node: %lld): surfaceConsumer is null!", node->GetId());
+        RS_LOGE("RsDebug RSRenderServiceListener::DropFrameProcess (node: %lld): surfaceConsumer is null!",
+            node->GetId());
         return;
     }
      
     // availableBufferCnt>= 2 means QueueSize >=2 too
     if (availableBufferCnt >= 2 && surfaceConsumer->GetQueueSize() == static_cast<uint32_t>(availableBufferCnt)) {
-        RS_LOGI("RsDebug RSRenderServiceListener::DropFrameProcess (node: %lld) queueBlock, start to drop one frame", node->GetId());
+        RS_LOGI("RsDebug RSRenderServiceListener::DropFrameProcess (node: %lld) queueBlock, start to drop one frame",
+            node->GetId());
         OHOS::sptr<SurfaceBuffer> cbuffer;
         Rect damage;
         sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
@@ -61,12 +63,13 @@ void RSRenderServiceListener::DropFrameProcess()
 
         ret = surfaceConsumer->ReleaseBuffer(cbuffer, SyncFence::INVALID_FENCE);
         if (ret != OHOS::SURFACE_ERROR_OK) {
-            RS_LOGW("RSRenderServiceListener::DropFrameProcess(node: %lld): ReleaseBuffer failed(ret: %d), Acquire done ",
+            RS_LOGW("RSRenderServiceListener::DropFrameProcess(node: %lld): ReleaseBuffer failed(ret: %d)",
                 node->GetId(), ret);
             return;
         }
         availableBufferCnt = node->ReduceAvailableBuffer();
-        RS_LOGI("RsDebug RSRenderServiceListener::DropFrameProcess (node: %lld), drop one frame finished", node->GetId());
+        RS_LOGI("RsDebug RSRenderServiceListener::DropFrameProcess (node: %lld), drop one frame finished",
+            node->GetId());
     }
 
     return;

@@ -29,6 +29,7 @@ public:
     ~RSRenderServiceListener() override;
     void OnBufferAvailable() override;
 private :
+    void DropFrameProcess();
     std::weak_ptr<RSSurfaceRenderNode> surfaceRenderNode_;
 };
 } // namespace Rosen

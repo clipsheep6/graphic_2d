@@ -28,6 +28,51 @@ RSRenderServiceListener::RSRenderServiceListener(std::weak_ptr<RSSurfaceRenderNo
     : surfaceRenderNode_(surfaceRenderNode)
 {}
 
+void RSRenderServiceListener::DropFrameProcess()
+{
+    auto node = surfaceRenderNode_.lock();
+    if (node == nullptr) {
+        RS_LOGE("RSRenderServiceListener::DropFrameProcess node is nullptr");
+        return;
+    }
+    auto availableBufferCnt = node->GetAvailableBufferCount();
+    RS_LOGI("RsDebug RSRenderServiceListener::DropFrameProcess start node:%llu available buffer:%d", node->GetId(),
+        availableBufferCnt);
+
+    const auto& surfaceConsumer = node->GetConsumer();
+    if (surfaceConsumer == nullptr) {
+        RS_LOGE("RsDebug RSRenderServiceListener::DropFrameProcess (node: %lld): surfaceConsumer is null!", node->GetId());
+        return;
+    }
+     
+    // availableBufferCnt>= 2 means QueueSize >=2 too
+    if (availableBufferCnt >= 2 && surfaceConsumer->GetQueueSize() == static_cast<uint32_t>(availableBufferCnt)) {
+        RS_LOGI("RsDebug RSRenderServiceListener::DropFrameProcess (node: %lld) queueBlock, start to drop one frame", node->GetId());
+        OHOS::sptr<SurfaceBuffer> cbuffer;
+        Rect damage;
+        sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
+        int64_t timestamp = 0;
+        auto ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
+        if (ret != OHOS::SURFACE_ERROR_OK) {
+            RS_LOGW("RSRenderServiceListener::DropFrameProcess(node: %lld): AcquireBuffer failed(ret: %d), do nothing ",
+                node->GetId(), ret);
+            return;
+        }
+
+        ret = surfaceConsumer->ReleaseBuffer(cbuffer, SyncFence::INVALID_FENCE);
+        if (ret != OHOS::SURFACE_ERROR_OK) {
+            RS_LOGW("RSRenderServiceListener::DropFrameProcess(node: %lld): ReleaseBuffer failed(ret: %d), Acquire done ",
+                node->GetId(), ret);
+            return;
+        }
+        availableBufferCnt = node->ReduceAvailableBuffer();
+        RS_LOGI("RsDebug RSRenderServiceListener::DropFrameProcess (node: %lld), drop one frame finished", node->GetId());
+    }
+
+    return;
+}
+
+
 void RSRenderServiceListener::OnBufferAvailable()
 {
     auto node = surfaceRenderNode_.lock();
@@ -65,6 +110,7 @@ void RSRenderServiceListener::OnBufferAvailable()
         });
     } else {
         node->IncreaseAvailableBuffer();
+        DropFrameProcess();
     }
 
     if (!node->IsBufferAvailable()) {

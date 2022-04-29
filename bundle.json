@@ -45,6 +45,7 @@
       },
       "build": {
         "sub_component": [
+          "//third_party/libpng:libpng",
           "//foundation/graphic/standard:default",
           "//foundation/graphic/standard/interfaces/kits/napi:napi_packages",
           "//foundation/graphic/standard/rosen/samples/composer:hello_composer",

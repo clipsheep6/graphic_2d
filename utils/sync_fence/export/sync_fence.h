@@ -62,7 +62,7 @@ private:
     bool isValid_ = false;
 };
 
-class SyncFence : public RefBase {
+class OHOS_EXPORT SyncFence : public RefBase {
 public:
     explicit SyncFence(int32_t fenceFd);
     /* When the SyncFence is destroyed, the fd will be closed in UniqueFd */

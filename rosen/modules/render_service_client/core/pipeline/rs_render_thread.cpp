@@ -46,7 +46,6 @@ namespace {
 void DrawEventReport(float frameLength)
 {
     int32_t pid = getpid();
-    uint32_t uid = getuid();
     std::string domain = "GRAPHIC";
     std::string stringId = "NO_DRAW";
     std::string processName = "RS_THREAD";
@@ -55,7 +54,9 @@ void DrawEventReport(float frameLength)
     OHOS::HiviewDFX::HiSysEvent::Write(domain, stringId,
         OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
         "PID", pid,
-        "UID", uid,
+#ifndef OS_mingw
+        "UID", getuid(),
+#endif
         "PROCESS_NAME", processName,
         "MSG", msg);
 }

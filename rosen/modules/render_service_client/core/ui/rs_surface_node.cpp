@@ -38,7 +38,8 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
     RSNodeMap::MutableInstance().RegisterNode(node);
 
     // create node in RS
-    RSSurfaceRenderNodeConfig config = { .id = node->GetId(), .name = node->name_ };
+    RSSurfaceRenderNodeConfig config = { .id = node->GetId(), .name = node->name_,
+        .onRender = surfaceNodeConfig.onRender };
     if (!node->CreateNodeAndSurface(config)) {
         ROSEN_LOGE("RSSurfaceNode::Create, create node and surface failed");
         return nullptr;

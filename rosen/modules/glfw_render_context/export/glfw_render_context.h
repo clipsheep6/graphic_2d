@@ -24,6 +24,9 @@ struct GLFWwindow;
 namespace OHOS::Rosen {
 class GlfwRenderContext {
 public:
+    using OnMouseButtonFunc = std::function<void(int button, bool pressed, int mods)>;
+    using OnCursorPosFunc = std::function<void(double x, double y)>;
+
     // GlfwRenderContext isn't a singleton.
     static std::shared_ptr<GlfwRenderContext> GetGlobal();
 
@@ -43,10 +46,17 @@ public:
     void SetWindowTitle(const std::string &title);
     void MakeCurrent();
     void SwapBuffers();
+    void OnMouseButton(const OnMouseButtonFunc &onMouseBotton);
+    void OnCursorPos(const OnCursorPosFunc &onCursorPos);
 
 private:
+    static void OnMouseButton(GLFWwindow *window, int button, int action, int mods);
+    static void OnCursorPos(GLFWwindow *window, double x, double y);
+
     static inline std::shared_ptr<GlfwRenderContext> global_ = nullptr;
     GLFWwindow *window_ = nullptr;
+    OnMouseButtonFunc onMouseBotton_ = nullptr;
+    OnCursorPosFunc onCursorPos_ = nullptr;
 };
 } // namespace OHOS::Rosen
 

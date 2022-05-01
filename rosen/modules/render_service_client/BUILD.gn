@@ -91,6 +91,7 @@ ohos_source_set("render_service_client_src") {
   ]
 
   deps = []
+  public_deps = []
 
   if (enable_export_macro) {
     defines += [ "ENABLE_EXPORT_MACRO" ]
@@ -109,9 +110,11 @@ ohos_source_set("render_service_client_src") {
       "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
       "//foundation/graphic/standard:libgl",
     ]
+
+    public_deps += [ "//foundation/graphic/standard/rosen/modules/glfw_render_context:libglfw_render_context" ]
   }
 
-  public_deps =
+  public_deps +=
       [ "$rosen_root/modules/render_service_base:librender_service_base" ]
 }
 

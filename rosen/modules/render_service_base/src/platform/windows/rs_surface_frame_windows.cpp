@@ -49,21 +49,27 @@ void RSSurfaceFrameWindows::SetDamageRegion(int32_t left, int32_t top, int32_t w
 
 SkCanvas* RSSurfaceFrameWindows::GetCanvas()
 {
-    if (buffer_ == nullptr || buffer_->GetWidth() <= 0 || buffer_->GetHeight() <= 0) {
-        ROSEN_LOGW("buffer is invalid");
-        return nullptr;
+    if (surface_ != nullptr) {
+        return surface_->getCanvas();
     }
 
     if (canvas_ == nullptr) {
-        auto addr = static_cast<uint32_t *>(buffer_->GetVirAddr());
-        if (addr == nullptr) {
-            ROSEN_LOGW("buffer addr is invalid");
+        if (buffer_ == nullptr) {
+            ROSEN_LOGW("RSSurfaceFrameWindows::GetCanvas buffer is nullptr");
             return nullptr;
         }
 
-        constexpr auto colorType = kRGBA_8888_SkColorType;
-        auto info = SkImageInfo::Make(buffer_->GetWidth(), buffer_->GetHeight(), colorType, kPremul_SkAlphaType);
-        canvas_ = SkCanvas::MakeRasterDirect(info, addr, buffer_->GetSize() / buffer_->GetHeight());
+        const auto &addr = reinterpret_cast<uint32_t *>(buffer_->GetVirAddr());
+        if (addr == nullptr) {
+            ROSEN_LOGW("RSSurfaceFrameWindows::GetCanvas buffer.addr is nullptr");
+            return nullptr;
+        }
+
+        const auto &width = buffer_->GetWidth();
+        const auto &height = buffer_->GetHeight();
+        const auto &size = buffer_->GetSize();
+        const auto &info = SkImageInfo::Make(width, height, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+        canvas_ = SkCanvas::MakeRasterDirect(info, addr, size / height);
     }
 
     return canvas_.get();

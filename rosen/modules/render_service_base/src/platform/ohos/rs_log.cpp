@@ -33,7 +33,7 @@ inline OHOS::HiviewDFX::HiLogLabel GenerateLabel(const std::string& tag)
     return label;
 }
 
-int RSLog::Output(RSLog::Level level, const char* format, ...)
+int RSLog::Output(RSLog::Level level, const char *func, int line, const char* format, ...)
 {
     char logStr[MAX_LOG_LENGTH] = {0};
     va_list args;

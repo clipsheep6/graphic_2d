@@ -31,15 +31,11 @@ public:
     {
         interpolator_ = interpolator;
     }
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderTransition* Unmarshalling(Parcel& parcel);
-#endif
 
 protected:
-#ifdef ROSEN_OHOS
     bool ParseParam(Parcel& parcel) override;
-#endif
     void OnAnimate(float fraction) override;
     void OnAttach() override;
     void OnDetach() override;

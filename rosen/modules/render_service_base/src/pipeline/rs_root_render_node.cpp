@@ -19,9 +19,7 @@
 #include "platform/drawing/rs_surface.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
-#ifdef ROSEN_OHOS
 #include <surface.h>
-#endif
 
 namespace OHOS {
 namespace Rosen {

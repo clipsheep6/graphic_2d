@@ -21,11 +21,9 @@
 #include "common/rs_obj_abs_geometry.h"
 #include "pipeline/rs_context.h"
 #include "platform/common/rs_log.h"
-#ifdef ROSEN_OHOS
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties_painter.h"
 #include "property/rs_transition_properties.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -110,8 +108,6 @@ bool RSRenderNode::IsDirty() const
 
 void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 {
-#ifdef ROSEN_OHOS
-    saveCount_ = canvas.getSaveCount();
     canvas.save();
     canvas.SaveAlpha();
     canvas.MultiplyAlpha(GetRenderProperties().GetAlpha());
@@ -121,17 +117,13 @@ void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
     }
     auto transitionProperties = GetAnimationManager().GetTransitionProperties();
     RSPropertiesPainter::DrawTransitionProperties(transitionProperties, GetRenderProperties(), canvas);
-    RSPropertiesPainter::DrawMask(GetRenderProperties(), canvas);
-#endif
 }
 
 void RSRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 {
-#ifdef ROSEN_OHOS
     GetMutableRenderProperties().ResetBounds();
     canvas.RestoreAlpha();
-    canvas.restoreToCount(saveCount_);
-#endif
+    canvas.restore();
 }
 } // namespace Rosen
 } // namespace OHOS

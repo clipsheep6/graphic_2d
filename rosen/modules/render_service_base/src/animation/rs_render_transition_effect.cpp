@@ -23,7 +23,6 @@
 
 namespace OHOS {
 namespace Rosen {
-#ifdef ROSEN_OHOS
 namespace {
 enum RSTransitionEffectType : uint16_t {
     FADE = 1,
@@ -125,52 +124,43 @@ RSRenderTransitionEffect* RSTransitionRotate::Unmarshalling(Parcel& parcel)
     }
     return new RSTransitionRotate(dx, dy, dz, angle);
 }
-#endif
 
 void RSTransitionFade::OnTransition(const std::unique_ptr<RSTransitionProperties>& transitionProperties, float fraction)
 {
-#ifdef ROSEN_OHOS
     float startValue(1.0f);
     float endValue(alpha_);
     auto value = RSValueEstimator::Estimate(fraction, startValue, endValue);
 
     transitionProperties->DoAlphaTransition(value);
-#endif
 }
 
 void RSTransitionScale::OnTransition(
     const std::unique_ptr<RSTransitionProperties>& transitionProperties, float fraction)
 {
-#ifdef ROSEN_OHOS
     Vector3f startValue(1.0f, 1.0f, 1.0f);
     Vector3f endValue(scaleX_, scaleY_, scaleZ_);
     auto value = RSValueEstimator::Estimate(fraction, startValue, endValue);
 
     transitionProperties->DoScaleTransition(value);
-#endif
 }
 
 void RSTransitionTranslate::OnTransition(
     const std::unique_ptr<RSTransitionProperties>& transitionProperties, float fraction)
 {
-#ifdef ROSEN_OHOS
     Vector3f startValue(0.0f, 0.0f, 0.0f);
     Vector3f endValue(translateX_, translateY_, translateZ_);
     auto value = RSValueEstimator::Estimate(fraction, startValue, endValue);
     transitionProperties->DoTranslateTransition(value);
-#endif
 }
 
 void RSTransitionRotate::OnTransition(
     const std::unique_ptr<RSTransitionProperties>& transitionProperties, float fraction)
 {
-#ifdef ROSEN_OHOS
     auto angle = angle_ * fraction;
     auto rotateMatrix = SkMatrix44::I();
     rotateMatrix.setRotateDegreesAbout(dx_, dy_, dz_, angle);
 
     transitionProperties->DoRotateTransition(rotateMatrix);
-#endif
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -16,10 +16,8 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_TRANSITION_RS_RENDER_TRANSITION_EFFECT_H
 #define RENDER_SERVICE_CLIENT_CORE_TRANSITION_RS_RENDER_TRANSITION_EFFECT_H
 
-#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <refbase.h>
-#endif
 #include <memory>
 
 #include "animation/rs_animation_common.h"
@@ -32,20 +30,14 @@ class RSPaintFilterCanvas;
 class RSProperties;
 class RSTransitionProperties;
 
-#ifdef ROSEN_OHOS
 class RSRenderTransitionEffect : public Parcelable {
-#else
-class RSRenderTransitionEffect {
-#endif
 public:
     RSRenderTransitionEffect() = default;
     virtual ~RSRenderTransitionEffect() = default;
     virtual void OnTransition(const std::unique_ptr<RSTransitionProperties>& transitionProperties, float fraction) = 0;
 
-#ifdef ROSEN_OHOS
     virtual bool Marshalling(Parcel& parcel) const override = 0;
     static RSRenderTransitionEffect* Unmarshalling(Parcel& parcel);
-#endif
 
 protected:
 };
@@ -56,10 +48,8 @@ public:
     virtual ~RSTransitionFade() = default;
     void OnTransition(const std::unique_ptr<RSTransitionProperties>& transitionProperties, float fraction) override;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderTransitionEffect* Unmarshalling(Parcel& parcel);
-#endif
 private:
     float alpha_;
 };
@@ -73,10 +63,8 @@ public:
     virtual ~RSTransitionScale() = default;
     void OnTransition(const std::unique_ptr<RSTransitionProperties>& transitionProperties, float fraction) override;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderTransitionEffect* Unmarshalling(Parcel& parcel);
-#endif
 private:
     float scaleX_;
     float scaleY_;
@@ -92,10 +80,8 @@ public:
     virtual ~RSTransitionTranslate() = default;
     void OnTransition(const std::unique_ptr<RSTransitionProperties>& transitionProperties, float fraction) override;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderTransitionEffect* Unmarshalling(Parcel& parcel);
-#endif
 private:
     float translateX_;
     float translateY_;
@@ -109,10 +95,8 @@ public:
     virtual ~RSTransitionRotate() = default;
     void OnTransition(const std::unique_ptr<RSTransitionProperties>& transitionProperties, float fraction) override;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderTransitionEffect* Unmarshalling(Parcel& parcel);
-#endif
 private:
     float dx_;
     float dy_;

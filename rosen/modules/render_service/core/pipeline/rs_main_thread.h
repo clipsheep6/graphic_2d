@@ -133,7 +133,7 @@ private:
 
     RSContext context_;
     std::thread::id mainThreadId_;
-    std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
+    std::shared_ptr<IVSyncReceiver> receiver_ = nullptr;
 
 #ifdef RS_ENABLE_GL
     std::shared_ptr<RenderContext> renderContext_;

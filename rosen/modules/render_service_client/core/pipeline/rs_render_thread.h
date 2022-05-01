@@ -22,7 +22,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <vsync_helper.h>
+#include <event_handler.h>
 
 #include "common/rs_thread_handler.h"
 #include "common/rs_thread_looper.h"
@@ -92,7 +92,7 @@ private:
     std::unique_ptr<std::thread> thread_ = nullptr;
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
-    std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
+    std::shared_ptr<IVSyncReceiver> receiver_ = nullptr;
     RSTaskMessage::RSTask preTask_ = nullptr;
     RSTaskMessage::RSTask mainFunc_;
 

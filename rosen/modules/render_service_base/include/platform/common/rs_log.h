@@ -47,9 +47,9 @@ private:
 // And if you want specific a log tag by yourself, you may should use ROSEN_LOGX_WITH_TAG.
 #define ROSEN_LOG_WITH_TAG(type, tag, format, ...)                                              \
     do {                                                                                        \
-        RSLog logger;                                                                           \
+        OHOS::Rosen::RSLog logger;                                                                           \
         logger.SetTag(tag);                                                                     \
-        logger.Output(RSLog::Level::LEVEL_ ## type, __func__, __LINE__, format, ##__VA_ARGS__); \
+        logger.Output(OHOS::Rosen::RSLog::Level::LEVEL_ ## type, __func__, __LINE__, format, ##__VA_ARGS__); \
     } while (0)
 
 #define ROSEN_LOGI_WITH_TAG(tag, format, ...) ROSEN_LOG_WITH_TAG(INFO, tag, format, ##__VA_ARGS__)
@@ -57,16 +57,16 @@ private:
 #define ROSEN_LOGW_WITH_TAG(tag, format, ...) ROSEN_LOG_WITH_TAG(WARN, tag, format, ##__VA_ARGS__)
 #define ROSEN_LOGE_WITH_TAG(tag, format, ...) ROSEN_LOG_WITH_TAG(ERROR, tag, format, ##__VA_ARGS__)
 #define ROSEN_LOGF_WITH_TAG(tag, format, ...) ROSEN_LOG_WITH_TAG(FATAL, tag, format, ##__VA_ARGS__)
-#define ROSEN_LOGI(format, ...) ROSEN_LOGI_WITH_TAG(RSLog("OHOS::ROSEN").GetTag().c_str(), format, ##__VA_ARGS__)
-#define ROSEN_LOGD(format, ...) ROSEN_LOGD_WITH_TAG(RSLog("OHOS::ROSEN").GetTag().c_str(), format, ##__VA_ARGS__)
-#define ROSEN_LOGE(format, ...) ROSEN_LOGE_WITH_TAG(RSLog("OHOS::ROSEN").GetTag().c_str(), format, ##__VA_ARGS__)
-#define ROSEN_LOGW(format, ...) ROSEN_LOGW_WITH_TAG(RSLog("OHOS::ROSEN").GetTag().c_str(), format, ##__VA_ARGS__)
-#define ROSEN_LOGF(format, ...) ROSEN_LOGF_WITH_TAG(RSLog("OHOS::ROSEN").GetTag().c_str(), format, ##__VA_ARGS__)
-#define RS_LOGI(format, ...) ROSEN_LOGI_WITH_TAG(RSLog("OHOS::RS").GetTag().c_str(), format, ##__VA_ARGS__)
-#define RS_LOGD(format, ...) ROSEN_LOGD_WITH_TAG(RSLog("OHOS::RS").GetTag().c_str(), format, ##__VA_ARGS__)
-#define RS_LOGE(format, ...) ROSEN_LOGE_WITH_TAG(RSLog("OHOS::RS").GetTag().c_str(), format, ##__VA_ARGS__)
-#define RS_LOGW(format, ...) ROSEN_LOGW_WITH_TAG(RSLog("OHOS::RS").GetTag().c_str(), format, ##__VA_ARGS__)
-#define RS_LOGF(format, ...) ROSEN_LOGF_WITH_TAG(RSLog("OHOS::RS").GetTag().c_str(), format, ##__VA_ARGS__)
-#define $ ROSEN_LOGI("");
+#define ROSEN_LOGI(format, ...) ROSEN_LOGI_WITH_TAG(OHOS::Rosen::RSLog("OHOS::ROSEN").GetTag().c_str(), format, ##__VA_ARGS__)
+#define ROSEN_LOGD(format, ...) ROSEN_LOGD_WITH_TAG(OHOS::Rosen::RSLog("OHOS::ROSEN").GetTag().c_str(), format, ##__VA_ARGS__)
+#define ROSEN_LOGE(format, ...) ROSEN_LOGE_WITH_TAG(OHOS::Rosen::RSLog("OHOS::ROSEN").GetTag().c_str(), format, ##__VA_ARGS__)
+#define ROSEN_LOGW(format, ...) ROSEN_LOGW_WITH_TAG(OHOS::Rosen::RSLog("OHOS::ROSEN").GetTag().c_str(), format, ##__VA_ARGS__)
+#define ROSEN_LOGF(format, ...) ROSEN_LOGF_WITH_TAG(OHOS::Rosen::RSLog("OHOS::ROSEN").GetTag().c_str(), format, ##__VA_ARGS__)
+#define RS_LOGI(format, ...) ROSEN_LOGI_WITH_TAG(OHOS::Rosen::RSLog("OHOS::RS").GetTag().c_str(), format, ##__VA_ARGS__)
+#define RS_LOGD(format, ...) ROSEN_LOGD_WITH_TAG(OHOS::Rosen::RSLog("OHOS::RS").GetTag().c_str(), format, ##__VA_ARGS__)
+#define RS_LOGE(format, ...) ROSEN_LOGE_WITH_TAG(OHOS::Rosen::RSLog("OHOS::RS").GetTag().c_str(), format, ##__VA_ARGS__)
+#define RS_LOGW(format, ...) ROSEN_LOGW_WITH_TAG(OHOS::Rosen::RSLog("OHOS::RS").GetTag().c_str(), format, ##__VA_ARGS__)
+#define RS_LOGF(format, ...) ROSEN_LOGF_WITH_TAG(OHOS::Rosen::RSLog("OHOS::RS").GetTag().c_str(), format, ##__VA_ARGS__)
+#define $ ROSEN_LOGI("luwh");
 
 #endif // RENDER_SERVICE_BASE_CORE_COMMON_RS_LOG_H

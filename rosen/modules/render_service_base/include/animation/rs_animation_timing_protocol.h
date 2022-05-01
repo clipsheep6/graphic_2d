@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
-enum class RS_EXPORT FillMode {
+enum class FillMode {
     NONE,
     FORWARDS,
     BACKWARDS,

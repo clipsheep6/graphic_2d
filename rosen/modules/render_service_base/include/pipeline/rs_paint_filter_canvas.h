@@ -26,7 +26,7 @@ class SkDrawable;
 namespace OHOS {
 namespace Rosen {
 
-class RSPaintFilterCanvas : public SkPaintFilterCanvas {
+class OHOS_EXPORT RSPaintFilterCanvas : public SkPaintFilterCanvas {
 public:
     RSPaintFilterCanvas(SkCanvas* canvas, float alpha = 1.0f);
     ~RSPaintFilterCanvas() override {};

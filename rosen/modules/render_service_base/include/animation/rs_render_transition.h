@@ -24,7 +24,7 @@ namespace OHOS {
 namespace Rosen {
 class RSTransitionEffect;
 
-class RSRenderTransition : public RSRenderAnimation {
+class RS_EXPORT RSRenderTransition : public RSRenderAnimation {
 public:
     RSRenderTransition(AnimationId id, const std::shared_ptr<const RSTransitionEffect>& effect, bool isTransitionIn);
     void SetInterpolator(const std::shared_ptr<RSInterpolator>& interpolator)

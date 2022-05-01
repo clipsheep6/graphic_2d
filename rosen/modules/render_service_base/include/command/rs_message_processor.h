@@ -22,9 +22,9 @@ namespace OHOS {
 namespace Rosen {
 class RSCommand;
 class RSTransactionData;
-class RSMessageProcessor final {
+class OHOS_EXPORT RSMessageProcessor final {
 public:
-    static RSMessageProcessor& Instance();
+    static OHOS_EXPORT RSMessageProcessor& Instance();
 
     void AddUIMessage(uint32_t pid, std::unique_ptr<RSCommand>& command);
     void AddUIMessage(uint32_t pid, std::unique_ptr<RSCommand>&& command);

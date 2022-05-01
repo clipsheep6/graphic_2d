@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSLog {
+class OHOS_EXPORT RSLog {
 public:
     enum Level { LEVEL_INFO = 0, LEVEL_DEBUG, LEVEL_WARN, LEVEL_ERROR, LEVEL_FATAL };
     RSLog() : tag_("OHOS::ROSEN") {}

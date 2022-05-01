@@ -28,7 +28,7 @@ enum RSDisplayNodeCommandType : uint16_t {
     DISPLAY_NODE_SET_SECURITY_DISPLAY,
 };
 
-class DisplayNodeCommandHelper {
+class RS_EXPORT DisplayNodeCommandHelper {
 public:
     static void Create(RSContext&, NodeId, const RSDisplayNodeConfig&);
     static void SetScreenId(RSContext&, NodeId, uint64_t);

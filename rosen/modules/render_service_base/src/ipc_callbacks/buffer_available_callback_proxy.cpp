@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#ifdef ROSEN_OHOS
 #include "buffer_available_callback_proxy.h"
 
 #include <message_option.h>
@@ -46,4 +45,3 @@ void RSBufferAvailableCallbackProxy::OnBufferAvailable()
 }
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS

@@ -36,7 +36,7 @@ enum RSSurfaceNodeCommandType : uint16_t {
     SURFACE_NODE_CONNECT_TO_NODE_IN_RENDER_SERVICE,
 };
 
-class SurfaceNodeCommandHelper {
+class RS_EXPORT SurfaceNodeCommandHelper {
 public:
     static void Create(RSContext& context, NodeId nodeId);
     static void SetMatrix(RSContext& context, NodeId nodeId, SkMatrix matrix);

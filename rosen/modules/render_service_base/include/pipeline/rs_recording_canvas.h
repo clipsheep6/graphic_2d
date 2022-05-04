@@ -33,7 +33,7 @@ namespace OHOS {
 namespace Rosen {
 class DrawCmdList;
 class OpItem;
-class RSRecordingCanvas : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
+class RS_EXPORT RSRecordingCanvas : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
 public:
     RSRecordingCanvas(int width, int height);
     virtual ~RSRecordingCanvas();

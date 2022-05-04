@@ -17,8 +17,10 @@
 
 #include <fstream>
 #include <iostream>
+#include <thread>
 #include <unistd.h>
 
+#include <directory_ex.h>
 #include <hilog/log.h>
 
 namespace {
@@ -101,8 +103,8 @@ void Gslogger::FileLog(Gslogger& logger, enum LOG_PHASE phase)
         return;
     }
 
-    char path[PATH_MAX + 1] = { 0x00 };
-    if (strlen(data->filename) > PATH_MAX || realpath(data->filename, path) == NULL) {
+    std::string path;
+    if (OHOS::PathToRealPath(data->filename, path) == NULL) {
         std::cerr << "File path error!" << std::endl;
         return;
     }
@@ -150,7 +152,12 @@ void Gslogger::FileFuncLine(Gslogger& logger, enum LOG_PHASE phase)
 void Gslogger::PidTid(Gslogger &logger, enum LOG_PHASE phase)
 {
     if (phase == LOG_PHASE::BEGIN) {
-        logger << "[" << getpid() << "][" << gettid() << "]";
+#ifdef OS_mingw
+        const auto &tid = std::this_thread::get_id();
+#else
+        const auto &tid = gettid();
+#endif
+        logger << "[" << getpid() << "][" << tid << "]";
     }
 }
 

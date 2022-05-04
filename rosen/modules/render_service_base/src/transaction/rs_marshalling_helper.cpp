@@ -33,7 +33,6 @@
 #include "src/core/SkWriteBuffer.h"
 #include <memory>
 
-#ifdef ROSEN_OHOS
 namespace OHOS {
 namespace Rosen {
 
@@ -293,4 +292,3 @@ template bool RSMarshallingHelper::Unmarshalling(
 
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS

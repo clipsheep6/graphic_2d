@@ -33,7 +33,6 @@ RSRenderTransition::RSRenderTransition(
     }
 }
 
-#ifdef ROSEN_OHOS
 bool RSRenderTransition::Marshalling(Parcel& parcel) const
 {
     if (!RSRenderAnimation::Marshalling(parcel)) {
@@ -82,7 +81,6 @@ bool RSRenderTransition::ParseParam(Parcel& parcel)
     SetInterpolator(interpolator);
     return true;
 }
-#endif
 void RSRenderTransition::OnAnimate(float fraction)
 {
     currentFraction_ = interpolator_->Interpolate(fraction);

@@ -33,6 +33,8 @@ ohos_static_library("libgslogger") {
 
   configs = [ ":libgslogger_config" ]
 
+  deps = [ "//utils/native/base:utils" ]
+
   public_configs = [ ":libgslogger_public_config" ]
 
   public_deps =

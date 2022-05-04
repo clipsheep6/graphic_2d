@@ -16,7 +16,6 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_PAINT_FILTER_CANVAS_H
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_PAINT_FILTER_CANVAS_H
 
-#ifdef ROSEN_OHOS
 #include <include/utils/SkPaintFilterCanvas.h>
 #include <stack>
 
@@ -26,7 +25,7 @@ class SkDrawable;
 namespace OHOS {
 namespace Rosen {
 
-class RSPaintFilterCanvas : public SkPaintFilterCanvas {
+class OHOS_EXPORT RSPaintFilterCanvas : public SkPaintFilterCanvas {
 public:
     RSPaintFilterCanvas(SkCanvas* canvas, float alpha = 1.0f);
     ~RSPaintFilterCanvas() override {};
@@ -47,5 +46,4 @@ private:
 
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS
 #endif // RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_PAINT_FILTER_CANVAS_H

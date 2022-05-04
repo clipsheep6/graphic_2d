@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#ifdef ROSEN_OHOS
 #include "buffer_available_callback_stub.h"
 
 #include "platform/common/rs_log.h"
@@ -45,4 +44,3 @@ int RSBufferAvailableCallbackStub::OnRemoteRequest(
 }
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS

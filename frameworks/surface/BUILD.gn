@@ -38,6 +38,14 @@ config("surface_public_config") {
   cflags = [ "-Wno-error=deprecated-declarations" ]
 }
 
+config("surface_mingw_public_config") {
+  visibility = [ ":surface" ]
+  include_dirs = [
+    "//drivers/peripheral/display/interfaces/include",
+    "//drivers/peripheral/display/hdi_service/gralloc/include",
+  ]
+}
+
 ohos_shared_library("surface") {
   sources = [
     "src/buffer_client_producer.cpp",
@@ -93,7 +101,24 @@ ohos_shared_library("surface") {
     "//utils/native/base:utils",
   ]
 
-  external_deps = [ "bytrace_standard:bytrace_core" ]
+  if (current_os != "mingw") {
+    external_deps = [ "bytrace_standard:bytrace_core" ]
+  } else {
+    sources -= [
+      "src/buffer_manager.cpp",
+      "src/surface_buffer_impl.cpp",
+    ]
+    sources += [
+      "src/buffer_manager_mingw.cpp",
+      "src/surface_buffer_impl_mingw.cpp",
+    ]
+    public_deps -= [
+      "//drivers/peripheral/display/hal:hdi_display_gralloc",
+      "//drivers/peripheral/display/hdi_service/gralloc/client:hdi_gralloc_client",
+    ]
+    public_deps += [ "//developtools/bytrace_standard/interfaces/innerkits/native:bytrace_core" ]
+    public_configs += [ ":surface_mingw_public_config" ]
+  }
 
   symlink_target_name = [ "libnative_window.so" ]
 

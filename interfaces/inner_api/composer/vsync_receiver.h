@@ -57,11 +57,16 @@ private:
     std::mutex mtx_;
 };
 
-class VSyncReceiver : public RefBase {
+class IVSyncReceiver : public RefBase {
 public:
-    // check
     using FrameCallback = VSyncCallBackListener::FrameCallback;
+    virtual VsyncError Init() = 0;
+    virtual VsyncError RequestNextVSync(FrameCallback callback) = 0;
+    virtual VsyncError SetVSyncRate(FrameCallback callback, int32_t rate) = 0;
+};
 
+class VSyncReceiver : public IVSyncReceiver {
+public:
     VSyncReceiver(const sptr<IVSyncConnection>& conn,
         const std::shared_ptr<OHOS::AppExecFwk::EventHandler>& looper = nullptr,
         const std::string& name = "Uninitialized");
@@ -70,9 +75,9 @@ public:
     VSyncReceiver(const VSyncReceiver &) = delete;
     VSyncReceiver &operator=(const VSyncReceiver &) = delete;
 
-    VsyncError Init();
-    VsyncError RequestNextVSync(FrameCallback callback);
-    VsyncError SetVSyncRate(FrameCallback callback, int32_t rate);
+    VsyncError Init() override;
+    VsyncError RequestNextVSync(FrameCallback callback) override;
+    VsyncError SetVSyncRate(FrameCallback callback, int32_t rate) override;
 
 private:
     sptr<IVSyncConnection> connection_;

@@ -29,7 +29,7 @@ namespace Rosen {
 class OpItem;
 class RSPaintFilterCanvas;
 
-class DrawCmdList {
+class RS_EXPORT DrawCmdList {
 public:
     DrawCmdList(int w, int h);
     DrawCmdList& operator=(DrawCmdList&& that);
@@ -45,7 +45,7 @@ public:
     int GetWidth() const;
     int GetHeight() const;
 
-private:
+public:
     std::vector<std::unique_ptr<OpItem>> ops_;
     std::recursive_mutex mutex_;
     int width_;

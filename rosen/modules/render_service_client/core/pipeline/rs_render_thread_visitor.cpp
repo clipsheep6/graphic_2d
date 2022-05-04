@@ -201,7 +201,6 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     // RSSurfaceRenderNode in RSRenderThreadVisitor do not have information of property.
     // We only get parent's matrix and send it to RenderService
-#ifdef ROSEN_OHOS
     node.SetMatrix(canvas_->getTotalMatrix());
     node.SetAlpha(canvas_->GetAlpha());
     node.SetParentId(node.GetParent().lock()->GetId());
@@ -235,7 +234,6 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     canvas_->restore();
 
-#endif
     ProcessBaseRenderNode(node);
 }
 } // namespace Rosen

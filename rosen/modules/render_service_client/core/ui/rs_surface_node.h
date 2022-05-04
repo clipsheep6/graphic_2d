@@ -34,6 +34,7 @@ namespace Rosen {
 using BufferAvailableCallback = std::function<void()>;
 struct RSSurfaceNodeConfig {
     std::string SurfaceNodeName = "SurfaceNode";
+    UseSurfaceToRenderFunc onRender = nullptr;
 };
 
 class RS_EXPORT RSSurfaceNode : public RSNode, public Parcelable {

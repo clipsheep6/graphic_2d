@@ -71,7 +71,7 @@ private:
     int32_t pointY_ = 0;
     int32_t picCurNo_ = -1;
     int32_t imgVecSize_ = 0;
-    std::shared_ptr<OHOS::Rosen::VSyncReceiver> receiver_ = nullptr;
+    std::shared_ptr<OHOS::Rosen::IVSyncReceiver> receiver_ = nullptr;
     std::shared_ptr<Media::Player> soundPlayer_ = nullptr;
     ImageStructVec imageVector_;
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#ifdef ROSEN_OHOS
 #include "screen_change_callback_stub.h"
 
 namespace OHOS {
@@ -44,4 +43,3 @@ int RSScreenChangeCallbackStub::OnRemoteRequest(
 }
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS

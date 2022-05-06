@@ -19,7 +19,8 @@
         "//foundation/graphic/standard/frameworks/wmserver:wmserver",
 
         "//foundation/graphic/standard/frameworks/bootanimation:bootanimation",
-        "//foundation/graphic/standard/frameworks/bootanimation:bootanimation-480x960.raw",
+        "//foundation/graphic/standard/frameworks/bootanimation:bootanimation-1920x1080.raw",
+        "//foundation/graphic/standard/frameworks/wmtest:wmtest",
         "//foundation/graphic/standard:default.scss",
         "//foundation/graphic/standard:graphic.rc"
       ],

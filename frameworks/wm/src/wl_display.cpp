@@ -270,7 +270,11 @@ bool WlDisplay::DispatchThreadCoreProcess()
         { .fd = interruptFd, .events = POLLIN, },
     };
 
-    int32_t ret = poll(pfd, sizeof(pfd) / sizeof(*pfd), -1);
+    int32_t ret = 0;
+    do {
+        ret = poll(pfd, sizeof(pfd) / sizeof(*pfd), -1);
+    } while (ret == -1 && errno == EINTR);
+
     if (ret == -1) {
         WMLOGFE("poll return -1");
         CancelRead();

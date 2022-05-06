@@ -54,6 +54,7 @@ enum NativeWindowOperation {
     GET_SWAP_INTERVAL,
     SET_COLOR_GAMUT,        // ([in] int32_t colorGamut)
     GET_COLOR_GAMUT,        // ([out int32_t *colorGamut])
+    SET_UI_TIMESTAMP,       // ([in] uint64_t UITimestamp)
 };
 
 // pSurface type is OHOS::sptr<OHOS::Rosen::Surface>*

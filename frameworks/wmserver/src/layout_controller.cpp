@@ -23,6 +23,7 @@
 #include <regex>
 #include <sstream>
 
+#include "layout_header.h"
 #include "rects.h"
 #include "weston.h"
 
@@ -73,6 +74,7 @@ void LayoutController::Init(int32_t width, int32_t height)
     displayHeight = height;
     if (!init) {
         InitByDefaultValue();
+        InitByParseSCSS();
         init = true;
     }
 }
@@ -127,8 +129,6 @@ int32_t LayoutController::CalcWindowDefaultLayout(uint32_t type, uint32_t mode, 
 
 #define DEF_LYT_MACRO(wt, lt, ptx, pty, _x, _y, _w, _h) \
     modeLayoutMap[WINDOW_MODE_UNSET][WINDOW_TYPE_##wt] = { \
-        .windowType = WINDOW_TYPE_##wt, \
-        .windowTypeString = "WINDOW_TYPE_" #wt, \
         .zIndex = WINDOW_TYPE_##wt, \
         .positionType = Layout::PositionType::lt, \
         .pTypeX = Layout::XPositionType::ptx, \
@@ -147,8 +147,6 @@ void LayoutController::InitByDefaultValue()
     constexpr double full = 100.0; // 100%
     DEF_POS_LYT(RELATIVE, MID, MID, full, full, NORMAL);
     modeLayoutMap[WINDOW_MODE_FREE][WINDOW_TYPE_NORMAL] = {
-        .windowType = WINDOW_TYPE_NORMAL,
-        .windowTypeString = "WINDOW_TYPE_NORMAL",
         .zIndex = static_cast<int32_t>(51.0 + 1e-6),
         .positionType = Layout::PositionType::FIXED,
         .pTypeX = Layout::XPositionType::MID,
@@ -173,13 +171,43 @@ void LayoutController::InitByDefaultValue()
     DEF_RCT_LYT(RELATIVE, 7.5, 7.5, 85.0, 50.0, FLOAT);
 }
 
+void LayoutController::InitByParseSCSS()
+{
+    fs::path dir{searchCSSDirectory};
+    if (!fs::exists(dir)) {
+        LOGE("%{public}s not exist dir", searchCSSDirectory.c_str());
+        return;
+    }
+
+    fs::directory_entry entry{dir};
+    if (entry.status().type() != fs::file_type::directory) {
+        LOGE("%{public}s is not dir", searchCSSDirectory.c_str());
+        return;
+    }
+
+    std::vector<fs::path> orderedFiles;
+    fs::directory_iterator files{dir};
+    for (const auto &file : files) {
+        LOGI("found file: %{public}s", file.path().string().c_str());
+        if (file.is_regular_file() && file.path().extension().string() == ".scss") {
+            orderedFiles.push_back(file.path());
+        }
+    }
+
+    auto fspathLessOperator = [](const auto &a, const auto &b) { return a.string() < b.string(); };
+    std::sort(orderedFiles.begin(), orderedFiles.end(), fspathLessOperator);
+    for (const auto &file : orderedFiles) {
+        ParseSCSS(file);
+    }
+}
+
 bool LayoutController::CalcNormalRect(struct layout &layout)
 {
     Rects totalRects{0, 0, displayWidth, displayHeight};
-    for (const auto &[_, layout] : modeLayoutMap[WINDOW_MODE_UNSET]) {
+    for (const auto &[type, layout] : modeLayoutMap[WINDOW_MODE_UNSET]) {
         if (layout.positionType == Layout::PositionType::STATIC) {
             struct Layout nowLayout = {};
-            CalcWindowDefaultLayout(layout.windowType, WINDOW_MODE_UNSET, nowLayout);
+            CalcWindowDefaultLayout(type, WINDOW_MODE_UNSET, nowLayout);
             Rects rect{
                 static_cast<int32_t>(nowLayout.layout.x + 1e-6),
                 static_cast<int32_t>(nowLayout.layout.y + 1e-6),
@@ -203,4 +231,33 @@ bool LayoutController::CalcNormalRect(struct layout &layout)
     }
     return false;
 }
-} // namespace OHOS
+
+void LayoutController::ParseSCSS(const fs::path &file)
+{
+    std::ifstream ifs{file};
+    int32_t size = 0;
+    ifs >> size;
+
+    int32_t mode = 0;
+    int32_t type = 0;
+    struct Layout layout = {};
+    for (size_t i = 0; i < size; i++) {
+        ifs >> mode >> type >> layout;
+        if (layout.isZIndexSetting) {
+            modeLayoutMap[mode][type].zIndex = layout.zIndex;
+        }
+        if (layout.isPositionTypeSetting) {
+            modeLayoutMap[mode][type].positionType = layout.positionType;
+        }
+        if (layout.isPositionXTypeSetting) {
+            modeLayoutMap[mode][type].pTypeX = layout.pTypeX;
+        }
+        if (layout.isPositionYTypeSetting) {
+            modeLayoutMap[mode][type].pTypeY = layout.pTypeY;
+        }
+        if (layout.isLayoutSetting) {
+            modeLayoutMap[mode][type].layout = layout.layout;
+        }
+    }
+}
+} // namespace OHOS::WMServer

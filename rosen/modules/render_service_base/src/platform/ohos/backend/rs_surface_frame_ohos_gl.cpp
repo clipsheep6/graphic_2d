@@ -35,7 +35,18 @@ void RSSurfaceFrameOhosGl::SetDamageRegion(int32_t left, int32_t top, int32_t wi
 
 SkCanvas* RSSurfaceFrameOhosGl::GetCanvas()
 {
-    return renderContext_->AcquireCanvas(width_, height_);
+    if (surface_ == nullptr) {
+        CreateSurface();
+    }
+    return surface_->getCanvas();
+}
+
+sk_sp<SkSurface> RSSurfaceFrameOhosGl::GetSurface()
+{
+    if (surface_ == nullptr) {
+        CreateSurface();
+    }
+    return surface_;
 }
 
 int32_t RSSurfaceFrameOhosGl::GetReleaseFence() const
@@ -46,6 +57,11 @@ int32_t RSSurfaceFrameOhosGl::GetReleaseFence() const
 void RSSurfaceFrameOhosGl::SetReleaseFence(const int32_t& fence)
 {
     releaseFence_ = fence;
+}
+
+void RSSurfaceFrameOhosGl::CreateSurface()
+{
+    surface_ = renderContext_->AcquireSurface(width_, height_);
 }
 } // namespace Rosen
 } // namespace OHOS

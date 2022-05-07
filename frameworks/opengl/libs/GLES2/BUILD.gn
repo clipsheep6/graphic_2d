@@ -13,8 +13,8 @@
 
 import("//build/ohos/native_stub/native_stub.gni")
 
-ohos_native_stub_library("libGLESv3_stub") {
-  output_name = "GLESv3"
+ohos_native_stub_library("libGLESv2_stub") {
+  output_name = "GLESv2"
   output_extension = "so"
-  stub_description_file = "./libGLESv3.stub.json"
+  stub_description_file = "./libGLESv2.stub.json"
 }

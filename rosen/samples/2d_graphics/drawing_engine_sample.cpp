@@ -169,14 +169,14 @@ void DrawingEngineSample::OnBufferAvailable()
 {
 }
 
-void DrawingEngineSample::ExcuteBenchMark(SkCanvas* canvas)
+void DrawingEngineSample::ExcuteBenchMark(SkSurface* surface)
 {
     std::cout << "ExcuteBenchMark benchmark is " << benchMark_ << std::endl;
     if (benchMark_ == nullptr) {
         return;
     }
     benchMark_->Start();
-    benchMark_->Test(canvas, drawingWidth, drawingHeight);
+    benchMark_->Test(surface, drawingWidth, drawingHeight);
     benchMark_->Stop();
 }
 
@@ -193,9 +193,10 @@ SurfaceError DrawingEngineSample::DoDraw()
         return SURFACE_ERROR_ERROR;
     }
 
-    SkCanvas* canvas = surface->GetCanvas(surfaceFrame);
+    //SkCanvas* canvas = surface->GetCanvas(surfaceFrame);
+    SkSurface* skiaSurface = surface->GetSkSurface(surfaceFrame);
 
-    ExcuteBenchMark(canvas);
+    ExcuteBenchMark(skiaSurface);
 
     surface->FlushFrame(surfaceFrame);
     

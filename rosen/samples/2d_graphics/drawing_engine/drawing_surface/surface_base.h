@@ -22,6 +22,7 @@
 #include "surface_type.h"
 
 class SkCanvas;
+class SkSurface;
 
 namespace OHOS {
 namespace Rosen {
@@ -39,6 +40,8 @@ public:
     virtual bool FlushFrame(std::unique_ptr<SurfaceFrame>& frame) = 0;
 
     virtual SkCanvas* GetCanvas(std::unique_ptr<SurfaceFrame>& frame) = 0;
+
+    virtual SkSurface* GetSkSurface(std::unique_ptr<SurfaceFrame>& frame) = 0;
 
     void SetDrawingProxy(DrawingProxy* proxy)
     {

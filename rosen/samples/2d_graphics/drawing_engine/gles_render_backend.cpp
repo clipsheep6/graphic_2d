@@ -133,6 +133,52 @@ void GLESRenderBackend::RenderFrame()
 
 SkCanvas* GLESRenderBackend::AcquireCanvas(std::unique_ptr<SurfaceFrame>& frame)
 {
+    if (skSurface_ == nullptr) {
+        if (!SetUpGrContext()) {
+            LOGE("GrContext is not ready!!!");
+            return nullptr;
+        }
+
+        SurfaceFrameOhosGl* framePtr = static_cast<SurfaceFrameOhosGl*>(frame.get());
+
+        if (GetGrContext() == nullptr) {
+            LOGE("GrContext is not ready!!!");
+            return nullptr;
+        }
+
+        GrGLFramebufferInfo framebufferInfo;
+        framebufferInfo.fFBOID = 0;
+        framebufferInfo.fFormat = GL_RGBA8;
+
+        SkColorType colorType = kRGBA_8888_SkColorType;
+
+        int32_t width = framePtr->GetWidth();
+        int32_t height = framePtr->GetHeight();
+        const int stencilBufferSize = 8;
+
+        GrBackendRenderTarget backendRenderTarget(width, height, 0, stencilBufferSize, framebufferInfo);
+        #if defined(USE_CANVASKIT0310_SKIA)
+        SkSurfaceProps surfaceProps(0, kRGB_H_SkPixelGeometry);
+        #else
+        SkSurfaceProps surfaceProps = SkSurfaceProps::kLegacyFontHost_InitType;
+        #endif
+        skSurface_ = SkSurface::MakeFromBackendRenderTarget(
+            GetGrContext(), backendRenderTarget, kBottomLeft_GrSurfaceOrigin, colorType, nullptr, &surfaceProps);
+        if (skSurface_ == nullptr) {
+            LOGW("skSurface is nullptr");
+            return nullptr;
+        }
+    }
+    LOGI("CreateCanvas successfully!!! (%{public}p)", skSurface_->getCanvas());
+
+    return skSurface_->getCanvas();
+}
+
+
+SkSurface* GLESRenderBackend::GetSurface(std::unique_ptr<SurfaceFrame>& frame) {
+    if (skSurface_.get()) {
+        return skSurface_.get();
+    }
     if (!SetUpGrContext()) {
         LOGE("GrContext is not ready!!!");
         return nullptr;
@@ -169,8 +215,7 @@ SkCanvas* GLESRenderBackend::AcquireCanvas(std::unique_ptr<SurfaceFrame>& frame)
     }
 
     LOGI("CreateCanvas successfully!!! (%{public}p)", skSurface_->getCanvas());
-
-    return skSurface_->getCanvas();
+    return skSurface_.get();
 }
 }
 }

@@ -20,6 +20,7 @@
 #include "surface_base.h"
 
 class SkCanvas;
+class SkSurface;
 
 namespace OHOS {
 namespace Rosen {
@@ -35,6 +36,7 @@ public:
     virtual void Destroy() = 0;
     virtual void RenderFrame() = 0;
     virtual SkCanvas* AcquireCanvas(std::unique_ptr<SurfaceFrame>& frame) = 0;
+    virtual SkSurface* GetSurface(std::unique_ptr<SurfaceFrame>& frame) {return nullptr;}
 };
 }
 }

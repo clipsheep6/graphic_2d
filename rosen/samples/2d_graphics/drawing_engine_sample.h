@@ -74,7 +74,7 @@ private:
     void DoPrepareCompleted(sptr<Surface> surface, const struct PrepareCompleteParam &param);
     virtual void OnBufferAvailable() override;
     SurfaceError DoDraw();
-    void ExcuteBenchMark(SkCanvas* canvas);
+    void ExcuteBenchMark(SkSurface* surface);
     bool DrawDrawingLayer(std::shared_ptr<HdiLayerInfo> &layer);
     void CreateDrawingSurface();
     void OnHotPlugEvent(std::shared_ptr<HdiOutput> &output, bool connected);

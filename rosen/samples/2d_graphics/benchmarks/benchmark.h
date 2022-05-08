@@ -31,7 +31,7 @@ public:
     virtual ~BenchMark() {}
     virtual void Start() = 0;
     virtual void Stop() = 0;
-    virtual void Test(SkCanvas* canvas, int width, int height) = 0;
+    virtual void Test(SkSurface* surface, int width, int height) = 0;
     virtual void Output() = 0;
 };
 }

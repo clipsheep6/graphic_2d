@@ -54,6 +54,7 @@ public:
         return grContext_.get();
     }
 #endif
+    SkSurface* GetSurface(std::unique_ptr<SurfaceFrame>& frame) override;
     bool SetUpGrContext();
     void Destroy() override;
     void RenderFrame() override;

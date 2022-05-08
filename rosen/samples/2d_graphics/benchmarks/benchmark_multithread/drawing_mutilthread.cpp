@@ -23,12 +23,17 @@ void DrawingMultithread::Start()
 void DrawingMultithread::Stop()
 {
 }
-void DrawingMultithread::Test(SkCanvas* canvas, int width, int height)
+void DrawingMultithread::Test(SkSurface* surface, int width, int height)
 {
+    mTester.setWindowInfo(width, height);
+    mTester.setMode(0, 3);
+    mTester.useMultiThread(1);
+    mTester.onPaint(surface);
 }
 
 void DrawingMultithread::Output()
 {
+    std::cout <<"whole draw time = "<<mTester.getPaintTime()<<"ms"<<std::endl;
 }
 }
 }

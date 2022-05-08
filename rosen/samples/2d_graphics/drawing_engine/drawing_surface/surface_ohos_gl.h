@@ -37,6 +37,7 @@ public:
     std::unique_ptr<SurfaceFrame> RequestFrame(int32_t width, int32_t height) override;
     bool FlushFrame(std::unique_ptr<SurfaceFrame>& frame) override;
     SkCanvas* GetCanvas(std::unique_ptr<SurfaceFrame>& frame) override;
+    SkSurface* GetSkSurface(std::unique_ptr<SurfaceFrame>& frame) override;
 private:
     std::unique_ptr<SurfaceFrameOhosGl> frame_;
 };

@@ -15,6 +15,7 @@
 #ifndef DRAWING_MULTITHREAD_H
 #define DRAWING_MULTITHREAD_H
 #include "benchmark.h"
+#include "../windowSimulator/winSimulator.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -26,6 +27,8 @@ public:
     virtual void Stop() override;
     virtual void Test(SkCanvas* canvas, int width, int height) override;
     virtual void Output() override;
+private:
+	WinSimulator mTester;
 };
 }
 }

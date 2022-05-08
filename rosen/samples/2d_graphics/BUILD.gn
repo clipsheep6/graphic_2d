@@ -64,6 +64,8 @@ ohos_executable("drawing_engine_sample") {
     "benchmarks/benchmark_config.cpp",
     "benchmarks/benchmark_multithread/drawing_mutilthread.cpp",
     "benchmarks/benchmark_singlethread/drawing_singlethread.cpp",
+    "benchmarks/windowSimulator/skpPainter.cpp",
+    "benchmarks/windowSimulator/winSimulator.cpp"
   ]
 
   include_dirs += [

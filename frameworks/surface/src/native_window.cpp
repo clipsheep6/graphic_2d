@@ -44,7 +44,7 @@ OHNativeWindow* CreateNativeWindowFromSurface(void* pSuface)
     nativeWindow->config.usage = HBM_USE_CPU_READ | HBM_USE_MEM_DMA;
     nativeWindow->config.format = PIXEL_FMT_RGBA_8888;
     nativeWindow->config.strideAlignment = 8;   // default stride is 8
-    nativeWindow->config.timeout = 3000;        // default timout is 3000 ms
+    nativeWindow->config.timeout = INT_MAX;        // default timout is INT_MAX ms
     nativeWindow->config.colorGamut = ColorGamut::COLOR_GAMUT_SRGB;
     nativeWindow->config.transform = TransformType::ROTATE_NONE;
 

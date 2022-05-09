@@ -19,6 +19,8 @@
 
 #include "platform/common/rs_log.h"
 #include "rs_surface_frame_ohos_raster.h"
+#include "surface_buffer_impl.h"
+#include "buffer_manager.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -38,6 +40,12 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosRaster::RequestFrame(int32_t width,
         ROSEN_LOGE("RSSurfaceOhosRaster::Requestframe Failed, error is : %s", SurfaceErrorStr(err).c_str());
         return nullptr;
     }
+
+    if (frame->buffer_->GetVirAddr() == nullptr) {
+        sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(frame->buffer_);
+        BufferManager::GetInstance()->Map(bufferImpl);
+    }
+
     sptr<SyncFence> tempFence = new SyncFence(frame->releaseFence_);
     int res = tempFence->Wait(3000);
     if (res < 0) {

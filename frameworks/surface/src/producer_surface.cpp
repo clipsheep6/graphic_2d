@@ -63,17 +63,6 @@ GSError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
     }
 
     std::lock_guard<std::mutex> lockGuard(mutex_);
-    // add cache
-    if (retval.buffer != nullptr && IsRemote()) {
-        sptr<SurfaceBufferImpl> bufferImpl = SurfaceBufferImpl::FromBase(retval.buffer);
-        ret = BufferManager::GetInstance()->Map(bufferImpl);
-        if (ret != GSERROR_OK) {
-            BLOGN_FAILURE_ID(retval.sequence, "Map failed");
-            return GSERROR_API_FAILED;
-        } else {
-            BLOGN_SUCCESS_ID(retval.sequence, "Map");
-        }
-    }
 
     if (retval.buffer != nullptr) {
         bufferProducerCache_[retval.sequence] = SurfaceBufferImpl::FromBase(retval.buffer);

@@ -638,8 +638,7 @@ void RsRenderServiceUtil::DealAnimation(SkCanvas& canvas, RSSurfaceRenderNode& n
     if (filter != nullptr) {
         auto skRectPtr = std::make_unique<SkRect>();
         skRectPtr->setXYWH(0, 0, params.srcRect.width(), params.srcRect.height());
-        RSPropertiesPainter::SaveLayerForFilter(property, canvas, filter, skRectPtr);
-        RSPropertiesPainter::RestoreForFilter(canvas);
+        RSPropertiesPainter::DrawFilter(property, canvas, filter, skRectPtr);
     }
 }
 

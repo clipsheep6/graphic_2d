@@ -73,8 +73,6 @@ void RSProcessor::SetBufferTimeStamp()
 void RSProcessor::DropFrameProcess(RSSurfaceRenderNode& node)
 {
     auto availableBufferCnt = node.GetAvailableBufferCount();
-    RS_LOGI("RsDebug RSProcessor::DropFrameProcess start node:%llu available buffer:%d", node.GetId(),
-        availableBufferCnt);
 
     const auto& surfaceConsumer = node.GetConsumer();
     if (surfaceConsumer == nullptr) {

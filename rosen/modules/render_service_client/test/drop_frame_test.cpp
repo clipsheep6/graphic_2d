@@ -347,7 +347,7 @@ public:
             usleep(5000);
         }
         
-        std::cout << "Compatible rotation test end\n";
+        std::cout << "Compatible test end\n";
         std::cout << "RSDropFrameTestCase:: rs drop_frame_tets.cpp testCaseDefault end\n";
         std::cout << "-------------------------------------------------------\n";
     }

@@ -200,6 +200,7 @@ sptr<Surface> RSRenderServiceConnection::CreateNodeAndSurface(const RSSurfaceRen
     node->SetConsumer(surface);
     std::function<void()> registerNode = [node, this]() -> void {
         this->mainThread_->GetContext().GetMutableNodeMap().RegisterRenderNode(node);
+        this->mainThread_->RegisterSurfaceNode(node->GetId());
     };
     mainThread_->PostTask(registerNode);
     std::weak_ptr<RSSurfaceRenderNode> surfaceRenderNode(node);

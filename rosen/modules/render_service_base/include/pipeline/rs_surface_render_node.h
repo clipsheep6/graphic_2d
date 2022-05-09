@@ -43,12 +43,30 @@ public:
 
     void SetConsumer(const sptr<Surface>& consumer);
     void SetBuffer(const sptr<SurfaceBuffer>& buffer);
+    void SetNextBuffer(const sptr<SurfaceBuffer>& buffer);
     void SetFence(sptr<SyncFence> fence);
+    void SetNextFence(sptr<SyncFence> fence);
     void SetDamageRegion(const Rect& damage);
     void IncreaseAvailableBuffer();
     int32_t ReduceAvailableBuffer();
     void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
     void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
+
+    void SetNextBufferTimestamp(int64_t timestamp);
+    int64_t GetBufferTimestamp() const
+    {
+        return bufferTimestamp_;
+    }
+
+    sptr<SurfaceBuffer>& GetNextBuffer()
+    {
+        return nextBuffer_;
+    }
+
+    sptr<SyncFence> GetNextFence() const
+    {
+        return nextFence_;
+    }
 
     sptr<SurfaceBuffer>& GetBuffer()
     {
@@ -209,10 +227,14 @@ private:
     float globalZOrder_ = 0.0f;
     bool isSecurityLayer_ = false;
     NodeId parentId_ = 0;
+    sptr<SurfaceBuffer> nextBuffer_;
     sptr<SurfaceBuffer> buffer_;
     sptr<SurfaceBuffer> preBuffer_;
+    sptr<SyncFence> nextFence_;
     sptr<SyncFence> fence_;
     sptr<SyncFence> preFence_;
+    int64_t bufferTimestamp_ = 0;
+    int64_t nextBufferTimestamp_ = 0;
     Rect damageRect_ = {0, 0, 0, 0};
     RectI dstRect_;
     int32_t offsetX_ = 0;

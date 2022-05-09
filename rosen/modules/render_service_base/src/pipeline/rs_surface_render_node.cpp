@@ -46,6 +46,22 @@ void RSSurfaceRenderNode::SetConsumer(const sptr<Surface>& consumer)
     consumer_ = consumer;
 }
 
+void RSSurfaceRenderNode::SetNextBufferTimestamp(int64_t timestamp)
+{
+    bufferTimestamp_ = nextBufferTimestamp_;
+    nextBufferTimestamp_ = timestamp;
+}
+
+void RSSurfaceRenderNode::SetNextBuffer(const sptr<SurfaceBuffer>& buffer)
+{
+    if (nextBuffer_ != nullptr) {
+        SetBuffer(nextBuffer_)
+        nextBuffer_ = buffer;
+    } else {
+        nextBuffer_ = buffer;
+    }
+}
+
 void RSSurfaceRenderNode::SetBuffer(const sptr<SurfaceBuffer>& buffer)
 {
     if (buffer_ != nullptr) {
@@ -106,6 +122,14 @@ void RSSurfaceRenderNode::SetFence(sptr<SyncFence> fence)
 {
     preFence_ = fence_;
     fence_ = std::move(fence);
+}
+
+void RSSurfaceRenderNode::SetNextFence(sptr<SyncFence> fence)
+{
+    if (nextFence_ != SyncFence::INVALID_FENCE) {
+        SetFence(nextFence_);
+    }
+    nextFence_ = std::move(fence);
 }
 
 void RSSurfaceRenderNode::SetDamageRegion(const Rect& damage)

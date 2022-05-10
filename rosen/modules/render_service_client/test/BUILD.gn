@@ -176,7 +176,6 @@ ohos_executable("drop_frame_test") {
     # render_service_base include
     "//foundation/graphic/graphic/rosen/modules/render_service_base/src",
     "//foundation/graphic/graphic/rosen/include",
-    "//drivers/peripheral/display/interfaces/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
   ]
 

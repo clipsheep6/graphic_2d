@@ -195,4 +195,3 @@ ohos_executable("drop_frame_test") {
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
-

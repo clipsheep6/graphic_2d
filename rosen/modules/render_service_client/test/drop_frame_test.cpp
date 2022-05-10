@@ -86,9 +86,9 @@ namespace pipelineTestUtils {
 
         bool DrawSurface()
         {
-            printf("ToDrawSurface::DrawSurface() start\n");
+            std::cout("ToDrawSurface::DrawSurface() start\n");
             if (surfaceNode_ == nullptr) {
-                printf("ToDrawSurface: surfaceNode_ is nullptr\n");
+                std::cout("ToDrawSurface: surfaceNode_ is nullptr\n");
                 return false;
             }
             auto x = surfaceGeometry_.x();
@@ -105,19 +105,19 @@ namespace pipelineTestUtils {
             if (rc_) {
                 rsSurface->SetRenderContext(rc_);
             } else {
-                printf("ToDrawSurface: RenderContext is nullptr\n");
+                std::cout("ToDrawSurface: RenderContext is nullptr\n");
             }
 #endif
             auto framePtr = rsSurface->RequestFrame(bufferSize_.width(), bufferSize_.height());
             if (!framePtr) {
                 // SetRenderContext must before rsSurface->RequestFrame,
                 //      or frameptr will be nullptr.
-                printf("ToDrawSurface: frameptr is nullptr\n");
+                std::cout("ToDrawSurface: frameptr is nullptr\n");
                 return wrongExit;
             }
             auto canvas = framePtr->GetCanvas();
             if (!canvas) {
-                printf("ToDrawSurface: canvas is nullptr\n");
+                std::cout("ToDrawSurface: canvas is nullptr\n");
                 return wrongExit;
             }
             canvas->clear(SK_ColorTRANSPARENT);
@@ -129,14 +129,14 @@ namespace pipelineTestUtils {
             paint.setColor(color_);
             ChangeColor();
             if (!drawShape_) {
-                printf("ToDrawSurface: drawShape_ is nullptr\n");
+                std::cout("ToDrawSurface: drawShape_ is nullptr\n");
                 return wrongExit;
             }
             drawShape_(*(canvas), paint);
             framePtr->SetDamageRegion(0, 0, surfaceGeometry_.width(), surfaceGeometry_.height());
             rsSurface->FlushFrame(framePtr);
             return successExit;
-            printf("ToDrawSurface::DrawSurface() end\n");
+            std::cout("ToDrawSurface::DrawSurface() end\n");
         }
 
     private:
@@ -234,15 +234,15 @@ private:
 #ifdef ACE_ENABLE_GPU
         std::cout << "ACE_ENABLE_GPU is true. \n";
         std::cout << "Init RenderContext start. \n";
-            rc_ = RenderContextFactory::GetInstance().CreateEngine();
-            if (rc_) {
-                std::cout << "Init RenderContext success.\n";
-                rc_->InitializeEglContext();
-                isInit_ = true;
-            } else {
-                isInit_ = false;
-                std::cout << "Init RenderContext failed, RenderContext is nullptr.\n";
-            }
+        rc_ = RenderContextFactory::GetInstance().CreateEngine();
+        if (rc_) {
+            std::cout << "Init RenderContext success.\n";
+            rc_->InitializeEglContext();
+            isInit_ = true;
+        } else {
+            isInit_ = false;
+            std::cout << "Init RenderContext failed, RenderContext is nullptr.\n";
+        }
         std::cout << "Init RenderContext start.\n";
 #endif
     }

@@ -341,7 +341,6 @@ public:
         if (transactionProxy != nullptr) {
             transactionProxy->FlushImplicitTransaction();
         }
-        
         for (int index = 0; index <= TEST_TIME / SLEEP_TIME; index ++) {
             drawEr.DrawSurface();
             if (transactionProxy != nullptr) {

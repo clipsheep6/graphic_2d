@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "boot_animation.h"
+#include "parameter.h"
 #include "event_handler.h"
 #include "rs_trace.h"
 #include "transaction/rs_render_service_client.h"
@@ -21,6 +22,7 @@
 using namespace OHOS;
 static const std::string BOOT_PIC_ZIP = "/system/etc/init/bootpic.zip";
 static const std::string BOOT_SOUND_URI = "file://system/etc/init/bootsound.wav";
+static const std::string BOOT_ANIMATION_COMPLETE = "bootevent.bootanimation.exit";
 
 
 void BootAnimation::OnDraw(SkCanvas* canvas, int32_t curNo)
@@ -183,6 +185,7 @@ void BootAnimation::InitRsSurface()
 
 BootAnimation::~BootAnimation()
 {
+    SetParameter(BOOT_ANIMATION_COMPLETE.c_str(), "1");
     window_->Destroy();
 }
 

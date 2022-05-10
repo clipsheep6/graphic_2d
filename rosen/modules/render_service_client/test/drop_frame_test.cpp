@@ -40,6 +40,8 @@ using namespace std;
 constexpr int MICRO_SECS_PER_SECOND = 1000000; // 1s = 1000000 us
 constexpr int SLEEP_TIME = 5000; // 5000 us
 constexpr int TEST_TIME = MICRO_SECS_PER_SECOND * 10; // test duration 10 s
+constexpr int SKSCALAR_W = 500; //rect width 1400
+constexpr int SKSCALAR_H = 300; //rect height 1200
 
 namespace OHOS::Rosen {
 #ifdef ACE_ENABLE_GPU
@@ -70,22 +72,9 @@ namespace pipelineTestUtils {
             return *this;
         }
 
-        inline ToDrawSurface& SetBufferSize(int width, int height)
-        {
-            bufferSize_ = SkRect::MakeXYWH(0, 0, width, height);
-            return *this;
-        }
-
         inline ToDrawSurface& SetBufferSizeAuto()
         {
             bufferSize_ = surfaceGeometry_;
-            return *this;
-        }
-
-        inline ToDrawSurface& SetBufferSize(SkRect bufferSize)
-        {
-            // bufferSize has no XY
-            bufferSize_ = bufferSize;
             return *this;
         }
 
@@ -171,97 +160,6 @@ namespace pipelineTestUtils {
     }
 } // namespace pipelineTestUtils
 
-// Toy DMS.
-using DisplayId = ScreenId;
-class DmsMock {
-public:
-    inline static DmsMock& GetInstance()
-    {
-        static DmsMock c;
-        return c;
-    }
-
-    ~DmsMock() noexcept = default;
-
-    DisplayId GetDefaultDisplayId()
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        return defaultDisplayId_;
-    }
-
-    std::optional<RSScreenModeInfo> GetDisplayActiveMode(DisplayId id) const
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        if (displays_.count(id) == 0) {
-            cout << "DmsMock: No display " << id << "!" << endl;
-            return {};
-        }
-        return displays_.at(id).activeMode;
-    }
-
-    void OnDisplayConnected(ScreenId id)
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        displays_[id] = Display { id, rsInterface_.GetScreenActiveMode(id) };
-        std::cout << "DmsMock: Display " << id << " connected." << endl;
-    }
-
-    void OnDisplayDisConnected(ScreenId id)
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        if (displays_.count(id) == 0) {
-            cout << "DmsMock: No display " << id << "!" << endl;
-        } else {
-            std::cout << "DmsMock: Display " << id << " disconnected." << endl;
-            displays_.erase(id);
-            if (id == defaultDisplayId_) {
-                defaultDisplayId_ = rsInterface_.GetDefaultScreenId();
-                std::cout << "DmsMock: DefaultDisplayId changed, new DefaultDisplayId is" << defaultDisplayId_ << "."
-                          << endl;
-            }
-        }
-    }
-
-private:
-    struct Display {
-        DisplayId id;
-        RSScreenModeInfo activeMode;
-    };
-    std::unordered_map<DisplayId, Display> displays_;
-    mutable std::recursive_mutex mutex_;
-    RSInterfaces& rsInterface_;
-    DisplayId defaultDisplayId_;
-
-    DmsMock() : rsInterface_(RSInterfaces::GetInstance())
-    {
-        Init();
-    }
-
-    void Init()
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        (void)rsInterface_.SetScreenChangeCallback([this](ScreenId id, ScreenEvent event) {
-            switch (event) {
-                case ScreenEvent::CONNECTED: {
-                    this->OnDisplayConnected(id);
-                    break;
-                }
-                case ScreenEvent::DISCONNECTED: {
-                    this->OnDisplayDisConnected(id);
-                    break;
-                }
-                default:
-                    break;
-            }
-        });
-
-        defaultDisplayId_ = rsInterface_.GetDefaultScreenId();
-        displays_[defaultDisplayId_] =
-            Display { defaultDisplayId_, rsInterface_.GetScreenActiveMode(defaultDisplayId_) };
-    }
-}; // class DmsMock
-
-
 class RSDropFrameTestCase {
 public:
     inline static RSDropFrameTestCase& GetInstance()
@@ -282,27 +180,9 @@ public:
         std::cout << "ACE_ENABLE_GPU is disabled\n";
         isGPU_ = false;
 #endif
-
-#ifdef ACE_ENABLE_GL
-        std::cout << "ACE_ENABLE_GL is enabled\n";
-#else
-        std::cout << "ACE_ENABLE_GL is disabled\n";
-#endif
-        DisplayId id = DmsMock::GetInstance().GetDefaultDisplayId();
+        ScreenId id = RSInterfaces::GetInstance().GetDefaultScreenId();
         std::cout << "RS default screen id is " << id << ".\n";
-        auto activeModeInfo = DmsMock::GetInstance().GetDisplayActiveMode(id);
-        if (activeModeInfo) {
-            screenWidth_ = activeModeInfo->GetScreenWidth();
-            screenheight_ = activeModeInfo->GetScreenHeight();
-            screenRefreshRate_ = static_cast<int>(activeModeInfo->GetScreenRefreshRate());
-            std::cout << "Display " << id << " active mode info:\n";
-            std::cout << "Width: " << screenWidth_ << ", Height: " << screenheight_;
-            std::cout << ", RefreshRate: " << screenRefreshRate_ << "Hz.\n";
-            isInit_ = true;
-        } else {
-            std::cout << "Display " << id << " has no active mode!\n";
-            isInit_ = false;
-        }
+        isInit_ = true;
         RenderContextInit();
         std::cout << "RSDropFrameTestCase:: rs drop_frame_tets.cpp testInit end\n";
         std::cout << "-------------------------------------------------------\n";
@@ -317,16 +197,14 @@ public:
             std::cout << "RSDropFrameTestCase:: TestInit failed testCase Stop\n";
             return;
         }
-     
         auto surfaceNode1 = pipelineTestUtils::CreateSurface();
-
         auto drawEr = pipelineTestUtils::ToDrawSurface()
             .SetSurfaceNode(surfaceNode1)
-            .SetSurfaceNodeSize(SkRect::MakeXYWH(screenWidth_ * 0.4f, screenheight_ * 0.4f, 500, 300))
+            .SetSurfaceNodeSize(SkRect::MakeXYWH(0, 0, SKSCALAR_W, SKSCALAR_H))
             .SetBufferSizeAuto()
             .SetDraw([&](SkCanvas &canvas, SkPaint &paint) -> void {
                 canvas.drawRect(
-                    SkRect::MakeXYWH(0, 0, 500, 300),
+                    SkRect::MakeXYWH(0, 0, SKSCALAR_W, SKSCALAR_H),
                     paint);
             });
         drawEr.DrawSurface();
@@ -346,7 +224,6 @@ public:
             usleep(SLEEP_TIME);
         }
         
-        std::cout << "Compatible test end\n";
         std::cout << "RSDropFrameTestCase:: rs drop_frame_tets.cpp testCaseDefault end\n";
         std::cout << "-------------------------------------------------------\n";
     }
@@ -372,9 +249,6 @@ private:
 
     bool isInit_ = false;
     bool isGPU_ = false;
-    int screenWidth_ = 0;
-    int screenheight_ = 0;
-    int screenRefreshRate_ = 0;
 }; // class RSDropFrameTestCase
 } // namespace OHOS::Rosen
 

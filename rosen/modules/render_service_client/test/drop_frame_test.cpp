@@ -40,8 +40,8 @@ using namespace std;
 constexpr int MICRO_SECS_PER_SECOND = 1000000; // 1s = 1000000 us
 constexpr int SLEEP_TIME = 5000; // 5000 us
 constexpr int TEST_TIME = MICRO_SECS_PER_SECOND * 10; // test duration 10 s
-constexpr int SKSCALAR_W = 500; //rect width 500
-constexpr int SKSCALAR_H = 300; //rect height 300
+constexpr int SKSCALAR_W = 500; // rect width 500
+constexpr int SKSCALAR_H = 300; // rect height 300
 
 namespace OHOS::Rosen {
 #ifdef ACE_ENABLE_GPU

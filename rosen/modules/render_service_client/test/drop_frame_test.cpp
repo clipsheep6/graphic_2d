@@ -86,9 +86,9 @@ namespace pipelineTestUtils {
 
         bool DrawSurface()
         {
-            std::cout("ToDrawSurface::DrawSurface() start\n");
+            std::cout << "ToDrawSurface::DrawSurface() start\n";
             if (surfaceNode_ == nullptr) {
-                std::cout("ToDrawSurface: surfaceNode_ is nullptr\n");
+                std::cout << "ToDrawSurface: surfaceNode_ is nullptr\n";
                 return false;
             }
             auto x = surfaceGeometry_.x();
@@ -105,19 +105,19 @@ namespace pipelineTestUtils {
             if (rc_) {
                 rsSurface->SetRenderContext(rc_);
             } else {
-                std::cout("ToDrawSurface: RenderContext is nullptr\n");
+                std::cout << "ToDrawSurface: RenderContext is nullptr\n";
             }
 #endif
             auto framePtr = rsSurface->RequestFrame(bufferSize_.width(), bufferSize_.height());
             if (!framePtr) {
                 // SetRenderContext must before rsSurface->RequestFrame,
                 //      or frameptr will be nullptr.
-                std::cout("ToDrawSurface: frameptr is nullptr\n");
+                std::cout << "ToDrawSurface: frameptr is nullptr\n";
                 return wrongExit;
             }
             auto canvas = framePtr->GetCanvas();
             if (!canvas) {
-                std::cout("ToDrawSurface: canvas is nullptr\n");
+                std::cout << "ToDrawSurface: canvas is nullptr\n";
                 return wrongExit;
             }
             canvas->clear(SK_ColorTRANSPARENT);
@@ -129,14 +129,14 @@ namespace pipelineTestUtils {
             paint.setColor(color_);
             ChangeColor();
             if (!drawShape_) {
-                std::cout("ToDrawSurface: drawShape_ is nullptr\n");
+                std::cout << "ToDrawSurface: drawShape_ is nullptr\n";
                 return wrongExit;
             }
             drawShape_(*(canvas), paint);
             framePtr->SetDamageRegion(0, 0, surfaceGeometry_.width(), surfaceGeometry_.height());
             rsSurface->FlushFrame(framePtr);
             return successExit;
-            std::cout("ToDrawSurface::DrawSurface() end\n");
+            std::cout << "ToDrawSurface::DrawSurface() end\n";
         }
 
     private:

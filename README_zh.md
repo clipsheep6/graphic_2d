@@ -48,13 +48,13 @@ foundation/graphic/graphic/
 │   ├── doc                 # doc
 │   ├── include             # 对外头文件代码
 │   ├── lib                 # lib
-│   ├── modules             # graphic 子系统各模块代码
-│   ├── samples             # 实例代码
-│   ├── test                # 开发测试代码
-│   ├── tools               # 工具代码
+│   ├── modules             # graphic 子系统各模块代码
+│   ├── samples             # 实例代码
+│   ├── test                # 开发测试代码
+│   ├── tools               # 工具代码
 ├── interfaces              # 图形接口存放目录
-│   ├── innerkits           # 内部native接口存放目录
-│   └── kits                # js/napi外部接口存放目录
+│   ├── innerkits           # 内部native接口存放目录
+│   └── kits                # js/napi外部接口存放目录
 └── utils                   # 小部件存放目录
 ```
 
@@ -71,9 +71,8 @@ foundation/graphic/graphic/
 
 
 ## 相关仓
-- **graphic_standard**
-- ace_ace_engine
-- aafwk_standard
-- multimedia_media_standard
-- multimedia_camera_standard
-- Window Manager
+- [graphic_standard](https://gitee.com/mr-yx/graphic_standard)
+- [ace_ace_engine](https://gitee.com/openharmony/ace_ace_engine)
+- [aafwk_standard](https://gitee.com/openharmony/aafwk_standard)
+- [multimedia_media_standard](https://gitee.com/openharmony/multimedia_media_standard)
+- [multimedia_camera_standard](https://gitee.com/openharmony/multimedia_camera_standard)

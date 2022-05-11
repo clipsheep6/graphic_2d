@@ -16,6 +16,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_PROPERTY_ANIMATION_H
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_PROPERTY_ANIMATION_H
 
+#include "animation/rs_animation_log.h"
 #include "animation/rs_property_accessors.h"
 #include "animation/rs_render_animation.h"
 #include "common/rs_common_def.h"
@@ -74,6 +75,8 @@ protected:
     {
         propertyAccessor_ = std::static_pointer_cast<RSPropertyAccessors<T>>(
             RSBasePropertyAccessors::GetAccessor(property));
+        animationLog_ = std::make_shared<RSAnimationLog>();
+        animationLog_->InitNodeAndPropertyInfo();
     }
     RSRenderPropertyAnimation() =default;
 #ifdef ROSEN_OHOS
@@ -140,6 +143,7 @@ protected:
 
         lastValue_ = value;
         SetPropertyValue(animationValue);
+        WriteAnimationValueToLog(animationValue);
     }
 
     void OnRemoveOnCompletion() override
@@ -154,11 +158,51 @@ protected:
         SetPropertyValue(backwardValue);
     }
 
+    void WriteAnimationValueToLog(const T& value)
+    {
+        auto node = GetTarget();
+        if (node == nullptr) {
+            return;
+        }
+        if (!hasUpdateNeedWriteLog_) {
+            hasUpdateNeedWriteLog_ = true;
+            needWritePropertyToLog_ = animationLog_->IsNeedWriteLog(property_, node->GetId());
+        }
+        if (needWritePropertyToLog_) {
+            animationLog_->WritePropertyValueToLog(value, property_, node->GetId());
+        }
+    }
+
+    void WriteAnimationValueToLog(const T& value, const T& startValue, const T& endValue)
+    {
+        T animationValue;
+        if (GetAdditive()) {
+            animationValue = GetPropertyValue() + value - lastValue_;
+        } else {
+            animationValue = value;
+        }
+
+        auto node = GetTarget();
+        if (node == nullptr) {
+            return;
+        }
+        if (!hasUpdateNeedWriteLog_) {
+            hasUpdateNeedWriteLog_ = true;
+            needWritePropertyToLog_ = animationLog_->IsNeedWriteLog(property_, node->GetId());
+        }
+        if (needWritePropertyToLog_) {
+            animationLog_->WritePropertyValueToLog(animationValue, property_, GetAnimationId(), startValue, endValue);
+        }
+    }
+
 private:
     RSAnimatableProperty property_ { RSAnimatableProperty::INVALID };
     T originValue_;
     T lastValue_;
     bool isAdditive_ { true };
+    bool hasUpdateNeedWriteLog_ {false};
+    bool needWritePropertyToLog_ { false };
+    std::shared_ptr<RSAnimationLog> animationLog_;
     std::shared_ptr<RSPropertyAccessors<T>> propertyAccessor_;
 };
 } // namespace Rosen

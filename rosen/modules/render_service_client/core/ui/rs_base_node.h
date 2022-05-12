@@ -72,7 +72,7 @@ protected:
 
     virtual void OnAddChildren() {}
     virtual void OnRemoveChildren() {}
-    SharedPtr GetParent();
+    std::vector<SharedPtr> GetParent();
 
     void SetId(const NodeId& id)
     {
@@ -94,7 +94,7 @@ private:
     NodeId id_;
     bool isRenderServiceNode_;
 
-    NodeId parent_ = 0;
+    std::vector<NodeId> parents_;
     std::vector<NodeId> children_;
     void SetParent(NodeId parent);
     void RemoveChildById(NodeId childId);

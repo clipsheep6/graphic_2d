@@ -213,12 +213,14 @@ float RSSurfaceRenderNode::GetGlobalZOrder() const
 
 void RSSurfaceRenderNode::SetParentId(NodeId parentId, bool sendMsg)
 {
-    parentId_ = parentId;
-    if (!sendMsg) {
+    //  only node without multi-parent can run into the code below, excluding the cross-screen state.
+    if (!sendMsg || GetParents().size() > 1) {
         return;
     }
+    parentId_.clear();
+    parentId_.emplace_back(parentId);
     // find parent surface
-    auto node = GetParent().lock();
+    auto node = GetParents()[0].lock();
     std::unique_ptr<RSCommand> command;
     while (true) {
         if (node == nullptr) {
@@ -230,7 +232,11 @@ void RSSurfaceRenderNode::SetParentId(NodeId parentId, bool sendMsg)
             command = std::make_unique<RSSurfaceNodeSetParentSurface>(GetId(), surfaceNode->GetId());
             break;
         } else {
-            node = node->GetParent().lock();
+            if (node->GetParents().size() > 1) {
+                RS_LOGE("RsDebug RSSurfaceRenderNode::SetParentId parent number is error");
+                return;
+            }
+            node = node->GetParents()[0].lock();
         }
     }
     // send a Command
@@ -239,7 +245,7 @@ void RSSurfaceRenderNode::SetParentId(NodeId parentId, bool sendMsg)
     }
 }
 
-NodeId RSSurfaceRenderNode::GetParentId() const
+std::vector<NodeId> RSSurfaceRenderNode::GetParentId() const
 {
     return parentId_;
 }

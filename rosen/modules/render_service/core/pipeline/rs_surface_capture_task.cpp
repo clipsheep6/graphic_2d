@@ -249,6 +249,8 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode(RSS
             param.dstRect = SkRect::MakeXYWH(0, 0, node.GetRenderProperties().GetBoundsWidth(),
                 node.GetRenderProperties().GetBoundsHeight());
             AdjustSurfaceTransform(param, surfaceTransform);
+            RS_LOGE("chen Node: clip[%f %f %f %f] tranY[%f]", param.clipRect.left(), param.clipRect.top(), param.clipRect.width(),
+                param.clipRect.height(), param.matrix.getTranslateY());
             RsRenderServiceUtil::DrawBuffer(*canvas_, param, [this](SkCanvas& canvas, BufferDrawParam& params) -> void {
                     canvas.scale(scaleX_, scaleY_);
                 });

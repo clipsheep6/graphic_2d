@@ -21,11 +21,14 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include <unordered_set>
+#include <unordered_map>
 
 #include "common/rs_thread_handler.h"
 #include "common/rs_thread_looper.h"
 #include "ipc_callbacks/iapplication_render_thread.h"
 #include "pipeline/rs_context.h"
+#include "pipeline/rs_surface_render_node.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "refbase.h"
 #include "vsync_receiver.h"
@@ -70,7 +73,8 @@ public:
 
     void Init();
     void Start();
-    void RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
+    void RecvRSTransactionData(
+        std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp);
     void RequestNextVSync();
     void PostTask(RSTaskMessage::RSTask task);
     void RenderServiceTreeDump(std::string& dumpString);
@@ -106,6 +110,9 @@ public:
     void UnregisterApplicationRenderThread(sptr<IApplicationRenderThread> app);
 
     sptr<VSyncDistributor> rsVSyncDistributor_;
+
+    void RegisterSurfaceNode(NodeId id);
+    void SetBufferTimestamp(int64_t bufferTimestamp);
 private:
     RSMainThread();
     ~RSMainThread() noexcept;
@@ -126,8 +133,13 @@ private:
     RSTaskHandle taskHandle_ = nullptr;
     RSTaskMessage::RSTask mainLoop_;
     std::unique_ptr<RSVsyncClient> vsyncClient_ = nullptr;
-    std::queue<std::unique_ptr<RSTransactionData>> cacheCommandQueue_;
+    std::unordered_map<uint64_t, std::queue<std::unique_ptr<RSTransactionData>>> cacheCommandQueue_;
+    // std::queue<std::unique_ptr<RSTransactionData>> cacheCommandQueue_;
     std::queue<std::unique_ptr<RSTransactionData>> effectCommandQueue_;
+
+    // std::mutex surfaceNodeIdMutex_;
+    std::unordered_set<uint64_t> surfaceNodeId_;
+    std::unordered_set<int64_t> bufferTimestamp_;
 
     uint64_t timestamp_ = 0;
     std::unordered_map<uint32_t, sptr<IApplicationRenderThread>> applicationRenderThreadMap_;

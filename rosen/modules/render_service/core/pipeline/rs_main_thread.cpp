@@ -78,9 +78,28 @@ void RSMainThread::Start()
 
 void RSMainThread::ProcessCommand()
 {
+    // auto& nodeMap = context_.GetNodeMap();
     {
         std::lock_guard<std::mutex> lock(transitionDataMutex_);
-        std::swap(cacheCommandQueue_, effectCommandQueue_);
+        // for (auto id : surfaceNodeId) {
+            // auto node = nodeMap.GetRenderNode<RSSurfaceRenderNode>(id);
+            // if (!node->IsOnTheTree() || !node->GetRenderProperties().GetVisible()) {
+            //     continue;
+            // }
+        for (auto timestamp : bufferTimestamp_) {
+            auto iter = cacheCommandQueue_.find(static_cast<uint64_t>(timestamp));
+            if (iter != cacheCommandQueue_.end()) {
+                std::queue<std::unique_ptr<RSTransactionData>> temp;
+                swap(temp, cacheCommandQueue_[timestamp]);
+                while(!temp.empty()) {
+                    effectCommandQueue_.push(std::move(temp.front()));
+                    temp.pop();
+                }
+                // effectCommandQueue_.emplace_back(temp);
+                cacheCommandQueue_.erase(timestamp);
+            }
+            bufferTimestamp_.erase(timestamp);
+        }
     }
     while (!effectCommandQueue_.empty())
     {
@@ -161,11 +180,14 @@ void RSMainThread::Animate(uint64_t timestamp)
     RequestNextVSync();
 }
 
-void RSMainThread::RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData)
+void RSMainThread::RecvRSTransactionData(
+    std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp)
 {
     {
         std::lock_guard<std::mutex> lock(transitionDataMutex_);
-        cacheCommandQueue_.push(std::move(rsTransactionData));
+        auto timestamp = transactionDataWithTimeStamp.first;
+        cacheCommandQueue_[timestamp].push(std::move(transactionDataWithTimeStamp.second));
+        transactionDataWithTimeStamp.second = nullptr;
     }
     RequestNextVSync();
 }
@@ -186,6 +208,16 @@ void RSMainThread::RegisterApplicationRenderThread(uint32_t pid, sptr<IApplicati
 void RSMainThread::UnregisterApplicationRenderThread(sptr<IApplicationRenderThread> app)
 {
     std::__libcpp_erase_if_container(applicationRenderThreadMap_, [&app](auto& iter) { return iter.second == app; });
+}
+
+void RSMainThread::RegisterSurfaceNode(NodeId id)
+{
+    surfaceNodeId_.insert(id);
+}
+
+void RSMainThread::SetBufferTimestamp(int64_t bufferTimestamp)
+{
+    bufferTimestamp_.insert(bufferTimestamp);
 }
 
 void RSMainThread::SendCommands()

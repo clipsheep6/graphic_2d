@@ -163,9 +163,10 @@ void RSRenderServiceConnection::RSApplicationRenderThreadDeathRecipient::OnRemot
     rsConn->UnregisterApplicationRenderThread(app);
 }
 
-void RSRenderServiceConnection::CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData)
+void RSRenderServiceConnection::CommitTransaction(
+    std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp)
 {
-    mainThread_->RecvRSTransactionData(transactionData);
+    mainThread_->RecvRSTransactionData(transactionDataWithTimeStamp);
 }
 
 void RSRenderServiceConnection::ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task)
@@ -199,6 +200,7 @@ sptr<Surface> RSRenderServiceConnection::CreateNodeAndSurface(const RSSurfaceRen
     node->SetConsumer(surface);
     std::function<void()> registerNode = [node, this]() -> void {
         this->mainThread_->GetContext().GetMutableNodeMap().RegisterRenderNode(node);
+        this->mainThread_->RegisterSurfaceNode(node->GetId());
     };
     mainThread_->PostTask(registerNode);
     std::weak_ptr<RSSurfaceRenderNode> surfaceRenderNode(node);

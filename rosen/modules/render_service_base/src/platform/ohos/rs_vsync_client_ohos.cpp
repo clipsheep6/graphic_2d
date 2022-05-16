@@ -43,16 +43,13 @@ RSVsyncClientOhos::RSVsyncClientOhos()
 
 void RSVsyncClientOhos::RequestNextVsync()
 {
-    if (!requestFlag_.load()) {
-        requestFlag_.store(true);
-        handler_->PostTask([this]() {
-            VSyncReceiver::FrameCallback fcb = {
-                .userData_ = this,
-                .callback_ = OnVsync,
-            };
-            receiver_->RequestNextVSync(fcb);
-        });
-    }
+    handler_->PostTask([this]() {
+        VSyncReceiver::FrameCallback fcb = {
+            .userData_ = this,
+            .callback_ = OnVsync,
+        };
+        receiver_->RequestNextVSync(fcb);
+    });
 }
 
 void RSVsyncClientOhos::SetVsyncCallback(RSVsyncClient::VsyncCallback callback)
@@ -62,7 +59,6 @@ void RSVsyncClientOhos::SetVsyncCallback(RSVsyncClient::VsyncCallback callback)
 
 void RSVsyncClientOhos::VsyncCallback(int64_t nanoTimestamp)
 {
-    requestFlag_.store(false);
     if (vsyncCallback_ != nullptr) {
         vsyncCallback_(nanoTimestamp);
     }

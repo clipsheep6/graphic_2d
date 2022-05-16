@@ -26,7 +26,8 @@ public:
     RSRenderThreadClient() = default;
     ~RSRenderThreadClient() = default;
 
-    void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) override;
+    void CommitTransaction(
+        std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp) override;
     void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) override;
 };
 

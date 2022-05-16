@@ -98,7 +98,7 @@ RSRenderThread::RSRenderThread()
         SendCommands();
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
-            transactionProxy->FlushImplicitTransactionFromRT();
+            transactionProxy->FlushImplicitTransactionFromRT(UITimestamp_);
         }
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         clock_t endTime = clock();
@@ -159,13 +159,16 @@ void RSRenderThread::Stop()
     ROSEN_LOGD("RSRenderThread stopped.");
 }
 
-void RSRenderThread::RecvTransactionData(std::unique_ptr<RSTransactionData>& transactionData)
+void RSRenderThread::RecvTransactionData(
+    std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp)
 {
     {
         std::unique_lock<std::mutex> cmdLock(cmdMutex_);
-        std::string str = "RecvCommands ptr:" + std::to_string(reinterpret_cast<uintptr_t>(transactionData.get()));
+        UITimestamp_ = transactionDataWithTimeStamp.first;
+        std::string str = "RecvCommands ptr:" + std::to_string(reinterpret_cast<uintptr_t>(transactionDataWithTimeStamp.second.get()));
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, str.c_str());
-        cmds_.emplace_back(std::move(transactionData));
+        cmds_.emplace_back(std::move(transactionDataWithTimeStamp.second));
+        transactionDataWithTimeStamp.second = nullptr;
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
     }
     // [PLANNING]: process in next vsync (temporarily)

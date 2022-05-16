@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/graphic/standard/utils/wmlayout/wmlayout.gni")
+import("//foundation/graphic/graphic/utils/wmlayout/wmlayout.gni")
 import("graphic_config.gni")
 
 group("default") {
@@ -44,6 +44,10 @@ group("graphic_standard_test") {
     "rosen/modules/effect/test/unittest:test",
     "utils/sync_fence:test",
   ]
+
+  if (color_gamut_enable) {
+    public_deps += [ "utils/color_manager:test" ]
+  }
 }
 
 ## Install graphic.rc to /system/etc/init/graphic.rc {{{

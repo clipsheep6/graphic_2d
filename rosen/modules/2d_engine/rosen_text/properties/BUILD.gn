@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("//foundation/arkui/ace_engine/ace_config.gni")
 import(
-    "//foundation/graphic/standard/rosen/modules/2d_engine/rosen_text/config.gni")
+    "//foundation/graphic/graphic/rosen/modules/2d_engine/rosen_text/config.gni")
 
 config("rosen_text_config") {
   cflags_cc = [
@@ -50,7 +50,8 @@ template("rosen_text_properties") {
       "typography_txt.cpp",
     ]
 
-    public_deps = [ "//foundation/arkui/ace_engine/build/external_config/flutter/libtxt:thirdparty_lib_txt_$current_os" ]
+    public_deps =
+        [ "//third_party/flutter/build/libtxt:thirdparty_lib_txt_$current_os" ]
   }
 }
 

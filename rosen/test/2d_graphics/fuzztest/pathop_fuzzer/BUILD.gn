@@ -19,9 +19,9 @@ module_output_path = "graphic/2d_graphics"
 ##############################fuzztest##########################################
 ohos_fuzztest("PathOpFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//foundation/graphic/standard/rosen/test/2d_graphics/fuzztest/path_op_fuzzer"
+  fuzz_config_file = "//foundation/graphic/graphic/rosen/test/2d_graphics/fuzztest/pathop_fuzzer"
 
-  sources = [ "path_op_fuzzer.cpp" ]
+  sources = [ "pathop_fuzzer.cpp" ]
 
   cflags = [
     "-g",
@@ -31,12 +31,11 @@ ohos_fuzztest("PathOpFuzzTest") {
   ]
 
   include_dirs = [
-    "//foundation/graphic/standard/rosen/modules/2d_graphics/include",
-    "//foundation/graphic/standard/rosen/modules/2d_graphics/src",
+    "//foundation/graphic/graphic/rosen/modules/2d_graphics/include",
+    "//foundation/graphic/graphic/rosen/modules/2d_graphics/src",
   ]
 
-  deps =
-      [ "//foundation/graphic/standard/rosen/modules/2d_graphics:2d_graphics" ]
+  deps = [ "//foundation/graphic/graphic/rosen/modules/2d_graphics:2d_graphics" ]
 
   external_deps = [
     "hilog_native:libhilog",

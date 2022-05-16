@@ -131,11 +131,12 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
 
         int64_t timestamp = lastPresentFence_->SyncFileReadTimestamp();
         bool ret = false;
-        if (timestamp > 0) {
+        if (timestamp != SyncFence::FENCE_PENDING_TIMESTAMP) {
             ret = sampler_->AddPresentFenceTime(timestamp);
             for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {
                 const LayerPtr &layer = iter->second;
                 layer->RecordPresentTime(timestamp);
+                output->RecordCompositionTime(timestamp);
             }
         }
         if (ret) {

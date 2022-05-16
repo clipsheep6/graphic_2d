@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,19 +13,9 @@
  * limitations under the License.
  */
 
- #include "vsync.h"
+#ifndef TEST_FUZZTEST_PATHINTERPOLATE_FUZZER_H
+#define TEST_FUZZTEST_PATHINTERPOLATE_FUZZER_H
 
- #include <mutex>
+#define FUZZ_PROJECT_NAME "pathinterpolate_fuzzer"
 
-namespace OHOS {
-namespace Rosen {
-
-Vsync* Vsync::GetInstance()
-{
-    static Vsync instance;
-
-    return &instance;
-}
-
-} // namespace Rosen
-} // namespace OHOS
+#endif // TEST_FUZZTEST_PATHINTERPOLATE_FUZZER_H

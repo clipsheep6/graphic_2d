@@ -179,7 +179,6 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 
         node.SetGlobalZOrder(uniZOrder_);
     } else {
-        RsRenderServiceUtil::ConsumeAndUpdateBuffer(node, true);
         ProcessBaseRenderNode(node);
     }
     if (!hasUniRender_) {
@@ -212,7 +211,6 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
                     node.GetId());
                 return;
             }
-            RsRenderServiceUtil::ConsumeAndUpdateBuffer(node, true);
             RS_TRACE_BEGIN("RSUniRender::Process:" + node.GetName());
             uniZOrder_ = globalZOrder_++;
             canvas_->save();
@@ -233,7 +231,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             canvas_->clipRect(SkRect::MakeXYWH(
                 node.GetRenderProperties().GetBoundsPositionX(), node.GetRenderProperties().GetBoundsPositionY(),
                 node.GetRenderProperties().GetBoundsWidth(), node.GetRenderProperties().GetBoundsHeight()));
-            if (!RsRenderServiceUtil::ConsumeAndUpdateBuffer(node, true)) {
+            if (node.GetBuffer() == nullptr) {
                 RS_LOGI("RSUniRenderVisitor::ProcessSurfaceRenderNode buffer is not available, set black");
                 canvas_->clear(SK_ColorBLACK);
             } else {

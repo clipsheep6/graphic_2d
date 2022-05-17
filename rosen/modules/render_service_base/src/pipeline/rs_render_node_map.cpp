@@ -56,6 +56,13 @@ void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
     });
 }
 
+void RSRenderNodeMap::TraversalNodes(std::function<void (const std::shared_ptr<RSBaseRenderNode>&)> func) const
+{
+    for (const auto& [_, node] : renderNodeMap_) {
+        func(node);
+    }
+}
+
 void RSRenderNodeMap::DumpNodeNotOnTree(std::string& dumpString) const
 {
     dumpString.append("\n");

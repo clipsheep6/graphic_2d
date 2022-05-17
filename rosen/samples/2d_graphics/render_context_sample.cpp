@@ -341,8 +341,7 @@ bool RenderContextSample::FillDrawingLayer(std::shared_ptr<HdiLayerInfo> &showLa
     LayerAlpha alpha = { .enPixelAlpha = true };
 
     showLayer->SetSurface(drawingCSurface);
-    showLayer->SetBuffer(cbuffer, acquireSyncFence, prevBufferMap_[drawingCSurface->GetUniqueId()],
-        prevFenceMap_[drawingCSurface->GetUniqueId()]);
+    showLayer->SetBuffer(cbuffer, acquireSyncFence);
     showLayer->SetZorder(zorder);
     showLayer->SetAlpha(alpha);
     showLayer->SetTransform(TransformType::ROTATE_NONE);
@@ -392,8 +391,7 @@ bool RenderContextSample::FillBackGroundLayer(std::shared_ptr<HdiLayerInfo> &sho
     LayerAlpha alpha = { .enPixelAlpha = true };
 
     showLayer->SetSurface(backGroundCSurface);
-    showLayer->SetBuffer(cbuffer, acquireSyncFence, prevBufferMap_[backGroundCSurface->GetUniqueId()],
-        prevFenceMap_[backGroundCSurface->GetUniqueId()]);
+    showLayer->SetBuffer(cbuffer, acquireSyncFence);
     showLayer->SetZorder(zorder);
     showLayer->SetAlpha(alpha);
     showLayer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);

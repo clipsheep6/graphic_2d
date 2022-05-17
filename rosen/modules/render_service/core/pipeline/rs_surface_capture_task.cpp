@@ -222,13 +222,14 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode(RSS
         if (param.clipRect.isEmpty()) {
             return;
         }
-        auto existedParent = node.GetParent().lock();
+        //  only node with one parent can run into the code below, excluding the cross-screen state.
+        auto existedParent = node.GetParents().size() == 1 ? node.GetParents()[0].lock() : nullptr;
         if (existedParent && existedParent->IsInstanceOf<RSSurfaceRenderNode>()) {
             param.matrix = node.GetMatrix();
             auto& parent = *std::static_pointer_cast<RSSurfaceRenderNode>(existedParent);
             auto parentRect = RsRenderServiceUtil::CreateBufferDrawParam(parent).clipRect;
-            //Changes the clip area from absolute to relative to the parent window and deal with clip area with scale
-            //Based on the origin of the parent window.
+            // Changes the clip area from absolute to relative to the parent window and deal with clip area with scale
+            // Based on the origin of the parent window.
             param.clipRect.offsetTo(param.clipRect.left() - parentRect.left(), param.clipRect.top() - parentRect.top());
             SkMatrix scaleMatrix = SkMatrix::I();
             scaleMatrix.preScale(scaleX_, scaleY_, 0, 0);

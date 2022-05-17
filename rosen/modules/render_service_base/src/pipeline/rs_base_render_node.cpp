@@ -32,10 +32,6 @@ void RSBaseRenderNode::AddChild(const SharedPtr& child, int index)
     if (child == nullptr) {
         return;
     }
-    // if child already has a parent, remove it from its previous parent
-    if (auto prevParent = child->GetParent().lock()) {
-        prevParent->RemoveChild(child);
-    }
 
     // Set parent-child relationship
     child->SetParent(weak_from_this());
@@ -66,7 +62,7 @@ void RSBaseRenderNode::RemoveChild(const SharedPtr& child)
         uint32_t origPos = static_cast<uint32_t>(std::distance(children_.begin(), it));
         disappearingChildren_.emplace_back(child, origPos);
     } else {
-        child->ResetParent();
+        child->ResetParent(weak_from_this());
     }
     children_.erase(it);
     SetDirty();
@@ -74,8 +70,10 @@ void RSBaseRenderNode::RemoveChild(const SharedPtr& child)
 
 void RSBaseRenderNode::RemoveFromTree()
 {
-    if (auto parentPtr = parent_.lock()) {
-        parentPtr->RemoveChild(shared_from_this());
+    for (auto parent : parents_) {
+        if (auto parentPtr = parent.lock()) {
+            parentPtr->RemoveChild(shared_from_this());
+        }
     }
 }
 
@@ -99,7 +97,7 @@ void RSBaseRenderNode::ClearChildren()
             // keep shared_ptr alive for transition
             disappearingChildren_.emplace_back(child, pos);
         } else {
-            child->ResetParent();
+            child->ResetParent(weak_from_this());
         }
         ++pos;
     }
@@ -109,29 +107,37 @@ void RSBaseRenderNode::ClearChildren()
 
 void RSBaseRenderNode::SetParent(WeakPtr parent)
 {
-    parent_ = parent;
+    auto iter = std::find_if(parents_.begin(), parents_.end(),
+        [&](WeakPtr& ptr) -> bool { return ROSEN_EQ<RSBaseRenderNode>(ptr, parent); });
+    if (iter == parents_.end()) {
+        parents_.emplace_back(parent);
+    }
 }
 
-void RSBaseRenderNode::ResetParent()
+void RSBaseRenderNode::ResetParent(WeakPtr parent)
 {
-    parent_.reset();
+    auto iter = std::find_if(parents_.begin(), parents_.end(),
+        [&](WeakPtr& ptr) -> bool { return ROSEN_EQ<RSBaseRenderNode>(ptr, parent); });
+    if (iter != parents_.end()) {
+        parents_.erase(iter);
+    }
 }
 
-RSBaseRenderNode::WeakPtr RSBaseRenderNode::GetParent() const
+std::vector<RSBaseRenderNode::WeakPtr> RSBaseRenderNode::GetParents() const
 {
-    return parent_;
+    return parents_;
 }
 
 void RSBaseRenderNode::DumpTree(std::string& out) const
 {
-    out += "id: " + std::to_string(GetId()) + ", type: ";
-    DumpNodeType(out);
-    out += "\n";
-    auto p = parent_.lock();
-    if (p != nullptr) {
-        out += "parent: " + std::to_string(p->GetId()) + "\n";
-    } else {
-        out += "parent: null\n";
+    out += "id: " + std::to_string(GetId()) + "\n";
+    for (auto parent : parents_) {
+        auto p = parent.lock();
+        if (p != nullptr) {
+            out += "parent: " + std::to_string(p->GetId()) + "\n";
+        } else {
+            out += "parent: null\n";
+        }
     }
 
     uint32_t i = 0;
@@ -251,8 +257,11 @@ void RSBaseRenderNode::GenerateSortedChildren()
         // if neither parent node or child node has transition, we can safely remove it
         if (!parentHasTransition && !disappearingChild->HasTransition(false)) {
             ROSEN_LOGD("RSBaseRenderNode::GenerateSortedChildren removing finished transition child");
-            if (ROSEN_EQ<RSBaseRenderNode>(disappearingChild->GetParent(), weak_from_this())) {
-                disappearingChild->ResetParent();
+            auto parents = disappearingChild->GetParents();
+            auto iter = std::find_if(parents.begin(), parents.end(),
+                [&](WeakPtr& ptr) -> bool { return ROSEN_EQ<RSBaseRenderNode>(ptr, weak_from_this()); });
+            if (iter != parents.end()) {
+                disappearingChild->ResetParent(weak_from_this());
             }
             return true;
         }

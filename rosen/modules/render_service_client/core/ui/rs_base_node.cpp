@@ -65,9 +65,6 @@ void RSBaseNode::AddChild(SharedPtr child, int index)
         return;
     }
     NodeId childId = child->GetId();
-    if (child->parent_ != 0) {
-        child->RemoveFromTree();
-    }
 
     if (index < 0 || index >= static_cast<int>(children_.size())) {
         children_.push_back(childId);
@@ -85,14 +82,15 @@ void RSBaseNode::AddChild(SharedPtr child, int index)
 
 void RSBaseNode::RemoveChild(SharedPtr child)
 {
-    if (child == nullptr || child->parent_ != id_) {
+    auto iter = std::find(child->parents_.begin(), child->parents_.end(), id_);
+    if (child == nullptr || iter == child->parents_.end()) {
         ROSEN_LOGI("RSBaseNode::RemoveChild, child is nullptr");
         return;
     }
     NodeId childId = child->GetId();
     RemoveChildById(childId);
     child->OnRemoveChildren();
-    child->SetParent(0);
+    child->parents_.erase(iter);
 
     std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveChild>(id_, childId);
     auto transactionProxy = RSTransactionProxy::GetInstance();
@@ -111,11 +109,13 @@ void RSBaseNode::RemoveChildById(NodeId childId)
 
 void RSBaseNode::RemoveFromTree()
 {
-    if (auto parentPtr = RSNodeMap::Instance().GetNode(parent_)) {
-        parentPtr->RemoveChildById(id_);
-        OnRemoveChildren();
-        SetParent(0);
+    for (auto parent : parents_) {
+        if (auto parentPtr = RSNodeMap::Instance().GetNode(parent)) {
+            parentPtr->RemoveChildById(id_);
+            OnRemoveChildren();
+        }
     }
+    parents_.clear();
     // always send Remove-From-Tree command
     std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveFromTree>(id_);
     auto transactionProxy = RSTransactionProxy::GetInstance();
@@ -128,7 +128,10 @@ void RSBaseNode::ClearChildren()
 {
     for (auto child : children_) {
         if (auto childPtr = RSNodeMap::Instance().GetNode(child)) {
-            childPtr->SetParent(0);
+            auto iter = std::find(childPtr->parents_.begin(), childPtr->parents_.end(), id_);
+            if (iter !=  childPtr->parents_.end()) {
+                childPtr->parents_.erase(iter);
+            }
         }
     }
     children_.clear();
@@ -142,12 +145,19 @@ void RSBaseNode::ClearChildren()
 
 void RSBaseNode::SetParent(NodeId parentId)
 {
-    parent_ = parentId;
+    auto iter = std::find(parents_.begin(), parents_.end(), parentId);
+    if (iter == parents_.end()) {
+        parents_.emplace_back(parentId);
+    }
 }
 
-RSBaseNode::SharedPtr RSBaseNode::GetParent()
+std::vector<RSBaseNode::SharedPtr> RSBaseNode::GetParent()
 {
-    return RSNodeMap::Instance().GetNode(parent_);
+    std::vector<RSBaseNode::SharedPtr> res;
+    for (auto parent : parents_) {
+        res.emplace_back(RSNodeMap::Instance().GetNode(parent));
+    }
+    return res;
 }
 
 std::string RSBaseNode::DumpNode(int depth) const

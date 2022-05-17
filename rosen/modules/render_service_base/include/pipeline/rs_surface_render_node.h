@@ -177,7 +177,7 @@ public:
     float GetGlobalZOrder() const;
 
     void SetParentId(NodeId parentId, bool sendMsg = true);
-    NodeId GetParentId() const;
+    std::vector<NodeId> GetParentId() const;
 
     void UpdateSurfaceDefaultSize(float width, float height);
 
@@ -217,7 +217,7 @@ private:
     float alpha_ = 1.0f;
     float globalZOrder_ = 0.0f;
     bool isSecurityLayer_ = false;
-    NodeId parentId_ = 0;
+    std::vector<NodeId> parentId_;
     sptr<SurfaceBuffer> buffer_;
     sptr<SurfaceBuffer> preBuffer_;
     sptr<SyncFence> fence_;

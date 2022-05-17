@@ -48,8 +48,8 @@ public:
         return false;
     }
 
-    WeakPtr GetParent() const;
-    void ResetParent();
+    std::vector<WeakPtr> GetParents() const;
+    void ResetParent(WeakPtr parent);
 
     NodeId GetId() const
     {
@@ -59,7 +59,12 @@ public:
     // node is on the render tree as long as it has a valid parent
     bool IsOnTheTree() const
     {
-        return !parent_.expired();
+        for (auto parent : parents_) {
+            if (!parent.expired()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     const std::list<SharedPtr>& GetSortedChildren();
@@ -81,8 +86,15 @@ public:
         if (recursive == false) {
             return false;
         } else {
-            auto parent = GetParent().lock();
-            return parent ? parent->HasTransition(true) : false;
+            bool res = false;
+            for (auto parent : GetParents()) {
+                auto parentPtr = parent.lock();
+                if (parentPtr && parentPtr->HasTransition(true)) {
+                    res = true;
+                    break;
+                }
+            }
+            return res;
         }
     }
 
@@ -125,7 +137,7 @@ protected:
 private:
     NodeId id_;
 
-    WeakPtr parent_;
+    std::vector<WeakPtr> parents_;
     void SetParent(WeakPtr parent);
 
     std::list<WeakPtr> children_;

@@ -212,7 +212,9 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         ProcessBaseRenderNode(node);
         return;
     }
-    node.SetParentId(node.GetParent().lock()->GetId());
+    for (auto parent : node.GetParents()) {
+        node.SetParentId(parent.lock()->GetId());
+    }
     auto clipRect = canvas_->getDeviceClipBounds();
     node.SetClipRegion({ clipRect.left(), clipRect.top(), clipRect.width(), clipRect.height() });
 

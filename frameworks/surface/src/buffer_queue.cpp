@@ -228,7 +228,7 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
             config.width, config.height, ret, uniqueId_);
     }
     BLOGND("request finish id: %{public}" PRIu64 " bufferqueue cach size: %{public}d  freelist size: %{public}d  dirty list size:%{public}d ", 
-    uniqueId_, bufferQueueCache_.size(), freeList_.size(), dirtyList_.size());
+    uniqueId_, static_cast<int32_t>(bufferQueueCache_.size()), static_cast<int32_t>(freeList_.size()), static_cast<int32_t>((dirtyList_.size()));
     return ret;
 }
 
@@ -275,7 +275,7 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, sptr<BufferE
         retval.buffer = nullptr;
     }
     BLOGND("RequestBuffer reuse finish id: %{public}" PRIu64 " bufferqueue cach size: %{public}d  freelist size: %{public}d  dirty list size:%{public}d ", 
-    uniqueId_, bufferQueueCache_.size(), freeList_.size(), dirtyList_.size());
+    uniqueId_, static_cast<int32_t>(bufferQueueCache_.size()), static_cast<int32_t>((freeList_.size()), static_cast<int32_t>((dirtyList_.size()));
 
     ScopedBytrace bufferName(name_ + ":" + std::to_string(retval.sequence));
     return GSERROR_OK;
@@ -359,7 +359,7 @@ GSError BufferQueue::FlushBuffer(int32_t sequence, const sptr<BufferExtraData> &
         sequence, uniqueId_, fence->Get());
 
     BLOGND("FlushBuffer finish id: %{public}" PRIu64 " bufferqueue cach size: %{public}d  freelist size: %{public}d  dirty list size:%{public}d ", 
-    uniqueId_, bufferQueueCache_.size(), freeList_.size(), dirtyList_.size());
+    uniqueId_, static_cast<int32_t>(bufferQueueCache_.size()), static_cast<int32_t>(freeList_.size()), static_cast<int32_t>(dirtyList_.size()));
     return sret;
 }
 
@@ -455,7 +455,7 @@ GSError BufferQueue::AcquireBuffer(sptr<SurfaceBuffer> &buffer,
     }
 
     BLOGND("AcquireBuffer finish id: %{public}" PRIu64 " bufferqueue cach size: %{public}d  freelist size: %{public}d  dirty list size:%{public}d ", 
-    uniqueId_, bufferQueueCache_.size(), freeList_.size(), dirtyList_.size());
+    uniqueId_, static_cast<int32_t>(bufferQueueCache_.size()), static_cast<int32_t>(freeList_.size()), static_cast<int32_t>(dirtyList_.size()));
     CountTrace(HITRACE_TAG_GRAPHIC_AGP, name_, static_cast<int32_t>(dirtyList_.size()));
     return ret;
 }
@@ -503,7 +503,7 @@ GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, const sptr<SyncF
             sequence, uniqueId_, fence->Get());
     }
     BLOGND("ReleaseBuffer finish id: %{public}" PRIu64 " bufferqueue cach size: %{public}d  freelist size: %{public}d  dirty list size:%{public}d ", 
-    uniqueId_, bufferQueueCache_.size(), freeList_.size(), dirtyList_.size());
+    uniqueId_, static_cast<int32_t>(bufferQueueCache_.size()), static_cast<int32_t>(freeList_.size()), static_cast<int32_t>(dirtyList_.size()));
     waitReqCon_.notify_all();
     return GSERROR_OK;
 }

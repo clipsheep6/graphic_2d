@@ -18,6 +18,7 @@
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_render_service_util.h"
 #include "pipeline/rs_render_service_visitor.h"
+#include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "rs_trace.h"
@@ -47,6 +48,7 @@ void RSMainThread::Init()
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
         ProcessCommand();
         Animate(timestamp_);
+        ConsumeAndUpdateAllNodes();
         Render();
         SendCommands();
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
@@ -89,6 +91,59 @@ void RSMainThread::ProcessCommand()
         if (rsTransaction) {
             rsTransaction->Process(context_);
         }
+    }
+}
+
+void RSMainThread::ConsumeAndUpdateAllNodes()
+{
+    bool needRequestNextVsync = false;
+
+    const auto& nodeMap = GetContext().GetNodeMap();
+    nodeMap.TraversalNodes([this, &needRequestNextVsync](const std::shared_ptr<RSBaseRenderNode>& node) mutable {
+        if (node == nullptr) {
+            return;
+        }
+
+        if (node->IsInstanceOf<RSSurfaceRenderNode>()) {
+            auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
+            auto availableBufferCnt = surfaceNode->GetAvailableBufferCount();
+            if (availableBufferCnt <= 0) {
+                return;
+            }
+
+            auto& consumer = surfaceNode->GetConsumer();
+            if (consumer == nullptr) {
+                RS_LOGE("RsDebug surfaceNode(%%llu) has no consumer!", surfaceNode->GetId());
+                return;
+            }
+            
+            auto preBuffer = surfaceNode->GetPreBuffer();
+            if (preBuffer.buffer != nullptr) {
+                auto ret = consumer->ReleaseBuffer(preBuffer.buffer, preBuffer.releaseFence);
+                if (ret != OHOS::SURFACE_ERROR_OK) {
+                    RS_LOGE("RsDebug surfaceNode(%%llu) ReleaseBuffer failed(ret: %d)!", surfaceNode->GetId(), ret);
+                }
+            }
+
+            sptr<SurfaceBuffer> buffer;
+            sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
+            int64_t timestamp = 0;
+            Rect damage;
+            auto ret = consumer->AcquireBuffer(buffer, acquireFence, timestamp, damage);
+            if (buffer == nullptr || ret != SURFACE_ERROR_OK) {
+                RS_LOGE("RsDebug surfaceNode(%%llu) AcquireBuffer failed(ret: %d)!", surfaceNode->GetId(), ret);
+                return;
+            }
+            surfaceNode->SetBuffer(buffer, acquireFence);
+            availableBufferCnt = surfaceNode->ReduceAvailableBuffer();
+
+            if (availableBufferCnt > 0) {
+                needRequestNextVsync = true;
+            }
+        }
+    });
+    if (needRequestNextVsync) {
+        RequestNextVSync();
     }
 }
 

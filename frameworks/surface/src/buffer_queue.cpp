@@ -227,8 +227,8 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
         BLOGNE("Fail to alloc or map Buffer[%{public}d %{public}d] ret: %{public}d, id: %{public}" PRIu64 "",
             config.width, config.height, ret, uniqueId_);
     }
-    BLOGND("request finish id: %{public}" PRIu64 " bufferqueue cach size: %{public}d  freelist size: %{public}d  dirty list size:%{public}d ", 
-    uniqueId_, static_cast<int32_t>(bufferQueueCache_.size()), static_cast<int32_t>(freeList_.size()), static_cast<int32_t>((dirtyList_.size()));
+    BLOGND("RequestBuffer request finish id: %{public}" PRIu64 " bufferqueue cach size: %{public}d  freelist size: %{public}d  dirty list size:%{public}d ", uniqueId_, 
+    static_cast<int32_t>(bufferQueueCache_.size()), static_cast<int32_t>(freeList_.size()), static_cast<int32_t>(dirtyList_.size()));
     return ret;
 }
 
@@ -275,7 +275,7 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, sptr<BufferE
         retval.buffer = nullptr;
     }
     BLOGND("RequestBuffer reuse finish id: %{public}" PRIu64 " bufferqueue cach size: %{public}d  freelist size: %{public}d  dirty list size:%{public}d ", 
-    uniqueId_, static_cast<int32_t>(bufferQueueCache_.size()), static_cast<int32_t>((freeList_.size()), static_cast<int32_t>((dirtyList_.size()));
+    uniqueId_, static_cast<int32_t>(bufferQueueCache_.size()), static_cast<int32_t>(freeList_.size()), static_cast<int32_t>(dirtyList_.size()));
 
     ScopedBytrace bufferName(name_ + ":" + std::to_string(retval.sequence));
     return GSERROR_OK;
@@ -311,6 +311,8 @@ GSError BufferQueue::CancelBuffer(int32_t sequence, const sptr<BufferExtraData> 
 GSError BufferQueue::FlushBuffer(int32_t sequence, const sptr<BufferExtraData> &bedata,
     const sptr<SyncFence>& fence, const BufferFlushConfig &config)
 {
+    BLOGND("FlushBuffer start id: %{public}" PRIu64 " " , uniqueId_);
+
     ScopedBytrace func(__func__);
     // check param
     auto sret = CheckFlushConfig(config);

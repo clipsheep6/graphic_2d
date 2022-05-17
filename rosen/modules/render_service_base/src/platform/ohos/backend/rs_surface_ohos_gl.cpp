@@ -23,6 +23,17 @@
 namespace OHOS {
 namespace Rosen {
 
+template <typename Duration>
+using SysTime = std::chrono::time_point<std::chrono::system_clock, Duration>;
+using SysMicroSeconds = SysTime<std::chrono::microseconds>;
+
+uint64_t MicroSecondsSinceEpoch()
+{
+    SysMicroSeconds tmp = std::chrono::system_clock::now();
+    return tmp.time_since_epoch().count();
+}
+
+
 RSSurfaceOhosGl::RSSurfaceOhosGl(const sptr<Surface>& producer) : RSSurfaceOhos(producer)
 {
     bufferUsage_ = HBM_USE_CPU_READ | HBM_USE_MEM_DMA;
@@ -90,9 +101,16 @@ bool RSSurfaceOhosGl::FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame)
     }
 
     // gpu render flush
+    ROSEN_LOGD("RSSurfaceOhosGl: FlushFrame, SwapBuffers eglsurface is %p  start RenderFrame ", mEglSurface);
+    uint64_t beforeRenderFrameTime = MicroSecondsSinceEpoch();
     context->RenderFrame();
+    uint64_t afterRenderFrameTime = MicroSecondsSinceEpoch();
+    ROSEN_LOGD("RSSurfaceOhosGl: FlushFrame, SwapBuffers eglsurface is %p  finish RenderFrame ", mEglSurface);
     context->SwapBuffers(mEglSurface);
-    ROSEN_LOGD("RSSurfaceOhosGl: FlushFrame, SwapBuffers eglsurface is %p", mEglSurface);
+    uint64_t afterSwapBuffersTime = MicroSecondsSinceEpoch();
+    ROSEN_LOGD("RSSurfaceOhosGl: FlushFrame, SwapBuffers eglsurface is %p ", mEglSurface);
+    ROSEN_LOGD("RSSurfaceOhosGl: FlushFrame, SwapBuffers eglsurface is %p, renderframe CostTime is %llu, swapbuffer costtime is %llu", mEglSurface,
+    afterRenderFrameTime-beforeRenderFrameTime, afterSwapBuffersTime- afterRenderFrameTime);
     return true;
 }
 } // namespace Rosen

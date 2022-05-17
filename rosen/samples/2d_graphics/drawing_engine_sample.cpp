@@ -237,8 +237,7 @@ bool DrawingEngineSample::DrawDrawingLayer(std::shared_ptr<HdiLayerInfo> &layer)
     srcRect.h = drawingHeight;
     LayerAlpha alpha = { .enPixelAlpha = true };
     layer->SetSurface(drawingCSurface);
-    layer->SetBuffer(cbuffer, acquireSyncFence, prevBufferMap_[drawingCSurface->GetUniqueId()],
-        prevFenceMap_[drawingCSurface->GetUniqueId()]);
+    layer->SetBuffer(cbuffer, acquireSyncFence);
     layer->SetZorder(zorder);
     layer->SetAlpha(alpha);
     layer->SetTransform(TransformType::ROTATE_NONE);

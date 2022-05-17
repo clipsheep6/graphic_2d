@@ -46,16 +46,6 @@ void RSSurfaceRenderNode::SetConsumer(const sptr<Surface>& consumer)
     consumer_ = consumer;
 }
 
-void RSSurfaceRenderNode::SetBuffer(const sptr<SurfaceBuffer>& buffer)
-{
-    if (buffer_ != nullptr) {
-        preBuffer_ = buffer_;
-        buffer_ = buffer;
-    } else {
-        buffer_ = buffer;
-    }
-}
-
 void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     canvas.SaveAlpha();
@@ -100,12 +90,6 @@ RectI RSSurfaceRenderNode::CalculateClipRegion(RSPaintFilterCanvas& canvas)
 void RSSurfaceRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 {
     canvas.RestoreAlpha();
-}
-
-void RSSurfaceRenderNode::SetFence(sptr<SyncFence> fence)
-{
-    preFence_ = fence_;
-    fence_ = std::move(fence);
 }
 
 void RSSurfaceRenderNode::SetDamageRegion(const Rect& damage)

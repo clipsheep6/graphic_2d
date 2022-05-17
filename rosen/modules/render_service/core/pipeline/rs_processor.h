@@ -50,11 +50,10 @@ protected:
     SkCanvas* CreateCanvas(
         const std::shared_ptr<RSSurfaceOhos>& surface,
         const BufferRequestConfig& requestConfig);
-    bool ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask& task, sptr<SurfaceBuffer>& buffer);
     void SetBufferTimeStamp();
     int32_t GetOffsetX();
     int32_t GetOffsetY();
-    void DropFrameProcess(RSSurfaceRenderNode& node);
+    // void DropFrameProcess(RSSurfaceRenderNode& node);
     
 #ifdef RS_ENABLE_GL
     std::shared_ptr<RenderContext> renderContext_;

@@ -44,8 +44,7 @@ public:
     void Stop();
 
     void Detach(NodeId id);
-    void RecvTransactionData(
-        std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp);
+    void RecvTransactionData(std::unique_ptr<RSTransactionData>& transactionData);
     void RequestNextVSync();
     void PostTask(RSTaskMessage::RSTask task);
     void PostPreTask();

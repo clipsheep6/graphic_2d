@@ -26,10 +26,9 @@ std::unique_ptr<RSIRenderClient> RSIRenderClient::CreateRenderThreadClient()
     return std::make_unique<RSRenderThreadClient>();
 }
 
-void RSRenderThreadClient::CommitTransaction(
-    std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp)
+void RSRenderThreadClient::CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData)
 {
-    RSRenderThread::Instance().RecvTransactionData(transactionDataWithTimeStamp);
+    RSRenderThread::Instance().RecvTransactionData(transactionData);
 }
 
 void RSRenderThreadClient::ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task)

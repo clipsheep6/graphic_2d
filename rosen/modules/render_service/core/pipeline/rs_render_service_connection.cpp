@@ -163,10 +163,9 @@ void RSRenderServiceConnection::RSApplicationRenderThreadDeathRecipient::OnRemot
     rsConn->UnregisterApplicationRenderThread(app);
 }
 
-void RSRenderServiceConnection::CommitTransaction(
-    std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp)
+void RSRenderServiceConnection::CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData)
 {
-    mainThread_->RecvRSTransactionData(transactionDataWithTimeStamp);
+    mainThread_->RecvRSTransactionData(transactionData);
 }
 
 void RSRenderServiceConnection::ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task)

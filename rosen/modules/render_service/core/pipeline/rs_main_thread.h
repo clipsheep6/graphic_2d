@@ -70,8 +70,7 @@ public:
 
     void Init();
     void Start();
-    void RecvRSTransactionData(
-        std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp);
+    void RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void RequestNextVSync();
     void PostTask(RSTaskMessage::RSTask task);
     void RenderServiceTreeDump(std::string& dumpString);

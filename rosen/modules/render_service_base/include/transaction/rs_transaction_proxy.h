@@ -37,8 +37,8 @@ public:
     void AddCommand(std::unique_ptr<RSCommand>& command, bool isRenderServiceCommand = false);
     void AddCommandFromRT(std::unique_ptr<RSCommand>& command);
 
-    void FlushImplicitTransaction(uint64_t timeStamp);
-    void FlushImplicitTransactionFromRT(uint64_t timeStamp);
+    void FlushImplicitTransaction(uint64_t timestamp);
+    void FlushImplicitTransactionFromRT(uint64_t timestamp);
 
     void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task, bool isRenderServiceTask = false);
 private:

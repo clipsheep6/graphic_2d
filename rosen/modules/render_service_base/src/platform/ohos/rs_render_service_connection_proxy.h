@@ -26,8 +26,7 @@ public:
     explicit RSRenderServiceConnectionProxy(const sptr<IRemoteObject>& impl);
     virtual ~RSRenderServiceConnectionProxy() noexcept = default;
 
-    void CommitTransaction(
-        std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp) override;
+    void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) override;
 
     void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) override;
 

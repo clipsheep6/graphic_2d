@@ -51,8 +51,7 @@ private:
     void CleanAll(bool toDelete = false) noexcept;
 
     // IPC RSIRenderServiceConnection Interfaces
-    void CommitTransaction(
-        std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp) override;
+    void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) override;
     void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) override;
 
     sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) override;

@@ -112,13 +112,13 @@ void RSTransactionProxy::FlushImplicitTransaction(uint64_t timestamp)
 {
     std::unique_lock<std::mutex> cmdLock(mutex_);
     if (renderThreadClient_ != nullptr && !implicitCommonTransactionData_->IsEmpty()) {
-        renderThreadClient_->CommitTransaction(
-            std::pair<uint64_t, std::unique_ptr<RSTransactionData>&>(timestamp, implicitCommonTransactionData_));
+        implicitCommonTransactionData_->timestamp_ = timestamp;
+        renderThreadClient_->CommitTransaction(implicitCommonTransactionData_);
         implicitCommonTransactionData_ = std::make_unique<RSTransactionData>();
     }
     if (renderServiceClient_ != nullptr && !implicitRemoteTransactionData_->IsEmpty()) {
-        renderServiceClient_->CommitTransaction(
-            std::pair<uint64_t, std::unique_ptr<RSTransactionData>&>(timestamp, implicitRemoteTransactionData_));
+        implicitRemoteTransactionData_->timestamp_ = timestamp;
+        renderServiceClient_->CommitTransaction(implicitRemoteTransactionData_);
         implicitRemoteTransactionData_ = std::make_unique<RSTransactionData>();
     }
 }
@@ -127,8 +127,8 @@ void RSTransactionProxy::FlushImplicitTransactionFromRT(uint64_t timestamp)
 {
     std::unique_lock<std::mutex> cmdLock(mutexForRT_);
     if (renderServiceClient_ != nullptr && !implicitTransactionDataFromRT_->IsEmpty()) {
-        renderServiceClient_->CommitTransaction(
-            std::pair<uint64_t, std::unique_ptr<RSTransactionData>&>(timestamp, implicitTransactionDataFromRT_));
+        implicitTransactionDataFromRT_->timestamp_ = timestamp;
+        renderServiceClient_->CommitTransaction(implicitTransactionDataFromRT_);
         implicitTransactionDataFromRT_ = std::make_unique<RSTransactionData>();
     }
 }

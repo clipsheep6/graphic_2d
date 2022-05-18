@@ -159,16 +159,14 @@ void RSRenderThread::Stop()
     ROSEN_LOGD("RSRenderThread stopped.");
 }
 
-void RSRenderThread::RecvTransactionData(
-    std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp)
+void RSRenderThread::RecvTransactionData(std::unique_ptr<RSTransactionData>& transactionData)
 {
     {
         std::unique_lock<std::mutex> cmdLock(cmdMutex_);
-        UITimestamp_ = transactionDataWithTimeStamp.first;
-        std::string str = "RecvCommands ptr:" + std::to_string(reinterpret_cast<uintptr_t>(transactionDataWithTimeStamp.second.get()));
+        UITimestamp_ = transactionData->GetTimestamp();
+        std::string str = "RecvCommands ptr:" + std::to_string(reinterpret_cast<uintptr_t>(transactionData.get()));
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, str.c_str());
-        cmds_.emplace_back(std::move(transactionDataWithTimeStamp.second));
-        transactionDataWithTimeStamp.second = nullptr;
+        cmds_.emplace_back(std::move(transactionData));
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
     }
     // [PLANNING]: process in next vsync (temporarily)

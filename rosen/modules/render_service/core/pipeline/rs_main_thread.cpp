@@ -161,13 +161,11 @@ void RSMainThread::Animate(uint64_t timestamp)
     RequestNextVSync();
 }
 
-void RSMainThread::RecvRSTransactionData(
-    std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp)
+void RSMainThread::RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData)
 {
     {
         std::lock_guard<std::mutex> lock(transitionDataMutex_);
-        cacheCommandQueue_.push(std::move(transactionDataWithTimeStamp.second));
-        transactionDataWithTimeStamp.second = nullptr;
+        cacheCommandQueue_.push(std::move(rsTransactionData));
     }
     RequestNextVSync();
 }

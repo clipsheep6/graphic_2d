@@ -26,8 +26,7 @@ RSRenderServiceConnectionProxy::RSRenderServiceConnectionProxy(const sptr<IRemot
 {
 }
 
-void RSRenderServiceConnectionProxy::CommitTransaction(
-    std::pair<uint64_t, std::unique_ptr<RSTransactionData>&> transactionDataWithTimeStamp)
+void RSRenderServiceConnectionProxy::CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -36,12 +35,7 @@ void RSRenderServiceConnectionProxy::CommitTransaction(
     if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
         return;
     }
-    auto UITimestamp = transactionDataWithTimeStamp.first;
-    if (!data.WriteUint64(UITimestamp)) {
-        return;
-    }
-    auto transactionData = std::move(transactionDataWithTimeStamp.second);
-    transactionDataWithTimeStamp.second = nullptr;
+
     if (!data.WriteParcelable(transactionData.get())) {
         return;
     }

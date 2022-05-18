@@ -57,6 +57,10 @@ public:
 
     void Clear();
 
+    uint64_t GetTimestamp() const {
+        return timestamp_;
+    }
+
 private:
     void AddCommand(std::unique_ptr<RSCommand>& command);
     void AddCommand(std::unique_ptr<RSCommand>&& command);
@@ -66,6 +70,7 @@ private:
 #endif
 
     std::vector<std::unique_ptr<RSCommand>> commands_;
+    uint64_t timestamp_;
 
     friend class RSTransactionProxy;
     friend class RSMessageProcessor;

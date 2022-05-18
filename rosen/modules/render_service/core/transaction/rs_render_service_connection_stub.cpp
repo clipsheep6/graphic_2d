@@ -27,11 +27,9 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
     switch (code) {
         case COMMIT_TRANSACTION: {
             auto token = data.ReadInterfaceToken();
-            auto UITimestamp = data.ReadUint64();
             auto transactionData = data.ReadParcelable<RSTransactionData>();
             std::unique_ptr<RSTransactionData> transData(transactionData);
-            CommitTransaction(
-                std::pair<uint64_t, std::unique_ptr<RSTransactionData>&>(UITimestamp, transData));
+            CommitTransaction(transData);
             break;
         }
         case CREATE_NODE_AND_SURFACE: {

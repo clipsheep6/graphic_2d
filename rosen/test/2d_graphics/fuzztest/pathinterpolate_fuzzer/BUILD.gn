@@ -35,7 +35,8 @@ ohos_fuzztest("PathInterpolateFuzzTest") {
     "//foundation/graphic/graphic/rosen/modules/2d_graphics/src",
   ]
 
-  deps = [ "//foundation/graphic/graphic/rosen/modules/2d_graphics:2d_graphics" ]
+  deps =
+      [ "//foundation/graphic/graphic/rosen/modules/2d_graphics:2d_graphics" ]
 
   external_deps = [
     "hilog_native:libhilog",

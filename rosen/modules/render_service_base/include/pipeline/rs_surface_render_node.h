@@ -37,37 +37,48 @@ public:
     using SharedPtr = std::shared_ptr<RSSurfaceRenderNode>;
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::SURFACE_NODE;
 
+    struct SurfaceBufferEntry {
+        sptr<SurfaceBuffer> buffer;
+        sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
+        sptr<SyncFence> releaseFence = SyncFence::INVALID_FENCE;
+    };
+
     explicit RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
     explicit RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, std::weak_ptr<RSContext> context = {});
     virtual ~RSSurfaceRenderNode();
 
     void SetConsumer(const sptr<Surface>& consumer);
-    void SetBuffer(const sptr<SurfaceBuffer>& buffer);
-    void SetFence(sptr<SyncFence> fence);
     void SetDamageRegion(const Rect& damage);
     void IncreaseAvailableBuffer();
     int32_t ReduceAvailableBuffer();
     void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
     void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
 
-    sptr<SurfaceBuffer>& GetBuffer()
+    void SetBuffer(const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence)
     {
-        return buffer_;
+        preBuffer_ = buffer_;
+        buffer_.buffer = buffer;
+        buffer_.acquireFence = acquireFence;
     }
 
-    sptr<SyncFence> GetFence() const
+    sptr<SurfaceBuffer> GetBuffer()
     {
-        return fence_;
+        return buffer_.buffer;
     }
 
-    sptr<SurfaceBuffer>& GetPreBuffer()
+    sptr<SyncFence> GetAcquireFence() const
+    {
+        return buffer_.acquireFence;
+    }
+
+    void SetReleaseFence(sptr<SyncFence> fence)
+    {
+        buffer_.releaseFence = std::move(fence);
+    }
+
+    SurfaceBufferEntry GetPreBuffer()
     {
         return preBuffer_;
-    }
-
-    sptr<SyncFence> GetPreFence() const
-    {
-        return preFence_;
     }
 
     const Rect& GetDamageRegion() const
@@ -218,10 +229,8 @@ private:
     float globalZOrder_ = 0.0f;
     bool isSecurityLayer_ = false;
     NodeId parentId_ = 0;
-    sptr<SurfaceBuffer> buffer_;
-    sptr<SurfaceBuffer> preBuffer_;
-    sptr<SyncFence> fence_;
-    sptr<SyncFence> preFence_;
+    SurfaceBufferEntry buffer_;
+    SurfaceBufferEntry preBuffer_;
     Rect damageRect_ = {0, 0, 0, 0};
     RectI dstRect_;
     int32_t offsetX_ = 0;

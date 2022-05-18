@@ -306,8 +306,19 @@ void RenderContextSample::Draw()
         damageRect.w = display_w;
         damageRect.h = display_h;
         output_->SetOutputDamage(1, damageRect);
-
+        
         backend_->Repaint(outputs_);
+        const auto layersReleaseFence = backend_->GetLayersReleaseFence(output_);
+        for (auto layerI : layers) {
+            sptr<SyncFence> releaseFence = nullptr;
+            for (const auto& [layer, fence] : layersReleaseFence) {
+                if (layerI == layer) {
+                    releaseFence = fence;
+                }
+            }
+            auto buffer = layerI->GetBuffer();
+            layerI->GetSurface()->ReleaseBuffer(buffer, releaseFence);
+        }
         std::cout << "------ draw count " << count << std::endl;
         count++;
     } while (false);
@@ -341,8 +352,7 @@ bool RenderContextSample::FillDrawingLayer(std::shared_ptr<HdiLayerInfo> &showLa
     LayerAlpha alpha = { .enPixelAlpha = true };
 
     showLayer->SetSurface(drawingCSurface);
-    showLayer->SetBuffer(cbuffer, acquireSyncFence, prevBufferMap_[drawingCSurface->GetUniqueId()],
-        prevFenceMap_[drawingCSurface->GetUniqueId()]);
+    showLayer->SetBuffer(cbuffer, acquireSyncFence);
     showLayer->SetZorder(zorder);
     showLayer->SetAlpha(alpha);
     showLayer->SetTransform(TransformType::ROTATE_NONE);
@@ -392,8 +402,7 @@ bool RenderContextSample::FillBackGroundLayer(std::shared_ptr<HdiLayerInfo> &sho
     LayerAlpha alpha = { .enPixelAlpha = true };
 
     showLayer->SetSurface(backGroundCSurface);
-    showLayer->SetBuffer(cbuffer, acquireSyncFence, prevBufferMap_[backGroundCSurface->GetUniqueId()],
-        prevFenceMap_[backGroundCSurface->GetUniqueId()]);
+    showLayer->SetBuffer(cbuffer, acquireSyncFence);
     showLayer->SetZorder(zorder);
     showLayer->SetAlpha(alpha);
     showLayer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);

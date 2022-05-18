@@ -534,7 +534,7 @@ void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sp
     std::vector<LayerInfoPtr>& layers, ComposeInfo info, RSSurfaceRenderNode* node)
 {
     layer->SetSurface(consumerSurface);
-    layer->SetBuffer(info.buffer, info.fence, info.preBuffer, info.preFence);
+    layer->SetBuffer(info.buffer, info.fence);
     layer->SetZorder(info.zOrder);
     layer->SetAlpha(info.alpha);
     layer->SetLayerSize(info.dstRect);
@@ -769,7 +769,7 @@ BufferDrawParam RsRenderServiceUtil::CreateBufferDrawParam(RSSurfaceRenderNode& 
 
     params.buffer = buffer;
     params.matrix = GetCanvasTransform(node, canvasMatrix, rotation, dstRect);
-    params.acquireFence = node.GetFence();
+    params.acquireFence = node.GetAcquireFence();
 
     params.srcRect = SkRect::MakeXYWH(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
     const auto surfaceTransform = surface->GetTransform();

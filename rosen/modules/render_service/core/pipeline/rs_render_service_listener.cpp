@@ -57,14 +57,17 @@ void RSRenderServiceListener::OnBufferAvailable()
                 RS_LOGE("RsDebug RSRenderServiceListener::OnBufferAvailable: AcquireBuffer failed!");
                 return;
             }
+            RS_LOGI("RsDebug RSRenderServiceListener::AcquireBuffer finish node id:%llu", node->GetId());
             if (node->GetBuffer() != nullptr && node->GetBuffer() != buffer) {
                 (void)surfaceConsumer->ReleaseBuffer(node->GetBuffer(), SyncFence::INVALID_FENCE);
+                RS_LOGI("RsDebug RSRenderServiceListener::ReleaseBuffer finish node id:%llu", node->GetId());
             }
             node->SetBuffer(buffer);
             node->SetFence(acquireFence);
         });
     } else {
         node->IncreaseAvailableBuffer();
+        RS_LOGI("RsDebug RSRenderServiceListener::IncreaseAvailableBuffer node id:%llu  availalbecout is %d ", node->GetId(), node->GetAvailableBufferCount());
     }
 
     if (!node->IsBufferAvailable()) {

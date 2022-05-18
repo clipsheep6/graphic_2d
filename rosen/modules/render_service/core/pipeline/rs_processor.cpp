@@ -84,7 +84,7 @@ void RSProcessor::DropFrameProcess(RSSurfaceRenderNode& node)
         RS_LOGE("RsDebug RSProcessor::DropFrameProcess (node: %llu): surfaceConsumer is null!", node.GetId());
         return;
     }
-     
+    RS_LOGI("RsDebug RSProcessor::DropFrameProcess (node: %lld) availableBufferCnt is %d queue size is %d", node.GetId(),availableBufferCnt,surfaceConsumer->GetQueueSize());
     // availableBufferCnt>= 2 means QueueSize >=2 too
     if (availableBufferCnt >= 2 && surfaceConsumer->GetQueueSize() == static_cast<uint32_t>(availableBufferCnt)) {
         RS_LOGI("RsDebug RSProcessor::DropFrameProcess (node: %llu) queueBlock, start to drop one frame", node.GetId());
@@ -143,6 +143,7 @@ bool RSProcessor::ConsumeAndUpdateBuffer(RSSurfaceRenderNode& node, SpecialTask&
             damage = node.GetDamageRegion();
         } else {
             availableBufferCnt = node.ReduceAvailableBuffer();
+            RS_LOGI("RSProcessor::ProcessSurface(node: %lld): ReduceAvailableBuffer finish avaiablecount:%d ", node.GetId(),node.GetAvailableBufferCount());
         }
     }
 

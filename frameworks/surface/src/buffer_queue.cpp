@@ -27,7 +27,7 @@
 
 #include "buffer_log.h"
 #include "buffer_manager.h"
-#include "bytrace.h"
+#include "hitrace_meter.h"
 #include "surface_buffer_impl.h"
 #include "sync_fence.h"
 
@@ -55,7 +55,7 @@ static uint64_t GetUniqueIdImpl()
 BufferQueue::BufferQueue(const std::string &name, bool isShared)
     : name_(name), uniqueId_(GetUniqueIdImpl()), isShared_(isShared)
 {
-    BLOGNI("ctor, Queue id: %{public}" PRIu64 "", uniqueId_);
+    BLOGNI("ctor, Queue id: %{public}" PRIu64 " isShared: %{public}d", uniqueId_, isShared);
     bufferManager_ = BufferManager::GetInstance();
     if (isShared_ == true) {
         queueSize_ = 1;
@@ -65,7 +65,7 @@ BufferQueue::BufferQueue(const std::string &name, bool isShared)
 BufferQueue::~BufferQueue()
 {
     BLOGNI("dtor, Queue id: %{public}" PRIu64 "", uniqueId_);
-    // we don't have to do anything
+    CleanCache();
 }
 
 GSError BufferQueue::Init()
@@ -163,6 +163,12 @@ GSError BufferQueue::CheckRequestConfig(const BufferRequestConfig &config)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
+    if (config.scalingMode < ScalingMode::SCALING_MODE_FREEZE ||
+        config.scalingMode > ScalingMode::SCALING_MODE_NO_SCALE_CROP) {
+        BLOGN_INVALID("config.scalingMode [0, %{public}d], now is %{public}d",
+            ScalingMode::SCALING_MODE_NO_SCALE_CROP, config.scalingMode);
+        return GSERROR_INVALID_ARGUMENTS;
+    }
     return GSERROR_OK;
 }
 
@@ -221,9 +227,11 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
         retval.sequence = buffer->GetSeqNum();
         bedata = buffer->GetExtraData();
         retval.fence = SyncFence::INVALID_FENCE;
-        BLOGD("Success alloc Buffer id: %{public}d Queue id: %{public}" PRIu64 "", retval.sequence, uniqueId_);
+        BLOGND("Success alloc Buffer[%{public}d %{public}d] id: %{public}d id: %{public}" PRIu64 "", config.width,
+            config.height, retval.sequence, uniqueId_);
     } else {
-        BLOGE("Fail to alloc or map buffer ret: %{public}d, Queue id: %{public}" PRIu64 "", ret, uniqueId_);
+        BLOGNE("Fail to alloc or map Buffer[%{public}d %{public}d] ret: %{public}d, id: %{public}" PRIu64 "",
+            config.width, config.height, ret, uniqueId_);
     }
 
     return ret;
@@ -263,11 +271,12 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, sptr<BufferE
     deletingList_.clear();
 
     if (needRealloc) {
-        BLOGD("RequestBuffer Success realloc Buffer with new config id: %{public}d Queue id: %{public}" PRIu64 "",
-            retval.sequence, uniqueId_);
+        BLOGND("RequestBuffer Succ realloc Buffer[%{public}d %{public}d] with new config "\
+            "qid: %{public}d id: %{public}" PRIu64 "", config.width, config.height, retval.sequence, uniqueId_);
     } else {
-        BLOGD("RequestBuffer Success Buffer in cache id: %{public}d Queue id: %{public}" PRIu64 "",
-            retval.sequence, uniqueId_);
+        BLOGND("RequestBuffer Succ Buffer[%{public}d %{public}d] in seq id: %{public}d "\
+            "qid: %{public}" PRIu64 " releaseFence: %{public}d",
+            config.width, config.height, retval.sequence, uniqueId_, retval.fence->Get());
         retval.buffer = nullptr;
     }
 
@@ -297,7 +306,7 @@ GSError BufferQueue::CancelBuffer(int32_t sequence, const sptr<BufferExtraData> 
     bufferQueueCache_[sequence].buffer->SetExtraData(bedata);
 
     waitReqCon_.notify_all();
-    BLOGD("Success Buffer id: %{public}d Queue id: %{public}" PRIu64 "", sequence, uniqueId_);
+    BLOGND("Success Buffer id: %{public}d Queue id: %{public}" PRIu64 "", sequence, uniqueId_);
 
     return GSERROR_OK;
 }
@@ -339,11 +348,8 @@ GSError BufferQueue::FlushBuffer(int32_t sequence, const sptr<BufferExtraData> &
     if (sret != GSERROR_OK) {
         return sret;
     }
-    CountTrace(BYTRACE_TAG_GRAPHIC_AGP, name_, static_cast<int32_t>(dirtyList_.size()));
-    BLOGD("Success Buffer id: %{public}d Queue id: %{public}" PRIu64 "", sequence, uniqueId_);
-
+    CountTrace(HITRACE_TAG_GRAPHIC_AGP, name_, static_cast<int32_t>(dirtyList_.size()));
     if (sret == GSERROR_OK) {
-        BLOGN_SUCCESS_ID(sequence, "OnBufferAvailable Start");
         if (listener_ != nullptr) {
             ScopedBytrace bufferIPCSend("OnBufferAvailable");
             listener_->OnBufferAvailable();
@@ -351,8 +357,9 @@ GSError BufferQueue::FlushBuffer(int32_t sequence, const sptr<BufferExtraData> &
             ScopedBytrace bufferIPCSend("OnBufferAvailable");
             listenerClazz_->OnBufferAvailable();
         }
-        BLOGN_SUCCESS_ID(sequence, "OnBufferAvailable End");
     }
+    BLOGND("Success Buffer seq id: %{public}d Queue id: %{public}" PRIu64 " AcquireFence:%{public}d",
+        sequence, uniqueId_, fence->Get());
     return sret;
 }
 
@@ -441,12 +448,13 @@ GSError BufferQueue::AcquireBuffer(sptr<SurfaceBuffer> &buffer,
         damage = bufferQueueCache_[sequence].damage;
 
         ScopedBytrace bufferName(name_ + ":" + std::to_string(sequence));
-        BLOGD("Success Buffer id: %{public}d Queue id: %{public}" PRIu64 "", sequence, uniqueId_);
+        BLOGND("Success Buffer seq id: %{public}d Queue id: %{public}" PRIu64 " AcquireFence:%{public}d",
+            sequence, uniqueId_, fence->Get());
     } else if (ret == GSERROR_NO_BUFFER) {
         BLOGN_FAILURE("there is no dirty buffer");
     }
 
-    CountTrace(BYTRACE_TAG_GRAPHIC_AGP, name_, static_cast<int32_t>(dirtyList_.size()));
+    CountTrace(HITRACE_TAG_GRAPHIC_AGP, name_, static_cast<int32_t>(dirtyList_.size()));
     return ret;
 }
 
@@ -458,7 +466,7 @@ GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, const sptr<SyncF
     {
         std::lock_guard<std::mutex> lockGuard(mutex_);
         if (bufferQueueCache_.find(sequence) == bufferQueueCache_.end()) {
-            BLOGN_FAILURE_ID(sequence, "not find in cache");
+            BLOGN_FAILURE_ID(sequence, "not find in cache, Queue id: %{public}" PRIu64 "", uniqueId_);
             return GSERROR_NO_ENTRY;
         }
 
@@ -474,10 +482,7 @@ GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, const sptr<SyncF
     if (onBufferRelease != nullptr) {
         ScopedBytrace func("OnBufferRelease");
         sptr<SurfaceBuffer> buf = buffer;
-        BLOGNI("onBufferRelease start");
         auto sret = onBufferRelease(buf);
-        BLOGNI("onBufferRelease end return %{public}s", GSErrorStr(sret).c_str());
-
         if (sret == GSERROR_OK) {   // need to check why directly return?
             return sret;
         }
@@ -489,10 +494,11 @@ GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, const sptr<SyncF
 
     if (bufferQueueCache_[sequence].isDeleting) {
         DeleteBufferInCache(sequence);
-        BLOGD("Success delete Buffer id: %{public}d Queue id: %{public}" PRIu64 " in cache", sequence, uniqueId_);
+        BLOGND("Succ delete Buffer seq id: %{public}d Queue id: %{public}" PRIu64 " in cache", sequence, uniqueId_);
     } else {
         freeList_.push_back(sequence);
-        BLOGD("Success push Buffer id: %{public}d Queue id: %{public}" PRIu64 " to free list", sequence, uniqueId_);
+        BLOGND("Succ push Buffer seq id: %{public}d Qid: %{public}" PRIu64 " to free list, releaseFence: %{public}d",
+            sequence, uniqueId_, fence->Get());
     }
     waitReqCon_.notify_all();
     return GSERROR_OK;
@@ -534,6 +540,9 @@ void BufferQueue::DeleteBufferInCache(int32_t sequence)
 {
     auto it = bufferQueueCache_.find(sequence);
     if (it != bufferQueueCache_.end()) {
+        if (onBufferDelete_ != nullptr) {
+            onBufferDelete_(sequence);
+        }
         bufferQueueCache_.erase(it);
         deletingList_.push_back(sequence);
     }
@@ -654,7 +663,9 @@ GSError BufferQueue::DetachBuffer(sptr<SurfaceBuffer> &buffer)
     } else {
         BLOGN_FAILURE_ID_RET(sequence, GSERROR_NO_ENTRY);
     }
-
+    if (onBufferDelete_ != nullptr) {
+        onBufferDelete_(sequence);
+    }
     bufferQueueCache_.erase(sequence);
     return GSERROR_OK;
 }
@@ -715,6 +726,16 @@ GSError BufferQueue::RegisterReleaseListener(OnReleaseFunc func)
     return GSERROR_OK;
 }
 
+GSError BufferQueue::RegisterDeleteBufferListener(OnDeleteBufferFunc func)
+{
+    std::lock_guard<std::mutex> lockGuard(mutex_);
+    if (onBufferDelete_ != nullptr) {
+        return GSERROR_OK;
+    }
+    onBufferDelete_ = func;
+    return GSERROR_OK;
+}
+
 GSError BufferQueue::SetDefaultWidthAndHeight(int32_t width, int32_t height)
 {
     if (width <= 0) {
@@ -756,6 +777,11 @@ uint32_t BufferQueue::GetDefaultUsage()
 GSError BufferQueue::CleanCache()
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
+    for (auto &[id, _] : bufferQueueCache_) {
+        if (onBufferDelete_ != nullptr) {
+            onBufferDelete_(id);
+        }
+    }
     bufferQueueCache_.clear();
     freeList_.clear();
     dirtyList_.clear();

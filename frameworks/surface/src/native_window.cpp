@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,13 +30,13 @@
 
 using namespace OHOS;
 
-struct NativeWindow* CreateNativeWindowFromSurface(void* pSuface)
+OHNativeWindow* CreateNativeWindowFromSurface(void* pSuface)
 {
     if (pSuface == nullptr) {
-        BLOGD("CreateNativeWindowFromSurface pSuface is nullptr");
+        BLOGE("para error, please check input parameter");
         return nullptr;
     }
-    NativeWindow* nativeWindow = new NativeWindow();
+    OHNativeWindow* nativeWindow = new OHNativeWindow();
     nativeWindow->surface =
                 *reinterpret_cast<OHOS::sptr<OHOS::Surface> *>(pSuface);
     nativeWindow->config.width = nativeWindow->surface->GetDefaultWidth();
@@ -47,66 +47,68 @@ struct NativeWindow* CreateNativeWindowFromSurface(void* pSuface)
     nativeWindow->config.timeout = 3000;        // default timout is 3000 ms
     nativeWindow->config.colorGamut = ColorGamut::COLOR_GAMUT_SRGB;
     nativeWindow->config.transform = TransformType::ROTATE_NONE;
+    nativeWindow->config.scalingMode = ScalingMode::SCALING_MODE_SCALE_TO_WINDOW;
 
     NativeObjectReference(nativeWindow);
     return nativeWindow;
 }
 
-void DestoryNativeWindow(struct NativeWindow *window)
+void DestoryNativeWindow(OHNativeWindow *window)
 {
     if (window == nullptr) {
+        BLOGE("para error, please check input parameter");
         return;
     }
     // unreference nativewindow object
     NativeObjectUnreference(window);
 }
 
-struct NativeWindowBuffer* CreateNativeWindowBufferFromSurfaceBuffer(void* pSurfaceBuffer)
+OHNativeWindowBuffer* CreateNativeWindowBufferFromSurfaceBuffer(void* pSurfaceBuffer)
 {
     if (pSurfaceBuffer == nullptr) {
+        BLOGE("para error, please check input parameter");
         return nullptr;
     }
-    NativeWindowBuffer *nwBuffer = new NativeWindowBuffer();
+    OHNativeWindowBuffer *nwBuffer = new OHNativeWindowBuffer();
     nwBuffer->sfbuffer = *reinterpret_cast<OHOS::sptr<OHOS::SurfaceBuffer> *>(pSurfaceBuffer);
     NativeObjectReference(nwBuffer);
     return nwBuffer;
 }
-void DestoryNativeWindowBuffer(struct NativeWindowBuffer* buffer)
+void DestoryNativeWindowBuffer(OHNativeWindowBuffer* buffer)
 {
     if (buffer == nullptr) {
+        BLOGE("para error, please check input parameter");
         return;
     }
     NativeObjectUnreference(buffer);
 }
 
-int32_t NativeWindowRequestBuffer(struct NativeWindow *window,
-    struct NativeWindowBuffer **buffer, int *fenceFd)
+int32_t NativeWindowRequestBuffer(OHNativeWindow *window,
+    OHNativeWindowBuffer **buffer, int *fenceFd)
 {
     if (window == nullptr || buffer == nullptr || fenceFd == nullptr) {
-        BLOGD("window or buffer or fenceid is nullptr");
+        BLOGE("para error, please check input parameter");
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
-    BLOGD("width is %{public}d, height is %{public}d, Queue Id:%{public}" PRIu64 "",
-        window->config.width, window->config.height, window->surface->GetUniqueId());
     OHOS::sptr<OHOS::SurfaceBuffer> sfbuffer;
     OHOS::sptr<OHOS::SyncFence> relaeaseFence = OHOS::SyncFence::INVALID_FENCE;
     if (window->surface->RequestBuffer(sfbuffer, relaeaseFence, window->config) != OHOS::GSError::GSERROR_OK ||
         sfbuffer == nullptr) {
+        BLOGE("API failed, please check RequestBuffer funcation ret");
         return OHOS::GSERROR_NO_BUFFER;
     }
-    NativeWindowBuffer *nwBuffer = new NativeWindowBuffer();
+    OHNativeWindowBuffer *nwBuffer = new OHNativeWindowBuffer();
     nwBuffer->sfbuffer = sfbuffer;
     *buffer = nwBuffer;
     *fenceFd = relaeaseFence->Dup();
-    NativeObjectReference(*buffer);
     return OHOS::GSERROR_OK;
 }
 
-int32_t NativeWindowFlushBuffer(struct NativeWindow *window, struct NativeWindowBuffer *buffer,
+int32_t NativeWindowFlushBuffer(OHNativeWindow *window, OHNativeWindowBuffer *buffer,
     int fenceFd, struct Region region)
 {
     if (window == nullptr || buffer == nullptr || window->surface == nullptr) {
-        BLOGD("NativeWindowFlushBuffer window, buffer is nullptr");
+        BLOGE("para error, please check input parameter");
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
 
@@ -125,27 +127,24 @@ int32_t NativeWindowFlushBuffer(struct NativeWindow *window, struct NativeWindow
         config.timestamp = 0;
     }
 
-    BLOGD("damage w is %{public}d, h is %{public}d, Queue Id:%{public}" PRIu64 ", acquire fence: %{public}d",
-        config.damage.w, config.damage.h, window->surface->GetUniqueId(), fenceFd);
     OHOS::sptr<OHOS::SyncFence> acquireFence = new OHOS::SyncFence(fenceFd);
     window->surface->FlushBuffer(buffer->sfbuffer, acquireFence, config);
-    NativeObjectUnreference(buffer);
 
     return OHOS::GSERROR_OK;
 }
 
-int32_t NativeWindowCancelBuffer(struct NativeWindow *window, struct NativeWindowBuffer *buffer)
+int32_t NativeWindowCancelBuffer(OHNativeWindow *window, OHNativeWindowBuffer *buffer)
 {
     if (window == nullptr || buffer == nullptr) {
+        BLOGE("para error, please check input parameter");
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
 
     window->surface->CancelBuffer(buffer->sfbuffer);
-    NativeObjectUnreference(buffer);
     return OHOS::GSERROR_OK;
 }
 
-static int32_t InternalHanleNativeWindowOpt(struct NativeWindow *window, int code, va_list args)
+static int32_t InternalHanleNativeWindowOpt(OHNativeWindow *window, int code, va_list args)
 {
     switch (code) {
         case SET_USAGE: {
@@ -170,6 +169,11 @@ static int32_t InternalHanleNativeWindowOpt(struct NativeWindow *window, int cod
             window->config.strideAlignment = stride;
             break;
         }
+        case SET_TIMEOUT: {
+            int32_t timeout = va_arg(args, int32_t);
+            window->config.timeout = timeout;
+            break;
+        }
         case SET_COLOR_GAMUT: {
             int32_t colorGamut = va_arg(args, int32_t);
             window->config.colorGamut = static_cast<ColorGamut>(colorGamut);
@@ -178,6 +182,11 @@ static int32_t InternalHanleNativeWindowOpt(struct NativeWindow *window, int cod
         case SET_TRANSFORM : {
             int32_t transform = va_arg(args, int32_t);
             window->config.transform = static_cast<TransformType>(transform);
+            break;
+        }
+        case SET_SCALING_MODE : {
+            int32_t scalingMode = va_arg(args, int32_t);
+            window->config.scalingMode = static_cast<ScalingMode>(scalingMode);
             break;
         }
         case GET_USAGE: {
@@ -203,6 +212,11 @@ static int32_t InternalHanleNativeWindowOpt(struct NativeWindow *window, int cod
             *stride = window->config.strideAlignment;
             break;
         }
+        case GET_TIMEOUT : {
+            int32_t *timeout = va_arg(args, int32_t*);
+            *timeout = window->config.timeout;
+            break;
+        }
         case GET_COLOR_GAMUT: {
             int32_t *colorGamut = va_arg(args, int32_t*);
             *colorGamut = static_cast<int32_t>(window->config.colorGamut);
@@ -213,15 +227,21 @@ static int32_t InternalHanleNativeWindowOpt(struct NativeWindow *window, int cod
             *transform = static_cast<int32_t>(window->config.transform);
             break;
         }
+        case GET_SCALING_MODE: {
+            int32_t *scalingMode = va_arg(args, int32_t*);
+            *scalingMode = static_cast<int32_t>(window->config.scalingMode);
+            break;
+        }
         default:
             break;
     }
     return OHOS::GSERROR_OK;
 }
 
-int32_t NativeWindowHandleOpt(struct NativeWindow *window, int code, ...)
+int32_t NativeWindowHandleOpt(OHNativeWindow *window, int code, ...)
 {
     if (window == nullptr) {
+        BLOGE("para error, please check input parameter");
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
     va_list args;
@@ -231,9 +251,10 @@ int32_t NativeWindowHandleOpt(struct NativeWindow *window, int code, ...)
     return OHOS::GSERROR_OK;
 }
 
-BufferHandle *GetBufferHandleFromNative(struct NativeWindowBuffer *buffer)
+BufferHandle *GetBufferHandleFromNative(OHNativeWindowBuffer *buffer)
 {
     if (buffer == nullptr) {
+        BLOGE("para error, please check input parameter");
         return nullptr;
     }
     return buffer->sfbuffer->GetBufferHandle();
@@ -242,6 +263,7 @@ BufferHandle *GetBufferHandleFromNative(struct NativeWindowBuffer *buffer)
 int32_t GetNativeObjectMagic(void *obj)
 {
     if (obj == nullptr) {
+        BLOGE("para error, please check input parameter");
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
     NativeWindowMagic* nativeWindowMagic = reinterpret_cast<NativeWindowMagic *>(obj);
@@ -251,6 +273,7 @@ int32_t GetNativeObjectMagic(void *obj)
 int32_t NativeObjectReference(void *obj)
 {
     if (obj == nullptr) {
+        BLOGE("para error, please check input parameter");
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
     switch (GetNativeObjectMagic(obj)) {
@@ -268,6 +291,7 @@ int32_t NativeObjectReference(void *obj)
 int32_t NativeObjectUnreference(void *obj)
 {
     if (obj == nullptr) {
+        BLOGE("para error, please check input parameter");
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
     switch (GetNativeObjectMagic(obj)) {

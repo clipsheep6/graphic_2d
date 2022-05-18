@@ -22,6 +22,9 @@
 
 #include "common/rs_obj_abs_geometry.h"
 #include "display_type.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_processor.h"
@@ -84,7 +87,10 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         RS_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode ScreenManager is nullptr");
         return;
     }
-    ScreenState state = screenManager->QueryScreenInfo(node.GetScreenId()).state;
+    offsetX_ = node.GetDisplayOffsetX();
+    offsetY_ = node.GetDisplayOffsetY();
+    ScreenInfo currScreenInfo = screenManager->QueryScreenInfo(node.GetScreenId());
+    ScreenState state = currScreenInfo.state;
     switch (state) {
         case ScreenState::PRODUCER_SURFACE_ENABLE:
             node.SetCompositeType(RSDisplayRenderNode::CompositeType::SOFTWARE_COMPOSITE);
@@ -113,6 +119,14 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         }
         ProcessBaseRenderNode(*existingSource);
     } else {
+        ScreenRotation rotation = screenManager->GetRotation(node.GetScreenId());
+        uint32_t boundWidth = currScreenInfo.width;
+        uint32_t boundHeight = currScreenInfo.height;
+        if (rotation == ScreenRotation::ROTATION_90 || rotation == ScreenRotation::ROTATION_270) {
+            std::swap(boundWidth, boundHeight);
+        }
+        skCanvas_ = std::make_unique<SkCanvas>(boundWidth, boundHeight);
+        canvas_ = std::make_shared<RSPaintFilterCanvas>(skCanvas_.get());
         ProcessBaseRenderNode(node);
     }
     processor_->PostProcess();
@@ -126,7 +140,7 @@ void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         return;
     }
     if (!node.GetRenderProperties().GetVisible()) {
-        RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : %llu is unvisible", node.GetId());
+        RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : %llu is invisible", node.GetId());
         return;
     }
     auto currentGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
@@ -170,13 +184,18 @@ void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         return;
     }
     if (!node.GetRenderProperties().GetVisible()) {
-        RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node : %llu is unvisible", node.GetId());
+        RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node : %llu is invisible", node.GetId());
         return;
     }
+    canvas_->save();
+    node.SetOffset(offsetX_, offsetY_);
+    node.ProcessRenderBeforeChildren(*canvas_);
     ProcessBaseRenderNode(node);
     node.SetGlobalZOrder(globalZOrder_);
     globalZOrder_ = globalZOrder_ + 1;
     processor_->ProcessSurface(node);
+    node.ProcessRenderAfterChildren(*canvas_);
+    canvas_->restore();
 }
 
 void RSRenderServiceVisitor::UpdateGeometry(RSBaseRenderNode& displayNode)

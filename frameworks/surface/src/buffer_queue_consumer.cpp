@@ -24,12 +24,10 @@ BufferQueueConsumer::BufferQueueConsumer(sptr<BufferQueue>& bufferQueue)
     if (bufferQueue_ != nullptr) {
         bufferQueue_->GetName(name_);
     }
-    BLOGNI("ctor");
 }
 
 BufferQueueConsumer::~BufferQueueConsumer()
 {
-    BLOGNI("dtor");
 }
 
 GSError BufferQueueConsumer::AcquireBuffer(sptr<SurfaceBuffer>& buffer, sptr<SyncFence>& fence,
@@ -87,6 +85,14 @@ GSError BufferQueueConsumer::RegisterReleaseListener(OnReleaseFunc func)
         return GSERROR_INVALID_ARGUMENTS;
     }
     return bufferQueue_->RegisterReleaseListener(func);
+}
+
+GSError BufferQueueConsumer::RegisterDeleteBufferListener(OnDeleteBufferFunc func)
+{
+    if (bufferQueue_ == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    return bufferQueue_->RegisterDeleteBufferListener(func);
 }
 
 GSError BufferQueueConsumer::UnregisterConsumerListener()

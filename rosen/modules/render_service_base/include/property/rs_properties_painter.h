@@ -28,7 +28,7 @@ class RSTransitionProperties;
 class RSPropertiesPainter {
 public:
     static void Clip(SkCanvas& canvas, RectF rect);
-    static void DrawBackground(const RSProperties& properties, SkCanvas& canvas);
+    static void DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void DrawBorder(const RSProperties& properties, SkCanvas& canvas);
     static void DrawFrame(
         const RSProperties& properties, RSPaintFilterCanvas& canvas, std::shared_ptr<DrawCmdList>& drawCmdList);
@@ -39,7 +39,12 @@ public:
     static void DrawForegroundColor(const RSProperties& properties, SkCanvas& canvas);
     static void DrawTransitionProperties(const std::unique_ptr<RSTransitionProperties>& transitionProperties,
         const RSProperties& properties, RSPaintFilterCanvas& canvas);
+    static void DrawTransitionProperties(const std::unique_ptr<RSTransitionProperties>& transitionProperties,
+        const Vector2f& center, RSPaintFilterCanvas& canvas);
     static void DrawMask(const RSProperties& properties, SkCanvas& canvas);
+    static void DrawMask(const RSProperties& properties, SkCanvas& canvas, SkRect maskBounds);
+    static SkRRect RRect2SkRRect(const RRect& rr);
+    static SkRect Rect2SkRect(const RectF& r);
 };
 } // namespace Rosen
 } // namespace OHOS

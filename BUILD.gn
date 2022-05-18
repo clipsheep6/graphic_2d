@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/graphic/standard/utils/wmlayout/wmlayout.gni")
+import("//foundation/graphic/graphic/utils/wmlayout/wmlayout.gni")
 import("graphic_config.gni")
 
 group("default") {
@@ -38,13 +38,16 @@ group("graphic_standard_test") {
   testonly = true
 
   public_deps = [
-    "frameworks/fence:test",
-    "frameworks/surface:test",
+    "frameworks/surface/test:test",
     "frameworks/wmtest:wmtest",
     "rosen/modules/composer:test",
     "rosen/modules/effect/test/unittest:test",
     "utils/sync_fence:test",
   ]
+
+  if (color_gamut_enable) {
+    public_deps += [ "utils/color_manager:test" ]
+  }
 }
 
 ## Install graphic.rc to /system/etc/init/graphic.rc {{{
@@ -91,11 +94,7 @@ group("libfence") {
 }
 
 group("libgl") {
-  public_deps = [
-    "//third_party/EGL:libEGL",
-    "//third_party/openGLES:libGLES",
-  ]
-  public_deps += libgl
+  public_deps = libgl
 }
 
 group("libgraphic_dumper_client") {

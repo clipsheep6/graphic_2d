@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,25 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef VSYNC_VSYNC_H
-#define VSYNC_VSYNC_H
+#ifndef TEST_FUZZTEST_PATHOP_FUZZER_H
+#define TEST_FUZZTEST_PATHOP_FUZZER_H
 
-namespace OHOS {
-namespace Rosen {
+#define FUZZ_PROJECT_NAME "pathop_fuzzer"
 
-class Vsync {
-    static Vsync* GetInstance();
-
-private:
-    Vsync() = default;
-    virtual ~Vsync() = default;
-
-    Vsync(const Vsync& rhs) = delete;
-    Vsync& operator=(const Vsync& rhs) = delete;
-    Vsync(Vsync&& rhs) = delete;
-    Vsync& operator=(Vsync&& rhs) = delete;
-};
-} // namespace Rosen
-} // namespace OHOS
-
-#endif // VSYNC_VSYNC_H
+#endif // TEST_FUZZTEST_PATHOP_FUZZER_H

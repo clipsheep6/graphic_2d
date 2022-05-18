@@ -47,6 +47,8 @@ public:
     virtual void SetSurfaceBufferColorGamut(const ColorGamut& colorGamut) = 0;
     virtual void SetSurfaceBufferTransform(const TransformType& transform) = 0;
 
+    virtual const ScalingMode& GetSurfaceBufferScalingMode() const = 0;
+
     virtual int32_t GetSurfaceBufferWidth() const = 0;
     virtual int32_t GetSurfaceBufferHeight() const = 0;
     virtual void SetSurfaceBufferWidth(int32_t width) = 0;
@@ -78,6 +80,7 @@ protected:
 };
 
 using OnReleaseFunc = std::function<GSError(sptr<SurfaceBuffer> &)>;
+using OnDeleteBufferFunc = std::function<void(int32_t)>;
 } // namespace OHOS
 
 #endif // INTERFACES_INNERKITS_SURFACE_SURFACE_BUFFER_H

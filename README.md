@@ -35,7 +35,7 @@ foundation/graphic/graphic/
 │ ├── bootanimation # Boot animation directory
 │ ├── dumper # graphic dumper code
 │ ├── fence # fence code
-│ ├── surface # surface source code
+│ ├── surface # code
 │ ├── vsync # vsync code
 ├── rosen # framework code directory
 │ ├── build # build instructions

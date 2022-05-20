@@ -31,29 +31,29 @@ The layered description of the OpenHarmony graphics stack is as follows:
 foundation/graphic/graphic/
 ├── figures # Markdown referenced image catalog
 ├── frameworks # framework code directory
-│ ├── animation_server # animationServer code
-│ ├── bootanimation # Boot animation directory
-│ ├── dumper # graphic dumper code
-│ ├── fence # fence code
-│ ├── surface # code
-│ ├── vsync # vsync code
+│   ├── animation_server # animationServer code
+│   ├── bootanimation # Boot animation directory
+│   ├── dumper # graphic dumper code
+│   ├── fence # fence code
+│   ├── surface # Surface code
+│   ├── vsync # Vsync code
 ├── rosen # framework code directory
-│ ├── build # build instructions
-│ ├── doc # doc
-│ ├── include # external header file code
-│ ├── lib # lib
-│ ├── modules # graphic Each module code of the subsystem
-│ ├── samples # sample code
-│ ├── test # develop test code
-│ ├── tools # tool code
+│   ├── build # build instructions
+│   ├── doc # doc
+│   ├── include # external header file code
+│   ├── lib # lib
+│   ├── modules # graphic Each module code of the subsystem
+│   ├── samples # sample code
+│   ├── test # develop test code
+│   ├── tools # tool code
 ├── interfaces # graphical interface storage directory
-│ ├── innerkits # internal native interface storage directory
-│ └── kits # js/napi external interface storage directory
+│   ├── innerkits # internal native interface storage directory
+│   └── kits # js/napi external interface storage directory
 └── utils # widget storage directory
 ```
 
 
-## 相关仓
+## Related positions
 - **graphic_standard**
 - [ace_ace_engine](https://gitee.com/openharmony/ace_ace_engine)
 - [aafwk_standard](https://gitee.com/openharmony/aafwk_standard)

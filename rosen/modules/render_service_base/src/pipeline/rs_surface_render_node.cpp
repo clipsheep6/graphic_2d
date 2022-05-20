@@ -34,12 +34,24 @@ namespace OHOS {
 namespace Rosen {
 static const int rectBounds = 2;
 
-RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context) : RSRenderNode(id, context) {}
 RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, std::weak_ptr<RSContext> context)
-    : RSRenderNode(config.id, context), name_(config.name)
-{}
+    : RSRenderNode(config.id, context),
+      RSSurfaceHandler(config.id),
+      name_(config.name)
+{
+}
+
+RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context)
+    : RSSurfaceRenderNode(RSSurfaceRenderNodeConfig{id, "SurfaceNode"}, context)
+{
+}
 
 RSSurfaceRenderNode::~RSSurfaceRenderNode() {}
+
+void RSSurfaceRenderNode::SetConsumer(const sptr<Surface>& consumer)
+{
+    consumer_ = consumer;
+}
 
 void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 {
@@ -200,7 +212,9 @@ NodeId RSSurfaceRenderNode::GetParentId() const
 
 void RSSurfaceRenderNode::UpdateSurfaceDefaultSize(float width, float height)
 {
-    consumer_->SetDefaultWidthAndHeight(width, height);
+    if (consumer_ != nullptr) {
+        consumer_->SetDefaultWidthAndHeight(width, height);
+    }  
 }
 
 void RSSurfaceRenderNode::SendPropertyCommand(std::unique_ptr<RSCommand>& command)

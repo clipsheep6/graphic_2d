@@ -1,6 +1,6 @@
 - [Introduction](#Introduction)
 - [directory](#directory)
-- [Related warehouse](#Related warehouse)
+- [Repositories Involved](#RepositoriesInvolved)
 
 ## Introduction
 
@@ -53,7 +53,7 @@ foundation/graphic/graphic/
 ```
 
 
-## Related positions
+## Repositories Involved<a name="RepositoriesInvolved"></a>
 - **graphic_standard**
 - [ace_ace_engine](https://gitee.com/openharmony/ace_ace_engine)
 - [aafwk_standard](https://gitee.com/openharmony/aafwk_standard)

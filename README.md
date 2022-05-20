@@ -30,24 +30,24 @@ The layered description of the OpenHarmony graphics stack is as follows:
 ```
 foundation/graphic/graphic/
 ├── figures # Markdown referenced image catalog
-├── frameworks # Framework code directory
-│ ├── animation_server # AnimationServer code
+├── frameworks # framework code directory
+│ ├── animation_server # animationServer code
 │ ├── bootanimation # Boot animation directory
 │ ├── dumper # graphic dumper code
 │ ├── fence # fence code
-│ ├── surface # Surface code
-│ ├── vsync # Vsync code
-├── rosen # Framework code directory
-│ ├── build # Build instructions
+│ ├── surface # surface source code
+│ ├── vsync # vsync code
+├── rosen # framework code directory
+│ ├── build # build instructions
 │ ├── doc # doc
-│ ├── include # External header file code
+│ ├── include # external header file code
 │ ├── lib # lib
 │ ├── modules # graphic Each module code of the subsystem
 │ ├── samples # sample code
-│ ├── test # Develop test code
+│ ├── test # develop test code
 │ ├── tools # tool code
-├── interfaces # Graphical interface storage directory
-│ ├── innerkits # Internal native interface storage directory
+├── interfaces # graphical interface storage directory
+│ ├── innerkits # internal native interface storage directory
 │ └── kits # js/napi external interface storage directory
 └── utils # widget storage directory
 ```

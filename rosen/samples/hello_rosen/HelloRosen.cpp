@@ -14,7 +14,6 @@
  */
 
 #include <iostream>
-#include <string>
 int main()
 {
     std::cout << "hello, rosen!" << std::endl;

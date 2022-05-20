@@ -16,13 +16,11 @@
 #ifndef STRING_UTILS_H
 #define STRING_UTILS_H
 
-#include <iostream>
-
 #include <hilog/log.h>
 
 #include "securec.h"
 
-
+using std::string;
 namespace OHOS {
 namespace Rosen {
 static constexpr HiviewDFX::HiLogLabel TAG = { LOG_CORE, 0, "StringUtils" };

@@ -259,9 +259,10 @@ void RSSurfaceRenderNode::NotifyBufferAvailable()
     if (isBufferAvailable_) {
         return;
     }
+    isBufferAvailable_ = true;
 
     if (callbackForRenderThreadRefresh_) {
-        isBufferAvailable_ = true;
+        ROSEN_LOGI("RSSurfaceRenderNode::NotifyBufferAvailable nodeId = %llu RenderThreadRefresh", GetId());
         callbackForRenderThreadRefresh_();
     }
 
@@ -270,12 +271,10 @@ void RSSurfaceRenderNode::NotifyBufferAvailable()
         if (callbackFromRT_) {
             ROSEN_LOGI("RSSurfaceRenderNode::NotifyBufferAvailable nodeId = %llu callbackFromRT", GetId());
             callbackFromRT_->OnBufferAvailable();
-            isBufferAvailable_ = true;
         }
         if (callbackFromUI_) {
             ROSEN_LOGI("RSSurfaceRenderNode::NotifyBufferAvailable nodeId = %llu callbackFromUI", GetId());
             callbackFromUI_->OnBufferAvailable();
-            isBufferAvailable_ = true;
         }
         if (!callbackForRenderThreadRefresh_ && !callbackFromRT_ && !callbackFromUI_) {
             isBufferAvailable_ = false;

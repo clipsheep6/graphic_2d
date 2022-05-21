@@ -229,11 +229,6 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     } else {
         ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode node : %llu, not clip [%f, %f, %f, %f]",
             node.GetId(), x, y, width, height);
-        if (node.NeedSetCallbackForRenderThreadRefresh() == true) {
-            node.SetCallbackForRenderThreadRefresh([] {
-                RSRenderThread::Instance().RequestNextVSync();
-            });
-        }
         auto backgroundColor = node.GetRenderProperties().GetBackgroundColor();
         if (backgroundColor != RgbPalette::Transparent()) {
             canvas_->clear(backgroundColor.AsArgbInt());

@@ -79,9 +79,8 @@ HWTEST_F(HdiLayerInfoTest, GetBuffer001, Function | MediumTest| Level3)
     sptr<SurfaceBuffer> sbuffer = nullptr;
     sptr<SurfaceBuffer> preBuffer = nullptr;
     sptr<SyncFence> preAcquireFence = SyncFence::INVALID_FENCE;
-    HdiLayerInfoTest::hdiLayerInfo_->SetBuffer(sbuffer, acquireFence, preBuffer, preAcquireFence);
+    HdiLayerInfoTest::hdiLayerInfo_->SetBuffer(sbuffer, acquireFence);
     ASSERT_EQ(HdiLayerInfoTest::hdiLayerInfo_->GetBuffer(), nullptr);
-    ASSERT_EQ(HdiLayerInfoTest::hdiLayerInfo_->GetPreBuffer(), nullptr);
 }
 
 /**

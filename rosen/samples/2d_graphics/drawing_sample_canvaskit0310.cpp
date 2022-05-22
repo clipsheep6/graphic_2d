@@ -305,6 +305,18 @@ void HelloDrawing::Draw()
         output->SetOutputDamage(1, damageRect);
 
         backend->Repaint(outputs_);
+
+        const auto layersReleaseFence = backend_->GetLayersReleaseFence(output);
+        for (auto layerI : layerVec) {
+            sptr<SyncFence> releaseFence = nullptr;
+            for (const auto& [layer, fence] : layersReleaseFence) {
+                if (layerI == layer) {
+                    releaseFence = fence;
+                }
+            }
+            auto buffer = layerI->GetBuffer();
+            layerI->GetSurface()->ReleaseBuffer(buffer, releaseFence);
+        }
         count++;
 #ifdef DEBUG_DUMP
         std::string result;

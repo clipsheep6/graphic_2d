@@ -58,8 +58,6 @@ struct ComposeInfo {
     LayerAlpha alpha;
     sptr<SurfaceBuffer> buffer;
     sptr<SyncFence> fence = SyncFence::INVALID_FENCE;
-    sptr<SurfaceBuffer> preBuffer;
-    sptr<SyncFence> preFence = SyncFence::INVALID_FENCE;
     BlendType blendType;
 };
 

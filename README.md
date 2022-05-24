@@ -36,7 +36,6 @@ foundation/graphic/standard
 │   ├── dumper                   # graphic dumper code
 │   ├── fence                    # fence code
 │   ├── vsync                    # Vsync code
-|   ├── surface                  # codes
 ├── rosen                        # framework code directory
 │   ├── build                    # build instructions
 │   ├── doc                      # doc

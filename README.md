@@ -28,7 +28,7 @@ The layered description of the OpenHarmony graphics stack is as follows:
 
 ## content
 ```
-foundation/graphic/standard
+foundataion/graphic/graphic_2d
 ├── figures                      # Markdown referenced image catalog
 ├── frameworks                   # framework code directory
 │   ├── animation_server         # animationServer code

@@ -21,6 +21,7 @@ config("bootanimation_config") {
   include_dirs = [
     "include",
     "//foundation/graphic/graphic/utils/log",
+    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
     "//third_party/cJSON",
     "//foundation/multimedia/media_standard/interfaces/inner_api/native",
   ]

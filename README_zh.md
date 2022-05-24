@@ -37,11 +37,16 @@ foundation/graphic/graphic/
 │   ├── bootanimation       # 开机动画目录
 │   ├── dumper              # graphic dumper代码
 │   ├── fence               # fence代码
+│   ├── opengl              # opengl代码
 │   ├── surface             # Surface代码
+│   ├── surfaceimage        # Surface image代码
 │   ├── vsync               # Vsync代码
+│   ├── wm                  # wm
+│   ├── wmserver            # wmserver代码
+│   ├── wmservice           # wmservice代码
+│   ├── wmtest              # wmtest代码
 ├── rosen                   # 框架代码目录
 │   ├── build               # 构建说明
-│   ├── doc                 # doc
 │   ├── include             # 对外头文件代码
 │   ├── lib                 # lib
 │   ├── modules             # graphic 子系统各模块代码

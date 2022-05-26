@@ -27,10 +27,28 @@ ohos_unittest("EffectTest") {
   ]
 
   if (effect_enable_gpu) {
-    sources += [ "effect_chain_unittest.cpp" ]
+    sources += [
+      "effect_chain_unittest.cpp",
+      "algo_filter_unittest.cpp",
+      "brightness_filter_unittest.cpp",
+      "contrast_filter_unittest.cpp",
+      "saturation_filter_unittest.cpp",
+      "scale_filter_unittest.cpp",
+      "filter_factory_unittest.cpp",
+      "horizontal_blur_filter_unittest.cpp",
+      "vertical_blur_filter_unittest.cpp",
+      "gaussian_blur_filter_unittest.cpp",
+      "mesh_unittest.cpp",
+      "input_unittest.cpp",
+      "output_unittest.cpp",
+      "program_unittest.cpp",
+      "filter_unittest.cpp",
+      "image_chain_unittest.cpp",
+    ]
 
     deps += [
       "//foundation/graphic/graphic_2d:libgl",
+      "//foundation/multimedia/image_standard:image_framework",
       "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/common:graphic_napi_common",
       "//foundation/graphic/graphic_2d/rosen/modules/effect/effectChain:libeffectchain",
       "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect",

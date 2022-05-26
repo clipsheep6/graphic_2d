@@ -1,0 +1,115 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
+
+if (color_gamut_enable) {
+  group("color_manager_unit_test") {
+    testonly = true
+    deps = [ "//foundation/graphic/graphic_2d/utils/color_manager:test" ]
+  }
+
+  group("color_manager") {
+    public_deps = [ "color_manager:color_manager" ]
+  }
+}
+
+group("buffer_handle") {
+  public_deps = [ "buffer_handle:buffer_handle" ]
+}
+
+group("scoped_bytrace") {
+  public_deps = [ "scoped_bytrace:scoped_bytrace" ]
+}
+
+group("promise") {
+  public_deps = [ "promise:promise" ]
+}
+
+group("semaphore") {
+  public_deps = [ "semaphore:semaphore" ]
+}
+
+group("socketpair") {
+  public_deps = [ "socketpair:socketpair" ]
+}
+
+group("test_header") {
+  public_deps = [ "test_header:test_header" ]
+}
+
+group("option_parser") {
+  public_deps = [ "option_parser:option_parser" ]
+}
+
+group("libgslogger") {
+  public_deps = [ "gslogger:libgslogger" ]
+}
+
+group("matrix") {
+  public_deps = [ "matrix:matrix" ]
+}
+
+group("raw_parser") {
+  public_deps = [ "raw_parser:raw_parser" ]
+}
+
+group("cpudraw") {
+  public_deps = [ "cpudraw:cpudraw" ]
+}
+
+group("gl_utils") {
+  public_deps = [ "gl_utils:gl_utils" ]
+}
+
+group("raw_maker") {
+  public_deps = [ "raw_maker:raw_maker" ]
+}
+
+group("sync_fence") {
+  public_deps = [ "sync_fence:sync_fence" ]
+}
+
+## Build libgraphic_utils.so {{{
+config("libgraphic_utils_public_config") {
+  include_dirs =
+      [ "//foundation/graphic/graphic_2d/interfaces/inner_api/common" ]
+}
+
+ohos_shared_library("libgraphic_utils") {
+  public_configs = [ ":libgraphic_utils_public_config" ]
+
+  public_deps = [
+    "buffer_handle:buffer_handle",
+    "cpudraw:cpudraw",
+    "gl_utils:gl_utils",
+    "gslogger:libgslogger",
+    "matrix:matrix",
+    "option_parser:option_parser",
+    "promise:promise",
+    "raw_maker:raw_maker",
+    "raw_parser:raw_parser",
+    "scoped_bytrace:scoped_bytrace",
+    "semaphore:semaphore",
+    "test_header:test_header",
+  ]
+
+  if (color_gamut_enable) {
+    public_deps += [ "color_manager:color_manager" ]
+  }
+
+  part_name = "graphic_graphic_2d"
+  subsystem_name = "graphic"
+}
+## Build libgraphic_utils.so }}}

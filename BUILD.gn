@@ -1,0 +1,102 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/utils/wmlayout/wmlayout.gni")
+import("graphic_config.gni")
+
+group("default") {
+  public_deps = [
+    ":default.scss",
+    ":graphic.rc",
+    "frameworks/animation_server:animation_server",
+    "frameworks/animation_server:cursor.raw",
+    "frameworks/bootanimation:bootanimation",
+    "frameworks/bootanimation:bootanimation_pics",
+    "frameworks/bootanimation:bootanimation_sounds",
+    "frameworks/dumper:gdumper",
+    "frameworks/dumper:gdumper.ini",
+    "frameworks/dumper:graphic_dumper_server",
+    "frameworks/vsync:vsync_server",
+    "frameworks/wmserver:screen-info-test",
+    "frameworks/wmserver:wmserver",
+    "frameworks/wmservice:wmservice_test",
+  ]
+}
+
+group("graphic_graphic_2d_test") {
+  testonly = true
+
+  public_deps = [
+    "frameworks/surface/test:test",
+    "frameworks/wmtest:wmtest",
+    "rosen/modules/composer:test",
+    "rosen/modules/effect/test/unittest:test",
+    "utils/sync_fence:test",
+  ]
+
+  if (color_gamut_enable) {
+    public_deps += [ "utils/color_manager:test" ]
+  }
+}
+
+## Install graphic.rc to /system/etc/init/graphic.rc {{{
+ohos_prebuilt_etc("graphic.rc") {
+  source = "graphic.cfg"
+  relative_install_dir = "init"
+  part_name = "graphic_graphic_2d"
+  subsystem_name = "graphic"
+}
+
+## Install graphic.rc to /system/etc/init/graphic.rc }}}
+
+## Install default.scss to /system/etc/wmlayout.d/default.scss {{{
+wmlayout_scss("default.scss") {
+  scss = "default.scss"
+  part_name = "graphic_graphic_2d"
+  subsystem_name = "graphic"
+}
+
+## Install default.scss to /system/etc/wmlayout.d/default.scss }}}
+
+group("libsurface") {
+  public_deps = [ "frameworks/surface:surface" ]
+}
+
+group("libvsync_client") {
+  public_deps = [ "frameworks/vsync:libvsync_client" ]
+}
+
+group("libwms_client") {
+  public_deps = [ "frameworks/wm:wms_client" ]
+}
+
+group("libwmclient") {
+  public_deps = [ "frameworks/wm:libwmclient" ]
+}
+
+group("libwmservice") {
+  public_deps = [ "frameworks/wmservice:libwmservice" ]
+}
+
+group("libfence") {
+  public_deps = [ "frameworks/fence:libfence" ]
+}
+
+group("libgl") {
+  public_deps = libgl
+}
+
+group("libgraphic_dumper_client") {
+  public_deps = [ "frameworks/dumper:libgraphic_dumper_client" ]
+}

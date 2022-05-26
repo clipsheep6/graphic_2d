@@ -1,0 +1,78 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+
+module_out_path = "graphic_graphic_2d/render_service_client"
+
+group("unittest") {
+  testonly = true
+
+  deps = [
+    ":RSDropframeTest",
+    ":RSInterfacesTest",
+  ]
+}
+
+## Build RSInterfacesTest
+ohos_unittest("RSInterfacesTest") {
+  module_out_path = module_out_path
+  sources = [ "rs_interfaces_test.cpp" ]
+  deps = [ ":rs_client_test_common" ]
+}
+
+## Build RSDropframeTest
+ohos_unittest("RSDropframeTest") {
+  module_out_path = module_out_path
+  sources = [
+    "//foundation/graphic/graphic/rosen/modules/render_service_base/src/pipeline/rs_base_render_node.cpp",
+    "rs_dropframe_test.cpp",
+  ]
+  deps = [ ":rs_client_test_common" ]
+}
+
+## Build rs_client_test_common.a {{{
+config("rs_client_test_common_public_config") {
+  include_dirs = [
+    "//foundation/graphic/graphic_2d/frameworks/surface/include",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/core",
+  ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-g3",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+}
+
+ohos_static_library("rs_client_test_common") {
+  visibility = [ ":*" ]
+  testonly = true
+
+  public_configs = [ ":rs_client_test_common_public_config" ]
+
+  public_deps = [
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//foundation/graphic/graphic_2d:libsurface",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//third_party/googletest:gtest_main",
+    "//utils/native/base:utils",
+  ]
+  subsystem_name = "graphic"
+  part_name = "graphic_graphic_2d"
+}
+## Build rs_client_test_common.a }}}

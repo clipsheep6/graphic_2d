@@ -25,10 +25,9 @@
 
 namespace OHOS {
 namespace Rosen {
-std::shared_ptr<Filter> FilterFactory::GetFilter(cJSON* type)
+std::shared_ptr<Filter> FilterFactory::GetFilter(std::string filterType)
 {
-    std::string filterType = type->valuestring;
-    if (!algoFilterSet_.count(filterType)) {
+    if (!filterSet_.count(filterType)) {
         LOGE("The filter type of %{public}s is not registered.", filterType.c_str());
         return nullptr;
     }

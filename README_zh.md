@@ -30,7 +30,7 @@ OpenHarmony 图形栈的分层说明如下：
 
 ## 目录
 ```
-foundation/graphic/graphic/
+foundation/graphic/graphic_2d/
 ├── figures                 # Markdown引用的图片目录
 ├── frameworks              # 框架代码目录
 │   ├── animation_server    # AnimationServer代码
@@ -56,7 +56,7 @@ foundation/graphic/graphic/
 
 
 ## 相关仓
-- **graphic_standard**
+- [**graphic_standard**](https://gitee.com/openharmony/graphic_standard)
 - [ace_ace_engine](https://gitee.com/openharmony/ace_ace_engine)
 - [aafwk_standard](https://gitee.com/openharmony/aafwk_standard)
 - [multimedia_media_standard](https://gitee.com/openharmony/multimedia_media_standard)

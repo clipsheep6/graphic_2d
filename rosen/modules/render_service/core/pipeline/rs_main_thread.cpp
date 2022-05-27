@@ -18,7 +18,9 @@
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_render_service_util.h"
 #include "pipeline/rs_render_service_visitor.h"
+#include "pipeline/rs_uni_render_visitor.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "rs_trace.h"
 #include "screen_manager/rs_screen_manager.h"
@@ -53,8 +55,8 @@ void RSMainThread::Init()
         RS_LOGI("RsDebug mainLoop end");
     };
 
-    threadLooper_ = RSThreadLooper::Create();
-    threadHandler_ = RSThreadHandler::Create();
+    runner_ = AppExecFwk::EventRunner::Create(false);
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
 
     sptr<VSyncConnection> conn = new VSyncConnection(rsVSyncDistributor_, "rs");
     rsVSyncDistributor_->AddConnection(conn);
@@ -71,8 +73,8 @@ void RSMainThread::Init()
 
 void RSMainThread::Start()
 {
-    while (true) {
-        threadLooper_->ProcessAllMessages(-1);
+    if (runner_) {
+        runner_->Run();
     }
 }
 
@@ -99,7 +101,14 @@ void RSMainThread::Render()
         RS_LOGE("RSMainThread::Draw GetGlobalRootRenderNode fail");
         return;
     }
-    std::shared_ptr<RSNodeVisitor> visitor = std::make_shared<RSRenderServiceVisitor>();
+    static bool isUniRender = RSSystemProperties::GetUniRenderEnabledType() != UniRenderEnabledType::UNI_RENDER_DISABLED;
+    std::shared_ptr<RSNodeVisitor> visitor;
+    if (isUniRender) {
+        RS_LOGI("RSMainThread::Render isUni");
+        visitor = std::make_shared<RSUniRenderVisitor>();
+    } else {
+        visitor = std::make_shared<RSRenderServiceVisitor>();
+    }
     rootNode->Prepare(visitor);
     rootNode->Process(visitor);
 }
@@ -120,11 +129,8 @@ void RSMainThread::OnVsync(uint64_t timestamp, void *data)
 {
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::OnVsync");
     timestamp_ = timestamp;
-    if (threadHandler_) {
-        if (!taskHandle_) {
-            taskHandle_ = RSThreadHandler::StaticCreateTask(mainLoop_);
-        }
-        threadHandler_->PostTaskDelay(taskHandle_, 0);
+    if (handler_) {
+        handler_->PostTask(mainLoop_, AppExecFwk::EventQueue::Priority::IDLE);
 
         auto screenManager_ = CreateOrGetScreenManager();
         if (screenManager_ != nullptr) {
@@ -172,9 +178,8 @@ void RSMainThread::RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsT
 
 void RSMainThread::PostTask(RSTaskMessage::RSTask task)
 {
-    if (threadHandler_) {
-        auto taskHandle = threadHandler_->CreateTask(task);
-        threadHandler_->PostTask(taskHandle, 0);
+    if (handler_) {
+        handler_->PostTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
 }
 

@@ -17,17 +17,24 @@
 #include "ivsync_connection.h"
 
 #include "command/rs_command_factory.h"
+#include "platform/common/rs_log.h"
+#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
 int RSRenderServiceConnectionStub::OnRemoteRequest(
     uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
+    RS_ASYNC_TRACE_END("RSProxySendRequest", data.GetDataSize());
     int ret = ERR_NONE;
     switch (code) {
         case COMMIT_TRANSACTION: {
             auto token = data.ReadInterfaceToken();
+
+            RS_TRACE_BEGIN("UnMarsh RSTransactionData: data size:" + std::to_string(data.GetDataSize()));
             auto transactionData = data.ReadParcelable<RSTransactionData>();
+            RS_TRACE_END();
+
             std::unique_ptr<RSTransactionData> transData(transactionData);
             CommitTransaction(transData);
             break;
@@ -49,6 +56,19 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             ScreenId id = GetDefaultScreenId();
             reply.WriteUint64(id);
+            break;
+        }
+        case GET_ALL_SCREEN_IDS: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            std::vector<ScreenId> ids = GetAllScreenIds();
+            reply.WriteUint32(ids.size());
+            for (int32_t i = 0; i < ids.size(); i++) {
+                reply.WriteUint64(ids[i]);
+            }
             break;
         }
         case CREATE_VIRTUAL_SCREEN: {
@@ -135,6 +155,19 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             SetScreenActiveMode(id, modeId);
             break;
         }
+        case SET_VIRTUAL_SCREEN_RESOLUTION: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            uint32_t width = data.ReadUint32();
+            uint32_t height = data.ReadUint32();
+            int32_t status = SetVirtualScreenResolution(id, width, height);
+            reply.WriteInt32(status);
+            break;
+        }
         case SET_SCREEN_POWER_STATUS: {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {
@@ -168,6 +201,17 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             sptr<IApplicationRenderThread> app = iface_cast<IApplicationRenderThread>(remoteObject);
             RegisterApplicationRenderThread(pid, app);
+            break;
+        }
+        case GET_VIRTUAL_SCREEN_RESOLUTION: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            RSVirtualScreenResolution virtualScreenResolution = GetVirtualScreenResolution(id);
+            reply.WriteParcelable(&virtualScreenResolution);
             break;
         }
         case GET_SCREEN_ACTIVE_MODE: {

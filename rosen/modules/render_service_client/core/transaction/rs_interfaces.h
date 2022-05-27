@@ -32,6 +32,8 @@ public:
 
     ScreenId GetDefaultScreenId();
 
+    std::vector<ScreenId> GetAllScreenIds();
+
     // mirrorId: decide which screen id to mirror, INVALID_SCREEN_ID means do not mirror any screen.
     ScreenId CreateVirtualScreen(
         const std::string &name,
@@ -54,6 +56,10 @@ public:
         std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX = 1.0f, float scaleY = 1.0f);
 
     void SetScreenActiveMode(ScreenId id, uint32_t modeId);
+
+    int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height);
+
+    RSVirtualScreenResolution GetVirtualScreenResolution(ScreenId id);
 
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status);
 

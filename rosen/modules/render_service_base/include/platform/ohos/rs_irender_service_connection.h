@@ -30,6 +30,7 @@
 #include "screen_manager/rs_screen_hdr_capability.h"
 #include "screen_manager/rs_screen_mode_info.h"
 #include "screen_manager/screen_types.h"
+#include "screen_manager/rs_virtual_screen_resolution.h"
 #include "transaction/rs_transaction_data.h"
 #include "ivsync_connection.h"
 
@@ -48,7 +49,9 @@ public:
         COMMIT_TRANSACTION,
         CREATE_NODE_AND_SURFACE,
         GET_DEFAULT_SCREEN_ID,
+        GET_ALL_SCREEN_IDS,
         CREATE_VIRTUAL_SCREEN,
+        SET_VIRTUAL_SCREEN_RESOLUTION,
         SET_VIRTUAL_SCREEN_SURFACE,
         REMOVE_VIRTUAL_SCREEN,
         SET_SCREEN_CHANGE_CALLBACK,
@@ -62,6 +65,7 @@ public:
         GET_SCREEN_POWER_STATUS,
         GET_SCREEN_BACK_LIGHT,
         GET_SCREEN_DATA,
+        GET_VIRTUAL_SCREEN_RESOLUTION,
         EXECUTE_SYNCHRONOUS_TASK,
         REGISTER_APPLICATION_RENDER_THREAD,
         SET_BUFFER_AVAILABLE_LISTENER,
@@ -87,6 +91,8 @@ public:
 
     virtual ScreenId GetDefaultScreenId() = 0;
 
+    virtual std::vector<ScreenId> GetAllScreenIds() = 0;
+
     // mirrorId: decide which screen id to mirror, INVALID_SCREEN_ID means do not mirror any screen.
     virtual ScreenId CreateVirtualScreen(
         const std::string &name,
@@ -104,12 +110,16 @@ public:
 
     virtual void SetScreenActiveMode(ScreenId id, uint32_t modeId) = 0;
 
+    virtual int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height) = 0;
+
     virtual void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) = 0;
 
     virtual void TakeSurfaceCapture(
         NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY) = 0;
 
     virtual void RegisterApplicationRenderThread(uint32_t pid, sptr<IApplicationRenderThread> app) = 0;
+
+    virtual RSVirtualScreenResolution GetVirtualScreenResolution(ScreenId id) = 0;
 
     virtual RSScreenModeInfo GetScreenActiveMode(ScreenId id) = 0;
 

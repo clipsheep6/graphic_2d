@@ -12,19 +12,19 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/graphic/graphic/graphic_config.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
 import(
-    "//foundation/graphic/graphic/rosen/modules/render_service_base/config.gni")
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
 
 config("export_config") {
   cflags_cc = [ "-std=c++17" ]
   include_dirs = [
     "include",
-    "//foundation/graphic/graphic/rosen/include",
+    "//foundation/graphic/graphic_2d/rosen/include",
     "//drivers/peripheral/display/interfaces/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
-    "//foundation/graphic/graphic/interfaces/inner_api/surface",
-    "//foundation/graphic/graphic/interfaces/inner_api/composer",
+    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
+    "//foundation/graphic/graphic_2d/interfaces/inner_api/composer",
   ]
 
   defines = rs_common_define
@@ -95,6 +95,7 @@ ohos_shared_library("librender_service_base") {
     "src/pipeline/rs_render_node.cpp",
     "src/pipeline/rs_render_node_map.cpp",
     "src/pipeline/rs_root_render_node.cpp",
+    "src/pipeline/rs_surface_handler.cpp",
     "src/pipeline/rs_surface_render_node.cpp",
 
     #property
@@ -123,7 +124,15 @@ ohos_shared_library("librender_service_base") {
     "src/screen_manager/rs_screen_hdr_capability.cpp",
     "src/screen_manager/rs_screen_mode_info.cpp",
     "src/screen_manager/rs_screen_props.cpp",
+    "src/screen_manager/rs_virtual_screen_resolution.cpp",
   ]
+
+  include_dirs = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
+    "//third_party/flutter/skia/src",
+  ]
+
+  deps = [ "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/platform:platform" ]
 
   public_deps = [
     "src/platform:platform",

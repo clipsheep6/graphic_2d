@@ -41,21 +41,6 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config
 
 RSSurfaceRenderNode::~RSSurfaceRenderNode() {}
 
-void RSSurfaceRenderNode::SetConsumer(const sptr<Surface>& consumer)
-{
-    consumer_ = consumer;
-}
-
-void RSSurfaceRenderNode::SetBuffer(const sptr<SurfaceBuffer>& buffer)
-{
-    if (buffer_ != nullptr) {
-        preBuffer_ = buffer_;
-        buffer_ = buffer;
-    } else {
-        buffer_ = buffer;
-    }
-}
-
 void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     canvas.SaveAlpha();
@@ -100,27 +85,6 @@ RectI RSSurfaceRenderNode::CalculateClipRegion(RSPaintFilterCanvas& canvas)
 void RSSurfaceRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 {
     canvas.RestoreAlpha();
-}
-
-void RSSurfaceRenderNode::SetFence(sptr<SyncFence> fence)
-{
-    preFence_ = fence_;
-    fence_ = std::move(fence);
-}
-
-void RSSurfaceRenderNode::SetDamageRegion(const Rect& damage)
-{
-    damageRect_ = damage;
-}
-
-void RSSurfaceRenderNode::IncreaseAvailableBuffer()
-{
-    bufferAvailableCount_++;
-}
-
-int32_t RSSurfaceRenderNode::ReduceAvailableBuffer()
-{
-    return --bufferAvailableCount_;
 }
 
 void RSSurfaceRenderNode::Prepare(const std::shared_ptr<RSNodeVisitor>& visitor)
@@ -201,16 +165,6 @@ bool RSSurfaceRenderNode::GetSecurityLayer() const
     return isSecurityLayer_;
 }
 
-void RSSurfaceRenderNode::SetGlobalZOrder(float globalZOrder)
-{
-    globalZOrder_ = globalZOrder;
-}
-
-float RSSurfaceRenderNode::GetGlobalZOrder() const
-{
-    return globalZOrder_;
-}
-
 void RSSurfaceRenderNode::SetParentId(NodeId parentId, bool sendMsg)
 {
     parentId_ = parentId;
@@ -270,13 +224,12 @@ void RSSurfaceRenderNode::SetBlendType(BlendType blendType)
 void RSSurfaceRenderNode::RegisterBufferAvailableListener(
     sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread)
 {
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (isFromRenderThread) {
-            callbackFromRT_ = callback;
-        } else {
-            callbackFromUI_ = callback;
-        }
+    if (isFromRenderThread) {
+        std::lock_guard<std::mutex> lock(mutexRT_);
+        callbackFromRT_ = callback;
+    } else {
+        std::lock_guard<std::mutex> lock(mutexUI_);
+        callbackFromUI_ = callback;
     }
 }
 
@@ -292,41 +245,63 @@ void RSSurfaceRenderNode::ConnectToNodeInRenderService()
                 if (node == nullptr) {
                     return;
                 }
-                node->NotifyBufferAvailable();
+                node->NotifyRTBufferAvailable();
             }, true);
     }
 }
 
-void RSSurfaceRenderNode::NotifyBufferAvailable()
+void RSSurfaceRenderNode::NotifyRTBufferAvailable()
 {
-    ROSEN_LOGI("RSSurfaceRenderNode::NotifyBufferAvailable nodeId = %llu", GetId());
-
-    // In RS, "isBufferAvailable_ = true" means buffer is ready and need to trigger ipc callback.
-    // In RT, "isBufferAvailable_ = true" means RT know that RS have had available buffer
+    // In RS, "isNotifyRTBufferAvailable_ = true" means buffer is ready and need to trigger ipc callback.
+    // In RT, "isNotifyRTBufferAvailable_ = true" means RT know that RS have had available buffer
     // and ready to trigger "callbackForRenderThreadRefresh_" to "clip" on parent surface.
-    if (isBufferAvailable_) {
+    if (isNotifyRTBufferAvailable_) {
         return;
     }
-    isBufferAvailable_ = true;
+    isNotifyRTBufferAvailable_ = true;
 
     if (callbackForRenderThreadRefresh_) {
+        ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %llu RenderThread", GetId());
         callbackForRenderThreadRefresh_();
     }
 
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> lock(mutexRT_);
         if (callbackFromRT_) {
+            ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %llu RenderService", GetId());
             callbackFromRT_->OnBufferAvailable();
         }
-        if (callbackFromUI_) {
-            callbackFromUI_->OnBufferAvailable();
+        if (!callbackForRenderThreadRefresh_ && !callbackFromRT_) {
+            isNotifyRTBufferAvailable_ = false;
         }
     }
 }
 
-bool RSSurfaceRenderNode::IsBufferAvailable() const
+void RSSurfaceRenderNode::NotifyUIBufferAvailable()
 {
-    return isBufferAvailable_;
+    if (isNotifyUIBufferAvailable_) {
+        return;
+    }
+    isNotifyUIBufferAvailable_ = true;
+    {
+        std::lock_guard<std::mutex> lock(mutexUI_);
+        if (callbackFromUI_) {
+            ROSEN_LOGI("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %llu", GetId());
+            callbackFromUI_->OnBufferAvailable();
+        } else {
+            isNotifyUIBufferAvailable_ = false;
+        }
+    }
+}
+
+bool RSSurfaceRenderNode::IsNotifyRTBufferAvailable() const
+{
+    return isNotifyRTBufferAvailable_;
+}
+
+bool RSSurfaceRenderNode::IsNotifyUIBufferAvailable() const
+{
+    return isNotifyUIBufferAvailable_;
 }
 
 void RSSurfaceRenderNode::SetCallbackForRenderThreadRefresh(std::function<void(void)> callback)
@@ -337,6 +312,38 @@ void RSSurfaceRenderNode::SetCallbackForRenderThreadRefresh(std::function<void(v
 bool RSSurfaceRenderNode::NeedSetCallbackForRenderThreadRefresh()
 {
     return (callbackForRenderThreadRefresh_ == nullptr);
+}
+
+void RSSurfaceRenderNode::ConsumeNodeNotOnTree()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (GetAvailableBufferCount() <= 0) {
+        return;
+    }
+    const auto& surfaceConsumer = GetConsumer();
+    if (surfaceConsumer == nullptr) {
+        RS_LOGE("RSSurfaceRenderNode::ConsumeNodesNotOnTree (node: %llu): surfaceConsumer is null!", GetId());
+        return;
+    }
+    OHOS::sptr<SurfaceBuffer> cbuffer;
+    Rect damage;
+    sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
+    int64_t timestamp = 0;
+    auto ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
+    if (cbuffer == nullptr || ret != SURFACE_ERROR_OK) {
+        RS_LOGW("RSSurfaceRenderNode::ConsumeNodesNotOnTree: AcquireBuffer failed, (node: %llu):!", GetId());
+        return;
+    }
+    ret = surfaceConsumer->ReleaseBuffer(cbuffer, SyncFence::INVALID_FENCE);
+    if (ret != OHOS::SURFACE_ERROR_OK) {
+        RS_LOGW("RSSurfaceRenderNode::ConsumeNodesNotOnTree(node: %llu): ReleaseBuffer failed(ret: %d)",
+            GetId(), ret);
+    }
+    SetBuffer(cbuffer);
+    SetFence(acquireFence);
+    RS_LOGI("RSSurfaceRenderNode::ConsumeNodesNotOnTree(node: %llu): consume buffer successfully (ret: %d)",
+            GetId(), ret);
+    ReduceAvailableBuffer();
 }
 
 } // namespace Rosen

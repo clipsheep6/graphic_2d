@@ -27,8 +27,8 @@ ohos_shared_library("window") {
     "${aafwk_kits_path}/ability/native:abilitykit_native",
     "${aafwk_kits_path}/appkit:appkit_native",
     "../common:graphic_napi_common",
-    "//foundation/graphic/graphic:libwmclient",
-    "//foundation/graphic/graphic:libwmservice",
+    "//foundation/graphic/graphic_2d:libwmclient",
+    "//foundation/graphic/graphic_2d:libwmservice",
   ]
 
   relative_install_dir = "module"

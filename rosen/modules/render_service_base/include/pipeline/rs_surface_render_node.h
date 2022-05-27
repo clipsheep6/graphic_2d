@@ -25,13 +25,14 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties_painter.h"
 #include "include/core/SkRect.h"
+#include "pipeline/rs_surface_handler.h"
 #include "refbase.h"
 #include "sync_fence.h"
 
 namespace OHOS {
 namespace Rosen {
 class RSCommand;
-class RSSurfaceRenderNode : public RSRenderNode {
+class RSSurfaceRenderNode : public RSRenderNode, public RSSurfaceHandler {
 public:
     using WeakPtr = std::weak_ptr<RSSurfaceRenderNode>;
     using SharedPtr = std::shared_ptr<RSSurfaceRenderNode>;
@@ -41,49 +42,9 @@ public:
     explicit RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, std::weak_ptr<RSContext> context = {});
     virtual ~RSSurfaceRenderNode();
 
-    void SetConsumer(const sptr<Surface>& consumer);
-    void SetBuffer(const sptr<SurfaceBuffer>& buffer);
-    void SetFence(sptr<SyncFence> fence);
-    void SetDamageRegion(const Rect& damage);
-    void IncreaseAvailableBuffer();
-    int32_t ReduceAvailableBuffer();
     void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
     void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
-
-    sptr<SurfaceBuffer>& GetBuffer()
-    {
-        return buffer_;
-    }
-
-    sptr<SyncFence> GetFence() const
-    {
-        return fence_;
-    }
-
-    sptr<SurfaceBuffer>& GetPreBuffer()
-    {
-        return preBuffer_;
-    }
-
-    sptr<SyncFence> GetPreFence() const
-    {
-        return preFence_;
-    }
-
-    const Rect& GetDamageRegion() const
-    {
-        return damageRect_;
-    }
-
-    const sptr<Surface>& GetConsumer() const
-    {
-        return consumer_;
-    }
-
-    int32_t GetAvailableBufferCount() const
-    {
-        return bufferAvailableCount_;
-    }
+    void ConsumeNodeNotOnTree();
 
     std::string GetName() const
     {
@@ -172,9 +133,10 @@ public:
         return globalAlpha_;
     }
 
-    // Only use in Render Service
-    void SetGlobalZOrder(float globalZOrder);
-    float GetGlobalZOrder() const;
+    NodeId GetId() const override
+    {
+        return RSBaseRenderNode::GetId();
+    }
 
     void SetParentId(NodeId parentId, bool sendMsg = true);
     NodeId GetParentId() const;
@@ -194,8 +156,11 @@ public:
     // Only SurfaceNode in RT calls "ConnectToNodeInRenderService" to send callback method to RS
     void ConnectToNodeInRenderService();
 
-    void NotifyBufferAvailable();
-    bool IsBufferAvailable() const;
+    void NotifyRTBufferAvailable();
+    bool IsNotifyRTBufferAvailable() const;
+
+    void NotifyUIBufferAvailable();
+    bool IsNotifyUIBufferAvailable() const;
 
     // UI Thread would not be notified when SurfaceNode created by Video/Camera in RenderService has available buffer.
     // And RenderThread does not call mainFunc_ if nothing in UI thread is changed
@@ -209,20 +174,14 @@ public:
 private:
     RectI CalculateClipRegion(RSPaintFilterCanvas& canvas);
     friend class RSRenderTransition;
-    sptr<Surface> consumer_;
 
+    std::mutex mutexRT_;
+    std::mutex mutexUI_;
     std::mutex mutex_;
-    std::atomic<int> bufferAvailableCount_ = 0;
     SkMatrix matrix_;
     float alpha_ = 1.0f;
-    float globalZOrder_ = 0.0f;
     bool isSecurityLayer_ = false;
     NodeId parentId_ = 0;
-    sptr<SurfaceBuffer> buffer_;
-    sptr<SurfaceBuffer> preBuffer_;
-    sptr<SyncFence> fence_;
-    sptr<SyncFence> preFence_;
-    Rect damageRect_ = {0, 0, 0, 0};
     RectI dstRect_;
     int32_t offsetX_ = 0;
     int32_t offsetY_ = 0;
@@ -231,7 +190,8 @@ private:
     std::string name_;
     bool isProxy_ = false;
     BlendType blendType_ = BlendType::BLEND_SRCOVER;
-    std::atomic<bool> isBufferAvailable_ = false;
+    std::atomic<bool> isNotifyRTBufferAvailable_ = false;
+    std::atomic<bool> isNotifyUIBufferAvailable_ = false;
     sptr<RSIBufferAvailableCallback> callbackFromRT_;
     sptr<RSIBufferAvailableCallback> callbackFromUI_;
     std::function<void(void)> callbackForRenderThreadRefresh_ = nullptr;

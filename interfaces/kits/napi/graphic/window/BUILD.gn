@@ -12,22 +12,20 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-
-aakits_path = "//foundation/aafwk/standard/frameworks/kits"
-aainnerkits_path = "//foundation/aafwk/standard/interfaces/innerkits"
+import("//foundation/graphic/graphic/graphic_config.gni")
 
 ## Build window.so {{{
 ohos_shared_library("window") {
   sources = [ "native_window_module.cpp" ]
 
   configs = [
-    "${aainnerkits_path}/ability_manager:ability_manager_public_config",
-    "${aaservices_path}/abilitymgr:abilityms_config",
+    "${aafwk_inner_api_path}/ability_manager:ability_manager_public_config",
+    "${aafwk_services_path}/abilitymgr:abilityms_config",
   ]
 
   deps = [
-    "${aakits_path}/ability/native:abilitykit_native",
-    "${aakits_path}/appkit:appkit_native",
+    "${aafwk_kits_path}/ability/native:abilitykit_native",
+    "${aafwk_kits_path}/appkit:appkit_native",
     "../common:graphic_napi_common",
     "//foundation/graphic/graphic_2d:libwmclient",
     "//foundation/graphic/graphic_2d:libwmservice",

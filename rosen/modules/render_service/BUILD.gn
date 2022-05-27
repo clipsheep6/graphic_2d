@@ -82,7 +82,7 @@ ohos_shared_library("librender_service") {
     "startup_l2:syspara",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -104,7 +104,7 @@ ohos_executable("render_service") {
 
   external_deps = [ "ipc:ipc_core" ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -127,7 +127,7 @@ ohos_executable("render_service_dump") {
     "samgr_standard:samgr_proxy",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }
 

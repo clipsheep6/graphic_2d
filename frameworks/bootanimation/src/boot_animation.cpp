@@ -136,6 +136,11 @@ void BootAnimation::Init(int32_t width, int32_t height, const std::shared_ptr<Ap
     } else {
         LOGI("SetVSyncRate success: %{public}d %{public}d", freq_, changefreq);
     }
+    if (!setBootEvent_) {
+        LOGI("set bootevent parameter");
+        system::SetParameter("bootevent.bootanimation.started", "true");
+        setBootEvent_ = true;
+    }
 }
 
 void BootAnimation::InitBootWindow()
@@ -207,12 +212,7 @@ void BootAnimation::OnVsync()
 void BootAnimation::CheckExitAnimation()
 {
     LOGI("CheckExitAnimation enter");
-    if (!setBootEvent_) {
-        LOGI("CheckExitAnimation set bootevent parameter");
-        system::SetParameter("bootevent.bootanimation.started", "true");
-        setBootEvent_ = true;
-    }
-    std::string windowInit = system::GetParameter("persist.window.boot.inited", "0");
+    std::string windowInit = system::GetParameter("bootevent.window.ready", "0");
     if (windowInit == "1") {
         PostTask(std::bind(&AppExecFwk::EventRunner::Stop, runner_));
         LOGI("CheckExitAnimation read windowInit is 1");

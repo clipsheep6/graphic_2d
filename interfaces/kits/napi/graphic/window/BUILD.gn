@@ -34,7 +34,7 @@ ohos_shared_library("window") {
   ]
 
   relative_install_dir = "module"
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }
 ## Build window.so }}}

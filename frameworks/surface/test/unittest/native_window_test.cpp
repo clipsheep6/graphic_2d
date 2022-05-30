@@ -87,7 +87,7 @@ void NativeWindowTest::TearDownTestCase()
 * CaseDescription: 1. call CreateNativeWindowFromSurface by abnormal input
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, CreateNativeWindow001, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, CreateNativeWindow001, Function | MediumTest | Level0)
 {
     ASSERT_EQ(CreateNativeWindowFromSurface(nullptr), nullptr);
 }
@@ -100,7 +100,7 @@ HWTEST_F(NativeWindowTest, CreateNativeWindow001, Function | MediumTest | Level2
 * CaseDescription: 1. call CreateNativeWindowFromSurface
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, CreateNativeWindow002, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, CreateNativeWindow002, Function | MediumTest | Level0)
 {
     nativeWindow = CreateNativeWindowFromSurface(&pSurface);
     ASSERT_NE(nativeWindow, nullptr);
@@ -114,7 +114,7 @@ HWTEST_F(NativeWindowTest, CreateNativeWindow002, Function | MediumTest | Level2
 * CaseDescription: 1. call NativeWindowHandleOpt by abnormal input
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, HandleOpt001, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, HandleOpt001, Function | MediumTest | Level0)
 {
     int code = SET_USAGE;
     int32_t usage = HBM_USE_CPU_READ;
@@ -129,7 +129,7 @@ HWTEST_F(NativeWindowTest, HandleOpt001, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowHandleOpt by different param
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, HandleOpt002, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, HandleOpt002, Function | MediumTest | Level0)
 {
     int code = SET_USAGE;
     int32_t usageSet = HBM_USE_CPU_READ;
@@ -149,7 +149,7 @@ HWTEST_F(NativeWindowTest, HandleOpt002, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowHandleOpt by different param
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, HandleOpt003, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, HandleOpt003, Function | MediumTest | Level0)
 {
     int code = SET_BUFFER_GEOMETRY;
     int32_t heightSet = 0x100;
@@ -172,7 +172,7 @@ HWTEST_F(NativeWindowTest, HandleOpt003, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowHandleOpt by different param
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, HandleOpt004, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, HandleOpt004, Function | MediumTest | Level0)
 {
     int code = SET_FORMAT;
     int32_t formatSet = PIXEL_FMT_RGBA_8888;
@@ -192,7 +192,7 @@ HWTEST_F(NativeWindowTest, HandleOpt004, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowHandleOpt by different param
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, HandleOpt005, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, HandleOpt005, Function | MediumTest | Level0)
 {
     int code = SET_STRIDE;
     int32_t strideSet = 0x8;
@@ -212,7 +212,7 @@ HWTEST_F(NativeWindowTest, HandleOpt005, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowHandleOpt by different param
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, HandleOpt006, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, HandleOpt006, Function | MediumTest | Level0)
 {
     int code = SET_COLOR_GAMUT;
     int32_t colorGamutSet = static_cast<int32_t>(ColorGamut::COLOR_GAMUT_DCI_P3);
@@ -232,7 +232,7 @@ HWTEST_F(NativeWindowTest, HandleOpt006, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowHandleOpt by different param
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, HandleOpt007, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, HandleOpt007, Function | MediumTest | Level0)
 {
     int code = SET_TIMEOUT;
     int32_t timeoutSet = 10;  // 10: for test
@@ -252,7 +252,7 @@ HWTEST_F(NativeWindowTest, HandleOpt007, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowHandleOpt by different param
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, HandleOpt008, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, HandleOpt008, Function | MediumTest | Level0)
 {
     int code = SET_SCALING_MODE;
     ScalingMode scalingModeSet = ScalingMode::SCALING_MODE_SCALE_CROP;
@@ -272,7 +272,7 @@ HWTEST_F(NativeWindowTest, HandleOpt008, Function | MediumTest | Level2)
 * CaseDescription: 1. call CreateNativeWindowBufferFromSurfaceBuffer by abnormal input
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, CreateNativeWindowBuffer001, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, CreateNativeWindowBuffer001, Function | MediumTest | Level0)
 {
     ASSERT_EQ(CreateNativeWindowBufferFromSurfaceBuffer(nullptr), nullptr);
 }
@@ -285,7 +285,7 @@ HWTEST_F(NativeWindowTest, CreateNativeWindowBuffer001, Function | MediumTest | 
 * CaseDescription: 1. call CreateNativeWindowBufferFromSurfaceBuffer
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, CreateNativeWindowBuffer002, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, CreateNativeWindowBuffer002, Function | MediumTest | Level0)
 {
     nativeWindowBuffer = CreateNativeWindowBufferFromSurfaceBuffer(&sBuffer);
     ASSERT_NE(nativeWindowBuffer, nullptr);
@@ -299,7 +299,7 @@ HWTEST_F(NativeWindowTest, CreateNativeWindowBuffer002, Function | MediumTest | 
 * CaseDescription: 1. call NativeWindowRequestBuffer by abnormal input
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, RequestBuffer001, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, RequestBuffer001, Function | MediumTest | Level0)
 {
     ASSERT_EQ(NativeWindowRequestBuffer(nullptr, &nativeWindowBuffer, nullptr), OHOS::GSERROR_INVALID_ARGUMENTS);
 }
@@ -312,7 +312,7 @@ HWTEST_F(NativeWindowTest, RequestBuffer001, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowRequestBuffer by abnormal input
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, RequestBuffer002, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, RequestBuffer002, Function | MediumTest | Level0)
 {
     ASSERT_EQ(NativeWindowRequestBuffer(nativeWindow, nullptr, nullptr), OHOS::GSERROR_INVALID_ARGUMENTS);
 }
@@ -325,7 +325,7 @@ HWTEST_F(NativeWindowTest, RequestBuffer002, Function | MediumTest | Level2)
 * CaseDescription: 1. call GetBufferHandleFromNative by abnormal input
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, GetBufferHandle001, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, GetBufferHandle001, Function | MediumTest | Level0)
 {
     ASSERT_EQ(GetBufferHandleFromNative(nullptr), nullptr);
 }
@@ -338,7 +338,7 @@ HWTEST_F(NativeWindowTest, GetBufferHandle001, Function | MediumTest | Level2)
 * CaseDescription: 1. call GetBufferHandleFromNative
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, GetBufferHandle002, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, GetBufferHandle002, Function | MediumTest | Level0)
 {
     struct NativeWindowBuffer *buffer = new NativeWindowBuffer();
     buffer->sfbuffer = sBuffer;
@@ -354,7 +354,7 @@ HWTEST_F(NativeWindowTest, GetBufferHandle002, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowFlushBuffer by abnormal input
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, FlushBuffer001, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, FlushBuffer001, Function | MediumTest | Level0)
 {
     int fenceFd = -1;
     struct Region *region = new Region();
@@ -377,7 +377,7 @@ HWTEST_F(NativeWindowTest, FlushBuffer001, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowFlushBuffer by abnormal input
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, FlushBuffer002, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, FlushBuffer002, Function | MediumTest | Level0)
 {
     int fenceFd = -1;
     struct Region *region = new Region();
@@ -400,7 +400,7 @@ HWTEST_F(NativeWindowTest, FlushBuffer002, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowFlushBuffer
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, FlushBuffer003, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, FlushBuffer003, Function | MediumTest | Level0)
 {
     int fenceFd = -1;
     struct Region *region = new Region();
@@ -423,7 +423,7 @@ HWTEST_F(NativeWindowTest, FlushBuffer003, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowCancelBuffer by abnormal input
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, CancelBuffer001, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, CancelBuffer001, Function | MediumTest | Level0)
 {
     ASSERT_EQ(NativeWindowCancelBuffer(nullptr, nullptr), OHOS::GSERROR_INVALID_ARGUMENTS);
 }
@@ -436,7 +436,7 @@ HWTEST_F(NativeWindowTest, CancelBuffer001, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowCancelBuffer by abnormal input
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, CancelBuffer002, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, CancelBuffer002, Function | MediumTest | Level0)
 {
     ASSERT_EQ(NativeWindowCancelBuffer(nativeWindow, nullptr), OHOS::GSERROR_INVALID_ARGUMENTS);
 }
@@ -449,7 +449,7 @@ HWTEST_F(NativeWindowTest, CancelBuffer002, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeWindowCancelBuffer
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, CancelBuffer003, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, CancelBuffer003, Function | MediumTest | Level0)
 {
     ASSERT_EQ(NativeWindowCancelBuffer(nativeWindow, nativeWindowBuffer), OHOS::GSERROR_OK);
 }
@@ -462,7 +462,7 @@ HWTEST_F(NativeWindowTest, CancelBuffer003, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeObjectReference
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, Reference001, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, Reference001, Function | MediumTest | Level0)
 {
     struct NativeWindowBuffer *buffer = new NativeWindowBuffer();
     buffer->sfbuffer = sBuffer;
@@ -478,7 +478,7 @@ HWTEST_F(NativeWindowTest, Reference001, Function | MediumTest | Level2)
 * CaseDescription: 1. call NativeObjectUnreference
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, Unreference001, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, Unreference001, Function | MediumTest | Level0)
 {
     struct NativeWindowBuffer *buffer = new NativeWindowBuffer();
     buffer->sfbuffer = sBuffer;
@@ -494,7 +494,7 @@ HWTEST_F(NativeWindowTest, Unreference001, Function | MediumTest | Level2)
 * CaseDescription: 1. call DestoryNativeWindow by abnormal input
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, DestoryNativeWindow001, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, DestoryNativeWindow001, Function | MediumTest | Level0)
 {
     DestoryNativeWindow(nullptr);
 }
@@ -507,7 +507,7 @@ HWTEST_F(NativeWindowTest, DestoryNativeWindow001, Function | MediumTest | Level
 * CaseDescription: 1. call DestoryNativeWindow
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, DestoryNativeWindow002, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, DestoryNativeWindow002, Function | MediumTest | Level0)
 {
     DestoryNativeWindow(nativeWindow);
 }
@@ -520,7 +520,7 @@ HWTEST_F(NativeWindowTest, DestoryNativeWindow002, Function | MediumTest | Level
 * CaseDescription: 1. call DestoryNativeWindowBuffer by abnormal and normal input
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, DestoryNativeWindowBuffer001, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, DestoryNativeWindowBuffer001, Function | MediumTest | Level0)
 {
     DestoryNativeWindowBuffer(nullptr);
     DestoryNativeWindowBuffer(nativeWindowBuffer);
@@ -534,7 +534,7 @@ HWTEST_F(NativeWindowTest, DestoryNativeWindowBuffer001, Function | MediumTest |
 * CaseDescription: 1. call DestoryNativeWindowBuffer again
 *                  2. check ret
  */
-HWTEST_F(NativeWindowTest, DestoryNativeWindowBuffer002, Function | MediumTest | Level2)
+HWTEST_F(NativeWindowTest, DestoryNativeWindowBuffer002, Function | MediumTest | Level0)
 {
     DestoryNativeWindowBuffer(nativeWindowBuffer);
 }

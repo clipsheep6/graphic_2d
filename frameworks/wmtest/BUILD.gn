@@ -29,7 +29,7 @@ config("wmtest_config") {
 
 ohos_systemtest("wmtest") {
   test_type = "nativetest"
-  module_out_path = "graphic_standard/wmtest"
+  module_out_path = "graphic_graphic_2d/wmtest"
 
   sources = [
     "frameworks/inative_test.cpp",
@@ -109,7 +109,7 @@ ohos_systemtest("wmtest") {
     "//third_party/zlib:libz",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }
 ## Build wmtest }}}

@@ -12,11 +12,11 @@
 # limitations under the License.
 
 declare_args() {
-  graphic_standard_feature_ace_enable_gpu = true
-  graphic_standard_feature_color_gamut_enable = false
+  graphic_graphic_2d_feature_ace_enable_gpu = true
+  graphic_graphic_2d_feature_color_gamut_enable = false
 }
 
-if (graphic_standard_feature_ace_enable_gpu) {
+if (graphic_graphic_2d_feature_ace_enable_gpu) {
   gpu_defines = [
     "ACE_ENABLE_GL",
     "RS_ENABLE_GL",
@@ -37,7 +37,7 @@ if (graphic_standard_feature_ace_enable_gpu) {
   libgl = []
 }
 
-if (graphic_standard_feature_color_gamut_enable) {
+if (graphic_graphic_2d_feature_color_gamut_enable) {
   color_gamut_enable = true
 } else {
   color_gamut_enable = false

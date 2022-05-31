@@ -73,7 +73,7 @@ ohos_shared_library("wmserver") {
 
   public_deps = [ ":wms_protocol" ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -100,7 +100,7 @@ ohos_executable("screen-info-test") {
     "//third_party/wayland_standard:libwayland_client",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -129,6 +129,6 @@ ohos_static_library("layout_header") {
   public_configs = [ ":layout_header_public_config" ]
 
   subsystem_name = "graphic"
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
 }
 ## Build layout_header.a }}}

@@ -558,10 +558,6 @@ void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sp
 void RsRenderServiceUtil::DropFrameProcess(RSSurfaceHandler& node)
 {
     auto availableBufferCnt = node.GetAvailableBufferCount();
-
-    RS_LOGI("RsDebug RsRenderServiceUtil::DropFrameProcess startnode:%llu availablebuffer:%d",
-        node.GetId(), availableBufferCnt);
-
     const auto& surfaceConsumer = node.GetConsumer();
     if (surfaceConsumer == nullptr) {
         RS_LOGE("RsDebug RsRenderServiceUtil::DropFrameProcess (node: %llu): surfaceConsumer is null!", node.GetId());

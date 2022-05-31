@@ -558,9 +558,9 @@ void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sp
 void RsRenderServiceUtil::DropFrameProcess(RSSurfaceHandler& node)
 {
     auto availableBufferCnt = node.GetAvailableBufferCount();
-    int maxDirtyListSize = surfaceConsumer->GetQueueSize() -1;
-    RS_LOGI("RsDebug RsRenderServiceUtil::DropFrameProcess startnode:%llu availablebuffer:%d maxDirtyListSize:%d", node.GetId(),
-        availableBufferCnt, maxDirtyListSize);
+
+    RS_LOGI("RsDebug RsRenderServiceUtil::DropFrameProcess startnode:%llu availablebuffer:%d",
+        node.GetId(), availableBufferCnt);
 
     const auto& surfaceConsumer = node.GetConsumer();
     if (surfaceConsumer == nullptr) {
@@ -568,6 +568,8 @@ void RsRenderServiceUtil::DropFrameProcess(RSSurfaceHandler& node)
         return;
     }
 
+    int maxDirtyListSize = surfaceConsumer->GetQueueSize() -1;
+    // queuesize >=3 dropframe work
     if (surfaceConsumer->GetQueueSize() >= 3 && availableBufferCnt >= maxDirtyListSize) {
         RS_LOGI("RsRenderServiceUtil::DropFrameProcess(node: %llu) queueBlock, start to drop one frame", node.GetId());
         OHOS::sptr<SurfaceBuffer> cbuffer;

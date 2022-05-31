@@ -49,11 +49,11 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
         std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeCreate>(node->GetId());
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
-            transactionProxy->AddCommand(command, isWindow);
+            transactionProxy->AddCommand(command, isWindow, node->GetType(), node->GetId());
         }
         command = std::make_unique<RSSurfaceNodeConnectToNodeInRenderService>(node->GetId());
         if (transactionProxy != nullptr) {
-            transactionProxy->AddCommand(command, isWindow);
+            transactionProxy->AddCommand(command, isWindow, node->GetType(), node->GetId());
         }
     }
     ROSEN_LOGD("RsDebug RSSurfaceNode::Create id:%llu", node->GetId());
@@ -69,7 +69,7 @@ void RSSurfaceNode::CreateNodeInRenderThread(bool isProxy)
     std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeCreate>(GetId());
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, false);
+        transactionProxy->AddCommand(command, false, GetType(), GetId());
     }
     if (isProxy) {
         command = std::make_unique<RSSurfaceNodeSetProxy>(GetId());
@@ -77,7 +77,7 @@ void RSSurfaceNode::CreateNodeInRenderThread(bool isProxy)
         command = std::make_unique<RSSurfaceNodeConnectToNodeInRenderService>(GetId());
     }
     if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, false);
+        transactionProxy->AddCommand(command, false, GetType(), GetId());
     }
     SetRenderServiceNodeType(false);
 }
@@ -124,7 +124,7 @@ void RSSurfaceNode::UpdateSurfaceDefaultSize(float width, float height)
         std::make_unique<RSSurfaceNodeUpdateSurfaceDefaultSize>(GetId(), width, height);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, true);
+        transactionProxy->AddCommand(command, true, GetType(), GetId());
     }
 }
 
@@ -135,7 +135,7 @@ void RSSurfaceNode::SetSecurityLayer(bool isSecurityLayer)
         std::make_unique<RSSurfaceNodeSetSecurityLayer>(GetId(), isSecurityLayer);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, true);
+        transactionProxy->AddCommand(command, true, GetType(), GetId());
     }
     ROSEN_LOGD("RSSurfaceNode::SetSecurityLayer, surfaceNodeId:[%llu] isSecurityLayer:%s", GetId(),
         isSecurityLayer ? "true" : "false");
@@ -239,7 +239,8 @@ RSSurfaceNode::~RSSurfaceNode() {
         std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeDestroy>(GetId());
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
-            transactionProxy->AddCommand(command, true);
+            // Todo : this need to be considered
+            transactionProxy->AddCommand(command, true, GetType(), GetId());
         }
     }
 }

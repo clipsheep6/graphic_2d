@@ -37,7 +37,7 @@ RSCanvasNode::SharedPtr RSCanvasNode::Create(bool isRenderServiceNode)
     std::unique_ptr<RSCommand> command = std::make_unique<RSCanvasNodeCreate>(node->GetId());
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, isRenderServiceNode);
+        transactionProxy->AddCommand(command, isRenderServiceNode, node->GetType(), node->GetId());
     }
     ROSEN_LOGD("RSCanvasNode::Create, NodeID = %llu", node->GetId());
     return node;
@@ -74,7 +74,7 @@ void RSCanvasNode::FinishRecording()
         std::make_unique<RSCanvasNodeUpdateRecording>(GetId(), recording, drawContentLast_);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode());
+        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetType(), GetId());
     }
 #endif
 }

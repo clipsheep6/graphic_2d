@@ -40,10 +40,15 @@ RSTransactionData* RSTransactionData::Unmarshalling(Parcel& parcel)
 bool RSTransactionData::Marshalling(Parcel& parcel) const
 {
     bool success = true;
+    success = success && parcel.WriteInt32(static_cast<int32_t>(commands_.size()));
+    for (auto followType : followTypes_) {
+        success = success && parcel.WriteUint32(static_cast<uint32_t>(followType));
+    }
+    success = success && parcel.WriteUInt64Vector(nodeIds_);
+    success = success && parcel.WriteUint64(timestamp_);
     for (auto& command : commands_) {
         success = success && command->Marshalling(parcel);
     }
-
     return success;
 }
 #endif // ROSEN_OHOS
@@ -60,16 +65,23 @@ void RSTransactionData::Process(RSContext& context)
 void RSTransactionData::Clear()
 {
     commands_.clear();
+    followTypes_.clear();
+    nodeIds_.clear();
+    timestamp_ = 0;
 }
 
-void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>& command)
+void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType)
 {
     commands_.emplace_back(std::move(command));
+    followTypes_.push_back(followType);
+    nodeIds_.push_back(nodeId);
 }
 
-void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>&& command)
+void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>&& command, NodeId nodeId, FollowType followType)
 {
     commands_.emplace_back(std::move(command));
+    followTypes_.push_back(followType);
+    nodeIds_.push_back(nodeId);
 }
 
 #ifdef ROSEN_OHOS
@@ -77,8 +89,27 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
 {
     uint16_t commandType = 0;
     uint16_t commandSubType = 0;
+    int commandSize = 0;
+    if (!parcel.ReadInt32(commandSize)) {
+        ROSEN_LOGE("RSTransactionData::UnmarshallingCommand cannot read commandSize");
+        return false;
+    }
+    uint32_t followType = 0;
     bool isNotFinished = true;
-    commands_.clear();
+    Clear();
+
+    for (int i = 0; i < commandSize; i++) {
+        if (!parcel.ReadUint32(followType)) {
+            ROSEN_LOGE("RSTransactionData::UnmarshallingCommand cannot read followType");
+            return false;
+        }
+        followTypes_.push_back(static_cast<FollowType>(followType));
+    }
+
+    if (!(parcel.ReadUInt64Vector(&nodeIds_) && parcel.ReadUint64(timestamp_))) {
+        ROSEN_LOGE("RSTransactionData::UnmarshallingCommand cannot read nodeIds or timestamp");
+        return false;
+    }
     while (isNotFinished) {
         if (!(parcel.ReadUint16(commandType) && parcel.ReadUint16(commandSubType))) {
             isNotFinished = false;
@@ -92,7 +123,7 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
         if (command == nullptr) {
             break;
         }
-        AddCommand(std::unique_ptr<RSCommand>(command));
+        commands_.emplace_back(std::unique_ptr<RSCommand>(command));
     }
     return !isNotFinished;
 }

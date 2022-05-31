@@ -60,7 +60,8 @@ void RSTransactionProxy::SetRenderServiceClient(const std::shared_ptr<RSIRenderC
     }
 }
 
-void RSTransactionProxy::AddCommand(std::unique_ptr<RSCommand>& command, bool isRenderServiceCommand)
+void RSTransactionProxy::AddCommand(std::unique_ptr<RSCommand>& command, bool isRenderServiceCommand,
+                                    RSUINodeType nodeType, NodeId nodeId)
 {
     if ((renderServiceClient_ == nullptr && renderThreadClient_ == nullptr) || command == nullptr) {
         return;
@@ -69,7 +70,15 @@ void RSTransactionProxy::AddCommand(std::unique_ptr<RSCommand>& command, bool is
     std::unique_lock<std::mutex> cmdLock(mutex_);
 
     if (renderThreadClient_ == nullptr || isRenderServiceCommand) {
-        AddRemoteCommand(command);
+        if (nodeType != RSUINodeType::SURFACE_NODE) {
+            AddRemoteCommand(command, nodeId, FollowType::NONE);
+        } else {
+            if (isRenderServiceCommand) {
+                AddRemoteCommand(command, nodeId, FollowType::FOLLOW_TO_SELF);
+            } else {
+                AddRemoteCommand(command, nodeId, FollowType::FOLLOW_TO_PARENT);
+            }
+        }
         return;
     }
 
@@ -79,7 +88,7 @@ void RSTransactionProxy::AddCommand(std::unique_ptr<RSCommand>& command, bool is
     }
 }
 
-void RSTransactionProxy::AddCommandFromRT(std::unique_ptr<RSCommand>& command)
+void RSTransactionProxy::AddCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId)
 {
     if (renderServiceClient_ == nullptr || command == nullptr) {
         return;
@@ -87,7 +96,7 @@ void RSTransactionProxy::AddCommandFromRT(std::unique_ptr<RSCommand>& command)
 
     {
         std::unique_lock<std::mutex> cmdLock(mutexForRT_);
-        implicitTransactionDataFromRT_->AddCommand(command);
+        implicitTransactionDataFromRT_->AddCommand(command, nodeId, FollowType::FOLLOW_TO_PARENT);
     }
 }
 
@@ -138,9 +147,9 @@ void RSTransactionProxy::AddCommonCommand(std::unique_ptr<RSCommand> &command)
     implicitCommonTransactionData_->AddCommand(command);
 }
 
-void RSTransactionProxy::AddRemoteCommand(std::unique_ptr<RSCommand>& command)
+void RSTransactionProxy::AddRemoteCommand(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType)
 {
-    implicitRemoteTransactionData_->AddCommand(command);
+    implicitRemoteTransactionData_->AddCommand(command, nodeId, followType);
 }
 
 } // namespace Rosen

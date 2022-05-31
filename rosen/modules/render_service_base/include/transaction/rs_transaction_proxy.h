@@ -27,15 +27,15 @@
 namespace OHOS {
 namespace Rosen {
 class RSSyncTask;
-
 class RSTransactionProxy final {
 public:
     static RSTransactionProxy* GetInstance();
     void SetRenderThreadClient(std::unique_ptr<RSIRenderClient>& renderThreadClient);
     void SetRenderServiceClient(const std::shared_ptr<RSIRenderClient>& renderServiceClient);
 
-    void AddCommand(std::unique_ptr<RSCommand>& command, bool isRenderServiceCommand = false);
-    void AddCommandFromRT(std::unique_ptr<RSCommand>& command);
+    void AddCommand(std::unique_ptr<RSCommand>& command, bool isRenderServiceCommand = false,
+                    RSUINodeType nodeType = RSUINodeType::BASE_NODE, NodeId nodeId = 0);
+    void AddCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId);
 
     void FlushImplicitTransaction(uint64_t timestamp);
     void FlushImplicitTransactionFromRT(uint64_t timestamp);
@@ -53,7 +53,7 @@ private:
     RSTransactionProxy& operator=(const RSTransactionProxy&&) = delete;
 
     void AddCommonCommand(std::unique_ptr<RSCommand>& command);
-    void AddRemoteCommand(std::unique_ptr<RSCommand>& command);
+    void AddRemoteCommand(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType = FollowType::NONE);
 
     // Command Transaction Triggered by UI Thread.
     std::mutex mutex_;

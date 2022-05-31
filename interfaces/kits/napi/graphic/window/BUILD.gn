@@ -13,8 +13,8 @@
 
 import("//build/ohos.gni")
 
-aakits_path = "//foundation/aafwk/standard/frameworks/kits"
-aainnerkits_path = "//foundation/aafwk/standard/interfaces/innerkits"
+aakits_path = "//foundation/ability/ability_runtime/frameworks/kits"
+aainnerkits_path = "//foundation/ability/ability_runtime/interfaces/innerkits"
 
 ## Build window.so {{{
 ohos_shared_library("window") {

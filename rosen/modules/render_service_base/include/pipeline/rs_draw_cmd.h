@@ -291,6 +291,17 @@ private:
     float radius_;
 };
 
+class ClipOutsetRectOpItem : public OpItem {
+public:
+    ClipOutsetRectOpItem(float dx, float dy);
+    ~ClipOutsetRectOpItem() override {}
+    void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+
+private:
+    float dx_;
+    float dy_;
+};
+
 class PathOpItem : public OpItemWithPaint {
 public:
     PathOpItem(const SkPath& path, const SkPaint& paint);

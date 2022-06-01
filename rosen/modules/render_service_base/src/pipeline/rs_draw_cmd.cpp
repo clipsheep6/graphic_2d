@@ -265,6 +265,16 @@ void ClipAdaptiveRRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect* re
     canvas.clipRRect(rrect, true);
 }
 
+ClipOutsetRectOpItem::ClipOutsetRectOpItem(float dx, float dy)
+    : OpItem(sizeof(ClipOutsetRectOpItem)), dx_(dx), dy_(dy)
+{}
+
+void ClipOutsetRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const
+{
+    auto clipRect = canvas.getLocalClipBounds().makeOutset(dx_, dy_);
+    canvas.clipRect(clipRect, SkClipOp::kExtraEnumNeedInternallyPleaseIgnoreWillGoAway5, true);
+}
+
 PathOpItem::PathOpItem(const SkPath& path, const SkPaint& paint) : OpItemWithPaint(sizeof(PathOpItem))
 {
     path_ = path;

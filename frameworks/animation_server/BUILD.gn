@@ -57,7 +57,7 @@ ohos_shared_library("libanimation_service") {
     "//utils/native/base:utils",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -116,7 +116,7 @@ ohos_executable("animation_server") {
     "//foundation/graphic/graphic_2d/utils:libgraphic_utils",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -124,6 +124,6 @@ ohos_executable("animation_server") {
 
 ohos_prebuilt_etc("cursor.raw") {
   source = "server/cursor.raw"
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }

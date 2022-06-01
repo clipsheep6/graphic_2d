@@ -65,7 +65,7 @@ ohos_shared_library("libwmservice") {
     "//utils/native/base:utils",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -93,7 +93,7 @@ ohos_executable("wmservice_test") {
 
   deps = [ ":libwmservice" ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }
 ## Build wmservice_test }}}

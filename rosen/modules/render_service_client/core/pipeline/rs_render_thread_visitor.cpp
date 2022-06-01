@@ -23,6 +23,7 @@
 #include "rs_trace.h"
 
 #include "command/rs_base_node_command.h"
+#include "common/rs_vector4.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_node_map.h"
@@ -31,6 +32,8 @@
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_surface.h"
+#include "include/core/SkRect.h"
+#include "rs_trace.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
@@ -158,6 +161,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         skSurface = SkSurface::MakeRaster(imageInfo);
         canvas_ = new RSPaintFilterCanvas(skSurface.get());
     } else {
+        canvas_->clipRect(SkRect::MakeWH(node.GetSurfaceWidth(), node.GetSurfaceHeight()));
         auto skSurface = surfaceFrame->GetSurface();
         canvas_ = new RSPaintFilterCanvas(skSurface.get());
     }
@@ -233,7 +237,7 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     // RSSurfaceRenderNode in RSRenderThreadVisitor do not have information of property.
     // We only get parent's matrix and send it to RenderService
 #ifdef ROSEN_OHOS
-    //SkMatrix invertMatrix;
+    SkMatrix invertMatrix;
     SkMatrix contextMatrix = canvas_->getTotalMatrix();
 
     if (parentSurfaceNodeMatrix_.invert(&invertMatrix)) {
@@ -249,14 +253,6 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         ProcessBaseRenderNode(node);
         return;
     }
-    // auto contextClipRect = canvas_->getLocalClipBounds();
-    // node.SetContextClipRegion(
-    //     { contextClipRect.left(), contextClipRect.top(), contextClipRect.width(), contextClipRect.height() });
-    auto clipDeviceBounds = canvas_->getDeviceClipBounds();
-    auto clipLocalBounds = canvas_->getLocalClipBounds();
-    ROSEN_LOGI("chenlu RSRenderThreadVisitor::ProcessSurfaceRenderNode node :%llu  name:%s, clipDevice[%d, %d, %d, %d] clipLocal[%f, %f, %f, %f]",
-            node.GetId(), node.GetName().c_str(), clipDeviceBounds.left(), clipDeviceBounds.top(), clipDeviceBounds.width(), clipDeviceBounds.height(),
-            clipLocalBounds.left(), clipLocalBounds.top(), clipLocalBounds.width(), clipLocalBounds.height());
     node.SetContextClipRegion(canvas_->getLocalClipBounds());
 
     // clip hole
@@ -292,6 +288,15 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     parentSurfaceNodeMatrix_ = parentSurfaceNodeMatrix;
 }
 
+const Vector4f CalSrcRectRatio(const SkRect& originRect, const SkRect& resRect)
+{
+    float x = std::max((resRect.left() - originRect.left()) / originRect.width(), 0.0f);
+    float y = std::max((resRect.top() - originRect.top()) / originRect.height(), 0.0f);
+    float width = std::min(resRect.width() / originRect.width(), 1.0f);
+    float height = std::min(resRect.height() / originRect.height(), 1.0f);
+    return Vector4f(x, y, width, height);
+}
+
 void RSRenderThreadVisitor::ClipHoleForSurfaceNode(RSSurfaceRenderNode& node)
 {
 #ifdef ROSEN_OHOS
@@ -300,11 +305,12 @@ void RSRenderThreadVisitor::ClipHoleForSurfaceNode(RSSurfaceRenderNode& node)
     auto width = node.GetRenderProperties().GetBoundsWidth();
     auto height = node.GetRenderProperties().GetBoundsHeight();
     canvas_->save();
-    canvas_->clipRect(SkRect::MakeXYWH(x, y, width, height));
-    SkMatrix contextMatrix = canvas_->getTotalMatrix();
+    SkRect originRect = SkRect::MakeXYWH(x, y, width, height);
+    canvas_->clipRect(originRect);
+    SkRect resRect = canvas_->getLocalClipBounds();
+    auto ratio = CalSrcRectRatio(originRect, resRect);
+    node.SetSrcRatio(ratio);
     if (node.IsNotifyRTBufferAvailable() == true) {
-        ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode node : %llu, clip [%f, %f, %f, %f] tran[%f %f]",
-            node.GetId(), x, y, width, height, contextMatrix.getTranslateX(), contextMatrix.getTranslateY());
         canvas_->clear(SK_ColorTRANSPARENT);
     } else {
         ROSEN_LOGI("RSRenderThreadVisitor::ProcessSurfaceRenderNode node : %llu, not clip [%f, %f, %f, %f]",

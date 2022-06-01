@@ -22,6 +22,7 @@
 #include "include/core/SkRect.h"
 #include "common/rs_rect.h"
 #include "common/rs_vector2.h"
+#include "common/rs_vector4.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_root_render_node.h"
 #include "platform/common/rs_log.h"
@@ -46,31 +47,59 @@ void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canva
 {
     canvas.SaveAlpha();
     canvas.MultiplyAlpha(GetRenderProperties().GetAlpha() * GetContextAlpha());
+
+    auto currentClipRegion0 = canvas.getDeviceClipBounds();
+    auto matrix0 = canvas.getTotalMatrix();
+    RS_LOGE("chenlu ProcessRenderBeforeChildren 0 name:%s tran[%f %f] clip[%d %d %d %d]",
+        GetName().c_str(),
+        matrix0.getTranslateX(), matrix0.getTranslateY(),
+        currentClipRegion0.left(), currentClipRegion0.top(), currentClipRegion0.width(), currentClipRegion0.height());
+
     auto clipRectFromRT = GetContextClipRegion();
     canvas.concat(GetContextMatrix());
     if (!clipRectFromRT.isEmpty()){
         canvas.clipRect(clipRectFromRT);
     }
+
+    auto currentClipRegion1 = canvas.getDeviceClipBounds();
+    auto matrix1 = canvas.getTotalMatrix();
+    RS_LOGE("chenlu ProcessRenderBeforeChildren 1 name:%s tran[%f %f] clip[%d %d %d %d] clipRT[%f %f %f %f] tranRT[%f %f]",
+        GetName().c_str(),
+        matrix1.getTranslateX(), matrix1.getTranslateY(),
+        currentClipRegion1.left(), currentClipRegion1.top(), currentClipRegion1.width(), currentClipRegion1.height(),
+        clipRectFromRT.left(), clipRectFromRT.top(), clipRectFromRT.width(), clipRectFromRT.height(),
+        GetContextMatrix().getTranslateX(), GetContextMatrix().getTranslateY());
+
     RectI clipRegion = CalculateClipRegion(canvas);
     SkRect rect;
-    auto currentClipRegion1 = canvas.getDeviceClipBounds();
-    SkPoint points[] = {{clipRegion.left_ + currentClipRegion1.left(), clipRegion.top_ + currentClipRegion1.top()},
-        {clipRegion.GetRight() + currentClipRegion1.left(), clipRegion.GetBottom() + currentClipRegion1.top()}};
+    auto currentClipRegion2 = canvas.getDeviceClipBounds();
+    SkPoint points[] = {{clipRegion.left_, clipRegion.top_}, {clipRegion.GetRight(), clipRegion.GetBottom()}};
     rect.setBounds(points, rectBounds);
+    RS_LOGE("chenlu ProcessRenderBeforeChildren 2 name:%s rect[%f %f %f %f] currentClipRegion2[%d %d %d %d]",
+        GetName().c_str(),
+        rect.left(), rect.top(), rect.width(), rect.height(),
+        currentClipRegion2.left(), currentClipRegion2.top(), currentClipRegion2.width(), currentClipRegion2.height());
     canvas.clipRect(rect);
     auto currentClipRegion = canvas.getDeviceClipBounds();
+    RS_LOGE("chenlu ProcessRenderBeforeChildren 3 name:%s currentClipRegion2[%d %d %d %d]",
+        GetName().c_str(),
+        currentClipRegion.left(), currentClipRegion.top(), currentClipRegion.width(), currentClipRegion.height());
     SetDstRect({ currentClipRegion.left(), currentClipRegion.top(), currentClipRegion.width(),
         currentClipRegion.height() });
-    SetGlobalAlpha(canvas.GetAlpha());
+    SetGlobalAlpha(canvas.GetAlpha()); 
 }
 
 RectI RSSurfaceRenderNode::CalculateClipRegion(RSPaintFilterCanvas& canvas)
 {
     const RSProperties& properties = GetRenderProperties();
-    RectI originDstRect(properties.GetBoundsPositionX() - offsetX_, properties.GetBoundsPositionY() - offsetY_,
-            properties.GetBoundsWidth(), properties.GetBoundsHeight());
+    RectI originDstRect(0, 0, properties.GetBoundsWidth(), properties.GetBoundsHeight());
+    canvas.translate(properties.GetBoundsPositionX(), properties.GetBoundsPositionY());
     auto transitionProperties = GetAnimationManager().GetTransitionProperties();
     Vector2f center(originDstRect.width_ * 0.5f, originDstRect.height_ * 0.5f);
+    RS_LOGE("chenlu CalculateClipRegion name:%s clip[%d %d %d %d] center[%f %f]",
+        GetName().c_str(),
+        properties.GetBoundsPositionX(), properties.GetBoundsPositionY(), originDstRect.width_, originDstRect.height_,
+        center.x_, center.y_);
     RSPropertiesPainter::DrawTransitionProperties(transitionProperties, center, canvas);
     return originDstRect;
 }
@@ -113,6 +142,25 @@ void RSSurfaceRenderNode::SetContextMatrix(const SkMatrix& matrix, bool sendMsg)
 const SkMatrix& RSSurfaceRenderNode::GetContextMatrix() const
 {
     return contextMatrix_;
+}
+
+void RSSurfaceRenderNode::SetSrcRatio(const Vector4f ratio, bool sendMsg)
+{
+    if (srcRatio_ == ratio) {
+        return;
+    }
+    srcRatio_ = ratio;
+    if (!sendMsg) {
+        return;
+    }
+    // send a Command
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetSrcRatio>(GetId(), ratio);
+    SendCommandFromRT(command);
+}
+
+const Vector4f& RSSurfaceRenderNode::GetSrcRatio() const
+{
+    return srcRatio_;
 }
 
 void RSSurfaceRenderNode::SetContextAlpha(float alpha, bool sendMsg)

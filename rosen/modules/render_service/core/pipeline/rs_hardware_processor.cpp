@@ -267,12 +267,7 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
         ReleaseNodePrevBuffer(node);
         return;
     }
-    RectI originDstRect(geoPtr->GetAbsRect().left_ - offsetX_, geoPtr->GetAbsRect().top_ - offsetY_,
-        geoPtr->GetAbsRect().width_, geoPtr->GetAbsRect().height_);
-    // RectI originDstRect(node.GetOriRect().left(), node.GetOriRect().top(), node.GetOriRect().width(),
-    //      node.GetOriRect().height());
-    RectI clipRegion(info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h);
-    //CalculateSrcRect(info, clipRegion, originDstRect);
+    CalculateSrcRect(info, node.GetSrcRatio());
     std::string inf;
     char strBuffer[UINT8_MAX] = { 0 };
     if (sprintf_s(strBuffer, UINT8_MAX, "ProcessSurfaceNode:%s XYWH[%d %d %d %d]", node.GetName().c_str(),
@@ -346,14 +341,12 @@ void RSHardwareProcessor::ProcessSurface(RSDisplayRenderNode& node)
     RsRenderServiceUtil::ComposeSurface(layer, node.GetConsumer(), layers_, info, &node);
 }
 
-void RSHardwareProcessor::CalculateSrcRect(ComposeInfo& info, RectI clipRegion, RectI originDstRect)
+void RSHardwareProcessor::CalculateSrcRect(ComposeInfo& info, const Vector4f& ratio)
 {
-    info.srcRect.x = clipRegion.IsEmpty() ? 0 : std::ceil((clipRegion.left_ - originDstRect.left_) *
-        info.srcRect.w / originDstRect.width_);
-    info.srcRect.y = clipRegion.IsEmpty() ? 0 : std::ceil((clipRegion.top_ - originDstRect.top_) *
-        info.srcRect.h / originDstRect.height_);
-    info.srcRect.w = originDstRect.IsEmpty() ? 0 : info.srcRect.w * clipRegion.width_ / originDstRect.width_;
-    info.srcRect.h = originDstRect.IsEmpty() ? 0 : info.srcRect.h * clipRegion.height_ / originDstRect.height_;
+    info.srcRect.x = info.srcRect.w * ratio.x_;
+    info.srcRect.y = info.srcRect.h * ratio.y_;
+    info.srcRect.w = info.srcRect.w * ratio.z_;
+    info.srcRect.h = info.srcRect.h * ratio.w_;
 }
 
 bool IfUseGPUClient(const struct PrepareCompleteParam& param)

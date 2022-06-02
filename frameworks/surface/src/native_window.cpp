@@ -47,6 +47,7 @@ OHNativeWindow* CreateNativeWindowFromSurface(void* pSuface)
     nativeWindow->config.timeout = 3000;        // default timout is 3000 ms
     nativeWindow->config.colorGamut = ColorGamut::COLOR_GAMUT_SRGB;
     nativeWindow->config.transform = TransformType::ROTATE_NONE;
+    nativeWindow->config.scalingMode = ScalingMode::SCALING_MODE_SCALE_TO_WINDOW;
 
     NativeObjectReference(nativeWindow);
     return nativeWindow;
@@ -100,7 +101,6 @@ int32_t NativeWindowRequestBuffer(OHNativeWindow *window,
     nwBuffer->sfbuffer = sfbuffer;
     *buffer = nwBuffer;
     *fenceFd = relaeaseFence->Dup();
-    NativeObjectReference(*buffer);
     return OHOS::GSERROR_OK;
 }
 
@@ -129,7 +129,6 @@ int32_t NativeWindowFlushBuffer(OHNativeWindow *window, OHNativeWindowBuffer *bu
 
     OHOS::sptr<OHOS::SyncFence> acquireFence = new OHOS::SyncFence(fenceFd);
     window->surface->FlushBuffer(buffer->sfbuffer, acquireFence, config);
-    NativeObjectUnreference(buffer);
 
     return OHOS::GSERROR_OK;
 }
@@ -142,7 +141,6 @@ int32_t NativeWindowCancelBuffer(OHNativeWindow *window, OHNativeWindowBuffer *b
     }
 
     window->surface->CancelBuffer(buffer->sfbuffer);
-    NativeObjectUnreference(buffer);
     return OHOS::GSERROR_OK;
 }
 
@@ -171,6 +169,11 @@ static int32_t InternalHanleNativeWindowOpt(OHNativeWindow *window, int code, va
             window->config.strideAlignment = stride;
             break;
         }
+        case SET_TIMEOUT: {
+            int32_t timeout = va_arg(args, int32_t);
+            window->config.timeout = timeout;
+            break;
+        }
         case SET_COLOR_GAMUT: {
             int32_t colorGamut = va_arg(args, int32_t);
             window->config.colorGamut = static_cast<ColorGamut>(colorGamut);
@@ -184,6 +187,11 @@ static int32_t InternalHanleNativeWindowOpt(OHNativeWindow *window, int code, va
         case SET_UI_TIMESTAMP : {
             uint64_t UITimestamp = va_arg(args, uint64_t);
             window->UITimestamp = static_cast<int64_t>(UITimestamp);
+            break;
+        }
+        case SET_SCALING_MODE : {
+            int32_t scalingMode = va_arg(args, int32_t);
+            window->config.scalingMode = static_cast<ScalingMode>(scalingMode);
             break;
         }
         case GET_USAGE: {
@@ -209,6 +217,11 @@ static int32_t InternalHanleNativeWindowOpt(OHNativeWindow *window, int code, va
             *stride = window->config.strideAlignment;
             break;
         }
+        case GET_TIMEOUT : {
+            int32_t *timeout = va_arg(args, int32_t*);
+            *timeout = window->config.timeout;
+            break;
+        }
         case GET_COLOR_GAMUT: {
             int32_t *colorGamut = va_arg(args, int32_t*);
             *colorGamut = static_cast<int32_t>(window->config.colorGamut);
@@ -217,6 +230,11 @@ static int32_t InternalHanleNativeWindowOpt(OHNativeWindow *window, int code, va
         case GET_TRANSFORM: {
             int32_t *transform = va_arg(args, int32_t*);
             *transform = static_cast<int32_t>(window->config.transform);
+            break;
+        }
+        case GET_SCALING_MODE: {
+            int32_t *scalingMode = va_arg(args, int32_t*);
+            *scalingMode = static_cast<int32_t>(window->config.scalingMode);
             break;
         }
         default:

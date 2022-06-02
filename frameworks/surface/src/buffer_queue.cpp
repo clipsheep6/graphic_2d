@@ -163,6 +163,12 @@ GSError BufferQueue::CheckRequestConfig(const BufferRequestConfig &config)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
+    if (config.scalingMode < ScalingMode::SCALING_MODE_FREEZE ||
+        config.scalingMode > ScalingMode::SCALING_MODE_NO_SCALE_CROP) {
+        BLOGN_INVALID("config.scalingMode [0, %{public}d], now is %{public}d",
+            ScalingMode::SCALING_MODE_NO_SCALE_CROP, config.scalingMode);
+        return GSERROR_INVALID_ARGUMENTS;
+    }
     return GSERROR_OK;
 }
 
@@ -454,9 +460,13 @@ GSError BufferQueue::AcquireBuffer(sptr<SurfaceBuffer> &buffer,
 
 GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, const sptr<SyncFence>& fence)
 {
-    ScopedBytrace func(__func__);
+    if (buffer == nullptr) {
+        BLOGE("invalid parameter: buffer is null, please check");
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
     int32_t sequence = buffer->GetSeqNum();
-    ScopedBytrace bufferName(name_ + ":" + std::to_string(sequence));
+    ScopedBytrace bufferName(std::string(__func__) + "," + name_ + ":" + std::to_string(sequence));
     {
         std::lock_guard<std::mutex> lockGuard(mutex_);
         if (bufferQueueCache_.find(sequence) == bufferQueueCache_.end()) {

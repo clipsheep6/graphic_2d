@@ -151,6 +151,16 @@ ScreenId RSRenderServiceClient::GetDefaultScreenId()
     return renderService->GetDefaultScreenId();
 }
 
+std::vector<ScreenId> RSRenderServiceClient::GetAllScreenIds()
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return std::vector<ScreenId>();
+    }
+
+    return renderService->GetAllScreenIds();
+}
+
 ScreenId RSRenderServiceClient::CreateVirtualScreen(
     const std::string &name,
     uint32_t width,
@@ -223,6 +233,27 @@ void RSRenderServiceClient::SetScreenActiveMode(ScreenId id, uint32_t modeId)
     }
 
     renderService->SetScreenActiveMode(id, modeId);
+}
+
+int32_t RSRenderServiceClient::SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::SetVirtualScreenResolution renderService == nullptr!");
+        return RENDER_SERVICE_NULL;
+    }
+
+    return renderService->SetVirtualScreenResolution(id, width, height);
+}
+
+RSVirtualScreenResolution RSRenderServiceClient::GetVirtualScreenResolution(ScreenId id)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return RSVirtualScreenResolution {}; // return empty RSVirtualScreenResolution.
+    }
+
+    return renderService->GetVirtualScreenResolution(id);
 }
 
 void RSRenderServiceClient::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status)

@@ -21,7 +21,6 @@ ohos_shared_library("window") {
   sources = [ "native_window_module.cpp" ]
 
   configs = [
-    "${aainnerkits_path}/want:want_public_config",
     "${aainnerkits_path}/ability_manager:ability_manager_public_config",
     "${aaservices_path}/abilitymgr:abilityms_config",
   ]
@@ -30,8 +29,8 @@ ohos_shared_library("window") {
     "${aakits_path}/ability/native:abilitykit_native",
     "${aakits_path}/appkit:appkit_native",
     "../common:graphic_napi_common",
-    "//foundation/graphic/graphic:libwmclient",
-    "//foundation/graphic/graphic:libwmservice",
+    "//foundation/graphic/graphic_2d:libwmclient",
+    "//foundation/graphic/graphic_2d:libwmservice",
   ]
 
   relative_install_dir = "module"

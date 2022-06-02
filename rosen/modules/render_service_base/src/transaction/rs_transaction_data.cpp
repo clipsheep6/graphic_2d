@@ -47,7 +47,11 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
     success = success && parcel.WriteUInt64Vector(nodeIds_);
     success = success && parcel.WriteUint64(timestamp_);
     for (auto& command : commands_) {
-        success = success && command->Marshalling(parcel);
+        success &= command->Marshalling(parcel);
+        if (!success) {
+            ROSEN_LOGE("failed RSTransactionData::Marshalling type:%s", command->PrintType().c_str());
+            break;
+        }
     }
     return success;
 }
@@ -121,6 +125,8 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
         }
         auto command = (*func)(parcel);
         if (command == nullptr) {
+            ROSEN_LOGE("failed RSTransactionData::UnmarshallingCommand, type=%d subtype=%d", commandType,
+                commandSubType);
             break;
         }
         commands_.emplace_back(std::unique_ptr<RSCommand>(command));

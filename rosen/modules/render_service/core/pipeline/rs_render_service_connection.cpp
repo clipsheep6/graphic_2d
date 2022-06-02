@@ -229,6 +229,12 @@ ScreenId RSRenderServiceConnection::GetDefaultScreenId()
     return screenManager_->GetDefaultScreenId();
 }
 
+std::vector<ScreenId> RSRenderServiceConnection::GetAllScreenIds()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return screenManager_->GetAllScreenIds();
+}
+
 ScreenId RSRenderServiceConnection::CreateVirtualScreen(
     const std::string &name,
     uint32_t width,
@@ -283,6 +289,13 @@ void RSRenderServiceConnection::SetScreenActiveMode(ScreenId id, uint32_t modeId
     }).wait();
 }
 
+int32_t RSRenderServiceConnection::SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height)
+{
+    return mainThread_->ScheduleTask([=]() {
+        return screenManager_->SetVirtualScreenResolution(id, width, height);
+    }).get();
+}
+
 void RSRenderServiceConnection::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status)
 {
     mainThread_->ScheduleTask([=]() {
@@ -320,6 +333,13 @@ void RSRenderServiceConnection::UnregisterApplicationRenderThread(sptr<IApplicat
         mainThread_->UnregisterApplicationRenderThread(app);
     };
     mainThread_->PostTask(captureTask);
+}
+
+RSVirtualScreenResolution RSRenderServiceConnection::GetVirtualScreenResolution(ScreenId id)
+{
+    RSVirtualScreenResolution virtualScreenResolution;
+    screenManager_->GetVirtualScreenResolution(id, virtualScreenResolution);
+    return virtualScreenResolution;
 }
 
 RSScreenModeInfo RSRenderServiceConnection::GetScreenActiveMode(ScreenId id)

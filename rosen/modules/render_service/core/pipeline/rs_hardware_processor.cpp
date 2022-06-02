@@ -36,8 +36,9 @@
 #include "pipeline/rs_render_service_util.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
-#include "platform/ohos/backend/rs_surface_ohos_gl.h"
-#include "platform/ohos/backend/rs_surface_ohos_raster.h"
+#include "platform/common/rs_system_properties.h"
+#include <platform/ohos/backend/rs_surface_ohos_gl.h>
+#include <platform/ohos/backend/rs_surface_ohos_raster.h>
 #include "property/rs_properties_painter.h"
 
 namespace OHOS {
@@ -91,6 +92,7 @@ void RSHardwareProcessor::PostProcess()
     // Rotaion must be executed before CropLayers.
     OnRotate();
     CropLayers();
+    ScaleDownLayers();
     output_->SetLayerInfo(layers_);
     std::vector<std::shared_ptr<HdiOutput>> outputs{output_};
     if (backend_) {
@@ -133,6 +135,51 @@ void RSHardwareProcessor::CropLayers()
     }
 }
 
+void RSHardwareProcessor::ScaleDownLayers()
+{
+    for (auto layer : layers_) {
+        if (layer->GetBuffer()->GetSurfaceBufferScalingMode() == ScalingMode::SCALING_MODE_SCALE_CROP) {
+            IRect dstRect = layer->GetLayerSize();
+            IRect srcRect = layer->GetCropRect();
+
+            uint32_t newWidth = static_cast<uint32_t>(srcRect.w);
+            uint32_t newHeight = static_cast<uint32_t>(srcRect.h);
+
+            if (newWidth * dstRect.h > newHeight * dstRect.w) {
+                // too wide
+                newWidth = dstRect.w * newHeight / dstRect.h;
+            } else if (newWidth * dstRect.h < newHeight * dstRect.w) {
+                // too tall
+                newHeight = dstRect.h * newWidth / dstRect.w;
+            } else {
+                continue;
+            }
+
+            uint32_t currentWidth = static_cast<uint32_t>(srcRect.w);
+            uint32_t currentHeight = static_cast<uint32_t>(srcRect.h);
+
+            if (newWidth < currentWidth) {
+                // the crop is too wide
+                uint32_t dw = currentWidth - newWidth;
+                auto halfdw = dw / 2;
+                srcRect.x += halfdw;
+                srcRect.w = newWidth;
+            } else {
+                // thr crop is too tall
+                uint32_t dh = currentHeight - newHeight;
+                auto halfdh = dh / 2;
+                srcRect.y += halfdh;
+                srcRect.h = newHeight;
+            }
+            layer->SetDirtyRegion(srcRect);
+            layer->SetCropRect(srcRect);
+            RS_LOGD("RsDebug RSHardwareProcessor::ScaleDownLayers layer has been scaledown dst[%d %d %d %d]"\
+                "src[%d %d %d %d]", dstRect.x, dstRect.y, dstRect.w, dstRect.h,
+                srcRect.x, srcRect.y, srcRect.w, srcRect.h);
+        }
+    }
+}
+
 void RSHardwareProcessor::ReleaseNodePrevBuffer(RSSurfaceRenderNode& node)
 {
     const auto& consumer = node.GetConsumer();
@@ -151,10 +198,7 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
     RS_LOGI("RsDebug RSHardwareProcessor::ProcessSurface start node id:%llu available buffer:%d name:[%s]"\
         "[%d %d %d %d]", node.GetId(), node.GetAvailableBufferCount(), node.GetName().c_str(),
         node.GetDstRect().left_, node.GetDstRect().top_, node.GetDstRect().width_, node.GetDstRect().height_);
-    OHOS::sptr<SurfaceBuffer> cbuffer;
-    RSProcessor::SpecialTask task = [] () -> void {};
-    bool ret = ConsumeAndUpdateBuffer(node, task, cbuffer);
-    if (!ret) {
+    if (!RsRenderServiceUtil::ConsumeAndUpdateBuffer(node)) {
         RS_LOGI("RsDebug RSHardwareProcessor::ProcessSurface consume buffer fail");
         return;
     }
@@ -181,6 +225,13 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
         RS_LOGE("RsDebug RSHardwareProcessor::ProcessSurface geoPtr == nullptr");
         ReleaseNodePrevBuffer(node);
         return;
+    }
+
+    if (!node.IsNotifyRTBufferAvailable()) {
+        // Only ipc for one time.
+        RS_LOGI("RsDebug RSHardwareProcessor::ProcessSurface id = %llu "\
+                "Notify RT buffer available", node.GetId());
+        node.NotifyRTBufferAvailable();
     }
     ComposeInfo info = {
         .srcRect = {
@@ -239,6 +290,58 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
     if (info.buffer->GetSurfaceBufferColorGamut() != static_cast<ColorGamut>(currScreenInfo_.colorGamut)) {
         layer->SetCompositionType(CompositionType::COMPOSITION_CLIENT);
     }
+}
+
+void RSHardwareProcessor::ProcessSurface(RSDisplayRenderNode& node)
+{
+    RS_LOGI("RSHardwareProcessor::ProcessSurface displayNode id:%llu available buffer:%d", node.GetId(),
+        node.GetAvailableBufferCount());
+    if (!output_) {
+        RS_LOGE("RSHardwareProcessor::ProcessSurface output is nullptr");
+        return;
+    }
+    if (!RsRenderServiceUtil::ConsumeAndUpdateBuffer(node)) {
+        RS_LOGE("RSHardwareProcessor::ProcessSurface consume buffer fail");
+        return;
+    }
+    ComposeInfo info = {
+        .srcRect = {
+            .x = 0,
+            .y = 0,
+            .w = node.GetBuffer()->GetSurfaceBufferWidth(),
+            .h = node.GetBuffer()->GetSurfaceBufferHeight(),
+        },
+        .dstRect = {
+            .x = 0,
+            .y = 0,
+            .w = static_cast<int32_t>(currScreenInfo_.width),
+            .h = static_cast<int32_t>(currScreenInfo_.height),
+        },
+        .visibleRect = {
+            .x = 0,
+            .y = 0,
+            .w = static_cast<int32_t>(currScreenInfo_.width),
+            .h = static_cast<int32_t>(currScreenInfo_.height),
+        },
+        .zOrder = static_cast<int32_t>(node.GetGlobalZOrder()),
+        .alpha = {
+            .enGlobalAlpha = false,
+        },
+        .buffer = node.GetBuffer(),
+        .fence = node.GetFence(),
+        .preBuffer = node.GetPreBuffer(),
+        .preFence = node.GetPreFence(),
+        .blendType = BLEND_NONE,
+    };
+    std::shared_ptr<HdiLayerInfo> layer = HdiLayerInfo::CreateHdiLayerInfo();
+    RS_LOGI("RSHardwareProcessor::ProcessSurface displayNode id:%llu dst [%d %d %d %d]"\
+        "SrcRect [%d %d] rawbuffer [%d %d] surfaceBuffer [%d %d] buffaddr:%p, globalZOrder:%d, blendType = %d",
+        node.GetId(),
+        info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h, info.srcRect.w, info.srcRect.h,
+        node.GetBuffer()->GetWidth(), node.GetBuffer()->GetHeight(), node.GetBuffer()->GetSurfaceBufferWidth(),
+        node.GetBuffer()->GetSurfaceBufferHeight(), node.GetBuffer().GetRefPtr(),
+        info.zOrder, info.blendType);
+    RsRenderServiceUtil::ComposeSurface(layer, node.GetConsumer(), layers_, info, &node);
 }
 
 void RSHardwareProcessor::CalculateSrcRect(ComposeInfo& info, RectI clipRegion, RectI originDstRect)
@@ -303,8 +406,9 @@ void RSHardwareProcessor::Redraw(
         .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA | HBM_USE_MEM_FB,
         .timeout = 0,
     };
+    bool isUni = RSSystemProperties::GetUniRenderEnabledType() != UniRenderEnabledType::UNI_RENDER_DISABLED;
     RS_TRACE_NAME("Redraw");
-    bool ifUseGPU = IfUseGPUClient(param);
+    bool ifUseGPU = !isUni && IfUseGPUClient(param);
     RS_LOGE("RSHardwareProcessor::Redraw if use GPU client: %d!", ifUseGPU);
 #ifdef RS_ENABLE_GL
     if (ifUseGPU) {
@@ -325,6 +429,9 @@ void RSHardwareProcessor::Redraw(
     }
     std::unique_ptr<RSPaintFilterCanvas> canvas = std::make_unique<RSPaintFilterCanvas>(skCanvas);
     for (auto it = param.layers.begin(); it != param.layers.end(); ++it) {
+        if (isUni) {
+            break;
+        }
         LayerInfoPtr layerInfo = *it;
         if (layerInfo == nullptr) {
             continue;
@@ -388,10 +495,25 @@ void RSHardwareProcessor::Redraw(
 #ifdef RS_ENABLE_GL
     eglImageManager_->ShrinkCachesIfNeeded();
 #endif // RS_ENABLE_GL
+    ConsumeNodesNotOnTheTree();
+}
+
+void RSHardwareProcessor::ConsumeNodesNotOnTheTree()
+{
+    auto mainThread = RSMainThread::Instance();
+    if (mainThread != nullptr) {
+        auto& context = mainThread->GetContext();
+        mainThread->PostTask([&context]() {
+            context.GetMutableNodeMap().ConsumeNodesNotOnTree();
+        });
+    }
 }
 
 void RSHardwareProcessor::OnRotate()
 {
+    if (RSSystemProperties::GetUniRenderEnabledType() != UniRenderEnabledType::UNI_RENDER_DISABLED) {
+        return;
+    }
     int32_t width = static_cast<int32_t>(currScreenInfo_.width);
     int32_t height = static_cast<int32_t>(currScreenInfo_.height);
     for (auto& layer: layers_) {

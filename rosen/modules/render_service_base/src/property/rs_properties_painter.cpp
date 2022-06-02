@@ -38,6 +38,8 @@
 #include "render/rs_shader.h"
 #include "render/rs_mask.h"
 #include "render/rs_skia_filter.h"
+#include "include/core/SkSurface.h"
+#include "render_context/render_context.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -132,7 +134,7 @@ void RSPropertiesPainter::Clip(SkCanvas& canvas, RectF rect)
     canvas.clipRect(Rect2SkRect(rect), true);
 }
 
-void RSPropertiesPainter::DrawShadow(const RSProperties& properties, SkCanvas& canvas)
+void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
     if (properties.shadow_ && properties.shadow_->IsValid()) {
         canvas.save();
@@ -148,17 +150,19 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties, SkCanvas& c
             canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), SkClipOp::kDifference, true);
         }
         skPath.offset(properties.GetShadowOffsetX(), properties.GetShadowOffsetY());
-        SkColor spotColor = properties.GetShadowColor().AsArgbInt();
+        Color spotColor = properties.GetShadowColor();
         if (properties.shadow_->GetHardwareAcceleration()) {
             SkPoint3 planeParams = { 0.0f, 0.0f, properties.GetShadowElevation() };
             SkPoint3 lightPos = { canvas.getTotalMatrix().getTranslateX() + skPath.getBounds().centerX(),
                 canvas.getTotalMatrix().getTranslateY() + skPath.getBounds().centerY(), DEFAULT_LIGHT_HEIGHT };
-            SkColor ambientColor = DEFAULT_AMBIENT_COLOR;
-            SkShadowUtils::DrawShadow(&canvas, skPath, planeParams, lightPos, DEFAULT_LIGHT_RADIUS, ambientColor,
-                spotColor, SkShadowFlags::kTransparentOccluder_ShadowFlag);
+            Color ambientColor = Color::FromArgbInt(DEFAULT_AMBIENT_COLOR);
+            ambientColor.MultiplyAlpha(canvas.GetAlpha());
+            spotColor.MultiplyAlpha(canvas.GetAlpha());
+            SkShadowUtils::DrawShadow(&canvas, skPath, planeParams, lightPos, DEFAULT_LIGHT_RADIUS,
+                ambientColor.AsArgbInt(), spotColor.AsArgbInt(), SkShadowFlags::kTransparentOccluder_ShadowFlag);
         } else {
             SkPaint paint;
-            paint.setColor(spotColor);
+            paint.setColor(spotColor.AsArgbInt());
             paint.setAntiAlias(true);
             paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, properties.GetShadowRadius()));
             canvas.drawPath(skPath, paint);
@@ -167,12 +171,24 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties, SkCanvas& c
     }
 }
 
-void RSPropertiesPainter::SaveLayerForFilter(const RSProperties& properties, SkCanvas& canvas,
-    std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect)
+void RSPropertiesPainter::DrawFilter(const RSProperties& properties, SkCanvas& canvas,
+    std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect,
+    SkSurface* skSurface)
 {
     SkPaint paint;
     paint.setAntiAlias(true);
+    paint.setBlendMode(SkBlendMode::kSrc);
+    if (skSurface == nullptr) {
+        ROSEN_LOGE("skSurface null");
+        return ;
+    }
     filter->ApplyTo(paint);
+    // canvas draw by snapshot instead of SaveLayer, since the blur layer moves while using savelayer
+    auto imageSnapshot = skSurface->makeImageSnapshot();
+    if (imageSnapshot == nullptr) {
+        ROSEN_LOGE("image null");
+        return ;
+    }
     if (rect != nullptr) {
         canvas.clipRect((*rect), true);
     } else if (properties.GetClipBounds() != nullptr) {
@@ -180,19 +196,14 @@ void RSPropertiesPainter::SaveLayerForFilter(const RSProperties& properties, SkC
     } else {
         canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
     }
-    SkCanvas::SaveLayerRec slr(nullptr, &paint, SkCanvas::kInitWithPrevious_SaveLayerFlag);
-    canvas.saveLayer(slr);
-    RSRootRenderNode::MarkForceRaster();
-}
-
-void RSPropertiesPainter::RestoreForFilter(SkCanvas& canvas)
-{
+    canvas.save();
+    canvas.resetMatrix();
+    canvas.drawImage(imageSnapshot.get(), 0, 0, &paint);
     canvas.restore();
 }
 
-void RSPropertiesPainter::DrawBackground(const RSProperties& properties, SkCanvas& canvas)
+void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
-    auto filter = std::static_pointer_cast<RSSkiaFilter>(properties.GetBackgroundFilter());
     DrawShadow(properties, canvas);
     // clip
     if (properties.GetClipBounds() != nullptr) {
@@ -201,9 +212,6 @@ void RSPropertiesPainter::DrawBackground(const RSProperties& properties, SkCanva
         canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
     }
     // paint backgroundColor
-    if (filter != nullptr) {
-        SaveLayerForFilter(properties, canvas, filter);
-    }
     SkPaint paint;
     paint.setAntiAlias(true);
     canvas.save();
@@ -222,9 +230,6 @@ void RSPropertiesPainter::DrawBackground(const RSProperties& properties, SkCanva
         canvas.drawPaint(paint);
     }
     canvas.restore();
-    if (filter != nullptr) {
-        RestoreForFilter(canvas);
-    }
 }
 
 void RSPropertiesPainter::DrawFrame(
@@ -237,7 +242,6 @@ void RSPropertiesPainter::DrawFrame(
             canvas.concat(mat);
         }
         auto frameRect = Rect2SkRect(properties.GetFrameRect());
-
         cmds->Playback(canvas, &frameRect);
     }
 }

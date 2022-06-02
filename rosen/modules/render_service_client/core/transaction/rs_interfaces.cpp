@@ -36,6 +36,11 @@ ScreenId RSInterfaces::GetDefaultScreenId()
     return renderServiceClient_->GetDefaultScreenId();
 }
 
+std::vector<ScreenId> RSInterfaces::GetAllScreenIds()
+{
+    return renderServiceClient_->GetAllScreenIds();
+}
+
 ScreenId RSInterfaces::CreateVirtualScreen(
     const std::string &name,
     uint32_t width,
@@ -77,6 +82,16 @@ bool RSInterfaces::TakeSurfaceCapture(std::shared_ptr<RSDisplayNode> node,
 void RSInterfaces::SetScreenActiveMode(ScreenId id, uint32_t modeId)
 {
     renderServiceClient_->SetScreenActiveMode(id, modeId);
+}
+
+int32_t RSInterfaces::SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height)
+{
+    return renderServiceClient_->SetVirtualScreenResolution(id, width, height);
+}
+
+RSVirtualScreenResolution RSInterfaces::GetVirtualScreenResolution(ScreenId id)
+{
+    return renderServiceClient_->GetVirtualScreenResolution(id);
 }
 
 void RSInterfaces::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status)

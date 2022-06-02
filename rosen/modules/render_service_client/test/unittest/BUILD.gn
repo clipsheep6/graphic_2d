@@ -18,7 +18,10 @@ module_out_path = "graphic_standard/render_service_client"
 group("unittest") {
   testonly = true
 
-  deps = [ ":RSInterfacesTest" ]
+  deps = [
+    ":RSDropframeTest",
+    ":RSInterfacesTest",
+  ]
 }
 
 ## Build RSInterfacesTest
@@ -28,11 +31,21 @@ ohos_unittest("RSInterfacesTest") {
   deps = [ ":rs_client_test_common" ]
 }
 
+## Build RSDropframeTest
+ohos_unittest("RSDropframeTest") {
+  module_out_path = module_out_path
+  sources = [
+    "//foundation/graphic/graphic/rosen/modules/render_service_base/src/pipeline/rs_base_render_node.cpp",
+    "rs_dropframe_test.cpp",
+  ]
+  deps = [ ":rs_client_test_common" ]
+}
+
 ## Build rs_client_test_common.a {{{
 config("rs_client_test_common_public_config") {
   include_dirs = [
-    "//foundation/graphic/graphic/frameworks/surface/include",
-    "//foundation/graphic/graphic/rosen/modules/render_service_client/core",
+    "//foundation/graphic/graphic_2d/frameworks/surface/include",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/core",
   ]
 
   cflags = [
@@ -53,9 +66,9 @@ ohos_static_library("rs_client_test_common") {
   public_deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-    "//foundation/graphic/graphic:libsurface",
-    "//foundation/graphic/graphic/rosen/modules/render_service_base:librender_service_base",
-    "//foundation/graphic/graphic/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/graphic/graphic_2d:libsurface",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//third_party/googletest:gtest_main",
     "//utils/native/base:utils",
   ]

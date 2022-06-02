@@ -56,7 +56,6 @@ SurfaceBufferImpl::IDisplayGrallocSptr SurfaceBufferImpl::GetDisplayGralloc()
     static std::mutex mutex;
     std::lock_guard<std::mutex> lock(mutex);
     if (displayGralloc_ != nullptr) {
-        BLOGD("IDisplayGralloc has been initialized successfully.");
         return displayGralloc_;
     }
 
@@ -122,6 +121,7 @@ GSError SurfaceBufferImpl::Alloc(const BufferRequestConfig &config)
         std::lock_guard<std::mutex> lock(mutex_);
         surfaceBufferColorGamut_ = config.colorGamut;
         transform_ = config.transform;
+        surfaceBufferScalingMode_ = config.scalingMode;
         surfaceBufferWidth_ = config.width;
         surfaceBufferHeight_ = config.height;
         handle_ = handle;
@@ -145,6 +145,9 @@ GSError SurfaceBufferImpl::Map()
         if (handle_ == nullptr) {
             BLOGE("handle is nullptr");
             return GSERROR_INVALID_OPERATING;
+        } else if (handle_->virAddr != nullptr) {
+            BLOGI("handle_->virAddr has been maped");
+            return GSERROR_OK;
         }
         handle = handle_;
     }
@@ -166,6 +169,9 @@ GSError SurfaceBufferImpl::Unmap()
         if (handle_ == nullptr) {
             BLOGE("handle is nullptr");
             return GSERROR_INVALID_OPERATING;
+        } else if (handle_->virAddr == nullptr) {
+            BLOGW("handle has been unmaped");
+            return GSERROR_OK;
         }
         handle = handle_;
     }
@@ -271,6 +277,12 @@ const TransformType& SurfaceBufferImpl::GetSurfaceBufferTransform() const
     return transform_;
 }
 
+const ScalingMode& SurfaceBufferImpl::GetSurfaceBufferScalingMode() const
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return surfaceBufferScalingMode_;
+}
+
 int32_t SurfaceBufferImpl::GetSurfaceBufferWidth() const
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -365,11 +377,11 @@ int32_t SurfaceBufferImpl::GetKey() const
     return handle_->key;
 }
 
-void *SurfaceBufferImpl::GetVirAddr() const
+void *SurfaceBufferImpl::GetVirAddr()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (handle_ == nullptr) {
-        BLOGW("handle is nullptr");
+    GSError ret = this->Map();
+    if (ret != GSERROR_OK) {
+        BLOGW("Map failed");
         return nullptr;
     }
     return handle_->virAddr;

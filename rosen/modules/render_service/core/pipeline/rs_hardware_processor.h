@@ -38,6 +38,7 @@ public:
     RSHardwareProcessor();
     ~RSHardwareProcessor() override;
     void ProcessSurface(RSSurfaceRenderNode& node) override;
+    void ProcessSurface(RSDisplayRenderNode& node) override;
     void Init(ScreenId id, int32_t offsetX, int32_t offsetY) override;
     void PostProcess() override;
     void CropLayers();
@@ -47,6 +48,8 @@ private:
     void OnRotate();
     void CalculateSrcRect(ComposeInfo& info, RectI clipRegion, RectI originDstRect);
     void ReleaseNodePrevBuffer(RSSurfaceRenderNode& node);
+    void ScaleDownLayers();
+    void ConsumeNodesNotOnTheTree();
     HdiBackend* backend_ = nullptr;
     sptr<RSScreenManager> screenManager_;
     ScreenInfo currScreenInfo_;

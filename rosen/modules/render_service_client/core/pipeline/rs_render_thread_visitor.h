@@ -16,6 +16,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_RENDER_RS_RENDER_THREAD_VISITOR_H
 #define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_RENDER_THREAD_VISITOR_H
 
+#include <include/core/SkMatrix.h>
 #include <memory>
 #include <set>
 
@@ -57,6 +58,7 @@ private:
     void ClipHoleForSurfaceNode(RSSurfaceRenderNode& node);
 
     std::vector<NodeId> childSurfaceNodeIds_;
+    SkMatrix parentSurfaceNodeMatrix_;
 
     void SendCommandFromRT(std::unique_ptr<RSCommand>& command);
 };

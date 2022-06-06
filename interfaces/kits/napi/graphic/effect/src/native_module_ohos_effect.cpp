@@ -25,16 +25,6 @@ namespace Rosen{
  */
 static napi_value Export(napi_env env, napi_value exports)
 {
-    HiLog::Info(LABEL, "Info Napi CALL");
-    HiLog::Debug(LABEL, "Debug Napi CALL");
-    HiLog::Warn(LABEL, "Warn Napi CALL");
-    HiLog::Error(LABEL, "Error Napi CALL");
-    HiLog::Fatal(LABEL, "Fatal Napi CALL");
-
-
-
-    EFFECT_LOG_I("AdvancedEffect Napi CALL");
-    AdvancedEffectNapi::Init(env, exports);
     EFFECT_LOG_I("ColorPicker Napi CALL");
     ColorPickerNapi::Init(env, exports);
     return exports;

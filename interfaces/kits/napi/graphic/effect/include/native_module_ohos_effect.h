@@ -17,7 +17,6 @@
 #define NATIVE_MODULE_OHOS_EFFECT_H_
 
 #include "napi/native_node_api.h"
-#include "advanced_effect_napi.h"
 #include "color_picker_napi.h"
 
 #endif /* NATIVE_MODULE_OHOS_EFFECT_H_ */

@@ -19,9 +19,6 @@
 #include "effect_napi_utils.h"
 #include "color.h"
 #include "pixel_map.h"
-//#include "core/SkImageInfo.h"
-//#include "core/SkPixmap.h"
-
 #include "include/core/SkBitmap.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkImageFilter.h"
@@ -60,87 +57,26 @@ std::shared_ptr<ColorPicker> ColorPicker::CreateColorPicker(const std::shared_pt
     return std::shared_ptr<ColorPicker>(colorPicker);
 }
 
-std::shared_ptr<Media::PixelMap> ColorPicker::GetPixelMap()
+std::shared_ptr<Media::PixelMap> ColorPicker::GetScaledPixelMap()
 {
-    // 1 print pixelmap info
-    auto width = pixelmap_->GetWidth();
-    auto height = pixelmap_->GetHeight();
-    auto pixelFormat = pixelmap_->GetPixelFormat();
-    auto alphaType = pixelmap_->GetAlphaType();
-    auto pixelAddr = const_cast<uint8_t *>(pixelmap_->GetPixels());
-    auto rowBytes = pixelmap_->GetRowBytes();
-    HiLog::Info(LABEL, ".[pixelmap_]size=%{public}d X %{public}d", width, height);   // 1634 x 919
-    HiLog::Info(LABEL, ".[pixelmap_]format=%{public}d alpha= %{public}d", pixelFormat, alphaType);   // 3  1
-    HiLog::Info(LABEL, ".[pixelmap_]pix.addr=%{public}p rByte=%{public}d", pixelAddr, rowBytes);
-
-#if 1
-    // 2 Create pixelmap
+    // Create scaled pixelmap
     OHOS::Media::InitializationOptions options;
-    options.alphaType = alphaType;
-    options.pixelFormat = pixelFormat;
+    options.alphaType = pixelmap_->GetAlphaType();
+    options.pixelFormat = pixelmap_->GetPixelFormat();
     options.scaleMode = OHOS::Media::ScaleMode::FIT_TARGET_SIZE;
     options.size.width = 1;
     options.size.height = 1;
     options.editable = true;
     std::unique_ptr<Media::PixelMap> newPixelMap = Media::PixelMap::Create(*pixelmap_.get(), options);
-
-    HiLog::Info(LABEL, "[newpix].wh=%{public}d x %{public}d" , pixelmap_->GetWidth(), pixelmap_->GetHeight());
-    HiLog::Info(LABEL, "[newpix].rbyte=%{public}d, bCnt=%{public}d" , pixelmap_->GetRowBytes(), pixelmap_->GetByteCount() );
-    HiLog::Info(LABEL, "[newpix].pixByte=%{public}d" , pixelmap_->GetPixelBytes() );
-#endif
     return std::move(newPixelMap);
 }
 
-#if 0
-static SkColorType PixelFormatConvert(const Media::PixelFormat &pixelFormat)
-{
-    SkColorType colorType;
-    switch (pixelFormat) {
-        case Media::PixelFormat::BGRA_8888:
-            colorType = SkColorType::kBGRA_8888_SkColorType;
-            break;
-        case Media::PixelFormat::RGBA_8888:
-            colorType = SkColorType::kRGBA_8888_SkColorType;
-            break;
-        case Media::PixelFormat::RGB_565:
-            colorType = SkColorType::kRGB_565_SkColorType;
-            break;
-        case Media::PixelFormat::ALPHA_8:
-            colorType = SkColorType::kAlpha_8_SkColorType;
-            break;
-        default:
-            colorType = SkColorType::kUnknown_SkColorType;
-            break;
-    }
-    return colorType;
-}
-#endif
-
-uint32_t ColorPicker::GetMainColor(Color &color)
+uint32_t ColorPicker::GetMainColor(ColorManager::Color &color)
 {
     if (pixelmap_ == nullptr){
         return ERR_EFFECT_INVALID_VALUE;
     }
-    //color = Color(0x00, 0xff, 0x00, 0xff);
-
-    // 1 print pixelmap info
-//    auto width = pixelmap_->GetWidth();
-//    auto height = pixelmap_->GetHeight();
-    auto pixelFormat = pixelmap_->GetPixelFormat();
-    auto alphaType = pixelmap_->GetAlphaType();
-//    auto pixelAddr = const_cast<uint8_t *>(pixelmap_->GetPixels());
-//    auto rowBytes = pixelmap_->GetRowBytes();
-    
-#if 1
-    // Create pixelmap
-    OHOS::Media::InitializationOptions options;
-    options.alphaType = alphaType;
-    options.pixelFormat = pixelFormat;
-    options.scaleMode = OHOS::Media::ScaleMode::FIT_TARGET_SIZE;
-    options.size.width = 1;
-    options.size.height = 1;
-    options.editable = true;
-    std::unique_ptr<Media::PixelMap> newPixelMap = Media::PixelMap::Create(*pixelmap_.get(), options);
+    std::shared_ptr<Media::PixelMap> newPixelMap = GetScaledPixelMap();
 
     // get color
     uint32_t colorVal = 0;
@@ -148,10 +84,7 @@ uint32_t ColorPicker::GetMainColor(Color &color)
     int y = 0;
     bool bSucc = newPixelMap->GetARGB32Color(x, y, colorVal);
     HiLog::Info(LABEL, "[newpix].argb.ret=%{public}d, %{public}x", bSucc, colorVal);
-    color = Color(colorVal);
-    
-#endif
-
+    color = ColorManager::Color(colorVal);
     return SUCCESS;
 }
 
@@ -162,38 +95,6 @@ ColorPicker::ColorPicker(std::shared_ptr<Media::PixelMap> pixmap)
         return ;
     }
     pixelmap_ = pixmap;
-
-#if 0
-    //  
-    SkImageInfo drawImageInfo = SkImageInfo::Make(width, height,
-                                                PixelFormatConvert(pixelFormat),
-                                                static_cast<SkAlphaType>(alphaType));
-    // SkPixmap drawPixmap(drawImageInfo, pixelAddr, rowBytes);
-    SkBitmap bitmap;
-    bitmap.installPixels(drawImageInfo, pixelAddr, rowBytes);
-
-    HiLog::Info(LABEL, "[bitmap]size=%{public}d x %{public}d", bitmap.width(), bitmap.height());
-
-    std::unique_ptr<SkCanvas> offscreen = SkCanvas::MakeRasterDirect(drawImageInfo, pixelAddr, rowBytes);
-    offscreen->drawBitmap(bitmap, 0, 0);
-    offscreen->scale(.5f, .5f);
-
-    SkPaint p;
-    p.setColor(SK_ColorRED);
-    p.setAntiAlias(true);
-
-    offscreen->translate(0, 0);
-    offscreen->rotate(10);
-    offscreen->drawRect({ 20, 20, 200, 200 }, p);
-    
-    SkFont font(SkTypeface::MakeFromName("monospace", SkFontStyle()), 100);
-    offscreen->drawString("ABC", 20, 160, font, p);
-    offscreen->drawString("DEF", 20, 160, font, p);
-
-    HiLog::Info(LABEL, "[bitmap.scale]size=%{public}d x %{public}d", bitmap.width(), bitmap.height());
-
-
-#endif    
 }
 
 

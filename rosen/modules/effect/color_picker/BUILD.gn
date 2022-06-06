@@ -40,6 +40,7 @@ ohos_shared_library("color_picker") {
     "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
     "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/effect/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include/",
+    "//foundation/graphic/graphic_2d/utils/color_manager/export",
     "//foundation/graphic/graphic_2d/utils/log",
   ]
 
@@ -58,6 +59,7 @@ ohos_shared_library("color_picker") {
     "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/common:graphic_napi_common",
     "//foundation/graphic/graphic_2d/rosen/modules/effect/effectChain:libeffectchain",
     "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect",
+    "//foundation/graphic/graphic_2d/utils/color_manager:color_manager",
     "//foundation/graphic/graphic_2d:libsurface",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image",

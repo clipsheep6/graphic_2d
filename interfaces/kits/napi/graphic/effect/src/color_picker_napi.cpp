@@ -28,7 +28,6 @@ namespace {
     constexpr uint32_t NUM_0 = 0;
     constexpr uint32_t NUM_1 = 1;
     constexpr uint32_t NUM_2 = 2;
-//    constexpr uint32_t NUM_3 = 3;
     constexpr uint32_t NUM_4 = 4;
 }
 
@@ -50,7 +49,7 @@ struct ColorPickerAsyncContext {
     ColorPickerNapi *nConstructor;
     std::shared_ptr<ColorPicker> rColorPicker;
     std::shared_ptr<Media::PixelMap> rPixelMap;
-    Color color;
+    ColorManager::Color color;
 };
 
 static void BuildMsgOnError(napi_env env,
@@ -58,7 +57,7 @@ static void BuildMsgOnError(napi_env env,
                             bool assertion,
                             const std::string msg);
 
-static napi_value BuildJsColor(napi_env env, Color color);
+static napi_value BuildJsColor(napi_env env, ColorManager::Color color);
 
 static void CommonCallbackRoutine(napi_env env, ColorPickerAsyncContext* &asyncContext, const napi_value &valueParam)
 {
@@ -116,10 +115,9 @@ ColorPickerNapi::~ColorPickerNapi()
 napi_value ColorPickerNapi::Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor props[] = {
-        DECLARE_NAPI_FUNCTION("test", Test),
         DECLARE_NAPI_FUNCTION("getMainColor", GetMainColor),
         DECLARE_NAPI_FUNCTION("getMainColorSync", GetMainColorSync),
-        DECLARE_NAPI_GETTER("pixelMap", GetPixelMap),
+        DECLARE_NAPI_GETTER("scaledPixelMap", GetScaledPixelMap),
     };
 
     napi_property_descriptor static_prop[] = {
@@ -166,7 +164,6 @@ napi_value ColorPickerNapi::Init(napi_env env, napi_value exports)
     EFFECT_LOG_I("Init success");
     return exports;
 }
-
 
 napi_value ColorPickerNapi::Constructor(napi_env env, napi_callback_info info)
 {
@@ -258,8 +255,6 @@ static void CreateColorPickerErrorComplete(napi_env env, napi_status status, voi
     CommonCallbackRoutine(env, context, result);
 }
 
-//function createColorPicker(source: image.PixelMap): Promise<ColorPicker>;
-//function createColorPicker(source: image.PixelMap, callback: AsyncCallback<ColorPicker>): void;
 napi_value ColorPickerNapi::CreateColorPicker(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
@@ -333,11 +328,11 @@ napi_value ColorPickerNapi::CreateColorPicker(napi_env env, napi_callback_info i
     return result;
 }
 
-napi_value ColorPickerNapi::GetPixelMap(napi_env env, napi_callback_info info)
+napi_value ColorPickerNapi::GetScaledPixelMap(napi_env env, napi_callback_info info)
 {
     napi_status status;
     napi_value thisVar = nullptr;
-    EFFECT_LOG_I("GetPixelMap");
+    EFFECT_LOG_I("GetScaledPixelMap");
     VALUE_JS_NO_ARGS(env, info, status, thisVar);
     VALUE_NAPI_CHECK_RET_D(VALUE_IS_OK(status),
                         nullptr,
@@ -353,7 +348,7 @@ napi_value ColorPickerNapi::GetPixelMap(napi_env env, napi_callback_info info)
                         nullptr,
                         EFFECT_LOG_E("empty native colorPicker"));
 
-    auto result = thisColorPicker->nativeColorPicker_->GetPixelMap();
+    auto result = thisColorPicker->nativeColorPicker_->GetScaledPixelMap();
     VALUE_NAPI_CHECK_RET_D(VALUE_IS_READY(status, result),
                         nullptr,
                         EFFECT_LOG_E("empty pixelmap"));
@@ -385,23 +380,17 @@ static void GetMainColorComplete(napi_env env, napi_status status, void *data)
         EFFECT_LOG_I("[ColorPicker]build color");
         result = BuildJsColor(env, context->color);
     }
-    EFFECT_LOG_I("[ColorPicker]Get color %{public}x,%{public}x,%{public}x,%{public}x", 
-                        context->color.red_,
-                        context->color.green_, 
-                        context->color.blue_, 
-                        context->color.alpha_ );
+    EFFECT_LOG_I("[ColorPicker]Get color[ARGB] %{public}f,%{public}f,%{public}f,%{public}f",
+                        context->color.a,
+                        context->color.r,
+                        context->color.g,
+                        context->color.b);
     CommonCallbackRoutine(env, context, result);
-}
-
-napi_value ColorPickerNapi::Test(napi_env env, napi_callback_info info)
-{
-    return nullptr;
 }
 
 napi_value ColorPickerNapi::GetMainColor(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
-//    napi_get_undefined(env, &result);
     int32_t refCount = 1;
     napi_status status;
     napi_value thisVar = nullptr;
@@ -441,7 +430,7 @@ napi_value ColorPickerNapi::GetMainColor(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value BuildJsColor(napi_env env, Color color)
+napi_value BuildJsColor(napi_env env, ColorManager::Color color)
 {
     EFFECT_LOG_I("build color");
     napi_value result = nullptr;
@@ -451,17 +440,22 @@ napi_value BuildJsColor(napi_env env, Color color)
     napi_value clrAlpha = nullptr;
 
     napi_create_object(env, &result);
-    
-    napi_create_int32(env, color.red_, &clrRed);
+
+    int color_red = static_cast<int>(color.r * 255.0f);
+    int color_green = static_cast<int>(color.g * 255.0f);
+    int color_blue = static_cast<int>(color.b * 255.0f);
+    int color_alpha = static_cast<int>(color.a * 255.0f);
+
+    napi_create_int32(env, color_red, &clrRed);
     napi_set_named_property(env, result, "red", clrRed);
 
-    napi_create_int32(env, color.green_, &clrGreen);
+    napi_create_int32(env, color_green, &clrGreen);
     napi_set_named_property(env, result, "green", clrGreen);
 
-    napi_create_int32(env, color.blue_, &clrBlue);
+    napi_create_int32(env, color_blue, &clrBlue);
     napi_set_named_property(env, result, "blue", clrBlue);
     
-    napi_create_int32(env, color.alpha_, &clrAlpha);
+    napi_create_int32(env, color_alpha, &clrAlpha);
     napi_set_named_property(env, result, "alpha", clrAlpha);
 
     return result;
@@ -494,7 +488,7 @@ napi_value ColorPickerNapi::GetMainColorSync(napi_env env, napi_callback_info in
     uint32_t errorCode = ERR_EFFECT_INVALID_VALUE;
 
     napi_value result = nullptr;
-    Color color;
+    ColorManager::Color color;
     errorCode = thisColorPicker->nativeColorPicker_->GetMainColor(color);
     if (errorCode == SUCCESS) {
         result = BuildJsColor(env, color);

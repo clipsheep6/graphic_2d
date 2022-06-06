@@ -37,12 +37,12 @@ ohos_shared_library("advanced_effect") {
     "//foundation/graphic/graphic_2d/rosen/modules/effect/effectChain/include",
     "//foundation/graphic/graphic_2d/rosen/modules/effect/egl/include",
     "//foundation/graphic/graphic_2d/rosen/modules/effect/color_picker/include",
+    "//foundation/graphic/graphic_2d/utils/color_manager/export",
     "//foundation/multimedia/image_standard/interfaces/kits/js/common/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
     "//foundation/multimedia/image_standard/mock/native/include",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
   ]
-
 
   configs = [
     ":graphic_napi_advancedEffect_config",
@@ -51,7 +51,6 @@ ohos_shared_library("advanced_effect") {
 
   sources = [
     "./src/native_module_ohos_effect.cpp",
-    "./src/advanced_effect_napi.cpp",
     "./src/color_picker_napi.cpp",
     "./src/effect_napi_utils.cpp",
   ]
@@ -61,10 +60,12 @@ ohos_shared_library("advanced_effect") {
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/effect/effectChain:libeffectchain",
     "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect",
+    "//foundation/graphic/graphic_2d/utils/color_manager:color_manager",
     "//foundation/graphic/graphic_2d/rosen/modules/effect/color_picker:color_picker",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
+    
     "//foundation/arkui/napi:ace_napi",
     "//utils/native/base:utils",
   ]

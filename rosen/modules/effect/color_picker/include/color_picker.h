@@ -27,15 +27,17 @@ namespace OHOS {
 namespace Media {
 class PixelMap;
 }
-namespace Rosen {
+namespace ColorManager {
 class Color;
+}
+namespace Rosen {
 class ColorPicker {
 public:
     ~ColorPicker() {}
 
     NATIVEEXPORT static std::shared_ptr<ColorPicker> CreateColorPicker(const std::shared_ptr<Media::PixelMap>& pixmap, uint32_t &errorCode);
-    NATIVEEXPORT std::shared_ptr<Media::PixelMap> GetPixelMap();
-    NATIVEEXPORT uint32_t GetMainColor(Color &color);
+    NATIVEEXPORT std::shared_ptr<Media::PixelMap> GetScaledPixelMap();
+    NATIVEEXPORT uint32_t GetMainColor(ColorManager::Color &color);
 
 private:
     ColorPicker(std::shared_ptr<Media::PixelMap> pixmap);

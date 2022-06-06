@@ -16,12 +16,9 @@
 #ifndef COLOR_PICKER_NAPI_H_
 #define COLOR_PICKER_NAPI_H_
 
-
 #include "effect_type.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-
-
 
 namespace OHOS {
 namespace Media {
@@ -47,24 +44,24 @@ private:
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
 
     // static mothod
-    static napi_value Test(napi_env env, napi_callback_info info);
     static napi_value CreateColorPicker(napi_env env, napi_callback_info info);
     static void CreateColorPickerFromPixelmapComplete(napi_env env, napi_status status, void *data);
-    static napi_value GetPixelMap(napi_env env, napi_callback_info info);
+    static napi_value GetScaledPixelMap(napi_env env, napi_callback_info info);
 
-//    static void CreateColorPickerComplete(napi_env env, napi_status status, void *data);
     static napi_value GetMainColor(napi_env env, napi_callback_info info);
     static napi_value GetMainColorSync(napi_env env, napi_callback_info info);
 
     static ImageType ParserArgumentType(napi_env env, napi_value argv);
 
-    // var
+    // napi var
     napi_env env_ = nullptr;
     napi_ref wrapper_ = nullptr;
-    // for create ColorPicker
-    // var
+
+    // var for create ColorPicker
     static thread_local napi_ref sConstructor_;
     static std::shared_ptr<ColorPicker> sColorPicker_;
+
+    // native var
     std::shared_ptr<ColorPicker> nativeColorPicker_;
 };
 } // namespace Rosen

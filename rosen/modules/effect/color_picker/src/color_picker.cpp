@@ -64,8 +64,8 @@ std::shared_ptr<Media::PixelMap> ColorPicker::GetScaledPixelMap()
     options.alphaType = pixelmap_->GetAlphaType();
     options.pixelFormat = pixelmap_->GetPixelFormat();
     options.scaleMode = OHOS::Media::ScaleMode::CENTER_CROP; //FIT_TARGET_SIZE;  
-    options.size.width = 400;
-    options.size.height = 400;
+    options.size.width = 1;
+    options.size.height = 1;
     options.editable = true;
     std::unique_ptr<Media::PixelMap> newPixelMap = Media::PixelMap::Create(*pixelmap_.get(), options);
     return std::move(newPixelMap);

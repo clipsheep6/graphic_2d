@@ -52,7 +52,6 @@ ohos_shared_library("advanced_effect") {
   sources = [
     "./src/native_module_ohos_effect.cpp",
     "./src/color_picker_napi.cpp",
-    "./src/effect_napi_utils.cpp",
   ]
 
   deps = [

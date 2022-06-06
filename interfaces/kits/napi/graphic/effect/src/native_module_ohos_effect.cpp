@@ -15,7 +15,7 @@
 
 #include "native_module_ohos_effect.h"
 #include "hilog/log.h"
-#include "effect_napi_utils.h"
+#include "effect_utils.h"
 
 using OHOS::HiviewDFX::HiLog;
 namespace OHOS {

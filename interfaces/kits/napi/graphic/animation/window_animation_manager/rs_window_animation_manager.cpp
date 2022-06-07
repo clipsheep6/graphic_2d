@@ -28,6 +28,7 @@ namespace OHOS {
 namespace Rosen {
 using namespace AbilityRuntime;
 constexpr size_t ARGC_ONE = 1;
+constexpr size_t ARGC_TWO = 2;
 
 NativeValue* RSWindowAnimationManager::Init(NativeEngine* engine, NativeValue* exportObj)
 {
@@ -47,6 +48,8 @@ NativeValue* RSWindowAnimationManager::Init(NativeEngine* engine, NativeValue* e
     object->SetNativePointer(windowAnimationManager.release(), RSWindowAnimationManager::Finalizer, nullptr);
 
     BindNativeFunction(*engine, *object, "setController", RSWindowAnimationManager::SetController);
+
+    BindNativeFunction(*engine, *object, "minimizeWindows", RSWindowAnimationManager::MinimizeWindows);
     return nullptr;
 }
 
@@ -74,6 +77,64 @@ NativeValue* RSWindowAnimationManager::OnSetController(NativeEngine& engine, Nat
     sptr<RSWindowAnimationController> controller = new RSWindowAnimationController(engine);
     controller->SetJsController(info.argv[0]);
     SingletonContainer::Get<WindowAdapter>().SetWindowAnimationController(controller);
+    return nullptr;
+}
+
+NativeValue* RSWindowAnimationManager::MinimizeWindows(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WALOGD("minimize");
+    auto me = CheckParamsAndGetThis<RSWindowAnimationManager>(engine, info);
+    return (me != nullptr) ? me->OnMinimizeWindows(*engine, *info) : nullptr;
+}
+
+NativeValue* RSWindowAnimationManager::OnMinimizeWindows(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WALOGD("OnMinimize");
+    // only support two param
+    if (info.argc != ARGC_TWO) {
+        WALOGE("No enough params!");
+        return nullptr;
+    }
+
+    // parse windowsId
+    NativeReference* nativeRef = engine.CreateReference(info.argv[0], ARGC_ONE);
+    if (nativeRef == nullptr) {
+        WALOGE("Failed to create reference!");
+        return nullptr;
+    }
+    NativeValue* arrayValue = nativeRef->Get();
+    NativeArray* array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    if (array == nullptr) {
+        WALOGE("Failed to convert native value!");
+        return nullptr;
+    }
+
+    std::vector<uint32_t> windowIds;
+    for (uint32_t i = 0; i < array->GetLength(); i++) {
+        uint32_t windowId = 0;
+        if (!ConvertFromJsValue(engine, array->GetElement(i), windowId)) {
+            WALOGE("Parse windowId failed");
+            return nullptr;
+        }
+        windowIds.push_back(windowId);
+    }
+
+    // parse finishCallback function
+    nativeRef = engine.CreateReference(info.argv[1], ARGC_ONE);
+    if (nativeRef == nullptr) {
+        WALOGE("Failed to create reference!");
+        return nullptr;
+    }
+    NativeValue* funValue = nativeRef->Get();
+    NativeObject* function = ConvertNativeValueTo<NativeObject>(funValue);
+    if (function == nullptr) {
+        WALOGE("Failed to convert native value!");
+        return nullptr;
+    }
+
+    auto callback = static_cast<RSIWindowAnimationFinishedCallback*>(function->GetNativePointer());
+    sptr<RSIWindowAnimationFinishedCallback> finishCallback(callback);
+    SingletonContainer::Get<WindowAdapter>().MinimizeWindowsByLauncher(windowIds, false, finishCallback);
     return nullptr;
 }
 } // namespace Rosen

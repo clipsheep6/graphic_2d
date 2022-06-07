@@ -39,6 +39,9 @@ public:
     virtual void OnMinimizeWindow(const sptr<RSWindowAnimationTarget>& minimizingWindowTarget,
         const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback);
 
+    virtual void OnMinimizeAllWindow(std::vector<sptr<RSWindowAnimationTarget>> minimizingWindowsTarget,
+        const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback);
+
     virtual void OnCloseWindow(const sptr<RSWindowAnimationTarget>& closingWindowTarget,
         const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback);
 

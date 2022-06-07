@@ -35,8 +35,11 @@ public:
 
     static NativeValue* SetController(NativeEngine* engine, NativeCallbackInfo* info);
 
+    static NativeValue* MinimizeWindows(NativeEngine* engine, NativeCallbackInfo* info);
 private:
     NativeValue* OnSetController(NativeEngine& engine, NativeCallbackInfo& info);
+
+    NativeValue* OnMinimizeWindows(NativeEngine& engine, NativeCallbackInfo& info);
 };
 } // namespace Rosen
 } // namespace OHOS

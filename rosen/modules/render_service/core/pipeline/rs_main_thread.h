@@ -84,11 +84,11 @@ public:
         return std::move(taskFuture);
     }
 
-#ifdef RS_ENABLE_GL
     std::shared_ptr<RenderContext> GetRenderContext() const
     {
         return renderContext_;
     }
+#ifdef RS_ENABLE_GL
     std::shared_ptr<RSEglImageManager> GetRSEglImageManager() const
     {
         return eglImageManager_;
@@ -135,9 +135,8 @@ private:
     RSContext context_;
     std::thread::id mainThreadId_;
     std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
-
-#ifdef RS_ENABLE_GL
     std::shared_ptr<RenderContext> renderContext_;
+#ifdef RS_ENABLE_GL
     std::shared_ptr<RSEglImageManager> eglImageManager_;
 #endif // RS_ENABLE_GL
 };

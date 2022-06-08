@@ -45,6 +45,9 @@ public:
 
 private:
     void DrawBufferOnCanvas(RSSurfaceRenderNode& node);
+#ifdef RS_ENABLE_GL
+    void DrawImageOnCanvas(RSSurfaceRenderNode& node);
+#endif // RS_ENABLE_GL
     static bool IsChildOfDisplayNode(RSBaseRenderNode& node);
     static bool IsChildOfSurfaceNode(RSBaseRenderNode& node);
     static bool IsChildOfLeashNode(RSBaseRenderNode& node);

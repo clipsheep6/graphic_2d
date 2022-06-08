@@ -499,9 +499,6 @@ void RSHardwareProcessor::Redraw(
 #endif // RS_ENABLE_GL
     }
     rsSurface_->FlushFrame(currFrame_);
-#ifdef RS_ENABLE_GL
-    eglImageManager_->ShrinkCachesIfNeeded();
-#endif // RS_ENABLE_GL
     ConsumeNodesNotOnTheTree();
 }
 

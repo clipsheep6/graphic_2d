@@ -63,10 +63,9 @@ void RSMainThread::Init()
     receiver_ = std::make_shared<VSyncReceiver>(conn);
     receiver_->Init();
     RsRenderServiceUtil::InitEnableClient();
-
-#ifdef RS_ENABLE_GL
     renderContext_ = std::make_shared<RenderContext>();
     renderContext_->InitializeEglContext();
+#ifdef RS_ENABLE_GL
     eglImageManager_ = std::make_shared<RSEglImageManager>(renderContext_->GetEGLDisplay());
 #endif // RS_ENABLE_GL
 }
@@ -111,6 +110,9 @@ void RSMainThread::Render()
     }
     rootNode->Prepare(visitor);
     rootNode->Process(visitor);
+#ifdef RS_ENABLE_GL
+    eglImageManager_->ShrinkCachesIfNeeded();
+#endif // RS_ENABLE_GL
 }
 
 void RSMainThread::RequestNextVSync()

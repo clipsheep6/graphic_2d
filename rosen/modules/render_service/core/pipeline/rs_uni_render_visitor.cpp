@@ -246,7 +246,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             canvas_->clipRect(SkRect::MakeXYWH(
                 node.GetRenderProperties().GetBoundsPositionX(), node.GetRenderProperties().GetBoundsPositionY(),
                 node.GetRenderProperties().GetBoundsWidth(), node.GetRenderProperties().GetBoundsHeight()));
-            if (!RsRenderServiceUtil::ConsumeAndUpdateBuffer(node, true)) {
+            if (node.GetBuffer() == nullptr) {
                 RS_LOGI("RSUniRenderVisitor::ProcessSurfaceRenderNode buffer is not available, set black");
                 canvas_->clear(SK_ColorBLACK);
             } else {
@@ -374,5 +374,70 @@ void RSUniRenderVisitor::DrawBufferOnCanvas(RSSurfaceRenderNode& node)
             node.GetRenderProperties().GetBoundsWidth(), node.GetRenderProperties().GetBoundsHeight()), &paint);
     canvas_->restore();
 }
+
+#ifdef RS_ENABLE_GL
+void RSUniRenderVisitor::DrawImageOnCanvas(RSSurfaceRenderNode& node)
+{
+    if (!canvas_) {
+        RS_LOGE("RSUniRenderVisitor::DrawBufferOnCanvas canvas is nullptr");
+    }
+
+    bool bitmapCreated = false;
+    SkBitmap bitmap;
+    std::vector<uint8_t> newTmpBuffer;
+    auto buffer = node.GetBuffer();
+
+    SkPaint paint;
+    paint.setAntiAlias(true);
+    paint.setAlphaf(node.GetAlpha() * node.GetRenderProperties().GetAlpha());
+    canvas_->save();
+    const RSProperties& property = node.GetRenderProperties();
+    auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
+    if (filter != nullptr) {
+        auto skRectPtr = std::make_unique<SkRect>();
+        skRectPtr->setXYWH(node.GetRenderProperties().GetBoundsPositionX(),
+            node.GetRenderProperties().GetBoundsPositionY(),
+            node.GetRenderProperties().GetBoundsWidth(), node.GetRenderProperties().GetBoundsHeight());
+        RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr);
+    }
+    SkRect srcRect = SkRect::MakeXYWH(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
+    kRect dstRect = SkRect::MakeXYWH(node.GetRenderProperties().GetBoundsPositionX(),
+            node.GetRenderProperties().GetBoundsPositionY(),
+            node.GetRenderProperties().GetBoundsWidth(), node.GetRenderProperties().GetBoundsHeight());
+    if (buffer->GetFormat() == PIXEL_FMT_YCRCB_420_SP || buffer->GetFormat() == PIXEL_FMT_YCBCR_420_SP) {
+        bitmapCreated = RsRenderServiceUtil::CreateYuvToRGBABitMap(buffer, newTmpBuffer, bitmap);
+        if (!bitmapCreated) {
+            RS_LOGE("RSUniRenderVisitor::DrawBufferOnCanvas installPixels failed");
+            return;
+        }
+        canvas_->drawBitmapRect(bitmap, srcRect, dstRect, &paint);
+        canvas_->restore();
+    } else {
+        auto mainThread = RSMainThread::Instance();
+        if (mainThread != nullptr) {
+            renderContext = mainThread->GetRenderContext();
+            eglImageManager =  mainThread->GetRSEglImageManager();
+        }
+        BufferDrawParam params;
+        params.buffer = buffer;
+        params.acquireFence = node.GetFence();
+        params.srcRect = srcRect;
+        params.dstRect = dstRect;
+        params.clipRect = dstRect;
+        params.paint = paint;
+        params.cornerRadius = property.GetCornerRadius();
+        params.isNeedClip = property.GetClipToFrame();
+        RsRenderServiceUtil::DrawImage(eglImageManager, renderContext->GetGrContext(), *canvas, params, nullptr);
+        auto consumerSurface = node.GetConsumer();
+        GSError error = consumerSurface->RegisterDeleteBufferListener([eglImageManager_ = eglImageManager]
+            (int32_t bufferId) {eglImageManager_->UnMapEglImageFromSurfaceBuffer(bufferId);
+        });
+        if (error != GSERROR_OK) {
+            RS_LOGE("RSUniRenderVisitor::DrawImageOnCanvas: fail to register UnMapEglImage callback.");
+        }
+
+    }
+}
+#endif // RS_ENABLE_GL
 } // namespace Rosen
 } // namespace OHOS

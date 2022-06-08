@@ -30,6 +30,12 @@ enum LayerType : uint32_t {
     LAYER_EXTRA
 };
 
+using YUVPixel = struct YUVPixel {
+    uint8_t y;
+    uint8_t u;
+    uint8_t v;
+};
+
 class LayerContext : public IBufferConsumerListenerClazz {
 public:
     LayerContext(IRect dst, IRect src, uint32_t zorder, LayerType layerType);
@@ -41,6 +47,7 @@ public:
     const std::shared_ptr<HdiLayerInfo> GetHdiLayer();
     void SetTestClientStatus(bool status);
     void SetTestRotateStatus(bool status);
+    void SetTestYUVStatus(bool status);
     LayerType GetLayerType() const;
 
 private:
@@ -59,10 +66,13 @@ private:
     LayerType layerType_ = LayerType::LAYER_EXTRA;
     bool testClient_ = false;
     bool testRotate_ = false;
+    bool testYUV_ = false;
 
     void DrawColor(void *image, int width, int height);
     void DrawExtraColor(void *image, uint32_t width, uint32_t height);
     void DrawBaseColor(void *image, uint32_t width, uint32_t height);
+    void DrawYUVColor(void *image, uint32_t width, uint32_t height, YUVPixel pixelValueYUV);
+    void ConvertRBGA2YUV(uint32_t pixelValueRBGA, YUVPixel *pixelValueYUV);
     void SetLayerTransformType();
     void SetLayerCompositionType();
 };

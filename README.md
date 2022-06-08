@@ -1,8 +1,8 @@
 # graphic_standard
 
 - [Introduction](#Introduction)
-- [File Tree](#File Tree)
-- [Related Repos](#Related Repos)
+- [File Tree](#file-tree)
+- [Related Repos](#related-repos)
 
 ## Introduction
 
@@ -18,8 +18,8 @@ The layered description of the OpenHarmony graphics stack is as follows:
 
 • Framework layer: divided into five modules: Render Service, Drawing, Animation, Effect, Display and Memory Management.
 
-| Module | Capability Description |
-|-------------------------|----------------------- -------------------------------------------------- ------------------|
+| Module | Capability  |
+|-------------------------|-------------------------------------------------------------------------------------------|
 | Render Servicel | Provides the rendering capabilities of the UI framework. Its core responsibility is to convert ArkUI's control description into drawing tree information, and perform optimal path rendering according to the corresponding rendering strategy. At the same time, it is responsible for the core underlying mechanism of UI sharing in multi-window smoothness and spatial state. |
 | Drawing | Provides a standardized interface within the graphics subsystem, and mainly completes basic functions such as 2D rendering, 3D rendering and rendering engine management. |
 | Animation | Provides related capabilities of the animation engine. |

@@ -20,6 +20,7 @@
 #include <surface.h>
 
 #include "display_type.h"
+#include "common/rs_vector4.h"
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_paint_filter_canvas.h"
@@ -94,21 +95,18 @@ public:
         return RSRenderNodeType::SURFACE_NODE;
     }
 
-    void SetMatrix(const SkMatrix& transform, bool sendMsg = true);
-    const SkMatrix& GetMatrix() const;
+    // pass render context (matrix/alpha/clip) from RT to RS
+    void SetContextMatrix(const SkMatrix& transform, bool sendMsg = true);
+    const SkMatrix& GetContextMatrix() const;
 
-    void SetAlpha(float alpha, bool sendMsg = true);
-    float GetAlpha() const;
+    void SetContextAlpha(float alpha, bool sendMsg = true);
+    float GetContextAlpha() const;
 
-    void SetClipRegion(Vector4f clipRegion, bool sendMsg = true);
+    void SetContextClipRegion(SkRect clipRegion, bool sendMsg = true);
+    const SkRect& GetContextClipRegion() const;
 
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
-
-    const Vector4f& GetClipRegion() const
-    {
-        return clipRect_;
-    }
 
     void SetDstRect(const RectI& dstRect)
     {
@@ -119,6 +117,10 @@ public:
     {
         return dstRect_;
     }
+
+    const Vector4f& GetSrcRatio() const;
+
+    void SetSrcRatio(const Vector4f ratio, bool sendMsg = true);
 
     void SetGlobalAlpha(float alpha)
     {
@@ -138,12 +140,7 @@ public:
         return RSBaseRenderNode::GetId();
     }
 
-    void SetParentId(NodeId parentId, bool sendMsg = true);
-    NodeId GetParentId() const;
-
     void UpdateSurfaceDefaultSize(float width, float height);
-
-    static void SendPropertyCommand(std::unique_ptr<RSCommand>& command);
 
     BlendType GetBlendType();
     void SetBlendType(BlendType blendType);
@@ -172,21 +169,27 @@ public:
     bool NeedSetCallbackForRenderThreadRefresh();
 
 private:
+    void SendCommandFromRT(std::unique_ptr<RSCommand>& command);
+
     RectI CalculateClipRegion(RSPaintFilterCanvas& canvas);
     friend class RSRenderTransition;
 
     std::mutex mutexRT_;
     std::mutex mutexUI_;
     std::mutex mutex_;
-    SkMatrix matrix_;
-    float alpha_ = 1.0f;
+
+    SkMatrix contextMatrix_;
+    float contextAlpha_ = 1.0f;
+    SkRect contextClipRect_;
+
     bool isSecurityLayer_ = false;
-    NodeId parentId_ = 0;
     RectI dstRect_;
     int32_t offsetX_ = 0;
     int32_t offsetY_ = 0;
     float globalAlpha_ = 1.0f;
-    Vector4f clipRect_;
+    RectI clipRegionFromParent_;
+    Vector4f srcRatio_ = {0.0f, 0.0f, 1.0f, 1.0f};
+
     std::string name_;
     bool isProxy_ = false;
     BlendType blendType_ = BlendType::BLEND_SRCOVER;
@@ -195,7 +198,9 @@ private:
     sptr<RSIBufferAvailableCallback> callbackFromRT_;
     sptr<RSIBufferAvailableCallback> callbackFromUI_;
     std::function<void(void)> callbackForRenderThreadRefresh_ = nullptr;
-    RectI clipRegionFromParent_;
+
+    std::vector<NodeId> childSurfaceNodeIds_;
+    friend class RSRenderThreadVisitor;
 };
 } // namespace Rosen
 } // namespace OHOS

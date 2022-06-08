@@ -14,13 +14,17 @@
  */
 
 #include "pipeline/rs_surface_render_node.h"
+#include <cmath>
+#include <stdint.h>
 
 #include "command/rs_surface_node_command.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "display_type.h"
+#include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
 #include "common/rs_rect.h"
 #include "common/rs_vector2.h"
+#include "common/rs_vector4.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_root_render_node.h"
 #include "platform/common/rs_log.h"
@@ -44,9 +48,13 @@ RSSurfaceRenderNode::~RSSurfaceRenderNode() {}
 void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     canvas.SaveAlpha();
-    canvas.MultiplyAlpha(GetRenderProperties().GetAlpha() * GetAlpha());
-    SkIRect clipBounds = canvas.getDeviceClipBounds();  // this clip region from parent node from render service
-    clipRegionFromParent_.SetAll(clipBounds.left(), clipBounds.top(), clipBounds.width(), clipBounds.height());
+    canvas.MultiplyAlpha(GetRenderProperties().GetAlpha() * GetContextAlpha());
+    auto clipRectFromRT = GetContextClipRegion();
+    canvas.concat(GetContextMatrix());
+    if (!clipRectFromRT.isEmpty()){
+        canvas.clipRect(clipRectFromRT);
+    }
+
     RectI clipRegion = CalculateClipRegion(canvas);
     SkRect rect;
     SkPoint points[] = {{clipRegion.left_, clipRegion.top_}, {clipRegion.GetRight(), clipRegion.GetBottom()}};
@@ -55,31 +63,24 @@ void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canva
     auto currentClipRegion = canvas.getDeviceClipBounds();
     SetDstRect({ currentClipRegion.left(), currentClipRegion.top(), currentClipRegion.width(),
         currentClipRegion.height() });
-    SetGlobalAlpha(canvas.GetAlpha());
+    SetGlobalAlpha(canvas.GetAlpha()); 
 }
 
 RectI RSSurfaceRenderNode::CalculateClipRegion(RSPaintFilterCanvas& canvas)
 {
-    const Vector4f& clipRegionFromRT = GetClipRegion(); // this clip region from render thread, it`s relative position
-    RectI clipRegion(clipRegionFromRT.x_, clipRegionFromRT.y_, clipRegionFromRT.z_, clipRegionFromRT.w_);
-    clipRegion.left_ = clipRegionFromRT.x_ + clipRegionFromParent_.left_;
-    clipRegion.top_ = clipRegionFromRT.y_ + clipRegionFromParent_.top_;
-    clipRegion.SetRight(clipRegion.IsEmpty() ? clipRegionFromParent_.GetRight() :
-        std::min(clipRegion.GetRight(), clipRegionFromParent_.GetRight()));
-    clipRegion.SetBottom(clipRegion.IsEmpty() ? clipRegionFromParent_.GetBottom() :
-        std::min(clipRegion.GetBottom(), clipRegionFromParent_.GetBottom()));
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(GetRenderProperties().GetBoundsGeometry());
-    if (geoPtr == nullptr) {
-        RS_LOGE("RsDebug RSSurfaceRenderNode::ProcessRenderBeforeChildren geoPtr == nullptr");
-        return RectI();
+    const RSProperties& properties = GetRenderProperties();
+    float width = std::ceil(properties.GetBoundsWidth());
+    float height = std::ceil(properties.GetBoundsHeight());
+    RectI originDstRect(0, 0, width, height);
+    auto currentGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    if (currentGeoPtr != nullptr) {
+        currentGeoPtr->UpdateByMatrixFromSelf();
     }
-    RectI originDstRect(geoPtr->GetAbsRect().left_ - offsetX_, geoPtr->GetAbsRect().top_ - offsetY_,
-            geoPtr->GetAbsRect().width_, geoPtr->GetAbsRect().height_);
-    RectI resClipRegion = clipRegion.IntersectRect(originDstRect);
+    canvas.concat(currentGeoPtr->GetMatrix());
     auto transitionProperties = GetAnimationManager().GetTransitionProperties();
-    Vector2f center(resClipRegion.width_ * 0.5f, resClipRegion.height_ * 0.5f);
+    Vector2f center(originDstRect.width_ * 0.5f, originDstRect.height_ * 0.5f);
     RSPropertiesPainter::DrawTransitionProperties(transitionProperties, center, canvas);
-    return resClipRegion;
+    return originDstRect;
 }
 
 void RSSurfaceRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
@@ -103,56 +104,80 @@ void RSSurfaceRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->ProcessSurfaceRenderNode(*this);
 }
 
-void RSSurfaceRenderNode::SetMatrix(const SkMatrix& matrix, bool sendMsg)
+void RSSurfaceRenderNode::SetContextMatrix(const SkMatrix& matrix, bool sendMsg)
 {
-    if (matrix_ == matrix) {
+    if (contextMatrix_ == matrix) {
         return;
     }
-    matrix_ = matrix;
+    contextMatrix_ = matrix;
     if (!sendMsg) {
         return;
     }
     // send a Command
-    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetMatrix>(GetId(), matrix);
-    SendPropertyCommand(command);
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetContextMatrix>(GetId(), matrix);
+    SendCommandFromRT(command);
 }
 
-const SkMatrix& RSSurfaceRenderNode::GetMatrix() const
+const SkMatrix& RSSurfaceRenderNode::GetContextMatrix() const
 {
-    return matrix_;
+    return contextMatrix_;
 }
 
-void RSSurfaceRenderNode::SetAlpha(float alpha, bool sendMsg)
+void RSSurfaceRenderNode::SetSrcRatio(const Vector4f ratio, bool sendMsg)
 {
-    if (alpha_ == alpha) {
+    if (srcRatio_ == ratio) {
         return;
     }
-    alpha_ = alpha;
+    srcRatio_ = ratio;
     if (!sendMsg) {
         return;
     }
     // send a Command
-    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetAlpha>(GetId(), alpha);
-    SendPropertyCommand(command);
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetSrcRatio>(GetId(), ratio);
+    SendCommandFromRT(command);
 }
 
-float RSSurfaceRenderNode::GetAlpha() const
+const Vector4f& RSSurfaceRenderNode::GetSrcRatio() const
 {
-    return alpha_;
+    return srcRatio_;
 }
 
-void RSSurfaceRenderNode::SetClipRegion(Vector4f clipRegion, bool sendMsg)
+void RSSurfaceRenderNode::SetContextAlpha(float alpha, bool sendMsg)
 {
-    if (clipRect_ == clipRegion) {
+    if (contextAlpha_ == alpha) {
         return;
     }
-    clipRect_ = clipRegion;
+    contextAlpha_ = alpha;
     if (!sendMsg) {
         return;
     }
     // send a Command
-    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetClipRegion>(GetId(), clipRegion);
-    SendPropertyCommand(command);
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetContextAlpha>(GetId(), alpha);
+    SendCommandFromRT(command);
+}
+
+float RSSurfaceRenderNode::GetContextAlpha() const
+{
+    return contextAlpha_;
+}
+
+void RSSurfaceRenderNode::SetContextClipRegion(SkRect clipRegion, bool sendMsg)
+{
+    if (contextClipRect_ == clipRegion) {
+        return;
+    }
+    contextClipRect_ = clipRegion;
+    if (!sendMsg) {
+        return;
+    }
+    // send a Command
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetContextClipRegion>(GetId(), clipRegion);
+    SendCommandFromRT(command);
+}
+
+const SkRect& RSSurfaceRenderNode::GetContextClipRegion() const
+{
+    return contextClipRect_;
 }
 
 void RSSurfaceRenderNode::SetSecurityLayer(bool isSecurityLayer)
@@ -165,45 +190,12 @@ bool RSSurfaceRenderNode::GetSecurityLayer() const
     return isSecurityLayer_;
 }
 
-void RSSurfaceRenderNode::SetParentId(NodeId parentId, bool sendMsg)
-{
-    parentId_ = parentId;
-    if (!sendMsg) {
-        return;
-    }
-    // find parent surface
-    auto node = GetParent().lock();
-    std::unique_ptr<RSCommand> command;
-    while (true) {
-        if (node == nullptr) {
-            return;
-        } else if (auto rootnode = node->ReinterpretCastTo<RSRootRenderNode>()) {
-            command = std::make_unique<RSSurfaceNodeSetParentSurface>(GetId(), rootnode->GetRSSurfaceNodeId());
-            break;
-        } else if (auto surfaceNode = node->ReinterpretCastTo<RSSurfaceRenderNode>()) {
-            command = std::make_unique<RSSurfaceNodeSetParentSurface>(GetId(), surfaceNode->GetId());
-            break;
-        } else {
-            node = node->GetParent().lock();
-        }
-    }
-    // send a Command
-    if (command) {
-        SendPropertyCommand(command);
-    }
-}
-
-NodeId RSSurfaceRenderNode::GetParentId() const
-{
-    return parentId_;
-}
-
 void RSSurfaceRenderNode::UpdateSurfaceDefaultSize(float width, float height)
 {
     consumer_->SetDefaultWidthAndHeight(width, height);
 }
 
-void RSSurfaceRenderNode::SendPropertyCommand(std::unique_ptr<RSCommand>& command)
+void RSSurfaceRenderNode::SendCommandFromRT(std::unique_ptr<RSCommand>& command)
 {
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {

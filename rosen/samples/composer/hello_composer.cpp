@@ -89,6 +89,8 @@ void HelloComposer::ParseArgs(std::vector<std::string> &runArgs)
             testClient_ = true;
         } else if (arg == "--testLayerRotate") {
             testLayerRotate_ = true;
+        } else if (arg == "--YUV") {
+            YUVFormat_ = true;
         }
     }
 }
@@ -164,10 +166,10 @@ void HelloComposer::InitLayers(uint32_t screenId)
          statusHeight, launcherHeight, navigationY);
 
     // status bar
-    drawLayers.emplace_back(std::make_unique<LayerContext>(
-        IRect { 0, 0, displayWidth, statusHeight },
-        IRect { 0, 0, displayWidth, statusHeight },
-        1, LayerType::LAYER_STATUS));
+    // drawLayers.emplace_back(std::make_unique<LayerContext>(
+    //     IRect { 0, 0, displayWidth, statusHeight },
+    //     IRect { 0, 0, displayWidth, statusHeight },
+    //     1, LayerType::LAYER_STATUS));
 
     // launcher
     drawLayers.emplace_back(std::make_unique<LayerContext>(
@@ -216,18 +218,21 @@ void HelloComposer::Sync(int64_t, void *data)
 
 void HelloComposer::SetRunArgs(const std::unique_ptr<LayerContext> &drawLayer)
 {
+    LayerType type = drawLayer->GetLayerType();
+    if (type < LayerType::LAYER_EXTRA) {
+        return;
+    }
+
     if (testClient_) {
-        LayerType type = drawLayer->GetLayerType();
-        if (type >= LayerType::LAYER_EXTRA) {
-            drawLayer->SetTestClientStatus(true);
-        }
+        drawLayer->SetTestClientStatus(true);
     }
 
     if (testLayerRotate_) {
-        LayerType type = drawLayer->GetLayerType();
-        if (type >= LayerType::LAYER_EXTRA) {
-            drawLayer->SetTestRotateStatus(true);
-        }
+        drawLayer->SetTestRotateStatus(true);
+    }
+
+    if (YUVFormat_) {
+        drawLayer->SetTestYUVStatus(true);
     }
 }
 

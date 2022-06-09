@@ -210,6 +210,8 @@ ohos_shared_library("libwmclient") {
     "//foundation/graphic/graphic_2d/utils:promise",
   ]
 
+  install_images = [ system_base_dir ]
+  relative_install_dir = "platformsdk"
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }

@@ -1,4 +1,4 @@
-# graphic_standard
+# graphic_2d
 
 -   [简介](#简介)
 -   [目录](#目录)
@@ -19,7 +19,7 @@ OpenHarmony 图形栈的分层说明如下：
 • 框架层：分为 Render Service、Drawing、Animation、Effect、显示与内存管理五个模块。
 | 模块                     | 能力描述                                                                                       |
 |------------------------|--------------------------------------------------------------------------------------------|
-| Render Servicel （渲染服务） | 提供UI框架的绘制能力，其核心职责是将ArkUI的控件描述转换成绘制树信息，根据对应的渲染策略，进行最佳路径渲染。同时，负责多窗口流畅和空间态下UI共享的核心底层机制。       |
+| Render Service （渲染服务） | 提供UI框架的绘制能力，其核心职责是将ArkUI的控件描述转换成绘制树信息，根据对应的渲染策略，进行最佳路径渲染。同时，负责多窗口流畅和空间态下UI共享的核心底层机制。       |
 | Drawing （绘制）           | 提供图形子系统内部的标准化接口，主要完成2D渲染、3D渲染和渲染引擎的管理等基本功能。                                                |
 | Animation (动画）         | 提供动画引擎的相关能力。                                                                               |
 | Effect （效果）            | 主要完成图片效果、渲染特效等效果处理的能力，包括：多效果的串联、并联处理，在布局时加入渲染特效、控件交互特效等相关能力。                               |
@@ -56,9 +56,9 @@ foundation/graphic/graphic_2d/
 
 
 ## 相关仓
-- [**graphic_standard**](https://gitee.com/openharmony/graphic_standard)
-- [ace_ace_engine](https://gitee.com/openharmony/ace_ace_engine)
-- [aafwk_standard](https://gitee.com/openharmony/aafwk_standard)
+- [**graphic_2d**](https://gitee.com/openharmony/graphic_graphic_2d)
+- [arkui_ace_engine](https://gitee.com/openharmony/arkui_ace_engine)
+- [ability_runtime](https://gitee.com/openharmony/ability_ability_runtime)
 - [multimedia_media_standard](https://gitee.com/openharmony/multimedia_media_standard)
 - [multimedia_camera_standard](https://gitee.com/openharmony/multimedia_camera_standard)
-- [Windowmanager](https://gitee.com/openharmony/windowmanager)
+- [windowmanager](https://gitee.com/openharmony/windowmanager)

@@ -435,6 +435,36 @@ HWTEST_F(ProducerSurfaceTest, isSupportedAlloc001, Function | MediumTest | Level
 }
 
 /*
+* Function: SetScalingMode and GetScalingMode
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScalingMode with abnormal parameters and check ret
+*                  2. call SetScalingMode with normal parameters and check ret
+*                  3. call GetScalingMode and check ret
+ */
+HWTEST_F(ProducerSurfaceTest, scalingMode001, Function | MediumTest | Level2)
+{
+    int32_t sequence = -1;
+    ScalingMode scalingMode = ScalingMode::SCALING_MODE_SCALE_TO_WINDOW;
+    GSError ret = pSurface->SetScalingMode(sequence, scalingMode);
+    ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
+
+    sptr<SurfaceBuffer> buffer;
+    int releaseFence = -1;
+    ret = pSurface->RequestBuffer(buffer, releaseFence, requestConfig);
+    ASSERT_EQ(ret, OHOS::GSERROR_OK);
+    ASSERT_NE(buffer, nullptr);
+
+    sequence = buffer->GetSeqNum();
+    ret = pSurface->SetScalingMode(sequence, scalingMode);
+    ASSERT_EQ(ret, OHOS::GSERROR_OK);
+
+    ret = pSurface->GetScalingMode(sequence, scalingMode);
+    ASSERT_EQ(ret, OHOS::GSERROR_NOT_SUPPORT);
+}
+
+/*
 * Function: SetMetaData and GetMetaData
 * Type: Function
 * Rank: Important(2)

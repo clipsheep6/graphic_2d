@@ -15,76 +15,113 @@
 
 #include "pipeline/rs_surface_render_node.h"
 
+#include "display_type.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkRect.h"
+
 #include "command/rs_surface_node_command.h"
 #include "common/rs_obj_abs_geometry.h"
-#include "display_type.h"
-#include "include/core/SkRect.h"
 #include "common/rs_rect.h"
 #include "common/rs_vector2.h"
+#include "common/rs_vector4.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_root_render_node.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
 #include "property/rs_transition_properties.h"
-#include "transaction/rs_transaction_proxy.h"
 #include "transaction/rs_render_service_client.h"
+#include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
 
 namespace OHOS {
 namespace Rosen {
-static const int rectBounds = 2;
-
-RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context) : RSRenderNode(id, context) {}
 RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, std::weak_ptr<RSContext> context)
-    : RSRenderNode(config.id, context), name_(config.name)
-{}
+    : RSRenderNode(config.id, context),
+      RSSurfaceHandler(config.id),
+      name_(config.name)
+{
+}
+
+RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context)
+    : RSSurfaceRenderNode(RSSurfaceRenderNodeConfig{id, "SurfaceNode"}, context)
+{
+}
 
 RSSurfaceRenderNode::~RSSurfaceRenderNode() {}
+
+void RSSurfaceRenderNode::SetConsumer(const sptr<Surface>& consumer)
+{
+    consumer_ = consumer;
+}
+
+static SkRect getLocalClipBounds(const RSPaintFilterCanvas& canvas)
+{
+    SkIRect ibounds = canvas.getDeviceClipBounds();
+    if (ibounds.isEmpty()) {
+        return SkRect::MakeEmpty();
+    }
+
+    SkMatrix inverse;
+    // if we can't invert the CTM, we can't return local clip bounds
+    if (!(canvas.getTotalMatrix().invert(&inverse))) {
+        return SkRect::MakeEmpty();
+    }
+    SkRect bounds;
+    SkRect r = SkRect::Make(ibounds);
+    inverse.mapRect(&bounds, r);
+    return bounds;
+}
 
 void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     canvas.SaveAlpha();
-    canvas.MultiplyAlpha(GetRenderProperties().GetAlpha() * GetAlpha());
-    SkIRect clipBounds = canvas.getDeviceClipBounds();  // this clip region from parent node from render service
-    clipRegionFromParent_.SetAll(clipBounds.left(), clipBounds.top(), clipBounds.width(), clipBounds.height());
-    RectI clipRegion = CalculateClipRegion(canvas);
-    SkRect rect;
-    SkPoint points[] = {{clipRegion.left_, clipRegion.top_}, {clipRegion.GetRight(), clipRegion.GetBottom()}};
-    rect.setBounds(points, rectBounds);
-    canvas.clipRect(rect);
+    canvas.save();
+    canvas.MultiplyAlpha(GetRenderProperties().GetAlpha() * GetContextAlpha());
+
+    // apply intermediate properties from RT
+    canvas.concat(GetContextMatrix());
+    auto clipRectFromRT = GetContextClipRegion();
+    if (!clipRectFromRT.isEmpty()) {
+        canvas.clipRect(clipRectFromRT);
+    }
+
+    // apply node properties
+    const RSProperties& properties = GetRenderProperties();
+    auto currentGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    if (currentGeoPtr != nullptr) {
+        currentGeoPtr->UpdateByMatrixFromSelf();
+    }
+    canvas.concat(currentGeoPtr->GetMatrix());
+
+    // apply transition properties
+    auto transitionProperties = GetAnimationManager().GetTransitionProperties();
+    Vector2f center(properties.GetBoundsWidth() * 0.5f, properties.GetBoundsHeight() * 0.5f);
+    RSPropertiesPainter::DrawTransitionProperties(transitionProperties, center, canvas);
+
+    // clip by bounds
+    canvas.clipRect(SkRect::MakeWH(properties.GetBoundsWidth(), properties.GetBoundsHeight()));
+
+    auto rect = getLocalClipBounds(canvas);
+    RectI rectI = {
+        std::ceil(std::clamp(rect.left(), 0.0f, properties.GetBoundsWidth())),
+        std::ceil(std::clamp(rect.top(), 0.0f, properties.GetBoundsHeight())),
+        std::floor(std::clamp(rect.width(), 0.0f, properties.GetBoundsWidth() - rect.left())),
+        std::floor(std::clamp(rect.height(), 0.0f, properties.GetBoundsHeight() - rect.top()))
+    };
+    SetSrcRect(rectI);
+
+    // extract information from SkCanvas to compositor, we use deviceClipBounds as DstRect, canvas alpha as GlobalAlpha
     auto currentClipRegion = canvas.getDeviceClipBounds();
     SetDstRect({ currentClipRegion.left(), currentClipRegion.top(), currentClipRegion.width(),
         currentClipRegion.height() });
+    SetTotalMatrix(canvas.getTotalMatrix());
     SetGlobalAlpha(canvas.GetAlpha());
-}
-
-RectI RSSurfaceRenderNode::CalculateClipRegion(RSPaintFilterCanvas& canvas)
-{
-    const Vector4f& clipRegionFromRT = GetClipRegion(); // this clip region from render thread, it`s relative position
-    RectI clipRegion(clipRegionFromRT.x_, clipRegionFromRT.y_, clipRegionFromRT.z_, clipRegionFromRT.w_);
-    clipRegion.left_ = clipRegionFromRT.x_ + clipRegionFromParent_.left_;
-    clipRegion.top_ = clipRegionFromRT.y_ + clipRegionFromParent_.top_;
-    clipRegion.SetRight(clipRegion.IsEmpty() ? clipRegionFromParent_.GetRight() :
-        std::min(clipRegion.GetRight(), clipRegionFromParent_.GetRight()));
-    clipRegion.SetBottom(clipRegion.IsEmpty() ? clipRegionFromParent_.GetBottom() :
-        std::min(clipRegion.GetBottom(), clipRegionFromParent_.GetBottom()));
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(GetRenderProperties().GetBoundsGeometry());
-    if (geoPtr == nullptr) {
-        RS_LOGE("RsDebug RSSurfaceRenderNode::ProcessRenderBeforeChildren geoPtr == nullptr");
-        return RectI();
-    }
-    RectI originDstRect(geoPtr->GetAbsRect().left_ - offsetX_, geoPtr->GetAbsRect().top_ - offsetY_,
-            geoPtr->GetAbsRect().width_, geoPtr->GetAbsRect().height_);
-    RectI resClipRegion = clipRegion.IntersectRect(originDstRect);
-    auto transitionProperties = GetAnimationManager().GetTransitionProperties();
-    Vector2f center(resClipRegion.width_ * 0.5f, resClipRegion.height_ * 0.5f);
-    RSPropertiesPainter::DrawTransitionProperties(transitionProperties, center, canvas);
-    return resClipRegion;
 }
 
 void RSSurfaceRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 {
     canvas.RestoreAlpha();
+    canvas.restore();
 }
 
 void RSSurfaceRenderNode::Prepare(const std::shared_ptr<RSNodeVisitor>& visitor)
@@ -103,56 +140,61 @@ void RSSurfaceRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->ProcessSurfaceRenderNode(*this);
 }
 
-void RSSurfaceRenderNode::SetMatrix(const SkMatrix& matrix, bool sendMsg)
+void RSSurfaceRenderNode::SetContextMatrix(const SkMatrix& matrix, bool sendMsg)
 {
-    if (matrix_ == matrix) {
+    if (contextMatrix_ == matrix) {
         return;
     }
-    matrix_ = matrix;
+    contextMatrix_ = matrix;
     if (!sendMsg) {
         return;
     }
     // send a Command
-    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetMatrix>(GetId(), matrix);
-    SendPropertyCommand(command);
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetContextMatrix>(GetId(), matrix);
+    SendCommandFromRT(command);
 }
 
-const SkMatrix& RSSurfaceRenderNode::GetMatrix() const
+const SkMatrix& RSSurfaceRenderNode::GetContextMatrix() const
 {
-    return matrix_;
+    return contextMatrix_;
 }
 
-void RSSurfaceRenderNode::SetAlpha(float alpha, bool sendMsg)
+void RSSurfaceRenderNode::SetContextAlpha(float alpha, bool sendMsg)
 {
-    if (alpha_ == alpha) {
+    if (contextAlpha_ == alpha) {
         return;
     }
-    alpha_ = alpha;
+    contextAlpha_ = alpha;
     if (!sendMsg) {
         return;
     }
     // send a Command
-    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetAlpha>(GetId(), alpha);
-    SendPropertyCommand(command);
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetContextAlpha>(GetId(), alpha);
+    SendCommandFromRT(command);
 }
 
-float RSSurfaceRenderNode::GetAlpha() const
+float RSSurfaceRenderNode::GetContextAlpha() const
 {
-    return alpha_;
+    return contextAlpha_;
 }
 
-void RSSurfaceRenderNode::SetClipRegion(Vector4f clipRegion, bool sendMsg)
+void RSSurfaceRenderNode::SetContextClipRegion(SkRect clipRegion, bool sendMsg)
 {
-    if (clipRect_ == clipRegion) {
+    if (contextClipRect_ == clipRegion) {
         return;
     }
-    clipRect_ = clipRegion;
+    contextClipRect_ = clipRegion;
     if (!sendMsg) {
         return;
     }
     // send a Command
-    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetClipRegion>(GetId(), clipRegion);
-    SendPropertyCommand(command);
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetContextClipRegion>(GetId(), clipRegion);
+    SendCommandFromRT(command);
+}
+
+const SkRect& RSSurfaceRenderNode::GetContextClipRegion() const
+{
+    return contextClipRect_;
 }
 
 void RSSurfaceRenderNode::SetSecurityLayer(bool isSecurityLayer)
@@ -165,45 +207,14 @@ bool RSSurfaceRenderNode::GetSecurityLayer() const
     return isSecurityLayer_;
 }
 
-void RSSurfaceRenderNode::SetParentId(NodeId parentId, bool sendMsg)
-{
-    parentId_ = parentId;
-    if (!sendMsg) {
-        return;
-    }
-    // find parent surface
-    auto node = GetParent().lock();
-    std::unique_ptr<RSCommand> command;
-    while (true) {
-        if (node == nullptr) {
-            return;
-        } else if (auto rootnode = node->ReinterpretCastTo<RSRootRenderNode>()) {
-            command = std::make_unique<RSSurfaceNodeSetParentSurface>(GetId(), rootnode->GetRSSurfaceNodeId());
-            break;
-        } else if (auto surfaceNode = node->ReinterpretCastTo<RSSurfaceRenderNode>()) {
-            command = std::make_unique<RSSurfaceNodeSetParentSurface>(GetId(), surfaceNode->GetId());
-            break;
-        } else {
-            node = node->GetParent().lock();
-        }
-    }
-    // send a Command
-    if (command) {
-        SendPropertyCommand(command);
-    }
-}
-
-NodeId RSSurfaceRenderNode::GetParentId() const
-{
-    return parentId_;
-}
-
 void RSSurfaceRenderNode::UpdateSurfaceDefaultSize(float width, float height)
 {
-    consumer_->SetDefaultWidthAndHeight(width, height);
+    if (consumer_ != nullptr) {
+        consumer_->SetDefaultWidthAndHeight(width, height);
+    }  
 }
 
-void RSSurfaceRenderNode::SendPropertyCommand(std::unique_ptr<RSCommand>& command)
+void RSSurfaceRenderNode::SendCommandFromRT(std::unique_ptr<RSCommand>& command)
 {
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
@@ -312,38 +323,6 @@ void RSSurfaceRenderNode::SetCallbackForRenderThreadRefresh(std::function<void(v
 bool RSSurfaceRenderNode::NeedSetCallbackForRenderThreadRefresh()
 {
     return (callbackForRenderThreadRefresh_ == nullptr);
-}
-
-void RSSurfaceRenderNode::ConsumeNodeNotOnTree()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (GetAvailableBufferCount() <= 0) {
-        return;
-    }
-    const auto& surfaceConsumer = GetConsumer();
-    if (surfaceConsumer == nullptr) {
-        RS_LOGE("RSSurfaceRenderNode::ConsumeNodesNotOnTree (node: %llu): surfaceConsumer is null!", GetId());
-        return;
-    }
-    OHOS::sptr<SurfaceBuffer> cbuffer;
-    Rect damage;
-    sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
-    int64_t timestamp = 0;
-    auto ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
-    if (cbuffer == nullptr || ret != SURFACE_ERROR_OK) {
-        RS_LOGW("RSSurfaceRenderNode::ConsumeNodesNotOnTree: AcquireBuffer failed, (node: %llu):!", GetId());
-        return;
-    }
-    ret = surfaceConsumer->ReleaseBuffer(cbuffer, SyncFence::INVALID_FENCE);
-    if (ret != OHOS::SURFACE_ERROR_OK) {
-        RS_LOGW("RSSurfaceRenderNode::ConsumeNodesNotOnTree(node: %llu): ReleaseBuffer failed(ret: %d)",
-            GetId(), ret);
-    }
-    SetBuffer(cbuffer);
-    SetFence(acquireFence);
-    RS_LOGI("RSSurfaceRenderNode::ConsumeNodesNotOnTree(node: %llu): consume buffer successfully (ret: %d)",
-            GetId(), ret);
-    ReduceAvailableBuffer();
 }
 
 } // namespace Rosen

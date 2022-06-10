@@ -14,6 +14,7 @@
 declare_args() {
   graphic_graphic_2d_feature_ace_enable_gpu = true
   graphic_graphic_2d_feature_color_gamut_enable = false
+  graphic_graphic_2d_feature_bootanimation_enable = true
 }
 
 if (graphic_graphic_2d_feature_ace_enable_gpu) {

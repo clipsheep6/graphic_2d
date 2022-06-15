@@ -29,6 +29,7 @@
 #include "pipeline/rs_surface_handler.h"
 #include "refbase.h"
 #include "sync_fence.h"
+#include "common/rs_occlusion_region.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -86,6 +87,8 @@ public:
         return isProxy_;
     }
 
+    void CollectSurface(const std::shared_ptr<RSBaseRenderNode>& node,
+                        std::vector<RSBaseRenderNode::SharedPtr>& vec) override;
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
@@ -149,6 +152,26 @@ public:
         return globalAlpha_;
     }
 
+    void SetVisibleRegionRecursive(const Occlusion::Region& region,
+                                    std::vector<std::pair<uint64_t, bool>>& visChangeVec)
+    {
+        visibleRegion_ = region;
+        bool vis = region.GetSize() > 0;
+        if (vis != GetMutableRenderProperties().GetOcclusionVisible()) {
+            visChangeVec.emplace_back(GetId(), vis);
+        }
+        GetMutableRenderProperties().SetOcclusionVisible(vis);
+        for (auto& child : GetSortedChildren()) {
+            if (child->GetType() == RSRenderNodeType::SURFACE_NODE) {
+                auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+                if (surface == nullptr) {
+                    continue;
+                }
+                surface->SetVisibleRegionRecursive(region, visChangeVec);
+            }
+        }
+    }
+
     void SetConsumer(const sptr<Surface>& consumer);
 
     void UpdateSurfaceDefaultSize(float width, float height);
@@ -186,14 +209,14 @@ private:
     std::mutex mutexUI_;
     std::mutex mutex_;
 
-    SkMatrix contextMatrix_;
-    SkMatrix totalMatrix_;
+    SkMatrix contextMatrix_ = SkMatrix::I();
     float contextAlpha_ = 1.0f;
-    SkRect contextClipRect_;
+    SkRect contextClipRect_ = SkRect::MakeEmpty();
 
     bool isSecurityLayer_ = false;
     RectI srcRect_;
     RectI dstRect_;
+    SkMatrix totalMatrix_;
     int32_t offsetX_ = 0;
     int32_t offsetY_ = 0;
     float globalAlpha_ = 1.0f;
@@ -206,9 +229,10 @@ private:
     sptr<RSIBufferAvailableCallback> callbackFromRT_;
     sptr<RSIBufferAvailableCallback> callbackFromUI_;
     std::function<void(void)> callbackForRenderThreadRefresh_ = nullptr;
-
     std::vector<NodeId> childSurfaceNodeIds_;
     friend class RSRenderThreadVisitor;
+    RectI clipRegionFromParent_;
+    Occlusion::Region visibleRegion_;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -30,7 +30,8 @@
 #include "refbase.h"
 #include "vsync_receiver.h"
 #include "vsync_distributor.h"
-#include <vsync_helper.h>
+#include "vsync_helper.h"
+#include "ipc_callbacks/rs_iocclusion_change_callback.h"
 
 #ifdef RS_ENABLE_GL
 #include "render_context/render_context.h"
@@ -83,17 +84,19 @@ public:
         PostTask([t(std::move(scheduledTask))]() { t->Run(); });
         return std::move(taskFuture);
     }
-
 #ifdef RS_ENABLE_GL
     std::shared_ptr<RenderContext> GetRenderContext() const
     {
         return renderContext_;
     }
+#endif // RS_ENABLE_GL
+
+#ifdef RS_ENABLE_EGLIMAGE
     std::shared_ptr<RSEglImageManager> GetRSEglImageManager() const
     {
         return eglImageManager_;
     }
-#endif // RS_ENABLE_GL
+#endif // RS_ENABLE_EGLIMAGE
 
     RSContext& GetContext()
     {
@@ -105,6 +108,10 @@ public:
     }
     void RegisterApplicationRenderThread(uint32_t pid, sptr<IApplicationRenderThread> app);
     void UnregisterApplicationRenderThread(sptr<IApplicationRenderThread> app);
+
+    void RegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback);
+    void UnRegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback);
+    void CleanOcclusionListener();
 
     void WaitUtilUniRenderFinished();
     void NotifyUniRenderFinish();
@@ -124,6 +131,7 @@ private:
     void ConsumeAndUpdateAllNodes();
     void ReleaseAllNodesBuffer();
     void Render();
+    void CalcOcclusion(RSBaseRenderNode::SharedPtr node);
     void SendCommands();
 
     std::mutex transitionDataMutex_;
@@ -140,15 +148,19 @@ private:
     RSContext context_;
     std::thread::id mainThreadId_;
     std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
+    std::vector<sptr<RSIOcclusionChangeCallback>> occlusionListeners_;
 
     mutable std::mutex uniRenderMutex_;
     bool uniRenderFinished_ = false;
     std::condition_variable uniRenderCond_;
-
+    
 #ifdef RS_ENABLE_GL
     std::shared_ptr<RenderContext> renderContext_;
-    std::shared_ptr<RSEglImageManager> eglImageManager_;
 #endif // RS_ENABLE_GL
+
+#ifdef RS_ENABLE_EGLIMAGE
+    std::shared_ptr<RSEglImageManager> eglImageManager_;
+#endif // RS_ENABLE_EGLIMAGE
 };
 } // namespace Rosen
 } // namespace OHOS

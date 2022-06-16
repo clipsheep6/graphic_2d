@@ -947,6 +947,21 @@ void RsRenderServiceUtil::DrawBuffer(RSPaintFilterCanvas& canvas, BufferDrawPara
     canvas.restore();
 }
 
+void RsRenderServiceUtil::ClipHoleForLayer(RSPaintFilterCanvas& canvas, const LayerInfoPtr& layerInfo,
+    const SkMatrix& canvasMatrix)
+{
+    auto x = std::ceil(layerInfo->GetLayerSize().x);
+    auto y = std::ceil(layerInfo->GetLayerSize().y);
+    auto width = std::floor(layerInfo->GetLayerSize().w);
+    auto height = std::floor(layerInfo->GetLayerSize().h);
+    canvas.save();
+    canvas.setMatrix(canvasMatrix);
+    SkRect originRect = SkRect::MakeXYWH(x, y, width, height);
+    canvas.clipRect(originRect);
+    canvas.clear(SK_ColorTRANSPARENT);
+    canvas.restore();
+}
+
 #ifdef RS_ENABLE_EGLIMAGE
 void RsRenderServiceUtil::DrawImage(std::shared_ptr<RSEglImageManager> eglImageManager, GrContext* grContext,
     RSPaintFilterCanvas& canvas, BufferDrawParam& bufferDrawParam, CanvasPostProcess process)

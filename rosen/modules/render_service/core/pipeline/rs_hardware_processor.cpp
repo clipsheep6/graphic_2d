@@ -396,6 +396,40 @@ void DrawBufferPostProcess(RSPaintFilterCanvas& canvas, RSSurfaceRenderNode& nod
     RSPropertiesPainter::DrawMask(node.GetRenderProperties(), canvas, RSPropertiesPainter::Rect2SkRect(maskBounds));
 }
 
+SkMatrix RSHardwareProcessor::ExtractGravityMatrix(
+    RSSurfaceRenderNode& node, const RectF& targetRect)
+{
+    SkMatrix gravityMatrix = SkMatrix::I();
+    const RSProperties& property = node.GetRenderProperties();
+    const auto& buffer = node.GetBuffer();
+    if (buffer == nullptr) {
+        return gravityMatrix;
+    }
+
+    if (!RSPropertiesPainter::GetGravityMatrix(property.GetFrameGravity(), targetRect,
+        buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight(), gravityMatrix)) {
+        RS_LOGI("RSHardwareProcessor::ExtractGravityMatrix did not obtain gravity matrix.");
+    }
+
+    return gravityMatrix;
+}
+
+// private func, assert layerInfo is not nullptr.
+BufferDrawParam RSHardwareProcessor::GetBufferDrawParam(
+    RSSurfaceRenderNode& node, const LayerInfoPtr& layerInfo)
+{
+    SkPaint paint;
+    paint.setAlphaf(node.GetGlobalAlpha());
+    BufferDrawParam params = RsRenderServiceUtil::CreateBufferDrawParam(
+        node, currScreenInfo_.rotationMatrix, rotation_, paint);
+    params.targetColorGamut = static_cast<ColorGamut>(currScreenInfo_.colorGamut);
+    const auto& clipRect = layerInfo->GetLayerSize();
+    params.clipRect = SkRect::MakeXYWH(clipRect.x, clipRect.y, clipRect.w, clipRect.h);
+    params.matrix = params.matrix.preConcat(
+        ExtractGravityMatrix(node, RectF(clipRect.x, clipRect.y, clipRect.w, clipRect.h)));
+    return params;
+}
+
 void RSHardwareProcessor::Redraw(
     sptr<Surface>& surface, const struct PrepareCompleteParam& param, void* data)
 {
@@ -469,21 +503,17 @@ void RSHardwareProcessor::Redraw(
             layerInfo->GetCompositionType(), layerInfo->GetLayerSize().x, layerInfo->GetLayerSize().y,
             layerInfo->GetLayerSize().w, layerInfo->GetLayerSize().h);
         int saveCount = canvas->getSaveCount();
-        SkPaint paint;
-        paint.setAlphaf(node.GetGlobalAlpha());
-        auto params = RsRenderServiceUtil::CreateBufferDrawParam(node, currScreenInfo_.rotationMatrix,
-            rotation_, paint);
-        params.targetColorGamut = static_cast<ColorGamut>(currScreenInfo_.colorGamut);
-        const auto& clipRect = layerInfo->GetLayerSize();
-        params.clipRect = SkRect::MakeXYWH(clipRect.x, clipRect.y, clipRect.w, clipRect.h);
+        auto params = GetBufferDrawParam(node, layerInfo);
         Vector2f center(node.GetDstRect().left_ + node.GetDstRect().width_ * 0.5f,
             node.GetDstRect().top_ + node.GetDstRect().height_ * 0.5f);
+        auto drawBufferPostProcessFunc = [this, &node, &center](RSPaintFilterCanvas& canvas,
+            BufferDrawParam& params) -> void {
+                DrawBufferPostProcess(canvas, node, params, center);
+        };
 #ifdef RS_ENABLE_EGLIMAGE
         if (ifUseGPU) {
             RsRenderServiceUtil::DrawImage(eglImageManager_, renderContext_->GetGrContext(), *canvas, params,
-                [this, &node, &center](RSPaintFilterCanvas& canvas, BufferDrawParam& params) -> void {
-                    DrawBufferPostProcess(canvas, node, params, center);
-            });
+                drawBufferPostProcessFunc);
             auto consumerSurface = node.GetConsumer();
             GSError error = consumerSurface->RegisterDeleteBufferListener([eglImageManager = eglImageManager_]
                 (int32_t bufferId) {eglImageManager->UnMapEglImageFromSurfaceBuffer(bufferId);
@@ -492,17 +522,11 @@ void RSHardwareProcessor::Redraw(
                 RS_LOGE("RSHardwareProcessor::Redraw: fail to register UnMapEglImage callback.");
             }
         } else {
-            RsRenderServiceUtil::DrawBuffer(*canvas, params, [this, &node, &center](RSPaintFilterCanvas& canvas,
-                BufferDrawParam& params) -> void {
-                    DrawBufferPostProcess(canvas, node, params, center);
-            });
+            RsRenderServiceUtil::DrawBuffer(*canvas, params, drawBufferPostProcessFunc);
         }
         canvas->restoreToCount(saveCount);
 #else
-        RsRenderServiceUtil::DrawBuffer(*canvas, params, [this, &node, &center](RSPaintFilterCanvas& canvas,
-            BufferDrawParam& params) -> void {
-            DrawBufferPostProcess(canvas, node, params, center);
-        });
+        RsRenderServiceUtil::DrawBuffer(*canvas, params, drawBufferPostProcessFunc);
         canvas->restoreToCount(saveCount);
 #endif // RS_ENABLE_EGLIMAGE
     }

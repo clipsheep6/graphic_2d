@@ -461,7 +461,16 @@ void RSHardwareProcessor::Redraw(
             info.append(strBuffer);
         }
         RS_TRACE_NAME(info.c_str());
-        if (layerInfo->GetCompositionType() == CompositionType::COMPOSITION_DEVICE) {
+        if (layerInfo->GetCompositionType() == CompositionType::COMPOSITION_DEVICE || 
+            layerInfo->GetCompositionType() == CompositionType::COMPOSITION_DEVICE_CLEAR) {
+            continue;
+        }
+        if (layerInfo->GetCompositionType() == CompositionType::COMPOSITION_CLIENT_CLEAR) {
+            SkRect nodeRect = SkRect::MakeXYWH(node.GetDstRect().left_, node.GetDstRect().top_,
+                node.GetDstRect().width_, node.GetDstRect().height_);
+            SkMatrix canvasTransformMatrix = RsRenderServiceUtil::GetCanvasTransform(node, currScreenInfo_.rotationMatrix,
+                rotation_, nodeRect);
+            RsRenderServiceUtil::ClipHoleForLayer(*canvas, layerInfo, canvasTransformMatrix);
             continue;
         }
         RS_LOGD("RsDebug RSHardwareProcessor::Redraw layer composition Type:%d, [%d %d %d %d]",

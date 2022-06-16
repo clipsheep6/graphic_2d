@@ -87,10 +87,12 @@ public:
     static void DropFrameProcess(RSSurfaceHandler& surfaceHandler);
     static bool ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler);
     static bool ReleaseBuffer(RSSurfaceHandler& surfaceHandler);
-
-private:
+    static void ClipHoleForLayer(RSPaintFilterCanvas& canvas, const LayerInfoPtr& layerInfo,
+        const SkMatrix& canvasMatrix);
     static SkMatrix GetCanvasTransform(const RSSurfaceRenderNode& node, const SkMatrix& canvasMatrix,
         ScreenRotation rotation, SkRect clipRect);
+
+private:
     static bool IsNeedClient(RSSurfaceRenderNode* node);
     static bool CreateBitmap(sptr<OHOS::SurfaceBuffer> buffer, SkBitmap& bitmap);
 

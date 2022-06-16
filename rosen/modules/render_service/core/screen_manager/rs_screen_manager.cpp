@@ -231,6 +231,30 @@ void RSScreenManager::ReuseVirtualScreenIdLocked(ScreenId id)
     freeVirtualScreenIds_.push(id);
 }
 
+// The main screen resolution can be changed on the mirrored screen.
+void RSScreenManager::MirrorChangeMainScreenResolution(Screen id, u_int32_t width, u_int32_t height){
+    ScreenId mirroredId = screens_.at(id)->MirrorId();
+    ScreenId mainId = GetDefaultScreenId();
+    if (mirroredId == mainId) {
+        bool setSuccess = false;
+        std::vector<RSScreenModeInfo> mainMode = GetScreenSupportedModes(mainId);
+        for (uint32_t i = 0; i < mainMode.size(); i++) {
+            if (static_cast<uint32_t>(mainMode[i].GetScreenWidth()) == width &&
+                static_cast<uint32_t>(mainMode[i].GetScreenHeight()) == height) {
+                screens_.at(mainId)->SetActiveMode(i);
+                HiLog::Debug(LOG_LABEL, "%{public}s:  set main screen resolution success! \n", __func__);
+                setSuccess = true;
+                break;
+            }
+        }
+        if (!setSuccess) {
+            HiLog::Debug(LOG_LABEL, "%{public}s:  the main screen does not support the current resolution!  \n", __func__);
+        }
+    } else {
+        HiLog::Debug(LOG_LABEL, "%{public}s:  the main screen and the current screen are not mirrored!  \n", __func__);
+    }
+}
+
 void RSScreenManager::GetVirtualScreenResolutionLocked(ScreenId id,
     RSVirtualScreenResolution& virtualScreenResolution) const
 {
@@ -436,6 +460,11 @@ void RSScreenManager::SetScreenActiveMode(ScreenId id, uint32_t modeId)
         return;
     }
     screens_.at(id)->SetActiveMode(modeId);
+
+    // The main screen resolution can be changed on the mirrored screen(physics).
+    uint32_t width = screens_.at(id)->Width();
+    uint32_t height = screens_.at(id)->Height();
+    MirrorChangeMainScreenResolution(id, width, height);
 }
 
 int32_t RSScreenManager::SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height)
@@ -450,26 +479,7 @@ int32_t RSScreenManager::SetVirtualScreenResolution(ScreenId id, uint32_t width,
     HiLog::Debug(LOG_LABEL, "%{public}s:  set virtual screen resolution success! \n", __func__);
 
     // The main screen resolution can be changed on the mirrored screen. 
-    ScreenId mirroredId = screens_.at(id)->MirrorId();
-    ScreenId mainId = GetDefaultScreenId();
-    if (mirroredId == mainId) {
-        bool setSuccess = false;
-        std::vector<RSScreenModeInfo> mainMode = GetScreenSupportedModes(mainId);
-        for (uint32_t i = 0; i < mainMode.size(); i++) {
-            if (static_cast<uint32_t>(mainMode[i].GetScreenWidth()) == width &&
-                static_cast<uint32_t>(mainMode[i].GetScreenHeight()) == height) {
-                screens_.at(mainId)->SetActiveMode(i);
-                HiLog::Debug(LOG_LABEL, "%{public}s:  set main screen resolution success! \n", __func__);
-                setSuccess = true;
-                break;
-            }
-        }
-        if (!setSuccess) {
-            HiLog::Debug(LOG_LABEL, "%{public}s:  the main screen does not support the current resolution!  \n", __func__);
-        }
-    } else {
-        HiLog::Debug(LOG_LABEL, "%{public}s:  the main screen and the current screen are not mirrored!  \n", __func__);
-    }
+    MirrorChangeMainScreenResolution(id, width, height);
 
     return SUCCESS;
 }

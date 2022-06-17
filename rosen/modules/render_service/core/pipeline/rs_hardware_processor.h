@@ -44,6 +44,8 @@ public:
     void CropLayers();
 
 private:
+    static SkMatrix ExtractGravityMatrix(RSSurfaceRenderNode& node, const RectF& targetRect);
+    BufferDrawParam GetBufferDrawParam(RSSurfaceRenderNode& node, const LayerInfoPtr& layerInfo);
     void Redraw(sptr<Surface>& surface, const struct PrepareCompleteParam& param, void* data);
     void OnRotate();
     void ScaleDownLayers();

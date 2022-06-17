@@ -23,6 +23,7 @@
 #include "common/rs_vector2.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "platform/common/rs_log.h"
+#include "property/rs_properties_def.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_blur_filter.h"
 #include "rs_trace.h"
@@ -667,6 +668,9 @@ bool RsRenderServiceUtil::IsNeedClient(RSSurfaceRenderNode* node)
     auto transitionProperties = node->GetAnimationManager().GetTransitionProperties();
     if (!transitionProperties) {
         return false;
+    }
+    if (node->GetRenderProperties().GetFrameGravity() != Gravity::RESIZE) {
+        return true;
     }
     SkMatrix matrix = transitionProperties->GetRotate();
     float value[9];

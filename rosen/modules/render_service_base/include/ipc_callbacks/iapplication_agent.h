@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ROSEN_RENDER_SERVICE_BASE_IAPPLICATION_RENDER_THREAD_H
-#define ROSEN_RENDER_SERVICE_BASE_IAPPLICATION_RENDER_THREAD_H
+#ifndef ROSEN_RENDER_SERVICE_BASE_IAPPLICATION_AGENT_H
+#define ROSEN_RENDER_SERVICE_BASE_IAPPLICATION_AGENT_H
 
 #ifdef ROSEN_OHOS
 #include <iremote_broker.h>
@@ -24,12 +24,12 @@
 namespace OHOS {
 namespace Rosen {
 class RSTransactionData;
-class IApplicationRenderThread : public IRemoteBroker {
+class IApplicationAgent : public IRemoteBroker {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.rosen.RSIApplicationRenderThread");
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.rosen.RSIApplicationAgent");
 
-    IApplicationRenderThread() = default;
-    virtual ~IApplicationRenderThread() noexcept = default;
+    IApplicationAgent() = default;
+    virtual ~IApplicationAgent() noexcept = default;
 
     enum {
         COMMIT_TRANSACTION,
@@ -41,4 +41,4 @@ public:
 } // namespace OHOS
 #endif // ROSEN_OHOS
 
-#endif // ROSEN_RENDER_SERVICE_BASE_IAPPLICATION_RENDER_THREAD_H
+#endif // ROSEN_RENDER_SERVICE_BASE_IAPPLICATION_AGENT_H

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,25 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef ROSEN_RENDER_SERVICE_BASE_RS_APPLICATION_RENDER_THREAD_STUB_H
-#define ROSEN_RENDER_SERVICE_BASE_RS_APPLICATION_RENDER_THREAD_STUB_H
+#ifndef ROSEN_RENDER_SERVICE_BASE_OCCLUSION_CHANGE_CALLBACK_STUB_H
+#define ROSEN_RENDER_SERVICE_BASE_OCCLUSION_CHANGE_CALLBACK_STUB_H
 
-#ifdef ROSEN_OHOS
 #include <iremote_stub.h>
 
-#include "ipc_callbacks/iapplication_render_thread.h"
+#include "ipc_callbacks/rs_iocclusion_change_callback.h"
 
 namespace OHOS {
 namespace Rosen {
-class RSApplicationRenderThreadStub : public IRemoteStub<IApplicationRenderThread> {
+class RSOcclusionChangeCallbackStub : public IRemoteStub<RSIOcclusionChangeCallback> {
 public:
-    RSApplicationRenderThreadStub() = default;
-    ~RSApplicationRenderThreadStub() = default;
+    RSOcclusionChangeCallbackStub() = default;
+    ~RSOcclusionChangeCallbackStub() = default;
 
     int OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
 };
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS
 
-#endif // ROSEN_RENDER_SERVICE_BASE_RS_APPLICATION_RENDER_THREAD_STUB_H
+#endif

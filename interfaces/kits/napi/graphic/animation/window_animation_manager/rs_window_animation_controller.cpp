@@ -60,7 +60,7 @@ void RSWindowAnimationController::OnStartApp(StartingAppType type,
 
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule(engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+    AsyncTask::Schedule(engine_, std::make_unique<AsyncTask>("RSWindowAnimationController::OnStartApp", callback, std::move(execute), std::move(complete)));
 }
 
 void RSWindowAnimationController::OnAppTransition(const sptr<RSWindowAnimationTarget>& fromWindowTarget,
@@ -83,7 +83,7 @@ void RSWindowAnimationController::OnAppTransition(const sptr<RSWindowAnimationTa
 
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule(engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+    AsyncTask::Schedule(engine_, std::make_unique<AsyncTask>("RSWindowAnimationController::OnAppTransition", callback, std::move(execute), std::move(complete)));
 }
 
 void RSWindowAnimationController::OnMinimizeWindow(const sptr<RSWindowAnimationTarget>& minimizingWindowTarget,
@@ -105,7 +105,7 @@ void RSWindowAnimationController::OnMinimizeWindow(const sptr<RSWindowAnimationT
 
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule(engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+    AsyncTask::Schedule(engine_, std::make_unique<AsyncTask>("RSWindowAnimationController::OnMinimizeWindow", callback, std::move(execute), std::move(complete)));
 }
 
 void RSWindowAnimationController::OnCloseWindow(const sptr<RSWindowAnimationTarget>& closingWindowTarget,
@@ -127,7 +127,7 @@ void RSWindowAnimationController::OnCloseWindow(const sptr<RSWindowAnimationTarg
 
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule(engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+    AsyncTask::Schedule(engine_, std::make_unique<AsyncTask>("RSWindowAnimationController::OnCloseWindow", callback, std::move(execute), std::move(complete)));
 }
 
 void RSWindowAnimationController::OnScreenUnlock(const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback)
@@ -148,7 +148,7 @@ void RSWindowAnimationController::OnScreenUnlock(const sptr<RSIWindowAnimationFi
 
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule(engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+    AsyncTask::Schedule(engine_, std::make_unique<AsyncTask>("RSWindowAnimationController::OnScreenUnlock", callback, std::move(execute), std::move(complete)));
 }
 
 void RSWindowAnimationController::HandleOnStartApp(StartingAppType type,

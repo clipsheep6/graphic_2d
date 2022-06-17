@@ -534,6 +534,11 @@ bool RsRenderServiceUtil::enableClient = false;
 void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
     std::vector<LayerInfoPtr>& layers, ComposeInfo info, RSBaseRenderNode* node)
 {
+    info.srcRect.x = info.srcRect.x == 1 ? 0 : info.srcRect.x;
+    info.srcRect.y = info.srcRect.y == 1 ? 0 : info.srcRect.y;
+    info.dstRect.x = info.dstRect.x == 1 ? 0 : info.dstRect.x;
+    info.dstRect.y = info.dstRect.y == 1 ? 0 : info.dstRect.y;
+
     layer->SetSurface(consumerSurface);
     layer->SetBuffer(info.buffer, info.fence);
     layer->SetZorder(info.zOrder);

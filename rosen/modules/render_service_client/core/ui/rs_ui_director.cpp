@@ -132,7 +132,7 @@ void RSUIDirector::AttachSurface()
 void RSUIDirector::SetTimeStamp(uint64_t timeStamp, const std::string& abilityName)
 {
     timeStamp_ = timeStamp;
-    RSRenderThread::Instance().UpdateUiDrawFrameMsg(timeStamp_, abilityName);
+    RSRenderThread::Instance().UpdateUiDrawFrameMsg(abilityName);
 }
 
 void RSUIDirector::SetUITaskRunner(const TaskRunner& uiTaskRunner)

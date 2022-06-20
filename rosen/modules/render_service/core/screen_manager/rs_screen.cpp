@@ -104,7 +104,10 @@ void RSScreen::PhysicalScreenInit() noexcept
         screenType_ = RSScreenType::EXTERNAL_TYPE_SCREEN;
     }
 
-
+    //only used to do test.
+    uint32_t testModeId = supportedModes_.size();
+    DisplayModeInfo testMode = {1920 ,1080 ,50 ,testModeId};
+    supportedModes_.push_back(testMode);
 }
 
 ScreenId RSScreen::Id() const
@@ -177,6 +180,12 @@ void RSScreen::SetActiveMode(uint32_t modeId)
     if (activeMode) {
         width_ = activeMode->width;
         height_ = activeMode->height;
+    }
+
+    //only used to do test.
+    if (modeId == supportedModes_.size()-1) {
+        HiLog::Debug(LOG_LABEL, "%{public}s: the current resolution is 1920x1080!\n", __func__);
+        return;
     }
 }
 

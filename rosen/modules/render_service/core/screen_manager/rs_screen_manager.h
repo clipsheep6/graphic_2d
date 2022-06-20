@@ -266,7 +266,7 @@ private:
     void RemoveVirtualScreenLocked(ScreenId id);
     ScreenId GenerateVirtualScreenIdLocked();
     void ReuseVirtualScreenIdLocked(ScreenId id);
-    void MirrorChangeMainScreenResolution(Screen id, u_int32_t width, u_int32_t height);
+    void MirrorChangeMainScreenResolution(ScreenId id, u_int32_t width, u_int32_t height);
 
     int32_t GetScreenSupportedColorGamutsLocked(ScreenId id, std::vector<ScreenColorGamut>& mode) const;
     int32_t GetScreenColorGamutLocked(ScreenId id, ScreenColorGamut& mode) const;

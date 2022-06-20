@@ -232,7 +232,7 @@ void RSScreenManager::ReuseVirtualScreenIdLocked(ScreenId id)
 }
 
 // The main screen resolution can be changed on the mirrored screen.
-void RSScreenManager::MirrorChangeMainScreenResolution(Screen id, u_int32_t width, u_int32_t height){
+void RSScreenManager::MirrorChangeMainScreenResolution(ScreenId id, u_int32_t width, u_int32_t height){
     ScreenId mirroredId = screens_.at(id)->MirrorId();
     ScreenId mainId = GetDefaultScreenId();
     if (mirroredId == mainId) {

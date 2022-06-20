@@ -16,11 +16,15 @@
 #include "render/rs_blur_filter.h"
 
 #include "include/effects/SkBlurImageFilter.h"
+
 namespace OHOS {
 namespace Rosen {
 RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY)
-    : RSSkiaFilter(SkBlurImageFilter::Make(blurRadiusX, blurRadiusY, nullptr)), blurRadiusX_(blurRadiusX),
-      blurRadiusY_(blurRadiusY)
+    : RSSkiaFilter(
+          SkBlurImageFilter::Make(blurRadiusX, blurRadiusY, nullptr, nullptr, SkBlurImageFilter::kClamp_TileMode)),
+      blurRadiusX_(blurRadiusX), blurRadiusY_(blurRadiusY),
+      blurFilter_(
+          SkBlurImageFilter::Make(blurRadiusX, blurRadiusY, nullptr, nullptr, SkBlurImageFilter::kClamp_TileMode))
 {
     type_ = FilterType::BLUR;
 }
@@ -37,14 +41,19 @@ float RSBlurFilter::GetBlurRadiusY()
     return blurRadiusY_;
 }
 
+sk_sp<SkImageFilter> RSBlurFilter::GetBlurFilter()
+{
+    return blurFilter_;
+}
+
 std::shared_ptr<RSFilter> RSBlurFilter::Add(const std::shared_ptr<RSFilter>& rhs)
 {
     if ((rhs == nullptr) || (rhs->GetFilterType() != FilterType::BLUR)) {
         return shared_from_this();
     }
     auto blurR = std::static_pointer_cast<RSBlurFilter>(rhs);
-    return std::make_shared<RSBlurFilter>(blurRadiusX_ + blurR->GetBlurRadiusX(),
-        blurRadiusY_ + blurR->GetBlurRadiusY());
+    return std::make_shared<RSBlurFilter>(
+        blurRadiusX_ + blurR->GetBlurRadiusX(), blurRadiusY_ + blurR->GetBlurRadiusY());
 }
 
 std::shared_ptr<RSFilter> RSBlurFilter::Sub(const std::shared_ptr<RSFilter>& rhs)
@@ -53,8 +62,8 @@ std::shared_ptr<RSFilter> RSBlurFilter::Sub(const std::shared_ptr<RSFilter>& rhs
         return shared_from_this();
     }
     auto blurR = std::static_pointer_cast<RSBlurFilter>(rhs);
-    return std::make_shared<RSBlurFilter>(blurRadiusX_ - blurR->GetBlurRadiusX(),
-        blurRadiusY_ - blurR->GetBlurRadiusY());
+    return std::make_shared<RSBlurFilter>(
+        blurRadiusX_ - blurR->GetBlurRadiusX(), blurRadiusY_ - blurR->GetBlurRadiusY());
 }
 
 std::shared_ptr<RSFilter> RSBlurFilter::Multiply(float rhs)

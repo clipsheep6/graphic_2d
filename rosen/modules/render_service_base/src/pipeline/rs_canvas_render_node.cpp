@@ -18,8 +18,9 @@
 #include <algorithm>
 
 #ifdef ROSEN_OHOS
-#include "common/rs_obj_abs_geometry.h"
 #include "include/core/SkCanvas.h"
+
+#include "common/rs_obj_abs_geometry.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_blur_filter.h"
@@ -72,7 +73,9 @@ void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas
     RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas);
     auto filter = std::static_pointer_cast<RSSkiaFilter>(GetRenderProperties().GetBackgroundFilter());
     if (filter != nullptr) {
-        RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, filter, nullptr, canvas.GetSurface());
+        auto mfilter = std::static_pointer_cast<RSSkiaFilter>(RSFilter::CreateMaterialFilter(1, 1.5));
+        RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, mfilter, nullptr, canvas.GetSurface());
+        // RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, filter, nullptr, canvas.GetSurface());
     }
 
     canvas.save();
@@ -96,7 +99,9 @@ void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 
     auto filter = std::static_pointer_cast<RSSkiaFilter>(GetRenderProperties().GetFilter());
     if (filter != nullptr) {
-        RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, filter, nullptr, canvas.GetSurface());
+        auto mfilter = std::static_pointer_cast<RSSkiaFilter>(RSFilter::CreateMaterialFilter(2, 1.5));
+        RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, mfilter, nullptr, canvas.GetSurface());
+        // RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, filter, nullptr, canvas.GetSurface());
     }
     canvas.restore();
     RSPropertiesPainter::DrawBorder(GetRenderProperties(), canvas);

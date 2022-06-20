@@ -16,6 +16,7 @@
 #include "hdi_backend.h"
 
 #include <scoped_bytrace.h>
+#include "display_type.h"
 #include "surface_buffer.h"
 
 namespace OHOS {
@@ -54,6 +55,42 @@ RosenError HdiBackend::RegPrepareComplete(OnPrepareCompleteFunc func, void* data
     return ROSEN_ERROR_OK;
 }
 
+int32_t HdiBackend::PreProcessLayersComp(OutputPtr output, const std::unordered_map<uint32_t, LayerPtr> &layersMap,
+                                         bool &needFlush)
+{
+    if (device_ == nullptr) {
+        HLOGE("device has not been initialized");
+        return DISPLAY_FAILURE;
+    }
+
+    uint32_t layersNum = layersMap.size();
+    uint32_t layerCompCapacity = output->GetLayerCompCapacity();
+    uint32_t screenId = output->GetScreenId();
+    bool shouldClientCompDirect = ((layerCompCapacity != COMPOSITION_LAYER_CAPACITY_INVALID) &&
+                                   (layersNum > layerCompCapacity));
+
+    for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {
+        const LayerPtr &layer = iter->second;
+        if (shouldClientCompDirect) {
+            layer->UpdateCompositionType(CompositionType::COMPOSITION_CLIENT);
+            continue;
+        }
+        layer->SetHdiLayerInfo();
+    }
+
+    int32_t ret = device_->PrepareScreenLayers(screenId, needFlush);
+    if (ret != DISPLAY_SUCCESS) {
+        HLOGE("PrepareScreenLayers failed, ret is %{public}d", ret);
+        return DISPLAY_FAILURE;
+    }
+
+    if (shouldClientCompDirect) {
+        return DISPLAY_SUCCESS;
+    }
+
+    return UpdateLayerCompType(screenId, layersMap);
+}
+
 void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
 {
     ScopedBytrace bytrace(__func__);
@@ -78,25 +115,13 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
             HLOGI("layer map is empty, drop this frame");
             continue;
         }
+        bool needFlush = false;
+        ret = PreProcessLayersComp(output, layersMap, needFlush);
+        if (ret != DISPLAY_SUCCESS) {
+            return;
+        }
 
         uint32_t screenId = output->GetScreenId();
-        for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {
-            const LayerPtr &layer = iter->second;
-            layer->SetHdiLayerInfo();
-        }
-
-        bool needFlush = false;
-        ret = device_->PrepareScreenLayers(screenId, needFlush);
-        if (ret != DISPLAY_SUCCESS) {
-            HLOGE("PrepareScreenLayers failed, ret is %{public}d", ret);
-            return;
-        }
-
-        ret = UpdateLayerCompType(screenId, layersMap);
-        if (ret != DISPLAY_SUCCESS) {
-            return;
-        }
-
         std::vector<LayerPtr> compClientLayers;
         std::vector<LayerInfoPtr> newLayerInfos;
         for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {

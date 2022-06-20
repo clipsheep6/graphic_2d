@@ -18,6 +18,7 @@
 
 #include <array>
 #include <stdint.h>
+#include <sys/types.h>
 #include <vector>
 #include <unordered_map>
 
@@ -31,7 +32,7 @@ namespace OHOS {
 namespace Rosen {
 
 using LayerPtr = std::shared_ptr<HdiLayer>;
-
+static constexpr uint32_t COMPOSITION_LAYER_CAPACITY_INVALID = 0;
 // dump layer
 struct LayerDumpInfo {
     uint64_t surfaceId;
@@ -42,12 +43,14 @@ class HdiOutput {
 public:
     HdiOutput(uint32_t screenId);
     virtual ~HdiOutput();
-
     static constexpr uint COMPOSITION_RECORDS_NUM = 128;
+
     /* for RS begin */
     void SetLayerInfo(const std::vector<LayerInfoPtr> &layerInfos);
     void SetOutputDamage(uint32_t num, const IRect &outputDamage);
     uint32_t GetScreenId() const;
+    void SetLayerCompCapacity(uint32_t layerCompositionCapacity);
+    uint32_t GetLayerCompCapacity();
     /* for RS end */
 
     static std::shared_ptr<HdiOutput> CreateHdiOutput(uint32_t screenId);
@@ -73,6 +76,7 @@ private:
     // surface unique id -- layer ptr
     std::unordered_map<uint64_t, LayerPtr> surfaceIdMap_;
     uint32_t screenId_;
+    uint32_t layerCompCapacity_ = COMPOSITION_LAYER_CAPACITY_INVALID;
     IRect outputDamage_;
     uint32_t outputDamageNum_;
 

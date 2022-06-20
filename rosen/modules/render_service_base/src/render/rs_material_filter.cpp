@@ -73,15 +73,12 @@ sk_sp<SkImageFilter> RSMaterialFilter::createMaterialStyle(int style, float dipS
     switch (style) {
         case 1:
             // cardThinLight
-            maskColor_ = 0x6BF0F0F0;
             return RSMaterialFilter::createMaterialfilter(RSMaterialFilter::vp2sigma(109, dipScale), 1.22, 0x6BF0F0F0);
         case 2:
             // cardLight
-            maskColor_ = 0xB8FAFAFA;
             return RSMaterialFilter::createMaterialfilter(RSMaterialFilter::vp2sigma(103, dipScale), 2.4, 0xB8FAFAFA);
         case 3:
             // cardThickLight
-            maskColor_ = 0xB8FAFAFA;
             return RSMaterialFilter::createMaterialfilter(RSMaterialFilter::vp2sigma(109, dipScale), 2.4, 0xB8FAFAFA);
         default:
             break;

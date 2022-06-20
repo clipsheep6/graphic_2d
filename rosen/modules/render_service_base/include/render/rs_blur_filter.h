@@ -36,6 +36,7 @@ public:
 private:
     float blurRadiusX_;
     float blurRadiusY_;
+    sk_sp<SkImageFilter> blurFilter_;
 };
 } // namespace Rosen
 } // namespace OHOS

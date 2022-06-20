@@ -168,16 +168,16 @@ void RSScreen::SetActiveMode(uint32_t modeId)
         return;
     }
     
-    // int32_t selectModeId = supportedModes_[modeId].id;
-    // if (hdiScreen_->SetScreenMode(static_cast<uint32_t>(selectModeId)) < 0) {
-    //     HiLog::Error(LOG_LABEL, "%{public}s: Hdi SetScreenMode fails.\n", __func__);
-    //     return;
-    // }
-    // auto activeMode = GetActiveMode();
-    // if (activeMode) {
-    //     width_ = activeMode->width;
-    //     height_ = activeMode->height;
-    // }
+    int32_t selectModeId = supportedModes_[modeId].id;
+    if (hdiScreen_->SetScreenMode(static_cast<uint32_t>(selectModeId)) < 0) {
+        HiLog::Error(LOG_LABEL, "%{public}s: Hdi SetScreenMode fails.\n", __func__);
+        return;
+    }
+    auto activeMode = GetActiveMode();
+    if (activeMode) {
+        width_ = activeMode->width;
+        height_ = activeMode->height;
+    }
 }
 
 void RSScreen::SetResolution(uint32_t width, uint32_t height)

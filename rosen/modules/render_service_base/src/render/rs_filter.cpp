@@ -18,13 +18,12 @@
 #include "platform/common/rs_log.h"
 #ifdef ROSEN_OHOS
 #include "render/rs_blur_filter.h"
+#include "render/rs_material_filter.h"
 #endif
 
 namespace OHOS {
 namespace Rosen {
-RSFilter::RSFilter()
-    : type_(FilterType::NONE)
-{}
+RSFilter::RSFilter() : type_(FilterType::NONE) {}
 
 RSFilter::~RSFilter() {}
 
@@ -32,6 +31,15 @@ std::shared_ptr<RSFilter> RSFilter::CreateBlurFilter(float blurRadiusX, float bl
 {
 #ifdef ROSEN_OHOS
     return std::make_shared<RSBlurFilter>(blurRadiusX, blurRadiusY);
+#else
+    return nullptr;
+#endif
+}
+
+std::shared_ptr<RSFilter> RSFilter::CreateMaterialFilter(int style, float dipScale)
+{
+#ifdef ROSEN_OHOS
+    return std::make_shared<RSMaterialFilter>(style, dipScale);
 #else
     return nullptr;
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@
 #include "pipeline/rs_surface_handler.h"
 #include "refbase.h"
 #include "sync_fence.h"
+#include "common/rs_occlusion_region.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -86,6 +87,8 @@ public:
         return isProxy_;
     }
 
+    void CollectSurface(const std::shared_ptr<RSBaseRenderNode>& node,
+                        std::vector<RSBaseRenderNode::SharedPtr>& vec) override;
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
@@ -139,7 +142,7 @@ public:
     void SetGlobalAlpha(float alpha)
     {
         if (globalAlpha_ == alpha) {
-        return;
+            return;
         }
         globalAlpha_ = alpha;
     }
@@ -147,6 +150,34 @@ public:
     float GetGlobalAlpha() const
     {
         return globalAlpha_;
+    }
+
+    void SetOcclusionVisible(bool visible)
+    {
+        isOcclusionVisible_ = visible;
+    }
+
+    bool GetOcclusionVisible() const
+    {
+        return isOcclusionVisible_;
+    }
+
+    void SetVisibleRegionRecursive(const Occlusion::Region& region,
+                                    std::vector<std::pair<uint64_t, bool>>& visibilityVec)
+    {
+        visibleRegion_ = region;
+        bool vis = region.GetSize() > 0;
+        visibilityVec.emplace_back(GetId(), vis);
+        SetOcclusionVisible(vis);
+        for (auto& child : GetSortedChildren()) {
+            if (child->GetType() == RSRenderNodeType::SURFACE_NODE) {
+                auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+                if (surface == nullptr) {
+                    continue;
+                }
+                surface->SetVisibleRegionRecursive(region, visibilityVec);
+            }
+        }
     }
 
     void SetConsumer(const sptr<Surface>& consumer);
@@ -180,7 +211,7 @@ public:
     bool NeedSetCallbackForRenderThreadRefresh();
 
 private:
-    void SendCommandFromRT(std::unique_ptr<RSCommand>& command);
+    void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId);
 
     std::mutex mutexRT_;
     std::mutex mutexUI_;
@@ -206,9 +237,11 @@ private:
     sptr<RSIBufferAvailableCallback> callbackFromRT_;
     sptr<RSIBufferAvailableCallback> callbackFromUI_;
     std::function<void(void)> callbackForRenderThreadRefresh_ = nullptr;
-
     std::vector<NodeId> childSurfaceNodeIds_;
     friend class RSRenderThreadVisitor;
+    RectI clipRegionFromParent_;
+    Occlusion::Region visibleRegion_;
+    bool isOcclusionVisible_ = true;
 };
 } // namespace Rosen
 } // namespace OHOS

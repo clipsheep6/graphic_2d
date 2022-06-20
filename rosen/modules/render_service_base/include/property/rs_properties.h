@@ -51,6 +51,7 @@ public:
     Vector2f GetBoundsPosition() const;
     float GetBoundsPositionX() const;
     float GetBoundsPositionY() const;
+    bool GetGeoDirty() const;
 
     void SetFrame(Vector4f frame);
     void SetFrameSize(Vector2f size);

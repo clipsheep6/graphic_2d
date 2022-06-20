@@ -128,6 +128,11 @@ Vector2f RSProperties::GetBoundsPosition() const
     return { GetBoundsPositionX(), GetBoundsPositionY() };
 }
 
+bool RSProperties::GetGeoDirty() const
+{
+    return geoDirty_;
+}
+
 void RSProperties::SetFrame(Vector4f frame)
 {
     frameGeo_->SetRect(frame.x_, frame.y_, frame.z_, frame.w_);

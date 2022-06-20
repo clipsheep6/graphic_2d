@@ -26,10 +26,12 @@ class RS_EXPORT RSFilter : public std::enable_shared_from_this<RSFilter> {
 public:
     virtual ~RSFilter();
     static std::shared_ptr<RSFilter> CreateBlurFilter(float blurRadiusX, float blurRadiusY);
+    static std::shared_ptr<RSFilter> CreateMaterialFilter(int style, float dipScale);
 
     enum FilterType {
         NONE = 0,
         BLUR,
+        MATERIAL,
     };
     FilterType GetFilterType() const
     {
@@ -39,15 +41,30 @@ public:
     {
         return type_ != FilterType::NONE;
     }
+
 protected:
     FilterType type_;
     RSFilter();
-    virtual std::shared_ptr<RSFilter> Add(const std::shared_ptr<RSFilter>& rhs) { return nullptr; }
-    virtual std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs) { return nullptr; }
-    virtual std::shared_ptr<RSFilter> Multiply(float rhs) { return nullptr; }
-    virtual std::shared_ptr<RSFilter> Negate() { return nullptr; }
-    friend std::shared_ptr<RSFilter> operator+(const std::shared_ptr<RSFilter>& lhs, const std::shared_ptr<RSFilter>& rhs);
-    friend std::shared_ptr<RSFilter> operator-(const std::shared_ptr<RSFilter>& lhs, const std::shared_ptr<RSFilter>& rhs);
+    virtual std::shared_ptr<RSFilter> Add(const std::shared_ptr<RSFilter>& rhs)
+    {
+        return nullptr;
+    }
+    virtual std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs)
+    {
+        return nullptr;
+    }
+    virtual std::shared_ptr<RSFilter> Multiply(float rhs)
+    {
+        return nullptr;
+    }
+    virtual std::shared_ptr<RSFilter> Negate()
+    {
+        return nullptr;
+    }
+    friend std::shared_ptr<RSFilter> operator+(
+        const std::shared_ptr<RSFilter>& lhs, const std::shared_ptr<RSFilter>& rhs);
+    friend std::shared_ptr<RSFilter> operator-(
+        const std::shared_ptr<RSFilter>& lhs, const std::shared_ptr<RSFilter>& rhs);
     friend std::shared_ptr<RSFilter> operator*(const std::shared_ptr<RSFilter>& lhs, float rhs);
 };
 } // namespace Rosen

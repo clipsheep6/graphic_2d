@@ -108,6 +108,7 @@ ohos_shared_library("librender_service_base") {
 
     #render
     "src/render/rs_blur_filter.cpp",
+    "src/render/rs_material_filter.cpp",
     "src/render/rs_border.cpp",
     "src/render/rs_filter.cpp",
     "src/render/rs_image.cpp",
@@ -116,7 +117,7 @@ ohos_shared_library("librender_service_base") {
     "src/render/rs_shader.cpp",
     "src/render/rs_shadow.cpp",
     "src/render/rs_skia_filter.cpp",
-
+/home/gaoweihua/OH_620/foundation/graphic/graphic_2d/rosen/modules/render_service_base/BUILD.gn
     #transaction
     "src/transaction/rs_marshalling_helper.cpp",
     "src/transaction/rs_occlusion_data.cpp",

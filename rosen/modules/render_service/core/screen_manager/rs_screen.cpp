@@ -103,6 +103,8 @@ void RSScreen::PhysicalScreenInit() noexcept
     } else {
         screenType_ = RSScreenType::EXTERNAL_TYPE_SCREEN;
     }
+
+
 }
 
 ScreenId RSScreen::Id() const
@@ -165,6 +167,7 @@ void RSScreen::SetActiveMode(uint32_t modeId)
         HiLog::Error(LOG_LABEL, "%{public}s: set fails because the index is out of bounds.\n", __func__);
         return;
     }
+    
     int32_t selectModeId = supportedModes_[modeId].id;
     if (hdiScreen_->SetScreenMode(static_cast<uint32_t>(selectModeId)) < 0) {
         HiLog::Error(LOG_LABEL, "%{public}s: Hdi SetScreenMode fails.\n", __func__);

@@ -22,15 +22,16 @@
 #include "pipeline/rs_main_thread.h"
 #include "common/rs_vector2.h"
 #include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_uni_render_judgement.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_blur_filter.h"
 #include "rs_trace.h"
-#ifdef RS_ENABLE_GL
+#ifdef RS_ENABLE_EGLIMAGE
 #include "include/gpu/gl/GrGLTypes.h"
 #include "include/gpu/GrBackendSurface.h"
 
-#endif // RS_ENABLE_GL
+#endif // RS_ENABLE_EGLIMAGE
 
 namespace OHOS {
 namespace Rosen {
@@ -599,8 +600,7 @@ bool RsRenderServiceUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandle
 {
     auto availableBufferCnt = surfaceHandler.GetAvailableBufferCount();
     if (availableBufferCnt <= 0) {
-        RS_LOGD("RsDebug surfaceHandler(id: %llu) has no new buffer, try use old buffer.",
-            surfaceHandler.GetNodeId());
+        // this node has no new buffer, try use old buffer.
         return true;
     }
     auto& consumer = surfaceHandler.GetConsumer();
@@ -621,7 +621,9 @@ bool RsRenderServiceUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandle
         return false;
     }
 
-    surfaceHandler.SetBuffer(buffer, acquireFence, damage);
+    surfaceHandler.SetBuffer(buffer, acquireFence, damage, timestamp);
+    RS_LOGD("RsDebug surfaceHandler(id: %llu) AcquireBuffer success, timestamp = %lld.",
+        surfaceHandler.GetNodeId(), timestamp);
     availableBufferCnt = surfaceHandler.ReduceAvailableBuffer();
     return true;
 }
@@ -634,7 +636,7 @@ bool RsRenderServiceUtil::ReleaseBuffer(RSSurfaceHandler& surfaceHandler)
         return false;
     }
 
-    auto preBuffer = surfaceHandler.GetPreBuffer();
+    auto& preBuffer = surfaceHandler.GetPreBuffer();
     if (preBuffer.buffer != nullptr) {
         auto ret = consumer->ReleaseBuffer(preBuffer.buffer, preBuffer.releaseFence);
         if (ret != OHOS::SURFACE_ERROR_OK) {
@@ -642,6 +644,9 @@ bool RsRenderServiceUtil::ReleaseBuffer(RSSurfaceHandler& surfaceHandler)
                 surfaceHandler.GetNodeId(), ret);
             return false;
         }
+        // reset prevBuffer if we release it successfully,
+        // to avoid releasing the same buffer next frame in some suitations.
+        preBuffer.Reset();
     }
 
     return true;
@@ -873,7 +878,8 @@ BufferDrawParam RsRenderServiceUtil::CreateBufferDrawParam(RSSurfaceRenderNode& 
     params.clipRect = dstRect;
     params.paint = paint;
     params.cornerRadius = property.GetCornerRadius();
-    params.isNeedClip = property.GetClipToFrame();
+    params.isNeedClip = RSUniRenderJudgement::GetUniRenderEnabledType() == UniRenderEnabledType::UNI_RENDER_DISABLED &&
+        property.GetClipToFrame();
     return params;
 }
 

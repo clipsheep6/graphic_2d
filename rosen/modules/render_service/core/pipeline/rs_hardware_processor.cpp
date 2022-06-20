@@ -37,6 +37,7 @@
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
+#include "pipeline/rs_uni_render_judgement.h"
 #include <platform/ohos/backend/rs_surface_ohos_gl.h>
 #include <platform/ohos/backend/rs_surface_ohos_raster.h>
 #include "property/rs_properties_painter.h"
@@ -166,6 +167,9 @@ void RSHardwareProcessor::ScaleDownLayers()
 {
     for (auto layer : layers_) {
         ScalingMode scalingMode = ScalingMode::SCALING_MODE_SCALE_TO_WINDOW;
+        if (layer->GetBuffer() == nullptr || layer->GetSurface() == nullptr) {
+            continue;
+        }
         if (layer->GetSurface()->GetScalingMode(layer->GetBuffer()->GetSeqNum(), scalingMode) == GSERROR_OK &&
             scalingMode == ScalingMode::SCALING_MODE_SCALE_CROP) {
             IRect dstRect = layer->GetLayerSize();
@@ -411,15 +415,15 @@ void RSHardwareProcessor::Redraw(
         .width = static_cast<int32_t>(currScreenInfo_.width),
         .height = static_cast<int32_t>(currScreenInfo_.height),
         .strideAlignment = 0x8,
-        .format = PIXEL_FMT_RGBA_8888,      // [PLANNING] different soc need different format
+        .format = PIXEL_FMT_RGBA_8888,
         .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA | HBM_USE_MEM_FB,
         .timeout = 0,
     };
-    bool isUni = RSSystemProperties::GetUniRenderEnabledType() != UniRenderEnabledType::UNI_RENDER_DISABLED;
+    bool isUni = RSUniRenderJudgement::GetUniRenderEnabledType() != UniRenderEnabledType::UNI_RENDER_DISABLED;
     RS_TRACE_NAME("Redraw");
     bool ifUseGPU = !isUni && IfUseGPUClient(param);
     RS_LOGE("RSHardwareProcessor::Redraw if use GPU client: %d!", ifUseGPU);
-#ifdef RS_ENABLE_GL
+#if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
     if (ifUseGPU) {
         rsSurface_ = std::make_shared<RSSurfaceOhosGl>(surface);
         rsSurface_->SetSurfaceBufferUsage(HBM_USE_CPU_READ | HBM_USE_MEM_DMA | HBM_USE_MEM_FB);
@@ -430,7 +434,7 @@ void RSHardwareProcessor::Redraw(
 #else
     rsSurface_ = std::make_shared<RSSurfaceOhosRaster>(surface);
     rsSurface_->SetSurfaceBufferUsage(HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA | HBM_USE_MEM_FB);
-#endif
+#endif // (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
     auto skCanvas = CreateCanvas(rsSurface_, requestConfig);
     if (skCanvas == nullptr) {
         RS_LOGE("RSHardwareProcessor::Redraw: canvas is null.");
@@ -510,7 +514,7 @@ void RSHardwareProcessor::Redraw(
 
 void RSHardwareProcessor::OnRotate()
 {
-    if (RSSystemProperties::GetUniRenderEnabledType() != UniRenderEnabledType::UNI_RENDER_DISABLED) {
+    if (RSUniRenderJudgement::GetUniRenderEnabledType() != UniRenderEnabledType::UNI_RENDER_DISABLED) {
         return;
     }
     int32_t width = static_cast<int32_t>(currScreenInfo_.width);

@@ -45,26 +45,12 @@ public:
 protected:
     FilterType type_;
     RSFilter();
-    virtual std::shared_ptr<RSFilter> Add(const std::shared_ptr<RSFilter>& rhs)
-    {
-        return nullptr;
-    }
-    virtual std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs)
-    {
-        return nullptr;
-    }
-    virtual std::shared_ptr<RSFilter> Multiply(float rhs)
-    {
-        return nullptr;
-    }
-    virtual std::shared_ptr<RSFilter> Negate()
-    {
-        return nullptr;
-    }
-    friend std::shared_ptr<RSFilter> operator+(
-        const std::shared_ptr<RSFilter>& lhs, const std::shared_ptr<RSFilter>& rhs);
-    friend std::shared_ptr<RSFilter> operator-(
-        const std::shared_ptr<RSFilter>& lhs, const std::shared_ptr<RSFilter>& rhs);
+    virtual std::shared_ptr<RSFilter> Add(const std::shared_ptr<RSFilter>& rhs) { return nullptr; }
+    virtual std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs) { return nullptr; }
+    virtual std::shared_ptr<RSFilter> Multiply(float rhs) { return nullptr; }
+    virtual std::shared_ptr<RSFilter> Negate() { return nullptr; }
+    friend std::shared_ptr<RSFilter> operator+(const std::shared_ptr<RSFilter>& lhs, const std::shared_ptr<RSFilter>& rhs);
+    friend std::shared_ptr<RSFilter> operator-(const std::shared_ptr<RSFilter>& lhs, const std::shared_ptr<RSFilter>& rhs);
     friend std::shared_ptr<RSFilter> operator*(const std::shared_ptr<RSFilter>& lhs, float rhs);
 };
 } // namespace Rosen

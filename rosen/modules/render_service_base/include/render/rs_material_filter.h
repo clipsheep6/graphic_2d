@@ -27,11 +27,7 @@ namespace Rosen {
 class RSMaterialFilter : public RSSkiaFilter {
 public:
     RSMaterialFilter(int style, float dipScale);
-<<<<<<< HEAD
     ~RSMaterialFilter() override;
-=======
-    ~RSMaterialFilter() override;   
->>>>>>> 7bbff8bc2b3cea0bcdfaf1b5cdeb9875439cd6aa
     
     float vp2sigma(float radiusVp, float dipScale) const;
     sk_sp<SkColorFilter> maskColorFilter(SkColor maskColor);

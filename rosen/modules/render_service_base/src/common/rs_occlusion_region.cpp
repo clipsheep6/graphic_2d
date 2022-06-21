@@ -13,16 +13,21 @@
  * limitations under the License.
  */
 
+#include "common/rs_occlusion_region.h"
+
+#include <dlfcn.h>
 #include <map>
 #include <set>
 
-#include "common/rs_occlusion_region.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Occlusion {
 static Rect _s_empty_rect_ { 0, 0, 0, 0 };
 static Rect _s_invalid_rect_ { 0, 0, -1, -1 };
+bool Region::_s_so_loaded_ = false;
+void (*Region::regionOpFromSO)(Region& r1, Region& r2, Region& res, Region::OP op) = nullptr;
 
 std::ostream& operator<<(std::ostream& os, const Rect& r)
 {
@@ -164,15 +169,15 @@ void Region::getRange(std::vector<Range>& ranges, Node& node, Region::OP op)
 
 void Region::UpdateRects(Rects& r, std::vector<Range>& ranges, std::vector<int>& indexAt, Region& res)
 {
-    int i = 0;
-    int j = 0;
+    size_t i = 0;
+    size_t j = 0;
     while (i < r.preRects.size() && j < ranges.size()) {
         if (r.preRects[i].left_ == indexAt[ranges[j].start_] && r.preRects[i].right_ == indexAt[ranges[j].end_]) {
             r.curRects.emplace_back(Rect { r.preRects[i].left_, r.preRects[i].top_, r.preRects[i].right_, r.curY });
             i++;
             j++;
         } else if (r.preRects[i].right_ < indexAt[ranges[j].end_]) {
-            res.rects_.push_back(r.preRects[i]);
+            res.GetRegionRects().push_back(r.preRects[i]);
             i++;
         } else {
             r.curRects.emplace_back(Rect { indexAt[ranges[j].start_], r.preY, indexAt[ranges[j].end_], r.curY });
@@ -183,17 +188,26 @@ void Region::UpdateRects(Rects& r, std::vector<Range>& ranges, std::vector<int>&
         r.curRects.emplace_back(Rect { indexAt[ranges[j].start_], r.preY, indexAt[ranges[j].end_], r.curY });
     }
     for (; i < r.preRects.size(); i++) {
-        res.rects_.push_back(r.preRects[i]);
+        res.GetRegionRects().push_back(r.preRects[i]);
     }
     r.preRects.clear();
     r.preRects.swap(r.curRects);
     return;
 }
 
-Region::Region(std::vector<Rect>& rs)
+void Region::InitDynamicLibraryFunction()
 {
-    copy(rs.begin(), rs.end(), back_inserter(rects_));
-    MakeBound();
+    void* handle = dlopen("liggraphic_innovation.z.so", RTLD_LAZY);
+    if (handle) {
+        regionOpFromSO = reinterpret_cast<void (*)(Region & r1, Region & r2, Region & res, Region::OP op)>(
+            dlsym(handle, "RegionOpFromSO"));
+        if (regionOpFromSO) {
+            RS_LOGI("Occlusion Region Op using Shared Library function.");
+            _s_so_loaded_ = true;
+        }
+    }
+    RS_LOGI("Occlusion Region Op using local function.");
+    return;
 }
 
 void Region::MakeBound()
@@ -211,19 +225,30 @@ void Region::MakeBound()
 
 void Region::RegionOp(Region& r1, Region& r2, Region& res, Region::OP op)
 {
+    if (_s_so_loaded_) {
+        RS_LOGD("Occlusion Region Op using Shared Library function.");
+        regionOpFromSO(r1, r2, res, op);
+    } else {
+        RS_LOGD("Occlusion Region Op using local function.");
+        RegionOpLocal(r1, r2, res, op);
+    }
+}
+
+void Region::RegionOpLocal(Region& r1, Region& r2, Region& res, Region::OP op)
+{
     r1.MakeBound();
     r2.MakeBound();
-    res.rects_.clear();
+    res.GetRegionRects().clear();
     std::vector<Event> events;
     std::set<int> xs;
 
-    for (auto& r : r1.rects_) {
+    for (auto& r : r1.GetRegionRects()) {
         events.emplace_back(Event { r.top_, Event::Type::OPEN, r.left_, r.right_ });
         events.emplace_back(Event { r.bottom_, Event::Type::CLOSE, r.left_, r.right_ });
         xs.insert(r.left_);
         xs.insert(r.right_);
     }
-    for (auto& r : r2.rects_) {
+    for (auto& r : r2.GetRegionRects()) {
         events.emplace_back(Event { r.top_, Event::Type::VOID_OPEN, r.left_, r.right_ });
         events.emplace_back(Event { r.bottom_, Event::Type::VOID_CLOSE, r.left_, r.right_ });
         xs.insert(r.left_);
@@ -255,7 +280,7 @@ void Region::RegionOp(Region& r1, Region& r2, Region& res, Region::OP op)
         rootNode.Update(indexOf[e.left_], indexOf[e.right_], e.type_);
         r.preY = r.curY;
     }
-    copy(r.preRects.begin(), r.preRects.end(), back_inserter(res.rects_));
+    copy(r.preRects.begin(), r.preRects.end(), back_inserter(res.GetRegionRects()));
     res.MakeBound();
 }
 

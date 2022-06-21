@@ -78,6 +78,7 @@ void RSMainThread::Init()
 #ifdef RS_ENABLE_EGLIMAGE
     eglImageManager_ = std::make_shared<RSEglImageManager>(renderContext_->GetEGLDisplay());
 #endif // RS_ENABLE_EGLIMAGE
+    Occlusion::Region::InitDynamicLibraryFunction();
 }
 
 void RSMainThread::Start()
@@ -236,6 +237,7 @@ void RSMainThread::Render()
 #ifdef RS_ENABLE_EGLIMAGE
     eglImageManager_->ShrinkCachesIfNeeded();
 #endif // RS_ENABLE_EGLIMAGE
+    // Occlusion::Region::
 }
 
 void RSMainThread::CalcOcclusion()

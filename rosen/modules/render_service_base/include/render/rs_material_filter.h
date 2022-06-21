@@ -27,13 +27,7 @@ namespace Rosen {
 class RSMaterialFilter : public RSSkiaFilter {
 public:
     RSMaterialFilter(int style, float dipScale);
-    ~RSMaterialFilter() override;
-    enum MaterialStyle {
-        THIN,
-        REGULAR,
-        THICK,
-    };
-    
+    ~RSMaterialFilter() override;   
     
     float vp2sigma(float radiusVp, float dipScale) const;
     sk_sp<SkColorFilter> maskColorFilter(SkColor maskColor);
@@ -44,8 +38,6 @@ public:
     std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs) override;
     std::shared_ptr<RSFilter> Multiply(float rhs) override;
     std::shared_ptr<RSFilter> Negate() override;
-private:
-    MaterialStyle style_;
     
 };
 } // namespace Rosen

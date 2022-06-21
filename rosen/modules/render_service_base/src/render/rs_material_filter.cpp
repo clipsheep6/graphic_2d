@@ -86,11 +86,6 @@ sk_sp<SkImageFilter> RSMaterialFilter::createMaterialStyle(int style, float dipS
     return nullptr;
 }
 
-RSMaterialFilter::MaterialStyle RSMaterialFilter::GetStyle()
-{
-    return style_;
-}
-
 std::shared_ptr<RSFilter> RSMaterialFilter::Add(const std::shared_ptr<RSFilter>& rhs)
 {
     return shared_from_this();

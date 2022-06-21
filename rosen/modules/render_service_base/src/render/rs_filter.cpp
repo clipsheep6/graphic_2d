@@ -41,7 +41,7 @@ std::shared_ptr<RSFilter> RSFilter::CreateBlurFilter(float blurRadiusX, float bl
 std::shared_ptr<RSFilter> RSFilter::CreateMaterialFilter(int style, float dipScale)
 {
 #ifdef ROSEN_OHOS
-    return std::make_shared<RSMaterialFilter>(style, dipScale); //返回构造器对象
+    return std::make_shared<RSMaterialFilter>(style, dipScale);
 #else
     return nullptr;
 #endif

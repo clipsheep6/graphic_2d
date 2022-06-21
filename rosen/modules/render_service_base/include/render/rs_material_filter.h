@@ -28,18 +28,11 @@ class RSMaterialFilter : public RSSkiaFilter {
 public:
     RSMaterialFilter(int style, float dipScale);
     ~RSMaterialFilter() override;
-    enum MaterialStyle {
-        THIN,
-        REGULAR,
-        THICK,
-    };
-    
     
     float vp2sigma(float radiusVp, float dipScale) const;
     sk_sp<SkColorFilter> maskColorFilter(SkColor maskColor);
     sk_sp<SkImageFilter> createMaterialfilter(float radius, float sat, SkColor maskColor);
     sk_sp<SkImageFilter> createMaterialStyle(int style, float dipScale);  
-    RSMaterialFilter::MaterialStyle GetStyle();
     std::shared_ptr<RSFilter> Add(const std::shared_ptr<RSFilter>& rhs) override;
     std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs) override;
     std::shared_ptr<RSFilter> Multiply(float rhs) override;

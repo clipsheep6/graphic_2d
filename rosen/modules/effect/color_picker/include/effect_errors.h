@@ -21,11 +21,10 @@
 
 namespace OHOS {
 namespace Rosen {
-
 /* Effect defined errors */
-const uint32_t ERR_EFFECT_INVALID_VALUE = 2;                                  // invalid size
-const uint32_t ERROR = 1;                                                     // Operation error
-const uint32_t SUCCESS = 0;                                                    // Operation success
+const uint32_t ERR_EFFECT_INVALID_VALUE = 2;                          // Invalid value
+const uint32_t ERROR = 1;                                             // Operation error
+const uint32_t SUCCESS = 0;                                           // Operation success
 }  // namespace Rosen
 }  // namespace OHOS
 #endif  // EFFECT_ERRORS_H

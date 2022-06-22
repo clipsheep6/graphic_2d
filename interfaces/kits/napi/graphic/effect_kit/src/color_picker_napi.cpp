@@ -200,7 +200,7 @@ napi_value ColorPickerNapi::Constructor(napi_env env, napi_callback_info info)
     return thisVar;
 }
 
-void ColorPickerNapi::Destructor(napi_env env, ColorPickerNapi* nativeObject, void *finalize)
+void ColorPickerNapi::Destructor(napi_env env, void* nativeObject, void *finalize)
 {
     ColorPickerNapi *pColorPickerNapi = reinterpret_cast<ColorPickerNapi*>(nativeObject);
 

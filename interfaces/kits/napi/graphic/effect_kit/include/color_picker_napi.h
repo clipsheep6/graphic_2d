@@ -41,13 +41,12 @@ public:
 private:
     // methods constructor
     static napi_value Constructor(napi_env env, napi_callback_info info);
-    static void Destructor(napi_env env, void *nativeObject, void *finalize);
+    static void Destructor(napi_env env, void* nativeObject, void* finalize);
 
     // static mothod
     static napi_value CreateColorPicker(napi_env env, napi_callback_info info);
     static void CreateColorPickerFromPixelmapComplete(napi_env env, napi_status status, void *data);
     static napi_value GetScaledPixelMap(napi_env env, napi_callback_info info);
-
     static napi_value GetMainColor(napi_env env, napi_callback_info info);
     static napi_value GetMainColorSync(napi_env env, napi_callback_info info);
 

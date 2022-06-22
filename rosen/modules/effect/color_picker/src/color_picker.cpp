@@ -42,7 +42,7 @@ namespace Rosen {
 using OHOS::HiviewDFX::HiLog;
 
 std::shared_ptr<ColorPicker> ColorPicker::CreateColorPicker(const std::shared_ptr<Media::PixelMap>& pixmap,
-                                                                 uint32_t &errorCode)
+    uint32_t &errorCode)
 {
     if (pixmap == nullptr) {
         HiLog::Info(LABEL, "[ColorPicker]failed to create ColorPicker with null pixmap.");
@@ -65,7 +65,7 @@ std::shared_ptr<Media::PixelMap> ColorPicker::GetScaledPixelMap()
     OHOS::Media::InitializationOptions options;
     options.alphaType = pixelmap_->GetAlphaType();
     options.pixelFormat = pixelmap_->GetPixelFormat();
-    options.scaleMode = OHOS::Media::ScaleMode::FIT_TARGET_SIZE;  
+    options.scaleMode = OHOS::Media::ScaleMode::FIT_TARGET_SIZE;
     options.size.width = 1;
     options.size.height = 1;
     options.editable = true;
@@ -93,7 +93,7 @@ uint32_t ColorPicker::GetMainColor(ColorManager::Color &color)
 
 ColorPicker::ColorPicker(std::shared_ptr<Media::PixelMap> pixmap)
 {
-    if(pixmap == nullptr) {
+    if (pixmap == nullptr) {
         return ;
     }
     pixelmap_ = pixmap;

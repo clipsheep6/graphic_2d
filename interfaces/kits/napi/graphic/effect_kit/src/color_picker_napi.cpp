@@ -92,7 +92,7 @@ static void CommonCallbackRoutine(napi_env env, ColorPickerAsyncContext* &asyncC
     napi_delete_async_work(env, asyncContext->work);
 
     delete asyncContext;
-    asyncContext = nullptr;    
+    asyncContext = nullptr;
 }
 
 ColorPickerNapi::ColorPickerNapi()
@@ -126,11 +126,11 @@ napi_value ColorPickerNapi::Init(napi_env env, napi_value exports)
 
     napi_value constructor = nullptr;
 
-    napi_status status = napi_define_class(env, CLASS_NAME.c_str(), 
-                                          NAPI_AUTO_LENGTH, Constructor,
-                                          nullptr,
-                                          IMG_ARRAY_SIZE(props), props,
-                                          &constructor);
+    napi_status status = napi_define_class(env, CLASS_NAME.c_str(),
+                                           NAPI_AUTO_LENGTH, Constructor,
+                                           nullptr,
+                                           IMG_ARRAY_SIZE(props), props,
+                                           &constructor);
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
                          nullptr,
                          EFFECT_LOG_E("define class fail"));
@@ -185,7 +185,7 @@ napi_value ColorPickerNapi::Constructor(napi_env env, napi_callback_info info)
     pColorPickerNapi->env_ = env;
     pColorPickerNapi->nativeColorPicker_ = sColorPicker_;
 
-    status = napi_wrap(env, thisVar, 
+    status = napi_wrap(env, thisVar,
                        reinterpret_cast<void*>(pColorPickerNapi.get()),
                        Destructor,
                        nullptr,
@@ -200,7 +200,7 @@ napi_value ColorPickerNapi::Constructor(napi_env env, napi_callback_info info)
     return thisVar;
 }
 
-void ColorPickerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
+void ColorPickerNapi::Destructor(napi_env env, ColorPickerNapi* nativeObject, void *finalize)
 {
     ColorPickerNapi *pColorPickerNapi = reinterpret_cast<ColorPickerNapi*>(nativeObject);
 
@@ -229,9 +229,7 @@ void ColorPickerNapi::CreateColorPickerFromPixelmapComplete(napi_env env, napi_s
 
     EFFECT_LOG_I("Create ColorPicker Complete");
     auto context = static_cast<ColorPickerAsyncContext*>(data);
-
     status = napi_get_reference_value(env, sConstructor_, &constructor);
-
     if (IMG_IS_OK(status)) {
         sColorPicker_ = context->rColorPicker;
         status = napi_new_instance(env, constructor, NUM_0, nullptr, &result);
@@ -307,7 +305,7 @@ napi_value ColorPickerNapi::CreateColorPicker(napi_env env, napi_callback_info i
         EFFECT_LOG_I("errorMsg");
         IMG_CREATE_CREATE_ASYNC_WORK(env, status,
                                      "CreateColorPickerError",
-                                     [](napi_env env, void *data) {}, 
+                                     [](napi_env env, void *data) {},
                                      CreateColorPickerErrorComplete, 
                                      asyncContext,
                                      asyncContext->work);
@@ -353,7 +351,7 @@ napi_value ColorPickerNapi::GetScaledPixelMap(napi_env env, napi_callback_info i
                          nullptr,
                          EFFECT_LOG_E("empty pixelmap"));
 
-    EFFECT_LOG_I("GetPixelMap.w,h=%{public}d,%{public}d", result->GetWidth(),result->GetHeight());
+    EFFECT_LOG_I("GetPixelMap.w,h=%{public}d,%{public}d", result->GetWidth(), result->GetHeight());
     return Media::PixelMapNapi::CreatePixelMap(env, result);
 }
 
@@ -534,15 +532,14 @@ ImageType ColorPickerNapi::ParserArgumentType(napi_env env, napi_value argv)
 }
 
 void BuildMsgOnError(napi_env env,
-                         const std::unique_ptr<ColorPickerAsyncContext>& context,
-                         bool assertion,
-                         const std::string msg)
+                     const std::unique_ptr<ColorPickerAsyncContext>& context,
+                     bool assertion,
+                     const std::string msg)
 {
     if (!assertion) {
         EFFECT_LOG_E("%{public}s", msg.c_str());
         napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH, &(context->errorMsg));
     }
 }
-
 }  // namespace Rosen
 }  // namespace OHOS

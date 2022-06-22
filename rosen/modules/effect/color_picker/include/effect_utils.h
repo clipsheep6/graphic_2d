@@ -30,7 +30,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "EffectNapi
 
 #define EFFECT_LOG_E(fmt, ...) OHOS::HiviewDFX::HiLog::Error(LABEL, \
         "%{public}s:%{public}d " fmt, __func__, __LINE__, ##__VA_ARGS__)
-
 } // namespace Rosen
 } // namespace OHOS
 #endif // EFFECT_UTILS_H

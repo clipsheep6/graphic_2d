@@ -19,7 +19,7 @@
 
 using OHOS::HiviewDFX::HiLog;
 namespace OHOS {
-namespace Rosen{
+namespace Rosen {
 /*
  * Function registering all props and functions of ohos.effectlibrary module
  */

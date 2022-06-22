@@ -33,9 +33,6 @@
 #include "include/core/SkFont.h"
 #include "include/core/SkTypeface.h"
 
-
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -43,7 +40,6 @@ extern "C" {
 namespace OHOS {
 namespace Rosen {
 using OHOS::HiviewDFX::HiLog;
-//using namespace OHOS::HiviewDFX;
 
 std::shared_ptr<ColorPicker> ColorPicker::CreateColorPicker(const std::shared_ptr<Media::PixelMap>& pixmap, uint32_t &errorCode)
 {

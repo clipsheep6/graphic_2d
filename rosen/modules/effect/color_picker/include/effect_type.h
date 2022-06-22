@@ -26,7 +26,6 @@ namespace Rosen {
 #define NATIVEEXPORT
 #endif
 
-
 } // namespace Rosen
 } // namespace OHOS
 

@@ -23,8 +23,6 @@
 #include "hilog/log.h"
 #include "effect_utils.h"
 
-
-
 using OHOS::HiviewDFX::HiLog;
 namespace {
     constexpr uint32_t NUM_0 = 0;

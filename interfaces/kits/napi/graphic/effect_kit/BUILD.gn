@@ -13,9 +13,9 @@
 
 import("//build/ohos.gni")
 
-## Build advanced_effect.so
+## Build effect_kit.so
     
-config("graphic_napi_advancedEffect_config") {
+config("graphic_napi_effect_kit_config") {
   visibility = [ ":*" ]
 
   cflags = [
@@ -40,13 +40,13 @@ ohos_shared_library("effect_kit") {
     "//foundation/graphic/graphic_2d/utils/color_manager/export",
     "//foundation/multimedia/image_standard/interfaces/kits/js/common/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
-    "//foundation/multimedia/image_standard/mock/native/include",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
   ]
 
   configs = [
-    ":graphic_napi_advancedEffect_config",
+    ":graphic_napi_effect_kit_config",
     "//utils/native/base:utils_config",
+    "//foundation/multimedia/image_standard/interfaces/innerkits:image_external_config",
   ]
 
   sources = [
@@ -80,4 +80,4 @@ ohos_shared_library("effect_kit") {
   subsystem_name = "graphic"
 }
 
-## Build advanced_effect.so
+## Build effect_kit.so

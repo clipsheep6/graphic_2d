@@ -18,19 +18,14 @@
 
 #include <cstdint>
 #include "errors.h"
-//#include "modules.h"
 
 namespace OHOS {
 namespace Rosen {
-//constexpr int32_t BASE_EFFECT_ERR_OFFSET = ErrCodeOffset(SUBSYS_GRAPHIC, MODULE_EFFECT);
 
 /* Effect defined errors */
 const uint32_t ERR_EFFECT_INVALID_VALUE = 2;                                  // invalid size
 const uint32_t ERROR = 1;                                                     // Operation error
 const uint32_t SUCCESS = 0;                                                    // Operation success
-//const int32_t ERROR = BASE_EFFECT_ERR_OFFSET;                                  // Operation failed
-//const int32_t ERR_IPC = BASE_EFFECT_ERR_OFFSET + 1;                            // ipc error
-//const int32_t ERR_EFFECT_UNKNOWN = BASE_EFFECT_ERR_OFFSET + 200;  // effect unknown error
 }  // namespace Rosen
 }  // namespace OHOS
 #endif  // EFFECT_ERRORS_H

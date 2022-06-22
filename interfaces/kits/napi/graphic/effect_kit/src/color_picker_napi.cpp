@@ -16,12 +16,12 @@
 #include "image_napi_utils.h"
 #include "effect_errors.h"
 #include "image_napi_utils.h"
-#include "color_picker_napi.h"
 #include "color_picker.h"
 #include "color.h"
 #include "pixel_map_napi.h"
 #include "hilog/log.h"
 #include "effect_utils.h"
+#include "color_picker_napi.h"
 
 using OHOS::HiviewDFX::HiLog;
 namespace {
@@ -127,39 +127,39 @@ napi_value ColorPickerNapi::Init(napi_env env, napi_value exports)
     napi_value constructor = nullptr;
 
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), 
-                                         NAPI_AUTO_LENGTH, Constructor,
-                                         nullptr,
-                                         IMG_ARRAY_SIZE(props), props,
-                                         &constructor);
+                                          NAPI_AUTO_LENGTH, Constructor,
+                                          nullptr,
+                                          IMG_ARRAY_SIZE(props), props,
+                                          &constructor);
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                        nullptr,
-                        EFFECT_LOG_E("define class fail"));
+                         nullptr,
+                         EFFECT_LOG_E("define class fail"));
 
     status = napi_create_reference(env, constructor, 1, &sConstructor_);
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                        nullptr,
-                        EFFECT_LOG_E("create reference fail"));
+                         nullptr,
+                         EFFECT_LOG_E("create reference fail"));
 
     napi_value global = nullptr;
     status = napi_get_global(env, &global);
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                        nullptr,
-                        EFFECT_LOG_E("Init:get global fail"));
+                         nullptr,
+                         EFFECT_LOG_E("Init:get global fail"));
 
     status = napi_set_named_property(env, global, CLASS_NAME.c_str(), constructor);
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                        nullptr,
-                        EFFECT_LOG_E("Init:set global named property fail"));
+                         nullptr,
+                         EFFECT_LOG_E("Init:set global named property fail"));
 
     status = napi_set_named_property(env, exports, CLASS_NAME.c_str(), constructor);
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                        nullptr,
-                        EFFECT_LOG_E("set named property fail"));
+                         nullptr,
+                         EFFECT_LOG_E("set named property fail"));
 
     status = napi_define_properties(env, exports, IMG_ARRAY_SIZE(static_prop), static_prop);
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                        nullptr,
-                        EFFECT_LOG_E("define properties fail"));
+                         nullptr,
+                         EFFECT_LOG_E("define properties fail"));
 
     EFFECT_LOG_I("Init success");
     return exports;
@@ -186,13 +186,13 @@ napi_value ColorPickerNapi::Constructor(napi_env env, napi_callback_info info)
     pColorPickerNapi->nativeColorPicker_ = sColorPicker_;
 
     status = napi_wrap(env, thisVar, 
-                        reinterpret_cast<void*>(pColorPickerNapi.get()),
-                        Destructor,
-                        nullptr,
-                        &(pColorPickerNapi->wrapper_));
+                       reinterpret_cast<void*>(pColorPickerNapi.get()),
+                       Destructor,
+                       nullptr,
+                       &(pColorPickerNapi->wrapper_));
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                        undefineVar,
-                        EFFECT_LOG_E("Failure wrapping js to native napi"));
+                         undefineVar,
+                         EFFECT_LOG_E("Failure wrapping js to native napi"));
 
     pColorPickerNapi.release();
     sColorPicker_ = nullptr;
@@ -273,8 +273,8 @@ napi_value ColorPickerNapi::CreateColorPicker(napi_env env, napi_callback_info i
     // we are static method!
     // thisVar is nullptr here
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                        nullptr,
-                        EFFECT_LOG_E("fail to napi_get_cb_info"));
+                         nullptr,
+                         EFFECT_LOG_E("fail to napi_get_cb_info"));
     std::unique_ptr<ColorPickerAsyncContext> asyncContext = std::make_unique<ColorPickerAsyncContext>();
     if (argCount >= NUM_1) {
         imgType = ParserArgumentType(env, argValue[NUM_1 - 1]);
@@ -282,18 +282,18 @@ napi_value ColorPickerNapi::CreateColorPicker(napi_env env, napi_callback_info i
             asyncContext->rPixelMap = Media::PixelMapNapi::GetPixelMap(env, argValue[NUM_1 - 1]);
             EFFECT_LOG_I("rPixelMap=%{public}p.", asyncContext->rPixelMap.get());
             BuildMsgOnError(env, asyncContext,
-                        IMG_NOT_NULL(asyncContext->rPixelMap),
-                        "PixelMap mismatch");
+                            IMG_NOT_NULL(asyncContext->rPixelMap),
+                            "PixelMap mismatch");
         } else {
             BuildMsgOnError(env, asyncContext,
-                        false,
-                        "image type mismatch");
+                            false,
+                            "image type mismatch");
         }
     }
     
     IMG_NAPI_CHECK_RET_D(asyncContext->errorMsg == nullptr,
-                        nullptr,
-                        EFFECT_LOG_E("image type mismatch."));
+                         nullptr,
+                         EFFECT_LOG_E("image type mismatch."));
 
     if (argCount == NUM_2 && Media::ImageNapiUtils::getType(env, argValue[argCount - 1]) == napi_function) {
         napi_create_reference(env, argValue[argCount - 1], refCount, &asyncContext->callbackRef);
@@ -306,25 +306,25 @@ napi_value ColorPickerNapi::CreateColorPicker(napi_env env, napi_callback_info i
     if (asyncContext->errorMsg != nullptr) {
         EFFECT_LOG_I("errorMsg");
         IMG_CREATE_CREATE_ASYNC_WORK(env, status,
-                        "CreateColorPickerError",
-                        [](napi_env env, void *data) {}, 
-                        CreateColorPickerErrorComplete, 
-                        asyncContext,
-                        asyncContext->work);
+                                     "CreateColorPickerError",
+                                     [](napi_env env, void *data) {}, 
+                                     CreateColorPickerErrorComplete, 
+                                     asyncContext,
+                                     asyncContext->work);
     } else if (imgType == ImageType::TYPE_PIXEL_MAP) {
         EFFECT_LOG_I("pixelmap.create");
         IMG_CREATE_CREATE_ASYNC_WORK(env, status,
-                        "CreateColorPickerFromPixelMap",
-                        CreateColorPickerFromPixelmapExecute,
-                        CreateColorPickerFromPixelmapComplete,
-                        asyncContext, asyncContext->work);
+                                     "CreateColorPickerFromPixelMap",
+                                     CreateColorPickerFromPixelmapExecute,
+                                     CreateColorPickerFromPixelmapComplete,
+                                     asyncContext, asyncContext->work);
     } else {
         EFFECT_LOG_E("Create error");
     }
 
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                        nullptr,
-                        EFFECT_LOG_E("fail to create async work"));
+                         nullptr,
+                         EFFECT_LOG_E("fail to create async work"));
     return result;
 }
 
@@ -335,23 +335,23 @@ napi_value ColorPickerNapi::GetScaledPixelMap(napi_env env, napi_callback_info i
     EFFECT_LOG_I("GetScaledPixelMap");
     IMG_JS_NO_ARGS(env, info, status, thisVar);
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                        nullptr,
-                        EFFECT_LOG_E("fail to napi_get_cb_info"));
+                         nullptr,
+                         EFFECT_LOG_E("fail to napi_get_cb_info"));
     ColorPickerNapi *thisColorPicker = nullptr;
 
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&thisColorPicker));
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker),
-                        nullptr,
-                        EFFECT_LOG_E("fail to unwrap context"));
+                         nullptr,
+                         EFFECT_LOG_E("fail to unwrap context"));
 
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker->nativeColorPicker_),
-                        nullptr,
-                        EFFECT_LOG_E("empty native colorPicker"));
+                         nullptr,
+                         EFFECT_LOG_E("empty native colorPicker"));
 
     auto result = thisColorPicker->nativeColorPicker_->GetScaledPixelMap();
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, result),
-                        nullptr,
-                        EFFECT_LOG_E("empty pixelmap"));
+                         nullptr,
+                         EFFECT_LOG_E("empty pixelmap"));
 
     EFFECT_LOG_I("GetPixelMap.w,h=%{public}d,%{public}d", result->GetWidth(),result->GetHeight());
     return Media::PixelMapNapi::CreatePixelMap(env, result);
@@ -381,10 +381,10 @@ static void GetMainColorComplete(napi_env env, napi_status status, void *data)
         result = BuildJsColor(env, context->color);
     }
     EFFECT_LOG_I("[ColorPicker]Get color[ARGB] %{public}f,%{public}f,%{public}f,%{public}f",
-                        context->color.a,
-                        context->color.r,
-                        context->color.g,
-                        context->color.b);
+                 context->color.a,
+                 context->color.r,
+                 context->color.g,
+                 context->color.b);
     CommonCallbackRoutine(env, context, result);
 }
 
@@ -399,18 +399,18 @@ napi_value ColorPickerNapi::GetMainColor(napi_env env, napi_callback_info info)
     EFFECT_LOG_I("Get MainColor");
     IMG_JS_ARGS(env, info, status, argCount, argValue, thisVar);
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                        nullptr,
-                        EFFECT_LOG_E("fail to napi_get_cb_info"));
+                         nullptr,
+                         EFFECT_LOG_E("fail to napi_get_cb_info"));
     
     std::unique_ptr<ColorPickerAsyncContext> asyncContext = std::make_unique<ColorPickerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->nConstructor));
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, asyncContext->nConstructor),
-                        nullptr,
-                        EFFECT_LOG_E("fail to unwrap context"));
+                         nullptr,
+                         EFFECT_LOG_E("fail to unwrap context"));
     asyncContext->rColorPicker = asyncContext->nConstructor->nativeColorPicker_;
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, asyncContext->rColorPicker),
-                        nullptr,
-                        EFFECT_LOG_E("empty native ColorPicker"));
+                         nullptr,
+                         EFFECT_LOG_E("empty native ColorPicker"));
     if (argCount == NUM_1 && Media::ImageNapiUtils::getType(env, argValue[argCount - 1]) == napi_function) {
         napi_create_reference(env, argValue[argCount - 1], refCount, &asyncContext->callbackRef);
     }
@@ -421,12 +421,12 @@ napi_value ColorPickerNapi::GetMainColor(napi_env env, napi_callback_info info)
     }
 
     IMG_CREATE_CREATE_ASYNC_WORK(env, status, "GetMainColor",
-                        GetMainColorExecute,
-                        GetMainColorComplete,
-                        asyncContext, asyncContext->work);
+                                 GetMainColorExecute,
+                                 GetMainColorComplete,
+                                 asyncContext, asyncContext->work);
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                        nullptr,
-                        EFFECT_LOG_E("fail to create async work"));
+                         nullptr,
+                         EFFECT_LOG_E("fail to create async work"));
     return result;
 }
 
@@ -471,19 +471,19 @@ napi_value ColorPickerNapi::GetMainColorSync(napi_env env, napi_callback_info in
     EFFECT_LOG_I("Get MainColor sync");
     IMG_JS_ARGS(env, info, status, argCount, argValue, thisVar);
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                        nullptr,
-                        EFFECT_LOG_E("fail to napi_get_cb_info"));
+                         nullptr,
+                         EFFECT_LOG_E("fail to napi_get_cb_info"));
 
     ColorPickerNapi *thisColorPicker = nullptr;
 
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&thisColorPicker));
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker),
-                        nullptr,
-                        EFFECT_LOG_E("fail to unwrap context"));
+                         nullptr,
+                         EFFECT_LOG_E("fail to unwrap context"));
     
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker->nativeColorPicker_),
-                        nullptr,
-                        EFFECT_LOG_E("empty native ColorPicker"));
+                         nullptr,
+                         EFFECT_LOG_E("empty native ColorPicker"));
 
     uint32_t errorCode = ERR_EFFECT_INVALID_VALUE;
 
@@ -534,9 +534,9 @@ ImageType ColorPickerNapi::ParserArgumentType(napi_env env, napi_value argv)
 }
 
 void BuildMsgOnError(napi_env env,
-                    const std::unique_ptr<ColorPickerAsyncContext>& context,
-                    bool assertion,
-                    const std::string msg)
+                         const std::unique_ptr<ColorPickerAsyncContext>& context,
+                         bool assertion,
+                         const std::string msg)
 {
     if (!assertion) {
         EFFECT_LOG_E("%{public}s", msg.c_str());

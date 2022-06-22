@@ -41,7 +41,8 @@ namespace OHOS {
 namespace Rosen {
 using OHOS::HiviewDFX::HiLog;
 
-std::shared_ptr<ColorPicker> ColorPicker::CreateColorPicker(const std::shared_ptr<Media::PixelMap>& pixmap, uint32_t &errorCode)
+std::shared_ptr<ColorPicker> ColorPicker::CreateColorPicker(const std::shared_ptr<Media::PixelMap>& pixmap,
+                                                                 uint32_t &errorCode)
 {
     if (pixmap == nullptr) {
         HiLog::Info(LABEL, "[ColorPicker]failed to create ColorPicker with null pixmap.");
@@ -64,7 +65,7 @@ std::shared_ptr<Media::PixelMap> ColorPicker::GetScaledPixelMap()
     OHOS::Media::InitializationOptions options;
     options.alphaType = pixelmap_->GetAlphaType();
     options.pixelFormat = pixelmap_->GetPixelFormat();
-    options.scaleMode = OHOS::Media::ScaleMode::CENTER_CROP; //FIT_TARGET_SIZE;  
+    options.scaleMode = OHOS::Media::ScaleMode::FIT_TARGET_SIZE;  
     options.size.width = 1;
     options.size.height = 1;
     options.editable = true;
@@ -74,16 +75,16 @@ std::shared_ptr<Media::PixelMap> ColorPicker::GetScaledPixelMap()
 
 uint32_t ColorPicker::GetMainColor(ColorManager::Color &color)
 {
-    if (pixelmap_ == nullptr){
+    if (pixelmap_ == nullptr) {
         return ERR_EFFECT_INVALID_VALUE;
     }
-    std::shared_ptr<Media::PixelMap> newPixelMap = GetScaledPixelMap();
+    std::shared_ptr<Media::PixelMap> pixelMap = GetScaledPixelMap();
 
     // get color
     uint32_t colorVal = 0;
     int x = 0;
     int y = 0;
-    bool bSucc = newPixelMap->GetARGB32Color(x, y, colorVal);
+    bool bSucc = pixelMap->GetARGB32Color(x, y, colorVal);
     HiLog::Info(LABEL, "[newpix].argb.ret=%{public}d, %{public}x", bSucc, colorVal);
     color = ColorManager::Color(colorVal);
     return SUCCESS;
@@ -97,9 +98,6 @@ ColorPicker::ColorPicker(std::shared_ptr<Media::PixelMap> pixmap)
     }
     pixelmap_ = pixmap;
 }
-
-
-
 } // namespace Rosen
 } // namespace OHOS
 

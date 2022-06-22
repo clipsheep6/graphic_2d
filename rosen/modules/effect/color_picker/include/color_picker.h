@@ -16,8 +16,8 @@
 #ifndef COLOR_PICKER_H
 #define COLOR_PICKER_H
 
-#include "effect_type.h"
 #include <iostream>
+#include "effect_type.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +34,6 @@ namespace Rosen {
 class ColorPicker {
 public:
     ~ColorPicker() {}
-
     NATIVEEXPORT static std::shared_ptr<ColorPicker> CreateColorPicker(const std::shared_ptr<Media::PixelMap>& pixmap, uint32_t &errorCode);
     NATIVEEXPORT std::shared_ptr<Media::PixelMap> GetScaledPixelMap();
     NATIVEEXPORT uint32_t GetMainColor(ColorManager::Color &color);

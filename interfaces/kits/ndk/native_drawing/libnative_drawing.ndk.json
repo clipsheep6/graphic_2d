@@ -74,5 +74,16 @@
     { "name": "OH_Drawing_CreateTypography" },
     { "name": "OH_Drawing_DestroyTypography" },
     { "name": "OH_Drawing_TypographyLayout" },
-    { "name": "OH_Drawing_TypographyPaint" }
+    { "name": "OH_Drawing_TypographyPaint" },
+    { "name": "OH_Drawing_TypographyGetMaxWidth" },
+    { "name": "OH_Drawing_TypographyGetHeight" },
+    { "name": "OH_Drawing_TypographyGetLongestLine" },
+    { "name": "OH_Drawing_TypographyGetMinIntrinsicWidth" },
+    { "name": "OH_Drawing_TypographyGetMaxIntrinsicWidth" },
+    { "name": "OH_Drawing_TypographyGetAlphabeticBaseline" },
+    { "name": "OH_Drawing_TypographyGetIdeographicBaseline" },
+    { "name": "OH_Drawing_TypographyDidExceedMaxLines" },
+    { "name": "OH_Drawing_GetGlyphPositionAtCoordinate" },
+    { "name": "OH_Drawing_GetGlyphPositionAtCoordinateWithCluster" },
+    { "name": "OH_Drawing_GetWordWidth" }
 ]

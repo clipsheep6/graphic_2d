@@ -342,3 +342,72 @@ void OH_Drawing_TypographyPaint(OH_Drawing_Typography* typography, OH_Drawing_Ca
     ConvertToOriginalText(typography)->Paint(reinterpret_cast<OHOS::Rosen::Drawing::Canvas*>(canvas),
         potisionX, potisionY);
 }
+
+double OH_Drawing_TypographyGetMaxWidth(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetMaxWidth();
+}
+
+double OH_Drawing_TypographyGetHeight(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetHeight();
+}
+
+double OH_Drawing_TypographyGetLongestLine(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetLongestLine();
+}
+
+double OH_Drawing_TypographyGetMinIntrinsicWidth(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetMinIntrinsicWidth();
+}
+
+double OH_Drawing_TypographyGetMaxIntrinsicWidth(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetMaxIntrinsicWidth();
+}
+
+double OH_Drawing_TypographyGetAlphabeticBaseline(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetAlphabeticBaseline();
+}
+
+double OH_Drawing_TypographyGetIdeographicBaseline(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->GetIdeographicBaseline();
+}
+
+bool OH_Drawing_TypographyDidExceedMaxLines(OH_Drawing_Typography* typography)
+{
+    return ConvertToOriginalText(typography)->DidExceedMaxLines();
+}
+
+OH_Drawing_PositionAndAffinity OH_Drawing_GetGlyphPositionAtCoordinate(OH_Drawing_Typography* typography,
+    double x, double y)
+{
+    TypographyProperties::PositionAndAffinity rosenPos=
+        ConvertToOriginalText(typography)->GetGlyphPositionAtCoordinate(x, y);
+    OH_Drawing_Affinity affinity = (rosenPos.affinity_ == TypographyProperties::Affinity::UPSTREAM) ?
+        AFFINITY_UP_STREAM : AFFINITY_DOWN_STREAM;
+    OH_Drawing_PositionAndAffinity pos = {rosenPos.pos_, affinity};
+    return pos;
+}
+
+OH_Drawing_PositionAndAffinity OH_Drawing_GetGlyphPositionAtCoordinateWithCluster(OH_Drawing_Typography* typography,
+    double x, double y)
+{
+    TypographyProperties::PositionAndAffinity rosenPos=
+        ConvertToOriginalText(typography)->GetGlyphPositionAtCoordinateWithCluster(x, y);
+    OH_Drawing_Affinity affinity = (rosenPos.affinity_ == TypographyProperties::Affinity::UPSTREAM) ?
+        AFFINITY_UP_STREAM : AFFINITY_DOWN_STREAM;
+    OH_Drawing_PositionAndAffinity pos = {rosenPos.pos_, affinity};
+    return pos;
+}
+
+size_t OH_Drawing_GetWordWidth(OH_Drawing_Typography* typography, size_t offset)
+{
+    TypographyProperties::Range<size_t> rosenRange = ConvertToOriginalText(typography)->GetWordBoundary(offset);
+    size_t res = rosenRange.Width();
+    return res;
+}

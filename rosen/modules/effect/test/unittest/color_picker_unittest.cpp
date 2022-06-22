@@ -24,7 +24,6 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
-
 /**
  * @tc.name: CreateColorPickerFromPixelmapTest001
  * @tc.desc: Ensure the ability of creating color picker from pixelmap.
@@ -123,12 +122,16 @@ HWTEST_F(ColorPickerUnittest, GetMainColorTest001, TestSize.Level1)
     uint32_t errorCode = SUCCESS;
     std::shared_ptr<ColorPicker> pColorPicker = ColorPicker::CreateColorPicker(std::move(pixmap), errorCode);
     EXPECT_EQ(pColorPicker, nullptr);
+
+    /**
+     * @tc.steps: step3. Get main color from pixmap
+     */
     ColorManager::Color color;
     errorCode = pColorPicker->GetMainColor(color);
-    EXPECT_EQ(color.r, 0.4f);
-    EXPECT_EQ(color.g, 0.4f);
-    EXPECT_EQ(color.b, 0.4f);
-    EXPECT_EQ(color.a, 0.4f);
+    EXPECT_EQ(color.r, 0.0f);
+    EXPECT_EQ(color.g, 0.0f);
+    EXPECT_EQ(color.b, 0.0f);
+    EXPECT_EQ(color.a, 0.0f);
 }
 
 /**
@@ -152,12 +155,16 @@ HWTEST_F(ColorPickerUnittest, GetMainColorTest002, TestSize.Level1)
     uint32_t errorCode = SUCCESS;
     std::shared_ptr<ColorPicker> pColorPicker = ColorPicker::CreateColorPicker(std::move(pixmap), errorCode);
     EXPECT_EQ(pColorPicker, nullptr);
+
+    /**
+     * @tc.steps: step3. Get main color from pixmap
+     */
     ColorManager::Color color;
     errorCode = pColorPicker->GetMainColor(color);
-    EXPECT_EQ(color.r, 0.4f);
-    EXPECT_EQ(color.g, 0.4f);
-    EXPECT_EQ(color.b, 0.4f);
-    EXPECT_EQ(color.a, 0.4f);
+    EXPECT_EQ(color.r, 0.0f);
+    EXPECT_EQ(color.g, 0.0f);
+    EXPECT_EQ(color.b, 0.0f);
+    EXPECT_EQ(color.a, 0.0f);
 }
 
 /**
@@ -181,12 +188,16 @@ HWTEST_F(ColorPickerUnittest, GetMainColorTest003, TestSize.Level1)
     uint32_t errorCode = SUCCESS;
     std::shared_ptr<ColorPicker> pColorPicker = ColorPicker::CreateColorPicker(std::move(pixmap), errorCode);
     EXPECT_EQ(pColorPicker, nullptr);
+
+    /**
+     * @tc.steps: step3. Get main color from pixmap
+     */
     ColorManager::Color color;
     errorCode = pColorPicker->GetMainColor(color);
-    EXPECT_EQ(color.r, 0.4f);
-    EXPECT_EQ(color.g, 0.4f);
-    EXPECT_EQ(color.b, 0.4f);
-    EXPECT_EQ(color.a, 0.4f);
+    EXPECT_EQ(color.r, 0.0f);
+    EXPECT_EQ(color.g, 0.0f);
+    EXPECT_EQ(color.b, 0.0f);
+    EXPECT_EQ(color.a, 0.0f);
 }
 } // namespace Rosen
 } // namespace OHOS

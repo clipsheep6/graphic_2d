@@ -98,7 +98,6 @@ static void CommonCallbackRoutine(napi_env env, ColorPickerAsyncContext* &asyncC
 ColorPickerNapi::ColorPickerNapi()
     :env_(nullptr), wrapper_(nullptr)
 {
-
 }
 
 ColorPickerNapi::~ColorPickerNapi()
@@ -200,7 +199,7 @@ napi_value ColorPickerNapi::Constructor(napi_env env, napi_callback_info info)
     return thisVar;
 }
 
-void ColorPickerNapi::Destructor(napi_env env, void* nativeObject, void *finalize)
+void ColorPickerNapi::Destructor(napi_env env, void* nativeObject, void* finalize)
 {
     ColorPickerNapi *pColorPickerNapi = reinterpret_cast<ColorPickerNapi*>(nativeObject);
 
@@ -209,7 +208,7 @@ void ColorPickerNapi::Destructor(napi_env env, void* nativeObject, void *finaliz
     }
 }
 
-static void CreateColorPickerFromPixelmapExecute(napi_env env, void *data)
+static void CreateColorPickerFromPixelmapExecute(napi_env env, void* data)
 {
     EFFECT_LOG_I("create ColorPicker Execute");
     auto context = static_cast<ColorPickerAsyncContext*>(data);
@@ -222,7 +221,7 @@ static void CreateColorPickerFromPixelmapExecute(napi_env env, void *data)
     }
 }
 
-void ColorPickerNapi::CreateColorPickerFromPixelmapComplete(napi_env env, napi_status status, void *data)
+void ColorPickerNapi::CreateColorPickerFromPixelmapComplete(napi_env env, napi_status status, void* data)
 {
     napi_value constructor = nullptr;
     napi_value result = nullptr;
@@ -244,7 +243,7 @@ void ColorPickerNapi::CreateColorPickerFromPixelmapComplete(napi_env env, napi_s
     CommonCallbackRoutine(env, context, result);
 }
 
-static void CreateColorPickerErrorComplete(napi_env env, napi_status status, void *data)
+static void CreateColorPickerErrorComplete(napi_env env, napi_status status, void* data)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -305,8 +304,8 @@ napi_value ColorPickerNapi::CreateColorPicker(napi_env env, napi_callback_info i
         EFFECT_LOG_I("errorMsg");
         IMG_CREATE_CREATE_ASYNC_WORK(env, status,
                                      "CreateColorPickerError",
-                                     [](napi_env env, void *data) {},
-                                     CreateColorPickerErrorComplete, 
+                                     [](napi_env env, void* data) {},
+                                     CreateColorPickerErrorComplete,
                                      asyncContext,
                                      asyncContext->work);
     } else if (imgType == ImageType::TYPE_PIXEL_MAP) {
@@ -355,7 +354,7 @@ napi_value ColorPickerNapi::GetScaledPixelMap(napi_env env, napi_callback_info i
     return Media::PixelMapNapi::CreatePixelMap(env, result);
 }
 
-static void GetMainColorExecute(napi_env env, void *data)
+static void GetMainColorExecute(napi_env env, void* data)
 {
     EFFECT_LOG_I("[ColorPicker]Get color execute");
     uint32_t errorCode = ERR_EFFECT_INVALID_VALUE;
@@ -368,7 +367,7 @@ static void GetMainColorExecute(napi_env env, void *data)
     }
 }
 
-static void GetMainColorComplete(napi_env env, napi_status status, void *data)
+static void GetMainColorComplete(napi_env env, napi_status status, void* data)
 {
     EFFECT_LOG_I("[ColorPicker]Get color Complete");
     napi_value result = nullptr;

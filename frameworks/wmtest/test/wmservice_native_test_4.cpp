@@ -31,7 +31,7 @@ class WMServiceNativeTest4 : public INativeTest {
 public:
     std::string GetDescription() const override
     {
-        constexpr const char *desc = "hide/show statusbar";
+        constexpr const char *desc = "hide/show navigationbar";
         return desc;
     }
 

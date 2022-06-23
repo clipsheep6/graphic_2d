@@ -20,6 +20,7 @@
 #include <list>
 #include <vector>
 #include <mutex>
+#include <array>
 
 #include <ibuffer_consumer_listener.h>
 #include <ibuffer_producer.h>
@@ -51,6 +52,14 @@ typedef struct {
     HDRMetadataKey key;
     std::vector<uint8_t> metaDataSet;
 } BufferElement;
+
+
+typedef struct {
+    int64_t requestDuration;
+    uint32_t dirtyListLength;
+    int64_t compositionDuration;
+} BufferHistoryInfo;
+
 
 class BufferQueue : public RefBase {
 public:
@@ -119,6 +128,7 @@ public:
                            std::vector<uint8_t> &metaData);
     GSError SetTunnelHandle(const ExtDataHandle *handle);
     GSError GetTunnelHandle(ExtDataHandle **handle) const;
+    //GSError AdjustBufferSize(const BufferHistoryInfo& currentAvarageInfo)
 
 private:
     GSError AllocBuffer(sptr<SurfaceBuffer>& buffer, const BufferRequestConfig &config);
@@ -155,6 +165,18 @@ private:
     bool isShared_ = false;
     std::condition_variable waitReqCon_;
     ExtDataHandle *tunnelHandle_ = nullptr;
+
+    GSError StatisticsTimeOut(bool isTimeOut);
+    static constexpr int FRAME_RECORDS_NUM = 128;
+    bool fullFrames = false;
+    uint32_t requestTimeOutCount = 0;
+    std::array<uint32_t, FRAME_RECORDS_NUM> requestTimeOutRecords_ {};
+    uint32_t count = 0;
+    GSError AdjustBufferSize();
+    
+    //std::array<BufferHistoryInfo, FRAME_RECORDS_NUM> bufferInfoRecords_ {};
+    //BufferHistoryInfo bufferInfoCountRecords_ {};
+    
 };
 }; // namespace OHOS
 

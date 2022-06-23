@@ -16,6 +16,7 @@
 #ifndef RENDER_SERVICE_CORE_PIPELINE_RS_RENDER_SERVICE_UTIL_H
 #define RENDER_SERVICE_CORE_PIPELINE_RS_RENDER_SERVICE_UTIL_H
 
+#include <stdint.h>
 #include <surface.h>
 #include "display_type.h"
 #include "hdi_backend.h"
@@ -89,6 +90,7 @@ public:
     static bool ReleaseBuffer(RSSurfaceHandler& surfaceHandler);
 
 private:
+    static int64_t compositionDuration_;
     static SkMatrix GetCanvasTransform(const RSSurfaceRenderNode& node, const SkMatrix& canvasMatrix,
         ScreenRotation rotation, SkRect clipRect);
     static bool IsNeedClient(RSSurfaceRenderNode* node);
@@ -97,6 +99,7 @@ private:
     static bool CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffer, std::vector<uint8_t>& newGamutBuffer,
         SkBitmap& bitmap, ColorGamut srcGamut, ColorGamut dstGamut);
     static bool enableClient;
+    static int64_t frameCount_;
 };
 } // Rosen
 } // OHOS

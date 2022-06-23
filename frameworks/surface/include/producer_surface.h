@@ -100,6 +100,8 @@ public:
     GSError GetMetaData(uint32_t sequence, std::vector<HDRMetaData> &metaData) const override;
     GSError GetMetaDataSet(uint32_t sequence, HDRMetadataKey &key,
                            std::vector<uint8_t> &metaData) const override;
+    void ChangeSize(bool needAddSurface) override {};
+    
 
 private:
     bool IsRemote();

@@ -45,6 +45,12 @@ static const std::map<BufferState, std::string> BufferStateStrs = {
     {BUFFER_STATE_ACQUIRED,                    "3 <acquired>"},
 };
 
+static int64_t GetSysTimeNs()
+{
+    auto now = std::chrono::steady_clock::now().time_since_epoch();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+}
+
 static uint64_t GetUniqueIdImpl()
 {
     static std::atomic<uint32_t> counter { 0 };
@@ -203,8 +209,14 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
 
     // check queue size
     if (GetUsedSize() >= GetQueueSize()) {
+        int64_t startTimestamp = GetSysTimeNs();
         waitReqCon_.wait_for(lock, std::chrono::milliseconds(config.timeout),
             [this]() { return !freeList_.empty() || (GetUsedSize() < GetQueueSize()); });
+        int64_t duration = GetSysTimeNs() - startTimestamp;
+        if (duration > 5000000) {
+            requestTimeoutCount_++;
+        }
+        BLOGE("xfl wait buffer:%{public}ld", duration);
         // try dequeue from free list again
         ret = PopFromFreeList(buffer, config);
         if (ret == GSERROR_OK) {
@@ -685,6 +697,12 @@ GSError BufferQueue::SetQueueSize(uint32_t queueSize)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
+    if (queueSize < SURFACE_DEFAULT_QUEUE_SIZE) {
+        BLOGN_INVALID("invalid queueSize[%{public}d] > SURFACE_MAX_QUEUE_SIZE[%{public}d]",
+            queueSize, SURFACE_MAX_QUEUE_SIZE);
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
     DeleteBuffers(queueSize_ - queueSize);
     queueSize_ = queueSize;
 
@@ -967,5 +985,27 @@ void BufferQueue::Dump(std::string &result)
 
     result.append("      bufferQueueCache:\n");
     DumpCache(result);
+}
+
+void BufferQueue::ChangeSize(bool needAddSurface)
+{
+    BLOGE("xfl in needAddSurface:%{public}d, requestTimeoutCount_:%{public}d, queueSize_:%{public}d, free size:%{public}lu",
+        needAddSurface, (int32_t)requestTimeoutCount_, queueSize_, freeList_.size());
+    
+    if (needAddSurface) {
+        SetQueueSize(queueSize_ + 1);
+        requestTimeoutCount_ = 0;
+        return;
+    }
+    
+    if (requestTimeoutCount_ > 5) {
+        SetQueueSize(queueSize_ + 1);
+        requestTimeoutCount_ = 0;
+        return;
+    } else if (freeList_.size() >= 1) {
+        SetQueueSize(queueSize_ - 1);
+        requestTimeoutCount_ = 0;
+        return;
+    }
 }
 }; // namespace OHOS

@@ -18,6 +18,8 @@
 
 #include <map>
 #include <list>
+#include <stdatomic.h>
+#include <stdint.h>
 #include <vector>
 #include <mutex>
 
@@ -118,6 +120,8 @@ public:
     GSError GetMetaDataSet(uint32_t sequence, HDRMetadataKey &key,
                            std::vector<uint8_t> &metaData) const;
 
+    void ChangeSize(bool needAddSurface);
+
 private:
     GSError AllocBuffer(sptr<SurfaceBuffer>& buffer, const BufferRequestConfig &config);
     void DeleteBufferInCache(uint32_t sequence);
@@ -152,6 +156,7 @@ private:
     OnDeleteBufferFunc onBufferDelete_ = nullptr;
     bool isShared_ = false;
     std::condition_variable waitReqCon_;
+    std::atomic<int32_t> requestTimeoutCount_ = 0;
 };
 }; // namespace OHOS
 

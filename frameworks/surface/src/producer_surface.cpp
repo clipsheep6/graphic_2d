@@ -281,7 +281,14 @@ bool ProducerSurface::IsRemote()
 
 GSError ProducerSurface::CleanCache()
 {
-    BLOGND("Queue Id:%{public}" PRIu64 "", queueId_);
+    BLOGNI("Queue Id:%{public}" PRIu64 "", queueId_);
+
+    auto it = bufferProducerCache_.begin();
+    while (it != bufferProducerCache_.end()) {
+        BLOGNW("seq:%{public}d, sptr_count:%{public}d", it->first, it->second->GetSptrRefCount());
+        it++;
+    }
+
     if (IsRemote()) {
         std::lock_guard<std::mutex> lockGuard(mutex_);
         bufferProducerCache_.clear();

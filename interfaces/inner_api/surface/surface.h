@@ -97,6 +97,7 @@ public:
     virtual GSError GetMetaData(uint32_t sequence, std::vector<HDRMetaData> &metaData) const = 0;
     virtual GSError GetMetaDataSet(uint32_t sequence, HDRMetadataKey &key,
                                    std::vector<uint8_t> &metaData) const = 0;
+    virtual void ChangeSize(bool needAddSurface);
 
     virtual void Dump(std::string &result) const = 0;
 protected:

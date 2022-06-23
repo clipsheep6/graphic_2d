@@ -38,6 +38,12 @@ namespace Detail {
 // [PLANNING]: Use GPU to do the gamut conversion instead of these following works.
 using PixelTransformFunc = std::function<float(float)>;
 
+static int64_t GetSysTimeNs()
+{
+    auto now = std::chrono::steady_clock::now().time_since_epoch();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+}
+
 inline constexpr float PassThrough(float v)
 {
     return v;
@@ -530,6 +536,8 @@ bool ConvertYUV420SPToRGBA(std::vector<uint8_t>& rgbaBuf, const sptr<OHOS::Surfa
 } // namespace Detail
 
 bool RsRenderServiceUtil::enableClient = false;
+int64_t RsRenderServiceUtil::compositionDuration_ = 0;
+int64_t RsRenderServiceUtil::frameCount_ = 0;
 
 void RsRenderServiceUtil::ComposeSurface(std::shared_ptr<HdiLayerInfo> layer, sptr<Surface> consumerSurface,
     std::vector<LayerInfoPtr>& layers, ComposeInfo info, RSBaseRenderNode* node)
@@ -597,6 +605,7 @@ void RsRenderServiceUtil::DropFrameProcess(RSSurfaceHandler& node)
 
 bool RsRenderServiceUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler)
 {
+    compositionDuration_ = Detail::GetSysTimeNs();
     auto availableBufferCnt = surfaceHandler.GetAvailableBufferCount();
     if (availableBufferCnt <= 0) {
         // this node has no new buffer, try use old buffer.
@@ -648,6 +657,14 @@ bool RsRenderServiceUtil::ReleaseBuffer(RSSurfaceHandler& surfaceHandler)
         preBuffer.Reset();
     }
 
+    if (Detail::GetSysTimeNs() - compositionDuration_ > 17000000) {
+        RS_LOGE("xfl RsDebug doComposition timeout: %lld", Detail::GetSysTimeNs() - compositionDuration_);
+        consumer->ChangeSize(true);
+    }
+    frameCount_++;
+    if (frameCount_ % 30 == 0) {
+        consumer->ChangeSize(false);
+    }
     return true;
 }
 

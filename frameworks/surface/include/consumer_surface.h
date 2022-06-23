@@ -95,6 +95,7 @@ public:
     GSError GetMetaData(uint32_t sequence, std::vector<HDRMetaData> &metaData) const override;
     GSError GetMetaDataSet(uint32_t sequence, HDRMetadataKey &key,
                            std::vector<uint8_t> &metaData) const override;
+    void ChangeSize(bool needAddSurface) override { consumer_->ChangeSize(needAddSurface); };
 
 private:
     std::map<std::string, std::string> userData_;

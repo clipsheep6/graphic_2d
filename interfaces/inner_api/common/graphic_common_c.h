@@ -16,7 +16,7 @@
 #ifndef INTERFACES_INNERKITS_COMMON_GRAPHIC_COMMON_C_H
 #define INTERFACES_INNERKITS_COMMON_GRAPHIC_COMMON_C_H
 
-// GraphicStandard Error, number just find fast, it may change
+// Graphic_graphic_2d Error, number just find fast, it may change
 const int LOWERROR_MAX = 1000;
 const int LOWERROR_FAILURE = 999;
 const int LOWERROR_INVALID = 998;

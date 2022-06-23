@@ -103,6 +103,8 @@ public:
     GSError SetTunnelHandle(const ExtDataHandle *handle) override;
     GSError GetTunnelHandle(ExtDataHandle **handle) const override;
 
+    void ChangeSize(bool needAddSurface) override {};
+
 private:
     bool IsRemote();
 

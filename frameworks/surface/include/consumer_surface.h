@@ -98,6 +98,8 @@ public:
     GSError SetTunnelHandle(const ExtDataHandle *handle) override;
     GSError GetTunnelHandle(ExtDataHandle **handle) const override;
 
+    void ChangeSize(bool needAddSurface) override { consumer_->ChangeSize(needAddSurface); };
+
 private:
     std::map<std::string, std::string> userData_;
     sptr<BufferQueueProducer> producer_ = nullptr;

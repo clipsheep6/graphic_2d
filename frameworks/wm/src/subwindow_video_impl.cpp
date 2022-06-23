@@ -176,6 +176,11 @@ GSError SubwindowVideoImpl::Move(int32_t x, int32_t y)
         WMLOGFE("display layer is not create");
         return GSERROR_NOT_INIT;
     }
+    
+    if (attr.GetX() == x && attr.GetY() == y) {
+        WMLOGFD("Same position: no need to Move.");
+        return GSERROR_OK;
+    }
 
 #ifdef TARGET_CPU_ARM
     IRect rect = {};
@@ -214,6 +219,12 @@ GSError SubwindowVideoImpl::Resize(uint32_t width, uint32_t height)
         WMLOGFE("display layer is not create");
         return GSERROR_NOT_INIT;
     }
+
+    if (attr.GetWidth() == width && attr.GetHeight() == height) {
+        WMLOGFD("Same size: no need to Resize.");
+        return GSERROR_OK;
+    }
+    
 #ifdef TARGET_CPU_ARM
     IRect rect = {};
     int32_t ret = display->GetRect(layerId, rect);
@@ -231,6 +242,16 @@ GSError SubwindowVideoImpl::Resize(uint32_t width, uint32_t height)
         return GSERROR_API_FAILED;
     }
 #endif
+
+    auto wret = CreateSHMBuffer();
+    if (wret != GSERROR_OK) {
+        return wret;
+    }
+
+    wlSurface->Attach(wlBuffer, 0, 0);
+    wlSurface->Damage(0, 0, attr.GetWidth(), attr.GetHeight());
+    wlSurface->Commit();
+
     return GSERROR_OK;
 }
 

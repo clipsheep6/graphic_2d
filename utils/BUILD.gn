@@ -108,7 +108,7 @@ ohos_shared_library("libgraphic_utils") {
   if (color_gamut_enable) {
     public_deps += [ "color_manager:color_manager" ]
   }
-
+  relative_install_dir = "chipset-sdk"
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }

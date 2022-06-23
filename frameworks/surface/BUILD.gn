@@ -88,7 +88,8 @@ ohos_shared_library("surface") {
   external_deps = [ "hitrace_native:hitrace_meter" ]
 
   symlink_target_name = [ "libnative_window.so" ]
-
+  install_images = [ system_base_dir ]
+  relative_install_dir = "chipset-pub-sdk"
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }

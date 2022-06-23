@@ -35,10 +35,11 @@ RSSoftwareProcessor::RSSoftwareProcessor() {}
 
 RSSoftwareProcessor::~RSSoftwareProcessor() {}
 
-void RSSoftwareProcessor::Init(ScreenId id, int32_t offsetX, int32_t offsetY)
+void RSSoftwareProcessor::Init(ScreenId id, int32_t offsetX, int32_t offsetY, ScreenId mirroredId)
 {
     offsetX_ = offsetX;
     offsetY_ = offsetY;
+    SetMirror(mirroredId);
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (screenManager == nullptr) {
         RS_LOGE("RSSoftwareProcessor::Init: failed to get screen manager!");
@@ -115,7 +116,7 @@ bool RSSoftwareProcessor::GenerateParamAndDrawBuffer(RSSurfaceRenderNode& node)
     BufferDrawParam params;
     SkPaint paint;
     paint.setAlphaf(node.GetGlobalAlpha());
-    if (GetMirror()) {
+    if (GetMirror() != INVALID_SCREEN_ID) {
         RS_LOGI("RSSoftwareProcessor::ProcessSurface mirrorScreen is not support rotation");
         params = RSDividedRenderUtil::CreateBufferDrawParam(node, SkMatrix(), ScreenRotation::ROTATION_0, paint);
     } else {

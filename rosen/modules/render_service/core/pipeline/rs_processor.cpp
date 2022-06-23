@@ -73,14 +73,24 @@ void RSProcessor::SetBufferTimeStamp()
     }
 }
 
-void RSProcessor::SetMirror(bool isMirror)
+void RSProcessor::SetMirror(ScreenId mirroredId)
 {
-    isMirror_ = isMirror;
+    mirroredId_ = mirroredId;
 }
 
-bool RSProcessor::GetMirror()
+ScreenId RSProcessor::GetMirror()
 {
-    return isMirror_;
+    return mirroredId_;
+}
+
+void RSProcessor::SetMirrorAdaptiveCoefficient(float mirrorAdaptiveCoefficient)
+{
+    mirrorAdaptiveCoefficient_ = mirrorAdaptiveCoefficient;
+}
+
+float RSProcessor::GetMirrorAdaptiveCoefficient()
+{
+    return mirrorAdaptiveCoefficient_;
 }
 } // namespace Rosen
 } // namespace OHOS

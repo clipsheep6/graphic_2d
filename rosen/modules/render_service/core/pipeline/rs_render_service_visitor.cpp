@@ -101,10 +101,12 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         RS_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode: RSProcessor is null!");
         return;
     }
-    processor_->Init(node.GetScreenId(), node.GetDisplayOffsetX(), node.GetDisplayOffsetY());
+
+    auto mirrorNode = node.GetMirrorSource().lock();
+    processor_->Init(node.GetScreenId(), node.GetDisplayOffsetX(), node.GetDisplayOffsetY(),
+        mirrorNode ? mirrorNode->GetScreenId() : INVALID_SCREEN_ID);
 
     if (node.IsMirrorDisplay()) {
-        processor_->SetMirror(true);
         auto mirrorSource = node.GetMirrorSource();
         auto existingSource = mirrorSource.lock();
         if (!existingSource) {
@@ -113,7 +115,6 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         }
         ProcessBaseRenderNode(*existingSource);
     } else {
-        processor_->SetMirror(false);
         ScreenRotation rotation = screenManager->GetRotation(node.GetScreenId());
         uint32_t boundWidth = currScreenInfo.width;
         uint32_t boundHeight = currScreenInfo.height;

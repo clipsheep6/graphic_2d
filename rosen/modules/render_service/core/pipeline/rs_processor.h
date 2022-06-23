@@ -44,9 +44,8 @@ public:
     virtual ~RSProcessor() {}
     virtual void ProcessSurface(RSSurfaceRenderNode& node) = 0;
     virtual void ProcessSurface(RSDisplayRenderNode& node) = 0;
-    virtual void Init(ScreenId id, int32_t offsetX, int32_t offsetY) = 0;
+    virtual void Init(ScreenId id, int32_t offsetX, int32_t offsetY, ScreenId mirroredId) = 0;
     virtual void PostProcess() = 0;
-    void SetMirror(bool isMirror);
 
 protected:
     SkCanvas* CreateCanvas(
@@ -56,7 +55,10 @@ protected:
     void SetBufferTimeStamp();
     int32_t GetOffsetX();
     int32_t GetOffsetY();
-    bool GetMirror();
+    void SetMirror(ScreenId mirroredId);
+    void SetMirrorAdaptiveCoefficient(float mirrorAdaptiveCoefficient);
+    ScreenId GetMirror();
+    float GetMirrorAdaptiveCoefficient();
 
 #ifdef RS_ENABLE_GL
     std::shared_ptr<RenderContext> renderContext_;
@@ -70,7 +72,8 @@ protected:
 #endif // RS_ENABLE_EGLIMAGE
 private:
     int32_t releaseFence_ = -1;
-    bool isMirror_ = false;
+    ScreenId mirroredId_ = INVALID_SCREEN_ID;
+    float mirrorAdaptiveCoefficient_ = 1.0f;
 };
 } // namespace Rosen
 } // namespace OHOS

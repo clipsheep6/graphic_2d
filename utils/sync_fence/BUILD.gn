@@ -50,7 +50,7 @@ ohos_shared_library("sync_fence") {
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//utils/native/base:utils",
   ]
-
+  relative_install_dir = "chipset-pub-sdk"
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }

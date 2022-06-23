@@ -91,6 +91,8 @@ ohos_shared_library("surface") {
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
+  install_images = [ system_base_dir ]
+  relative_install_dir = "chipset-pub-sdk"
 }
 
 ## Build surface.so }}}

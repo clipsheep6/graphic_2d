@@ -50,10 +50,11 @@ RSHardwareProcessor::RSHardwareProcessor() {}
 
 RSHardwareProcessor::~RSHardwareProcessor() {}
 
-void RSHardwareProcessor::Init(ScreenId id, int32_t offsetX, int32_t offsetY)
+void RSHardwareProcessor::Init(ScreenId id, int32_t offsetX, int32_t offsetY, ScreenId mirroredId)
 {
     offsetX_ = offsetX;
     offsetY_ = offsetY;
+    SetMirror(mirroredId);
     backend_ = HdiBackend::GetInstance();
     backend_->RegPrepareComplete(std::bind(&RSHardwareProcessor::Redraw, this, std::placeholders::_1,
         std::placeholders::_2, std::placeholders::_3), nullptr);
@@ -69,7 +70,16 @@ void RSHardwareProcessor::Init(ScreenId id, int32_t offsetX, int32_t offsetY)
         return;
     }
     currScreenInfo_ = screenManager_->QueryScreenInfo(id);
-    RS_LOGI("RSHardwareProcessor::Init screen w:%d, w:%d", currScreenInfo_.width, currScreenInfo_.height);
+    RS_LOGI("RSHardwareProcessor::Init screen w:%d, h:%d", currScreenInfo_.width, currScreenInfo_.height);
+
+    if (mirroredId != INVALID_SCREEN_ID) {
+        auto mirroredScreenInfo = screenManager_->QueryScreenInfo(mirroredId);
+        CalculateMirrorAdaptiveCoefficient(
+            static_cast<float>(currScreenInfo_.width), static_cast<float>(currScreenInfo_.height),
+            static_cast<float>(mirroredScreenInfo.width), static_cast<float>(mirroredScreenInfo.height)
+        );
+    }
+
     IRect damageRect;
     damageRect.x = 0;
     damageRect.y = 0;
@@ -262,10 +272,10 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
             .h = node.GetSrcRect().height_,
         },
         .dstRect = {
-            .x = node.GetDstRect().left_,
-            .y = node.GetDstRect().top_,
-            .w = node.GetDstRect().width_,
-            .h = node.GetDstRect().height_,
+            .x = static_cast<int32_t>(static_cast<float>(node.GetDstRect().left_) * GetMirrorAdaptiveCoefficient()),
+            .y = static_cast<int32_t>(static_cast<float>(node.GetDstRect().top_) * GetMirrorAdaptiveCoefficient()),
+            .w = static_cast<int32_t>(static_cast<float>(node.GetDstRect().width_) * GetMirrorAdaptiveCoefficient()),
+            .h = static_cast<int32_t>(static_cast<float>(node.GetDstRect().height_) * GetMirrorAdaptiveCoefficient()),
         },
         .visibleRect = {
             .x = 0,
@@ -286,8 +296,8 @@ void RSHardwareProcessor::ProcessSurface(RSSurfaceRenderNode &node)
     if (info.srcRect.w <= 0 || info.srcRect.h <= 0 || info.dstRect.w <= 0 || info.dstRect.h <= 0) {
         return;
     }
-    info.dstRect.x -= offsetX_;
-    info.dstRect.y -= offsetY_;
+    info.dstRect.x -= static_cast<int32_t>(static_cast<float>(offsetX_) * GetMirrorAdaptiveCoefficient());
+    info.dstRect.y -= static_cast<int32_t>(static_cast<float>(offsetY_) * GetMirrorAdaptiveCoefficient());;
     if (node.GetBuffer()->GetSurfaceBufferWidth() != node.GetRenderProperties().GetBoundsWidth() ||
         node.GetBuffer()->GetSurfaceBufferHeight() != node.GetRenderProperties().GetBoundsHeight()) {
         float xScale = (node.GetBuffer()->GetSurfaceBufferWidth() / node.GetRenderProperties().GetBoundsWidth());
@@ -340,8 +350,8 @@ void RSHardwareProcessor::ProcessSurface(RSDisplayRenderNode& node)
         .dstRect = {
             .x = 0,
             .y = 0,
-            .w = static_cast<int32_t>(currScreenInfo_.width),
-            .h = static_cast<int32_t>(currScreenInfo_.height),
+            .w = static_cast<int32_t>(static_cast<float>(currScreenInfo_.width) * GetMirrorAdaptiveCoefficient()),
+            .h = static_cast<int32_t>(static_cast<float>(currScreenInfo_.height) * GetMirrorAdaptiveCoefficient()),
         },
         .visibleRect = {
             .x = 0,

@@ -35,10 +35,11 @@ RSSoftwareProcessor::RSSoftwareProcessor() {}
 
 RSSoftwareProcessor::~RSSoftwareProcessor() {}
 
-void RSSoftwareProcessor::Init(ScreenId id, int32_t offsetX, int32_t offsetY)
+void RSSoftwareProcessor::Init(ScreenId id, int32_t offsetX, int32_t offsetY, ScreenId mirroredId)
 {
     offsetX_ = offsetX;
     offsetY_ = offsetY;
+    SetMirror(mirroredId);
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (screenManager == nullptr) {
         RS_LOGE("RSSoftwareProcessor::Init: failed to get screen manager!");
@@ -54,6 +55,14 @@ void RSSoftwareProcessor::Init(ScreenId id, int32_t offsetX, int32_t offsetY)
     rotation_ = screenManager->GetRotation(id);
 
     currScreenInfo_ = screenManager->QueryScreenInfo(id);
+    if (mirroredId != INVALID_SCREEN_ID) {
+        auto mirroredScreenInfo = screenManager->QueryScreenInfo(mirroredId);
+        CalculateMirrorAdaptiveCoefficient(
+            static_cast<float>(currScreenInfo_.width), static_cast<float>(currScreenInfo_.height),
+            static_cast<float>(mirroredScreenInfo.width), static_cast<float>(mirroredScreenInfo.height)
+        );
+    }
+
     BufferRequestConfig requestConfig = {
         .width = currScreenInfo_.width,
         .height = currScreenInfo_.height,
@@ -110,18 +119,27 @@ bool RSSoftwareProcessor::GenerateParamAndDrawBuffer(RSSurfaceRenderNode& node)
         RS_LOGE("RsDebug RSSoftwareProcessor::ProcessSurface geoPtr == nullptr");
         return false;
     }
-    node.SetDstRect({node.GetDstRect().left_ - offsetX_, node.GetDstRect().top_ - offsetY_,
-        node.GetDstRect().width_, node.GetDstRect().height_});
+    int32_t dstRectX =
+        static_cast<int32_t>(static_cast<float>(node.GetDstRect().left_ - offsetX_) * GetMirrorAdaptiveCoefficient());
+    int32_t dstRectY =
+        static_cast<int32_t>(static_cast<float>(node.GetDstRect().top_ - offsetY_) * GetMirrorAdaptiveCoefficient());
+    int32_t dstRectW =
+        static_cast<int32_t>(static_cast<float>(node.GetDstRect().width_) * GetMirrorAdaptiveCoefficient());
+    int32_t dstRectH =
+        static_cast<int32_t>(static_cast<float>(node.GetDstRect().height_) * GetMirrorAdaptiveCoefficient());
+
+    node.SetDstRect({dstRectX, dstRectY, dstRectW, dstRectH});
     BufferDrawParam params;
     SkPaint paint;
     paint.setAlphaf(node.GetGlobalAlpha());
-    if (GetMirror()) {
+    if (GetMirror() != INVALID_SCREEN_ID) {
         RS_LOGI("RSSoftwareProcessor::ProcessSurface mirrorScreen is not support rotation");
         params = RSDividedRenderUtil::CreateBufferDrawParam(node, SkMatrix(), ScreenRotation::ROTATION_0, paint);
     } else {
         params = RSDividedRenderUtil::CreateBufferDrawParam(node, currScreenInfo_.rotationMatrix, rotation_, paint);
     }
-    
+    params.dstRect.setWH(params.dstRect.width() * GetMirrorAdaptiveCoefficient(),
+        params.dstRect.height() * GetMirrorAdaptiveCoefficient());
     RSDividedRenderUtil::DrawBuffer(*canvas_, params);
     return true;
 }

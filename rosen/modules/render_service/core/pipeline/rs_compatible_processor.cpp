@@ -32,10 +32,11 @@ RSCompatibleProcessor::RSCompatibleProcessor() {}
 
 RSCompatibleProcessor::~RSCompatibleProcessor() {}
 
-void RSCompatibleProcessor::Init(ScreenId id, int32_t offsetX, int32_t offsetY)
+void RSCompatibleProcessor::Init(ScreenId id, int32_t offsetX, int32_t offsetY, ScreenId mirroredId)
 {
     offsetX_ = offsetX;
     offsetY_ = offsetY;
+    SetMirror(mirroredId);
     backend_ = HdiBackend::GetInstance();
     screenManager_ = CreateOrGetScreenManager();
     if (!screenManager_) {

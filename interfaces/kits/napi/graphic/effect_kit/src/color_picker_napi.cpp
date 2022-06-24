@@ -255,7 +255,6 @@ napi_value ColorPickerNapi::CreateColorPicker(napi_env env, napi_callback_info i
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-
     int32_t refCount = 1;
     napi_status status;
     napi_value thisVar = nullptr;
@@ -264,42 +263,25 @@ napi_value ColorPickerNapi::CreateColorPicker(napi_env env, napi_callback_info i
     ImageType imgType = ImageType::TYPE_UNKOWN;
     EFFECT_LOG_I("[ColorPickerNapi]Create ColorPicker IN");
     IMG_JS_ARGS(env, info, status, argCount, argValue, thisVar);
-
-    // we are static method!
-    // thisVar is nullptr here
-    IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                         nullptr,
-                         EFFECT_LOG_E("fail to napi_get_cb_info"));
+    IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status), nullptr, EFFECT_LOG_E("fail to napi_get_cb_info"));
     std::unique_ptr<ColorPickerAsyncContext> asyncContext = std::make_unique<ColorPickerAsyncContext>();
     if (argCount >= NUM_1) {
         imgType = ParserArgumentType(env, argValue[NUM_1 - 1]);
         if (imgType == ImageType::TYPE_PIXEL_MAP) {
             asyncContext->rPixelMap = Media::PixelMapNapi::GetPixelMap(env, argValue[NUM_1 - 1]);
-            EFFECT_LOG_I("rPixelMap=%{public}p.", asyncContext->rPixelMap.get());
-            BuildMsgOnError(env, asyncContext,
-                            IMG_NOT_NULL(asyncContext->rPixelMap),
-                            "PixelMap mismatch");
+            BuildMsgOnError(env, asyncContext, IMG_NOT_NULL(asyncContext->rPixelMap), "Pixmap mismatch");
         } else {
-            BuildMsgOnError(env, asyncContext,
-                            false,
-                            "image type mismatch");
+            BuildMsgOnError(env, asyncContext, false, "image type mismatch");
         }
     }
-    
-    IMG_NAPI_CHECK_RET_D(asyncContext->errorMsg == nullptr,
-                         nullptr,
-                         EFFECT_LOG_E("image type mismatch."));
-
+    IMG_NAPI_CHECK_RET_D(asyncContext->errorMsg == nullptr, nullptr, EFFECT_LOG_E("image type mismatch."));
     if (argCount == NUM_2 && Media::ImageNapiUtils::getType(env, argValue[argCount - 1]) == napi_function) {
         napi_create_reference(env, argValue[argCount - 1], refCount, &asyncContext->callbackRef);
     }
-
     if (asyncContext->callbackRef == nullptr) {
         napi_create_promise(env, &(asyncContext->deferred), &result);
     }
-
     if (asyncContext->errorMsg != nullptr) {
-        EFFECT_LOG_I("errorMsg");
         IMG_CREATE_CREATE_ASYNC_WORK(env, status,
                                      "CreateColorPickerError",
                                      [](napi_env env, void* data) {},
@@ -307,7 +289,6 @@ napi_value ColorPickerNapi::CreateColorPicker(napi_env env, napi_callback_info i
                                      asyncContext,
                                      asyncContext->work);
     } else if (imgType == ImageType::TYPE_PIXEL_MAP) {
-        EFFECT_LOG_I("pixelmap.create");
         IMG_CREATE_CREATE_ASYNC_WORK(env, status,
                                      "CreateColorPickerFromPixelMap",
                                      CreateColorPickerFromPixelmapExecute,
@@ -316,10 +297,7 @@ napi_value ColorPickerNapi::CreateColorPicker(napi_env env, napi_callback_info i
     } else {
         EFFECT_LOG_E("Create error");
     }
-
-    IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
-                         nullptr,
-                         EFFECT_LOG_E("fail to create async work"));
+    IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status), nullptr, EFFECT_LOG_E("fail to create async work"));
     return result;
 }
 

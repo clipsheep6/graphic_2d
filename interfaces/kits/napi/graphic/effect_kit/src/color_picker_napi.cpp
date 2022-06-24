@@ -116,7 +116,6 @@ napi_value ColorPickerNapi::Init(napi_env env, napi_value exports)
     napi_property_descriptor props[] = {
         DECLARE_NAPI_FUNCTION("getMainColor", GetMainColor),
         DECLARE_NAPI_FUNCTION("getMainColorSync", GetMainColorSync),
-        DECLARE_NAPI_GETTER("scaledPixelMap", GetScaledPixelMap),
     };
 
     napi_property_descriptor static_prop[] = {
@@ -264,7 +263,6 @@ napi_value ColorPickerNapi::CreateColorPicker(napi_env env, napi_callback_info i
     size_t argCount = NUM_4;
     ImageType imgType = ImageType::TYPE_UNKOWN;
     EFFECT_LOG_I("[ColorPickerNapi]Create ColorPicker IN");
-
     IMG_JS_ARGS(env, info, status, argCount, argValue, thisVar);
 
     // we are static method!

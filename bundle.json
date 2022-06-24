@@ -72,7 +72,8 @@
           "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:EGL",
           "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:GLESv3",
           "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:opengl_wrapper_native_test",
-          "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect"
+          "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect",
+          "//foundation/graphic/graphic_2d/rosen/modules/effect/skia_effectChain:skeffectchain"
         ],
         "inner_kits": [
           {

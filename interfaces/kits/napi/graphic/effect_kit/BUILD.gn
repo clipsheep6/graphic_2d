@@ -31,7 +31,7 @@ config("graphic_napi_effect_kit_config") {
   defines = [ "EGL_EGLEXT_PROTOTYPES" ]
 }
 
-ohos_shared_library("effect_kit") {
+ohos_shared_library("effectkit") {
   include_dirs = [
     "./include",
     "//foundation/graphic/graphic_2d/rosen/modules/effect/effectChain/include",

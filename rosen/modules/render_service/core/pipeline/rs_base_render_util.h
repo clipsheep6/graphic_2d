@@ -58,6 +58,8 @@ public:
 #endif
 
 private:
+    static int64_t compositionDuration_;
+    static int64_t frameCount_;
     static bool IsBufferValid(const sptr<SurfaceBuffer>& buffer);
     static bool CreateYuvToRGBABitMap(sptr<OHOS::SurfaceBuffer> buffer, std::vector<uint8_t>& newBuffer,
         SkBitmap& bitmap);

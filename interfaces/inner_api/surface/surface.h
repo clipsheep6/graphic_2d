@@ -100,6 +100,8 @@ public:
     virtual GSError SetTunnelHandle(const ExtDataHandle *handle) = 0;
     virtual GSError GetTunnelHandle(ExtDataHandle **handle) const = 0;
 
+    virtual void ChangeSize(bool needAddSurface);
+    
     virtual void Dump(std::string &result) const = 0;
 protected:
     Surface() = default;

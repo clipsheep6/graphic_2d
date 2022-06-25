@@ -18,6 +18,8 @@
 
 #include <map>
 #include <list>
+#include <stdatomic.h>
+#include <stdint.h
 #include <vector>
 #include <mutex>
 
@@ -120,6 +122,8 @@ public:
     GSError SetTunnelHandle(const ExtDataHandle *handle);
     GSError GetTunnelHandle(ExtDataHandle **handle) const;
 
+    void ChangeSize(bool needAddSurface);
+
 private:
     GSError AllocBuffer(sptr<SurfaceBuffer>& buffer, const BufferRequestConfig &config);
     void DeleteBufferInCache(uint32_t sequence);
@@ -155,6 +159,8 @@ private:
     bool isShared_ = false;
     std::condition_variable waitReqCon_;
     ExtDataHandle *tunnelHandle_ = nullptr;
+
+    std::atomic<int32_t> requestTimeoutCount_ = 0;
 };
 }; // namespace OHOS
 

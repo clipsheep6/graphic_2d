@@ -53,6 +53,7 @@ config("effect_test_config") {
   include_dirs = [
     "//third_party/EGL/api",
     "//third_party/openGLES/api",
+    "//third_party/skia",
     "//foundation/graphic/graphic_2d/rosen/modules/effect/color_picker/include",
     "//foundation/graphic/graphic_2d/rosen/modules/effect/effectChain/include",
     "//foundation/graphic/graphic_2d/rosen/modules/effect/egl/include",

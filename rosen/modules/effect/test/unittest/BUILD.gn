@@ -19,7 +19,6 @@ module_output_path = "graphic_standard/rosen/modules/effect"
 
 ohos_unittest("EffectTest") {
   module_out_path = module_output_path
-  sources = [ "color_picker_unittest.cpp" ]
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",

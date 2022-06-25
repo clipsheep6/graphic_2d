@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef GRAPHIC_STANDARD_COMPOSER_HDIDEVICE_MOCK_H
-#define GRAPHIC_STANDARD_COMPOSER_HDIDEVICE_MOCK_H
+#ifndef GRAPHIC_GRAPHIC_2D_COMPOSER_HDIDEVICE_MOCK_H
+#define GRAPHIC_GRAPHIC_2D_COMPOSER_HDIDEVICE_MOCK_H
 
 #include "hdi_device.h"
 
@@ -84,4 +84,4 @@ public:
 } // namespace Mock
 } // namespace Rosen
 } // namespace OHOS
-#endif // GRAPHIC_STANDARD_COMPOSER_HDIDEVICE_MOCK_H
+#endif // GRAPHIC_GRAPHIC_2D_COMPOSER_HDIDEVICE_MOCK_H

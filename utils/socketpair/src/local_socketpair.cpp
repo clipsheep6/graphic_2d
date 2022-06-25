@@ -62,16 +62,15 @@ int32_t LocalSocketPair::CreateChannel(size_t sendSize, size_t receiveSize)
 
     // set socket attr
     int32_t ret = 0;
-    ret |= setsockopt(socketPair[0], SOL_SOCKET, SO_SNDBUF, &sendSize, sizeof(sendSize));
-    ret |= setsockopt(socketPair[1], SOL_SOCKET, SO_RCVBUF, &receiveSize, sizeof(receiveSize));
-    ret |= setsockopt(socketPair[0], SOL_SOCKET, SO_RCVBUF, &receiveSize, sizeof(receiveSize));
-    ret |= setsockopt(socketPair[1], SOL_SOCKET, SO_SNDBUF, &sendSize, sizeof(sendSize));
-    ret |= fcntl(socketPair[0], F_SETFL, O_NONBLOCK);
-    ret |= fcntl(socketPair[1], F_SETFL, O_NONBLOCK);
-    if (ret != 0) { // check the return value together
-        HiLog::Error(LABEL, "%{public}s setsockopt or fcntl socketpair failed", __func__);
-        return -1;
-    }
+    if ((setsockopt(socketPair[0], SOL_SOCKET, SO_SNDBUF, &sendSize, sizeof(sendSize)) != 0) ||
+        (setsockopt(socketPair[1], SOL_SOCKET, SO_RCVBUF, &receiveSize, sizeof(receiveSize)) != 0) || 
+        (setsockopt(socketPair[0], SOL_SOCKET, SO_RCVBUF, &receiveSize, sizeof(receiveSize)) != 0) ||
+        (setsockopt(socketPair[1], SOL_SOCKET, SO_SNDBUF, &sendSize, sizeof(sendSize)) != 0) ||
+        (fcntl(socketPair[0], F_SETFL, O_NONBLOCK) != 0) ||
+        (fcntl(socketPair[1], F_SETFL, O_NONBLOCK) ! = 0)) {
+            HiLog::Error(LABEL, "%{public}s setsockopt or fcntl socketpair failed", __func__);
+            return -1;
+        }
     sendFd_ = socketPair[0];
     receiveFd_ = socketPair[1];
     HiLog::Debug(LABEL, "%{public}s create socketpair success, receiveFd_ : %{public}d, sendFd_ : %{public}d", __func__,

@@ -16,11 +16,19 @@
 #include "color_picker_unittest.h"
 #include "color_picker.h"
 #include "color.h"
+#include "image_source.h"
 #include "pixel_map.h"
 #include "effect_errors.h"
+#include "hilog/log.h"
 
 using namespace testing;
 using namespace testing::ext;
+using namespace OHOS::Media;
+using namespace OHOS::HiviewDFX;
+
+static constexpr OHOS::HiviewDFX::HiLogLabel LABEL_TEST = {
+    LOG_CORE, LOG_DOMAIN, "ColorPickerTest"
+};
 
 namespace OHOS {
 namespace Rosen {
@@ -48,6 +56,7 @@ HWTEST_F(ColorPickerUnittest, CreateColorPickerFromPixelmapTest001, TestSize.Lev
      */
     uint32_t errorCode = SUCCESS;
     std::shared_ptr<ColorPicker> pColorPicker = ColorPicker::CreateColorPicker(std::move(pixmap), errorCode);
+    ASSERT_EQ(errorCode, SUCCESS);
     EXPECT_NE(pColorPicker, nullptr);
 }
 
@@ -62,18 +71,28 @@ HWTEST_F(ColorPickerUnittest, CreateColorPickerFromPixelmapTest002, TestSize.Lev
 {
     GTEST_LOG_(INFO) << "ColorPickerUnittest CreateColorPickerFromPixelmapTest002 start";
     /**
-     * @tc.steps: step1. Create a pixelMap
+     * @tc.steps: step1. Create a ImageSource
      */
-    Media::InitializationOptions opts;
-    opts.size.width = 200;
-    opts.size.height = 150;
-    opts.editable = true;
-    std::unique_ptr<Media::PixelMap> pixmap = Media::PixelMap::Create(opts);
+    uint32_t errorCode = 0;
+    SourceOptions opts;
+    opts.formatHint = "image/png";
+    std::unique_ptr<ImageSource> imageSource =
+        ImageSource::CreateImageSource("/data/local/tmp/image/test.png", opts, errorCode);
+    ASSERT_EQ(errorCode, SUCCESS);
 
     /**
-     * @tc.steps: step2. Call create From pixelMap
+     * @tc.steps: step2. decode image source to pixel map by default decode options
+     * @tc.expected: step2. decode image source to pixel map success.
      */
-    uint32_t errorCode = SUCCESS;
+    DecodeOptions decodeOpts;
+    std::unique_ptr<PixelMap> pixmap = imageSource->CreatePixelMap(decodeOpts, errorCode);
+    HiLog::Debug(LABEL_TEST, "create pixel map error code=%{public}u.", errorCode);
+    ASSERT_EQ(errorCode, SUCCESS);
+    ASSERT_NE(pixmap.get(), nullptr);
+
+    /**
+     * @tc.steps: step3. Call create From pixelMap
+     */
     std::shared_ptr<ColorPicker> pColorPicker = ColorPicker::CreateColorPicker(std::move(pixmap), errorCode);
     EXPECT_NE(pColorPicker, nullptr);
 }
@@ -98,7 +117,8 @@ HWTEST_F(ColorPickerUnittest, CreateColorPickerFromPixelmapTest003, TestSize.Lev
      */
     uint32_t errorCode = SUCCESS;
     std::shared_ptr<ColorPicker> pColorPicker = ColorPicker::CreateColorPicker(std::move(pixmap), errorCode);
-    EXPECT_NE(pColorPicker, nullptr);
+    ASSERT_EQ(errorCode, ERR_EFFECT_INVALID_VALUE);
+    EXPECT_EQ(pColorPicker, nullptr);
 }
 
 /**
@@ -111,27 +131,45 @@ HWTEST_F(ColorPickerUnittest, CreateColorPickerFromPixelmapTest003, TestSize.Lev
 HWTEST_F(ColorPickerUnittest, GetMainColorTest001, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ColorPickerUnittest GetMainColorTest001 start";
+
     /**
-     * @tc.steps: step1. Create a pixelMap
+     * @tc.steps: step1. create image source by correct jpeg file path and jpeg format hit.
+     * @tc.expected: step1. create image source success.
      */
-    std::unique_ptr<Media::PixelMap> pixmap = nullptr;
+    uint32_t errorCode = 0;
+    SourceOptions opts;
+    opts.formatHint = "image/jpeg";
+    std::unique_ptr<ImageSource> imageSource =
+        ImageSource::CreateImageSource("/data/local/tmp/image/test.jpg", opts, errorCode);
+    ASSERT_EQ(errorCode, SUCCESS);
+    ASSERT_NE(imageSource.get(), nullptr);
+
+    /**
+     * @tc.steps: step2. decode image source to pixel map by default decode options
+     * @tc.expected: step2. decode image source to pixel map success.
+     */
+    DecodeOptions decodeOpts;
+    std::unique_ptr<PixelMap> pixmap = imageSource->CreatePixelMap(decodeOpts, errorCode);
+    HiLog::Debug(LABEL_TEST, "create pixel map error code=%{public}u.", errorCode);
+    ASSERT_EQ(errorCode, SUCCESS);
+    ASSERT_NE(pixmap.get(), nullptr);
 
     /**
      * @tc.steps: step2. Call create From pixelMap
      */
-    uint32_t errorCode = SUCCESS;
     std::shared_ptr<ColorPicker> pColorPicker = ColorPicker::CreateColorPicker(std::move(pixmap), errorCode);
-    EXPECT_EQ(pColorPicker, nullptr);
+    ASSERT_EQ(errorCode, SUCCESS);
+    EXPECT_NE(pColorPicker, nullptr);
 
     /**
      * @tc.steps: step3. Get main color from pixmap
      */
     ColorManager::Color color;
     errorCode = pColorPicker->GetMainColor(color);
-    EXPECT_EQ(color.r, 0.0f);
-    EXPECT_EQ(color.g, 0.0f);
-    EXPECT_EQ(color.b, 0.0f);
-    EXPECT_EQ(color.a, 0.0f);
+    HiLog::Info(LABEL_TEST, "get main color t1[rgba]=%{public}f,%{public}f,%{public}f,%{public}f", color.r, color.g, color.b, color.a);
+    ASSERT_EQ(errorCode, SUCCESS);
+    bool ret = color.ColorEqual(ColorManager::Color(1.f, 0.788235f, 0.050980f, 1.f));
+    EXPECT_EQ(true, ret);
 }
 
 /**
@@ -144,27 +182,43 @@ HWTEST_F(ColorPickerUnittest, GetMainColorTest001, TestSize.Level1)
 HWTEST_F(ColorPickerUnittest, GetMainColorTest002, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "ColorPickerUnittest GetMainColorTest002 start";
-    /**
-     * @tc.steps: step1. Create a pixelMap
-     */
-    std::unique_ptr<Media::PixelMap> pixmap = nullptr;
 
     /**
-     * @tc.steps: step2. Call create From pixelMap
+     * @tc.steps: step1. Create a ImageSource
      */
-    uint32_t errorCode = SUCCESS;
+    uint32_t errorCode = 0;
+    SourceOptions opts;
+    opts.formatHint = "image/png";
+    std::unique_ptr<ImageSource> imageSource =
+        ImageSource::CreateImageSource("/data/local/tmp/image/test.png", opts, errorCode);
+    ASSERT_EQ(errorCode, SUCCESS);
+
+    /**
+     * @tc.steps: step2. decode image source to pixel map by default decode options
+     * @tc.expected: step2. decode image source to pixel map success.
+     */
+    DecodeOptions decodeOpts;
+    std::unique_ptr<PixelMap> pixmap = imageSource->CreatePixelMap(decodeOpts, errorCode);
+    HiLog::Debug(LABEL_TEST, "create pixel map error code=%{public}u.", errorCode);
+    ASSERT_EQ(errorCode, SUCCESS);
+    ASSERT_NE(pixmap.get(), nullptr);
+
+    /**
+     * @tc.steps: step3. Call create From pixelMap
+     */
     std::shared_ptr<ColorPicker> pColorPicker = ColorPicker::CreateColorPicker(std::move(pixmap), errorCode);
-    EXPECT_EQ(pColorPicker, nullptr);
+    ASSERT_EQ(errorCode, SUCCESS);
+    ASSERT_NE(pColorPicker, nullptr);
 
     /**
-     * @tc.steps: step3. Get main color from pixmap
+     * @tc.steps: step4. Get main color from pixmap
      */
     ColorManager::Color color;
     errorCode = pColorPicker->GetMainColor(color);
-    EXPECT_EQ(color.r, 0.0f);
-    EXPECT_EQ(color.g, 0.0f);
-    EXPECT_EQ(color.b, 0.0f);
-    EXPECT_EQ(color.a, 0.0f);
+    HiLog::Info(LABEL_TEST, "get main color t2[rgba]=%{public}f,%{public}f,%{public}f,%{public}f", color.r, color.g, color.b, color.a);
+    ASSERT_EQ(errorCode, SUCCESS);
+    bool ret = color.ColorEqual(ColorManager::Color(1.f, 1.f, 1.f, 1.f));
+    EXPECT_EQ(true, ret);
 }
 
 /**
@@ -180,24 +234,29 @@ HWTEST_F(ColorPickerUnittest, GetMainColorTest003, TestSize.Level1)
     /**
      * @tc.steps: step1. Create a pixelMap
      */
-    std::unique_ptr<Media::PixelMap> pixmap = nullptr;
+    Media::InitializationOptions opts;
+    opts.size.width = 200;
+    opts.size.height = 100;
+    opts.editable = true;
+    std::unique_ptr<Media::PixelMap> pixmap = Media::PixelMap::Create(opts);
 
     /**
      * @tc.steps: step2. Call create From pixelMap
      */
     uint32_t errorCode = SUCCESS;
     std::shared_ptr<ColorPicker> pColorPicker = ColorPicker::CreateColorPicker(std::move(pixmap), errorCode);
-    EXPECT_EQ(pColorPicker, nullptr);
+    ASSERT_EQ(errorCode, SUCCESS);
+    ASSERT_NE(pColorPicker, nullptr);
 
     /**
      * @tc.steps: step3. Get main color from pixmap
      */
     ColorManager::Color color;
     errorCode = pColorPicker->GetMainColor(color);
-    EXPECT_EQ(color.r, 0.0f);
-    EXPECT_EQ(color.g, 0.0f);
-    EXPECT_EQ(color.b, 0.0f);
-    EXPECT_EQ(color.a, 0.0f);
+    HiLog::Info(LABEL_TEST, "get main color t3[rgba]=%{public}f,%{public}f,%{public}f,%{public}f", color.r, color.g, color.b, color.a);
+    ASSERT_EQ(errorCode, SUCCESS);
+    bool ret = color.ColorEqual(ColorManager::Color(0x00000000U));
+    EXPECT_EQ(true, ret);
 }
 } // namespace Rosen
 } // namespace OHOS

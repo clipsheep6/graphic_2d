@@ -150,60 +150,16 @@ void HdiLayer::SetHdiLayerInfo()
     ret = device->SetLayerPreMulti(screenId_, layerId_, layerInfo_->IsPreMulti());
     CheckRet(ret, "SetLayerPreMulti");
 
+    (void)device->SetLayerColorTransform(screenId_, layerId_, layerInfo_->GetColorTransform());
+    (void)device->SetLayerColorDataSpace(screenId_, layerId_, layerInfo_->GetColorDataSpace());
+    (void)device->SetLayerMetaData(screenId_, layerId_, layerInfo_->GetMetaData());
+    (void)device->SetLayerMetaDataSet(screenId_, layerId_, layerInfo_->GetMetaDataSet().key,
+                                      layerInfo_->GetMetaDataSet().metaData);
+
     if (layerInfo_->GetTunnelHandleChange()) {
         ret = device->SetLayerTunnelHandle(screenId_, layerId_, layerInfo_->GetTunnelHandle());
         CheckRet(ret, "SetLayerTunnelHandle");
     }
-}
-
-int32_t HdiLayer::SetLayerColorTransform(const float *matrix) const
-{
-    HdiDevice *device = HdiDevice::GetInstance();
-    if (device == nullptr || matrix == nullptr) {
-        return DISPLAY_NULL_PTR;
-    }
-
-    return device->SetLayerColorTransform(screenId_, layerId_, matrix);
-}
-
-int32_t HdiLayer::SetLayerColorDataSpace(ColorDataSpace colorSpace) const
-{
-    HdiDevice *device = HdiDevice::GetInstance();
-    if (device == nullptr) {
-        return DISPLAY_NULL_PTR;
-    }
-
-    return device->SetLayerColorDataSpace(screenId_, layerId_, colorSpace);
-}
-
-int32_t HdiLayer::GetLayerColorDataSpace(ColorDataSpace &colorSpace) const
-{
-    HdiDevice *device = HdiDevice::GetInstance();
-    if (device == nullptr) {
-        return DISPLAY_NULL_PTR;
-    }
-
-    return device->GetLayerColorDataSpace(screenId_, layerId_, colorSpace);
-}
-
-int32_t HdiLayer::SetLayerMetaData(const std::vector<HDRMetaData> &metaData) const
-{
-    HdiDevice *device = HdiDevice::GetInstance();
-    if (device == nullptr) {
-        return DISPLAY_NULL_PTR;
-    }
-
-    return device->SetLayerMetaData(screenId_, layerId_, metaData);
-}
-
-int32_t HdiLayer::SetLayerMetaDataSet(HDRMetadataKey key, const std::vector<uint8_t> &metaData) const
-{
-    HdiDevice *device = HdiDevice::GetInstance();
-    if (device == nullptr) {
-        return DISPLAY_NULL_PTR;
-    }
-
-    return device->SetLayerMetaDataSet(screenId_, layerId_, key, metaData);
 }
 
 uint32_t HdiLayer::GetLayerId() const

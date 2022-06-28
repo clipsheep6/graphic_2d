@@ -164,6 +164,15 @@ SurfaceError LayerContext::FillHDILayer()
     hdiLayer_->SetCropRect(src_);
     hdiLayer_->SetPreMulti(false);
 
+    float matrix[9] = {1, 0, 0, 0, 1, 0, 0 , 0, 1};
+    (void)hdiLayer_->SetColorTransform(matrix);
+    ColorDataSpace colorSpace = ColorDataSpace::DISPLAY_P3_LINEAR_FULL;
+    (void)hdiLayer_->SetColorDataSpace(colorSpace);
+    std::vector<HDRMetaData> metaData = {{MATAKEY_RED_PRIMARY_X, 1}};
+    (void)hdiLayer_->SetMetaData(metaData);
+    HDRMetaDataSet metaDataSet = {HDRMetadataKey::MATAKEY_RED_PRIMARY_X, {1, 2, 3}};
+    (void)hdiLayer_->SetMetaDataSet(metaDataSet);
+
     prevBuffer_ = buffer;
     prevFence_ = acquireSyncFence;
 

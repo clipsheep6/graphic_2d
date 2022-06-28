@@ -322,6 +322,23 @@ uint32_t HelloComposer::CreatePhysicalScreen()
          "supportWriteBack(%{public}d), propertyCount(%{public}d)", info.supportLayers,
          info.virtualDispCount, info.supportWriteBack, info.propertyCount);
 
+    std::vector<ColorGamut> gamuts;
+    (void)screen->GetScreenSupportedColorGamuts(gamuts);
+    ColorGamut setGamut = ColorGamut::COLOR_GAMUT_SRGB;
+    (void)screen->SetScreenColorGamut(setGamut);
+    ColorGamut getGamut = ColorGamut::COLOR_GAMUT_INVALID;
+    (void)screen->GetScreenColorGamut(getGamut);
+    GamutMap setMap = GamutMap::GAMUT_MAP_EXPANSION;
+    (void)screen->SetScreenGamutMap(setMap);
+    GamutMap getMap = GamutMap::GAMUT_MAP_CONSTANT;
+    (void)screen->GetScreenGamutMap(getMap);
+    float matrix[9] = {1, 0, 0, 0, 1, 0, 0 , 0, 1};
+    (void)screen->SetScreenColorTransform(matrix);
+    HDRCapability hdrInfo;
+    (void)screen->GetHDRCapabilityInfos(hdrInfo);
+    std::vector<HDRMetadataKey> keys;
+    (void)screen->GetSupportedMetaDataKey(keys);
+
     ready_ = true;
 
     screensMap_[screenId] = std::move(screen);

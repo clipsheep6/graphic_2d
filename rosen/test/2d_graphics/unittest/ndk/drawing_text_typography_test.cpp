@@ -27,7 +27,8 @@ using namespace rosen;
 using namespace testing;
 using namespace testing::ext;
 
-class NativeDrawingTypographyTest : public testing::Test {
+namespace OHOS {
+class OH_Drawing_TypographyTest : public testing::Test {
 };
 
 static TypographyStyle* ConvertToOriginalText(OH_Drawing_TypographyStyle* style)
@@ -41,11 +42,11 @@ static TextStyle* ConvertToOriginalText(OH_Drawing_TextStyle* style)
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest001
+ * @tc.name: OH_Drawing_TypographyTest001
  * @tc.desc: test for creating TypographyStyle
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest001, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest001, TestSize.Level1)
 {
     OH_Drawing_TypographyStyle* typoStyle = OH_Drawing_CreateTypographyStyle();
     EXPECT_EQ(typoStyle == nullptr, false);
@@ -53,11 +54,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest001, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest002
+ * @tc.name: OH_Drawing_TypographyTest002
  * @tc.desc: test for text direction
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest002, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest002, TestSize.Level1)
 {
     OH_Drawing_TypographyStyle* typoStyle = OH_Drawing_CreateTypographyStyle();
     OH_Drawing_SetTypographyTextDirection(typoStyle, TEXT_DIRECTION_LTR);
@@ -67,11 +68,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest002, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest003
+ * @tc.name: OH_Drawing_TypographyTest003
  * @tc.desc: test for text alignment
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest003, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest003, TestSize.Level1)
 {
     OH_Drawing_TypographyStyle* typoStyle = OH_Drawing_CreateTypographyStyle();
     OH_Drawing_SetTypographyTextAlign(typoStyle, TEXT_ALIGN_LEFT);
@@ -89,11 +90,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest003, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest004
+ * @tc.name: OH_Drawing_TypographyTest004
  * @tc.desc: test for max lines
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest004, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest004, TestSize.Level1)
 {
     OH_Drawing_TypographyStyle* typoStyle = OH_Drawing_CreateTypographyStyle();
     OH_Drawing_SetTypographyTextMaxLines(typoStyle, 100);
@@ -103,11 +104,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest004, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest005
+ * @tc.name: OH_Drawing_TypographyTest005
  * @tc.desc: test for creating text style
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest005, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest005, TestSize.Level1)
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     EXPECT_EQ(txtStyle == nullptr, false);
@@ -115,11 +116,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest005, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest006
+ * @tc.name: OH_Drawing_TypographyTest006
  * @tc.desc: test for text color
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest006, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest006, TestSize.Level1)
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     // black
@@ -134,11 +135,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest006, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest007
+ * @tc.name: OH_Drawing_TypographyTest007
  * @tc.desc: test for font size
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest007, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest007, TestSize.Level1)
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     OH_Drawing_SetTextStyleFontSize(txtStyle, 80);
@@ -148,11 +149,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest007, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest008
+ * @tc.name: OH_Drawing_TypographyTest008
  * @tc.desc: test for font weight
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest008, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest008, TestSize.Level1)
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     OH_Drawing_SetTextStyleFontWeight(txtStyle, FONT_WEIGHT_400);
@@ -162,11 +163,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest008, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest009
+ * @tc.name: OH_Drawing_TypographyTest009
  * @tc.desc: test for baseline location
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest009, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest009, TestSize.Level1)
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     OH_Drawing_SetTextStyleBaseLine(txtStyle, TEXT_BASELINE_ALPHABETIC);
@@ -176,11 +177,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest009, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest010
+ * @tc.name: OH_Drawing_TypographyTest010
  * @tc.desc: test for text decoration
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest010, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest010, TestSize.Level1)
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     OH_Drawing_SetTextStyleDecoration(txtStyle, TEXT_DECORATION_NONE);
@@ -194,11 +195,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest010, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest011
+ * @tc.name: OH_Drawing_TypographyTest011
  * @tc.desc: test for text decoration color
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest011, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest011, TestSize.Level1)
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     OH_Drawing_SetTextStyleDecorationColor(txtStyle, OH_Drawing_ColorSetArgb(0xFF, 0x00, 0x00, 0x00));
@@ -208,11 +209,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest011, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest012
+ * @tc.name: OH_Drawing_TypographyTest012
  * @tc.desc: test for font height
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest012, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest012, TestSize.Level1)
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     OH_Drawing_SetTextStyleFontHeight(txtStyle, 0.0);
@@ -220,11 +221,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest012, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest013
+ * @tc.name: OH_Drawing_TypographyTest013
  * @tc.desc: test for font families
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest013, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest013, TestSize.Level1)
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     const char* fontFamilies[] = {"Roboto"};
@@ -234,11 +235,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest013, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest014
+ * @tc.name: OH_Drawing_TypographyTest014
  * @tc.desc: test for font italic
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest014, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest014, TestSize.Level1)
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     OH_Drawing_SetTextStyleFontStyle(txtStyle, FONT_STYLE_NORMAL);
@@ -248,11 +249,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest014, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest015
+ * @tc.name: OH_Drawing_TypographyTest015
  * @tc.desc: test for font locale
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest015, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest015, TestSize.Level1)
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     OH_Drawing_SetTextStyleLocale(txtStyle, "en");
@@ -260,11 +261,11 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest015, TestSize.L
 }
 
 /*
- * @tc.name: NativeDrawingTypographyTest016
+ * @tc.name: OH_Drawing_TypographyTest016
  * @tc.desc: test for typography
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest016, TestSize.Level1)
+HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest016, TestSize.Level1)
 {
     OH_Drawing_TypographyStyle* typoStyle = OH_Drawing_CreateTypographyStyle();
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
@@ -299,4 +300,5 @@ HWTEST_F(NativeDrawingTypographyTest, NativeDrawingTypographyTest016, TestSize.L
     OH_Drawing_CanvasBind(cCanvas, cBitmap);
     OH_Drawing_CanvasClear(cCanvas, OH_Drawing_ColorSetArgb(0xFF, 0xFF, 0xFF, 0xFF));
     OH_Drawing_TypographyPaint(typography, cCanvas, position[0], position[1]);
+}
 }

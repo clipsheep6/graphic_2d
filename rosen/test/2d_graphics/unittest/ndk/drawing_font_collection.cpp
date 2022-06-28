@@ -21,7 +21,8 @@
 using namespace testing;
 using namespace testing::ext;
 
-class NativeDrawingFontCollectionTest : public testing::Test {
+namespace OHOS {
+class OH_Drawing_FontCollectionTest : public testing::Test {
 };
 
 /*
@@ -29,8 +30,9 @@ class NativeDrawingFontCollectionTest : public testing::Test {
  * @tc.desc: test for creating fontCollection
  * @tc.type: FUNC
  */
-HWTEST_F(NativeDrawingFontCollectionTest, NativeDrawingFontCollectionTest001, TestSize.Level1)
+HWTEST_F(OH_Drawing_FontCollectionTest, OH_Drawing_FontCollectionTest001, TestSize.Level1)
 {
     OH_Drawing_FontCollection* fontCollection = OH_Drawing_CreateFontCollection();
     EXPECT_EQ(fontCollection == nullptr, false);
+}
 }

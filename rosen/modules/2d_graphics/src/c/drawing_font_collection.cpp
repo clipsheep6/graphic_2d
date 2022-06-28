@@ -23,5 +23,4 @@ OH_Drawing_FontCollection* OH_Drawing_CreateFontCollection(void)
 
 void OH_Drawing_DestroyFontCollection(OH_Drawing_FontCollection* fontCollection)
 {
-
 }

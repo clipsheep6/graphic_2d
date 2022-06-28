@@ -13,14 +13,13 @@
  * limitations under the License.
  */
 
+#include "gtest/gtest.h"
 #include "c/drawing_bitmap.h"
 #include "c/drawing_canvas.h"
 #include "c/drawing_color.h"
 #include "c/drawing_font_collection.h"
 #include "c/drawing_text_declaration.h"
 #include "c/drawing_text_typography.h"
-#include "gtest/gtest.h"
-#include "gtest/hwext/gtest-ext.h"
 #include "rosen_text/ui/typography.h"
 #include "rosen_text/ui/typography_create.h"
 
@@ -28,7 +27,7 @@ using namespace rosen;
 using namespace testing;
 using namespace testing::ext;
 
-class NativeDrawingTypographyTest : public testing::Test{
+class NativeDrawingTypographyTest : public testing::Test {
 };
 
 static TypographyStyle* ConvertToOriginalText(OH_Drawing_TypographyStyle* style)

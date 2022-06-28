@@ -14,13 +14,14 @@
  */
 
 #include "c/drawing_font_collection.h"
-#include "c/drawing_text_declaration.h"
+
 #include "gtest/gtest.h"
+#include "c/drawing_text_declaration.h"
 
 using namespace testing;
 using namespace testing::ext;
 
-class NativeDrawingFontCollectionTest : public testing::Test{
+class NativeDrawingFontCollectionTest : public testing::Test {
 };
 
 /*

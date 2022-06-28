@@ -128,6 +128,83 @@ HWTEST_F(RSInterfacesSystemTest, ScreenManager01, Function | MediumTest | Level2
     auto res = ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId);
     ASSERT_EQ(DMError::DM_OK, res);
 }
+
+
+/**
+ * @brief 
+ * @tc.desc: Virtualmirrorscreen is supported to change the resolution of main screen.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RSInterfacesSystemTest, ScreenManager02, Function | MediumTest | Level2)
+{
+    uint32_t resolutionFirstWidth = 720;
+    uint32_t resolutionFirstHeight = 400;
+    
+    RSInterfacesTestUtils utils;
+    ASSERT_TRUE(utils.CreateSurface());
+    defaultOption_.surface_ = utils.pSurface_;
+    defaultOption_.isForShot_ = false;
+
+    ScreenId virtualScreenId = ScreenManager::GetInstance().CreateVirtualScreen(defaultOption_);
+    sleep(TEST_SLEEP_S);
+      
+    std::vector<ScreenId> mirrorIds;
+    mirrorIds.push_back(virtualScreenId);
+    ScreenManager::GetInstance().MakeMirror(defaultScreenId_, mirrorIds);
+    sleep(TEST_SLEEP_S);
+    ASSERT_NE(SCREEN_ID_INVALID, virtualScreenId);
+
+    auto ids = RSInterfaces::GetInstance().GetAllScreenIds();
+    ScreenId rsId = ids.front();
+    auto resolution = RSInterfaces::GetInstance().GetVirtualScreenResolution(rsId);
+    ASSERT_EQ(resolution.GetVirtualScreenWidth(), defaultWidth_);
+    ASSERT_EQ(resolution.GetVirtualScreenHeight(), defaultHeight_);
+    
+    ScreenId mainId = RSInterfaces::GetInstance().GetDefaultScreenId();
+    RSScreenModeInfo screenModeInfo = RSInterfaces::GetInstance().GetScreenActiveMode(mainId);
+    std::cout<<"mainDefaultResolution:"<<screenModeInfo.GetScreenWidth()<<" "<<screenModeInfo.GetScreenHeight()<<std::endl;
+    RSInterfaces::GetInstance().SetVirtualScreenResolution(rsId, resolutionFirstWidth, resolutionFirstHeight);
+    resolution = RSInterfaces::GetInstance().GetVirtualScreenResolution(rsId);
+    ASSERT_EQ(resolution.GetVirtualScreenWidth(), resolutionFirstWidth);
+    ASSERT_EQ(resolution.GetVirtualScreenHeight(), resolutionFirstHeight);
+    RSInterfaces::GetInstance().SetVirtualScreenResolution(rsId, defaultWidth_, defaultHeight_);
+
+    auto res = ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId);
+    ASSERT_EQ(DMError::DM_OK, res);
+}
+
+/**
+ * @tc.name: ScreenManager03
+ * @tc.desc: Physical mirrorscreen is supported to change the resolution of main screen.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RSInterfacesSystemTest, ScreenManager03, Function | MediumTest | Level2)
+{
+    ScreenId mainId = RSInterfaces::GetInstance().GetDefaultScreenId();
+    sleep(TEST_SLEEP_S);
+
+    auto ids = RSInterfaces::GetInstance().GetAllScreenIds();
+    ScreenId mirrorId = ids.front();
+    for (uint32_t k = 0; k < ids.size(); k++) {
+        if (ids[k] != mainId) {
+            mirrorId = ids[k];
+            break;
+        }
+    }
+    
+    RSScreenModeInfo mainDefaultMode = RSInterfaces::GetInstance().GetScreenActiveMode(mainId);
+    std::cout<<"MainScreen:"<<mainId<<" "<<mainDefaultMode.GetScreenWidth()<<" "<<mainDefaultMode.GetScreenHeight()<<std::endl;
+    RSScreenModeInfo mirrorDefaultMode = RSInterfaces::GetInstance().GetScreenActiveMode(mirrorId);
+    std::cout<<"MirrorScreen:"<<mirrorId<<" "<<mirrorDefaultMode.GetScreenWidth()<<" "<<mirrorDefaultMode.GetScreenHeight()<<std::endl;
+    auto supportModes = RSInterfaces::GetInstance().GetScreenSupportedModes(mirrorId);
+    for(uint32_t i = 0; i < supportModes.size(); i++){
+        if (supportModes[i].GetScreenWidth() != mirrorDefaultMode.GetScreenWidth()) {
+            std::cout<<"SetResolution:"<<i<<" "<<supportModes[i].GetScreenWidth()<<" "<<supportModes[i].GetScreenHeight()<<std::endl;
+            RSInterfaces::GetInstance().SetScreenActiveMode(mirrorId, i);
+            break;
+        }    
+    }
+}
 }
 } // namespace Rosen
 } // namespace OHOS

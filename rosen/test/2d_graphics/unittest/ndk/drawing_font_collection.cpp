@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,13 +14,25 @@
  */
 
 #include "c/drawing_font_collection.h"
-#include "rosen_text/ui/font_collection.h"
 
-OH_Drawing_FontCollection* OH_Drawing_CreateFontCollection(void)
+#include "gtest/gtest.h"
+#include "c/drawing_text_declaration.h"
+
+using namespace testing;
+using namespace testing::ext;
+
+namespace OHOS {
+class OH_Drawing_FontCollectionTest : public testing::Test {
+};
+
+/*
+ * @tc.name: NativeDrawingTest001
+ * @tc.desc: test for creating fontCollection
+ * @tc.type: FUNC
+ */
+HWTEST_F(OH_Drawing_FontCollectionTest, OH_Drawing_FontCollectionTest001, TestSize.Level1)
 {
-    return (OH_Drawing_FontCollection*)new rosen::FontCollection;
+    OH_Drawing_FontCollection* fontCollection = OH_Drawing_CreateFontCollection();
+    EXPECT_EQ(fontCollection == nullptr, false);
 }
-
-void OH_Drawing_DestroyFontCollection(OH_Drawing_FontCollection* fontCollection)
-{
 }

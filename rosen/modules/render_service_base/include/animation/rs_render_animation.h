@@ -135,6 +135,8 @@ public:
 
     virtual RSAnimatableProperty GetProperty() const;
 
+    virtual void UpdateValueOnAnimationRemove() {};
+
 protected:
     explicit RSRenderAnimation(AnimationId id);
     RSRenderAnimation() = default;
@@ -153,13 +155,14 @@ protected:
 
     virtual void OnRemoveOnCompletion() {}
 
+    RSAnimationFraction animationFraction_;
+
 private:
     void ProcessFillModeOnStart(float startFraction);
 
     void ProcessFillModeOnFinish(float endFraction);
 
     AnimationId id_ = 0;
-    RSAnimationFraction animationFraction_;
     AnimationState state_ { AnimationState::INITIALIZED };
     bool firstToRunning_ { false };
     RSRenderNode* target_ { nullptr };

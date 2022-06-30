@@ -69,7 +69,7 @@ public:
         window_ = Window::Create(option->GetWindowName(), option);
         if (window_ != nullptr) {
             surfaceNode_ = window_->GetSurfaceNode();
-            surfaceNode_->SetBounds(0, 0, 600, 600); // surface bounds is window rect.
+            surfaceNode_->SetBounds(0, 0, 600, 600); // surface bounds is window rect(600*600).
             surfaceNode_->SetBackgroundColor(0xffff0000); // set background color to red.
             RSTransaction::FlushImplicitTransaction();
             window_->Show();
@@ -133,16 +133,16 @@ public:
             SkPaint paint;
             paint.setAntiAlias(true);
             paint.setStyle(SkPaint::kFill_Style);
-            paint.setStrokeWidth(20);
+            paint.setStrokeWidth(20); // 20 is setStrokeWidth.
             paint.setStrokeJoin(SkPaint::kRound_Join);
             paint.setColor(SK_ColorBLUE);
             sk_sp<SkTextBlob> textBlob = SkTextBlob::MakeFromString(
                 GravityString(gravity), SkFont(nullptr, 24.0f, 1.0f, 0.0f)); // font size: 24
-            canvas->drawTextBlob(textBlob.get(), 10, 100, paint);
-            frame->SetDamageRegion(0, 0, 400, 400);
+            canvas->drawTextBlob(textBlob.get(), 10, 100, paint); // drawTextBlob is 10-100
+            frame->SetDamageRegion(0, 0, 400, 400); // SetDamageRegion is 400*400
             rsSurface->FlushFrame(frame);
 
-            sleep(2);
+            sleep(2); // sleep time is 2
         }
     }
 

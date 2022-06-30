@@ -173,6 +173,9 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
     struct IBufferProducer::RequestBufferReturnValue &retval)
 {
     ScopedBytrace func(__func__);
+    if (!isValidStatus_) {
+        BLOGN_FAILURE_RET(GSERROR_NO_CONSUMER);
+    }
     if (listener_ == nullptr && listenerClazz_ == nullptr) {
         BLOGN_FAILURE_RET(GSERROR_NO_CONSUMER);
     }

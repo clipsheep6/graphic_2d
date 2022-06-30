@@ -51,6 +51,8 @@ public:
     GSError GetMetaData(uint32_t sequence, std::vector<HDRMetaData> &metaData) const;
     GSError GetMetaDataSet(uint32_t sequence, HDRMetadataKey &key, std::vector<uint8_t> &metaData) const;
     GSError GetTunnelHandle(ExtDataHandle **handle) const;
+    bool GetStatus() const;
+    void SetStatus(bool status);
 
 private:
     sptr<BufferQueue> bufferQueue_ = nullptr;

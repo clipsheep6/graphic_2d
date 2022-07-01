@@ -181,7 +181,7 @@ void RSBaseNode::RemoveFromTree()
 {
     if (auto parentPtr = RSNodeMap::Instance().GetNode(parent_)) {
         if (parentPtr == nullptr) {
-            ROSEN_LOGI("RSBaseNode::RemoveFromTree, parent is nullptr, parent id: [%llu]", parent_);
+            ROSEN_LOGD("RSBaseNode::RemoveFromTree, parent is nullptr, parent id: [%llu]", parent_);
             return;
         }
         parentPtr->RemoveChildById(id_);
@@ -201,7 +201,7 @@ void RSBaseNode::ClearChildren()
     for (auto child : children_) {
         if (auto childPtr = RSNodeMap::Instance().GetNode(child)) {
             if (childPtr == nullptr) {
-                ROSEN_LOGI("RSBaseNode::ClearChildren, child is nullptr, child id: [%llu]", child);
+                ROSEN_LOGD("RSBaseNode::ClearChildren, child is nullptr, child id: [%llu]", child);
                 continue;
             }
             childPtr->SetParent(0);

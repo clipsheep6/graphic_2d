@@ -185,15 +185,20 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
     }
 
     std::unique_lock<std::mutex> lock(mutex_);
+
+    AdjustBufferSize();
+
     // dequeue from free list
     sptr<SurfaceBuffer>& buffer = retval.buffer;
     ret = PopFromFreeList(buffer, config);
     if (ret == GSERROR_OK) {
+        StatisticsTimeOut(false);
         return ReuseBuffer(config, bedata, retval);
     }
 
     // check queue size
     if (GetUsedSize() >= GetQueueSize()) {
+       StatisticsTimeOut(true);
         waitReqCon_.wait_for(lock, std::chrono::milliseconds(config.timeout),
             [this]() { return !freeList_.empty() || (GetUsedSize() < GetQueueSize()); });
         // try dequeue from free list again
@@ -207,7 +212,8 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
     }
 
     ret = AllocBuffer(buffer, config);
-    if (ret == GSERROR_OK) {
+    StatisticsTimeOut(false);
+    if (ret == GSERROR_OK) {        
         retval.sequence = buffer->GetSeqNum();
         bedata = buffer->GetExtraData();
         retval.fence = SyncFence::INVALID_FENCE;
@@ -665,11 +671,6 @@ GSError BufferQueue::SetQueueSize(uint32_t queueSize)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    if (queueSize <= 0) {
-        BLOGN_INVALID("queue size (%{public}d) <= 0", queueSize);
-        return GSERROR_INVALID_ARGUMENTS;
-    }
-
     if (queueSize > SURFACE_MAX_QUEUE_SIZE) {
         BLOGN_INVALID("invalid queueSize[%{public}d] > SURFACE_MAX_QUEUE_SIZE[%{public}d]",
             queueSize, SURFACE_MAX_QUEUE_SIZE);
@@ -938,6 +939,71 @@ GSError BufferQueue::GetTunnelHandle(ExtDataHandle **handle) const
     *handle = tunnelHandle_;
     return GSERROR_OK;
 }
+
+GSError BufferQueue::StatisticsTimeOut(bool isTimeOut)
+{
+    requestTimeOutCount -= requestTimeOutRecords_[count - 1];
+    requestTimeOutRecords_[count - 1] = (isTimeOut ? 1 : 0);
+    if (isTimeOut) {
+        requestTimeOutCount++;
+    }
+    return GSERROR_OK;
+}
+
+GSError BufferQueue::AdjustBufferSize()
+{
+    if (count == FRAME_RECORDS_NUM) {
+        fullFrames = true;
+    }
+    count = (count + 1) % (FRAME_RECORDS_NUM + 1);
+
+    if (!fullFrames) {
+        BLOGN_SUCCESS("Andrew :: AdjustBufferSize return because %{public}d < 128", count);
+        return GSERROR_OK;
+    }
+
+    if (requestTimeOutCount > 64 && queueSize_ < 4) {
+        BLOGN_SUCCESS("Andrew :: AdjustBufferSize queue size +1");
+        return SetQueueSize(queueSize_ + 1);
+    }
+    return GSERROR_OK; 
+}
+
+/*
+GSError BufferQueue::AdjustBufferSize(const BufferHistoryInfo& currentAvarageInfo)
+{
+    if (count == FRAME_RECORDS_NUM - 1) {
+        fullFrames = true;
+    }
+    BufferHistoryInfo& currentFrameInfo = bufferInfoRecords_.at[count];
+
+    bufferInfoCountRecords_.requestDuration -= currentFrameInfo.requestDuration;
+    bufferInfoCountRecords_.compositionDuration -= currentFrameInfo.compositionDuration;
+    bufferInfoCountRecords_.dirtyListLength -= currentFrameInfo.dirtyListLength;
+    
+    // request time out or not
+    currentFrameInfo.requestDuration = 1;
+    bufferInfoCountRecords_.requestDuration += 1;
+    // composition darution
+    currentFrameInfo.compositionDuration = 0;
+    bufferInfoCountRecords_.compositionDuration += 0;
+    // dirtylist length
+    currentFrameInfo.dirtyListLength = dirtyList_.size();
+    bufferInfoCountRecords_.dirtyListLength += dirtyList_.size();
+
+    count = (count + 1) % FRAME_RECORDS_NUM;
+    if (fullFrames) {
+        BufferHistoryInfo currentAvarageInfo;
+        currentAvarageInfo.requestDuration = static_cast<int64_t>( bufferInfoCountRecords_.requestDuration / FRAME_RECORDS_NUM);
+        currentAvarageInfo.compositionDuration = static_cast<int64_t>( bufferInfoCountRecords_.compositionDuration / FRAME_RECORDS_NUM);
+        currentAvarageInfo.dirtyListLength = static_cast<uint32_t>( bufferInfoCountRecords_.dirtyListLength / FRAME_RECORDS_NUM);
+
+        AdjustBufferSize(currentAvarageInfo);
+    }
+
+    return GSERROR_OK;
+}
+*/
 
 void BufferQueue::DumpCache(std::string &result)
 {

@@ -64,7 +64,7 @@ void CompareOHHardwareBufferConfig(OH_HardwareBuffer_Config &config, OH_Hardware
 int32_t main(int32_t argc, const char *argv[])
 {
     LOGI("sample start");
-    OHHardwareBuffer* buffer = OH_HardwareBuffer_HardwareBufferAlloc(&config);
+    OH_HardwareBuffer* buffer = OH_HardwareBuffer_HardwareBufferAlloc(&config);
     if (buffer == nullptr) {
         LOGE("HardwareBufferAlloc failed");
     }

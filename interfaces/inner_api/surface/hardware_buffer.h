@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 struct HardwareBuffer;
-typedef struct HardwareBuffer OHHardwareBuffer;
+typedef struct HardwareBuffer OH_HardwareBuffer;
 
 /**
  * @brief <b>HardwareBuffer</b> config. \n
@@ -71,7 +71,7 @@ typedef struct {
  * @since 8
  * @version 2.0
  */
-OHHardwareBuffer* OH_HardwareBuffer_HardwareBufferAlloc(const OH_HardwareBuffer_Config* config);
+OH_HardwareBuffer* OH_HardwareBuffer_HardwareBufferAlloc(const OH_HardwareBuffer_Config* config);
 
 /**
  * @brief Adds the reference count of a HardwareBuffer.
@@ -82,7 +82,7 @@ OHHardwareBuffer* OH_HardwareBuffer_HardwareBufferAlloc(const OH_HardwareBuffer_
  * @since 8
  * @version 2.0
  */
-int32_t OH_HardwareBuffer_HardwareBufferReference(OHHardwareBuffer *buffer);
+int32_t OH_HardwareBuffer_HardwareBufferReference(OH_HardwareBuffer *buffer);
 
 /**
  * @brief Decreases the reference count of a HardwareBuffer and, when the reference count reaches 0, \n
@@ -94,7 +94,7 @@ int32_t OH_HardwareBuffer_HardwareBufferReference(OHHardwareBuffer *buffer);
  * @since 8
  * @version 2.0
  */
-int32_t OH_HardwareBuffer_HardwareBufferUnreference(OHHardwareBuffer *buffer);
+int32_t OH_HardwareBuffer_HardwareBufferUnreference(OH_HardwareBuffer *buffer);
 
 /**
  * @brief Return a config of the OHHardwareBuffer in the passed OHHardwareBufferConfig struct.
@@ -107,7 +107,7 @@ int32_t OH_HardwareBuffer_HardwareBufferUnreference(OHHardwareBuffer *buffer);
  * @since 8
  * @version 2.0
  */
-void OH_HardwareBuffer_GetHardwareBufferConfig(OHHardwareBuffer *buffer, OH_HardwareBuffer_Config* config);
+void OH_HardwareBuffer_GetHardwareBufferConfig(OH_HardwareBuffer *buffer, OH_HardwareBuffer_Config* config);
 
 /**
  * @brief Provide direct cpu access to the OHHardwareBuffer in the process's address space.
@@ -120,7 +120,7 @@ void OH_HardwareBuffer_GetHardwareBufferConfig(OHHardwareBuffer *buffer, OH_Hard
  * @version 2.0
  */
 
-int32_t OH_HardwareBuffer_HardwareBufferMap(OHHardwareBuffer *buffer, void **virAddr);
+int32_t OH_HardwareBuffer_HardwareBufferMap(OH_HardwareBuffer *buffer, void **virAddr);
 
 /**
  * @brief Remove direct cpu access ability of the HardwareBuffer in the process's address space.
@@ -131,7 +131,7 @@ int32_t OH_HardwareBuffer_HardwareBufferMap(OHHardwareBuffer *buffer, void **vir
  * @since 8
  * @version 2.0
  */
-int32_t OH_HardwareBuffer_HardwareBufferUnmap(OHHardwareBuffer *buffer);
+int32_t OH_HardwareBuffer_HardwareBufferUnmap(OH_HardwareBuffer *buffer);
 
 /**
  * @brief Get the systen wide unique sequence number of the HardwareBuffer.
@@ -142,7 +142,7 @@ int32_t OH_HardwareBuffer_HardwareBufferUnmap(OHHardwareBuffer *buffer);
  * @since 8
  * @version 2.0
  */
-uint32_t OH_HardwareBuffer_HardwareBufferGetSeqNum(OHHardwareBuffer *buffer);
+uint32_t OH_HardwareBuffer_HardwareBufferGetSeqNum(OH_HardwareBuffer *buffer);
 
 #ifdef __cplusplus
 }

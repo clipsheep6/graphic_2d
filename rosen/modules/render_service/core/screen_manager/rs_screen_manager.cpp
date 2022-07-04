@@ -663,7 +663,8 @@ sptr<Surface> RSScreenManager::GetProducerSurface(ScreenId id) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    // GetProducerSurface can only be called after QueryScreenState and the state is ScreenState::PRODUCER_SURFACE_ENABLE.
+    // GetProducerSurface can only be called after QueryScreenState
+    // And the state is ScreenState::PRODUCER_SURFACE_ENABLE.
     // Therefore, screens_.count(id) == 1 is guaranteed.
     return screens_.at(id)->GetProducerSurface();
 }

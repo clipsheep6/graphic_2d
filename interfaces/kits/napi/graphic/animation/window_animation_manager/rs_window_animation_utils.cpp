@@ -56,6 +56,19 @@ NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationTarget(NativeEngine&
     return objValue;
 }
 
+NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationTargetArray(NativeEngine& engine,
+    const std::vector<sptr<RSWindowAnimationTarget>>& targets)
+{
+    WALOGD("CreateJsWindowAnimationTargetArray");
+    NativeValue* arrayValue = engine.CreateArray(targets.size());
+    NativeArray* array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    uint32_t index = 0;
+    for (const auto& target : targets) {
+        array->SetElement(index++, CreateJsWindowAnimationTarget(engine, target));
+    }
+    return arrayValue;
+}
+
 NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationFinishedCallback(
     NativeEngine& engine, const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback)
 {

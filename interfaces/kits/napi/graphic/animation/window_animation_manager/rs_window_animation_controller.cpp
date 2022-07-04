@@ -156,6 +156,29 @@ void RSWindowAnimationController::OnScreenUnlock(const sptr<RSIWindowAnimationFi
         std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 
+void RSWindowAnimationController::OnMinimizeAllWindow(
+    std::vector<sptr<RSWindowAnimationTarget>> minimizingWindowsTarget,
+    const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback)
+{
+    WALOGD("Window animation controller on minimize all windows.");
+    wptr<RSWindowAnimationController> controllerWptr = this;
+    std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (
+        [controllerWptr, minimizingWindowsTarget, finishedCallback](NativeEngine&, AsyncTask&, int32_t) {
+            auto controllerSptr = controllerWptr.promote();
+            if (controllerSptr == nullptr) {
+                WALOGE("Controller is null!");
+                return;
+            }
+
+            controllerSptr->HandleOnMinimizeAllWindow(minimizingWindowsTarget, finishedCallback);
+        }
+    );
+
+    NativeReference* callback = nullptr;
+    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
+    AsyncTask::Schedule(engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
 void RSWindowAnimationController::HandleOnStartApp(StartingAppType type,
     const sptr<RSWindowAnimationTarget>& startingWindowTarget,
     const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback)
@@ -204,6 +227,18 @@ void RSWindowAnimationController::HandleOnMinimizeWindow(const sptr<RSWindowAnim
         RSWindowAnimationUtils::CreateJsWindowAnimationFinishedCallback(engine_, finishedCallback),
     };
     CallJsFunction("onMinimizeWindow", argv, ARGC_TWO);
+}
+
+void RSWindowAnimationController::HandleOnMinimizeAllWindow(
+    std::vector<sptr<RSWindowAnimationTarget>> minimizingWindowsTarget,
+    const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback)
+{
+    WALOGD("Handle on minimize all window.");
+    NativeValue* argv[] = {
+        RSWindowAnimationUtils::CreateJsWindowAnimationTargetArray(engine_, minimizingWindowsTarget),
+        RSWindowAnimationUtils::CreateJsWindowAnimationFinishedCallback(engine_, finishedCallback),
+    };
+    CallJsFunction("onMinimizeAllWindow", argv, ARGC_TWO);
 }
 
 void RSWindowAnimationController::HandleOnCloseWindow(const sptr<RSWindowAnimationTarget>& closingWindowTarget,

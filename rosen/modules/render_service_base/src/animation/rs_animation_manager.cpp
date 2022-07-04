@@ -86,6 +86,9 @@ const std::shared_ptr<RSRenderAnimation> RSAnimationManager::GetAnimation(Animat
 void RSAnimationManager::OnAnimationRemove(const std::shared_ptr<RSRenderAnimation>& animation)
 {
     animationNum_[animation->GetProperty()]--;
+    if (animationNum_[animation->GetProperty()] == 0) {
+        animation->UpdateValueOnAnimationRemove();
+    }
 }
 
 void RSAnimationManager::OnAnimationAdd(const std::shared_ptr<RSRenderAnimation>& animation)

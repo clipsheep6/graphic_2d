@@ -69,6 +69,14 @@ public:
         return renderCurveAnimation;
     }
 #endif
+
+    void UpdateValueOnAnimationRemove() override
+    {
+        auto endFraction = RSRenderPropertyAnimation<T>::animationFraction_.GetEndFraction();
+        auto endValue = RSValueEstimator::Estimate(endFraction, startValue_, endValue_);
+        RSRenderPropertyAnimation<T>::SetPropertyValue(endValue);
+    }
+
 protected:
     void OnSetFraction(float fraction) override
     {

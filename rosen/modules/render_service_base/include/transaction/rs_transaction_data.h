@@ -64,6 +64,11 @@ public:
         return timestamp_;
     }
 
+    uint64_t GetTransactionFlag() const
+    {
+        return transactionFlag_;
+    }
+
     std::vector<std::tuple<NodeId, FollowType, std::unique_ptr<RSCommand>>>& GetPayload()
     {
         return payload_;
@@ -78,6 +83,7 @@ private:
 #endif
     std::vector<std::tuple<NodeId, FollowType, std::unique_ptr<RSCommand>>> payload_;
     uint64_t timestamp_ = 0;
+    uint64_t transactionFlag_ = 0;
 
     friend class RSTransactionProxy;
     friend class RSMessageProcessor;

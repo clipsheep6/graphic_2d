@@ -89,9 +89,10 @@ void RSMainThread::Start()
 void RSMainThread::ProcessCommand()
 {
     const auto& nodeMap = context_.GetNodeMap();
-    RS_TRACE_BEGIN("RSMainThread::ProcessCommand");
+    RS_TRACE_BEGIN("RSMainThread::ProcessCommand" + pendingTransactionFlags_);
     {
         std::lock_guard<std::mutex> lock(transitionDataMutex_);
+        pendingTransactionFlags_.clear();
         if (!pendingEffectiveCommands_.empty()) {
             effectiveCommands_.insert(effectiveCommands_.end(),
                 std::make_move_iterator(pendingEffectiveCommands_.begin()),
@@ -396,8 +397,13 @@ void RSMainThread::RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsT
         }
         auto timestamp = transactionData->GetTimestamp();
         RS_LOGD("RSMainThread::RecvRSTransactionData timestamp = %llu", timestamp);
+        static bool isUniRenderForAll = RSUniRenderJudgement::GetUniRenderEnabledType() ==
+            UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL;
+        if (isUniRenderForAll) {
+            pendingTransactionFlags_ += ", " + std::to_string(transactionData->GetTransactionFlag());
+        }
         for (auto& [nodeId, followType, command] : transactionData->GetPayload()) {
-            if (nodeId == 0 || followType == FollowType::NONE) {
+            if (nodeId == 0 || followType == FollowType::NONE || isUniRenderForAll) {
                 pendingEffectiveCommands_.emplace_back(std::move(command));
                 continue;
             }

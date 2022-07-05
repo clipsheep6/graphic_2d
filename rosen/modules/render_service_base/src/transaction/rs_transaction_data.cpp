@@ -49,6 +49,7 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
         }
     }
     success = success && parcel.WriteUint64(timestamp_);
+    success = success && parcel.WriteUint64(transactionFlag_);
     return success;
 }
 #endif // ROSEN_OHOS
@@ -118,7 +119,7 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
         }
         payload_.emplace_back(nodeId, static_cast<FollowType>(followType), std::move(command));
     }
-    return parcel.ReadUint64(timestamp_);
+    return parcel.ReadUint64(timestamp_) && parcel.ReadUint64(transactionFlag_);
 }
 
 #endif // ROSEN_OHOS

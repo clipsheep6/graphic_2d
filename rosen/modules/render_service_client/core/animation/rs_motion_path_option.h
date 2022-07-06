@@ -65,11 +65,21 @@ public:
         return rotationMode_;
     }
 
+    void SetPositionType(const RSPositionType& positionType){
+        positionType_ = positionType;
+    }
+
+    RSPositionType GetPositionType() const
+    {
+        return positionType_;
+    }
+
 private:
     std::string path_;
     float beginFraction_ { FRACTION_MIN };
     float endFraction_ { FRACTION_MAX };
     RotationMode rotationMode_ { RotationMode::ROTATE_NONE };
+    RSPositionType positionType_ {RSPositionType::RELATIVE};
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -15,19 +15,19 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_DISPLAY_NODE_H
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_DISPLAY_NODE_H
 
-#include "ui/rs_base_node.h"
+#include "ui/rs_node.h"
 
 class SkCanvas;
 namespace OHOS {
 namespace Rosen {
 
-class RS_EXPORT RSDisplayNode : public RSBaseNode {
+class RS_EXPORT RSDisplayNode : public RSNode {
 public:
     using WeakPtr = std::weak_ptr<RSDisplayNode>;
     using SharedPtr = std::shared_ptr<RSDisplayNode>;
     static inline constexpr RSUINodeType Type = RSUINodeType::DISPLAY_NODE;
 
-    virtual ~RSDisplayNode();
+    ~RSDisplayNode() override;
 
     static SharedPtr Create(const RSDisplayNodeConfig& displayNodeConfig);
 
@@ -37,7 +37,11 @@ public:
 
     void SetSecurityDisplay(bool isSecurityDisplay);
 
+    void SetDisplayNodeMirrorConfig(const RSDisplayNodeConfig& displayNodeConfig);
+
     bool GetSecurityDisplay() const;
+
+    bool IsMirrorDisplay() const;
 
     RSUINodeType GetType() const override
     {
@@ -56,6 +60,7 @@ private:
     int32_t offsetX_;
     int32_t offsetY_;
     bool isSecurityDisplay_ = false;
+    bool isMirroredDisplay_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -64,7 +64,7 @@ GSError BufferQueueProducer::CheckConnectLocked()
 {
     if (connectedPid_ == 0) {
         BLOGNI("this BufferQueue has no connections");
-        return GSERROR_OK;
+        return GSERROR_INVALID_OPERATING;
     }
 
     if (connectedPid_ != GetCallingPid()) {
@@ -133,7 +133,6 @@ int32_t BufferQueueProducer::CancelBufferRemote(MessageParcel &arguments, Messag
 
 int32_t BufferQueueProducer::FlushBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
 {
-    sptr<SyncFence> fence = SyncFence::INVALID_FENCE;
     uint32_t sequence;
     BufferFlushConfig config;
     sptr<BufferExtraData> bedataimpl = new BufferExtraDataImpl;
@@ -141,7 +140,7 @@ int32_t BufferQueueProducer::FlushBufferRemote(MessageParcel &arguments, Message
     sequence = arguments.ReadUint32();
     bedataimpl->ReadFromParcel(arguments);
 
-    fence->ReadFromMessageParcel(arguments);
+    sptr<SyncFence> fence = SyncFence::ReadFromMessageParcel(arguments);
     ReadFlushConfig(arguments, config);
 
     GSError sret = FlushBuffer(sequence, bedataimpl, fence, config);
@@ -521,5 +520,15 @@ GSError BufferQueueProducer::SetTunnelHandle(const ExtDataHandle *handle)
         return GSERROR_INVALID_ARGUMENTS;
     }
     return bufferQueue_->SetTunnelHandle(handle);
+}
+
+bool BufferQueueProducer::GetStatus() const
+{
+    return bufferQueue_->GetStatus();
+}
+
+void BufferQueueProducer::SetStatus(bool status)
+{
+    bufferQueue_->SetStatus(status);
 }
 }; // namespace OHOS

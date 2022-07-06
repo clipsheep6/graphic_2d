@@ -26,6 +26,7 @@
 #include "common/rs_vector4.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_root_render_node.h"
+#include "pipeline/rs_occlusion_config.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
 #include "property/rs_transition_properties.h"
@@ -92,8 +93,10 @@ void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canva
     auto currentGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
     if (currentGeoPtr != nullptr) {
         currentGeoPtr->UpdateByMatrixFromSelf();
+        auto matrix = currentGeoPtr->GetMatrix();
+        matrix.setTranslate(std::ceil(matrix.getTranslateX()), std::ceil(matrix.getTranslateY()));
+        canvas.concat(matrix);
     }
-    canvas.concat(currentGeoPtr->GetMatrix());
 
     // apply transition properties to canvas
     auto transitionProperties = GetAnimationManager().GetTransitionProperties();
@@ -101,7 +104,8 @@ void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canva
     RSPropertiesPainter::DrawTransitionProperties(transitionProperties, center, canvas);
 
     // clip by bounds
-    canvas.clipRect(SkRect::MakeWH(properties.GetBoundsWidth(), properties.GetBoundsHeight()));
+    canvas.clipRect(
+        SkRect::MakeWH(std::floor(properties.GetBoundsWidth()), std::floor(properties.GetBoundsHeight())));
 
     // extract srcDest and dstRect from SkCanvas, localCLipBounds as SrcRect, deviceClipBounds as DstRect
     auto localClipRect = getLocalClipBounds(canvas);
@@ -130,20 +134,16 @@ void RSSurfaceRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas
 void RSSurfaceRenderNode::CollectSurface(
     const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec)
 {
-    const std::string leashWin = "leashWindow";
-    const std::string startWin = "startingWindow";
-    if (GetName().find(startWin) != std::string::npos) {
+    if (RSOcclusionConfig::GetInstance().IsStartingWindow(GetName())) {
         return;
     }
-    if (GetName().find(leashWin) != std::string::npos) {
+    if (RSOcclusionConfig::GetInstance().IsLeashWindow(GetName())) {
         for (auto& child : node->GetSortedChildren()) {
             child->CollectSurface(child, vec);
         }
         return;
     }
-    if (IsOnTheTree()) {
-        vec.emplace_back(shared_from_this());
-    }
+    vec.emplace_back(shared_from_this());
 }
 
 void RSSurfaceRenderNode::Prepare(const std::shared_ptr<RSNodeVisitor>& visitor)

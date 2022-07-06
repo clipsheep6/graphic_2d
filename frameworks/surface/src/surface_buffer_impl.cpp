@@ -24,6 +24,7 @@
 #include "buffer_log.h"
 #include "buffer_manager.h"
 #include "buffer_extra_data_impl.h"
+#include "native_buffer.h"
 
 namespace OHOS {
 namespace {
@@ -112,6 +113,11 @@ GSError SurfaceBufferImpl::Alloc(const BufferRequestConfig &config)
         if (handle_ != nullptr) {
             FreeBufferHandleLocked();
         }
+    }
+    
+    GSError ret = CheckBufferConfig(config.width, config.height, config.format, config.usage);
+    if (ret != GSERROR_OK) {
+        return GSERROR_INVALID_ARGUMENTS;
     }
 
     BufferHandle *handle = nullptr;
@@ -451,6 +457,11 @@ GSError SurfaceBufferImpl::ReadFromMessageParcel(MessageParcel &parcel)
     return GSERROR_OK;
 }
 
+OH_NativeBuffer* SurfaceBufferImpl::SurfaceBufferToNativeBuffer()
+{
+    return reinterpret_cast<OH_NativeBuffer *>(this);
+}
+
 uint32_t SurfaceBufferImpl::GetSeqNum() const
 {
     return sequenceNumber_;
@@ -464,5 +475,21 @@ sptr<EglData> SurfaceBufferImpl::GetEglData() const
 void SurfaceBufferImpl::SetEglData(const sptr<EglData>& data)
 {
     eglData_ = data;
+}
+
+GSError SurfaceBufferImpl::CheckBufferConfig(int32_t width, int32_t height,
+                                             int32_t format, int32_t usage)
+{
+    if (width <= 0 || height <= 0) {
+        BLOGE("width or height is greater than 0, now is w %{public}d h %{public}d", width, height);
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
+    if (format < 0 || format > PIXEL_FMT_BUTT) {
+        BLOGE("format [0, %{public}d], now is %{public}d", PIXEL_FMT_BUTT, format);
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
+    return GSERROR_OK;
 }
 } // namespace OHOS

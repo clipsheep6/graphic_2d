@@ -109,7 +109,8 @@ ohos_shared_library("libgraphic_utils") {
     public_deps += [ "color_manager:color_manager" ]
   }
   relative_install_dir = "chipset-sdk"
-  part_name = "graphic_standard"
+
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }
 ## Build libgraphic_utils.so }}}

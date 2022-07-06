@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-module_out_path = "graphic_standard/surface"
+module_out_path = "graphic_graphic_2d/surface"
 
 group("unittest") {
   testonly = true
@@ -27,6 +27,7 @@ group("unittest") {
     ":buffer_queue_test",
     ":buffer_shared_test",
     ":consumer_surface_test",
+    ":native_buffer_test",
     ":native_window_test",
     ":producer_surface_test",
     ":surface_buffer_impl_test",
@@ -166,6 +167,17 @@ ohos_unittest("native_window_test") {
 
 ## UnitTest native_window_test }}}
 
+## UnitTest native_buffer_test {{{
+ohos_unittest("native_buffer_test") {
+  module_out_path = module_out_path
+
+  sources = [ "native_buffer_test.cpp" ]
+
+  deps = [ ":surface_test_common" ]
+}
+
+## UnitTest native_buffer_test }}}
+
 ## Build surface_test_common.a {{{
 config("surface_test_common_public_config") {
   include_dirs = [
@@ -197,6 +209,6 @@ ohos_static_library("surface_test_common") {
     "//third_party/googletest:gtest_main",
   ]
   subsystem_name = "graphic"
-  part_name = "graphic_standard"
+  part_name = "graphic_graphic_2d"
 }
 ## Build surface_test_common.a }}}

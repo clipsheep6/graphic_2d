@@ -25,6 +25,7 @@
 #include "surface_type.h"
 #include "egl_data.h"
 #include "buffer_extra_data.h"
+#include "native_buffer.h"
 
 namespace OHOS {
 class MessageParcel;
@@ -70,6 +71,19 @@ public:
     virtual GSError Unmap() = 0;
     virtual GSError FlushCache() = 0;
     virtual GSError InvalidateCache() = 0;
+
+    static SurfaceBuffer* NativeBufferToSurfaceBuffer(OH_NativeBuffer* buffer)
+    {
+        return reinterpret_cast<SurfaceBuffer *>(buffer);
+    };
+
+    static const SurfaceBuffer* NativeBufferToSurfaceBuffer(OH_NativeBuffer const* buffer)
+    {
+        return reinterpret_cast<SurfaceBuffer const*>(buffer);
+    };
+
+    virtual OH_NativeBuffer* SurfaceBufferToNativeBuffer() = 0;
+
 protected:
     SurfaceBuffer(){}
     SurfaceBuffer(const SurfaceBuffer&) = delete;

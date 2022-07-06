@@ -15,22 +15,23 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_DISPLAY_RENDER_NODE_H
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_DISPLAY_RENDER_NODE_H
 
+#include <ibuffer_consumer_listener.h>
 #include <memory>
 #include <surface.h>
-#include <ibuffer_consumer_listener.h>
 
-#include "platform/drawing/rs_surface.h"
-#include "pipeline/rs_base_render_node.h"
-#include "pipeline/rs_surface_handler.h"
-#include "render_context/render_context.h"
 #include "sync_fence.h"
+
+#include "pipeline/rs_render_node.h"
+#include "pipeline/rs_surface_handler.h"
+#include "platform/drawing/rs_surface.h"
+#include "render_context/render_context.h"
 
 namespace OHOS {
 namespace Rosen {
-class RSDisplayRenderNode : public RSBaseRenderNode, public RSSurfaceHandler {
+class RSDisplayRenderNode : public RSRenderNode, public RSSurfaceHandler {
 public:
     enum CompositeType {
-        COMPATIBLE_COMPOSITE = 0,
+        UNI_RENDER_COMPOSITE = 0,
         HARDWARE_COMPOSITE,
         SOFTWARE_COMPOSITE
     };
@@ -39,7 +40,7 @@ public:
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::DISPLAY_NODE;
 
     explicit RSDisplayRenderNode(NodeId id, const RSDisplayNodeConfig& config, std::weak_ptr<RSContext> context = {});
-    virtual ~RSDisplayRenderNode();
+    ~RSDisplayRenderNode() override;
 
     void SetScreenId(uint64_t screenId)
     {
@@ -66,9 +67,9 @@ public:
     {
         return offsetY_;
     }
-    
-    void CollectSurface(const std::shared_ptr<RSBaseRenderNode>& node,
-                        std::vector<RSBaseRenderNode::SharedPtr>& vec) override;
+
+    void CollectSurface(
+        const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec) override;
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
@@ -84,8 +85,11 @@ public:
     void SetForceSoftComposite(bool flag);
     bool IsForceSoftComposite() const;
     void SetMirrorSource(SharedPtr node);
+    void ResetMirrorSource();
+    void SetIsMirrorDisplay(bool isMirror);
     void SetSecurityDisplay(bool isSecurityDisplay);
     bool GetSecurityDisplay() const;
+    bool SkipFrame(uint32_t skipFrameInterval);
 
     WeakPtr GetMirrorSource() const
     {
@@ -127,6 +131,7 @@ private:
     std::shared_ptr<RSSurface> surface_;
     bool surfaceCreated_ { false };
     sptr<IBufferConsumerListener> consumerListener_;
+    uint64_t frameCount_ = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

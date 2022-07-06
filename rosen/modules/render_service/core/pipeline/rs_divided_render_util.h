@@ -19,11 +19,13 @@
 #include <surface.h>
 #include "display_type.h"
 #include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
 
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_surface_render_node.h"
+#include "rs_composer_adapter.h"
 #include "screen_manager/screen_types.h"
 #include "sync_fence.h"
 #ifdef RS_ENABLE_EGLIMAGE
@@ -43,6 +45,7 @@ struct BufferDrawParam {
     Vector4f cornerRadius;
     bool isNeedClip = true;
     SkPaint paint;
+    SkColor backgroundColor = SK_ColorTRANSPARENT;
     ColorGamut targetColorGamut = ColorGamut::COLOR_GAMUT_SRGB;
 };
 
@@ -51,6 +54,8 @@ public:
     using CanvasPostProcess = std::function<void(RSPaintFilterCanvas&, BufferDrawParam&)>;
     static void DrawBuffer(RSPaintFilterCanvas& canvas, BufferDrawParam& bufferDrawParam,
         CanvasPostProcess process = nullptr);
+    // YUV Layer clip hole
+    static void ClipHole(RSPaintFilterCanvas& canvas, BufferDrawParam& bufferDrawParam);
 
 #ifdef RS_ENABLE_EGLIMAGE
     static void DrawImage(std::shared_ptr<RSEglImageManager> eglImageManager, GrContext* grContext,
@@ -58,11 +63,11 @@ public:
 #endif // RS_ENABLE_EGLIMAGE
 
     static BufferDrawParam CreateBufferDrawParam(RSSurfaceRenderNode& node, SkMatrix canvasMatrix = SkMatrix(),
-        ScreenRotation rotation = ScreenRotation::ROTATION_0, SkPaint paint = SkPaint());
+        ScreenRotation rotation = ScreenRotation::ROTATION_0);
     static void DealAnimation(RSPaintFilterCanvas& canvas, RSSurfaceRenderNode& node, BufferDrawParam& params,
         const Vector2f& center);
     static void InitEnableClient();
-    static bool IsNeedClient(RSSurfaceRenderNode* node);
+    static bool IsNeedClient(RSSurfaceRenderNode& node, const ComposeInfo& info);
 
 private:
     static SkMatrix GetCanvasTransform(const RSSurfaceRenderNode& node, const SkMatrix& canvasMatrix,

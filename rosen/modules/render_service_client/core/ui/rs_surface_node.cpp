@@ -71,6 +71,7 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
             transactionProxy->AddCommand(command, isWindow);
         }
     }
+    node->SetFrameGravity(Gravity::RESIZE);
     ROSEN_LOGD("RsDebug RSSurfaceNode::Create id:%llu", node->GetId());
     return node;
 }
@@ -81,6 +82,7 @@ void RSSurfaceNode::CreateNodeInRenderThread(bool isProxy)
         ROSEN_LOGI("RsDebug RSSurfaceNode::CreateNodeInRenderThread id:%llu already has RT Node", GetId());
         return;
     }
+    isChildOperationDisallowed_ = true;
     std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeCreate>(GetId());
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
@@ -108,7 +110,7 @@ void RSSurfaceNode::CreateNodeInRenderThread(bool isProxy)
 
 void RSSurfaceNode::AddChild(std::shared_ptr<RSBaseNode> child, int index)
 {
-    if (!isRenderServiceNode_) {
+    if (isChildOperationDisallowed_ && !isRenderServiceNode_) {
         ROSEN_LOGE("RSSurfaceNode::AddChild for non RenderServiceNodeType surfaceNode is not allowed");
         return;
     }
@@ -117,7 +119,7 @@ void RSSurfaceNode::AddChild(std::shared_ptr<RSBaseNode> child, int index)
 
 void RSSurfaceNode::RemoveChild(std::shared_ptr<RSBaseNode> child)
 {
-    if (!isRenderServiceNode_) {
+    if (isChildOperationDisallowed_ && !isRenderServiceNode_) {
         ROSEN_LOGE("RSSurfaceNode::RemoveChild for non RenderServiceNodeType surfaceNode is not allowed");
         return;
     }
@@ -126,7 +128,7 @@ void RSSurfaceNode::RemoveChild(std::shared_ptr<RSBaseNode> child)
 
 void RSSurfaceNode::ClearChildren()
 {
-    if (!isRenderServiceNode_) {
+    if (isChildOperationDisallowed_ && !isRenderServiceNode_) {
         ROSEN_LOGE("RSSurfaceNode::ClearChildren for non RenderServiceNodeType surfaceNode is not allowed");
         return;
     }
@@ -201,7 +203,7 @@ bool RSSurfaceNode::Marshalling(Parcel& parcel) const
     return parcel.WriteUint64(GetId()) && parcel.WriteString(name_) && parcel.WriteBool(IsRenderServiceNode());
 }
 
-RSSurfaceNode* RSSurfaceNode::Unmarshalling(Parcel& parcel)
+RSSurfaceNode::SharedPtr RSSurfaceNode::Unmarshalling(Parcel& parcel)
 {
     uint64_t id = UINT64_MAX;
     std::string name;
@@ -212,8 +214,9 @@ RSSurfaceNode* RSSurfaceNode::Unmarshalling(Parcel& parcel)
     }
     RSSurfaceNodeConfig config = { name };
 
-    RSSurfaceNode* surfaceNode = new RSSurfaceNode(config, isRenderServiceNode);
+    SharedPtr surfaceNode(new RSSurfaceNode(config, isRenderServiceNode));
     surfaceNode->SetId(id);
+    RSNodeMap::MutableInstance().RegisterNode(surfaceNode);
 
     return surfaceNode;
 }

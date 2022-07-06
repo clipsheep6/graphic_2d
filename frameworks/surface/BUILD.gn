@@ -50,6 +50,7 @@ ohos_shared_library("surface") {
     "src/buffer_queue_producer.cpp",
     "src/buffer_utils.cpp",
     "src/consumer_surface.cpp",
+    "src/native_buffer.cpp",
     "src/native_window.cpp",
     "src/producer_surface.cpp",
     "src/surface.cpp",
@@ -90,7 +91,8 @@ ohos_shared_library("surface") {
   symlink_target_name = [ "libnative_window.so" ]
   install_images = [ system_base_dir ]
   relative_install_dir = "chipset-pub-sdk"
-  part_name = "graphic_standard"
+
+  part_name = "graphic_graphic_2d"
   subsystem_name = "graphic"
 }
 

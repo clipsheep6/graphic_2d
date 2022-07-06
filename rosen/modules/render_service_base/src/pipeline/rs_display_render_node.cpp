@@ -22,19 +22,12 @@
 
 namespace OHOS {
 namespace Rosen {
-RSDisplayRenderNode::RSDisplayRenderNode(
-    NodeId id,
-    const RSDisplayNodeConfig& config,
-    std::weak_ptr<RSContext> context)
-    : RSBaseRenderNode(id, context),
-      RSSurfaceHandler(id),
-      screenId_(config.screenId),
-      offsetX_(0), offsetY_(0),
+RSDisplayRenderNode::RSDisplayRenderNode(NodeId id, const RSDisplayNodeConfig& config, std::weak_ptr<RSContext> context)
+    : RSRenderNode(id, context), RSSurfaceHandler(id), screenId_(config.screenId), offsetX_(0), offsetY_(0),
       isMirroredDisplay_(config.isMirrored)
-{
-}
+{}
 
-RSDisplayRenderNode::~RSDisplayRenderNode() {}
+RSDisplayRenderNode::~RSDisplayRenderNode() = default;
 
 void RSDisplayRenderNode::CollectSurface(
     const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec)
@@ -88,6 +81,11 @@ void RSDisplayRenderNode::SetMirrorSource(SharedPtr node)
     mirrorSource_ = node;
 }
 
+void RSDisplayRenderNode::ResetMirrorSource()
+{
+    mirrorSource_.reset();
+}
+
 bool RSDisplayRenderNode::IsMirrorDisplay() const
 {
     return isMirroredDisplay_;
@@ -101,6 +99,13 @@ void RSDisplayRenderNode::SetSecurityDisplay(bool isSecurityDisplay)
 bool RSDisplayRenderNode::GetSecurityDisplay() const
 {
     return isSecurityDisplay_;
+}
+
+void RSDisplayRenderNode::SetIsMirrorDisplay(bool isMirror)
+{
+    isMirroredDisplay_ = isMirror;
+    RS_LOGD("RSDisplayRenderNode::SetIsMirrorDisplay, node id:[%llu], isMirrorDisplay: [%s]",
+        GetId(), IsMirrorDisplay() ? "true" : "false");
 }
 
 bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
@@ -133,6 +138,19 @@ bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
 
     RS_LOGI("RSDisplayRenderNode::CreateSurface end");
     surfaceCreated_ = true;
+    return true;
+}
+
+bool RSDisplayRenderNode::SkipFrame(uint32_t skipFrameInterval)
+{
+    frameCount_++;
+    // ensure skipFrameInterval is not 0
+    if (skipFrameInterval == 0) {
+        return false;
+    }
+    if ((frameCount_ - 1) % skipFrameInterval == 0) {
+        return false;
+    }
     return true;
 }
 } // namespace Rosen

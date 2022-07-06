@@ -110,7 +110,8 @@ float RSPathAnimation::GetEndFraction() const
     return endFraction_;
 }
 
-void RSPathAnimation::SetPositionType(const RSPositionType& positionType){
+void RSPathAnimation::SetPositionType(const RSPositionType& positionType)
+{
     positionType_ = positionType;
 }
 

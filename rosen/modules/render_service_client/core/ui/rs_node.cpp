@@ -215,7 +215,7 @@ RSPositionType RSNode::GetPositionType() const
     return motionPathOption_->GetPositionType();
 }
 
-bool RSNode::HasPropertyAnimation(const RSAnimatableProperty& property)
+bool RSNode::HasPropertyAnimation(const RSAnimatableProperty& property) const
 {
     // check if any animation matches the property bitmask
     auto pred = [property](const auto& it) -> bool {

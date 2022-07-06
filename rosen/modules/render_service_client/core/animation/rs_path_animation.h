@@ -78,8 +78,7 @@ private:
     RotationMode rotationMode_ { RotationMode::ROTATE_NONE };
     RSAnimationTimingCurve timingCurve_ { RSAnimationTimingCurve::DEFAULT };
     std::shared_ptr<RSPath> animationPath_;
-    RSPositionType positionType_ {RSPositionType::RELATIVE};
-
+    RSPositionType positionType_ { RSPositionType::RELATIVE };
 };
 } // namespace Rosen
 } // namespace OHOS

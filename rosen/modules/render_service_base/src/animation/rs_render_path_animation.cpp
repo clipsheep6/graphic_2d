@@ -143,7 +143,8 @@ float RSRenderPathAnimation::GetEndFraction() const
     return endFraction_;
 }
 
-void RSRenderPathAnimation::SetPositionType(const RSPositionType& positionType){
+void RSRenderPathAnimation::SetPositionType(const RSPositionType& positionType)
+{
     positionType_ = positionType;
 }
 
@@ -168,7 +169,7 @@ void RSRenderPathAnimation::OnAnimate(float fraction)
     if (positionType_ == RSPositionType::OFFSET) {
         position += RSRenderPropertyAnimation::GetOriginValue();
     }
-    SetPathValue(position , tangent);
+    SetPathValue(position, tangent);
 #endif
 }
 

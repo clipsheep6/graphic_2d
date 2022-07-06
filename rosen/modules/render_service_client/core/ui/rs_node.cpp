@@ -205,7 +205,17 @@ const std::shared_ptr<RSMotionPathOption> RSNode::GetMotionPathOption() const
     return motionPathOption_;
 }
 
-bool RSNode::HasPropertyAnimation(const RSAnimatableProperty& property) const
+void RSNode::SetPositionType(const RSPositionType& positionType)
+{
+    motionPathOption_->SetPositionType(positionType);
+}
+
+RSPositionType RSNode::GetPositionType() const
+{
+    return motionPathOption_->GetPositionType();
+}
+
+bool RSNode::HasPropertyAnimation(const RSAnimatableProperty& property)
 {
     // check if any animation matches the property bitmask
     auto pred = [property](const auto& it) -> bool {

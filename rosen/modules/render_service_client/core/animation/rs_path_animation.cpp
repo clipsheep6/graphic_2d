@@ -110,6 +110,15 @@ float RSPathAnimation::GetEndFraction() const
     return endFraction_;
 }
 
+void RSPathAnimation::SetPositionType(const RSPositionType& positionType){
+    positionType_ = positionType;
+}
+
+RSPositionType RSPathAnimation::GetPositionType() const
+{
+    return positionType_;
+}
+
 void RSPathAnimation::OnStart()
 {
     if (!IsAnimatablePathProperty(GetProperty())) {
@@ -144,6 +153,7 @@ void RSPathAnimation::OnStart()
     animation->SetRotationMode(GetRotationMode());
     animation->SetBeginFraction(GetBeginFraction());
     animation->SetEndFraction(GetEndFraction());
+    animation->SetPositionType(GetPositionType());
     std::unique_ptr<RSCommand> command = std::make_unique<RSAnimationCreatePath>(target->GetId(), animation);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {

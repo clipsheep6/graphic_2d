@@ -197,8 +197,9 @@ void BootAnimation::CheckExitAnimation()
     std::string windowInit = system::GetParameter("persist.window.boot.inited", "0");
     if (windowInit == "1") {
         LOG("CheckExitAnimation read windowInit is 1");
-        window_->Destroy();
+        //window_->Destroy();
         int delRet = RemoveDir(DST_FILE_PATH.c_str());
+        PostTask(std::bind(&AppExecFwk::EventRunner::Stop, runner_));
         LOG("clean resources and exit animation, delRet: %{public}d", delRet);
         exit(0);
     }

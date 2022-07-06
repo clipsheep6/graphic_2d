@@ -339,8 +339,10 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWith
             param.matrix = node.GetContextMatrix();
             auto& parent = *std::static_pointer_cast<RSSurfaceRenderNode>(existedParent);
             auto parentRect = RSDividedRenderUtil::CreateBufferDrawParam(parent).clipRect;
-            //Changes the clip area from absolute to relative to the parent window and deal with clip area with scale
-            //Based on the origin of the parent window.
+            /*
+            * Changes the clip area from absolute to relative to the parent window and deal with clip area with scale
+            * Based on the origin of the parent window.
+            */
             param.clipRect.offsetTo(param.clipRect.left() - parentRect.left(), param.clipRect.top() - parentRect.top());
             SkMatrix scaleMatrix = SkMatrix::I();
             scaleMatrix.preScale(scaleX_, scaleY_, 0, 0);

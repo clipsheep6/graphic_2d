@@ -70,6 +70,16 @@ enum RSAnimationCommandType : uint16_t {
 
     // UI operation
     ANIMATION_FINISH_CALLBACK,
+
+    // remove animation
+    ANIMATION_REMOVE_ANIMATION_FLOAT,
+    ANIMATION_REMOVE_ANIMATION_COLOR,
+    ANIMATION_REMOVE_ANIMATION_MATRIX3F,
+    ANIMATION_REMOVE_ANIMATION_VEC2F,
+    ANIMATION_REMOVE_ANIMATION_VEC4F,
+    ANIMATION_REMOVE_ANIMATION_QUATERNION,
+    ANIMATION_REMOVE_ANIMATION_FILTER,
+    ANIMATION_REMOVE_ANIMATION_VEC4_COLOR,
 };
 
 class AnimationCommandHelper {
@@ -127,6 +137,21 @@ public:
         animation->Start();
         // register node on animation add
         context.RegisterAnimatingRenderNode(node);
+    }
+    template<typename T>
+    static void RemoveAnimation(RSContext& context, NodeId targetId, AnimationId animId, T param)
+    {
+        auto node = context.GetNodeMap().GetRenderNode<RSRenderNode>(targetId);
+        if (node == nullptr) {
+            return;
+        }
+        auto animation = node->GetAnimationManager().GetFinishedAnimation(animId);
+        auto renderPropertyAnimation = std::static_pointer_cast<RSRenderPropertyAnimation<T>>(animation);
+        if (renderPropertyAnimation == nullptr) {
+            return;
+        }
+        renderPropertyAnimation->SetEndValueBeforeRemove(param);
+        node->GetAnimationManager().RemoveFinishedAnimation(animId);
     }
 
     using FinishCallbackProcessor = void (*)(NodeId, AnimationId);
@@ -239,6 +264,32 @@ ADD_COMMAND(RSAnimationCreateSpringFilter,
 ADD_COMMAND(RSAnimationCreateSpringVec4Color,
     ARG(ANIMATION, ANIMATION_CREATE_SPRING_VEC4_COLOR, AnimationCommandHelper::CreateAnimation, NodeId,
         std::shared_ptr<RSRenderSpringAnimation<Vector4<Color>>>))
+
+// remove animation
+ADD_COMMAND(RSOnAnimationRemoveFloat,
+    ARG(ANIMATION, ANIMATION_REMOVE_ANIMATION_FLOAT, AnimationCommandHelper::RemoveAnimation<float>, NodeId,
+        AnimationId, float))
+ADD_COMMAND(RSOnAnimationRemoveColor,
+    ARG(ANIMATION, ANIMATION_REMOVE_ANIMATION_COLOR, AnimationCommandHelper::RemoveAnimation<Color>, NodeId,
+        AnimationId, Color))
+ADD_COMMAND(RSOnAnimationRemoveMatrix3f,
+    ARG(ANIMATION, ANIMATION_REMOVE_ANIMATION_MATRIX3F, AnimationCommandHelper::RemoveAnimation<Matrix3f>, NodeId,
+        AnimationId, Matrix3f))
+ADD_COMMAND(RSOnAnimationRemoveVector2f,
+    ARG(ANIMATION, ANIMATION_REMOVE_ANIMATION_VEC2F, AnimationCommandHelper::RemoveAnimation<Vector2f>, NodeId,
+        AnimationId, Vector2f))
+ADD_COMMAND(RSOnAnimationRemoveVector4f,
+    ARG(ANIMATION, ANIMATION_REMOVE_ANIMATION_VEC4F, AnimationCommandHelper::RemoveAnimation<Vector4f>, NodeId,
+        AnimationId, Vector4f))
+ADD_COMMAND(RSOnAnimationRemoveQuaternion,
+    ARG(ANIMATION, ANIMATION_REMOVE_ANIMATION_QUATERNION, AnimationCommandHelper::RemoveAnimation<Quaternion>, NodeId,
+        AnimationId, Quaternion))
+ADD_COMMAND(RSOnAnimationRemoveFilter,
+    ARG(ANIMATION, ANIMATION_REMOVE_ANIMATION_FILTER, AnimationCommandHelper::RemoveAnimation<std::shared_ptr<RSFilter>>, NodeId,
+        AnimationId, std::shared_ptr<RSFilter>))
+ADD_COMMAND(RSOnAnimationRemoveVec4Color,
+    ARG(ANIMATION, ANIMATION_REMOVE_ANIMATION_VEC4_COLOR, AnimationCommandHelper::RemoveAnimation<Vector4<Color>>, NodeId,
+        AnimationId, Vector4<Color>))
 } // namespace Rosen
 } // namespace OHOS
 

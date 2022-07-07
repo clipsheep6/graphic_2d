@@ -133,6 +133,11 @@ protected:
         SetPropertyValue(targetValue);
     }
 
+    void OnAnimationRemove() override;
+
+    template<typename P>
+    void OnAnimationRemoveInner();
+
     T byValue_ {};
     T startValue_ {};
     T endValue_ {};

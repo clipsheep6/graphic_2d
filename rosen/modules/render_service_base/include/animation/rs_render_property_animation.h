@@ -69,6 +69,12 @@ public:
         return true;
     }
 #endif
+
+    void SetEndValueBeforeRemove(const T& value)
+    {
+        SetPropertyValue(value);
+    }
+
 protected:
     RSRenderPropertyAnimation(AnimationId id, const RSAnimatableProperty& property, const T& originValue)
         : RSRenderAnimation(id), originValue_(originValue), lastValue_(originValue), property_(property)

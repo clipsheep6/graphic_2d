@@ -77,6 +77,7 @@ protected:
     virtual void OnSetFraction(float fraction);
     virtual void OnUpdateStagingValue(bool isFirstStart) {};
     virtual RSAnimatableProperty GetProperty() const;
+    virtual void OnAnimationRemove() {};
 
     void StartInner(const std::shared_ptr<RSNode>& target);
     bool IsReversed() const;

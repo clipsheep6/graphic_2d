@@ -41,6 +41,8 @@ public:
     void AddAnimation(const std::shared_ptr<RSRenderAnimation>& animation);
     void RemoveAnimation(AnimationId keyId);
     const std::shared_ptr<RSRenderAnimation> GetAnimation(AnimationId id) const;
+    const std::shared_ptr<RSRenderAnimation> GetFinishedAnimation(AnimationId animId) const;
+    void RemoveFinishedAnimation(AnimationId animId);
 
     bool Animate(int64_t time);
 
@@ -56,14 +58,16 @@ public:
     AnimationId QuerySpringAnimation(RSAnimatableProperty property);
 
 private:
-    void OnAnimationRemove(const std::shared_ptr<RSRenderAnimation>& animation);
+    bool OnAnimationRemove(const std::shared_ptr<RSRenderAnimation>& animation);
     void OnAnimationAdd(const std::shared_ptr<RSRenderAnimation>& animation);
     void OnAnimationFinished(const std::shared_ptr<RSRenderAnimation>& animation);
+    void AddFinishedAnimation(const std::shared_ptr<RSRenderAnimation>& animation);
 
     std::unordered_map<AnimationId, std::shared_ptr<RSRenderAnimation>> animations_;
     std::unordered_map<RSAnimatableProperty, int> animationNum_;
     std::list<std::tuple<AnimationId, TransitionCallback, bool>> transition_;
     std::unordered_map<RSAnimatableProperty, AnimationId> springAnimations_;
+    std::unordered_map<AnimationId, std::shared_ptr<RSRenderAnimation>> finishedAnimations_;
 
     friend class RSRenderNode;
 };

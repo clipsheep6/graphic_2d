@@ -62,7 +62,7 @@ private:
     std::vector<NodeId> childSurfaceNodeIds_;
     SkMatrix parentSurfaceNodeMatrix_;
 
-    void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType);
+    void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId followNodeId) const;
 };
 } // namespace Rosen
 } // namespace OHOS

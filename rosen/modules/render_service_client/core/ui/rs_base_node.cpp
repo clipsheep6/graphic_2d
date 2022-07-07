@@ -94,7 +94,7 @@ void RSBaseNode::AddChild(SharedPtr child, int index)
     std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeAddChild>(id_, childId, index);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowNodeId());
     }
 }
 
@@ -112,7 +112,7 @@ void RSBaseNode::RemoveChild(SharedPtr child)
     std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveChild>(id_, childId);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowNodeId());
     }
 }
 
@@ -188,7 +188,7 @@ void RSBaseNode::RemoveFromTree()
     std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveFromTree>(id_);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowNodeId());
     }
 }
 
@@ -204,7 +204,7 @@ void RSBaseNode::ClearChildren()
     std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearChild>(id_);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowNodeId());
     }
 }
 
@@ -213,7 +213,7 @@ void RSBaseNode::SetParent(NodeId parentId)
     parent_ = parentId;
 }
 
-RSBaseNode::SharedPtr RSBaseNode::GetParent()
+RSBaseNode::SharedPtr RSBaseNode::GetParent() const
 {
     return RSNodeMap::Instance().GetNode(parent_);
 }
@@ -231,6 +231,36 @@ std::string RSBaseNode::DumpNode(int depth) const
     }
     ss << "]";
     return ss.str();
+}
+
+NodeId RSBaseNode::GetFollowNodeId() const
+{
+    return GetFollowNodeId(GetFollowType());
+}
+
+NodeId RSBaseNode::GetFollowNodeId(FollowType type) const
+{
+    switch (type) {
+        case FollowType::FOLLOW_TO_PARENT: {
+            auto parent = GetParent();
+            while (parent != nullptr) {
+                auto root = ReinterpretCast<RSRootNode>(parent);
+                if (root != nullptr) {
+                    return root->GetSurfaceNodeId();
+                } else {
+                    parent = parent->GetParent();
+                }
+            }
+            return 0;
+        }
+        case FollowType::FOLLOW_TO_SELF: {
+            return id_;
+        }
+        case FollowType::NONE:
+        default:
+            break;
+    }
+    return 0;
 }
 
 template<typename T>

@@ -396,22 +396,12 @@ void RSMainThread::RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsT
         }
         auto timestamp = transactionData->GetTimestamp();
         RS_LOGD("RSMainThread::RecvRSTransactionData timestamp = %llu", timestamp);
-        for (auto& [nodeId, followType, command] : transactionData->GetPayload()) {
-            if (nodeId == 0 || followType == FollowType::NONE) {
+        for (auto& [nodeId, command] : transactionData->GetPayload()) {
+            if (nodeId == 0 || nodeMap.GetRenderNode(nodeId) == nullptr) {
                 pendingEffectiveCommands_.emplace_back(std::move(command));
-                continue;
+            } else {
+                cachedCommands_[nodeId][timestamp].emplace_back(std::move(command));
             }
-            auto node = nodeMap.GetRenderNode(nodeId);
-            if (node && followType == FollowType::FOLLOW_TO_PARENT) {
-                auto parentNode = node->GetParent().lock();
-                if (parentNode) {
-                    nodeId = parentNode->GetId();
-                } else {
-                    pendingEffectiveCommands_.emplace_back(std::move(command));
-                    continue;
-                }
-            }
-            cachedCommands_[nodeId][timestamp].emplace_back(std::move(command));
         }
     }
     RequestNextVSync();

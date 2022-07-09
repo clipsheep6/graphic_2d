@@ -109,6 +109,8 @@ GSError BufferClientProducer::FlushBuffer(int32_t sequence, BufferExtraData &bed
     SEND_REQUEST_WITH_SEQ(BUFFER_PRODUCER_FLUSH_BUFFER, arguments, reply, option, sequence);
     CHECK_RETVAL_WITH_SEQ(reply, sequence);
 
+    close(fence);
+
     return GSERROR_OK;
 }
 

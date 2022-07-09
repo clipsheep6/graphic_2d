@@ -83,9 +83,31 @@ const std::shared_ptr<RSRenderAnimation> RSAnimationManager::GetAnimation(Animat
     return animationItr->second;
 }
 
-void RSAnimationManager::OnAnimationRemove(const std::shared_ptr<RSRenderAnimation>& animation)
+const std::shared_ptr<RSRenderAnimation> RSAnimationManager::GetFinishedAnimation(AnimationId animId) const
+{
+    auto animationItr = finishedAnimations_.find(animId);
+    if (animationItr == finishedAnimations_.end()) {
+        ROSEN_LOGE("RSAnimationManager::GetFinishedAnimation, animtor[%lld] is not found", animId);
+        return nullptr;
+    }
+    return animationItr->second;
+}
+
+void RSAnimationManager::RemoveFinishedAnimation(AnimationId animId)
+{
+    auto animationItr = finishedAnimations_.find(animId);
+    if (animationItr == animations_.end()) {
+        ROSEN_LOGE("RSAnimationManager::RemoveFinishedAnimation, The Animation does not exist when is deleted");
+        return;
+    }
+    animationItr->second->Detach();
+    finishedAnimations_.erase(animationItr);
+}
+
+bool RSAnimationManager::OnAnimationRemove(const std::shared_ptr<RSRenderAnimation>& animation)
 {
     animationNum_[animation->GetProperty()]--;
+    return animationNum_[animation->GetProperty()];
 }
 
 void RSAnimationManager::OnAnimationAdd(const std::shared_ptr<RSRenderAnimation>& animation)
@@ -108,8 +130,21 @@ void RSAnimationManager::OnAnimationFinished(const std::shared_ptr<RSRenderAnima
     std::unique_ptr<RSCommand> command =
         std::make_unique<RSAnimationFinishCallback>(targetId, animationId);
     RSMessageProcessor::Instance().AddUIMessage(ExtractPid(animationId), command);
-    OnAnimationRemove(animation);
-    animation->Detach();
+    if (OnAnimationRemove(animation)) {
+        AddFinishedAnimation(animation);
+    } else {
+        animation->Detach();
+    }
+}
+
+void RSAnimationManager::AddFinishedAnimation(const std::shared_ptr<RSRenderAnimation>& animation)
+{
+    auto animId = animation->GetAnimationId();
+    if (finishedAnimations_.find(animId) != finishedAnimations_.end()) {
+        ROSEN_LOGE("RSAnimationManager::AddFinishedAnimation, The Animation already exists when is added");
+        return;
+    }
+    finishedAnimations_.emplace(animId, animation);
 }
 
 void RSAnimationManager::RegisterTransition(AnimationId id, const TransitionCallback& transition, bool isTransitionIn)

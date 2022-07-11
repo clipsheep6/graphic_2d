@@ -382,6 +382,31 @@ void RSBaseRenderNode::GenerateSortedChildren()
     });
 }
 
+NodeId RSBaseRenderNode::GetFollowNodeId(FollowType type) const
+{
+    switch (type) {
+        case FollowType::FOLLOW_TO_PARENT: {
+            auto parent = GetParent().lock();
+            while (parent != nullptr) {
+                auto root = ReinterpretCast<RSRootRenderNode>(parent);
+                if (root != nullptr) {
+                    return root->GetRSSurfaceNodeId();
+                } else {
+                    parent = parent->GetParent().lock();
+                }
+            }
+            return 0;
+        }
+        case FollowType::FOLLOW_TO_SELF: {
+            return id_;
+        }
+        case FollowType::NONE:
+        default:
+            break;
+    }
+    return 0;
+}
+
 template<typename T>
 bool RSBaseRenderNode::IsInstanceOf()
 {

@@ -62,7 +62,6 @@ ohos_shared_library("libcomposer") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//drivers/peripheral/display/hal:hdi_display_device",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/frameworks/vsync:libvsync_module",
     "//foundation/graphic/graphic_2d/utils:libgraphic_utils",
@@ -79,7 +78,9 @@ ohos_shared_library("libcomposer") {
     "//utils/native/base:utils",
   ]
 
-  part_name = "graphic_graphic_2d"
+  external_deps = [ "drivers_interface_display:display_device_client" ]
+
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 

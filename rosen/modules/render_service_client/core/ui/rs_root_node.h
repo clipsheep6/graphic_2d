@@ -26,6 +26,7 @@ public:
     using WeakPtr = std::weak_ptr<RSRootNode>;
     using SharedPtr = std::shared_ptr<RSRootNode>;
     static inline constexpr RSUINodeType Type = RSUINodeType::ROOT_NODE;
+    static NodeId rootNodeId;
 
     virtual ~RSRootNode() {}
 
@@ -34,6 +35,11 @@ public:
     RSUINodeType GetType() const override
     {
         return RSUINodeType::ROOT_NODE;
+    }
+
+    NodeId GetSurfaceNodeId() const
+    {
+        return rootNodeId;
     }
 
 protected:

@@ -39,9 +39,8 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
     bool success = true;
     parcel.SetMaxCapacity(409600); // reset upper bound of parcel capacity to 400K(409600)
     success = success && parcel.WriteInt32(static_cast<int32_t>(payload_.size()));
-    for (auto& [nodeId, followType, command] : payload_) {
+    for (auto& [nodeId, command] : payload_) {
         success = success && parcel.WriteUint64(nodeId);
-        success = success && parcel.WriteUint8(static_cast<uint8_t>(followType));
         success = success && command->Marshalling(parcel);
         if (!success) {
             ROSEN_LOGE("failed RSTransactionData::Marshalling type:%s", command->PrintType().c_str());
@@ -55,7 +54,7 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
 
 void RSTransactionData::Process(RSContext& context)
 {
-    for (auto& [nodeId, followType, command] : payload_) {
+    for (auto& [nodeId, command] : payload_) {
         if (command != nullptr) {
             command->Process(context);
         }
@@ -68,14 +67,14 @@ void RSTransactionData::Clear()
     timestamp_ = 0;
 }
 
-void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType)
+void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>& command, NodeId followNodeId)
 {
-    payload_.emplace_back(nodeId, followType, std::move(command));
+    payload_.emplace_back(followNodeId, std::move(command));
 }
 
-void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>&& command, NodeId nodeId, FollowType followType)
+void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>&& command, NodeId followNodeId)
 {
-    payload_.emplace_back(nodeId, followType, std::move(command));
+    payload_.emplace_back(followNodeId, std::move(command));
 }
 
 #ifdef ROSEN_OHOS
@@ -88,7 +87,6 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
         ROSEN_LOGE("RSTransactionData::UnmarshallingCommand cannot read commandSize");
         return false;
     }
-    uint8_t followType = 0;
     NodeId nodeId = 0;
     uint16_t commandType = 0;
     uint16_t commandSubType = 0;
@@ -98,11 +96,6 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
             ROSEN_LOGE("RSTransactionData::UnmarshallingCommand cannot read nodeId");
             return false;
         }
-        if (!parcel.ReadUint8(followType)) {
-            ROSEN_LOGE("RSTransactionData::UnmarshallingCommand cannot read followType");
-            return false;
-        }
-
         if (!(parcel.ReadUint16(commandType) && parcel.ReadUint16(commandSubType))) {
             return false;
         }
@@ -116,7 +109,7 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
                 commandSubType);
             return false;
         }
-        payload_.emplace_back(nodeId, static_cast<FollowType>(followType), std::move(command));
+        payload_.emplace_back(nodeId, std::move(command));
     }
     return parcel.ReadUint64(timestamp_);
 }

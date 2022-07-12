@@ -72,6 +72,9 @@ public:
         return (IsInstanceOf<T>()) ? std::static_pointer_cast<T>(shared_from_this()) : nullptr;
     }
     virtual std::string DumpNode(int depth) const;
+
+    NodeId GetFollowNodeId() const;
+    NodeId GetFollowNodeId(FollowType type) const;
 protected:
     static bool isUniRenderEnabled_;
     bool isRenderServiceNode_;
@@ -84,7 +87,7 @@ protected:
 
     virtual void OnAddChildren() {}
     virtual void OnRemoveChildren() {}
-    SharedPtr GetParent();
+    SharedPtr GetParent() const;
 
     void SetId(const NodeId& id)
     {

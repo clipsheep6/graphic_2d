@@ -266,7 +266,7 @@ RSSurfaceNode::~RSSurfaceNode() {
         std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeDestroy>(GetId());
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
-            transactionProxy->AddCommand(command, true, FollowType::FOLLOW_TO_PARENT, GetId());
+            transactionProxy->AddCommand(command, true, GetFollowNodeId(FollowType::FOLLOW_TO_PARENT));
         }
     }
 }

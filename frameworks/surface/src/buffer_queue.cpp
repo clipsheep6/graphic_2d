@@ -781,8 +781,12 @@ uint32_t BufferQueue::GetDefaultUsage()
 GSError BufferQueue::CleanCache()
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
-    if (!GetStatus()) {
-        BLOGN_FAILURE_RET(GSERROR_NO_CONSUMER);
+    if (listener_ != nullptr) {
+        ScopedBytrace bufferIPCSend("OnCleanCache");
+        listener_->OnCleanCache();
+    } else if (listenerClazz_ != nullptr) {
+        ScopedBytrace bufferIPCSend("OnCleanCache");
+        listenerClazz_->OnCleanCache();
     }
     for (auto &[id, _] : bufferQueueCache_) {
         if (onBufferDelete_ != nullptr) {

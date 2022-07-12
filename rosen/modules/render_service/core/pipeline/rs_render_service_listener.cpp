@@ -14,6 +14,7 @@
  */
 
 #include "pipeline/rs_render_service_listener.h"
+#include <memory>
 
 #include "platform/common/rs_log.h"
 #include "pipeline/rs_main_thread.h"
@@ -44,6 +45,20 @@ void RSRenderServiceListener::OnBufferAvailable()
         node->NotifyUIBufferAvailable();
     }
     RSMainThread::Instance()->RequestNextVSync();
+}
+
+void RSRenderServiceListener::OnCleanCache()
+{
+    std::weak_ptr<RSSurfaceRenderNode> surfaceNode = surfaceRenderNode_;
+    RSMainThread::Instance()->PostTask([surfaceNode]() {
+        auto node = surfaceNode.lock();
+        if (node == nullptr) {
+            RS_LOGE("RSRenderServiceListener::OnBufferAvailable node is nullptr");
+            return;
+        }
+        RS_LOGI("RsDebug RSRenderServiceListener::OnCleanCache node id:%llu", node->GetId());
+        node->CleanCache();
+    });
 }
 } // namespace Rosen
 } // namespace OHOS

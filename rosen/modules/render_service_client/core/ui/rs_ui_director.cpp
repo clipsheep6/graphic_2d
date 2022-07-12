@@ -89,6 +89,21 @@ void RSUIDirector::GoBackground()
         if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
             node->SetVisible(false);
         }
+
+        // clean bufferQueue cache
+        sptr<OHOS::Surface> pSurface = surfaceNode_->GetSurface();
+        if (pSurface != nullptr) {
+            pSurface->CleanCache();
+        }
+
+        // clean glcontext cache
+        std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode_);
+        if (rsSurface != nullptr) {
+            ROSEN_LOGI("RSUIDirector::GoBackground rsSurface CleanCache");
+            rsSurface->CleanCache();
+        } else {
+            ROSEN_LOGI("RSUIDirector::GoBackground rsSurface is nullptr");
+        }
     }
 }
 

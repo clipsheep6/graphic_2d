@@ -68,6 +68,7 @@ VSyncGenerator::~VSyncGenerator()
     }
     if (thread_.joinable()) {
         con_.notify_all();
+        waitForTimeoutCon_.notify_all();
         thread_.join();
     }
 }
@@ -103,7 +104,7 @@ void VSyncGenerator::ThreadLoop()
         }
 
         bool isWakeup = false;
-        if (occurTimestamp < nextTimeStamp) {
+        if (vsyncThreadRunning_ && (occurTimestamp < nextTimeStamp)) {
             std::unique_lock<std::mutex> lck(waitForTimeoutMtx_);
             auto err = waitForTimeoutCon_.wait_for(lck, std::chrono::nanoseconds(nextTimeStamp - occurTimestamp));
             if (err == std::cv_status::timeout) {

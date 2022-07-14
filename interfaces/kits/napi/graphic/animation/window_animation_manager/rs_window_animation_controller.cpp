@@ -123,6 +123,18 @@ void RSWindowAnimationController::OnMinimizeAllWindow(
     }
 }
 
+void RSWindowAnimationController::OnMinimizeAllWindow(
+    std::vector<sptr<RSWindowAnimationTarget>> minimizingWindowsTarget,
+    const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback)
+{
+    WALOGD("Window animation controller on minimize all windows.");
+    for (auto target : minimizingWindowsTarget) {
+        sptr<RSIWindowAnimationFinishedCallback> animationCallback =
+            new(std::nothrow) RSWindowAnimationCallback(finishedCallback);
+        OnMinimizeWindow(target, animationCallback);
+    }
+}
+
 void RSWindowAnimationController::OnCloseWindow(const sptr<RSWindowAnimationTarget>& closingWindowTarget,
     const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback)
 {

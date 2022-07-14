@@ -66,6 +66,8 @@ public:
     void RemoveAnimation(const std::shared_ptr<RSAnimation>& animation);
     void SetMotionPathOption(const std::shared_ptr<RSMotionPathOption>& motionPathOption);
     const std::shared_ptr<RSMotionPathOption> GetMotionPathOption() const;
+    void SetPositionType(const RSPositionType& positionType);
+    RSPositionType GetPositionType() const;
 
     const RSProperties& GetStagingProperties() const;
 

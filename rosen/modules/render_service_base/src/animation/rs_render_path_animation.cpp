@@ -143,6 +143,16 @@ float RSRenderPathAnimation::GetEndFraction() const
     return endFraction_;
 }
 
+void RSRenderPathAnimation::SetPositionType(const RSPositionType& positionType)
+{
+    positionType_ = positionType;
+}
+
+RSPositionType RSRenderPathAnimation::GetPositionType() const
+{
+    return positionType_;
+}
+
 void RSRenderPathAnimation::OnAnimate(float fraction)
 {
     if (animationPath_ == nullptr) {
@@ -156,7 +166,10 @@ void RSRenderPathAnimation::OnAnimate(float fraction)
     Vector2f position;
     float tangent = 0;
     animationPath_->GetPosTan(distance * progress, position, tangent);
-    SetPathValue(position + RSRenderPropertyAnimation::GetOriginValue(), tangent);
+    if (positionType_ == RSPositionType::OFFSET) {
+        position += RSRenderPropertyAnimation::GetOriginValue();
+    }
+    SetPathValue(position, tangent);
 #endif
 }
 

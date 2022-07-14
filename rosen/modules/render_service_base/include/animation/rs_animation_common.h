@@ -31,6 +31,14 @@ enum class RotationMode {
     ROTATE_AUTO_REVERSE
 };
 
+enum class RSPositionType {
+    RELATIVE = 0,
+    FIXED,
+    ABSOLUTE,
+    OFFSET,
+    SEMI_RELATIVE,
+};
+
 } // namespace Rosen
 } // namespace OHOS
 

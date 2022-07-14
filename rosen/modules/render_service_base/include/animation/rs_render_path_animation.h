@@ -45,6 +45,10 @@ public:
 
     float GetEndFraction() const;
 
+    void SetPositionType(const RSPositionType& positionType);
+
+    RSPositionType GetPositionType() const;
+
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderPathAnimation* Unmarshalling(Parcel& parcel);
@@ -68,6 +72,7 @@ private:
     RotationMode rotationMode_ { RotationMode::ROTATE_NONE };
     std::shared_ptr<RSInterpolator> interpolator_ { RSInterpolator::DEFAULT };
     std::shared_ptr<RSPath> animationPath_;
+    RSPositionType positionType_ { RSPositionType::RELATIVE };
 };
 } // namespace Rosen
 } // namespace OHOS

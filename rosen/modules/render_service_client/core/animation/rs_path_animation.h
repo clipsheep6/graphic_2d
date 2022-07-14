@@ -52,6 +52,10 @@ public:
 
     static bool IsAnimatablePathProperty(const RSAnimatableProperty& property);
 
+    void SetPathNeedAddOrigin(bool needAddOrigin);
+
+    bool GetPathNeedAddOrigin() const;
+
 protected:
     void OnStart() override;
 
@@ -74,6 +78,7 @@ private:
     RotationMode rotationMode_ { RotationMode::ROTATE_NONE };
     RSAnimationTimingCurve timingCurve_ { RSAnimationTimingCurve::DEFAULT };
     std::shared_ptr<RSPath> animationPath_;
+    bool needAddOrigin_ { false };
 };
 } // namespace Rosen
 } // namespace OHOS

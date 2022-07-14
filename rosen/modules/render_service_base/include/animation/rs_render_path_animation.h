@@ -45,6 +45,8 @@ public:
 
     float GetEndFraction() const;
 
+    void SetPathNeedAddOrigin(bool needAddOrigin_);
+
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderPathAnimation* Unmarshalling(Parcel& parcel);
@@ -68,6 +70,7 @@ private:
     RotationMode rotationMode_ { RotationMode::ROTATE_NONE };
     std::shared_ptr<RSInterpolator> interpolator_ { RSInterpolator::DEFAULT };
     std::shared_ptr<RSPath> animationPath_;
+    bool needAddOrigin_ { false };
 };
 } // namespace Rosen
 } // namespace OHOS

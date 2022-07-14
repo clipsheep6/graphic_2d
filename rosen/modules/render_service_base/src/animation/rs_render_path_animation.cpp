@@ -156,7 +156,10 @@ void RSRenderPathAnimation::OnAnimate(float fraction)
     Vector2f position;
     float tangent = 0;
     animationPath_->GetPosTan(distance * progress, position, tangent);
-    SetPathValue(position + RSRenderPropertyAnimation::GetOriginValue(), tangent);
+    if (needAddOrigin_) {
+        position += RSRenderPropertyAnimation::GetOriginValue();
+    }
+    SetPathValue(position, tangent);
 #endif
 }
 
@@ -195,6 +198,11 @@ void RSRenderPathAnimation::SetPathValue(const Vector2f& position, float tangent
     }
 
     SetPropertyValue(position);
+}
+
+void RSRenderPathAnimation::SetPathNeedAddOrigin(bool needAddOrigin)
+{
+    needAddOrigin_ = needAddOrigin;
 }
 } // namespace Rosen
 } // namespace OHOS

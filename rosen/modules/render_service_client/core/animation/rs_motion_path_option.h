@@ -64,12 +64,23 @@ public:
     {
         return rotationMode_;
     }
+    
+    void SetPathNeedAddOrigin(bool needAddOrigin)
+    {
+        needAddOrigin_ = needAddOrigin;
+    }
+
+    bool GetPathNeedAddOrigin() const
+    {
+        return needAddOrigin_;
+    }
 
 private:
     std::string path_;
     float beginFraction_ { FRACTION_MIN };
     float endFraction_ { FRACTION_MAX };
     RotationMode rotationMode_ { RotationMode::ROTATE_NONE };
+    bool needAddOrigin_ { false };
 };
 } // namespace Rosen
 } // namespace OHOS

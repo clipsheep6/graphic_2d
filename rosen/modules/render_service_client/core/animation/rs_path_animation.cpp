@@ -144,6 +144,7 @@ void RSPathAnimation::OnStart()
     animation->SetRotationMode(GetRotationMode());
     animation->SetBeginFraction(GetBeginFraction());
     animation->SetEndFraction(GetEndFraction());
+    animation->SetPathNeedAddOrigin(GetPathNeedAddOrigin());
     std::unique_ptr<RSCommand> command = std::make_unique<RSAnimationCreatePath>(target->GetId(), animation);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
@@ -166,6 +167,10 @@ void RSPathAnimation::InitInterpolationValue()
 #ifdef ROSEN_OHOS
     animationPath_->GetPosTan(0.0f, startValue_, startTangent_);
     animationPath_->GetPosTan(animationPath_->GetDistance(), endValue_, endTangent_);
+    if (GetPathNeedAddOrigin()) {
+        startValue_ += originValue_;
+        endValue_ += originValue_;
+    }
     byValue_ = endValue_ - startValue_;
 #endif
 }
@@ -254,6 +259,16 @@ bool RSPathAnimation::IsAnimatablePathProperty(const RSAnimatableProperty& prope
     }
 
     return true;
+}
+
+void RSPathAnimation::SetPathNeedAddOrigin(bool needAddOrigin)
+{
+    needAddOrigin_ = needAddOrigin;
+}
+
+bool RSPathAnimation::GetPathNeedAddOrigin() const
+{
+    return needAddOrigin_;
 }
 } // namespace Rosen
 } // namespace OHOS

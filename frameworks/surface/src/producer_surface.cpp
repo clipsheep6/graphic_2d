@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace {
-constexpr uint32_t PRODUCER_REF_COUNT_IN_PRODUCER_SURFACE = 1;
+constexpr int32_t PRODUCER_REF_COUNT_IN_PRODUCER_SURFACE = 1;
 }
 
 ProducerSurface::ProducerSurface(sptr<IBufferProducer>& producer)
@@ -316,6 +316,11 @@ GSError ProducerSurface::IsSupportedAlloc(const std::vector<VerifyAllocInfo> &in
     return producer_->IsSupportedAlloc(infos, supporteds);
 }
 
+GSError ProducerSurface::Disconnect()
+{
+    return producer_->Disconnect();
+}
+
 GSError ProducerSurface::SetScalingMode(uint32_t sequence, ScalingMode scalingMode)
 {
     if (scalingMode < ScalingMode::SCALING_MODE_FREEZE ||
@@ -367,8 +372,9 @@ GSError ProducerSurface::SetTunnelHandle(const ExtDataHandle *handle)
     return producer_->SetTunnelHandle(handle);
 }
 
-GSError ProducerSurface::GetTunnelHandle(ExtDataHandle **handle) const
+sptr<SurfaceTunnelHandle> ProducerSurface::GetTunnelHandle() const
 {
-    return GSERROR_NOT_SUPPORT;
+    // not support
+    return nullptr;
 }
 } // namespace OHOS

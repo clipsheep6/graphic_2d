@@ -223,7 +223,9 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWith
     }
     RS_TRACE_BEGIN("RSSurfaceCaptureVisitor::Process:" + node.GetName());
     canvas_->save();
-    canvas_->scale(scaleX_, scaleY_);
+    if (node.GetBuffer()) {
+        canvas_->scale(scaleX_, scaleY_);
+    }
     canvas_->SaveAlpha();
     canvas_->MultiplyAlpha(node.GetRenderProperties().GetAlpha() * node.GetContextAlpha());
     canvas_->concat(node.GetContextMatrix());
@@ -232,9 +234,11 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWith
         canvas_->clipRect(contextClipRect);
     }
 
-    canvas_->concat(geoPtr->GetMatrix());
-    canvas_->clipRect(SkRect::MakeWH(node.GetRenderProperties().GetBoundsWidth(),
-        node.GetRenderProperties().GetBoundsHeight()));
+    auto matrix = geoPtr->GetMatrix();
+    matrix.setTranslate(std::ceil(matrix.getTranslateX()), std::ceil(matrix.getTranslateY()));
+    canvas_->concat(matrix);
+    canvas_->clipRect(SkRect::MakeWH(std::floor(node.GetRenderProperties().GetBoundsWidth()),
+        std::floor(node.GetRenderProperties().GetBoundsHeight())));
     ProcessBaseRenderNode(node);
 
     if (node.GetConsumer() != nullptr) {
@@ -339,8 +343,8 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWith
             param.matrix = node.GetContextMatrix();
             auto& parent = *std::static_pointer_cast<RSSurfaceRenderNode>(existedParent);
             auto parentRect = RSDividedRenderUtil::CreateBufferDrawParam(parent).clipRect;
-            //Changes the clip area from absolute to relative to the parent window and deal with clip area with scale
-            //Based on the origin of the parent window.
+            // Changes the clip area from absolute to relative to the parent window and deal with clip area with scale
+            // based on the origin of the parent window.
             param.clipRect.offsetTo(param.clipRect.left() - parentRect.left(), param.clipRect.top() - parentRect.top());
             SkMatrix scaleMatrix = SkMatrix::I();
             scaleMatrix.preScale(scaleX_, scaleY_, 0, 0);

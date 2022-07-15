@@ -266,7 +266,8 @@ int32_t BufferQueueProducer::IsSupportedAllocRemote(MessageParcel &arguments, Me
 
 int32_t BufferQueueProducer::DisconnectRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
 {
-    (void)Disconnect();
+    GSError sret = Disconnect();
+    reply.WriteInt32(sret);
     return 0;
 }
 
@@ -303,8 +304,11 @@ int32_t BufferQueueProducer::SetMetaDataSetRemote(MessageParcel &arguments, Mess
 int32_t BufferQueueProducer::SetTunnelHandleRemote(MessageParcel &arguments, MessageParcel &reply,
                                                    MessageOption &option)
 {
-    ExtDataHandle *handle = nullptr;
-    ReadExtDataHandle(arguments, &handle);
+    sptr<SurfaceTunnelHandle> handle = nullptr;
+    if (arguments.ReadBool()) {
+        handle = new SurfaceTunnelHandle();
+        ReadExtDataHandle(arguments, handle);
+    }
     GSError sret = SetTunnelHandle(handle);
     reply.WriteInt32(sret);
     return 0;
@@ -514,12 +518,21 @@ GSError BufferQueueProducer::SetMetaDataSet(uint32_t sequence, HDRMetadataKey ke
     return bufferQueue_->SetMetaDataSet(sequence, key, metaData);
 }
 
-GSError BufferQueueProducer::SetTunnelHandle(const ExtDataHandle *handle)
+GSError BufferQueueProducer::SetTunnelHandle(const sptr<SurfaceTunnelHandle> &handle)
 {
     if (bufferQueue_ == nullptr) {
         return GSERROR_INVALID_ARGUMENTS;
     }
     return bufferQueue_->SetTunnelHandle(handle);
+}
+
+GSError BufferQueueProducer::SetTunnelHandle(const ExtDataHandle *handle)
+{
+    sptr<SurfaceTunnelHandle> tunnelHandle = new SurfaceTunnelHandle();
+    if (tunnelHandle->SetHandle(handle) != GSERROR_OK) {
+        return GSERROR_INVALID_OPERATING;
+    }
+    return bufferQueue_->SetTunnelHandle(tunnelHandle);
 }
 
 bool BufferQueueProducer::GetStatus() const

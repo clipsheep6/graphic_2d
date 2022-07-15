@@ -93,8 +93,11 @@ void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canva
     auto currentGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
     if (currentGeoPtr != nullptr) {
         currentGeoPtr->UpdateByMatrixFromSelf();
+        auto matrix = currentGeoPtr->GetMatrix();
+        matrix.setTranslateX(std::ceil(matrix.getTranslateX()));
+        matrix.setTranslateY(std::ceil(matrix.getTranslateY()));
+        canvas.concat(matrix);
     }
-    canvas.concat(currentGeoPtr->GetMatrix());
 
     // apply transition properties to canvas
     auto transitionProperties = GetAnimationManager().GetTransitionProperties();
@@ -102,7 +105,8 @@ void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canva
     RSPropertiesPainter::DrawTransitionProperties(transitionProperties, center, canvas);
 
     // clip by bounds
-    canvas.clipRect(SkRect::MakeWH(properties.GetBoundsWidth(), properties.GetBoundsHeight()));
+    canvas.clipRect(
+        SkRect::MakeWH(std::floor(properties.GetBoundsWidth()), std::floor(properties.GetBoundsHeight())));
 
     // extract srcDest and dstRect from SkCanvas, localCLipBounds as SrcRect, deviceClipBounds as DstRect
     auto localClipRect = getLocalClipBounds(canvas);
@@ -157,6 +161,12 @@ void RSSurfaceRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
         return;
     }
     visitor->ProcessSurfaceRenderNode(*this);
+}
+
+void RSSurfaceRenderNode::SetContextBounds(const Vector4f bounds)
+{
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetBounds>(GetId(), bounds);
+    SendCommandFromRT(command, GetId());
 }
 
 void RSSurfaceRenderNode::SetContextMatrix(const SkMatrix& matrix, bool sendMsg)

@@ -92,7 +92,7 @@ public:
     TransformType GetTransform() const override;
 
     GSError IsSupportedAlloc(const std::vector<VerifyAllocInfo> &infos, std::vector<bool> &supporteds) override;
-
+    GSError Disconnect() override;
     GSError SetScalingMode(uint32_t sequence, ScalingMode scalingMode) override;
     GSError GetScalingMode(uint32_t sequence, ScalingMode &scalingMode) override;
     GSError SetMetaData(uint32_t sequence, const std::vector<HDRMetaData> &metaData) override;
@@ -101,7 +101,7 @@ public:
     GSError GetMetaDataSet(uint32_t sequence, HDRMetadataKey &key,
                            std::vector<uint8_t> &metaData) const override;
     GSError SetTunnelHandle(const ExtDataHandle *handle) override;
-    GSError GetTunnelHandle(ExtDataHandle **handle) const override;
+    sptr<SurfaceTunnelHandle> GetTunnelHandle() const override;
 
 private:
     bool IsRemote();

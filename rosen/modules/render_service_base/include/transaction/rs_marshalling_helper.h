@@ -54,6 +54,8 @@ template<typename T>
 class RSRenderCurveAnimation;
 template<typename T>
 class RSRenderKeyframeAnimation;
+template<typename T>
+class RSRenderSpringAnimation;
 class RSRenderPathAnimation;
 class RSRenderTransition;
 class RSRenderTransitionEffect;
@@ -81,13 +83,19 @@ public:
     }
 
     template<typename T>
-    static bool Marshalling(Parcel& parcel, const T* val, int count)
+    static bool MarshallingArray(Parcel& parcel, const T* val, int count)
     {
+        if (count <= 0) {
+            return true;
+        }
         return parcel.WriteUnpadBuffer(val, count * sizeof(T));
     }
     template<typename T>
-    static bool Unmarshalling(Parcel& parcel, T*& val, int count)
+    static bool UnmarshallingArray(Parcel& parcel, T*& val, int count)
     {
+        if (count <= 0) {
+            return true;
+        }
         if (const uint8_t* buff = parcel.ReadUnpadBuffer(count * sizeof(T))) {
             val = reinterpret_cast<const T*>(buff);
             return true;
@@ -148,6 +156,7 @@ public:
 
     DECLARE_TEMPLATE_OVERLOAD(RSRenderCurveAnimation)
     DECLARE_TEMPLATE_OVERLOAD(RSRenderKeyframeAnimation)
+    DECLARE_TEMPLATE_OVERLOAD(RSRenderSpringAnimation)
 #undef DECLARE_TEMPLATE_OVERLOAD
 
     // reloaded marshalling & unmarshalling function for std::vector
@@ -155,6 +164,18 @@ public:
     static bool Marshalling(Parcel& parcel, const std::vector<T>& val);
     template<typename T>
     static bool Unmarshalling(Parcel& parcel, std::vector<T>& val);
+
+    template<typename T, typename... Args>
+    static bool Marshalling(Parcel& parcel, const T& first, const Args&... args)
+    {
+        return Marshalling(parcel, first) && Marshalling(parcel, args...);
+    }
+    template<typename T, typename... Args>
+    static bool Unmarshalling(Parcel& parcel, T& first, Args&... args)
+    {
+        return Unmarshalling(parcel, first) && Unmarshalling(parcel, args...);
+    }
+
 private:
     static sk_sp<SkData> SerializeTypeface(SkTypeface* tf, void* ctx);
     static sk_sp<SkTypeface> DeserializeTypeface(const void* data, size_t length, void* ctx);

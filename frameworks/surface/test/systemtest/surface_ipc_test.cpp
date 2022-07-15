@@ -95,6 +95,17 @@ pid_t SurfaceIPCTest::ChildProcessMain()
     buffer->GetExtraData()->ExtraSet("345", (int64_t)0x345);
     buffer->GetExtraData()->ExtraSet("567", "567");
 
+    ExtDataHandle *handle = new ExtDataHandle();
+    handle->fd = -1;
+    handle->reserveInts = 1;
+    handle->reserve[0] = 1;
+    sRet = pSurface->SetTunnelHandle(handle);
+    if (sRet != OHOS::GSERROR_OK) {
+        data = sRet;
+        write(pipeFd[1], &data, sizeof(data));
+        exit(0);
+    }
+
     sRet = pSurface->FlushBuffer(buffer, -1, flushConfig);
     data = sRet;
     write(pipeFd[1], &data, sizeof(data));
@@ -149,6 +160,12 @@ HWTEST_F(SurfaceIPCTest, BufferIPC001, Function | MediumTest | Level2)
         EXPECT_EQ(int32, 0x123);
         EXPECT_EQ(int64, 0x345);
         EXPECT_EQ(str, "567");
+        sptr<SurfaceTunnelHandle> handleGet = nullptr;
+        handleGet = cSurface->GetTunnelHandle();
+        ASSERT_NE(handleGet, nullptr);
+        ASSERT_EQ(handleGet->GetHandle()->fd, -1);
+        ASSERT_EQ(handleGet->GetHandle()->reserveInts, 1);
+        ASSERT_EQ(handleGet->GetHandle()->reserve[0], 1);
     }
 
     sRet = cSurface->ReleaseBuffer(buffer, -1);
@@ -182,5 +199,21 @@ HWTEST_F(SurfaceIPCTest, Connect001, Function | MediumTest | Level2)
     auto sRet = pSurface->RequestBuffer(buffer, releaseFence, requestConfig);
     ASSERT_EQ(sRet, OHOS::GSERROR_INVALID_OPERATING);  // RequestBuffer cannot be called in two processes
     ASSERT_EQ(buffer, nullptr);
+}
+
+/*
+* Function: disconnect
+* Type: Function
+* Rank: Important(1)
+* EnvConditions: N/A
+* CaseDescription: 1. call Disconnect in other process, check sRet
+ */
+HWTEST_F(SurfaceIPCTest, Disconnect001, Function | MediumTest | Level1)
+{
+    cSurface->RegisterConsumerListener(this);
+    auto producer = cSurface->GetProducer();
+    auto pSurface = Surface::CreateSurfaceAsProducer(producer);
+    auto sRet = pSurface->Disconnect();
+    ASSERT_EQ(sRet, OHOS::GSERROR_INVALID_OPERATING);  // Disconnect cannot be called in two processes
 }
 }

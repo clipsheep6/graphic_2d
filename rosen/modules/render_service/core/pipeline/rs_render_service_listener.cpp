@@ -14,7 +14,6 @@
  */
 
 #include "pipeline/rs_render_service_listener.h"
-#include <memory>
 
 #include "platform/common/rs_log.h"
 #include "pipeline/rs_main_thread.h"

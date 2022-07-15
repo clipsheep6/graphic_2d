@@ -249,7 +249,11 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWith
         } else {
             node.NotifyRTBufferAvailable();
             RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode draw buffer on canvas");
+#ifdef RS_ENABLE_EGLIMAGE
+            DrawImageOnCanvas(node);
+#else
             DrawBufferOnCanvas(node);
+#endif // RS_ENABLE_EGLIMAGE
         }
         RS_TRACE_END();
     }
@@ -271,6 +275,23 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::DrawBufferOnCanvas(RSSurface
         node.GetRenderProperties().GetBoundsHeight());
     RSUniRenderUtil::DrawBufferOnCanvas(buffer, ColorGamut::COLOR_GAMUT_SRGB, *canvas_, srcRect, dstRect);
 }
+
+#ifdef RS_ENABLE_EGLIMAGE
+void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::DrawImageOnCanvas(RSSurfaceRenderNode& node)
+{
+    if (!canvas_) {
+        RS_LOGE("RSUniRenderVisitor::DrawImageOnCanvas canvas is nullptr");
+        return;
+    }
+
+    auto buffer = node.GetBuffer();
+    auto srcRect = SkRect::MakeWH(buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
+    auto dstRect = SkRect::MakeWH(node.GetRenderProperties().GetBoundsWidth(),
+        node.GetRenderProperties().GetBoundsHeight());
+    BufferInfo bufferInfo = { buffer, node.GetAcquireFence(), node.GetConsumer() };
+    RSUniRenderUtil::DrawImageOnCanvas(bufferInfo, *canvas_, srcRect, dstRect);
+}
+#endif // RS_ENABLE_EGLIMAGE
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 {

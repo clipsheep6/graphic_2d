@@ -74,6 +74,7 @@ private:
         void ProcessSurfaceRenderNodeWithUni(RSSurfaceRenderNode &node);
         void ProcessSurfaceRenderNodeWithoutUni(RSSurfaceRenderNode &node);
         void DrawBufferOnCanvas(RSSurfaceRenderNode& node);
+        void DrawImageOnCanvas(RSSurfaceRenderNode& node);
         void DrawSurface(RSSurfaceRenderNode &node);
         std::unique_ptr<RSPaintFilterCanvas> canvas_ = nullptr;
         bool isDisplayNode_ = false;

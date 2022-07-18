@@ -63,7 +63,7 @@ void RSTransactionProxy::SetRenderServiceClient(const std::shared_ptr<RSIRenderC
 }
 
 void RSTransactionProxy::AddCommand(std::unique_ptr<RSCommand>& command, bool isRenderServiceCommand,
-                                    FollowType followType, NodeId nodeId)
+    NodeId followNodeId)
 {
     if ((renderServiceClient_ == nullptr && renderThreadClient_ == nullptr) || command == nullptr) {
         return;
@@ -72,7 +72,7 @@ void RSTransactionProxy::AddCommand(std::unique_ptr<RSCommand>& command, bool is
     std::unique_lock<std::mutex> cmdLock(mutex_);
 
     if (renderServiceClient_ != nullptr && isRenderServiceCommand) {
-        AddRemoteCommand(command, nodeId, followType);
+        AddRemoteCommand(command, followNodeId);
         return;
     }
 
@@ -83,16 +83,14 @@ void RSTransactionProxy::AddCommand(std::unique_ptr<RSCommand>& command, bool is
     ROSEN_LOGE("RSTransactionProxy::AddCommand failed, command type and client type not match !");
 }
 
-void RSTransactionProxy::AddCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType)
+void RSTransactionProxy::AddCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId followNodeId)
 {
     if (renderServiceClient_ == nullptr || command == nullptr) {
         return;
     }
 
-    {
-        std::unique_lock<std::mutex> cmdLock(mutexForRT_);
-        implicitTransactionDataFromRT_->AddCommand(command, nodeId, followType);
-    }
+    std::unique_lock<std::mutex> cmdLock(mutexForRT_);
+    implicitTransactionDataFromRT_->AddCommand(command, followNodeId);
 }
 
 void RSTransactionProxy::ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task, bool isRenderServiceTask)
@@ -166,20 +164,19 @@ void RSTransactionProxy::Commit(uint64_t timestamp)
 void RSTransactionProxy::AddCommonCommand(std::unique_ptr<RSCommand> &command)
 {
     if (!implicitCommonTransactionDataStack_.empty()) {
-        implicitCommonTransactionDataStack_.top()->AddCommand(command, 0, FollowType::NONE);
+        implicitCommonTransactionDataStack_.top()->AddCommand(command, 0);
         return;
     }
-    implicitCommonTransactionData_->AddCommand(command, 0, FollowType::NONE);
+    implicitCommonTransactionData_->AddCommand(command, 0);
 }
 
-void RSTransactionProxy::AddRemoteCommand(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType)
+void RSTransactionProxy::AddRemoteCommand(std::unique_ptr<RSCommand>& command, NodeId followNodeId)
 {
     if (!implicitRemoteTransactionDataStack_.empty()) {
-        implicitRemoteTransactionDataStack_.top()->AddCommand(command, nodeId, followType);
+        implicitRemoteTransactionDataStack_.top()->AddCommand(command, followNodeId);
         return;
     }
-    implicitRemoteTransactionData_->AddCommand(command, nodeId, followType);
+    implicitRemoteTransactionData_->AddCommand(command, followNodeId);
 }
-
 } // namespace Rosen
 } // namespace OHOS

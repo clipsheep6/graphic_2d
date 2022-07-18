@@ -35,8 +35,8 @@ public:
     void SetRenderServiceClient(const std::shared_ptr<RSIRenderClient>& renderServiceClient);
 
     void AddCommand(std::unique_ptr<RSCommand>& command, bool isRenderServiceCommand = false,
-                    FollowType followType = FollowType::NONE, NodeId nodeId = 0);
-    void AddCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType = FollowType::FOLLOW_TO_PARENT);
+        NodeId followNodeId = 0);
+    void AddCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId followNodeId);
 
     void FlushImplicitTransaction(uint64_t timestamp = 0);
     void FlushImplicitTransactionFromRT(uint64_t timestamp);
@@ -56,9 +56,8 @@ private:
     RSTransactionProxy(const RSTransactionProxy&&) = delete;
     RSTransactionProxy& operator=(const RSTransactionProxy&) = delete;
     RSTransactionProxy& operator=(const RSTransactionProxy&&) = delete;
-
     void AddCommonCommand(std::unique_ptr<RSCommand>& command);
-    void AddRemoteCommand(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType);
+    void AddRemoteCommand(std::unique_ptr<RSCommand>& command, NodeId followNodeId);
 
     // Command Transaction Triggered by UI Thread.
     std::mutex mutex_;

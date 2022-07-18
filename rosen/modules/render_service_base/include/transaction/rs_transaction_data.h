@@ -64,19 +64,19 @@ public:
         return timestamp_;
     }
 
-    std::vector<std::tuple<NodeId, FollowType, std::unique_ptr<RSCommand>>>& GetPayload()
+    std::vector<std::tuple<NodeId, std::unique_ptr<RSCommand>>>& GetPayload()
     {
         return payload_;
     }
 
 private:
-    void AddCommand(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType);
-    void AddCommand(std::unique_ptr<RSCommand>&& command, NodeId nodeId, FollowType followType);
+    void AddCommand(std::unique_ptr<RSCommand>& command, NodeId followNodeId);
+    void AddCommand(std::unique_ptr<RSCommand>&& command, NodeId followNodeId);
 
 #ifdef ROSEN_OHOS
     bool UnmarshallingCommand(Parcel& parcel);
 #endif
-    std::vector<std::tuple<NodeId, FollowType, std::unique_ptr<RSCommand>>> payload_;
+    std::vector<std::tuple<NodeId, std::unique_ptr<RSCommand>>> payload_;
     uint64_t timestamp_ = 0;
 
     friend class RSTransactionProxy;

@@ -75,6 +75,7 @@ std::shared_ptr<RSAnimation> RSImplicitPathAnimationParam::CreateAnimation(
     pathAnimation->SetEndFraction(motionPathOption_->GetEndFraction());
     pathAnimation->SetRotationMode(motionPathOption_->GetRotationMode());
     pathAnimation->SetTimingCurve(timingCurve_);
+    pathAnimation->SetPathNeedAddOrigin(motionPathOption_->GetPathNeedAddOrigin());
     ApplyTimingProtocol(pathAnimation);
     return pathAnimation;
 }

@@ -161,6 +161,21 @@ void RSRenderEngine::DrawLayers(
     }
 }
 
+UniqueFd RSRenderEngine::GetReleaseFenceFd() const
+{
+    RS_TRACE_NAME("RSRenderEngine::GetReleaseFence");
+
+#ifdef RS_ENABLE_EGLIMAGE
+    if (eglImageManager_ == nullptr) {
+        return UniqueFd();
+    }
+
+    return eglImageManager_->CreateSyncFenceFd();
+#else
+    return UniqueFd();
+#endif // RS_ENABLE_EGLIMAGE
+}
+
 static void DrawBufferPostProcess(
     RSPaintFilterCanvas& canvas,
     RSSurfaceRenderNode& node,

@@ -141,6 +141,7 @@ public:
 #endif // RS_ENABLE_EGLIMAGE
 
     void ShrinkEGLImageCachesIfNeeded();
+    UniqueFd GetReleaseFenceFd() const;
 private:
     SkMatrix GetSurfaceNodeGravityMatrix(RSSurfaceRenderNode& node, const RectF& targetRect);
     // This func can only by called in DrawLayers().

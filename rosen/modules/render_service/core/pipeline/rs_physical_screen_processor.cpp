@@ -86,6 +86,12 @@ void RSPhysicalScreenProcessor::Redraw(const sptr<Surface>& surface, const std::
     }
     renderEngine_->DrawLayers(*canvas, layers, screenInfo_, forceCPU, mirrorAdaptiveCoefficient_);
     renderFrame->Flush();
+    sptr<SyncFence> releaseFence = new SyncFence(renderEngine_->GetReleaseFenceFd());
+    if (releaseFence != SyncFence::INVALID_FENCE) {
+        for (const auto& layer : layers) {
+            RSComposerAdapter::SetLayerReleaseFence(layer, releaseFence);
+        }
+    }
     RS_LOGD("RsDebug RSPhysicalScreenProcessor::Redraw flush frame buffer end");
 }
 } // namespace Rosen

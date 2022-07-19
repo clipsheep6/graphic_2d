@@ -54,6 +54,12 @@ public:
     LayerInfoPtr CreateLayer(RSDisplayRenderNode& node);
     void CommitLayers(const std::vector<LayerInfoPtr>& layers);
 
+    // we can use this func to set current or prev layers' release fences.
+    static void SetLayerReleaseFence(
+        const LayerInfoPtr& layer,
+        const sptr<SyncFence>& releaseFence,
+        bool isPrev = false);
+
 private:
     // check if the node is out of the screen region.
     bool IsOutOfScreenRegion(const ComposeInfo& info) const;

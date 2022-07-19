@@ -50,10 +50,6 @@ ohos_shared_library("librender_service") {
     "core/transaction/rs_render_service_stub.cpp",
   ]
 
-  if (rs_enable_eglimage) {
-    sources += [ "core/pipeline/rs_egl_image_manager.cpp" ]
-  }
-
   include_dirs = [
     "core",
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
@@ -72,6 +68,16 @@ ohos_shared_library("librender_service") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//utils/native/base:utils",
   ]
+
+  if (rs_enable_eglimage) {
+    sources += [
+      "core/gpu/gl/egl_api.cpp",
+      "core/gpu/gl/egl_extensions.cpp",
+      "core/pipeline/rs_egl_image_manager.cpp",
+    ]
+
+    include_dirs += [ "core/gpu" ]
+  }
 
   public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
 

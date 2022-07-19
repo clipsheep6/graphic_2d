@@ -71,6 +71,15 @@ void RSVirtualScreenProcessor::PostProcess()
         return;
     }
     renderFrame_->Flush();
+    sptr<SyncFence> releaseFence = new SyncFence(renderEngine_->GetReleaseFenceFd());
+    if (releaseFence != SyncFence::INVALID_FENCE) {
+        for (const auto& node : processedNodes_) {
+            if (node == nullptr) {
+                continue;
+            }
+            node->SetReleaseFence(releaseFence);
+        }
+    }
 }
 
 void RSVirtualScreenProcessor::ProcessSurface(RSSurfaceRenderNode& node)
@@ -103,6 +112,7 @@ void RSVirtualScreenProcessor::ProcessSurface(RSSurfaceRenderNode& node)
         mirrorAdaptiveCoefficient_
     };
     renderEngine_->DrawSurfaceNode(*canvas_, node, screenInfo_, clipRect, infos);
+    processedNodes_.push_back(static_cast<RSSurfaceHandler*>(&node));
 }
 
 void RSVirtualScreenProcessor::ProcessDisplaySurface(RSDisplayRenderNode& node)

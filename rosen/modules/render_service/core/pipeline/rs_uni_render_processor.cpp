@@ -100,6 +100,12 @@ void RSUniRenderProcessor::Redraw(const sptr<Surface>& surface, const std::vecto
     }
     renderEngine_->DrawLayers(*canvas, layers, screenInfo_, forceCPU);
     renderFrame->Flush();
+    sptr<SyncFence> releaseFence = new SyncFence(renderEngine_->GetReleaseFenceFd());
+    if (releaseFence != SyncFence::INVALID_FENCE) {
+        for (const auto& layer : layers) {
+            RSComposerAdapter::SetLayerReleaseFence(layer, releaseFence);
+        }
+    }
     RS_LOGD("RsDebug RSUniRenderProcessor::Redraw flush frame buffer end");
 }
 } // namespace Rosen

@@ -17,22 +17,11 @@
 
 #include <native_window.h>
 #include <platform/common/rs_log.h>
-#include "sync_fence.h"
 #include "pipeline/rs_main_thread.h"
-
-#ifndef NDEBUG
-#include <cassert>
-#endif
 
 namespace OHOS {
 namespace Rosen {
 namespace Detail {
-#ifdef NDEBUG
-#define RS_ASSERT(exp) (void)((exp))
-#else
-#define RS_ASSERT(exp) assert((exp))
-#endif
-
 #define RS_EGL_ERR_CASE_STR(value) case value: return #value
 const char *EGLErrorString(GLint error)
 {
@@ -54,25 +43,6 @@ const char *EGLErrorString(GLint error)
         RS_EGL_ERR_CASE_STR(EGL_CONTEXT_LOST);
         default: return "Unknown";
     }
-}
-
-static PFNEGLCREATEIMAGEKHRPROC GetEGLCreateImageKHRFunc()
-{
-    static auto func = reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"));
-    return func;
-}
-
-static PFNEGLDESTROYIMAGEKHRPROC GetEGLDestroyImageKHRFunc()
-{
-    static auto func = reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"));
-    return func;
-}
-
-static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC GetGLEGLImageTargetTexture2DOESFunc()
-{
-    static auto func = reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
-        eglGetProcAddress("glEGLImageTargetTexture2DOES"));
-    return func;
 }
 
 // RAII object for NativeWindowBuffer
@@ -155,7 +125,7 @@ EGLImageKHR CreateEGLImage(
         EGL_NONE,
     };
 
-    return GetEGLCreateImageKHRFunc()(
+    return eglCreateImageKHR(
         eglDisplay, EGLContext, EGL_NATIVE_BUFFER_OHOS, CastToEGLClientBuffer(nativeBuffer), attrs);
 }
 } // namespace Detail
@@ -171,7 +141,7 @@ ImageCacheSeq::ImageCacheSeq(
 ImageCacheSeq::~ImageCacheSeq() noexcept
 {
     if (eglImage_ != EGL_NO_IMAGE_KHR) {
-        Detail::GetEGLDestroyImageKHRFunc()(eglDisplay_, eglImage_);
+        eglDestroyImageKHR(eglDisplay_, eglImage_);
         eglImage_ = EGL_NO_IMAGE_KHR;
     }
 
@@ -201,7 +171,7 @@ bool ImageCacheSeq::BindToTexture()
 
     // bind this eglImage_ to textureId_.
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, textureId_);
-    Detail::GetGLEGLImageTargetTexture2DOESFunc()(GL_TEXTURE_EXTERNAL_OES, eglImage_);
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, eglImage_);
     return true;
 }
 
@@ -232,14 +202,82 @@ std::unique_ptr<ImageCacheSeq> ImageCacheSeq::Create(
 
 RSEglImageManager::RSEglImageManager(EGLDisplay display) : eglDisplay_(display)
 {
+    InitEglExtensions();
 }
 
-void RSEglImageManager::WaitAcquireFence(const sptr<SyncFence>& acquireFence)
+void RSEglImageManager::InitEglExtensions()
+{
+    const auto version = eglQueryString(eglDisplay_, EGL_VERSION);
+    const auto extensions = eglQueryString(eglDisplay_, EGL_EXTENSIONS);
+    eglExtensions_ = std::make_unique<EGLExtensions>(version, extensions);
+}
+
+UniqueFd RSEglImageManager::CreateSyncFenceFd() const
+{
+    if (!eglExtensions_->HasNativeFenceSync()) {
+        return UniqueFd();
+    }
+
+    EGLSyncKHR sync = eglCreateSyncKHR(eglDisplay_, EGL_SYNC_NATIVE_FENCE_OHOS, nullptr);
+    if (sync == EGL_NO_SYNC_KHR) {
+        RS_LOGE("RSEglImageManager::CreateSyncFenceFd: eglCreateSyncKHR failed(err: %s).",
+            Detail::EGLErrorString(eglGetError()));
+        return UniqueFd();
+    }
+
+    glFlush();
+
+    UniqueFd fenceFd(eglDupNativeFenceFDOHOS(eglDisplay_, sync));
+    eglDestroySyncKHR(eglDisplay_, sync);
+    return fenceFd;
+}
+
+bool RSEglImageManager::WaitGpuNativeFence(const sptr<SyncFence>& acquireFence) const
+{
+    if (!(eglExtensions_->HasNativeFenceSync() && eglExtensions_->HasWaitSync())) {
+        return false;
+    }
+
+    UniqueFd fenceFd(acquireFence->Dup());
+    if (fenceFd.Get() < 0) {
+        RS_LOGE("RSEglImageManager::WaitGpuNativeFence: failed to dup fence fd(err: %d).", errno);
+        return false;
+    }
+
+    EGLint attribs[] = {
+        EGL_SYNC_NATIVE_FENCE_OHOS, fenceFd.Release(),
+        EGL_NONE
+    };
+    EGLSyncKHR sync = eglCreateSyncKHR(eglDisplay_, EGL_SYNC_NATIVE_FENCE_OHOS, attribs);
+    if (sync == EGL_NO_SYNC_KHR) {
+        RS_LOGE("RSEglImageManager::WaitGpuNativeFence: eglCreateSyncKHR failed(err: %s).",
+            Detail::EGLErrorString(eglGetError()));
+        return false;
+    }
+
+    bool ret = false;
+    eglWaitSyncKHR(eglDisplay_, sync, 0);
+    EGLint err = eglGetError();
+    if (err != EGL_SUCCESS) {
+        RS_LOGE("RSEglImageManager::WaitGpuNativeFence: eglWaitSyncKHR failed(err: %s).",
+            Detail::EGLErrorString(err));
+        ret = false;
+    } else {
+        ret = true;
+    }
+    eglDestroySyncKHR(eglDisplay_, sync);
+    return ret;
+}
+
+void RSEglImageManager::WaitAcquireFence(const sptr<SyncFence>& acquireFence) const
 {
     if (acquireFence == nullptr) {
         return;
     }
-    acquireFence->Wait(3000); // 3000ms
+
+    if (!WaitGpuNativeFence(acquireFence)) {
+        acquireFence->Wait(3000); // 3000ms
+    }
 }
 
 GLuint RSEglImageManager::CreateImageCacheFromBuffer(const sptr<OHOS::SurfaceBuffer>& buffer)

@@ -112,6 +112,8 @@ public:
         return (IsInstanceOf<T>()) ? std::static_pointer_cast<T>(shared_from_this()) : nullptr;
     }
 
+    NodeId GetFollowNodeId(FollowType type) const;
+
 protected:
     enum class NodeDirty {
         CLEAN = 0,

@@ -24,11 +24,13 @@
 
 namespace OHOS {
 namespace Rosen {
+NodeId RSRootNode::rootNodeId = 0;
+
 std::shared_ptr<RSNode> RSRootNode::Create(bool isRenderServiceNode)
 {
     std::shared_ptr<RSRootNode> node(new RSRootNode(isRenderServiceNode));
     RSNodeMap::MutableInstance().RegisterNode(node);
-
+    rootNodeId = node->GetId();
     std::unique_ptr<RSCommand> command = std::make_unique<RSRootNodeCreate>(node->GetId());
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {

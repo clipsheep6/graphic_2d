@@ -266,7 +266,9 @@ ScreenId RSRenderServiceConnection::CreateVirtualScreen(
 {
     std::lock_guard<std::mutex> lock(mutex_);
     auto newVirtualScreenId = screenManager_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags);
-    virtualScreenIds_.insert(newVirtualScreenId);
+    if (newVirtualScreenId != INVALID_SCREEN_ID) {
+        virtualScreenIds_.insert(newVirtualScreenId);
+    }
     return newVirtualScreenId;
 }
 

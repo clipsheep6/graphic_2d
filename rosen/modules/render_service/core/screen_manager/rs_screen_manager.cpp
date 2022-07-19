@@ -664,7 +664,9 @@ sptr<Surface> RSScreenManager::GetProducerSurface(ScreenId id) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    // assert screens_.count(id) == 1
+    // GetProducerSurface can only be called after QueryScreenState
+    // And the state is ScreenState::PRODUCER_SURFACE_ENABLE.
+    // Therefore, screens_.count(id) == 1 is guaranteed.
     return screens_.at(id)->GetProducerSurface();
 }
 
@@ -672,7 +674,8 @@ std::shared_ptr<HdiOutput> RSScreenManager::GetOutput(ScreenId id) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    // assert screens_.count(id) == 1
+    // GetOutput can only be called after QueryScreenState and the state is ScreenState::HDI_OUTPUT_ENABLE.
+    // Therefore, screens_.count(id) == 1 is guaranteed.
     return screens_.at(id)->GetOutput();
 }
 

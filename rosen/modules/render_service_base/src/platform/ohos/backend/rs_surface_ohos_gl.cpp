@@ -96,5 +96,16 @@ bool RSSurfaceOhosGl::FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64_
     ROSEN_LOGD("RSSurfaceOhosGl: FlushFrame, SwapBuffers eglsurface is %p", mEglSurface);
     return true;
 }
+
+void RSSurfaceOhosGl::CleanCache()
+{
+    ROSEN_LOGI("RsDebug RSSurfaceOhosGl::CleanCache in");
+    DestoryNativeWindow(mWindow);
+    if (context_ != nullptr) {
+        context_->DestroyEGLSurface(mEglSurface);
+    }
+    mWindow = nullptr;
+    mEglSurface = EGL_NO_SURFACE;
+}
 } // namespace Rosen
 } // namespace OHOS

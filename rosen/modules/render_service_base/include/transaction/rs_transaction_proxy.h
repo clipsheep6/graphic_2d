@@ -75,6 +75,8 @@ private:
     std::shared_ptr<RSIRenderClient> renderServiceClient_ = RSIRenderClient::CreateRenderServiceClient();
     std::unique_ptr<RSIRenderClient> renderThreadClient_ = nullptr;
 
+    pid_t pid_ = getpid();
+    uint32_t uITransactionDataIndex_ = 0;
     static std::once_flag flag_;
     static RSTransactionProxy* instance_;
 };

@@ -138,6 +138,7 @@ private:
     std::unordered_map<NodeId, std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>>> cachedCommands_;
     std::vector<std::unique_ptr<RSCommand>> effectiveCommands_;
     std::vector<std::unique_ptr<RSCommand>> pendingEffectiveCommands_;
+    std::string pendingTransactionFlags_;
 
     uint64_t timestamp_ = 0;
     std::unordered_map<uint32_t, sptr<IApplicationAgent>> applicationAgentMap_;

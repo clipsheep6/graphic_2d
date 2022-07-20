@@ -37,7 +37,8 @@ void RSRenderServiceConnectionProxy::CommitTransaction(std::unique_ptr<RSTransac
         return;
     }
 
-    RS_TRACE_BEGIN("Marsh RSTransactionData: cmd count:" + std::to_string(transactionData->GetCommandCount()));
+    RS_TRACE_BEGIN("Marsh RSTransactionData: cmd count:" + std::to_string(transactionData->GetCommandCount()) +
+        " transactionFlag:" + std::to_string(transactionData->GetTransactionFlag()));
     bool success = data.WriteParcelable(transactionData.get());
     RS_TRACE_END();
     if (!success) {

@@ -76,6 +76,10 @@ GSError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
     sptr<BufferExtraData> bedataimpl = new BufferExtraDataImpl;
     GSError ret = producer_->RequestBuffer(config, bedataimpl, retval);
     if (ret != GSERROR_OK) {
+        if (ret == GSERROR_NO_CONSUMER) {
+            std::lock_guard<std::mutex> lockGuard(mutex_);
+            bufferProducerCache_.clear();
+        }
         BLOGN_FAILURE("Producer report %{public}s", GSErrorStr(ret).c_str());
         return ret;
     }

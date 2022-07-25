@@ -39,8 +39,8 @@ public:
     static void DropFrameProcess(RSSurfaceHandler& surfaceHandler);
     static bool ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler);
     static bool ReleaseBuffer(RSSurfaceHandler& surfaceHandler);
-    static bool ConvertBufferToBitmap(sptr<SurfaceBuffer> buffer, std::vector<uint8_t>& newBuffer, ColorGamut dstGamut,
-        SkBitmap& bitmap);
+    static bool ConvertBufferToBitmap(sptr<SurfaceBuffer> buffer, ColorGamut dstGamut, SkBitmap& bitmap,
+        const std::vector<HDRMetaData>& metaDatas = {});
 #ifdef RS_ENABLE_EGLIMAGE
     static bool ConvertBufferToEglImage(sptr<SurfaceBuffer> buffer, std::shared_ptr<RSEglImageManager> eglImageManager,
         GrContext* grContext, sptr<SyncFence> acquireFence, sk_sp<SkImage>& image);
@@ -52,9 +52,9 @@ private:
     static bool IsBufferValid(const sptr<SurfaceBuffer>& buffer);
     static bool CreateYuvToRGBABitMap(sptr<OHOS::SurfaceBuffer> buffer, std::vector<uint8_t>& newBuffer,
         SkBitmap& bitmap);
-    static bool CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffer, std::vector<uint8_t>& newGamutBuffer,
-        SkBitmap& bitmap, ColorGamut srcGamut, ColorGamut dstGamut);
-    static bool CreateBitmap(sptr<OHOS::SurfaceBuffer> buffer, SkBitmap& bitmap);
+    static bool CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffer, SkBitmap& bitmap,
+    ColorGamut srcGamut, ColorGamut dstGamut, const std::vector<HDRMetaData>& metaDatas = {});
+    static bool CreateBitmap(sptr<OHOS::SurfaceBuffer> buffer, SkBitmap& bitmap, const void* addr);
 };
 }
 }

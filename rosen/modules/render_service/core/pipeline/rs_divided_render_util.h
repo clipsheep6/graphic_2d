@@ -48,6 +48,8 @@ struct BufferDrawParam {
     SkColor backgroundColor = SK_ColorTRANSPARENT;
     ColorGamut targetColorGamut = ColorGamut::COLOR_GAMUT_SRGB;
     const RSProperties* property;
+    std::vector<HDRMetaData> metaDatas = {}; // static meta data for HDR10
+    HDRMetaDataSet metaDataSet; // dynamic meta data for HDR10+, HDR VIVID
 };
 
 class RSDividedRenderUtil {

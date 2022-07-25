@@ -237,6 +237,8 @@ BufferDrawParam RSDividedRenderUtil::CreateBufferDrawParam(RSSurfaceRenderNode& 
         params.buffer = buffer;
         params.srcRect = SkRect::MakeXYWH(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
     }
+
+    surface->GetMetaData(buffer->GetSeqNum(), params.metaDatas);
     return params;
 }
 
@@ -279,8 +281,7 @@ void RSDividedRenderUtil::DrawBuffer(RSPaintFilterCanvas& canvas, BufferDrawPara
     CanvasPostProcess process)
 {
     SkBitmap bitmap;
-    std::vector<uint8_t> newBuffer;
-    if (!RSBaseRenderUtil::ConvertBufferToBitmap(bufferDrawParam.buffer, newBuffer, bufferDrawParam.targetColorGamut,
+    if (!RSBaseRenderUtil::ConvertBufferToBitmap(bufferDrawParam.buffer, bufferDrawParam.targetColorGamut,
         bitmap)) {
         RS_LOGE("RSDividedRenderUtil::DrawBuffer: create bitmap failed.");
         return;

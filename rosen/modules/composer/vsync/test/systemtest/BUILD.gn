@@ -41,7 +41,7 @@ ohos_systemtest("vsync_test") {
   ]
 
   deps = [
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//foundation/graphic/graphic_2d/rosen/modules/composer/vsync:libvsync",
     "//third_party/googletest:gtest_main",
   ]

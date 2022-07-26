@@ -243,6 +243,14 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     }
 
     auto skSurface = surfaceFrame->GetSurface();
+    if (!skSurface) {
+        ROSEN_LOGI("ProcessRoot %s: This skSurface is invalid", ptr->GetName().c_str());
+        return;
+    }
+    if (skSurface->getCanvas() == nullptr) {
+        ROSEN_LOGI("ProcessRoot %s: This canvas is invalid", ptr->GetName().c_str());
+        return;
+    }
     canvas_ = new RSPaintFilterCanvas(skSurface.get());
 
     auto &overdrawController = RSOverdrawController::GetInstance();

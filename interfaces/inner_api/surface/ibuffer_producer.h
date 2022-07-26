@@ -73,6 +73,8 @@ public:
     virtual GSError SetMetaDataSet(int32_t sequence, HDRMetadataKey key,
                                    const std::vector<uint8_t> &metaData) = 0;
 
+    virtual GSError Connect(SurfaceSceneType surfaceSceneType) = 0;
+
     DECLARE_INTERFACE_DESCRIPTOR(u"surf.IBufferProducer");
 
 protected:
@@ -98,6 +100,7 @@ protected:
         BUFFER_PRODUCER_SET_METADATA = 18,
         BUFFER_PRODUCER_SET_METADATASET = 19,
         BUFFER_PRODUCER_GO_BACKGROUND = 20,
+        BUFFER_PRODUCER_CONNECT = 21,
     };
 };
 } // namespace OHOS

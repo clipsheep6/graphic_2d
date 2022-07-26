@@ -73,7 +73,12 @@ NativeValue* RSWindowAnimationManager::OnSetController(NativeEngine& engine, Nat
 
     sptr<RSWindowAnimationController> controller = new RSWindowAnimationController(engine);
     controller->SetJsController(info.argv[0]);
-    SingletonContainer::Get<WindowAdapter>().SetWindowAnimationController(controller);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        WALOGE("Set controller failed, because window adapter is null.");
+        return nullptr;
+    }
+    singleton->SetWindowAnimationController(controller);
     return nullptr;
 }
 } // namespace Rosen

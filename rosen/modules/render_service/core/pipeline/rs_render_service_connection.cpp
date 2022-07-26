@@ -416,10 +416,10 @@ void RSRenderServiceConnection::SetScreenBacklight(ScreenId id, uint32_t level)
     }).wait();
 }
 
-void RSRenderServiceConnection::RegisterBufferAvailableListener(
+int32_t RSRenderServiceConnection::RegisterBufferAvailableListener(
     NodeId id, sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread)
 {
-    auto registerBufferAvailableListener = [id, callback, isFromRenderThread, this]() -> bool {
+    auto registerBufferAvailableListener = [id, callback, isFromRenderThread, this]() -> int32_t {
         if (auto node = this->mainThread_->GetContext().GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
             node->RegisterBufferAvailableListener(callback, isFromRenderThread);
             return true;
@@ -428,8 +428,9 @@ void RSRenderServiceConnection::RegisterBufferAvailableListener(
     };
     if (!registerBufferAvailableListener()) {
         RS_LOGI("RegisterBufferAvailableListener: node not found, post task to retry");
-        mainThread_->PostTask(registerBufferAvailableListener);
+        mainThread_->PostSyncTask(registerBufferAvailableListener);
     }
+    return SUCCESS;
 }
 
 int32_t RSRenderServiceConnection::GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode)

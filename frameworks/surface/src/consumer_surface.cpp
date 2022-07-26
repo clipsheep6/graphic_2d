@@ -291,4 +291,14 @@ GSError ConsumerSurface::GetMetaDataSet(int32_t sequence, HDRMetadataKey &key,
     }
     return consumer_->GetMetaDataSet(sequence, key, metaData);
 }
+
+GSError ConsumerSurface::Connect(SurfaceSceneType surfaceSceneType)
+{
+    return GSERROR_NOT_SUPPORT;
+}
+
+GSError ConsumerSurface::ChangeQueueSize(bool forceIncrease)
+{
+    return consumer_->ChangeQueueSize(forceIncrease);
+}
 } // namespace OHOS

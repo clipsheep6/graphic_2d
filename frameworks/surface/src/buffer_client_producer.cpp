@@ -77,8 +77,7 @@ GSError BufferClientProducer::RequestBuffer(const BufferRequestConfig &config, s
 
     ReadSurfaceBufferImpl(reply, retval.sequence, retval.buffer);
     bedata->ReadFromParcel(reply);
-    retval.fence = SyncFence::INVALID_FENCE;
-    retval.fence->ReadFromMessageParcel(reply);
+    retval.fence = SyncFence::ReadFromMessageParcel(reply);
     reply.ReadInt32Vector(&retval.deletingBuffers);
     return GSERROR_OK;
 }
@@ -367,6 +366,19 @@ GSError BufferClientProducer::SetMetaDataSet(int32_t sequence, HDRMetadataKey ke
         return (GSError)ret;
     }
 
+    return GSERROR_OK;
+}
+
+GSError BufferClientProducer::Connect(SurfaceSceneType surfaceSceneType)
+{
+    DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
+    arguments.WriteInt32(surfaceSceneType);
+    SEND_REQUEST(BUFFER_PRODUCER_CONNECT, arguments, reply, option);
+    int32_t ret = reply.ReadInt32();
+    if (ret != GSERROR_OK) {
+        BLOGN_FAILURE("Remote return %{public}d", ret);
+        return (GSError)ret;
+    }
     return GSERROR_OK;
 }
 }; // namespace OHOS

@@ -100,6 +100,10 @@ public:
     GSError GetMetaDataSet(int32_t sequence, HDRMetadataKey &key,
                            std::vector<uint8_t> &metaData) const override;
 
+    GSError Connect(SurfaceSceneType surfaceSceneType) override;
+
+    GSError ChangeQueueSize(bool forceChange) override;
+
 private:
     bool IsRemote();
 

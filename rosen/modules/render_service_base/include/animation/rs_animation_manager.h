@@ -39,6 +39,7 @@ public:
     ~RSAnimationManager() = default;
 
     void AddAnimation(const std::shared_ptr<RSRenderAnimation>& animation);
+    void ClearAnimation();
     void RemoveAnimation(AnimationId keyId);
     const std::shared_ptr<RSRenderAnimation> GetAnimation(AnimationId id) const;
 

@@ -608,12 +608,12 @@ void RSRenderServiceConnectionProxy::SetScreenBacklight(ScreenId id, uint32_t le
     }
 }
 
-void RSRenderServiceConnectionProxy::RegisterBufferAvailableListener(
+int32_t RSRenderServiceConnectionProxy::RegisterBufferAvailableListener(
     NodeId id, sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread)
 {
     if (callback == nullptr) {
         ROSEN_LOGE("RSRenderServiceConnectionProxy::RegisterBufferAvailableListener: callback is nullptr.");
-        return;
+        return RS_CONNECTION_ERROR;
     }
 
     MessageParcel data;
@@ -621,10 +621,10 @@ void RSRenderServiceConnectionProxy::RegisterBufferAvailableListener(
     MessageOption option;
 
     if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
-        return;
+        return RS_CONNECTION_ERROR;
     }
 
-    option.SetFlags(MessageOption::TF_ASYNC);
+    option.SetFlags(MessageOption::TF_SYNC);
     data.WriteUint64(id);
     data.WriteRemoteObject(callback->AsObject());
     data.WriteBool(isFromRenderThread);
@@ -632,6 +632,8 @@ void RSRenderServiceConnectionProxy::RegisterBufferAvailableListener(
     if (err != NO_ERROR) {
         ROSEN_LOGE("RSRenderServiceConnectionProxy::RegisterBufferAvailableListener: Send Request err.");
     }
+    int32_t result = reply.ReadInt32();
+    return result;
 }
 
 int32_t RSRenderServiceConnectionProxy::GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode)

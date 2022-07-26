@@ -81,7 +81,7 @@ public:
 
     void SetScreenBacklight(ScreenId id, uint32_t level) override;
 
-    void RegisterBufferAvailableListener(
+    int32_t RegisterBufferAvailableListener(
         NodeId id, sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread) override;
 
     int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode) override;

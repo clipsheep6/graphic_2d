@@ -455,6 +455,13 @@ void RSMainThread::PostTask(RSTaskMessage::RSTask task)
     }
 }
 
+void RSMainThread::PostSyncTask(RSTaskMessage::RSTask task)
+{
+    if (handler_) {
+        handler_->PostSyncTask(task);
+    }
+}
+
 void RSMainThread::RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app)
 {
     applicationAgentMap_.emplace(pid, app);

@@ -97,6 +97,7 @@ private:
     static bool CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffer, std::vector<uint8_t>& newGamutBuffer,
         SkBitmap& bitmap, ColorGamut srcGamut, ColorGamut dstGamut);
     static bool enableClient;
+    static int64_t compositionStartTimestamp_;
 };
 } // Rosen
 } // OHOS

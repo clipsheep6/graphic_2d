@@ -358,4 +358,14 @@ GSError ProducerSurface::GetMetaDataSet(int32_t sequence, HDRMetadataKey &key,
 {
     return GSERROR_NOT_SUPPORT;
 }
+
+GSError ProducerSurface::Connect(SurfaceSceneType surfaceSceneType)
+{
+    return producer_->Connect(surfaceSceneType);
+}
+
+GSError ProducerSurface::ChangeQueueSize(bool forceChange)
+{
+    return GSERROR_NOT_SUPPORT;
+}
 } // namespace OHOS

@@ -97,6 +97,10 @@ public:
     virtual GSError GetMetaDataSet(int32_t sequence, HDRMetadataKey &key,
                                    std::vector<uint8_t> &metaData) const = 0;
 
+    virtual GSError Connect(SurfaceSceneType surfaceSceneType) = 0;
+
+    virtual GSError ChangeQueueSize(bool forceIncrease) = 0;
+
     virtual void Dump(std::string &result) const = 0;
 protected:
     Surface() = default;

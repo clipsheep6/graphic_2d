@@ -53,6 +53,8 @@ BufferQueueProducer::BufferQueueProducer(sptr<BufferQueue>& bufferQueue)
     memberFuncMap_[BUFFER_PRODUCER_SET_METADATA] = &BufferQueueProducer::SetMetaDataRemote;
     memberFuncMap_[BUFFER_PRODUCER_SET_METADATASET] = &BufferQueueProducer::SetMetaDataSetRemote;
     memberFuncMap_[BUFFER_PRODUCER_GO_BACKGROUND] = &BufferQueueProducer::GoBackgroundRemote;
+    memberFuncMap_[BUFFER_PRODUCER_CONNECT] = &BufferQueueProducer::ConnectRemote;
+}
 }
 
 BufferQueueProducer::~BufferQueueProducer()
@@ -132,7 +134,6 @@ int32_t BufferQueueProducer::CancelBufferRemote(MessageParcel &arguments, Messag
 
 int32_t BufferQueueProducer::FlushBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
 {
-    sptr<SyncFence> fence = SyncFence::INVALID_FENCE;
     int32_t sequence;
     BufferFlushConfig config;
     sptr<BufferExtraData> bedataimpl = new BufferExtraDataImpl;
@@ -140,7 +141,7 @@ int32_t BufferQueueProducer::FlushBufferRemote(MessageParcel &arguments, Message
     sequence = arguments.ReadInt32();
     bedataimpl->ReadFromParcel(arguments);
 
-    fence->ReadFromMessageParcel(arguments);
+    sptr<SyncFence> fence = SyncFence::ReadFromMessageParcel(arguments);
     ReadFlushConfig(arguments, config);
 
     GSError sret = FlushBuffer(sequence, bedataimpl, fence, config);
@@ -297,6 +298,15 @@ int32_t BufferQueueProducer::SetMetaDataSetRemote(MessageParcel &arguments, Mess
     return 0;
 }
 
+int32_t BufferQueueProducer::ConnectRemote(MessageParcel &arguments, MessageParcel &reply,
+                                           MessageOption &option)
+{
+    SurfaceSceneType surfaceSceneType = static_cast<SurfaceSceneType>(arguments.ReadInt32());
+    GSError sret = Connect(surfaceSceneType);
+    reply.WriteInt32(sret);
+    return 0;
+}
+
 GSError BufferQueueProducer::RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
                                            RequestBufferReturnValue &retval)
 {
@@ -304,13 +314,8 @@ GSError BufferQueueProducer::RequestBuffer(const BufferRequestConfig &config, sp
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (connectedPid_ != 0 && connectedPid_ != GetCallingPid()) {
-            BLOGNW("this BufferQueue has been connected by :%{public}d", connectedPid_);
-            return GSERROR_INVALID_OPERATING;
-        }
-        connectedPid_ = GetCallingPid();
+    if (Connect(SurfaceSceneType::SURFACE_SCENE_TYPE_OTHER) != GSERROR_OK) {
+        return GSERROR_INVALID_OPERATING;
     }
 
     return bufferQueue_->RequestBuffer(config, bedata, retval);
@@ -518,5 +523,21 @@ bool BufferQueueProducer::GetStatus() const
 void BufferQueueProducer::SetStatus(bool status)
 {
     bufferQueue_->SetStatus(status);
+}
+
+GSError BufferQueueProducer::Connect(SurfaceSceneType surfaceSceneType)
+{
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (connectedPid_ != 0 && connectedPid_ != GetCallingPid()) {
+            BLOGNW("this BufferQueue has been connected by :%{public}d", connectedPid_);
+            return GSERROR_INVALID_OPERATING;
+        } else if (connectedPid_ == GetCallingPid()) {
+            return GSERROR_OK;
+        }
+        connectedPid_ = GetCallingPid();
+    }
+    bufferQueue_->Connect(surfaceSceneType);
+    return GSERROR_OK;
 }
 }; // namespace OHOS

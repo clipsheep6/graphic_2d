@@ -67,6 +67,8 @@ public:
     GSError SetMetaData(int32_t sequence, const std::vector<HDRMetaData> &metaData) override;
     GSError SetMetaDataSet(int32_t sequence, HDRMetadataKey key,
                            const std::vector<uint8_t> &metaData) override;
+    
+    GSError Connect(SurfaceSceneType surfaceSceneType) override;
 
 private:
     static inline BrokerDelegator<BufferClientProducer> delegator_;

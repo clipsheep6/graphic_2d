@@ -517,4 +517,17 @@ HWTEST_F(ProducerSurfaceTest, metaDataSet001, Function | MediumTest | Level2)
     ret = pSurface->GetMetaDataSet(sequence, key, metaData);
     ASSERT_EQ(ret, OHOS::GSERROR_NOT_SUPPORT);
 }
+
+/*
+* Function: Connect
+* Type: Function
+* Rank: Important(1)
+* EnvConditions: N/A
+* CaseDescription: 1. call Connect and check ret
+ */
+HWTEST_F(ProducerSurfaceTest, Connect001, Function | MediumTest | Level1)
+{
+    GSError ret = pSurface->Connect(SurfaceSceneType::SURFACE_SCENE_TYPE_EGL);
+    ASSERT_EQ(ret, OHOS::GSERROR_OK);
+}
 }

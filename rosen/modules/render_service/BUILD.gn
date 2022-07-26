@@ -40,6 +40,7 @@ ohos_shared_library("librender_service") {
     "core/pipeline/rs_surface_capture_task.cpp",
     "core/pipeline/rs_uni_render_judgement.cpp",
     "core/pipeline/rs_uni_render_listener.cpp",
+    "core/pipeline/rs_uni_render_mirror_processor.cpp",
     "core/pipeline/rs_uni_render_processor.cpp",
     "core/pipeline/rs_uni_render_util.cpp",
     "core/pipeline/rs_uni_render_visitor.cpp",
@@ -77,9 +78,9 @@ ohos_shared_library("librender_service") {
 
   external_deps = [
     "hitrace_native:hitrace_meter",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
-    "startup_l2:syspara",
   ]
 
   part_name = "graphic_standard"

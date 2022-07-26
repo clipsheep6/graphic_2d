@@ -174,6 +174,14 @@ sptr<SurfaceTunnelHandle> BufferQueueConsumer::GetTunnelHandle() const
     return bufferQueue_->GetTunnelHandle();
 }
 
+GSError BufferQueueConsumer::SetPresentTimestamp(uint32_t sequence, const PresentTimestamp &timestamp)
+{
+    if (bufferQueue_ == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    return bufferQueue_->SetPresentTimestamp(sequence, timestamp);
+}
+
 bool BufferQueueConsumer::GetStatus() const
 {
     return bufferQueue_->GetStatus();
@@ -184,7 +192,7 @@ void BufferQueueConsumer::SetStatus(bool status)
     bufferQueue_->SetStatus(status);
 }
 
-GSError BufferQueueConsumer::CleanCache()
+GSError BufferQueueConsumer::OnConsumerDied()
 {
     if (bufferQueue_ == nullptr) {
         return GSERROR_INVALID_ARGUMENTS;

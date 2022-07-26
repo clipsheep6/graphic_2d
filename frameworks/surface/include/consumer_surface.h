@@ -82,6 +82,7 @@ public:
     void Dump(std::string &result) const override;
 
     GSError CleanCache() override;
+    GSError GoBackground() override;
 
     GSError SetTransform(TransformType transform) override;
     TransformType GetTransform() const override;
@@ -98,6 +99,8 @@ public:
                            std::vector<uint8_t> &metaData) const override;
     GSError SetTunnelHandle(const ExtDataHandle *handle) override;
     sptr<SurfaceTunnelHandle> GetTunnelHandle() const override;
+    GSError SetPresentTimestamp(uint32_t sequence, const PresentTimestamp &timestamp) override;
+    GSError GetPresentTimestamp(uint32_t sequence, PresentTimestampType type, int64_t &time) const override;
 
 private:
     std::map<std::string, std::string> userData_;

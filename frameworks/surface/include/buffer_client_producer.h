@@ -62,12 +62,14 @@ public:
     // Call carefully. This interface will empty all caches of the current process
     GSError CleanCache() override;
     GSError Disconnect() override;
+    GSError GoBackground() override;
 
     GSError SetScalingMode(uint32_t sequence, ScalingMode scalingMode) override;
     GSError SetMetaData(uint32_t sequence, const std::vector<HDRMetaData> &metaData) override;
     GSError SetMetaDataSet(uint32_t sequence, HDRMetadataKey key,
                            const std::vector<uint8_t> &metaData) override;
     GSError SetTunnelHandle(const ExtDataHandle *handle) override;
+    GSError GetPresentTimestamp(uint32_t sequence, PresentTimestampType type, int64_t &time) override;
 
 private:
     static inline BrokerDelegator<BufferClientProducer> delegator_;

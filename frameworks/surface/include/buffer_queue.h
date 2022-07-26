@@ -52,6 +52,7 @@ using BufferElement = struct BufferElement {
     std::vector<HDRMetaData> metaData;
     HDRMetadataKey key;
     std::vector<uint8_t> metaDataSet;
+    PresentTimestamp presentTimestamp = {HARDWARE_DISPLAY_PTS_UNSUPPORTED, 0};
 };
 
 class BufferQueue : public RefBase {
@@ -100,6 +101,7 @@ public:
     uint32_t GetDefaultUsage();
 
     GSError CleanCache();
+    GSError GoBackground();
 
     uint64_t GetUniqueId() const;
 
@@ -122,6 +124,8 @@ public:
                            std::vector<uint8_t> &metaData);
     GSError SetTunnelHandle(const sptr<SurfaceTunnelHandle> &handle);
     sptr<SurfaceTunnelHandle> GetTunnelHandle();
+    GSError SetPresentTimestamp(uint32_t sequence, const PresentTimestamp &timestamp);
+    GSError GetPresentTimestamp(uint32_t sequence, PresentTimestampType type, int64_t &time);
 
     bool GetStatus() const;
     void SetStatus(bool status);
@@ -140,6 +144,7 @@ private:
     GSError CheckRequestConfig(const BufferRequestConfig &config);
     GSError CheckFlushConfig(const BufferFlushConfig &config);
     void DumpCache(std::string &result);
+    void ClearLocked();
 
     int32_t defaultWidth = 0;
     int32_t defaultHeight = 0;

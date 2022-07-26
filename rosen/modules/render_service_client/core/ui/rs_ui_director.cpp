@@ -98,7 +98,7 @@ void RSUIDirector::GoBackground()
         if (surfaceNode != nullptr) {
             sptr<OHOS::Surface> pSurface = surfaceNode->GetSurface();
             if (pSurface != nullptr) {
-                pSurface->CleanCache();
+                pSurface->GoBackground();
             }
         }
     }
@@ -108,7 +108,9 @@ void RSUIDirector::Destroy()
 {
     if (root_ != 0) {
         if (!isUniRenderEnabled_) {
-            RSRenderThread::Instance().Detach(root_);
+            if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
+                node->RemoveFromTree();
+            }
         }
         root_ = 0;
     }
@@ -162,7 +164,7 @@ void RSUIDirector::SetTimeStamp(uint64_t timeStamp, const std::string& abilityNa
 bool RSUIDirector::RunningCustomAnimation(uint64_t timeStamp)
 {
     bool hasRunningAnimation = false;
-    auto animationManager = RSAnimationManagerMap::Instance().GetAnimationManager(gettid());
+    auto animationManager = RSAnimationManagerMap::Instance()->GetAnimationManager(gettid());
     if (animationManager != nullptr) {
         hasRunningAnimation = animationManager->Animate(timeStamp);
         animationManager->Draw();

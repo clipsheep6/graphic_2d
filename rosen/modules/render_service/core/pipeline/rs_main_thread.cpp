@@ -14,10 +14,7 @@
  */
 #include "pipeline/rs_main_thread.h"
 
-#include <memory>
 #include <securec.h>
-#include <string>
-
 #include "rs_trace.h"
 
 #include "command/rs_message_processor.h"
@@ -47,6 +44,7 @@ RSMainThread::RSMainThread() : mainThreadId_(std::this_thread::get_id()) {}
 
 RSMainThread::~RSMainThread() noexcept
 {
+    RemoveRSEventDetector();
     RSInnovation::CloseInnovationSo();
 }
 
@@ -54,6 +52,7 @@ void RSMainThread::Init()
 {
     mainLoop_ = [&]() {
         RS_LOGD("RsDebug mainLoop start");
+        SetRSEventDetectorLoopStartTag();
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
         ConsumeAndUpdateAllNodes();
         ProcessCommand();
@@ -62,21 +61,58 @@ void RSMainThread::Init()
         ReleaseAllNodesBuffer();
         SendCommands();
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
+        SetRSEventDetectorLoopFinishTag();
+        rsEventManager_.UpdateParam();
         RS_LOGD("RsDebug mainLoop end");
     };
 
     runner_ = AppExecFwk::EventRunner::Create(false);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
-
+    InitRSEventDetector();
     sptr<VSyncConnection> conn = new VSyncConnection(rsVSyncDistributor_, "rs");
     rsVSyncDistributor_->AddConnection(conn);
     receiver_ = std::make_shared<VSyncReceiver>(conn);
     receiver_->Init();
     RSDividedRenderUtil::InitEnableClient();
-
     renderEngine_ = std::make_shared<RSRenderEngine>();
     RSInnovation::OpenInnovationSo();
     Occlusion::Region::InitDynamicLibraryFunction();
+}
+
+void RSMainThread::RsEventParamDump(std::string& dumpString)
+{
+    rsEventManager_.DumpAllEventParam(dumpString);
+}
+
+void RSMainThread::RemoveRSEventDetector()
+{
+    if (rsCompositionTimeoutDetector_ != nullptr) {
+        rsEventManager_.RemoveEvent(rsCompositionTimeoutDetector_->GetStringId());
+    }
+}
+
+void RSMainThread::InitRSEventDetector()
+{
+    // default Threshold value of Timeout Event: 2000ms
+    rsCompositionTimeoutDetector_ = RSBaseEventDetector::CreateRSTimeOutDetector(2000, "RS_COMPOSITION_TIMEOUT");
+    if (rsCompositionTimeoutDetector_ != nullptr) {
+        rsEventManager_.AddEvent(rsCompositionTimeoutDetector_, 60000); // report Internal 1min:60s：60000ms
+        RS_LOGD("InitRSEventDetector  finish");
+    }
+}
+
+void RSMainThread::SetRSEventDetectorLoopStartTag()
+{
+    if (rsCompositionTimeoutDetector_ != nullptr) {
+        rsCompositionTimeoutDetector_->SetLoopStartTag();
+    }
+}
+
+void RSMainThread::SetRSEventDetectorLoopFinishTag()
+{
+    if (rsCompositionTimeoutDetector_ != nullptr) {
+        rsCompositionTimeoutDetector_->SetLoopFinishTag();
+    }
 }
 
 void RSMainThread::Start()
@@ -282,15 +318,14 @@ void RSMainThread::CalcOcclusion()
         Occlusion::Region curSurface { rect };
         // Current surface subtract current region, if result region is empty that means it's covered
         Occlusion::Region subResult = curSurface.Sub(curRegion);
-        std::string info = "RSMainThread::CalcOcclusion: id: " + std::to_string(surface->GetId()) + ", ";
-        info.append("name: " + surface->GetName()) + ", ";
-        info.append(subResult.GetRegionInfo());
-        RS_LOGD(info.c_str());
         // Set result to SurfaceRenderNode and its children
         surface->SetVisibleRegionRecursive(subResult, curVisVec);
         // Current region need to merge current surface for next calculation(ignore alpha surface)
+        bool diff = surface->GetDstRect().width_ != surface->GetBuffer()->GetWidth() ||
+                    surface->GetDstRect().height_ != surface->GetBuffer()->GetHeight();
         const uint8_t opacity = 255;
-        if (surface->GetAbilityBgAlpha() == opacity && surface->GetRenderProperties().GetAlpha() == 1.0) {
+        if (surface->GetAbilityBgAlpha() == opacity &&
+            ROSEN_EQ(surface->GetRenderProperties().GetAlpha(), 1.0f) && !diff) {
             curRegion = curSurface.Or(curRegion);
         }
     }
@@ -315,13 +350,6 @@ void RSMainThread::CallbackToWMS(VisibleData& curVisVec)
         }
     }
     if (visibleChanged) {
-        std::string inf;
-        char strBuffer[UINT8_MAX] = { 0 };
-        if (sprintf_s(strBuffer, UINT8_MAX, "RSMainThread::CallbackToWMS:%d - %d", lastVisVec_.size(),
-            curVisVec.size()) != -1) {
-            inf.append(strBuffer);
-        }
-        RS_TRACE_NAME(inf.c_str());
         for (auto& listener : occlusionListeners_) {
             listener->OnOcclusionVisibleChanged(std::make_shared<RSOcclusionData>(curVisVec));
         }
@@ -484,8 +512,6 @@ void RSMainThread::SendCommands()
 
 void RSMainThread::RenderServiceTreeDump(std::string& dumpString)
 {
-    dumpString.append("\n");
-    dumpString.append("-- RenderServiceTreeDump: \n");
     const std::shared_ptr<RSBaseRenderNode> rootNode = context_.GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
         dumpString.append("rootNode is null\n");

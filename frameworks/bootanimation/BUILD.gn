@@ -60,9 +60,7 @@ ohos_executable("bootanimation") {
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//foundation/window/window_manager/dm:libdm",
-    "//foundation/window/window_manager/dmserver:libdms",
     "//foundation/window/window_manager/wm:libwm",
-    "//foundation/window/window_manager/wmserver:libwms",
     "//third_party/cJSON:cjson_static",
     "//third_party/flutter/build/skia:ace_skia_ohos",
     "//third_party/zlib:libz",
@@ -74,7 +72,7 @@ ohos_executable("bootanimation") {
   ]
 
   if (is_standard_system) {
-    external_deps += [ "startup_l2:syspara" ]
+    external_deps += [ "init:libbegetutil" ]
   } else {
     external_deps += [ "startup:syspara" ]
   }

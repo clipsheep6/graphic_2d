@@ -50,6 +50,12 @@ RSNode::RSNode(bool isRenderServiceNode)
     UpdateImplicitAnimator();
 }
 
+RSNode::RSNode(bool isRenderServiceNode, NodeId id)
+    : RSBaseNode(isRenderServiceNode, id), stagingPropertiesExtrator_(id)
+{
+    UpdateImplicitAnimator();
+}
+
 RSNode::~RSNode()
 {
     FallbackAnimationsToRoot();
@@ -829,7 +835,7 @@ void RSNode::ClearModifiers()
 void RSNode::ClearAllModifiers()
 {
     if (animationManager_ == nullptr) {
-        animationManager_ = RSAnimationManagerMap::Instance().GetAnimationManager(gettid());
+        animationManager_ = RSAnimationManagerMap::Instance()->GetAnimationManager(gettid());
     }
     for (auto& [id, modifier] : modifiers_) {
         modifier->MarkRemoveFromNode();
@@ -877,7 +883,7 @@ void RSNode::RemoveModifier(const std::shared_ptr<RSModifier>& modifier)
     modifiers_.erase(iter);
     modifier->MarkRemoveFromNode();
     if (animationManager_ == nullptr) {
-        animationManager_ = RSAnimationManagerMap::Instance().GetAnimationManager(gettid());
+        animationManager_ = RSAnimationManagerMap::Instance()->GetAnimationManager(gettid());
     }
     animationManager_->RemoveProperty(modifier->GetPropertyId());
     std::unique_ptr<RSCommand> command = std::make_unique<RSRemoveModifier>(GetId(), modifier->GetPropertyId());

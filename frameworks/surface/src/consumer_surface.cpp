@@ -43,7 +43,7 @@ ConsumerSurface::~ConsumerSurface()
         BLOGNE("Wrong SptrRefCount! Queue Id:%{public}" PRIu64 " consumer_:%{public}d producer_:%{public}d",
             producer_->GetUniqueId(), consumer_->GetSptrRefCount(), producer_->GetSptrRefCount());
     }
-    CleanCache();
+    consumer_->OnConsumerDied();
     producer_->SetStatus(false);
     consumer_ = nullptr;
     producer_ = nullptr;
@@ -223,10 +223,12 @@ GSError ConsumerSurface::UnregisterConsumerListener()
 
 GSError ConsumerSurface::CleanCache()
 {
-    if (consumer_ == nullptr) {
-        return GSERROR_INVALID_ARGUMENTS;
-    }
-    return consumer_->CleanCache();
+    return GSERROR_NOT_SUPPORT;
+}
+
+GSError ConsumerSurface::GoBackground()
+{
+    return GSERROR_NOT_SUPPORT;
 }
 
 uint64_t ConsumerSurface::GetUniqueId() const
@@ -319,5 +321,19 @@ GSError ConsumerSurface::SetTunnelHandle(const ExtDataHandle *handle)
 sptr<SurfaceTunnelHandle> ConsumerSurface::GetTunnelHandle() const
 {
     return consumer_->GetTunnelHandle();
+}
+
+GSError ConsumerSurface::SetPresentTimestamp(uint32_t sequence, const PresentTimestamp &timestamp)
+{
+    if (timestamp.type == PresentTimestampType::HARDWARE_DISPLAY_PTS_UNSUPPORTED) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    return consumer_->SetPresentTimestamp(sequence, timestamp);
+}
+
+GSError ConsumerSurface::GetPresentTimestamp(uint32_t sequence, PresentTimestampType type,
+                                             int64_t &time) const
+{
+    return GSERROR_NOT_SUPPORT;
 }
 } // namespace OHOS

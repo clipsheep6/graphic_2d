@@ -86,6 +86,15 @@ void RSComposerAdapter::CommitLayers(const std::vector<LayerInfoPtr>& layers)
     std::vector<std::shared_ptr<HdiOutput>> outputs {output_};
     hdiBackend_->Repaint(outputs);
 
+    // get present timestamp from and set present timestamp to surface
+    for (const auto& layer : layers) {
+        if (layer == nullptr || layer->GetSurface() == nullptr) {
+            RS_LOGW("RSComposerAdapter::CommitLayers: layer or layer's cSurface is nullptr");
+            continue;
+        }
+        LayerPresentTimestamp(layer, layer->GetSurface());
+    }
+
     // set all layers' releaseFence.
     const auto layersReleaseFence = hdiBackend_->GetLayersReleaseFence(output_);
     for (const auto& [layer, fence] : layersReleaseFence) {
@@ -134,10 +143,9 @@ bool RSComposerAdapter::IsOutOfScreenRegion(const ComposeInfo& info) const
 
 void RSComposerAdapter::DealWithNodeGravity(RSSurfaceRenderNode& node, ComposeInfo& info) const
 {
-    const auto& buffer = node.GetBuffer(); // private func, guarantee node's buffer is valid.
     const auto& property = node.GetRenderProperties();
-    const float frameWidth = buffer->GetSurfaceBufferWidth();
-    const float frameHeight = buffer->GetSurfaceBufferHeight();
+    const float frameWidth = info.buffer->GetSurfaceBufferWidth();
+    const float frameHeight = info.buffer->GetSurfaceBufferHeight();
     const float boundsWidth = property.GetBoundsWidth();
     const float boundsHeight = property.GetBoundsHeight();
     const Gravity frameGravity = property.GetFrameGravity();
@@ -192,13 +200,37 @@ void RSComposerAdapter::DealWithNodeGravity(RSSurfaceRenderNode& node, ComposeIn
     info.srcRect = newSrcRect;
 }
 
+void RSComposerAdapter::GetComposerInfoSrcRect(ComposeInfo &info, const RSSurfaceRenderNode& node) const
+{
+    const auto& property = node.GetRenderProperties();
+    const auto bufferWidth = info.buffer->GetSurfaceBufferWidth();
+    const auto bufferHeight = info.buffer->GetSurfaceBufferHeight();
+    const auto boundsWidth = property.GetBoundsWidth();
+    const auto boundsHeight = property.GetBoundsHeight();
+    if (bufferWidth != boundsWidth || bufferHeight != boundsHeight) {
+        float xScale = (ROSEN_EQ(boundsWidth, 0.0f) ? 1.0f : bufferWidth / boundsWidth);
+        float yScale = (ROSEN_EQ(boundsHeight, 0.0f) ? 1.0f : bufferHeight / boundsHeight);
+        info.srcRect.x = info.srcRect.x * xScale;
+        info.srcRect.y = info.srcRect.y * yScale;
+        info.srcRect.w = info.srcRect.w * xScale;
+        info.srcRect.h = info.srcRect.h * yScale;
+    }
+}
+
+bool RSComposerAdapter::GetComposerInfoNeedClient(const ComposeInfo &info, RSSurfaceRenderNode& node) const
+{
+    bool needClient = RSDividedRenderUtil::IsNeedClient(node, info);
+    if (info.buffer->GetSurfaceBufferColorGamut() != static_cast<ColorGamut>(screenInfo_.colorGamut)) {
+        needClient = true;
+    }
+    return needClient;
+}
+
 // private func, for RSSurfaceRenderNode.
-ComposeInfo RSComposerAdapter::BuildComposeInfo(RSSurfaceRenderNode& node) const
+ComposeInfo RSComposerAdapter::BuildComposeInfo(RSSurfaceRenderNode& node, bool isTunnelCheck) const
 {
     const auto& dstRect = node.GetDstRect();
     const auto& srcRect = node.GetSrcRect();
-    const auto& buffer = node.GetBuffer(); // we guarantee the buffer is valid.
-
     ComposeInfo info {};
     info.srcRect = IRect {srcRect.left_, srcRect.top_, srcRect.width_, srcRect.height_};
     info.dstRect = IRect {
@@ -210,36 +242,21 @@ ComposeInfo RSComposerAdapter::BuildComposeInfo(RSSurfaceRenderNode& node) const
     info.zOrder = static_cast<int32_t>(node.GetGlobalZOrder());
     info.alpha.enGlobalAlpha = true;
     info.alpha.gAlpha = node.GetGlobalAlpha() * 255; // map gAlpha from float(0, 1) to uint8_t(0, 255).
-    info.buffer = buffer;
     info.fence = node.GetAcquireFence();
     info.blendType = node.GetBlendType();
 
     info.dstRect.x -= static_cast<int32_t>(static_cast<float>(offsetX_) * mirrorAdaptiveCoefficient_);
     info.dstRect.y -= static_cast<int32_t>(static_cast<float>(offsetY_) * mirrorAdaptiveCoefficient_);
     info.visibleRect = info.dstRect;
-
-    const auto& property = node.GetRenderProperties();
-    const auto bufferWidth = buffer->GetSurfaceBufferWidth();
-    const auto bufferHeight = buffer->GetSurfaceBufferHeight();
-    const auto boundsWidth = property.GetBoundsWidth();
-    const auto boundsHeight = property.GetBoundsHeight();
-    if (bufferWidth != boundsWidth || bufferHeight != boundsHeight) {
-        float xScale = (ROSEN_EQ(boundsWidth, 0.0f) ? 1.0f : bufferWidth / boundsWidth);
-        float yScale = (ROSEN_EQ(boundsHeight, 0.0f) ? 1.0f : bufferHeight / boundsHeight);
-        info.srcRect.x = info.srcRect.x * xScale;
-        info.srcRect.y = info.srcRect.y * yScale;
-        info.srcRect.w = info.srcRect.w * xScale;
-        info.srcRect.h = info.srcRect.h * yScale;
+    if (!isTunnelCheck) {
+        const auto& buffer = node.GetBuffer();
+        info.buffer = buffer;
+        GetComposerInfoSrcRect(info, node);
+        info.needClient = GetComposerInfoNeedClient(info, node);
+        DealWithNodeGravity(node, info);
+    } else {
+        info.needClient = false;
     }
-
-    bool needClient = RSDividedRenderUtil::IsNeedClient(node, info);
-    if (buffer->GetSurfaceBufferColorGamut() != static_cast<ColorGamut>(screenInfo_.colorGamut)) {
-        needClient = true;
-    }
-    info.needClient = needClient;
-
-    DealWithNodeGravity(node, info);
-
     return info;
 }
 
@@ -274,7 +291,6 @@ void RSComposerAdapter::SetComposeInfoToLayer(
     if (layer == nullptr) {
         return;
     }
-
     layer->SetSurface(surface);
     layer->SetBuffer(info.buffer, info.fence);
     layer->SetZorder(info.zOrder);
@@ -287,34 +303,39 @@ void RSComposerAdapter::SetComposeInfoToLayer(
     layer->SetDirtyRegion(info.srcRect);
     layer->SetBlendType(info.blendType);
     layer->SetCropRect(info.srcRect);
+    if (node -> GetTunnelHandleChange()) {
+        layer->SetTunnelHandleChange(true);
+        layer->SetTunnelHandle(surface->GetTunnelHandle());
+        node ->SetTunnelHandleChange(false);
+    }
 }
 
-LayerInfoPtr RSComposerAdapter::CreateLayer(RSSurfaceRenderNode& node)
+bool RSComposerAdapter::CheckStatusBeforeCreateLayer(RSSurfaceRenderNode& node, bool isTunnelCheck) const
 {
     if (output_ == nullptr) {
-        RS_LOGE("RSComposerAdapter::CreateLayer: output is nullptr");
-        return nullptr;
+        RS_LOGE("RSComposerAdapter::CheckStatusBeforeCreateLayer: output is nullptr");
+        return false;
     }
 
-    if (node.GetBuffer() == nullptr) {
-        RS_LOGE("RsDebug RSComposerAdapter::CreateLayer: node(%llu) has no available buffer.", node.GetId());
-        return nullptr;
+    auto& buffer = node.GetBuffer();
+    if (isTunnelCheck == false && buffer == nullptr) {
+        RS_LOGD("RsDebug RSComposerAdapter::CheckStatusBeforeCreateLayer:node(%llu) has no available buffer.",
+            node.GetId());
+        return false;
     }
 
     const auto& dstRect = node.GetDstRect();
     const auto& srcRect = node.GetSrcRect();
     // check if the node's srcRect and dstRect are valid.
     if (srcRect.width_ <= 0 || srcRect.height_ <= 0 || dstRect.width_ <= 0 || dstRect.height_ <= 0) {
-        return nullptr;
+        return false;
     }
-
-    RS_LOGD("RsDebug RSComposerAdapter::CreateLayer start(node(%llu) name:[%s] dst:[%d %d %d %d]).",
-        node.GetId(), node.GetName().c_str(), dstRect.left_, dstRect.top_, dstRect.width_, dstRect.height_);
 
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
     if (geoPtr == nullptr) {
-        RS_LOGE("RsDebug RSComposerAdapter::CreateLayer: node(%llu)'s geoPtr is nullptr!", node.GetId());
-        return nullptr;
+        RS_LOGW("RsDebug RSComposerAdapter::CheckStatusBeforeCreateLayer: node(%llu)'s geoPtr is nullptr!",
+            node.GetId());
+        return false;
     }
 
     if (!node.IsNotifyRTBufferAvailable()) {
@@ -323,10 +344,17 @@ LayerInfoPtr RSComposerAdapter::CreateLayer(RSSurfaceRenderNode& node)
                 "Notify RT buffer available", node.GetId());
         node.NotifyRTBufferAvailable();
     }
+    return true;
+}
 
+LayerInfoPtr RSComposerAdapter::CreateBufferLayer(RSSurfaceRenderNode& node)
+{
+    if (!CheckStatusBeforeCreateLayer(node)) {
+        return nullptr;
+    }
     ComposeInfo info = BuildComposeInfo(node);
     if (IsOutOfScreenRegion(info)) {
-        RS_LOGD("RsDebug RSComposerAdapter::CreateLayer: node(%llu) out of screen region, no need to composite.",
+        RS_LOGD("RsDebug RSComposerAdapter::CreateBufferLayer: node(%llu) out of screen region, no need to composite.",
             node.GetId());
         return nullptr;
     }
@@ -334,20 +362,60 @@ LayerInfoPtr RSComposerAdapter::CreateLayer(RSSurfaceRenderNode& node)
     AppendFormat(traceInfo, "ProcessSurfaceNode:%s XYWH[%d %d %d %d]", node.GetName().c_str(),
         info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h);
     RS_TRACE_NAME(traceInfo.c_str());
-    RS_LOGD("RsDebug RSComposerAdapter::CreateLayer surfaceNode id:%llu name:[%s] dst [%d %d %d %d]"\
+    RS_LOGD("RsDebug RSComposerAdapter::CreateBufferLayer surfaceNode id:%llu name:[%s] dst [%d %d %d %d]"\
         "SrcRect [%d %d] rawbuffer [%d %d] surfaceBuffer [%d %d] buffaddr:%p, z:%f, globalZOrder:%d, blendType = %d",
         node.GetId(), node.GetName().c_str(),
         info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h, info.srcRect.w, info.srcRect.h,
         info.buffer->GetWidth(), info.buffer->GetHeight(),
         info.buffer->GetSurfaceBufferWidth(), info.buffer->GetSurfaceBufferHeight(),
         info.buffer.GetRefPtr(), node.GetGlobalZOrder(), info.zOrder, info.blendType);
-
     LayerInfoPtr layer = HdiLayerInfo::CreateHdiLayerInfo();
     SetComposeInfoToLayer(layer, info, node.GetConsumer(), &node);
     LayerRotate(layer);
     LayerCrop(layer);
     LayerScaleDown(layer);
     return layer;
+}
+
+LayerInfoPtr RSComposerAdapter::CreateTunnelLayer(RSSurfaceRenderNode& node)
+{
+    if (!CheckStatusBeforeCreateLayer(node, true)) {
+        return nullptr;
+    }
+    ComposeInfo info = BuildComposeInfo(node, true);
+    if (IsOutOfScreenRegion(info)) {
+        RS_LOGD("RsDebug RSComposerAdapter::CreateTunnelLayer: node(%llu) out of screen region, no need to composite.",
+            node.GetId());
+        return nullptr;
+    }
+    std::string traceInfo;
+    AppendFormat(traceInfo, "ProcessSurfaceNode:%s XYWH[%d %d %d %d]", node.GetName().c_str(),
+        info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h);
+    RS_TRACE_NAME(traceInfo.c_str());
+    LayerInfoPtr layer = HdiLayerInfo::CreateHdiLayerInfo();
+    SetComposeInfoToLayer(layer, info, node.GetConsumer(), &node);
+    LayerRotate(layer);
+    RS_LOGD("RsDebug RSComposerAdapter::CreateTunnelLayer surfaceNode id:%llu name:[%s] dst [%d %d %d %d]"\
+        "SrcRect [%d %d], z:%f, globalZOrder:%d, blendType = %d",
+        node.GetId(), node.GetName().c_str(),
+        info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h, info.srcRect.w, info.srcRect.h,
+        node.GetGlobalZOrder(), info.zOrder, info.blendType);
+    return layer;
+}
+
+LayerInfoPtr RSComposerAdapter::CreateLayer(RSSurfaceRenderNode& node)
+{
+    auto& consumer = node.GetConsumer();
+    if (consumer == nullptr) {
+        RS_LOGE("RSComposerAdapter::CreateLayer get consumer fail");
+        return nullptr;
+    }
+    sptr<SurfaceTunnelHandle> handle = consumer->GetTunnelHandle();
+    if (handle != nullptr) {
+        return CreateTunnelLayer(node);
+    } else {
+        return CreateBufferLayer(node);
+    }
 }
 
 LayerInfoPtr RSComposerAdapter::CreateLayer(RSDisplayRenderNode& node)
@@ -606,6 +674,21 @@ void RSComposerAdapter::LayerScaleDown(const LayerInfoPtr& layer) const
         RS_LOGD("RsDebug RSComposerAdapter::LayerScaleDown layer has been scaledown dst[%d %d %d %d]"\
             "src[%d %d %d %d]", dstRect.x, dstRect.y, dstRect.w, dstRect.h,
             srcRect.x, srcRect.y, srcRect.w, srcRect.h);
+    }
+}
+
+// private func, guarantee the layer and surface are valid
+void RSComposerAdapter::LayerPresentTimestamp(const LayerInfoPtr& layer, const sptr<Surface>& surface) const
+{
+    if (!layer->IsSupportedPresentTimestamp()) {
+        return;
+    }
+    const auto& buffer = layer->GetBuffer();
+    if (buffer == nullptr) {
+        return;
+    }
+    if (surface->SetPresentTimestamp(buffer->GetSeqNum(), layer->GetPresentTimestamp()) != GSERROR_OK) {
+        RS_LOGD("RsDebug RSComposerAdapter::LayerPresentTimestamp: SetPresentTimestamp failed");
     }
 }
 

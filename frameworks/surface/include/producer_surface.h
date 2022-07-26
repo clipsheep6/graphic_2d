@@ -107,6 +107,10 @@ public:
     GSError SetPresentTimestamp(uint32_t sequence, const PresentTimestamp &timestamp) override;
     GSError GetPresentTimestamp(uint32_t sequence, PresentTimestampType type, int64_t &time) const override;
 
+    GSError Connect(SurfaceSceneType surfaceSceneType) override;
+
+    GSError ChangeQueueSize(bool forceChange) override;
+
 private:
     bool IsRemote();
 

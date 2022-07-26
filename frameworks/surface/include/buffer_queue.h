@@ -20,6 +20,7 @@
 #include <list>
 #include <vector>
 #include <mutex>
+#include <atomic>
 
 #include <ibuffer_consumer_listener.h>
 #include <ibuffer_producer.h>
@@ -130,6 +131,10 @@ public:
     bool GetStatus() const;
     void SetStatus(bool status);
 
+    void Connect(SurfaceSceneType surfaceSceneType);
+
+    GSError ChangeQueueSize(bool forceIncrease);
+
 private:
     GSError AllocBuffer(sptr<SurfaceBuffer>& buffer, const BufferRequestConfig &config);
     void DeleteBufferInCache(uint32_t sequence);
@@ -149,7 +154,7 @@ private:
     int32_t defaultWidth = 0;
     int32_t defaultHeight = 0;
     uint32_t defaultUsage = 0;
-    uint32_t queueSize_ = SURFACE_DEFAULT_QUEUE_SIZE;
+    std::atomic<uint32_t> queueSize_ = SURFACE_DEFAULT_QUEUE_SIZE;
     TransformType transform_ = TransformType::ROTATE_NONE;
     std::string name_;
     std::list<int32_t> freeList_;
@@ -167,6 +172,10 @@ private:
     std::condition_variable waitReqCon_;
     sptr<SurfaceTunnelHandle> tunnelHandle_ = nullptr;
     std::atomic_bool isValidStatus_ = true;
+    SurfaceSceneType sceneType_ = SurfaceSceneType::SURFACE_SCENE_TYPE_EGL;
+    std::atomic<int32_t> requestTimeoutCount_ = 0;
+    std::atomic<int32_t> frameCount_ = 0;
+    std::atomic<int32_t> freeBufferIsRedundantCount_ = 0;
 };
 }; // namespace OHOS
 

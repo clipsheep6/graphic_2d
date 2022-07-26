@@ -226,4 +226,18 @@ HWTEST_F(BufferQueueProducerTest, ReqFlu002, Function | MediumTest | Level2)
     ret = bq->ReleaseBuffer(retval.buffer, releaseFence);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
 }
+
+/*
+* Function: Connect
+* Type: Function
+* Rank: Important(1)
+* EnvConditions: N/A
+* CaseDescription: 1. call Connect
+*                  2. check ret
+*/
+HWTEST_F(BufferQueueProducerTest, Connect001, Function | MediumTest | Level1)
+{
+    GSError ret = bqp->Connect(SurfaceSceneType::SURFACE_SCENE_TYPE_EGL);
+    ASSERT_EQ(ret, OHOS::GSERROR_OK);
+}
 }

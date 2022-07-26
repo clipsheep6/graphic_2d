@@ -78,6 +78,8 @@ public:
     bool GetStatus() const;
     void SetStatus(bool status);
 
+    GSError Connect(SurfaceSceneType surfaceSceneType) override;
+
 private:
     GSError CheckConnectLocked();
 
@@ -102,6 +104,7 @@ private:
     int32_t SetMetaDataRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t SetMetaDataSetRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GoBackgroundRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
+    int32_t ConnectRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
 
     using BufferQueueProducerFunc = int32_t (BufferQueueProducer::*)(MessageParcel &arguments,
         MessageParcel &reply, MessageOption &option);

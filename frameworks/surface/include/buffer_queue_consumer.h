@@ -54,6 +54,8 @@ public:
     void SetStatus(bool status);
     GSError OnConsumerDied();
 
+    GSError ChangeQueueSize(bool forceIncrease);
+
 private:
     sptr<BufferQueue> bufferQueue_ = nullptr;
     std::string name_ = "not init";

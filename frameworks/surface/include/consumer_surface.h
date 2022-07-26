@@ -95,6 +95,10 @@ public:
     GSError GetMetaDataSet(int32_t sequence, HDRMetadataKey &key,
                            std::vector<uint8_t> &metaData) const override;
 
+    GSError Connect(SurfaceSceneType surfaceSceneType) override;
+
+    GSError ChangeQueueSize(bool forceIncrease) override;
+
 private:
     std::map<std::string, std::string> userData_;
     sptr<BufferQueueProducer> producer_ = nullptr;

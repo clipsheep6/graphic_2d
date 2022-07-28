@@ -499,6 +499,7 @@ bool ConvertBufferColorGamut(std::vector<uint8_t>& dstBuf, const sptr<OHOS::Surf
         offsetSrc += len.first;
         offsetDst += len.second;
     }
+    dstBuf.resize(offsetDst); // dstBuf size might not be as large ad srcBuf in HDR
 
     return true;
 }

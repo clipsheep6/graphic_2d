@@ -21,6 +21,7 @@
 #include "common/rs_vector2.h"
 #include "common/rs_vector3.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 #include "rs_trace.h"
 
 namespace OHOS {
@@ -518,7 +519,17 @@ bool ConvertYUV420SPToRGBA(std::vector<uint8_t>& rgbaBuf, const sptr<OHOS::Surfa
     }
     return true;
 }
+
+static int64_t GetSysTimeNs()
+{
+    auto now = std::chrono::steady_clock::now().time_since_epoch();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+}
+
+constexpr int32_t COMPOSITION_DURATION_THRESHOLD = 16000000; // 16ms
 } // namespace Detail
+
+int64_t RSBaseRenderUtil::compositionStartTimestamp_ = 0;
 
 void RSBaseRenderUtil::DropFrameProcess(RSSurfaceHandler& node)
 {
@@ -560,6 +571,8 @@ void RSBaseRenderUtil::DropFrameProcess(RSSurfaceHandler& node)
 
 bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler)
 {
+    compositionStartTimestamp_ = Detail::GetSysTimeNs();
+
     auto availableBufferCnt = surfaceHandler.GetAvailableBufferCount();
     if (availableBufferCnt <= 0) {
         // this node has no new buffer, try use old buffer.
@@ -596,6 +609,7 @@ bool RSBaseRenderUtil::ReleaseBuffer(RSSurfaceHandler& surfaceHandler)
         return false;
     }
 
+    bool forceIncrease = false;
     auto& preBuffer = surfaceHandler.GetPreBuffer();
     if (preBuffer.buffer != nullptr) {
         auto ret = consumer->ReleaseBuffer(preBuffer.buffer, preBuffer.releaseFence);
@@ -607,6 +621,14 @@ bool RSBaseRenderUtil::ReleaseBuffer(RSSurfaceHandler& surfaceHandler)
         // reset prevBuffer if we release it successfully,
         // to avoid releasing the same buffer next frame in some situations.
         preBuffer.Reset();
+        if (Detail::GetSysTimeNs() - compositionStartTimestamp_ > Detail::COMPOSITION_DURATION_THRESHOLD) {
+            forceIncrease = true;
+        }
+    }
+
+    if (RSSystemProperties::GetDynamicBufferQueueSizeEnableStatus()) {
+        // enable dynamic buffer queue size manager
+        consumer->ChangeQueueSize(forceIncrease);
     }
 
     return true;

@@ -21,16 +21,14 @@
 
 #include "transaction/rs_transaction.h"
 #include "ui/rs_surface_node.h"
-// #include "window_option.h"
 
-using namespace OHOS;
-using namespace OHOS::Rosen;
-using namespace std;
-
-sptr<Surface> GetWindowSurface(uint32_t w, uint32_t h)
+namespace OHOS {
+namespace Rosen {
+namespace Test {
+sptr<OHOS::Surface> GetWindowSurface(uint32_t w, uint32_t h)
 {
     sptr<WindowOption> option = new WindowOption();
-    option->SetWindowRect({ 0, 0, w, h});
+    option->SetWindowRect( { 0, 0, w, h} );
     option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_APP_LAUNCHING);
     option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
     sptr<OHOS::Rosen::Window> previewWindow = Rosen::Window::Create("xcomponent_window", option);
@@ -49,19 +47,24 @@ struct PriData {
     ExtDataHandle handle;
     int data;
 };
+}
+}
+}
 
 int main()
 {
-    sptr<Surface> surface = GetWindowSurface(700, 1080);
+    std::cout << "Test Begin" << std::endl;
+    // 700 500 : surface width and height
+    sptr<OHOS::Surface> surface = OHOS::Rosen::Test::GetWindowSurface(700, 500); 
     if (surface == nullptr) {
         return 0;
     }
-
+    std::cout << "GetWindowSurface Success" << std::endl;
     sptr<OHOS::SurfaceBuffer> buffer;
     int32_t releaseFence;
     OHOS::BufferRequestConfig config = {
-        .width = 700,
-        .height = 1080,
+        .width = 700, // width
+        .height = 500, // height
         .strideAlignment = 0x8,
         .format = PIXEL_FMT_YCBCR_422_P,
         .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
@@ -70,14 +73,14 @@ int main()
     OHOS::SurfaceError ret = surface->RequestBuffer(buffer, releaseFence, config);
 
     if (buffer == nullptr) {
-        cout << "request buffer failed: buffer is nullptr" << endl;;
+        std::cout << "request buffer failed: buffer is nullptr" << std::endl;
         return 0;
     }
     if (buffer->GetVirAddr() == nullptr) {
-        cout << "get virAddr failed: virAddr is nullptr"<< endl;
+        std::cout << "get virAddr failed: virAddr is nullptr"<< std::endl;
         return 0;
     }
-
+    std::cout << "RequestBuffer Success" << std::endl;
     OHOS::BufferFlushConfig flushConfig = {
         .damage = {
             .w = buffer->GetWidth(),
@@ -85,5 +88,6 @@ int main()
         },
     };
     ret = surface->FlushBuffer(buffer, -1, flushConfig);
-    sleep(1000);
+    std::cout << "FlushBuffer Success" << std::endl;
+    sleep(1000); // wait 1000s
 }

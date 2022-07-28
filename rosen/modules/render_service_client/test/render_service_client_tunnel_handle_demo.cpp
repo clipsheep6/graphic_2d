@@ -22,11 +22,10 @@
 #include "transaction/rs_transaction.h"
 #include "ui/rs_surface_node.h"
 
-using namespace OHOS;
-using namespace OHOS::Rosen;
-using namespace std;
-
-sptr<Surface> GetWindowSurface(uint32_t w, uint32_t h)
+namespace OHOS {
+namespace Rosen {
+namespace Test {
+sptr<OHOS::Surface> GetWindowSurface(uint32_t w, uint32_t h)
 {
     sptr<WindowOption> option = new WindowOption();
     option->SetWindowRect({ 0, 0, w, h});
@@ -34,7 +33,7 @@ sptr<Surface> GetWindowSurface(uint32_t w, uint32_t h)
     option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
     sptr<OHOS::Rosen::Window> previewWindow = Rosen::Window::Create("xcomponent_window", option);
     if (previewWindow == nullptr || previewWindow->GetSurfaceNode() == nullptr) {
-        cout << "previewWindow is nullptr" << endl;
+        std::cout << "previewWindow is nullptr" << std::endl;
         return nullptr;
     }
     previewWindow->Show();
@@ -48,14 +47,25 @@ struct PriData {
     ExtDataHandle handle;
     int data;
 };
+}
+}
+}
 
 int main()
 {
-    sptr<Surface> surface = GetWindowSurface(720, 1280);
-    PriData priHandle;
+    std::cout << "Test Begin " << std::endl;
+    // 500 300 width and height
+    sptr<OHOS::Surface> surface = OHOS::Rosen::Test::GetWindowSurface(500, 300);
+    if (surface == nullptr) {
+        return 0;
+    }
+    std::cout << "GetWindowSurface Success" << std::endl;
+    OHOS::Rosen::Test::PriData priHandle;
     priHandle.handle.fd = -1;
     priHandle.handle.reserveInts = 1;
     priHandle.data = 1;
-    surface->SetTunnelHandle(reinterpret_cast<ExtDataHandle*>(&priHandle));
-    sleep(1000);
+    std::cout << "SetTunnelHandle Begin " << std::endl;
+    surface->SetTunnelHandle(reinterpret_cast<OHOS::Rosen::ExtDataHandle*>(&priHandle));
+    std::cout << "SetTunnelHandle Finish " << std::endl;
+    sleep(1000); // wait 1000s
 }

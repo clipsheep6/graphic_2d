@@ -22,8 +22,9 @@
 #include "transaction/rs_transaction.h"
 #include "ui/rs_surface_node.h"
 
-namespace OHOS {
-namespace Rosen {
+using namespace OHOS;
+using namespace OHOS::Rosen;
+
 namespace Test {
 sptr<OHOS::Surface> GetWindowSurface(uint32_t w, uint32_t h)
 {
@@ -48,24 +49,22 @@ struct PriData {
     int data;
 };
 }
-}
-}
 
 int main()
 {
     std::cout << "Test Begin " << std::endl;
     // 500 300 width and height
-    sptr<OHOS::Surface> surface = OHOS::Rosen::Test::GetWindowSurface(500, 300);
+    sptr<OHOS::Surface> surface = Test::GetWindowSurface(500, 300);
     if (surface == nullptr) {
         return 0;
     }
     std::cout << "GetWindowSurface Success" << std::endl;
-    OHOS::Rosen::Test::PriData priHandle;
+    Test::PriData priHandle;
     priHandle.handle.fd = -1;
     priHandle.handle.reserveInts = 1;
     priHandle.data = 1;
     std::cout << "SetTunnelHandle Begin " << std::endl;
-    surface->SetTunnelHandle(reinterpret_cast<OHOS::Rosen::ExtDataHandle*>(&priHandle));
+    surface->SetTunnelHandle(reinterpret_cast<ExtDataHandle*>(&priHandle));
     std::cout << "SetTunnelHandle Finish " << std::endl;
     sleep(1000); // wait 1000s
 }

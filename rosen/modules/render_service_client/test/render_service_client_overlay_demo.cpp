@@ -22,18 +22,19 @@
 #include "transaction/rs_transaction.h"
 #include "ui/rs_surface_node.h"
 
-namespace OHOS {
-namespace Rosen {
+using namespace OHOS;
+using namespace OHOS::Rosen;
+
 namespace Test {
 sptr<OHOS::Surface> GetWindowSurface(uint32_t w, uint32_t h)
 {
     sptr<WindowOption> option = new WindowOption();
-    option->SetWindowRect( { 0, 0, w, h} );
+    option->SetWindowRect({ 0, 0, w, h});
     option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_APP_LAUNCHING);
     option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
     sptr<OHOS::Rosen::Window> previewWindow = Rosen::Window::Create("xcomponent_window", option);
     if (previewWindow == nullptr || previewWindow->GetSurfaceNode() == nullptr) {
-        cout << "previewWindow is nullptr" << endl;
+        std::cout << "previewWindow is nullptr" << std::endl;
         return nullptr;
     }
     previewWindow->Show();
@@ -42,20 +43,13 @@ sptr<OHOS::Surface> GetWindowSurface(uint32_t w, uint32_t h)
     Rosen::RSTransaction::FlushImplicitTransaction();
     return surfaceNode->GetSurface();
 }
-
-struct PriData {
-    ExtDataHandle handle;
-    int data;
-};
-}
-}
 }
 
 int main()
 {
     std::cout << "Test Begin" << std::endl;
     // 700 500 : surface width and height
-    sptr<OHOS::Surface> surface = OHOS::Rosen::Test::GetWindowSurface(700, 500); 
+    sptr<OHOS::Surface> surface = Test::GetWindowSurface(700, 500);
     if (surface == nullptr) {
         return 0;
     }

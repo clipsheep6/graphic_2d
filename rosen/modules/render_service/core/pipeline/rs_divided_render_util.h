@@ -41,6 +41,7 @@ struct BufferDrawParam {
     SkRect srcRect;
     SkRect dstRect;
     SkRect clipRect;
+    SkRect fullRect; // the uncropped (x, y, w, h) of the full window
     Vector4f cornerRadius;
     bool isNeedClip = true;
     SkPaint paint;

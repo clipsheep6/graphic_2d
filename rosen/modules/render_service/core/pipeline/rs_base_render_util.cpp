@@ -389,7 +389,7 @@ uint8_t RGBFloatToUint10(float val)
     return static_cast<uint8_t>(Saturate(val) * 1023 + 0.5f); // 255.0 is the max value, + 0.5f to avoid negative.
 }
 
-Offset RGBUintToFloat(uint8_t* dst, uint8_t* src, int32_t pixelFormat, Vector3f &srcColor,
+uint8_t RGBUintToFloat(uint8_t* dst, uint8_t* src, int32_t pixelFormat, Vector3f &srcColor,
     std::array<uint8_t*, 3> &colorDst)
 {
     // Because PixelFormat does not have enumeration for RGBA_16 or RGBA_1010102,
@@ -403,7 +403,7 @@ Offset RGBUintToFloat(uint8_t* dst, uint8_t* src, int32_t pixelFormat, Vector3f 
         colorDst = {dst + 0, dst + 1, dst + 2};
         // Alpha: linear transfer src[3] to dst[3]
         dst[3] = RGBFloatToUint8(RGBUint10ToFloat(src16[3]));
-        return std::make_pair(8, 4); // 8 bytes per pixel and HDR pictures are always redrawn as sRGB
+        return 8; // 8 bytes per pixel and HDR pictures are always redrawn as sRGB
     }
     if (pixelFormat == STUB_PIXEL_FMT_RGBA_1010102) {
         auto src32 = (const uint32_t*) src;
@@ -414,7 +414,7 @@ Offset RGBUintToFloat(uint8_t* dst, uint8_t* src, int32_t pixelFormat, Vector3f 
         colorDst = {dst + 0, dst + 1, dst + 2};
         // Alpha: copy src[3] to dst[3]
         dst[3] = (uint8_t)(*src32 >> 30);
-        return std::make_pair(4, 4); // 4 bytes per pixel and HDR pictures are always redrawn as sRGB
+        return 4; // 4 bytes per pixel and HDR pictures are always redrawn as sRGB
     }
     switch (static_cast<PixelFormat>(pixelFormat)) {
         case PixelFormat::PIXEL_FMT_RGBX_8888:
@@ -425,14 +425,14 @@ Offset RGBUintToFloat(uint8_t* dst, uint8_t* src, int32_t pixelFormat, Vector3f 
             colorDst = {dst + 0, dst + 1, dst + 2};
             // Alpha: copy src[3] to dst[3]
             dst[3] = src[3];
-            return std::make_pair(4, 4); // 4 bytes per pixel.
+            return 4; // 4 bytes per pixel.
         }
         case PixelFormat::PIXEL_FMT_RGB_888: {
             // R: src[0], G: src[1], B: src[2]
             srcColor = {RGBUint8ToFloat(src[0]), RGBUint8ToFloat(src[1]), RGBUint8ToFloat(src[2])};
             // R: dst + 0, G: dst + 1, B: dst + 2
             colorDst = {dst + 0, dst + 1, dst + 2};
-            return std::make_pair(3, 3); // 3 bytes per pixel.
+            return 3; // 3 bytes per pixel.
         }
         case PixelFormat::PIXEL_FMT_BGRX_8888:
         case PixelFormat::PIXEL_FMT_BGRA_8888: {
@@ -442,11 +442,11 @@ Offset RGBUintToFloat(uint8_t* dst, uint8_t* src, int32_t pixelFormat, Vector3f 
             colorDst = {dst + 2, dst + 1, dst + 0};
             // Alpha: copy src[3] to dst[3]
             dst[3] = src[3];
-            return std::make_pair(4, 4); // 4 bytes per pixel.
+            return 4; // 4 bytes per pixel.
         }
         default: {
             RS_LOGE("RGBUintToFloat: unexpected pixelFormat(%d).", pixelFormat);
-            return std::make_pair(0, 0);
+            return 0;
         }
     }
 }
@@ -454,17 +454,16 @@ Offset RGBUintToFloat(uint8_t* dst, uint8_t* src, int32_t pixelFormat, Vector3f 
 Offset ConvertColorGamut(uint8_t* dst, uint8_t* src, int32_t pixelFormat, SimpleColorSpace& srcColorSpace,
     SimpleColorSpace& dstColorSpace)
 {
-    Offset len(0, 0);
     Vector3f srcColor;
     std::array<uint8_t*, 3> colorDst; // color dst, 3 bytes (R G B).
 
-    len = RGBUintToFloat(dst, src, pixelFormat, srcColor, colorDst);
+    auto len = RGBUintToFloat(dst, src, pixelFormat, srcColor, colorDst);
     Vector3f outColor = dstColorSpace.XYZToRGB(srcColorSpace.RGBToXYZ(srcColor));
     *(colorDst[0]) = RGBFloatToUint8(outColor[0]); // outColor 0 to colorDst[0]
     *(colorDst[1]) = RGBFloatToUint8(outColor[1]); // outColor 1 to colorDst[1]
     *(colorDst[2]) = RGBFloatToUint8(outColor[2]); // outColor 2 to colorDst[2]
 
-    return len;
+    return std::make_pair(len, 4);
 }
 
 bool ConvertBufferColorGamut(std::vector<uint8_t>& dstBuf, const sptr<OHOS::SurfaceBuffer>& srcBuf,

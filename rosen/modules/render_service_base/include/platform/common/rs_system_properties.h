@@ -42,6 +42,7 @@ public:
     static bool GetOcclusionEnabled();
     static std::string GetRSEventProperty(const std::string &paraName);
     static bool GetDirectClientCompEnableStatus();
+    static bool GetDynamicBufferQueueSizeEnableStatus();
 
 private:
     RSSystemProperties() = default;

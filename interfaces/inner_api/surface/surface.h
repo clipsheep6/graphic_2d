@@ -106,6 +106,10 @@ public:
     virtual GSError GetPresentTimestamp(uint32_t sequence, PresentTimestampType type,
                                         int64_t &time) const = 0;
 
+    virtual GSError Connect(SurfaceSceneType surfaceSceneType) = 0;
+
+    virtual GSError ChangeQueueSize(bool forceIncrease) = 0;
+
     virtual void Dump(std::string &result) const = 0;
 protected:
     Surface() = default;

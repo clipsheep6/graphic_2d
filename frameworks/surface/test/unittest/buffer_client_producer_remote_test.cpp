@@ -293,4 +293,18 @@ HWTEST_F(BufferClientProducerRemoteTest, ReqFlu002, Function | MediumTest | Leve
     ret = bp->FlushBuffer(retval.sequence, bedata, acquireFence, flushConfig);
     ASSERT_NE(ret, OHOS::GSERROR_OK);
 }
+
+/*
+* Function: Connect
+* Type: Function
+* Rank: Important(1)
+* EnvConditions: N/A
+* CaseDescription: 1. call Connect
+*                  2. check ret
+*/
+HWTEST_F(BufferClientProducerRemoteTest, Connect001, Function | MediumTest | Level1)
+{
+    GSError ret = bp->Connect(SurfaceSceneType::SURFACE_SCENE_TYPE_EGL);
+    ASSERT_EQ(ret, OHOS::GSERROR_OK);
+}
 }

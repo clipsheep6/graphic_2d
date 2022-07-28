@@ -424,4 +424,14 @@ GSError ProducerSurface::GetPresentTimestamp(uint32_t sequence, PresentTimestamp
     }
     return producer_->GetPresentTimestamp(sequence, type, time);
 }
+
+GSError ProducerSurface::Connect(SurfaceSceneType surfaceSceneType)
+{
+    return producer_->Connect(surfaceSceneType);
+}
+
+GSError ProducerSurface::ChangeQueueSize(bool forceChange)
+{
+    return GSERROR_NOT_SUPPORT;
+}
 } // namespace OHOS

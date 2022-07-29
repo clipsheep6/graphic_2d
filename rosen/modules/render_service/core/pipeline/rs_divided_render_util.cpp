@@ -220,6 +220,8 @@ BufferDrawParam RSDividedRenderUtil::CreateBufferDrawParam(RSSurfaceRenderNode& 
     params.clipRect = dstRect;
     params.paint = paint;
     params.cornerRadius = property.GetCornerRadius();
+    params.fullRect = SkRect::MakeXYWH(node.GetTotalMatrix().getTranslateX(), node.GetTotalMatrix().getTranslateY(),
+        property.GetBoundsWidth(), property.GetBoundsHeight());
     params.isNeedClip = property.GetClipToFrame();
     params.backgroundColor = static_cast<SkColor>(property.GetBackgroundColor().AsArgbInt());
     if (!isClipHole) {
@@ -232,9 +234,9 @@ BufferDrawParam RSDividedRenderUtil::CreateBufferDrawParam(RSSurfaceRenderNode& 
 void SetPropertiesForCanvas(RSPaintFilterCanvas& canvas, const BufferDrawParam& bufferDrawParam)
 {
     if (bufferDrawParam.isNeedClip) {
-        SkRect clipRect = bufferDrawParam.clipRect;
         if (!bufferDrawParam.cornerRadius.IsZero()) {
-            RectF rect(clipRect.left(), clipRect.top(), clipRect.width(), clipRect.height());
+            auto fullRect = bufferDrawParam.fullRect;
+            RectF rect(fullRect.left(), fullRect.top(), fullRect.width(), fullRect.height());
             RRect rrect = RRect(rect, bufferDrawParam.cornerRadius);
             canvas.clipRRect(RSPropertiesPainter::RRect2SkRRect(rrect), true);
         } else {

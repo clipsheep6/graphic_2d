@@ -20,7 +20,7 @@
 #include <surface.h>
 #include <surface_buffer.h>
 #include <sync_fence.h>
-
+#include "hdi_log.h"
 #include "surface_type.h"
 #include "display_type.h"
 
@@ -296,6 +296,58 @@ public:
     void SetPresentTimestamp(const PresentTimestamp &timestamp)
     {
         presentTimestamp_ = timestamp;
+    }
+    
+    void CopyLayerInfo(std::shared_ptr<HdiLayerInfo> layerInfo)
+    {
+        zOrder_ = layerInfo->GetZorder();
+        visibleNum_ = layerInfo->GetVisibleNum();
+        layerRect_ = layerInfo->GetLayerSize();
+        visibleRegion_ = layerInfo->GetVisibleRegion();
+        dirtyRegion_ = layerInfo->GetDirtyRegion();
+        cropRect_ = layerInfo->GetCropRect();
+        layerAlpha_ = layerInfo->GetAlpha();
+        transformType_ = layerInfo->GetTransformType();
+        compositionType_ = layerInfo->GetCompositionType();
+        blendType_ = layerInfo->GetBlendType();
+        tunnelHandle_ = layerInfo->GetTunnelHandle();
+        tunnelHandleChange_ = layerInfo->GetTunnelHandleChange();
+        additionalInfo_ = layerInfo->GetLayerAdditionalInfo();
+        cSurface_ = layerInfo->GetSurface();
+        sbuffer_ = layerInfo->GetBuffer();
+        preMulti_ = layerInfo->IsPreMulti();
+    }
+
+    bool IsSameRect(const IRect& rect1, const IRect& rect2)
+    {
+        return rect1.x == rect2.x && rect1.y == rect2.y && rect1.w == rect2.w && rect1.h == rect2.h;
+    }
+
+    bool IsSameAlpha(const LayerAlpha& layerAlpha1, const LayerAlpha& layerAlpha2)
+    {
+        return layerAlpha1.enGlobalAlpha == layerAlpha2.enGlobalAlpha && layerAlpha1.gAlpha == layerAlpha2.gAlpha &&
+               layerAlpha1.alpha0 == layerAlpha2.alpha0 && layerAlpha1.alpha1 == layerAlpha2.alpha1 &&
+               layerAlpha1.enPixelAlpha == layerAlpha2.enPixelAlpha;
+    }
+
+    bool operator ==(std::shared_ptr<HdiLayerInfo> layerInfo) const
+    {
+        return sbuffer_ == layerInfo->GetBuffer() && acquireFence_ == layerInfo->GetAcquireFence() &&
+               IsSameRect(layerRect_, layerInfo->GetLayerSize()) &&
+               IsSameRect(cropRect_, layerInfo->GetCropRect()) &&
+               IsSameRect(dirtyRegion_, layerInfo->GetDirtyRegion()) &&
+               IsSameRect(visibleRegion_, layerInfo->GetVisibleRegion()) &&
+               additionalInfo_ != layerInfo->GetLayerAdditionalInfo() &&
+               cSurface_ != layerInfo->GetSurface() &&
+               compositionType_ != layerInfo->GetCompositionType() &&
+               IsSameAlpha(layerAlpha_, layerInfo->GetAlpha()) &&
+               zOrder_ != layerInfo->GetZorder() &&
+               transformType_ != layerInfo->GetTransformType() &&
+               visibleNum_ != layerInfo->GetVisibleNum() &&
+               blendType_ != layerInfo->GetBlendType() &&
+               preMulti_ != layerInfo->IsPreMulti() &&
+               tunnelHandle_ != layerInfo->GetTunnelHandle() &&
+               tunnelHandleChange_ != layerInfo->GetTunnelHandleChange();
     }
 
     void Dump(std::string &result) const

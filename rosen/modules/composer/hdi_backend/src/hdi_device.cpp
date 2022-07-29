@@ -308,6 +308,7 @@ int32_t HdiDevice::GetSupportedMetaDataKey(uint32_t screenId, std::vector<HDRMet
     uint32_t num = 0;
     int32_t ret = deviceFuncs_->GetSupportedMetadataKey(screenId, &num, nullptr);
     if (ret != DISPLAY_SUCCESS) {
+        HLOGE("GetSupportedMetaDataKey failed, ret is %{public}d", ret);
         return ret;
     }
     if (num > 0) {

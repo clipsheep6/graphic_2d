@@ -670,6 +670,41 @@ bool ConvertYUV420SPToRGBA(std::vector<uint8_t>& rgbaBuf, const sptr<OHOS::Surfa
 }
 } // namespace Detail
 
+bool RSBaseRenderUtil::StubConvertBufferColorGamut(sptr<OHOS::SurfaceBuffer>& dstBuf, ColorGamut srcGamut, ColorGamut dstGamut,
+    const std::vector<HDRMetaData>& metaDatas, uint8_t* srcStart, int32_t pixelFormat, uint32_t bufferSize)
+{
+    RS_TRACE_NAME("ConvertBufferColorGamut");
+    
+    if (!IsSupportedFormatForGamutConversion(pixelFormat)) {
+        RS_LOGE("ConvertBufferColorGamut: the buffer's format is not supported.");
+        return false;
+    }
+    if (!IsSupportedColorGamut(srcGamut) || !IsSupportedColorGamut(dstGamut)) {
+        return false;
+    }
+
+    uint32_t dstBufferSize = dstBuf->GetSize();
+
+    auto bufferAddr = dstBuf->GetVirAddr();
+    uint8_t* dstStart = static_cast<uint8_t*>(bufferAddr);
+
+    uint32_t offsetDst = 0, offsetSrc = 0;
+    auto& srcColorSpace = GetColorSpaceOfCertainGamut(srcGamut, metaDatas);
+    auto& dstColorSpace = GetColorSpaceOfCertainGamut(dstGamut, metaDatas);
+    while (offsetSrc < bufferSize && offsetDst < dstBufferSize) {
+        uint8_t* dst = dstStart + offsetDst;;
+        uint8_t* src = srcStart + offsetSrc;
+        Offset len = ConvertColorGamut(dst, src, pixelFormat, srcColorSpace, dstColorSpace);
+        if (len.first == 0 || len.second == 0) {
+            return false;
+        }
+        offsetSrc += len.first;
+        offsetDst += len.second;
+    }
+
+    return true;
+}
+
 void RSBaseRenderUtil::DropFrameProcess(RSSurfaceHandler& node)
 {
     auto availableBufferCnt = node.GetAvailableBufferCount();

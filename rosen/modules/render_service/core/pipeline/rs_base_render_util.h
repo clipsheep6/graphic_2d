@@ -41,6 +41,8 @@ public:
     static bool ReleaseBuffer(RSSurfaceHandler& surfaceHandler);
     static bool ConvertBufferToBitmap(sptr<SurfaceBuffer> buffer, ColorGamut dstGamut, SkBitmap& bitmap,
         const std::vector<HDRMetaData>& metaDatas = {});
+    static bool StubConvertBufferColorGamut(sptr<OHOS::SurfaceBuffer>& dstBuf, ColorGamut srcGamut, ColorGamut dstGamut,
+    const std::vector<HDRMetaData>& metaDatas, uint8_t* srcStart, int32_t pixelFormat, uint32_t bufferSize);
 #ifdef RS_ENABLE_EGLIMAGE
     static bool ConvertBufferToEglImage(sptr<SurfaceBuffer> buffer, std::shared_ptr<RSEglImageManager> eglImageManager,
         GrContext* grContext, sptr<SyncFence> acquireFence, sk_sp<SkImage>& image);

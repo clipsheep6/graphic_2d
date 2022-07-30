@@ -118,7 +118,7 @@ inline constexpr float FullResponse(float x, const TransferParameters& p)
 
 inline PixelTransformFunc GenOETF(const TransferParameters& params)
 {
-    if (param.g < 0) { // HDR
+    if (params.g < 0) { // HDR
         return std::bind(RcpResponsePq, std::placeholders::_1, params);
     }
 
@@ -230,7 +230,7 @@ public:
 
     ~SimpleColorSpace() noexcept = default;
 
-    Vector3f ToneMapping(Vector3f& coloar, float adapted_lum = 0) const
+    Vector3f ToneMapping(const Vector3f& color, float adapted_lum = 0) const
     {
         PixelTransformFunc toneMappingFunc = GenACESToneMapping(adapted_lum);
         return ApplyTransForm(ApplyTransForm(color, toneMappingFunc), clamper_);

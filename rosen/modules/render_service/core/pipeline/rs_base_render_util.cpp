@@ -83,6 +83,19 @@ struct TransferParameters {
     float f = 0.0f;
 };
 
+inline float RcpResponsePq(float x, const TransferParameters& p)
+{
+    float tmp = powf(x, p.a);
+    return std::powf((p.c + p.d * tmp) / (1 + p.e * tmp), p.b);
+}
+
+inline float ResponsePq(float x, const TransferParameters& p)
+{
+    float tmp = powf(x, 1.f / p.b);
+    return std::powf(std::max((tmp - p.c), p.f) / (p.d - p.e * tmp), 1.f / p.a);
+}
+
+
 static constexpr float RcpResponse(float x, const TransferParameters& p)
 {
     return x >= p.d * p.c ? (std::pow(x, 1.0f / p.g) - p.b) / p.a : x / p.c;
@@ -105,6 +118,10 @@ inline constexpr float FullResponse(float x, const TransferParameters& p)
 
 inline PixelTransformFunc GenOETF(const TransferParameters& params)
 {
+    if (param.g < 0) { // HDR
+        return std::bind(RcpResponsePq, std::placeholders::_1, params);
+    }
+
     if (params.e == 0.0f && params.f == 0.0f) {
         return std::bind(RcpResponse, std::placeholders::_1, params);
     }
@@ -114,11 +131,35 @@ inline PixelTransformFunc GenOETF(const TransferParameters& params)
 
 inline PixelTransformFunc GenEOTF(const TransferParameters& params)
 {
-    if (params.e == 0.0f && params.f == 0.0f) {
+    if (params.g < 0) {
         return std::bind(Response, std::placeholders::_1, params);
     }
 
+    if (params.e == 0.0f && params.f == 0.0f) {
+        return std::bind(ResponsePq, std::placeholders::_1, params);
+    }
+
     return std::bind(FullResponse, std::placeholders::_1, params);
+}
+
+float ACESToneMapping(float color, float adapted_lum)
+{
+	const float a = 2.51f;
+	const float b = 0.03f;
+	const float c = 2.43f;
+	const float d = 0.59f;
+	const float e = 0.14f;
+
+	color *= adapted_lum;
+	return (color * (a * color + b)) / (color * (c * color + d) + e);
+}
+
+inline PixelTransformFunc GenACESToneMapping(float adapted_lum)
+{
+    if (adapted_lum <= 0) {
+        adapted_lum = 10000;
+    }
+    return std::bind(ACESToneMapping, std::placeholders::_1, adapted_lum);
 }
 
 Matrix3f GenRGBToXYZMatrix(const std::array<Vector2f, 3>& basePoints, const Vector2f& whitePoint)
@@ -189,8 +230,17 @@ public:
 
     ~SimpleColorSpace() noexcept = default;
 
+    Vector3f ToneMapping(Vector3f& coloar, float adapted_lum = 0) const
+    {
+        PixelTransformFunc toneMappingFunc = GenACESToneMapping(adapted_lum);
+        return ApplyTransForm(ApplyTransForm(color, toneMappingFunc), clamper_);
+    }
+
     Vector3f ToLinear(const Vector3f& val) const
     {
+        if (transferParams_.g < 0) { // HDR
+            return ToneMapping(ApplyTransForm(val, transEOTF_));
+        }
         return ApplyTransForm(val, transEOTF_);
     }
 
@@ -254,23 +304,6 @@ SimpleColorSpace &GetDCIP3ColorSpace()
     return dciP3;
 }
 
-TransferParameters GetPQTransferParameters(float targetLum = 0)
-{
-    if (targetLum <= 0.f) {
-        float defaultSdrLum = 200.f;
-        targetLum = defaultSdrLum;
-    }
-
-    const float w = 10000.f / targetLum;
-    // ((A + Bx^C) / (D + Ex^C))^F * W = ((A + Bx^C) / (D + Ex^C) * W^(1/F))^F
-    TransferParameters PQParameters = {-2.0f, -107/128.0f, 1.0f, 32/2523.0f, 2413/128.0f, -2392/128.0f, 8192/1305.0f};
-    const double factor = powf(w, 1. / PQParameters.f);
-    PQParameters.a = factor * PQParameters.a;
-    PQParameters.b = factor * PQParameters.b;
-
-    return PQParameters;
-}
-
 bool IsValidMetaData(const std::vector<HDRMetaData> &metaDatas)
 {
     uint16_t validFlag = 0;
@@ -299,7 +332,7 @@ SimpleColorSpace &GetColorSpaceFromMetaData(const std::vector<HDRMetaData> &meta
                    metaDataSorted[HDRMetadataKey::MATAKEY_BLUE_PRIMARY_Y].value}}},
         {metaDataSorted[HDRMetadataKey::MATAKEY_WHITE_PRIMARY_X].value,
          metaDataSorted[HDRMetadataKey::MATAKEY_WHITE_PRIMARY_Y].value}, // white points.
-        GetPQTransferParameters(targetLum)}; // PQ TransferParameters
+        {-2.0f, 0.1593017578125, 78.84375, 0.8359375, 18.8515625, 18.6875, 0.f}}; // PQ TransferParameters
     return hdrPq;
 }
 
@@ -312,7 +345,7 @@ SimpleColorSpace &GetHdrPqColorSpace(const std::vector<HDRMetaData> &metaData, f
     static SimpleColorSpace DefaultHdrPq {
         {{Vector2f{0.708f, 0.292f}, {0.17f, 0.797f}, {0.131f, 0.046f}}}, // BT.2020 rgb base points.
         {0.3127f, 0.3290f}, // BT.2020 white points.
-        GetPQTransferParameters(targetLum)}; // PQ TransferParameters
+        {-2.0f, 0.1593017578125, 78.84375, 0.8359375, 18.8515625, 18.6875, 0.f}}; // PQ TransferParameters
     return DefaultHdrPq;
 }
 
@@ -470,7 +503,7 @@ bool ConvertBufferColorGamut(std::vector<uint8_t>& dstBuf, const sptr<OHOS::Surf
     ColorGamut srcGamut, ColorGamut dstGamut, const std::vector<HDRMetaData>& metaDatas)
 {
     RS_TRACE_NAME("ConvertBufferColorGamut");
-
+    
     int32_t pixelFormat = srcBuf->GetFormat();
     if (!IsSupportedFormatForGamutConversion(pixelFormat)) {
         RS_LOGE("ConvertBufferColorGamut: the buffer's format is not supported.");

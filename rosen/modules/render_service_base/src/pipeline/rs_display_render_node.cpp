@@ -30,10 +30,10 @@ RSDisplayRenderNode::RSDisplayRenderNode(NodeId id, const RSDisplayNodeConfig& c
 RSDisplayRenderNode::~RSDisplayRenderNode() = default;
 
 void RSDisplayRenderNode::CollectSurface(
-    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec)
+    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender)
 {
     for (auto& child : node->GetSortedChildren()) {
-        child->CollectSurface(child, vec);
+        child->CollectSurface(child, vec, isUniRender);
     }
 }
 
@@ -104,8 +104,8 @@ bool RSDisplayRenderNode::GetSecurityDisplay() const
 void RSDisplayRenderNode::SetIsMirrorDisplay(bool isMirror)
 {
     isMirroredDisplay_ = isMirror;
-    RS_LOGD("RSDisplayRenderNode::SetIsMirrorDisplay, node id:[%llu], isMirrorDisplay: [%s]",
-        GetId(), IsMirrorDisplay() ? "true" : "false");
+    RS_LOGD("RSDisplayRenderNode::SetIsMirrorDisplay, node id:[%" PRIu64 "], isMirrorDisplay: [%s]", GetId(),
+        IsMirrorDisplay() ? "true" : "false");
 }
 
 bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)

@@ -54,11 +54,11 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
     std::shared_ptr<RSSurfaceCaptureVisitor> visitor = std::make_shared<RSSurfaceCaptureVisitor>();
     visitor->SetUniRender(RSUniRenderJudgement::IsUniRender());
     if (auto surfaceNode = node->ReinterpretCastTo<RSSurfaceRenderNode>()) {
-        RS_LOGI("RSSurfaceCaptureTask::Run: Into SURFACE_NODE SurfaceRenderNodeId:[%llu]", node->GetId());
+        RS_LOGI("RSSurfaceCaptureTask::Run: Into SURFACE_NODE SurfaceRenderNodeId:[%" PRIu64 "]", node->GetId());
         pixelmap = CreatePixelMapBySurfaceNode(surfaceNode, visitor->IsUniRender());
         visitor->IsDisplayNode(false);
     } else if (auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>()) {
-        RS_LOGI("RSSurfaceCaptureTask::Run: Into DISPLAY_NODE DisplayRenderNodeId:[%llu]", node->GetId());
+        RS_LOGI("RSSurfaceCaptureTask::Run: Into DISPLAY_NODE DisplayRenderNodeId:[%" PRIu64 "]", node->GetId());
         pixelmap = CreatePixelMapByDisplayNode(displayNode);
         visitor->IsDisplayNode(true);
     } else {
@@ -69,12 +69,12 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         RS_LOGE("RSSurfaceCaptureTask::Run: pixelmap == nullptr!");
         return nullptr;
     }
-    std::unique_ptr<SkCanvas> canvas = CreateCanvas(pixelmap);
-    if (canvas == nullptr) {
-        RS_LOGE("RSSurfaceCaptureTask::Run: canvas is nullptr!");
+    auto skSurface = CreateSurface(pixelmap);
+    if (skSurface == nullptr) {
+        RS_LOGE("RSSurfaceCaptureTask::Run: surface is nullptr!");
         return nullptr;
     }
-    visitor->SetCanvas(canvas.get());
+    visitor->SetSurface(skSurface.get());
     visitor->SetScale(scaleX_, scaleY_);
     node->Process(visitor);
     return pixelmap;
@@ -132,29 +132,29 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::CreatePixelMapByDisplayNo
     return Media::PixelMap::Create(opts);
 }
 
-std::unique_ptr<SkCanvas> RSSurfaceCaptureTask::CreateCanvas(const std::unique_ptr<Media::PixelMap>& pixelmap)
+sk_sp<SkSurface> RSSurfaceCaptureTask::CreateSurface(const std::unique_ptr<Media::PixelMap>& pixelmap)
 {
     if (pixelmap == nullptr) {
-        RS_LOGE("RSSurfaceCaptureTask::CreateCanvas: pixelmap == nullptr");
+        RS_LOGE("RSSurfaceCaptureTask::CreateSurface: pixelmap == nullptr");
         return nullptr;
     }
     auto address = const_cast<uint32_t*>(pixelmap->GetPixel32(0, 0));
     if (address == nullptr) {
-        RS_LOGE("RSSurfaceCaptureTask::CreateCanvas: address == nullptr");
+        RS_LOGE("RSSurfaceCaptureTask::CreateSurface: address == nullptr");
         return nullptr;
     }
     SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
             kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-    return SkCanvas::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
+    return SkSurface::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
 }
 
-void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::SetCanvas(SkCanvas* canvas)
+void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::SetSurface(SkSurface* surface)
 {
-    if (canvas == nullptr) {
-        RS_LOGE("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::SetCanvas: address == nullptr");
+    if (surface == nullptr) {
+        RS_LOGE("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::SetSurface: surface == nullptr");
         return;
     }
-    canvas_ = std::make_unique<RSPaintFilterCanvas>(canvas);
+    canvas_ = std::make_unique<RSPaintFilterCanvas>(surface);
 }
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessBaseRenderNode(RSBaseRenderNode &node)
@@ -207,7 +207,7 @@ static void AdjustSurfaceTransform(BufferDrawParam &param, TransformType surface
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWithUni(RSSurfaceRenderNode &node)
 {
     if (!node.GetRenderProperties().GetVisible()) {
-        RS_LOGD("ProcessSurfaceRenderNode node: %llu invisible", node.GetId());
+        RS_LOGD("ProcessSurfaceRenderNode node: %" PRIu64 " invisible", node.GetId());
         return;
     }
     if (!canvas_) {
@@ -216,7 +216,7 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWith
     }
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
     if (!geoPtr) {
-        RS_LOGI("ProcessSurfaceRenderNode node:%llu, get geoPtr failed", node.GetId());
+        RS_LOGI("ProcessSurfaceRenderNode node:%" PRIu64 ", get geoPtr failed", node.GetId());
         return;
     }
     RS_TRACE_NAME("RSSurfaceCaptureVisitor::Process:" + node.GetName());
@@ -241,7 +241,8 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWith
     if (node.GetConsumer() != nullptr) {
         RS_TRACE_NAME("UniRender::Process:" + node.GetName());
         if (node.GetBuffer() == nullptr) {
-            RS_LOGD("RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode:%llu buffer is not available", node.GetId());
+            RS_LOGD(
+                "RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode:%" PRIu64 " buffer is not available", node.GetId());
         } else {
             node.NotifyRTBufferAvailable();
 #ifdef RS_ENABLE_EGLIMAGE
@@ -322,7 +323,8 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWith
 {
     if (node.GetSecurityLayer()) {
         RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode: \
-            process RSSurfaceRenderNode(id:[%llu]) paused, because surfaceNode is the security layer.", node.GetId());
+            process RSSurfaceRenderNode(id:[%" PRIu64 "]) paused, because surfaceNode is the security layer.",
+            node.GetId());
         return;
     }
     if (node.GetBuffer() == nullptr) {

@@ -70,14 +70,15 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
         transactionProxy->AddCommand(command, isWindow);
         node->SetFrameGravity(Gravity::RESIZE);
     }
-    ROSEN_LOGD("RsDebug RSSurfaceNode::Create id:%llu", node->GetId());
+    node->SetFrameGravity(Gravity::RESIZE);
+    ROSEN_LOGD("RsDebug RSSurfaceNode::Create id:%" PRIu64, node->GetId());
     return node;
 }
 
 void RSSurfaceNode::CreateNodeInRenderThread(bool isProxy)
 {
     if (!IsRenderServiceNode()) {
-        ROSEN_LOGI("RsDebug RSSurfaceNode::CreateNodeInRenderThread id:%llu already has RT Node", GetId());
+        ROSEN_LOGI("RsDebug RSSurfaceNode::CreateNodeInRenderThread id:%" PRIu64 " already has RT Node", GetId());
         return;
     }
 
@@ -156,7 +157,7 @@ void RSSurfaceNode::SetSecurityLayer(bool isSecurityLayer)
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, true);
     }
-    ROSEN_LOGD("RSSurfaceNode::SetSecurityLayer, surfaceNodeId:[%llu] isSecurityLayer:%s", GetId(),
+    ROSEN_LOGD("RSSurfaceNode::SetSecurityLayer, surfaceNodeId:[%" PRIu64 "] isSecurityLayer:%s", GetId(),
         isSecurityLayer ? "true" : "false");
 }
 
@@ -270,6 +271,20 @@ bool RSSurfaceNode::NeedForcedSendToRemote() const
     }
 }
 
+void RSSurfaceNode::ResetContextAlpha() const
+{
+    // temporarily fix: manually set contextAlpha in RT and RS to 0.0f, to avoid residual alpha/context matrix from
+    // previous animation. this value will be overwritten in RenderThreadVisitor::ProcessSurfaceRenderNode.
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy == nullptr) {
+        return;
+    }
+    std::unique_ptr<RSCommand> commandRT = std::make_unique<RSSurfaceNodeSetContextAlpha>(GetId(), 0.0f);
+    transactionProxy->AddCommand(commandRT, false);
+    std::unique_ptr<RSCommand> commandRS = std::make_unique<RSSurfaceNodeSetContextAlpha>(GetId(), 0.0f);
+    transactionProxy->AddCommand(commandRS, true);
+}
+
 RSSurfaceNode::RSSurfaceNode(const RSSurfaceNodeConfig& config, bool isRenderServiceNode)
     : RSNode(isRenderServiceNode), name_(config.SurfaceNodeName)
 {}
@@ -280,6 +295,11 @@ RSSurfaceNode::RSSurfaceNode(const RSSurfaceNodeConfig& config, bool isRenderSer
 
 RSSurfaceNode::~RSSurfaceNode()
 {
+    auto renderServiceClient =
+        std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
+    if (renderServiceClient != nullptr) {
+        renderServiceClient->UnregisterBufferAvailableListener(GetId());
+    }
     if (!IsRenderServiceNode()) {
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {

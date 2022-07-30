@@ -23,7 +23,7 @@
 #include "pipeline/rs_divided_render_util.h"
 #include "pipeline/rs_render_service_visitor.h"
 #include "pipeline/rs_surface_render_node.h"
-#include "pipeline/rs_uni_render_judgement.h"
+#include "pipeline/rs_unmarshal_thread.h"
 #include "pipeline/rs_uni_render_visitor.h"
 #include "pipeline/rs_occlusion_config.h"
 #include "platform/common/rs_log.h"
@@ -34,6 +34,24 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+bool Compare(const std::unique_ptr<RSTransactionData>& data1, const std::unique_ptr<RSTransactionData>& data2)
+{
+    if (!data1 || !data2) {
+        RS_LOGW("Compare RSTransactionData: nullptr!");
+        return true;
+    }
+    return data1->GetIndex() < data2->GetIndex();
+}
+
+void InsertToEnd(std::vector<std::unique_ptr<RSTransactionData>>& source,
+    std::vector<std::unique_ptr<RSTransactionData>>& target)
+{
+    target.insert(target.end(), std::make_move_iterator(source.begin()), std::make_move_iterator(source.end()));
+    source.clear();
+}
+}
+
 RSMainThread* RSMainThread::Instance()
 {
     static RSMainThread instance;
@@ -55,6 +73,7 @@ void RSMainThread::Init()
         SetRSEventDetectorLoopStartTag();
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
         ConsumeAndUpdateAllNodes();
+        WaitUntilUnmarshallingTaskFinished();
         ProcessCommand();
         Animate(timestamp_);
         Render();
@@ -65,6 +84,19 @@ void RSMainThread::Init()
         rsEventManager_.UpdateParam();
         RS_LOGD("RsDebug mainLoop end");
     };
+
+    if (isUniRender_) {
+        unmarshalBarrierTask_ = [this]() {
+            auto cachedTransactionData = RSUnmarshalThread::Instance().GetCachedTransactionData();
+            MergeToEffectiveTransactionDataMap(cachedTransactionData);
+            {
+                std::lock_guard<std::mutex> lock(unmarshalMutex_);
+                ++unmarshalFinishedCount_;
+            }
+            unmarshalTaskCond_.notify_all();
+        };
+        RSUnmarshalThread::Instance().Start();
+    }
 
     runner_ = AppExecFwk::EventRunner::Create(false);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
@@ -124,6 +156,60 @@ void RSMainThread::Start()
 
 void RSMainThread::ProcessCommand()
 {
+    ProcessCommandForDividedRender();
+    if (isUniRender_) {
+        ProcessCommandForUniRender();
+    }
+}
+
+void RSMainThread::ProcessCommandForUniRender()
+{
+    TransactionDataMap transactionDataEffective;
+    std::string transactionFlags;
+    {
+        std::lock_guard<std::mutex> lock(transitionDataMutex_);
+
+        for (auto& elem: effectiveTransactionDataIndexMap_) {
+            auto& transactionVec = elem.second.second;
+            std::sort(transactionVec.begin(), transactionVec.end(), Compare);
+        }
+
+        for (auto& rsTransactionElem: effectiveTransactionDataIndexMap_) {
+            auto pid = rsTransactionElem.first;
+            auto& lastIndex = rsTransactionElem.second.first;
+            auto& transactionVec = rsTransactionElem.second.second;
+            auto iter = transactionVec.begin();
+            for (; iter != transactionVec.end(); ++iter) {
+                if ((*iter) == nullptr) {
+                    continue;
+                }
+                auto curIndex = (*iter)->GetIndex();
+                if (curIndex == lastIndex + 1) {
+                    ++lastIndex;
+                    transactionFlags += ", [" + std::to_string(pid) + ", " + std::to_string(curIndex) + "]";
+                } else {
+                    RS_LOGE("RSMainThread::ProcessCommandForUniRender wait curIndex:%llu, lastIndex:%llu, pid:%d",
+                        curIndex, lastIndex, pid);
+                    break;
+                }
+            }
+            transactionDataEffective[pid].insert(transactionDataEffective[pid].end(),
+                std::make_move_iterator(transactionVec.begin()), std::make_move_iterator(iter));
+            transactionVec.erase(transactionVec.begin(), iter);
+        }
+    }
+    RS_TRACE_NAME("RSMainThread::ProcessCommand" + transactionFlags);
+    for (auto& rsTransactionElem: transactionDataEffective) {
+        for (auto& rsTransaction: rsTransactionElem.second) {
+            if (rsTransaction) {
+                rsTransaction->Process(context_);
+            }
+        }
+    }
+}
+
+void RSMainThread::ProcessCommandForDividedRender()
+{
     const auto& nodeMap = context_.GetNodeMap();
     RS_TRACE_BEGIN("RSMainThread::ProcessCommand");
     {
@@ -155,7 +241,8 @@ void RSMainThread::ProcessCommand()
             commandMap.erase(commandMap.begin(), effectIter);
 
             for (auto it = commandMap.begin(); it != commandMap.end(); it++) {
-                RS_LOGD("RSMainThread::ProcessCommand CacheCommand NodeId = %llu, timestamp = %llu, commandSize = %zu",
+                RS_LOGD("RSMainThread::ProcessCommand CacheCommand NodeId = %" PRIu64 ", timestamp = %" PRIu64
+                        ", commandSize = %zu",
                     surfaceNodeId, it->first, it->second.size());
             }
         }
@@ -226,6 +313,31 @@ void RSMainThread::WaitUtilUniRenderFinished()
     uniRenderFinished_ = false;
 }
 
+void RSMainThread::WaitUntilUnmarshallingTaskFinished()
+{
+    if (!isUniRender_) {
+        return;
+    }
+    RS_TRACE_NAME("RSMainThread::WaitUntilUnmarshallingTaskFinished");
+    std::unique_lock<std::mutex> lock(unmarshalMutex_);
+    unmarshalTaskCond_.wait(lock, [this]() { return unmarshalFinishedCount_ > 0; });
+    --unmarshalFinishedCount_;
+}
+
+void RSMainThread::MergeToEffectiveTransactionDataMap(TransactionDataMap& cachedTransactionDataMap)
+{
+    std::lock_guard<std::mutex> lock(transitionDataMutex_);
+    for (auto& elem : cachedTransactionDataMap) {
+        auto pid = elem.first;
+        if (effectiveTransactionDataIndexMap_.count(pid) == 0) {
+            RS_LOGE("RSMainThread::MergeToEffectiveTransactionDataMap pid:%d not valid, skip it", pid);
+            continue;
+        }
+        InsertToEnd(elem.second, effectiveTransactionDataIndexMap_[pid].second);
+    }
+    cachedTransactionDataMap.clear();
+}
+
 void RSMainThread::NotifyUniRenderFinish()
 {
     if (std::this_thread::get_id() != Id()) {
@@ -245,8 +357,7 @@ void RSMainThread::Render()
         return;
     }
     std::shared_ptr<RSNodeVisitor> visitor;
-    if (RSUniRenderJudgement::IsUniRender()) {
-        RS_LOGI("RSMainThread::Render isUni");
+    if (isUniRender_) {
         visitor = std::make_shared<RSUniRenderVisitor>();
     } else {
         bool doParallelComposition = false;
@@ -270,7 +381,7 @@ void RSMainThread::Render()
 
 void RSMainThread::CalcOcclusion()
 {
-    if (doAnimate_) {
+    if (doAnimate_ && !isUniRender_) {
         return;
     }
     const std::shared_ptr<RSBaseRenderNode> node = context_.GetGlobalRootRenderNode();
@@ -280,7 +391,7 @@ void RSMainThread::CalcOcclusion()
     }
     RSInnovation::UpdateOcclusionCullingSoEnabled();
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-    node->CollectSurface(node, curAllSurfaces);
+    node->CollectSurface(node, curAllSurfaces, isUniRender_);
     // 1. Judge whether it is dirty
     // Surface cnt changed or surface DstRectChanged or surface ZorderChanged
     bool winDirty = lastSurfaceCnt_ != curAllSurfaces.size();
@@ -321,12 +432,19 @@ void RSMainThread::CalcOcclusion()
         // Set result to SurfaceRenderNode and its children
         surface->SetVisibleRegionRecursive(subResult, curVisVec);
         // Current region need to merge current surface for next calculation(ignore alpha surface)
-        bool diff = surface->GetDstRect().width_ != surface->GetBuffer()->GetWidth() ||
-                    surface->GetDstRect().height_ != surface->GetBuffer()->GetHeight();
         const uint8_t opacity = 255;
-        if (surface->GetAbilityBgAlpha() == opacity &&
-            ROSEN_EQ(surface->GetRenderProperties().GetAlpha(), 1.0f) && !diff) {
-            curRegion = curSurface.Or(curRegion);
+        if (isUniRender_) {
+            if (surface->GetAbilityBgAlpha() == opacity &&
+                ROSEN_EQ(surface->GetRenderProperties().GetAlpha(), 1.0f)) {
+                curRegion = curSurface.Or(curRegion);
+            }
+        } else {
+            bool diff = surface->GetDstRect().width_ != surface->GetBuffer()->GetWidth() ||
+                        surface->GetDstRect().height_ != surface->GetBuffer()->GetHeight();
+            if (surface->GetAbilityBgAlpha() == opacity &&
+                ROSEN_EQ(surface->GetRenderProperties().GetAlpha(), 1.0f) && !diff) {
+                curRegion = curSurface.Or(curRegion);
+            }
         }
     }
 
@@ -374,6 +492,10 @@ void RSMainThread::OnVsync(uint64_t timestamp, void* data)
 {
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::OnVsync");
     timestamp_ = timestamp;
+    if (isUniRender_) {
+        MergeToEffectiveTransactionDataMap(cachedTransactionDataMap_);
+        RSUnmarshalThread::Instance().PostTask(unmarshalBarrierTask_);
+    }
     if (handler_) {
         handler_->PostTask(mainLoop_, AppExecFwk::EventQueue::Priority::IDLE);
 
@@ -406,7 +528,7 @@ void RSMainThread::Animate(uint64_t timestamp)
         }
         bool animationFinished = !node->Animate(timestamp);
         if (animationFinished) {
-            RS_LOGD("RSMainThread::Animate removing finished animating node %llu", node->GetId());
+            RS_LOGD("RSMainThread::Animate removing finished animating node %" PRIu64, node->GetId());
         }
         return animationFinished;
     });
@@ -418,15 +540,26 @@ void RSMainThread::Animate(uint64_t timestamp)
 
 void RSMainThread::RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData)
 {
+    if (!rsTransactionData) {
+        return;
+    }
+    if (rsTransactionData->GetUniRender()) {
+        std::lock_guard<std::mutex> lock(transitionDataMutex_);
+        cachedTransactionDataMap_[rsTransactionData->GetSendingPid()].emplace_back(std::move(rsTransactionData));
+    } else {
+        ClassifyRSTransactionData(rsTransactionData);
+    }
+    RequestNextVSync();
+}
+
+void RSMainThread::ClassifyRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData)
+{
     const auto& nodeMap = context_.GetNodeMap();
     {
         std::lock_guard<std::mutex> lock(transitionDataMutex_);
         std::unique_ptr<RSTransactionData> transactionData(std::move(rsTransactionData));
-        if (!transactionData) {
-            return;
-        }
         auto timestamp = transactionData->GetTimestamp();
-        RS_LOGD("RSMainThread::RecvRSTransactionData timestamp = %llu", timestamp);
+        RS_LOGD("RSMainThread::RecvRSTransactionData timestamp = %" PRIu64, timestamp);
         for (auto& [nodeId, followType, command] : transactionData->GetPayload()) {
             if (nodeId == 0 || followType == FollowType::NONE) {
                 pendingEffectiveCommands_.emplace_back(std::move(command));
@@ -445,7 +578,6 @@ void RSMainThread::RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsT
             cachedCommands_[nodeId][timestamp].emplace_back(std::move(command));
         }
     }
-    RequestNextVSync();
 }
 
 void RSMainThread::PostTask(RSTaskMessage::RSTask task)
@@ -572,6 +704,31 @@ void RSMainThread::ResetSortedChildren(std::shared_ptr<RSBaseRenderNode> node)
         ResetSortedChildren(child);
     }
     node->ResetSortedChildren();
+}
+
+void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
+{
+    if (!isUniRender_) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(transitionDataMutex_);
+    if (effectiveTransactionDataIndexMap_.count(remotePid) > 0 &&
+        !effectiveTransactionDataIndexMap_[remotePid].second.empty()) {
+        RS_LOGD("RSMainThread::ClearTransactionDataPidInfo process:%d destroyed, skip commands", remotePid);
+    }
+    effectiveTransactionDataIndexMap_.erase(remotePid);
+}
+
+void RSMainThread::AddTransactionDataPidInfo(pid_t remotePid)
+{
+    if (!isUniRender_) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(transitionDataMutex_);
+    if (effectiveTransactionDataIndexMap_.count(remotePid) > 0) {
+        RS_LOGW("RSMainThread::AddTransactionDataPidInfo remotePid:%d already exists", remotePid);
+    }
+    effectiveTransactionDataIndexMap_[remotePid].first = 0;
 }
 } // namespace Rosen
 } // namespace OHOS

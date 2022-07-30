@@ -103,6 +103,25 @@ void HdiLayer::CloseLayer()
     HLOGD("Close hwc layer succeed, layerId is %{public}u", layerId_);
 }
 
+void HdiLayer::SetLayerTunnelHandle()
+{
+    HdiDevice *device = HdiDevice::GetInstance();
+    if (device == nullptr || layerInfo_ == nullptr) {
+        return;
+    }
+    if (!layerInfo_->GetTunnelHandleChange()) {
+        return;
+    }
+    int32_t ret = DISPLAY_SUCCESS;
+    if (layerInfo_->GetTunnelHandle() == nullptr) {
+        ret = device->SetLayerTunnelHandle(screenId_, layerId_, nullptr);
+    } else {
+        ret = device->SetLayerTunnelHandle(screenId_, layerId_,
+                                           layerInfo_->GetTunnelHandle()->GetHandle());
+    }
+    CheckRet(ret, "SetLayerTunnelHandle");
+}
+
 void HdiLayer::SetLayerPresentTimestamp()
 {
     HdiDevice *device = HdiDevice::GetInstance();
@@ -151,9 +170,11 @@ void HdiLayer::SetHdiLayerInfo()
     ret = device->SetLayerDirtyRegion(screenId_, layerId_, layerInfo_->GetDirtyRegion());
     CheckRet(ret, "SetLayerDirtyRegion");
 
-    ret = device->SetLayerBuffer(screenId_, layerId_, layerInfo_->GetBuffer()->GetBufferHandle(),
-                                  layerInfo_->GetAcquireFence());
-    CheckRet(ret, "SetLayerBuffer");
+    if (layerInfo_->GetBuffer() != nullptr) {
+        ret = device->SetLayerBuffer(screenId_, layerId_, layerInfo_->GetBuffer()->GetBufferHandle(),
+                                     layerInfo_->GetAcquireFence());
+        CheckRet(ret, "SetLayerBuffer");
+    }
 
     ret = device->SetLayerCompositionType(screenId_, layerId_, layerInfo_->GetCompositionType());
     CheckRet(ret, "SetLayerCompositionType");
@@ -170,28 +191,14 @@ void HdiLayer::SetHdiLayerInfo()
     ret = device->SetLayerPreMulti(screenId_, layerId_, layerInfo_->IsPreMulti());
     CheckRet(ret, "SetLayerPreMulti");
 
+    // because hdi interface func is not implemented, delete CheckRet to avoid excessive print of log
     ret = device->SetLayerColorTransform(screenId_, layerId_, layerInfo_->GetColorTransform());
-    CheckRet(ret, "SetLayerColorTransform");
-
     ret = device->SetLayerColorDataSpace(screenId_, layerId_, layerInfo_->GetColorDataSpace());
-    CheckRet(ret, "SetLayerColorDataSpace");
-
     ret = device->SetLayerMetaData(screenId_, layerId_, layerInfo_->GetMetaData());
-    CheckRet(ret, "SetLayerMetaData");
-
     ret = device->SetLayerMetaDataSet(screenId_, layerId_, layerInfo_->GetMetaDataSet().key,
                                       layerInfo_->GetMetaDataSet().metaData);
-    CheckRet(ret, "SetLayerMetaDataSet");
 
-    if (layerInfo_->GetTunnelHandleChange()) {
-        if (layerInfo_->GetTunnelHandle() == nullptr) {
-            ret = device->SetLayerTunnelHandle(screenId_, layerId_, nullptr);
-        } else {
-            ret = device->SetLayerTunnelHandle(screenId_, layerId_,
-                                               layerInfo_->GetTunnelHandle()->GetHandle());
-        }
-        CheckRet(ret, "SetLayerTunnelHandle");
-    }
+    SetLayerTunnelHandle();
 
     SetLayerPresentTimestamp();
 }

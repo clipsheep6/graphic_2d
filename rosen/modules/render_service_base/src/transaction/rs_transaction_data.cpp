@@ -48,6 +48,9 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
         }
     }
     success = success && parcel.WriteUint64(timestamp_);
+    success = success && parcel.WriteInt32(pid_);
+    success = success && parcel.WriteUint64(index_);
+    success = success && parcel.WriteBool(isUniRender_);
     return success;
 }
 #endif // ROSEN_OHOS
@@ -117,7 +120,8 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
         }
         payload_.emplace_back(nodeId, static_cast<FollowType>(followType), std::move(command));
     }
-    return parcel.ReadUint64(timestamp_);
+    return parcel.ReadUint64(timestamp_) && parcel.ReadInt32(pid_) && parcel.ReadUint64(index_) &&
+        parcel.ReadBool(isUniRender_);
 }
 
 #endif // ROSEN_OHOS

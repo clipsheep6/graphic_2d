@@ -78,15 +78,23 @@ void RSExtendedModifier<T>::UpdateToRender()
     auto transactionProxy = RSTransactionProxy::GetInstance();
     auto node = RSNodeMap::Instance().GetNode<RSNode>(this->property_->nodeId_);
     if (transactionProxy && node) {
-        transactionProxy->AddCommand(command, node->IsRenderServiceNode());
+        transactionProxy->AddCommand(command, node->IsRenderServiceNode(), node->GetFollowType(), node->GetId());
         if (node->NeedForcedSendToRemote()) {
             std::unique_ptr<RSCommand> commandForRemote = std::make_unique<RSUpdatePropertyDrawCmdList>(
                 this->property_->nodeId_, drawCmdList, this->property_->id_, false);
-            transactionProxy->AddCommand(commandForRemote, true);
+            transactionProxy->AddCommand(commandForRemote, true, node->GetFollowType(), node->GetId());
         }
     }
 }
 
-template class RS_EXPORT RSExtendedModifier<std::shared_ptr<RSAnimatableBase>>;
+template class RS_EXPORT RSExtendedModifier<RSAnimatableProperty<float>>;
+template class RS_EXPORT RSExtendedModifier<RSAnimatableProperty<Color>>;
+template class RS_EXPORT RSExtendedModifier<RSAnimatableProperty<Matrix3f>>;
+template class RS_EXPORT RSExtendedModifier<RSAnimatableProperty<Quaternion>>;
+template class RS_EXPORT RSExtendedModifier<RSAnimatableProperty<std::shared_ptr<RSFilter>>>;
+template class RS_EXPORT RSExtendedModifier<RSAnimatableProperty<Vector2f>>;
+template class RS_EXPORT RSExtendedModifier<RSAnimatableProperty<Vector4<Color>>>;
+template class RS_EXPORT RSExtendedModifier<RSAnimatableProperty<Vector4f>>;
+template class RS_EXPORT RSExtendedModifier<RSAnimatableProperty<std::shared_ptr<RSAnimatableBase>>>;
 } // namespace Rosen
 } // namespace OHOS

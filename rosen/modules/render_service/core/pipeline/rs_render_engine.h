@@ -79,7 +79,7 @@ public:
 
     std::unique_ptr<RSPaintFilterCanvas> GetCanvas()
     {
-        return std::make_unique<RSPaintFilterCanvas>(surfaceFrame_->GetCanvas());
+        return std::make_unique<RSPaintFilterCanvas>(surfaceFrame_->GetSurface().get());
     }
 
 private:
@@ -96,7 +96,7 @@ public:
     RSRenderEngine(const RSRenderEngine&) = delete;
     void operator=(const RSRenderEngine&) = delete;
 
-    // [PLANNING]: this is a work-around for the lack of colorgamut convertion and yuv support in GPU.
+    // [PLANNING]: this is a work-around for the lack of colorgamut conversion and yuv support in GPU.
     // We should remove this function in someday.
     static bool NeedForceCPU(const std::vector<LayerInfoPtr>& layers);
 

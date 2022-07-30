@@ -152,11 +152,11 @@ void RSNode::AddAnimationInner(const std::shared_ptr<RSAnimation>& animation)
 
 void RSNode::RemoveAnimationInner(const std::shared_ptr<RSAnimation>& animation)
 {
-    animations_.erase(animation->GetId());
     animatingPropertyNum_[animation->GetPropertyId()]--;
     if (animatingPropertyNum_[animation->GetPropertyId()] == 0) {
         animation->SetPropertyOnAllAnimationFinish();
     }
+    animations_.erase(animation->GetId());
 }
 
 void RSNode::FinishAnimationByProperty(const PropertyId& id)
@@ -240,14 +240,15 @@ bool RSNode::HasPropertyAnimation(const PropertyId& id)
     do {                                                                                                  \
         auto iter = propertyModifiers_.find(RSModifierType::propertyType);                                \
         if (iter != propertyModifiers_.end()) {                                                           \
-            std::static_pointer_cast<RSAnimatableModifier<T>>(iter->second)->Update(value);               \
+            std::static_pointer_cast<RSModifier<RSProperty<T>>>(iter->second)->                           \
+                GetProperty()->Set(value);                                                                \
             break;                                                                                        \
         }                                                                                                 \
         auto property = std::make_shared<RSAnimatableProperty<T>>(defaultValue);                          \
-        std::shared_ptr<RSModifier> modifier = std::make_shared<RS##propertyName##Modifier>(property);    \
+        std::shared_ptr<RSModifierBase> modifier = std::make_shared<RS##propertyName##Modifier>(property); \
         modifiers_.emplace(modifier->GetPropertyId(), modifier);                                          \
         propertyModifiers_.emplace(RSModifierType::propertyType, modifier);                               \
-        modifier->MarkAddToNode(GetId());                                                                 \
+        modifier->AttachToNode(GetId());                                                                  \
         if (motionPathOption_ != nullptr && IsPathAnimatableModifier(RSModifierType::propertyType)) {     \
             modifier->SetMotionPathOption(motionPathOption_);                                             \
         }                                                                                                 \
@@ -255,11 +256,11 @@ bool RSNode::HasPropertyAnimation(const PropertyId& id)
             GetId(), modifier->CreateRenderModifier());                                                   \
         auto transactionProxy = RSTransactionProxy::GetInstance();                                        \
         if (transactionProxy != nullptr) {                                                                \
-            transactionProxy->AddCommand(cmd, IsRenderServiceNode());                                     \
+            transactionProxy->AddCommand(cmd, IsRenderServiceNode(), GetFollowType(), GetId());           \
             if (NeedForcedSendToRemote()) {                                                               \
                 std::unique_ptr<RSCommand> cmdForRemote =                                                 \
                     std::make_unique<RSAddModifier>(GetId(), modifier->CreateRenderModifier());           \
-                transactionProxy->AddCommand(cmdForRemote, true);                                         \
+                transactionProxy->AddCommand(cmdForRemote, true, GetFollowType(), GetId());               \
             }                                                                                             \
         }                                                                                                 \
         property->Set(value);                                                                             \
@@ -269,23 +270,24 @@ bool RSNode::HasPropertyAnimation(const PropertyId& id)
     do {                                                                                                  \
         auto iter = propertyModifiers_.find(RSModifierType::propertyType);                                \
         if (iter != propertyModifiers_.end()) {                                                           \
-            std::static_pointer_cast<RSAnimatableModifier<T>>(iter->second)->Update(value);               \
+            std::static_pointer_cast<RSModifier<RSProperty<T>>>(iter->second)->                           \
+                GetProperty()->Set(value);                                                                \
             break;                                                                                        \
         }                                                                                                 \
         auto property = std::make_shared<RSProperty<T>>(value);                                           \
-        std::shared_ptr<RSModifier> modifier = std::make_shared<RS##propertyName##Modifier>(property);    \
+        std::shared_ptr<RSModifierBase> modifier = std::make_shared<RS##propertyName##Modifier>(property); \
         modifiers_.emplace(modifier->GetPropertyId(), modifier);                                          \
         propertyModifiers_.emplace(RSModifierType::propertyType, modifier);                               \
-        modifier->MarkAddToNode(GetId());                                                                 \
+        modifier->AttachToNode(GetId());                                                                  \
         std::unique_ptr<RSCommand> cmd = std::make_unique<RSAddModifier>(                                 \
             GetId(), modifier->CreateRenderModifier());                                                   \
         auto transactionProxy = RSTransactionProxy::GetInstance();                                        \
         if (transactionProxy != nullptr) {                                                                \
-            transactionProxy->AddCommand(cmd, IsRenderServiceNode());                                     \
+            transactionProxy->AddCommand(cmd, IsRenderServiceNode(), GetFollowType(), GetId());           \
             if (NeedForcedSendToRemote()) {                                                               \
                 std::unique_ptr<RSCommand> cmdForRemote =                                                 \
                     std::make_unique<RSAddModifier>(GetId(), modifier->CreateRenderModifier());           \
-                transactionProxy->AddCommand(cmdForRemote, true);                                         \
+                transactionProxy->AddCommand(cmdForRemote, true, GetFollowType(), GetId());               \
             }                                                                                             \
         }                                                                                                 \
     } while (0)
@@ -315,13 +317,13 @@ void RSNode::SetBoundsWidth(float width)
         SetBounds(0.f, 0.f, width, 0.f);
         return;
     }
-    auto modifier = std::static_pointer_cast<RSAnimatableModifier<Vector4f>>(iter->second);
+    auto modifier = std::static_pointer_cast<RSModifier<RSProperty<Vector4f>>>(iter->second);
     if (!modifier) {
         return;
     }
     auto bounds = modifier->property_->Get();
     bounds.z_ = width;
-    modifier->Update(bounds);
+    modifier->GetProperty()->Set(bounds);
     OnBoundsSizeChanged();
 }
 
@@ -332,13 +334,13 @@ void RSNode::SetBoundsHeight(float height)
         SetBounds(0.f, 0.f, 0.f, height);
         return;
     }
-    auto modifier = std::static_pointer_cast<RSAnimatableModifier<Vector4f>>(iter->second);
+    auto modifier = std::static_pointer_cast<RSModifier<RSProperty<Vector4f>>>(iter->second);
     if (!modifier) {
         return;
     }
     auto bounds = modifier->property_->Get();
     bounds.w_ = height;
-    modifier->Update(bounds);
+    modifier->GetProperty()->Set(bounds);
     OnBoundsSizeChanged();
 }
 
@@ -360,13 +362,13 @@ void RSNode::SetFramePositionX(float positionX)
         SetFrame(positionX, 0.f, 0.f, 0.f);
         return;
     }
-    auto modifier = std::static_pointer_cast<RSAnimatableModifier<Vector4f>>(iter->second);
+    auto modifier = std::static_pointer_cast<RSModifier<RSProperty<Vector4f>>>(iter->second);
     if (!modifier) {
         return;
     }
     auto frame = modifier->property_->Get();
     frame.x_ = positionX;
-    modifier->Update(frame);
+    modifier->GetProperty()->Set(frame);
 }
 
 void RSNode::SetFramePositionY(float positionY)
@@ -376,13 +378,13 @@ void RSNode::SetFramePositionY(float positionY)
         SetFrame(0.f, positionY, 0.f, 0.f);
         return;
     }
-    auto modifier = std::static_pointer_cast<RSAnimatableModifier<Vector4f>>(iter->second);
+    auto modifier = std::static_pointer_cast<RSModifier<RSProperty<Vector4f>>>(iter->second);
     if (!modifier) {
         return;
     }
     auto frame = modifier->property_->Get();
     frame.y_ = positionY;
-    modifier->Update(frame);
+    modifier->GetProperty()->Set(frame);
 }
 
 void RSNode::SetPositionZ(float positionZ)
@@ -408,13 +410,13 @@ void RSNode::SetPivotX(float pivotX)
         SetPivot(pivotX, 0.5f);
         return;
     }
-    auto modifier = std::static_pointer_cast<RSAnimatableModifier<Vector2f>>(iter->second);
+    auto modifier = std::static_pointer_cast<RSModifier<RSProperty<Vector2f>>>(iter->second);
     if (!modifier) {
         return;
     }
     auto pivot = modifier->property_->Get();
     pivot.x_ = pivotX;
-    modifier->Update(pivot);
+    modifier->GetProperty()->Set(pivot);
 }
 
 void RSNode::SetPivotY(float pivotY)
@@ -424,13 +426,13 @@ void RSNode::SetPivotY(float pivotY)
         SetPivot(0.5f, pivotY);
         return;
     }
-    auto modifier = std::static_pointer_cast<RSAnimatableModifier<Vector2f>>(iter->second);
+    auto modifier = std::static_pointer_cast<RSModifier<RSProperty<Vector2f>>>(iter->second);
     if (!modifier) {
         return;
     }
     auto pivot = modifier->property_->Get();
     pivot.y_ = pivotY;
-    modifier->Update(pivot);
+    modifier->GetProperty()->Set(pivot);
 }
 
 void RSNode::SetCornerRadius(float cornerRadius)
@@ -488,13 +490,13 @@ void RSNode::SetTranslateX(float translate)
         SetTranslate({ translate, 0.f });
         return;
     }
-    auto modifier = std::static_pointer_cast<RSAnimatableModifier<Vector2f>>(iter->second);
+    auto modifier = std::static_pointer_cast<RSModifier<RSProperty<Vector2f>>>(iter->second);
     if (!modifier) {
         return;
     }
     auto trans = modifier->property_->Get();
     trans.x_ = translate;
-    modifier->Update(trans);
+    modifier->GetProperty()->Set(trans);
 }
 
 void RSNode::SetTranslateY(float translate)
@@ -504,13 +506,13 @@ void RSNode::SetTranslateY(float translate)
         SetTranslate({ 0.f, translate });
         return;
     }
-    auto modifier = std::static_pointer_cast<RSAnimatableModifier<Vector2f>>(iter->second);
+    auto modifier = std::static_pointer_cast<RSModifier<RSProperty<Vector2f>>>(iter->second);
     if (!modifier) {
         return;
     }
     auto trans = modifier->property_->Get();
     trans.y_ = translate;
-    modifier->Update(trans);
+    modifier->GetProperty()->Set(trans);
 }
 
 void RSNode::SetTranslateZ(float translate)
@@ -540,13 +542,13 @@ void RSNode::SetScaleX(float scaleX)
         SetScale(scaleX, 1.f);
         return;
     }
-    auto modifier = std::static_pointer_cast<RSAnimatableModifier<Vector2f>>(iter->second);
+    auto modifier = std::static_pointer_cast<RSModifier<RSProperty<Vector2f>>>(iter->second);
     if (!modifier) {
         return;
     }
     auto scale = modifier->property_->Get();
     scale.x_ = scaleX;
-    modifier->Update(scale);
+    modifier->GetProperty()->Set(scale);
 }
 
 void RSNode::SetScaleY(float scaleY)
@@ -556,13 +558,13 @@ void RSNode::SetScaleY(float scaleY)
         SetScale(1.f, scaleY);
         return;
     }
-    auto modifier = std::static_pointer_cast<RSAnimatableModifier<Vector2f>>(iter->second);
+    auto modifier = std::static_pointer_cast<RSModifier<RSProperty<Vector2f>>>(iter->second);
     if (!modifier) {
         return;
     }
     auto scale = modifier->property_->Get();
     scale.y_ = scaleY;
-    modifier->Update(scale);
+    modifier->GetProperty()->Set(scale);
 }
 
 // foreground
@@ -800,13 +802,13 @@ void RSNode::AnimationFinish(AnimationId animationId)
 {
     auto animationItr = animations_.find(animationId);
     if (animationItr == animations_.end()) {
-        ROSEN_LOGE("Failed to find animation[%llu]!", animationId);
+        ROSEN_LOGE("Failed to find animation[%" PRIu64 "]!", animationId);
         return;
     }
 
     auto animation = animationItr->second;
     if (animation == nullptr) {
-        ROSEN_LOGE("Failed to finish animation[%llu], animation is null!", animationId);
+        ROSEN_LOGE("Failed to finish animation[%" PRIu64 "], animation is null!", animationId);
         return;
     }
 
@@ -822,11 +824,16 @@ void RSNode::SetPaintOrder(bool drawContentLast)
 void RSNode::ClearModifiers()
 {
     for (auto& [id, modifier] : modifiers_) {
-        modifier->MarkRemoveFromNode();
+        modifier->DetachFromNode();
         std::unique_ptr<RSCommand> command = std::make_unique<RSRemoveModifier>(GetId(), modifier->GetPropertyId());
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
-            transactionProxy->AddCommand(command, IsRenderServiceNode());
+            transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), GetId());
+            if (NeedForcedSendToRemote()) {
+                std::unique_ptr<RSCommand> cmdForRemote =
+                    std::make_unique<RSRemoveModifier>(GetId(), modifier->GetPropertyId());
+                transactionProxy->AddCommand(cmdForRemote, true, GetFollowType(), GetId());
+            }
         }
     }
     modifiers_.clear();
@@ -838,18 +845,22 @@ void RSNode::ClearAllModifiers()
         animationManager_ = RSAnimationManagerMap::Instance()->GetAnimationManager(gettid());
     }
     for (auto& [id, modifier] : modifiers_) {
-        modifier->MarkRemoveFromNode();
+        modifier->DetachFromNode();
         animationManager_->RemoveProperty(id);
     }
     modifiers_.clear();
     std::unique_ptr<RSCommand> command = std::make_unique<RSClearModifiers>(GetId());
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode());
+        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), GetId());
+        if (NeedForcedSendToRemote()) {
+            std::unique_ptr<RSCommand> cmdForRemote = std::make_unique<RSClearModifiers>(GetId());
+            transactionProxy->AddCommand(cmdForRemote, true, GetFollowType(), GetId());
+        }
     }
 }
 
-void RSNode::AddModifier(const std::shared_ptr<RSModifier>& modifier)
+void RSNode::AddModifier(const std::shared_ptr<RSModifierBase>& modifier)
 {
     if (!modifier) {
         return;
@@ -862,15 +873,20 @@ void RSNode::AddModifier(const std::shared_ptr<RSModifier>& modifier)
         modifier->SetMotionPathOption(motionPathOption_);
     }
     modifiers_.insert({ modifier->GetPropertyId(), modifier });
-    modifier->MarkAddToNode(GetId());
+    modifier->AttachToNode(GetId());
     std::unique_ptr<RSCommand> command = std::make_unique<RSAddModifier>(GetId(), modifier->CreateRenderModifier());
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode());
+        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), GetId());
+        if (NeedForcedSendToRemote()) {
+            std::unique_ptr<RSCommand> cmdForRemote =
+                std::make_unique<RSAddModifier>(GetId(), modifier->CreateRenderModifier());
+            transactionProxy->AddCommand(cmdForRemote, true, GetFollowType(), GetId());
+        }
     }
 }
 
-void RSNode::RemoveModifier(const std::shared_ptr<RSModifier>& modifier)
+void RSNode::RemoveModifier(const std::shared_ptr<RSModifierBase>& modifier)
 {
     if (!modifier) {
         return;
@@ -881,7 +897,7 @@ void RSNode::RemoveModifier(const std::shared_ptr<RSModifier>& modifier)
     }
 
     modifiers_.erase(iter);
-    modifier->MarkRemoveFromNode();
+    modifier->DetachFromNode();
     if (animationManager_ == nullptr) {
         animationManager_ = RSAnimationManagerMap::Instance()->GetAnimationManager(gettid());
     }
@@ -889,11 +905,16 @@ void RSNode::RemoveModifier(const std::shared_ptr<RSModifier>& modifier)
     std::unique_ptr<RSCommand> command = std::make_unique<RSRemoveModifier>(GetId(), modifier->GetPropertyId());
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode());
+        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), GetId());
+        if (NeedForcedSendToRemote()) {
+            std::unique_ptr<RSCommand> cmdForRemote =
+                std::make_unique<RSRemoveModifier>(GetId(), modifier->GetPropertyId());
+            transactionProxy->AddCommand(cmdForRemote, true, GetFollowType(), GetId());
+        }
     }
 }
 
-const std::shared_ptr<RSModifier> RSNode::GetModifier(const PropertyId& propertyId)
+const std::shared_ptr<RSModifierBase> RSNode::GetModifier(const PropertyId& propertyId)
 {
     auto iter = modifiers_.find(propertyId);
     if (iter != modifiers_.end()) {

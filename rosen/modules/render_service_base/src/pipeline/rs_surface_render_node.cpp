@@ -39,7 +39,8 @@ namespace Rosen {
 RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, std::weak_ptr<RSContext> context)
     : RSRenderNode(config.id, context),
       RSSurfaceHandler(config.id),
-      name_(config.name)
+      name_(config.name),
+      dirtyManager_(std::make_shared<RSDirtyRegionManager>())
 {
 }
 
@@ -131,24 +132,28 @@ void RSSurfaceRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas
 }
 
 void RSSurfaceRenderNode::CollectSurface(
-    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec)
+    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender)
 {
     if (RSOcclusionConfig::GetInstance().IsStartingWindow(GetName())) {
         return;
     }
     if (RSOcclusionConfig::GetInstance().IsLeashWindow(GetName())) {
         for (auto& child : node->GetSortedChildren()) {
-            child->CollectSurface(child, vec);
+            child->CollectSurface(child, vec, isUniRender);
         }
         return;
     }
+
     auto& consumer = GetConsumer();
     if (consumer != nullptr && consumer->GetTunnelHandle() != nullptr) {
         return;
     }
-    
-    if (GetBuffer() != nullptr && GetRenderProperties().GetVisible()) {
+    if (isUniRender) {
         vec.emplace_back(shared_from_this());
+    } else {
+        if (GetBuffer() != nullptr && GetRenderProperties().GetVisible()) {
+            vec.emplace_back(shared_from_this());
+        }
     }
 }
 
@@ -172,6 +177,11 @@ void RSSurfaceRenderNode::SetContextBounds(const Vector4f bounds)
 {
     std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetBounds>(GetId(), bounds);
     SendCommandFromRT(command, GetId());
+}
+
+std::shared_ptr<RSDirtyRegionManager> RSSurfaceRenderNode::GetDirtyManager() const
+{
+    return dirtyManager_;
 }
 
 void RSSurfaceRenderNode::SetContextMatrix(const SkMatrix& matrix, bool sendMsg)
@@ -280,7 +290,7 @@ void RSSurfaceRenderNode::RegisterBufferAvailableListener(
 
 void RSSurfaceRenderNode::ConnectToNodeInRenderService()
 {
-    ROSEN_LOGI("RSSurfaceRenderNode::ConnectToNodeInRenderService nodeId = %llu", GetId());
+    ROSEN_LOGI("RSSurfaceRenderNode::ConnectToNodeInRenderService nodeId = %" PRIu64, GetId());
     auto renderServiceClient =
         std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
     if (renderServiceClient != nullptr) {
@@ -306,14 +316,14 @@ void RSSurfaceRenderNode::NotifyRTBufferAvailable()
     isNotifyRTBufferAvailable_ = true;
 
     if (callbackForRenderThreadRefresh_) {
-        ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %llu RenderThread", GetId());
+        ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %" PRIu64 " RenderThread", GetId());
         callbackForRenderThreadRefresh_();
     }
 
     {
         std::lock_guard<std::mutex> lock(mutexRT_);
         if (callbackFromRT_) {
-            ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %llu RenderService", GetId());
+            ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %" PRIu64 " RenderService", GetId());
             callbackFromRT_->OnBufferAvailable();
         }
         if (!callbackForRenderThreadRefresh_ && !callbackFromRT_) {
@@ -331,7 +341,7 @@ void RSSurfaceRenderNode::NotifyUIBufferAvailable()
     {
         std::lock_guard<std::mutex> lock(mutexUI_);
         if (callbackFromUI_) {
-            ROSEN_LOGI("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %llu", GetId());
+            ROSEN_LOGI("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %" PRIu64, GetId());
             callbackFromUI_->OnBufferAvailable();
         } else {
             isNotifyUIBufferAvailable_ = false;

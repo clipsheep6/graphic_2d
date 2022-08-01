@@ -21,12 +21,11 @@ ohos_executable("vulkan_wrapper_native_test") {
               "src/driver_loader.cpp" ]
 
   include_dirs = [
-    # "include/vulkan/include",
     "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
     "include",
   ]
 
-  defines = ["VK_USE_PLATFORM_OHOS"]
+  defines = ["VK_USE_PLATFORM_OHOS_OPENHARMONY"]
 
 
   deps = [

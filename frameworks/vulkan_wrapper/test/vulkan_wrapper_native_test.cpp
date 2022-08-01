@@ -14,15 +14,16 @@
  */
 
 #include <iostream>
+// #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan.h"
 #include "api_export.h"
 
 void InitSurface(NativeWindow* window, VkSurfaceKHR& out_surface, VkInstance instance)
 {
-	VkOpenhmSurfaceCreateInfoOHOS surfaceCreateInfo = {};
-	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_OHOS_SURFACE_CREATE_INFO_KHR;
+	VkOHOSSurfaceCreateInfoOpenHarmony surfaceCreateInfo = {};
+	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_OHOS_SURFACE_CREATE_INFO_OPENHARMONY;
 	surfaceCreateInfo.window = window;
-	VkResult err = vkCreateOpenhmSurfaceOHOS(instance, &surfaceCreateInfo, NULL, &out_surface);
+	VkResult err = vkCreateOHOSSurfaceOpenHarmony(instance, &surfaceCreateInfo, NULL, &out_surface);
 
 	if (err != VK_SUCCESS) {
 		std::cout << "Could not create surface!" << std::endl;

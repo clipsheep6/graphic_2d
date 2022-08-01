@@ -20,7 +20,7 @@
 namespace vulkan {
 namespace driver {
 
-VKAPI_ATTR VkResult CreateOpenhmSurfaceOHOS(VkInstance instance, const VkOpenhmSurfaceCreateInfoOHOS* pCreateInfo, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface);
+VKAPI_ATTR VkResult CreateOHOSSurfaceOpenHarmony(VkInstance instance, const VkOHOSSurfaceCreateInfoOpenHarmony* pCreateInfo, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface);
 VKAPI_ATTR void DestroySurfaceKHR(VkInstance instance, VkSurfaceKHR surface, const VkAllocationCallbacks* allocator);
 VKAPI_ATTR VkResult GetPhysicalDeviceSurfaceSupportKHR(VkPhysicalDevice pdev, uint32_t queue_family, VkSurfaceKHR surface, VkBool32* pSupported);
 VKAPI_ATTR VkResult GetPhysicalDeviceSurfaceCapabilitiesKHR(VkPhysicalDevice pdev, VkSurfaceKHR surface, VkSurfaceCapabilitiesKHR* capabilities);

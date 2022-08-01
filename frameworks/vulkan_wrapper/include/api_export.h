@@ -765,8 +765,8 @@ VKAPI_ATTR void vkCmdExecuteCommands(VkCommandBuffer commandBuffer, uint32_t com
 }
 
 __attribute__((visibility("default")))
-VKAPI_ATTR VkResult vkCreateOpenhmSurfaceOHOS(VkInstance instance, const VkOpenhmSurfaceCreateInfoOHOS* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) {
-    return vulkan::driver::CreateOpenhmSurfaceOHOS(instance, pCreateInfo, pAllocator, pSurface);
+VKAPI_ATTR VkResult vkCreateOHOSSurfaceOpenHarmony(VkInstance instance, const VkOHOSSurfaceCreateInfoOpenHarmony* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) {
+    return vulkan::driver::CreateOHOSSurfaceOpenHarmony(instance, pCreateInfo, pAllocator, pSurface);
 }
 
 __attribute__((visibility("default")))

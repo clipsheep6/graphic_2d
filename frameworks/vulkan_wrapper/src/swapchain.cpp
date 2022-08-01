@@ -85,10 +85,10 @@ VkSwapchainKHR HandleFromSwapchain(Swapchain* swapchain) {
 // input  : VkSwapchainCreateInfoKHR (native window)
 // output : VkSurfaceKHR(swapchain_handle is null)
 VKAPI_ATTR 
-VkResult CreateOpenhmSurfaceOHOS(VkInstance instance, 
-                                 const VkOpenhmSurfaceCreateInfoOHOS* pCreateInfo, 
-                                 const VkAllocationCallbacks* allocator, 
-                                 VkSurfaceKHR* out_surface) {
+VkResult CreateOHOSSurfaceOpenHarmony(VkInstance instance, 
+                                      const VkOHOSSurfaceCreateInfoOpenHarmony* pCreateInfo, 
+                                      const VkAllocationCallbacks* allocator, 
+                                      VkSurfaceKHR* out_surface) {
 
     if (!allocator) {
         allocator = vulkan::driver::GetDefaultAllocator();

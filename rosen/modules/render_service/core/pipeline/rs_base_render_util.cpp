@@ -142,7 +142,7 @@ inline PixelTransformFunc GenEOTF(const TransferParameters& params)
     return std::bind(FullResponse, std::placeholders::_1, params);
 }
 
-float ACESToneMapping(float color, float adapted_lum)
+float ACESToneMapping(float color, float target_lum)
 {
 	const float a = 2.51f;
 	const float b = 0.03f;
@@ -150,16 +150,16 @@ float ACESToneMapping(float color, float adapted_lum)
 	const float d = 0.59f;
 	const float e = 0.14f;
 
-	color *= adapted_lum;
+	color *= target_lum;
 	return (color * (a * color + b)) / (color * (c * color + d) + e);
 }
 
-inline PixelTransformFunc GenACESToneMapping(float adapted_lum)
+inline PixelTransformFunc GenACESToneMapping(float target_lum)
 {
-    if (adapted_lum <= 0) {
-        adapted_lum = 10000;
+    if (target_lum <= 0) {
+        target_lum = 200;
     }
-    return std::bind(ACESToneMapping, std::placeholders::_1, adapted_lum);
+    return std::bind(ACESToneMapping, std::placeholders::_1, target_lum);
 }
 
 Matrix3f GenRGBToXYZMatrix(const std::array<Vector2f, 3>& basePoints, const Vector2f& whitePoint)
@@ -230,9 +230,9 @@ public:
 
     ~SimpleColorSpace() noexcept = default;
 
-    Vector3f ToneMapping(const Vector3f& color, float adapted_lum = 0) const
+    Vector3f ToneMapping(const Vector3f& color, float target_lum = 0) const
     {
-        PixelTransformFunc toneMappingFunc = GenACESToneMapping(adapted_lum);
+        PixelTransformFunc toneMappingFunc = GenACESToneMapping(target_lum);
         return ApplyTransForm(ApplyTransForm(color, toneMappingFunc), clamper_);
     }
 
@@ -407,7 +407,7 @@ float RGBUint8ToFloat(uint8_t val)
     return val * 1.0f / 255.0f; // 255.0f is the max value.
 }
 
-float RGBUint10ToFloat(uint8_t val)
+float RGBUint10ToFloat(uint16_t val)
 {
     return val * 1.0f / 1023.0f; // 1023.0f is the max value
 }

@@ -55,6 +55,7 @@ private:
     static bool CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffer, std::vector<uint8_t>& newGamutBuffer,
         SkBitmap& bitmap, ColorGamut srcGamut, ColorGamut dstGamut);
     static bool CreateBitmap(sptr<OHOS::SurfaceBuffer> buffer, SkBitmap& bitmap);
+    static int64_t compositionStartTimestamp_;
 };
 }
 }

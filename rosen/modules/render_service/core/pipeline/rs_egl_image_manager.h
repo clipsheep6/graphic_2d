@@ -21,12 +21,9 @@
 #include <queue>
 #include <unordered_map>
 
-#include <surface.h>
-#include "EGL/egl.h"
-#include "EGL/eglext.h"
-#include "GLES/gl.h"
-#include "GLES/glext.h"
-#include "GLES3/gl32.h"
+#include "gl/egl_api.h"
+#include "gl/egl_extensions.h"
+#include "surface.h"
 #include "sync_fence.h"
 #include "pipeline/rs_context.h"
 
@@ -69,8 +66,12 @@ public:
         const sptr<SyncFence>& acquireFence);
     void UnMapEglImageFromSurfaceBuffer(int32_t seqNum);
     void ShrinkCachesIfNeeded();
+
+    UniqueFd CreateSyncFenceFd() const;
 private:
-    void WaitAcquireFence(const sptr<SyncFence>& acquireFence);
+    void InitEglExtensions();
+    bool WaitGpuNativeFence(const sptr<SyncFence>& acquireFence) const; // called by WaitAcquireFence
+    void WaitAcquireFence(const sptr<SyncFence>& acquireFence) const;
     GLuint CreateImageCacheFromBuffer(const sptr<OHOS::SurfaceBuffer>& buffer);
 
     mutable std::mutex opMutex_;
@@ -78,6 +79,8 @@ private:
     std::queue<int32_t> cacheQueue_; // fifo, size restricted by MAX_CACHE_SIZE
     std::unordered_map<int32_t, std::unique_ptr<ImageCacheSeq>> imageCacheSeqs_; // guarded by opMutex_.
     EGLDisplay eglDisplay_ = EGL_NO_DISPLAY;
+
+    std::unique_ptr<EGLExtensions> eglExtensions_;
 };
 } // namespace Rosen
 } // namespace OHOS

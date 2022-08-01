@@ -88,10 +88,14 @@ public:
         return buffer_.damageRect;
     }
 
+    void SetPrevBufferReleaseFence(sptr<SyncFence> fence)
+    {
+        preBuffer_.releaseFence = std::move(fence);
+    }
+
     void SetReleaseFence(sptr<SyncFence> fence)
     {
-        // The fence which get from hdi is preBuffer's releaseFence now.
-        preBuffer_.releaseFence = std::move(fence);
+        buffer_.releaseFence = std::move(fence);
     }
 
     SurfaceBufferEntry& GetPreBuffer()

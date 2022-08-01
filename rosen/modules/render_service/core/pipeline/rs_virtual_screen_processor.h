@@ -17,6 +17,7 @@
 #define RS_CORE_PIPELINE_VIRTUAL_SCREEN_PROCESSOR_H
 
 #include "rs_processor.h"
+#include "pipeline/rs_surface_render_node.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -36,6 +37,8 @@ private:
     sptr<Surface> producerSurface_;
     std::unique_ptr<RSRenderFrame> renderFrame_;
     std::unique_ptr<RSPaintFilterCanvas> canvas_;
+
+    std::vector<RSSurfaceHandler*> processedNodes_;
 };
 } // namespace Rosen
 } // namespace OHOS

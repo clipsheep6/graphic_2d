@@ -71,6 +71,40 @@ bool RSComposerAdapter::Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t
     return true;
 }
 
+void RSComposerAdapter::SetLayerReleaseFence(
+    const LayerInfoPtr& layer,
+    const sptr<SyncFence>& releaseFence,
+    bool isPrev)
+{
+    if (layer == nullptr) {
+        return;
+    }
+
+    auto nodePtr = static_cast<RSBaseRenderNode*>(layer->GetLayerAdditionalInfo());
+    if (nodePtr == nullptr) {
+        RS_LOGW("RSComposerAdapter::SetLayerReleaseFence: layer's node is nullptr.");
+        return;
+    }
+
+    RSSurfaceHandler* surfaceHandler = nullptr;
+    if (nodePtr->IsInstanceOf<RSSurfaceRenderNode>()) {
+        auto surfaceNode = static_cast<RSSurfaceRenderNode*>(nodePtr);
+        surfaceHandler = static_cast<RSSurfaceHandler*>(surfaceNode);
+    } else if (nodePtr->IsInstanceOf<RSDisplayRenderNode>()) {
+        auto displayNode = static_cast<RSDisplayRenderNode*>(nodePtr);
+        surfaceHandler = static_cast<RSSurfaceHandler*>(displayNode);
+    }
+    if (surfaceHandler == nullptr) {
+        return;
+    }
+
+    if (isPrev) {
+        surfaceHandler->SetPrevBufferReleaseFence(releaseFence);
+    } else {
+        surfaceHandler->SetReleaseFence(releaseFence);
+    }
+}
+
 void RSComposerAdapter::CommitLayers(const std::vector<LayerInfoPtr>& layers)
 {
     if (hdiBackend_ == nullptr) {
@@ -100,28 +134,9 @@ void RSComposerAdapter::CommitLayers(const std::vector<LayerInfoPtr>& layers)
     // set all layers' releaseFence.
     const auto layersReleaseFence = hdiBackend_->GetLayersReleaseFence(output_);
     for (const auto& [layer, fence] : layersReleaseFence) {
-        if (layer == nullptr) {
-            continue;
-        }
-
-        auto nodePtr = static_cast<RSBaseRenderNode*>(layer->GetLayerAdditionalInfo());
-        if (nodePtr == nullptr) {
-            RS_LOGW("RSComposerAdapter::PostProcess: layer's node is nullptr.");
-            continue;
-        }
-
-        RSSurfaceHandler* surfaceHandler = nullptr;
-        if (nodePtr->IsInstanceOf<RSSurfaceRenderNode>()) {
-            auto surfaceNode = static_cast<RSSurfaceRenderNode*>(nodePtr);
-            surfaceHandler = static_cast<RSSurfaceHandler*>(surfaceNode);
-        } else if (nodePtr->IsInstanceOf<RSDisplayRenderNode>()) {
-            auto displayNode = static_cast<RSDisplayRenderNode*>(nodePtr);
-            surfaceHandler = static_cast<RSSurfaceHandler*>(displayNode);
-        }
-        if (surfaceHandler == nullptr) {
-            continue;
-        }
-        surfaceHandler->SetReleaseFence(fence);
+        // the releaseFence get from hdi is prevBuffer's.
+        bool isPrev = true;
+        RSComposerAdapter::SetLayerReleaseFence(layer, fence, isPrev);
     }
 }
 

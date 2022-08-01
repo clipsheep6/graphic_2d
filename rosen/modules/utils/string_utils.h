@@ -17,6 +17,8 @@
 #define STRING_UTILS_H
 
 #include <iostream>
+#include <sstream>
+#include <vector>
 
 #include <hilog/log.h>
 
@@ -27,8 +29,9 @@ namespace OHOS {
 namespace Rosen {
 static constexpr HiviewDFX::HiLogLabel TAG = { LOG_CORE, 0, "StringUtils" };
 constexpr int STRING_BUFFER_SIZE = 4096;
+
 template <typename...Args>
-void AppendFormat(std::string& out, const char* fmt, Args&& ... args)
+inline void AppendFormat(std::string& out, const char* fmt, Args&& ... args)
 {
     char buf[STRING_BUFFER_SIZE] = {0};
     int len = ::snprintf_s(buf, sizeof(buf), sizeof(buf)-1, fmt, args...);
@@ -38,6 +41,17 @@ void AppendFormat(std::string& out, const char* fmt, Args&& ... args)
     }
     out += buf;
 }
+
+inline std::vector<std::string> StringSplit(const std::string& s, char delimiter)
+{
+    std::vector<std::string> result;
+    std::istringstream ss(s);
+    std::string token;
+    while (std::getline(ss, token, delimiter)) {
+        result.push_back(token);
+    }
+    return result;
 }
-}
-#endif
+} // namespace Rosen
+} // namespace OHOS
+#endif // STRING_UTILS_H

@@ -132,11 +132,11 @@ inline PixelTransformFunc GenOETF(const TransferParameters& params)
 inline PixelTransformFunc GenEOTF(const TransferParameters& params)
 {
     if (params.g < 0) {
-        return std::bind(Response, std::placeholders::_1, params);
+        return std::bind(ResponsePq, std::placeholders::_1, params);
     }
 
     if (params.e == 0.0f && params.f == 0.0f) {
-        return std::bind(ResponsePq, std::placeholders::_1, params);
+        return std::bind(Response, std::placeholders::_1, params);
     }
 
     return std::bind(FullResponse, std::placeholders::_1, params);
@@ -823,7 +823,7 @@ bool RSBaseRenderUtil::CreateYuvToRGBABitMap(sptr<OHOS::SurfaceBuffer> buffer, s
 bool RSBaseRenderUtil::CreateBitmap(sptr<OHOS::SurfaceBuffer> buffer, SkBitmap& bitmap, const void* addr)
 {
     SkImageInfo imageInfo = Detail::GenerateSkImageInfo(buffer);
-    SkPixmap pixmap(imageInfo, buffer->GetVirAddr(), buffer->GetStride());
+    SkPixmap pixmap(imageInfo, addr, buffer->GetStride());
     return bitmap.installPixels(pixmap);
 }
 

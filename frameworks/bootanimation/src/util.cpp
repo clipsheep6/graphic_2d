@@ -15,7 +15,6 @@
 
 #include "cJSON.h"
 #include "util.h"
-
 #include <vsync_helper.h>
 #include <securec.h>
 #include <sys/time.h>

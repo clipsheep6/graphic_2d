@@ -61,7 +61,6 @@ ohos_shared_library("surface") {
 
   configs = [
     ":surface_config",
-    "//third_party/libdrm:libdrm_public_config",
   ]
 
   public_configs = [

@@ -15,7 +15,6 @@
 
 #include "hdi_layer.h"
 
-#include "hdi_log.h"
 #include "hdi_device.h"
 
 namespace OHOS {
@@ -72,7 +71,7 @@ int32_t HdiLayer::CreateLayer(const LayerInfoPtr &layerInfo)
         HLOGE("Create hwc layer failed, ret is %{public}d", ret);
         return ret;
     }
-
+    prevLayerInfo_ = HdiLayerInfo::CreateHdiLayerInfo();
     layerId_ = layerId;
 
     HLOGD("Create hwc layer succeed, layerId is %{public}u", layerId_);
@@ -293,6 +292,26 @@ void HdiLayer::CheckRet(int32_t ret, const char* func)
     if (ret != DISPLAY_SUCCESS) {
         HLOGD("call hdi %{public}s failed, ret is %{public}d", func, ret);
     }
+}
+
+void HdiLayer::SavePrevLayerInfo()
+{
+    prevLayerInfo_->CopyLayerInfo(layerInfo_);
+}
+
+bool HdiLayer::IsSameLayer()
+{
+    bool retCode = false;
+    if (prevLayerInfo_->GetBuffer() == nullptr) {
+        HLOGD("Prev buffer is nullptr, name:%{public}s", layerInfo_->GetSurface()->GetName().c_str());
+        return retCode;
+    }
+
+    if (layerInfo_ == prevLayerInfo_) {
+        HLOGD("Same layer, name:%{public}s", layerInfo_->GetSurface()->GetName().c_str());
+        retCode = true;
+    }
+    return retCode;
 }
 
 void HdiLayer::Dump(std::string &result)

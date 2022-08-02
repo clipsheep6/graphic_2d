@@ -62,28 +62,17 @@ int32_t HdiBackend::PreProcessLayersComp(const OutputPtr &output,
         return DISPLAY_FAILURE;
     }
 
-    uint32_t layersNum = layersMap.size();
-    uint32_t layerCompCapacity = output->GetLayerCompCapacity();
-    uint32_t screenId = output->GetScreenId();
-
     // If doClientCompositionDirectly is true then layer->SetHdiLayerInfo and UpdateLayerCompType is no need to run.
-    bool doClientCompositionDirectly = ((layerCompCapacity != LAYER_COMPOSITION_CAPACITY_INVALID) &&
-                                        (layersNum > layerCompCapacity));
-    bool isDirectClientCompositionEnabled = output->GetDirectClientCompEnableStatus();
-    if (!isDirectClientCompositionEnabled) {
-        doClientCompositionDirectly = false;
-    }
-
+    bool doClientCompositionDirectly = output->GetCurrCompType() == CompositionType::COMPOSITION_CLIENT;
     for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {
         const LayerPtr &layer = iter->second;
         if (doClientCompositionDirectly) {
-            HLOGD("Direct client composition is enabled.");
-            layer->UpdateCompositionType(CompositionType::COMPOSITION_CLIENT);
-            continue;
+            break;
         }
         layer->SetHdiLayerInfo();
     }
 
+    uint32_t screenId = output->GetScreenId();
     int32_t ret = device_->PrepareScreenLayers(screenId, needFlush);
     if (ret != DISPLAY_SUCCESS) {
         HLOGE("PrepareScreenLayers failed, ret is %{public}d", ret);
@@ -91,11 +80,12 @@ int32_t HdiBackend::PreProcessLayersComp(const OutputPtr &output,
     }
 
     if (doClientCompositionDirectly) {
+        HLOGD("Direct client composition is enabled.");
         ScopedBytrace doClientCompositionDirectlyTag("DoClientCompositionDirectly");
         return DISPLAY_SUCCESS;
     }
 
-    return UpdateLayerCompType(screenId, layersMap);
+    return UpdateLayerCompType(output);
 }
 
 void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
@@ -117,7 +107,7 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
         if (output == nullptr) {
             continue;
         }
-        const std::unordered_map<uint32_t, LayerPtr> &layersMap = output->GetLayers();
+        const std::unordered_map<uint32_t, LayerPtr> &layersMap = output->GetValidLayers();
         if (layersMap.empty()) {
             HLOGI("layer map is empty, drop this frame");
             continue;
@@ -129,20 +119,18 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
             return;
         }
 
-        uint32_t screenId = output->GetScreenId();
         std::vector<LayerPtr> compClientLayers;
         std::vector<LayerInfoPtr> newLayerInfos;
-        for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {
-            const LayerPtr &layer = iter->second;
-            newLayerInfos.emplace_back(layer->GetLayerInfo());
-            if (layer->GetLayerInfo()->GetCompositionType() == CompositionType::COMPOSITION_CLIENT) {
-                compClientLayers.emplace_back(layer);
-            }
-        }
-
-        if (compClientLayers.size() > 0) {
+        if (output->GetCurrCompType() == CompositionType::COMPOSITION_CLIENT) {
             needFlush = true;
-            HLOGD("Need flush framebuffer, client composition layer num is %{public}zu", compClientLayers.size());
+            const std::unordered_map<uint32_t, LayerPtr> &clientLayersMap = output->GetLayers();
+            for (auto iter = clientLayersMap.begin(); iter != clientLayersMap.end(); ++iter) {
+                const LayerPtr &layer = iter->second;
+                newLayerInfos.emplace_back(layer->GetLayerInfo());
+                if (layer->GetLayerInfo()->GetCompositionType() == CompositionType::COMPOSITION_CLIENT) {
+                    compClientLayers.emplace_back(layer);
+                }
+            }
         }
 
         OnPrepareComplete(needFlush, output, newLayerInfos);
@@ -153,6 +141,7 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
             }
         }
 
+        uint32_t screenId = output->GetScreenId();
         sptr<SyncFence> fbFence = SyncFence::INVALID_FENCE;
         ret = device_->Commit(screenId, fbFence);
         if (ret != DISPLAY_SUCCESS) {
@@ -160,6 +149,7 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
             // return
         }
 
+        output->UpdatePrevLayerInfo();
         int64_t timestamp = lastPresentFence_->SyncFileReadTimestamp();
         bool ret = false;
         if (timestamp != SyncFence::FENCE_PENDING_TIMESTAMP) {
@@ -178,10 +168,11 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
     }
 }
 
-int32_t HdiBackend::UpdateLayerCompType(uint32_t screenId, const std::unordered_map<uint32_t, LayerPtr> &layersMap)
+int32_t HdiBackend::UpdateLayerCompType(const OutputPtr &output)
 {
     std::vector<uint32_t> layersId;
     std::vector<int32_t> types;
+    uint32_t screenId = output->GetScreenId();
     int32_t ret = device_->GetScreenCompChange(screenId, layersId, types);
     if (ret != DISPLAY_SUCCESS || layersId.size() != types.size()) {
         HLOGE("GetScreenCompChange failed, ret is %{public}d", ret);
@@ -190,22 +181,17 @@ int32_t HdiBackend::UpdateLayerCompType(uint32_t screenId, const std::unordered_
 
     size_t layerNum = layersId.size();
     for (size_t i = 0; i < layerNum; i++) {
-        auto iter = layersMap.find(layersId[i]);
-        if (iter == layersMap.end()) {
-            HLOGE("Invalid hdi layer id[%{public}u]", layersId[i]);
-            continue;
+        if (static_cast<CompositionType>(types[i]) == CompositionType::COMPOSITION_CLIENT) {
+            output->SetCurrCompType(CompositionType::COMPOSITION_CLIENT);
         }
-
-        const LayerPtr &layer = iter->second;
-        layer->UpdateCompositionType(static_cast<CompositionType>(types[i]));
     }
-
     return ret;
 }
 
 void HdiBackend::OnPrepareComplete(bool needFlush, OutputPtr &output, std::vector<LayerInfoPtr> &newLayerInfos)
 {
     if (needFlush) {
+        HLOGD("Need flush framebuffer, client composition layer num is %{public}zu", newLayerInfos.size());
         ReorderLayerInfo(newLayerInfos);
     }
 

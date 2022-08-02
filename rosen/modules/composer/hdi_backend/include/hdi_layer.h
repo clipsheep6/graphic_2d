@@ -56,6 +56,8 @@ public:
     void Dump(std::string &result);
 
     sptr<SyncFence> GetReleaseFence() const;
+    bool IsSameLayer();
+    void SavePrevLayerInfo();
 private:
     // layer buffer & fence
     class LayerBufferInfo : public RefBase {
@@ -76,6 +78,7 @@ private:
     sptr<LayerBufferInfo> currSbuffer_ = nullptr;
     sptr<LayerBufferInfo> prevSbuffer_ = nullptr;
     LayerInfoPtr layerInfo_ = nullptr;
+    LayerInfoPtr prevLayerInfo_ = nullptr;
     PresentTimestampType supportedPresentTimestamptype_ = PresentTimestampType::HARDWARE_DISPLAY_PTS_UNSUPPORTED;
 
     void CloseLayer();

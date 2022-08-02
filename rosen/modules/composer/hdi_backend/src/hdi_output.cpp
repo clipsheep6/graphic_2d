@@ -143,6 +143,56 @@ const std::unordered_map<uint32_t, std::shared_ptr<HdiLayer>>& HdiOutput::GetLay
     return layerIdMap_;
 }
 
+const std::unordered_map<uint32_t, LayerPtr>& HdiOutput::GetValidLayers()
+{
+    currCompType_ = CompositionType::COMPOSITION_DEVICE;
+    if (!directClientCompositionEnabled_) {
+        return layerIdMap_;
+    }
+    uint32_t layersNum = layerIdMap_.size();
+    // If doClientCompositionDirectly is true then currCompType_ is CompositionType::COMPOSITION_CLIENT.
+    bool doClientCompositionDirectly = ((layerCompCapacity_ != LAYER_COMPOSITION_CAPACITY_INVALID) &&
+                                        (layersNum > layerCompCapacity_));
+    if (doClientCompositionDirectly) {
+        SetCurrCompType(CompositionType::COMPOSITION_CLIENT);
+        return layerIdMap_;
+    }
+    validLayerIdMap_.clear();
+    for (auto iter = layerIdMap_.begin(); iter != layerIdMap_.end(); iter++) {
+        uint32_t layerId = iter->first;
+        std::shared_ptr<HdiLayer> layer = iter->second;
+        if (currCompType_ == prevCompType_ && layer->IsSameLayer()) {
+            continue;
+        }
+        validLayerIdMap_[layerId] = layer;
+    }
+    HLOGD("total layers size:%{public}zu, valid Layers size:%{public}zu, prev CompType:%{public}d.",
+          layerIdMap_.size(), validLayerIdMap_.size(), prevCompType_);
+    return validLayerIdMap_;
+}
+
+void HdiOutput::UpdatePrevLayerInfo()
+{
+    prevCompType_ = currCompType_;
+    for (auto iter = layerIdMap_.begin(); iter != layerIdMap_.end(); iter++) {
+        std::shared_ptr<HdiLayer> layer = iter->second;
+        layer->SavePrevLayerInfo();
+    }
+}
+
+void HdiOutput::SetCurrCompType(CompositionType compType)
+{
+    currCompType_ = compType;
+    for (auto iter = layerIdMap_.begin(); iter != layerIdMap_.end(); iter++) {
+        std::shared_ptr<HdiLayer> layer = iter->second;
+        layer->UpdateCompositionType(compType);
+    }
+}
+CompositionType HdiOutput::GetCurrCompType() const
+{
+    return currCompType_;
+}
+
 uint32_t HdiOutput::GetScreenId() const
 {
     return screenId_;

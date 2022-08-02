@@ -21,7 +21,6 @@
 #include <vector>
 #include <unordered_map>
 
-#include "hdi_log.h"
 #include "surface_type.h"
 #include "hdi_layer.h"
 #include "hdi_framebuffer_surface.h"
@@ -57,6 +56,7 @@ public:
     static std::shared_ptr<HdiOutput> CreateHdiOutput(uint32_t screenId);
     RosenError Init();
     const std::unordered_map<uint32_t, LayerPtr>& GetLayers();
+    const std::unordered_map<uint32_t, LayerPtr>& GetValidLayers();
     IRect& GetOutputDamage();
     uint32_t GetOutputDamageNum() const;
     sptr<Surface> GetFrameBufferSurface();
@@ -69,6 +69,9 @@ public:
     void RecordCompositionTime(int64_t timeStamp);
     void SetDirectClientCompEnableStatus(bool enableStatus);
     bool GetDirectClientCompEnableStatus() const;
+    void UpdatePrevLayerInfo();
+    void SetCurrCompType(CompositionType compType);
+    CompositionType GetCurrCompType() const;
 
 private:
     std::array<int64_t, COMPOSITION_RECORDS_NUM> compositionTimeRecords_ = {};
@@ -76,6 +79,7 @@ private:
     sptr<HdiFramebufferSurface> fbSurface_ = nullptr;
     // layerId -- layer ptr
     std::unordered_map<uint32_t, LayerPtr> layerIdMap_;
+    std::unordered_map<uint32_t, LayerPtr> validLayerIdMap_;
     // surface unique id -- layer ptr
     std::unordered_map<uint64_t, LayerPtr> surfaceIdMap_;
     uint32_t screenId_;
@@ -83,6 +87,8 @@ private:
     IRect outputDamage_;
     uint32_t outputDamageNum_;
     bool directClientCompositionEnabled_ = true;
+    CompositionType currCompType_ = CompositionType::COMPOSITION_DEVICE;
+    CompositionType prevCompType_ = CompositionType::COMPOSITION_DEVICE;
 
     int32_t CreateLayer(uint64_t surfaceId, const LayerInfoPtr &layerInfo);
     void DeletePrevLayers();

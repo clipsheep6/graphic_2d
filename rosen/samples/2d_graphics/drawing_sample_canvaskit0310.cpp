@@ -23,8 +23,7 @@
 #include <unistd.h>
 
 #include <sync_fence.h>
-
-#include <vsync_helper.h>
+#include <event_handler.h>
 #include <display_type.h>
 #include <surface.h>
 #include "hdi_backend.h"
@@ -409,11 +408,6 @@ void HelloDrawing::Sync(int64_t, void *data)
         .userdata_ = data,
         .callback_ = std::bind(&HelloDrawing::Sync, this, SYNC_FUNC_ARG),
     };
-
-    OHOS::VsyncError ret = OHOS::VsyncHelper::Current()->RequestFrameCallback(cb);
-    if (ret) {
-        LOGE("RequestFrameCallback inner %{public}d\n", ret);
-    }
 
     if (!ready) {
         return;

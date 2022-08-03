@@ -21,7 +21,6 @@ group("default") {
     "frameworks/dumper:gdumper",
     "frameworks/dumper:gdumper.ini",
     "frameworks/dumper:graphic_dumper_server",
-    "frameworks/vsync:vsync_server",
   ]
 
   if (graphic_standard_feature_bootanimation_enable) {
@@ -61,10 +60,6 @@ ohos_prebuilt_etc("graphic.rc") {
 
 group("libsurface") {
   public_deps = [ "frameworks/surface:surface" ]
-}
-
-group("libvsync_client") {
-  public_deps = [ "frameworks/vsync:libvsync_client" ]
 }
 
 group("libfence") {

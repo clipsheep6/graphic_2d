@@ -51,8 +51,10 @@ public:
         if (skData_ != nullptr) {
             skData_ = nullptr;
         } else {
-            free(memBuffer);
-            memBuffer = nullptr;
+            if (memBuffer != nullptr) {
+                free(memBuffer);
+                memBuffer = nullptr;
+            }
         }
         LOGI("~MemStruct()");
     }

@@ -40,9 +40,7 @@ void PostTask(std::function<void()> func, uint32_t delayTime)
 
 bool ReadJsonConfig(const char* filebuffer, int totalsize, BootAniConfig& aniconfig)
 {
-    std::string JParamsString;
-    JParamsString.assign(filebuffer, totalsize);
-    cJSON* overallData = cJSON_Parse(JParamsString.c_str());
+    cJSON* overallData = cJSON_Parse(filebuffer);
     if (overallData == nullptr) {
         LOGE("The config json file fails to compile.");
         return false;

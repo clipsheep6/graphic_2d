@@ -501,7 +501,7 @@ int32_t RSScreen::GetScreenSupportedMetaDataKeys(std::vector<ScreenHDRMetadataKe
         }
         return StatusCode::SUCCESS;
     }
-    RS_LOGW("GetScreenSupportedMetaDataKeys Failed!");
+    RS_LOGE("RSScreen %s: Hdi GetScreenSupportedMetaDataKeys fails.", __func__);
     return StatusCode::HDI_ERROR;
 }
 

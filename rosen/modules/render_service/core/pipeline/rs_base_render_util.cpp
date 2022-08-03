@@ -30,6 +30,10 @@ namespace Detail {
 // [PLANNING]: Use GPU to do the gamut conversion instead of these following works.
 using PixelTransformFunc = std::function<float(float)>;
 
+typedef std::pair<uint8_t, uint8_t> Offset; // first: offsetSrc; second: offsetDst
+#define STUB_PIXEL_FMT_RGBA_16161616 0X7fff0001
+#define STUB_PIXEL_FMT_RGBA_1010102 0X7fff0002
+
 inline constexpr float PassThrough(float v)
 {
     return v;
@@ -79,6 +83,19 @@ struct TransferParameters {
     float f = 0.0f;
 };
 
+inline float RcpResponsePq(float x, const TransferParameters& p)
+{
+    float tmp = powf(x, p.a);
+    return std::powf((p.c + p.d * tmp) / (1 + p.e * tmp), p.b);
+}
+
+inline float ResponsePq(float x, const TransferParameters& p)
+{
+    float tmp = powf(x, 1.f / p.b);
+    return std::powf(std::max((tmp - p.c), p.f) / (p.d - p.e * tmp), 1.f / p.a);
+}
+
+
 static constexpr float RcpResponse(float x, const TransferParameters& p)
 {
     return x >= p.d * p.c ? (std::pow(x, 1.0f / p.g) - p.b) / p.a : x / p.c;
@@ -101,6 +118,10 @@ inline constexpr float FullResponse(float x, const TransferParameters& p)
 
 inline PixelTransformFunc GenOETF(const TransferParameters& params)
 {
+    if (params.g < 0) { // HDR
+        return std::bind(RcpResponsePq, std::placeholders::_1, params);
+    }
+
     if (params.e == 0.0f && params.f == 0.0f) {
         return std::bind(RcpResponse, std::placeholders::_1, params);
     }
@@ -110,11 +131,35 @@ inline PixelTransformFunc GenOETF(const TransferParameters& params)
 
 inline PixelTransformFunc GenEOTF(const TransferParameters& params)
 {
-    if (params.e == 0.0f && params.f == 0.0f) {
+    if (params.g < 0) {
         return std::bind(Response, std::placeholders::_1, params);
     }
 
+    if (params.e == 0.0f && params.f == 0.0f) {
+        return std::bind(ResponsePq, std::placeholders::_1, params);
+    }
+
     return std::bind(FullResponse, std::placeholders::_1, params);
+}
+
+float ACESToneMapping(float color, float adapted_lum)
+{
+	const float a = 2.51f;
+	const float b = 0.03f;
+	const float c = 2.43f;
+	const float d = 0.59f;
+	const float e = 0.14f;
+
+	color *= adapted_lum;
+	return (color * (a * color + b)) / (color * (c * color + d) + e);
+}
+
+inline PixelTransformFunc GenACESToneMapping(float adapted_lum)
+{
+    if (adapted_lum <= 0) {
+        adapted_lum = 10000;
+    }
+    return std::bind(ACESToneMapping, std::placeholders::_1, adapted_lum);
 }
 
 Matrix3f GenRGBToXYZMatrix(const std::array<Vector2f, 3>& basePoints, const Vector2f& whitePoint)
@@ -185,8 +230,17 @@ public:
 
     ~SimpleColorSpace() noexcept = default;
 
+    Vector3f ToneMapping(const Vector3f& color, float adapted_lum = 0) const
+    {
+        PixelTransformFunc toneMappingFunc = GenACESToneMapping(adapted_lum);
+        return ApplyTransForm(ApplyTransForm(color, toneMappingFunc), clamper_);
+    }
+
     Vector3f ToLinear(const Vector3f& val) const
     {
+        if (transferParams_.g < 0) { // HDR
+            return ToneMapping(ApplyTransForm(val, transEOTF_));
+        }
         return ApplyTransForm(val, transEOTF_);
     }
 
@@ -250,6 +304,51 @@ SimpleColorSpace &GetDCIP3ColorSpace()
     return dciP3;
 }
 
+bool IsValidMetaData(const std::vector<HDRMetaData> &metaDatas)
+{
+    uint16_t validFlag = 0;
+    for(auto metaData : metaDatas) {
+        validFlag ^= 1 << metaData.key;
+    }
+
+    uint16_t bitsToCheck = 0xFF;
+    // has complete and unique primaries;
+    return (validFlag & bitsToCheck) == bitsToCheck;
+}
+
+SimpleColorSpace &GetColorSpaceFromMetaData(const std::vector<HDRMetaData> &metaDatas, float targetLum = 0)
+{
+    std::vector<HDRMetaData> metaDataSorted = metaDatas;
+    std::sort(metaDataSorted.begin(), metaDataSorted.end(), [&](const HDRMetaData &a,const HDRMetaData &b)->bool{
+        return a.key < b.key;
+    });
+    static SimpleColorSpace hdrPq {
+         // rgb base points.
+        {{Vector2f{metaDataSorted[HDRMetadataKey::MATAKEY_RED_PRIMARY_X].value,
+                   metaDataSorted[HDRMetadataKey::MATAKEY_RED_PRIMARY_Y].value},
+                  {metaDataSorted[HDRMetadataKey::MATAKEY_GREEN_PRIMARY_X].value,
+                   metaDataSorted[HDRMetadataKey::MATAKEY_GREEN_PRIMARY_Y].value},
+                  {metaDataSorted[HDRMetadataKey::MATAKEY_BLUE_PRIMARY_X].value,
+                   metaDataSorted[HDRMetadataKey::MATAKEY_BLUE_PRIMARY_Y].value}}},
+        {metaDataSorted[HDRMetadataKey::MATAKEY_WHITE_PRIMARY_X].value,
+         metaDataSorted[HDRMetadataKey::MATAKEY_WHITE_PRIMARY_Y].value}, // white points.
+        {-2.0f, 0.1593017578125, 78.84375, 0.8359375, 18.8515625, 18.6875, 0.f}}; // PQ TransferParameters
+    return hdrPq;
+}
+
+SimpleColorSpace &GetHdrPqColorSpace(const std::vector<HDRMetaData> &metaData, float targetLum = 0.f)
+{
+    if (metaData.size() > 0 && IsValidMetaData(metaData)) {
+        return GetColorSpaceFromMetaData(metaData, targetLum);
+    } 
+
+    static SimpleColorSpace DefaultHdrPq {
+        {{Vector2f{0.708f, 0.292f}, {0.17f, 0.797f}, {0.131f, 0.046f}}}, // BT.2020 rgb base points.
+        {0.3127f, 0.3290f}, // BT.2020 white points.
+        {-2.0f, 0.1593017578125, 78.84375, 0.8359375, 18.8515625, 18.6875, 0.f}}; // PQ TransferParameters
+    return DefaultHdrPq;
+}
+
 bool IsSupportedFormatForGamutConversion(int32_t pixelFormat)
 {
     static std::unordered_set<PixelFormat> supportedFormats = {
@@ -259,7 +358,12 @@ bool IsSupportedFormatForGamutConversion(int32_t pixelFormat)
         PixelFormat::PIXEL_FMT_BGRX_8888,
         PixelFormat::PIXEL_FMT_BGRA_8888
     };
-    return supportedFormats.count(static_cast<PixelFormat>(pixelFormat)) > 0;
+
+    // Because PixelFormat has no enumeration for RBG_16,
+    // we use a temporary stub here for testing
+    // The final version should use a PixelFormat::PIXEL_FMT_RGBA_XXXX
+    return pixelFormat == STUB_PIXEL_FMT_RGBA_16161616 ||
+        supportedFormats.count(static_cast<PixelFormat>(pixelFormat)) > 0;
 }
 
 bool IsSupportedColorGamut(ColorGamut colorGamut)
@@ -268,12 +372,14 @@ bool IsSupportedColorGamut(ColorGamut colorGamut)
         ColorGamut::COLOR_GAMUT_SRGB,
         ColorGamut::COLOR_GAMUT_ADOBE_RGB,
         ColorGamut::COLOR_GAMUT_DISPLAY_P3,
-        ColorGamut::COLOR_GAMUT_DCI_P3
+        ColorGamut::COLOR_GAMUT_DCI_P3,
+        ColorGamut::COLOR_GAMUT_BT2020,
+        ColorGamut::COLOR_GAMUT_BT2100_PQ
     };
     return supportedColorGamuts.count(colorGamut) > 0;
 }
 
-SimpleColorSpace& GetColorSpaceOfCertainGamut(ColorGamut colorGamut)
+SimpleColorSpace& GetColorSpaceOfCertainGamut(ColorGamut colorGamut, const std::vector<HDRMetaData> &metaData = {})
 {
     switch (colorGamut) {
         case ColorGamut::COLOR_GAMUT_SRGB: {
@@ -286,6 +392,10 @@ SimpleColorSpace& GetColorSpaceOfCertainGamut(ColorGamut colorGamut)
         case ColorGamut::COLOR_GAMUT_DCI_P3: {
             return GetDisplayP3ColorSpace(); // Currently p3 colorspace is displayP3
         }
+        case ColorGamut::COLOR_GAMUT_BT2020:
+        case ColorGamut::COLOR_GAMUT_BT2100_PQ: {
+            return GetHdrPqColorSpace(metaData);
+        }
         default: {
             return GetSRGBColorSpace();
         }
@@ -297,16 +407,48 @@ float RGBUint8ToFloat(uint8_t val)
     return val * 1.0f / 255.0f; // 255.0f is the max value.
 }
 
+float RGBUint10ToFloat(uint8_t val)
+{
+    return val * 1.0f / 1023.0f; // 1023.0f is the max value
+}
+
 uint8_t RGBFloatToUint8(float val)
 {
     return static_cast<uint8_t>(Saturate(val) * 255 + 0.5f); // 255.0 is the max value, + 0.5f to avoid negative.
 }
 
-uint8_t ConvertColorGamut(uint8_t *dst, uint8_t* src, int32_t pixelFormat, ColorGamut srcGamut, ColorGamut dstGamut)
+uint8_t RGBFloatToUint10(float val)
 {
-    uint8_t len = 0;
-    Vector3f srcColor;
-    std::array<uint8_t *, 3> colorDst; // color dst, 3 bytes (R G B).
+    return static_cast<uint8_t>(Saturate(val) * 1023 + 0.5f); // 255.0 is the max value, + 0.5f to avoid negative.
+}
+
+uint8_t RGBUintToFloat(uint8_t* dst, uint8_t* src, int32_t pixelFormat, Vector3f &srcColor,
+    std::array<uint8_t*, 3> &colorDst)
+{
+    // Because PixelFormat does not have enumeration for RGBA_16 or RGBA_1010102,
+    // we use two special IF statements here to realize the transfer process.
+    // They should to be adjusted to the SWITCH process after the enumerations are added.
+    if (pixelFormat == STUB_PIXEL_FMT_RGBA_16161616) {
+        auto src16 = (const uint16_t*) src;
+        // R: src[0], G: src[1], B: src[2]
+        srcColor = {RGBUint10ToFloat(src16[0]), RGBUint10ToFloat(src16[1]), RGBUint10ToFloat(src16[2])};
+        // R: dst + 0, G: dst + 1, B: dst + 2
+        colorDst = {dst + 0, dst + 1, dst + 2};
+        // Alpha: linear transfer src[3] to dst[3]
+        dst[3] = RGBFloatToUint8(RGBUint10ToFloat(src16[3]));
+        return 8; // 8 bytes per pixel and HDR pictures are always redrawn as sRGB
+    }
+    if (pixelFormat == STUB_PIXEL_FMT_RGBA_1010102) {
+        auto src32 = (const uint32_t*) src;
+        // R: 0-9 bits, G: 10-19 ts, B: 20-29bits
+        srcColor = {RGBUint10ToFloat(*src32 & 0x3FF), RGBUint10ToFloat((*src32 >> 10) & 0x3FF),
+             RGBUint10ToFloat((*src32 >> 20) & 0x3FF)};
+        // R: dst + 0, G: dst + 1, B: dst + 2
+        colorDst = {dst + 0, dst + 1, dst + 2};
+        // Alpha: copy src[3] to dst[3]
+        dst[3] = (uint8_t)(*src32 >> 30);
+        return 4; // 4 bytes per pixel and HDR pictures are always redrawn as sRGB
+    }
     switch (static_cast<PixelFormat>(pixelFormat)) {
         case PixelFormat::PIXEL_FMT_RGBX_8888:
         case PixelFormat::PIXEL_FMT_RGBA_8888: {
@@ -316,16 +458,14 @@ uint8_t ConvertColorGamut(uint8_t *dst, uint8_t* src, int32_t pixelFormat, Color
             colorDst = {dst + 0, dst + 1, dst + 2};
             // Alpha: copy src[3] to dst[3]
             dst[3] = src[3];
-            len = 4; // 4 bytes per pixel.
-            break;
+            return 4; // 4 bytes per pixel.
         }
         case PixelFormat::PIXEL_FMT_RGB_888: {
             // R: src[0], G: src[1], B: src[2]
             srcColor = {RGBUint8ToFloat(src[0]), RGBUint8ToFloat(src[1]), RGBUint8ToFloat(src[2])};
             // R: dst + 0, G: dst + 1, B: dst + 2
             colorDst = {dst + 0, dst + 1, dst + 2};
-            len = 3; // 3 bytes per pixel.
-            break;
+            return 3; // 3 bytes per pixel.
         }
         case PixelFormat::PIXEL_FMT_BGRX_8888:
         case PixelFormat::PIXEL_FMT_BGRA_8888: {
@@ -335,30 +475,35 @@ uint8_t ConvertColorGamut(uint8_t *dst, uint8_t* src, int32_t pixelFormat, Color
             colorDst = {dst + 2, dst + 1, dst + 0};
             // Alpha: copy src[3] to dst[3]
             dst[3] = src[3];
-            len = 4; // 4 bytes per pixel.
-            break;
+            return 4; // 4 bytes per pixel.
         }
         default: {
-            RS_LOGE("ConvertColorGamut: unexpected pixelFormat(%d).", pixelFormat);
+            RS_LOGE("RGBUintToFloat: unexpected pixelFormat(%d).", pixelFormat);
             return 0;
         }
     }
+}
 
-    auto& srcColorSpace = GetColorSpaceOfCertainGamut(srcGamut);
-    auto& dstColorSpace = GetColorSpaceOfCertainGamut(dstGamut);
+Offset ConvertColorGamut(uint8_t* dst, uint8_t* src, int32_t pixelFormat, SimpleColorSpace& srcColorSpace,
+    SimpleColorSpace& dstColorSpace)
+{
+    Vector3f srcColor;
+    std::array<uint8_t*, 3> colorDst; // color dst, 3 bytes (R G B).
+
+    auto len = RGBUintToFloat(dst, src, pixelFormat, srcColor, colorDst);
     Vector3f outColor = dstColorSpace.XYZToRGB(srcColorSpace.RGBToXYZ(srcColor));
     *(colorDst[0]) = RGBFloatToUint8(outColor[0]); // outColor 0 to colorDst[0]
     *(colorDst[1]) = RGBFloatToUint8(outColor[1]); // outColor 1 to colorDst[1]
     *(colorDst[2]) = RGBFloatToUint8(outColor[2]); // outColor 2 to colorDst[2]
 
-    return len;
+    return std::make_pair(len, 4);
 }
 
 bool ConvertBufferColorGamut(std::vector<uint8_t>& dstBuf, const sptr<OHOS::SurfaceBuffer>& srcBuf,
-    ColorGamut srcGamut, ColorGamut dstGamut)
+    ColorGamut srcGamut, ColorGamut dstGamut, const std::vector<HDRMetaData>& metaDatas)
 {
     RS_TRACE_NAME("ConvertBufferColorGamut");
-
+    
     int32_t pixelFormat = srcBuf->GetFormat();
     if (!IsSupportedFormatForGamutConversion(pixelFormat)) {
         RS_LOGE("ConvertBufferColorGamut: the buffer's format is not supported.");
@@ -374,16 +519,20 @@ bool ConvertBufferColorGamut(std::vector<uint8_t>& dstBuf, const sptr<OHOS::Surf
     auto bufferAddr = srcBuf->GetVirAddr();
     uint8_t* srcStart = static_cast<uint8_t*>(bufferAddr);
 
-    uint32_t offset = 0;
-    while (offset < bufferSize) {
-        uint8_t* dst = &dstBuf[offset];
-        uint8_t* src = srcStart + offset;
-        uint8_t len = ConvertColorGamut(dst, src, pixelFormat, srcGamut, dstGamut);
-        if (len == 0) {
+    uint32_t offsetDst = 0, offsetSrc = 0;
+    auto& srcColorSpace = GetColorSpaceOfCertainGamut(srcGamut, metaDatas);
+    auto& dstColorSpace = GetColorSpaceOfCertainGamut(dstGamut, metaDatas);
+    while (offsetSrc < bufferSize) {
+        uint8_t* dst = &dstBuf[offsetDst];
+        uint8_t* src = srcStart + offsetSrc;
+        Offset len = ConvertColorGamut(dst, src, pixelFormat, srcColorSpace, dstColorSpace);
+        if (len.first == 0 || len.second == 0) {
             return false;
         }
-        offset += len;
+        offsetSrc += len.first;
+        offsetDst += len.second;
     }
+    dstBuf.resize(offsetDst); // dstBuf size might not be as large ad srcBuf in HDR
 
     return true;
 }
@@ -521,6 +670,41 @@ bool ConvertYUV420SPToRGBA(std::vector<uint8_t>& rgbaBuf, const sptr<OHOS::Surfa
 }
 } // namespace Detail
 
+bool RSBaseRenderUtil::StubConvertBufferColorGamut(sptr<OHOS::SurfaceBuffer>& dstBuf, ColorGamut srcGamut, ColorGamut dstGamut,
+    const std::vector<HDRMetaData>& metaDatas, uint8_t* srcStart, int32_t pixelFormat, uint32_t bufferSize)
+{
+    RS_TRACE_NAME("ConvertBufferColorGamut");
+    
+    if (!IsSupportedFormatForGamutConversion(pixelFormat)) {
+        RS_LOGE("ConvertBufferColorGamut: the buffer's format is not supported.");
+        return false;
+    }
+    if (!IsSupportedColorGamut(srcGamut) || !IsSupportedColorGamut(dstGamut)) {
+        return false;
+    }
+
+    uint32_t dstBufferSize = dstBuf->GetSize();
+
+    auto bufferAddr = dstBuf->GetVirAddr();
+    uint8_t* dstStart = static_cast<uint8_t*>(bufferAddr);
+
+    uint32_t offsetDst = 0, offsetSrc = 0;
+    auto& srcColorSpace = GetColorSpaceOfCertainGamut(srcGamut, metaDatas);
+    auto& dstColorSpace = GetColorSpaceOfCertainGamut(dstGamut, metaDatas);
+    while (offsetSrc < bufferSize && offsetDst < dstBufferSize) {
+        uint8_t* dst = dstStart + offsetDst;;
+        uint8_t* src = srcStart + offsetSrc;
+        Offset len = ConvertColorGamut(dst, src, pixelFormat, srcColorSpace, dstColorSpace);
+        if (len.first == 0 || len.second == 0) {
+            return false;
+        }
+        offsetSrc += len.first;
+        offsetDst += len.second;
+    }
+
+    return true;
+}
+
 void RSBaseRenderUtil::DropFrameProcess(RSSurfaceHandler& node)
 {
     auto availableBufferCnt = node.GetAvailableBufferCount();
@@ -632,8 +816,8 @@ bool RSBaseRenderUtil::IsBufferValid(const sptr<SurfaceBuffer>& buffer)
     return true;
 }
 
-bool RSBaseRenderUtil::ConvertBufferToBitmap(sptr<SurfaceBuffer> buffer, std::vector<uint8_t>& newBuffer,
-    ColorGamut dstGamut, SkBitmap& bitmap)
+bool RSBaseRenderUtil::ConvertBufferToBitmap(sptr<SurfaceBuffer> buffer, ColorGamut dstGamut, SkBitmap& bitmap,
+    const std::vector<HDRMetaData>& metaDatas)
 {
     if (!IsBufferValid(buffer)) {
         return false;
@@ -643,12 +827,15 @@ bool RSBaseRenderUtil::ConvertBufferToBitmap(sptr<SurfaceBuffer> buffer, std::ve
     // [PLANNING]: We will not use this tmp newBuffer if we use GPU to do the color conversions.
     // Attention: make sure newBuffer's lifecycle is longer than the moment call drawBitmap
     if (buffer->GetFormat() == PIXEL_FMT_YCRCB_420_SP || buffer->GetFormat() == PIXEL_FMT_YCBCR_420_SP) {
+        std::vector<uint8_t> newBuffer;
         bitmapCreated = CreateYuvToRGBABitMap(buffer, newBuffer, bitmap);
+    } else if (buffer->GetFormat() == STUB_PIXEL_FMT_RGBA_16161616) {
+        bitmapCreated = CreateNewColorGamutBitmap(buffer, bitmap, ColorGamut::COLOR_GAMUT_SRGB, dstGamut, metaDatas);
     } else if (srcGamut != dstGamut) {
-        RS_LOGW("RSBaseRenderUtil::ConvertBufferToBitmap: need to convert color gamut.");
-        bitmapCreated = CreateNewColorGamutBitmap(buffer, newBuffer, bitmap, srcGamut, dstGamut);
+        RS_LOGD("RSBaseRenderUtil::ConvertBufferToBitmap: need to convert color gamut.");
+        bitmapCreated = CreateNewColorGamutBitmap(buffer, bitmap, srcGamut, dstGamut);
     } else {
-        bitmapCreated = CreateBitmap(buffer, bitmap);
+        bitmapCreated = CreateBitmap(buffer, bitmap, buffer->GetVirAddr());
     }
     return bitmapCreated;
 }
@@ -668,25 +855,24 @@ bool RSBaseRenderUtil::CreateYuvToRGBABitMap(sptr<OHOS::SurfaceBuffer> buffer, s
     return bitmap.installPixels(pixmap);
 }
 
-bool RSBaseRenderUtil::CreateBitmap(sptr<OHOS::SurfaceBuffer> buffer, SkBitmap& bitmap)
+bool RSBaseRenderUtil::CreateBitmap(sptr<OHOS::SurfaceBuffer> buffer, SkBitmap& bitmap, const void* addr)
 {
     SkImageInfo imageInfo = Detail::GenerateSkImageInfo(buffer);
     SkPixmap pixmap(imageInfo, buffer->GetVirAddr(), buffer->GetStride());
     return bitmap.installPixels(pixmap);
 }
 
-bool RSBaseRenderUtil::CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffer,
-    std::vector<uint8_t>& newGamutBuffer, SkBitmap& bitmap, ColorGamut srcGamut, ColorGamut dstGamut)
+bool RSBaseRenderUtil::CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffer, SkBitmap& bitmap,
+    ColorGamut srcGamut, ColorGamut dstGamut, const std::vector<HDRMetaData>& metaDatas)
 {
-    bool convertRes = Detail::ConvertBufferColorGamut(newGamutBuffer, buffer, srcGamut, dstGamut);
+    std::vector<uint8_t> newGamutBuffer;
+    bool convertRes = Detail::ConvertBufferColorGamut(newGamutBuffer, buffer, srcGamut, dstGamut, metaDatas);
     if (convertRes) {
-        RS_LOGW("CreateNewColorGamutBitmap: convert color gamut succeed, use new buffer to create bitmap.");
-        SkImageInfo imageInfo = Detail::GenerateSkImageInfo(buffer);
-        SkPixmap pixmap(imageInfo, newGamutBuffer.data(), buffer->GetStride());
-        return bitmap.installPixels(pixmap);
+        RS_LOGD("CreateNewColorGamutBitmap: convert color gamut succeed, use new buffer to create bitmap.");
+        return CreateBitmap(buffer, bitmap, newGamutBuffer.data());
     } else {
-        RS_LOGW("CreateNewColorGamutBitmap: convert color gamut failed, use old buffer to create bitmap.");
-        return CreateBitmap(buffer, bitmap);
+        RS_LOGD("CreateNewColorGamutBitmap: convert color gamut failed, use old buffer to create bitmap.");
+        return CreateBitmap(buffer, bitmap, buffer->GetVirAddr());
     }
 }
 

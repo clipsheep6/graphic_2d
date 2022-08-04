@@ -1,6 +1,7 @@
 #include "driver_loader.h"
 #include <dlfcn.h>
 #include <iostream>
+#include "wrapper_log.h"
 #define LIB_CACULATE_PATH "/system/lib64/libGLES_mali.so"
 #define HAL_MODULE_INFO_SYM_AS_STR "HMI"
 namespace vulkan {
@@ -8,6 +9,7 @@ namespace driver {
 
 bool DriverLoader::Load()
 {
+    WLOGD("Andrew:: DriverLoader::Load is comming");
     if (loader_.dev_ != nullptr) {
         return true;
     }

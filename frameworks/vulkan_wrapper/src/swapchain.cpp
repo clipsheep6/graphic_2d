@@ -12,15 +12,75 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include <scoped_bytrace.h>
+#include "swapchain.h"
+#include "driver.h"
+#include <algorithm>
+#include <vector>
+#include <unordered_set>
+#include <unordered_map>
+#include <new>
+#include <malloc.h>
+#include <native_window.h>
 #include <window.h>
-#include <surface_type.h>
 #include <native_buffer.h>
 #include <wrapper_log.h>
+#include <graphic_common.h>
+#include "display_type.h"
+#include "vk_ohos_native_buffer.h"
+
 namespace vulkan {
 namespace driver {
 
+VKAPI_ATTR void* DefaultAllocate(void*,
+                                 size_t size,
+                                 size_t alignment,
+                                 VkSystemAllocationScope) {
+    void* ptr = nullptr;
+    // Vulkan requires 'alignment' to be a power of two, but posix_memalign
+    // additionally requires that it be at least sizeof(void*).
+    int ret = posix_memalign(&ptr, std::max(alignment, sizeof(void*)), size);
+    return ret == 0 ? ptr : nullptr;
+}
+
+VKAPI_ATTR void* DefaultReallocate(void*,
+                                   void* ptr,
+                                   size_t size,
+                                   size_t alignment,
+                                   VkSystemAllocationScope) {
+    if (size == 0) {
+        free(ptr);
+        return nullptr;
+    }
+
+    size_t old_size = ptr ? malloc_usable_size(ptr) : 0;
+    if (size <= old_size)
+        return ptr;
+
+    void* new_ptr = nullptr;
+    if (posix_memalign(&new_ptr, std::max(alignment, sizeof(void*)), size) != 0)
+        return nullptr;
+    if (ptr) {
+        memcpy(new_ptr, ptr, std::min(old_size, size));
+        free(ptr);
+    }
+    return new_ptr;
+}
+
+VKAPI_ATTR void DefaultFree(void*, void* ptr) {
+    free(ptr);
+}
+
+
+const VkAllocationCallbacks& GetDefaultAllocator() {
+    static const VkAllocationCallbacks kDefaultAllocCallbacks = {
+        .pUserData = nullptr,
+        .pfnAllocation = DefaultAllocate,
+        .pfnReallocation = DefaultReallocate,
+        .pfnFree = DefaultFree,
+    };
+
+    return kDefaultAllocCallbacks;
+}
 
 struct Surface {
     NativeWindow* window;
@@ -41,7 +101,7 @@ struct Swapchain {
           shared(present_mode == VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR ||
                  present_mode ==
                      VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR) {
-        NativeWindow* window = surface.window;
+        //OHNativeWindow* window = surface.window;
 
     }
 
@@ -63,7 +123,7 @@ struct Swapchain {
         int request_fence;
         int release_fence;
         bool requested;
-    } images[OHOS::SURFACE_MAX_QUEUE_SIZE];
+    } images[32];
 };
 
 VkSurfaceKHR HandleFromSurface(Surface* surface) {
@@ -91,7 +151,7 @@ VkResult CreateOHOSSurfaceOpenHarmony(VkInstance instance,
                                       VkSurfaceKHR* out_surface) {
 
     if (!allocator) {
-        allocator = vulkan::driver::GetDefaultAllocator();
+        allocator = &vulkan::driver::GetDefaultAllocator();
     }
     void* mem = allocator->pfnAllocation(allocator->pUserData, sizeof(Surface),
                                          alignof(Surface),
@@ -132,7 +192,7 @@ void DestroySurfaceKHR(VkInstance instance,
 
     surface->~Surface();
     if (!allocator) {
-        allocator = vulkan::driver::GetDefaultAllocator();
+        allocator = &vulkan::driver::GetDefaultAllocator();
     }
     allocator->pfnFree(allocator->pUserData, surface);
 }
@@ -163,10 +223,10 @@ VkResult GetPhysicalDeviceSurfaceCapabilitiesKHR(
         return VK_ERROR_SURFACE_LOST_KHR;
     }
 
-    int transform_hint = 0; // TODO
+    // int transform_hint = 0; // TODO
 
 
-    int max_buffer_count = window->surafce->GetQueueSize();
+    int max_buffer_count = window->surface->GetQueueSize();
 
     capabilities->minImageCount = std::min(max_buffer_count, 3);
     capabilities->maxImageCount = static_cast<uint32_t>(max_buffer_count);
@@ -180,9 +240,9 @@ VkResult GetPhysicalDeviceSurfaceCapabilitiesKHR(
 
     capabilities->maxImageArrayLayers = 1;
 
-    capabilities->supportedTransforms = kSupportedTransforms;
-    capabilities->currentTransform =
-        TranslateNativeToVulkanTransform(transform_hint);
+    // capabilities->supportedTransforms = kSupportedTransforms;
+    // capabilities->currentTransform =
+    //     TranslateNativeToVulkanTransform(transform_hint);
 
 
     capabilities->supportedCompositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
@@ -204,7 +264,7 @@ VkResult GetPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice pdev,
                                             VkSurfaceFormatKHR* formats) {
 
     bool wide_color_support = false;
-    Surface& surface = *SurfaceFromHandle(surface_handle);
+    //Surface& surface = *SurfaceFromHandle(surface_handle);
 
     WLOGE("wide_color_support is: %d", wide_color_support);
 
@@ -236,7 +296,7 @@ VkResult GetPhysicalDeviceSurfaceFormats2KHR(
     VkPhysicalDevice physicalDevice,
     const VkPhysicalDeviceSurfaceInfo2KHR* pSurfaceInfo,
     uint32_t* pSurfaceFormatCount,
-    VkSurfaceFormat2KHR* pSurfaceFormats)3
+    VkSurfaceFormat2KHR* pSurfaceFormats)
 {
     if (!pSurfaceFormats) {
         return GetPhysicalDeviceSurfaceFormatsKHR(physicalDevice,
@@ -271,8 +331,8 @@ VkResult GetPhysicalDeviceSurfacePresentModesKHR(
     uint32_t* count, 
     VkPresentModeKHR* modes)
 {
-    int err;
-    int query_value;
+
+    std::vector<VkPresentModeKHR> present_modes;
 
     if (surface == VK_NULL_HANDLE) {
         //[TODO]
@@ -281,9 +341,9 @@ VkResult GetPhysicalDeviceSurfacePresentModesKHR(
     } else {
         present_modes.push_back(VK_PRESENT_MODE_FIFO_KHR);
     }
-    NativeWindow* window = SurfaceFromHandle(surface)->window;
+    // NativeWindow* window = SurfaceFromHandle(surface)->window;
 
-    VkPhysicalDevicePresentationPropertiesOHOS present_properties;
+    VkPhysicalDevicePresentationPropertiesOpenHarmony present_properties;
     QueryPresentationProperties(pdev, &present_properties);
     if (present_properties.sharedImage) {
         present_modes.push_back(VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR);
@@ -374,7 +434,7 @@ VkResult GetPhysicalDevicePresentRectanglesKHR(VkPhysicalDevice,
         }
 
         int err;
-        AativeWindow* window = SurfaceFromHandle(surface)->window;
+        NativeWindow* window = SurfaceFromHandle(surface)->window;
 
         int width = 0, height = 0;
         err = NativeWindowHandleOpt(window, GET_BUFFER_GEOMETRY,&height, &width);
@@ -451,16 +511,17 @@ ColorDataSpace GetColorDataspace(VkColorSpaceKHR colorspace) {
 }
 
 static bool IsFencePending(int fd) {
+    return false;
     if (fd < 0) {
         return false;
     }
 
     errno = 0; // ?????
-    return sync_wait(fd, 0 /* timeout */) == -1 && errno == ETIME;
+    //return sync_wait(fd, 0 /* timeout */) == -1 && errno == ETIME;
 }
 
 void ReleaseSwapchainImage(VkDevice device,
-                           ANativeWindow* window,
+                           NativeWindow* window,
                            int release_fence,
                            Swapchain::Image& image,
                            bool defer_if_pending) {
@@ -479,7 +540,7 @@ void ReleaseSwapchainImage(VkDevice device,
             NativeWindowCancelBuffer(window, image.buffer);
         } else {
             if (release_fence >= 0) {
-                sync_wait(release_fence, -1 /* forever */);
+                //sync_wait(release_fence, -1 /* forever */);
                 close(release_fence);
             }
         }
@@ -497,12 +558,7 @@ void ReleaseSwapchainImage(VkDevice device,
     }
 
     if (image.image) {
-        PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr = vulkan::driver::GetInstanceProcAddr(instance, "vkGetDeviceProcAddr");
-        if (vkGetDeviceProcAddr) {
-            vkGetDeviceProcAddr
-            vukan::driver::DestroyImage(device, image.image, nullptr);
-
-        }
+        vulkan::driver::DestroyImage(device, image.image, nullptr);
         image.image = VK_NULL_HANDLE;
     }
 }
@@ -512,12 +568,11 @@ void ReleaseSwapchain(VkDevice device, Swapchain* swapchain) {
         return;
     }
     for (uint32_t i = 0; i < swapchain->num_images; i++) {
-        if (!swapchain->images[i].dequeued)
+        if (!swapchain->images[i].requested)
             ReleaseSwapchainImage(device, nullptr, -1, swapchain->images[i],
                                   true);
     }
     swapchain->surface.swapchain_handle = VK_NULL_HANDLE;
-    swapchain->timing.clear();
 }
 
 int TranslateVulkanToNativeTransform(VkSurfaceTransformFlagBitsKHR transform) {
@@ -545,7 +600,7 @@ static void DestroySwapchainInternal(VkDevice device,
     }
 
     if (!allocator) {
-        allocator = vulkan::driver::GetDefaultAllocator();
+        allocator = &vulkan::driver::GetDefaultAllocator();
     }
 
     swapchain->~Swapchain();
@@ -563,7 +618,7 @@ VkResult CreateSwapchainKHR(VkDevice device,
     VkResult result = VK_SUCCESS;
 
     if (!allocator) {
-        allocator = vulkan::driver::GetDefaultAllocator();
+        allocator = &vulkan::driver::GetDefaultAllocator();
     }
 
     // VkFormat -> PIXEL_FORMAT // ?????
@@ -593,7 +648,7 @@ VkResult CreateSwapchainKHR(VkDevice device,
 
     // [TODO]disconnet and connect
     // -- Configure the native window --
-
+    NativeWindow* window = surface.window;
     err = NativeWindowHandleOpt(window, SET_FORMAT, pixel_format);
     if (err != OHOS::GSERROR_OK) {
         WLOGE("native_window_set_buffers_format(%d) failed: %s (%d)",
@@ -613,10 +668,10 @@ VkResult CreateSwapchainKHR(VkDevice device,
 
     // [TODO]Transform and scaling mode
 
-    VkSwapchainImageUsageFlagsOHOS swapchain_image_usage = 0;
+    VkSwapchainImageUsageFlagsOpenHarmony swapchain_image_usage = 0;
     if (create_info->presentMode == VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR ||
         create_info->presentMode == VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR) {
-        swapchain_image_usage |= VK_SWAPCHAIN_IMAGE_USAGE_SHARED_BIT_OHOS;
+        swapchain_image_usage |= VK_SWAPCHAIN_IMAGE_USAGE_SHARED_BIT_OPENHARMONY;
         // [TODO]shared buffer
         if (err != OHOS::GSERROR_OK) {
             WLOGE("native_window_set_shared_buffer_mode failed: %{public}s (%{public}d)", strerror(-err), err);
@@ -629,7 +684,7 @@ VkResult CreateSwapchainKHR(VkDevice device,
 
     uint32_t num_images = 3;
 
-    if (swapchain_image_usage & VK_SWAPCHAIN_IMAGE_USAGE_SHARED_BIT_OHOS) {
+    if (swapchain_image_usage & VK_SWAPCHAIN_IMAGE_USAGE_SHARED_BIT_OPENHARMONY) {
         num_images = 1;
     }
 
@@ -659,18 +714,17 @@ VkResult CreateSwapchainKHR(VkDevice device,
     // -- Dequeue all buffers and create a VkImage for each --
     // Any failures during or after this must cancel the dequeued buffers.
 
-    VkSwapchainImageCreateInfoOHOS swapchain_image_create = {
+    VkSwapchainImageCreateInfoOpenHarmony swapchain_image_create = {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
-        .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_IMAGE_CREATE_INFO_OHOS,
+        .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_IMAGE_CREATE_INFO_OPENHARMONY,
 #pragma clang diagnostic pop
         .pNext = nullptr,
-        .usage = swapchain_image_usage,
     };
-    VkNativeBufferOHOS image_native_buffer = {
+    VkNativeBufferOpenHarmony image_native_buffer = {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
-        .sType = VK_STRUCTURE_TYPE_NATIVE_BUFFER_OHOS,
+        .sType = VK_STRUCTURE_TYPE_NATIVE_BUFFER_OPENHARMONY,
 #pragma clang diagnostic pop
         .pNext = &swapchain_image_create,
     };
@@ -700,7 +754,7 @@ VkResult CreateSwapchainKHR(VkDevice device,
         Swapchain::Image& img = swapchain->images[i];
 
         NativeWindowBuffer* buffer;
-        err = NativeWindowHandleOpt(window, &buffer, &img.request_fence);
+        err = NativeWindowRequestBuffer(window, &buffer, &img.request_fence);
         if (err != OHOS::GSERROR_OK) {
             WLOGE("dequeueBuffer[%{public}u] failed: %{public}s (%{public}d)", i, strerror(-err), err);
             switch (-err) {
@@ -714,18 +768,14 @@ VkResult CreateSwapchainKHR(VkDevice device,
             break;
         }
         img.buffer = buffer;
-        img.dequeued = true;
+        img.requested = true;
 
         image_create.extent =
-            VkExtent3D{static_cast<uint32_t>(img.buffer->width),
-                       static_cast<uint32_t>(img.buffer->height),
+            VkExtent3D{static_cast<uint32_t>(img.buffer->sfbuffer->GetSurfaceBufferWidth()),
+                       static_cast<uint32_t>(img.buffer->sfbuffer->GetSurfaceBufferHeight()),
                        1};
         image_native_buffer.handle = img.buffer->sfbuffer->GetBufferHandle();
-        image_native_buffer.stride = img.buffer->sfbuffer->GetStride();
-        image_native_buffer.format = img.buffer->sfbuffer->GetFormat();
-        image_native_buffer.usage = int(img.buffer->sfbuffer->GetUsage());
-        image_native_buffer.usage2.producer = native_usage;
-        image_native_buffer.usage2.consumer = native_usage;
+        
         // [TODO] set producer and consumer usage
 
 
@@ -745,7 +795,7 @@ VkResult CreateSwapchainKHR(VkDevice device,
         Swapchain::Image& img = swapchain->images[i];
         if (img.requested) {
             if (!swapchain->shared) {
-                NaitveWindowCancelBuffer(window, img.buffer);
+                NativeWindowCancelBuffer(window, img.buffer);
                 img.request_fence = -1;
                 img.requested = false;
             }
@@ -794,8 +844,8 @@ VkResult AcquireNextImageKHR(VkDevice device,
         // want to dequeue a buffer here. Instead, just ask the driver to ensure
         // the semaphore and fence passed to us will be signalled.
         *image_index = 0;
-        result = vulkan::driver::AcquireImageOHOS(
-                device, swapchain.images[*image_index].image, -1, semaphore, vk_fence);
+        result = vulkan::driver::SetNativeFenceFdOpenHarmony(
+                device, -1, semaphore, vk_fence);
         return result;
     }
 
@@ -812,8 +862,8 @@ VkResult AcquireNextImageKHR(VkDevice device,
     uint32_t idx;
     for (idx = 0; idx < swapchain.num_images; idx++) {
         if (swapchain.images[idx].buffer->sfbuffer == buffer->sfbuffer) {
-            swapchain.images[idx].dequeued = true;
-            swapchain.images[idx].dequeue_fence = fence_fd;
+            swapchain.images[idx].requested = true;
+            swapchain.images[idx].request_fence = fence_fd;
             break;
         }
     }
@@ -829,16 +879,16 @@ VkResult AcquireNextImageKHR(VkDevice device,
         if (fence_clone == -1) {
             WLOGE("dup(fence) failed, stalling until signalled: %{public}s (%{public}d)",
                   strerror(errno), errno);
-            sync_wait(fence_fd, -1 /* forever */);
+            //sync_wait(fence_fd, -1 /* forever */);
         }
     }
 
-    result = vulkan::driver::AcquireImageOHOS(
-        device, swapchain.images[idx].image, fence_clone, semaphore, vk_fence);
+    result = vulkan::driver::SetNativeFenceFdOpenHarmony(
+        device, fence_clone, semaphore, vk_fence);
     if (result != VK_SUCCESS) {
         NativeWindowCancelBuffer(window, buffer);
-        swapchain.images[idx].dequeued = false;
-        swapchain.images[idx].dequeue_fence = -1;
+        swapchain.images[idx].requested = false;
+        swapchain.images[idx].request_fence = -1;
         return result;
     }
 
@@ -910,100 +960,93 @@ VkResult GetPhysicalDeviceSurfaceCapabilities2KHR(
     return result;
 }
 
-static void InterceptBindImageMemory2(
-    uint32_t bind_info_count,
-    const VkBindImageMemoryInfo* bind_infos,
-    std::vector<VkNativeBufferOHOS>* out_native_buffers,
-    std::vector<VkBindImageMemoryInfo>* out_bind_infos) {
-    out_native_buffers->clear();
-    out_bind_infos->clear();
+// static void InterceptBindImageMemory2(
+//     uint32_t bind_info_count,
+//     const VkBindImageMemoryInfo* bind_infos,
+//     std::vector<VkNativeBufferOpenHarmony>* out_native_buffers,
+//     std::vector<VkBindImageMemoryInfo>* out_bind_infos) {
+//     out_native_buffers->clear();
+//     out_bind_infos->clear();
 
-    if (!bind_info_count)
-        return;
+//     if (!bind_info_count)
+//         return;
 
-    std::unordered_set<uint32_t> intercepted_indexes;
+//     std::unordered_set<uint32_t> intercepted_indexes;
 
-    for (uint32_t idx = 0; idx < bind_info_count; idx++) {
-        auto info = reinterpret_cast<const VkBindImageMemorySwapchainInfoKHR*>(
-            bind_infos[idx].pNext);
-        while (info &&
-               info->sType !=
-                   VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_SWAPCHAIN_INFO_KHR) {
-            info = reinterpret_cast<const VkBindImageMemorySwapchainInfoKHR*>(
-                info->pNext);
-        }
+//     for (uint32_t idx = 0; idx < bind_info_count; idx++) {
+//         auto info = reinterpret_cast<const VkBindImageMemorySwapchainInfoKHR*>(
+//             bind_infos[idx].pNext);
+//         while (info &&
+//                info->sType !=
+//                    VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_SWAPCHAIN_INFO_KHR) {
+//             info = reinterpret_cast<const VkBindImageMemorySwapchainInfoKHR*>(
+//                 info->pNext);
+//         }
 
-        if (!info)
-            continue;
+//         if (!info)
+//             continue;
 
         
-        const Swapchain* swapchain = SwapchainFromHandle(info->swapchain);
+//         const Swapchain* swapchain = SwapchainFromHandle(info->swapchain);
       
-        NativeWindowBuffer* buffer =
-            swapchain->images[info->imageIndex].buffer;
-        VkNativeBufferOHOS native_buffer = {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wold-style-cast"
-            .sType = VK_STRUCTURE_TYPE_NATIVE_BUFFER_OHOS,
-#pragma clang diagnostic pop
-            .pNext = bind_infos[idx].pNext,
-            .handle = img.buffer->sfbuffer->GetBufferHandle();
-            .stride = img.buffer->sfbuffer->GetStride();
-            .format = img.buffer->sfbuffer->GetFormat();
-            .usage = int(img.buffer->sfbuffer->GetUsage());
-        };
-        // Reserve enough space to avoid letting re-allocation invalidate the
-        // addresses of the elements inside.
-        out_native_buffers->reserve(bind_info_count);
-        out_native_buffers->emplace_back(native_buffer);
+//         NativeWindowBuffer* buffer =
+//             swapchain->images[info->imageIndex].buffer;
+//         VkNativeBufferOpenHarmony native_buffer = {
+//             .sType = VK_STRUCTURE_TYPE_NATIVE_BUFFER_OPENHARMONY,
+//             .pNext = bind_infos[idx].pNext,
+//             .handle = buffer->sfbuffer->GetBufferHandle(),
+//         };
+//         // Reserve enough space to avoid letting re-allocation invalidate the
+//         // addresses of the elements inside.
+//         out_native_buffers->reserve(bind_info_count);
+//         out_native_buffers->emplace_back(native_buffer);
 
-        // Reserve the space now since we know how much is needed now.
-        out_bind_infos->reserve(bind_info_count);
-        out_bind_infos->emplace_back(bind_infos[idx]);
-        out_bind_infos->back().pNext = &out_native_buffers->back();
+//         // Reserve the space now since we know how much is needed now.
+//         out_bind_infos->reserve(bind_info_count);
+//         out_bind_infos->emplace_back(bind_infos[idx]);
+//         out_bind_infos->back().pNext = &out_native_buffers->back();
 
-        intercepted_indexes.insert(idx);
-    }
+//         intercepted_indexes.insert(idx);
+//     }
 
-    if (intercepted_indexes.empty())
-        return;
+//     if (intercepted_indexes.empty())
+//         return;
 
-    for (uint32_t idx = 0; idx < bind_info_count; idx++) {
-        if (intercepted_indexes.count(idx))
-            continue;
-        out_bind_infos->emplace_back(bind_infos[idx]);
-    }
-}
+//     for (uint32_t idx = 0; idx < bind_info_count; idx++) {
+//         if (intercepted_indexes.count(idx))
+//             continue;
+//         out_bind_infos->emplace_back(bind_infos[idx]);
+//     }
+// }
 
-VKAPI_ATTR 
-VkResult BindImageMemory2(
-    VkDevice device, 
-    uint32_t bindInfoCount, 
-    const VkBindImageMemoryInfo* pBindInfos)
-{
-    std::vector<VkNativeBufferOHOS> out_native_buffers;
-    std::vector<VkBindImageMemoryInfo> out_bind_infos;
-    InterceptBindImageMemory2(bindInfoCount, pBindInfos, &out_native_buffers,
-                              &out_bind_infos);
-    return vulkan::driver::BindImageMemory2(
-        device, bindInfoCount,
-        out_bind_infos.empty() ? pBindInfos : out_bind_infos.data());
+// VKAPI_ATTR 
+// VkResult BindImageMemory2(
+//     VkDevice device, 
+//     uint32_t bindInfoCount, 
+//     const VkBindImageMemoryInfo* pBindInfos)
+// {
+//     std::vector<VkNativeBufferOpenHarmony> out_native_buffers;
+//     std::vector<VkBindImageMemoryInfo> out_bind_infos;
+//     InterceptBindImageMemory2(bindInfoCount, pBindInfos, &out_native_buffers,
+//                               &out_bind_infos);
+//     return vulkan::driver::BindImageMemory2(device, bindInfoCount,
+//         out_bind_infos.empty() ? pBindInfos : out_bind_infos.data());
 
-}
+// }
 
-VKAPI_ATTR
-VkResult BindImageMemory2KHR(VkDevice device,
-                             uint32_t bindInfoCount,
-                             const VkBindImageMemoryInfo* pBindInfos) {
+// VKAPI_ATTR
+// VkResult BindImageMemory2KHR(VkDevice device,
+//                              uint32_t bindInfoCount,
+//                              const VkBindImageMemoryInfo* pBindInfos) {
 
-    std::vector<VkNativeBufferOHOS> out_native_buffers;
-    std::vector<VkBindImageMemoryInfo> out_bind_infos;
-    InterceptBindImageMemory2(bindInfoCount, pBindInfos, &out_native_buffers,
-                              &out_bind_infos);
-    return vulkan::driver::BindImageMemory2KHR(
-        device, bindInfoCount,
-        out_bind_infos.empty() ? pBindInfos : out_bind_infos.data());
-}
+//     std::vector<VkNativeBufferOpenHarmony> out_native_buffers;
+//     std::vector<VkBindImageMemoryInfo> out_bind_infos;
+//     InterceptBindImageMemory2(bindInfoCount, pBindInfos, &out_native_buffers,
+//                               &out_bind_infos);
+//     return vulkan::driver::BindImageMemory2KHR(
+//         device, bindInfoCount,
+//         out_bind_infos.empty() ? pBindInfos : out_bind_infos.data());
+// }
 
 static VkResult WorstPresentResult(VkResult a, VkResult b) {
     static const VkResult kWorstToBest[] = {
@@ -1026,7 +1069,7 @@ static VkResult WorstPresentResult(VkResult a, VkResult b) {
 VKAPI_ATTR 
 VkResult QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* present_info)
 {
-    //VkDevice device = GetData(queue).driver_device;
+    VkDevice device = nullptr;//[TODO] = GetData(queue).driver_device;
     //const auto& dispatch = GetData(queue).driver;
     VkResult final_result = VK_SUCCESS;
 
@@ -1050,7 +1093,7 @@ VkResult QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* present_info)
     const VkPresentRegionKHR* regions =
         (present_regions) ? present_regions->pRegions : nullptr;
 
-    const VkAllocationCallbacks* allocator = vulkan::driver::GetDefaultAllocator();
+    const VkAllocationCallbacks* allocator = &vulkan::driver::GetDefaultAllocator();
     struct Region::Rect* rects = nullptr;
     uint32_t nrects = 0;
 
@@ -1063,10 +1106,13 @@ VkResult QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* present_info)
             (regions && !swapchain.mailbox_mode) ? &regions[sc] : nullptr;
         VkResult swapchain_result = VK_SUCCESS;
         VkResult result;
+        Region native_region;
+        memset(&native_region, 0, sizeof(Region));
+        
         int err;
 
         int fence = -1;
-        result = vulkan::driver::QueueSignalReleaseImageOHOS(
+        result = vulkan::driver::GetNativeFenceFdOpenHarmony(
             queue, present_info->waitSemaphoreCount,
             present_info->pWaitSemaphores, img.image, &fence);
         if (result != VK_SUCCESS) {
@@ -1113,25 +1159,27 @@ VkResult QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* present_info)
                         int height = static_cast<int>(
                             region->pRectangles[r].extent.height);
                         struct Region::Rect* cur_rect = &rects[r];
-                        cur_rect->left = x;
-                        cur_rect->top = y + height;
-                        cur_rect->right = x + width;
-                        cur_rect->bottom = y;
+                        cur_rect->x = x;
+                        cur_rect->y = y;
+                        cur_rect->w = width;
+                        cur_rect->h = height;
                     }
+                    native_region.rects = rects;
+                    native_region.rectNumber = rcount;
                 }
 
-                err = NaitveWindowFlushBuffer(window, img.buffer, fence, native_region);
+                err = NativeWindowFlushBuffer(window, img.buffer, fence, native_region);
                 // queueBuffer always closes fence, even on error
                 if (err != OHOS::GSERROR_OK) {
                     WLOGE("queueBuffer failed: %{public}s (%{public}d)", strerror(-err), err);
                     swapchain_result = WorstPresentResult(
                         swapchain_result, VK_ERROR_SURFACE_LOST_KHR);
                 } else {
-                    if (img.dequeue_fence >= 0) {
-                        close(img.dequeue_fence);
-                        img.dequeue_fence = -1;
+                    if (img.request_fence >= 0) {
+                        close(img.request_fence);
+                        img.request_fence = -1;
                     }
-                    img.dequeued = false;
+                    img.requested = false;
                 }
 
                 // If the swapchain is in shared mode, immediately dequeue the
@@ -1151,8 +1199,8 @@ VkResult QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* present_info)
                         swapchain_result = WorstPresentResult(swapchain_result,
                             VK_ERROR_SURFACE_LOST_KHR);
                     } else {
-                        img.dequeue_fence = fence_fd;
-                        img.dequeued = true;
+                        img.request_fence = fence_fd;
+                        img.requested = true;
                     }
                 }
             }
@@ -1160,10 +1208,6 @@ VkResult QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* present_info)
                 ReleaseSwapchain(device, &swapchain);
             }
 
-            if (swapchain.pre_transform != window_transform_hint) {
-                swapchain_result =
-                    WorstPresentResult(swapchain_result, VK_SUBOPTIMAL_KHR);
-            }
         } else {
             WLOGE("QueuePresentKHR swapchain_handle != pSwapchains[%{public}d]", sc);
             ReleaseSwapchainImage(device, nullptr, fence, img, true);

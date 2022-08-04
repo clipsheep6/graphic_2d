@@ -17,6 +17,7 @@
 #include "driver_loader.h"
 #include <mutex>
 #include <malloc.h>
+#include "wrapper_log.h"
 
 
 namespace vulkan {
@@ -26,70 +27,29 @@ DriverLoader DriverLoader::loader_;
 PFN_vkGetDeviceProcAddr pfn_vkGetDeviceProcAddr = nullptr;
 PFN_vkGetPhysicalDeviceProperties2KHR fpn_vkGetPhysicalDeviceProperties2KHR = nullptr;
 PFN_vkCreateDevice pfn_vkCreateDevice = nullptr;
-PFN_vkQueueSignalReleaseImageOHOS pfn_vkQueueSignalReleaseImageOHOS = nullptr;
-
+PFN_vkGetNativeFenceFdOpenHarmony pfn_vkGetNativeFenceFdOpenHarmony = nullptr;
+PFN_vkGetPhysicalDeviceProperties pfn_vkGetPhysicalDeviceProperties = nullptr;
+PFN_vkGetPhysicalDeviceFeatures pfn_vkGetPhysicalDeviceFeatures = nullptr;
+PFN_vkGetPhysicalDeviceMemoryProperties pfn_vkGetPhysicalDeviceMemoryProperties = nullptr;
+PFN_vkGetPhysicalDeviceQueueFamilyProperties pfn_vkGetPhysicalDeviceQueueFamilyProperties = nullptr;
+ 
 bool EnsureInitialized() {
+    WLOGD("Andrew:: EnsureInitialized is comming");
     static bool initialized = false;
     static std::mutex init_lock;
 
     std::lock_guard<std::mutex> lock(init_lock);
 
     if (initialized) {
+        WLOGD("Andrew:: initialized is ready");
         return true;
     }
 
     if (DriverLoader::Load()) {
+        WLOGD("Andrew:: DriverLoader::Load is ready");
         initialized = true;
     }
     return initialized;
-}
-
-VKAPI_ATTR void* DefaultAllocate(void*,
-                                 size_t size,
-                                 size_t alignment,
-                                 VkSystemAllocationScope) {
-    void* ptr = nullptr;
-    int ret = posix_memalign(&ptr, std::max(alignment, sizeof(void*)), size);
-    return ret == 0 ? ptr : nullptr;
-}
-
-VKAPI_ATTR void* DefaultReallocate(void*,
-                                   void* ptr,
-                                   size_t size,
-                                   size_t alignment,
-                                   VkSystemAllocationScope) {
-    if (size == 0) {
-        free(ptr);
-        return nullptr;
-    }
-
-    size_t old_size = ptr ? malloc_usable_size(ptr) : 0;
-    if (size <= old_size)
-        return ptr;
-
-    void* new_ptr = nullptr;
-    if (posix_memalign(&new_ptr, std::max(alignment, sizeof(void*)), size) != 0)
-        return nullptr;
-    if (ptr) {
-        memcpy(new_ptr, ptr, std::min(old_size, size));
-        free(ptr);
-    }
-    return new_ptr;
-}
-
-VKAPI_ATTR void DefaultFree(void*, void* ptr) {
-    free(ptr);
-}
-
-const VkAllocationCallbacks& GetDefaultAllocator() {
-    static const VkAllocationCallbacks kDefaultAllocCallbacks = {
-        .pUserData = nullptr,
-        .pfnAllocation = DefaultAllocate,
-        .pfnReallocation = DefaultReallocate,
-        .pfnFree = DefaultFree,
-    };
-
-    return kDefaultAllocCallbacks;
 }
 
 VkResult CreateInstance(const VkInstanceCreateInfo* pCreateInfo,
@@ -112,7 +72,10 @@ VkResult CreateInstance(const VkInstanceCreateInfo* pCreateInfo,
         reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2KHR>(
             DriverLoader::Device().GetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceProperties2KHR"));
     pfn_vkCreateDevice = reinterpret_cast<PFN_vkCreateDevice>(DriverLoader::Device().GetInstanceProcAddr(*pInstance, "vkCreateDevice"));
-
+    pfn_vkGetPhysicalDeviceProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties>(DriverLoader::Device().GetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceProperties"));
+    pfn_vkGetPhysicalDeviceFeatures = reinterpret_cast<PFN_vkGetPhysicalDeviceFeatures>(DriverLoader::Device().GetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceFeatures"));
+    pfn_vkGetPhysicalDeviceMemoryProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceMemoryProperties>(DriverLoader::Device().GetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceMemoryProperties"));
+    pfn_vkGetPhysicalDeviceQueueFamilyProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties>(DriverLoader::Device().GetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceQueueFamilyProperties"));
     return VK_SUCCESS; 
 }
 
@@ -161,8 +124,8 @@ VkResult CreateDevice(VkPhysicalDevice physicalDevice,
     }
 
     if (pDevice && pfn_vkGetDeviceProcAddr) {
-        pfn_vkQueueSignalReleaseImageOHOS = reinterpret_cast<PFN_vkQueueSignalReleaseImageOHOS>(
-            pfn_vkGetDeviceProcAddr(*pDevice, "vkQueueSignalReleaseImageOHOS"));
+        pfn_vkGetNativeFenceFdOpenHarmony= reinterpret_cast<PFN_vkGetNativeFenceFdOpenHarmony>(
+            pfn_vkGetDeviceProcAddr(*pDevice, "vkGetNativeFenceFdOpenHarmony"));
     }
 
     return result;
@@ -199,10 +162,50 @@ VkResult CreateImage(VkDevice device, const VkImageCreateInfo* pCreateInfo, cons
     return VK_ERROR_INITIALIZATION_FAILED;
 }
 
+VkResult EnumeratePhysicalDevices(VkInstance instance, uint32_t* pPhysicalDeviceCount, VkPhysicalDevice* pPhysicalDevices)
+{
+    PFN_vkEnumeratePhysicalDevices pfn_vkEnumeratePhysicalDevices = 
+        reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(GetInstanceProcAddr(instance, "vkEnumeratePhysicalDevices"));
+    if (pfn_vkEnumeratePhysicalDevices) {
+        return pfn_vkEnumeratePhysicalDevices(instance, pPhysicalDeviceCount, pPhysicalDevices);
+    }
+    return VK_ERROR_INITIALIZATION_FAILED;
+}
+
+void GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties* pProperties)
+{
+    if (pfn_vkGetPhysicalDeviceProperties) {
+        pfn_vkGetPhysicalDeviceProperties(physicalDevice, pProperties);
+    }
+}
+
+void GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures* pFeatures)
+{
+    if (pfn_vkGetPhysicalDeviceFeatures) {
+        pfn_vkGetPhysicalDeviceFeatures(physicalDevice, pFeatures);
+    }
+}
+
+void GetPhysicalDeviceMemoryProperties(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties* pMemoryProperties)
+{
+    if (pfn_vkGetPhysicalDeviceMemoryProperties) {
+        pfn_vkGetPhysicalDeviceMemoryProperties(physicalDevice, pMemoryProperties);
+    }
+}
+
+void GetPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice physicalDevice, 
+                                            uint32_t* pQueueFamilyPropertyCount, 
+                                            VkQueueFamilyProperties* pQueueFamilyProperties)
+{
+    if (pfn_vkGetPhysicalDeviceQueueFamilyProperties) {
+        pfn_vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, pQueueFamilyPropertyCount, pQueueFamilyProperties);
+    }
+}
+
+
 void QueryPresentationProperties(
     VkPhysicalDevice physicalDevice,
-    VkPhysicalDevicePresentationPropertiesOHOS* presentation_properties) {
-    // Request the android-specific presentation properties via GPDP2
+    VkPhysicalDevicePresentationPropertiesOpenHarmony* presentation_properties) {
     VkPhysicalDeviceProperties2 properties = {
         VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
         presentation_properties,
@@ -212,7 +215,7 @@ void QueryPresentationProperties(
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
     presentation_properties->sType =
-        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENTATION_PROPERTIES_OHOS;
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENTATION_PROPERTIES_OPENHARMONY;
 #pragma clang diagnostic pop
     presentation_properties->pNext = nullptr;
     presentation_properties->sharedImage = VK_FALSE;
@@ -227,15 +230,15 @@ void GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
     }
 }
 
-VkResult AcquireImageOHOS(VkDevice device,
-    VkImage image,
+// VkResult AcquireImageOHOS(VkDevice device,
+VkResult SetNativeFenceFdOpenHarmony(VkDevice device,
     int nativeFenceFd,
     VkSemaphore semaphore,
     VkFence fence)
 {
-    PFN_vkAcquireImageOHOS acquireImage = reinterpret_cast<PFN_vkAcquireImageOHOS>(GetDeviceProcAddr(device, "vkAcquireImageOHOS"));
+    PFN_vkSetNativeFenceFdOpenHarmony acquireImage = reinterpret_cast<PFN_vkSetNativeFenceFdOpenHarmony>(GetDeviceProcAddr(device, "vkSetNativeFenceFdOpenHarmony"));
     if (acquireImage) {
-        return acquireImage(device, image, nativeFenceFd, semaphore, fence);
+        return acquireImage(device, nativeFenceFd, semaphore, fence);
     }
     return VK_ERROR_INITIALIZATION_FAILED;
 }
@@ -262,15 +265,15 @@ VkResult BindImageMemory2(VkDevice device,
     return VK_ERROR_INITIALIZATION_FAILED;
 }
 
-VkResult QueueSignalReleaseImageOHOS(
+VkResult GetNativeFenceFdOpenHarmony(
     VkQueue queue,
     uint32_t waitSemaphoreCount,
     const VkSemaphore* pWaitSemaphores,
     VkImage image,
     int* pNativeFenceFd)
 {
-    if (pfn_vkQueueSignalReleaseImageOHOS) {
-        return pfn_vkQueueSignalReleaseImageOHOS(queue, waitSemaphoreCount, pWaitSemaphores, image, pNativeFenceFd);
+    if (pfn_vkGetNativeFenceFdOpenHarmony) {
+        return pfn_vkGetNativeFenceFdOpenHarmony(queue, waitSemaphoreCount, pWaitSemaphores, image, pNativeFenceFd);
     }
     return VK_ERROR_INITIALIZATION_FAILED;
 }

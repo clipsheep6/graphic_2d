@@ -1,5 +1,4 @@
 
-#include "driver.h"
 #include "swapchain.h"
 
 
@@ -40,12 +39,12 @@ VKAPI_ATTR void vkGetPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice physic
 
 __attribute__((visibility("default")))
 VKAPI_ATTR void vkGetPhysicalDeviceMemoryProperties(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties* pMemoryProperties) {
-    //vulkan::driver::GetPhysicalDeviceMemoryProperties(physicalDevice, pMemoryProperties);
+    vulkan::driver::GetPhysicalDeviceMemoryProperties(physicalDevice, pMemoryProperties);
 }
 
 __attribute__((visibility("default")))
 VKAPI_ATTR void vkGetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures* pFeatures) {
-    //vulkan::driver::GetPhysicalDeviceFeatures(physicalDevice, pFeatures);
+    vulkan::driver::GetPhysicalDeviceFeatures(physicalDevice, pFeatures);
 }
 
 __attribute__((visibility("default")))
@@ -776,26 +775,22 @@ VKAPI_ATTR void vkDestroySurfaceKHR(VkInstance instance, VkSurfaceKHR surface, c
 
 __attribute__((visibility("default")))
 VKAPI_ATTR VkResult vkGetPhysicalDeviceSurfaceSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, VkSurfaceKHR surface, VkBool32* pSupported) {
-    return VK_SUCCESS;
-    // return vulkan::driver::GetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueFamilyIndex, surface, pSupported);
+    return vulkan::driver::GetPhysicalDeviceSurfaceSupportKHR(physicalDevice, queueFamilyIndex, surface, pSupported);
 }
 
 __attribute__((visibility("default")))
 VKAPI_ATTR VkResult vkGetPhysicalDeviceSurfaceCapabilitiesKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkSurfaceCapabilitiesKHR* pSurfaceCapabilities) {
-    return VK_SUCCESS;
-    // return vulkan::driver::GetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, pSurfaceCapabilities);
+    return vulkan::driver::GetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, pSurfaceCapabilities);
 }
 
 __attribute__((visibility("default")))
 VKAPI_ATTR VkResult vkGetPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t* pSurfaceFormatCount, VkSurfaceFormatKHR* pSurfaceFormats) {
-    return VK_SUCCESS;
-    // return vulkan::driver::GetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, pSurfaceFormatCount, pSurfaceFormats);
+    return vulkan::driver::GetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, pSurfaceFormatCount, pSurfaceFormats);
 }
 
 __attribute__((visibility("default")))
 VKAPI_ATTR VkResult vkGetPhysicalDeviceSurfacePresentModesKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t* pPresentModeCount, VkPresentModeKHR* pPresentModes) {
-    return VK_SUCCESS;
-    // return vulkan::driver::GetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, pPresentModeCount, pPresentModes);
+    return vulkan::driver::GetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, pPresentModeCount, pPresentModes);
 }
 
 __attribute__((visibility("default")))
@@ -925,8 +920,7 @@ VKAPI_ATTR VkResult vkGetDeviceGroupSurfacePresentModesKHR(VkDevice device, VkSu
 
 __attribute__((visibility("default")))
 VKAPI_ATTR VkResult vkAcquireNextImage2KHR(VkDevice device, const VkAcquireNextImageInfoKHR* pAcquireInfo, uint32_t* pImageIndex) {
-    return VK_SUCCESS;
-    // return vulkan::driver::AcquireNextImage2KHR(device, pAcquireInfo, pImageIndex);
+    return vulkan::driver::AcquireNextImage2KHR(device, pAcquireInfo, pImageIndex);
 }
 
 __attribute__((visibility("default")))

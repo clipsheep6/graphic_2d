@@ -74,7 +74,7 @@ ohos_executable("bootanimation") {
   if (is_standard_system) {
     external_deps += [ "init:libbegetutil" ]
   } else {
-    external_deps += [ "startup:syspara" ]
+    external_deps += [ "init_lite:libbegetutil" ]
   }
 
   part_name = "graphic_standard"

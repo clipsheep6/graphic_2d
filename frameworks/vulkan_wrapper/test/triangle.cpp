@@ -25,6 +25,7 @@
 #include "core/ui/rs_surface_node.h"
 #include "window.h"
 #include "vulkanexamplebase.h"
+#include "VulkanUtils.h"
 
 
 // Set to "true" to use staging buffers for uploading vertex and index data to device local memory

@@ -27,6 +27,8 @@
 #include <numeric>
 #include <array>
 
+#include "VulkanUtils.h"
+
 #include "vulkan/vulkan.h"
 
 #include "VulkanSwapChain.h"

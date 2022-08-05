@@ -74,10 +74,9 @@ ohos_executable("vulkan_wrapper_native_test") {
               "test/VulkanSwapChain.cpp",
               "test/VulkanBuffer.cpp",
               "test/VulkanTools.cpp",
+              "test/VulkanUtils.cpp",
               "test/VulkanInitializers.hpp",
-              "src/driver.cpp",
-              "src/swapchain.cpp",
-              "src/driver_loader.cpp" ]
+             ]
 
   include_dirs = [
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
@@ -88,7 +87,10 @@ ohos_executable("vulkan_wrapper_native_test") {
     "test",
   ]
 
-  defines = ["VK_USE_PLATFORM_OHOS_OPENHARMONY"]
+  defines = [
+    "VK_USE_PLATFORM_OHOS_OPENHARMONY",
+    "VK_NO_PROTOTYPES"
+    ]
 
 
   deps = [

@@ -24,7 +24,7 @@
 #include <fstream>
 #include <algorithm>
 #include "wrapper_log.h"
-
+#include "VulkanUtils.h"
 
 // Custom define for better code readability
 #define VK_FLAGS_NONE 0

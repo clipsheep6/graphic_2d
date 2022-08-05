@@ -19,6 +19,7 @@
 #include <vulkan/vulkan.h>
 
 #include "VulkanTools.h"
+#include "VulkanUtils.h"
 
 typedef struct _SwapChainBuffers {
 	VkImage image;

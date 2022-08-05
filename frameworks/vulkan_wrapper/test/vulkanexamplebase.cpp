@@ -187,8 +187,12 @@ void VulkanExampleBase::submitFrame()
 VulkanExampleBase::VulkanExampleBase()
 {
 	// Vulkan library is loaded dynamically on Android
-	// bool libLoaded = vks::android::loadVulkanLibrary();
-	// assert(libLoaded);
+	bool libLoaded = vks::utils::loadVulkanLibrary();
+	if (libLoaded) {
+		std::cout << "dlopen libvulkan.so success " << std::endl;
+	} else {
+		std::cout << "dlopen libvulkan.so failed" << std::endl;
+	}
 }
 
 VulkanExampleBase::~VulkanExampleBase()

@@ -143,7 +143,7 @@ pid_t SurfaceIPCTest::ChildProcessMain()
     write(pipeFd[1], &data, sizeof(data));
     sleep(0);
     read(pipeFd[0], &data, sizeof(data));
-    sleep(1);
+    sleep(2);  // sleep 2s for test
     PresentTimestampType type = PresentTimestampType::HARDWARE_DISPLAY_PTS_DELAY;
     int64_t time = 0;
     sRet = pSurface->GetPresentTimestamp(buffer->GetSeqNum(), type, time);
@@ -187,6 +187,7 @@ HWTEST_F(SurfaceIPCTest, BufferIPC001, Function | MediumTest | Level2)
     int32_t fence = -1;
     int64_t timestamp;
     Rect damage;
+    sleep(1);
     auto sRet = cSurface->AcquireBuffer(buffer, fence, timestamp, damage);
     EXPECT_EQ(sRet, OHOS::GSERROR_OK);
     EXPECT_NE(buffer, nullptr);

@@ -17,8 +17,14 @@ config("vulkan_config") {
   visibility = [ ":*" ]
 
   #defines = [ "EGL_WRAPPER_DEBUG_ENABLE" ]
+  defines = [
+    "VK_USE_PLATFORM_OHOS_OPENHARMONY",
+    "VK_NO_PROTOTYPES",
+    ]
 
   cflags = [
+    "-fvisibility=hidden",
+    "-fstrict-aliasing",
     "-Wall",
     "-Werror",
     "-g3",
@@ -36,6 +42,7 @@ config("vulkan_public_config") {
 
 ohos_shared_library("vulkan") {
   sources = [
+    "src/api_export.cpp",
     "src/driver.cpp",
     "src/driver_loader.cpp",
     "src/swapchain.cpp",

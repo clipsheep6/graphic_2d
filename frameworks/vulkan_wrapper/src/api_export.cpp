@@ -1,7 +1,6 @@
-
 #include "swapchain.h"
 
-
+extern "C" {
 __attribute__((visibility("default")))
 VKAPI_ATTR VkResult vkCreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance) {
     return vulkan::driver::CreateInstance(pCreateInfo, pAllocator, pInstance);
@@ -1051,4 +1050,5 @@ __attribute__((visibility("default")))
 VKAPI_ATTR uint64_t vkGetDeviceMemoryOpaqueCaptureAddress(VkDevice device, const VkDeviceMemoryOpaqueCaptureAddressInfo* pInfo) {
     return VK_SUCCESS;
     // return vulkan::driver::GetDeviceMemoryOpaqueCaptureAddress(device, pInfo);
+}
 }

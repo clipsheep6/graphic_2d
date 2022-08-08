@@ -16,6 +16,7 @@
 #define LIBVULKAN_SWAPCHAIN_H 1
 
 #include <vulkan/vulkan.h>
+#include "driver.h"
 
 namespace vulkan {
 namespace driver {

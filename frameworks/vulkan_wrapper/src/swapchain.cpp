@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 #include "swapchain.h"
-#include "driver.h"
 #include <algorithm>
 #include <vector>
 #include <unordered_set>

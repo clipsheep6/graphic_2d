@@ -894,7 +894,7 @@ void RSBaseRenderUtil::CalculateSurfaceNodeClipRects(
     const RSSurfaceRenderNode& node,
     const RectF& absBounds,
     const RectF& localBounds,
-    bool inLocalCoordinate,
+    const bool inLocalCoordinate,
     BufferDrawParam& params)
 {
     const RSProperties& property = node.GetRenderProperties();

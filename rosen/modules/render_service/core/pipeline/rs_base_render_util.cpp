@@ -936,23 +936,19 @@ BufferDrawParam RSBaseRenderUtil::CreateBufferDrawParam(
     // calculate clipRect and clipRRect(if has cornerRadius) for canvas.
     CalculateSurfaceNodeClipRects(node, absBounds, localBounds, inLocalCoordinate, params);
 
-    // init translate matrix.
-    if (inLocalCoordinate) {
-        params.matrix = SkMatrix::I();
-    } else {
-        // inLocalCoordinate is false: we should use node's totalMatrix to
-        // translate the canvas to the node's left-top point first.
-        const auto& matrix = node.GetTotalMatrix();
-        params.matrix.setTranslate(std::ceil(matrix.getTranslateX()), std::ceil(matrix.getTranslateY()));
-    }
-
-    // deal with node's rotation.
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
     if (geoPtr != nullptr) {
-        params.matrix.preRotate(
-            geoPtr->GetRotation(),
-            geoPtr->GetPivotX() * localBounds.GetWidth(),
-            geoPtr->GetPivotY() * localBounds.GetHeight());
+        auto matrix = geoPtr->GetMatrix();
+        // reset the matrix's scale to do the gravity effects.
+        matrix.setScaleX(1.0f);
+        matrix.setScaleY(1.0f);
+        // inLocalCoordinate: reset translate to (0, 0),
+        // else: save its translate.
+        if (inLocalCoordinate) {
+            matrix.setTranslateX(0.0f);
+            matrix.setTranslateY(0.0f);
+        }
+        params.matrix = std::move(matrix);
     }
 
     // we can use only the bound's size (ignore its offset) now,

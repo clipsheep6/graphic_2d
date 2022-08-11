@@ -1,24 +1,27 @@
-#include "hardware/hwvulkan.h"
+#include "hardware/hdi_vulkan.h"
 namespace vulkan {
 namespace driver {
 
+typedef int32_t (*PFN_VulkanInitialize)(VulkanFuncs **funcs);
+typedef int32_t (*PFN_VulkanUnInitialize)(VulkanFuncs *funcs);
 class DriverLoader {
 
 public:
 static bool Load();
+static bool Unload();
 
 static const DriverLoader& Get() { return loader_; }
-static const hwvulkan_device_t& Device() { return *Get().dev_; }
+static const VulkanFuncs& GetVulkanFuncs() { return *Get().vulkanFuncs_; }
 
 private:
-DriverLoader() : dev_(nullptr) {}
+DriverLoader() : vulkanFuncs_(nullptr), vulkanUnInitializeFunc_(nullptr) {}
 DriverLoader(const DriverLoader&) = delete;
 DriverLoader& operator=(const DriverLoader&) = delete;
 
 static DriverLoader loader_;
 
-const hwvulkan_device_t* dev_;
-
+VulkanFuncs* vulkanFuncs_;
+PFN_VulkanUnInitialize vulkanUnInitializeFunc_;
 };
 
 

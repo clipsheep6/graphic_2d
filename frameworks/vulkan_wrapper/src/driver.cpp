@@ -62,20 +62,20 @@ VkResult CreateInstance(const VkInstanceCreateInfo* pCreateInfo,
     }
     VkResult result = VK_SUCCESS;
 
-    result = DriverLoader::Device().CreateInstance(pCreateInfo, pAllocator, pInstance);
+    result = DriverLoader::GetVulkanFuncs().PFN_vkCreateInstance(pCreateInfo, pAllocator, pInstance);
     if (result != VK_SUCCESS) {
         return result;
     }
     pfn_vkGetDeviceProcAddr = 
-        reinterpret_cast<PFN_vkGetDeviceProcAddr>(DriverLoader::Device().GetInstanceProcAddr(*pInstance, "vkGetDeviceProcAddr"));
+        reinterpret_cast<PFN_vkGetDeviceProcAddr>(DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetDeviceProcAddr"));
     fpn_vkGetPhysicalDeviceProperties2KHR = 
         reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2KHR>(
-            DriverLoader::Device().GetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceProperties2KHR"));
-    pfn_vkCreateDevice = reinterpret_cast<PFN_vkCreateDevice>(DriverLoader::Device().GetInstanceProcAddr(*pInstance, "vkCreateDevice"));
-    pfn_vkGetPhysicalDeviceProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties>(DriverLoader::Device().GetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceProperties"));
-    pfn_vkGetPhysicalDeviceFeatures = reinterpret_cast<PFN_vkGetPhysicalDeviceFeatures>(DriverLoader::Device().GetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceFeatures"));
-    pfn_vkGetPhysicalDeviceMemoryProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceMemoryProperties>(DriverLoader::Device().GetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceMemoryProperties"));
-    pfn_vkGetPhysicalDeviceQueueFamilyProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties>(DriverLoader::Device().GetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceQueueFamilyProperties"));
+            DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceProperties2KHR"));
+    pfn_vkCreateDevice = reinterpret_cast<PFN_vkCreateDevice>(DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkCreateDevice"));
+    pfn_vkGetPhysicalDeviceProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties>(DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceProperties"));
+    pfn_vkGetPhysicalDeviceFeatures = reinterpret_cast<PFN_vkGetPhysicalDeviceFeatures>(DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceFeatures"));
+    pfn_vkGetPhysicalDeviceMemoryProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceMemoryProperties>(DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceMemoryProperties"));
+    pfn_vkGetPhysicalDeviceQueueFamilyProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties>(DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceQueueFamilyProperties"));
     return VK_SUCCESS; 
 }
 
@@ -86,7 +86,7 @@ VkResult EnumerateInstanceExtensionProperties(const char* pLayerName, uint32_t* 
         return VK_ERROR_INITIALIZATION_FAILED;
     }
 
-    VkResult result = DriverLoader::Device().EnumerateInstanceExtensionProperties(pLayerName, pPropertyCount, pProperties);
+    VkResult result = DriverLoader::GetVulkanFuncs().PFN_vkEnumerateInstanceExtensionProperties(pLayerName, pPropertyCount, pProperties);
     if (result != VK_SUCCESS) {
         return result;
     }
@@ -99,7 +99,9 @@ PFN_vkVoidFunction GetInstanceProcAddr(VkInstance instance, const char* pName)
         return nullptr;
     }
 
-    PFN_vkVoidFunction func = DriverLoader::Device().GetInstanceProcAddr(instance, pName);
+    
+
+    PFN_vkVoidFunction func = DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(instance, pName);
 
     return func;
 }

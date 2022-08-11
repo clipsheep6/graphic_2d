@@ -2,15 +2,16 @@
 #include <dlfcn.h>
 #include <iostream>
 #include "wrapper_log.h"
-#define LIB_CACULATE_PATH "/system/lib64/libGLES_mali.so"
-#define HAL_MODULE_INFO_SYM_AS_STR "HMI"
+#define LIB_CACULATE_PATH "/system/lib64/libGLES_mali_vk.so"
+#define HDI_VULKAN_MODULE_INIT "VulkanInitialize"
+#define HDI_VULKAN_MODULE_UNINIT "VulkanUnInitialize"
 namespace vulkan {
 namespace driver {
 
 bool DriverLoader::Load()
 {
-    WLOGD("Andrew:: DriverLoader::Load is comming");
-    if (loader_.dev_ != nullptr) {
+    std::cout << "DriverLoader::Load is comming" << std::endl;
+    if (loader_.vulkanFuncs_ != nullptr) {
         return true;
     }
 
@@ -18,32 +19,48 @@ bool DriverLoader::Load()
     handle = dlopen(LIB_CACULATE_PATH, RTLD_LOCAL | RTLD_NOW);
 
     if (handle == nullptr) {
-        std::cout << "dlopen faild : " << dlerror() << std::endl;
+        std::cout << "DriverLoader:: dlopen faild : " << dlerror() << std::endl;
         return false;
     }
-    std::cout << "dlopen success" << std::endl;
+    std::cout << "DriverLoader::dlopen "<< LIB_CACULATE_PATH <<" success" << std::endl;
 
-    auto hmi = static_cast<hw_module_t*>(dlsym(handle, HAL_MODULE_INFO_SYM_AS_STR));
+    PFN_VulkanInitialize VulkanInitializeFunc = reinterpret_cast<PFN_VulkanInitialize>(dlsym(handle, HDI_VULKAN_MODULE_INIT));
 
-    if (hmi == nullptr) {
-        std::cout << "couldn't find symbol(" << HAL_MODULE_INFO_SYM_AS_STR <<") in library : " << dlerror() << std::endl;
+    if (VulkanInitializeFunc == nullptr) {
+        std::cout << "DriverLoader:: couldn't find symbol(" << HDI_VULKAN_MODULE_INIT <<") in library : " << dlerror() << std::endl;
         dlclose(handle);
         return false;
     }
 
-    std::cout << "dlsym success" << hmi->id << std::endl;
-    hmi->dso = handle;
+    if (VulkanInitializeFunc(&loader_.vulkanFuncs_) != 0) {
+        std::cout << "Initialize Vulkan Func fail" << std::endl;
+        return false;
+    }
 
-    hwvulkan_device_t* device;
-    int result = hmi->methods->open(hmi, HWVULKAN_DEVICE_0, reinterpret_cast<hw_device_t**>(&device));
-    if (result != 0) {
-        std::cout << "open failed" << std::endl;
+
+    loader_.vulkanUnInitializeFunc_ = reinterpret_cast<PFN_VulkanUnInitialize>(dlsym(handle, HDI_VULKAN_MODULE_UNINIT));
+
+    if (loader_.vulkanUnInitializeFunc_ == nullptr) {
+        std::cout << "DriverLoader:: couldn't find symbol(" << HDI_VULKAN_MODULE_UNINIT <<") in library : " << dlerror() << std::endl;
         dlclose(handle);
         return false;
-    } 
-    loader_.dev_ = device;
+    }
+   
     std::cout << "open success" << std::endl;
 
+    return true;
+}
+
+bool DriverLoader::Unload()
+{
+    if (!loader_.vulkanUnInitializeFunc_) {
+        std::cout << "DriverLoader::Unload can not find vulkan UnInitialize Func " << std::endl;
+        return false;
+    }
+    if (loader_.vulkanUnInitializeFunc_(loader_.vulkanFuncs_) != 0) {
+        std::cout << "DriverLoader::Unload vulkan UnInitialize Func success" << std::endl;
+        return false;
+    }
     return true;
 }
 

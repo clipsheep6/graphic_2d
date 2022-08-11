@@ -88,8 +88,8 @@ bool RSRenderServiceConnectHub::Connect()
         // sleep move time (1000us * tryCnt) when tryCnt++
         usleep(1000 * tryCnt);
         ++tryCnt;
-        // try most 5 times to get render service.
-        if (tryCnt == 5) {
+        // try most 50 times to get render service.
+        if (tryCnt == 50) {
             ROSEN_LOGE("RSRenderServiceConnect::Connect failed, tried %d times.", tryCnt);
             break;
         }

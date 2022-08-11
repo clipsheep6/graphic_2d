@@ -37,6 +37,7 @@
  * @version 1.0
  */
 
+#include "cstddef"
 #include "drawing_canvas.h"
 #include "drawing_color.h"
 #include "drawing_text_declaration.h"
@@ -432,6 +433,23 @@ void OH_Drawing_TypographyLayout(OH_Drawing_Typography*, double /* maxWidth */);
  */
 void OH_Drawing_TypographyPaint(OH_Drawing_Typography*, OH_Drawing_Canvas*,
     double /* potisionX */, double /* potisionY */);
+
+// temp addition
+double OH_Drawing_TypographyGetMaxWidth(OH_Drawing_Typography*);
+
+double OH_Drawing_TypographyGetHeight(OH_Drawing_Typography*);
+
+double OH_Drawing_TypographyGetLongestLine(OH_Drawing_Typography*);
+
+double OH_Drawing_TypographyGetMinIntrinsicWidth(OH_Drawing_Typography*);
+
+double OH_Drawing_TypographyGetMaxIntrinsicWidth(OH_Drawing_Typography*);
+
+double OH_Drawing_TypographyGetAlphabeticBaseline(OH_Drawing_Typography*);
+
+double OH_Drawing_TypographyGetIdeographicBaseline(OH_Drawing_Typography*);
+
+size_t OH_Drawing_GetWordWidth(OH_Drawing_Typography*, size_t offset = 0);
 
 #ifdef __cplusplus
 }

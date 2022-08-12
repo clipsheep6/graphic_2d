@@ -50,6 +50,10 @@ bool RSProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offse
             static_cast<float>(screenInfo_.width), static_cast<float>(screenInfo_.height),
             static_cast<float>(mirroredScreenInfo.width), static_cast<float>(mirroredScreenInfo.height)
         );
+        auto mirrorNode = node.GetMirrorSource().lock();
+        if (mirrorNode->GetRotation() == ScreenRotation::ROTATION_90 || mirrorNode->GetRotation() == ScreenRotation::ROTATION_270) {
+            std::swap(screenInfo_.width, screenInfo_.height);
+        }
     }
 
     // set default render frame config

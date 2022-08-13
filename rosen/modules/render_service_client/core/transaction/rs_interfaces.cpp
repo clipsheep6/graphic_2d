@@ -168,7 +168,8 @@ std::shared_ptr<VSyncReceiver> RSInterfaces::CreateVSyncReceiver(
     const std::string& name,
     const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper)
 {
-    return renderServiceClient_->CreateVSyncReceiver(name, looper);
+    auto connectionName = name + "_" + std::to_string(::getpid());
+    return renderServiceClient_->CreateVSyncReceiver(connectionName, looper);
 }
 
 int32_t RSInterfaces::GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability)

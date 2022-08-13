@@ -20,6 +20,7 @@
 
 #include "screen_manager/rs_screen_manager.h"
 #include "transaction/rs_render_service_stub.h"
+#include "rs_render_service_qos.h"
 #include "vsync_controller.h"
 #include "vsync_distributor.h"
 
@@ -41,6 +42,7 @@ public:
     void Run();
 
 private:
+    bool InitQosService();
     int Dump(int fd, const std::vector<std::u16string>& args) override;
     void DoDump(std::unordered_set<std::u16string>& argSets, std::string& dumpString) const;
     void DumpNodesNotOnTheTree(std::string& dumpString) const;

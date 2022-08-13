@@ -271,6 +271,22 @@ VsyncError VSyncDistributor::RequestNextVSync(const sptr<VSyncConnection>& conne
     return VSYNC_ERROR_OK;
 }
 
+VsyncError VSyncDistributor::SetVSyncRate(int32_t rate, uint32_t pid)
+{
+    for (auto connection : connections_) {
+        std::string name = connection->info_.name_;
+        if (name.find("ACE") == std::string::npos) {
+            continue;
+        }
+        int pos = name.find("_");
+        uint32_t tmpPid = atoi(name.substr(pos + 1).c_str());
+        if (tmpPid == pid) {
+            SetHighPriorityVSyncRate(rate, connection);
+        }
+    }
+    return VSYNC_ERROR_OK;
+}
+
 VsyncError VSyncDistributor::SetVSyncRate(int32_t rate, const sptr<VSyncConnection>& connection)
 {
     if (rate <= 0 || connection == nullptr) {

@@ -64,6 +64,8 @@ bool RSRenderService::Init()
     }
     samgr->AddSystemAbility(RENDER_SERVICE, this);
 
+    (void)InitQosService();
+
     return true;
 }
 
@@ -103,6 +105,12 @@ void RSRenderService::RemoveConnection(sptr<IRemoteObject> token)
     auto tmp = connections_.at(token);
     connections_.erase(token);
     lock.unlock();
+}
+
+bool RSRenderService::InitQosService()
+{
+    rsRenderServiceQos_ = new RSRenderServiceQos();
+    return rsRenderServiceQos_->Init();
 }
 
 int RSRenderService::Dump(int fd, const std::vector<std::u16string>& args)

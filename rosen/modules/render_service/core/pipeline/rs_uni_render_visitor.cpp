@@ -83,6 +83,19 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         if (node.GetDstRectChanged()) {
             curDisplayDirtyManager_->MergeDirtyRect(curDisplayNode_->GetLastFrameSurfacePos(node.GetId()));
         }
+    } else {
+        if (node.GetBuffer() == nullptr) {
+            // skip leashwindow surfacenode
+            RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode:%" PRIu64 " buffer is not available", node.GetId());
+        } else {
+            auto& surfaceHandler = static_cast<RSSurfaceHandler&>(node);
+            if (surfaceHandler.GetAvailableBufferCount() > 0) {
+                curSurfaceDirtyManager_->MergeDirtyRect(node.GetDstRect());
+            }
+            if (node.IsDirtyRegionUpdated() && curSurfaceDirtyManager_->IsDebugRegionTypeEnable(DebugRegionType::CURRENT_SUB)) {
+                curSurfaceDirtyManager_->UpdateDirtySurfaceNodes(node.GetId(), node.GetOldDirty());
+            }
+        }
     }
 
     if (node.GetDstRectChanged()) {
@@ -191,6 +204,8 @@ void RSUniRenderVisitor::DrawDirtyRegion()
             ROSEN_LOGD("DrawDirtyRegion surfaceNode id %d is dirty", nid);
             // light purple
             DrawRectOnCanvas(subRect, 0xFFD899D8, SkPaint::kStroke_Style, edgeAlpha);
+            DrawRectOnCanvas(subRect, 0xFFD899D8, SkPaint::kFill_Style, fillAlpha);
+            
         }
     }
 }

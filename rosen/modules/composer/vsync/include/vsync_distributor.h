@@ -77,6 +77,7 @@ public:
     VsyncError SetVSyncRate(int32_t rate, const sptr<VSyncConnection>& connection);
     VsyncError SetHighPriorityVSyncRate(int32_t highPriorityRate, const sptr<VSyncConnection>& connection);
     VsyncError GetVSyncConnectionInfos(std::vector<ConnectionInfo>& infos);
+    VsyncError SetVSyncRate(uint32_t pid, int rate);
 
 private:
 

@@ -27,6 +27,7 @@ public:
         innovationHandle = dlopen("libgraphic_innovation.z.so", RTLD_NOW);
         GetParallelCompositionFunc();
         GetOcclusionCullingFunc();
+        GetQosVsyncFunc();
     }
 
     static void CloseInnovationSo()
@@ -34,6 +35,7 @@ public:
         if (innovationHandle) {
             ResetParallelCompositionFunc();
             ResetOcclusionCullingFunc();
+            ResetQosVsyncFunc();
             dlclose(innovationHandle);
         }
     }
@@ -63,6 +65,22 @@ public:
     static inline bool _s_occlusionCullingFuncLoaded = false;
     static inline bool _s_occlusionCullingSoEnabled = false;
     static inline void* _s_regionOpFromSo = nullptr;
+
+    // qos vsync
+    static void GetQosVsyncSoEnabled()
+    {
+        _s_qosVsyncSoEnabled =
+            std::atoi((system::GetParameter("rosen.qos.so.enabled", "0")).c_str()) != 0;
+    }
+    static inline bool _s_qosVsyncFuncLoaded = false;
+    static inline bool _s_qosVsyncSoEnabled = false;
+    static inline void* _s_createWinQosService = nullptr;
+    static inline void* _s_qosTreadStart = nullptr;
+    static inline void* _s_qosTreadStop = nullptr;
+    static inline void* _s_qosSetBoundaryRate = nullptr;
+    static inline void* _s_qosOnWindowVisibilityChangeCB = nullptr;
+    static inline void* _s_qosSetWhiteList = nullptr;
+    static inline void* _s_qosRegisteProxy = nullptr;
 
 private:
     RSInnovation() = default;
@@ -108,6 +126,39 @@ private:
     {
         if (_s_occlusionCullingFuncLoaded) {
             _s_regionOpFromSo = nullptr;
+        }
+    }
+    static void GetOcclusionCullingFunc()
+    {
+        if (innovationHandle) {
+            _s_createWinQosService = dlsym(innovationHandle, "CreateWinQosService");
+            _s_qosTreadStart = dlsym(innovationHandle, "QosTreadStart");
+            _s_qosTreadStop = dlsym(innovationHandle, "QosTreadStop");
+            _s_qosSetBoundaryRate = dlsym(innovationHandle, "QosSetBuondaryRate");
+            _s_qosOnWindowVisibilityChangeCB = dlsym(innovationHandle, "QosOnWindowVisibilityChangeCB");
+            _s_qosSetWhiteList = dlsym(innovationHandle, "QosSetWhiteList");
+            _s_qosRegisteProxy = dlsym(innovationHandle, "QosRegisteProxy");
+            _s_qosVsyncFuncLoaded = (_s_createWinQosService != nullptr) &&
+                                    (_s_qosTreadStart != nullptr) &&
+                                    (_s_qosTreadStop != nullptr) &&
+                                    (_s_qosSetBoundaryRate != nullptr) &&
+                                    (_s_qosOnWindowVisibilityChangeCB != nullptr) &&
+                                    (_s_qosSetWhiteList != nullptr) &&
+                                    (_s_qosRegisteProxy != nullptr);
+        }
+    }
+
+    static void ResetQosVsyncFunc()
+    {
+        if (_s_qosVsyncFuncLoaded) {
+            _s_qosVsyncFuncLoaded = false;
+            _s_createWinQosService = nullptr;
+            _s_qosTreadStart = nullptr;
+            _s_qosTreadStop = nullptr;
+            _s_qosSetBoundaryRate = nullptr;
+            _s_qosOnWindowVisibilityChangeCB = nullptr;
+            _s_qosSetWhiteList = nullptr;
+            _s_qosRegisteProxy = nullptr;
         }
     }
 };

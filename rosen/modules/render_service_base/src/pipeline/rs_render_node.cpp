@@ -125,7 +125,7 @@ bool RSRenderNode::IsDirty() const
     return RSBaseRenderNode::IsDirty() || renderProperties_.IsDirty();
 }
 
-void RSRenderNode::UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEnabled)
+void RSRenderNode::UpdateRenderStatus(const RectI& dirtyRegion, bool isPartialRenderEnabled)
 {
     // should judge if there's any child out of parent
     if (!isPartialRenderEnabled) {

@@ -42,7 +42,7 @@ public:
 
     RSProperties& GetMutableRenderProperties();
     const RSProperties& GetRenderProperties() const;
-    void UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEnabled);
+    void UpdateRenderStatus(const RectI& dirtyRegion, bool isPartialRenderEnabled);
     inline bool IsRenderUpdateIgnored() const
     {
         return isRenderUpdateIgnored_;

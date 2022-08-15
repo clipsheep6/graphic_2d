@@ -64,6 +64,8 @@ private:
     std::map<ScreenId, bool> displayHasSecSurface_;
     std::set<ScreenId> mirroredDisplays_;
     bool isSecurityDisplay_ = false;
+    bool isPartialRenderEnabled_ = false;
+    bool isOpDroped_ = false;
 
     std::shared_ptr<RSRenderEngine> renderEngine_;
     

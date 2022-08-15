@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "animation/rs_animation_manager.h"
+#include "animation/rs_animation_log.h"
 #include "modifier/rs_render_modifier.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_dirty_region_manager.h"
@@ -95,6 +96,8 @@ protected:
 
 private:
     void FallbackAnimationsToRoot();
+    void PropertiesDisplayByTrace();
+    void AddTraceFlag(const std::string& str);
     bool isDirtyRegionUpdated_ = false;
     bool isLastVisible_ = false;
     RectI oldDirty_;
@@ -104,6 +107,7 @@ private:
     // bounds and frame modifiers must be unique
     std::shared_ptr<RSRenderModifier> boundsModifier_;
     std::shared_ptr<RSRenderModifier> frameModifier_;
+    std::shared_ptr<RSAnimationLog> animationLog_ = std::make_shared<RSAnimationLog>();
 
     friend class RSRenderTransition;
 };

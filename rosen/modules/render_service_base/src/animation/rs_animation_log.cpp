@@ -67,6 +67,7 @@ std::vector<std::string> SplitStringBySeparator(const std::string& str,
 
 RSAnimationLog::RSAnimationLog()
 {
+    InitNodeAndPropertyInfo();
     std::string logFilePath = ANIMATION_LOG_PATH + ANIMATION_LOG_FILE_NAME + ANIMATION_LOG_FILE_TYPE;
     PreProcessLogFile(logFilePath);
     logFile_ = std::ofstream(logFilePath, std::ios::app);
@@ -75,8 +76,6 @@ RSAnimationLog::RSAnimationLog()
         logFile_.close();
         return;
     }
-
-    InitNodeAndPropertyInfo();
 }
 
 RSAnimationLog::~RSAnimationLog()
@@ -175,6 +174,37 @@ bool RSAnimationLog::IsNeedWriteLog(const PropertyId& propertyId, const NodeId& 
         return false;
     }
 
+    auto itrn = nodeIdSet_.find(id);
+    if (itrn == nodeIdSet_.end() && !needWriteAllNode_) {
+        return false;
+    }
+
+    return true;
+}
+
+bool RSAnimationLog::isNeedRefreshConfig()
+{
+    struct stat configFileStatus = {};
+    std::string configFilePath = ANIMATION_LOG_PATH + CONFIG_FILE_NAME;
+    if (stat(configFilePath.c_str(), &configFileStatus)) {
+        ROSEN_LOGE("err: get stat for file :%s", configFilePath.c_str());
+        return false;
+    }
+
+    std::string curent(ctime(&configFileStatus.st_mtime));
+    if (curent != propertyFileLastModifyTime) {
+        propertyFileLastModifyTime = curent;
+        return true;
+    }
+
+    return false;
+}
+
+bool RSAnimationLog::IsNeedWriteLog(const NodeId& id)
+{
+    if (isNeedRefreshConfig()) {
+        InitNodeAndPropertyInfo();
+    }
     auto itrn = nodeIdSet_.find(id);
     if (itrn == nodeIdSet_.end() && !needWriteAllNode_) {
         return false;

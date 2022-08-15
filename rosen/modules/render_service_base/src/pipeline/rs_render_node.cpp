@@ -25,6 +25,7 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties_painter.h"
 #include "property/rs_transition_properties.h"
+#include "rs_trace.h"
 #endif
 
 namespace OHOS {
@@ -85,6 +86,7 @@ bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties
 
 RSProperties& RSRenderNode::GetMutableRenderProperties()
 {
+    PropertiesDisplayByTrace();
     return renderProperties_;
 }
 
@@ -241,6 +243,24 @@ std::shared_ptr<RSRenderModifier> RSRenderNode::GetModifier(const PropertyId& id
         }
     }
     return nullptr;
+}
+
+void RSRenderNode::PropertiesDisplayByTrace()
+{
+    if (animationLog_->IsNeedWriteLog(GetId())) {
+        auto currentGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(renderProperties_.GetBoundsGeometry());
+        auto rectI = currentGeoPtr->GetAbsRect();
+        AddTraceFlag(std::to_string(GetId()) + " Geometry Left: " + std::to_string(rectI.GetLeft()));
+        AddTraceFlag(std::to_string(GetId()) + " Geometry Top: " + std::to_string(rectI.GetTop()));
+        AddTraceFlag(std::to_string(GetId()) + " Geometry Right: " + std::to_string(rectI.GetRight()));
+        AddTraceFlag(std::to_string(GetId()) + " Geometry Bottom: " + std::to_string(rectI.GetBottom()));
+    }
+}
+
+void RSRenderNode::AddTraceFlag(const std::string& str)
+{
+    ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, str.c_str());
+    ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }
 } // namespace Rosen
 } // namespace OHOS

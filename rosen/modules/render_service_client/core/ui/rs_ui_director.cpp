@@ -94,13 +94,13 @@ void RSUIDirector::GoBackground()
         }
 
         // clean bufferQueue cache
-        auto surfaceNode = surfaceNode_.lock();
-        RSRenderThread::Instance().PostTask([surfaceNode]() {
-            if (surfaceNode != nullptr) {
-                std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
-                rsSurface->ClearBuffer();
-            }
-        });
+        // auto surfaceNode = surfaceNode_.lock();
+        // RSRenderThread::Instance().PostTask([surfaceNode]() {
+        //     if (surfaceNode != nullptr) {
+        //         std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
+        //         rsSurface->ClearBuffer();
+        //     }
+        // });
     }
 }
 

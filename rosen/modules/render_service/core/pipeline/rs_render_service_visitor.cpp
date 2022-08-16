@@ -124,7 +124,6 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
     ScreenRotation rotation = node.GetRotation();
     uint32_t logicalScreenWidth = node.GetRenderProperties().GetFrameWidth();
     uint32_t logicalScreenHeight = node.GetRenderProperties().GetFrameHeight();
-
     if (logicalScreenWidth <= 0 || logicalScreenHeight <= 0) {
         logicalScreenWidth = currScreenInfo.width;
         logicalScreenHeight = currScreenInfo.height;

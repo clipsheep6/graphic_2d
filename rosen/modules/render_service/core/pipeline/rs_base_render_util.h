@@ -69,7 +69,7 @@ public:
     static BufferRequestConfig GetFrameBufferRequestConfig(const ScreenInfo& screenInfo, bool isPhysical = true);
     static BufferDrawParam CreateBufferDrawParam(
         const RSSurfaceRenderNode& node,
-        bool inLocalCoordinate = false,
+        const bool inLocalCoordinate = false,
         bool isClipHole = false,
         bool forceCPU = false,
         bool setColorFilter = true);
@@ -100,7 +100,7 @@ private:
         const RSSurfaceRenderNode& node,
         const RectF& absBounds,
         const RectF& localBounds,
-        bool inLocalCoordinate,
+        const bool inLocalCoordinate,
         BufferDrawParam& params);
     static void DealWithSurfaceRotationAndGravity(
         const RSSurfaceRenderNode& node, RectF& bounds, BufferDrawParam& params);

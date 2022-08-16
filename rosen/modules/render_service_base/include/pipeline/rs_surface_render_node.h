@@ -49,6 +49,9 @@ public:
     void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
     void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
 
+    void PrepareRenderBeforeChildren(RSPaintFilterCanvas& canvas);
+    void PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas);
+    
     std::string GetName() const
     {
         return name_;

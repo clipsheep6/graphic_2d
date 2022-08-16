@@ -24,16 +24,16 @@
 #include "animation/rs_animation_manager_map.h"
 #include "animation/rs_implicit_animator.h"
 #include "animation/rs_implicit_animator_map.h"
+#include "animation/rs_ui_animation_manager.h"
 #include "command/rs_node_command.h"
 #include "common/rs_color.h"
 #include "common/rs_obj_geometry.h"
 #include "modifier/rs_modifier.h"
+#include "modifier/rs_property_modifier.h"
 #include "pipeline/rs_node_map.h"
 #include "platform/common/rs_log.h"
 #include "render/rs_path.h"
 #include "transaction/rs_transaction_proxy.h"
-#include "animation/rs_ui_animation_manager.h"
-#include "modifier/rs_property_modifier.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -45,10 +45,9 @@ bool IsPathAnimatableModifier(const RSModifierType& type)
     }
     return false;
 }
-}
+} // namespace
 
-RSNode::RSNode(bool isRenderServiceNode)
-    : RSBaseNode(isRenderServiceNode), stagingPropertiesExtractor_(GetId())
+RSNode::RSNode(bool isRenderServiceNode) : RSBaseNode(isRenderServiceNode), stagingPropertiesExtractor_(GetId())
 {
     UpdateImplicitAnimator();
 }
@@ -254,18 +253,14 @@ std::shared_ptr<RSModifierBase> RSNode::FindOrCreateModifier(RSModifierType prop
     return modifier;
 }
 
-#define SET_ANIMATABLE_MODIFIER(propertyName, T, value, propertyType, defaultValue)                                \
-    do {                                                                                                           \
-        auto modifier =                                                                                            \
-            FindOrCreateModifier<RSAnimatableProperty<T>, RS##propertyName##Modifier>(propertyType, defaultValue); \
-        std::static_pointer_cast<RSAnimatableProperty<T>>(modifier->GetProperty())->Set(value);                    \
-    } while (0)
+#define SET_ANIMATABLE_MODIFIER(propertyName, T, value, propertyType, defaultValue)                            \
+    auto modifier =                                                                                            \
+        FindOrCreateModifier<RSAnimatableProperty<T>, RS##propertyName##Modifier>(propertyType, defaultValue); \
+    std::static_pointer_cast<RSAnimatableProperty<T>>(modifier->GetProperty())->Set(value);
 
-#define SET_NONANIMATABLE_MODIFIER(propertyName, T, value, propertyType)                                      \
-    do {                                                                                                      \
-        auto modifier = FindOrCreateModifier<RSProperty<T>, RS##propertyName##Modifier>(propertyType, value); \
-        std::static_pointer_cast<RSProperty<T>>(modifier->GetProperty())->Set(value);                         \
-    } while (0)
+#define SET_NONANIMATABLE_MODIFIER(propertyName, T, value, propertyType)                                  \
+    auto modifier = FindOrCreateModifier<RSProperty<T>, RS##propertyName##Modifier>(propertyType, value); \
+    std::static_pointer_cast<RSProperty<T>>(modifier->GetProperty())->Set(value);
 
 // alpha
 void RSNode::SetAlpha(float alpha)
@@ -620,8 +615,8 @@ void RSNode::SetBorderColor(uint32_t colorValue)
 
 void RSNode::SetBorderColor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom)
 {
-    Vector4<Color> color(Color::FromArgbInt(left), Color::FromArgbInt(top),
-                         Color::FromArgbInt(right), Color::FromArgbInt(bottom));
+    Vector4<Color> color(
+        Color::FromArgbInt(left), Color::FromArgbInt(top), Color::FromArgbInt(right), Color::FromArgbInt(bottom));
     SET_ANIMATABLE_MODIFIER(
         BorderColor, Vector4<Color>, color, RSModifierType::BORDER_COLOR, Vector4<Color>(RgbPalette::Transparent()));
 }
@@ -668,7 +663,8 @@ void RSNode::SetBorderStyle(const Vector4<BorderStyle>& style)
 
 void RSNode::SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter)
 {
-    SET_ANIMATABLE_MODIFIER(BackgroundFilter, std::shared_ptr<RSFilter>, backgroundFilter, RSModifierType::BACKGROUND_FILTER, nullptr);
+    SET_ANIMATABLE_MODIFIER(
+        BackgroundFilter, std::shared_ptr<RSFilter>, backgroundFilter, RSModifierType::BACKGROUND_FILTER, nullptr);
 }
 
 void RSNode::SetFilter(const std::shared_ptr<RSFilter>& filter)
@@ -681,7 +677,8 @@ void RSNode::SetCompositingFilter(const std::shared_ptr<RSFilter>& compositingFi
 void RSNode::SetShadowColor(uint32_t colorValue)
 {
     auto color = Color::FromArgbInt(colorValue);
-    SET_ANIMATABLE_MODIFIER(ShadowColor, Color, color, RSModifierType::SHADOW_COLOR, Color::FromArgbInt(DEFAULT_SPOT_COLOR));
+    SET_ANIMATABLE_MODIFIER(
+        ShadowColor, Color, color, RSModifierType::SHADOW_COLOR, Color::FromArgbInt(DEFAULT_SPOT_COLOR));
 }
 
 void RSNode::SetShadowOffset(float offsetX, float offsetY)
@@ -870,7 +867,7 @@ void RSNode::AddModifier(const std::shared_ptr<RSModifierBase>& modifier)
         modifier->SetMotionPathOption(motionPathOption_);
     }
     modifiers_.emplace(modifier->GetPropertyId(), modifier);
-    modifier->AttachToNode(GetId());
+    modifier->AttachToNode(std::static_pointer_cast<RSNode>(shared_from_this()));
     std::unique_ptr<RSCommand> command = std::make_unique<RSAddModifier>(GetId(), modifier->CreateRenderModifier());
     transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), GetId());
     if (NeedForcedSendToRemote()) {

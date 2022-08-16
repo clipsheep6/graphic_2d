@@ -45,7 +45,7 @@ public:
 protected:
     virtual RSModifierType GetModifierType() const = 0;
 
-    virtual void AttachToNode(const NodeId& id) = 0;
+    virtual void AttachToNode(const std::weak_ptr<RSNode>& target) = 0;
     virtual void DetachFromNode() = 0;
 
     virtual void SetMotionPathOption(const std::shared_ptr<RSMotionPathOption>& motionPathOption) = 0;
@@ -93,15 +93,14 @@ protected:
         return RSModifierType::INVALID;
     }
 
-    void AttachToNode(const NodeId& id) override
+    void AttachToNode(const std::weak_ptr<RSNode>& target) override
     {
-        property_->hasAddToNode_ = true;
-        property_->nodeId_ = id;
+        property_->target_ = target;
     }
 
     void DetachFromNode() override
     {
-        property_->hasAddToNode_ = false;
+        property_->target_.reset();
     }
 
     void SetMotionPathOption(const std::shared_ptr<RSMotionPathOption>& motionPathOption) override

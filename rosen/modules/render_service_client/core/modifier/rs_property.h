@@ -45,6 +45,7 @@
 namespace OHOS {
 namespace Rosen {
 class RSModifierBase;
+class RSNode;
 
 class RS_EXPORT RSPropertyBase : public std::enable_shared_from_this<RSPropertyBase> {
 public:
@@ -152,7 +153,7 @@ public:
         }
 
         stagingValue_ = value;
-        if (!hasAddToNode_) {
+        if (this->target_.lock() == nullptr) {
             return;
         }
 
@@ -187,8 +188,7 @@ protected:
     }
 
     T stagingValue_ {};
-    NodeId nodeId_ { 0 };
-    bool hasAddToNode_ { false };
+    std::weak_ptr<RSNode> target_;
     std::shared_ptr<RSMotionPathOption> motionPathOption_ {};
 
     friend class RSPathAnimation;
@@ -216,13 +216,9 @@ public:
             return;
         }
 
-        if (!RSProperty<T>::hasAddToNode_) {
-            RSProperty<T>::stagingValue_ = value;
-            return;
-        }
-
-        auto node = RSNodeMap::Instance().GetNode<RSNode>(RSProperty<T>::nodeId_);
+        auto node = this->target_.lock();
         if (node == nullptr) {
+            RSProperty<T>::stagingValue_ = value;
             return;
         }
 

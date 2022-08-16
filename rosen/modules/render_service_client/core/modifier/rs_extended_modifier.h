@@ -58,7 +58,7 @@ protected:
     }
     std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override
     {
-        if (!this->property_->hasAddToNode_) {
+        if (this->property_->target_.lock() == nullptr) {
             return nullptr;
         }
         RSDrawingContext ctx = RSExtendedModifierHelper::CreateDrawingContext(this->property_->nodeId_);

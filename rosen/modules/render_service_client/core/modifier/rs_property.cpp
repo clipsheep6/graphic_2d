@@ -87,31 +87,31 @@ bool operator!=(const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<
     return !a->IsEqual(b);
 }
 
-#define UPDATE_TO_RENDER(Command, value, isDelta, forceUpdate)                                                   \
-    do {                                                                                                         \
-        std::unique_ptr<RSCommand> command = std::make_unique<Command>(nodeId_, value, id_, isDelta);            \
-        auto transactionProxy = RSTransactionProxy::GetInstance();                                               \
-        auto node = RSNodeMap::Instance().GetNode<RSNode>(nodeId_);                                              \
-        if (transactionProxy && node) {                                                                          \
-            if (forceUpdate) {                                                                                   \
-                transactionProxy->Begin();                                                                       \
-            }                                                                                                    \
-            transactionProxy->AddCommand(command, node->IsRenderServiceNode(), node->GetFollowType(), node->GetId()); \
-            if (node->NeedForcedSendToRemote()) {                                                                \
-                std::unique_ptr<RSCommand> commandForRemote =                                                    \
-                    std::make_unique<Command>(nodeId_, value, id_, isDelta);                                     \
-                transactionProxy->AddCommand(commandForRemote, true, node->GetFollowType(), node->GetId());      \
-            }                                                                                                    \
-            if (node->NeedSendExtraCommand()) {                                                                  \
-                std::unique_ptr<RSCommand> extraCommand =                                                        \
-                    std::make_unique<Command>(nodeId_, value, id_, isDelta);                                     \
-                transactionProxy->AddCommand(extraCommand, !node->IsRenderServiceNode(),                         \
-                    node->GetFollowType(), node->GetId());                                                       \
-            }                                                                                                    \
-            if (forceUpdate) {                                                                                   \
-                transactionProxy->Commit();                                                                      \
-            }                                                                                                    \
-        }                                                                                                        \
+#define UPDATE_TO_RENDER(Command, value, isDelta, forceUpdate)                                                       \
+    do {                                                                                                             \
+        auto node = target_.lock();                                                                              \
+        auto transactionProxy = RSTransactionProxy::GetInstance();                                                   \
+        if (transactionProxy == nullptr || node == nullptr) {                                                        \
+            break;                                                                                                   \
+        }                                                                                                            \
+        std::unique_ptr<RSCommand> command = std::make_unique<Command>(node->GetId(), value, id_, isDelta);          \
+        if (forceUpdate) {                                                                                           \
+            transactionProxy->Begin();                                                                               \
+        }                                                                                                            \
+        transactionProxy->AddCommand(command, node->IsRenderServiceNode(), node->GetFollowType(), node->GetId());    \
+        if (node->NeedForcedSendToRemote()) {                                                                        \
+            std::unique_ptr<RSCommand> commandForRemote =                                                            \
+                std::make_unique<Command>(node->GetId(), value, id_, isDelta);                                       \
+            transactionProxy->AddCommand(commandForRemote, true, node->GetFollowType(), node->GetId());              \
+        }                                                                                                            \
+        if (node->NeedSendExtraCommand()) {                                                                          \
+            std::unique_ptr<RSCommand> extraCommand = std::make_unique<Command>(node->GetId(), value, id_, isDelta); \
+            transactionProxy->AddCommand(                                                                            \
+                extraCommand, !node->IsRenderServiceNode(), node->GetFollowType(), node->GetId());                   \
+        }                                                                                                            \
+        if (forceUpdate) {                                                                                           \
+            transactionProxy->Commit();                                                                              \
+        }                                                                                                            \
     } while (0)
 
 template<>

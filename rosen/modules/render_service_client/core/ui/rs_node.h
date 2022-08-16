@@ -212,13 +212,16 @@ private:
     std::unordered_map<RSModifierType, std::shared_ptr<RSModifierBase>> propertyModifiers_;
     std::shared_ptr<RSMotionPathOption> motionPathOption_;
 
+    template<typename PropertyType, typename ModifierType, typename T>
+    std::shared_ptr<RSModifierBase> FindOrCreateModifier(RSModifierType propertyType, T defaultType);
+
     void UpdateImplicitAnimator();
     pid_t implicitAnimatorTid_ = 0;
     std::shared_ptr<RSImplicitAnimator> implicitAnimator_;
     std::shared_ptr<const RSTransitionEffect> transitionEffect_ = nullptr;
     std::shared_ptr<RSUIAnimationManager> animationManager_;
 
-    RSModifierExtractor stagingPropertiesExtrator_;
+    RSModifierExtractor stagingPropertiesExtractor_;
 
     friend class RSAnimation;
     friend class RSCurveAnimation;

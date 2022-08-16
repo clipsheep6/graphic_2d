@@ -429,6 +429,9 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         node.NotifyRTBufferAvailable();
         renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
     }
+    if (!property.GetCornerRadius().IsZero()) {
+        canvas_->clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
+    }
     filter = std::static_pointer_cast<RSSkiaFilter>(property.GetFilter());
     if (filter != nullptr) {
         auto skRectPtr = std::make_unique<SkRect>();

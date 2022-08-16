@@ -31,6 +31,7 @@
 #include "property/rs_transition_properties.h"
 #include "rs_trace.h"
 #include "render/rs_skia_filter.h"
+
 namespace OHOS {
 namespace Rosen {
 RSUniRenderVisitor::RSUniRenderVisitor()

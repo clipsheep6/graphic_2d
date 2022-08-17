@@ -28,6 +28,7 @@
 #include "include/gpu/GrContext.h"
 #include "include/gpu/gl/GrGLInterface.h"
 #include "surface_type.h"
+#include "gl_cache/memory_handler.h"
 
 #define GLES_VERSION 2
 namespace OHOS {
@@ -83,6 +84,12 @@ public:
         return eglContext_ != EGL_NO_DISPLAY;
     }
 
+    GLCache::MemoryHandler& mHandler()
+    {
+        return *mHandler_;
+    }
+
+    std::string cacheDir_;
 private:
     sk_sp<GrContext> grContext_;
     sk_sp<SkSurface> skSurface_;
@@ -94,6 +101,7 @@ private:
     EGLSurface eglSurface_ = EGL_NO_SURFACE;
     EGLConfig config_;
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
+    GLCache::MemoryHandler* mHandler_;
 };
 
 class RenderContextFactory {

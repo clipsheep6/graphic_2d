@@ -191,10 +191,15 @@ protected:
     std::weak_ptr<RSNode> target_;
     std::shared_ptr<RSMotionPathOption> motionPathOption_ {};
 
+private:
+    template<typename Command>
+    void UpdateToRenderImpl(const T& value, bool isDelta, bool forceUpdate) const;
+
     friend class RSPathAnimation;
     friend class RSImplicitAnimator;
     template<typename T2>
     friend class RSModifier;
+
 };
 
 template<typename T>

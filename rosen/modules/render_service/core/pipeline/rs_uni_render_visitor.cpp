@@ -39,6 +39,8 @@ RSUniRenderVisitor::RSUniRenderVisitor()
 {
     auto mainThread = RSMainThread::Instance();
     renderEngine_ = mainThread->GetRenderEngine();
+    isPartialRenderEnabled_ = (RSSystemProperties::GetPartialRenderEnabled() != PartialRenderType::DISABLED);
+    isOpDroped_ = (RSSystemProperties::GetPartialRenderEnabled() == PartialRenderType::SET_DAMAGE_AND_DROP_OP);
 }
 RSUniRenderVisitor::~RSUniRenderVisitor() {}
 
@@ -55,6 +57,7 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     displayHasSecSurface_.emplace(currentVisitDisplay_, false);
     dirtySurfaceNodeMap_.clear();
 
+    RS_TRACE_NAME("RSUniRender:PrepareDisplay " + std::to_string(currentVisitDisplay_));
     curDisplayDirtyManager_ = node.GetDirtyManager();
     curDisplayDirtyManager_->Clear();
     curDisplayNode_ = node.shared_from_this()->ReinterpretCastTo<RSDisplayRenderNode>();
@@ -84,6 +87,13 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         if (node.GetDstRectChanged()) {
             curDisplayDirtyManager_->MergeDirtyRect(curDisplayNode_->GetLastFrameSurfacePos(node.GetId()));
         }
+    }
+
+    if (auto parentNode = node.GetParent().lock()) {
+        dirtyFlag_ = node.Update(*curSurfaceDirtyManager_,
+            &(parentNode->ReinterpretCastTo<RSRenderNode>()->GetRenderProperties()), dirtyFlag_);
+    } else {
+        dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, nullptr, dirtyFlag_);
     }
 
     if (node.GetDstRectChanged()) {
@@ -271,6 +281,14 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode No RSSurface found");
             return;
         }
+        curDisplayDirtyManager_ = node.GetDirtyManager();
+#ifdef RS_ENABLE_EGLQUERYSURFACE
+        if (isOpDroped_ && dirtySurfaceNodeMap_.empty() &&
+            !(curDisplayDirtyManager_ && curDisplayDirtyManager_->IsDirty())) {
+            RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode No dirty RSSurface");
+            return;
+        }
+#endif
 
         auto renderFrame = renderEngine_->RequestFrame(std::static_pointer_cast<RSSurfaceOhos>(rsSurface),
             RSBaseRenderUtil::GetFrameBufferRequestConfig(screenInfo_, false));
@@ -282,19 +300,24 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 #ifdef RS_ENABLE_EGLQUERYSURFACE
         // Get displayNode buffer age in order to merge visible dirty region for displayNode.
         // And then set egl damage region to improve uni_render efficiency.
-        if (RSSystemProperties::GetUniPartialRenderEnabled()) {
+        if (isPartialRenderEnabled_) {
             uint32_t bufferAge = renderFrame->GetBufferAge();
             RS_LOGD("RSUniRenderVisitor buffer age is %d", bufferAge);
-            auto dirtyRegion = RSUniRenderUtil::MergeVisibleDirtyRegion(displayNodePtr, bufferAge);
-            std::vector<RectI> rects = GetDirtyRects(dirtyRegion);
+            node.SetTotalDirtyRegion(RSUniRenderUtil::MergeVisibleDirtyRegion(displayNodePtr, bufferAge));
+            std::vector<RectI> rects = GetDirtyRects(node.GetTotalDirtyRegion());
             node.UpdateDisplayDirtyManager(bufferAge);
-            RectI rect = CoordinateTransform(node.GetDirtyManager()->GetDirtyRegion());
-            rects.push_back(rect);
+            if (curDisplayDirtyManager_->IsDirty()) {
+                auto rect = curDisplayDirtyManager_->GetDirtyRegion();
+                rects.push_back(CoordinateTransform(rect));
+                Occlusion::Rect occlusionRect(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
+                Occlusion::Region occlusionRegion(occlusionRect);
+                node.GetTotalDirtyRegion().OrSelf(occlusionRegion);
+            }
             renderFrame->SetDamageRegion(rects);
         }
 #endif
         canvas_ = renderFrame->GetCanvas();
-        canvas_->clear(SK_ColorTRANSPARENT);
+        // canvas_->clear(SK_ColorTRANSPARENT);
 
         ProcessBaseRenderNode(node);
 
@@ -362,6 +385,27 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (!node.GetOcclusionVisible() && RSSystemProperties::GetOcclusionEnabled()) {
         return;
     }
+#ifdef RS_ENABLE_EGLQUERYSURFACE
+    // skip when node doesn't have visible dirty region
+    if (isOpDroped_ && !node.GetConsumer()) {
+        Occlusion::Rect boundsRect(node.GetOldDirty().GetLeft(), node.GetOldDirty().GetTop(),
+            node.GetOldDirty().GetRight(), node.GetOldDirty().GetBottom());
+        Occlusion::Region boundsRegion(boundsRect);
+        auto visionRegion = node.GetVisibleRegion();
+        boundsRegion.AndSelf(visionRegion);
+        auto selfDirtyRegion = curDisplayNode_->GetTotalDirtyRegion().And(boundsRegion);
+        if (selfDirtyRegion.IsEmpty()) {
+            RS_LOGD("RSUniRender::ProcessSurface skip %s", node.GetName().c_str());
+            return;
+        }
+        RS_LOGD("RSUniRender::ProcessSurface %s", node.GetName().c_str());
+        curSurfaceDirtyManager_ = node.GetDirtyManager();
+        for (auto& rect : selfDirtyRegion.GetRegionRects()) {
+            curSurfaceDirtyManager_->MergeDirtyRect(
+                RectI(rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_));
+        }
+    }
+#endif
 
     if (!canvas_) {
         RS_LOGE("RSUniRenderVisitor::ProcessSurfaceRenderNode, canvas is nullptr");
@@ -482,6 +526,14 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         RS_LOGD("RSUniRenderVisitor::ProcessCanvasRenderNode, no need process");
         return;
     }
+    
+#ifdef RS_ENABLE_EGLQUERYSURFACE
+    // skip when node doesn't have visible dirty region
+    node.UpdateRenderStatus(curSurfaceDirtyManager_->GetDirtyRegion(), isOpDroped_);
+    if (node.IsRenderUpdateIgnored()) {
+        return;
+    }
+#endif
     if (!canvas_) {
         RS_LOGE("RSUniRenderVisitor::ProcessCanvasRenderNode, canvas is nullptr");
         return;

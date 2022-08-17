@@ -21,6 +21,7 @@
 
 #include "sync_fence.h"
 
+#include "common/rs_occlusion_region.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
 #include "platform/drawing/rs_surface.h"
@@ -147,6 +148,14 @@ public:
         return lastFrameSurfacePos_[id];
     }
 
+    Occlusion::Region& GetTotalDirtyRegion()
+    {
+        return totalDirtyRegion_;
+    }
+    void SetTotalDirtyRegion(const Occlusion::Region& region)
+    {
+        totalDirtyRegion_ = region;
+    }
 private:
     CompositeType compositeType_ { HARDWARE_COMPOSITE };
     uint64_t screenId_;
@@ -166,6 +175,7 @@ private:
 
     std::map<NodeId, RectI> lastFrameSurfacePos_;
     std::map<NodeId, RectI> currentFrameSurfacePos_;
+    Occlusion::Region totalDirtyRegion_;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
 };
 } // namespace Rosen

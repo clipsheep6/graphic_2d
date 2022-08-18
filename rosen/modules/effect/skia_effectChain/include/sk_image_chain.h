@@ -31,6 +31,7 @@
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkBitmap.h"
 #include "include/core/SkPaint.h"
+#include "include/core/SkSurface.h"
 #include "include/effects/SkImageFilters.h"
 
 
@@ -42,6 +43,7 @@ public:
     SKImageChain(std::shared_ptr<Media::PixelMap> srcPxielMap);
     virtual ~SKImageChain();
     void Draw();
+    void SetForceCPU(bool forceCPU);
     void SetFilters(sk_sp<SkImageFilter> filter);
     void SetClipRect(SkRect* rect);
     void SetClipPath(SkPath* path);
@@ -52,15 +54,18 @@ private:
     void InitWithoutCanvas();
     SkColorType PixelFormatConvert(const Media::PixelFormat& pixelFormat);
     bool initWithoutCanvas_ = false;
+    bool forceCPU_ = true;
     sk_sp<SkImage> image_ = nullptr;
     SkCanvas* canvas_ = nullptr;
     SkRect* rect_ = nullptr;
     SkPath* path_ = nullptr;
     SkRRect* rRect_ = nullptr;
-    SkPixmap* dstPixmap_ = nullptr;
+    // SkPixmap* dstPixmap_ = nullptr;
+    std::shared_ptr<SkPixmap> dstPixmap_ = nullptr;
     std::shared_ptr<Media::PixelMap> srcPixelMap_ = nullptr;
     std::shared_ptr<Media::PixelMap> dstPixelMap_ = nullptr;
     sk_sp<SkImageFilter> filters_ = nullptr;
+    sk_sp<SkSurface> gpuSurface_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

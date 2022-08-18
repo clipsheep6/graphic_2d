@@ -76,6 +76,8 @@ public:
     virtual GSError SetTunnelHandle(const ExtDataHandle *handle) = 0;
     virtual GSError GetPresentTimestamp(uint32_t sequence, PresentTimestampType type, int64_t &time) = 0;
 
+    virtual GSError Connect(SurfaceSceneType surfaceSceneType) = 0;
+
     DECLARE_INTERFACE_DESCRIPTOR(u"surf.IBufferProducer");
 
 protected:
@@ -104,6 +106,7 @@ protected:
         BUFFER_PRODUCER_SET_TUNNEL_HANDLE = 21,
         BUFFER_PRODUCER_GO_BACKGROUND = 22,
         BUFFER_PRODUCER_GET_PRESENT_TIMESTAMP = 23,
+        BUFFER_PRODUCER_CONNECT = 24,
     };
 };
 } // namespace OHOS

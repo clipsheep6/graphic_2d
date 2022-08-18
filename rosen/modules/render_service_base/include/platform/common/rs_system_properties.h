@@ -53,6 +53,7 @@ public:
     static bool GetUniPartialRenderEnabled();
     static bool IsUniRenderMode();
     static void SetRenderMode(bool isUni);
+    static bool GetDynamicBufferQueueSizeEnableStatus();
 
 private:
     RSSystemProperties() = default;

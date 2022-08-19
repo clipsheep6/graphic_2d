@@ -25,5 +25,9 @@ void RSSkiaFilter::ApplyTo(SkPaint& paint)
 {
     paint.setImageFilter(imageFilter_);
 }
+void RSSkiaFilter::SetColor(SkPaint& paint)
+{
+    paint.setColor(maskColor_);
+}
 } // namespace Rosen
 } // namespace OHOS

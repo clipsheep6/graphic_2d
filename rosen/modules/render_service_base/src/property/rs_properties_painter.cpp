@@ -210,6 +210,11 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, SkCanvas& c
     auto clipBounds = SkRect::Make(canvas.getDeviceClipBounds());
     canvas.drawImageRect(imageSnapshot.get(), clipBounds, clipBounds, &paint);
     canvas.restore();
+    SkPaint paintColor;
+    if (filter->IsMaterial()) {
+        filter->SetColor(paintColor);
+        canvas.drawPaint(paintColor);
+    }
 }
 
 void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas)

@@ -47,6 +47,7 @@ public:
     void SetConsumer(const sptr<Surface>& consumer);
     void IncreaseAvailableBuffer();
     int32_t ReduceAvailableBuffer();
+    void ResetAvailableCount();
 
     NodeId GetNodeId() const
     {

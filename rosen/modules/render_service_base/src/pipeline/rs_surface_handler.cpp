@@ -41,5 +41,11 @@ float RSSurfaceHandler::GetGlobalZOrder() const
 {
     return globalZOrder_;
 }
+
+void RSSurfaceHandler::ResetAvailableCount()
+{
+    bufferAvailableCount_ = 0;
+}
+
 }
 }

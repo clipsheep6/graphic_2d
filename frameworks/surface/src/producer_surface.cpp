@@ -73,8 +73,9 @@ GSError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
                                        sptr<SyncFence>& fence, BufferRequestConfig &config)
 {
     IBufferProducer::RequestBufferReturnValue retval;
+    IBufferProducer::RequestBufferSendValue sendval = { cleaningCache_ };
     sptr<BufferExtraData> bedataimpl = new BufferExtraDataImpl;
-    GSError ret = producer_->RequestBuffer(config, bedataimpl, retval);
+    GSError ret = producer_->RequestBuffer(config, bedataimpl, retval, sendval);
     if (ret != GSERROR_OK) {
         if (ret == GSERROR_NO_CONSUMER) {
             std::lock_guard<std::mutex> lockGuard(mutex_);
@@ -292,8 +293,11 @@ GSError ProducerSurface::CleanCache()
     if (IsRemote()) {
         std::lock_guard<std::mutex> lockGuard(mutex_);
         bufferProducerCache_.clear();
+        cleaningCache_ = true;
     }
-    return producer_->CleanCache();
+    GSError ret = producer_->CleanCache();
+    cleaningCache_ = false;
+    return ret;
 }
 
 GSError ProducerSurface::GoBackground()

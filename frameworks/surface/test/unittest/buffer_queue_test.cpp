@@ -133,9 +133,10 @@ HWTEST_F(BufferQueueTest, QueueSize002, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueTest, ReqCanFluAcqRel001, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
+    IBufferProducer::RequestBufferSendValue sendval = { false };
 
     // first request
-    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval);
+    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
     ASSERT_NE(retval.buffer, nullptr);
     ASSERT_GE(retval.sequence, 0);
@@ -179,9 +180,10 @@ HWTEST_F(BufferQueueTest, ReqCanFluAcqRel001, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueTest, ReqCanFluAcqRel002, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
+    IBufferProducer::RequestBufferSendValue sendval = { false };
 
     // not first request
-    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval);
+    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
     ASSERT_GE(retval.sequence, 0);
     ASSERT_EQ(retval.buffer, nullptr);
@@ -202,9 +204,10 @@ HWTEST_F(BufferQueueTest, ReqCanFluAcqRel002, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueTest, ReqCanFluAcqRel003, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
+    IBufferProducer::RequestBufferSendValue sendval = { false };
 
     // not first request
-    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval);
+    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
     ASSERT_GE(retval.sequence, 0);
     ASSERT_EQ(retval.buffer, nullptr);
@@ -228,9 +231,10 @@ HWTEST_F(BufferQueueTest, ReqCanFluAcqRel003, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueTest, ReqCanFluAcqRel004, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
+    IBufferProducer::RequestBufferSendValue sendval = { false };
 
     // not first request
-    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval);
+    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
     ASSERT_GE(retval.sequence, 0);
     ASSERT_EQ(retval.buffer, nullptr);
@@ -281,16 +285,17 @@ HWTEST_F(BufferQueueTest, ReqCanFluAcqRel006, Function | MediumTest | Level2)
     IBufferProducer::RequestBufferReturnValue retval1;
     IBufferProducer::RequestBufferReturnValue retval2;
     IBufferProducer::RequestBufferReturnValue retval3;
+    IBufferProducer::RequestBufferSendValue sendval = { false };
     GSError ret;
 
     // not alloc
-    ret = bq->RequestBuffer(requestConfig, bedata, retval1);
+    ret = bq->RequestBuffer(requestConfig, bedata, retval1, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
     ASSERT_GE(retval1.sequence, 0);
     ASSERT_EQ(retval1.buffer, nullptr);
 
     // alloc
-    ret = bq->RequestBuffer(requestConfig, bedata, retval2);
+    ret = bq->RequestBuffer(requestConfig, bedata, retval2, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
     ASSERT_GE(retval2.sequence, 0);
     ASSERT_NE(retval2.buffer, nullptr);
@@ -298,7 +303,7 @@ HWTEST_F(BufferQueueTest, ReqCanFluAcqRel006, Function | MediumTest | Level2)
     cache[retval2.sequence] = retval2.buffer;
 
     // no buffer
-    ret = bq->RequestBuffer(requestConfig, bedata, retval3);
+    ret = bq->RequestBuffer(requestConfig, bedata, retval3, sendval);
     ASSERT_NE(ret, OHOS::GSERROR_OK);
     ASSERT_EQ(retval3.buffer, nullptr);
 
@@ -325,9 +330,10 @@ HWTEST_F(BufferQueueTest, ReqCanFluAcqRel006, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueTest, ReqCanFluAcqRel007, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
+    IBufferProducer::RequestBufferSendValue sendval = { false };
 
     // not alloc
-    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval);
+    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
     ASSERT_GE(retval.sequence, 0);
     ASSERT_EQ(retval.buffer, nullptr);
@@ -390,10 +396,11 @@ HWTEST_F(BufferQueueTest, ReqCanFluAcqRel008, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueTest, ReqCanFluAcqRel009, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
+    IBufferProducer::RequestBufferSendValue sendval = { false };
     BufferRequestConfig deleteconfig = requestConfig;
     deleteconfig.width = 1921;
 
-    GSError ret = bq->RequestBuffer(deleteconfig, bedata, retval);
+    GSError ret = bq->RequestBuffer(deleteconfig, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
     ASSERT_EQ(retval.deletingBuffers.size(), 1u);
     ASSERT_GE(retval.sequence, 0);
@@ -415,10 +422,11 @@ HWTEST_F(BufferQueueTest, ReqCanFluAcqRel009, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueTest, RequestBuffer001, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
+    IBufferProducer::RequestBufferSendValue sendval = { false };
     BufferRequestConfig config = requestConfig;
     config.width = -1;
 
-    GSError ret = bq->RequestBuffer(config, bedata, retval);
+    GSError ret = bq->RequestBuffer(config, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
 }
 
@@ -434,10 +442,11 @@ HWTEST_F(BufferQueueTest, RequestBuffer001, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueTest, RequestBuffer002, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
+    IBufferProducer::RequestBufferSendValue sendval = { false };
     BufferRequestConfig config = requestConfig;
     config.height = -1;
 
-    GSError ret = bq->RequestBuffer(config, bedata, retval);
+    GSError ret = bq->RequestBuffer(config, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
 }
 
@@ -454,10 +463,11 @@ HWTEST_F(BufferQueueTest, RequestBuffer002, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueTest, RequestBuffer003, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
+    IBufferProducer::RequestBufferSendValue sendval = { false };
     BufferRequestConfig config = requestConfig;
     config.strideAlignment = SURFACE_MIN_STRIDE_ALIGNMENT - 1;
 
-    GSError ret = bq->RequestBuffer(config, bedata, retval);
+    GSError ret = bq->RequestBuffer(config, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
 }
 
@@ -473,10 +483,11 @@ HWTEST_F(BufferQueueTest, RequestBuffer003, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueTest, RequestBuffer004, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
+    IBufferProducer::RequestBufferSendValue sendval = { false };
     BufferRequestConfig config = requestConfig;
     config.strideAlignment = SURFACE_MAX_STRIDE_ALIGNMENT + 1;
 
-    GSError ret = bq->RequestBuffer(config, bedata, retval);
+    GSError ret = bq->RequestBuffer(config, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
 }
 
@@ -492,10 +503,11 @@ HWTEST_F(BufferQueueTest, RequestBuffer004, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueTest, RequestBuffer005, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
+    IBufferProducer::RequestBufferSendValue sendval = { false };
     BufferRequestConfig config = requestConfig;
     config.strideAlignment = 3;
 
-    GSError ret = bq->RequestBuffer(config, bedata, retval);
+    GSError ret = bq->RequestBuffer(config, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
 }
 
@@ -511,10 +523,11 @@ HWTEST_F(BufferQueueTest, RequestBuffer005, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueTest, RequestBuffer006, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
+    IBufferProducer::RequestBufferSendValue sendval = { false };
     BufferRequestConfig config = requestConfig;
     config.format = -1;
 
-    GSError ret = bq->RequestBuffer(config, bedata, retval);
+    GSError ret = bq->RequestBuffer(config, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
 }
 }

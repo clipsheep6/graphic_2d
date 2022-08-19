@@ -78,7 +78,8 @@ void BufferQueueConsumerTest::TearDownTestCase()
 HWTEST_F(BufferQueueConsumerTest, AcqRel001, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
-    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval);
+    IBufferProducer::RequestBufferSendValue sendval = { false };
+    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
     ASSERT_GE(retval.sequence, 0);
     ASSERT_NE(retval.buffer, nullptr);
@@ -111,7 +112,8 @@ HWTEST_F(BufferQueueConsumerTest, AcqRel001, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueConsumerTest, AcqRel002, Function | MediumTest | Level2)
 {
     IBufferProducer::RequestBufferReturnValue retval;
-    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval);
+    IBufferProducer::RequestBufferSendValue sendval = { false };
+    GSError ret = bq->RequestBuffer(requestConfig, bedata, retval, sendval);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
     ASSERT_GE(retval.sequence, 0);
     ASSERT_EQ(retval.buffer, nullptr);

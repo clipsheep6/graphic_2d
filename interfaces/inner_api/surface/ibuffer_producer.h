@@ -35,8 +35,11 @@ public:
         sptr<SyncFence> fence;
         std::vector<int32_t> deletingBuffers;
     };
+    struct RequestBufferSendValue {
+        bool cleaningCache;
+    };
     virtual GSError RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
-                                  RequestBufferReturnValue &retval) = 0;
+                                  RequestBufferReturnValue &retval, RequestBufferSendValue &sendval) = 0;
 
     virtual GSError CancelBuffer(uint32_t sequence, const sptr<BufferExtraData> &bedata) = 0;
 

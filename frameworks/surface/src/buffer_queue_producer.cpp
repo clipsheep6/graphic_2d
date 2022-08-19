@@ -108,7 +108,10 @@ int32_t BufferQueueProducer::RequestBufferRemote(MessageParcel &arguments, Messa
 
     ReadRequestConfig(arguments, config);
 
-    GSError sret = RequestBuffer(config, bedataimpl, retval);
+    RequestBufferSendValue sendval = {};
+    sendval.cleaningCache = arguments.ReadBool();
+
+    GSError sret = RequestBuffer(config, bedataimpl, retval, sendval);
 
     reply.WriteInt32(sret);
     if (sret == GSERROR_OK) {
@@ -337,7 +340,7 @@ int32_t BufferQueueProducer::GetPresentTimestampRemote(MessageParcel &arguments,
 }
 
 GSError BufferQueueProducer::RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
-                                           RequestBufferReturnValue &retval)
+                                           RequestBufferReturnValue &retval, RequestBufferSendValue &sendval)
 {
     if (bufferQueue_ == nullptr) {
         return GSERROR_INVALID_ARGUMENTS;
@@ -352,7 +355,7 @@ GSError BufferQueueProducer::RequestBuffer(const BufferRequestConfig &config, sp
         connectedPid_ = GetCallingPid();
     }
 
-    return bufferQueue_->RequestBuffer(config, bedata, retval);
+    return bufferQueue_->RequestBuffer(config, bedata, retval, sendval);
 }
 
 GSError BufferQueueProducer::CancelBuffer(uint32_t sequence, const sptr<BufferExtraData> &bedata)

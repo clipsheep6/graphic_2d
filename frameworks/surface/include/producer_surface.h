@@ -118,6 +118,7 @@ private:
     std::string name_ = "not init";
     uint64_t queueId_ = 0;
     bool isDisconnected = true;
+    bool cleaningCache_ = false;
 };
 } // namespace OHOS
 

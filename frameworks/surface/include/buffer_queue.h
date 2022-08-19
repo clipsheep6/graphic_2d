@@ -62,10 +62,12 @@ public:
     GSError Init();
 
     GSError RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
-                          struct IBufferProducer::RequestBufferReturnValue &retval);
+                          struct IBufferProducer::RequestBufferReturnValue &retval,
+                          struct IBufferProducer::RequestBufferSendValue &sendval);
 
     GSError ReuseBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
-                        struct IBufferProducer::RequestBufferReturnValue &retval);
+                        struct IBufferProducer::RequestBufferReturnValue &retval,
+                        struct IBufferProducer::RequestBufferSendValue &sendval);
 
     GSError CancelBuffer(uint32_t sequence, const sptr<BufferExtraData> &bedata);
 
@@ -145,6 +147,9 @@ private:
     GSError CheckFlushConfig(const BufferFlushConfig &config);
     void DumpCache(std::string &result);
     void ClearLocked();
+    void OnCleaningCache(struct IBufferProducer::RequestBufferReturnValue &retval);
+    void RecordCleaningBuffers();
+    void CleanCacheOver();
 
     int32_t defaultWidth = 0;
     int32_t defaultHeight = 0;
@@ -152,9 +157,10 @@ private:
     uint32_t queueSize_ = SURFACE_DEFAULT_QUEUE_SIZE;
     TransformType transform_ = TransformType::ROTATE_NONE;
     std::string name_;
-    std::list<int32_t> freeList_;
-    std::list<int32_t> dirtyList_;
-    std::list<int32_t> deletingList_;
+    std::list<uint32_t> freeList_;
+    std::list<uint32_t> dirtyList_;
+    std::list<uint32_t> deletingList_;
+    std::list<uint32_t> cleaningBuffersList_;
     std::map<uint32_t, BufferElement> bufferQueueCache_;
     sptr<IBufferConsumerListener> listener_ = nullptr;
     IBufferConsumerListenerClazz *listenerClazz_ = nullptr;
@@ -167,6 +173,7 @@ private:
     std::condition_variable waitReqCon_;
     sptr<SurfaceTunnelHandle> tunnelHandle_ = nullptr;
     std::atomic_bool isValidStatus_ = true;
+    bool hasReturnedAllBuffersWhenCleaningCache_ = false;
 };
 }; // namespace OHOS
 

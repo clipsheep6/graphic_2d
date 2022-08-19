@@ -170,7 +170,7 @@ GSError BufferQueue::CheckFlushConfig(const BufferFlushConfig &config)
 }
 
 GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
-    struct IBufferProducer::RequestBufferReturnValue &retval)
+    struct IBufferProducer::RequestBufferReturnValue &retval, struct IBufferProducer::RequestBufferSendValue &sendval)
 {
     ScopedBytrace func(__func__);
     if (!GetStatus()) {
@@ -192,7 +192,7 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
     sptr<SurfaceBuffer>& buffer = retval.buffer;
     ret = PopFromFreeList(buffer, config);
     if (ret == GSERROR_OK) {
-        return ReuseBuffer(config, bedata, retval);
+        return ReuseBuffer(config, bedata, retval, sendval);
     }
 
     // check queue size
@@ -205,7 +205,7 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
         // try dequeue from free list again
         ret = PopFromFreeList(buffer, config);
         if (ret == GSERROR_OK) {
-            return ReuseBuffer(config, bedata, retval);
+            return ReuseBuffer(config, bedata, retval, sendval);
         } else if (GetUsedSize() >= GetQueueSize()) {
             BLOGNW("all buffer are using, Queue id: %{public}" PRIu64, uniqueId_);
             return GSERROR_NO_BUFFER;
@@ -228,7 +228,7 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
 }
 
 GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
-    struct IBufferProducer::RequestBufferReturnValue &retval)
+    struct IBufferProducer::RequestBufferReturnValue &retval, struct IBufferProducer::RequestBufferSendValue &sendval)
 {
     ScopedBytrace func(__func__);
     retval.sequence = retval.buffer->GetSeqNum();
@@ -267,7 +267,12 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, sptr<BufferE
         BLOGND("RequestBuffer Succ Buffer[%{public}d %{public}d] in seq id: %{public}d "\
             "qid: %{public}" PRIu64 " releaseFence: %{public}d",
             config.width, config.height, retval.sequence, uniqueId_, retval.fence->Get());
-        retval.buffer = nullptr;
+
+        if (sendval.cleaningCache) {
+            OnCleaningCache(retval);
+        } else {
+            retval.buffer = nullptr;
+        }
     }
 
     ScopedBytrace bufferName(name_ + ":" + std::to_string(retval.sequence));
@@ -818,6 +823,7 @@ GSError BufferQueue::CleanCache()
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
     ClearLocked();
+    CleanCacheOver();
     waitReqCon_.notify_all();
     return GSERROR_OK;
 }
@@ -1115,5 +1121,34 @@ void BufferQueue::SetStatus(bool status)
 {
     isValidStatus_ = status;
     waitReqCon_.notify_all();
+}
+
+void BufferQueue::OnCleaningCache(struct IBufferProducer::RequestBufferReturnValue &retval)
+{
+    if (cleaningBuffersList_.size() == 0 && !hasReturnedAllBuffersWhenCleaningCache_) {
+        RecordCleaningBuffers();
+    }
+    if (std::find(cleaningBuffersList_.begin(), cleaningBuffersList_.end(), retval.sequence) ==
+                                                                            cleaningBuffersList_.end()) {
+        retval.buffer = nullptr;
+    } else {
+        cleaningBuffersList_.remove(retval.sequence);
+    }
+    if (cleaningBuffersList_.size() == 0) {
+        hasReturnedAllBuffersWhenCleaningCache_ = true;
+    }
+}
+
+void BufferQueue::RecordCleaningBuffers()
+{
+    for (auto &[id, _] : bufferQueueCache_) {
+        cleaningBuffersList_.push_back(id);
+    }
+}
+
+void BufferQueue::CleanCacheOver()
+{
+    cleaningBuffersList_.clear();
+    hasReturnedAllBuffersWhenCleaningCache_ = false;
 }
 }; // namespace OHOS

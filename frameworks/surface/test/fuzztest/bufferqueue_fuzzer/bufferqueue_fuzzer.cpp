@@ -124,11 +124,13 @@ namespace OHOS {
             uint8_t data = GetData<uint8_t>();
             metaDataSet.push_back(data);
         }
+        bool cleaningCache = GetData<bool>();
         // test
         sptr<BufferQueue> bufferqueue = new BufferQueue(name, isShared);
         sptr<BufferExtraData> bedata = GetBufferExtraDataFromData();
         IBufferProducer::RequestBufferReturnValue retval;
-        bufferqueue->RequestBuffer(requestConfig, bedata, retval);
+        IBufferProducer::RequestBufferSendValue sendval = { cleaningCache };
+        bufferqueue->RequestBuffer(requestConfig, bedata, retval, sendval);
         bufferqueue->CancelBuffer(sequence, bedata);
         sptr<SyncFence> syncFence = SyncFence::INVALID_FENCE;
         sptr<OHOS::SurfaceBuffer> buffer = nullptr;

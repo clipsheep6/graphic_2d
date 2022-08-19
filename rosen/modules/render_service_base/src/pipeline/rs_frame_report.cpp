@@ -51,7 +51,7 @@ void RsFrameReport::Init()
         ROSEN_LOGE("RsFrameReport:[Init] dlopen libframe_ui_intf.so failed!");
         return;
     }
-    ROSEN_LOGI("RsFrameReport:[Init] dlopen libframe_ui_intf.so success!");
+    ROSEN_LOGD("RsFrameReport:[Init] dlopen libframe_ui_intf.so success!");
 }
 
 bool RsFrameReport::LoadLibrary()

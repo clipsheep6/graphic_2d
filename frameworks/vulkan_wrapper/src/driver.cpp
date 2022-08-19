@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
-#include "driver.h"
-#include "driver_loader.h"
+#include "swapchain.h"
+#include <iostream>
 #include <mutex>
 #include <malloc.h>
+#include "driver_loader.h"
 #include "wrapper_log.h"
 
 
@@ -34,19 +35,19 @@ PFN_vkGetPhysicalDeviceMemoryProperties pfn_vkGetPhysicalDeviceMemoryProperties 
 PFN_vkGetPhysicalDeviceQueueFamilyProperties pfn_vkGetPhysicalDeviceQueueFamilyProperties = nullptr;
  
 bool EnsureInitialized() {
-    WLOGD("Andrew:: EnsureInitialized is comming");
+    WLOGD("EnsureInitialized is comming");
     static bool initialized = false;
     static std::mutex init_lock;
 
     std::lock_guard<std::mutex> lock(init_lock);
 
     if (initialized) {
-        WLOGD("Andrew:: initialized is ready");
+        WLOGD("DriverLoader Initialized is ready");
         return true;
     }
 
     if (DriverLoader::Load()) {
-        WLOGD("Andrew:: DriverLoader::Load is ready");
+        WLOGD("DriverLoader::Load is ready");
         initialized = true;
     }
     return initialized;
@@ -99,9 +100,38 @@ PFN_vkVoidFunction GetInstanceProcAddr(VkInstance instance, const char* pName)
         return nullptr;
     }
 
+    if (std::strcmp(pName, "vkCreateOHOSSurfaceOpenHarmony") == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(vulkan::driver::CreateOHOSSurfaceOpenHarmony);
+    }
+
+    if (std::strcmp(pName, "vkGetPhysicalDeviceSurfaceSupportKHR") == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(vulkan::driver::GetPhysicalDeviceSurfaceSupportKHR);
+    }
+
+    if (std::strcmp(pName, "vkGetPhysicalDeviceSurfaceCapabilitiesKHR") == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(vulkan::driver::GetPhysicalDeviceSurfaceCapabilitiesKHR);
+    }
     
+    if (std::strcmp(pName, "vkGetPhysicalDeviceSurfaceFormatsKHR") == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(vulkan::driver::GetPhysicalDeviceSurfaceFormatsKHR);
+    }
+    
+    if (std::strcmp(pName, "vkGetPhysicalDeviceSurfacePresentModesKHR") == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(vulkan::driver::GetPhysicalDeviceSurfacePresentModesKHR);
+    }
+    
+    if (std::strcmp(pName, "vkDestroySurfaceKHR") == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(vulkan::driver::DestroySurfaceKHR);
+    }
+
+    if (std::strcmp(pName, "vkCreateDevice") == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(vulkan::driver::CreateDevice);
+    }
 
     PFN_vkVoidFunction func = DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(instance, pName);
+    if (!func) {
+        WLOGE("GetInstanceProcAddr %{public}s failed, please check", pName);
+    }
 
     return func;
 }
@@ -125,9 +155,13 @@ VkResult CreateDevice(VkPhysicalDevice physicalDevice,
         result = pfn_vkCreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice);
     }
 
-    if (pDevice && pfn_vkGetDeviceProcAddr) {
+    if ((result == VK_SUCCESS) && (pfn_vkGetDeviceProcAddr != nullptr)) {
         pfn_vkGetNativeFenceFdOpenHarmony= reinterpret_cast<PFN_vkGetNativeFenceFdOpenHarmony>(
             pfn_vkGetDeviceProcAddr(*pDevice, "vkGetNativeFenceFdOpenHarmony"));
+
+        if (!pfn_vkGetNativeFenceFdOpenHarmony) {
+            std::cout << "vulkan::driver::CreateDevice Get vkGetNativeFenceFdOpenHarmony failed" << std::endl;
+        }
     }
 
     return result;
@@ -139,8 +173,32 @@ PFN_vkVoidFunction GetDeviceProcAddr(VkDevice device, const char* pName)
 
     PFN_vkVoidFunction func = nullptr;
 
-    if (pfn_vkGetDeviceProcAddr) {
-        func = pfn_vkGetDeviceProcAddr(device, pName);
+    if (!pfn_vkGetDeviceProcAddr) {
+        std::cout << "pfn_vkGetDeviceProcAddr is null, please check"<< std::endl;
+        return nullptr;
+    }
+    if (std::strcmp(pName, "vkCreateSwapchainKHR") == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(vulkan::driver::CreateSwapchainKHR);
+    }
+
+    if (std::strcmp(pName, "vkDestroySwapchainKHR") == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(vulkan::driver::DestroySwapchainKHR);
+    }
+
+    if (std::strcmp(pName, "vkGetSwapchainImagesKHR") == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(vulkan::driver::GetSwapchainImagesKHR);
+    }
+
+    if (std::strcmp(pName, "vkAcquireNextImageKHR") == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(vulkan::driver::AcquireNextImageKHR);
+    }
+
+    if (std::strcmp(pName, "vkQueuePresentKHR") == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(vulkan::driver::QueuePresentKHR);
+    }
+    func = pfn_vkGetDeviceProcAddr(device, pName);
+    if (!func) {
+        std::cout << "GetDeviceProcAddr " << pName << " is null, please check" << std::endl;
     }
 
     return func;
@@ -232,7 +290,6 @@ void GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
     }
 }
 
-// VkResult AcquireImageOHOS(VkDevice device,
 VkResult SetNativeFenceFdOpenHarmony(VkDevice device,
     int nativeFenceFd,
     VkSemaphore semaphore,

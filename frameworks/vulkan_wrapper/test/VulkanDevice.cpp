@@ -11,10 +11,6 @@
 #include <VulkanDevice.h>
 #include <unordered_set>
 
-#if defined(VK_USE_PLATFORM_MACOS_MVK) && (VK_HEADER_VERSION >= 216)
-#include <vulkan/vulkan_beta.h>
-#endif
-
 namespace vks
 {	
 	/**
@@ -49,10 +45,10 @@ namespace vks
 			std::vector<VkExtensionProperties> extensions(extCount);
 			if (vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extCount, &extensions.front()) == VK_SUCCESS)
 			{
-				// for (auto ext : extensions)
-				// {
-				// 	//supportedExtensions.push_back(ext.extensionName);
-				// }
+				for (auto ext : extensions)
+				{
+					supportedExtensions.push_back(ext.extensionName);
+				}
 			}
 		}
 	}
@@ -253,10 +249,7 @@ namespace vks
 			// If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
 			deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		}
-
-#if defined(VK_USE_PLATFORM_MACOS_MVK) && (VK_HEADER_VERSION >= 216)
-        deviceExtensions.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
-#endif
+		deviceExtensions.push_back("VK_OHOS_native_buffer"); //todo
 
 		VkDeviceCreateInfo deviceCreateInfo = {};
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -272,13 +265,6 @@ namespace vks
 			physicalDeviceFeatures2.pNext = pNextChain;
 			deviceCreateInfo.pEnabledFeatures = nullptr;
 			deviceCreateInfo.pNext = &physicalDeviceFeatures2;
-		}
-
-		// Enable the debug marker extension if it is present (likely meaning a debugging tool is present)
-		if (extensionSupported(VK_EXT_DEBUG_MARKER_EXTENSION_NAME))
-		{
-			deviceExtensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
-			enableDebugMarkers = true;
 		}
 
 		if (deviceExtensions.size() > 0)
@@ -556,8 +542,7 @@ namespace vks
 	*/
 	bool VulkanDevice::extensionSupported(std::string extension)
 	{
-		return true;
-		// return (std::find(supportedExtensions.begin(), supportedExtensions.end(), extension) != supportedExtensions.end());
+		return (std::find(supportedExtensions.begin(), supportedExtensions.end(), extension) != supportedExtensions.end());
 	}
 
 	/**

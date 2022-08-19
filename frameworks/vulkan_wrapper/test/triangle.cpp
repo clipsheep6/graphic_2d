@@ -13,59 +13,34 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <assert.h>
 #include <iostream>
+#include <string>
 #include <vector>
 #include <exception>
 
 #include <vulkan/vulkan.h>
 #include "surface.h"
-#include "core/ui/rs_display_node.h"
-#include "core/ui/rs_surface_node.h"
+#include "refbase.h"
+#include "render_context/render_context.h"
+#include "transaction/rs_transaction.h"
+#include "ui/rs_surface_extractor.h"
+#include "ui/rs_surface_node.h"
+#include "wm/window.h"
 #include "window.h"
 #include "vulkanexamplebase.h"
 #include "VulkanUtils.h"
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
-// Set to "true" to use staging buffers for uploading vertex and index data to device local memory
-// See "prepareVertices" for details on what's staging and on why to use it
-#define USE_STAGING true
-
-
-
-static const char *gVertShaderText =
-	"#version 450\n"
-	"layout (location = 0) in vec3 inPos;\n"
-	"layout (location = 1) in vec3 inColor;\n"
-	"layout (binding = 0) uniform UBO \n"
-	"{\n"
-	"	mat4 projectionMatrix;\n"
-	"	mat4 modelMatrix;\n"
-	"	mat4 viewMatrix;\n"
-	"} ubo;\n"
-	"layout (location = 0) out vec3 outColor;\n"
-	"out gl_PerVertex \n"
-	"{\n"
-	"    vec4 gl_Position;   \n"
-	"};\n"
-	"void main() \n"
-	"{\n"
-	"	outColor = inColor;\n"
-	"	gl_Position = ubo.projectionMatrix * ubo.viewMatrix * ubo.modelMatrix * vec4(inPos.xyz, 1.0);\n"
-	"}\n";
-
-static const char *gFragShaderText =
-	"#version 450\n"
-	"layout (location = 0) in vec3 inColor;\n"
-	"layout (location = 0) out vec4 outFragColor;\n"
-	"void main() \n"
-	"{\n"
-	"  outFragColor = vec4(inColor, 1.0);\n"
-	"}\n";
-
-
-
+constexpr int DEFAULT_DISPLAY_ID = 0;
+constexpr int WINDOW_LEFT = 100;
+constexpr int WINDOW_TOP = 200;
+constexpr int WINDOW_WIDTH = 360;
+constexpr int WINDOW_HEIGHT = 360;
 class VulkanExample : public VulkanExampleBase
 {
 public:
@@ -107,9 +82,9 @@ struct {
 // This way we can just memcopy the ubo data to the ubo
 // Note: You should use data types that align with the GPU in order to avoid manual padding (vec4, mat4)
 struct {
-	//glm::mat4 projectionMatrix;
-	//glm::mat4 modelMatrix;
-	//glm::mat4 viewMatrix;
+	glm::mat4 projectionMatrix;
+	glm::mat4 modelMatrix;
+	glm::mat4 viewMatrix;
 } uboVS;
 
 // The pipeline layout is used by a pipeline to access the descriptor sets
@@ -142,15 +117,15 @@ VkSemaphore renderCompleteSemaphore;
 
 // Fences
 // Used to check the completion of queue operations (e.g. command buffer execution)
-std::vector<VkFence> waitFences;
+std::vector<VkFence> queueCompleteFences;
 
 VulkanExample() : VulkanExampleBase()
 {
 	// Setup a default look-at camera
-	// camera.type = Camera::CameraType::lookat;
-	// camera.setPosition(glm::vec3(0.0f, 0.0f, -2.5f));
-	// camera.setRotation(glm::vec3(0.0f));
-	// camera.setPerspective(60.0f, (float)width / (float)height, 1.0f, 256.0f);
+	camera.type = Camera::CameraType::lookat;
+	camera.setPosition(glm::vec3(0.0f, 0.0f, -2.5f));
+	camera.setRotation(glm::vec3(0.0f));
+	camera.setPerspective(60.0f, (float)width / (float)height, 1.0f, 256.0f);
 	// Values not set here are initialized in the base class constructor
 }
 
@@ -175,7 +150,7 @@ VulkanExample() : VulkanExampleBase()
 	vkDestroySemaphore(device, presentCompleteSemaphore, nullptr);
 	vkDestroySemaphore(device, renderCompleteSemaphore, nullptr);
 
-	for (auto& fence : waitFences)
+	for (auto& fence : queueCompleteFences)
 	{
 		vkDestroyFence(device, fence, nullptr);
 	}
@@ -222,8 +197,8 @@ void prepareSynchronizationPrimitives()
 	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	// Create in signaled state so we don't wait on first render of each command buffer
 	fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-	waitFences.resize(drawCmdBuffers.size());
-	for (auto& fence : waitFences)
+	queueCompleteFences.resize(drawCmdBuffers.size());
+	for (auto& fence : queueCompleteFences)
 	{
 		VK_CHECK_RESULT(vkCreateFence(device, &fenceCreateInfo, nullptr, &fence));
 	}
@@ -364,11 +339,14 @@ void buildCommandBuffers()
 void draw()
 {
 	// Get next image in the swap chain (back/front buffer)
-	VK_CHECK_RESULT(swapChain.acquireNextImage(presentCompleteSemaphore, &currentBuffer));
+	VkResult acquire = swapChain.acquireNextImage(presentCompleteSemaphore, &currentBuffer);
+	if (!((acquire == VK_SUCCESS) || (acquire == VK_SUBOPTIMAL_KHR))) {
+		VK_CHECK_RESULT(acquire);
+	}
 
 	// Use a fence to wait until the command buffer has finished execution before using it again
-	VK_CHECK_RESULT(vkWaitForFences(device, 1, &waitFences[currentBuffer], VK_TRUE, UINT64_MAX));
-	VK_CHECK_RESULT(vkResetFences(device, 1, &waitFences[currentBuffer]));
+	VK_CHECK_RESULT(vkWaitForFences(device, 1, &queueCompleteFences[currentBuffer], VK_TRUE, UINT64_MAX));
+	VK_CHECK_RESULT(vkResetFences(device, 1, &queueCompleteFences[currentBuffer]));
 
 	// Pipeline stage at which the queue submission will wait (via pWaitSemaphores)
 	VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -384,7 +362,7 @@ void draw()
 	submitInfo.commandBufferCount = 1;                           // One command buffer
 
 	// Submit to the graphics queue passing a wait fence
-	VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, waitFences[currentBuffer]));
+	VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, queueCompleteFences[currentBuffer]));
 
 	// Present the current buffer to the swap chain
 	// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
@@ -829,12 +807,22 @@ void setupRenderPass()
 // This function loads such a shader from a binary file and returns a shader module structure
 VkShaderModule loadSPIRVShader(std::string filename)
 {
-	const char* shaderCode = NULL;
+	std::string spvPath = "/data/andrew/" + filename + ".spv";
 
-	if (filename == "triangle.vert") {
-		shaderCode = gVertShaderText;
-	} else if (filename == "triangle.frag") {
-		shaderCode = gFragShaderText;
+	size_t shaderSize;
+	char* shaderCode = NULL;
+
+	std::ifstream is(spvPath, std::ios::binary | std::ios::in | std::ios::ate);
+
+	if (is.is_open())
+	{
+		shaderSize = is.tellg();
+		is.seekg(0, std::ios::beg);
+		// Copy file contents into a buffer
+		shaderCode = new char[shaderSize];
+		is.read(shaderCode, shaderSize);
+		is.close();
+		assert(shaderSize > 0);
 	}
 
 	if (shaderCode)
@@ -842,7 +830,7 @@ VkShaderModule loadSPIRVShader(std::string filename)
 		// Create a new shader module that will be used for pipeline creation
 		VkShaderModuleCreateInfo moduleCreateInfo{};
 		moduleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		moduleCreateInfo.codeSize = strlen(shaderCode);
+		moduleCreateInfo.codeSize = shaderSize;
 		moduleCreateInfo.pCode = (uint32_t*)shaderCode;
 
 		VkShaderModule shaderModule;
@@ -1068,9 +1056,9 @@ void prepareUniformBuffers()
 void updateUniformBuffers()
 {
 	// Pass matrices to the shaders
-	// uboVS.projectionMatrix = camera.matrices.perspective;
-	// uboVS.viewMatrix = camera.matrices.view;
-	// uboVS.modelMatrix = glm::mat4(1.0f);
+	uboVS.projectionMatrix = camera.matrices.perspective;
+	uboVS.viewMatrix = camera.matrices.view;
+	uboVS.modelMatrix = glm::mat4(1.0f);
 
 	// Map uniform buffer and update it
 	uint8_t *pData;
@@ -1085,7 +1073,7 @@ void prepare()
 {
 	VulkanExampleBase::prepare();
 	prepareSynchronizationPrimitives();
-	prepareVertices(USE_STAGING);
+	prepareVertices(true);
 	prepareUniformBuffers();
 	setupDescriptorSetLayout();
 	preparePipelines();
@@ -1114,18 +1102,39 @@ VulkanExample *vulkanExample;
 int main(const int argc, const char *argv[])
 {
 	// Create Native Window & Init Surface
-	OHOS::Rosen::RSSurfaceNodeConfig config;
-    auto surfaceNode = OHOS::Rosen::RSSurfaceNode::Create(config);
+	OHOS::sptr<OHOS::Rosen::WindowOption> option(new OHOS::Rosen::WindowOption());
+	option->SetDisplayId(DEFAULT_DISPLAY_ID);
+	option->SetWindowRect( {WINDOW_LEFT, WINDOW_TOP, WINDOW_WIDTH, WINDOW_HEIGHT} );
+	option->SetWindowType(OHOS::Rosen::WindowType::APP_MAIN_WINDOW_BASE);
+	option->SetWindowMode(OHOS::Rosen::WindowMode::WINDOW_MODE_FLOATING);
+	option->SetWindowName("vulkan_triangle_demo");
+	OHOS::sptr<OHOS::Rosen::Window> window_ = OHOS::Rosen::Window::Create(option->GetWindowName(), option);
+	if (window_ == nullptr) {
+		std::cout << "Create OHOS::Rosen::Window failed" << std::endl;
+		return -1;
+	}
+
+	OHOS::Rosen::RSTransaction::FlushImplicitTransaction();
+	window_->Show();
+
+    auto surfaceNode = window_->GetSurfaceNode();
     OHOS::sptr<OHOS::Surface> surf = surfaceNode->GetSurface();
 	OHNativeWindow* nativeWindow = CreateNativeWindowFromSurface(&surf);
-	std::cout << "CreateNativeWindowFromSurface Success" << std::endl;
+	if (nativeWindow == nullptr) {
+		std::cout << "CreateNativeWindowFromSurface Failed" << std::endl;
+		return -1;
+	}
 
 	vulkanExample = new VulkanExample();
 	vulkanExample->initVulkan();
 	vulkanExample->setupWindow(nativeWindow);
 	vulkanExample->prepare();
 	vulkanExample->renderLoop();
+
 	delete(vulkanExample);
+	window_->Hide();
+	window_->Destroy();
+
 	return 0;
 }
 

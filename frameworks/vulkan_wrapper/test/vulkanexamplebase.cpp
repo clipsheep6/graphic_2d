@@ -20,7 +20,7 @@ VkResult VulkanExampleBase::createInstance()
 
 	// Enable surface extensions depending on os
 
-	//instanceExtensions.push_back(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
+	instanceExtensions.push_back(VK_OPENHARMONY_OHOS_SURFACE_EXTENSION_NAME);
 
 
 	// Get extensions supported by the instance and store for later use
@@ -128,11 +128,11 @@ void VulkanExampleBase::nextFrame()
 	auto tEnd = std::chrono::high_resolution_clock::now();
 	auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
 	frameTimer = (float)tDiff / 1000.0f;
-	//camera.update(frameTimer);
-	// if (camera.moving())
-	// {
-	// 	viewUpdated = true;
-	// }
+	camera.update(frameTimer);
+	if (camera.moving())
+	{
+		viewUpdated = true;
+	}
 	// Convert to clamped timer value
 	if (!paused)
 	{
@@ -153,7 +153,27 @@ void VulkanExampleBase::nextFrame()
 
 void VulkanExampleBase::renderLoop()
 {
+	destWidth = width;
+	destHeight = height;
+	lastTimestamp = std::chrono::high_resolution_clock::now();
 
+	while (true) {
+		// Render frame
+		if (prepared)
+		{
+			auto tStart = std::chrono::high_resolution_clock::now();
+			render();
+			frameCounter++;
+			auto tEnd = std::chrono::high_resolution_clock::now();
+			auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
+			frameTimer = tDiff / 1000.0f;
+			camera.update(frameTimer);
+		}
+	}
+	// Flush device to make sure all resources can be freed
+	if (device != VK_NULL_HANDLE) {
+		vkDeviceWaitIdle(device);
+	}
 }
 
 void VulkanExampleBase::prepareFrame()
@@ -187,7 +207,7 @@ void VulkanExampleBase::submitFrame()
 VulkanExampleBase::VulkanExampleBase()
 {
 	// Vulkan library is loaded dynamically on Android
-	bool libLoaded = vks::utils::loadVulkanLibrary();
+	libLoaded = vks::utils::loadVulkanLibrary();
 	if (libLoaded) {
 		std::cout << "dlopen libvulkan.so success " << std::endl;
 	} else {
@@ -247,7 +267,7 @@ bool VulkanExampleBase::initVulkan()
 		return false;
 	}
 
-	// vks::android::loadVulkanFunctions(instance);
+	vks::utils::loadVulkanFunctions(instance);
 
 	// Physical device
 	uint32_t gpuCount = 0;
@@ -277,9 +297,6 @@ bool VulkanExampleBase::initVulkan()
 	vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
 	vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
 	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &deviceMemoryProperties);
-
-	// Derived examples can override this to set actual features (based on above readings) to enable for logical device creation
-	getEnabledFeatures();
 
 	// Vulkan device creation
 	// This is handled by a separate class that gets a logical device representation
@@ -493,8 +510,6 @@ void VulkanExampleBase::setupRenderPass()
 	VK_CHECK_RESULT(vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass));
 }
 
-void VulkanExampleBase::getEnabledFeatures() {}
-
 void VulkanExampleBase::windowResize()
 {
 	if (!prepared)
@@ -522,20 +537,22 @@ void VulkanExampleBase::windowResize()
 	}
 	setupFrameBuffer();
 
-	if ((width > 0.0f) && (height > 0.0f)) {
-
-	}
-
 	// Command buffers need to be recreated as they may store
 	// references to the recreated frame buffer
 	destroyCommandBuffers();
 	createCommandBuffers();
 	buildCommandBuffers();
 
+	// SRS - Recreate fences in case number of swapchain images has changed on resize
+	for (auto& fence : waitFences) {
+		vkDestroyFence(device, fence, nullptr);
+	}
+	createSynchronizationPrimitives();
+
 	vkDeviceWaitIdle(device);
 
 	if ((width > 0.0f) && (height > 0.0f)) {
-		//camera.updateAspectRatio((float)width / (float)height);
+		camera.updateAspectRatio((float)width / (float)height);
 	}
 
 	// Notify derived class
@@ -555,5 +572,5 @@ void VulkanExampleBase::initSwapchain()
 
 void VulkanExampleBase::setupSwapChain()
 {
-	swapChain.create(&width, &height, settings.vsync);
+	swapChain.create(&width, &height);
 }

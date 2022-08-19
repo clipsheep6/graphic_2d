@@ -37,7 +37,7 @@
 
 #include "VulkanInitializers.hpp"
 
-// #include "camera.hpp"
+#include "camera.hpp"
 #define DEFAULT_FENCE_TIMEOUT 100000000000
 class VulkanExampleBase
 {
@@ -58,6 +58,7 @@ private:
 	void createCommandBuffers();
 	void destroyCommandBuffers();
 	std::string shaderDir = "glsl";
+	bool libLoaded = false;
 protected:
 	// Frame counter to display fps
 	uint32_t frameCounter = 0;
@@ -129,14 +130,6 @@ public:
 	/** @brief Encapsulated physical and logical vulkan device */
 	vks::VulkanDevice *vulkanDevice;
 
-	/** @brief Example settings that can be changed e.g. by command line arguments */
-	struct Settings {
-		/** @brief Set to true if fullscreen mode has been requested via command line */
-		bool fullscreen = false;
-		/** @brief Set to true if v-sync will be forced for the swapchain */
-		bool vsync = false;
-	} settings;
-
 	VkClearColorValue defaultClearColor = { { 0.025f, 0.025f, 0.025f, 1.0f } };
 
 	static std::vector<const char*> args;
@@ -148,7 +141,7 @@ public:
 	float timerSpeed = 0.25f;
 	bool paused = false;
 
-	// Camera camera;
+	Camera camera;
 
 	std::string name = "vulkanExample";
 	uint32_t apiVersion = VK_API_VERSION_1_0;
@@ -190,8 +183,6 @@ public:
 	virtual void setupFrameBuffer();
 	/** @brief (Virtual) Setup a default renderpass */
 	virtual void setupRenderPass();
-	/** @brief (Virtual) Called after the physical device features have been read, can be used to set features to enable on the device */
-	virtual void getEnabledFeatures();
 
 	/** @brief Prepares all Vulkan resources and functions required to run the sample */
 	virtual void prepare();

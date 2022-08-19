@@ -212,20 +212,24 @@ VkResult GetPhysicalDeviceSurfaceCapabilitiesKHR(
     VkSurfaceCapabilitiesKHR* capabilities) {
 
     int err;
-    NativeWindow* window = SurfaceFromHandle(surface)->window;
 
-    int width, height;
-    err = NativeWindowHandleOpt(window, GET_BUFFER_GEOMETRY,&height, &width);
-    if (err != OHOS::GSERROR_OK) {
-        WLOGE("NATIVE_WINDOW_DEFAULT_WIDTH query failed: %{public}s (%{public}d)",
-              strerror(-err), err);
-        return VK_ERROR_SURFACE_LOST_KHR;
+    int width = 0;
+    int height = 0;
+    int max_buffer_count = 10;
+    if (surface != VK_NULL_HANDLE) {
+        NativeWindow* window = SurfaceFromHandle(surface)->window;
+        err = NativeWindowHandleOpt(window, GET_BUFFER_GEOMETRY, &height, &width);
+        if (err != OHOS::GSERROR_OK) {
+            WLOGE("NATIVE_WINDOW_DEFAULT_WIDTH query failed: %{public}s (%{public}d)", strerror(-err), err);
+            return VK_ERROR_SURFACE_LOST_KHR;
+        }
+        max_buffer_count = window->surface->GetQueueSize();
     }
+
+
 
     // int transform_hint = 0; // TODO
 
-
-    int max_buffer_count = window->surface->GetQueueSize();
 
     capabilities->minImageCount = std::min(max_buffer_count, 3);
     capabilities->maxImageCount = static_cast<uint32_t>(max_buffer_count);
@@ -333,14 +337,10 @@ VkResult GetPhysicalDeviceSurfacePresentModesKHR(
 
     std::vector<VkPresentModeKHR> present_modes;
 
-    if (surface == VK_NULL_HANDLE) {
-        //[TODO]
-        present_modes.push_back(VK_PRESENT_MODE_MAILBOX_KHR);
-        present_modes.push_back(VK_PRESENT_MODE_FIFO_KHR);
-    } else {
-        present_modes.push_back(VK_PRESENT_MODE_FIFO_KHR);
-    }
-    // NativeWindow* window = SurfaceFromHandle(surface)->window;
+    //[TODO]
+    present_modes.push_back(VK_PRESENT_MODE_MAILBOX_KHR);
+    present_modes.push_back(VK_PRESENT_MODE_FIFO_KHR);
+   
 
     VkPhysicalDevicePresentationPropertiesOpenHarmony present_properties;
     QueryPresentationProperties(pdev, &present_properties);
@@ -656,8 +656,9 @@ VkResult CreateSwapchainKHR(VkDevice device,
     }
     // [TODO]color_data_space not ready
 
-    err = NativeWindowHandleOpt(window, static_cast<int>(create_info->imageExtent.width),
-        static_cast<int>(create_info->imageExtent.height));
+    err = NativeWindowHandleOpt(window, SET_BUFFER_GEOMETRY,
+                                static_cast<int>(create_info->imageExtent.width),
+                                static_cast<int>(create_info->imageExtent.height));
     if (err != OHOS::GSERROR_OK) {
         WLOGE("native_window_set_buffers_dimensions(%{public}d,%{public}d) failed: %{public}s (%{public}d)",
               create_info->imageExtent.width, create_info->imageExtent.height,

@@ -17,7 +17,7 @@
 * @addtogroup vulkan
 * @{
 * 
-* @brief Defines driver functions of vulkan moudle.
+* @brief Defines driver functions of the vulkan moudle.
 *
 * @since 1.0
 * @version 2.0
@@ -37,9 +37,7 @@
 #ifndef HDI_VULKAN_H
 #define HDI_VULKAN_H
 
-#include "third_party/EGL/api/KHR/khrplatform.h"
 #include "vulkan/vulkan.h"
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,16 +53,16 @@ typedef struct {
 
 
 /**
-* @brief Obtains all interfaces of IDisplayGralloc.
+* @brief Initialize the vulkan module to obtain the pointer to functions for memory operation.
 *
-* @return Returns <b>IDisplayGralloc*</b> if the operation is successful; returns an null point otherwise.
+* @return Returns <b>0</b> if the operation is successful.
 * @since 1.0
 * @version 1.0
 */
-KHRONOS_APICALL int32_t VulkanInitialize(VulkanFuncs **funcs);
+__attribute__((visibility("default"))) int32_t VulkanInitialize(VulkanFuncs **funcs);
 
 
-KHRONOS_APICALL int32_t VulkanUnInitialize(VulkanFuncs *funcs);
+__attribute__((visibility("default"))) int32_t VulkanUnInitialize(VulkanFuncs *funcs);
 
 #ifdef __cplusplus
 }

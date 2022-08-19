@@ -15,8 +15,7 @@ bool DriverLoader::Load()
         return true;
     }
 
-    void* handle = nullptr;
-    handle = dlopen(LIB_CACULATE_PATH, RTLD_LOCAL | RTLD_NOW);
+    void* handle = dlopen(LIB_CACULATE_PATH, RTLD_LOCAL | RTLD_NOW);
 
     if (handle == nullptr) {
         std::cout << "DriverLoader:: dlopen faild : " << dlerror() << std::endl;

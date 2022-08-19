@@ -35,11 +35,9 @@ struct VulkanDevice
 	/** @brief Queue family properties of the physical device */
 	std::vector<VkQueueFamilyProperties> queueFamilyProperties;
 	/** @brief List of extensions supported by the device */
-	// std::vector<std::string> supportedExtensions;
+	std::vector<std::string> supportedExtensions;
 	/** @brief Default command pool for the graphics queue family index */
 	VkCommandPool commandPool = VK_NULL_HANDLE;
-	/** @brief Set to true when the debug marker extension is detected */
-	bool enableDebugMarkers = false;
 	/** @brief Contains queue family indices */
 	struct
 	{

@@ -133,7 +133,8 @@ namespace vks
 			std::cout << "vulkanutils :: Loading libvulkan.so...\n";
 
 			// Load vulkan library
-			libVulkan = dlopen("libvulkan.so", RTLD_NOW | RTLD_LOCAL);
+			const char* path_ = "/system/lib64/libvulkan.so";
+			libVulkan = dlopen(path_, RTLD_NOW | RTLD_LOCAL);
 			if (!libVulkan)
 			{
 				std::cout << "vulkanutils :: Could not load vulkan library :" << dlerror() << std::endl;

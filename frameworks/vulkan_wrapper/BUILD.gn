@@ -97,3 +97,54 @@ ohos_executable("vulkan_wrapper_native_test") {
   subsystem_name = "graphic"
 }
 ## Build vulkan_wrapper_native_test }}}
+
+## Build triangle {{{
+ohos_executable("triangle") {
+  install_enable = true
+
+  sources = [ "test/triangle.cpp",
+              "test/VulkanDevice.cpp",
+              "test/vulkanexamplebase.cpp",
+              "test/VulkanSwapChain.cpp",
+              "test/VulkanBuffer.cpp",
+              "test/VulkanTools.cpp",
+              "test/VulkanUtils.cpp",
+              "test/VulkanInitializers.hpp",
+             ]
+
+  include_dirs = [
+    "//foundation/graphic/graphic_2d/frameworks/surface/include",
+    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
+    "//foundation/graphic/graphic_2d/interfaces/inner_api/common",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client",
+    "//foundation/window/window_manager/interfaces/innerkits",
+    "test",
+  ]
+
+  defines = [
+    "VK_USE_PLATFORM_OHOS_OPENHARMONY",
+    "VK_NO_PROTOTYPES"
+    ]
+
+
+  deps = [
+    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
+    "//third_party/vulkan:vulkan_headers",
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/window/window_manager/wm:libwm",
+    "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/zlib:libz",
+  ]
+
+  external_deps = [
+    "hilog_native:libhilog",
+  ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+## Build triangle }}}

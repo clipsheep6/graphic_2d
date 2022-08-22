@@ -556,6 +556,7 @@ HWTEST_F(RSInterfacesTest, GetScreenSupportedColorGamuts002, Function | SmallTes
 * EnvConditions: N/A
 * CaseDescription: 1. call GetScreenSupportedMetaDataKeys
 *                  2. check ret
+* @tc.require: Issue I5KGK4
 */
 HWTEST_F(RSInterfacesTest, GetScreenSupportedMetaDataKeys001, Function | SmallTest | Level2)
 {
@@ -574,6 +575,7 @@ HWTEST_F(RSInterfacesTest, GetScreenSupportedMetaDataKeys001, Function | SmallTe
 * EnvConditions: N/A
 * CaseDescription: 1. call GetScreenSupportedMetaDataKeys with INVALID_SCREEN_ID
 *                  2. check ret
+* @tc.require: Issue I5KGK4
 */
 HWTEST_F(RSInterfacesTest, GetScreenSupportedMetaDataKeys002, Function | SmallTest | Level2)
 {
@@ -715,6 +717,7 @@ HWTEST_F(RSInterfacesTest, GetScreenGamutMap002, Function | SmallTest | Level2)
 * EnvConditions: N/A
 * CaseDescription: 1. call GetScreenHDRCapability
 *                  2. check ret
+* @tc.require: Issue I5KGK4
 */
 HWTEST_F(RSInterfacesTest, GetScreenHDRCapability001, Function | SmallTest | Level2)
 {
@@ -734,6 +737,7 @@ HWTEST_F(RSInterfacesTest, GetScreenHDRCapability001, Function | SmallTest | Lev
 * EnvConditions: N/A
 * CaseDescription: 1. call GetScreenHDRCapability with INVALID_SCREEN_ID
 *                  2. check ret
+*@tc.require: Issue I5KGK4
 */
 HWTEST_F(RSInterfacesTest, GetScreenHDRCapability002, Function | SmallTest | Level2)
 {

@@ -153,9 +153,9 @@ private:
     uint32_t queueSize_ = SURFACE_DEFAULT_QUEUE_SIZE;
     TransformType transform_ = TransformType::ROTATE_NONE;
     std::string name_;
-    std::list<int32_t> freeList_;
-    std::list<int32_t> dirtyList_;
-    std::list<int32_t> deletingList_;
+    std::list<uint32_t> freeList_;
+    std::list<uint32_t> dirtyList_;
+    std::list<uint32_t> deletingList_;
     std::map<uint32_t, BufferElement> bufferQueueCache_;
     sptr<IBufferConsumerListener> listener_ = nullptr;
     IBufferConsumerListenerClazz *listenerClazz_ = nullptr;

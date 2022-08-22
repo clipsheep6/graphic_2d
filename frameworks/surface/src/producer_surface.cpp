@@ -301,9 +301,19 @@ GSError ProducerSurface::GoBackground()
     BLOGND("Queue Id:%{public}" PRIu64 "", queueId_);
     if (IsRemote()) {
         std::lock_guard<std::mutex> lockGuard(mutex_);
-        bufferProducerCache_.clear();
+        for (auto &[id, _] : bufferProducerCache_) {
+            cleanCacheList_.push_back(id);
+        }
     }
-    return producer_->GoBackground();
+    GSError ret = producer_->GoBackground();
+    if (IsRemote()) {
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        for (uint32_t seq : cleanCacheList_) {
+            bufferProducerCache_.erase(seq);
+        }
+        cleanCacheList_.clear();
+    }
+    return ret;
 }
 
 uint64_t ProducerSurface::GetUniqueId() const

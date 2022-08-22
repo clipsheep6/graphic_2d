@@ -112,7 +112,8 @@ private:
 
     std::mutex mutex_;
     std::atomic_bool inited_ = false;
-    std::map<int32_t, sptr<SurfaceBuffer>> bufferProducerCache_;
+    std::list<uint32_t> cleanCacheList_;
+    std::map<uint32_t, sptr<SurfaceBuffer>> bufferProducerCache_;
     std::map<std::string, std::string> userData_;
     sptr<IBufferProducer> producer_ = nullptr;
     std::string name_ = "not init";

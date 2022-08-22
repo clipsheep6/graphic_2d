@@ -460,7 +460,17 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     // 3. traversal children, child surface node will be added to childSurfaceNodeIds_
     // note: apply current node properties onto canvas if there is any child node
+
+    // Attention: When we have cliped hole for surfaceNode
+    // created by RosenRenderTexture/RosenRenderWeb/RosenRenderXComponent,
+    // we should set the canvas to the layout position before we draw child node.
+    auto canvasNodeSaveCount = canvas_->SaveCanvasAndAlpha();
+    canvas_->translate(node.GetRenderProperties().GetFramePositionX(), node.GetRenderProperties().GetFramePositionY());
+    if (node.GetRenderProperties().GetClipToFrame()) {
+        RSPropertiesPainter::Clip(*canvas_, node.GetRenderProperties().GetFrameRect());
+    }
     ProcessBaseRenderNode(node);
+    canvas_->RestoreCanvasAndAlpha(canvasNodeSaveCount);
 
     // 4. if children changed, sync children to RenderService
     if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_ || RSRenderThread::Instance().GetForceUpdateSurfaceNode()) {

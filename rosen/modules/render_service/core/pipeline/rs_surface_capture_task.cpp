@@ -257,7 +257,22 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWith
 
     canvas_->restore();
 
-    ProcessBaseRenderNode(node);
+    if (!node.IsAppWindow() && node.GetBuffer() != nullptr) {
+        // Attention: When we have drawn surfaceNode
+        // created by RosenRenderTexture/RosenRenderWeb/RosenRenderXComponent,
+        // we should reset the canvas to the layout position before we draw child node.
+
+        auto canvasNodeSaveCount = canvas_->SaveCanvasAndAlpha();
+        canvas_->translate(
+            node.GetRenderProperties().GetFramePositionX(), node.GetRenderProperties().GetFramePositionY());
+        if (node.GetRenderProperties().GetClipToFrame()) {
+            RSPropertiesPainter::Clip(*canvas_, node.GetRenderProperties().GetFrameRect());
+        }
+        ProcessBaseRenderNode(node);
+        canvas_->RestoreCanvasAndAlpha(canvasNodeSaveCount);
+    } else {
+        ProcessBaseRenderNode(node);
+    }
 }
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode& node)
@@ -298,10 +313,22 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithU
     }
 
     if (parentPtr && parentPtr->IsInstanceOf<RSCanvasRenderNode>()) {
+        // Attention: When we have drawn surfaceNode
+        // created by RosenRenderTexture/RosenRenderWeb/RosenRenderXComponent,
+        // we should reset the canvas to the layout position before we draw child node.
         canvas_->restore();
-    }
 
-    ProcessBaseRenderNode(node);
+        auto canvasNodeSaveCount = canvas_->SaveCanvasAndAlpha();
+        canvas_->translate(
+            node.GetRenderProperties().GetFramePositionX(), node.GetRenderProperties().GetFramePositionY());
+        if (node.GetRenderProperties().GetClipToFrame()) {
+            RSPropertiesPainter::Clip(*canvas_, node.GetRenderProperties().GetFrameRect());
+        }
+        ProcessBaseRenderNode(node);
+        canvas_->RestoreCanvasAndAlpha(canvasNodeSaveCount);
+    } else {
+        ProcessBaseRenderNode(node);
+    }
 }
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWithUni(RSSurfaceRenderNode &node)

@@ -60,6 +60,7 @@
             "//foundation/graphic/graphic_2d/rosen/samples/hello_native_image:hello_native_image",
             "//foundation/graphic/graphic_2d/rosen/samples/hello_vsync:hello_vsync",
             "//foundation/graphic/graphic_2d/rosen/samples/hello_native_buffer:hello_native_buffer",
+            "//foundation/graphic/graphic_2d/rosen/samples/hello_native_gl_triangle:hello_native_gl_triangle",
             "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
             "//foundation/graphic/graphic_2d/rosen/modules/composer/native_vsync:libnative_vsync",
             "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",

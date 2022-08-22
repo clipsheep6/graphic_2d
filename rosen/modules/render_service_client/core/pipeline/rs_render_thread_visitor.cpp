@@ -206,7 +206,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         return;
     }
     if (!node.enableRender_) {
-        ROSEN_LOGI("ProcessRoot %s: Invisible", ptr->GetName().c_str());
+        ROSEN_LOGD("ProcessRoot %s: Invisible", ptr->GetName().c_str());
         return;
     }
     if (node.GetSurfaceWidth() <= 0 || node.GetSurfaceHeight() <= 0) {

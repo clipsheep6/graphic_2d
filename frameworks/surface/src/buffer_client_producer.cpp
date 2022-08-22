@@ -66,11 +66,12 @@ BufferClientProducer::~BufferClientProducer()
 }
 
 GSError BufferClientProducer::RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
-                                            RequestBufferReturnValue &retval)
+                                            RequestBufferReturnValue &retval, RequestBufferSendValue &sendval)
 {
     DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
 
     WriteRequestConfig(arguments, config);
+    arguments.WriteBool(sendval.cleaningCache);
 
     SEND_REQUEST(BUFFER_PRODUCER_REQUEST_BUFFER, arguments, reply, option);
     CHECK_RETVAL_WITH_SEQ(reply, retval.sequence);

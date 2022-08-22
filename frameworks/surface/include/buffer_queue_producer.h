@@ -38,7 +38,7 @@ public:
                                 MessageParcel &reply, MessageOption &option) override;
 
     virtual GSError RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
-                                  RequestBufferReturnValue &retval) override;
+                                  RequestBufferReturnValue &retval, RequestBufferSendValue &sendval) override;
 
     GSError CancelBuffer(uint32_t sequence, const sptr<BufferExtraData> &bedata) override;
 

@@ -94,5 +94,11 @@ bool RSSystemProperties::GetUniPartialRenderEnabled()
 {
     return std::atoi((system::GetParameter("rosen.uni.partialrender.enabled", "0")).c_str());
 }
+
+bool RSSystemProperties::GetDynamicBufferQueueSizeEnableStatus()
+{
+    // If the value of rosen.dynamicBufferQueueSize.enabled is not 0 then enable the dynamic BufferQueue Size.
+    return std::atoi((system::GetParameter("rosen.dynamicBufferQueueSize.enabled", "0")).c_str()) != 0;
+}
 } // namespace Rosen
 } // namespace OHOS

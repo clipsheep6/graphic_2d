@@ -56,6 +56,7 @@ BufferQueueProducer::BufferQueueProducer(sptr<BufferQueue>& bufferQueue)
     memberFuncMap_[BUFFER_PRODUCER_SET_TUNNEL_HANDLE] = &BufferQueueProducer::SetTunnelHandleRemote;
     memberFuncMap_[BUFFER_PRODUCER_GO_BACKGROUND] = &BufferQueueProducer::GoBackgroundRemote;
     memberFuncMap_[BUFFER_PRODUCER_GET_PRESENT_TIMESTAMP] = &BufferQueueProducer::GetPresentTimestampRemote;
+    memberFuncMap_[BUFFER_PRODUCER_CONNECT] = &BufferQueueProducer::ConnectRemote;
 }
 
 BufferQueueProducer::~BufferQueueProducer()
@@ -336,6 +337,15 @@ int32_t BufferQueueProducer::GetPresentTimestampRemote(MessageParcel &arguments,
     return 0;
 }
 
+int32_t BufferQueueProducer::ConnectRemote(MessageParcel &arguments, MessageParcel &reply,
+                                           MessageOption &option)
+{
+    SurfaceSceneType surfaceSceneType = static_cast<SurfaceSceneType>(arguments.ReadInt32());
+    GSError sret = Connect(surfaceSceneType);
+    reply.WriteInt32(sret);
+    return 0;
+}
+
 GSError BufferQueueProducer::RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
                                            RequestBufferReturnValue &retval)
 {
@@ -343,13 +353,8 @@ GSError BufferQueueProducer::RequestBuffer(const BufferRequestConfig &config, sp
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (connectedPid_ != 0 && connectedPid_ != GetCallingPid()) {
-            BLOGNW("this BufferQueue has been connected by :%{public}d", connectedPid_);
-            return GSERROR_INVALID_OPERATING;
-        }
-        connectedPid_ = GetCallingPid();
+    if (Connect(SurfaceSceneType::SURFACE_SCENE_TYPE_OTHER) != GSERROR_OK) {
+        return GSERROR_INVALID_OPERATING;
     }
 
     return bufferQueue_->RequestBuffer(config, bedata, retval);
@@ -590,5 +595,21 @@ bool BufferQueueProducer::GetStatus() const
 void BufferQueueProducer::SetStatus(bool status)
 {
     bufferQueue_->SetStatus(status);
+}
+
+GSError BufferQueueProducer::Connect(SurfaceSceneType surfaceSceneType)
+{
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (connectedPid_ != 0 && connectedPid_ != GetCallingPid()) {
+            BLOGNW("this BufferQueue has been connected by :%{public}d", connectedPid_);
+            return GSERROR_INVALID_OPERATING;
+        } else if (connectedPid_ == GetCallingPid()) {
+            return GSERROR_OK;
+        }
+        connectedPid_ = GetCallingPid();
+    }
+    bufferQueue_->Connect(surfaceSceneType);
+    return GSERROR_OK;
 }
 }; // namespace OHOS

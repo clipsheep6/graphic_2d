@@ -57,6 +57,7 @@ public:
     bool GetStatus() const;
     void SetStatus(bool status);
     GSError OnConsumerDied();
+    GSError ChangeQueueSize(bool forceIncrease);
 
 private:
     sptr<BufferQueue> bufferQueue_ = nullptr;

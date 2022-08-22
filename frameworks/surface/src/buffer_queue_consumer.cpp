@@ -199,4 +199,9 @@ GSError BufferQueueConsumer::OnConsumerDied()
     }
     return bufferQueue_->OnConsumerDied();
 }
+
+GSError BufferQueueConsumer::ChangeQueueSize(bool forceIncrease)
+{
+    return bufferQueue_->ChangeQueueSize(forceIncrease);
+}
 } // namespace OHOS

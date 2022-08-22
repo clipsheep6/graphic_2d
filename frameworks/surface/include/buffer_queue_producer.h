@@ -81,6 +81,8 @@ public:
     bool GetStatus() const;
     void SetStatus(bool status);
 
+    GSError Connect(SurfaceSceneType surfaceSceneType) override;
+
 private:
     GSError CheckConnectLocked();
     GSError SetTunnelHandle(const sptr<SurfaceTunnelHandle> &handle);
@@ -109,6 +111,7 @@ private:
     int32_t SetTunnelHandleRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GoBackgroundRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetPresentTimestampRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
+    int32_t ConnectRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
 
     using BufferQueueProducerFunc = int32_t (BufferQueueProducer::*)(MessageParcel &arguments,
         MessageParcel &reply, MessageOption &option);

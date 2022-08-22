@@ -21,9 +21,12 @@
 #include <sys/time.h>
 #include <cinttypes>
 #include <unistd.h>
+#include <unordered_map>
+#include <array>
 
 #include <display_type.h>
 #include <scoped_bytrace.h>
+// #include <parameters.h>
 
 #include "buffer_utils.h"
 #include "buffer_log.h"
@@ -37,6 +40,12 @@ namespace {
 constexpr uint32_t UNIQUE_ID_OFFSET = 32;
 constexpr uint32_t BUFFER_MEMSIZE_RATE = 1024;
 constexpr uint32_t BUFFER_MEMSIZE_FORMAT = 2;
+constexpr uint32_t QUEUE_SIZE_MAP_ARRAY_SIZE = 2;
+constexpr int32_t QUEUE_SIZE_MAP_MAX_INDEX = 1;
+constexpr int64_t REQUEST_BUFFER_WAIT_TIME_THRESHOLD = 5000000; // 5ms
+constexpr int32_t FREE_BUFFER_INVALID_COUNT_THRESHOLD = 5;
+constexpr int32_t REQUEST_BUFFER_TIMEOUT_COUNT_THRESHOLD = 5;
+constexpr int32_t CHANGE_QUEUE_SIZE_CHECK_PER_FRANME_COUNT = 60;
 }
 
 static const std::map<BufferState, std::string> BufferStateStrs = {
@@ -45,6 +54,20 @@ static const std::map<BufferState, std::string> BufferStateStrs = {
     {BUFFER_STATE_FLUSHED,                     "2 <flushed>"},
     {BUFFER_STATE_ACQUIRED,                    "3 <acquired>"},
 };
+
+static const std::unordered_map<SurfaceSceneType, std::array<uint32_t, QUEUE_SIZE_MAP_ARRAY_SIZE>> QueueSizeMap = {
+    {SURFACE_SCENE_TYPE_EGL,    {SURFACE_EGL_MIN_QUEUE_SIZE, SURFACE_EGL_MAX_QUEUE_SIZE}},
+    {SURFACE_SCENE_TYPE_MEDIA,  {SURFACE_MEDIA_MIN_QUEUE_SIZE, SURFACE_MEDIA_MAX_QUEUE_SIZE}},
+    {SURFACE_SCENE_TYPE_CAMERA, {SURFACE_CAMERA_MIN_QUEUE_SIZE, SURFACE_CAMERA_MAX_QUEUE_SIZE}},
+    {SURFACE_SCENE_TYPE_CPU,    {SURFACE_CPU_MIN_QUEUE_SIZE, SURFACE_CPU_MAX_QUEUE_SIZE}},
+    {SURFACE_SCENE_TYPE_OTHER,  {SURFACE_OTHER_MIN_QUEUE_SIZE, SURFACE_OTHER_MAX_QUEUE_SIZE}},
+};
+
+static int64_t GetSysTimeNs()
+{
+    auto now = std::chrono::steady_clock::now().time_since_epoch();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+}
 
 static uint64_t GetUniqueIdImpl()
 {
@@ -201,10 +224,15 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
 
     // check queue size
     if (GetUsedSize() >= GetQueueSize()) {
+        int64_t startTimestamp = GetSysTimeNs();
         waitReqCon_.wait_for(lock, std::chrono::milliseconds(config.timeout),
             [this]() { return !freeList_.empty() || (GetUsedSize() < GetQueueSize()) || !GetStatus(); });
         if (!GetStatus()) {
             BLOGN_FAILURE_RET(GSERROR_NO_CONSUMER);
+        }
+        int64_t duration = GetSysTimeNs() - startTimestamp;
+        if (duration > REQUEST_BUFFER_WAIT_TIME_THRESHOLD) {
+            requestTimeoutCount_++;
         }
         // try dequeue from free list again
         ret = PopFromFreeList(buffer, config);
@@ -691,10 +719,13 @@ GSError BufferQueue::SetQueueSize(uint32_t queueSize)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    if (queueSize > SURFACE_MAX_QUEUE_SIZE) {
-        BLOGN_INVALID("invalid queueSize[%{public}d] > SURFACE_MAX_QUEUE_SIZE[%{public}d]",
-            queueSize, SURFACE_MAX_QUEUE_SIZE);
-        return GSERROR_INVALID_ARGUMENTS;
+    uint32_t queueSizeLimit = QueueSizeMap.at(sceneType_)[QUEUE_SIZE_MAP_MAX_INDEX];
+    BLOGND("DynamicBufferQueueSize Enabled queueSizeLimit = QUEUE_SIZE_MAP_MAX_INDEX[%{public}d]:[%{public}d]",
+            sceneType_, queueSizeLimit);
+
+    if (queueSize > queueSizeLimit) {
+        queueSize = queueSizeLimit;
+        BLOGN_INVALID("invalid queueSize[%{public}d] > queueSizeLimit:[%{public}d]", queueSize, queueSizeLimit);
     }
 
     DeleteBuffers(queueSize_ - queueSize);
@@ -707,7 +738,7 @@ GSError BufferQueue::SetQueueSize(uint32_t queueSize)
         queueSize_ = queueSize;
     }
 
-    BLOGN_SUCCESS("queue size: %{public}d, Queue id: %{public}" PRIu64, queueSize_, uniqueId_);
+    BLOGN_SUCCESS("queue size: %{public}d, Queue id: %{public}" PRIu64, GetQueueSize(), uniqueId_);
     return GSERROR_OK;
 }
 
@@ -1114,6 +1145,7 @@ void BufferQueue::Dump(std::string &result)
     result.append("    BufferQueue:\n");
     result += "      default-size = [" + std::to_string(defaultWidth) + "x" + std::to_string(defaultHeight) + "]" +
         ", FIFO = " + std::to_string(queueSize_) +
+        ", sceneType = " + std::to_string(sceneType_) +
         ", name = " + name_ +
         ", uniqueId = " + std::to_string(uniqueId_) +
         ", usedBufferListLen = " + std::to_string(GetUsedSize()) +
@@ -1134,5 +1166,47 @@ void BufferQueue::SetStatus(bool status)
 {
     isValidStatus_ = status;
     waitReqCon_.notify_all();
+}
+
+void BufferQueue::Connect(SurfaceSceneType surfaceSceneType)
+{
+    sceneType_ = surfaceSceneType;
+}
+
+GSError BufferQueue::ChangeQueueSize(bool forceIncrease)
+{
+    frameCount_++;
+    if (forceIncrease) {
+        SetQueueSize(queueSize_ + 1);
+        freeBufferIsRedundantCount_ = 0;
+        return GSERROR_OK;
+    }
+
+    if (frameCount_ % CHANGE_QUEUE_SIZE_CHECK_PER_FRANME_COUNT != 0) {
+        return GSERROR_INVALID_OPERATING;
+    }
+
+    int32_t freeListSize = 0;
+    {
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        freeListSize = freeList_.size();
+    }
+
+    if (requestTimeoutCount_ > REQUEST_BUFFER_TIMEOUT_COUNT_THRESHOLD) {
+        BLOGNI("requestTimeoutCount_ > [%{public}d]", REQUEST_BUFFER_TIMEOUT_COUNT_THRESHOLD);
+        SetQueueSize(queueSize_ + 1);
+        requestTimeoutCount_ = 0;
+        return GSERROR_OK;
+    } else if (freeListSize > 1) {
+        freeBufferIsRedundantCount_++;
+        if (freeBufferIsRedundantCount_ >= FREE_BUFFER_INVALID_COUNT_THRESHOLD) {
+            BLOGNE("freeBufferIsRedundantCount_ > [%{public}d]", FREE_BUFFER_INVALID_COUNT_THRESHOLD);
+            SetQueueSize(queueSize_ - 1);
+            requestTimeoutCount_ = 0;
+            freeBufferIsRedundantCount_ = 0;
+        }
+    }
+
+    return GSERROR_OK;
 }
 }; // namespace OHOS

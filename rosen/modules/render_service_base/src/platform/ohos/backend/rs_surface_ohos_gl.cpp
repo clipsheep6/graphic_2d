@@ -54,6 +54,10 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int
     if (mWindow == nullptr) {
         mWindow = CreateNativeWindowFromSurface(&producer_);
         mEglSurface = context->CreateEGLSurface((EGLNativeWindowType)mWindow);
+        if (producer_->Connect(SurfaceSceneType::SURFACE_SCENE_TYPE_EGL) != OHOS::GSError::GSERROR_OK) {
+            ROSEN_LOGE("RSSurfaceOhosGl: Connect failed, please check Connect function ret");
+            return nullptr;
+        }
         ROSEN_LOGI("RSSurfaceOhosGl: create and Init EglSurface %p", mEglSurface);
     }
 

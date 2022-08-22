@@ -53,7 +53,7 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
     }
     std::unique_ptr<Media::PixelMap> pixelmap;
     std::shared_ptr<RSSurfaceCaptureVisitor> visitor = std::make_shared<RSSurfaceCaptureVisitor>(scaleX_, scaleY_);
-    visitor->SetUniRender(RSUniRenderJudgement::IsUniRender());
+    visitor->SetUniRender(RSMainThread::Instance()->IfUseUniVisitor());
     if (auto surfaceNode = node->ReinterpretCastTo<RSSurfaceRenderNode>()) {
         RS_LOGI("RSSurfaceCaptureTask::Run: Into SURFACE_NODE SurfaceRenderNodeId:[%" PRIu64 "]", node->GetId());
         pixelmap = CreatePixelMapBySurfaceNode(surfaceNode, visitor->IsUniRender());
@@ -78,32 +78,28 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
     visitor->SetSurface(skSurface.get());
     node->Process(visitor);
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
-    if (pixelmap->GetPixelFormat() == Media::PixelFormat::NV21 ||
-        pixelmap->GetPixelFormat() == Media::PixelFormat::NV12) {
-        sk_sp<SkImage> img(skSurface.get()->makeImageSnapshot());
-        if (!img) {
-            RS_LOGE("RSSurfaceCaptureTask::Run: img is nullptr");
-            return nullptr;
-        }
-
-        auto data = (uint8_t *)malloc(pixelmap->GetRowBytes() * pixelmap->GetHeight());
-        if (data == nullptr) {
-            RS_LOGE("RSSurfaceCaptureTask::Run: data is nullptr");
-            return nullptr;
-        }
-        SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
-                kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-        if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
-            RS_LOGE("RSSurfaceCaptureTask::Run: readPixels failed");
-            free(data);
-            data = nullptr;
-            return nullptr;
-        }
-        pixelmap->SetPixelsAddr(data, nullptr, pixelmap->GetRowBytes() * pixelmap->GetHeight(),
-            Media::AllocatorType::HEAP_ALLOC, nullptr);
-    } else {
-        return pixelmap;
+    sk_sp<SkImage> img(skSurface.get()->makeImageSnapshot());
+    if (!img) {
+        RS_LOGE("RSSurfaceCaptureTask::Run: img is nullptr");
+        return nullptr;
     }
+
+    auto data = (uint8_t *)malloc(pixelmap->GetRowBytes() * pixelmap->GetHeight());
+    if (data == nullptr) {
+        RS_LOGE("RSSurfaceCaptureTask::Run: data is nullptr");
+        return nullptr;
+    }
+    SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
+            kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+    if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
+        RS_LOGE("RSSurfaceCaptureTask::Run: readPixels failed");
+        free(data);
+        data = nullptr;
+        return nullptr;
+    }
+    pixelmap->SetPixelsAddr(data, nullptr, pixelmap->GetRowBytes() * pixelmap->GetHeight(),
+        Media::AllocatorType::HEAP_ALLOC, nullptr);
+    return pixelmap;
 #endif
     return pixelmap;
 }
@@ -174,23 +170,18 @@ sk_sp<SkSurface> RSSurfaceCaptureTask::CreateSurface(const std::unique_ptr<Media
     SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
             kRGBA_8888_SkColorType, kPremul_SkAlphaType);
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
-    if (pixelmap->GetPixelFormat() == Media::PixelFormat::NV21 ||
-        pixelmap->GetPixelFormat() == Media::PixelFormat::NV12) {
-        auto renderEngine = RSMainThread::Instance()->GetRenderEngine();
-        if (renderEngine == nullptr) {
-            RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderEngine is nullptr");
-            return nullptr;
-        }
-        auto renderContext = renderEngine->GetRenderContext();
-        if (renderContext == nullptr) {
-            RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderContext is nullptr");
-            return nullptr;
-        }
-        renderContext->SetUpGrContext();
-        return SkSurface::MakeRenderTarget(renderContext->GetGrContext(), SkBudgeted::kNo, info);
-    } else {
-        return SkSurface::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
+    auto renderEngine = RSMainThread::Instance()->GetRenderEngine();
+    if (renderEngine == nullptr) {
+        RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderEngine is nullptr");
+        return nullptr;
     }
+    auto renderContext = renderEngine->GetRenderContext();
+    if (renderContext == nullptr) {
+        RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderContext is nullptr");
+        return nullptr;
+    }
+    renderContext->SetUpGrContext();
+    return SkSurface::MakeRenderTarget(renderContext->GetGrContext(), SkBudgeted::kNo, info);
 #endif
     return SkSurface::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
 }
@@ -230,19 +221,33 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSD
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNode& node)
 {
-    // in node's local coordinate.
-    auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
+    SkMatrix translateMatrix;
+    const float thisNodetranslateX = node.GetTotalMatrix().getTranslateX();
+    const float thisNodetranslateY = node.GetTotalMatrix().getTranslateY();
+    if (!node.IsAppWindow()) {
+        translateMatrix.preTranslate(
+            thisNodetranslateX - parentNodeTranslateX_, thisNodetranslateY - parentNodeTranslateY_);
+    } else {
+        parentNodeTranslateX_ = thisNodetranslateX;
+        parentNodeTranslateY_ = thisNodetranslateY;
+    }
+
+    if (!node.IsAppWindow() && node.GetBuffer() != nullptr) {
+        canvas_->save();
+        canvas_->translate(-canvas_->getTotalMatrix().getTranslateX() / canvas_->getTotalMatrix().getScaleX(),
+            -canvas_->getTotalMatrix().getTranslateY() / canvas_->getTotalMatrix().getScaleY());
+        canvas_->concat(translateMatrix);
+
+        // in node's local coordinate.
+        auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
+        renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
+
+        canvas_->restore();
+    }
 
     const auto saveCnt = canvas_->save();
-    if (node.GetConsumer() == nullptr) {
-        canvas_->concat(params.matrix);
-    }
     ProcessBaseRenderNode(node);
     canvas_->restoreToCount(saveCnt);
-
-    if (node.GetBuffer() != nullptr) {
-        renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
-    }
 }
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode& node)
@@ -254,17 +259,12 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithU
     }
 
     const auto& property = node.GetRenderProperties();
-    SkMatrix translateMatrix;
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
-    translateMatrix.setTranslate(
-        std::ceil(geoPtr->GetMatrix().getTranslateX()),
-        std::ceil(geoPtr->GetMatrix().getTranslateY()));
-    canvas_->concat(translateMatrix);
-    // use node's local coordinate.
-    auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false); 
+    if (geoPtr) {
+        canvas_->concat(geoPtr->GetMatrix());
+    }
 
     const auto saveCnt = canvas_->save();
-    canvas_->concat(params.matrix);
     auto transitionProperties = node.GetAnimationManager().GetTransitionProperties();
     RSPropertiesPainter::DrawTransitionProperties(transitionProperties, property, *canvas_);
     boundsRect_ = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
@@ -277,7 +277,9 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithU
     ProcessBaseRenderNode(node);
     canvas_->restoreToCount(saveCnt);
 
-    if (node.GetBuffer() != nullptr) {
+    if (!node.IsAppWindow() && node.GetBuffer() != nullptr) {
+        // use node's local coordinate.
+        auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false); 
         renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
     }
 }
@@ -304,6 +306,9 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWith
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 {
+    if (!RSMainThread::Instance()->IfUseUniVisitor()) {
+        return;
+    }
     if (!node.GetRenderProperties().GetVisible()) {
         RS_LOGD("ProcessRootRenderNode, no need process");
         return;

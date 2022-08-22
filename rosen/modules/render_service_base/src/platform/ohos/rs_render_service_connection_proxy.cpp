@@ -45,11 +45,16 @@ void RSRenderServiceConnectionProxy::CommitTransaction(std::unique_ptr<RSTransac
     data->SetMaxCapacity(PARCEL_MAX_CPACITY);
     data->WriteInt32(0); // indicate data parcel
 
+    bool isUniMode = RSSystemProperties::IsUniRenderMode();
     transactionData->SetSendingPid(pid_);
-    transactionData->SetIndex(++transactionDataIndex_);
-    transactionData->SetUniRender(RSSystemProperties::GetUniRenderEnabled());
+    if (isUniMode) {
+        ++transactionDataIndex_;
+    }
+    transactionData->SetIndex(transactionDataIndex_);
+    transactionData->SetUniRender(isUniMode);
     RS_TRACE_BEGIN("Marsh RSTransactionData: cmd count:" + std::to_string(transactionData->GetCommandCount()) +
-        " transactionFlag:[" + std::to_string(pid_) + ", " + std::to_string(transactionData->GetIndex()) + "]");
+        " transactionFlag:[" + std::to_string(pid_) + ", " + std::to_string(transactionData->GetIndex()) + "],isUni:" +
+        std::to_string(isUniMode));
     bool success = data->WriteParcelable(transactionData.get());
     RS_TRACE_END();
     if (!success) {
@@ -99,19 +104,74 @@ void RSRenderServiceConnectionProxy::ExecuteSynchronousTask(const std::shared_pt
     }
 }
 
-bool RSRenderServiceConnectionProxy::InitUniRenderEnabled(const std::string &bundleName)
+int32_t RSRenderServiceConnectionProxy::SetRenderModeChangeCallback(sptr<RSIRenderModeChangeCallback> callback)
+{
+    if (callback == nullptr) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::SetRenderModeChangeCallback: callback is nullptr.");
+        return INVALID_ARGUMENTS;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return WRITE_PARCEL_ERR;
+    }
+
+    option.SetFlags(MessageOption::TF_ASYNC);
+    data.WriteRemoteObject(callback->AsObject());
+    int32_t err =
+        Remote()->SendRequest(RSIRenderServiceConnection::SET_RENDER_MODE_CHANGE_CALLBACK, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::SetRenderModeChangeCallback: Send Request err.");
+        return RS_CONNECTION_ERROR;
+    }
+    int32_t result = reply.ReadInt32();
+    return result;
+}
+
+void RSRenderServiceConnectionProxy::UpdateRenderMode(bool isUniRender)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteString(bundleName)) {
-        return false;
+    if (!data.WriteBool(isUniRender)) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::UpdateRenderMode WriteBool failed!");
+        return;
     }
+    option.SetFlags(MessageOption::TF_ASYNC);
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::UPDATE_RENDER_MODE, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::UpdateRenderMode SendRequest failed, err = %d", err);
+        return;
+    }
+}
+
+bool RSRenderServiceConnectionProxy::GetUniRenderEnabled()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
     option.SetFlags(MessageOption::TF_SYNC);
-    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::GET_UNI_RENDER_TYPE, data, reply, option);
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::GET_UNI_RENDER_ENABLED, data, reply, option);
     if (err != NO_ERROR) {
         return false;
+    }
+    return reply.ReadBool();
+}
+
+bool RSRenderServiceConnectionProxy::QueryIfRTNeedRender()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::QUERY_RT_NEED_RENDER, data, reply, option);
+    if (err != NO_ERROR) {
+        return true;
     }
     return reply.ReadBool();
 }

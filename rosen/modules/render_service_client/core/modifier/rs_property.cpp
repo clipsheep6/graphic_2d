@@ -112,16 +112,12 @@ void RSAnimatableProperty<T>::Set(const T& value)
         return;
     }
     bool hasPropertyAnimation = !this->runningPathNum_ && node->HasPropertyAnimation(this->id_);
-    T sendValue = value;
     if (hasPropertyAnimation) {
-        if (this->motionPathOption_ != nullptr) {
-            node->FinishAnimationByProperty(this->id_);
-        } else {
-            sendValue = value - this->stagingValue_;
-        }
+        this->UpdateToRender(value - this->stagingValue_, true);
+    } else {
+        this->UpdateToRender(value, false);
     }
     this->stagingValue_ = value;
-    this->UpdateToRender(sendValue, hasPropertyAnimation);
 }
 
 #define UPDATE_TO_RENDER(Command, value, isDelta, forceUpdate)                                                   \
@@ -138,6 +134,12 @@ void RSAnimatableProperty<T>::Set(const T& value)
                 std::unique_ptr<RSCommand> commandForRemote =                                                    \
                     std::make_unique<Command>(nodeId_, value, id_, isDelta);                                     \
                 transactionProxy->AddCommand(commandForRemote, true, node->GetFollowType(), node->GetId());      \
+            }                                                                                                    \
+            if (node->NeedSendExtraCommand()) {                                                                  \
+                std::unique_ptr<RSCommand> extraCommand =                                                        \
+                    std::make_unique<Command>(nodeId_, value, id_, isDelta);                                     \
+                transactionProxy->AddCommand(extraCommand, !node->IsRenderServiceNode(),                         \
+                    node->GetFollowType(), node->GetId());                                                       \
             }                                                                                                    \
             if (forceUpdate) {                                                                                   \
                 transactionProxy->Commit();                                                                      \

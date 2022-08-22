@@ -16,16 +16,15 @@
 #ifndef RS_UNI_RENDER_JUDGEMENT_H
 #define RS_UNI_RENDER_JUDGEMENT_H
 
-#include <set>
 #include <string>
-#include <map>
 
 namespace OHOS {
 namespace Rosen {
+class RSBaseRenderNode;
 enum class UniRenderEnabledType {
     UNI_RENDER_DISABLED = 0,
     UNI_RENDER_ENABLED_FOR_ALL,
-    UNI_RENDER_PARTIALLY_ENABLED,
+    UNI_RENDER_DYNAMIC_SWITCH,
 };
 // Judge the unified rendering strategy of RenderService.
 class RSUniRenderJudgement final {
@@ -34,23 +33,20 @@ public:
 
     // used by render server
     static UniRenderEnabledType GetUniRenderEnabledType();
-    static const std::set<std::string>& GetUniRenderEnabledList();
-    static bool QueryClientEnabled(const std::string &bundleName);
     static void InitUniRenderConfig();
     static bool IsUniRender();
 
 private:
     RSUniRenderJudgement() = default;
+    // dealing with Windows type end of line "\r\n"
+    static std::ifstream& SafeGetLine(std::ifstream &configFile, std::string &line);
 
     static void InitUniRenderWithConfigFile();
-
-    static inline UniRenderEnabledType uniRenderEnabledType_ = UniRenderEnabledType::UNI_RENDER_DISABLED;
-    static inline std::set<std::string> uniRenderBlockList_ {};
-    static inline const std::map<std::string, UniRenderEnabledType> uniRenderConfigMap_ = {
-        {"DISABLED", UniRenderEnabledType::UNI_RENDER_DISABLED},
-        {"ENABLED_FOR_ALL", UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL},
-        {"ENABLED", UniRenderEnabledType::UNI_RENDER_PARTIALLY_ENABLED}
-    };
+#ifdef RS_ENABLE_UNI_RENDER
+        static inline UniRenderEnabledType uniRenderEnabledType_ = UniRenderEnabledType::UNI_RENDER_DYNAMIC_SWITCH;
+#else
+        static inline UniRenderEnabledType uniRenderEnabledType_ = UniRenderEnabledType::UNI_RENDER_DISABLED;
+#endif
 };
 } // namespace Rosen
 } // namespace OHOS

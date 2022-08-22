@@ -51,6 +51,25 @@ RSRenderThreadVisitor::RSRenderThreadVisitor()
 
 RSRenderThreadVisitor::~RSRenderThreadVisitor() {}
 
+bool RSRenderThreadVisitor::IsValidRootRenderNode(RSRootRenderNode& node)
+{
+    auto ptr = RSNodeMap::Instance().GetNode<RSSurfaceNode>(node.GetRSSurfaceNodeId());
+    if (ptr == nullptr) {
+        ROSEN_LOGE("No valid RSSurfaceNode id");
+        return false;
+    }
+    if (!node.enableRender_) {
+        ROSEN_LOGI("RootNode %s: Invisible", ptr->GetName().c_str());
+        return false;
+    }
+    if (node.GetSurfaceWidth() <= 0 || node.GetSurfaceHeight() <= 0) {
+        ROSEN_LOGE("Root %s: Negative width or height [%d %d]", ptr->GetName().c_str(),
+            node.GetSurfaceWidth(), node.GetSurfaceHeight());
+        return false;
+    }
+    return true;
+}
+
 void RSRenderThreadVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 {
     isPartialRenderEnabled_ = (RSSystemProperties::GetPartialRenderEnabled() != PartialRenderType::DISABLED);
@@ -65,6 +84,12 @@ void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
     if (isIdle_) {
         curDirtyManager_ = node.GetDirtyManager();
         curDirtyManager_->Clear();
+        // After the node calls applymodifiers, the modifiers assign the renderProperties to the node
+        // Otherwise node.GetSurfaceHeight always less than 0, causing black screen
+        node.ApplyModifiers();
+        if (!IsValidRootRenderNode(node)) {
+            return;
+        }
         dirtyFlag_ = false;
         isIdle_ = false;
         PrepareCanvasRenderNode(node);
@@ -201,17 +226,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         return;
     }
     auto ptr = RSNodeMap::Instance().GetNode<RSSurfaceNode>(node.GetRSSurfaceNodeId());
-    if (ptr == nullptr) {
-        ROSEN_LOGE("ProcessRoot: No valid RSSurfaceNode id");
-        return;
-    }
-    if (!node.enableRender_) {
-        ROSEN_LOGI("ProcessRoot %s: Invisible", ptr->GetName().c_str());
-        return;
-    }
-    if (node.GetSurfaceWidth() <= 0 || node.GetSurfaceHeight() <= 0) {
-        ROSEN_LOGE("ProcessRoot %s: Negative width or height [%d %d]", ptr->GetName().c_str(),
-            node.GetSurfaceWidth(), node.GetSurfaceHeight());
+    if (!IsValidRootRenderNode(node)) {
         return;
     }
 
@@ -311,9 +326,9 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     RS_TRACE_BEGIN("ProcessRenderNodes");
     ProcessCanvasRenderNode(node);
 
-    if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_) {
+    if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_ || RSRenderThread::Instance().GetForceUpdateSurfaceNode()) {
         auto thisSurfaceNodeId = node.GetRSSurfaceNodeId();
-        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearChild>(thisSurfaceNodeId);
+        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearSurfaceNodeChild>(thisSurfaceNodeId);
         SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
         for (const auto& childSurfaceNodeId : childSurfaceNodeIds_) {
             command = std::make_unique<RSBaseNodeAddChild>(thisSurfaceNodeId, childSurfaceNodeId, -1);
@@ -448,9 +463,9 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     ProcessBaseRenderNode(node);
 
     // 4. if children changed, sync children to RenderService
-    if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_) {
+    if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_ || RSRenderThread::Instance().GetForceUpdateSurfaceNode()) {
         auto thisSurfaceNodeId = node.GetId();
-        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearChild>(thisSurfaceNodeId);
+        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearSurfaceNodeChild>(thisSurfaceNodeId);
         SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
         for (const auto& childSurfaceNodeId : childSurfaceNodeIds_) {
             command = std::make_unique<RSBaseNodeAddChild>(thisSurfaceNodeId, childSurfaceNodeId, -1);
@@ -474,7 +489,7 @@ void RSRenderThreadVisitor::ClipHoleForSurfaceNode(RSSurfaceRenderNode& node)
     canvas_->save();
     SkRect originRect = SkRect::MakeXYWH(x, y, width, height);
     canvas_->clipRect(originRect);
-    if (node.IsNotifyRTBufferAvailable() == true) {
+    if (node.IsNotifyRTBufferAvailable()) {
         ROSEN_LOGI("RSRenderThreadVisitor::ClipHoleForSurfaceNode node : %" PRIu64 ", clip [%f, %f, %f, %f]",
             node.GetId(), x, y, width, height);
         canvas_->clear(SK_ColorTRANSPARENT);

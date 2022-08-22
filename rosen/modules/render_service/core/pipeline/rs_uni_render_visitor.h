@@ -15,6 +15,8 @@
 #ifndef RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_VISITOR_H
 #define RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_VISITOR_H
 
+#include <set>
+
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_processor.h"
 #include "screen_manager/rs_screen_manager.h"
@@ -41,12 +43,22 @@ public:
     void ProcessRootRenderNode(RSRootRenderNode& node) override;
     void ProcessCanvasRenderNode(RSCanvasRenderNode& node) override;
 
+    void SetAnimateState(bool doAnimate)
+    {
+        doAnimate_ = doAnimate;
+    }
+
 private:
     void DrawRectOnCanvas(const RectI& dirtyRect, const SkColor color,
         const SkPaint::Style fillType, float alpha);
     void DrawDirtyRegion();
-    std::vector<RectI> GetDirtyRects(const Occlusion::Region &region);
+    const std::vector<RectI> GetDirtyRects(const Occlusion::Region &region) const;
     RectI CoordinateTransform(const RectI& rect);
+    const std::vector<RectI> GetSurfaceTransparentDirtyRects(std::shared_ptr<RSDisplayRenderNode>& node) const;
+    inline bool GetSurfaceViewDirtyEnabled()
+    {
+        return std::atoi((system::GetParameter("rosen.uni.surfaceviewdirty.enabled", "0")).c_str()) != 0;
+    }
 
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;
@@ -66,9 +78,10 @@ private:
     bool isSecurityDisplay_ = false;
 
     std::shared_ptr<RSRenderEngine> renderEngine_;
-    
+
     std::shared_ptr<RSDirtyRegionManager> curDisplayDirtyManager_;
     std::shared_ptr<RSDisplayRenderNode> curDisplayNode_;
+    bool doAnimate_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

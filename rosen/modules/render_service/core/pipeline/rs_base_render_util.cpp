@@ -812,6 +812,7 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler)
     }
 
     surfaceHandler.SetBuffer(buffer, acquireFence, damage, timestamp);
+    surfaceHandler.SetCurrentFrameBufferConsumed();
     RS_LOGD("RsDebug surfaceHandler(id: %" PRIu64 ") AcquireBuffer success, timestamp = %" PRId64 ".",
         surfaceHandler.GetNodeId(), timestamp);
     availableBufferCnt = surfaceHandler.ReduceAvailableBuffer();
@@ -1012,20 +1013,10 @@ BufferDrawParam RSBaseRenderUtil::CreateBufferDrawParam(
     // inLocalCoordinate: reset the translate to (0, 0).
     // else: use node's total matrix.
     if (inLocalCoordinate) {
-        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
-        if (geoPtr != nullptr) {
-            params.matrix = geoPtr->GetMatrix();
-        }
-        params.matrix.setTranslateX(0.0f);
-        params.matrix.setTranslateY(0.0f);
+        params.matrix = SkMatrix::I();
     } else {
         params.matrix = node.GetTotalMatrix();
     }
-
-    // reset the matrix's scale to deal with the gravity effects.
-    const float invScaleX = (ROSEN_EQ(property.GetScaleX(), 0.0f) ? 1.0f : 1.0f / property.GetScaleX());
-    const float invScaleY = (ROSEN_EQ(property.GetScaleY(), 0.0f) ? 1.0f : 1.0f / property.GetScaleY());
-    params.matrix.preScale(invScaleX, invScaleY);
 
     // we can use only the bound's size (ignore its offset) now,
     // (the canvas was moved to the node's left-top point correctly).

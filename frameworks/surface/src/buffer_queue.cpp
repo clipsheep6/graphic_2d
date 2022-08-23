@@ -835,7 +835,7 @@ GSError BufferQueue::CleanCache()
     return GSERROR_OK;
 }
 
-GSError BufferQueue::OnConsumerDied()
+GSError BufferQueue::ClearCache()
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
     ClearLocked();

@@ -653,7 +653,7 @@ HWTEST_F(RSInterfacesTest, GetScreenHDRCapability001, Function | SmallTest | Lev
 * EnvConditions: N/A
 * CaseDescription: 1. call GetScreenHDRCapability with INVALID_SCREEN_ID
 *                  2. check ret
-*@tc.require: Issue I5KGK4
+* @tc.require: Issue I5KGK4
 */
 HWTEST_F(RSInterfacesTest, GetScreenHDRCapability002, Function | SmallTest | Level2)
 {

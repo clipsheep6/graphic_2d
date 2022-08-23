@@ -195,6 +195,8 @@ public:
     RectF GetBoundsRect() const;
     RectF GetFrameRect() const;
 
+    bool IsZOrderPromoted() const;
+    void CleanZOrderPromoted();
 private:
     void Reset();
     void SetDirty();
@@ -216,13 +218,14 @@ private:
     bool isDirty_ = false;
     bool geoDirty_ = false;
     bool zOrderChanged_ = false;
+    bool zOrderPromoted = false;
 
     bool hasBounds_ = false;
 
     Gravity frameGravity_ = Gravity::DEFAULT;
 
     float alpha_ = 1.f;
-    bool alphaOffscreen_ = true;
+    bool alphaOffscreen_ = false;
 
     std::unique_ptr<Matrix3f> sublayerTransform_ = nullptr;
     std::unique_ptr<Decoration> decoration_ = nullptr;

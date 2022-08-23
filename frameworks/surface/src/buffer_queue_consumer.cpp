@@ -197,6 +197,6 @@ GSError BufferQueueConsumer::OnConsumerDied()
     if (bufferQueue_ == nullptr) {
         return GSERROR_INVALID_ARGUMENTS;
     }
-    return bufferQueue_->OnConsumerDied();
+    return bufferQueue_->ClearCache();
 }
 } // namespace OHOS

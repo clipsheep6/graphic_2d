@@ -20,7 +20,7 @@
 
 #include "EGL/egl.h"
 #include "window.h"
-
+#include "parameters.h"
 #include "utils/log.h"
 
 namespace OHOS {
@@ -32,6 +32,10 @@ constexpr int32_t EGL_CONTEXT_CLIENT_VERSION_NUM = 2;
 constexpr char CHARACTER_WHITESPACE = ' ';
 constexpr const char* CHARACTER_STRING_WHITESPACE = " ";
 constexpr const char* EGL_GET_PLATFORM_DISPLAY_EXT = "eglGetPlatformDisplayEXT";
+
+constexpr const char* ATLAS_PAGE_NUM = "persist.atlas_page_num";
+constexpr const char* PLOT_OLD_THRESHOLD = "persist.plot_old_threshold";
+constexpr const char* ATLAS_CACHE_NUM = "persist.atlas_cache_num";
 
 // use functor to call gel*KHR API
 static PFNEGLSETDAMAGEREGIONKHRPROC GetEGLSetDamageRegionKHRFunc()
@@ -235,7 +239,10 @@ bool RenderContext::SetUpGrContext()
     options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
-
+    options.fAtlasPageNum = atoi(system::GetParameter(ATLAS_PAGE_NUM, "16").c_str());
+    options.fGlyphCacheTextureMaximumBytes = atoi(system::GetParameter(ATLAS_CACHE_NUM, "4194304").c_str());
+    options.fPlotOldThreshold = atoi(system::GetParameter(PLOT_OLD_THRESHOLD, "128").c_str());
+    
     mHandler_ = new MemoryHandler();
     if (mHandler_ != nullptr) {
         auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));

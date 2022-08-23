@@ -77,6 +77,7 @@ ohos_unittest("RSAnimationTest") {
     "$rosen_root/modules/render_service_base/src/pipeline/rs_canvas_render_node.cpp",
     "$rosen_root/modules/render_service_base/src/pipeline/rs_context.cpp",
     "$rosen_root/modules/render_service_base/src/pipeline/rs_dirty_region_manager.cpp",
+    "$rosen_root/modules/render_service_base/src/pipeline/rs_dirty_region_manager_refined.cpp",
     "$rosen_root/modules/render_service_base/src/pipeline/rs_display_render_node.cpp",
     "$rosen_root/modules/render_service_base/src/pipeline/rs_draw_cmd.cpp",
     "$rosen_root/modules/render_service_base/src/pipeline/rs_draw_cmd_list.cpp",

@@ -20,8 +20,7 @@
 #include "../src/wrapper_log.h"
 
 namespace {
-constexpr const char *MY_LOG_TAG = "DebugLayerTest2";
-}
+    constexpr const char *MY_LOG_TAG = "DebugLayerTest2";
 static GetNextLayerAddr gGetNextLayerAddr = nullptr;
 static void *gFuncTbl = nullptr;
 
@@ -61,6 +60,6 @@ __eglMustCastToProperFunctionPointerType DebugLayerGetProcAddr(const char *name,
         WLOGD("-%{public}s-", MY_LOG_TAG);
         return (__eglMustCastToProperFunctionPointerType)EglGetDisplay;
     }
-
     return next;
+}
 }

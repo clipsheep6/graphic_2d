@@ -191,6 +191,10 @@ public:
 
     bool GetZorderChanged() const;
     void CleanZorderChanged();
+
+    RectF GetBoundsRect() const;
+    RectF GetFrameRect() const;
+
     bool IsZOrderPromoted() const;
     void CleanZOrderPromoted();
 private:
@@ -200,8 +204,6 @@ private:
     bool IsDirty() const;
     void ResetBounds();
 
-    RectF GetBoundsRect() const;
-    RectF GetFrameRect() const;
     RectF GetBgImageRect() const;
     RRect GetRRect() const;
     RRect GetInnerRRect() const;

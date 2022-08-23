@@ -69,11 +69,6 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     offsetX_ = node.GetDisplayOffsetX();
     offsetY_ = node.GetDisplayOffsetY();
     ScreenInfo currScreenInfo = screenManager->QueryScreenInfo(node.GetScreenId());
-    // skip frame according to skipFrameInterval value of SetScreenSkipFrameInterval interface
-    if (node.SkipFrame(currScreenInfo.skipFrameInterval)) {
-        return;
-    }
-    RS_TRACE_NAME("PrepareDisplayRenderNode[" + std::to_string(node.GetScreenId()) + "]");
     ScreenState state = currScreenInfo.state;
     switch (state) {
         case ScreenState::PRODUCER_SURFACE_ENABLE:
@@ -133,6 +128,17 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         node.GetId(), node.GetScreenId(), isSecurityDisplay_ ? "true" : "false", node.GetChildrenCount(),
         node.GetSortedChildren().size());
     globalZOrder_ = 0.0f;
+    sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
+    if (!screenManager) {
+        RS_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode ScreenManager is nullptr");
+        return;
+    }
+    ScreenInfo currScreenInfo = screenManager->QueryScreenInfo(node.GetScreenId());
+    RS_TRACE_NAME("ProcessDisplayRenderNode[" + std::to_string(node.GetScreenId()) + "]");
+    // skip frame according to skipFrameInterval value of SetScreenSkipFrameInterval interface
+    if (node.SkipFrame(currScreenInfo.skipFrameInterval)) {
+        return;
+    }
     processor_ = RSProcessorFactory::CreateProcessor(node.GetCompositeType());
     if (processor_ == nullptr) {
         RS_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode: RSProcessor is null!");

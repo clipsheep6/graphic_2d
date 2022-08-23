@@ -175,6 +175,9 @@ void RSRenderSpringAnimation::OnAnimateInner(float fraction)
 std::tuple<std::shared_ptr<RSRenderPropertyBase>,
         std::shared_ptr<RSRenderPropertyBase>> RSRenderSpringAnimation::GetSpringStatus()
 {
+    if (ROSEN_EQ(prevFraction_, 0.0f)) {
+        return {startValue_->GetValue(), initialVelocity_};
+    }
     auto displacement = CalculateDisplacement(
         prevFraction_ * GetDuration() * MILLISECOND_TO_SECOND);
     auto velocity = GetInstantaneousVelocity(

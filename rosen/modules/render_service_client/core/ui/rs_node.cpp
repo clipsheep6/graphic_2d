@@ -229,13 +229,10 @@ const std::shared_ptr<RSMotionPathOption> RSNode::GetMotionPathOption() const
     return motionPathOption_;
 }
 
-bool RSNode::HasPropertyAnimation(const PropertyId& id)
+bool RSNode::HasPropertyAnimation(const PropertyId& id) const
 {
-    // check if any animation matches the property bitmask
-    auto pred = [id](const auto& it) -> bool {
-        return it.second > 0 && (static_cast<unsigned long long>(it.first) & static_cast<unsigned long long>(id));
-    };
-    return std::any_of(animatingPropertyNum_.begin(), animatingPropertyNum_.end(), pred);
+    auto iter = animatingPropertyNum_.find(id);
+    return iter != animatingPropertyNum_.end() && iter->second > 0;
 }
 
 template<typename PropertyType, typename ModifierType, typename T>

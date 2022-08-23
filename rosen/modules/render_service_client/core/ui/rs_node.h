@@ -197,7 +197,7 @@ protected:
 
 private:
     void AnimationFinish(AnimationId animationId);
-    bool HasPropertyAnimation(const PropertyId& id);
+    bool HasPropertyAnimation(const PropertyId& id) const;
     void FallbackAnimationsToRoot();
     void AddAnimationInner(const std::shared_ptr<RSAnimation>& animation);
     void RemoveAnimationInner(const std::shared_ptr<RSAnimation>& animation);

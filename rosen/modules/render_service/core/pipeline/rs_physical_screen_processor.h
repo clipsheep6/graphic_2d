@@ -16,9 +16,8 @@
 #ifndef RS_CORE_PIPELINE_PHYSICAL_SCREEN_PROCESSOR_H
 #define RS_CORE_PIPELINE_PHYSICAL_SCREEN_PROCESSOR_H
 
-#include "rs_processor.h"
-
 #include "rs_composer_adapter.h"
+#include "rs_processor.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -27,12 +26,15 @@ public:
     RSPhysicalScreenProcessor();
     ~RSPhysicalScreenProcessor() noexcept override;
 
-    bool Init(ScreenId id, int32_t offsetX, int32_t offsetY, ScreenId mirroredId) override;
+    bool Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId) override;
     void ProcessSurface(RSSurfaceRenderNode& node) override;
     void ProcessDisplaySurface(RSDisplayRenderNode& node) override;
     void PostProcess() override;
 private:
     void Redraw(const sptr<Surface>& surface, const std::vector<LayerInfoPtr>& layers);
+    uint32_t GetLayerLevel(uint32_t layerLevel) const;
+    void ClosePerf(uint32_t layerLevel);
+    void RequestPerf(uint32_t layerLevel);
 
     std::unique_ptr<RSComposerAdapter> composerAdapter_;
     std::vector<LayerInfoPtr> layers_;

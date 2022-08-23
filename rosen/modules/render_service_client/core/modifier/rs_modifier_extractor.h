@@ -22,6 +22,7 @@
 namespace OHOS {
 namespace Rosen {
 class RSNode;
+enum class RSModifierType : int16_t;
 
 class RS_EXPORT RSModifierExtractor {
 public:
@@ -82,6 +83,9 @@ public:
 
     std::string Dump() const;
 private:
+    template<typename T, auto op>
+    T GetProperty(RSModifierType type, const T& defaultValue) const;
+
     NodeId id_;
 };
 } // namespace Rosen

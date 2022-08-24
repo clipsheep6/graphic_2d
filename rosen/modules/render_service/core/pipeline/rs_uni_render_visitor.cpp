@@ -549,18 +549,18 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 
     ColorFilterMode mode = static_cast<ColorFilterMode>(RSSystemProperties::GetCorrectionMode());
     if (RSBaseRenderUtil::IsColorFilterModeValid(mode)) {
+        RS_LOGD("RsDebug RSRenderEngine::SetColorFilterModeToPaint mode:%d", static_cast<int32_t>(mode));
         SkPaint paint;
         RSBaseRenderUtil::SetColorFilterModeToPaint(mode, paint);
         canvas_->saveLayer(nullptr, &paint);
     } else {
         canvas_->save();
     }
-    const float rootWidth = node.GetSurfaceWidth();
-    const float rootHeight = node.GetSurfaceHeight();
+    const float rootWidth = property.GetFrameWidth() * property.GetScaleX();
+    const float rootHeight = property.GetFrameHeight() * property.GetScaleY();
     SkMatrix gravityMatrix;
     (void)RSPropertiesPainter::GetGravityMatrix(frameGravity_,
-        RectF {0.0f, 0.0f, boundsRect_.width(), boundsRect_.height()},
-        rootWidth, rootHeight, gravityMatrix);
+        RectF { 0.0f, 0.0f, boundsRect_.width(), boundsRect_.height() }, rootWidth, rootHeight, gravityMatrix);
     canvas_->concat(gravityMatrix);
     ProcessCanvasRenderNode(node);
     canvas_->restore();

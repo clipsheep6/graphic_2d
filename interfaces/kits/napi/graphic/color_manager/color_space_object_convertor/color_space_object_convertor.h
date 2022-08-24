@@ -13,10 +13,22 @@
  * limitations under the License.
  */
 
-#include <iostream>
+#ifndef OHOS_COLOR_SPACE_OBJECT_CONVERTOR_H
+#define OHOS_COLOR_SPACE_OBJECT_CONVERTOR_H
 
-int main()
-{
-    std::cout << "surface image not supported beacause there is no gpu " << std::endl;
-    return 0;
-}
+#include <memory>
+
+#include "color_space.h"
+#include "js_color_space.h"
+#include "js_runtime_utils.h"
+#include "native_engine/native_engine.h"
+#include "native_engine/native_value.h"
+
+namespace OHOS {
+namespace ColorManager {
+NativeValue* CreateJsColorSpaceObject(NativeEngine& engine, std::shared_ptr<ColorSpace>& colorSpace);
+std::shared_ptr<ColorSpace> GetColorSpaceByJSObject(NativeObject* object);
+}  // namespace ColorManager
+}  // namespace OHOS
+
+#endif // OHOS_COLOR_SPACE_OBJECT_CONVERTOR_H

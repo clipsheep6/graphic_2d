@@ -46,13 +46,28 @@ void RSRenderEngineTest::TearDown() {}
 
 /**
  * @tc.name: SetColorFilterMode001
- * @tc.desc:SetColorFilterMode INVERT_COLOR
+ * @tc.desc:SetColorFilterMode INVERT_COLOR_ENABLE_MODE
  * @tc.type:FUNC
  * @tc.require:issueI5NJLC
  */
 HWTEST_F(RSRenderEngineTest, SetColorFilterMode001, TestSize.Level1)
 {
     ColorFilterMode mode = ColorFilterMode::INVERT_COLOR_ENABLE_MODE;
+    renderEngine_->SetColorFilterMode(mode);
+    ASSERT_EQ(renderEngine_->GetColorFilterMode(), mode);
+
+    renderEngine_->SetColorFilterMode(ColorFilterMode::COLOR_FILTER_END);
+}
+
+/**
+ * @tc.name: SetColorFilterMode002
+ * @tc.desc:SetColorFilterMode DALTONIZATION
+ * @tc.type:FUNC
+ * @tc.require:issueI5NM41
+ */
+HWTEST_F(RSRenderEngineTest, SetColorFilterMode002, TestSize.Level1)
+{
+    ColorFilterMode mode = ColorFilterMode::DALTONIZATION_PROTANOMALY_MODE;
     renderEngine_->SetColorFilterMode(mode);
     ASSERT_EQ(renderEngine_->GetColorFilterMode(), mode);
 }

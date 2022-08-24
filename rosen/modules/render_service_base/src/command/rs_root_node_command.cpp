@@ -63,10 +63,10 @@ void RootNodeCommandHelper::AttachToUniSurfaceNode(RSContext& context, NodeId id
     parent->NotifyUIBufferAvailable();
 }
 
-void RootNodeCommandHelper::UpdateSurfaceSize(RSContext &context, NodeId id, int32_t width, int32_t height)
+void RootNodeCommandHelper::UpdateSuggestedBufferSize(RSContext &context, NodeId id, int32_t width, int32_t height)
 {
     if (auto node = context.GetNodeMap().GetRenderNode<RSRootRenderNode>(id)) {
-        node->UpdateSurfaceSize(width, height);
+        node->UpdateSuggestedBufferSize(width, height);
     }
 }
 } // namespace Rosen

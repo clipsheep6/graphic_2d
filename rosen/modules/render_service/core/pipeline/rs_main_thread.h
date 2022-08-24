@@ -112,6 +112,7 @@ public:
     void NotifyUniRenderFinish();
     void SetRenderModeChangeCallback(sptr<RSIRenderModeChangeCallback> callback);
     bool IfUseUniVisitor() const;
+    bool HasWindowAnimation() const;
 
     void ClearTransactionDataPidInfo(pid_t remotePid);
     void AddTransactionDataPidInfo(pid_t remotePid);
@@ -190,6 +191,7 @@ private:
     std::condition_variable uniRenderCond_;
     VisibleData lastVisVec_;
     bool doAnimate_ = false;
+    bool doWindowAnimate_ = false;
     uint32_t lastSurfaceCnt_ = 0;
 
     std::shared_ptr<RSRenderEngine> renderEngine_;

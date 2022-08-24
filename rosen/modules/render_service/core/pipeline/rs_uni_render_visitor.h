@@ -48,6 +48,11 @@ public:
         doAnimate_ = doAnimate;
     }
 
+    void SetWindowAnimateState(bool doWindowAnimate)
+    {
+        doWindowAnimate_ = doWindowAnimate;
+    }
+
 private:
     void DrawRectOnCanvas(const RectI& dirtyRect, const SkColor color,
         const SkPaint::Style fillType, float alpha);
@@ -79,6 +84,7 @@ private:
     std::shared_ptr<RSDirtyRegionManager> curDisplayDirtyManager_;
     std::shared_ptr<RSDisplayRenderNode> curDisplayNode_;
     bool doAnimate_ = false;
+    bool doWindowAnimate_ = false;
     bool isPartialRenderEnabled_ = false;
     bool isOpDroped_ = false;
 };

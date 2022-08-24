@@ -412,6 +412,18 @@ bool RSMainThread::IfUseUniVisitor() const
     return useUniVisitor_ || (!useUniVisitor_ && waitBufferAvailable_);
 }
 
+bool RSMainThread::HasWindowAnimation() const
+{
+    for (auto [nodeid, nodeweakptr] : context_.animatingNodeList_) {
+        auto node = nodeweakptr.lock();
+        if (node == nullptr || !node->IsInstanceOf<RSSurfaceRenderNode>()) {
+            continue;
+        }
+        return true;
+    }
+    return false;
+}
+
 void RSMainThread::CheckBufferAvailableIfNeed()
 {
     if (!waitBufferAvailable_) {
@@ -452,6 +464,7 @@ void RSMainThread::Render()
     std::shared_ptr<RSNodeVisitor> visitor;
     if (IfUseUniVisitor()) {
         auto uniVisitor = std::make_shared<RSUniRenderVisitor>();
+        uniVisitor->SetWindowAnimateState(doWindowAnimate_);
         uniVisitor->SetAnimateState(doAnimate_);
         visitor = uniVisitor;
     } else {
@@ -477,7 +490,7 @@ void RSMainThread::Render()
 
 void RSMainThread::CalcOcclusion()
 {
-    if (doAnimate_ && !useUniVisitor_) {
+    if (doWindowAnimate_) {
         return;
     }
     const std::shared_ptr<RSBaseRenderNode> node = context_.GetGlobalRootRenderNode();
@@ -608,8 +621,10 @@ void RSMainThread::Animate(uint64_t timestamp)
 
     if (context_.animatingNodeList_.empty()) {
         doAnimate_ = false;
+        doWindowAnimate_ = false;
         return;
     }
+    doWindowAnimate_ = HasWindowAnimation();
 
     RS_LOGD("RSMainThread::Animate start, processing %d animating nodes", context_.animatingNodeList_.size());
 

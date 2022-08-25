@@ -38,6 +38,7 @@ enum RSSurfaceNodeCommandType : uint16_t {
     SURFACE_NODE_SET_CONTEXT_BOUNDS,
     SURFACE_NODE_SET_ABILITY_BG_ALPHA,
     SURFACE_NODE_UPDATE_PARENT,
+    SURFACE_NODE_SET_IS_NOTIFY_BUFFER_AVAILABLE,
 };
 
 class SurfaceNodeCommandHelper {
@@ -54,6 +55,7 @@ public:
     static void SetContextBounds(RSContext& context, NodeId id, Vector4f bounds);
     static void SetAbilityBGAlpha(RSContext& context, NodeId id, uint8_t alpha);
     static void UpdateParent(RSContext& context, NodeId nodeId, NodeId parentId);
+    static void SetIsNotifyUIBufferAvailable(RSContext& context, NodeId nodeId, bool available);
 };
 
 ADD_COMMAND(RSSurfaceNodeCreate, ARG(SURFACE_NODE, SURFACE_NODE_CREATE, SurfaceNodeCommandHelper::Create, NodeId))
@@ -81,6 +83,8 @@ ADD_COMMAND(RSSurfaceNodeSetAbilityBGAlpha,
     ARG(SURFACE_NODE, SURFACE_NODE_SET_ABILITY_BG_ALPHA, SurfaceNodeCommandHelper::SetAbilityBGAlpha, NodeId, uint8_t))
 ADD_COMMAND(RSSurfaceNodeUpdateParent,
     ARG(SURFACE_NODE, SURFACE_NODE_UPDATE_PARENT, SurfaceNodeCommandHelper::UpdateParent, NodeId, NodeId))
+ADD_COMMAND(RSSurfaceNodeSetIsNotifyUIBUfferAvailable,
+    ARG(SURFACE_NODE, SURFACE_NODE_SET_IS_NOTIFY_BUFFER_AVAILABLE, SurfaceNodeCommandHelper::SetIsNotifyUIBufferAvailable, NodeId, bool))
 } // namespace Rosen
 } // namespace OHOS
 #endif // ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_SURFACE_NODE_COMMAND_H

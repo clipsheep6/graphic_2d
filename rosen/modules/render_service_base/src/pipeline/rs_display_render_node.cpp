@@ -33,10 +33,10 @@ RSDisplayRenderNode::RSDisplayRenderNode(NodeId id, const RSDisplayNodeConfig& c
 RSDisplayRenderNode::~RSDisplayRenderNode() = default;
 
 void RSDisplayRenderNode::CollectSurface(
-    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender)
+    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender, bool needLeashWindow)
 {
     for (auto& child : node->GetSortedChildren()) {
-        child->CollectSurface(child, vec, isUniRender);
+        child->CollectSurface(child, vec, needLeashWindow, isUniRender);
     }
 }
 

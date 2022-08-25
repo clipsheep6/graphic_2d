@@ -66,7 +66,11 @@ void RSRenderNode::FallbackAnimationsToRoot()
 
 bool RSRenderNode::Animate(int64_t timestamp)
 {
-    return animationManager_.Animate(timestamp);
+    if (animationManager_.Animate(timestamp)) {
+        SetDirty();
+        return true;
+    }
+    return false;
 }
 
 bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty)

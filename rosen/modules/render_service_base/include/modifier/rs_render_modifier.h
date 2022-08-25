@@ -17,6 +17,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_MODIFIER_H
 
 #include <memory>
+#include <unordered_map>
 
 #include "parcel.h"
 
@@ -60,6 +61,13 @@ public:
     virtual bool Marshalling(Parcel& parcel) = 0;
     static RSRenderModifier* Unmarshalling(Parcel& parcel);
     virtual void SetIsAdditive(bool isAdditive) = 0;
+
+private:
+    using ModifierUnmarshallingFunc = RSRenderModifier* (*)(Parcel& parcel);
+    inline static std::unordered_map<RSModifierType, ModifierUnmarshallingFunc> unmarshallingFuncLUT_;
+
+    template<RSModifierType typeEnum, RSRenderModifier::ModifierUnmarshallingFunc func>
+    friend class RSModifierRegister;
 };
 
 class RSDrawCmdListRenderModifier : public RSRenderModifier {
@@ -92,6 +100,7 @@ public:
     {
         drawStyle_ = type;
     }
+
 protected:
     RSModifierType drawStyle_ = RSModifierType::EXTENDED;
     std::shared_ptr<RSRenderProperty<DrawCmdListPtr>> property_;
@@ -130,8 +139,18 @@ protected:
     friend class RSRenderPropertyAnimation;
 };
 
+// Helper class for automatically registry
+template<RSModifierType typeEnum, RSRenderModifier::ModifierUnmarshallingFunc func>
+class RSModifierRegister {
+public:
+    RSModifierRegister()
+    {
+        RSRenderModifier::unmarshallingFuncLUT_.emplace(typeEnum, func);
+    }
+};
+
 template<typename T, RSModifierType typeEnum, auto getter, auto setter>
-class RSAnimatableRenderModifierTemplate : public RSAnimatableRenderModifier<RSRenderAnimatableProperty<T>> { 
+class RSAnimatableRenderModifierTemplate : public RSAnimatableRenderModifier<RSRenderAnimatableProperty<T>> {
 public:
     RSAnimatableRenderModifierTemplate(const std::shared_ptr<RSRenderAnimatableProperty<T>>& property)
         : RSAnimatableRenderModifier<RSRenderAnimatableProperty<T>>(property)
@@ -147,10 +166,13 @@ public:
     static RSRenderModifier* Unmarshalling(Parcel& parcel);
     void Apply(RSModifyContext& context) override;
     void Update(const std::shared_ptr<RSRenderPropertyBase>& newProp, bool isDelta) override;
+
+private:
+    inline static RSModifierRegister<typeEnum, Unmarshalling> register_;
 };
 
 template<typename T, RSModifierType typeEnum, auto setter>
-class RSRenderModifierTemplate : public RSAnimatableRenderModifier<RSRenderProperty<T>> { 
+class RSRenderModifierTemplate : public RSAnimatableRenderModifier<RSRenderProperty<T>> {
 public:
     RSRenderModifierTemplate(const std::shared_ptr<RSRenderProperty<T>>& property)
         : RSAnimatableRenderModifier<RSRenderProperty<T>>(property)
@@ -166,6 +188,9 @@ public:
     static RSRenderModifier* Unmarshalling(Parcel& parcel);
     void Apply(RSModifyContext& context) override;
     void Update(const std::shared_ptr<RSRenderPropertyBase>& newProp, bool isDelta) override;
+
+private:
+    inline static RSModifierRegister<typeEnum, Unmarshalling> register_;
 };
 
 #define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE)                                               \

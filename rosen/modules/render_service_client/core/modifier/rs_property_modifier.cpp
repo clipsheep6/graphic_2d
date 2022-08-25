@@ -13,12 +13,44 @@
  * limitations under the License.
  */
 
-#include "modifier/rs_property_modifier.h"
+// #include "modifier/rs_property_modifier.h"
 
-#include "modifier/rs_modifier_type.h"
-#include "modifier/rs_render_modifier.h"
+// #include "modifier/rs_modifier_type.h"
+// #include "modifier/rs_render_modifier.h"
 
 namespace OHOS {
 namespace Rosen {
+// template<typename renderModifierType, typename modifierType, RSModifierType typeEnum>
+// std::shared_ptr<RSRenderModifier>
+// RSModifierTemplate<renderModifierType, modifierType, typeEnum>::CreateRenderModifier() const
+// {
+//     auto renderProperty =
+//         std::make_shared<RSRenderProperty<modifierType>>(this->property_->Get(), this->property_->GetId());
+//     auto renderModifier = std::make_shared<renderModifierType>(renderProperty);
+//     return renderModifier;
+// }
+
+// template<typename renderModifierType, typename modifierType, RSModifierType typeEnum>
+// std::shared_ptr<RSRenderModifier>
+// RSAnimatableModifierTemplate<renderModifierType, modifierType, typeEnum>::CreateRenderModifier() const
+// {
+//     auto renderProperty =
+//         std::make_shared<RSRenderAnimatableProperty<modifierType>>(this->property_->Get(), this->property_->GetId());
+//     auto renderModifier = std::make_shared<renderModifierType>(renderProperty);
+//     renderModifier->SetIsAdditive(this->isAdditive_);
+//     return renderModifier;
+// }
+
+// // explicit instantiation and registration
+// #define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE) \
+//     template class RSAnimatableModifierTemplate<RS##MODIFIER_NAME##RenderModifier, TYPE, RSModifierType::MODIFIER_TYPE>;
+
+// #define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE) \
+//     template class RSModifierTemplate<RS##MODIFIER_NAME##RenderModifier, TYPE, RSModifierType::MODIFIER_TYPE>;
+
+// #include "modifier/rs_modifiers_def.in"
+
+// #undef DECLARE_ANIMATABLE_MODIFIER
+// #undef DECLARE_NOANIMATABLE_MODIFIER
 } // namespace Rosen
 } // namespace OHOS

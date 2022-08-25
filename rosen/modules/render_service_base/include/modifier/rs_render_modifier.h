@@ -17,6 +17,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_MODIFIER_H
 
 #include <memory>
+
 #include "parcel.h"
 
 #include "common/rs_color.h"
@@ -26,13 +27,13 @@
 #include "modifier/rs_modifier_type.h"
 #include "modifier/rs_render_property.h"
 #include "pipeline/rs_draw_cmd_list.h"
+#include "property/rs_properties.h"
 #include "render/rs_border.h"
 #include "render/rs_filter.h"
 #include "render/rs_image.h"
 #include "render/rs_mask.h"
 #include "render/rs_path.h"
 #include "render/rs_shader.h"
-
 
 namespace OHOS {
 namespace Rosen {
@@ -80,6 +81,7 @@ public:
     {
         return property_;
     }
+    static RSRenderModifier* Unmarshalling(Parcel& parcel);
 
     void SetIsAdditive(bool isAdditive) override {}
     RSModifierType GetType() override
@@ -128,38 +130,51 @@ protected:
     friend class RSRenderPropertyAnimation;
 };
 
-// declare RenderModifiers like RSBoundsRenderModifier
-#define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE)                                             \
-    class RS##MODIFIER_NAME##RenderModifier : public RSAnimatableRenderModifier<RSRenderAnimatableProperty<TYPE>> { \
-    public:                                                                                                         \
-        RS##MODIFIER_NAME##RenderModifier(const std::shared_ptr<RSRenderAnimatableProperty<TYPE>>& property)        \
-            : RSAnimatableRenderModifier<RSRenderAnimatableProperty<TYPE>>(property)                                \
-        {}                                                                                                          \
-        virtual ~RS##MODIFIER_NAME##RenderModifier() = default;                                                     \
-        void Apply(RSModifyContext& context) override;                                                              \
-        void Update(const std::shared_ptr<RSRenderPropertyBase>& newProp, bool isDelta) override;                   \
-        bool Marshalling(Parcel& parcel) override;                                                                  \
-        RSModifierType GetType() override                                                                           \
-        {                                                                                                           \
-            return RSModifierType::MODIFIER_TYPE;                                                                   \
-        }                                                                                                           \
-    };
+template<typename T, RSModifierType typeEnum, auto getter, auto setter>
+class RSAnimatableRenderModifierTemplate : public RSAnimatableRenderModifier<RSRenderAnimatableProperty<T>> { 
+public:
+    RSAnimatableRenderModifierTemplate(const std::shared_ptr<RSRenderAnimatableProperty<T>>& property)
+        : RSAnimatableRenderModifier<RSRenderAnimatableProperty<T>>(property)
+    {}
+    virtual ~RSAnimatableRenderModifierTemplate() = default;
 
-#define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE)                          \
-    class RS##MODIFIER_NAME##RenderModifier : public RSAnimatableRenderModifier<RSRenderProperty<TYPE>> {    \
-    public:                                                                                        \
-        RS##MODIFIER_NAME##RenderModifier(const std::shared_ptr<RSRenderProperty<TYPE>>& property) \
-            : RSAnimatableRenderModifier<RSRenderProperty<TYPE>>(property)                                   \
-        {}                                                                                         \
-        virtual ~RS##MODIFIER_NAME##RenderModifier() = default;                                    \
-        void Apply(RSModifyContext& context) override;                                             \
-        void Update(const std::shared_ptr<RSRenderPropertyBase>& newProp, bool isDelta) override;  \
-        bool Marshalling(Parcel& parcel) override;                                                 \
-        RSModifierType GetType() override                                                          \
-        {                                                                                          \
-            return RSModifierType::MODIFIER_TYPE;                                                  \
-        }                                                                                          \
-    };
+    RSModifierType GetType() override
+    {
+        return typeEnum;
+    }
+
+    bool Marshalling(Parcel& parcel) override;
+    static RSRenderModifier* Unmarshalling(Parcel& parcel);
+    void Apply(RSModifyContext& context) override;
+    void Update(const std::shared_ptr<RSRenderPropertyBase>& newProp, bool isDelta) override;
+};
+
+template<typename T, RSModifierType typeEnum, auto setter>
+class RSRenderModifierTemplate : public RSAnimatableRenderModifier<RSRenderProperty<T>> { 
+public:
+    RSRenderModifierTemplate(const std::shared_ptr<RSRenderProperty<T>>& property)
+        : RSAnimatableRenderModifier<RSRenderProperty<T>>(property)
+    {}
+    virtual ~RSRenderModifierTemplate() = default;
+
+    RSModifierType GetType() override
+    {
+        return typeEnum;
+    }
+
+    bool Marshalling(Parcel& parcel) override;
+    static RSRenderModifier* Unmarshalling(Parcel& parcel);
+    void Apply(RSModifyContext& context) override;
+    void Update(const std::shared_ptr<RSRenderPropertyBase>& newProp, bool isDelta) override;
+};
+
+#define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE)                                               \
+    using RS##MODIFIER_NAME##RenderModifier = RSAnimatableRenderModifierTemplate<TYPE, RSModifierType::MODIFIER_TYPE, \
+        &RSProperties::Get##MODIFIER_NAME, &RSProperties::Set##MODIFIER_NAME>;
+
+#define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE) \
+    using RS##MODIFIER_NAME##RenderModifier =                             \
+        RSRenderModifierTemplate<TYPE, RSModifierType::MODIFIER_TYPE, &RSProperties::Set##MODIFIER_NAME>;
 
 #include "modifier/rs_modifiers_def.in"
 

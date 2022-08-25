@@ -33,12 +33,13 @@ void RSBaseRenderNode::AddChild(SharedPtr child, int index)
     if (child == nullptr || child->GetId() == GetId()) {
         return;
     }
-    // if child already has a parent, remove it from its previous parent
+    // break previous parent-child relationship if any
     if (auto prevParent = child->GetParent().lock()) {
-        prevParent->RemoveChild(child);
+        // skip transition or cache cleanup
+        prevParent->RemoveChild(child, true);
     }
 
-    // Set parent-child relationship
+    // build new parent-child relationship
     child->SetParent(weak_from_this());
     if (index < 0 || index >= static_cast<int>(children_.size())) {
         children_.emplace_back(child);
@@ -53,7 +54,7 @@ void RSBaseRenderNode::AddChild(SharedPtr child, int index)
     }
 }
 
-void RSBaseRenderNode::RemoveChild(SharedPtr child)
+void RSBaseRenderNode::RemoveChild(SharedPtr child, bool skipTransition)
 {
     if (child == nullptr) {
         return;
@@ -64,6 +65,11 @@ void RSBaseRenderNode::RemoveChild(SharedPtr child)
     if (it == children_.end()) {
         return;
     }
+    if (skipTransition) {
+        children_.erase(it);
+        return;
+    }
+
     // avoid duplicate entry in disappearingChildren_ (this should not happen)
     disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
     // if child has disappearing transition, add it to disappearingChildren_

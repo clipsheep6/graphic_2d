@@ -37,7 +37,7 @@ public:
     virtual ~RSBaseRenderNode() = default;
 
     void AddChild(SharedPtr child, int index = -1);
-    void RemoveChild(SharedPtr child);
+    void RemoveChild(SharedPtr child, bool skipTransition = false);
     // Add/RemoveCrossParentChild only used as: the child is under multiple parents(e.g. a window cross multi-screens)
     void AddCrossParentChild(const SharedPtr& child, int32_t index = -1);
     void RemoveCrossParentChild(const SharedPtr& child, const WeakPtr& newParent);

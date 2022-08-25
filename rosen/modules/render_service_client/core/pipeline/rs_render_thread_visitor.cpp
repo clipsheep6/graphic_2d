@@ -65,6 +65,12 @@ void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
     if (isIdle_) {
         curDirtyManager_ = node.GetDirtyManager();
         curDirtyManager_->Clear();
+        // After the node calls applymodifiers, the modifiers assign the renderProperties to the node
+        // Otherwise node.GetSurfaceHeight always less than 0, causing black screen
+        node.ApplyModifiers();
+        if (!IsValidRootRenderNode(node)) {
+            return;
+        }
         dirtyFlag_ = false;
         isIdle_ = false;
         PrepareCanvasRenderNode(node);
@@ -201,17 +207,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         return;
     }
     auto ptr = RSNodeMap::Instance().GetNode<RSSurfaceNode>(node.GetRSSurfaceNodeId());
-    if (ptr == nullptr) {
-        ROSEN_LOGE("ProcessRoot: No valid RSSurfaceNode id");
-        return;
-    }
-    if (!node.enableRender_) {
-        ROSEN_LOGI("ProcessRoot %s: Invisible", ptr->GetName().c_str());
-        return;
-    }
-    if (node.GetSurfaceWidth() <= 0 || node.GetSurfaceHeight() <= 0) {
-        ROSEN_LOGE("ProcessRoot %s: Negative width or height [%d %d]", ptr->GetName().c_str(),
-            node.GetSurfaceWidth(), node.GetSurfaceHeight());
+    if (!IsValidRootRenderNode(node)) {
         return;
     }
 

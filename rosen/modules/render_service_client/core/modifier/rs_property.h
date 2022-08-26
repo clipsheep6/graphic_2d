@@ -199,8 +199,6 @@ protected:
 
 template<typename T>
 class RS_EXPORT RSAnimatableProperty : public RSProperty<T> {
-    // static_assert(std::is_integral_v<T> || std::is_floating_point_v<T> ||
-    //     std::is_base_of_v<RSAnimatableArithmetic<T>, T>);
 public:
     RSAnimatableProperty() {}
     RSAnimatableProperty(const T& value) : RSProperty<T>(value)

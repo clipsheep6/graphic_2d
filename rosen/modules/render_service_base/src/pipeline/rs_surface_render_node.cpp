@@ -173,12 +173,6 @@ void RSSurfaceRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->ProcessSurfaceRenderNode(*this);
 }
 
-void RSSurfaceRenderNode::SetContextBounds(const Vector4f bounds)
-{
-    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetBounds>(GetId(), bounds);
-    SendCommandFromRT(command, GetId());
-}
-
 std::shared_ptr<RSDirtyRegionManager> RSSurfaceRenderNode::GetDirtyManager() const
 {
     return dirtyManager_;

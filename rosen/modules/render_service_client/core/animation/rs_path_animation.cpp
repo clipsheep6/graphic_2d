@@ -157,11 +157,6 @@ void RSPathAnimation::OnStart()
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, target->IsRenderServiceNode(),
             target->GetFollowType(), target->GetId());
-        if (target->NeedForcedSendToRemote()) {
-            std::unique_ptr<RSCommand> commandForRemote =
-                std::make_unique<RSAnimationCreatePath>(target->GetId(), animation);
-            transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
-        }
         if (target->NeedSendExtraCommand()) {
             std::unique_ptr<RSCommand> extraCommand =
                 std::make_unique<RSAnimationCreatePath>(target->GetId(), animation);

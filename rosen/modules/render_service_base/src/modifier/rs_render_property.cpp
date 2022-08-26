@@ -14,6 +14,8 @@
  */
 
 #include "modifier/rs_render_property.h"
+#include "command/rs_node_command.h"
+#include "transaction/rs_transaction_proxy.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -172,6 +174,239 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
     return val != nullptr;
 }
 #endif
+
+template<>
+void RSRenderProperty<bool>::SendIfNeed(const bool& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyBool>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<float>::SendIfNeed(const float& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyFloat>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<int>::SendIfNeed(const int& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyInt>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<Color>::SendIfNeed(const Color& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyColor>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<Gravity>::SendIfNeed(const Gravity& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyGravity>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<Matrix3f>::SendIfNeed(const Matrix3f& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyMatrix3f>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<Quaternion>::SendIfNeed(const Quaternion& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyQuaternion>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<std::shared_ptr<RSFilter>>::SendIfNeed(const std::shared_ptr<RSFilter>& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyFilter>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<std::shared_ptr<RSImage>>::SendIfNeed(const std::shared_ptr<RSImage>& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyImage>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<std::shared_ptr<RSMask>>::SendIfNeed(const std::shared_ptr<RSMask>& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyMask>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<std::shared_ptr<RSPath>>::SendIfNeed(const std::shared_ptr<RSPath>& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyPath>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<std::shared_ptr<RSShader>>::SendIfNeed(const std::shared_ptr<RSShader>& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyShader>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<Vector2f>::SendIfNeed(const Vector2f& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyVector2f>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<Vector4<uint32_t>>::SendIfNeed(const Vector4<uint32_t>& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyBorderStyle>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<Vector4<Color>>::SendIfNeed(const Vector4<Color>& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyVector4Color>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+template<>
+void RSRenderProperty<Vector4f>::SendIfNeed(const Vector4f& value)
+{
+    if (node_.lock()) {
+        auto node = (node_.lock())->ReinterpretCastTo<RSRenderNode>();
+        std::unique_ptr<RSCommand> cmd =
+            std::make_unique<RSUpdatePropertyVector4f>(node->GetId(), value, id_, false);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(cmd, true, FollowType::FOLLOW_TO_PARENT, node->GetId());
+        }
+    }
+}
+
+// Attention: SurfaceNode created by RosenRenderTexture/RosenRenderWeb/RosenRenderXComponent,
+// has not supported DrawCmdList yet.
+template<>
+void RSRenderProperty<std::shared_ptr<DrawCmdList>>::SendIfNeed(
+    const std::shared_ptr<DrawCmdList>& value)
+{
+    return;
+}
 
 template<>
 float RSRenderAnimatableProperty<float>::toFloat() const

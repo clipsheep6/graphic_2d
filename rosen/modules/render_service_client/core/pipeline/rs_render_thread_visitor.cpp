@@ -445,10 +445,6 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         return;
     }
 
-    // PLANNING: This is a temporary modification. Animation for surfaceView should not be triggered in RenderService.
-    // We plan to refactor code here.
-    node.SetContextBounds(node.GetRenderProperties().GetBounds());
-
     auto clipRect = getLocalClipBounds(canvas_);
     if (clipRect.width() < std::numeric_limits<float>::epsilon() ||
         clipRect.height() < std::numeric_limits<float>::epsilon()) {

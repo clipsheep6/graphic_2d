@@ -62,12 +62,19 @@ public:
     static RSRenderModifier* Unmarshalling(Parcel& parcel);
     virtual void SetIsAdditive(bool isAdditive) = 0;
 
-private:
+protected:
+    // unmarshalling function Look up table
     using ModifierUnmarshallingFunc = RSRenderModifier* (*)(Parcel& parcel);
     inline static std::unordered_map<RSModifierType, ModifierUnmarshallingFunc> unmarshallingFuncLUT_;
 
+    // Helper class for automatically registry
     template<RSModifierType typeEnum, RSRenderModifier::ModifierUnmarshallingFunc func>
-    friend class RSModifierRegister;
+    struct UnmarshallingFuncRegister {
+        UnmarshallingFuncRegister()
+        {
+            RSRenderModifier::unmarshallingFuncLUT_.emplace(typeEnum, func);
+        }
+    };
 };
 
 class RSDrawCmdListRenderModifier : public RSRenderModifier {
@@ -75,12 +82,12 @@ public:
     RSDrawCmdListRenderModifier(const std::shared_ptr<RSRenderProperty<DrawCmdListPtr>>& property)
         : property_(property ? property : std::make_shared<RSRenderProperty<DrawCmdListPtr>>())
     {}
-    virtual ~RSDrawCmdListRenderModifier() = default;
+    ~RSDrawCmdListRenderModifier() override = default;
     void Apply(RSModifyContext& context) override;
     void Update(const std::shared_ptr<RSRenderPropertyBase>& newProp, bool isDelta) override;
     bool Marshalling(Parcel& parcel) override;
 
-    virtual PropertyId GetPropertyId() override
+    PropertyId GetPropertyId() override
     {
         return property_->GetId();
     }
@@ -115,7 +122,7 @@ public:
 
     virtual ~RSAnimatableRenderModifier() = default;
 
-    virtual PropertyId GetPropertyId() override
+    PropertyId GetPropertyId() override
     {
         return property_->GetId();
     }
@@ -125,7 +132,7 @@ public:
         return property_;
     }
 
-    virtual void SetIsAdditive(bool isAdditive) override
+    void SetIsAdditive(bool isAdditive) override
     {
         isAdditive_ = isAdditive;
     }
@@ -139,23 +146,13 @@ protected:
     friend class RSRenderPropertyAnimation;
 };
 
-// Helper class for automatically registry
-template<RSModifierType typeEnum, RSRenderModifier::ModifierUnmarshallingFunc func>
-class RSModifierRegister {
-public:
-    RSModifierRegister()
-    {
-        RSRenderModifier::unmarshallingFuncLUT_.emplace(typeEnum, func);
-    }
-};
-
 template<typename T, RSModifierType typeEnum, auto getter, auto setter>
 class RSAnimatableRenderModifierTemplate : public RSAnimatableRenderModifier<RSRenderAnimatableProperty<T>> {
 public:
     RSAnimatableRenderModifierTemplate(const std::shared_ptr<RSRenderAnimatableProperty<T>>& property)
         : RSAnimatableRenderModifier<RSRenderAnimatableProperty<T>>(property)
     {}
-    virtual ~RSAnimatableRenderModifierTemplate() = default;
+    ~RSAnimatableRenderModifierTemplate() override = default;
 
     RSModifierType GetType() override
     {
@@ -168,7 +165,7 @@ public:
     void Update(const std::shared_ptr<RSRenderPropertyBase>& newProp, bool isDelta) override;
 
 private:
-    inline static RSModifierRegister<typeEnum, Unmarshalling> register_;
+    inline static RSRenderModifier::UnmarshallingFuncRegister<typeEnum, Unmarshalling> register_;
 };
 
 template<typename T, RSModifierType typeEnum, auto setter>
@@ -177,7 +174,7 @@ public:
     RSRenderModifierTemplate(const std::shared_ptr<RSRenderProperty<T>>& property)
         : RSAnimatableRenderModifier<RSRenderProperty<T>>(property)
     {}
-    virtual ~RSRenderModifierTemplate() = default;
+    ~RSRenderModifierTemplate() override = default;
 
     RSModifierType GetType() override
     {
@@ -190,16 +187,16 @@ public:
     void Update(const std::shared_ptr<RSRenderPropertyBase>& newProp, bool isDelta) override;
 
 private:
-    inline static RSModifierRegister<typeEnum, Unmarshalling> register_;
+    inline static RSRenderModifier::UnmarshallingFuncRegister<typeEnum, Unmarshalling> register_;
 };
 
-#define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE)                                               \
-    using RS##MODIFIER_NAME##RenderModifier = RSAnimatableRenderModifierTemplate<TYPE, RSModifierType::MODIFIER_TYPE, \
+#define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_ENUM)                               \
+    using RS##MODIFIER_NAME##RenderModifier = RSAnimatableRenderModifierTemplate<TYPE, MODIFIER_ENUM, \
         &RSProperties::Get##MODIFIER_NAME, &RSProperties::Set##MODIFIER_NAME>;
 
-#define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE) \
+#define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_ENUM) \
     using RS##MODIFIER_NAME##RenderModifier =                             \
-        RSRenderModifierTemplate<TYPE, RSModifierType::MODIFIER_TYPE, &RSProperties::Set##MODIFIER_NAME>;
+        RSRenderModifierTemplate<TYPE, MODIFIER_ENUM, &RSProperties::Set##MODIFIER_NAME>;
 
 #include "modifier/rs_modifiers_def.in"
 

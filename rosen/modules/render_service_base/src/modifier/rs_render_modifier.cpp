@@ -169,12 +169,12 @@ void RSRenderModifierTemplate<T, typeEnum, setter>::Update(
 }
 
 // explicit instantiation and registration
-#define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE)                    \
-    template class RSAnimatableRenderModifierTemplate<TYPE, RSModifierType::MODIFIER_TYPE, \
-        &RSProperties::Get##MODIFIER_NAME, &RSProperties::Set##MODIFIER_NAME>;
+#define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_ENUM)                                       \
+    template class RSAnimatableRenderModifierTemplate<TYPE, MODIFIER_ENUM, &RSProperties::Get##MODIFIER_NAME, \
+        &RSProperties::Set##MODIFIER_NAME>;
 
-#define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE) \
-    template class RSRenderModifierTemplate<TYPE, RSModifierType::MODIFIER_TYPE, &RSProperties::Set##MODIFIER_NAME>;
+#define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_ENUM) \
+    template class RSRenderModifierTemplate<TYPE, MODIFIER_ENUM, &RSProperties::Set##MODIFIER_NAME>;
 
 #include "modifier/rs_modifiers_def.in"
 

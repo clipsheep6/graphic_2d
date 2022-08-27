@@ -34,10 +34,10 @@ void RSDrawCmdListRenderModifier::Apply(RSModifyContext& context)
     }
 }
 
-void RSDrawCmdListRenderModifier::Update(const std::shared_ptr<RSRenderPropertyBase>& newProp, bool isDelta)
+void RSDrawCmdListRenderModifier::Update(const std::shared_ptr<RSRenderPropertyBase>& property, bool isDelta)
 {
-    if (auto newProperty = std::static_pointer_cast<RSRenderProperty<DrawCmdListPtr>>(newProp)) {
-        property_->Set(newProperty->Get());
+    if (auto prop = std::static_pointer_cast<RSRenderProperty<DrawCmdListPtr>>(property)) {
+        property_->Set(prop->Get());
     }
 }
 
@@ -137,13 +137,13 @@ void RSAnimatableRenderModifierTemplate<T, typeEnum, getter, setter>::Apply(RSMo
 
 template<typename T, RSModifierType typeEnum, auto getter, auto setter>
 void RSAnimatableRenderModifierTemplate<T, typeEnum, getter, setter>::Update(
-    const std::shared_ptr<RSRenderPropertyBase>& newProp, bool isDelta)
+    const std::shared_ptr<RSRenderPropertyBase>& property, bool isDelta)
 {
-    if (auto newProperty = std::static_pointer_cast<RSRenderAnimatableProperty<T>>(newProp)) {
+    if (auto prop = std::static_pointer_cast<RSRenderAnimatableProperty<T>>(property)) {
         if (isDelta) {
-            this->property_->Set(this->property_->Get() + newProperty->Get());
+            this->property_->Set(this->property_->Get() + prop->Get());
         } else {
-            this->property_->Set(newProperty->Get());
+            this->property_->Set(prop->Get());
         }
     }
 }
@@ -182,20 +182,20 @@ void RSRenderModifierTemplate<T, typeEnum, setter>::Apply(RSModifyContext& conte
 
 template<typename T, RSModifierType typeEnum, auto setter>
 void RSRenderModifierTemplate<T, typeEnum, setter>::Update(
-    const std::shared_ptr<RSRenderPropertyBase>& newProp, bool isDelta)
+    const std::shared_ptr<RSRenderPropertyBase>& property, bool isDelta)
 {
-    if (auto newProperty = std::static_pointer_cast<RSRenderProperty<T>>(newProp)) {
-        this->property_->Set(newProperty->Get());
+    if (auto prop = std::static_pointer_cast<RSRenderProperty<T>>(property)) {
+        this->property_->Set(prop->Get());
     }
 }
 
 // explicit instantiation and registration
 #define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_ENUM)                                       \
     template class RSAnimatableRenderModifierTemplate<TYPE, MODIFIER_ENUM, &RSProperties::Get##MODIFIER_NAME, \
-        &RSProperties::Set##MODIFIER_NAME>;
+        &RSProperties::Set##MODIFIER_NAME>
 
 #define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_ENUM) \
-    template class RSRenderModifierTemplate<TYPE, MODIFIER_ENUM, &RSProperties::Set##MODIFIER_NAME>;
+    template class RSRenderModifierTemplate<TYPE, MODIFIER_ENUM, &RSProperties::Set##MODIFIER_NAME>
 
 #include "modifier/rs_modifiers_def.in"
 

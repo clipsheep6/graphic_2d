@@ -341,31 +341,31 @@ void RSProperty<T>::Set(const T& value)
     UpdateToRender(stagingValue_, false);
 }
 
-template class RSProperty<bool>;
-template class RSProperty<float>;
-template class RSProperty<int>;
-template class RSProperty<Color>;
-template class RSProperty<Gravity>;
-template class RSProperty<Matrix3f>;
-template class RSProperty<Quaternion>;
-template class RSProperty<std::shared_ptr<RSFilter>>;
-template class RSProperty<std::shared_ptr<RSImage>>;
-template class RSProperty<std::shared_ptr<RSMask>>;
-template class RSProperty<std::shared_ptr<RSPath>>;
-template class RSProperty<std::shared_ptr<RSShader>>;
-template class RSProperty<Vector2f>;
-template class RSProperty<Vector4<uint32_t>>;
-template class RSProperty<Vector4<Color>>;
-template class RSProperty<Vector4f>;
+template class RS_EXPORT RSProperty<bool>;
+template class RS_EXPORT RSProperty<float>;
+template class RS_EXPORT RSProperty<int>;
+template class RS_EXPORT RSProperty<Color>;
+template class RS_EXPORT RSProperty<Gravity>;
+template class RS_EXPORT RSProperty<Matrix3f>;
+template class RS_EXPORT RSProperty<Quaternion>;
+template class RS_EXPORT RSProperty<std::shared_ptr<RSFilter>>;
+template class RS_EXPORT RSProperty<std::shared_ptr<RSImage>>;
+template class RS_EXPORT RSProperty<std::shared_ptr<RSMask>>;
+template class RS_EXPORT RSProperty<std::shared_ptr<RSPath>>;
+template class RS_EXPORT RSProperty<std::shared_ptr<RSShader>>;
+template class RS_EXPORT RSProperty<Vector2f>;
+template class RS_EXPORT RSProperty<Vector4<uint32_t>>;
+template class RS_EXPORT RSProperty<Vector4<Color>>;
+template class RS_EXPORT RSProperty<Vector4f>;
 
-template class RSAnimatableProperty<bool>;
-template class RSAnimatableProperty<float>;
-template class RSAnimatableProperty<Color>;
-template class RSAnimatableProperty<Matrix3f>;
-template class RSAnimatableProperty<Vector2f>;
-template class RSAnimatableProperty<Vector4f>;
-template class RSAnimatableProperty<Quaternion>;
-template class RSAnimatableProperty<std::shared_ptr<RSFilter>>;
-template class RSAnimatableProperty<Vector4<Color>>;
+template class RS_EXPORT RSAnimatableProperty<bool>;
+template class RS_EXPORT RSAnimatableProperty<float>;
+template class RS_EXPORT RSAnimatableProperty<Color>;
+template class RS_EXPORT RSAnimatableProperty<Matrix3f>;
+template class RS_EXPORT RSAnimatableProperty<Vector2f>;
+template class RS_EXPORT RSAnimatableProperty<Vector4f>;
+template class RS_EXPORT RSAnimatableProperty<Quaternion>;
+template class RS_EXPORT RSAnimatableProperty<std::shared_ptr<RSFilter>>;
+template class RS_EXPORT RSAnimatableProperty<Vector4<Color>>;
 } // namespace Rosen
 } // namespace OHOS

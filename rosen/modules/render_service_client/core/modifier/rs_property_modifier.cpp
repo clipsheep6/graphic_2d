@@ -29,7 +29,9 @@ namespace OHOS::Rosen {
         auto renderModifier = std::make_shared<RS##MODIFIER_NAME##RenderModifier>(renderProperty);                \
         renderModifier->SetIsAdditive(this->isAdditive_);                                                         \
         return renderModifier;                                                                                    \
-    }
+    }                                                                                                             \
+    template class RS_EXPORT RSModifierTemplate<RSAnimatableProperty<TYPE>, MODIFIER_ENUM>
+
 #define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_ENUM)                                         \
     template<>                                                                                                    \
     std::shared_ptr<RSRenderModifier> RSModifierTemplate<RSProperty<TYPE>, MODIFIER_ENUM>::CreateRenderModifier() \
@@ -39,7 +41,8 @@ namespace OHOS::Rosen {
             std::make_shared<RSRenderProperty<TYPE>>(this->property_->Get(), this->property_->GetId());           \
         auto renderModifier = std::make_shared<RS##MODIFIER_NAME##RenderModifier>(renderProperty);                \
         return renderModifier;                                                                                    \
-    }
+    }                                                                                                             \
+    template class RS_EXPORT RSModifierTemplate<RSProperty<TYPE>, MODIFIER_ENUM>
 
 #include "modifier/rs_modifiers_def.in"
 

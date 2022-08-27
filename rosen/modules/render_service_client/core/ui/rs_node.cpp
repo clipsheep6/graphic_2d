@@ -253,14 +253,18 @@ std::shared_ptr<RSModifierBase> RSNode::FindOrCreateModifier(RSModifierType prop
     return modifier;
 }
 
-#define SET_ANIMATABLE_MODIFIER(propertyName, T, value, propertyType, defaultValue)                            \
-    auto modifier =                                                                                            \
-        FindOrCreateModifier<RSAnimatableProperty<T>, RS##propertyName##Modifier>(propertyType, defaultValue); \
-    std::static_pointer_cast<RSAnimatableProperty<T>>(modifier->GetProperty())->Set(value);
+#define SET_ANIMATABLE_MODIFIER(propertyName, T, value, propertyType, defaultValue)                                \
+    do {                                                                                                           \
+        auto modifier =                                                                                            \
+            FindOrCreateModifier<RSAnimatableProperty<T>, RS##propertyName##Modifier>(propertyType, defaultValue); \
+        std::static_pointer_cast<RSAnimatableProperty<T> >(modifier->GetProperty())->Set(value);                   \
+    } while (0)
 
-#define SET_NONANIMATABLE_MODIFIER(propertyName, T, value, propertyType)                                  \
-    auto modifier = FindOrCreateModifier<RSProperty<T>, RS##propertyName##Modifier>(propertyType, value); \
-    std::static_pointer_cast<RSProperty<T>>(modifier->GetProperty())->Set(value);
+#define SET_NONANIMATABLE_MODIFIER(propertyName, T, value, propertyType)                                      \
+    do {                                                                                                      \
+        auto modifier = FindOrCreateModifier<RSProperty<T>, RS##propertyName##Modifier>(propertyType, value); \
+        std::static_pointer_cast<RSProperty<T> >(modifier->GetProperty())->Set(value);                        \
+    } while (0)
 
 // alpha
 void RSNode::SetAlpha(float alpha)

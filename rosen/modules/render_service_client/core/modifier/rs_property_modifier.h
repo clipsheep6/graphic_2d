@@ -38,9 +38,9 @@ protected:
 };
 
 #define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_ENUM) \
-    using RS##MODIFIER_NAME##Modifier = RSModifierTemplate<RSAnimatableProperty<TYPE>, MODIFIER_ENUM>;
+    using RS##MODIFIER_NAME##Modifier = RSModifierTemplate<RSAnimatableProperty<TYPE>, (MODIFIER_ENUM)>
 #define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_ENUM) \
-    using RS##MODIFIER_NAME##Modifier = RSModifierTemplate<RSProperty<TYPE>, MODIFIER_ENUM>;
+    using RS##MODIFIER_NAME##Modifier = RSModifierTemplate<RSProperty<TYPE>, (MODIFIER_ENUM)>
 
 #include "modifier/rs_modifiers_def.in"
 

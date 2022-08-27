@@ -47,7 +47,8 @@ config("vulkan_headers_config") {
     defines = [ "VK_USE_PLATFORM_GGP" ]
   }
 }
-# [TODO] this file should in ./third_party/vulkan 
+
+# [TODO] this file should in ./third_party/vulkan
 # please remove when third_party_vulkan_sig is ready
 # Vulkan headers only, no compiled sources.
 source_set("vulkan_headers") {

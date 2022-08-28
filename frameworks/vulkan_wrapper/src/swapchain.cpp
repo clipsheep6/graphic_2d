@@ -141,8 +141,6 @@ VkSwapchainKHR HandleFromSwapchain(Swapchain* swapchain) {
     return VkSwapchainKHR(reinterpret_cast<uint64_t>(swapchain));
 }
 
-// input  : VkSwapchainCreateInfoKHR (native window)
-// output : VkSurfaceKHR(swapchain_handle is null)
 VKAPI_ATTR 
 VkResult CreateOHOSSurfaceOpenHarmony(VkInstance instance, 
                                       const VkOHOSSurfaceCreateInfoOpenHarmony* pCreateInfo, 
@@ -171,8 +169,6 @@ VkResult CreateOHOSSurfaceOpenHarmony(VkInstance instance,
         return VK_ERROR_SURFACE_LOST_KHR;
     }
 
-    // TODO: find connect method
-
     *out_surface = HandleFromSurface(surface);
     return VK_SUCCESS;
 }
@@ -187,7 +183,6 @@ void DestroySurfaceKHR(VkInstance instance,
     if (!surface) {
         return;
     }
-    // disconnect [TODO]
 
     surface->~Surface();
     if (!allocator) {
@@ -228,25 +223,16 @@ VkResult GetPhysicalDeviceSurfaceCapabilitiesKHR(
 
 
 
-    // int transform_hint = 0; // TODO
-
-
     capabilities->minImageCount = std::min(max_buffer_count, 3);
     capabilities->maxImageCount = static_cast<uint32_t>(max_buffer_count);
 
     capabilities->currentExtent =
         VkExtent2D{static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
 
-    // TODO(http://b/134182502): Figure out what the max extent should be.
     capabilities->minImageExtent = VkExtent2D{1, 1};
     capabilities->maxImageExtent = VkExtent2D{4096, 4096};
 
     capabilities->maxImageArrayLayers = 1;
-
-    // capabilities->supportedTransforms = kSupportedTransforms;
-    // capabilities->currentTransform =
-    //     TranslateNativeToVulkanTransform(transform_hint);
-
 
     capabilities->supportedCompositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
 
@@ -267,11 +253,8 @@ VkResult GetPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice pdev,
                                             VkSurfaceFormatKHR* formats) {
 
     bool wide_color_support = false;
-    //Surface& surface = *SurfaceFromHandle(surface_handle);
 
     WLOGE("wide_color_support is: %d", wide_color_support);
-
-    // [todo] Hardwarebuffer
 
     std::vector<VkSurfaceFormatKHR> all_formats = {
         {VK_FORMAT_R8G8B8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
@@ -337,7 +320,6 @@ VkResult GetPhysicalDeviceSurfacePresentModesKHR(
 
     std::vector<VkPresentModeKHR> present_modes;
 
-    //[TODO]
     present_modes.push_back(VK_PRESENT_MODE_MAILBOX_KHR);
     present_modes.push_back(VK_PRESENT_MODE_FIFO_KHR);
    
@@ -498,12 +480,6 @@ ColorDataSpace GetColorDataspace(VkColorSpaceKHR colorspace) {
                 GAMUT_ADOBE_RGB | TRANSFORM_FUNC_LINEAR | PRECISION_FULL);
         case VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT:
             return ADOBE_RGB_GAMMA22_FULL;
-
-        // Pass through is intended to allow app to provide data that is passed
-        // to the display system without modification.
-        // case VK_COLOR_SPACE_PASS_THROUGH_EXT:
-        //     return HAL_DATASPACE_ARBITRARY; // ????
-
         default:
             return COLOR_DATA_SPACE_UNKNOWN;
     }
@@ -515,8 +491,7 @@ static bool IsFencePending(int fd) {
         return false;
     }
 
-    errno = 0; // ?????
-    //return sync_wait(fd, 0 /* timeout */) == -1 && errno == ETIME;
+    errno = 0;
 }
 
 void ReleaseSwapchainImage(VkDevice device,
@@ -539,7 +514,6 @@ void ReleaseSwapchainImage(VkDevice device,
             NativeWindowCancelBuffer(window, image.buffer);
         } else {
             if (release_fence >= 0) {
-                //sync_wait(release_fence, -1 /* forever */);
                 close(release_fence);
             }
         }
@@ -575,7 +549,6 @@ void ReleaseSwapchain(VkDevice device, Swapchain* swapchain) {
 }
 
 int TranslateVulkanToNativeTransform(VkSurfaceTransformFlagBitsKHR transform) {
-    // TODO
     return ROTATE_NONE;
 }
 
@@ -620,7 +593,6 @@ VkResult CreateSwapchainKHR(VkDevice device,
         allocator = &vulkan::driver::GetDefaultAllocator();
     }
 
-    // VkFormat -> PIXEL_FORMAT // ?????
 
     PixelFormat pixel_format = GetPixelFormat(create_info->imageFormat);
     ColorDataSpace color_data_space = GetColorDataspace(create_info->imageColorSpace);
@@ -630,7 +602,6 @@ VkResult CreateSwapchainKHR(VkDevice device,
         return VK_ERROR_INITIALIZATION_FAILED;
     }
 
-    // surface(native_window, but swapchain_handle is null)
     Surface& surface = *SurfaceFromHandle(create_info->surface);
     if (surface.swapchain_handle != create_info->oldSwapchain) {
         WLOGD("Can't create a swapchain for VkSurfaceKHR 0x%" PRIx64
@@ -645,7 +616,6 @@ VkResult CreateSwapchainKHR(VkDevice device,
         ReleaseSwapchain(device, SwapchainFromHandle(create_info->oldSwapchain));
     }
 
-    // [TODO]disconnet and connect
     // -- Configure the native window --
     NativeWindow* window = surface.window;
     err = NativeWindowHandleOpt(window, SET_FORMAT, pixel_format);
@@ -654,7 +624,6 @@ VkResult CreateSwapchainKHR(VkDevice device,
               pixel_format, strerror(-err), err);
         return VK_ERROR_SURFACE_LOST_KHR;
     }
-    // [TODO]color_data_space not ready
 
     err = NativeWindowHandleOpt(window, SET_BUFFER_GEOMETRY,
                                 static_cast<int>(create_info->imageExtent.width),
@@ -666,29 +635,22 @@ VkResult CreateSwapchainKHR(VkDevice device,
         return VK_ERROR_SURFACE_LOST_KHR;
     }
 
-    // [TODO]Transform and scaling mode
-
     VkSwapchainImageUsageFlagsOpenHarmony swapchain_image_usage = 0;
     if (create_info->presentMode == VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR ||
         create_info->presentMode == VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR) {
         swapchain_image_usage |= VK_SWAPCHAIN_IMAGE_USAGE_SHARED_BIT_OPENHARMONY;
-        // [TODO]shared buffer
         if (err != OHOS::GSERROR_OK) {
             WLOGE("native_window_set_shared_buffer_mode failed: %{public}s (%{public}d)", strerror(-err), err);
             return VK_ERROR_SURFACE_LOST_KHR;
         }
     }
 
-    //[TODO] auto refresh
-    // [TODO] get min undequeued buffers and set buffer_count
 
     uint32_t num_images = 3;
 
     if (swapchain_image_usage & VK_SWAPCHAIN_IMAGE_USAGE_SHARED_BIT_OPENHARMONY) {
         num_images = 1;
     }
-
-    // get consumer and producer usage
 
     uint64_t native_usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA;
     err = NativeWindowHandleOpt(window, SET_USAGE, native_usage);
@@ -697,8 +659,6 @@ VkResult CreateSwapchainKHR(VkDevice device,
               strerror(-err), err);
         return VK_ERROR_SURFACE_LOST_KHR;
     }
-
-    // [TODO] transform hint
 
     // -- Allocate our Swapchain object --
     // After this point, we must deallocate the swapchain on error.
@@ -776,9 +736,6 @@ VkResult CreateSwapchainKHR(VkDevice device,
                        1};
         image_native_buffer.handle = img.buffer->sfbuffer->GetBufferHandle();
         
-        // [TODO] set producer and consumer usage
-
-
         result =
             vulkan::driver::CreateImage(device, &image_create, nullptr, &img.image);
         if (result != VK_SUCCESS) {
@@ -807,8 +764,6 @@ VkResult CreateSwapchainKHR(VkDevice device,
                                  allocator);
         return result;
     }
-
-    // [TODO] set target stat
 
     surface.swapchain_handle = HandleFromSwapchain(swapchain);
     *swapchain_handle = surface.swapchain_handle;
@@ -849,8 +804,6 @@ VkResult AcquireNextImageKHR(VkDevice device,
         return result;
     }
 
-    // [TODO] timeout
-
     NativeWindowBuffer* buffer;
     int fence_fd;
     err = NativeWindowRequestBuffer(window, &buffer, &fence_fd);
@@ -879,7 +832,6 @@ VkResult AcquireNextImageKHR(VkDevice device,
         if (fence_clone == -1) {
             WLOGE("dup(fence) failed, stalling until signalled: %{public}s (%{public}d)",
                   strerror(errno), errno);
-            //sync_wait(fence_fd, -1 /* forever */);
         }
     }
 
@@ -960,94 +912,6 @@ VkResult GetPhysicalDeviceSurfaceCapabilities2KHR(
     return result;
 }
 
-// static void InterceptBindImageMemory2(
-//     uint32_t bind_info_count,
-//     const VkBindImageMemoryInfo* bind_infos,
-//     std::vector<VkNativeBufferOpenHarmony>* out_native_buffers,
-//     std::vector<VkBindImageMemoryInfo>* out_bind_infos) {
-//     out_native_buffers->clear();
-//     out_bind_infos->clear();
-
-//     if (!bind_info_count)
-//         return;
-
-//     std::unordered_set<uint32_t> intercepted_indexes;
-
-//     for (uint32_t idx = 0; idx < bind_info_count; idx++) {
-//         auto info = reinterpret_cast<const VkBindImageMemorySwapchainInfoKHR*>(
-//             bind_infos[idx].pNext);
-//         while (info &&
-//                info->sType !=
-//                    VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_SWAPCHAIN_INFO_KHR) {
-//             info = reinterpret_cast<const VkBindImageMemorySwapchainInfoKHR*>(
-//                 info->pNext);
-//         }
-
-//         if (!info)
-//             continue;
-
-        
-//         const Swapchain* swapchain = SwapchainFromHandle(info->swapchain);
-      
-//         NativeWindowBuffer* buffer =
-//             swapchain->images[info->imageIndex].buffer;
-//         VkNativeBufferOpenHarmony native_buffer = {
-//             .sType = VK_STRUCTURE_TYPE_NATIVE_BUFFER_OPENHARMONY,
-//             .pNext = bind_infos[idx].pNext,
-//             .handle = buffer->sfbuffer->GetBufferHandle(),
-//         };
-//         // Reserve enough space to avoid letting re-allocation invalidate the
-//         // addresses of the elements inside.
-//         out_native_buffers->reserve(bind_info_count);
-//         out_native_buffers->emplace_back(native_buffer);
-
-//         // Reserve the space now since we know how much is needed now.
-//         out_bind_infos->reserve(bind_info_count);
-//         out_bind_infos->emplace_back(bind_infos[idx]);
-//         out_bind_infos->back().pNext = &out_native_buffers->back();
-
-//         intercepted_indexes.insert(idx);
-//     }
-
-//     if (intercepted_indexes.empty())
-//         return;
-
-//     for (uint32_t idx = 0; idx < bind_info_count; idx++) {
-//         if (intercepted_indexes.count(idx))
-//             continue;
-//         out_bind_infos->emplace_back(bind_infos[idx]);
-//     }
-// }
-
-// VKAPI_ATTR 
-// VkResult BindImageMemory2(
-//     VkDevice device, 
-//     uint32_t bindInfoCount, 
-//     const VkBindImageMemoryInfo* pBindInfos)
-// {
-//     std::vector<VkNativeBufferOpenHarmony> out_native_buffers;
-//     std::vector<VkBindImageMemoryInfo> out_bind_infos;
-//     InterceptBindImageMemory2(bindInfoCount, pBindInfos, &out_native_buffers,
-//                               &out_bind_infos);
-//     return vulkan::driver::BindImageMemory2(device, bindInfoCount,
-//         out_bind_infos.empty() ? pBindInfos : out_bind_infos.data());
-
-// }
-
-// VKAPI_ATTR
-// VkResult BindImageMemory2KHR(VkDevice device,
-//                              uint32_t bindInfoCount,
-//                              const VkBindImageMemoryInfo* pBindInfos) {
-
-//     std::vector<VkNativeBufferOpenHarmony> out_native_buffers;
-//     std::vector<VkBindImageMemoryInfo> out_bind_infos;
-//     InterceptBindImageMemory2(bindInfoCount, pBindInfos, &out_native_buffers,
-//                               &out_bind_infos);
-//     return vulkan::driver::BindImageMemory2KHR(
-//         device, bindInfoCount,
-//         out_bind_infos.empty() ? pBindInfos : out_bind_infos.data());
-// }
-
 static VkResult WorstPresentResult(VkResult a, VkResult b) {
     static const VkResult kWorstToBest[] = {
         VK_ERROR_DEVICE_LOST,
@@ -1064,13 +928,10 @@ static VkResult WorstPresentResult(VkResult a, VkResult b) {
     return a != VK_SUCCESS ? a : b;
 }
 
-
-
 VKAPI_ATTR 
 VkResult QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* present_info)
 {
-    VkDevice device = nullptr;//[TODO] = GetData(queue).driver_device;
-    //const auto& dispatch = GetData(queue).driver;
+    VkDevice device = nullptr;
     VkResult final_result = VK_SUCCESS;
 
     // Look at the pNext chain for supported extension structs:
@@ -1182,10 +1043,6 @@ VkResult QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* present_info)
                     img.requested = false;
                 }
 
-                // If the swapchain is in shared mode, immediately dequeue the
-                // buffer so it can be presented again without an intervening
-                // call to AcquireNextImageKHR. We expect to get the same buffer
-                // back from every call to dequeueBuffer in this mode.
                 if (swapchain.shared && swapchain_result == VK_SUCCESS) {
                     NativeWindowBuffer* buffer;
                     int fence_fd;

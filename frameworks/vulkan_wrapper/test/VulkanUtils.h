@@ -27,7 +27,6 @@ extern PFN_vkGetPhysicalDeviceFeatures2 vkGetPhysicalDeviceFeatures2;
 extern PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties;
 extern PFN_vkGetPhysicalDeviceMemoryProperties vkGetPhysicalDeviceMemoryProperties;
 extern PFN_vkEnumerateInstanceExtensionProperties vkEnumerateInstanceExtensionProperties;
-extern PFN_vkEnumerateInstanceLayerProperties vkEnumerateInstanceLayerProperties;
 extern PFN_vkCmdPipelineBarrier vkCmdPipelineBarrier;
 extern PFN_vkCreateShaderModule vkCreateShaderModule;
 extern PFN_vkCreateBuffer vkCreateBuffer;
@@ -124,12 +123,12 @@ extern PFN_vkCmdFillBuffer vkCmdFillBuffer;
 
 namespace vks
 {
-	namespace utils
-	{
-		bool loadVulkanLibrary();
-		void loadVulkanFunctions(VkInstance instance);
-		void freeVulkanLibrary();
-	}
-}
+namespace utils
+{
+    bool loadVulkanLibrary();
+    void loadVulkanFunctions(VkInstance instance);
+    void freeVulkanLibrary();
+} // namespace utils
+} // namespace vks
 
  

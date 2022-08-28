@@ -46,8 +46,10 @@ extern "C" {
 #define HDIVULKAN_DISPATCH_MAGIC 0x01CDC0DE
 
 typedef struct {
-    VkResult (VKAPI_PTR *PFN_vkEnumerateInstanceExtensionProperties)(const char* pLayerName, uint32_t* pPropertyCount, VkExtensionProperties* pProperties);
-    VkResult (VKAPI_PTR *PFN_vkCreateInstance)(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance);
+    VkResult (VKAPI_PTR *PFN_vkEnumerateInstanceExtensionProperties)(const char* pLayerName, 
+        uint32_t* pPropertyCount, VkExtensionProperties* pProperties);
+    VkResult (VKAPI_PTR *PFN_vkCreateInstance)(const VkInstanceCreateInfo* pCreateInfo, 
+        const VkAllocationCallbacks* pAllocator, VkInstance* pInstance);
     PFN_vkVoidFunction (VKAPI_PTR *PFN_vkGetInstanceProcAddr)(VkInstance instance, const char* pName);
 } VulkanFuncs;
 

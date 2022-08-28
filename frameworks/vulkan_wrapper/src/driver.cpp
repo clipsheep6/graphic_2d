@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
-#include "swapchain.h"
-#include <iostream>
 #include <mutex>
 #include <malloc.h>
+#include <string>
+#include <vector>
+#include "swapchain.h"
 #include "driver_loader.h"
+#include "vulkan/vk_ohos_native_buffer.h"
 #include "wrapper_log.h"
-
 
 namespace vulkan {
 namespace driver {
@@ -54,8 +55,8 @@ bool EnsureInitialized() {
 }
 
 VkResult CreateInstance(const VkInstanceCreateInfo* pCreateInfo,
-                    const VkAllocationCallbacks* pAllocator,
-                    VkInstance* pInstance) 
+                        const VkAllocationCallbacks* pAllocator,
+                        VkInstance* pInstance) 
 {
     if (!EnsureInitialized())
     {
@@ -67,27 +68,34 @@ VkResult CreateInstance(const VkInstanceCreateInfo* pCreateInfo,
     if (result != VK_SUCCESS) {
         return result;
     }
-    pfn_vkGetDeviceProcAddr = 
-        reinterpret_cast<PFN_vkGetDeviceProcAddr>(DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetDeviceProcAddr"));
-    fpn_vkGetPhysicalDeviceProperties2KHR = 
-        reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2KHR>(
+    pfn_vkGetDeviceProcAddr = reinterpret_cast<PFN_vkGetDeviceProcAddr>(
+        DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetDeviceProcAddr"));
+    fpn_vkGetPhysicalDeviceProperties2KHR = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2KHR>(
             DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceProperties2KHR"));
-    pfn_vkCreateDevice = reinterpret_cast<PFN_vkCreateDevice>(DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkCreateDevice"));
-    pfn_vkGetPhysicalDeviceProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties>(DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceProperties"));
-    pfn_vkGetPhysicalDeviceFeatures = reinterpret_cast<PFN_vkGetPhysicalDeviceFeatures>(DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceFeatures"));
-    pfn_vkGetPhysicalDeviceMemoryProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceMemoryProperties>(DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceMemoryProperties"));
-    pfn_vkGetPhysicalDeviceQueueFamilyProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties>(DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceQueueFamilyProperties"));
+    pfn_vkCreateDevice = reinterpret_cast<PFN_vkCreateDevice>(
+        DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkCreateDevice"));
+    pfn_vkGetPhysicalDeviceProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceProperties>(
+        DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceProperties"));
+    pfn_vkGetPhysicalDeviceFeatures = reinterpret_cast<PFN_vkGetPhysicalDeviceFeatures>(
+        DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceFeatures"));
+    pfn_vkGetPhysicalDeviceMemoryProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceMemoryProperties>(
+        DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(*pInstance, "vkGetPhysicalDeviceMemoryProperties"));
+    pfn_vkGetPhysicalDeviceQueueFamilyProperties = reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties>(
+        DriverLoader::GetVulkanFuncs().PFN_vkGetInstanceProcAddr(
+            *pInstance, "vkGetPhysicalDeviceQueueFamilyProperties"));
     return VK_SUCCESS; 
 }
 
 
-VkResult EnumerateInstanceExtensionProperties(const char* pLayerName, uint32_t* pPropertyCount,VkExtensionProperties* pProperties)
+VkResult EnumerateInstanceExtensionProperties(const char* pLayerName, 
+    uint32_t* pPropertyCount, VkExtensionProperties* pProperties)
 {
     if (!EnsureInitialized()) {
         return VK_ERROR_INITIALIZATION_FAILED;
     }
 
-    VkResult result = DriverLoader::GetVulkanFuncs().PFN_vkEnumerateInstanceExtensionProperties(pLayerName, pPropertyCount, pProperties);
+    VkResult result = DriverLoader::GetVulkanFuncs().PFN_vkEnumerateInstanceExtensionProperties(
+        pLayerName, pPropertyCount, pProperties);
     if (result != VK_SUCCESS) {
         return result;
     }
@@ -138,8 +146,8 @@ PFN_vkVoidFunction GetInstanceProcAddr(VkInstance instance, const char* pName)
 
 void DestroyInstance(VkInstance instance, const VkAllocationCallbacks* pAllocator)
 {
-    PFN_vkDestroyInstance pfn_vkDestroyInstance = 
-        reinterpret_cast<PFN_vkDestroyInstance>(GetInstanceProcAddr(instance, "vkDestroyInstance"));
+    PFN_vkDestroyInstance pfn_vkDestroyInstance = reinterpret_cast<PFN_vkDestroyInstance>(
+        GetInstanceProcAddr(instance, "vkDestroyInstance"));
     if (pfn_vkDestroyInstance) {
         pfn_vkDestroyInstance(instance, pAllocator);
     }
@@ -152,7 +160,20 @@ VkResult CreateDevice(VkPhysicalDevice physicalDevice,
 {
     VkResult result = VK_SUCCESS;
     if (pfn_vkCreateDevice) {
-        result = pfn_vkCreateDevice(physicalDevice, pCreateInfo, pAllocator, pDevice);
+        std::vector<const char*> deviceExtensions;
+
+        auto& ext_names = (*pCreateInfo).ppEnabledExtensionNames;
+        auto& ext_count = (*pCreateInfo).enabledExtensionCount;
+        for (uint32_t i = 0; i < ext_count; i++) {
+             deviceExtensions.push_back(ext_names[i]);
+        }
+        deviceExtensions.push_back(VK_OHOS_NATIVE_BUFFER_EXTENSION_NAME);
+        VkDeviceCreateInfo createInfo(*pCreateInfo);
+
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+        createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+
+        result = pfn_vkCreateDevice(physicalDevice, &createInfo, pAllocator, pDevice);
     }
 
     if ((result == VK_SUCCESS) && (pfn_vkGetDeviceProcAddr != nullptr)) {
@@ -160,7 +181,7 @@ VkResult CreateDevice(VkPhysicalDevice physicalDevice,
             pfn_vkGetDeviceProcAddr(*pDevice, "vkGetNativeFenceFdOpenHarmony"));
 
         if (!pfn_vkGetNativeFenceFdOpenHarmony) {
-            std::cout << "vulkan::driver::CreateDevice Get vkGetNativeFenceFdOpenHarmony failed" << std::endl;
+            WLOGE("vulkan::driver::CreateDevice Get vkGetNativeFenceFdOpenHarmony failed");
         }
     }
 
@@ -174,7 +195,7 @@ PFN_vkVoidFunction GetDeviceProcAddr(VkDevice device, const char* pName)
     PFN_vkVoidFunction func = nullptr;
 
     if (!pfn_vkGetDeviceProcAddr) {
-        std::cout << "pfn_vkGetDeviceProcAddr is null, please check"<< std::endl;
+        WLOGE("pfn_vkGetDeviceProcAddr is null, please check");
         return nullptr;
     }
     if (std::strcmp(pName, "vkCreateSwapchainKHR") == 0) {
@@ -198,7 +219,7 @@ PFN_vkVoidFunction GetDeviceProcAddr(VkDevice device, const char* pName)
     }
     func = pfn_vkGetDeviceProcAddr(device, pName);
     if (!func) {
-        std::cout << "GetDeviceProcAddr " << pName << " is null, please check" << std::endl;
+        WLOGE("GetDeviceProcAddr %{public}s  is null, please check", pName);
     }
 
     return func;
@@ -213,7 +234,8 @@ void DestroyImage(VkDevice device, VkImage image, const VkAllocationCallbacks* p
     return;
 }
 
-VkResult CreateImage(VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage)
+VkResult CreateImage(VkDevice device, const VkImageCreateInfo* pCreateInfo, 
+    const VkAllocationCallbacks* pAllocator, VkImage* pImage)
 {
     PFN_vkCreateImage createImage = reinterpret_cast<PFN_vkCreateImage>(GetDeviceProcAddr(device, "vkCreateImage"));
     if (createImage) {
@@ -222,10 +244,11 @@ VkResult CreateImage(VkDevice device, const VkImageCreateInfo* pCreateInfo, cons
     return VK_ERROR_INITIALIZATION_FAILED;
 }
 
-VkResult EnumeratePhysicalDevices(VkInstance instance, uint32_t* pPhysicalDeviceCount, VkPhysicalDevice* pPhysicalDevices)
+VkResult EnumeratePhysicalDevices(
+    VkInstance instance, uint32_t* pPhysicalDeviceCount, VkPhysicalDevice* pPhysicalDevices)
 {
-    PFN_vkEnumeratePhysicalDevices pfn_vkEnumeratePhysicalDevices = 
-        reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(GetInstanceProcAddr(instance, "vkEnumeratePhysicalDevices"));
+    PFN_vkEnumeratePhysicalDevices pfn_vkEnumeratePhysicalDevices = reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(
+        GetInstanceProcAddr(instance, "vkEnumeratePhysicalDevices"));
     if (pfn_vkEnumeratePhysicalDevices) {
         return pfn_vkEnumeratePhysicalDevices(instance, pPhysicalDeviceCount, pPhysicalDevices);
     }
@@ -246,7 +269,8 @@ void GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice, VkPhysicalDevice
     }
 }
 
-void GetPhysicalDeviceMemoryProperties(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties* pMemoryProperties)
+void GetPhysicalDeviceMemoryProperties(
+    VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties* pMemoryProperties)
 {
     if (pfn_vkGetPhysicalDeviceMemoryProperties) {
         pfn_vkGetPhysicalDeviceMemoryProperties(physicalDevice, pMemoryProperties);
@@ -295,7 +319,8 @@ VkResult SetNativeFenceFdOpenHarmony(VkDevice device,
     VkSemaphore semaphore,
     VkFence fence)
 {
-    PFN_vkSetNativeFenceFdOpenHarmony acquireImage = reinterpret_cast<PFN_vkSetNativeFenceFdOpenHarmony>(GetDeviceProcAddr(device, "vkSetNativeFenceFdOpenHarmony"));
+    PFN_vkSetNativeFenceFdOpenHarmony acquireImage = reinterpret_cast<PFN_vkSetNativeFenceFdOpenHarmony>(
+        GetDeviceProcAddr(device, "vkSetNativeFenceFdOpenHarmony"));
     if (acquireImage) {
         return acquireImage(device, nativeFenceFd, semaphore, fence);
     }
@@ -306,7 +331,8 @@ VkResult BindImageMemory2KHR(VkDevice device,
                              uint32_t bindInfoCount,
                              const VkBindImageMemoryInfo* pBindInfos)
 {
-    PFN_vkBindImageMemory2KHR bindImageMemory2KHR = reinterpret_cast<PFN_vkBindImageMemory2KHR>(GetDeviceProcAddr(device, "vkBindImageMemory2KHR"));
+    PFN_vkBindImageMemory2KHR bindImageMemory2KHR 
+        = reinterpret_cast<PFN_vkBindImageMemory2KHR>(GetDeviceProcAddr(device, "vkBindImageMemory2KHR"));
     if (bindImageMemory2KHR) {
         return bindImageMemory2KHR(device, bindInfoCount, pBindInfos);
     }
@@ -317,7 +343,8 @@ VkResult BindImageMemory2(VkDevice device,
                              uint32_t bindInfoCount,
                              const VkBindImageMemoryInfo* pBindInfos)
 {
-    PFN_vkBindImageMemory2 bindImageMemory2 = reinterpret_cast<PFN_vkBindImageMemory2>(GetDeviceProcAddr(device, "vkBindImageMemory2"));
+    PFN_vkBindImageMemory2 bindImageMemory2 
+        = reinterpret_cast<PFN_vkBindImageMemory2>(GetDeviceProcAddr(device, "vkBindImageMemory2"));
     if (bindImageMemory2) {
         return bindImageMemory2(device, bindInfoCount, pBindInfos);
     }

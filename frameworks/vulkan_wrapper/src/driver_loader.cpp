@@ -1,3 +1,17 @@
+/*
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "driver_loader.h"
 #include <dlfcn.h>
 #include <iostream>
@@ -23,10 +37,12 @@ bool DriverLoader::Load()
     }
     std::cout << "DriverLoader::dlopen "<< LIB_CACULATE_PATH <<" success" << std::endl;
 
-    PFN_VulkanInitialize VulkanInitializeFunc = reinterpret_cast<PFN_VulkanInitialize>(dlsym(handle, HDI_VULKAN_MODULE_INIT));
+    PFN_VulkanInitialize VulkanInitializeFunc
+        = reinterpret_cast<PFN_VulkanInitialize>(dlsym(handle, HDI_VULKAN_MODULE_INIT));
 
     if (VulkanInitializeFunc == nullptr) {
-        std::cout << "DriverLoader:: couldn't find symbol(" << HDI_VULKAN_MODULE_INIT <<") in library : " << dlerror() << std::endl;
+        std::cout << "DriverLoader:: couldn't find symbol(" 
+            << HDI_VULKAN_MODULE_INIT <<") in library : " << dlerror() << std::endl;
         dlclose(handle);
         return false;
     }
@@ -40,7 +56,8 @@ bool DriverLoader::Load()
     loader_.vulkanUnInitializeFunc_ = reinterpret_cast<PFN_VulkanUnInitialize>(dlsym(handle, HDI_VULKAN_MODULE_UNINIT));
 
     if (loader_.vulkanUnInitializeFunc_ == nullptr) {
-        std::cout << "DriverLoader:: couldn't find symbol(" << HDI_VULKAN_MODULE_UNINIT <<") in library : " << dlerror() << std::endl;
+        std::cout << "DriverLoader:: couldn't find symbol(" 
+            << HDI_VULKAN_MODULE_UNINIT <<") in library : " << dlerror() << std::endl;
         dlclose(handle);
         return false;
     }

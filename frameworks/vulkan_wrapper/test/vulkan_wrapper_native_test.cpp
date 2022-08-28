@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,7 +22,7 @@
 
 int32_t main(int32_t argc, const char* argv[])
 {
-	 std::cout << "vulkan wrapper native test is comming :: Loading libvulkan.so..." << std::endl;
+     std::cout << "vulkan wrapper native test is comming :: Loading libvulkan.so..." << std::endl;
 
     void* libVulkan = dlopen(LIB_CACULATE_PATH, RTLD_LOCAL | RTLD_NOW);
 
@@ -32,15 +32,16 @@ int32_t main(int32_t argc, const char* argv[])
     }
     std::cout << "vulkan wrapper native test :: dlopen "<< LIB_CACULATE_PATH <<" success" << std::endl;
 
-	// Test Load base function pointers
-	PFN_vkCreateInstance vkCreateInstance = reinterpret_cast<PFN_vkCreateInstance>(dlsym(libVulkan, "vkCreateInstance"));
-	if (vkCreateInstance) {
-		std::cout << "find vulkan vkCreateInstance success" << std::endl;
-	} else {
-		std::cout << "find vulkan vkCreateInstance failed" << std::endl;
-		return -1;
-	}
+    // Test Load base function pointers
+    PFN_vkCreateInstance vkCreateInstance = reinterpret_cast<PFN_vkCreateInstance>(
+		dlsym(libVulkan, "vkCreateInstance"));
+    if (vkCreateInstance) {
+        std::cout << "find vulkan vkCreateInstance success" << std::endl;
+    } else {
+        std::cout << "find vulkan vkCreateInstance failed" << std::endl;
+        return -1;
+    }
 
-	std::cout << "vulkan wrapper native test is successful :: Loading libvulkan.so..." << std::endl;
-	return 0;
+    std::cout << "vulkan wrapper native test is successful :: Loading libvulkan.so..." << std::endl;
+    return 0;
 }

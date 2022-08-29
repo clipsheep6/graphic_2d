@@ -17,401 +17,163 @@
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_MODIFIER_H
 
 #include "modifier/rs_modifier.h"
+#include "modifier/rs_render_modifier.h"
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSBoundsModifier : public RSModifier<RSAnimatableProperty<Vector4f>> {
+
+template<typename renderModifierType, typename modifierType, RSModifierType typeEnum>
+class RS_EXPORT RSAnimatableModifierTemplate : public RSModifier<RSAnimatableProperty<modifierType>> {
 public:
-    explicit RSBoundsModifier(const std::shared_ptr<RSAnimatableProperty<Vector4f>>& property);
-    virtual ~RSBoundsModifier() = default;
+    explicit RSAnimatableModifierTemplate(const std::shared_ptr<RSAnimatableProperty<modifierType>>& property)
+        : RSModifier<RSAnimatableProperty<modifierType>>(property, typeEnum)
+    {}
+    virtual ~RSAnimatableModifierTemplate() = default;
+
 protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
+    RSModifierType GetModifierType() const
+    {
+        return typeEnum;
+    }
+
+    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const
+    {
+        auto renderProperty = std::make_shared<RSRenderAnimatableProperty<modifierType>>(
+            this->property_->Get(), this->property_->GetId());
+        auto renderModifier = std::make_shared<renderModifierType>(renderProperty);
+        renderModifier->SetIsAdditive(this->isAdditive_);
+        return renderModifier;
+    }
 };
 
-class RS_EXPORT RSBoundsSizeModifier : public RSModifier<RSAnimatableProperty<Vector2f>> {
+template<typename renderModifierType, typename modifierType, RSModifierType typeEnum>
+class RS_EXPORT RSModifierTemplate : public RSModifier<RSProperty<modifierType>> {
 public:
-    explicit RSBoundsSizeModifier(const std::shared_ptr<RSAnimatableProperty<Vector2f>>& property);
-    virtual ~RSBoundsSizeModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
+    explicit RSModifierTemplate(const std::shared_ptr<RSProperty<modifierType>>& property)
+        : RSModifier<RSProperty<modifierType>>(property, typeEnum)
+    {}
+    virtual ~RSModifierTemplate() = default;
+
+    RSModifierType GetModifierType() const
+    {
+        return typeEnum;
+    }
+
+    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const
+    {
+        auto renderProperty =
+            std::make_shared<RSRenderProperty<modifierType>>(this->property_->Get(), this->property_->GetId());
+        auto renderModifier = std::make_shared<renderModifierType>(renderProperty);
+        return renderModifier;
+    }
 };
 
-class RS_EXPORT RSBoundsPositionModifier : public RSModifier<RSAnimatableProperty<Vector2f>> {
-public:
-    explicit RSBoundsPositionModifier(const std::shared_ptr<RSAnimatableProperty<Vector2f>>& property);
-    virtual ~RSBoundsPositionModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSBoundsModifier = RSAnimatableModifierTemplate<RSBoundsRenderModifier, Vector4f, RSModifierType::BOUNDS>;
 
-class RS_EXPORT RSFrameModifier : public RSModifier<RSAnimatableProperty<Vector4f>> {
-public:
-    explicit RSFrameModifier(const std::shared_ptr<RSAnimatableProperty<Vector4f>>& property);
-    virtual ~RSFrameModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSFrameModifier = RSAnimatableModifierTemplate<RSFrameRenderModifier, Vector4f, RSModifierType::FRAME>;
 
-class RS_EXPORT RSPositionZModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSPositionZModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSPositionZModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSPositionZModifier = RSAnimatableModifierTemplate<RSPositionZRenderModifier, float, RSModifierType::POSITION_Z>;
 
-class RS_EXPORT RSPivotModifier : public RSModifier<RSAnimatableProperty<Vector2f>> {
-public:
-    explicit RSPivotModifier(const std::shared_ptr<RSAnimatableProperty<Vector2f>>& property);
-    virtual ~RSPivotModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSPivotModifier = RSAnimatableModifierTemplate<RSPivotRenderModifier, Vector2f, RSModifierType::PIVOT>;
 
-class RS_EXPORT RSQuaternionModifier : public RSModifier<RSAnimatableProperty<Quaternion>> {
-public:
-    explicit RSQuaternionModifier(const std::shared_ptr<RSAnimatableProperty<Quaternion>>& property);
-    virtual ~RSQuaternionModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSQuaternionModifier =
+    RSAnimatableModifierTemplate<RSQuaternionRenderModifier, Quaternion, RSModifierType::QUATERNION>;
 
-class RS_EXPORT RSRotationModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSRotationModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSRotationModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSRotationModifier = RSAnimatableModifierTemplate<RSRotationRenderModifier, float, RSModifierType::ROTATION>;
 
-class RS_EXPORT RSRotationXModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSRotationXModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSRotationXModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSRotationXModifier = RSAnimatableModifierTemplate<RSRotationXRenderModifier, float, RSModifierType::ROTATION_X>;
 
-class RS_EXPORT RSRotationYModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSRotationYModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSRotationYModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSRotationYModifier = RSAnimatableModifierTemplate<RSRotationYRenderModifier, float, RSModifierType::ROTATION_Y>;
 
-class RS_EXPORT RSScaleModifier : public RSModifier<RSAnimatableProperty<Vector2f>> {
-public:
-    explicit RSScaleModifier(const std::shared_ptr<RSAnimatableProperty<Vector2f>>& property);
-    virtual ~RSScaleModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSScaleModifier = RSAnimatableModifierTemplate<RSScaleRenderModifier, Vector2f, RSModifierType::SCALE>;
 
-class RS_EXPORT RSTranslateModifier : public RSModifier<RSAnimatableProperty<Vector2f>> {
-public:
-    explicit RSTranslateModifier(const std::shared_ptr<RSAnimatableProperty<Vector2f>>& property);
-    virtual ~RSTranslateModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSTranslateModifier =
+    RSAnimatableModifierTemplate<RSTranslateRenderModifier, Vector2f, RSModifierType::TRANSLATE>;
 
-class RS_EXPORT RSTranslateZModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSTranslateZModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSTranslateZModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSTranslateZModifier =
+    RSAnimatableModifierTemplate<RSTranslateZRenderModifier, float, RSModifierType::TRANSLATE_Z>;
 
-class RS_EXPORT RSCornerRadiusModifier : public RSModifier<RSAnimatableProperty<Vector4f>> {
-public:
-    explicit RSCornerRadiusModifier(const std::shared_ptr<RSAnimatableProperty<Vector4f>>& property);
-    virtual ~RSCornerRadiusModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSCornerRadiusModifier =
+    RSAnimatableModifierTemplate<RSCornerRadiusRenderModifier, Vector4f, RSModifierType::CORNER_RADIUS>;
 
-class RS_EXPORT RSAlphaModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSAlphaModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSAlphaModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSAlphaModifier = RSAnimatableModifierTemplate<RSAlphaRenderModifier, float, RSModifierType::ALPHA>;
 
-class RS_EXPORT RSAlphaOffscreenModifier : public RSModifier<RSProperty<bool>> {
-public:
-    explicit RSAlphaOffscreenModifier(const std::shared_ptr<RSProperty<bool>>& property);
-    virtual ~RSAlphaOffscreenModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSAlphaOffscreenModifier =
+    RSModifierTemplate<RSAlphaOffscreenRenderModifier, bool, RSModifierType::ALPHA_OFFSCREEN>;
 
-class RS_EXPORT RSForegroundColorModifier : public RSModifier<RSAnimatableProperty<Color>> {
-public:
-    explicit RSForegroundColorModifier(const std::shared_ptr<RSAnimatableProperty<Color>>& property);
-    virtual ~RSForegroundColorModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSForegroundColorModifier =
+    RSAnimatableModifierTemplate<RSForegroundColorRenderModifier, Color, RSModifierType::FOREGROUND_COLOR>;
 
-class RS_EXPORT RSBackgroundColorModifier : public RSModifier<RSAnimatableProperty<Color>> {
-public:
-    explicit RSBackgroundColorModifier(const std::shared_ptr<RSAnimatableProperty<Color>>& property);
-    virtual ~RSBackgroundColorModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSBackgroundColorModifier =
+    RSAnimatableModifierTemplate<RSBackgroundColorRenderModifier, Color, RSModifierType::BACKGROUND_COLOR>;
 
-class RS_EXPORT RSSurfaceBgColorModifier : public RSModifier<RSAnimatableProperty<Color>> {
-public:
-    explicit RSSurfaceBgColorModifier(const std::shared_ptr<RSAnimatableProperty<Color>>& property);
-    virtual ~RSSurfaceBgColorModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSBackgroundShaderModifier =
+    RSModifierTemplate<RSBackgroundShaderRenderModifier, std::shared_ptr<RSShader>, RSModifierType::BACKGROUND_SHADER>;
 
-class RS_EXPORT RSBackgroundShaderModifier :
-    public RSModifier<RSProperty<std::shared_ptr<RSShader>>> {
-public:
-    explicit RSBackgroundShaderModifier(
-        const std::shared_ptr<RSProperty<std::shared_ptr<RSShader>>>& property);
-    virtual ~RSBackgroundShaderModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSBgImageModifier =
+    RSModifierTemplate<RSBgImageRenderModifier, std::shared_ptr<RSImage>, RSModifierType::BG_IMAGE>;
 
-class RS_EXPORT RSBgImageModifier : public RSModifier<RSProperty<std::shared_ptr<RSImage>>> {
-public:
-    explicit RSBgImageModifier(const std::shared_ptr<RSProperty<std::shared_ptr<RSImage>>>& property);
-    virtual ~RSBgImageModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSBgImageWidthModifier =
+    RSAnimatableModifierTemplate<RSBgImageWidthRenderModifier, float, RSModifierType::BG_IMAGE_WIDTH>;
 
-class RS_EXPORT RSBgImageWidthModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSBgImageWidthModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSBgImageWidthModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSBgImageHeightModifier =
+    RSAnimatableModifierTemplate<RSBgImageHeightRenderModifier, float, RSModifierType::BG_IMAGE_HEIGHT>;
 
-class RS_EXPORT RSBgImageHeightModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSBgImageHeightModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSBgImageHeightModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSBgImagePositionXModifier =
+    RSAnimatableModifierTemplate<RSBgImagePositionXRenderModifier, float, RSModifierType::BG_IMAGE_POSITION_X>;
 
-class RS_EXPORT RSBgImagePositionXModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSBgImagePositionXModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSBgImagePositionXModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSBgImagePositionYModifier =
+    RSAnimatableModifierTemplate<RSBgImagePositionYRenderModifier, float, RSModifierType::BG_IMAGE_POSITION_Y>;
 
-class RS_EXPORT RSBgImagePositionYModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSBgImagePositionYModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSBgImagePositionYModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSBorderColorModifier =
+    RSAnimatableModifierTemplate<RSBorderColorRenderModifier, Vector4<Color>, RSModifierType::BORDER_COLOR>;
 
-class RS_EXPORT RSBorderColorModifier : public RSModifier<RSAnimatableProperty<Vector4<Color>>> {
-public:
-    explicit RSBorderColorModifier(const std::shared_ptr<RSAnimatableProperty<Vector4<Color>>>& property);
-    virtual ~RSBorderColorModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSBorderWidthModifier =
+    RSAnimatableModifierTemplate<RSBorderWidthRenderModifier, Vector4f, RSModifierType::BORDER_WIDTH>;
 
-class RS_EXPORT RSBorderWidthModifier : public RSModifier<RSAnimatableProperty<Vector4f>> {
-public:
-    explicit RSBorderWidthModifier(const std::shared_ptr<RSAnimatableProperty<Vector4f>>& property);
-    virtual ~RSBorderWidthModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSBorderStyleModifier =
+    RSModifierTemplate<RSBorderStyleRenderModifier, Vector4<uint32_t>, RSModifierType::BORDER_STYLE>;
 
-class RS_EXPORT RSBorderStyleModifier : public RSModifier<RSProperty<Vector4<uint32_t>>> {
-public:
-    explicit RSBorderStyleModifier(const std::shared_ptr<RSProperty<Vector4<uint32_t>>>& property);
-    virtual ~RSBorderStyleModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSFilterModifier =
+    RSAnimatableModifierTemplate<RSFilterRenderModifier, std::shared_ptr<RSFilter>, RSModifierType::FILTER>;
 
-class RS_EXPORT RSFilterModifier : public RSModifier<RSAnimatableProperty<std::shared_ptr<RSFilter>>> {
-public:
-    explicit RSFilterModifier(const std::shared_ptr<RSAnimatableProperty<std::shared_ptr<RSFilter>>>& property);
-    virtual ~RSFilterModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSBackgroundFilterModifier = RSAnimatableModifierTemplate<RSBackgroundFilterRenderModifier,
+    std::shared_ptr<RSFilter>, RSModifierType::BACKGROUND_FILTER>;
 
-class RS_EXPORT RSBackgroundFilterModifier :
-    public RSModifier<RSAnimatableProperty<std::shared_ptr<RSFilter>>> {
-public:
-    explicit RSBackgroundFilterModifier(
-        const std::shared_ptr<RSAnimatableProperty<std::shared_ptr<RSFilter>>>& property);
-    virtual ~RSBackgroundFilterModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSFrameGravityModifier = RSModifierTemplate<RSFrameGravityRenderModifier, Gravity, RSModifierType::FRAME_GRAVITY>;
 
-class RS_EXPORT RSFrameGravityModifier : public RSModifier<RSProperty<Gravity>> {
-public:
-    explicit RSFrameGravityModifier(const std::shared_ptr<RSProperty<Gravity>>& property);
-    virtual ~RSFrameGravityModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSClipBoundsModifier =
+    RSModifierTemplate<RSClipBoundsRenderModifier, std::shared_ptr<RSPath>, RSModifierType::CLIP_BOUNDS>;
 
-class RS_EXPORT RSClipBoundsModifier :
-    public RSModifier<RSProperty<std::shared_ptr<RSPath>>> {
-public:
-    explicit RSClipBoundsModifier(const std::shared_ptr<RSProperty<std::shared_ptr<RSPath>>>& property);
-    virtual ~RSClipBoundsModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSClipToBoundsModifier = RSModifierTemplate<RSClipToBoundsRenderModifier, bool, RSModifierType::CLIP_TO_BOUNDS>;
 
-class RS_EXPORT RSClipToBoundsModifier : public RSModifier<RSProperty<bool>> {
-public:
-    explicit RSClipToBoundsModifier(const std::shared_ptr<RSProperty<bool>>& property);
-    virtual ~RSClipToBoundsModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSClipToFrameModifier = RSModifierTemplate<RSClipToFrameRenderModifier, bool, RSModifierType::CLIP_TO_FRAME>;
 
-class RS_EXPORT RSClipToFrameModifier : public RSModifier<RSProperty<bool>> {
-public:
-    explicit RSClipToFrameModifier(const std::shared_ptr<RSProperty<bool>>& property);
-    virtual ~RSClipToFrameModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSVisibleModifier = RSModifierTemplate<RSVisibleRenderModifier, bool, RSModifierType::VISIBLE>;
 
-class RS_EXPORT RSVisibleModifier : public RSModifier<RSProperty<bool>> {
-public:
-    explicit RSVisibleModifier(const std::shared_ptr<RSProperty<bool>>& property);
-    virtual ~RSVisibleModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSShadowColorModifier =
+    RSAnimatableModifierTemplate<RSShadowColorRenderModifier, Color, RSModifierType::SHADOW_COLOR>;
 
-class RS_EXPORT RSShadowColorModifier : public RSModifier<RSAnimatableProperty<Color>> {
-public:
-    explicit RSShadowColorModifier(const std::shared_ptr<RSAnimatableProperty<Color>>& property);
-    virtual ~RSShadowColorModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSShadowOffsetXModifier =
+    RSAnimatableModifierTemplate<RSShadowOffsetXRenderModifier, float, RSModifierType::SHADOW_OFFSET_X>;
 
-class RS_EXPORT RSShadowOffsetXModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSShadowOffsetXModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSShadowOffsetXModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSShadowOffsetYModifier =
+    RSAnimatableModifierTemplate<RSShadowOffsetYRenderModifier, float, RSModifierType::SHADOW_OFFSET_Y>;
 
-class RS_EXPORT RSShadowOffsetYModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSShadowOffsetYModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSShadowOffsetYModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSShadowAlphaModifier =
+    RSAnimatableModifierTemplate<RSShadowAlphaRenderModifier, float, RSModifierType::SHADOW_ALPHA>;
 
-class RS_EXPORT RSShadowAlphaModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSShadowAlphaModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSShadowAlphaModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSShadowElevationModifier =
+    RSAnimatableModifierTemplate<RSShadowElevationRenderModifier, float, RSModifierType::SHADOW_ELEVATION>;
 
-class RS_EXPORT RSShadowElevationModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSShadowElevationModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSShadowElevationModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSShadowRadiusModifier =
+    RSAnimatableModifierTemplate<RSShadowRadiusRenderModifier, float, RSModifierType::SHADOW_RADIUS>;
 
-class RS_EXPORT RSShadowRadiusModifier : public RSModifier<RSAnimatableProperty<float>> {
-public:
-    explicit RSShadowRadiusModifier(const std::shared_ptr<RSAnimatableProperty<float>>& property);
-    virtual ~RSShadowRadiusModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSShadowPathModifier =
+    RSModifierTemplate<RSShadowPathRenderModifier, std::shared_ptr<RSPath>, RSModifierType::SHADOW_PATH>;
 
-class RS_EXPORT RSShadowPathModifier :
-    public RSModifier<RSProperty<std::shared_ptr<RSPath>>> {
-public:
-    explicit RSShadowPathModifier(const std::shared_ptr<RSProperty<std::shared_ptr<RSPath>>>& property);
-    virtual ~RSShadowPathModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
+using RSMaskModifier = RSModifierTemplate<RSMaskRenderModifier, std::shared_ptr<RSMask>, RSModifierType::MASK>;
 
-class RS_EXPORT RSMaskModifier : public RSModifier<RSProperty<std::shared_ptr<RSMask>>> {
-public:
-    explicit RSMaskModifier(const std::shared_ptr<RSProperty<std::shared_ptr<RSMask>>>& property);
-    virtual ~RSMaskModifier() = default;
-protected:
-    RSModifierType GetModifierType() const override;
-    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
-};
 } // namespace Rosen
 } // namespace OHOS
 

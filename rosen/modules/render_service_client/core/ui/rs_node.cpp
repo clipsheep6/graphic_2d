@@ -276,6 +276,8 @@ bool IsValid(const Vector4f& value)
         }                                                                                                   \
     } while (0)
 
+    
+
 #define SET_NONANIMATABLE_PROPERTY(propertyName, value)                                                 \
     do {                                                                                                \
         auto currentValue = stagingProperties_.Get##propertyName();                                     \

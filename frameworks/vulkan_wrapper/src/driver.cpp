@@ -151,6 +151,19 @@ void DestroyInstance(VkInstance instance, const VkAllocationCallbacks* pAllocato
     if (pfn_vkDestroyInstance) {
         pfn_vkDestroyInstance(instance, pAllocator);
     }
+
+    if (!DriverLoader::Unload()) {
+        WLOGE("DriverLoader::Unload() failed");
+    }
+
+    pfn_vkGetDeviceProcAddr = nullptr;
+    fpn_vkGetPhysicalDeviceProperties2KHR = nullptr;
+    pfn_vkCreateDevice = nullptr;
+    pfn_vkGetNativeFenceFdOpenHarmony = nullptr;
+    pfn_vkGetPhysicalDeviceProperties = nullptr;
+    pfn_vkGetPhysicalDeviceFeatures = nullptr;
+    pfn_vkGetPhysicalDeviceMemoryProperties = nullptr;
+    pfn_vkGetPhysicalDeviceQueueFamilyProperties = nullptr;
 }
 
 VkResult CreateDevice(VkPhysicalDevice physicalDevice,
@@ -363,12 +376,6 @@ VkResult GetNativeFenceFdOpenHarmony(
     }
     return VK_ERROR_INITIALIZATION_FAILED;
 }
-
-
-
-
-
-
 
 }  // namespace driver
 }  // namespace vulkan

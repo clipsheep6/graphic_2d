@@ -59,7 +59,10 @@ ohos_shared_library("vulkan") {
     "//foundation/graphic/graphic_2d/frameworks/vulkan_wrapper/external/vulkan:vulkan_headers",
   ]
 
-  external_deps = [ "hilog_native:libhilog" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog_native:libhilog",
+  ]
 
   output_name = "vulkan"
   output_extension = "so"

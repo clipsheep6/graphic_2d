@@ -16,67 +16,84 @@
 #include <dlfcn.h>
 #include <iostream>
 #include "wrapper_log.h"
-#define LIB_CACULATE_PATH "/system/lib64/libGLES_mali_vk.so"
-#define HDI_VULKAN_MODULE_INIT "VulkanInitialize"
-#define HDI_VULKAN_MODULE_UNINIT "VulkanUnInitialize"
+#include "directory_ex.h"
+
 namespace vulkan {
 namespace driver {
 
+
+#ifdef __aarch64__
+constexpr const char *VENDOR_LIB_PATH = "/vendor/lib64/chipsetsdk/";
+constexpr const char *SYSTEM_LIB_PATH = "/system/lib64/";
+#else
+    constexpr const char *VENDOR_LIB_PATH = "/vendor/lib/chipsetsdk/";
+    constexpr const char *SYSTEM_LIB_PATH = "/system/lib/";
+#endif
+constexpr const char *LIB_NAME = "libEGL_impl.so";
+constexpr const char *HDI_VULKAN_MODULE_INIT = "VulkanInitialize";
+constexpr const char *HDI_VULKAN_MODULE_UNINIT = "VulkanUnInitialize";
+
+
 bool DriverLoader::Load()
 {
-    std::cout << "DriverLoader::Load is comming" << std::endl;
     if (loader_.vulkanFuncs_ != nullptr) {
         return true;
     }
 
-    void* handle = dlopen(LIB_CACULATE_PATH, RTLD_LOCAL | RTLD_NOW);
+    std::string path = std::string(VENDOR_LIB_PATH) + std::string(LIB_NAME);
+    loader_.handle_ = dlopen(path.c_str(), RTLD_LOCAL | RTLD_NOW);
 
-    if (handle == nullptr) {
-        std::cout << "DriverLoader:: dlopen faild : " << dlerror() << std::endl;
-        return false;
+    if (loader_.handle_ == nullptr) {
+        path = std::string(SYSTEM_LIB_PATH) + std::string(LIB_NAME);
+        std::string realPath;
+        if (!OHOS::PathToRealPath(path, realPath)) {
+            WLOGE("file is not real path, file path: %{private}s", path.c_str());
+            return false;
+        }
+        loader_.handle_ = dlopen(realPath.c_str(), RTLD_NOW | RTLD_LOCAL);
+        if (loader_.handle_ == nullptr) {
+            WLOGE("dlopen failed. error: %{public}s.", dlerror());
+            return false;
+        }
     }
-    std::cout << "DriverLoader::dlopen "<< LIB_CACULATE_PATH <<" success" << std::endl;
+    WLOGD("DriverLoader::dlopen success");
 
     PFN_VulkanInitialize VulkanInitializeFunc
-        = reinterpret_cast<PFN_VulkanInitialize>(dlsym(handle, HDI_VULKAN_MODULE_INIT));
+        = reinterpret_cast<PFN_VulkanInitialize>(dlsym(loader_.handle_, HDI_VULKAN_MODULE_INIT));
 
     if (VulkanInitializeFunc == nullptr) {
-        std::cout << "DriverLoader:: couldn't find symbol(" 
-            << HDI_VULKAN_MODULE_INIT <<") in library : " << dlerror() << std::endl;
-        dlclose(handle);
+        WLOGE("DriverLoader:: couldn't find symbol(VulkanInitializeFunc) in library : %{public}s.", dlerror());
+        dlclose(loader_.handle_);
         return false;
     }
 
     if (VulkanInitializeFunc(&loader_.vulkanFuncs_) != 0) {
-        std::cout << "Initialize Vulkan Func fail" << std::endl;
+        WLOGE("DriverLoader:: Initialize Vulkan Func fail");
         return false;
     }
 
-
-    loader_.vulkanUnInitializeFunc_ = reinterpret_cast<PFN_VulkanUnInitialize>(dlsym(handle, HDI_VULKAN_MODULE_UNINIT));
+    loader_.vulkanUnInitializeFunc_ = reinterpret_cast<PFN_VulkanUnInitialize>(dlsym(loader_.handle_, HDI_VULKAN_MODULE_UNINIT));
 
     if (loader_.vulkanUnInitializeFunc_ == nullptr) {
-        std::cout << "DriverLoader:: couldn't find symbol(" 
-            << HDI_VULKAN_MODULE_UNINIT <<") in library : " << dlerror() << std::endl;
-        dlclose(handle);
+        WLOGE("DriverLoader:: couldn't find symbol(VulkanUnInitialize) in library : %{public}s.", dlerror());
+        dlclose(loader_.handle_);
         return false;
     }
-   
-    std::cout << "open success" << std::endl;
-
+    WLOGI("DriverLoader:: Found Vulkan Func success");
     return true;
 }
 
 bool DriverLoader::Unload()
 {
     if (!loader_.vulkanUnInitializeFunc_) {
-        std::cout << "DriverLoader::Unload can not find vulkan UnInitialize Func " << std::endl;
+        WLOGE("DriverLoader::Unload can not find vulkan UnInitialize Func ");
         return false;
     }
     if (loader_.vulkanUnInitializeFunc_(loader_.vulkanFuncs_) != 0) {
-        std::cout << "DriverLoader::Unload vulkan UnInitialize Func success" << std::endl;
+        WLOGE("DriverLoader::Unload vulkan UnInitialize Func success");
         return false;
     }
+    dlclose(loader_.handle_);
     return true;
 }
 

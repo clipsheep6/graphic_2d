@@ -34,11 +34,11 @@ DriverLoader(const DriverLoader&) = delete;
 DriverLoader& operator=(const DriverLoader&) = delete;
 
 static DriverLoader loader_;
+void* handle_;
 
 VulkanFuncs* vulkanFuncs_;
 PFN_VulkanUnInitialize vulkanUnInitializeFunc_;
 };
-
 
 }  // namespace driver
 }  // namespace vulkan

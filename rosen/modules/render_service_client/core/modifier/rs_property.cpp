@@ -114,9 +114,6 @@ void RSProperty<T>::UpdateToRenderImpl(const T& value, bool isDelta, bool forceU
     }
 }
 
-template<typename T>
-void RSProperty<T>::UpdateToRender(const T& value, bool isDelta, bool forceUpdate) const
-{}
 template<>
 void RSProperty<bool>::UpdateToRender(const bool& value, bool isDelta, bool forceUpdate) const
 {
@@ -203,11 +200,6 @@ void RSProperty<Vector4f>::UpdateToRender(const Vector4f& value, bool isDelta, b
     UpdateToRenderImpl<RSUpdatePropertyVector4f>(value, isDelta, forceUpdate);
 }
 
-template<typename T>
-bool RSProperty<T>::IsValid(const T& value)
-{
-    return true;
-}
 template<>
 bool RSProperty<float>::IsValid(const float& value)
 {
@@ -224,11 +216,6 @@ bool RSProperty<Vector4f>::IsValid(const Vector4f& value)
     return !value.IsInfinite();
 }
 
-template<typename T>
-RSRenderPropertyType RSAnimatableProperty<T>::GetPropertyType() const
-{
-    return RSRenderPropertyType::INVALID;
-}
 template<>
 RSRenderPropertyType RSAnimatableProperty<float>::GetPropertyType() const
 {
@@ -269,103 +256,5 @@ RSRenderPropertyType RSAnimatableProperty<Vector4<Color>>::GetPropertyType() con
 {
     return RSRenderPropertyType::PROPERTY_VECTOR4_COLOR;
 }
-
-template<typename T>
-std::shared_ptr<RSRenderPropertyBase> RSAnimatableProperty<T>::CreateRenderProperty()
-{
-    return std::make_shared<RSRenderAnimatableProperty<T>>(
-        RSProperty<T>::stagingValue_, RSProperty<T>::id_, GetPropertyType());
-}
-
-template<typename T>
-void RSAnimatableProperty<T>::SetValue(const std::shared_ptr<RSPropertyBase>& value)
-{
-    auto property = std::static_pointer_cast<RSAnimatableProperty<T>>(value);
-    if (property != nullptr && property->GetPropertyType() == GetPropertyType()) {
-        RSProperty<T>::stagingValue_ = property->stagingValue_;
-    }
-}
-
-template<typename T>
-void RSAnimatableProperty<T>::Set(const T& value)
-{
-    if (ROSEN_EQ(value, RSProperty<T>::stagingValue_) || !RSProperty<T>::IsValid(value)) {
-        return;
-    }
-
-    auto node = this->target_.lock();
-    if (node == nullptr) {
-        RSProperty<T>::stagingValue_ = value;
-        return;
-    }
-
-    auto implicitAnimator = RSImplicitAnimatorMap::Instance().GetAnimator(gettid());
-    if (implicitAnimator && implicitAnimator->NeedImplicitAnimation()) {
-        auto startValue = std::make_shared<RSAnimatableProperty<T>>(RSProperty<T>::stagingValue_);
-        auto endValue = std::make_shared<RSAnimatableProperty<T>>(value);
-        if (RSProperty<T>::motionPathOption_ != nullptr) {
-            implicitAnimator->BeginImplicitPathAnimation(RSProperty<T>::motionPathOption_);
-            implicitAnimator->CreateImplicitAnimation(node, RSProperty<T>::shared_from_this(), startValue, endValue);
-            implicitAnimator->EndImplicitPathAnimation();
-        } else {
-            implicitAnimator->CreateImplicitAnimation(node, RSProperty<T>::shared_from_this(), startValue, endValue);
-        }
-        return;
-    }
-
-    if (runningPathNum_ > 0) {
-        return;
-    }
-
-    bool hasPropertyAnimation = node->HasPropertyAnimation(RSProperty<T>::id_);
-    T sendValue = value;
-    if (hasPropertyAnimation) {
-        sendValue = value - RSProperty<T>::stagingValue_;
-    }
-    RSProperty<T>::stagingValue_ = value;
-    RSProperty<T>::UpdateToRender(sendValue, hasPropertyAnimation);
-}
-
-template<typename T>
-void RSProperty<T>::Set(const T& value)
-{
-    if (ROSEN_EQ(value, stagingValue_) || !IsValid(value)) {
-        return;
-    }
-
-    stagingValue_ = value;
-    if (this->target_.lock() == nullptr) {
-        return;
-    }
-
-    UpdateToRender(stagingValue_, false);
-}
-
-template class RS_EXPORT RSProperty<bool>;
-template class RS_EXPORT RSProperty<float>;
-template class RS_EXPORT RSProperty<int>;
-template class RS_EXPORT RSProperty<Color>;
-template class RS_EXPORT RSProperty<Gravity>;
-template class RS_EXPORT RSProperty<Matrix3f>;
-template class RS_EXPORT RSProperty<Quaternion>;
-template class RS_EXPORT RSProperty<std::shared_ptr<RSFilter>>;
-template class RS_EXPORT RSProperty<std::shared_ptr<RSImage>>;
-template class RS_EXPORT RSProperty<std::shared_ptr<RSMask>>;
-template class RS_EXPORT RSProperty<std::shared_ptr<RSPath>>;
-template class RS_EXPORT RSProperty<std::shared_ptr<RSShader>>;
-template class RS_EXPORT RSProperty<Vector2f>;
-template class RS_EXPORT RSProperty<Vector4<uint32_t>>;
-template class RS_EXPORT RSProperty<Vector4<Color>>;
-template class RS_EXPORT RSProperty<Vector4f>;
-
-template class RS_EXPORT RSAnimatableProperty<bool>;
-template class RS_EXPORT RSAnimatableProperty<float>;
-template class RS_EXPORT RSAnimatableProperty<Color>;
-template class RS_EXPORT RSAnimatableProperty<Matrix3f>;
-template class RS_EXPORT RSAnimatableProperty<Vector2f>;
-template class RS_EXPORT RSAnimatableProperty<Vector4f>;
-template class RS_EXPORT RSAnimatableProperty<Quaternion>;
-template class RS_EXPORT RSAnimatableProperty<std::shared_ptr<RSFilter>>;
-template class RS_EXPORT RSAnimatableProperty<Vector4<Color>>;
 } // namespace Rosen
 } // namespace OHOS

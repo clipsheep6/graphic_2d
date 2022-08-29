@@ -26,23 +26,6 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace {
-using ModifierUnmarshallingFunc = RSRenderModifier* (*)(Parcel& parcel);
-
-#define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE) \
-    { RSModifierType::MODIFIER_TYPE, &RS##MODIFIER_NAME##RenderModifier::Unmarshalling },
-#define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE) \
-    { RSModifierType::MODIFIER_TYPE, &RS##MODIFIER_NAME##RenderModifier::Unmarshalling },
-
-static std::unordered_map<RSModifierType, ModifierUnmarshallingFunc> funcLUT = {
-#include "modifier/rs_modifiers_def.in"
-    { RSModifierType::EXTENDED, &RSDrawCmdListRenderModifier::Unmarshalling },
-};
-
-#undef DECLARE_ANIMATABLE_MODIFIER
-#undef DECLARE_NOANIMATABLE_MODIFIER
-} // namespace
-
 void RSDrawCmdListRenderModifier::Apply(RSModifyContext& context)
 {
     if (context.canvas_) {
@@ -103,8 +86,8 @@ RSRenderModifier* RSRenderModifier::Unmarshalling(Parcel& parcel)
     if (!parcel.ReadInt16(type)) {
         return nullptr;
     }
-    auto it = funcLUT.find(static_cast<RSModifierType>(type));
-    if (it == funcLUT.end()) {
+    auto it = unmarshallingFuncLUT_.find(static_cast<RSModifierType>(type));
+    if (it == unmarshallingFuncLUT_.end()) {
         ROSEN_LOGE("RSRenderModifier Unmarshalling cannot find func in lut %d", type);
         return nullptr;
     }
@@ -206,5 +189,17 @@ void RSRenderModifierTemplate<T, typeEnum, setter>::Update(
     }
 }
 
+// explicit instantiation and registration
+#define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_ENUM)                                       \
+    template class RSAnimatableRenderModifierTemplate<TYPE, MODIFIER_ENUM, &RSProperties::Get##MODIFIER_NAME, \
+        &RSProperties::Set##MODIFIER_NAME>;
+
+#define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_ENUM) \
+    template class RSRenderModifierTemplate<TYPE, MODIFIER_ENUM, &RSProperties::Set##MODIFIER_NAME>;
+
+#include "modifier/rs_modifiers_def.in"
+
+#undef DECLARE_ANIMATABLE_MODIFIER
+#undef DECLARE_NOANIMATABLE_MODIFIER
 } // namespace Rosen
 } // namespace OHOS

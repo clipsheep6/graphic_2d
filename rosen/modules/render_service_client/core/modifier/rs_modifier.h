@@ -69,7 +69,7 @@ public:
         : property_(property ? property : std::make_shared<T>())
     {}
 
-    virtual ~RSModifier() = default;
+    ~RSModifier() override = default;
 
     PropertyId GetPropertyId() override
     {

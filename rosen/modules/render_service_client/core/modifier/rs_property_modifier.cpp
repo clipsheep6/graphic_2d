@@ -18,7 +18,31 @@
 #include "modifier/rs_modifier_type.h"
 #include "modifier/rs_render_modifier.h"
 
-namespace OHOS {
-namespace Rosen {
-} // namespace Rosen
-} // namespace OHOS
+namespace OHOS::Rosen {
+#define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_ENUM)                                           \
+    template<>                                                                                                    \
+    std::shared_ptr<RSRenderModifier>                                                                             \
+    RSModifierTemplate<RSAnimatableProperty<TYPE>, MODIFIER_ENUM>::CreateRenderModifier() const                   \
+    {                                                                                                             \
+        auto renderProperty =                                                                                     \
+            std::make_shared<RSRenderAnimatableProperty<TYPE>>(this->property_->Get(), this->property_->GetId()); \
+        auto renderModifier = std::make_shared<RS##MODIFIER_NAME##RenderModifier>(renderProperty);                \
+        renderModifier->SetIsAdditive(this->isAdditive_);                                                         \
+        return renderModifier;                                                                                    \
+    }
+#define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_ENUM)                                         \
+    template<>                                                                                                    \
+    std::shared_ptr<RSRenderModifier> RSModifierTemplate<RSProperty<TYPE>, MODIFIER_ENUM>::CreateRenderModifier() \
+        const                                                                                                     \
+    {                                                                                                             \
+        auto renderProperty =                                                                                     \
+            std::make_shared<RSRenderProperty<TYPE>>(this->property_->Get(), this->property_->GetId());           \
+        auto renderModifier = std::make_shared<RS##MODIFIER_NAME##RenderModifier>(renderProperty);                \
+        return renderModifier;                                                                                    \
+    }
+
+#include "modifier/rs_modifiers_def.in"
+
+#undef DECLARE_ANIMATABLE_MODIFIER
+#undef DECLARE_NOANIMATABLE_MODIFIER
+} // namespace OHOS::Rosen

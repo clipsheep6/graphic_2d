@@ -17,7 +17,6 @@
 
 #include <hilog/log.h>
 namespace OHOS {
-
 #define GLW_DFUNC OHOS::HiviewDFX::HiLog::Debug
 #define GLW_IFUNC OHOS::HiviewDFX::HiLog::Info
 #define GLW_WFUNC OHOS::HiviewDFX::HiLog::Warn

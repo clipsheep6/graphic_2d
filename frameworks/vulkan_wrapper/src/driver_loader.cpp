@@ -20,19 +20,16 @@
 
 namespace vulkan {
 namespace driver {
-
-
 #ifdef __aarch64__
 constexpr const char *VENDOR_LIB_PATH = "/vendor/lib64/chipsetsdk/";
 constexpr const char *SYSTEM_LIB_PATH = "/system/lib64/";
 #else
-    constexpr const char *VENDOR_LIB_PATH = "/vendor/lib/chipsetsdk/";
-    constexpr const char *SYSTEM_LIB_PATH = "/system/lib/";
+constexpr const char *VENDOR_LIB_PATH = "/vendor/lib/chipsetsdk/";
+constexpr const char *SYSTEM_LIB_PATH = "/system/lib/";
 #endif
 constexpr const char *LIB_NAME = "libEGL_impl.so";
 constexpr const char *HDI_VULKAN_MODULE_INIT = "VulkanInitialize";
 constexpr const char *HDI_VULKAN_MODULE_UNINIT = "VulkanUnInitialize";
-
 
 bool DriverLoader::Load()
 {
@@ -60,7 +57,6 @@ bool DriverLoader::Load()
 
     PFN_VulkanInitialize VulkanInitializeFunc
         = reinterpret_cast<PFN_VulkanInitialize>(dlsym(loader_.handle_, HDI_VULKAN_MODULE_INIT));
-
     if (VulkanInitializeFunc == nullptr) {
         WLOGE("DriverLoader:: couldn't find symbol(VulkanInitializeFunc) in library : %{public}s.", dlerror());
         dlclose(loader_.handle_);
@@ -72,7 +68,8 @@ bool DriverLoader::Load()
         return false;
     }
 
-    loader_.vulkanUnInitializeFunc_ = reinterpret_cast<PFN_VulkanUnInitialize>(dlsym(loader_.handle_, HDI_VULKAN_MODULE_UNINIT));
+    loader_.vulkanUnInitializeFunc_ = reinterpret_cast<PFN_VulkanUnInitialize>(
+        dlsym(loader_.handle_, HDI_VULKAN_MODULE_UNINIT));
 
     if (loader_.vulkanUnInitializeFunc_ == nullptr) {
         WLOGE("DriverLoader:: couldn't find symbol(VulkanUnInitialize) in library : %{public}s.", dlerror());
@@ -96,7 +93,5 @@ bool DriverLoader::Unload()
     dlclose(loader_.handle_);
     return true;
 }
-
-
 }  // namespace driver
 }  // namespace vulkan

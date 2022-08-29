@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef FRAMEWORKS_OPENGL_WRAPPER_WRAPPER_LOG_H
-#define FRAMEWORKS_OPENGL_WRAPPER_WRAPPER_LOG_H
+#ifndef LIBVULKAN_WRAPPER_LOG_H
+#define LIBVULKAN_WRAPPER_LOG_H
 
 #include <hilog/log.h>
 namespace OHOS {
@@ -36,4 +36,4 @@ namespace OHOS {
 #define WLOGW(fmt, ...) GLW_CPRINTF(GLW_WFUNC, fmt, ##__VA_ARGS__)
 #define WLOGE(fmt, ...) GLW_CPRINTF(GLW_EFUNC, fmt, ##__VA_ARGS__)
 } // namespace OHOS
-#endif // FRAMEWORKS_OPENGL_WRAPPER_WRAPPER_LOG_H
+#endif // LIBVULKAN_WRAPPER_LOG_H

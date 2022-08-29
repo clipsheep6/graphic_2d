@@ -18,11 +18,11 @@
 #include <dlfcn.h>
 #include "vulkan/vulkan.h"
 
-#define LIB_CACULATE_PATH "/system/lib64/libvulkan.so"
+constexpr const char *LIB_CACULATE_PATH = "/system/lib64/libvulkan.so";
 
 int32_t main(int32_t argc, const char* argv[])
 {
-     std::cout << "vulkan wrapper native test is comming :: Loading libvulkan.so..." << std::endl;
+    std::cout << "vulkan wrapper native test is comming :: Loading libvulkan.so..." << std::endl;
 
     void* libVulkan = dlopen(LIB_CACULATE_PATH, RTLD_LOCAL | RTLD_NOW);
 

@@ -102,7 +102,7 @@ public:
 
     void CollectSurface(const std::shared_ptr<RSBaseRenderNode>& node,
                         std::vector<RSBaseRenderNode::SharedPtr>& vec,
-                        bool isUniRender) override;
+                        bool isUniRender, bool needLeashWindow = false) override;
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
@@ -334,6 +334,7 @@ public:
         bool localIntersect = visibleDirtyRegion_.IsIntersectWith(dirtyRect);
         return localIntersect;
     }
+
 private:
     void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId);
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);

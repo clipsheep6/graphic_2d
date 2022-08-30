@@ -83,11 +83,10 @@ public:
     void RemoveModifier(const PropertyId& id);
     void ApplyModifiers();
     std::shared_ptr<RSRenderModifier> GetModifier(const PropertyId& id);
-
+    bool IsDirty() const override;
 protected:
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
     void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty);
-    bool IsDirty() const override;
     void AddGeometryModifier(const std::shared_ptr<RSRenderModifier>& modifier);
     std::pair<int, int> renderNodeSaveCount_ = { 0, 0 };
     std::unordered_map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>> drawCmdModifiers_;

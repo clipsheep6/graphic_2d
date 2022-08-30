@@ -47,7 +47,8 @@ public:
     void RemoveFromTreeWithoutTransition();
     virtual void CollectSurface(const std::shared_ptr<RSBaseRenderNode>& node,
                                 std::vector<RSBaseRenderNode::SharedPtr>& vec,
-                                bool isUniRender);
+                                bool isUniRender,
+                                bool needLeashWindow = false);
     virtual void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor);
     virtual void Process(const std::shared_ptr<RSNodeVisitor>& visitor);
 
@@ -124,14 +125,13 @@ public:
     {
         return (IsInstanceOf<T>()) ? std::static_pointer_cast<T>(shared_from_this()) : nullptr;
     }
-
+    virtual bool IsDirty() const;
+    void SetClean();
 protected:
     enum class NodeDirty {
         CLEAN = 0,
         DIRTY,
     };
-    virtual bool IsDirty() const;
-    void SetClean();
     void SetDirty();
 
     void DumpNodeType(std::string& out) const;

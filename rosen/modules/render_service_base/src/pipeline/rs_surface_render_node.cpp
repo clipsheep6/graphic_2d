@@ -132,7 +132,7 @@ void RSSurfaceRenderNode::PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas
 }
 
 void RSSurfaceRenderNode::CollectSurface(
-    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender)
+    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender, bool needLeashWindow)
 {
     if (RSOcclusionConfig::GetInstance().IsStartingWindow(GetName())) {
         return;
@@ -140,6 +140,9 @@ void RSSurfaceRenderNode::CollectSurface(
     if (RSOcclusionConfig::GetInstance().IsLeashWindow(GetName())) {
         for (auto& child : node->GetSortedChildren()) {
             child->CollectSurface(child, vec, isUniRender);
+        }
+        if (needLeashWindow) {
+            vec.emplace_back(shared_from_this());
         }
         return;
     }

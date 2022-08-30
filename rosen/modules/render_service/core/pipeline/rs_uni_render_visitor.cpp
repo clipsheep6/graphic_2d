@@ -20,6 +20,7 @@
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_occlusion_config.h"
 #include "pipeline/rs_processor_factory.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
@@ -367,11 +368,18 @@ void RSUniRenderVisitor::CalcDirtyDisplayRegion(std::shared_ptr<RSDisplayRenderN
 {
     RS_TRACE_FUNC();
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-    node->CollectSurface(node, curAllSurfaces, true);
+    node->CollectSurface(node, curAllSurfaces, true, true);
     auto displayDirtyManager = node->GetDirtyManager();
     for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
         auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
+            continue;
+        }
+        if (surfaceNode->IsDirty() && RSOcclusionConfig::GetInstance().IsLeashWindow(surfaceNode->GetName())) {
+            RS_LOGD("CalcDirtyDisplayRegion merge surface IsDirty %s rect %s", surfaceNode->GetName().c_str(),
+                surfaceNode->GetDstRect().ToString().c_str());
+            displayDirtyManager->MergeDirtyRect(surfaceNode->GetDstRect());
+            surfaceNode->SetClean();
             continue;
         }
         auto surfaceDirtyManager = surfaceNode->GetDirtyManager();

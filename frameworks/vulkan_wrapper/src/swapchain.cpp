@@ -39,9 +39,9 @@ struct Surface {
 };
 
 struct Swapchain {
-    Swapchain(Surface& surface_, uint32_t numImages_, VkPresentModeKHR presentMode, int preTransform_)
-        : surface(surface_), numImages(numImages_), mailboxMode(presentMode == VK_PRESENT_MODE_MAILBOX_KHR),
-          preTransform(preTransform_), frameTimestampsEnabled(false),
+    Swapchain(Surface& surface, uint32_t numImages, VkPresentModeKHR presentMode, int preTransform)
+        : surface(surface), numImages(numImages), mailboxMode(presentMode == VK_PRESENT_MODE_MAILBOX_KHR),
+          preTransform(preTransform), frameTimestampsEnabled(false),
           shared(presentMode == VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR ||
                  presentMode == VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR) {}
 
@@ -197,7 +197,7 @@ VkResult GetPhysicalDeviceSurfaceCapabilitiesKHR(VkPhysicalDevice, VkSurfaceKHR 
         NativeWindow* window = SurfaceFromHandle(surface)->window;
         err = NativeWindowHandleOpt(window, GET_BUFFER_GEOMETRY, &height, &width);
         if (err != OHOS::GSERROR_OK) {
-            WLOGE("NATIVE_WINDOW_DEFAULT_WIDTH query failed: %{public}s (%{public}d)", strerror(-err), err);
+            WLOGE("NATIVE_WINDOW_DEFAULT_WIDTH query failed: (%{public}d)", err);
             return VK_ERROR_SURFACE_LOST_KHR;
         }
         maxBufferCount = window->surface->GetQueueSize();
@@ -354,7 +354,7 @@ VKAPI_ATTR VkResult GetPhysicalDevicePresentRectanglesKHR(VkPhysicalDevice, VkSu
     int height = 0;
     int err = NativeWindowHandleOpt(window, GET_BUFFER_GEOMETRY, &height, &width);
     if (err != OHOS::GSERROR_OK) {
-        WLOGE("NATIVE_WINDOW_DEFAULT_WIDTH query failed: %{public}s (%{public}d)", strerror(-err), err);
+        WLOGE("NATIVE_WINDOW_DEFAULT_WIDTH query failed: (%{public}d)", err);
     }
     pRects[0].offset.x = 0;
     pRects[0].offset.y = 0;
@@ -516,15 +516,15 @@ VkResult ConfigWindowInfo(Surface* surface, PixelFormat& pixelFormat, const VkSw
     NativeWindow* window = surface->window;
     int err = NativeWindowHandleOpt(window, SET_FORMAT, pixelFormat);
     if (err != OHOS::GSERROR_OK) {
-        WLOGE("native_window_set_buffers_format(%d) failed: %s (%d)", pixelFormat, strerror(-err), err);
+        WLOGE("native_window_set_buffers_format(%{public}d) failed: (%{public}d)", pixelFormat, err);
         return VK_ERROR_SURFACE_LOST_KHR;
     }
 
     err = NativeWindowHandleOpt(window, SET_BUFFER_GEOMETRY, static_cast<int>(createInfo->imageExtent.width),
                                 static_cast<int>(createInfo->imageExtent.height));
     if (err != OHOS::GSERROR_OK) {
-        WLOGE("native_window_set_buffers_dimensions(%{public}d,%{public}d) failed: %{public}s (%{public}d)",
-              createInfo->imageExtent.width, createInfo->imageExtent.height, strerror(-err), err);
+        WLOGE("native_window_set_buffers_dimensions(%{public}d,%{public}d) failed:(%{public}d)",
+              createInfo->imageExtent.width, createInfo->imageExtent.height, err);
         return VK_ERROR_SURFACE_LOST_KHR;
     }
 
@@ -533,7 +533,7 @@ VkResult ConfigWindowInfo(Surface* surface, PixelFormat& pixelFormat, const VkSw
         createInfo->presentMode == VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR) {
         swapchainImageUsage |= VK_SWAPCHAIN_IMAGE_USAGE_SHARED_BIT_OPENHARMONY;
         if (err != OHOS::GSERROR_OK) {
-            WLOGE("native_window_set_shared_buffer_mode failed: %{public}s (%{public}d)", strerror(-err), err);
+            WLOGE("native_window_set_shared_buffer_mode failed: (%{public}d)", err);
             return VK_ERROR_SURFACE_LOST_KHR;
         }
     }
@@ -546,83 +546,127 @@ VkResult ConfigWindowInfo(Surface* surface, PixelFormat& pixelFormat, const VkSw
     uint64_t nativeUsage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA;
     err = NativeWindowHandleOpt(window, SET_USAGE, nativeUsage);
     if (err != OHOS::GSERROR_OK) {
-        WLOGE("native_window_set_buffer_count(%{public}d) failed: %{public}s (%{public}d)",
-              *numImages, strerror(-err), err);
+        WLOGE("native_window_set_buffer_count(%{public}d) failed: (%{public}d)",
+              *numImages, err);
         return VK_ERROR_SURFACE_LOST_KHR;
     }
     return VK_SUCCESS;
 }
 
-VKAPI_ATTR
-VkResult UpdateSwapchainCreateInfo(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo, uint32_t* numImages,
-                                   Surface* surface)
+VKAPI_ATTR VkResult CreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo,
+    const VkAllocationCallbacks* allocator, VkSwapchainKHR* swapchainHandle)
 {
-    PixelFormat pixelFormat = GetPixelFormat(createInfo->imageFormat);
-    ColorDataSpace colorDataSpace = GetColorDataspace(createInfo->imageColorSpace);
-    if (colorDataSpace == COLOR_DATA_SPACE_UNKNOWN) {
-        WLOGI("CreateSwapchainKHR(VkSwapchainCreateInfoKHR.imageColorSpace = %{public}d) "
-              "failed: Unsupported color space", createInfo->imageColorSpace);
+    int err;
+    VkResult result = VK_SUCCESS;
+
+    if (!allocator) {
+        allocator = &vulkan::driver::GetDefaultAllocator();
+    }
+
+    PixelFormat pixel_format = GetPixelFormat(createInfo->imageFormat);
+    ColorDataSpace color_data_space = GetColorDataspace(createInfo->imageColorSpace);
+    if (color_data_space == COLOR_DATA_SPACE_UNKNOWN) {
         return VK_ERROR_INITIALIZATION_FAILED;
     }
 
-    surface = SurfaceFromHandle(createInfo->surface);
-    if (surface->swapchainHandle != createInfo->oldSwapchain) {
+    Surface& surface = *SurfaceFromHandle(createInfo->surface);
+    if (surface.swapchainHandle != createInfo->oldSwapchain) {
         return VK_ERROR_NATIVE_WINDOW_IN_USE_KHR;
     }
     if (createInfo->oldSwapchain != VK_NULL_HANDLE) {
         ReleaseSwapchain(device, SwapchainFromHandle(createInfo->oldSwapchain));
     }
-    return ConfigWindowInfo(surface, pixelFormat, createInfo, numImages);
-}
 
+    NativeWindow* window = surface.window;
+    err = NativeWindowHandleOpt(window, SET_FORMAT, pixel_format);
+    if (err != OHOS::GSERROR_OK) {
+        WLOGE("native_window_set_buffers_format(%{public}d) failed: (%{public}d)", pixel_format, err);
+        return VK_ERROR_SURFACE_LOST_KHR;
+    }
 
-void UpdateImageCreateInfo(const VkSwapchainCreateInfoKHR* createInfo, VkImageCreateInfo* imageCreate)
-{
-    // Dequeue all buffers and create a VkImage for each Swapchain
-    // Any failures during or after this must cancel the dequeued buffers.
-    VkSwapchainImageCreateInfoOpenHarmony swapchainImageCreate = {
+    err = NativeWindowHandleOpt(window, SET_BUFFER_GEOMETRY,
+                                static_cast<int>(createInfo->imageExtent.width),
+                                static_cast<int>(createInfo->imageExtent.height));
+    if (err != OHOS::GSERROR_OK) {
+        WLOGE("native_window_set_buffers_dimensions(%{public}d,%{public}d) failed: (%{public}d)",
+            createInfo->imageExtent.width, createInfo->imageExtent.height, err);
+        return VK_ERROR_SURFACE_LOST_KHR;
+    }
+
+    VkSwapchainImageUsageFlagsOpenHarmony swapchain_image_usage = 0;
+    if (createInfo->presentMode == VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR ||
+        createInfo->presentMode == VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR) {
+        swapchain_image_usage |= VK_SWAPCHAIN_IMAGE_USAGE_SHARED_BIT_OPENHARMONY;
+        if (err != OHOS::GSERROR_OK) {
+            WLOGE("native_window_set_shared_buffer_mode failed: (%{public}d)", err);
+            return VK_ERROR_SURFACE_LOST_KHR;
+        }
+    }
+
+    uint32_t num_images = MIN_BUFFER_SIZE;
+
+    if (swapchain_image_usage & VK_SWAPCHAIN_IMAGE_USAGE_SHARED_BIT_OPENHARMONY) {
+        num_images = 1;
+    }
+
+    uint64_t native_usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA;
+    err = NativeWindowHandleOpt(window, SET_USAGE, native_usage);
+    if (err != OHOS::GSERROR_OK) {
+        WLOGE("native_window_set_buffer_count(%{public}d) failed: (%{public}d)", num_images, err);
+        return VK_ERROR_SURFACE_LOST_KHR;
+    }
+
+    void* mem = allocator->pfnAllocation(allocator->pUserData, sizeof(Swapchain), alignof(Swapchain),
+        VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+    if (!mem) {
+        return VK_ERROR_OUT_OF_HOST_MEMORY;
+    }
+    Swapchain* swapchain = new (mem) Swapchain(surface, num_images, createInfo->presentMode,
+        TranslateVulkanToNativeTransform(createInfo->preTransform));
+
+    VkSwapchainImageCreateInfoOpenHarmony swapchain_image_create = {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_IMAGE_CREATE_INFO_OPENHARMONY,
 #pragma clang diagnostic pop
         .pNext = nullptr,
     };
-
-    VkNativeBufferOpenHarmony imageNativeBuffer = {
+    VkNativeBufferOpenHarmony image_native_buffer = {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wold-style-cast"
         .sType = VK_STRUCTURE_TYPE_NATIVE_BUFFER_OPENHARMONY,
 #pragma clang diagnostic pop
-        .pNext = &swapchainImageCreate,
+        .pNext = &swapchain_image_create,
+    };
+    VkImageCreateInfo image_create = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+        .pNext = &image_native_buffer,
+        .flags = 0u,
+        .imageType = VK_IMAGE_TYPE_2D,
+        .format = createInfo->imageFormat,
+        .extent = {0, 0, 1},
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .tiling = VK_IMAGE_TILING_OPTIMAL,
+        .usage = createInfo->imageUsage,
+        .sharingMode = createInfo->imageSharingMode,
+        .queueFamilyIndexCount = createInfo->queueFamilyIndexCount,
+        .pQueueFamilyIndices = createInfo->pQueueFamilyIndices,
     };
 
-    imageCreate->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    imageCreate->pNext = &imageNativeBuffer;
-    imageCreate->flags = 0u;
-    imageCreate->imageType = VK_IMAGE_TYPE_2D;
-    imageCreate->format = createInfo->imageFormat;
-    imageCreate->extent = {0, 0, 1};
-    imageCreate->mipLevels = 1;
-    imageCreate->arrayLayers = 1;
-    imageCreate->samples = VK_SAMPLE_COUNT_1_BIT;
-    imageCreate->tiling = VK_IMAGE_TILING_OPTIMAL;
-    imageCreate->usage = createInfo->imageUsage;
-    imageCreate->sharingMode = createInfo->imageSharingMode;
-    imageCreate->queueFamilyIndexCount = createInfo->queueFamilyIndexCount;
-    imageCreate->pQueueFamilyIndices = createInfo->pQueueFamilyIndices;
-}
+    if (createInfo->oldSwapchain != VK_NULL_HANDLE) {
+        WLOGI("recreate swapchain ,clean buffer queue");
+        window->surface->CleanCache();
+    }
 
-VKAPI_ATTR
-VkResult CreateImages(uint32_t numImages, Swapchain* swapchain, NativeWindow* window,
-    VkImageCreateInfo& imageCreate, VkDevice device)
-{
-    VkResult result = VK_SUCCESS;
-    for (uint32_t i = 0; i < numImages; i++) {
+    for (uint32_t i = 0; i < num_images; i++) {
         Swapchain::Image& img = swapchain->images[i];
+
         NativeWindowBuffer* buffer;
-        int err = NativeWindowRequestBuffer(window, &buffer, &img.requestFence);
+        err = NativeWindowRequestBuffer(window, &buffer, &img.requestFence);
         if (err != OHOS::GSERROR_OK) {
-            WLOGE("dequeueBuffer[%{public}u] failed: %{public}s (%{public}d)", i, strerror(-err), err);
+            WLOGE("dequeueBuffer[%{public}u] failed: (%{public}d)", i, err);
             switch (-err) {
                 case ENOMEM:
                     result = VK_ERROR_OUT_OF_DEVICE_MEMORY;
@@ -635,21 +679,18 @@ VkResult CreateImages(uint32_t numImages, Swapchain* swapchain, NativeWindow* wi
         }
         img.buffer = buffer;
         img.requested = true;
-        imageCreate.extent = VkExtent3D {static_cast<uint32_t>(img.buffer->sfbuffer->GetSurfaceBufferWidth()),
-                                         static_cast<uint32_t>(img.buffer->sfbuffer->GetSurfaceBufferHeight()), 1};
-        ((VkNativeBufferOpenHarmony*)(imageCreate.pNext))->handle = img.buffer->sfbuffer->GetBufferHandle();
-        result = vulkan::driver::CreateImage(device, &imageCreate, nullptr, &img.image);
+        image_create.extent = VkExtent3D {static_cast<uint32_t>(img.buffer->sfbuffer->GetSurfaceBufferWidth()),
+                                          static_cast<uint32_t>(img.buffer->sfbuffer->GetSurfaceBufferHeight()), 1};
+        image_native_buffer.handle = img.buffer->sfbuffer->GetBufferHandle();
+
+        result = vulkan::driver::CreateImage(device, &image_create, nullptr, &img.image);
         if (result != VK_SUCCESS) {
             WLOGD("vkCreateImage w/ native buffer failed: %{public}u", result);
             break;
         }
     }
-
-    // -- Cancel all buffers, returning them to the queue --
-    // If an error occurred before, also destroy the VkImage and release the buffer reference.
-    // Otherwise, we retain a strong reference to the buffer.
     WLOGD("swapchain init shared %{public}d", swapchain->shared);
-    for (uint32_t i = 0; i < numImages; i++) {
+    for (uint32_t i = 0; i < num_images; i++) {
         Swapchain::Image& img = swapchain->images[i];
         if (img.requested) {
             if (!swapchain->shared) {
@@ -659,48 +700,14 @@ VkResult CreateImages(uint32_t numImages, Swapchain* swapchain, NativeWindow* wi
             }
         }
     }
-    result = VK_SUCCESS;
-    return result;
-}
 
-VKAPI_ATTR
-VkResult CreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo,
-                            const VkAllocationCallbacks* allocator, VkSwapchainKHR* swapchainHandle)
-{
-    uint32_t numImages = 3;
-    Surface* surface = nullptr;
-    VkResult result = UpdateSwapchainCreateInfo(device, createInfo, &numImages, surface);
-    if (result != VK_SUCCESS) {
-        return result;
-    }
-
-    // Allocate our Swapchain object. After this point, we must deallocate the swapchain on error.
-    if (!allocator) {
-        allocator = &vulkan::driver::GetDefaultAllocator();
-    }
-    void* mem = allocator->pfnAllocation(allocator->pUserData, sizeof(Swapchain), alignof(Swapchain),
-                                         VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-    if (!mem) {
-        return VK_ERROR_OUT_OF_HOST_MEMORY;
-    }
-    Swapchain* swapchain = new (mem) Swapchain(*surface, numImages, createInfo->presentMode,
-                                               TranslateVulkanToNativeTransform(createInfo->preTransform));
-    NativeWindow* window = surface->window;
-    VkImageCreateInfo imageCreate;
-    UpdateImageCreateInfo(createInfo, &imageCreate);
-    if (createInfo->oldSwapchain != VK_NULL_HANDLE) {
-        WLOGI("recreate swapchain ,clean buffer queue");
-        window->surface->CleanCache();
-    }
-    
-    result = CreateImages(numImages, swapchain, window, imageCreate, device);
     if (result != VK_SUCCESS) {
         DestroySwapchainInternal(device, HandleFromSwapchain(swapchain), allocator);
         return result;
     }
 
-    surface->swapchainHandle = HandleFromSwapchain(swapchain);
-    *swapchainHandle = surface->swapchainHandle;
+    surface.swapchainHandle = HandleFromSwapchain(swapchain);
+    *swapchainHandle = surface.swapchainHandle;
     return VK_SUCCESS;
 }
 
@@ -755,7 +762,12 @@ VKAPI_ATTR VkResult AcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchai
         return VK_ERROR_OUT_OF_DATE_KHR;
     }
 
-    result = vulkan::driver::SetNativeFenceFdOpenHarmony(device, -1, semaphore, vkFence);
+    int fenceFd = dup(fence);
+    if (fenceFd == -1) {
+        WLOGE("dup(fence) failed, stalling until signalled: (%{public}d)", errno);
+    }
+
+    result = vulkan::driver::SetNativeFenceFdOpenHarmony(device, fenceFd, semaphore, vkFence);
     if (result != VK_SUCCESS) {
         if (NativeWindowCancelBuffer(nativeWindow, nativeWindowBuffer) != OHOS::GSERROR_OK) {
             WLOGE("NativeWindowCancelBuffer failed: (%{public}d)", ret);
@@ -833,97 +845,117 @@ static VkResult WorstPresentResult(VkResult a, VkResult b)
     return a != VK_SUCCESS ? a : b;
 }
 
-VKAPI_ATTR
-VkResult QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* presentInfo)
+static inline const VkPresentRegionKHR* GetPresentRegion(
+    const VkPresentRegionKHR* regions, const Swapchain& swapchain, uint32_t index)
 {
-    VkDevice device = nullptr;
-    VkResult finalResult = VK_SUCCESS;
+    return (regions && !swapchain.mailboxMode) ? &regions[index] : nullptr;
+}
 
-    // Look at the pNext chain for supported extension structs:
-    const VkPresentRegionsKHR* presentRegions = nullptr;
-    const VkPresentRegionsKHR* next = reinterpret_cast<const VkPresentRegionsKHR*>(presentInfo->pNext);
-    while (next) {
-        switch (next->sType) {
-            case VK_STRUCTURE_TYPE_PRESENT_REGIONS_KHR:
-                presentRegions = next;
-                break;
-            default:
-                WLOGE("QueuePresentKHR ignoring unrecognized pNext->sType = %{public}x", next->sType);
-                break;
-        }
-        next = reinterpret_cast<const VkPresentRegionsKHR*>(next->pNext);
+static inline VkResult GetReleaseFence(VkQueue queue, const VkPresentInfoKHR* presentInfo,
+    Swapchain::Image& img, int32_t &fence)
+{
+    VkResult result = vulkan::driver::GetNativeFenceFdOpenHarmony(queue, presentInfo->waitSemaphoreCount,
+        presentInfo->pWaitSemaphores, img.image, &fence);
+    if (img.releaseFence >= 0) {
+        close(img.releaseFence);
+        img.releaseFence = -1;
+    }
+    if (fence >= 0) {
+        img.releaseFence = dup(fence);
     }
 
-    const VkPresentRegionKHR* regions = (presentRegions) ? presentRegions->pRegions : nullptr;
-    const VkAllocationCallbacks* allocator = &vulkan::driver::GetDefaultAllocator();
+    return result;
+}
+
+static inline struct Region::Rect* GetRegionRect(
+    const VkAllocationCallbacks* defaultAllocator, struct Region::Rect** rects, uint32_t rectangleCount)
+{
+    return static_cast<struct Region::Rect*>(
+                defaultAllocator->pfnReallocation(
+                    defaultAllocator->pUserData, *rects,
+                    sizeof(Region::Rect) * rectangleCount,
+                    alignof(Region::Rect), VK_SYSTEM_ALLOCATION_SCOPE_COMMAND));
+}
+
+static inline void InitRegionRect(const VkRectLayerKHR* layer, struct Region::Rect* rect)
+{
+    int32_t x = layer->offset.x;
+    int32_t y = layer->offset.y;
+    int32_t width = static_cast<int32_t>(layer->extent.width);
+    int32_t height = static_cast<int32_t>(layer->extent.height);
+    rect->x = x;
+    rect->y = y;
+    rect->w = width;
+    rect->h = height;
+}
+
+static inline const VkPresentRegionKHR* GetPresentRegions(const VkPresentInfoKHR* presentInfo)
+{
+    const VkPresentRegionsKHR* presentRegions = nullptr;
+    const VkPresentRegionsKHR* nextRegions = reinterpret_cast<const VkPresentRegionsKHR*>(presentInfo->pNext);
+    while (nextRegions != nullptr) {
+        if (nextRegions->sType == VK_STRUCTURE_TYPE_PRESENT_REGIONS_KHR) {
+            presentRegions = nextRegions;
+        }
+        nextRegions = reinterpret_cast<const VkPresentRegionsKHR*>(nextRegions->pNext);
+    }
+    
+    if (presentRegions == nullptr) {
+        return nullptr;
+    } else {
+        return presentRegions->pRegions;
+    }
+}
+
+VKAPI_ATTR VkResult QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* presentInfo)
+{
+    VkDevice device = nullptr;
+    VkResult ret = VK_SUCCESS;
+
+    const VkPresentRegionKHR* regions = GetPresentRegions(presentInfo);
+    const VkAllocationCallbacks* defaultAllocator = &vulkan::driver::GetDefaultAllocator();
     struct Region::Rect* rects = nullptr;
-    uint32_t nrects = 0;
+    uint32_t restsNumber = 0;
 
-    for (uint32_t sc = 0; sc < presentInfo->swapchainCount; sc++) {
-        Swapchain& swapchain = *SwapchainFromHandle(presentInfo->pSwapchains[sc]);
-        uint32_t image_idx = presentInfo->pImageIndices[sc];
-        Swapchain::Image& img = swapchain.images[image_idx];
-        const VkPresentRegionKHR* region = (regions && !swapchain.mailboxMode) ? &regions[sc] : nullptr;
-        VkResult swapchainResult = VK_SUCCESS;
-        VkResult result;
-        Region native_region;
-        memset(&native_region, 0, sizeof(Region));
-        int err;
-        int fence = -1;
-        result = vulkan::driver::GetNativeFenceFdOpenHarmony(queue, presentInfo->waitSemaphoreCount,
-                                                             presentInfo->pWaitSemaphores, img.image, &fence);
-        if (result != VK_SUCCESS) {
-            WLOGE("QueueSignalReleaseImageOHOS failed: %{public}d", result);
-            swapchainResult = result;
-        }
-        if (img.releaseFence >= 0) {
-            close(img.releaseFence);
-        }
-        img.releaseFence = fence < 0 ? -1 : dup(fence);
+    for (uint32_t i = 0; i < presentInfo->swapchainCount; i++) {
+        VkResult scResult = VK_SUCCESS;
+        int err = 0;
 
-        if (swapchain.surface.swapchainHandle == presentInfo->pSwapchains[sc]) {
+        Swapchain& swapchain = *(reinterpret_cast<Swapchain*>(presentInfo->pSwapchains[i]));
+        Swapchain::Image& img = swapchain.images[presentInfo->pImageIndices[i]];
+        const VkPresentRegionKHR* region = GetPresentRegion(regions, swapchain, i);
+        
+        Region localRegion;
+        memset(&localRegion, 0, sizeof(Region));
+
+        int32_t fence = -1;
+        scResult = GetReleaseFence(queue, presentInfo, img, fence);
+        if (swapchain.surface.swapchainHandle == presentInfo->pSwapchains[i]) {
             NativeWindow* window = swapchain.surface.window;
-            if (swapchainResult == VK_SUCCESS) {
-                if (region) {
-                    // Process the incremental-present hint for this swapchain:
-                    uint32_t rcount = region->rectangleCount;
-                    if (rcount > nrects) {
-                        struct Region::Rect* new_rects =
-                            static_cast<struct Region::Rect*>(
-                                allocator->pfnReallocation(allocator->pUserData, rects,
-                                    sizeof(Region::Rect) * rcount, alignof(Region::Rect),
-                                    VK_SYSTEM_ALLOCATION_SCOPE_COMMAND));
-                        if (new_rects) {
-                            rects = new_rects;
-                            nrects = rcount;
+            if (scResult == VK_SUCCESS) {
+                if (region != nullptr) {
+                    uint32_t rectangleCount = region->rectangleCount;
+                    if (rectangleCount > restsNumber) {
+                        struct Region::Rect* tmpRects = GetRegionRect(defaultAllocator, &rects, rectangleCount);
+                        if (tmpRects != nullptr) {
+                            rects = tmpRects;
+                            restsNumber = rectangleCount;
                         } else {
-                            rcount = 0;  // Ignore the hint for this swapchain
+                            rectangleCount = 0;
                         }
                     }
-                    for (uint32_t r = 0; r < rcount; ++r) {
-                        if (region->pRectangles[r].layer > 0) {
-                            WLOGD("vkQueuePresentKHR ignoring invalid layer (%{public}u); using layer 0 instead",
-                                  region->pRectangles[r].layer);
-                        }
-                        int x = region->pRectangles[r].offset.x;
-                        int y = region->pRectangles[r].offset.y;
-                        int width = static_cast<int>(region->pRectangles[r].extent.width);
-                        int height = static_cast<int>(region->pRectangles[r].extent.height);
-                        struct Region::Rect* cur_rect = &rects[r];
-                        cur_rect->x = x;
-                        cur_rect->y = y;
-                        cur_rect->w = width;
-                        cur_rect->h = height;
+                    for (uint32_t r = 0; r < rectangleCount; ++r) {
+                        InitRegionRect(&region->pRectangles[r], &rects[r]);
                     }
-                    native_region.rects = rects;
-                    native_region.rectNumber = rcount;
+                    localRegion.rects = rects;
+                    localRegion.rectNumber = rectangleCount;
                 }
 
-                err = NativeWindowFlushBuffer(window, img.buffer, fence, native_region);
-                // queueBuffer always closes fence, even on error
+                // the acquire fence will be close by BufferQueue module
+                err = NativeWindowFlushBuffer(window, img.buffer, fence, localRegion);
                 if (err != OHOS::GSERROR_OK) {
-                    WLOGE("queueBuffer failed: %{public}s (%{public}d)", strerror(-err), err);
-                    swapchainResult = WorstPresentResult(swapchainResult, VK_ERROR_SURFACE_LOST_KHR);
+                    WLOGE("queueBuffer failed: (%{public}d)", err);
+                    scResult = WorstPresentResult(scResult, VK_ERROR_SURFACE_LOST_KHR);
                 } else {
                     if (img.requestFence >= 0) {
                         close(img.requestFence);
@@ -932,42 +964,40 @@ VkResult QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* presentInfo)
                     img.requested = false;
                 }
 
-                if (swapchain.shared && swapchainResult == VK_SUCCESS) {
-                    NativeWindowBuffer* buffer;
-                    int fenceFd;
-                    err = NativeWindowRequestBuffer(window, &buffer, &fenceFd);
+                if (swapchain.shared && scResult == VK_SUCCESS) {
+                    NativeWindowBuffer* buffer = nullptr;
+                    int releaseFence = -1;
+                    err = NativeWindowRequestBuffer(window, &buffer, &releaseFence);
                     if (err != OHOS::GSERROR_OK) {
-                        WLOGE("dequeueBuffer failed: %{public}s (%{public}d)", strerror(-err), err);
-                        swapchainResult = WorstPresentResult(swapchainResult, VK_ERROR_SURFACE_LOST_KHR);
+                        WLOGE("NativeWindowRequestBuffer failed: (%{public}d)", err);
+                        scResult = WorstPresentResult(scResult, VK_ERROR_SURFACE_LOST_KHR);
                     } else if (img.buffer != buffer) {
-                        WLOGE("got wrong image back for shared swapchain");
-                        swapchainResult = WorstPresentResult(swapchainResult, VK_ERROR_SURFACE_LOST_KHR);
+                        WLOGE("img.buffer != buffer");
+                        scResult = WorstPresentResult(scResult, VK_ERROR_SURFACE_LOST_KHR);
                     } else {
-                        img.requestFence = fenceFd;
+                        img.requestFence = releaseFence;
                         img.requested = true;
                     }
                 }
-            }
-            if (swapchainResult != VK_SUCCESS) {
+            } else {
                 ReleaseSwapchain(device, &swapchain);
             }
         } else {
-            WLOGE("QueuePresentKHR swapchainHandle != pSwapchains[%{public}d]", sc);
+            WLOGE("QueuePresentKHR swapchainHandle != pSwapchains[%{public}d]", i);
             ReleaseSwapchainImage(device, nullptr, fence, img, true);
-            swapchainResult = VK_ERROR_OUT_OF_DATE_KHR;
+            scResult = VK_ERROR_OUT_OF_DATE_KHR;
         }
 
         if (presentInfo->pResults)
-            presentInfo->pResults[sc] = swapchainResult;
+            presentInfo->pResults[i] = scResult;
 
-        if (swapchainResult != finalResult)
-            finalResult = WorstPresentResult(finalResult, swapchainResult);
+        if (scResult != ret)
+            ret = WorstPresentResult(ret, scResult);
     }
-    if (rects) {
-        allocator->pfnFree(allocator->pUserData, rects);
+    if (rects != nullptr) {
+        defaultAllocator->pfnFree(defaultAllocator->pUserData, rects);
     }
-
-    return finalResult;
+    return ret;
 }
 }  // namespace driver
 }  // namespace vulkan

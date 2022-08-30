@@ -85,7 +85,7 @@ public:
         return name_;
     }
 
-    void ResetContextAlpha() const;
+    void ResetContextAlpha(bool isProxy) const;
 
 protected:
     bool NeedForcedSendToRemote() const override;

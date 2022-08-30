@@ -38,8 +38,6 @@ void SurfaceNodeCommandHelper::CreateProxy(RSContext& context, NodeId id)
     }
     // this is proxy node, so set proxy flag
     node->SetProxy();
-    // this code ensures that next call to SetContextAlpha always send command to RenderService
-    node->SetContextAlpha(-1.0f, false);
 }
 
 void SurfaceNodeCommandHelper::SetContextMatrix(RSContext& context, NodeId id, SkMatrix matrix)

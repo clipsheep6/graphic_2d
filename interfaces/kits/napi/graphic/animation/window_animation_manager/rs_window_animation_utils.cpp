@@ -51,6 +51,8 @@ NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationTarget(NativeEngine&
     if (target->surfaceNode_) {
         // create proxy in Render Thread, this proxy node will extract context variables and send to Render Service
         target->surfaceNode_->CreateProxyInRenderThread();
+        // this code ensures that next call to SetContextAlpha always send command to RenderService
+        target->surfaceNode_->ResetContextAlpha(true);
     }
 
     object->SetProperty("bundleName", CreateJsValue(engine, target->bundleName_));

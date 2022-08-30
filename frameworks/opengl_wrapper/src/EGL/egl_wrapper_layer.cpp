@@ -17,6 +17,9 @@
 #include <dlfcn.h>
 #include <cstdlib>
 
+#include <parameter.h>
+#include <sstream>
+
 #include "../wrapper_log.h"
 
 namespace OHOS {
@@ -31,6 +34,14 @@ constexpr const char *DEBUG_LAYERS_SUFFIX = ".so";
 constexpr const char *DEBUG_LAYERS_DELIMITER = ":";
 constexpr const char *DEBUG_LAYER_INIT_FUNC = "DebugLayerInitialize";
 constexpr const char *DEBUG_LAYER_GET_PROC_ADDR_FUNC = "DebugLayerGetProcAddr";
+}
+
+static std::string strLayers;
+
+static void GetWrapperDebugLayers(const char *key, const char *value, void *context)
+{
+    WLOGD("");
+    strLayers = std::string(value);
 }
 
 static void UpdateApiEntries(LayerSetupFunc func,
@@ -102,8 +113,12 @@ static std::vector<std::string> GetDebugLayers(void)
     WLOGD("");
     std::vector<std::string> layers;
 
-    const char *strLayers = getenv("OPENGL_WRAPPER_DEBUG_LAYERS");
-    if (strLayers) {
+    auto ret = WatchParameter("debug_layer", GetWrapperDebugLayers, nullptr);
+    if (ret) {
+        WLOGE("WatchParameter faild.");
+    }
+
+    if (!strLayers.empty()) {
         SplitEnvString(strLayers, &layers);
     } else {
         WLOGD("OPENGL_WRAPPER_DEBUG_LAYERS is not set.");

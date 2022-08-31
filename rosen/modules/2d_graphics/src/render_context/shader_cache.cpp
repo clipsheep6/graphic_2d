@@ -125,6 +125,29 @@ void ShaderCache::WriteToDisk()
     savePending_ = false;
 }
 
+void ShaderCache::NewTaskWrite()
+{
+    RS_TRACE_NAME("ShaderCache::NewTaskWrite");
+    if (savePending_ || saveDelaySeconds_ <= 0) {
+        return;
+    }
+    savePending_ = true;
+    if (!writerHandler_) {
+        auto runner = OHOS::AppExecFwk::EventRunner::Create("shader writer");
+        writerHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    }
+    if (writerHandler_) {
+        writerHandler_->PostTask([this]() {
+            sleep(saveDelaySeconds_);
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (cacheDirty_) {
+                WriteToDisk();
+                cacheDirty_ = false;
+            }
+        });
+    }
+}
+
 void ShaderCache::store(const SkData& key, const SkData& data)
 {
     RS_TRACE_NAME("store shader");
@@ -146,17 +169,7 @@ void ShaderCache::store(const SkData& key, const SkData& data)
     CacheData* cacheData = GetCacheData();
     cacheDirty_ = true;
     cacheData->Rewrite(key.data(), keySize, value, valueSize);
-
-    if (!savePending_ && saveDelaySeconds_ > 0) {
-        savePending_ = true;
-        std::thread deferredSaveThread([this]() {
-            sleep(saveDelaySeconds_);
-            std::lock_guard<std::mutex> lock(mutex_);
-            WriteToDisk();
-            cacheDirty_ = false;
-        });
-        deferredSaveThread.detach();
-    }
+    NewTaskWrite();
 }
 }   // namespace Rosen
 }   // namespace OHOS

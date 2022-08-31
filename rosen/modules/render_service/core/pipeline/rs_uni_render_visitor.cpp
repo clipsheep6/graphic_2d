@@ -314,6 +314,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             if (!rect.IsEmpty()) {
                 rects.emplace_back(rect);
             }
+            if (doWindowAnimate_ && RSSystemProperties::GetUniAnimationDisablePartialRenderEnabled()) {
+                rects.clear();
+            }
             for (auto& r : rects) {
                 RS_LOGD("SetDamageRegion %s", r.ToString().c_str());
             }

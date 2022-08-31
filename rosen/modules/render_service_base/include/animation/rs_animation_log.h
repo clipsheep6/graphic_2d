@@ -19,6 +19,7 @@
 #include <fstream>
 #include <set>
 #include <unordered_map>
+#include <sys/stat.h>
 
 #include "common/rs_common_def.h"
 #include "modifier/rs_modifier_type.h"
@@ -37,6 +38,8 @@ public:
 
     bool IsNeedWriteLog(const PropertyId& propertyId, const NodeId& id);
 
+    bool IsNeedWriteLog(const NodeId& id);
+
     template<typename T>
     void WriteAnimationValueToLog(const T& value, const PropertyId& propertyId, const NodeId& id);
 
@@ -49,6 +52,8 @@ private:
 
     void DealConfigInputInfo(const std::string& info);
 
+    bool isNeedRefreshConfig();
+
     uint64_t GetNowTime();
 
     void WriteString(const std::string& log);
@@ -60,6 +65,7 @@ private:
     std::ofstream logFile_;
     std::set<NodeId> nodeIdSet_;
     std::set<PropertyId> propertySet_;
+    std::string propertyFileLastModifyTime;
 };
 } // namespace Rosen
 } // namespace OHOS

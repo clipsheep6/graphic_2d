@@ -16,7 +16,6 @@ import("//build/ohos.gni")
 config("vulkan_config") {
   visibility = [ ":*" ]
 
-  #defines = [ "EGL_WRAPPER_DEBUG_ENABLE" ]
   defines = [
     "VK_USE_PLATFORM_OHOS_OPENHARMONY",
     "VK_NO_PROTOTYPES",
@@ -53,10 +52,7 @@ ohos_shared_library("vulkan") {
 
   public_deps = [
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
-
-    # "//third_party/vulkan:vulkan_headers",
-    # [todo] should use //third_party/vulkan
-    "//foundation/graphic/graphic_2d/frameworks/vulkan_wrapper/external/vulkan:vulkan_headers",
+    "//third_party/vulkan:vulkan_headers",
   ]
 
   external_deps = [
@@ -86,11 +82,7 @@ ohos_executable("vulkan_wrapper_native_test") {
     "VK_NO_PROTOTYPES",
   ]
 
-  deps = [
-    # "//third_party/vulkan:vulkan_headers",
-    # [todo] should use //third_party/vulkan
-    "//foundation/graphic/graphic_2d/frameworks/vulkan_wrapper/external/vulkan:vulkan_headers",
-  ]
+  deps = [ "//third_party/vulkan:vulkan_headers" ]
 
   external_deps = [ "hilog_native:libhilog" ]
 

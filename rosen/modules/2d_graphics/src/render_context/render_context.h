@@ -86,6 +86,16 @@ public:
         return eglContext_ != EGL_NO_DISPLAY;
     }
 
+    EGLConfig GetEGLConfig() const
+    {
+        return config_;
+    }
+
+    ColorGamut GetColorSpace() const
+    {
+        return colorSpace_;
+    }
+
     void SetCacheDir(const std::string& filePath)
     {
         cacheDir_ = filePath;

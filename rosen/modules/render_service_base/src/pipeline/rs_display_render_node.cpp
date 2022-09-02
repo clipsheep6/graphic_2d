@@ -169,22 +169,10 @@ ScreenRotation RSDisplayRenderNode::GetRotation() const
 
 void RSDisplayRenderNode::UpdateDisplayDirtyManager(uint32_t bufferage)
 {
-    for (auto iter = lastFrameSurfacePos_.cbegin(); iter != lastFrameSurfacePos_.cend(); iter++) {
-        if (currentFrameSurfacePos_.find(iter->first) == currentFrameSurfacePos_.end()) {
-            dirtyManager_->MergeDirtyRect(iter->second);
-        }
-    }
     dirtyManager_->SetBufferAge(bufferage);
     dirtyManager_->UpdateDirty();
     lastFrameSurfacePos_.clear();
     lastFrameSurfacePos_.swap(currentFrameSurfacePos_);
-}
-
-void RSDisplayRenderNode::ResetDirtyRegion()
-{
-    damageRegion_.Reset();
-    displayOpaqueRegion_.Reset();
-    displayTransparentDirtyRegion_.Reset();
 }
 } // namespace Rosen
 } // namespace OHOS

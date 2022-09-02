@@ -63,12 +63,28 @@ void RSRootNode::AttachRSSurfaceNode(std::shared_ptr<RSSurfaceNode> surfaceNode)
 
 void RSRootNode::SetEnableRender(bool flag) const
 {
-    if (!isUniRenderEnabled_) {
-        std::unique_ptr<RSCommand> command = std::make_unique<RSRootNodeSetEnableRender>(GetId(), flag);
-        auto transactionProxy = RSTransactionProxy::GetInstance();
-        if (transactionProxy != nullptr) {
-            transactionProxy->AddCommand(command, IsRenderServiceNode());
-        }
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy == nullptr) {
+        return;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<RSRootNodeSetEnableRender>(GetId(), flag);
+    transactionProxy->AddCommand(command, IsRenderServiceNode());
+    if (NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand = std::make_unique<RSRootNodeSetEnableRender>(GetId(), flag);
+        transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode());
+    }
+    transactionProxy->FlushImplicitTransaction();
+}
+
+void RSRootNode::OnBoundsSizeChanged() const
+{
+    // Planning: we should use frame size instead of bounds size to calculate the surface size.
+    auto bounds = GetStagingProperties().GetBounds();
+    // Set RootNode Surface Size with animation final value. NOTE: this logic is only used in RenderThreadVisitor
+    std::unique_ptr<RSCommand> command = std::make_unique<RSRootNodeUpdateSurfaceSize>(GetId(), bounds.z_, bounds.w_);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, false);
     }
 }
 } // namespace Rosen

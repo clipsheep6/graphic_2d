@@ -82,9 +82,24 @@ public:
         return isHighContrastEnabled_;
     }
     void UpdateRenderMode(bool needRender);
+    void NotifyClearBufferCache();
     bool GetForceUpdateSurfaceNode() const
     {
         return forceUpdateSurfaceNode_;
+    }
+
+    void SetCacheDir(const std::string& filePath)
+    {
+        cacheDir_ = filePath;
+    }
+
+    // If disabled partial render, rt forces to render whole frame
+    void SetRTRenderForced(bool isRenderForced)
+    {
+        if ((isRTRenderForced_ != isRenderForced)) {
+            ROSEN_LOGD("RSRenderThread::SetRenderForced %d -> %d", isRTRenderForced_, isRenderForced);
+            isRTRenderForced_ = isRenderForced;
+        }
     }
 
 private:
@@ -122,11 +137,10 @@ private:
     std::mutex cmdMutex_;
     std::vector<std::unique_ptr<RSTransactionData>> cmds_;
     bool hasRunningAnimation_ = false;
-    std::shared_ptr<RSNodeVisitor> visitor_;
+    std::shared_ptr<RSRenderThreadVisitor> visitor_;
 
     uint64_t timestamp_ = 0;
     uint64_t prevTimestamp_ = 0;
-    uint64_t refreshPeriod_ = 16666667;
     int32_t tid_ = -1;
     uint64_t mValue = 0;
 
@@ -143,6 +157,9 @@ private:
     RenderContext* renderContext_ = nullptr;
     std::shared_ptr<HighContrastObserver> highContrastObserver_;
     std::atomic_bool isHighContrastEnabled_ = false;
+
+    std::string cacheDir_;
+    bool isRTRenderForced_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

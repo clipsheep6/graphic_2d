@@ -142,9 +142,10 @@ public:
         float mirrorAdaptiveCoefficient = 1.0f);
 
     void ShrinkCachesIfNeeded();
-    void SetColorFilterMode(ColorFilterMode mode)
+    void SetColorFilterMode(ColorFilterMode mode);
+    ColorFilterMode GetColorFilterMode() const
     {
-        colorFilterMode_ = mode;
+        return colorFilterMode_;
     }
 #ifdef RS_ENABLE_GL
     const std::shared_ptr<RenderContext>& GetRenderContext() const
@@ -185,6 +186,8 @@ private:
 
     void SetColorFilterModeToPaint(SkPaint& paint);
 
+    ColorFilterMode colorFilterMode_ = ColorFilterMode::COLOR_FILTER_END;
+
 #ifdef RS_ENABLE_GL
     std::shared_ptr<RenderContext> renderContext_;
 #endif // RS_ENABLE_GL
@@ -192,8 +195,6 @@ private:
 #ifdef RS_ENABLE_EGLIMAGE
     std::shared_ptr<RSEglImageManager> eglImageManager_;
 #endif // RS_ENABLE_EGLIMAGE
-
-    ColorFilterMode colorFilterMode_ = ColorFilterMode::COLOR_FILTER_END;
 
     // RSSurfaces for framebuffer surfaces.
     static constexpr size_t MAX_RS_SURFACE_SIZE = 32; // used for rsSurfaces_.

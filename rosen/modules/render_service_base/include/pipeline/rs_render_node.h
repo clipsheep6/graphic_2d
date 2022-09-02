@@ -38,7 +38,8 @@ public:
     ~RSRenderNode() override;
 
     bool Animate(int64_t timestamp) override;
-    bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty);
+    bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty,
+        const std::unique_ptr<RSTransitionProperties>& transition = nullptr);
 
     RSProperties& GetMutableRenderProperties();
     const RSProperties& GetRenderProperties() const;
@@ -95,6 +96,7 @@ protected:
 
 private:
     void FallbackAnimationsToRoot();
+    void UpdateOverlayerBounds();
     bool isDirtyRegionUpdated_ = false;
     bool isLastVisible_ = false;
     RectI oldDirty_;

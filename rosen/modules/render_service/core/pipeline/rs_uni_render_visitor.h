@@ -16,6 +16,7 @@
 #define RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_VISITOR_H
 
 #include <set>
+#include <parameters.h>
 
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_processor.h"
@@ -52,16 +53,22 @@ private:
     void DrawRectOnCanvas(const RectI& dirtyRect, const SkColor color,
         const SkPaint::Style fillType, float alpha);
     void DrawDirtyRegion();
-    const std::vector<RectI> GetDirtyRects(const Occlusion::Region &region) const;
-    RectI CoordinateTransform(const RectI& rect);
-    const std::vector<RectI> GetSurfaceTransparentDirtyRects(std::shared_ptr<RSDisplayRenderNode>& node) const;
-    inline bool GetSurfaceViewDirtyEnabled()
-    {
-        return std::atoi((system::GetParameter("rosen.uni.surfaceviewdirty.enabled", "0")).c_str()) != 0;
-    }
+    std::vector<RectI> GetDirtyRects(const Occlusion::Region &region);
+    /* calculate display/global (between windows) level dirty region, current include:
+     * 1. window move/add/remove 2. transparent dirty region
+     * when process canvas culling, canvas intersect with surface's visibledirty region or
+     * global dirty region will be skipped
+     */
+    void CalcDirtyDisplayRegion(std::shared_ptr<RSDisplayRenderNode>& node) const;
+    // set global dirty region to each surface node
+    void SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node);
+
+    void InitCacheSurface(RSSurfaceRenderNode& node, int width, int height);
+    void DrawCacheSurface(RSSurfaceRenderNode& node);
 
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;
+    std::shared_ptr<RSSurfaceRenderNode> curSurfaceNode_;
     bool dirtyFlag_ { false };
     std::unique_ptr<RSPaintFilterCanvas> canvas_;
     std::map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> dirtySurfaceNodeMap_;
@@ -82,6 +89,8 @@ private:
     std::shared_ptr<RSDirtyRegionManager> curDisplayDirtyManager_;
     std::shared_ptr<RSDisplayRenderNode> curDisplayNode_;
     bool doAnimate_ = false;
+    bool isPartialRenderEnabled_ = false;
+    bool isOpDroped_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

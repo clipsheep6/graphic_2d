@@ -46,17 +46,23 @@ public:
     explicit RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, std::weak_ptr<RSContext> context = {});
     virtual ~RSSurfaceRenderNode();
 
-    void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
-    void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
+    void PrepareRenderBeforeChildren(RSPaintFilterCanvas& canvas);
+    void PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas);
+    void ResetParent() override;
 
     bool IsAppWindow() const
     {
-        return isAppWindow_;
+        return nodeType_ == RSSurfaceNodeType::APP_WINDOW_NODE;
     }
 
-    void MarkAppWindow()
+    RSSurfaceNodeType GetSurfaceNodeType() const
     {
-        isAppWindow_ = true;
+        return nodeType_;
+    }
+
+    void SetSurfaceNodeType(RSSurfaceNodeType nodeType)
+    {
+        nodeType_ = nodeType;
     }
 
     std::string GetName() const
@@ -197,13 +203,31 @@ public:
         return abilityBgAlpha_;
     }
 
-    void SetVisibleRegionRecursive(const Occlusion::Region& region, VisibleData& visibleVec)
+    void setQosCal(bool qosPidCal)
+    {
+        qosPidCal_ = qosPidCal;
+    }
+
+    void SetVisibleRegionRecursive(const Occlusion::Region& region,
+                                   VisibleData& visibleVec,
+                                   std::map<uint32_t, bool>& pidVisMap)
     {
         visibleRegion_ = region;
         bool vis = region.GetSize() > 0;
         if (vis) {
             visibleVec.emplace_back(GetId());
         }
+
+        // collect visible changed pid
+        if (qosPidCal_) {
+            uint32_t tmpPid = (GetId() >> 32) & 0xFFFFFFFF;
+            if (pidVisMap.find(tmpPid) != pidVisMap.end()) {
+                pidVisMap[tmpPid] |= vis;
+            } else {
+                pidVisMap[tmpPid] = vis;
+            }
+        }
+
         SetOcclusionVisible(vis);
         for (auto& child : GetSortedChildren()) {
             if (child->GetType() == RSRenderNodeType::SURFACE_NODE) {
@@ -211,9 +235,14 @@ public:
                 if (surface == nullptr) {
                     continue;
                 }
-                surface->SetVisibleRegionRecursive(region, visibleVec);
+                surface->SetVisibleRegionRecursive(region, visibleVec, pidVisMap);
             }
         }
+    }
+
+    const Occlusion::Region& GetVisibleDirtyRegion() const
+    {
+        return visibleDirtyRegion_;
     }
 
     void SetVisibleDirtyRegion(const Occlusion::Region& region)
@@ -221,9 +250,18 @@ public:
         visibleDirtyRegion_ = region;
     }
 
-    Occlusion::Region& GetVisibleDirtyRegion()
+    const Occlusion::Region& GetDirtyRegionBelowCurrentLayer() const
     {
-        return visibleDirtyRegion_;
+        return dirtyRegionBelowCurrentLayer_;
+    }
+
+    void SetDirtyRegionBelowCurrentLayer(Occlusion::Region& region)
+    {
+        Occlusion::Rect dstrect { dstRect_.left_, dstRect_.top_,
+            dstRect_.GetRight(), dstRect_.GetBottom() };
+        Occlusion::Region dstregion {dstrect};
+        dirtyRegionBelowCurrentLayer_ = dstregion.And(region);
+        dirtyRegionBelowCurrentLayerIsEmpty_ = dirtyRegionBelowCurrentLayer_.IsEmpty();
     }
 
     bool GetDstRectChanged() const
@@ -246,6 +284,13 @@ public:
         abilityBgAlphaChanged_ = false;
     }
 
+    void SetGloblDirtyRegion(const RectI& rect)
+    {
+        auto globaldirtyInSurfaceRange = GetDstRect().IntersectRect(rect);
+        globalDirtyRegionIsEmpty_ = globaldirtyInSurfaceRange.IsEmpty();
+        globalDirtyRegion_ = globaldirtyInSurfaceRange;
+    }
+
     void SetConsumer(const sptr<Surface>& consumer);
 
     void UpdateSurfaceDefaultSize(float width, float height);
@@ -263,9 +308,11 @@ public:
 
     void NotifyRTBufferAvailable();
     bool IsNotifyRTBufferAvailable() const;
+    bool IsNotifyRTBufferAvailablePre() const;
 
     void NotifyUIBufferAvailable();
     bool IsNotifyUIBufferAvailable() const;
+    void SetIsNotifyUIBufferAvailable(bool available);
 
     // UI Thread would not be notified when SurfaceNode created by Video/Camera in RenderService has available buffer.
     // And RenderThread does not call mainFunc_ if nothing in UI thread is changed
@@ -286,8 +333,70 @@ public:
         parallelVisitMutex_.unlock();
     }
 
+    bool IsIntersectWithDirty(const RectI& r) const
+    {
+        if (dirtyManager_ == nullptr) {
+            return true;
+        }
+        Occlusion::Rect nodeRect { r.left_, r.top_, r.GetRight(), r.GetBottom() };
+
+        // if current node is in occluded region of the surface, it could be skipped in process step
+        bool isVisible = visibleRegion_.IsIntersectWith(nodeRect);
+        if (!isVisible) {
+            return false;
+        }
+
+        // if current node rect r is in global dirtyregion, it CANNOT be skipped
+        if (!globalDirtyRegionIsEmpty_) {
+            auto globalRect = r.IntersectRect(globalDirtyRegion_);
+            if (!globalRect.IsEmpty()) {
+                return true;
+            }
+        }
+        
+        // if current node is in visible dirtyRegion, it CANNOT be skipped
+        bool localIntersect = visibleDirtyRegion_.IsIntersectWith(nodeRect);
+        if (localIntersect) {
+            return true;
+        }
+
+        // if current node is transparent
+        const uint8_t opacity = 255;
+        if (!(GetAbilityBgAlpha() == opacity &&
+                ROSEN_EQ(GetRenderProperties().GetAlpha(), 1.0f))) {
+            return dirtyRegionBelowCurrentLayer_.IsIntersectWith(nodeRect);
+        }
+        return false;
+    }
+
+    void SetCacheSurface(sk_sp<SkSurface> cacheSurface)
+    {
+        cacheSurface_ = std::move(cacheSurface);
+    }
+
+    sk_sp<SkSurface> GetCacheSurface() const
+    {
+        return cacheSurface_;
+    }
+
+    void ClearCacheSurface()
+    {
+        cacheSurface_ = nullptr;
+    }
+
+    void SetAppFreeze(bool isAppFreeze)
+    {
+        isAppFreeze_ = isAppFreeze;
+    }
+
+    bool IsAppFreeze() const
+    {
+        return isAppFreeze_;
+    }
+
 private:
     void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId);
+    void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
 
     std::mutex mutexRT_;
     std::mutex mutexUI_;
@@ -305,11 +414,13 @@ private:
     int32_t offsetX_ = 0;
     int32_t offsetY_ = 0;
     float globalAlpha_ = 1.0f;
+    bool qosPidCal_ = false;
 
     std::string name_;
-    bool isAppWindow_ = false;
+    RSSurfaceNodeType nodeType_ = RSSurfaceNodeType::DEFAULT;
     bool isProxy_ = false;
     BlendType blendType_ = BlendType::BLEND_SRCOVER;
+    bool isNotifyRTBufferAvailablePre_ = false;
     std::atomic<bool> isNotifyRTBufferAvailable_ = false;
     std::atomic<bool> isNotifyUIBufferAvailable_ = false;
     std::atomic_bool isBufferAvailable_ = false;
@@ -320,13 +431,21 @@ private:
     friend class RSRenderThreadVisitor;
     RectI clipRegionFromParent_;
     Occlusion::Region visibleRegion_;
+    Occlusion::Region visibleDirtyRegion_;
     bool isOcclusionVisible_ = true;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
     RectI dstRect_;
     bool dstRectChanged_ = false;
     uint8_t abilityBgAlpha_ = 0;
     bool abilityBgAlphaChanged_ = false;
-    Occlusion::Region visibleDirtyRegion_;
+    RectI globalDirtyRegion_;
+
+    std::atomic<bool> isAppFreeze_ = false;
+    sk_sp<SkSurface> cacheSurface_ = nullptr;
+    bool globalDirtyRegionIsEmpty_ = false;
+    // if a there a dirty layer under transparent clean layer, transparent layer should refreshed
+    Occlusion::Region dirtyRegionBelowCurrentLayer_;
+    bool dirtyRegionBelowCurrentLayerIsEmpty_;
 };
 } // namespace Rosen
 } // namespace OHOS

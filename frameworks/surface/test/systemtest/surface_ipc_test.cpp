@@ -19,6 +19,9 @@
 #include <iservice_registry.h>
 #include <surface.h>
 #include <display_type.h>
+#include "accesstoken_kit.h"
+#include "nativetoken_kit.h"
+#include "token_setproc.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -165,12 +168,31 @@ pid_t SurfaceIPCTest::ChildProcessMain()
 * EnvConditions: N/A
 * CaseDescription: 1. produce surface, fill buffer
 *                  2. consume surface and check buffer
+* @tc.require: issueI5I57K issueI5GMZN issueI5IWHW
  */
 HWTEST_F(SurfaceIPCTest, BufferIPC001, Function | MediumTest | Level2)
 {
     auto pid = ChildProcessMain();
     ASSERT_GE(pid, 0);
 
+    uint64_t tokenId;
+    const char *perms[2];
+    perms[0] = "ohos.permission.DISTRIBUTED_DATASYNC";
+    perms[1] = "ohos.permission.CAMERA";
+    NativeTokenInfoParams infoInstance = {
+        .dcapsNum = 0,
+        .permsNum = 2,
+        .aclsNum = 0,
+        .dcaps = NULL,
+        .perms = perms,
+        .acls = NULL,
+        .processName = "dcamera_client_demo",
+        .aplStr = "system_basic",
+    };
+    tokenId = GetAccessTokenId(&infoInstance);
+    SetSelfTokenID(tokenId);
+    int32_t rett = Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
+    ASSERT_EQ(rett, Security::AccessToken::RET_SUCCESS);
     cSurface = Surface::CreateSurfaceAsConsumer("test");
     cSurface->RegisterConsumerListener(this);
     auto producer = cSurface->GetProducer();

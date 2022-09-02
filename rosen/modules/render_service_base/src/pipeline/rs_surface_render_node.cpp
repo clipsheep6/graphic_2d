@@ -40,6 +40,7 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config
     : RSRenderNode(config.id, context),
       RSSurfaceHandler(config.id),
       name_(config.name),
+      nodeType_(config.nodeType),
       dirtyManager_(std::make_shared<RSDirtyRegionManager>())
 {
 }
@@ -74,7 +75,7 @@ static SkRect getLocalClipBounds(const RSPaintFilterCanvas& canvas)
     return bounds;
 }
 
-void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
+void RSSurfaceRenderNode::PrepareRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     renderNodeSaveCount_ = canvas.SaveCanvasAndAlpha();
 
@@ -126,7 +127,7 @@ void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canva
     SetGlobalAlpha(canvas.GetAlpha());
 }
 
-void RSSurfaceRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
+void RSSurfaceRenderNode::PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas)
 {
     canvas.RestoreCanvasAndAlpha(renderNodeSaveCount_);
 }
@@ -148,6 +149,11 @@ void RSSurfaceRenderNode::CollectSurface(
     if (consumer != nullptr && consumer->GetTunnelHandle() != nullptr) {
         return;
     }
+    std::vector<RSBaseRenderNode::SharedPtr>::iterator num =
+        find(vec.begin(), vec.end(), shared_from_this());
+    if (num != vec.end()) {
+        return;
+    }
     if (isUniRender) {
         vec.emplace_back(shared_from_this());
     } else {
@@ -155,6 +161,39 @@ void RSSurfaceRenderNode::CollectSurface(
             vec.emplace_back(shared_from_this());
         }
     }
+}
+
+void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node)
+{
+    for (auto& child : node->GetSortedChildren()) {
+        auto surfaceNode = child->ReinterpretCastTo<RSSurfaceRenderNode>();
+        if (surfaceNode == nullptr) {
+            continue;
+        }
+        auto& consumer = surfaceNode->GetConsumer();
+        if (consumer != nullptr) {
+            consumer->GoBackground();
+        }
+    }
+}
+
+void RSSurfaceRenderNode::ResetParent()
+{
+    RSBaseRenderNode::ResetParent();
+
+    if (RSOcclusionConfig::GetInstance().IsLeashWindow(GetName())) {
+        ClearChildrenCache(shared_from_this());
+    } else {
+        auto& consumer = GetConsumer();
+        if (consumer != nullptr) {
+            consumer->GoBackground();
+        }
+    }
+}
+
+void RSSurfaceRenderNode::SetIsNotifyUIBufferAvailable(bool available)
+{
+    isNotifyUIBufferAvailable_.store(available);
 }
 
 void RSSurfaceRenderNode::Prepare(const std::shared_ptr<RSNodeVisitor>& visitor)
@@ -310,6 +349,7 @@ void RSSurfaceRenderNode::NotifyRTBufferAvailable()
     // In RS, "isNotifyRTBufferAvailable_ = true" means buffer is ready and need to trigger ipc callback.
     // In RT, "isNotifyRTBufferAvailable_ = true" means RT know that RS have had available buffer
     // and ready to trigger "callbackForRenderThreadRefresh_" to "clip" on parent surface.
+    isNotifyRTBufferAvailablePre_ = isNotifyRTBufferAvailable_;
     if (isNotifyRTBufferAvailable_) {
         return;
     }
@@ -341,7 +381,7 @@ void RSSurfaceRenderNode::NotifyUIBufferAvailable()
     {
         std::lock_guard<std::mutex> lock(mutexUI_);
         if (callbackFromUI_) {
-            ROSEN_LOGI("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %" PRIu64, GetId());
+            ROSEN_LOGD("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %" PRIu64, GetId());
             callbackFromUI_->OnBufferAvailable();
         } else {
             isNotifyUIBufferAvailable_ = false;
@@ -352,6 +392,11 @@ void RSSurfaceRenderNode::NotifyUIBufferAvailable()
 bool RSSurfaceRenderNode::IsNotifyRTBufferAvailable() const
 {
     return isNotifyRTBufferAvailable_;
+}
+
+bool RSSurfaceRenderNode::IsNotifyRTBufferAvailablePre() const
+{
+    return isNotifyRTBufferAvailablePre_;
 }
 
 bool RSSurfaceRenderNode::IsNotifyUIBufferAvailable() const

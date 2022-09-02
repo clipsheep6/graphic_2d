@@ -20,6 +20,9 @@
 #include <securec.h>
 #include <display_type.h>
 #include <native_window.h>
+#include "accesstoken_kit.h"
+#include "nativetoken_kit.h"
+#include "token_setproc.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -186,11 +189,31 @@ pid_t NativeWindowBufferTest::ChildProcessMain()
 * EnvConditions: N/A
 * CaseDescription: 1. produce surface by nativewindow interface, fill buffer
 *                  2. consume surface and check buffer
+* @tc.require: issueI5GMZN issueI5IWHW
  */
 HWTEST_F(NativeWindowBufferTest, Surface001, Function | MediumTest | Level2)
 {
     auto pid = ChildProcessMain();
     ASSERT_GE(pid, 0);
+
+    uint64_t tokenId;
+    const char *perms[2];
+    perms[0] = "ohos.permission.DISTRIBUTED_DATASYNC";
+    perms[1] = "ohos.permission.CAMERA";
+    NativeTokenInfoParams infoInstance = {
+        .dcapsNum = 0,
+        .permsNum = 2,
+        .aclsNum = 0,
+        .dcaps = NULL,
+        .perms = perms,
+        .acls = NULL,
+        .processName = "dcamera_client_demo",
+        .aplStr = "system_basic",
+    };
+    tokenId = GetAccessTokenId(&infoInstance);
+    SetSelfTokenID(tokenId);
+    int32_t rett = Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
+    ASSERT_EQ(rett, Security::AccessToken::RET_SUCCESS);
 
     cSurface = Surface::CreateSurfaceAsConsumer("test");
     cSurface->RegisterConsumerListener(this);

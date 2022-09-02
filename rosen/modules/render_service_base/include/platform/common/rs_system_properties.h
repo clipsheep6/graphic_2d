@@ -37,6 +37,13 @@ enum class PartialRenderType {
     SET_DAMAGE_AND_DROP_OP
 };
 
+enum class DumpSurfaceType {
+    DISABLED = 0,
+    SINGLESURFACE,
+    ALLSURFACES,
+    PIXELMAP,
+};
+
 class RSSystemProperties final {
 public:
     ~RSSystemProperties() = default;
@@ -45,14 +52,16 @@ public:
     static bool GetUniRenderEnabled();
     static DirtyRegionDebugType GetDirtyRegionDebugType();
     static PartialRenderType GetPartialRenderEnabled();
+    static PartialRenderType GetUniPartialRenderEnabled();
     static bool GetOcclusionEnabled();
     static std::string GetRSEventProperty(const std::string &paraName);
     static bool GetDirectClientCompEnableStatus();
     static bool GetHighContrastStatus();
-    static int32_t GetCorrectionMode();
-    static bool GetUniPartialRenderEnabled();
+    static uint32_t GetCorrectionMode();
     static bool IsUniRenderMode();
     static void SetRenderMode(bool isUni);
+    static DumpSurfaceType GetDumpSurfaceType();
+    static uint64_t GetDumpSurfaceId();
 
 private:
     RSSystemProperties() = default;

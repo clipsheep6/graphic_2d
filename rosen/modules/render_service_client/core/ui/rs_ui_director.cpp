@@ -34,6 +34,7 @@
 #include "ui/rs_surface_node.h"
 #include "ui/rs_local_capture_task.h"
 #include "ui/rs_capture_callback.h"
+#include "sandbox_utils.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -61,6 +62,9 @@ void RSUIDirector::Init(bool shouldCreateRenderThread)
         }
 
         RsFrameReport::GetInstance().Init();
+        if (!cacheDir_.empty()) {
+            RSRenderThread::Instance().SetCacheDir(cacheDir_);
+        }
         RSRenderThread::Instance().Start();
     }
     RSApplicationAgentImpl::Instance().RegisterRSApplicationAgent();
@@ -70,7 +74,7 @@ void RSUIDirector::Init(bool shouldCreateRenderThread)
 
 void RSUIDirector::GoForeground()
 {
-    ROSEN_LOGI("RSUIDirector::GoForeground");
+    ROSEN_LOGD("RSUIDirector::GoForeground");
     if (!isActive_) {
         RSRenderThread::Instance().UpdateWindowStatus(true);
         isActive_ = true;
@@ -109,13 +113,29 @@ std::shared_ptr<Media::PixelMap> RSUIDirector::LocalCapture(NodeId id, float sca
 
 void RSUIDirector::GoBackground()
 {
-    ROSEN_LOGI("RSUIDirector::GoBackground");
+    ROSEN_LOGD("RSUIDirector::GoBackground");
     if (isActive_) {
         RSRenderThread::Instance().UpdateWindowStatus(false);
         isActive_ = false;
         if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
             node->SetEnableRender(false);
         }
+        // clean bufferQueue cache
+        auto surfaceNode = surfaceNode_.lock();
+        RSRenderThread::Instance().PostTask([surfaceNode]() {
+            if (surfaceNode != nullptr) {
+                std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
+                rsSurface->ClearBuffer();
+            }
+        });
+#ifdef ACE_ENABLE_GL
+        RSRenderThread::Instance().PostTask([this]() {
+            auto renderContext = RSRenderThread::Instance().GetRenderContext();
+            if (renderContext != nullptr) {
+                renderContext->ClearRedundantResources();
+            }
+        });
+#endif
     }
 }
 
@@ -146,6 +166,11 @@ void RSUIDirector::SetAbilityBGAlpha(uint8_t alpha)
     node->SetAbilityBGAlpha(alpha);
 }
 
+void RSUIDirector::SetRTRenderForced(bool isRenderForced)
+{
+    RSRenderThread::Instance().SetRTRenderForced(isRenderForced);
+}
+
 void RSUIDirector::SetRoot(NodeId root)
 {
     if (root_ == root) {
@@ -168,10 +193,23 @@ void RSUIDirector::AttachSurface()
     }
 }
 
+void RSUIDirector::SetAppFreeze(bool isAppFreeze)
+{
+    auto surfaceNode = surfaceNode_.lock();
+    if (surfaceNode != nullptr) {
+        surfaceNode->SetAppFreeze(isAppFreeze);
+    }
+}
+
 void RSUIDirector::SetTimeStamp(uint64_t timeStamp, const std::string& abilityName)
 {
     timeStamp_ = timeStamp;
     RSRenderThread::Instance().UpdateUiDrawFrameMsg(abilityName);
+}
+
+void RSUIDirector::SetCacheDir(const std::string& cacheFilePath)
+{
+    cacheDir_ = cacheFilePath;
 }
 
 bool RSUIDirector::RunningCustomAnimation(uint64_t timeStamp)
@@ -202,10 +240,10 @@ void RSUIDirector::SendMessages()
 
 void RSUIDirector::RecvMessages(bool needProcess)
 {
-    if (getpid() == -1) {
+    if (GetRealPid() == -1) {
         return;
     }
-    static const uint32_t pid = static_cast<uint32_t>(getpid());
+    static const uint32_t pid = static_cast<uint32_t>(GetRealPid());
     if (!RSMessageProcessor::Instance().HasTransaction(pid)) {
         return;
     }

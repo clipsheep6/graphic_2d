@@ -27,6 +27,7 @@
 #include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_root_render_node.h"
+#include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #ifdef OHOS_RSS_CLIENT
@@ -44,6 +45,7 @@
 #include <unistd.h>
 #endif
 #include "accessibility_config.h"
+#include "sandbox_utils.h"
 
 static void SystemCallSetThreadName(const std::string& name)
 {
@@ -204,7 +206,7 @@ void RSRenderThread::RenderLoop()
 #ifdef OHOS_RSS_CLIENT
     std::unordered_map<std::string, std::string> payload;
     payload["uid"] = std::to_string(getuid());
-    payload["pid"] = std::to_string(getpid());
+    payload["pid"] = std::to_string(GetRealPid());
     ResourceSchedule::ResSchedClient::GetInstance().ReportData(
         ResourceSchedule::ResType::RES_TYPE_REPORT_RENDER_THREAD, gettid(), payload);
 #endif
@@ -213,13 +215,16 @@ void RSRenderThread::RenderLoop()
 #endif
 #ifdef ACE_ENABLE_GL
     renderContext_->InitializeEglContext(); // init egl context on RT
+    if (!cacheDir_.empty()) {
+        renderContext_->SetCacheDir(cacheDir_);
+    }
 #endif
     if (RSSystemProperties::GetUniRenderEnabled()) {
         needRender_ = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
             ->QueryIfRTNeedRender();
         RSSystemProperties::SetRenderMode(!needRender_);
     }
-    std::string name = "RSRenderThread_" + std::to_string(::getpid());
+    std::string name = "RSRenderThread_" + std::to_string(GetRealPid());
     runner_ = AppExecFwk::EventRunner::Create(false);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     auto rsClient = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
@@ -272,17 +277,23 @@ void RSRenderThread::UpdateRenderMode(bool needRender)
 {
     if (handler_) {
         handler_->PostTask([needRender = needRender, this]() {
-            if (needRender_ == needRender) {
-                return;
-            }
-            needRender_ = needRender;
             RequestNextVSync();
-            if (!needRender_) { // change to uni render, should move surfaceView's position
+            if (!needRender) { // change to uni render, should move surfaceView's position
                 UpdateSurfaceNodeParentInRS();
-                ClearBufferCache();
             } else {
+                needRender_ = needRender;
                 forceUpdateSurfaceNode_ = true;
             }
+        }, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+    }
+}
+
+void RSRenderThread::NotifyClearBufferCache()
+{
+    if (handler_) {
+        handler_->PostTask([this]() {
+            needRender_ = false;
+            ClearBufferCache();
         }, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
 }
@@ -291,8 +302,8 @@ void RSRenderThread::UpdateSurfaceNodeParentInRS()
 {
     auto& nodeMap = context_.GetMutableNodeMap();
     std::unordered_map<NodeId, NodeId> surfaceNodeMap; // [surfaceNodeId, parentId]
-    nodeMap.TraversalNodes([&surfaceNodeMap](const std::shared_ptr<RSBaseRenderNode>& node) mutable {
-        if (!node || !node->IsInstanceOf<RSSurfaceRenderNode>()) {
+    nodeMap.TraverseSurfaceNodes([&surfaceNodeMap](const std::shared_ptr<RSSurfaceRenderNode>& node) mutable {
+        if (!node) {
             return;
         }
         auto parent = node->GetParent().lock();
@@ -304,7 +315,8 @@ void RSRenderThread::UpdateSurfaceNodeParentInRS()
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         for (auto& [surfaceNodeId, parentId] : surfaceNodeMap) {
-            std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeUpdateParent>(surfaceNodeId, parentId);
+            std::unique_ptr<RSCommand> command =
+                std::make_unique<RSSurfaceNodeUpdateParentWithoutTransition>(surfaceNodeId, parentId);
             transactionProxy->AddCommandFromRT(command, surfaceNodeId, FollowType::FOLLOW_TO_SELF);
         }
         transactionProxy->FlushImplicitTransactionFromRT(uiTimestamp_);
@@ -329,6 +341,7 @@ void RSRenderThread::ClearBufferCache()
             rsSurface->ClearBuffer();
         }
     }
+    rootNode->ResetSortedChildren();
 }
 
 void RSRenderThread::ProcessCommands()
@@ -430,6 +443,8 @@ void RSRenderThread::Render()
     if (visitor_ == nullptr) {
         visitor_ = std::make_shared<RSRenderThreadVisitor>();
     }
+    // get latest partial render status from system properties and set it to RTvisitor_
+    visitor_->SetPartialRenderStatus(RSSystemProperties::GetPartialRenderEnabled(), isRTRenderForced_);
     rootNode->Prepare(visitor_);
     rootNode->Process(visitor_);
     forceUpdateSurfaceNode_ = false;

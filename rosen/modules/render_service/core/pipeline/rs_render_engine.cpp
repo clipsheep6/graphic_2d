@@ -199,6 +199,11 @@ void RSRenderEngine::DrawLayers(
                 canvas.restoreToCount(saveCount);
                 continue;
             }
+            RS_LOGD("RSRenderEngine::DrawLayers dstRect[%d %d %d %d] SrcRect[%d %d %d %d]",
+                layer->GetLayerSize().x, layer->GetLayerSize().y,
+                layer->GetLayerSize().w, layer->GetLayerSize().h,
+                layer->GetDirtyRegion().x, layer->GetDirtyRegion().y,
+                layer->GetDirtyRegion().w, layer->GetDirtyRegion().h);
             DrawSurfaceNode(canvas, node, mirrorAdaptiveCoefficient, forceCPU);
         } else if (nodePtr->IsInstanceOf<RSDisplayRenderNode>()) {
             // In uniRender mode, maybe need to handle displayNode.
@@ -232,10 +237,64 @@ void RSRenderEngine::ClipHoleForLayer(
     return;
 }
 
+void RSRenderEngine::SetColorFilterMode(ColorFilterMode mode)
+{
+    uint32_t uMode = static_cast<uint32_t>(mode);
+    uint32_t uInvertMode = static_cast<uint32_t>(ColorFilterMode::INVERT_COLOR_ENABLE_MODE);
+    uint32_t ucolorFilterMode = static_cast<uint32_t>(colorFilterMode_);
+    bool isInvertModeEnabled = ((ucolorFilterMode & uInvertMode) == uInvertMode);
+
+    switch (mode) {
+        case ColorFilterMode::INVERT_COLOR_DISABLE_MODE: {
+            if (colorFilterMode_ != ColorFilterMode::COLOR_FILTER_END) {
+                colorFilterMode_ = static_cast<ColorFilterMode>(ucolorFilterMode & ~uInvertMode);
+            }
+            break;
+        }
+        case ColorFilterMode::INVERT_COLOR_ENABLE_MODE: {
+            if (colorFilterMode_ != ColorFilterMode::COLOR_FILTER_END) {
+                colorFilterMode_ = static_cast<ColorFilterMode>(ucolorFilterMode | uInvertMode);
+            } else {
+                colorFilterMode_ = mode;
+            }
+            break;
+        }
+        case ColorFilterMode::DALTONIZATION_PROTANOMALY_MODE:
+        case ColorFilterMode::DALTONIZATION_DEUTERANOMALY_MODE:
+        case ColorFilterMode::DALTONIZATION_TRITANOMALY_MODE: {
+            if (isInvertModeEnabled) {
+                colorFilterMode_ = static_cast<ColorFilterMode>(uMode | uInvertMode);
+            } else {
+                colorFilterMode_ = mode;
+            }
+            break;
+        }
+        case ColorFilterMode::DALTONIZATION_NORMAL_MODE: {
+            if (isInvertModeEnabled) {
+                colorFilterMode_ = ColorFilterMode::INVERT_COLOR_ENABLE_MODE;
+            } else {
+                colorFilterMode_ = ColorFilterMode::COLOR_FILTER_END;
+            }
+            break;
+        }
+
+        // INVERT_DALTONIZATION_PROTANOMALY_MODE, INVERT_DALTONIZATION_DEUTERANOMALY_MODE
+        // INVERT_DALTONIZATION_TRITANOMALY_MODE and COLOR_FILTER_END can not be set directly
+        case ColorFilterMode::INVERT_DALTONIZATION_PROTANOMALY_MODE: // fall-through
+        case ColorFilterMode::INVERT_DALTONIZATION_DEUTERANOMALY_MODE: // fall-through
+        case ColorFilterMode::INVERT_DALTONIZATION_TRITANOMALY_MODE: // fall-through
+        case ColorFilterMode::COLOR_FILTER_END: // fall-through
+        default: {
+            colorFilterMode_ = ColorFilterMode::COLOR_FILTER_END;
+            break;
+        }
+    }
+}
+
 void RSRenderEngine::SetColorFilterModeToPaint(SkPaint& paint)
 {
     ColorFilterMode mode = static_cast<ColorFilterMode>(RSSystemProperties::GetCorrectionMode());
-    if (mode <= ColorFilterMode::COLOR_FILTER_END && mode >= ColorFilterMode::INVERT_MODE) {
+    if (RSBaseRenderUtil::IsColorFilterModeValid(mode)) {
         colorFilterMode_ = mode;
     }
 
@@ -249,7 +308,8 @@ void RSRenderEngine::SetColorFilterModeToPaint(SkPaint& paint)
 void RSRenderEngine::DrawBuffer(RSPaintFilterCanvas& canvas, BufferDrawParam& params)
 {
     SkBitmap bitmap;
-    if (!RSBaseRenderUtil::ConvertBufferToBitmap(params.buffer, params.targetColorGamut, bitmap,
+    std::vector<uint8_t> newBuffer;
+    if (!RSBaseRenderUtil::ConvertBufferToBitmap(params.buffer, newBuffer, params.targetColorGamut, bitmap,
         params.metaDatas)) {
         RS_LOGE("RSDividedRenderUtil::DrawBuffer: create bitmap failed.");
         return;

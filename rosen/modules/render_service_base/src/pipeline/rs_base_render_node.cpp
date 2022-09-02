@@ -53,6 +53,27 @@ void RSBaseRenderNode::AddChild(SharedPtr child, int index)
     }
 }
 
+void RSBaseRenderNode::MoveChild(SharedPtr child, int index)
+{
+    if (child == nullptr || child->GetParent().lock().get() != this) {
+        return;
+    }
+    auto it = std::find_if(children_.begin(), children_.end(),
+        [&](WeakPtr& ptr) -> bool { return ROSEN_EQ<RSBaseRenderNode>(ptr, child); });
+    if (it == children_.end()) {
+        return;
+    }
+
+    // Reset parent-child relationship
+    if (index < 0 || index >= static_cast<int>(children_.size())) {
+        children_.emplace_back(child);
+    } else {
+        children_.emplace(std::next(children_.begin(), index), child);
+    }
+    children_.erase(it);
+    SetDirty();
+}
+
 void RSBaseRenderNode::RemoveChild(SharedPtr child)
 {
     if (child == nullptr) {
@@ -154,6 +175,17 @@ void RSBaseRenderNode::RemoveFromTree()
     if (auto parentPtr = parent_.lock()) {
         auto child = shared_from_this();
         parentPtr->RemoveChild(child);
+    }
+}
+
+void RSBaseRenderNode::RemoveFromTreeWithoutTransition()
+{
+    if (auto parentPtr = parent_.lock()) {
+        auto child = shared_from_this();
+        parentPtr->RemoveChild(child);
+        parentPtr->disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
+        parentPtr->sortedChildren_.clear();
+        child->ResetParent();
     }
 }
 

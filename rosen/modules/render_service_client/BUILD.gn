@@ -37,6 +37,7 @@ ohos_source_set("render_service_client_src") {
     "$rosen_root/modules/2d_graphics/src",
     "//foundation/graphic/utils/log",
     "//foundation/graphic/graphic_2d/utils/log",
+    "//foundation/graphic/graphic_2d/utils/sandbox",
     "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
     "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk/include",
   ]
@@ -54,6 +55,7 @@ ohos_source_set("render_service_client_src") {
     "core/animation/rs_implicit_animator_map.cpp",
     "core/animation/rs_keyframe_animation.cpp",
     "core/animation/rs_path_animation.cpp",
+    "core/animation/rs_property_animation.cpp",
     "core/animation/rs_spring_animation.cpp",
     "core/animation/rs_transition.cpp",
     "core/animation/rs_ui_animation_manager.cpp",
@@ -69,10 +71,6 @@ ohos_source_set("render_service_client_src") {
     "core/jank_detector/rs_jank_detector.cpp",
 
     #pipeline
-    "core/pipeline/overdraw/rs_cpu_overdraw_canvas_listener.cpp",
-    "core/pipeline/overdraw/rs_gpu_overdraw_canvas_listener.cpp",
-    "core/pipeline/overdraw/rs_listened_canvas.cpp",
-    "core/pipeline/overdraw/rs_overdraw_controller.cpp",
     "core/pipeline/rs_node_map.cpp",
     "core/pipeline/rs_render_thread.cpp",
     "core/pipeline/rs_render_thread_visitor.cpp",
@@ -89,6 +87,7 @@ ohos_source_set("render_service_client_src") {
     "core/ui/rs_display_node.cpp",
     "core/ui/rs_local_capture_task.cpp",
     "core/ui/rs_node.cpp",
+    "core/ui/rs_pixel_map_util.cpp",
     "core/ui/rs_root_node.cpp",
     "core/ui/rs_surface_extractor.cpp",
     "core/ui/rs_surface_node.cpp",

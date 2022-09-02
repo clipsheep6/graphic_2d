@@ -21,17 +21,18 @@
 
 namespace OHOS {
 namespace Rosen {
-void RSUniRenderUtil::UpdateRenderNodeDstRect(RSRenderNode& node)
+bool RSUniRenderUtil::UpdateRenderNodeDstRect(RSRenderNode& node)
 {
     auto parentNode = node.GetParent().lock();
     std::shared_ptr<RSRenderNode> rsParent = nullptr;
     if (!parentNode) {
         RS_LOGE("RSUniRenderUtil::UpdateDstRect: fail to get parent dstRect.");
-        return;
+        return false;
     }
     rsParent = parentNode->ReinterpretCastTo<RSRenderNode>();
     auto& property = node.GetMutableRenderProperties();
-    property.UpdateGeometry(rsParent ? &(rsParent->GetRenderProperties()) : nullptr, true);
+    auto transitionProperties = node.GetAnimationManager().GetTransitionProperties();
+    property.UpdateGeometry(rsParent ? &(rsParent->GetRenderProperties()) : nullptr, true, transitionProperties);
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
     if (geoPtr && node.IsInstanceOf<RSSurfaceRenderNode>()) {
         std::shared_ptr<RSBaseRenderNode> nodePtr = node.shared_from_this();
@@ -42,33 +43,46 @@ void RSUniRenderUtil::UpdateRenderNodeDstRect(RSRenderNode& node)
             surfaceNode->GetName().c_str(),
             dstRect.GetLeft(), dstRect.GetTop(), dstRect.GetWidth(), dstRect.GetHeight());
     }
+    return transitionProperties != nullptr;
 }
 
-Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
-    int32_t bufferAge)
+void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge)
 {
-    std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-    Occlusion::Region curRegion;
-    node->CollectSurface(node, curAllSurfaces, true);
-    for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
-        auto sufaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
-        if (sufaceNode == nullptr) {
+    // update all child surfacenode history
+    for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
             continue;
         }
-        auto surfaceDirtyManager = sufaceNode->GetDirtyManager();
+        auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
         if (!surfaceDirtyManager->SetBufferAge(bufferAge)) {
             ROSEN_LOGE("RSUniRenderUtil::MergeVisibleDirtyRegion with invalid buffer age %d", bufferAge);
         }
         surfaceDirtyManager->UpdateDirty();
+    }
+    // update display dirtymanager
+    node->UpdateDisplayDirtyManager(bufferAge);
+}
+
+Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node)
+{
+    Occlusion::Region allSurfaceVisibleDirtyRegion;
+    for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
+            continue;
+        }
+        auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
         auto surfaceDirtyRect = surfaceDirtyManager->GetDirtyRegion();
         Occlusion::Rect dirtyRect { surfaceDirtyRect.left_, surfaceDirtyRect.top_,
             surfaceDirtyRect.GetRight(), surfaceDirtyRect.GetBottom() };
-        auto visibleRegion = sufaceNode->GetVisibleRegion();
+        auto visibleRegion = surfaceNode->GetVisibleRegion();
         Occlusion::Region surfaceDirtyRegion { dirtyRect };
-        Occlusion::Region uniRegion = surfaceDirtyRegion.And(visibleRegion);
-        curRegion = curRegion.Or(uniRegion);
+        Occlusion::Region surfaceVisibleDirtyRegion = surfaceDirtyRegion.And(visibleRegion);
+        surfaceNode->SetVisibleDirtyRegion(surfaceVisibleDirtyRegion);
+        allSurfaceVisibleDirtyRegion = allSurfaceVisibleDirtyRegion.Or(surfaceVisibleDirtyRegion);
     }
-    return curRegion;
+    return allSurfaceVisibleDirtyRegion;
 }
 } // namespace Rosen
 } // namespace OHOS

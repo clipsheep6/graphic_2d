@@ -45,6 +45,7 @@ enum class FollowType : uint8_t {
     NONE,
     FOLLOW_TO_PARENT,
     FOLLOW_TO_SELF,
+    FOLLOW_VISITOR,
 };
 
 static const std::map<RSUINodeType, std::string> RSUINodeTypeStrs = {
@@ -66,9 +67,17 @@ enum class RSRenderNodeType : uint32_t {
     ROOT_NODE    = 0x14111u,
 };
 
+// types for RSSurfaceRenderNode
+enum class RSSurfaceNodeType : uint8_t {
+    DEFAULT,           // include leashing | starting window
+    APP_WINDOW_NODE,   // surfacenode created as app main window
+    SELF_DRAWING_NODE, // surfacenode created by arkui component
+};
+
 struct RSSurfaceRenderNodeConfig {
     NodeId id = 0;
     std::string name = "SurfaceNode";
+    RSSurfaceNodeType nodeType = RSSurfaceNodeType::DEFAULT;
 };
 
 struct RSDisplayNodeConfig {

@@ -40,16 +40,17 @@
 #include "player.h"
 #include "vsync_receiver.h"
 #include "util.h"
+#include <display.h>
 
 namespace OHOS {
 class BootAnimation {
 public:
-    void Init(int32_t width, int32_t height, const std::shared_ptr<AppExecFwk::EventHandler>& handler,
-        std::shared_ptr<AppExecFwk::EventRunner>& runner);
+    void Init(int32_t width, int32_t height);
     void Draw();
     void CheckExitAnimation();
     void PlaySound();
     bool CheckFrameRateValid(int32_t ratevalue);
+    void Run(std::vector<sptr<OHOS::Rosen::Display>>& displays);
     ~BootAnimation();
 private:
     void OnVsync();

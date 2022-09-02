@@ -19,6 +19,7 @@
 #include "transaction/rs_interfaces.h"
 
 using namespace OHOS;
+static const std::string BOOT_OEMPIC_ZIP = "/data/data/bootpic.zip";
 static const std::string BOOT_PIC_ZIP = "/system/etc/init/bootpic.zip";
 static const std::string BOOT_SOUND_URI = "file://system/etc/init/bootsound.wav";
 
@@ -81,15 +82,11 @@ bool BootAnimation::CheckFrameRateValid(int32_t ratevalue)
     return true;
 }
 
-void BootAnimation::Init(int32_t width, int32_t height, const std::shared_ptr<AppExecFwk::EventHandler>& handler,
-    std::shared_ptr<AppExecFwk::EventRunner>& runner)
+void BootAnimation::Init(int32_t width, int32_t height)
 {
     windowWidth_ = width;
     windowHeight_ = height;
     LOGI("Init enter, width: %{public}d, height: %{public}d", width, height);
-
-    mainHandler_ = handler;
-    runner_ = runner;
 
     auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
     while (receiver_ == nullptr) {
@@ -107,7 +104,12 @@ void BootAnimation::Init(int32_t width, int32_t height, const std::shared_ptr<Ap
     InitPicCoordinates();
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "BootAnimation::preload");
     BootAniConfig jsonConfig;
-    ReadZipFile(BOOT_PIC_ZIP, imageVector_, jsonConfig);
+    std::string zipstr = BOOT_OEMPIC_ZIP;
+    if (!IsFileExisted(zipstr.c_str())) {
+        zipstr = BOOT_PIC_ZIP;
+    }
+    ReadZipFile(zipstr, imageVector_, jsonConfig);
+
     imgVecSize_ = static_cast<int32_t>(imageVector_.size());
     if (imgVecSize_ <= 0) {
         PostTask(std::bind(&AppExecFwk::EventRunner::Stop, runner_));
@@ -136,6 +138,15 @@ void BootAnimation::Init(int32_t width, int32_t height, const std::shared_ptr<Ap
     } else {
         LOGI("SetVSyncRate success: %{public}d %{public}d", freq_, changefreq);
     }
+}
+
+void BootAnimation::Run(std::vector<sptr<OHOS::Rosen::Display>>& displays)
+{
+    runner_ = AppExecFwk::EventRunner::Create(false);
+    mainHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+    Init(displays[0]->GetWidth(), displays[0]->GetHeight());
+    PostTask(std::bind(&BootAnimation::PlaySound, this));
+    runner_->Run();
 }
 
 void BootAnimation::InitBootWindow()

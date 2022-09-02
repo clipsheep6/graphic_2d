@@ -298,18 +298,22 @@ bool RSSurfaceNode::NeedForcedSendToRemote() const
     }
 }
 
-void RSSurfaceNode::ResetContextAlpha() const
+void RSSurfaceNode::ResetContextAlpha(bool isProxy) const
 {
-    // temporarily fix: manually set contextAlpha in RT and RS to 0.0f, to avoid residual alpha/context matrix from
-    // previous animation. this value will be overwritten in RenderThreadVisitor::ProcessSurfaceRenderNode.
+    // isProxy should be true for remote window surface node, false for window surface node.
+    // This method is used to hide remote window before correct ContextAlpha/Matrix were set.
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy == nullptr) {
         return;
     }
-    std::unique_ptr<RSCommand> commandRT = std::make_unique<RSSurfaceNodeSetContextAlpha>(GetId(), 0.0f);
-    transactionProxy->AddCommand(commandRT, false);
-    std::unique_ptr<RSCommand> commandRS = std::make_unique<RSSurfaceNodeSetContextAlpha>(GetId(), 0.0f);
-    transactionProxy->AddCommand(commandRS, true);
+    if (isProxy) {
+        // -1 ensures that next call to SetContextAlpha always send command to RenderService
+        std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetContextAlpha>(GetId(), -1.0f);
+        transactionProxy->AddCommand(command, false);
+    } else {
+        std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetContextAlpha>(GetId(), 0.0f);
+        transactionProxy->AddCommand(command, true);
+    }
 }
 
 void RSSurfaceNode::SetAppFreeze(bool isAppFreeze)

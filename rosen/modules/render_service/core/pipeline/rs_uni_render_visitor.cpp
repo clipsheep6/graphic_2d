@@ -333,7 +333,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             return;
         }
 #ifdef RS_ENABLE_EGLQUERYSURFACE
-        if (isOpDroped_ && !region.isEmpty()) {
+        if (isOpDroped_) {
             canvas_->clipRegion(region);
         }
 #endif

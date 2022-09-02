@@ -97,6 +97,7 @@ ohos_shared_library("librender_service_base") {
 
     #pipeline
     "src/pipeline/rs_base_render_node.cpp",
+    "src/pipeline/rs_cache_manager.cpp",
     "src/pipeline/rs_canvas_render_node.cpp",
     "src/pipeline/rs_context.cpp",
     "src/pipeline/rs_dirty_region_manager.cpp",

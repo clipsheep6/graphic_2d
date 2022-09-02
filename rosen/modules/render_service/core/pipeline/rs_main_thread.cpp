@@ -21,6 +21,7 @@
 #include "command/rs_message_processor.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_base_render_util.h"
+#include "pipeline/rs_cache_manager.h"
 #include "pipeline/rs_divided_render_util.h"
 #include "pipeline/rs_render_service_visitor.h"
 #include "pipeline/rs_root_render_node.h"
@@ -145,6 +146,7 @@ void RSMainThread::Init()
 #ifdef RS_ENABLE_GL
     if (renderEngine_) {
         int cacheLimitsTimes = 2; // double skia Resource Cache Limits
+        RSCacheManager::Instance().SetRenderContext(renderEngine_->GetRenderContext());
         auto grContext = renderEngine_->GetRenderContext()->GetGrContext();
         int maxResources = 0;
         size_t maxResourcesSize = 0;

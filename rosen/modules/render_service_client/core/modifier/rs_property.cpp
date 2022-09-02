@@ -38,11 +38,10 @@ PropertyId GeneratePropertyId()
 }
 } // namespace
 
-RSPropertyBase::RSPropertyBase() : id_(GeneratePropertyId())
-{}
+RSPropertyBase::RSPropertyBase() : id_(GeneratePropertyId()) {}
 
-std::shared_ptr<RSPropertyBase> operator+(const std::shared_ptr<RSPropertyBase>& a,
-    const std::shared_ptr<RSPropertyBase>& b)
+std::shared_ptr<RSPropertyBase> operator+(
+    const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<RSPropertyBase>& b)
 {
     if (a == nullptr) {
         return {};
@@ -51,8 +50,8 @@ std::shared_ptr<RSPropertyBase> operator+(const std::shared_ptr<RSPropertyBase>&
     return a->Add(b);
 }
 
-std::shared_ptr<RSPropertyBase> operator-(const std::shared_ptr<RSPropertyBase>& a,
-    const std::shared_ptr<RSPropertyBase>& b)
+std::shared_ptr<RSPropertyBase> operator-(
+    const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<RSPropertyBase>& b)
 {
     if (a == nullptr) {
         return {};
@@ -88,119 +87,117 @@ bool operator!=(const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<
     return !a->IsEqual(b);
 }
 
-#define UPDATE_TO_RENDER(Command, value, isDelta, forceUpdate)                                                   \
-    do {                                                                                                         \
-        std::unique_ptr<RSCommand> command = std::make_unique<Command>(nodeId_, value, id_, isDelta);            \
-        auto transactionProxy = RSTransactionProxy::GetInstance();                                               \
-        auto node = RSNodeMap::Instance().GetNode<RSNode>(nodeId_);                                              \
-        if (transactionProxy && node) {                                                                          \
-            if (forceUpdate) {                                                                                   \
-                transactionProxy->Begin();                                                                       \
-            }                                                                                                    \
-            transactionProxy->AddCommand(command, node->IsRenderServiceNode(), node->GetFollowType(), node->GetId()); \
-            if (node->NeedForcedSendToRemote()) {                                                                \
-                std::unique_ptr<RSCommand> commandForRemote =                                                    \
-                    std::make_unique<Command>(nodeId_, value, id_, isDelta);                                     \
-                transactionProxy->AddCommand(commandForRemote, true, node->GetFollowType(), node->GetId());      \
-            }                                                                                                    \
-            if (node->NeedSendExtraCommand()) {                                                                  \
-                std::unique_ptr<RSCommand> extraCommand =                                                        \
-                    std::make_unique<Command>(nodeId_, value, id_, isDelta);                                     \
-                transactionProxy->AddCommand(extraCommand, !node->IsRenderServiceNode(),                         \
-                    node->GetFollowType(), node->GetId());                                                       \
-            }                                                                                                    \
-            if (forceUpdate) {                                                                                   \
-                transactionProxy->Commit();                                                                      \
-            }                                                                                                    \
-        }                                                                                                        \
-    } while (0)
+template<typename T>
+template<typename Command>
+void RSProperty<T>::UpdateToRenderImpl(const T& value, bool isDelta, bool forceUpdate) const
+{
+    auto node = target_.lock();
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy == nullptr || node == nullptr) {
+        return;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<Command>(node->GetId(), value, id_, isDelta);
+    if (forceUpdate) {
+        transactionProxy->Begin();
+    }
+    transactionProxy->AddCommand(command, node->IsRenderServiceNode(), node->GetFollowType(), node->GetId());
+    if (node->NeedForcedSendToRemote()) {
+        std::unique_ptr<RSCommand> commandForRemote = std::make_unique<Command>(node->GetId(), value, id_, isDelta);
+        transactionProxy->AddCommand(commandForRemote, true, node->GetFollowType(), node->GetId());
+    }
+    if (node->NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand = std::make_unique<Command>(node->GetId(), value, id_, isDelta);
+        transactionProxy->AddCommand(extraCommand, !node->IsRenderServiceNode(), node->GetFollowType(), node->GetId());
+    }
+    if (forceUpdate) {
+        transactionProxy->Commit();
+    }
+}
 
 template<>
 void RSProperty<bool>::UpdateToRender(const bool& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyBool, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyBool>(value, isDelta, forceUpdate);
 }
 template<>
 void RSProperty<float>::UpdateToRender(const float& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyFloat, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyFloat>(value, isDelta, forceUpdate);
 }
 template<>
 void RSProperty<int>::UpdateToRender(const int& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyInt, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyInt>(value, isDelta, forceUpdate);
 }
 template<>
 void RSProperty<Color>::UpdateToRender(const Color& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyColor, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyColor>(value, isDelta, forceUpdate);
 }
 template<>
 void RSProperty<Gravity>::UpdateToRender(const Gravity& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyGravity, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyGravity>(value, isDelta, forceUpdate);
 }
 template<>
 void RSProperty<Matrix3f>::UpdateToRender(const Matrix3f& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyMatrix3f, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyMatrix3f>(value, isDelta, forceUpdate);
 }
 template<>
 void RSProperty<Quaternion>::UpdateToRender(const Quaternion& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyQuaternion, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyQuaternion>(value, isDelta, forceUpdate);
 }
 template<>
 void RSProperty<std::shared_ptr<RSFilter>>::UpdateToRender(
     const std::shared_ptr<RSFilter>& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyFilter, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyFilter>(value, isDelta, forceUpdate);
 }
 template<>
 void RSProperty<std::shared_ptr<RSImage>>::UpdateToRender(
     const std::shared_ptr<RSImage>& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyImage, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyImage>(value, isDelta, forceUpdate);
 }
 template<>
 void RSProperty<std::shared_ptr<RSMask>>::UpdateToRender(
     const std::shared_ptr<RSMask>& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyMask, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyMask>(value, isDelta, forceUpdate);
 }
 template<>
 void RSProperty<std::shared_ptr<RSPath>>::UpdateToRender(
     const std::shared_ptr<RSPath>& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyPath, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyPath>(value, isDelta, forceUpdate);
 }
 template<>
 void RSProperty<std::shared_ptr<RSShader>>::UpdateToRender(
     const std::shared_ptr<RSShader>& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyShader, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyShader>(value, isDelta, forceUpdate);
 }
 template<>
 void RSProperty<Vector2f>::UpdateToRender(const Vector2f& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyVector2f, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyVector2f>(value, isDelta, forceUpdate);
 }
 template<>
-void RSProperty<Vector4<uint32_t>>::UpdateToRender(const Vector4<uint32_t>& value,
-    bool isDelta, bool forceUpdate) const
+void RSProperty<Vector4<uint32_t>>::UpdateToRender(const Vector4<uint32_t>& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyBorderStyle, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyBorderStyle>(value, isDelta, forceUpdate);
 }
 template<>
-void RSProperty<Vector4<Color>>::UpdateToRender(const Vector4<Color>& value,
-    bool isDelta, bool forceUpdate) const
+void RSProperty<Vector4<Color>>::UpdateToRender(const Vector4<Color>& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyVector4Color, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyVector4Color>(value, isDelta, forceUpdate);
 }
 template<>
 void RSProperty<Vector4f>::UpdateToRender(const Vector4f& value, bool isDelta, bool forceUpdate) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyVector4f, value, isDelta, forceUpdate);
+    UpdateToRenderImpl<RSUpdatePropertyVector4f>(value, isDelta, forceUpdate);
 }
 
 template<>

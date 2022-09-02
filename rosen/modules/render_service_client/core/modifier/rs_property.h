@@ -47,6 +47,7 @@
 namespace OHOS {
 namespace Rosen {
 class RSModifierBase;
+class RSNode;
 
 class RS_EXPORT RSPropertyBase : public std::enable_shared_from_this<RSPropertyBase> {
 public:
@@ -59,10 +60,7 @@ public:
     }
 
 protected:
-    virtual std::shared_ptr<RSPropertyBase> GetValue()
-    {
-        return std::make_shared<RSPropertyBase>();
-    }
+    virtual std::shared_ptr<RSPropertyBase> GetValue() = 0;
 
     virtual void SetValue(const std::shared_ptr<RSPropertyBase>& value) {}
 
@@ -117,12 +115,11 @@ private:
         return true;
     }
 
-    friend std::shared_ptr<RSPropertyBase> operator+(const std::shared_ptr<RSPropertyBase>& a,
-        const std::shared_ptr<RSPropertyBase>& b);
-    friend std::shared_ptr<RSPropertyBase> operator-(const std::shared_ptr<RSPropertyBase>& a,
-        const std::shared_ptr<RSPropertyBase>& b);
-    friend std::shared_ptr<RSPropertyBase> operator*(const std::shared_ptr<RSPropertyBase>& value,
-        const float scale);
+    friend std::shared_ptr<RSPropertyBase> operator+(
+        const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<RSPropertyBase>& b);
+    friend std::shared_ptr<RSPropertyBase> operator-(
+        const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<RSPropertyBase>& b);
+    friend std::shared_ptr<RSPropertyBase> operator*(const std::shared_ptr<RSPropertyBase>& value, const float scale);
     friend bool operator==(const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<RSPropertyBase>& b);
     friend bool operator!=(const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<RSPropertyBase>& b);
     friend class RSCurveAnimation;
@@ -154,7 +151,7 @@ public:
         }
 
         stagingValue_ = value;
-        if (!hasAddToNode_) {
+        if (this->target_.lock() == nullptr) {
             return;
         }
 
@@ -202,9 +199,12 @@ protected:
     }
 
     T stagingValue_ {};
-    NodeId nodeId_ { 0 };
-    bool hasAddToNode_ { false };
+    std::weak_ptr<RSNode> target_;
     std::shared_ptr<RSMotionPathOption> motionPathOption_ {};
+
+private:
+    template<typename Command>
+    void UpdateToRenderImpl(const T& value, bool isDelta, bool forceUpdate) const;
 
     friend class RSPathAnimation;
     friend class RSImplicitAnimator;
@@ -233,13 +233,9 @@ public:
             return;
         }
 
-        if (!RSProperty<T>::hasAddToNode_) {
-            RSProperty<T>::stagingValue_ = value;
-            return;
-        }
-
-        auto node = RSNodeMap::Instance().GetNode<RSNode>(RSProperty<T>::nodeId_);
+        auto node = this->target_.lock();
         if (node == nullptr) {
+            RSProperty<T>::stagingValue_ = value;
             return;
         }
 
@@ -249,12 +245,12 @@ public:
             auto endValue = std::make_shared<RSAnimatableProperty<T>>(value);
             if (RSProperty<T>::motionPathOption_ != nullptr) {
                 implicitAnimator->BeginImplicitPathAnimation(RSProperty<T>::motionPathOption_);
-                implicitAnimator->CreateImplicitAnimation(node,
-                    RSProperty<T>::shared_from_this(), startValue, endValue);
+                implicitAnimator->CreateImplicitAnimation(
+                    node, RSProperty<T>::shared_from_this(), startValue, endValue);
                 implicitAnimator->EndImplicitPathAnimation();
             } else {
-                implicitAnimator->CreateImplicitAnimation(node,
-                    RSProperty<T>::shared_from_this(), startValue, endValue);
+                implicitAnimator->CreateImplicitAnimation(
+                    node, RSProperty<T>::shared_from_this(), startValue, endValue);
             }
             return;
         }
@@ -346,8 +342,8 @@ protected:
 
     std::shared_ptr<RSRenderPropertyBase> CreateRenderProperty() override
     {
-        return std::make_shared<RSRenderAnimatableProperty<T>>(RSProperty<T>::stagingValue_,
-            RSProperty<T>::id_, GetPropertyType());
+        return std::make_shared<RSRenderAnimatableProperty<T>>(
+            RSProperty<T>::stagingValue_, RSProperty<T>::id_, GetPropertyType());
     }
 
     std::shared_ptr<RSPropertyBase> GetValue() override
@@ -448,11 +444,11 @@ RS_EXPORT void RSProperty<std::shared_ptr<RSShader>>::UpdateToRender(
 template<>
 RS_EXPORT void RSProperty<Vector2f>::UpdateToRender(const Vector2f& value, bool isDelta, bool forceUpdate) const;
 template<>
-RS_EXPORT void RSProperty<Vector4<uint32_t>>::UpdateToRender(const Vector4<uint32_t>& value,
-    bool isDelta, bool forceUpdate) const;
+RS_EXPORT void RSProperty<Vector4<uint32_t>>::UpdateToRender(
+    const Vector4<uint32_t>& value, bool isDelta, bool forceUpdate) const;
 template<>
-RS_EXPORT void RSProperty<Vector4<Color>>::UpdateToRender(const Vector4<Color>& value,
-    bool isDelta, bool forceUpdate) const;
+RS_EXPORT void RSProperty<Vector4<Color>>::UpdateToRender(
+    const Vector4<Color>& value, bool isDelta, bool forceUpdate) const;
 template<>
 RS_EXPORT void RSProperty<Vector4f>::UpdateToRender(const Vector4f& value, bool isDelta, bool forceUpdate) const;
 
@@ -481,5 +477,4 @@ template<>
 RS_EXPORT RSRenderPropertyType RSAnimatableProperty<Vector4<Color>>::GetPropertyType() const;
 } // namespace Rosen
 } // namespace OHOS
-
 #endif // RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_PROP_H

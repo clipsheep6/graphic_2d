@@ -39,6 +39,7 @@
 #include "platform/drawing/rs_vsync_client.h"
 #include "platform/common/rs_event_manager.h"
 #include "transaction/rs_transaction_data.h"
+#include "rs_sub_main_thread.h"
 
 namespace OHOS::Rosen {
 class ColorCorrectionObserver;

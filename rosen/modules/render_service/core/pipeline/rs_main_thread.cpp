@@ -28,6 +28,7 @@
 #include "pipeline/rs_unmarshal_thread.h"
 #include "pipeline/rs_uni_render_visitor.h"
 #include "pipeline/rs_occlusion_config.h"
+#include "pipeline/rs_change_core_util.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_innovation.h"
 #include "platform/drawing/rs_vsync_client.h"
@@ -40,6 +41,10 @@ using namespace OHOS::AccessibilityConfig;
 namespace OHOS {
 namespace Rosen {
 namespace {
+#ifdef RS_ENABLE_GL
+constexpr uint32_t SUB_THREAD_NUMBER = 3;
+#endif
+constexpr int RENDER_CORE_LEVEL = 500;
 bool Compare(const std::unique_ptr<RSTransactionData>& data1, const std::unique_ptr<RSTransactionData>& data2)
 {
     if (!data1 || !data2) {
@@ -160,6 +165,10 @@ void RSMainThread::Init()
     config.InitializeContext();
     config.SubscribeConfigObserver(CONFIG_ID::CONFIG_DALTONIZATION_COLOR_FILTER, correctionObserver_);
     config.SubscribeConfigObserver(CONFIG_ID::CONFIG_INVERT_COLOR, correctionObserver_);
+#ifdef RS_ENABLE_GL
+    RSSubMainThread::Instance().InitializeSubRenderThread(SUB_THREAD_NUMBER);
+    RSSubMainThread::Instance().InitializeSubContext(renderEngine_->GetRenderContext().get());
+#endif
 }
 
 void RSMainThread::RsEventParamDump(std::string& dumpString)
@@ -200,6 +209,7 @@ void RSMainThread::SetRSEventDetectorLoopFinishTag()
 
 void RSMainThread::Start()
 {
+    RSSubMainThread::Instance().StartSubThread();
     if (runner_) {
         runner_->Run();
     }
@@ -491,6 +501,7 @@ void RSMainThread::CheckUpdateSurfaceNodeIfNeed()
 
 void RSMainThread::Render()
 {
+    RSChangeCoreUtil::Instance().set_core_level(RENDER_CORE_LEVEL);
     const std::shared_ptr<RSBaseRenderNode> rootNode = context_.GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
         RS_LOGE("RSMainThread::Render GetGlobalRootRenderNode fail");

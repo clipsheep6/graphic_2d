@@ -96,7 +96,7 @@ private:
     std::shared_ptr<RSDisplayRenderNode> curDisplayNode_;
     bool doAnimate_ = false;
     bool isPartialRenderEnabled_ = false;
-    bool isOpDroped_ = false;
+    bool isOpDropped_ = false;
     bool packTask_ = false;
     timespec timeStart {0};
     timespec timeEnd {0};

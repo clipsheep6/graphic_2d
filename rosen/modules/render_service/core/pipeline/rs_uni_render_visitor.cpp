@@ -620,11 +620,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     if (packTask_) {
         std::unique_ptr<RSRenderTask> surfaceNodeTask = std::make_unique<RSRenderTask>(node);
-        if (RSSubMainThread::Instance().tastManager_.GetEnableLoadBalance()) {
-            RSSubMainThread::Instance().tastManager_.LoadBalancePushTask(std::move(surfaceNodeTask));
-        } else {
-            RSSubMainThread::Instance().tastManager_.PushTask(std::move(surfaceNodeTask));
-        }
+        RSSubMainThread::Instance().tastManager_.LoadBalancePushTask(std::move(surfaceNodeTask));
         return;
     }
 

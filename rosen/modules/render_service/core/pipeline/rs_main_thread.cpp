@@ -165,6 +165,11 @@ void RSMainThread::Init()
     config.InitializeContext();
     config.SubscribeConfigObserver(CONFIG_ID::CONFIG_DALTONIZATION_COLOR_FILTER, correctionObserver_);
     config.SubscribeConfigObserver(CONFIG_ID::CONFIG_INVERT_COLOR, correctionObserver_);
+    InitParallerRendering();
+}
+
+void RSMainThread::InitParallerRendering()
+{
 #ifdef RS_ENABLE_GL
     RSSubMainThread::Instance().InitializeSubRenderThread(SUB_THREAD_NUMBER);
     RSSubMainThread::Instance().InitializeSubContext(renderEngine_->GetRenderContext().get());

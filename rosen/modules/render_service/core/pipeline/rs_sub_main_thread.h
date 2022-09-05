@@ -85,7 +85,7 @@ public:
     void FlushAndSubmitRegister();
     bool EnableParallerRendering()
     {
-        return (eglShareCtxNum > 0) && tastManager_.EnableParallerRendering() && RSInnovation::innovationHandle;
+        return false;
     }
     RSRenderTaskManager tastManager_;
 

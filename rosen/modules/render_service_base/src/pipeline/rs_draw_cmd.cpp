@@ -15,12 +15,13 @@
 
 #include "pipeline/rs_draw_cmd.h"
 
+#include "pixel_map_rosen_utils.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "pipeline/rs_paint_filter_canvas.h"
-#include "pipeline/rs_pixel_map_util.h"
 #include "pipeline/rs_root_render_node.h"
 #include "securec.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -173,8 +174,9 @@ TextBlobOpItem::TextBlobOpItem(const sk_sp<SkTextBlob> textBlob, float x, float 
 
 void TextBlobOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
-    bool highContrastEnabled = canvas.isHighContrastEnabled() || RSSystemProperties::GetHighContrastStatus();
-    if (highContrastEnabled) {
+    bool isHighContrastEnabled = canvas.isHighContrastEnabled() || RSSystemProperties::GetHighContrastStatus();
+    if (isHighContrastEnabled) {
+        ROSEN_LOGD("TextBlobOpItem::Draw highContrastEnabled");
         int32_t color = paint_.getColor();
         int32_t channelSum = SkColorGetR(color) + SkColorGetG(color) + SkColorGetB(color);
         bool flag = channelSum < 384; // 384 is empirical value
@@ -242,7 +244,7 @@ PixelMapOpItem::PixelMapOpItem(
 
 void PixelMapOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
-    sk_sp<SkImage> skImage = RSPixelMapUtil::PixelMapToSkImage(pixelmap_);
+    sk_sp<SkImage> skImage = Media::PixelMapRosenUtils::ExtractSkImage(pixelmap_);
     canvas.drawImage(skImage, left_, top_, &paint_);
 }
 
@@ -257,7 +259,7 @@ PixelMapRectOpItem::PixelMapRectOpItem(
 
 void PixelMapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
-    sk_sp<SkImage> skImage = RSPixelMapUtil::PixelMapToSkImage(pixelmap_);
+    sk_sp<SkImage> skImage = Media::PixelMapRosenUtils::ExtractSkImage(pixelmap_);
     canvas.drawImageRect(skImage, src_, dst_, &paint_);
 }
 
@@ -1204,7 +1206,10 @@ OpItem* ConcatOpItem::Unmarshalling(Parcel& parcel)
 bool SaveLayerOpItem::Marshalling(Parcel& parcel) const
 {
     bool success = true;
-    success &= RSMarshallingHelper::Marshalling(parcel, rect_);
+    success &= parcel.WriteBool(rectPtr_ != nullptr);
+    if (rectPtr_) {
+        success &= RSMarshallingHelper::Marshalling(parcel, rect_);
+    }
     success &= RSMarshallingHelper::Marshalling(parcel, backdrop_);
     success &= RSMarshallingHelper::Marshalling(parcel, mask_);
     success &= RSMarshallingHelper::Marshalling(parcel, matrix_);
@@ -1215,14 +1220,22 @@ bool SaveLayerOpItem::Marshalling(Parcel& parcel) const
 
 OpItem* SaveLayerOpItem::Unmarshalling(Parcel& parcel)
 {
+    bool isRectExist;
     SkRect rect;
+    SkRect* rectPtr = nullptr;
     sk_sp<SkImageFilter> backdrop;
     sk_sp<SkImage> mask;
     SkMatrix matrix;
     SkCanvas::SaveLayerFlags flags;
     SkPaint paint;
-    if (!RSMarshallingHelper::Unmarshalling(parcel, rect)) {
+    if (!parcel.ReadBool(isRectExist)) {
         return nullptr;
+    }
+    if (isRectExist) {
+        if (!RSMarshallingHelper::Unmarshalling(parcel, rect)) {
+            return nullptr;
+        }
+        rectPtr = &rect;
     }
     if (!RSMarshallingHelper::Unmarshalling(parcel, backdrop)) {
         return nullptr;
@@ -1239,7 +1252,7 @@ OpItem* SaveLayerOpItem::Unmarshalling(Parcel& parcel)
     if (!RSMarshallingHelper::Unmarshalling(parcel, paint)) {
         return nullptr;
     }
-    SkCanvas::SaveLayerRec rec = { &rect, &paint, backdrop.get(), mask.get(), &matrix, flags };
+    SkCanvas::SaveLayerRec rec = { rectPtr, &paint, backdrop.get(), mask.get(), &matrix, flags };
 
     return new SaveLayerOpItem(rec);
 }

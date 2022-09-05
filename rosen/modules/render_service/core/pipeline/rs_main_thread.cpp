@@ -23,6 +23,7 @@
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_divided_render_util.h"
 #include "pipeline/rs_render_service_visitor.h"
+#include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_unmarshal_thread.h"
 #include "pipeline/rs_uni_render_visitor.h"
@@ -33,6 +34,7 @@
 #include "screen_manager/rs_screen_manager.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "accessibility_config.h"
+#include "rs_qos_thread.h"
 
 using namespace OHOS::AccessibilityConfig;
 namespace OHOS {
@@ -65,20 +67,21 @@ public:
         if (id == CONFIG_ID::CONFIG_DALTONIZATION_COLOR_FILTER) {
             switch (value.daltonizationColorFilter) {
                 case Protanomaly:
-                    mode = ColorFilterMode::PROTANOMALY_MODE;
+                    mode = ColorFilterMode::DALTONIZATION_PROTANOMALY_MODE;
                     break;
                 case Deuteranomaly:
-                    mode = ColorFilterMode::DEUTERANOMALY_MODE;
+                    mode = ColorFilterMode::DALTONIZATION_DEUTERANOMALY_MODE;
                     break;
                 case Tritanomaly:
-                    mode = ColorFilterMode::TRITANOMALY_MODE;
+                    mode = ColorFilterMode::DALTONIZATION_TRITANOMALY_MODE;
                     break;
                 case Normal:
-                    mode = ColorFilterMode::COLOR_FILTER_END;
+                    mode = ColorFilterMode::DALTONIZATION_NORMAL_MODE;
                     break;
             }
         } else {
-            mode = value.invertColor ? ColorFilterMode::INVERT_MODE : ColorFilterMode::COLOR_FILTER_END;
+            mode = value.invertColor ? ColorFilterMode::INVERT_COLOR_ENABLE_MODE :
+                                        ColorFilterMode::INVERT_COLOR_DISABLE_MODE;
         }
         RSMainThread::Instance()->GetRenderEngine()->SetColorFilterMode(mode);
     }
@@ -139,6 +142,16 @@ void RSMainThread::Init()
     receiver_ = std::make_shared<VSyncReceiver>(conn, handler_);
     receiver_->Init();
     renderEngine_ = std::make_shared<RSRenderEngine>();
+#ifdef RS_ENABLE_GL
+    if (renderEngine_) {
+        int cacheLimitsTimes = 2; // double skia Resource Cache Limits
+        auto grContext = renderEngine_->GetRenderContext()->GetGrContext();
+        int maxResources = 0;
+        size_t maxResourcesSize = 0;
+        grContext->getResourceCacheLimits(&maxResources, &maxResourcesSize);
+        grContext->setResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes * maxResourcesSize);
+    }
+#endif
     RSInnovation::OpenInnovationSo();
     Occlusion::Region::InitDynamicLibraryFunction();
 
@@ -196,8 +209,9 @@ void RSMainThread::ProcessCommand()
 {
     if (!isUniRender_) { // divided render for all
         ProcessCommandForDividedRender();
+        return;
     }
-
+    CheckBufferAvailableIfNeed();
     // dynamic switch
     if (useUniVisitor_) {
         ProcessCommandForDividedRender();
@@ -206,6 +220,7 @@ void RSMainThread::ProcessCommand()
         ProcessCommandForUniRender();
         ProcessCommandForDividedRender();
     }
+    CheckUpdateSurfaceNodeIfNeed();
 }
 
 void RSMainThread::ProcessCommandForUniRender()
@@ -266,6 +281,12 @@ void RSMainThread::ProcessCommandForDividedRender()
                 std::make_move_iterator(pendingEffectiveCommands_.end()));
             pendingEffectiveCommands_.clear();
         }
+        if (!waitingBufferAvailable_ && !followVisitorCommands_.empty()) {
+            effectiveCommands_.insert(effectiveCommands_.end(),
+                std::make_move_iterator(followVisitorCommands_.begin()),
+                std::make_move_iterator(followVisitorCommands_.end()));
+            followVisitorCommands_.clear();
+        }
         for (auto& [surfaceNodeId, commandMap] : cachedCommands_) {
             auto node = nodeMap.GetRenderNode<RSSurfaceRenderNode>(surfaceNodeId);
             auto bufferTimestamp = bufferTimestamps_.find(surfaceNodeId);
@@ -308,24 +329,39 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
     bool needRequestNextVsync = false;
     bufferTimestamps_.clear();
     const auto& nodeMap = GetContext().GetNodeMap();
-    nodeMap.TraversalNodes([this, &needRequestNextVsync](const std::shared_ptr<RSBaseRenderNode>& node) mutable {
-        if (node == nullptr) {
+    nodeMap.TraverseSurfaceNodes(
+        [this, &needRequestNextVsync](const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) mutable {
+        if (surfaceNode == nullptr) {
             return;
         }
 
-        if (node->IsInstanceOf<RSSurfaceRenderNode>()) {
-            RSSurfaceRenderNode& surfaceNode = *(RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node));
-            auto& surfaceHandler = static_cast<RSSurfaceHandler&>(surfaceNode);
-            surfaceHandler.ResetCurrentFrameBufferConsumed();
-            if (RSBaseRenderUtil::ConsumeAndUpdateBuffer(surfaceHandler)) {
-                this->bufferTimestamps_[surfaceNode.GetId()] = static_cast<uint64_t>(surfaceNode.GetTimestamp());
-            }
+        auto& surfaceHandler = static_cast<RSSurfaceHandler&>(*surfaceNode);
+        surfaceHandler.ResetCurrentFrameBufferConsumed();
+        if (RSBaseRenderUtil::ConsumeAndUpdateBuffer(surfaceHandler)) {
+            this->bufferTimestamps_[surfaceNode->GetId()] = static_cast<uint64_t>(surfaceNode->GetTimestamp());
+        }
 
-            // still have buffer(s) to consume.
-            if (surfaceHandler.GetAvailableBufferCount() > 0) {
-                needRequestNextVsync = true;
+        // still have buffer(s) to consume.
+        if (surfaceHandler.GetAvailableBufferCount() > 0) {
+            needRequestNextVsync = true;
+        }
+
+        // check first frame callback in uniRender case
+        if (!IfUseUniVisitor() || !surfaceNode->IsAppWindow()) {
+            return;
+        }
+        for (auto& child : surfaceNode->GetSortedChildren()) {
+            if (child != nullptr && child->IsInstanceOf<RSRootRenderNode>()) {
+                auto rootNode = child->ReinterpretCastTo<RSRootRenderNode>();
+                rootNode->ApplyModifiers();
+                const auto& property = rootNode->GetRenderProperties();
+                if (property.GetFrameWidth() > 0 && property.GetFrameHeight() > 0 &&
+                    rootNode->GetEnableRender()) {
+                    surfaceNode->NotifyUIBufferAvailable();
+                }
             }
         }
+        surfaceNode->ResetSortedChildren();
     });
 
     if (needRequestNextVsync) {
@@ -337,16 +373,11 @@ void RSMainThread::ReleaseAllNodesBuffer()
 {
     RS_TRACE_NAME("RSMainThread::ReleaseAllNodesBuffer");
     const auto& nodeMap = GetContext().GetNodeMap();
-    nodeMap.TraversalNodes([this](const std::shared_ptr<RSBaseRenderNode>& node) mutable {
-        if (node == nullptr) {
+    nodeMap.TraverseSurfaceNodes([](const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) mutable {
+        if (surfaceNode == nullptr) {
             return;
         }
-
-        if (node->IsInstanceOf<RSSurfaceRenderNode>()) {
-            RSSurfaceRenderNode& surfaceNode = *(RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node));
-            auto& surfaceHandler = static_cast<RSSurfaceHandler&>(surfaceNode);
-            (void)RSBaseRenderUtil::ReleaseBuffer(surfaceHandler);
-        }
+        RSBaseRenderUtil::ReleaseBuffer(static_cast<RSSurfaceHandler&>(*surfaceNode));
     });
 }
 
@@ -398,22 +429,18 @@ void RSMainThread::NotifyUniRenderFinish()
 
 bool RSMainThread::IfUseUniVisitor() const
 {
-    return useUniVisitor_ || (!useUniVisitor_ && waitBufferAvailable_);
+    return (useUniVisitor_ && !waitingUpdateSurfaceNode_) || (!useUniVisitor_ && waitingBufferAvailable_);
 }
 
 void RSMainThread::CheckBufferAvailableIfNeed()
 {
-    if (!waitBufferAvailable_) {
+    if (!waitingBufferAvailable_) {
         return;
     }
     const auto& nodeMap = GetContext().GetNodeMap();
     bool allBufferAvailable = true;
-    for (auto& [id, node] : nodeMap.renderNodeMap_) {
-        if (node == nullptr || !node->IsInstanceOf<RSSurfaceRenderNode>()) {
-            continue;
-        }
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
-        if (!surfaceNode->IsAppWindow() || !node->IsOnTheTree()) {
+    for (auto& [id, surfaceNode] : nodeMap.surfaceNodeMap_) {
+        if (surfaceNode == nullptr || !surfaceNode->IsOnTheTree() || !surfaceNode->IsAppWindow()) {
             continue;
         }
         if (surfaceNode->GetBuffer() == nullptr) {
@@ -421,9 +448,44 @@ void RSMainThread::CheckBufferAvailableIfNeed()
             break;
         }
     }
-    waitBufferAvailable_ = !allBufferAvailable;
-    if (!waitBufferAvailable_ && renderModeChangeCallback_) {
+    waitingBufferAvailable_ = !allBufferAvailable;
+    if (!waitingBufferAvailable_ && renderModeChangeCallback_) {
         renderModeChangeCallback_->OnRenderModeChanged(false);
+    }
+}
+
+void RSMainThread::CheckUpdateSurfaceNodeIfNeed()
+{
+    if (!waitingUpdateSurfaceNode_) {
+        return;
+    }
+    const auto& nodeMap = GetContext().GetNodeMap();
+    bool allSurfaceNodeUpdated = true;
+    for (auto& [id, surfaceNode] : nodeMap.surfaceNodeMap_) {
+        if (!allSurfaceNodeUpdated) {
+            break;
+        }
+        if (surfaceNode == nullptr || !surfaceNode->IsOnTheTree() || !surfaceNode->IsAppWindow()) {
+            continue;
+        }
+        for (auto& child : surfaceNode->GetSortedChildren()) {
+            if (child != nullptr && child->IsInstanceOf<RSSurfaceRenderNode>() && child->IsOnTheTree()) {
+                allSurfaceNodeUpdated = false;
+                break;
+            }
+        }
+        surfaceNode->ResetSortedChildren();
+    }
+    waitingUpdateSurfaceNode_ = !allSurfaceNodeUpdated;
+    if (!waitingUpdateSurfaceNode_) {
+        for (auto& elem : applicationAgentMap_) {
+            if (elem.second != nullptr) {
+                elem.second->NotifyClearBufferCache();
+            }
+        }
+        if (renderModeChangeCallback_) {
+            renderModeChangeCallback_->OnRenderModeChanged(true);
+        }
     }
 }
 
@@ -434,14 +496,12 @@ void RSMainThread::Render()
         RS_LOGE("RSMainThread::Render GetGlobalRootRenderNode fail");
         return;
     }
-    if (isUniRender_) {
-        CheckBufferAvailableIfNeed();
-    }
+
     RS_LOGD("RSMainThread::Render isUni:%d", IfUseUniVisitor());
     std::shared_ptr<RSNodeVisitor> visitor;
     if (IfUseUniVisitor()) {
         auto uniVisitor = std::make_shared<RSUniRenderVisitor>();
-        uniVisitor->SetAnimateState(doAnimate_);
+        uniVisitor->SetAnimateState(doWindowAnimate_);
         visitor = uniVisitor;
     } else {
         bool doParallelComposition = false;
@@ -453,7 +513,7 @@ void RSMainThread::Render()
             return;
         }
         auto rsVisitor = std::make_shared<RSRenderServiceVisitor>();
-        rsVisitor->SetAnimateState(doAnimate_);
+        rsVisitor->SetAnimateState(doWindowAnimate_);
         visitor = rsVisitor;
     }
 
@@ -466,7 +526,7 @@ void RSMainThread::Render()
 
 void RSMainThread::CalcOcclusion()
 {
-    if (doAnimate_) {
+    if (doWindowAnimate_ && !useUniVisitor_) {
         return;
     }
     const std::shared_ptr<RSBaseRenderNode> node = context_.GetGlobalRootRenderNode();
@@ -475,8 +535,15 @@ void RSMainThread::CalcOcclusion()
         return;
     }
     RSInnovation::UpdateOcclusionCullingSoEnabled();
+
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-    node->CollectSurface(node, curAllSurfaces, isUniRender_);
+    for (auto& child : node->GetSortedChildren()) {
+        auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(child);
+        if (displayNode) {
+            curAllSurfaces.insert(curAllSurfaces.end(),
+                displayNode->GetCurAllSurfaces().begin(), displayNode->GetCurAllSurfaces().end());
+        }
+    }
     // 1. Judge whether it is dirty
     // Surface cnt changed or surface DstRectChanged or surface ZorderChanged
     bool winDirty = lastSurfaceCnt_ != curAllSurfaces.size();
@@ -504,6 +571,7 @@ void RSMainThread::CalcOcclusion()
     // 2. Calc occlusion
     Occlusion::Region curRegion;
     VisibleData curVisVec;
+    std::map<uint32_t, bool> pidVisMap;
     for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
         auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (surface == nullptr || surface->GetDstRect().IsEmpty()) {
@@ -515,7 +583,8 @@ void RSMainThread::CalcOcclusion()
         // Current surface subtract current region, if result region is empty that means it's covered
         Occlusion::Region subResult = curSurface.Sub(curRegion);
         // Set result to SurfaceRenderNode and its children
-        surface->SetVisibleRegionRecursive(subResult, curVisVec);
+        surface->setQosCal(qosPidCal_);
+        surface->SetVisibleRegionRecursive(subResult, curVisVec, pidVisMap);
         // Current region need to merge current surface for next calculation(ignore alpha surface)
         const uint8_t opacity = 255;
         if (isUniRender_) {
@@ -523,7 +592,6 @@ void RSMainThread::CalcOcclusion()
                 ROSEN_EQ(surface->GetRenderProperties().GetAlpha(), 1.0f)) {
                 curRegion = curSurface.Or(curRegion);
             }
-            CalcDirtyRegion(surface, curSurface);
         } else {
             bool diff = surface->GetDstRect().width_ > surface->GetBuffer()->GetWidth() ||
                         surface->GetDstRect().height_ > surface->GetBuffer()->GetHeight();
@@ -534,68 +602,46 @@ void RSMainThread::CalcOcclusion()
         }
     }
 
-    // 3. Callback to WMS
+    // 3. Callback to QOS
+    CallbackToQOS(pidVisMap);
+
+    // 4. Callback to WMS
     CallbackToWMS(curVisVec);
 }
 
-const std::shared_ptr<RSDisplayRenderNode> RSMainThread::GetDisplayNode(
-    const std::shared_ptr<RSSurfaceRenderNode> node) const
+bool RSMainThread::CheckQosVisChanged(std::map<uint32_t, bool>& pidVisMap)
 {
-    auto parent = node->GetParent().lock();
-    while (parent != nullptr) {
-        if (parent->GetType() == RSRenderNodeType::DISPLAY_NODE) {
-            return RSDisplayRenderNode::ReinterpretCast<RSDisplayRenderNode>(parent);
+    bool isVisibleChanged  = pidVisMap.size() != lastPidVisMap_.size();
+    if (!isVisibleChanged) {
+        auto iterCur = pidVisMap.begin();
+        auto iterLast = lastPidVisMap_.begin();
+        for (; iterCur != pidVisMap.end(); iterCur++, iterLast++) {
+            if (iterCur->first != iterLast->first ||
+                iterCur->second != iterLast->second) {
+                isVisibleChanged = true;
+                break;
+            }
         }
-        parent = parent->GetParent().lock();
     }
-    return nullptr;
+
+    lastPidVisMap_.clear();
+    lastPidVisMap_.insert(pidVisMap.begin(), pidVisMap.end());
+    return isVisibleChanged;
 }
 
-void RSMainThread::CalcDirtyRegion(const std::shared_ptr<RSSurfaceRenderNode> surface, Occlusion::Region curSurface)
+void RSMainThread::CallbackToQOS(std::map<uint32_t, bool>& pidVisMap)
 {
-    RS_TRACE_FUNC();
-    auto manager = surface->GetDirtyManager();
-    if (manager == nullptr) {
-        RS_LOGW("dirtyManager is nullptr %s", surface->GetName().c_str());
+    if (!RSInnovation::UpdateQosVsyncEnabled()) {
+        qosPidCal_ = false;
+        RSQosThread::GetInstance()->ResetQosPid(pidVisMap);
         return;
     }
-    auto displayNode = GetDisplayNode(surface);
-    if (displayNode == nullptr) {
-        RS_LOGW("Get display node failed %s", surface->GetName().c_str());
+    qosPidCal_ = true;
+    if (!CheckQosVisChanged(pidVisMap)) {
         return;
     }
 
-    Occlusion::Region transparentRegion;
-    Occlusion::Region opaqueRegion;
-    const uint8_t opacity = 255;
-    if (surface->GetAbilityBgAlpha() == opacity &&
-        ROSEN_EQ(surface->GetRenderProperties().GetAlpha(), 1.0f)) {
-        opaqueRegion = curSurface;
-    } else {
-        transparentRegion = curSurface;
-    }
-
-    Occlusion::Region& displayOpaqueRegion = displayNode->GetDisplayOpaqueRegion();
-    Occlusion::Region& displayTransparentDirtyRegion = displayNode->GetDisplayTransparentDirtyRegion();
-    Occlusion::Rect dirtyRect { manager->GetDirtyRegion().left_, manager->GetDirtyRegion().top_,
-        manager->GetDirtyRegion().GetRight(), manager->GetDirtyRegion().GetBottom() };
-    Occlusion::Region dirtyRegion { dirtyRect };
-    Occlusion::Region visibleRegion = curSurface.Sub(displayOpaqueRegion);
-    auto clipTransparentDirtyRegion = displayTransparentDirtyRegion.And(curSurface);
-    dirtyRegion = dirtyRegion.Or(clipTransparentDirtyRegion);
-    Occlusion::Region visibleDirtyRegion = visibleRegion.And(dirtyRegion);
-    Occlusion::Region transparentDirtyRegion = transparentRegion.And(visibleDirtyRegion);
-    displayNode->MergeDamageRegion(visibleDirtyRegion);
-    displayTransparentDirtyRegion = displayTransparentDirtyRegion.Or(transparentDirtyRegion);
-    displayTransparentDirtyRegion = displayTransparentDirtyRegion.Sub(opaqueRegion);
-    displayOpaqueRegion = displayOpaqueRegion.Or(opaqueRegion);
-    surface->SetVisibleDirtyRegion(visibleDirtyRegion);
-    RS_LOGD("%s DamageRegion %s visibleDirtyRegion %s displayOpaqueRegion %s displayTransparentDirtyRegion %s",
-        surface->GetName().c_str(),
-        displayNode->GetDamageRegion().GetRegionInfo().c_str(),
-        visibleDirtyRegion.GetRegionInfo().c_str(),
-        displayNode->GetDisplayOpaqueRegion().GetRegionInfo().c_str(),
-        displayNode->GetDisplayTransparentDirtyRegion().GetRegionInfo().c_str());
+    RSQosThread::GetInstance()->OnRSVisibilityChangeCB(pidVisMap);
 }
 
 void RSMainThread::CallbackToWMS(VisibleData& curVisVec)
@@ -657,13 +703,13 @@ void RSMainThread::Animate(uint64_t timestamp)
     RS_TRACE_FUNC();
 
     if (context_.animatingNodeList_.empty()) {
-        doAnimate_ = false;
+        doWindowAnimate_ = false;
         return;
     }
 
     RS_LOGD("RSMainThread::Animate start, processing %d animating nodes", context_.animatingNodeList_.size());
 
-    doAnimate_ = true;
+    doWindowAnimate_ = HasWindowAnimation();
     // iterate and animate all animating nodes, remove if animation finished
     std::__libcpp_erase_if_container(context_.animatingNodeList_, [timestamp](const auto& iter) -> bool {
         auto node = iter.second.lock();
@@ -681,6 +727,17 @@ void RSMainThread::Animate(uint64_t timestamp)
     RS_LOGD("RSMainThread::Animate end, %d animating nodes remains", context_.animatingNodeList_.size());
 
     RequestNextVSync();
+}
+
+bool RSMainThread::HasWindowAnimation() const
+{
+    for (auto [nodeId, nodePtr] : context_.animatingNodeList_) {
+        auto node = nodePtr.lock();
+        if (node != nullptr && node->IsInstanceOf<RSSurfaceRenderNode>()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void RSMainThread::RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData)
@@ -711,6 +768,10 @@ void RSMainThread::ClassifyRSTransactionData(std::unique_ptr<RSTransactionData>&
                 continue;
             }
             auto node = nodeMap.GetRenderNode(nodeId);
+            if (waitingBufferAvailable_ && node && followType == FollowType::FOLLOW_VISITOR) {
+                followVisitorCommands_.emplace_back(std::move(command));
+                continue;
+            }
             if (node && followType == FollowType::FOLLOW_TO_PARENT) {
                 auto parentNode = node->GetParent().lock();
                 if (parentNode) {
@@ -752,15 +813,16 @@ void RSMainThread::NotifyRenderModeChanged(bool useUniVisitor)
         return;
     }
     PostTask([useUniVisitor = useUniVisitor, this]() {
+        if (waitingBufferAvailable_ || waitingUpdateSurfaceNode_) {
+            RS_LOGE("RSMainThread::NotifyRenderModeChanged last update mode not finished, switch again");
+        }
         useUniVisitor_ = useUniVisitor;
-        waitBufferAvailable_ = !useUniVisitor;
+        waitingBufferAvailable_ = !useUniVisitor;
+        waitingUpdateSurfaceNode_ = useUniVisitor;
         for (auto& elem : applicationAgentMap_) {
             if (elem.second != nullptr) {
                 elem.second->OnRenderModeChanged(!useUniVisitor);
             }
-        }
-        if (useUniVisitor_ && renderModeChangeCallback_) {
-            renderModeChangeCallback_->OnRenderModeChanged(true);
         }
     });
 }
@@ -804,9 +866,6 @@ void RSMainThread::SendCommands()
     // dispatch messages to corresponding application
     auto transactionMapPtr = std::make_shared<std::unordered_map<uint32_t, RSTransactionData>>(
         RSMessageProcessor::Instance().GetAllTransactions());
-    if (!useUniVisitor_) {
-        return;
-    }
     PostTask([this, transactionMapPtr]() {
         for (auto& transactionIter : *transactionMapPtr) {
             auto pid = transactionIter.first;
@@ -858,7 +917,7 @@ bool RSMainThread::DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootN
     rootNode->Prepare(visitor);
     CalcOcclusion();
     auto children = rootNode->GetSortedChildren();
-    bool animate_ = doAnimate_;
+    bool animate_ = doWindowAnimate_;
     for (auto it = children.rbegin(); it != children.rend(); it++) {
         auto child = *it;
         auto task = [&syncSignal, SignalCountDown, child, animate_]() {

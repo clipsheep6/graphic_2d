@@ -28,11 +28,11 @@ bool RSSystemProperties::GetUniRenderEnabled()
     if (inited) {
         return isUniRenderEnabled_;
     }
-    inited = true;
 
     isUniRenderEnabled_ = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
         ->GetUniRenderEnabled();
     isUniRenderMode_ = isUniRenderEnabled_;
+    inited = true;
     ROSEN_LOGI("RSSystemProperties::GetUniRenderEnabled:%d", isUniRenderEnabled_);
     return isUniRenderEnabled_;
 }
@@ -59,6 +59,12 @@ PartialRenderType RSSystemProperties::GetPartialRenderEnabled()
         std::atoi((system::GetParameter("rosen.partialrender.enabled", "0")).c_str()));
 }
 
+PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
+{
+    return static_cast<PartialRenderType>(
+        std::atoi((system::GetParameter("rosen.uni.partialrender.enabled", "0")).c_str()));
+}
+
 bool RSSystemProperties::GetOcclusionEnabled()
 {
     return std::atoi((system::GetParameter("rosen.occlusion.enabled", "1")).c_str()) != 0;
@@ -83,16 +89,22 @@ bool RSSystemProperties::GetHighContrastStatus()
     return std::atoi((system::GetParameter("rosen.HighContrast.enabled", "0")).c_str()) != 0;
 }
 
-int32_t RSSystemProperties::GetCorrectionMode()
+uint32_t RSSystemProperties::GetCorrectionMode()
 {
     // If the value of rosen.directClientComposition.enabled is not 0 then enable the direct CLIENT composition.
     // Direct CLIENT composition will be processed only when the num of layer is larger than 11
-    return std::atoi((system::GetParameter("rosen.CorrectionMode", "5")).c_str());
+    return std::atoi((system::GetParameter("rosen.CorrectionMode", "999")).c_str());
 }
 
-bool RSSystemProperties::GetUniPartialRenderEnabled()
+DumpSurfaceType RSSystemProperties::GetDumpSurfaceType()
 {
-    return std::atoi((system::GetParameter("rosen.uni.partialrender.enabled", "0")).c_str());
+    return static_cast<DumpSurfaceType>(
+        std::atoi((system::GetParameter("rosen.dumpsurfacetype.enabled", "0")).c_str()));
+}
+
+uint64_t RSSystemProperties::GetDumpSurfaceId()
+{
+    return std::atoi((system::GetParameter("rosen.dumpsurfaceid", "0")).c_str());
 }
 } // namespace Rosen
 } // namespace OHOS

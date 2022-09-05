@@ -55,11 +55,11 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
     std::shared_ptr<RSSurfaceCaptureVisitor> visitor = std::make_shared<RSSurfaceCaptureVisitor>(scaleX_, scaleY_);
     visitor->SetUniRender(RSMainThread::Instance()->IfUseUniVisitor());
     if (auto surfaceNode = node->ReinterpretCastTo<RSSurfaceRenderNode>()) {
-        RS_LOGI("RSSurfaceCaptureTask::Run: Into SURFACE_NODE SurfaceRenderNodeId:[%" PRIu64 "]", node->GetId());
+        RS_LOGD("RSSurfaceCaptureTask::Run: Into SURFACE_NODE SurfaceRenderNodeId:[%" PRIu64 "]", node->GetId());
         pixelmap = CreatePixelMapBySurfaceNode(surfaceNode, visitor->IsUniRender());
         visitor->IsDisplayNode(false);
     } else if (auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>()) {
-        RS_LOGI("RSSurfaceCaptureTask::Run: Into DISPLAY_NODE DisplayRenderNodeId:[%" PRIu64 "]", node->GetId());
+        RS_LOGD("RSSurfaceCaptureTask::Run: Into DISPLAY_NODE DisplayRenderNodeId:[%" PRIu64 "]", node->GetId());
         pixelmap = CreatePixelMapByDisplayNode(displayNode);
         visitor->IsDisplayNode(true);
     } else {
@@ -90,7 +90,7 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         return nullptr;
     }
     SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
-            kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
     if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
         RS_LOGE("RSSurfaceCaptureTask::Run: readPixels failed");
         free(data);
@@ -168,7 +168,7 @@ sk_sp<SkSurface> RSSurfaceCaptureTask::CreateSurface(const std::unique_ptr<Media
         return nullptr;
     }
     SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
-            kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
     auto renderEngine = RSMainThread::Instance()->GetRenderEngine();
     if (renderEngine == nullptr) {
@@ -221,19 +221,43 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSD
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNode& node)
 {
-    // in node's local coordinate.
-    auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
-
-    const auto saveCnt = canvas_->save();
-    if (node.IsAppWindow()) {
-        canvas_->concat(params.matrix);
+    SkMatrix translateMatrix;
+    const float thisNodetranslateX = node.GetTotalMatrix().getTranslateX();
+    const float thisNodetranslateY = node.GetTotalMatrix().getTranslateY();
+    if (!node.IsAppWindow()) {
+        translateMatrix.preTranslate(
+            thisNodetranslateX - parentNodeTranslateX_, thisNodetranslateY - parentNodeTranslateY_);
+    } else {
+        parentNodeTranslateX_ = thisNodetranslateX;
+        parentNodeTranslateY_ = thisNodetranslateY;
     }
-    ProcessBaseRenderNode(node);
-    canvas_->restoreToCount(saveCnt);
 
-    if (node.GetBuffer() != nullptr) {
+    canvas_->save();
+
+    if (!node.IsAppWindow()) {
+        canvas_->translate(-canvas_->getTotalMatrix().getTranslateX() / canvas_->getTotalMatrix().getScaleX(),
+            -canvas_->getTotalMatrix().getTranslateY() / canvas_->getTotalMatrix().getScaleY());
+        canvas_->concat(translateMatrix);
+    }
+
+    canvas_->save();
+    const auto& property = node.GetRenderProperties();
+    canvas_->clipRect(SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight()));
+    auto backgroundColor = static_cast<SkColor>(property.GetBackgroundColor().AsArgbInt());
+    if (SkColorGetA(backgroundColor) != SK_AlphaTRANSPARENT) {
+        canvas_->drawColor(backgroundColor);
+    }
+    canvas_->restore();
+
+    if (!node.IsAppWindow() && node.GetBuffer() != nullptr) {
+        // in node's local coordinate.
+        auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
         renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
     }
+
+    canvas_->restore();
+
+    ProcessBaseRenderNode(node);
 }
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode& node)
@@ -244,18 +268,22 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithU
         canvas_->clipRect(contextClipRect);
     }
 
-    const auto& property = node.GetRenderProperties();
-    SkMatrix translateMatrix;
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
-    translateMatrix.setTranslate(
-        std::ceil(geoPtr->GetMatrix().getTranslateX()),
-        std::ceil(geoPtr->GetMatrix().getTranslateY()));
-    canvas_->concat(translateMatrix);
-    // use node's local coordinate.
-    auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false); 
+    auto parentPtr = node.GetParent().lock();
+    bool isSelfDrawingSurface = parentPtr && parentPtr->IsInstanceOf<RSCanvasRenderNode>();
+    if (isSelfDrawingSurface) {
+        canvas_->save();
+    }
 
-    const auto saveCnt = canvas_->save();
-    canvas_->concat(params.matrix);
+    const auto& property = node.GetRenderProperties();
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    if (geoPtr) {
+        canvas_->concat(geoPtr->GetMatrix());
+    }
+
+    if (isSelfDrawingSurface) {
+        canvas_->save();
+    }
+
     auto transitionProperties = node.GetAnimationManager().GetTransitionProperties();
     RSPropertiesPainter::DrawTransitionProperties(transitionProperties, property, *canvas_);
     boundsRect_ = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
@@ -265,12 +293,22 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithU
     if (SkColorGetA(backgroundColor) != SK_AlphaTRANSPARENT) {
         canvas_->drawColor(backgroundColor);
     }
-    ProcessBaseRenderNode(node);
-    canvas_->restoreToCount(saveCnt);
 
-    if (node.GetBuffer() != nullptr) {
+    if (isSelfDrawingSurface) {
+        canvas_->restore();
+    }
+
+    if (!node.IsAppWindow() && node.GetBuffer() != nullptr) {
+        // use node's local coordinate.
+        auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
         renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
     }
+
+    if (isSelfDrawingSurface) {
+        canvas_->restore();
+    }
+
+    ProcessBaseRenderNode(node);
 }
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWithUni(RSSurfaceRenderNode &node)
@@ -350,16 +388,25 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWith
         translateMatrix.preTranslate(
             thisNodetranslateX - parentNodeTranslateX, thisNodetranslateY - parentNodeTranslateY);
     }
-
-    canvas_->concat(translateMatrix);
-    const auto saveCnt = canvas_->save();
-    ProcessBaseRenderNode(node);
-    canvas_->restoreToCount(saveCnt);
-
-    if (node.GetBuffer() != nullptr) {
-        // in node's local coordinate.
-        auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
-        renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
+    if (node.GetChildrenCount() > 0) {
+        canvas_->concat(translateMatrix);
+        const auto saveCnt = canvas_->save();
+        ProcessBaseRenderNode(node);
+        canvas_->restoreToCount(saveCnt);
+        if (node.GetBuffer() != nullptr) {
+            // in node's local coordinate.
+            auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
+            renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
+        }
+    } else {
+        canvas_->save();
+        canvas_->concat(translateMatrix);
+        if (node.GetBuffer() != nullptr) {
+            // in node's local coordinate.
+            auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
+            renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
+        }
+        canvas_->restore();
     }
 }
 

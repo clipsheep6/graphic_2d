@@ -23,8 +23,8 @@
 #include "animation/rs_transition_effect.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
-#include "modifier/rs_property_modifier.h"
 #include "modifier/rs_modifier_extractor.h"
+#include "modifier/rs_modifier_type.h"
 #include "pipeline/rs_recording_canvas.h"
 #include "property/rs_properties.h"
 #include "render/rs_mask.h"
@@ -35,19 +35,24 @@ class SkCanvas;
 
 namespace OHOS {
 namespace Rosen {
-using DrawFunc = std::function<void(SkCanvas*)>;
+using DrawFunc = std::function<void(std::shared_ptr<SkCanvas>)>;
 using PropertyCallback = std::function<void()>;
 class RSAnimation;
 class RSCommand;
 class RSImplicitAnimParam;
 class RSImplicitAnimator;
 class RSUIAnimationManager;
+class RSModifierBase;
 
 class RS_EXPORT RSNode : public RSBaseNode {
 public:
     using WeakPtr = std::weak_ptr<RSNode>;
     using SharedPtr = std::shared_ptr<RSNode>;
     static inline constexpr RSUINodeType Type = RSUINodeType::RS_NODE;
+    RSUINodeType GetType() const override
+    {
+        return Type;
+    }
 
     ~RSNode() override;
     std::string DumpNode(int depth) const override;
@@ -166,19 +171,17 @@ public:
         transitionEffect_ = effect;
     }
 
-    RSUINodeType GetType() const override
-    {
-        return RSUINodeType::RS_NODE;
-    }
-
     void ClearModifiers();
     void ClearAllModifiers();
     void AddModifier(const std::shared_ptr<RSModifierBase>& modifier);
     void RemoveModifier(const std::shared_ptr<RSModifierBase>& modifier);
 
+    void SetChildIds(const std::vector<NodeId>& childIds);
+    const std::vector<NodeId>& GetChildIds() const;
+
 protected:
     explicit RSNode(bool isRenderServiceNode);
-    RSNode(bool isRenderServiceNode, NodeId id);
+    explicit RSNode(bool isRenderServiceNode, NodeId id);
     RSNode(const RSNode&) = delete;
     RSNode(const RSNode&&) = delete;
     RSNode& operator=(const RSNode&) = delete;
@@ -204,6 +207,7 @@ private:
     const std::shared_ptr<RSModifierBase> GetModifier(const PropertyId& propertyId);
     virtual void OnBoundsSizeChanged() const {};
     void UpdateModifierMotionPathOption();
+    void UpdateExtendedModifier(const PropertyId& id);
 
     std::unordered_map<AnimationId, std::shared_ptr<RSAnimation>> animations_;
     std::unordered_map<PropertyId, uint32_t> animatingPropertyNum_;
@@ -217,22 +221,18 @@ private:
     std::shared_ptr<const RSTransitionEffect> transitionEffect_ = nullptr;
     std::shared_ptr<RSUIAnimationManager> animationManager_;
 
-    RSModifierExtractor stagingPropertiesExtrator_;
+    RSModifierExtractor stagingPropertiesExtractor_;
+    std::vector<NodeId> childNodeIds_;
 
     friend class RSAnimation;
-    template<typename T>
     friend class RSCurveAnimation;
-    template<typename T>
     friend class RSKeyframeAnimation;
-    template<typename T>
     friend class RSPropertyAnimation;
-    template<typename T>
     friend class RSSpringAnimation;
     template<typename T>
     friend class RSProperty;
     template<typename T>
     friend class RSAnimatableProperty;
-    template<typename T>
     friend class RSPathAnimation;
     template<typename T>
     friend class RSExtendedModifier;

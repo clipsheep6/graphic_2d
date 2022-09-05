@@ -21,6 +21,7 @@
 #endif
 #include "rs_trace.h"
 #include "ui/rs_ui_director.h"
+#include "sandbox_utils.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -44,7 +45,7 @@ void RSApplicationAgentImpl::RegisterRSApplicationAgent()
             if (appSptr == nullptr) {
                 return;
             }
-            conn->RegisterApplicationAgent(getpid(), appSptr);
+            conn->RegisterApplicationAgent(GetRealPid(), appSptr);
         });
 #endif
 }
@@ -58,8 +59,15 @@ void RSApplicationAgentImpl::OnTransaction(std::shared_ptr<RSTransactionData> tr
 
 void RSApplicationAgentImpl::OnRenderModeChanged(bool renderThreadNeedRender)
 {
+    RS_TRACE_NAME_FMT("RSApplicationAgentImpl::OnRenderModeChanged isUni:%d", !renderThreadNeedRender);
     RSSystemProperties::SetRenderMode(!renderThreadNeedRender);
     RSRenderThread::Instance().UpdateRenderMode(renderThreadNeedRender);
+}
+
+void RSApplicationAgentImpl::NotifyClearBufferCache()
+{
+    RS_TRACE_NAME_FMT("RSApplicationAgentImpl::NotifyClearBufferCache");
+    RSRenderThread::Instance().NotifyClearBufferCache();
 }
 #endif
 }

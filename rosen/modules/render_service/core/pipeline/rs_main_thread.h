@@ -136,6 +136,8 @@ private:
     void ReleaseAllNodesBuffer();
     void Render();
     void CalcOcclusion();
+    bool CheckQosVisChanged(std::map<uint32_t, bool>& pidVisMap);
+    void CallbackToQOS(std::map<uint32_t, bool>& pidVisMap);
     void CallbackToWMS(VisibleData& curVisVec);
     void SendCommands();
     void InitRSEventDetector();
@@ -151,10 +153,12 @@ private:
     void ProcessCommandForUniRender();
     void WaitUntilUnmarshallingTaskFinished();
     void MergeToEffectiveTransactionDataMap(TransactionDataMap& cachedTransactionDataMap);
-    void CheckBufferAvailableIfNeed();
 
-    void CalcDirtyRegion(std::shared_ptr<RSSurfaceRenderNode> surface, Occlusion::Region curSurface);
-    const std::shared_ptr<RSDisplayRenderNode> GetDisplayNode(const std::shared_ptr<RSSurfaceRenderNode> node) const;
+    void CheckBufferAvailableIfNeed();
+    void CheckUpdateSurfaceNodeIfNeed();
+
+    bool HasWindowAnimation() const;
+
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     RSTaskMessage::RSTask mainLoop_;
@@ -165,6 +169,7 @@ private:
     std::unordered_map<NodeId, std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>>> cachedCommands_;
     std::vector<std::unique_ptr<RSCommand>> effectiveCommands_;
     std::vector<std::unique_ptr<RSCommand>> pendingEffectiveCommands_;
+    std::vector<std::unique_ptr<RSCommand>> followVisitorCommands_;
 
     TransactionDataMap cachedTransactionDataMap_;
     TransactionDataIndexMap effectiveTransactionDataIndexMap_;
@@ -177,7 +182,8 @@ private:
     std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
     std::vector<sptr<RSIOcclusionChangeCallback>> occlusionListeners_;
 
-    bool waitBufferAvailable_ = false; // only used in main thread
+    bool waitingBufferAvailable_ = false; // uni->non-uni mode, wait for RT buffer, only used in main thread
+    bool waitingUpdateSurfaceNode_ = false; // non-uni->uni mode, wait for update surfaceView, only used in main thread
     bool isUniRender_ = RSUniRenderJudgement::IsUniRender();
     sptr<RSIRenderModeChangeCallback> renderModeChangeCallback_;
     std::atomic_bool useUniVisitor_ = isUniRender_;
@@ -189,8 +195,10 @@ private:
     mutable std::mutex uniRenderMutex_;
     bool uniRenderFinished_ = false;
     std::condition_variable uniRenderCond_;
+    std::map<uint32_t, bool> lastPidVisMap_;
     VisibleData lastVisVec_;
-    bool doAnimate_ = false;
+    bool qosPidCal_ = false;
+    bool doWindowAnimate_ = false;
     uint32_t lastSurfaceCnt_ = 0;
 
     std::shared_ptr<RSRenderEngine> renderEngine_;

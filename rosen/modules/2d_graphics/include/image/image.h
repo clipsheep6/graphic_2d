@@ -16,7 +16,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-#include "engine_adapter/impl_interface/image_impl.h"
+#include "drawing/engine_adapter/impl_interface/image_impl.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -29,6 +29,8 @@ enum class BitDepth {
 class Image {
 public:
     Image() noexcept;
+    // constructor adopt a raw image ptr, using for ArkUI, should remove after enable multi-media image decode.
+    explicit Image(void* rawImg) noexcept;
     virtual ~Image() {};
     Image* BuildFromBitmap(const Bitmap& bitmap);
     Image* BuildFromPicture(const Picture& picture, const SizeI& dimensions, const Matrix& matrix, const Brush& brush,

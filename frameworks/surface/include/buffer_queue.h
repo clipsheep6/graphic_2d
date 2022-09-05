@@ -102,6 +102,7 @@ public:
 
     GSError CleanCache();
     GSError GoBackground();
+    GSError OnConsumerDied();
 
     uint64_t GetUniqueId() const;
 
@@ -130,6 +131,8 @@ public:
     bool GetStatus() const;
     void SetStatus(bool status);
 
+    GSError SetProducerCacheCleanFlag(bool flag);
+
 private:
     GSError AllocBuffer(sptr<SurfaceBuffer>& buffer, const BufferRequestConfig &config);
     void DeleteBufferInCache(uint32_t sequence);
@@ -145,6 +148,7 @@ private:
     GSError CheckFlushConfig(const BufferFlushConfig &config);
     void DumpCache(std::string &result);
     void ClearLocked();
+    bool CheckProducerCacheList();
 
     int32_t defaultWidth = 0;
     int32_t defaultHeight = 0;
@@ -152,13 +156,15 @@ private:
     uint32_t queueSize_ = SURFACE_DEFAULT_QUEUE_SIZE;
     TransformType transform_ = TransformType::ROTATE_NONE;
     std::string name_;
-    std::list<int32_t> freeList_;
-    std::list<int32_t> dirtyList_;
-    std::list<int32_t> deletingList_;
+    std::list<uint32_t> freeList_;
+    std::list<uint32_t> dirtyList_;
+    std::list<uint32_t> deletingList_;
+    std::list<uint32_t> producerCacheList_;
     std::map<uint32_t, BufferElement> bufferQueueCache_;
     sptr<IBufferConsumerListener> listener_ = nullptr;
     IBufferConsumerListenerClazz *listenerClazz_ = nullptr;
     std::mutex mutex_;
+    std::mutex listenerMutex_;
     const uint64_t uniqueId_;
     sptr<BufferManager> bufferManager_ = nullptr;
     OnReleaseFunc onBufferRelease = nullptr;
@@ -167,6 +173,7 @@ private:
     std::condition_variable waitReqCon_;
     sptr<SurfaceTunnelHandle> tunnelHandle_ = nullptr;
     std::atomic_bool isValidStatus_ = true;
+    std::atomic_bool producerCacheClean_ = false;
 };
 }; // namespace OHOS
 

@@ -19,13 +19,13 @@
 #include <memory>
 #include <surface.h>
 
-#include "common/rs_occlusion_region.h"
 #include "sync_fence.h"
 
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
 #include "platform/drawing/rs_surface.h"
 #include "render_context/render_context.h"
+
 namespace OHOS {
 namespace Rosen {
 enum class ScreenRotation : uint32_t;
@@ -93,7 +93,6 @@ public:
     void SetSecurityDisplay(bool isSecurityDisplay);
     bool GetSecurityDisplay() const;
     bool SkipFrame(uint32_t skipFrameInterval);
-    void ResetDirtyRegion();
 
     WeakPtr GetMirrorSource() const
     {
@@ -132,26 +131,6 @@ public:
         snapshot_ = surface->makeImageSnapshot();
     }
 
-    void MergeDamageRegion(Occlusion::Region region)
-    {
-        damageRegion_.Or(region);
-    }
-
-    Occlusion::Region& GetDamageRegion()
-    {
-        return damageRegion_;
-    }
-
-    Occlusion::Region& GetDisplayOpaqueRegion()
-    {
-        return displayOpaqueRegion_;
-    }
-
-    Occlusion::Region& GetDisplayTransparentDirtyRegion()
-    {
-        return displayTransparentDirtyRegion_;
-    }
-
     ScreenRotation GetRotation() const;
 
     std::shared_ptr<RSDirtyRegionManager> GetDirtyManager()
@@ -163,9 +142,36 @@ public:
     {
         currentFrameSurfacePos_[id] = rect;
     }
+
     RectI GetLastFrameSurfacePos(NodeId id)
     {
         return lastFrameSurfacePos_[id];
+    }
+
+    RectI GetCurrentFrameSurfacePos(NodeId id)
+    {
+        return currentFrameSurfacePos_[id];
+    }
+
+    const std::vector<RectI> GetSurfaceChangedRects() const
+    {
+        std::vector<RectI> rects;
+        for (auto iter = lastFrameSurfacePos_.begin(); iter != lastFrameSurfacePos_.end(); iter++) {
+            if (currentFrameSurfacePos_.find(iter->first) == currentFrameSurfacePos_.end()) {
+                rects.emplace_back(iter->second);
+            }
+        }
+        for (auto iter = currentFrameSurfacePos_.begin(); iter != currentFrameSurfacePos_.end(); iter++) {
+            if (lastFrameSurfacePos_.find(iter->first) == lastFrameSurfacePos_.end()) {
+                rects.emplace_back(iter->second);
+            }
+        }
+        return rects;
+    }
+
+    std::vector<RSBaseRenderNode::SharedPtr>& GetCurAllSurfaces()
+    {
+        return curAllSurfaces_;
     }
 
 private:
@@ -188,9 +194,8 @@ private:
     std::map<NodeId, RectI> lastFrameSurfacePos_;
     std::map<NodeId, RectI> currentFrameSurfacePos_;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
-    Occlusion::Region damageRegion_;
-    Occlusion::Region displayOpaqueRegion_;
-    Occlusion::Region displayTransparentDirtyRegion_;
+
+    std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces_;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -16,7 +16,10 @@
 #include "rs_window_animation_utils.h"
 
 #include <js_runtime_utils.h>
-#include <rs_window_animation_log.h>
+
+#include "rs_window_animation_log.h"
+
+#include "ui/rs_proxy_node.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -48,8 +51,9 @@ NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationTarget(NativeEngine&
     };
     target.GetRefPtr()->IncStrongRef(target.GetRefPtr());
     object->SetNativePointer(&(target->surfaceNode_), finalizeCallback, target.GetRefPtr());
-    if (target->surfaceNode_) {
-        target->surfaceNode_->CreateNodeInRenderThread(true);
+    if (auto proxyNode = RSBaseNode::ReinterpretCast<RSProxyNode>(target->surfaceNode_)) {
+        // force proxy node to flush correct context alpha on next visit
+        proxyNode->ResetContextAlpha();
     }
 
     object->SetProperty("bundleName", CreateJsValue(engine, target->bundleName_));

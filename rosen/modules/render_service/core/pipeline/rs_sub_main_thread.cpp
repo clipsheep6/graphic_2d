@@ -29,6 +29,7 @@
 
 namespace OHOS {
 namespace Rosen {
+#ifdef RS_ENABLE_GL
 constexpr int32_t EGL_CONTEXT_CLIENT_VERSION_NUM = 2;
 const int STENCIL_BUFFER_SIZE = 8;
 
@@ -391,5 +392,6 @@ SkSurface* RSSubMainThread::AcquireShareRsSurface(uint32_t index, int32_t width,
     RS_LOGI("AcquireShareRsSurface successfully!!! (%{public}p)", skSurface->getCanvas());
     return skSurface.release();
 }
+#endif
 } // namespace Rosen
 } // namespace OHOS

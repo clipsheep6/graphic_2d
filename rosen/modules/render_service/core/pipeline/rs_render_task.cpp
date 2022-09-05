@@ -17,6 +17,7 @@
 
 namespace OHOS {
 namespace Rosen {
+#ifdef RS_ENABLE_GL
 RSRenderTask::RSRenderTask(int idx, RSSurfaceRenderNode &node)
 {
     idx_ = idx;
@@ -71,5 +72,6 @@ void RSRenderSuperTask::Playback(RSPaintFilterCanvas& canvas)
         tasks_.pop();
     }
 }
+#endif
 } // namespace Rosen
 } // namespace OHOS

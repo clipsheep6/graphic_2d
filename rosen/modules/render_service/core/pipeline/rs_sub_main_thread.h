@@ -16,7 +16,8 @@
 #ifndef RS_SUB_MAIN_THREAD_H
 #define RS_SUB_MAIN_THREAD_H
 
-#include <EGL/egl.h>
+
+
 #include <atomic>
 #include <condition_variable>
 #include <functional>
@@ -26,11 +27,15 @@
 #include <unordered_map>
 #include <vector>
 
+#ifdef RS_ENABLE_GL
+#include <EGL/egl.h>
 #include "render_context/render_context.h"
 #include "rs_render_task_manager.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
+#ifdef RS_ENABLE_GL
 class RSSubMainThread {
 public:
     RSSubMainThread();
@@ -122,6 +127,7 @@ private:
     int32_t surfaceHeight_ = 0;
     using CreateEglShareContextFunc = EGLContext(*)(EGLDisplay, EGLConfig, EGLContext, const EGLint *);
 };
+#endif
 }
 }
 #endif

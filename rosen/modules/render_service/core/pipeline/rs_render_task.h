@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+#ifdef RS_ENABLE_GL
 class  RSRenderTaskBase {
 public:
     virtual void SetIdx(int idx);
@@ -104,6 +105,7 @@ private:
     std::queue<std::unique_ptr<RSRenderTask>> tasks_;
     int taskLoad_;
 };
+#endif
 } // namespace Rosen
 } // namespace OHOS
 #endif // RS_RENDER_TASK_H

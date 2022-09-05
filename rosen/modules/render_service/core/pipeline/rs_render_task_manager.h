@@ -26,11 +26,14 @@
 #include <queue>
 #include <thread>
 #include <condition_variable>
+
+#ifdef RS_ENABLE_GL
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 #include <GLES3/gl32.h>
+#endif
 
 #include "platform/drawing/rs_surface.h"
 #include "include/core/SkSurface.h"
@@ -41,6 +44,7 @@
 
 namespace OHOS {
 namespace Rosen {
+#ifdef RS_ENABLE_GL
 class RSSurface;
 class RSRenderSuperTask;
 class RSRenderTask;
@@ -230,7 +234,7 @@ private:
     std::unordered_map<uint64_t, std::unique_ptr<RSRenderTask>> taskLoad_;
     RenderLoad renderLoad_;
 };
+#endif
 }
 }
-
 #endif // RS_RENDER_TASK_MANAGER_H

@@ -43,8 +43,8 @@ namespace Rosen {
 namespace {
 #ifdef RS_ENABLE_GL
 constexpr uint32_t SUB_THREAD_NUMBER = 3;
-#endif
 constexpr int RENDER_CORE_LEVEL = 500;
+#endif
 bool Compare(const std::unique_ptr<RSTransactionData>& data1, const std::unique_ptr<RSTransactionData>& data2)
 {
     if (!data1 || !data2) {
@@ -214,7 +214,9 @@ void RSMainThread::SetRSEventDetectorLoopFinishTag()
 
 void RSMainThread::Start()
 {
+#ifdef RS_ENABLE_GL
     RSSubMainThread::Instance().StartSubThread();
+#endif
     if (runner_) {
         runner_->Run();
     }
@@ -506,7 +508,9 @@ void RSMainThread::CheckUpdateSurfaceNodeIfNeed()
 
 void RSMainThread::Render()
 {
+#ifdef RS_ENABLE_GL
     RSChangeCoreUtil::Instance().set_core_level(RENDER_CORE_LEVEL);
+#endif
     const std::shared_ptr<RSBaseRenderNode> rootNode = context_.GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
         RS_LOGE("RSMainThread::Render GetGlobalRootRenderNode fail");

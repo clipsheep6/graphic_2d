@@ -24,11 +24,11 @@
 #include "rs_trace.h"
 #include "rs_render_task_manager.h"
 
-#define SUPER_TASK_LOAD_LIMIT 180
-#define BACKGROUND_TASK_LOAD 10
-
 namespace OHOS {
 namespace Rosen {
+#ifdef RS_ENABLE_GL
+#define SUPER_TASK_LOAD_LIMIT 180
+#define BACKGROUND_TASK_LOAD 10
 RSRenderTaskTexture::RSRenderTaskTexture(int idx, int offsetX, int offsetY)
     : taskIdx_(idx), isFinished_(false), offsetX_(offsetX), offsetY_(offsetY)
 {
@@ -295,5 +295,6 @@ void RSRenderTaskManager::ResetMainThreadRenderingParam()
         surfaceNodesQueue_.pop();
     }
 }
+#endif
 } // namespace Rosen
 } // namespace OHOS

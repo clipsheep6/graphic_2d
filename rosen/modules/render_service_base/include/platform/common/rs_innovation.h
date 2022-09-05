@@ -236,7 +236,34 @@ private:
         _s_getSubContext = dlsym(innovationHandle, "GetSubContext");
         _s_canvasPrepare = dlsym(innovationHandle, "CanvasPrepare");
         _s_subDraw = dlsym(innovationHandle, "SubDraw");
-        _s_subMainThread  = dlsym(innovationHandle, "SubMainThread");
+        _s_subMainThread = dlsym(innovationHandle, "SubMainThread");
+
+        _s_parallelRenderingLoaded = (_s_regionOpFromSo != nullptr) &&
+            (_s_loadReassignment != nullptr) &&
+            (_s_bfsLoadAssignment != nullptr)&&
+            (_s_createEglShareContext != nullptr)&&
+            (_s_createSharedContext != nullptr)&&
+            (_s_intersects != nullptr)&&
+            (_s_createShareContextPSurface != nullptr)&&
+            (_s_pushTask != nullptr)&&
+            (_s_loadBalanceBasedOnLoadCostingCall != nullptr)&&
+            (_s_loadBalanceBasedOnLoadNumCall != nullptr)&&
+            (_s_getSubContextRegister!= nullptr)&&
+            (_s_getSubContext!= nullptr)&&
+            (_s_createFence != nullptr)&&
+            (_s_wrapAndPushSuperTask != nullptr)&&
+            (_s_wrapAndPushSuperTaskRegister != nullptr)&&
+            (_s_canvasPrepareRegister != nullptr)&&
+            (_s_canvasPrepare != nullptr)&&
+            (_s_subDrawRegister != nullptr)&&
+            (_s_subDraw != nullptr)&&
+            (_s_subMainThread != nullptr)&&
+            (_s_clearLoad != nullptr)&&
+            (_s_flushAndSubmitFuncRegister != nullptr)&&
+            (_s_loadBalancePushTask != nullptr)&&
+            (_s_setSubThreadRenderLoad != nullptr)&&
+            (_s_loadBalanceCall != nullptr)&&
+            (_s_updateLoadCall != nullptr);
     }
 
     static void ResetParallelRenderingFunc()
@@ -244,6 +271,31 @@ private:
         if (!innovationHandle) {
             return;
         }
+        _s_loadReassignment = nullptr;
+        _s_bfsLoadAssignment = nullptr;
+        _s_createEglShareContext = nullptr;
+        _s_createShareContextPSurface = nullptr;
+        _s_intersects = nullptr;
+        _s_createSharedContext = nullptr;
+        _s_loadBalancePushTask = nullptr;
+        _s_updateLoadCall = nullptr;
+        _s_loadBalanceBasedOnLoadNumCall = nullptr;
+        _s_loadBalanceCall = nullptr;
+        _s_wrapAndPushSuperTask = nullptr;
+        _s_pushTask = nullptr;
+        _s_loadBalanceBasedOnLoadCostingCall = nullptr;
+        _s_createFence = nullptr;
+        _s_wrapAndPushSuperTaskRegister = nullptr;
+        _s_getSubContextRegister = nullptr;
+        _s_getSubContext = nullptr;
+        _s_canvasPrepareRegister = nullptr;
+        _s_canvasPrepare = nullptr;
+        _s_subDrawRegister = nullptr;
+        _s_subDraw = nullptr;
+        _s_subMainThread = nullptr;
+        _s_flushAndSubmitFuncRegister = nullptr;
+        _s_setSubThreadRenderLoad = nullptr;
+        _s_clearLoad = nullptr;
     }
 };
 }

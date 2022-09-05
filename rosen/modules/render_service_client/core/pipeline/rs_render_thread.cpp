@@ -15,11 +15,11 @@
 
 #include "pipeline/rs_render_thread.h"
 
-#ifdef OHOS_RSS_CLIENT
-#include <unordered_map>
-#endif
-
 #include <frame_collector.h>
+
+#include "accessibility_config.h"
+#include "rs_trace.h"
+#include "sandbox_utils.h"
 
 #include "animation/rs_animation_fraction.h"
 #include "command/rs_surface_node_command.h"
@@ -27,24 +27,22 @@
 #include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_root_render_node.h"
+#include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
-#ifdef OHOS_RSS_CLIENT
-#include "res_sched_client.h"
-#include "res_type.h"
-#endif
-#include "rs_trace.h"
-
 #include "transaction/rs_render_service_client.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
 #include "ui/rs_ui_director.h"
+
 #ifdef ROSEN_OHOS
 #include <sys/prctl.h>
 #include <unistd.h>
 #endif
-#include "accessibility_config.h"
-#include "sandbox_utils.h"
+#ifdef OHOS_RSS_CLIENT
+#include "res_sched_client.h"
+#include "res_type.h"
+#endif
 
 static void SystemCallSetThreadName(const std::string& name)
 {
@@ -301,8 +299,8 @@ void RSRenderThread::UpdateSurfaceNodeParentInRS()
 {
     auto& nodeMap = context_.GetMutableNodeMap();
     std::unordered_map<NodeId, NodeId> surfaceNodeMap; // [surfaceNodeId, parentId]
-    nodeMap.TraversalNodes([&surfaceNodeMap](const std::shared_ptr<RSBaseRenderNode>& node) mutable {
-        if (!node || !node->IsInstanceOf<RSSurfaceRenderNode>()) {
+    nodeMap.TraverseSurfaceNodes([&surfaceNodeMap](const std::shared_ptr<RSSurfaceRenderNode>& node) mutable {
+        if (!node) {
             return;
         }
         auto parent = node->GetParent().lock();

@@ -48,13 +48,13 @@ bool IsPathAnimatableModifier(const RSModifierType& type)
 }
 
 RSNode::RSNode(bool isRenderServiceNode)
-    : RSBaseNode(isRenderServiceNode), stagingPropertiesExtrator_(GetId())
+    : RSBaseNode(isRenderServiceNode), stagingPropertiesExtractor_(GetId())
 {
     UpdateImplicitAnimator();
 }
 
 RSNode::RSNode(bool isRenderServiceNode, NodeId id)
-    : RSBaseNode(isRenderServiceNode, id), stagingPropertiesExtrator_(id)
+    : RSBaseNode(isRenderServiceNode, id), stagingPropertiesExtractor_(id)
 {
     UpdateImplicitAnimator();
 }
@@ -173,7 +173,7 @@ void RSNode::FinishAnimationByProperty(const PropertyId& id)
 
 const RSModifierExtractor& RSNode::GetStagingProperties() const
 {
-    return stagingPropertiesExtrator_;
+    return stagingPropertiesExtractor_;
 }
 
 void RSNode::AddAnimation(const std::shared_ptr<RSAnimation>& animation)
@@ -965,6 +965,16 @@ const std::shared_ptr<RSModifierBase> RSNode::GetModifier(const PropertyId& prop
     return {};
 }
 
+void RSNode::SetChildIds(const std::vector<NodeId>& childIds)
+{
+    childNodeIds_ = childIds;
+}
+
+const std::vector<NodeId>& RSNode::GetChildIds() const
+{
+    return childNodeIds_;
+}
+
 void RSNode::UpdateModifierMotionPathOption()
 {
     for (auto& [type, modifier] : propertyModifiers_) {
@@ -976,6 +986,14 @@ void RSNode::UpdateModifierMotionPathOption()
         if (IsPathAnimatableModifier(modifier->GetModifierType())) {
             modifier->SetMotionPathOption(motionPathOption_);
         }
+    }
+}
+
+void RSNode::UpdateExtendedModifier(const PropertyId& id)
+{
+    auto modifier = GetModifier(id);
+    if (modifier != nullptr) {
+        modifier->UpdateToRender();
     }
 }
 

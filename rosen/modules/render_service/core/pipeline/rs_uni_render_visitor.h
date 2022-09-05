@@ -34,18 +34,21 @@ public:
     ~RSUniRenderVisitor() override;
 
     void PrepareBaseRenderNode(RSBaseRenderNode& node) override;
-    void PrepareDisplayRenderNode(RSDisplayRenderNode& node) override;
-    void PrepareSurfaceRenderNode(RSSurfaceRenderNode& node) override;
-    void PrepareRootRenderNode(RSRootRenderNode& node) override;
     void PrepareCanvasRenderNode(RSCanvasRenderNode& node) override;
+    void PrepareDisplayRenderNode(RSDisplayRenderNode& node) override;
+    void PrepareProxyRenderNode(RSProxyRenderNode& node) override;
+    void PrepareRootRenderNode(RSRootRenderNode& node) override;
+    void PrepareSurfaceRenderNode(RSSurfaceRenderNode& node) override;
 
     void ProcessBaseRenderNode(RSBaseRenderNode& node) override;
+    void ProcessCanvasRenderNode(RSCanvasRenderNode& node) override;
     void ProcessDisplayRenderNode(RSDisplayRenderNode& node) override;
-    void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
+    void ProcessProxyRenderNode(RSProxyRenderNode& node) override;
     void ProcessRootRenderNode(RSRootRenderNode& node) override;
     void ProcessCanvasRenderNode(RSCanvasRenderNode& node) override;
     void LBCalculate();
     void LBTimerCalculate();
+    void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
 
     void SetAnimateState(bool doAnimate)
     {
@@ -81,6 +84,7 @@ private:
     int32_t offsetX_ { 0 };
     int32_t offsetY_ { 0 };
     std::shared_ptr<RSProcessor> processor_;
+    SkMatrix parentSurfaceNodeMatrix_;
 
     ScreenId currentVisitDisplay_;
     std::map<ScreenId, bool> displayHasSecSurface_;

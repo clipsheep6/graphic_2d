@@ -18,17 +18,21 @@
 #include <ctime>
 
 #include "include/core/SkRegion.h"
+#include "rs_trace.h"
+
+#include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_processor_factory.h"
+#include "pipeline/rs_proxy_render_node.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_uni_render_listener.h"
-#include "pipeline/rs_uni_render_util.h"
 #include "pipeline/rs_uni_render_mirror_processor.h"
+#include "pipeline/rs_uni_render_util.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
 #include "property/rs_transition_properties.h"
@@ -45,7 +49,7 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     auto mainThread = RSMainThread::Instance();
     renderEngine_ = mainThread->GetRenderEngine();
     isPartialRenderEnabled_ = (RSSystemProperties::GetUniPartialRenderEnabled() != PartialRenderType::DISABLED);
-    isOpDroped_ = (RSSystemProperties::GetUniPartialRenderEnabled() == PartialRenderType::SET_DAMAGE_AND_DROP_OP);
+    isOpDropped_ = (RSSystemProperties::GetUniPartialRenderEnabled() == PartialRenderType::SET_DAMAGE_AND_DROP_OP);
 }
 
 RSUniRenderVisitor::RSUniRenderVisitor(RSPaintFilterCanvas* canvas)
@@ -78,6 +82,8 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
 
     dirtyFlag_ = false;
     node.ApplyModifiers();
+
+    parentSurfaceNodeMatrix_ = SkMatrix::I();
     PrepareBaseRenderNode(node);
     auto mirrorNode = node.GetMirrorSource().lock();
     if (mirrorNode) {
@@ -96,8 +102,16 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     node.CleanDstRectChanged();
     node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
+
+    // update geoptr with ContextMatrix
+    auto parentSurfaceNodeMatrix = parentSurfaceNodeMatrix_;
+    auto& property = node.GetMutableRenderProperties();
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    geoPtr->ConcatMatrix(node.GetContextMatrix());
+    parentSurfaceNodeMatrix_ = geoPtr->GetAbsMatrix();
+
     // prepare the surfaceRenderNode whose child is rootRenderNode 
-    if (node.IsAppWindow()) {
+    if (node.IsAppWindow() || node.GetSurfaceNodeType() == RSSurfaceNodeType::STARTING_WINDOW_NODE) {
         curSurfaceDirtyManager_ = node.GetDirtyManager();
         curSurfaceDirtyManager_->Clear();
         auto transitionProperties = node.GetAnimationManager().GetTransitionProperties();
@@ -108,8 +122,6 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         } else {
             dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, nullptr, dirtyFlag_, transitionProperties);
         }
-        auto& property = node.GetMutableRenderProperties();
-        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
         node.SetDstRect(geoPtr->GetAbsRect());
         curDisplayNode_->UpdateSurfaceNodePos(node.GetId(), node.GetDstRect());
     } else {
@@ -126,12 +138,32 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         dirtyFlag_ = true;
     }
     PrepareBaseRenderNode(node);
+    // restore flags
+    parentSurfaceNodeMatrix_ = parentSurfaceNodeMatrix;
     dirtyFlag_ = dirtyFlag;
     if (node.GetDirtyManager() && node.GetDirtyManager()->IsDirty()) {
-        std::shared_ptr<RSBaseRenderNode> nodePtr = node.shared_from_this();
-        auto surfaceNodePtr = nodePtr->ReinterpretCastTo<RSSurfaceRenderNode>();
-        dirtySurfaceNodeMap_.insert(std::make_pair(surfaceNodePtr->GetId(), surfaceNodePtr));
+        auto surfaceNodePtr = std::static_pointer_cast<RSSurfaceRenderNode>(node.shared_from_this());
+        dirtySurfaceNodeMap_.emplace(surfaceNodePtr->GetId(), surfaceNodePtr);
     }
+}
+
+void RSUniRenderVisitor::PrepareProxyRenderNode(RSProxyRenderNode& node)
+{
+    node.ApplyModifiers();
+
+    auto& property = node.GetMutableRenderProperties();
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    SkMatrix invertMatrix;
+    SkMatrix contextMatrix = geoPtr->GetAbsMatrix();
+
+    if (parentSurfaceNodeMatrix_.invert(&invertMatrix)) {
+        contextMatrix.preConcat(invertMatrix);
+    } else {
+        ROSEN_LOGE("RSUniRenderVisitor::ProcessSurfaceRenderNode, invertMatrix failed");
+    }
+    node.SetContextMatrix(contextMatrix);
+
+    PrepareBaseRenderNode(node);
 }
 
 void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
@@ -347,7 +379,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             return;
         }
 #ifdef RS_ENABLE_EGLQUERYSURFACE
-        if (isOpDroped_ && !region.isEmpty()) {
+        if (isOpDropped_ && !region.isEmpty()) {
             canvas_->clipRegion(region);
         }
 #endif
@@ -443,24 +475,21 @@ void RSUniRenderVisitor::CalcDirtyDisplayRegion(std::shared_ptr<RSDisplayRenderN
     auto displayDirtyManager = node->GetDirtyManager();
     for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
         auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
-        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
+        if (surfaceNode == nullptr) {
             continue;
         }
         auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
         RectI surfaceDirtyRect = surfaceDirtyManager->GetDirtyRegion();
-        auto visibleRegion = surfaceNode->GetVisibleRegion();
-        surfaceDirtyRect = surfaceDirtyRect.IntersectRect(RectI {visibleRegion.GetBound().top_,
-            visibleRegion.GetBound().left_,
-            visibleRegion.GetBound().right_ - visibleRegion.GetBound().left_,
-            visibleRegion.GetBound().bottom_ - visibleRegion.GetBound().top_});
         const uint8_t opacity = 255;
         if (surfaceNode->GetAbilityBgAlpha() != opacity ||
             !ROSEN_EQ(surfaceNode->GetRenderProperties().GetAlpha(), 1.0f)) {
             // Handles the case of transparent surface, merge transparent dirty rect
             RectI transparentDirtyRect = surfaceNode->GetDstRect().IntersectRect(surfaceDirtyRect);
-            RS_LOGD("CalcDirtyDisplayRegion merge transparent dirty rect %s rect %s", surfaceNode->GetName().c_str(),
-                transparentDirtyRect.ToString().c_str());
-            displayDirtyManager->MergeDirtyRect(transparentDirtyRect);
+            if (!transparentDirtyRect.IsEmpty()) {
+                RS_LOGD("CalcDirtyDisplayRegion merge transparent dirty rect %s rect %s",
+                    surfaceNode->GetName().c_str(), transparentDirtyRect.ToString().c_str());
+                displayDirtyManager->MergeDirtyRect(transparentDirtyRect);
+            }
         }
 
         if (surfaceNode->GetRenderProperties().IsZOrderPromoted()) {
@@ -504,6 +533,17 @@ void RSUniRenderVisitor::SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRe
         }
         // set display dirty region to surfaceNode
         surfaceNode->SetGloblDirtyRegion(node->GetDirtyManager()->GetDirtyRegion());
+    }
+    Occlusion::Region curVisibleDirtyRegion;
+    for (auto it = node->GetCurAllSurfaces().begin(); it != node->GetCurAllSurfaces().end(); ++it) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
+            continue;
+        }
+        // set display dirty region to surfaceNode
+        surfaceNode->SetDirtyRegionBelowCurrentLayer(curVisibleDirtyRegion);
+        auto visibleDirtyRegion = surfaceNode->GetVisibleDirtyRegion();
+        curVisibleDirtyRegion = curVisibleDirtyRegion.Or(visibleDirtyRegion);
     }
 }
 
@@ -560,7 +600,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
 #ifdef RS_ENABLE_EGLQUERYSURFACE
     // skip clean surface node
-    if (isOpDroped_ && node.IsAppWindow()) {
+    if (isOpDropped_ && node.IsAppWindow()) {
         if (!node.IsIntersectWithDirty(node.GetDstRect())) {
             RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode skip: %s", node.GetName().c_str());
             return;
@@ -594,6 +634,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     canvas_->SaveAlpha();
 
     canvas_->MultiplyAlpha(property.GetAlpha());
+    canvas_->MultiplyAlpha(node.GetContextAlpha());
 
     bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
     if (isSelfDrawingSurface) {
@@ -692,6 +733,24 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     canvas_->restore();
 }
 
+void RSUniRenderVisitor::ProcessProxyRenderNode(RSProxyRenderNode& node)
+{
+    if (!canvas_) {
+        ROSEN_LOGE("RSRenderThreadVisitor::ProcessProxyRenderNode, canvas is nullptr");
+        return;
+    }
+    if (!node.GetRenderProperties().GetVisible()) {
+        ROSEN_LOGI("RSRenderThreadVisitor::ProcessProxyRenderNode node : %" PRIu64 " is invisible", node.GetId());
+        node.SetContextAlpha(0.0f);
+        return;
+    }
+#ifdef ROSEN_OHOS
+    node.SetContextAlpha(canvas_->GetAlpha());
+
+    node.ResetSortedChildren();
+#endif
+}
+
 void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 {
     RS_LOGD("RSUniRenderVisitor::ProcessRootRenderNode node: %" PRIu64 ", child size:%u", node.GetId(),
@@ -733,7 +792,7 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         return;
     }
 #ifdef RS_ENABLE_EGLQUERYSURFACE
-    if (isOpDroped_ && !curSurfaceNode_->IsIntersectWithDirty(node.GetOldDirty())) {
+    if (isOpDropped_ && !curSurfaceNode_->IsIntersectWithDirty(node.GetOldDirty())) {
         return;
     }
 #endif

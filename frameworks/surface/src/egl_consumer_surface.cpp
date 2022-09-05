@@ -18,8 +18,6 @@
 #include "buffer_log.h"
 
 #include "buffer_queue_producer.h"
-#include "egl_data_impl.h"
-#include "egl_manager.h"
 namespace OHOS {
 EglConsumerSurface::EglConsumerSurface(const std::string &name, bool isShared)
     : ConsumerSurface(name, isShared)
@@ -57,7 +55,7 @@ GSError EglConsumerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &
         auto ret = eglDataImpl->CreateEglData(buffer);
         if (ret) {
             BLOGE("EglDataImpl::CreateEglData failed with %{public}d", ret);
-            return GSERROR_INTERNEL;
+            return GSERROR_INTERNAL;
         } else {
             eglData = eglDataImpl;
             buffer->SetEglData(eglData);

@@ -15,13 +15,77 @@
 
 #include "rs_render_service_connection_stub.h"
 #include "ivsync_connection.h"
+#include "securec.h"
+#include "sys_binder.h"
 
 #include "command/rs_command_factory.h"
+#include "pipeline/rs_base_render_util.h"
+#include "pipeline/rs_main_thread.h"
+#include "pipeline/rs_uni_render_judgement.h"
+#include "pipeline/rs_unmarshal_thread.h"
 #include "platform/common/rs_log.h"
+#include "transaction/rs_ashmem_helper.h"
 #include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+constexpr size_t MAX_DATA_SIZE_FOR_UNMARSHALLING_IN_PLACE = 1024 * 30; // 30kB
+
+void CopyFileDescriptor(MessageParcel& old, MessageParcel& copied)
+{
+    binder_size_t* object = reinterpret_cast<binder_size_t*>(old.GetObjectOffsets());
+    binder_size_t* copiedObject = reinterpret_cast<binder_size_t*>(copied.GetObjectOffsets());
+
+    size_t objectNum = old.GetOffsetsSize();
+
+    uintptr_t data = old.GetData();
+    uintptr_t copiedData = copied.GetData();
+
+    for (size_t i = 0; i < objectNum; i++) {
+        const flat_binder_object* flat = reinterpret_cast<flat_binder_object*>(data + object[i]);
+        flat_binder_object* copiedFlat = reinterpret_cast<flat_binder_object*>(copiedData + copiedObject[i]);
+
+        if (flat->hdr.type == BINDER_TYPE_FD && flat->handle > 0) {
+            copiedFlat->handle = dup(flat->handle);
+        }
+    }
+}
+
+std::shared_ptr<MessageParcel> CopyParcelIfNeed(MessageParcel& old)
+{
+    auto dataSize = old.GetDataSize();
+    if (dataSize <= MAX_DATA_SIZE_FOR_UNMARSHALLING_IN_PLACE) {
+        return nullptr;
+    }
+    RS_TRACE_NAME("CopyParcelForUnmarsh: size:" + std::to_string(dataSize));
+    void* base = malloc(dataSize);
+    if (memcpy_s(base, dataSize, reinterpret_cast<void*>(old.GetData()), dataSize) != 0) {
+        RS_LOGE("RSRenderServiceConnectionStub::CopyParcelIfNeed copy parcel data failed");
+        free(base);
+        return nullptr;
+    }
+
+    auto parcelCopied = std::make_shared<MessageParcel>();
+    if (!parcelCopied->ParseFrom(reinterpret_cast<uintptr_t>(base), dataSize)) {
+        RS_LOGE("RSRenderServiceConnectionStub::CopyParcelIfNeed ParseFrom failed");
+        free(base);
+        return nullptr;
+    }
+
+    auto objectNum = old.GetOffsetsSize();
+    if (objectNum != 0) {
+        parcelCopied->InjectOffsets(old.GetObjectOffsets(), objectNum);
+        CopyFileDescriptor(old, *parcelCopied);
+    }
+    if (parcelCopied->ReadInt32() != 0) {
+        RS_LOGE("RSRenderServiceConnectionStub::CopyParcelIfNeed parcel data not match");
+        return nullptr;
+    }
+    return parcelCopied;
+}
+}
+
 int RSRenderServiceConnectionStub::OnRemoteRequest(
     uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
@@ -29,19 +93,69 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
     switch (code) {
         case COMMIT_TRANSACTION: {
             RS_ASYNC_TRACE_END("RSProxySendRequest", data.GetDataSize());
-            auto token = data.ReadInterfaceToken();
-
-            RS_TRACE_BEGIN("UnMarsh RSTransactionData: data size:" + std::to_string(data.GetDataSize()));
-            auto transactionData = data.ReadParcelable<RSTransactionData>();
-            RS_TRACE_END();
-
-            std::unique_ptr<RSTransactionData> transData(transactionData);
-            CommitTransaction(transData);
+            static bool isUniRender = RSUniRenderJudgement::IsUniRender();
+            std::shared_ptr<MessageParcel> parsedParcel;
+            if (data.ReadInt32() == 0) { // indicate normal parcel
+                if (isUniRender) {
+                    // in uni render mode, if parcel size over threshold,
+                    // Unmarshalling task will be post to RSUnmarshalThread,
+                    // copy the origin parcel to maintain the parcel lifetime
+                    parsedParcel = CopyParcelIfNeed(data);
+                }
+                if (parsedParcel == nullptr) {
+                    // no need to copy or copy failed, use original parcel
+                    // execute Unmarshalling immediately
+                    auto transactionData = RSBaseRenderUtil::ParseTransactionData(data);
+                    CommitTransaction(transactionData);
+                    break;
+                }
+            } else {
+                // indicate ashmem parcel
+                // should be parsed to normal parcel before Unmarshalling
+                parsedParcel = RSAshmemHelper::ParseFromAshmemParcel(&data);
+            }
+            if (parsedParcel == nullptr) {
+                RS_LOGE("RSRenderServiceConnectionStub::COMMIT_TRANSACTION failed");
+                return ERR_INVALID_DATA;
+            }
+            if (RSMainThread::Instance()->QueryIfUseUniVisitor()) {
+                // post Unmarshalling task to RSUnmarshalThread
+                RSUnmarshalThread::Instance().RecvParcel(parsedParcel);
+            } else {
+                // execute Unmarshalling immediately
+                auto transactionData = RSBaseRenderUtil::ParseTransactionData(data);
+                CommitTransaction(transactionData);
+            }
             break;
         }
-        case GET_UNI_RENDER_TYPE: {
-            auto packageName = data.ReadString();
-            reply.WriteBool(InitUniRenderEnabled(packageName));
+        case SET_RENDER_MODE_CHANGE_CALLBACK: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+
+            auto remoteObject = data.ReadRemoteObject();
+            if (remoteObject == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            sptr<RSIRenderModeChangeCallback> cb = iface_cast<RSIRenderModeChangeCallback>(remoteObject);
+            int32_t status = SetRenderModeChangeCallback(cb);
+            reply.WriteInt32(status);
+            break;
+        }
+        case UPDATE_RENDER_MODE: {
+            bool isUniRender = data.ReadBool();
+            UpdateRenderMode(isUniRender);
+            break;
+        }
+        case GET_UNI_RENDER_ENABLED: {
+            reply.WriteBool(GetUniRenderEnabled());
+            break;
+        }
+        case QUERY_RT_NEED_RENDER: {
+            reply.WriteBool(QueryIfRTNeedRender());
             break;
         }
         case CREATE_NODE: {
@@ -54,7 +168,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         case CREATE_NODE_AND_SURFACE: {
             auto nodeId = data.ReadUint64();
             auto surfaceName = data.ReadString();
-            RSSurfaceRenderNodeConfig config = {.id = nodeId, .name = surfaceName};
+            auto type = static_cast<RSSurfaceNodeType>(data.ReadUint8());
+            RSSurfaceRenderNodeConfig config = {.id = nodeId, .name = surfaceName, .nodeType = type };
             sptr<Surface> surface = CreateNodeAndSurface(config);
             auto producer = surface->GetProducer();
             reply.WriteRemoteObject(producer->AsObject());
@@ -372,6 +487,26 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             reply.WriteUInt32Vector(modeSend);
             break;
         }
+        case GET_SCREEN_SUPPORTED_METADATAKEYS: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            std::vector<uint32_t> keySend;
+            std::vector<ScreenHDRMetadataKey> keys;
+            int32_t result = GetScreenSupportedMetaDataKeys(id, keys);
+            reply.WriteInt32(result);
+            if (result != StatusCode::SUCCESS) {
+                break;
+            }
+            for (auto i : keys) {
+                keySend.push_back(i);
+            }
+            reply.WriteUInt32Vector(keySend);
+            break;
+        }
         case GET_SCREEN_GAMUT: {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {
@@ -432,28 +567,6 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             std::string name = data.ReadString();
             sptr<IVSyncConnection> conn = CreateVSyncConnection(name);
             reply.WriteRemoteObject(conn->AsObject());
-        }
-        case REQUEST_ROTATION: {
-            auto token = data.ReadInterfaceToken();
-            if (token != RSIRenderServiceConnection::GetDescriptor()) {
-                ret = ERR_INVALID_STATE;
-                break;
-            }
-            ScreenId id = data.ReadUint64();
-            ScreenRotation rotation = static_cast<ScreenRotation>(data.ReadUint32());
-            bool res = RequestRotation(id, rotation);
-            reply.WriteBool(res);
-            break;
-        }
-        case GET_ROTATION: {
-            auto token = data.ReadInterfaceToken();
-            if (token != RSIRenderServiceConnection::GetDescriptor()) {
-                ret = ERR_INVALID_STATE;
-                break;
-            }
-            ScreenId id = data.ReadUint64();
-            ScreenRotation rotation = GetRotation(id);
-            reply.WriteUint32(static_cast<uint32_t>(rotation));
             break;
         }
         case GET_SCREEN_HDR_CAPABILITY: {

@@ -22,6 +22,7 @@
 #include "ibuffer_producer.h"
 #include "surface_buffer.h"
 #include "surface_type.h"
+#include "surface_tunnel_handle.h"
 
 namespace OHOS {
 class Surface : public RefBase {
@@ -82,23 +83,28 @@ public:
 
     // Call carefully. This interface will empty all caches of the current process
     virtual GSError CleanCache() = 0;
+    virtual GSError GoBackground() = 0;
 
     virtual GSError SetTransform(TransformType transform) = 0;
     virtual TransformType GetTransform() const = 0;
 
     virtual GSError IsSupportedAlloc(const std::vector<VerifyAllocInfo> &infos,
                                      std::vector<bool> &supporteds) = 0;
-
+    virtual GSError Disconnect() = 0;
     virtual GSError SetScalingMode(uint32_t sequence, ScalingMode scalingMode) = 0;
     virtual GSError GetScalingMode(uint32_t sequence, ScalingMode &scalingMode) = 0;
     virtual GSError SetMetaData(uint32_t sequence, const std::vector<HDRMetaData> &metaData) = 0;
     virtual GSError SetMetaDataSet(uint32_t sequence, HDRMetadataKey key,
                                    const std::vector<uint8_t> &metaData) = 0;
+    virtual GSError QueryMetaDataType(uint32_t sequence, HDRMetaDataType &type) const = 0;
     virtual GSError GetMetaData(uint32_t sequence, std::vector<HDRMetaData> &metaData) const = 0;
     virtual GSError GetMetaDataSet(uint32_t sequence, HDRMetadataKey &key,
                                    std::vector<uint8_t> &metaData) const = 0;
     virtual GSError SetTunnelHandle(const ExtDataHandle *handle) = 0;
-    virtual GSError GetTunnelHandle(ExtDataHandle **handle) const = 0;
+    virtual sptr<SurfaceTunnelHandle> GetTunnelHandle() const = 0;
+    virtual GSError SetPresentTimestamp(uint32_t sequence, const PresentTimestamp &timestamp) = 0;
+    virtual GSError GetPresentTimestamp(uint32_t sequence, PresentTimestampType type,
+                                        int64_t &time) const = 0;
 
     virtual void Dump(std::string &result) const = 0;
 protected:

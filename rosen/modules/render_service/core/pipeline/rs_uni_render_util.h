@@ -19,24 +19,26 @@
 #include "display_type.h"
 #include "surface.h"
 #include "sync_fence.h"
-
+#include "pipeline/rs_display_render_node.h"
+#include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_paint_filter_canvas.h"
+#include "common/rs_obj_abs_geometry.h"
 
 namespace OHOS {
 namespace Rosen {
-struct BufferInfo {
-    sptr<SurfaceBuffer> buffer;
-    sptr<SyncFence> acquireFence;
-    sptr<Surface> consumerSurface;
-};
-
 class RSUniRenderUtil {
 public:
-    static void DrawBufferOnCanvas(sptr<SurfaceBuffer> buffer, const ColorGamut& dstGamut, RSPaintFilterCanvas& canvas,
-        SkRect srcRect, SkRect dstRect);
-#ifdef RS_ENABLE_EGLIMAGE
-    static void DrawImageOnCanvas(BufferInfo& bufferInfo, RSPaintFilterCanvas& canvas, SkRect srcRect, SkRect dstRect);
-#endif
+    static bool UpdateRenderNodeDstRect(RSRenderNode& node);
+
+    // merge history dirty region of current display node and its child surfacenode(app windows)
+    // for mirror display, call this function twice will introduce additional dirtyhistory in dirtymanager
+    static void MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge);
+
+    /* we want to set visible dirty region of each surfacenode into DamageRegionKHR interface, hence
+     * occlusion is calculated.
+     * make sure this function is called after merge dirty history
+     */
+    static Occlusion::Region MergeVisibleDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node);
 };
 }
 }

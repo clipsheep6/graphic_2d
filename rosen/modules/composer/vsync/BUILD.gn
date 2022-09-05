@@ -31,6 +31,7 @@ config("vsync_public_config") {
     "//foundation/graphic/graphic_2d/interfaces/inner_api/composer",
     "//foundation/graphic/graphic_2d/rosen/include/common",
     "//foundation/graphic/graphic_2d/rosen/modules/composer/vsync/include",
+    "//foundation/graphic/graphic_2d/utils/sandbox",
   ]
 }
 
@@ -51,7 +52,7 @@ ohos_shared_library("libvsync") {
 
   public_configs = [
     ":vsync_public_config",
-    "//utils/native/base:utils_config",
+    "//commonlibrary/c_utils/base:utils_config",
   ]
 
   deps = [
@@ -61,13 +62,13 @@ ohos_shared_library("libvsync") {
 
   public_deps = [
     "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler",
+    "//commonlibrary/c_utils/base:utils",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//foundation/graphic/graphic_2d/utils:scoped_bytrace",
     "//foundation/graphic/graphic_2d/utils:socketpair",
-    "//utils/native/base:utils",
   ]
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 

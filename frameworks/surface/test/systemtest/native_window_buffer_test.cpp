@@ -17,8 +17,12 @@
 #include <unistd.h>
 #include <gtest/gtest.h>
 #include <iservice_registry.h>
+#include <securec.h>
 #include <display_type.h>
 #include <native_window.h>
+#include "accesstoken_kit.h"
+#include "nativetoken_kit.h"
+#include "token_setproc.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -28,6 +32,8 @@ class NativeWindowBufferTest : public testing::Test,  public IBufferConsumerList
 public:
     static void SetUpTestCase();
     virtual void OnBufferAvailable() override;
+    int32_t SetData(NativeWindowBuffer *nativeWindowBuffer, NativeWindow *nativeWindow);
+    bool GetData(sptr<SurfaceBuffer> &buffer);
     pid_t ChildProcessMain();
 
     static inline sptr<OHOS::Surface> cSurface = nullptr;
@@ -38,6 +44,61 @@ public:
 void NativeWindowBufferTest::SetUpTestCase() {}
 
 void NativeWindowBufferTest::OnBufferAvailable() {}
+
+int32_t NativeWindowBufferTest::SetData(NativeWindowBuffer *nativeWindowBuffer, NativeWindow *nativeWindow)
+{
+    nativeWindowBuffer->sfbuffer->GetExtraData()->ExtraSet("123", 0x123);
+    nativeWindowBuffer->sfbuffer->GetExtraData()->ExtraSet("345", (int64_t)0x345);
+    nativeWindowBuffer->sfbuffer->GetExtraData()->ExtraSet("567", "567");
+
+    // alloc OHExtDataHandle
+    uint32_t reserveInts = 1;
+    size_t handleSize = sizeof(OHExtDataHandle) + (sizeof(int32_t) * reserveInts);
+    OHExtDataHandle *handle = static_cast<OHExtDataHandle *>(malloc(handleSize));
+    if (handle == nullptr) {
+        return -1;
+    }
+    int32_t ret = memset_s(handle, handleSize, 0, handleSize);
+    if (ret != EOK) {
+        return -1;
+    }
+    handle->fd = -1;
+    handle->reserveInts = reserveInts;
+    for (uint32_t i = 0; i < reserveInts; i++) {
+        handle->reserve[i] = 1;
+    }
+
+    ret = NativeWindowSetTunnelHandle(nativeWindow, handle);
+    // free OHExtDataHandle
+    if (handle->fd >= 0) {
+        close(handle->fd);
+        handle->fd = -1;
+    }
+    free(handle);
+    handle = nullptr;
+    return ret;
+}
+
+bool NativeWindowBufferTest::GetData(sptr<SurfaceBuffer> &buffer)
+{
+    int32_t int32;
+    int64_t int64;
+    std::string str;
+    buffer->GetExtraData()->ExtraGet("123", int32);
+    buffer->GetExtraData()->ExtraGet("345", int64);
+    buffer->GetExtraData()->ExtraGet("567", str);
+    if ((int32 != 0x123) || (int64 != 0x345) || (str != "567")) {
+        return false;
+    }
+
+    sptr<SurfaceTunnelHandle> handleGet = nullptr;
+    handleGet = cSurface->GetTunnelHandle();
+    if ((handleGet == nullptr) || (handleGet->GetHandle()->fd != -1) ||
+        (handleGet->GetHandle()->reserveInts != 1) || (handleGet->GetHandle()->reserve[0] != 1)) {
+            return false;
+    }
+    return true;
+}
 
 pid_t NativeWindowBufferTest::ChildProcessMain()
 {
@@ -91,9 +152,13 @@ pid_t NativeWindowBufferTest::ChildProcessMain()
         exit(0);
         return -1;
     }
-    nativeWindowBuffer->sfbuffer->GetExtraData()->ExtraSet("123", 0x123);
-    nativeWindowBuffer->sfbuffer->GetExtraData()->ExtraSet("345", (int64_t)0x345);
-    nativeWindowBuffer->sfbuffer->GetExtraData()->ExtraSet("567", "567");
+    ret = SetData(nativeWindowBuffer, nativeWindow);
+        if (ret != OHOS::GSERROR_OK) {
+        data = ret;
+        write(pipeFd[1], &data, sizeof(data));
+        exit(0);
+        return -1;
+    }
 
     struct Region *region = new Region();
     struct Region::Rect *rect = new Region::Rect();
@@ -109,7 +174,7 @@ pid_t NativeWindowBufferTest::ChildProcessMain()
     }
     data = ret;
     write(pipeFd[1], &data, sizeof(data));
-    sleep(0);
+    usleep(1000); // sleep 1000 microseconds (equals 1 milliseconds)
     read(pipeFd[0], &data, sizeof(data));
     close(pipeFd[0]);
     close(pipeFd[1]);
@@ -124,11 +189,31 @@ pid_t NativeWindowBufferTest::ChildProcessMain()
 * EnvConditions: N/A
 * CaseDescription: 1. produce surface by nativewindow interface, fill buffer
 *                  2. consume surface and check buffer
+* @tc.require: issueI5GMZN issueI5IWHW
  */
 HWTEST_F(NativeWindowBufferTest, Surface001, Function | MediumTest | Level2)
 {
     auto pid = ChildProcessMain();
     ASSERT_GE(pid, 0);
+
+    uint64_t tokenId;
+    const char *perms[2];
+    perms[0] = "ohos.permission.DISTRIBUTED_DATASYNC";
+    perms[1] = "ohos.permission.CAMERA";
+    NativeTokenInfoParams infoInstance = {
+        .dcapsNum = 0,
+        .permsNum = 2,
+        .aclsNum = 0,
+        .dcaps = NULL,
+        .perms = perms,
+        .acls = NULL,
+        .processName = "dcamera_client_demo",
+        .aplStr = "system_basic",
+    };
+    tokenId = GetAccessTokenId(&infoInstance);
+    SetSelfTokenID(tokenId);
+    int32_t rett = Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
+    ASSERT_EQ(rett, Security::AccessToken::RET_SUCCESS);
 
     cSurface = Surface::CreateSurfaceAsConsumer("test");
     cSurface->RegisterConsumerListener(this);
@@ -138,7 +223,7 @@ HWTEST_F(NativeWindowBufferTest, Surface001, Function | MediumTest | Level2)
 
     int64_t data = 0;
     write(pipeFd[1], &data, sizeof(data));
-    sleep(0);
+    usleep(1000); // sleep 1000 microseconds (equals 1 milliseconds)
     read(pipeFd[0], &data, sizeof(data));
     EXPECT_EQ(data, OHOS::GSERROR_OK);
 
@@ -149,18 +234,7 @@ HWTEST_F(NativeWindowBufferTest, Surface001, Function | MediumTest | Level2)
     auto ret = cSurface->AcquireBuffer(buffer, fence, timestamp, damage);
     EXPECT_EQ(ret, OHOS::GSERROR_OK);
     EXPECT_NE(buffer, nullptr);
-    if (buffer != nullptr) {
-        int32_t int32;
-        int64_t int64;
-        std::string str;
-        buffer->GetExtraData()->ExtraGet("123", int32);
-        buffer->GetExtraData()->ExtraGet("345", int64);
-        buffer->GetExtraData()->ExtraGet("567", str);
-
-        EXPECT_EQ(int32, 0x123);
-        EXPECT_EQ(int64, 0x345);
-        EXPECT_EQ(str, "567");
-    }
+    EXPECT_EQ(GetData(buffer), true);
 
     ret = cSurface->ReleaseBuffer(buffer, -1);
     EXPECT_EQ(ret, OHOS::GSERROR_OK);

@@ -21,12 +21,18 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+static constexpr int MAX_FLOATING_WINDOW_NUMBER = 100;
+}
 const std::map<uint32_t, WindowAnimationStubFunc> RSWindowAnimationStub::stubFuncMap_{
     std::make_pair(RSIWindowAnimationController::ON_START_APP, &RSWindowAnimationStub::StartApp),
     std::make_pair(RSIWindowAnimationController::ON_APP_TRANSITION, &RSWindowAnimationStub::AppTransition),
     std::make_pair(RSIWindowAnimationController::ON_MINIMIZE_WINDOW, &RSWindowAnimationStub::MinimizeWindow),
+    std::make_pair(RSIWindowAnimationController::ON_MINIMIZE_ALLWINDOW, &RSWindowAnimationStub::MinimizeAllWindow),
     std::make_pair(RSIWindowAnimationController::ON_CLOSE_WINDOW, &RSWindowAnimationStub::CloseWindow),
     std::make_pair(RSIWindowAnimationController::ON_SCREEN_UNLOCK, &RSWindowAnimationStub::ScreenUnlock),
+    std::make_pair(RSIWindowAnimationController::ON_WINDOW_ANIMATION_TARGETS_UPDATE,
+        &RSWindowAnimationStub::WindowAnimationTargetsUpdate)
 };
 
 int RSWindowAnimationStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
@@ -117,6 +123,32 @@ int RSWindowAnimationStub::MinimizeWindow(MessageParcel& data, MessageParcel& re
     return ERR_NONE;
 }
 
+int RSWindowAnimationStub::MinimizeAllWindow(MessageParcel& data, MessageParcel& reply)
+{
+    WALOGD("Window animation minimize all window!");
+    size_t dataCount = data.ReadUint32();
+    std::vector<sptr<RSWindowAnimationTarget>> minimizingWindows;
+    for (size_t i = 0; i < dataCount; i++) {
+        sptr<RSWindowAnimationTarget> minimizingWindow(data.ReadParcelable<RSWindowAnimationTarget>());
+        if (minimizingWindow == nullptr) {
+            WALOGE("Failed to read minimizing window!");
+            return ERR_INVALID_DATA;
+        }
+        minimizingWindows.push_back(minimizingWindow);
+    }
+
+    sptr<IRemoteObject> finishcallbackObject = data.ReadRemoteObject();
+    sptr<RSIWindowAnimationFinishedCallback> finishedCallback =
+        iface_cast<RSIWindowAnimationFinishedCallback>(finishcallbackObject);
+    if (finishedCallback == nullptr) {
+        WALOGE("Failed to read animation finished callback!");
+        return ERR_INVALID_DATA;
+    }
+
+    OnMinimizeAllWindow(minimizingWindows, finishedCallback);
+    return ERR_NONE;
+}
+
 int RSWindowAnimationStub::CloseWindow(MessageParcel& data, MessageParcel& reply)
 {
     WALOGD("Window animation close window!");
@@ -150,6 +182,33 @@ int RSWindowAnimationStub::ScreenUnlock(MessageParcel& data, MessageParcel& repl
     }
 
     OnScreenUnlock(finishedCallback);
+    return ERR_NONE;
+}
+
+int RSWindowAnimationStub::WindowAnimationTargetsUpdate(MessageParcel& data, MessageParcel& reply)
+{
+    WALOGD("Window animation targets update!");
+    sptr<RSWindowAnimationTarget> fullScreenWindowTarget = nullptr;
+    if (data.ReadBool()) {
+        fullScreenWindowTarget = data.ReadParcelable<RSWindowAnimationTarget>();
+    }
+
+    size_t floatWindowSize = data.ReadUint32();
+    if (floatWindowSize > MAX_FLOATING_WINDOW_NUMBER) {
+        WALOGE("Floating windows are too much!");
+        return ERR_INVALID_DATA;
+    }
+    std::vector<sptr<RSWindowAnimationTarget>> floatingWindowTargets;
+    for (size_t i = 0; i < floatWindowSize; i++) {
+        sptr<RSWindowAnimationTarget> floatingWindowTarget(data.ReadParcelable<RSWindowAnimationTarget>());
+        if (floatingWindowTarget == nullptr) {
+            WALOGE("Failed to read floating window animation window!");
+            return ERR_INVALID_DATA;
+        }
+        floatingWindowTargets.push_back(floatingWindowTarget);
+    }
+
+    OnWindowAnimationTargetsUpdate(fullScreenWindowTarget, floatingWindowTargets);
     return ERR_NONE;
 }
 } // namespace Rosen

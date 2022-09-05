@@ -20,13 +20,12 @@
 #include <vector>
 #include <string>
 
-#include "platform/common/rs_innovation.h"
-
 namespace OHOS {
 namespace Rosen {
 namespace Occlusion {
 class Rect {
 public:
+    // assumption: left-top is [0,0]
     int left_ = 0;
     int top_ = 0;
     int right_ = 0;
@@ -40,6 +39,27 @@ public:
     bool IsEmpty() const
     {
         return left_ >= right_ || top_ >= bottom_;
+    }
+    Rect Intersect(const Rect& rect) const
+    {
+        int left = std::max(left_, rect.left_);
+        int top = std::max(top_, rect.top_);
+        int right = std::min(right_, rect.right_);
+        int bottom = std::min(bottom_, rect.bottom_);
+        if ((right - left <= 0) || (bottom - top <= 0)) {
+            return Rect(0, 0, 0, 0);
+        } else {
+            return Rect(left, top, right, bottom);
+        }
+    }
+
+    bool IsIntersect(const Rect& rect) const
+    {
+        int left = std::max(left_, rect.left_);
+        int top = std::max(top_, rect.top_);
+        int right = std::min(right_, rect.right_);
+        int bottom = std::min(bottom_, rect.bottom_);
+        return (right - left > 0) && (bottom - top > 0);
     }
 
     std::string GetRectInfo() const
@@ -160,6 +180,7 @@ public:
     {
         return rects_;
     }
+
     std::vector<Rect>& GetRegionRects()
     {
         return rects_;
@@ -183,7 +204,7 @@ public:
     std::string GetRegionInfo() const
     {
         std::string info = "{ Region Size " + std::to_string(rects_.size()) + ": ";
-        for (auto&r : rects_) {
+        for (auto& r : rects_) {
             info.append(r.GetRectInfo());
         }
         info.append(" }");
@@ -213,6 +234,17 @@ public:
 
     // bound of all region rects
     void MakeBound();
+
+    bool IsIntersectWith(const Rect& r) const
+    {
+        for (const Rect& rect : rects_) {
+            if (rect.IsIntersect(r)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /* core Region logic operation function, the return region's rects is guaranteed no-intersection
         (rect in rects_ do not intersect with each other)
     */

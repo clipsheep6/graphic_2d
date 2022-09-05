@@ -30,7 +30,6 @@ config("composer_public_config") {
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/include/common",
     "//drivers/peripheral/display/interfaces/include",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/vsync_module",
     "//foundation/graphic/graphic_2d/interfaces/inner_api/common",
     "//foundation/graphic/graphic_2d/rosen/modules/composer/hdi_backend/include",
     "//foundation/graphic/graphic_2d/rosen/modules/composer/vsync/include",
@@ -57,29 +56,29 @@ ohos_shared_library("libcomposer") {
 
   public_configs = [
     ":composer_public_config",
-    "//utils/native/base:utils_config",
+    "//commonlibrary/c_utils/base:utils_config",
   ]
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//drivers/peripheral/display/hal:hdi_display_device",
     "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/graphic/graphic_2d/frameworks/vsync:libvsync_module",
     "//foundation/graphic/graphic_2d/utils:libgraphic_utils",
   ]
 
   public_deps = [
     "vsync:libvsync",
     "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler",
+    "//commonlibrary/c_utils/base:utils",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//foundation/graphic/graphic_2d/utils:buffer_handle",
     "//foundation/graphic/graphic_2d/utils:scoped_bytrace",
     "//foundation/graphic/graphic_2d/utils:socketpair",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
-    "//utils/native/base:utils",
   ]
 
-  part_name = "graphic_graphic_2d"
+  external_deps = [ "drivers_interface_display:display_device_client" ]
+
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 

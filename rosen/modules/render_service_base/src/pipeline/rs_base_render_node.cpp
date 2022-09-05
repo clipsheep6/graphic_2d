@@ -18,18 +18,17 @@
 #include <algorithm>
 
 #include "pipeline/rs_context.h"
-#include "pipeline/rs_display_render_node.h"
-#include "pipeline/rs_render_node_map.h"
-#include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
+#include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
 
 namespace OHOS {
 namespace Rosen {
-void RSBaseRenderNode::AddChild(const SharedPtr& child, int index)
+void RSBaseRenderNode::AddChild(SharedPtr child, int index)
 {
-    if (child == nullptr) {
+    // sanity check, avoid loop
+    if (child == nullptr || child->GetId() == GetId()) {
         return;
     }
     // if child already has a parent, remove it from its previous parent
@@ -52,7 +51,28 @@ void RSBaseRenderNode::AddChild(const SharedPtr& child, int index)
     }
 }
 
-void RSBaseRenderNode::RemoveChild(const SharedPtr& child)
+void RSBaseRenderNode::MoveChild(SharedPtr child, int index)
+{
+    if (child == nullptr || child->GetParent().lock().get() != this) {
+        return;
+    }
+    auto it = std::find_if(children_.begin(), children_.end(),
+        [&](WeakPtr& ptr) -> bool { return ROSEN_EQ<RSBaseRenderNode>(ptr, child); });
+    if (it == children_.end()) {
+        return;
+    }
+
+    // Reset parent-child relationship
+    if (index < 0 || index >= static_cast<int>(children_.size())) {
+        children_.emplace_back(child);
+    } else {
+        children_.emplace(std::next(children_.begin(), index), child);
+    }
+    children_.erase(it);
+    SetDirty();
+}
+
+void RSBaseRenderNode::RemoveChild(SharedPtr child)
 {
     if (child == nullptr) {
         return;
@@ -67,8 +87,8 @@ void RSBaseRenderNode::RemoveChild(const SharedPtr& child)
     disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
     // if child has disappearing transition, add it to disappearingChildren_
     if (child->HasDisappearingTransition(true)) {
-        ROSEN_LOGD("RSBaseRenderNode::RemoveChild %llu move child(id %llu) into disappearingChildren", GetId(),
-            child->GetId());
+        ROSEN_LOGD("RSBaseRenderNode::RemoveChild %" PRIu64 " move child(id %" PRIu64 ") into disappearingChildren",
+            GetId(), child->GetId());
         // keep shared_ptr alive for transition
         uint32_t origPos = static_cast<uint32_t>(std::distance(children_.begin(), it));
         disappearingChildren_.emplace_back(child, origPos);
@@ -136,8 +156,8 @@ void RSBaseRenderNode::RemoveCrossParentChild(const SharedPtr& child, const Weak
     disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
     // if child has disappearing transition, add it to disappearingChildren_
     if (child->HasDisappearingTransition(true)) {
-        ROSEN_LOGD("RSBaseRenderNode::RemoveChild %llu move child(id %llu) into disappearingChildren", GetId(),
-            child->GetId());
+        ROSEN_LOGD("RSBaseRenderNode::RemoveChild %" PRIu64 " move child(id %" PRIu64 ") into disappearingChildren",
+            GetId(), child->GetId());
         // keep shared_ptr alive for transition
         uint32_t origPos = static_cast<uint32_t>(std::distance(children_.begin(), it));
         disappearingChildren_.emplace_back(child, origPos);
@@ -151,7 +171,19 @@ void RSBaseRenderNode::RemoveCrossParentChild(const SharedPtr& child, const Weak
 void RSBaseRenderNode::RemoveFromTree()
 {
     if (auto parentPtr = parent_.lock()) {
-        parentPtr->RemoveChild(shared_from_this());
+        auto child = shared_from_this();
+        parentPtr->RemoveChild(child);
+    }
+}
+
+void RSBaseRenderNode::RemoveFromTreeWithoutTransition()
+{
+    if (auto parentPtr = parent_.lock()) {
+        auto child = shared_from_this();
+        parentPtr->RemoveChild(child);
+        parentPtr->disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
+        parentPtr->sortedChildren_.clear();
+        child->ResetParent();
     }
 }
 
@@ -218,6 +250,7 @@ void RSBaseRenderNode::DumpTree(int32_t depth, std::string& out) const
         auto p = parent_.lock();
         out += ", parent [" + (p != nullptr ? std::to_string(p->GetId()) : "null") + "]";
         out = out + ", " + surfaceNode->GetVisibleRegion().GetRegionInfo();
+        out += ", SurfaceBgAlpha[ " + std::to_string(surfaceNode->GetAbilityBgAlpha()) + " ]";
     }
     out += ", children[";
     for (auto child : children_) {
@@ -277,6 +310,10 @@ void RSBaseRenderNode::DumpNodeType(std::string& out) const
             out += "ROOT_NODE";
             break;
         }
+        case RSRenderNodeType::PROXY_NODE: {
+            out += "PROXY_NODE";
+            break;
+        }
         default: {
             out += "UNKNOWN_NODE";
             break;
@@ -300,10 +337,10 @@ void RSBaseRenderNode::SetClean()
 }
 
 void RSBaseRenderNode::CollectSurface(
-    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec)
+    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender)
 {
     for (auto& child : node->GetSortedChildren()) {
-        child->CollectSurface(child, vec);
+        child->CollectSurface(child, vec, isUniRender);
     }
 }
 
@@ -356,7 +393,7 @@ void RSBaseRenderNode::GenerateSortedChildren()
         auto& origPos = pair.second;
         // if neither parent node or child node has transition, we can safely remove it
         if (!parentHasDisappearingTransition && !disappearingChild->HasDisappearingTransition(false)) {
-            ROSEN_LOGD("RSBaseRenderNode::GenerateSortedChildren removing finished transition child(id %llu)",
+            ROSEN_LOGD("RSBaseRenderNode::GenerateSortedChildren removing finished transition child(id %" PRIu64 ")",
                 disappearingChild->GetId());
             if (ROSEN_EQ<RSBaseRenderNode>(disappearingChild->GetParent(), weak_from_this())) {
                 disappearingChild->ResetParent();
@@ -382,20 +419,12 @@ void RSBaseRenderNode::GenerateSortedChildren()
     });
 }
 
-template<typename T>
-bool RSBaseRenderNode::IsInstanceOf()
+void RSBaseRenderNode::SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId)
 {
-    constexpr uint32_t targetType = static_cast<uint32_t>(T::Type);
-    return (static_cast<uint32_t>(GetType()) & targetType) == targetType;
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommandFromRT(command, nodeId);
+    }
 }
-
-// explicit instantiation with all render node types
-template bool RSBaseRenderNode::IsInstanceOf<RSBaseRenderNode>();
-template bool RSBaseRenderNode::IsInstanceOf<RSDisplayRenderNode>();
-template bool RSBaseRenderNode::IsInstanceOf<RSRenderNode>();
-template bool RSBaseRenderNode::IsInstanceOf<RSSurfaceRenderNode>();
-template bool RSBaseRenderNode::IsInstanceOf<RSCanvasRenderNode>();
-template bool RSBaseRenderNode::IsInstanceOf<RSRootRenderNode>();
-
 } // namespace Rosen
 } // namespace OHOS

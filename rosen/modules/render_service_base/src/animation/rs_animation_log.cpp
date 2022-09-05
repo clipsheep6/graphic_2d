@@ -25,6 +25,7 @@
 #include "common/rs_matrix3.h"
 #include "common/rs_vector4.h"
 #include "render/rs_filter.h"
+#include "modifier/rs_render_property.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -142,9 +143,9 @@ void RSAnimationLog::DealConfigInputInfo(const std::string& info)
                 needWriteAllProperty_ = true;
                 return;
             }
-            RSAnimatableProperty property =
-                static_cast<RSAnimatableProperty>(strtoull(prop.c_str(), NULL, 10));
-            propertySet_.insert(property);
+            PropertyId propertyId =
+                static_cast<unsigned long long>(strtoull(prop.c_str(), NULL, 10));
+            propertySet_.insert(propertyId);
         }
     }
 
@@ -168,9 +169,9 @@ void RSAnimationLog::ClearNodeAndPropertyInfo()
     nodeIdSet_.clear();
 }
 
-bool RSAnimationLog::IsNeedWriteLog(const RSAnimatableProperty& property, const NodeId& id)
+bool RSAnimationLog::IsNeedWriteLog(const PropertyId& propertyId, const NodeId& id)
 {
-    auto itrp = propertySet_.find(property);
+    auto itrp = propertySet_.find(propertyId);
     if (itrp == propertySet_.end() && !needWriteAllProperty_) {
         return false;
     }
@@ -183,7 +184,7 @@ bool RSAnimationLog::IsNeedWriteLog(const RSAnimatableProperty& property, const 
     return true;
 }
 
-int64_t RSAnimationLog::GetNowTime()
+uint64_t RSAnimationLog::GetNowTime()
 {
     struct timeval start = {};
     gettimeofday(&start, nullptr);
@@ -222,51 +223,51 @@ int RSAnimationLog::WriteLog(const char* format, ...)
 
 template<>
 void RSAnimationLog::WriteAnimationValueToLog(const int& value,
-    const RSAnimatableProperty& property, const NodeId& id)
+    const PropertyId& propertyId, const NodeId& id)
 {
-    WRITE_LOG("RSAnimationValueLog NodeId:{%llu} time:{%lld} property:{%llu} value:{%d}\n",
-        id, GetNowTime(), property, value);
+    WRITE_LOG("RSAnimationValueLog NodeId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} value:{%d}\n",
+        id, GetNowTime(), propertyId, value);
 }
 
 template<>
-void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& property,
+void RSAnimationLog::WriteAnimationInfoToLog(const PropertyId& propertyId,
     const AnimationId& id, const int& startValue, const int& endValue)
 {
-    WRITE_LOG("RSAnimationInfoLog AnimationId:{%llu} time:{%lld} property:{%llu} " \
-        "startValue:{%d} endValue:{%d}\n", id, GetNowTime(), property, startValue, endValue);
+    WRITE_LOG("RSAnimationInfoLog AnimationId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+        "startValue:{%d} endValue:{%d}\n", id, GetNowTime(), propertyId, startValue, endValue);
 }
 
 template<>
 void RSAnimationLog::WriteAnimationValueToLog(const float& value,
-    const RSAnimatableProperty& property, const NodeId& id)
+    const PropertyId& propertyId, const NodeId& id)
 {
-    WRITE_LOG("RSAnimationValueLog NodeId:{%llu} time:{%lld} property:{%llu} value:{%f}\n",
-        id, GetNowTime(), property, value);
+    WRITE_LOG("RSAnimationValueLog NodeId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} value:{%f}\n",
+        id, GetNowTime(), propertyId, value);
 }
 
 template<>
-void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& property,
+void RSAnimationLog::WriteAnimationInfoToLog(const PropertyId& propertyId,
     const AnimationId& id, const float& startValue, const float& endValue)
 {
-    WRITE_LOG("RSAnimationInfoLog AnimationId:{%llu} time:{%lld} property:{%llu} " \
-        "startValue:{%f} endValue:{%f}\n", id, GetNowTime(), property, startValue, endValue);
+    WRITE_LOG("RSAnimationInfoLog AnimationId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+        "startValue:{%f} endValue:{%f}\n", id, GetNowTime(), propertyId, startValue, endValue);
 }
 
 template<>
 void RSAnimationLog::WriteAnimationValueToLog(const Color& value,
-    const RSAnimatableProperty& property, const NodeId& id)
+    const PropertyId& propertyId, const NodeId& id)
 {
-    WRITE_LOG("RSAnimationValueLog NodeId:{%llu} time:{%lld} property:{%llu} " \
-        "value:{%d %d %d %d}\n", id, GetNowTime(), property, value.GetRed(),
+    WRITE_LOG("RSAnimationValueLog NodeId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+        "value:{%d %d %d %d}\n", id, GetNowTime(), propertyId, value.GetRed(),
         value.GetGreen(), value.GetBlue(), value.GetAlpha());
 }
 
 template<>
-void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& property,
+void RSAnimationLog::WriteAnimationInfoToLog(const PropertyId& propertyId,
     const AnimationId& id, const Color& startValue, const Color& endValue)
 {
-    WRITE_LOG("RSAnimationInfoLog AnimationId:{%llu} time:{%lld} property:{%llu} " \
-        "startValue:{%d %d %d %d} endValue:{%d %d %d %d}\n", id, GetNowTime(), property,
+    WRITE_LOG("RSAnimationInfoLog AnimationId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+        "startValue:{%d %d %d %d} endValue:{%d %d %d %d}\n", id, GetNowTime(), propertyId,
         startValue.GetRed(), startValue.GetGreen(), startValue.GetBlue(),
         startValue.GetAlpha(), endValue.GetRed(), endValue.GetGreen(), endValue.GetBlue(),
         endValue.GetAlpha());
@@ -274,7 +275,7 @@ void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& propert
 
 template<>
 void RSAnimationLog::WriteAnimationValueToLog(const Matrix3f& value,
-    const RSAnimatableProperty& property, const NodeId& id)
+    const PropertyId& propertyId, const NodeId& id)
 {
     auto data = value.GetConstData();
     if ((DATA_INDEX_ZERO < DATA_ARRAY_SIZE) && (DATA_INDEX_ONE < DATA_ARRAY_SIZE) &&
@@ -282,8 +283,8 @@ void RSAnimationLog::WriteAnimationValueToLog(const Matrix3f& value,
         (DATA_INDEX_FOUR < DATA_ARRAY_SIZE) && (DATA_INDEX_FIVE < DATA_ARRAY_SIZE) &&
         (DATA_INDEX_SIX < DATA_ARRAY_SIZE) && (DATA_INDEX_SEVEN < DATA_ARRAY_SIZE) &&
         (DATA_INDEX_EIGHT < DATA_ARRAY_SIZE)) {
-        WRITE_LOG("RSAnimationValueLog NodeId:{%llu} time:{%lld} property:{%llu} " \
-            "value:{%d %d %d %d %d %d %d %d %d}\n", id, GetNowTime(), property,
+        WRITE_LOG("RSAnimationValueLog NodeId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+            "value:{%d %d %d %d %d %d %d %d %d}\n", id, GetNowTime(), propertyId,
             data[DATA_INDEX_ZERO], data[DATA_INDEX_ONE], data[DATA_INDEX_TWO],
             data[DATA_INDEX_THREE], data[DATA_INDEX_FOUR], data[DATA_INDEX_FIVE],
             data[DATA_INDEX_SIX], data[DATA_INDEX_SEVEN], data[DATA_INDEX_EIGHT]);
@@ -291,7 +292,7 @@ void RSAnimationLog::WriteAnimationValueToLog(const Matrix3f& value,
 }
 
 template<>
-void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& property,
+void RSAnimationLog::WriteAnimationInfoToLog(const PropertyId& propertyId,
     const AnimationId& id, const Matrix3f& startValue, const Matrix3f& endValue)
 {
     auto startData = startValue.GetConstData();
@@ -301,9 +302,9 @@ void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& propert
         (DATA_INDEX_FOUR < DATA_ARRAY_SIZE) && (DATA_INDEX_FIVE < DATA_ARRAY_SIZE) &&
         (DATA_INDEX_SIX < DATA_ARRAY_SIZE) && (DATA_INDEX_SEVEN < DATA_ARRAY_SIZE) &&
         (DATA_INDEX_EIGHT < DATA_ARRAY_SIZE)) {
-        WRITE_LOG("RSAnimationInfoLog AnimationId:{%llu} time:{%lld} property:{%llu} " \
+        WRITE_LOG("RSAnimationInfoLog AnimationId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
             "startValue:{%d %d %d %d %d %d %d %d %d} endValue:{%d %d %d %d %d %d %d %d %d}\n",
-            id, GetNowTime(), property, startData[DATA_INDEX_ZERO], startData[DATA_INDEX_ONE],
+            id, GetNowTime(), propertyId, startData[DATA_INDEX_ZERO], startData[DATA_INDEX_ONE],
             startData[DATA_INDEX_TWO], startData[DATA_INDEX_THREE], startData[DATA_INDEX_FOUR],
             startData[DATA_INDEX_FIVE], startData[DATA_INDEX_SIX], startData[DATA_INDEX_SEVEN],
             startData[DATA_INDEX_EIGHT], endData[DATA_INDEX_ZERO], endData[DATA_INDEX_ONE],
@@ -315,39 +316,39 @@ void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& propert
 
 template<>
 void RSAnimationLog::WriteAnimationValueToLog(const Vector2f& value,
-    const RSAnimatableProperty& property, const NodeId& id)
+    const PropertyId& propertyId, const NodeId& id)
 {
-    WRITE_LOG("RSAnimationValueLog NodeId:{%llu} time:{%lld} property:{%llu} " \
-        "value:{%f %f}\n", id, GetNowTime(), property, value.x_, value.y_);
+    WRITE_LOG("RSAnimationValueLog NodeId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+        "value:{%f %f}\n", id, GetNowTime(), propertyId, value.x_, value.y_);
 }
 
 template<>
-void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& property,
+void RSAnimationLog::WriteAnimationInfoToLog(const PropertyId& propertyId,
     const AnimationId& id, const Vector2f& startValue, const Vector2f& endValue)
 {
-    WRITE_LOG("RSAnimationInfoLog AnimationId:{%llu} time:{%lld} property:{%llu} " \
-        "startValue:{%f %f} endValue:{%f %f}\n", id, GetNowTime(), property,
+    WRITE_LOG("RSAnimationInfoLog AnimationId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+        "startValue:{%f %f} endValue:{%f %f}\n", id, GetNowTime(), propertyId,
         startValue.x_, startValue.y_, endValue.x_, endValue.y_);
 }
 
 template<>
 void RSAnimationLog::WriteAnimationValueToLog(const Vector4f& value,
-    const RSAnimatableProperty& property, const NodeId& id)
+    const PropertyId& propertyId, const NodeId& id)
 {
     auto data = value;
-    WRITE_LOG("RSAnimationValueLog NodeId:{%llu} time:{%lld} property:{%llu} " \
-        "value:{%f %f %f %f}\n", id, GetNowTime(), property, data[DATA_INDEX_ZERO],
+    WRITE_LOG("RSAnimationValueLog NodeId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+        "value:{%f %f %f %f}\n", id, GetNowTime(), propertyId, data[DATA_INDEX_ZERO],
         data[DATA_INDEX_ONE], data[DATA_INDEX_TWO], data[DATA_INDEX_THREE]);
 }
 
 template<>
-void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& property,
+void RSAnimationLog::WriteAnimationInfoToLog(const PropertyId& propertyId,
     const AnimationId& id, const Vector4f& startValue, const Vector4f& endValue)
 {
     auto startData = startValue;
     auto endData = endValue;
-    WRITE_LOG("RSAnimationInfoLog AnimationId:{%llu} time:{%lld} property:{%llu} " \
-        "startValue:{%f %f %f %f} endValue:{%f %f %f %f}\n", id, GetNowTime(), property,
+    WRITE_LOG("RSAnimationInfoLog AnimationId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+        "startValue:{%f %f %f %f} endValue:{%f %f %f %f}\n", id, GetNowTime(), propertyId,
         startData[DATA_INDEX_ZERO], startData[DATA_INDEX_ONE], startData[DATA_INDEX_TWO],
         startData[DATA_INDEX_THREE], endData[DATA_INDEX_ZERO], endData[DATA_INDEX_ONE],
         endData[DATA_INDEX_TWO], endData[DATA_INDEX_THREE]);
@@ -355,22 +356,22 @@ void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& propert
 
 template<>
 void RSAnimationLog::WriteAnimationValueToLog(const Quaternion& value,
-    const RSAnimatableProperty& property, const NodeId& id)
+    const PropertyId& propertyId, const NodeId& id)
 {
     auto data = value;
-    WRITE_LOG("RSAnimationValueLog NodeId:{%llu} time:{%lld} property:{%llu} " \
-        "value:{%f %f %f %f}\n", id, GetNowTime(), property, data[DATA_INDEX_ZERO],
+    WRITE_LOG("RSAnimationValueLog NodeId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+        "value:{%f %f %f %f}\n", id, GetNowTime(), propertyId, data[DATA_INDEX_ZERO],
         data[DATA_INDEX_ONE], data[DATA_INDEX_TWO], data[DATA_INDEX_THREE]);
 }
 
 template<>
-void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& property,
+void RSAnimationLog::WriteAnimationInfoToLog(const PropertyId& propertyId,
     const AnimationId& id, const Quaternion& startValue, const Quaternion& endValue)
 {
     auto startData = startValue;
     auto endData = endValue;
-    WRITE_LOG("RSAnimationInfoLog AnimationId:{%llu} time:{%lld} property:{%llu} " \
-        "startValue:{%f %f %f %f} endValue:{%f %f %f %f}\n", id, GetNowTime(), property,
+    WRITE_LOG("RSAnimationInfoLog AnimationId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+        "startValue:{%f %f %f %f} endValue:{%f %f %f %f}\n", id, GetNowTime(), propertyId,
         startData[DATA_INDEX_ZERO], startData[DATA_INDEX_ONE], startData[DATA_INDEX_TWO],
         startData[DATA_INDEX_THREE], endData[DATA_INDEX_ZERO], endData[DATA_INDEX_ONE],
         endData[DATA_INDEX_TWO], endData[DATA_INDEX_THREE]);
@@ -378,44 +379,44 @@ void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& propert
 
 template<>
 void RSAnimationLog::WriteAnimationValueToLog(const std::shared_ptr<RSFilter>& value,
-    const RSAnimatableProperty& property, const NodeId& id)
+    const PropertyId& propertyId, const NodeId& id)
 {
     auto filter = std::static_pointer_cast<RSBlurFilter>(value);
     if (filter == nullptr) {
-        WRITE_LOG("RSAnimationValueLog NodeId:{%llu} time:{%lld} property:{%llu} " \
-            "value:{nullptr}\n", id, GetNowTime(), property);
+        WRITE_LOG("RSAnimationValueLog NodeId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+            "value:{nullptr}\n", id, GetNowTime(), propertyId);
         return;
     }
-    WRITE_LOG("RSAnimationValueLog NodeId:{%llu} time:{%lld} property:{%llu} value:{%f %f}\n",
-        id, GetNowTime(), property, filter->GetBlurRadiusX(), filter->GetBlurRadiusY());
+    WRITE_LOG("RSAnimationValueLog NodeId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} value:{%f %f}\n",
+        id, GetNowTime(), propertyId, filter->GetBlurRadiusX(), filter->GetBlurRadiusY());
 }
 
 template<>
-void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& property,
+void RSAnimationLog::WriteAnimationInfoToLog(const PropertyId& propertyId,
     const AnimationId& id, const std::shared_ptr<RSFilter>& startValue,
     const std::shared_ptr<RSFilter>& endValue)
 {
     auto startFilter = std::static_pointer_cast<RSBlurFilter>(startValue);
     auto endFilter = std::static_pointer_cast<RSBlurFilter>(endValue);
     if (startFilter == nullptr || endFilter == nullptr) {
-        WRITE_LOG("RSAnimationValueLog NodeId:{%llu} time:{%lld} property:{%llu} " \
-            "startValue:{nullptr} endValue:{nullptr}\n", id, GetNowTime(), property);
+        WRITE_LOG("RSAnimationValueLog NodeId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+            "startValue:{nullptr} endValue:{nullptr}\n", id, GetNowTime(), propertyId);
         return;
     }
-    WRITE_LOG("RSAnimationInfoLog AnimationId:{%llu} time:{%lld} property:{%llu} " \
-        "startValue:{%f %f} endValue:{%f %f}\n", id, GetNowTime(), property,
+    WRITE_LOG("RSAnimationInfoLog AnimationId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+        "startValue:{%f %f} endValue:{%f %f}\n", id, GetNowTime(), propertyId,
         startFilter->GetBlurRadiusX(), startFilter->GetBlurRadiusY(),
         endFilter->GetBlurRadiusX(), endFilter->GetBlurRadiusY());
 }
 
 template<>
 void RSAnimationLog::WriteAnimationValueToLog(const Vector4<Color>& value,
-    const RSAnimatableProperty& property, const NodeId& id)
+    const PropertyId& propertyId, const NodeId& id)
 {
     auto data = value;
-    WRITE_LOG("RSAnimationValueLog NodeId:{%llu} time:{%lld} property:{%llu} " \
+    WRITE_LOG("RSAnimationValueLog NodeId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
         "value:{%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d}\n", id, GetNowTime(),
-        property, data[DATA_INDEX_ZERO].GetRed(), data[DATA_INDEX_ZERO].GetGreen(),
+        propertyId, data[DATA_INDEX_ZERO].GetRed(), data[DATA_INDEX_ZERO].GetGreen(),
         data[DATA_INDEX_ZERO].GetBlue(), data[DATA_INDEX_ZERO].GetAlpha(),
         data[DATA_INDEX_ONE].GetRed(), data[DATA_INDEX_ONE].GetGreen(),
         data[DATA_INDEX_ONE].GetBlue(), data[DATA_INDEX_ONE].GetAlpha(),
@@ -426,14 +427,14 @@ void RSAnimationLog::WriteAnimationValueToLog(const Vector4<Color>& value,
 }
 
 template<>
-void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& property,
+void RSAnimationLog::WriteAnimationInfoToLog(const PropertyId& propertyId,
     const AnimationId& id, const Vector4<Color>& startValue, const Vector4<Color>& endValue)
 {
     auto startData = startValue;
     auto endData = endValue;
-    WRITE_LOG("RSAnimationInfoLog AnimationId:{%llu} time:{%lld} property:{%llu} " \
-        "startValue:{%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d} " \
-        "endValue:{%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d}\n", id, GetNowTime(), property,
+    WRITE_LOG("RSAnimationInfoLog AnimationId:{%" PRIu64 "} time:{%" PRIu64 "} property:{%" PRIu64 "} "
+        "startValue:{%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d} "
+        "endValue:{%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d}\n", id, GetNowTime(), propertyId,
         startData[DATA_INDEX_ZERO].GetRed(), startData[DATA_INDEX_ZERO].GetGreen(),
         startData[DATA_INDEX_ZERO].GetBlue(), startData[DATA_INDEX_ZERO].GetAlpha(),
         startData[DATA_INDEX_ONE].GetRed(), startData[DATA_INDEX_ONE].GetGreen(),
@@ -450,6 +451,19 @@ void RSAnimationLog::WriteAnimationInfoToLog(const RSAnimatableProperty& propert
         endData[DATA_INDEX_TWO].GetBlue(), endData[DATA_INDEX_TWO].GetAlpha(),
         endData[DATA_INDEX_THREE].GetRed(), endData[DATA_INDEX_THREE].GetGreen(),
         endData[DATA_INDEX_THREE].GetBlue(), endData[DATA_INDEX_THREE].GetAlpha());
+}
+
+template<>
+void RSAnimationLog::WriteAnimationValueToLog(const std::shared_ptr<RSRenderPropertyBase>& value,
+    const PropertyId& propertyId, const NodeId& id)
+{
+}
+
+template<>
+void RSAnimationLog::WriteAnimationInfoToLog(const PropertyId& propertyId,
+    const AnimationId& id, const std::shared_ptr<RSRenderPropertyBase>& startValue,
+    const std::shared_ptr<RSRenderPropertyBase>& endValue)
+{
 }
 } // namespace Rosen
 } // namespace OHOS

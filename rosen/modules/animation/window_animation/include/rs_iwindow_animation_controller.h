@@ -16,6 +16,8 @@
 #ifndef WINDOW_ANIMATION_RS_IWINDOW_ANIMATION_CONTROLLER_H
 #define WINDOW_ANIMATION_RS_IWINDOW_ANIMATION_CONTROLLER_H
 
+#include <vector>
+
 #include <iremote_broker.h>
 
 namespace OHOS {
@@ -37,8 +39,10 @@ public:
         ON_START_APP,
         ON_APP_TRANSITION,
         ON_MINIMIZE_WINDOW,
+        ON_MINIMIZE_ALLWINDOW,
         ON_CLOSE_WINDOW,
         ON_SCREEN_UNLOCK,
+        ON_WINDOW_ANIMATION_TARGETS_UPDATE,
     };
 
     virtual void OnStartApp(StartingAppType type, const sptr<RSWindowAnimationTarget>& startingWindowTarget,
@@ -50,10 +54,16 @@ public:
     virtual void OnMinimizeWindow(const sptr<RSWindowAnimationTarget>& minimizingWindow,
         const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback) = 0;
 
+    virtual void OnMinimizeAllWindow(std::vector<sptr<RSWindowAnimationTarget>> minimizingWindows,
+        const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback) = 0;
+
     virtual void OnCloseWindow(const sptr<RSWindowAnimationTarget>& closingWindow,
         const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback) = 0;
 
     virtual void OnScreenUnlock(const sptr<RSIWindowAnimationFinishedCallback>& finishedCallback) = 0;
+
+    virtual void OnWindowAnimationTargetsUpdate(const sptr<RSWindowAnimationTarget>& fullScreenWindowTarget,
+        const std::vector<sptr<RSWindowAnimationTarget>>& floatingWindowTargets) = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

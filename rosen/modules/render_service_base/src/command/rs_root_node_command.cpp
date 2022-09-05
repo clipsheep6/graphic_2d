@@ -36,21 +36,34 @@ void RootNodeCommandHelper::AttachRSSurfaceNode(RSContext& context, NodeId id, N
     }
 }
 
+void RootNodeCommandHelper::SetEnableRender(RSContext& context, NodeId id, bool flag)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSRootRenderNode>(id)) {
+        node->SetEnableRender(flag);
+    }
+}
+
 void RootNodeCommandHelper::AttachToUniSurfaceNode(RSContext& context, NodeId id, NodeId surfaceNodeId)
 {
     auto& nodeMap = context.GetNodeMap();
     auto parent = nodeMap.GetRenderNode<RSSurfaceRenderNode>(surfaceNodeId);
     auto node = nodeMap.GetRenderNode<RSRootRenderNode>(id);
     if (!parent || !node) {
-        RS_LOGE("unirender: RootNodeCommandHelper::AttachToUniSurfaceNode surfaceNodeId:%llu id:%llu, parent " \
-            "valid:%d, node valid:%d", surfaceNodeId, id, parent != nullptr, node != nullptr);
+        RS_LOGE("unirender: RootNodeCommandHelper::AttachToUniSurfaceNode surfaceNodeId:%" PRIu64 " id:%" PRIu64
+                ", parent "
+                "valid:%d, node valid:%d",
+            surfaceNodeId, id, parent != nullptr, node != nullptr);
         return;
     }
     parent->AddChild(node);
-    RS_LOGI("unirender: RootNodeCommandHelper::AttachToUniSurfaceNode NotifyUIBufferAvailable parent:%llu node:%llu",
-        surfaceNodeId, id);
-    parent->NotifyUIBufferAvailable();
+    parent->SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
 }
 
+void RootNodeCommandHelper::UpdateSurfaceSize(RSContext &context, NodeId id, int32_t width, int32_t height)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSRootRenderNode>(id)) {
+        node->UpdateSurfaceSize(width, height);
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

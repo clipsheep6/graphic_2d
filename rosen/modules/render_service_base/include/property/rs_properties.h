@@ -21,6 +21,7 @@
 #include "common/rs_matrix3.h"
 #include "common/rs_vector4.h"
 #include "property/rs_properties_def.h"
+#include "property/rs_transition_properties.h"
 #include "render/rs_border.h"
 #include "render/rs_filter.h"
 #include "render/rs_image.h"
@@ -109,6 +110,8 @@ public:
 
     void SetAlpha(float alpha);
     float GetAlpha() const;
+    void SetAlphaOffscreen(bool alphaOffscreen);
+    bool GetAlphaOffscreen() const;
 
     void SetSublayerTransform(Matrix3f sublayerTransform);
     Matrix3f GetSublayerTransform() const;
@@ -136,10 +139,10 @@ public:
     // border properties
     void SetBorderColor(Vector4<Color> color);
     void SetBorderWidth(Vector4f width);
-    void SetBorderStyle(Vector4<BorderStyle> style);
+    void SetBorderStyle(Vector4<uint32_t> style);
     Vector4<Color> GetBorderColor() const;
     Vector4f GetBorderWidth() const;
-    Vector4<BorderStyle> GetBorderStyle() const;
+    Vector4<uint32_t> GetBorderStyle() const;
     std::shared_ptr<RSBorder> GetBorder() const;
 
     // filter properties
@@ -163,9 +166,13 @@ public:
     float GetShadowElevation() const;
     float GetShadowRadius() const;
     std::shared_ptr<RSPath> GetShadowPath() const;
+    bool IsShadowValid() const;
 
     void SetFrameGravity(Gravity gravity);
     Gravity GetFrameGravity() const;
+
+    void SetOverlayerBounds(std::shared_ptr<RectI> rect);
+    std::shared_ptr<RectI> GetOverlayerBounds() const;
 
     void SetClipBounds(std::shared_ptr<RSPath> path);
     std::shared_ptr<RSPath> GetClipBounds() const;
@@ -184,12 +191,15 @@ public:
 
     const std::shared_ptr<RSObjGeometry>& GetBoundsGeometry() const;
     const std::shared_ptr<RSObjGeometry>& GetFrameGeometry() const;
-    bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag);
+    bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag,
+        const std::unique_ptr<RSTransitionProperties>& transition = nullptr);
 
     bool GetZorderChanged() const;
     void CleanZorderChanged();
-
+    bool IsZOrderPromoted() const;
+    void CleanZOrderPromoted();
 private:
+    void Reset();
     void SetDirty();
     void ResetDirty();
     bool IsDirty() const;
@@ -211,12 +221,16 @@ private:
     bool isDirty_ = false;
     bool geoDirty_ = false;
     bool zOrderChanged_ = false;
+    bool zOrderPromoted = false;
 
     bool hasBounds_ = false;
 
     Gravity frameGravity_ = Gravity::DEFAULT;
 
+    std::shared_ptr<RectI> overlayRect_ = nullptr;
+
     float alpha_ = 1.f;
+    bool alphaOffscreen_ = true;
 
     std::unique_ptr<Matrix3f> sublayerTransform_ = nullptr;
     std::unique_ptr<Decoration> decoration_ = nullptr;

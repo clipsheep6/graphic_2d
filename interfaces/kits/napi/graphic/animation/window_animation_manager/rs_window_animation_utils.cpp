@@ -16,7 +16,10 @@
 #include "rs_window_animation_utils.h"
 
 #include <js_runtime_utils.h>
-#include <rs_window_animation_log.h>
+
+#include "rs_window_animation_log.h"
+
+#include "ui/rs_proxy_node.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -27,8 +30,8 @@ NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationTarget(NativeEngine&
 {
     WALOGD("Create!");
     if (target == nullptr) {
-        WALOGE("Target is null!");
-        return engine.CreateUndefined();
+        WALOGD("Target is null!");
+        return engine.CreateNull();
     }
 
     auto objValue = engine.CreateObject();
@@ -48,12 +51,30 @@ NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationTarget(NativeEngine&
     };
     target.GetRefPtr()->IncStrongRef(target.GetRefPtr());
     object->SetNativePointer(&(target->surfaceNode_), finalizeCallback, target.GetRefPtr());
+    if (auto proxyNode = RSBaseNode::ReinterpretCast<RSProxyNode>(target->surfaceNode_)) {
+        // force proxy node to flush correct context alpha on next visit
+        proxyNode->ResetContextAlpha();
+    }
 
     object->SetProperty("bundleName", CreateJsValue(engine, target->bundleName_));
     object->SetProperty("abilityName", CreateJsValue(engine, target->abilityName_));
     object->SetProperty("windowBounds", CreateJsRRect(engine, target->windowBounds_));
+    object->SetProperty("missionId", CreateJsValue(engine, target->missionId_));
 
     return objValue;
+}
+
+NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationTargetArray(NativeEngine& engine,
+    const std::vector<sptr<RSWindowAnimationTarget>>& targets)
+{
+    WALOGD("Create!");
+    NativeValue* arrayValue = engine.CreateArray(targets.size());
+    NativeArray* array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    uint32_t index = 0;
+    for (const auto& item : targets) {
+        array->SetElement(index++, CreateJsWindowAnimationTarget(engine, item));
+    }
+    return arrayValue;
 }
 
 NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationFinishedCallback(
@@ -94,7 +115,8 @@ NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationFinishedCallback(
         nativeFinishedCallback->OnAnimationFinished();
         return engine->CreateUndefined();
     };
-    BindNativeFunction(engine, *object, "onAnimationFinish", jsFinishedCallback);
+    const char *moduleName = "RSWindowAnimationUtils";
+    BindNativeFunction(engine, *object, "onAnimationFinish", moduleName, jsFinishedCallback);
     return objValue;
 }
 

@@ -17,6 +17,10 @@
 #define EGL_EGLEXT_PROTOTYPES
 
 #include "surface_image.h"
+
+#include "securec.h"
+#include "sandbox_utils.h"
+
 #include <atomic>
 #include <sync_fence.h>
 #include <unistd.h>
@@ -38,13 +42,13 @@ static int GetProcessUniqueId()
 }
 
 SurfaceImage::SurfaceImage(uint32_t textureId, uint32_t textureTarget)
-    : ConsumerSurface("SurfaceImage-" + std::to_string(getpid()) + "-" + std::to_string(GetProcessUniqueId())),
+    : ConsumerSurface("SurfaceImage-" + std::to_string(GetRealPid()) + "-" + std::to_string(GetProcessUniqueId())),
       textureId_(textureId),
       textureTarget_(textureTarget),
       updateSurfaceImage_(false),
       eglDisplay_(EGL_NO_DISPLAY),
       eglContext_(EGL_NO_CONTEXT),
-      currentSurfaceImage_(-1), // -1 invalid
+      currentSurfaceImage_(0),
       currentSurfaceBuffer_(nullptr),
       currentSurfaceBufferFence_(-1), // -1 invalid
       currentTimeStamp_(0)
@@ -58,7 +62,7 @@ SurfaceImage::~SurfaceImage()
 
 void SurfaceImage::InitSurfaceImage()
 {
-    std::string name = "SurfaceImage-" + std::to_string(getpid()) + "-" + std::to_string(GetProcessUniqueId());
+    std::string name = "SurfaceImage-" + std::to_string(GetRealPid()) + "-" + std::to_string(GetProcessUniqueId());
     auto ret = ConsumerSurface::Init();
     SLOGI("surfaceimage init");
     if (ret != SURFACE_ERROR_OK) {
@@ -72,14 +76,70 @@ SurfaceError SurfaceImage::SetDefaultSize(int32_t width, int32_t height)
     return ConsumerSurface::SetDefaultWidthAndHeight(width, height);
 }
 
+std::array<float, 16> SurfaceImage::MatrixProduct(const std::array<float, 16>& lMat, const std::array<float, 16>& rMat)
+{
+    return std::array<float, 16> {lMat[0] * rMat[0] + lMat[4] * rMat[1] + lMat[8] * rMat[2] + lMat[12] * rMat[3],
+                                  lMat[1] * rMat[0] + lMat[5] * rMat[1] + lMat[9] * rMat[2] + lMat[13] * rMat[3],
+                                  lMat[2] * rMat[0] + lMat[6] * rMat[1] + lMat[10] * rMat[2] + lMat[14] * rMat[3],
+                                  lMat[3] * rMat[0] + lMat[7] * rMat[1] + lMat[11] * rMat[2] + lMat[15] * rMat[3],
+
+                                  lMat[0] * rMat[4] + lMat[4] * rMat[5] + lMat[8] * rMat[6] + lMat[12] * rMat[7],
+                                  lMat[1] * rMat[4] + lMat[5] * rMat[5] + lMat[9] * rMat[6] + lMat[13] * rMat[7],
+                                  lMat[2] * rMat[4] + lMat[6] * rMat[5] + lMat[10] * rMat[6] + lMat[14] * rMat[7],
+                                  lMat[3] * rMat[4] + lMat[7] * rMat[5] + lMat[11] * rMat[6] + lMat[15] * rMat[7],
+
+                                  lMat[0] * rMat[8] + lMat[4] * rMat[9] + lMat[8] * rMat[10] + lMat[12] * rMat[11],
+                                  lMat[1] * rMat[8] + lMat[5] * rMat[9] + lMat[9] * rMat[10] + lMat[13] * rMat[11],
+                                  lMat[2] * rMat[8] + lMat[6] * rMat[9] + lMat[10] * rMat[10] + lMat[14] * rMat[11],
+                                  lMat[3] * rMat[8] + lMat[7] * rMat[9] + lMat[11] * rMat[10] + lMat[15] * rMat[11],
+
+                                  lMat[0] * rMat[12] + lMat[4] * rMat[13] + lMat[8] * rMat[14] + lMat[12] * rMat[15],
+                                  lMat[1] * rMat[12] + lMat[5] * rMat[13] + lMat[9] * rMat[14] + lMat[13] * rMat[15],
+                                  lMat[2] * rMat[12] + lMat[6] * rMat[13] + lMat[10] * rMat[14] + lMat[14] * rMat[15],
+                                  lMat[3] * rMat[12] + lMat[7] * rMat[13] + lMat[11] * rMat[14] + lMat[15] * rMat[15]};
+}
+
+void SurfaceImage::ComputeTransformMatrix()
+{
+    static const std::array<float, 16> flipV = {-1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1};
+    static const std::array<float, 16> rotate90 = {0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1};
+
+    std::array<float, TRANSFORM_MATRIX_ELE_COUNT> transformMatrix = {1};
+    float tx = 0.f;
+    float ty = 0.f;
+    float sx = 1.f;
+    float sy = 1.f;
+    if (currentTransformType_ == TransformType::ROTATE_90) {
+        transformMatrix = MatrixProduct(transformMatrix, rotate90);
+    }
+    float bufferWidth = currentSurfaceBuffer_->GetWidth();
+    float bufferHeight = currentSurfaceBuffer_->GetHeight();
+    if (currentCrop_.w < bufferWidth) {
+        tx = (float(currentCrop_.x) / bufferWidth);
+        sx = (float(currentCrop_.w) / bufferWidth);
+    }
+    if (currentCrop_.h < bufferHeight) {
+        ty = (float(bufferHeight - currentCrop_.y) / bufferHeight);
+        sy = (float(currentCrop_.h) / bufferHeight);
+    }
+    static const std::array<float, 16> cropMatrix = {sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, 1, 0, tx, ty, 0, 1};
+    transformMatrix = MatrixProduct(cropMatrix, transformMatrix);
+
+    transformMatrix = MatrixProduct(flipV, transformMatrix);
+
+    auto ret = memcpy_s(currentTransformMatrix_.data(), sizeof(transformMatrix),
+                        transformMatrix.data(), sizeof(transformMatrix));
+    if (ret != EOK) {
+        SLOGE("ComputeTransformMatrix: transformMatrix memcpy_s failed");
+    }
+}
+
 SurfaceError SurfaceImage::UpdateSurfaceImage()
 {
     std::lock_guard<std::mutex> lockGuard(opMutex_);
-    SLOGI();
 
-    SurfaceError ret;
     // validate egl state
-    ret = ValidateEglState();
+    SurfaceError ret = ValidateEglState();
     if (ret != SURFACE_ERROR_OK) {
         return ret;
     }
@@ -101,7 +161,7 @@ SurfaceError SurfaceImage::UpdateSurfaceImage()
         return ret;
     }
 
-    int32_t seqNum = buffer->GetSeqNum();
+    uint32_t seqNum = buffer->GetSeqNum();
     SLOGI("seqNum %{public}d", seqNum);
     EGLImageKHR img = imageCacheSeqs_[seqNum].eglImage_;
     glBindTexture(textureTarget_, textureId_);
@@ -121,7 +181,7 @@ SurfaceError SurfaceImage::UpdateSurfaceImage()
         return ret;
     }
     
-    if (currentSurfaceImage_ != -1 && seqNum != currentSurfaceImage_) {
+    if (seqNum != currentSurfaceImage_) {
         ret = ReleaseBuffer(currentSurfaceBuffer_, -1);
         if (ret != SURFACE_ERROR_OK) {
             SLOGE("release currentSurfaceBuffer_ failed %{public}d", ret);
@@ -132,12 +192,16 @@ SurfaceError SurfaceImage::UpdateSurfaceImage()
     currentSurfaceBuffer_ = buffer;
     currentSurfaceBufferFence_ = fence;
     currentTimeStamp_ = timestamp;
+    currentCrop_ = damage;
+    currentTransformType_ = ConsumerSurface::GetTransform();
+
+    ComputeTransformMatrix();
 
     ret = WaitOnFence();
     return ret;
 }
 
-SurfaceError SurfaceImage::AttachContext()
+SurfaceError SurfaceImage::AttachContext(uint32_t textureId)
 {
     std::lock_guard<std::mutex> lockGuard(opMutex_);
     if (isAttached) {
@@ -157,7 +221,8 @@ SurfaceError SurfaceImage::AttachContext()
         return SURFACE_ERROR_INIT;
     }
 
-    glBindTexture(textureTarget_, textureId_);
+    glBindTexture(textureTarget_, textureId);
+    textureId_ = textureId;
     glEGLImageTargetTexture2DOES(textureTarget_, static_cast<GLeglImageOES>(img));
     eglDisplay_ = disp;
     eglContext_ = context;
@@ -205,6 +270,18 @@ int64_t SurfaceImage::GetTimeStamp()
     return currentTimeStamp_;
 }
 
+SurfaceError SurfaceImage::GetTransformMatrix(float matrix[16])
+{
+    std::lock_guard<std::mutex> lockGuard(opMutex_);
+    auto ret = memcpy_s(matrix, sizeof(currentTransformMatrix_),
+                        currentTransformMatrix_.data(), sizeof(currentTransformMatrix_));
+    if (ret != EOK) {
+        SLOGE("GetTransformMatrix: currentTransformMatrix_ memcpy_s failed");
+        return SURFACE_ERROR_ERROR;
+    }
+    return SURFACE_ERROR_OK;
+}
+
 SurfaceError SurfaceImage::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
                                          int64_t &timestamp, Rect &damage)
 {
@@ -214,7 +291,7 @@ SurfaceError SurfaceImage::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &f
         return ret;
     }
     // get seq num
-    int32_t seqNum = buffer->GetSeqNum();
+    uint32_t seqNum = buffer->GetSeqNum();
 
     if (buffer != nullptr) {
         if (imageCacheSeqs_[seqNum].eglImage_ != EGL_NO_IMAGE_KHR) {
@@ -241,7 +318,7 @@ SurfaceError SurfaceImage::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fe
         SLOGE("ReleaseBuffer error");
         return error;
     }
-    int32_t seqNum = buffer->GetSeqNum();
+    uint32_t seqNum = buffer->GetSeqNum();
 
     imageCacheSeqs_[seqNum].eglSync_ = EGL_NO_SYNC_KHR;
     return SURFACE_ERROR_OK;

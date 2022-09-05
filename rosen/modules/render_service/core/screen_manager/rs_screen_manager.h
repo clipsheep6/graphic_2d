@@ -23,7 +23,6 @@
 #include <unordered_map>
 
 #include <hdi_backend.h>
-#include <hilog/log.h>
 #include <ipc_callbacks/screen_change_callback.h>
 #include <refbase.h>
 #include <screen_manager/rs_screen_props.h>
@@ -48,13 +47,24 @@ enum class ScreenState : uint8_t {
 };
 
 struct ScreenInfo {
+    ScreenId id = INVALID_SCREEN_ID;
     uint32_t width = 0;
     uint32_t height = 0;
     ScreenColorGamut colorGamut = ScreenColorGamut::COLOR_GAMUT_SRGB;
     ScreenState state = ScreenState::UNKNOWN;
     ScreenRotation rotation = ScreenRotation::ROTATION_0;
-    SkMatrix rotationMatrix; // Screen rotation matrix for canvas.
+
     uint32_t skipFrameInterval = DEFAULT_SKIP_FRAME_INTERVAL;  // skip frame interval for change screen refresh rate
+
+    uint32_t GetRotatedWidth() const
+    {
+        return (rotation == ScreenRotation::ROTATION_0 || rotation == ScreenRotation::ROTATION_180) ? width : height;
+    }
+
+    uint32_t GetRotatedHeight() const
+    {
+        return (rotation == ScreenRotation::ROTATION_0 || rotation == ScreenRotation::ROTATION_180) ? height : width;
+    }
 };
 
 class RSScreenManager : public RefBase {
@@ -129,6 +139,8 @@ public:
 
     virtual int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode) const = 0;
 
+    virtual int32_t GetScreenSupportedMetaDataKeys(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys) const = 0;
+
     virtual int32_t GetScreenColorGamut(ScreenId id, ScreenColorGamut& mode) const = 0;
 
     virtual int32_t SetScreenColorGamut(ScreenId id, int32_t modeIdx) = 0;
@@ -136,10 +148,6 @@ public:
     virtual int32_t SetScreenGamutMap(ScreenId id, ScreenGamutMap mode) = 0;
 
     virtual int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) const = 0;
-
-    virtual bool RequestRotation(ScreenId id, ScreenRotation rotation) = 0;
-
-    virtual ScreenRotation GetRotation(ScreenId id) const = 0;
 
     virtual int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) const = 0;
 
@@ -231,6 +239,8 @@ public:
 
     int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode) const override;
 
+    int32_t GetScreenSupportedMetaDataKeys(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys) const override;
+
     int32_t GetScreenColorGamut(ScreenId id, ScreenColorGamut& mode) const override;
 
     int32_t SetScreenColorGamut(ScreenId id, int32_t modeIdx) override;
@@ -238,10 +248,6 @@ public:
     int32_t SetScreenGamutMap(ScreenId id, ScreenGamutMap mode) override;
 
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) const override;
-
-    bool RequestRotation(ScreenId id, ScreenRotation rotation) override;
-
-    ScreenRotation GetRotation(ScreenId id) const override;
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) const override;
 
@@ -251,9 +257,6 @@ public:
 private:
     RSScreenManager();
     ~RSScreenManager() noexcept override;
-
-    // [PLANNING]: fixme -- domain 0 only for debug.
-    static constexpr HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, 0, "RSScreenManager" };
 
     static void OnHotPlug(std::shared_ptr<HdiOutput> &output, bool connected, void *data);
     void OnHotPlugEvent(std::shared_ptr<HdiOutput> &output, bool connected);
@@ -276,12 +279,11 @@ private:
     ScreenId GetMirrorScreenId(ScreenId id);
 
     int32_t GetScreenSupportedColorGamutsLocked(ScreenId id, std::vector<ScreenColorGamut>& mode) const;
+    int32_t GetScreenSupportedMetaDataKeysLocked(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys) const;
     int32_t GetScreenColorGamutLocked(ScreenId id, ScreenColorGamut& mode) const;
     int32_t SetScreenColorGamutLocked(ScreenId id, int32_t modeIdx);
     int32_t SetScreenGamutMapLocked(ScreenId id, ScreenGamutMap mode);
     int32_t GetScreenGamutMapLocked(ScreenId id, ScreenGamutMap& mode) const;
-    bool RequestRotationLocked(ScreenId id, ScreenRotation rotation);
-    ScreenRotation GetRotationLocked(ScreenId id) const;
     int32_t GetScreenHDRCapabilityLocked(ScreenId id, RSScreenHDRCapability& screenHdrCapability) const;
     int32_t GetScreenTypeLocked(ScreenId id, RSScreenType& type) const;
     int32_t SetScreenSkipFrameIntervalLocked(ScreenId id, uint32_t skipFrameInterval);

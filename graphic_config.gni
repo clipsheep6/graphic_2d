@@ -12,19 +12,21 @@
 # limitations under the License.
 
 declare_args() {
-  graphic_graphic_2d_feature_bootanimation_enable = true
-  graphic_graphic_2d_feature_ace_enable_gpu = true
-  graphic_graphic_2d_feature_color_gamut_enable = false
-  graphic_graphic_2d_feature_rs_enable_eglimage = false
+  graphic_standard_feature_bootanimation_enable = true
+  graphic_standard_feature_ace_enable_gpu = true
+  graphic_standard_feature_color_gamut_enable = false
+  graphic_standard_feature_rs_enable_eglimage = false
+  graphic_standard_feature_rs_enable_uni_render = false
 }
 
-if (graphic_graphic_2d_feature_ace_enable_gpu) {
+if (graphic_standard_feature_ace_enable_gpu) {
   gpu_defines = [
     "ACE_ENABLE_GL",
     "RS_ENABLE_GL",
   ]
   ace_enable_gpu = true
   rs_enable_gpu = true
+  surface_enable_gpu = true
 
   # libgl is a native stub for decoupling system.img and vendor.img
   # real libgl installed in /vendor/lib/chipsetsdk
@@ -36,19 +38,21 @@ if (graphic_graphic_2d_feature_ace_enable_gpu) {
   gpu_defines = [ "ACE_DISABLE_GL" ]
   ace_enable_gpu = false
   rs_enable_gpu = false
+  surface_enable_gpu = false
   libgl = []
 }
 
-if (graphic_graphic_2d_feature_rs_enable_eglimage) {
-  gpu_defines += [ "RS_ENABLE_EGLIMAGE" ]
+if (graphic_standard_feature_rs_enable_eglimage) {
+  gpu_defines += [
+    "RS_ENABLE_EGLIMAGE",
+    "RS_ENABLE_EGLQUERYSURFACE",
+  ]
   rs_enable_eglimage = true
 } else {
   gpu_defines += [ "RS_DISABLE_EGLIMAGE" ]
   rs_enable_eglimage = false
 }
 
-if (graphic_graphic_2d_feature_color_gamut_enable) {
-  color_gamut_enable = true
-} else {
-  color_gamut_enable = false
+if (graphic_standard_feature_rs_enable_uni_render) {
+  gpu_defines += [ "RS_ENABLE_UNI_RENDER" ]
 }

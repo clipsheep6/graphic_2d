@@ -24,27 +24,37 @@ namespace OHOS {
 namespace Rosen {
 class RSContext;
 class RSNodeVisitor;
+class RSCommand;
 
 class RSBaseRenderNode : public std::enable_shared_from_this<RSBaseRenderNode> {
 public:
     using WeakPtr = std::weak_ptr<RSBaseRenderNode>;
     using SharedPtr = std::shared_ptr<RSBaseRenderNode>;
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::BASE_NODE;
+    virtual RSRenderNodeType GetType() const
+    {
+        return Type;
+    }
 
     explicit RSBaseRenderNode(NodeId id, std::weak_ptr<RSContext> context = {}) : id_(id), context_(context) {};
     explicit RSBaseRenderNode(NodeId id, bool isOnTheTree = false, std::weak_ptr<RSContext> context = {}) : id_(id),
         isOnTheTree_(isOnTheTree), context_(context) {};
     virtual ~RSBaseRenderNode() = default;
 
-    void AddChild(const SharedPtr& child, int index = -1);
-    void RemoveChild(const SharedPtr& child);
+    void AddChild(SharedPtr child, int index = -1);
+    void MoveChild(SharedPtr child, int index);
+    void RemoveChild(SharedPtr child);
+    void ClearChildren();
+    void RemoveFromTree();
+    void RemoveFromTreeWithoutTransition();
+
     // Add/RemoveCrossParentChild only used as: the child is under multiple parents(e.g. a window cross multi-screens)
     void AddCrossParentChild(const SharedPtr& child, int32_t index = -1);
     void RemoveCrossParentChild(const SharedPtr& child, const WeakPtr& newParent);
-    void ClearChildren();
-    void RemoveFromTree();
+
     virtual void CollectSurface(const std::shared_ptr<RSBaseRenderNode>& node,
-                                std::vector<RSBaseRenderNode::SharedPtr>& vec);
+                                std::vector<RSBaseRenderNode::SharedPtr>& vec,
+                                bool isUniRender);
     virtual void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor);
     virtual void Process(const std::shared_ptr<RSNodeVisitor>& visitor);
 
@@ -55,7 +65,7 @@ public:
     }
 
     WeakPtr GetParent() const;
-    void ResetParent();
+    virtual void ResetParent();
 
     NodeId GetId() const
     {
@@ -91,18 +101,26 @@ public:
             return parent ? parent->HasDisappearingTransition(true) : false;
         }
     }
-
-    virtual RSRenderNodeType GetType() const
+    
+    void SetTunnelHandleChange(bool change)
     {
-        return RSRenderNodeType::BASE_NODE;
+        isTunnelHandleChange_ = change;
     }
 
-    template<typename T>
-    bool IsInstanceOf();
+    bool GetTunnelHandleChange() const
+    {
+        return isTunnelHandleChange_;
+    }
 
     // type-safe reinterpret_cast
     template<typename T>
-    static std::shared_ptr<T> ReinterpretCast(const std::shared_ptr<RSBaseRenderNode>& node)
+    bool IsInstanceOf()
+    {
+        constexpr uint32_t targetType = static_cast<uint32_t>(T::Type);
+        return (static_cast<uint32_t>(GetType()) & targetType) == targetType;
+    }
+    template<typename T>
+    static std::shared_ptr<T> ReinterpretCast(std::shared_ptr<RSBaseRenderNode> node)
     {
         return node ? node->ReinterpretCastTo<T>() : nullptr;
     }
@@ -118,8 +136,8 @@ protected:
         DIRTY,
     };
     virtual bool IsDirty() const;
-    void SetDirty();
     void SetClean();
+    void SetDirty();
 
     void DumpNodeType(std::string& out) const;
 
@@ -128,6 +146,7 @@ protected:
         return context_;
     }
 
+    static void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId);
 private:
     NodeId id_;
 
@@ -143,6 +162,8 @@ private:
 
     const std::weak_ptr<RSContext> context_;
     NodeDirty dirtyStatus_ = NodeDirty::DIRTY;
+    friend class RSRenderPropertyBase;
+    std::atomic<bool> isTunnelHandleChange_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

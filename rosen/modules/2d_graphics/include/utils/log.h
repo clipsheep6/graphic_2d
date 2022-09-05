@@ -19,10 +19,15 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#ifdef OHOS_PLATFORM
 #include <hilog/log.h>
+#endif
 
 namespace OHOS {
 namespace Rosen {
+
+#ifndef LOGD
+#ifdef OHOS_PLATFORM
 #define LOGD(fmt, ...)               \
     ::OHOS::HiviewDFX::HiLog::Debug( \
         ::OHOS::HiviewDFX::HiLogLabel { LOG_CORE, 0, "Drawing" }, "%{public}s: " fmt, __func__, ##__VA_ARGS__)
@@ -35,6 +40,13 @@ namespace Rosen {
 #define LOGE(fmt, ...)               \
     ::OHOS::HiviewDFX::HiLog::Error( \
         ::OHOS::HiviewDFX::HiLogLabel { LOG_CORE, 0, "Drawing" }, "%{public}s: " fmt, __func__, ##__VA_ARGS__)
+#else
+#define LOGD(fmt, ...)
+#define LOGI(fmt, ...)
+#define LOGW(fmt, ...)
+#define LOGE(fmt, ...)
+#endif
+#endif
 } // namespace Rosen
 } // namespace OHOS
 #endif

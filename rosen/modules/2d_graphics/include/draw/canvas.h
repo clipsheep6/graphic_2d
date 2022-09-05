@@ -19,8 +19,7 @@
 #include <iostream>
 #include <string>
 
-#include "draw/core_canvas.h"
-#include "image/bitmap.h"
+#include "drawing/draw/core_canvas.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -28,6 +27,9 @@ namespace Drawing {
 class Canvas : public CoreCanvas {
 public:
     Canvas() {}
+
+    // constructor adopt a raw canvas ptr, using for ArkUI, should remove after rosen modifier provide drawing Canvas.
+    explicit Canvas(void* rawCanvas) : CoreCanvas(rawCanvas) {}
     virtual ~Canvas() {};
 };
 } // namespace Drawing

@@ -37,7 +37,9 @@ ohos_source_set("render_service_client_src") {
     "$rosen_root/modules/2d_graphics/src",
     "//foundation/graphic/utils/log",
     "//foundation/graphic/graphic_2d/utils/log",
+    "//foundation/graphic/graphic_2d/utils/sandbox",
     "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
+    "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk/include",
   ]
 
   sources = [
@@ -45,6 +47,7 @@ ohos_source_set("render_service_client_src") {
     "core/animation/rs_animation.cpp",
     "core/animation/rs_animation_callback.cpp",
     "core/animation/rs_animation_group.cpp",
+    "core/animation/rs_animation_manager_map.cpp",
     "core/animation/rs_animation_timing_curve.cpp",
     "core/animation/rs_curve_animation.cpp",
     "core/animation/rs_implicit_animation_param.cpp",
@@ -52,17 +55,22 @@ ohos_source_set("render_service_client_src") {
     "core/animation/rs_implicit_animator_map.cpp",
     "core/animation/rs_keyframe_animation.cpp",
     "core/animation/rs_path_animation.cpp",
+    "core/animation/rs_property_animation.cpp",
     "core/animation/rs_spring_animation.cpp",
     "core/animation/rs_transition.cpp",
+    "core/animation/rs_ui_animation_manager.cpp",
+
+    #modifier
+    "core/modifier/rs_extended_modifier.cpp",
+    "core/modifier/rs_modifier_extractor.cpp",
+    "core/modifier/rs_modifier_manager.cpp",
+    "core/modifier/rs_property.cpp",
+    "core/modifier/rs_property_modifier.cpp",
 
     #jank_detector
     "core/jank_detector/rs_jank_detector.cpp",
 
     #pipeline
-    "core/pipeline/overdraw/rs_cpu_overdraw_canvas_listener.cpp",
-    "core/pipeline/overdraw/rs_gpu_overdraw_canvas_listener.cpp",
-    "core/pipeline/overdraw/rs_listened_canvas.cpp",
-    "core/pipeline/overdraw/rs_overdraw_controller.cpp",
     "core/pipeline/rs_node_map.cpp",
     "core/pipeline/rs_render_thread.cpp",
     "core/pipeline/rs_render_thread_visitor.cpp",
@@ -78,6 +86,8 @@ ohos_source_set("render_service_client_src") {
     "core/ui/rs_canvas_node.cpp",
     "core/ui/rs_display_node.cpp",
     "core/ui/rs_node.cpp",
+    "core/ui/rs_pixel_map_util.cpp",
+    "core/ui/rs_proxy_node.cpp",
     "core/ui/rs_root_node.cpp",
     "core/ui/rs_surface_extractor.cpp",
     "core/ui/rs_surface_node.cpp",
@@ -102,8 +112,7 @@ ohos_source_set("render_service_client_src") {
   deps = []
 
   deps += [
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara_watchagent",
+    "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk:accessibilityconfig",
     "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
   ]
 
@@ -125,7 +134,8 @@ ohos_source_set("render_service_client_src") {
   external_deps = [
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
-    "startup_l2:syspara",
+    "init:libbeget_proxy",
+    "init:libbegetutil",
   ]
   public_deps =
       [ "$rosen_root/modules/render_service_base:librender_service_base" ]
@@ -139,7 +149,7 @@ ohos_shared_library("librender_service_client") {
 
   public_configs = [ ":render_service_client_config" ]
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 

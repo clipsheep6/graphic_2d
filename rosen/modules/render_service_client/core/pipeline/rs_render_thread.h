@@ -22,7 +22,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <vsync_helper.h>
+#include <event_handler.h>
 
 #include "common/rs_thread_handler.h"
 #include "common/rs_thread_looper.h"
@@ -36,6 +36,7 @@
 
 namespace OHOS {
 namespace Rosen {
+class HighContrastObserver;
 class RSRenderThread final {
 public:
     static RSRenderThread& Instance();
@@ -72,6 +73,34 @@ public:
     {
         return uiTimestamp_;
     }
+    void SetHighContrast(bool enabled)
+    {
+        isHighContrastEnabled_  = enabled;
+    }
+    bool isHighContrastEnabled() const
+    {
+        return isHighContrastEnabled_;
+    }
+    void UpdateRenderMode(bool needRender);
+    void NotifyClearBufferCache();
+    bool GetForceUpdateSurfaceNode() const
+    {
+        return forceUpdateSurfaceNode_;
+    }
+
+    void SetCacheDir(const std::string& filePath)
+    {
+        cacheDir_ = filePath;
+    }
+
+    // If disabled partial render, rt forces to render whole frame
+    void SetRTRenderForced(bool isRenderForced)
+    {
+        if ((isRTRenderForced_ != isRenderForced)) {
+            ROSEN_LOGD("RSRenderThread::SetRenderForced %d -> %d", isRTRenderForced_, isRenderForced);
+            isRTRenderForced_ = isRenderForced;
+        }
+    }
 
 private:
     RSRenderThread();
@@ -90,7 +119,12 @@ private:
     void Render();
     void SendCommands();
 
+    void UpdateSurfaceNodeParentInRS();
+    void ClearBufferCache();
     std::atomic_bool running_ = false;
+    std::atomic_bool hasSkipVsync_ = false;
+    bool needRender_ = true;
+    bool forceUpdateSurfaceNode_ = false;
     std::atomic_int activeWindowCnt_ = 0;
     std::unique_ptr<std::thread> thread_ = nullptr;
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
@@ -103,11 +137,10 @@ private:
     std::mutex cmdMutex_;
     std::vector<std::unique_ptr<RSTransactionData>> cmds_;
     bool hasRunningAnimation_ = false;
-    std::shared_ptr<RSNodeVisitor> visitor_;
+    std::shared_ptr<RSRenderThreadVisitor> visitor_;
 
     uint64_t timestamp_ = 0;
     uint64_t prevTimestamp_ = 0;
-    uint64_t refreshPeriod_ = 16666667;
     int32_t tid_ = -1;
     uint64_t mValue = 0;
 
@@ -122,6 +155,11 @@ private:
     RSContext context_;
 
     RenderContext* renderContext_ = nullptr;
+    std::shared_ptr<HighContrastObserver> highContrastObserver_;
+    std::atomic_bool isHighContrastEnabled_ = false;
+
+    std::string cacheDir_;
+    bool isRTRenderForced_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

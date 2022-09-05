@@ -87,21 +87,25 @@ public:
 
     // Call carefully. This interface will empty all caches of the current process
     GSError CleanCache() override;
+    GSError GoBackground() override;
 
     GSError SetTransform(TransformType transform) override;
     TransformType GetTransform() const override;
 
     GSError IsSupportedAlloc(const std::vector<VerifyAllocInfo> &infos, std::vector<bool> &supporteds) override;
-
+    GSError Disconnect() override;
     GSError SetScalingMode(uint32_t sequence, ScalingMode scalingMode) override;
     GSError GetScalingMode(uint32_t sequence, ScalingMode &scalingMode) override;
     GSError SetMetaData(uint32_t sequence, const std::vector<HDRMetaData> &metaData) override;
     GSError SetMetaDataSet(uint32_t sequence, HDRMetadataKey key, const std::vector<uint8_t> &metaData) override;
+    GSError QueryMetaDataType(uint32_t sequence, HDRMetaDataType &type) const override;
     GSError GetMetaData(uint32_t sequence, std::vector<HDRMetaData> &metaData) const override;
     GSError GetMetaDataSet(uint32_t sequence, HDRMetadataKey &key,
                            std::vector<uint8_t> &metaData) const override;
     GSError SetTunnelHandle(const ExtDataHandle *handle) override;
-    GSError GetTunnelHandle(ExtDataHandle **handle) const override;
+    sptr<SurfaceTunnelHandle> GetTunnelHandle() const override;
+    GSError SetPresentTimestamp(uint32_t sequence, const PresentTimestamp &timestamp) override;
+    GSError GetPresentTimestamp(uint32_t sequence, PresentTimestampType type, int64_t &time) const override;
 
 private:
     bool IsRemote();
@@ -113,6 +117,7 @@ private:
     sptr<IBufferProducer> producer_ = nullptr;
     std::string name_ = "not init";
     uint64_t queueId_ = 0;
+    bool isDisconnected = true;
 };
 } // namespace OHOS
 

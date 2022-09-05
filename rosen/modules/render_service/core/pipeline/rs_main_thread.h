@@ -25,7 +25,7 @@
 #include "refbase.h"
 #include "rs_render_engine.h"
 #include "vsync_distributor.h"
-#include "vsync_helper.h"
+#include <event_handler.h>
 #include "vsync_receiver.h"
 
 #include "command/rs_command.h"
@@ -33,12 +33,15 @@
 #include "common/rs_thread_looper.h"
 #include "ipc_callbacks/iapplication_agent.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
+#include "ipc_callbacks/rs_irender_mode_change_callback.h"
 #include "pipeline/rs_context.h"
+#include "pipeline/rs_uni_render_judgement.h"
 #include "platform/drawing/rs_vsync_client.h"
+#include "platform/common/rs_event_manager.h"
+#include "transaction/rs_transaction_data.h"
 
 namespace OHOS::Rosen {
-class RSTransactionData;
-
+class ColorCorrectionObserver;
 namespace Detail {
 template<typename Task>
 class ScheduledTask : public RefBase {
@@ -73,6 +76,7 @@ public:
     void RequestNextVSync();
     void PostTask(RSTaskMessage::RSTask task);
     void RenderServiceTreeDump(std::string& dumpString);
+    void RsEventParamDump(std::string& dumpString);
 
     template<typename Task, typename Return = std::invoke_result_t<Task>>
     std::future<Return> ScheduleTask(Task&& task)
@@ -97,6 +101,8 @@ public:
     }
     void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app);
     void UnRegisterApplicationAgent(sptr<IApplicationAgent> app);
+    void NotifyRenderModeChanged(bool useUniVisitor);
+    bool QueryIfUseUniVisitor() const;
 
     void RegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback);
     void UnRegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback);
@@ -104,10 +110,18 @@ public:
 
     void WaitUtilUniRenderFinished();
     void NotifyUniRenderFinish();
+    void SetRenderModeChangeCallback(sptr<RSIRenderModeChangeCallback> callback);
+    bool IfUseUniVisitor() const;
+
+    void ClearTransactionDataPidInfo(pid_t remotePid);
+    void AddTransactionDataPidInfo(pid_t remotePid);
 
     sptr<VSyncDistributor> rsVSyncDistributor_;
 
 private:
+    using TransactionDataIndexMap = std::unordered_map<pid_t,
+        std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;
+
     RSMainThread();
     ~RSMainThread() noexcept;
     RSMainThread(const RSMainThread&) = delete;
@@ -122,22 +136,43 @@ private:
     void ReleaseAllNodesBuffer();
     void Render();
     void CalcOcclusion();
+    bool CheckQosVisChanged(std::map<uint32_t, bool>& pidVisMap);
+    void CallbackToQOS(std::map<uint32_t, bool>& pidVisMap);
     void CallbackToWMS(VisibleData& curVisVec);
     void SendCommands();
+    void InitRSEventDetector();
+    void RemoveRSEventDetector();
+    void SetRSEventDetectorLoopStartTag();
+    void SetRSEventDetectorLoopFinishTag();
 
     bool DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
     void ResetSortedChildren(std::shared_ptr<RSBaseRenderNode> node);
 
-    std::mutex transitionDataMutex_;
+    void ClassifyRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
+    void ProcessCommandForDividedRender();
+    void ProcessCommandForUniRender();
+    void WaitUntilUnmarshallingTaskFinished();
+    void MergeToEffectiveTransactionDataMap(TransactionDataMap& cachedTransactionDataMap);
+
+    void CheckBufferAvailableIfNeed();
+    void CheckUpdateSurfaceNodeIfNeed();
+
+    bool HasWindowAnimation() const;
+
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     RSTaskMessage::RSTask mainLoop_;
     std::unique_ptr<RSVsyncClient> vsyncClient_ = nullptr;
     std::unordered_map<NodeId, uint64_t> bufferTimestamps_;
 
+    std::mutex transitionDataMutex_;
     std::unordered_map<NodeId, std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>>> cachedCommands_;
     std::vector<std::unique_ptr<RSCommand>> effectiveCommands_;
     std::vector<std::unique_ptr<RSCommand>> pendingEffectiveCommands_;
+    std::vector<std::unique_ptr<RSCommand>> followVisitorCommands_;
+
+    TransactionDataMap cachedTransactionDataMap_;
+    TransactionDataIndexMap effectiveTransactionDataIndexMap_;
 
     uint64_t timestamp_ = 0;
     std::unordered_map<uint32_t, sptr<IApplicationAgent>> applicationAgentMap_;
@@ -147,14 +182,29 @@ private:
     std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
     std::vector<sptr<RSIOcclusionChangeCallback>> occlusionListeners_;
 
+    bool waitingBufferAvailable_ = false; // uni->non-uni mode, wait for RT buffer, only used in main thread
+    bool waitingUpdateSurfaceNode_ = false; // non-uni->uni mode, wait for update surfaceView, only used in main thread
+    bool isUniRender_ = RSUniRenderJudgement::IsUniRender();
+    sptr<RSIRenderModeChangeCallback> renderModeChangeCallback_;
+    std::atomic_bool useUniVisitor_ = isUniRender_;
+    RSTaskMessage::RSTask unmarshalBarrierTask_;
+    std::condition_variable unmarshalTaskCond_;
+    std::mutex unmarshalMutex_;
+    int32_t unmarshalFinishedCount_ = 0;
+
     mutable std::mutex uniRenderMutex_;
     bool uniRenderFinished_ = false;
     std::condition_variable uniRenderCond_;
+    std::map<uint32_t, bool> lastPidVisMap_;
     VisibleData lastVisVec_;
-    bool doAnimate_ = false;
+    bool qosPidCal_ = false;
+    bool doWindowAnimate_ = false;
     uint32_t lastSurfaceCnt_ = 0;
 
     std::shared_ptr<RSRenderEngine> renderEngine_;
+    std::shared_ptr<RSBaseEventDetector> rsCompositionTimeoutDetector_;
+    RSEventManager rsEventManager_;
+    std::shared_ptr<ColorCorrectionObserver> correctionObserver_;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

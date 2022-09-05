@@ -15,13 +15,26 @@
 
 #include "pipeline/rs_draw_cmd.h"
 
+#include "pixel_map_rosen_utils.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 #include "pipeline/rs_paint_filter_canvas.h"
-#include "pipeline/rs_pixel_map_util.h"
 #include "pipeline/rs_root_render_node.h"
 #include "securec.h"
+
 namespace OHOS {
 namespace Rosen {
+namespace {
+constexpr int32_t CORNER_SIZE = 4;
+void SimplifyPaint(int32_t color, SkPaint* paint)
+{
+    paint->setColor(color);
+    paint->setShader(nullptr);
+    paint->setColorFilter(nullptr);
+    paint->setStrokeWidth(1.04); // 1.04 is empirical value
+    paint->setStrokeJoin(SkPaint::kRound_Join);
+}
+}
 RectOpItem::RectOpItem(SkRect rect, const SkPaint& paint) : OpItemWithPaint(sizeof(RectOpItem)), rect_(rect)
 {
     paint_ = paint;
@@ -161,7 +174,25 @@ TextBlobOpItem::TextBlobOpItem(const sk_sp<SkTextBlob> textBlob, float x, float 
 
 void TextBlobOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
-    canvas.drawTextBlob(textBlob_, x_, y_, paint_);
+    bool isHighContrastEnabled = canvas.isHighContrastEnabled() || RSSystemProperties::GetHighContrastStatus();
+    if (isHighContrastEnabled) {
+        ROSEN_LOGD("TextBlobOpItem::Draw highContrastEnabled");
+        int32_t color = paint_.getColor();
+        int32_t channelSum = SkColorGetR(color) + SkColorGetG(color) + SkColorGetB(color);
+        bool flag = channelSum < 384; // 384 is empirical value
+
+        SkPaint outlinePaint(paint_);
+        SimplifyPaint(flag ? SK_ColorWHITE : SK_ColorBLACK, &outlinePaint);
+        outlinePaint.setStyle(SkPaint::kStrokeAndFill_Style);
+        canvas.drawTextBlob(textBlob_, x_, y_, outlinePaint);
+
+        SkPaint innerPaint(paint_);
+        SimplifyPaint(SK_ColorBLACK, &innerPaint);
+        innerPaint.setStyle(SkPaint::kFill_Style);
+        canvas.drawTextBlob(textBlob_, x_, y_, innerPaint);
+    } else {
+        canvas.drawTextBlob(textBlob_, x_, y_, paint_);
+    }
 }
 
 BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top, const SkPaint* paint)
@@ -213,7 +244,7 @@ PixelMapOpItem::PixelMapOpItem(
 
 void PixelMapOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
-    sk_sp<SkImage> skImage = RSPixelMapUtil::PixelMapToSkImage(pixelmap_);
+    sk_sp<SkImage> skImage = Media::PixelMapRosenUtils::ExtractSkImage(pixelmap_);
     canvas.drawImage(skImage, left_, top_, &paint_);
 }
 
@@ -228,22 +259,8 @@ PixelMapRectOpItem::PixelMapRectOpItem(
 
 void PixelMapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
-    sk_sp<SkImage> skImage = RSPixelMapUtil::PixelMapToSkImage(pixelmap_);
+    sk_sp<SkImage> skImage = Media::PixelMapRosenUtils::ExtractSkImage(pixelmap_);
     canvas.drawImageRect(skImage, src_, dst_, &paint_);
-}
-
-PixelMapWithParmOpItem::PixelMapWithParmOpItem(const std::shared_ptr<Media::PixelMap>& pixelmap,
-    const RsImageInfo& rsImageInfo, const SkPaint& paint)
-    : OpItemWithPaint(sizeof(PixelMapWithParmOpItem)), pixelmap_(pixelmap), rsImageInfo_(rsImageInfo)
-{
-    paint_ = paint;
-}
-
-void PixelMapWithParmOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const
-{
-    sk_sp<SkImage> skImage = RSPixelMapUtil::PixelMapToSkImage(pixelmap_);
-    auto op = std::make_unique<ImageWithParmOpItem>(skImage, rsImageInfo_, paint_);
-    op->Draw(canvas, rect);
 }
 
 BitmapLatticeOpItem::BitmapLatticeOpItem(
@@ -296,9 +313,14 @@ void AdaptiveRRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) 
     canvas.drawRRect(rrect, paint_);
 }
 
-ClipAdaptiveRRectOpItem::ClipAdaptiveRRectOpItem(float radius)
-    : OpItemWithPaint(sizeof(ClipAdaptiveRRectOpItem)), radius_(radius)
-{}
+ClipAdaptiveRRectOpItem::ClipAdaptiveRRectOpItem(const SkVector radius[])
+    : OpItem(sizeof(ClipAdaptiveRRectOpItem))
+{
+    errno_t ret = memcpy_s(radius_, CORNER_SIZE * sizeof(SkVector), radius, CORNER_SIZE * sizeof(SkVector));
+    if (ret != EOK) {
+        ROSEN_LOGE("ClipAdaptiveRRectOpItem: memcpy failed!");
+    }
+}
 
 void ClipAdaptiveRRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const
 {
@@ -306,7 +328,8 @@ void ClipAdaptiveRRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect* re
         ROSEN_LOGE("ClipAdaptiveRRectOpItem::Draw skrect is null");
         return;
     }
-    SkRRect rrect = SkRRect::MakeRectXY(*rect, radius_, radius_);
+    SkRRect rrect = SkRRect::MakeEmpty();
+    rrect.setRectRadii(*rect, radius_);
     canvas.clipRRect(rrect, true);
 }
 
@@ -363,6 +386,19 @@ ImageWithParmOpItem::ImageWithParmOpItem(const sk_sp<SkImage> img,
     paint_ = paint;
 }
 
+ImageWithParmOpItem::ImageWithParmOpItem(
+    const std::shared_ptr<Media::PixelMap>& pixelmap, const RsImageInfo& rsimageInfo, const SkPaint& paint)
+    : OpItemWithPaint(sizeof(ImageWithParmOpItem))
+{
+    rsImage_ = std::make_shared<RSImage>();
+    rsImage_->SetPixelMap(pixelmap);
+    rsImage_->SetImageFit(rsimageInfo.fitNum_);
+    rsImage_->SetImageRepeat(rsimageInfo.repeatNum_);
+    rsImage_->SetRadius(rsimageInfo.radius_);
+    rsImage_->SetScale(rsimageInfo.scale_);
+    paint_ = paint;
+}
+
 ImageWithParmOpItem::ImageWithParmOpItem(const std::shared_ptr<RSImage>& rsImage, const SkPaint& paint)
     : OpItemWithPaint(sizeof(ImageWithParmOpItem)), rsImage_(rsImage)
 {
@@ -372,7 +408,7 @@ ImageWithParmOpItem::ImageWithParmOpItem(const std::shared_ptr<RSImage>& rsImage
 void ImageWithParmOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const
 {
     if (!rect) {
-        ROSEN_LOGE("agp_ace: no rect");
+        ROSEN_LOGE("ImageWithParmOpItem: no rect");
         return;
     }
     rsImage_->CanvasDrawImage(canvas, *rect, paint_);
@@ -982,34 +1018,6 @@ OpItem* PixelMapRectOpItem::Unmarshalling(Parcel& parcel)
     return new PixelMapRectOpItem(pixelmap, rectSrc, rectDst, &paint);
 }
 
-// PixelMapWithParmOpItem
-bool PixelMapWithParmOpItem::Marshalling(Parcel& parcel) const
-{
-    bool success = true;
-    success &= RSMarshallingHelper::Marshalling(parcel, pixelmap_);
-    success &= RSMarshallingHelper::Marshalling(parcel, rsImageInfo_);
-    success &= RSMarshallingHelper::Marshalling(parcel, paint_);
-    return success;
-}
-
-OpItem* PixelMapWithParmOpItem::Unmarshalling(Parcel& parcel)
-{
-    std::shared_ptr<Media::PixelMap> pixelmap;
-    RsImageInfo rsImageInfo(0, 0, 0, 0);
-    SkPaint paint;
-    if (!RSMarshallingHelper::Unmarshalling(parcel, pixelmap)) {
-        return nullptr;
-    }
-    if (!RSMarshallingHelper::Unmarshalling(parcel, rsImageInfo)) {
-        return nullptr;
-    }
-    if (!RSMarshallingHelper::Unmarshalling(parcel, paint)) {
-        return nullptr;
-    }
-
-    return new PixelMapWithParmOpItem(pixelmap, rsImageInfo, paint);
-}
-
 // BitmapNineOpItem
 bool BitmapNineOpItem::Marshalling(Parcel& parcel) const
 {
@@ -1076,9 +1084,11 @@ bool ClipAdaptiveRRectOpItem::Marshalling(Parcel& parcel) const
 
 OpItem* ClipAdaptiveRRectOpItem::Unmarshalling(Parcel& parcel)
 {
-    float radius;
-    if (!RSMarshallingHelper::Unmarshalling(parcel, radius)) {
-        return nullptr;
+    SkVector radius[CORNER_SIZE];
+    for (auto i = 0; i < CORNER_SIZE; i++) {
+        if (!RSMarshallingHelper::Unmarshalling(parcel, radius[i])) {
+            return nullptr;
+        }
     }
     return new ClipAdaptiveRRectOpItem(radius);
 }
@@ -1196,7 +1206,10 @@ OpItem* ConcatOpItem::Unmarshalling(Parcel& parcel)
 bool SaveLayerOpItem::Marshalling(Parcel& parcel) const
 {
     bool success = true;
-    success &= RSMarshallingHelper::Marshalling(parcel, rect_);
+    success &= parcel.WriteBool(rectPtr_ != nullptr);
+    if (rectPtr_) {
+        success &= RSMarshallingHelper::Marshalling(parcel, rect_);
+    }
     success &= RSMarshallingHelper::Marshalling(parcel, backdrop_);
     success &= RSMarshallingHelper::Marshalling(parcel, mask_);
     success &= RSMarshallingHelper::Marshalling(parcel, matrix_);
@@ -1207,14 +1220,22 @@ bool SaveLayerOpItem::Marshalling(Parcel& parcel) const
 
 OpItem* SaveLayerOpItem::Unmarshalling(Parcel& parcel)
 {
+    bool isRectExist;
     SkRect rect;
+    SkRect* rectPtr = nullptr;
     sk_sp<SkImageFilter> backdrop;
     sk_sp<SkImage> mask;
     SkMatrix matrix;
     SkCanvas::SaveLayerFlags flags;
     SkPaint paint;
-    if (!RSMarshallingHelper::Unmarshalling(parcel, rect)) {
+    if (!parcel.ReadBool(isRectExist)) {
         return nullptr;
+    }
+    if (isRectExist) {
+        if (!RSMarshallingHelper::Unmarshalling(parcel, rect)) {
+            return nullptr;
+        }
+        rectPtr = &rect;
     }
     if (!RSMarshallingHelper::Unmarshalling(parcel, backdrop)) {
         return nullptr;
@@ -1231,7 +1252,7 @@ OpItem* SaveLayerOpItem::Unmarshalling(Parcel& parcel)
     if (!RSMarshallingHelper::Unmarshalling(parcel, paint)) {
         return nullptr;
     }
-    SkCanvas::SaveLayerRec rec = { &rect, &paint, backdrop.get(), mask.get(), &matrix, flags };
+    SkCanvas::SaveLayerRec rec = { rectPtr, &paint, backdrop.get(), mask.get(), &matrix, flags };
 
     return new SaveLayerOpItem(rec);
 }
@@ -1293,7 +1314,7 @@ bool PointsOpItem::Marshalling(Parcel& parcel) const
     bool success = true;
     success &= RSMarshallingHelper::Marshalling(parcel, mode_);
     success &= RSMarshallingHelper::Marshalling(parcel, count_);
-    success &= RSMarshallingHelper::Marshalling(parcel, processedPoints_, count_);
+    success &= RSMarshallingHelper::MarshallingArray(parcel, processedPoints_, count_);
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
 }
@@ -1310,7 +1331,7 @@ OpItem* PointsOpItem::Unmarshalling(Parcel& parcel)
     if (!RSMarshallingHelper::Unmarshalling(parcel, count)) {
         return nullptr;
     }
-    if (!RSMarshallingHelper::Unmarshalling(parcel, processedPoints, count)) {
+    if (!RSMarshallingHelper::UnmarshallingArray(parcel, processedPoints, count)) {
         return nullptr;
     }
     if (!RSMarshallingHelper::Unmarshalling(parcel, paint)) {
@@ -1326,7 +1347,7 @@ bool VerticesOpItem::Marshalling(Parcel& parcel) const
     bool success = true;
     success &= RSMarshallingHelper::Marshalling(parcel, vertices_);
     success &= RSMarshallingHelper::Marshalling(parcel, boneCount_);
-    success &= RSMarshallingHelper::Marshalling(parcel, bones_, boneCount_);
+    success &= RSMarshallingHelper::MarshallingArray(parcel, bones_, boneCount_);
     success &= RSMarshallingHelper::Marshalling(parcel, mode_);
     success &= RSMarshallingHelper::Marshalling(parcel, paint_);
     return success;
@@ -1345,7 +1366,7 @@ OpItem* VerticesOpItem::Unmarshalling(Parcel& parcel)
     if (!RSMarshallingHelper::Unmarshalling(parcel, boneCount)) {
         return nullptr;
     }
-    if (!RSMarshallingHelper::Unmarshalling(parcel, bones, boneCount)) {
+    if (!RSMarshallingHelper::UnmarshallingArray(parcel, bones, boneCount)) {
         return nullptr;
     }
     if (!RSMarshallingHelper::Unmarshalling(parcel, mode)) {

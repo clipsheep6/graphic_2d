@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace {
-constexpr uint32_t PRODUCER_REF_COUNT_IN_PRODUCER_SURFACE = 1;
+constexpr int32_t PRODUCER_REF_COUNT_IN_PRODUCER_SURFACE = 1;
 }
 
 ProducerSurface::ProducerSurface(sptr<IBufferProducer>& producer)
@@ -38,8 +38,8 @@ ProducerSurface::~ProducerSurface()
     if (producer_->GetSptrRefCount() > PRODUCER_REF_COUNT_IN_PRODUCER_SURFACE) {
         BLOGNE("Wrong SptrRefCount! producer_:%{public}d", producer_->GetSptrRefCount());
     }
-    BLOGND("dtor, name:%{public}s, Queue Id:%{public}" PRIu64 "", name_.c_str(), queueId_);
-    auto ret = producer_->Disconnect();
+    BLOGND("dtor, name:%{public}s, Queue Id:%{public}" PRIu64, name_.c_str(), queueId_);
+    auto ret = Disconnect();
     if (ret != GSERROR_OK) {
         BLOGNE("Disconnect failed, %{public}s", GSErrorStr(ret).c_str());
     }
@@ -55,7 +55,7 @@ GSError ProducerSurface::Init()
         BLOGNE("GetNameAndUniqueId failed, %{public}s", GSErrorStr(ret).c_str());
     }
     inited_.store(true);
-    BLOGND("ctor, name:%{public}s, Queue Id:%{public}" PRIu64 "", name_.c_str(), queueId_);
+    BLOGND("ctor, name:%{public}s, Queue Id:%{public}" PRIu64, name_.c_str(), queueId_);
     return GSERROR_OK;
 }
 
@@ -76,11 +76,18 @@ GSError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
     sptr<BufferExtraData> bedataimpl = new BufferExtraDataImpl;
     GSError ret = producer_->RequestBuffer(config, bedataimpl, retval);
     if (ret != GSERROR_OK) {
-        BLOGN_FAILURE("Producer report %{public}s", GSErrorStr(ret).c_str());
+        if (ret == GSERROR_NO_CONSUMER) {
+            std::lock_guard<std::mutex> lockGuard(mutex_);
+            bufferProducerCache_.clear();
+        }
+        BLOGND("Producer report %{public}s", GSErrorStr(ret).c_str());
         return ret;
     }
 
     std::lock_guard<std::mutex> lockGuard(mutex_);
+    if (isDisconnected) {
+        isDisconnected = false;
+    }
     // add cache
     if (retval.buffer != nullptr) {
         bufferProducerCache_[retval.sequence] = retval.buffer;
@@ -281,12 +288,22 @@ bool ProducerSurface::IsRemote()
 
 GSError ProducerSurface::CleanCache()
 {
-    BLOGND("Queue Id:%{public}" PRIu64 "", queueId_);
+    BLOGND("Queue Id:%{public}" PRIu64, queueId_);
     if (IsRemote()) {
         std::lock_guard<std::mutex> lockGuard(mutex_);
         bufferProducerCache_.clear();
     }
     return producer_->CleanCache();
+}
+
+GSError ProducerSurface::GoBackground()
+{
+    BLOGND("Queue Id:%{public}" PRIu64 "", queueId_);
+    if (IsRemote()) {
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        bufferProducerCache_.clear();
+    }
+    return producer_->GoBackground();
 }
 
 uint64_t ProducerSurface::GetUniqueId() const
@@ -314,6 +331,24 @@ GSError ProducerSurface::IsSupportedAlloc(const std::vector<VerifyAllocInfo> &in
         return GSERROR_INVALID_ARGUMENTS;
     }
     return producer_->IsSupportedAlloc(infos, supporteds);
+}
+
+GSError ProducerSurface::Disconnect()
+{
+    {
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        if (isDisconnected) {
+            return GSERROR_INVALID_OPERATING;
+        }
+    }
+    GSError ret = producer_->Disconnect();
+    {
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        if (ret == GSERROR_OK) {
+            isDisconnected = true;
+        }
+    }
+    return ret;
 }
 
 GSError ProducerSurface::SetScalingMode(uint32_t sequence, ScalingMode scalingMode)
@@ -348,6 +383,11 @@ GSError ProducerSurface::SetMetaDataSet(uint32_t sequence, HDRMetadataKey key,
     return producer_->SetMetaDataSet(sequence, key, metaData);
 }
 
+GSError ProducerSurface::QueryMetaDataType(uint32_t sequence, HDRMetaDataType &type) const
+{
+    return GSERROR_NOT_SUPPORT;
+}
+
 GSError ProducerSurface::GetMetaData(uint32_t sequence, std::vector<HDRMetaData> &metaData) const
 {
     return GSERROR_NOT_SUPPORT;
@@ -361,14 +401,27 @@ GSError ProducerSurface::GetMetaDataSet(uint32_t sequence, HDRMetadataKey &key,
 
 GSError ProducerSurface::SetTunnelHandle(const ExtDataHandle *handle)
 {
-    if (handle == nullptr || handle->reserveInts == 0) {
-        return GSERROR_INVALID_ARGUMENTS;
-    }
     return producer_->SetTunnelHandle(handle);
 }
 
-GSError ProducerSurface::GetTunnelHandle(ExtDataHandle **handle) const
+sptr<SurfaceTunnelHandle> ProducerSurface::GetTunnelHandle() const
+{
+    // not support
+    return nullptr;
+}
+
+GSError ProducerSurface::SetPresentTimestamp(uint32_t sequence, const PresentTimestamp &timestamp)
 {
     return GSERROR_NOT_SUPPORT;
+}
+
+GSError ProducerSurface::GetPresentTimestamp(uint32_t sequence, PresentTimestampType type,
+                                             int64_t &time) const
+{
+    if (type <= PresentTimestampType::HARDWARE_DISPLAY_PTS_UNSUPPORTED ||
+        type > PresentTimestampType::HARDWARE_DISPLAY_PTS_TIMESTAMP) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    return producer_->GetPresentTimestamp(sequence, type, time);
 }
 } // namespace OHOS

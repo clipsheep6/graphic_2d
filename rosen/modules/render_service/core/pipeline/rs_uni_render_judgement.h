@@ -16,17 +16,16 @@
 #ifndef RS_UNI_RENDER_JUDGEMENT_H
 #define RS_UNI_RENDER_JUDGEMENT_H
 
-#include <set>
 #include <string>
 
 namespace OHOS {
 namespace Rosen {
+class RSBaseRenderNode;
 enum class UniRenderEnabledType {
     UNI_RENDER_DISABLED = 0,
     UNI_RENDER_ENABLED_FOR_ALL,
-    UNI_RENDER_PARTIALLY_ENABLED,
+    UNI_RENDER_DYNAMIC_SWITCH,
 };
-
 // Judge the unified rendering strategy of RenderService.
 class RSUniRenderJudgement final {
 public:
@@ -34,18 +33,16 @@ public:
 
     // used by render server
     static UniRenderEnabledType GetUniRenderEnabledType();
-    static const std::set<std::string>& GetUniRenderEnabledList();
-    static bool QueryClientEnabled(const std::string &bundleName);
     static void InitUniRenderConfig();
     static bool IsUniRender();
 
 private:
     RSUniRenderJudgement() = default;
+    // dealing with Windows type end of line "\r\n"
+    static std::ifstream& SafeGetLine(std::ifstream &configFile, std::string &line);
 
     static void InitUniRenderWithConfigFile();
-
     static inline UniRenderEnabledType uniRenderEnabledType_ = UniRenderEnabledType::UNI_RENDER_DISABLED;
-    static inline std::set<std::string> uniRenderEnabledList_ {};
 };
 } // namespace Rosen
 } // namespace OHOS

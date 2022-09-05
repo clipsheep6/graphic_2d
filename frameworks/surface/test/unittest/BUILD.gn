@@ -12,8 +12,9 @@
 # limitations under the License.
 
 import("//build/test.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
-module_out_path = "graphic_graphic_2d/surface"
+module_out_path = "graphic_standard/surface"
 
 group("unittest") {
   testonly = true
@@ -28,6 +29,7 @@ group("unittest") {
     ":buffer_shared_test",
     ":consumer_surface_test",
     ":native_buffer_test",
+    ":native_image_test",
     ":native_window_test",
     ":producer_surface_test",
     ":surface_buffer_impl_test",
@@ -178,11 +180,28 @@ ohos_unittest("native_buffer_test") {
 
 ## UnitTest native_buffer_test }}}
 
+## UnitTest native_image_test {{{
+ohos_unittest("native_image_test") {
+  module_out_path = module_out_path
+
+  sources = []
+  if (surface_enable_gpu) {
+    sources += [ "native_image_test.cpp" ]
+  }
+
+  deps = [ ":surface_test_common" ]
+}
+
+## UnitTest native_image_test }}}
+
 ## Build surface_test_common.a {{{
 config("surface_test_common_public_config") {
   include_dirs = [
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
     "//drivers/peripheral/display/interfaces/include",
+    "//base/security/access_token/interfaces/innerkits/nativetoken/include",
+    "//base/security/access_token/interfaces/innerkits/accesstoken/include",
+    "//base/security/access_token/interfaces/innerkits/token_setproc/include",
   ]
 
   cflags = [
@@ -202,13 +221,17 @@ ohos_static_library("surface_test_common") {
 
   public_deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//base/security/access_token/interfaces/innerkits/accesstoken:libaccesstoken_sdk",
+    "//base/security/access_token/interfaces/innerkits/nativetoken:libnativetoken",
+    "//base/security/access_token/interfaces/innerkits/token_setproc:libtoken_setproc",
+    "//foundation/graphic/graphic_2d:libnative_image",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/utils:buffer_handle",
     "//foundation/graphic/graphic_2d/utils:libgraphic_utils",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/googletest:gtest_main",
   ]
   subsystem_name = "graphic"
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
 }
 ## Build surface_test_common.a }}}

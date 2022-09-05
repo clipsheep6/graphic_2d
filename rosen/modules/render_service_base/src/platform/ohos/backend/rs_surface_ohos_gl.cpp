@@ -54,7 +54,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int
     if (mWindow == nullptr) {
         mWindow = CreateNativeWindowFromSurface(&producer_);
         mEglSurface = context->CreateEGLSurface((EGLNativeWindowType)mWindow);
-        ROSEN_LOGI("RSSurfaceOhosGl: create and Init EglSurface %p", mEglSurface);
+        ROSEN_LOGD("RSSurfaceOhosGl: create and Init EglSurface %p", mEglSurface);
     }
 
     if (mEglSurface == EGL_NO_SURFACE) {
@@ -72,7 +72,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int
 
     context->MakeCurrent(mEglSurface);
 
-    ROSEN_LOGI("RSSurfaceOhosGl:RequestFrame, eglsurface is %p, width is %d, height is %d",
+    ROSEN_LOGD("RSSurfaceOhosGl:RequestFrame, eglsurface is %p, width is %d, height is %d",
         mEglSurface, mWidth, mHeight);
 
     frame->SetRenderContext(context);
@@ -95,6 +95,19 @@ bool RSSurfaceOhosGl::FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64_
     context->SwapBuffers(mEglSurface);
     ROSEN_LOGD("RSSurfaceOhosGl: FlushFrame, SwapBuffers eglsurface is %p", mEglSurface);
     return true;
+}
+
+void RSSurfaceOhosGl::ClearBuffer()
+{
+    if (context_ != nullptr && mEglSurface != EGL_NO_SURFACE && producer_ != nullptr) {
+        ROSEN_LOGD("RSSurfaceOhosGl: Clear surface buffer!");
+        DestoryNativeWindow(mWindow);
+        context_->MakeCurrent(EGL_NO_SURFACE);
+        context_->DestroyEGLSurface(mEglSurface);
+        mEglSurface = EGL_NO_SURFACE;
+        mWindow = nullptr;
+        producer_->GoBackground();
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

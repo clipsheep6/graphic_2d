@@ -28,10 +28,12 @@
 
 namespace OHOS {
 namespace Rosen {
+enum class ScreenRotation : uint32_t;
 class RSDisplayRenderNode : public RSRenderNode, public RSSurfaceHandler {
 public:
     enum CompositeType {
         UNI_RENDER_COMPOSITE = 0,
+        UNI_RENDER_MIRROR_COMPOSITE,
         HARDWARE_COMPOSITE,
         SOFTWARE_COMPOSITE
     };
@@ -69,7 +71,8 @@ public:
     }
 
     void CollectSurface(
-        const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec) override;
+        const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec,
+        bool isUniRender) override;
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
@@ -118,6 +121,59 @@ public:
         return surfaceCreated_;
     }
 
+    sk_sp<SkImage> Snapshot()
+    {
+        return snapshot_;
+    }
+
+    void MakeSnapshot(SkSurface* surface)
+    {
+        snapshot_ = surface->makeImageSnapshot();
+    }
+
+    ScreenRotation GetRotation() const;
+
+    std::shared_ptr<RSDirtyRegionManager> GetDirtyManager()
+    {
+        return dirtyManager_;
+    }
+    void UpdateDisplayDirtyManager(uint32_t bufferage);
+    void UpdateSurfaceNodePos(NodeId id, RectI rect)
+    {
+        currentFrameSurfacePos_[id] = rect;
+    }
+
+    RectI GetLastFrameSurfacePos(NodeId id)
+    {
+        return lastFrameSurfacePos_[id];
+    }
+
+    RectI GetCurrentFrameSurfacePos(NodeId id)
+    {
+        return currentFrameSurfacePos_[id];
+    }
+
+    const std::vector<RectI> GetSurfaceChangedRects() const
+    {
+        std::vector<RectI> rects;
+        for (auto iter = lastFrameSurfacePos_.begin(); iter != lastFrameSurfacePos_.end(); iter++) {
+            if (currentFrameSurfacePos_.find(iter->first) == currentFrameSurfacePos_.end()) {
+                rects.emplace_back(iter->second);
+            }
+        }
+        for (auto iter = currentFrameSurfacePos_.begin(); iter != currentFrameSurfacePos_.end(); iter++) {
+            if (lastFrameSurfacePos_.find(iter->first) == lastFrameSurfacePos_.end()) {
+                rects.emplace_back(iter->second);
+            }
+        }
+        return rects;
+    }
+
+    std::vector<RSBaseRenderNode::SharedPtr>& GetCurAllSurfaces()
+    {
+        return curAllSurfaces_;
+    }
+
 private:
     CompositeType compositeType_ { HARDWARE_COMPOSITE };
     uint64_t screenId_;
@@ -128,10 +184,18 @@ private:
     bool isSecurityDisplay_ = false;
     WeakPtr mirrorSource_;
 
+    sk_sp<SkImage> snapshot_;
+
     std::shared_ptr<RSSurface> surface_;
     bool surfaceCreated_ { false };
     sptr<IBufferConsumerListener> consumerListener_;
     uint64_t frameCount_ = 0;
+
+    std::map<NodeId, RectI> lastFrameSurfacePos_;
+    std::map<NodeId, RectI> currentFrameSurfacePos_;
+    std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
+
+    std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces_;
 };
 } // namespace Rosen
 } // namespace OHOS

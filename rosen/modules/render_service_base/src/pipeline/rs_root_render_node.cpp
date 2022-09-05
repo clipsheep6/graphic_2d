@@ -15,7 +15,6 @@
 
 #include "pipeline/rs_root_render_node.h"
 
-#include "command/rs_surface_node_command.h"
 #include "platform/drawing/rs_surface.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
@@ -25,7 +24,8 @@
 
 namespace OHOS {
 namespace Rosen {
-RSRootRenderNode::RSRootRenderNode(NodeId id, std::weak_ptr<RSContext> context) : RSCanvasRenderNode(id, context) {}
+RSRootRenderNode::RSRootRenderNode(NodeId id, std::weak_ptr<RSContext> context)
+    : RSCanvasRenderNode(id, context), dirtyManager_(std::make_shared<RSDirtyRegionManager>()) {}
 
 RSRootRenderNode::~RSRootRenderNode() {}
 
@@ -36,12 +36,18 @@ void RSRootRenderNode::AttachRSSurfaceNode(NodeId surfaceNodeId)
 
 int32_t RSRootRenderNode::GetSurfaceWidth() const
 {
-    return GetRenderProperties().GetFrameWidth();
+    return surfaceWidth_;
 }
 
 int32_t RSRootRenderNode::GetSurfaceHeight() const
 {
-    return GetRenderProperties().GetFrameHeight();
+    return surfaceHeight_;
+}
+
+void RSRootRenderNode::UpdateSurfaceSize(int32_t width, int32_t height)
+{
+    surfaceHeight_ = height;
+    surfaceWidth_ = width;
 }
 
 std::shared_ptr<RSSurface> RSRootRenderNode::GetSurface()
@@ -52,6 +58,11 @@ std::shared_ptr<RSSurface> RSRootRenderNode::GetSurface()
 NodeId RSRootRenderNode::GetRSSurfaceNodeId()
 {
     return surfaceNodeId_;
+}
+
+std::shared_ptr<RSDirtyRegionManager> RSRootRenderNode::GetDirtyManager() const
+{
+    return dirtyManager_;
 }
 
 void RSRootRenderNode::Prepare(const std::shared_ptr<RSNodeVisitor>& visitor)

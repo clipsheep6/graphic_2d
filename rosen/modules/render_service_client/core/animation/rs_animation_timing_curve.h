@@ -66,11 +66,8 @@ private:
     std::shared_ptr<RSInterpolator> interpolator_;
     std::function<float(float)> customCurveFunc_;
 
-    template<typename T>
     friend class RSCurveAnimation;
-    template<typename T>
     friend class RSKeyframeAnimation;
-    template<typename T>
     friend class RSSpringAnimation;
     friend class RSPathAnimation;
     friend class RSTransition;

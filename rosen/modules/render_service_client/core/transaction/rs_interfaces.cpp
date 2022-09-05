@@ -139,6 +139,11 @@ int32_t RSInterfaces::GetScreenSupportedColorGamuts(ScreenId id, std::vector<Scr
     return renderServiceClient_->GetScreenSupportedColorGamuts(id, mode);
 }
 
+int32_t RSInterfaces::GetScreenSupportedMetaDataKeys(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys)
+{
+    return renderServiceClient_->GetScreenSupportedMetaDataKeys(id, keys);
+}
+
 int32_t RSInterfaces::GetScreenColorGamut(ScreenId id, ScreenColorGamut& mode)
 {
     return renderServiceClient_->GetScreenColorGamut(id, mode);
@@ -166,16 +171,6 @@ std::shared_ptr<VSyncReceiver> RSInterfaces::CreateVSyncReceiver(
     return renderServiceClient_->CreateVSyncReceiver(name, looper);
 }
 
-bool RSInterfaces::RequestRotation(ScreenId id, ScreenRotation rotation)
-{
-    return renderServiceClient_->RequestRotation(id, rotation);
-}
-
-ScreenRotation RSInterfaces::GetRotation(ScreenId id)
-{
-    return renderServiceClient_->GetRotation(id);
-}
-
 int32_t RSInterfaces::GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability)
 {
     return renderServiceClient_->GetScreenHDRCapability(id, screenHdrCapability);
@@ -199,6 +194,16 @@ int32_t RSInterfaces::RegisterOcclusionChangeCallback(const OcclusionChangeCallb
 int32_t RSInterfaces::UnRegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback)
 {
     return renderServiceClient_->UnRegisterOcclusionChangeCallback(callback);
+}
+
+int32_t RSInterfaces::SetRenderModeChangeCallback(const RenderModeChangeCallback& callback)
+{
+    return renderServiceClient_->SetRenderModeChangeCallback(callback);
+}
+
+void RSInterfaces::UpdateRenderMode(bool isUniRender)
+{
+    renderServiceClient_->UpdateRenderMode(isUniRender);
 }
 } // namespace Rosen
 } // namespace OHOS

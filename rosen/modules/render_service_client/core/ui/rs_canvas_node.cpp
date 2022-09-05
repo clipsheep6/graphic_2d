@@ -34,10 +34,15 @@ RSCanvasNode::SharedPtr RSCanvasNode::Create(bool isRenderServiceNode)
     SharedPtr node(new RSCanvasNode(isRenderServiceNode));
     RSNodeMap::MutableInstance().RegisterNode(node);
 
-    std::unique_ptr<RSCommand> command = std::make_unique<RSCanvasNodeCreate>(node->GetId());
     auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, isUniRenderEnabled_ || isRenderServiceNode);
+    if (transactionProxy == nullptr) {
+        return node;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<RSCanvasNodeCreate>(node->GetId());
+    transactionProxy->AddCommand(command, node->IsRenderServiceNode());
+    if (node->NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand = std::make_unique<RSCanvasNodeCreate>(node->GetId());
+        transactionProxy->AddCommand(extraCommand, !node->IsRenderServiceNode());
     }
     return node;
 }
@@ -51,6 +56,16 @@ SkCanvas* RSCanvasNode::BeginRecording(int width, int height)
 #ifdef ROSEN_OHOS
     recordingCanvas_ = new RSRecordingCanvas(width, height);
 #endif
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy == nullptr) {
+        return recordingCanvas_;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<RSCanvasNodeClearRecording>(GetId());
+    transactionProxy->AddCommand(command, IsRenderServiceNode());
+    if (NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand = std::make_unique<RSCanvasNodeClearRecording>(GetId());
+        transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode());
+    }
     return recordingCanvas_;
 }
 
@@ -69,14 +84,51 @@ void RSCanvasNode::FinishRecording()
     auto recording = static_cast<RSRecordingCanvas*>(recordingCanvas_)->GetDrawCmdList();
     delete recordingCanvas_;
     recordingCanvas_ = nullptr;
-    std::unique_ptr<RSCommand> command =
-        std::make_unique<RSCanvasNodeUpdateRecording>(GetId(), recording, drawContentLast_);
     auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    if (transactionProxy == nullptr) {
+        return;
+    }
+    std::unique_ptr<RSCommand> command =
+        std::make_unique<RSCanvasNodeUpdateRecording>(GetId(), recording,
+            drawContentLast_ ? RSModifierType::FOREGROUND_STYLE : RSModifierType::CONTENT_STYLE);
+    transactionProxy->AddCommand(command, IsRenderServiceNode());
+    if (NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand = std::make_unique<RSCanvasNodeUpdateRecording>(GetId(), recording,
+            drawContentLast_ ? RSModifierType::FOREGROUND_STYLE : RSModifierType::CONTENT_STYLE);
+        transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode());
     }
 #endif
 }
 
+void RSCanvasNode::DrawOnNode(RSModifierType type, DrawFunc func)
+{
+    auto recordingCanvas = std::make_shared<RSRecordingCanvas>(GetPaintWidth(), GetPaintHeight());
+    func(recordingCanvas);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy == nullptr) {
+        return;
+    }
+    auto recording = recordingCanvas->GetDrawCmdList();
+    std::unique_ptr<RSCommand> command =
+        std::make_unique<RSCanvasNodeUpdateRecording>(GetId(), recording, type);
+    transactionProxy->AddCommand(command, IsRenderServiceNode());
+    if (NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand =
+            std::make_unique<RSCanvasNodeUpdateRecording>(GetId(), recording, type);
+        transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode());
+    }
+}
+
+float RSCanvasNode::GetPaintWidth() const
+{
+    auto frame = GetStagingProperties().GetFrame();
+    return frame.z_ <= 0.f ? GetStagingProperties().GetBounds().z_ : frame.z_;
+}
+
+float RSCanvasNode::GetPaintHeight() const
+{
+    auto frame = GetStagingProperties().GetFrame();
+    return frame.w_ <= 0.f ? GetStagingProperties().GetBounds().w_ : frame.w_;
+}
 } // namespace Rosen
 } // namespace OHOS

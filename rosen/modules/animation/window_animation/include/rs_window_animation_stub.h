@@ -42,9 +42,13 @@ private:
 
     int MinimizeWindow(MessageParcel& data, MessageParcel& reply);
 
+    int MinimizeAllWindow(MessageParcel& data, MessageParcel& reply);
+
     int CloseWindow(MessageParcel& data, MessageParcel& reply);
 
     int ScreenUnlock(MessageParcel& data, MessageParcel& reply);
+
+    int WindowAnimationTargetsUpdate(MessageParcel& data, MessageParcel& reply);
 
     static const std::map<uint32_t, WindowAnimationStubFunc> stubFuncMap_;
     DISALLOW_COPY_AND_MOVE(RSWindowAnimationStub);

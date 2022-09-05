@@ -18,6 +18,7 @@
 
 #include <iremote_proxy.h>
 #include <platform/ohos/rs_irender_service_connection.h>
+#include "sandbox_utils.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -27,10 +28,15 @@ public:
     virtual ~RSRenderServiceConnectionProxy() noexcept = default;
 
     void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) override;
+    bool FillParcelWithTransactionData(
+        std::unique_ptr<RSTransactionData>& transactionData, std::shared_ptr<MessageParcel>& data);
 
     void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) override;
 
-    bool InitUniRenderEnabled(const std::string &bundleName) override;
+    int32_t SetRenderModeChangeCallback(sptr<RSIRenderModeChangeCallback> callback) override;
+    void UpdateRenderMode(bool isUniRender) override;
+    bool GetUniRenderEnabled() override;
+    bool QueryIfRTNeedRender() override;
     bool CreateNode(const RSSurfaceRenderNodeConfig& config) override;
     sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) override;
 
@@ -86,6 +92,8 @@ public:
 
     int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode) override;
 
+    int32_t GetScreenSupportedMetaDataKeys(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys) override;
+
     int32_t GetScreenColorGamut(ScreenId id, ScreenColorGamut& mode) override;
 
     int32_t SetScreenColorGamut(ScreenId id, int32_t modeIdx) override;
@@ -93,10 +101,6 @@ public:
     int32_t SetScreenGamutMap(ScreenId id, ScreenGamutMap mode) override;
 
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) override;
-    
-    bool RequestRotation(ScreenId id, ScreenRotation rotation) override;
-
-    ScreenRotation GetRotation(ScreenId id) override;
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) override;
 
@@ -109,6 +113,9 @@ public:
     int32_t UnRegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback) override;
 private:
     static inline BrokerDelegator<RSRenderServiceConnectionProxy> delegator_;
+
+    pid_t pid_ = GetRealPid();
+    uint32_t transactionDataIndex_ = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -22,6 +22,7 @@
 #include "ipc_callbacks/surface_capture_callback_stub.h"
 #include "ipc_callbacks/buffer_available_callback_stub.h"
 #include "ipc_callbacks/rs_occlusion_change_callback_stub.h"
+#include "ipc_callbacks/rs_render_mode_change_callback_stub.h"
 #include "platform/common/rs_log.h"
 #include "rs_render_service_connect_hub.h"
 #include "rs_surface_ohos.h"
@@ -50,13 +51,57 @@ void RSRenderServiceClient::ExecuteSynchronousTask(const std::shared_ptr<RSSyncT
     }
 }
 
-bool RSRenderServiceClient::InitUniRenderEnabled(const std::string &bundleName)
+class CustomRenderModeChangeCallback : public RSRenderModeChangeCallbackStub {
+public:
+    explicit CustomRenderModeChangeCallback(const RenderModeChangeCallback& callback) : cb_(callback) {}
+    ~CustomRenderModeChangeCallback() override {};
+
+    void OnRenderModeChanged(bool isUniRender) override
+    {
+        if (cb_ != nullptr) {
+            cb_(isUniRender);
+        }
+    }
+
+private:
+    RenderModeChangeCallback cb_;
+};
+
+int32_t RSRenderServiceClient::SetRenderModeChangeCallback(const RenderModeChangeCallback& callback)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return RENDER_SERVICE_NULL;
+    }
+
+    renderModeChangeCb_ = new CustomRenderModeChangeCallback(callback);
+    return renderService->SetRenderModeChangeCallback(renderModeChangeCb_);
+}
+
+void RSRenderServiceClient::UpdateRenderMode(bool isUniRender)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService != nullptr) {
+        renderService->UpdateRenderMode(isUniRender);
+    }
+}
+
+bool RSRenderServiceClient::GetUniRenderEnabled()
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
         return false;
     }
-    return renderService->InitUniRenderEnabled(bundleName);
+    return renderService->GetUniRenderEnabled();
+}
+
+bool RSRenderServiceClient::QueryIfRTNeedRender()
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return false;
+    }
+    return renderService->QueryIfRTNeedRender();
 }
 
 bool RSRenderServiceClient::CreateNode(const RSSurfaceRenderNodeConfig& config)
@@ -100,7 +145,7 @@ std::shared_ptr<VSyncReceiver> RSRenderServiceClient::CreateVSyncReceiver(
 
 void RSRenderServiceClient::TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap)
 {
-    ROSEN_LOGI("RSRenderServiceClient::Into TriggerSurfaceCaptureCallback nodeId:[%llu]", id);
+    ROSEN_LOGI("RSRenderServiceClient::Into TriggerSurfaceCaptureCallback nodeId:[%" PRIu64 "]", id);
     std::shared_ptr<Media::PixelMap> surfaceCapture(pixelmap);
     std::shared_ptr<SurfaceCaptureCallback> callback = nullptr;
     {
@@ -405,15 +450,17 @@ bool RSRenderServiceClient::UnregisterBufferAvailableListener(NodeId id)
     if (iter != bufferAvailableCbRTMap_.end()) {
         bufferAvailableCbRTMap_.erase(iter);
     } else {
-        ROSEN_LOGI("RSRenderServiceClient::UnregisterBufferAvailableListener "\
-            "Node %llu has not regiatered RT callback", id);
+        ROSEN_LOGD("RSRenderServiceClient::UnregisterBufferAvailableListener "
+                   "Node %" PRIu64 " has not registered RT callback",
+            id);
     }
     iter = bufferAvailableCbUIMap_.find(id);
     if (iter != bufferAvailableCbUIMap_.end()) {
         bufferAvailableCbUIMap_.erase(iter);
     } else {
-        ROSEN_LOGI("RSRenderServiceClient::UnregisterBufferAvailableListener "\
-            "Node %llu has not regiatered UI callback", id);
+        ROSEN_LOGD("RSRenderServiceClient::UnregisterBufferAvailableListener "
+                   "Node %" PRIu64 " has not registered UI callback",
+            id);
     }
     return true;
 }
@@ -425,6 +472,16 @@ int32_t RSRenderServiceClient::GetScreenSupportedColorGamuts(ScreenId id, std::v
         return RENDER_SERVICE_NULL;
     }
     return renderService->GetScreenSupportedColorGamuts(id, mode);
+}
+
+int32_t RSRenderServiceClient::GetScreenSupportedMetaDataKeys(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::RequestRotation renderService == nullptr!");
+        return RENDER_SERVICE_NULL;
+    }
+    return renderService->GetScreenSupportedMetaDataKeys(id, keys);
 }
 
 int32_t RSRenderServiceClient::GetScreenColorGamut(ScreenId id, ScreenColorGamut& mode)
@@ -461,26 +518,6 @@ int32_t RSRenderServiceClient::GetScreenGamutMap(ScreenId id, ScreenGamutMap& mo
         return RENDER_SERVICE_NULL;
     }
     return renderService->GetScreenGamutMap(id, mode);
-}
-
-bool RSRenderServiceClient::RequestRotation(ScreenId id, ScreenRotation rotation)
-{
-    auto renderService = RSRenderServiceConnectHub::GetRenderService();
-    if (renderService == nullptr) {
-        ROSEN_LOGE("RSRenderServiceClient::RequestRotation renderService == nullptr!");
-        return false;
-    }
-    return renderService->RequestRotation(id, rotation);
-}
-
-ScreenRotation RSRenderServiceClient::GetRotation(ScreenId id)
-{
-    auto renderService = RSRenderServiceConnectHub::GetRenderService();
-    if (renderService == nullptr) {
-        ROSEN_LOGE("RSRenderServiceClient::GetRotation renderService == nullptr!");
-        return ScreenRotation::INVALID_SCREEN_ROTATION;
-    }
-    return renderService->GetRotation(id);
 }
 
 int32_t RSRenderServiceClient::GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability)

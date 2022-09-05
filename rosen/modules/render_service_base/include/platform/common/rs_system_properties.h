@@ -16,7 +16,7 @@
 #ifndef RENDER_SERVICE_BASE_COMMON_RS_COMMON_DEF_H
 #define RENDER_SERVICE_BASE_COMMON_RS_COMMON_DEF_H
 
-#include <set>
+#include <atomic>
 #include <string>
 
 namespace OHOS {
@@ -31,20 +31,43 @@ enum class DirtyRegionDebugType {
     CURRENT_WHOLE_AND_MULTI_HISTORY
 };
 
+enum class PartialRenderType {
+    DISABLED = 0,
+    SET_DAMAGE,
+    SET_DAMAGE_AND_DROP_OP
+};
+
+enum class DumpSurfaceType {
+    DISABLED = 0,
+    SINGLESURFACE,
+    ALLSURFACES,
+    PIXELMAP,
+};
+
 class RSSystemProperties final {
 public:
     ~RSSystemProperties() = default;
 
     // used by clients
     static bool GetUniRenderEnabled();
-    static void InitUniRenderEnabled(const std::string &bundleName);
     static DirtyRegionDebugType GetDirtyRegionDebugType();
+    static PartialRenderType GetPartialRenderEnabled();
+    static PartialRenderType GetUniPartialRenderEnabled();
     static bool GetOcclusionEnabled();
+    static std::string GetRSEventProperty(const std::string &paraName);
+    static bool GetDirectClientCompEnableStatus();
+    static bool GetHighContrastStatus();
+    static uint32_t GetCorrectionMode();
+    static bool IsUniRenderMode();
+    static void SetRenderMode(bool isUni);
+    static DumpSurfaceType GetDumpSurfaceType();
+    static uint64_t GetDumpSurfaceId();
 
 private:
     RSSystemProperties() = default;
 
     static inline bool isUniRenderEnabled_ = false;
+    static inline std::atomic_bool isUniRenderMode_ = false;
 };
 
 } // namespace Rosen

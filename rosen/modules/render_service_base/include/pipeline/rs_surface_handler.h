@@ -114,12 +114,35 @@ public:
         return buffer_.timestamp;
     }
 
+    void CleanCache()
+    {
+        buffer_.Reset();
+        preBuffer_.Reset();
+    }
+
+    void ResetBufferAvailableCount()
+    {
+        bufferAvailableCount_ = 0;
+    }
+
     void SetGlobalZOrder(float globalZOrder);
     float GetGlobalZOrder() const;
 
     bool HasConsumer() const
     {
         return consumer_ != nullptr;
+    }
+    inline bool IsCurrentFrameBufferConsumed()
+    {
+        return isCurrentFrameBufferConsumed_;
+    }
+    inline void ResetCurrentFrameBufferConsumed()
+    {
+        isCurrentFrameBufferConsumed_ = false;
+    }
+    inline void SetCurrentFrameBufferConsumed()
+    {
+        isCurrentFrameBufferConsumed_ = true;
     }
 
 protected:
@@ -131,6 +154,8 @@ private:
     SurfaceBufferEntry preBuffer_;
     float globalZOrder_ = 0.0f;
     std::atomic<int> bufferAvailableCount_ = 0;
+
+    bool isCurrentFrameBufferConsumed_ = false;
 };
 }
 }

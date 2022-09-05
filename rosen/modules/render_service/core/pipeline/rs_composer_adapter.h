@@ -47,7 +47,7 @@ public:
     RSComposerAdapter(const RSComposerAdapter&) = delete;
     void operator=(const RSComposerAdapter&) = delete;
 
-    bool Init(ScreenId screenId, int32_t offsetX, int32_t offsetY, float mirrorAdaptiveCoefficient,
+    bool Init(const ScreenInfo& screenInfo, int32_t offsetX, int32_t offsetY, float mirrorAdaptiveCoefficient,
         const FallbackCallback& cb);
 
     LayerInfoPtr CreateLayer(RSSurfaceRenderNode& node);
@@ -56,20 +56,27 @@ public:
 
 private:
     // check if the node is out of the screen region.
-    bool IsOutOfScreenRegion(RSSurfaceRenderNode& node);
-    ComposeInfo BuildComposeInfo(RSSurfaceRenderNode& node);
-    ComposeInfo BuildComposeInfo(RSDisplayRenderNode& node);
+    bool IsOutOfScreenRegion(const ComposeInfo& info) const;
+    LayerInfoPtr CreateBufferLayer(RSSurfaceRenderNode& node);
+    LayerInfoPtr CreateTunnelLayer(RSSurfaceRenderNode& node);
+    ComposeInfo BuildComposeInfo(RSSurfaceRenderNode& node, bool isTunnelCheck = false) const;
+    ComposeInfo BuildComposeInfo(RSDisplayRenderNode& node) const;
     void SetComposeInfoToLayer(
         const LayerInfoPtr& layer,
         const ComposeInfo& info,
         const sptr<Surface>& surface,
-        RSBaseRenderNode* node);
+        RSBaseRenderNode* node) const;
+    void DealWithNodeGravity(const RSSurfaceRenderNode& node, ComposeInfo& info) const;
 
-    void LayerRotate(const LayerInfoPtr& layer);
-    void LayerCrop(const LayerInfoPtr& layer);
-    void LayerScaleDown(const LayerInfoPtr& layer);
+    void LayerRotate(const LayerInfoPtr& layer, RSBaseRenderNode& node) const;
+    void LayerCrop(const LayerInfoPtr& layer) const;
+    void LayerScaleDown(const LayerInfoPtr& layer) const;
+    void LayerPresentTimestamp(const LayerInfoPtr& layer, const sptr<Surface>& surface) const;
 
     void OnPrepareComplete(sptr<Surface>& surface, const PrepareCompleteParam& param, void* data);
+    void GetComposerInfoSrcRect(ComposeInfo &info, const RSSurfaceRenderNode& node) const;
+    bool GetComposerInfoNeedClient(const ComposeInfo &info, RSSurfaceRenderNode& node) const;
+    bool CheckStatusBeforeCreateLayer(RSSurfaceRenderNode& node, bool isTunnelCheck = false) const;
     HdiBackend *hdiBackend_ = nullptr;
     std::shared_ptr<HdiOutput> output_;
     ScreenInfo screenInfo_;

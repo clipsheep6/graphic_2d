@@ -15,19 +15,31 @@
 
 #include "rs_base_render_util.h"
 
+#include <sys/time.h>
 #include <unordered_set>
 
 #include "common/rs_matrix3.h"
+#include "common/rs_obj_abs_geometry.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector3.h"
 #include "platform/common/rs_log.h"
+#include "png.h"
 #include "rs_trace.h"
+#include "transaction/rs_transaction_data.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Detail {
 // [PLANNING]: Use GPU to do the gamut conversion instead of these following works.
 using PixelTransformFunc = std::function<float(float)>;
+
+using Offset = std::pair<uint8_t, uint8_t>; // first: offsetSrc; second: offsetDst
+const int dstLength = 3;
+using Array3ptr = std::array<uint8_t*, dstLength>;
+const uint32_t STUB_PIXEL_FMT_RGBA_16161616 = 0X7fff0001;
+const uint32_t STUB_PIXEL_FMT_RGBA_1010102 = 0X7fff0002;
+constexpr uint32_t MATRIX_SIZE = 20; // colorMatrix size
+constexpr int BITMAP_DEPTH = 8;
 
 inline constexpr float PassThrough(float v)
 {
@@ -78,6 +90,19 @@ struct TransferParameters {
     float f = 0.0f;
 };
 
+inline float RcpResponsePq(float x, const TransferParameters& p)
+{
+    float tmp = powf(x, p.a);
+    return std::powf((p.c + p.d * tmp) / (1 + p.e * tmp), p.b);
+}
+
+inline float ResponsePq(float x, const TransferParameters& p)
+{
+    float tmp = powf(x, 1.f / p.b);
+    return std::powf(std::max((tmp - p.c), p.f) / (p.d - p.e * tmp), 1.f / p.a);
+}
+
+
 static constexpr float RcpResponse(float x, const TransferParameters& p)
 {
     return x >= p.d * p.c ? (std::pow(x, 1.0f / p.g) - p.b) / p.a : x / p.c;
@@ -100,6 +125,10 @@ inline constexpr float FullResponse(float x, const TransferParameters& p)
 
 inline PixelTransformFunc GenOETF(const TransferParameters& params)
 {
+    if (params.g < 0) { // HDR
+        return std::bind(RcpResponsePq, std::placeholders::_1, params);
+    }
+
     if (params.e == 0.0f && params.f == 0.0f) {
         return std::bind(RcpResponse, std::placeholders::_1, params);
     }
@@ -109,11 +138,36 @@ inline PixelTransformFunc GenOETF(const TransferParameters& params)
 
 inline PixelTransformFunc GenEOTF(const TransferParameters& params)
 {
+    if (params.g < 0) {
+        return std::bind(ResponsePq, std::placeholders::_1, params);
+    }
+
     if (params.e == 0.0f && params.f == 0.0f) {
         return std::bind(Response, std::placeholders::_1, params);
     }
 
     return std::bind(FullResponse, std::placeholders::_1, params);
+}
+
+float ACESToneMapping(float color, float targetLum)
+{
+    const float a = 2.51f;
+    const float b = 0.03f;
+    const float c = 2.43f;
+    const float d = 0.59f;
+    const float e = 0.14f;
+
+    color *= targetLum;
+    return (color * (a * color + b)) / (color * (c * color + d) + e);
+}
+
+inline PixelTransformFunc GenACESToneMapping(float targetLum)
+{
+    if (targetLum <= 0) {
+        const float defaultLum = 200.f;
+        targetLum = defaultLum;
+    }
+    return std::bind(ACESToneMapping, std::placeholders::_1, targetLum);
 }
 
 Matrix3f GenRGBToXYZMatrix(const std::array<Vector2f, 3>& basePoints, const Vector2f& whitePoint)
@@ -147,6 +201,89 @@ Matrix3f GenRGBToXYZMatrix(const std::array<Vector2f, 3>& basePoints, const Vect
         GYGy * G.x_, GY, GYGy * (1 - G.x_ - G.y_),
         BYBy * B.x_, BY, BYBy * (1 - B.x_ - B.y_)
     };
+}
+static const sk_sp<SkColorFilter>& InvertColorMat()
+{
+    static const SkScalar colorMatrix[MATRIX_SIZE] = {
+        0.402,  -1.174, -0.228, 1.0, 0.0,
+        -0.598, -0.174, -0.228, 1.0, 0.0,
+        -0.599, -1.175, 0.772,  1.0, 0.0,
+        0.0,    0.0,    0.0,    1.0, 0.0
+    };
+    static auto invertColorMat = SkColorFilters::Matrix(colorMatrix);
+    return invertColorMat;
+}
+
+static const sk_sp<SkColorFilter>& ProtanomalyMat()
+{
+    static const SkScalar colorMatrix[MATRIX_SIZE] = {
+        0.622,  0.377,  0.0, 0.0, 0.0,
+        0.264,  0.736,  0.0, 0.0, 0.0,
+        0.217,  -0.217, 1.0, 0.0, 0.0,
+        0.0,    0.0,    0.0, 1.0, 0.0
+    };
+    static auto protanomalyMat = SkColorFilters::Matrix(colorMatrix);
+    return protanomalyMat;
+}
+
+static const sk_sp<SkColorFilter>& DeuteranomalyMat()
+{
+    static const SkScalar colorMatrix[MATRIX_SIZE] = {
+        0.288,  0.712, 0.0, 0.0, 0.0,
+        0.053,  0.947, 0.0, 0.0, 0.0,
+        -0.258, 0.258, 1.0, 0.0, 0.0,
+        0.0,    0.0,   0.0, 1.0, 0.0
+    };
+    static auto deuteranomalyMat = SkColorFilters::Matrix(colorMatrix);
+    return deuteranomalyMat;
+}
+
+static const sk_sp<SkColorFilter>& TritanomalyMat()
+{
+    static const SkScalar colorMatrix[MATRIX_SIZE] = {
+        1.0, -0.806, 0.806, 0.0, 0.0,
+        0.0, 0.379,  0.621, 0.0, 0.0,
+        0.0, 0.105,  0.895, 0.0, 0.0,
+        0.0, 0.0,    0.0,   1.0, 0.0
+    };
+    static auto tritanomalyMat = SkColorFilters::Matrix(colorMatrix);
+    return tritanomalyMat;
+}
+
+static const sk_sp<SkColorFilter>& InvertProtanomalyMat()
+{
+    static const SkScalar colorMatrix[MATRIX_SIZE] = {
+        0.025,  -0.796, -0.228, 1.0, 0.0,
+        -0.334, -0.438, -0.228, 1.0, 0.0,
+        -0.382, -1.392, 0.772,  1.0, 0.0,
+        0.0,    0.0,    0.0,    1.0, 0.0
+    };
+    static auto invertProtanomalyMat = SkColorFilters::Matrix(colorMatrix);
+    return invertProtanomalyMat;
+}
+
+static const sk_sp<SkColorFilter>& InvertDeuteranomalyMat()
+{
+    static const SkScalar colorMatrix[MATRIX_SIZE] = {
+        -0.31,  -0.462, -0.228, 1.0, 0.0,
+        -0.545, -0.227, -0.228, 1.0, 0.0,
+        -0.857, -0.917, 0.772,  1.0, 0.0,
+        0.0,    0.0,    0.0,    1.0, 0.0
+    };
+    static auto invertDeuteranomalyMat = SkColorFilters::Matrix(colorMatrix);
+    return invertDeuteranomalyMat;
+}
+
+static const sk_sp<SkColorFilter>& InvertTritanomalyMat()
+{
+    static const SkScalar colorMatrix[MATRIX_SIZE] = {
+        0.401,  -1.98,  0.578, 1.0, 0.0,
+        -0.599, -0.796, 0.393, 1.0, 0.0,
+        -0.599, -1.07,  0.667, 1.0, 0.0,
+        0.0,    0.0,    0.0,   1.0, 0.0
+    };
+    static auto invertTritanomalyMat = SkColorFilters::Matrix(colorMatrix);
+    return invertTritanomalyMat;
 }
 
 class SimpleColorSpace {
@@ -183,6 +320,12 @@ public:
     }
 
     ~SimpleColorSpace() noexcept = default;
+
+    Vector3f ToneMapping(const Vector3f& color, float targetLum = 0) const
+    {
+        PixelTransformFunc toneMappingFunc = GenACESToneMapping(targetLum);
+        return ApplyTransForm(color, toneMappingFunc);
+    }
 
     Vector3f ToLinear(const Vector3f& val) const
     {
@@ -249,6 +392,56 @@ SimpleColorSpace &GetDCIP3ColorSpace()
     return dciP3;
 }
 
+SimpleColorSpace &GetBT2020ColorSpace()
+{
+    static SimpleColorSpace bt2020 {
+        {{Vector2f{0.708f, 0.292f}, {0.17f, 0.797f}, {0.131f, 0.046f}}}, // BT.2020 rgb base points.
+        {0.3127f, 0.3290f}, // BT.2020 white points.
+        {-2.0f, 0.1593017578125, 78.84375, 0.8359375, 18.8515625, 18.6875, 0.f}}; // PQ TransferParameters
+    return bt2020;
+}
+
+bool IsValidMetaData(const std::vector<HDRMetaData> &metaDatas)
+{
+    uint16_t validFlag = 0;
+    for (auto metaData : metaDatas) {
+        validFlag ^= 1 << metaData.key;
+    }
+
+    uint16_t bitsToCheck = 0xFF;
+    // has complete and unique primaries;
+    return (validFlag & bitsToCheck) == bitsToCheck;
+}
+
+SimpleColorSpace &GetColorSpaceFromMetaData(const std::vector<HDRMetaData> &metaDatas, float targetLum = 0)
+{
+    std::vector<HDRMetaData> metaDataSorted = metaDatas;
+    std::sort(metaDataSorted.begin(), metaDataSorted.end(), [&](const HDRMetaData &a, const HDRMetaData &b)->bool {
+            return a.key < b.key;
+    });
+    static SimpleColorSpace hdrPq {
+         // rgb base points.
+        {{Vector2f{metaDataSorted[HDRMetadataKey::MATAKEY_RED_PRIMARY_X].value,
+                   metaDataSorted[HDRMetadataKey::MATAKEY_RED_PRIMARY_Y].value},
+                  {metaDataSorted[HDRMetadataKey::MATAKEY_GREEN_PRIMARY_X].value,
+                   metaDataSorted[HDRMetadataKey::MATAKEY_GREEN_PRIMARY_Y].value},
+                  {metaDataSorted[HDRMetadataKey::MATAKEY_BLUE_PRIMARY_X].value,
+                   metaDataSorted[HDRMetadataKey::MATAKEY_BLUE_PRIMARY_Y].value}}},
+        {metaDataSorted[HDRMetadataKey::MATAKEY_WHITE_PRIMARY_X].value,
+         metaDataSorted[HDRMetadataKey::MATAKEY_WHITE_PRIMARY_Y].value}, // white points.
+        {-2.0f, 0.1593017578125, 78.84375, 0.8359375, 18.8515625, 18.6875, 0.f}}; // PQ TransferParameters
+    return hdrPq;
+}
+
+SimpleColorSpace &GetHdrPqColorSpace(const std::vector<HDRMetaData> &metaData, float targetLum = 0.f)
+{
+    if (metaData.size() > 0 && IsValidMetaData(metaData)) {
+        return GetColorSpaceFromMetaData(metaData, targetLum);
+    }
+
+    return GetBT2020ColorSpace();
+}
+
 bool IsSupportedFormatForGamutConversion(int32_t pixelFormat)
 {
     static std::unordered_set<PixelFormat> supportedFormats = {
@@ -258,7 +451,12 @@ bool IsSupportedFormatForGamutConversion(int32_t pixelFormat)
         PixelFormat::PIXEL_FMT_BGRX_8888,
         PixelFormat::PIXEL_FMT_BGRA_8888
     };
-    return supportedFormats.count(static_cast<PixelFormat>(pixelFormat)) > 0;
+
+    // Because PixelFormat has no enumeration for RBG_16,
+    // we use a temporary stub here for testing
+    // The final version should use a PixelFormat::PIXEL_FMT_RGBA_XXXX
+    return pixelFormat == STUB_PIXEL_FMT_RGBA_16161616 ||
+        supportedFormats.count(static_cast<PixelFormat>(pixelFormat)) > 0;
 }
 
 bool IsSupportedColorGamut(ColorGamut colorGamut)
@@ -267,12 +465,14 @@ bool IsSupportedColorGamut(ColorGamut colorGamut)
         ColorGamut::COLOR_GAMUT_SRGB,
         ColorGamut::COLOR_GAMUT_ADOBE_RGB,
         ColorGamut::COLOR_GAMUT_DISPLAY_P3,
-        ColorGamut::COLOR_GAMUT_DCI_P3
+        ColorGamut::COLOR_GAMUT_DCI_P3,
+        ColorGamut::COLOR_GAMUT_BT2020,
+        ColorGamut::COLOR_GAMUT_BT2100_PQ
     };
     return supportedColorGamuts.count(colorGamut) > 0;
 }
 
-SimpleColorSpace& GetColorSpaceOfCertainGamut(ColorGamut colorGamut)
+SimpleColorSpace& GetColorSpaceOfCertainGamut(ColorGamut colorGamut, const std::vector<HDRMetaData> &metaData = {})
 {
     switch (colorGamut) {
         case ColorGamut::COLOR_GAMUT_SRGB: {
@@ -285,15 +485,26 @@ SimpleColorSpace& GetColorSpaceOfCertainGamut(ColorGamut colorGamut)
         case ColorGamut::COLOR_GAMUT_DCI_P3: {
             return GetDisplayP3ColorSpace(); // Currently p3 colorspace is displayP3
         }
+        case ColorGamut::COLOR_GAMUT_BT2020:
+        case ColorGamut::COLOR_GAMUT_BT2100_PQ: {
+            return GetHdrPqColorSpace(metaData);
+        }
         default: {
             return GetSRGBColorSpace();
         }
     }
 }
 
+const uint16_t maxUint10 = 1023;
 float RGBUint8ToFloat(uint8_t val)
 {
     return val * 1.0f / 255.0f; // 255.0f is the max value.
+}
+
+// Used to transfer integers of pictures with color depth of 10 bits to float
+float RGBUint10ToFloat(uint16_t val)
+{
+    return val * 1.0f / maxUint10; // 1023.0f is the max value
 }
 
 uint8_t RGBFloatToUint8(float val)
@@ -301,11 +512,46 @@ uint8_t RGBFloatToUint8(float val)
     return static_cast<uint8_t>(Saturate(val) * 255 + 0.5f); // 255.0 is the max value, + 0.5f to avoid negative.
 }
 
-uint8_t ConvertColorGamut(uint8_t *dst, uint8_t* src, int32_t pixelFormat, ColorGamut srcGamut, ColorGamut dstGamut)
+// Used to transfer float values to integers for pictures with color depth of 10 bits
+uint16_t RGBFloatToUint10(float val)
 {
-    uint8_t len = 0;
-    Vector3f srcColor;
-    std::array<uint8_t *, 3> colorDst; // color dst, 3 bytes (R G B).
+    // 1023.0 is the max value, + 0.5f to avoid negative.
+    return static_cast<uint16_t>(Saturate(val) * maxUint10 + 0.5f);
+}
+
+Offset RGBUintToFloat(uint8_t* dst, uint8_t* src, int32_t pixelFormat, Vector3f &srcColor,
+    Array3ptr &colorDst)
+{
+    // Because PixelFormat does not have enumeration for RGBA_16 or RGBA_1010102,
+    // we use two special IF statements here to realize the transfer process.
+    // They should to be adjusted to the SWITCH process after the enumerations are added.
+    if (pixelFormat == STUB_PIXEL_FMT_RGBA_16161616) {
+        auto src16 = reinterpret_cast<const uint16_t*>(src);
+        // R: src[0], G: src[1], B: src[2]
+        srcColor = {RGBUint10ToFloat(src16[0]), RGBUint10ToFloat(src16[1]), RGBUint10ToFloat(src16[2])};
+        // R: dst + 0, G: dst + 1, B: dst + 2
+        colorDst = {dst + 0, dst + 1, dst + 2};
+        // Alpha: linear transfer src[3] to dst[3]
+        dst[3] = RGBFloatToUint8(RGBUint10ToFloat(src16[3]));
+        const uint8_t outPixelBits = 4;
+        const uint8_t inPixelBits = 8;
+        // 8 bytes per pixel and HDR pictures are always redrawn as sRGB
+        return std::make_pair(inPixelBits, outPixelBits);
+    }
+    if (pixelFormat == STUB_PIXEL_FMT_RGBA_1010102) {
+        auto src32 = reinterpret_cast<const uint32_t*>(src);
+        // R: 0-9 bits, G: 10-19 ts, B: 20-29bits
+        srcColor = {RGBUint10ToFloat((*src32) & 0x3FF), RGBUint10ToFloat(((*src32) >> 10) & 0x3FF),
+             RGBUint10ToFloat(((*src32) >> 20) & 0x3FF)};
+        // R: dst + 0, G: dst + 1, B: dst + 2
+        colorDst = {dst + 0, dst + 1, dst + 2};
+        // Alpha: copy src[3] to dst[3]
+        const uint8_t rbgBitsNum = 30;
+        const uint8_t alphaBitMask = 0x3;
+        const uint8_t alphaPos = 3;
+        dst[alphaPos] = static_cast<uint8_t>(((*src32) >> rbgBitsNum) & alphaBitMask);
+        return std::make_pair(4, 4); // 4 bytes per pixel and HDR pictures are always redrawn as sRGB
+    }
     switch (static_cast<PixelFormat>(pixelFormat)) {
         case PixelFormat::PIXEL_FMT_RGBX_8888:
         case PixelFormat::PIXEL_FMT_RGBA_8888: {
@@ -315,16 +561,14 @@ uint8_t ConvertColorGamut(uint8_t *dst, uint8_t* src, int32_t pixelFormat, Color
             colorDst = {dst + 0, dst + 1, dst + 2};
             // Alpha: copy src[3] to dst[3]
             dst[3] = src[3];
-            len = 4; // 4 bytes per pixel.
-            break;
+            return std::make_pair(4, 4); // 4 bytes per pixel.
         }
         case PixelFormat::PIXEL_FMT_RGB_888: {
             // R: src[0], G: src[1], B: src[2]
             srcColor = {RGBUint8ToFloat(src[0]), RGBUint8ToFloat(src[1]), RGBUint8ToFloat(src[2])};
             // R: dst + 0, G: dst + 1, B: dst + 2
             colorDst = {dst + 0, dst + 1, dst + 2};
-            len = 3; // 3 bytes per pixel.
-            break;
+            return std::make_pair(3, 3); // 3 bytes per pixel.
         }
         case PixelFormat::PIXEL_FMT_BGRX_8888:
         case PixelFormat::PIXEL_FMT_BGRA_8888: {
@@ -334,17 +578,22 @@ uint8_t ConvertColorGamut(uint8_t *dst, uint8_t* src, int32_t pixelFormat, Color
             colorDst = {dst + 2, dst + 1, dst + 0};
             // Alpha: copy src[3] to dst[3]
             dst[3] = src[3];
-            len = 4; // 4 bytes per pixel.
-            break;
+            return std::make_pair(4, 4); // 4 bytes per pixel.
         }
         default: {
-            RS_LOGE("ConvertColorGamut: unexpected pixelFormat(%d).", pixelFormat);
-            return 0;
+            RS_LOGE("RGBUintToFloat: unexpected pixelFormat(%d).", pixelFormat);
+            return std::make_pair(0, 0);
         }
     }
+}
 
-    auto& srcColorSpace = GetColorSpaceOfCertainGamut(srcGamut);
-    auto& dstColorSpace = GetColorSpaceOfCertainGamut(dstGamut);
+Offset ConvertColorGamut(uint8_t* dst, uint8_t* src, int32_t pixelFormat, SimpleColorSpace& srcColorSpace,
+    SimpleColorSpace& dstColorSpace)
+{
+    Vector3f srcColor;
+    Array3ptr colorDst; // color dst, 3 bytes (R G B).
+
+    Offset len = RGBUintToFloat(dst, src, pixelFormat, srcColor, colorDst);
     Vector3f outColor = dstColorSpace.XYZToRGB(srcColorSpace.RGBToXYZ(srcColor));
     *(colorDst[0]) = RGBFloatToUint8(outColor[0]); // outColor 0 to colorDst[0]
     *(colorDst[1]) = RGBFloatToUint8(outColor[1]); // outColor 1 to colorDst[1]
@@ -354,10 +603,10 @@ uint8_t ConvertColorGamut(uint8_t *dst, uint8_t* src, int32_t pixelFormat, Color
 }
 
 bool ConvertBufferColorGamut(std::vector<uint8_t>& dstBuf, const sptr<OHOS::SurfaceBuffer>& srcBuf,
-    ColorGamut srcGamut, ColorGamut dstGamut)
+    ColorGamut srcGamut, ColorGamut dstGamut, const std::vector<HDRMetaData>& metaDatas)
 {
     RS_TRACE_NAME("ConvertBufferColorGamut");
-
+    
     int32_t pixelFormat = srcBuf->GetFormat();
     if (!IsSupportedFormatForGamutConversion(pixelFormat)) {
         RS_LOGE("ConvertBufferColorGamut: the buffer's format is not supported.");
@@ -373,16 +622,20 @@ bool ConvertBufferColorGamut(std::vector<uint8_t>& dstBuf, const sptr<OHOS::Surf
     auto bufferAddr = srcBuf->GetVirAddr();
     uint8_t* srcStart = static_cast<uint8_t*>(bufferAddr);
 
-    uint32_t offset = 0;
-    while (offset < bufferSize) {
-        uint8_t* dst = &dstBuf[offset];
-        uint8_t* src = srcStart + offset;
-        uint8_t len = ConvertColorGamut(dst, src, pixelFormat, srcGamut, dstGamut);
-        if (len == 0) {
+    uint32_t offsetDst = 0, offsetSrc = 0;
+    auto& srcColorSpace = GetColorSpaceOfCertainGamut(srcGamut, metaDatas);
+    auto& dstColorSpace = GetColorSpaceOfCertainGamut(dstGamut, metaDatas);
+    while (offsetSrc < bufferSize) {
+        uint8_t* dst = &dstBuf[offsetDst];
+        uint8_t* src = srcStart + offsetSrc;
+        Offset len = ConvertColorGamut(dst, src, pixelFormat, srcColorSpace, dstColorSpace);
+        if (len.first == 0 || len.second == 0) {
             return false;
         }
-        offset += len;
+        offsetSrc += len.first;
+        offsetDst += len.second;
     }
+    dstBuf.resize(offsetDst); // dstBuf size might not be as large ad srcBuf in HDR
 
     return true;
 }
@@ -506,7 +759,7 @@ bool ConvertYUV420SPToRGBA(std::vector<uint8_t>& rgbaBuf, const sptr<OHOS::Surfa
 
             for (int k = 0; k < 3; k++) { // 3 is index
                 idx = (i * bufferWidth + j) * 4 + k; // 4 is color channel
-                if (rgb[k] >=0 && rgb[k] <= 255) { // 255 is upper threshold
+                if (rgb[k] >= 0 && rgb[k] <= 255) { // 255 is upper threshold
                     rgbaDst[idx] = static_cast<uint8_t>(rgb[k]);
                 } else {
                     rgbaDst[idx] = (rgb[k] < 0) ? 0 : 255; // 255 is upper threshold
@@ -520,12 +773,27 @@ bool ConvertYUV420SPToRGBA(std::vector<uint8_t>& rgbaBuf, const sptr<OHOS::Surfa
 }
 } // namespace Detail
 
+BufferRequestConfig RSBaseRenderUtil::GetFrameBufferRequestConfig(
+    const ScreenInfo& screenInfo, bool isPhysical)
+{
+    BufferRequestConfig config {};
+    const auto width = isPhysical ? screenInfo.width : screenInfo.GetRotatedWidth();
+    const auto height = isPhysical ? screenInfo.height : screenInfo.GetRotatedHeight();
+    config.width = static_cast<int32_t>(width);
+    config.height = static_cast<int32_t>(height);
+    config.strideAlignment = 0x8; // default stride is 8 Bytes.
+    config.format = PIXEL_FMT_RGBA_8888;
+    config.usage = HBM_USE_CPU_READ | HBM_USE_MEM_DMA | HBM_USE_MEM_FB;
+    config.timeout = 0;
+    return config;
+}
+
 void RSBaseRenderUtil::DropFrameProcess(RSSurfaceHandler& node)
 {
     auto availableBufferCnt = node.GetAvailableBufferCount();
     const auto& surfaceConsumer = node.GetConsumer();
     if (surfaceConsumer == nullptr) {
-        RS_LOGE("RsDebug RSBaseRenderUtil::DropFrameProcess (node: %llu): surfaceConsumer is null!",
+        RS_LOGE("RsDebug RSBaseRenderUtil::DropFrameProcess (node: %" PRIu64 "): surfaceConsumer is null!",
             node.GetNodeId());
         return;
     }
@@ -534,27 +802,25 @@ void RSBaseRenderUtil::DropFrameProcess(RSSurfaceHandler& node)
     // maxDirtyListSize > 2 means QueueSize >3 too
     if (maxDirtyListSize > 2 && availableBufferCnt >= maxDirtyListSize) {
         RS_TRACE_NAME("DropFrame");
-        RS_LOGD("RSBaseRenderUtil::DropFrameProcess(node: %llu) queueBlock, start to drop one frame",
-            node.GetNodeId());
         OHOS::sptr<SurfaceBuffer> cbuffer;
         Rect damage;
         sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
         int64_t timestamp = 0;
         auto ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
         if (ret != OHOS::SURFACE_ERROR_OK) {
-            RS_LOGW("RSBaseRenderUtil::DropFrameProcess(node: %llu): AcquireBuffer failed(ret: %d), do nothing ",
+            RS_LOGW("RSBaseRenderUtil::DropFrameProcess(node: %" PRIu64 "): AcquireBuffer failed(ret: %d), do nothing ",
                 node.GetNodeId(), ret);
             return;
         }
 
         ret = surfaceConsumer->ReleaseBuffer(cbuffer, SyncFence::INVALID_FENCE);
         if (ret != OHOS::SURFACE_ERROR_OK) {
-            RS_LOGW("RSBaseRenderUtil::DropFrameProcess(node: %llu): ReleaseBuffer failed(ret: %d), Acquire done ",
+            RS_LOGW("RSBaseRenderUtil::DropFrameProcess(node: %" PRIu64
+                    "): ReleaseBuffer failed(ret: %d), Acquire done ",
                 node.GetNodeId(), ret);
         }
         availableBufferCnt = node.ReduceAvailableBuffer();
-        RS_LOGD("RsDebug RSBaseRenderUtil::DropFrameProcess (node: %llu), drop one frame finished",
-            node.GetNodeId());
+        RS_LOGD("RsDebug RSBaseRenderUtil::DropFrameProcess (node: %" PRIu64 "), drop one frame", node.GetNodeId());
     }
 
     return;
@@ -579,13 +845,14 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler)
     Rect damage;
     auto ret = consumer->AcquireBuffer(buffer, acquireFence, timestamp, damage);
     if (buffer == nullptr || ret != SURFACE_ERROR_OK) {
-        RS_LOGE("RsDebug surfaceHandler(id: %llu) AcquireBuffer failed(ret: %d)!",
+        RS_LOGE("RsDebug surfaceHandler(id: %" PRIu64 ") AcquireBuffer failed(ret: %d)!",
             surfaceHandler.GetNodeId(), ret);
         return false;
     }
 
     surfaceHandler.SetBuffer(buffer, acquireFence, damage, timestamp);
-    RS_LOGD("RsDebug surfaceHandler(id: %llu) AcquireBuffer success, timestamp = %lld.",
+    surfaceHandler.SetCurrentFrameBufferConsumed();
+    RS_LOGD("RsDebug surfaceHandler(id: %" PRIu64 ") AcquireBuffer success, timestamp = %" PRId64 ".",
         surfaceHandler.GetNodeId(), timestamp);
     availableBufferCnt = surfaceHandler.ReduceAvailableBuffer();
     return true;
@@ -602,7 +869,7 @@ bool RSBaseRenderUtil::ReleaseBuffer(RSSurfaceHandler& surfaceHandler)
     if (preBuffer.buffer != nullptr) {
         auto ret = consumer->ReleaseBuffer(preBuffer.buffer, preBuffer.releaseFence);
         if (ret != OHOS::SURFACE_ERROR_OK) {
-            RS_LOGE("RsDebug surfaceHandler(id: %llu) ReleaseBuffer failed(ret: %d)!",
+            RS_LOGE("RsDebug surfaceHandler(id: %" PRIu64 ") ReleaseBuffer failed(ret: %d)!",
                 surfaceHandler.GetNodeId(), ret);
             return false;
         }
@@ -612,6 +879,61 @@ bool RSBaseRenderUtil::ReleaseBuffer(RSSurfaceHandler& surfaceHandler)
     }
 
     return true;
+}
+
+bool RSBaseRenderUtil::IsColorFilterModeValid(ColorFilterMode mode)
+{
+    bool valid = false;
+    switch (mode) {
+        case ColorFilterMode::INVERT_COLOR_DISABLE_MODE:
+        case ColorFilterMode::INVERT_COLOR_ENABLE_MODE:
+        case ColorFilterMode::DALTONIZATION_PROTANOMALY_MODE:
+        case ColorFilterMode::DALTONIZATION_DEUTERANOMALY_MODE:
+        case ColorFilterMode::DALTONIZATION_TRITANOMALY_MODE:
+        case ColorFilterMode::INVERT_DALTONIZATION_PROTANOMALY_MODE:
+        case ColorFilterMode::INVERT_DALTONIZATION_DEUTERANOMALY_MODE:
+        case ColorFilterMode::INVERT_DALTONIZATION_TRITANOMALY_MODE:
+        case ColorFilterMode::DALTONIZATION_NORMAL_MODE:
+        case ColorFilterMode::COLOR_FILTER_END:
+            valid = true;
+            break;
+        default:
+            valid = false;
+    }
+    return valid;
+}
+
+void RSBaseRenderUtil::SetColorFilterModeToPaint(ColorFilterMode colorFilterMode, SkPaint& paint)
+{
+    switch (colorFilterMode) {
+        case ColorFilterMode::INVERT_COLOR_ENABLE_MODE:
+            paint.setColorFilter(Detail::InvertColorMat());
+            break;
+        case ColorFilterMode::DALTONIZATION_PROTANOMALY_MODE:
+            paint.setColorFilter(Detail::ProtanomalyMat());
+            break;
+        case ColorFilterMode::DALTONIZATION_DEUTERANOMALY_MODE:
+            paint.setColorFilter(Detail::DeuteranomalyMat());
+            break;
+        case ColorFilterMode::DALTONIZATION_TRITANOMALY_MODE:
+            paint.setColorFilter(Detail::TritanomalyMat());
+            break;
+        case ColorFilterMode::INVERT_DALTONIZATION_PROTANOMALY_MODE:
+            paint.setColorFilter(Detail::InvertProtanomalyMat());
+            break;
+        case ColorFilterMode::INVERT_DALTONIZATION_DEUTERANOMALY_MODE:
+            paint.setColorFilter(Detail::InvertDeuteranomalyMat());
+            break;
+        case ColorFilterMode::INVERT_DALTONIZATION_TRITANOMALY_MODE:
+            paint.setColorFilter(Detail::InvertTritanomalyMat());
+            break;
+        // INVERT_COLOR_DISABLE_MODE and DALTONIZATION_NORMAL_MODE couldn't be in this process
+        case ColorFilterMode::INVERT_COLOR_DISABLE_MODE:
+        case ColorFilterMode::DALTONIZATION_NORMAL_MODE:
+        case ColorFilterMode::COLOR_FILTER_END:
+        default:
+            paint.setColorFilter(nullptr);
+    }
 }
 
 bool RSBaseRenderUtil::IsBufferValid(const sptr<SurfaceBuffer>& buffer)
@@ -633,8 +955,175 @@ bool RSBaseRenderUtil::IsBufferValid(const sptr<SurfaceBuffer>& buffer)
     return true;
 }
 
+SkMatrix RSBaseRenderUtil::GetSurfaceTransformMatrix(const RSSurfaceRenderNode& node, const RectF& bounds)
+{
+    SkMatrix matrix;
+    const float boundsWidth = bounds.GetWidth();
+    const float boundsHeight = bounds.GetHeight();
+    const sptr<Surface>& surface = node.GetConsumer();
+    if (surface == nullptr) {
+        return matrix;
+    }
+
+    switch (surface->GetTransform()) {
+        case TransformType::ROTATE_90: {
+            matrix.preTranslate(0, boundsHeight);
+            matrix.preRotate(-90); // rotate 90 degrees anti-clockwise at last.
+            break;
+        }
+        case TransformType::ROTATE_180: {
+            matrix.preTranslate(boundsWidth, boundsHeight);
+            matrix.preRotate(-180); // rotate 180 degrees anti-clockwise at last.
+            break;
+        }
+        case TransformType::ROTATE_270: {
+            matrix.preTranslate(boundsWidth, 0);
+            matrix.preRotate(-270); // rotate 270 degrees anti-clockwise at last.
+            break;
+        }
+        default:
+            break;
+    }
+
+    return matrix;
+}
+
+SkMatrix RSBaseRenderUtil::GetNodeGravityMatrix(
+    const RSSurfaceRenderNode& node, const sptr<SurfaceBuffer>& buffer, const RectF& bounds)
+{
+    SkMatrix gravityMatrix;
+    if (buffer == nullptr) {
+        return gravityMatrix;
+    }
+
+    const RSProperties& property = node.GetRenderProperties();
+    const Gravity gravity = property.GetFrameGravity();
+    const float frameWidth = buffer->GetSurfaceBufferWidth();
+    const float frameHeight = buffer->GetSurfaceBufferHeight();
+    const float boundsWidth = bounds.GetWidth();
+    const float boundsHeight = bounds.GetHeight();
+    if (frameWidth == boundsWidth && frameHeight == boundsHeight) {
+        return gravityMatrix;
+    }
+
+    if (!RSPropertiesPainter::GetGravityMatrix(gravity,
+        RectF {0.0f, 0.0f, boundsWidth, boundsHeight}, frameWidth, frameHeight, gravityMatrix)) {
+        RS_LOGD("RSDividedRenderUtil::DealWithNodeGravity did not obtain gravity matrix.");
+    }
+
+    return gravityMatrix;
+}
+
+void RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(
+    const RSSurfaceRenderNode& node, RectF& localBounds, BufferDrawParam& params)
+{
+    // the surface can rotate itself.
+    params.matrix.preConcat(RSBaseRenderUtil::GetSurfaceTransformMatrix(node, localBounds));
+    const sptr<Surface>& surface = node.GetConsumer(); // private func, guarantee surface is not nullptr.
+    if (surface->GetTransform() == TransformType::ROTATE_90 || surface->GetTransform() == TransformType::ROTATE_270) {
+        // after rotate, we should swap dstRect and bound's width and height.
+        std::swap(localBounds.width_, localBounds.height_);
+        params.dstRect = SkRect::MakeWH(localBounds.GetWidth(), localBounds.GetHeight());
+    }
+
+    // deal with buffer's gravity effect in node's inner space.
+    params.matrix.preConcat(RSBaseRenderUtil::GetNodeGravityMatrix(node, params.buffer, localBounds));
+    // because we use the gravity matrix above(which will implicitly includes scale effect),
+    // we must disable the scale effect that from srcRect to dstRect.
+    params.dstRect = params.srcRect;
+}
+
+void RSBaseRenderUtil::CalculateSurfaceNodeClipRects(
+    const RSSurfaceRenderNode& node,
+    const RectF& absBounds,
+    const RectF& localBounds,
+    bool inLocalCoordinate,
+    BufferDrawParam& params)
+{
+    const RSProperties& property = node.GetRenderProperties();
+    params.cornerRadius = property.GetCornerRadius();
+    params.isNeedClip = property.GetClipToFrame();
+    if (inLocalCoordinate) {
+        // in canvas's local coordinate system.
+        params.clipRect = SkRect::MakeWH(localBounds.GetWidth(), localBounds.GetHeight());
+        params.clipRRect = RRect(localBounds, params.cornerRadius);
+    } else {
+        // in logical screen's coordinate system.
+        const auto& clipRect = node.GetDstRect();
+        params.clipRect = SkRect::MakeXYWH(
+            clipRect.GetLeft(), clipRect.GetTop(), clipRect.GetWidth(), clipRect.GetHeight());
+        params.clipRRect = RRect(absBounds, params.cornerRadius);
+    }
+}
+
+BufferDrawParam RSBaseRenderUtil::CreateBufferDrawParam(
+    const RSSurfaceRenderNode& node, bool inLocalCoordinate, bool isClipHole, bool forceCPU, bool setColorFilter)
+{
+    BufferDrawParam params;
+#ifdef RS_ENABLE_EGLIMAGE
+    params.useCPU = forceCPU;
+#else // RS_ENABLE_EGLIMAGE
+    (void)(forceCPU); // unused param.
+    params.useCPU = true;
+#endif // RS_ENABLE_EGLIMAGE
+    params.paint.setAlphaf(node.GetGlobalAlpha());
+    params.paint.setAntiAlias(true);
+    params.setColorFilter = setColorFilter;
+
+    const RSProperties& property = node.GetRenderProperties();
+    params.backgroundColor = static_cast<SkColor>(property.GetBackgroundColor().AsArgbInt());
+
+    const RectF absBounds = {
+        node.GetTotalMatrix().getTranslateX(), node.GetTotalMatrix().getTranslateY(),
+        property.GetBoundsWidth(), property.GetBoundsHeight()};
+    RectF localBounds = {0.0f, 0.0f, absBounds.GetWidth(), absBounds.GetHeight()};
+
+    // calculate clipRect and clipRRect(if has cornerRadius) for canvas.
+    CalculateSurfaceNodeClipRects(node, absBounds, localBounds, inLocalCoordinate, params);
+
+    // inLocalCoordinate: reset the translate to (0, 0).
+    // else: use node's total matrix.
+    if (inLocalCoordinate) {
+        params.matrix = SkMatrix::I();
+    } else {
+        params.matrix = node.GetTotalMatrix();
+    }
+
+    // we can use only the bound's size (ignore its offset) now,
+    // (the canvas was moved to the node's left-top point correctly).
+    params.dstRect = SkRect::MakeWH(localBounds.GetWidth(), localBounds.GetHeight());
+
+    const sptr<Surface>& surface = node.GetConsumer();
+    const sptr<SurfaceBuffer>& buffer = node.GetBuffer();
+    if (isClipHole || surface == nullptr || buffer == nullptr) {
+        return params;
+    }
+
+    params.buffer = buffer;
+    params.acquireFence = node.GetAcquireFence();
+    params.srcRect = SkRect::MakeWH(buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
+
+    DealWithSurfaceRotationAndGravity(node, localBounds, params);
+    return params;
+}
+
+void RSBaseRenderUtil::SetPropertiesForCanvas(RSPaintFilterCanvas& canvas, const BufferDrawParam& params)
+{
+    if (params.isNeedClip) {
+        if (!params.cornerRadius.IsZero()) {
+            canvas.clipRRect(RSPropertiesPainter::RRect2SkRRect(params.clipRRect), true);
+        } else {
+            canvas.clipRect(params.clipRect);
+        }
+    }
+    if (SkColorGetA(params.backgroundColor) != SK_AlphaTRANSPARENT) {
+        canvas.drawColor(params.backgroundColor);
+    }
+    canvas.concat(params.matrix);
+}
+
 bool RSBaseRenderUtil::ConvertBufferToBitmap(sptr<SurfaceBuffer> buffer, std::vector<uint8_t>& newBuffer,
-    ColorGamut dstGamut, SkBitmap& bitmap)
+    ColorGamut dstGamut, SkBitmap& bitmap, const std::vector<HDRMetaData>& metaDatas)
 {
     if (!IsBufferValid(buffer)) {
         return false;
@@ -645,8 +1134,10 @@ bool RSBaseRenderUtil::ConvertBufferToBitmap(sptr<SurfaceBuffer> buffer, std::ve
     // Attention: make sure newBuffer's lifecycle is longer than the moment call drawBitmap
     if (buffer->GetFormat() == PIXEL_FMT_YCRCB_420_SP || buffer->GetFormat() == PIXEL_FMT_YCBCR_420_SP) {
         bitmapCreated = CreateYuvToRGBABitMap(buffer, newBuffer, bitmap);
+    } else if (buffer->GetFormat() == Detail::STUB_PIXEL_FMT_RGBA_16161616) {
+        bitmapCreated = CreateNewColorGamutBitmap(buffer, newBuffer, bitmap, srcGamut, dstGamut, metaDatas);
     } else if (srcGamut != dstGamut) {
-        RS_LOGW("RSBaseRenderUtil::ConvertBufferToBitmap: need to convert color gamut.");
+        RS_LOGD("RSBaseRenderUtil::ConvertBufferToBitmap: need to convert color gamut.");
         bitmapCreated = CreateNewColorGamutBitmap(buffer, newBuffer, bitmap, srcGamut, dstGamut);
     } else {
         bitmapCreated = CreateBitmap(buffer, bitmap);
@@ -676,14 +1167,14 @@ bool RSBaseRenderUtil::CreateBitmap(sptr<OHOS::SurfaceBuffer> buffer, SkBitmap& 
     return bitmap.installPixels(pixmap);
 }
 
-bool RSBaseRenderUtil::CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffer,
-    std::vector<uint8_t>& newGamutBuffer, SkBitmap& bitmap, ColorGamut srcGamut, ColorGamut dstGamut)
+bool RSBaseRenderUtil::CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffer, std::vector<uint8_t>& newBuffer,
+    SkBitmap& bitmap, ColorGamut srcGamut, ColorGamut dstGamut, const std::vector<HDRMetaData>& metaDatas)
 {
-    bool convertRes = Detail::ConvertBufferColorGamut(newGamutBuffer, buffer, srcGamut, dstGamut);
+    bool convertRes = Detail::ConvertBufferColorGamut(newBuffer, buffer, srcGamut, dstGamut, metaDatas);
     if (convertRes) {
         RS_LOGW("CreateNewColorGamutBitmap: convert color gamut succeed, use new buffer to create bitmap.");
         SkImageInfo imageInfo = Detail::GenerateSkImageInfo(buffer);
-        SkPixmap pixmap(imageInfo, newGamutBuffer.data(), buffer->GetStride());
+        SkPixmap pixmap(imageInfo, newBuffer.data(), buffer->GetStride());
         return bitmap.installPixels(pixmap);
     } else {
         RS_LOGW("CreateNewColorGamutBitmap: convert color gamut failed, use old buffer to create bitmap.");
@@ -691,29 +1182,114 @@ bool RSBaseRenderUtil::CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffe
     }
 }
 
-#ifdef RS_ENABLE_EGLIMAGE
-bool RSBaseRenderUtil::ConvertBufferToEglImage(sptr<SurfaceBuffer> buffer,
-    std::shared_ptr<RSEglImageManager> eglImageManager, GrContext* grContext, sptr<SyncFence> acquireFence,
-    sk_sp<SkImage>& image)
+std::unique_ptr<RSTransactionData> RSBaseRenderUtil::ParseTransactionData(MessageParcel& parcel)
 {
-    if (!IsBufferValid(buffer) || eglImageManager == nullptr || grContext == nullptr) {
-        RS_LOGE("RSBaseRenderUtil::ConvertBufferToEglImage invalid param!");
-        return false;
-    }
-    auto eglTextureId = eglImageManager->MapEglImageFromSurfaceBuffer(buffer, acquireFence);
-    if (eglTextureId == 0) {
-        RS_LOGE("RSBaseRenderUtil::ConvertBufferToEglImage MapEglImageFromSurfaceBuffer return invalid texture ID");
-        return false;
-    }
-    SkColorType colorType = (buffer->GetFormat() == PIXEL_FMT_BGRA_8888) ?
-        kBGRA_8888_SkColorType : kRGBA_8888_SkColorType;
-    GrGLTextureInfo grExternalTextureInfo = { GL_TEXTURE_EXTERNAL_OES, eglTextureId, GL_RGBA8 };
-    GrBackendTexture backendTexture(buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight(),
-        GrMipMapped::kNo, grExternalTextureInfo);
-    image = SkImage::MakeFromTexture(grContext, backendTexture,
-        kTopLeft_GrSurfaceOrigin, colorType, kPremul_SkAlphaType, nullptr);
-    return true;
+    RS_TRACE_NAME("UnMarsh RSTransactionData: data size:" + std::to_string(parcel.GetDataSize()));
+    auto transactionData = parcel.ReadParcelable<RSTransactionData>();
+    std::unique_ptr<RSTransactionData> transData(transactionData);
+    return transData;
 }
-#endif
+
+bool RSBaseRenderUtil::WriteSurfaceRenderNodeToPng(const RSSurfaceRenderNode& node)
+{
+    auto type = RSSystemProperties::GetDumpSurfaceType();
+    if (type == DumpSurfaceType::DISABLED || type == DumpSurfaceType::PIXELMAP) {
+        return false;
+    }
+    uint64_t id = RSSystemProperties::GetDumpSurfaceId();
+    if (type == DumpSurfaceType::SINGLESURFACE && !ROSEN_EQ(node.GetId(), id)) {
+        return false;
+    }
+    sptr<SurfaceBuffer> buffer = node.GetBuffer();
+    if (buffer == nullptr) {
+        return false;
+    }
+    BufferHandle *bufferHandle =  buffer->GetBufferHandle();
+    if (bufferHandle == nullptr) {
+        return false;
+    }
+
+    struct timeval now;
+    gettimeofday(&now, nullptr);
+    constexpr int secToUsec = 1000 * 1000;
+    int64_t nowVal =  static_cast<int64_t>(now.tv_sec) * secToUsec + static_cast<int64_t>(now.tv_usec);
+    std::string filename = "/data/SurfaceRenderNode_" +
+        node.GetName() + "_"  +
+        std::to_string(node.GetId()) + "_" +
+        std::to_string(nowVal) + ".png";
+
+    WriteToPngParam param;
+    param.width = static_cast<uint32_t>(bufferHandle->width);
+    param.height = static_cast<uint32_t>(bufferHandle->height);
+    param.data = (uint8_t*)(buffer->GetVirAddr());
+    param.stride = static_cast<uint32_t>(bufferHandle->stride);
+    param.bitDepth = Detail::BITMAP_DEPTH;
+
+    return WriteToPng(filename, param);
+}
+
+bool RSBaseRenderUtil::WritePixelMapToPng(Media::PixelMap& pixelMap)
+{
+    auto type = RSSystemProperties::GetDumpSurfaceType();
+    if (type != DumpSurfaceType::PIXELMAP) {
+        return false;
+    }
+    struct timeval now;
+    gettimeofday(&now, nullptr);
+    constexpr int secToUsec = 1000 * 1000;
+    int64_t nowVal =  static_cast<int64_t>(now.tv_sec) * secToUsec + static_cast<int64_t>(now.tv_usec);
+    std::string filename = "/data/PixelMap_" + std::to_string(nowVal) + ".png";
+
+    WriteToPngParam param;
+    param.width = static_cast<uint32_t>(pixelMap.GetWidth());
+    param.height = static_cast<uint32_t>(pixelMap.GetHeight());
+    param.data = pixelMap.GetPixels();
+    param.stride = static_cast<uint32_t>(pixelMap.GetRowBytes());
+    param.bitDepth = Detail::BITMAP_DEPTH;
+
+    return WriteToPng(filename, param);
+}
+
+bool RSBaseRenderUtil::WriteToPng(const std::string &filename, const WriteToPngParam &param)
+{
+    RS_LOGI("RSBaseRenderUtil::WriteToPng filename = %s", filename.c_str());
+    png_structp pngStruct = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    if (pngStruct == nullptr) {
+        return false;
+    }
+    png_infop pngInfo = png_create_info_struct(pngStruct);
+    if (pngInfo == nullptr) {
+        png_destroy_write_struct(&pngStruct, nullptr);
+        return false;
+    }
+
+    FILE *fp = fopen(filename.c_str(), "wb");
+    if (fp == nullptr) {
+        png_destroy_write_struct(&pngStruct, &pngInfo);
+        return false;
+    }
+    png_init_io(pngStruct, fp);
+
+    // set png header
+    png_set_IHDR(pngStruct, pngInfo,
+        param.width, param.height,
+        param.bitDepth,
+        PNG_COLOR_TYPE_RGBA,
+        PNG_INTERLACE_NONE,
+        PNG_COMPRESSION_TYPE_BASE,
+        PNG_FILTER_TYPE_BASE);
+    png_set_packing(pngStruct); // set packing info
+    png_write_info(pngStruct, pngInfo); // write to header
+
+    for (uint32_t i = 0; i < param.height; i++) {
+        png_write_row(pngStruct, param.data + (i * param.stride));
+    }
+    png_write_end(pngStruct, pngInfo);
+
+    // free
+    png_destroy_write_struct(&pngStruct, &pngInfo);
+    int ret = fclose(fp);
+    return ret == 0;
+}
 } // namespace Rosen
 } // namespace OHOS

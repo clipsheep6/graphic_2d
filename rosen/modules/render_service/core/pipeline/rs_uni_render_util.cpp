@@ -21,53 +21,68 @@
 
 namespace OHOS {
 namespace Rosen {
-void RSUniRenderUtil::DrawBufferOnCanvas(sptr<SurfaceBuffer> buffer, const ColorGamut& dstGamut,
-    RSPaintFilterCanvas& canvas, SkRect srcRect, SkRect dstRect)
+bool RSUniRenderUtil::UpdateRenderNodeDstRect(RSRenderNode& node)
 {
-    SkBitmap bitmap;
-    std::vector<uint8_t> newBuffer;
-    if (!RSBaseRenderUtil::ConvertBufferToBitmap(buffer, newBuffer, dstGamut, bitmap)) {
-        RS_LOGE("RSUniRenderUtil::DrawBufferOnCanvas ConvertBufferToBitmap failed");
-        return;
+    auto parentNode = node.GetParent().lock();
+    std::shared_ptr<RSRenderNode> rsParent = nullptr;
+    if (!parentNode) {
+        RS_LOGE("RSUniRenderUtil::UpdateDstRect: fail to get parent dstRect.");
+        return false;
     }
-
-    SkPaint paint;
-    paint.setAntiAlias(true);
-    canvas.save();
-    canvas.drawBitmapRect(bitmap, srcRect, dstRect, &paint);
-    canvas.restore();
+    rsParent = parentNode->ReinterpretCastTo<RSRenderNode>();
+    auto& property = node.GetMutableRenderProperties();
+    auto transitionProperties = node.GetAnimationManager().GetTransitionProperties();
+    property.UpdateGeometry(rsParent ? &(rsParent->GetRenderProperties()) : nullptr, true, transitionProperties);
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    if (geoPtr && node.IsInstanceOf<RSSurfaceRenderNode>()) {
+        std::shared_ptr<RSBaseRenderNode> nodePtr = node.shared_from_this();
+        auto surfaceNode = nodePtr->ReinterpretCastTo<RSSurfaceRenderNode>();
+        surfaceNode->SetDstRect(geoPtr->GetAbsRect());
+        auto dstRect = surfaceNode->GetDstRect();
+        RS_LOGD("RSUniRenderUtil::UpdateDstRect: nodeName: %s, dstRect[%d, %d, %d, %d].",
+            surfaceNode->GetName().c_str(),
+            dstRect.GetLeft(), dstRect.GetTop(), dstRect.GetWidth(), dstRect.GetHeight());
+    }
+    return transitionProperties != nullptr;
 }
 
-#ifdef RS_ENABLE_EGLIMAGE
-void RSUniRenderUtil::DrawImageOnCanvas(BufferInfo& bufferInfo, RSPaintFilterCanvas& canvas, SkRect srcRect,
-    SkRect dstRect)
+void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge)
 {
-    auto renderEngine = RSMainThread::Instance()->GetRenderEngine();
-    auto renderContext = renderEngine->GetRenderContext();
-    auto eglImageManager =  renderEngine->GetRSEglImageManager();
-    sk_sp<SkImage> image;
-    if (!RSBaseRenderUtil::ConvertBufferToEglImage(bufferInfo.buffer, eglImageManager, renderContext->GetGrContext(),
-        bufferInfo.acquireFence, image)) {
-        RS_LOGE("RSUniRenderUtil::DrawImageOnCanvas ConvertBufferToEglImage failed");
-        return;
-    }
-
-    SkPaint paint;
-    paint.setAntiAlias(true);
-    canvas.save();
-    canvas.drawImageRect(image, srcRect, dstRect, &paint);
-    canvas.restore();
-
-    auto consumerSurface = bufferInfo.consumerSurface;
-    if (consumerSurface != nullptr) {
-        GSError error = consumerSurface->RegisterDeleteBufferListener([eglImageManager] (int32_t bufferId) {
-            eglImageManager->UnMapEglImageFromSurfaceBuffer(bufferId);
-        });
-        if (error != GSERROR_OK) {
-            RS_LOGE("RSUniRenderVisitor::DrawImageOnCanvas: fail to register UnMapEglImage callback.");
+    // update all child surfacenode history
+    for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
+            continue;
         }
+        auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
+        if (!surfaceDirtyManager->SetBufferAge(bufferAge)) {
+            ROSEN_LOGE("RSUniRenderUtil::MergeVisibleDirtyRegion with invalid buffer age %d", bufferAge);
+        }
+        surfaceDirtyManager->UpdateDirty();
     }
+    // update display dirtymanager
+    node->UpdateDisplayDirtyManager(bufferAge);
 }
-#endif
+
+Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node)
+{
+    Occlusion::Region allSurfaceVisibleDirtyRegion;
+    for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
+            continue;
+        }
+        auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
+        auto surfaceDirtyRect = surfaceDirtyManager->GetDirtyRegion();
+        Occlusion::Rect dirtyRect { surfaceDirtyRect.left_, surfaceDirtyRect.top_,
+            surfaceDirtyRect.GetRight(), surfaceDirtyRect.GetBottom() };
+        auto visibleRegion = surfaceNode->GetVisibleRegion();
+        Occlusion::Region surfaceDirtyRegion { dirtyRect };
+        Occlusion::Region surfaceVisibleDirtyRegion = surfaceDirtyRegion.And(visibleRegion);
+        surfaceNode->SetVisibleDirtyRegion(surfaceVisibleDirtyRegion);
+        allSurfaceVisibleDirtyRegion = allSurfaceVisibleDirtyRegion.Or(surfaceVisibleDirtyRegion);
+    }
+    return allSurfaceVisibleDirtyRegion;
+}
 } // namespace Rosen
 } // namespace OHOS

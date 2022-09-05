@@ -518,118 +518,6 @@ HWTEST_F(RSInterfacesTest, SetScreenChangeCallback, Function | SmallTest | Level
 }
 
 /*
-* Function: RequestRotation
-* Type: Function
-* Rank: Important(2)
-* EnvConditions: N/A
-* CaseDescription: 1. call RequestRotation with default screenId
-*                  2. check ret
-*/
-HWTEST_F(RSInterfacesTest, RequestRotation001, Function | SmallTest | Level2)
-{
-    auto screenId = rsInterfaces->GetDefaultScreenId();
-    EXPECT_NE(screenId, INVALID_SCREEN_ID);
-
-    bool res = rsInterfaces->RequestRotation(screenId, ScreenRotation::ROTATION_90);
-    ASSERT_EQ(res, true);
-
-    res = rsInterfaces->RequestRotation(screenId, ScreenRotation::ROTATION_180);
-    ASSERT_EQ(res, true);
-
-    res = rsInterfaces->RequestRotation(screenId, ScreenRotation::ROTATION_270);
-    ASSERT_EQ(res, true);
-
-    res = rsInterfaces->RequestRotation(screenId, ScreenRotation::ROTATION_0);
-    ASSERT_EQ(res, true);
-}
-
-/*
-* Function: RequestRotation
-* Type: Function
-* Rank: Important(2)
-* EnvConditions: N/A
-* CaseDescription: 1. call RequestRotation with invalid screenId
-*                  2. check ret
-*/
-HWTEST_F(RSInterfacesTest, RequestRotation002, Function | SmallTest | Level2)
-{
-    ScreenId screenId = INVALID_SCREEN_ID;
-
-    bool res = rsInterfaces->RequestRotation(screenId, ScreenRotation::ROTATION_90);
-    ASSERT_EQ(res, false);
-}
-
-/*
-* Function: GetRotation
-* Type: Function
-* Rank: Important(2)
-* EnvConditions: N/A
-* CaseDescription: 1. call GetRotation with default screenId
-*                  2. check ret
-*/
-HWTEST_F(RSInterfacesTest, GetRotation001, Function | SmallTest | Level2)
-{
-    auto screenId = rsInterfaces->GetDefaultScreenId();
-    EXPECT_NE(screenId, INVALID_SCREEN_ID);
-
-    ScreenRotation rotation = rsInterfaces->GetRotation(screenId);
-    ASSERT_EQ(rotation, ScreenRotation::ROTATION_0);
-}
-
-/*
-* Function: GetRotation
-* Type: Function
-* Rank: Important(2)
-* EnvConditions: N/A
-* CaseDescription: 1. call GetRotation with default screenId
-*                  2. check ret
-*/
-HWTEST_F(RSInterfacesTest, GetRotation002, Function | SmallTest | Level2)
-{
-    auto screenId = rsInterfaces->GetDefaultScreenId();
-    EXPECT_NE(screenId, INVALID_SCREEN_ID);
-
-    bool res = rsInterfaces->RequestRotation(screenId, ScreenRotation::ROTATION_90);
-    ASSERT_EQ(res, true);
-
-    ScreenRotation rotation = rsInterfaces->GetRotation(screenId);
-    ASSERT_EQ(rotation, ScreenRotation::ROTATION_90);
-}
-
-/*
-* Function: GetRotation
-* Type: Function
-* Rank: Important(2)
-* EnvConditions: N/A
-* CaseDescription: 1. call GetRotation with invalid screenId
-*                  2. check ret
-*/
-HWTEST_F(RSInterfacesTest, GetRotation003, Function | SmallTest | Level2)
-{
-    ScreenId screenId = INVALID_SCREEN_ID;
-
-    ScreenRotation rotation = rsInterfaces->GetRotation(screenId);
-    ASSERT_EQ(rotation, ScreenRotation::INVALID_SCREEN_ROTATION);
-}
-
-/*
-* Function: GetScreenSupportedColorGamuts
-* Type: Function
-* Rank: Important(2)
-* EnvConditions: N/A
-* CaseDescription: 1. call GetScreenSupportedColorGamuts
-*                  2. check ret
-*/
-HWTEST_F(RSInterfacesTest, GetScreenSupportedColorGamuts001, Function | SmallTest | Level2)
-{
-    auto screenId = rsInterfaces->GetDefaultScreenId();
-    EXPECT_NE(screenId, INVALID_SCREEN_ID);
-    std::vector<ScreenColorGamut> modes;
-    int ret = rsInterfaces->GetScreenSupportedColorGamuts(screenId, modes);
-    EXPECT_EQ(ret, StatusCode::SUCCESS);
-}
-
-/*
 * Function: GetScreenSupportedColorGamuts
 * Type: Function
 * Rank: Important(2)
@@ -645,20 +533,38 @@ HWTEST_F(RSInterfacesTest, GetScreenSupportedColorGamuts002, Function | SmallTes
 }
 
 /*
-* Function: GetScreenColorGamut
+* Function: GetScreenSupportedMetaDataKeys
 * Type: Function
 * Rank: Important(2)
 * EnvConditions: N/A
-* CaseDescription: 1. call GetScreenColorGamut
+* CaseDescription: 1. call GetScreenSupportedMetaDataKeys
 *                  2. check ret
+* @tc.require: IssueI5KGK4
 */
-HWTEST_F(RSInterfacesTest, GetScreenColorGamut001, Function | SmallTest | Level2)
+HWTEST_F(RSInterfacesTest, GetScreenSupportedMetaDataKeys001, Function | SmallTest | Level2)
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
-    ScreenColorGamut mode = ScreenColorGamut::COLOR_GAMUT_INVALID;
-    int ret = rsInterfaces->GetScreenColorGamut(screenId, mode);
+    std::vector<ScreenHDRMetadataKey> keys;
+    int ret = rsInterfaces->GetScreenSupportedMetaDataKeys(screenId, keys);
     EXPECT_EQ(ret, StatusCode::SUCCESS);
+    EXPECT_EQ(keys[0], ScreenHDRMetadataKey::MATAKEY_RED_PRIMARY_X); // ScreenHDRMetadataKey now is mock data.
+}
+
+/*
+* Function: GetScreenSupportedMetaDataKeys
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetScreenSupportedMetaDataKeys with INVALID_SCREEN_ID
+*                  2. check ret
+* @tc.require: IssueI5KGK4
+*/
+HWTEST_F(RSInterfacesTest, GetScreenSupportedMetaDataKeys002, Function | SmallTest | Level2)
+{
+    std::vector<ScreenHDRMetadataKey> keys;
+    int ret = rsInterfaces->GetScreenSupportedMetaDataKeys(INVALID_SCREEN_ID, keys);
+    EXPECT_EQ(ret, StatusCode::SCREEN_NOT_FOUND);
 }
 
 /*
@@ -681,22 +587,6 @@ HWTEST_F(RSInterfacesTest, GetScreenColorGamut002, Function | SmallTest | Level2
 * Type: Function
 * Rank: Important(2)
 * EnvConditions: N/A
-* CaseDescription: 1. call SetScreenColorGamut
-*                  2. check ret
-*/
-HWTEST_F(RSInterfacesTest, SetScreenColorGamut001, Function | SmallTest | Level2)
-{
-    auto screenId = rsInterfaces->GetDefaultScreenId();
-    EXPECT_NE(screenId, INVALID_SCREEN_ID);
-    int ret = rsInterfaces->SetScreenColorGamut(screenId, 0);
-    EXPECT_EQ(ret, StatusCode::SUCCESS);
-}
-
-/*
-* Function: SetScreenColorGamut
-* Type: Function
-* Rank: Important(2)
-* EnvConditions: N/A
 * CaseDescription: 1. call SetScreenColorGamut with INVALID_SCREEN_ID
 *                  2. check ret
 */
@@ -704,23 +594,6 @@ HWTEST_F(RSInterfacesTest, SetScreenColorGamut002, Function | SmallTest | Level2
 {
     int ret = rsInterfaces->SetScreenColorGamut(INVALID_SCREEN_ID, 0);
     EXPECT_EQ(ret, StatusCode::SCREEN_NOT_FOUND);
-}
-
-/*
-* Function: SetScreenGamutMap
-* Type: Function
-* Rank: Important(2)
-* EnvConditions: N/A
-* CaseDescription: 1. call SetScreenGamutMap
-*                  2. check ret
-*/
-HWTEST_F(RSInterfacesTest, SetScreenGamutMap001, Function | SmallTest | Level2)
-{
-    auto screenId = rsInterfaces->GetDefaultScreenId();
-    EXPECT_NE(screenId, INVALID_SCREEN_ID);
-    ScreenGamutMap gamutMap = ScreenGamutMap::GAMUT_MAP_CONSTANT;
-    int ret = rsInterfaces->SetScreenGamutMap(screenId, gamutMap);
-    EXPECT_EQ(ret, StatusCode::SUCCESS);
 }
 
 /*
@@ -736,23 +609,6 @@ HWTEST_F(RSInterfacesTest, SetScreenGamutMap002, Function | SmallTest | Level2)
     ScreenGamutMap gamutMap = ScreenGamutMap::GAMUT_MAP_CONSTANT;
     int ret = rsInterfaces->SetScreenGamutMap(INVALID_SCREEN_ID, gamutMap);
     EXPECT_EQ(ret, StatusCode::SCREEN_NOT_FOUND);
-}
-
-/*
-* Function: GetScreenGamutMap
-* Type: Function
-* Rank: Important(2)
-* EnvConditions: N/A
-* CaseDescription: 1. call GetScreenGamutMap
-*                  2. check ret
-*/
-HWTEST_F(RSInterfacesTest, GetScreenGamutMap001, Function | SmallTest | Level2)
-{
-    auto screenId = rsInterfaces->GetDefaultScreenId();
-    EXPECT_NE(screenId, INVALID_SCREEN_ID);
-    ScreenGamutMap gamutMap = ScreenGamutMap::GAMUT_MAP_CONSTANT;
-    int ret = rsInterfaces->GetScreenGamutMap(screenId, gamutMap);
-    EXPECT_EQ(ret, StatusCode::SUCCESS);
 }
 
 /*
@@ -777,6 +633,7 @@ HWTEST_F(RSInterfacesTest, GetScreenGamutMap002, Function | SmallTest | Level2)
 * EnvConditions: N/A
 * CaseDescription: 1. call GetScreenHDRCapability
 *                  2. check ret
+* @tc.require: IssueI5KGK4
 */
 HWTEST_F(RSInterfacesTest, GetScreenHDRCapability001, Function | SmallTest | Level2)
 {
@@ -796,6 +653,7 @@ HWTEST_F(RSInterfacesTest, GetScreenHDRCapability001, Function | SmallTest | Lev
 * EnvConditions: N/A
 * CaseDescription: 1. call GetScreenHDRCapability with INVALID_SCREEN_ID
 *                  2. check ret
+* @tc.require: IssueI5KGK4
 */
 HWTEST_F(RSInterfacesTest, GetScreenHDRCapability002, Function | SmallTest | Level2)
 {
@@ -940,9 +798,41 @@ HWTEST_F(RSInterfacesTest, SetScreenSkipFrameInterval002, Function | SmallTest |
 * Type: Function
 * Rank: Important(2)
 * EnvConditions: N/A
-* CaseDescription: 1. call SetScreenSkipFrameInterval with valid parameters and check ret
+* CaseDescription: 1. call SetScreenSkipFrameInterval with invalid parameters and check ret
 */
 HWTEST_F(RSInterfacesTest, SetScreenSkipFrameInterval003, Function | SmallTest | Level2)
+{
+    ScreenId screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
+    uint32_t skipFrameInterval = 100;  // for test
+    int32_t ret = rsInterfaces->SetScreenSkipFrameInterval(screenId, skipFrameInterval);
+    EXPECT_EQ(ret, StatusCode::INVALID_ARGUMENTS);
+}
+
+/*
+* Function: SetScreenSkipFrameInterval
+* Type: Function
+* Rank: Important(1)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScreenSkipFrameInterval with valid parameters and check ret
+*/
+HWTEST_F(RSInterfacesTest, SetScreenSkipFrameInterval004, Function | SmallTest | Level1)
+{
+    ScreenId screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
+    float skipFrameInterval = 2.1;  // for test
+    int32_t ret = rsInterfaces->SetScreenSkipFrameInterval(screenId, skipFrameInterval);
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+}
+
+/*
+* Function: SetScreenSkipFrameInterval
+* Type: Function
+* Rank: Important(1)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScreenSkipFrameInterval with valid parameters and check ret
+*/
+HWTEST_F(RSInterfacesTest, SetScreenSkipFrameInterval005, Function | SmallTest | Level1)
 {
     ScreenId screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);

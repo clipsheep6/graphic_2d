@@ -32,7 +32,8 @@ config("libvsync_client_config") {
 config("libvsync_client_public_config") {
   include_dirs = [
     "//foundation/graphic/graphic_2d/interfaces/inner_api/vsync",
-    "//utils/native/base/include",
+    "//foundation/graphic/graphic_2d/utils/sandbox",
+    "//commonlibrary/c_utils/base/include",
   ]
 }
 
@@ -52,107 +53,19 @@ ohos_shared_library("libvsync_client") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//foundation/graphic/graphic_2d/utils:libgraphic_utils",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
   ]
 
   external_deps = [ "ipc:ipc_core" ]
 
   public_deps = [
     "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler",
+    "//commonlibrary/c_utils/base:utils",
     "//foundation/graphic/graphic_2d:libgraphic_dumper_client",
-    "//utils/native/base:utils",
   ]
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
-
 ## Build libvsync_client.so }}}
-
-## Build libvsync_module.z.so {{{
-config("libvsync_module_config") {
-  visibility = [ ":*" ]
-
-  include_dirs = [
-    "include",
-    "//utils/system/safwk/native/include",
-  ]
-
-  cflags = [
-    "-Wall",
-    "-Werror",
-    "-g3",
-  ]
-}
-
-config("libvsync_module_public_config") {
-  include_dirs = [
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/common",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/vsync_module",
-  ]
-}
-
-ohos_shared_library("libvsync_module") {
-  sources = [
-    "src/drm_module.cpp",
-    "src/return_value_tester.cpp",
-    "src/vsync_callback_death_recipient.cpp",
-    "src/vsync_callback_proxy.cpp",
-    "src/vsync_manager.cpp",
-    "src/vsync_module.cpp",
-    "src/vsync_module_c.cpp",
-    "src/vsync_module_impl.cpp",
-  ]
-
-  configs = [ ":libvsync_module_config" ]
-
-  public_configs = [ ":libvsync_module_public_config" ]
-
-  deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-    "//foundation/graphic/graphic_2d/utils:libgraphic_utils",
-    "//third_party/libdrm:libdrm",
-  ]
-
-  public_deps = [
-    "//foundation/graphic/graphic_2d/utils:semaphore",
-    "//utils/native/base:utils",
-  ]
-
-  part_name = "graphic_graphic_2d"
-  subsystem_name = "graphic"
-}
-
-## Build libvsync_module.z.so }}}
-
-## Build vsync_server {{{
-ohos_executable("vsync_server") {
-  install_enable = false
-
-  sources = [ "src/module_main.cpp" ]
-
-  deps = [
-    ":libvsync_module",
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
-  ]
-
-  part_name = "graphic_graphic_2d"
-  subsystem_name = "graphic"
-}
-
-## Build vsync_server }}}
-
-## Build vsync_test {{{
-ohos_executable("vsync_test") {
-  install_enable = false
-
-  sources = [ "test/nativetest/main.cpp" ]
-
-  deps = [ ":libvsync_client" ]
-
-  part_name = "graphic_graphic_2d"
-  subsystem_name = "graphic"
-}

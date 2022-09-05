@@ -13,12 +13,15 @@
  * limitations under the License.
  */
 
+#include "common/rs_occlusion_region.h"
+
 #include <map>
 #include <set>
 #include <dlfcn.h>
 #include <parameters.h>
+
 #include "platform/common/rs_log.h"
-#include "common/rs_occlusion_region.h"
+#include "platform/common/rs_innovation.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -220,10 +223,8 @@ void Region::InitDynamicLibraryFunction()
 void Region::RegionOp(Region& r1, Region& r2, Region& res, Region::OP op)
 {
     if (RSInnovation::_s_occlusionCullingFuncLoaded && RSInnovation::_s_occlusionCullingSoEnabled) {
-        RS_LOGD("Occlusion Region Op using Shared Library function.");
         regionOpFromSO(r1, r2, res, op);
     } else {
-        RS_LOGD("Occlusion Region Op using local function.");
         RegionOpLocal(r1, r2, res, op);
     }
 }

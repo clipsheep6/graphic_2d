@@ -43,6 +43,7 @@
 #include "animation/rs_render_spring_animation.h"
 #include "animation/rs_render_transition.h"
 #include "common/rs_color.h"
+#include "common/rs_common_def.h"
 #include "common/rs_matrix3.h"
 #include "common/rs_vector4.h"
 #include "pipeline/rs_draw_cmd_list.h"
@@ -50,8 +51,12 @@
 #include "platform/common/rs_log.h"
 #include "render/rs_blur_filter.h"
 #include "render/rs_filter.h"
+#include "render/rs_material_filter.h"
 #include "render/rs_path.h"
 #include "render/rs_shader.h"
+#include "render/rs_image.h"
+#include "transaction/rs_ashmem_helper.h"
+#include "modifier/rs_render_modifier.h"
 
 #ifdef ROSEN_OHOS
 namespace OHOS {
@@ -128,8 +133,20 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkData>& val)
         return false;
     }
 
-    val = size < MIN_DATA_SIZE ? SkData::MakeWithoutCopy(data, size) : SkData::MakeFromMalloc(data, size);
+    if (static_cast<uint32_t>(size) < MIN_DATA_SIZE) {
+        val = SkData::MakeWithoutCopy(data, size);
+    } else {
+        val = SkData::MakeFromMalloc(data, size);
+    }
     return val != nullptr;
+}
+bool RSMarshallingHelper::SkipSkData(Parcel& parcel)
+{
+    int32_t size = parcel.ReadInt32();
+    if (size <= 0) {
+        return true;
+    }
+    return SkipFromParcel(parcel, size);
 }
 
 // SkTypeface serial proc
@@ -315,6 +332,33 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val)
             SkData::MakeFromMalloc(addr, pixmapSize);
         val = SkImage::MakeRasterData(imageInfo, skData, rb);
         return val != nullptr;
+    }
+}
+
+bool RSMarshallingHelper::SkipSkImage(Parcel& parcel)
+{
+    int32_t type = parcel.ReadInt32();
+    if (type == -1) {
+        return true;
+    }
+    sk_sp<SkData> data;
+    if (type == 1) {
+        ROSEN_LOGD("RSMarshallingHelper::SkipSkImage lazy");
+        return SkipSkData(parcel);
+    } else {
+        size_t pixmapSize = parcel.ReadUint32();
+        if (!SkipFromParcel(parcel, pixmapSize)) {
+            ROSEN_LOGE("failed RSMarshallingHelper::SkipSkImage SkData addr");
+            return false;
+        }
+
+        parcel.ReadUint32();
+        parcel.ReadInt32();
+        parcel.ReadInt32();
+        parcel.ReadUint32();
+        parcel.ReadUint32();
+        size_t size = parcel.ReadUint32();
+        return size == 0 ? true : SkipFromParcel(parcel, size);
     }
 }
 
@@ -534,6 +578,7 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSPa
     }
     return parcel.WriteInt32(1) && Marshalling(parcel, val->GetSkiaPath());
 }
+
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSPath>& val)
 {
     if (parcel.ReadInt32() == -1) {
@@ -554,16 +599,18 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSMa
 {
     if (!val) {
         ROSEN_LOGD("unirender: RSMarshallingHelper::Marshalling RSMask is nullptr");
+        parcel.WriteInt32(-1);
     }
-    // marshalling func planning to be implemented
-    ROSEN_LOGW("unirender: RSMask Marshalling not define");
-    return true;
+    return parcel.WriteInt32(1) && val->Marshalling(parcel);
 }
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSMask>& val)
 {
-    // marshalling func planning to be implemented
-    ROSEN_LOGW("unirender: RSMask Unmarshalling not define");
-    return true;
+    if (parcel.ReadInt32() == -1) {
+        val = nullptr;
+        return true;
+    }
+    val.reset(RSMask::Unmarshalling(parcel));
+    return val != nullptr;
 }
 
 // RSFilter
@@ -577,6 +624,11 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSFi
         case RSFilter::BLUR: {
             auto blur = std::static_pointer_cast<RSBlurFilter>(val);
             success = success && parcel.WriteFloat(blur->GetBlurRadiusX()) && parcel.WriteFloat(blur->GetBlurRadiusY());
+            break;
+        }
+        case RSFilter::MATERIAL: {
+            auto material = std::static_pointer_cast<RSMaterialFilter>(val);
+            success = success && parcel.WriteInt32(material->GetStyle()) && parcel.WriteFloat(material->GetDipScale());
             break;
         }
         default:
@@ -595,6 +647,15 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSFilter
             success = success && parcel.ReadFloat(blurRadiusX) && parcel.ReadFloat(blurRadiusY);
             if (success) {
                 val = RSFilter::CreateBlurFilter(blurRadiusX, blurRadiusY);
+            }
+            break;
+        }
+        case RSFilter::MATERIAL: {
+            int style;
+            float dipScale;
+            success = success && parcel.ReadInt32(style) && parcel.ReadFloat(dipScale);
+            if (success) {
+                val = RSFilter::CreateMaterialFilter(style, dipScale);
             }
             break;
         }
@@ -625,6 +686,32 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSImage>
     return val != nullptr;
 }
 
+// Media::PixelMap
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<Media::PixelMap>& val)
+{
+    if (!val) {
+        return parcel.WriteInt32(-1);
+    }
+    if (!(parcel.WriteInt32(1) && val->Marshalling(parcel))) {
+        ROSEN_LOGE("failed RSMarshallingHelper::Marshalling Media::PixelMap");
+        return false;
+    }
+    return true;
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Media::PixelMap>& val)
+{
+    if (parcel.ReadInt32() == -1) {
+        val = nullptr;
+        return true;
+    }
+    val.reset(Media::PixelMap::Unmarshalling(parcel));
+    if (val == nullptr) {
+        ROSEN_LOGE("failed RSMarshallingHelper::Unmarshalling Media::PixelMap");
+        return false;
+    }
+    return true;
+}
+
 #define MARSHALLING_AND_UNMARSHALLING(TYPE)                                                 \
     bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<TYPE>& val) \
     {                                                                                       \
@@ -635,48 +722,107 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSImage>
         val.reset(parcel.ReadParcelable<TYPE>());                                           \
         return val != nullptr;                                                              \
     }
-MARSHALLING_AND_UNMARSHALLING(RSRenderPathAnimation)
 MARSHALLING_AND_UNMARSHALLING(RSRenderTransition)
 MARSHALLING_AND_UNMARSHALLING(RSRenderTransitionEffect)
 MARSHALLING_AND_UNMARSHALLING(DrawCmdList)
-MARSHALLING_AND_UNMARSHALLING(Media::PixelMap)
 #undef MARSHALLING_AND_UNMARSHALLING
 
 #define MARSHALLING_AND_UNMARSHALLING(TEMPLATE)                                                    \
-    template<typename T>                                                                           \
-    bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<TEMPLATE<T>>& val) \
+    bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<TEMPLATE>& val)    \
     {                                                                                              \
         return parcel.WriteParcelable(val.get());                                                  \
     }                                                                                              \
-    template<typename T>                                                                           \
-    bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<TEMPLATE<T>>& val)     \
+    bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<TEMPLATE>& val)        \
     {                                                                                              \
-        val.reset(parcel.ReadParcelable<TEMPLATE<T>>());                                           \
+        val.reset(parcel.ReadParcelable<TEMPLATE>());                                              \
         return val != nullptr;                                                                     \
     }
 
 MARSHALLING_AND_UNMARSHALLING(RSRenderCurveAnimation)
 MARSHALLING_AND_UNMARSHALLING(RSRenderKeyframeAnimation)
 MARSHALLING_AND_UNMARSHALLING(RSRenderSpringAnimation)
+MARSHALLING_AND_UNMARSHALLING(RSRenderPathAnimation)
+#undef MARSHALLING_AND_UNMARSHALLING
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSRenderModifier>& val)
+{
+    return val->Marshalling(parcel);
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRenderModifier>& val)
+{
+    val.reset(RSRenderModifier::Unmarshalling(parcel));
+    return val != nullptr;
+}
+
+#define MARSHALLING_AND_UNMARSHALLING(TEMPLATE)                                                    \
+    template<typename T>                                                                           \
+    bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<TEMPLATE<T>>& val) \
+    {                                                                                              \
+        return parcel.WriteUint64(val->GetId()) && Marshalling(parcel, val->Get());                \
+    }                                                                                              \
+    template<typename T>                                                                           \
+    bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<TEMPLATE<T>>& val)     \
+    {                                                                                              \
+        PropertyId id = 0;                                                                         \
+        if (!parcel.ReadUint64(id)) {                                                              \
+            return false;                                                                          \
+        }                                                                                          \
+        T value;                                                                                   \
+        if (!Unmarshalling(parcel, value)) {                                                       \
+            return false;                                                                          \
+        }                                                                                          \
+        val.reset(new TEMPLATE<T>(value, id));                                                     \
+        return val != nullptr;                                                                     \
+    }
+
+MARSHALLING_AND_UNMARSHALLING(RSRenderProperty)
+MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
 #undef MARSHALLING_AND_UNMARSHALLING
 
 #define EXPLICIT_INSTANTIATION(TEMPLATE, TYPE)                                                                  \
     template bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<TEMPLATE<TYPE>>& val); \
     template bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<TEMPLATE<TYPE>>& val);
 
-#define BATCH_EXPLICIT_INSTANTIATION(TEMPLATE)                  \
-    EXPLICIT_INSTANTIATION(TEMPLATE, float)                     \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Color)                     \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Matrix3f)                  \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Vector2f)                  \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                  \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Quaternion)                \
-    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSFilter>) \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<Color>)
+#define BATCH_EXPLICIT_INSTANTIATION(TEMPLATE)                            \
+    EXPLICIT_INSTANTIATION(TEMPLATE, bool)                                \
+    EXPLICIT_INSTANTIATION(TEMPLATE, float)                               \
+    EXPLICIT_INSTANTIATION(TEMPLATE, int)                                 \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Color)                               \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Gravity)                             \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Matrix3f)                            \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Quaternion)                          \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSFilter>)           \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSImage>)            \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSMask>)             \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSPath>)             \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSShader>)           \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector2f)                            \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<uint32_t>)                   \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<Color>)                      \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                            \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<DrawCmdList>)
 
-BATCH_EXPLICIT_INSTANTIATION(RSRenderCurveAnimation)
-BATCH_EXPLICIT_INSTANTIATION(RSRenderKeyframeAnimation)
-BATCH_EXPLICIT_INSTANTIATION(RSRenderSpringAnimation)
+BATCH_EXPLICIT_INSTANTIATION(RSRenderProperty)
+
+#undef EXPLICIT_INSTANTIATION
+#undef BATCH_EXPLICIT_INSTANTIATION
+
+#define EXPLICIT_INSTANTIATION(TEMPLATE, TYPE)                                                                  \
+    template bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<TEMPLATE<TYPE>>& val); \
+    template bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<TEMPLATE<TYPE>>& val);
+
+#define BATCH_EXPLICIT_INSTANTIATION(TEMPLATE)                            \
+    EXPLICIT_INSTANTIATION(TEMPLATE, float)                               \
+    EXPLICIT_INSTANTIATION(TEMPLATE, int)                                 \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Color)                               \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Matrix3f)                            \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Quaternion)                          \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSFilter>)           \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector2f)                            \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<Color>)                      \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)
+
+BATCH_EXPLICIT_INSTANTIATION(RSRenderAnimatableProperty)
 
 #undef EXPLICIT_INSTANTIATION
 #undef BATCH_EXPLICIT_INSTANTIATION
@@ -715,25 +861,13 @@ template bool RSMarshallingHelper::Marshalling(
 template bool RSMarshallingHelper::Unmarshalling(
     Parcel& parcel, std::vector<std::shared_ptr<RSRenderTransitionEffect>>& val);
 
-void RSMarshallingHelper::ReleaseMemory(void* data, int* fd, size_t size)
-{
-    if (data != nullptr) {
-        ::munmap(data, size);
-        data = nullptr;
-    }
-    if (fd != nullptr && (*fd) > 0) {
-        ::close(*fd);
-        *fd = -1;
-    }
-}
-
 bool RSMarshallingHelper::WriteToParcel(Parcel& parcel, const void* data, size_t size)
 {
     if (data == nullptr) {
         ROSEN_LOGE("RSMarshallingHelper::WriteToParcel data is nullptr");
         return false;
     }
-    if (data == nullptr || size > MAX_DATA_SIZE) {
+    if (size > MAX_DATA_SIZE) {
         ROSEN_LOGE("RSMarshallingHelper::WriteToParcel data exceed MAX_DATA_SIZE");
         return false;
     }
@@ -745,41 +879,21 @@ bool RSMarshallingHelper::WriteToParcel(Parcel& parcel, const void* data, size_t
         return parcel.WriteUnpadBuffer(data, size);
     }
 
-    static pid_t pid_ = getpid();
-    uint64_t id = ((uint64_t)pid_ << 32) | shmemCount++;
-    std::string name = "Parcel RS" + std::to_string(id);
-    int fd = AshmemCreate(name.c_str(), size);
-    ROSEN_LOGD("RSMarshallingHelper::WriteToParcel fd:%d", fd);
-    if (fd < 0) {
+    // write to ashmem
+    auto ashmemAllocator = AshmemAllocator::CreateAshmemAllocator(size, PROT_READ | PROT_WRITE);
+    if (!ashmemAllocator) {
+        ROSEN_LOGE("RSMarshallingHelper::WriteToParcel CreateAshmemAllocator fail");
         return false;
     }
-
-    int result = AshmemSetProt(fd, PROT_READ | PROT_WRITE);
-    if (result < 0) {
-        ::close(fd);
-        ROSEN_LOGE("RSMarshallingHelper::WriteToParcel result:%d", result);
-        return false;
-    }
-    void* ptr = ::mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (ptr == MAP_FAILED) {
-        ::close(fd);
-        ROSEN_LOGE("RSMarshallingHelper::WriteToParcel MAP_FAILED");
-        return false;
-    }
-
+    int fd = ashmemAllocator->GetFd();
     if (!(static_cast<MessageParcel*>(&parcel)->WriteFileDescriptor(fd))) {
-        ::munmap(ptr, size);
-        ::close(fd);
         ROSEN_LOGE("RSMarshallingHelper::WriteToParcel WriteFileDescriptor error");
         return false;
     }
-    if (memcpy_s(ptr, size, data, size) != EOK) {
-        ::munmap(ptr, size);
-        ::close(fd);
+    if (!ashmemAllocator->WriteToAshmem(data, size)) {
         ROSEN_LOGE("RSMarshallingHelper::WriteToParcel memcpy_s failed");
         return false;
     }
-    ReleaseMemory(ptr, &fd, size);
     return true;
 }
 
@@ -794,40 +908,32 @@ const void* RSMarshallingHelper::ReadFromParcel(Parcel& parcel, size_t size)
     if (static_cast<unsigned int>(bufferSize) <= MIN_DATA_SIZE) {
         return parcel.ReadUnpadBuffer(size);
     }
-
+    // read from ashmem
     int fd = static_cast<MessageParcel*>(&parcel)->ReadFileDescriptor();
-    if (fd < 0) {
-        ROSEN_LOGE("RSMarshallingHelper::ReadFromParcel fd < 0");
+    auto ashmemAllocator = AshmemAllocator::CreateAshmemAllocatorWithFd(fd, size, PROT_READ);
+    if (!ashmemAllocator) {
+        ROSEN_LOGE("RSMarshallingHelper::ReadFromParcel CreateAshmemAllocator fail");
         return nullptr;
     }
-    int ashmemSize = AshmemGetSize(fd);
-    if (ashmemSize < 0 || size_t(ashmemSize) < size) {
-        // do not close fd here. fd will be closed in FileDescriptor, ::close(fd)
-        ROSEN_LOGE("RSMarshallingHelper::ReadFromParcel ashmemSize < size");
-        return nullptr;
+    return ashmemAllocator->CopyFromAshmem(size);
+}
+
+bool RSMarshallingHelper::SkipFromParcel(Parcel& parcel, size_t size)
+{
+    int32_t bufferSize = parcel.ReadInt32();
+    if (static_cast<unsigned int>(bufferSize) != size) {
+        ROSEN_LOGE("RSMarshallingHelper::SkipFromParcel size mismatch");
+        return false;
     }
 
-    void* ptr = ::mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
-    if (ptr == MAP_FAILED) {
-        // do not close fd here. fd will be closed in FileDescriptor, ::close(fd)
-        ROSEN_LOGE("RSMarshallingHelper::ReadFromParcel MAP_FAILED");
-        return nullptr;
+    if (static_cast<unsigned int>(bufferSize) <= MIN_DATA_SIZE) {
+        parcel.SkipBytes(size);
+        return true;
     }
-    uint8_t* base = static_cast<uint8_t*>(malloc(size));
-    if (base == nullptr) {
-        ::munmap(ptr, size);
-        ROSEN_LOGE("RSMarshallingHelper::ReadFromParcel malloc(size) failed");
-        return nullptr;
-    }
-    if (memcpy_s(base, size, ptr, size) != 0) {
-        ::munmap(ptr, size);
-        free(base);
-        base = nullptr;
-        ROSEN_LOGE("RSMarshallingHelper::ReadFromParcel memcpy_s failed");
-        return nullptr;
-    }
-    ReleaseMemory(ptr, &fd, size);
-    return base;
+    // read from ashmem
+    int fd = static_cast<MessageParcel*>(&parcel)->ReadFileDescriptor();
+    auto ashmemAllocator = AshmemAllocator::CreateAshmemAllocatorWithFd(fd, size, PROT_READ);
+    return ashmemAllocator != nullptr;
 }
 } // namespace Rosen
 } // namespace OHOS

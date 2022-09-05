@@ -37,16 +37,28 @@ public:
     void Init(bool shouldCreateRenderThread = true);
     void Destroy();
     void SetRSSurfaceNode(std::shared_ptr<RSSurfaceNode> surfaceNode);
+    void SetAbilityBGAlpha(uint8_t alpha);
+    /**
+     * @brief Set rt render status and keep it till set again
+     *
+     * @param isRenderForced if true, rt will reject partial render and be forced to render all frames
+     */
+    void SetRTRenderForced(bool isRenderForced);
 
     void SetRoot(NodeId root);
     void SetUITaskRunner(const TaskRunner& uiTaskRunner);
     void SendMessages(); // post messages to render thread
 
     void SetTimeStamp(uint64_t timeStamp, const std::string& abilityName);
+    void SetCacheDir(const std::string& cacheFilePath);
+
+    bool RunningCustomAnimation(uint64_t timeStamp);
+
+    void SetAppFreeze(bool isAppFreeze);
 
 private:
     void AttachSurface();
-    static void RecvMessages();
+    static void RecvMessages(bool needProcess = true);
     static void RecvMessages(std::shared_ptr<RSTransactionData> cmds);
     static void ProcessMessages(std::shared_ptr<RSTransactionData> cmds); // receive message
     static void AnimationCallbackProcessor(NodeId nodeId, AnimationId animId);
@@ -61,12 +73,12 @@ private:
     NodeId root_ = 0;
 
     bool isActive_ = false;
-    bool isUniRenderEnabled_ = false;
     uint64_t refreshPeriod_ = 16666667;
     uint64_t timeStamp_ = 0;
-    std::shared_ptr<RSSurfaceNode> surfaceNode_ = nullptr;
+    std::weak_ptr<RSSurfaceNode> surfaceNode_;
     int surfaceWidth_ = 0;
     int surfaceHeight_ = 0;
+    std::string cacheDir_;
 
     friend class RSRenderThread;
     friend class RSApplicationAgentImpl;

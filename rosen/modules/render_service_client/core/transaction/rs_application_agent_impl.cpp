@@ -15,11 +15,13 @@
 
 #include "rs_application_agent_impl.h"
 
+#include "pipeline/rs_render_thread.h"
 #ifdef ROSEN_OHOS
 #include "platform/ohos/rs_render_service_connect_hub.h"
 #endif
 #include "rs_trace.h"
 #include "ui/rs_ui_director.h"
+#include "sandbox_utils.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -31,6 +33,11 @@ RSApplicationAgentImpl& RSApplicationAgentImpl::Instance()
 
 void RSApplicationAgentImpl::RegisterRSApplicationAgent()
 {
+    static bool isRegistered = false;
+    if (isRegistered) {
+        return;
+    }
+    isRegistered = true;
 #ifdef ROSEN_OHOS
     RSRenderServiceConnectHub::SetOnConnectCallback(
         [weakThis = wptr<RSApplicationAgentImpl>(this)](sptr<RSIRenderServiceConnection>& conn) {
@@ -38,7 +45,7 @@ void RSApplicationAgentImpl::RegisterRSApplicationAgent()
             if (appSptr == nullptr) {
                 return;
             }
-            conn->RegisterApplicationAgent(getpid(), appSptr);
+            conn->RegisterApplicationAgent(GetRealPid(), appSptr);
         });
 #endif
 }
@@ -48,6 +55,19 @@ void RSApplicationAgentImpl::OnTransaction(std::shared_ptr<RSTransactionData> tr
 {
     RS_TRACE_NAME("RSApplicationAgentImpl::OnTransaction");
     RSUIDirector::RecvMessages(transactionData);
+}
+
+void RSApplicationAgentImpl::OnRenderModeChanged(bool renderThreadNeedRender)
+{
+    RS_TRACE_NAME_FMT("RSApplicationAgentImpl::OnRenderModeChanged isUni:%d", !renderThreadNeedRender);
+    RSSystemProperties::SetRenderMode(!renderThreadNeedRender);
+    RSRenderThread::Instance().UpdateRenderMode(renderThreadNeedRender);
+}
+
+void RSApplicationAgentImpl::NotifyClearBufferCache()
+{
+    RS_TRACE_NAME_FMT("RSApplicationAgentImpl::NotifyClearBufferCache");
+    RSRenderThread::Instance().NotifyClearBufferCache();
 }
 #endif
 }

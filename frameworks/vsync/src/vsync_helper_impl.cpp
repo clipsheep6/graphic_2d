@@ -27,6 +27,7 @@
 
 #include "static_call.h"
 #include "vsync_log.h"
+#include "sandbox_utils.h"
 
 using namespace std::chrono_literals;
 
@@ -106,7 +107,7 @@ GSError VsyncClient::InitVsyncFrequency()
             VLOG_FAILURE_RET(vret);
         }
         if (vsyncFrequency_ == 0) {
-            VLOG_FAILURE_RET(GSERROR_INTERNEL);
+            VLOG_FAILURE_RET(GSERROR_INTERNAL);
         }
         VLOG_SUCCESS("Get Frequency: %{public}u", vsyncFrequency_);
     }
@@ -329,7 +330,7 @@ sptr<VsyncHelperImpl> VsyncHelperImpl::Current()
 void VsyncClient::OnDump()
 {
     for (auto &[vid, eles] : callbacksMap_) {
-        dumper->SendInfo("client.vsync", "pid=%d, frequency is %d\n", getpid(), eles.top().frequency_);
+        dumper->SendInfo("client.vsync", "pid=%d, frequency is %d\n", GetRealPid(), eles.top().frequency_);
     }
 }
 

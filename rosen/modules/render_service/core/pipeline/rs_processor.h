@@ -16,10 +16,13 @@
  #ifndef RS_CORE_PIPELINE_PROCESSOR_H
  #define RS_CORE_PIPELINE_PROCESSOR_H
 
+#include <memory>
+
+#include "include/core/SkMatrix.h"
+
+#include "rs_render_engine.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
-#include "rs_render_engine.h"
-#include "screen_manager/rs_screen_manager.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -31,7 +34,7 @@ public:
     RSProcessor(const RSProcessor&) = delete;
     void operator=(const RSProcessor&) = delete;
 
-    virtual bool Init(ScreenId id, int32_t offsetX, int32_t offsetY, ScreenId mirroredId);
+    virtual bool Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId);
     virtual void ProcessSurface(RSSurfaceRenderNode& node) = 0;
     virtual void ProcessDisplaySurface(RSDisplayRenderNode& node) = 0;
     virtual void PostProcess() = 0;
@@ -39,6 +42,7 @@ public:
 protected:
     void CalculateMirrorAdaptiveCoefficient(float curWidth, float curHeight,
         float mirroredWidth, float mirroredHeight);
+    void CalculateScreenTransformMatrix(const RSDisplayRenderNode& node);
 
     ScreenInfo screenInfo_;
     int32_t offsetX_ = 0;
@@ -46,6 +50,7 @@ protected:
     ScreenId mirroredId_ = INVALID_SCREEN_ID;
     float mirrorAdaptiveCoefficient_ = 1.0f;
     std::shared_ptr<RSRenderEngine> renderEngine_;
+    SkMatrix screenTransformMatrix_;
     BufferRequestConfig renderFrameConfig_ {};
 };
 } // namespace Rosen

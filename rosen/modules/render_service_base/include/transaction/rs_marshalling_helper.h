@@ -50,20 +50,23 @@ class RSImage;
 class RSMask;
 class RSPath;
 class RSShader;
-template<typename T>
 class RSRenderCurveAnimation;
-template<typename T>
 class RSRenderKeyframeAnimation;
-template<typename T>
 class RSRenderSpringAnimation;
 class RSRenderPathAnimation;
 class RSRenderTransition;
 class RSRenderTransitionEffect;
+class RSRenderModifier;
+template<typename T>
+class RSRenderProperty;
+template<typename T>
+class RSRenderAnimatableProperty;
 
 class RSMarshallingHelper {
 public:
     static bool WriteToParcel(Parcel &parcel, const void* data, size_t size);
     static const void* ReadFromParcel(Parcel& parcel, size_t size);
+    static bool SkipFromParcel(Parcel& parcel, size_t size);
 
     // default marshalling and unmarshalling method for POD types
     // [PLANNING]: implement marshalling & unmarshalling methods for other types (e.g. RSImage, drawCMDList)
@@ -83,13 +86,19 @@ public:
     }
 
     template<typename T>
-    static bool Marshalling(Parcel& parcel, const T* val, int count)
+    static bool MarshallingArray(Parcel& parcel, const T* val, int count)
     {
+        if (count <= 0) {
+            return true;
+        }
         return parcel.WriteUnpadBuffer(val, count * sizeof(T));
     }
     template<typename T>
-    static bool Unmarshalling(Parcel& parcel, T*& val, int count)
+    static bool UnmarshallingArray(Parcel& parcel, T*& val, int count)
     {
+        if (count <= 0) {
+            return true;
+        }
         if (const uint8_t* buff = parcel.ReadUnpadBuffer(count * sizeof(T))) {
             val = reinterpret_cast<const T*>(buff);
             return true;
@@ -127,6 +136,8 @@ public:
     DECLARE_FUNCTION_OVERLOAD(sk_sp<SkImageFilter>)
     DECLARE_FUNCTION_OVERLOAD(sk_sp<SkImage>)
     DECLARE_FUNCTION_OVERLOAD(sk_sp<SkVertices>)
+    static bool SkipSkData(Parcel& parcel);
+    static bool SkipSkImage(Parcel& parcel);
     // RS types
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSShader>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSPath>)
@@ -136,21 +147,31 @@ public:
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<DrawCmdList>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<Media::PixelMap>)
     // animation
-    DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSRenderPathAnimation>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSRenderTransition>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSRenderTransitionEffect>)
+
+    DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSRenderModifier>)
 #undef DECLARE_FUNCTION_OVERLOAD
 
-    // reloaded marshalling & unmarshalling function for animation template
+    // reloaded marshalling & unmarshalling function for animation
+#define DECLARE_ANIMATION_OVERLOAD(TEMPLATE)                                       \
+    static bool Marshalling(Parcel& parcel, const std::shared_ptr<TEMPLATE>& val); \
+    static bool Unmarshalling(Parcel& parcel, std::shared_ptr<TEMPLATE>& val);
+
+    DECLARE_ANIMATION_OVERLOAD(RSRenderCurveAnimation)
+    DECLARE_ANIMATION_OVERLOAD(RSRenderKeyframeAnimation)
+    DECLARE_ANIMATION_OVERLOAD(RSRenderSpringAnimation)
+    DECLARE_ANIMATION_OVERLOAD(RSRenderPathAnimation)
+#undef DECLARE_ANIMATION_OVERLOAD
+
 #define DECLARE_TEMPLATE_OVERLOAD(TEMPLATE)                                           \
     template<typename T>                                                              \
     static bool Marshalling(Parcel& parcel, const std::shared_ptr<TEMPLATE<T>>& val); \
     template<typename T>                                                              \
     static bool Unmarshalling(Parcel& parcel, std::shared_ptr<TEMPLATE<T>>& val);
 
-    DECLARE_TEMPLATE_OVERLOAD(RSRenderCurveAnimation)
-    DECLARE_TEMPLATE_OVERLOAD(RSRenderKeyframeAnimation)
-    DECLARE_TEMPLATE_OVERLOAD(RSRenderSpringAnimation)
+    DECLARE_TEMPLATE_OVERLOAD(RSRenderProperty)
+    DECLARE_TEMPLATE_OVERLOAD(RSRenderAnimatableProperty)
 #undef DECLARE_TEMPLATE_OVERLOAD
 
     // reloaded marshalling & unmarshalling function for std::vector
@@ -173,8 +194,6 @@ public:
 private:
     static sk_sp<SkData> SerializeTypeface(SkTypeface* tf, void* ctx);
     static sk_sp<SkTypeface> DeserializeTypeface(const void* data, size_t length, void* ctx);
-    static void ReleaseMemory(void* data, int* fd, size_t size);
-    inline static std::atomic<uint32_t> shmemCount = 0;
     static constexpr size_t MAX_DATA_SIZE = 128 * 1024 * 1024; // 128M
     static constexpr size_t MIN_DATA_SIZE = 8 * 1024;         // 8k
 };

@@ -25,6 +25,7 @@
 #include <ibuffer_producer.h>
 #include <surface_type.h>
 #include <buffer_manager.h>
+#include <surface_tunnel_handle.h>
 
 #include "surface_buffer.h"
 
@@ -37,7 +38,7 @@ enum BufferState {
     BUFFER_STATE_ATTACHED,
 };
 
-typedef struct {
+using BufferElement = struct BufferElement {
     sptr<SurfaceBuffer> buffer;
     BufferState state;
     bool isDeleting;
@@ -47,10 +48,12 @@ typedef struct {
     int64_t timestamp;
     Rect damage;
     ScalingMode scalingMode;
+    HDRMetaDataType hdrMetaDataType = HDRMetaDataType::HDR_NOT_USED;
     std::vector<HDRMetaData> metaData;
     HDRMetadataKey key;
     std::vector<uint8_t> metaDataSet;
-} BufferElement;
+    PresentTimestamp presentTimestamp = {HARDWARE_DISPLAY_PTS_UNSUPPORTED, 0};
+};
 
 class BufferQueue : public RefBase {
 public:
@@ -98,6 +101,8 @@ public:
     uint32_t GetDefaultUsage();
 
     GSError CleanCache();
+    GSError GoBackground();
+    GSError OnConsumerDied();
 
     uint64_t GetUniqueId() const;
 
@@ -114,14 +119,19 @@ public:
     GSError SetMetaData(uint32_t sequence, const std::vector<HDRMetaData> &metaData);
     GSError SetMetaDataSet(uint32_t sequence, HDRMetadataKey key,
                            const std::vector<uint8_t> &metaData);
+    GSError QueryMetaDataType(uint32_t sequence, HDRMetaDataType &type);
     GSError GetMetaData(uint32_t sequence, std::vector<HDRMetaData> &metaData);
     GSError GetMetaDataSet(uint32_t sequence, HDRMetadataKey &key,
                            std::vector<uint8_t> &metaData);
-    GSError SetTunnelHandle(const ExtDataHandle *handle);
-    GSError GetTunnelHandle(ExtDataHandle **handle) const;
+    GSError SetTunnelHandle(const sptr<SurfaceTunnelHandle> &handle);
+    sptr<SurfaceTunnelHandle> GetTunnelHandle();
+    GSError SetPresentTimestamp(uint32_t sequence, const PresentTimestamp &timestamp);
+    GSError GetPresentTimestamp(uint32_t sequence, PresentTimestampType type, int64_t &time);
 
     bool GetStatus() const;
     void SetStatus(bool status);
+
+    GSError SetProducerCacheCleanFlag(bool flag);
 
 private:
     GSError AllocBuffer(sptr<SurfaceBuffer>& buffer, const BufferRequestConfig &config);
@@ -137,6 +147,8 @@ private:
     GSError CheckRequestConfig(const BufferRequestConfig &config);
     GSError CheckFlushConfig(const BufferFlushConfig &config);
     void DumpCache(std::string &result);
+    void ClearLocked();
+    bool CheckProducerCacheList();
 
     int32_t defaultWidth = 0;
     int32_t defaultHeight = 0;
@@ -144,21 +156,24 @@ private:
     uint32_t queueSize_ = SURFACE_DEFAULT_QUEUE_SIZE;
     TransformType transform_ = TransformType::ROTATE_NONE;
     std::string name_;
-    std::list<int32_t> freeList_;
-    std::list<int32_t> dirtyList_;
-    std::list<int32_t> deletingList_;
+    std::list<uint32_t> freeList_;
+    std::list<uint32_t> dirtyList_;
+    std::list<uint32_t> deletingList_;
+    std::list<uint32_t> producerCacheList_;
     std::map<uint32_t, BufferElement> bufferQueueCache_;
     sptr<IBufferConsumerListener> listener_ = nullptr;
     IBufferConsumerListenerClazz *listenerClazz_ = nullptr;
     std::mutex mutex_;
+    std::mutex listenerMutex_;
     const uint64_t uniqueId_;
     sptr<BufferManager> bufferManager_ = nullptr;
     OnReleaseFunc onBufferRelease = nullptr;
     OnDeleteBufferFunc onBufferDelete_ = nullptr;
     bool isShared_ = false;
     std::condition_variable waitReqCon_;
-    ExtDataHandle *tunnelHandle_ = nullptr;
+    sptr<SurfaceTunnelHandle> tunnelHandle_ = nullptr;
     std::atomic_bool isValidStatus_ = true;
+    std::atomic_bool producerCacheClean_ = false;
 };
 }; // namespace OHOS
 

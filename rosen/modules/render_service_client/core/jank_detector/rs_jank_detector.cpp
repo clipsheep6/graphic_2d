@@ -17,6 +17,7 @@
 
 #include <unistd.h>
 #include "base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include/hisysevent.h"
+#include "sandbox_utils.h"
 
 namespace {
 struct FrameMsg {
@@ -29,7 +30,7 @@ struct FrameMsg {
 
 void DrawEventReport(FrameMsg& frameMsg, std::string stringId)
 {
-    int32_t pid = getpid();
+    int32_t pid = OHOS::GetRealPid();
     uint32_t uid = getuid();
     std::string domain = "GRAPHIC";
     std::string msg = "It took " + std::to_string(frameMsg.totalTime) + "ns to draw, "
@@ -109,9 +110,13 @@ void RSJankDetector::CalculateSkippedFrame(uint64_t renderStartTimeStamp, uint64
     }
 
     // Currently a frame takes two vsync times
-    uint64_t skippedFrame = frameMsg.totalTime / (refreshPeriod_ * 2);
+    int skippedFrame = static_cast<int>(frameMsg.totalTime / (refreshPeriod_ * 2));
     if ((skippedFrame >= JANK_SKIPPED_THRESHOLD) || (frameMsg.dropUiFrameNum >= JANK_SKIPPED_THRESHOLD)) {
         DrawEventReport(frameMsg, "JANK_FRAME_SKIP");
+    }
+
+    if (frameMsg.renderDrawTime >= NO_DRAW_THRESHOLD) {
+        DrawEventReport(frameMsg, "NO_DRAW");
     }
 }
 } // namespace Rosen

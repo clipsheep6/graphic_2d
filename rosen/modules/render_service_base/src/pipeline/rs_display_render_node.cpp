@@ -15,25 +15,28 @@
 
 #include "pipeline/rs_display_render_node.h"
 
+#include "common/rs_obj_abs_geometry.h"
 #include "platform/common/rs_log.h"
 #include "platform/ohos/backend/rs_surface_ohos_gl.h"
 #include "platform/ohos/backend/rs_surface_ohos_raster.h"
+#include "screen_manager/screen_types.h"
 #include "visitor/rs_node_visitor.h"
 
 namespace OHOS {
 namespace Rosen {
 RSDisplayRenderNode::RSDisplayRenderNode(NodeId id, const RSDisplayNodeConfig& config, std::weak_ptr<RSContext> context)
     : RSRenderNode(id, context), RSSurfaceHandler(id), screenId_(config.screenId), offsetX_(0), offsetY_(0),
-      isMirroredDisplay_(config.isMirrored)
+      isMirroredDisplay_(config.isMirrored),
+      dirtyManager_(std::make_shared<RSDirtyRegionManager>())
 {}
 
 RSDisplayRenderNode::~RSDisplayRenderNode() = default;
 
 void RSDisplayRenderNode::CollectSurface(
-    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec)
+    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender)
 {
     for (auto& child : node->GetSortedChildren()) {
-        child->CollectSurface(child, vec);
+        child->CollectSurface(child, vec, isUniRender);
     }
 }
 
@@ -104,8 +107,8 @@ bool RSDisplayRenderNode::GetSecurityDisplay() const
 void RSDisplayRenderNode::SetIsMirrorDisplay(bool isMirror)
 {
     isMirroredDisplay_ = isMirror;
-    RS_LOGD("RSDisplayRenderNode::SetIsMirrorDisplay, node id:[%llu], isMirrorDisplay: [%s]",
-        GetId(), IsMirrorDisplay() ? "true" : "false");
+    RS_LOGD("RSDisplayRenderNode::SetIsMirrorDisplay, node id:[%" PRIu64 "], isMirrorDisplay: [%s]", GetId(),
+        IsMirrorDisplay() ? "true" : "false");
 }
 
 bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
@@ -152,6 +155,24 @@ bool RSDisplayRenderNode::SkipFrame(uint32_t skipFrameInterval)
         return false;
     }
     return true;
+}
+
+ScreenRotation RSDisplayRenderNode::GetRotation() const
+{
+    auto boundsGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(GetRenderProperties().GetBoundsGeometry());
+    if (boundsGeoPtr == nullptr) {
+        return ScreenRotation::ROTATION_0;
+    }
+    // -90.0f: convert rotation degree to 4 enum values
+    return static_cast<ScreenRotation>(static_cast<int32_t>(std::roundf(boundsGeoPtr->GetRotation() / -90.0f)) % 4);
+}
+
+void RSDisplayRenderNode::UpdateDisplayDirtyManager(uint32_t bufferage)
+{
+    dirtyManager_->SetBufferAge(bufferage);
+    dirtyManager_->UpdateDirty();
+    lastFrameSurfacePos_.clear();
+    lastFrameSurfacePos_.swap(currentFrameSurfacePos_);
 }
 } // namespace Rosen
 } // namespace OHOS

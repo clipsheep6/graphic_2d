@@ -89,6 +89,7 @@ void RSRenderServiceConnection::CleanAll(bool toDelete) noexcept
     mainThread_->ScheduleTask([this]() {
         CleanVirtualScreens();
         CleanRenderNodes();
+        mainThread_->ClearTransactionDataPidInfo(remotePid_);
     }).wait();
 
     for (auto& conn : vsyncConnections_) {
@@ -181,9 +182,29 @@ void RSRenderServiceConnection::ExecuteSynchronousTask(const std::shared_ptr<RSS
     }).wait_for(std::chrono::nanoseconds(task->GetTimeout()));
 }
 
-bool RSRenderServiceConnection::InitUniRenderEnabled(const std::string &bundleName)
+int32_t RSRenderServiceConnection::SetRenderModeChangeCallback(sptr<RSIRenderModeChangeCallback> callback)
 {
-    return RSUniRenderJudgement::QueryClientEnabled(bundleName);
+    if (!callback) {
+        RS_LOGD("RSRenderServiceConnection::SetRenderModeChangeCallback: callback is nullptr");
+        return INVALID_ARGUMENTS;
+    }
+    mainThread_->SetRenderModeChangeCallback(callback);
+    return SUCCESS;
+}
+
+void RSRenderServiceConnection::UpdateRenderMode(bool isUniRender)
+{
+    mainThread_->NotifyRenderModeChanged(isUniRender);
+}
+
+bool RSRenderServiceConnection::GetUniRenderEnabled()
+{
+    return RSUniRenderJudgement::IsUniRender();
+}
+
+bool RSRenderServiceConnection::QueryIfRTNeedRender()
+{
+    return !mainThread_->QueryIfUseUniVisitor();
 }
 
 bool RSRenderServiceConnection::CreateNode(const RSSurfaceRenderNodeConfig& config)
@@ -215,7 +236,7 @@ sptr<Surface> RSRenderServiceConnection::CreateNodeAndSurface(const RSSurfaceRen
         return nullptr;
     }
     const std::string& surfaceName = surface->GetName();
-    RS_LOGE("RsDebug RSRenderService::CreateNodeAndSurface node id:%llu name:%s surface id:%llu name:%s",
+    RS_LOGI("RsDebug RSRenderService::CreateNodeAndSurface node id:%" PRIu64 " name:%s surface id:%" PRIu64 " name:%s",
         node->GetId(), node->GetName().c_str(), surface->GetUniqueId(), surfaceName.c_str());
     node->SetConsumer(surface);
     std::function<void()> registerNode = [node, this]() -> void {
@@ -328,7 +349,7 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
     float scaleX, float scaleY)
 {
     std::function<void()> captureTask = [scaleY, scaleX, callback, id]() -> void {
-        RS_LOGD("RSRenderService::TakeSurfaceCapture callback->OnSurfaceCapture nodeId:[%llu]", id);
+        RS_LOGD("RSRenderService::TakeSurfaceCapture callback->OnSurfaceCapture nodeId:[%" PRIu64 "]", id);
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderService::TakeSurfaceCapture");
         RSSurfaceCaptureTask task(id, scaleX, scaleY);
         std::unique_ptr<Media::PixelMap> pixelmap = task.Run();
@@ -439,6 +460,13 @@ int32_t RSRenderServiceConnection::GetScreenSupportedColorGamuts(ScreenId id, st
     }).get();
 }
 
+int32_t RSRenderServiceConnection::GetScreenSupportedMetaDataKeys(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys)
+{
+    return mainThread_->ScheduleTask([=, &keys]() {
+        return screenManager_->GetScreenSupportedMetaDataKeys(id, keys);
+    }).get();
+}
+
 int32_t RSRenderServiceConnection::GetScreenColorGamut(ScreenId id, ScreenColorGamut& mode)
 {
     return mainThread_->ScheduleTask([=, &mode]() {
@@ -465,26 +493,6 @@ int32_t RSRenderServiceConnection::GetScreenGamutMap(ScreenId id, ScreenGamutMap
     return mainThread_->ScheduleTask([=, &mode]() {
         return screenManager_->GetScreenGamutMap(id, mode);
     }).get();
-}
-
-bool RSRenderServiceConnection::RequestRotation(ScreenId id, ScreenRotation rotation)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (screenManager_ == nullptr) {
-        RS_LOGE("RequestRotation failed: screenManager_ is nullptr");
-        return false;
-    }
-    return screenManager_->RequestRotation(id, rotation);
-}
-
-ScreenRotation RSRenderServiceConnection::GetRotation(ScreenId id)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (screenManager_ == nullptr) {
-        RS_LOGE("GetRotation failed: screenManager_ is nullptr");
-        return ScreenRotation::INVALID_SCREEN_ROTATION;
-    }
-    return screenManager_->GetRotation(id);
 }
 
 int32_t RSRenderServiceConnection::GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability)

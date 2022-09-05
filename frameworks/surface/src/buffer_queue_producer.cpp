@@ -54,6 +54,8 @@ BufferQueueProducer::BufferQueueProducer(sptr<BufferQueue>& bufferQueue)
     memberFuncMap_[BUFFER_PRODUCER_SET_METADATA] = &BufferQueueProducer::SetMetaDataRemote;
     memberFuncMap_[BUFFER_PRODUCER_SET_METADATASET] = &BufferQueueProducer::SetMetaDataSetRemote;
     memberFuncMap_[BUFFER_PRODUCER_SET_TUNNEL_HANDLE] = &BufferQueueProducer::SetTunnelHandleRemote;
+    memberFuncMap_[BUFFER_PRODUCER_GO_BACKGROUND] = &BufferQueueProducer::GoBackgroundRemote;
+    memberFuncMap_[BUFFER_PRODUCER_GET_PRESENT_TIMESTAMP] = &BufferQueueProducer::GetPresentTimestampRemote;
 }
 
 BufferQueueProducer::~BufferQueueProducer()
@@ -233,6 +235,12 @@ int32_t BufferQueueProducer::CleanCacheRemote(MessageParcel &arguments, MessageP
     return 0;
 }
 
+int32_t BufferQueueProducer::GoBackgroundRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
+{
+    reply.WriteInt32(GoBackground());
+    return 0;
+}
+
 int32_t BufferQueueProducer::RegisterReleaseListenerRemote(MessageParcel &arguments,
     MessageParcel &reply, MessageOption &option)
 {
@@ -266,7 +274,8 @@ int32_t BufferQueueProducer::IsSupportedAllocRemote(MessageParcel &arguments, Me
 
 int32_t BufferQueueProducer::DisconnectRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
 {
-    (void)Disconnect();
+    GSError sret = Disconnect();
+    reply.WriteInt32(sret);
     return 0;
 }
 
@@ -303,10 +312,27 @@ int32_t BufferQueueProducer::SetMetaDataSetRemote(MessageParcel &arguments, Mess
 int32_t BufferQueueProducer::SetTunnelHandleRemote(MessageParcel &arguments, MessageParcel &reply,
                                                    MessageOption &option)
 {
-    ExtDataHandle *handle = nullptr;
-    ReadExtDataHandle(arguments, &handle);
+    sptr<SurfaceTunnelHandle> handle = nullptr;
+    if (arguments.ReadBool()) {
+        handle = new SurfaceTunnelHandle();
+        ReadExtDataHandle(arguments, handle);
+    }
     GSError sret = SetTunnelHandle(handle);
     reply.WriteInt32(sret);
+    return 0;
+}
+
+int32_t BufferQueueProducer::GetPresentTimestampRemote(MessageParcel &arguments, MessageParcel &reply,
+                                                       MessageOption &option)
+{
+    uint32_t sequence = arguments.ReadUint32();
+    PresentTimestampType type = static_cast<PresentTimestampType>(arguments.ReadUint32());
+    int64_t time = 0;
+    GSError sret = GetPresentTimestamp(sequence, type, time);
+    reply.WriteInt32(sret);
+    if (sret == GSERROR_OK) {
+        reply.WriteInt64(time);
+    }
     return 0;
 }
 
@@ -435,6 +461,22 @@ GSError BufferQueueProducer::CleanCache()
     return bufferQueue_->CleanCache();
 }
 
+GSError BufferQueueProducer::GoBackground()
+{
+    if (bufferQueue_ == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto ret = CheckConnectLocked();
+        if (ret != GSERROR_OK) {
+            return ret;
+        }
+    }
+    return bufferQueue_->SetProducerCacheCleanFlag(true);
+}
+
 GSError BufferQueueProducer::RegisterReleaseListener(OnReleaseFunc func)
 {
     if (bufferQueue_ == nullptr) {
@@ -514,12 +556,29 @@ GSError BufferQueueProducer::SetMetaDataSet(uint32_t sequence, HDRMetadataKey ke
     return bufferQueue_->SetMetaDataSet(sequence, key, metaData);
 }
 
-GSError BufferQueueProducer::SetTunnelHandle(const ExtDataHandle *handle)
+GSError BufferQueueProducer::SetTunnelHandle(const sptr<SurfaceTunnelHandle> &handle)
 {
     if (bufferQueue_ == nullptr) {
         return GSERROR_INVALID_ARGUMENTS;
     }
     return bufferQueue_->SetTunnelHandle(handle);
+}
+
+GSError BufferQueueProducer::SetTunnelHandle(const ExtDataHandle *handle)
+{
+    sptr<SurfaceTunnelHandle> tunnelHandle = new SurfaceTunnelHandle();
+    if (tunnelHandle->SetHandle(handle) != GSERROR_OK) {
+        return GSERROR_INVALID_OPERATING;
+    }
+    return bufferQueue_->SetTunnelHandle(tunnelHandle);
+}
+
+GSError BufferQueueProducer::GetPresentTimestamp(uint32_t sequence, PresentTimestampType type, int64_t &time)
+{
+    if (bufferQueue_ == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    return bufferQueue_->GetPresentTimestamp(sequence, type, time);
 }
 
 bool BufferQueueProducer::GetStatus() const

@@ -35,15 +35,61 @@ void RSRenderServiceListener::OnBufferAvailable()
         RS_LOGE("RSRenderServiceListener::OnBufferAvailable node is nullptr");
         return;
     }
-    RS_LOGI("RsDebug RSRenderServiceListener::OnBufferAvailable node id:%llu", node->GetId());
+    RS_LOGD("RsDebug RSRenderServiceListener::OnBufferAvailable node id:%" PRIu64, node->GetId());
     node->IncreaseAvailableBuffer();
     if (!node->IsNotifyUIBufferAvailable()) {
         // Only ipc for one time.
-        RS_LOGD("RsDebug RSRenderServiceListener::OnBufferAvailable id = %llu "\
-                "Notify UI buffer available", node->GetId());
+        RS_LOGD("RsDebug RSRenderServiceListener::OnBufferAvailable id = %" PRIu64 " Notify UI buffer available",
+            node->GetId());
         node->NotifyUIBufferAvailable();
     }
     RSMainThread::Instance()->RequestNextVSync();
+}
+
+void RSRenderServiceListener::OnTunnelHandleChange()
+{
+    auto node = surfaceRenderNode_.lock();
+    if (node == nullptr) {
+        RS_LOGE("RSRenderServiceListener::OnTunnelHandleChange node is nullptr");
+        return;
+    }
+    node->SetTunnelHandleChange(true);
+    if (!node->IsNotifyUIBufferAvailable()) {
+        // Only ipc for one time.
+        RS_LOGD("RsDebug RSRenderServiceListener::OnTunnelHandleChange id = %" PRIu64 " Notify UI buffer available",
+            node->GetId());
+        node->NotifyUIBufferAvailable();
+    }
+    RSMainThread::Instance()->RequestNextVSync();
+}
+
+void RSRenderServiceListener::OnCleanCache()
+{
+    std::weak_ptr<RSSurfaceRenderNode> surfaceNode = surfaceRenderNode_;
+    RSMainThread::Instance()->PostTask([surfaceNode]() {
+        auto node = surfaceNode.lock();
+        if (node == nullptr) {
+            RS_LOGW("RSRenderServiceListener::OnBufferAvailable node is nullptr");
+            return;
+        }
+        RS_LOGD("RsDebug RSRenderServiceListener::OnCleanCache node id:%" PRIu64, node->GetId());
+        node->ResetBufferAvailableCount();
+    });
+}
+
+void RSRenderServiceListener::OnGoBackground()
+{
+    std::weak_ptr<RSSurfaceRenderNode> surfaceNode = surfaceRenderNode_;
+    RSMainThread::Instance()->PostTask([surfaceNode]() {
+        auto node = surfaceNode.lock();
+        if (node == nullptr) {
+            RS_LOGW("RSRenderServiceListener::OnBufferAvailable node is nullptr");
+            return;
+        }
+        RS_LOGD("RsDebug RSRenderServiceListener::OnGoBackground node id:%" PRIu64, node->GetId());
+        node->ResetBufferAvailableCount();
+        node->CleanCache();
+    });
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -15,9 +15,10 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_COMMON_RS_OBJ_ABS_GEOMETRY_H
 #define RENDER_SERVICE_CLIENT_CORE_COMMON_RS_OBJ_ABS_GEOMETRY_H
 
+#include <memory>
+
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPoint.h"
-#include <memory>
 
 #include "common/rs_matrix3.h"
 #include "common/rs_obj_geometry.h"
@@ -30,12 +31,12 @@ class RSObjAbsGeometry : public RSObjGeometry {
 public:
     RSObjAbsGeometry();
     ~RSObjAbsGeometry() override;
-    void UpdateMatrix(const Matrix3f& matrix);
+    void ConcatMatrix(const SkMatrix& matrix);
     void UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& parent, float offsetX, float offsetY);
+    void UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& parent,
+        Vector2f& offset, Vector3f& scale, Vector3f& tran);
 
     // Using by RenderService
-    void UpdateByMatrixFromParent(const std::shared_ptr<RSObjAbsGeometry>& parent);
-    void UpdateByMatrixFromRenderThread(const SkMatrix& skMatrix);
     void UpdateByMatrixFromSelf();
 
     const RectI& GetAbsRect() const
@@ -54,6 +55,8 @@ public:
     }
 
     bool IsPointInHotZone(const float x, const float y) const;
+
+    bool IsNeedClientCompose() const;
 
 private:
     void UpdateAbsMatrix2D();

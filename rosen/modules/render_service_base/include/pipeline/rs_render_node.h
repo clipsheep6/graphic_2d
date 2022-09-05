@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "animation/rs_animation_manager.h"
+#include "modifier/rs_render_modifier.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "property/rs_properties.h"
@@ -33,14 +34,24 @@ public:
     using WeakPtr = std::weak_ptr<RSRenderNode>;
     using SharedPtr = std::shared_ptr<RSRenderNode>;
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::RS_NODE;
+    RSRenderNodeType GetType() const override
+    {
+        return Type;
+    }
 
-    virtual ~RSRenderNode();
+    ~RSRenderNode() override;
 
     bool Animate(int64_t timestamp) override;
-    bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty);
+    bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty,
+        const std::unique_ptr<RSTransitionProperties>& transition = nullptr);
 
     RSProperties& GetMutableRenderProperties();
     const RSProperties& GetRenderProperties() const;
+    void UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEnabled);
+    inline bool IsRenderUpdateIgnored() const
+    {
+        return isRenderUpdateIgnored_;
+    }
 
     // used for animation test
     RSAnimationManager& GetAnimationManager()
@@ -52,11 +63,6 @@ public:
     virtual void ProcessRenderContents(RSPaintFilterCanvas& canvas) {}
     virtual void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas);
 
-    RSRenderNodeType GetType() const override
-    {
-        return RSRenderNodeType::RS_NODE;
-    }
-
     bool HasDisappearingTransition(bool recursive) const override
     {
         return animationManager_.HasDisappearingTransition() || RSBaseRenderNode::HasDisappearingTransition(recursive);
@@ -66,24 +72,39 @@ public:
     {
         return oldDirty_;
     }
-
     inline bool IsDirtyRegionUpdated() const
     {
         return isDirtyRegionUpdated_;
     }
 
+    void ClearModifiers();
+    virtual void AddModifier(const std::shared_ptr<RSRenderModifier> modifier);
+    void RemoveModifier(const PropertyId& id);
+    void ApplyModifiers();
+    std::shared_ptr<RSRenderModifier> GetModifier(const PropertyId& id);
+
 protected:
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
-    void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager);
+    void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty);
     bool IsDirty() const override;
+    void AddGeometryModifier(const std::shared_ptr<RSRenderModifier>& modifier);
+    std::pair<int, int> renderNodeSaveCount_ = { 0, 0 };
+    std::unordered_map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>> drawCmdModifiers_;
+    // if true, it means currently it's in partial render mode and this node is intersect with dirtyRegion
+    bool isRenderUpdateIgnored_ = false;
 
 private:
     void FallbackAnimationsToRoot();
-    int32_t saveCount_ = 0;
+    void UpdateOverlayerBounds();
     bool isDirtyRegionUpdated_ = false;
+    bool isLastVisible_ = false;
     RectI oldDirty_;
     RSProperties renderProperties_;
     RSAnimationManager animationManager_;
+    std::map<PropertyId, std::shared_ptr<RSRenderModifier>> modifiers_;
+    // bounds and frame modifiers must be unique
+    std::shared_ptr<RSRenderModifier> boundsModifier_;
+    std::shared_ptr<RSRenderModifier> frameModifier_;
 
     friend class RSRenderTransition;
 };

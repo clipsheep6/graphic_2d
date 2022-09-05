@@ -28,13 +28,6 @@ void SurfaceNodeCommandHelper::Create(RSContext& context, NodeId id)
     nodeMap.RegisterRenderNode(node);
 }
 
-void SurfaceNodeCommandHelper::SetProxy(RSContext& context, NodeId id)
-{
-    if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
-        node->SetProxy();
-    }
-}
-
 void SurfaceNodeCommandHelper::SetContextMatrix(RSContext& context, NodeId id, SkMatrix matrix)
 {
     if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
@@ -86,5 +79,43 @@ void SurfaceNodeCommandHelper::SetCallbackForRenderThreadRefresh(RSContext& cont
     }
 }
 
+void SurfaceNodeCommandHelper::SetContextBounds(RSContext& context, NodeId id, Vector4f bounds)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
+        node->GetMutableRenderProperties().SetBounds(bounds);
+    }
+}
+
+void SurfaceNodeCommandHelper::SetAbilityBGAlpha(RSContext& context, NodeId id, uint8_t alpha)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
+        node->SetAbilityBGAlpha(alpha);
+    }
+}
+
+void SurfaceNodeCommandHelper::UpdateParentWithoutTransition(RSContext& context, NodeId nodeId, NodeId parentId)
+{
+    auto& nodeMap = context.GetNodeMap();
+    auto node = nodeMap.GetRenderNode(nodeId);
+    auto parent = nodeMap.GetRenderNode(parentId);
+    if (node && parent) {
+        node->RemoveFromTreeWithoutTransition();
+        parent->AddChild(node);
+    }
+}
+
+void SurfaceNodeCommandHelper::SetIsNotifyUIBufferAvailable(RSContext& context, NodeId id, bool available)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
+        node->SetIsNotifyUIBufferAvailable(available);
+    }
+}
+
+void SurfaceNodeCommandHelper::SetAppFreeze(RSContext& context, NodeId nodeId, bool isAppFreeze)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(nodeId)) {
+        node->SetAppFreeze(isAppFreeze);
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -20,9 +20,15 @@
 namespace OHOS {
 namespace Rosen {
 class RSSurface;
+class RSDirtyRegionManager;
 class RSRootRenderNode : public RSCanvasRenderNode {
 public:
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::ROOT_NODE;
+    RSRenderNodeType GetType() const override
+    {
+        return Type;
+    }
+
     explicit RSRootRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
     ~RSRootRenderNode() override;
 
@@ -31,19 +37,29 @@ public:
 
     void AttachRSSurfaceNode(NodeId SurfaceNodeId);
 
-    RSRenderNodeType GetType() const override
-    {
-        return RSRenderNodeType::ROOT_NODE;
-    }
-
+    std::shared_ptr<RSDirtyRegionManager> GetDirtyManager() const;
     std::shared_ptr<RSSurface> GetSurface();
     NodeId GetRSSurfaceNodeId();
     int32_t GetSurfaceWidth() const;
     int32_t GetSurfaceHeight() const;
+    void UpdateSurfaceSize(int32_t width, int32_t height);
+    void SetEnableRender(bool enableRender)
+    {
+        enableRender_ = enableRender;
+    }
+
+    bool GetEnableRender() const
+    {
+        return enableRender_;
+    }
 
 private:
+    std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
     std::shared_ptr<RSSurface> rsSurface_ = nullptr;
     NodeId surfaceNodeId_ = 0;
+    bool enableRender_ = true;
+    int32_t surfaceWidth_ = 0;
+    int32_t surfaceHeight_ = 0;
 
     std::vector<NodeId> childSurfaceNodeIds_;
     friend class RSRenderThreadVisitor;

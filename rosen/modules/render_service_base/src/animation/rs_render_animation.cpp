@@ -93,9 +93,9 @@ bool RSRenderAnimation::IsFinished() const
     return state_ == AnimationState::FINISHED;
 }
 
-RSAnimatableProperty RSRenderAnimation::GetProperty() const
+PropertyId RSRenderAnimation::GetPropertyId() const
 {
-    return RSAnimatableProperty::INVALID;
+    return 0;
 }
 
 void RSRenderAnimation::Attach(RSRenderNode* renderNode)
@@ -245,7 +245,7 @@ bool RSRenderAnimation::Animate(int64_t time)
     OnAnimate(fraction);
     if (isFinished) {
         ProcessFillModeOnFinish(fraction);
-        ROSEN_LOGI("RSRenderAnimation::Animate, isFinished is true");
+        ROSEN_LOGD("RSRenderAnimation::Animate, isFinished is true");
         return true;
     }
     return isFinished;

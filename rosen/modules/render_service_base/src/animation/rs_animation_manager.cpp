@@ -42,6 +42,14 @@ void RSAnimationManager::AddAnimation(const std::shared_ptr<RSRenderAnimation>& 
     OnAnimationAdd(animation);
 }
 
+void RSAnimationManager::ClearAnimation()
+{
+    animations_.clear();
+    animationNum_.clear();
+    transition_.clear();
+    springAnimations_.clear();
+}
+
 void RSAnimationManager::RemoveAnimation(AnimationId keyId)
 {
     auto animationItr = animations_.find(keyId);
@@ -49,8 +57,23 @@ void RSAnimationManager::RemoveAnimation(AnimationId keyId)
         ROSEN_LOGE("RSAnimationManager::RemoveAnimation, The Animation does not exist when is deleted");
         return;
     }
+    animationItr->second->Detach();
     OnAnimationRemove(animationItr->second);
     animations_.erase(animationItr);
+}
+
+void RSAnimationManager::FilterAnimationByPid(pid_t pid)
+{
+    ROSEN_LOGI("RSAnimationManager::FilterAnimationByPid removing all animations belong to pid %d", pid);
+    // remove all animations belong to given pid (by matching higher 32 bits of animation id)
+    std::__libcpp_erase_if_container(animations_, [pid, this](const auto& pair) -> bool {
+        if (static_cast<pid_t>(pair.first >> 32) != pid) {
+            return false;
+        }
+        pair.second->Detach();
+        OnAnimationRemove(pair.second);
+        return true;
+    });
 }
 
 bool RSAnimationManager::Animate(int64_t time)
@@ -77,7 +100,7 @@ const std::shared_ptr<RSRenderAnimation> RSAnimationManager::GetAnimation(Animat
 {
     auto animationItr = animations_.find(id);
     if (animationItr == animations_.end()) {
-        ROSEN_LOGE("RSAnimationManager::GetAnimation, animtor[%lld] is not found", id);
+        ROSEN_LOGE("RSAnimationManager::GetAnimation, animation [%" PRIu64 "] not found", id);
         return nullptr;
     }
     return animationItr->second;
@@ -85,12 +108,12 @@ const std::shared_ptr<RSRenderAnimation> RSAnimationManager::GetAnimation(Animat
 
 void RSAnimationManager::OnAnimationRemove(const std::shared_ptr<RSRenderAnimation>& animation)
 {
-    animationNum_[animation->GetProperty()]--;
+    animationNum_[animation->GetPropertyId()]--;
 }
 
 void RSAnimationManager::OnAnimationAdd(const std::shared_ptr<RSRenderAnimation>& animation)
 {
-    animationNum_[animation->GetProperty()]++;
+    animationNum_[animation->GetPropertyId()]++;
 }
 
 namespace {
@@ -149,21 +172,21 @@ bool RSAnimationManager::HasDisappearingTransition() const
     });
 }
 
-void RSAnimationManager::RegisterSpringAnimation(RSAnimatableProperty property, AnimationId animId)
+void RSAnimationManager::RegisterSpringAnimation(PropertyId propertyId, AnimationId animId)
 {
-    springAnimations_[property] = animId;
+    springAnimations_[propertyId] = animId;
 }
 
-void RSAnimationManager::UnregisterSpringAnimation(RSAnimatableProperty property, AnimationId animId)
+void RSAnimationManager::UnregisterSpringAnimation(PropertyId propertyId, AnimationId animId)
 {
-    if (springAnimations_[property] == animId) {
-        springAnimations_.erase(property);
+    if (springAnimations_[propertyId] == animId) {
+        springAnimations_.erase(propertyId);
     }
 }
 
-AnimationId RSAnimationManager::QuerySpringAnimation(RSAnimatableProperty property)
+AnimationId RSAnimationManager::QuerySpringAnimation(PropertyId propertyId)
 {
-    auto it = springAnimations_.find(property);
+    auto it = springAnimations_.find(propertyId);
     if (it == springAnimations_.end()) {
         return 0;
     }

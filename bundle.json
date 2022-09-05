@@ -1,6 +1,6 @@
 {
-    "name": "@ohos/graphic_graphic_2d",
-    "description": "graphic_graphic_2d",
+    "name": "@ohos/graphic_standard",
+    "description": "graphic_standard",
     "version": "3.1",
     "license": "Apache License 2.0",
     "publishAs": "code-segment",
@@ -10,9 +10,10 @@
     "dirs": {},
     "scripts": {},
     "component": {
-      "name": "graphic_graphic_2d",
+      "name": "graphic_standard",
       "subsystem": "graphic",
       "syscap": [
+        "SystemCapability.Graphic.Graphic2D.ColorManager.Core",
         "SystemCapability.Graphic.Graphic2D.EGL",
         "SystemCapability.Graphic.Graphic2D.GLES3",
         "SystemCapability.Graphic.Graphic2D.NativeWindow",
@@ -22,10 +23,11 @@
       ],
       "adapted_system_type": [ "standard" ],
       "features": [
-        "graphic_graphic_2d_feature_bootanimation_enable",
-        "graphic_graphic_2d_feature_ace_enable_gpu",
-        "graphic_graphic_2d_feature_rs_enable_eglimage",
-        "graphic_graphic_2d_feature_color_gamut_enable"
+        "graphic_standard_feature_bootanimation_enable",
+        "graphic_standard_feature_ace_enable_gpu",
+        "graphic_standard_feature_rs_enable_eglimage",
+        "graphic_standard_feature_color_gamut_enable",
+        "graphic_standard_feature_rs_enable_uni_render"
       ],
       "rom": "10000KB",
       "ram": "10000KB",
@@ -44,40 +46,52 @@
           "bytrace_core"
         ],
         "third_party": [
-          "libz",
-          "libdrm"
+          "libz"
         ]
       },
       "build": {
-        "sub_component": [
-          "//third_party/libpng:libpng",
-          "//foundation/graphic/graphic_2d:default",
-          "//foundation/graphic/graphic_2d/interfaces/kits/napi:napi_packages",
-          "//foundation/graphic/graphic_2d/rosen/samples/composer:hello_composer",
-          "//foundation/graphic/graphic_2d/rosen/samples/hello_vsync:hello_vsync",
-          "//foundation/graphic/graphic_2d/rosen/samples/hello_native_buffer:hello_native_buffer",
-          "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
-          "//foundation/graphic/graphic_2d/rosen/modules/composer/native_vsync:libnative_vsync",
-          "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
-          "//foundation/graphic/graphic_2d/rosen/samples/2d_graphics:drawing_sample_rs",
-          "//foundation/graphic/graphic_2d/rosen/samples/2d_graphics:drawing_engine_sample",
-          "//foundation/graphic/graphic_2d/rosen/samples/2d_graphics/test:drawing_sample",
-          "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
-          "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/test:render_service_client",
-          "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-          "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/test:render_service_client_rs_demo",
-          "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/test:render_service_client_gravity_demo",
-          "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/test:render_service_client_scale_demo",
-          "//foundation/graphic/graphic_2d/rosen/modules/render_service:librender_service",
-          "//foundation/graphic/graphic_2d/rosen/modules/render_service:render_service",
-          "//foundation/graphic/graphic_2d/rosen/modules/effect/effectChain:libeffectchain",
-          "//foundation/graphic/graphic_2d/rosen/modules/effect/color_picker:color_picker",
-          "//foundation/graphic/graphic_2d/rosen/modules/effect/skia_effectChain:skeffectchain",
-          "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:EGL",
-          "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:GLESv3",
-          "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:opengl_wrapper_native_test",
-          "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect"
-        ],
+        "group_type": {
+          "base_group": [
+            "//third_party/libpng:libpng",
+            "//foundation/graphic/graphic_2d/interfaces/kits/napi:napi_packages",
+            "//foundation/graphic/graphic_2d/rosen/samples/composer:hello_composer",
+            "//foundation/graphic/graphic_2d/rosen/samples/hello_native_window:hello_native_window",
+            "//foundation/graphic/graphic_2d/rosen/samples/hello_native_image:hello_native_image",
+            "//foundation/graphic/graphic_2d/rosen/samples/hello_vsync:hello_vsync",
+            "//foundation/graphic/graphic_2d/rosen/samples/hello_native_buffer:hello_native_buffer",
+            "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
+            "//foundation/graphic/graphic_2d/rosen/modules/composer/native_vsync:libnative_vsync",
+            "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
+            "//foundation/graphic/graphic_2d/rosen/samples/2d_graphics:drawing_sample_rs",
+            "//foundation/graphic/graphic_2d/rosen/samples/2d_graphics:drawing_engine_sample",
+            "//foundation/graphic/graphic_2d/rosen/samples/2d_graphics/test:drawing_sample",
+            "//foundation/graphic/graphic_2d/rosen/modules/effect/effectChain:libeffectchain",
+            "//foundation/graphic/graphic_2d/rosen/modules/effect/color_picker:color_picker",
+            "//foundation/graphic/graphic_2d/rosen/modules/effect/skia_effectChain:skeffectchain",
+            "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:EGL",
+            "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:GLESv3",
+            "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:debug_layer_test1",
+            "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:debug_layer_test2",
+            "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:opengl_wrapper_native_test",
+            "//foundation/graphic/graphic_2d/frameworks/surfaceimage:libnative_image",
+            "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect"
+          ],
+          "fwk_group": [
+            "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
+            "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client"
+          ],
+          "service_group": [
+            "//foundation/graphic/graphic_2d:default",
+            "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/test:render_service_client",
+            "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/test:render_service_client_rs_demo",
+            "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/test:render_service_client_gravity_demo",
+            "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/test:render_service_client_scale_demo",
+            "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/test:render_service_client_tunnel_handle_demo",
+            "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/test:render_service_client_overlay_demo",
+            "//foundation/graphic/graphic_2d/rosen/modules/render_service:librender_service",
+            "//foundation/graphic/graphic_2d/rosen/modules/render_service:render_service"
+          ]
+      },
         "inner_kits": [
           {
             "type": "so",
@@ -89,6 +103,7 @@
                 "egl_surface.h",
                 "external_window.h",
                 "native_buffer.h",
+                "native_image.h",
                 "ibuffer_consumer_listener.h",
                 "ibuffer_producer.h",
                 "surface.h",
@@ -122,17 +137,6 @@
           },
           {
             "type": "so",
-            "name": "//foundation/graphic/graphic_2d/frameworks/vsync:libvsync_module",
-            "header": {
-              "header_files": [
-                "vsync_module.h",
-                "vsync_module_c.h"
-              ],
-              "header_base": "//foundation/graphic/graphic_2d/interfaces/inner_api/vsync_module"
-            }
-          },
-          {
-            "type": "so",
             "name": "//foundation/graphic/graphic_2d/utils:libgraphic_utils",
             "header": {
               "header_files": [
@@ -159,7 +163,8 @@
           }
         ],
         "test": [
-          "//foundation/graphic/graphic_2d:graphic_graphic_2d_test",
+          "//foundation/graphic/graphic_2d:graphic_standard_test",
+          "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:test",
           "//foundation/graphic/graphic_2d/rosen/test/render_service:unittest",
           "//foundation/graphic/graphic_2d/rosen/test/2d_graphics:test"
         ]

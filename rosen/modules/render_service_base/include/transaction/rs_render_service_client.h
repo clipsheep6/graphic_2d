@@ -37,6 +37,7 @@
 #include "screen_manager/rs_virtual_screen_resolution.h"
 #include "vsync_receiver.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
+#include "ipc_callbacks/rs_irender_mode_change_callback.h"
 #include "rs_occlusion_data.h"
 
 namespace OHOS {
@@ -45,6 +46,7 @@ namespace Rosen {
 using ScreenChangeCallback = std::function<void(ScreenId, ScreenEvent)>;
 using BufferAvailableCallback = std::function<void()>;
 using OcclusionChangeCallback = std::function<void(std::shared_ptr<RSOcclusionData>)>;
+using RenderModeChangeCallback = std::function<void(bool)>;
 class SurfaceCaptureCallback {
 public:
     SurfaceCaptureCallback() {}
@@ -63,7 +65,10 @@ public:
     void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) override;
     void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) override;
 
-    bool InitUniRenderEnabled(const std::string &bundleName);
+    int32_t SetRenderModeChangeCallback(const RenderModeChangeCallback& callback);
+    void UpdateRenderMode(bool isUniRender);
+    bool GetUniRenderEnabled();
+    bool QueryIfRTNeedRender();
     bool CreateNode(const RSSurfaceRenderNodeConfig& config);
     std::shared_ptr<RSSurface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config);
 
@@ -81,7 +86,7 @@ public:
         ScreenId mirrorId, int32_t flags);
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface);
-    
+
     void RemoveVirtualScreen(ScreenId id);
 
     int32_t SetScreenChangeCallback(const ScreenChangeCallback& callback);
@@ -114,6 +119,8 @@ public:
 
     int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode);
 
+    int32_t GetScreenSupportedMetaDataKeys(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys);
+
     int32_t GetScreenColorGamut(ScreenId id, ScreenColorGamut& mode);
 
     int32_t SetScreenColorGamut(ScreenId id, int32_t modeIdx);
@@ -121,10 +128,6 @@ public:
     int32_t SetScreenGamutMap(ScreenId id, ScreenGamutMap mode);
 
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode);
-    
-    bool RequestRotation(ScreenId id, ScreenRotation rotation);
-
-    ScreenRotation GetRotation(ScreenId id);
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability);
 
@@ -140,6 +143,7 @@ private:
     std::mutex mutex_;
     std::map<NodeId, sptr<RSIBufferAvailableCallback>> bufferAvailableCbRTMap_;
     std::map<NodeId, sptr<RSIBufferAvailableCallback>> bufferAvailableCbUIMap_;
+    sptr<RSIRenderModeChangeCallback> renderModeChangeCb_;
     sptr<RSIScreenChangeCallback> screenChangeCb_;
     sptr<RSISurfaceCaptureCallback> surfaceCaptureCbDirector_;
     std::map<NodeId, std::shared_ptr<SurfaceCaptureCallback>> surfaceCaptureCbMap_;

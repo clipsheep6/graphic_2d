@@ -18,14 +18,21 @@
 
 #include <stack>
 
-#include "animation/rs_animation.h"
 #include "animation/rs_animation_timing_curve.h"
-#include "animation/rs_implicit_animation_param.h"
-#include "platform/common/rs_log.h"
+#include "animation/rs_animation_timing_protocol.h"
+
+#include "common/rs_macros.h"
 
 namespace OHOS {
 namespace Rosen {
-class RSImplicitAnimator {
+class RSAnimation;
+class RSPropertyBase;
+class RSImplicitAnimationParam;
+class RSTransitionEffect;
+class RSMotionPathOption;
+class RSNode;
+
+class RS_EXPORT RSImplicitAnimator {
 public:
     RSImplicitAnimator() = default;
     virtual ~RSImplicitAnimator() = default;
@@ -46,9 +53,10 @@ public:
 
     bool NeedImplicitAnimation();
 
-    template<typename T>
-    std::shared_ptr<RSAnimation> CreateImplicitAnimation(
-        RSNode& target, const RSAnimatableProperty& property, const T& startValue, const T& endValue);
+    std::shared_ptr<RSAnimation> CreateImplicitAnimation(const std::shared_ptr<RSNode>& target,
+        std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
+        const std::shared_ptr<RSPropertyBase>& endValue);
+
     std::shared_ptr<RSAnimation> CreateImplicitTransition(RSNode& target, bool isTransitionIn);
 
 private:
@@ -60,22 +68,13 @@ private:
     void PopImplicitParam();
     void CreateEmptyAnimation();
 
-    template<typename T>
-    void SetPropertyValue(RSNode& target, const RSAnimatableProperty& property, const T& value)
-    {
-        std::shared_ptr<RSBasePropertyAccessors> propertyAccess = RSBasePropertyAccessors::GetAccessor(property);
-        auto accessors = std::static_pointer_cast<RSPropertyAccessors<T>>(propertyAccess);
-        if (accessors->setter_ == nullptr) {
-            return;
-        }
-        (target.stagingProperties_.*accessors->setter_)(value);
-    }
+    void SetPropertyValue(std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& value);
 
     std::stack<std::tuple<RSAnimationTimingProtocol, RSAnimationTimingCurve, std::function<void()>>>
         globalImplicitParams_;
     std::stack<std::shared_ptr<RSImplicitAnimationParam>> implicitAnimationParams_;
     std::stack<std::vector<std::pair<std::shared_ptr<RSAnimation>, NodeId>>> implicitAnimations_;
-    std::stack<std::map<std::pair<NodeId, RSAnimatableProperty>, std::shared_ptr<RSAnimation>>> keyframeAnimations_;
+    std::stack<std::map<std::pair<NodeId, PropertyId>, std::shared_ptr<RSAnimation>>> keyframeAnimations_;
 };
 } // namespace Rosen
 } // namespace OHOS

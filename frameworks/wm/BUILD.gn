@@ -82,11 +82,11 @@ ohos_shared_library("wms_client") {
   ]
 
   if (target_cpu == "arm") {
-    deps += [ "//foundation/multimedia/media_standard/frameworks/videodisplaymanager:videodisplaymanager" ]
+    deps += [ "//foundation/multimedia/player_framework/frameworks/videodisplaymanager:videodisplaymanager" ]
     defines = [ "TARGET_CPU_ARM" ]
   } else {
     include_dirs = [
-      "//foundation/multimedia/media_standard/frameworks/videodisplaymanager/include",
+      "//foundation/multimedia/player_framework/frameworks/videodisplaymanager/include",
       "//drivers/peripheral/display/interfaces/include",
       "//drivers/peripheral/display/interfaces/hdi_cpp/client",
     ]
@@ -96,12 +96,12 @@ ohos_shared_library("wms_client") {
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 
   public_deps = [ "//foundation/graphic/graphic_2d:libsurface" ]
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 
@@ -184,11 +184,11 @@ ohos_shared_library("libwmclient") {
   ]
 
   if (target_cpu == "arm") {
-    deps += [ "//foundation/multimedia/media_standard/frameworks/videodisplaymanager:videodisplaymanager" ]
+    deps += [ "//foundation/multimedia/player_framework/frameworks/videodisplaymanager:videodisplaymanager" ]
     defines = [ "TARGET_CPU_ARM" ]
   } else {
     include_dirs = [
-      "//foundation/multimedia/media_standard/frameworks/videodisplaymanager/include",
+      "//foundation/multimedia/player_framework/frameworks/videodisplaymanager/include",
       "//drivers/peripheral/display/interfaces/include",
       "//drivers/peripheral/display/interfaces/hdi_cpp/client",
     ]
@@ -198,7 +198,7 @@ ohos_shared_library("libwmclient") {
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 
   public_deps = [
@@ -208,7 +208,7 @@ ohos_shared_library("libwmclient") {
   install_images = [ system_base_dir ]
   relative_install_dir = "platformsdk"
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 ## Build libwmclient.so }}}

@@ -28,19 +28,21 @@ public:
     using WeakPtr = std::weak_ptr<RSCanvasNode>;
     using SharedPtr = std::shared_ptr<RSCanvasNode>;
     static inline constexpr RSUINodeType Type = RSUINodeType::CANVAS_NODE;
+    RSUINodeType GetType() const override
+    {
+        return Type;
+    }
 
-    virtual ~RSCanvasNode();
+    ~RSCanvasNode() override;
 
     static SharedPtr Create(bool isRenderServiceNode = false);
 
     SkCanvas* BeginRecording(int width, int height);
     bool IsRecording() const;
     void FinishRecording();
-
-    RSUINodeType GetType() const override
-    {
-        return RSUINodeType::CANVAS_NODE;
-    }
+    float GetPaintWidth() const;
+    float GetPaintHeight() const;
+    void DrawOnNode(RSModifierType type, DrawFunc func) override;
 
 protected:
     RSCanvasNode(bool isRenderServiceNode);
@@ -55,7 +57,6 @@ private:
     friend class RSUIDirector;
     friend class RSAnimation;
     friend class RSPathAnimation;
-    template<typename T>
     friend class RSPropertyAnimation;
     friend class RSNodeMap;
 };

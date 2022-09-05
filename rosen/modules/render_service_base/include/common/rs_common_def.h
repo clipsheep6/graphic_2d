@@ -17,9 +17,9 @@
 
 #include <cmath>
 #include <limits>
-#include <map>
 #include <memory>
 #include <mutex>
+#include <unordered_map>
 #include <vector>
 
 #include "common/rs_macros.h"
@@ -28,46 +28,60 @@ namespace OHOS {
 namespace Rosen {
 using AnimationId = uint64_t;
 using NodeId = uint64_t;
+using PropertyId = uint64_t;
 
 // types in the same layer should be 0/1/2/4/8
 // types for UINode
-enum class RSUINodeType {
-    BASE_NODE    = 0x00010,
-    RS_NODE      = 0x00110,   // formerly RSPropertyNode
-    DISPLAY_NODE = 0x01110,
-    SURFACE_NODE = 0x02110,
-    CANVAS_NODE  = 0x04110,   // formerly RSNode
-    ROOT_NODE    = 0x14110,
+enum class RSUINodeType : uint32_t {
+    BASE_NODE    = 0x00010u,
+    RS_NODE      = 0x00110u,   // formerly RSPropertyNode
+    DISPLAY_NODE = 0x01110u,
+    SURFACE_NODE = 0x02110u,
+    PROXY_NODE   = 0x04110u,
+    CANVAS_NODE  = 0x08110u,   // formerly RSNode
+    ROOT_NODE    = 0x18110u,
 };
 
 enum class FollowType : uint8_t {
     NONE,
     FOLLOW_TO_PARENT,
     FOLLOW_TO_SELF,
+    FOLLOW_VISITOR,
 };
 
-static const std::map<RSUINodeType, std::string> RSUINodeTypeStrs = {
+static inline const std::unordered_map<RSUINodeType, std::string> RSUINodeTypeStrs = {
     {RSUINodeType::BASE_NODE,    "BaseNode"},
     {RSUINodeType::DISPLAY_NODE, "DisplayNode"},
     {RSUINodeType::RS_NODE,      "RsNode"},
     {RSUINodeType::SURFACE_NODE, "SurfaceNode"},
+    {RSUINodeType::PROXY_NODE,   "ProxyNode"},
     {RSUINodeType::CANVAS_NODE,  "CanvasNode"},
     {RSUINodeType::ROOT_NODE,    "RootNode"},
 };
 
 // types for RenderNode
-enum class RSRenderNodeType {
-    BASE_NODE    = 0x00011,
-    RS_NODE      = 0x00111,   // formerly RSPropertyRenderNode
-    DISPLAY_NODE = 0x01111,
-    SURFACE_NODE = 0x02111,
-    CANVAS_NODE  = 0x04111,   // formerly RSRenderNode
-    ROOT_NODE    = 0x14111,
+enum class RSRenderNodeType : uint32_t {
+    BASE_NODE    = 0x00011u,
+    RS_NODE      = 0x00111u,   // formerly RSPropertyRenderNode
+    DISPLAY_NODE = 0x01111u,
+    SURFACE_NODE = 0x02111u,
+    PROXY_NODE   = 0x04111u,
+    CANVAS_NODE  = 0x08111u,   // formerly RSRenderNode
+    ROOT_NODE    = 0x18111u,
+};
+
+// types for RSSurfaceRenderNode
+enum class RSSurfaceNodeType : uint8_t {
+    DEFAULT,           // include leashing
+    APP_WINDOW_NODE,   // surfacenode created as app main window
+    SELF_DRAWING_NODE, // surfacenode created by arkui component
+    STARTING_WINDOW_NODE, //  starting window, surfacenode created by wms
 };
 
 struct RSSurfaceRenderNodeConfig {
     NodeId id = 0;
     std::string name = "SurfaceNode";
+    RSSurfaceNodeType nodeType = RSSurfaceNodeType::DEFAULT;
 };
 
 struct RSDisplayNodeConfig {
@@ -77,9 +91,9 @@ struct RSDisplayNodeConfig {
 };
 
 #if defined(M_PI)
-const float PI = M_PI;
+constexpr float PI = M_PI;
 #else
-const float PI = std::atanf(1.0) * 4;
+constexpr float PI = std::atanf(1.0) * 4;
 #endif
 
 template<typename T>
@@ -118,35 +132,10 @@ inline bool ROSEN_EQ(const std::weak_ptr<T>& x, const std::weak_ptr<T>& y)
     return !(x.owner_before(y) || y.owner_before(x));
 }
 
-class MemAllocater final {
-    struct BlockHead {
-        int size;
-        char ptr[0];
-    };
-    using Cache = std::vector<char*>;
-
-public:
-    static MemAllocater& GetInstance();
-    ~MemAllocater();
-
-    void* Alloc(size_t size);
-    void Free(void* ptr);
-
-private:
-    MemAllocater() = default;
-    MemAllocater(const MemAllocater&) = delete;
-    MemAllocater& operator=(const MemAllocater&) = delete;
-
-    std::mutex mutex_;
-    std::map<size_t, Cache> memCaches_;
-    std::vector<char*> blocks_;
-    static constexpr unsigned sizeStep_ = 64;
-};
-
 class MemObject {
 public:
     explicit MemObject(size_t size) : size_(size) {}
-    virtual ~MemObject() {}
+    virtual ~MemObject() = default;
 
     void* operator new(size_t size);
     void operator delete(void* ptr);

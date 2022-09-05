@@ -218,12 +218,12 @@ Vector2f RSProperties::GetFramePosition() const
 
 float RSProperties::GetFrameOffsetX() const
 {
-    return frameGeo_->IsEmpty() ? 0 : (frameGeo_->GetX() - boundsGeo_->GetX());
+    return std::isinf(frameGeo_->GetX()) ? 0 : (frameGeo_->GetX() - boundsGeo_->GetX());
 }
 
 float RSProperties::GetFrameOffsetY() const
 {
-    return frameGeo_->IsEmpty() ? 0 : (frameGeo_->GetY() - boundsGeo_->GetY());
+    return std::isinf(frameGeo_->GetY()) ? 0 : (frameGeo_->GetY() - boundsGeo_->GetY());
 }
 
 const std::shared_ptr<RSObjGeometry>& RSProperties::GetBoundsGeometry() const
@@ -236,7 +236,8 @@ const std::shared_ptr<RSObjGeometry>& RSProperties::GetFrameGeometry() const
     return frameGeo_;
 }
 
-bool RSProperties::UpdateGeometry(const RSProperties* parent, bool dirtyFlag)
+bool RSProperties::UpdateGeometry(const RSProperties* parent, bool dirtyFlag,
+    const std::unique_ptr<RSTransitionProperties>& transition)
 {
     if (boundsGeo_ == nullptr) {
         return false;
@@ -249,12 +250,13 @@ bool RSProperties::UpdateGeometry(const RSProperties* parent, bool dirtyFlag)
     auto boundsGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(boundsGeo_);
 
     if (dirtyFlag || geoDirty_) {
-        if (parent == nullptr) {
-            boundsGeoPtr->UpdateMatrix(nullptr, 0.f, 0.f);
-        } else {
-            auto parentGeo = std::static_pointer_cast<RSObjAbsGeometry>(parent->boundsGeo_);
-            boundsGeoPtr->UpdateMatrix(parentGeo, parent->GetFrameOffsetX(), parent->GetFrameOffsetY());
-        }
+        auto parentGeo = parent == nullptr ?
+            nullptr : std::static_pointer_cast<RSObjAbsGeometry>(parent->boundsGeo_);
+        Vector2f offset = parent == nullptr ?
+            Vector2f { 0.f, 0.f } : Vector2f { parent->GetFrameOffsetX(), parent->GetFrameOffsetY() };
+        Vector3f scale = transition == nullptr ? Vector3f { 1.f, 1.f, 1.f} : transition->GetScale();
+        Vector3f tran = transition == nullptr ? Vector3f { 0.f, 0.f, 0.f} : transition->GetTranslate();
+        boundsGeoPtr->UpdateMatrix(parentGeo, offset, scale, tran);
     }
 #endif
     return dirtyFlag || geoDirty_;
@@ -262,6 +264,11 @@ bool RSProperties::UpdateGeometry(const RSProperties* parent, bool dirtyFlag)
 
 void RSProperties::SetPositionZ(float positionZ)
 {
+    if (boundsGeo_->GetZ() < positionZ) {
+        zOrderPromoted = true;
+    } else {
+        zOrderPromoted = false;
+    }
     boundsGeo_->SetZ(positionZ);
     frameGeo_->SetZ(positionZ);
     geoDirty_ = true;
@@ -279,9 +286,19 @@ bool RSProperties::GetZorderChanged() const
     return zOrderChanged_;
 }
 
+bool RSProperties::IsZOrderPromoted() const
+{
+    return zOrderPromoted;
+}
+
 void RSProperties::CleanZorderChanged()
 {
     zOrderChanged_ = false;
+}
+
+void RSProperties::CleanZOrderPromoted()
+{
+    zOrderPromoted = false;
 }
 
 void RSProperties::SetPivot(Vector2f pivot)
@@ -477,6 +494,16 @@ float RSProperties::GetAlpha() const
 {
     return alpha_;
 }
+void RSProperties::SetAlphaOffscreen(bool alphaOffscreen)
+{
+    alphaOffscreen_ = alphaOffscreen;
+    SetDirty();
+}
+
+bool RSProperties::GetAlphaOffscreen() const
+{
+    return alphaOffscreen_;
+}
 
 void RSProperties::SetSublayerTransform(Matrix3f sublayerTransform)
 {
@@ -626,7 +653,7 @@ void RSProperties::SetBorderWidth(Vector4f width)
     SetDirty();
 }
 
-void RSProperties::SetBorderStyle(Vector4<BorderStyle> style)
+void RSProperties::SetBorderStyle(Vector4<uint32_t> style)
 {
     if (!border_) {
         border_ = std::make_shared<RSBorder>();
@@ -645,9 +672,9 @@ Vector4f RSProperties::GetBorderWidth() const
     return border_ ? border_->GetWidthFour() : Vector4f(0.f);
 }
 
-Vector4<BorderStyle> RSProperties::GetBorderStyle() const
+Vector4<uint32_t> RSProperties::GetBorderStyle() const
 {
-    return border_ ? border_->GetStyleFour() : Vector4<BorderStyle>(BorderStyle::NONE);
+    return border_ ? border_->GetStyleFour() : Vector4<uint32_t>(static_cast<uint32_t>(BorderStyle::NONE));
 }
 
 std::shared_ptr<RSBorder> RSProperties::GetBorder() const
@@ -743,7 +770,7 @@ void RSProperties::SetShadowPath(std::shared_ptr<RSPath> shadowPath)
 
 Color RSProperties::GetShadowColor() const
 {
-    return shadow_ ? shadow_->GetColor() : Color(DEFAULT_SPOT_COLOR);
+    return shadow_ ? shadow_->GetColor() : Color::FromArgbInt(DEFAULT_SPOT_COLOR);
 }
 
 float RSProperties::GetShadowOffsetX() const
@@ -776,6 +803,11 @@ std::shared_ptr<RSPath> RSProperties::GetShadowPath() const
     return shadow_ ? shadow_->GetPath() : nullptr;
 }
 
+bool RSProperties::IsShadowValid() const
+{
+    return shadow_ && shadow_->IsValid();
+}
+
 void RSProperties::SetFrameGravity(Gravity gravity)
 {
     if (frameGravity_ != gravity) {
@@ -787,6 +819,16 @@ void RSProperties::SetFrameGravity(Gravity gravity)
 Gravity RSProperties::GetFrameGravity() const
 {
     return frameGravity_;
+}
+
+void RSProperties::SetOverlayerBounds(std::shared_ptr<RectI> rect)
+{
+    overlayRect_ = rect;
+}
+
+std::shared_ptr<RectI> RSProperties::GetOverlayerBounds() const
+{
+    return overlayRect_;
 }
 
 void RSProperties::SetClipBounds(std::shared_ptr<RSPath> path)
@@ -892,6 +934,26 @@ bool RSProperties::NeedClip() const
     return clipToBounds_ || clipToFrame_;
 }
 
+void RSProperties::Reset()
+{
+    isDirty_ = true;
+    boundsGeo_ = std::make_shared<RSObjAbsGeometry>();
+    frameGeo_ = std::make_shared<RSObjGeometry>();
+    visible_ = true;
+    clipToBounds_ = false;
+    clipToFrame_ = false;
+    clipPath_ = nullptr;
+    frameGravity_ = Gravity::DEFAULT;
+    alpha_ = 1.f;
+    decoration_ = nullptr;
+    cornerRadius_ = nullptr;
+    shadow_ = nullptr;
+    border_ = nullptr;
+    backgroundFilter_ = nullptr;
+    filter_ = nullptr;
+    mask_ = nullptr;
+}
+
 void RSProperties::SetDirty()
 {
     isDirty_ = true;
@@ -911,13 +973,19 @@ bool RSProperties::IsDirty() const
 RectI RSProperties::GetDirtyRect() const
 {
 #ifdef ROSEN_OHOS
+    RectI dirtyRect = RectI();
     auto boundsGeometry = std::static_pointer_cast<RSObjAbsGeometry>(boundsGeo_);
     if (clipToBounds_) {
-        return boundsGeometry->GetAbsRect();
+        dirtyRect = boundsGeometry->GetAbsRect();
     } else {
         auto frameRect =
             boundsGeometry->MapAbsRect(RectF(GetFrameOffsetX(), GetFrameOffsetY(), GetFrameWidth(), GetFrameHeight()));
-        return boundsGeometry->GetAbsRect().JoinRect(frameRect);
+        dirtyRect = boundsGeometry->GetAbsRect().JoinRect(frameRect);
+    }
+    if (overlayRect_ == nullptr || overlayRect_->IsEmpty()) {
+        return dirtyRect;
+    } else {
+        return dirtyRect.JoinRect(*overlayRect_);
     }
 #else
     return RectI();

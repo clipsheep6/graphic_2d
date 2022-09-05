@@ -65,13 +65,19 @@ int32_t HdiBackend::PreProcessLayersComp(const OutputPtr &output,
     uint32_t layersNum = layersMap.size();
     uint32_t layerCompCapacity = output->GetLayerCompCapacity();
     uint32_t screenId = output->GetScreenId();
-    // If shouldClientCompDirect is true then layer->SetHdiLayerInfo and UpdateLayerCompType is no need to run.
+
+    // If doClientCompositionDirectly is true then layer->SetHdiLayerInfo and UpdateLayerCompType is no need to run.
     bool doClientCompositionDirectly = ((layerCompCapacity != LAYER_COMPOSITION_CAPACITY_INVALID) &&
-                                   (layersNum > layerCompCapacity));
+                                        (layersNum > layerCompCapacity));
+    bool isDirectClientCompositionEnabled = output->GetDirectClientCompEnableStatus();
+    if (!isDirectClientCompositionEnabled) {
+        doClientCompositionDirectly = false;
+    }
 
     for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {
         const LayerPtr &layer = iter->second;
         if (doClientCompositionDirectly) {
+            HLOGD("Direct client composition is enabled.");
             layer->UpdateCompositionType(CompositionType::COMPOSITION_CLIENT);
             continue;
         }
@@ -140,9 +146,9 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
         }
 
         OnPrepareComplete(needFlush, output, newLayerInfos);
-
+        sptr<SurfaceBuffer> frameBuffer = nullptr;
         if (needFlush) {
-            if (FlushScreen(output, compClientLayers) != DISPLAY_SUCCESS) {
+            if (FlushScreen(output, compClientLayers, frameBuffer) != DISPLAY_SUCCESS) {
                 // return
             }
         }
@@ -154,6 +160,7 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
             // return
         }
 
+        output->UpdatePrevLayerInfo();
         int64_t timestamp = lastPresentFence_->SyncFileReadTimestamp();
         bool ret = false;
         if (timestamp != SyncFence::FENCE_PENDING_TIMESTAMP) {
@@ -165,8 +172,12 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
             }
         }
         if (ret) {
+            HLOGD("Enable Screen Vsync");
+            device_->SetScreenVsyncEnabled(screenId, true);
             sampler_->BeginSample();
         }
+
+        ReleaseFramebuffer(output, fbFence, frameBuffer);
         lastPresentFence_ = fbFence;
         HLOGD("%{public}s: end", __func__);
     }
@@ -224,7 +235,8 @@ void HdiBackend::ReorderLayerInfo(std::vector<LayerInfoPtr> &newLayerInfos)
     std::sort(newLayerInfos.begin(), newLayerInfos.end(), Cmp);
 }
 
-int32_t HdiBackend::FlushScreen(const OutputPtr &output, std::vector<LayerPtr> &compClientLayers)
+int32_t HdiBackend::FlushScreen(
+    const OutputPtr &output, std::vector<LayerPtr> &compClientLayers, sptr<SurfaceBuffer> &buffer)
 {
     auto fbEntry = output->GetFramebuffer();
     if (fbEntry == nullptr) {
@@ -232,18 +244,26 @@ int32_t HdiBackend::FlushScreen(const OutputPtr &output, std::vector<LayerPtr> &
         return -1;
     }
 
-    if (lastFrameBuffers_.find(output->GetScreenId()) != lastFrameBuffers_.end()) {
-        // wrong check
-        (void)output->ReleaseFramebuffer(lastFrameBuffers_[output->GetScreenId()], lastPresentFence_);
-    }
-    lastFrameBuffers_[output->GetScreenId()] = fbEntry->buffer;
-
     const auto& fbAcquireFence = fbEntry->acquireFence;
     for (auto &layer : compClientLayers) {
         layer->MergeWithFramebufferFence(fbAcquireFence);
     }
 
+    buffer = fbEntry->buffer;
     return SetScreenClientInfo(*fbEntry, output);
+}
+
+void HdiBackend::ReleaseFramebuffer(
+    const OutputPtr &output, sptr<SyncFence> &presentFence, const sptr<SurfaceBuffer> &buffer)
+{
+    if (buffer == nullptr) {
+        return;
+    }
+    if (lastFrameBuffers_.find(output->GetScreenId()) != lastFrameBuffers_.end()) {
+        // wrong check
+        (void)output->ReleaseFramebuffer(lastFrameBuffers_[output->GetScreenId()], presentFence);
+    }
+    lastFrameBuffers_[output->GetScreenId()] = buffer;
 }
 
 int32_t HdiBackend::SetScreenClientInfo(const FrameBufferEntry &fbEntry, const OutputPtr &output)
@@ -263,7 +283,7 @@ int32_t HdiBackend::SetScreenClientInfo(const FrameBufferEntry &fbEntry, const O
     ret = device_->SetScreenClientDamage(output->GetScreenId(), output->GetOutputDamageNum(),
                                          output->GetOutputDamage());
     if (ret != DISPLAY_SUCCESS) {
-        HLOGE("SetScreenClientDamage failed, ret is %{public}d", ret);
+        HLOGD("SetScreenClientDamage failed, ret is %{public}d", ret);
         return ret;
     }
 

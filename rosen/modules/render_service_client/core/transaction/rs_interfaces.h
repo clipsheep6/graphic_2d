@@ -80,6 +80,8 @@ public:
 
     int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode);
 
+    int32_t GetScreenSupportedMetaDataKeys(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys);
+
     int32_t GetScreenColorGamut(ScreenId id, ScreenColorGamut& mode);
 
     int32_t SetScreenColorGamut(ScreenId id, int32_t modeIdx);
@@ -87,10 +89,6 @@ public:
     int32_t SetScreenGamutMap(ScreenId id, ScreenGamutMap mode);
 
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode);
-    
-    bool RequestRotation(ScreenId id, ScreenRotation rotation);
-
-    ScreenRotation GetRotation(ScreenId id);
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability);
 
@@ -108,6 +106,10 @@ public:
     int32_t RegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback);
 
     int32_t UnRegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback);
+
+    int32_t SetRenderModeChangeCallback(const RenderModeChangeCallback& callback);
+
+    void UpdateRenderMode(bool isUniRender);
 
 private:
     RSInterfaces();

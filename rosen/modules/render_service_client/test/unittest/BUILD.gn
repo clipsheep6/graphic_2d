@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-module_out_path = "graphic_graphic_2d/render_service_client"
+module_out_path = "graphic_standard/render_service_client"
 
 group("unittest") {
   testonly = true
@@ -21,7 +21,9 @@ group("unittest") {
   deps = [
     ":RSDisplayModeTest",
     ":RSDropframeTest",
+    ":RSEventTest",
     ":RSInterfacesTest",
+    ":RSTunnelHandleTest",
   ]
 }
 
@@ -35,10 +37,7 @@ ohos_unittest("RSInterfacesTest") {
 ## Build RSDropframeTest
 ohos_unittest("RSDropframeTest") {
   module_out_path = module_out_path
-  sources = [
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/pipeline/rs_base_render_node.cpp",
-    "rs_dropframe_test.cpp",
-  ]
+  sources = [ "rs_dropframe_test.cpp" ]
   deps = [ ":rs_client_test_common" ]
 }
 
@@ -46,6 +45,20 @@ ohos_unittest("RSDropframeTest") {
 ohos_unittest("RSDisplayModeTest") {
   module_out_path = module_out_path
   sources = [ "rs_display_mode_test.cpp" ]
+  deps = [ ":rs_client_test_common" ]
+}
+
+## Build TunnelHandleTest
+ohos_unittest("RSTunnelHandleTest") {
+  module_out_path = module_out_path
+  sources = [ "rs_tunnel_handle_test.cpp" ]
+  deps = [ ":rs_client_test_common" ]
+}
+
+## Build RSEventTest
+ohos_unittest("RSEventTest") {
+  module_out_path = module_out_path
+  sources = [ "rs_event_test.cpp" ]
   deps = [ ":rs_client_test_common" ]
 }
 
@@ -73,14 +86,14 @@ ohos_static_library("rs_client_test_common") {
 
   public_deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//commonlibrary/c_utils/base:utils",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/googletest:gtest_main",
-    "//utils/native/base:utils",
   ]
   subsystem_name = "graphic"
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
 }
 ## Build rs_client_test_common.a }}}

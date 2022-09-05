@@ -54,7 +54,11 @@ private:
     void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) override;
     void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) override;
 
-    bool InitUniRenderEnabled(const std::string &bundleName) override;
+    int32_t SetRenderModeChangeCallback(sptr<RSIRenderModeChangeCallback> callback) override;
+    void UpdateRenderMode(bool isUniRender) override;
+    bool GetUniRenderEnabled() override;
+    bool QueryIfRTNeedRender() override;
+
     bool CreateNode(const RSSurfaceRenderNodeConfig& config) override;
     sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) override;
 
@@ -71,7 +75,7 @@ private:
         sptr<Surface> surface,
         ScreenId mirrorId = 0,
         int32_t flags = 0) override;
-    
+
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface) override;
 
     void RemoveVirtualScreen(ScreenId id) override;
@@ -111,6 +115,8 @@ private:
 
     int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode) override;
 
+    int32_t GetScreenSupportedMetaDataKeys(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys) override;
+
     int32_t GetScreenColorGamut(ScreenId id, ScreenColorGamut& mode) override;
 
     int32_t SetScreenColorGamut(ScreenId id, int32_t modeIdx) override;
@@ -118,10 +124,6 @@ private:
     int32_t SetScreenGamutMap(ScreenId id, ScreenGamutMap mode) override;
 
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) override;
-    
-    bool RequestRotation(ScreenId id, ScreenRotation rotation) override;
-
-    ScreenRotation GetRotation(ScreenId id) override;
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) override;
 

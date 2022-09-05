@@ -17,7 +17,7 @@ import(
 
 #import("//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
 
-module_output_path = "graphic_graphic_2d/rosen/modules/render_service_client"
+module_output_path = "graphic_standard/rosen/modules/render_service_client"
 
 ohos_unittest("RSAnimationTest") {
   module_out_path = module_output_path
@@ -40,7 +40,6 @@ ohos_unittest("RSAnimationTest") {
     "$rosen_root/modules/render_service_base/src/animation/rs_animation_fraction.cpp",
     "$rosen_root/modules/render_service_base/src/animation/rs_animation_manager.cpp",
     "$rosen_root/modules/render_service_base/src/animation/rs_interpolator.cpp",
-    "$rosen_root/modules/render_service_base/src/animation/rs_property_accessors.cpp",
     "$rosen_root/modules/render_service_base/src/animation/rs_render_animation.cpp",
     "$rosen_root/modules/render_service_base/src/animation/rs_render_path_animation.cpp",
     "$rosen_root/modules/render_service_base/src/animation/rs_render_transition.cpp",
@@ -123,8 +122,8 @@ ohos_unittest("RSAnimationTest") {
     "$rosen_root/modules/render_service_base/src/platform:platform",
     "$rosen_root/modules/render_service_client:librender_service_client",
     "//third_party/googletest:gtest_main",
-    "//utils/native/base:utils",
   ]
+  external_deps = [ "c_utils:utils" ]
 }
 
 config("rs_animation_test_config") {

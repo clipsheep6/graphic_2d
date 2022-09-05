@@ -34,10 +34,25 @@ public:
     ~RSPaintFilterCanvas() override {};
 
     void MultiplyAlpha(float alpha);
-    void SaveAlpha();
-    void RestoreAlpha();
     float GetAlpha() { return alpha_; }
+
+    int SaveAlpha();
+    void RestoreAlpha();
+    void RestoreAlphaToCount(int count);
+
+    std::pair<int, int> SaveCanvasAndAlpha();
+    void RestoreCanvasAndAlpha(std::pair<int, int>& count);
+
     SkSurface* GetSurface() const;
+
+    void SetHighContrast(bool enabled)
+    {
+        isHighContrastEnabled_  = enabled;
+    }
+    bool isHighContrastEnabled() const
+    {
+        return isHighContrastEnabled_;
+    }
 
 protected:
     bool onFilter(SkPaint& paint) const override;
@@ -47,6 +62,7 @@ private:
     std::stack<float> alphaStack_;
     float alpha_ = 1.0f;
     SkSurface* skSurface_ = nullptr;
+    std::atomic_bool isHighContrastEnabled_ { false };
 };
 
 } // namespace Rosen

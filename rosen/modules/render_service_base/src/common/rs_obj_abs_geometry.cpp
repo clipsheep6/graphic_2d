@@ -34,12 +34,10 @@ RSObjAbsGeometry::RSObjAbsGeometry() : RSObjGeometry()
 
 RSObjAbsGeometry::~RSObjAbsGeometry() {}
 
-void RSObjAbsGeometry::UpdateMatrix(const Matrix3f& matrix)
+void RSObjAbsGeometry::ConcatMatrix(const SkMatrix& matrix)
 {
-    SkMatrix skMatrix;
-    skMatrix.set9(matrix.Transpose().GetData());
-    matrix_.preConcat(skMatrix);
-    absMatrix_.preConcat(matrix_);
+    matrix_.preConcat(matrix);
+    absMatrix_.preConcat(matrix);
     SetAbsRect();
 }
 
@@ -52,7 +50,7 @@ void RSObjAbsGeometry::UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& par
         absMatrix_.preTranslate(offsetX, offsetY);
     }
     matrix_.reset();
-    if (!trans_ || (ROSEN_EQ(z_ + trans_->translateZ_, 0.f) && ROSEN_EQ(trans_->rotationX_, 0.f) &&
+    if (!trans_ || (ROSEN_EQ(trans_->translateZ_, 0.f) && ROSEN_EQ(trans_->rotationX_, 0.f) &&
         ROSEN_EQ(trans_->rotationY_, 0.f) && trans_->quaternion_.IsIdentity())) {
         UpdateAbsMatrix2D();
     } else {
@@ -62,23 +60,36 @@ void RSObjAbsGeometry::UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& par
     SetAbsRect();
 }
 
-void RSObjAbsGeometry::UpdateByMatrixFromParent(const std::shared_ptr<RSObjAbsGeometry>& parent)
+void RSObjAbsGeometry::UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& parent,
+    Vector2f& offset, Vector3f& scale, Vector3f& tran)
 {
-    absMatrix_.reset();
-    if (parent != nullptr) {
+    if (parent == nullptr) {
+        absMatrix_.reset();
+    } else {
         absMatrix_ = parent->absMatrix_;
+        absMatrix_.preTranslate(offset.x_, offset.y_);
     }
-}
-
-void RSObjAbsGeometry::UpdateByMatrixFromRenderThread(const SkMatrix& skMatrix)
-{
-    absMatrix_.preConcat(skMatrix);
+    matrix_.reset();
+    if (!trans_ || (ROSEN_EQ(trans_->translateZ_, 0.f) && ROSEN_EQ(trans_->rotationX_, 0.f) &&
+        ROSEN_EQ(trans_->rotationY_, 0.f) && trans_->quaternion_.IsIdentity())) {
+        UpdateAbsMatrix2D();
+    } else {
+        UpdateAbsMatrix3D();
+    }
+    absMatrix_.preConcat(matrix_);
+    auto tranMatrix = SkMatrix::MakeTrans(tran.x_, tran.y_);
+    tranMatrix.preTranslate(width_ / 2, height_ / 2); // 2 means half
+    tranMatrix.preScale(scale.x_, scale.y_);
+    tranMatrix.preTranslate(-width_ / 2, -height_ / 2); // 2 means half
+    absMatrix_.preConcat(tranMatrix);
+    SetAbsRect();
 }
 
 void RSObjAbsGeometry::UpdateByMatrixFromSelf()
 {
+    absMatrix_.reset();
     matrix_.reset();
-    if (!trans_ || (ROSEN_EQ(z_ + trans_->translateZ_, 0.f) && ROSEN_EQ(trans_->rotationX_, 0.f) &&
+    if (!trans_ || (ROSEN_EQ(trans_->translateZ_, 0.f) && ROSEN_EQ(trans_->rotationX_, 0.f) &&
         ROSEN_EQ(trans_->rotationY_, 0.f) && trans_->quaternion_.IsIdentity())) {
         UpdateAbsMatrix2D();
     } else {
@@ -86,6 +97,15 @@ void RSObjAbsGeometry::UpdateByMatrixFromSelf()
     }
     absMatrix_.preConcat(matrix_);
     SetAbsRect();
+}
+
+bool RSObjAbsGeometry::IsNeedClientCompose() const
+{
+    if (!trans_) {
+        return false;
+    }
+    // return false if rotation degree is times of 90
+    return !ROSEN_EQ(std::remainder(trans_->rotation_, 90.f), 0.f);
 }
 
 void RSObjAbsGeometry::UpdateAbsMatrix2D()

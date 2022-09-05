@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,142 +19,59 @@
 #include <memory>
 
 #include "animation/rs_animation.h"
-#include "animation/rs_property_accessors.h"
 #include "common/rs_macros.h"
-#include "ui/rs_node.h"
 
 namespace OHOS {
 namespace Rosen {
-template<typename T>
+class RSPropertyBase;
+class RSRenderAnimation;
+
 class RS_EXPORT RSPropertyAnimation : public RSAnimation {
 public:
     RSPropertyAnimation() = delete;
     virtual ~RSPropertyAnimation() = default;
 
+    void SetIsCustom(const bool isCustom);
+
 protected:
-    RSPropertyAnimation(const RSAnimatableProperty& property) : property_(property)
-    {
-        propertyAccess_ = std::static_pointer_cast<RSPropertyAccessors<T>>(
-            RSBasePropertyAccessors::GetAccessor(property));
-        InitAdditiveMode();
-    }
+    RSPropertyAnimation(std::shared_ptr<RSPropertyBase> property);
 
-    void SetAdditive(bool isAdditive)
-    {
-        isAdditive_ = true;
-    }
+    void SetAdditive(bool isAdditive);
 
-    bool GetAdditive() const
-    {
-        return isAdditive_;
-    }
+    bool GetAdditive() const;
 
-    auto GetOriginValue() const
-    {
-        return originValue_;
-    }
+    const std::shared_ptr<RSPropertyBase> GetOriginValue() const;
 
-    void SetPropertyValue(const T& value)
-    {
-        auto target = GetTarget().lock();
-        if (target == nullptr || propertyAccess_->setter_ == nullptr) {
-            return;
-        }
+    void SetPropertyValue(const std::shared_ptr<RSPropertyBase>& value);
 
-        (target->stagingProperties_.*propertyAccess_->setter_)(value);
-    }
+    const std::shared_ptr<RSPropertyBase> GetPropertyValue() const;
 
-    auto GetPropertyValue() const
-    {
-        auto target = GetTarget().lock();
-        if (target == nullptr || propertyAccess_->getter_ == nullptr) {
-            return startValue_;
-        }
+    PropertyId GetPropertyId() const override;
 
-        return (target->stagingProperties_.*propertyAccess_->getter_)();
-    }
+    void OnStart() override;
 
-    RSAnimatableProperty GetProperty() const override
-    {
-        return property_;
-    }
+    void SetOriginValue(const std::shared_ptr<RSPropertyBase>& originValue);
 
-    void OnStart() override
-    {
-        if (!hasOriginValue_) {
-            originValue_ = GetPropertyValue();
-            hasOriginValue_ = true;
-        }
-        InitInterpolationValue();
-    }
+    virtual void InitInterpolationValue();
 
-    void SetOriginValue(const T& originValue)
-    {
-        if (!hasOriginValue_) {
-            originValue_ = originValue;
-            hasOriginValue_ = true;
-        }
-    }
+    void OnUpdateStagingValue(bool isFirstStart) override;
 
-    virtual void InitInterpolationValue()
-    {
-        if (isDelta_) {
-            startValue_ = originValue_;
-            endValue_ = originValue_ + byValue_;
-        } else {
-            byValue_ = endValue_ - startValue_;
-        }
-    }
+    void StartCustomPropertyAnimation(const std::shared_ptr<RSRenderAnimation>& animation);
 
-    void OnUpdateStagingValue(bool isFirstStart) override
-    {
-        auto startValue = startValue_;
-        auto endValue = endValue_;
-        if (!GetDirection()) {
-            std::swap(startValue, endValue);
-        }
-        auto byValue = endValue - startValue;
-        auto targetValue = endValue;
-        if (isFirstStart) {
-            if (GetAutoReverse() && GetRepeatCount() % 2 == 0) {
-                targetValue = startValue;
-            } else {
-                targetValue = endValue;
-            }
-        } else {
-            auto currentValue = GetPropertyValue();
-            if (GetAutoReverse() && GetRepeatCount() % 2 == 0) {
-                targetValue = IsReversed() ? currentValue + byValue : currentValue - byValue;
-            } else {
-                targetValue = IsReversed() ? currentValue - byValue : currentValue + byValue;
-            }
-        }
+    void SetPropertyOnAllAnimationFinish() override;
 
-        SetPropertyValue(targetValue);
-    }
-
-    T byValue_ {};
-    T startValue_ {};
-    T endValue_ {};
-    T originValue_ {};
+    std::shared_ptr<RSPropertyBase> property_;
+    std::shared_ptr<RSPropertyBase> byValue_ {};
+    std::shared_ptr<RSPropertyBase> startValue_ {};
+    std::shared_ptr<RSPropertyBase> endValue_ {};
+    std::shared_ptr<RSPropertyBase> originValue_ {};
     bool isAdditive_ { true };
+    bool isCustom_ { false };
     bool isDelta_ { false };
     bool hasOriginValue_ { false };
 
 private:
-    void InitAdditiveMode()
-    {
-        switch (GetProperty()) {
-            case RSAnimatableProperty::ROTATION_3D:
-                SetAdditive(false);
-                break;
-            default:
-                break;
-        }
-    }
-
-    RSAnimatableProperty property_ { RSAnimatableProperty::INVALID };
-    std::shared_ptr<RSPropertyAccessors<T>> propertyAccess_;
+    void InitAdditiveMode();
 };
 } // namespace Rosen
 } // namespace OHOS

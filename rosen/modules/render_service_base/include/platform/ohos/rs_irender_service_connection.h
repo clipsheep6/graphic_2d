@@ -34,6 +34,7 @@
 #include "transaction/rs_transaction_data.h"
 #include "ivsync_connection.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
+#include "ipc_callbacks/rs_irender_mode_change_callback.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -48,7 +49,10 @@ public:
 
     enum {
         COMMIT_TRANSACTION,
-        GET_UNI_RENDER_TYPE,
+        SET_RENDER_MODE_CHANGE_CALLBACK,
+        UPDATE_RENDER_MODE,
+        GET_UNI_RENDER_ENABLED,
+        QUERY_RT_NEED_RENDER,
         CREATE_NODE,
         CREATE_NODE_AND_SURFACE,
         GET_DEFAULT_SCREEN_ID,
@@ -73,13 +77,12 @@ public:
         REGISTER_APPLICATION_AGENT,
         SET_BUFFER_AVAILABLE_LISTENER,
         GET_SCREEN_SUPPORTED_GAMUTS,
+        GET_SCREEN_SUPPORTED_METADATAKEYS,
         GET_SCREEN_GAMUT,
         SET_SCREEN_GAMUT,
         SET_SCREEN_GAMUT_MAP,
         GET_SCREEN_GAMUT_MAP,
         CREATE_VSYNC_CONNECTION,
-        REQUEST_ROTATION,
-        GET_ROTATION,
         GET_SCREEN_HDR_CAPABILITY,
         GET_SCREEN_TYPE,
         SET_SCREEN_SKIP_FRAME_INTERVAL,
@@ -91,7 +94,10 @@ public:
 
     virtual void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) = 0;
 
-    virtual bool InitUniRenderEnabled(const std::string &bundleName) = 0;
+    virtual int32_t SetRenderModeChangeCallback(sptr<RSIRenderModeChangeCallback> callback) = 0;
+    virtual void UpdateRenderMode(bool isUniRender) = 0;
+    virtual bool GetUniRenderEnabled() = 0;
+    virtual bool QueryIfRTNeedRender() = 0;
     virtual bool CreateNode(const RSSurfaceRenderNodeConfig& config) = 0;
     virtual sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) = 0;
 
@@ -148,6 +154,8 @@ public:
 
     virtual int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode) = 0;
 
+    virtual int32_t GetScreenSupportedMetaDataKeys(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys) = 0;
+
     virtual int32_t GetScreenColorGamut(ScreenId id, ScreenColorGamut& mode) = 0;
 
     virtual int32_t SetScreenColorGamut(ScreenId id, int32_t modeIdx) = 0;
@@ -155,17 +163,13 @@ public:
     virtual int32_t SetScreenGamutMap(ScreenId id, ScreenGamutMap mode) = 0;
 
     virtual int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) = 0;
-    
-    virtual bool RequestRotation(ScreenId id, ScreenRotation rotation) = 0;
-
-    virtual ScreenRotation GetRotation(ScreenId id) = 0;
 
     virtual int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) = 0;
 
     virtual int32_t GetScreenType(ScreenId id, RSScreenType& screenType) = 0;
 
     virtual int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval) = 0;
-    
+
     virtual int32_t RegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback) = 0;
 
     virtual int32_t UnRegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback) = 0;

@@ -35,7 +35,6 @@ ohos_executable("render_service_client_rs_demo") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/graphic/graphic_2d:libvsync_client",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
@@ -44,95 +43,117 @@ ohos_executable("render_service_client_rs_demo") {
 
   public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 
 ohos_executable("render_service_client_app_demo") {
   sources = [ "render_service_client_app_demo.cpp" ]
 
-  include_dirs = [ "//foundation/windowmanager/interfaces/innerkits" ]
+  include_dirs = [ "//foundation/window/window_manager/interfaces/innerkits" ]
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/windowmanager/wm:libwm",
-    "//foundation/windowmanager/wmserver:libwms",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/window/window_manager/wm:libwm",
+    "//foundation/window/window_manager/wmserver:libwms",
     "//third_party/zlib:libz",
   ]
 
   public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("render_service_client_modifier_demo") {
+  sources = [ "render_service_client_modifier_demo.cpp" ]
+
+  include_dirs = [ "//foundation/window/window_manager/interfaces/innerkits" ]
+
+  deps = [
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/window/window_manager/wm:libwm",
+    "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/zlib:libz",
+  ]
+
+  public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 
 ohos_executable("render_service_client_gravity_demo") {
   sources = [ "render_service_client_gravity_demo.cpp" ]
 
-  include_dirs = [ "//foundation/windowmanager/interfaces/innerkits" ]
+  include_dirs = [ "//foundation/window/window_manager/interfaces/innerkits" ]
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/windowmanager/wm:libwm",
-    "//foundation/windowmanager/wmserver:libwms",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/window/window_manager/wm:libwm",
+    "//foundation/window/window_manager/wmserver:libwms",
     "//third_party/zlib:libz",
   ]
 
   public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 
 ohos_executable("render_service_client_scale_demo") {
   sources = [ "render_service_client_scale_demo.cpp" ]
 
-  include_dirs = [ "//foundation/windowmanager/interfaces/innerkits" ]
+  include_dirs = [ "//foundation/window/window_manager/interfaces/innerkits" ]
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/windowmanager/wm:libwm",
-    "//foundation/windowmanager/wmserver:libwms",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/window/window_manager/wm:libwm",
+    "//foundation/window/window_manager/wmserver:libwms",
     "//third_party/zlib:libz",
   ]
 
   public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 
 ohos_executable("render_service_client_rs_animation_demo") {
   sources = [ "render_service_client_rs_animation_demo.cpp" ]
 
-  include_dirs = [ "//foundation/windowmanager/interfaces/innerkits" ]
+  include_dirs = [ "//foundation/window/window_manager/interfaces/innerkits" ]
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/windowmanager/wm:libwm",
-    "//foundation/windowmanager/wmserver:libwms",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/window/window_manager/wm:libwm",
+    "//foundation/window/window_manager/wmserver:libwms",
     "//third_party/zlib:libz",
   ]
 
   public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 
@@ -141,7 +162,6 @@ ohos_executable("surface_capture_demo") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/graphic/graphic_2d:libvsync_client",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
@@ -151,7 +171,7 @@ ohos_executable("surface_capture_demo") {
 
   public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 
@@ -164,7 +184,7 @@ ohos_executable("security_layer_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
   ]
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 
@@ -173,7 +193,6 @@ ohos_executable("mirror_display_demo") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/graphic/graphic_2d:libvsync_client",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
@@ -188,21 +207,21 @@ ohos_executable("mirror_display_demo") {
 
   public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 
 ohos_executable("render_service_client_surface_node_demo") {
   sources = [ "render_service_client_surface_node_demo.cpp" ]
 
-  include_dirs = [ "//foundation/windowmanager/interfaces/innerkits" ]
+  include_dirs = [ "//foundation/window/window_manager/interfaces/innerkits" ]
 
   deps = [
-    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/windowmanager/wm:libwm",
-    "//foundation/windowmanager/wmserver:libwms",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/window/window_manager/wm:libwm",
+    "//foundation/window/window_manager/wmserver:libwms",
     "//third_party/zlib:libz",
   ]
 
@@ -210,6 +229,125 @@ ohos_executable("render_service_client_surface_node_demo") {
 
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("render_service_client_uni_render_demo") {
+  sources = [ "render_service_client_uni_render_demo.cpp" ]
+
+  include_dirs = [ "//foundation/window/window_manager/interfaces/innerkits" ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/window/window_manager/wm:libwm",
+    "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/zlib:libz",
+  ]
+
+  public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("rs_uni_render_pixelmap_demo") {
+  sources = [ "rs_uni_render_pixelmap_demo.cpp" ]
+
+  include_dirs = [ "//foundation/window/window_manager/interfaces/innerkits" ]
+
+  deps = [
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/window/window_manager/wm:libwm",
+    "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/zlib:libz",
+  ]
+
+  public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("render_service_display_mode_demo") {
+  sources = [ "render_service_display_mode_demo.cpp" ]
+
+  include_dirs = [
+    # render_service_base include
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
+    "//foundation/graphic/graphic_2d/rosen/include",
+    "//drivers/peripheral/display/interfaces/include",
+    "//foundation/multimedia/image_standard/interfaces/innerkits/include",
+  ]
+
+  deps = [
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//third_party/zlib:libz",
+  ]
+
+  public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+ohos_executable("render_service_client_tunnel_handle_demo") {
+  sources = [ "render_service_client_tunnel_handle_demo.cpp" ]
+
+  include_dirs = [
+    "//foundation/window/window_manager/interfaces/innerkits",
+
+    # render_service_base include
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
+    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface/",
+    "//foundation/graphic/graphic_2d/interfaces/inner_api/wmclient/",
+  ]
+
+  deps = [
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/window/window_manager/wm:libwm",
+    "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/zlib:libz",
+  ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("render_service_client_overlay_demo") {
+  sources = [ "render_service_client_overlay_demo.cpp" ]
+
+  include_dirs = [
+    "//foundation/window/window_manager/interfaces/innerkits",
+
+    # render_service_base include
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
+    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface/",
+    "//foundation/graphic/graphic_2d/interfaces/inner_api/wmclient/",
+  ]
+
+  deps = [
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/window/window_manager/wm:libwm",
+    "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/zlib:libz",
+  ]
+
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }

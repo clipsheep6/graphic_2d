@@ -39,7 +39,10 @@ static const std::map<CompositionType, std::string> CompositionTypeStrs = {
     {COMPOSITION_DEVICE,             "1 <device composistion>"},
     {COMPOSITION_CURSOR,             "2 <cursor composistion>"},
     {COMPOSITION_VIDEO,              "3 <video composistion>"},
-    {COMPOSITION_BUTT,               "4 <uninitialized>"},
+    {COMPOSITION_DEVICE_CLEAR,       "4 <device clear composistion>"},
+    {COMPOSITION_CLIENT_CLEAR,       "5 <client clear composistion>"},
+    {COMPOSITION_TUNNEL,             "6 <tunnel composistion>"},
+    {COMPOSITION_BUTT,               "7 <uninitialized>"},
 };
 
 static const std::map<BlendType, std::string> BlendTypeStrs = {
@@ -145,15 +148,46 @@ public:
         return additionalInfo_;
     }
 
+    void SetColorTransform(const float *matrix)
+    {
+        colorTransformMatrix_ = const_cast<float *>(matrix);
+    }
+
+    void SetColorDataSpace(ColorDataSpace colorSpace)
+    {
+        colorSpace_ = colorSpace;
+    }
+
+    void SetMetaData(const std::vector<HDRMetaData> &metaData)
+    {
+        metaData_ = metaData;
+    }
+
+    void SetMetaDataSet(const HDRMetaDataSet &metaDataSet)
+    {
+        metaDataSet_ = metaDataSet;
+    }
+
     void SetTunnelHandleChange(bool change)
     {
         tunnelHandleChange_ = change;
     }
 
-    void SetTunnelHandle(const ExtDataHandle *handle)
+    void SetTunnelHandle(const sptr<SurfaceTunnelHandle> &handle)
     {
-        tunnelHandle_ = const_cast<ExtDataHandle *>(handle);
+        tunnelHandle_ = handle;
     }
+
+    bool IsSupportedPresentTimestamp() const
+    {
+        return IsSupportedPresentTimestamp_;
+    }
+
+    const PresentTimestamp& GetPresentTimestamp()
+    {
+        return presentTimestamp_;
+    }
+
     /* rs create and set/get layer info end */
 
     /* hdiLayer get layer info begin */
@@ -227,29 +261,85 @@ public:
         return preMulti_;
     }
 
+    float* GetColorTransform() const
+    {
+        return colorTransformMatrix_;
+    }
+
+    ColorDataSpace GetColorDataSpace() const
+    {
+        return colorSpace_;
+    }
+
+    std::vector<HDRMetaData>& GetMetaData()
+    {
+        return metaData_;
+    }
+
+    HDRMetaDataSet &GetMetaDataSet()
+    {
+        return metaDataSet_;
+    }
+
     bool GetTunnelHandleChange() const
     {
         return tunnelHandleChange_;
     }
 
-    ExtDataHandle *GetTunnelHandle() const
+    sptr<SurfaceTunnelHandle> GetTunnelHandle() const
     {
         return tunnelHandle_;
     }
 
+    void SetIsSupportedPresentTimestamp(bool isSupported)
+    {
+        IsSupportedPresentTimestamp_ = isSupported;
+    }
+
+    void SetPresentTimestamp(const PresentTimestamp &timestamp)
+    {
+        presentTimestamp_ = timestamp;
+    }
+
+    void CopyLayerInfo(const std::shared_ptr<HdiLayerInfo> &layerInfo)
+    {
+        zOrder_ = layerInfo->GetZorder();
+        visibleNum_ = layerInfo->GetVisibleNum();
+        layerRect_ = layerInfo->GetLayerSize();
+        visibleRegion_ = layerInfo->GetVisibleRegion();
+        dirtyRegion_ = layerInfo->GetDirtyRegion();
+        cropRect_ = layerInfo->GetCropRect();
+        layerAlpha_ = layerInfo->GetAlpha();
+        transformType_ = layerInfo->GetTransformType();
+        compositionType_ = layerInfo->GetCompositionType();
+        blendType_ = layerInfo->GetBlendType();
+        colorTransformMatrix_ = layerInfo->GetColorTransform();
+        colorSpace_ = layerInfo->GetColorDataSpace();
+        metaData_ = layerInfo->GetMetaData();
+        metaDataSet_ = layerInfo->GetMetaDataSet();
+        tunnelHandle_ = layerInfo->GetTunnelHandle();
+        tunnelHandleChange_ = layerInfo->GetTunnelHandleChange();
+        sbuffer_ = layerInfo->GetBuffer();
+        acquireFence_ = layerInfo->GetAcquireFence();
+        preMulti_ = layerInfo->IsPreMulti();
+    }
+
     void Dump(std::string &result) const
     {
-        result += " zOrder = " + std::to_string(zOrder_) +
-            ", visibleNum = " + std::to_string(visibleNum_) +
-            ", transformType = " + TransformTypeStrs.at(transformType_) +
-            ", compositionType = " + CompositionTypeStrs.at(compositionType_) +
-            ", blendType = " + BlendTypeStrs.at(blendType_) +
-            ", layerAlpha = [enGlobalAlpha(" + std::to_string(layerAlpha_.enGlobalAlpha) + "), enPixelAlpha(" +
-            std::to_string(layerAlpha_.enPixelAlpha) + "), alpha0(" +
-            std::to_string(layerAlpha_.alpha0) + "), alpha1(" +
-            std::to_string(layerAlpha_.alpha1) + "), gAlpha(" +
-            std::to_string(layerAlpha_.gAlpha) + ")].\n";
-
+        if (TransformTypeStrs.find(transformType_) != TransformTypeStrs.end() &&
+            CompositionTypeStrs.find(compositionType_) != CompositionTypeStrs.end() &&
+            BlendTypeStrs.find(blendType_) != BlendTypeStrs.end()) {
+            result += " zOrder = " + std::to_string(zOrder_) +
+                ", visibleNum = " + std::to_string(visibleNum_) +
+                ", transformType = " + TransformTypeStrs.at(transformType_) +
+                ", compositionType = " + CompositionTypeStrs.at(compositionType_) +
+                ", blendType = " + BlendTypeStrs.at(blendType_) +
+                ", layerAlpha = [enGlobalAlpha(" + std::to_string(layerAlpha_.enGlobalAlpha) + "), enPixelAlpha(" +
+                std::to_string(layerAlpha_.enPixelAlpha) + "), alpha0(" +
+                std::to_string(layerAlpha_.alpha0) + "), alpha1(" +
+                std::to_string(layerAlpha_.alpha1) + "), gAlpha(" +
+                std::to_string(layerAlpha_.gAlpha) + ")].\n";
+        }
         result += " layerRect = [" + std::to_string(layerRect_.x) + ", " +
             std::to_string(layerRect_.y) + ", " +
             std::to_string(layerRect_.w) + ", " +
@@ -266,7 +356,9 @@ public:
             std::to_string(cropRect_.y) + ", " +
             std::to_string(cropRect_.w) + ", " +
             std::to_string(cropRect_.h) + "].\n";
-        cSurface_->Dump(result);
+        if (cSurface_ != nullptr) {
+            cSurface_->Dump(result);
+        }
     }
     /* hdiLayer get layer info end */
 
@@ -281,8 +373,14 @@ private:
     TransformType transformType_ = TransformType::ROTATE_BUTT;
     CompositionType compositionType_;
     BlendType blendType_;
-    ExtDataHandle *tunnelHandle_ = nullptr;
+    float *colorTransformMatrix_ = nullptr;
+    ColorDataSpace colorSpace_ = ColorDataSpace::COLOR_DATA_SPACE_UNKNOWN;
+    std::vector<HDRMetaData> metaData_;
+    HDRMetaDataSet metaDataSet_;
+    sptr<SurfaceTunnelHandle> tunnelHandle_ = nullptr;
     bool tunnelHandleChange_ = false;
+    bool IsSupportedPresentTimestamp_ = false;
+    PresentTimestamp presentTimestamp_ = {HARDWARE_DISPLAY_PTS_UNSUPPORTED, 0};
 
     void *additionalInfo_ = nullptr;
     sptr<Surface> cSurface_ = nullptr;

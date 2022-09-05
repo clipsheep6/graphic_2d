@@ -24,6 +24,7 @@ ohos_unittest("RSRenderServiceCommonPipelineTest") {
     "rs_drop_frame_processor_test.cpp",
     "rs_physical_screen_processor_test.cpp",
     "rs_processor_factory_test.cpp",
+    "rs_render_engine_test.cpp",
     "rs_render_service_listener_test.cpp",
     "rs_render_service_visitor_test.cpp",
     "rs_virtual_screen_processor_test.cpp",
@@ -39,6 +40,7 @@ ohos_unittest("RSRenderServiceCommonPipelineTest") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
     "//foundation/graphic/graphic_2d/rosen/include",
     "//foundation/graphic/graphic_2d/rosen/test/include",
+    "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk/include",
   ]
 
   deps = [
@@ -47,10 +49,12 @@ ohos_unittest("RSRenderServiceCommonPipelineTest") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service:librender_service",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//third_party/googletest:gtest_main",
-    "//utils/native/base:utils",
   ]
 
-  external_deps = [ "init:libbegetutil" ]
+  external_deps = [
+    "c_utils:utils",
+    "init:libbegetutil",
+  ]
 
   subsystem_name = "graphic"
 }

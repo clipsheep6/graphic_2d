@@ -18,9 +18,12 @@
 
 #include "common/rs_common_def.h"
 #include "include/core/SkCanvas.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkSurface.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "pixel_map.h"
+#include "rs_render_engine.h"
 #include "visitor/rs_node_visitor.h"
 
 namespace OHOS {
@@ -36,28 +39,26 @@ public:
 private:
     class RSSurfaceCaptureVisitor : public RSNodeVisitor {
     public:
-        RSSurfaceCaptureVisitor() {}
-        ~RSSurfaceCaptureVisitor() override {}
-        virtual void PrepareBaseRenderNode(RSBaseRenderNode &node) override {}
-        virtual void PrepareDisplayRenderNode(RSDisplayRenderNode &node) override {}
-        virtual void PrepareSurfaceRenderNode(RSSurfaceRenderNode &node) override {}
-        virtual void PrepareCanvasRenderNode(RSCanvasRenderNode &node) override {}
-        virtual void PrepareRootRenderNode(RSRootRenderNode& node) override {}
+        RSSurfaceCaptureVisitor(float scaleX, float scaleY);
+        ~RSSurfaceCaptureVisitor() noexcept override = default;
+        void PrepareBaseRenderNode(RSBaseRenderNode& node) override {}
+        void PrepareCanvasRenderNode(RSCanvasRenderNode& node) override {}
+        void PrepareDisplayRenderNode(RSDisplayRenderNode& node) override {}
+        void PrepareProxyRenderNode(RSProxyRenderNode& node) override {}
+        void PrepareRootRenderNode(RSRootRenderNode& node) override {}
+        void PrepareSurfaceRenderNode(RSSurfaceRenderNode& node) override {}
 
-        void ProcessBaseRenderNode(RSBaseRenderNode &node) override;
+        void ProcessBaseRenderNode(RSBaseRenderNode& node) override;
         void ProcessCanvasRenderNode(RSCanvasRenderNode& node) override;
+        void ProcessDisplayRenderNode(RSDisplayRenderNode& node) override;
+        void ProcessProxyRenderNode(RSProxyRenderNode& node) override {}
         void ProcessRootRenderNode(RSRootRenderNode& node) override;
-        void ProcessDisplayRenderNode(RSDisplayRenderNode &node) override;
-        void ProcessSurfaceRenderNode(RSSurfaceRenderNode &node) override;
-        void SetCanvas(SkCanvas* canvas);
+        void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
+
+        void SetSurface(SkSurface* surface);
         void IsDisplayNode(bool isDisplayNode)
         {
             isDisplayNode_ = isDisplayNode;
-        }
-        void SetScale(float scaleX, float scaleY)
-        {
-            scaleX_ = scaleX;
-            scaleY_ = scaleY;
         }
 
         void SetUniRender(bool flag)
@@ -71,18 +72,28 @@ private:
         }
 
     private:
-        void ProcessSurfaceRenderNodeWithUni(RSSurfaceRenderNode &node);
-        void ProcessSurfaceRenderNodeWithoutUni(RSSurfaceRenderNode &node);
-        void DrawBufferOnCanvas(RSSurfaceRenderNode& node);
-        void DrawSurface(RSSurfaceRenderNode &node);
+        void ProcessSurfaceRenderNodeWithUni(RSSurfaceRenderNode& node);
+        void CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNode& node);
+        void CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode& node);
+        void ProcessSurfaceRenderNodeWithoutUni(RSSurfaceRenderNode& node);
+        void CaptureSingleSurfaceNodeWithoutUni(RSSurfaceRenderNode& node);
+        void CaptureSurfaceInDisplayWithoutUni(RSSurfaceRenderNode& node);
         std::unique_ptr<RSPaintFilterCanvas> canvas_ = nullptr;
         bool isDisplayNode_ = false;
         float scaleX_ = 1.0f;
         float scaleY_ = 1.0f;
         bool isUniRender_ = false;
+
+        float parentNodeTranslateX_ = 0.0f;
+        float parentNodeTranslateY_ = 0.0f;
+
+        SkRect boundsRect_;
+        Gravity frameGravity_ = Gravity::DEFAULT;
+
+        std::shared_ptr<RSRenderEngine> renderEngine_;
     };
 
-    std::unique_ptr<SkCanvas> CreateCanvas(const std::unique_ptr<Media::PixelMap>& pixelmap);
+    sk_sp<SkSurface> CreateSurface(const std::unique_ptr<Media::PixelMap>& pixelmap);
 
     std::unique_ptr<Media::PixelMap> CreatePixelMapBySurfaceNode(std::shared_ptr<RSSurfaceRenderNode> node,
         bool isUniRender = false);

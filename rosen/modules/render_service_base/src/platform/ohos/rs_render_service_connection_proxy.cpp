@@ -17,11 +17,18 @@
 
 #include <message_option.h>
 #include <message_parcel.h>
+#include <vector>
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
+#include "transaction/rs_ashmem_helper.h"
 #include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+static constexpr size_t ASHMEM_SIZE_THRESHOLD = 400 * 1024; // cannot > 500K in TF_ASYNC mode
+}
+
 RSRenderServiceConnectionProxy::RSRenderServiceConnectionProxy(const sptr<IRemoteObject>& impl)
     : IRemoteProxy<RSIRenderServiceConnection>(impl)
 {
@@ -29,28 +36,70 @@ RSRenderServiceConnectionProxy::RSRenderServiceConnectionProxy(const sptr<IRemot
 
 void RSRenderServiceConnectionProxy::CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData)
 {
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+    if (!transactionData) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::CommitTransaction transactionData nullptr!");
         return;
     }
+    bool isUniMode = RSSystemProperties::IsUniRenderMode();
+    transactionData->SetUniRender(isUniMode);
+    transactionData->SetSendingPid(pid_);
 
-    RS_TRACE_BEGIN("Marsh RSTransactionData: cmd count:" + std::to_string(transactionData->GetCommandCount()));
-    bool success = data.WriteParcelable(transactionData.get());
+    // split to several parcels if parcel size > PARCEL_SPLIT_THRESHOLD during marshalling
+    std::vector<std::shared_ptr<MessageParcel>> parcelVector;
+    while (transactionData->GetMarshallingIndex() < transactionData->GetCommandCount()) {
+        if (isUniMode) {
+            ++transactionDataIndex_;
+        }
+        transactionData->SetIndex(transactionDataIndex_);
+        std::shared_ptr<MessageParcel> parcel = std::make_shared<MessageParcel>();
+        if (!FillParcelWithTransactionData(transactionData, parcel)) {
+            ROSEN_LOGE("FillParcelWithTransactionData failed!");
+            return;
+        }
+        parcelVector.emplace_back(parcel);
+    }
+
+    MessageOption option;
+    option.SetFlags(MessageOption::TF_ASYNC);
+    for (auto& parcel : parcelVector) {
+        MessageParcel reply;
+        RS_ASYNC_TRACE_BEGIN("RSProxySendRequest", parcel->GetDataSize());
+        int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::COMMIT_TRANSACTION, *parcel, reply, option);
+        if (err != NO_ERROR) {
+            ROSEN_LOGE("RSRenderServiceConnectionProxy::CommitTransaction SendRequest failed, err = %d", err);
+            return;
+        }
+    }
+}
+
+bool RSRenderServiceConnectionProxy::FillParcelWithTransactionData(
+    std::unique_ptr<RSTransactionData>& transactionData, std::shared_ptr<MessageParcel>& data)
+{
+    // write a flag at the begin of parcel to identify parcel type
+    // 0: indicate normal parcel
+    // 1: indicate ashmem parcel
+    data->WriteInt32(0);
+
+    // 1. marshalling RSTransactionData
+    RS_TRACE_BEGIN("Marsh RSTransactionData: cmd count:" + std::to_string(transactionData->GetCommandCount()) +
+        " transactionFlag:[" + std::to_string(pid_) + ", " + std::to_string(transactionData->GetIndex()) + "],isUni:" +
+        std::to_string(transactionData->GetUniRender()));
+    bool success = data->WriteParcelable(transactionData.get());
     RS_TRACE_END();
     if (!success) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::CommitTransaction data.WriteParcelable failed!");
-        return;
+        ROSEN_LOGE("FillParcelWithTransactionData data.WriteParcelable failed!");
+        return false;
     }
 
-    option.SetFlags(MessageOption::TF_ASYNC);
-    RS_ASYNC_TRACE_BEGIN("RSProxySendRequest", data.GetDataSize());
-    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::COMMIT_TRANSACTION, data, reply, option);
-    if (err != NO_ERROR) {
-        return;
+    // 2. convert data to new ashmem parcel if size over threshold
+    std::shared_ptr<MessageParcel> ashmemParcel = nullptr;
+    if (data->GetDataSize() > ASHMEM_SIZE_THRESHOLD) {
+        ashmemParcel = RSAshmemHelper::CreateAshmemParcel(data);
     }
+    if (ashmemParcel != nullptr) {
+        data = ashmemParcel;
+    }
+    return true;
 }
 
 void RSRenderServiceConnectionProxy::ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task)
@@ -78,19 +127,74 @@ void RSRenderServiceConnectionProxy::ExecuteSynchronousTask(const std::shared_pt
     }
 }
 
-bool RSRenderServiceConnectionProxy::InitUniRenderEnabled(const std::string &bundleName)
+int32_t RSRenderServiceConnectionProxy::SetRenderModeChangeCallback(sptr<RSIRenderModeChangeCallback> callback)
+{
+    if (callback == nullptr) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::SetRenderModeChangeCallback: callback is nullptr.");
+        return INVALID_ARGUMENTS;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return WRITE_PARCEL_ERR;
+    }
+
+    option.SetFlags(MessageOption::TF_ASYNC);
+    data.WriteRemoteObject(callback->AsObject());
+    int32_t err =
+        Remote()->SendRequest(RSIRenderServiceConnection::SET_RENDER_MODE_CHANGE_CALLBACK, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::SetRenderModeChangeCallback: Send Request err.");
+        return RS_CONNECTION_ERROR;
+    }
+    int32_t result = reply.ReadInt32();
+    return result;
+}
+
+void RSRenderServiceConnectionProxy::UpdateRenderMode(bool isUniRender)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteString(bundleName)) {
-        return false;
+    if (!data.WriteBool(isUniRender)) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::UpdateRenderMode WriteBool failed!");
+        return;
     }
+    option.SetFlags(MessageOption::TF_ASYNC);
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::UPDATE_RENDER_MODE, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::UpdateRenderMode SendRequest failed, err = %d", err);
+        return;
+    }
+}
+
+bool RSRenderServiceConnectionProxy::GetUniRenderEnabled()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
     option.SetFlags(MessageOption::TF_SYNC);
-    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::GET_UNI_RENDER_TYPE, data, reply, option);
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::GET_UNI_RENDER_ENABLED, data, reply, option);
     if (err != NO_ERROR) {
         return false;
+    }
+    return reply.ReadBool();
+}
+
+bool RSRenderServiceConnectionProxy::QueryIfRTNeedRender()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::QUERY_RT_NEED_RENDER, data, reply, option);
+    if (err != NO_ERROR) {
+        return true;
     }
     return reply.ReadBool();
 }
@@ -126,6 +230,9 @@ sptr<Surface> RSRenderServiceConnectionProxy::CreateNodeAndSurface(const RSSurfa
         return nullptr;
     }
     if (!data.WriteString(config.name)) {
+        return nullptr;
+    }
+    if (!data.WriteUint8(static_cast<uint8_t>(config.nodeType))) {
         return nullptr;
     }
     option.SetFlags(MessageOption::TF_SYNC);
@@ -613,7 +720,7 @@ void RSRenderServiceConnectionProxy::RegisterBufferAvailableListener(
         return;
     }
 
-    option.SetFlags(MessageOption::TF_ASYNC);
+    option.SetFlags(MessageOption::TF_SYNC);
     data.WriteUint64(id);
     data.WriteRemoteObject(callback->AsObject());
     data.WriteBool(isFromRenderThread);
@@ -644,6 +751,34 @@ int32_t RSRenderServiceConnectionProxy::GetScreenSupportedColorGamuts(ScreenId i
         reply.ReadUInt32Vector(&modeRecv);
         for (auto i : modeRecv) {
             mode.push_back(static_cast<ScreenColorGamut>(i));
+        }
+    }
+    return result;
+}
+
+int32_t RSRenderServiceConnectionProxy::GetScreenSupportedMetaDataKeys(
+    ScreenId id, std::vector<ScreenHDRMetadataKey>& keys)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return RS_CONNECTION_ERROR;
+    }
+    option.SetFlags(MessageOption::TF_SYNC);
+    data.WriteUint64(id);
+    int32_t err = Remote()->SendRequest(
+        RSIRenderServiceConnection::GET_SCREEN_SUPPORTED_METADATAKEYS, data, reply, option);
+    if (err != NO_ERROR) {
+        return RS_CONNECTION_ERROR;
+    }
+    int32_t result = reply.ReadInt32();
+    if (result == SUCCESS) {
+        keys.clear();
+        std::vector<uint32_t> keyRecv;
+        reply.ReadUInt32Vector(&keyRecv);
+        for (auto i : keyRecv) {
+            keys.push_back(static_cast<ScreenHDRMetadataKey>(i));
         }
     }
     return result;
@@ -727,45 +862,6 @@ int32_t RSRenderServiceConnectionProxy::GetScreenGamutMap(ScreenId id, ScreenGam
         mode = static_cast<ScreenGamutMap>(reply.ReadUint32());
     }
     return result;
-}
-
-bool RSRenderServiceConnectionProxy::RequestRotation(ScreenId id, ScreenRotation rotation)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
-        return false;
-    }
-    option.SetFlags(MessageOption::TF_SYNC);
-    data.WriteUint64(id);
-    data.WriteUint32(static_cast<uint32_t>(rotation));
-    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::REQUEST_ROTATION, data, reply, option);
-    if (err != NO_ERROR) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::RequestRotation: Send Request err.");
-        return false;
-    }
-    bool res = reply.ReadBool();
-    return res;
-}
-
-ScreenRotation RSRenderServiceConnectionProxy::GetRotation(ScreenId id)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
-        return ScreenRotation::INVALID_SCREEN_ROTATION;
-    }
-    option.SetFlags(MessageOption::TF_SYNC);
-    data.WriteUint64(id);
-    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::GET_ROTATION, data, reply, option);
-    if (err != NO_ERROR) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetRotation: Send Request err.");
-        return ScreenRotation::INVALID_SCREEN_ROTATION;
-    }
-    ScreenRotation rotation = static_cast<ScreenRotation>(reply.ReadUint32());
-    return rotation;
 }
 
 int32_t RSRenderServiceConnectionProxy::GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability)

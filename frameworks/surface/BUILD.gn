@@ -31,6 +31,7 @@ config("surface_public_config") {
   include_dirs = [
     "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
     "//foundation/graphic/graphic_2d/interfaces/inner_api/common",
+    "//foundation/graphic/graphic_2d/utils/sandbox",
   ]
 
   if (ace_enable_gpu) {
@@ -55,35 +56,33 @@ ohos_shared_library("surface") {
     "src/producer_surface.cpp",
     "src/surface.cpp",
     "src/surface_buffer_impl.cpp",
+    "src/surface_tunnel_handle.cpp",
     "src/surface_utils.cpp",
   ]
 
-  configs = [
-    ":surface_config",
-    "//third_party/libdrm:libdrm_public_config",
-  ]
+  configs = [ ":surface_config" ]
 
   public_configs = [
     ":surface_public_config",
-    "//utils/native/base:utils_config",
+    "//commonlibrary/c_utils/base:utils_config",
   ]
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
   ]
 
   public_deps = [
-    "//drivers/peripheral/display/hal:hdi_display_gralloc",
+    "//commonlibrary/c_utils/base:utils",
     "//drivers/peripheral/display/hdi_service/gralloc/client:hdi_gralloc_client",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//foundation/graphic/graphic_2d/utils/buffer_handle:buffer_handle",
     "//foundation/graphic/graphic_2d/utils/gslogger:libgslogger",
+    "//foundation/graphic/graphic_2d/utils/sandbox:sandbox_utils",
     "//foundation/graphic/graphic_2d/utils/scoped_bytrace:scoped_bytrace",
     "//foundation/graphic/graphic_2d/utils/sync_fence:sync_fence",
     "//third_party/EGL:libEGL",
     "//third_party/openGLES:libGLES",
-    "//utils/native/base:utils",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -92,7 +91,7 @@ ohos_shared_library("surface") {
   install_images = [ system_base_dir ]
   relative_install_dir = "chipset-pub-sdk"
 
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 

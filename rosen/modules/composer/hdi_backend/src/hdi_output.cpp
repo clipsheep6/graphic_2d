@@ -143,6 +143,14 @@ const std::unordered_map<uint32_t, std::shared_ptr<HdiLayer>>& HdiOutput::GetLay
     return layerIdMap_;
 }
 
+void HdiOutput::UpdatePrevLayerInfo()
+{
+    for (auto iter = layerIdMap_.begin(); iter != layerIdMap_.end(); iter++) {
+        LayerPtr layer = iter->second;
+        layer->SavePrevLayerInfo();
+    }
+}
+
 uint32_t HdiOutput::GetScreenId() const
 {
     return screenId_;
@@ -203,6 +211,16 @@ void HdiOutput::RecordCompositionTime(int64_t timeStamp)
     compTimeRcdIndex_ = (compTimeRcdIndex_ + 1) % COMPOSITION_RECORDS_NUM;
 }
 
+void HdiOutput::SetDirectClientCompEnableStatus(bool enableStatus)
+{
+    directClientCompositionEnabled_ = enableStatus;
+}
+
+bool HdiOutput::GetDirectClientCompEnableStatus() const
+{
+    return directClientCompositionEnabled_;
+}
+
 void HdiOutput::Dump(std::string &result) const
 {
     std::vector<LayerDumpInfo> dumpLayerInfos;
@@ -213,6 +231,10 @@ void HdiOutput::Dump(std::string &result) const
 
     for (const LayerDumpInfo &layerInfo : dumpLayerInfos) {
         const LayerPtr &layer = layerInfo.layer;
+        if (layer == nullptr || layer->GetLayerInfo() == nullptr ||
+            layer->GetLayerInfo()->GetSurface() == nullptr) {
+            continue;
+        }
         const std::string& name = layer->GetLayerInfo()->GetSurface()->GetName();
         const LayerInfoPtr &info = layer->GetLayerInfo();
         result += "\n surface [" + name + "] NodeId[" + std::to_string(layerInfo.surfaceId) + "]";
@@ -236,7 +258,7 @@ void HdiOutput::DumpFps(std::string &result, const std::string &arg) const
     if (arg == "composer") {
         result += "The fps of scrren [Id:" + std::to_string(screenId_) + "] is:\n";
         const int32_t offset = compTimeRcdIndex_;
-        for (int i = 0; i < COMPOSITION_RECORDS_NUM; i++) {
+        for (uint32_t i = 0; i < COMPOSITION_RECORDS_NUM; i++) {
             uint32_t order = (offset + i) % COMPOSITION_RECORDS_NUM;
             result += std::to_string(compositionTimeRecords_[order]) + "\n";
         }

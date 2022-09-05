@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,11 +21,16 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSRenderPathAnimation : public RSRenderPropertyAnimation<Vector2f> {
+class RSPath;
+
+class RSRenderPathAnimation : public RSRenderPropertyAnimation {
 static constexpr float UNDEFINED_FLOAT = 0.0f;
 public:
-    RSRenderPathAnimation(AnimationId id, const RSAnimatableProperty& property, const Vector2f& originPosition,
-        float originRotation, const std::shared_ptr<RSPath>& animationPath);
+    RSRenderPathAnimation(AnimationId id, const PropertyId& propertyId,
+        const std::shared_ptr<RSRenderPropertyBase>& originPosition,
+        const std::shared_ptr<RSRenderPropertyBase>& startPosition,
+        const std::shared_ptr<RSRenderPropertyBase>& endPosition, float originRotation,
+        const std::shared_ptr<RSPath>& animationPath);
 
     ~RSRenderPathAnimation() = default;
 
@@ -45,12 +50,21 @@ public:
 
     float GetEndFraction() const;
 
+    void SetIsNeedPath(const bool isNeedPath);
+
+    void SetPathNeedAddOrigin(bool needAddOrigin);
+
+    void SetRotationId(const PropertyId id);
+
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
+
     static RSRenderPathAnimation* Unmarshalling(Parcel& parcel);
 #endif
 
 protected:
+    RSRenderPathAnimation() = default;
+
     void OnAnimate(float fraction) override;
 
     void OnRemoveOnCompletion() override;
@@ -59,13 +73,24 @@ private:
 #ifdef ROSEN_OHOS
     bool ParseParam(Parcel& parcel) override;
 #endif
-    void SetPathValue(const Vector2f& position, float tangent);
-    RSRenderPathAnimation() = default;
+    void SetPathValue(const std::shared_ptr<RSRenderPropertyBase>& value, float tangent);
+
+    void SetRotation(const float tangent);
+
+    void GetPosTanValue(float fraction, Vector2f& position, float& tangent);
+
+    std::shared_ptr<RSRenderPropertyBase> UpdateVector2fPathValue(const Vector2f& value, const Vector2f& position);
+    std::shared_ptr<RSRenderPropertyBase> UpdateVector4fPathValue(const Vector4f& value, const Vector2f& position);
 
     float originRotation_ { UNDEFINED_FLOAT };
     float beginFraction_ { FRACTION_MIN };
     float endFraction_ { FRACTION_MAX };
+    bool isNeedPath_ { true };
+    bool needAddOrigin_ { false };
+    PropertyId rotationId_;
     RotationMode rotationMode_ { RotationMode::ROTATE_NONE };
+    std::shared_ptr<RSRenderPropertyBase> startValue_ {};
+    std::shared_ptr<RSRenderPropertyBase> endValue_ {};
     std::shared_ptr<RSInterpolator> interpolator_ { RSInterpolator::DEFAULT };
     std::shared_ptr<RSPath> animationPath_;
 };

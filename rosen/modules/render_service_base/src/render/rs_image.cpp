@@ -17,10 +17,37 @@
 
 #include "include/core/SkPaint.h"
 #include "include/core/SkRRect.h"
+#include "pixel_map_rosen_utils.h"
+
 #include "property/rs_properties_painter.h"
+#include "render/rs_image_cache.h"
+#include "sandbox_utils.h"
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+constexpr int32_t CORNER_SIZE = 4;
+}
+
+RSImage::~RSImage()
+{
+    image_ = nullptr;
+    if (uniqueId_ > 0) {
+        RSImageCache::Instance().ReleaseSkiaImageCache(uniqueId_);
+    }
+}
+
+bool RSImage::IsEqual(const RSImage& other) const
+{
+    bool radiusEq = true;
+    for (auto i = 0; i < CORNER_SIZE; i++) {
+        radiusEq &= (radius_[i] == other.radius_[i]);
+    }
+    return (image_ == other.image_) && (pixelmap_ == other.pixelmap_) &&
+           (imageFit_ == other.imageFit_) && (imageRepeat_ == other.imageRepeat_) &&
+           (scale_ == other.scale_) && radiusEq;
+}
+
 void RSImage::CanvasDrawImage(SkCanvas& canvas, const SkRect& rect, const SkPaint& paint, bool isBackground)
 {
     canvas.save();
@@ -79,15 +106,10 @@ void RSImage::ApplyImageFit()
 
 void RSImage::ApplyCanvasClip(SkCanvas& canvas)
 {
-    if (imageRepeat_ == ImageRepeat::NO_REPEAT) {
-        // clip dst & frame intersect rect
-        RRect rrect = RRect(dstRect_.IntersectRect(frameRect_), cornerRadius_, cornerRadius_);
-        canvas.clipRRect(RSPropertiesPainter::RRect2SkRRect(rrect), true);
-    } else {
-        // clip frame rect
-        RRect rrect = RRect(frameRect_, cornerRadius_, cornerRadius_);
-        canvas.clipRRect(RSPropertiesPainter::RRect2SkRRect(rrect), true);
-    }
+    auto rect = (imageRepeat_ == ImageRepeat::NO_REPEAT) ? dstRect_.IntersectRect(frameRect_) : frameRect_;
+    SkRRect rrect = SkRRect::MakeEmpty();
+    rrect.setRectRadii(RSPropertiesPainter::Rect2SkRect(rect), radius_);
+    canvas.clipRRect(rrect, true);
 }
 
 void RSImage::DrawImageRepeatRect(const SkPaint& paint, SkCanvas& canvas)
@@ -119,6 +141,9 @@ void RSImage::DrawImageRepeatRect(const SkPaint& paint, SkCanvas& canvas)
         }
     }
     // draw repeat rect
+    if (!image_ && pixelmap_) {
+        image_ = Media::PixelMapRosenUtils::ExtractSkImage(pixelmap_);
+    }
     auto src = RSPropertiesPainter::Rect2SkRect(srcRect_);
     for (int i = minX; i <= maxX; ++i) {
         for (int j = minY; j <= maxY; ++j) {
@@ -137,6 +162,15 @@ void RSImage::SetImage(const sk_sp<SkImage> image)
     }
 }
 
+void RSImage::SetPixelMap(const std::shared_ptr<Media::PixelMap>& pixelmap)
+{
+    pixelmap_ = pixelmap;
+    if (pixelmap_) {
+        srcRect_.SetAll(0.0, 0.0, pixelmap_->GetWidth(), pixelmap_->GetHeight());
+        image_ = nullptr;
+    }
+}
+
 void RSImage::SetDstRect(const RectF& dstRect)
 {
     dstRect_ = dstRect;
@@ -152,9 +186,11 @@ void RSImage::SetImageRepeat(int repeatNum)
     imageRepeat_ = static_cast<ImageRepeat>(repeatNum);
 }
 
-void RSImage::SetRadius(float radius)
+void RSImage::SetRadius(const SkVector radius[])
 {
-    cornerRadius_ = radius;
+    for (auto i = 0; i < CORNER_SIZE; i++) {
+        radius_[i] = radius[i];
+    }
 }
 
 void RSImage::SetScale(double scale)
@@ -170,21 +206,42 @@ bool RSImage::Marshalling(Parcel& parcel) const
     bool success = true;
     int imageFit = static_cast<int>(imageFit_);
     int imageRepeat = static_cast<int>(imageRepeat_);
+    static uint64_t pid = static_cast<uint64_t>(GetRealPid()) << 32; // 32 for 64-bit unsignd number shift
+    uint64_t uniqueId = image_ ? (pid | image_->uniqueID()) : 0;
+    success &= RSMarshallingHelper::Marshalling(parcel, uniqueId);
     success &= RSMarshallingHelper::Marshalling(parcel, image_);
+    success &= RSMarshallingHelper::Marshalling(parcel, pixelmap_);
     success &= RSMarshallingHelper::Marshalling(parcel, imageFit);
     success &= RSMarshallingHelper::Marshalling(parcel, imageRepeat);
-    success &= RSMarshallingHelper::Marshalling(parcel, cornerRadius_);
+    success &= RSMarshallingHelper::Marshalling(parcel, radius_);
     success &= RSMarshallingHelper::Marshalling(parcel, scale_);
     return success;
 }
 RSImage* RSImage::Unmarshalling(Parcel& parcel)
 {
     sk_sp<SkImage> img;
+    std::shared_ptr<Media::PixelMap> pixelmap;
     int fitNum;
     int repeatNum;
-    float radius;
+    SkVector radius[CORNER_SIZE];
     double scale;
-    if (!RSMarshallingHelper::Unmarshalling(parcel, img)) {
+    uint64_t uniqueId;
+    if (!RSMarshallingHelper::Unmarshalling(parcel, uniqueId)) {
+        return nullptr;
+    }
+    img = RSImageCache::Instance().GetSkiaImageCache(uniqueId);
+    if (img != nullptr) {
+        // match a cached skimage
+        if (!RSMarshallingHelper::SkipSkImage(parcel)) {
+            return nullptr;
+        }
+    } else if (RSMarshallingHelper::Unmarshalling(parcel, img)) {
+        // unmarshalling the skimage and cache it
+        RSImageCache::Instance().CacheSkiaImage(uniqueId, img);
+    } else {
+        return nullptr;
+    }
+    if (!RSMarshallingHelper::Unmarshalling(parcel, pixelmap)) {
         return nullptr;
     }
     if (!RSMarshallingHelper::Unmarshalling(parcel, fitNum)) {
@@ -193,8 +250,10 @@ RSImage* RSImage::Unmarshalling(Parcel& parcel)
     if (!RSMarshallingHelper::Unmarshalling(parcel, repeatNum)) {
         return nullptr;
     }
-    if (!RSMarshallingHelper::Unmarshalling(parcel, radius)) {
-        return nullptr;
+    for (auto i = 0; i < CORNER_SIZE; i++) {
+        if (!RSMarshallingHelper::Unmarshalling(parcel, radius[i])) {
+            return nullptr;
+        }
     }
     if (!RSMarshallingHelper::Unmarshalling(parcel, scale)) {
         return nullptr;
@@ -202,10 +261,12 @@ RSImage* RSImage::Unmarshalling(Parcel& parcel)
 
     RSImage* rsImage = new RSImage();
     rsImage->SetImage(img);
+    rsImage->SetPixelMap(pixelmap);
     rsImage->SetImageFit(fitNum);
     rsImage->SetImageRepeat(repeatNum);
     rsImage->SetRadius(radius);
     rsImage->SetScale(scale);
+    rsImage->uniqueId_ = uniqueId;
 
     return rsImage;
 }

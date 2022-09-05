@@ -21,17 +21,16 @@ group("default") {
     "frameworks/dumper:gdumper",
     "frameworks/dumper:gdumper.ini",
     "frameworks/dumper:graphic_dumper_server",
-    "frameworks/vsync:vsync_server",
   ]
 
-  if (graphic_graphic_2d_feature_bootanimation_enable) {
+  if (graphic_standard_feature_bootanimation_enable) {
     public_deps += [ "frameworks/bootanimation:bootanimation" ]
     public_deps += [ "frameworks/bootanimation:bootanimation_pics" ]
     public_deps += [ "frameworks/bootanimation:bootanimation_sounds" ]
   }
 }
 
-group("graphic_graphic_2d_test") {
+group("graphic_standard_test") {
   testonly = true
 
   public_deps = [
@@ -41,19 +40,16 @@ group("graphic_graphic_2d_test") {
     "rosen/modules/effect/test/unittest:test",
     "rosen/test/frame_analyzer:test",
     "rosen/test/render_service:unittest",
+    "utils/color_manager:test",
     "utils/sync_fence:test",
   ]
-
-  if (color_gamut_enable) {
-    public_deps += [ "utils/color_manager:test" ]
-  }
 }
 
 ## Install graphic.rc to /system/etc/init/graphic.rc {{{
 ohos_prebuilt_etc("graphic.rc") {
   source = "graphic.cfg"
   relative_install_dir = "init"
-  part_name = "graphic_graphic_2d"
+  part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 
@@ -77,4 +73,8 @@ group("libgl") {
 
 group("libgraphic_dumper_client") {
   public_deps = [ "frameworks/dumper:libgraphic_dumper_client" ]
+}
+
+group("libnative_image") {
+  public_deps = [ "frameworks/surfaceimage:libnative_image" ]
 }

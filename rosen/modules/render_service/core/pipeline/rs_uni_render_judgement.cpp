@@ -21,14 +21,12 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
 const std::string CONFIG_PATH = "/etc/";
 const std::string UNIRENDER_CONFIG_FILE_NAME = "unirender.config";
 const std::string UNI_RENDER_DISABLED_TAG = "DISABLED";
 const std::string UNI_RENDER_ENABLED_FOR_ALL_TAG = "ENABLED_FOR_ALL";
-
-bool StartsWith(const std::string &str, const std::string &prefix)
-{
-    return str.size() >= prefix.size() && str.substr(0, prefix.size()) == prefix;
+const std::string UNI_RENDER_DYNAMIC_SWITCH_TAG = "DYNAMIC_SWITCH";
 }
 
 // used by render server
@@ -37,33 +35,27 @@ UniRenderEnabledType RSUniRenderJudgement::GetUniRenderEnabledType()
     return uniRenderEnabledType_;
 }
 
-const std::set<std::string>& RSUniRenderJudgement::GetUniRenderEnabledList()
-{
-    return uniRenderEnabledList_;
-}
-
 bool RSUniRenderJudgement::IsUniRender()
 {
     return RSUniRenderJudgement::GetUniRenderEnabledType() != UniRenderEnabledType::UNI_RENDER_DISABLED;
 }
 
-bool RSUniRenderJudgement::QueryClientEnabled(const std::string &bundleName)
-{
-    switch (uniRenderEnabledType_) {
-        case UniRenderEnabledType::UNI_RENDER_PARTIALLY_ENABLED:
-            return uniRenderEnabledList_.find(bundleName) != uniRenderEnabledList_.end();
-        case UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL:
-            return true;
-        case UniRenderEnabledType::UNI_RENDER_DISABLED:
-        default:
-            return false;
-    }
-}
-
 void RSUniRenderJudgement::InitUniRenderConfig()
 {
     InitUniRenderWithConfigFile();
-    RS_LOGI("Init RenderService UniRender Type:%d", uniRenderEnabledType_);
+    RS_LOGD("Init RenderService UniRender Type:%d", uniRenderEnabledType_);
+}
+
+std::ifstream& RSUniRenderJudgement::SafeGetLine(std::ifstream &configFile, std::string &line)
+{
+    std::string myline;
+    std::getline(configFile, myline);
+    if (myline.size() && myline[myline.size() - 1] == '\r') {
+        line = myline.substr(0, myline.size() - 1);
+    } else {
+        line = myline;
+    }
+    return configFile;
 }
 
 void RSUniRenderJudgement::InitUniRenderWithConfigFile()
@@ -73,22 +65,14 @@ void RSUniRenderJudgement::InitUniRenderWithConfigFile()
     std::ifstream configFile = std::ifstream(configFilePath.c_str());
     std::string line;
     // first line, init uniRenderEnabledType_
-    if (!configFile.is_open() || !std::getline(configFile, line) ||
-        line == "" || line == UNI_RENDER_DISABLED_TAG) {
+    if (!configFile.is_open() || !SafeGetLine(configFile, line) || line.empty()) { // default case
+        uniRenderEnabledType_ = UniRenderEnabledType::UNI_RENDER_DISABLED;
+    } else if (line == UNI_RENDER_DISABLED_TAG) {
         uniRenderEnabledType_ = UniRenderEnabledType::UNI_RENDER_DISABLED;
     } else if (line == UNI_RENDER_ENABLED_FOR_ALL_TAG) {
         uniRenderEnabledType_ = UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL;
-    } else {
-        // init uniRenderEnabledList_
-        while (std::getline(configFile, line)) {
-            if (line == "" || StartsWith(line, "//")) {
-                continue;
-            }
-            uniRenderEnabledList_.insert(line);
-        }
-        if (!uniRenderEnabledList_.empty()) {
-            uniRenderEnabledType_ = UniRenderEnabledType::UNI_RENDER_PARTIALLY_ENABLED;
-        }
+    } else if (line == UNI_RENDER_DYNAMIC_SWITCH_TAG) {
+        uniRenderEnabledType_ = UniRenderEnabledType::UNI_RENDER_DYNAMIC_SWITCH;
     }
     configFile.close();
 }

@@ -20,6 +20,7 @@
 
 #include "platform/common/rs_log.h"
 #include "platform/ohos/backend/rs_surface_frame_ohos_raster.h"
+#include "rs_base_render_util.h"
 #include "rs_trace.h"
 #include "string_utils.h"
 
@@ -33,22 +34,23 @@ RSVirtualScreenProcessor::~RSVirtualScreenProcessor() noexcept
 {
 }
 
-bool RSVirtualScreenProcessor::Init(ScreenId id, int32_t offsetX, int32_t offsetY, ScreenId mirroredId)
+bool RSVirtualScreenProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId)
 {
-    if (!RSProcessor::Init(id, offsetX, offsetY, mirroredId)) {
+    if (!RSProcessor::Init(node, offsetX, offsetY, mirroredId)) {
         return false;
     }
 
     renderFrameConfig_.usage = HBM_USE_CPU_READ | HBM_USE_MEM_DMA;
 
     auto screenManager = CreateOrGetScreenManager();
-    producerSurface_ = screenManager->GetProducerSurface(id);
+    producerSurface_ = screenManager->GetProducerSurface(node.GetScreenId());
     if (producerSurface_ == nullptr) {
-        RS_LOGE("RSVirtualScreenProcessor::Init for Screen(id %llu): ProducerSurface is null!", id);
+        RS_LOGE(
+            "RSVirtualScreenProcessor::Init for Screen(id %" PRIu64 "): ProducerSurface is null!", node.GetScreenId());
         return false;
     }
 
-    // this is a work-around for the lack of colorgamut convertion and yuv support in GPU.
+    // this is a work-around for the lack of color gamut conversion and yuv support in GPU.
     // currently we must forceCPU to do the composition for virtual screen.
     bool forceCPU = true;
     renderFrame_ = renderEngine_->RequestFrame(producerSurface_, renderFrameConfig_, forceCPU);
@@ -59,6 +61,7 @@ bool RSVirtualScreenProcessor::Init(ScreenId id, int32_t offsetX, int32_t offset
     if (canvas_ == nullptr) {
         return false;
     }
+    canvas_->concat(screenTransformMatrix_);
 
     return true;
 }
@@ -81,28 +84,18 @@ void RSVirtualScreenProcessor::ProcessSurface(RSSurfaceRenderNode& node)
     }
 
     std::string traceInfo;
-    AppendFormat(traceInfo, "RSVirtualScreenProcessor::ProcessSurface Node:%s ",
-        node.GetName().c_str());
-    RS_TRACE_NAME(traceInfo.c_str());
+    AppendFormat(traceInfo, "RSVirtualScreenProcessor::ProcessSurface Node:%s ", node.GetName().c_str());
+    RS_TRACE_NAME(traceInfo);
 
-    if (mirroredId_ != INVALID_SCREEN_ID) {
-        RS_LOGI("RSVirtualScreenProcessor::ProcessSurface mirrorScreen is not support rotation");
-        screenInfo_.rotation = ScreenRotation::ROTATION_0;
-        screenInfo_.rotationMatrix = SkMatrix::I();
-    }
-
-    IRect clipRect = {
-        static_cast<int32_t>(static_cast<float>(node.GetDstRect().left_ - offsetX_) * mirrorAdaptiveCoefficient_),
-        static_cast<int32_t>(static_cast<float>(node.GetDstRect().top_ - offsetY_) * mirrorAdaptiveCoefficient_),
-        static_cast<int32_t>(static_cast<float>(node.GetDstRect().width_) * mirrorAdaptiveCoefficient_),
-        static_cast<int32_t>(static_cast<float>(node.GetDstRect().height_) * mirrorAdaptiveCoefficient_)
-    };
-    
-    DrawSurfaceNodeInfo infos = {
-        true,
-        mirrorAdaptiveCoefficient_
-    };
-    renderEngine_->DrawSurfaceNode(*canvas_, node, screenInfo_, clipRect, infos);
+    // prepare BufferDrawParam
+    // in display's coordinate.
+    // clipHole: false.
+    // forceCPU: true.
+    auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, false, false, true);
+    const float adaptiveDstWidth = params.dstRect.width() * mirrorAdaptiveCoefficient_;
+    const float adaptiveDstHeight = params.dstRect.height() * mirrorAdaptiveCoefficient_;
+    params.dstRect.setWH(adaptiveDstWidth, adaptiveDstHeight);
+    renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
 }
 
 void RSVirtualScreenProcessor::ProcessDisplaySurface(RSDisplayRenderNode& node)

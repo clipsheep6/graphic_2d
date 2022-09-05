@@ -25,7 +25,10 @@ RSDirtyRegionManager::RSDirtyRegionManager()
 
 void RSDirtyRegionManager::MergeDirtyRect(const RectI& rect)
 {
-    if ((dirtyRegion_.width_ <= 0) || (dirtyRegion_.height_ <= 0)) {
+    if (rect.IsEmpty()) {
+        return;
+    }
+    if (dirtyRegion_.IsEmpty()) {
         dirtyRegion_ = rect;
     } else {
         dirtyRegion_ = dirtyRegion_.JoinRect(rect);
@@ -37,9 +40,56 @@ void RSDirtyRegionManager::IntersectDirtyRect(const RectI& rect)
     dirtyRegion_ = dirtyRegion_.IntersectRect(rect);
 }
 
+void RSDirtyRegionManager::ClipDirtyRectWithinSurface()
+{
+    int left = std::max(std::max(dirtyRegion_.left_, 0), surfaceRect_.left_);
+    int top = std::max(std::max(dirtyRegion_.top_, 0), surfaceRect_.top_);
+    int width = std::min(dirtyRegion_.GetRight(), surfaceRect_.GetRight()) - left;
+    int height = std::min(dirtyRegion_.GetBottom(), surfaceRect_.GetBottom()) - top;
+    // If new region is invalid, dirtyRegion would be reset as [0, 0, 0, 0]
+    dirtyRegion_ = ((width <= 0) || (height <= 0)) ? RectI() : RectI(left, top, width, height);
+}
+
 const RectI& RSDirtyRegionManager::GetDirtyRegion() const
 {
     return dirtyRegion_;
+}
+
+RectI RSDirtyRegionManager::GetDirtyRegionFlipWithinSurface() const
+{
+    RectI glRect = dirtyRegion_;
+    // left-top to left-bottom corner(in current surface)
+    glRect.top_ = surfaceRect_.height_ - dirtyRegion_.top_ - dirtyRegion_.height_;
+    return glRect;
+}
+
+const RectI& RSDirtyRegionManager::GetRectFlipWithinSurface(RectI& rect) const
+{
+    RectI glRect = rect;
+    // left-top to left-bottom corner(in current surface)
+    glRect.top_ = surfaceRect_.height_ - rect.top_ - rect.height_;
+    return glRect;
+}
+
+const RectI& RSDirtyRegionManager::GetLatestDirtyRegion() const
+{
+    if (historyHead_ < 0) {
+        return dirtyRegion_;
+    }
+    return dirtyHistory_[historyHead_];
+}
+
+const RectI& RSDirtyRegionManager::GetPixelAlignedRect(RectI& rect, uint32_t alignedBits)
+{
+    RectI newRect = rect;
+    if (alignedBits > 1) {
+        int32_t left = (rect.left_ / alignedBits) * alignedBits;
+        int32_t top = (rect.top_ / alignedBits) * alignedBits;
+        int32_t width = ((rect.GetRight() + alignedBits - 1) / alignedBits) * alignedBits - left;
+        int32_t height = ((rect.GetBottom() + alignedBits - 1) / alignedBits) * alignedBits - top;
+        RectI newRect = RectI(left, top, width, height);
+    }
+    return newRect;
 }
 
 void RSDirtyRegionManager::Clear()
@@ -58,14 +108,7 @@ bool RSDirtyRegionManager::IsDirty() const
 void RSDirtyRegionManager::UpdateDirty()
 {
     PushHistory(dirtyRegion_);
-    if (bufferAge_ == 0) {
-        dirtyRegion_.left_ = 0;
-        dirtyRegion_.top_ = 0;
-        dirtyRegion_.width_ = surfaceWidth_;
-        dirtyRegion_.height_ = surfaceHeight_;
-    } else if (bufferAge_ > 1) {
-        dirtyRegion_ = MergeHistory(bufferAge_, dirtyRegion_);
-    }
+    dirtyRegion_ = MergeHistory(bufferAge_, dirtyRegion_);
 }
 
 void RSDirtyRegionManager::UpdateDirtyCanvasNodes(NodeId id, const RectI& rect)
@@ -88,10 +131,28 @@ void RSDirtyRegionManager::GetDirtySurfaceNodes(std::map<NodeId, RectI>& target)
     target = dirtySurfaceNodes_;
 }
 
-RectI RSDirtyRegionManager::GetAllHistoryMerge()
+bool RSDirtyRegionManager::SetBufferAge(const int age)
 {
-    PushHistory(dirtyRegion_);
-    return MergeHistory(bufferAge_, dirtyRegion_);
+    if (age < 0) {
+        bufferAge_ = 0; // reset invalid age
+        return false;
+    }
+    bufferAge_ = static_cast<unsigned int>(age);
+    return true;
+}
+
+bool RSDirtyRegionManager::SetSurfaceSize(const int32_t width, const int32_t height)
+{
+    if (width < 0 || height < 0) {
+        return false;
+    }
+    surfaceRect_ = RectI(0, 0, width, height);
+    return true;
+}
+
+void RSDirtyRegionManager::ResetDirtyAsSurfaceSize()
+{
+    dirtyRegion_ = surfaceRect_;
 }
 
 void RSDirtyRegionManager::UpdateDebugRegionTypeEnable()
@@ -122,18 +183,24 @@ void RSDirtyRegionManager::UpdateDebugRegionTypeEnable()
     }
 }
 
-RectI RSDirtyRegionManager::MergeHistory(int age, RectI rect) const
+RectI RSDirtyRegionManager::MergeHistory(unsigned int age, RectI rect) const
 {
-    int size = static_cast<int>(historySize_);
-    if (age > size) {
-        rect.left_ = 0;
-        rect.top_ = 0;
-        rect.width_ = surfaceWidth_;
-        rect.height_ = surfaceHeight_;
-    } else {
-        for (int i = size - 1; i > size - age; --i) {
-            rect = rect.JoinRect(GetHistory(i));
+    if (age == 0 || age > historySize_) {
+        return surfaceRect_;
+    }
+    // GetHistory(historySize_) is equal to dirtyHistory_[historyHead_] (latest his rect)
+    // therefore, this loop merges rect with (age-1) frames' dirtyRect
+    for (unsigned int i = historySize_ - 1; i > historySize_ - age; --i) {
+        auto subRect = GetHistory(i);
+        if (subRect.IsEmpty()) {
+            continue;
         }
+        if (rect.IsEmpty()) {
+            rect = subRect;
+            continue;
+        }
+        // only join valid his dirty region
+        rect = rect.JoinRect(subRect);
     }
     return rect;
 }
@@ -148,7 +215,7 @@ void RSDirtyRegionManager::PushHistory(RectI rect)
     historyHead_ = next;
 }
 
-RectI RSDirtyRegionManager::GetHistory(unsigned i) const
+RectI RSDirtyRegionManager::GetHistory(unsigned int i) const
 {
     if (i >= HISTORY_QUEUE_MAX_SIZE) {
         i %= HISTORY_QUEUE_MAX_SIZE;

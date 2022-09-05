@@ -15,36 +15,44 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_NODE_H
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_NODE_H
 
-#include "animation/rs_animatable_property.h"
+#include <unordered_map>
+
 #include "animation/rs_animation_timing_curve.h"
 #include "animation/rs_animation_timing_protocol.h"
 #include "animation/rs_motion_path_option.h"
-#include "animation/rs_property_accessors.h"
 #include "animation/rs_transition_effect.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
+#include "modifier/rs_modifier_extractor.h"
+#include "modifier/rs_modifier_type.h"
 #include "pipeline/rs_recording_canvas.h"
 #include "property/rs_properties.h"
-#include "render/rs_path.h"
 #include "render/rs_mask.h"
+#include "render/rs_path.h"
 #include "ui/rs_base_node.h"
 
 class SkCanvas;
 
 namespace OHOS {
 namespace Rosen {
+using DrawFunc = std::function<void(std::shared_ptr<SkCanvas>)>;
 using PropertyCallback = std::function<void()>;
 class RSAnimation;
 class RSCommand;
 class RSImplicitAnimParam;
 class RSImplicitAnimator;
-class RSBasePropertyAccessors;
+class RSUIAnimationManager;
+class RSModifierBase;
 
 class RS_EXPORT RSNode : public RSBaseNode {
 public:
     using WeakPtr = std::weak_ptr<RSNode>;
     using SharedPtr = std::shared_ptr<RSNode>;
     static inline constexpr RSUINodeType Type = RSUINodeType::RS_NODE;
+    RSUINodeType GetType() const override
+    {
+        return Type;
+    }
 
     ~RSNode() override;
     std::string DumpNode(int depth) const override;
@@ -67,27 +75,17 @@ public:
     void SetMotionPathOption(const std::shared_ptr<RSMotionPathOption>& motionPathOption);
     const std::shared_ptr<RSMotionPathOption> GetMotionPathOption() const;
 
-    const RSProperties& GetStagingProperties() const;
+    virtual void DrawOnNode(RSModifierType type, DrawFunc func) {} // [PLANNING]: support SurfaceNode
+
+    const RSModifierExtractor& GetStagingProperties() const;
 
     void SetBounds(const Vector4f& bounds);
     void SetBounds(float positionX, float positionY, float width, float height);
-    void SetBoundsSize(const Vector2f& size);
-    void SetBoundsSize(float width, float height);
     void SetBoundsWidth(float width);
     void SetBoundsHeight(float height);
-    void SetBoundsPosition(const Vector2f& boundsPosition);
-    void SetBoundsPosition(float positionX, float positionY);
-    void SetBoundsPositionX(float positionX);
-    void SetBoundsPositionY(float positionY);
 
     void SetFrame(const Vector4f& frame);
     void SetFrame(float positionX, float positionY, float width, float height);
-    void SetFrameSize(const Vector2f& size);
-    void SetFrameSize(float width, float height);
-    void SetFrameWidth(float width);
-    void SetFrameHeight(float height);
-    void SetFramePosition(const Vector2f& framePosition);
-    void SetFramePosition(float positionX, float positionY);
     void SetFramePositionX(float positionX);
     void SetFramePositionY(float positionY);
 
@@ -116,16 +114,17 @@ public:
     void SetScale(float scale);
     void SetScale(float scaleX, float scaleY);
     void SetScale(const Vector2f& scale);
-    void SetScaleX(float scale);
-    void SetScaleY(float scale);
+    void SetScaleX(float scaleX);
+    void SetScaleY(float scaleY);
 
     void SetAlpha(float alpha);
+    void SetAlphaOffscreen(bool alphaOffscreen);
 
     void SetForegroundColor(uint32_t colorValue);
     void SetBackgroundColor(uint32_t colorValue);
-    void SetBackgroundShader(std::shared_ptr<RSShader> shader);
+    void SetBackgroundShader(const std::shared_ptr<RSShader>& shader);
 
-    void SetBgImage(std::shared_ptr<RSImage> image);
+    void SetBgImage(const std::shared_ptr<RSImage>& image);
     void SetBgImageSize(float width, float height);
     void SetBgImageWidth(float width);
     void SetBgImageHeight(float height);
@@ -134,17 +133,18 @@ public:
     void SetBgImagePositionY(float positionY);
 
     void SetBorderColor(uint32_t colorValue);
-    void SetBorderWidth(float width);
-    void SetBorderStyle(uint32_t styleValue);
     void SetBorderColor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom);
+    void SetBorderColor(const Vector4<Color>& color);
+    void SetBorderWidth(float width);
     void SetBorderWidth(float left, float top, float right, float bottom);
+    void SetBorderWidth(const Vector4f& width);
+    void SetBorderStyle(uint32_t styleValue);
     void SetBorderStyle(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom);
+    void SetBorderStyle(const Vector4<BorderStyle>& style);
 
-    void SetSublayerTransform(Matrix3f sublayerTransform);
-
-    void SetBackgroundFilter(std::shared_ptr<RSFilter> backgroundFilter);
-    void SetFilter(std::shared_ptr<RSFilter> filter);
-    void SetCompositingFilter(std::shared_ptr<RSFilter> compositingFilter);
+    void SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter);
+    void SetFilter(const std::shared_ptr<RSFilter>& filter);
+    void SetCompositingFilter(const std::shared_ptr<RSFilter>& compositingFilter);
 
     void SetShadowColor(uint32_t colorValue);
     void SetShadowOffset(float offsetX, float offsetY);
@@ -153,30 +153,35 @@ public:
     void SetShadowAlpha(float alpha);
     void SetShadowElevation(float elevation);
     void SetShadowRadius(float radius);
-    void SetShadowPath(std::shared_ptr<RSPath> shadowpath);
+    void SetShadowPath(const std::shared_ptr<RSPath>& shadowPath);
 
     void SetFrameGravity(Gravity gravity);
 
-    void SetClipBounds(std::shared_ptr<RSPath> clipToBounds);
+    void SetClipBounds(const std::shared_ptr<RSPath>& clipToBounds);
     void SetClipToBounds(bool clipToBounds);
     void SetClipToFrame(bool clipToFrame);
 
     void SetVisible(bool visible);
+    void SetMask(const std::shared_ptr<RSMask>& mask);
+
     void SetPaintOrder(bool drawContentLast);
-    void SetMask(std::shared_ptr<RSMask> mask);
 
     void SetTransitionEffect(const std::shared_ptr<const RSTransitionEffect>& effect)
     {
         transitionEffect_ = effect;
     }
 
-    RSUINodeType GetType() const override
-    {
-        return RSUINodeType::RS_NODE;
-    }
+    void ClearModifiers();
+    void ClearAllModifiers();
+    void AddModifier(const std::shared_ptr<RSModifierBase>& modifier);
+    void RemoveModifier(const std::shared_ptr<RSModifierBase>& modifier);
+
+    void SetChildIds(const std::vector<NodeId>& childIds);
+    const std::vector<NodeId>& GetChildIds() const;
 
 protected:
-    RSNode(bool isRenderServiceNode);
+    explicit RSNode(bool isRenderServiceNode);
+    explicit RSNode(bool isRenderServiceNode, NodeId id);
     RSNode(const RSNode&) = delete;
     RSNode(const RSNode&&) = delete;
     RSNode& operator=(const RSNode&) = delete;
@@ -193,39 +198,48 @@ protected:
     }
 
 private:
-    bool HasPropertyAnimation(const RSAnimatableProperty& property) const;
+    void AnimationFinish(AnimationId animationId);
+    bool HasPropertyAnimation(const PropertyId& id);
     void FallbackAnimationsToRoot();
     void AddAnimationInner(const std::shared_ptr<RSAnimation>& animation);
     void RemoveAnimationInner(const std::shared_ptr<RSAnimation>& animation);
-    void FinishAnimationByProperty(const RSAnimatableProperty& property);
-    void AnimationFinish(AnimationId animationId);
+    void FinishAnimationByProperty(const PropertyId& id);
+    const std::shared_ptr<RSModifierBase> GetModifier(const PropertyId& propertyId);
     virtual void OnBoundsSizeChanged() const {};
+    void UpdateModifierMotionPathOption();
+    void UpdateExtendedModifier(const PropertyId& id);
 
     std::unordered_map<AnimationId, std::shared_ptr<RSAnimation>> animations_;
-    std::unordered_map<RSAnimatableProperty, uint32_t> animatingPropertyNum_;
+    std::unordered_map<PropertyId, uint32_t> animatingPropertyNum_;
+    std::unordered_map<PropertyId, std::shared_ptr<RSModifierBase>> modifiers_;
+    std::unordered_map<RSModifierType, std::shared_ptr<RSModifierBase>> propertyModifiers_;
     std::shared_ptr<RSMotionPathOption> motionPathOption_;
 
     void UpdateImplicitAnimator();
     pid_t implicitAnimatorTid_ = 0;
     std::shared_ptr<RSImplicitAnimator> implicitAnimator_;
-
     std::shared_ptr<const RSTransitionEffect> transitionEffect_ = nullptr;
+    std::shared_ptr<RSUIAnimationManager> animationManager_;
 
-    RSProperties stagingProperties_;
+    RSModifierExtractor stagingPropertiesExtractor_;
+    std::vector<NodeId> childNodeIds_;
 
     friend class RSAnimation;
-    template<typename T>
     friend class RSCurveAnimation;
-    template<typename T>
     friend class RSKeyframeAnimation;
-    template<typename T>
     friend class RSPropertyAnimation;
-    template<typename T>
     friend class RSSpringAnimation;
+    template<typename T>
+    friend class RSProperty;
+    template<typename T>
+    friend class RSAnimatableProperty;
     friend class RSPathAnimation;
+    template<typename T>
+    friend class RSExtendedModifier;
     friend class RSTransition;
     friend class RSUIDirector;
     friend class RSImplicitAnimator;
+    friend class RSModifierExtractor;
 };
 } // namespace Rosen
 } // namespace OHOS

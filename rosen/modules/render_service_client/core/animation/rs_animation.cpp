@@ -17,17 +17,19 @@
 
 #include "animation/rs_animation_callback.h"
 #include "animation/rs_animation_common.h"
+#include "animation/rs_render_animation.h"
 #include "command/rs_animation_command.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_node.h"
+#include "sandbox_utils.h"
 
 namespace OHOS {
 namespace Rosen {
 
 AnimationId RSAnimation::GenerateId()
 {
-    static pid_t pid_ = getpid();
+    static pid_t pid_ = GetRealPid();
     static std::atomic<uint32_t> currentId_ = 0;
 
     ++currentId_;
@@ -60,6 +62,7 @@ void RSAnimation::CallFinishCallback()
 {
     finishCallback_.reset();
     state_ = AnimationState::FINISHED;
+    OnCallFinishCallback();
 }
 
 AnimationId RSAnimation::GetId() const
@@ -159,6 +162,12 @@ void RSAnimation::OnPause()
                 std::make_unique<RSAnimationPause>(target->GetId(), id_);
             transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
         }
+        if (target->NeedSendExtraCommand()) {
+            std::unique_ptr<RSCommand> extraCommand =
+                std::make_unique<RSAnimationPause>(target->GetId(), id_);
+            transactionProxy->AddCommand(extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(),
+                target->GetId());
+        }
     }
 }
 
@@ -195,6 +204,12 @@ void RSAnimation::OnResume()
             std::unique_ptr<RSCommand> commandForRemote =
                 std::make_unique<RSAnimationResume>(target->GetId(), id_);
             transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
+        }
+        if (target->NeedSendExtraCommand()) {
+            std::unique_ptr<RSCommand> extraCommand =
+                std::make_unique<RSAnimationResume>(target->GetId(), id_);
+            transactionProxy->AddCommand(extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(),
+                target->GetId());
         }
     }
 }
@@ -233,6 +248,12 @@ void RSAnimation::OnFinish()
                 std::make_unique<RSAnimationFinish>(target->GetId(), id_);
             transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
         }
+        if (target->NeedSendExtraCommand()) {
+            std::unique_ptr<RSCommand> extraCommand =
+                std::make_unique<RSAnimationFinish>(target->GetId(), id_);
+            transactionProxy->AddCommand(extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(),
+                target->GetId());
+        }
     }
 }
 
@@ -270,6 +291,12 @@ void RSAnimation::OnReverse()
             std::unique_ptr<RSCommand> commandForRemote =
                 std::make_unique<RSAnimationReverse>(target->GetId(), id_, isReversed_);
             transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
+        }
+        if (target->NeedSendExtraCommand()) {
+            std::unique_ptr<RSCommand> extraCommand =
+                std::make_unique<RSAnimationReverse>(target->GetId(), id_, isReversed_);
+            transactionProxy->AddCommand(extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(),
+                target->GetId());
         }
     }
 }
@@ -312,17 +339,34 @@ void RSAnimation::OnSetFraction(float fraction)
                 std::make_unique<RSAnimationSetFraction>(target->GetId(), id_, fraction);
             transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
         }
+        if (target->NeedSendExtraCommand()) {
+            std::unique_ptr<RSCommand> extraCommand =
+                std::make_unique<RSAnimationSetFraction>(target->GetId(), id_, fraction);
+            transactionProxy->AddCommand(extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(),
+                target->GetId());
+        }
     }
 }
 
-RSAnimatableProperty RSAnimation::GetProperty() const
+PropertyId RSAnimation::GetPropertyId() const
 {
-    return RSAnimatableProperty::INVALID;
+    return 0;
 }
 
 void RSAnimation::UpdateStagingValue(bool isFirstStart)
 {
     OnUpdateStagingValue(isFirstStart);
+}
+
+void RSAnimation::UpdateParamToRenderAnimation(const std::shared_ptr<RSRenderAnimation>& animation)
+{
+    animation->SetDuration(GetDuration());
+    animation->SetStartDelay(GetStartDelay());
+    animation->SetRepeatCount(GetRepeatCount());
+    animation->SetAutoReverse(GetAutoReverse());
+    animation->SetSpeed(GetSpeed());
+    animation->SetDirection(GetDirection());
+    animation->SetFillMode(GetFillMode());
 }
 } // namespace Rosen
 } // namespace OHOS

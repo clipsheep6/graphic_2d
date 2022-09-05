@@ -173,9 +173,8 @@ void VSyncDistributor::ThreadMain()
                 }
                 continue;
             } else if ((timestamp > 0) && (waitForVSync == false)) {
-                // if there is a vsync signal but no vaild connections, we should disable vsync,
-                // but the system was unstable, so we didn't choose to disable it
-                // DisableVSync()
+                // if there is a vsync signal but no vaild connections, we should disable vsync
+                DisableVSync();
                 continue;
             }
         }
@@ -234,16 +233,16 @@ void VSyncDistributor::CollectConnections(bool &waitForVSync, int64_t timestamp,
                 connections_[i]->rate_ = -1;
                 conns.push_back(connections_[i]);
             }
-        } else if (rate > 0 && (vsyncCount % rate == 0)) {
+        } else if (rate > 0) {
             if (connections_[i]->rate_ == 0) {  // for SetHighPriorityVSyncRate with RequestNextVSync
                 waitForVSync = true;
-                if (timestamp > 0) {
+                if (timestamp > 0 && (vsyncCount % rate == 0)) {
                     connections_[i]->rate_ = -1;
                     conns.push_back(connections_[i]);
                 }
             } else if (connections_[i]->rate_ > 0) {  // for SetVSyncRate
                 waitForVSync = true;
-                if (timestamp > 0) {
+                if (timestamp > 0 && (vsyncCount % rate == 0)) {
                     conns.push_back(connections_[i]);
                 }
             }
@@ -312,11 +311,55 @@ VsyncError VSyncDistributor::SetHighPriorityVSyncRate(int32_t highPriorityRate, 
     con_.notify_all();
     return VSYNC_ERROR_OK;
 }
+
 VsyncError VSyncDistributor::GetVSyncConnectionInfos(std::vector<ConnectionInfo>& infos)
 {
     infos.clear();
     for (auto &connection : connections_) {
         infos.push_back(connection->info_);
+    }
+    return VSYNC_ERROR_OK;
+}
+
+VsyncError VSyncDistributor::QosGetPidByName(const std::string& name, uint32_t& pid)
+{
+    if (name.find("WM") == std::string::npos) {
+        return VSYNC_ERROR_INVALID_ARGUMENTS;
+    }
+    int32_t pos = name.find("_");
+    if (pos == std::string::npos) {
+        return VSYNC_ERROR_INVALID_ARGUMENTS;
+    }
+    pid = stoi(name.substr(pos + 1));
+    return VSYNC_ERROR_OK;
+}
+
+VsyncError VSyncDistributor::SetQosVSyncRate(uint32_t pid, int32_t rate)
+{
+    for (auto connection : connections_) {
+        uint32_t tmpPid;
+        if (QosGetPidByName(connection->info_.name_, tmpPid) != VSYNC_ERROR_OK) {
+            continue;
+        }
+
+        if (tmpPid == pid) {
+            SetHighPriorityVSyncRate(rate, connection);
+            break;
+        }
+    }
+    return VSYNC_ERROR_OK;
+}
+
+VsyncError VSyncDistributor::GetQosVSyncRateInfos(std::vector<std::pair<uint32_t, int32_t>>& vsyncRateInfos)
+{
+    vsyncRateInfos.clear();
+    for (auto &connection : connections_) {
+        uint32_t tmpPid;
+        if (QosGetPidByName(connection->info_.name_, tmpPid) != VSYNC_ERROR_OK) {
+            continue;
+        }
+        int32_t tmpRate = connection->highPriorityState_ ? connection->highPriorityRate_ : connection->rate_;
+        vsyncRateInfos.push_back(std::make_pair(tmpPid, tmpRate));
     }
     return VSYNC_ERROR_OK;
 }

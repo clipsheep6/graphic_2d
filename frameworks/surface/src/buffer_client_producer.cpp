@@ -269,6 +269,20 @@ GSError BufferClientProducer::CleanCache()
     return GSERROR_OK;
 }
 
+GSError BufferClientProducer::GoBackground()
+{
+    DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
+
+    SEND_REQUEST(BUFFER_PRODUCER_GO_BACKGROUND, arguments, reply, option);
+    int32_t ret = reply.ReadInt32();
+    if (ret != GSERROR_OK) {
+        BLOGN_FAILURE("Remote return %{public}d", ret);
+        return (GSError)ret;
+    }
+
+    return GSERROR_OK;
+}
+
 GSError BufferClientProducer::SetTransform(TransformType transform)
 {
     DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
@@ -309,17 +323,13 @@ GSError BufferClientProducer::IsSupportedAlloc(const std::vector<VerifyAllocInfo
 
 GSError BufferClientProducer::Disconnect()
 {
-    MessageOption option(MessageOption::TF_ASYNC);
-    MessageParcel arguments;
-    MessageParcel reply;
-    if (!arguments.WriteInterfaceToken(GetDescriptor())) {
-        BLOGN_FAILURE("write interface token failed");
-    }
+    DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
 
-    int32_t ret = Remote()->SendRequest(BUFFER_PRODUCER_DISCONNECT, arguments, reply, option);
-    if (ret != ERR_NONE) {
-        BLOGN_FAILURE("SendRequest return %{public}d", ret);
-        return GSERROR_BINDER;
+    SEND_REQUEST(BUFFER_PRODUCER_DISCONNECT, arguments, reply, option);
+    int32_t ret = reply.ReadInt32();
+    if (ret != GSERROR_OK) {
+        BLOGN_FAILURE("Remote return %{public}d", ret);
+        return static_cast<GSError>(ret);
     }
     return GSERROR_OK;
 }
@@ -374,7 +384,12 @@ GSError BufferClientProducer::SetMetaDataSet(uint32_t sequence, HDRMetadataKey k
 GSError BufferClientProducer::SetTunnelHandle(const ExtDataHandle *handle)
 {
     DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
-    WriteExtDataHandle(arguments, handle);
+    if (handle == nullptr) {
+        arguments.WriteBool(false);
+    } else {
+        arguments.WriteBool(true);
+        WriteExtDataHandle(arguments, handle);
+    }
     SEND_REQUEST(BUFFER_PRODUCER_SET_TUNNEL_HANDLE, arguments, reply, option);
     int32_t ret = reply.ReadInt32();
     if (ret != GSERROR_OK) {
@@ -382,5 +397,20 @@ GSError BufferClientProducer::SetTunnelHandle(const ExtDataHandle *handle)
         return (GSError)ret;
     }
     return GSERROR_OK;
+}
+
+GSError BufferClientProducer::GetPresentTimestamp(uint32_t sequence, PresentTimestampType type, int64_t &time)
+{
+    DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
+    arguments.WriteUint32(sequence);
+    arguments.WriteUint32(static_cast<uint32_t>(type));
+    SEND_REQUEST(BUFFER_PRODUCER_GET_PRESENT_TIMESTAMP, arguments, reply, option);
+    int32_t ret = reply.ReadInt32();
+    if (ret != GSERROR_OK) {
+        BLOGN_FAILURE("Remote return %{public}d", ret);
+        return static_cast<GSError>(ret);
+    }
+    time = reply.ReadInt64();
+    return static_cast<GSError>(ret);
 }
 }; // namespace OHOS

@@ -31,7 +31,6 @@ void RSWindowAnimationFinishedCallback::OnAnimationFinished()
         WALOGE("Callback is null!");
         return;
     }
-
     callback_();
 }
 } // namespace Rosen

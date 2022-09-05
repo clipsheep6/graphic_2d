@@ -20,6 +20,7 @@
 
 #include "command/rs_command_factory.h"
 #include "pipeline/rs_base_render_util.h"
+#include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_uni_render_judgement.h"
 #include "pipeline/rs_unmarshal_thread.h"
 #include "platform/common/rs_log.h"
@@ -94,33 +95,67 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             RS_ASYNC_TRACE_END("RSProxySendRequest", data.GetDataSize());
             static bool isUniRender = RSUniRenderJudgement::IsUniRender();
             std::shared_ptr<MessageParcel> parsedParcel;
-            if (data.ReadInt32() == 0) { // copy original parcel if needed
+            if (data.ReadInt32() == 0) { // indicate normal parcel
                 if (isUniRender) {
+                    // in uni render mode, if parcel size over threshold,
+                    // Unmarshalling task will be post to RSUnmarshalThread,
+                    // copy the origin parcel to maintain the parcel lifetime
                     parsedParcel = CopyParcelIfNeed(data);
                 }
                 if (parsedParcel == nullptr) {
+                    // no need to copy or copy failed, use original parcel
+                    // execute Unmarshalling immediately
                     auto transactionData = RSBaseRenderUtil::ParseTransactionData(data);
                     CommitTransaction(transactionData);
                     break;
                 }
             } else {
+                // indicate ashmem parcel
+                // should be parsed to normal parcel before Unmarshalling
                 parsedParcel = RSAshmemHelper::ParseFromAshmemParcel(&data);
             }
             if (parsedParcel == nullptr) {
                 RS_LOGE("RSRenderServiceConnectionStub::COMMIT_TRANSACTION failed");
                 return ERR_INVALID_DATA;
             }
-            if (isUniRender) {
+            if (RSMainThread::Instance()->QueryIfUseUniVisitor()) {
+                // post Unmarshalling task to RSUnmarshalThread
                 RSUnmarshalThread::Instance().RecvParcel(parsedParcel);
             } else {
+                // execute Unmarshalling immediately
                 auto transactionData = RSBaseRenderUtil::ParseTransactionData(data);
                 CommitTransaction(transactionData);
             }
             break;
         }
-        case GET_UNI_RENDER_TYPE: {
-            auto packageName = data.ReadString();
-            reply.WriteBool(InitUniRenderEnabled(packageName));
+        case SET_RENDER_MODE_CHANGE_CALLBACK: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+
+            auto remoteObject = data.ReadRemoteObject();
+            if (remoteObject == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            sptr<RSIRenderModeChangeCallback> cb = iface_cast<RSIRenderModeChangeCallback>(remoteObject);
+            int32_t status = SetRenderModeChangeCallback(cb);
+            reply.WriteInt32(status);
+            break;
+        }
+        case UPDATE_RENDER_MODE: {
+            bool isUniRender = data.ReadBool();
+            UpdateRenderMode(isUniRender);
+            break;
+        }
+        case GET_UNI_RENDER_ENABLED: {
+            reply.WriteBool(GetUniRenderEnabled());
+            break;
+        }
+        case QUERY_RT_NEED_RENDER: {
+            reply.WriteBool(QueryIfRTNeedRender());
             break;
         }
         case CREATE_NODE: {

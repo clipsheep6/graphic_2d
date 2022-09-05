@@ -27,8 +27,8 @@ NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationTarget(NativeEngine&
 {
     WALOGD("Create!");
     if (target == nullptr) {
-        WALOGE("Target is null!");
-        return engine.CreateUndefined();
+        WALOGD("Target is null!");
+        return engine.CreateNull();
     }
 
     auto objValue = engine.CreateObject();
@@ -49,7 +49,6 @@ NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationTarget(NativeEngine&
     target.GetRefPtr()->IncStrongRef(target.GetRefPtr());
     object->SetNativePointer(&(target->surfaceNode_), finalizeCallback, target.GetRefPtr());
     if (target->surfaceNode_) {
-        // planning: remove CreateNodeInRenderThread in RosenRenderRemoteWindow::ExtractRSNode
         target->surfaceNode_->CreateNodeInRenderThread(true);
     }
 
@@ -65,11 +64,6 @@ NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationTargetArray(NativeEn
     const std::vector<sptr<RSWindowAnimationTarget>>& targets)
 {
     WALOGD("Create!");
-    if (targets.empty()) {
-        WALOGE("Target is empty!");
-        return engine.CreateUndefined();
-    }
-
     NativeValue* arrayValue = engine.CreateArray(targets.size());
     NativeArray* array = ConvertNativeValueTo<NativeArray>(arrayValue);
     uint32_t index = 0;
@@ -117,7 +111,8 @@ NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationFinishedCallback(
         nativeFinishedCallback->OnAnimationFinished();
         return engine->CreateUndefined();
     };
-    BindNativeFunction(engine, *object, "onAnimationFinish", jsFinishedCallback);
+    const char *moduleName = "RSWindowAnimationUtils";
+    BindNativeFunction(engine, *object, "onAnimationFinish", moduleName, jsFinishedCallback);
     return objValue;
 }
 

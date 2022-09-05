@@ -34,16 +34,16 @@ RSModifierExtractor::RSModifierExtractor(NodeId id) : id_(id) {}
         }                                                                                                           \
         auto iter = node->propertyModifiers_.find(RSModifierType::propertyType);                                    \
         if (iter != node->propertyModifiers_.end()) {                                                               \
-            return std::static_pointer_cast<RSModifier<RSProperty<T>>>(iter->second)->GetProperty()->Get();         \
+            return std::static_pointer_cast<RSProperty<T>>(iter->second->GetProperty())->Get();                     \
         }                                                                                                           \
         T value = defaultValue;                                                                                     \
         for (auto& [_, modifier] : node->modifiers_) {                                                              \
             if (modifier->GetModifierType() == RSModifierType::propertyType) {                                      \
                 auto modifierPtr = std::static_pointer_cast<RSModifier<RSProperty<T>>>(modifier);                   \
                 if (modifierPtr->isAdditive_) {                                                                     \
-                    value operator modifierPtr->GetProperty()->Get();                                               \
+                    value operator std::static_pointer_cast<RSProperty<T>>(modifierPtr->GetProperty())->Get();      \
                 } else {                                                                                            \
-                    value = modifierPtr->GetProperty()->Get();                                                      \
+                    value = std::static_pointer_cast<RSProperty<T>>(modifierPtr->GetProperty())->Get();             \
                 }                                                                                                   \
             }                                                                                                       \
         }                                                                                                           \
@@ -108,6 +108,11 @@ Vector2f RSModifierExtractor::GetScale() const
 float RSModifierExtractor::GetAlpha() const
 {
     GET_PROPERTY_FROM_MODIFIERS(float, ALPHA, 1.f, *=);
+}
+
+bool RSModifierExtractor::GetAlphaOffscreen() const
+{
+    GET_PROPERTY_FROM_MODIFIERS(bool, ALPHA_OFFSCREEN, true, =);
 }
 
 Vector4f RSModifierExtractor::GetCornerRadius() const

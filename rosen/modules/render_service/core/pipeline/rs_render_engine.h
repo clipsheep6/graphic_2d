@@ -36,14 +36,6 @@
 
 namespace OHOS {
 namespace Rosen {
-enum class ColorFilterMode {
-    INVERT_MODE = 0,
-    PROTANOMALY_MODE,
-    DEUTERANOMALY_MODE,
-    TRITANOMALY_MODE,
-    COLOR_FILTER_END,
-};
-
 // The RenderFrame can do auto flush
 class RSRenderFrame {
 public:
@@ -85,6 +77,17 @@ public:
         return std::make_unique<RSPaintFilterCanvas>(surfaceFrame_->GetSurface().get());
     }
 
+    int32_t GetBufferAge()
+    {
+        return surfaceFrame_ != nullptr ? surfaceFrame_->GetBufferAge() : 0;
+    }
+
+    void SetDamageRegion(const std::vector<RectI> &rects)
+    {
+        if (surfaceFrame_ != nullptr) {
+            surfaceFrame_->SetDamageRegion(rects);
+        }
+    }
 private:
     std::shared_ptr<RSSurfaceOhos> targetSurface_;
     std::unique_ptr<RSSurfaceFrame> surfaceFrame_;
@@ -139,10 +142,17 @@ public:
         float mirrorAdaptiveCoefficient = 1.0f);
 
     void ShrinkCachesIfNeeded();
-    void SetColorFilterMode(ColorFilterMode mode)
+    void SetColorFilterMode(ColorFilterMode mode);
+    ColorFilterMode GetColorFilterMode() const
     {
-        colorFilterMode_ = mode;
+        return colorFilterMode_;
     }
+#ifdef RS_ENABLE_GL
+    const std::shared_ptr<RenderContext>& GetRenderContext() const
+    {
+        return renderContext_;
+    }
+#endif // RS_ENABLE_GL
 private:
     void DrawBuffer(RSPaintFilterCanvas& canvas, BufferDrawParam& drawParams);
     void DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam& drawParams);
@@ -176,6 +186,8 @@ private:
 
     void SetColorFilterModeToPaint(SkPaint& paint);
 
+    ColorFilterMode colorFilterMode_ = ColorFilterMode::COLOR_FILTER_END;
+
 #ifdef RS_ENABLE_GL
     std::shared_ptr<RenderContext> renderContext_;
 #endif // RS_ENABLE_GL
@@ -183,8 +195,6 @@ private:
 #ifdef RS_ENABLE_EGLIMAGE
     std::shared_ptr<RSEglImageManager> eglImageManager_;
 #endif // RS_ENABLE_EGLIMAGE
-
-    ColorFilterMode colorFilterMode_ = ColorFilterMode::COLOR_FILTER_END;
 
     // RSSurfaces for framebuffer surfaces.
     static constexpr size_t MAX_RS_SURFACE_SIZE = 32; // used for rsSurfaces_.

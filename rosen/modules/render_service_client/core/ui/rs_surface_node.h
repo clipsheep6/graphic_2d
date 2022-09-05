@@ -68,14 +68,8 @@ public:
     {
         return RSUINodeType::SURFACE_NODE;
     }
-    FollowType GetFollowType() const override
-    {
-        if (IsRenderServiceNode()) {
-            return FollowType::NONE;
-        } else {
-            return FollowType::FOLLOW_TO_PARENT;
-        }
-    }
+    FollowType GetFollowType() const override;
+
     ColorGamut GetColorSpace()
     {
         return colorSpace_;
@@ -110,9 +104,7 @@ private:
 
     friend class RSUIDirector;
     friend class RSAnimation;
-    template<typename T>
     friend class RSPathAnimation;
-    template<typename T>
     friend class RSPropertyAnimation;
     friend class RSSurfaceExtractor;
 };

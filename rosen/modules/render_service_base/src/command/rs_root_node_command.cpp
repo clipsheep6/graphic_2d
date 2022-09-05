@@ -56,11 +56,14 @@ void RootNodeCommandHelper::AttachToUniSurfaceNode(RSContext& context, NodeId id
         return;
     }
     parent->AddChild(node);
-    RS_LOGI("unirender: RootNodeCommandHelper::AttachToUniSurfaceNode NotifyUIBufferAvailable parent:%" PRIu64
-            " node:%" PRIu64,
-        surfaceNodeId, id);
-    parent->NotifyUIBufferAvailable();
+    parent->MarkAppWindow();
 }
 
+void RootNodeCommandHelper::UpdateSurfaceSize(RSContext &context, NodeId id, int32_t width, int32_t height)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSRootRenderNode>(id)) {
+        node->UpdateSurfaceSize(width, height);
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

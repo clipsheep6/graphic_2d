@@ -24,7 +24,6 @@
 #include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_thread.h"
 #include "platform/common/rs_log.h"
-#include "platform/common/rs_system_properties.h"
 #include "rs_trace.h"
 #include "transaction/rs_application_agent_impl.h"
 #include "transaction/rs_interfaces.h"
@@ -51,8 +50,7 @@ void RSUIDirector::Init(bool shouldCreateRenderThread)
 {
     AnimationCommandHelper::SetFinishCallbackProcessor(AnimationCallbackProcessor);
 
-    isUniRenderEnabled_ = RSSystemProperties::GetUniRenderEnabled();
-    if (!isUniRenderEnabled_ && shouldCreateRenderThread) {
+    if (shouldCreateRenderThread) {
         auto renderThreadClient = RSIRenderClient::CreateRenderThreadClient();
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
@@ -60,6 +58,9 @@ void RSUIDirector::Init(bool shouldCreateRenderThread)
         }
 
         RsFrameReport::GetInstance().Init();
+        if (!cacheDir_.empty()) {
+            RSRenderThread::Instance().SetCacheDir(cacheDir_);
+        }
         RSRenderThread::Instance().Start();
     }
     RSApplicationAgentImpl::Instance().RegisterRSApplicationAgent();
@@ -69,11 +70,9 @@ void RSUIDirector::Init(bool shouldCreateRenderThread)
 
 void RSUIDirector::GoForeground()
 {
-    ROSEN_LOGI("RSUIDirector::GoForeground");
+    ROSEN_LOGD("RSUIDirector::GoForeground");
     if (!isActive_) {
-        if (!isUniRenderEnabled_) {
-            RSRenderThread::Instance().UpdateWindowStatus(true);
-        }
+        RSRenderThread::Instance().UpdateWindowStatus(true);
         isActive_ = true;
         if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
             node->SetEnableRender(true);
@@ -83,34 +82,29 @@ void RSUIDirector::GoForeground()
 
 void RSUIDirector::GoBackground()
 {
-    ROSEN_LOGI("RSUIDirector::GoBackground");
+    ROSEN_LOGD("RSUIDirector::GoBackground");
     if (isActive_) {
-        if (!isUniRenderEnabled_) {
-            RSRenderThread::Instance().UpdateWindowStatus(false);
-        }
+        RSRenderThread::Instance().UpdateWindowStatus(false);
         isActive_ = false;
         if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
             node->SetEnableRender(false);
         }
-
-        // clean bufferQueue cache
-        auto surfaceNode = surfaceNode_.lock();
-        RSRenderThread::Instance().PostTask([surfaceNode]() {
-            if (surfaceNode != nullptr) {
-                std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
-                rsSurface->ClearBuffer();
+#ifdef ACE_ENABLE_GL
+        RSRenderThread::Instance().PostTask([this]() {
+            auto renderContext = RSRenderThread::Instance().GetRenderContext();
+            if (renderContext != nullptr) {
+                renderContext->ClearRedundantResources();
             }
         });
+#endif
     }
 }
 
 void RSUIDirector::Destroy()
 {
     if (root_ != 0) {
-        if (!isUniRenderEnabled_) {
-            if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
-                node->RemoveFromTree();
-            }
+        if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
+            node->RemoveFromTree();
         }
         root_ = 0;
     }
@@ -161,6 +155,11 @@ void RSUIDirector::SetTimeStamp(uint64_t timeStamp, const std::string& abilityNa
     RSRenderThread::Instance().UpdateUiDrawFrameMsg(abilityName);
 }
 
+void RSUIDirector::SetCacheDir(const std::string& cacheFilePath)
+{
+    cacheDir_ = cacheFilePath;
+}
+
 bool RSUIDirector::RunningCustomAnimation(uint64_t timeStamp)
 {
     bool hasRunningAnimation = false;
@@ -187,7 +186,7 @@ void RSUIDirector::SendMessages()
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }
 
-void RSUIDirector::RecvMessages()
+void RSUIDirector::RecvMessages(bool needProcess)
 {
     if (getpid() == -1) {
         return;
@@ -197,7 +196,9 @@ void RSUIDirector::RecvMessages()
         return;
     }
     auto transactionDataPtr = std::make_shared<RSTransactionData>(RSMessageProcessor::Instance().GetTransaction(pid));
-    RecvMessages(transactionDataPtr);
+    if (needProcess) {
+        RecvMessages(transactionDataPtr);
+    }
 }
 
 void RSUIDirector::RecvMessages(std::shared_ptr<RSTransactionData> cmds)

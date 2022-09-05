@@ -47,7 +47,7 @@ public:
     RSComposerAdapter(const RSComposerAdapter&) = delete;
     void operator=(const RSComposerAdapter&) = delete;
 
-    bool Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, float mirrorAdaptiveCoefficient,
+    bool Init(const ScreenInfo& screenInfo, int32_t offsetX, int32_t offsetY, float mirrorAdaptiveCoefficient,
         const FallbackCallback& cb);
 
     LayerInfoPtr CreateLayer(RSSurfaceRenderNode& node);
@@ -68,7 +68,7 @@ private:
         RSBaseRenderNode* node) const;
     void DealWithNodeGravity(const RSSurfaceRenderNode& node, ComposeInfo& info) const;
 
-    void LayerRotate(const LayerInfoPtr& layer) const;
+    void LayerRotate(const LayerInfoPtr& layer, RSBaseRenderNode& node) const;
     void LayerCrop(const LayerInfoPtr& layer) const;
     void LayerScaleDown(const LayerInfoPtr& layer) const;
     void LayerPresentTimestamp(const LayerInfoPtr& layer, const sptr<Surface>& surface) const;

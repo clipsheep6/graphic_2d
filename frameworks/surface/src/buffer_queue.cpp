@@ -66,7 +66,11 @@ BufferQueue::BufferQueue(const std::string &name, bool isShared)
 BufferQueue::~BufferQueue()
 {
     BLOGNI("dtor, Queue id: %{public}" PRIu64, uniqueId_);
-    CleanCache();
+    for (auto &[id, _] : bufferQueueCache_) {
+        if (onBufferDelete_ != nullptr) {
+            onBufferDelete_(id);
+        }
+    }
 }
 
 GSError BufferQueue::Init()
@@ -207,7 +211,7 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
         if (ret == GSERROR_OK) {
             return ReuseBuffer(config, bedata, retval);
         } else if (GetUsedSize() >= GetQueueSize()) {
-            BLOGNW("all buffer are using, Queue id: %{public}" PRIu64, uniqueId_);
+            BLOGND("all buffer are using, Queue id: %{public}" PRIu64, uniqueId_);
             return GSERROR_NO_BUFFER;
         }
     }
@@ -343,6 +347,7 @@ GSError BufferQueue::FlushBuffer(uint32_t sequence, const sptr<BufferExtraData> 
     }
     CountTrace(HITRACE_TAG_GRAPHIC_AGP, name_, static_cast<int32_t>(dirtyList_.size()));
     if (sret == GSERROR_OK) {
+        std::lock_guard<std::mutex> lockGuard(listenerMutex_);
         if (listener_ != nullptr) {
             ScopedBytrace bufferIPCSend("OnBufferAvailable");
             listener_->OnBufferAvailable();
@@ -727,6 +732,7 @@ GSError BufferQueue::RegisterConsumerListener(IBufferConsumerListenerClazz *list
 
 GSError BufferQueue::UnregisterConsumerListener()
 {
+    std::lock_guard<std::mutex> lockGuard(listenerMutex_);
     listener_ = nullptr;
     listenerClazz_ = nullptr;
     return GSERROR_OK;
@@ -803,6 +809,21 @@ GSError BufferQueue::GoBackground()
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
     if (listener_ != nullptr) {
+        ScopedBytrace bufferIPCSend("OnGoBackground");
+        listener_->OnGoBackground();
+    } else if (listenerClazz_ != nullptr) {
+        ScopedBytrace bufferIPCSend("OnGoBackground");
+        listenerClazz_->OnGoBackground();
+    }
+    ClearLocked();
+    waitReqCon_.notify_all();
+    return GSERROR_OK;
+}
+
+GSError BufferQueue::CleanCache()
+{
+    std::lock_guard<std::mutex> lockGuard(mutex_);
+    if (listener_ != nullptr) {
         ScopedBytrace bufferIPCSend("OnCleanCache");
         listener_->OnCleanCache();
     } else if (listenerClazz_ != nullptr) {
@@ -814,7 +835,7 @@ GSError BufferQueue::GoBackground()
     return GSERROR_OK;
 }
 
-GSError BufferQueue::CleanCache()
+GSError BufferQueue::OnConsumerDied()
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
     ClearLocked();

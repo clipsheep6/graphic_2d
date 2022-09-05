@@ -15,6 +15,7 @@
 
 #include "rs_render_engine.h"
 
+#include "pipeline/rs_uni_render_judgement.h"
 #include "platform/common/rs_log.h"
 #include "platform/ohos/backend/rs_surface_ohos_gl.h"
 #include "platform/ohos/backend/rs_surface_ohos_raster.h"
@@ -27,57 +28,6 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace Detail {
-constexpr uint32_t MATRIX_SIZE = 20;
-static const sk_sp<SkColorFilter>& InvertColorMat()
-{
-    static const SkScalar colorMatrix[MATRIX_SIZE] = {
-        0.402,  -1.174, -0.228, 1.0, 0.0,
-        -5.598, -0.174, -0.228, 1.0, 0.0,
-        -0.599, -1.175, 0.772,  1.0, 0.0,
-        0.0,    0.0,    0.0,    1.0, 0.0
-    };
-    static auto invertColorMat = SkColorFilters::Matrix(colorMatrix);
-    return invertColorMat;
-}
-
-static const sk_sp<SkColorFilter>& ProtanomalyMat()
-{
-    static const SkScalar colorMatrix[MATRIX_SIZE] = {
-        0.829,  0.1,    0.016,   0.0, 0.0,
-        1.161,  0.32,   -0.111,  0.0, 0.0,
-        0.224,  -0.131, 0.979,   0.0, 0.0,
-        0.0,    0.0,    0.0,     1.0, 0.0
-    };
-    static auto protanomalyMat = SkColorFilters::Matrix(colorMatrix);
-    return protanomalyMat;
-}
-
-static const sk_sp<SkColorFilter>& DeuteranomalyMat()
-{
-    static const SkScalar colorMatrix[MATRIX_SIZE] = {
-        0.583,  -0.072, 0.054,   0.0, 0.0,
-        -0.692, 0.881,  0.089,   0.0, 0.0,
-        -0.118, -0.02,  1.015,   0.0, 0.0,
-        0.0,    0.0,    0.0,     1.0, 0.0
-    };
-    static auto deuteranomalyMat = SkColorFilters::Matrix(colorMatrix);
-    return deuteranomalyMat;
-}
-
-static const sk_sp<SkColorFilter>& TritanomalyMat()
-{
-    static const SkScalar colorMatrix[MATRIX_SIZE] = {
-        0.989,  0.074,  -0.39,   0.0, 0.0,
-        -0.004, 1.026,  -0.141,  0.0, 0.0,
-        -0.093, 0.608,  -2.23,   0.0, 0.0,
-        0.0,    0.0,    0.0,     1.0, 0.0
-    };
-    static auto tritanomalyMat = SkColorFilters::Matrix(colorMatrix);
-    return tritanomalyMat;
-}
-} // namespace Detail
-
 RSRenderEngine::RSRenderEngine()
 {
 #ifdef RS_ENABLE_GL
@@ -249,6 +199,11 @@ void RSRenderEngine::DrawLayers(
                 canvas.restoreToCount(saveCount);
                 continue;
             }
+            RS_LOGD("RSRenderEngine::DrawLayers dstRect[%d %d %d %d] SrcRect[%d %d %d %d]",
+                layer->GetLayerSize().x, layer->GetLayerSize().y,
+                layer->GetLayerSize().w, layer->GetLayerSize().h,
+                layer->GetDirtyRegion().x, layer->GetDirtyRegion().y,
+                layer->GetDirtyRegion().w, layer->GetDirtyRegion().h);
             DrawSurfaceNode(canvas, node, mirrorAdaptiveCoefficient, forceCPU);
         } else if (nodePtr->IsInstanceOf<RSDisplayRenderNode>()) {
             // In uniRender mode, maybe need to handle displayNode.
@@ -282,38 +237,79 @@ void RSRenderEngine::ClipHoleForLayer(
     return;
 }
 
+void RSRenderEngine::SetColorFilterMode(ColorFilterMode mode)
+{
+    uint32_t uMode = static_cast<uint32_t>(mode);
+    uint32_t uInvertMode = static_cast<uint32_t>(ColorFilterMode::INVERT_COLOR_ENABLE_MODE);
+    uint32_t ucolorFilterMode = static_cast<uint32_t>(colorFilterMode_);
+    bool isInvertModeEnabled = ((ucolorFilterMode & uInvertMode) == uInvertMode);
+
+    switch (mode) {
+        case ColorFilterMode::INVERT_COLOR_DISABLE_MODE: {
+            if (colorFilterMode_ != ColorFilterMode::COLOR_FILTER_END) {
+                colorFilterMode_ = static_cast<ColorFilterMode>(ucolorFilterMode & ~uInvertMode);
+            }
+            break;
+        }
+        case ColorFilterMode::INVERT_COLOR_ENABLE_MODE: {
+            if (colorFilterMode_ != ColorFilterMode::COLOR_FILTER_END) {
+                colorFilterMode_ = static_cast<ColorFilterMode>(ucolorFilterMode | uInvertMode);
+            } else {
+                colorFilterMode_ = mode;
+            }
+            break;
+        }
+        case ColorFilterMode::DALTONIZATION_PROTANOMALY_MODE:
+        case ColorFilterMode::DALTONIZATION_DEUTERANOMALY_MODE:
+        case ColorFilterMode::DALTONIZATION_TRITANOMALY_MODE: {
+            if (isInvertModeEnabled) {
+                colorFilterMode_ = static_cast<ColorFilterMode>(uMode | uInvertMode);
+            } else {
+                colorFilterMode_ = mode;
+            }
+            break;
+        }
+        case ColorFilterMode::DALTONIZATION_NORMAL_MODE: {
+            if (isInvertModeEnabled) {
+                colorFilterMode_ = ColorFilterMode::INVERT_COLOR_ENABLE_MODE;
+            } else {
+                colorFilterMode_ = ColorFilterMode::COLOR_FILTER_END;
+            }
+            break;
+        }
+
+        // INVERT_DALTONIZATION_PROTANOMALY_MODE, INVERT_DALTONIZATION_DEUTERANOMALY_MODE
+        // INVERT_DALTONIZATION_TRITANOMALY_MODE and COLOR_FILTER_END can not be set directly
+        case ColorFilterMode::INVERT_DALTONIZATION_PROTANOMALY_MODE: // fall-through
+        case ColorFilterMode::INVERT_DALTONIZATION_DEUTERANOMALY_MODE: // fall-through
+        case ColorFilterMode::INVERT_DALTONIZATION_TRITANOMALY_MODE: // fall-through
+        case ColorFilterMode::COLOR_FILTER_END: // fall-through
+        default: {
+            colorFilterMode_ = ColorFilterMode::COLOR_FILTER_END;
+            break;
+        }
+    }
+}
+
 void RSRenderEngine::SetColorFilterModeToPaint(SkPaint& paint)
 {
     ColorFilterMode mode = static_cast<ColorFilterMode>(RSSystemProperties::GetCorrectionMode());
-    if (mode <= ColorFilterMode::COLOR_FILTER_END && mode >= ColorFilterMode::INVERT_MODE) {
+    if (RSBaseRenderUtil::IsColorFilterModeValid(mode)) {
         colorFilterMode_ = mode;
     }
 
-    switch (colorFilterMode_) {
-        case ColorFilterMode::INVERT_MODE:
-            paint.setColorFilter(Detail::InvertColorMat());
-            break;
-        case ColorFilterMode::PROTANOMALY_MODE:
-            paint.setColorFilter(Detail::ProtanomalyMat());
-            break;
-        case ColorFilterMode::DEUTERANOMALY_MODE:
-            paint.setColorFilter(Detail::DeuteranomalyMat());
-            break;
-        case ColorFilterMode::TRITANOMALY_MODE:
-            paint.setColorFilter(Detail::TritanomalyMat());
-            break;
-        case ColorFilterMode::COLOR_FILTER_END:
-            paint.setColorFilter(nullptr);
-            break;
-        default:
-            paint.setColorFilter(nullptr);
+    // for test automation
+    if (colorFilterMode_ != ColorFilterMode::COLOR_FILTER_END) {
+        RS_LOGD("RsDebug RSRenderEngine::SetColorFilterModeToPaint mode:%d", static_cast<int32_t>(colorFilterMode_));
     }
+    RSBaseRenderUtil::SetColorFilterModeToPaint(colorFilterMode_, paint);
 }
 
 void RSRenderEngine::DrawBuffer(RSPaintFilterCanvas& canvas, BufferDrawParam& params)
 {
     SkBitmap bitmap;
-    if (!RSBaseRenderUtil::ConvertBufferToBitmap(params.buffer, params.targetColorGamut, bitmap,
+    std::vector<uint8_t> newBuffer;
+    if (!RSBaseRenderUtil::ConvertBufferToBitmap(params.buffer, newBuffer, params.targetColorGamut, bitmap,
         params.metaDatas)) {
         RS_LOGE("RSDividedRenderUtil::DrawBuffer: create bitmap failed.");
         return;
@@ -336,7 +332,9 @@ void RSRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam& par
 void RSRenderEngine::DrawWithParams(RSPaintFilterCanvas& canvas, BufferDrawParam& params,
     PreProcessFunc preProcess, PostProcessFunc postProcess)
 {
-    SetColorFilterModeToPaint(params.paint);
+    if (params.setColorFilter) {
+        SetColorFilterModeToPaint(params.paint);
+    }
 
     canvas.save();
 
@@ -483,6 +481,7 @@ void RSRenderEngine::DrawDisplayNode(
     bool forceCPU)
 {
     // [PLANNING]: In uniRender mode, maybe need to handle displayNode.
+    // it is unexpected in now suitation.
 }
 } // namespace Rosen
 } // namespace OHOS

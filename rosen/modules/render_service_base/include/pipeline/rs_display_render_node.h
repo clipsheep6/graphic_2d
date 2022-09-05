@@ -133,6 +133,42 @@ public:
 
     ScreenRotation GetRotation() const;
 
+    std::shared_ptr<RSDirtyRegionManager> GetDirtyManager()
+    {
+        return dirtyManager_;
+    }
+    void UpdateDisplayDirtyManager(uint32_t bufferage);
+    void UpdateSurfaceNodePos(NodeId id, RectI rect)
+    {
+        currentFrameSurfacePos_[id] = rect;
+    }
+
+    RectI GetLastFrameSurfacePos(NodeId id)
+    {
+        return lastFrameSurfacePos_[id];
+    }
+
+    RectI GetCurrentFrameSurfacePos(NodeId id)
+    {
+        return currentFrameSurfacePos_[id];
+    }
+
+    const std::vector<RectI> GetSurfaceChangedRects() const
+    {
+        std::vector<RectI> rects;
+        for (auto iter = lastFrameSurfacePos_.begin(); iter != lastFrameSurfacePos_.end(); iter++) {
+            if (currentFrameSurfacePos_.find(iter->first) == currentFrameSurfacePos_.end()) {
+                rects.emplace_back(iter->second);
+            }
+        }
+        for (auto iter = currentFrameSurfacePos_.begin(); iter != currentFrameSurfacePos_.end(); iter++) {
+            if (lastFrameSurfacePos_.find(iter->first) == lastFrameSurfacePos_.end()) {
+                rects.emplace_back(iter->second);
+            }
+        }
+        return rects;
+    }
+
 private:
     CompositeType compositeType_ { HARDWARE_COMPOSITE };
     uint64_t screenId_;
@@ -149,6 +185,10 @@ private:
     bool surfaceCreated_ { false };
     sptr<IBufferConsumerListener> consumerListener_;
     uint64_t frameCount_ = 0;
+
+    std::map<NodeId, RectI> lastFrameSurfacePos_;
+    std::map<NodeId, RectI> currentFrameSurfacePos_;
+    std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

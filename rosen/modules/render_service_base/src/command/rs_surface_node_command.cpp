@@ -99,5 +99,16 @@ void SurfaceNodeCommandHelper::SetAbilityBGAlpha(RSContext& context, NodeId id, 
         node->SetAbilityBGAlpha(alpha);
     }
 }
+
+void SurfaceNodeCommandHelper::UpdateParentWithoutTransition(RSContext& context, NodeId nodeId, NodeId parentId)
+{
+    auto& nodeMap = context.GetNodeMap();
+    auto node = nodeMap.GetRenderNode<RSBaseRenderNode>(nodeId);
+    auto parent = nodeMap.GetRenderNode<RSBaseRenderNode>(parentId);
+    if (node && parent) {
+        node->RemoveFromTreeWithoutTransition();
+        parent->AddChild(node);
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

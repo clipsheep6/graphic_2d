@@ -739,10 +739,11 @@ HWTEST_F(ConsumerSurfaceTest, TunnelHandle002, Function | MediumTest | Level2)
 * EnvConditions: N/A
 * CaseDescription: 1. call SetTunnelHandle with normal parameters and check ret
 *                  2. call GetTunnelHandle and check ret
+* @tc.require: issueI5GMZN issueI5IWHW
  */
 HWTEST_F(ConsumerSurfaceTest, TunnelHandle003, Function | MediumTest | Level1)
 {
-    ExtDataHandle *handle = new ExtDataHandle();
+    ExtDataHandle *handle = static_cast<ExtDataHandle *>(malloc(sizeof(ExtDataHandle) + sizeof(int32_t) * 1));
     handle->fd = -1;
     handle->reserveInts = 1;
     handle->reserve[0] = 0;
@@ -758,7 +759,7 @@ HWTEST_F(ConsumerSurfaceTest, TunnelHandle003, Function | MediumTest | Level1)
     ASSERT_EQ(handle->fd, handleGet->GetHandle()->fd);
     ASSERT_EQ(handle->reserveInts, handleGet->GetHandle()->reserveInts);
     ASSERT_EQ(handle->reserve[0], handleGet->GetHandle()->reserve[0]);
-    delete handle;
+    free(handle);
 }
 
 /*
@@ -780,6 +781,7 @@ HWTEST_F(ConsumerSurfaceTest, disconnect001, Function | MediumTest | Level1)
 * Rank: Important(2)
 * EnvConditions: N/A
 * CaseDescription: 1. call GetPresentTimestamp and check ret
+* @tc.require: issueI5I57K
  */
 HWTEST_F(ConsumerSurfaceTest, presentTimestamp001, Function | MediumTest | Level2)
 {
@@ -796,6 +798,7 @@ HWTEST_F(ConsumerSurfaceTest, presentTimestamp001, Function | MediumTest | Level
 * Rank: Important(2)
 * EnvConditions: N/A
 * CaseDescription: 1. call SetPresentTimestamp with abnormal parameters and check ret
+* @tc.require: issueI5I57K
  */
 HWTEST_F(ConsumerSurfaceTest, presentTimestamp002, Function | MediumTest | Level2)
 {
@@ -810,6 +813,7 @@ HWTEST_F(ConsumerSurfaceTest, presentTimestamp002, Function | MediumTest | Level
 * Rank: Important(2)
 * EnvConditions: N/A
 * CaseDescription: 1. call SetPresentTimestamp with abnormal parameters and check ret
+* @tc.require: issueI5I57K
  */
 HWTEST_F(ConsumerSurfaceTest, presentTimestamp003, Function | MediumTest | Level2)
 {
@@ -824,6 +828,7 @@ HWTEST_F(ConsumerSurfaceTest, presentTimestamp003, Function | MediumTest | Level
 * Rank: Important(1)
 * EnvConditions: N/A
 * CaseDescription: 1. call SetPresentTimestamp with normal parameters and check ret
+* @tc.require: issueI5I57K
  */
 HWTEST_F(ConsumerSurfaceTest, presentTimestamp004, Function | MediumTest | Level1)
 {
@@ -839,6 +844,7 @@ HWTEST_F(ConsumerSurfaceTest, presentTimestamp004, Function | MediumTest | Level
 * Rank: Important(1)
 * EnvConditions: N/A
 * CaseDescription: 1. call SetPresentTimestamp with normal parameters and check ret
+* @tc.require: issueI5I57K
  */
 HWTEST_F(ConsumerSurfaceTest, presentTimestamp005, Function | MediumTest | Level1)
 {

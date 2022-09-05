@@ -44,12 +44,13 @@ public:
     void SendMessages(); // post messages to render thread
 
     void SetTimeStamp(uint64_t timeStamp, const std::string& abilityName);
+    void SetCacheDir(const std::string& cacheFilePath);
 
     bool RunningCustomAnimation(uint64_t timeStamp);
 
 private:
     void AttachSurface();
-    static void RecvMessages();
+    static void RecvMessages(bool needProcess = true);
     static void RecvMessages(std::shared_ptr<RSTransactionData> cmds);
     static void ProcessMessages(std::shared_ptr<RSTransactionData> cmds); // receive message
     static void AnimationCallbackProcessor(NodeId nodeId, AnimationId animId);
@@ -64,12 +65,12 @@ private:
     NodeId root_ = 0;
 
     bool isActive_ = false;
-    bool isUniRenderEnabled_ = false;
     uint64_t refreshPeriod_ = 16666667;
     uint64_t timeStamp_ = 0;
     std::weak_ptr<RSSurfaceNode> surfaceNode_;
     int surfaceWidth_ = 0;
     int surfaceHeight_ = 0;
+    std::string cacheDir_;
 
     friend class RSRenderThread;
     friend class RSApplicationAgentImpl;

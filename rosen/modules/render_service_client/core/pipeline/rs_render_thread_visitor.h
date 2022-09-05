@@ -52,6 +52,9 @@ private:
     void DrawDirtyRegion();
 
     std::shared_ptr<RSDirtyRegionManager> curDirtyManager_;
+    bool isPartialRenderEnabled_ = false;
+    bool isOpDroped_ = false;
+    RectI currentDirtyRegion_ = RectI();
     bool dirtyFlag_ = false;
     bool isIdle_ = true;
     RSPaintFilterCanvas* canvas_;
@@ -63,6 +66,7 @@ private:
     SkMatrix parentSurfaceNodeMatrix_;
 
     void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType);
+    bool IsValidRootRenderNode(RSRootRenderNode& node);
 };
 } // namespace Rosen
 } // namespace OHOS

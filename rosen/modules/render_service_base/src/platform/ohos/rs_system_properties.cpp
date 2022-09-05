@@ -24,21 +24,27 @@ namespace Rosen {
 // used by clients
 bool RSSystemProperties::GetUniRenderEnabled()
 {
+    static bool inited = false;
+    if (inited) {
+        return isUniRenderEnabled_;
+    }
+
+    isUniRenderEnabled_ = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
+        ->GetUniRenderEnabled();
+    isUniRenderMode_ = isUniRenderEnabled_;
+    inited = true;
+    ROSEN_LOGI("RSSystemProperties::GetUniRenderEnabled:%d", isUniRenderEnabled_);
     return isUniRenderEnabled_;
 }
 
-void RSSystemProperties::InitUniRenderEnabled(const std::string &bundleName)
+bool RSSystemProperties::IsUniRenderMode()
 {
-    static bool inited = false;
-    if (inited) {
-        return;
-    }
+    return isUniRenderMode_;
+}
 
-    // init
-    inited = true;
-    isUniRenderEnabled_ = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
-                ->InitUniRenderEnabled(bundleName);
-    ROSEN_LOGI("Init UniRender Enabled:%d, package name:%s", isUniRenderEnabled_, bundleName.c_str());
+void RSSystemProperties::SetRenderMode(bool isUni)
+{
+    isUniRenderMode_ = isUni;
 }
 
 DirtyRegionDebugType RSSystemProperties::GetDirtyRegionDebugType()
@@ -47,9 +53,16 @@ DirtyRegionDebugType RSSystemProperties::GetDirtyRegionDebugType()
         std::atoi((system::GetParameter("rosen.dirtyregiondebug.enabled", "0")).c_str()));
 }
 
-bool RSSystemProperties::GetPartialRenderEnabled()
+PartialRenderType RSSystemProperties::GetPartialRenderEnabled()
 {
-    return std::atoi((system::GetParameter("rosen.partialrender.enabled", "0")).c_str()) != 0;
+    return static_cast<PartialRenderType>(
+        std::atoi((system::GetParameter("rosen.partialrender.enabled", "0")).c_str()));
+}
+
+PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
+{
+    return static_cast<PartialRenderType>(
+        std::atoi((system::GetParameter("rosen.uni.partialrender.enabled", "0")).c_str()));
 }
 
 bool RSSystemProperties::GetOcclusionEnabled()
@@ -76,11 +89,22 @@ bool RSSystemProperties::GetHighContrastStatus()
     return std::atoi((system::GetParameter("rosen.HighContrast.enabled", "0")).c_str()) != 0;
 }
 
-int32_t RSSystemProperties::GetCorrectionMode()
+uint32_t RSSystemProperties::GetCorrectionMode()
 {
     // If the value of rosen.directClientComposition.enabled is not 0 then enable the direct CLIENT composition.
     // Direct CLIENT composition will be processed only when the num of layer is larger than 11
-    return std::atoi((system::GetParameter("rosen.CorrectionMode", "5")).c_str());
+    return std::atoi((system::GetParameter("rosen.CorrectionMode", "999")).c_str());
+}
+
+DumpSurfaceType RSSystemProperties::GetDumpSurfaceType()
+{
+    return static_cast<DumpSurfaceType>(
+        std::atoi((system::GetParameter("rosen.dumpsurfacetype.enabled", "0")).c_str()));
+}
+
+uint64_t RSSystemProperties::GetDumpSurfaceId()
+{
+    return std::atoi((system::GetParameter("rosen.dumpsurfaceid", "0")).c_str());
 }
 } // namespace Rosen
 } // namespace OHOS

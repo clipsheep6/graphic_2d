@@ -39,6 +39,7 @@ enum class RSModifierType : int16_t {
 
     CORNER_RADIUS,
     ALPHA,
+    ALPHA_OFFSCREEN,
 
     FOREGROUND_COLOR,
     BACKGROUND_COLOR,
@@ -79,6 +80,18 @@ enum class RSModifierType : int16_t {
     FOREGROUND_STYLE,
     CONTENT_STYLE,
     OVERLAY_STYLE,
+};
+
+enum class RSRenderPropertyType : int16_t {
+    INVALID = 0,
+    PROPERTY_FLOAT,
+    PROPERTY_COLOR,
+    PROPERTY_MATRIX3F,
+    PROPERTY_QUATERNION,
+    PROPERTY_FILTER,
+    PROPERTY_VECTOR2F,
+    PROPERTY_VECTOR4F,
+    PROPERTY_VECTOR4_COLOR,
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -17,6 +17,7 @@
 
 #include <message_option.h>
 #include <message_parcel.h>
+#include <vector>
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "transaction/rs_ashmem_helper.h"
@@ -24,6 +25,10 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+static constexpr size_t ASHMEM_SIZE_THRESHOLD = 400 * 1024; // cannot > 500K in TF_ASYNC mode
+}
+
 RSRenderServiceConnectionProxy::RSRenderServiceConnectionProxy(const sptr<IRemoteObject>& impl)
     : IRemoteProxy<RSIRenderServiceConnection>(impl)
 {
@@ -31,47 +36,70 @@ RSRenderServiceConnectionProxy::RSRenderServiceConnectionProxy(const sptr<IRemot
 
 void RSRenderServiceConnectionProxy::CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData)
 {
-    static constexpr size_t PARCEL_MAX_CPACITY = 1000 * 1024; // set upper bound of data parcel capacity to 1000K
-    static constexpr size_t ASHMEM_SIZE_THRESHOLD = 400 * 1024;
-
     if (!transactionData) {
         ROSEN_LOGE("RSRenderServiceConnectionProxy::CommitTransaction transactionData nullptr!");
         return;
     }
-
-    std::shared_ptr<MessageParcel> data = std::make_shared<MessageParcel>();
-    MessageParcel reply;
-    MessageOption option;
-    data->SetMaxCapacity(PARCEL_MAX_CPACITY);
-    data->WriteInt32(0); // indicate data parcel
-
+    bool isUniMode = RSSystemProperties::IsUniRenderMode();
+    transactionData->SetUniRender(isUniMode);
     transactionData->SetSendingPid(pid_);
-    transactionData->SetIndex(++transactionDataIndex_);
-    transactionData->SetUniRender(RSSystemProperties::GetUniRenderEnabled());
+
+    // split to several parcels if parcel size > PARCEL_SPLIT_THRESHOLD during marshalling
+    std::vector<std::shared_ptr<MessageParcel>> parcelVector;
+    while (transactionData->GetMarshallingIndex() < transactionData->GetCommandCount()) {
+        if (isUniMode) {
+            ++transactionDataIndex_;
+        }
+        transactionData->SetIndex(transactionDataIndex_);
+        std::shared_ptr<MessageParcel> parcel = std::make_shared<MessageParcel>();
+        if (!FillParcelWithTransactionData(transactionData, parcel)) {
+            ROSEN_LOGE("FillParcelWithTransactionData failed!");
+            return;
+        }
+        parcelVector.emplace_back(parcel);
+    }
+
+    MessageOption option;
+    option.SetFlags(MessageOption::TF_ASYNC);
+    for (auto& parcel : parcelVector) {
+        MessageParcel reply;
+        RS_ASYNC_TRACE_BEGIN("RSProxySendRequest", parcel->GetDataSize());
+        int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::COMMIT_TRANSACTION, *parcel, reply, option);
+        if (err != NO_ERROR) {
+            ROSEN_LOGE("RSRenderServiceConnectionProxy::CommitTransaction SendRequest failed, err = %d", err);
+            return;
+        }
+    }
+}
+
+bool RSRenderServiceConnectionProxy::FillParcelWithTransactionData(
+    std::unique_ptr<RSTransactionData>& transactionData, std::shared_ptr<MessageParcel>& data)
+{
+    // write a flag at the begin of parcel to identify parcel type
+    // 0: indicate normal parcel
+    // 1: indicate ashmem parcel
+    data->WriteInt32(0);
+
+    // 1. marshalling RSTransactionData
     RS_TRACE_BEGIN("Marsh RSTransactionData: cmd count:" + std::to_string(transactionData->GetCommandCount()) +
-        " transactionFlag:[" + std::to_string(pid_) + ", " + std::to_string(transactionData->GetIndex()) + "]");
+        " transactionFlag:[" + std::to_string(pid_) + ", " + std::to_string(transactionData->GetIndex()) + "],isUni:" +
+        std::to_string(transactionData->GetUniRender()));
     bool success = data->WriteParcelable(transactionData.get());
     RS_TRACE_END();
     if (!success) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::CommitTransaction data.WriteParcelable failed!");
-        return;
+        ROSEN_LOGE("FillParcelWithTransactionData data.WriteParcelable failed!");
+        return false;
     }
 
+    // 2. convert data to new ashmem parcel if size over threshold
     std::shared_ptr<MessageParcel> ashmemParcel = nullptr;
     if (data->GetDataSize() > ASHMEM_SIZE_THRESHOLD) {
         ashmemParcel = RSAshmemHelper::CreateAshmemParcel(data);
     }
-    if (ashmemParcel == nullptr) {
-        ashmemParcel = data;
+    if (ashmemParcel != nullptr) {
+        data = ashmemParcel;
     }
-
-    option.SetFlags(MessageOption::TF_ASYNC);
-    RS_ASYNC_TRACE_BEGIN("RSProxySendRequest", ashmemParcel->GetDataSize());
-    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::COMMIT_TRANSACTION, *ashmemParcel, reply, option);
-    if (err != NO_ERROR) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::CommitTransaction SendRequest failed, err = %d", err);
-        return;
-    }
+    return true;
 }
 
 void RSRenderServiceConnectionProxy::ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task)
@@ -99,19 +127,74 @@ void RSRenderServiceConnectionProxy::ExecuteSynchronousTask(const std::shared_pt
     }
 }
 
-bool RSRenderServiceConnectionProxy::InitUniRenderEnabled(const std::string &bundleName)
+int32_t RSRenderServiceConnectionProxy::SetRenderModeChangeCallback(sptr<RSIRenderModeChangeCallback> callback)
+{
+    if (callback == nullptr) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::SetRenderModeChangeCallback: callback is nullptr.");
+        return INVALID_ARGUMENTS;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return WRITE_PARCEL_ERR;
+    }
+
+    option.SetFlags(MessageOption::TF_ASYNC);
+    data.WriteRemoteObject(callback->AsObject());
+    int32_t err =
+        Remote()->SendRequest(RSIRenderServiceConnection::SET_RENDER_MODE_CHANGE_CALLBACK, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::SetRenderModeChangeCallback: Send Request err.");
+        return RS_CONNECTION_ERROR;
+    }
+    int32_t result = reply.ReadInt32();
+    return result;
+}
+
+void RSRenderServiceConnectionProxy::UpdateRenderMode(bool isUniRender)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteString(bundleName)) {
-        return false;
+    if (!data.WriteBool(isUniRender)) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::UpdateRenderMode WriteBool failed!");
+        return;
     }
+    option.SetFlags(MessageOption::TF_ASYNC);
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::UPDATE_RENDER_MODE, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::UpdateRenderMode SendRequest failed, err = %d", err);
+        return;
+    }
+}
+
+bool RSRenderServiceConnectionProxy::GetUniRenderEnabled()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
     option.SetFlags(MessageOption::TF_SYNC);
-    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::GET_UNI_RENDER_TYPE, data, reply, option);
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::GET_UNI_RENDER_ENABLED, data, reply, option);
     if (err != NO_ERROR) {
         return false;
+    }
+    return reply.ReadBool();
+}
+
+bool RSRenderServiceConnectionProxy::QueryIfRTNeedRender()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::QUERY_RT_NEED_RENDER, data, reply, option);
+    if (err != NO_ERROR) {
+        return true;
     }
     return reply.ReadBool();
 }

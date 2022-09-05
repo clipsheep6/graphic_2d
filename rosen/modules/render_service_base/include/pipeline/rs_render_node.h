@@ -42,6 +42,11 @@ public:
 
     RSProperties& GetMutableRenderProperties();
     const RSProperties& GetRenderProperties() const;
+    void UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEnabled);
+    inline bool IsRenderUpdateIgnored() const
+    {
+        return isRenderUpdateIgnored_;
+    }
 
     // used for animation test
     RSAnimationManager& GetAnimationManager()
@@ -73,17 +78,20 @@ public:
         return isDirtyRegionUpdated_;
     }
     void ClearModifiers();
-    virtual void AddModifier(const std::shared_ptr<RSRenderModifier>& modifier);
+    virtual void AddModifier(const std::shared_ptr<RSRenderModifier> modifier);
     void RemoveModifier(const PropertyId& id);
     void ApplyModifiers();
     std::shared_ptr<RSRenderModifier> GetModifier(const PropertyId& id);
 
 protected:
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
-    void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool parentDirty);
+    void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty);
     bool IsDirty() const override;
+    void AddGeometryModifier(const std::shared_ptr<RSRenderModifier>& modifier);
     std::pair<int, int> renderNodeSaveCount_ = { 0, 0 };
     std::unordered_map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>> drawCmdModifiers_;
+    // if true, it means currently it's in partial render mode and this node is intersect with dirtyRegion
+    bool isRenderUpdateIgnored_ = false;
 
 private:
     void FallbackAnimationsToRoot();
@@ -93,6 +101,9 @@ private:
     RSProperties renderProperties_;
     RSAnimationManager animationManager_;
     std::map<PropertyId, std::shared_ptr<RSRenderModifier>> modifiers_;
+    // bounds and frame modifiers must be unique
+    std::shared_ptr<RSRenderModifier> boundsModifier_;
+    std::shared_ptr<RSRenderModifier> frameModifier_;
 
     friend class RSRenderTransition;
 };

@@ -37,12 +37,14 @@ public:
     virtual ~RSBaseRenderNode() = default;
 
     void AddChild(SharedPtr child, int index = -1);
+    void MoveChild(SharedPtr child, int index);
     void RemoveChild(SharedPtr child);
     // Add/RemoveCrossParentChild only used as: the child is under multiple parents(e.g. a window cross multi-screens)
     void AddCrossParentChild(const SharedPtr& child, int32_t index = -1);
     void RemoveCrossParentChild(const SharedPtr& child, const WeakPtr& newParent);
     void ClearChildren();
     void RemoveFromTree();
+    void RemoveFromTreeWithoutTransition();
     virtual void CollectSurface(const std::shared_ptr<RSBaseRenderNode>& node,
                                 std::vector<RSBaseRenderNode::SharedPtr>& vec,
                                 bool isUniRender);

@@ -160,6 +160,7 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
             // return
         }
 
+        output->UpdatePrevLayerInfo();
         int64_t timestamp = lastPresentFence_->SyncFileReadTimestamp();
         bool ret = false;
         if (timestamp != SyncFence::FENCE_PENDING_TIMESTAMP) {
@@ -171,6 +172,8 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
             }
         }
         if (ret) {
+            HLOGD("Enable Screen Vsync");
+            device_->SetScreenVsyncEnabled(screenId, true);
             sampler_->BeginSample();
         }
 
@@ -280,7 +283,7 @@ int32_t HdiBackend::SetScreenClientInfo(const FrameBufferEntry &fbEntry, const O
     ret = device_->SetScreenClientDamage(output->GetScreenId(), output->GetOutputDamageNum(),
                                          output->GetOutputDamage());
     if (ret != DISPLAY_SUCCESS) {
-        HLOGE("SetScreenClientDamage failed, ret is %{public}d", ret);
+        HLOGD("SetScreenClientDamage failed, ret is %{public}d", ret);
         return ret;
     }
 

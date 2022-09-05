@@ -13,6 +13,7 @@
       "name": "graphic_standard",
       "subsystem": "graphic",
       "syscap": [
+        "SystemCapability.Graphic.Graphic2D.ColorManager.Core",
         "SystemCapability.Graphic.Graphic2D.EGL",
         "SystemCapability.Graphic.Graphic2D.GLES3",
         "SystemCapability.Graphic.Graphic2D.NativeWindow",
@@ -26,7 +27,8 @@
         "graphic_standard_feature_bootanimation_enable",
         "graphic_standard_feature_ace_enable_gpu",
         "graphic_standard_feature_rs_enable_eglimage",
-        "graphic_standard_feature_color_gamut_enable"
+        "graphic_standard_feature_color_gamut_enable",
+        "graphic_standard_feature_rs_enable_uni_render"
       ],
       "rom": "10000KB",
       "ram": "10000KB",
@@ -45,8 +47,7 @@
           "bytrace_core"
         ],
         "third_party": [
-          "libz",
-          "libdrm"
+          "libz"
         ]
       },
       "build": {
@@ -73,7 +74,7 @@
             "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:debug_layer_test1",
             "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:debug_layer_test2",
             "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:opengl_wrapper_native_test",
-            "//foundation/graphic/graphic_2d/frameworks/surfaceimage:libsurfaceimage",
+            "//foundation/graphic/graphic_2d/frameworks/surfaceimage:libnative_image",
             "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect"
           ],
           "fwk_group": [
@@ -137,17 +138,6 @@
           },
           {
             "type": "so",
-            "name": "//foundation/graphic/graphic_2d/frameworks/vsync:libvsync_module",
-            "header": {
-              "header_files": [
-                "vsync_module.h",
-                "vsync_module_c.h"
-              ],
-              "header_base": "//foundation/graphic/graphic_2d/interfaces/inner_api/vsync_module"
-            }
-          },
-          {
-            "type": "so",
             "name": "//foundation/graphic/graphic_2d/utils:libgraphic_utils",
             "header": {
               "header_files": [
@@ -175,6 +165,7 @@
         ],
         "test": [
           "//foundation/graphic/graphic_2d:graphic_standard_test",
+          "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:test",
           "//foundation/graphic/graphic_2d/rosen/test/render_service:unittest",
           "//foundation/graphic/graphic_2d/rosen/test/2d_graphics:test"
         ]

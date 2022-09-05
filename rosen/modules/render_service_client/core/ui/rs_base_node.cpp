@@ -53,7 +53,7 @@ void RSBaseNode::InitUniRenderEnabled()
     if (!inited) {
         inited = true;
         isUniRenderEnabled_ = RSSystemProperties::GetUniRenderEnabled();
-        ROSEN_LOGI("RSBaseNode::InitUniRenderEnabled:%d", isUniRenderEnabled_);
+        ROSEN_LOGD("RSBaseNode::InitUniRenderEnabled:%d", isUniRenderEnabled_);
     }
 }
 
@@ -69,10 +69,15 @@ RSBaseNode::~RSBaseNode()
 {
     RemoveFromTree();
     RSNodeMap::MutableInstance().UnregisterNode(id_);
-    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeDestroy>(id_);
     auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    if (transactionProxy == nullptr) {
+        return;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeDestroy>(id_);
+    transactionProxy->AddCommand(command, IsRenderServiceNode());
+    if (NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand = std::make_unique<RSBaseNodeDestroy>(GetId());
+        transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode());
     }
 }
 
@@ -94,10 +99,60 @@ void RSBaseNode::AddChild(SharedPtr child, int index)
     }
     child->SetParent(id_);
     child->OnAddChildren();
-    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeAddChild>(id_, childId, index);
     auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+    if (transactionProxy == nullptr) {
+        return;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeAddChild>(id_, childId, index);
+    bool disallowSendToRemote = isUniRenderEnabled_ && !RSSystemProperties::IsUniRenderMode() && // dynamic-Non Uni
+        !isRenderServiceNode_ && !IsInstanceOf(RSUINodeType::SURFACE_NODE) && // canvas/root node
+        child->IsInstanceOf(RSUINodeType::SURFACE_NODE);
+    if (disallowSendToRemote) {
+        transactionProxy->AddCommand(command, false, GetFollowType(), id_);
+        return;
+    }
+    transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+    if (NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand = std::make_unique<RSBaseNodeAddChild>(id_, childId, index);
+        transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode(), GetFollowType(), id_);
+    }
+}
+
+void RSBaseNode::MoveChild(SharedPtr child, int index)
+{
+    if (child == nullptr || child->parent_ != id_) {
+        ROSEN_LOGD("RSBaseNode::MoveChild, not valid child");
+        return;
+    }
+    NodeId childId = child->GetId();
+    auto itr = std::find(children_.begin(), children_.end(), childId);
+    if (itr == children_.end()) {
+        ROSEN_LOGD("RSBaseNode::MoveChild, not child");
+        return;
+    }
+    children_.erase(itr);
+    if (index < 0 || index >= static_cast<int>(children_.size())) {
+        children_.push_back(childId);
+    } else {
+        children_.insert(children_.begin() + index, childId);
+    }
+
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy == nullptr) {
+        return;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeMoveChild>(id_, childId, index);
+    bool disallowSendToRemote = isUniRenderEnabled_ && !RSSystemProperties::IsUniRenderMode() && // dynamic-Non Uni
+        !isRenderServiceNode_ && !IsInstanceOf(RSUINodeType::SURFACE_NODE) && // canvas/root node
+        child->IsInstanceOf(RSUINodeType::SURFACE_NODE);
+    if (disallowSendToRemote) {
+        transactionProxy->AddCommand(command, false, GetFollowType(), id_);
+        return;
+    }
+    transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+    if (NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand = std::make_unique<RSBaseNodeMoveChild>(id_, childId, index);
+        transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode(), GetFollowType(), id_);
     }
 }
 
@@ -112,10 +167,15 @@ void RSBaseNode::RemoveChild(SharedPtr child)
     child->OnRemoveChildren();
     child->SetParent(0);
 
-    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveChild>(id_, childId);
     auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+    if (transactionProxy == nullptr) {
+        return;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveChild>(id_, childId);
+    transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+    if (NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand = std::make_unique<RSBaseNodeRemoveChild>(id_, childId);
+        transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode(), GetFollowType(), id_);
     }
 }
 
@@ -140,10 +200,16 @@ void RSBaseNode::AddCrossParentChild(SharedPtr child, int index)
     }
     child->SetParent(GetId());
     child->OnAddChildren();
-    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeAddCrossParentChild>(GetId(), childId, index);
     auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    if (transactionProxy == nullptr) {
+        return;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeAddCrossParentChild>(GetId(), childId, index);
+    transactionProxy->AddCommand(command, IsRenderServiceNode());
+    if (NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand =
+            std::make_unique<RSBaseNodeAddCrossParentChild>(GetId(), childId, index);
+        transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode());
     }
 }
 
@@ -164,11 +230,17 @@ void RSBaseNode::RemoveCrossParentChild(SharedPtr child, NodeId newParentId)
     child->OnRemoveChildren();
     child->SetParent(newParentId);
 
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy == nullptr) {
+        return;
+    }
     std::unique_ptr<RSCommand> command =
         std::make_unique<RSBaseNodeRemoveCrossParentChild>(GetId(), childId, newParentId);
-    auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    transactionProxy->AddCommand(command, IsRenderServiceNode());
+    if (NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand =
+            std::make_unique<RSBaseNodeRemoveCrossParentChild>(GetId(), childId, newParentId);
+        transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode());
     }
 }
 
@@ -188,10 +260,15 @@ void RSBaseNode::RemoveFromTree()
         SetParent(0);
     }
     // always send Remove-From-Tree command
-    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveFromTree>(id_);
     auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+    if (transactionProxy == nullptr) {
+        return;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeRemoveFromTree>(id_);
+    transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+    if (NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand = std::make_unique<RSBaseNodeRemoveFromTree>(id_);
+        transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode(), GetFollowType(), id_);
     }
 }
 
@@ -204,10 +281,15 @@ void RSBaseNode::ClearChildren()
     }
     children_.clear();
 
-    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearChild>(id_);
     auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+    if (transactionProxy == nullptr) {
+        return;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearChild>(id_);
+    transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), id_);
+    if (NeedSendExtraCommand()) {
+        std::unique_ptr<RSCommand> extraCommand = std::make_unique<RSBaseNodeClearChild>(id_);
+        transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode(), GetFollowType(), id_);
     }
 }
 

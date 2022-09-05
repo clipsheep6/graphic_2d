@@ -25,7 +25,7 @@
 #include "refbase.h"
 #include "rs_render_engine.h"
 #include "vsync_distributor.h"
-#include "vsync_helper.h"
+#include <event_handler.h>
 #include "vsync_receiver.h"
 
 #include "command/rs_command.h"
@@ -33,6 +33,7 @@
 #include "common/rs_thread_looper.h"
 #include "ipc_callbacks/iapplication_agent.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
+#include "ipc_callbacks/rs_irender_mode_change_callback.h"
 #include "pipeline/rs_context.h"
 #include "pipeline/rs_uni_render_judgement.h"
 #include "platform/drawing/rs_vsync_client.h"
@@ -100,6 +101,8 @@ public:
     }
     void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app);
     void UnRegisterApplicationAgent(sptr<IApplicationAgent> app);
+    void NotifyRenderModeChanged(bool useUniVisitor);
+    bool QueryIfUseUniVisitor() const;
 
     void RegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback);
     void UnRegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback);
@@ -107,6 +110,8 @@ public:
 
     void WaitUtilUniRenderFinished();
     void NotifyUniRenderFinish();
+    void SetRenderModeChangeCallback(sptr<RSIRenderModeChangeCallback> callback);
+    bool IfUseUniVisitor() const;
 
     void ClearTransactionDataPidInfo(pid_t remotePid);
     void AddTransactionDataPidInfo(pid_t remotePid);
@@ -147,6 +152,9 @@ private:
     void WaitUntilUnmarshallingTaskFinished();
     void MergeToEffectiveTransactionDataMap(TransactionDataMap& cachedTransactionDataMap);
 
+    void CheckBufferAvailableIfNeed();
+    void CheckUpdateSurfaceNodeIfNeed();
+
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     RSTaskMessage::RSTask mainLoop_;
@@ -169,7 +177,11 @@ private:
     std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
     std::vector<sptr<RSIOcclusionChangeCallback>> occlusionListeners_;
 
+    bool waitingBufferAvailable_ = false; // uni->non-uni mode, wait for RT buffer, only used in main thread
+    bool waitingUpdateSurfaceNode_ = false; // non-uni->uni mode, wait for update surfaceView, only used in main thread
     bool isUniRender_ = RSUniRenderJudgement::IsUniRender();
+    sptr<RSIRenderModeChangeCallback> renderModeChangeCallback_;
+    std::atomic_bool useUniVisitor_ = isUniRender_;
     RSTaskMessage::RSTask unmarshalBarrierTask_;
     std::condition_variable unmarshalTaskCond_;
     std::mutex unmarshalMutex_;

@@ -37,6 +37,7 @@ enum RSSurfaceNodeCommandType : uint16_t {
     SURFACE_NODE_SET_CALLBACK_FOR_RENDER_THREAD,
     SURFACE_NODE_SET_CONTEXT_BOUNDS,
     SURFACE_NODE_SET_ABILITY_BG_ALPHA,
+    SURFACE_NODE_UPDATE_PARENT_WITHOUT_TRANSITION,
 };
 
 class SurfaceNodeCommandHelper {
@@ -52,6 +53,7 @@ public:
     static void SetCallbackForRenderThreadRefresh(RSContext& context, NodeId id, std::function<void(void)> callback);
     static void SetContextBounds(RSContext& context, NodeId id, Vector4f bounds);
     static void SetAbilityBGAlpha(RSContext& context, NodeId id, uint8_t alpha);
+    static void UpdateParentWithoutTransition(RSContext& context, NodeId nodeId, NodeId parentId);
 };
 
 ADD_COMMAND(RSSurfaceNodeCreate, ARG(SURFACE_NODE, SURFACE_NODE_CREATE, SurfaceNodeCommandHelper::Create, NodeId))
@@ -77,6 +79,9 @@ ADD_COMMAND(RSSurfaceNodeSetBounds,
     ARG(SURFACE_NODE, SURFACE_NODE_SET_CONTEXT_BOUNDS, SurfaceNodeCommandHelper::SetContextBounds, NodeId, Vector4f))
 ADD_COMMAND(RSSurfaceNodeSetAbilityBGAlpha,
     ARG(SURFACE_NODE, SURFACE_NODE_SET_ABILITY_BG_ALPHA, SurfaceNodeCommandHelper::SetAbilityBGAlpha, NodeId, uint8_t))
+ADD_COMMAND(RSSurfaceNodeUpdateParentWithoutTransition,
+    ARG(SURFACE_NODE, SURFACE_NODE_UPDATE_PARENT_WITHOUT_TRANSITION,
+        SurfaceNodeCommandHelper::UpdateParentWithoutTransition, NodeId, NodeId))
 } // namespace Rosen
 } // namespace OHOS
 #endif // ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_SURFACE_NODE_COMMAND_H

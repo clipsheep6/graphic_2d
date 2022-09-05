@@ -19,6 +19,7 @@
 #include <string>
 
 #include "EGL/egl.h"
+#include "rs_trace.h"
 #include "window.h"
 
 #include "utils/log.h"
@@ -92,7 +93,8 @@ RenderContext::RenderContext()
       eglDisplay_(EGL_NO_DISPLAY),
       eglContext_(EGL_NO_CONTEXT),
       eglSurface_(EGL_NO_SURFACE),
-      config_(nullptr)
+      config_(nullptr),
+      mHandler_(nullptr)
 {}
 
 RenderContext::~RenderContext()
@@ -110,6 +112,7 @@ RenderContext::~RenderContext()
     eglSurface_ = EGL_NO_SURFACE;
     grContext_ = nullptr;
     skSurface_ = nullptr;
+    mHandler_ = nullptr;
 }
 
 void RenderContext::InitializeEglContext()
@@ -234,12 +237,18 @@ bool RenderContext::SetUpGrContext()
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
 
+    mHandler_ = std::make_shared<MemoryHandler>();
+    if (mHandler_ != nullptr) {
+        auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+        auto size = glesVersion ? strlen(glesVersion) : -1;
+        mHandler_->configureContext(&options, glesVersion, size, cacheDir_);
+    }
+
     sk_sp<GrContext> grContext(GrContext::MakeGL(std::move(glInterface), options));
     if (grContext == nullptr) {
         LOGE("SetUpGrContext grContext is null");
         return false;
     }
-
     grContext_ = std::move(grContext);
     return true;
 }
@@ -331,6 +340,46 @@ void RenderContext::DamageFrame(int32_t left, int32_t top, int32_t width, int32_
     EGLBoolean ret = GetEGLSetDamageRegionKHRFunc()(eglDisplay_, eglSurface_, rect, 1);
     if (ret == EGL_FALSE) {
         LOGE("eglSetDamageRegionKHR is failed");
+    }
+}
+
+void RenderContext::DamageFrame(const std::vector<RectI> &rects)
+{
+    if ((eglDisplay_ == nullptr) || (eglSurface_ == nullptr)) {
+        LOGE("eglDisplay or eglSurface is nullptr");
+        return;
+    }
+
+    int size = rects.size();
+    if (size == 0) {
+        LOGE("invalid rects size");
+        return;
+    }
+
+    EGLint eglRect[size * 4]; // 4 is size of RectI.
+    int index = 0;
+    for (const RectI& rect : rects) {
+        eglRect[index * 4] = rect.left_; // 4 is size of RectI.
+        eglRect[index * 4 + 1] = rect.top_; // 4 is size of RectI.
+        eglRect[index * 4 + 2] = rect.width_; // 4 is size of RectI, 2 is the index of the width_ subscript.
+        eglRect[index * 4 + 3] = rect.height_; // 4 is size of RectI, 3 is the index of the height_ subscript.
+        index++;
+    }
+
+    EGLBoolean ret = GetEGLSetDamageRegionKHRFunc()(eglDisplay_, eglSurface_, eglRect, size);
+    if (ret == EGL_FALSE) {
+        LOGE("eglSetDamageRegionKHR is failed");
+    }
+}
+
+void RenderContext::ClearRedundantResources()
+{
+    RS_TRACE_FUNC();
+    if (grContext_ != nullptr) {
+        LOGD("grContext clear redundant resources");
+        grContext_->flush();
+        // GPU resources that haven't been used in the past 10 seconds
+        grContext_->purgeResourcesNotUsedInMs(std::chrono::seconds(10));
     }
 }
 } // namespace Rosen

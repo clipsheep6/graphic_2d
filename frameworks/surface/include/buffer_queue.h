@@ -102,6 +102,7 @@ public:
 
     GSError CleanCache();
     GSError GoBackground();
+    GSError OnConsumerDied();
 
     uint64_t GetUniqueId() const;
 
@@ -159,6 +160,7 @@ private:
     sptr<IBufferConsumerListener> listener_ = nullptr;
     IBufferConsumerListenerClazz *listenerClazz_ = nullptr;
     std::mutex mutex_;
+    std::mutex listenerMutex_;
     const uint64_t uniqueId_;
     sptr<BufferManager> bufferManager_ = nullptr;
     OnReleaseFunc onBufferRelease = nullptr;

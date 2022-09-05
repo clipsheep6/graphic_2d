@@ -15,6 +15,8 @@
 #ifndef RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_VISITOR_H
 #define RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_VISITOR_H
 
+#include <set>
+
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_processor.h"
 #include "screen_manager/rs_screen_manager.h"
@@ -41,18 +43,27 @@ public:
     void ProcessRootRenderNode(RSRootRenderNode& node) override;
     void ProcessCanvasRenderNode(RSCanvasRenderNode& node) override;
 
+    void SetAnimateState(bool doAnimate)
+    {
+        doAnimate_ = doAnimate;
+    }
+
 private:
     void DrawRectOnCanvas(const RectI& dirtyRect, const SkColor color,
         const SkPaint::Style fillType, float alpha);
     void DrawDirtyRegion();
+    std::vector<RectI> GetDirtyRects(const Occlusion::Region &region);
+    RectI CoordinateTransform(const RectI& rect);
+    void CalcDirtyDisplayRegion(std::shared_ptr<RSDisplayRenderNode>& node) const;
 
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;
+    std::shared_ptr<RSSurfaceRenderNode> curSurfaceNode_;
     bool dirtyFlag_ { false };
     std::unique_ptr<RSPaintFilterCanvas> canvas_;
     std::map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> dirtySurfaceNodeMap_;
-    SkRect clipRect_;
-    Gravity frameGravity_;
+    SkRect boundsRect_;
+    Gravity frameGravity_ = Gravity::DEFAULT;
 
     int32_t offsetX_ { 0 };
     int32_t offsetY_ { 0 };
@@ -61,9 +72,15 @@ private:
     ScreenId currentVisitDisplay_;
     std::map<ScreenId, bool> displayHasSecSurface_;
     std::set<ScreenId> mirroredDisplays_;
-    bool skipSecSurface_ = false;
+    bool isSecurityDisplay_ = false;
 
     std::shared_ptr<RSRenderEngine> renderEngine_;
+
+    std::shared_ptr<RSDirtyRegionManager> curDisplayDirtyManager_;
+    std::shared_ptr<RSDisplayRenderNode> curDisplayNode_;
+    bool doAnimate_ = false;
+    bool isPartialRenderEnabled_ = false;
+    bool isOpDroped_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

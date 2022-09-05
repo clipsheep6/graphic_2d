@@ -21,7 +21,6 @@ group("default") {
     "frameworks/dumper:gdumper",
     "frameworks/dumper:gdumper.ini",
     "frameworks/dumper:graphic_dumper_server",
-    "frameworks/vsync:vsync_server",
   ]
 
   if (graphic_standard_feature_bootanimation_enable) {
@@ -41,12 +40,9 @@ group("graphic_standard_test") {
     "rosen/modules/effect/test/unittest:test",
     "rosen/test/frame_analyzer:test",
     "rosen/test/render_service:unittest",
+    "utils/color_manager:test",
     "utils/sync_fence:test",
   ]
-
-  if (color_gamut_enable) {
-    public_deps += [ "utils/color_manager:test" ]
-  }
 }
 
 ## Install graphic.rc to /system/etc/init/graphic.rc {{{
@@ -79,6 +75,6 @@ group("libgraphic_dumper_client") {
   public_deps = [ "frameworks/dumper:libgraphic_dumper_client" ]
 }
 
-group("libsurfaceimage") {
-  public_deps = [ "frameworks/surfaceimage:libsurfaceimage" ]
+group("libnative_image") {
+  public_deps = [ "frameworks/surfaceimage:libnative_image" ]
 }

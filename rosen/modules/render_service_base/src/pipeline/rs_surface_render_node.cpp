@@ -74,7 +74,7 @@ static SkRect getLocalClipBounds(const RSPaintFilterCanvas& canvas)
     return bounds;
 }
 
-void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
+void RSSurfaceRenderNode::PrepareRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     renderNodeSaveCount_ = canvas.SaveCanvasAndAlpha();
 
@@ -126,7 +126,7 @@ void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canva
     SetGlobalAlpha(canvas.GetAlpha());
 }
 
-void RSSurfaceRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
+void RSSurfaceRenderNode::PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas)
 {
     canvas.RestoreCanvasAndAlpha(renderNodeSaveCount_);
 }
@@ -341,7 +341,7 @@ void RSSurfaceRenderNode::NotifyUIBufferAvailable()
     {
         std::lock_guard<std::mutex> lock(mutexUI_);
         if (callbackFromUI_) {
-            ROSEN_LOGI("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %" PRIu64, GetId());
+            ROSEN_LOGD("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %" PRIu64, GetId());
             callbackFromUI_->OnBufferAvailable();
         } else {
             isNotifyUIBufferAvailable_ = false;

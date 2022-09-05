@@ -46,8 +46,18 @@ public:
     explicit RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, std::weak_ptr<RSContext> context = {});
     virtual ~RSSurfaceRenderNode();
 
-    void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
-    void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
+    void PrepareRenderBeforeChildren(RSPaintFilterCanvas& canvas);
+    void PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas);
+
+    bool IsAppWindow() const
+    {
+        return isAppWindow_;
+    }
+
+    void MarkAppWindow()
+    {
+        isAppWindow_ = true;
+    }
 
     std::string GetName() const
     {
@@ -226,6 +236,11 @@ public:
         abilityBgAlphaChanged_ = false;
     }
 
+    void SetGloblDirtyRegion(const RectI& rect)
+    {
+        globalDirtyRegion_ = rect;
+    }
+
     void SetConsumer(const sptr<Surface>& consumer);
 
     void UpdateSurfaceDefaultSize(float width, float height);
@@ -266,6 +281,15 @@ public:
         parallelVisitMutex_.unlock();
     }
 
+    bool IsIntersectWithDirty(const RectI& r) const
+    {
+        if (dirtyManager_ == nullptr) {
+            return false;
+        }
+        auto localRect = r.IntersectRect(dirtyManager_->GetDirtyRegion());
+        auto globalRect = r.IntersectRect(globalDirtyRegion_);
+        return !(localRect.IsEmpty() && globalRect.IsEmpty());
+    }
 private:
     void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId);
 
@@ -287,10 +311,12 @@ private:
     float globalAlpha_ = 1.0f;
 
     std::string name_;
+    bool isAppWindow_ = false;
     bool isProxy_ = false;
     BlendType blendType_ = BlendType::BLEND_SRCOVER;
     std::atomic<bool> isNotifyRTBufferAvailable_ = false;
     std::atomic<bool> isNotifyUIBufferAvailable_ = false;
+    std::atomic_bool isBufferAvailable_ = false;
     sptr<RSIBufferAvailableCallback> callbackFromRT_;
     sptr<RSIBufferAvailableCallback> callbackFromUI_;
     std::function<void(void)> callbackForRenderThreadRefresh_ = nullptr;
@@ -304,6 +330,7 @@ private:
     bool dstRectChanged_ = false;
     uint8_t abilityBgAlpha_ = 0;
     bool abilityBgAlphaChanged_ = false;
+    RectI globalDirtyRegion_;
 };
 } // namespace Rosen
 } // namespace OHOS

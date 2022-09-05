@@ -42,7 +42,11 @@ ohos_shared_library("librender_service_base") {
     "src/animation/rs_animation_manager.cpp",
     "src/animation/rs_interpolator.cpp",
     "src/animation/rs_render_animation.cpp",
+    "src/animation/rs_render_curve_animation.cpp",
+    "src/animation/rs_render_keyframe_animation.cpp",
     "src/animation/rs_render_path_animation.cpp",
+    "src/animation/rs_render_property_animation.cpp",
+    "src/animation/rs_render_spring_animation.cpp",
     "src/animation/rs_render_transition.cpp",
     "src/animation/rs_render_transition_effect.cpp",
     "src/animation/rs_spring_interpolator.cpp",
@@ -54,8 +58,8 @@ ohos_shared_library("librender_service_base") {
     "src/command/rs_message_processor.cpp",
 
     # modifier
-    "src/modifier/rs_animatable_arithmetric.cpp",
     "src/modifier/rs_render_modifier.cpp",
+    "src/modifier/rs_render_property.cpp",
 
     #command
     "src/command/rs_animation_command.cpp",
@@ -83,6 +87,8 @@ ohos_shared_library("librender_service_base") {
     "src/ipc_callbacks/rs_application_agent_stub.cpp",
     "src/ipc_callbacks/rs_occlusion_change_callback_proxy.cpp",
     "src/ipc_callbacks/rs_occlusion_change_callback_stub.cpp",
+    "src/ipc_callbacks/rs_render_mode_change_callback_proxy.cpp",
+    "src/ipc_callbacks/rs_render_mode_change_callback_stub.cpp",
     "src/ipc_callbacks/screen_change_callback_proxy.cpp",
     "src/ipc_callbacks/screen_change_callback_stub.cpp",
     "src/ipc_callbacks/surface_capture_callback_proxy.cpp",
@@ -99,7 +105,6 @@ ohos_shared_library("librender_service_base") {
     "src/pipeline/rs_frame_report.cpp",
     "src/pipeline/rs_occlusion_config.cpp",
     "src/pipeline/rs_paint_filter_canvas.cpp",
-    "src/pipeline/rs_pixel_map_util.cpp",
     "src/pipeline/rs_recording_canvas.cpp",
     "src/pipeline/rs_render_node.cpp",
     "src/pipeline/rs_render_node_map.cpp",
@@ -116,6 +121,7 @@ ohos_shared_library("librender_service_base") {
     "src/render/rs_border.cpp",
     "src/render/rs_filter.cpp",
     "src/render/rs_image.cpp",
+    "src/render/rs_image_cache.cpp",
     "src/render/rs_mask.cpp",
     "src/render/rs_material_filter.cpp",
     "src/render/rs_path.cpp",
@@ -137,6 +143,12 @@ ohos_shared_library("librender_service_base") {
     "src/screen_manager/rs_screen_mode_info.cpp",
     "src/screen_manager/rs_screen_props.cpp",
     "src/screen_manager/rs_virtual_screen_resolution.cpp",
+
+    #overdraw
+    "src/overdraw/rs_cpu_overdraw_canvas_listener.cpp",
+    "src/overdraw/rs_gpu_overdraw_canvas_listener.cpp",
+    "src/overdraw/rs_listened_canvas.cpp",
+    "src/overdraw/rs_overdraw_controller.cpp",
   ]
 
   include_dirs = [

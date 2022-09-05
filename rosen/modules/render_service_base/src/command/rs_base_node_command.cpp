@@ -16,6 +16,7 @@
 #include "command/rs_base_node_command.h"
 
 #include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_surface_render_node.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -39,6 +40,16 @@ void BaseNodeCommandHelper::AddChild(RSContext& context, NodeId nodeId, NodeId c
     auto child = nodeMap.GetRenderNode<RSBaseRenderNode>(childNodeId);
     if (node && child) {
         node->AddChild(child, index);
+    }
+}
+
+void BaseNodeCommandHelper::MoveChild(RSContext& context, NodeId nodeId, NodeId childNodeId, int32_t index)
+{
+    auto& nodeMap = context.GetNodeMap();
+    auto node = nodeMap.GetRenderNode<RSBaseRenderNode>(nodeId);
+    auto child = nodeMap.GetRenderNode<RSBaseRenderNode>(childNodeId);
+    if (node && child) {
+        node->MoveChild(child, index);
     }
 }
 
@@ -93,5 +104,19 @@ void BaseNodeCommandHelper::ClearChildren(RSContext& context, NodeId nodeId)
     }
 }
 
+void BaseNodeCommandHelper::ClearSurfaceNodeChildren(RSContext& context, NodeId nodeId)
+{
+    auto& nodeMap = context.GetNodeMap();
+    auto node = nodeMap.GetRenderNode<RSBaseRenderNode>(nodeId);
+    if (!node) {
+        return;
+    }
+    for (auto& child : node->GetSortedChildren()) {
+        if (child->IsInstanceOf<RSSurfaceRenderNode>()) {
+            child->RemoveFromTree();
+        }
+    }
+    node->ResetSortedChildren();
+}
 } // namespace Rosen
 } // namespace OHOS

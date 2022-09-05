@@ -42,6 +42,8 @@ private:
 
 #ifdef ROSEN_OHOS
     void OnTransaction(std::shared_ptr<RSTransactionData> transactionData) override;
+    void OnRenderModeChanged(bool renderThreadNeedRender) override;
+    void NotifyClearBufferCache() override;
 #endif
 };
 }

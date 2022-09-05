@@ -22,7 +22,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <vsync_helper.h>
+#include <event_handler.h>
 
 #include "common/rs_thread_handler.h"
 #include "common/rs_thread_looper.h"
@@ -81,6 +81,17 @@ public:
     {
         return isHighContrastEnabled_;
     }
+    void UpdateRenderMode(bool needRender);
+    void NotifyClearBufferCache();
+    bool GetForceUpdateSurfaceNode() const
+    {
+        return forceUpdateSurfaceNode_;
+    }
+
+    void SetCacheDir(const std::string& filePath)
+    {
+        cacheDir_ = filePath;
+    }
 
 private:
     RSRenderThread();
@@ -99,8 +110,12 @@ private:
     void Render();
     void SendCommands();
 
+    void UpdateSurfaceNodeParentInRS();
+    void ClearBufferCache();
     std::atomic_bool running_ = false;
     std::atomic_bool hasSkipVsync_ = false;
+    bool needRender_ = true;
+    bool forceUpdateSurfaceNode_ = false;
     std::atomic_int activeWindowCnt_ = 0;
     std::unique_ptr<std::thread> thread_ = nullptr;
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
@@ -134,6 +149,8 @@ private:
     RenderContext* renderContext_ = nullptr;
     std::shared_ptr<HighContrastObserver> highContrastObserver_;
     std::atomic_bool isHighContrastEnabled_ = false;
+
+    std::string cacheDir_;
 };
 } // namespace Rosen
 } // namespace OHOS

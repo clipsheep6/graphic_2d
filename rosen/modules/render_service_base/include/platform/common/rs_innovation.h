@@ -28,6 +28,7 @@ public:
         GetParallelCompositionFunc();
         GetOcclusionCullingFunc();
         GetQosVSyncFunc();
+        GetParallelRenderingFunc();
     }
 
     static void CloseInnovationSo()
@@ -36,6 +37,7 @@ public:
             ResetParallelCompositionFunc();
             ResetOcclusionCullingFunc();
             ResetQosVsyncFunc();
+            ResetParallelRenderingFunc();
             dlclose(innovationHandle);
         }
     }
@@ -92,6 +94,41 @@ public:
     static inline void* _s_qosSetBoundaryRate = nullptr;
     static inline void* _s_qosOnRSVisibilityChangeCB = nullptr;
     static inline void* _s_qosRegisteFuncCB = nullptr;
+
+    // parallel rendering
+    static bool GetParallelRenderingEnabled()
+    {
+        return _s_parallelRenderingLoaded &&
+            std::atoi((system::GetParameter("rosen.parallelrendering.enabled", "0")).c_str()) != 0;
+    }
+
+    static inline bool _s_parallelRenderingLoaded = false;
+
+    static inline void* _s_loadReassignment = nullptr;
+    static inline void* _s_bfsLoadAssignment = nullptr;
+    static inline void* _s_createEglShareContext = nullptr;
+    static inline void* _s_intersects = nullptr;
+    static inline void* _s_createShareContextPSurface = nullptr;
+    static inline void* _s_createSharedContext = nullptr;
+    static inline void* _s_loadBalancePushTask = nullptr;
+    static inline void* _s_setSubThreadRenderLoad = nullptr;
+    static inline void* _s_updateLoadCall = nullptr;
+    static inline void* _s_loadBalanceBasedOnLoadCostingCall = nullptr;
+    static inline void* _s_loadBalanceBasedOnLoadNumCall = nullptr;
+    static inline void* _s_loadBalanceCall = nullptr;
+    static inline void* _s_clearLoad = nullptr;
+    static inline void* _s_wrapAndPushSuperTaskRegister = nullptr;
+    static inline void* _s_getSubContextRegister = nullptr;
+    static inline void* _s_canvasPrepareRegister = nullptr;
+    static inline void* _s_subDrawRegister = nullptr;
+    static inline void* _s_flushAndSubmitFuncRegister = nullptr;
+    static inline void* _s_wrapAndPushSuperTask = nullptr;
+    static inline void* _s_pushTask = nullptr;
+    static inline void* _s_createFence = nullptr;
+    static inline void* _s_getSubContext = nullptr;
+    static inline void* _s_canvasPrepare = nullptr;
+    static inline void* _s_subDraw = nullptr;
+    static inline void* _s_subMainThread = nullptr;
 
 private:
     RSInnovation() = default;
@@ -167,6 +204,45 @@ private:
             _s_qosSetBoundaryRate = nullptr;
             _s_qosOnRSVisibilityChangeCB = nullptr;
             _s_qosRegisteFuncCB = nullptr;
+        }
+    }
+
+    static void GetParallelRenderingFunc()
+    {
+        if (!innovationHandle) {
+            return;
+        }
+        _s_loadReassignment = dlsym(innovationHandle, "LoadReassignment");
+        _s_bfsLoadAssignment = dlsym(innovationHandle, "BfsLoadAssignment");
+        _s_createEglShareContext = dlsym(innovationHandle, "CreateEglShareContext");
+        _s_intersects = dlsym(innovationHandle, "Intersects");
+        _s_createShareContextPSurface = dlsym(innovationHandle, "CreateShareContextPSurface");
+        _s_createSharedContext = dlsym(innovationHandle, "CreateSharedContext");
+        _s_loadBalancePushTask = dlsym(innovationHandle, "LoadBalancePushTask");
+        _s_setSubThreadRenderLoad = dlsym(innovationHandle, "SetSubThreadRenderLoad");
+        _s_updateLoadCall = dlsym(innovationHandle, "UpdateLoadCall");
+        _s_loadBalanceBasedOnLoadCostingCall = dlsym(innovationHandle, "LoadBalanceBasedOnLoadCostingCall");
+        _s_loadBalanceBasedOnLoadNumCall = dlsym(innovationHandle, "LoadBalanceBasedOnLoadNumCall");
+        _s_loadBalanceCall = dlsym(innovationHandle, "LoadBalanceCall");
+        _s_clearLoad = dlsym(innovationHandle, "ClearLoad");
+        _s_wrapAndPushSuperTaskRegister = dlsym(innovationHandle, "WrapAndPushSuperTaskRegister");
+        _s_getSubContextRegister = dlsym(innovationHandle, "GetSubContextRegister");
+        _s_canvasPrepareRegister = dlsym(innovationHandle, "CanvasPrepareRegister");
+        _s_subDrawRegister = dlsym(innovationHandle, "SubDrawRegister");
+        _s_flushAndSubmitFuncRegister = dlsym(innovationHandle, "FlushAndSubmitFuncRegister");
+        _s_wrapAndPushSuperTask = dlsym(innovationHandle, "WrapAndPushSuperTask");
+        _s_pushTask = dlsym(innovationHandle, "PushTask");
+        _s_createFence = dlsym(innovationHandle, "CreateFence");
+        _s_getSubContext = dlsym(innovationHandle, "GetSubContext");
+        _s_canvasPrepare = dlsym(innovationHandle, "CanvasPrepare");
+        _s_subDraw = dlsym(innovationHandle, "SubDraw");
+        _s_subMainThread  = dlsym(innovationHandle, "SubMainThread");
+    }
+
+    static void ResetParallelRenderingFunc()
+    {
+        if (!innovationHandle) {
+            return;
         }
     }
 };

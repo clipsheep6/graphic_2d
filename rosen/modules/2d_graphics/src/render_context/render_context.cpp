@@ -92,7 +92,8 @@ RenderContext::RenderContext()
       eglDisplay_(EGL_NO_DISPLAY),
       eglContext_(EGL_NO_CONTEXT),
       eglSurface_(EGL_NO_SURFACE),
-      config_(nullptr)
+      config_(nullptr),
+      mHandler_(nullptr)
 {}
 
 RenderContext::~RenderContext()
@@ -110,6 +111,7 @@ RenderContext::~RenderContext()
     eglSurface_ = EGL_NO_SURFACE;
     grContext_ = nullptr;
     skSurface_ = nullptr;
+    mHandler_ = nullptr;
 }
 
 void RenderContext::InitializeEglContext()
@@ -157,7 +159,7 @@ void RenderContext::InitializeEglContext()
 
     eglMakeCurrent(eglDisplay_, EGL_NO_SURFACE, EGL_NO_SURFACE, eglContext_);
 
-    LOGW("Create EGL context successfully, version %{public}d.%{public}d", major, minor);
+    LOGD("Create EGL context successfully, version %{public}d.%{public}d", major, minor);
 }
 
 void RenderContext::MakeCurrent(EGLSurface surface) const
@@ -178,7 +180,7 @@ void RenderContext::SwapBuffers(EGLSurface surface) const
     if (!eglSwapBuffers(eglDisplay_, surface)) {
         LOGE("Failed to SwapBuffers on surface %{public}p, error is %{public}x", surface, eglGetError());
     } else {
-        LOGW("SwapBuffers successfully, surface is %{public}p", surface);
+        LOGD("SwapBuffers successfully, surface is %{public}p", surface);
     }
 }
 
@@ -205,7 +207,7 @@ EGLSurface RenderContext::CreateEGLSurface(EGLNativeWindowType eglNativeWindow)
         return EGL_NO_SURFACE;
     }
 
-    LOGW("CreateEGLSurface: %{public}p", surface);
+    LOGD("CreateEGLSurface: %{public}p", surface);
 
     eglSurface_ = surface;
     return surface;
@@ -219,7 +221,7 @@ void RenderContext::SetColorSpace(ColorGamut colorSpace)
 bool RenderContext::SetUpGrContext()
 {
     if (grContext_ != nullptr) {
-        LOGW("grContext has already created!!");
+        LOGD("grContext has already created!!");
         return true;
     }
 
@@ -233,6 +235,13 @@ bool RenderContext::SetUpGrContext()
     options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
+
+    mHandler_ = std::make_shared<MemoryHandler>();
+    if (mHandler_ != nullptr) {
+        auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+        auto size = glesVersion ? strlen(glesVersion) : -1;
+        mHandler_->configureContext(&options, glesVersion, size, cacheDir_);
+    }
 
     sk_sp<GrContext> grContext(GrContext::MakeGL(std::move(glInterface), options));
     if (grContext == nullptr) {
@@ -285,7 +294,7 @@ sk_sp<SkSurface> RenderContext::AcquireSurface(int width, int height)
         return nullptr;
     }
 
-    LOGE("CreateCanvas successfully!!! (%{public}p)", skSurface_->getCanvas());
+    LOGD("CreateCanvas successfully!!! (%{public}p)", skSurface_->getCanvas());
     return skSurface_;
 }
 
@@ -293,7 +302,7 @@ void RenderContext::RenderFrame()
 {
     // flush commands
     if (skSurface_->getCanvas() != nullptr) {
-        LOGW("RenderFrame: Canvas is %{public}p", skSurface_->getCanvas());
+        LOGD("RenderFrame: Canvas is %{public}p", skSurface_->getCanvas());
         skSurface_->getCanvas()->flush();
     } else {
         LOGW("canvas is nullptr!!!");

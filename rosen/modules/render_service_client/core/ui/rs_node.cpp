@@ -674,7 +674,7 @@ void RSNode::SetBorderStyle(uint32_t left, uint32_t top, uint32_t right, uint32_
 void RSNode::SetBorderStyle(const Vector4<BorderStyle>& style)
 {
     Vector4<uint32_t> styles(static_cast<uint32_t>(style.x_), static_cast<uint32_t>(style.y_),
-                            static_cast<uint32_t>(style.z_), static_cast<uint32_t>(style.w_));
+                             static_cast<uint32_t>(style.z_), static_cast<uint32_t>(style.w_));
     SET_NONANIMATABLE_MODIFIER(
         BorderStyle, Vector4<uint32_t>, styles, BORDER_STYLE, Vector4<uint32_t>(BorderStyle::NONE));
 }
@@ -756,9 +756,6 @@ void RSNode::SetClipToFrame(bool clipToFrame)
 void RSNode::SetVisible(bool visible)
 {
     SET_NONANIMATABLE_MODIFIER(Visible, bool, visible, VISIBLE, true);
-    if (transitionEffect_ != nullptr) {
-        NotifyTransition(transitionEffect_, visible);
-    }
 }
 
 void RSNode::SetMask(const std::shared_ptr<RSMask>& mask)

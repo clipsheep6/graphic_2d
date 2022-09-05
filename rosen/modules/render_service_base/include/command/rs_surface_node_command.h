@@ -27,7 +27,7 @@ namespace Rosen {
 
 enum RSSurfaceNodeCommandType : uint16_t {
     SURFACE_NODE_CREATE,
-    SURFACE_NODE_SET_PROXY,
+    SURFACE_NODE_CREATE_PROXY,
     SURFACE_NODE_SET_CONTEXT_MATRIX,
     SURFACE_NODE_SET_CONTEXT_ALPHA,
     SURFACE_NODE_SET_CONTEXT_CLIP_REGION,
@@ -37,12 +37,13 @@ enum RSSurfaceNodeCommandType : uint16_t {
     SURFACE_NODE_SET_CALLBACK_FOR_RENDER_THREAD,
     SURFACE_NODE_SET_CONTEXT_BOUNDS,
     SURFACE_NODE_SET_ABILITY_BG_ALPHA,
+    SURFACE_NODE_SET_IS_NOTIFY_BUFFER_AVAILABLE,
 };
 
 class SurfaceNodeCommandHelper {
 public:
     static void Create(RSContext& context, NodeId nodeId);
-    static void SetProxy(RSContext& context, NodeId nodeId);
+    static void CreateProxy(RSContext& context, NodeId nodeId);
     static void SetContextMatrix(RSContext& context, NodeId nodeId, SkMatrix matrix);
     static void SetContextAlpha(RSContext& context, NodeId nodeId, float alpha);
     static void SetContextClipRegion(RSContext& context, NodeId nodeId, SkRect clipRect);
@@ -52,11 +53,12 @@ public:
     static void SetCallbackForRenderThreadRefresh(RSContext& context, NodeId id, std::function<void(void)> callback);
     static void SetContextBounds(RSContext& context, NodeId id, Vector4f bounds);
     static void SetAbilityBGAlpha(RSContext& context, NodeId id, uint8_t alpha);
+    static void SetIsNotifyUIBufferAvailable(RSContext& context, NodeId nodeId, bool available);
 };
 
 ADD_COMMAND(RSSurfaceNodeCreate, ARG(SURFACE_NODE, SURFACE_NODE_CREATE, SurfaceNodeCommandHelper::Create, NodeId))
-ADD_COMMAND(
-    RSSurfaceNodeSetProxy, ARG(SURFACE_NODE, SURFACE_NODE_SET_PROXY, SurfaceNodeCommandHelper::SetProxy, NodeId))
+ADD_COMMAND(RSSurfaceNodeCreateProxy,
+    ARG(SURFACE_NODE, SURFACE_NODE_CREATE_PROXY, SurfaceNodeCommandHelper::CreateProxy, NodeId))
 ADD_COMMAND(RSSurfaceNodeSetContextMatrix,
     ARG(SURFACE_NODE, SURFACE_NODE_SET_CONTEXT_MATRIX, SurfaceNodeCommandHelper::SetContextMatrix, NodeId, SkMatrix))
 ADD_COMMAND(RSSurfaceNodeSetContextAlpha,
@@ -77,6 +79,9 @@ ADD_COMMAND(RSSurfaceNodeSetBounds,
     ARG(SURFACE_NODE, SURFACE_NODE_SET_CONTEXT_BOUNDS, SurfaceNodeCommandHelper::SetContextBounds, NodeId, Vector4f))
 ADD_COMMAND(RSSurfaceNodeSetAbilityBGAlpha,
     ARG(SURFACE_NODE, SURFACE_NODE_SET_ABILITY_BG_ALPHA, SurfaceNodeCommandHelper::SetAbilityBGAlpha, NodeId, uint8_t))
+ADD_COMMAND(RSSurfaceNodeSetIsNotifyUIBUfferAvailable,
+    ARG(SURFACE_NODE, SURFACE_NODE_SET_IS_NOTIFY_BUFFER_AVAILABLE,
+    SurfaceNodeCommandHelper::SetIsNotifyUIBufferAvailable, NodeId, bool))
 } // namespace Rosen
 } // namespace OHOS
 #endif // ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_SURFACE_NODE_COMMAND_H

@@ -60,6 +60,9 @@ void RSUIDirector::Init(bool shouldCreateRenderThread)
         }
 
         RsFrameReport::GetInstance().Init();
+        if (!cacheDir_.empty()) {
+            RSRenderThread::Instance().SetCacheDir(cacheDir_);
+        }
         RSRenderThread::Instance().Start();
     }
     RSApplicationAgentImpl::Instance().RegisterRSApplicationAgent();
@@ -69,7 +72,7 @@ void RSUIDirector::Init(bool shouldCreateRenderThread)
 
 void RSUIDirector::GoForeground()
 {
-    ROSEN_LOGI("RSUIDirector::GoForeground");
+    ROSEN_LOGD("RSUIDirector::GoForeground");
     if (!isActive_) {
         if (!isUniRenderEnabled_) {
             RSRenderThread::Instance().UpdateWindowStatus(true);
@@ -83,7 +86,7 @@ void RSUIDirector::GoForeground()
 
 void RSUIDirector::GoBackground()
 {
-    ROSEN_LOGI("RSUIDirector::GoBackground");
+    ROSEN_LOGD("RSUIDirector::GoBackground");
     if (isActive_) {
         if (!isUniRenderEnabled_) {
             RSRenderThread::Instance().UpdateWindowStatus(false);
@@ -92,6 +95,14 @@ void RSUIDirector::GoBackground()
         if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
             node->SetEnableRender(false);
         }
+        // clean bufferQueue cache
+        auto surfaceNode = surfaceNode_.lock();
+        RSRenderThread::Instance().PostTask([surfaceNode]() {
+            if (surfaceNode != nullptr) {
+                std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
+                rsSurface->ClearBuffer();
+            }
+        });
     }
 }
 
@@ -150,6 +161,11 @@ void RSUIDirector::SetTimeStamp(uint64_t timeStamp, const std::string& abilityNa
 {
     timeStamp_ = timeStamp;
     RSRenderThread::Instance().UpdateUiDrawFrameMsg(abilityName);
+}
+
+void RSUIDirector::SetCacheDir(const std::string& cacheFilePath)
+{
+    cacheDir_ = cacheFilePath;
 }
 
 bool RSUIDirector::RunningCustomAnimation(uint64_t timeStamp)

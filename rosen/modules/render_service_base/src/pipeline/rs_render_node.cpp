@@ -154,7 +154,7 @@ void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
     renderNodeSaveCount_ = canvas.SaveCanvasAndAlpha();
     auto boundsGeo = std::static_pointer_cast<RSObjAbsGeometry>(GetRenderProperties().GetBoundsGeometry());
     if (boundsGeo && !boundsGeo->IsEmpty()) {
-        canvas.concat(boundsGeo->GetMatrix());
+        canvas.setMatrix(boundsGeo->GetAbsMatrix());
     }
     auto alpha = renderProperties_.GetAlpha();
     if (alpha < 1.f) {

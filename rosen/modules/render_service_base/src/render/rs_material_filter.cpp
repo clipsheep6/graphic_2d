@@ -33,6 +33,14 @@ RSMaterialFilter::RSMaterialFilter(int style, float dipScale)
     type_ = FilterType::MATERIAL;
 }
 
+RSMaterialFilter::RSMaterialFilter(sk_sp<SkImageFilter> imageFilter)
+    : RSSkiaFilter(imageFilter)
+{
+    type_ = FilterType::MATERIAL;
+    style_ = 0;
+    dipScale_ = 0;
+}    
+
 RSMaterialFilter::~RSMaterialFilter() {}
 
 int RSMaterialFilter::GetStyle() const
@@ -106,24 +114,94 @@ sk_sp<SkImageFilter> RSMaterialFilter::CreateMaterialStyle(int style, float dipS
     return nullptr;
 }
 
+float RSMaterialFilter::GetRadius(int style)
+{
+    switch (style) {
+        case STYLE_CARD_THIN_LIGHT:
+            return CARDTHINLIGHT.radius;
+        case STYLE_CARD_LIGHT:
+            return CARDLIGHT.radius;
+        case STYLE_CARD_THICK_LIGHT:
+            return CARDTHICKLIGHT.radius;
+        default:
+            break;
+    }
+    return 0;
+}
+
+sk_sp<SkImageFilter> RSMaterialFilter::CreateMaterialRadius(int style, float dipScale, float radius)
+{
+    sk_sp<SkImageFilter> spFilter;
+    switch (style) {
+        case STYLE_CARD_THIN_LIGHT:
+            spFilter = RSMaterialFilter::CreateMaterialFilter(
+                RSMaterialFilter::RadiusVp2Sigma(radius, dipScale),
+                CARDTHINLIGHT.saturation, CARDTHINLIGHT.maskColor);
+            break;
+        case STYLE_CARD_LIGHT:
+            spFilter = RSMaterialFilter::CreateMaterialFilter(
+                RSMaterialFilter::RadiusVp2Sigma(radius, dipScale),
+                CARDLIGHT.saturation, CARDLIGHT.maskColor);
+            break;
+        case STYLE_CARD_THICK_LIGHT:
+            spFilter = RSMaterialFilter::CreateMaterialFilter(
+                RSMaterialFilter::RadiusVp2Sigma(radius, dipScale),
+                CARDTHICKLIGHT.saturation, CARDTHICKLIGHT.maskColor);
+            break;
+        default:
+            break;
+    }
+    return spFilter;
+}
+
 std::shared_ptr<RSFilter> RSMaterialFilter::Add(const std::shared_ptr<RSFilter>& rhs)
 {
-    return shared_from_this();
+    if ((rhs == nullptr) || (rhs->GetFilterType() != FilterType::MATERIAL)) {
+         return shared_from_this();
+    }
+    auto filterM = std::static_pointer_cast<RSMaterialFilter>(rhs);
+    float radiusThis = GetRadius(style_);
+    float radiusOther = GetRadius(filterM->GetStyle());
+    sk_sp<SkImageFilter> spFilter = RSMaterialFilter::CreateMaterialRadius(style_, dipScale_, radiusThis + radiusOther) ;
+    if (spFilter == nullptr) {
+        return shared_from_this();
+    }
+    return std::make_shared<RSMaterialFilter>(spFilter);
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Sub(const std::shared_ptr<RSFilter>& rhs)
 {
-    return shared_from_this();
+    if ((rhs == nullptr) || (rhs->GetFilterType() != FilterType::MATERIAL)) {
+        return shared_from_this();
+    }
+    auto filterM = std::static_pointer_cast<RSMaterialFilter>(rhs);
+    float radiusThis = GetRadius(style_);
+    float radiusOther = GetRadius(filterM->GetStyle());
+    sk_sp<SkImageFilter> spFilter = RSMaterialFilter::CreateMaterialRadius(style_, dipScale_, radiusThis - radiusOther) ;
+    if (spFilter == nullptr) {
+        return shared_from_this();
+    }
+    return std::make_shared<RSMaterialFilter>(spFilter);
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Multiply(float rhs)
 {
-    return shared_from_this();
+    float radiusThis = GetRadius(style_);
+    sk_sp<SkImageFilter> spFilter = RSMaterialFilter::CreateMaterialRadius(style_, dipScale_, radiusThis * rhs) ;
+    if (spFilter == nullptr) {
+        return shared_from_this();
+    }
+    return std::make_shared<RSMaterialFilter>(spFilter);
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Negate()
 {
-    return shared_from_this();
+    float radiusThis = GetRadius(style_);
+    sk_sp<SkImageFilter> spFilter = RSMaterialFilter::CreateMaterialRadius(style_, dipScale_, -radiusThis) ;
+    if (spFilter == nullptr) {
+        return shared_from_this();
+    }
+    return std::make_shared<RSMaterialFilter>(spFilter);
 }
 } // namespace Rosen
 } // namespace OHOS

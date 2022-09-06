@@ -33,6 +33,7 @@ struct MaterialParam {
 class RSMaterialFilter : public RSSkiaFilter {
 public:
     RSMaterialFilter(int style, float dipScale);
+    RSMaterialFilter(sk_sp<SkImageFilter> imageFilter);
     ~RSMaterialFilter() override;
     int GetStyle() const;
     float GetDipScale() const;
@@ -50,6 +51,8 @@ private:
     static constexpr MaterialParam CARDLIGHT = {50.0f, 1.8, 0x99FAFAFA};
     static constexpr MaterialParam CARDTHICKLIGHT = {75.0f, 2.4, 0xB8FAFAFA};
     sk_sp<SkImageFilter> CreateMaterialStyle(int style, float dipScale);
+    sk_sp<SkImageFilter> CreateMaterialRadius(int style, float dipScale, float radius);
+    float GetRadius(int style);
     float RadiusVp2Sigma(float radiusVp, float dipScale) const;
     sk_sp<SkColorFilter> MaskColorFilter(SkColor maskColor);
     sk_sp<SkImageFilter> CreateMaterialFilter(float radius, float sat, SkColor maskColor);

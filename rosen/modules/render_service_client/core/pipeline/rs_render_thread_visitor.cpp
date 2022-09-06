@@ -136,7 +136,10 @@ void RSRenderThreadVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     bool dirtyFlag = dirtyFlag_;
     auto nodeParent = node.GetParent().lock();
     std::shared_ptr<RSRenderNode> rsParent = nullptr;
-    if (nodeParent != nullptr) {
+    while (nodeParent && nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>()) {
+        nodeParent = nodeParent->GetParent().lock();
+    }
+    if (nodeParent) {
         rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
     }
     // If rt buffer switches to be available

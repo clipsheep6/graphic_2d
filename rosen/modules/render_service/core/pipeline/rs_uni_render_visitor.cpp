@@ -188,7 +188,11 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     bool dirtyFlag = dirtyFlag_;
     auto nodeParent = node.GetParent().lock();
     std::shared_ptr<RSRenderNode> rsParent = nullptr;
-    if (nodeParent != nullptr) {
+    while (nodeParent && nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>() &&
+        nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>()->GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE) {
+        nodeParent = nodeParent->GetParent().lock();
+    }
+    if (nodeParent) {
         rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
     }
     dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,

@@ -30,6 +30,9 @@ class RSPaintFilterCanvas;
 class RSUniRenderVisitor : public RSNodeVisitor {
 public:
     RSUniRenderVisitor();
+#ifdef RS_ENABLE_GL
+    RSUniRenderVisitor(RSPaintFilterCanvas* canvas);
+#endif
     ~RSUniRenderVisitor() override;
 
     void PrepareBaseRenderNode(RSBaseRenderNode& node) override;
@@ -44,6 +47,10 @@ public:
     void ProcessDisplayRenderNode(RSDisplayRenderNode& node) override;
     void ProcessProxyRenderNode(RSProxyRenderNode& node) override;
     void ProcessRootRenderNode(RSRootRenderNode& node) override;
+#ifdef RS_ENABLE_GL
+    void LBCalculate();
+    void LBTimerCalculate();
+#endif
     void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
 
     void SetAnimateState(bool doAnimate)
@@ -94,6 +101,12 @@ private:
     bool doAnimate_ = false;
     bool isPartialRenderEnabled_ = false;
     bool isOpDropped_ = false;
+#ifdef RS_ENABLE_GL
+    bool packTask_ = false;
+    timespec timeStart {0};
+    timespec timeEnd {0};
+    float costing {0.f};
+#endif
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -59,7 +59,7 @@ public:
         return animationManager_;
     }
 
-    virtual void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas);
+    virtual void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas, SkMatrix captureMatrix = SkMatrix::I());
     virtual void ProcessRenderContents(RSPaintFilterCanvas& canvas) {}
     virtual void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas);
 

@@ -262,14 +262,7 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWith
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode& node)
 {
-    canvas_->concat(node.GetContextMatrix());
-    auto contextClipRect = node.GetContextClipRegion();
-    if (!contextClipRect.isEmpty()) {
-        canvas_->clipRect(contextClipRect);
-    }
-
-    auto parentPtr = node.GetParent().lock();
-    bool isSelfDrawingSurface = parentPtr && parentPtr->IsInstanceOf<RSCanvasRenderNode>();
+    bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
     if (isSelfDrawingSurface) {
         canvas_->save();
     }
@@ -277,7 +270,7 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithU
     const auto& property = node.GetRenderProperties();
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
     if (geoPtr) {
-        canvas_->concat(geoPtr->GetMatrix());
+        canvas_->setMatrix(geoPtr->GetAbsMatrix());
     }
 
     if (isSelfDrawingSurface) {
@@ -369,7 +362,12 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessCanvasRenderNode(RSCa
         RS_LOGE("ProcessCanvasRenderNode, canvas is nullptr");
         return;
     }
-    node.ProcessRenderBeforeChildren(*canvas_);
+    SkMatrix captureMatrix;
+    captureMatrix.setScaleX(scaleX_);
+    captureMatrix.setScaleY(scaleY_);
+    captureMatrix.setTranslateX(-parentNodeTranslateX_ * scaleX_);
+    captureMatrix.setTranslateY(-parentNodeTranslateY_ * scaleY_);
+    node.ProcessRenderBeforeChildren(*canvas_, captureMatrix);
     ProcessBaseRenderNode(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }

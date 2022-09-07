@@ -148,6 +148,9 @@ void RSRenderThreadVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
     bool dirtyFlag = dirtyFlag_;
     auto nodeParent = node.GetParent().lock();
     std::shared_ptr<RSRenderNode> rsParent = nullptr;
+    while (nodeParent && nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>()) {
+        nodeParent = nodeParent->GetParent().lock();
+    }
     if (nodeParent != nullptr) {
         rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
     }
@@ -165,10 +168,7 @@ void RSRenderThreadVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     bool dirtyFlag = dirtyFlag_;
     auto nodeParent = node.GetParent().lock();
     std::shared_ptr<RSRenderNode> rsParent = nullptr;
-    while (nodeParent && nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>()) {
-        nodeParent = nodeParent->GetParent().lock();
-    }
-    if (nodeParent) {
+    if (nodeParent != nullptr) {
         rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
     }
     // If rt buffer switches to be available

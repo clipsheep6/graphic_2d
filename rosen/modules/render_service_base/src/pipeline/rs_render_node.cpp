@@ -153,13 +153,12 @@ void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas, SkMa
     auto boundsGeo = std::static_pointer_cast<RSObjAbsGeometry>(GetRenderProperties().GetBoundsGeometry());
     if (boundsGeo && !boundsGeo->IsEmpty()) {
         auto absMatrix = boundsGeo->GetAbsMatrix();
-        if (infoMatrix.isIndentity()) {
+        if (infoMatrix.isIdentity()) {
             canvas.setMatrix(absMatrix);
         } else {
             canvas.setMatrix(infoMatrix);
             canvas.concat(absMatrix);
         }
-        canvas.setMatrix(boundsGeo->GetAbsMatrix());
     }
     auto alpha = renderProperties_.GetAlpha();
     if (alpha < 1.f) {

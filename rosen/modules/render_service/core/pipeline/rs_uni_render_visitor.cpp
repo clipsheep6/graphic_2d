@@ -191,7 +191,7 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
         nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>()->GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE) {
         nodeParent = nodeParent->GetParent().lock();
     }
-    if (nodeParent) {
+    if (nodeParent != nullptr) {
         rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
     }
     dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
@@ -652,6 +652,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     if (node.IsAppWindow()) {
         if (!node.IsAppFreeze()) {
+            invertMatrix_ = SkMatrix::I();
             ProcessBaseRenderNode(node);
             node.ClearCacheSurface();
         } else if (node.GetCacheSurface()) {
@@ -663,7 +664,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             // coordinates the node relative to the upper-left corner of the window here.
             // So we have to get the invert matrix here and pass it to the method
             // "RSRenderNode::ProcessRenderBeforeChildren".
-            bool isSuccess = geoPtr->GetAbsMatrix.invert(&invertMatrix_);
+            bool isSuccess = geoPtr->GetAbsMatrix().invert(&invertMatrix_);
 
             if (node.GetCacheSurface() && isSuccess) {
                 auto cacheCanvas = std::make_unique<RSPaintFilterCanvas>(node.GetCacheSurface().get());

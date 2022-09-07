@@ -238,7 +238,7 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWith
             captureMatrix_.preConcat(invertMatrix);
         }
     } else {
-        canvas_->SetMatrix(captureMatrix);
+        canvas_->setMatrix(captureMatrix_);
         canvas_->concat(geoPtr->GetAbsMatrix());
     }
 

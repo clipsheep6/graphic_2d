@@ -57,6 +57,13 @@ BufferQueue::BufferQueue(const std::string &name, bool isShared)
     : name_(name), uniqueId_(GetUniqueIdImpl()), isShared_(isShared)
 {
     BLOGNI("ctor, Queue id: %{public}" PRIu64 " isShared: %{public}d", uniqueId_, isShared);
+    std::stringstream testLog;
+    testLog << "andrew :: ctor, Queue id: " << uniqueId_ 
+            << " sizeof(uint64_t): " << sizeof(uint64_t) 
+            << " sizeof(unsigned long int): " << sizeof(unsigned long int) 
+            << " sizeof(unsigned long long int): " << sizeof(unsigned long long int);
+            // << "__WORDSIZE : " << __WORDSIZE;
+    BLOGNI("%{public}s", testLog.str().c_str());
     bufferManager_ = BufferManager::GetInstance();
     if (isShared_ == true) {
         queueSize_ = 1;

@@ -61,7 +61,10 @@ ohos_shared_library("libgraphic_dumper_client") {
 config("graphic_dumper_server_config") {
   visibility = [ ":*" ]
 
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "//foundation/graphic/graphic_2d/interfaces/inner_api/common",
+  ]
 
   cflags = [
     "-Wall",

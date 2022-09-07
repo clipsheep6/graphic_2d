@@ -16,7 +16,6 @@
 #ifndef RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_UTIL_H
 #define RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_UTIL_H
 
-#include "display_type.h"
 #include "surface.h"
 #include "sync_fence.h"
 #include "pipeline/rs_display_render_node.h"
@@ -28,7 +27,7 @@ namespace OHOS {
 namespace Rosen {
 class RSUniRenderUtil {
 public:
-    static bool UpdateRenderNodeDstRect(RSRenderNode& node, const SkMatrix& matrix);
+    static void UpdateRenderNodeDstRect(RSRenderNode& node, const SkMatrix& matrix);
 
     // merge history dirty region of current display node and its child surfacenode(app windows)
     // for mirror display, call this function twice will introduce additional dirtyhistory in dirtymanager

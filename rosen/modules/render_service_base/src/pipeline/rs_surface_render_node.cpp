@@ -15,7 +15,6 @@
 
 #include "pipeline/rs_surface_render_node.h"
 
-#include "display_type.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
 
@@ -24,12 +23,11 @@
 #include "common/rs_rect.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
+#include "pipeline/rs_occlusion_config.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_root_render_node.h"
-#include "pipeline/rs_occlusion_config.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
-#include "property/rs_transition_properties.h"
 #include "transaction/rs_render_service_client.h"
 #include "visitor/rs_node_visitor.h"
 
@@ -41,13 +39,11 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config
       name_(config.name),
       nodeType_(config.nodeType),
       dirtyManager_(std::make_shared<RSDirtyRegionManager>())
-{
-}
+{}
 
 RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context)
     : RSSurfaceRenderNode(RSSurfaceRenderNodeConfig{id, "SurfaceNode"}, context)
-{
-}
+{}
 
 RSSurfaceRenderNode::~RSSurfaceRenderNode() {}
 
@@ -99,11 +95,6 @@ void RSSurfaceRenderNode::PrepareRenderBeforeChildren(RSPaintFilterCanvas& canva
         canvas.concat(matrix);
     }
 
-    // apply transition properties to canvas
-    auto transitionProperties = GetAnimationManager().GetTransitionProperties();
-    Vector2f center(properties.GetBoundsWidth() * 0.5f, properties.GetBoundsHeight() * 0.5f);
-    RSPropertiesPainter::DrawTransitionProperties(transitionProperties, center, canvas);
-
     // clip by bounds
     canvas.clipRect(
         SkRect::MakeWH(std::floor(properties.GetBoundsWidth()), std::floor(properties.GetBoundsHeight())));
@@ -134,13 +125,13 @@ void RSSurfaceRenderNode::PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas
 void RSSurfaceRenderNode::CollectSurface(
     const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender)
 {
-    if (RSOcclusionConfig::GetInstance().IsStartingWindow(GetName())) {
+    if (nodeType_ == RSSurfaceNodeType::STARTING_WINDOW_NODE) {
         if (isUniRender) {
             vec.emplace_back(shared_from_this());
         }
         return;
     }
-    if (RSOcclusionConfig::GetInstance().IsLeashWindow(GetName())) {
+    if (nodeType_ == RSSurfaceNodeType::DEFAULT) {
         for (auto& child : node->GetSortedChildren()) {
             child->CollectSurface(child, vec, isUniRender);
         }
@@ -300,7 +291,7 @@ void RSSurfaceRenderNode::UpdateSurfaceDefaultSize(float width, float height)
 {
     if (consumer_ != nullptr) {
         consumer_->SetDefaultWidthAndHeight(width, height);
-    }  
+    }
 }
 
 BlendType RSSurfaceRenderNode::GetBlendType()
@@ -412,5 +403,36 @@ bool RSSurfaceRenderNode::NeedSetCallbackForRenderThreadRefresh()
     return (callbackForRenderThreadRefresh_ == nullptr);
 }
 
+void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& region,
+                                                    VisibleData& visibleVec,
+                                                    std::map<uint32_t, bool>& pidVisMap)
+{
+    if (nodeType_ == RSSurfaceNodeType::SELF_DRAWING_NODE) {
+        SetOcclusionVisible(true);
+        return;
+    }
+    visibleRegion_ = region;
+    bool vis = region.GetSize() > 0;
+    if (vis) {
+        visibleVec.emplace_back(GetId());
+    }
+
+    // collect visible changed pid
+    if (qosPidCal_) {
+        uint32_t tmpPid = (GetId() >> 32) & 0xFFFFFFFF;
+        if (pidVisMap.find(tmpPid) != pidVisMap.end()) {
+            pidVisMap[tmpPid] |= vis;
+        } else {
+            pidVisMap[tmpPid] = vis;
+        }
+    }
+
+    SetOcclusionVisible(vis);
+    for (auto& child : GetSortedChildren()) {
+        if (auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)) {
+            surface->SetVisibleRegionRecursive(region, visibleVec, pidVisMap);
+        }
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

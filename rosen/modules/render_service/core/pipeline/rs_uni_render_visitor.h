@@ -94,8 +94,12 @@ private:
     bool doAnimate_ = false;
     bool isPartialRenderEnabled_ = false;
     bool isOpDropped_ = false;
+<<<<<<< HEAD
 
     SkMatrix invertMatrix_ = SkMatrix::I();
+=======
+    PartialRenderType partialRenderType_;
+>>>>>>> FETCH_HEAD
 };
 } // namespace Rosen
 } // namespace OHOS

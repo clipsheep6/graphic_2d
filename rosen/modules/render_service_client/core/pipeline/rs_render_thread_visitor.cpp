@@ -27,6 +27,7 @@
 #include "rs_trace.h"
 
 #include "command/rs_base_node_command.h"
+#include "common/rs_obj_abs_geometry.h"
 #include "common/rs_vector4.h"
 #include "overdraw/rs_cpu_overdraw_canvas_listener.h"
 #include "overdraw/rs_gpu_overdraw_canvas_listener.h"
@@ -90,6 +91,26 @@ void RSRenderThreadVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
     }
 }
 
+void RSRenderThreadVisitor::PrepareRootRenderNodeMatrix(RSRootRenderNode& node)
+{
+    dirtyFlag_ = node.Update(*curDirtyManager_, nullptr, dirtyFlag_);
+    if (node.IsDirtyRegionUpdated() && curDirtyManager_->IsDebugRegionTypeEnable(DebugRegionType::CURRENT_SUB)) {
+        curDirtyManager_->UpdateDirtyCanvasNodes(node.GetId(), node.GetOldDirty());
+    }
+    const auto& property = node.GetRenderProperties();
+    if (auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry())) {
+        const float surfaceWidth = node.GetSurfaceWidth() * property.GetScaleX();
+        const float surfaceHeight = node.GetSurfaceHeight() * property.GetScaleY();
+        const float rootWidth = property.GetFrameWidth() * property.GetScaleX();
+        const float rootHeight = property.GetFrameHeight() * property.GetScaleY();
+        SkMatrix gravityMatrix;
+        (void)RSPropertiesPainter::GetGravityMatrix(
+            Gravity::RESIZE, RectF { 0.0f, 0.0f, surfaceWidth, surfaceHeight }, rootWidth, rootHeight, gravityMatrix);
+        geoPtr->ConcatMatrix(gravityMatrix);
+        parentSurfaceNodeMatrix_ = gravityMatrix;
+    }
+}
+
 void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
     if (isIdle_) {
@@ -103,10 +124,18 @@ void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
         }
         dirtyFlag_ = false;
         isIdle_ = false;
+
+        bool dirtyFlag = dirtyFlag_;
+        PrepareRootRenderNodeMatrix(node);
         PrepareCanvasRenderNode(node);
+        dirtyFlag_ = dirtyFlag;
+
         isIdle_ = true;
     } else {
+        bool dirtyFlag = dirtyFlag_;
+        PrepareRootRenderNodeMatrix(node);
         PrepareCanvasRenderNode(node);
+        dirtyFlag_ = dirtyFlag;
     }
 }
 
@@ -371,15 +400,6 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 
     // clear current children before traversal, we will re-add them again during traversal
     childSurfaceNodeIds_.clear();
-
-    // reset matrix
-    const float rootWidth = property.GetFrameWidth() * property.GetScaleX();
-    const float rootHeight = property.GetFrameHeight() * property.GetScaleY();
-    SkMatrix gravityMatrix;
-    (void)RSPropertiesPainter::GetGravityMatrix(
-        Gravity::RESIZE, RectF { 0.0f, 0.0f, surfaceWidth, surfaceHeight }, rootWidth, rootHeight, gravityMatrix);
-    canvas_->concat(gravityMatrix);
-    parentSurfaceNodeMatrix_ = gravityMatrix;
 
     RS_TRACE_BEGIN("ProcessRenderNodes");
     ProcessCanvasRenderNode(node);

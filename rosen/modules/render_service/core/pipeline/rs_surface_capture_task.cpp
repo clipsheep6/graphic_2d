@@ -221,27 +221,28 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSD
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNode& node)
 {
-    SkMatrix translateMatrix;
-    const float thisNodetranslateX = node.GetTotalMatrix().getTranslateX();
-    const float thisNodetranslateY = node.GetTotalMatrix().getTranslateY();
-    if (!node.IsAppWindow()) {
-        translateMatrix.preTranslate(
-            thisNodetranslateX - parentNodeTranslateX_, thisNodetranslateY - parentNodeTranslateY_);
-    } else {
-        parentNodeTranslateX_ = thisNodetranslateX;
-        parentNodeTranslateY_ = thisNodetranslateY;
-    }
-
-    canvas_->save();
-
-    if (!node.IsAppWindow()) {
-        canvas_->translate(-canvas_->getTotalMatrix().getTranslateX() / canvas_->getTotalMatrix().getScaleX(),
-            -canvas_->getTotalMatrix().getTranslateY() / canvas_->getTotalMatrix().getScaleY());
-        canvas_->concat(translateMatrix);
-    }
-
-    canvas_->save();
     const auto& property = node.GetRenderProperties();
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    if (!geoPtr) {
+        RS_LOGE("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni node:%" PRIu64 ", get geoPtr failed", node.GetId());
+        return;
+    }
+
+    canvas_->save();
+
+    if (node.IsAppWindow()) {
+        captureMatrix_.setScaleX(scaleX_);
+        captureMatrix_.setScaleY(scaleY_);
+        SkMatrix invertMatrix;
+        if (geoPtr->GetAbsMatrix().invert(&invertMatrix)) {
+            captureMatrix_.preConcat(invertMatrix);
+        }
+    } else {
+        canvas_->SetMatrix(captureMatrix);
+        canvas_->concat(geoPtr->GetAbsMatrix());
+    }
+
+    canvas_->save();
     canvas_->clipRect(SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight()));
     auto backgroundColor = static_cast<SkColor>(property.GetBackgroundColor().AsArgbInt());
     if (SkColorGetA(backgroundColor) != SK_AlphaTRANSPARENT) {
@@ -262,6 +263,12 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWith
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode& node)
 {
+    canvas_->concat(node.GetContextMatrix());
+    auto contextClipRect = node.GetContextClipRegion();
+    if (!contextClipRect.isEmpty()) {
+        canvas_->clipRect(contextClipRect);
+    }
+
     bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
     if (isSelfDrawingSurface) {
         canvas_->save();
@@ -362,12 +369,8 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessCanvasRenderNode(RSCa
         RS_LOGE("ProcessCanvasRenderNode, canvas is nullptr");
         return;
     }
-    SkMatrix captureMatrix;
-    captureMatrix.setScaleX(scaleX_);
-    captureMatrix.setScaleY(scaleY_);
-    captureMatrix.setTranslateX(-parentNodeTranslateX_ * scaleX_);
-    captureMatrix.setTranslateY(-parentNodeTranslateY_ * scaleY_);
-    node.ProcessRenderBeforeChildren(*canvas_, captureMatrix);
+
+    node.ProcessRenderBeforeChildren(*canvas_, captureMatrix_);
     ProcessBaseRenderNode(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }

@@ -94,6 +94,8 @@ private:
     bool doAnimate_ = false;
     bool isPartialRenderEnabled_ = false;
     bool isOpDropped_ = false;
+
+    SkMatrix invertMatrix_ = SkMatrix::I();
 };
 } // namespace Rosen
 } // namespace OHOS

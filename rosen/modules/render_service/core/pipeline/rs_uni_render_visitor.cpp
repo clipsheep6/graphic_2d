@@ -124,6 +124,9 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (node.GetDstRectChanged()) {
         dirtyFlag_ = true;
     }
+
+    boundsRect_ = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
+    frameGravity_ = property.GetFrameGravity();
     PrepareBaseRenderNode(node);
     // restore flags
     parentSurfaceNodeMatrix_ = parentSurfaceNodeMatrix;
@@ -615,11 +618,10 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         property.GetBoundsHeight() * canvas_->getTotalMatrix().getScaleY()};
     RS_TRACE_NAME("RSUniRender::Process:[" + node.GetName() + "]_" + dstRect.ToString());
 
-    boundsRect_ = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
     if (!property.GetCornerRadius().IsZero()) {
         canvas_->clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
     } else {
-        canvas_->clipRect(boundsRect_);
+        canvas_->clipRect(SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight()));
     }
 
     RSPropertiesPainter::DrawBackground(property, *canvas_);
@@ -661,10 +663,17 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             ProcessBaseRenderNode(node);
             node.ClearCacheSurface();
         } else if (node.GetCacheSurface()) {
-                DrawCacheSurface(node);
+            DrawCacheSurface(node);
         } else {
             InitCacheSurface(node, property.GetBoundsWidth(), property.GetBoundsHeight());
-            if (node.GetCacheSurface()) {
+
+            // We should use relative coordinates which is
+            // coordinates the node relative to the upper-left corner of the window here.
+            // So we have to get the invert matrix here and pass it to the method
+            // "RSRenderNode::ProcessRenderBeforeChildren".
+            bool isSuccess = geoPtr->GetAbsMatrix.invert(&invertMatrix_);
+
+            if (node.GetCacheSurface() && isSuccess) {
                 auto cacheCanvas = std::make_unique<RSPaintFilterCanvas>(node.GetCacheSurface().get());
 
                 swap(cacheCanvas, canvas_);
@@ -673,7 +682,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
                 DrawCacheSurface(node);
             } else {
-                RS_LOGE("RSUniRenderVisitor::ProcessSurfaceRenderNode %s Create CacheSurface failed",
+                RS_LOGE("RSUniRenderVisitor::ProcessSurfaceRenderNode %s Create CacheSurface or invert matrix failed",
                     node.GetName().c_str());
             }
         }
@@ -751,7 +760,7 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         RS_LOGE("RSUniRenderVisitor::ProcessCanvasRenderNode, canvas is nullptr");
         return;
     }
-    node.ProcessRenderBeforeChildren(*canvas_);
+    node.ProcessRenderBeforeChildren(*canvas_, invertMatrix_);
     ProcessBaseRenderNode(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }

@@ -146,17 +146,17 @@ void RSRenderNode::UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEn
     }
 }
 
-void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas, SkMatrix captureMatrix)
+void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas, SkMatrix infoMatrix)
 {
 #ifdef ROSEN_OHOS
     renderNodeSaveCount_ = canvas.SaveCanvasAndAlpha();
     auto boundsGeo = std::static_pointer_cast<RSObjAbsGeometry>(GetRenderProperties().GetBoundsGeometry());
     if (boundsGeo && !boundsGeo->IsEmpty()) {
         auto absMatrix = boundsGeo->GetAbsMatrix();
-        if (captureMatrix.isIndentity()) {
+        if (infoMatrix.isIndentity()) {
             canvas.setMatrix(absMatrix);
         } else {
-            canvas.setMatrix(captureMatrix);
+            canvas.setMatrix(infoMatrix);
             canvas.concat(absMatrix);
         }
         canvas.setMatrix(boundsGeo->GetAbsMatrix());

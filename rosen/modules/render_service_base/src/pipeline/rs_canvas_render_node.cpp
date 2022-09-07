@@ -67,10 +67,10 @@ void RSCanvasRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->ProcessCanvasRenderNode(*this);
 }
 
-void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas, SkMatrix captureMatrix)
+void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas, SkMatrix infoMatrix)
 {
 #ifdef ROSEN_OHOS
-    RSRenderNode::ProcessRenderBeforeChildren(canvas, captureMatrix);
+    RSRenderNode::ProcessRenderBeforeChildren(canvas, infoMatrix);
     if (!isRenderUpdateIgnored_) {
         RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas);
         auto filter = std::static_pointer_cast<RSSkiaFilter>(GetRenderProperties().GetBackgroundFilter());

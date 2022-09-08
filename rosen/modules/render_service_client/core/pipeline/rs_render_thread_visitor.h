@@ -56,6 +56,7 @@ private:
     void DrawDirtyRegion();
     // Update damageRegion based on buffer age, and then set it through egl api
     void UpdateDirtyAndSetEGLDamageRegion(std::unique_ptr<RSSurfaceFrame>& surfaceFrame);
+    void PrepareRootRenderNodeMatrix(RSRootRenderNode& node);
 
     std::shared_ptr<RSDirtyRegionManager> curDirtyManager_;
     bool isRenderForced_ = false;

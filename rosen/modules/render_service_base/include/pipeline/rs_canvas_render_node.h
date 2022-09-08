@@ -39,7 +39,7 @@ public:
     void UpdateRecording(std::shared_ptr<DrawCmdList> drawCmds, RSModifierType type);
     void ClearRecording();
 
-    void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
+    void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas, SkMatrix infoMatrix = SkMatrix::I()) override;
     void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
 
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;

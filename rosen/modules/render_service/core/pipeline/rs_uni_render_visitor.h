@@ -95,6 +95,8 @@ private:
     bool isPartialRenderEnabled_ = false;
     bool isOpDropped_ = false;
     PartialRenderType partialRenderType_;
+
+    SkMatrix invertMatrix_ = SkMatrix::I();
 };
 } // namespace Rosen
 } // namespace OHOS

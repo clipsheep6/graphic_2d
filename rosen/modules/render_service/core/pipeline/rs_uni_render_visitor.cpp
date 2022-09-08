@@ -187,6 +187,9 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     bool dirtyFlag = dirtyFlag_;
     auto nodeParent = node.GetParent().lock();
     std::shared_ptr<RSRenderNode> rsParent = nullptr;
+    // [planning] surfaceNode use frame instead.
+    // This is a temporary modify when processing self-drawing surfaceNode with children
+    // like RosenRenderTexture.
     while (nodeParent && nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>() &&
         nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>()->GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE) {
         nodeParent = nodeParent->GetParent().lock();
@@ -660,12 +663,11 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         } else {
             InitCacheSurface(node, property.GetBoundsWidth(), property.GetBoundsHeight());
 
-            // We should use relative coordinates which is
-            // coordinates the node relative to the upper-left corner of the window here.
-            // So we have to get the invert matrix here and pass it to the method
+            // Here should use relative coordinates
+            // which is the node relative to the upper-left corner of the window.
+            // So we have to get the invert matrix of AppWindow here and pass it to the method
             // "RSRenderNode::ProcessRenderBeforeChildren".
             bool isSuccess = geoPtr->GetAbsMatrix().invert(&invertMatrix_);
-
             if (node.GetCacheSurface() && isSuccess) {
                 auto cacheCanvas = std::make_unique<RSPaintFilterCanvas>(node.GetCacheSurface().get());
 

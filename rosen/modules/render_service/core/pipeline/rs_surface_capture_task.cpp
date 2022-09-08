@@ -224,13 +224,19 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWith
     const auto& property = node.GetRenderProperties();
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
     if (!geoPtr) {
-        RS_LOGE("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni node:%" PRIu64 ", get geoPtr failed", node.GetId());
+        RS_LOGE("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni node:%" PRIu64 ", get geoPtr failed",
+            node.GetId());
         return;
     }
 
     canvas_->save();
 
     if (node.IsAppWindow()) {
+        // When CaptureSingleSurfaceNodeWithUni, we should consider scale factor of canvas_ and
+        // child nodes of AppWindow should use relative coordinates
+        // which is the node relative to the upper-left corner of the window.
+        // So we have to get the invert matrix of AppWindow here and concat with captureMatrix before
+        // passing it to the method "RSRenderNode::ProcessRenderBeforeChildren".
         captureMatrix_.setScaleX(scaleX_);
         captureMatrix_.setScaleY(scaleY_);
         SkMatrix invertMatrix;
@@ -238,6 +244,7 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWith
             captureMatrix_.preConcat(invertMatrix);
         }
     } else {
+        // Self-Drawing surfaceNode is also child of AppWindow.
         canvas_->setMatrix(captureMatrix_);
         canvas_->concat(geoPtr->GetAbsMatrix());
     }

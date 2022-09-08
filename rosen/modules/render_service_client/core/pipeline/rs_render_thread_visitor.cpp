@@ -132,10 +132,7 @@ void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 
         isIdle_ = true;
     } else {
-        bool dirtyFlag = dirtyFlag_;
-        PrepareRootRenderNodeMatrix(node);
         PrepareCanvasRenderNode(node);
-        dirtyFlag_ = dirtyFlag;
     }
 }
 
@@ -148,6 +145,9 @@ void RSRenderThreadVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
     bool dirtyFlag = dirtyFlag_;
     auto nodeParent = node.GetParent().lock();
     std::shared_ptr<RSRenderNode> rsParent = nullptr;
+    // [planning] surfaceNode use frame instead.
+    // This is a temporary modify when processing self-drawing surfaceNode with children
+    // like RosenRenderTexture.
     while (nodeParent && nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>()) {
         nodeParent = nodeParent->GetParent().lock();
     }

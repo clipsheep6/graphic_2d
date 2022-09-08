@@ -21,6 +21,7 @@
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "transaction/rs_ashmem_helper.h"
+#include "render/rs_image_cache.h"
 #include "rs_trace.h"
 
 namespace OHOS {
@@ -44,6 +45,7 @@ void RSRenderServiceConnectionProxy::CommitTransaction(std::unique_ptr<RSTransac
     transactionData->SetUniRender(isUniMode);
     transactionData->SetSendingPid(pid_);
 
+    RSResCacheQuery::Instance().QueryCacheValid();
     // split to several parcels if parcel size > PARCEL_SPLIT_THRESHOLD during marshalling
     std::vector<std::shared_ptr<MessageParcel>> parcelVector;
     while (transactionData->GetMarshallingIndex() < transactionData->GetCommandCount()) {
@@ -58,6 +60,7 @@ void RSRenderServiceConnectionProxy::CommitTransaction(std::unique_ptr<RSTransac
         }
         parcelVector.emplace_back(parcel);
     }
+    RSResCacheQuery::Instance().ClearQueryed();
 
     MessageOption option;
     option.SetFlags(MessageOption::TF_ASYNC);
@@ -244,6 +247,39 @@ sptr<Surface> RSRenderServiceConnectionProxy::CreateNodeAndSurface(const RSSurfa
     sptr<IBufferProducer> bp = iface_cast<IBufferProducer>(surfaceObject);
     sptr<Surface> surface = Surface::CreateSurfaceAsProducer(bp);
     return surface;
+}
+
+void RSRenderServiceConnectionProxy::QueryCacheValid(
+    const std::unordered_set<uint64_t>& toQuery, std::unordered_set<uint64_t>& queryed)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteUint32(toQuery.size())) {
+        return;
+    }
+    for (auto it : toQuery) {
+        if (!data.WriteUint64(it)) {
+            return;
+        }
+    }
+
+    option.SetFlags(MessageOption::TF_SYNC);
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::QUERY_CACHE_VALID, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::QueryCacheValid SendRequest failed, err = %d", err);
+        return;
+    }
+
+    std::vector<uint64_t> validCacheIds;
+    if (!reply.ReadUInt64Vector(&validCacheIds)) {
+        return;
+    }
+    for (auto validId : validCacheIds) {
+        queryed.emplace(validId);
+    }
+    return;
 }
 
 sptr<IVSyncConnection> RSRenderServiceConnectionProxy::CreateVSyncConnection(const std::string& name)

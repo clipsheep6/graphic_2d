@@ -25,6 +25,7 @@
 #include "pipeline/rs_unmarshal_thread.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_ashmem_helper.h"
+#include "render/rs_image_cache.h"
 #include "rs_trace.h"
 
 namespace OHOS {
@@ -173,6 +174,16 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             sptr<Surface> surface = CreateNodeAndSurface(config);
             auto producer = surface->GetProducer();
             reply.WriteRemoteObject(producer->AsObject());
+            break;
+        }
+        case QUERY_CACHE_VALID: {
+            auto size = data.ReadUint32();
+            std::vector<uint64_t> toQuery(size);
+            for (uint32_t i = 0; i < size; ++i) {
+                toQuery[i] = data.ReadUint64();
+            }
+            auto validCache = RSImageCache::Instance().QueryCacheValid(toQuery);
+            reply.WriteUInt64Vector(validCache);
             break;
         }
         case GET_DEFAULT_SCREEN_ID: {

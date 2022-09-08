@@ -39,6 +39,7 @@ public:
     bool QueryIfRTNeedRender() override;
     bool CreateNode(const RSSurfaceRenderNodeConfig& config) override;
     sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) override;
+    void QueryCacheValid(const std::unordered_set<uint64_t>& toQuery, std::unordered_set<uint64_t>& queryed) override;
 
     virtual sptr<IVSyncConnection> CreateVSyncConnection(const std::string& name) override;
 

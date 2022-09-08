@@ -131,6 +131,15 @@ std::shared_ptr<RSSurface> RSRenderServiceClient::CreateNodeAndSurface(const RSS
     return producer;
 }
 
+void RSRenderServiceClient::QueryCacheValid(
+    const std::unordered_set<uint64_t>& toQuery, std::unordered_set<uint64_t>& queryed)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService != nullptr) {
+        renderService->QueryCacheValid(toQuery, queryed);
+    }
+}
+
 std::shared_ptr<VSyncReceiver> RSRenderServiceClient::CreateVSyncReceiver(
     const std::string& name,
     const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper)

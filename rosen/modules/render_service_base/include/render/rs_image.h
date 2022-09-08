@@ -72,6 +72,7 @@ public:
     void SetRadius(const SkVector radius[]);
     void SetScale(double scale);
     void SetCompressData(const sk_sp<SkData> data, int width, int height);
+    uint64_t GetUniqueId() const;
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const;
     static RSImage* Unmarshalling(Parcel& parcel);

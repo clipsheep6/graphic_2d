@@ -30,6 +30,7 @@
 #include "modifier/rs_modifier.h"
 #include "pipeline/rs_node_map.h"
 #include "platform/common/rs_log.h"
+#include "render/rs_image_cache.h"
 #include "render/rs_path.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "animation/rs_ui_animation_manager.h"
@@ -610,6 +611,9 @@ void RSNode::SetBackgroundShader(const std::shared_ptr<RSShader>& shader)
 // background
 void RSNode::SetBgImage(const std::shared_ptr<RSImage>& image)
 {
+    if (RSSystemProperties::GetUniRenderEnabled()) {
+        RSResCacheQuery::Instance().AddCacheId(image->GetUniqueId());
+    }
     SET_NONANIMATABLE_MODIFIER(BgImage, std::shared_ptr<RSImage>, image, BG_IMAGE, nullptr);
 }
 

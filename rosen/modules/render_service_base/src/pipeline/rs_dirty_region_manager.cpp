@@ -189,8 +189,8 @@ RectI RSDirtyRegionManager::MergeHistory(unsigned int age, RectI rect) const
         return surfaceRect_;
     }
     // GetHistory(historySize_) is equal to dirtyHistory_[historyHead_] (latest his rect)
-    // therefore, this loop merges rect with (age-1) frames' dirtyRect
-    for (unsigned int i = historySize_ - 1; i > historySize_ - age; --i) {
+    // therefore, this loop merges rect with age frames' dirtyRect
+    for (unsigned int i = historySize_ - 1; i >= historySize_ - age; --i) {
         auto subRect = GetHistory(i);
         if (subRect.IsEmpty()) {
             continue;

@@ -21,6 +21,7 @@
 #include "accessibility_config.h"
 #include "rs_trace.h"
 #include "sandbox_utils.h"
+#include "socperf_client.h"
 
 #include "animation/rs_animation_fraction.h"
 #include "command/rs_surface_node_command.h"
@@ -60,6 +61,8 @@ namespace Rosen {
 namespace {
     static constexpr uint64_t REFRESH_PERIOD = 16666667;
     static constexpr uint64_t REFRESH_FREQ_IN_UNI_RENDER = 3600;
+    constexpr int32_t PERF_ANIMATION_REQUESTED_CODE = 10006;
+    constexpr uint64_t PERF_PERIOD = 200000000;
 }
 class HighContrastObserver : public AccessibilityConfigObserver {
 public:
@@ -426,6 +429,7 @@ void RSRenderThread::Animate(uint64_t timestamp)
     if (!context_.animatingNodeList_.empty()) {
         RSRenderThread::Instance().RequestNextVSync();
     }
+    RequestPerf();
 }
 
 void RSRenderThread::Render()
@@ -484,6 +488,15 @@ void RSRenderThread::PostPreTask()
 {
     if (handler_ && preTask_) {
         handler_->PostTask(preTask_);
+    }
+}
+
+void RSRenderThread::RequestPerf()
+{
+    if (!context_.animatingNodeList_.empty() && timestamp_ - prePerfTimestamp_ > PERF_PERIOD) {
+        RS_LOGD("RSRenderThread:: RequestPerf");
+        OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequest(PERF_ANIMATION_REQUESTED_CODE, "");
+        prePerfTimestamp_ = timestamp_;
     }
 }
 } // namespace Rosen

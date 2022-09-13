@@ -15,9 +15,10 @@
 
 #include "rs_uni_render_processor.h"
 
-#include "platform/common/rs_log.h"
 #include "rs_trace.h"
 #include "string_utils.h"
+
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -30,13 +31,17 @@ RSUniRenderProcessor::~RSUniRenderProcessor() noexcept
 {
 }
 
-bool RSUniRenderProcessor::Init(ScreenId id, int32_t offsetX, int32_t offsetY, ScreenId mirroredId)
+bool RSUniRenderProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId)
 {
-    if (!RSProcessor::Init(id, offsetX, offsetY, mirroredId)) {
+    if (!RSProcessor::Init(node, offsetX, offsetY, mirroredId)) {
         return false;
     }
 
-    return composerAdapter_->Init(id, offsetX, offsetY, mirrorAdaptiveCoefficient_,
+    // In uni render mode, we can handle screen rotation in the rendering process,
+    // so we do not need to handle rotation in composer adapter any more,
+    // just pass the buffer to composer straightly.
+    screenInfo_.rotation = ScreenRotation::ROTATION_0;
+    return composerAdapter_->Init(screenInfo_, offsetX, offsetY, mirrorAdaptiveCoefficient_,
         [this](const auto& surface, const auto& layers) {
         Redraw(surface, layers);
     });
@@ -51,15 +56,14 @@ void RSUniRenderProcessor::ProcessSurface(RSSurfaceRenderNode &node)
 {
     if (!node.IsNotifyRTBufferAvailable()) {
         // Only ipc for one time.
-        RS_LOGD("RsDebug RSUniRenderProcessor::ProcessSurface id = %llu "\
-                "Notify RT buffer available", node.GetId());
+        RS_LOGD("RsDebug RSUniRenderProcessor::ProcessSurface id = %" PRIu64 " Notify RT buffer available",
+            node.GetId());
         node.NotifyRTBufferAvailable();
     }
 
     auto layer = composerAdapter_->CreateLayer(node);
     if (layer == nullptr) {
-        RS_LOGE("RSUniRenderProcessor::ProcessSurface: failed to createLayer for node(id: %llu)",
-            node.GetId());
+        RS_LOGE("RSUniRenderProcessor::ProcessSurface: failed to createLayer for node(id: %" PRIu64 ")", node.GetId());
         return;
     }
 
@@ -70,7 +74,7 @@ void RSUniRenderProcessor::ProcessDisplaySurface(RSDisplayRenderNode& node)
 {
     auto layer = composerAdapter_->CreateLayer(node);
     if (layer == nullptr) {
-        RS_LOGE("RSUniRenderProcessor::ProcessDisplaySurface: failed to createLayer for node(id: %llu)",
+        RS_LOGE("RSUniRenderProcessor::ProcessDisplaySurface: failed to createLayer for node(id: %" PRIu64 ")",
             node.GetId());
         return;
     }
@@ -98,7 +102,7 @@ void RSUniRenderProcessor::Redraw(const sptr<Surface>& surface, const std::vecto
         RS_LOGE("RsDebug RSUniRenderProcessor::Redraw：canvas is nullptr.");
         return;
     }
-    renderEngine_->DrawLayers(*canvas, layers, screenInfo_, forceCPU);
+    renderEngine_->DrawLayers(*canvas, layers, forceCPU);
     renderFrame->Flush();
     RS_LOGD("RsDebug RSUniRenderProcessor::Redraw flush frame buffer end");
 }

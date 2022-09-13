@@ -18,6 +18,7 @@
 #include <unordered_set>
 
 #include "common/rs_matrix3.h"
+#include "common/rs_obj_abs_geometry.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector3.h"
 #include "platform/common/rs_log.h"
@@ -520,6 +521,21 @@ bool ConvertYUV420SPToRGBA(std::vector<uint8_t>& rgbaBuf, const sptr<OHOS::Surfa
 }
 } // namespace Detail
 
+BufferRequestConfig RSBaseRenderUtil::GetFrameBufferRequestConfig(
+    const ScreenInfo& screenInfo, bool isPhysical)
+{
+    BufferRequestConfig config {};
+    const auto width = isPhysical ? screenInfo.width : screenInfo.GetRotatedWidth();
+    const auto height = isPhysical ? screenInfo.height : screenInfo.GetRotatedHeight();
+    config.width = static_cast<int32_t>(width);
+    config.height = static_cast<int32_t>(height);
+    config.strideAlignment = 0x8; // default stride is 8 Bytes.
+    config.format = PIXEL_FMT_RGBA_8888;
+    config.usage = HBM_USE_CPU_READ | HBM_USE_MEM_DMA | HBM_USE_MEM_FB;
+    config.timeout = 0;
+    return config;
+}
+
 void RSBaseRenderUtil::DropFrameProcess(RSSurfaceHandler& node)
 {
     auto availableBufferCnt = node.GetAvailableBufferCount();
@@ -633,6 +649,173 @@ bool RSBaseRenderUtil::IsBufferValid(const sptr<SurfaceBuffer>& buffer)
     return true;
 }
 
+SkMatrix RSBaseRenderUtil::GetSurfaceTransformMatrix(const RSSurfaceRenderNode& node, const RectF& bounds)
+{
+    SkMatrix matrix;
+    const float boundsWidth = bounds.GetWidth();
+    const float boundsHeight = bounds.GetHeight();
+    const sptr<Surface>& surface = node.GetConsumer();
+    if (surface == nullptr) {
+        return matrix;
+    }
+
+    switch (surface->GetTransform()) {
+        case TransformType::ROTATE_90: {
+            matrix.preTranslate(0, boundsHeight);
+            matrix.preRotate(-90); // rotate 90 degrees anti-clockwise at last.
+            break;
+        }
+        case TransformType::ROTATE_180: {
+            matrix.preTranslate(boundsWidth, boundsHeight);
+            matrix.preRotate(-180); // rotate 180 degrees anti-clockwise at last.
+            break;
+        }
+        case TransformType::ROTATE_270: {
+            matrix.preTranslate(boundsWidth, 0);
+            matrix.preRotate(-270); // rotate 270 degrees anti-clockwise at last.
+            break;
+        }
+        default:
+            break;
+    }
+
+    return matrix;
+}
+
+SkMatrix RSBaseRenderUtil::GetNodeGravityMatrix(
+    const RSSurfaceRenderNode& node, const sptr<SurfaceBuffer>& buffer, const RectF& bounds)
+{
+    SkMatrix gravityMatrix;
+    if (buffer == nullptr) {
+        return gravityMatrix;
+    }
+
+    const RSProperties& property = node.GetRenderProperties();
+    const Gravity gravity = property.GetFrameGravity();
+    const float frameWidth = buffer->GetSurfaceBufferWidth();
+    const float frameHeight = buffer->GetSurfaceBufferHeight();
+    const float boundsWidth = bounds.GetWidth();
+    const float boundsHeight = bounds.GetHeight();
+    if (frameWidth == boundsWidth && frameHeight == boundsHeight) {
+        return gravityMatrix;
+    }
+
+    if (!RSPropertiesPainter::GetGravityMatrix(gravity,
+        RectF {0.0f, 0.0f, boundsWidth, boundsHeight}, frameWidth, frameHeight, gravityMatrix)) {
+        RS_LOGD("RSDividedRenderUtil::DealWithNodeGravity did not obtain gravity matrix.");
+    }
+
+    return gravityMatrix;
+}
+
+void RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(
+    const RSSurfaceRenderNode& node, RectF& localBounds, BufferDrawParam& params)
+{
+    // the surface can rotate itself.
+    params.matrix.preConcat(RSBaseRenderUtil::GetSurfaceTransformMatrix(node, localBounds));
+    const sptr<Surface>& surface = node.GetConsumer(); // private func, guarantee surface is not nullptr.
+    if (surface->GetTransform() == TransformType::ROTATE_90 || surface->GetTransform() == TransformType::ROTATE_270) {
+        // after rotate, we should swap dstRect and bound's width and height.
+        std::swap(localBounds.width_, localBounds.height_);
+        params.dstRect = SkRect::MakeWH(localBounds.GetWidth(), localBounds.GetHeight());
+    }
+
+    // deal with buffer's gravity effect in node's inner space.
+    params.matrix.preConcat(RSBaseRenderUtil::GetNodeGravityMatrix(node, params.buffer, localBounds));
+    // because we use the gravity matrix above(which will implicitly includes scale effect),
+    // we must disable the scale effect that from srcRect to dstRect.
+    params.dstRect = params.srcRect;
+}
+
+void RSBaseRenderUtil::CalculateSurfaceNodeClipRects(
+    const RSSurfaceRenderNode& node,
+    const RectF& absBounds,
+    const RectF& localBounds,
+    bool inLocalCoordinate,
+    BufferDrawParam& params)
+{
+    const RSProperties& property = node.GetRenderProperties();
+    params.cornerRadius = property.GetCornerRadius();
+    params.isNeedClip = property.GetClipToFrame();
+    if (inLocalCoordinate) {
+        // in canvas's local coordinate system.
+        params.clipRect = SkRect::MakeWH(localBounds.GetWidth(), localBounds.GetHeight());
+        params.clipRRect = RRect(localBounds, params.cornerRadius);
+    } else {
+        // in logical screen's coordinate system.
+        const auto& clipRect = node.GetDstRect();
+        params.clipRect = SkRect::MakeXYWH(
+            clipRect.GetLeft(), clipRect.GetTop(), clipRect.GetWidth(), clipRect.GetHeight());
+        params.clipRRect = RRect(absBounds, params.cornerRadius);
+    }
+}
+
+BufferDrawParam RSBaseRenderUtil::CreateBufferDrawParam(
+    const RSSurfaceRenderNode& node, bool inLocalCoordinate, bool isClipHole, bool forceCPU, bool setColorFilter)
+{
+    BufferDrawParam params;
+#ifdef RS_ENABLE_EGLIMAGE
+    params.useCPU = forceCPU;
+#else // RS_ENABLE_EGLIMAGE
+    (void)(forceCPU); // unused param.
+    params.useCPU = true;
+#endif // RS_ENABLE_EGLIMAGE
+    params.paint.setAlphaf(node.GetGlobalAlpha());
+    params.paint.setAntiAlias(true);
+    params.setColorFilter = setColorFilter;
+
+    const RSProperties& property = node.GetRenderProperties();
+    params.backgroundColor = static_cast<SkColor>(property.GetBackgroundColor().AsArgbInt());
+
+    const RectF absBounds = {
+        node.GetTotalMatrix().getTranslateX(), node.GetTotalMatrix().getTranslateY(),
+        property.GetBoundsWidth(), property.GetBoundsHeight()};
+    RectF localBounds = {0.0f, 0.0f, absBounds.GetWidth(), absBounds.GetHeight()};
+
+    // calculate clipRect and clipRRect(if has cornerRadius) for canvas.
+    CalculateSurfaceNodeClipRects(node, absBounds, localBounds, inLocalCoordinate, params);
+
+    // inLocalCoordinate: reset the translate to (0, 0).
+    // else: use node's total matrix.
+    if (inLocalCoordinate) {
+        params.matrix = SkMatrix::I();
+    } else {
+        params.matrix = node.GetTotalMatrix();
+    }
+
+    // we can use only the bound's size (ignore its offset) now,
+    // (the canvas was moved to the node's left-top point correctly).
+    params.dstRect = SkRect::MakeWH(localBounds.GetWidth(), localBounds.GetHeight());
+
+    const sptr<Surface>& surface = node.GetConsumer();
+    const sptr<SurfaceBuffer>& buffer = node.GetBuffer();
+    if (isClipHole || surface == nullptr || buffer == nullptr) {
+        return params;
+    }
+
+    params.buffer = buffer;
+    params.acquireFence = node.GetAcquireFence();
+    params.srcRect = SkRect::MakeWH(buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
+
+    DealWithSurfaceRotationAndGravity(node, localBounds, params);
+    return params;
+}
+
+void RSBaseRenderUtil::SetPropertiesForCanvas(RSPaintFilterCanvas& canvas, const BufferDrawParam& params)
+{
+    if (params.isNeedClip) {
+        if (!params.cornerRadius.IsZero()) {
+            canvas.clipRRect(RSPropertiesPainter::RRect2SkRRect(params.clipRRect), true);
+        } else {
+            canvas.clipRect(params.clipRect);
+        }
+    }
+    if (SkColorGetA(params.backgroundColor) != SK_AlphaTRANSPARENT) {
+        canvas.drawColor(params.backgroundColor);
+    }
+    canvas.concat(params.matrix);
+}
+
 bool RSBaseRenderUtil::ConvertBufferToBitmap(sptr<SurfaceBuffer> buffer, std::vector<uint8_t>& newBuffer,
     ColorGamut dstGamut, SkBitmap& bitmap)
 {
@@ -690,30 +873,5 @@ bool RSBaseRenderUtil::CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffe
         return CreateBitmap(buffer, bitmap);
     }
 }
-
-#ifdef RS_ENABLE_EGLIMAGE
-bool RSBaseRenderUtil::ConvertBufferToEglImage(sptr<SurfaceBuffer> buffer,
-    std::shared_ptr<RSEglImageManager> eglImageManager, GrContext* grContext, sptr<SyncFence> acquireFence,
-    sk_sp<SkImage>& image)
-{
-    if (!IsBufferValid(buffer) || eglImageManager == nullptr || grContext == nullptr) {
-        RS_LOGE("RSBaseRenderUtil::ConvertBufferToEglImage invalid param!");
-        return false;
-    }
-    auto eglTextureId = eglImageManager->MapEglImageFromSurfaceBuffer(buffer, acquireFence);
-    if (eglTextureId == 0) {
-        RS_LOGE("RSBaseRenderUtil::ConvertBufferToEglImage MapEglImageFromSurfaceBuffer return invalid texture ID");
-        return false;
-    }
-    SkColorType colorType = (buffer->GetFormat() == PIXEL_FMT_BGRA_8888) ?
-        kBGRA_8888_SkColorType : kRGBA_8888_SkColorType;
-    GrGLTextureInfo grExternalTextureInfo = { GL_TEXTURE_EXTERNAL_OES, eglTextureId, GL_RGBA8 };
-    GrBackendTexture backendTexture(buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight(),
-        GrMipMapped::kNo, grExternalTextureInfo);
-    image = SkImage::MakeFromTexture(grContext, backendTexture,
-        kTopLeft_GrSurfaceOrigin, colorType, kPremul_SkAlphaType, nullptr);
-    return true;
-}
-#endif
 } // namespace Rosen
 } // namespace OHOS

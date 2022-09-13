@@ -24,7 +24,7 @@
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/drawing/rs_surface_frame.h"
 #include "platform/ohos/rs_surface_ohos.h"
-#include "screen_manager/rs_screen_manager.h"
+#include "rs_base_render_util.h"
 
 #ifdef RS_ENABLE_GL
 #include "render_context/render_context.h"
@@ -36,11 +36,6 @@
 
 namespace OHOS {
 namespace Rosen {
-struct DrawSurfaceNodeInfo {
-    bool forceCPU = false;
-    float mirrorAdaptiveCoefficient = 1.0f;
-};
-
 // The RenderFrame can do auto flush
 class RSRenderFrame {
 public:
@@ -79,13 +74,19 @@ public:
 
     std::unique_ptr<RSPaintFilterCanvas> GetCanvas()
     {
-        return std::make_unique<RSPaintFilterCanvas>(surfaceFrame_->GetCanvas());
+        return std::make_unique<RSPaintFilterCanvas>(surfaceFrame_->GetSurface().get());
     }
 
 private:
     std::shared_ptr<RSSurfaceOhos> targetSurface_;
     std::unique_ptr<RSSurfaceFrame> surfaceFrame_;
 };
+
+// function that will be called before drawing Buffer / Image.
+using PreProcessFunc = std::function<void(RSPaintFilterCanvas&, BufferDrawParam&)>;
+// function that will be called after drawing Buffer / Image.
+using PostProcessFunc = std::function<void(RSPaintFilterCanvas&, BufferDrawParam&)>;
+
 
 // This render engine aims to do the client composition for all surfaces that hardware can't handle.
 class RSRenderEngine {
@@ -100,56 +101,74 @@ public:
     // We should remove this function in someday.
     static bool NeedForceCPU(const std::vector<LayerInfoPtr>& layers);
 
+    sk_sp<SkImage> CreateEglImageFromBuffer(const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence);
+
     // There would only one user(thread) to renderFrame(request frame) at one time.
+    // for framebuffer surface
     std::unique_ptr<RSRenderFrame> RequestFrame(
         const sptr<Surface>& targetSurface,
         const BufferRequestConfig& config,
         bool forceCPU = false);
+    // There would only one user(thread) to renderFrame(request frame) at one time.
+    std::unique_ptr<RSRenderFrame> RequestFrame(
+        const std::shared_ptr<RSSurfaceOhos>& targetSurface,
+        const BufferRequestConfig& config,
+        bool forceCPU = false);
+
+    void DrawWithParams(RSPaintFilterCanvas& canvas, BufferDrawParam& params,
+        PreProcessFunc preProcess = nullptr, PostProcessFunc postProcess = nullptr);
+
+    void DrawSurfaceNodeWithParams(
+        RSPaintFilterCanvas& canvas,
+        RSSurfaceRenderNode& node,
+        BufferDrawParam& params,
+        PreProcessFunc preProcess = nullptr,
+        PostProcessFunc postProcess = nullptr);
 
     void DrawLayers(
         RSPaintFilterCanvas& canvas,
         const std::vector<LayerInfoPtr>& layers,
-        const ScreenInfo& screenInfo,
         bool forceCPU = false,
         float mirrorAdaptiveCoefficient = 1.0f);
-    void DrawSurfaceNode(
-        RSPaintFilterCanvas& canvas,
-        RSSurfaceRenderNode& node,
-        const ScreenInfo& screenInfo,
-        const IRect& clipRect,
-        DrawSurfaceNodeInfo& infos);
 
-    void ClipHoleForLayer(
-        RSPaintFilterCanvas& canvas,
-        RSSurfaceRenderNode& node,
-        const ScreenInfo& screenInfo,
-        const IRect& clipRect,
-        bool forceCPU = false);
-
+    void ShrinkCachesIfNeeded();
 #ifdef RS_ENABLE_GL
     const std::shared_ptr<RenderContext>& GetRenderContext() const
     {
         return renderContext_;
     }
 #endif // RS_ENABLE_GL
-
-#ifdef RS_ENABLE_EGLIMAGE
-    const std::shared_ptr<RSEglImageManager>& GetRSEglImageManager() const
-    {
-        return eglImageManager_;
-    }
-#endif // RS_ENABLE_EGLIMAGE
-
-    void ShrinkEGLImageCachesIfNeeded();
 private:
-    SkMatrix GetSurfaceNodeGravityMatrix(RSSurfaceRenderNode& node, const RectF& targetRect);
+    void DrawBuffer(RSPaintFilterCanvas& canvas, BufferDrawParam& drawParams);
+    void DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam& drawParams);
+
+    static void RSSurfaceNodeCommonPreProcess(
+        RSSurfaceRenderNode& node,
+        RSPaintFilterCanvas& canvas,
+        BufferDrawParam& drawParams);
+    static void RSSurfaceNodeCommonPostProcess(
+        RSSurfaceRenderNode& node,
+        RSPaintFilterCanvas& canvas,
+        BufferDrawParam& drawParams);
+
+    // This func can only by called in DrawLayers().
+    void ClipHoleForLayer(
+        RSPaintFilterCanvas& canvas,
+        RSSurfaceRenderNode& node);
+
+    // This func can only by called in DrawLayers().
+    void DrawSurfaceNode(
+        RSPaintFilterCanvas& canvas,
+        RSSurfaceRenderNode& node,
+        float mirrorAdaptiveCoefficient = 1.0f,
+        bool forceCPU = false);
+
     // This func can only by called in DrawLayers().
     void DrawDisplayNode(
         RSPaintFilterCanvas& canvas,
         RSDisplayRenderNode& node,
-        const ScreenInfo& screenInfo,
         bool forceCPU = false);
-        
+
 #ifdef RS_ENABLE_GL
     std::shared_ptr<RenderContext> renderContext_;
 #endif // RS_ENABLE_GL
@@ -157,6 +176,11 @@ private:
 #ifdef RS_ENABLE_EGLIMAGE
     std::shared_ptr<RSEglImageManager> eglImageManager_;
 #endif // RS_ENABLE_EGLIMAGE
+
+    // RSSurfaces for framebuffer surfaces.
+    static constexpr size_t MAX_RS_SURFACE_SIZE = 32; // used for rsSurfaces_.
+    using SurfaceId = uint64_t;
+    std::unordered_map<SurfaceId, std::shared_ptr<RSSurfaceOhos>> rsSurfaces_;
 };
 } // namespace Rosen
 } // namespace OHOS

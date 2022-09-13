@@ -72,7 +72,6 @@ void RSMainThread::Init()
     rsVSyncDistributor_->AddConnection(conn);
     receiver_ = std::make_shared<VSyncReceiver>(conn);
     receiver_->Init();
-    RSDividedRenderUtil::InitEnableClient();
 
     renderEngine_ = std::make_shared<RSRenderEngine>();
     RSInnovation::OpenInnovationSo();

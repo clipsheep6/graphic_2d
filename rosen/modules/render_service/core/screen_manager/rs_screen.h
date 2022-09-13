@@ -19,11 +19,9 @@
 #include <memory>
 #include <optional>
 
-#include <include/core/SkMatrix.h>
 #include <display_type.h>
 #include <hdi_output.h>
 #include <hdi_screen.h>
-#include <hilog/log.h>
 #include <screen_manager/screen_types.h>
 
 namespace OHOS {
@@ -67,18 +65,17 @@ public:
     virtual void SetScreenBacklight(uint32_t level) = 0;
     virtual int32_t GetScreenBacklight() const = 0;
     virtual int32_t GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut> &mode) const = 0;
+    virtual int32_t GetScreenSupportedMetaDataKeys(std::vector<ScreenHDRMetadataKey> &keys) const = 0;
     virtual int32_t GetScreenColorGamut(ScreenColorGamut &mode) const = 0;
     virtual int32_t SetScreenColorGamut(int32_t modeIdx) = 0;
     virtual int32_t SetScreenGamutMap(ScreenGamutMap mode) = 0;
     virtual int32_t GetScreenGamutMap(ScreenGamutMap &mode) const = 0;
-    virtual bool SetRotation(ScreenRotation rotation) = 0;
-    virtual SkMatrix GetRotationMatrix() const = 0;
-    virtual ScreenRotation GetRotation() const = 0;
     virtual int32_t GetActiveModePosByModeId(int32_t modeId) const = 0;
-    virtual const HDRCapability& GetHDRCapability() const = 0;
+    virtual const HDRCapability& GetHDRCapability() = 0;
     virtual const RSScreenType& GetScreenType() const = 0;
     virtual void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) = 0;
     virtual uint32_t GetScreenSkipFrameInterval() const = 0;
+    virtual void SetScreenVsyncEnabled(bool enabled) const = 0;
 };
 
 namespace impl {
@@ -119,23 +116,19 @@ public:
     void SetScreenBacklight(uint32_t level) override;
     int32_t GetScreenBacklight() const override;
     int32_t GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut> &mode) const override;
+    int32_t GetScreenSupportedMetaDataKeys(std::vector<ScreenHDRMetadataKey> &keys) const override;
     int32_t GetScreenColorGamut(ScreenColorGamut &mode) const override;
     int32_t SetScreenColorGamut(int32_t modeIdx) override;
     int32_t SetScreenGamutMap(ScreenGamutMap mode) override;
     int32_t GetScreenGamutMap(ScreenGamutMap &mode) const override;
-    bool SetRotation(ScreenRotation rotation) override;
-    SkMatrix GetRotationMatrix() const override;
-    ScreenRotation GetRotation() const override;
     int32_t GetActiveModePosByModeId(int32_t modeId) const override;
-    const HDRCapability& GetHDRCapability() const override;
+    const HDRCapability& GetHDRCapability() override;
     const RSScreenType& GetScreenType() const override;
     void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) override;
     uint32_t GetScreenSkipFrameInterval() const override;
+    void SetScreenVsyncEnabled(bool enabled) const override;
 
 private:
-    // [PLANNING]: fixme -- domain 0 only for debug.
-    static constexpr HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, 0, "RSScreen" };
-
     // create hdiScreen and get some information from drivers.
     void PhysicalScreenInit() noexcept;
 
@@ -145,9 +138,6 @@ private:
     void PowerStatusDump(std::string& dumpString);
     void CapabilityTypeDump(InterfaceType capabilityType, std::string& dumpString);
     void ScreenTypeDump(std::string& dumpString);
-    void ScreenRotationDump(std::string& dumpString);
-
-    void UpdateRotationMatrix();
 
     // ScreenId for this screen.
     ScreenId id_ = INVALID_SCREEN_ID;
@@ -158,15 +148,13 @@ private:
 
     int32_t width_ = 0;
     int32_t height_ = 0;
-    ScreenRotation rotation_ = ScreenRotation::ROTATION_0;
-    SkMatrix rotationMatrix_; // rotation matrix for canvas.
 
     bool isVirtual_ = true;
     std::shared_ptr<HdiOutput> hdiOutput_; // has value if the screen is physical
     std::unique_ptr<HdiScreen> hdiScreen_; // has value if the screen is physical
     std::vector<DisplayModeInfo> supportedModes_;
     DisplayCapability capability_ = {"", ::DISP_INTF_HDMI, 0, 0, 0, 0, true, 0, nullptr};
-    HDRCapability hdrCapability_;
+    HDRCapability hdrCapability_ = {0, nullptr, 0, 0, 0};
     sptr<Surface> producerSurface_;  // has value if the screen is virtual
     DispPowerStatus powerStatus_ = ::POWER_STATUS_ON;
 

@@ -15,18 +15,20 @@
 
 #include "pipeline/rs_render_service_visitor.h"
 
-#include "common/rs_obj_abs_geometry.h"
 #include "display_type.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkPoint.h"
 #include "include/core/SkRect.h"
+#include "rs_divided_render_util.h"
+#include "rs_trace.h"
+
+#include "common/rs_obj_abs_geometry.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_processor.h"
 #include "pipeline/rs_processor_factory.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
-#include "rs_trace.h"
 #include "platform/drawing/rs_surface.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "screen_manager/screen_types.h"
@@ -58,6 +60,7 @@ void RSRenderServiceVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
 
 void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
 {
+    node.ApplyModifiers();
     if (node.IsMirrorDisplay()) {
         auto mirrorSource = node.GetMirrorSource();
         auto existingSource = mirrorSource.lock();
@@ -74,9 +77,10 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
 void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 {
     isSecurityDisplay_ = node.GetSecurityDisplay();
-    RS_LOGD("RsDebug RSRenderServiceVisitor::ProcessDisplayRenderNode: nodeid:[%llu] screenid:[%llu] \
-        isSecurityDisplay:[%s] child size:[%d] total size:[%d]", node.GetId(), node.GetScreenId(),
-        isSecurityDisplay_ ? "true" : "false", node.GetChildrenCount(), node.GetSortedChildren().size());
+    RS_LOGD("RsDebug RSRenderServiceVisitor::ProcessDisplayRenderNode: nodeid:[%" PRIu64 "] screenid:[%" PRIu64 "] \
+        isSecurityDisplay:[%s] child size:[%d] total size:[%d]",
+        node.GetId(), node.GetScreenId(), isSecurityDisplay_ ? "true" : "false", node.GetChildrenCount(),
+        node.GetSortedChildren().size());
     globalZOrder_ = 0.0f;
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
@@ -111,10 +115,23 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         return;
     }
     auto mirrorNode = node.GetMirrorSource().lock();
-    if (!processor_->Init(node.GetScreenId(), node.GetDisplayOffsetX(), node.GetDisplayOffsetY(),
+    if (!processor_->Init(node, node.GetDisplayOffsetX(), node.GetDisplayOffsetY(),
         mirrorNode ? mirrorNode->GetScreenId() : INVALID_SCREEN_ID)) {
         RS_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode: processor init failed!");
         return;
+    }
+
+    ScreenRotation rotation = node.GetRotation();
+    uint32_t logicalScreenWidth = node.GetRenderProperties().GetFrameWidth();
+    uint32_t logicalScreenHeight = node.GetRenderProperties().GetFrameHeight();
+
+    if (logicalScreenWidth <= 0 || logicalScreenHeight <= 0) {
+        logicalScreenWidth = currScreenInfo.width;
+        logicalScreenHeight = currScreenInfo.height;
+
+        if (rotation == ScreenRotation::ROTATION_90 || rotation == ScreenRotation::ROTATION_270) {
+            std::swap(logicalScreenWidth, logicalScreenHeight);
+        }
     }
 
     if (node.IsMirrorDisplay()) {
@@ -125,27 +142,17 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             return;
         }
         if (mParallelEnable) {
-            ScreenRotation rotation = screenManager->GetRotation(node.GetScreenId());
-            uint32_t boundWidth = currScreenInfo.width;
-            uint32_t boundHeight = currScreenInfo.height;
-            if (rotation == ScreenRotation::ROTATION_90 || rotation == ScreenRotation::ROTATION_270) {
-                std::swap(boundWidth, boundHeight);
-            }
-            skCanvas_ = std::make_unique<SkCanvas>(boundWidth, boundHeight);
+            skCanvas_ = std::make_unique<SkCanvas>(logicalScreenWidth, logicalScreenHeight);
             canvas_ = std::make_shared<RSPaintFilterCanvas>(skCanvas_.get());
-            canvas_->clipRect(SkRect::MakeWH(boundWidth, boundHeight));
+            canvas_->clipRect(SkRect::MakeWH(logicalScreenWidth, logicalScreenHeight));
         }
         ProcessBaseRenderNode(*existingSource);
     } else {
-        ScreenRotation rotation = screenManager->GetRotation(node.GetScreenId());
-        uint32_t boundWidth = currScreenInfo.width;
-        uint32_t boundHeight = currScreenInfo.height;
-        if (rotation == ScreenRotation::ROTATION_90 || rotation == ScreenRotation::ROTATION_270) {
-            std::swap(boundWidth, boundHeight);
-        }
-        skCanvas_ = std::make_unique<SkCanvas>(boundWidth, boundHeight);
+        auto boundsGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
+        RSDividedRenderUtil::SetNeedClient(boundsGeoPtr && boundsGeoPtr->IsNeedClientCompose());
+        skCanvas_ = std::make_unique<SkCanvas>(logicalScreenWidth, logicalScreenHeight);
         canvas_ = std::make_shared<RSPaintFilterCanvas>(skCanvas_.get());
-        canvas_->clipRect(SkRect::MakeWH(boundWidth, boundHeight));
+        canvas_->clipRect(SkRect::MakeWH(logicalScreenWidth, logicalScreenHeight));
         ProcessBaseRenderNode(node);
     }
     processor_->PostProcess();
@@ -154,12 +161,14 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
     if (isSecurityDisplay_ && node.GetSecurityLayer()) {
-        RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node[%llu] prepare paused because of \
-            security DisplayNode.", node.GetId());
+        RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node[%" PRIu64 "] prepare paused because of \
+            security DisplayNode.",
+            node.GetId());
         return;
     }
+    node.ApplyModifiers();
     if (!node.GetRenderProperties().GetVisible()) {
-        RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : %llu is invisible", node.GetId());
+        RS_LOGD("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : %" PRIu64 " is invisible", node.GetId());
         return;
     }
     PrepareBaseRenderNode(node);
@@ -172,12 +181,13 @@ void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         return;
     }
     if (isSecurityDisplay_ && node.GetSecurityLayer()) {
-        RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node[%llu] process paused because of \
-            security DisplayNode.", node.GetId());
+        RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node[%" PRIu64 "] process paused because of \
+            security DisplayNode.",
+            node.GetId());
         return;
     }
     if (!node.GetRenderProperties().GetVisible()) {
-        RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node : %llu is invisible", node.GetId());
+        RS_LOGD("RSRenderServiceVisitor::ProcessSurfaceRenderNode node : %" PRIu64 " is invisible", node.GetId());
         return;
     }
     if (!node.GetOcclusionVisible() && !doAnimate_ && RSSystemProperties::GetOcclusionEnabled()) {

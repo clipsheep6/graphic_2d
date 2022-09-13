@@ -30,10 +30,10 @@ class ShaderCache : public GrContextOptions::PersistentCache {
 public:
     static ShaderCache& Instance();
 
-    virtual void InitShaderCache(const char *identity, const ssize_t size);
+    virtual void InitShaderCache(const char *identity, const ssize_t size, bool isUni);
     virtual void InitShaderCache()
     {
-        InitShaderCache(nullptr, 0);
+        InitShaderCache(nullptr, 0, false);
     }
 
     virtual void SetFilePath(const std::string& filename);
@@ -66,6 +66,7 @@ private:
     bool cacheDirty_ = false;
 
     static constexpr uint8_t ID_KEY = 0;
+    static constexpr uint8_t UNI_ENLARGE = 5;
 
     static const size_t glslKeySize = 1024;
     static const size_t glslValueSize = glslKeySize * 512;

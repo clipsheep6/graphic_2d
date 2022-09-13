@@ -31,7 +31,7 @@ ShaderCache& ShaderCache::Instance()
     return cache_;
 }
 
-void ShaderCache::InitShaderCache(const char* identity, const ssize_t size)
+void ShaderCache::InitShaderCache(const char* identity, const ssize_t size, bool isUni)
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
@@ -39,7 +39,12 @@ void ShaderCache::InitShaderCache(const char* identity, const ssize_t size)
         LOGE("abandon, illegal cacheDir length");
         return;
     }
-    cacheData_.reset(new CacheData(glslKeySize, glslValueSize, glslTotalSize, filePath_));
+    cacheData_.reset();
+    if (isUni) {
+        cacheData_ = std::make_unique<CacheData>(glslKeySize, glslValueSize, glslTotalSize * UNI_ENLARGE, filePath_)
+    } else {
+        cacheData_ = std::make_unique<CacheData>(glslKeySize, glslValueSize, glslTotalSize, filePath_)
+    }
     cacheData_->ReadFromFile();
     if (identity == nullptr || size <= 0) {
         LOGE("abandon, illegal cacheDir length");

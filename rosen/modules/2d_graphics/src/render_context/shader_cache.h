@@ -52,6 +52,7 @@ private:
     }
 
     void WriteToDisk();
+    void SetEnlargeLevel(const size_t uniEnlarge);
 
     bool initialized_ = false;
     std::unique_ptr<CacheData> cacheData_;
@@ -63,10 +64,11 @@ private:
     unsigned int saveDelaySeconds_ = 3;
 
     size_t bufferSize_ = 16 * 1024;
+    size_t enlargeLevel_ = 5;
     bool cacheDirty_ = false;
 
     static constexpr uint8_t ID_KEY = 0;
-    static constexpr uint8_t UNI_ENLARGE = 5;
+    static constexpr uint8_t MAX_UNI_ENLARGE = 20;
 
     static const size_t glslKeySize = 1024;
     static const size_t glslValueSize = glslKeySize * 512;

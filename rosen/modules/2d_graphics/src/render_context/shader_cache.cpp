@@ -31,6 +31,14 @@ ShaderCache& ShaderCache::Instance()
     return cache_;
 }
 
+void ShaderCache::SetEnlargeLevel(const size_t uniEnlarge)
+{
+    if (uniEnlarge > MAX_UNI_ENLARGE) {
+        return;
+    }
+    enlargeLevel_ = uniEnlarge;
+}
+
 void ShaderCache::InitShaderCache(const char* identity, const ssize_t size, bool isUni)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -40,11 +48,11 @@ void ShaderCache::InitShaderCache(const char* identity, const ssize_t size, bool
         return;
     }
     cacheData_.reset();
+    size_t totalSize = glslTotalSize;
     if (isUni) {
-        cacheData_ = std::make_unique<CacheData>(glslKeySize, glslValueSize, glslTotalSize * UNI_ENLARGE, filePath_)
-    } else {
-        cacheData_ = std::make_unique<CacheData>(glslKeySize, glslValueSize, glslTotalSize, filePath_)
-    }
+        totalSize = enlargeLevel_ * glslTotalSize;
+    } 
+    cacheData_ = std::make_unique<CacheData>(glslKeySize, glslValueSize, totalSize, filePath_)
     cacheData_->ReadFromFile();
     if (identity == nullptr || size <= 0) {
         LOGE("abandon, illegal cacheDir length");

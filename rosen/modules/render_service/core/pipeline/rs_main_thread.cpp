@@ -314,7 +314,9 @@ void RSMainThread::ProcessCommandForDividedRender()
         }
     }
     for (auto& [timestamp, commands] : effectiveCommands_) {
-        context_.transactionTimestamp_ = timestamp;
+        if (isUniRender_) {
+            context_.transactionTimestamp_ = timestamp;
+        }
         for (auto& command : commands) {
             if (command) {
                 command->Process(context_);

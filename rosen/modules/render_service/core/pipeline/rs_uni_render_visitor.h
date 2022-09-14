@@ -51,10 +51,6 @@ public:
         doAnimate_ = doAnimate;
     }
 
-    void SetDirtyFlag(bool isDirty)
-    {
-        isDirty_ = isDirty;
-    }
 private:
     void DrawRectOnCanvas(const RectI& dirtyRect, const SkColor color,
         const SkPaint::Style fillType, float alpha);
@@ -99,7 +95,6 @@ private:
     bool isPartialRenderEnabled_ = false;
     bool isOpDropped_ = false;
     PartialRenderType partialRenderType_;
-    bool isDirty_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

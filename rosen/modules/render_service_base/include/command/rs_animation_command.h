@@ -108,7 +108,7 @@ public:
         }
         animation->Attach(node.get());
         animation->Start();
-        if (auto timestamp = context.GetTransactionTimestamp() && RSSystemProperties::GetUniRenderEnabled()) {
+        if (auto timestamp = context.GetTransactionTimestamp()) {
             animation->SetStartTime(timestamp);
         }
         animation->Animate(context.GetCurrentTimestamp());

@@ -32,6 +32,7 @@
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
 #include "sandbox_utils.h"
+#include "ui/rs_offscreen_render.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -107,6 +108,32 @@ void RSUIDirector::GoBackground()
         });
 #endif
     }
+}
+
+void RSUIDirector::TriggerCaptureCallback(std::shared_ptr<CaptureCallback> captureCallback, std::shared_ptr<Media::PixelMap> pixelMap)
+{
+    captureCallback->OutCall(pixelMap);
+}
+
+void RSUIDirector::CaptureTask(std::shared_ptr<CaptureCallback> captureCallback, NodeId id, float scaleX, float scaleY)
+{
+    RSRenderThread::Instance().PostTask([captureCallback, id, scaleX, scaleY]() {
+        RSOffscreenRender rsOffscreenRender;
+        std::shared_ptr<Media::PixelMap> pixelMap;
+        pixelMap = rsOffscreenRender.GetLocalCapture(id, scaleX, scaleY);
+        RSUIDirector::Create()->TriggerCaptureCallback(captureCallback, pixelMap);
+    });
+}
+
+std::shared_ptr<Media::PixelMap> RSUIDirector::LocalCapture(NodeId id, float scaleX, float scaleY)
+{
+    std::shared_ptr<CaptureCallback> callback = std::make_shared<CaptureCallback>();
+    CaptureTask(callback, id, scaleX, scaleY);
+    std::shared_ptr<Media::PixelMap> pixelMap = callback->GetResult(2000); // wait for <= 2000ms
+    if (pixelMap == nullptr){
+        ROSEN_LOGE("RSUIDirector::LocalCapture failed to get pixelmap, return nullptr!");
+    }
+    return pixelMap;
 }
 
 void RSUIDirector::Destroy()

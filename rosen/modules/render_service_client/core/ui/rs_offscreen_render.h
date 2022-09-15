@@ -33,7 +33,7 @@ class RS_EXPORT RSOffscreenRender {
 public:
     RSOffscreenRender() = default;
     ~RSOffscreenRender() = default;
-    std::shared_ptr<Media::PixelMap> GetLocalCapture(NodeId nodeId, float scaleX, float scaleY);
+    std::shared_ptr<Media::PixelMap> GetLocalCapture(NodeId nodeId, float scaleX = 1.0f, float scaleY = 1.0f);
 
 private:
     class RSOffscreenRenderVisitor : public RSNodeVisitor {

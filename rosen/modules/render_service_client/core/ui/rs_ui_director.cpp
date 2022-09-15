@@ -125,17 +125,6 @@ void RSUIDirector::CaptureTask(std::shared_ptr<CaptureCallback> captureCallback,
     });
 }
 
-std::shared_ptr<Media::PixelMap> RSUIDirector::LocalCapture(NodeId id, float scaleX, float scaleY)
-{
-    std::shared_ptr<CaptureCallback> callback = std::make_shared<CaptureCallback>();
-    CaptureTask(callback, id, scaleX, scaleY);
-    std::shared_ptr<Media::PixelMap> pixelMap = callback->GetResult(2000); // wait for <= 2000ms
-    if (pixelMap == nullptr){
-        ROSEN_LOGE("RSUIDirector::LocalCapture failed to get pixelmap, return nullptr!");
-    }
-    return pixelMap;
-}
-
 void RSUIDirector::Destroy()
 {
     if (root_ != 0) {

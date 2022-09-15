@@ -57,8 +57,7 @@ public:
     bool RunningCustomAnimation(uint64_t timeStamp);
 
     void TriggerCaptureCallback(std::shared_ptr<CaptureCallback> captureCallback, std::shared_ptr<Media::PixelMap> pixelMap);
-    void CaptureTask(std::shared_ptr<CaptureCallback> captureCallback, NodeId id, float scaleX, float scaleY);
-    std::shared_ptr<Media::PixelMap> LocalCapture(NodeId id, float scaleX, float scaleY);
+    void CaptureTask(std::shared_ptr<CaptureCallback> captureCallback, NodeId id, float scaleX = 1.0f, float scaleY = 1.0f);
 
     void SetAppFreeze(bool isAppFreeze);
 

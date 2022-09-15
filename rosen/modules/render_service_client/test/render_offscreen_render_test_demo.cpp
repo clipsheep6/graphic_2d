@@ -40,6 +40,7 @@
 #include "include/core/SkTextBlob.h"
 #include "render_context/render_context.h"
 #include "transaction/rs_interfaces.h"
+#include "ui/rs_capture_callback.h"
 
 using namespace OHOS;
 using namespace OHOS::Rosen;
@@ -65,22 +66,22 @@ shared_ptr<RSSurfaceNode> surfaceNode1;
     RenderContext* rc_ = nullptr;
 #endif
 
-bool WriteToPng(const std::string &fileName, const WriteToPngParam &param)
+bool WriteToPng(const string &fileName, const WriteToPngParam &param)
 {
     png_structp pngStruct = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     if (pngStruct == nullptr) {
-        std::cout << "png_create_write_struct error, nullptr!" << std::endl;
+        cout << "png_create_write_struct error, nullptr!" << endl;
         return false;
     }
     png_infop pngInfo = png_create_info_struct(pngStruct);
     if (pngInfo == nullptr) {
-        std::cout << "png_create_info_struct error, nullptr!" << std::endl;
+        cout << "png_create_info_struct error, nullptr!" <<endl;
         png_destroy_write_struct(&pngStruct, nullptr);
         return false;
     }
     FILE *fp = fopen(fileName.c_str(), "wb");
     if (fp == nullptr) {
-        std::cout << "open file error, nullptr!" << std::endl;
+        cout << "open file error, nullptr!" << endl;
         png_destroy_write_struct(&pngStruct, &pngInfo);
         return false;
     }
@@ -107,7 +108,7 @@ bool WriteToPng(const std::string &fileName, const WriteToPngParam &param)
     png_destroy_write_struct(&pngStruct, &pngInfo);
     int ret = fclose(fp);
     if (ret != 0) {
-        std::cout << "close fp failed" << std::endl;
+        cout << "close fp failed" << endl;
     }
     return true;
 }
@@ -127,7 +128,7 @@ void RenderContextInit()
 #endif
 }
 
-void DrawSurfaceNode(std::shared_ptr<RSSurfaceNode> surfaceNode)
+void DrawSurfaceNode(shared_ptr<RSSurfaceNode> surfaceNode)
 {
     SkRect surfaceGeometry = SkRect::MakeXYWH(100, 50, 300, 600);
     auto x = surfaceGeometry.x();
@@ -135,7 +136,7 @@ void DrawSurfaceNode(std::shared_ptr<RSSurfaceNode> surfaceNode)
     auto width = surfaceGeometry.width();
     auto height = surfaceGeometry.height();
     surfaceNode->SetBounds(x, y, width, height);
-    std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
+    shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
     if (rsSurface == nullptr) {
         cout << "surface is nullptr" << endl;
         return;
@@ -175,7 +176,7 @@ void DrawSurfaceNode(std::shared_ptr<RSSurfaceNode> surfaceNode)
     return;
 }
 
-bool WriteToPngWithPixelMap(const std::string &fileName, Media::PixelMap &pixelMap)
+bool WriteToPngWithPixelMap(const string &fileName, Media::PixelMap &pixelMap)
 {
     WriteToPngParam param;
     param.width = static_cast<uint32_t>(pixelMap.GetWidth());
@@ -216,6 +217,17 @@ void Init(shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
     canvasNode2->AddChild(surfaceNode1, -1);
 }
 
+shared_ptr<Media::PixelMap> LocalCapture(NodeId id, float scaleX, float scaleY)
+{
+    shared_ptr<CaptureCallback> callback = make_shared<CaptureCallback>();
+    RSUIDirector::Create()->CaptureTask(callback, id, scaleX, scaleY);
+    shared_ptr<Media::PixelMap> pixelMap = callback->GetResult(2000); // wait for <= 2000ms
+    if (pixelMap == nullptr){
+       cout << "RSUIDirector::LocalCapture failed to get pixelmap, return nullptr!" << endl;
+    }
+    return pixelMap;
+}
+
 int main()
 {
     cout << "rs local surface capture demo" << endl;
@@ -251,9 +263,7 @@ int main()
 
     cout << "rs local surface demo cratePixelMap" << endl;
 
-    // RSOffscreenRender rsOffscreenRender;
-    // auto pixelmap = rsOffscreenRender.GetLocalCapture(surfaceNode1->GetId(), 1, 1);
-    auto pixelmap = rsUiDirector->LocalCapture(rootNode->GetId(), 1, 1);
+    auto pixelmap = LocalCapture(rootNode->GetId(), 1, 1);
     if (pixelmap == nullptr) {
         cout << "create pixelmap failed" << endl;
         return -1;

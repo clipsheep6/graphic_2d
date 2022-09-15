@@ -42,16 +42,13 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
         ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: scale is invalid.");
         return nullptr;
     }
-    // create rs_render_node, because it maybe canvasNode、surfaceNode、rootNode
+    // create rs_render_node,because it maybe canvasNode or surfaceNode or rootNode
     auto node = RSRenderThread::Instance().GetContext().GetNodeMap().GetRenderNode<RSRenderNode>(nodeId_);
-    // node->ApplyModifiers();
-    // auto node = RSRenderThread::Instance().GetContext().GetNodeMap().GetRenderNode<RSCanvasRenderNode>(nodeId_); 
     if (node == nullptr) {
         ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: node is nullptr");
         return nullptr;
     }
     std::shared_ptr<Media::PixelMap> pixelmap;
-    // creat pixelMap
     int pixmapWidth = node->GetRenderProperties().GetBoundsWidth();
     int pixmapHeight = node->GetRenderProperties().GetBoundsHeight();
     pixelMapX_ = node->GetRenderProperties().GetBoundsPositionX();
@@ -197,7 +194,6 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessSurfaceRenderNode(RSSur
     // draw pixelmap in canvas
     auto image = Media::PixelMapRosenUtils::ExtractSkImage(pixelMap);
     canvas_->drawImage(image, node.GetRenderProperties().GetBoundsPositionX()-pixelMapX_, node.GetRenderProperties().GetBoundsPositionY()-pixelMapY_);
-    // canvas_->drawImage(image, 0, 0);
 }
 
 } // namespace Rosen

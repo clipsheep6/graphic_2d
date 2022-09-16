@@ -377,9 +377,7 @@ ohos_executable("render_offscreen_render_test_demo") {
     "//third_party/libpng:libpng",
   ]
 
-  external_deps = [
-    "init:libbegetutil",
-  ]
+  external_deps = [ "init:libbegetutil" ]
 
   public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
 

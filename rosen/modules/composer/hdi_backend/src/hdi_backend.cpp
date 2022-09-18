@@ -135,7 +135,9 @@ void HdiBackend::Repaint(std::vector<OutputPtr> &outputs)
         for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {
             const LayerPtr &layer = iter->second;
             newLayerInfos.emplace_back(layer->GetLayerInfo());
-            if (layer->GetLayerInfo()->GetCompositionType() == CompositionType::COMPOSITION_CLIENT) {
+            if (layer->GetLayerInfo()->GetCompositionType() == CompositionType::COMPOSITION_CLIENT ||
+                layer->GetLayerInfo()->GetCompositionType() == CompositionType::COMPOSITION_CLIENT_CLEAR ||
+                layer->GetLayerInfo()->GetCompositionType() == CompositionType::COMPOSITION_TUNNEL) {
                 compClientLayers.emplace_back(layer);
             }
         }

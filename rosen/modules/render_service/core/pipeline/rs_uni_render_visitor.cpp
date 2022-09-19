@@ -15,6 +15,8 @@
 
 #include "pipeline/rs_uni_render_visitor.h"
 
+#include <ctime>
+
 #include "include/core/SkRegion.h"
 #include "rs_trace.h"
 
@@ -33,10 +35,20 @@
 #include "pipeline/rs_uni_render_util.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
+#ifdef RS_ENABLE_GL
+#include "rs_render_engine.h"
+#include "rs_sub_main_thread.h"
+#include "rs_trace.h"
+#endif
 #include "render/rs_skia_filter.h"
 
 namespace OHOS {
 namespace Rosen {
+    
+#ifdef RS_ENABLE_GL
+constexpr uint32_t SURFACE_NODE_NUMBER = 6;
+#endif
+
 RSUniRenderVisitor::RSUniRenderVisitor()
     : curSurfaceDirtyManager_(std::make_shared<RSDirtyRegionManager>())
 {
@@ -46,6 +58,17 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     isPartialRenderEnabled_ = (partialRenderType_ != PartialRenderType::DISABLED);
     isOpDropped_ = isPartialRenderEnabled_ && (partialRenderType_ != PartialRenderType::SET_DAMAGE);
 }
+
+RSUniRenderVisitor::RSUniRenderVisitor(RSPaintFilterCanvas* canvas)
+    : curSurfaceDirtyManager_(std::make_shared<RSDirtyRegionManager>())
+{
+#ifdef RS_ENABLE_GL
+    renderEngine_ = RSMainThread::Instance()->GetRenderEngine();
+    canvas_ = std::make_unique<RSPaintFilterCanvas>(canvas);
+#endif
+}
+
+
 RSUniRenderVisitor::~RSUniRenderVisitor() {}
 
 void RSUniRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
@@ -363,9 +386,16 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: failed to create canvas");
             return;
         }
+        canvas_->save();
 #ifdef RS_ENABLE_EGLQUERYSURFACE
         if (isOpDropped_ && !region.isEmpty()) {
-            canvas_->clipRegion(region);
+            if (region.isRect()) {
+                canvas_->clipRegion(region);
+            } else {
+                SkPath dirtyPath;
+                region.getBoundaryPath(&dirtyPath);
+                canvas_->clipPath(dirtyPath, true);
+            }
         }
 #endif
         auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
@@ -373,8 +403,25 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             geoPtr->UpdateByMatrixFromSelf();
             canvas_->concat(geoPtr->GetMatrix());
         }
-
+#ifdef RS_ENABLE_GL
+        surfaceNodeNum_ = node.GetChildrenCount();
+        if (EnableParallerRendering()) {
+            RSSubMainThread::Instance().InitTaskManager();
+            RSSubMainThread::Instance().SetFrameWH(screenInfo_.width, screenInfo_.height);
+            packTask_ = true;
+        } else {
+            packTask_ = false;
+        }
+#endif
         ProcessBaseRenderNode(node);
+#ifdef RS_ENABLE_GL
+        packTask_ = false;
+        if (EnableParallerRendering()) {
+            LBCalculate();
+            RSSubMainThread::Instance().tastManager_.MergeTextures(renderFrame->GetFrame()->GetCanvas());
+        }
+#endif
+        canvas_->restore();
 
         // the following code makes DirtyRegion visible, enable this method by turning on the dirtyregiondebug property
         for (auto [id, surfaceNode] : dirtySurfaceNodeMap_) {
@@ -403,8 +450,50 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
     // since the buffer's releaseFence was set in PostProcess().
     auto& surfaceHandler = static_cast<RSSurfaceHandler&>(node);
     (void)RSBaseRenderUtil::ReleaseBuffer(surfaceHandler);
+#ifdef RS_ENABLE_GL
+    if (EnableParallerRendering()) {
+        RSSubMainThread::Instance().tastManager_.DeleteTextures();
+    }
+#endif
     RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode end");
 }
+
+#ifdef RS_ENABLE_GL
+void RSUniRenderVisitor::LBCalculate()
+{
+    auto manager = &RSSubMainThread::Instance().tastManager_;
+    if (manager->GetEnableLoadBalance()) {
+        RS_TRACE_BEGIN("LoadBalance");
+        manager->LoadBalance();
+        RS_TRACE_END();
+        if (manager->GetMainThreadUsed()) {
+            LBTimerCalculate();
+        }
+    } else {
+        manager->WrapAndPushSuperTask();
+    }
+}
+
+void RSUniRenderVisitor::LBTimerCalculate()
+{
+    auto manager = &RSSubMainThread::Instance().tastManager_;
+    auto surfaceNodeQueue = manager->GetLoadForMainThread();
+    while (surfaceNodeQueue.size() > 0) {
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &timeStart);
+        auto surfaceNode = surfaceNodeQueue.front();
+        if (surfaceNode != nullptr) {
+            ProcessSurfaceRenderNode(*surfaceNode);
+        }
+        surfaceNodeQueue.pop();
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &timeEnd);
+        costing = (timeEnd.tv_sec * 1000.0f + timeEnd.tv_nsec * 1e-6) -
+            (timeStart.tv_sec * 1000.0f + timeStart.tv_nsec * 1e-6);
+        manager->SetSubThreadRenderLoad(0xFFFFFFFF,
+            surfaceNode->GetId(), costing);
+    }
+    canvas_->GetSurface()->flush();
+}
+#endif
 
 void RSUniRenderVisitor::CalcDirtyDisplayRegion(std::shared_ptr<RSDisplayRenderNode>& node) const
 {
@@ -556,6 +645,13 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         RS_LOGE("RSUniRenderVisitor::ProcessSurfaceRenderNode node:%" PRIu64 ", get geoPtr failed", node.GetId());
         return;
     }
+#ifdef RS_ENABLE_GL
+    if (packTask_) {
+        std::unique_ptr<RSRenderTask> surfaceNodeTask = std::make_unique<RSRenderTask>(node);
+        RSSubMainThread::Instance().tastManager_.LoadBalancePushTask(std::move(surfaceNodeTask));
+        return;
+    }
+#endif
     canvas_->save();
     canvas_->SaveAlpha();
 
@@ -569,9 +665,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     canvas_->concat(geoPtr->GetMatrix());
 
-    const RectF absBounds = {
-        node.GetTotalMatrix().getTranslateX(), node.GetTotalMatrix().getTranslateY(),
-        property.GetBoundsWidth(), property.GetBoundsHeight()};
+    const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
     RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect);
 
@@ -607,7 +701,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     node.SetTotalMatrix(canvas_->getTotalMatrix());
 
-    if (!node.IsAppWindow() && node.GetBuffer() != nullptr) {
+    if ((!node.IsAppWindow() || node.GetName() == "pointer window") && node.GetBuffer() != nullptr) {
         node.NotifyRTBufferAvailable();
         node.SetGlobalAlpha(1.0f);
         // use node's local coordinate.
@@ -734,5 +828,18 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     ProcessBaseRenderNode(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }
+
+bool RSUniRenderVisitor::EnableParallerRendering()
+{
+#if defined(RS_ENABLE_GL)
+    // if surface node number >= SURFACE_NODE_NUMBER, we will benefit.
+    return (surfaceNodeNum_ >= SURFACE_NODE_NUMBER) && 
+        RSSubMainThread::Instance().EnableParallerRendering();
+#else 
+    return false;
+#endif
+}
+
+
 } // namespace Rosen
 } // namespace OHOS

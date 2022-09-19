@@ -202,6 +202,7 @@ ohos_executable("opengl_wrapper_native_test") {
   deps = [
     ":EGL",
     ":GLESv3",
+    "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
   ]
 

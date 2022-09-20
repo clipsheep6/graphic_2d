@@ -74,9 +74,52 @@ RSUniRenderVisitor::~RSUniRenderVisitor() {}
 
 void RSUniRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 {
+    node.ClearPaintOutOfParentRect();
+    node.UpdateChildrenOutOfRectFlag(false);
     node.ResetSortedChildren();
     for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
+    }
+    SetPaintOutOfParentFlag(node);
+}
+
+void RSUniRenderVisitor::SetPaintOutOfParentFlag(RSBaseRenderNode& node)
+{
+    if (!isPartialRenderEnabled_) {
+        return;
+    } 
+    if (node.GetType() != RSRenderNodeType::CANVAS_NODE && node.GetType() != RSRenderNodeType::SURFACE_NODE) {
+        RS_LOGD("Other types do not need to processed %d", node.GetType());
+        return;
+    }
+    auto nodeParent = node.GetParent().lock();
+    std::shared_ptr<RSRenderNode> rsParent = nullptr;
+    if (nodeParent == nullptr) {
+        return;
+    }
+    rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
+    auto& property = node.shared_from_this()->ReinterpretCastTo<RSRenderNode>()->GetMutableRenderProperties();
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    RectI rect;
+    if (geoPtr != nullptr) {
+        rect = geoPtr->GetAbsRect();
+    }
+    RectI parentRect;
+    auto& parentProperty = rsParent->GetMutableRenderProperties();
+    auto parentGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(parentProperty.GetBoundsGeometry());
+    if (parentGeoPtr != nullptr) {
+        parentRect = parentGeoPtr->GetAbsRect();
+    }
+    if (node.HasChildrenOutOfRect()) {
+        if (!node.GetPaintOutOfParentRect().IsInsideOf(parentRect) || parentRect.IsEmpty()) {
+            nodeParent->UpdateChildrenOutOfRectFlag(true);
+            nodeParent->UpdatePaintOutOfParentRect(node.GetPaintOutOfParentRect());
+        }
+    } else {
+        if (!rect.IsInsideOf(parentRect) || parentRect.IsEmpty()) {
+            nodeParent->UpdateChildrenOutOfRectFlag(true);
+            nodeParent->UpdatePaintOutOfParentRect(rect);
+        }
     }
 }
 
@@ -94,6 +137,12 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     dirtyFlag_ = isDirty_;
 
     node.ApplyModifiers();
+    sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
+    if (!screenManager) {
+        RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode ScreenManager is nullptr");
+        return;
+    }
+    screenInfo_ = screenManager->QueryScreenInfo(node.GetScreenId());
 
     parentSurfaceNodeMatrix_ = SkMatrix::I();
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
@@ -132,16 +181,24 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         curSurfaceDirtyManager_ = node.GetDirtyManager();
         curSurfaceDirtyManager_->Clear();
         if (auto parentNode = node.GetParent().lock()) {
+            auto rsParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(parentNode);
             dirtyFlag_ = node.Update(*curSurfaceDirtyManager_,
-                &(parentNode->ReinterpretCastTo<RSRenderNode>()->GetRenderProperties()), dirtyFlag_);
+                &(rsParent->GetRenderProperties()), dirtyFlag_);
+            if (rsParent->ReinterpretCastTo<RSSurfaceRenderNode>() &&
+                rsParent->ReinterpretCastTo<RSSurfaceRenderNode>()->GetSurfaceNodeType() == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
+                node.SetGlobalAlpha(property.GetAlpha() * rsParent->GetMutableRenderProperties().GetAlpha()); // calculate alpha on parent's alpha
+            } else {
+                node.SetGlobalAlpha(property.GetAlpha());
+            }
         } else {
             dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, nullptr, dirtyFlag_);
         }
         geoPtr->ConcatMatrix(node.GetContextMatrix());
-        node.SetDstRect(geoPtr->GetAbsRect());
+        node.SetDstRect(geoPtr->GetAbsRect().IntersectRect(RectI(0, 0, screenInfo_.width, screenInfo_.height)));
         curDisplayNode_->UpdateSurfaceNodePos(node.GetId(), node.GetDstRect());
     } else {
         RSUniRenderUtil::UpdateRenderNodeDstRect(node, node.GetContextMatrix());
+        node.SetDstRect(geoPtr->GetAbsRect().IntersectRect(RectI(0, 0, screenInfo_.width, screenInfo_.height)));
         if (node.GetBuffer() != nullptr) {
             auto& surfaceHandler = static_cast<RSSurfaceHandler&>(node);
             if (surfaceHandler.IsCurrentFrameBufferConsumed()) {
@@ -302,12 +359,6 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
     RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode node: %" PRIu64 ", child size:%u", node.GetId(),
         node.GetChildrenCount());
     isSecurityDisplay_ = node.GetSecurityDisplay();
-    sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
-    if (!screenManager) {
-        RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode ScreenManager is nullptr");
-        return;
-    }
-    screenInfo_ = screenManager->QueryScreenInfo(node.GetScreenId());
     switch (screenInfo_.state) {
         case ScreenState::PRODUCER_SURFACE_ENABLE:
             node.SetCompositeType(RSDisplayRenderNode::CompositeType::UNI_RENDER_MIRROR_COMPOSITE);
@@ -622,7 +673,7 @@ void RSUniRenderVisitor::DrawCacheSurface(RSSurfaceRenderNode& node)
 
 void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
-    RS_TRACE_NAME("RSUniRender::Process:[" + node.GetName() + "]");
+    RS_TRACE_NAME("RSUniRender::Process:[" + node.GetName() + "]" + node.GetDstRect().ToString());
     RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode node: %" PRIu64 ", child size:%u %s", node.GetId(),
         node.GetChildrenCount(), node.GetName().c_str());
     node.UpdatePositionZ();
@@ -689,12 +740,6 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         canvas_->save();
     }
 
-    const RectI dstRect = {
-        canvas_->getTotalMatrix().getTranslateX(), canvas_->getTotalMatrix().getTranslateY(),
-        property.GetBoundsWidth() * canvas_->getTotalMatrix().getScaleX(),
-        property.GetBoundsHeight() * canvas_->getTotalMatrix().getScaleY()};
-    
-
     boundsRect_ = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
     frameGravity_ = property.GetFrameGravity();
     if (!property.GetCornerRadius().IsZero()) {
@@ -742,7 +787,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             ProcessBaseRenderNode(node);
             node.ClearCacheSurface();
         } else if (node.GetCacheSurface()) {
-                DrawCacheSurface(node);
+            DrawCacheSurface(node);
         } else {
             InitCacheSurface(node, property.GetBoundsWidth(), property.GetBoundsHeight());
             if (node.GetCacheSurface()) {

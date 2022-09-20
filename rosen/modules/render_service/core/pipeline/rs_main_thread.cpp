@@ -1012,6 +1012,16 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
         RS_LOGD("RSMainThread::ClearTransactionDataPidInfo process:%d destroyed, skip commands", remotePid);
     }
     effectiveTransactionDataIndexMap_.erase(remotePid);
+#ifdef RS_ENABLE_GL
+    if (renderEngine_) {
+        auto grContext = renderEngine_->GetRenderContext()->GetGrContext();
+        grContext->flush();
+        grContext->freeGpuResources();
+        SkGraphics::PurgeAllCaches();
+        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+        RS_LOGD("RSMainThread::ClearTransactionDataPidInfo freeGpuResources & PurgeAllCaches");
+    }
+#endif
 }
 
 void RSMainThread::AddTransactionDataPidInfo(pid_t remotePid)

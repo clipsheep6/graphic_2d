@@ -379,8 +379,10 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     parentSurfaceNodeMatrix_ = gravityMatrix;
 
     RS_TRACE_BEGIN("ProcessRenderNodes");
-    ProcessCanvasRenderNode(node);
 
+    RS_TRACE_BEGIN("ProcessCanvasRenderNode");
+    ProcessCanvasRenderNode(node);
+    RS_TRACE_END();
     if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_ || RSRenderThread::Instance().GetForceUpdateSurfaceNode()) {
         auto thisSurfaceNodeId = node.GetRSSurfaceNodeId();
         std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearSurfaceNodeChild>(thisSurfaceNodeId);
@@ -440,7 +442,9 @@ void RSRenderThreadVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         return;
     }
     node.ProcessRenderBeforeChildren(*canvas_);
+    RS_TRACE_BEGIN("ProcessBaseRenderNode");
     ProcessBaseRenderNode(node);
+    RS_TRACE_END();
     node.ProcessRenderAfterChildren(*canvas_);
 }
 

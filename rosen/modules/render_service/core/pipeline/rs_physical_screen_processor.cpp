@@ -30,7 +30,7 @@ namespace {
     constexpr int32_t PERF_LEVEL_1_REQUESTED_CODE = 10013;
     constexpr int32_t PERF_LEVEL_2_REQUESTED_CODE = 10014;
     constexpr int32_t PERF_LEVEL_3_REQUESTED_CODE = 10015;
-    constexpr int64_t PERF_TIME_OUT = 1000;
+    constexpr int64_t PERF_TIME_OUT = 900;
     constexpr uint32_t PERF_LEVEL_INTERVAL = 10;
 }
 RSPhysicalScreenProcessor::RSPhysicalScreenProcessor()
@@ -63,9 +63,6 @@ void RSPhysicalScreenProcessor::PostProcess()
     bool isTimeOut = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastRequestPerfTime).
         count() > PERF_TIME_OUT;
     if (curLayerLevel != lastLayerLevel || isTimeOut) {
-        if (!isTimeOut) {
-            ClosePerf(lastLayerLevel);
-        }
         RequestPerf(curLayerLevel);
         lastLayerLevel = curLayerLevel;
         lastRequestPerfTime = currentTime;

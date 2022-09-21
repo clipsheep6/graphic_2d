@@ -114,6 +114,8 @@ ohos_source_set("render_service_client_src") {
   deps += [
     "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk:accessibilityconfig",
     "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
+    "//foundation/resourceschedule/resource_schedule_service/soc_perf:socperf_client",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
   ]
 
   if (rss_enabled) {

@@ -57,6 +57,7 @@ ohos_shared_library("sync_fence") {
     "hitrace_native:hitrace_meter",
     "ipc:ipc_core",
   ]
+  relative_install_dir = "chipset-pub-sdk"
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

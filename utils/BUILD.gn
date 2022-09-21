@@ -112,6 +112,7 @@ ohos_shared_library("libgraphic_utils") {
     "test_header:test_header",
   ]
 
+  relative_install_dir = "chipset-sdk"
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }

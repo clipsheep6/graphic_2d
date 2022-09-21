@@ -127,6 +127,7 @@ private:
 
     void UpdateSurfaceNodeParentInRS();
     void ClearBufferCache();
+    void RequestPerf();
     std::atomic_bool running_ = false;
     std::atomic_bool hasSkipVsync_ = false;
     bool needRender_ = true;
@@ -146,6 +147,7 @@ private:
     std::shared_ptr<RSRenderThreadVisitor> visitor_;
 
     uint64_t timestamp_ = 0;
+    uint64_t prePerfTimestamp_ = 0;
     uint64_t prevTimestamp_ = 0;
     int32_t tid_ = -1;
     uint64_t mValue = 0;

@@ -17,6 +17,11 @@
 
 namespace OHOS {
 namespace ColorManager {
+NativeValue* CreateJsError(NativeEngine& engine, int32_t errCode, const std::string& message)
+{
+    return engine.CreateError(CreateJsValue(engine, errCode), CreateJsValue(engine, message));
+}
+
 void BindNativeFunction(NativeEngine& engine, NativeObject& object, const char* name,
     const char* moduleName, NativeCallback func)
 {
@@ -47,6 +52,53 @@ NativeValue* ColorSpaceTypeInit(NativeEngine* engine)
     object->SetProperty("DISPLAY_P3", CreateJsValue(*engine, static_cast<int32_t>(ApiColorSpaceType::DISPLAY_P3)));
     object->SetProperty("SRGB", CreateJsValue(*engine, static_cast<int32_t>(ApiColorSpaceType::SRGB)));
     object->SetProperty("CUSTOM", CreateJsValue(*engine, static_cast<int32_t>(ApiColorSpaceType::CUSTOM)));
+    return objValue;
+}
+
+NativeValue* CMErrorInit(NativeEngine* engine)
+{
+    if (engine == nullptr) {
+        CMLOGE("[NAPI]Engine is nullptr");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+    if (object == nullptr) {
+        CMLOGE("[NAPI]Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("CM_ERROR_NULLPTR", CreateJsValue(*engine, static_cast<int32_t>(CMError::CM_ERROR_NULLPTR)));
+    object->SetProperty("CM_ERROR_INVALID_PARAM",
+    CreateJsValue(*engine, static_cast<int32_t>(CMError::CM_ERROR_INVALID_PARAM)));
+    object->SetProperty("CM_ERROR_INVALID_JS_ENUM_RANGE",
+        CreateJsValue(*engine, static_cast<int32_t>(CMError::CM_ERROR_INVALID_JS_ENUM_RANGE)));
+    return objValue;
+}
+
+NativeValue* CMErrorCodeInit(NativeEngine* engine)
+{
+    if (engine == nullptr) {
+        CMLOGE("[NAPI]Engine is nullptr");
+        return nullptr;
+    }
+
+    NativeValue *objValue = engine->CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+    if (object == nullptr) {
+        CMLOGE("[NAPI]Failed to get object");
+        return nullptr;
+    }
+
+    object->SetProperty("CM_ERROR_NO_PERMISSION",
+    CreateJsValue(*engine, static_cast<int32_t>(CMErrorCode::CM_ERROR_NO_PERMISSION)));
+    object->SetProperty("CM_ERROR_INVALID_PARAM",
+    CreateJsValue(*engine, static_cast<int32_t>(CMErrorCode::CM_ERROR_INVALID_PARAM)));
+    object->SetProperty("CM_ERROR_DEVICE_NOT_SUPPORT",
+            CreateJsValue(*engine, static_cast<int32_t>(CMErrorCode::CM_ERROR_DEVICE_NOT_SUPPORT)));
+    object->SetProperty("CM_ERROR_INVALID_ENUM_RANGE",
+        CreateJsValue(*engine, static_cast<int32_t>(CMErrorCode::CM_ERROR_INVALID_ENUM_RANGE)));
     return objValue;
 }
 

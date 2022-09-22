@@ -38,6 +38,7 @@
 #include "player.h"
 #include "vsync_receiver.h"
 #include "util.h"
+#include <display.h>
 
 namespace OHOS {
 class BootAnimation {

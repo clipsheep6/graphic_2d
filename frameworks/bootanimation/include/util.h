@@ -98,6 +98,7 @@ bool GenImageData(const std::string& filename, std::shared_ptr<ImageStruct> imag
     ImageStructVec& outBgImgVec);
 bool ReadJsonConfig(const char* filebuffer, int totalsize, BootAniConfig& aniconfig);
 void SortZipFile(ImageStructVec& outBgImgVec);
+bool IsFileExisted(const char * const filePath);
 } // namespace OHOS
 
 #endif // FRAMEWORKS_BOOTANIMATION_INCLUDE_UTIL_H

@@ -19,6 +19,7 @@
 #include "transaction/rs_interfaces.h"
 
 using namespace OHOS;
+static const std::string BOOT_OEMPIC_ZIP = "/data/data/bootpic.zip";
 static const std::string BOOT_PIC_ZIP = "/system/etc/init/bootpic.zip";
 static const std::string BOOT_SOUND_URI = "file://system/etc/init/bootsound.wav";
 
@@ -103,7 +104,12 @@ void BootAnimation::Init(int32_t width, int32_t height)
     InitPicCoordinates();
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "BootAnimation::preload");
     BootAniConfig jsonConfig;
-    ReadZipFile(BOOT_PIC_ZIP, imageVector_, jsonConfig);
+    std::string zipstr = BOOT_OEMPIC_ZIP;
+    if (!IsFileExisted(zipstr.c_str())) {
+        zipstr = BOOT_PIC_ZIP;
+    }
+    ReadZipFile(zipstr, imageVector_, jsonConfig);
+
     imgVecSize_ = static_cast<int32_t>(imageVector_.size());
     if (imgVecSize_ <= 0) {
         PostTask(std::bind(&AppExecFwk::EventRunner::Stop, runner_));

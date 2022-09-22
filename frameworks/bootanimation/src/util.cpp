@@ -179,7 +179,7 @@ void WaitRenderServiceInit()
     while (true) {
         sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgr == nullptr) {
-            LOGI("samgr is null");
+            LOGI("AbilityManager is not inited, wait");
             sleep(1);
             continue;
         }
@@ -193,4 +193,16 @@ void WaitRenderServiceInit()
         }
     }
 }
+bool IsFileExisted(const char * const filePath)
+{
+    if (filePath == nullptr) {
+        return false;
+    }
+    struct stat info = {0};
+    if (stat(filePath, &info) != 0) {
+        return false;
+    }
+    return true;
+}
+
 } // namespace OHOS

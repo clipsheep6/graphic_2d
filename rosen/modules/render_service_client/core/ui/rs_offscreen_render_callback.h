@@ -19,57 +19,16 @@
 
 #include "platform/common/rs_log.h"
 #include "transaction/rs_render_service_client.h"
-#include "ui/rs_offscreen_render.h"
+#include "ui/rs_capture_callback.h"
 
 namespace OHOS {
-namespace Media {
-class PixelMap;
-}
 namespace Rosen {
-class RSOffscreenRenderCallback: public SurfaceCaptureCallback{
+class RSOffscreenRenderCallback: public SurfaceCaptureCallback, public CaptureCallback{
 public:
-    RSOffscreenRenderCallback() = default;
-    ~RSOffscreenRenderCallback() {};
-
     void OnSurfaceCapture(std::shared_ptr<Media::PixelMap> pixelmap) override
     {
         OutCall(pixelmap);
     }
-
-    void Call(std::shared_ptr<Media::PixelMap> pixelmap)
-    {
-        if (!flag_) {
-            pixelMap_ = pixelmap;
-            flag_ = true;
-        }    
-    }
-    bool IsReady()
-    {
-        return flag_;
-    }
-    std::shared_ptr<Media::PixelMap> FetchResult()
-    {
-        return pixelMap_;
-    }
-    void OutCall(std::shared_ptr<Media::PixelMap> pixelmap)
-    {
-        std::unique_lock <std::mutex> lock(mutex_);
-        Call(pixelmap);
-        conditionVariable_.notify_one();
-    }
-    std::shared_ptr<Media::PixelMap> GetResult(long timeOut)
-    {
-        std::unique_lock <std::mutex> lock(mutex_);
-        if (!conditionVariable_.wait_for(lock, std::chrono::milliseconds(timeOut), [this] { return IsReady(); })) {
-            ROSEN_LOGE("wait for %lu timeout", timeOut);
-        }
-        return FetchResult();
-    }
-private:
-    std::shared_ptr<Media::PixelMap> pixelMap_ = nullptr;
-    std::condition_variable conditionVariable_;
-    std::mutex mutex_;
-    bool flag_ = false;
 };
 } // Rosen
 } // OHOS

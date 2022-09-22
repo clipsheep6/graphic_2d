@@ -198,13 +198,13 @@ void Init(shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
 
     rsUiDirector->SetRoot(rootNode->GetId());
     canvasNode = RSCanvasNode::Create();
-    canvasNode->SetBounds(0, 0, 600, 1200);
+    canvasNode->SetBounds(10, 10, 600, 1200);
     canvasNode->SetFrame(0, 0, 600, 1200);
     canvasNode->SetBackgroundColor(SK_ColorYELLOW);
     rootNode->AddChild(canvasNode, -1);
 
     canvasNode2 = RSCanvasNode::Create();
-    canvasNode2->SetBounds(0, 0, 400, 800);
+    canvasNode2->SetBounds(5, 20, 400, 800);
     canvasNode2->SetFrame(0, 0, 400, 800);
     canvasNode2->SetBackgroundColor(SK_ColorBLUE);
     canvasNode->AddChild(canvasNode2, -1);

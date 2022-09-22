@@ -24,7 +24,7 @@
 #include "pipeline/rs_root_render_node.h"
 #include "include/core/SkMatrix.h"
 #include "transaction/rs_interfaces.h"
-#include "ui/rs_offscreen_render_callback.h"
+#include "ui/rs_capture_callback.h"
 #include "transaction/rs_render_service_client.h"
 #include "include/core/SkImage.h"
 #include "pixel_map_rosen_utils.h"
@@ -59,7 +59,8 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
     opts.size.height = ceil(pixmapHeight * scaleY_);
     pixelmap = Media::PixelMap::Create(opts);
     // Get sksurface according to pixelmap
-    std::shared_ptr<RSOffscreenRenderVisitor> visitor = std::make_shared<RSOffscreenRenderVisitor>(scaleX_, scaleY_, pixelMapX_, pixelMapY_);  // create a visitor
+    std::shared_ptr<RSOffscreenRenderVisitor> visitor = std::make_shared<RSOffscreenRenderVisitor>(
+        scaleX_, scaleY_, pixelMapX_, pixelMapY_);  // create a visitor
     if (pixelmap == nullptr) {
         ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: pixelmap == nullptr");
         return nullptr;
@@ -112,7 +113,8 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
     return pixelmap;
 }
 
-RSOffscreenRender::RSOffscreenRenderVisitor::RSOffscreenRenderVisitor(float scaleX, float scaleY, float pixelMapX, float pixelMapY)
+RSOffscreenRender::RSOffscreenRenderVisitor::RSOffscreenRenderVisitor(
+    float scaleX, float scaleY, float pixelMapX, float pixelMapY) 
     : scaleX_(scaleX), scaleY_(scaleY), pixelMapX_(pixelMapX), pixelMapY_(pixelMapY)
 {
 
@@ -138,6 +140,8 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessCanvasRenderNode(RSCanv
         ROSEN_LOGE("ProcessCanvasRenderNode, canvas is nullptr");
         return;
     }
+    pixelMapX_ = 0;
+    pixelMapY_ = 0;
     node.ProcessRenderBeforeChildren(*canvas_);
     ProcessBaseRenderNode(node);
     node.ProcessRenderAfterChildren(*canvas_);

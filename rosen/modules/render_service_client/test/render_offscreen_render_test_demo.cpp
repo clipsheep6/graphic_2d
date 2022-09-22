@@ -263,7 +263,7 @@ int main()
 
     cout << "rs local surface demo cratePixelMap" << endl;
 
-    auto pixelmap = LocalCapture(surfaceNode1->GetId(), 1, 1);
+    auto pixelmap = LocalCapture(canvasNode->GetId(), 1, 1);
     if (pixelmap == nullptr) {
         cout << "create pixelmap failed" << endl;
         return -1;

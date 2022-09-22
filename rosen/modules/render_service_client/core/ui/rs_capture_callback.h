@@ -18,6 +18,7 @@
 #define RS_CAPTURE_CALLBACK_H
 
 #include "platform/common/rs_log.h"
+#include "transaction/rs_render_service_client.h"
 
 namespace OHOS {
 namespace Media {
@@ -63,6 +64,14 @@ private:
     std::mutex mutex_;
     std::condition_variable conditionVariable_;
     bool flag_ = false;
+};
+
+class RSOffscreenRenderCallback: public SurfaceCaptureCallback, public CaptureCallback{
+public:
+    void OnSurfaceCapture(std::shared_ptr<Media::PixelMap> pixelmap) override
+    {
+        OutCall(pixelmap);
+    }
 };
 } // Rosen
 } // OHOS

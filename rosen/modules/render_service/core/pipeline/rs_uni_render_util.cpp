@@ -51,6 +51,8 @@ void RSUniRenderUtil::UpdateRenderNodeDstRect(RSRenderNode& node, const SkMatrix
 
 void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge)
 {
+    // update display dirtymanager
+    node->UpdateDisplayDirtyManager(bufferAge);
     // update all child surfacenode history
     for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
         auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
@@ -63,9 +65,10 @@ void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& no
         }
         surfaceDirtyManager->IntersectDirtyRect(surfaceNode->GetDstRect());
         surfaceDirtyManager->UpdateDirty();
+        if (surfaceDirtyManager->GetDirtyRegion().IsInsideOf(surfaceNode->GetDstRect())) {
+            node->GetDirtyManager()->MergeDirtyRect(surfaceNode->GetDstRect());
+        }
     }
-    // update display dirtymanager
-    node->UpdateDisplayDirtyManager(bufferAge);
 }
 
 Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node)

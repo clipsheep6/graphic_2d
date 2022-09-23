@@ -70,10 +70,10 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
         return nullptr;
     }
     SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
-            kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
 #ifdef ACE_ENABLE_GL
     RenderContext* rc = RSRenderThread::Instance().GetRenderContext();
-    if(rc == nullptr) {
+    if (rc == nullptr) {
         ROSEN_LOGE("RSOffscreenRender::createSurface: RenderContext == nullptr");
         return nullptr;
     }
@@ -112,7 +112,7 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
     return pixelmap;
 }
 
-RSOffscreenRender::RSOffscreenRenderVisitor::RSOffscreenRenderVisitor(float scaleX, float scaleY) 
+RSOffscreenRender::RSOffscreenRenderVisitor::RSOffscreenRenderVisitor(float scaleX, float scaleY)
     : scaleX_(scaleX), scaleY_(scaleY)
 {
 

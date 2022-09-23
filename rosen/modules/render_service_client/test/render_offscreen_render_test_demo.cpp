@@ -16,9 +16,8 @@
 #include <cstdint>
 #include <iostream>
 #include <sstream>
-#include <stdint.h>
-#include <string.h>
-#include <string>
+#include <cstdlib>
+#include <cstring>
 #include "display_type.h"
 #include "graphic_common.h"
 #include "include/core/SkColor.h"
@@ -221,8 +220,8 @@ shared_ptr<Media::PixelMap> LocalCapture(NodeId id, float scaleX, float scaleY)
     shared_ptr<CaptureCallback> callback = make_shared<CaptureCallback>();
     RSUIDirector::Create()->CaptureTask(callback, id, scaleX, scaleY);
     shared_ptr<Media::PixelMap> pixelMap = callback->GetResult(2000); // wait for <= 2000ms
-    if (pixelMap == nullptr){
-       cout << "RSUIDirector::LocalCapture failed to get pixelmap, return nullptr!" << endl;
+    if (pixelMap == nullptr) {
+        cout << "RSUIDirector::LocalCapture failed to get pixelmap, return nullptr!" << endl;
     }
     return pixelMap;
 }

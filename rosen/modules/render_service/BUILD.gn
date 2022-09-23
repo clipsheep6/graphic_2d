@@ -91,6 +91,7 @@ ohos_shared_library("librender_service") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "hicollie_native:libhicollie",
   ]
 
   part_name = "graphic_standard"

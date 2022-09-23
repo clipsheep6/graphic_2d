@@ -19,7 +19,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <string>
- 
 #include "display_type.h"
 #include "graphic_common.h"
 #include "include/core/SkColor.h"

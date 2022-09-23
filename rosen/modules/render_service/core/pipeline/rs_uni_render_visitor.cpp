@@ -34,6 +34,9 @@
 #include "pipeline/rs_uni_render_util.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
+#include "overdraw/rs_cpu_overdraw_canvas_listener.h"
+#include "overdraw/rs_gpu_overdraw_canvas_listener.h"
+#include "overdraw/rs_overdraw_controller.h"
 #include "render/rs_skia_filter.h"
 
 namespace OHOS {
@@ -195,8 +198,11 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
             dirtyFlag_ = node.Update(*curSurfaceDirtyManager_,
                 &(rsParent->GetRenderProperties()), dirtyFlag_);
             if (rsParent->ReinterpretCastTo<RSSurfaceRenderNode>() &&
-                rsParent->ReinterpretCastTo<RSSurfaceRenderNode>()->GetSurfaceNodeType() == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
-                node.SetGlobalAlpha(property.GetAlpha() * rsParent->GetMutableRenderProperties().GetAlpha()); // calculate alpha on parent's alpha
+                rsParent->ReinterpretCastTo<RSSurfaceRenderNode>()->GetSurfaceNodeType() ==
+                RSSurfaceNodeType::LEASH_WINDOW_NODE) {
+                node.SetGlobalAlpha(
+                    property.GetAlpha() * rsParent->GetMutableRenderProperties().GetAlpha()
+                ); // calculate alpha on parent's alpha
             } else {
                 node.SetGlobalAlpha(property.GetAlpha());
             }
@@ -432,7 +438,40 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             RS_LOGE("RSUniRenderVisitor Request Frame Failed");
             return;
         }
-        canvas_ = renderFrame->GetCanvas();
+        auto skSurface = renderFrame->GetFrame()->GetSurface();
+        if (skSurface == nullptr) {
+           RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: skSurface is null");
+            return; 
+        }
+        if (skSurface->getCanvas() == nullptr) {
+            ROSEN_LOGE("skSurface.getCanvas is null.");
+            return;
+        }
+        // if listenedCanvas is nullptr, that means disabled or listen failed
+        std::shared_ptr<RSListenedCanvas> listenedCanvas = nullptr;
+        std::shared_ptr<RSCanvasListener> overdrawListener = nullptr;
+
+        if (RSOverdrawController::GetInstance().IsEnabled()) {
+            auto &oc = RSOverdrawController::GetInstance();
+            listenedCanvas = std::make_shared<RSListenedCanvas>(skSurface.get());
+            overdrawListener = oc.CreateListener<RSGPUOverdrawCanvasListener>(listenedCanvas.get());
+            if (overdrawListener == nullptr) {
+                overdrawListener = oc.CreateListener<RSCPUOverdrawCanvasListener>(listenedCanvas.get());
+            }
+
+            if (overdrawListener != nullptr) {
+                listenedCanvas->SetListener(overdrawListener);
+            } else {
+                // create listener failed
+                listenedCanvas = nullptr;
+            }
+        }
+
+        if (listenedCanvas != nullptr) {
+            canvas_ = listenedCanvas;
+        } else {
+            canvas_ = std::make_shared<RSPaintFilterCanvas>(skSurface.get());
+        }
         if (canvas_ == nullptr) {
             RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: failed to create canvas");
             return;
@@ -493,6 +532,10 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         if (saveLayerCnt > 0) {
             RS_TRACE_NAME("RSUniRender:RestoreLayer");
             canvas_->restoreToCount(saveLayerCnt);
+        }
+
+        if (overdrawListener != nullptr) {
+            overdrawListener->Draw();
         }
 
         RS_TRACE_BEGIN("RSUniRender:FlushFrame");
@@ -733,7 +776,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         } else {
             InitCacheSurface(node, property.GetBoundsWidth(), property.GetBoundsHeight());
             if (node.GetCacheSurface()) {
-                auto cacheCanvas = std::make_unique<RSPaintFilterCanvas>(node.GetCacheSurface().get());
+                auto cacheCanvas = std::make_shared<RSPaintFilterCanvas>(node.GetCacheSurface().get());
 
                 swap(cacheCanvas, canvas_);
                 ProcessBaseRenderNode(node);

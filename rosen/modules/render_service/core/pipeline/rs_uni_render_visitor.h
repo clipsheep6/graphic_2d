@@ -78,7 +78,7 @@ private:
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;
     std::shared_ptr<RSSurfaceRenderNode> curSurfaceNode_;
     bool dirtyFlag_ { false };
-    std::unique_ptr<RSPaintFilterCanvas> canvas_;
+    std::shared_ptr<RSPaintFilterCanvas> canvas_;
     std::map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> dirtySurfaceNodeMap_;
     SkRect boundsRect_;
     Gravity frameGravity_ = Gravity::DEFAULT;

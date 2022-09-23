@@ -19,9 +19,13 @@
 #include <mutex>
 
 #include "common/rs_common_def.h"
+#include "ui/rs_capture_callback.h"
 
 namespace OHOS {
 class Surface;
+namespace Media {
+class PixelMap;
+}
 namespace Rosen {
 class RSSurfaceNode;
 class RSTransactionData;
@@ -53,6 +57,9 @@ public:
     void SetCacheDir(const std::string& cacheFilePath);
 
     bool RunningCustomAnimation(uint64_t timeStamp);
+
+    void TriggerCaptureCallback(std::shared_ptr<CaptureCallback> captureCallback, std::shared_ptr<Media::PixelMap> pixelMap);
+    void CaptureTask(std::shared_ptr<CaptureCallback> captureCallback, NodeId id, float scaleX = 1.0f, float scaleY = 1.0f);
 
     void SetAppFreeze(bool isAppFreeze);
 

@@ -199,13 +199,13 @@ void Init(shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
     rsUiDirector->SetRoot(rootNode->GetId());
     canvasNode = RSCanvasNode::Create();
     canvasNode->SetBounds(10, 10, 600, 1200);
-    canvasNode->SetFrame(0, 0, 600, 1200);
+    canvasNode->SetFrame(10, 10, 600, 1200);
     canvasNode->SetBackgroundColor(SK_ColorYELLOW);
     rootNode->AddChild(canvasNode, -1);
 
     canvasNode2 = RSCanvasNode::Create();
-    canvasNode2->SetBounds(5, 20, 400, 800);
-    canvasNode2->SetFrame(0, 0, 400, 800);
+    canvasNode2->SetBounds(5, 5, 400, 800);
+    canvasNode2->SetFrame(5, 5, 400, 800);
     canvasNode2->SetBackgroundColor(SK_ColorBLUE);
     canvasNode->AddChild(canvasNode2, -1);
 
@@ -262,8 +262,7 @@ int main()
     sleep(4);
 
     cout << "rs local surface demo cratePixelMap" << endl;
-
-    auto pixelmap = LocalCapture(canvasNode->GetId(), 1, 1);
+    auto pixelmap = LocalCapture(rootNode->GetId(), 1, 1);
     if (pixelmap == nullptr) {
         cout << "create pixelmap failed" << endl;
         return -1;

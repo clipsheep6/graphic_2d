@@ -39,7 +39,7 @@ public:
 private:
     class RSOffscreenRenderVisitor : public RSNodeVisitor {
     public:
-        RSOffscreenRenderVisitor(float scaleX, float scaleY, float pixelMapX, float pixelMapY);
+        RSOffscreenRenderVisitor(float scaleX, float scaleY);
         ~RSOffscreenRenderVisitor() noexcept override = default;
         void PrepareBaseRenderNode(RSBaseRenderNode& node) override {}
         void PrepareDisplayRenderNode(RSDisplayRenderNode& node) override {}
@@ -60,15 +60,11 @@ private:
         float scaleX_ = 1.0f;
         float scaleY_ = 1.0f;
         std::unique_ptr<RSPaintFilterCanvas> canvas_ = nullptr;
-        float pixelMapX_;
-        float pixelMapY_;
     };
 
     NodeId nodeId_;
     float scaleX_;
     float scaleY_;
-    float pixelMapX_;
-    float pixelMapY_; 
 };
 } // namespace Rosen
 } // namespace OHOS

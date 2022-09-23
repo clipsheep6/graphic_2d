@@ -52,15 +52,14 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
     std::shared_ptr<Media::PixelMap> pixelmap;
     int pixmapWidth = node->GetRenderProperties().GetBoundsWidth();
     int pixmapHeight = node->GetRenderProperties().GetBoundsHeight();
-    pixelMapX_ = node->GetRenderProperties().GetBoundsPositionX();
-    pixelMapY_ = node->GetRenderProperties().GetBoundsPositionY();
+    node->GetMutableRenderProperties().SetBoundsPositionX(0);
+    node->GetMutableRenderProperties().SetBoundsPositionY(0);
     Media::InitializationOptions opts;
     opts.size.width = ceil(pixmapWidth * scaleX_);
     opts.size.height = ceil(pixmapHeight * scaleY_);
     pixelmap = Media::PixelMap::Create(opts);
     // Get sksurface according to pixelmap
-    std::shared_ptr<RSOffscreenRenderVisitor> visitor = std::make_shared<RSOffscreenRenderVisitor>(
-        scaleX_, scaleY_, pixelMapX_, pixelMapY_);  // create a visitor
+    std::shared_ptr<RSOffscreenRenderVisitor> visitor = std::make_shared<RSOffscreenRenderVisitor>(scaleX_, scaleY_);  // create a visitor
     if (pixelmap == nullptr) {
         ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: pixelmap == nullptr");
         return nullptr;
@@ -113,9 +112,8 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
     return pixelmap;
 }
 
-RSOffscreenRender::RSOffscreenRenderVisitor::RSOffscreenRenderVisitor(
-    float scaleX, float scaleY, float pixelMapX, float pixelMapY) 
-    : scaleX_(scaleX), scaleY_(scaleY), pixelMapX_(pixelMapX), pixelMapY_(pixelMapY)
+RSOffscreenRender::RSOffscreenRenderVisitor::RSOffscreenRenderVisitor(float scaleX, float scaleY) 
+    : scaleX_(scaleX), scaleY_(scaleY)
 {
 
 }
@@ -140,8 +138,6 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessCanvasRenderNode(RSCanv
         ROSEN_LOGE("ProcessCanvasRenderNode, canvas is nullptr");
         return;
     }
-    pixelMapX_ = 0;
-    pixelMapY_ = 0;
     node.ProcessRenderBeforeChildren(*canvas_);
     ProcessBaseRenderNode(node);
     node.ProcessRenderAfterChildren(*canvas_);
@@ -198,7 +194,7 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessSurfaceRenderNode(RSSur
     }
     // draw pixelmap in canvas
     auto image = Media::PixelMapRosenUtils::ExtractSkImage(pixelMap);
-    canvas_->drawImage(image, node.GetRenderProperties().GetBoundsPositionX()-pixelMapX_, node.GetRenderProperties().GetBoundsPositionY()-pixelMapY_);
+    canvas_->drawImage(image, node.GetRenderProperties().GetBoundsPositionX(), node.GetRenderProperties().GetBoundsPositionY());
 }
 
 } // namespace Rosen

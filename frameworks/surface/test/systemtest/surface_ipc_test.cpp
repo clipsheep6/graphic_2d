@@ -18,7 +18,6 @@
 #include <gtest/gtest.h>
 #include <iservice_registry.h>
 #include <surface.h>
-#include <display_type.h>
 #include "accesstoken_kit.h"
 #include "nativetoken_kit.h"
 #include "token_setproc.h"
@@ -30,7 +29,7 @@ namespace OHOS::Rosen {
 class SurfaceIPCTest : public testing::Test, public IBufferConsumerListenerClazz {
 public:
     static void SetUpTestCase();
-    virtual void OnBufferAvailable() override;
+    void OnBufferAvailable() override;
     OHOS::GSError SetData(sptr<SurfaceBuffer> &buffer, sptr<Surface> &pSurface);
     bool GetData(sptr<SurfaceBuffer> &buffer);
     pid_t ChildProcessMain();
@@ -50,7 +49,7 @@ void SurfaceIPCTest::SetUpTestCase()
         .height = 0x100, // small
         .strideAlignment = 0x8,
         .format = PIXEL_FMT_RGBA_8888,
-        .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
         .timeout = 0,
     };
     flushConfig = { .damage = {

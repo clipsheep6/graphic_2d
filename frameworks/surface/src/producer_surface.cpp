@@ -99,7 +99,7 @@ GSError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
     buffer = retval.buffer;
     fence = retval.fence;
 
-    if (static_cast<uint32_t>(config.usage) & HBM_USE_CPU_WRITE) {
+    if (static_cast<uint32_t>(config.usage) & BUFFER_USAGE_CPU_WRITE) {
         ret = buffer->InvalidateCache();
         if (ret != GSERROR_OK) {
             BLOGNW("Warning [%{public}d], InvalidateCache failed", retval.sequence);
@@ -289,7 +289,7 @@ bool ProducerSurface::IsRemote()
 GSError ProducerSurface::CleanCache()
 {
     BLOGND("Queue Id:%{public}" PRIu64, queueId_);
-    if (IsRemote()) {
+    {
         std::lock_guard<std::mutex> lockGuard(mutex_);
         bufferProducerCache_.clear();
     }
@@ -299,7 +299,7 @@ GSError ProducerSurface::CleanCache()
 GSError ProducerSurface::GoBackground()
 {
     BLOGND("Queue Id:%{public}" PRIu64 "", queueId_);
-    if (IsRemote()) {
+    {
         std::lock_guard<std::mutex> lockGuard(mutex_);
         bufferProducerCache_.clear();
     }
@@ -340,6 +340,11 @@ GSError ProducerSurface::Disconnect()
         if (isDisconnected) {
             return GSERROR_INVALID_OPERATING;
         }
+    }
+    BLOGND("Queue Id:%{public}" PRIu64 "", queueId_);
+    {
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        bufferProducerCache_.clear();
     }
     GSError ret = producer_->Disconnect();
     {

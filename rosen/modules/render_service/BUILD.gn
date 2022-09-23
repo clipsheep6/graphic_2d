@@ -38,6 +38,9 @@ ohos_shared_library("librender_service") {
     "core/pipeline/rs_render_service_connection.cpp",
     "core/pipeline/rs_render_service_listener.cpp",
     "core/pipeline/rs_render_service_visitor.cpp",
+    "core/pipeline/rs_render_task.cpp",
+    "core/pipeline/rs_render_task_manager.cpp",
+    "core/pipeline/rs_sub_main_thread.cpp",
     "core/pipeline/rs_surface_capture_task.cpp",
     "core/pipeline/rs_uni_render_judgement.cpp",
     "core/pipeline/rs_uni_render_listener.cpp",
@@ -86,10 +89,12 @@ ohos_shared_library("librender_service") {
 
   external_deps = [
     "c_utils:utils",
+    "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "hicollie_native:libhicollie",
   ]
 
   part_name = "graphic_standard"
@@ -107,12 +112,9 @@ ohos_executable("render_service") {
 
   deps = [
     ":librender_service",
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
   ]
-
-  external_deps = [ "ipc:ipc_core" ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

@@ -33,6 +33,7 @@ constexpr int32_t EGL_CONTEXT_CLIENT_VERSION_NUM = 2;
 constexpr char CHARACTER_WHITESPACE = ' ';
 constexpr const char* CHARACTER_STRING_WHITESPACE = " ";
 constexpr const char* EGL_GET_PLATFORM_DISPLAY_EXT = "eglGetPlatformDisplayEXT";
+constexpr const char* EGL_KHR_SURFACELESS_CONTEXT = "EGL_KHR_surfaceless_context";
 
 // use functor to call gel*KHR API
 static PFNEGLSETDAMAGEREGIONKHRPROC GetEGLSetDamageRegionKHRFunc()
@@ -102,7 +103,11 @@ RenderContext::~RenderContext()
     if (eglDisplay_ == EGL_NO_DISPLAY) {
         return;
     }
+
     eglDestroyContext(eglDisplay_, eglContext_);
+    if (pbufferSurface_ != EGL_NO_SURFACE) {
+        eglDestroySurface(eglDisplay_, pbufferSurface_);
+    }
     eglMakeCurrent(eglDisplay_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglTerminate(eglDisplay_);
     eglReleaseThread();
@@ -110,9 +115,26 @@ RenderContext::~RenderContext()
     eglDisplay_ = EGL_NO_DISPLAY;
     eglContext_ = EGL_NO_CONTEXT;
     eglSurface_ = EGL_NO_SURFACE;
+    pbufferSurface_ = EGL_NO_SURFACE;
     grContext_ = nullptr;
     skSurface_ = nullptr;
     mHandler_ = nullptr;
+}
+
+void RenderContext::CreatePbufferSurface()
+{
+    const char* extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
+
+    if ((extensions != nullptr) &&
+       (!CheckEglExtension(extensions, EGL_KHR_SURFACELESS_CONTEXT)) &&
+       (pbufferSurface_ == EGL_NO_SURFACE)) {
+        EGLint attribs[] = {EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
+        pbufferSurface_ = eglCreatePbufferSurface(eglDisplay_, config_, attribs);
+        if (pbufferSurface_ == EGL_NO_SURFACE) {
+            LOGE("Failed to create pbuffer surface");
+            return;
+        }
+    }
 }
 
 void RenderContext::InitializeEglContext()
@@ -121,7 +143,7 @@ void RenderContext::InitializeEglContext()
         return;
     }
 
-    LOGI("Creating EGLContext!!!");
+    LOGD("Creating EGLContext!!!");
     eglDisplay_ = GetPlatformEglDisplay(EGL_PLATFORM_OHOS_KHR, EGL_DEFAULT_DISPLAY, NULL);
     if (eglDisplay_ == EGL_NO_DISPLAY) {
         LOGW("Failed to create EGLDisplay gl errno : %{public}x", eglGetError());
@@ -157,16 +179,19 @@ void RenderContext::InitializeEglContext()
         LOGE("Failed to create egl context %{public}x", eglGetError());
         return;
     }
-
-    eglMakeCurrent(eglDisplay_, EGL_NO_SURFACE, EGL_NO_SURFACE, eglContext_);
+    CreatePbufferSurface();
+    if(!eglMakeCurrent(eglDisplay_, pbufferSurface_, pbufferSurface_, eglContext_)) {
+        LOGE("Failed to make current on surface %{public}p, error is %{public}x", pbufferSurface_, eglGetError());
+        return;
+    }
 
     LOGD("Create EGL context successfully, version %{public}d.%{public}d", major, minor);
 }
 
-void RenderContext::MakeCurrent(EGLSurface surface) const
+void RenderContext::MakeCurrent(EGLSurface surface, EGLContext context) const
 {
     if (surface == EGL_NO_SURFACE) {
-        if (!eglMakeCurrent(eglDisplay_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
+        if (!eglMakeCurrent(eglDisplay_, EGL_NO_SURFACE, EGL_NO_SURFACE, context)) {
             LOGE("Failed to make current on surface %{public}p, error is %{public}x", surface, eglGetError());
         }
     } else {
@@ -178,6 +203,7 @@ void RenderContext::MakeCurrent(EGLSurface surface) const
 
 void RenderContext::SwapBuffers(EGLSurface surface) const
 {
+    RS_TRACE_FUNC();
     if (!eglSwapBuffers(eglDisplay_, surface)) {
         LOGE("Failed to SwapBuffers on surface %{public}p, error is %{public}x", surface, eglGetError());
     } else {
@@ -300,6 +326,7 @@ sk_sp<SkSurface> RenderContext::AcquireSurface(int width, int height)
 
 void RenderContext::RenderFrame()
 {
+    RS_TRACE_FUNC();
     // flush commands
     if (skSurface_->getCanvas() != nullptr) {
         LOGD("RenderFrame: Canvas is %{public}p", skSurface_->getCanvas());

@@ -35,7 +35,7 @@ public:
     static SharedPtr Create(NodeId targetNodeId, std::string name = "ProxyNode");
     ~RSProxyNode() override;
 
-    void ResetContextAlpha() const;
+    void ResetContextVariableCache() const;
 
     const std::string& GetName() const
     {
@@ -45,6 +45,16 @@ public:
     void AddChild(std::shared_ptr<RSBaseNode> child, int index) override;
     void RemoveChild(std::shared_ptr<RSBaseNode> child) override;
     void ClearChildren() override;
+
+    void SetBounds(const Vector4f& bounds) override {}
+    void SetBounds(float positionX, float positionY, float width, float height) override {}
+    void SetBoundsWidth(float width) override {}
+    void SetBoundsHeight(float height) override {}
+
+    void SetFrame(const Vector4f& frame) override {}
+    void SetFrame(float positionX, float positionY, float width, float height) override {}
+    void SetFramePositionX(float positionX) override {}
+    void SetFramePositionY(float positionY) override {}
 
 protected:
     explicit RSProxyNode(NodeId targetNodeId, std::string name);

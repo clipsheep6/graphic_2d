@@ -17,7 +17,6 @@
 #include "external_window.h"
 #include "window.h"
 #include "surface.h"
-#include "buffer_log.h"
 
 using namespace OHOS;
 
@@ -43,7 +42,7 @@ int32_t main(int32_t argc, const char *argv[])
     OHNativeWindow* nativeWindow = OH_NativeWindow_CreateNativeWindow(&pSurface);
 
     int code = SET_USAGE;
-    int32_t usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA;
+    int32_t usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA;
     int32_t ret = NativeWindowHandleOpt(nativeWindow, code, usage);
     if (ret != OHOS::GSERROR_OK) {
         std::cout << "NativeWindowHandleOpt SET_USAGE faile" << std::endl;

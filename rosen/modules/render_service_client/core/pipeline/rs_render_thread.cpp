@@ -15,7 +15,7 @@
 
 #include "pipeline/rs_render_thread.h"
 
-#include <frame_collector.h>
+#include <cstdint>
 
 #include "accessibility_config.h"
 #include "rs_trace.h"
@@ -23,6 +23,7 @@
 
 #include "animation/rs_animation_fraction.h"
 #include "command/rs_surface_node_command.h"
+#include "frame_collector.h"
 #include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_node_map.h"
@@ -56,10 +57,14 @@ static void SystemCallSetThreadName(const std::string& name)
 using namespace OHOS::AccessibilityConfig;
 namespace OHOS {
 namespace Rosen {
+namespace {
+    static constexpr uint64_t REFRESH_PERIOD = 16666667;
+    static constexpr uint64_t REFRESH_FREQ_IN_UNI_RENDER = 3600;
+}
 class HighContrastObserver : public AccessibilityConfigObserver {
 public:
     HighContrastObserver() = default;
-    virtual void OnConfigChanged(const CONFIG_ID id, const ConfigValue &value) override
+    void OnConfigChanged(const CONFIG_ID id, const ConfigValue &value) override
     {
         ROSEN_LOGD("HighContrastObserver OnConfigChanged");
         auto& renderThread = RSRenderThread::Instance();
@@ -78,10 +83,6 @@ RSRenderThread& RSRenderThread::Instance()
 
 RSRenderThread::RSRenderThread()
 {
-#ifdef ACE_ENABLE_GL
-    renderContext_ = new RenderContext();
-    ROSEN_LOGD("Create RenderContext, its pointer is %p", renderContext_);
-#endif
     mainFunc_ = [&]() {
         uint64_t renderStartTimeStamp;
         if (needRender_) {
@@ -195,6 +196,21 @@ int32_t RSRenderThread::GetTid()
     return tid_;
 }
 
+void RSRenderThread::CreateAndInitRenderContextIfNeed()
+{
+#ifdef ACE_ENABLE_GL
+    if (needRender_ && renderContext_ == nullptr) {
+        renderContext_ = new RenderContext();
+        ROSEN_LOGD("Create RenderContext, its pointer is %p", renderContext_);
+        RS_TRACE_NAME("InitializeEglContext");
+        renderContext_->InitializeEglContext(); // init egl context on RT
+        if (!cacheDir_.empty()) {
+            renderContext_->SetCacheDir(cacheDir_);
+        }
+    }
+#endif
+}
+
 void RSRenderThread::RenderLoop()
 {
     SystemCallSetThreadName("RSRenderThread");
@@ -209,17 +225,12 @@ void RSRenderThread::RenderLoop()
 #ifdef ROSEN_OHOS
     tid_ = gettid();
 #endif
-#ifdef ACE_ENABLE_GL
-    renderContext_->InitializeEglContext(); // init egl context on RT
-    if (!cacheDir_.empty()) {
-        renderContext_->SetCacheDir(cacheDir_);
-    }
-#endif
     if (RSSystemProperties::GetUniRenderEnabled()) {
         needRender_ = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
             ->QueryIfRTNeedRender();
         RSSystemProperties::SetRenderMode(!needRender_);
     }
+    CreateAndInitRenderContextIfNeed();
     std::string name = "RSRenderThread_" + std::to_string(GetRealPid());
     runner_ = AppExecFwk::EventRunner::Create(false);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
@@ -235,6 +246,8 @@ void RSRenderThread::RenderLoop()
         RSRenderThread::Instance().RequestNextVSync();
     }
 
+    FrameCollector::GetInstance().SetRepaintCallback([this]() { this->RequestNextVSync(); });
+
     if (runner_) {
         runner_->Run();
     }
@@ -247,7 +260,8 @@ void RSRenderThread::OnVsync(uint64_t timestamp)
     mValue = (mValue + 1) % 2; // 1 and 2 is Calculated parameters
     RS_TRACE_INT("Vsync-client", mValue);
     timestamp_ = timestamp;
-    if (activeWindowCnt_.load() > 0) {
+    if (activeWindowCnt_.load() > 0 &&
+        (needRender_ || (timestamp_ - prevTimestamp_) / REFRESH_PERIOD >= REFRESH_FREQ_IN_UNI_RENDER)) {
         mainFunc_(); // start render-loop now
     }
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
@@ -278,7 +292,8 @@ void RSRenderThread::UpdateRenderMode(bool needRender)
                 UpdateSurfaceNodeParentInRS();
             } else {
                 needRender_ = needRender;
-                forceUpdateSurfaceNode_ = true;
+                MarkNeedUpdateSurfaceNode();
+                CreateAndInitRenderContextIfNeed();
             }
         }, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
@@ -334,8 +349,26 @@ void RSRenderThread::ClearBufferCache()
         auto surfaceNode = RSNodeMap::Instance().GetNode<RSSurfaceNode>(childNode->GetRSSurfaceNodeId());
         auto rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
         if (rsSurface != nullptr) {
-            rsSurface->ClearBuffer();
+            rsSurface->ClearAllBuffer();
         }
+    }
+    rootNode->ResetSortedChildren();
+}
+
+
+void RSRenderThread::MarkNeedUpdateSurfaceNode()
+{
+    const auto& rootNode = context_.GetGlobalRootRenderNode();
+    if (rootNode == nullptr) {
+        ROSEN_LOGE("RSRenderThread::MarkNeedUpdateSurfaceNode, rootNode is nullptr");
+        return;
+    }
+    for (auto& child : rootNode->GetSortedChildren()) {
+        if (!child || !child->IsInstanceOf<RSRootRenderNode>()) {
+            continue;
+        }
+        auto childNode = child->ReinterpretCastTo<RSRootRenderNode>();
+        childNode->SetNeedUpdateSurfaceNode(true);
     }
     rootNode->ResetSortedChildren();
 }
@@ -381,9 +414,12 @@ void RSRenderThread::ProcessCommands()
     std::swap(cmds, cmds_);
     cmdLock.unlock();
 
+    context_.currentTimestamp_ = prevTimestamp_;
     for (auto& cmdData : cmds) {
         std::string str = "ProcessCommands ptr:" + std::to_string(reinterpret_cast<uintptr_t>(cmdData.get()));
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, str.c_str());
+        // only set transactionTimestamp_ in UniRender mode
+        context_.transactionTimestamp_ = RSSystemProperties::GetUniRenderEnabled() ? cmdData->GetTimestamp() : 0;
         cmdData->Process(context_);
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
     }

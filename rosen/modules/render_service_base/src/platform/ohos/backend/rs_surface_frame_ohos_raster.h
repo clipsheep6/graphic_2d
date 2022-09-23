@@ -16,7 +16,6 @@
 #ifndef RS_SURFACE_FRAME_OHOS_RASTER_H
 #define RS_SURFACE_FRAME_OHOS_RASTER_H
 
-#include <display_type.h>
 #include <surface.h>
 
 #include "platform/drawing/rs_surface_frame.h"
@@ -51,7 +50,7 @@ private:
         .height = 0x100,
         .strideAlignment = 0x8,
         .format = PIXEL_FMT_RGBA_8888,
-        .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
         .timeout = 0,
     };
     BufferFlushConfig flushConfig_ = {

@@ -253,9 +253,9 @@ static const sk_sp<SkColorFilter>& TritanomalyMat()
 static const sk_sp<SkColorFilter>& InvertProtanomalyMat()
 {
     static const SkScalar colorMatrix[MATRIX_SIZE] = {
-        0.025,  -0.796, -0.228, 1.0, 0.0,
-        -0.334, -0.438, -0.228, 1.0, 0.0,
-        -0.382, -1.392, 0.772,  1.0, 0.0,
+        -0.109, -0.663, -0.228, 1.0, 0.0,
+        -0.468, -0.304, -0.228, 1.0, 0.0,
+        -0.516, -1.258, 0.772,  1.0, 0.0,
         0.0,    0.0,    0.0,    1.0, 0.0
     };
     static auto invertProtanomalyMat = SkColorFilters::Matrix(colorMatrix);
@@ -265,9 +265,9 @@ static const sk_sp<SkColorFilter>& InvertProtanomalyMat()
 static const sk_sp<SkColorFilter>& InvertDeuteranomalyMat()
 {
     static const SkScalar colorMatrix[MATRIX_SIZE] = {
-        -0.31,  -0.462, -0.228, 1.0, 0.0,
-        -0.545, -0.227, -0.228, 1.0, 0.0,
-        -0.857, -0.917, 0.772,  1.0, 0.0,
+        0.113,  -0.885, -0.228, 1.0, 0.0,
+        -0.123, -0.649, -0.228, 1.0, 0.0,
+        -0.434, -1.341, 0.772,  1.0, 0.0,
         0.0,    0.0,    0.0,    1.0, 0.0
     };
     static auto invertDeuteranomalyMat = SkColorFilters::Matrix(colorMatrix);
@@ -277,10 +277,10 @@ static const sk_sp<SkColorFilter>& InvertDeuteranomalyMat()
 static const sk_sp<SkColorFilter>& InvertTritanomalyMat()
 {
     static const SkScalar colorMatrix[MATRIX_SIZE] = {
-        0.401,  -1.98,  0.578, 1.0, 0.0,
-        -0.599, -0.796, 0.393, 1.0, 0.0,
-        -0.599, -1.07,  0.667, 1.0, 0.0,
-        0.0,    0.0,    0.0,   1.0, 0.0
+        0.402,  -0.792, -0.609, 1.0, 0.0,
+        -0.598, 0.392,  -0.794, 1.0, 0.0,
+        -0.598, 0.118,  -0.521, 1.0, 0.0,
+        0.0,    0.0,    0.0,    1.0, 0.0
     };
     static auto invertTritanomalyMat = SkColorFilters::Matrix(colorMatrix);
     return invertTritanomalyMat;
@@ -783,7 +783,7 @@ BufferRequestConfig RSBaseRenderUtil::GetFrameBufferRequestConfig(
     config.height = static_cast<int32_t>(height);
     config.strideAlignment = 0x8; // default stride is 8 Bytes.
     config.format = PIXEL_FMT_RGBA_8888;
-    config.usage = HBM_USE_CPU_READ | HBM_USE_MEM_DMA | HBM_USE_MEM_FB;
+    config.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_MEM_FB;
     config.timeout = 0;
     return config;
 }
@@ -1071,7 +1071,11 @@ BufferDrawParam RSBaseRenderUtil::CreateBufferDrawParam(
     params.setColorFilter = setColorFilter;
 
     const RSProperties& property = node.GetRenderProperties();
-    params.backgroundColor = static_cast<SkColor>(property.GetBackgroundColor().AsArgbInt());
+    auto backgroundColor = property.GetBackgroundColor();
+    auto backgroundAlpha = backgroundColor.GetAlpha();
+    int16_t finalBackgroundAlpha = static_cast<int16_t>(backgroundAlpha * node.GetGlobalAlpha());
+    backgroundColor.SetAlpha(finalBackgroundAlpha);
+    params.backgroundColor = static_cast<SkColor>(backgroundColor.AsArgbInt());
 
     const RectF absBounds = {
         node.GetTotalMatrix().getTranslateX(), node.GetTotalMatrix().getTranslateY(),

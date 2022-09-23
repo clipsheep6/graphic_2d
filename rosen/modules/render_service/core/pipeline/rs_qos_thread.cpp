@@ -51,13 +51,6 @@ void RSQosThread::Init()
     QosSetBoundaryRate(MIN_RATE, MAX_RATE);
     QosRegisteFuncCB(SetQosVSyncRate, GetQosVSyncRateInfos);
     CreateQosService();
-
-    ::atexit(&RSQosThread::Destroy);
-}
-
-void RSQosThread::Destroy()
-{
-    instance_ = nullptr;
 }
 
 void RSQosThread::ThreadStart()
@@ -100,23 +93,23 @@ void RSQosThread::SetQosVSyncRate(uint32_t pid, int32_t rate)
     appVSyncDistributor_->SetQosVSyncRate(pid, rate);
 }
 
-void RSQosThread::ResetQosPid(std::map<uint32_t, bool>& pidVisMap)
+void RSQosThread::ResetQosPid()
 {
-    if (!RSInnovation::UpdateQosNeedReset()) {
-        return;
-    }
-    for (auto it = pidVisMap.begin(); it != pidVisMap.end(); it++) {
-        it->second = true;
-    }
+    using QosOnRSResetPidFunc = void* (*)();
 
-    OnRSVisibilityChangeCB(pidVisMap);
+    auto QosOnRSResetPid = (QosOnRSResetPidFunc)RSInnovation::_s_qosOnRSResetPid;
+    QosOnRSResetPid();
 }
 
 void RSQosThread::OnRSVisibilityChangeCB(std::map<uint32_t, bool>& pidVisMap)
 {
-    using QosOnRSVisibilityChangeCBFunc = void (*)(void*);
+    if (!qosCal_) {
+        return;
+    }
+
+    using QosOnRSVisibilityChangeCBFunc = void (*)(std::map<uint32_t, bool>&);
 
     auto QosOnRSVisibilityChangeCB = (QosOnRSVisibilityChangeCBFunc)RSInnovation::_s_qosOnRSVisibilityChangeCB;
-    QosOnRSVisibilityChangeCB((void*)(&pidVisMap));
+    QosOnRSVisibilityChangeCB(pidVisMap);
 }
 } // amespace OHOS::Rosen

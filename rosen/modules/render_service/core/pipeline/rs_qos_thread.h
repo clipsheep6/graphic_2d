@@ -30,16 +30,28 @@ public:
     static RSQosThread* GetInstance();
     void ThreadStart();
     void ThreadStop();
-    void ResetQosPid(std::map<uint32_t, bool>& pidVisMap);
+    void ResetQosPid();
     void OnRSVisibilityChangeCB(std::map<uint32_t, bool>& pidVisMap);
+
+    void SetQosCal(bool qosCal)
+    {
+        qosCal_ = qosCal;
+    }
+
+    bool GetQosCal() const
+    {
+        return qosCal_;
+    }
+
 private:
     static const int MAX_RATE = 1;
     static const int MIN_RATE = INT_MAX;
     static std::once_flag flag_;
     static RSQosThread* instance_;
 
+    bool qosCal_ = false;
+
     static void Init();
-    static void Destroy();
 
     static void GetQosVSyncRateInfos(std::vector<std::pair<uint32_t, int>>& appsRateVec);
     static void SetQosVSyncRate(uint32_t pid, int32_t rate);

@@ -19,7 +19,6 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkPaint.h"
 
-#include <display_type.h>
 #include <surface.h>
 #include <event_handler.h>
 #include "hdi_backend.h"
@@ -73,7 +72,7 @@ private:
     void Sync(int64_t, void *data);
     void CreatePhysicalScreen();
     void DoPrepareCompleted(sptr<Surface> surface, const struct PrepareCompleteParam &param);
-    virtual void OnBufferAvailable() override;
+    void OnBufferAvailable() override;
     SurfaceError DoDraw();
     void ExcuteBenchMark(SkCanvas* canvas);
     bool DrawDrawingLayer(std::shared_ptr<HdiLayerInfo> &layer);

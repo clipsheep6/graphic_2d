@@ -245,22 +245,20 @@ void RSRenderThreadVisitor::UpdateDirtyAndSetEGLDamageRegion(std::unique_ptr<RSS
             ROSEN_LOGW("ProcessRootRenderNode SetBufferAge with invalid buffer age %d", bufferAge);
             curDirtyManager_->ResetDirtyAsSurfaceSize();
         }
+        curDirtyManager_->UpdateDirtyByAligned();
         curDirtyManager_->UpdateDirty();
         curDirtyRegion_ = curDirtyManager_->GetDirtyRegion();
         // only set damage region if dirty region and buffer age is valid(>0)
         if (bufferAge >= 0) {
             // get dirty rect coordinated from upper left to lower left corner in current surface
             RectI dirtyRectFlip = curDirtyManager_->GetRectFlipWithinSurface(curDirtyRegion_);
-            // get aligned rect following current egl rules
-            RectI dirtyRect = curDirtyManager_->GetPixelAlignedRect(dirtyRectFlip);
             // set dirty rect as eglSurfaceFrame's damage region
-            surfaceFrame->SetDamageRegion(dirtyRect.left_, dirtyRect.top_, dirtyRect.width_, dirtyRect.height_);
+            surfaceFrame->SetDamageRegion(dirtyRectFlip.left_, dirtyRectFlip.top_, dirtyRectFlip.width_, dirtyRectFlip.height_);
             // flip aligned rect for op drops
-            curDirtyRegion_ = curDirtyManager_->GetRectFlipWithinSurface(dirtyRect);
+            curDirtyRegion_ = curDirtyManager_->GetRectFlipWithinSurface(dirtyRectFlip);
             ROSEN_LOGD("GetPartialRenderEnabled buffer age %d, dirtyRectFlip = [%d, %d, %d, %d], "
-                "dirtyRectAlign = [%d, %d, %d, %d] -> [%d, %d, %d, %d]", bufferAge,
+                "dirtyRectAlign = [%d, %d, %d, %d]", bufferAge,
                 dirtyRectFlip.left_, dirtyRectFlip.top_, dirtyRectFlip.width_, dirtyRectFlip.height_,
-                dirtyRect.left_, dirtyRect.top_, dirtyRect.width_, dirtyRect.height_,
                 curDirtyRegion_.left_, curDirtyRegion_.top_, curDirtyRegion_.width_, curDirtyRegion_.height_);
         }
     } else {
@@ -357,7 +355,9 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     (void)curDirtyManager_->SetSurfaceSize(surfaceWidth, surfaceHeight);
     // keep non-nagative rect region within surface
     curDirtyManager_->ClipDirtyRectWithinSurface();
-    if (isRenderForced_) {
+    if (isRenderForced_ ||
+        curDirtyManager_->GetDirtyRegion().GetWidth() == 0 ||
+        curDirtyManager_->GetDirtyRegion().GetHeight() == 0) {
         curDirtyManager_->ResetDirtyAsSurfaceSize();
     }
     UpdateDirtyAndSetEGLDamageRegion(surfaceFrame);
@@ -379,9 +379,10 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     parentSurfaceNodeMatrix_ = gravityMatrix;
 
     RS_TRACE_BEGIN("ProcessRenderNodes");
+    needUpdateSurfaceNode_ = node.GetNeedUpdateSurfaceNode();
     ProcessCanvasRenderNode(node);
 
-    if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_ || RSRenderThread::Instance().GetForceUpdateSurfaceNode()) {
+    if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_ || needUpdateSurfaceNode_) {
         auto thisSurfaceNodeId = node.GetRSSurfaceNodeId();
         std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearSurfaceNodeChild>(thisSurfaceNodeId);
         SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_VISITOR);
@@ -391,7 +392,8 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         }
         node.childSurfaceNodeIds_ = std::move(childSurfaceNodeIds_);
     }
-    RSRenderThread::Instance().SetForceUpdateSurfaceNode(false);
+    needUpdateSurfaceNode_ = false;
+    node.SetNeedUpdateSurfaceNode(false);
     RS_TRACE_END();
 
     auto transactionProxy = RSTransactionProxy::GetInstance();
@@ -436,6 +438,9 @@ void RSRenderThreadVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         return;
     }
     node.UpdateRenderStatus(curDirtyRegion_, isOpDropped_);
+    if (node.IsRenderUpdateIgnored()) {
+        return;
+    }
     node.ProcessRenderBeforeChildren(*canvas_);
     ProcessBaseRenderNode(node);
     node.ProcessRenderAfterChildren(*canvas_);
@@ -513,7 +518,7 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     ProcessBaseRenderNode(node);
 
     // 4. if children changed, sync children to RenderService
-    if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_ || RSRenderThread::Instance().GetForceUpdateSurfaceNode()) {
+    if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_ || needUpdateSurfaceNode_) {
         auto thisSurfaceNodeId = node.GetId();
         std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearSurfaceNodeChild>(thisSurfaceNodeId);
         SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_VISITOR);
@@ -575,8 +580,6 @@ void RSRenderThreadVisitor::ClipHoleForSurfaceNode(RSSurfaceRenderNode& node)
         auto backgroundColor = node.GetRenderProperties().GetBackgroundColor();
         if (backgroundColor != RgbPalette::Transparent()) {
             canvas_->clear(backgroundColor.AsArgbInt());
-        } else {
-            canvas_->clear(SK_ColorBLACK);
         }
     }
     canvas_->restore();

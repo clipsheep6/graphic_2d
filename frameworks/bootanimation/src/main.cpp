@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
 #include <display_type.h>
 #include <display_manager.h>
 #include <event_handler.h>
@@ -36,7 +37,7 @@ int main(int argc, const char *argv[])
 
     BootAnimation bootAnimation;
     bootAnimation.Run(displays);
-
     LOGI("main exit");
+    exit(0);
     return 0;
 }

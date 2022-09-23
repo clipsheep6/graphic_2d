@@ -364,7 +364,7 @@ bool RSComposerAdapter::CheckStatusBeforeCreateLayer(RSSurfaceRenderNode& node, 
     const auto& dstRect = node.GetDstRect();
     const auto& srcRect = node.GetSrcRect();
     // check if the node's srcRect and dstRect are valid.
-    if (srcRect.width_ <= 0 || srcRect.height_ <= 0 || dstRect.width_ <= 0 || dstRect.height_ <= 0) {
+    if (srcRect.width_ <= 0 || srcRect.height_ <= 0 || dstRect.width_ <= 1 || dstRect.height_ <= 1) {
         return false;
     }
 

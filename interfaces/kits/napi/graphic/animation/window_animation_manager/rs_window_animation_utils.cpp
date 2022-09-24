@@ -46,6 +46,11 @@ NativeValue* RSWindowAnimationUtils::CreateJsWindowAnimationTarget(NativeEngine&
     NativeFinalize finalizeCallback = [](NativeEngine* engine, void* data, void* hint) {
         sptr<RSWindowAnimationTarget>(static_cast<RSWindowAnimationTarget*>(hint));
     };
+
+    if (target && target->surfaceNode_) {
+        target->surfaceNode_->ResetStagingBounds();
+    }
+
     target.GetRefPtr()->IncStrongRef(target.GetRefPtr());
     object->SetNativePointer(&(target->surfaceNode_), finalizeCallback, target.GetRefPtr());
 

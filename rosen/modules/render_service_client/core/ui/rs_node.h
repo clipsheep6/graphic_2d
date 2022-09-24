@@ -178,6 +178,11 @@ public:
         return RSUINodeType::RS_NODE;
     }
 
+    void ResetStagingBounds() {
+        // set staging bounds to -inf, and skip sync to render node
+        stagingProperties_.SetBounds(Vector4f { -INFINITY, -INFINITY, -INFINITY, -INFINITY });
+    }
+
 protected:
     RSNode(bool isRenderServiceNode);
     RSNode(const RSNode&) = delete;

@@ -31,6 +31,7 @@ public:
  * @tc.name: GetInstance001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSUIShareContextTest, GetInstance001, TestSize.Level1)
 {
@@ -42,6 +43,7 @@ HWTEST_F(RSUIShareContextTest, GetInstance001, TestSize.Level1)
  * @tc.name: GetRsRenderContext001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSUIShareContextTest, GetRsRenderContext001, TestSize.Level1)
 {

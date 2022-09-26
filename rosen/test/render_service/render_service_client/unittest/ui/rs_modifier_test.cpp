@@ -46,6 +46,7 @@ void RSModifierTest::TearDown() {}
  * @tc.name: Property001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, Property001, TestSize.Level1)
 {
@@ -58,6 +59,7 @@ HWTEST_F(RSModifierTest, Property001, TestSize.Level1)
  * @tc.name: Property002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, Property002, TestSize.Level1)
 {
@@ -73,6 +75,7 @@ HWTEST_F(RSModifierTest, Property002, TestSize.Level1)
  * @tc.name: Modifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, Modifier001, TestSize.Level1)
 {
@@ -87,6 +90,7 @@ HWTEST_F(RSModifierTest, Modifier001, TestSize.Level1)
  * @tc.name: Modifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, Modifier002, TestSize.Level1)
 {
@@ -102,6 +106,7 @@ HWTEST_F(RSModifierTest, Modifier002, TestSize.Level1)
  * @tc.name: AddModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, AddModifier001, TestSize.Level1)
 {
@@ -118,6 +123,7 @@ HWTEST_F(RSModifierTest, AddModifier001, TestSize.Level1)
  * @tc.name: AddModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, AddModifier002, TestSize.Level1)
 {
@@ -141,6 +147,7 @@ HWTEST_F(RSModifierTest, AddModifier002, TestSize.Level1)
  * @tc.name: BoundsModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BoundsModifier001, TestSize.Level1)
 {
@@ -162,6 +169,7 @@ HWTEST_F(RSModifierTest, BoundsModifier001, TestSize.Level1)
  * @tc.name: BoundsModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BoundsModifier002, TestSize.Level1)
 {
@@ -183,6 +191,7 @@ HWTEST_F(RSModifierTest, BoundsModifier002, TestSize.Level1)
  * @tc.name: FrameModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, FrameModifier001, TestSize.Level1)
 {
@@ -204,6 +213,7 @@ HWTEST_F(RSModifierTest, FrameModifier001, TestSize.Level1)
  * @tc.name: FrameModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, FrameModifier002, TestSize.Level1)
 {
@@ -225,6 +235,7 @@ HWTEST_F(RSModifierTest, FrameModifier002, TestSize.Level1)
  * @tc.name: PositionZModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, PositionZModifier001, TestSize.Level1)
 {
@@ -246,6 +257,7 @@ HWTEST_F(RSModifierTest, PositionZModifier001, TestSize.Level1)
  * @tc.name: PositionZModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, PositionZModifier002, TestSize.Level1)
 {
@@ -267,6 +279,7 @@ HWTEST_F(RSModifierTest, PositionZModifier002, TestSize.Level1)
  * @tc.name: PivotModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, PivotModifier001, TestSize.Level1)
 {
@@ -288,6 +301,7 @@ HWTEST_F(RSModifierTest, PivotModifier001, TestSize.Level1)
  * @tc.name: PivotModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, PivotModifier002, TestSize.Level1)
 {
@@ -309,6 +323,7 @@ HWTEST_F(RSModifierTest, PivotModifier002, TestSize.Level1)
  * @tc.name: QuaternionModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, QuaternionModifier001, TestSize.Level1)
 {
@@ -330,6 +345,7 @@ HWTEST_F(RSModifierTest, QuaternionModifier001, TestSize.Level1)
  * @tc.name: QuaternionModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, QuaternionModifier002, TestSize.Level1)
 {
@@ -351,6 +367,7 @@ HWTEST_F(RSModifierTest, QuaternionModifier002, TestSize.Level1)
  * @tc.name: RotationModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, RotationModifier001, TestSize.Level1)
 {
@@ -372,6 +389,7 @@ HWTEST_F(RSModifierTest, RotationModifier001, TestSize.Level1)
  * @tc.name: RotationModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, RotationModifier002, TestSize.Level1)
 {
@@ -393,6 +411,7 @@ HWTEST_F(RSModifierTest, RotationModifier002, TestSize.Level1)
  * @tc.name: RotationXModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, RotationXModifier001, TestSize.Level1)
 {
@@ -414,6 +433,7 @@ HWTEST_F(RSModifierTest, RotationXModifier001, TestSize.Level1)
  * @tc.name: RotationXModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, RotationXModifier002, TestSize.Level1)
 {
@@ -435,6 +455,7 @@ HWTEST_F(RSModifierTest, RotationXModifier002, TestSize.Level1)
  * @tc.name: RotationYModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, RotationYModifier001, TestSize.Level1)
 {
@@ -456,6 +477,7 @@ HWTEST_F(RSModifierTest, RotationYModifier001, TestSize.Level1)
  * @tc.name: RotationYModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, RotationYModifier002, TestSize.Level1)
 {
@@ -477,6 +499,7 @@ HWTEST_F(RSModifierTest, RotationYModifier002, TestSize.Level1)
  * @tc.name: ScaleModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ScaleModifier001, TestSize.Level1)
 {
@@ -498,6 +521,7 @@ HWTEST_F(RSModifierTest, ScaleModifier001, TestSize.Level1)
  * @tc.name: ScaleModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ScaleModifier002, TestSize.Level1)
 {
@@ -519,6 +543,7 @@ HWTEST_F(RSModifierTest, ScaleModifier002, TestSize.Level1)
  * @tc.name: TranslateModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, TranslateModifier001, TestSize.Level1)
 {
@@ -540,6 +565,7 @@ HWTEST_F(RSModifierTest, TranslateModifier001, TestSize.Level1)
  * @tc.name: TranslateModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, TranslateModifier002, TestSize.Level1)
 {
@@ -561,6 +587,7 @@ HWTEST_F(RSModifierTest, TranslateModifier002, TestSize.Level1)
  * @tc.name: TranslateZModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, TranslateZModifier001, TestSize.Level1)
 {
@@ -582,6 +609,7 @@ HWTEST_F(RSModifierTest, TranslateZModifier001, TestSize.Level1)
  * @tc.name: TranslateZModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, TranslateZModifier002, TestSize.Level1)
 {
@@ -603,6 +631,7 @@ HWTEST_F(RSModifierTest, TranslateZModifier002, TestSize.Level1)
  * @tc.name: CornerRadiusModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, CornerRadiusModifier001, TestSize.Level1)
 {
@@ -624,6 +653,7 @@ HWTEST_F(RSModifierTest, CornerRadiusModifier001, TestSize.Level1)
  * @tc.name: CornerRadiusModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, CornerRadiusModifier002, TestSize.Level1)
 {
@@ -645,6 +675,7 @@ HWTEST_F(RSModifierTest, CornerRadiusModifier002, TestSize.Level1)
  * @tc.name: AlphaModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, AlphaModifier001, TestSize.Level1)
 {
@@ -666,6 +697,7 @@ HWTEST_F(RSModifierTest, AlphaModifier001, TestSize.Level1)
  * @tc.name: AlphaModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, AlphaModifier002, TestSize.Level1)
 {
@@ -687,6 +719,7 @@ HWTEST_F(RSModifierTest, AlphaModifier002, TestSize.Level1)
  * @tc.name: ForegroundColorModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ForegroundColorModifier001, TestSize.Level1)
 {
@@ -708,6 +741,7 @@ HWTEST_F(RSModifierTest, ForegroundColorModifier001, TestSize.Level1)
  * @tc.name: ForegroundColorModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ForegroundColorModifier002, TestSize.Level1)
 {
@@ -729,6 +763,7 @@ HWTEST_F(RSModifierTest, ForegroundColorModifier002, TestSize.Level1)
  * @tc.name: BackgroundColorModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BackgroundColorModifier001, TestSize.Level1)
 {
@@ -750,6 +785,7 @@ HWTEST_F(RSModifierTest, BackgroundColorModifier001, TestSize.Level1)
  * @tc.name: BackgroundColorModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BackgroundColorModifier002, TestSize.Level1)
 {
@@ -771,6 +807,7 @@ HWTEST_F(RSModifierTest, BackgroundColorModifier002, TestSize.Level1)
  * @tc.name: BackgroundShaderModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BackgroundShaderModifier001, TestSize.Level1)
 {
@@ -792,6 +829,7 @@ HWTEST_F(RSModifierTest, BackgroundShaderModifier001, TestSize.Level1)
  * @tc.name: BackgroundShaderModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BackgroundShaderModifier002, TestSize.Level1)
 {
@@ -813,6 +851,7 @@ HWTEST_F(RSModifierTest, BackgroundShaderModifier002, TestSize.Level1)
  * @tc.name: BgImageModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BgImageModifier001, TestSize.Level1)
 {
@@ -834,6 +873,7 @@ HWTEST_F(RSModifierTest, BgImageModifier001, TestSize.Level1)
  * @tc.name: BgImageModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BgImageModifier002, TestSize.Level1)
 {
@@ -855,6 +895,7 @@ HWTEST_F(RSModifierTest, BgImageModifier002, TestSize.Level1)
  * @tc.name: BgImageWidthModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BgImageWidthModifier001, TestSize.Level1)
 {
@@ -876,6 +917,7 @@ HWTEST_F(RSModifierTest, BgImageWidthModifier001, TestSize.Level1)
  * @tc.name: BgImageWidthModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BgImageWidthModifier002, TestSize.Level1)
 {
@@ -897,6 +939,7 @@ HWTEST_F(RSModifierTest, BgImageWidthModifier002, TestSize.Level1)
  * @tc.name: BgImageHeightModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BgImageHeightModifier001, TestSize.Level1)
 {
@@ -918,6 +961,7 @@ HWTEST_F(RSModifierTest, BgImageHeightModifier001, TestSize.Level1)
  * @tc.name: BgImageHeightModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BgImageHeightModifier002, TestSize.Level1)
 {
@@ -939,6 +983,7 @@ HWTEST_F(RSModifierTest, BgImageHeightModifier002, TestSize.Level1)
  * @tc.name: BgImagePositionXModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BgImagePositionXModifier001, TestSize.Level1)
 {
@@ -960,6 +1005,7 @@ HWTEST_F(RSModifierTest, BgImagePositionXModifier001, TestSize.Level1)
  * @tc.name: BgImagePositionXModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BgImagePositionXModifier002, TestSize.Level1)
 {
@@ -981,6 +1027,7 @@ HWTEST_F(RSModifierTest, BgImagePositionXModifier002, TestSize.Level1)
  * @tc.name: BgImagePositionYModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BgImagePositionYModifier001, TestSize.Level1)
 {
@@ -1002,6 +1049,7 @@ HWTEST_F(RSModifierTest, BgImagePositionYModifier001, TestSize.Level1)
  * @tc.name: BgImagePositionYModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BgImagePositionYModifier002, TestSize.Level1)
 {
@@ -1023,6 +1071,7 @@ HWTEST_F(RSModifierTest, BgImagePositionYModifier002, TestSize.Level1)
  * @tc.name: BorderColorModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BorderColorModifier001, TestSize.Level1)
 {
@@ -1044,6 +1093,7 @@ HWTEST_F(RSModifierTest, BorderColorModifier001, TestSize.Level1)
  * @tc.name: BorderColorModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BorderColorModifier002, TestSize.Level1)
 {
@@ -1065,6 +1115,7 @@ HWTEST_F(RSModifierTest, BorderColorModifier002, TestSize.Level1)
  * @tc.name: BorderWidthModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BorderWidthModifier001, TestSize.Level1)
 {
@@ -1086,6 +1137,7 @@ HWTEST_F(RSModifierTest, BorderWidthModifier001, TestSize.Level1)
  * @tc.name: BorderWidthModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BorderWidthModifier002, TestSize.Level1)
 {
@@ -1107,6 +1159,7 @@ HWTEST_F(RSModifierTest, BorderWidthModifier002, TestSize.Level1)
  * @tc.name: BorderStyleModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BorderStyleModifier001, TestSize.Level1)
 {
@@ -1128,6 +1181,7 @@ HWTEST_F(RSModifierTest, BorderStyleModifier001, TestSize.Level1)
  * @tc.name: BorderStyleModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BorderStyleModifier002, TestSize.Level1)
 {
@@ -1149,6 +1203,7 @@ HWTEST_F(RSModifierTest, BorderStyleModifier002, TestSize.Level1)
  * @tc.name: FilterModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, FilterModifier001, TestSize.Level1)
 {
@@ -1170,6 +1225,7 @@ HWTEST_F(RSModifierTest, FilterModifier001, TestSize.Level1)
  * @tc.name: FilterModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, FilterModifier002, TestSize.Level1)
 {
@@ -1191,6 +1247,7 @@ HWTEST_F(RSModifierTest, FilterModifier002, TestSize.Level1)
  * @tc.name: BackgroundFilterModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BackgroundFilterModifier001, TestSize.Level1)
 {
@@ -1212,6 +1269,7 @@ HWTEST_F(RSModifierTest, BackgroundFilterModifier001, TestSize.Level1)
  * @tc.name: BackgroundFilterModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, BackgroundFilterModifier002, TestSize.Level1)
 {
@@ -1233,6 +1291,7 @@ HWTEST_F(RSModifierTest, BackgroundFilterModifier002, TestSize.Level1)
  * @tc.name: FrameGravityModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, FrameGravityModifier001, TestSize.Level1)
 {
@@ -1254,6 +1313,7 @@ HWTEST_F(RSModifierTest, FrameGravityModifier001, TestSize.Level1)
  * @tc.name: FrameGravityModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, FrameGravityModifier002, TestSize.Level1)
 {
@@ -1275,6 +1335,7 @@ HWTEST_F(RSModifierTest, FrameGravityModifier002, TestSize.Level1)
  * @tc.name: ClipBoundsModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ClipBoundsModifier001, TestSize.Level1)
 {
@@ -1296,6 +1357,7 @@ HWTEST_F(RSModifierTest, ClipBoundsModifier001, TestSize.Level1)
  * @tc.name: ClipBoundsModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ClipBoundsModifier002, TestSize.Level1)
 {
@@ -1317,6 +1379,7 @@ HWTEST_F(RSModifierTest, ClipBoundsModifier002, TestSize.Level1)
  * @tc.name: ClipToBoundsModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ClipToBoundsModifier001, TestSize.Level1)
 {
@@ -1338,6 +1401,7 @@ HWTEST_F(RSModifierTest, ClipToBoundsModifier001, TestSize.Level1)
  * @tc.name: ClipToBoundsModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ClipToBoundsModifier002, TestSize.Level1)
 {
@@ -1359,6 +1423,7 @@ HWTEST_F(RSModifierTest, ClipToBoundsModifier002, TestSize.Level1)
  * @tc.name: ClipToFrameModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ClipToFrameModifier001, TestSize.Level1)
 {
@@ -1380,6 +1445,7 @@ HWTEST_F(RSModifierTest, ClipToFrameModifier001, TestSize.Level1)
  * @tc.name: ClipToFrameModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ClipToFrameModifier002, TestSize.Level1)
 {
@@ -1401,6 +1467,7 @@ HWTEST_F(RSModifierTest, ClipToFrameModifier002, TestSize.Level1)
  * @tc.name: VisibleModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, VisibleModifier001, TestSize.Level1)
 {
@@ -1422,6 +1489,7 @@ HWTEST_F(RSModifierTest, VisibleModifier001, TestSize.Level1)
  * @tc.name: VisibleModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, VisibleModifier002, TestSize.Level1)
 {
@@ -1443,6 +1511,7 @@ HWTEST_F(RSModifierTest, VisibleModifier002, TestSize.Level1)
  * @tc.name: ShadowColorModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowColorModifier001, TestSize.Level1)
 {
@@ -1464,6 +1533,7 @@ HWTEST_F(RSModifierTest, ShadowColorModifier001, TestSize.Level1)
  * @tc.name: ShadowColorModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowColorModifier002, TestSize.Level1)
 {
@@ -1485,6 +1555,7 @@ HWTEST_F(RSModifierTest, ShadowColorModifier002, TestSize.Level1)
  * @tc.name: ShadowOffsetXModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowOffsetXModifier001, TestSize.Level1)
 {
@@ -1506,6 +1577,7 @@ HWTEST_F(RSModifierTest, ShadowOffsetXModifier001, TestSize.Level1)
  * @tc.name: ShadowOffsetXModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowOffsetXModifier002, TestSize.Level1)
 {
@@ -1527,6 +1599,7 @@ HWTEST_F(RSModifierTest, ShadowOffsetXModifier002, TestSize.Level1)
  * @tc.name: ShadowOffsetYModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowOffsetYModifier001, TestSize.Level1)
 {
@@ -1549,6 +1622,7 @@ HWTEST_F(RSModifierTest, ShadowOffsetYModifier001, TestSize.Level1)
  * @tc.name: ShadowOffsetYModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowOffsetYModifier002, TestSize.Level1)
 {
@@ -1570,6 +1644,7 @@ HWTEST_F(RSModifierTest, ShadowOffsetYModifier002, TestSize.Level1)
  * @tc.name: ShadowAlphaModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowAlphaModifier001, TestSize.Level1)
 {
@@ -1591,6 +1666,7 @@ HWTEST_F(RSModifierTest, ShadowAlphaModifier001, TestSize.Level1)
  * @tc.name: ShadowAlphaModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowAlphaModifier002, TestSize.Level1)
 {
@@ -1612,6 +1688,7 @@ HWTEST_F(RSModifierTest, ShadowAlphaModifier002, TestSize.Level1)
  * @tc.name: ShadowElevationModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowElevationModifier001, TestSize.Level1)
 {
@@ -1633,6 +1710,7 @@ HWTEST_F(RSModifierTest, ShadowElevationModifier001, TestSize.Level1)
  * @tc.name: ShadowElevationModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowElevationModifier002, TestSize.Level1)
 {
@@ -1654,6 +1732,7 @@ HWTEST_F(RSModifierTest, ShadowElevationModifier002, TestSize.Level1)
  * @tc.name: ShadowRadiusModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowRadiusModifier001, TestSize.Level1)
 {
@@ -1675,6 +1754,7 @@ HWTEST_F(RSModifierTest, ShadowRadiusModifier001, TestSize.Level1)
  * @tc.name: ShadowRadiusModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowRadiusModifier002, TestSize.Level1)
 {
@@ -1696,6 +1776,7 @@ HWTEST_F(RSModifierTest, ShadowRadiusModifier002, TestSize.Level1)
  * @tc.name: ShadowPathModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowPathModifier001, TestSize.Level1)
 {
@@ -1717,6 +1798,7 @@ HWTEST_F(RSModifierTest, ShadowPathModifier001, TestSize.Level1)
  * @tc.name: ShadowPathModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, ShadowPathModifier002, TestSize.Level1)
 {
@@ -1738,6 +1820,7 @@ HWTEST_F(RSModifierTest, ShadowPathModifier002, TestSize.Level1)
  * @tc.name: MaskModifier001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, MaskModifier001, TestSize.Level1)
 {
@@ -1759,6 +1842,7 @@ HWTEST_F(RSModifierTest, MaskModifier001, TestSize.Level1)
  * @tc.name: MaskModifier002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSModifierTest, MaskModifier002, TestSize.Level1)
 {

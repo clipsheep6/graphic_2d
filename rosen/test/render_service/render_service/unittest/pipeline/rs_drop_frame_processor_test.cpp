@@ -66,7 +66,7 @@ void RSDropFrameProcessorTest::TearDown() {}
  * @tc.name: TestDropFrame001
  * @tc.desc:
  * @tc.type:
- * @tc.require:
+ * @tc.require: issueI5T8FR
  * @tc.author:
  */
 HWTEST_F(RSDropFrameProcessorTest, TestDropFrame001, TestSize.Level1)

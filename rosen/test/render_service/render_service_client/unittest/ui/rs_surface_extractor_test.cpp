@@ -38,6 +38,7 @@ void RSSurfaceExtractorTest::TearDown() {}
  * @tc.name: ExtractRSSurface001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceExtractorTest, ExtractRSSurface001, TestSize.Level1)
 {

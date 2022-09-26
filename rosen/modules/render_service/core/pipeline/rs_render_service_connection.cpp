@@ -207,6 +207,10 @@ bool RSRenderServiceConnection::QueryIfRTNeedRender()
     return !mainThread_->QueryIfUseUniVisitor();
 }
 
+void RSRenderServiceConnection::QueryCacheValid(
+    const std::unordered_set<uint64_t>& toQuery, std::unordered_set<uint64_t>& queryed)
+{}
+
 bool RSRenderServiceConnection::CreateNode(const RSSurfaceRenderNodeConfig& config)
 {
     std::shared_ptr<RSSurfaceRenderNode> node =

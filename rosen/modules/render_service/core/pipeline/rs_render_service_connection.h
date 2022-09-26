@@ -58,6 +58,7 @@ private:
     void UpdateRenderMode(bool isUniRender) override;
     bool GetUniRenderEnabled() override;
     bool QueryIfRTNeedRender() override;
+    void QueryCacheValid(const std::unordered_set<uint64_t>& toQuery, std::unordered_set<uint64_t>& queryed) override;
 
     bool CreateNode(const RSSurfaceRenderNodeConfig& config) override;
     sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) override;

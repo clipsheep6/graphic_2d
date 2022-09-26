@@ -20,6 +20,7 @@
 #include "platform/common/rs_system_properties.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_root_render_node.h"
+#include "render/rs_image_cache.h"
 #include "securec.h"
 
 namespace OHOS {
@@ -387,6 +388,9 @@ ImageWithParmOpItem::ImageWithParmOpItem(const sk_sp<SkImage> img, const sk_sp<S
     rsImage_->SetRadius(rsimageInfo.radius_);
     rsImage_->SetScale(rsimageInfo.scale_);
     paint_ = paint;
+    if (RSSystemProperties::GetUniRenderEnabled()) {
+        RSResCacheQuery::Instance().AddCacheId(rsImage_->GetUniqueId());
+    }
 }
 
 ImageWithParmOpItem::ImageWithParmOpItem(

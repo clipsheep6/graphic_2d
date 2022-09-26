@@ -71,6 +71,7 @@ public:
     bool QueryIfRTNeedRender();
     bool CreateNode(const RSSurfaceRenderNodeConfig& config);
     std::shared_ptr<RSSurface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config);
+    void QueryCacheValid(const std::unordered_set<uint64_t>& toQuery, std::unordered_set<uint64_t>& queryed);
 
     std::shared_ptr<VSyncReceiver> CreateVSyncReceiver(
         const std::string& name,

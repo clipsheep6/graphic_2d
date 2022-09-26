@@ -55,6 +55,7 @@ public:
         QUERY_RT_NEED_RENDER,
         CREATE_NODE,
         CREATE_NODE_AND_SURFACE,
+        QUERY_CACHE_VALID,
         GET_DEFAULT_SCREEN_ID,
         GET_ALL_SCREEN_IDS,
         CREATE_VIRTUAL_SCREEN,
@@ -100,6 +101,8 @@ public:
     virtual bool QueryIfRTNeedRender() = 0;
     virtual bool CreateNode(const RSSurfaceRenderNodeConfig& config) = 0;
     virtual sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) = 0;
+    virtual void QueryCacheValid(
+        const std::unordered_set<uint64_t>& toQuery, std::unordered_set<uint64_t>& queryed) = 0;
 
     virtual sptr<IVSyncConnection> CreateVSyncConnection(const std::string& name) = 0;
 

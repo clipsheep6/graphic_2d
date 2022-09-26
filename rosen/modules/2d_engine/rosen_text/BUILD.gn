@@ -13,7 +13,7 @@
 
 import("//build/ohos.gni")
 
-config("rosen_text2_public_config") {
+config("rosen_text_public_config") {
   include_dirs = [
     "export",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
@@ -21,15 +21,29 @@ config("rosen_text2_public_config") {
   ]
 }
 
-ohos_shared_library("rosen_text2") {
-  public_deps = [ ":rosen_text2_txt" ]
+ohos_shared_library("rosen_text") {
+  public_deps = [ ":rosen_text_inner" ]
+
+  platform = current_os
+  if (platform == "mingw") {
+    platform = "windows"
+  }
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
+    "//third_party/flutter/build/libtxt:thirdparty_lib_txt_$platform",
+  ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
 
-ohos_source_set("rosen_text2_txt") {
-  public_configs = [ ":rosen_text2_public_config" ]
+ohos_source_set("rosen_text_inner") {
+  public_deps = [ ":rosen_text_txt" ]
+}
+
+ohos_source_set("rosen_text_txt") {
+  public_configs = [ ":rosen_text_public_config" ]
 
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/drawing",
@@ -53,8 +67,6 @@ ohos_source_set("rosen_text2_txt") {
   }
 
   deps = [
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
-    "//third_party/flutter/build/libtxt:thirdparty_lib_txt_$platform",
     "//third_party/flutter/build/skia:ace_skia_$platform",
   ]
 

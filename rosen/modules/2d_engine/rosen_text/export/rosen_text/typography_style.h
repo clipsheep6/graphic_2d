@@ -25,6 +25,8 @@
 namespace OHOS {
 namespace Rosen {
 struct TypographyStyle {
+    const static inline std::u16string ELLIPSIS = u"\u2026";
+
     FontWeight fontWeight_ = FontWeight::W400;
     FontStyle fontStyle_ = FontStyle::Normal;
     std::string fontFamily_ = "";

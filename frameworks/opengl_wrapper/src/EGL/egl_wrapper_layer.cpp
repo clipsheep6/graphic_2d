@@ -81,19 +81,19 @@ static const void *GetNextLayerProcAddr(void *funcTable, const char *name)
     return reinterpret_cast<void *>(val);
 }
 
-static void SplitEnvString(const char *strLayers, std::vector<std::string> *layers)
+static void SplitEnvString(std::string str, std::vector<std::string> *layers)
 {
     WLOGD("");
-    std::string env(strLayers);
-    strLayers = env.c_str();
-    for (const char *p = env.c_str(); *p != 0; p++) {
-        if (*p == *DEBUG_LAYERS_DELIMITER) {
-            layers->emplace_back(strLayers, p - strLayers);
-            strLayers = p + 1;
-        }
+    int pos1 = 0;
+    int pos2 = str.find(DEBUG_LAYERS_DELIMITER);
+    while (pos2 != std::string::npos) {
+        layers->emplace_back(str.substr(pos1, pos2-pos1));
+        pos1 = pos2 + 1;
+        pos2 = str.find(DEBUG_LAYERS_DELIMITER, pos1);
     }
-    if (strLayers != env.c_str() || env.size() > 0) {
-        layers->push_back(std::string(strLayers));
+
+    if (pos1 != str.length()) {
+        layers->emplace_back(str.substr(pos1));
     }
 }
 

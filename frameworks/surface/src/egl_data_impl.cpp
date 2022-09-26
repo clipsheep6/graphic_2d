@@ -15,7 +15,6 @@
 
 #include "egl_data_impl.h"
 
-#include <display_gralloc.h>
 #include <drm_fourcc.h>
 
 #include "buffer_log.h"

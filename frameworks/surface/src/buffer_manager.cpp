@@ -20,10 +20,12 @@
 #include <sys/mman.h>
 
 #include "buffer_log.h"
+#include "v1_0/include/idisplay_buffer.h"
+#include "v1_0/display_buffer_type.h"
 
 #define CHECK_INIT() \
     do { \
-        if (displayGralloc_ == nullptr) { \
+        if (g_displayBuffer == nullptr) { \
             GSError ret = Init(); \
             if (ret != GSERROR_OK) { \
                 return ret; \
@@ -63,6 +65,7 @@ inline GSError GenerateError(GSError err, int32_t code)
 }
 } // namespace
 
+static std::unique_ptr<OHOS::HDI::Display::Buffer::V1_0::IDisplayBuffer> g_displayBuffer = nullptr;
 sptr<BufferManager> BufferManager::GetInstance()
 {
     if (instance == nullptr) {
@@ -77,14 +80,14 @@ sptr<BufferManager> BufferManager::GetInstance()
 
 GSError BufferManager::Init()
 {
-    if (displayGralloc_ != nullptr) {
+    if (g_displayBuffer != nullptr) {
         BLOGD("BufferManager has been initialized successfully.");
         return GSERROR_OK;
     }
 
-    displayGralloc_.reset(::OHOS::HDI::Display::V1_0::IDisplayGralloc::Get());
-    if (displayGralloc_ == nullptr) {
-        BLOGE("IDisplayGralloc::Get return nullptr.");
+    g_displayBuffer.reset(OHOS::HDI::Display::Buffer::V1_0::IDisplayBuffer::Get());
+    if (g_displayBuffer == nullptr) {
+        BLOGE("IDisplayBuffer::Get return nullptr.");
         return GSERROR_INTERNAL;
     }
     return GSERROR_OK;
@@ -98,8 +101,9 @@ GSError BufferManager::Alloc(const BufferRequestConfig &config, sptr<SurfaceBuff
     BufferHandle *handle = nullptr;
     int32_t allocWidth = config.width;
     int32_t allocHeight = config.height;
-    AllocInfo info = {allocWidth, allocHeight, config.usage, (PixelFormat)config.format};
-    auto dret = displayGralloc_->AllocMem(info, handle);
+    OHOS::HDI::Display::Buffer::V1_0::AllocInfo info =
+        {allocWidth, allocHeight, config.usage, (PixelFormat)config.format};
+    auto dret = g_displayBuffer->AllocMem(info, handle);
     if (dret == DISPLAY_SUCCESS) {
         buffer->SetBufferHandle(handle);
         buffer->SetSurfaceBufferWidth(allocWidth);
@@ -125,7 +129,7 @@ GSError BufferManager::Map(sptr<SurfaceBuffer> &buffer)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    void *virAddr = displayGralloc_->Mmap(*handle);
+    void *virAddr = g_displayBuffer->Mmap(*handle);
     if (virAddr == nullptr || virAddr == MAP_FAILED) {
         return GSERROR_API_FAILED;
     }
@@ -146,7 +150,7 @@ GSError BufferManager::Unmap(sptr<SurfaceBuffer> &buffer)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    auto dret = displayGralloc_->Unmap(*handle);
+    auto dret = g_displayBuffer->Unmap(*handle);
     if (dret == DISPLAY_SUCCESS) {
         handle->virAddr = nullptr;
         return GSERROR_OK;
@@ -164,7 +168,7 @@ GSError BufferManager::Unmap(BufferHandle *bufferHandle)
     if (bufferHandle->virAddr == nullptr) {
         return GSERROR_OK;
     }
-    auto dret = displayGralloc_->Unmap(*bufferHandle);
+    auto dret = g_displayBuffer->Unmap(*bufferHandle);
     if (dret == DISPLAY_SUCCESS) {
         bufferHandle->virAddr = nullptr;
         return GSERROR_OK;
@@ -183,7 +187,7 @@ GSError BufferManager::FlushCache(sptr<SurfaceBuffer> &buffer)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    auto dret = displayGralloc_->FlushCache(*handle);
+    auto dret = g_displayBuffer->FlushCache(*handle);
     if (dret == DISPLAY_SUCCESS) {
         return GSERROR_OK;
     }
@@ -201,7 +205,7 @@ GSError BufferManager::InvalidateCache(sptr<SurfaceBuffer> &buffer)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    auto dret = displayGralloc_->InvalidateCache(*handle);
+    auto dret = g_displayBuffer->InvalidateCache(*handle);
     if (dret == DISPLAY_SUCCESS) {
         return GSERROR_OK;
     }
@@ -220,7 +224,7 @@ GSError BufferManager::Free(sptr<SurfaceBuffer> &buffer)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    displayGralloc_->FreeMem(*handle);
+    g_displayBuffer->FreeMem(*handle);
     return GSERROR_OK;
 }
 

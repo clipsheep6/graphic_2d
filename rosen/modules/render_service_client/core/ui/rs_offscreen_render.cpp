@@ -52,6 +52,8 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
     std::shared_ptr<Media::PixelMap> pixelmap;
     int pixmapWidth = node->GetRenderProperties().GetBoundsWidth();
     int pixmapHeight = node->GetRenderProperties().GetBoundsHeight();
+    float boundsPositionX = node->GetRenderProperties().GetBoundsPositionX();
+    float boundsPositionY = node->GetRenderProperties().GetBoundsPositionY();
     node->GetMutableRenderProperties().SetBoundsPositionX(0);
     node->GetMutableRenderProperties().SetBoundsPositionY(0);
     Media::InitializationOptions opts;
@@ -85,6 +87,8 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
     visitor->SetSurface(skSurface.get());
     // Draw
     node->Process(visitor);
+    node->GetMutableRenderProperties().SetBoundsPositionX(boundsPositionX);
+    node->GetMutableRenderProperties().SetBoundsPositionY(boundsPositionY);
 #ifdef ACE_ENABLE_GL
     sk_sp<SkImage> img(skSurface.get()->makeImageSnapshot());
     if (!img) {

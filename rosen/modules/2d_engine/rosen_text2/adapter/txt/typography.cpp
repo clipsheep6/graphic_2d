@@ -22,27 +22,27 @@
 
 namespace OHOS {
 namespace Rosen {
-TextBox::TextBox(Drawing::RectF rect, TextDirection direction)
+TextRect::TextRect(Drawing::RectF rect, TextDirection direction)
 {
     rect_ = rect;
     direction_ = direction;
 }
 
-PositionAndAffinity::PositionAndAffinity(size_t pos, Affinity affinity)
+IndexAndAffinity::IndexAndAffinity(size_t index, Affinity affinity)
 {
-    pos_ = pos;
+    index_ = index;
     affinity_ = affinity;
 }
 
-Range::Range(size_t start, size_t end)
+Boundary::Boundary(size_t left, size_t right)
 {
-    start_ = start;
-    end_ = end;
+    leftIndex_ = left;
+    rightIndex_ = right;
 }
 
-bool Range::operator ==(const Range &rhs) const
+bool Boundary::operator ==(const Boundary &rhs) const
 {
-    return start_ == rhs.start_ && end_ == rhs.end_;
+    return leftIndex_ == rhs.leftIndex_ && rightIndex_ == rhs.rightIndex_;
 }
 
 namespace AdapterTxt {
@@ -126,41 +126,41 @@ void Typography::Paint(Drawing::Canvas *drawCanvas, double x, double y)
     paragraph_->Paint(canvas, x, y);
 }
 
-std::vector<TextBox> Typography::GetRectsForRange(size_t start, size_t end,
-                                                  RectHeightStyle heightStyle,
-                                                  RectWidthStyle widthStyle)
+std::vector<TextRect> Typography::GetTextRectsByBoundary(size_t left, size_t right,
+                                                        TextRectHeightStyle heightStyle,
+                                                        TextRectWidthStyle widthStyle)
 {
     auto txtRectHeightStyle = Convert(heightStyle);
     auto txtRectWidthStyle = Convert(widthStyle);
-    auto rects = paragraph_->GetRectsForRange(start, end, txtRectHeightStyle, txtRectWidthStyle);
+    auto rects = paragraph_->GetRectsForRange(left, right, txtRectHeightStyle, txtRectWidthStyle);
 
-    std::vector<TextBox> boxes;
+    std::vector<TextRect> boxes;
     for (const auto &rect : rects) {
         boxes.push_back(Convert(rect));
     }
     return boxes;
 }
 
-std::vector<TextBox> Typography::GetRectsForPlaceholders()
+std::vector<TextRect> Typography::GetTextRectsOfPlaceholders()
 {
     auto rects = paragraph_->GetRectsForPlaceholders();
 
-    std::vector<TextBox> boxes;
+    std::vector<TextRect> boxes;
     for (const auto &rect : rects) {
         boxes.push_back(Convert(rect));
     }
     return boxes;
 }
 
-PositionAndAffinity Typography::GetGlyphPositionAtCoordinate(double dx, double dy)
+IndexAndAffinity Typography::GetGlyphIndexByCoordinate(double x, double y)
 {
-    auto pos = paragraph_->GetGlyphPositionAtCoordinate(dx, dy);
+    auto pos = paragraph_->GetGlyphPositionAtCoordinate(x, y);
     return Convert(pos);
 }
 
-Range Typography::GetWordBoundary(size_t offset)
+Boundary Typography::GetWordBoundaryByIndex(size_t index)
 {
-    auto range = paragraph_->GetWordBoundary(offset);
+    auto range = paragraph_->GetWordBoundary(index);
     return Convert(range);
 }
 } // namespace AdapterTxt

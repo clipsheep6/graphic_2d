@@ -57,23 +57,23 @@ struct TextStyle {
     TextDecoration decoration_ = TextDecoration::NONE;
     Drawing::Color decorationColor_ = Drawing::Color::COLOR_TRANSPARENT;
     TextDecorationStyle decorationStyle_ = TextDecorationStyle::Solid;
-    double decorationThicknessMultiplier_ = 1.0;
+    double decorationThicknessScale_ = 1.0;
     FontWeight fontWeight_ = FontWeight::W400;
     FontStyle fontStyle_ = FontStyle::Normal;
-    TextBaseline textBaseline_ = TextBaseline::Alphabetic;
+    TextBaseline baseline_ = TextBaseline::Alphabetic;
     std::vector<std::string> fontFamilies_;
     double fontSize_ = 14.0;
     double letterSpacing_ = 0.0;
     double wordSpacing_ = 0.0;
-    double height_ = 1.0;
-    bool hasHeightOverride_ = false;
+    double heightScale_ = 1.0;
+    bool heightOnly_ = false;
     std::string locale_;
     std::optional<SkPaint> background_; // SKIA
     std::optional<SkPaint> foreground_; // SKIA
     // if Pen and SkPaint are setting, use pen first
     std::optional<Drawing::Pen> backgroundPen_;
     std::optional<Drawing::Pen> foregroundPen_;
-    std::vector<TextShadow> textShadows_;
+    std::vector<TextShadow> shadows_;
     FontFeatures fontFeatures_;
 
     bool operator ==(const TextStyle &rhs) const;

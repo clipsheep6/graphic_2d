@@ -25,19 +25,19 @@
 
 namespace OHOS {
 namespace Rosen {
-enum class PlaceholderAlignment {
-    Baseline,
+enum class PlaceholderVerticalAlignment {
+    OffsetAtBaseline,
     AboveBaseline,
     BelowBaseline,
-    Top,
-    Bottom,
-    Middle,
+    TopOfRowBox,
+    BottomOfRowBox,
+    CenterOfRowBox,
 };
 
-struct PlaceholderRun {
+struct PlaceholderSpan {
     double width;
     double height;
-    PlaceholderAlignment alignment;
+    PlaceholderVerticalAlignment alignment;
     TextBaseline baseline;
     double baselineOffset;
 };
@@ -48,10 +48,10 @@ public:
         std::shared_ptr<FontCollection> collection);
     virtual ~TypographyCreate() = default;
     virtual void PushStyle(const TextStyle& style) = 0;
-    virtual void Pop() = 0;
-    virtual void AddText(const std::u16string& text) = 0;
-    virtual void AddPlaceholder(PlaceholderRun& span) = 0;
-    virtual std::unique_ptr<Typography> Build() = 0;
+    virtual void PopStyle() = 0;
+    virtual void AppendText(const std::u16string& text) = 0;
+    virtual void AppendPlaceholder(const PlaceholderSpan& span) = 0;
+    virtual std::unique_ptr<Typography> CreateTypography() = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

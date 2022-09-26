@@ -82,20 +82,20 @@ bool TextStyle::operator ==(const TextStyle &rhs) const
            decoration_ == rhs.decoration_ &&
            decorationColor_ == rhs.decorationColor_ &&
            decorationStyle_ == rhs.decorationStyle_ &&
-           decorationThicknessMultiplier_ == rhs.decorationThicknessMultiplier_ &&
+           decorationThicknessScale_ == rhs.decorationThicknessScale_ &&
            fontWeight_ == rhs.fontWeight_ &&
            fontStyle_ == rhs.fontStyle_ &&
-           textBaseline_ == rhs.textBaseline_ &&
+           baseline_ == rhs.baseline_ &&
            fontFamilies_ == rhs.fontFamilies_ &&
            fontSize_ == rhs.fontSize_ &&
            letterSpacing_ == rhs.letterSpacing_ &&
            wordSpacing_ == rhs.wordSpacing_ &&
-           height_ == rhs.height_ &&
-           hasHeightOverride_ == rhs.hasHeightOverride_ &&
+           heightScale_ == rhs.heightScale_ &&
+           heightOnly_ == rhs.heightOnly_ &&
            locale_ == rhs.locale_ &&
            background_ == rhs.background_ &&
            foreground_ == rhs.foreground_ &&
-           textShadows_ == rhs.textShadows_ &&
+           shadows_ == rhs.shadows_ &&
            fontFeatures_ == rhs.fontFeatures_;
 }
 } // namespace Rosen

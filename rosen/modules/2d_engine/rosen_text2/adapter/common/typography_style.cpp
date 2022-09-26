@@ -24,8 +24,8 @@ TextStyle TypographyStyle::GetTextStyle() const
         .fontStyle_ = fontStyle_,
         .fontFamilies_ = { fontFamily_ },
         .fontSize_ = fontSize_,
-        .height_ = height_,
-        .hasHeightOverride_ = hasHeightOverride_,
+        .heightScale_ = heightScale_,
+        .heightOnly_ = heightOnly_,
         .locale_ = locale_,
     };
     if (fontSize_ >= 0) {
@@ -35,17 +35,7 @@ TextStyle TypographyStyle::GetTextStyle() const
     return style;
 }
 
-bool TypographyStyle::UnlimitedLines() const
-{
-    return maxLines_ == 1e9;
-}
-
-bool TypographyStyle::Ellipsized() const
-{
-    return !ellipsis_.empty();
-}
-
-TextAlign TypographyStyle::EffectiveAlign() const
+TextAlign TypographyStyle::GetEffectiveAlign() const
 {
     if (textAlign_ == TextAlign::Start) {
         return (textDirection_ == TextDirection::LTR) ? TextAlign::Left : TextAlign::Right;
@@ -54,6 +44,16 @@ TextAlign TypographyStyle::EffectiveAlign() const
     } else {
         return textAlign_;
     }
+}
+
+bool TypographyStyle::IsUnlimitedLines() const
+{
+    return maxLines_ == 1e9;
+}
+
+bool TypographyStyle::IsEllipsized() const
+{
+    return !ellipsis_.empty();
 }
 } // namespace Rosen
 } // namespace OHOS

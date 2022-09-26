@@ -42,12 +42,12 @@ public:
     void Paint(SkCanvas *canvas, double x, double y) override;
     void Paint(Drawing::Canvas *canvas, double x, double y) override;
 
-    std::vector<TextBox> GetRectsForRange(size_t start, size_t end,
-                                          RectHeightStyle heightStyle,
-                                          RectWidthStyle widthStyle) override;
-    std::vector<TextBox> GetRectsForPlaceholders() override;
-    PositionAndAffinity GetGlyphPositionAtCoordinate(double dx, double dy) override;
-    Range GetWordBoundary(size_t offset) override;
+    std::vector<TextRect> GetTextRectsByBoundary(size_t left, size_t right,
+                                                TextRectHeightStyle heightStyle,
+                                                TextRectWidthStyle widthStyle) override;
+    std::vector<TextRect> GetTextRectsOfPlaceholders() override;
+    IndexAndAffinity GetGlyphIndexByCoordinate(double x, double y) override;
+    Boundary GetWordBoundaryByIndex(size_t index) override;
 
 private:
     std::unique_ptr<txt::Paragraph> paragraph_ = nullptr;

@@ -40,23 +40,23 @@ void TypographyCreate::PushStyle(const TextStyle& style)
     builder_->PushStyle(txtTextStyle);
 }
 
-void TypographyCreate::Pop()
+void TypographyCreate::PopStyle()
 {
     builder_->Pop();
 }
 
-void TypographyCreate::AddText(const std::u16string& text)
+void TypographyCreate::AppendText(const std::u16string& text)
 {
     builder_->AddText(text);
 }
 
-void TypographyCreate::AddPlaceholder(PlaceholderRun& span)
+void TypographyCreate::AppendPlaceholder(const PlaceholderSpan& span)
 {
     auto txtPlaceholderRun = Convert(span);
     builder_->AddPlaceholder(txtPlaceholderRun);
 }
 
-std::unique_ptr<OHOS::Rosen::Typography> TypographyCreate::Build()
+std::unique_ptr<OHOS::Rosen::Typography> TypographyCreate::CreateTypography()
 {
     auto paragraph = builder_->Build();
     return std::make_unique<Typography>(std::move(paragraph));

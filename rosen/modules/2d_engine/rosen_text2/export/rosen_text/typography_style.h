@@ -29,18 +29,18 @@ struct TypographyStyle {
     FontStyle fontStyle_ = FontStyle::Normal;
     std::string fontFamily_ = "";
     double fontSize_ = 14;
-    double height_ = 1;
-    bool hasHeightOverride_ = false;
-    bool strutEnabled_ = false;
+    double heightScale_ = 1;
+    bool heightOnly_ = false;
+    bool useLineStyle_ = false;
 
-    FontWeight strutFontWeight_ = FontWeight::W400;
-    FontStyle strutFontStyle_ = FontStyle::Normal;
-    std::vector<std::string> strutFontFamilies_;
-    double strutFontSize_ = 14;
-    double strutHeight_ = 1;
-    bool strutHasHeightOverride_ = false;
-    double strutLeading_ = -1;
-    bool forceStrutHeight_ = false;
+    FontWeight lineStyleFontWeight_ = FontWeight::W400;
+    FontStyle lineStyleFontStyle_ = FontStyle::Normal;
+    std::vector<std::string> lineStyleFontFamilies_;
+    double lineStyleFontSize_ = 14;
+    double lineStyleHeightScale_ = 1;
+    bool lineStyleHeightOnly_ = false;
+    double lineStyleSpacingScale_ = -1;
+    bool lineStyleOnly_ = false;
 
     TextAlign textAlign_ = TextAlign::Start;
     TextDirection textDirection_ = TextDirection::LTR;
@@ -52,9 +52,9 @@ struct TypographyStyle {
     WordBreakType wordBreakType_ = WordBreakType::BreakWord;
 
     TextStyle GetTextStyle() const;
-    bool UnlimitedLines() const;
-    bool Ellipsized() const;
-    TextAlign EffectiveAlign() const;
+    TextAlign GetEffectiveAlign() const;
+    bool IsUnlimitedLines() const;
+    bool IsEllipsized() const;
 };
 } // namespace Rosen
 } // namespace OHOS

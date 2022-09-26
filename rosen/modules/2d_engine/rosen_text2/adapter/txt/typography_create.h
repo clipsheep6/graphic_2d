@@ -27,10 +27,10 @@ class TypographyCreate : public ::OHOS::Rosen::TypographyCreate {
 public:
     TypographyCreate(const TypographyStyle& style, std::shared_ptr<FontCollection> collection);
     void PushStyle(const TextStyle& style) override;
-    void Pop() override;
-    void AddText(const std::u16string& text) override;
-    void AddPlaceholder(PlaceholderRun& span) override;
-    std::unique_ptr<Typography> Build() override;
+    void PopStyle() override;
+    void AppendText(const std::u16string& text) override;
+    void AppendPlaceholder(const PlaceholderSpan& span) override;
+    std::unique_ptr<Typography> CreateTypography() override;
 
 private:
     std::unique_ptr<txt::ParagraphBuilder> builder_ = nullptr;

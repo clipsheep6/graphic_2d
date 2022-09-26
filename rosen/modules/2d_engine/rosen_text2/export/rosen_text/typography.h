@@ -27,43 +27,43 @@
 
 namespace OHOS {
 namespace Rosen {
-enum class RectWidthStyle {
+enum class TextRectWidthStyle {
     Tight,
     Max,
+};
+
+enum class TextRectHeightStyle {
+    Tight,
+    CoverTopAndBottom,
+    CoverHalfTopAndBottom,
+    CoverTop,
+    CoverBottom,
+    FollowByStrut,
+};
+
+struct TextRect {
+    Drawing::RectF rect_;
+    TextDirection direction_;
+    TextRect(Drawing::RectF rect, TextDirection direction);
 };
 
 enum class Affinity {
-    Upstream,
-    Downstream,
+    Prev,
+    Next,
 };
 
-enum class RectHeightStyle {
-    Tight,
-    Max,
-    IncludeLinespaceMiddle,
-    IncludeLinespaceTop,
-    IncludeLinespaceBottom,
-    Strut,
-};
-
-struct TextBox {
-    Drawing::RectF rect_;
-    TextDirection direction_;
-    TextBox(Drawing::RectF rect, TextDirection direction);
-};
-
-struct PositionAndAffinity {
-    size_t pos_;
+struct IndexAndAffinity {
+    size_t index_;
     Affinity affinity_;
-    PositionAndAffinity(size_t pos, Affinity affinity);
+    IndexAndAffinity(size_t index, Affinity affinity);
 };
 
-struct Range {
-    size_t start_;
-    size_t end_;
+struct Boundary {
+    size_t leftIndex_; // include leftIndex_
+    size_t rightIndex_; // not include rightIndex_
 
-    Range(size_t start, size_t end);
-    bool operator ==(const Range& rhs) const;
+    Boundary(size_t left, size_t right);
+    bool operator ==(const Boundary& rhs) const;
 };
 
 class Typography {
@@ -85,12 +85,12 @@ public:
     virtual void Paint(SkCanvas *canvas, double x, double y) = 0; // SKIA
     virtual void Paint(Drawing::Canvas *canvas, double x, double y) = 0; // DRAWING
 
-    virtual std::vector<TextBox> GetRectsForRange(size_t start, size_t end,
-                                                  RectHeightStyle heightStyle,
-                                                  RectWidthStyle widthStyle) = 0;
-    virtual std::vector<TextBox> GetRectsForPlaceholders() = 0;
-    virtual PositionAndAffinity GetGlyphPositionAtCoordinate(double dx, double dy) = 0;
-    virtual Range GetWordBoundary(size_t offset) = 0;
+    virtual std::vector<TextRect> GetTextRectsByBoundary(size_t left, size_t right,
+                                                         TextRectHeightStyle heightStyle,
+                                                         TextRectWidthStyle widthStyle) = 0;
+    virtual std::vector<TextRect> GetTextRectsOfPlaceholders() = 0;
+    virtual IndexAndAffinity GetGlyphIndexByCoordinate(double x, double y) = 0;
+    virtual Boundary GetWordBoundaryByIndex(size_t index) = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

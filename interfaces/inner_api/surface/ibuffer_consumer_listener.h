@@ -25,7 +25,8 @@ public:
     virtual ~IBufferConsumerListener() = default;
     virtual void OnBufferAvailable() = 0;
     virtual void OnTunnelHandleChange() {};
-    virtual void GoBackground() {};
+    virtual void OnGoBackground() {};
+    virtual void OnCleanCache() {};
 };
 
 class IBufferConsumerListenerClazz {
@@ -33,7 +34,8 @@ public:
     virtual ~IBufferConsumerListenerClazz() = default;
     virtual void OnBufferAvailable() = 0;
     virtual void OnTunnelHandleChange() {};
-    virtual void GoBackground() {};
+    virtual void OnGoBackground() {};
+    virtual void OnCleanCache() {};
 };
 } // namespace OHOS
 

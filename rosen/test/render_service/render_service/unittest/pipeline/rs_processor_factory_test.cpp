@@ -38,7 +38,7 @@ void RSProcessorFactoryTest::TearDown() {}
  * @tc.name: CreateAndDestroy001
  * @tc.desc:
  * @tc.type:
- * @tc.require:
+ * @tc.require: issueI5T8FR
  * @tc.author:
  */
 HWTEST_F(RSProcessorFactoryTest, CreateAndDestroy001, TestSize.Level1)
@@ -54,7 +54,7 @@ HWTEST_F(RSProcessorFactoryTest, CreateAndDestroy001, TestSize.Level1)
  * @tc.name: CreateProcessor001
  * @tc.desc:
  * @tc.type:
- * @tc.require:
+ * @tc.require: issueI5T8FR
  * @tc.author:
  */
 HWTEST_F(RSProcessorFactoryTest, CreateProcessor001, TestSize.Level1)
@@ -68,7 +68,7 @@ HWTEST_F(RSProcessorFactoryTest, CreateProcessor001, TestSize.Level1)
  * @tc.name: CreateProcessor002
  * @tc.desc:
  * @tc.type:
- * @tc.require:
+ * @tc.require: issueI5T8FR
  * @tc.author:
  */
 HWTEST_F(RSProcessorFactoryTest, CreateProcessor002, TestSize.Level1)
@@ -82,7 +82,7 @@ HWTEST_F(RSProcessorFactoryTest, CreateProcessor002, TestSize.Level1)
  * @tc.name: CreateProcessor003
  * @tc.desc:
  * @tc.type:
- * @tc.require:
+ * @tc.require: issueI5T8FR
  * @tc.author:
  */
 HWTEST_F(RSProcessorFactoryTest, CreateProcessor003, TestSize.Level1)

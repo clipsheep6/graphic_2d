@@ -44,6 +44,7 @@ void RSSurfaceNodeTest::TearDown() {}
  * @tc.name: Create001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, Create001, TestSize.Level1)
 {
@@ -60,6 +61,7 @@ HWTEST_F(RSSurfaceNodeTest, Create001, TestSize.Level1)
  * @tc.name: CreateNodeInRenderThread001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, CreateNodeInRenderThread001, TestSize.Level1)
 {
@@ -75,6 +77,7 @@ HWTEST_F(RSSurfaceNodeTest, CreateNodeInRenderThread001, TestSize.Level1)
  * @tc.name: SetBufferAvailableCallback001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetBufferAvailableCallback001, TestSize.Level1)
 {
@@ -93,6 +96,7 @@ HWTEST_F(RSSurfaceNodeTest, SetBufferAvailableCallback001, TestSize.Level1)
  * @tc.name: SetandGetBounds001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBounds001, TestSize.Level1)
 {
@@ -111,6 +115,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBounds001, TestSize.Level1)
  * @tc.name: SetandGetBounds002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBounds002, TestSize.Level1)
 {
@@ -129,6 +134,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBounds002, TestSize.Level1)
  * @tc.name: SetandGetBounds003
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBounds003, TestSize.Level1)
 {
@@ -147,6 +153,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBounds003, TestSize.Level1)
  * @tc.name: SetandGetBounds004
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBounds004, TestSize.Level1)
 {
@@ -166,6 +173,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBounds004, TestSize.Level1)
  * @tc.name: SetandGetBounds005
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBounds005, TestSize.Level1)
 {
@@ -185,6 +193,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBounds005, TestSize.Level1)
  * @tc.name: SetandGetBounds006
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBounds006, TestSize.Level1)
 {
@@ -204,6 +213,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBounds006, TestSize.Level1)
  * @tc.name: SetandGetBoundsWidth001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsWidth001, TestSize.Level1)
 {
@@ -218,6 +228,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsWidth001, TestSize.Level1)
  * @tc.name: SetandGetBoundsWidth002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsWidth002, TestSize.Level1)
 {
@@ -232,6 +243,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsWidth002, TestSize.Level1)
  * @tc.name: SetandGetBoundsWidth003
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsWidth003, TestSize.Level1)
 {
@@ -246,6 +258,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsWidth003, TestSize.Level1)
  * @tc.name: SetandGetBoundsWidth004
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsWidth004, TestSize.Level1)
 {
@@ -260,6 +273,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsWidth004, TestSize.Level1)
  * @tc.name: SetandGetBoundsWidth005
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsWidth005, TestSize.Level1)
 {
@@ -274,6 +288,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsWidth005, TestSize.Level1)
  * @tc.name: SetandGetBoundsHeight001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsHeight001, TestSize.Level1)
 {
@@ -288,6 +303,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsHeight001, TestSize.Level1)
  * @tc.name: SetandGetBoundsHeight002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsHeight002, TestSize.Level1)
 {
@@ -302,6 +318,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsHeight002, TestSize.Level1)
  * @tc.name: SetandGetBoundsHeight003
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsHeight003, TestSize.Level1)
 {
@@ -316,6 +333,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsHeight003, TestSize.Level1)
  * @tc.name: SetandGetBoundsHeight004
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsHeight004, TestSize.Level1)
 {
@@ -330,6 +348,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsHeight004, TestSize.Level1)
  * @tc.name: SetandGetBoundsHeight005
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsHeight005, TestSize.Level1)
 {
@@ -344,6 +363,7 @@ HWTEST_F(RSSurfaceNodeTest, SetandGetBoundsHeight005, TestSize.Level1)
  * @tc.name: SetSecurityLayer001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetSecurityLayer001, TestSize.Level1)
 {
@@ -357,6 +377,7 @@ HWTEST_F(RSSurfaceNodeTest, SetSecurityLayer001, TestSize.Level1)
  * @tc.name: SetSecurityLayer002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, SetSecurityLayer002, TestSize.Level1)
 {
@@ -370,6 +391,7 @@ HWTEST_F(RSSurfaceNodeTest, SetSecurityLayer002, TestSize.Level1)
  * @tc.name: GetSecurityLayer001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, GetSecurityLayer001, TestSize.Level1)
 {
@@ -382,6 +404,7 @@ HWTEST_F(RSSurfaceNodeTest, GetSecurityLayer001, TestSize.Level1)
  * @tc.name: Marshalling001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, Marshalling001, TestSize.Level1)
 {
@@ -398,6 +421,7 @@ HWTEST_F(RSSurfaceNodeTest, Marshalling001, TestSize.Level1)
  * @tc.name: Marshalling002
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, Marshalling002, TestSize.Level1)
 {
@@ -410,6 +434,7 @@ HWTEST_F(RSSurfaceNodeTest, Marshalling002, TestSize.Level1)
  * @tc.name: Marshalling003
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, Marshalling003, TestSize.Level1)
 {
@@ -427,6 +452,7 @@ HWTEST_F(RSSurfaceNodeTest, Marshalling003, TestSize.Level1)
  * @tc.name: Marshalling004
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, Marshalling004, TestSize.Level1)
 {
@@ -445,6 +471,7 @@ HWTEST_F(RSSurfaceNodeTest, Marshalling004, TestSize.Level1)
  * @tc.name: Marshalling005
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, Marshalling005, TestSize.Level1)
 {
@@ -465,6 +492,7 @@ HWTEST_F(RSSurfaceNodeTest, Marshalling005, TestSize.Level1)
  * @tc.name: GetSurface001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, GetSurface001, TestSize.Level1)
 {
@@ -480,6 +508,7 @@ HWTEST_F(RSSurfaceNodeTest, GetSurface001, TestSize.Level1)
  * @tc.name: GetType001
  * @tc.desc:
  * @tc.type:FUNC
+ * @tc.require: issueI5T8FR
  */
 HWTEST_F(RSSurfaceNodeTest, GetType001, TestSize.Level1)
 {

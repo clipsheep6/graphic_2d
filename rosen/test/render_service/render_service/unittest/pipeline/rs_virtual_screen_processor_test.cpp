@@ -39,7 +39,7 @@ void RSVirtualScreenProcessorTest::TearDown() {}
  * @tc.name: CreateAndDestroy001
  * @tc.desc:
  * @tc.type:
- * @tc.require:
+ * @tc.require: issueI5T8FR
  * @tc.author:
  */
 HWTEST_F(RSVirtualScreenProcessorTest, CreateAndDestroy001, TestSize.Level1)
@@ -52,7 +52,7 @@ HWTEST_F(RSVirtualScreenProcessorTest, CreateAndDestroy001, TestSize.Level1)
  * @tc.name: CreateAndDestroy002
  * @tc.desc:
  * @tc.type:
- * @tc.require:
+ * @tc.require: issueI5T8FR
  * @tc.author:
  */
 HWTEST_F(RSVirtualScreenProcessorTest, CreateAndDestroy002, TestSize.Level1)
@@ -66,7 +66,7 @@ HWTEST_F(RSVirtualScreenProcessorTest, CreateAndDestroy002, TestSize.Level1)
  * @tc.name: ProcessSurface001
  * @tc.desc:
  * @tc.type:
- * @tc.require:
+ * @tc.require: issueI5T8FR
  * @tc.author:
  */
 HWTEST_F(RSVirtualScreenProcessorTest, ProcessSurface001, TestSize.Level1)
@@ -82,7 +82,7 @@ HWTEST_F(RSVirtualScreenProcessorTest, ProcessSurface001, TestSize.Level1)
  * @tc.name: PostProcess001
  * @tc.desc:
  * @tc.type:
- * @tc.require:
+ * @tc.require: issueI5T8FR
  * @tc.author:
  */
 HWTEST_F(RSVirtualScreenProcessorTest, PostProcess001, TestSize.Level1)

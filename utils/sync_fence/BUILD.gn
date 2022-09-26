@@ -55,6 +55,7 @@ ohos_shared_library("sync_fence") {
   external_deps = [
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "eventhandler:libeventhandler",
     "ipc:ipc_core",
   ]
 

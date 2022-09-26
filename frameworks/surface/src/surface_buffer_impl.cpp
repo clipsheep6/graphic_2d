@@ -24,6 +24,7 @@
 #include "buffer_log.h"
 #include "buffer_manager.h"
 #include "buffer_extra_data_impl.h"
+#include "display_type.h"
 #include "native_buffer.h"
 
 namespace OHOS {
@@ -156,6 +157,7 @@ GSError SurfaceBufferImpl::Map()
         }
         handle = handle_;
     }
+    handle->usage |= (BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAFE_MEM_DMA);
     void *virAddr = displayGralloc_->Mmap(*handle);
     if (virAddr == nullptr || virAddr == MAP_FAILED) {
         return GSERROR_API_FAILED;

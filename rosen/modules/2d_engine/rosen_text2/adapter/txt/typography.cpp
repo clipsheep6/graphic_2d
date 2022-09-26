@@ -15,13 +15,14 @@
 
 #include "typography.h"
 
-#include "convert.h"
-
+#include "engine_adapter/skia_adapter/skia_canvas.h"
 #include "txt/paragraph_txt.h"
+
+#include "convert.h"
 
 namespace OHOS {
 namespace Rosen {
-TextBox::TextBox(SkRect rect, TextDirection direction)
+TextBox::TextBox(Drawing::RectF rect, TextDirection direction)
 {
     rect_ = rect;
     direction_ = direction;
@@ -115,6 +116,14 @@ void Typography::Layout(double width)
 void Typography::Paint(SkCanvas *canvas, double x, double y)
 {
     return paragraph_->Paint(canvas, x, y);
+}
+
+void Typography::Paint(Drawing::Canvas *drawCanvas, double x, double y)
+{
+    std::shared_ptr<Drawing::CoreCanvasImpl> coreCanvas = drawCanvas->GetCanvasData();
+    auto skiacavas = static_cast<Drawing::SkiaCanvas *>(coreCanvas.get());
+    auto canvas = skiacavas->ExportSkCanvas();
+    paragraph_->Paint(canvas, x, y);
 }
 
 std::vector<TextBox> Typography::GetRectsForRange(size_t start, size_t end,

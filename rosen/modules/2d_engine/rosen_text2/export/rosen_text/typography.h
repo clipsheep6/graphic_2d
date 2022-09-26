@@ -19,7 +19,9 @@
 #include <cstddef>
 #include <vector>
 
-#include "include/core/SkCanvas.h"
+#include "draw/canvas.h"
+#include "include/core/SkCanvas.h" // SKIA
+#include "utils/rect.h"
 
 #include "typography_types.h"
 
@@ -45,9 +47,9 @@ enum class RectHeightStyle {
 };
 
 struct TextBox {
-    SkRect rect_;
+    Drawing::RectF rect_;
     TextDirection direction_;
-    TextBox(SkRect rect, TextDirection direction);
+    TextBox(Drawing::RectF rect, TextDirection direction);
 };
 
 struct PositionAndAffinity {
@@ -80,7 +82,8 @@ public:
 
     virtual void SetIndents(const std::vector<float> &indents) = 0;
     virtual void Layout(double width) = 0;
-    virtual void Paint(SkCanvas *canvas, double x, double y) = 0;
+    virtual void Paint(SkCanvas *canvas, double x, double y) = 0; // SKIA
+    virtual void Paint(Drawing::Canvas *canvas, double x, double y) = 0; // DRAWING
 
     virtual std::vector<TextBox> GetRectsForRange(size_t start, size_t end,
                                                   RectHeightStyle heightStyle,

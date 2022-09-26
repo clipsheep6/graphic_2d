@@ -54,7 +54,7 @@ TextShadow::TextShadow()
 {
 }
 
-TextShadow::TextShadow(SkColor color, SkPoint offset, double blurRadius)
+TextShadow::TextShadow(Drawing::Color color, Drawing::Point offset, double blurRadius)
 {
     color_ = color;
     offset_ = offset;
@@ -73,7 +73,7 @@ bool TextShadow::operator !=(const TextShadow& rhs) const
 
 bool TextShadow::HasShadow() const
 {
-    return !offset_.isZero() || blurRadius_ != 0.0;
+    return offset_.GetX() != 0 || offset_.GetY() != 0 || blurRadius_ != 0.0;
 }
 
 bool TextStyle::operator ==(const TextStyle &rhs) const

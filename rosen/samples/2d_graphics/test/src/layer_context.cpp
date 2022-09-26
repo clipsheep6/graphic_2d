@@ -18,6 +18,7 @@
 #include <securec.h>
 
 #include "hdi_log.h"
+#include "utils/log.h"
 
 using namespace OHOS;
 using namespace Rosen;

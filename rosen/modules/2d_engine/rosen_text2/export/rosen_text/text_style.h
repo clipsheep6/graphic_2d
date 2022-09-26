@@ -20,7 +20,10 @@
 #include <string>
 #include <vector>
 
-#include "include/core/SkPaint.h"
+#include "draw/color.h"
+#include "draw/pen.h"
+#include "include/core/SkPaint.h" // SKIA
+#include "utils/point.h"
 
 #include "typography_types.h"
 
@@ -38,21 +41,21 @@ private:
 };
 
 struct TextShadow {
-    SkColor color_ = SK_ColorBLACK;
-    SkPoint offset_;
+    Drawing::Color color_ = Drawing::Color::COLOR_BLACK;
+    Drawing::PointF offset_;
     double blurRadius_ = 0.0;
 
     TextShadow();
-    TextShadow(SkColor color, SkPoint offset, double blurRadius);
+    TextShadow(Drawing::Color color, Drawing::PointF offset, double blurRadius);
     bool operator ==(const TextShadow& rhs) const;
     bool operator !=(const TextShadow& rhs) const;
     bool HasShadow() const;
 };
 
 struct TextStyle {
-    SkColor color_ = SK_ColorWHITE;
+    Drawing::Color color_ = Drawing::Color::COLOR_WHITE;
     TextDecoration decoration_ = TextDecoration::NONE;
-    SkColor decorationColor_ = SK_ColorTRANSPARENT;
+    Drawing::Color decorationColor_ = Drawing::Color::COLOR_TRANSPARENT;
     TextDecorationStyle decorationStyle_ = TextDecorationStyle::Solid;
     double decorationThicknessMultiplier_ = 1.0;
     FontWeight fontWeight_ = FontWeight::W400;
@@ -65,8 +68,11 @@ struct TextStyle {
     double height_ = 1.0;
     bool hasHeightOverride_ = false;
     std::string locale_;
-    std::optional<SkPaint> background_;
-    std::optional<SkPaint> foreground_;
+    std::optional<SkPaint> background_; // SKIA
+    std::optional<SkPaint> foreground_; // SKIA
+    // if Pen and SkPaint are setting, use pen first
+    std::optional<Drawing::Pen> backgroundPen_;
+    std::optional<Drawing::Pen> foregroundPen_;
     std::vector<TextShadow> textShadows_;
     FontFeatures fontFeatures_;
 

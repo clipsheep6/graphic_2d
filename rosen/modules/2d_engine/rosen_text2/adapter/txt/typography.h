@@ -40,6 +40,7 @@ public:
     void SetIndents(const std::vector<float> &indents) override;
     void Layout(double width) override;
     void Paint(SkCanvas *canvas, double x, double y) override;
+    void Paint(Drawing::Canvas *canvas, double x, double y) override;
 
     std::vector<TextBox> GetRectsForRange(size_t start, size_t end,
                                           RectHeightStyle heightStyle,

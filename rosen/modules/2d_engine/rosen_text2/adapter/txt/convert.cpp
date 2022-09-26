@@ -36,7 +36,8 @@ Range Convert(const txt::Paragraph::Range<size_t> &range)
 
 TextBox Convert(const txt::Paragraph::TextBox &box)
 {
-    return { box.rect, static_cast<TextDirection>(box.direction) };
+    Drawing::RectF rect(box.rect.fLeft, box.rect.fTop, box.rect.fRight, box.rect.fBottom);
+    return { rect, static_cast<TextDirection>(box.direction) };
 }
 
 txt::Paragraph::RectHeightStyle Convert(const RectHeightStyle &style)
@@ -90,9 +91,17 @@ txt::PlaceholderRun Convert(const PlaceholderRun &run)
 txt::TextStyle Convert(const TextStyle &style)
 {
     txt::TextStyle textStyle;
-    textStyle.color = style.color_;
+    auto color = SkColorSetARGB(style.color_.GetAlpha(),
+                                style.color_.GetRed(),
+                                style.color_.GetGreen(),
+                                style.color_.GetBlue());
+    textStyle.color = color;
     textStyle.decoration = style.decoration_;
-    textStyle.decoration_color = style.decorationColor_;
+    auto decorationColor = SkColorSetARGB(style.decorationColor_.GetAlpha(),
+                                          style.decorationColor_.GetRed(),
+                                          style.decorationColor_.GetGreen(),
+                                          style.decorationColor_.GetBlue());
+    textStyle.decoration_color = decorationColor;
     textStyle.decoration_style = static_cast<txt::TextDecorationStyle>(style.decorationStyle_);
     textStyle.decoration_thickness_multiplier = style.decorationThicknessMultiplier_;
     textStyle.font_weight = static_cast<txt::FontWeight>(style.fontWeight_);
@@ -111,7 +120,10 @@ txt::TextStyle Convert(const TextStyle &style)
     textStyle.foreground = style.foreground_.value_or(SkPaint());
 
     for (const auto &[color, offset, radius] : style.textShadows_) {
-        textStyle.text_shadows.emplace_back(color, offset, radius);
+        auto shadowColor = SkColorSetARGB(color.GetAlpha(), color.GetRed(),
+                                          color.GetGreen(), color.GetBlue());
+        auto shadowOffset = SkPoint::Make(offset.GetX(), offset.GetY());
+        textStyle.text_shadows.emplace_back(shadowColor, shadowOffset, radius);
     }
 
     for (const auto &[tag, value] : style.fontFeatures_.GetFontFeatures()) {

@@ -32,7 +32,6 @@
 #include "skia_picture.h"
 
 #include "impl_interface/core_canvas_impl.h"
-#include "utils/log.h"
 
 namespace OHOS {
 namespace Rosen {

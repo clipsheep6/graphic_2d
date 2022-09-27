@@ -52,10 +52,6 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
     std::shared_ptr<Media::PixelMap> pixelmap;
     int pixmapWidth = node->GetRenderProperties().GetBoundsWidth();
     int pixmapHeight = node->GetRenderProperties().GetBoundsHeight();
-    float boundsPositionX = node->GetRenderProperties().GetBoundsPositionX();
-    float boundsPositionY = node->GetRenderProperties().GetBoundsPositionY();
-    node->GetMutableRenderProperties().SetBoundsPositionX(0);
-    node->GetMutableRenderProperties().SetBoundsPositionY(0);
     Media::InitializationOptions opts;
     opts.size.width = ceil(pixmapWidth * scaleX_);
     opts.size.height = ceil(pixmapHeight * scaleY_);
@@ -87,8 +83,6 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
     visitor->SetSurface(skSurface.get());
     // Draw
     node->Process(visitor);
-    node->GetMutableRenderProperties().SetBoundsPositionX(boundsPositionX);
-    node->GetMutableRenderProperties().SetBoundsPositionY(boundsPositionY);
 #ifdef ACE_ENABLE_GL
     sk_sp<SkImage> img(skSurface.get()->makeImageSnapshot());
     if (!img) {
@@ -161,6 +155,8 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessRootRenderNode(RSRootRe
 
     canvas_->save();
     canvas_->clipRect(SkRect::MakeWH(node.GetSurfaceWidth(), node.GetSurfaceHeight()));
+    // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
+    canvas_->translate(-node.GetRenderProperties().GetBoundsPositionX(), -node.GetRenderProperties().GetBoundsPositionY());
     canvas_->clear(SK_ColorTRANSPARENT);
     ProcessCanvasRenderNode(node);
     canvas_->restore();

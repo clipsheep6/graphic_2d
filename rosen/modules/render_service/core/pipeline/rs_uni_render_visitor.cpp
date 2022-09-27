@@ -162,6 +162,7 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     }
     dirtyFlag_ |= node.IsRotationChanged();
     node.UpdateRotation();
+    curAlpha_ = node.GetRenderProperties().GetAlpha();
     PrepareBaseRenderNode(node);
     auto mirrorNode = node.GetMirrorSource().lock();
     if (mirrorNode) {
@@ -185,6 +186,10 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     auto parentSurfaceNodeMatrix = parentSurfaceNodeMatrix_;
     auto& property = node.GetMutableRenderProperties();
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    float alpha = curAlpha_;
+    curAlpha_ *= property.GetAlpha();
+    curAlpha_ *= node.GetContextAlpha();
+    node.SetGlobalAlpha(curAlpha_);
 
     // prepare the surfaceRenderNode whose child is rootRenderNode 
     if (node.IsAppWindow() || node.GetSurfaceNodeType() == RSSurfaceNodeType::STARTING_WINDOW_NODE) {
@@ -222,6 +227,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     PrepareBaseRenderNode(node);
     // restore flags
     parentSurfaceNodeMatrix_ = parentSurfaceNodeMatrix;
+    curAlpha_ = alpha;
     dirtyFlag_ = dirtyFlag;
     if (node.GetDirtyManager() && node.GetDirtyManager()->IsDirty()) {
         auto surfaceNodePtr = std::static_pointer_cast<RSSurfaceRenderNode>(node.shared_from_this());
@@ -246,6 +252,7 @@ void RSUniRenderVisitor::PrepareProxyRenderNode(RSProxyRenderNode& node)
         ROSEN_LOGE("RSUniRenderVisitor::ProcessSurfaceRenderNode, invertMatrix failed");
     }
     node.SetContextMatrix(contextMatrix);
+    node.SetContextAlpha(curAlpha_);
 
     PrepareBaseRenderNode(node);
 }
@@ -275,7 +282,10 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     if (node.IsDirtyRegionUpdated() && curSurfaceDirtyManager_->IsDebugRegionTypeEnable(DebugRegionType::CURRENT_SUB)) {
         curSurfaceDirtyManager_->UpdateDirtyCanvasNodes(node.GetId(), node.GetOldDirty());
     }
+    float alpha = curAlpha_;
+    curAlpha_ *= node.GetRenderProperties().GetAlpha();
     PrepareBaseRenderNode(node);
+    curAlpha_ = alpha;
     dirtyFlag_ = dirtyFlag;
 }
 
@@ -762,20 +772,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
 void RSUniRenderVisitor::ProcessProxyRenderNode(RSProxyRenderNode& node)
 {
-    if (!canvas_) {
-        ROSEN_LOGE("RSUniRenderVisitor::ProcessProxyRenderNode, canvas is nullptr");
-        return;
-    }
-    if (!node.GetRenderProperties().GetVisible()) {
-        ROSEN_LOGD("RSUniRenderVisitor::ProcessProxyRenderNode node : %" PRIu64 " is invisible", node.GetId());
-        node.SetContextAlpha(0.0f);
-        return;
-    }
-#ifdef ROSEN_OHOS
-    node.SetContextAlpha(canvas_->GetAlpha());
-
-    node.ResetSortedChildren();
-#endif
+    ProcessBaseRenderNode(node);
 }
 
 void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)

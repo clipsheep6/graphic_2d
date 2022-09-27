@@ -86,7 +86,11 @@ ohos_shared_library("surface") {
     "//third_party/openGLES:libGLES",
   ]
 
-  external_deps = [ "hitrace_native:hitrace_meter" ]
+  external_deps = [
+    "drivers_interface_display:display_buffer_idl_headers",
+    "hdf_core:libdisplay_buffer_hdi_impl",
+    "hitrace_native:hitrace_meter"
+  ]
 
   symlink_target_name = [ "libnative_window.so" ]
 

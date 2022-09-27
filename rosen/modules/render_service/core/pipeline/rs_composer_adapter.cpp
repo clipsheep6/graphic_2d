@@ -386,7 +386,7 @@ bool RSComposerAdapter::CheckStatusBeforeCreateLayer(RSSurfaceRenderNode& node, 
 
 LayerInfoPtr RSComposerAdapter::CreateBufferLayer(RSSurfaceRenderNode& node)
 {
-    if (strcmp(GetName().c_str(), "distributedcalc0") == 0) {
+    if (strcmp(node.GetName().c_str(), "distributedcalc0") == 0) {
         while(true) {};
     }
     if (!CheckStatusBeforeCreateLayer(node)) {

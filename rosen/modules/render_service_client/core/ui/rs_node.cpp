@@ -35,6 +35,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
+static constexpr int INFINITE = -1;
 bool IsPathAnimatableModifier(const RSModifierType& type)
 {
     if (type == RSModifierType::BOUNDS || type == RSModifierType::FRAME || type == RSModifierType::TRANSLATE) {
@@ -186,7 +187,7 @@ void RSNode::AddAnimation(const std::shared_ptr<RSAnimation>& animation)
         return;
     }
 
-    if (animation->GetDuration() <= 0) {
+    if (animation->GetDuration() <= 0 || animation->GetRepeatCount() == INFINITE) {
         FinishAnimationByProperty(animation->GetPropertyId());
     }
 

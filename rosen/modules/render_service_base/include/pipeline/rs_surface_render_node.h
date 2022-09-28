@@ -313,6 +313,12 @@ public:
         return visibleRegion_.IsIntersectWith(nodeRect);
     }
 
+    inline bool IsCurrentSurfaceNodeTransparent() const
+    {
+        const uint8_t opacity = 255;
+        return !(GetAbilityBgAlpha() == opacity && ROSEN_EQ(GetRenderProperties().GetAlpha(), 1.0f));
+    }
+
     bool SubNodeIntersectWithDirty(const RectI& r) const
     {
         Occlusion::Rect nodeRect { r.left_, r.top_, r.GetRight(), r.GetBottom() };
@@ -329,9 +335,7 @@ public:
             return true;
         }
         // if current node is transparent
-        const uint8_t opacity = 255;
-        if (!(GetAbilityBgAlpha() == opacity &&
-                ROSEN_EQ(GetRenderProperties().GetAlpha(), 1.0f))) {
+        if (IsCurrentSurfaceNodeTransparent()) {
             return dirtyRegionBelowCurrentLayer_.IsIntersectWith(nodeRect);
         }
         return false;
@@ -399,6 +403,34 @@ public:
     {
         positionZ_ = GetRenderProperties().GetPositionZ();
     }
+
+    inline bool HasContainerWindow() const
+    {
+        return !property.GetCornerRadius().IsZero();
+        // return hasContainer_;
+    }
+
+    void ResetSurfaceVisibleRegion()
+    {
+        Occlusion::Rect dstRect{dstRect_.left_, dstRect_.top_, dstRect_.GetRight(), dstRect_.GetBottom()};
+        if (IsCurrentSurfaceNodeTransparent()) {
+            opaqueRegion_ = Occlusion::Region();
+            transparentRegion_ = Occlusion::Region{dstRect};
+        } else {
+            if (IsAppWindow() && HasContainerWindow()) {
+                Occlusion::Rect opaqueRect{ dstRect_.left_ + container_content_padding + container_border_width,
+                                    dstRect_.top_ + container_title_height,
+                                    dstRect_.GetRight() - container_content_padding - container_border_width,
+                                    dstRect_.GetBottom() - container_content_padding - container_border_width};
+                opaqueRegion_ = Occlusion::Region{opaqueRect};
+                transparentRegion_ = Occlusion::Region{dstRect};
+                transparentRegion_.SubSelf(opaqueRegion_);
+            } else {
+                opaqueRegion_ = Occlusion::Region{dstRect};
+                transparentRegion_ = Occlusion::Region();
+            }   
+        }
+    }
 private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
 
@@ -451,6 +483,14 @@ private:
     // if a there a dirty layer under transparent clean layer, transparent layer should refreshed
     Occlusion::Region dirtyRegionBelowCurrentLayer_;
     bool dirtyRegionBelowCurrentLayerIsEmpty_;
+
+    Occlusion::Region opaqueRegion_;            // opaque region of the surface,  typically 
+    Occlusion::Region transparentRegion_;
+    // temporary const value from ACE container_modal_constants.h, will be replaced by uniform interface
+    bool hasContainer_ = true; // cannot distinguish between normal/maximized/floatingwindow/splitwindow, set to true as default
+    int container_title_height = 37 * 2;        // container title height = 74 px
+    int container_content_padding = 4 * 2;      // container <--> content distance 8 px
+    int container_border_width = 1 * 2;         // container border width 2px
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -78,7 +78,8 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
         node->SetFrameGravity(Gravity::RESIZE);
     }
     if (std::strcmp(node->GetName().c_str(), "SystemUi_BatteryPanel") == 0 ||
-        std::strcmp(node->GetName().c_str(), "SystemUi_SoundPanel") == 0) {
+        std::strcmp(node->GetName().c_str(), "SystemUi_SoundPanel") == 0 ||
+        std::strcmp(node->GetName().c_str(), "SystemUi_ControlPanel") == 0) {
         node->SetFrameGravity(Gravity::TOP_LEFT);
     } else {
         node->SetFrameGravity(Gravity::RESIZE);

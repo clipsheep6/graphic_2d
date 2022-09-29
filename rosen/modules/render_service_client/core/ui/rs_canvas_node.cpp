@@ -89,6 +89,9 @@ void RSCanvasNode::FinishRecording()
     auto recording = static_cast<RSRecordingCanvas*>(recordingCanvas_)->GetDrawCmdList();
     delete recordingCanvas_;
     recordingCanvas_ = nullptr;
+    if (recording->GetSize() == 0) {
+        return;
+    }
     DrawCmdListManager::Instance().RegisterDrawCmdList(GetId(), recording);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy == nullptr) {
@@ -115,6 +118,9 @@ void RSCanvasNode::DrawOnNode(RSModifierType type, DrawFunc func)
         return;
     }
     auto recording = recordingCanvas->GetDrawCmdList();
+    if (recording->GetSize() == 0) {
+        return;
+    }
     DrawCmdListManager::Instance().RegisterDrawCmdList(GetId(), recording);
     std::unique_ptr<RSCommand> command =
         std::make_unique<RSCanvasNodeUpdateRecording>(GetId(), recording, type);

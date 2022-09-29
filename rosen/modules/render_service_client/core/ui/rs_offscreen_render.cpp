@@ -45,19 +45,56 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
     }
     // create rs_render_node,because it maybe canvasNode or surfaceNode or rootNode
     auto node = RSRenderThread::Instance().GetContext().GetNodeMap().GetRenderNode<RSRenderNode>(nodeId_);
+    std::shared_ptr<Media::PixelMap> pixelmap;
+    pixelmap = CreatePixelMapByNode(node);
+    auto skSurface = CreateSurface(pixelmap);
+    std::shared_ptr<RSOffscreenRenderVisitor> visitor = std::make_shared<RSOffscreenRenderVisitor>(scaleX_, scaleY_, nodeId_);
+    visitor->SetSurface(skSurface.get());
+    // Draw
+    node->Process(visitor);
+#ifdef ACE_ENABLE_GL
+    sk_sp<SkImage> img(skSurface.get()->makeImageSnapshot());
+    if (!img) {
+        ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: img is nullptr");
+        return nullptr;
+    }
+
+    auto data = (uint8_t *)malloc(pixelmap->GetRowBytes() * pixelmap->GetHeight());
+    if (data == nullptr) {
+        ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: data is nullptr");
+        return nullptr;
+    }
+    SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+    if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
+        ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: readPixels failed");
+        free(data);
+        data = nullptr;
+        return nullptr;
+    }
+    pixelmap->SetPixelsAddr(data, nullptr, pixelmap->GetRowBytes() * pixelmap->GetHeight(),
+        Media::AllocatorType::HEAP_ALLOC, nullptr);
+    return pixelmap;
+#endif
+    return pixelmap;
+}
+
+std::shared_ptr<Media::PixelMap> RSOffscreenRender::CreatePixelMapByNode(std::shared_ptr<RSRenderNode> node)
+{
     if (node == nullptr) {
         ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: node is nullptr");
         return nullptr;
     }
-    std::shared_ptr<Media::PixelMap> pixelmap;
     int pixmapWidth = node->GetRenderProperties().GetBoundsWidth();
     int pixmapHeight = node->GetRenderProperties().GetBoundsHeight();
     Media::InitializationOptions opts;
     opts.size.width = ceil(pixmapWidth * scaleX_);
     opts.size.height = ceil(pixmapHeight * scaleY_);
-    pixelmap = Media::PixelMap::Create(opts);
-    // Get sksurface according to pixelmap
-    std::shared_ptr<RSOffscreenRenderVisitor> visitor = std::make_shared<RSOffscreenRenderVisitor>(scaleX_, scaleY_);  // create a visitor
+    return Media::PixelMap::Create(opts);
+}
+
+sk_sp<SkSurface> RSOffscreenRender::CreateSurface(const std::shared_ptr<Media::PixelMap> pixelmap)
+{
     if (pixelmap == nullptr) {
         ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: pixelmap == nullptr");
         return nullptr;
@@ -76,42 +113,13 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
         return nullptr;
     }
     rc->SetUpGrContext();
-    auto skSurface = SkSurface::MakeRenderTarget(rc->GetGrContext(), SkBudgeted::kNo, info);
-#else
-    auto skSurface = SkSurface::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
+    return SkSurface::MakeRenderTarget(rc->GetGrContext(), SkBudgeted::kNo, info);
 #endif
-    visitor->SetSurface(skSurface.get());
-    // Draw
-    node->Process(visitor);
-#ifdef ACE_ENABLE_GL
-    sk_sp<SkImage> img(skSurface.get()->makeImageSnapshot());
-    if (!img) {
-        ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: img is nullptr");
-        return nullptr;
-    }
-
-    auto data = (uint8_t *)malloc(pixelmap->GetRowBytes() * pixelmap->GetHeight());
-    if (data == nullptr) {
-        ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: data is nullptr");
-        return nullptr;
-    }
-    info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
-        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-    if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
-        ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: readPixels failed");
-        free(data);
-        data = nullptr;
-        return nullptr;
-    }
-    pixelmap->SetPixelsAddr(data, nullptr, pixelmap->GetRowBytes() * pixelmap->GetHeight(),
-        Media::AllocatorType::HEAP_ALLOC, nullptr);
-    return pixelmap;
-#endif
-    return pixelmap;
+    return SkSurface::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
 }
 
-RSOffscreenRender::RSOffscreenRenderVisitor::RSOffscreenRenderVisitor(float scaleX, float scaleY)
-    : scaleX_(scaleX), scaleY_(scaleY)
+RSOffscreenRender::RSOffscreenRenderVisitor::RSOffscreenRenderVisitor(float scaleX, float scaleY, NodeId nodeId)
+    : scaleX_(scaleX), scaleY_(scaleY), nodeId_(nodeId)
 {
 
 }
@@ -136,6 +144,10 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessCanvasRenderNode(RSCanv
         ROSEN_LOGE("ProcessCanvasRenderNode, canvas is nullptr");
         return;
     }
+    if(node.GetId() == nodeId_) {
+        // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
+        canvas_->translate(-node.GetRenderProperties().GetBoundsPositionX(), -node.GetRenderProperties().GetBoundsPositionY());
+    }
     node.ProcessRenderBeforeChildren(*canvas_);
     ProcessBaseRenderNode(node);
     node.ProcessRenderAfterChildren(*canvas_);
@@ -156,7 +168,6 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessRootRenderNode(RSRootRe
     canvas_->save();
     canvas_->clipRect(SkRect::MakeWH(node.GetSurfaceWidth(), node.GetSurfaceHeight()));
     // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
-    canvas_->translate(-node.GetRenderProperties().GetBoundsPositionX(), -node.GetRenderProperties().GetBoundsPositionY());
     canvas_->clear(SK_ColorTRANSPARENT);
     ProcessCanvasRenderNode(node);
     canvas_->restore();
@@ -183,6 +194,10 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessSurfaceRenderNode(RSSur
     }
     if (node.GetSecurityLayer()) {
         return;
+    }
+    if(node.GetId() == nodeId_) {
+        // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
+        canvas_->translate(-node.GetRenderProperties().GetBoundsPositionX(), -node.GetRenderProperties().GetBoundsPositionY());
     }
     // we can't get buffer in renderThread, so use renderService surface capture to process surfaceNode
     std::shared_ptr<RSOffscreenRenderCallback> callback = std::make_shared<RSOffscreenRenderCallback>();

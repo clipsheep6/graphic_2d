@@ -16,6 +16,7 @@
 #ifndef RS_OFFSCREEN_RENDER
 #define RS_OFFSCREEN_RENDER
 
+#include <memory>
 #include "common/rs_common_def.h"
 #include "include/core/SkCanvas.h"
 #include "render/rs_skia_filter.h"
@@ -35,11 +36,13 @@ public:
     RSOffscreenRender() = default;
     ~RSOffscreenRender() = default;
     std::shared_ptr<Media::PixelMap> GetLocalCapture(NodeId nodeId, float scaleX = 1.0f, float scaleY = 1.0f);
+    std::shared_ptr<Media::PixelMap> CreatePixelMapByNode(std::shared_ptr<RSRenderNode> node);
+    sk_sp<SkSurface> CreateSurface(const std::shared_ptr<Media::PixelMap> pixelmap);
 
 private:
     class RSOffscreenRenderVisitor : public RSNodeVisitor {
     public:
-        RSOffscreenRenderVisitor(float scaleX, float scaleY);
+        RSOffscreenRenderVisitor(float scaleX, float scaleY, NodeId nodeId);
         ~RSOffscreenRenderVisitor() noexcept override = default;
         void PrepareBaseRenderNode(RSBaseRenderNode& node) override {}
         void PrepareDisplayRenderNode(RSDisplayRenderNode& node) override {}
@@ -59,6 +62,7 @@ private:
     private:
         float scaleX_ = 1.0f;
         float scaleY_ = 1.0f;
+        NodeId nodeId_;
         std::unique_ptr<RSPaintFilterCanvas> canvas_ = nullptr;
     };
 

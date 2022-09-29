@@ -18,8 +18,7 @@
 #include <map>
 #include <cinttypes>
 #include "buffer_log.h"
-#include "display_type.h"
-#include "external_window.h"
+#include "window.h"
 #include "surface_type.h"
 #include "sync_fence.h"
 
@@ -41,7 +40,7 @@ OHNativeWindow* CreateNativeWindowFromSurface(void* pSurface)
                 *reinterpret_cast<OHOS::sptr<OHOS::Surface> *>(pSurface);
     nativeWindow->config.width = nativeWindow->surface->GetDefaultWidth();
     nativeWindow->config.height = nativeWindow->surface->GetDefaultHeight();
-    nativeWindow->config.usage = HBM_USE_CPU_READ | HBM_USE_MEM_DMA;
+    nativeWindow->config.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_DMA;
     nativeWindow->config.format = PIXEL_FMT_RGBA_8888;
     nativeWindow->config.strideAlignment = 8;   // default stride is 8
     nativeWindow->config.timeout = 3000;        // default timeout is 3000 ms
@@ -148,7 +147,7 @@ static int32_t InternalHandleNativeWindowOpt(OHNativeWindow *window, int code, v
 {
     switch (code) {
         case SET_USAGE: {
-            int32_t usage = va_arg(args, int32_t);
+            uint64_t usage = va_arg(args, uint64_t);
             window->config.usage = usage;
             break;
         }
@@ -190,8 +189,8 @@ static int32_t InternalHandleNativeWindowOpt(OHNativeWindow *window, int code, v
             break;
         }
         case GET_USAGE: {
-            int32_t *value = va_arg(args, int32_t*);
-            int32_t usage = window->config.usage;
+            uint64_t *value = va_arg(args, uint64_t*);
+            uint64_t usage = window->config.usage;
             *value = usage;
             break;
         }

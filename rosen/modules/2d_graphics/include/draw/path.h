@@ -19,7 +19,7 @@
 #include <memory>
 #include <vector>
 
-#include "engine_adapter/impl_interface/path_impl.h"
+#include "drawing/engine_adapter/impl_interface/path_impl.h"
 #include "utils/matrix.h"
 #include "utils/point.h"
 #include "utils/rect.h"
@@ -56,6 +56,7 @@ public:
     void LineTo(scalar x, scalar y);
     void ArcTo(scalar pt1X, scalar pt1Y, scalar pt2X, scalar pt2Y, scalar startAngle, scalar sweepAngle);
     void ArcTo(const Point& pt1, const Point& pt2, scalar startAngle, scalar sweepAngle);
+    void ArcTo(scalar rx, scalar ry, scalar angle, PathDirection direction, scalar endX, scalar endY);
     void CubicTo(scalar ctrlPt1X, scalar ctrlPt1Y, scalar ctrlPt2X, scalar ctrlPt2Y, scalar endPtX, scalar endPtY);
     void CubicTo(const Point& ctrlPt1, const Point& ctrlPt2, const Point& endPt);
     void QuadTo(scalar ctrlPtX, scalar ctrlPtY, scalar endPtX, scalar endPtY);

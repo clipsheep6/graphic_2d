@@ -17,6 +17,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_IMAGE_H
 
 #include <cstdint>
+#include <mutex>
 #include "common/rs_macros.h"
 #include "common/rs_rect.h"
 #include "include/core/SkCanvas.h"
@@ -71,6 +72,7 @@ public:
     void SetImageRepeat(int repeatNum);
     void SetRadius(const SkVector radius[]);
     void SetScale(double scale);
+    void SetCompressData(const sk_sp<SkData> data, int width, int height);
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const;
     static RSImage* Unmarshalling(Parcel& parcel);
@@ -80,9 +82,13 @@ private:
     void ApplyImageFit();
     void ApplyCanvasClip(SkCanvas& canvas);
     void DrawImageRepeatRect(const SkPaint& paint, SkCanvas& canvas);
+    void UploadGpu(SkCanvas& canvas);
 
+    mutable std::mutex mutex_;
     sk_sp<SkImage> image_;
+    sk_sp<SkData> compressData_;
     std::shared_ptr<Media::PixelMap> pixelmap_;
+
     ImageFit imageFit_ = ImageFit::COVER;
     ImageRepeat imageRepeat_ = ImageRepeat::NO_REPEAT;
     SkVector radius_[4];

@@ -20,11 +20,12 @@
 #include "animation/rs_render_animation.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "pipeline/rs_context.h"
+#include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
+#include "property/rs_property_trace.h"
 #ifdef ROSEN_OHOS
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties_painter.h"
-#include "property/rs_transition_properties.h"
 #endif
 
 namespace OHOS {
@@ -75,7 +76,10 @@ bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties
     if (!renderProperties_.GetVisible() && !isLastVisible_) {
         return false;
     }
-    bool dirty = renderProperties_.UpdateGeometry(parent, parentDirty);
+    // [planning] surfaceNode use frame instead
+    Vector2f offset = (parent == nullptr || IsInstanceOf<RSSurfaceRenderNode>()) ?
+        Vector2f { 0.f, 0.f } : Vector2f { parent->GetFrameOffsetX(), parent->GetFrameOffsetY() };
+    bool dirty = renderProperties_.UpdateGeometry(parent, parentDirty, offset);
     isDirtyRegionUpdated_ = false;
     UpdateDirtyRegion(dirtyManager, dirty);
     isLastVisible_ = renderProperties_.GetVisible();
@@ -106,15 +110,18 @@ void RSRenderNode::UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool ge
         ROSEN_LOGD("RSRenderNode:: id %" PRIu64 " UpdateDirtyRegion visible->invisible", GetId());
     } else {
         auto dirtyRect = renderProperties_.GetDirtyRect();
+        if (renderProperties_.shadow_ && renderProperties_.shadow_->IsValid()) {
+            RectI shadowDirty;
+            RSPropertiesPainter::GetShadowDirtyRect(shadowDirty, renderProperties_);
+            if (!shadowDirty.IsEmpty()) {
+                dirtyRect = dirtyRect.JoinRect(shadowDirty);
+            }
+        }
         // filter invalid dirtyrect
         if (!dirtyRect.IsEmpty()) {
             dirtyManager.MergeDirtyRect(dirtyRect);
             isDirtyRegionUpdated_ = true;
             oldDirty_ = dirtyRect;
-        } else {
-            // keep old dirty and print debug log in case
-            ROSEN_LOGD("RSRenderNode:: id %" PRIu64 " UpdateDirtyRegion invalid dirtyRect = [%d, %d, %d, %d]",
-                GetId(), dirtyRect.left_, dirtyRect.top_, dirtyRect.width_, dirtyRect.height_);
         }
     }
     SetClean();
@@ -127,14 +134,23 @@ bool RSRenderNode::IsDirty() const
 
 void RSRenderNode::UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEnabled)
 {
+    auto dirtyRect = renderProperties_.GetDirtyRect();
     // should judge if there's any child out of parent
     if (!isPartialRenderEnabled) {
         isRenderUpdateIgnored_ = false;
-    } else if (dirtyRegion.IsEmpty() || oldDirty_.IsEmpty()) {
+    } else if (dirtyRegion.IsEmpty() || dirtyRect.IsEmpty()) {
         isRenderUpdateIgnored_ = true;
     } else {
-        RectI intersectRect = dirtyRegion.IntersectRect(oldDirty_);
+        RectI intersectRect = dirtyRegion.IntersectRect(dirtyRect);
         isRenderUpdateIgnored_ = intersectRect.IsEmpty();
+    }
+}
+
+void RSRenderNode::RenderTraceDebug() const
+{
+    if (RSSystemProperties::GetRenderNodeTraceEnabled()) {
+        RSPropertyTrace::GetInstance().PropertiesDisplayByTrace(GetId(),
+            std::static_pointer_cast<RSObjAbsGeometry>(GetRenderProperties().GetBoundsGeometry()));
     }
 }
 
@@ -155,8 +171,6 @@ void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
             canvas.saveLayerAlpha(&rect, std::clamp(alpha, 0.f, 1.f) * UINT8_MAX);
         }
     }
-    auto transitionProperties = GetAnimationManager().GetTransitionProperties();
-    RSPropertiesPainter::DrawTransitionProperties(transitionProperties, GetRenderProperties(), canvas);
     RSPropertiesPainter::DrawMask(GetRenderProperties(), canvas);
 #endif
 }
@@ -169,13 +183,6 @@ void RSRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 #endif
 }
 
-void RSRenderNode::ClearModifiers()
-{
-    modifiers_.clear();
-    drawCmdModifiers_.clear();
-    SetDirty();
-}
-
 void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
 {
     if (!modifier) {
@@ -184,7 +191,7 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
     if (modifier->GetType() == RSModifierType::BOUNDS || modifier->GetType() == RSModifierType::FRAME) {
         AddGeometryModifier(modifier);
     } else if (modifier->GetType() < RSModifierType::CUSTOM) {
-        modifiers_.insert({ modifier->GetPropertyId(), modifier });
+        modifiers_.emplace(modifier->GetPropertyId(), modifier);
     } else {
         drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
     }
@@ -192,29 +199,28 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
     SetDirty();
 }
 
-void RSRenderNode::AddGeometryModifier(const std::shared_ptr<RSRenderModifier>& modifier)
+void RSRenderNode::AddGeometryModifier(const std::shared_ptr<RSRenderModifier> modifier)
 {
     // bounds and frame modifiers must be unique
     if (modifier->GetType() == RSModifierType::BOUNDS) {
         if (boundsModifier_ == nullptr) {
             boundsModifier_ = modifier;
         }
-        modifiers_.insert({ modifier->GetPropertyId(), boundsModifier_ });
+        modifiers_.emplace(modifier->GetPropertyId(), boundsModifier_);
     }
 
     if (modifier->GetType() == RSModifierType::FRAME) {
         if (frameModifier_ == nullptr) {
             frameModifier_ = modifier;
         }
-        modifiers_.insert({ modifier->GetPropertyId(), frameModifier_ });
+        modifiers_.emplace(modifier->GetPropertyId(), frameModifier_);
     }
 }
 
 void RSRenderNode::RemoveModifier(const PropertyId& id)
 {
-    auto iter = modifiers_.find(id);
-    if (iter != modifiers_.end()) {
-        modifiers_.erase(iter);
+    bool success = modifiers_.erase(id);
+    if (success) {
         SetDirty();
         return;
     }
@@ -222,6 +228,9 @@ void RSRenderNode::RemoveModifier(const PropertyId& id)
         modifiers.remove_if([id](const auto& modifier) -> bool {
             return modifier ? modifier->GetPropertyId() == id : true;
         });
+        if (type == RSModifierType::OVERLAY_STYLE) {
+            UpdateOverlayBounds();
+        }
     }
 }
 
@@ -230,11 +239,31 @@ void RSRenderNode::ApplyModifiers()
     if (!RSBaseRenderNode::IsDirty()) {
         return;
     }
-    RSModifyContext context = { GetMutableRenderProperties() };
-    for (auto& [id, modify] : modifiers_) {
-        if (modify) {
-            modify->Apply(context);
+    RSModifierContext context = { GetMutableRenderProperties() };
+    context.property_.Reset();
+    for (auto& [id, modifier] : modifiers_) {
+        if (modifier) {
+            modifier->Apply(context);
         }
+    }
+
+    UpdateOverlayBounds();
+}
+
+void RSRenderNode::UpdateOverlayBounds()
+{
+    RSModifierContext context = { GetMutableRenderProperties() };
+    auto iterator = drawCmdModifiers_.find(RSModifierType::OVERLAY_STYLE);
+    if (iterator != drawCmdModifiers_.end()) {
+        RectI joinRect = RectI();
+        for (auto& overlayModifier : iterator->second) {
+            auto drawCmdModifier = std::static_pointer_cast<RSDrawCmdListRenderModifier>(overlayModifier);
+            if (drawCmdModifier != nullptr && drawCmdModifier->GetOverlayBounds() != nullptr &&
+                !drawCmdModifier->GetOverlayBounds()->IsEmpty()) {
+                joinRect = joinRect.JoinRect(*drawCmdModifier->GetOverlayBounds());
+            }
+        }
+        context.property_.SetOverlayBounds(std::make_shared<RectI>(joinRect));
     }
 }
 

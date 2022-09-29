@@ -23,7 +23,6 @@ namespace OHOS {
 namespace Rosen {
 class RSSkiaFilter;
 class RSPaintFilterCanvas;
-class RSTransitionProperties;
 
 class RSPropertiesPainter {
 public:
@@ -31,15 +30,12 @@ public:
     static void DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void DrawBorder(const RSProperties& properties, SkCanvas& canvas);
     static void DrawFrame(const RSProperties& properties, RSPaintFilterCanvas& canvas, DrawCmdListPtr& drawCmdList);
+    static void GetShadowDirtyRect(RectI& dirtyShadow, const RSProperties& properties, const RRect* rrect = nullptr);
     static void DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect = nullptr);
     static void DrawFilter(const RSProperties& properties, SkCanvas& canvas,
         std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect = nullptr,
         SkSurface* sKSurface = nullptr);
     static void DrawForegroundColor(const RSProperties& properties, SkCanvas& canvas);
-    static void DrawTransitionProperties(const std::unique_ptr<RSTransitionProperties>& transitionProperties,
-        const RSProperties& properties, RSPaintFilterCanvas& canvas);
-    static void DrawTransitionProperties(const std::unique_ptr<RSTransitionProperties>& transitionProperties,
-        const Vector2f& center, RSPaintFilterCanvas& canvas);
     static void DrawMask(const RSProperties& properties, SkCanvas& canvas);
     static void DrawMask(const RSProperties& properties, SkCanvas& canvas, SkRect maskBounds);
     static bool GetGravityMatrix(Gravity gravity, RectF rect, float w, float h, SkMatrix& mat);

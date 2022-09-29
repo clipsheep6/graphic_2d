@@ -16,10 +16,10 @@
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_SURFACE_RENDER_NODE_H
 
 #include <functional>
+#include <limits>
 #include <memory>
 #include <surface.h>
 
-#include "display_type.h"
 #include "common/rs_vector4.h"
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "pipeline/rs_render_node.h"
@@ -41,22 +41,34 @@ public:
     using WeakPtr = std::weak_ptr<RSSurfaceRenderNode>;
     using SharedPtr = std::shared_ptr<RSSurfaceRenderNode>;
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::SURFACE_NODE;
+    RSRenderNodeType GetType() const override
+    {
+        return Type;
+    }
 
     explicit RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
     explicit RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, std::weak_ptr<RSContext> context = {});
-    virtual ~RSSurfaceRenderNode();
+    ~RSSurfaceRenderNode() override;
 
     void PrepareRenderBeforeChildren(RSPaintFilterCanvas& canvas);
     void PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas);
+    void ResetParent() override;
 
     bool IsAppWindow() const
     {
-        return isAppWindow_;
+        return nodeType_ == RSSurfaceNodeType::APP_WINDOW_NODE;
     }
 
-    void MarkAppWindow()
+    RSSurfaceNodeType GetSurfaceNodeType() const
     {
-        isAppWindow_ = true;
+        return nodeType_;
+    }
+
+    void SetSurfaceNodeType(RSSurfaceNodeType nodeType)
+    {
+        if (nodeType_ != RSSurfaceNodeType::ABILITY_COMPONENT_NODE) {
+            nodeType_ = nodeType;
+        }
     }
 
     std::string GetName() const
@@ -90,29 +102,11 @@ public:
         offsetY_ = offsetY;
     }
 
-    void SetProxy()
-    {
-        isProxy_ = true;
-    }
-    bool IsProxy() const
-    {
-        return isProxy_;
-    }
-
     void CollectSurface(const std::shared_ptr<RSBaseRenderNode>& node,
                         std::vector<RSBaseRenderNode::SharedPtr>& vec,
                         bool isUniRender) override;
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
-
-    RSRenderNodeType GetType() const override
-    {
-        return RSRenderNodeType::SURFACE_NODE;
-    }
-
-    // pass render context (matrix/alpha/clip) from RT to RS
-    void SetContextMatrix(const SkMatrix& transform, bool sendMsg = true);
-    const SkMatrix& GetContextMatrix() const;
 
     void SetTotalMatrix(const SkMatrix& totalMatrix)
     {
@@ -123,6 +117,10 @@ public:
         return totalMatrix_;
     }
 
+    // pass render context (matrix/alpha/clip) from RT to RS
+    void SetContextMatrix(const SkMatrix& transform, bool sendMsg = true);
+    const SkMatrix& GetContextMatrix() const;
+
     void SetContextAlpha(float alpha, bool sendMsg = true);
     float GetContextAlpha() const;
 
@@ -131,6 +129,10 @@ public:
 
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
+
+    void SetColorSpace(ColorGamut colorSpace);
+    ColorGamut GetColorSpace() const;
+
     std::shared_ptr<RSDirtyRegionManager> GetDirtyManager() const;
 
     void SetSrcRect(const RectI& rect)
@@ -161,6 +163,7 @@ public:
         if (globalAlpha_ == alpha) {
             return;
         }
+        alphaChanged_ = true;
         globalAlpha_ = alpha;
     }
 
@@ -187,7 +190,7 @@ public:
     void SetAbilityBGAlpha(uint8_t alpha)
     {
         abilityBgAlpha_ = alpha;
-        abilityBgAlphaChanged_ = true;
+        alphaChanged_ = true;
     }
 
     uint8_t GetAbilityBgAlpha() const
@@ -195,23 +198,37 @@ public:
         return abilityBgAlpha_;
     }
 
-    void SetVisibleRegionRecursive(const Occlusion::Region& region, VisibleData& visibleVec)
+    void setQosCal(bool qosPidCal)
     {
-        visibleRegion_ = region;
-        bool vis = region.GetSize() > 0;
-        if (vis) {
-            visibleVec.emplace_back(GetId());
-        }
-        SetOcclusionVisible(vis);
-        for (auto& child : GetSortedChildren()) {
-            if (child->GetType() == RSRenderNodeType::SURFACE_NODE) {
-                auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
-                if (surface == nullptr) {
-                    continue;
-                }
-                surface->SetVisibleRegionRecursive(region, visibleVec);
-            }
-        }
+        qosPidCal_ = qosPidCal;
+    }
+
+    void SetVisibleRegionRecursive(const Occlusion::Region& region,
+                                   VisibleData& visibleVec,
+                                   std::map<uint32_t, bool>& pidVisMap);
+
+    const Occlusion::Region& GetVisibleDirtyRegion() const
+    {
+        return visibleDirtyRegion_;
+    }
+
+    void SetVisibleDirtyRegion(const Occlusion::Region& region)
+    {
+        visibleDirtyRegion_ = region;
+    }
+
+    const Occlusion::Region& GetDirtyRegionBelowCurrentLayer() const
+    {
+        return dirtyRegionBelowCurrentLayer_;
+    }
+
+    void SetDirtyRegionBelowCurrentLayer(Occlusion::Region& region)
+    {
+        Occlusion::Rect dstrect { dstRect_.left_, dstRect_.top_,
+            dstRect_.GetRight(), dstRect_.GetBottom() };
+        Occlusion::Region dstregion {dstrect};
+        dirtyRegionBelowCurrentLayer_ = dstregion.And(region);
+        dirtyRegionBelowCurrentLayerIsEmpty_ = dirtyRegionBelowCurrentLayer_.IsEmpty();
     }
 
     bool GetDstRectChanged() const
@@ -224,19 +241,25 @@ public:
         dstRectChanged_ = false;
     }
 
-    bool GetAbilityBgAlphaChanged() const
+    bool GetAlphaChanged() const
     {
-        return abilityBgAlphaChanged_;
+        return alphaChanged_;
     }
 
-    void CleanAbilityBgAlphaChanged()
+    void CleanAlphaChanged()
     {
-        abilityBgAlphaChanged_ = false;
+        alphaChanged_ = false;
     }
 
     void SetGloblDirtyRegion(const RectI& rect)
     {
-        globalDirtyRegion_ = rect;
+        globalDirtyRegion_ = GetDstRect().IntersectRect(rect);
+        globalDirtyRegionIsEmpty_ = globalDirtyRegion_.IsEmpty();
+    }
+
+    RectI GetGlobalDirtyRegion() const
+    {
+        return globalDirtyRegion_;
     }
 
     void SetConsumer(const sptr<Surface>& consumer);
@@ -256,9 +279,11 @@ public:
 
     void NotifyRTBufferAvailable();
     bool IsNotifyRTBufferAvailable() const;
+    bool IsNotifyRTBufferAvailablePre() const;
 
     void NotifyUIBufferAvailable();
     bool IsNotifyUIBufferAvailable() const;
+    void SetIsNotifyUIBufferAvailable(bool available);
 
     // UI Thread would not be notified when SurfaceNode created by Video/Camera in RenderService has available buffer.
     // And RenderThread does not call mainFunc_ if nothing in UI thread is changed
@@ -279,17 +304,101 @@ public:
         parallelVisitMutex_.unlock();
     }
 
-    bool IsIntersectWithDirty(const RectI& r) const
+    bool SubNodeVisible(const RectI& r) const
+    {
+        Occlusion::Rect nodeRect { r.left_, r.top_, r.GetRight(), r.GetBottom() };
+        // if current node is in occluded region of the surface, it could be skipped in process step
+        return visibleRegion_.IsIntersectWith(nodeRect);
+    }
+
+    bool SubNodeIntersectWithDirty(const RectI& r) const
+    {
+        Occlusion::Rect nodeRect { r.left_, r.top_, r.GetRight(), r.GetBottom() };
+        // if current node rect r is in global dirtyregion, it CANNOT be skipped
+        if (!globalDirtyRegionIsEmpty_) {
+            auto globalRect = r.IntersectRect(globalDirtyRegion_);
+            if (!globalRect.IsEmpty()) {
+                return true;
+            }
+        }
+        // if current node is in visible dirtyRegion, it CANNOT be skipped
+        bool localIntersect = visibleDirtyRegion_.IsIntersectWith(nodeRect);
+        if (localIntersect) {
+            return true;
+        }
+        // if current node is transparent
+        const uint8_t opacity = 255;
+        if (!(GetAbilityBgAlpha() == opacity &&
+                ROSEN_EQ(GetRenderProperties().GetAlpha(), 1.0f))) {
+            return dirtyRegionBelowCurrentLayer_.IsIntersectWith(nodeRect);
+        }
+        return false;
+    }
+
+    bool SubNodeNeedDraw(const RectI &r, PartialRenderType opDropType) const
     {
         if (dirtyManager_ == nullptr) {
-            return false;
+            return true;
         }
-        auto localRect = r.IntersectRect(dirtyManager_->GetDirtyRegion());
-        auto globalRect = r.IntersectRect(globalDirtyRegion_);
-        return !(localRect.IsEmpty() && globalRect.IsEmpty());
+        if (r.IsEmpty()) {
+            return true;
+        }
+        switch (opDropType) {
+            case PartialRenderType::SET_DAMAGE_AND_DROP_OP:
+                return SubNodeIntersectWithDirty(r);
+            case PartialRenderType::SET_DAMAGE_AND_DROP_OP_OCCLUSION:
+                return SubNodeVisible(r);
+            case PartialRenderType::SET_DAMAGE_AND_DROP_OP_NOT_VISIBLEDIRTY:
+                return SubNodeVisible(r) && SubNodeIntersectWithDirty(r);
+            case PartialRenderType::DISABLED:
+            case PartialRenderType::SET_DAMAGE:
+            default:
+                return true;
+        }
+        return true;
+    }
+
+    void SetCacheSurface(sk_sp<SkSurface> cacheSurface)
+    {
+        cacheSurface_ = std::move(cacheSurface);
+    }
+
+    sk_sp<SkSurface> GetCacheSurface() const
+    {
+        return cacheSurface_;
+    }
+
+    void ClearCacheSurface()
+    {
+        cacheSurface_ = nullptr;
+    }
+
+    void SetAppFreeze(bool isAppFreeze)
+    {
+        isAppFreeze_ = isAppFreeze;
+    }
+
+    bool IsAppFreeze() const
+    {
+        return isAppFreeze_;
+    }
+
+    bool GetZorderChanged() const
+    {
+        return (std::abs(GetRenderProperties().GetPositionZ() - positionZ_) > (std::numeric_limits<float>::epsilon()));
+    }
+
+    bool IsZOrderPromoted() const
+    {
+        return GetRenderProperties().GetPositionZ() > positionZ_;
+    }
+
+    void UpdatePositionZ()
+    {
+        positionZ_ = GetRenderProperties().GetPositionZ();
     }
 private:
-    void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId);
+    void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
 
     std::mutex mutexRT_;
     std::mutex mutexUI_;
@@ -302,16 +411,19 @@ private:
     SkRect contextClipRect_ = SkRect::MakeEmpty();
 
     bool isSecurityLayer_ = false;
+    ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
     RectI srcRect_;
     SkMatrix totalMatrix_;
     int32_t offsetX_ = 0;
     int32_t offsetY_ = 0;
     float globalAlpha_ = 1.0f;
+    float positionZ_ = 0.0f;
+    bool qosPidCal_ = false;
 
     std::string name_;
-    bool isAppWindow_ = false;
-    bool isProxy_ = false;
+    RSSurfaceNodeType nodeType_ = RSSurfaceNodeType::DEFAULT;
     BlendType blendType_ = BlendType::BLEND_SRCOVER;
+    bool isNotifyRTBufferAvailablePre_ = false;
     std::atomic<bool> isNotifyRTBufferAvailable_ = false;
     std::atomic<bool> isNotifyUIBufferAvailable_ = false;
     std::atomic_bool isBufferAvailable_ = false;
@@ -322,13 +434,21 @@ private:
     friend class RSRenderThreadVisitor;
     RectI clipRegionFromParent_;
     Occlusion::Region visibleRegion_;
+    Occlusion::Region visibleDirtyRegion_;
     bool isOcclusionVisible_ = true;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
     RectI dstRect_;
     bool dstRectChanged_ = false;
     uint8_t abilityBgAlpha_ = 0;
-    bool abilityBgAlphaChanged_ = false;
+    bool alphaChanged_ = false;
     RectI globalDirtyRegion_;
+
+    std::atomic<bool> isAppFreeze_ = false;
+    sk_sp<SkSurface> cacheSurface_ = nullptr;
+    bool globalDirtyRegionIsEmpty_ = false;
+    // if a there a dirty layer under transparent clean layer, transparent layer should refreshed
+    Occlusion::Region dirtyRegionBelowCurrentLayer_;
+    bool dirtyRegionBelowCurrentLayerIsEmpty_;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -38,13 +38,15 @@ public:
     virtual void SetRenderContext(RenderContext* context) override;
     virtual void SetColorSpace(ColorGamut colorSpace) override;
     virtual ColorGamut GetColorSpace() const override;
+    virtual uint32_t GetQueueSize() const override;
 
     virtual void SetSurfaceBufferUsage(int32_t usage) = 0;
+    void ClearAllBuffer() override;
 protected:
     sptr<Surface> producer_;
     RenderContext* context_ = nullptr;
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
-    int32_t bufferUsage_ = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA;
+    int32_t bufferUsage_ = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA;
 };
 
 } // namespace Rosen

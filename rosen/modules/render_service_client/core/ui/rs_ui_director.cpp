@@ -31,6 +31,7 @@
 #include "ui/rs_root_node.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
+#include "sandbox_utils.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -89,6 +90,14 @@ void RSUIDirector::GoBackground()
         if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
             node->SetEnableRender(false);
         }
+        // clean bufferQueue cache
+        auto surfaceNode = surfaceNode_.lock();
+        RSRenderThread::Instance().PostTask([surfaceNode]() {
+            if (surfaceNode != nullptr) {
+                std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
+                rsSurface->ClearBuffer();
+            }
+        });
 #ifdef ACE_ENABLE_GL
         RSRenderThread::Instance().PostTask([this]() {
             auto renderContext = RSRenderThread::Instance().GetRenderContext();
@@ -127,6 +136,11 @@ void RSUIDirector::SetAbilityBGAlpha(uint8_t alpha)
     node->SetAbilityBGAlpha(alpha);
 }
 
+void RSUIDirector::SetRTRenderForced(bool isRenderForced)
+{
+    RSRenderThread::Instance().SetRTRenderForced(isRenderForced);
+}
+
 void RSUIDirector::SetRoot(NodeId root)
 {
     if (root_ == root) {
@@ -146,6 +160,14 @@ void RSUIDirector::AttachSurface()
         ROSEN_LOGD("RSUIDirector::AttachSurface [%" PRIu64 "]", surfaceNode->GetId());
     } else {
         ROSEN_LOGD("RSUIDirector::AttachSurface not ready");
+    }
+}
+
+void RSUIDirector::SetAppFreeze(bool isAppFreeze)
+{
+    auto surfaceNode = surfaceNode_.lock();
+    if (surfaceNode != nullptr) {
+        surfaceNode->SetAppFreeze(isAppFreeze);
     }
 }
 
@@ -188,10 +210,10 @@ void RSUIDirector::SendMessages()
 
 void RSUIDirector::RecvMessages(bool needProcess)
 {
-    if (getpid() == -1) {
+    if (GetRealPid() == -1) {
         return;
     }
-    static const uint32_t pid = static_cast<uint32_t>(getpid());
+    static const uint32_t pid = static_cast<uint32_t>(GetRealPid());
     if (!RSMessageProcessor::Instance().HasTransaction(pid)) {
         return;
     }

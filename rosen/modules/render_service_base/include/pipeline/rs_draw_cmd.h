@@ -61,11 +61,12 @@ enum RSOpType : uint16_t {
     TEXTBLOB_OPITEM,
     BITMAP_OPITEM,
     BITMAP_RECT_OPITEM,
-    PIXELMAP_OPITEM,
-    PIXELMAP_RECT_OPITEM,
     BITMAP_LATTICE_OPITEM, // marshalling func planning to be implemented
     BITMAP_NINE_OPITEM,
+    PIXELMAP_OPITEM,
+    PIXELMAP_RECT_OPITEM,
     ADAPTIVE_RRECT_OPITEM,
+    ADAPTIVE_RRECT_SCALE_OPITEM,
     CLIP_ADAPTIVE_RRECT_OPITEM,
     CLIP_OUTSET_RECT_OPITEM,
     PATH_OPITEM,
@@ -160,7 +161,8 @@ private:
 
 class ImageWithParmOpItem : public OpItemWithPaint {
 public:
-    ImageWithParmOpItem(const sk_sp<SkImage> img, const RsImageInfo& rsimageInfo, const SkPaint& paint);
+    ImageWithParmOpItem(
+        const sk_sp<SkImage> img, const sk_sp<SkData> data, const RsImageInfo& rsimageInfo, const SkPaint& paint);
     ImageWithParmOpItem(
         const std::shared_ptr<Media::PixelMap>& pixelmap, const RsImageInfo& rsimageInfo, const SkPaint& paint);
     ImageWithParmOpItem(const std::shared_ptr<RSImage>& rsImage, const SkPaint& paint);
@@ -590,6 +592,27 @@ public:
 
 private:
     float radius_;
+    SkPaint paint_;
+};
+
+class AdaptiveRRectScaleOpItem : public OpItemWithPaint {
+public:
+    AdaptiveRRectScaleOpItem(float radiusRatio, const SkPaint& paint);
+    ~AdaptiveRRectScaleOpItem() override {}
+    void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+
+    RSOpType GetType() const override
+    {
+        return RSOpType::ADAPTIVE_RRECT_SCALE_OPITEM;
+    }
+
+#ifdef ROSEN_OHOS
+    bool Marshalling(Parcel& parcel) const override;
+    static OpItem* Unmarshalling(Parcel& parcel);
+#endif
+
+private:
+    float radiusRatio_;
     SkPaint paint_;
 };
 

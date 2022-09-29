@@ -37,6 +37,12 @@ bool RSSystemProperties::GetUniRenderEnabled()
     return isUniRenderEnabled_;
 }
 
+bool RSSystemProperties::GetRenderNodeTraceEnabled()
+{
+    static bool isNeedTrace = system::GetParameter("persist.rosen.rendernodetrace.enabled", "0") != "0";
+    return isNeedTrace;
+}
+
 bool RSSystemProperties::IsUniRenderMode()
 {
     return isUniRenderMode_;
@@ -56,13 +62,13 @@ DirtyRegionDebugType RSSystemProperties::GetDirtyRegionDebugType()
 PartialRenderType RSSystemProperties::GetPartialRenderEnabled()
 {
     return static_cast<PartialRenderType>(
-        std::atoi((system::GetParameter("rosen.partialrender.enabled", "0")).c_str()));
+        std::atoi((system::GetParameter("rosen.partialrender.enabled", "1")).c_str()));
 }
 
 PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
 {
     return static_cast<PartialRenderType>(
-        std::atoi((system::GetParameter("rosen.uni.partialrender.enabled", "0")).c_str()));
+        std::atoi((system::GetParameter("rosen.uni.partialrender.enabled", "4")).c_str()));
 }
 
 bool RSSystemProperties::GetOcclusionEnabled()
@@ -105,6 +111,15 @@ DumpSurfaceType RSSystemProperties::GetDumpSurfaceType()
 uint64_t RSSystemProperties::GetDumpSurfaceId()
 {
     return std::atoi((system::GetParameter("rosen.dumpsurfaceid", "0")).c_str());
+}
+
+void RSSystemProperties::SetDrawTextAsBitmap(bool flag)
+{
+    isDrawTextAsBitmap_ = flag;
+}
+bool RSSystemProperties::GetDrawTextAsBitmap()
+{
+    return isDrawTextAsBitmap_;
 }
 } // namespace Rosen
 } // namespace OHOS

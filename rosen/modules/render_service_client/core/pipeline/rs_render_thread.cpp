@@ -15,35 +15,39 @@
 
 #include "pipeline/rs_render_thread.h"
 
-#ifdef OHOS_RSS_CLIENT
-#include <unordered_map>
-#endif
+#include <cstdint>
 
-#include <frame_collector.h>
+#include "accessibility_config.h"
+#include "rs_trace.h"
+#include "sandbox_utils.h"
 
 #include "animation/rs_animation_fraction.h"
 #include "command/rs_surface_node_command.h"
+#include "frame_collector.h"
+#include "delegate/rs_functional_delegate.h"
+#include "overdraw/rs_overdraw_controller.h"
+#include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_root_render_node.h"
+#include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
-#ifdef OHOS_RSS_CLIENT
-#include "res_sched_client.h"
-#include "res_type.h"
-#endif
-#include "rs_trace.h"
-
+#include "property/rs_property_trace.h"
 #include "transaction/rs_render_service_client.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
 #include "ui/rs_ui_director.h"
+
 #ifdef ROSEN_OHOS
 #include <sys/prctl.h>
 #include <unistd.h>
 #endif
-#include "accessibility_config.h"
+#ifdef OHOS_RSS_CLIENT
+#include "res_sched_client.h"
+#include "res_type.h"
+#endif
 
 static void SystemCallSetThreadName(const std::string& name)
 {
@@ -57,10 +61,14 @@ static void SystemCallSetThreadName(const std::string& name)
 using namespace OHOS::AccessibilityConfig;
 namespace OHOS {
 namespace Rosen {
+namespace {
+    static constexpr uint64_t REFRESH_PERIOD = 16666667;
+    static constexpr uint64_t REFRESH_FREQ_IN_UNI_RENDER = 1200;
+}
 class HighContrastObserver : public AccessibilityConfigObserver {
 public:
     HighContrastObserver() = default;
-    virtual void OnConfigChanged(const CONFIG_ID id, const ConfigValue &value) override
+    void OnConfigChanged(const CONFIG_ID id, const ConfigValue &value) override
     {
         ROSEN_LOGD("HighContrastObserver OnConfigChanged");
         auto& renderThread = RSRenderThread::Instance();
@@ -79,10 +87,6 @@ RSRenderThread& RSRenderThread::Instance()
 
 RSRenderThread::RSRenderThread()
 {
-#ifdef ACE_ENABLE_GL
-    renderContext_ = new RenderContext();
-    ROSEN_LOGD("Create RenderContext, its pointer is %p", renderContext_);
-#endif
     mainFunc_ = [&]() {
         uint64_t renderStartTimeStamp;
         if (needRender_) {
@@ -99,7 +103,6 @@ RSRenderThread::RSRenderThread()
         ROSEN_LOGD("RSRenderThread DrawFrame(%" PRIu64 ") in %s", prevTimestamp_, renderContext_ ? "GPU" : "CPU");
         Animate(prevTimestamp_);
         Render();
-        RS_ASYNC_TRACE_BEGIN("waiting GPU running", 1111); // 1111 means async trace code for gpu
         SendCommands();
         RS_TRACE_END();
 
@@ -109,6 +112,7 @@ RSRenderThread::RSRenderThread()
     };
 
     highContrastObserver_ = std::make_shared<HighContrastObserver>();
+    context_ = std::make_shared<RSContext>();
     auto &config = OHOS::Singleton<OHOS::AccessibilityConfig::AccessibilityConfig>::GetInstance();
     config.InitializeContext();
     config.SubscribeConfigObserver(CONFIG_ID::CONFIG_HIGH_CONTRAST_TEXT, highContrastObserver_);
@@ -197,6 +201,21 @@ int32_t RSRenderThread::GetTid()
     return tid_;
 }
 
+void RSRenderThread::CreateAndInitRenderContextIfNeed()
+{
+#ifdef ACE_ENABLE_GL
+    if (needRender_ && renderContext_ == nullptr) {
+        renderContext_ = new RenderContext();
+        ROSEN_LOGD("Create RenderContext, its pointer is %p", renderContext_);
+        RS_TRACE_NAME("InitializeEglContext");
+        renderContext_->InitializeEglContext(); // init egl context on RT
+        if (!cacheDir_.empty()) {
+            renderContext_->SetCacheDir(cacheDir_);
+        }
+    }
+#endif
+}
+
 void RSRenderThread::RenderLoop()
 {
     SystemCallSetThreadName("RSRenderThread");
@@ -204,25 +223,21 @@ void RSRenderThread::RenderLoop()
 #ifdef OHOS_RSS_CLIENT
     std::unordered_map<std::string, std::string> payload;
     payload["uid"] = std::to_string(getuid());
-    payload["pid"] = std::to_string(getpid());
+    payload["pid"] = std::to_string(GetRealPid());
     ResourceSchedule::ResSchedClient::GetInstance().ReportData(
         ResourceSchedule::ResType::RES_TYPE_REPORT_RENDER_THREAD, gettid(), payload);
 #endif
 #ifdef ROSEN_OHOS
     tid_ = gettid();
 #endif
-#ifdef ACE_ENABLE_GL
-    renderContext_->InitializeEglContext(); // init egl context on RT
-    if (!cacheDir_.empty()) {
-        renderContext_->SetCacheDir(cacheDir_);
-    }
-#endif
     if (RSSystemProperties::GetUniRenderEnabled()) {
         needRender_ = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
             ->QueryIfRTNeedRender();
         RSSystemProperties::SetRenderMode(!needRender_);
+        DrawCmdListManager::Instance().MarkForceClear(!needRender_);
     }
-    std::string name = "RSRenderThread_" + std::to_string(::getpid());
+    CreateAndInitRenderContextIfNeed();
+    std::string name = "RSRenderThread_" + std::to_string(GetRealPid());
     runner_ = AppExecFwk::EventRunner::Create(false);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     auto rsClient = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
@@ -237,6 +252,12 @@ void RSRenderThread::RenderLoop()
         RSRenderThread::Instance().RequestNextVSync();
     }
 
+    FrameCollector::GetInstance().SetRepaintCallback([this]() { this->RequestNextVSync(); });
+
+    auto delegate = RSFunctionalDelegate::Create();
+    delegate->SetRepaintCallback([this]() { this->RequestNextVSync(); });
+    RSOverdrawController::GetInstance().SetDelegate(delegate);
+
     if (runner_) {
         runner_->Run();
     }
@@ -249,7 +270,8 @@ void RSRenderThread::OnVsync(uint64_t timestamp)
     mValue = (mValue + 1) % 2; // 1 and 2 is Calculated parameters
     RS_TRACE_INT("Vsync-client", mValue);
     timestamp_ = timestamp;
-    if (activeWindowCnt_.load() > 0) {
+    if (activeWindowCnt_.load() > 0 &&
+        (needRender_ || (timestamp_ - prevTimestamp_) / REFRESH_PERIOD >= REFRESH_FREQ_IN_UNI_RENDER)) {
         mainFunc_(); // start render-loop now
     }
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
@@ -280,7 +302,9 @@ void RSRenderThread::UpdateRenderMode(bool needRender)
                 UpdateSurfaceNodeParentInRS();
             } else {
                 needRender_ = needRender;
-                forceUpdateSurfaceNode_ = true;
+                MarkNeedUpdateSurfaceNode();
+                CreateAndInitRenderContextIfNeed();
+                DrawCmdListManager::Instance().MarkForceClear(!needRender_);
             }
         }, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
@@ -292,16 +316,17 @@ void RSRenderThread::NotifyClearBufferCache()
         handler_->PostTask([this]() {
             needRender_ = false;
             ClearBufferCache();
+            DrawCmdListManager::Instance().MarkForceClear(!needRender_);
         }, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
 }
 
 void RSRenderThread::UpdateSurfaceNodeParentInRS()
 {
-    auto& nodeMap = context_.GetMutableNodeMap();
+    auto& nodeMap = context_->GetMutableNodeMap();
     std::unordered_map<NodeId, NodeId> surfaceNodeMap; // [surfaceNodeId, parentId]
-    nodeMap.TraversalNodes([&surfaceNodeMap](const std::shared_ptr<RSBaseRenderNode>& node) mutable {
-        if (!node || !node->IsInstanceOf<RSSurfaceRenderNode>()) {
+    nodeMap.TraverseSurfaceNodes([&surfaceNodeMap](const std::shared_ptr<RSSurfaceRenderNode>& node) mutable {
+        if (!node) {
             return;
         }
         auto parent = node->GetParent().lock();
@@ -323,7 +348,7 @@ void RSRenderThread::UpdateSurfaceNodeParentInRS()
 
 void RSRenderThread::ClearBufferCache()
 {
-    const auto& rootNode = context_.GetGlobalRootRenderNode();
+    const auto& rootNode = context_->GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
         ROSEN_LOGE("RSRenderThread::ClearBufferCache, rootNode is nullptr");
         return;
@@ -336,8 +361,26 @@ void RSRenderThread::ClearBufferCache()
         auto surfaceNode = RSNodeMap::Instance().GetNode<RSSurfaceNode>(childNode->GetRSSurfaceNodeId());
         auto rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
         if (rsSurface != nullptr) {
-            rsSurface->ClearBuffer();
+            rsSurface->ClearAllBuffer();
         }
+    }
+    rootNode->ResetSortedChildren();
+}
+
+
+void RSRenderThread::MarkNeedUpdateSurfaceNode()
+{
+    const auto& rootNode = context_->GetGlobalRootRenderNode();
+    if (rootNode == nullptr) {
+        ROSEN_LOGE("RSRenderThread::MarkNeedUpdateSurfaceNode, rootNode is nullptr");
+        return;
+    }
+    for (auto& child : rootNode->GetSortedChildren()) {
+        if (!child || !child->IsInstanceOf<RSRootRenderNode>()) {
+            continue;
+        }
+        auto childNode = child->ReinterpretCastTo<RSRootRenderNode>();
+        childNode->SetNeedUpdateSurfaceNode(true);
     }
     rootNode->ResetSortedChildren();
 }
@@ -383,10 +426,13 @@ void RSRenderThread::ProcessCommands()
     std::swap(cmds, cmds_);
     cmdLock.unlock();
 
+    context_->currentTimestamp_ = prevTimestamp_;
     for (auto& cmdData : cmds) {
         std::string str = "ProcessCommands ptr:" + std::to_string(reinterpret_cast<uintptr_t>(cmdData.get()));
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, str.c_str());
-        cmdData->Process(context_);
+        // only set transactionTimestamp_ in UniRender mode
+        context_->transactionTimestamp_ = RSSystemProperties::GetUniRenderEnabled() ? cmdData->GetTimestamp() : 0;
+        cmdData->Process(*context_);
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
     }
 }
@@ -399,12 +445,12 @@ void RSRenderThread::Animate(uint64_t timestamp)
         RsFrameReport::GetInstance().AnimateStart();
     }
 
-    if (context_.animatingNodeList_.empty()) {
+    if (context_->animatingNodeList_.empty()) {
         return;
     }
 
     // iterate and animate all animating nodes, remove if animation finished
-    std::__libcpp_erase_if_container(context_.animatingNodeList_, [timestamp](const auto& iter) -> bool {
+    std::__libcpp_erase_if_container(context_->animatingNodeList_, [timestamp](const auto& iter) -> bool {
         auto node = iter.second.lock();
         if (node == nullptr) {
             ROSEN_LOGD("RSRenderThread::Animate removing expired animating node");
@@ -417,7 +463,7 @@ void RSRenderThread::Animate(uint64_t timestamp)
         return animationFinished;
     });
 
-    if (!context_.animatingNodeList_.empty()) {
+    if (!context_->animatingNodeList_.empty()) {
         RSRenderThread::Instance().RequestNextVSync();
     }
 }
@@ -427,12 +473,15 @@ void RSRenderThread::Render()
     if (!needRender_) {
         return;
     }
+    if (RSSystemProperties::GetRenderNodeTraceEnabled()) {
+        RSPropertyTrace::GetInstance().RefreshNodeTraceInfo();
+    }
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderThread::Render");
     if (RsFrameReport::GetInstance().GetEnable()) {
         RsFrameReport::GetInstance().RenderStart();
     }
     std::unique_lock<std::mutex> lock(mutex_);
-    const auto& rootNode = context_.GetGlobalRootRenderNode();
+    const auto& rootNode = context_->GetGlobalRootRenderNode();
 
     if (rootNode == nullptr) {
         ROSEN_LOGE("RSRenderThread::Render, rootNode is nullptr");
@@ -441,9 +490,10 @@ void RSRenderThread::Render()
     if (visitor_ == nullptr) {
         visitor_ = std::make_shared<RSRenderThreadVisitor>();
     }
+    // get latest partial render status from system properties and set it to RTvisitor_
+    visitor_->SetPartialRenderStatus(RSSystemProperties::GetPartialRenderEnabled(), isRTRenderForced_);
     rootNode->Prepare(visitor_);
     rootNode->Process(visitor_);
-    forceUpdateSurfaceNode_ = false;
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }
 
@@ -460,9 +510,9 @@ void RSRenderThread::SendCommands()
 
 void RSRenderThread::Detach(NodeId id)
 {
-    if (auto node = context_.GetNodeMap().GetRenderNode<RSRootRenderNode>(id)) {
+    if (auto node = context_->GetNodeMap().GetRenderNode<RSRootRenderNode>(id)) {
         std::unique_lock<std::mutex> lock(mutex_);
-        context_.GetGlobalRootRenderNode()->RemoveChild(node);
+        context_->GetGlobalRootRenderNode()->RemoveChild(node);
     }
 }
 

@@ -137,7 +137,7 @@ public:
     {
         return dirtyManager_;
     }
-    void UpdateDisplayDirtyManager(uint32_t bufferage);
+    void UpdateDisplayDirtyManager(int32_t bufferage);
     void UpdateSurfaceNodePos(NodeId id, RectI rect)
     {
         currentFrameSurfacePos_[id] = rect;
@@ -169,6 +169,13 @@ public:
         return rects;
     }
 
+    std::vector<RSBaseRenderNode::SharedPtr>& GetCurAllSurfaces()
+    {
+        return curAllSurfaces_;
+    }
+
+    void UpdateRotation();
+    bool IsRotationChanged() const;
 private:
     CompositeType compositeType_ { HARDWARE_COMPOSITE };
     uint64_t screenId_;
@@ -178,7 +185,7 @@ private:
     bool isMirroredDisplay_ = false;
     bool isSecurityDisplay_ = false;
     WeakPtr mirrorSource_;
-
+    float lastRotation_ = 0.f;
     sk_sp<SkImage> snapshot_;
 
     std::shared_ptr<RSSurface> surface_;
@@ -189,6 +196,8 @@ private:
     std::map<NodeId, RectI> lastFrameSurfacePos_;
     std::map<NodeId, RectI> currentFrameSurfacePos_;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
+
+    std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces_;
 };
 } // namespace Rosen
 } // namespace OHOS

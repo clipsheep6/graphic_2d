@@ -20,13 +20,15 @@
 #include <gtest/gtest.h>
 
 #include <iservice_registry.h>
-#include <display_type.h>
 #include <surface.h>
 #include <buffer_extra_data_impl.h>
 #include <buffer_client_producer.h>
 #include <buffer_queue_producer.h>
 #include "buffer_consumer_listener.h"
 #include "sync_fence.h"
+#include "accesstoken_kit.h"
+#include "nativetoken_kit.h"
+#include "token_setproc.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -42,7 +44,7 @@ public:
         .height = 0x100,
         .strideAlignment = 0x8,
         .format = PIXEL_FMT_RGBA_8888,
-        .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
         .timeout = 0,
     };
     static inline BufferFlushConfig flushConfig = {
@@ -70,6 +72,25 @@ void BufferClientProducerRemoteTest::SetUpTestCase()
     }
 
     if (pid == 0) {
+        uint64_t tokenId;
+        const char *perms[2];
+        perms[0] = "ohos.permission.DISTRIBUTED_DATASYNC";
+        perms[1] = "ohos.permission.CAMERA";
+        NativeTokenInfoParams infoInstance = {
+            .dcapsNum = 0,
+            .permsNum = 2,
+            .aclsNum = 0,
+            .dcaps = NULL,
+            .perms = perms,
+            .acls = NULL,
+            .processName = "dcamera_client_demo",
+            .aplStr = "system_basic",
+        };
+        tokenId = GetAccessTokenId(&infoInstance);
+        SetSelfTokenID(tokenId);
+        int32_t ret = Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
+        ASSERT_EQ(ret, Security::AccessToken::RET_SUCCESS);
+
         std::this_thread::sleep_for(std::chrono::milliseconds(50));  // wait 50ms
         sptr<BufferQueue> bq = new BufferQueue("test");
         ASSERT_NE(bq, nullptr);

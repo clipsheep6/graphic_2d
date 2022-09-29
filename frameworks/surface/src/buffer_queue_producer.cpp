@@ -474,8 +474,7 @@ GSError BufferQueueProducer::GoBackground()
             return ret;
         }
     }
-
-    return bufferQueue_->GoBackground();
+    return bufferQueue_->SetProducerCacheCleanFlag(true);
 }
 
 GSError BufferQueueProducer::RegisterReleaseListener(OnReleaseFunc func)
@@ -527,7 +526,7 @@ GSError BufferQueueProducer::Disconnect()
         }
         connectedPid_ = 0;
     }
-    return bufferQueue_->CleanCache();
+    return bufferQueue_->GoBackground();
 }
 
 GSError BufferQueueProducer::SetScalingMode(uint32_t sequence, ScalingMode scalingMode)

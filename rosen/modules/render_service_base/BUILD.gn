@@ -22,23 +22,28 @@ config("export_config") {
     "include",
     "//foundation/graphic/graphic_2d/rosen/include",
     "//drivers/peripheral/display/interfaces/include",
-    "//foundation/multimedia/image_standard/interfaces/innerkits/include",
+    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
     "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
     "//foundation/graphic/graphic_2d/interfaces/inner_api/composer",
+    "//foundation/graphic/graphic_2d/utils/sandbox",
   ]
 
   defines = rs_common_define
 }
 
+config("render_service_base_all_deps_config") {
+  include_dirs = [ "include" ]
+}
+
 ohos_shared_library("librender_service_base") {
   public_configs = [ ":export_config" ]
+  all_dependent_configs = [ ":render_service_base_all_deps_config" ]
   defines = []
   defines += gpu_defines
 
   sources = [
     #animation
     "src/animation/rs_animation_fraction.cpp",
-    "src/animation/rs_animation_log.cpp",
     "src/animation/rs_animation_manager.cpp",
     "src/animation/rs_interpolator.cpp",
     "src/animation/rs_render_animation.cpp",
@@ -51,6 +56,7 @@ ohos_shared_library("librender_service_base") {
     "src/animation/rs_render_transition_effect.cpp",
     "src/animation/rs_spring_interpolator.cpp",
     "src/animation/rs_spring_model.cpp",
+    "src/animation/rs_steps_interpolator.cpp",
     "src/animation/rs_transition_effect.cpp",
     "src/animation/rs_value_estimator.cpp",
 
@@ -68,6 +74,7 @@ ohos_shared_library("librender_service_base") {
     "src/command/rs_command_factory.cpp",
     "src/command/rs_display_node_command.cpp",
     "src/command/rs_node_command.cpp",
+    "src/command/rs_proxy_node_command.cpp",
     "src/command/rs_root_node_command.cpp",
     "src/command/rs_surface_node_command.cpp",
 
@@ -79,6 +86,9 @@ ohos_shared_library("librender_service_base") {
     "src/common/rs_thread_handler_generic.cpp",
     "src/common/rs_thread_looper_generic.cpp",
     "src/common/rs_thread_looper_impl.cpp",
+
+    #delegate
+    "src/delegate/rs_functional_delegate.cpp",
 
     #ipc_callbacks
     "src/ipc_callbacks/buffer_available_callback_proxy.cpp",
@@ -105,6 +115,7 @@ ohos_shared_library("librender_service_base") {
     "src/pipeline/rs_frame_report.cpp",
     "src/pipeline/rs_occlusion_config.cpp",
     "src/pipeline/rs_paint_filter_canvas.cpp",
+    "src/pipeline/rs_proxy_render_node.cpp",
     "src/pipeline/rs_recording_canvas.cpp",
     "src/pipeline/rs_render_node.cpp",
     "src/pipeline/rs_render_node_map.cpp",
@@ -115,6 +126,7 @@ ohos_shared_library("librender_service_base") {
     #property
     "src/property/rs_properties.cpp",
     "src/property/rs_properties_painter.cpp",
+    "src/property/rs_property_trace.cpp",
 
     #render
     "src/render/rs_blur_filter.cpp",
@@ -157,18 +169,22 @@ ohos_shared_library("librender_service_base") {
     "//third_party/flutter/skia/src",
   ]
 
-  deps = [ "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/platform:platform" ]
+  deps = [
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/platform:platform",
+    "//foundation/graphic/graphic_2d/utils:sandbox_utils",
+  ]
 
   external_deps = [
     "hitrace_native:hitrace_meter",
     "init:libbeget_proxy",
     "init:libbegetutil",
+    "ipc:ipc_core",
   ]
 
   public_deps = [
     "src/platform:platform",
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
+    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
   ]
 
   part_name = "graphic_standard"

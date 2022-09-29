@@ -20,7 +20,6 @@
 #include "command/rs_display_node_command.h"
 #include "command/rs_surface_node_command.h"
 #include "common/rs_common_def.h"
-#include "display_type.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkImageInfo.h"
 #include "pipeline/rs_render_result.h"
@@ -172,7 +171,7 @@ public:
     ~MyDMS() noexcept = default;
     RSInterfaces& rsInterface_;
 
-    DisplayId GetDefaultDisplayId()
+    DisplayId GetDefaultDisplayId() const
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         return defaultDisplayId_;
@@ -270,7 +269,7 @@ int main()
 
     class TestSurfaceCapture : public SurfaceCaptureCallback {
     public:
-        TestSurfaceCapture(std::shared_ptr<RSSurfaceNode> surfaceNode) : showNode_(surfaceNode) {}
+        explicit TestSurfaceCapture(std::shared_ptr<RSSurfaceNode> surfaceNode) : showNode_(surfaceNode) {}
         ~TestSurfaceCapture() override {}
         void OnSurfaceCapture(std::shared_ptr<Media::PixelMap> pixelmap) override
         {

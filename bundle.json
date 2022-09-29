@@ -18,7 +18,6 @@
         "SystemCapability.Graphic.Graphic2D.GLES3",
         "SystemCapability.Graphic.Graphic2D.NativeWindow",
         "SystemCapability.Graphic.Graphic2D.NativeDrawing",
-        "SystemCapability.Graphic.Graphic2D.Vulkan",
         "SystemCapability.Graphic.Graphic2D.WebGL",
         "SystemCapability.Graphic.Graphic2D.WebGL2"
       ],
@@ -28,7 +27,8 @@
         "graphic_standard_feature_ace_enable_gpu",
         "graphic_standard_feature_rs_enable_eglimage",
         "graphic_standard_feature_color_gamut_enable",
-        "graphic_standard_feature_rs_enable_uni_render"
+        "graphic_standard_feature_rs_enable_uni_render",
+        "graphic_standard_feature_wuji_enable"
       ],
       "rom": "10000KB",
       "ram": "10000KB",
@@ -55,11 +55,6 @@
           "base_group": [
             "//third_party/libpng:libpng",
             "//foundation/graphic/graphic_2d/interfaces/kits/napi:napi_packages",
-            "//foundation/graphic/graphic_2d/rosen/samples/composer:hello_composer",
-            "//foundation/graphic/graphic_2d/rosen/samples/hello_native_window:hello_native_window",
-            "//foundation/graphic/graphic_2d/rosen/samples/hello_native_image:hello_native_image",
-            "//foundation/graphic/graphic_2d/rosen/samples/hello_vsync:hello_vsync",
-            "//foundation/graphic/graphic_2d/rosen/samples/hello_native_buffer:hello_native_buffer",
             "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
             "//foundation/graphic/graphic_2d/rosen/modules/composer/native_vsync:libnative_vsync",
             "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
@@ -75,7 +70,8 @@
             "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:debug_layer_test2",
             "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:opengl_wrapper_native_test",
             "//foundation/graphic/graphic_2d/frameworks/surfaceimage:libnative_image",
-            "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect"
+            "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect",
+            "//foundation/graphic/graphic_2d/frameworks/vulkan_wrapper:vulkan"
           ],
           "fwk_group": [
             "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",

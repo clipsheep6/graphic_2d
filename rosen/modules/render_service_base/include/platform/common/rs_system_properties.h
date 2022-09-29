@@ -32,9 +32,11 @@ enum class DirtyRegionDebugType {
 };
 
 enum class PartialRenderType {
-    DISABLED = 0,
-    SET_DAMAGE,
-    SET_DAMAGE_AND_DROP_OP
+    DISABLED = 0,                               // 0, disable partial render
+    SET_DAMAGE,                                 // 1, set damageregion, without draw_op dropping
+    SET_DAMAGE_AND_DROP_OP,                     // 2, drop draw_op if node is not in dirty region
+    SET_DAMAGE_AND_DROP_OP_OCCLUSION,           // 3, drop draw_op if node is not in visible region (unirender)
+    SET_DAMAGE_AND_DROP_OP_NOT_VISIBLEDIRTY     // 4, drop draw_op if node is not in visible dirty region (unirender)
 };
 
 enum class DumpSurfaceType {
@@ -50,6 +52,7 @@ public:
 
     // used by clients
     static bool GetUniRenderEnabled();
+    static bool GetRenderNodeTraceEnabled();
     static DirtyRegionDebugType GetDirtyRegionDebugType();
     static PartialRenderType GetPartialRenderEnabled();
     static PartialRenderType GetUniPartialRenderEnabled();
@@ -63,11 +66,15 @@ public:
     static DumpSurfaceType GetDumpSurfaceType();
     static uint64_t GetDumpSurfaceId();
 
+    static void SetDrawTextAsBitmap(bool flag);
+    static bool GetDrawTextAsBitmap();
+
 private:
     RSSystemProperties() = default;
 
     static inline bool isUniRenderEnabled_ = false;
     static inline std::atomic_bool isUniRenderMode_ = false;
+    inline static bool isDrawTextAsBitmap_ = false;
 };
 
 } // namespace Rosen

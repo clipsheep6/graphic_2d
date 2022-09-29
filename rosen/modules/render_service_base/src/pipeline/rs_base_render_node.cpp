@@ -18,11 +18,9 @@
 #include <algorithm>
 
 #include "pipeline/rs_context.h"
-#include "pipeline/rs_display_render_node.h"
-#include "pipeline/rs_render_node_map.h"
-#include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
+#include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
 
 namespace OHOS {
@@ -33,9 +31,9 @@ void RSBaseRenderNode::AddChild(SharedPtr child, int index)
     if (child == nullptr || child->GetId() == GetId()) {
         return;
     }
-    // if child already has a parent, remove it from its previous parent
+    // if child already has a parent, remove it from its previous parent (without transition)
     if (auto prevParent = child->GetParent().lock()) {
-        prevParent->RemoveChild(child);
+        prevParent->RemoveChild(child, true);
     }
 
     // Set parent-child relationship
@@ -74,7 +72,7 @@ void RSBaseRenderNode::MoveChild(SharedPtr child, int index)
     SetDirty();
 }
 
-void RSBaseRenderNode::RemoveChild(SharedPtr child)
+void RSBaseRenderNode::RemoveChild(SharedPtr child, bool skipTransition)
 {
     if (child == nullptr) {
         return;
@@ -88,7 +86,7 @@ void RSBaseRenderNode::RemoveChild(SharedPtr child)
     // avoid duplicate entry in disappearingChildren_ (this should not happen)
     disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
     // if child has disappearing transition, add it to disappearingChildren_
-    if (child->HasDisappearingTransition(true)) {
+    if (skipTransition == false && child->HasDisappearingTransition(true)) {
         ROSEN_LOGD("RSBaseRenderNode::RemoveChild %" PRIu64 " move child(id %" PRIu64 ") into disappearingChildren",
             GetId(), child->GetId());
         // keep shared_ptr alive for transition
@@ -170,12 +168,21 @@ void RSBaseRenderNode::RemoveCrossParentChild(const SharedPtr& child, const Weak
     SetDirty();
 }
 
-void RSBaseRenderNode::RemoveFromTree()
+void RSBaseRenderNode::RemoveFromTree(bool skipTransition)
 {
-    if (auto parentPtr = parent_.lock()) {
-        auto child = shared_from_this();
-        parentPtr->RemoveChild(child);
+    auto parentPtr = parent_.lock();
+    if (parentPtr == nullptr) {
+        return;
     }
+    auto child = shared_from_this();
+    parentPtr->RemoveChild(child, skipTransition);
+    if (skipTransition == false) {
+        return;
+    }
+    // force remove child from disappearingChildren_ and clean sortChildren_ cache
+    parentPtr->disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
+    parentPtr->sortedChildren_.clear();
+    child->ResetParent();
 }
 
 void RSBaseRenderNode::RemoveFromTreeWithoutTransition()
@@ -184,6 +191,7 @@ void RSBaseRenderNode::RemoveFromTreeWithoutTransition()
         auto child = shared_from_this();
         parentPtr->RemoveChild(child);
         parentPtr->disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
+        parentPtr->sortedChildren_.clear();
         child->ResetParent();
     }
 }
@@ -262,15 +270,14 @@ void RSBaseRenderNode::DumpTree(int32_t depth, std::string& out) const
             out += ", null";
         }
     }
-    out += "]\n";
+    out += "], disappearing children[";
     int i = 0;
     for (auto& disappearingChild : disappearingChildren_) {
-        out +=
-            "disappearing children[" + std::to_string(i) + "]: " + std::to_string(disappearingChild.first->GetId()) +
-            ", hasDisappearingTransition:" + std::to_string(disappearingChild.first->HasDisappearingTransition(false)) +
-            "\n";
+        out += "(" + std::to_string(i) + ": id:" + std::to_string(disappearingChild.first->GetId()) +
+               ", Transition:" + std::to_string(disappearingChild.first->HasDisappearingTransition(false)) + "),";
         ++i;
     }
+    out += "]\n";
 
     for (auto child : children_) {
         if (auto c = child.lock()) {
@@ -309,6 +316,10 @@ void RSBaseRenderNode::DumpNodeType(std::string& out) const
         }
         case RSRenderNodeType::ROOT_NODE: {
             out += "ROOT_NODE";
+            break;
+        }
+        case RSRenderNodeType::PROXY_NODE: {
+            out += "PROXY_NODE";
             break;
         }
         default: {
@@ -387,7 +398,7 @@ void RSBaseRenderNode::GenerateSortedChildren()
     bool parentHasDisappearingTransition = disappearingChildren_.empty() ? false : HasDisappearingTransition(true);
     disappearingChildren_.remove_if([this, parentHasDisappearingTransition](const auto& pair) -> bool {
         auto& disappearingChild = pair.first;
-        auto& origPos = pair.second;
+        const auto& origPos = pair.second;
         // if neither parent node or child node has transition, we can safely remove it
         if (!parentHasDisappearingTransition && !disappearingChild->HasDisappearingTransition(false)) {
             ROSEN_LOGD("RSBaseRenderNode::GenerateSortedChildren removing finished transition child(id %" PRIu64 ")",
@@ -416,20 +427,12 @@ void RSBaseRenderNode::GenerateSortedChildren()
     });
 }
 
-template<typename T>
-bool RSBaseRenderNode::IsInstanceOf()
+void RSBaseRenderNode::SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId)
 {
-    constexpr uint32_t targetType = static_cast<uint32_t>(T::Type);
-    return (static_cast<uint32_t>(GetType()) & targetType) == targetType;
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommandFromRT(command, nodeId);
+    }
 }
-
-// explicit instantiation with all render node types
-template bool RSBaseRenderNode::IsInstanceOf<RSBaseRenderNode>();
-template bool RSBaseRenderNode::IsInstanceOf<RSDisplayRenderNode>();
-template bool RSBaseRenderNode::IsInstanceOf<RSRenderNode>();
-template bool RSBaseRenderNode::IsInstanceOf<RSSurfaceRenderNode>();
-template bool RSBaseRenderNode::IsInstanceOf<RSCanvasRenderNode>();
-template bool RSBaseRenderNode::IsInstanceOf<RSRootRenderNode>();
-
 } // namespace Rosen
 } // namespace OHOS

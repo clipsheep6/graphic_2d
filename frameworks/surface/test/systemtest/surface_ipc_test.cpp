@@ -18,7 +18,9 @@
 #include <gtest/gtest.h>
 #include <iservice_registry.h>
 #include <surface.h>
-#include <display_type.h>
+#include "accesstoken_kit.h"
+#include "nativetoken_kit.h"
+#include "token_setproc.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -27,7 +29,7 @@ namespace OHOS::Rosen {
 class SurfaceIPCTest : public testing::Test, public IBufferConsumerListenerClazz {
 public:
     static void SetUpTestCase();
-    virtual void OnBufferAvailable() override;
+    void OnBufferAvailable() override;
     OHOS::GSError SetData(sptr<SurfaceBuffer> &buffer, sptr<Surface> &pSurface);
     bool GetData(sptr<SurfaceBuffer> &buffer);
     pid_t ChildProcessMain();
@@ -47,7 +49,7 @@ void SurfaceIPCTest::SetUpTestCase()
         .height = 0x100, // small
         .strideAlignment = 0x8,
         .format = PIXEL_FMT_RGBA_8888,
-        .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
         .timeout = 0,
     };
     flushConfig = { .damage = {
@@ -172,6 +174,24 @@ HWTEST_F(SurfaceIPCTest, BufferIPC001, Function | MediumTest | Level2)
     auto pid = ChildProcessMain();
     ASSERT_GE(pid, 0);
 
+    uint64_t tokenId;
+    const char *perms[2];
+    perms[0] = "ohos.permission.DISTRIBUTED_DATASYNC";
+    perms[1] = "ohos.permission.CAMERA";
+    NativeTokenInfoParams infoInstance = {
+        .dcapsNum = 0,
+        .permsNum = 2,
+        .aclsNum = 0,
+        .dcaps = NULL,
+        .perms = perms,
+        .acls = NULL,
+        .processName = "dcamera_client_demo",
+        .aplStr = "system_basic",
+    };
+    tokenId = GetAccessTokenId(&infoInstance);
+    SetSelfTokenID(tokenId);
+    int32_t rett = Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
+    ASSERT_EQ(rett, Security::AccessToken::RET_SUCCESS);
     cSurface = Surface::CreateSurfaceAsConsumer("test");
     cSurface->RegisterConsumerListener(this);
     auto producer = cSurface->GetProducer();

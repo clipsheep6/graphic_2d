@@ -16,7 +16,6 @@
 #ifndef RENDER_CONTEXT_SAMPLE_H
 #define RENDER_CONTEXT_SAMPLE_H
 
-#include <display_type.h>
 #include <surface.h>
 #include <sync_fence.h>
 
@@ -75,7 +74,7 @@ private:
     void Sync(int64_t, void *data);
     void CreatePhysicalScreen();
     void DoPrepareCompleted(sptr<Surface> surface, const struct PrepareCompleteParam &param);
-    virtual void OnBufferAvailable() override;
+    void OnBufferAvailable() override;
     SurfaceError ProduceBackGroundBuffer(uint32_t width, uint32_t height);
     SurfaceError ProduceDrawingBuffer(uint32_t width, uint32_t height);
     bool FillDrawingLayer(std::shared_ptr<HdiLayerInfo> &showLayer, uint32_t index, uint32_t zorder, IRect &dstRect);

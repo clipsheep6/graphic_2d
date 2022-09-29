@@ -50,7 +50,11 @@ bool RSRenderPropertyAnimation::GetAdditive()
 void RSRenderPropertyAnimation::AttachRenderProperty(const std::shared_ptr<RSRenderPropertyBase>& property)
 {
     property_ = property;
-    if (property_ != nullptr && originValue_ != nullptr) {
+    if (property_ == nullptr) {
+        return;
+    }
+    InitValueEstimator();
+    if (originValue_ != nullptr) {
         property_->SetPropertyType(originValue_->GetPropertyType());
     }
 }
@@ -149,46 +153,6 @@ void RSRenderPropertyAnimation::OnRemoveOnCompletion()
     }
 
     SetPropertyValue(backwardValue);
-}
-
-void RSRenderPropertyAnimation::WriteAnimationValueToLog(const std::shared_ptr<RSRenderPropertyBase>& value)
-{
-    auto node = GetTarget();
-    if (node == nullptr) {
-        return;
-    }
-
-    UpdateNeedWriteLog(node->GetId());
-    if (needWriteToLog_) {
-        animationLog_->WriteAnimationValueToLog(value, propertyId_, node->GetId());
-    }
-}
-
-void RSRenderPropertyAnimation::WriteAnimationInfoToLog(const std::shared_ptr<RSRenderPropertyBase>& startValue,
-    const std::shared_ptr<RSRenderPropertyBase>& endValue)
-{
-    if (hasWriteInfo_) {
-        return;
-    }
-
-    hasWriteInfo_ = true;
-    auto node = GetTarget();
-    if (node == nullptr) {
-        return;
-    }
-
-    UpdateNeedWriteLog(node->GetId());
-    if (needWriteToLog_) {
-        animationLog_->WriteAnimationInfoToLog(propertyId_, GetAnimationId(), startValue, endValue);
-    }
-}
-
-void RSRenderPropertyAnimation::UpdateNeedWriteLog(const NodeId id)
-{
-    if (!hasUpdateNeedWriteLog_) {
-        hasUpdateNeedWriteLog_ = true;
-        needWriteToLog_ = animationLog_->IsNeedWriteLog(propertyId_, id);
-    }
 }
 } // namespace Rosen
 } // namespace OHOS

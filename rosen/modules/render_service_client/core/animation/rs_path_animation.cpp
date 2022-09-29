@@ -269,7 +269,7 @@ void RSPathAnimation::SetRotation(const std::shared_ptr<RSNode>& node, const flo
 {
     auto iter = node->modifiers_.find(rotationId_);
     if (iter != node->modifiers_.end()) {
-        auto modifier = std::static_pointer_cast<RSModifier<RSProperty<float>>>(iter->second);
+        auto modifier = iter->second;
         if (modifier != nullptr) {
             std::static_pointer_cast<RSProperty<float>>(modifier->GetProperty())->stagingValue_ = rotation;
         }
@@ -277,12 +277,8 @@ void RSPathAnimation::SetRotation(const std::shared_ptr<RSNode>& node, const flo
     }
 
     for (const auto& [type, modifier] : node->propertyModifiers_) {
-        if (modifier->GetPropertyId() == rotationId_) {
-            auto animatableModifier = std::static_pointer_cast<RSModifier<RSProperty<float>>>(modifier);
-            if (animatableModifier != nullptr) {
-                std::static_pointer_cast<RSProperty<float>>(
-                    animatableModifier->GetProperty())->stagingValue_ = rotation;
-            }
+        if (modifier != nullptr && modifier->GetPropertyId() == rotationId_) {
+            std::static_pointer_cast<RSProperty<float>>(modifier->GetProperty())->stagingValue_ = rotation;
         }
         return;
     }

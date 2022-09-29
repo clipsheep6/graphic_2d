@@ -56,7 +56,7 @@ void ShaderCache::InitShaderCache(const char* identity, const ssize_t size)
     auto loaded = cacheData_->Get(&key, sizeof(key), shaArray.data(), shaArray.size());
     if (!(loaded && std::equal(shaArray.begin(), shaArray.end(), idHash_.begin()))) {
         cacheData_->Clear();
-        LOGI("abandon, bad hash value, cleared for future regeneration");
+        LOGW("abandon, bad hash value, cleared for future regeneration");
     }
     initialized_ = true;
 }
@@ -77,7 +77,7 @@ sk_sp<SkData> ShaderCache::load(const SkData& key)
     size_t keySize = key.size();
     std::lock_guard<std::mutex> lock(mutex_);
     if (!initialized_) {
-        LOGE("load: failed because ShaderCache is not initialized");
+        LOGW("load: failed because ShaderCache is not initialized");
         return nullptr;
     }
 
@@ -131,7 +131,7 @@ void ShaderCache::store(const SkData& key, const SkData& data)
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (!initialized_) {
-        LOGE("stored: failed because ShaderCache is not initialized");
+        LOGW("stored: failed because ShaderCache is not initialized");
         return;
     }
 

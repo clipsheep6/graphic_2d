@@ -20,7 +20,6 @@
 #include "command/rs_display_node_command.h"
 #include "command/rs_surface_node_command.h"
 #include "common/rs_common_def.h"
-#include "display_type.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkImageInfo.h"
 #include "pipeline/rs_render_result.h"
@@ -58,7 +57,7 @@ namespace pipelineTestUtils {
             // Do not hold it. Use it As ToDrawSurface::Sample().
         };
 
-        inline ToDrawSurface& SetSurfaceNode(std::shared_ptr<RSSurfaceNode> &surfaceNode)
+        inline ToDrawSurface& SetSurfaceNode(const std::shared_ptr<RSSurfaceNode> surfaceNode)
         {
             surfaceNode_ = surfaceNode;
             return *this;

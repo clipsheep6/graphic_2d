@@ -24,6 +24,11 @@ class RSDirtyRegionManager;
 class RSRootRenderNode : public RSCanvasRenderNode {
 public:
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::ROOT_NODE;
+    RSRenderNodeType GetType() const override
+    {
+        return Type;
+    }
+
     explicit RSRootRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
     ~RSRootRenderNode() override;
 
@@ -31,11 +36,6 @@ public:
     virtual void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
     void AttachRSSurfaceNode(NodeId SurfaceNodeId);
-
-    RSRenderNodeType GetType() const override
-    {
-        return RSRenderNodeType::ROOT_NODE;
-    }
 
     std::shared_ptr<RSDirtyRegionManager> GetDirtyManager() const;
     std::shared_ptr<RSSurface> GetSurface();
@@ -45,7 +45,10 @@ public:
     void UpdateSurfaceSize(int32_t width, int32_t height);
     void SetEnableRender(bool enableRender)
     {
-        enableRender_ = enableRender;
+        if (enableRender_ != enableRender) {
+            enableRender_ = enableRender;
+            SetDirty();
+        }
     }
 
     bool GetEnableRender() const
@@ -53,11 +56,22 @@ public:
         return enableRender_;
     }
 
+    void SetNeedUpdateSurfaceNode(bool needUpdate)
+    {
+        needUpdateSurfaceNode_ = needUpdate;
+    }
+
+    bool GetNeedUpdateSurfaceNode() const
+    {
+        return needUpdateSurfaceNode_;
+    }
+
 private:
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
     std::shared_ptr<RSSurface> rsSurface_ = nullptr;
     NodeId surfaceNodeId_ = 0;
     bool enableRender_ = true;
+    bool needUpdateSurfaceNode_ = false;
     int32_t surfaceWidth_ = 0;
     int32_t surfaceHeight_ = 0;
 

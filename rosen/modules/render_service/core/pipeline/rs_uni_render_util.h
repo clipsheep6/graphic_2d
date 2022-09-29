@@ -16,7 +16,6 @@
 #ifndef RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_UTIL_H
 #define RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_UTIL_H
 
-#include "display_type.h"
 #include "surface.h"
 #include "sync_fence.h"
 #include "pipeline/rs_display_render_node.h"
@@ -28,8 +27,17 @@ namespace OHOS {
 namespace Rosen {
 class RSUniRenderUtil {
 public:
-    static void UpdateRenderNodeDstRect(RSRenderNode& node);
-    static Occlusion::Region MergeVisibleDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge);
+    static void UpdateRenderNodeDstRect(RSRenderNode& node, const SkMatrix& matrix);
+
+    // merge history dirty region of current display node and its child surfacenode(app windows)
+    // for mirror display, call this function twice will introduce additional dirtyhistory in dirtymanager
+    static void MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge);
+
+    /* we want to set visible dirty region of each surfacenode into DamageRegionKHR interface, hence
+     * occlusion is calculated.
+     * make sure this function is called after merge dirty history
+     */
+    static Occlusion::Region MergeVisibleDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node);
 };
 }
 }

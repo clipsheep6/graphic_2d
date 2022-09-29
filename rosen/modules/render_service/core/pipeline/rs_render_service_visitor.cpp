@@ -15,7 +15,6 @@
 
 #include "pipeline/rs_render_service_visitor.h"
 
-#include "display_type.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkPoint.h"
 #include "include/core/SkRect.h"
@@ -29,6 +28,7 @@
 #include "pipeline/rs_processor_factory.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_innovation.h"
 #include "platform/drawing/rs_surface.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "screen_manager/screen_types.h"
@@ -118,6 +118,9 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
         canvas_->clipRect(SkRect::MakeWH(logicalScreenWidth, logicalScreenHeight));
         PrepareBaseRenderNode(node);
     }
+
+    node.GetCurAllSurfaces().clear();
+    node.CollectSurface(node.shared_from_this(), node.GetCurAllSurfaces(), false);
 }
 
 void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
@@ -167,10 +170,22 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 
 void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
+    if (RSInnovation::GetParallelCompositionEnabled()) {
+        typedef bool (*CheckForSerialForcedFunc)(std::string&);
+        CheckForSerialForcedFunc CheckForSerialForced =
+            (CheckForSerialForcedFunc)RSInnovation::_s_checkForSerialForced;
+        auto name = node.GetName();
+        mForceSerial |= CheckForSerialForced(name);
+    }
+
     if (isSecurityDisplay_ && node.GetSecurityLayer()) {
         RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node[%" PRIu64 "] prepare paused because of \
             security DisplayNode.",
             node.GetId());
+        return;
+    }
+    if (!canvas_) {
+        RS_LOGD("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : %" PRIu64 " canvas is nullptr", node.GetId());
         return;
     }
     node.ApplyModifiers();

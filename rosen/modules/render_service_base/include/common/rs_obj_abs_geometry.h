@@ -31,7 +31,7 @@ class RSObjAbsGeometry : public RSObjGeometry {
 public:
     RSObjAbsGeometry();
     ~RSObjAbsGeometry() override;
-    void UpdateMatrix(const Matrix3f& matrix);
+    void ConcatMatrix(const SkMatrix& matrix);
     void UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& parent, float offsetX, float offsetY);
 
     // Using by RenderService

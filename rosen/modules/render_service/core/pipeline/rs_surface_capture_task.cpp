@@ -16,12 +16,13 @@
 #include "pipeline/rs_surface_capture_task.h"
 
 #include <memory>
-#include "rs_trace.h"
 
-#include "common/rs_obj_abs_geometry.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
+#include "rs_trace.h"
+
+#include "common/rs_obj_abs_geometry.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_divided_render_util.h"
@@ -33,7 +34,6 @@
 #include "pipeline/rs_uni_render_util.h"
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_surface.h"
-#include "property/rs_transition_properties.h"
 #include "render/rs_skia_filter.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "screen_manager/rs_screen_mode_info.h"
@@ -221,28 +221,45 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSD
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNode& node)
 {
-    SkMatrix translateMatrix;
-    const float thisNodetranslateX = node.GetTotalMatrix().getTranslateX();
-    const float thisNodetranslateY = node.GetTotalMatrix().getTranslateY();
-    if (!node.IsAppWindow()) {
-        translateMatrix.preTranslate(
-            thisNodetranslateX - parentNodeTranslateX_, thisNodetranslateY - parentNodeTranslateY_);
-    } else {
-        parentNodeTranslateX_ = thisNodetranslateX;
-        parentNodeTranslateY_ = thisNodetranslateY;
-    }
-
-    canvas_->save();
-
-    if (!node.IsAppWindow()) {
-        canvas_->translate(-canvas_->getTotalMatrix().getTranslateX() / canvas_->getTotalMatrix().getScaleX(),
-            -canvas_->getTotalMatrix().getTranslateY() / canvas_->getTotalMatrix().getScaleY());
-        canvas_->concat(translateMatrix);
-    }
-
-    canvas_->save();
     const auto& property = node.GetRenderProperties();
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    if (!geoPtr) {
+        RS_LOGE("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni node:%" PRIu64 ", get geoPtr failed",
+            node.GetId());
+        return;
+    }
+
+    canvas_->save();
+
+    if (node.IsAppWindow()) {
+        // When CaptureSingleSurfaceNodeWithUni, we should consider scale factor of canvas_ and
+        // child nodes (self-drawing surfaceNode) of AppWindow should use relative coordinates
+        // which is the node relative to the upper-left corner of the window.
+        // So we have to get the invert matrix of AppWindow here and apply it to canvas_
+        // when we calculate the position of self-drawing surfaceNode.
+        captureMatrix_.setScaleX(scaleX_);
+        captureMatrix_.setScaleY(scaleY_);
+        SkMatrix invertMatrix;
+        if (geoPtr->GetAbsMatrix().invert(&invertMatrix)) {
+            captureMatrix_.preConcat(invertMatrix);
+        }
+    } else {
+        canvas_->setMatrix(captureMatrix_);
+        canvas_->concat(geoPtr->GetAbsMatrix());
+    }
+
+    canvas_->save();
     canvas_->clipRect(SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight()));
+    if (node.GetSecurityLayer()) {
+        RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni: \
+            process RSSurfaceRenderNode(id:[%" PRIu64 "]) clear white since it is security layer.",
+            node.GetId());
+        canvas_->clear(SK_ColorWHITE);
+        canvas_->restore(); // restore clipRect
+        canvas_->restore(); // restore translate and concat
+        return;
+    }
+
     auto backgroundColor = static_cast<SkColor>(property.GetBackgroundColor().AsArgbInt());
     if (SkColorGetA(backgroundColor) != SK_AlphaTRANSPARENT) {
         canvas_->drawColor(backgroundColor);
@@ -262,14 +279,21 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWith
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode& node)
 {
-    canvas_->concat(node.GetContextMatrix());
+    if (node.GetSecurityLayer()) {
+        RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni: \
+            process RSSurfaceRenderNode(id:[%" PRIu64 "]) paused since it is security layer.",
+            node.GetId());
+        return;
+    }
+    bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
+    if (!isSelfDrawingSurface) {
+        canvas_->concat(node.GetContextMatrix());
+    }
     auto contextClipRect = node.GetContextClipRegion();
     if (!contextClipRect.isEmpty()) {
         canvas_->clipRect(contextClipRect);
     }
 
-    auto parentPtr = node.GetParent().lock();
-    bool isSelfDrawingSurface = parentPtr && parentPtr->IsInstanceOf<RSCanvasRenderNode>();
     if (isSelfDrawingSurface) {
         canvas_->save();
     }
@@ -284,16 +308,27 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithU
         canvas_->save();
     }
 
-    auto transitionProperties = node.GetAnimationManager().GetTransitionProperties();
-    RSPropertiesPainter::DrawTransitionProperties(transitionProperties, property, *canvas_);
     boundsRect_ = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
     frameGravity_ = property.GetFrameGravity();
-    canvas_->clipRect(boundsRect_);
+    const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
+    RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
+    RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect);
+    if (!property.GetCornerRadius().IsZero()) {
+        canvas_->clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
+    } else {
+        canvas_->clipRect(boundsRect_);
+    }
     auto backgroundColor = static_cast<SkColor>(property.GetBackgroundColor().AsArgbInt());
     if (SkColorGetA(backgroundColor) != SK_AlphaTRANSPARENT) {
         canvas_->drawColor(backgroundColor);
     }
 
+    auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
+    if (filter != nullptr) {
+        auto skRectPtr = std::make_unique<SkRect>();
+        skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
+        RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
+    }
     if (isSelfDrawingSurface) {
         canvas_->restore();
     }
@@ -309,6 +344,12 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithU
     }
 
     ProcessBaseRenderNode(node);
+    filter = std::static_pointer_cast<RSSkiaFilter>(property.GetFilter());
+    if (filter != nullptr) {
+        auto skRectPtr = std::make_unique<SkRect>();
+        skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
+        RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
+    }
 }
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWithUni(RSSurfaceRenderNode &node)
@@ -348,8 +389,8 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessRootRenderNode(RSRoot
 
     canvas_->save();
     const auto& property = node.GetRenderProperties();
-    const float frameWidth = property.GetFrameWidth();
-    const float frameHeight = property.GetFrameHeight();
+    const float frameWidth = property.GetFrameWidth() * property.GetScaleX();
+    const float frameHeight = property.GetFrameHeight() * property.GetScaleY();
     SkMatrix gravityMatrix;
     (void)RSPropertiesPainter::GetGravityMatrix(frameGravity_,
         RectF {0.0f, 0.0f, boundsRect_.width(), boundsRect_.height()},
@@ -361,6 +402,9 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessRootRenderNode(RSRoot
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
 {
+    if (!IsUniRender()) {
+        return;
+    }
     if (!node.GetRenderProperties().GetVisible()) {
         RS_LOGD("ProcessCanvasRenderNode, no need process");
         return;
@@ -388,21 +432,47 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWith
         translateMatrix.preTranslate(
             thisNodetranslateX - parentNodeTranslateX, thisNodetranslateY - parentNodeTranslateY);
     }
+    if (node.GetSecurityLayer()) {
+        RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithoutUni: \
+            process RSSurfaceRenderNode(id:[%" PRIu64 "]) clear white since it is security layer.",
+            node.GetId());
+        canvas_->save();
+        canvas_->concat(translateMatrix);
+        canvas_->clear(SK_ColorWHITE);
+        canvas_->restore();
+        return;
+    }
 
-    canvas_->concat(translateMatrix);
-    const auto saveCnt = canvas_->save();
-    ProcessBaseRenderNode(node);
-    canvas_->restoreToCount(saveCnt);
-
-    if (node.GetBuffer() != nullptr) {
-        // in node's local coordinate.
-        auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
-        renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
+    if (node.GetChildrenCount() > 0) {
+        canvas_->concat(translateMatrix);
+        const auto saveCnt = canvas_->save();
+        ProcessBaseRenderNode(node);
+        canvas_->restoreToCount(saveCnt);
+        if (node.GetBuffer() != nullptr) {
+            // in node's local coordinate.
+            auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
+            renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
+        }
+    } else {
+        canvas_->save();
+        canvas_->concat(translateMatrix);
+        if (node.GetBuffer() != nullptr) {
+            // in node's local coordinate.
+            auto params = RSBaseRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
+            renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
+        }
+        canvas_->restore();
     }
 }
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithoutUni(RSSurfaceRenderNode& node)
 {
+    if (node.GetSecurityLayer()) {
+        RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithoutUni: \
+            process RSSurfaceRenderNode(id:[%" PRIu64 "]) paused since it is security layer.",
+            node.GetId());
+        return;
+    }
     ProcessBaseRenderNode(node);
     if (node.GetBuffer() != nullptr) {
         // in display's coordinate.
@@ -434,13 +504,7 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode(RSS
         return;
     }
 
-    if (node.GetSecurityLayer()) {
-        RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode: \
-            process RSSurfaceRenderNode(id:[%" PRIu64 "]) paused, because surfaceNode is the security layer.",
-            node.GetId());
-        return;
-    }
-
+    // execute security layer in each case, ignore display snapshot and set it white for surface snapshot
     if (IsUniRender()) {
         ProcessSurfaceRenderNodeWithUni(node);
     } else {

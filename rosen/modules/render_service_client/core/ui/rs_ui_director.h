@@ -38,6 +38,12 @@ public:
     void Destroy();
     void SetRSSurfaceNode(std::shared_ptr<RSSurfaceNode> surfaceNode);
     void SetAbilityBGAlpha(uint8_t alpha);
+    /**
+     * @brief Set rt render status and keep it till set again
+     *
+     * @param isRenderForced if true, rt will reject partial render and be forced to render all frames
+     */
+    void SetRTRenderForced(bool isRenderForced);
 
     void SetRoot(NodeId root);
     void SetUITaskRunner(const TaskRunner& uiTaskRunner);
@@ -47,6 +53,8 @@ public:
     void SetCacheDir(const std::string& cacheFilePath);
 
     bool RunningCustomAnimation(uint64_t timeStamp);
+
+    void SetAppFreeze(bool isAppFreeze);
 
 private:
     void AttachSurface();

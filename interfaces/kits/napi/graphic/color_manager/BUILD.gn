@@ -17,6 +17,7 @@ config("color_space_object_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
+    "//foundation/graphic/graphic_2d/interfaces/inner_api/color_manager",
     "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/color_manager/color_space_object_convertor",
     "//foundation/graphic/graphic_2d/utils/color_manager/export",
   ]
@@ -34,7 +35,6 @@ ohos_shared_library("color_space_object_convertor") {
   deps = [ "//foundation/graphic/graphic_2d/utils:libgraphic_utils" ]
 
   external_deps = [
-    "ability_runtime:runtime",
     "hiviewdfx_hilog_native:libhilog",
     "napi:ace_napi",
   ]
@@ -49,6 +49,7 @@ config("color_manager_napi_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
+    "//foundation/graphic/graphic_2d/interfaces/inner_api/color_manager",
     "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/color_manager/color_space_object_convertor",
     "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/color_manager/colorspacemanager_napi",
     "//foundation/graphic/graphic_2d/utils/color_manager/export",
@@ -69,7 +70,6 @@ ohos_shared_library("colorspacemanager_napi") {
   ]
 
   external_deps = [
-    "ability_runtime:runtime",
     "hiviewdfx_hilog_native:libhilog",
     "napi:ace_napi",
   ]

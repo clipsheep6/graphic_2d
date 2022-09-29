@@ -15,6 +15,7 @@
 
 #include "rs_render_service.h"
 #include "rs_main_thread.h"
+#include "rs_qos_thread.h"
 #include "rs_render_service_connection.h"
 #include "vsync_generator.h"
 #include "pipeline/rs_surface_render_node.h"
@@ -26,6 +27,7 @@
 #include <iservice_registry.h>
 #include <platform/common/rs_log.h>
 #include <system_ability_definition.h>
+#include "parameter.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -57,6 +59,15 @@ bool RSRenderService::Init()
     mainThread_->rsVSyncDistributor_ = rsVSyncDistributor_;
     mainThread_->Init();
  
+    RSQosThread::GetInstance()->appVSyncDistributor_ = appVSyncDistributor_;
+    RSQosThread::GetInstance()->ThreadStart();
+
+    // Wait samgr ready for up to 5 second to ensure adding service to samgr.
+    int status = WaitParameter("bootevent.samgr.ready", "true", 5);
+    if (status != 0) {
+        RS_LOGE("RSRenderService wait SAMGR error, return value [%d].", status);
+    }
+
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
         RS_LOGE("RSRenderService GetSystemAbilityManager fail.");
@@ -215,6 +226,8 @@ void RSRenderService::DumpRSEvenParam(std::string& dumpString) const
     dumpString.append("\n");
     dumpString.append("-- EventParamListDump: \n");
     mainThread_->RsEventParamDump(dumpString);
+    dumpString.append("-- QosDump: \n");
+    mainThread_->QosStateDump(dumpString);
 }
 
 void RSRenderService::DumpRenderServiceTree(std::string& dumpString) const

@@ -16,7 +16,6 @@
 #include <iostream>
 #include <surface.h>
 
-#include "display_type.h"
 #include "include/core/SkBitmap.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkImage.h"
@@ -66,7 +65,7 @@ void Init(std::shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
 class MyData : public RSAnimatableArithmetic<MyData> {
 public:
     MyData() : data(0.f) {}
-    MyData(const float num) : data(num) {}
+    explicit MyData(const float num) : data(num) {}
     virtual ~MyData() = default;
 
     MyData Add(const MyData& value) const override
@@ -92,10 +91,10 @@ public:
     float data;
 };
 
-class MyModifier : public RSOverlayStyleModifier<RSAnimatableProperty<MyData>> {
+class MyModifier : public RSOverlayStyleModifier {
 public:
-    MyModifier(const std::shared_ptr<RSAnimatableProperty<MyData>> property)
-        : RSOverlayStyleModifier<RSAnimatableProperty<MyData>>(property) {}
+    explicit MyModifier(const std::shared_ptr<RSPropertyBase> property)
+        : RSOverlayStyleModifier(property) {}
     virtual ~MyModifier() = default;
     void Draw(RSDrawingContext& context) const override
     {
@@ -106,8 +105,9 @@ public:
         bitmap.erase(0xffff3f7f, SkIRect::MakeXYWH(50, 50, 50, 50));
         SkPaint p;
         p.setShader(bitmap.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat));
-        p.setAlphaf(property_->Get().data);
-        std::cout<<"MyModifier Draw property get  "<<property_->Get().data<<std::endl;
+        auto animatableProperty = std::static_pointer_cast<RSAnimatableProperty<MyData>>(property_);
+        p.setAlphaf(animatableProperty->Get().data);
+        std::cout<<"MyModifier Draw property get  "<<animatableProperty->Get().data<<std::endl;
         context.canvas->drawRect(SkRect::MakeWH(context.width, context.height), p);
     }
 };

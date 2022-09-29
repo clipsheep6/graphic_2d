@@ -42,13 +42,17 @@ class RSCommand;
 class RSImplicitAnimParam;
 class RSImplicitAnimator;
 class RSUIAnimationManager;
-class RSModifierBase;
+class RSModifier;
 
 class RS_EXPORT RSNode : public RSBaseNode {
 public:
     using WeakPtr = std::weak_ptr<RSNode>;
     using SharedPtr = std::shared_ptr<RSNode>;
     static inline constexpr RSUINodeType Type = RSUINodeType::RS_NODE;
+    RSUINodeType GetType() const override
+    {
+        return Type;
+    }
 
     ~RSNode() override;
     std::string DumpNode(int depth) const override;
@@ -75,15 +79,15 @@ public:
 
     const RSModifierExtractor& GetStagingProperties() const;
 
-    void SetBounds(const Vector4f& bounds);
-    void SetBounds(float positionX, float positionY, float width, float height);
-    void SetBoundsWidth(float width);
-    void SetBoundsHeight(float height);
+    virtual void SetBounds(const Vector4f& bounds);
+    virtual void SetBounds(float positionX, float positionY, float width, float height);
+    virtual void SetBoundsWidth(float width);
+    virtual void SetBoundsHeight(float height);
 
-    void SetFrame(const Vector4f& frame);
-    void SetFrame(float positionX, float positionY, float width, float height);
-    void SetFramePositionX(float positionX);
-    void SetFramePositionY(float positionY);
+    virtual void SetFrame(const Vector4f& frame);
+    virtual void SetFrame(float positionX, float positionY, float width, float height);
+    virtual void SetFramePositionX(float positionX);
+    virtual void SetFramePositionY(float positionY);
 
     void SetPositionZ(float positionZ);
 
@@ -167,19 +171,12 @@ public:
         transitionEffect_ = effect;
     }
 
-    RSUINodeType GetType() const override
-    {
-        return RSUINodeType::RS_NODE;
-    }
-
-    void ClearModifiers();
-    void ClearAllModifiers();
-    void AddModifier(const std::shared_ptr<RSModifierBase>& modifier);
-    void RemoveModifier(const std::shared_ptr<RSModifierBase>& modifier);
+    void AddModifier(const std::shared_ptr<RSModifier>& modifier);
+    void RemoveModifier(const std::shared_ptr<RSModifier>& modifier);
 
 protected:
     explicit RSNode(bool isRenderServiceNode);
-    RSNode(bool isRenderServiceNode, NodeId id);
+    explicit RSNode(bool isRenderServiceNode, NodeId id);
     RSNode(const RSNode&) = delete;
     RSNode(const RSNode&&) = delete;
     RSNode& operator=(const RSNode&) = delete;
@@ -195,6 +192,8 @@ protected:
         return false;
     }
 
+    std::vector<PropertyId> GetModifierIds() const;
+
 private:
     void AnimationFinish(AnimationId animationId);
     bool HasPropertyAnimation(const PropertyId& id);
@@ -202,23 +201,27 @@ private:
     void AddAnimationInner(const std::shared_ptr<RSAnimation>& animation);
     void RemoveAnimationInner(const std::shared_ptr<RSAnimation>& animation);
     void FinishAnimationByProperty(const PropertyId& id);
-    const std::shared_ptr<RSModifierBase> GetModifier(const PropertyId& propertyId);
+    const std::shared_ptr<RSModifier> GetModifier(const PropertyId& propertyId);
     virtual void OnBoundsSizeChanged() const {};
     void UpdateModifierMotionPathOption();
+    void UpdateExtendedModifier(const PropertyId& id);
+
+    // Planning: refactor RSUIAnimationManager and remove this method
+    void ClearAllModifiers();
 
     std::unordered_map<AnimationId, std::shared_ptr<RSAnimation>> animations_;
     std::unordered_map<PropertyId, uint32_t> animatingPropertyNum_;
-    std::unordered_map<PropertyId, std::shared_ptr<RSModifierBase>> modifiers_;
-    std::unordered_map<RSModifierType, std::shared_ptr<RSModifierBase>> propertyModifiers_;
+    std::unordered_map<PropertyId, std::shared_ptr<RSModifier>> modifiers_;
+    std::unordered_map<RSModifierType, std::shared_ptr<RSModifier>> propertyModifiers_;
     std::shared_ptr<RSMotionPathOption> motionPathOption_;
 
     void UpdateImplicitAnimator();
     pid_t implicitAnimatorTid_ = 0;
     std::shared_ptr<RSImplicitAnimator> implicitAnimator_;
-    std::shared_ptr<const RSTransitionEffect> transitionEffect_ = nullptr;
+    std::shared_ptr<const RSTransitionEffect> transitionEffect_;
     std::shared_ptr<RSUIAnimationManager> animationManager_;
 
-    RSModifierExtractor stagingPropertiesExtrator_;
+    RSModifierExtractor stagingPropertiesExtractor_;
 
     friend class RSAnimation;
     friend class RSCurveAnimation;
@@ -230,7 +233,6 @@ private:
     template<typename T>
     friend class RSAnimatableProperty;
     friend class RSPathAnimation;
-    template<typename T>
     friend class RSExtendedModifier;
     friend class RSTransition;
     friend class RSUIDirector;

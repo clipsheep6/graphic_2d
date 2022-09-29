@@ -39,12 +39,7 @@ RSModifierExtractor::RSModifierExtractor(NodeId id) : id_(id) {}
         T value = defaultValue;                                                                                     \
         for (auto& [_, modifier] : node->modifiers_) {                                                              \
             if (modifier->GetModifierType() == RSModifierType::propertyType) {                                      \
-                auto modifierPtr = std::static_pointer_cast<RSModifier<RSProperty<T>>>(modifier);                   \
-                if (modifierPtr->isAdditive_) {                                                                     \
-                    value operator std::static_pointer_cast<RSProperty<T>>(modifierPtr->GetProperty())->Get();      \
-                } else {                                                                                            \
-                    value = std::static_pointer_cast<RSProperty<T>>(modifierPtr->GetProperty())->Get();             \
-                }                                                                                                   \
+                value operator std::static_pointer_cast<RSProperty<T>>(modifier->GetProperty())->Get();             \
             }                                                                                                       \
         }                                                                                                           \
         return value;                                                                                               \
@@ -198,27 +193,27 @@ Color RSModifierExtractor::GetShadowColor() const
 
 float RSModifierExtractor::GetShadowOffsetX() const
 {
-    GET_PROPERTY_FROM_MODIFIERS(float, SHADOW_OFFSET_X, DEFAULT_SHADOW_OFFSET_X, +=);
+    GET_PROPERTY_FROM_MODIFIERS(float, SHADOW_OFFSET_X, DEFAULT_SHADOW_OFFSET_X, =);
 }
 
 float RSModifierExtractor::GetShadowOffsetY() const
 {
-    GET_PROPERTY_FROM_MODIFIERS(float, SHADOW_OFFSET_Y, DEFAULT_SHADOW_OFFSET_Y, +=);
+    GET_PROPERTY_FROM_MODIFIERS(float, SHADOW_OFFSET_Y, DEFAULT_SHADOW_OFFSET_Y, =);
 }
 
 float RSModifierExtractor::GetShadowAlpha() const
 {
-    GET_PROPERTY_FROM_MODIFIERS(float, SHADOW_ALPHA, 0.f, *=);
+    GET_PROPERTY_FROM_MODIFIERS(float, SHADOW_ALPHA, 0.f, =);
 }
 
 float RSModifierExtractor::GetShadowElevation() const
 {
-    GET_PROPERTY_FROM_MODIFIERS(float, SHADOW_ELEVATION, 0.f, +=);
+    GET_PROPERTY_FROM_MODIFIERS(float, SHADOW_ELEVATION, 0.f, =);
 }
 
 float RSModifierExtractor::GetShadowRadius() const
 {
-    GET_PROPERTY_FROM_MODIFIERS(float, SHADOW_RADIUS, 0.f, +=);
+    GET_PROPERTY_FROM_MODIFIERS(float, SHADOW_RADIUS, DEFAULT_SHADOW_RADIUS, =);
 }
 
 std::shared_ptr<RSPath> RSModifierExtractor::GetShadowPath() const
@@ -267,13 +262,19 @@ std::string RSModifierExtractor::Dump() const
         dumpInfo.append(buffer);
     }
 
-    memset_s(buffer, UINT8_MAX, 0, UINT8_MAX);
+    auto ret = memset_s(buffer, UINT8_MAX, 0, UINT8_MAX);
+    if (ret != EOK) {
+        return "Failed to memset_s for BackgroundColor, ret=" + std::to_string(ret);
+    }
     if (!ROSEN_EQ(GetBackgroundColor(), RgbPalette::Transparent()) &&
         sprintf_s(buffer, UINT8_MAX, ", BackgroundColor[#%08X]", GetBackgroundColor().AsArgbInt()) != -1) {
         dumpInfo.append(buffer);
     }
 
-    memset_s(buffer, UINT8_MAX, 0, UINT8_MAX);
+    ret = memset_s(buffer, UINT8_MAX, 0, UINT8_MAX);
+    if (ret != EOK) {
+        return "Failed to memset_s for Alpha, ret=" + std::to_string(ret);
+    }
     if (!ROSEN_EQ(GetAlpha(), 1.f) &&
         sprintf_s(buffer, UINT8_MAX, ", Alpha[%.1f]", GetAlpha()) != -1) {
         dumpInfo.append(buffer);

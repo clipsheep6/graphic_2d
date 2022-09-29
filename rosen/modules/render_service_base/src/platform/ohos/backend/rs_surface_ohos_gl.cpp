@@ -17,7 +17,6 @@
 #include "platform/common/rs_log.h"
 #include "window.h"
 #include <hilog/log.h>
-#include <display_type.h>
 #include "pipeline/rs_render_thread.h"
 
 namespace OHOS {
@@ -25,7 +24,7 @@ namespace Rosen {
 
 RSSurfaceOhosGl::RSSurfaceOhosGl(const sptr<Surface>& producer) : RSSurfaceOhos(producer)
 {
-    bufferUsage_ = HBM_USE_CPU_READ | HBM_USE_MEM_DMA;
+    bufferUsage_ = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_DMA;
 }
 
 void RSSurfaceOhosGl::SetSurfaceBufferUsage(int32_t usage)
@@ -64,7 +63,15 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int
 
     std::unique_ptr<RSSurfaceFrameOhosGl> frame = std::make_unique<RSSurfaceFrameOhosGl>(width, height);
 
-    NativeWindowHandleOpt(mWindow, SET_USAGE, bufferUsage_);
+    int32_t format = 0;
+    NativeWindowHandleOpt(mWindow, GET_FORMAT, &format);
+    if (format == PIXEL_FMT_RGBA_8888) {
+        NativeWindowHandleOpt(mWindow, SET_USAGE,
+            BUFFER_USAGE_HW_RENDER | BUFFER_USAGE_HW_TEXTURE | BUFFER_USAGE_HW_COMPOSER | BUFFER_USAGE_MEM_DMA);
+    } else {
+        NativeWindowHandleOpt(mWindow, SET_USAGE, bufferUsage_);
+    }
+
     NativeWindowHandleOpt(mWindow, SET_BUFFER_GEOMETRY, width, height);
     NativeWindowHandleOpt(mWindow, GET_BUFFER_GEOMETRY, &mHeight, &mWidth);
     NativeWindowHandleOpt(mWindow, SET_COLOR_GAMUT, colorSpace_);
@@ -107,6 +114,18 @@ void RSSurfaceOhosGl::ClearBuffer()
         mEglSurface = EGL_NO_SURFACE;
         mWindow = nullptr;
         producer_->GoBackground();
+    }
+}
+
+void RSSurfaceOhosGl::ResetBufferAge()
+{
+    if (context_ != nullptr && mEglSurface != EGL_NO_SURFACE && producer_ != nullptr) {
+        ROSEN_LOGD("RSSurfaceOhosGl: Reset Buffer Age!");
+        DestoryNativeWindow(mWindow);
+        context_->MakeCurrent(EGL_NO_SURFACE, context_->GetEGLContext());
+        context_->DestroyEGLSurface(mEglSurface);
+        mEglSurface = EGL_NO_SURFACE;
+        mWindow = nullptr;
     }
 }
 } // namespace Rosen

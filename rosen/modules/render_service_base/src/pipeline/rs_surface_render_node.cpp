@@ -15,7 +15,6 @@
 
 #include "pipeline/rs_surface_render_node.h"
 
-#include "display_type.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
 
@@ -26,12 +25,9 @@
 #include "common/rs_vector4.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_root_render_node.h"
-#include "pipeline/rs_occlusion_config.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
-#include "property/rs_transition_properties.h"
 #include "transaction/rs_render_service_client.h"
-#include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
 
 namespace OHOS {
@@ -40,14 +36,13 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config
     : RSRenderNode(config.id, context),
       RSSurfaceHandler(config.id),
       name_(config.name),
+      nodeType_(config.nodeType),
       dirtyManager_(std::make_shared<RSDirtyRegionManager>())
-{
-}
+{}
 
 RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context)
     : RSSurfaceRenderNode(RSSurfaceRenderNodeConfig{id, "SurfaceNode"}, context)
-{
-}
+{}
 
 RSSurfaceRenderNode::~RSSurfaceRenderNode() {}
 
@@ -99,11 +94,6 @@ void RSSurfaceRenderNode::PrepareRenderBeforeChildren(RSPaintFilterCanvas& canva
         canvas.concat(matrix);
     }
 
-    // apply transition properties to canvas
-    auto transitionProperties = GetAnimationManager().GetTransitionProperties();
-    Vector2f center(properties.GetBoundsWidth() * 0.5f, properties.GetBoundsHeight() * 0.5f);
-    RSPropertiesPainter::DrawTransitionProperties(transitionProperties, center, canvas);
-
     // clip by bounds
     canvas.clipRect(
         SkRect::MakeWH(std::floor(properties.GetBoundsWidth()), std::floor(properties.GetBoundsHeight())));
@@ -134,10 +124,13 @@ void RSSurfaceRenderNode::PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas
 void RSSurfaceRenderNode::CollectSurface(
     const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender)
 {
-    if (RSOcclusionConfig::GetInstance().IsStartingWindow(GetName())) {
+    if (nodeType_ == RSSurfaceNodeType::STARTING_WINDOW_NODE) {
+        if (isUniRender) {
+            vec.emplace_back(shared_from_this());
+        }
         return;
     }
-    if (RSOcclusionConfig::GetInstance().IsLeashWindow(GetName())) {
+    if (nodeType_ == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
         for (auto& child : node->GetSortedChildren()) {
             child->CollectSurface(child, vec, isUniRender);
         }
@@ -148,6 +141,10 @@ void RSSurfaceRenderNode::CollectSurface(
     if (consumer != nullptr && consumer->GetTunnelHandle() != nullptr) {
         return;
     }
+    auto num = find(vec.begin(), vec.end(), shared_from_this());
+    if (num != vec.end()) {
+        return;
+    }
     if (isUniRender) {
         vec.emplace_back(shared_from_this());
     } else {
@@ -155,6 +152,40 @@ void RSSurfaceRenderNode::CollectSurface(
             vec.emplace_back(shared_from_this());
         }
     }
+}
+
+void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node)
+{
+    for (auto& child : node->GetSortedChildren()) {
+        auto surfaceNode = child->ReinterpretCastTo<RSSurfaceRenderNode>();
+        if (surfaceNode == nullptr) {
+            continue;
+        }
+        auto& consumer = surfaceNode->GetConsumer();
+        if (consumer != nullptr) {
+            consumer->GoBackground();
+        }
+    }
+}
+
+void RSSurfaceRenderNode::ResetParent()
+{
+    RSBaseRenderNode::ResetParent();
+
+    if (nodeType_ == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
+        ClearChildrenCache(shared_from_this());
+    } else {
+        auto& consumer = GetConsumer();
+        if (consumer != nullptr &&
+            GetSurfaceNodeType() != RSSurfaceNodeType::SELF_DRAWING_NODE) {
+            consumer->GoBackground();
+        }
+    }
+}
+
+void RSSurfaceRenderNode::SetIsNotifyUIBufferAvailable(bool available)
+{
+    isNotifyUIBufferAvailable_.store(available);
 }
 
 void RSSurfaceRenderNode::Prepare(const std::shared_ptr<RSNodeVisitor>& visitor)
@@ -170,6 +201,7 @@ void RSSurfaceRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     if (!visitor) {
         return;
     }
+    RSRenderNode::RenderTraceDebug();
     visitor->ProcessSurfaceRenderNode(*this);
 }
 
@@ -184,6 +216,7 @@ void RSSurfaceRenderNode::SetContextMatrix(const SkMatrix& matrix, bool sendMsg)
         return;
     }
     contextMatrix_ = matrix;
+    SetDirty();
     if (!sendMsg) {
         return;
     }
@@ -203,6 +236,7 @@ void RSSurfaceRenderNode::SetContextAlpha(float alpha, bool sendMsg)
         return;
     }
     contextAlpha_ = alpha;
+    SetDirty();
     if (!sendMsg) {
         return;
     }
@@ -222,6 +256,7 @@ void RSSurfaceRenderNode::SetContextClipRegion(SkRect clipRegion, bool sendMsg)
         return;
     }
     contextClipRect_ = clipRegion;
+    SetDirty();
     if (!sendMsg) {
         return;
     }
@@ -245,18 +280,20 @@ bool RSSurfaceRenderNode::GetSecurityLayer() const
     return isSecurityLayer_;
 }
 
+void RSSurfaceRenderNode::SetColorSpace(ColorGamut colorSpace)
+{
+    colorSpace_ = colorSpace;
+}
+
+ColorGamut RSSurfaceRenderNode::GetColorSpace() const
+{
+    return colorSpace_;
+}
+
 void RSSurfaceRenderNode::UpdateSurfaceDefaultSize(float width, float height)
 {
     if (consumer_ != nullptr) {
         consumer_->SetDefaultWidthAndHeight(width, height);
-    }  
-}
-
-void RSSurfaceRenderNode::SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId)
-{
-    auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->AddCommandFromRT(command, nodeId);
     }
 }
 
@@ -304,6 +341,7 @@ void RSSurfaceRenderNode::NotifyRTBufferAvailable()
     // In RS, "isNotifyRTBufferAvailable_ = true" means buffer is ready and need to trigger ipc callback.
     // In RT, "isNotifyRTBufferAvailable_ = true" means RT know that RS have had available buffer
     // and ready to trigger "callbackForRenderThreadRefresh_" to "clip" on parent surface.
+    isNotifyRTBufferAvailablePre_ = isNotifyRTBufferAvailable_;
     if (isNotifyRTBufferAvailable_) {
         return;
     }
@@ -348,6 +386,11 @@ bool RSSurfaceRenderNode::IsNotifyRTBufferAvailable() const
     return isNotifyRTBufferAvailable_;
 }
 
+bool RSSurfaceRenderNode::IsNotifyRTBufferAvailablePre() const
+{
+    return isNotifyRTBufferAvailablePre_;
+}
+
 bool RSSurfaceRenderNode::IsNotifyUIBufferAvailable() const
 {
     return isNotifyUIBufferAvailable_;
@@ -363,5 +406,36 @@ bool RSSurfaceRenderNode::NeedSetCallbackForRenderThreadRefresh()
     return (callbackForRenderThreadRefresh_ == nullptr);
 }
 
+void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& region,
+                                                    VisibleData& visibleVec,
+                                                    std::map<uint32_t, bool>& pidVisMap)
+{
+    if (nodeType_ == RSSurfaceNodeType::SELF_DRAWING_NODE) {
+        SetOcclusionVisible(true);
+        return;
+    }
+    visibleRegion_ = region;
+    bool vis = region.GetSize() > 0;
+    if (vis) {
+        visibleVec.emplace_back(GetId());
+    }
+
+    // collect visible changed pid
+    if (qosPidCal_ && GetType() == RSRenderNodeType::SURFACE_NODE) {
+        uint32_t tmpPid = (GetId() >> 32) & 0xFFFFFFFF;
+        if (pidVisMap.find(tmpPid) != pidVisMap.end()) {
+            pidVisMap[tmpPid] |= vis;
+        } else {
+            pidVisMap[tmpPid] = vis;
+        }
+    }
+
+    SetOcclusionVisible(vis);
+    for (auto& child : GetSortedChildren()) {
+        if (auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)) {
+            surface->SetVisibleRegionRecursive(region, visibleVec, pidVisMap);
+        }
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

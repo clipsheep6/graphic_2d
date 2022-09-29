@@ -71,12 +71,10 @@ ohos_shared_library("librender_service") {
   ]
 
   deps = [
-    "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk:accessibilityconfig",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/resourceschedule/resource_schedule_service/soc_perf:socperf_client",
-    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
   ]
 
   public_deps = [
@@ -85,6 +83,7 @@ ohos_shared_library("librender_service") {
   ]
 
   external_deps = [
+    "accessibility:accessibilityconfig",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",

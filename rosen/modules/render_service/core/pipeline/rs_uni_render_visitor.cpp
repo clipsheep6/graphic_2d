@@ -295,8 +295,13 @@ void RSUniRenderVisitor::DrawRectOnCanvas(const RectI& dirtyRect, const SkColor 
         return;
     }
     auto skRect = SkRect::MakeXYWH(dirtyRect.left_, dirtyRect.top_, dirtyRect.width_, dirtyRect.height_);
+    std::string position = std::to_string(dirtyRect.left_) + ',' + std::to_string(dirtyRect.top_) + ',' +
+        std::to_string(dirtyRect.width_) + ',' + std::to_string(dirtyRect.height_);
     const int defaultEdgeWidth = 6;
     SkPaint rectPaint;
+    auto textPos = SkPoint::Make(SkScalar(dirtyRect.left_, dirtyRect.top_ + defaultEdgeWidth));
+    sk_sp<SkTextBlob> SkTextBlob = SkTextBlob::MakeFromPosText(position, strlen(position), 
+        textPos, SkFont(nullptr, 24.0f, 1.0f, 0.0f));
     rectPaint.setColor(color);
     rectPaint.setAntiAlias(true);
     rectPaint.setAlphaf(alpha);
@@ -306,6 +311,15 @@ void RSUniRenderVisitor::DrawRectOnCanvas(const RectI& dirtyRect, const SkColor 
         rectPaint.setStrokeJoin(SkPaint::kRound_Join);
     }
     canvas_->drawRect(skRect, rectPaint);
+    canvas_->drawTextBlob(SkTextBlob, 0, 0, SkPaint());
+}
+
+void RSUniRenderVisitor::DrawEglDamageRegion(std::vector<RectI> dirtyRects)
+{
+    const float fillAlpha = 0.2;
+    for (const auto& subRect : dirtyRects) {
+        DrawRectOnCanvas(subRect, SK_ColorBLUE, SkPaint::kStroke_Style, fillAlpha);
+    }
 }
 
 void RSUniRenderVisitor::DrawDirtyRegion()
@@ -457,6 +471,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         }
         int saveLayerCnt = 0;
         SkRegion region;
+        Occlusion::Region dirtyRegionTest;
 #ifdef RS_ENABLE_EGLQUERYSURFACE
         // Get displayNode buffer age in order to merge visible dirty region for displayNode.
         // And then set egl damage region to improve uni_render efficiency.
@@ -464,6 +479,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             int bufferAge = renderFrame->GetBufferAge();
             RSUniRenderUtil::MergeDirtyHistory(displayNodePtr, bufferAge);
             auto dirtyRegion = RSUniRenderUtil::MergeVisibleDirtyRegion(displayNodePtr);
+            dirtyRegionTest = dirtyRegion;
             SetSurfaceGlobalDirtyRegion(displayNodePtr);
             std::vector<RectI> rects = GetDirtyRects(dirtyRegion);
             RectI rect = node.GetDirtyManager()->GetDirtyRegionFlipWithinSurface();
@@ -475,7 +491,11 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 region.op(SkIRect::MakeXYWH(r.left_, disH - r.GetBottom(), r.width_, r.height_), SkRegion::kUnion_Op);
                 RS_LOGD("SetDamageRegion %s", r.ToString().c_str());
             }
-            renderFrame->SetDamageRegion(rects);
+            // disable SetDamageRegion and opDrop for dirty region DFX visualization 
+            if (!curDisplayDirtyManager_->IsDebugRegionTypeEnable(DebugRegionType::EGL_DAMAGE)) {
+                renderFrame->SetDamageRegion(rects);
+            }
+            isOpDropped_ &= !curDisplayDirtyManager_->IsDebugRegionTypeEnable(DebugRegionType::EGL_DAMAGE);
         }
         if (isOpDropped_ && !region.isEmpty()) {
             if (region.isRect()) {
@@ -512,6 +532,17 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 
         if (overdrawListener != nullptr) {
             overdrawListener->Draw();
+        }
+
+        if (isPartialRenderEnabled_ && curDisplayDirtyManager_->IsDebugRegionTypeEnable(DebugRegionType::EGL_DAMAGE)) {
+            RectI dirtySurfaceRect = node.GetDirtyManager()->GetDirtyRegion();
+            std::vector<Occlusion::Rect> visibleDirtyRects = dirtyRegionTest.GetRegionRects();
+            std::vector<RectI> rects;
+            rects.emplace_back(dirtySurfaceRect);
+            for (auto rect : visibleDirtyRects) {
+                 rects.emplace_back(RectI(rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_));
+            }
+            DrawEglDamageRegion(rects);
         }
 
         RS_TRACE_BEGIN("RSUniRender:FlushFrame");

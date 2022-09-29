@@ -62,6 +62,7 @@ private:
     void DrawRectOnCanvas(const RectI& dirtyRect, const SkColor color,
         const SkPaint::Style fillType, float alpha);
     void DrawDirtyRegion();
+    void DrawEglDamageRegion(std::vector<RectI> dirtyRects);
     std::vector<RectI> GetDirtyRects(const Occlusion::Region &region);
     /* calculate display/global (between windows) level dirty region, current include:
      * 1. window move/add/remove 2. transparent dirty region

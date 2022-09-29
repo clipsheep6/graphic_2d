@@ -32,7 +32,7 @@ namespace OHOS {
 #define SURFACE_DEFAULT_STRIDE_ALIGNMENT 4
 #define SURFACE_MAX_SIZE 58982400 // 8K * 8K
 
-using Rect = struct Rect {
+using Rect = struct {
     int32_t x;
     int32_t y;
     int32_t w;
@@ -52,7 +52,7 @@ using HDRMetaDataType = enum {
     HDR_META_DATA_SET,
 };
 
-using HDRMetaDataSet = struct HDRMetaDataSet {
+using HDRMetaDataSet = struct {
     HDRMetadataKey key = HDRMetadataKey::MATAKEY_RED_PRIMARY_X;
     std::vector<uint8_t> metaData;
 };
@@ -96,7 +96,7 @@ using SurfaceBufferUsage = enum {
     BUFFER_USAGE_VENDOR_PRI19 = (1ULL << 63),   /**< Reserverd for vendor */
 };
 
-using BufferRequestConfig = struct BufferRequestConfig {
+using BufferRequestConfig = struct {
     int32_t width;
     int32_t height;
     int32_t strideAlignment;
@@ -122,7 +122,7 @@ using BufferRequestConfig = struct BufferRequestConfig {
     }
 };
 
-using BufferFlushConfig = struct BufferFlushConfig {
+using BufferFlushConfig = struct {
     Rect damage;
     int64_t timestamp;
 };

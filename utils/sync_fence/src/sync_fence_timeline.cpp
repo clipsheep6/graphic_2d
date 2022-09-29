@@ -54,7 +54,7 @@ ns_sec_t SyncFenceTime::GetSignalTimestamp()
 
     timestamp = fence->SyncFileReadTimestamp();
     if (timestamp != SyncFence::FENCE_PENDING_TIMESTAMP) {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> lockTimestampStore(mutex_);
         fence_.clear();
         signaledTimestamps_.store(timestamp, std::memory_order_relaxed);
     }

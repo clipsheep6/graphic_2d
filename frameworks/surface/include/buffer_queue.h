@@ -38,7 +38,7 @@ enum BufferState {
     BUFFER_STATE_ATTACHED,
 };
 
-using BufferElement = struct BufferElement {
+using BufferElement = struct {
     sptr<SurfaceBuffer> buffer;
     BufferState state;
     bool isDeleting;

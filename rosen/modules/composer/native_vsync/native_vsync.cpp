@@ -55,14 +55,15 @@ OH_NativeVSync* OH_NativeVSync_Create(const char* name, unsigned int length)
     return OH_NativeVSync_NativeVSyncToOHNativeVSync(nativeVSync);
 }
 
-void OH_NativeVSync_Destroy(OH_NativeVSync *nativeVSync)
+int OH_NativeVSync_Destroy(OH_NativeVSync *nativeVSync)
 {
     if (nativeVSync == nullptr) {
         VLOGE("parameter is nullptr, please check");
-        return;
+        return -1;
     }
 
     delete OH_NativeVSync_OHNativeVSyncToNativeVSync(nativeVSync);
+    return 0;
 }
 
 int OH_NativeVSync_RequestFrame(OH_NativeVSync *ohNativeVSync, OH_NativeVSync_FrameCallback callback, void* data)

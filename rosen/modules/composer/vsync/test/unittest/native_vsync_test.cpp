@@ -119,7 +119,7 @@ HWTEST_F(NativeVsyncTest, OH_NativeVSync_RequestFrame003, Function | MediumTest 
  */
 HWTEST_F(NativeVsyncTest, OH_NativeVSync_Destroy001, Function | MediumTest | Level2)
 {
-    OH_NativeVSync_Destroy(nullptr);
+    ASSERT_NE(OH_NativeVSync_Destroy(nullptr), 0);
 }
 
 /*
@@ -132,7 +132,7 @@ HWTEST_F(NativeVsyncTest, OH_NativeVSync_Destroy001, Function | MediumTest | Lev
  */
 HWTEST_F(NativeVsyncTest, OH_NativeVSync_Destroy002, Function | MediumTest | Level2)
 {
-    OH_NativeVSync_Destroy(native_vsync);
+    ASSERT_EQ(OH_NativeVSync_Destroy(native_vsync), 0);
 }
 } // namespace
 } // namespace Rosen

@@ -51,14 +51,14 @@ OHNativeWindow* CreateNativeWindowFromSurface(void* pSurface)
     return nativeWindow;
 }
 
-void DestoryNativeWindow(OHNativeWindow *window)
+int32_t DestoryNativeWindow(OHNativeWindow *window)
 {
     if (window == nullptr) {
         BLOGE("parameter error, please check input parameter");
-        return;
+        return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
     // unreference nativewindow object
-    NativeObjectUnreference(window);
+    return NativeObjectUnreference(window);
 }
 
 OHNativeWindowBuffer* CreateNativeWindowBufferFromSurfaceBuffer(void* pSurfaceBuffer)
@@ -72,13 +72,13 @@ OHNativeWindowBuffer* CreateNativeWindowBufferFromSurfaceBuffer(void* pSurfaceBu
     NativeObjectReference(nwBuffer);
     return nwBuffer;
 }
-void DestroyNativeWindowBuffer(OHNativeWindowBuffer* buffer)
+int32_t DestroyNativeWindowBuffer(OHNativeWindowBuffer* buffer)
 {
     if (buffer == nullptr) {
         BLOGE("parameter error, please check input parameter");
-        return;
+        return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
-    NativeObjectUnreference(buffer);
+    return NativeObjectUnreference(buffer);
 }
 
 int32_t NativeWindowRequestBuffer(OHNativeWindow *window,

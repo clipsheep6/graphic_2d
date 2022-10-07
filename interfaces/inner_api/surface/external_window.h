@@ -271,7 +271,7 @@ OHNativeWindow* OH_NativeWindow_CreateNativeWindow(void* pSurface);
  * @since 8
  * @version 1.0
  */
-void OH_NativeWindow_DestroyNativeWindow(OHNativeWindow* window);
+int32_t OH_NativeWindow_DestroyNativeWindow(OHNativeWindow* window);
 
 /**
  * @brief Creates a <b>NativeWindowBuffer</b> instance. A new <b>NativeWindowBuffer</b> instance is created each time this function is called.
@@ -292,7 +292,7 @@ OHNativeWindowBuffer* OH_NativeWindow_CreateNativeWindowBufferFromSurfaceBuffer(
  * @since 8
  * @version 1.0
  */
-void OH_NativeWindow_DestroyNativeWindowBuffer(OHNativeWindowBuffer* buffer);
+int32_t OH_NativeWindow_DestroyNativeWindowBuffer(OHNativeWindowBuffer* buffer);
 
 /**
  * @brief Requests a <b>NativeWindowBuffer</b> through a <b>NativeWindow</b> instance for content production.

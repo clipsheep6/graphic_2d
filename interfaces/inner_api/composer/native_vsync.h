@@ -66,7 +66,7 @@ OH_NativeVSync* OH_NativeVSync_Create(const char* name, unsigned int length);
  * @since 9
  * @version 1.0
  */
-void OH_NativeVSync_Destroy(OH_NativeVSync* nativeVsync);
+int OH_NativeVSync_Destroy(OH_NativeVSync* nativeVsync);
 
 /**
  * @brief Request next vsync with callback.

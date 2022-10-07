@@ -517,7 +517,7 @@ HWTEST_F(NativeWindowTest, Unreference001, Function | MediumTest | Level2)
  */
 HWTEST_F(NativeWindowTest, DestroyNativeWindow001, Function | MediumTest | Level2)
 {
-    OH_NativeWindow_DestroyNativeWindow(nullptr);
+    ASSERT_NE(OH_NativeWindow_DestroyNativeWindow(nullptr), OHOS::GSERROR_OK);
 }
 
 /*
@@ -530,7 +530,7 @@ HWTEST_F(NativeWindowTest, DestroyNativeWindow001, Function | MediumTest | Level
  */
 HWTEST_F(NativeWindowTest, DestroyNativeWindow002, Function | MediumTest | Level2)
 {
-    OH_NativeWindow_DestroyNativeWindow(nativeWindow);
+    ASSERT_EQ(OH_NativeWindow_DestroyNativeWindow(nativeWindow), OHOS::GSERROR_OK);
 }
 
 /*
@@ -543,7 +543,7 @@ HWTEST_F(NativeWindowTest, DestroyNativeWindow002, Function | MediumTest | Level
  */
 HWTEST_F(NativeWindowTest, OH_NativeWindow_DestroyNativeWindowBuffer001, Function | MediumTest | Level2)
 {
-    OH_NativeWindow_DestroyNativeWindowBuffer(nullptr);
+    ASSERT_NE(OH_NativeWindow_DestroyNativeWindowBuffer(nullptr), OHOS::GSERROR_OK);
 }
 
 /*
@@ -556,7 +556,7 @@ HWTEST_F(NativeWindowTest, OH_NativeWindow_DestroyNativeWindowBuffer001, Functio
  */
 HWTEST_F(NativeWindowTest, OH_NativeWindow_DestroyNativeWindowBuffer002, Function | MediumTest | Level2)
 {
-    OH_NativeWindow_DestroyNativeWindowBuffer(nativeWindowBuffer);
+    ASSERT_EQ(OH_NativeWindow_DestroyNativeWindowBuffer(nativeWindowBuffer), OHOS::GSERROR_OK);
 }
 
 /*

@@ -32,11 +32,11 @@ enum NativeObjectMagic {
 
 // pSurface type is OHOS::sptr<OHOS::Surface>*
 OHNativeWindow* CreateNativeWindowFromSurface(void* pSurface);
-void DestoryNativeWindow(OHNativeWindow* window);
+int32_t DestoryNativeWindow(OHNativeWindow* window);
 
 // pSurfaceBuffer type is OHOS::sptr<OHOS::SurfaceBuffer>*
 OHNativeWindowBuffer* CreateNativeWindowBufferFromSurfaceBuffer(void* pSurfaceBuffer);
-void DestroyNativeWindowBuffer(OHNativeWindowBuffer* buffer);
+int32_t DestroyNativeWindowBuffer(OHNativeWindowBuffer* buffer);
 
 int32_t NativeWindowRequestBuffer(OHNativeWindow *window, /* [out] */ OHNativeWindowBuffer **buffer,
     /* [out] get release fence */ int *fenceFd);

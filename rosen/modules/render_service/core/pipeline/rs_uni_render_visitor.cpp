@@ -760,7 +760,9 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         canvas_->clipRect(boundsRect_);
     }
 
-    RSPropertiesPainter::DrawBackground(property, *canvas_);
+    if (!isSelfDrawingSurface || (node.GetBuffer() == nullptr && ROSEN_EQ(canvas_->GetAlpha(), 1.0f))) {
+        RSPropertiesPainter::DrawBackground(property, *canvas_);
+    }
     auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
     if (filter != nullptr) {
         auto skRectPtr = std::make_unique<SkRect>();

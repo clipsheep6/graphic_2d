@@ -259,7 +259,9 @@ private:
     ~RSScreenManager() noexcept override;
 
     static void OnHotPlug(std::shared_ptr<HdiOutput> &output, bool connected, void *data);
+    static void OnHwcDead(void *data);
     void OnHotPlugEvent(std::shared_ptr<HdiOutput> &output, bool connected);
+    void OnHwcDeadEvent();
     void ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &output);
     void ProcessScreenDisConnectedLocked(std::shared_ptr<HdiOutput> &output);
     void HandleDefaultScreenDisConnectedLocked();

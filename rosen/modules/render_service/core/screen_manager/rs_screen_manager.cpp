@@ -52,6 +52,11 @@ bool RSScreenManager::Init() noexcept
         return false;
     }
 
+    if (composer_->RegHwcDead(&RSScreenManager::OnHwcDead, this) == -1) {
+        RS_LOGE("RSScreenManager %s: Failed to register OnHwcDead Func to composer.", __func__);
+        return false;
+    }
+
     if (composer_->RegScreenHotplug(&RSScreenManager::OnHotPlug, this) == -1) {
         RS_LOGE("RSScreenManager %s: Failed to register OnHotPlug Func to composer.", __func__);
         return false;
@@ -61,6 +66,40 @@ bool RSScreenManager::Init() noexcept
     ProcessScreenHotPlugEvents();
 
     return true;
+}
+
+void RSScreenManager::OnHwcDead(void *data)
+{
+    RSScreenManager *screenManager = nullptr;
+    if (data != nullptr) {
+        screenManager = static_cast<RSScreenManager *>(data);
+    } else {
+        screenManager = static_cast<RSScreenManager *>(RSScreenManager::GetInstance().GetRefPtr());
+    }
+
+    if (screenManager == nullptr) {
+        RS_LOGE("RSScreenManager %s: Failed to find RSScreenManager instance.", __func__);
+        return;
+    }
+
+    // reset screen states
+    screenManager->OnHwcDeadEvent();
+    // reconnect
+    screenManager->Init();
+}
+
+void RSScreenManager::OnHwcDeadEvent()
+{
+    for (const auto &[id, screen] : screens_) {
+        if (!screen->IsVirtual()) {
+            for (auto &cb : screenChangeCallbacks_) {
+                cb->OnScreenChanged(id, ScreenEvent::DISCONNECTED);
+            }
+            screens_.erase(id);
+            RS_LOGI("RSScreenManager %s: Screen(id %" PRIu64 ") disconnected.", __func__, id);
+        }
+    }
+    defaultScreenId_ = INVALID_SCREEN_ID;
 }
 
 void RSScreenManager::OnHotPlug(std::shared_ptr<HdiOutput> &output, bool connected, void *data)

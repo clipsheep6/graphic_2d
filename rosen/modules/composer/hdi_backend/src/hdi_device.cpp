@@ -101,6 +101,12 @@ int32_t HdiDevice::RegHotPlugCallback(HotPlugCallback callback, void *data)
     return deviceFuncs_->RegHotPlugCallback(callback, data);
 }
 
+int32_t HdiDevice::RegHwcDeadCallback(HwcDeadCallback callback, void *data)
+{
+    CHECK_FUNC(deviceFuncs_, deviceFuncs_->RegHwcDeadCallback);
+    return deviceFuncs_->RegHwcDeadCallback(callback, data);
+}
+
 int32_t HdiDevice::RegScreenVBlankCallback(uint32_t screenId, VBlankCallback callback, void *data)
 {
     CHECK_FUNC(deviceFuncs_, deviceFuncs_->RegDisplayVBlankCallback);

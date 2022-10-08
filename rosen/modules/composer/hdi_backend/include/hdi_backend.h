@@ -40,13 +40,14 @@ struct PrepareCompleteParam {
 using OnScreenHotplugFunc = std::function<void(OutputPtr &output, bool connected, void* data)>;
 using OnPrepareCompleteFunc = std::function<void(sptr<Surface>& surface,
                                                  const struct PrepareCompleteParam &param, void* data)>;
-
+using OnHwcDeadCallback = std::function<void(void* data)>;
 class HdiBackend {
 public:
     /* for RS begin */
     static HdiBackend* GetInstance();
     RosenError RegScreenHotplug(OnScreenHotplugFunc func, void* data);
     RosenError RegPrepareComplete(OnPrepareCompleteFunc func, void* data);
+    RosenError RegHwcDead(OnHwcDeadCallback func, void* data);
     void Repaint(std::vector<OutputPtr> &outputs);
     std::map<LayerInfoPtr, sptr<SyncFence>> GetLayersReleaseFence(const OutputPtr& output);
     /* for RS end */

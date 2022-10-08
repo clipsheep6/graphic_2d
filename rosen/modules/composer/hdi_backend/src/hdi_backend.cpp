@@ -38,7 +38,18 @@ RosenError HdiBackend::RegScreenHotplug(OnScreenHotplugFunc func, void* data)
     onScreenHotplugCb_ = func;
     onHotPlugCbData_ = data;
 
-    return InitDevice();
+    RosenError retCode = InitDevice();
+    if (retCode != ROSEN_ERROR_OK) {
+        return retCode;
+    }
+
+    int32_t ret = device_->RegHotPlugCallback(HdiBackend::OnHdiBackendHotPlugEvent, this);
+    if (ret != DISPLAY_SUCCESS) {
+        HLOGE("RegHotPlugCallback failed, ret is %{public}d", ret);
+        return ROSEN_ERROR_API_FAILED;
+    }
+
+    return ROSEN_ERROR_OK;
 }
 
 RosenError HdiBackend::RegPrepareComplete(OnPrepareCompleteFunc func, void* data)
@@ -50,6 +61,27 @@ RosenError HdiBackend::RegPrepareComplete(OnPrepareCompleteFunc func, void* data
 
     onPrepareCompleteCb_ = func;
     onPrepareCompleteCbData_ = data;
+
+    return ROSEN_ERROR_OK;
+}
+
+RosenError HdiBackend::RegHwcDead(OnHwcDeadCallback func, void* data)
+{
+    if (func == nullptr) {
+        HLOGE("onHwcDeadCallbackFunc is null.");
+        return ROSEN_ERROR_INVALID_ARGUMENTS;
+    }
+
+    RosenError retCode = InitDevice();
+    if (retCode != ROSEN_ERROR_OK) {
+        return retCode;
+    }
+
+    int32_t ret = device_->RegHwcDeadCallback(func, data);
+    if (ret != DISPLAY_SUCCESS) {
+        HLOGE("RegHwcDeadCallback failed, ret is %{public}d", ret);
+        return ROSEN_ERROR_API_FAILED;
+    }
 
     return ROSEN_ERROR_OK;
 }
@@ -382,15 +414,7 @@ RosenError HdiBackend::InitDevice()
         HLOGE("Get HdiDevice failed");
         return ROSEN_ERROR_NOT_INIT;
     }
-
-    int32_t ret = device_->RegHotPlugCallback(HdiBackend::OnHdiBackendHotPlugEvent, this);
-    if (ret != DISPLAY_SUCCESS) {
-        HLOGE("RegHotPlugCallback failed, ret is %{public}d", ret);
-        return ROSEN_ERROR_API_FAILED;
-    }
-
     HLOGI("Init device succeed");
-
     return ROSEN_ERROR_OK;
 }
 

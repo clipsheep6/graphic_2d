@@ -21,6 +21,7 @@
 #include "modifier/rs_animatable_arithmetic.h"
 #include "modifier/rs_modifier_type.h"
 #include "pipeline/rs_base_render_node.h"
+#include "property/rs_properties.h"
 #include "transaction/rs_marshalling_helper.h"
 
 namespace OHOS {
@@ -136,6 +137,7 @@ public:
         if (stagingValue_ != value) {
             stagingValue_ = value;
             OnChange();
+            SendIfNeed(value);
         }
     }
 
@@ -144,9 +146,47 @@ public:
         return stagingValue_;
     }
 
+    void SendIfNeed(const T& value);
+
 protected:
     T stagingValue_;
 };
+
+template<>
+void RSRenderProperty<bool>::SendIfNeed(const bool& value);
+template<>
+void RSRenderProperty<float>::SendIfNeed(const float& value);
+template<>
+void RSRenderProperty<int>::SendIfNeed(const int& value);
+template<>
+void RSRenderProperty<Color>::SendIfNeed(const Color& value);
+template<>
+void RSRenderProperty<Gravity>::SendIfNeed(const Gravity& value);
+template<>
+void RSRenderProperty<Matrix3f>::SendIfNeed(const Matrix3f& value);
+template<>
+void RSRenderProperty<Quaternion>::SendIfNeed(const Quaternion& value);
+template<>
+void RSRenderProperty<std::shared_ptr<RSFilter>>::SendIfNeed(const std::shared_ptr<RSFilter>& value);
+template<>
+void RSRenderProperty<std::shared_ptr<RSImage>>::SendIfNeed(const std::shared_ptr<RSImage>& value);
+template<>
+void RSRenderProperty<std::shared_ptr<RSMask>>::SendIfNeed(const std::shared_ptr<RSMask>& value);
+template<>
+void RSRenderProperty<std::shared_ptr<RSPath>>::SendIfNeed(const std::shared_ptr<RSPath>& value);
+template<>
+void RSRenderProperty<std::shared_ptr<RSShader>>::SendIfNeed(const std::shared_ptr<RSShader>& value);
+template<>
+void RSRenderProperty<Vector2f>::SendIfNeed(const Vector2f& value);
+template<>
+void RSRenderProperty<Vector4<uint32_t>>::SendIfNeed(const Vector4<uint32_t>& value);
+template<>
+void RSRenderProperty<Vector4<Color>>::SendIfNeed(const Vector4<Color>& value);
+template<>
+void RSRenderProperty<Vector4f>::SendIfNeed(const Vector4f& value);
+template<>
+void RSRenderProperty<std::shared_ptr<DrawCmdList>>::SendIfNeed(
+    const std::shared_ptr<DrawCmdList>& value);
 
 template<typename T>
 class RSRenderAnimatableProperty : public RSRenderProperty<T> {

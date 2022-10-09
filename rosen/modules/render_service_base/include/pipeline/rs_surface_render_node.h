@@ -108,8 +108,6 @@ public:
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
-    void SetContextBounds(const Vector4f bounds);
-
     void SetTotalMatrix(const SkMatrix& totalMatrix)
     {
         totalMatrix_ = totalMatrix;

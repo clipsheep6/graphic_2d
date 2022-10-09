@@ -85,6 +85,7 @@ bool RSRenderTransition::ParseParam(Parcel& parcel)
 #endif
 void RSRenderTransition::OnAnimate(float fraction)
 {
+    ROSEN_LOGI("RSRenderTransition_On_Animate");    // y
     currentFraction_ = interpolator_->Interpolate(fraction);
     if (isTransitionIn_) {
         currentFraction_ = 1 - currentFraction_;

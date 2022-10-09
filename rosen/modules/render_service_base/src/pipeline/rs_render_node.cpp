@@ -66,6 +66,7 @@ void RSRenderNode::FallbackAnimationsToRoot()
 
 bool RSRenderNode::Animate(int64_t timestamp)
 {
+    ROSEN_LOGI("RSRenderNode_animate %lld", timestamp);
     return animationManager_.Animate(timestamp);
 }
 

@@ -80,7 +80,7 @@ RSRenderKeyframeAnimation* RSRenderKeyframeAnimation::Unmarshalling(Parcel& parc
 {
     RSRenderKeyframeAnimation* renderKeyframeAnimation = new RSRenderKeyframeAnimation();
     if (!renderKeyframeAnimation->ParseParam(parcel)) {
-        ROSEN_LOGE("RSRenderKeyframeAnimation::Unmarshalling, ParseParam failed");
+        ROSEN_LOGE("RSRenderKeyframeAnimation::Unmarshalling, Parse Param failed");
         delete renderKeyframeAnimation;
         return nullptr;
     }
@@ -90,12 +90,12 @@ RSRenderKeyframeAnimation* RSRenderKeyframeAnimation::Unmarshalling(Parcel& parc
 bool RSRenderKeyframeAnimation::ParseParam(Parcel& parcel)
 {
     if (!RSRenderPropertyAnimation::ParseParam(parcel)) {
-        ROSEN_LOGE("RSRenderKeyframeAnimation::ParseParam, RenderPropertyAnimation fail");
+        ROSEN_LOGE("RSRenderKeyframeAnimation::Parse Param, RenderPropertyAnimation fail");
         return false;
     }
     uint32_t size = 0;
     if (!parcel.ReadUint32(size)) {
-        ROSEN_LOGE("RSRenderKeyframeAnimation::ParseParam, Parse Keyframes size fail");
+        ROSEN_LOGE("RSRenderKeyframeAnimation::Parse Param, Parse Keyframes size fail");
         return false;
     }
     float tupValue0 = 0;
@@ -103,7 +103,7 @@ bool RSRenderKeyframeAnimation::ParseParam(Parcel& parcel)
     keyframes_.clear();
     for (u_int32_t i = 0; i < size; i++) {
         if (!(parcel.ReadFloat(tupValue0))) {
-            ROSEN_LOGE("RSRenderKeyframeAnimation::ParseParam, Unmarshalling value failed");
+            ROSEN_LOGE("RSRenderKeyframeAnimation::Parse Param, Unmarshalling value failed");
             return false;
         }
         std::shared_ptr<RSRenderPropertyBase> tupValue1;
@@ -123,6 +123,7 @@ void RSRenderKeyframeAnimation::OnAnimate(float fraction)
         ROSEN_LOGE("Failed to animate key frame, keyframes is empty!");
         return;
     }
+    ROSEN_LOGI("RSRenderKeyframeAnimation.animate key frame");   // x
 
     float preKeyframeFraction = std::get<0>(keyframes_.front());
     auto preKeyframeValue = std::get<1>(keyframes_.front());

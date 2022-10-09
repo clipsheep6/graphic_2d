@@ -30,6 +30,7 @@ public:
     std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs) override;
     std::shared_ptr<RSFilter> Multiply(float rhs) override;
     std::shared_ptr<RSFilter> Negate() override;
+    void print() override;
 private:
     float blurRadiusX_;
     float blurRadiusY_;

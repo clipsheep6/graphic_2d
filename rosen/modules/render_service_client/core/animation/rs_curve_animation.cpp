@@ -83,16 +83,20 @@ void RSCurveAnimation::StartUIAnimation(const std::shared_ptr<RSRenderCurveAnima
 
 void RSCurveAnimation::OnStart()
 {
+    ROSEN_LOGI("RSPropertyAnimation_OnStart");
     RSPropertyAnimation::OnStart();
+    ROSEN_LOGI("RSCurveAnimation_OnStart. make_shared");
     auto interpolator = timingCurve_.GetInterpolator(GetDuration());
     auto animation = std::make_shared<RSRenderCurveAnimation>(GetId(), GetPropertyId(),
-        originValue_->CreateRenderProperty(), startValue_->CreateRenderProperty(), endValue_->CreateRenderProperty());
+        originValue_->CreateRenderProperty(), startValue_->CreateRenderProperty(), endValue_->CreateRenderProperty());  // PT
     animation->SetInterpolator(interpolator);
     animation->SetAdditive(GetAdditive());
     UpdateParamToRenderAnimation(animation);
     if (isCustom_) {
+        ROSEN_LOGI("RSCurveAnimation_OnStart. StartUIAnimation");   // x
         StartUIAnimation(animation);
     } else {
+        ROSEN_LOGI("RSCurveAnimation_OnStart. StartRenderAnimation");  // y
         StartRenderAnimation(animation);
     }
 }

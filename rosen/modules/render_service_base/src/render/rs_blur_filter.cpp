@@ -14,8 +14,13 @@
  */
 
 #include "render/rs_blur_filter.h"
-
 #include "include/effects/SkBlurImageFilter.h"
+
+
+#include "platform/common/rs_log.h"
+#include "hilog/log.h"
+using namespace OHOS::HiviewDFX;
+
 namespace OHOS {
 namespace Rosen {
 RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY): RSSkiaFilter(SkBlurImageFilter::Make(blurRadiusX,
@@ -43,6 +48,10 @@ std::shared_ptr<RSFilter> RSBlurFilter::Add(const std::shared_ptr<RSFilter>& rhs
         return shared_from_this();
     }
     auto blurR = std::static_pointer_cast<RSBlurFilter>(rhs);
+
+    char szLog[2048] = {0};
+    snprintf(szLog, 2048, "add X=%f+%f, Y=%f+%f", blurRadiusX_, blurR->GetBlurRadiusX(), blurRadiusY_, blurR->GetBlurRadiusY());
+    ROSEN_LOGI("--------blur [%s]", szLog);
     return std::make_shared<RSBlurFilter>(blurRadiusX_ + blurR->GetBlurRadiusX(),
         blurRadiusY_ + blurR->GetBlurRadiusY());
 }
@@ -53,18 +62,38 @@ std::shared_ptr<RSFilter> RSBlurFilter::Sub(const std::shared_ptr<RSFilter>& rhs
         return shared_from_this();
     }
     auto blurR = std::static_pointer_cast<RSBlurFilter>(rhs);
+
+    char szLog[2048] = {0};
+    snprintf(szLog, 2048, "sub X=%f-%f.Y=%f-%f", blurRadiusX_, blurR->GetBlurRadiusX(), blurRadiusY_, blurR->GetBlurRadiusY());
+    ROSEN_LOGI("--------blur [%s]", szLog);
+
     return std::make_shared<RSBlurFilter>(blurRadiusX_ - blurR->GetBlurRadiusX(),
         blurRadiusY_ - blurR->GetBlurRadiusY());
 }
 
 std::shared_ptr<RSFilter> RSBlurFilter::Multiply(float rhs)
 {
+    char szLog[2048] = {0};
+    snprintf(szLog, 2048, "multi X=%f. Y=%f x %f", blurRadiusX_, blurRadiusY_, rhs);
+    ROSEN_LOGI("--------blur [%s]", szLog);
+
     return std::make_shared<RSBlurFilter>(blurRadiusX_ * rhs, blurRadiusY_ * rhs);
 }
 
 std::shared_ptr<RSFilter> RSBlurFilter::Negate()
 {
+    char szLog[2048] = {0};
+    snprintf(szLog, 2048, "neg %f,%f.", -blurRadiusX_, -blurRadiusY_);
+    ROSEN_LOGI("--------blur [%s]", szLog);
     return std::make_shared<RSBlurFilter>(-blurRadiusX_, -blurRadiusY_);
 }
+
+void RSBlurFilter::print()
+{
+    char szLog[2048] = {0};
+    snprintf(szLog, 2048, "print radiusX=%f, radiusY=%f.", blurRadiusX_, blurRadiusY_);
+    ROSEN_LOGI("--------blur [%s]", szLog);
+}
+
 } // namespace Rosen
 } // namespace OHOS

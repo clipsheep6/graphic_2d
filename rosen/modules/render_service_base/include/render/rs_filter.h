@@ -41,6 +41,8 @@ public:
     {
         return type_ != FilterType::NONE;
     }
+    virtual void print() {  }
+
 protected:
     FilterType type_;
     RSFilter();

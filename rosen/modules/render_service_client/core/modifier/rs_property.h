@@ -254,7 +254,7 @@ public:
                 implicitAnimator->EndImplicitPathAnimation();
             } else {
                 implicitAnimator->CreateImplicitAnimation(node,
-                    RSProperty<T>::shared_from_this(), startValue, endValue);
+                    RSProperty<T>::shared_from_this(), startValue, endValue);  // PT
             }
             return;
         }

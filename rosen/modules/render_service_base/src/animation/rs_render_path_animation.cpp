@@ -187,6 +187,7 @@ void RSRenderPathAnimation::OnAnimate(float fraction)
         ROSEN_LOGE("Failed to animate motion path, path is null!");
         return;
     }
+    ROSEN_LOGI("RSRenderPathAnimation.On_Animate");  // x
 
 #ifdef ROSEN_OHOS
     Vector2f position;

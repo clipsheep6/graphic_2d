@@ -316,6 +316,7 @@ std::shared_ptr<RSAnimation> RSImplicitAnimator::CreateImplicitAnimation(const s
         ROSEN_LOGE("Failed to create implicit animation, need to open implicit animation firstly!");
         return {};
     }
+    ROSEN_LOGI("rs implict animator. create_implicit_animation!");
 
     if (target == nullptr || property == nullptr) {
         return {};
@@ -325,11 +326,13 @@ std::shared_ptr<RSAnimation> RSImplicitAnimator::CreateImplicitAnimation(const s
     auto params = implicitAnimationParams_.top();
     switch (params->GetType()) {
         case ImplicitAnimationParamType::CURVE: {
+            ROSEN_LOGI("rs implict ImplicitAnimationParamType_CURVE!");   // y
             auto curveImplicitParam = static_cast<RSImplicitCurveAnimationParam*>(params.get());
             animation = curveImplicitParam->CreateAnimation(property, startValue, endValue);
             break;
         }
         case ImplicitAnimationParamType::KEYFRAME: {
+            ROSEN_LOGI("rs implict ImplicitAnimationParamType::KEYFRAME!");
             auto keyframeImplicitParam = static_cast<RSImplicitKeyframeAnimationParam*>(params.get());
             auto& keyframeAnimations = keyframeAnimations_.top();
             auto keyframeIter = keyframeAnimations.find({ target->GetId(), property->GetId() });
@@ -344,11 +347,13 @@ std::shared_ptr<RSAnimation> RSImplicitAnimator::CreateImplicitAnimation(const s
             break;
         }
         case ImplicitAnimationParamType::SPRING: {
+            ROSEN_LOGI("rs implict ImplicitAnimationParamType::SPRING!");
             auto springImplicitParam = static_cast<RSImplicitSpringAnimationParam*>(params.get());
             animation = springImplicitParam->CreateAnimation(property, startValue, endValue);
             break;
         }
         case ImplicitAnimationParamType::PATH: {
+            ROSEN_LOGI("rs implict ImplicitAnimationParamType::PATH!");
             auto pathImplicitParam = static_cast<RSImplicitPathAnimationParam*>(params.get());
             animation = pathImplicitParam->CreateAnimation(property, startValue, endValue);
             break;

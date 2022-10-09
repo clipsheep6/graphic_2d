@@ -55,7 +55,7 @@ bool RSRenderAnimation::ParseParam(Parcel& parcel)
     if (!(parcel.ReadUint64(id_) && parcel.ReadInt32(duration) && parcel.ReadInt32(startDelay) &&
             parcel.ReadFloat(speed) && parcel.ReadInt32(repeatCount) && parcel.ReadBool(autoReverse) &&
             parcel.ReadBool(direction) && parcel.ReadInt32(fillMode))) {
-        ROSEN_LOGE("RSRenderAnimation::ParseParam, read param failed");
+        ROSEN_LOGE("RSRenderAnimation::Parse Param, read param failed");
         return false;
     }
     SetDuration(duration);
@@ -205,6 +205,7 @@ void RSRenderAnimation::OnSetFraction(float fraction)
 
 void RSRenderAnimation::ProcessFillModeOnStart(float startFraction)
 {
+    // ROSEN_LOGI("Process Fill Mode On Start");   // y
     auto fillMode = GetFillMode();
     if (fillMode == FillMode::BACKWARDS || fillMode == FillMode::BOTH) {
         OnAnimate(startFraction);
@@ -213,6 +214,7 @@ void RSRenderAnimation::ProcessFillModeOnStart(float startFraction)
 
 void RSRenderAnimation::ProcessFillModeOnFinish(float endFraction)
 {
+    ROSEN_LOGI("Process Fill Mode On Finish");
     auto fillMode = GetFillMode();
     if (fillMode == FillMode::FORWARDS || fillMode == FillMode::BOTH) {
         OnAnimate(endFraction);
@@ -233,12 +235,13 @@ bool RSRenderAnimation::Animate(int64_t time)
         firstToRunning_ = false;
     }
 
+    //ROSEN_LOGI("renderAnimation.animate");   // y
     bool isInStartDelay = false;
     bool isFinished = false;
     float fraction = animationFraction_.GetAnimationFraction(time, isInStartDelay, isFinished);
     if (isInStartDelay) {
         ProcessFillModeOnStart(fraction);
-        ROSEN_LOGI("RSRenderAnimation::Animate, isInStartDelay is true");
+        ROSEN_LOGI("RSR");
         return false;
     }
 

@@ -128,6 +128,14 @@ void RSRenderPropertyAnimation::SetAnimationValue(const std::shared_ptr<RSRender
 const std::shared_ptr<RSRenderPropertyBase> RSRenderPropertyAnimation::GetAnimationValue(
     const std::shared_ptr<RSRenderPropertyBase>& value)
 {
+    ROSEN_LOGI("Get_Additive=%d", GetAdditive());  // y
+
+//    auto proVal_t = std::static_pointer_cast<RSRenderProperty<std::shared_ptr<RSFilter>>>(GetPropertyValue());
+//    auto value_t = std::static_pointer_cast<RSRenderProperty<std::shared_ptr<RSFilter>>>(value);
+//    auto lastValue_t = std::static_pointer_cast<RSRenderProperty<std::shared_ptr<RSFilter>>>(lastValue_);
+//    proVal_t->Get()->print();
+//    value_t->Get()->print();
+//    lastValue_t->Get()->print();
     std::shared_ptr<RSRenderPropertyBase> animationValue;
     if (GetAdditive()) {
         animationValue = GetPropertyValue() + value - lastValue_;

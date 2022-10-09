@@ -33,17 +33,26 @@ struct MaterialParam {
 class RSMaterialFilter : public RSSkiaFilter {
 public:
     RSMaterialFilter(int style, float dipScale);
-    RSMaterialFilter(sk_sp<SkImageFilter> imageFilter);
+    RSMaterialFilter(sk_sp<SkImageFilter> imageFilter, int style, float dipScale, float radius);
     ~RSMaterialFilter() override;
     int GetStyle() const;
     float GetDipScale() const;
+
     std::shared_ptr<RSFilter> Add(const std::shared_ptr<RSFilter>& rhs) override;
     std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs) override;
     std::shared_ptr<RSFilter> Multiply(float rhs) override;
     std::shared_ptr<RSFilter> Negate() override;
+    float GetRadius(int style);
+    SkColor GetMaskColor(int style);
+    float GetSaturation(int style);
+    void print() override;
 private:
     int style_;
     float dipScale_;
+    float radius_;
+    float saturation_;
+    SkColor maskColor_;
+    static constexpr int STYLE_CARD_INDEFINITE = 0;
     static constexpr int STYLE_CARD_THIN_LIGHT = 1;
     static constexpr int STYLE_CARD_LIGHT = 2;
     static constexpr int STYLE_CARD_THICK_LIGHT = 3;
@@ -52,7 +61,6 @@ private:
     static constexpr MaterialParam CARDTHICKLIGHT = {75.0f, 2.4, 0xB8FAFAFA};
     sk_sp<SkImageFilter> CreateMaterialStyle(int style, float dipScale);
     sk_sp<SkImageFilter> CreateMaterialRadius(int style, float dipScale, float radius);
-    float GetRadius(int style);
     float RadiusVp2Sigma(float radiusVp, float dipScale) const;
     sk_sp<SkColorFilter> MaskColorFilter(SkColor maskColor);
     sk_sp<SkImageFilter> CreateMaterialFilter(float radius, float sat, SkColor maskColor);

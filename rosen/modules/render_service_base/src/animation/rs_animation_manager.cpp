@@ -78,6 +78,7 @@ void RSAnimationManager::FilterAnimationByPid(pid_t pid)
 
 bool RSAnimationManager::Animate(int64_t time)
 {
+    ROSEN_LOGI("RSAnimationManager::animate %lld", time);   // y
     // process animation
     bool hasRunningAnimation = false;
 
@@ -85,6 +86,7 @@ bool RSAnimationManager::Animate(int64_t time)
     std::__libcpp_erase_if_container(animations_, [this, &hasRunningAnimation, time](auto& iter) -> bool {
         auto& animation = iter.second;
         bool isFinished = animation->Animate(time);
+        // ROSEN_LOGI("animate isFinish=%d", isFinished);   // y = 0
         if (isFinished) {
             OnAnimationFinished(animation);
         } else {

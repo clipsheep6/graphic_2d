@@ -104,6 +104,7 @@ void RSRenderSpringAnimation::OnSetFraction(float fraction)
 
 void RSRenderSpringAnimation::OnAnimate(float fraction)
 {
+    ROSEN_LOGE("RSRenderSpring Animation. On Animate");
     OnAnimateInner(fraction);
 }
 
@@ -165,6 +166,7 @@ void RSRenderSpringAnimation::OnAnimateInner(float fraction)
     if (GetPropertyId() == 0) {
         return;
     }
+    ROSEN_LOGI("RSRenderSpringAnimation::OnAnimate Inner");  // x
     // always record fraction from previous iterator, will be used to calculate velocity
     prevFraction_ = fraction;
     auto displacement = CalculateDisplacement(

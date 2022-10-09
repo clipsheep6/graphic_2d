@@ -94,6 +94,7 @@ void RSPropertyAnimation::SetOriginValue(const std::shared_ptr<RSPropertyBase>& 
 
 void RSPropertyAnimation::InitInterpolationValue()
 {
+    ROSEN_LOGI("RSPropertyAnimation_InitInterpolationValue! delta=%d", isDelta_);
     if (isDelta_) {
         startValue_ = originValue_->GetValue();
         endValue_ = originValue_->GetValue() + byValue_;

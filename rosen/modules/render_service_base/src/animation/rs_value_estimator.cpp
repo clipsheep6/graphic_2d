@@ -18,6 +18,7 @@
 #include "common/rs_common_def.h"
 #include "platform/common/rs_log.h"
 #include "modifier/rs_render_property.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -25,12 +26,16 @@ std::shared_ptr<RSRenderPropertyBase> RSValueEstimator::Estimate(float fraction,
     const std::shared_ptr<RSRenderPropertyBase>& startValue, const std::shared_ptr<RSRenderPropertyBase>& endValue)
 {
     if (endValue == nullptr) {
+        ROSEN_LOGI("filter start * f2");
         return startValue->GetValue();
     }
 
     if (startValue == nullptr) {
+        ROSEN_LOGI("filter end * f2");
         return endValue->GetValue() * fraction;
     }
+
+    ROSEN_LOGI("RSValueEstimator_Esti PropertyType=%d", startValue->GetPropertyType());  // y   5 PROPERTY_FILTER,
 
     if (startValue->GetPropertyType() == RSRenderPropertyType::PROPERTY_QUATERNION) {
         auto quaternionStart = std::static_pointer_cast<RSRenderProperty<Quaternion>>(startValue);
@@ -48,18 +53,25 @@ std::shared_ptr<RSRenderPropertyBase> RSValueEstimator::Estimate(float fraction,
         auto filterEnd = std::static_pointer_cast<RSRenderProperty<std::shared_ptr<RSFilter>>>(endValue);
         if (filterStart && filterEnd) {
             auto filterValue = EstimateFilter(fraction, filterStart->Get(), filterEnd->Get());
+            filterStart->Get()->print();
+            filterEnd->Get()->print();
+            filterValue->print();
+            ROSEN_LOGI("filter type=%d,%d,=%d", filterStart->Get()->GetFilterType(), filterEnd->Get()->GetFilterType(), filterValue->GetFilterType());  // 1.ALGOFILTER 2.MEGERFILTER
             return std::make_shared<RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>>(filterValue);
         }
 
+        ROSEN_LOGI("filter type=null");
         return nullptr;
     }
 
+    ROSEN_LOGI("filter type= s * f1 + e * f2");
     return startValue->GetValue() * (1.0f - fraction) + endValue->GetValue() * fraction;
 }
 
 Quaternion RSValueEstimator::EstimateQuaternion(float fraction,
     const Quaternion& startValue, const Quaternion& endValue)
 {
+    ROSEN_LOGI("Estimate Quaternion");   // x
     auto value = startValue;
     return value.Slerp(endValue, fraction);
 }
@@ -79,8 +91,21 @@ std::shared_ptr<RSFilter> RSValueEstimator::EstimateFilter(
         return (fraction < 0.5f) ? startValue * (1.0f - fraction * 2) : endValue;
     }
 
+    char szLog[2048] = {0};
+    snprintf(szLog, 2048, "FilterType %d.%d,fract=%f", startValue->GetFilterType(), endValue->GetFilterType(), fraction);  // 1.ALGOFILTER 2.MEGERFILTER
+    ROSEN_LOGI("Estimator filter [%s]", szLog);   // y
+
+    startValue->print();
+    endValue->print();
+    
     if (startValue->GetFilterType() == endValue->GetFilterType()) {
-        return startValue * (1.0f - fraction) + endValue * fraction;
+//        auto v1 = ;
+//        auto v2 = ;
+        auto v3 = startValue * (1.0f - fraction) + endValue * fraction;
+//        v1->print();
+//        v2->print();
+//        v3->print();
+        return v3;
     } else {
         return (fraction < 0.5f) ? startValue * (1.0f - fraction * 2) : endValue * (fraction * 2 - 1.0f);
     }
@@ -93,6 +118,8 @@ float RSValueEstimator::EstimateFraction(
     auto valueFloat = std::static_pointer_cast<RSRenderProperty<float>>(value);
     auto startFloat = std::static_pointer_cast<RSRenderProperty<float>>(startValue);
     auto endFloat = std::static_pointer_cast<RSRenderProperty<float>>(endValue);
+
+    ROSEN_LOGI("Estimate Fraction");   // x
     if (valueFloat != nullptr && startValue != nullptr && endValue != nullptr) {
         return EstimateFloatFraction(interpolator, valueFloat->Get(), startFloat->Get(), endFloat->Get());
     }
@@ -104,6 +131,7 @@ float RSValueEstimator::EstimateFloatFraction(
     const std::shared_ptr<RSInterpolator>& interpolator, const float value,
     const float startValue, const float endValue)
 {
+    ROSEN_LOGI("Estimate float Fraction");   // x
     float start = FRACTION_MIN;
     float end = FRACTION_MAX;
     auto byValue = endValue - startValue;

@@ -143,7 +143,7 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessCanvasRenderNode(RSCanv
     }
     if (node.GetId() == nodeId_) {
         // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
-        auto property = node.GetRenderProperties();
+        const auto& property = node.GetRenderProperties();
         canvas_->translate(-property.GetBoundsPositionX(), -property.GetBoundsPositionY());
     }
     node.ProcessRenderBeforeChildren(*canvas_);
@@ -197,7 +197,7 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessSurfaceRenderNode(RSSur
     }
     if (node.GetId() == nodeId_) {
         // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
-        auto property = node.GetRenderProperties();
+        const auto& property = node.GetRenderProperties();
         canvas_->translate(-property.GetBoundsPositionX(), -property.GetBoundsPositionY());
     }
     // we can't get buffer in renderThread, so use renderService surface capture to process surfaceNode
@@ -210,7 +210,7 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessSurfaceRenderNode(RSSur
     }
     // draw pixelmap in canvas
     auto image = Media::PixelMapRosenUtils::ExtractSkImage(pixelMap);
-    canvas_->drawImage(image, node.GetRenderProperties().GetBoundsPositionX(), 
+    canvas_->drawImage(image, node.GetRenderProperties().GetBoundsPositionX(),
         node.GetRenderProperties().GetBoundsPositionY());
 }
 

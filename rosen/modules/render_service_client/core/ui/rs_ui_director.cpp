@@ -112,8 +112,8 @@ void RSUIDirector::GoBackground()
     }
 }
 
-void RSUIDirector::TriggerCaptureCallback(std::shared_ptr<CaptureCallback> captureCallback, 
-        std::shared_ptr<Media::PixelMap> pixelMap)
+void RSUIDirector::TriggerCaptureCallback(std::shared_ptr<CaptureCallback> captureCallback,
+    std::shared_ptr<Media::PixelMap> pixelMap)
 {
     captureCallback->OutCall(pixelMap);
 }

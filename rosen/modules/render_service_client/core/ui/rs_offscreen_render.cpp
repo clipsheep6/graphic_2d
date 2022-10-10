@@ -166,7 +166,10 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessRootRenderNode(RSRootRe
     }
 
     canvas_->save();
-    canvas_->clipRect(SkRect::MakeWH(node.GetSurfaceWidth(), node.GetSurfaceHeight()));
+    const auto& property = node.GetRenderProperties();
+    const float bufferWidth = node.GetSuggestedBufferWidth() * property.GetScaleX();
+    const float bufferHeight = node.GetSuggestedBufferHeight() * property.GetScaleY();
+    canvas_->clipRect(SkRect::MakeWH(bufferWidth, bufferHeight));
     canvas_->clear(SK_ColorTRANSPARENT);
     ProcessCanvasRenderNode(node);
     canvas_->restore();

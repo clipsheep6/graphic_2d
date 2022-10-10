@@ -33,6 +33,8 @@
 #include "ui/rs_root_node.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
+#include "ui/rs_offscreen_render.h"
+#include "ui/rs_capture_callback.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -108,6 +110,21 @@ void RSUIDirector::GoBackground()
         });
 #endif
     }
+}
+
+void RSUIDirector::TriggerCaptureCallback(std::shared_ptr<CaptureCallback> captureCallback, std::shared_ptr<Media::PixelMap> pixelMap)
+{
+    captureCallback->OutCall(pixelMap);
+}
+
+void RSUIDirector::CaptureTask(std::shared_ptr<CaptureCallback> captureCallback, NodeId id, float scaleX, float scaleY)
+{
+    RSRenderThread::Instance().PostTask([captureCallback, id, scaleX, scaleY]() {
+        RSOffscreenRender rsOffscreenRender;
+        std::shared_ptr<Media::PixelMap> pixelMap;
+        pixelMap = rsOffscreenRender.GetLocalCapture(id, scaleX, scaleY);
+        RSUIDirector::Create()->TriggerCaptureCallback(captureCallback, pixelMap);
+    });
 }
 
 void RSUIDirector::Destroy()

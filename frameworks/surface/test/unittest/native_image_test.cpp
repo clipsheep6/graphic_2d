@@ -343,7 +343,7 @@ HWTEST_F(NativeImageTest, OHNativeImageUpdateSurfaceImage002, Function | MediumT
 HWTEST_F(NativeImageTest, OHNativeImageUpdateSurfaceImage003, Function | MediumTest | Level1)
 {
     int code = SET_USAGE;
-    int32_t usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA;
+    uint64_t usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA;
     int32_t ret = NativeWindowHandleOpt(nativeWindow, code, usage);
     if (ret != GSERROR_OK) {
         std::cout << "NativeWindowHandleOpt SET_USAGE faile" << std::endl;

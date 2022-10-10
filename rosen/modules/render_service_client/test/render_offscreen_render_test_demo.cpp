@@ -166,7 +166,7 @@ void DrawSurfaceNode(shared_ptr<RSSurfaceNode> surfaceNode)
 
     string scaleInfo = "Hello World";
     sk_sp<SkTextBlob> scaleInfoTextBlob = SkTextBlob::MakeFromString(
-                scaleInfo.c_str(), SkFont(nullptr, 16.0f, 1.0f, 0.0f)); // font size: 16
+        scaleInfo.c_str(), SkFont(nullptr, 16.0f, 1.0f, 0.0f)); // font size: 16
     canvas->drawTextBlob(scaleInfoTextBlob.get(), 20, 50, paint); // start point is (20, 50)
     framePtr->SetDamageRegion(0, 0, width, height);
     rsSurface->FlushFrame(framePtr);

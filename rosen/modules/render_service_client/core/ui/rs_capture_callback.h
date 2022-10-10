@@ -33,7 +33,7 @@ public:
         if (!flag_) {
             pixelMap_ = pixelmap;
             flag_ = true;
-        }   
+        }
     }
     bool IsReady()
     {

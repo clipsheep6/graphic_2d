@@ -48,7 +48,7 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
     std::shared_ptr<Media::PixelMap> pixelmap;
     pixelmap = CreatePixelMapByNode(node);
     auto skSurface = CreateSurface(pixelmap);
-    std::shared_ptr<RSOffscreenRenderVisitor> visitor = std::make_shared<RSOffscreenRenderVisitor>(scaleX_, scaleY_, nodeId_);
+    auto visitor = std::make_shared<RSOffscreenRenderVisitor>(scaleX_, scaleY_, nodeId_);
     visitor->SetSurface(skSurface.get());
     // Draw
     node->Process(visitor);
@@ -143,7 +143,8 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessCanvasRenderNode(RSCanv
     }
     if (node.GetId() == nodeId_) {
         // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
-        canvas_->translate(-node.GetRenderProperties().GetBoundsPositionX(), -node.GetRenderProperties().GetBoundsPositionY());
+        auto property = node.GetRenderProperties();
+        canvas_->translate(-property.GetBoundsPositionX(), -property.GetBoundsPositionY());
     }
     node.ProcessRenderBeforeChildren(*canvas_);
     ProcessBaseRenderNode(node);
@@ -188,15 +189,16 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessSurfaceRenderNode(RSSur
         return;
     }
     if (!node.GetRenderProperties().GetVisible()) {
-        ROSEN_LOGI("RSOffscreenRender::RSOffscreenRenderVisitor::ProcessSurfaceRenderNode node : %" PRIu64 " is invisible", node.GetId());
+        ROSEN_LOGI("RSOffscreenRenderVisitor::ProcessSurfaceRenderNode node : %" PRIu64 " is invisible", node.GetId());
         return;
     }
     if (node.GetSecurityLayer()) {
         return;
     }
-    if(node.GetId() == nodeId_) {
+    if (node.GetId() == nodeId_) {
         // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
-        canvas_->translate(-node.GetRenderProperties().GetBoundsPositionX(), -node.GetRenderProperties().GetBoundsPositionY());
+        auto property = node.GetRenderProperties();
+        canvas_->translate(-property.GetBoundsPositionX(), -property.GetBoundsPositionY());
     }
     // we can't get buffer in renderThread, so use renderService surface capture to process surfaceNode
     std::shared_ptr<RSOffscreenRenderCallback> callback = std::make_shared<RSOffscreenRenderCallback>();
@@ -208,7 +210,8 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessSurfaceRenderNode(RSSur
     }
     // draw pixelmap in canvas
     auto image = Media::PixelMapRosenUtils::ExtractSkImage(pixelMap);
-    canvas_->drawImage(image, node.GetRenderProperties().GetBoundsPositionX(), node.GetRenderProperties().GetBoundsPositionY());
+    canvas_->drawImage(image, node.GetRenderProperties().GetBoundsPositionX(), 
+        node.GetRenderProperties().GetBoundsPositionY());
 }
 
 } // namespace Rosen

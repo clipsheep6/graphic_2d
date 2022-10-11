@@ -46,7 +46,7 @@ public:
     // spring animation related
     void RegisterSpringAnimation(PropertyId propertyId, AnimationId animId);
     void UnregisterSpringAnimation(PropertyId propertyId, AnimationId animId);
-    std::shared_ptr<RSRenderAnimation> QuerySpringAnimation(PropertyId propertyId);
+    AnimationId QuerySpringAnimation(PropertyId propertyId);
 
 private:
     void OnAnimationRemove(const std::shared_ptr<RSRenderAnimation>& animation);

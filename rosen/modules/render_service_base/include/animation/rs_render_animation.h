@@ -153,8 +153,6 @@ protected:
 
     virtual void OnDetach() {}
 
-    virtual void OnInitialize() {}
-
     virtual void OnAnimate(float fraction) {}
 
     virtual void OnRemoveOnCompletion() {}
@@ -169,8 +167,7 @@ private:
     AnimationId id_ = 0;
     RSAnimationFraction animationFraction_;
     AnimationState state_ { AnimationState::INITIALIZED };
-    bool needUpdateStartTime_ { true };
-    bool needInitialize_ { true};
+    bool firstToRunning_ { false };
     RSRenderNode* target_ { nullptr };
 };
 } // namespace Rosen

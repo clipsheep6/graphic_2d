@@ -135,19 +135,18 @@ void RSAnimationManager::RegisterSpringAnimation(PropertyId propertyId, Animatio
 
 void RSAnimationManager::UnregisterSpringAnimation(PropertyId propertyId, AnimationId animId)
 {
-    auto it = springAnimations_.find(propertyId);
-    if (it != springAnimations_.end() && it->second == animId) {
-        springAnimations_.erase(it);
+    if (springAnimations_[propertyId] == animId) {
+        springAnimations_.erase(propertyId);
     }
 }
 
-std::shared_ptr<RSRenderAnimation> RSAnimationManager::QuerySpringAnimation(PropertyId propertyId)
+AnimationId RSAnimationManager::QuerySpringAnimation(PropertyId propertyId)
 {
     auto it = springAnimations_.find(propertyId);
-    if (it == springAnimations_.end() || it->second == 0) {
-        return nullptr;
+    if (it == springAnimations_.end()) {
+        return 0;
     }
-    return GetAnimation(it->second);
+    return it->second;
 }
 } // namespace Rosen
 } // namespace OHOS

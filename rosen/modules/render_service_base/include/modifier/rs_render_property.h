@@ -43,6 +43,7 @@ public:
 
 #ifdef ROSEN_OHOS
     static bool Marshalling(Parcel& parcel, const std::shared_ptr<RSRenderPropertyBase>& val);
+
     static bool Unmarshalling(Parcel& parcel, std::shared_ptr<RSRenderPropertyBase>& val);
 #endif
 
@@ -54,7 +55,7 @@ protected:
         }
     }
 
-    virtual const std::shared_ptr<RSRenderPropertyBase> Clone() const
+    virtual const std::shared_ptr<RSRenderPropertyBase> GetValue() const
     {
         return nullptr;
     }
@@ -82,12 +83,12 @@ protected:
     std::weak_ptr<RSBaseRenderNode> node_;
 
 private:
-    virtual std::shared_ptr<RSRenderPropertyBase> Add(const std::shared_ptr<const RSRenderPropertyBase>& value)
+    virtual std::shared_ptr<RSRenderPropertyBase> Add(const std::shared_ptr<RSRenderPropertyBase>& value)
     {
         return shared_from_this();
     }
 
-    virtual std::shared_ptr<RSRenderPropertyBase> Minus(const std::shared_ptr<const RSRenderPropertyBase>& value)
+    virtual std::shared_ptr<RSRenderPropertyBase> Minus(const std::shared_ptr<RSRenderPropertyBase>& value)
     {
         return shared_from_this();
     }
@@ -97,27 +98,21 @@ private:
         return shared_from_this();
     }
 
-    virtual bool IsEqual(const std::shared_ptr<const RSRenderPropertyBase>& value) const
+    virtual bool IsEqual(const std::shared_ptr<RSRenderPropertyBase>& value)
     {
         return true;
     }
 
-    friend std::shared_ptr<RSRenderPropertyBase> operator+=(
-        const std::shared_ptr<RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b);
-    friend std::shared_ptr<RSRenderPropertyBase> operator-=(
-        const std::shared_ptr<RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b);
-    friend std::shared_ptr<RSRenderPropertyBase> operator*=(
-        const std::shared_ptr<RSRenderPropertyBase>& value, const float scale);
-    friend std::shared_ptr<RSRenderPropertyBase> operator+(
-        const std::shared_ptr<const RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b);
-    friend std::shared_ptr<RSRenderPropertyBase> operator-(
-        const std::shared_ptr<const RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b);
-    friend std::shared_ptr<RSRenderPropertyBase> operator*(
-        const std::shared_ptr<const RSRenderPropertyBase>& value, const float scale);
-    friend bool operator==(
-        const std::shared_ptr<const RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b);
-    friend bool operator!=(
-        const std::shared_ptr<const RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b);
+    friend std::shared_ptr<RSRenderPropertyBase> operator+(const std::shared_ptr<RSRenderPropertyBase>& a,
+        const std::shared_ptr<RSRenderPropertyBase>& b);
+    friend std::shared_ptr<RSRenderPropertyBase> operator-(const std::shared_ptr<RSRenderPropertyBase>& a,
+        const std::shared_ptr<RSRenderPropertyBase>& b);
+    friend std::shared_ptr<RSRenderPropertyBase> operator*(const std::shared_ptr<RSRenderPropertyBase>& value,
+        const float scale);
+    friend bool operator==(const std::shared_ptr<RSRenderPropertyBase>& a,
+        const std::shared_ptr<RSRenderPropertyBase>& b);
+    friend bool operator!=(const std::shared_ptr<RSRenderPropertyBase>& a,
+        const std::shared_ptr<RSRenderPropertyBase>& b);
     friend class RSRenderPropertyAnimation;
     friend class RSMarshallingHelper;
     friend class RSValueEstimator;
@@ -160,12 +155,11 @@ public:
     RSRenderAnimatableProperty(const T& value) : RSRenderProperty<T>(value, 0) {}
     RSRenderAnimatableProperty(const T& value, const PropertyId& id) : RSRenderProperty<T>(value, id) {}
     RSRenderAnimatableProperty(const T& value, const PropertyId& id, const RSRenderPropertyType type)
-        : RSRenderProperty<T>(value, id), type_(type)
-    {}
+        : RSRenderProperty<T>(value, id), type_(type) {}
     virtual ~RSRenderAnimatableProperty() = default;
 
 protected:
-    const std::shared_ptr<RSRenderPropertyBase> Clone() const override
+    const std::shared_ptr<RSRenderPropertyBase> GetValue() const override
     {
         return std::make_shared<RSRenderAnimatableProperty<T>>(
             RSRenderProperty<T>::stagingValue_, RSRenderProperty<T>::id_, type_);
@@ -212,20 +206,22 @@ protected:
 private:
     RSRenderPropertyType type_ = RSRenderPropertyType::INVALID;
 
-    std::shared_ptr<RSRenderPropertyBase> Add(const std::shared_ptr<const RSRenderPropertyBase>& value) override
+    std::shared_ptr<RSRenderPropertyBase> Add(const std::shared_ptr<RSRenderPropertyBase>& value) override
     {
-        auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(value);
+        auto animatableProperty = std::static_pointer_cast<RSRenderAnimatableProperty<T>>(value);
         if (animatableProperty != nullptr) {
-            RSRenderProperty<T>::stagingValue_ = RSRenderProperty<T>::stagingValue_ + animatableProperty->stagingValue_;
+            RSRenderProperty<T>::stagingValue_ =
+                RSRenderProperty<T>::stagingValue_ + animatableProperty->stagingValue_;
         }
         return RSRenderProperty<T>::shared_from_this();
     }
 
-    std::shared_ptr<RSRenderPropertyBase> Minus(const std::shared_ptr<const RSRenderPropertyBase>& value) override
+    std::shared_ptr<RSRenderPropertyBase> Minus(const std::shared_ptr<RSRenderPropertyBase>& value) override
     {
-        auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(value);
+        auto animatableProperty = std::static_pointer_cast<RSRenderAnimatableProperty<T>>(value);
         if (animatableProperty != nullptr) {
-            RSRenderProperty<T>::stagingValue_ = RSRenderProperty<T>::stagingValue_ - animatableProperty->stagingValue_;
+            RSRenderProperty<T>::stagingValue_ =
+                RSRenderProperty<T>::stagingValue_ - animatableProperty->stagingValue_;
         }
         return RSRenderProperty<T>::shared_from_this();
     }
@@ -236,9 +232,9 @@ private:
         return RSRenderProperty<T>::shared_from_this();
     }
 
-    bool IsEqual(const std::shared_ptr<const RSRenderPropertyBase>& value) const override
+    bool IsEqual(const std::shared_ptr<RSRenderPropertyBase>& value) override
     {
-        auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(value);
+        auto animatableProperty = std::static_pointer_cast<RSRenderAnimatableProperty<T>>(value);
         if (animatableProperty != nullptr) {
             return RSRenderProperty<T>::stagingValue_ == animatableProperty->stagingValue_;
         }

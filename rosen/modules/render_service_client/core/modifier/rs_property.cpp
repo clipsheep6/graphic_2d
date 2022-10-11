@@ -41,8 +41,8 @@ PropertyId GeneratePropertyId()
 RSPropertyBase::RSPropertyBase() : id_(GeneratePropertyId())
 {}
 
-std::shared_ptr<RSPropertyBase> operator+=(const std::shared_ptr<RSPropertyBase>& a,
-    const std::shared_ptr<const RSPropertyBase>& b)
+std::shared_ptr<RSPropertyBase> operator+(const std::shared_ptr<RSPropertyBase>& a,
+    const std::shared_ptr<RSPropertyBase>& b)
 {
     if (a == nullptr) {
         return {};
@@ -51,8 +51,8 @@ std::shared_ptr<RSPropertyBase> operator+=(const std::shared_ptr<RSPropertyBase>
     return a->Add(b);
 }
 
-std::shared_ptr<RSPropertyBase> operator-=(const std::shared_ptr<RSPropertyBase>& a,
-    const std::shared_ptr<const RSPropertyBase>& b)
+std::shared_ptr<RSPropertyBase> operator-(const std::shared_ptr<RSPropertyBase>& a,
+    const std::shared_ptr<RSPropertyBase>& b)
 {
     if (a == nullptr) {
         return {};
@@ -61,7 +61,7 @@ std::shared_ptr<RSPropertyBase> operator-=(const std::shared_ptr<RSPropertyBase>
     return a->Minus(b);
 }
 
-std::shared_ptr<RSPropertyBase> operator*=(const std::shared_ptr<RSPropertyBase>& value, const float scale)
+std::shared_ptr<RSPropertyBase> operator*(const std::shared_ptr<RSPropertyBase>& value, const float scale)
 {
     if (value == nullptr) {
         return {};
@@ -70,48 +70,19 @@ std::shared_ptr<RSPropertyBase> operator*=(const std::shared_ptr<RSPropertyBase>
     return value->Multiply(scale);
 }
 
-std::shared_ptr<RSPropertyBase> operator+(const std::shared_ptr<const RSPropertyBase>& a,
-    const std::shared_ptr<const RSPropertyBase>& b)
+bool operator==(const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<RSPropertyBase>& b)
 {
     if (a == nullptr) {
         return {};
-    }
-
-    return a->Clone()->Add(b);
-}
-
-std::shared_ptr<RSPropertyBase> operator-(const std::shared_ptr<const RSPropertyBase>& a,
-    const std::shared_ptr<const RSPropertyBase>& b)
-{
-    if (a == nullptr) {
-        return {};
-    }
-
-    return a->Clone()->Minus(b);
-}
-
-std::shared_ptr<RSPropertyBase> operator*(const std::shared_ptr<const RSPropertyBase>& value, const float scale)
-{
-    if (value == nullptr) {
-        return {};
-    }
-
-    return value->Clone()->Multiply(scale);
-}
-
-bool operator==(const std::shared_ptr<const RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b)
-{
-    if (a == nullptr) {
-        return false;
     }
 
     return a->IsEqual(b);
 }
 
-bool operator!=(const std::shared_ptr<const RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b)
+bool operator!=(const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<RSPropertyBase>& b)
 {
     if (a == nullptr) {
-        return false;
+        return {};
     }
 
     return !a->IsEqual(b);

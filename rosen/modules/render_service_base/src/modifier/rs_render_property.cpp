@@ -197,8 +197,8 @@ float RSRenderAnimatableProperty<Vector2f>::toFloat() const
     return RSRenderProperty<Vector2f>::stagingValue_.GetLength();
 }
 
-std::shared_ptr<RSRenderPropertyBase> operator+=(
-    const std::shared_ptr<RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b)
+std::shared_ptr<RSRenderPropertyBase> operator+(const std::shared_ptr<RSRenderPropertyBase>& a,
+    const std::shared_ptr<RSRenderPropertyBase>& b)
 {
     if (a == nullptr) {
         return {};
@@ -207,8 +207,8 @@ std::shared_ptr<RSRenderPropertyBase> operator+=(
     return a->Add(b);
 }
 
-std::shared_ptr<RSRenderPropertyBase> operator-=(
-    const std::shared_ptr<RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b)
+std::shared_ptr<RSRenderPropertyBase> operator-(const std::shared_ptr<RSRenderPropertyBase>& a,
+    const std::shared_ptr<RSRenderPropertyBase>& b)
 {
     if (a == nullptr) {
         return {};
@@ -217,7 +217,8 @@ std::shared_ptr<RSRenderPropertyBase> operator-=(
     return a->Minus(b);
 }
 
-std::shared_ptr<RSRenderPropertyBase> operator*=(const std::shared_ptr<RSRenderPropertyBase>& value, const float scale)
+std::shared_ptr<RSRenderPropertyBase> operator*(const std::shared_ptr<RSRenderPropertyBase>& value,
+    const float scale)
 {
     if (value == nullptr) {
         return {};
@@ -226,38 +227,7 @@ std::shared_ptr<RSRenderPropertyBase> operator*=(const std::shared_ptr<RSRenderP
     return value->Multiply(scale);
 }
 
-std::shared_ptr<RSRenderPropertyBase> operator+(
-    const std::shared_ptr<const RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b)
-{
-    if (a == nullptr) {
-        return {};
-    }
-
-    return a->Clone()->Add(b);
-}
-
-std::shared_ptr<RSRenderPropertyBase> operator-(
-    const std::shared_ptr<const RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b)
-{
-    if (a == nullptr) {
-        return {};
-    }
-
-    return a->Clone()->Minus(b);
-}
-
-std::shared_ptr<RSRenderPropertyBase> operator*(
-    const std::shared_ptr<const RSRenderPropertyBase>& value, const float scale)
-{
-    if (value == nullptr) {
-        return {};
-    }
-
-    return value->Clone()->Multiply(scale);
-}
-
-bool operator==(
-    const std::shared_ptr<const RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b)
+bool operator==(const std::shared_ptr<RSRenderPropertyBase>& a, const std::shared_ptr<RSRenderPropertyBase>& b)
 {
     if (a == nullptr) {
         return {};
@@ -266,8 +236,7 @@ bool operator==(
     return a->IsEqual(b);
 }
 
-bool operator!=(
-    const std::shared_ptr<const RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b)
+bool operator!=(const std::shared_ptr<RSRenderPropertyBase>& a, const std::shared_ptr<RSRenderPropertyBase>& b)
 {
     if (a == nullptr) {
         return {};

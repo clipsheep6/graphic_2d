@@ -67,14 +67,14 @@ public:
 protected:
     virtual void SetIsCustom(bool isCustom) {}
 
-    virtual bool GetIsCustom() const
+    virtual bool GetIsCustom()
     {
         return false;
     }
 
     virtual void SetValue(const std::shared_ptr<RSPropertyBase>& value) {}
 
-    virtual std::shared_ptr<RSPropertyBase> Clone() const
+    virtual std::shared_ptr<RSPropertyBase> GetValue()
     {
         return std::make_shared<RSPropertyBase>();
     }
@@ -92,7 +92,7 @@ protected:
 
     virtual void RemovePathAnimation() {}
 
-    virtual void UpdateShowingValue(const std::shared_ptr<const RSRenderPropertyBase>& property) {}
+    virtual void UpdateShowingValue(const std::shared_ptr<RSRenderPropertyBase>& property) {}
 
     virtual void AttachModifier(const std::shared_ptr<RSModifier>& modifier) {}
 
@@ -103,12 +103,12 @@ protected:
     std::weak_ptr<RSNode> target_;
 
 private:
-    virtual std::shared_ptr<RSPropertyBase> Add(const std::shared_ptr<const RSPropertyBase>& value)
+    virtual std::shared_ptr<RSPropertyBase> Add(const std::shared_ptr<RSPropertyBase>& value)
     {
         return shared_from_this();
     }
 
-    virtual std::shared_ptr<RSPropertyBase> Minus(const std::shared_ptr<const RSPropertyBase>& value)
+    virtual std::shared_ptr<RSPropertyBase> Minus(const std::shared_ptr<RSPropertyBase>& value)
     {
         return shared_from_this();
     }
@@ -118,26 +118,19 @@ private:
         return shared_from_this();
     }
 
-    virtual bool IsEqual(const std::shared_ptr<const RSPropertyBase>& value) const
+    virtual bool IsEqual(const std::shared_ptr<RSPropertyBase>& value)
     {
         return true;
     }
 
-    friend std::shared_ptr<RSPropertyBase> operator+=(
-        const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b);
-    friend std::shared_ptr<RSPropertyBase> operator-=(
-        const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b);
-    friend std::shared_ptr<RSPropertyBase> operator*=(const std::shared_ptr<RSPropertyBase>& value, const float scale);
-    friend std::shared_ptr<RSPropertyBase> operator+(
-        const std::shared_ptr<const RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b);
-    friend std::shared_ptr<RSPropertyBase> operator-(
-        const std::shared_ptr<const RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b);
-    friend std::shared_ptr<RSPropertyBase> operator*(
-        const std::shared_ptr<const RSPropertyBase>& value, const float scale);
-    friend bool operator==(
-        const std::shared_ptr<const RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b);
-    friend bool operator!=(
-        const std::shared_ptr<const RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b);
+    friend std::shared_ptr<RSPropertyBase> operator+(const std::shared_ptr<RSPropertyBase>& a,
+        const std::shared_ptr<RSPropertyBase>& b);
+    friend std::shared_ptr<RSPropertyBase> operator-(const std::shared_ptr<RSPropertyBase>& a,
+        const std::shared_ptr<RSPropertyBase>& b);
+    friend std::shared_ptr<RSPropertyBase> operator*(const std::shared_ptr<RSPropertyBase>& value,
+        const float scale);
+    friend bool operator==(const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<RSPropertyBase>& b);
+    friend bool operator!=(const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<RSPropertyBase>& b);
     friend class RSCurveAnimation;
     friend class RSExtendedModifier;
     friend class RSImplicitAnimator;
@@ -211,7 +204,7 @@ protected:
         }
     }
 
-    std::shared_ptr<RSPropertyBase> Clone() const override
+    std::shared_ptr<RSPropertyBase> GetValue() override
     {
         return std::make_shared<RSProperty<T>>(stagingValue_);
     }
@@ -231,11 +224,10 @@ protected:
 
 template<typename T>
 class RS_EXPORT RSAnimatableProperty : public RSProperty<T> {
-    static_assert(std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<Color, T> ||
-                  std::is_same_v<Matrix3f, T> || std::is_same_v<Vector2f, T> || std::is_same_v<Vector4f, T> ||
-                  std::is_same_v<Quaternion, T> || std::is_same_v<std::shared_ptr<RSFilter>, T> ||
-                  std::is_same_v<Vector4<Color>, T> || std::is_base_of_v<RSAnimatableArithmetic<T>, T>);
-
+    static_assert(std::is_integral_v<T> || std::is_floating_point_v<T> ||
+        std::is_same_v<Color, T> || std::is_same_v<Matrix3f, T> || std::is_same_v<Vector2f, T> ||
+        std::is_same_v<Vector4f, T> || std::is_same_v<Quaternion, T> || std::is_same_v<std::shared_ptr<RSFilter>, T> ||
+        std::is_same_v<Vector4<Color>, T> || std::is_base_of_v<RSAnimatableArithmetic<T>, T>);
 public:
     RSAnimatableProperty() {}
     RSAnimatableProperty(const T& value) : RSProperty<T>(value)
@@ -263,12 +255,12 @@ public:
             auto endValue = std::make_shared<RSAnimatableProperty<T>>(value);
             if (motionPathOption_ != nullptr) {
                 implicitAnimator->BeginImplicitPathAnimation(motionPathOption_);
-                implicitAnimator->CreateImplicitAnimation(
-                    node, RSProperty<T>::shared_from_this(), startValue, endValue);
+                implicitAnimator->CreateImplicitAnimation(node,
+                    RSProperty<T>::shared_from_this(), startValue, endValue);
                 implicitAnimator->EndImplicitPathAnimation();
             } else {
-                implicitAnimator->CreateImplicitAnimation(
-                    node, RSProperty<T>::shared_from_this(), startValue, endValue);
+                implicitAnimator->CreateImplicitAnimation(node,
+                    RSProperty<T>::shared_from_this(), startValue, endValue);
             }
             return;
         }
@@ -296,8 +288,8 @@ public:
 
     std::shared_ptr<RSRenderPropertyBase> CreateRenderProperty() override
     {
-        return std::make_shared<RSRenderAnimatableProperty<T>>(
-            RSProperty<T>::stagingValue_, RSProperty<T>::id_, GetPropertyType());
+        return std::make_shared<RSRenderAnimatableProperty<T>>(RSProperty<T>::stagingValue_,
+            RSProperty<T>::id_, GetPropertyType());
     }
 
 protected:
@@ -306,7 +298,7 @@ protected:
         isCustom_ = isCustom;
     }
 
-    bool GetIsCustom() const override
+    bool GetIsCustom() override
     {
         return isCustom_;
     }
@@ -356,9 +348,9 @@ protected:
         runningPathNum_ -= 1;
     }
 
-    void UpdateShowingValue(const std::shared_ptr<const RSRenderPropertyBase>& property) override
+    void UpdateShowingValue(const std::shared_ptr<RSRenderPropertyBase>& property) override
     {
-        auto renderProperty = std::static_pointer_cast<const RSRenderProperty<T>>(property);
+        auto renderProperty = std::static_pointer_cast<RSRenderProperty<T>>(property);
         if (renderProperty != nullptr) {
             showingValue_ = renderProperty->Get();
         }
@@ -372,7 +364,7 @@ protected:
         }
     }
 
-    std::shared_ptr<RSPropertyBase> Clone() const override
+    std::shared_ptr<RSPropertyBase> GetValue() override
     {
         return std::make_shared<RSAnimatableProperty<T>>(RSProperty<T>::stagingValue_);
     }
@@ -394,18 +386,18 @@ private:
         return RSRenderPropertyType::INVALID;
     }
 
-    std::shared_ptr<RSPropertyBase> Add(const std::shared_ptr<const RSPropertyBase>& value) override
+    std::shared_ptr<RSPropertyBase> Add(const std::shared_ptr<RSPropertyBase>& value) override
     {
-        auto animatableProperty = std::static_pointer_cast<const RSAnimatableProperty<T>>(value);
+        auto animatableProperty = std::static_pointer_cast<RSAnimatableProperty<T>>(value);
         if (animatableProperty != nullptr) {
             RSProperty<T>::stagingValue_ = RSProperty<T>::stagingValue_ + animatableProperty->stagingValue_;
         }
         return RSProperty<T>::shared_from_this();
     }
 
-    std::shared_ptr<RSPropertyBase> Minus(const std::shared_ptr<const RSPropertyBase>& value) override
+    std::shared_ptr<RSPropertyBase> Minus(const std::shared_ptr<RSPropertyBase>& value) override
     {
-        auto animatableProperty = std::static_pointer_cast<const RSAnimatableProperty<T>>(value);
+        auto animatableProperty = std::static_pointer_cast<RSAnimatableProperty<T>>(value);
         if (animatableProperty != nullptr) {
             RSProperty<T>::stagingValue_ = RSProperty<T>::stagingValue_ - animatableProperty->stagingValue_;
         }
@@ -418,9 +410,9 @@ private:
         return RSProperty<T>::shared_from_this();
     }
 
-    bool IsEqual(const std::shared_ptr<const RSPropertyBase>& value) const override
+    bool IsEqual(const std::shared_ptr<RSPropertyBase>& value) override
     {
-        auto animatableProperty = std::static_pointer_cast<const RSAnimatableProperty<T>>(value);
+        auto animatableProperty = std::static_pointer_cast<RSAnimatableProperty<T>>(value);
         if (animatableProperty != nullptr) {
             return RSProperty<T>::stagingValue_ == animatableProperty->stagingValue_;
         }
@@ -466,11 +458,11 @@ RS_EXPORT void RSProperty<std::shared_ptr<RSShader>>::UpdateToRender(
 template<>
 RS_EXPORT void RSProperty<Vector2f>::UpdateToRender(const Vector2f& value, bool isDelta, bool forceUpdate) const;
 template<>
-RS_EXPORT void RSProperty<Vector4<uint32_t>>::UpdateToRender(
-    const Vector4<uint32_t>& value, bool isDelta, bool forceUpdate) const;
+RS_EXPORT void RSProperty<Vector4<uint32_t>>::UpdateToRender(const Vector4<uint32_t>& value,
+    bool isDelta, bool forceUpdate) const;
 template<>
-RS_EXPORT void RSProperty<Vector4<Color>>::UpdateToRender(
-    const Vector4<Color>& value, bool isDelta, bool forceUpdate) const;
+RS_EXPORT void RSProperty<Vector4<Color>>::UpdateToRender(const Vector4<Color>& value,
+    bool isDelta, bool forceUpdate) const;
 template<>
 RS_EXPORT void RSProperty<Vector4f>::UpdateToRender(const Vector4f& value, bool isDelta, bool forceUpdate) const;
 

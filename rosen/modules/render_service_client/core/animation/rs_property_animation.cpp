@@ -60,7 +60,7 @@ void RSPropertyAnimation::SetPropertyValue(const std::shared_ptr<RSPropertyBase>
 const std::shared_ptr<RSPropertyBase> RSPropertyAnimation::GetPropertyValue() const
 {
     if (property_ != nullptr) {
-        return property_->Clone();
+        return property_->GetValue();
     }
 
     return nullptr;
@@ -87,7 +87,7 @@ void RSPropertyAnimation::OnStart()
 void RSPropertyAnimation::SetOriginValue(const std::shared_ptr<RSPropertyBase>& originValue)
 {
     if (!hasOriginValue_) {
-        originValue_ = originValue->Clone();
+        originValue_ = originValue->GetValue();
         hasOriginValue_ = true;
     }
 }
@@ -95,21 +95,21 @@ void RSPropertyAnimation::SetOriginValue(const std::shared_ptr<RSPropertyBase>& 
 void RSPropertyAnimation::InitInterpolationValue()
 {
     if (isDelta_) {
-        startValue_ = originValue_->Clone();
-        endValue_ = originValue_ + byValue_;
+        startValue_ = originValue_->GetValue();
+        endValue_ = originValue_->GetValue() + byValue_;
     } else {
-        byValue_ = endValue_ - startValue_;
+        byValue_ = endValue_->GetValue() - startValue_;
     }
 }
 
 void RSPropertyAnimation::OnUpdateStagingValue(bool isFirstStart)
 {
-    auto startValue = startValue_;
-    auto endValue = endValue_;
+    auto startValue = startValue_->GetValue();
+    auto endValue = endValue_->GetValue();
     if (!GetDirection()) {
         std::swap(startValue, endValue);
     }
-    auto byValue = endValue - startValue;
+    auto byValue = endValue->GetValue() - startValue;
     auto targetValue = endValue;
     if (isFirstStart) {
         if (GetAutoReverse() && GetRepeatCount() % 2 == 0) {

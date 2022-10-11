@@ -96,20 +96,20 @@ void RSPropertyAnimation::InitInterpolationValue()
 {
     if (isDelta_) {
         startValue_ = originValue_->Clone();
-        endValue_ = originValue_ + byValue_;
+        endValue_ = originValue_->Clone() + byValue_;
     } else {
-        byValue_ = endValue_ - startValue_;
+        byValue_ = endValue_->Clone() - startValue_;
     }
 }
 
 void RSPropertyAnimation::OnUpdateStagingValue(bool isFirstStart)
 {
-    auto startValue = startValue_;
-    auto endValue = endValue_;
+    auto startValue = startValue_->Clone();
+    auto endValue = endValue_->Clone();
     if (!GetDirection()) {
         std::swap(startValue, endValue);
     }
-    auto byValue = endValue - startValue;
+    auto byValue = endValue->Clone() - startValue;
     auto targetValue = endValue;
     if (isFirstStart) {
         if (GetAutoReverse() && GetRepeatCount() % 2 == 0) {

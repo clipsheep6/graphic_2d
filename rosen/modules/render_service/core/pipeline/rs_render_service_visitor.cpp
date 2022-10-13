@@ -113,6 +113,14 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     } else {
         auto boundsGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
         RSDividedRenderUtil::SetNeedClient(boundsGeoPtr && boundsGeoPtr->IsNeedClientCompose());
+        ScreenId defaultScreenId = screenManager->GetDefaultScreenId();
+        if (node.GetScreenId() != defaultScreenId) {
+            logicalScreenWidth += offsetX_;
+            logicalScreenHeight = std::max(offsetY_, static_cast<int32_t>(currScreenInfo.height));
+            RS_LOGI("%s expand display offsetx/y[%d, %d], logicalw/h[%d, %d]", __func__,
+                offsetX_, offsetY_, logicalScreenWidth, logicalScreenHeight);
+        }
+
         skCanvas_ = std::make_unique<SkCanvas>(logicalScreenWidth, logicalScreenHeight);
         canvas_ = std::make_shared<RSPaintFilterCanvas>(skCanvas_.get());
         canvas_->clipRect(SkRect::MakeWH(logicalScreenWidth, logicalScreenHeight));

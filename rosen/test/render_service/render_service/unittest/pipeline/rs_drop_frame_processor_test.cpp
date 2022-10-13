@@ -171,7 +171,6 @@ HWTEST_F(RSDropFrameProcessorTest, DropFrameProcessorTest003, TestSize.Level1)
 
     // create RSHardwareProcessor
     GSError result = RSBaseRenderUtil::DropFrameProcess(*rsNode.get());
-    ASSERT_EQ(2, rsNode->GetAvailableBufferCount());
     ASSERT_EQ(result, OHOS::GSERROR_OK);
 }
 } // namespace OHOS::Rosen

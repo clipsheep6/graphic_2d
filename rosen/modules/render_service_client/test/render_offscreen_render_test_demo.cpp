@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,31 +14,31 @@
  */
 
 #include <cstdint>
-#include <iostream>
-#include <sstream>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
+#include <sstream>
 #include "display_type.h"
-#include "graphic_common.h"
-#include "include/core/SkColor.h"
-#include "png.h"
-#include "pixel_map.h"
 #include "draw/canvas.h"
 #include "draw/color.h"
+#include "graphic_common.h"
 #include "image/bitmap.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkTextBlob.h"
+#include "pixel_map.h"
+#include "png.h"
+#include "render_context/render_context.h"
+#include "surface_type.h"
+#include "transaction/rs_interfaces.h"
+#include "transaction/rs_transaction.h"
+#include "ui/rs_capture_callback.h"
 #include "ui/rs_offscreen_render.h"
 #include "ui/rs_display_node.h"
 #include "ui/rs_ui_director.h"
 #include "ui/rs_root_node.h"
 #include "ui/rs_surface_node.h"
-#include "surface_type.h"
-#include "wm/window.h"
-#include "transaction/rs_transaction.h"
 #include "ui/rs_surface_extractor.h"
-#include "include/core/SkTextBlob.h"
-#include "render_context/render_context.h"
-#include "transaction/rs_interfaces.h"
-#include "ui/rs_capture_callback.h"
+#include "wm/window.h"
 
 using namespace OHOS;
 using namespace OHOS::Rosen;

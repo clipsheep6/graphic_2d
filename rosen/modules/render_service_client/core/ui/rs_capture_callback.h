@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef RS_CAPTURE_CALLBACK_H
 #define RS_CAPTURE_CALLBACK_H
 
@@ -35,23 +34,23 @@ public:
             flag_ = true;
         }
     }
-    bool IsReady()
+    bool IsReady() const
     {
         return flag_;
     }
-    std::shared_ptr<Media::PixelMap> FetchResult()
+    std::shared_ptr<Media::PixelMap> FetchResult() const
     {
         return pixelMap_;
     }
     void OutCall(std::shared_ptr<Media::PixelMap> pixelmap)
     {
-        std::unique_lock <std::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(mutex_);
         Call(pixelmap);
         conditionVariable_.notify_one();
     }
     std::shared_ptr<Media::PixelMap> GetResult(long timeOut)
     {
-        std::unique_lock <std::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(mutex_);
         if (!conditionVariable_.wait_for(lock, std::chrono::milliseconds(timeOut), [this] { return IsReady(); })) {
             ROSEN_LOGE("wait for %lu timeout", timeOut);
         }
@@ -63,6 +62,7 @@ private:
     std::condition_variable conditionVariable_;
     bool flag_ = false;
 };
+
 class RSOffscreenRenderCallback : public SurfaceCaptureCallback, public CaptureCallback {
 public:
     void OnSurfaceCapture(std::shared_ptr<Media::PixelMap> pixelmap) override

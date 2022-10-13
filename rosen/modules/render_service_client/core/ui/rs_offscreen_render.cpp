@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "ui/rs_offscreen_render.h"
 #include <cstddef>
+#include "include/core/SkImage.h"
 #include "platform/common/rs_log.h"
 #include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_thread_visitor.h"
@@ -22,13 +23,11 @@
 #include "pipeline/rs_render_thread.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_root_render_node.h"
-#include "include/core/SkMatrix.h"
-#include "transaction/rs_interfaces.h"
-#include "ui/rs_capture_callback.h"
-#include "transaction/rs_render_service_client.h"
-#include "include/core/SkImage.h"
-#include "pixel_map_rosen_utils.h"
 #include "pixel_map.h"
+#include "pixel_map_rosen_utils.h"
+#include "transaction/rs_interfaces.h"
+#include "transaction/rs_render_service_client.h"
+#include "ui/rs_capture_callback.h"
 
 namespace OHOS {
 
@@ -53,7 +52,7 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
     // Draw
     node->Process(visitor);
 #ifdef ACE_ENABLE_GL
-    sk_sp<SkImage> img(skSurface.get()->makeImageSnapshot());
+    sk_sp<SkImage> img(skSurface->makeImageSnapshot());
     if (!img) {
         ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: img is nullptr");
         return nullptr;

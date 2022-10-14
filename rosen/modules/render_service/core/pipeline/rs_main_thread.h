@@ -188,7 +188,7 @@ private:
 
     std::shared_ptr<RSContext> context_;
     std::thread::id mainThreadId_;
-    std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
+    std::shared_ptr<IVSyncReceiver> receiver_ = nullptr;
     std::vector<sptr<RSIOcclusionChangeCallback>> occlusionListeners_;
 
     bool waitingBufferAvailable_ = false; // uni->non-uni mode, wait for RT buffer, only used in main thread

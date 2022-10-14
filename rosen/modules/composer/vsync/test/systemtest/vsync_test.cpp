@@ -109,7 +109,7 @@ pid_t VSyncTest::ChildProcessMain()
     }
 
     auto conn = iface_cast<IVSyncConnection>(robj);
-    sptr<VSyncReceiver> receiver = new VSyncReceiver(conn);
+    sptr<IVSyncReceiver> receiver = new VSyncReceiver(conn);
     receiver->Init();
 
     VSyncReceiver::FrameCallback fcb = {

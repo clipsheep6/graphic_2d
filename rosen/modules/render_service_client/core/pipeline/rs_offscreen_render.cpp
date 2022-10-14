@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-#include "ui/rs_offscreen_render.h"
-#include <cstddef>
+#include "pipeline/rs_offscreen_render.h"
 #include "include/core/SkImage.h"
 #include "platform/common/rs_log.h"
 #include "pipeline/rs_node_map.h"
@@ -33,20 +32,23 @@ namespace OHOS {
 
 namespace Rosen {
 
-std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeId, float scaleX, float scaleY)
+std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture()
 {
-    nodeId_ = nodeId;
-    scaleX_ = scaleX;
-    scaleY_ = scaleY;
     if (scaleX_ <= 0.f || scaleY_ <= 0.f) {
         ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: scale is invalid.");
         return nullptr;
     }
-    // create rs_render_node,because it maybe canvasNode or surfaceNode or rootNode
+    // create rs_render_node, because it maybe canvasNode or surfaceNode or rootNode
     auto node = RSRenderThread::Instance().GetContext().GetNodeMap().GetRenderNode<RSRenderNode>(nodeId_);
-    std::shared_ptr<Media::PixelMap> pixelmap;
-    pixelmap = CreatePixelMapByNode(node);
+    if (node == nullptr) {
+        ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: node is nullptr");
+        return nullptr;
+    }
+    std::shared_ptr<Media::PixelMap> pixelmap = CreatePixelMapByNode(node);
     auto skSurface = CreateSurface(pixelmap);
+    if (skSurface == nullptr) {
+        return nullptr;;
+    }
     auto visitor = std::make_shared<RSOffscreenRenderVisitor>(scaleX_, scaleY_, nodeId_);
     visitor->SetSurface(skSurface.get());
     // Draw
@@ -80,10 +82,6 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture(NodeId nodeI
 
 std::shared_ptr<Media::PixelMap> RSOffscreenRender::CreatePixelMapByNode(std::shared_ptr<RSRenderNode> node)
 {
-    if (node == nullptr) {
-        ROSEN_LOGE("RSOffscreenRender::GetLocalCapture: node is nullptr");
-        return nullptr;
-    }
     int pixmapWidth = node->GetRenderProperties().GetBoundsWidth();
     int pixmapHeight = node->GetRenderProperties().GetBoundsHeight();
     Media::InitializationOptions opts;
@@ -211,6 +209,7 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessSurfaceRenderNode(RSSur
     auto image = Media::PixelMapRosenUtils::ExtractSkImage(pixelMap);
     canvas_->drawImage(image, node.GetRenderProperties().GetBoundsPositionX(),
         node.GetRenderProperties().GetBoundsPositionY());
+    ProcessBaseRenderNode(node);
 }
 
 } // namespace Rosen

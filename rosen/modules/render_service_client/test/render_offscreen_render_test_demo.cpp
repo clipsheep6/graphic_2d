@@ -32,7 +32,7 @@
 #include "transaction/rs_interfaces.h"
 #include "transaction/rs_transaction.h"
 #include "ui/rs_capture_callback.h"
-#include "ui/rs_offscreen_render.h"
+// #include "ui/rs_offscreen_render.h"
 #include "ui/rs_display_node.h"
 #include "ui/rs_ui_director.h"
 #include "ui/rs_root_node.h"
@@ -59,6 +59,7 @@ shared_ptr<RSNode> rootNode;
 shared_ptr<RSCanvasNode> canvasNode;
 shared_ptr<RSCanvasNode> canvasNode2;
 shared_ptr<RSSurfaceNode> surfaceNode1;
+shared_ptr<RSSurfaceNode> surfaceNode2;
 
 #ifdef ACE_ENABLE_GPU
     RenderContext* rc_ = nullptr;
@@ -126,9 +127,9 @@ void RenderContextInit()
 #endif
 }
 
-void DrawSurfaceNode(shared_ptr<RSSurfaceNode> surfaceNode)
+void DrawSurfaceNode(shared_ptr<RSSurfaceNode> surfaceNode, float x1, float y1, float width1, float height1, string context, SkColor color)
 {
-    SkRect surfaceGeometry = SkRect::MakeXYWH(100, 50, 300, 600);
+    SkRect surfaceGeometry = SkRect::MakeXYWH(x1, y1, width1, height1);
     auto x = surfaceGeometry.x();
     auto y = surfaceGeometry.y();
     auto width = surfaceGeometry.width();
@@ -164,7 +165,7 @@ void DrawSurfaceNode(shared_ptr<RSSurfaceNode> surfaceNode)
     paint.setStrokeJoin(SkPaint::kRound_Join);
     paint.setColor(SK_ColorGREEN);
 
-    string scaleInfo = "Hello World";
+    string scaleInfo = context;
     sk_sp<SkTextBlob> scaleInfoTextBlob = SkTextBlob::MakeFromString(
         scaleInfo.c_str(), SkFont(nullptr, 16.0f, 1.0f, 0.0f)); // font size: 16
     canvas->drawTextBlob(scaleInfoTextBlob.get(), 20, 50, paint); // start point is (20, 50)
@@ -193,9 +194,11 @@ void Init(shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
     rootNode->SetBounds(0, 0, width, height);
     rootNode->SetFrame(0, 0, width, height);
     rootNode->SetBackgroundColor(SK_ColorRED);
+    // rootNode->SetRotation(15.f);
 
     rsUiDirector->SetRoot(rootNode->GetId());
     canvasNode = RSCanvasNode::Create();
+    // canvasNode->SetRotation(20.f);
     canvasNode->SetBounds(10, 10, 600, 1200);
     canvasNode->SetFrame(10, 10, 600, 1200);
     canvasNode->SetBackgroundColor(SK_ColorYELLOW);
@@ -210,9 +213,14 @@ void Init(shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
     RSSurfaceNodeConfig config;
     surfaceNode1 = RSSurfaceNode::Create(config, false);
     RenderContextInit();
-    DrawSurfaceNode(surfaceNode1);
+    DrawSurfaceNode(surfaceNode1, 100, 50, 300, 600, "Hello World", SK_ColorWHITE);
     cout << "SurfaceNode Id is  " << surfaceNode1->GetId() << endl;
     canvasNode2->AddChild(surfaceNode1, -1);
+
+    // surfaceNode2 = RSSurfaceNode::Create(config, false);
+    // DrawSurfaceNode(surfaceNode2, 0, 0, 100, 200, "Nice Boy", SK_ColorBLACK);
+    // cout << "SurfaceNode Id is  " << surfaceNode2->GetId() << endl;
+    // surfaceNode1->AddChild(surfaceNode2, -1);
 }
 
 shared_ptr<Media::PixelMap> LocalCapture(NodeId id, float scaleX, float scaleY)

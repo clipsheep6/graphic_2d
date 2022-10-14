@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef RS_OFFSCREEN_RENDER
-#define RS_OFFSCREEN_RENDER
+#ifndef RENDER_SERVICE_CLIENT_CORE_RS_OFFSCREEN_RENDER
+#define RENDER_SERVICE_CLIENT_CORE_RS_OFFSCREEN_RENDER
 
-#include <memory>
 #include "common/rs_common_def.h"
 #include "include/core/SkCanvas.h"
 #include "render/rs_skia_filter.h"
@@ -31,15 +30,16 @@ class PixelMap;
 }
 namespace Rosen {
 
-class RS_EXPORT RSOffscreenRender {
+class RSOffscreenRender {
 public:
-    RSOffscreenRender() = default;
+    RSOffscreenRender(float scaleX, float scaleY, NodeId nodeId) : scaleX_(scaleX), scaleY_(scaleY), nodeId_(nodeId) {};
     ~RSOffscreenRender() = default;
-    std::shared_ptr<Media::PixelMap> GetLocalCapture(NodeId nodeId, float scaleX = 1.0f, float scaleY = 1.0f);
+    std::shared_ptr<Media::PixelMap> GetLocalCapture();
+
+private:
     std::shared_ptr<Media::PixelMap> CreatePixelMapByNode(std::shared_ptr<RSRenderNode> node);
     sk_sp<SkSurface> CreateSurface(const std::shared_ptr<Media::PixelMap> pixelmap);
 
-private:
     class RSOffscreenRenderVisitor : public RSNodeVisitor {
     public:
         RSOffscreenRenderVisitor(float scaleX, float scaleY, NodeId nodeId);
@@ -66,9 +66,9 @@ private:
         std::unique_ptr<RSPaintFilterCanvas> canvas_ = nullptr;
     };
 
-    NodeId nodeId_;
     float scaleX_;
     float scaleY_;
+    NodeId nodeId_;
 };
 } // namespace Rosen
 } // namespace OHOS

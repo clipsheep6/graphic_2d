@@ -72,6 +72,7 @@ ohos_source_set("render_service_client_src") {
 
     #pipeline
     "core/pipeline/rs_node_map.cpp",
+    "core/pipeline/rs_offscreen_render.cpp",
     "core/pipeline/rs_render_thread.cpp",
     "core/pipeline/rs_render_thread_visitor.cpp",
 
@@ -86,7 +87,6 @@ ohos_source_set("render_service_client_src") {
     "core/ui/rs_canvas_node.cpp",
     "core/ui/rs_display_node.cpp",
     "core/ui/rs_node.cpp",
-    "core/ui/rs_offscreen_render.cpp",
     "core/ui/rs_pixel_map_util.cpp",
     "core/ui/rs_proxy_node.cpp",
     "core/ui/rs_root_node.cpp",

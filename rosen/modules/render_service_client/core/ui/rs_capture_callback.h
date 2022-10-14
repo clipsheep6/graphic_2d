@@ -27,25 +27,17 @@ public:
     CaptureCallback() = default;
     ~CaptureCallback() {};
 
-    void Call(std::shared_ptr<Media::PixelMap> pixelmap)
-    {
-        if (!flag_) {
-            pixelMap_ = pixelmap;
-            flag_ = true;
-        }
-    }
     bool IsReady() const
     {
         return flag_;
     }
-    std::shared_ptr<Media::PixelMap> FetchResult() const
-    {
-        return pixelMap_;
-    }
-    void OutCall(std::shared_ptr<Media::PixelMap> pixelmap)
+    void TriggerCallback(std::shared_ptr<Media::PixelMap> pixelmap)
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        Call(pixelmap);
+        if (!flag_) {
+            pixelMap_ = pixelmap;
+            flag_ = true;
+        }
         conditionVariable_.notify_one();
     }
     std::shared_ptr<Media::PixelMap> GetResult(long timeOut)
@@ -54,7 +46,7 @@ public:
         if (!conditionVariable_.wait_for(lock, std::chrono::milliseconds(timeOut), [this] { return IsReady(); })) {
             ROSEN_LOGE("wait for %lu timeout", timeOut);
         }
-        return FetchResult();
+        return pixelMap_;
     }
 private:
     std::shared_ptr<Media::PixelMap> pixelMap_ = nullptr;
@@ -67,7 +59,7 @@ class RSOffscreenRenderCallback : public SurfaceCaptureCallback, public CaptureC
 public:
     void OnSurfaceCapture(std::shared_ptr<Media::PixelMap> pixelmap) override
     {
-        OutCall(pixelmap);
+        TriggerCallback(pixelmap);
     }
 };
 } // Rosen

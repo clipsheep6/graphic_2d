@@ -22,7 +22,7 @@ using namespace OHOS;
 
 namespace {
 struct NativeVSync {
-    std::shared_ptr<OHOS::Rosen::VSyncReceiver> receiver_;
+    std::shared_ptr<OHOS::Rosen::IVSyncReceiver> receiver_;
 };
 }
 static NativeVSync* OH_NativeVSync_OHNativeVSyncToNativeVSync(OH_NativeVSync* ohNativeVSync)
@@ -44,7 +44,7 @@ OH_NativeVSync* OH_NativeVSync_Create(const char* name, unsigned int length)
     std::string vsyncName(name, length);
     NativeVSync* nativeVSync = new NativeVSync;
     auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
-    std::shared_ptr<OHOS::Rosen::VSyncReceiver> receiver = rsClient.CreateVSyncReceiver(vsyncName);
+    std::shared_ptr<OHOS::Rosen::IVSyncReceiver> receiver = rsClient.CreateVSyncReceiver(vsyncName);
     int ret = receiver->Init();
     if (ret != 0) {
         delete nativeVSync;

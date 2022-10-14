@@ -20,11 +20,11 @@ group("darwin") {
 
 ohos_source_set("rosen_darwin_sources") {
   sources = [
+    "../ohos/rs_log.cpp",
     "render_context.cpp",
     "rs_accessibility.cpp",
     "rs_ashmem_helper.cpp",
     "rs_frame_report.cpp",
-    "rs_log.cpp",
     "rs_marshalling_helper.cpp",
     "rs_render_service_client.cpp",
     "rs_surface_darwin.cpp",
@@ -60,4 +60,6 @@ ohos_source_set("rosen_darwin_sources") {
     "//third_party/EGL:libEGL",
     "//third_party/flutter/build/skia:ace_skia",
   ]
+
+  external_deps = [ "hilog_native:libhilog" ]
 }

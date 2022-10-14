@@ -21,10 +21,13 @@
 #include <mutex>
 #include <unordered_map>
 #include <vector>
+#include <unistd.h>
 
 #include "common/rs_macros.h"
 
 namespace OHOS {
+class Surface;
+
 namespace Rosen {
 using AnimationId = uint64_t;
 using NodeId = uint64_t;
@@ -81,10 +84,12 @@ enum class RSSurfaceNodeType : uint8_t {
     SELF_DRAWING_WINDOW_NODE, // create by wms
 };
 
+using UseSurfaceToRenderFunc = std::function<void(Surface *csurface)>;
 struct RSSurfaceRenderNodeConfig {
     NodeId id = 0;
     std::string name = "SurfaceNode";
     RSSurfaceNodeType nodeType = RSSurfaceNodeType::DEFAULT;
+    UseSurfaceToRenderFunc onRender = nullptr;
 };
 
 struct RSDisplayNodeConfig {

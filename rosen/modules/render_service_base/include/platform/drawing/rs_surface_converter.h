@@ -21,9 +21,9 @@
 namespace OHOS {
 namespace Rosen {
 
-class RSSurfaceConverter {
+class RSB_EXPORT RSSurfaceConverter {
 public:
-    static sptr<Surface> ConvertToOhosSurface(std::shared_ptr<RSSurface> surface);
+    static RSB_EXPORT sptr<Surface> ConvertToOhosSurface(std::shared_ptr<RSSurface> surface);
 };
 } // namespace Rosen
 } // namespace OHOS

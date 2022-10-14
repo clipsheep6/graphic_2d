@@ -21,6 +21,7 @@
 #include <stack>
 
 #include "command/rs_command.h"
+#include "common/rs_macros.h"
 #include "common/rs_singleton.h"
 #include "common/rs_macros.h"
 #include "transaction/rs_irender_client.h"
@@ -29,9 +30,9 @@
 namespace OHOS {
 namespace Rosen {
 class RSSyncTask;
-class RS_EXPORT RSTransactionProxy final {
+class RSB_EXPORT RSTransactionProxy final {
 public:
-    static RSTransactionProxy* GetInstance();
+    static RSB_EXPORT RSTransactionProxy* GetInstance();
     void SetRenderThreadClient(std::unique_ptr<RSIRenderClient>& renderThreadClient);
     void SetRenderServiceClient(const std::shared_ptr<RSIRenderClient>& renderServiceClient);
 

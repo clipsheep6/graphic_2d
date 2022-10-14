@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace Rosen {
 class RSSurfaceNode;
-class RS_EXPORT RSRootNode : public RSCanvasNode {
+class RSC_EXPORT RSRootNode : public RSCanvasNode {
 public:
     using WeakPtr = std::weak_ptr<RSRootNode>;
     using SharedPtr = std::shared_ptr<RSRootNode>;

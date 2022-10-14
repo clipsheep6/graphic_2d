@@ -47,7 +47,7 @@ enum RSNodeCommandType : uint16_t {
     UPDATE_MODIFIER_DRAW_CMD_LIST,
 };
 
-class RS_EXPORT RSNodeCommandHelper {
+class RSB_EXPORT RSNodeCommandHelper {
 public:
     static void AddModifier(RSContext& context, NodeId nodeId, const std::shared_ptr<RSRenderModifier>& modifier);
     static void RemoveModifier(RSContext& context, NodeId nodeId, PropertyId propertyId);

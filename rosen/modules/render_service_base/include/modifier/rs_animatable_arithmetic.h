@@ -28,7 +28,7 @@
 namespace OHOS {
 namespace Rosen {
 template<typename T>
-class RS_EXPORT RSArithmetic {
+class RSB_EXPORT RSArithmetic {
 public:
     RSArithmetic() = default;
     virtual ~RSArithmetic() = default;
@@ -47,7 +47,7 @@ public:
 };
 
 template<typename T>
-class RS_EXPORT RSAnimatableArithmetic : public RSArithmetic<T> {
+class RSB_EXPORT RSAnimatableArithmetic : public RSArithmetic<T> {
 public:
     RSAnimatableArithmetic() = default;
     virtual ~RSAnimatableArithmetic() = default;

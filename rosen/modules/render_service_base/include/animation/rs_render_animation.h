@@ -34,7 +34,7 @@ enum class AnimationState {
     FINISHED,
 };
 
-class RS_EXPORT RSRenderAnimation : public Parcelable {
+class RSB_EXPORT RSRenderAnimation : public Parcelable {
 public:
     virtual ~RSRenderAnimation() = default;
     AnimationId GetAnimationId() const;

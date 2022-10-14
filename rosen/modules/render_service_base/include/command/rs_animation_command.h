@@ -52,7 +52,7 @@ enum RSAnimationCommandType : uint16_t {
     ANIMATION_FINISH_CALLBACK,
 };
 
-class RS_EXPORT AnimationCommandHelper {
+class RSB_EXPORT AnimationCommandHelper {
 public:
     template<void (RSRenderAnimation::*OP)()>
     static void AnimOp(RSContext& context, NodeId nodeId, AnimationId animId)
@@ -100,7 +100,7 @@ public:
 
     using FinishCallbackProcessor = void (*)(NodeId, AnimationId);
     static void AnimationFinishCallback(RSContext& context, NodeId targetId, AnimationId animId);
-    static void SetFinishCallbackProcessor(FinishCallbackProcessor processor);
+    static RSB_EXPORT void SetFinishCallbackProcessor(FinishCallbackProcessor processor);
 };
 
 // animation operation

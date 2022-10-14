@@ -21,7 +21,7 @@
 namespace OHOS {
 namespace Rosen {
 
-class RS_EXPORT RSTransaction {
+class RSC_EXPORT RSTransaction {
 public:
     ~RSTransaction() = default;
 

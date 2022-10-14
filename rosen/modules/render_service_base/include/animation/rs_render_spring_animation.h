@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSRenderSpringAnimation : public RSRenderPropertyAnimation,
+class RSB_EXPORT RSRenderSpringAnimation : public RSRenderPropertyAnimation,
     public RSSpringModel<std::shared_ptr<RSRenderPropertyBase>> {
 public:
     explicit RSRenderSpringAnimation(AnimationId id, const PropertyId& propertyId,

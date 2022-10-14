@@ -31,7 +31,7 @@ namespace Rosen {
 class DrawCmdList;
 class RSPaintFilterCanvas;
 
-class RS_EXPORT RSRenderNode : public RSBaseRenderNode {
+class RSB_EXPORT RSRenderNode : public RSBaseRenderNode {
 public:
     using WeakPtr = std::weak_ptr<RSRenderNode>;
     using SharedPtr = std::shared_ptr<RSRenderNode>;

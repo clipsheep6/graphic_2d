@@ -21,7 +21,7 @@
 #include "surface.h"
 
 namespace OHOS {
-class SurfaceUtils {
+class OHOS_EXPORT SurfaceUtils {
 public:
     static SurfaceUtils* GetInstance();
 

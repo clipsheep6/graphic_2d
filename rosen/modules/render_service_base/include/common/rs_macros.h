@@ -17,10 +17,16 @@
 
 namespace OHOS {
 namespace Rosen {
-#ifdef ENABLE_EXPORT_MACRO
-#define RS_EXPORT __attribute__((visibility("default")))
+#ifdef MODULE_RSB
+#define RSB_EXPORT OHOS_EXPORT
 #else
-#define RS_EXPORT
+#define RSB_EXPORT OHOS_IMPORT
+#endif
+
+#ifdef MODULE_RSC
+#define RSC_EXPORT OHOS_EXPORT
+#else
+#define RSC_EXPORT OHOS_IMPORT
 #endif
 } // namespace Rosen
 } // namespace OHOS

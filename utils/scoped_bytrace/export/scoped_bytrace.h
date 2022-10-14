@@ -18,7 +18,7 @@
 
 #include <string>
 
-class ScopedBytrace {
+class OHOS_EXPORT ScopedBytrace {
 public:
     ScopedBytrace(const std::string &proc);
     ~ScopedBytrace();

@@ -27,7 +27,7 @@ namespace Media {
 class PixelMap;
 }
 namespace Rosen {
-class RS_EXPORT RSPixelMapUtil {
+class RSC_EXPORT RSPixelMapUtil {
 public:
     static bool UploadToGpuIfNeeded(std::shared_ptr<Media::PixelMap> pixelmap, GrContext* context, bool buildMips,
         bool limitToMaxTextureSize = false);

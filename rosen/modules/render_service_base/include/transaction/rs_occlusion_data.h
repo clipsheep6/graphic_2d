@@ -24,7 +24,7 @@
 namespace OHOS {
 namespace Rosen {
 using VisibleData = std::vector<uint64_t>;
-class RS_EXPORT RSOcclusionData : public Parcelable {
+class RSB_EXPORT RSOcclusionData : public Parcelable {
 public:
     RSOcclusionData() = default;
     RSOcclusionData(VisibleData& vec)

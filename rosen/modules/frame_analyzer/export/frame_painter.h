@@ -24,7 +24,7 @@ class SkCanvas;
 
 namespace OHOS {
 namespace Rosen {
-class FramePainter {
+class OHOS_EXPORT FramePainter {
 public:
     FramePainter(FrameCollector &collector);
 

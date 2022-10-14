@@ -25,10 +25,10 @@
 #include "surface_tunnel_handle.h"
 
 namespace OHOS {
-class Surface : public RefBase {
+class OHOS_EXPORT Surface : public RefBase {
 public:
-    static sptr<Surface> CreateSurfaceAsConsumer(std::string name = "noname", bool isShared = false);
-    static sptr<Surface> CreateSurfaceAsProducer(sptr<IBufferProducer>& producer);
+    static OHOS_EXPORT sptr<Surface> CreateSurfaceAsConsumer(std::string name = "noname", bool isShared = false);
+    static OHOS_EXPORT sptr<Surface> CreateSurfaceAsProducer(sptr<IBufferProducer>& producer);
 
     virtual ~Surface() = default;
 

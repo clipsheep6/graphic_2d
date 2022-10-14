@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSRenderTransition : public RSRenderAnimation {
+class RSB_EXPORT RSRenderTransition : public RSRenderAnimation {
 public:
     RSRenderTransition(
         AnimationId id, const std::vector<std::shared_ptr<RSRenderTransitionEffect>>& effects, bool isTransitionIn);

@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSColor final {
+class RSB_EXPORT RSColor final {
 public:
     RSColor() noexcept : alpha_(0), blue_(0), green_(0), red_(0) {}
     explicit RSColor(uint32_t rgba) noexcept;

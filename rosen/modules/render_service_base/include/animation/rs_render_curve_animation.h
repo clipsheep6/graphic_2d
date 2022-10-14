@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSRenderCurveAnimation : public RSRenderPropertyAnimation {
+class RSB_EXPORT RSRenderCurveAnimation : public RSRenderPropertyAnimation {
 public:
     RSRenderCurveAnimation(AnimationId id, const PropertyId& propertyId,
         const std::shared_ptr<RSRenderPropertyBase>& originValue,

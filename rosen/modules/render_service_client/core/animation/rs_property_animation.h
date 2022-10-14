@@ -34,7 +34,7 @@ namespace OHOS {
 namespace Rosen {
 class RSPropertyBase;
 
-class RS_EXPORT RSPropertyAnimation : public RSAnimation {
+class RSC_EXPORT RSPropertyAnimation : public RSAnimation {
 public:
     RSPropertyAnimation() = delete;
     virtual ~RSPropertyAnimation() = default;

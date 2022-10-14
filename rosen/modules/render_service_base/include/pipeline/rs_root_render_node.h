@@ -22,7 +22,7 @@ namespace OHOS {
 namespace Rosen {
 class RSSurface;
 class RSDirtyRegionManager;
-class RS_EXPORT RSRootRenderNode : public RSCanvasRenderNode {
+class RSB_EXPORT RSRootRenderNode : public RSCanvasRenderNode {
 public:
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::ROOT_NODE;
     RSRenderNodeType GetType() const override

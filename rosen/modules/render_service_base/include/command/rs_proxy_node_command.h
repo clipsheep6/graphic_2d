@@ -28,7 +28,7 @@ enum RSProxyNodeCommandType : uint16_t {
     REMOVE_MODIFIERS,
 };
 
-class RS_EXPORT ProxyNodeCommandHelper {
+class RSB_EXPORT ProxyNodeCommandHelper {
 public:
     static void Create(RSContext& context, NodeId id, NodeId target);
     static void ResetContextVariableCache(RSContext& context, NodeId id);

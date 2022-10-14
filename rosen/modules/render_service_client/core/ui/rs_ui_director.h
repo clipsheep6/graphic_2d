@@ -27,7 +27,7 @@ class RSSurfaceNode;
 class RSTransactionData;
 using TaskRunner = std::function<void(const std::function<void()>&)>;
 
-class RS_EXPORT RSUIDirector final {
+class RSC_EXPORT RSUIDirector final {
 public:
     static std::shared_ptr<RSUIDirector> Create();
 

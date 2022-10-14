@@ -19,7 +19,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSUIShareContext final {
+class RSC_EXPORT RSUIShareContext final {
 public:
     static RSUIShareContext& GetInstance();
     ~RSUIShareContext() = default;

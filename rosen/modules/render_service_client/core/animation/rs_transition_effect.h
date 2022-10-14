@@ -29,7 +29,7 @@ class RSRenderTransitionEffect;
 class RSTransitionModifier;
 class RSPropertyBase;
 
-class RSCustomTransitionEffect final {
+class RSB_EXPORT RSTransitionEffect final {
 public:
     RSCustomTransitionEffect(const std::shared_ptr<RSTransitionModifier>& modifier) : modifier_(modifier)
     {}

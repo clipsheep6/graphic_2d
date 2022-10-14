@@ -19,6 +19,8 @@
 #include <atomic>
 #include <string>
 
+#include "common/rs_macros.h"
+
 namespace OHOS {
 namespace Rosen {
 
@@ -66,7 +68,7 @@ enum class ParallelRenderingType {
     ENABLE = 2
 };
 
-class RSSystemProperties final {
+class RSB_EXPORT RSSystemProperties final {
 public:
     ~RSSystemProperties() = default;
 

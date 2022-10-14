@@ -23,7 +23,7 @@ namespace OHOS {
 namespace Rosen {
 class RSInterpolator;
 
-class RS_EXPORT RSRenderKeyframeAnimation : public RSRenderPropertyAnimation {
+class RSB_EXPORT RSRenderKeyframeAnimation : public RSRenderPropertyAnimation {
 public:
     RSRenderKeyframeAnimation(AnimationId id, const PropertyId& propertyId,
         const std::shared_ptr<RSRenderPropertyBase>& originValue);

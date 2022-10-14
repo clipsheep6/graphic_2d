@@ -27,7 +27,7 @@ class RSContext;
 class RSNodeVisitor;
 class RSCommand;
 
-class RS_EXPORT RSBaseRenderNode : public std::enable_shared_from_this<RSBaseRenderNode> {
+class RSB_EXPORT RSBaseRenderNode : public std::enable_shared_from_this<RSBaseRenderNode> {
 public:
     using WeakPtr = std::weak_ptr<RSBaseRenderNode>;
     using SharedPtr = std::shared_ptr<RSBaseRenderNode>;

@@ -22,7 +22,7 @@ namespace OHOS {
 namespace Rosen {
 class RSCanvasListener;
 
-class RS_EXPORT RSListenedCanvas : public RSPaintFilterCanvas {
+class RSB_EXPORT RSListenedCanvas : public RSPaintFilterCanvas {
 public:
     RSListenedCanvas(SkCanvas* canvas, float alpha = 1.0f);
     RSListenedCanvas(SkSurface* skSurface, float alpha = 1.0f);

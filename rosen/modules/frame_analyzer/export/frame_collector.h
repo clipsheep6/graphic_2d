@@ -26,7 +26,7 @@ namespace OHOS {
 namespace Rosen {
 class FrameSaver;
 
-class FrameCollector {
+class OHOS_EXPORT FrameCollector {
 public:
     static FrameCollector &GetInstance();
 

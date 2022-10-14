@@ -33,7 +33,7 @@ enum RSBaseNodeCommandType : uint16_t {
     BASE_NODE_CLEAR_CHILDREN,
 };
 
-class RS_EXPORT BaseNodeCommandHelper {
+class RSB_EXPORT BaseNodeCommandHelper {
 public:
     static void Destroy(RSContext& context, NodeId nodeId);
     static void AddChild(RSContext& context, NodeId nodeId, NodeId childNodeId, int32_t index);

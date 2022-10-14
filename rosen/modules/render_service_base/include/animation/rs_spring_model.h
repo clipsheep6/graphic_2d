@@ -16,11 +16,13 @@
 #ifndef ROSEN_ENGINE_CORE_ANIMATION_RS_SPRING_MODEL_H
 #define ROSEN_ENGINE_CORE_ANIMATION_RS_SPRING_MODEL_H
 
+#include "common/rs_macros.h"
+
 namespace OHOS {
 namespace Rosen {
 // RSAnimatableType should have following operators: + - *float ==
 template<typename RSAnimatableType>
-class RSSpringModel {
+class RSB_EXPORT RSSpringModel {
 public:
     explicit RSSpringModel(float response, float dampingRatio, const RSAnimatableType& initialOffset,
         const RSAnimatableType& initialVelocity, float minimumAmplitude);

@@ -26,7 +26,7 @@ namespace OHOS {
 namespace Rosen {
 class RSNode;
 
-class RS_EXPORT RSNodeMap final {
+class RSC_EXPORT RSNodeMap final {
 public:
     static const RSNodeMap& Instance();
     static RSNodeMap& MutableInstance();

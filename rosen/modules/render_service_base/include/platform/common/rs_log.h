@@ -20,9 +20,11 @@
 #include <cinttypes>
 #include <string>
 
+#include "common/rs_macros.h"
+
 namespace OHOS {
 namespace Rosen {
-class RSLog {
+class RSB_EXPORT RSLog {
 public:
     enum Tag { RS = 0, RS_CLIENT };
     enum Level { LEVEL_INFO = 0, LEVEL_DEBUG, LEVEL_WARN, LEVEL_ERROR, LEVEL_FATAL };

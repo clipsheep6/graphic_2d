@@ -59,7 +59,7 @@ void RenderContext::DestroyEGLSurface(EGLSurface surface)
 {
 }
 
-void RenderContext::MakeCurrent(EGLSurface surface) const
+void RenderContext::MakeCurrent(EGLSurface surface, EGLContext context) const
 {
 }
 

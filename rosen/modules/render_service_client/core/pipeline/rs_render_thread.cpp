@@ -31,6 +31,7 @@
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
+#include "platform/common/rs_accessibility.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "property/rs_property_trace.h"
@@ -47,7 +48,6 @@
 #include "res_sched_client.h"
 #include "res_type.h"
 #endif
-#include "rs_accessibility.h"
 #include "sandbox_utils.h"
 
 static void SystemCallSetThreadName(const std::string& name)

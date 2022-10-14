@@ -16,11 +16,11 @@
 
 #include "pipeline/rs_frame_report.h"
 
-#include "platform/common/rs_log.h"
-
 #include <dlfcn.h>
 #include <cstdio>
 #include <unistd.h>
+
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {

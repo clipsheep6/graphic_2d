@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "platform/common/rs_marshalling_helper.h"
+#include "transaction/rs_marshalling_helper.h"
 
 #include <memory>
 #include <message_parcel.h>
@@ -44,17 +44,17 @@
 #include "common/rs_common_def.h"
 #include "common/rs_matrix3.h"
 #include "common/rs_vector4.h"
+#include "modifier/rs_render_modifier.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "pixel_map.h"
-#include "platform/common/rs_ashmem_helper.h"
 #include "platform/common/rs_log.h"
 #include "render/rs_blur_filter.h"
 #include "render/rs_filter.h"
+#include "render/rs_image.h"
 #include "render/rs_material_filter.h"
 #include "render/rs_path.h"
 #include "render/rs_shader.h"
-#include "render/rs_image.h"
-#include "modifier/rs_render_modifier.h"
+#include "transaction/rs_ashmem_helper.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -93,7 +93,7 @@ static inline sk_sp<T> sk_reinterpret_cast(sk_sp<P> ptr)
 } // namespace
 
 // SkData
-bool RSMarshallingHelper::Marshalling(Parcel& parcel, const sk_sp<SkData>& val)
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, sk_sp<SkData> val)
 {
     return {};
 }
@@ -405,18 +405,6 @@ BATCH_EXPLICIT_INSTANTIATION(RSRenderAnimatableProperty)
 
 #undef EXPLICIT_INSTANTIATION
 #undef BATCH_EXPLICIT_INSTANTIATION
-
-template<typename T>
-bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::vector<T>& val)
-{
-    return {};
-}
-
-template<typename T>
-bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::vector<T>& val)
-{
-    return {};
-}
 
 // explicit instantiation
 template bool RSMarshallingHelper::Marshalling(

@@ -73,7 +73,6 @@ ohos_source_set("render_service_client_src") {
     "core/jank_detector/rs_jank_detector.cpp",
 
     #pipeline
-    "core/pipeline/rs_accessibility.cpp",
     "core/pipeline/rs_node_map.cpp",
     "core/pipeline/rs_render_thread.cpp",
     "core/pipeline/rs_render_thread_visitor.cpp",
@@ -114,10 +113,7 @@ ohos_source_set("render_service_client_src") {
 
   deps = []
 
-  deps += [
-    "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk:accessibilityconfig",
-    "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
-  ]
+  deps += [ "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer" ]
 
   if (rss_enabled) {
     deps += [ "//foundation/resourceschedule/resource_schedule_service/ressched/interfaces/innerkits/ressched_client:ressched_client" ]
@@ -139,10 +135,6 @@ ohos_source_set("render_service_client_src") {
   ]
 
   if (current_os == "mingw" || current_os == "mac") {
-    sources -= [ "core/pipeline/rs_accessibility.cpp" ]
-    sources += [ "core/pipeline/rs_accessibility_mingw.cpp" ]
-
-    deps -= [ "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk:accessibilityconfig" ]
     deps += [
       "//foundation/graphic/graphic_2d:libgl",
       "//foundation/graphic/graphic_2d/rosen/modules/glfw_render_context:libglfw_render_context",

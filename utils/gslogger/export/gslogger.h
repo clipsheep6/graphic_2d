@@ -18,6 +18,7 @@
 
 #include <any>
 #include <cstdarg>
+#include <memory>
 #include <sstream>
 #include <vector>
 

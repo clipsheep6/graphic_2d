@@ -100,7 +100,7 @@ ohos_shared_library("surface") {
     "ipc:ipc_core",
   ]
 
-  if (current_os == "mingw" || current_os == "mac") {
+  if (current_os == "mingw" || current_os == "mac" || current_os == "linux") {
     sources -= [
       "src/buffer_manager.cpp",
       "src/surface_buffer_impl.cpp",

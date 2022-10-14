@@ -16,6 +16,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_COMMON_RS_COMMON_DEF_H
 
 #include <cmath>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -101,7 +102,7 @@ struct RSDisplayNodeConfig {
 #if defined(M_PI)
 constexpr float PI = M_PI;
 #else
-constexpr float PI = std::atanf(1.0) * 4;
+static const float PI = std::atanf(1.0) * 4;
 #endif
 
 template<typename T>

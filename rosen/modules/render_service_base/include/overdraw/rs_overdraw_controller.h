@@ -19,6 +19,7 @@
 #include <array>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include "common/rs_macros.h"

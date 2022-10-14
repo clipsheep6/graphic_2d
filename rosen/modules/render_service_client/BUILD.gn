@@ -134,7 +134,7 @@ ohos_source_set("render_service_client_src") {
     "ipc:ipc_core",
   ]
 
-  if (current_os == "mingw" || current_os == "mac") {
+  if (current_os == "mingw" || current_os == "mac" || current_os == "linux") {
     deps += [
       "//foundation/graphic/graphic_2d:libgl",
       "//foundation/graphic/graphic_2d/rosen/modules/glfw_render_context:libglfw_render_context",

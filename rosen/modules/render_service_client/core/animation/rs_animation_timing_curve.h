@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <map>
+#include <memory>
 
 #include "common/rs_macros.h"
 

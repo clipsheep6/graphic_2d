@@ -16,6 +16,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_UI_DIRECTOR_H
 
 #include <atomic>
+#include <functional>
 #include <mutex>
 
 #include "common/rs_common_def.h"

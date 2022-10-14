@@ -26,6 +26,7 @@ config("render_service_client_config") {
     "//drivers/peripheral/display/interfaces/include",
     "//drivers/peripheral/base",
     "//utils/native/base/include",
+    "//commonlibrary/c_utils/base/include",
   ]
 }
 

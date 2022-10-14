@@ -92,6 +92,16 @@ public:
         cacheDir_ = filePath;
     }
 
+    void SetUniRender(bool isUni)
+    {
+        isUni_ = isUni;
+    }
+
+    std::string GetCacheDir()
+    {
+        return cacheDir_;
+    }
+
 private:
     sk_sp<GrContext> grContext_;
     sk_sp<SkSurface> skSurface_;
@@ -105,6 +115,7 @@ private:
     EGLConfig config_;
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
 
+    bool isUni_ = false;
     std::string cacheDir_;
     std::shared_ptr<MemoryHandler> mHandler_;
 };

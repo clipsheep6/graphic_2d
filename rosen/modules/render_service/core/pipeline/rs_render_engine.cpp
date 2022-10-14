@@ -33,6 +33,12 @@ RSRenderEngine::RSRenderEngine()
 #ifdef RS_ENABLE_GL
     renderContext_ = std::make_shared<RenderContext>();
     renderContext_->InitializeEglContext();
+    bool isUni = RSUniRenderJudgement::IsUniRender();
+    if (isUni && renderContext_->GetCacheDir().empty()) {
+        RS_LOGI("RSRenderEngine::RSRenderEngine set new cacheDir");
+        renderContext_->SetCacheDir("/data/system_de");
+        renderContext_->SetUniRender(isUni);
+    }
     renderContext_->SetUpGrContext();
 #endif // RS_ENABLE_GL
 

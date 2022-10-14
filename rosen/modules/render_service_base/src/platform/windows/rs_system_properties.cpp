@@ -15,12 +15,86 @@
 
 #include "platform/common/rs_system_properties.h"
 
+#include "transaction/rs_render_service_client.h"
+
 namespace OHOS {
 namespace Rosen {
-
 bool RSSystemProperties::GetUniRenderEnabled()
 {
     return isUniRenderEnabled_;
+}
+
+bool RSSystemProperties::GetRenderNodeTraceEnabled()
+{
+    return {};
+}
+
+DirtyRegionDebugType RSSystemProperties::GetDirtyRegionDebugType()
+{
+    return {};
+}
+
+PartialRenderType RSSystemProperties::GetPartialRenderEnabled()
+{
+    return {};
+}
+
+PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
+{
+    return {};
+}
+
+bool RSSystemProperties::GetOcclusionEnabled()
+{
+    return {};
+}
+
+std::string RSSystemProperties::GetRSEventProperty(const std::string &paraName)
+{
+    return {};
+}
+
+bool RSSystemProperties::GetDirectClientCompEnableStatus()
+{
+    return {};
+}
+
+bool RSSystemProperties::GetHighContrastStatus()
+{
+    return {};
+}
+
+uint32_t RSSystemProperties::GetCorrectionMode()
+{
+    return {};
+}
+
+bool RSSystemProperties::IsUniRenderMode()
+{
+    return {};
+}
+
+void RSSystemProperties::SetRenderMode(bool isUni)
+{
+}
+
+DumpSurfaceType RSSystemProperties::GetDumpSurfaceType()
+{
+    return {};
+}
+
+uint64_t RSSystemProperties::GetDumpSurfaceId()
+{
+    return {};
+}
+
+void RSSystemProperties::SetDrawTextAsBitmap(bool flag)
+{
+}
+
+bool RSSystemProperties::GetDrawTextAsBitmap()
+{
+    return {};
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -40,6 +40,7 @@ public:
     bool DidExceedMaxLines();
     void Layout(double width);
     void Paint(Canvas* canvas, double x, double y);
+    size_t GetLineCount();
 
     std::vector<TypographyProperties::TextBox> GetRectsForRange(
         size_t start,

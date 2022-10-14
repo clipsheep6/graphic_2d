@@ -78,6 +78,15 @@ bool TypographyTxt::DidExceedMaxLines()
     return paragraphTxt_->DidExceedMaxLines();
 }
 
+size_t TypographyTxt::GetLineCount()
+{
+    auto paragraphTxt = static_cast<txt::ParagraphTxt*>(paragraphTxt_.get());
+    if (paragraphTxt != nullptr) {
+        return paragraphTxt->GetLineCount();
+    }
+    return 0;
+}
+
 void TypographyTxt::Layout(double width)
 {
     paragraphTxt_->Layout(width);

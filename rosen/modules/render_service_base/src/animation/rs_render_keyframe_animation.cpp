@@ -54,7 +54,6 @@ void RSRenderKeyframeAnimation::AddKeyframes(const std::vector<std::tuple<float,
     keyframes_ = keyframes;
 }
 
-#ifdef ROSEN_OHOS
 bool RSRenderKeyframeAnimation::Marshalling(Parcel& parcel) const
 {
     if (!RSRenderPropertyAnimation::Marshalling(parcel)) {
@@ -115,7 +114,6 @@ bool RSRenderKeyframeAnimation::ParseParam(Parcel& parcel)
     }
     return true;
 }
-#endif
 
 void RSRenderKeyframeAnimation::OnAnimate(float fraction)
 {

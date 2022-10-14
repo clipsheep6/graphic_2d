@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#ifdef ROSEN_OHOS
 #include "screen_change_callback_proxy.h"
 
 #include <message_option.h>
@@ -47,4 +46,3 @@ void RSScreenChangeCallbackProxy::OnScreenChanged(ScreenId id, ScreenEvent event
 }
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS

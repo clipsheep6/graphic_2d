@@ -21,7 +21,6 @@
 
 namespace OHOS {
 namespace Rosen {
-#ifdef ROSEN_OHOS
 namespace {
 static constexpr size_t PARCEL_MAX_CPACITY = 2000 * 1024; // upper bound of parcel capacity
 static constexpr size_t PARCEL_SPLIT_THRESHOLD = 1800 * 1024; // should be < PARCEL_MAX_CPACITY
@@ -75,7 +74,6 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
     success = success && parcel.WriteBool(isUniRender_);
     return success;
 }
-#endif // ROSEN_OHOS
 
 void RSTransactionData::Process(RSContext& context)
 {
@@ -102,7 +100,6 @@ void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>&& command, NodeId 
     payload_.emplace_back(nodeId, followType, std::move(command));
 }
 
-#ifdef ROSEN_OHOS
 bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
 {
     Clear();
@@ -147,7 +144,6 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
         parcel.ReadUint64(index_) && parcel.ReadBool(isUniRender_);
 }
 
-#endif // ROSEN_OHOS
 
 } // namespace Rosen
 } // namespace OHOS

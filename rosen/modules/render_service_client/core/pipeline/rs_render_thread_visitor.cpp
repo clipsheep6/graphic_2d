@@ -507,7 +507,6 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     // RSSurfaceRenderNode in RSRenderThreadVisitor do not have information of property.
     // We only get parent's matrix and send it to RenderService
-#ifdef ROSEN_OHOS
     SkMatrix invertMatrix;
     SkMatrix contextMatrix = canvas_->getTotalMatrix();
 
@@ -533,7 +532,7 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     // clip hole
     ClipHoleForSurfaceNode(node);
-#endif
+
     // 1. add this node to parent's children list
     childSurfaceNodeIds_.emplace_back(node.GetId());
 
@@ -592,7 +591,6 @@ void RSRenderThreadVisitor::ProcessProxyRenderNode(RSProxyRenderNode& node)
 
 void RSRenderThreadVisitor::ClipHoleForSurfaceNode(RSSurfaceRenderNode& node)
 {
-#ifdef ROSEN_OHOS
     // Calculation position in RenderService may appear floating point number, and it will be removed.
     // It caused missed line problem on surfaceview hap, so we subtract one pixel when cliphole to avoid this problem
     static int pixel = 1;
@@ -616,7 +614,6 @@ void RSRenderThreadVisitor::ClipHoleForSurfaceNode(RSSurfaceRenderNode& node)
         }
     }
     canvas_->restore();
-#endif
 }
 
 void RSRenderThreadVisitor::SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType)

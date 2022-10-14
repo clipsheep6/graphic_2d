@@ -25,6 +25,7 @@ config("render_service_client_config") {
     "//foundation/graphic/graphic_2d/interfaces/inner_api/composer",
     "//drivers/peripheral/display/interfaces/include",
     "//drivers/peripheral/base",
+    "//utils/native/base/include",
   ]
 }
 
@@ -134,6 +135,19 @@ ohos_source_set("render_service_client_src") {
     "hitrace_native:hitrace_meter",
     "ipc:ipc_core",
   ]
+
+  if (current_os == "mingw" || current_os == "mac") {
+    deps -= [ "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk:accessibilityconfig" ]
+    deps += [
+      "//foundation/graphic/graphic_2d:libgl",
+      "//foundation/graphic/graphic_2d/rosen/modules/glfw_render_context:libglfw_render_context",
+    ]
+    external_deps += [
+      "c_utils:utils",
+      "eventhandler:libeventhandler",
+    ]
+  }
+
   public_deps =
       [ "$rosen_root/modules/render_service_base:librender_service_base" ]
 }

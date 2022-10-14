@@ -73,7 +73,9 @@ ohos_shared_library("libcomposer") {
     "//foundation/graphic/graphic_2d/utils:sync_fence",
   ]
 
-  external_deps = [ "drivers_interface_display:display_device_client" ]
+  if (current_os != "mingw" && current_os != "mac") {
+    external_deps = [ "drivers_interface_display:display_device_client" ]
+  }
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

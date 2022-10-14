@@ -187,6 +187,24 @@ ohos_shared_library("librender_service_base") {
     "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
   ]
 
+  if (current_os == "mingw" || current_os == "mac") {
+    sources -= [
+      "src/pipeline/rs_frame_report.cpp",
+      "src/transaction/rs_ashmem_helper.cpp",
+      "src/transaction/rs_marshalling_helper.cpp",
+    ]
+    sources += [
+      "src/pipeline/rs_frame_report_mingw.cpp",
+      "src/transaction/rs_ashmem_helper_mingw.cpp",
+      "src/transaction/rs_marshalling_helper_mingw.cpp",
+    ]
+    public_configs += [ "//foundation/graphic/graphic_2d/rosen/modules/composer:composer_public_config" ]
+    public_deps += [
+      "//foundation/graphic/graphic_2d/utils:sync_fence",
+      "//third_party/flutter/build/skia:ace_skia",
+    ]
+  }
+
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 

@@ -19,10 +19,10 @@
 #include <surface.h>
 
 #include "platform/drawing/rs_surface.h"
-#include "render_context/render_context.h"
 
 namespace OHOS {
 namespace Rosen {
+class RenderContext;
 class RSSurfaceOhos : public RSSurface {
 public:
     RSSurfaceOhos(const sptr<Surface>& producer) : producer_(producer)

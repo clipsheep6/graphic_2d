@@ -17,10 +17,9 @@
 
 #include "common/rs_obj_abs_geometry.h"
 #include "platform/common/rs_log.h"
-#include "platform/ohos/backend/rs_surface_ohos_gl.h"
-#include "platform/ohos/backend/rs_surface_ohos_raster.h"
 #include "screen_manager/screen_types.h"
 #include "visitor/rs_node_visitor.h"
+#include "transaction/rs_render_service_client.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -132,15 +131,8 @@ bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
     consumerListener_ = listener;
     auto producer = consumer_->GetProducer();
     sptr<Surface> surface = Surface::CreateSurfaceAsProducer(producer);
-
-#ifdef ACE_ENABLE_GL
-    // GPU render
-    surface_ = std::make_shared<RSSurfaceOhosGl>(surface);
-#else
-    // CPU render
-    surface_ = std::make_shared<RSSurfaceOhosRaster>(surface);
-#endif
-
+    auto client = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
+    surface_ = client->CreateRSSurface(surface);
     RS_LOGI("RSDisplayRenderNode::CreateSurface end");
     surfaceCreated_ = true;
     return true;

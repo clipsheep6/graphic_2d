@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSTransactionData : public Parcelable {
+class RSB_EXPORT RSTransactionData : public Parcelable {
 public:
     RSTransactionData() = default;
     RSTransactionData(RSTransactionData&& other)

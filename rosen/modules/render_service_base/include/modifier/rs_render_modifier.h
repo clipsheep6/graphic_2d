@@ -60,7 +60,7 @@ public:
     static RSRenderModifier* Unmarshalling(Parcel& parcel);
 };
 
-class RSDrawCmdListRenderModifier : public RSRenderModifier {
+class RSB_EXPORT RSDrawCmdListRenderModifier : public RSRenderModifier {
 public:
     RSDrawCmdListRenderModifier(const std::shared_ptr<RSRenderProperty<DrawCmdListPtr>>& property)
         : property_(property ? property : std::make_shared<RSRenderProperty<DrawCmdListPtr>>())
@@ -131,7 +131,7 @@ protected:
 
 // declare RenderModifiers like RSBoundsRenderModifier
 #define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE, DELTA_OP)                        \
-    class RS##MODIFIER_NAME##RenderModifier : public RSAnimatableRenderModifier {                        \
+    class RSB_EXPORT RS##MODIFIER_NAME##RenderModifier : public RSAnimatableRenderModifier {             \
     public:                                                                                              \
         RS##MODIFIER_NAME##RenderModifier(const std::shared_ptr<RSRenderPropertyBase>& property)         \
             : RSAnimatableRenderModifier(property)                                                       \

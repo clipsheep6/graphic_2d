@@ -32,6 +32,7 @@ config("render_service_client_config") {
 ohos_source_set("render_service_client_src") {
   defines = []
   defines += gpu_defines
+  defines += [ "MODULE_RSC" ]
   include_dirs = [
     "core",
     "$rosen_root/modules/render_service_base/src",

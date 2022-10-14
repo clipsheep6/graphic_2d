@@ -27,7 +27,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSPropertyTrace {
+class RSB_EXPORT RSPropertyTrace {
 public:
     static RSPropertyTrace &GetInstance()
     {

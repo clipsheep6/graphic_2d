@@ -24,7 +24,7 @@ namespace Rosen {
 class RSRenderPropertyBase;
 class RSAnimationLog;
 
-class RSRenderPropertyAnimation : public RSRenderAnimation {
+class RSB_EXPORT RSRenderPropertyAnimation : public RSRenderAnimation {
 public:
     virtual ~RSRenderPropertyAnimation() = default;
 

@@ -24,6 +24,8 @@
 #include <parcel.h>
 #include <refbase.h>
 
+#include "common/rs_macros.h"
+
 namespace OHOS {
 namespace Rosen {
 
@@ -37,12 +39,12 @@ enum InterpolatorType : uint16_t {
 
 class RSInterpolator : public Parcelable {
 public:
-    static const std::shared_ptr<RSInterpolator> DEFAULT;
+    static RSB_EXPORT const std::shared_ptr<RSInterpolator> DEFAULT;
     RSInterpolator() = default;
     virtual ~RSInterpolator() = default;
 
     virtual bool Marshalling(Parcel& parcel) const override = 0;
-    static RSInterpolator* Unmarshalling(Parcel& parcel);
+    static RSB_EXPORT RSInterpolator* Unmarshalling(Parcel& parcel);
 
     virtual float Interpolate(float input) const = 0;
 };
@@ -66,7 +68,7 @@ public:
     }
 };
 
-class RSCustomInterpolator : public RSInterpolator {
+class RSB_EXPORT RSCustomInterpolator : public RSInterpolator {
 public:
     RSCustomInterpolator(const std::function<float(float)>& func, int duration);
     virtual ~RSCustomInterpolator() = default;

@@ -30,7 +30,7 @@ enum RSRootNodeCommandType : uint16_t {
     UPDATE_SUGGESTED_BUFFER_SIZE,
 };
 
-class RootNodeCommandHelper {
+class RSB_EXPORT RootNodeCommandHelper {
 public:
     static void Create(RSContext& context, NodeId id);
     static void AttachRSSurfaceNode(RSContext& context, NodeId id, NodeId surfaceNodeId);

@@ -32,7 +32,7 @@ class RSTransitionEffect;
 class RSMotionPathOption;
 class RSNode;
 
-class RS_EXPORT RSImplicitAnimator {
+class RSC_EXPORT RSImplicitAnimator {
 public:
     RSImplicitAnimator() = default;
     virtual ~RSImplicitAnimator() = default;

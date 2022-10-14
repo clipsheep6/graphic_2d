@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSInterfaces {
+class RSC_EXPORT RSInterfaces {
 public:
     static RSInterfaces &GetInstance();
     RSInterfaces(const RSInterfaces &) = delete;

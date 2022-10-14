@@ -44,7 +44,7 @@ class RSImplicitAnimator;
 class RSUIAnimationManager;
 class RSModifier;
 
-class RS_EXPORT RSNode : public RSBaseNode {
+class RSC_EXPORT RSNode : public RSBaseNode {
 public:
     using WeakPtr = std::weak_ptr<RSNode>;
     using SharedPtr = std::shared_ptr<RSNode>;

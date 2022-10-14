@@ -40,6 +40,7 @@ ohos_shared_library("librender_service_base") {
   all_dependent_configs = [ ":render_service_base_all_deps_config" ]
   defines = []
   defines += gpu_defines
+  defines += [ "MODULE_RSB" ]
 
   sources = [
     #animation

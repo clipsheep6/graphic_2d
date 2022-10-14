@@ -33,7 +33,7 @@ enum class MaskType {
     PATH,
 };
 
-class RS_EXPORT RSMask : public std::enable_shared_from_this<RSMask> {
+class RSB_EXPORT RSMask : public std::enable_shared_from_this<RSMask> {
 public:
     RSMask();
     virtual ~RSMask();

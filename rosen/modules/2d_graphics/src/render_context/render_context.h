@@ -34,7 +34,7 @@
 #define GLES_VERSION 2
 namespace OHOS {
 namespace Rosen {
-class RenderContext {
+class OHOS_EXPORT RenderContext {
 public:
     RenderContext();
     virtual ~RenderContext();

@@ -26,7 +26,7 @@ namespace OHOS {
 namespace Rosen {
 class RSTransitionEffect;
 
-class RS_EXPORT RSBaseNode : public std::enable_shared_from_this<RSBaseNode> {
+class RSC_EXPORT RSBaseNode : public std::enable_shared_from_this<RSBaseNode> {
 public:
     using WeakPtr = std::weak_ptr<RSBaseNode>;
     using SharedPtr = std::shared_ptr<RSBaseNode>;
@@ -64,7 +64,7 @@ public:
 
     bool IsInstanceOf(RSUINodeType type) const;
     template<typename T>
-    bool IsInstanceOf() const;
+    RSC_EXPORT bool IsInstanceOf() const;
 
     // type-safe reinterpret_cast
     template<typename T>

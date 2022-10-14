@@ -24,7 +24,7 @@ namespace Rosen {
 class RSSkiaFilter;
 class RSPaintFilterCanvas;
 
-class RSPropertiesPainter {
+class RSB_EXPORT RSPropertiesPainter {
 public:
     static void Clip(SkCanvas& canvas, RectF rect);
     static void DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas);

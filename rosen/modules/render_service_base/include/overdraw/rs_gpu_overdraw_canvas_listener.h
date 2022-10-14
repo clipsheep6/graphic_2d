@@ -25,7 +25,7 @@
 class SkCanvas;
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSGPUOverdrawCanvasListener : public RSCanvasListener {
+class RSB_EXPORT RSGPUOverdrawCanvasListener : public RSCanvasListener {
 public:
     explicit RSGPUOverdrawCanvasListener(SkCanvas &canvas);
     ~RSGPUOverdrawCanvasListener() override;

@@ -21,7 +21,7 @@ class SkCanvas;
 namespace OHOS {
 namespace Rosen {
 
-class RS_EXPORT RSDisplayNode : public RSNode {
+class RSC_EXPORT RSDisplayNode : public RSNode {
 public:
     using WeakPtr = std::weak_ptr<RSDisplayNode>;
     using SharedPtr = std::shared_ptr<RSDisplayNode>;

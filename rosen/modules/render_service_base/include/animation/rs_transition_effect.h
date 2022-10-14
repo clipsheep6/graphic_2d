@@ -27,7 +27,7 @@ namespace OHOS {
 namespace Rosen {
 class RSRenderTransitionEffect;
 
-class RS_EXPORT RSTransitionEffect final : public std::enable_shared_from_this<RSTransitionEffect> {
+class RSB_EXPORT RSTransitionEffect final : public std::enable_shared_from_this<RSTransitionEffect> {
 public:
     static const std::shared_ptr<const RSTransitionEffect> OPACITY;
 

@@ -25,7 +25,7 @@ enum class ForwardDirection {
     REVERSE,
 };
 
-class RSAnimationFraction : public RSAnimationTimingProtocol {
+class RSB_EXPORT RSAnimationFraction : public RSAnimationTimingProtocol {
 public:
     RSAnimationFraction();
     ~RSAnimationFraction() = default;

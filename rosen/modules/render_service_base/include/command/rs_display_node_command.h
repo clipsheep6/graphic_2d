@@ -29,7 +29,7 @@ enum RSDisplayNodeCommandType : uint16_t {
     DISPLAY_NODE_SET_DISPLAY_MODE,
 };
 
-class DisplayNodeCommandHelper {
+class RSB_EXPORT DisplayNodeCommandHelper {
 public:
     static void Create(RSContext&, NodeId, const RSDisplayNodeConfig&);
     static void SetScreenId(RSContext&, NodeId, uint64_t);

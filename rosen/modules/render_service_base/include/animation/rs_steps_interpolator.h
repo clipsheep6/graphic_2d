@@ -25,7 +25,7 @@ enum class StepsCurvePosition {
     END,
 };
 
-class RSStepsInterpolator : public RSInterpolator {
+class RSB_EXPORT RSStepsInterpolator : public RSInterpolator {
 public:
     explicit RSStepsInterpolator(int32_t steps, StepsCurvePosition position = StepsCurvePosition::START);
 

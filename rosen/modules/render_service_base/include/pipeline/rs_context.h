@@ -21,7 +21,7 @@
 namespace OHOS {
 namespace Rosen {
 
-class RSContext : public std::enable_shared_from_this<RSContext> {
+class RSB_EXPORT RSContext : public std::enable_shared_from_this<RSContext> {
 public:
     RSContext() = default;
     ~RSContext() = default;

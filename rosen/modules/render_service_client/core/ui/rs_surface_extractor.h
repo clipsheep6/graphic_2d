@@ -21,7 +21,7 @@
 namespace OHOS {
 namespace Rosen {
 
-class RS_EXPORT RSSurfaceExtractor {
+class RSC_EXPORT RSSurfaceExtractor {
 public:
     static std::shared_ptr<RSSurface> ExtractRSSurface(std::shared_ptr<RSSurfaceNode> node);
 };

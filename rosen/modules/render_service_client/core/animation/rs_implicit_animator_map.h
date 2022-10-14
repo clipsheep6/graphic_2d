@@ -24,7 +24,7 @@ namespace OHOS {
 namespace Rosen {
 class RSImplicitAnimator;
 
-class RS_EXPORT RSImplicitAnimatorMap final {
+class RSC_EXPORT RSImplicitAnimatorMap final {
 public:
     static RSImplicitAnimatorMap& Instance();
 

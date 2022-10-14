@@ -32,7 +32,7 @@ namespace Rosen {
 class OpItem;
 class RSPaintFilterCanvas;
 
-class DrawCmdList : public Parcelable {
+class RSB_EXPORT DrawCmdList : public Parcelable {
 public:
     DrawCmdList(int w, int h);
     DrawCmdList& operator=(DrawCmdList&& that);
@@ -49,7 +49,7 @@ public:
     int GetHeight() const;
 
     bool Marshalling(Parcel& parcel) const override;
-    static DrawCmdList* Unmarshalling(Parcel& parcel);
+    static RSB_EXPORT DrawCmdList* Unmarshalling(Parcel& parcel);
 
 private:
     std::vector<std::unique_ptr<OpItem>> ops_;
@@ -60,7 +60,7 @@ private:
 
 using DrawCmdListPtr = std::shared_ptr<DrawCmdList>;
 
-class DrawCmdListManager {
+class RSB_EXPORT DrawCmdListManager {
 public:
     static DrawCmdListManager& Instance();
 

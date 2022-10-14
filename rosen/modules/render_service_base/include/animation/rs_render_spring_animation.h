@@ -26,7 +26,7 @@ constexpr float SECOND_TO_MILLISECOND = 1e3;
 constexpr float MILLISECOND_TO_SECOND = 1e-3;
 } // namespace
 
-class RSRenderSpringAnimation : public RSRenderPropertyAnimation,
+class RSB_EXPORT RSRenderSpringAnimation : public RSRenderPropertyAnimation,
     public RSSpringModel<std::shared_ptr<RSRenderPropertyBase>> {
 public:
     explicit RSRenderSpringAnimation(AnimationId id, const PropertyId& propertyId,

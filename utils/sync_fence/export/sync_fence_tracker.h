@@ -21,7 +21,7 @@
 #include "sync_fence.h"
 
 namespace OHOS {
-class SyncFenceTracker {
+class OHOS_EXPORT SyncFenceTracker {
 public:
     explicit SyncFenceTracker(const std::string threadName);
 

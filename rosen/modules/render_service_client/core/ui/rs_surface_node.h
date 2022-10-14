@@ -36,7 +36,7 @@ struct RSSurfaceNodeConfig {
     std::string SurfaceNodeName = "SurfaceNode";
 };
 
-class RS_EXPORT RSSurfaceNode : public RSNode {
+class RSC_EXPORT RSSurfaceNode : public RSNode {
 public:
     using WeakPtr = std::weak_ptr<RSSurfaceNode>;
     using SharedPtr = std::shared_ptr<RSSurfaceNode>;

@@ -35,13 +35,7 @@ ohos_shared_library("libglfw_render_context") {
 
   public_configs = [ ":libglfw_render_context_public_config" ]
 
-  deps = []
-  if (current_os == "mingw") {
-    deps += [ "//third_party/flutter/glfw:glfw_windows" ]
-  }
-  if (current_os == "mac") {
-    deps += [ "//third_party/flutter/glfw:glfw_mac" ]
-  }
+  deps = [ "//third_party/flutter/glfw:glfw" ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

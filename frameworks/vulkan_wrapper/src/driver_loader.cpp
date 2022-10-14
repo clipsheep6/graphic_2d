@@ -21,10 +21,10 @@
 namespace vulkan {
 namespace driver {
 #ifdef __aarch64__
-constexpr const char *VENDOR_LIB_PATH = "/vendor/lib64/chipsetsdk/";
+constexpr const char *VENDOR_LIB_PATH = "/chipset/lib64/chipsetsdk/";
 constexpr const char *SYSTEM_LIB_PATH = "/system/lib64/";
 #else
-constexpr const char *VENDOR_LIB_PATH = "/vendor/lib/chipsetsdk/";
+constexpr const char *VENDOR_LIB_PATH = "/chipset/lib/chipsetsdk/";
 constexpr const char *SYSTEM_LIB_PATH = "/system/lib/";
 #endif
 constexpr const char *LIB_NAME = "libEGL_impl.so";

@@ -70,6 +70,7 @@ public:
     bool GetUniRenderEnabled();
     bool CreateNode(const RSSurfaceRenderNodeConfig& config);
     std::shared_ptr<RSSurface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config);
+    std::shared_ptr<RSSurface> CreateRSSurface(const sptr<Surface> &surface);
 
     std::shared_ptr<IVSyncReceiver> CreateVSyncReceiver(
         const std::string& name,

@@ -50,7 +50,7 @@ ohos_source_set("rosen_darwin_sources") {
 
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
+    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
     "//third_party/flutter/build/skia:ace_skia",
   ]
 

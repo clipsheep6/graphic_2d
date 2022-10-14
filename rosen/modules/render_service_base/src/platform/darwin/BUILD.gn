@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 import("//foundation/arkui/ace_engine/ace_config.gni")
 
 group("darwin") {
-  deps = [ ":rosen_darwin_sources" ]
+  public_deps = [ ":rosen_darwin_sources" ]
 }
 
 ohos_source_set("rosen_darwin_sources") {
@@ -27,9 +27,9 @@ ohos_source_set("rosen_darwin_sources") {
     "rs_log.cpp",
     "rs_marshalling_helper.cpp",
     "rs_render_service_client.cpp",
+    "rs_surface_darwin.cpp",
     "rs_surface_frame_darwin.cpp",
     "rs_surface_ohos_converter.cpp",
-    "rs_surface_darwin.cpp",
     "rs_system_properties.cpp",
     "rs_vsync_client_darwin.cpp",
   ]
@@ -44,18 +44,20 @@ ohos_source_set("rosen_darwin_sources") {
     defines += [ "USE_GLFW_WINDOW" ]
   }
 
-  configs = [
-    "//foundation/graphic/graphic_2d/rosen/modules/composer:composer_public_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:public_libeventhandler_config",
-  ]
+  configs = [ "//base/notification/eventhandler/frameworks/eventhandler:public_libeventhandler_config" ]
+
+  public_configs = [ "//foundation/graphic/graphic_2d/rosen/modules/composer:composer_public_config" ]
 
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/graphic/graphic_2d/rosen/modules/glfw_render_context:libglfw_render_context",
-    "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
     "//third_party/flutter/build/skia:ace_skia",
   ]
 
-  public_deps = [ "//third_party/EGL:libEGL" ]
+  public_deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/glfw_render_context:libglfw_render_context",
+    "//foundation/graphic/graphic_2d/utils:sync_fence",
+    "//third_party/EGL:libEGL",
+    "//third_party/flutter/build/skia:ace_skia",
+  ]
 }

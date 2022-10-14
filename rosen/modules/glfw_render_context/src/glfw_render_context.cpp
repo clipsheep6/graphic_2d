@@ -19,7 +19,13 @@
 
 #include <GLFW/glfw3.h>
 
+#include "hilog/log.h"
+
 namespace OHOS::Rosen {
+namespace {
+constexpr ::OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0xD001403, "GlfwRC" };
+}
+
 std::shared_ptr<GlfwRenderContext> GlfwRenderContext::GetGlobal()
 {
     if (global_ == nullptr) {
@@ -35,16 +41,51 @@ std::shared_ptr<GlfwRenderContext> GlfwRenderContext::GetGlobal()
 
 int GlfwRenderContext::Init()
 {
+    ::OHOS::HiviewDFX::HiLog::Info(LABEL, "Init");
+    external_ = false;
     return glfwInit();
+}
+
+void GlfwRenderContext::InitFrom(void *glfwWindow)
+{
+    if (glfwWindow == nullptr) {
+        ::OHOS::HiviewDFX::HiLog::Error(LABEL, "InitFrom glfwWindow is nullptr");
+        return;
+    }
+    ::OHOS::HiviewDFX::HiLog::Info(LABEL, "InitFrom glfwWindow");
+
+    external_ = true;
+
+    // to be done: replace this with normal way, a no flutter way.
+    // from third_party/flutter/engine/flutter/shell/platform/glfw/flutter_glfw.cc +39
+    window_ = *reinterpret_cast<GLFWwindow **>(glfwWindow);
+
+    glfwSetCharCallback(window_, nullptr);
+    glfwSetCursorEnterCallback(window_, nullptr);
+    glfwSetCursorPosCallback(window_, nullptr);
+    glfwSetFramebufferSizeCallback(window_, nullptr);
+    glfwSetKeyCallback(window_, nullptr);
+    glfwSetMouseButtonCallback(window_, nullptr);
+    glfwSetScrollCallback(window_, nullptr);
+    glfwSetWindowRefreshCallback(window_, nullptr);
+    glfwSetWindowUserPointer(window_, this);
 }
 
 void GlfwRenderContext::Terminate()
 {
+    if (external_) {
+        return;
+    }
+
     glfwTerminate();
 }
 
 int GlfwRenderContext::CreateWindow(int32_t width, int32_t height, bool visible)
 {
+    if (external_) {
+        return 0;
+    }
+
     if (window_ != nullptr) {
         return 0;
     }
@@ -63,6 +104,10 @@ int GlfwRenderContext::CreateWindow(int32_t width, int32_t height, bool visible)
 
 void GlfwRenderContext::DestroyWindow()
 {
+    if (external_) {
+        return;
+    }
+
     if (window_ != nullptr) {
         glfwDestroyWindow(window_);
     }

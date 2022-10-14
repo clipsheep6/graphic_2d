@@ -61,7 +61,7 @@ ohos_executable("bootanimation") {
     "//foundation/window/window_manager/dm:libdm",
     "//foundation/window/window_manager/wm:libwm",
     "//third_party/cJSON:cjson_static",
-    "//third_party/flutter/build/skia:ace_skia_ohos",
+    "//third_party/flutter/build/skia:ace_skia",
     "//third_party/zlib:libz",
   ]
 

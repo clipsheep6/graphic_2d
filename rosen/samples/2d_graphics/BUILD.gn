@@ -77,7 +77,7 @@ ohos_executable("drawing_engine_sample") {
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
-    "//third_party/flutter/build/skia:ace_skia_ohos",
+    "//third_party/flutter/build/skia:ace_skia",
   ]
   public_deps = libgl
   defines = gpu_defines

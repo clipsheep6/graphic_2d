@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#ifdef ROSEN_OHOS
 #include "surface_capture_callback_proxy.h"
 #include <message_option.h>
 #include <message_parcel.h>
@@ -45,4 +44,3 @@ void RSSurfaceCaptureCallbackProxy::OnSurfaceCapture(NodeId id, Media::PixelMap*
 }
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS

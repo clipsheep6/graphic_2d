@@ -21,7 +21,6 @@
 namespace OHOS {
 namespace Rosen {
 RSRenderAnimation::RSRenderAnimation(AnimationId id) : id_(id) {}
-#ifdef ROSEN_OHOS
 bool RSRenderAnimation::Marshalling(Parcel& parcel) const
 {
     // animationId, targetId
@@ -67,7 +66,6 @@ bool RSRenderAnimation::ParseParam(Parcel& parcel)
     SetFillMode(static_cast<FillMode>(fillMode));
     return true;
 }
-#endif
 AnimationId RSRenderAnimation::GetAnimationId() const
 {
     return id_;

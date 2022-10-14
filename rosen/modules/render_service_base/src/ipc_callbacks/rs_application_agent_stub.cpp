@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#ifdef ROSEN_OHOS
 #include "rs_application_agent_stub.h"
 
 #include "command/rs_command.h"
@@ -54,4 +53,3 @@ int RSApplicationAgentStub::OnRemoteRequest(
 }
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS

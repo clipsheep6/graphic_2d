@@ -22,17 +22,11 @@
 #include "command/rs_command.h"
 #include "pipeline/rs_context.h"
 
-#ifdef ROSEN_OHOS
 #include <parcel.h>
-#endif
 
 namespace OHOS {
 namespace Rosen {
-#ifdef ROSEN_OHOS
 class RSTransactionData : public Parcelable {
-#else
-class RSTransactionData {
-#endif
 public:
     RSTransactionData() = default;
     RSTransactionData(RSTransactionData&& other)
@@ -41,10 +35,8 @@ public:
     {}
     ~RSTransactionData() noexcept = default;
 
-#ifdef ROSEN_OHOS
     static RSTransactionData* Unmarshalling(Parcel& parcel);
     bool Marshalling(Parcel& parcel) const override;
-#endif
 
     unsigned long GetCommandCount() const
     {
@@ -109,9 +101,7 @@ private:
     void AddCommand(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType);
     void AddCommand(std::unique_ptr<RSCommand>&& command, NodeId nodeId, FollowType followType);
 
-#ifdef ROSEN_OHOS
     bool UnmarshallingCommand(Parcel& parcel);
-#endif
     std::vector<std::tuple<NodeId, FollowType, std::unique_ptr<RSCommand>>> payload_;
     uint64_t timestamp_ = 0;
     pid_t pid_ = 0;

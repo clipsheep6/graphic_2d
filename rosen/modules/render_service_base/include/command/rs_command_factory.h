@@ -16,7 +16,6 @@
 #ifndef ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_COMMAND_FACTORY_H
 #define ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_COMMAND_FACTORY_H
 
-#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <unordered_map>
 
@@ -53,6 +52,5 @@ public:
 
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS
 
 #endif // ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_COMMAND_FACTORY_H

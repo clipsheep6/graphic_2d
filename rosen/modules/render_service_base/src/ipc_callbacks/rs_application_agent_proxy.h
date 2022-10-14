@@ -16,7 +16,6 @@
 #ifndef ROSEN_RENDER_SERVICE_BASE_RS_APPLICATION_AGENT_PROXY_H
 #define ROSEN_RENDER_SERVICE_BASE_RS_APPLICATION_AGENT_PROXY_H
 
-#ifdef ROSEN_OHOS
 #include <iremote_proxy.h>
 
 #include "ipc_callbacks/iapplication_agent.h"
@@ -37,6 +36,5 @@ private:
 };
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS
 
 #endif // ROSEN_RENDER_SERVICE_BASE_RS_APPLICATION_AGENT_PROXY_H

@@ -28,10 +28,8 @@ public:
     ~RSSpringInterpolator() override {};
 
     float Interpolate(float fraction) const override;
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSSpringInterpolator* Unmarshalling(Parcel& parcel);
-#endif
 };
 } // namespace Rosen
 } // namespace OHOS

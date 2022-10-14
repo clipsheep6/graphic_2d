@@ -16,7 +16,6 @@
 #ifndef ROSEN_RENDER_SERVICE_BASE_IAPPLICATION_AGENT_H
 #define ROSEN_RENDER_SERVICE_BASE_IAPPLICATION_AGENT_H
 
-#ifdef ROSEN_OHOS
 #include <iremote_broker.h>
 
 #include "common/rs_common_def.h"
@@ -43,6 +42,5 @@ public:
 };
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS
 
 #endif // ROSEN_RENDER_SERVICE_BASE_IAPPLICATION_AGENT_H

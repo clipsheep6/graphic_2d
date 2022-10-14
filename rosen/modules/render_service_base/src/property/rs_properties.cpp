@@ -20,11 +20,7 @@
 
 #include "platform/common/rs_log.h"
 #include "render/rs_filter.h"
-#ifdef ROSEN_OHOS
 #include "common/rs_obj_abs_geometry.h"
-#else
-#include "common/rs_obj_geometry.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -238,14 +234,12 @@ bool RSProperties::UpdateGeometry(const RSProperties* parent, bool dirtyFlag, Ve
         return false;
     }
     CheckEmptyBounds();
-#ifdef ROSEN_OHOS
     auto boundsGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(boundsGeo_);
 
     if (dirtyFlag || geoDirty_) {
         auto parentGeo = parent == nullptr ? nullptr : std::static_pointer_cast<RSObjAbsGeometry>(parent->boundsGeo_);
         boundsGeoPtr->UpdateMatrix(parentGeo, offset.x_, offset.y_);
     }
-#endif
     return dirtyFlag || geoDirty_;
 }
 
@@ -940,7 +934,6 @@ bool RSProperties::IsDirty() const
 
 RectI RSProperties::GetDirtyRect() const
 {
-#ifdef ROSEN_OHOS
     RectI dirtyRect;
     auto boundsGeometry = std::static_pointer_cast<RSObjAbsGeometry>(boundsGeo_);
     if (clipToBounds_ || std::isinf(GetFrameWidth()) || std::isinf(GetFrameHeight())) {
@@ -955,9 +948,6 @@ RectI RSProperties::GetDirtyRect() const
     } else {
         return dirtyRect.JoinRect(*overlayRect_);
     }
-#else
-    return RectI();
-#endif
 }
 
 void RSProperties::CheckEmptyBounds()

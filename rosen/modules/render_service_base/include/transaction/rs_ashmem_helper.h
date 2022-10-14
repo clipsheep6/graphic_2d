@@ -16,8 +16,6 @@
 #ifndef RENDER_SERVICE_BASE_TRANSACTION_RS_ASHMEM_HELPER_H
 #define RENDER_SERVICE_BASE_TRANSACTION_RS_ASHMEM_HELPER_H
 
-#ifdef ROSEN_OHOS
-
 #include <message_parcel.h>
 #include "common/rs_common_def.h"
 
@@ -60,5 +58,4 @@ private:
 } // namespace Rosen
 } // namespace OHOS
 
-#endif // ROSEN_OHOS
 #endif // RENDER_SERVICE_BASE_TRANSACTION_RS_ASHMEM_HELPER_H

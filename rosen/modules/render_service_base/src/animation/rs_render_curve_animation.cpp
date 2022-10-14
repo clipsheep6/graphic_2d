@@ -37,7 +37,6 @@ const std::shared_ptr<RSInterpolator>& RSRenderCurveAnimation::GetInterpolator()
     return interpolator_;
 }
 
-#ifdef ROSEN_OHOS
 bool RSRenderCurveAnimation::Marshalling(Parcel& parcel) const
 {
     if (!RSRenderPropertyAnimation::Marshalling(parcel)) {
@@ -81,7 +80,6 @@ bool RSRenderCurveAnimation::ParseParam(Parcel& parcel)
     SetInterpolator(interpolator);
     return true;
 }
-#endif
 
 void RSRenderCurveAnimation::OnSetFraction(float fraction)
 {

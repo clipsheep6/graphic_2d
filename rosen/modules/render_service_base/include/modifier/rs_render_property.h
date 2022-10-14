@@ -41,10 +41,8 @@ public:
         node_ = node;
     }
 
-#ifdef ROSEN_OHOS
     static bool Marshalling(Parcel& parcel, const std::shared_ptr<RSRenderPropertyBase>& val);
     static bool Unmarshalling(Parcel& parcel, std::shared_ptr<RSRenderPropertyBase>& val);
-#endif
 
 protected:
     void OnChange() const

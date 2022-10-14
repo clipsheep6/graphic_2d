@@ -23,9 +23,7 @@
 #include <vector>
 
 #include "common/rs_common_def.h"
-#ifdef ROSEN_OHOS
 #include <parcel.h>
-#endif
 
 class SkCanvas;
 struct SkRect;
@@ -34,11 +32,7 @@ namespace Rosen {
 class OpItem;
 class RSPaintFilterCanvas;
 
-#ifdef ROSEN_OHOS
 class DrawCmdList : public Parcelable {
-#else
-class DrawCmdList {
-#endif
 public:
     DrawCmdList(int w, int h);
     DrawCmdList& operator=(DrawCmdList&& that);
@@ -54,10 +48,8 @@ public:
     int GetWidth() const;
     int GetHeight() const;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static DrawCmdList* Unmarshalling(Parcel& parcel);
-#endif
 
 private:
     std::vector<std::unique_ptr<OpItem>> ops_;

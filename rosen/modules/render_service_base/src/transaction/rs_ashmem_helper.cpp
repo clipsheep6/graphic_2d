@@ -26,7 +26,6 @@
 #include "sys_binder.h"
 #include "sandbox_utils.h"
 
-#ifdef ROSEN_OHOS
 namespace OHOS {
 namespace Rosen {
 std::unique_ptr<AshmemAllocator> AshmemAllocator::CreateAshmemAllocator(size_t size, int mapType)
@@ -279,4 +278,3 @@ std::shared_ptr<MessageParcel> RSAshmemHelper::ParseFromAshmemParcel(MessageParc
 }
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS

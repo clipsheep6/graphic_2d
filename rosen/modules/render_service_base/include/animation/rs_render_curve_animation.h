@@ -34,11 +34,9 @@ public:
 
     const std::shared_ptr<RSInterpolator>& GetInterpolator() const;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
 
     static RSRenderCurveAnimation* Unmarshalling(Parcel& parcel);
-#endif
 protected:
     void OnSetFraction(float fraction) override;
 
@@ -47,9 +45,7 @@ protected:
     void InitValueEstimator() override;
 
 private:
-#ifdef ROSEN_OHOS
     bool ParseParam(Parcel& parcel) override;
-#endif
     RSRenderCurveAnimation() = default;
     void OnAnimateInner(float fraction, const std::shared_ptr<RSInterpolator>& interpolator);
 

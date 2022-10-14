@@ -18,7 +18,6 @@
 namespace OHOS {
 namespace Rosen {
 
-#ifdef ROSEN_OHOS
 bool RSRenderPropertyBase::Marshalling(Parcel& parcel, const std::shared_ptr<RSRenderPropertyBase>& val)
 {
     RSRenderPropertyType type = val->GetPropertyType();
@@ -171,7 +170,6 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
     }
     return val != nullptr;
 }
-#endif
 
 template<>
 float RSRenderAnimatableProperty<float>::toFloat() const

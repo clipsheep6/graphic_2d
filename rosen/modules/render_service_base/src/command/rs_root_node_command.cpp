@@ -15,6 +15,7 @@
 
 #include "command/rs_root_node_command.h"
 
+#include "pipeline/rs_cache_manager.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
@@ -40,6 +41,9 @@ void RootNodeCommandHelper::SetEnableRender(RSContext& context, NodeId id, bool 
 {
     if (auto node = context.GetNodeMap().GetRenderNode<RSRootRenderNode>(id)) {
         node->SetEnableRender(flag);
+        if (!flag) {
+            RSCacheManager::Instance().GoBackground();
+        }
     }
 }
 

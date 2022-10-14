@@ -21,6 +21,15 @@
 #include "animation/rs_animation.h"
 #include "common/rs_macros.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#define gettid GetCurrentThreadId
+#endif
+
+#ifdef __APPLE__
+#define gettid getpid
+#endif
+
 namespace OHOS {
 namespace Rosen {
 class RSPropertyBase;

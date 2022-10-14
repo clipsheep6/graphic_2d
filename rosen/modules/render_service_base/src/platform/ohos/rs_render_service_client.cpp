@@ -120,7 +120,11 @@ std::shared_ptr<RSSurface> RSRenderServiceClient::CreateNodeAndSurface(const RSS
         return nullptr;
     }
     sptr<Surface> surface = renderService->CreateNodeAndSurface(config);
+    return CreateRSSurface(surface);
+}
 
+std::shared_ptr<RSSurface> RSRenderServiceClient::CreateRSSurface(const sptr<Surface> &surface)
+{
 #ifdef ACE_ENABLE_GL
     // GPU render
     std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosGl>(surface);

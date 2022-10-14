@@ -21,6 +21,10 @@
 #include "buffer_log.h"
 #include "surface_buffer_impl.h"
 
+#ifdef _WIN32
+#define fcntl(...) -1
+#endif
+
 namespace OHOS {
 void ReadFileDescriptor(MessageParcel &parcel, int32_t &fd)
 {

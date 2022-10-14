@@ -22,13 +22,6 @@ config("libframe_analyzer_config") {
     "-Werror",
     "-g3",
   ]
-
-  if (current_os != "ohos") {
-    cflags += [
-      "-Wno-c++17-extensions",
-      "-Wno-unused-private-field",
-    ]
-  }
 }
 
 config("libframe_analyzer_public_config") {
@@ -36,33 +29,26 @@ config("libframe_analyzer_public_config") {
 }
 
 ohos_shared_library("libframe_analyzer") {
-  if (current_os == "ohos") {
-    sources = [
-      "src/frame_collector.cpp",
-      "src/frame_painter.cpp",
-      "src/frame_saver.cpp",
-    ]
+  sources = [
+    "src/frame_collector.cpp",
+    "src/frame_painter.cpp",
+    "src/frame_saver.cpp",
+  ]
 
-    include_dirs = [ "//foundation/graphic/graphic_2d/utils/sandbox" ]
+  include_dirs = [ "//foundation/graphic/graphic_2d/utils/sandbox" ]
 
-    deps = [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-      "//foundation/graphic/graphic_2d/utils/sandbox:sandbox_utils",
-      "//third_party/flutter/build/skia:ace_skia",
-    ]
+  deps = [
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/graphic/graphic_2d/utils/sandbox:sandbox_utils",
+    "//third_party/flutter/build/skia:ace_skia",
+  ]
 
-    external_deps = [
-      "c_utils:utils",
-      "hitrace_native:hitrace_meter",
-      "init:libbeget_proxy",
-      "init:libbegetutil",
-    ]
-  } else {
-    sources = [
-      "src/mingw/frame_collector.cpp",
-      "src/mingw/frame_painter.cpp",
-    ]
-  }
+  external_deps = [
+    "c_utils:utils",
+    "hitrace_native:hitrace_meter",
+    "init:libbeget_proxy",
+    "init:libbegetutil",
+  ]
 
   configs = [ ":libframe_analyzer_config" ]
 

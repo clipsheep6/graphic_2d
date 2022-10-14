@@ -162,7 +162,7 @@ private:
 };
 
 template<typename T>
-class RSC_EXPORT RSProperty : public RSPropertyBase {
+class RSProperty : public RSPropertyBase {
 public:
     RSProperty() : RSPropertyBase() {}
     explicit RSProperty(const T& value) : RSPropertyBase()
@@ -239,7 +239,7 @@ protected:
 };
 
 template<typename T>
-class RSC_EXPORT RSAnimatableProperty : public RSProperty<T> {
+class RSAnimatableProperty : public RSProperty<T> {
     static_assert(std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<Color, T> ||
                   std::is_same_v<Matrix3f, T> || std::is_same_v<Vector2f, T> || std::is_same_v<Vector4f, T> ||
                   std::is_same_v<Quaternion, T> || std::is_same_v<std::shared_ptr<RSFilter>, T> ||

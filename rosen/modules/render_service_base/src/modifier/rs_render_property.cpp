@@ -274,5 +274,10 @@ bool operator!=(
     return !a->IsEqual(b);
 }
 
+template class RSRenderAnimatableProperty<float>;
+template class RSRenderAnimatableProperty<Vector4f>;
+template class RSRenderAnimatableProperty<Quaternion>;
+template class RSRenderAnimatableProperty<Vector2f>;
+
 } // namespace Rosen
 } // namespace OHOS

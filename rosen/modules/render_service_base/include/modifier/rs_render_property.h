@@ -152,7 +152,7 @@ protected:
 };
 
 template<typename T>
-class RSB_EXPORT RSRenderAnimatableProperty : public RSRenderProperty<T> {
+class RSB_EXPORT_TMP RSRenderAnimatableProperty : public RSRenderProperty<T> {
 public:
     RSRenderAnimatableProperty() : RSRenderProperty<T>() {}
     RSRenderAnimatableProperty(const T& value) : RSRenderProperty<T>(value, 0) {}
@@ -256,6 +256,11 @@ template<>
 float RSRenderAnimatableProperty<Quaternion>::toFloat() const;
 template<>
 float RSRenderAnimatableProperty<Vector2f>::toFloat() const;
+
+extern template class RSRenderAnimatableProperty<float>;
+extern template class RSRenderAnimatableProperty<Vector4f>;
+extern template class RSRenderAnimatableProperty<Quaternion>;
+extern template class RSRenderAnimatableProperty<Vector2f>;
 } // namespace Rosen
 } // namespace OHOS
 

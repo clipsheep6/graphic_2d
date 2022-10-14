@@ -29,40 +29,49 @@ config("egl_public_config") {
   include_dirs = [ "include" ]
 }
 
-ohos_shared_library("EGL") {
-  sources = [
-    "src/EGL/egl.cpp",
-    "src/EGL/egl_core.cpp",
-    "src/EGL/egl_wrapper_context.cpp",
-    "src/EGL/egl_wrapper_display.cpp",
-    "src/EGL/egl_wrapper_entry.cpp",
-    "src/EGL/egl_wrapper_layer.cpp",
-    "src/EGL/egl_wrapper_loader.cpp",
-    "src/EGL/egl_wrapper_object.cpp",
-    "src/EGL/egl_wrapper_surface.cpp",
-    "src/thread_private_data_ctl.cpp",
-  ]
-  configs = [ ":egl_config" ]
+if (current_os == "mingw") {
+  group("EGL") {
+    public_deps = [
+      "//third_party/EGL:libEGL",
+      "//third_party/openGLES:libGLES",
+    ]
+  }
+} else {
+  ohos_shared_library("EGL") {
+    sources = [
+      "src/EGL/egl.cpp",
+      "src/EGL/egl_core.cpp",
+      "src/EGL/egl_wrapper_context.cpp",
+      "src/EGL/egl_wrapper_display.cpp",
+      "src/EGL/egl_wrapper_entry.cpp",
+      "src/EGL/egl_wrapper_layer.cpp",
+      "src/EGL/egl_wrapper_loader.cpp",
+      "src/EGL/egl_wrapper_object.cpp",
+      "src/EGL/egl_wrapper_surface.cpp",
+      "src/thread_private_data_ctl.cpp",
+    ]
+    configs = [ ":egl_config" ]
 
-  public_configs = [ ":egl_public_config" ]
+    public_configs = [ ":egl_public_config" ]
 
-  public_deps = [
-    "//third_party/EGL:libEGL",
-    "//third_party/openGLES:libGLES",
-  ]
+    public_deps = [
+      "//third_party/EGL:libEGL",
+      "//third_party/openGLES:libGLES",
+    ]
 
-  external_deps = [
-    "c_utils:utils",
-    "hilog_native:libhilog",
-    "init:libbeget_proxy",
-    "init:libbegetutil",
-  ]
+    external_deps = [
+      "c_utils:utils",
+      "hilog_native:libhilog",
+      "init:libbeget_proxy",
+      "init:libbegetutil",
+    ]
 
-  output_name = "EGL"
-  output_extension = "so"
+    output_name = "EGL"
+    output_extension = "so"
 
-  part_name = "graphic_standard"
-  subsystem_name = "graphic"
+    part_name = "graphic_standard"
+    subsystem_name = "graphic"
+  }
 }
 
 ## Build libEGL.so }}}
@@ -162,27 +171,36 @@ config("glesv3_public_config") {
   include_dirs = [ "include" ]
 }
 
-ohos_shared_library("GLESv3") {
-  sources = [
-    "src/GLES3/gles3.cpp",
-    "src/thread_private_data_ctl.cpp",
-  ]
-  configs = [ ":glesv3_config" ]
+if (current_os == "mingw") {
+  group("GLESv3") {
+    public_deps = [
+      "//third_party/EGL:libEGL",
+      "//third_party/openGLES:libGLES",
+    ]
+  }
+} else {
+  ohos_shared_library("GLESv3") {
+    sources = [
+      "src/GLES3/gles3.cpp",
+      "src/thread_private_data_ctl.cpp",
+    ]
+    configs = [ ":glesv3_config" ]
 
-  public_configs = [ ":glesv3_public_config" ]
+    public_configs = [ ":glesv3_public_config" ]
 
-  public_deps = [
-    "//third_party/EGL:libEGL",
-    "//third_party/openGLES:libGLES",
-  ]
+    public_deps = [
+      "//third_party/EGL:libEGL",
+      "//third_party/openGLES:libGLES",
+    ]
 
-  external_deps = [ "hilog_native:libhilog" ]
+    external_deps = [ "hilog_native:libhilog" ]
 
-  output_name = "GLESv3"
-  output_extension = "so"
+    output_name = "GLESv3"
+    output_extension = "so"
 
-  part_name = "graphic_standard"
-  subsystem_name = "graphic"
+    part_name = "graphic_standard"
+    subsystem_name = "graphic"
+  }
 }
 
 ## Build libGLESv3.so }}}

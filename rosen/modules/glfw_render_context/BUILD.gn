@@ -37,6 +37,8 @@ ohos_shared_library("libglfw_render_context") {
 
   deps = [ "//third_party/flutter/glfw:glfw" ]
 
+  external_deps = [ "hilog_native:libhilog" ]
+
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }

@@ -226,10 +226,10 @@ public:
 
     void SetDirtyRegionBelowCurrentLayer(Occlusion::Region& region)
     {
-        Occlusion::Rect dstrect { dstRect_.left_, dstRect_.top_,
-            dstRect_.GetRight(), dstRect_.GetBottom() };
-        Occlusion::Region dstregion {dstrect};
-        dirtyRegionBelowCurrentLayer_ = dstregion.And(region);
+        Occlusion::Rect currentRect { GetOldDirty().left_, GetOldDirty().top_,
+            GetOldDirty().GetRight(), GetOldDirty().GetBottom() };
+        Occlusion::Region currentRegion {currentRect};
+        dirtyRegionBelowCurrentLayer_ = currentRegion.And(region);
         dirtyRegionBelowCurrentLayerIsEmpty_ = dirtyRegionBelowCurrentLayer_.IsEmpty();
     }
 
@@ -328,8 +328,8 @@ public:
         if (localIntersect) {
             return true;
         }
-        // if current node is transparent
-        if (IsTransparent()) {
+        // if current node is transparent or has shadow
+        if (IsTransparent() || IsShadowValidLastFrame()) {
             return dirtyRegionBelowCurrentLayer_.IsIntersectWith(nodeRect);
         }
         return false;

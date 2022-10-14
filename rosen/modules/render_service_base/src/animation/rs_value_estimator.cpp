@@ -73,5 +73,7 @@ float RSCurveValueEstimator<float>::EstimateFraction(const std::shared_ptr<RSInt
 
     return FRACTION_MIN;
 }
+
+template class RSCurveValueEstimator<float>;
 } // namespace Rosen
 } // namespace OHOS

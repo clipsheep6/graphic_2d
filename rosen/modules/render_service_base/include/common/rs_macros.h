@@ -17,16 +17,41 @@
 
 namespace OHOS {
 namespace Rosen {
+/** about export template (most at _WIN32 platform)
+ *  Sometimes other module maybe use instantiated template classes or instantiate their own template class.
+ *  for example: arkui will use RSRenderAnimatableProperty<float> and instantiate the template
+ *      with type "NG::ColorBlend", so we need export instantiated template classes but cannot export
+ *      template itself. Because if you RSB_EXPORT the template, arkui will think the symbol
+ *      RSRenderAnimatableProperty<NG::ColorBlend> is importing from other module,
+ *      linker then raise a link problem.
+ *
+ *  So we should use RSB_EXPORT_TMP and use extern template & template to tell arkui that there are many
+ *      instantiated template classes, you don't need instantiate again.
+ *
+ *  correct way:
+ *      base view:
+ *          EXPORT RSRenderAnimatableProperty<T>
+ *          extern template class RSRenderAnimatableProperty<float>;
+ *          (in cpp) template class RSRenderAnimatableProperty<float>;
+ *      arkui view:
+ *                 RSRenderAnimatableProperty<T>
+ *          extern template class RSRenderAnimatableProperty<float>;
+ */
+
 #ifdef MODULE_RSB
-#define RSB_EXPORT OHOS_EXPORT
+#define RSB_EXPORT      OHOS_EXPORT
+#define RSB_EXPORT_TMP  OHOS_EXPORT
 #else
-#define RSB_EXPORT OHOS_IMPORT
+#define RSB_EXPORT      OHOS_IMPORT
+#define RSB_EXPORT_TMP
 #endif
 
 #ifdef MODULE_RSC
-#define RSC_EXPORT OHOS_EXPORT
+#define RSC_EXPORT      OHOS_EXPORT
+#define RSC_EXPORT_TMP  OHOS_EXPORT
 #else
-#define RSC_EXPORT OHOS_IMPORT
+#define RSC_EXPORT      OHOS_IMPORT
+#define RSC_EXPORT_TMP
 #endif
 
 #ifdef __gnu_linux__

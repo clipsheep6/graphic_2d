@@ -44,6 +44,15 @@
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_node.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#define gettid GetCurrentThreadId
+#endif
+
+#ifdef __APPLE__
+#define gettid getpid
+#endif
+
 namespace OHOS {
 namespace Rosen {
 class RSModifier;

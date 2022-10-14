@@ -28,7 +28,7 @@
 #include "include/core/SkRect.h"
 #include "include/core/SkRegion.h"
 #include "include/core/SkTextBlob.h"
-#include "core/SkDrawShadowInfo.h"
+#include "src/core/SkDrawShadowInfo.h"
 #include "pixel_map.h"
 
 #include "pipeline/rs_draw_cmd_list.h"

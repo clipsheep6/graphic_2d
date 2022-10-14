@@ -19,6 +19,10 @@
 #include "base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include/hisysevent.h"
 #include "sandbox_utils.h"
 
+#ifdef _WIN32
+#define getuid() 0
+#endif
+
 namespace {
 struct FrameMsg {
     uint64_t totalTime = 0;

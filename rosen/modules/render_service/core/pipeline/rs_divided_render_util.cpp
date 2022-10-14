@@ -17,6 +17,7 @@
 #include <parameters.h>
 
 #include "common/rs_obj_abs_geometry.h"
+#include "parameters.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_skia_filter.h"

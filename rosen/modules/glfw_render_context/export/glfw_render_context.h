@@ -26,6 +26,8 @@ class GlfwRenderContext {
 public:
     using OnMouseButtonFunc = std::function<void(int button, bool pressed, int mods)>;
     using OnCursorPosFunc = std::function<void(double x, double y)>;
+    using OnKeyFunc = std::function<void(int key, int scancode, int action, int mods)>;
+    using OnCharFunc = std::function<void(unsigned int codepoint)>;
 
     // GlfwRenderContext isn't a singleton.
     static std::shared_ptr<GlfwRenderContext> GetGlobal();
@@ -44,19 +46,31 @@ public:
     void GetWindowSize(int32_t &width, int32_t &height);
     void SetWindowSize(int32_t width, int32_t height);
     void SetWindowTitle(const std::string &title);
+    std::string GetClipboardData();
+    void SetClipboardData(const std::string &data);
+
+    /* gl operation */
     void MakeCurrent();
     void SwapBuffers();
+
+    /* input event */
     void OnMouseButton(const OnMouseButtonFunc &onMouseBotton);
     void OnCursorPos(const OnCursorPosFunc &onCursorPos);
+    void OnKey(const OnKeyFunc &onKey);
+    void OnChar(const OnCharFunc &onChar);
 
 private:
     static void OnMouseButton(GLFWwindow *window, int button, int action, int mods);
     static void OnCursorPos(GLFWwindow *window, double x, double y);
+    static void OnKey(GLFWwindow *window, int key, int scancode, int action, int mods);
+    static void OnChar(GLFWwindow *window, unsigned int codepoint);
 
     static inline std::shared_ptr<GlfwRenderContext> global_ = nullptr;
     GLFWwindow *window_ = nullptr;
     OnMouseButtonFunc onMouseBotton_ = nullptr;
     OnCursorPosFunc onCursorPos_ = nullptr;
+    OnKeyFunc onKey_ = nullptr;
+    OnCharFunc onChar_ = nullptr;
 };
 } // namespace OHOS::Rosen
 

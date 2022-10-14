@@ -57,11 +57,9 @@ public:
 
     void SetRotationId(const PropertyId id);
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
 
     static RSRenderPathAnimation* Unmarshalling(Parcel& parcel);
-#endif
 
 protected:
     RSRenderPathAnimation() = default;
@@ -73,9 +71,7 @@ protected:
     void InitValueEstimator() override;
 
 private:
-#ifdef ROSEN_OHOS
     bool ParseParam(Parcel& parcel) override;
-#endif
     void SetPathValue(const Vector2f& value, float tangent);
     void SetPathValue(const Vector4f& value, float tangent);
 

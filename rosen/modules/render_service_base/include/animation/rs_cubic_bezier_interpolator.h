@@ -32,7 +32,6 @@ public:
     {
         return GetCubicBezierValue(SEARCH_STEP * BinarySearch(input), controlly1_, controlly2_);
     }
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         if (!parcel.WriteUint16(InterpolatorType::CUBIC_BEZIER)) {
@@ -58,7 +57,6 @@ public:
         }
         return new RSCubicBezierInterpolator(x1, y1, x2, y2);
     }
-#endif
 
 private:
     float GetCubicBezierValue(const float time, const float ctr1, const float ctr2) const

@@ -17,7 +17,6 @@
 #define ROSEN_RENDER_SERVICE_BASE_RS_APPLICATION_AGENT_STUB_H
 
 #include "common/rs_macros.h"
-#ifdef ROSEN_OHOS
 #include <iremote_stub.h>
 
 #include "ipc_callbacks/iapplication_agent.h"
@@ -33,6 +32,5 @@ public:
 };
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS
 
 #endif // ROSEN_RENDER_SERVICE_BASE_RS_APPLICATION_AGENT_STUB_H

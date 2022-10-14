@@ -24,9 +24,7 @@
 
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
-#ifdef ROSEN_OHOS
 #include <parcel.h>
-#endif
 
 class SkCanvas;
 class SkSurface;
@@ -36,11 +34,7 @@ namespace Rosen {
 class OpItem;
 class RSPaintFilterCanvas;
 
-#ifdef ROSEN_OHOS
 class RS_EXPORT DrawCmdList : public Parcelable {
-#else
-class RS_EXPORT DrawCmdList {
-#endif
 public:
     DrawCmdList(int w, int h);
     DrawCmdList& operator=(DrawCmdList&& that);
@@ -59,10 +53,8 @@ public:
     void GenerateCache(SkSurface* surface);
     void ClearCache();
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static DrawCmdList* Unmarshalling(Parcel& parcel);
-#endif
 
 private:
     std::vector<std::unique_ptr<OpItem>> ops_;

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "rs_accessibility.h"
+#include "platform/common/rs_accessibility.h"
 
 namespace OHOS {
 namespace Rosen {

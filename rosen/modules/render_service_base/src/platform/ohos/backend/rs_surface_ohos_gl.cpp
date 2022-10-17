@@ -28,7 +28,7 @@ RSSurfaceOhosGl::RSSurfaceOhosGl(const sptr<Surface>& producer) : RSSurfaceOhos(
     bufferUsage_ = HBM_USE_CPU_READ | HBM_USE_MEM_DMA;
 }
 
-void RSSurfaceOhosGl::SetSurfaceBufferUsage(int32_t usage)
+void RSSurfaceOhosGl::SetSurfaceBufferUsage(uint64_t usage)
 {
     bufferUsage_ = usage;
 }

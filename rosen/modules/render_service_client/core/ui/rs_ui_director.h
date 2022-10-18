@@ -22,9 +22,13 @@
 
 namespace OHOS {
 class Surface;
+namespace Media {
+class PixelMap;
+}
 namespace Rosen {
 class RSSurfaceNode;
 class RSTransactionData;
+class CaptureCallback;
 using TaskRunner = std::function<void(const std::function<void()>&)>;
 
 class RS_EXPORT RSUIDirector final {
@@ -54,6 +58,9 @@ public:
     void SetCacheDir(const std::string& cacheFilePath);
 
     bool RunningCustomAnimation(uint64_t timeStamp);
+
+    void CaptureTask(std::shared_ptr<CaptureCallback> captureCallback,
+                     NodeId id, float scaleX = 1.0f, float scaleY = 1.0f);
 
     void SetAppFreeze(bool isAppFreeze);
 

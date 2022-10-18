@@ -25,6 +25,7 @@
 #include "modifier/rs_modifier_manager.h"
 #include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_node_map.h"
+#include "pipeline/rs_offscreen_render.h"
 #include "pipeline/rs_render_thread.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_application_agent_impl.h"
@@ -33,6 +34,7 @@
 #include "ui/rs_root_node.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
+#include "ui/rs_capture_callback.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -108,6 +110,16 @@ void RSUIDirector::GoBackground()
         });
 #endif
     }
+}
+
+void RSUIDirector::CaptureTask(std::shared_ptr<CaptureCallback> captureCallback, NodeId id, float scaleX, float scaleY)
+{
+    RSRenderThread::Instance().PostTask([captureCallback, id, scaleX, scaleY]() {
+        RSOffscreenRender rsOffscreenRender(scaleX, scaleY, id);
+        std::shared_ptr<Media::PixelMap> pixelMap;
+        pixelMap = rsOffscreenRender.GetLocalCapture();
+        captureCallback->TriggerCallback(pixelMap);
+    });
 }
 
 void RSUIDirector::Destroy()

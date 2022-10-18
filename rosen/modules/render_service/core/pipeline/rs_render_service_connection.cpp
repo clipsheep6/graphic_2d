@@ -346,12 +346,12 @@ void RSRenderServiceConnection::SetScreenPowerStatus(ScreenId id, ScreenPowerSta
 }
 
 void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback,
-    float scaleX, float scaleY)
+    float scaleX, float scaleY, bool isOffscreenRender)
 {
-    std::function<void()> captureTask = [scaleY, scaleX, callback, id]() -> void {
+    std::function<void()> captureTask = [scaleY, scaleX, callback, id, isOffscreenRender]() -> void {
         RS_LOGD("RSRenderService::TakeSurfaceCapture callback->OnSurfaceCapture nodeId:[%" PRIu64 "]", id);
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderService::TakeSurfaceCapture");
-        RSSurfaceCaptureTask task(id, scaleX, scaleY);
+        RSSurfaceCaptureTask task(id, scaleX, scaleY, isOffscreenRender);
         std::unique_ptr<Media::PixelMap> pixelmap = task.Run();
         callback->OnSurfaceCapture(id, pixelmap.get());
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);

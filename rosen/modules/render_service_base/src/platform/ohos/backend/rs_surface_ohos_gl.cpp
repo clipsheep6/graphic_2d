@@ -53,7 +53,6 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int
     if (mWindow == nullptr) {
         mWindow = CreateNativeWindowFromSurface(&producer_);
         mEglSurface = context->CreateEGLSurface((EGLNativeWindowType)mWindow);
-        ROSEN_LOGD("RSSurfaceOhosGl: create and Init EglSurface %p", mEglSurface);
     }
 
     if (mEglSurface == EGL_NO_SURFACE) {
@@ -71,8 +70,8 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int
 
     context->MakeCurrent(mEglSurface);
 
-    ROSEN_LOGD("RSSurfaceOhosGl:RequestFrame, eglsurface is %p, width is %d, height is %d",
-        mEglSurface, mWidth, mHeight);
+    ROSEN_LOGD("RSSurfaceOhosGl:RequestFrame, width is %d, height is %d",
+        mWidth, mHeight);
 
     frame->SetRenderContext(context);
 
@@ -92,7 +91,6 @@ bool RSSurfaceOhosGl::FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64_
     // gpu render flush
     context->RenderFrame();
     context->SwapBuffers(mEglSurface);
-    ROSEN_LOGD("RSSurfaceOhosGl: FlushFrame, SwapBuffers eglsurface is %p", mEglSurface);
     return true;
 }
 

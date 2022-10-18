@@ -206,7 +206,6 @@ void RSRenderThread::CreateAndInitRenderContextIfNeed()
 #ifdef ACE_ENABLE_GL
     if (needRender_ && renderContext_ == nullptr) {
         renderContext_ = new RenderContext();
-        ROSEN_LOGD("Create RenderContext, its pointer is %p", renderContext_);
         RS_TRACE_NAME("InitializeEglContext");
         renderContext_->InitializeEglContext(); // init egl context on RT
         if (!cacheDir_.empty()) {

@@ -69,7 +69,8 @@ public:
 
     void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app) override;
 
-    void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY) override;
+    void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
+        bool isOffscreenRender) override;
 
     RSVirtualScreenResolution GetVirtualScreenResolution(ScreenId id) override;
 

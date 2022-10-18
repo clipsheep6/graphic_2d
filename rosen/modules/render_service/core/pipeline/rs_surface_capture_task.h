@@ -30,8 +30,8 @@ namespace OHOS {
 namespace Rosen {
 class RSSurfaceCaptureTask {
 public:
-    explicit RSSurfaceCaptureTask(NodeId nodeId, float scaleX, float scaleY)
-        : nodeId_(nodeId), scaleX_(scaleX), scaleY_(scaleY) {}
+    explicit RSSurfaceCaptureTask(NodeId nodeId, float scaleX, float scaleY, bool isOffscreenRender)
+        : nodeId_(nodeId), scaleX_(scaleX), scaleY_(scaleY), isOffscreenRender_(isOffscreenRender) {}
     ~RSSurfaceCaptureTask() = default;
 
     std::unique_ptr<Media::PixelMap> Run();
@@ -39,7 +39,7 @@ public:
 private:
     class RSSurfaceCaptureVisitor : public RSNodeVisitor {
     public:
-        RSSurfaceCaptureVisitor(float scaleX, float scaleY, bool isUniRender);
+        RSSurfaceCaptureVisitor(float scaleX, float scaleY, bool isUniRender, bool isOffscreenRender);
         ~RSSurfaceCaptureVisitor() noexcept override = default;
         void PrepareBaseRenderNode(RSBaseRenderNode& node) override {}
         void PrepareCanvasRenderNode(RSCanvasRenderNode& node) override {}
@@ -78,6 +78,7 @@ private:
         float scaleX_ = 1.0f;
         float scaleY_ = 1.0f;
         bool isUniRender_ = false;
+        bool isOffscreenRender_ = false;
 
         SkMatrix captureMatrix_ = SkMatrix::I();
 
@@ -99,6 +100,8 @@ private:
     float scaleX_;
 
     float scaleY_;
+
+    bool isOffscreenRender_;
 };
 } // namespace Rosen
 } // namespace OHOS

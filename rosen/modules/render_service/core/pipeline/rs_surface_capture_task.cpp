@@ -53,7 +53,7 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
     }
     std::unique_ptr<Media::PixelMap> pixelmap;
     std::shared_ptr<RSSurfaceCaptureVisitor> visitor = std::make_shared<RSSurfaceCaptureVisitor>(scaleX_, scaleY_,
-        RSMainThread::Instance()->IfUseUniVisitor());
+        RSMainThread::Instance()->IfUseUniVisitor(), isOffscreenRender);
     if (auto surfaceNode = node->ReinterpretCastTo<RSSurfaceRenderNode>()) {
         RS_LOGD("RSSurfaceCaptureTask::Run: Into SURFACE_NODE SurfaceRenderNodeId:[%" PRIu64 "]", node->GetId());
         pixelmap = CreatePixelMapBySurfaceNode(surfaceNode, visitor->IsUniRender());
@@ -180,8 +180,9 @@ sk_sp<SkSurface> RSSurfaceCaptureTask::CreateSurface(const std::unique_ptr<Media
     return SkSurface::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
 }
 
-RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::RSSurfaceCaptureVisitor(float scaleX, float scaleY, bool isUniRender)
-    : scaleX_(scaleX), scaleY_(scaleY), isUniRender_(isUniRender)
+RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::RSSurfaceCaptureVisitor(
+    float scaleX, float scaleY, bool isUniRender, bool isOffscreenRender)
+    : scaleX_(scaleX), scaleY_(scaleY), isUniRender_(isUniRender), isOffscreenRender_(isOffscreenRender)
 {
     renderEngine_ = RSMainThread::Instance()->GetRenderEngine();
 }
@@ -442,7 +443,7 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWith
 {
     SkMatrix translateMatrix;
     auto parentPtr = node.GetParent().lock();
-    if (parentPtr != nullptr && parentPtr->IsInstanceOf<RSSurfaceRenderNode>()) {
+    if (parentPtr != nullptr && parentPtr->IsInstanceOf<RSSurfaceRenderNode>() && !isOffscreenRender_) {
         // calculate the offset from this node's parent, and perform translate.
         auto parentNode = std::static_pointer_cast<RSSurfaceRenderNode>(parentPtr);
         const float parentNodeTranslateX = parentNode->GetTotalMatrix().getTranslateX();

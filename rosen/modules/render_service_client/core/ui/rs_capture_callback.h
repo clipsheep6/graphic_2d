@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef RS_CAPTURE_CALLBACK_H
-#define RS_CAPTURE_CALLBACK_H
+#ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_CAPTURE_CALLBACK_H
+#define RENDER_SERVICE_CLIENT_CORE_UI_RS_CAPTURE_CALLBACK_H
 
 #include "platform/common/rs_log.h"
 #include "transaction/rs_render_service_client.h"
@@ -64,4 +64,4 @@ public:
 };
 } // Rosen
 } // OHOS
-#endif  // RS_CAPTURE_CALLBACK_H
+#endif  // RENDER_SERVICE_CLIENT_CORE_UI_RS_CAPTURE_CALLBACK_H

@@ -73,4 +73,4 @@ private:
 } // namespace Rosen
 } // namespace OHOS
 
-#endif // RS_OFFSCREEN_RENDER
+#endif // RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_OFFSCREEN_RENDER

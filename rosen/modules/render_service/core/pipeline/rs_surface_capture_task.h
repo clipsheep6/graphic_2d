@@ -101,7 +101,7 @@ private:
 
     float scaleY_;
 
-    bool isOffscreenRender_;
+    bool isOffscreenRender_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

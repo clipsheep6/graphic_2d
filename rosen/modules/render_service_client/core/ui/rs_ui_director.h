@@ -22,9 +22,6 @@
 
 namespace OHOS {
 class Surface;
-namespace Media {
-class PixelMap;
-}
 namespace Rosen {
 class RSSurfaceNode;
 class RSTransactionData;

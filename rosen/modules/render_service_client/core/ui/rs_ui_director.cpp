@@ -116,8 +116,7 @@ void RSUIDirector::CaptureTask(std::shared_ptr<CaptureCallback> captureCallback,
 {
     RSRenderThread::Instance().PostTask([captureCallback, id, scaleX, scaleY]() {
         RSOffscreenRender rsOffscreenRender(scaleX, scaleY, id);
-        std::shared_ptr<Media::PixelMap> pixelMap;
-        pixelMap = rsOffscreenRender.GetLocalCapture();
+        std::shared_ptr<Media::PixelMap> pixelMap = rsOffscreenRender.GetLocalCapture();
         captureCallback->TriggerCallback(pixelMap);
     });
 }

@@ -47,7 +47,7 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture()
     std::shared_ptr<Media::PixelMap> pixelmap = CreatePixelMapByNode(node);
     auto skSurface = CreateSurface(pixelmap);
     if (skSurface == nullptr) {
-        return nullptr;;
+        return nullptr;
     }
     auto visitor = std::make_shared<RSOffscreenRenderVisitor>(scaleX_, scaleY_, nodeId_);
     visitor->SetSurface(skSurface.get());
@@ -75,7 +75,6 @@ std::shared_ptr<Media::PixelMap> RSOffscreenRender::GetLocalCapture()
     }
     pixelmap->SetPixelsAddr(data, nullptr, pixelmap->GetRowBytes() * pixelmap->GetHeight(),
         Media::AllocatorType::HEAP_ALLOC, nullptr);
-    return pixelmap;
 #endif
     return pixelmap;
 }

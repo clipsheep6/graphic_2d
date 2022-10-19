@@ -27,5 +27,7 @@ group("unittest") {
     "render_service_client/systemtest/ui:systemtest",
     "render_service_client/unittest/transaction:unittest",
     "render_service_client/unittest/ui:unittest",
+    "render_service_client/unittest/jank_detector:unittest",
+    "render_service_client/unittest/modifier:unittest",
   ]
 }

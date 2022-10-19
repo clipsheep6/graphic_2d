@@ -42,6 +42,7 @@ ohos_executable("bootanimation") {
     "src/boot_animation.cpp",
     "src/main.cpp",
     "src/util.cpp",
+    "src/boot_videoplayer.cpp",
   ]
 
   configs = [
@@ -50,6 +51,7 @@ ohos_executable("bootanimation") {
   ]
 
   deps = [
+    "//base/customization/config_policy/frameworks/config_policy:configpolicy_util",
     "//base/global/resource_management/frameworks/resmgr:global_resmgr",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/graphic_2d:libsurface",
@@ -96,4 +98,15 @@ ohos_prebuilt_etc("bootanimation_sounds") {
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
+
 ## Install data/*.jpg to /system/etc/init/ }}}
+
+## Install data/bootanimation_custom_config.json to /sys_prod/etc/bootanimation/ {{{
+ohos_prebuilt_etc("bootanimation_custom_config") {
+  source = "data/bootanimation_custom_config.json"
+  relative_install_dir = "bootanimation"
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+  install_images = [ sys_prod_base_dir ]
+}
+## Install data/bootanimation_custom_config.json to /sys_prod/etc/bootanimation/ }}}

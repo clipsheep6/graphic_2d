@@ -15,8 +15,8 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_CAPTURE_CALLBACK_H
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_CAPTURE_CALLBACK_H
 
-#include "platform/common/rs_log.h"
-#include "transaction/rs_render_service_client.h"
+#include "common/rs_common_def.h"
+
 namespace OHOS {
 namespace Media {
 class PixelMap;
@@ -25,42 +25,8 @@ namespace Rosen {
 class RS_EXPORT CaptureCallback {
 public:
     CaptureCallback() = default;
-    ~CaptureCallback() {};
-
-    bool IsReady() const
-    {
-        return flag_;
-    }
-    void TriggerCallback(std::shared_ptr<Media::PixelMap> pixelmap)
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        if (!flag_) {
-            pixelMap_ = pixelmap;
-            flag_ = true;
-        }
-        conditionVariable_.notify_one();
-    }
-    std::shared_ptr<Media::PixelMap> GetResult(long timeOut)
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        if (!conditionVariable_.wait_for(lock, std::chrono::milliseconds(timeOut), [this] { return IsReady(); })) {
-            ROSEN_LOGE("wait for %lu timeout", timeOut);
-        }
-        return pixelMap_;
-    }
-private:
-    std::shared_ptr<Media::PixelMap> pixelMap_ = nullptr;
-    std::mutex mutex_;
-    std::condition_variable conditionVariable_;
-    bool flag_ = false;
-};
-
-class RSOffscreenRenderCallback : public SurfaceCaptureCallback, public CaptureCallback {
-public:
-    void OnSurfaceCapture(std::shared_ptr<Media::PixelMap> pixelmap) override
-    {
-        TriggerCallback(pixelmap);
-    }
+    virtual ~CaptureCallback() {}
+    virtual void OnLocalCapture(std::shared_ptr<Media::PixelMap> pixelmap) = 0;
 };
 } // Rosen
 } // OHOS

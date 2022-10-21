@@ -215,15 +215,29 @@ void Init(shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
     canvasNode2->AddChild(surfaceNode1, -1);
 }
 
-shared_ptr<Media::PixelMap> LocalCapture(NodeId id, float scaleX, float scaleY)
+class MyCallBack : public CaptureCallback
 {
-    shared_ptr<CaptureCallback> callback = make_shared<CaptureCallback>();
-    RSUIDirector::Create()->CaptureTask(callback, id, scaleX, scaleY);
-    shared_ptr<Media::PixelMap> pixelMap = callback->GetResult(2000); // wait for <= 2000ms
-    if (pixelMap == nullptr) {
-        cout << "RSUIDirector::LocalCapture failed to get pixelmap, return nullptr!" << endl;
+public:
+    void OnLocalCapture(std::shared_ptr<Media::PixelMap> pixelmap) override
+    {
+        if (pixelmap == nullptr) {
+            cout << "RSUIDirector::LocalCapture failed to get pixelmap, return nullptr!" << endl;
+            return;
+        }
+        cout << "rs local surface demo drawPNG" << endl;
+        int ret = WriteToPngWithPixelMap("/data/local/ccc_test.jpg", *pixelmap);
+        if (!ret) {
+            cout << "pixelmap write to png failed" << endl;
+        }
+        cout << "pixelmap write to png sucess" << endl;
     }
-    return pixelMap;
+};
+
+void LocalCapture(std::shared_ptr<RSNode> node, float scaleX, float scaleY)
+{
+    shared_ptr<MyCallBack> callback = make_shared<MyCallBack>();
+    RSUIDirector::Create()->CaptureTask(callback, node, scaleX, scaleY);
+    sleep(4);
 }
 
 int main()
@@ -260,19 +274,7 @@ int main()
     sleep(4);
 
     cout << "rs local surface demo cratePixelMap" << endl;
-    auto pixelmap = LocalCapture(surfaceNode1->GetId(), 1, 1);
-    if (pixelmap == nullptr) {
-        cout << "create pixelmap failed" << endl;
-        return -1;
-    }
-
-    cout << "rs local surface demo drawPNG" << endl;
-    bool ret = false;
-    ret = WriteToPngWithPixelMap("/data/local/ccc_test.jpg", *pixelmap);
-    if (!ret) {
-        cout << "pixelmap write to png failed" << endl;
-        return -1;
-    }
-    cout << "pixelmap write to png sucess" << endl;
+    LocalCapture(canvasNode, 1, 1);
+    sleep(4);
     return 0;
 }

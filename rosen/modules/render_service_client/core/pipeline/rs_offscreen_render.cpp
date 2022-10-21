@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <mutex>
 #include "pipeline/rs_offscreen_render.h"
 #include "include/core/SkImage.h"
 #include "platform/common/rs_log.h"
@@ -178,6 +179,36 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessBaseRenderNode(RSBaseRe
     node.ResetSortedChildren();
 }
 
+class RSOffscreenRenderCallback : public SurfaceCaptureCallback {
+public:
+    void OnSurfaceCapture(std::shared_ptr<Media::PixelMap> pixelmap) override
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (!flag_) {
+            pixelMap_ = pixelmap;
+            flag_ = true;
+        }
+        conditionVariable_.notify_one();
+    }
+    bool IsReady() const
+    {
+        return flag_;
+    }
+    std::shared_ptr<Media::PixelMap> GetResult(long timeOut)
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (!conditionVariable_.wait_for(lock, std::chrono::milliseconds(timeOut), [this] { return IsReady(); })) {
+            ROSEN_LOGE("wait for %lu timeout", timeOut);
+        }
+        return pixelMap_;
+    }
+private:
+    std::shared_ptr<Media::PixelMap> pixelMap_ = nullptr;
+    std::mutex mutex_;
+    std::condition_variable conditionVariable_;
+    bool flag_ = false;
+};
+
 void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
     if (!canvas_) {
@@ -200,7 +231,7 @@ void RSOffscreenRender::RSOffscreenRenderVisitor::ProcessSurfaceRenderNode(RSSur
     std::shared_ptr<RSOffscreenRenderCallback> callback = std::make_shared<RSOffscreenRenderCallback>();
     auto renderServiceClient = std::make_unique<RSRenderServiceClient>();
     renderServiceClient->TakeSurfaceCapture(node.GetId(), callback, scaleX_, scaleY_, true);
-    std::shared_ptr<Media::PixelMap> pixelMap = callback->GetResult(2000); // wait for <= 2000ms
+    std::shared_ptr<Media::PixelMap> pixelMap = callback->GetResult(2000);
     if (pixelMap == nullptr) {
         ROSEN_LOGE("RSUIDirector::LocalCapture failed to get pixelmap, return nullptr!");
     }

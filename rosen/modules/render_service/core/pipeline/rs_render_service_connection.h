@@ -88,7 +88,8 @@ private:
 
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) override;
 
-    void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY, bool isOffscreenRender) override;
+    void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
+        bool isOffscreenRender) override;
 
     void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app) override;
 

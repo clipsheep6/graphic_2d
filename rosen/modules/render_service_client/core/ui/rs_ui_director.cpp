@@ -31,6 +31,7 @@
 #include "transaction/rs_application_agent_impl.h"
 #include "transaction/rs_interfaces.h"
 #include "transaction/rs_transaction_proxy.h"
+#include "ui/rs_node.h"
 #include "ui/rs_root_node.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
@@ -112,12 +113,12 @@ void RSUIDirector::GoBackground()
     }
 }
 
-void RSUIDirector::CaptureTask(std::shared_ptr<CaptureCallback> captureCallback, NodeId id, float scaleX, float scaleY)
+void RSUIDirector::CaptureTask(std::shared_ptr<CaptureCallback> captureCallback, std::shared_ptr<RSNode> node, float scaleX, float scaleY)
 {
-    RSRenderThread::Instance().PostTask([captureCallback, id, scaleX, scaleY]() {
-        RSOffscreenRender rsOffscreenRender(scaleX, scaleY, id);
+    RSRenderThread::Instance().PostTask([captureCallback, node, scaleX, scaleY]() {
+        RSOffscreenRender rsOffscreenRender(scaleX, scaleY, node->GetId());
         std::shared_ptr<Media::PixelMap> pixelMap = rsOffscreenRender.GetLocalCapture();
-        captureCallback->TriggerCallback(pixelMap);
+        captureCallback->OnLocalCapture(pixelMap);
     });
 }
 

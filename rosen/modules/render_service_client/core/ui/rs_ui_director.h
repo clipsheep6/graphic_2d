@@ -26,6 +26,7 @@ namespace Rosen {
 class RSSurfaceNode;
 class RSTransactionData;
 class CaptureCallback;
+class RSNode;
 using TaskRunner = std::function<void(const std::function<void()>&)>;
 
 class RS_EXPORT RSUIDirector final {
@@ -56,8 +57,8 @@ public:
 
     bool RunningCustomAnimation(uint64_t timeStamp);
 
-    void CaptureTask(std::shared_ptr<CaptureCallback> captureCallback,
-                     NodeId id, float scaleX = 1.0f, float scaleY = 1.0f);
+    void CaptureTask(std::shared_ptr<CaptureCallback> captureCallback, std::shared_ptr<RSNode> node,
+        float scaleX = 1.0f, float scaleY = 1.0f);
 
     void SetAppFreeze(bool isAppFreeze);
 

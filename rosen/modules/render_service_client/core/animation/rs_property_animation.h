@@ -21,12 +21,21 @@
 #include "animation/rs_animation.h"
 #include "common/rs_macros.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#define gettid GetCurrentThreadId
+#endif
+
+#ifdef __APPLE__
+#define gettid getpid
+#endif
+
 namespace OHOS {
 namespace Rosen {
 class RSPropertyBase;
 class RSRenderAnimation;
 
-class RS_EXPORT RSPropertyAnimation : public RSAnimation {
+class RSC_EXPORT RSPropertyAnimation : public RSAnimation {
 public:
     RSPropertyAnimation() = delete;
     virtual ~RSPropertyAnimation() = default;

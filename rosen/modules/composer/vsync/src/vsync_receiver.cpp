@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,30 @@ namespace Rosen {
 namespace {
 constexpr int32_t INVALID_FD = -1;
 }
+
+class VSyncCallBackListener : public OHOS::AppExecFwk::FileDescriptorListener {
+public:
+    VSyncCallBackListener() : vsyncCallbacks_(nullptr), userData_(nullptr)
+    {
+    }
+
+    ~VSyncCallBackListener()
+    {
+    }
+    void SetCallback(FrameCallback cb)
+    {
+        std::lock_guard<std::mutex> locker(mtx_);
+        vsyncCallbacks_ = cb.callback_;
+        userData_ = cb.userData_;
+    }
+
+private:
+    void OnReadable(int32_t fileDescriptor) override;
+    VSyncCallback vsyncCallbacks_;
+    void *userData_;
+    std::mutex mtx_;
+};
+
 void VSyncCallBackListener::OnReadable(int32_t fileDescriptor)
 {
     if (fileDescriptor < 0) {

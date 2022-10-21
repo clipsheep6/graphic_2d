@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,14 +17,14 @@
 
 #include <memory>
 #include <unordered_map>
+#include "transaction/rs_transaction_data.h"
 
 namespace OHOS {
 namespace Rosen {
 class RSCommand;
-class RSTransactionData;
-class RSMessageProcessor final {
+class RSB_EXPORT RSMessageProcessor final {
 public:
-    static RSMessageProcessor& Instance();
+    static RSB_EXPORT RSMessageProcessor& Instance();
 
     void AddUIMessage(uint32_t pid, std::unique_ptr<RSCommand>& command);
     void AddUIMessage(uint32_t pid, std::unique_ptr<RSCommand>&& command);

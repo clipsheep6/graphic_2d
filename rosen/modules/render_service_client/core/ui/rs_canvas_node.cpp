@@ -18,9 +18,7 @@
 #include <algorithm>
 #include <string>
 
-#ifdef ROSEN_OHOS
 #include "common/rs_obj_abs_geometry.h"
-#endif
 #include "command/rs_canvas_node_command.h"
 #include "platform/common/rs_log.h"
 #include "common/rs_obj_geometry.h"
@@ -57,9 +55,7 @@ RSCanvasNode::~RSCanvasNode()
 
 SkCanvas* RSCanvasNode::BeginRecording(int width, int height)
 {
-#ifdef ROSEN_OHOS
     recordingCanvas_ = new RSRecordingCanvas(width, height);
-#endif
     DrawCmdListManager::Instance().ClearDrawCmdList(GetId());
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy == nullptr) {
@@ -81,7 +77,6 @@ bool RSCanvasNode::IsRecording() const
 
 void RSCanvasNode::FinishRecording()
 {
-#ifdef ROSEN_OHOS
     if (!IsRecording()) {
         ROSEN_LOGW("RSCanvasNode::FinishRecording, IsRecording = false");
         return;
@@ -103,7 +98,6 @@ void RSCanvasNode::FinishRecording()
             drawContentLast_ ? RSModifierType::FOREGROUND_STYLE : RSModifierType::CONTENT_STYLE);
         transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode());
     }
-#endif
 }
 
 void RSCanvasNode::DrawOnNode(RSModifierType type, DrawFunc func)

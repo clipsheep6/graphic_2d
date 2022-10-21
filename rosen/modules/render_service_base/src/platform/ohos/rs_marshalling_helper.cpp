@@ -58,7 +58,6 @@
 #include "render/rs_shader.h"
 #include "transaction/rs_ashmem_helper.h"
 
-#ifdef ROSEN_OHOS
 namespace OHOS {
 namespace Rosen {
 
@@ -913,4 +912,3 @@ bool RSMarshallingHelper::SkipFromParcel(Parcel& parcel, size_t size)
 }
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS

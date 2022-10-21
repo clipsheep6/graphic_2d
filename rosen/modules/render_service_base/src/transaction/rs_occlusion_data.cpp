@@ -22,7 +22,6 @@ RSOcclusionData::~RSOcclusionData() noexcept
 {
 }
 
-#ifdef ROSEN_OHOS
 RSOcclusionData* RSOcclusionData::Unmarshalling(Parcel& parcel)
 {
     auto data = new RSOcclusionData();
@@ -43,6 +42,5 @@ bool RSOcclusionData::Marshalling(Parcel& parcel) const
 
     return true;
 }
-#endif // ROSEN_OHOS
 } // namespace Rosen
 } // namespace OHOS

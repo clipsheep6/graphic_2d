@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,10 +21,10 @@
 #include <memory>
 #include <vector>
 
-#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <refbase.h>
-#endif
+
+#include "common/rs_macros.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -37,20 +37,14 @@ enum InterpolatorType : uint16_t {
     STEPS,
 };
 
-#ifdef ROSEN_OHOS
 class RSInterpolator : public Parcelable {
-#else
-class RSInterpolator {
-#endif
 public:
-    static const std::shared_ptr<RSInterpolator> DEFAULT;
+    static RSB_EXPORT const std::shared_ptr<RSInterpolator> DEFAULT;
     RSInterpolator() = default;
     virtual ~RSInterpolator() = default;
 
-#ifdef ROSEN_OHOS
     virtual bool Marshalling(Parcel& parcel) const override = 0;
-    static RSInterpolator* Unmarshalling(Parcel& parcel);
-#endif
+    static RSB_EXPORT RSInterpolator* Unmarshalling(Parcel& parcel);
 
     virtual float Interpolate(float input) const = 0;
 };
@@ -60,7 +54,6 @@ public:
     LinearInterpolator() = default;
     virtual ~LinearInterpolator() = default;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         if (!parcel.WriteUint16(InterpolatorType::LINEAR)) {
@@ -68,7 +61,6 @@ public:
         }
         return true;
     }
-#endif
 
     float Interpolate(float input) const override
     {
@@ -76,14 +68,13 @@ public:
     }
 };
 
-class RSCustomInterpolator : public RSInterpolator {
+class RSB_EXPORT RSCustomInterpolator : public RSInterpolator {
 public:
     RSCustomInterpolator(const std::function<float(float)>& func, int duration);
     virtual ~RSCustomInterpolator() = default;
 
     float Interpolate(float input) const override;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         if (!(parcel.WriteUint16(InterpolatorType::CUSTOM) && parcel.WriteFloatVector(times_) &&
@@ -93,7 +84,6 @@ public:
         return true;
     }
     static RSCustomInterpolator* Unmarshalling(Parcel& parcel);
-#endif
 
 private:
     RSCustomInterpolator(const std::vector<float>&& times, const std::vector<float>&& values);

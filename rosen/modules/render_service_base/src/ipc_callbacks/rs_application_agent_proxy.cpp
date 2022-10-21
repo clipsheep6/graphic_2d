@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#ifdef ROSEN_OHOS
 #include "rs_application_agent_proxy.h"
 
 #include <message_option.h>
@@ -89,4 +88,3 @@ void RSApplicationAgentProxy::NotifyClearBufferCache()
 }
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS

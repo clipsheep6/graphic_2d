@@ -58,7 +58,7 @@ enum class ImageFit {
     SCALE_DOWN,
 };
 
-class RSImage {
+class RSB_EXPORT RSImage {
 public:
     RSImage() = default;
     ~RSImage();

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,7 +48,11 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
     RSNodeMap::MutableInstance().RegisterNode(node);
 
     // create node in RS
-    RSSurfaceRenderNodeConfig config = { .id = node->GetId(), .name = node->name_ };
+    RSSurfaceRenderNodeConfig config = {
+        .id = node->GetId(),
+        .name = node->name_,
+        .onRender = surfaceNodeConfig.onRender,
+    };
     if (!isWindow) {
         config.nodeType = RSSurfaceNodeType::SELF_DRAWING_NODE;
     } else {
@@ -296,7 +299,6 @@ bool RSSurfaceNode::CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config
     return (surface_ != nullptr);
 }
 
-#ifdef ROSEN_OHOS
 sptr<OHOS::Surface> RSSurfaceNode::GetSurface() const
 {
     if (surface_ == nullptr) {
@@ -306,7 +308,6 @@ sptr<OHOS::Surface> RSSurfaceNode::GetSurface() const
     auto ohosSurface = RSSurfaceConverter::ConvertToOhosSurface(surface_);
     return ohosSurface;
 }
-#endif
 
 bool RSSurfaceNode::NeedForcedSendToRemote() const
 {

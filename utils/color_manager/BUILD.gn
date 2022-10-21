@@ -26,7 +26,9 @@ config("color_manager_config") {
     "-Os",
   ]
 
-  ldflags = [ "-Wl,--no-as-needed" ]
+  if (current_os == "ohos") {
+    ldflags = [ "-Wl,--no-as-needed" ]
+  }
 }
 
 config("color_manager_public_config") {
@@ -46,7 +48,7 @@ ohos_shared_library("color_manager") {
 
   public_deps = [
     "//third_party/bounds_checking_function:libsec_shared",
-    "//third_party/flutter/build/skia:ace_skia_ohos",
+    "//third_party/flutter/build/skia:ace_skia",
   ]
 
   subsystem_name = "graphic"

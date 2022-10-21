@@ -15,6 +15,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_ANIMATION_MANAGER_MAP_H
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_ANIMATION_MANAGER_MAP_H
 
+#include <memory>
 #include <mutex>
 #include <unordered_map>
 
@@ -24,7 +25,7 @@ namespace OHOS {
 namespace Rosen {
 class RSUIAnimationManager;
 
-class RS_EXPORT RSAnimationManagerMap final {
+class RSC_EXPORT RSAnimationManagerMap final {
 public:
     ~RSAnimationManagerMap() = default;
     static std::shared_ptr<RSAnimationManagerMap>& Instance();

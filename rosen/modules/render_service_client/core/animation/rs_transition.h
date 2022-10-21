@@ -25,7 +25,7 @@
 namespace OHOS {
 namespace Rosen {
 
-class RS_EXPORT RSTransition : public RSAnimation {
+class RSC_EXPORT RSTransition : public RSAnimation {
 public:
     RSTransition(const std::shared_ptr<const RSTransitionEffect>& effect, bool isTransitionIn);
     virtual ~RSTransition() = default;

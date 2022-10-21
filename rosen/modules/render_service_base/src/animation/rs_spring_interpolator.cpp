@@ -30,7 +30,6 @@ RSSpringInterpolator::RSSpringInterpolator(float response, float dampingRatio, f
     EstimateDuration();
 }
 
-#ifdef ROSEN_OHOS
 bool RSSpringInterpolator::Marshalling(Parcel& parcel) const
 {
     if (!parcel.WriteUint16(InterpolatorType::SPRING)) {
@@ -54,7 +53,6 @@ RSSpringInterpolator* RSSpringInterpolator::Unmarshalling(Parcel& parcel)
     auto ret = new RSSpringInterpolator(response, dampingRatio, initialVelocity);
     return ret;
 }
-#endif
 
 float RSSpringInterpolator::Interpolate(float fraction) const
 {

@@ -41,7 +41,7 @@ ohos_executable("render_service_client_rs_demo") {
     "//third_party/zlib:libz",
   ]
 
-  public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  public_deps = [ "//third_party/flutter/build/skia:ace_skia" ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
@@ -63,7 +63,7 @@ ohos_executable("render_service_client_app_demo") {
     "//third_party/zlib:libz",
   ]
 
-  public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  public_deps = [ "//third_party/flutter/build/skia:ace_skia" ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
@@ -107,7 +107,7 @@ ohos_executable("render_service_client_gravity_demo") {
     "//third_party/zlib:libz",
   ]
 
-  public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  public_deps = [ "//third_party/flutter/build/skia:ace_skia" ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
@@ -129,7 +129,7 @@ ohos_executable("render_service_client_scale_demo") {
     "//third_party/zlib:libz",
   ]
 
-  public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  public_deps = [ "//third_party/flutter/build/skia:ace_skia" ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
@@ -151,7 +151,7 @@ ohos_executable("render_service_client_rs_animation_demo") {
     "//third_party/zlib:libz",
   ]
 
-  public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  public_deps = [ "//third_party/flutter/build/skia:ace_skia" ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
@@ -169,7 +169,7 @@ ohos_executable("surface_capture_demo") {
     "//third_party/zlib:libz",
   ]
 
-  public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  public_deps = [ "//third_party/flutter/build/skia:ace_skia" ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
@@ -202,7 +202,7 @@ ohos_executable("render_service_client_surface_node_demo") {
     "//third_party/zlib:libz",
   ]
 
-  public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  public_deps = [ "//third_party/flutter/build/skia:ace_skia" ]
 
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 

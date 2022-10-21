@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSInterfaces {
+class RSC_EXPORT RSInterfaces {
 public:
     static RSInterfaces &GetInstance();
     RSInterfaces(const RSInterfaces &) = delete;
@@ -99,7 +99,7 @@ public:
        change screen refresh rate finally */
     int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval);
 
-    std::shared_ptr<VSyncReceiver> CreateVSyncReceiver(
+    std::shared_ptr<IVSyncReceiver> CreateVSyncReceiver(
         const std::string& name,
         const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper = nullptr);
 

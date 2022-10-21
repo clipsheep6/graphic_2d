@@ -34,6 +34,15 @@
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#define gettid GetCurrentThreadId
+#endif
+
+#ifdef __APPLE__
+#define gettid getpid
+#endif
+
 namespace OHOS {
 namespace Rosen {
 static TaskRunner g_uiTaskRunner;

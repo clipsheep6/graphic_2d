@@ -19,6 +19,7 @@
 #include <array>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include "common/rs_macros.h"
@@ -30,9 +31,9 @@ namespace OHOS {
 namespace Rosen {
 constexpr auto OverdrawColorArrayLength = 6;
 using OverdrawColorArray = std::array<SkColor, OverdrawColorArrayLength>;
-class RS_EXPORT RSOverdrawController {
+class RSB_EXPORT RSOverdrawController {
 public:
-    static RS_EXPORT RSOverdrawController &GetInstance();
+    static RSB_EXPORT RSOverdrawController &GetInstance();
 
     ~RSOverdrawController() = default;
 
@@ -41,7 +42,7 @@ public:
     void SetEnable(bool enable);
     OverdrawColorArray GetColorArray() const;
     std::map<int, SkColor> GetColorMap() const;
-    static RS_EXPORT void SwitchFunction(const char *key, const char *value, void *context);
+    static void SwitchFunction(const char *key, const char *value, void *context);
 
     template<class RSCanvasListenerImpl>
     std::shared_ptr<RSCanvasListenerImpl> CreateListener(RSPaintFilterCanvas *canvas)

@@ -25,7 +25,6 @@
 
 namespace OHOS {
 namespace Rosen {
-#ifdef ROSEN_OHOS
 using OpUnmarshallingFunc = OpItem* (*)(Parcel& parcel);
 
 static std::unordered_map<RSOpType, OpUnmarshallingFunc> opUnmarshallingFuncLUT = {
@@ -77,7 +76,6 @@ static OpUnmarshallingFunc GetOpUnmarshallingFunc(RSOpType type)
     }
     return it->second;
 }
-#endif
 
 DrawCmdList::DrawCmdList(int w, int h) : width_(w), height_(h) {}
 
@@ -113,7 +111,6 @@ void DrawCmdList::Playback(SkCanvas& canvas, const SkRect* rect) const
 
 void DrawCmdList::Playback(RSPaintFilterCanvas& canvas, const SkRect* rect) const
 {
-#ifdef ROSEN_OHOS
     if (width_ <= 0 || height_ <= 0) {
         return;
     }
@@ -124,7 +121,6 @@ void DrawCmdList::Playback(RSPaintFilterCanvas& canvas, const SkRect* rect) cons
         }
         it->Draw(canvas, rect);
     }
-#endif
 }
 
 int DrawCmdList::GetSize() const
@@ -142,7 +138,6 @@ int DrawCmdList::GetHeight() const
     return height_;
 }
 
-#ifdef ROSEN_OHOS
 bool DrawCmdList::Marshalling(Parcel& parcel) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -205,7 +200,6 @@ DrawCmdList* DrawCmdList::Unmarshalling(Parcel& parcel)
     }
     return drawCmdList.release();
 }
-#endif
 
 DrawCmdListManager& DrawCmdListManager::Instance()
 {

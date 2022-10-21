@@ -28,7 +28,7 @@ namespace OHOS {
 namespace Rosen {
 class AnimationCallback;
 
-class RS_EXPORT RSAnimationGroup : public RSAnimation {
+class RSC_EXPORT RSAnimationGroup : public RSAnimation {
 public:
     RSAnimationGroup() = default;
     ~RSAnimationGroup() = default;

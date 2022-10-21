@@ -16,10 +16,8 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_TRANSITION_RS_RENDER_TRANSITION_EFFECT_H
 #define RENDER_SERVICE_CLIENT_CORE_TRANSITION_RS_RENDER_TRANSITION_EFFECT_H
 
-#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <refbase.h>
-#endif
 #include <memory>
 
 #include "animation/rs_animation_common.h"
@@ -36,21 +34,15 @@ class Quaternion;
 template<typename T>
 class Vector2;
 
-#ifdef ROSEN_OHOS
 class RSRenderTransitionEffect : public Parcelable {
-#else
-class RSRenderTransitionEffect {
-#endif
 public:
     RSRenderTransitionEffect() = default;
     virtual ~RSRenderTransitionEffect() = default;
     const std::shared_ptr<RSRenderModifier>& GetModifier();
     virtual void UpdateFraction(float fraction) const = 0;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override = 0;
     static RSRenderTransitionEffect* Unmarshalling(Parcel& parcel);
-#endif
 private:
     std::shared_ptr<RSRenderModifier> modifier_;
     virtual const std::shared_ptr<RSRenderModifier> CreateModifier() = 0;
@@ -62,10 +54,8 @@ public:
     ~RSTransitionFade() override = default;
     void UpdateFraction(float fraction) const override;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderTransitionEffect* Unmarshalling(Parcel& parcel);
-#endif
 private:
     float alpha_;
     std::shared_ptr<RSRenderAnimatableProperty<float>> property_;
@@ -80,10 +70,8 @@ public:
     ~RSTransitionScale() override = default;
     void UpdateFraction(float fraction) const override;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderTransitionEffect* Unmarshalling(Parcel& parcel);
-#endif
 private:
     float scaleX_;
     float scaleY_;
@@ -100,10 +88,8 @@ public:
     ~RSTransitionTranslate() override = default;
     void UpdateFraction(float fraction) const override;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderTransitionEffect* Unmarshalling(Parcel& parcel);
-#endif
 private:
     float translateX_;
     float translateY_;
@@ -119,10 +105,8 @@ public:
     ~RSTransitionRotate() override = default;
     void UpdateFraction(float fraction) const override;
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderTransitionEffect* Unmarshalling(Parcel& parcel);
-#endif
 private:
     float dx_;
     float dy_;

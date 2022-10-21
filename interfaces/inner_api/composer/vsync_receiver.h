@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,6 @@
 
 #include <refbase.h>
 #include "ivsync_connection.h"
-#include "file_descriptor_listener.h"
 
 #include <atomic>
 #include <functional>
@@ -28,40 +27,30 @@
 #include <string>
 
 namespace OHOS {
+namespace AppExecFwk {
+class EventHandler;
+} // namespace AppExecFwk
+} // namespace OHOS
+
+namespace OHOS {
 namespace Rosen {
-class VSyncCallBackListener : public OHOS::AppExecFwk::FileDescriptorListener {
-public:
-    using VSyncCallback = std::function<void(int64_t, void*)>;
-    struct FrameCallback {
-        void *userData_;
-        VSyncCallback callback_;
-    };
-    VSyncCallBackListener() : vsyncCallbacks_(nullptr), userData_(nullptr)
-    {
-    }
-
-    ~VSyncCallBackListener()
-    {
-    }
-    void SetCallback(FrameCallback cb)
-    {
-        std::lock_guard<std::mutex> locker(mtx_);
-        vsyncCallbacks_ = cb.callback_;
-        userData_ = cb.userData_;
-    }
-
-private:
-    void OnReadable(int32_t fileDescriptor) override;
-    VSyncCallback vsyncCallbacks_;
+class VSyncCallBackListener;
+using VSyncCallback = std::function<void(int64_t, void*)>;
+struct FrameCallback {
     void *userData_;
-    std::mutex mtx_;
+    VSyncCallback callback_;
 };
 
-class VSyncReceiver : public RefBase {
+class IVSyncReceiver : public RefBase {
 public:
-    // check
-    using FrameCallback = VSyncCallBackListener::FrameCallback;
+    using FrameCallback = ::OHOS::Rosen::FrameCallback;
+    virtual VsyncError Init() = 0;
+    virtual VsyncError RequestNextVSync(FrameCallback callback) = 0;
+    virtual VsyncError SetVSyncRate(FrameCallback callback, int32_t rate) = 0;
+};
 
+class VSyncReceiver : public IVSyncReceiver {
+public:
     VSyncReceiver(const sptr<IVSyncConnection>& conn,
         const std::shared_ptr<OHOS::AppExecFwk::EventHandler>& looper = nullptr,
         const std::string& name = "Uninitialized");
@@ -70,9 +59,9 @@ public:
     VSyncReceiver(const VSyncReceiver &) = delete;
     VSyncReceiver &operator=(const VSyncReceiver &) = delete;
 
-    VsyncError Init();
-    VsyncError RequestNextVSync(FrameCallback callback);
-    VsyncError SetVSyncRate(FrameCallback callback, int32_t rate);
+    VsyncError Init() override;
+    VsyncError RequestNextVSync(FrameCallback callback) override;
+    VsyncError SetVSyncRate(FrameCallback callback, int32_t rate) override;
 
 private:
     sptr<IVSyncConnection> connection_;

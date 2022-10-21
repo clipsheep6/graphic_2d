@@ -17,18 +17,14 @@
 #define ROSEN_RENDER_SERVICE_BASE_RS_OCCLUSION_DATA_H
 
 #include <vector>
-#ifdef ROSEN_OHOS
 #include <parcel.h>
-#endif
+
+#include "common/rs_macros.h"
 
 namespace OHOS {
 namespace Rosen {
 using VisibleData = std::vector<uint64_t>;
-#ifdef ROSEN_OHOS
-class RSOcclusionData : public Parcelable {
-#else
-class RSOcclusionData {
-#endif
+class RSB_EXPORT RSOcclusionData : public Parcelable {
 public:
     RSOcclusionData() = default;
     RSOcclusionData(VisibleData& vec)
@@ -42,10 +38,8 @@ public:
     {
         return visibleData_;
     }
-#ifdef ROSEN_OHOS
     static RSOcclusionData* Unmarshalling(Parcel& parcel);
     bool Marshalling(Parcel& parcel) const override;
-#endif
 
 private:
     VisibleData visibleData_;

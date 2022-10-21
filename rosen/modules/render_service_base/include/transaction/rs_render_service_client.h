@@ -54,7 +54,7 @@ public:
     virtual void OnSurfaceCapture(std::shared_ptr<Media::PixelMap> pixelmap) = 0;
 };
 
-class RSRenderServiceClient : public RSIRenderClient {
+class RSB_EXPORT RSRenderServiceClient : public RSIRenderClient {
 public:
     RSRenderServiceClient() = default;
     virtual ~RSRenderServiceClient() = default;
@@ -71,8 +71,9 @@ public:
     bool QueryIfRTNeedRender();
     bool CreateNode(const RSSurfaceRenderNodeConfig& config);
     std::shared_ptr<RSSurface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config);
+    std::shared_ptr<RSSurface> CreateRSSurface(const sptr<Surface> &surface);
 
-    std::shared_ptr<VSyncReceiver> CreateVSyncReceiver(
+    std::shared_ptr<IVSyncReceiver> CreateVSyncReceiver(
         const std::string& name,
         const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper = nullptr);
 

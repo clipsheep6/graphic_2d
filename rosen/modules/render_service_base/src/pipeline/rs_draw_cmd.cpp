@@ -562,8 +562,6 @@ void RestoreAlphaOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     canvas.RestoreAlpha();
 }
 
-#ifdef ROSEN_OHOS
-
 // RectOpItem
 bool RectOpItem::Marshalling(Parcel& parcel) const
 {
@@ -1501,7 +1499,5 @@ OpItem* RestoreAlphaOpItem::Unmarshalling(Parcel& parcel)
 {
     return new RestoreAlphaOpItem();
 }
-
-#endif
 } // namespace Rosen
 } // namespace OHOS

@@ -27,7 +27,7 @@ class SkCanvas;
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSExtendedModifierHelper {
+class RSC_EXPORT RSExtendedModifierHelper {
 public:
     static RSDrawingContext CreateDrawingContext(NodeId nodeId);
     static std::shared_ptr<RSRenderModifier> CreateRenderModifier(
@@ -35,7 +35,7 @@ public:
     static std::shared_ptr<DrawCmdList> FinishDrawing(RSDrawingContext& ctx);
 };
 
-class RS_EXPORT RSExtendedModifier : public RSModifier {
+class RSC_EXPORT RSExtendedModifier : public RSModifier {
 public:
     RSExtendedModifier(const std::shared_ptr<RSPropertyBase>& property = {})
         : RSModifier(property, RSModifierType::EXTENDED)
@@ -96,7 +96,7 @@ protected:
     }
 };
 
-class RS_EXPORT RSContentStyleModifier : public RSExtendedModifier {
+class RSC_EXPORT RSContentStyleModifier : public RSExtendedModifier {
 public:
     RSContentStyleModifier() : RSExtendedModifier(RSModifierType::CONTENT_STYLE)
     {}
@@ -107,7 +107,7 @@ public:
     }
 };
 
-class RS_EXPORT RSOverlayStyleModifier : public RSExtendedModifier {
+class RSC_EXPORT RSOverlayStyleModifier : public RSExtendedModifier {
 public:
     RSOverlayStyleModifier() : RSExtendedModifier(RSModifierType::OVERLAY_STYLE)
     {}

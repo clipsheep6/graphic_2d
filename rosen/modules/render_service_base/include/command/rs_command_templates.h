@@ -63,7 +63,6 @@ public:
         std::apply([&context](auto&... args) { return (*processFunc)(context, args...); }, params_);
     }
 
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
     {
         return RSMarshallingHelper::Marshalling(parcel, commandType) &&
@@ -83,7 +82,6 @@ public:
     }
 
     static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
-#endif // ROSEN_OHOS
 
 private:
     std::tuple<Params...> params_;

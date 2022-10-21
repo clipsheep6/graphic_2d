@@ -11,25 +11,55 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine/ace_config.gni")
+
 group("darwin") {
-  deps = [ ":rosen_darwin_sources" ]
+  public_deps = [ ":rosen_darwin_sources" ]
 }
 
-config("export_config") {
-  include_dirs = []
-}
-
-source_set("rosen_darwin_sources") {
-  public_configs = [ ":export_config" ]
-
+ohos_source_set("rosen_darwin_sources") {
   sources = [
-    "rs_log.cpp",
+    "../ohos/rs_log.cpp",
+    "render_context.cpp",
+    "rs_accessibility.cpp",
+    "rs_ashmem_helper.cpp",
+    "rs_frame_report.cpp",
+    "rs_marshalling_helper.cpp",
+    "rs_render_service_client.cpp",
+    "rs_surface_darwin.cpp",
+    "rs_surface_frame_darwin.cpp",
+    "rs_surface_ohos_converter.cpp",
     "rs_system_properties.cpp",
+    "rs_vsync_client_darwin.cpp",
   ]
 
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include",
+    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context",
   ]
 
-  deps = []
+  defines = [ "MODULE_RSB" ]
+  if (enable_glfw_window) {
+    defines += [ "USE_GLFW_WINDOW" ]
+  }
+
+  configs = [ "//base/notification/eventhandler/frameworks/eventhandler:public_libeventhandler_config" ]
+
+  public_configs = [ "//foundation/graphic/graphic_2d/rosen/modules/composer:composer_public_config" ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d:libsurface",
+    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
+    "//third_party/flutter/build/skia:ace_skia",
+  ]
+
+  public_deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/glfw_render_context:libglfw_render_context",
+    "//foundation/graphic/graphic_2d/utils:sync_fence",
+    "//third_party/EGL:libEGL",
+    "//third_party/flutter/build/skia:ace_skia",
+  ]
+
+  external_deps = [ "hilog_native:libhilog" ]
 }

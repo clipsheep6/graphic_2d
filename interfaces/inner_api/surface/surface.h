@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,10 +25,10 @@
 #include "surface_tunnel_handle.h"
 
 namespace OHOS {
-class Surface : public RefBase {
+class OHOS_EXPORT Surface : public RefBase {
 public:
-    static sptr<Surface> CreateSurfaceAsConsumer(std::string name = "noname", bool isShared = false);
-    static sptr<Surface> CreateSurfaceAsProducer(sptr<IBufferProducer>& producer);
+    static OHOS_EXPORT sptr<Surface> CreateSurfaceAsConsumer(std::string name = "noname", bool isShared = false);
+    static OHOS_EXPORT sptr<Surface> CreateSurfaceAsProducer(sptr<IBufferProducer>& producer);
 
     virtual ~Surface() = default;
 

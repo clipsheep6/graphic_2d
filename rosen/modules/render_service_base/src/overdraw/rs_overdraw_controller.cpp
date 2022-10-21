@@ -15,6 +15,7 @@
 
 #include "overdraw/rs_overdraw_controller.h"
 
+#include <mutex>
 #include <sstream>
 
 #include "hilog/log.h"

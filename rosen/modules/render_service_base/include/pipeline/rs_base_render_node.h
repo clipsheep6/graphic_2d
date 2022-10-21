@@ -15,6 +15,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_BASE_RENDER_NODE_H
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_BASE_RENDER_NODE_H
 
+#include <atomic>
 #include <list>
 #include <memory>
 
@@ -26,7 +27,7 @@ class RSContext;
 class RSNodeVisitor;
 class RSCommand;
 
-class RSBaseRenderNode : public std::enable_shared_from_this<RSBaseRenderNode> {
+class RSB_EXPORT RSBaseRenderNode : public std::enable_shared_from_this<RSBaseRenderNode> {
 public:
     using WeakPtr = std::weak_ptr<RSBaseRenderNode>;
     using SharedPtr = std::shared_ptr<RSBaseRenderNode>;

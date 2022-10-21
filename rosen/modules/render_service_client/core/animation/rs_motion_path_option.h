@@ -24,7 +24,7 @@
 namespace OHOS {
 namespace Rosen {
 
-class RS_EXPORT RSMotionPathOption {
+class RSC_EXPORT RSMotionPathOption {
 public:
     RSMotionPathOption(const std::string& path) : path_(path) {}
 

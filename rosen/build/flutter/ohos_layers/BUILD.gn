@@ -36,5 +36,5 @@ ohos_source_set("flutter_ohos_layers") {
     "$flutter_root/engine/flutter/flow/ohos_layers/transform_layer.cpp",
   ]
 
-  deps = [ "$ace_flutter_engine_root/skia:ace_skia_ohos" ]
+  deps = [ "$ace_flutter_engine_root/skia:ace_skia" ]
 }

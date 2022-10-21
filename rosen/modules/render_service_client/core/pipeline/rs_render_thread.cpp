@@ -17,7 +17,6 @@
 
 #include <cstdint>
 
-#include "accessibility_config.h"
 #include "rs_trace.h"
 #include "sandbox_utils.h"
 
@@ -32,6 +31,7 @@
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
+#include "platform/common/rs_accessibility.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "property/rs_property_trace.h"
@@ -48,6 +48,7 @@
 #include "res_sched_client.h"
 #include "res_type.h"
 #endif
+#include "sandbox_utils.h"
 
 static void SystemCallSetThreadName(const std::string& name)
 {
@@ -58,25 +59,12 @@ static void SystemCallSetThreadName(const std::string& name)
 #endif
 }
 
-using namespace OHOS::AccessibilityConfig;
 namespace OHOS {
 namespace Rosen {
 namespace {
     static constexpr uint64_t REFRESH_PERIOD = 16666667;
     static constexpr uint64_t REFRESH_FREQ_IN_UNI_RENDER = 1200;
 }
-class HighContrastObserver : public AccessibilityConfigObserver {
-public:
-    HighContrastObserver() = default;
-    void OnConfigChanged(const CONFIG_ID id, const ConfigValue &value) override
-    {
-        ROSEN_LOGD("HighContrastObserver OnConfigChanged");
-        auto& renderThread = RSRenderThread::Instance();
-        if (id == CONFIG_ID::CONFIG_HIGH_CONTRAST_TEXT) {
-            renderThread.SetHighContrast(value.highContrastText);
-        }
-    }
-};
 
 RSRenderThread& RSRenderThread::Instance()
 {
@@ -111,11 +99,11 @@ RSRenderThread::RSRenderThread()
         }
     };
 
-    highContrastObserver_ = std::make_shared<HighContrastObserver>();
     context_ = std::make_shared<RSContext>();
-    auto &config = OHOS::AccessibilityConfig::AccessibilityConfig::GetInstance();
-    config.InitializeContext();
-    config.SubscribeConfigObserver(CONFIG_ID::CONFIG_HIGH_CONTRAST_TEXT, highContrastObserver_);
+    RSAccessibility::GetInstance().ListenHighContrastChange([](bool newHighContrast) {
+        auto& renderThread = RSRenderThread::Instance();
+        renderThread.SetHighContrast(newHighContrast);
+    });
 }
 
 RSRenderThread::~RSRenderThread()

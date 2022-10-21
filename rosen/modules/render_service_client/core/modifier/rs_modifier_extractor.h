@@ -23,7 +23,7 @@ namespace OHOS {
 namespace Rosen {
 class RSNode;
 
-class RS_EXPORT RSModifierExtractor {
+class RSC_EXPORT RSModifierExtractor {
 public:
     RSModifierExtractor(NodeId id);
     virtual ~RSModifierExtractor() = default;

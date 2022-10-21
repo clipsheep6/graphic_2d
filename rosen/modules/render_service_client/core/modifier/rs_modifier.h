@@ -30,7 +30,7 @@ struct RSDrawingContext {
 };
 class RSRenderModifier;
 
-class RS_EXPORT RSModifier : public std::enable_shared_from_this<RSModifier> {
+class RSC_EXPORT RSModifier : public std::enable_shared_from_this<RSModifier> {
 public:
     explicit RSModifier(const std::shared_ptr<RSPropertyBase>& property)
         : property_(property ? property : std::make_shared<RSPropertyBase>())

@@ -17,8 +17,12 @@
 #include <cstdlib>
 #include <cstring>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace OHOS {
-#ifndef OHOS_LITE
+#if !defined(OHOS_LITE) && !defined(_WIN32)
 const int PID_STR_SIZE = 4;
 const int STATUS_LINE_SIZE = 1024;
 
@@ -46,7 +50,9 @@ static int FindAndConvertPid(char *buf)
 
 pid_t GetRealPid(void)
 {
-#ifdef OHOS_LITE
+#ifdef _WIN32
+    return GetCurrentProcessId();
+#elif OHOS_LITE
     return getpid();
 #else
     const char *path = "/proc/self/status";

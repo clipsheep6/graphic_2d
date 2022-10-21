@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,27 +18,28 @@
 
 #include <any>
 #include <cstdarg>
+#include <memory>
 #include <sstream>
 #include <vector>
 
-class Gslogger : public std::stringstream {
+class OHOS_EXPORT Gslogger : public std::stringstream {
 public:
     enum class LOG_LEVEL { DEBUG, INFO, WARN, ERROR, FATAL };
     enum class LOG_PHASE { BEGIN, END };
 
     using GsloggerWrapperFunc = void(*)(Gslogger &, enum LOG_PHASE phase);
     // output GsloggerWrapperFunc
-    static void Stdout(Gslogger &logger, enum LOG_PHASE phase);
-    static void Stderr(Gslogger &logger, enum LOG_PHASE phase);
-    static void Hilog(Gslogger &logger, enum LOG_PHASE phase);
-    static void FileLog(Gslogger &logger, enum LOG_PHASE phase);
+    static OHOS_EXPORT void Stdout(Gslogger &logger, enum LOG_PHASE phase);
+    static OHOS_EXPORT void Stderr(Gslogger &logger, enum LOG_PHASE phase);
+    static OHOS_EXPORT void Hilog(Gslogger &logger, enum LOG_PHASE phase);
+    static OHOS_EXPORT void FileLog(Gslogger &logger, enum LOG_PHASE phase);
 
     // wrapper GsloggerWrapperFunc
-    static void Func(Gslogger &logger, enum LOG_PHASE phase); // 1
-    static void FuncLine(Gslogger &logger, enum LOG_PHASE phase); // 2
-    static void FileLine(Gslogger &logger, enum LOG_PHASE phase); // 3
-    static void FileFuncLine(Gslogger &logger, enum LOG_PHASE phase); // 4
-    static void PidTid(Gslogger &logger, enum LOG_PHASE phase); // +5
+    static OHOS_EXPORT void Func(Gslogger &logger, enum LOG_PHASE phase); // 1
+    static OHOS_EXPORT void FuncLine(Gslogger &logger, enum LOG_PHASE phase); // 2
+    static OHOS_EXPORT void FileLine(Gslogger &logger, enum LOG_PHASE phase); // 3
+    static OHOS_EXPORT void FileFuncLine(Gslogger &logger, enum LOG_PHASE phase); // 4
+    static OHOS_EXPORT void PidTid(Gslogger &logger, enum LOG_PHASE phase); // +5
 
     Gslogger(const std::string &file, const std::string &func, int line, enum LOG_LEVEL level, ...);
     virtual ~Gslogger() override;

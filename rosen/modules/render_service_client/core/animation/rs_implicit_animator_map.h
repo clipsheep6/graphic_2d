@@ -15,6 +15,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_IMPLICIT_ANIMATOR_MAP_H
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_IMPLICIT_ANIMATOR_MAP_H
 
+#include <memory>
 #include <mutex>
 #include <unordered_map>
 
@@ -24,7 +25,7 @@ namespace OHOS {
 namespace Rosen {
 class RSImplicitAnimator;
 
-class RS_EXPORT RSImplicitAnimatorMap final {
+class RSC_EXPORT RSImplicitAnimatorMap final {
 public:
     static RSImplicitAnimatorMap& Instance();
 

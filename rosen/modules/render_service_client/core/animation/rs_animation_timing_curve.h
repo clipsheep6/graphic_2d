@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <map>
+#include <memory>
 
 #include "common/rs_macros.h"
 
@@ -25,7 +26,7 @@ namespace OHOS {
 namespace Rosen {
 class RSInterpolator;
 enum class StepsCurvePosition;
-class RS_EXPORT RSAnimationTimingCurve final {
+class RSC_EXPORT RSAnimationTimingCurve final {
 public:
     static const RSAnimationTimingCurve DEFAULT;
     static const RSAnimationTimingCurve LINEAR;

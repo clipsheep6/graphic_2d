@@ -19,11 +19,10 @@
 #include <surface.h>
 
 #include "platform/drawing/rs_surface_frame.h"
-#include "render_context/render_context.h"
 
 namespace OHOS {
 namespace Rosen {
-
+class RenderContext;
 class RSSurfaceFrameOhos : public RSSurfaceFrame {
 public:
     virtual void SetRenderContext(RenderContext* context);

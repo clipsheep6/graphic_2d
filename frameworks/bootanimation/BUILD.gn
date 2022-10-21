@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -61,7 +61,7 @@ ohos_executable("bootanimation") {
     "//foundation/window/window_manager/dm:libdm",
     "//foundation/window/window_manager/wm:libwm",
     "//third_party/cJSON:cjson_static",
-    "//third_party/flutter/build/skia:ace_skia_ohos",
+    "//third_party/flutter/build/skia:ace_skia",
     "//third_party/zlib:libz",
   ]
 

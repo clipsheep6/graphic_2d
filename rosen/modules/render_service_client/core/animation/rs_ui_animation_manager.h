@@ -30,7 +30,7 @@ class RSRenderAnimation;
 class RSPropertyBase;
 class RSRenderPropertyBase;
 
-class RS_EXPORT RSUIAnimationManager {
+class RSC_EXPORT RSUIAnimationManager {
 public:
     RSUIAnimationManager();
     virtual ~RSUIAnimationManager() = default;

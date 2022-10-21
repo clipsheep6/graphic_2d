@@ -22,7 +22,7 @@ namespace OHOS {
 namespace Rosen {
 class RSInterpolator;
 
-class RSRenderKeyframeAnimation : public RSRenderPropertyAnimation {
+class RSB_EXPORT RSRenderKeyframeAnimation : public RSRenderPropertyAnimation {
 public:
     RSRenderKeyframeAnimation(AnimationId id, const PropertyId& propertyId,
         const std::shared_ptr<RSRenderPropertyBase>& originValue);
@@ -33,10 +33,8 @@ public:
 
     void AddKeyframes(const std::vector<std::tuple<float, std::shared_ptr<RSRenderPropertyBase>,
         std::shared_ptr<RSInterpolator>>>& keyframes);
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSRenderKeyframeAnimation* Unmarshalling(Parcel& parcel);
-#endif
 protected:
     void OnAnimate(float fraction) override;
 
@@ -44,9 +42,7 @@ protected:
 
 private:
     RSRenderKeyframeAnimation() = default;
-#ifdef ROSEN_OHOS
     bool ParseParam(Parcel& parcel) override;
-#endif
     std::vector<std::tuple<float, std::shared_ptr<RSRenderPropertyBase>, std::shared_ptr<RSInterpolator>>> keyframes_;
 };
 } // namespace Rosen

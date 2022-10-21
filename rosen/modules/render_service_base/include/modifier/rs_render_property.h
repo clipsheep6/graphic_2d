@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSRenderPropertyBase : public std::enable_shared_from_this<RSRenderPropertyBase> {
+class RSB_EXPORT RSRenderPropertyBase : public std::enable_shared_from_this<RSRenderPropertyBase> {
 public:
     RSRenderPropertyBase() = default;
     RSRenderPropertyBase(const PropertyId& id) : id_(id) {}
@@ -41,10 +41,8 @@ public:
         node_ = node;
     }
 
-#ifdef ROSEN_OHOS
     static bool Marshalling(Parcel& parcel, const std::shared_ptr<RSRenderPropertyBase>& val);
     static bool Unmarshalling(Parcel& parcel, std::shared_ptr<RSRenderPropertyBase>& val);
-#endif
 
 protected:
     void OnChange() const
@@ -154,7 +152,7 @@ protected:
 };
 
 template<typename T>
-class RSRenderAnimatableProperty : public RSRenderProperty<T> {
+class RSB_EXPORT_TMP RSRenderAnimatableProperty : public RSRenderProperty<T> {
 public:
     RSRenderAnimatableProperty() : RSRenderProperty<T>() {}
     RSRenderAnimatableProperty(const T& value) : RSRenderProperty<T>(value, 0) {}
@@ -258,6 +256,11 @@ template<>
 float RSRenderAnimatableProperty<Quaternion>::toFloat() const;
 template<>
 float RSRenderAnimatableProperty<Vector2f>::toFloat() const;
+
+extern template class RSRenderAnimatableProperty<float>;
+extern template class RSRenderAnimatableProperty<Vector4f>;
+extern template class RSRenderAnimatableProperty<Quaternion>;
+extern template class RSRenderAnimatableProperty<Vector2f>;
 } // namespace Rosen
 } // namespace OHOS
 

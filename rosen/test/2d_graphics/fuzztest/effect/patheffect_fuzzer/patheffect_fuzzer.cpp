@@ -13,50 +13,62 @@
  * limitations under the License.
  */
 
-#include "setcamerapos_fuzzer.h"
+#include "patheffect_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <securec.h>
 
-#include "utils/camera3d.h"
-#include "utils/matrix.h"
+#include "effect/path_effect.h"
 #include "utils/scalar.h"
-
-const int CONSTANTS_NUMBER = 5;
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+const uint8_t* g_data = nullptr;
+size_t g_size = 0;
+size_t g_pos;
+} // namespace
+
 namespace Drawing {
+/*
+* describe: get data from outside untrusted data(g_data) which size is according to sizeof(T)
+* tips: only support basic type
+*/
 template<class T>
-size_t GetObject(T &object, const uint8_t *data, size_t size)
+T GetObject()
 {
+    T object {};
     size_t objectSize = sizeof(object);
-    if (data == nullptr || objectSize > size) {
-        return 0;
+    if (g_data == nullptr || objectSize > g_size - g_pos) {
+        return object;
     }
-    auto ret = memcpy_s(&object, objectSize, data, objectSize);
+    errno_t ret = memcpy_s(&object, objectSize, g_data + g_pos, objectSize);
     if (ret != EOK) {
-        return 0;
+        return {};
     }
-    return objectSize;
+    g_pos += objectSize;
+    return object;
 }
 
-bool SetCameraPosFuzzTest(const uint8_t* data, size_t size)
+bool PathEffectFuzzTest(const uint8_t* data, size_t size)
 {
-    scalar positionX;
-    scalar positionY;
-    if (data == nullptr || size < sizeof(scalar) + sizeof(scalar)) {
+    if (data == nullptr) {
         return false;
     }
 
-    size_t startPos = 0;
-    startPos += GetObject<scalar>(positionX, data + startPos, size - startPos);
-    startPos += GetObject<scalar>(positionY, data + startPos, size - startPos);
-    Camera3D camera3d;
-    Matrix matrix;
-    camera3d.ApplyToMatrix(matrix);
-    camera3d.SetCameraPos(positionX, positionY, CONSTANTS_NUMBER);
+    // initialize
+    g_data = data;
+    g_size = size;
+    g_pos = 0;
+
+    scalar radius = GetObject<scalar>();
+    PathEffect::CreateCornerPathEffect(radius);
+    Path path;
+    scalar advance = GetObject<scalar>();
+    scalar phase = GetObject<scalar>();
+    uint32_t style = GetObject<uint32_t>();
+    PathEffect::CreatePathDashEffect(path, advance, phase, static_cast<PathDashStyle>(style));
     return true;
 }
 } // namespace Drawing
@@ -67,6 +79,6 @@ bool SetCameraPosFuzzTest(const uint8_t* data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::Rosen::Drawing::SetCameraPosFuzzTest(data, size);
+    OHOS::Rosen::Drawing::PathEffectFuzzTest(data, size);
     return 0;
 }

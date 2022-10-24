@@ -13,27 +13,35 @@
  * limitations under the License.
  */
 
-#include "matrixget_fuzzer.h"
+#include "bitmap_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <securec.h>
 
-#include "utils/matrix.h"
+#include "image/bitmap.h"
+#include "draw/color.h"
 
-constexpr int CONSTANTS_NUMBER_FIVE = 5;
+constexpr size_t DATA_MIN_SIZE = 2;
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-bool MatrixGetFuzzTest(const uint8_t* data, size_t size)
+bool BitmapFuzzTest(const uint8_t* data, size_t size)
 {
-    if (data == nullptr) {
+    if (data == nullptr || size < DATA_MIN_SIZE) {
         return false;
     }
-    int index = static_cast<int>(size % CONSTANTS_NUMBER_FIVE);
-    Matrix matrix;
-    matrix.Get(index);
+    Bitmap bitmap;
+    int width = static_cast<int>(data[0]);
+    int height = static_cast<int>(data[1]);
+    BitmapFormat bitmapFormat = { COLORTYPE_ARGB_4444, ALPHATYPE_OPAQUE };
+    bitmap.Build(width, height, bitmapFormat);
+    if (bitmap.GetWidth() != width || bitmap.GetHeight() != height || bitmap.GetPixels() == nullptr) {
+        return false;
+    }
+    bitmap.ClearWithColor(COLORTYPE_UNKNOWN);
+    bitmap.Free();
     return true;
 }
 } // namespace Drawing
@@ -44,6 +52,6 @@ bool MatrixGetFuzzTest(const uint8_t* data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::Rosen::Drawing::MatrixGetFuzzTest(data, size);
+    OHOS::Rosen::Drawing::BitmapFuzzTest(data, size);
     return 0;
 }

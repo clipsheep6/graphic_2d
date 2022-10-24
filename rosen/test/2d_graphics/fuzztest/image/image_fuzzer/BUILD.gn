@@ -17,11 +17,11 @@ import("//build/test.gni")
 module_output_path = "graphic/2d_graphics"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("MatrixGetFuzzTest") {
+ohos_fuzztest("ImageFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//foundation/graphic/graphic_2d/rosen/test/2d_graphics/fuzztest/matrixget_fuzzer"
+  fuzz_config_file = "//foundation/graphic/graphic_2d/rosen/test/2d_graphics/fuzztest/image/image_fuzzer"
 
-  sources = [ "matrixget_fuzzer.cpp" ]
+  sources = [ "image_fuzzer.cpp" ]
 
   cflags = [
     "-g",
@@ -47,3 +47,15 @@ ohos_fuzztest("MatrixGetFuzzTest") {
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+
+  deps += [
+    # deps file
+    ":ImageFuzzTest",
+  ]
+}
+###############################################################################

@@ -13,20 +13,23 @@
  * limitations under the License.
  */
 
-#include "bitmapbuild_fuzzer.h"
+#include "bitmap_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <securec.h>
 
 #include "image/bitmap.h"
-
-constexpr size_t DATA_MIN_SIZE = 2;
+#include "draw/color.h"
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+constexpr size_t DATA_MIN_SIZE = 2;
+} // namespace
+
 namespace Drawing {
-bool BitmapBuildFuzzTest(const uint8_t* data, size_t size)
+bool BitmapFuzzTest(const uint8_t* data, size_t size)
 {
     if (data == nullptr || size < DATA_MIN_SIZE) {
         return false;
@@ -36,9 +39,11 @@ bool BitmapBuildFuzzTest(const uint8_t* data, size_t size)
     int height = static_cast<int>(data[1]);
     BitmapFormat bitmapFormat = { COLORTYPE_ARGB_4444, ALPHATYPE_OPAQUE };
     bitmap.Build(width, height, bitmapFormat);
-    if (bitmap.GetWidth() != width || bitmap.GetHeight() != height) {
+    if (bitmap.GetWidth() != width || bitmap.GetHeight() != height || bitmap.GetPixels() == nullptr) {
         return false;
     }
+    bitmap.ClearWithColor(COLORTYPE_UNKNOWN);
+    bitmap.Free();
     return true;
 }
 } // namespace Drawing
@@ -49,6 +54,6 @@ bool BitmapBuildFuzzTest(const uint8_t* data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::Rosen::Drawing::BitmapBuildFuzzTest(data, size);
+    OHOS::Rosen::Drawing::BitmapFuzzTest(data, size);
     return 0;
 }

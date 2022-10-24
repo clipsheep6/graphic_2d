@@ -17,11 +17,11 @@ import("//build/test.gni")
 module_output_path = "graphic/2d_graphics"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("BitmapBuildFuzzTest") {
+ohos_fuzztest("BitmapFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//foundation/graphic/graphic_2d/rosen/test/2d_graphics/fuzztest/bitmapbuild_fuzzer"
+  fuzz_config_file = "//foundation/graphic/graphic_2d/rosen/test/2d_graphics/fuzztest/image/bitmap_fuzzer"
 
-  sources = [ "bitmapbuild_fuzzer.cpp" ]
+  sources = [ "bitmap_fuzzer.cpp" ]
 
   cflags = [
     "-g",
@@ -47,3 +47,16 @@ ohos_fuzztest("BitmapBuildFuzzTest") {
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
+
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+
+  deps += [
+    # deps file
+    ":BitmapFuzzTest",
+  ]
+}
+###############################################################################

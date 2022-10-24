@@ -17,11 +17,11 @@ import("//build/test.gni")
 module_output_path = "graphic/2d_graphics"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("PathInterpolateFuzzTest") {
+ohos_fuzztest("Camera3dFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//foundation/graphic/graphic_2d/rosen/test/2d_graphics/fuzztest/pathinterpolate_fuzzer"
+  fuzz_config_file = "//foundation/graphic/graphic_2d/rosen/test/2d_graphics/fuzztest/utils/camera3d_fuzzer"
 
-  sources = [ "pathinterpolate_fuzzer.cpp" ]
+  sources = [ "camera3d_fuzzer.cpp" ]
 
   cflags = [
     "-g",
@@ -47,3 +47,15 @@ ohos_fuzztest("PathInterpolateFuzzTest") {
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+
+  deps += [
+    # deps file
+    ":Camera3dFuzzTest",
+  ]
+}
+###############################################################################

@@ -63,3 +63,7 @@ if (graphic_standard_feature_rs_enable_uni_render) {
 if (graphic_standard_feature_enable_afbc) {
   gpu_defines += [ "RS_ENABLE_AFBC" ]
 }
+
+if (target_os == "ohos" == is_standard_system) {
+  sk_use_hitrace = true
+}

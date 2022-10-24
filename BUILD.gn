@@ -21,6 +21,7 @@ group("default") {
     "frameworks/dumper:gdumper",
     "frameworks/dumper:gdumper.ini",
     "frameworks/dumper:graphic_dumper_server",
+    "rosen/samples/texgine:texgine_sample",
   ]
 
   if (graphic_standard_feature_bootanimation_enable) {

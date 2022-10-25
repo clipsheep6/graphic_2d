@@ -22,6 +22,8 @@
 #include <vsync_generator.h>
 #include <vsync_receiver.h>
 
+#include "utils/log.h"
+
 using namespace OHOS;
 using namespace Rosen;
 using namespace Drawing;

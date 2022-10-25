@@ -20,10 +20,10 @@
 #include "c/drawing_font_collection.h"
 #include "c/drawing_text_declaration.h"
 #include "c/drawing_text_typography.h"
-#include "rosen_text/ui/typography.h"
-#include "rosen_text/ui/typography_create.h"
+#include "rosen_text/typography.h"
+#include "rosen_text/typography_create.h"
 
-using namespace rosen;
+using namespace OHOS::Rosen;
 using namespace testing;
 using namespace testing::ext;
 
@@ -76,17 +76,17 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest003, TestSize.Level
 {
     OH_Drawing_TypographyStyle* typoStyle = OH_Drawing_CreateTypographyStyle();
     OH_Drawing_SetTypographyTextAlign(typoStyle, TEXT_ALIGN_LEFT);
-    EXPECT_EQ(ConvertToOriginalText(typoStyle)->textAlign_, TextAlign::LEFT);
+    EXPECT_EQ(ConvertToOriginalText(typoStyle)->textAlign_, TextAlign::Left);
     OH_Drawing_SetTypographyTextAlign(typoStyle, TEXT_ALIGN_RIGHT);
-    EXPECT_EQ(ConvertToOriginalText(typoStyle)->textAlign_, TextAlign::RIGHT);
+    EXPECT_EQ(ConvertToOriginalText(typoStyle)->textAlign_, TextAlign::Right);
     OH_Drawing_SetTypographyTextAlign(typoStyle, TEXT_ALIGN_CENTER);
-    EXPECT_EQ(ConvertToOriginalText(typoStyle)->textAlign_, TextAlign::CENTER);
+    EXPECT_EQ(ConvertToOriginalText(typoStyle)->textAlign_, TextAlign::Center);
     OH_Drawing_SetTypographyTextAlign(typoStyle, TEXT_ALIGN_JUSTIFY);
-    EXPECT_EQ(ConvertToOriginalText(typoStyle)->textAlign_, TextAlign::JUSTIFY);
+    EXPECT_EQ(ConvertToOriginalText(typoStyle)->textAlign_, TextAlign::Justify);
     OH_Drawing_SetTypographyTextAlign(typoStyle, TEXT_ALIGN_START);
-    EXPECT_EQ(ConvertToOriginalText(typoStyle)->textAlign_, TextAlign::START);
+    EXPECT_EQ(ConvertToOriginalText(typoStyle)->textAlign_, TextAlign::Start);
     OH_Drawing_SetTypographyTextAlign(typoStyle, TEXT_ALIGN_END);
-    EXPECT_EQ(ConvertToOriginalText(typoStyle)->textAlign_, TextAlign::END);
+    EXPECT_EQ(ConvertToOriginalText(typoStyle)->textAlign_, TextAlign::End);
 }
 
 /*
@@ -171,9 +171,9 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest009, TestSize.Level
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     OH_Drawing_SetTextStyleBaseLine(txtStyle, TEXT_BASELINE_ALPHABETIC);
-    EXPECT_EQ(ConvertToOriginalText(txtStyle)->textBaseline_, TextBaseline::ALPHABETIC);
+    EXPECT_EQ(ConvertToOriginalText(txtStyle)->baseline_, TextBaseline::Alphabetic);
     OH_Drawing_SetTextStyleBaseLine(txtStyle, TEXT_BASELINE_IDEOGRAPHIC);
-    EXPECT_EQ(ConvertToOriginalText(txtStyle)->textBaseline_, TextBaseline::IDEOGRAPHIC);
+    EXPECT_EQ(ConvertToOriginalText(txtStyle)->baseline_, TextBaseline::Ideographic);
 }
 
 /*
@@ -217,7 +217,7 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest012, TestSize.Level
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     OH_Drawing_SetTextStyleFontHeight(txtStyle, 0.0);
-    EXPECT_EQ(ConvertToOriginalText(txtStyle)->height_, 0.0);
+    EXPECT_EQ(ConvertToOriginalText(txtStyle)->heightScale_, 0.0);
 }
 
 /*
@@ -243,9 +243,9 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest014, TestSize.Level
 {
     OH_Drawing_TextStyle* txtStyle = OH_Drawing_CreateTextStyle();
     OH_Drawing_SetTextStyleFontStyle(txtStyle, FONT_STYLE_NORMAL);
-    EXPECT_EQ(ConvertToOriginalText(txtStyle)->fontStyle_, FontStyle::NORMAL);
+    EXPECT_EQ(ConvertToOriginalText(txtStyle)->fontStyle_, FontStyle::Normal);
     OH_Drawing_SetTextStyleFontStyle(txtStyle, FONT_STYLE_ITALIC);
-    EXPECT_EQ(ConvertToOriginalText(txtStyle)->fontStyle_, FontStyle::ITALIC);
+    EXPECT_EQ(ConvertToOriginalText(txtStyle)->fontStyle_, FontStyle::Italic);
 }
 
 /*

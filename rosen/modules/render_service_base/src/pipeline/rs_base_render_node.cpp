@@ -45,8 +45,8 @@ void RSBaseRenderNode::AddChild(SharedPtr child, int index)
     }
 
     disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
-    // A child is not on the tree until its parent is on the tree
     if (isOnTheTree_) {
+    // A child is not on the tree until its parent is on the tree
         child->SetIsOnTheTree(true);
     }
 }

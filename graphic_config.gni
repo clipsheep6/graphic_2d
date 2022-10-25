@@ -20,6 +20,7 @@ declare_args() {
   graphic_standard_feature_wuji_enable = false
   graphic_standard_feature_enable_afbc = false
   graphic_standard_feature_freemem_enable = false
+  sk_use_hitrace = false
 }
 
 if (graphic_standard_feature_ace_enable_gpu) {
@@ -62,4 +63,8 @@ if (graphic_standard_feature_rs_enable_uni_render) {
 
 if (graphic_standard_feature_enable_afbc) {
   gpu_defines += [ "RS_ENABLE_AFBC" ]
+}
+
+if (target_os == "ohos" && target_cpu == "arm" && is_standard_system) {
+  sk_use_hitrace = true
 }

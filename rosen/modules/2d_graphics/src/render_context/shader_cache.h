@@ -16,6 +16,7 @@
 #ifndef OHOS_SHADER_CACHE_H
 #define OHOS_SHADER_CACHE_H
 
+#include <event_handler.h>
 #include <include/gpu/GrContext.h>
 #include <include/gpu/GrContextOptions.h>
 #include <mutex>
@@ -52,12 +53,14 @@ private:
     }
 
     void WriteToDisk();
+    void NewTaskWrite();
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> writerHandler_ = nullptr;
+    mutable std::mutex mutex_;
 
     bool initialized_ = false;
     std::unique_ptr<CacheData> cacheData_;
     std::string filePath_;
     std::vector<uint8_t> idHash_;
-    mutable std::mutex mutex_;
 
     bool savePending_ = false;
     unsigned int saveDelaySeconds_ = 3;

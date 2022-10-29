@@ -448,8 +448,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             CalcDirtyDisplayRegion(displayNodePtr);
         }
         if (isOpDropped_ && dirtySurfaceNodeMap_.empty() && !curDisplayDirtyManager_->IsDirty()) {
-            RS_LOGD("display node is not dirty skip");
-            return;
+            RS_LOGD("Force vsync");
         }
 #endif
         auto rsSurface = node.GetRSSurface();

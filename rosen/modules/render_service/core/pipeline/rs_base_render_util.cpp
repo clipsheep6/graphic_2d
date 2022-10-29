@@ -1150,7 +1150,7 @@ bool RSBaseRenderUtil::WriteSurfaceRenderNodeToPng(const RSSurfaceRenderNode& no
     WriteToPngParam param;
     param.width = static_cast<uint32_t>(bufferHandle->width);
     param.height = static_cast<uint32_t>(bufferHandle->height);
-    param.data = (uint8_t*)(buffer->GetVirAddr());
+    param.data = static_cast<uint8_t *>(buffer->GetVirAddr());
     param.stride = static_cast<uint32_t>(bufferHandle->stride);
     param.bitDepth = Detail::BITMAP_DEPTH;
 

@@ -66,7 +66,7 @@ void Init(std::shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
 class MyData : public RSAnimatableArithmetic<MyData> {
 public:
     MyData() : data(0.f) {}
-    MyData(const float num) : data(num) {}
+    explicit MyData(const float num) : data(num) {}
     virtual ~MyData() = default;
 
     MyData Add(const MyData& value) const override
@@ -94,7 +94,7 @@ public:
 
 class MyModifier : public RSOverlayStyleModifier<RSAnimatableProperty<MyData>> {
 public:
-    MyModifier(const std::shared_ptr<RSAnimatableProperty<MyData>> property)
+    explicit MyModifier(const std::shared_ptr<RSAnimatableProperty<MyData>> property)
         : RSOverlayStyleModifier<RSAnimatableProperty<MyData>>(property) {}
     virtual ~MyModifier() = default;
     void Draw(RSDrawingContext& context) const override

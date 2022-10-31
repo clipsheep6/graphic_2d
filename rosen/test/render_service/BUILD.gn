@@ -34,6 +34,8 @@ group("test") {
     "render_service_client/fuzztest/rsnodemap_fuzzer:fuzztest",
     "render_service_client/fuzztest/ui/rsnode_fuzzer:fuzztest",
     "render_service_client/fuzztest/ui/rsuisurface_fuzzer:fuzztest",
+    "render_service_client/fuzztest/rspropertyclient_fuzzer:fuzztest",
+    "render_service_client/fuzztest/rsmodifiermanager_fuzzer:fuzztest",
     "render_service_client/systemtest/ui:systemtest",
     "render_service_client/unittest/transaction:unittest",
     "render_service_client/unittest/ui:unittest",

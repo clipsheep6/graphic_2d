@@ -25,13 +25,6 @@ namespace OHOS {
 namespace Rosen {
 #ifdef ROSEN_OHOS
 namespace {
-enum RSTransitionEffectType : uint16_t {
-    FADE = 1,
-    SCALE,
-    TRANSLATE,
-    ROTATE,
-    UNDEFINED,
-};
 constexpr int PID_SHIFT = 32;
 
 PropertyId GenerateTransitionPropertyId()
@@ -97,7 +90,8 @@ RSRenderTransitionEffect* RSTransitionFade::Unmarshalling(Parcel& parcel)
 bool RSTransitionScale::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteUint16(RSTransitionEffectType::SCALE) && parcel.WriteFloat(scaleX_) &&
-           parcel.WriteFloat(scaleY_) && parcel.WriteFloat(scaleZ_);
+           parcel.WriteFloat(scaleY_) && parcel.WriteFloat(scaleZ_) &&
+           parcel.WriteFloat(pivotX_) && parcel.WriteFloat(pivotY_);
 }
 
 RSRenderTransitionEffect* RSTransitionScale::Unmarshalling(Parcel& parcel)
@@ -105,11 +99,14 @@ RSRenderTransitionEffect* RSTransitionScale::Unmarshalling(Parcel& parcel)
     float scaleX;
     float scaleY;
     float scaleZ;
-    if (!parcel.ReadFloat(scaleX) || !parcel.ReadFloat(scaleY) || !parcel.ReadFloat(scaleZ)) {
+    float pivotX;
+    float pivotY;
+    if (!parcel.ReadFloat(scaleX) || !parcel.ReadFloat(scaleY) || !parcel.ReadFloat(scaleZ) ||
+        !parcel.ReadFloat(pivotX) || !parcel.ReadFloat(pivotY)) {
         ROSEN_LOGE("RSTransitionScale::Unmarshalling, unmarshalling failed");
         return nullptr;
     }
-    return new RSTransitionScale(scaleX, scaleY, scaleZ);
+    return new RSTransitionScale(scaleX, scaleY, scaleZ, pivotX, pivotY);
 }
 
 bool RSTransitionTranslate::Marshalling(Parcel& parcel) const
@@ -133,21 +130,24 @@ RSRenderTransitionEffect* RSTransitionTranslate::Unmarshalling(Parcel& parcel)
 bool RSTransitionRotate::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteUint16(RSTransitionEffectType::ROTATE) && parcel.WriteFloat(dx_) && parcel.WriteFloat(dy_) &&
-           parcel.WriteFloat(dz_) && parcel.WriteFloat(radian_);
+           parcel.WriteFloat(dz_) && parcel.WriteFloat(radian_) &&
+           parcel.WriteFloat(pivotX_) && parcel.WriteFloat(pivotY_);
 }
 
 RSRenderTransitionEffect* RSTransitionRotate::Unmarshalling(Parcel& parcel)
 {
-    Quaternion quaternion;
     float dx;
     float dy;
     float dz;
     float radian;
-    if (!parcel.ReadFloat(dx) || !parcel.ReadFloat(dy) || !parcel.ReadFloat(dz) || !parcel.ReadFloat(radian)) {
+    float pivotX;
+    float pivotY;
+    if (!parcel.ReadFloat(dx) || !parcel.ReadFloat(dy) || !parcel.ReadFloat(dz) || !parcel.ReadFloat(radian) ||
+        !parcel.ReadFloat(pivotX) || !parcel.ReadFloat(pivotY)) {
         ROSEN_LOGE("RSTransitionRotate::Unmarshalling, unmarshalling failed");
         return nullptr;
     }
-    return new RSTransitionRotate(dx, dy, dz, radian);
+    return new RSTransitionRotate(dx, dy, dz, radian, pivotX, pivotY);
 }
 #endif
 
@@ -166,6 +166,16 @@ void RSTransitionFade::UpdateFraction(float fraction) const
     float endValue(alpha_);
     auto value = startValue * (1.0f - fraction) + endValue * fraction;
     property_->Set(value);
+}
+
+const std::shared_ptr<RSRenderModifier>& RSTransitionScale::GetPivotModifier()
+{
+    if (pivotModifier_ == nullptr) {
+        pivot_ = std::make_shared<RSRenderAnimatableProperty<Vector2f>>(
+            Vector2f { pivotX_, pivotY_ }, GenerateTransitionPropertyId());
+        pivotModifier_ = std::make_shared<RSPivotRenderModifier>(pivot_);
+    }
+    return pivotModifier_;
 }
 
 const std::shared_ptr<RSRenderModifier> RSTransitionScale::CreateModifier()
@@ -202,6 +212,16 @@ void RSTransitionTranslate::UpdateFraction(float fraction) const
     Vector2f endValue(translateX_, translateY_);
     auto value = startValue * (1.0f - fraction) + endValue * fraction;
     property_->Set(value);
+}
+
+const std::shared_ptr<RSRenderModifier>& RSTransitionRotate::GetPivotModifier()
+{
+    if (pivotModifier_ == nullptr) {
+        pivot_ = std::make_shared<RSRenderAnimatableProperty<Vector2f>>(
+            Vector2f { pivotX_, pivotY_ }, GenerateTransitionPropertyId());
+        pivotModifier_ = std::make_shared<RSPivotRenderModifier>(pivot_);
+    }
+    return pivotModifier_;
 }
 
 const std::shared_ptr<RSRenderModifier> RSTransitionRotate::CreateModifier()

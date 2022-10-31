@@ -46,13 +46,13 @@ std::shared_ptr<RSTransitionEffect> RSTransitionEffect::Opacity(float opacity)
     return shared_from_this();
 }
 
-std::shared_ptr<RSTransitionEffect> RSTransitionEffect::Scale(const Vector3f& scale)
+std::shared_ptr<RSTransitionEffect> RSTransitionEffect::Scale(const Vector3f& scale, const Vector2f& pivot)
 {
     if (scale.x_ == 1.0f && scale.y_ == 1.0f && scale.z_ == 1.0f) {
         ROSEN_LOGI("RSTransitionEffect::Scale: Skip empty transition effect");
         return shared_from_this();
     }
-    auto scaleEffect = std::make_shared<RSTransitionScale>(scale.x_, scale.y_, scale.z_);
+    auto scaleEffect = std::make_shared<RSTransitionScale>(scale.x_, scale.y_, scale.z_, pivot.x_, pivot.y_);
     transitionInEffects_.push_back(scaleEffect);
     transitionOutEffects_.push_back(scaleEffect);
     return shared_from_this();
@@ -70,14 +70,15 @@ std::shared_ptr<RSTransitionEffect> RSTransitionEffect::Translate(const Vector3f
     return shared_from_this();
 }
 
-std::shared_ptr<RSTransitionEffect> RSTransitionEffect::Rotate(const Vector4f& axisAngle)
+std::shared_ptr<RSTransitionEffect> RSTransitionEffect::Rotate(const Vector4f& axisAngle, const Vector2f& pivot)
 {
     if (axisAngle.w_ == 0.0f) {
         ROSEN_LOGI("RSTransitionEffect::Rotate: Skip empty transition effect");
         return shared_from_this();
     }
     auto angleRadian = axisAngle.w_ * DEGREE_TO_RADIAN;
-    auto rotateEffect = std::make_shared<RSTransitionRotate>(axisAngle.x_, axisAngle.y_, axisAngle.z_, angleRadian);
+    auto rotateEffect = std::make_shared<RSTransitionRotate>(axisAngle.x_, axisAngle.y_, axisAngle.z_, angleRadian,
+                                                             pivot.x_, pivot.y_);
     transitionInEffects_.push_back(rotateEffect);
     transitionOutEffects_.push_back(rotateEffect);
     return shared_from_this();

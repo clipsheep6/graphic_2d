@@ -62,8 +62,12 @@ public:
             return;
         }
         auto modifier = node->GetModifier(id);
-        if (modifier != nullptr) {
-            modifier->Update(prop, isDelta, updateFinal);
+        if (modifier) {
+            if (updateFinal) {
+                modifier->UpdateFinal(prop, isDelta);
+                return;
+            }
+            modifier->Update(prop, isDelta);
         }
     }
 };

@@ -154,12 +154,5 @@ void RSRenderPropertyAnimation::OnRemoveOnCompletion()
 
     SetPropertyValue(backwardValue);
 }
-
-void RSRenderPropertyAnimation::SetPropertyOnAllAnimationFinish()
-{
-    if (property_ != nullptr) {
-        property_->UpdateFinalOnAllAnimationFinish();
-    }
-}
 } // namespace Rosen
 } // namespace OHOS

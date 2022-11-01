@@ -71,8 +71,6 @@ protected:
 
     void InitValueEstimator() override;
 
-    void SetPropertyOnAllAnimationFinish() override {}
-
 private:
 #ifdef ROSEN_OHOS
     bool ParseParam(Parcel& parcel) override;

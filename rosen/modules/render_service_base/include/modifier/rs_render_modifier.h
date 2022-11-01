@@ -55,7 +55,6 @@ public:
     virtual std::shared_ptr<RSRenderPropertyBase> GetProperty() = 0;
     virtual RSModifierType GetType() = 0;
     virtual void Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) = 0;
-    virtual void UpdateFinal(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) = 0;
 
     virtual bool Marshalling(Parcel& parcel) = 0;
     static RSRenderModifier* Unmarshalling(Parcel& parcel);
@@ -70,7 +69,6 @@ public:
     void Apply(RSModifierContext& context) override;
     void Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) override;
     bool Marshalling(Parcel& parcel) override;
-    void UpdateFinal(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) override {}
 
     virtual PropertyId GetPropertyId() override
     {
@@ -141,7 +139,6 @@ protected:
         virtual ~RS##MODIFIER_NAME##RenderModifier() = default;                                          \
         void Apply(RSModifierContext& context) override;                                                 \
         void Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) override;           \
-        void UpdateFinal(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) override;      \
         bool Marshalling(Parcel& parcel) override;                                                       \
         RSModifierType GetType() override                                                                \
         {                                                                                                \

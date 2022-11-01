@@ -61,9 +61,7 @@ protected:
 
     virtual void InitValueEstimator() {}
 
-    void MarkAddAnimationToProperty() override;
-
-    void MarkRemoveAnimationToProperty() override;
+    void SetPropertyOnAllAnimationFinish() override;
 
 protected:
     PropertyId propertyId_;

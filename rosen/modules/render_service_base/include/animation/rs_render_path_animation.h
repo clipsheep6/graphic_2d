@@ -71,11 +71,7 @@ protected:
 
     void InitValueEstimator() override;
 
-    // path animation is different from other animations, no need to set final value again
-    // while all animations finished
-    void MarkAddAnimationToProperty() override {}
-
-    void MarkRemoveAnimationToProperty() override {}
+    void SetPropertyOnAllAnimationFinish() override {}
 
 private:
 #ifdef ROSEN_OHOS

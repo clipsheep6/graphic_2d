@@ -141,9 +141,7 @@ public:
 
     void SetStartTime(int64_t);
 
-    virtual void MarkAddAnimationToProperty() {}
-
-    virtual void MarkRemoveAnimationToProperty() {}
+    virtual void SetPropertyOnAllAnimationFinish() {}
 
 protected:
     explicit RSRenderAnimation(AnimationId id);

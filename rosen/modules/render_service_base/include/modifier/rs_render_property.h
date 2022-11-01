@@ -78,9 +78,7 @@ protected:
         return nullptr;
     }
 
-    virtual void MarkAddAnimation() {}
-
-    virtual void MarkRemoveAnimation() {}
+    virtual void UpdateFinalOnAllAnimationFinish() {}
 
     PropertyId id_;
     std::weak_ptr<RSBaseRenderNode> node_;
@@ -209,18 +207,9 @@ protected:
         return 1.f;
     }
 
-    virtual void MarkAddAnimation() override
+    void UpdateFinalOnAllAnimationFinish() override
     {
-        animationNum_++;
-    }
-
-    virtual void MarkRemoveAnimation() override
-    {
-        animationNum_--;
-        // update property value again while all animations finished
-        if (animationNum_ == 0) {
-            RSRenderProperty<T>::Set(finalValue_);
-        }
+        RSRenderProperty<T>::Set(finalValue_);
     }
 
     std::shared_ptr<RSValueEstimator> CreateRSValueEstimator(const RSValueEstimatorType type) override
@@ -241,7 +230,6 @@ protected:
 private:
     RSRenderPropertyType type_ = RSRenderPropertyType::INVALID;
     T finalValue_;
-    int animationNum_ { 0 };
 
     std::shared_ptr<RSRenderPropertyBase> Add(const std::shared_ptr<const RSRenderPropertyBase>& value) override
     {

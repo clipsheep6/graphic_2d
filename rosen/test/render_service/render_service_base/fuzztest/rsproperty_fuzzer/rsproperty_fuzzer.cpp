@@ -145,6 +145,42 @@ void RSPropertiesFuzzTestInner02(RSProperties& properties)
     float sy = GetData<float>();
     float alpha = GetData<float>();
     bool alphaOffscreen = GetData<bool>();
+    float width = GetData<float>();
+    float height = GetData<float>();
+    float positionX = GetData<float>();
+    float positionY = GetData<float>();
+
+    properties.SetQuaternion(quaternion);
+    properties.SetRotation(degree);
+    properties.SetRotationX(degree);
+    properties.SetRotationY(degree);
+    properties.SetTranslate(translateVector);
+    properties.SetTranslateX(translate);
+    properties.SetTranslateY(translate);
+    properties.SetTranslateZ(translate);
+    properties.SetScale(scale);
+    properties.SetScaleX(sx);
+    properties.SetScaleY(sy);
+    properties.SetAlpha(alpha);
+    properties.SetAlphaOffscreen(alphaOffscreen);
+    properties.SetBgImageWidth(width);
+    properties.SetBgImageHeight(height);
+    properties.SetBgImagePositionX(positionX);
+    properties.SetBgImagePositionY(positionY);
+}
+
+void RSPropertiesFuzzTestInner03(RSProperties& properties)
+{
+    float x10 = GetData<float>();
+    float y10 = GetData<float>();
+    float z10 = GetData<float>();
+    float w10 = GetData<float>();
+    Vector4f widthVector(x10, y10, z10, w10);
+    uint32_t x11 = GetData<float>();
+    uint32_t y11 = GetData<float>();
+    uint32_t z11 = GetData<float>();
+    uint32_t w11 = GetData<float>();
+    Vector4<uint32_t> style(x11, y11, z11, w11);
     int16_t red1 = GetData<int16_t>();
     int16_t green1 = GetData<int16_t>();
     int16_t blue1 = GetData<int16_t>();
@@ -164,47 +200,18 @@ void RSPropertiesFuzzTestInner02(RSProperties& properties)
     int16_t blue4 = GetData<int16_t>();
     Color color4(red4, green4, blue4);
     Vector4<Color> colorVector(color1, color2, color3, color4);
-    float width = GetData<float>();
-    float height = GetData<float>();
-    float positionX = GetData<float>();
-    float positionY = GetData<float>();
 
-    properties.SetQuaternion(quaternion);
-    properties.SetRotation(degree);
-    properties.SetRotationX(degree);
-    properties.SetRotationY(degree);
-    properties.SetTranslate(translateVector);
-    properties.SetTranslateX(translate);
-    properties.SetTranslateY(translate);
-    properties.SetTranslateZ(translate);
-    properties.SetScale(scale);
-    properties.SetScaleX(sx);
-    properties.SetScaleY(sy);
-    properties.SetAlpha(alpha);
-    properties.SetAlphaOffscreen(alphaOffscreen);
+    properties.SetBorderWidth(widthVector);
+    properties.SetBorderStyle(style);
     properties.SetForegroundColor(color1);
     properties.SetBackgroundColor(color2);
     properties.SetBackgroundShader(shader);
     properties.SetBgImage(image);
-    properties.SetBgImageWidth(width);
-    properties.SetBgImageHeight(height);
-    properties.SetBgImagePositionX(positionX);
-    properties.SetBgImagePositionY(positionY);
     properties.SetBorderColor(colorVector);
 }
 
-void RSPropertiesFuzzTestInner03(RSProperties& properties)
+void RSPropertiesFuzzTestInner04(RSProperties& properties)
 {
-    float x10 = GetData<float>();
-    float y10 = GetData<float>();
-    float z10 = GetData<float>();
-    float w10 = GetData<float>();
-    Vector4f widthVector(x10, y10, z10, w10);
-    uint32_t x11 = GetData<float>();
-    uint32_t y11 = GetData<float>();
-    uint32_t z11 = GetData<float>();
-    uint32_t w11 = GetData<float>();
-    Vector4<uint32_t> style(x11, y11, z11, w11);
     float blurRadiusX = GetData<float>();
     float blurRadiusY = GetData<float>();
     std::shared_ptr<RSFilter> backgroundFilter = RSFilter::CreateBlurFilter(blurRadiusX, blurRadiusY);
@@ -230,8 +237,6 @@ void RSPropertiesFuzzTestInner03(RSProperties& properties)
     Color color1(red1, green1, blue1);
     float alpha = GetData<float>();
 
-    properties.SetBorderWidth(widthVector);
-    properties.SetBorderStyle(style);
     properties.SetBackgroundFilter(backgroundFilter);
     properties.SetFilter(filter);
     properties.SetShadowColor(color1);
@@ -265,6 +270,7 @@ bool RSPropertiesFuzzTest(const uint8_t* data, size_t size)
     RSPropertiesFuzzTestInner01(properties);
     RSPropertiesFuzzTestInner02(properties);
     RSPropertiesFuzzTestInner03(properties);
+    RSPropertiesFuzzTestInner04(properties);
 
     return true;
 }

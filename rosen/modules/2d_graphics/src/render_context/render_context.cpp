@@ -266,7 +266,7 @@ bool RenderContext::SetUpGrContext()
     mHandler_ = std::make_shared<MemoryHandler>();
     if (mHandler_ != nullptr) {
         auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-        auto size = glesVersion ? strlen(glesVersion) : -1;
+        auto size = glesVersion ? strlen(glesVersion) : 0;
         if (isUniRenderMode_) {
             cacheDir_ = UNIRENDER_CACHE_DIR;
         }

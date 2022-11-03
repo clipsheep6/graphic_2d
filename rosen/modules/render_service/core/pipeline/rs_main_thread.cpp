@@ -228,7 +228,24 @@ void RSMainThread::SetRSEventDetectorLoopStartTag()
 void RSMainThread::SetRSEventDetectorLoopFinishTag()
 {
     if (rsCompositionTimeoutDetector_ != nullptr) {
-        rsCompositionTimeoutDetector_->SetLoopFinishTag();
+        rsCompositionTimeoutDetector_->SetLoopFinishTag(
+            focusAppUid_, focusAppPid_, focusAppBundleName_, focusAppAbilityName_);
+    }
+}
+
+void RSMainThread::SetFocusAppInfo(
+    int32_t pid, int32_t uid, const std::string &bundleName, const std::string &abilityName)
+{
+    if (IfUseUniVisitor()) {
+        focusAppUid_ = pid;
+        focusAppPid_ = uid;
+        focusAppBundleName_ = bundleName;
+        focusAppAbilityName_ = abilityName;
+    } else {
+        focusAppUid_ = -1;
+        focusAppPid_ = -1;
+        focusAppBundleName_ = "";
+        focusAppAbilityName_ = "";
     }
 }
 

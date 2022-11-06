@@ -308,6 +308,9 @@ Region& Region::SubSelf(Region& r)
 
 Region Region::And(Region& r)
 {
+    if (r.IsEmpty()) {
+        return Region();
+    }
     Region res;
     RegionOp(*this, r, res, Region::OP::AND);
     return res;
@@ -315,6 +318,9 @@ Region Region::And(Region& r)
 
 Region Region::Or(Region& r)
 {
+    if (r.IsEmpty()) {
+        return *this;
+    }
     Region res;
     RegionOp(*this, r, res, Region::OP::OR);
     return res;
@@ -322,6 +328,9 @@ Region Region::Or(Region& r)
 
 Region Region::Xor(Region& r)
 {
+    if (r.IsEmpty()) {
+        return *this;
+    }
     Region res;
     RegionOp(*this, r, res, Region::OP::XOR);
     return res;
@@ -329,6 +338,9 @@ Region Region::Xor(Region& r)
 
 Region Region::Sub(Region& r)
 {
+    if (r.IsEmpty()) {
+        return *this;
+    }
     Region res;
     RegionOp(*this, r, res, Region::OP::SUB);
     return res;

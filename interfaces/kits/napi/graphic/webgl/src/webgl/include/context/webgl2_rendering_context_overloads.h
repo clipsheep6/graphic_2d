@@ -18,6 +18,7 @@
 
 
 #include "GLES3/gl3.h"
+#include "securec.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include "../../../common/napi/n_exporter.h"

@@ -156,9 +156,9 @@ napi_value WebGL2RenderingContextBase::ClearBufferfv(napi_env env, napi_callback
         return nullptr;
     }
     if (type == napi_float32_array) {
-        float* inputFloat = reinterpret_cast<float*>(reinterpret_cast<uint8_t*>(data) + srcOffset);
+        float inputFloat = std::stof(reinterpret_cast<char*>(reinterpret_cast<uint8_t*>(data) + srcOffset));
         glClearBufferfv(static_cast<GLenum>(buffer), static_cast<GLint>(drawbuffer),
-            reinterpret_cast<GLfloat *>(inputFloat));
+            reinterpret_cast<GLfloat *>(&inputFloat));
     }
     LOGI("WebGL2 clearBufferfv typeArray end");
     return nullptr;
@@ -3028,9 +3028,9 @@ napi_value WebGL2RenderingContextBase::Uniform1uiv(napi_env env, napi_callback_i
         return nullptr;
     }
     if (type == napi_float32_array) {
-        float *inputFloat = reinterpret_cast<float*>(reinterpret_cast<uint8_t*>(data) + srcOffset);
+        float inputFloat = std::stof(reinterpret_cast<char*>(reinterpret_cast<uint8_t*>(data) + srcOffset));
         glUniform1uiv(static_cast<GLint>(location), static_cast<GLsizei>(srcLength),
-            reinterpret_cast<GLuint *>(inputFloat));
+            reinterpret_cast<GLuint *>(&inputFloat));
     }
     LOGI("WebGL2 uniform1uiv typeArray end");
     return nullptr;
@@ -3115,9 +3115,9 @@ napi_value WebGL2RenderingContextBase::Uniform2uiv(napi_env env, napi_callback_i
         return nullptr;
     }
     if (type == napi_float32_array) {
-        float *inputFloat = reinterpret_cast<float*>(reinterpret_cast<uint8_t*>(data) + srcOffset);
+        float inputFloat = std::stof(reinterpret_cast<char*>(reinterpret_cast<uint8_t*>(data) + srcOffset));
         glUniform2uiv(static_cast<GLint>(location), static_cast<GLsizei>(srcLength),
-            reinterpret_cast<GLuint *>(inputFloat));
+            reinterpret_cast<GLuint *>(&inputFloat));
     }
     LOGI("WebGL2 uniform2uiv typeArray end");
     return nullptr;
@@ -3202,9 +3202,9 @@ napi_value WebGL2RenderingContextBase::Uniform3uiv(napi_env env, napi_callback_i
         return nullptr;
     }
     if (type == napi_float32_array) {
-        float *inputFloat = reinterpret_cast<float*>(reinterpret_cast<uint8_t*>(data) + srcOffset);
+        float inputFloat = std::stof(reinterpret_cast<char*>(reinterpret_cast<uint8_t*>(data) + srcOffset));
         glUniform3uiv(static_cast<GLint>(location), static_cast<GLsizei>(srcLength),
-            reinterpret_cast<GLuint *>(inputFloat));
+            reinterpret_cast<GLuint *>(&inputFloat));
     }
     LOGI("WebGL2 uniform3uiv typeArray end");
     return nullptr;
@@ -3289,9 +3289,9 @@ napi_value WebGL2RenderingContextBase::Uniform4uiv(napi_env env, napi_callback_i
         return nullptr;
     }
     if (type == napi_float32_array) {
-        float *inputFloat = reinterpret_cast<float*>(reinterpret_cast<uint8_t*>(data) + srcOffset);
+        float inputFloat = std::stof(reinterpret_cast<char*>(reinterpret_cast<uint8_t*>(data) + srcOffset));
         glUniform4uiv(static_cast<GLint>(location), static_cast<GLsizei>(srcLength),
-            reinterpret_cast<GLuint *>(inputFloat));
+            reinterpret_cast<GLuint *>(&inputFloat));
     }
     LOGI("WebGL2 uniform4uiv typeArray end");
     return nullptr;
@@ -3383,9 +3383,9 @@ napi_value WebGL2RenderingContextBase::UniformMatrix3x2fv(napi_env env, napi_cal
         return nullptr;
     }
     if (type == napi_float32_array) {
-        float *inputFloat = reinterpret_cast<float*>(reinterpret_cast<uint8_t*>(data) + srcOffset);
+        float inputFloat = std::stof(reinterpret_cast<char*>(reinterpret_cast<uint8_t*>(data) + srcOffset));
         glUniformMatrix3x2fv(static_cast<GLuint>(location), static_cast<GLsizei>(srcLength),
-            static_cast<GLboolean>(transpose), reinterpret_cast<GLfloat*>(inputFloat));
+            static_cast<GLboolean>(transpose), reinterpret_cast<GLfloat*>(&inputFloat));
     }
     LOGI("WebGL2 uniformMatrix3x2fv typeArray end");
     return nullptr;
@@ -3477,9 +3477,9 @@ napi_value WebGL2RenderingContextBase::UniformMatrix4x2fv(napi_env env, napi_cal
         return nullptr;
     }
     if (type == napi_float32_array) {
-        float *inputFloat = reinterpret_cast<float*>(reinterpret_cast<uint8_t*>(data) + srcOffset);
+        float inputFloat = std::stof(reinterpret_cast<char*>(reinterpret_cast<uint8_t*>(data) + srcOffset));
         glUniformMatrix4x2fv(static_cast<GLuint>(location), static_cast<GLsizei>(srcLength),
-            static_cast<GLboolean>(transpose), reinterpret_cast<GLfloat*>(inputFloat));
+            static_cast<GLboolean>(transpose), reinterpret_cast<GLfloat*>(&inputFloat));
     }
     LOGI("WebGL2 uniformMatrix4x2fv typeArray end");
     return nullptr;
@@ -3571,9 +3571,9 @@ napi_value WebGL2RenderingContextBase::UniformMatrix2x3fv(napi_env env, napi_cal
         return nullptr;
     }
     if (type == napi_float32_array) {
-        float *inputFloat = reinterpret_cast<float*>(reinterpret_cast<uint8_t*>(data) + srcOffset);
+        float inputFloat = std::stof(reinterpret_cast<char*>(reinterpret_cast<uint8_t*>(data) + srcOffset));
         glUniformMatrix2x3fv(static_cast<GLuint>(location), static_cast<GLsizei>(srcLength),
-            static_cast<GLboolean>(transpose), reinterpret_cast<GLfloat*>(inputFloat));
+            static_cast<GLboolean>(transpose), reinterpret_cast<GLfloat*>(&inputFloat));
     }
     LOGI("WebGL2 uniformMatrix2x3fv typeArray end");
     return nullptr;
@@ -3664,9 +3664,9 @@ napi_value WebGL2RenderingContextBase::UniformMatrix4x3fv(napi_env env, napi_cal
         return nullptr;
     }
     if (type == napi_float32_array) {
-        float *inputFloat = reinterpret_cast<float*>(reinterpret_cast<uint8_t*>(data) + srcOffset);
+        float inputFloat = std::stof(reinterpret_cast<char*>(reinterpret_cast<uint8_t*>(data) + srcOffset));
         glUniformMatrix4x3fv(static_cast<GLuint>(location), static_cast<GLsizei>(srcLength),
-            static_cast<GLboolean>(transpose), reinterpret_cast<GLfloat*>(inputFloat));
+            static_cast<GLboolean>(transpose), reinterpret_cast<GLfloat*>(&inputFloat));
     }
     LOGI("WebGL2 uniformMatrix4x3fv typeArray end");
     return nullptr;
@@ -3758,9 +3758,9 @@ napi_value WebGL2RenderingContextBase::UniformMatrix2x4fv(napi_env env, napi_cal
         return nullptr;
     }
     if (type == napi_float32_array) {
-        float *inputFloat = reinterpret_cast<float*>(reinterpret_cast<uint8_t*>(data) + srcOffset);
+        float inputFloat = std::stof(reinterpret_cast<char*>(reinterpret_cast<uint8_t*>(data) + srcOffset));
         glUniformMatrix2x4fv(static_cast<GLuint>(location), static_cast<GLsizei>(srcLength),
-            static_cast<GLboolean>(transpose), reinterpret_cast<GLfloat*>(inputFloat));
+            static_cast<GLboolean>(transpose), reinterpret_cast<GLfloat*>(&inputFloat));
     }
     LOGI("WebGL2 uniformMatrix2x4fv typeArray end");
     return nullptr;
@@ -3851,9 +3851,9 @@ napi_value WebGL2RenderingContextBase::UniformMatrix3x4fv(napi_env env, napi_cal
         return nullptr;
     }
     if (type == napi_float32_array) {
-        float *inputFloat = reinterpret_cast<float*>(reinterpret_cast<uint8_t*>(data) + srcOffset);
+        float inputFloat = std::stof(reinterpret_cast<char*>(reinterpret_cast<uint8_t*>(data) + srcOffset));
         glUniformMatrix3x4fv(static_cast<GLuint>(location), static_cast<GLsizei>(srcLength),
-            static_cast<GLboolean>(transpose), reinterpret_cast<GLfloat*>(inputFloat));
+            static_cast<GLboolean>(transpose), reinterpret_cast<GLfloat*>(&inputFloat));
     }
     LOGI("WebGL2 uniformMatrix3x4fv typeArray end");
     return nullptr;
@@ -3916,7 +3916,7 @@ napi_value WebGL2RenderingContextBase::VertexAttribI4iv(napi_env env, napi_callb
         return nullptr;
     }
     if (type == napi_float32_array) {
-        float *inputFloat = reinterpret_cast<float*>(reinterpret_cast<uint8_t*>(data));
+        float *inputFloat = reinterpret_cast<float*>(data);
         glVertexAttribI4iv(static_cast<GLuint>(index), reinterpret_cast<GLint *>(inputFloat));
     }
     LOGI("WebGL2 vertexAttribI4iv typeArray end");

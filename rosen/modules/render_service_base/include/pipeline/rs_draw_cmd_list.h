@@ -77,10 +77,10 @@ public:
 
     void MarkForceClear(bool flag);
 
-private:
     DrawCmdListManager() = default;
     ~DrawCmdListManager() = default;
 
+private:
     DrawCmdListManager(const DrawCmdListManager&) = delete;
     DrawCmdListManager(const DrawCmdListManager&&) = delete;
     DrawCmdListManager& operator=(const DrawCmdListManager&) = delete;
@@ -88,6 +88,7 @@ private:
 
     std::atomic_bool forceClear_ = true;
 
+    std::mutex listsMutex_;
     std::unordered_map<NodeId, std::vector<std::weak_ptr<DrawCmdList>>> lists_;
 };
 } // namespace Rosen

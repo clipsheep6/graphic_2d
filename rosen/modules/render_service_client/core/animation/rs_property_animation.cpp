@@ -129,6 +129,8 @@ void RSPropertyAnimation::OnUpdateStagingValue(bool isFirstStart)
     SetPropertyValue(targetValue);
 }
 
+
+
 void RSPropertyAnimation::StartCustomPropertyAnimation(const std::shared_ptr<RSRenderAnimation>& animation)
 {
     auto target = GetTarget().lock();

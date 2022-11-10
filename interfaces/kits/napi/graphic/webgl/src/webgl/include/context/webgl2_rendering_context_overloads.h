@@ -18,6 +18,7 @@
 
 
 #include "GLES3/gl3.h"
+#include "securec.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include "../../../common/napi/n_exporter.h"
@@ -25,6 +26,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define INPUTFLOAT_LENGTH 128
 
 namespace OHOS {
 namespace Rosen {

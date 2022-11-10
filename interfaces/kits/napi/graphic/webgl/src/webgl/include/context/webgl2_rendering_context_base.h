@@ -17,6 +17,7 @@
 #define ROSENRENDER_ROSEN_WEBGL2_RENDERING_CONTEXT_BASE
 
 #include "webgl_rendering_context_basic_base.h"
+#include "securec.h"
 #include <GLES3/gl3.h>
 #include <map>
 #include "../../../common/napi/n_exporter.h"
@@ -24,6 +25,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define INPUTFLOAT_LENGTH 128
 
 namespace OHOS {
 namespace Rosen {

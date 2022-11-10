@@ -207,10 +207,12 @@ DrawCmdList* DrawCmdList::Unmarshalling(Parcel& parcel)
 }
 #endif
 
+// modify the DrawCmdListManager instance to global to extend life cycle, fix destructor crash
+static DrawCmdListManager gDrawCmdListManagerInstance;
+
 DrawCmdListManager& DrawCmdListManager::Instance()
 {
-    static DrawCmdListManager instance;
-    return instance;
+    return gDrawCmdListManagerInstance;
 }
 
 void DrawCmdListManager::RegisterDrawCmdList(NodeId id, std::shared_ptr<DrawCmdList> drawCmdList)

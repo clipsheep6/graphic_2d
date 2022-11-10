@@ -77,10 +77,10 @@ public:
 
     void MarkForceClear(bool flag);
 
-private:
     DrawCmdListManager() = default;
     ~DrawCmdListManager() = default;
 
+private:
     DrawCmdListManager(const DrawCmdListManager&) = delete;
     DrawCmdListManager(const DrawCmdListManager&&) = delete;
     DrawCmdListManager& operator=(const DrawCmdListManager&) = delete;

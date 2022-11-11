@@ -40,7 +40,7 @@ private:
         double height = 0;
     };
 
-    void DrawFPSLine(SkCanvas &canvas, uint32_t fps, double thickness, uint32_t color);
+    void DrawFPSLine(SkCanvas &canvas, uint32_t normalFps, uint32_t heightPerMs);
     std::vector<struct TimeBar> GenerateTimeBars(uint32_t width, uint32_t height, uint32_t fps);
     double SumTimesInMs(const struct FrameInfo &info);
 

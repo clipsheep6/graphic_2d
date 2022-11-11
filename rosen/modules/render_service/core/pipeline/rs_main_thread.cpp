@@ -22,6 +22,7 @@
 #include "command/rs_message_processor.h"
 #include "delegate/rs_functional_delegate.h"
 #include "overdraw/rs_overdraw_controller.h"
+#include "frame_collector.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_divided_render_util.h"
@@ -190,6 +191,8 @@ void RSMainThread::Init()
     if (isUniRender_) {
         config.SubscribeConfigObserver(CONFIG_ID::CONFIG_HIGH_CONTRAST_TEXT, accessibilityObserver_);
     }
+
+    FrameCollector::GetInstance().SetRepaintCallback([this]() { this->RequestNextVSync(); });
 
     auto delegate = RSFunctionalDelegate::Create();
     delegate->SetRepaintCallback([]() { RSMainThread::Instance()->RequestNextVSync(); });

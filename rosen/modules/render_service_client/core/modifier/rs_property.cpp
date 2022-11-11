@@ -16,6 +16,7 @@
 #include "modifier/rs_property.h"
 
 #include "command/rs_node_command.h"
+#include "modifier/rs_modifier.h"
 #include "sandbox_utils.h"
 
 namespace OHOS {
@@ -40,6 +41,21 @@ PropertyId GeneratePropertyId()
 
 RSPropertyBase::RSPropertyBase() : id_(GeneratePropertyId())
 {}
+
+void RSPropertyBase::MarkModifierDirty()
+{
+    auto modifier = modifier_.lock();
+    if (modifier != nullptr) {
+        modifier->SetDirty(true);
+    }
+}
+
+void RSPropertyBase::UpdateExtendModifierForGeometry(const std::shared_ptr<RSNode>& node)
+{
+    if (type_ == RSModifierType::BOUNDS || type_ == RSModifierType::FRAME) {
+        node->MarkAllExtendModifierDirty();
+    }
+}
 
 std::shared_ptr<RSPropertyBase> operator+=(const std::shared_ptr<RSPropertyBase>& a,
     const std::shared_ptr<const RSPropertyBase>& b)
@@ -131,12 +147,6 @@ bool operator!=(const std::shared_ptr<const RSPropertyBase>& a, const std::share
                 std::unique_ptr<RSCommand> commandForRemote =                                                         \
                     std::make_unique<Command>(node->GetId(), value, id_, isDelta);                                    \
                 transactionProxy->AddCommand(commandForRemote, true, node->GetFollowType(), node->GetId());           \
-            }                                                                                                         \
-            if (node->NeedSendExtraCommand()) {                                                                       \
-                std::unique_ptr<RSCommand> extraCommand =                                                             \
-                    std::make_unique<Command>(node->GetId(), value, id_, isDelta);                                    \
-                transactionProxy->AddCommand(extraCommand, !node->IsRenderServiceNode(),                              \
-                    node->GetFollowType(), node->GetId());                                                            \
             }                                                                                                         \
             if (forceUpdate) {                                                                                        \
                 transactionProxy->Commit();                                                                           \

@@ -15,13 +15,15 @@
 
 #include "platform/common/rs_system_properties.h"
 
+#include <cstdlib>
 #include <parameters.h>
 #include "platform/common/rs_log.h"
 #include "transaction/rs_render_service_client.h"
 
 namespace OHOS {
 namespace Rosen {
-static void ParseDfxSurfaceNamesString(const std::string& paramsStr, std::vector<std::string>& splitStrs, const std::string& seperator)
+static void ParseDfxSurfaceNamesString(const std::string& paramsStr,
+    std::vector<std::string>& splitStrs, const std::string& seperator)
 {
     std::string::size_type pos1 = 0;
     std::string::size_type pos2 = paramsStr.find(seperator);
@@ -49,7 +51,6 @@ bool RSSystemProperties::GetUniRenderEnabled()
 
     isUniRenderEnabled_ = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
         ->GetUniRenderEnabled();
-    isUniRenderMode_ = isUniRenderEnabled_;
     inited = true;
     ROSEN_LOGI("RSSystemProperties::GetUniRenderEnabled:%d", isUniRenderEnabled_);
     return isUniRenderEnabled_;
@@ -59,16 +60,6 @@ bool RSSystemProperties::GetRenderNodeTraceEnabled()
 {
     static bool isNeedTrace = system::GetParameter("persist.rosen.rendernodetrace.enabled", "0") != "0";
     return isNeedTrace;
-}
-
-bool RSSystemProperties::IsUniRenderMode()
-{
-    return isUniRenderMode_;
-}
-
-void RSSystemProperties::SetRenderMode(bool isUni)
-{
-    isUniRenderMode_ = isUni;
 }
 
 DirtyRegionDebugType RSSystemProperties::GetDirtyRegionDebugType()
@@ -89,9 +80,20 @@ PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
         std::atoi((system::GetParameter("rosen.uni.partialrender.enabled", "4")).c_str()));
 }
 
+ContainerWindowConfigType RSSystemProperties::GetContainerWindowConfig()
+{
+    return static_cast<ContainerWindowConfigType>(
+        std::atoi((system::GetParameter("rosen.uni.containerwindowconfig", "2")).c_str()));
+}
+
 bool RSSystemProperties::GetOcclusionEnabled()
 {
     return std::atoi((system::GetParameter("rosen.occlusion.enabled", "1")).c_str()) != 0;
+}
+
+bool RSSystemProperties::GetQuickSkipPrepareEnabled()
+{
+    return system::GetParameter("rosen.quickskipprepare.enabled", "1") != "0";
 }
 
 std::string RSSystemProperties::GetRSEventProperty(const std::string &paraName)
@@ -156,5 +158,18 @@ bool RSSystemProperties::GetDrawTextAsBitmap()
 {
     return isDrawTextAsBitmap_;
 }
+
+ParallelRenderingType RSSystemProperties::GetPrepareParallelRenderingEnabled()
+{
+    return static_cast<ParallelRenderingType>(
+        std::atoi((system::GetParameter("rosen.prepareparallelrender.enabled", "1")).c_str()));
+}
+
+ParallelRenderingType RSSystemProperties::GetParallelRenderingEnabled()
+{
+    return static_cast<ParallelRenderingType>(
+        std::atoi((system::GetParameter("rosen.parallelrender.enabled", "0")).c_str()));
+}
+
 } // namespace Rosen
 } // namespace OHOS

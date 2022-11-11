@@ -30,7 +30,8 @@
         "graphic_standard_feature_rs_enable_uni_render",
         "graphic_standard_feature_wuji_enable",
         "graphic_standard_feature_enable_afbc",
-        "graphic_standard_feature_freemem_enable"
+        "graphic_standard_feature_freemem_enable",
+        "graphic_standard_feature_parallel_render_enable"
       ],
       "rom": "10000KB",
       "ram": "10000KB",
@@ -76,7 +77,8 @@
           "service_group": [
             "//foundation/graphic/graphic_2d:default",
             "//foundation/graphic/graphic_2d/rosen/modules/render_service:librender_service",
-            "//foundation/graphic/graphic_2d/rosen/modules/render_service:render_service"
+            "//foundation/graphic/graphic_2d/rosen/modules/render_service:render_service",
+            "//foundation/graphic/graphic_2d/etc:ohos.para.dac"
           ]
       },
         "inner_kits": [
@@ -90,6 +92,7 @@
                 "egl_surface.h",
                 "external_window.h",
                 "native_buffer.h",
+                "native_buffer_inner.h",
                 "native_image.h",
                 "ibuffer_consumer_listener.h",
                 "ibuffer_producer.h",
@@ -144,7 +147,8 @@
           "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:test",
           "//foundation/graphic/graphic_2d/rosen/test/2d_graphics:test",
           "//foundation/graphic/graphic_2d/rosen/modules/animation/window_animation/test:test",
-          "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/test:test"
+          "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/test:test",
+          "//foundation/graphic/graphic_2d/rosen/test/2d_engine:test"
         ]
       }
     }

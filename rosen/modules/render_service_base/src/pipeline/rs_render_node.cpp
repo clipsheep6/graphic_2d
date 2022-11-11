@@ -65,12 +65,25 @@ void RSRenderNode::FallbackAnimationsToRoot()
     }
 }
 
-bool RSRenderNode::Animate(int64_t timestamp)
+std::pair<bool, bool> RSRenderNode::Animate(int64_t timestamp)
 {
-    return animationManager_.Animate(timestamp);
+    return animationManager_.Animate(timestamp, IsOnTheTree());
+}
+
+bool RSRenderNode::Update(
+    RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, RectI clipRect)
+{
+    return Update(dirtyManager, parent, parentDirty, true, clipRect);
 }
 
 bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty)
+{
+    RectI clipRect{0, 0, 0, 0};
+    return Update(dirtyManager, parent, parentDirty, false, clipRect);
+}
+
+bool RSRenderNode::Update(
+    RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, bool needClip, RectI clipRect)
 {
     // no need to update invisible nodes
     if (!ShouldPaint() && !isLastVisible_) {
@@ -81,7 +94,7 @@ bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties
         Vector2f { 0.f, 0.f } : Vector2f { parent->GetFrameOffsetX(), parent->GetFrameOffsetY() };
     bool dirty = renderProperties_.UpdateGeometry(parent, parentDirty, offset);
     isDirtyRegionUpdated_ = false;
-    UpdateDirtyRegion(dirtyManager, dirty);
+    UpdateDirtyRegion(dirtyManager, dirty, needClip, clipRect);
     isLastVisible_ = ShouldPaint();
     renderProperties_.ResetDirty();
     return dirty;
@@ -97,7 +110,8 @@ const RSProperties& RSRenderNode::GetRenderProperties() const
     return renderProperties_;
 }
 
-void RSRenderNode::UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty)
+void RSRenderNode::UpdateDirtyRegion(
+    RSDirtyRegionManager& dirtyManager, bool geoDirty, bool needClip, RectI clipRect)
 {
     if (!IsDirty() && !geoDirty) {
         return;
@@ -123,6 +137,9 @@ void RSRenderNode::UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool ge
             if (!shadowDirty.IsEmpty()) {
                 dirtyRect = dirtyRect.JoinRect(shadowDirty);
             }
+        }
+        if (needClip) {
+            dirtyRect = dirtyRect.IntersectRect(clipRect);
         }
         // filter invalid dirtyrect
         if (!dirtyRect.IsEmpty()) {
@@ -151,6 +168,16 @@ void RSRenderNode::UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEn
     } else {
         RectI intersectRect = dirtyRegion.IntersectRect(dirtyRect);
         isRenderUpdateIgnored_ = intersectRect.IsEmpty();
+    }
+}
+
+void RSRenderNode::UpdateParentChildrenRect(std::shared_ptr<RSBaseRenderNode> parentNode,
+    const bool isCustomized, const RectI subRect) const
+{
+    if (parentNode) {
+        RectI accumulatedRect = GetChildrenRect();
+        accumulatedRect = accumulatedRect.JoinRect((isCustomized ? subRect : renderProperties_.GetDirtyRect()));
+        parentNode->UpdateChildrenRect(accumulatedRect);
     }
 }
 
@@ -322,12 +349,12 @@ void RSRenderNode::FilterModifiersByPid(pid_t pid)
 {
     // remove all modifiers added by given pid (by matching higher 32 bits of node id)
     std::__libcpp_erase_if_container(
-        modifiers_, [pid](const auto& it) -> bool { return static_cast<pid_t>(it.first >> 32) == pid; });
+        modifiers_, [pid](const auto& pair) -> bool { return ExtractPid(pair.first) == pid; });
 
     // remove all modifiers added by given pid (by matching higher 32 bits of node id)
     for (auto& [type, modifiers] : drawCmdModifiers_) {
         modifiers.remove_if(
-            [pid](const auto& it) -> bool { return static_cast<pid_t>(it->GetPropertyId() >> 32) == pid; });
+            [pid](const auto& it) -> bool { return ExtractPid(it->GetPropertyId()) == pid; });
     }
 }
 

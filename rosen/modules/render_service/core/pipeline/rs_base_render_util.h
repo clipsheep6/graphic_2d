@@ -27,6 +27,7 @@
 #include "screen_manager/rs_screen_manager.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_surface_render_node.h"
+#include "pipeline/rs_composer_adapter.h"
 #include "pixel_map.h"
 #include "sync_fence.h"
 
@@ -52,8 +53,8 @@ struct BufferDrawParam {
 
     bool useCPU = false;
     bool setColorFilter = true;
-    std::vector<HDRMetaData> metaDatas = {}; // static meta datas for HDR10
-    HDRMetaDataSet metaDataSet; // dynamic meta datas for HDR10+, HDR VIVID
+    std::vector<GraphicHDRMetaData> metaDatas = {}; // static meta datas for HDR10
+    GraphicHDRMetaDataSet metaDataSet; // dynamic meta datas for HDR10+, HDR VIVID
 };
 
 using WriteToPngParam = struct {
@@ -79,6 +80,8 @@ enum class ColorFilterMode {
 
 class RSBaseRenderUtil {
 public:
+    static bool IsNeedClient(RSSurfaceRenderNode& node, const ComposeInfo& info);
+    static void SetNeedClient(bool flag);
     static bool IsBufferValid(const sptr<SurfaceBuffer>& buffer);
     static BufferRequestConfig GetFrameBufferRequestConfig(const ScreenInfo& screenInfo, bool isPhysical = true);
 
@@ -94,7 +97,7 @@ public:
     static std::unique_ptr<RSTransactionData> ParseTransactionData(MessageParcel& parcel);
 
     static bool ConvertBufferToBitmap(sptr<SurfaceBuffer> buffer, std::vector<uint8_t>& newBuffer,
-        ColorGamut dstGamut, SkBitmap& bitmap, const std::vector<HDRMetaData>& metaDatas = {});
+        ColorGamut dstGamut, SkBitmap& bitmap, const std::vector<GraphicHDRMetaData>& metaDatas = {});
     /**
      * @brief Set the Color Filter Mode To Paint object
      *
@@ -113,10 +116,13 @@ private:
     static bool CreateYuvToRGBABitMap(sptr<OHOS::SurfaceBuffer> buffer, std::vector<uint8_t>& newBuffer,
         SkBitmap& bitmap);
     static bool CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffer, std::vector<uint8_t>& newBuffer,
-        SkBitmap& bitmap, ColorGamut srcGamut, ColorGamut dstGamut, const std::vector<HDRMetaData>& metaDatas = {});
+                                          SkBitmap& bitmap, ColorGamut srcGamut, ColorGamut dstGamut,
+                                          const std::vector<GraphicHDRMetaData>& metaDatas = {});
     static bool CreateBitmap(sptr<OHOS::SurfaceBuffer> buffer, SkBitmap& bitmap);
     static bool WriteToPng(const std::string &filename, const WriteToPngParam &param);
-private:
+    static bool IsForceClient();
+
+    static bool enableClient;
 };
 } // namespace Rosen
 } // namespace OHOS

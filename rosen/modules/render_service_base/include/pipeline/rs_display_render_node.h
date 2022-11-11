@@ -17,6 +17,7 @@
 
 #include <ibuffer_consumer_listener.h>
 #include <memory>
+#include <mutex>
 #include <surface.h>
 
 #include "sync_fence.h"
@@ -34,6 +35,7 @@ public:
     enum CompositeType {
         UNI_RENDER_COMPOSITE = 0,
         UNI_RENDER_MIRROR_COMPOSITE,
+        UNI_RENDER_EXPAND_COMPOSITE,
         HARDWARE_COMPOSITE,
         SOFTWARE_COMPOSITE
     };
@@ -121,26 +123,22 @@ public:
         return surfaceCreated_;
     }
 
-    sk_sp<SkImage> Snapshot()
-    {
-        return snapshot_;
-    }
-
-    void MakeSnapshot(SkSurface* surface)
-    {
-        snapshot_ = surface->makeImageSnapshot();
-    }
-
     ScreenRotation GetRotation() const;
 
     std::shared_ptr<RSDirtyRegionManager> GetDirtyManager()
     {
         return dirtyManager_;
     }
-    void UpdateDisplayDirtyManager(int32_t bufferage);
+    void UpdateDisplayDirtyManager(int32_t bufferage, bool useAlignedDirtyRegion = false);
+    void ClearCurrentSurfacePos();
     void UpdateSurfaceNodePos(NodeId id, RectI rect)
     {
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+        std::unique_lock<std::mutex> lock(mtx_);
         currentFrameSurfacePos_[id] = rect;
+#else
+        currentFrameSurfacePos_[id] = rect;
+#endif
     }
 
     RectI GetLastFrameSurfacePos(NodeId id)
@@ -186,7 +184,6 @@ private:
     bool isSecurityDisplay_ = false;
     WeakPtr mirrorSource_;
     float lastRotation_ = 0.f;
-    sk_sp<SkImage> snapshot_;
 
     std::shared_ptr<RSSurface> surface_;
     bool surfaceCreated_ { false };
@@ -198,6 +195,7 @@ private:
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
 
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces_;
+    std::mutex mtx_;
 };
 } // namespace Rosen
 } // namespace OHOS

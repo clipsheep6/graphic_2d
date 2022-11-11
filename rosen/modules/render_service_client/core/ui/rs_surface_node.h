@@ -20,6 +20,7 @@
 #include <string>
 
 #include "surface.h"
+#include "surface_delegate.h"
 #include "surface_type.h"
 
 #include "platform/drawing/rs_surface.h"
@@ -69,6 +70,7 @@ public:
     void SetIsNotifyUIBufferAvailable(bool available);
 
     bool SetBufferAvailableCallback(BufferAvailableCallback callback);
+    void SetAnimationFinished();
 
     bool Marshalling(Parcel& parcel) const;
     static SharedPtr Unmarshalling(Parcel& parcel);
@@ -90,7 +92,8 @@ public:
     void ResetContextAlpha() const;
 
     void SetAppFreeze(bool isAppFreeze);
-    void SetContainerWindow(bool hasContainerWindow);
+    void SetContainerWindow(bool hasContainerWindow, float density);
+    void SetWindowId(uint32_t windowId);
 
 protected:
     bool NeedForcedSendToRemote() const override;
@@ -113,11 +116,16 @@ private:
     bool isSecurityLayer_ = false;
     bool isChildOperationDisallowed_ { false };
 
+    uint32_t windowId_;
+    sptr<SurfaceDelegate> surfaceDelegate_;
+    sptr<SurfaceDelegate::ISurfaceCallback> surfaceCallback_;
+
     friend class RSUIDirector;
     friend class RSAnimation;
     friend class RSPathAnimation;
     friend class RSPropertyAnimation;
     friend class RSSurfaceExtractor;
+    friend class RSSurfaceCallback;
 };
 } // namespace Rosen
 } // namespace OHOS

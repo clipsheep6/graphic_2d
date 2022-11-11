@@ -63,7 +63,7 @@ bool RSRenderThreadVisitor::IsValidRootRenderNode(RSRootRenderNode& node)
         return false;
     }
     if (node.GetSuggestedBufferWidth() <= 0 || node.GetSuggestedBufferHeight() <= 0) {
-        ROSEN_LOGE("Root %s: Negative width or height [%d %d]", ptr->GetName().c_str(),
+        ROSEN_LOGD("Root %s: Negative width or height [%d %d]", ptr->GetName().c_str(),
             node.GetSuggestedBufferWidth(), node.GetSuggestedBufferHeight());
         return false;
     }
@@ -110,6 +110,31 @@ void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
     }
 }
 
+void RSRenderThreadVisitor::ResetAndPrepareChildrenNode(RSRenderNode& node,
+    std::shared_ptr<RSBaseRenderNode> nodeParent)
+{
+    // merge last childRect as dirty if any child has been removed
+    if (node.HasRemovedChild()) {
+        curDirtyManager_->MergeDirtyRect(node.GetChildrenRect());
+        node.ResetHasRemovedChild();
+    }
+    // reset childRect before prepare children
+    node.ResetChildrenRect();
+    // [planning] replace outOfParentRect with childrenRect
+    node.ClearPaintOutOfParentRect();
+    node.UpdateChildrenOutOfRectFlag(false);
+    PrepareBaseRenderNode(node);
+    // accumulate direct parent's childrenRect
+    node.UpdateParentChildrenRect(nodeParent);
+#ifdef RS_ENABLE_EGLQUERYSURFACE
+    std::shared_ptr<RSRenderNode> rsParent = nullptr;
+    if (nodeParent != nullptr) {
+        rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
+    }
+    node.SetPaintOutOfParentFlag(rsParent);
+#endif
+}
+
 void RSRenderThreadVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
     node.ApplyModifiers();
@@ -126,14 +151,7 @@ void RSRenderThreadVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
     if (node.IsDirtyRegionUpdated() && curDirtyManager_->IsDebugRegionTypeEnable(DebugRegionType::CURRENT_SUB)) {
         curDirtyManager_->UpdateDirtyCanvasNodes(node.GetId(), node.GetOldDirty());
     }
-    node.ClearPaintOutOfParentRect();
-    node.UpdateChildrenOutOfRectFlag(false);
-    PrepareBaseRenderNode(node);
-#ifdef RS_ENABLE_EGLQUERYSURFACE
-    if (isOpDropped_) {
-        node.SetPaintOutOfParentFlag(rsParent);
-    }
-#endif
+    ResetAndPrepareChildrenNode(node, nodeParent);
     dirtyFlag_ = dirtyFlag;
 }
 
@@ -156,14 +174,7 @@ void RSRenderThreadVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (node.IsDirtyRegionUpdated() && curDirtyManager_->IsDebugRegionTypeEnable(DebugRegionType::CURRENT_SUB)) {
         curDirtyManager_->UpdateDirtySurfaceNodes(node.GetId(), node.GetOldDirty());
     }
-    node.ClearPaintOutOfParentRect();
-    node.UpdateChildrenOutOfRectFlag(false);
-    PrepareBaseRenderNode(node);
-#ifdef RS_ENABLE_EGLQUERYSURFACE
-    if (isOpDropped_) {
-        node.SetPaintOutOfParentFlag(rsParent);
-    }
-#endif
+    ResetAndPrepareChildrenNode(node, nodeParent);
     dirtyFlag_ = dirtyFlag;
 }
 
@@ -251,7 +262,7 @@ void RSRenderThreadVisitor::UpdateDirtyAndSetEGLDamageRegion(std::unique_ptr<RSS
         // get and update valid buffer age(>0) to merge history
         int32_t bufferAge = surfaceFrame->GetBufferAge();
         if (!curDirtyManager_->SetBufferAge(bufferAge)) {
-            ROSEN_LOGW("ProcessRootRenderNode SetBufferAge with invalid buffer age %d", bufferAge);
+            ROSEN_LOGD("ProcessRootRenderNode SetBufferAge with invalid buffer age %d", bufferAge);
             curDirtyManager_->ResetDirtyAsSurfaceSize();
         }
         curDirtyManager_->UpdateDirtyByAligned();
@@ -409,21 +420,18 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     parentSurfaceNodeMatrix_ = gravityMatrix;
 
     RS_TRACE_BEGIN("ProcessRenderNodes");
-    needUpdateSurfaceNode_ = node.GetNeedUpdateSurfaceNode();
     ProcessCanvasRenderNode(node);
 
-    if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_ || needUpdateSurfaceNode_) {
+    if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_) {
         auto thisSurfaceNodeId = node.GetRSSurfaceNodeId();
-        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearSurfaceNodeChild>(thisSurfaceNodeId);
-        SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_VISITOR);
+        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearChild>(thisSurfaceNodeId);
+        SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
         for (const auto& childSurfaceNodeId : childSurfaceNodeIds_) {
             command = std::make_unique<RSBaseNodeAddChild>(thisSurfaceNodeId, childSurfaceNodeId, -1);
-            SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_VISITOR);
+            SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
         }
         node.childSurfaceNodeIds_ = std::move(childSurfaceNodeIds_);
     }
-    needUpdateSurfaceNode_ = false;
-    node.SetNeedUpdateSurfaceNode(false);
     RS_TRACE_END();
 
     auto transactionProxy = RSTransactionProxy::GetInstance();
@@ -549,13 +557,13 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     ProcessBaseRenderNode(node);
 
     // 4. if children changed, sync children to RenderService
-    if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_ || needUpdateSurfaceNode_) {
+    if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_) {
         auto thisSurfaceNodeId = node.GetId();
-        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearSurfaceNodeChild>(thisSurfaceNodeId);
-        SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_VISITOR);
+        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearChild>(thisSurfaceNodeId);
+        SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
         for (const auto& childSurfaceNodeId : childSurfaceNodeIds_) {
             command = std::make_unique<RSBaseNodeAddChild>(thisSurfaceNodeId, childSurfaceNodeId, -1);
-            SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_VISITOR);
+            SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
         }
         node.childSurfaceNodeIds_ = std::move(childSurfaceNodeIds_);
     }
@@ -594,19 +602,22 @@ void RSRenderThreadVisitor::ProcessProxyRenderNode(RSProxyRenderNode& node)
 void RSRenderThreadVisitor::ClipHoleForSurfaceNode(RSSurfaceRenderNode& node)
 {
 #ifdef ROSEN_OHOS
-    auto x = std::ceil(node.GetRenderProperties().GetBoundsPositionX());
-    auto y = std::ceil(node.GetRenderProperties().GetBoundsPositionY());
-    auto width = std::floor(node.GetRenderProperties().GetBoundsWidth());
-    auto height = std::floor(node.GetRenderProperties().GetBoundsHeight());
+    // Calculation position in RenderService may appear floating point number, and it will be removed.
+    // It caused missed line problem on surfaceview hap, so we subtract one pixel when cliphole to avoid this problem
+    static int pixel = 1;
+    auto x = std::ceil(node.GetRenderProperties().GetBoundsPositionX() + pixel); // x increase 1 pixel
+    auto y = std::ceil(node.GetRenderProperties().GetBoundsPositionY() + pixel); // y increase 1 pixel
+    auto width = std::floor(node.GetRenderProperties().GetBoundsWidth() - (2 * pixel)); // width decrease 2 pixels
+    auto height = std::floor(node.GetRenderProperties().GetBoundsHeight() - (2 * pixel)); // height decrease 2 pixels
     canvas_->save();
     SkRect originRect = SkRect::MakeXYWH(x, y, width, height);
     canvas_->clipRect(originRect);
     if (node.IsNotifyRTBufferAvailable()) {
-        ROSEN_LOGI("RSRenderThreadVisitor::ClipHoleForSurfaceNode node : %" PRIu64 ", clip [%f, %f, %f, %f]",
+        ROSEN_LOGD("RSRenderThreadVisitor::ClipHoleForSurfaceNode node : %" PRIu64 ", clip [%f, %f, %f, %f]",
             node.GetId(), x, y, width, height);
         canvas_->clear(SK_ColorTRANSPARENT);
     } else {
-        ROSEN_LOGI("RSRenderThreadVisitor::ClipHoleForSurfaceNode node : %" PRIu64 ", not clip [%f, %f, %f, %f]",
+        ROSEN_LOGD("RSRenderThreadVisitor::ClipHoleForSurfaceNode node : %" PRIu64 ", not clip [%f, %f, %f, %f]",
             node.GetId(), x, y, width, height);
         auto backgroundColor = node.GetRenderProperties().GetBackgroundColor();
         if (backgroundColor != RgbPalette::Transparent()) {

@@ -195,11 +195,15 @@ public:
     void CheckEmptyBounds();
     void ResetBounds();
 
+    bool IsGeoDirty() const;
+
 private:
     void Reset();
     void SetDirty();
     void ResetDirty();
     bool IsDirty() const;
+
+    bool NeedClip() const;
 
     RectF GetBoundsRect() const;
     RectF GetFrameRect() const;
@@ -207,8 +211,6 @@ private:
     RRect GetRRect() const;
     RRect GetInnerRRect() const;
     RectI GetDirtyRect() const;
-
-    bool NeedClip() const;
 
     bool visible_ = true;
     bool clipToBounds_ = false;

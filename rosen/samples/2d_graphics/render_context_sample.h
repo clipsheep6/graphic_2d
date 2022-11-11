@@ -45,8 +45,7 @@ private:
     uint32_t backGroundHeight = 0;
     uint32_t drawingWidth = 0;
     uint32_t drawingHeight = 0;
-    std::vector<DisplayModeInfo> displayModeInfos_;
-    std::vector<std::shared_ptr<HdiOutput>> outputs_;
+    std::vector<GraphicDisplayModeInfo> displayModeInfos_;
 
     sptr<Surface> backGroundCSurface;
     sptr<Surface> backGroundPSurface;
@@ -77,8 +76,9 @@ private:
     void OnBufferAvailable() override;
     SurfaceError ProduceBackGroundBuffer(uint32_t width, uint32_t height);
     SurfaceError ProduceDrawingBuffer(uint32_t width, uint32_t height);
-    bool FillDrawingLayer(std::shared_ptr<HdiLayerInfo> &showLayer, uint32_t index, uint32_t zorder, IRect &dstRect);
-    bool FillBackGroundLayer(std::shared_ptr<HdiLayerInfo> &showLayer, uint32_t zorder, IRect &dstRect);
+    bool FillDrawingLayer(std::shared_ptr<HdiLayerInfo> &showLayer, uint32_t index,
+                          uint32_t zorder, GraphicIRect &dstRect);
+    bool FillBackGroundLayer(std::shared_ptr<HdiLayerInfo> &showLayer, uint32_t zorder, GraphicIRect &dstRect);
     bool DrawBackgroundLayer(std::shared_ptr<HdiLayerInfo> &layer);
     bool DrawDrawingLayer(std::shared_ptr<HdiLayerInfo> &layer);
     void CreateBackGroundSurface();

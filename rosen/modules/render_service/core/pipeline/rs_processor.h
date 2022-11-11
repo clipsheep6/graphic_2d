@@ -43,8 +43,13 @@ protected:
     void CalculateMirrorAdaptiveCoefficient(float curWidth, float curHeight,
         float mirroredWidth, float mirroredHeight);
     void CalculateScreenTransformMatrix(const RSDisplayRenderNode& node);
+    void SetMirrorScreenSwap(const RSDisplayRenderNode& node);
 
     void MultiLayersPerf(size_t layerNum);
+    void RequestPerf(uint32_t layerLevel, bool onOffTag);
+#ifdef FRAME_AWARE_TRACE
+    bool FrameAwareTraceBoost(size_t layerNum);
+#endif
 
     ScreenInfo screenInfo_;
     int32_t offsetX_ = 0;

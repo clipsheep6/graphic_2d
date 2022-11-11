@@ -19,7 +19,6 @@
 
 #include "rs_animation.h"
 #include "rs_animation_group.h"
-#include "rs_animation_manager_map.h"
 #include "rs_animation_timing_curve.h"
 #include "rs_curve_animation.h"
 #include "rs_implicit_animation_param.h"
@@ -34,6 +33,7 @@
 #include "rs_steps_interpolator.h"
 #include "rs_transition.h"
 #include "rs_transition_effect.h"
+#include "modifier/rs_modifier_manager_map.h"
 #include "ui/rs_canvas_node.h"
 
 namespace OHOS {
@@ -318,9 +318,28 @@ namespace OHOS {
         secondTransition->IsFinished();
     }
 
+    void RsTransitionEffectFuzzTest()
+    {
+        float x1 = GetData<float>();
+        float x2 = GetData<float>();
+        float y1 = GetData<float>();
+        float y2 = GetData<float>();
+        float opacity = GetData<float>();
+        Vector3f scale = Vector3f(x1, x2, y1);
+        Vector3f translate = Vector3f(x2, y1, y2);
+        Vector4f axisAngle = Vector4f(x1, x2, y1, y2);
+
+        auto animation = RSTransitionEffect::Create();
+        animation->Opacity(opacity);
+        animation->Scale(scale);
+        animation->Translate(translate);
+        animation->Rotate(axisAngle);
+    }
+
     void RsImplicitAnimatorFuzzTest()
     {
         float fraction = GetData<float>();
+        auto isTransitionIn = GetData<bool>();
         float first = GetData<float>();
         float second = GetData<float>();
         float third = GetData<float>();
@@ -338,7 +357,7 @@ namespace OHOS {
         implicitAnimator->BeginImplicitKeyFrameAnimation(fraction, RSAnimationTimingCurve::DEFAULT);
         implicitAnimator->BeginImplicitKeyFrameAnimation(fraction);
         implicitAnimator->EndImplicitKeyFrameAnimation();
-        implicitAnimator->BeginImplicitTransition(RSTransitionEffect::SCALE);
+        implicitAnimator->BeginImplicitTransition(RSTransitionEffect::SCALE, isTransitionIn);
         implicitAnimator->EndImplicitTransition();
         implicitAnimator->BeginImplicitPathAnimation(motionPathOption);
         implicitAnimator->EndImplicitPathAnimation();
@@ -378,9 +397,9 @@ namespace OHOS {
         testSpringParam->GetType();
         testSpringParam->CreateAnimation(firstProperty, secondProperty, thirdProperty);
         auto testTransitionParam = std::make_shared<RSImplicitTransitionParam>(timingProtocol,
-            RSAnimationTimingCurve::DEFAULT, RSTransitionEffect::SCALE);
+            RSAnimationTimingCurve::DEFAULT, RSTransitionEffect::SCALE, isTransitionIn);
         testTransitionParam->GetType();
-        testTransitionParam->CreateAnimation(isTransitionIn);
+        testTransitionParam->CreateAnimation();
     }
 
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
@@ -394,7 +413,7 @@ namespace OHOS {
         g_pos = 0;
         // get data
         int32_t managerId = GetData<int32_t>();
-        RSAnimationManagerMap::Instance()->GetAnimationManager(managerId);
+        RSModifierManagerMap::Instance()->GetModifierManager(managerId);
         RsAnimationGroupFuzzTest();
         RsAnimationTimingCurveFuzzTest();
         RsCurveAnimationFuzzTest();
@@ -403,6 +422,7 @@ namespace OHOS {
         RsMotionPathOptionFuzzTest();
         RsSpringAnimationFuzzTest();
         RsTransitionFuzzTest();
+        RsTransitionEffectFuzzTest();
         RsImplicitAnimatorFuzzTest();
         RsImplicitAnimatorParamFuzzTest();
         return true;

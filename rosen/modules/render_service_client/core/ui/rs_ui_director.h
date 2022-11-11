@@ -44,7 +44,7 @@ public:
      * @param isRenderForced if true, rt will reject partial render and be forced to render all frames
      */
     void SetRTRenderForced(bool isRenderForced);
-    void SetContainerWindow(bool hasContainerWindow);
+    void SetContainerWindow(bool hasContainerWindow, float density);
 
     void SetRoot(NodeId root);
     void SetUITaskRunner(const TaskRunner& uiTaskRunner);
@@ -59,7 +59,7 @@ public:
 
 private:
     void AttachSurface();
-    static void RecvMessages(bool needProcess = true);
+    static void RecvMessages();
     static void RecvMessages(std::shared_ptr<RSTransactionData> cmds);
     static void ProcessMessages(std::shared_ptr<RSTransactionData> cmds); // receive message
     static void AnimationCallbackProcessor(NodeId nodeId, AnimationId animId);
@@ -74,6 +74,7 @@ private:
     NodeId root_ = 0;
 
     bool isActive_ = false;
+    bool isUniRenderEnabled_ = false;
     uint64_t refreshPeriod_ = 16666667;
     uint64_t timeStamp_ = 0;
     std::weak_ptr<RSSurfaceNode> surfaceNode_;

@@ -131,6 +131,8 @@ HWTEST_F(RSAshmemTest, AshmemAllocatorWriteAndCopy001, Function | MediumTest | L
     /**
      * @tc.steps: step3. write to AshmemAllocator
      */
+    ASSERT_FALSE(ashmemAllocator->WriteToAshmem(nullptr, arrBytes));
+    ASSERT_FALSE(ashmemAllocator->WriteToAshmem(arr, arrBytes + 5));
     ashmemAllocator->WriteToAshmem(arr, arrBytes);
     ASSERT_EQ(memcmp(ashmemAllocator->GetData(), arr, arrBytes), 0);
 
@@ -227,5 +229,47 @@ HWTEST_F(RSAshmemTest, PixelMapAshmem001, Function | MediumTest | Level2)
     ASSERT_TRUE(parcel.GetOffsetsSize() > 0);
     ASSERT_TRUE(parcel.GetDataSize() > 0);
     ASSERT_TRUE((int)parcel.GetDataSize() < width * height * pixelBytes);
+}
+
+/**
+ * @tc.name: CreateAshmemParcel001
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSAshmemTest, CreateAshmemParcel001, Function | MediumTest | Level2)
+{
+    auto dataParcel = std::make_shared<MessageParcel>();
+    ASSERT_TRUE(RSAshmemHelper::CreateAshmemParcel(dataParcel) == nullptr);
+    dataParcel->WriteInt32(0);
+    dataParcel->WriteBool(true);
+    ASSERT_TRUE(RSAshmemHelper::CreateAshmemParcel(dataParcel) != nullptr);
+    size_t size = 1024;
+    auto ashmemAllocator = AshmemAllocator::CreateAshmemAllocator(size, PROT_READ | PROT_WRITE);
+    int fd = ashmemAllocator->GetFd();
+    ASSERT_TRUE(fd > 0);
+    dataParcel->WriteFileDescriptor(fd);
+    ASSERT_TRUE(RSAshmemHelper::CreateAshmemParcel(dataParcel) != nullptr);
+}
+
+/**
+ * @tc.name: ParseFromAshmemParcel001
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSAshmemTest, ParseFromAshmemParcel001, Function | MediumTest | Level2)
+{
+    MessageParcel ashmemParcel;
+    ASSERT_TRUE(RSAshmemHelper::ParseFromAshmemParcel(&ashmemParcel) == nullptr);
+    ashmemParcel.WriteInt32(0);
+    ashmemParcel.WriteBool(true);   
+    size_t size = 1024;
+    auto ashmemAllocator = AshmemAllocator::CreateAshmemAllocator(size, PROT_READ | PROT_WRITE);
+    int fd = ashmemAllocator->GetFd();
+    std::cout << fd << std::endl;
+    ASSERT_TRUE(fd > 0);
+    ASSERT_TRUE(ashmemParcel.WriteFileDescriptor(fd));
+    ASSERT_TRUE(RSAshmemHelper::ParseFromAshmemParcel(&ashmemParcel) == nullptr);
 }
 } // namespace OHOS::Rosen

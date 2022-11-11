@@ -138,7 +138,7 @@ void RSPathAnimation::OnStart()
     InitRotationId(target);
     auto interpolator = timingCurve_.GetInterpolator(GetDuration());
     auto animation = std::make_shared<RSRenderPathAnimation>(GetId(), GetPropertyId(),
-        originValue_->CreateRenderProperty(), startValue_->CreateRenderProperty(), endValue_->CreateRenderProperty(),
+        originValue_->GetRenderProperty(), startValue_->GetRenderProperty(), endValue_->GetRenderProperty(),
         target->GetStagingProperties().GetRotation(), animationPath_);
     UpdateParamToRenderAnimation(animation);
     animation->SetInterpolator(interpolator);
@@ -161,12 +161,6 @@ void RSPathAnimation::OnStart()
             std::unique_ptr<RSCommand> commandForRemote =
                 std::make_unique<RSAnimationCreatePath>(target->GetId(), animation);
             transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
-        }
-        if (target->NeedSendExtraCommand()) {
-            std::unique_ptr<RSCommand> extraCommand =
-                std::make_unique<RSAnimationCreatePath>(target->GetId(), animation);
-            transactionProxy->AddCommand(extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(),
-                target->GetId());
         }
     }
 }

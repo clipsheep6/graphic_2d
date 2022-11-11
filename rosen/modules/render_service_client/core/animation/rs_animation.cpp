@@ -19,6 +19,8 @@
 #include "animation/rs_animation_common.h"
 #include "animation/rs_render_animation.h"
 #include "command/rs_animation_command.h"
+#include "modifier/rs_modifier_manager.h"
+#include "modifier/rs_modifier_manager_map.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_node.h"
@@ -162,12 +164,6 @@ void RSAnimation::OnPause()
                 std::make_unique<RSAnimationPause>(target->GetId(), id_);
             transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
         }
-        if (target->NeedSendExtraCommand()) {
-            std::unique_ptr<RSCommand> extraCommand =
-                std::make_unique<RSAnimationPause>(target->GetId(), id_);
-            transactionProxy->AddCommand(extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(),
-                target->GetId());
-        }
     }
 }
 
@@ -204,12 +200,6 @@ void RSAnimation::OnResume()
             std::unique_ptr<RSCommand> commandForRemote =
                 std::make_unique<RSAnimationResume>(target->GetId(), id_);
             transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
-        }
-        if (target->NeedSendExtraCommand()) {
-            std::unique_ptr<RSCommand> extraCommand =
-                std::make_unique<RSAnimationResume>(target->GetId(), id_);
-            transactionProxy->AddCommand(extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(),
-                target->GetId());
         }
     }
 }
@@ -248,12 +238,6 @@ void RSAnimation::OnFinish()
                 std::make_unique<RSAnimationFinish>(target->GetId(), id_);
             transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
         }
-        if (target->NeedSendExtraCommand()) {
-            std::unique_ptr<RSCommand> extraCommand =
-                std::make_unique<RSAnimationFinish>(target->GetId(), id_);
-            transactionProxy->AddCommand(extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(),
-                target->GetId());
-        }
     }
 }
 
@@ -291,12 +275,6 @@ void RSAnimation::OnReverse()
             std::unique_ptr<RSCommand> commandForRemote =
                 std::make_unique<RSAnimationReverse>(target->GetId(), id_, isReversed_);
             transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
-        }
-        if (target->NeedSendExtraCommand()) {
-            std::unique_ptr<RSCommand> extraCommand =
-                std::make_unique<RSAnimationReverse>(target->GetId(), id_, isReversed_);
-            transactionProxy->AddCommand(extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(),
-                target->GetId());
         }
     }
 }
@@ -339,12 +317,6 @@ void RSAnimation::OnSetFraction(float fraction)
                 std::make_unique<RSAnimationSetFraction>(target->GetId(), id_, fraction);
             transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
         }
-        if (target->NeedSendExtraCommand()) {
-            std::unique_ptr<RSCommand> extraCommand =
-                std::make_unique<RSAnimationSetFraction>(target->GetId(), id_, fraction);
-            transactionProxy->AddCommand(extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(),
-                target->GetId());
-        }
     }
 }
 
@@ -367,6 +339,19 @@ void RSAnimation::UpdateParamToRenderAnimation(const std::shared_ptr<RSRenderAni
     animation->SetSpeed(GetSpeed());
     animation->SetDirection(GetDirection());
     animation->SetFillMode(GetFillMode());
+}
+
+void RSAnimation::StartCustomAnimation(const std::shared_ptr<RSRenderAnimation>& animation)
+{
+    auto modifierManager = RSModifierManagerMap::Instance()->GetModifierManager(gettid());
+    if (modifierManager == nullptr) {
+        ROSEN_LOGE("Failed to start custom animation, modifier manager is null  animationId: %llu!", GetId());
+        return;
+    }
+
+    uiAnimation_ = animation;
+    animation->Start();
+    modifierManager->AddAnimation(animation);
 }
 } // namespace Rosen
 } // namespace OHOS

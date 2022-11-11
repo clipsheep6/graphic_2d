@@ -18,11 +18,10 @@
 #include "rs_trace.h"
 #include "sandbox_utils.h"
 
-#include "animation/rs_animation_manager_map.h"
-#include "animation/rs_ui_animation_manager.h"
 #include "command/rs_animation_command.h"
 #include "command/rs_message_processor.h"
 #include "modifier/rs_modifier_manager.h"
+#include "modifier/rs_modifier_manager_map.h"
 #include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_thread.h"
@@ -52,7 +51,8 @@ void RSUIDirector::Init(bool shouldCreateRenderThread)
 {
     AnimationCommandHelper::SetFinishCallbackProcessor(AnimationCallbackProcessor);
 
-    if (shouldCreateRenderThread) {
+    isUniRenderEnabled_ = RSSystemProperties::GetUniRenderEnabled();
+    if (shouldCreateRenderThread && !isUniRenderEnabled_) {
         auto renderThreadClient = RSIRenderClient::CreateRenderThreadClient();
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
@@ -74,7 +74,9 @@ void RSUIDirector::GoForeground()
 {
     ROSEN_LOGD("RSUIDirector::GoForeground");
     if (!isActive_) {
-        RSRenderThread::Instance().UpdateWindowStatus(true);
+        if (!isUniRenderEnabled_) {
+            RSRenderThread::Instance().UpdateWindowStatus(true);
+        }
         isActive_ = true;
         if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
             node->SetEnableRender(true);
@@ -86,7 +88,9 @@ void RSUIDirector::GoBackground()
 {
     ROSEN_LOGD("RSUIDirector::GoBackground");
     if (isActive_) {
-        RSRenderThread::Instance().UpdateWindowStatus(false);
+        if (!isUniRenderEnabled_) {
+            RSRenderThread::Instance().UpdateWindowStatus(false);
+        }
         isActive_ = false;
         if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
             node->SetEnableRender(false);
@@ -113,8 +117,10 @@ void RSUIDirector::GoBackground()
 void RSUIDirector::Destroy()
 {
     if (root_ != 0) {
-        if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
-            node->RemoveFromTree();
+        if (!isUniRenderEnabled_) {
+            if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
+                node->RemoveFromTree();
+            }
         }
         root_ = 0;
     }
@@ -142,14 +148,14 @@ void RSUIDirector::SetRTRenderForced(bool isRenderForced)
     RSRenderThread::Instance().SetRTRenderForced(isRenderForced);
 }
 
-void RSUIDirector::SetContainerWindow(bool hasContainerWindow)
+void RSUIDirector::SetContainerWindow(bool hasContainerWindow, float density)
 {
     auto node = surfaceNode_.lock();
     if (!node) {
         ROSEN_LOGI("RSUIDirector::SetContainerWindow, surfaceNode_ is nullptr");
         return;
     }
-    node->SetContainerWindow(hasContainerWindow);
+    node->SetContainerWindow(hasContainerWindow, density);
 }
 
 void RSUIDirector::SetRoot(NodeId root)
@@ -196,11 +202,16 @@ void RSUIDirector::SetCacheDir(const std::string& cacheFilePath)
 bool RSUIDirector::RunningCustomAnimation(uint64_t timeStamp)
 {
     bool hasRunningAnimation = false;
-    auto animationManager = RSAnimationManagerMap::Instance()->GetAnimationManager(gettid());
-    if (animationManager != nullptr) {
-        hasRunningAnimation = animationManager->Animate(timeStamp);
-        animationManager->Draw();
+    auto modifierManager = RSModifierManagerMap::Instance()->GetModifierManager(gettid());
+    if (modifierManager == nullptr) {
+        return hasRunningAnimation;
     }
+
+    hasRunningAnimation = modifierManager->Animate(timeStamp);
+    modifierManager->Draw();
+
+    // post animation finish callback(s) to task queue
+    RSUIDirector::RecvMessages();
     return hasRunningAnimation;
 }
 
@@ -219,7 +230,7 @@ void RSUIDirector::SendMessages()
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }
 
-void RSUIDirector::RecvMessages(bool needProcess)
+void RSUIDirector::RecvMessages()
 {
     if (GetRealPid() == -1) {
         return;
@@ -229,9 +240,7 @@ void RSUIDirector::RecvMessages(bool needProcess)
         return;
     }
     auto transactionDataPtr = std::make_shared<RSTransactionData>(RSMessageProcessor::Instance().GetTransaction(pid));
-    if (needProcess) {
-        RecvMessages(transactionDataPtr);
-    }
+    RecvMessages(transactionDataPtr);
 }
 
 void RSUIDirector::RecvMessages(std::shared_ptr<RSTransactionData> cmds)

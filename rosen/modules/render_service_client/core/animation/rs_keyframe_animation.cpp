@@ -83,18 +83,12 @@ void RSKeyframeAnimation::StartRenderAnimation(const std::shared_ptr<RSRenderKey
                 std::make_unique<RSAnimationCreateKeyframe>(target->GetId(), animation);
             transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
         }
-        if (target->NeedSendExtraCommand()) {
-            std::unique_ptr<RSCommand> extraCommand =
-                std::make_unique<RSAnimationCreateKeyframe>(target->GetId(), animation);
-            transactionProxy->AddCommand(extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(),
-                target->GetId());
-        }
     }
 }
 
 void RSKeyframeAnimation::StartUIAnimation(const std::shared_ptr<RSRenderKeyframeAnimation>& animation)
 {
-    StartCustomPropertyAnimation(animation);
+    StartCustomAnimation(animation);
 }
 
 void RSKeyframeAnimation::OnStart()
@@ -105,13 +99,14 @@ void RSKeyframeAnimation::OnStart()
         return;
     }
     auto animation = std::make_shared<RSRenderKeyframeAnimation>(GetId(), GetPropertyId(),
-        originValue_->CreateRenderProperty());
+        originValue_->GetRenderProperty());
     for (const auto& [fraction, value, curve] : keyframes_) {
-        animation->AddKeyframe(fraction, value->CreateRenderProperty(), curve.GetInterpolator(GetDuration()));
+        animation->AddKeyframe(fraction, value->GetRenderProperty(), curve.GetInterpolator(GetDuration()));
     }
     animation->SetAdditive(GetAdditive());
     UpdateParamToRenderAnimation(animation);
     if (isCustom_) {
+        animation->AttachRenderProperty(property_->GetRenderProperty());
         StartUIAnimation(animation);
     } else {
         StartRenderAnimation(animation);

@@ -100,17 +100,6 @@ void SurfaceNodeCommandHelper::SetAbilityBGAlpha(RSContext& context, NodeId id, 
     }
 }
 
-void SurfaceNodeCommandHelper::UpdateParentWithoutTransition(RSContext& context, NodeId nodeId, NodeId parentId)
-{
-    auto& nodeMap = context.GetNodeMap();
-    auto node = nodeMap.GetRenderNode(nodeId);
-    auto parent = nodeMap.GetRenderNode(parentId);
-    if (node && parent) {
-        node->RemoveFromTree(true);
-        parent->AddChild(node);
-    }
-}
-
 void SurfaceNodeCommandHelper::SetIsNotifyUIBufferAvailable(RSContext& context, NodeId id, bool available)
 {
     if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
@@ -132,10 +121,18 @@ void SurfaceNodeCommandHelper::SetSurfaceNodeType(RSContext& context, NodeId nod
     }
 }
 
-void SurfaceNodeCommandHelper::SetContainerWindow(RSContext& context, NodeId nodeId, bool hasContainerWindow)
+void SurfaceNodeCommandHelper::SetContainerWindow(RSContext& context, NodeId nodeId,
+    bool hasContainerWindow, float density)
 {
     if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(nodeId)) {
-        node->SetContainerWindow(hasContainerWindow);
+        node->SetContainerWindow(hasContainerWindow, density);
+    }
+}
+
+void SurfaceNodeCommandHelper::SetAnimationFinished(RSContext& context, NodeId nodeId)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(nodeId)) {
+        node->SetStartAnimationFinished();
     }
 }
 } // namespace Rosen

@@ -39,6 +39,8 @@ public:
     void SetEnabled(bool enable);
     void MarkFrameEvent(const FrameEventType &type, int64_t timeNs = 0);
     void ClearEvents();
+    uint32_t GetFps() { return normalFPS_; }
+    void SetFps(int nowFps) { nowFps >= 0 ? normalFPS_ = nowFps : normalFPS_;}
 
 private:
     FrameCollector();
@@ -58,7 +60,9 @@ private:
     struct UIMarks currentUIMarks_ = {};
     struct FrameInfo *pbefore_ = nullptr;
     struct FrameInfo *pafter_ = nullptr;
+    struct FrameInfo _afterInfo;
     bool haveAfterVsync_ = false;
+    uint32_t normalFPS_ = 60;
 
     // frame queue
     std::mutex frameQueueMutex_;

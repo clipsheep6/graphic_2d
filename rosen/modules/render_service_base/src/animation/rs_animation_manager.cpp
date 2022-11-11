@@ -59,7 +59,7 @@ void RSAnimationManager::FilterAnimationByPid(pid_t pid)
     ROSEN_LOGI("RSAnimationManager::FilterAnimationByPid removing all animations belong to pid %d", pid);
     // remove all animations belong to given pid (by matching higher 32 bits of animation id)
     std::__libcpp_erase_if_container(animations_, [pid, this](const auto& pair) -> bool {
-        if (static_cast<pid_t>(pair.first >> 32) != pid) {
+        if (ExtractPid(pair.first) != pid) {
             return false;
         }
         pair.second->Finish();
@@ -69,24 +69,30 @@ void RSAnimationManager::FilterAnimationByPid(pid_t pid)
     });
 }
 
-bool RSAnimationManager::Animate(int64_t time)
+std::pair<bool, bool> RSAnimationManager::Animate(int64_t time, bool nodeIsOnTheTree)
 {
     // process animation
     bool hasRunningAnimation = false;
-
+    bool needRequestNextVsync = false;
     // iterate and execute all animations, remove finished animations
-    std::__libcpp_erase_if_container(animations_, [this, &hasRunningAnimation, time](auto& iter) -> bool {
+    std::__libcpp_erase_if_container(animations_, [this, &hasRunningAnimation, time,
+        &needRequestNextVsync, nodeIsOnTheTree](auto& iter) -> bool {
         auto& animation = iter.second;
+        if (!nodeIsOnTheTree && animation->GetRepeatCount() == -1) {
+            hasRunningAnimation = animation->IsRunning() || hasRunningAnimation;
+            return false;
+        }
         bool isFinished = animation->Animate(time);
         if (isFinished) {
             OnAnimationFinished(animation);
         } else {
-            hasRunningAnimation = animation->IsRunning() || hasRunningAnimation ;
+            hasRunningAnimation = animation->IsRunning() || hasRunningAnimation;
+            needRequestNextVsync = animation->IsRunning() || needRequestNextVsync;
         }
         return isFinished;
     });
 
-    return hasRunningAnimation;
+    return { hasRunningAnimation, needRequestNextVsync };
 }
 
 const std::shared_ptr<RSRenderAnimation> RSAnimationManager::GetAnimation(AnimationId id) const
@@ -107,13 +113,6 @@ void RSAnimationManager::OnAnimationRemove(const std::shared_ptr<RSRenderAnimati
 void RSAnimationManager::OnAnimationAdd(const std::shared_ptr<RSRenderAnimation>& animation)
 {
     animationNum_[animation->GetPropertyId()]++;
-}
-
-namespace {
-    inline constexpr uint32_t ExtractPid(AnimationId animId)
-    {
-        return animId >> 32;
-    }
 }
 
 void RSAnimationManager::OnAnimationFinished(const std::shared_ptr<RSRenderAnimation>& animation)

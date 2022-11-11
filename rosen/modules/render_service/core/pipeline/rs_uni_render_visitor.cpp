@@ -14,6 +14,7 @@
  */
 
 #include "pipeline/rs_uni_render_visitor.h"
+#include <mutex>
 
 #include "include/core/SkRegion.h"
 #include "include/core/SkTextBlob.h"
@@ -23,30 +24,57 @@
 #include "common/rs_obj_abs_geometry.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_base_render_util.h"
+#include "pipeline/rs_cold_start_thread.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_processor_factory.h"
 #include "pipeline/rs_proxy_render_node.h"
+#include "pipeline/rs_recording_canvas.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_uni_render_listener.h"
-#include "pipeline/rs_uni_render_mirror_processor.h"
+#include "pipeline/rs_uni_render_virtual_processor.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_skia_filter.h"
+#include "pipeline/parallel_render/rs_parallel_render_manager.h"
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+constexpr uint32_t USE_CACHE_SURFACE_NUM = 5;
+
+bool IsFirstFrameReadyToDraw(RSSurfaceRenderNode& node)
+{
+    for (auto& child : node.GetSortedChildren()) {
+        if (child != nullptr && child->IsInstanceOf<RSRootRenderNode>()) {
+            auto rootNode = child->ReinterpretCastTo<RSRootRenderNode>();
+            const auto& property = rootNode->GetRenderProperties();
+            if (property.GetFrameWidth() > 0 && property.GetFrameHeight() > 0 && rootNode->GetEnableRender()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+}
+
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined (RS_ENABLE_GL)
+constexpr uint32_t PARALLEL_RENDER_MINIMUN_RENDER_NODE_NUMBER = 50;
+#endif
+
 RSUniRenderVisitor::RSUniRenderVisitor()
     : curSurfaceDirtyManager_(std::make_shared<RSDirtyRegionManager>())
 {
     auto mainThread = RSMainThread::Instance();
     renderEngine_ = mainThread->GetRenderEngine();
     partialRenderType_ = RSSystemProperties::GetUniPartialRenderEnabled();
-    isPartialRenderEnabled_ = (partialRenderType_ != PartialRenderType::DISABLED);
+    sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
+    auto screenNum = screenManager->GetAllScreenIds().size();
+    isPartialRenderEnabled_ = (screenNum <= 1) && (partialRenderType_ != PartialRenderType::DISABLED);
     isDirtyRegionDfxEnabled_ = (RSSystemProperties::GetDirtyRegionDebugType() == DirtyRegionDebugType::EGL_DAMAGE);
     isTargetDirtyRegionDfxEnabled_ = RSSystemProperties::GetTargetDirtyRegionDfxEnabled(dfxTargetSurfaceNames_);
     if (isDirtyRegionDfxEnabled_ && isTargetDirtyRegionDfxEnabled_) {
@@ -54,7 +82,43 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     }
     isOpDropped_ = isPartialRenderEnabled_ && (partialRenderType_ != PartialRenderType::SET_DAMAGE)
         && (!isDirtyRegionDfxEnabled_ && !isTargetDirtyRegionDfxEnabled_);
+    // this config may downgrade the calcOcclusion performance when windows number become huge (i.e. > 30), keep it now
+    containerWindowConfig_ = RSSystemProperties::GetContainerWindowConfig();
+    isQuickSkipPreparationEnabled_ = RSSystemProperties::GetQuickSkipPrepareEnabled();
+    surfaceNodePrepareMutex_ = std::make_shared<std::mutex>();
 }
+
+RSUniRenderVisitor::RSUniRenderVisitor(std::shared_ptr<RSPaintFilterCanvas> canvas) : RSUniRenderVisitor()
+{
+    canvas_ = std::make_shared<RSPaintFilterCanvas>(canvas.get());
+}
+
+RSUniRenderVisitor::RSUniRenderVisitor(const RSUniRenderVisitor& visitor)
+{
+    currentVisitDisplay_ = visitor.currentVisitDisplay_;
+    curDisplayDirtyManager_ = visitor.curDisplayDirtyManager_;
+    screenInfo_ = visitor.screenInfo_;
+    colorGamutmodes_ = visitor.colorGamutmodes_;
+    newColorSpace_ = visitor.newColorSpace_;
+    displayHasSecSurface_ = visitor.displayHasSecSurface_;
+    isOpDropped_ = visitor.isOpDropped_;
+    isPartialRenderEnabled_ = visitor.isPartialRenderEnabled_;
+    parentSurfaceNodeMatrix_ = visitor.parentSurfaceNodeMatrix_;
+    curAlpha_ = visitor.curAlpha_;
+    curSurfaceDirtyManager_ = visitor.curSurfaceDirtyManager_;
+    dirtyFlag_ = visitor.dirtyFlag_;
+    curSurfaceNode_ = visitor.curSurfaceNode_;
+    boundsRect_ = visitor.boundsRect_;
+    frameGravity_ = visitor.frameGravity_;
+    curDisplayNode_ = visitor.curDisplayNode_;
+    containerWindowConfig_ = visitor.containerWindowConfig_;
+    currentFocusedPid_ = visitor.currentFocusedPid_;
+    dirtySurfaceNodeMap_ = visitor.dirtySurfaceNodeMap_;
+    needFilter_ = visitor.needFilter_;
+    filterRects_ = visitor.filterRects_;
+    surfaceNodePrepareMutex_ = visitor.surfaceNodePrepareMutex_;
+}
+
 RSUniRenderVisitor::~RSUniRenderVisitor() {}
 
 void RSUniRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
@@ -65,7 +129,25 @@ void RSUniRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
     for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
     }
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    switch (node.GetType()) {
+        case RSRenderNodeType::CANVAS_NODE:
+            SetPaintOutOfParentFlag(node);
+            break;
+        case RSRenderNodeType::SURFACE_NODE:
+            if (isParallel_) {
+                std::unique_lock<std::mutex> lock(*surfaceNodePrepareMutex_);
+                SetPaintOutOfParentFlag(node);
+            } else {
+                SetPaintOutOfParentFlag(node);
+            }
+            break;
+        default:
+            break;
+    }
+#else
     SetPaintOutOfParentFlag(node);
+#endif
 }
 
 void RSUniRenderVisitor::SetPaintOutOfParentFlag(RSBaseRenderNode& node)
@@ -88,12 +170,14 @@ void RSUniRenderVisitor::SetPaintOutOfParentFlag(RSBaseRenderNode& node)
     RectI rect;
     if (geoPtr != nullptr) {
         rect = geoPtr->GetAbsRect();
+        rect = rect.JoinRect(node.ReinterpretCastTo<RSRenderNode>()->GetOldDirty());
     }
     RectI parentRect;
     auto& parentProperty = rsParent->GetMutableRenderProperties();
     auto parentGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(parentProperty.GetBoundsGeometry());
     if (parentGeoPtr != nullptr) {
         parentRect = parentGeoPtr->GetAbsRect();
+        parentRect = parentRect.JoinRect(rsParent->GetOldDirty());
     }
     if (node.HasChildrenOutOfRect()) {
         if (!node.GetPaintOutOfParentRect().IsInsideOf(parentRect) || parentRect.IsEmpty()) {
@@ -149,15 +233,16 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     node.ApplyModifiers();
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
-        RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode ScreenManager is nullptr");
+        RS_LOGE("RSUniRenderVisitor::PrepareDisplayRenderNode ScreenManager is nullptr");
         return;
     }
     screenInfo_ = screenManager->QueryScreenInfo(node.GetScreenId());
+    prepareClipRect_.SetAll(0, 0, screenInfo_.width, screenInfo_.height);
     screenManager->GetScreenSupportedColorGamuts(node.GetScreenId(), colorGamutmodes_);
     for (auto& child : node.GetSortedChildren()) {
         auto surfaceNodePtr = child->ReinterpretCastTo<RSSurfaceRenderNode>();
         if (!surfaceNodePtr) {
-            RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode ReinterpretCastTo fail");
+            RS_LOGE("RSUniRenderVisitor::PrepareDisplayRenderNode ReinterpretCastTo fail");
             return;
         }
         CheckColorSpace(*surfaceNodePtr);
@@ -169,9 +254,19 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
         parentSurfaceNodeMatrix_ = geoPtr->GetAbsMatrix();
     }
     dirtyFlag_ = dirtyFlag_ || node.IsRotationChanged();
+    // when display is in rotation state, occlusion relationship will be ruined,
+    // hence partialrender quickreject should be disabled.
+    if(node.IsRotationChanged()) {
+        isOpDropped_ = false;
+    }
     node.UpdateRotation();
     curAlpha_ = node.GetRenderProperties().GetAlpha();
+    isParallel_ = false;
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    ParallelPrepareDisplayRenderNodeChildrens(node);
+#else
     PrepareBaseRenderNode(node);
+#endif
     auto mirrorNode = node.GetMirrorSource().lock();
     if (mirrorNode) {
         mirroredDisplays_.insert(mirrorNode->GetScreenId());
@@ -181,14 +276,95 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     node.CollectSurface(node.shared_from_this(), node.GetCurAllSurfaces(), true);
 }
 
+void RSUniRenderVisitor::ParallelPrepareDisplayRenderNodeChildrens(RSDisplayRenderNode& node)
+{
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    auto parallelRenderManager = RSParallelRenderManager::Instance();
+    isParallel_ = AdaptiveSubRenderThreadMode(node.GetChildrenCount()) &&
+        parallelRenderManager->GetParallelMode();
+    isDirtyRegionAlignedEnable_ = parallelRenderManager->GetParallelModeSafe();
+    // we will open prepare parallel after checjing all properties.
+    if (isParallel_ &&
+        RSSystemProperties::GetPrepareParallelRenderingEnabled() != ParallelRenderingType::DISABLE) {
+        parallelRenderManager->CopyPrepareVisitorAndPackTask(*this, node);
+        parallelRenderManager->LoadBalanceAndNotify(TaskType::PREPARE_TASK);
+        parallelRenderManager->WaitPrepareEnd(*this);
+    } else {
+        PrepareBaseRenderNode(node);
+    }
+#endif
+}
+
+bool RSUniRenderVisitor::CheckIfRenderNodeNeedFilter(RSBaseRenderNode& node)
+{
+    if (!curSurfaceNode_) {
+        return false;
+    }
+    if (node.ReinterpretCastTo<RSRenderNode>()->GetRenderProperties().NeedFilter() &&
+        !curSurfaceNode_->IsAppFreeze()) {
+        return true;
+    }
+    for (auto& child : node.GetSortedChildren()) {
+        if (child && CheckIfRenderNodeNeedFilter(*child)) {
+            if (auto canvasNode = child->ReinterpretCastTo<RSCanvasRenderNode>()) {
+                filterRects_[curSurfaceNode_->GetId()].push_back(canvasNode->GetOldDirtyInSurface());
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& node)
+{
+    // dirtyFlag_ includes leashwindow dirty
+    // window layout change(e.g. move or zooming) | proxyRenderNode's cmd
+    if (dirtyFlag_ || node.IsDirty() || node.GetSurfaceNodeType() == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
+        return false;
+    }
+    // if node has to be prepared, it's not static
+    if (RSMainThread::Instance()->CheckNodeHasToBePreparedByPid(node.GetId())) {
+        return false;
+    }
+    RS_TRACE_NAME("Skip static surface nodeid - pid: " +
+        std::to_string(node.GetId()) + " - " + std::to_string(ExtractPid(node.GetId())));
+    ROSEN_LOGD("Skip static surface nodeid - pid - name: %" PRIu64 " - %d - %s", node.GetId(),
+        ExtractPid(node.GetId()), node.GetName().c_str());
+    // static node's dirty region is empty
+    curSurfaceDirtyManager_ = node.GetDirtyManager();
+    if (curSurfaceDirtyManager_) {
+        curSurfaceDirtyManager_->Clear();
+    }
+    // static surface keeps same position
+    curDisplayNode_->UpdateSurfaceNodePos(node.GetId(), curDisplayNode_->GetLastFrameSurfacePos(node.GetId()));
+    // [planning] Remove this after skia is upgraded, the clipRegion is supported
+    if (node.IsAppWindow()) {
+        curSurfaceNode_ = node.ReinterpretCastTo<RSSurfaceRenderNode>();
+    }
+    needFilter_ = needFilter_ || CheckIfRenderNodeNeedFilter(node);
+    return true;
+}
+
 void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
+    RS_TRACE_NAME("RSUniRender::Prepare:[" + node.GetName() + "]");
     if (node.GetSecurityLayer()) {
         displayHasSecSurface_[currentVisitDisplay_] = true;
+    }
+    // avoid mouse error
+    if (node.GetName() == "pointer window") {
+        isOpDropped_ = false;
+        isPartialRenderEnabled_ = false;
+    }
+    // stop traversal if node keeps static
+    if (isQuickSkipPreparationEnabled_ && CheckIfSurfaceRenderNodeStatic(node)) {
+        return;
     }
     node.CleanDstRectChanged();
     node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
+    bool isCustomizedDirtyRect = false;
+    RectI prepareClipRect = prepareClipRect_;
 
     // update geoptr with ContextMatrix
     auto parentSurfaceNodeMatrix = parentSurfaceNodeMatrix_;
@@ -205,7 +381,8 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         curSurfaceDirtyManager_->SetSurfaceSize(screenInfo_.width, screenInfo_.height);
         if (auto parentNode = node.GetParent().lock()) {
             auto rsParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(parentNode);
-            dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, &(rsParent->GetRenderProperties()), dirtyFlag_);
+            dirtyFlag_ = node.Update(
+                *curSurfaceDirtyManager_, &(rsParent->GetRenderProperties()), dirtyFlag_);
         } else {
             dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, nullptr, dirtyFlag_);
         }
@@ -214,6 +391,8 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         curDisplayNode_->UpdateSurfaceNodePos(node.GetId(), node.GetOldDirtyInSurface());
         if (node.IsAppWindow()) {
             curSurfaceNode_ = node.ReinterpretCastTo<RSSurfaceRenderNode>();
+            boundsRect_ = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
+            frameGravity_ = property.GetFrameGravity();
         }
     } else {
         RSUniRenderUtil::UpdateRenderNodeDstRect(node, node.GetContextMatrix());
@@ -226,21 +405,56 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         if (node.GetBuffer() != nullptr) {
             auto& surfaceHandler = static_cast<RSSurfaceHandler&>(node);
             if (surfaceHandler.IsCurrentFrameBufferConsumed()) {
-                curSurfaceDirtyManager_->MergeDirtyRect(node.GetDstRect());
+                // SurfaceNode here should be considered as CanvasNode because they all represent component.
+                // The calculation of dirtyRect here should use prepareClipRect_ as CanvasNode does.
+                RectI dirtyRect = node.GetDstRect().IntersectRect(prepareClipRect_);
+                curSurfaceDirtyManager_->MergeDirtyRect(dirtyRect);
             }
         }
+        isCustomizedDirtyRect = true;
+    }
+    // [planning] Remove this after skia is upgraded, the clipRegion is supported
+    if (node.GetRenderProperties().NeedFilter() && !node.IsAppFreeze()) {
+        needFilter_ = true;
     }
     dirtyFlag_ = dirtyFlag_ || node.GetDstRectChanged();
     parentSurfaceNodeMatrix_ = geoPtr->GetAbsMatrix();
-    node.ResetSurfaceOpaqueRegion(RectI(0, 0, screenInfo_.width, screenInfo_.height), geoPtr->GetAbsRect());
+    node.ResetSurfaceOpaqueRegion(RectI(0, 0, screenInfo_.width, screenInfo_.height), geoPtr->GetAbsRect(),
+        containerWindowConfig_, node.IsFocusedWindow(currentFocusedPid_));
 
+    // merge last childRect as dirty if any child has been removed
+    if (node.HasRemovedChild()) {
+        RectI dirtyRect = prepareClipRect_.IntersectRect(node.GetChildrenRect());
+        curSurfaceDirtyManager_->MergeDirtyRect(dirtyRect);
+        node.ResetHasRemovedChild();
+    }
+    // reset childRect before prepare children
+    node.ResetChildrenRect();
     PrepareBaseRenderNode(node);
+    // [planning] apply dirty rect instead of customized rect
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    auto parentNode = node.GetParent().lock();
+    auto rsParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(parentNode);
+    if (rsParent == curDisplayNode_) {
+        std::unique_lock<std::mutex> lock(*surfaceNodePrepareMutex_);
+        node.UpdateParentChildrenRect(parentNode, isCustomizedDirtyRect, node.GetDstRect());
+    } else {
+        node.UpdateParentChildrenRect(parentNode, isCustomizedDirtyRect, node.GetDstRect());
+    }
+#else
+    node.UpdateParentChildrenRect(node.GetParent().lock(), isCustomizedDirtyRect, node.GetDstRect());
+#endif
     // restore flags
     parentSurfaceNodeMatrix_ = parentSurfaceNodeMatrix;
     curAlpha_ = alpha;
     dirtyFlag_ = dirtyFlag;
+    prepareClipRect_ = prepareClipRect;
     if (node.GetDirtyManager() && node.GetDirtyManager()->IsDirty()) {
         dirtySurfaceNodeMap_.emplace(node.GetId(), node.ReinterpretCastTo<RSSurfaceRenderNode>());
+    }
+    if (node.IsAppWindow()) {
+        RS_TRACE_NAME("PreparedNodes: " + std::to_string(preparedCanvasNodeInCurrentSurface_));
+        preparedCanvasNodeInCurrentSurface_ = 0;
     }
 }
 
@@ -268,14 +482,50 @@ void RSUniRenderVisitor::PrepareProxyRenderNode(RSProxyRenderNode& node)
 
 void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
-    RSUniRenderUtil::UpdateRenderNodeDstRect(node, SkMatrix::I());
-    PrepareCanvasRenderNode(node);
+    node.ApplyModifiers();
+    bool dirtyFlag = dirtyFlag_;
+    float alpha = curAlpha_;
+    auto parentSurfaceNodeMatrix = parentSurfaceNodeMatrix_;
+    RectI prepareClipRect = prepareClipRect_;
+
+    auto rsParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(node.GetParent().lock());
+    const auto& property = node.GetRenderProperties();
+    bool geoDirty = property.IsGeoDirty();
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+
+    dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
+        dirtyFlag_);
+    curAlpha_ *= property.GetAlpha();
+    if (rsParent == curSurfaceNode_) {
+        const float rootWidth = property.GetFrameWidth() * property.GetScaleX();
+        const float rootHeight = property.GetFrameHeight() * property.GetScaleY();
+        SkMatrix gravityMatrix;
+        (void)RSPropertiesPainter::GetGravityMatrix(frameGravity_,
+            RectF { 0.0f, 0.0f, boundsRect_.width(), boundsRect_.height() }, rootWidth, rootHeight, gravityMatrix);
+        // Only Apply gravityMatrix when rootNode is dirty
+        if (geoPtr != nullptr && (dirtyFlag || geoDirty)) {
+            geoPtr->ConcatMatrix(gravityMatrix);
+        }
+    }
+
+    if (geoPtr != nullptr) {
+        parentSurfaceNodeMatrix_ = geoPtr->GetAbsMatrix();
+    }
+    PrepareBaseRenderNode(node);
+
+    parentSurfaceNodeMatrix_ = parentSurfaceNodeMatrix;
+    curAlpha_ = alpha;
+    dirtyFlag_ = dirtyFlag;
+    prepareClipRect_ = prepareClipRect;
 }
 
 void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
 {
+    preparedCanvasNodeInCurrentSurface_++;
     node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
+    RectI prepareClipRect = prepareClipRect_;
+
     auto nodeParent = node.GetParent().lock();
     while (nodeParent && nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>() &&
         nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>()->GetSurfaceNodeType() ==
@@ -286,21 +536,73 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     if (nodeParent != nullptr) {
         rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
     }
-    dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
-        dirtyFlag_);
-    float alpha = curAlpha_;
-    curAlpha_ *= node.GetRenderProperties().GetAlpha();
-    PrepareBaseRenderNode(node);
 
-    // [planning] Remove this after skia is upgraded, the clipRegion is supported
-    if (node.GetRenderProperties().GetBackgroundFilter()) {
-        needFilter_ = true;
+    dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
+        dirtyFlag_, prepareClipRect_);
+
+    const auto& property = node.GetRenderProperties();
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    // Dirty Region use abstract coordinate, property of node use relative coordinate
+    // BoundsRect(if exists) is mapped to absRect_ of RSObjAbsGeometry.
+    if (property.GetClipToBounds()) {
+        prepareClipRect_ = prepareClipRect_.IntersectRect(geoPtr->GetAbsRect());
     }
-    if (node.GetRenderProperties().NeedFilter()) {
+    // FrameRect(if exists) is mapped to rect using abstract coordinate explicitly by calling MapAbsRect.
+    if (property.GetClipToFrame()) {
+        RectF frameRect{property.GetFrameOffsetX(), property.GetFrameOffsetY(),
+            property.GetFrameWidth(), property.GetFrameHeight()};
+        prepareClipRect_ = prepareClipRect_.IntersectRect(geoPtr->MapAbsRect(frameRect));
+    }
+
+    float alpha = curAlpha_;
+    curAlpha_ *= property.GetAlpha();
+    // merge last childRect as dirty if any child has been removed
+    if (node.HasRemovedChild()) {
+        RectI dirtyRect = prepareClipRect_.IntersectRect(node.GetChildrenRect());
+        curSurfaceDirtyManager_->MergeDirtyRect(dirtyRect);
+        node.ResetHasRemovedChild();
+    }
+    // reset childRect before prepare children
+    node.ResetChildrenRect();
+    PrepareBaseRenderNode(node);
+    // attention: accumulate direct parent's childrenRect
+    node.UpdateParentChildrenRect(node.GetParent().lock());
+    if (property.NeedFilter() && curSurfaceNode_) {
+        if (!curSurfaceNode_->IsAppFreeze()) {
+            // [planning] Remove this after skia is upgraded, the clipRegion is supported
+            needFilter_ = true;
+        }
+        // filterRects_ is used in RSUniRenderVisitor::CalcDirtyRegionForFilterNode
+        // When oldDirtyRect of node with filter has intersect with any surfaceNode or displayNode dirtyRegion,
+        // the whole oldDirtyRect should be render in this vsync.
+        // Partical rendering of node with filter would cause display problem.
         filterRects_[curSurfaceNode_->GetId()].push_back(node.GetOldDirtyInSurface());
     }
     curAlpha_ = alpha;
     dirtyFlag_ = dirtyFlag;
+    prepareClipRect_ = prepareClipRect;
+}
+
+
+void RSUniRenderVisitor::CopyForParallelPrepare(std::shared_ptr<RSUniRenderVisitor> visitor)
+{
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    isPartialRenderEnabled_ &= visitor->isPartialRenderEnabled_;
+    isOpDropped_ &= visitor->isOpDropped_;
+    needFilter_ |= visitor->needFilter_;
+    for (auto &u : visitor->displayHasSecSurface_) {
+        displayHasSecSurface_[u.first] |= u.second;
+    }
+
+    for (auto &u : visitor->dirtySurfaceNodeMap_) {
+        dirtySurfaceNodeMap_[u.first] = u.second;
+    }
+
+    for (auto &u : visitor->filterRects_) {
+        filterRects_[u.first] = u.second;
+    }
+
+#endif
 }
 
 void RSUniRenderVisitor::DrawDirtyRectForDFX(const RectI& dirtyRect, const SkColor color,
@@ -395,10 +697,19 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         node.GetDirtyManager()->GetDirtyRegion().ToString().c_str());
     RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode node: %" PRIu64 ", child size:%u", node.GetId(),
         node.GetChildrenCount());
+    sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
+    if (!screenManager) {
+        RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode ScreenManager is nullptr");
+        return;
+    }
+    screenInfo_ = screenManager->QueryScreenInfo(node.GetScreenId());
     isSecurityDisplay_ = node.GetSecurityDisplay();
+    auto mirrorNode = node.GetMirrorSource().lock();
     switch (screenInfo_.state) {
         case ScreenState::PRODUCER_SURFACE_ENABLE:
-            node.SetCompositeType(RSDisplayRenderNode::CompositeType::UNI_RENDER_MIRROR_COMPOSITE);
+            node.SetCompositeType(mirrorNode ?
+                RSDisplayRenderNode::CompositeType::UNI_RENDER_MIRROR_COMPOSITE :
+                RSDisplayRenderNode::CompositeType::UNI_RENDER_EXPAND_COMPOSITE);
             break;
         case ScreenState::HDI_OUTPUT_ENABLE:
             node.SetCompositeType(node.IsForceSoftComposite() ?
@@ -416,7 +727,6 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: RSProcessor is null!");
         return;
     }
-    auto mirrorNode = node.GetMirrorSource().lock();
     if (!processor_->Init(node, node.GetDisplayOffsetX(), node.GetDisplayOffsetY(),
         mirrorNode ? mirrorNode->GetScreenId() : INVALID_SCREEN_ID)) {
         RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: processor init failed!");
@@ -437,7 +747,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
     }
 
     if (mirrorNode) {
-        auto processor = std::static_pointer_cast<RSUniRenderMirrorProcessor>(processor_);
+        auto processor = std::static_pointer_cast<RSUniRenderVirtualProcessor>(processor_);
         if (displayHasSecSurface_[mirrorNode->GetScreenId()] && mirrorNode->GetSecurityDisplay() != isSecurityDisplay_
             && processor) {
             canvas_ = processor->GetCanvas();
@@ -445,11 +755,15 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         } else {
             processor_->ProcessDisplaySurface(*mirrorNode);
         }
+    } else if (node.GetCompositeType() == RSDisplayRenderNode::CompositeType::UNI_RENDER_EXPAND_COMPOSITE) {
+        ProcessBaseRenderNode(node);
     } else {
 #ifdef RS_ENABLE_EGLQUERYSURFACE
         if (isPartialRenderEnabled_) {
             curDisplayDirtyManager_->SetSurfaceSize(screenInfo_.width, screenInfo_.height);
             CalcDirtyDisplayRegion(displayNodePtr);
+            CalcDirtyRegionForFilterNode(displayNodePtr);
+            displayNodePtr->ClearCurrentSurfacePos();
         }
         if (isOpDropped_ && dirtySurfaceNodeMap_.empty() && !curDisplayDirtyManager_->IsDirty()) {
             RS_LOGD("DisplayNode skip");
@@ -463,15 +777,17 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         }
         rsSurface->SetColorSpace(newColorSpace_);
         // we should request a framebuffer whose size is equals to the physical screen size.
+        RS_TRACE_BEGIN("RSUniRender:RequestFrame");
         auto renderFrame = renderEngine_->RequestFrame(std::static_pointer_cast<RSSurfaceOhos>(rsSurface),
             RSBaseRenderUtil::GetFrameBufferRequestConfig(screenInfo_, true));
+        RS_TRACE_END();
         if (renderFrame == nullptr) {
             RS_LOGE("RSUniRenderVisitor Request Frame Failed");
             return;
         }
         std::shared_ptr<RSCanvasListener> overdrawListener = nullptr;
         AddOverDrawListener(renderFrame, overdrawListener);
-        
+
         if (canvas_ == nullptr) {
             RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: failed to create canvas");
             return;
@@ -479,37 +795,49 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         int saveLayerCnt = 0;
         SkRegion region;
         Occlusion::Region dirtyRegionTest;
+        std::vector<RectI> rects;
 #ifdef RS_ENABLE_EGLQUERYSURFACE
         // Get displayNode buffer age in order to merge visible dirty region for displayNode.
         // And then set egl damage region to improve uni_render efficiency.
         if (isPartialRenderEnabled_) {
-            // Early history buffer Merging will have impact on Overdraw display, so we need to 
+            // Early history buffer Merging will have impact on Overdraw display, so we need to
             // set the full screen dirty to avoid this impact.
             if (RSOverdrawController::GetInstance().IsEnabled()) {
                 node.GetDirtyManager()->ResetDirtyAsSurfaceSize();
             }
             int bufferAge = renderFrame->GetBufferAge();
-            RSUniRenderUtil::MergeDirtyHistory(displayNodePtr, bufferAge);
-            auto dirtyRegion = RSUniRenderUtil::MergeVisibleDirtyRegion(displayNodePtr);
+            RSUniRenderUtil::MergeDirtyHistory(displayNodePtr, bufferAge, isDirtyRegionAlignedEnable_);
+            Occlusion::Region dirtyRegion = RSUniRenderUtil::MergeVisibleDirtyRegion(
+                displayNodePtr, isDirtyRegionAlignedEnable_);
             dirtyRegionTest = dirtyRegion;
-            SetSurfaceGlobalDirtyRegion(displayNodePtr);
-            std::vector<RectI> rects = GetDirtyRects(dirtyRegion);
+            if (isDirtyRegionAlignedEnable_) {
+                SetSurfaceGlobalAlignedDirtyRegion(displayNodePtr, dirtyRegion);
+            } else {
+                SetSurfaceGlobalDirtyRegion(displayNodePtr);
+            }
+            rects = GetDirtyRects(dirtyRegion);
             RectI rect = node.GetDirtyManager()->GetDirtyRegionFlipWithinSurface();
             if (!rect.IsEmpty()) {
                 rects.emplace_back(rect);
             }
-            auto disH = screenInfo_.GetRotatedHeight();
-            for (auto& r : rects) {
-                region.op(SkIRect::MakeXYWH(r.left_, disH - r.GetBottom(), r.width_, r.height_), SkRegion::kUnion_Op);
-                RS_LOGD("SetDamageRegion %s", r.ToString().c_str());
+            if (!isDirtyRegionAlignedEnable_) {
+                auto disH = screenInfo_.GetRotatedHeight();
+                for (auto& r : rects) {
+                    region.op(SkIRect::MakeXYWH(r.left_, disH - r.GetBottom(), r.width_, r.height_),
+                        SkRegion::kUnion_Op);
+                    RS_LOGD("SetDamageRegion %s", r.ToString().c_str());
+                }
             }
             // SetDamageRegion and opDrop will be disabled for dirty region DFX visualization
             if (!isDirtyRegionDfxEnabled_ && !isTargetDirtyRegionDfxEnabled_) {
                 renderFrame->SetDamageRegion(rects);
             }
         }
-        if (isOpDropped_ && !region.isEmpty()) {
-            if (region.isRect()) {
+        if (isOpDropped_ && !isDirtyRegionAlignedEnable_) {
+            if (region.isEmpty()) {
+                // [planning] Remove this after frame buffer can cancel
+                canvas_->clipRect(SkRect::MakeEmpty());
+            } else if (region.isRect()) {
                 canvas_->clipRegion(region);
             } else {
                 SkPath dirtyPath;
@@ -520,20 +848,41 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                     saveLayerCnt = canvas_->saveLayer(SkRect::MakeWH(screenInfo_.width, screenInfo_.height), nullptr);
                 }
             }
-            canvas_->clear(SK_ColorTRANSPARENT);
         }
 #endif
-        int saveCount = canvas_->save();
-        canvas_->SetHighContrast(renderEngine_->IsHighContrastEnabled());
-        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
-        if (geoPtr != nullptr) {
-            canvas_->concat(geoPtr->GetMatrix());
-            // enable cache if screen rotation is not times of 90 degree
-            canvas_->SetCacheEnabled(geoPtr->IsNeedClientCompose());
+        RSPropertiesPainter::SetBgAntiAlias(true);
+        if (!isParallel_) {
+            int saveCount = canvas_->save();
+            canvas_->SetHighContrast(renderEngine_->IsHighContrastEnabled());
+            auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
+            if (geoPtr != nullptr) {
+                canvas_->concat(geoPtr->GetMatrix());
+                // enable cache if screen rotation is not times of 90 degree
+                canvas_->SetCacheEnabled(geoPtr->IsNeedClientCompose());
+            }
+            canvas_->SetCacheEnabled(canvas_->isCacheEnabled() ||
+                node.GetCurAllSurfaces().size() > USE_CACHE_SURFACE_NUM);
+            if (canvas_->isCacheEnabled()) {
+                // we are doing rotation animation, try offscreen render if capable
+                PrepareOffscreenRender(node);
+                ProcessBaseRenderNode(node);
+                FinishOffscreenRender();
+            } else {
+                // render directly
+                ProcessBaseRenderNode(node);
+            }
+            canvas_->restoreToCount(saveCount);
         }
-        ProcessBaseRenderNode(node);
-        canvas_->restoreToCount(saveCount);
-
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+        if (isParallel_ && ((rects.size() > 0) || !isPartialRenderEnabled_)) {
+            auto parallelRenderManager = RSParallelRenderManager::Instance();
+            parallelRenderManager->SetFrameSize(screenInfo_.width, screenInfo_.height);
+            parallelRenderManager->CopyVisitorAndPackTask(*this, node);
+            parallelRenderManager->LoadBalanceAndNotify(TaskType::PROCESS_TASK);
+            parallelRenderManager->MergeRenderResult(canvas_);
+            parallelRenderManager->CommitSurfaceNum(node.GetChildrenCount());
+        }
+#endif
         if (saveLayerCnt > 0) {
             RS_TRACE_NAME("RSUniRender:RestoreLayer");
             canvas_->restoreToCount(saveLayerCnt);
@@ -557,17 +906,17 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         RS_TRACE_BEGIN("RSUniRender:WaitUtilUniRenderFinished");
         RSMainThread::Instance()->WaitUtilUniRenderFinished();
         RS_TRACE_END();
-        if (mirroredDisplays_.size() > 0) {
-            node.MakeSnapshot(canvas_->GetSurface());
-        }
         processor_->ProcessDisplaySurface(node);
     }
     processor_->PostProcess();
 
-    // We should release DisplayNode's surface buffer after PostProcess(),
-    // since the buffer's releaseFence was set in PostProcess().
-    auto& surfaceHandler = static_cast<RSSurfaceHandler&>(node);
-    (void)RSBaseRenderUtil::ReleaseBuffer(surfaceHandler);
+    // this is a workaround for uni dynamic_switch mode, displayNode buffer releasing
+    // works in rs_hardware_thread when rs render type is UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL
+    auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
+    if (renderType != UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
+        auto& surfaceHandler = static_cast<RSSurfaceHandler&>(node);
+        (void)RSUniRenderUtil::ReleaseBuffer(surfaceHandler);
+    }
     RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode end");
 }
 
@@ -575,12 +924,12 @@ void RSUniRenderVisitor::AddOverDrawListener(std::unique_ptr<RSRenderFrame>& ren
     std::shared_ptr<RSCanvasListener>& overdrawListener)
 {
     if (renderFrame->GetFrame() == nullptr) {
-        RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: RSSurfaceFrame is null");
+        RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: RSSurfaceFrame is null");
         return;
     }
     auto skSurface = renderFrame->GetFrame()->GetSurface();
     if (skSurface == nullptr) {
-        RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: skSurface is null");
+        RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: skSurface is null");
         return;
     }
     if (skSurface->getCanvas() == nullptr) {
@@ -624,18 +973,13 @@ void RSUniRenderVisitor::CalcDirtyDisplayRegion(std::shared_ptr<RSDisplayRenderN
         }
         auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
         RectI surfaceDirtyRect = surfaceDirtyManager->GetDirtyRegion();
-        NodeId surfaceNodeId =  surfaceNode->GetId();
         if (surfaceNode->IsTransparent()) {
             // Handles the case of transparent surface, merge transparent dirty rect
             RectI transparentDirtyRect = surfaceNode->GetDstRect().IntersectRect(surfaceDirtyRect);
             if (!transparentDirtyRect.IsEmpty()) {
                 RS_LOGD("CalcDirtyDisplayRegion merge transparent dirty rect %s rect %s",
                     surfaceNode->GetName().c_str(), transparentDirtyRect.ToString().c_str());
-                if (!surfaceNode->GetRenderProperties().NeedFilter()) {
-                    displayDirtyManager->MergeDirtyRect(transparentDirtyRect);
-                } else {
-                    displayDirtyManager->MergeDirtyRect(surfaceNode->GetDstRect());
-                }
+                displayDirtyManager->MergeDirtyRect(transparentDirtyRect);
             }
         }
 
@@ -688,27 +1032,65 @@ void RSUniRenderVisitor::CalcDirtyDisplayRegion(std::shared_ptr<RSDisplayRenderN
             displayDirtyManager->MergeDirtyRect(RectI
                 { rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
         }
-
-        // Component
-        if (filterRects_.find(surfaceNodeId) != filterRects_.end()) {
-            auto rectVec = filterRects_.find(surfaceNodeId)->second;
-            for (auto it = rectVec.begin(); it != rectVec.end(); ++it) {
-                if (!displayDirtyManager->GetDirtyRegion().IntersectRect(*it).IsEmpty()) {
-                    if (surfaceNode->IsTransparent()) {
-                        displayDirtyManager->MergeDirtyRect(*it);
-                    }
-                    surfaceDirtyManager->MergeDirtyRect(*it);
-                } else if (!surfaceDirtyManager->GetDirtyRegion().IntersectRect(*it).IsEmpty()) {
-                    surfaceDirtyManager->MergeDirtyRect(*it);
-                }
-            }
-        }
     }
     std::vector<RectI> surfaceChangedRects = node->GetSurfaceChangedRects();
     for (auto& surfaceChangedRect : surfaceChangedRects) {
         RS_LOGD("CalcDirtyDisplayRegion merge Surface closed %s", surfaceChangedRect.ToString().c_str());
         if (!surfaceChangedRect.IsEmpty()) {
             displayDirtyManager->MergeDirtyRect(surfaceChangedRect);
+        }
+    }
+}
+
+void RSUniRenderVisitor::CalcDirtyRegionForFilterNode(std::shared_ptr<RSDisplayRenderNode>& node) const
+{
+    auto displayDirtyManager = node->GetDirtyManager();
+    RectI displayDirtyRect = displayDirtyManager ? displayDirtyManager->GetDirtyRegion() : RectI{0, 0, 0, 0};
+    for (auto it = node->GetCurAllSurfaces().begin(); it != node->GetCurAllSurfaces().end(); ++it) {
+        auto currentSurfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        if (currentSurfaceNode == nullptr) {
+            continue;
+        }
+        auto currentSurfaceDirtyManager = currentSurfaceNode->GetDirtyManager();
+        RectI currentSurfaceDirtyRect = currentSurfaceDirtyManager->GetDirtyRegion();
+        NodeId currentSurfaceNodeId = currentSurfaceNode->GetId();
+
+        // child node (component) has filter
+        if (filterRects_.find(currentSurfaceNodeId) != filterRects_.end()) {
+            auto rectVec = filterRects_.find(currentSurfaceNodeId)->second;
+            for (auto rectIt = rectVec.begin(); rectIt != rectVec.end(); ++rectIt) {
+                if (!displayDirtyRect.IntersectRect(*rectIt).IsEmpty()) {
+                    if (currentSurfaceNode->IsTransparent()) {
+                        displayDirtyManager->MergeDirtyRect(*rectIt);
+                    }
+                    currentSurfaceDirtyManager->MergeDirtyRect(*rectIt);
+                } else if (!currentSurfaceDirtyRect.IntersectRect(*rectIt).IsEmpty()) {
+                    currentSurfaceDirtyManager->MergeDirtyRect(*rectIt);
+                }
+            }
+        }
+
+        // surfaceNode self has filter
+        if (currentSurfaceNode->GetRenderProperties().NeedFilter()) {
+            if (!displayDirtyRect.IntersectRect(currentSurfaceNode->GetOldDirtyInSurface()).IsEmpty() ||
+                !currentSurfaceDirtyRect.IntersectRect(currentSurfaceNode->GetOldDirtyInSurface()).IsEmpty()) {
+                currentSurfaceDirtyManager->MergeDirtyRect(currentSurfaceNode->GetOldDirtyInSurface());
+            }
+
+            if (currentSurfaceNode->IsTransparent()) {
+                for (auto iter = node->GetCurAllSurfaces().begin(); iter != node->GetCurAllSurfaces().end(); ++iter) {
+                    auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*iter);
+                    if (surfaceNode == nullptr) {
+                        continue;
+                    }
+                    if (!surfaceNode->GetDirtyManager()->GetDirtyRegion().IntersectRect(
+                        currentSurfaceNode->GetOldDirtyInSurface()).IsEmpty()) {
+                        currentSurfaceDirtyManager->MergeDirtyRect(currentSurfaceNode->GetOldDirtyInSurface());
+                        displayDirtyManager->MergeDirtyRect(currentSurfaceNode->GetOldDirtyInSurface());
+                        break;
+                    }
+                }
+            }
         }
     }
 }
@@ -722,7 +1104,8 @@ void RSUniRenderVisitor::SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRe
             continue;
         }
         // set display dirty region to surfaceNode
-        surfaceNode->SetGloblDirtyRegion(node->GetDirtyManager()->GetDirtyRegion());
+        surfaceNode->SetGlobalDirtyRegion(node->GetDirtyManager()->GetDirtyRegion());
+        surfaceNode->SetDirtyRegionAlignedEnable(false);
     }
     Occlusion::Region curVisibleDirtyRegion;
     for (auto it = node->GetCurAllSurfaces().begin(); it != node->GetCurAllSurfaces().end(); ++it) {
@@ -734,6 +1117,47 @@ void RSUniRenderVisitor::SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRe
         surfaceNode->SetDirtyRegionBelowCurrentLayer(curVisibleDirtyRegion);
         auto visibleDirtyRegion = surfaceNode->GetVisibleDirtyRegion();
         curVisibleDirtyRegion = curVisibleDirtyRegion.Or(visibleDirtyRegion);
+    }
+}
+
+void RSUniRenderVisitor::SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
+    const Occlusion::Region alignedDirtyRegion)
+{
+    RS_TRACE_FUNC();
+    if (!isDirtyRegionAlignedEnable_) {
+        return;
+    }
+    // calcultae extra dirty region after 32 bits alignedment
+    Occlusion::Region dirtyRegion = alignedDirtyRegion;
+    auto globalRectI = node->GetDirtyManager()->GetDirtyRegion();
+    Occlusion::Rect globalRect {globalRectI.left_, globalRectI.top_, globalRectI.GetRight(), globalRectI.GetBottom()};
+    Occlusion::Region globalRegion{globalRect};
+    dirtyRegion.SubSelf(globalRegion);
+    for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
+            continue;
+        }
+        surfaceNode->SetGlobalDirtyRegion(node->GetDirtyManager()->GetDirtyRegion());
+        Occlusion::Region visibleRegion = surfaceNode->GetVisibleRegion();
+        Occlusion::Region surfaceAlignedDirtyRegion = surfaceNode->GetAlignedVisibleDirtyRegion();
+        if (dirtyRegion.IsEmpty()) {
+            surfaceNode->SetExtraDirtyRegionAfterAlignment(dirtyRegion);
+        } else {
+            auto extraDirtyRegion = (dirtyRegion.Sub(surfaceAlignedDirtyRegion)).And(visibleRegion);
+            surfaceNode->SetExtraDirtyRegionAfterAlignment(extraDirtyRegion);
+        }
+        surfaceNode->SetDirtyRegionAlignedEnable(true);
+    }
+    Occlusion::Region curVisibleDirtyRegion;
+    for (auto it = node->GetCurAllSurfaces().begin(); it != node->GetCurAllSurfaces().end(); ++it) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
+            continue;
+        }
+        surfaceNode->SetDirtyRegionBelowCurrentLayer(curVisibleDirtyRegion);
+        auto alignedVisibleDirtyRegion = surfaceNode->GetAlignedVisibleDirtyRegion();
+        curVisibleDirtyRegion.OrSelf(alignedVisibleDirtyRegion);
     }
 }
 
@@ -762,17 +1186,6 @@ void RSUniRenderVisitor::InitCacheSurface(RSSurfaceRenderNode& node, int width, 
 #endif
 }
 
-void RSUniRenderVisitor::DrawCacheSurface(RSSurfaceRenderNode& node)
-{
-    canvas_->save();
-    canvas_->scale(
-        node.GetRenderProperties().GetBoundsWidth() / node.GetCacheSurface()->width(),
-        node.GetRenderProperties().GetBoundsHeight() / node.GetCacheSurface()->height());
-    SkPaint paint;
-    node.GetCacheSurface()->draw(canvas_.get(), 0.0, 0.0, &paint);
-    canvas_->restore();
-}
-
 void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
     RS_TRACE_NAME("RSUniRender::Process:[" + node.GetName() + "]" + node.GetDstRect().ToString());
@@ -781,6 +1194,10 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     node.UpdatePositionZ();
     if (isSecurityDisplay_ && node.GetSecurityLayer()) {
         RS_TRACE_NAME("SecurityLayer Skip");
+        return;
+    }
+    if (node.GetSurfaceNodeType() == RSSurfaceNodeType::STARTING_WINDOW_NODE && !needDrawStartingWindow_) {
+        RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode skip startingWindow");
         return;
     }
     const auto& property = node.GetRenderProperties();
@@ -800,8 +1217,9 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode skip: %s", node.GetName().c_str());
             return;
         }
+    }
+    if (node.IsAppWindow()) {
         curSurfaceNode_ = node.ReinterpretCastTo<RSSurfaceRenderNode>();
-        curSurfaceDirtyManager_ = node.GetDirtyManager();
     }
 #endif
 
@@ -814,12 +1232,54 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         RS_LOGE("RSUniRenderVisitor::ProcessSurfaceRenderNode node:%" PRIu64 ", get geoPtr failed", node.GetId());
         return;
     }
+
+    if (node.IsAppWindow()) {
+        auto visibleRegions = node.GetVisibleRegion().GetRegionRects();
+        if (visibleRegions.size() == 1) {
+            canvas_->SetVisibleRect(SkRect::MakeLTRB(
+                visibleRegions[0].left_, visibleRegions[0].top_, visibleRegions[0].right_, visibleRegions[0].bottom_));
+        }
+    }
+
+    if (node.GetSurfaceNodeType() == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
+        needDrawStartingWindow_ = true; // reset to default value
+        needColdStartThread_ = !node.IsStartAnimationFinished() && doAnimate_;
+        needCheckFirstFrame_ = node.GetChildrenCount() > 1; // childCount > 1 means startingWindow and appWindow
+    }
+
+    if (node.IsAppWindow() && needColdStartThread_ && needCheckFirstFrame_ &&
+        !RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId())) {
+        if (!IsFirstFrameReadyToDraw(node)) {
+            return;
+        }
+        auto nodePtr = node.shared_from_this();
+        RSColdStartManager::Instance().StartColdStartThreadIfNeed(nodePtr->ReinterpretCastTo<RSSurfaceRenderNode>());
+        RecordAppWindowNodeAndPostTask(node, property.GetBoundsWidth(), property.GetBoundsHeight());
+        return;
+    }
+
     auto savedState = canvas_->SaveCanvasAndAlpha();
+    auto bgAntiAliasState = RSPropertiesPainter::GetBgAntiAlias();
+    if (doAnimate_ && (!ROSEN_EQ(geoPtr->GetScaleX(), 1.f) || !ROSEN_EQ(geoPtr->GetScaleY(), 1.f))) {
+        // disable background antialias when surfacenode has scale animation
+        RSPropertiesPainter::SetBgAntiAlias(false);
+    }
 
     canvas_->MultiplyAlpha(property.GetAlpha());
     canvas_->MultiplyAlpha(node.GetContextAlpha());
 
     bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
+    // [planning] surfaceNode use frame instead
+    // This is for SELF_DRAWING_NODE like RosenRenderTexture
+    // BoundsRect of RosenRenderTexture is the size of video, not the size of the component.
+    // The size of RosenRenderTexture is the paintRect (always be set to FrameRect) which is not passed to RenderNode
+    // because RSSurfaceRenderNode is designed only affected by BoundsRect.
+    // When RosenRenderTexture has child node, child node is layouted
+    // according to paintRect of RosenRenderTexture, not the BoundsRect.
+    // So when draw SELF_DRAWING_NODE, we should save canvas
+    // to avoid child node being layout according to the BoundsRect of RosenRenderTexture.
+    // Temporarily, we use parent of SELF_DRAWING_NODE which has the same paintRect with its child instead.
+    // to draw child node of SELF_DRAWING_NODE
     if (isSelfDrawingSurface) {
         canvas_->save();
     }
@@ -830,17 +1290,12 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
     RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect);
 
-    if (isSelfDrawingSurface) {
-        canvas_->save();
-    }
-
-    boundsRect_ = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
-    frameGravity_ = property.GetFrameGravity();
+    // Fix bug that when AppWindow has shadow set by config.xml cannot be displayed for LEASH_WINDOW_NODE has clipped canvas.
     if (node.GetSurfaceNodeType() != RSSurfaceNodeType::LEASH_WINDOW_NODE) {
         if (!property.GetCornerRadius().IsZero()) {
             canvas_->clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
         } else {
-            canvas_->clipRect(boundsRect_);
+            canvas_->clipRect(SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight()));
         }
     }
 
@@ -851,10 +1306,6 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         auto skRectPtr = std::make_unique<SkRect>();
         skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
         RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
-    }
-
-    if (isSelfDrawingSurface) {
-        canvas_->restore();
     }
 
     node.SetTotalMatrix(canvas_->getTotalMatrix());
@@ -870,29 +1321,59 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         canvas_->restore();
     }
 
-    if (node.IsAppWindow()) {
+    if (node.IsAppWindow() &&
+        (!needColdStartThread_ || !RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId()))) {
+        if (RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId())) {
+            node.ClearCachedImage();
+            RSColdStartManager::Instance().StopColdStartThread(node.GetId());
+        }
+        if (needCheckFirstFrame_ && IsFirstFrameReadyToDraw(node)) {
+            node.NotifyUIBufferAvailable();
+            needDrawStartingWindow_ = false;
+        }
         if (!node.IsAppFreeze()) {
             ProcessBaseRenderNode(node);
             node.ClearCacheSurface();
         } else if (node.GetCacheSurface()) {
-            DrawCacheSurface(node);
+            RSUniRenderUtil::DrawCachedSurface(node, *canvas_, node.GetCacheSurface());
         } else {
             InitCacheSurface(node, property.GetBoundsWidth(), property.GetBoundsHeight());
             if (node.GetCacheSurface()) {
                 auto cacheCanvas = std::make_shared<RSPaintFilterCanvas>(node.GetCacheSurface().get());
+                // When drawing CacheSurface, all child node should be drawn.
+                // So set isOpDropped_ = false here.
+                bool isOpDropped = isOpDropped_;
+                isOpDropped_ = false;
 
                 swap(cacheCanvas, canvas_);
                 ProcessBaseRenderNode(node);
                 swap(cacheCanvas, canvas_);
 
-                DrawCacheSurface(node);
+                isOpDropped_ = isOpDropped;
+
+                RSUniRenderUtil::DrawCachedSurface(node, *canvas_, node.GetCacheSurface());
+                // execute: set rosen.dumpsurfacetype.enabled 2 && setenforce 0
+                // Png file could be found in /data
+                RSBaseRenderUtil::WriteSurfaceRenderNodeToPng(node);
             } else {
                 RS_LOGE("RSUniRenderVisitor::ProcessSurfaceRenderNode %s Create CacheSurface failed",
                     node.GetName().c_str());
             }
         }
+    } else if (node.IsAppWindow()) { // use skSurface drawn by cold start thread
+        if (node.GetCachedImage() != nullptr) {
+            needDrawStartingWindow_ = false;
+            RSUniRenderUtil::DrawCachedImage(node, *canvas_, node.GetCachedImage());
+        }
+        RecordAppWindowNodeAndPostTask(node, property.GetBoundsWidth(), property.GetBoundsHeight());
     } else {
         ProcessBaseRenderNode(node);
+    }
+
+    if (node.GetSurfaceNodeType() == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
+        // reset to default value
+        needColdStartThread_ = false;
+        needCheckFirstFrame_ = false;
     }
 
     filter = std::static_pointer_cast<RSSkiaFilter>(property.GetFilter());
@@ -902,7 +1383,15 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
     }
 
+    RSPropertiesPainter::SetBgAntiAlias(bgAntiAliasState);
     canvas_->RestoreCanvasAndAlpha(savedState);
+    if (node.IsAppWindow()) {
+        canvas_->SetVisibleRect(SkRect::MakeLTRB(0, 0, 0, 0));
+
+        // count processed canvasnodes number
+        RS_TRACE_NAME("ProcessedNodes: " + std::to_string(processedCanvasNodeInCurrentSurface_));
+        processedCanvasNodeInCurrentSurface_ = 0; // reset
+    }
 }
 
 void RSUniRenderVisitor::ProcessProxyRenderNode(RSProxyRenderNode& node)
@@ -923,13 +1412,7 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         return;
     }
 
-    ColorFilterMode modeFromSysProperty = static_cast<ColorFilterMode>(RSSystemProperties::GetCorrectionMode());
     ColorFilterMode colorFilterMode = renderEngine_->GetColorFilterMode();
-    if (RSBaseRenderUtil::IsColorFilterModeValid(modeFromSysProperty)) {
-        colorFilterMode = modeFromSysProperty;
-    }
-    // save cache status
-    bool isCacheEnabledBefore = canvas_->isCacheEnabled();
     int saveCount;
     if (colorFilterMode >= ColorFilterMode::INVERT_COLOR_ENABLE_MODE &&
         colorFilterMode <= ColorFilterMode::INVERT_DALTONIZATION_TRITANOMALY_MODE) {
@@ -940,33 +1423,19 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     } else {
         saveCount = canvas_->save();
     }
-    const auto& property = node.GetRenderProperties();
-    if (node.GetParent().lock() == curSurfaceNode_) {
-        const float rootWidth = property.GetFrameWidth() * property.GetScaleX();
-        const float rootHeight = property.GetFrameHeight() * property.GetScaleY();
-        SkMatrix gravityMatrix;
-        (void)RSPropertiesPainter::GetGravityMatrix(frameGravity_,
-            RectF { 0.0f, 0.0f, boundsRect_.width(), boundsRect_.height() }, rootWidth, rootHeight, gravityMatrix);
-        // enable cache if gravityMatrix contains scale
-        if (gravityMatrix.getScaleX() != 1.0f || gravityMatrix.getScaleY() != 1.0f) {
-            canvas_->SetCacheEnabled(true);
-        }
-        canvas_->concat(gravityMatrix);
-    }
     ProcessCanvasRenderNode(node);
     canvas_->restoreToCount(saveCount);
-    // restore cache status
-    canvas_->SetCacheEnabled(isCacheEnabledBefore);
 }
 
 void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
 {
+    processedCanvasNodeInCurrentSurface_++;
     if (!node.ShouldPaint()) {
         RS_LOGD("RSUniRenderVisitor::ProcessCanvasRenderNode, no need process");
         return;
     }
 #ifdef RS_ENABLE_EGLQUERYSURFACE
-    if (isOpDropped_ &&
+    if (isOpDropped_ && curSurfaceNode_ &&
         !curSurfaceNode_->SubNodeNeedDraw(node.GetOldDirtyInSurface(), partialRenderType_) &&
         !node.HasChildrenOutOfRect()) {
         return;
@@ -976,9 +1445,100 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         RS_LOGE("RSUniRenderVisitor::ProcessCanvasRenderNode, canvas is nullptr");
         return;
     }
+    // in case preparation'update is skipped
+    node.GetMutableRenderProperties().CheckEmptyBounds();
     node.ProcessRenderBeforeChildren(*canvas_);
     ProcessBaseRenderNode(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }
+
+void RSUniRenderVisitor::RecordAppWindowNodeAndPostTask(RSSurfaceRenderNode& node, float width, float height)
+{
+    RSRecordingCanvas canvas(width, height);
+#ifdef RS_ENABLE_GL
+    canvas.SetGrContext(canvas_->getGrContext()); // SkImage::MakeFromCompressed need GrContext
+#endif
+    auto recordingCanvas = std::make_shared<RSPaintFilterCanvas>(&canvas);
+    swap(canvas_, recordingCanvas);
+    ProcessBaseRenderNode(node);
+    swap(canvas_, recordingCanvas);
+    RSColdStartManager::Instance().PostPlayBackTask(node.GetId(), canvas.GetDrawCmdList(), width, height);
+}
+
+void RSUniRenderVisitor::PrepareOffscreenRender(RSRenderNode& node)
+{
+    // cleanup
+    canvasBackup_ = nullptr;
+    offscreenSurface_ = nullptr;
+    // check offscreen size and hardware renderer
+    int32_t offscreenWidth = node.GetRenderProperties().GetFrameWidth();
+    int32_t offscreenHeight = node.GetRenderProperties().GetFrameHeight();
+    if (offscreenWidth <= 0 || offscreenHeight <= 0) {
+        RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, offscreenWidth or offscreenHeight is invalid");
+        return;
+    }
+    if (canvas_->GetSurface() == nullptr) {
+        canvas_->clipRect(SkRect::MakeWH(offscreenWidth, offscreenHeight));
+        RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, current surface is nullptr (software renderer?)");
+        return;
+    }
+    // create offscreen surface and canvas
+    auto offscreenInfo = SkImageInfo::Make(offscreenWidth, offscreenHeight, kRGBA_8888_SkColorType, kPremul_SkAlphaType,
+        canvas_->GetSurface()->imageInfo().refColorSpace());
+    offscreenSurface_ = canvas_->GetSurface()->makeSurface(offscreenInfo);
+    if (offscreenSurface_ == nullptr) {
+        RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, offscreenSurface is nullptr");
+        canvas_->clipRect(SkRect::MakeWH(offscreenWidth, offscreenHeight));
+        return;
+    }
+    auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface_.get());
+    // backup current canvas and replace with offscreen canvas
+    canvasBackup_ = std::move(canvas_);
+    canvas_ = std::move(offscreenCanvas);
+}
+
+void RSUniRenderVisitor::FinishOffscreenRender()
+{
+    if (canvasBackup_ == nullptr) {
+        RS_LOGD("RSUniRenderVisitor::FinishOffscreenRender, canvasBackup_ is nullptr");
+        return;
+    }
+    // flush offscreen canvas, maybe unnecessary
+    canvas_->flush();
+    // draw offscreen surface to current canvas
+    SkPaint paint;
+    paint.setAntiAlias(true);
+    canvasBackup_->drawImage(offscreenSurface_->makeImageSnapshot(), 0, 0, &paint);
+    // restore current canvas and cleanup
+    offscreenSurface_ = nullptr;
+    canvas_ = std::move(canvasBackup_);
+}
+
+bool RSUniRenderVisitor::AdaptiveSubRenderThreadMode(uint32_t renderNodeNum)
+{
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    bool isParallel = (renderNodeNum >= PARALLEL_RENDER_MINIMUN_RENDER_NODE_NUMBER) &&
+        (RSSystemProperties::GetParallelRenderingEnabled() != ParallelRenderingType::DISABLE);
+    if (!isParallel) {
+        return isParallel;
+    }
+    auto parallelRenderManager = RSParallelRenderManager::Instance();
+    switch (RSSystemProperties::GetParallelRenderingEnabled()) {
+        case ParallelRenderingType::AUTO:
+            parallelRenderManager->SetParallelMode(isParallel);
+            break;
+        case ParallelRenderingType::DISABLE:
+            parallelRenderManager->SetParallelMode(false);
+            break;
+        case ParallelRenderingType::ENABLE:
+            parallelRenderManager->SetParallelMode(true);
+            break;
+    }
+    return isParallel;
+#else
+    return false;
+#endif
+}
+
 } // namespace Rosen
 } // namespace OHOS

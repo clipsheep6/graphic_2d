@@ -47,6 +47,25 @@ enum class DumpSurfaceType {
     PIXELMAP,
 };
 
+/* ContainerWindowConfigType
+// -1, disable round corner's transparent region
+// 0, roundcorner surfacenode has a strip size transparent region
+// 1, on the base of ENABLED_LEVEL_0, unfocused surface's side boundary is opaque
+// 2, on the base of ENABLED_LEVEL_0, unfocused surface only has 4 little squares as transparent region
+*/
+enum class ContainerWindowConfigType {
+    DISABLED = -1,
+    ENABLED_LEVEL_0 = 0,
+    ENABLED_UNFOCUSED_WINDOW_LEVEL_1 = 1,
+    ENABLED_UNFOCUSED_WINDOW_LEVEL_2 = 2,
+};
+
+enum class ParallelRenderingType {
+    AUTO = 0,
+    DISABLE = 1,
+    ENABLE = 2
+};
+
 class RSSystemProperties final {
 public:
     ~RSSystemProperties() = default;
@@ -57,26 +76,27 @@ public:
     static DirtyRegionDebugType GetDirtyRegionDebugType();
     static PartialRenderType GetPartialRenderEnabled();
     static PartialRenderType GetUniPartialRenderEnabled();
+    static ContainerWindowConfigType GetContainerWindowConfig();
     static bool GetOcclusionEnabled();
     static std::string GetRSEventProperty(const std::string &paraName);
     static bool GetDirectClientCompEnableStatus();
     static bool GetHighContrastStatus();
     static uint32_t GetCorrectionMode();
-    static bool IsUniRenderMode();
-    static void SetRenderMode(bool isUni);
     static DumpSurfaceType GetDumpSurfaceType();
     static uint64_t GetDumpSurfaceId();
     static bool GetTargetDirtyRegionDfxEnabled(std::vector<std::string>& dfxTargetSurfaceNames_);
     static bool GetDumpLayersEnabled();
+    static bool GetQuickSkipPrepareEnabled();
 
     static void SetDrawTextAsBitmap(bool flag);
     static bool GetDrawTextAsBitmap();
+    static ParallelRenderingType GetPrepareParallelRenderingEnabled();
+    static ParallelRenderingType GetParallelRenderingEnabled();
 
 private:
     RSSystemProperties() = default;
 
     static inline bool isUniRenderEnabled_ = false;
-    static inline std::atomic_bool isUniRenderMode_ = false;
     inline static bool isDrawTextAsBitmap_ = false;
 };
 

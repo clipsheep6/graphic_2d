@@ -15,6 +15,7 @@
 
 #include "native_window.h"
 
+#include <cstdint>
 #include <map>
 #include <cinttypes>
 #include "buffer_log.h"
@@ -41,7 +42,7 @@ OHNativeWindow* CreateNativeWindowFromSurface(void* pSurface)
     nativeWindow->config.width = nativeWindow->surface->GetDefaultWidth();
     nativeWindow->config.height = nativeWindow->surface->GetDefaultHeight();
     nativeWindow->config.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_DMA;
-    nativeWindow->config.format = PIXEL_FMT_RGBA_8888;
+    nativeWindow->config.format = GRAPHIC_PIXEL_FMT_RGBA_8888;
     nativeWindow->config.strideAlignment = 8;   // default stride is 8
     nativeWindow->config.timeout = 3000;        // default timeout is 3000 ms
     nativeWindow->config.colorGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
@@ -90,9 +91,10 @@ int32_t NativeWindowRequestBuffer(OHNativeWindow *window,
     }
     OHOS::sptr<OHOS::SurfaceBuffer> sfbuffer;
     OHOS::sptr<OHOS::SyncFence> releaseFence = OHOS::SyncFence::INVALID_FENCE;
-    if (window->surface->RequestBuffer(sfbuffer, releaseFence, window->config) != OHOS::GSError::GSERROR_OK ||
-        sfbuffer == nullptr) {
-        BLOGE("API failed, please check RequestBuffer function ret");
+    int32_t ret = window->surface->RequestBuffer(sfbuffer, releaseFence, window->config);
+    if (ret != OHOS::GSError::GSERROR_OK || sfbuffer == nullptr) {
+        BLOGE("API failed, please check RequestBuffer function ret:%{public}d, Queue Id:%{public}" PRIu64,
+                ret, window->surface->GetUniqueId());
         return OHOS::GSERROR_NO_BUFFER;
     }
     OHNativeWindowBuffer *nwBuffer = new OHNativeWindowBuffer();
@@ -319,8 +321,8 @@ int32_t NativeWindowSetMetaData(OHNativeWindow *window, uint32_t sequence, int32
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
 
-    std::vector<HDRMetaData> data(reinterpret_cast<const HDRMetaData *>(metaData),
-                                  reinterpret_cast<const HDRMetaData *>(metaData) + size);
+    std::vector<GraphicHDRMetaData> data(reinterpret_cast<const GraphicHDRMetaData *>(metaData),
+                                         reinterpret_cast<const GraphicHDRMetaData *>(metaData) + size);
     return window->surface->SetMetaData(sequence, data);
 }
 
@@ -334,7 +336,7 @@ int32_t NativeWindowSetMetaDataSet(OHNativeWindow *window, uint32_t sequence, OH
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
     std::vector<uint8_t> data(metaData, metaData + size);
-    return window->surface->SetMetaDataSet(sequence, static_cast<HDRMetadataKey>(key), data);
+    return window->surface->SetMetaDataSet(sequence, static_cast<GraphicHDRMetadataKey>(key), data);
 }
 
 int32_t NativeWindowSetTunnelHandle(OHNativeWindow *window, const OHExtDataHandle *handle)
@@ -343,7 +345,7 @@ int32_t NativeWindowSetTunnelHandle(OHNativeWindow *window, const OHExtDataHandl
         BLOGE("parameter error, please check input parameter");
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
-    return window->surface->SetTunnelHandle(reinterpret_cast<const ExtDataHandle *>(handle));
+    return window->surface->SetTunnelHandle(handle);
 }
 
 NativeWindow::NativeWindow() : NativeWindowMagic(NATIVE_OBJECT_MAGIC_WINDOW), surface(nullptr)

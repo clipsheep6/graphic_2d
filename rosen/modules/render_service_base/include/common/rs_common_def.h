@@ -46,7 +46,6 @@ enum class FollowType : uint8_t {
     NONE,
     FOLLOW_TO_PARENT,
     FOLLOW_TO_SELF,
-    FOLLOW_VISITOR,
 };
 
 static inline const std::unordered_map<RSUINodeType, std::string> RSUINodeTypeStrs = {
@@ -149,6 +148,12 @@ public:
 protected:
     size_t size_;
 };
+
+inline constexpr pid_t ExtractPid(uint64_t id)
+{
+    // extract high 32 bits of nodeid/animationId/propertyId as pid
+    return static_cast<pid_t>(id >> 32);
+}
 } // namespace Rosen
 } // namespace OHOS
 #endif // RENDER_SERVICE_CLIENT_CORE_COMMON_RS_COMMON_DEF_H

@@ -77,8 +77,8 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
         transactionProxy->AddCommand(command, isWindow);
         node->SetFrameGravity(Gravity::RESIZE);
     }
-    if (std::strcmp(node->GetName().c_str(), "SystemUi_BatteryPanel") == 0 ||
-        std::strcmp(node->GetName().c_str(), "SystemUi_SoundPanel") == 0) {
+    if (node->GetName().find("battery_panel") != std::string::npos ||
+        node->GetName().find("sound_panel") != std::string::npos) {
         node->SetFrameGravity(Gravity::TOP_LEFT);
     } else {
         node->SetFrameGravity(Gravity::RESIZE);
@@ -144,13 +144,11 @@ void RSSurfaceNode::ClearChildren()
 
 FollowType RSSurfaceNode::GetFollowType() const
 {
-    if (!IsUniRenderEnabled() && !isRenderServiceNode_) {
+    if (IsRenderServiceNode()) {
+        return FollowType::NONE;
+    } else {
         return FollowType::FOLLOW_TO_PARENT;
     }
-    if (IsUniRenderEnabled() && !isRenderServiceNode_ && !RSSystemProperties::IsUniRenderMode()) {
-        return FollowType::FOLLOW_TO_PARENT;
-    }
-    return FollowType::NONE;
 }
 
 void RSSurfaceNode::OnBoundsSizeChanged() const
@@ -237,6 +235,16 @@ bool RSSurfaceNode::SetBufferAvailableCallback(BufferAvailableCallback callback)
         }
         actualCallback();
     });
+}
+
+void RSSurfaceNode::SetAnimationFinished()
+{
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetAnimationFinished>(GetId());
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, true);
+        transactionProxy->FlushImplicitTransaction();
+    }
 }
 
 bool RSSurfaceNode::Marshalling(Parcel& parcel) const
@@ -342,14 +350,19 @@ void RSSurfaceNode::SetAppFreeze(bool isAppFreeze)
     }
 }
 
-void RSSurfaceNode::SetContainerWindow(bool hasContainerWindow)
+void RSSurfaceNode::SetContainerWindow(bool hasContainerWindow, float density)
 {
     std::unique_ptr<RSCommand> command =
-        std::make_unique<RSSurfaceNodeSetContainerWindow>(GetId(), hasContainerWindow);
+        std::make_unique<RSSurfaceNodeSetContainerWindow>(GetId(), hasContainerWindow, density);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, true);
     }
+}
+
+void RSSurfaceNode::SetWindowId(uint32_t windowId)
+{
+    windowId_ = windowId;
 }
 
 RSSurfaceNode::RSSurfaceNode(const RSSurfaceNodeConfig& config, bool isRenderServiceNode)

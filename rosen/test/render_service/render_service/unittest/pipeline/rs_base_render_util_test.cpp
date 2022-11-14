@@ -108,7 +108,7 @@ HWTEST_F(RSBaseRenderUtilTest, ConvertBufferToBitmap_001, TestSize.Level1)
 {
     sptr<SurfaceBuffer> buffer;
     std::vector<uint8_t> newBuffer;
-    ColorGamut dstGamut = ColorGamut::COLOR_GAMUT_SRGB;
+    GraphicColorGamut dstGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
     SkBitmap bitmap;
     ASSERT_EQ(false, RSBaseRenderUtil::ConvertBufferToBitmap(buffer, newBuffer, dstGamut, bitmap));
 }

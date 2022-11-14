@@ -52,7 +52,7 @@ public:
     static void SetContextAlpha(RSContext& context, NodeId nodeId, float alpha);
     static void SetContextClipRegion(RSContext& context, NodeId nodeId, SkRect clipRect);
     static void SetSecurityLayer(RSContext& context, NodeId nodeId, bool isSecurityLayer);
-    static void SetColorSpace(RSContext& context, NodeId nodeId, ColorGamut colorSpace);
+    static void SetColorSpace(RSContext& context, NodeId nodeId, GraphicColorGamut colorSpace);
     static void UpdateSurfaceDefaultSize(RSContext& context, NodeId nodeId, float width, float height);
     static void ConnectToNodeInRenderService(RSContext& context, NodeId id);
     static void SetCallbackForRenderThreadRefresh(RSContext& context, NodeId id, std::function<void(void)> callback);
@@ -75,7 +75,7 @@ ADD_COMMAND(RSSurfaceNodeSetContextClipRegion, ARG(SURFACE_NODE, SURFACE_NODE_SE
 ADD_COMMAND(RSSurfaceNodeSetSecurityLayer,
     ARG(SURFACE_NODE, SURFACE_NODE_SET_SECURITY_LAYER, SurfaceNodeCommandHelper::SetSecurityLayer, NodeId, bool))
 ADD_COMMAND(RSSurfaceNodeSetColorSpace,
-    ARG(SURFACE_NODE, SURFACE_NODE_SET_COLOR_SPACE, SurfaceNodeCommandHelper::SetColorSpace, NodeId, ColorGamut))
+    ARG(SURFACE_NODE, SURFACE_NODE_SET_COLOR_SPACE, SurfaceNodeCommandHelper::SetColorSpace, NodeId, GraphicColorGamut))
 ADD_COMMAND(RSSurfaceNodeUpdateSurfaceDefaultSize, ARG(SURFACE_NODE, SURFACE_NODE_UPDATE_SURFACE_SIZE,
     SurfaceNodeCommandHelper::UpdateSurfaceDefaultSize, NodeId, float, float))
 ADD_COMMAND(RSSurfaceNodeConnectToNodeInRenderService,

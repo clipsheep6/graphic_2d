@@ -120,7 +120,7 @@ private:
     bool isDirty_ = false;
     bool needFilter_ = false;
     std::unordered_map<NodeId, std::vector<RectI>> filterRects_;
-    ColorGamut newColorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
+    GraphicColorGamut newColorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
     std::vector<ScreenColorGamut> colorGamutmodes_;
     ContainerWindowConfigType containerWindowConfig_;
     pid_t currentFocusedPid_ = -1;

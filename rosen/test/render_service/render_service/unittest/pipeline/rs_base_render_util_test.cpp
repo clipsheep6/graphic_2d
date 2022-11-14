@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 #include "limit_number.h"
 #include "pipeline/rs_base_render_util.h"
+#include "rs_test_util.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -27,6 +28,20 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+
+private:
+    static inline sptr<Surface> psurf = nullptr;
+    static inline BufferRequestConfig requestConfig = {
+        .width = 0x100,
+        .height = 0x100,
+        .strideAlignment = 0x8,
+        .format = PIXEL_FMT_YCRCB_420_SP,
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
+        .timeout = 0,
+    };
+    static inline BufferFlushConfig flushConfig = {
+        .damage = { .w = 0x100, .h = 0x100, },
+    };
 };
 
 void RSBaseRenderUtilTest::SetUpTestCase() {}
@@ -164,6 +179,82 @@ HWTEST_F(RSBaseRenderUtilTest, WriteSurfaceRenderNodeToPng_001, TestSize.Level1)
     std::shared_ptr<RSSurfaceRenderNode> node = std::make_shared<RSSurfaceRenderNode>(config);
     bool result = RSBaseRenderUtil::WriteSurfaceRenderNodeToPng(*node);
     ASSERT_EQ(false, result);
+}
+
+/*
+ * @tc.name: ConvertBufferToBitmap_001
+ * @tc.desc: Test ConvertBufferToBitmap IsBufferValid
+ * @tc.type: FUNC
+ * @tc.require: issueI614RU
+ */
+HWTEST_F(RSBaseRenderUtilTest, WriteSurfaceRenderNodeToPng_001, TestSize.Level1)
+{
+    sptr<SurfaceBuffer> cbuffer;
+    std::vector<uint8_t> newBuffer;
+    ColorGamut dstGamut = static_cast<ColorGamut>(4);  // set dstGamut
+    SkBitmap bitmap;
+    ASSERT_EQ(false, RSBaseRenderUtil::ConvertBufferToBitmap(cbuffer, newBuffer, dstGamut, bitmap));
+}
+
+/*
+ * @tc.name: ConvertBufferToBitmap_002
+ * @tc.desc: Test ConvertBufferToBitmap by CreateYuvToRGBABitMap
+ * @tc.type: FUNC
+ * @tc.require: issueI614RU
+ */
+HWTEST_F(RSBaseRenderUtilTest, ConvertBufferToBitmap_002, TestSize.Level1)
+{
+    auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
+    const auto& surfaceConsumer = rsSurfaceRenderNode->GetConsumer();
+    auto producer = surfaceConsumer->GetProducer();
+    psurf = Surface::CreateSurfaceAsProducer(producer);
+    psurf->SetQueueSize(1);
+    sptr<SurfaceBuffer> buffer;
+    sptr<SyncFence> requestFence = SyncFence::INVALID_FENCE;
+    GSError ret = psurf->RequestBuffer(buffer, requestFence, requestConfig);
+    sptr<SyncFence> flushFence = SyncFence::INVALID_FENCE;
+    ret = psurf->FlushBuffer(buffer, flushFence, flushConfig);
+    OHOS::sptr<SurfaceBuffer> cbuffer;
+    Rect damage;
+    sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
+    int64_t timestamp = 0;
+    ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
+
+    std::vector<uint8_t> newBuffer;
+    ColorGamut dstGamut = static_cast<ColorGamut>(4); // set dstGamut
+    SkBitmap bitmap;
+    ASSERT_EQ(false, RSBaseRenderUtil::ConvertBufferToBitmap(cbuffer, newBuffer, dstGamut, bitmap));
+}
+
+/*
+ * @tc.name: ConvertBufferToBitmap_003
+ * @tc.desc: Test ConvertBufferToBitmap by CreateNewColorGamutBitmap
+ * @tc.type: FUNC
+ * @tc.require: issueI614RU
+ */
+HWTEST_F(RSBaseRenderUtilTest, ConvertBufferToBitmap_003, TestSize.Level1)
+{
+    auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
+    const auto& surfaceConsumer = rsSurfaceRenderNode->GetConsumer();
+    auto producer = surfaceConsumer->GetProducer();
+    psurf = Surface::CreateSurfaceAsProducer(producer);
+    psurf->SetQueueSize(1);
+    sptr<SurfaceBuffer> buffer;
+    sptr<SyncFence> requestFence = SyncFence::INVALID_FENCE;
+    requestConfig.format = PIXEL_FMT_RGBA_8888;
+    GSError ret = psurf->RequestBuffer(buffer, requestFence, requestConfig);
+    sptr<SyncFence> flushFence = SyncFence::INVALID_FENCE;
+    ret = psurf->FlushBuffer(buffer, flushFence, flushConfig);
+    OHOS::sptr<SurfaceBuffer> cbuffer;
+    Rect damage;
+    sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
+    int64_t timestamp = 0;
+    ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
+
+    std::vector<uint8_t> newBuffer;
+    ColorGamut dstGamut = static_cast<ColorGamut>(1); // set dstGamut
+    SkBitmap bitmap;
+    ASSERT_EQ(true, RSBaseRenderUtil::ConvertBufferToBitmap(cbuffer, newBuffer, dstGamut, bitmap));
 }
 
 /*

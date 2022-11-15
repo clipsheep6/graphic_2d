@@ -182,7 +182,7 @@ bool RSSurfaceNode::GetSecurityLayer() const
     return isSecurityLayer_;
 }
 
-void RSSurfaceNode::SetColorSpace(ColorGamut colorSpace)
+void RSSurfaceNode::SetColorSpace(GraphicColorGamut colorSpace)
 {
     colorSpace_ = colorSpace;
     std::unique_ptr<RSCommand> command =

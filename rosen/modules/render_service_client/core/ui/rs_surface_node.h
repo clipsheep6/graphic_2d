@@ -62,7 +62,7 @@ public:
     void RemoveChild(std::shared_ptr<RSBaseNode> child) override;
     void ClearChildren() override;
 
-    void SetColorSpace(ColorGamut colorSpace);
+    void SetColorSpace(GraphicColorGamut colorSpace);
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
     void SetAbilityBGAlpha(uint8_t alpha);
@@ -78,7 +78,7 @@ public:
     sptr<OHOS::Surface> GetSurface() const;
     FollowType GetFollowType() const override;
 
-    ColorGamut GetColorSpace()
+    GraphicColorGamut GetColorSpace()
     {
         return colorSpace_;
     }
@@ -109,7 +109,7 @@ private:
     std::string name_;
     std::mutex mutex_;
     BufferAvailableCallback callback_;
-    ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
+    GraphicColorGamut colorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
     bool isSecurityLayer_ = false;
     bool isChildOperationDisallowed_ { false };
 

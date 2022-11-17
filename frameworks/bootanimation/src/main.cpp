@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cstdlib>
 
 #include <display_type.h>
 #include <display_manager.h>
@@ -43,5 +44,6 @@ int main(int argc, const char *argv[])
     runner->Run();
 
     LOGI("main exit");
+    exit(0);
     return 0;
 }

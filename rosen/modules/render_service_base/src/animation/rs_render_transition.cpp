@@ -104,6 +104,13 @@ void RSRenderTransition::OnAttach()
     // create "transition" modifier and add it to target
     for (auto& effect : effects_) {
         target->AddModifier(effect->GetModifier());
+        if (effect->GetTransitionEffectType() == RSTransitionEffectType::SCALE) {
+            auto scaleEffect = std::static_pointer_cast<RSTransitionScale>(effect);
+            target->AddModifier(scaleEffect->GetPivotModifier());
+        } else if (effect->GetTransitionEffectType() == RSTransitionEffectType::ROTATE) {
+            auto rotateEffect = std::static_pointer_cast<RSTransitionRotate>(effect);
+            target->AddModifier(rotateEffect->GetPivotModifier());
+        }
     }
     // update number of disappearing transition animation
     if (!isTransitionIn_) {
@@ -123,6 +130,13 @@ void RSRenderTransition::OnDetach()
     // remove "transition" modifier from target
     for (auto& effect : effects_) {
         target->RemoveModifier(effect->GetModifier()->GetPropertyId());
+        if (effect->GetTransitionEffectType() == RSTransitionEffectType::SCALE) {
+            auto scaleEffect = std::static_pointer_cast<RSTransitionScale>(effect);
+            target->RemoveModifier(scaleEffect->GetPivotModifier()->GetPropertyId());
+        } else if (effect->GetTransitionEffectType() == RSTransitionEffectType::ROTATE) {
+            auto rotateEffect = std::static_pointer_cast<RSTransitionRotate>(effect);
+            target->RemoveModifier(rotateEffect->GetPivotModifier()->GetPropertyId());
+        }
     }
     // update number of disappearing transition animation
     if (!isTransitionIn_) {

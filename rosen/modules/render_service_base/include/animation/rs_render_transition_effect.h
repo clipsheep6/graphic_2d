@@ -22,19 +22,22 @@
 #endif
 #include <memory>
 
-#include "animation/rs_animation_common.h"
+#include "common/rs_vector2.h"
+#include "common/rs_vector4.h"
 
 namespace OHOS {
 namespace Rosen {
-class RSCanvasRenderNode;
-class RSPaintFilterCanvas;
-class RSProperties;
 class RSRenderModifier;
 template<typename T>
 class RSRenderAnimatableProperty;
-class Quaternion;
-template<typename T>
-class Vector2;
+
+enum RSTransitionEffectType : uint16_t {
+    FADE = 1,
+    SCALE,
+    TRANSLATE,
+    ROTATE,
+    UNDEFINED,
+};
 
 #ifdef ROSEN_OHOS
 class RSRenderTransitionEffect : public Parcelable {
@@ -44,6 +47,7 @@ class RSRenderTransitionEffect {
 public:
     RSRenderTransitionEffect() = default;
     virtual ~RSRenderTransitionEffect() = default;
+    virtual RSTransitionEffectType GetTransitionEffectType() = 0;
     const std::shared_ptr<RSRenderModifier>& GetModifier();
     virtual void UpdateFraction(float fraction) const = 0;
 
@@ -60,6 +64,10 @@ class RSTransitionFade : public RSRenderTransitionEffect {
 public:
     explicit RSTransitionFade(float alpha) : alpha_(alpha) {}
     ~RSTransitionFade() override = default;
+    RSTransitionEffectType GetTransitionEffectType() override
+    {
+        return RSTransitionEffectType::FADE;
+    }
     void UpdateFraction(float fraction) const override;
 
 #ifdef ROSEN_OHOS
@@ -74,11 +82,17 @@ private:
 
 class RSTransitionScale : public RSRenderTransitionEffect {
 public:
-    explicit RSTransitionScale(float scaleX = 0.0f, float scaleY = 0.0f, float scaleZ = 0.0f)
-        : scaleX_(scaleX), scaleY_(scaleY), scaleZ_(scaleZ)
+    RSTransitionScale(float scaleX, float scaleY, float scaleZ, float pivotX, float pivotY)
+        : scaleX_(scaleX), scaleY_(scaleY), scaleZ_(scaleZ), pivotX_(pivotX), pivotY_(pivotY)
     {}
     ~RSTransitionScale() override = default;
+    RSTransitionEffectType GetTransitionEffectType() override
+    {
+        return RSTransitionEffectType::SCALE;
+    }
     void UpdateFraction(float fraction) const override;
+
+    const std::shared_ptr<RSRenderModifier>& GetPivotModifier();
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
@@ -88,16 +102,24 @@ private:
     float scaleX_;
     float scaleY_;
     float scaleZ_;
-    std::shared_ptr<RSRenderAnimatableProperty<Vector2<float>>> property_;
+    float pivotX_;
+    float pivotY_;
+    std::shared_ptr<RSRenderAnimatableProperty<Vector2f>> property_;
+    std::shared_ptr<RSRenderAnimatableProperty<Vector2f>> pivot_;
+    std::shared_ptr<RSRenderModifier> pivotModifier_;
     const std::shared_ptr<RSRenderModifier> CreateModifier() override;
 };
 
 class RSTransitionTranslate : public RSRenderTransitionEffect {
 public:
-    explicit RSTransitionTranslate(float translateX, float translateY, float translateZ)
+    RSTransitionTranslate(float translateX, float translateY, float translateZ)
         : translateX_(translateX), translateY_(translateY), translateZ_(translateZ)
     {}
     ~RSTransitionTranslate() override = default;
+    RSTransitionEffectType GetTransitionEffectType() override
+    {
+        return RSTransitionEffectType::TRANSLATE;
+    }
     void UpdateFraction(float fraction) const override;
 
 #ifdef ROSEN_OHOS
@@ -108,16 +130,23 @@ private:
     float translateX_;
     float translateY_;
     float translateZ_;
-    std::shared_ptr<RSRenderAnimatableProperty<Vector2<float>>> property_;
+    std::shared_ptr<RSRenderAnimatableProperty<Vector2f>> property_;
     const std::shared_ptr<RSRenderModifier> CreateModifier() override;
 };
 
 class RSTransitionRotate : public RSRenderTransitionEffect {
 public:
-    explicit RSTransitionRotate(float dx, float dy, float dz, float radian) : dx_(dx), dy_(dy), dz_(dz), radian_(radian)
+    RSTransitionRotate(float dx, float dy, float dz, float radian, float pivotX, float pivotY)
+        : dx_(dx), dy_(dy), dz_(dz), radian_(radian), pivotX_(pivotX), pivotY_(pivotY)
     {}
     ~RSTransitionRotate() override = default;
+    RSTransitionEffectType GetTransitionEffectType() override
+    {
+        return RSTransitionEffectType::ROTATE;
+    }
     void UpdateFraction(float fraction) const override;
+
+    const std::shared_ptr<RSRenderModifier>& GetPivotModifier();
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
@@ -128,7 +157,11 @@ private:
     float dy_;
     float dz_;
     float radian_;
+    float pivotX_;
+    float pivotY_;
     std::shared_ptr<RSRenderAnimatableProperty<Quaternion>> property_;
+    std::shared_ptr<RSRenderAnimatableProperty<Vector2f>> pivot_;
+    std::shared_ptr<RSRenderModifier> pivotModifier_;
     const std::shared_ptr<RSRenderModifier> CreateModifier() override;
 };
 } // namespace Rosen

@@ -425,6 +425,11 @@ public:
         hasContainerWindow_ = hasContainerWindow;
     }
 
+    bool IsOpaqueRegionChanged() const
+    {
+        return opaqueRegionChanged_;
+    }
+
     bool IsFocusedWindow(pid_t focusedWindowPid)
     {
         return static_cast<pid_t>(GetNodeId() >> 32) == focusedWindowPid; // higher 32 bits of nodeid is pid
@@ -482,6 +487,7 @@ public:
         ContainerWindowConfigType containerWindowConfigType, bool isFocusWindow = true)
     {
         Occlusion::Rect absRectR {absRect};
+        Occlusion::Region oldOpaqueRegion { opaqueRegion_ };
         if (IsTransparent()) {
             opaqueRegion_ = Occlusion::Region();
             transparentRegion_ = Occlusion::Region{absRectR};
@@ -498,6 +504,7 @@ public:
         Occlusion::Region screenRegion{screen};
         transparentRegion_.AndSelf(screenRegion);
         opaqueRegion_.AndSelf(screenRegion);
+        opaqueRegionChanged_ = !oldOpaqueRegion.Xor(opaqueRegion_).IsEmpty();
     }
 private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
@@ -554,6 +561,7 @@ private:
 
     // opaque region of the surface
     Occlusion::Region opaqueRegion_;
+    bool opaqueRegionChanged_ = false;
     // transparent region of the surface, floating window's container window is always treated as transparent
     Occlusion::Region transparentRegion_;
     // temporary const value from ACE container_modal_constants.h, will be replaced by uniform interface

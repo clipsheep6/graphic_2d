@@ -173,6 +173,18 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const sptr<Surfa
     return RequestFrame(rsSurfaces_.at(surfaceId), config, forceCPU);
 }
 
+void RSBaseRenderEngine::SetUiTimeStamp(const uint64_t surfaceId)
+{
+    std::shared_ptr<RSSurfaceOhos> surfaceOhosGl = nullptr;
+    for (auto it = rsSurfaces_.begin(); it != rsSurfaces_.end(); it++) {
+        if (it->first == surfaceId) {
+            surfaceOhosGl = it->second;
+            break;
+        }
+    }
+    surfaceOhosGl->SetUiTimeStamp();
+}
+
 void RSBaseRenderEngine::SetColorFilterMode(ColorFilterMode mode)
 {
     uint32_t uMode = static_cast<uint32_t>(mode);

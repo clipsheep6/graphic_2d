@@ -17,6 +17,7 @@
 #define RS_CORE_PIPELINE_VIRTUAL_SCREEN_PROCESSOR_H
 
 #include "rs_processor.h"
+#include "platform/ohos/backend/rs_surface_ohos_gl.h"
 
 namespace OHOS {
 namespace Rosen {

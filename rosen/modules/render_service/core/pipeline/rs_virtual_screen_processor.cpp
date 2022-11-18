@@ -70,6 +70,14 @@ bool RSVirtualScreenProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, 
 void RSVirtualScreenProcessor::PostProcess()
 {
     SetBufferTimeStamp();
+
+    if (producerSurface_ == nullptr) {
+        RS_LOGE("RSVirtualScreenProcessor::PostProcess surface is null!");
+        return;
+    }
+    auto surfaceId = producerSurface_->GetUniqueId();
+    renderEngine_->SetUiTimeStamp(surfaceId);
+    
     if (renderFrame_ == nullptr) {
         RS_LOGE("RSVirtualScreenProcessor::PostProcess renderFrame_ is null.");
         return;

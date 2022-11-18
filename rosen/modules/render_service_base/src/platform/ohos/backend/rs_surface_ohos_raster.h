@@ -40,6 +40,7 @@ public:
     void SetSurfaceBufferUsage(uint64_t usage) override;
     void ClearBuffer() override;
     void ResetBufferAge() override;
+    void SetUiTimeStamp(uint64_t uiTimestamp) override {}
 };
 } // namespace Rosen
 } // namespace OHOS

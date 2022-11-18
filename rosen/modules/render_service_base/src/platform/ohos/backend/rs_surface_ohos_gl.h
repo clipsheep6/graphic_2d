@@ -43,6 +43,7 @@ public:
     void SetSurfaceBufferUsage(uint64_t usage) override;
     void ClearBuffer() override;
     void ResetBufferAge() override;
+    void SetUiTimeStamp(uint64_t uiTimestamp) override;
 private:
     EGLSurface mEglSurface = EGL_NO_SURFACE;
     struct NativeWindow* mWindow = nullptr;

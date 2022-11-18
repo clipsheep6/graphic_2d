@@ -85,14 +85,14 @@ TEST_F(FontCollectionTest, FontCollection)
 }
 
 // 过程测试
-// 调用GetTypefaceForChar函数，第二个参数传空
+// 调用GetTypefaceForChar函数，locale为空
 // 调用GetTypefaceForChar函数
 // 判定bcp47.size为0
 // 判定返回值为非空指针, 调用Get返回的SkTypeface与传入的相同
 TEST_F(FontCollectionTest, GetTypefaceForChar1)
 {
     InitMockVars({});
-    auto tf = mockVars.fontCollection_->GetTypefaceForChar('a', "", {});
+    auto tf = mockVars.fontCollection_->GetTypefaceForChar('a', {}, "", "");
     EXPECT_NE(tf, nullptr);
     EXPECT_EQ(tf->Get(), mockVars.skTypeface_);
     EXPECT_EQ(mockVars.catchedSize_, 0);
@@ -105,7 +105,7 @@ TEST_F(FontCollectionTest, GetTypefaceForChar1)
 TEST_F(FontCollectionTest, GetTypefaceForChar2)
 {
     InitMockVars({.skFontMgr_ = nullptr});
-    EXPECT_EQ(mockVars.fontCollection_->GetTypefaceForChar('a', "zh_CN", {}), nullptr);
+    EXPECT_EQ(mockVars.fontCollection_->GetTypefaceForChar('a', {}, "zh_CN", ""), nullptr);
     EXPECT_EQ(mockVars.catchedSize_, -1);
 }
 
@@ -116,7 +116,7 @@ TEST_F(FontCollectionTest, GetTypefaceForChar2)
 TEST_F(FontCollectionTest, GetTypefaceForChar3)
 {
     InitMockVars({.skTypeface_ = nullptr});
-    EXPECT_EQ(mockVars.fontCollection_->GetTypefaceForChar('a', "zh_CN", {}), nullptr);
+    EXPECT_EQ(mockVars.fontCollection_->GetTypefaceForChar('a', {}, "", "zh_CN"), nullptr);
     EXPECT_NE(mockVars.catchedSize_, 0);
 }
 
@@ -128,11 +128,11 @@ TEST_F(FontCollectionTest, GetTypefaceForChar3)
 TEST_F(FontCollectionTest, GetTypefaceForChar4)
 {
     InitMockVars({});
-    auto tf1 = mockVars.fontCollection_->GetTypefaceForChar('a', "en_US", {});
+    auto tf1 = mockVars.fontCollection_->GetTypefaceForChar('a', {}, "", "en_US");
     EXPECT_NE(tf1, nullptr);
     EXPECT_NE(mockVars.catchedSize_, 0);
     InitMockVars({});
-    auto tf2 = mockVars.fontCollection_->GetTypefaceForChar('a', "en_US", {});
+    auto tf2 = mockVars.fontCollection_->GetTypefaceForChar('a', {}, "", "en_US");
     EXPECT_NE(tf2, nullptr);
     EXPECT_EQ(mockVars.catchedSize_, -1);
     EXPECT_EQ(tf1->Get(), tf2->Get());
@@ -147,7 +147,7 @@ TEST_F(FontCollectionTest, GetTypefaceForChar5)
     auto stf = sk_make_sp<SkTypeface_Empty>();
     InitMockVars({.skFontMgr_ = nullptr,
                   .fontStyleSets_ = CreateSets(nullptr, stf)});
-    EXPECT_EQ(mockVars.fontCollection_->GetTypefaceForChar('a', "en_UK", {}), nullptr);
+    EXPECT_EQ(mockVars.fontCollection_->GetTypefaceForChar('a', {}, "", "en_US"), nullptr);
 }
 
 // 过程测试
@@ -158,7 +158,7 @@ TEST_F(FontCollectionTest, GetTypefaceForChar6)
 {
     InitMockVars({.skFontMgr_ = nullptr,
                   .fontStyleSets_ = CreateSets(sk_make_sp<MockSkFontStyleSet>(), nullptr, 1)});
-    EXPECT_EQ(mockVars.fontCollection_->GetTypefaceForChar('a', "en_UK", {}), nullptr);
+    EXPECT_EQ(mockVars.fontCollection_->GetTypefaceForChar('a', {}, "", "en_US"), nullptr);
 }
 
 // 过程测试
@@ -170,7 +170,7 @@ TEST_F(FontCollectionTest, GetTypefaceForChar7)
     auto stf = sk_make_sp<SkTypeface_Empty>();
     InitMockVars({.skFontMgr_ = nullptr,
                   .fontStyleSets_ = CreateSets(sk_make_sp<MockSkFontStyleSet>(), stf, 1)});
-    EXPECT_EQ(mockVars.fontCollection_->GetTypefaceForChar('a', "en_UK", {}), nullptr);
+    EXPECT_EQ(mockVars.fontCollection_->GetTypefaceForChar('a', {}, "", "en_US"), nullptr);
 }
 
 // 过程测试
@@ -185,8 +185,8 @@ TEST_F(FontCollectionTest, GetTypefaceForChar8)
     auto stf = sk_make_sp<SkTypeface_Empty>();
     InitMockVars({.hasRetval_ = true, .skFontMgr_ = nullptr,
                   .fontStyleSets_ = CreateSets(sk_make_sp<MockSkFontStyleSet>(), stf, 1)});
-    auto tf1 = mockVars.fontCollection_->GetTypefaceForChar('a', "locale1", {});
-    auto tf2 = mockVars.fontCollection_->GetTypefaceForChar('a', "locale1", {});
+    auto tf1 = mockVars.fontCollection_->GetTypefaceForChar('a', {}, "", "locale1");
+    auto tf2 = mockVars.fontCollection_->GetTypefaceForChar('a', {}, "", "locale1");
     EXPECT_NE(tf1, nullptr);
     EXPECT_NE(tf2, nullptr);
     EXPECT_EQ(mockVars.hasCount_, 2);

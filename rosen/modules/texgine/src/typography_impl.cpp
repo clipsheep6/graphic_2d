@@ -439,7 +439,7 @@ int TypographyImpl::ComputeStrut()
     }
 
     FontStyles style(typographyStyle_.lineStyle_.fontWeight_, typographyStyle_.lineStyle_.fontStyle_);
-    auto typeface = fontCollection->GetTypefaceForFontStyles(style, "");
+    auto typeface = fontCollection->GetTypefaceForFontStyles(style, {}, {});
     if (typeface == nullptr) {
         LOG2EX_DEBUG() << "seek typeface failed";
         return 1;
@@ -482,7 +482,7 @@ int TypographyImpl::UpdateSpanMetrics(VariantSpan &span, double &coveredAscent)
 
         auto fontCollection = fontProviders_->GenerateFontCollection(families);
         FontStyles fs(style.fontWeight_, style.fontStyle_);
-        auto typeface = fontCollection->GetTypefaceForChar(0xFFFC, style.locale_, fs);
+        auto typeface = fontCollection->GetTypefaceForChar(0xFFFC, fs, "Latn", style.locale_);
         assert(typeface != nullptr);
 
         SkFont font;

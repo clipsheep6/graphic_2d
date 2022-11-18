@@ -27,7 +27,7 @@ FontCollection::FontCollection(std::vector<std::shared_ptr<FontStyleSet>> &&font
 }
 
 std::shared_ptr<Typeface> FontCollection::GetTypefaceForChar(const uint32_t &ch,
-    const std::string &locale, const FontStyles &style) const
+    const FontStyles &style, const std::string &script, const std::string &locale) const
 {
     for (const auto &fontStyleSet : fontStyleSets_) {
         std::shared_ptr<Typeface> typeface = nullptr;
@@ -54,10 +54,11 @@ std::shared_ptr<Typeface> FontCollection::GetTypefaceForChar(const uint32_t &ch,
         }
     }
 
-    return FindFallBackTypeface(ch, style, locale);
+    return FindFallBackTypeface(ch, style, script, locale);
 }
 
-std::shared_ptr<Typeface> FontCollection::GetTypefaceForFontStyles(const FontStyles &style, const std::string &locale) const
+std::shared_ptr<Typeface> FontCollection::GetTypefaceForFontStyles(const FontStyles &style,
+    const std::string &script, const std::string &locale) const
 {
     auto providingStyle = style.ToSkFontStyle();
 
@@ -87,35 +88,38 @@ std::shared_ptr<Typeface> FontCollection::GetTypefaceForFontStyles(const FontSty
         return std::make_shared<Typeface>(bestFontStyleSet->Get()->createTypeface(bestIndex));
     }
 
-    return FindFallBackTypeface(' ', style, locale);
+    return FindFallBackTypeface(' ', style, script, locale);
 }
 
 std::shared_ptr<Typeface> FontCollection::FindFallBackTypeface(const uint32_t &ch, const FontStyles &style,
-    const std::string &locale) const
+    const std::string &script, const std::string &locale) const
 {
     if (!enableFallback_) {
         return nullptr;
     }
 
     // fallback cache
-    struct FallbackCacheKey key = {.locale = locale, .fs = style};
+    struct FallbackCacheKey key = {.script = script, .locale = locale, .fs = style};
     if (auto it = fallbackCache_.find(key); it != fallbackCache_.end()) {
         return it->second;
     }
 
     // fallback
     std::vector<const char *> bcp47;
-    if (locale.empty() == false) {
-        bcp47.push_back(locale.data());
+    if (script.empty() == false) {
+        bcp47.push_back(script.data());
+    } else if (locale.empty() == false) {
+        if (locale.empty() == false) {
+        bcp47.push_back(locale.data());}
     }
 
     auto fm = SkFontMgr::RefDefault();
     if (fm == nullptr) {
         return nullptr;
     }
+    auto fallbackSkTypeface = fm->matchFamilyStyleCharacter(nullptr, style.ToSkFontStyle(),
+        bcp47.data(), bcp47.size(), ch);
 
-    auto fallbackSkTypeface = fm->matchFamilyStyleCharacter(nullptr,
-        style.ToSkFontStyle(), bcp47.data(), bcp47.size(), ch);
     if (fallbackSkTypeface == nullptr) {
         return nullptr;
     }

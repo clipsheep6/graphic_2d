@@ -119,7 +119,7 @@ public:
     static std::unique_ptr<RSRenderFrame> RequestFrame(const std::shared_ptr<RSSurfaceOhos>& rsSurface,
         const BufferRequestConfig& config, bool forceCPU = false);
 
-    void SetUiTimeStamp(const uint64_t surfaceId);
+    void SetUiTimeStamp(std::unique_ptr<RSRenderFrame>& renderFrame, const uint64_t surfaceId);
 
     virtual void DrawSurfaceNodeWithParams(RSPaintFilterCanvas& canvas, RSSurfaceRenderNode& node,
         BufferDrawParam& params, PreProcessFunc preProcess = nullptr, PostProcessFunc postProcess = nullptr) = 0;

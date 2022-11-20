@@ -17,7 +17,6 @@
 #define RS_CORE_PIPELINE_VIRTUAL_SCREEN_PROCESSOR_H
 
 #include "rs_processor.h"
-#include "platform/ohos/backend/rs_surface_ohos_gl.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -32,8 +31,6 @@ public:
     void PostProcess() override;
 
 private:
-    void SetBufferTimeStamp();
-
     sptr<Surface> producerSurface_;
     std::unique_ptr<RSRenderFrame> renderFrame_;
     std::unique_ptr<RSPaintFilterCanvas> canvas_;

@@ -89,7 +89,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int
     return ret;
 }
 
-void RSSurfaceOhosGl::SetUiTimeStamp(uint64_t uiTimestamp)
+void RSSurfaceOhosGl::SetUiTimeStamp(const std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp)
 {
     NativeWindowHandleOpt(mWindow, SET_UI_TIMESTAMP, uiTimestamp);
 }

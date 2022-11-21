@@ -22,7 +22,6 @@
 #include "animation/rs_implicit_animator.h"
 #include "animation/rs_implicit_animator_map.h"
 #include "animation/rs_motion_path_option.h"
-#include "animation/rs_ui_animation_manager.h"
 #include "common/rs_color.h"
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
@@ -113,26 +112,9 @@ protected:
         modifier_ = modifier;
     }
 
-    void MarkModifierDirty()
-    {
-        auto modifierManager = RSModifierManagerMap::Instance()->GetModifierManager(gettid());
-        if (modifierManager == nullptr) {
-            ROSEN_LOGE("Modifier manager is null while mark dirty propertyId: %llu!", GetId());
-            return;
-        }
+    void MarkModifierDirty();
 
-        auto modifier = modifier_.lock();
-        if (modifier != nullptr) {
-            modifierManager->AddModifier(modifier);
-        }
-    }
-
-    void UpdateExtendModifierForGeometry(const std::shared_ptr<RSNode>& node)
-    {
-        if (type_ == RSModifierType::BOUNDS || type_ == RSModifierType::FRAME) {
-            node->MarkAllExtendModifierDirty();
-        }
-    }
+    void UpdateExtendModifierForGeometry(const std::shared_ptr<RSNode>& node);
 
     virtual std::shared_ptr<RSRenderPropertyBase> GetRenderProperty()
     {

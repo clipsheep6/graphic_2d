@@ -56,6 +56,7 @@ void RSTransition::StartCustomTransition()
     if (target == nullptr) {
         return;
     }
+
     std::vector<std::shared_ptr<RSRenderTransitionEffect>> transitionEffects;
     auto& customEffects = isTransitionIn_ ? effect_->customTransitionInEffects_ : effect_->customTransitionOutEffects_;
     for (auto& customEffect : customEffects) {
@@ -72,9 +73,10 @@ void RSTransition::StartCustomTransition()
         ROSEN_LOGE("Failed to start custom transition, modifier manager is null  id: %llu!", GetId());
         return;
     }
+
     transition->SetFinishCallback([this]() { CallFinishCallback(); });
     transition->Start();
-    modifierManager->GetAnimationManager()->AddAnimation(transition);
+    modifierManager->AddAnimation(transition);
 }
 
 void RSTransition::StartRenderTransition()

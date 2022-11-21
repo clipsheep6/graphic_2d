@@ -651,8 +651,8 @@ HWTEST_F(VulkanWrapperUnitTest, fpCreateSwapchainKHR_Success_Test, TestSize.Leve
             VK_COLOR_SPACE_DCI_P3_LINEAR_EXT
         };
 
-        for (int i = 0; i < pixelFormatArray.size(); i++) {
-            for (int j = 0; j < colorDataspaceArray.size(); j++) {
+        for (uint32_t i = 0; i < static_cast<uint32_t>(pixelFormatArray.size()); i++) {
+            for (uint32_t j = 0; j < static_cast<uint32_t>(colorDataspaceArray.size()); j++) {
                 VkSwapchainCreateInfoKHR swapchainCI = getSwapchainCreateInfo(
                     pixelFormatArray[i], colorDataspaceArray[j]);
 
@@ -693,7 +693,7 @@ HWTEST_F(VulkanWrapperUnitTest, fpCreateSwapchainKHR_Fail_Test, TestSize.Level1)
             VK_COLOR_SPACE_MAX_ENUM_KHR
         };
 
-        for (int i = 0; i < colorDataspaceArray.size(); i++) {
+        for (uint32_t i = 0; i < static_cast<uint32_t>(colorDataspaceArray.size()); i++) {
             VkSwapchainCreateInfoKHR swapchainCI = getSwapchainCreateInfo(
                 VK_FORMAT_R8G8B8A8_UNORM, colorDataspaceArray[i]);
 

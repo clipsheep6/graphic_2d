@@ -22,7 +22,6 @@
 #include "animation/rs_implicit_animator.h"
 #include "animation/rs_implicit_animator_map.h"
 #include "animation/rs_motion_path_option.h"
-#include "animation/rs_ui_animation_manager.h"
 #include "common/rs_color.h"
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
@@ -113,17 +112,14 @@ protected:
 
     void MarkModifierDirty();
 
-    void UpdateExtendModifierForGeometry(const std::shared_ptr<RSNode>& node)
-    {
-        if (type_ == RSModifierType::BOUNDS || type_ == RSModifierType::FRAME) {
-            node->MarkAllExtendModifierDirty();
-        }
-    }
+    void UpdateExtendModifierForGeometry(const std::shared_ptr<RSNode>& node);
 
     virtual std::shared_ptr<RSRenderPropertyBase> GetRenderProperty()
     {
         return std::make_shared<RSRenderPropertyBase>(id_);
     }
+
+    virtual void UpdateShowingValue(const std::shared_ptr<const RSRenderPropertyBase>& property) {}
 
     PropertyId id_;
     RSModifierType type_ { RSModifierType::INVALID };
@@ -180,7 +176,6 @@ private:
     friend class RSKeyframeAnimation;
     friend class RSSpringAnimation;
     friend class RSTransition;
-    friend class RSUIAnimationManager;
     template<typename T1>
     friend class RSAnimatableProperty;
 };
@@ -370,19 +365,13 @@ protected:
         runningPathNum_ -= 1;
     }
 
-    void UpdateShowingValue(const std::shared_ptr<const RSRenderPropertyBase>& property)
+    void UpdateShowingValue(const std::shared_ptr<const RSRenderPropertyBase>& property) override
     {
         auto renderProperty = std::static_pointer_cast<const RSRenderProperty<T>>(property);
         if (renderProperty != nullptr) {
             showingValue_ = renderProperty->Get();
             RSProperty<T>::MarkModifierDirty();
         }
-        auto uiAnimationManager = RSAnimationManagerMap::Instance()->GetAnimationManager(gettid());
-        if (uiAnimationManager == nullptr) {
-            ROSEN_LOGE("Failed to update showing value, UI animation manager is null!");
-            return;
-        }
-        MarkModifierDirty(uiAnimationManager->modifierManager_);
     }
 
     void SetValue(const std::shared_ptr<RSPropertyBase>& value) override
@@ -474,7 +463,6 @@ private:
 
     friend class RSPropertyAnimation;
     friend class RSPathAnimation;
-    friend class RSUIAnimationManager;
     friend class RSExtendedModifier;
     friend class RSModifier;
 };

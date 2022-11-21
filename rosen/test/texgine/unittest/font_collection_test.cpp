@@ -128,11 +128,11 @@ TEST_F(FontCollectionTest, GetTypefaceForChar3)
 TEST_F(FontCollectionTest, GetTypefaceForChar4)
 {
     InitMockVars({});
-    auto tf1 = mockVars.fontCollection_->GetTypefaceForChar('a', {}, "", "en_US");
+    auto tf1 = mockVars.fontCollection_->GetTypefaceForChar('a', {}, "", "zh_HK");
     EXPECT_NE(tf1, nullptr);
     EXPECT_NE(mockVars.catchedSize_, 0);
     InitMockVars({});
-    auto tf2 = mockVars.fontCollection_->GetTypefaceForChar('a', {}, "", "en_US");
+    auto tf2 = mockVars.fontCollection_->GetTypefaceForChar('a', {}, "", "zh_HK");
     EXPECT_NE(tf2, nullptr);
     EXPECT_EQ(mockVars.catchedSize_, -1);
     EXPECT_EQ(tf1->Get(), tf2->Get());

@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 ## Build color_manager.so {{{
 config("color_manager_config") {
@@ -34,6 +35,12 @@ config("color_manager_public_config") {
 }
 
 ohos_shared_library("color_manager") {
+  if (!use_clang_android && !use_clang_ios) {
+    sanitize = {
+      cfi = true
+      debug = false
+    }
+  }
   sources = [
     "src/color.cpp",
     "src/color_space.cpp",
@@ -44,11 +51,41 @@ ohos_shared_library("color_manager") {
 
   public_configs = [ ":color_manager_public_config" ]
 
-  public_deps = [
-    "//third_party/bounds_checking_function:libsec_shared",
-    "//third_party/flutter/build/skia:ace_skia_ohos",
-  ]
-
+  if (use_mingw_win) {
+    defines = graphic_decode_windows_defines
+    public_deps = [
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/flutter/build/skia:ace_skia_windows",
+    ]
+  } else if (use_clang_mac) {
+    defines = graphic_decode_mac_defines
+    public_deps = [
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/flutter/build/skia:ace_skia_mac",
+    ]
+  } else if (use_clang_ios) {
+    defines = graphic_decode_ios_defines
+    public_deps = [
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/flutter/build/skia:ace_skia_ios",
+    ]
+  } else if (use_clang_android) {
+    defines = graphic_decode_android_defines
+    public_deps = [
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/flutter/build/skia:ace_skia_android",
+    ]
+    aosp_deps = [
+      "shared_library:libEGL",
+      "shared_library:libGLESv2",
+      "shared_library:libnativewindow",
+    ]
+  } else {
+    public_deps = [
+      "//third_party/bounds_checking_function:libsec_shared",
+      "//third_party/flutter/build/skia:ace_skia_ohos",
+    ]
+  }
   subsystem_name = "graphic"
   part_name = "graphic_standard"
 }

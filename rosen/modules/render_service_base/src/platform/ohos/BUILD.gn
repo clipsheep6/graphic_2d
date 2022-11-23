@@ -80,12 +80,25 @@ ohos_source_set("rosen_ohos_sources") {
   ]
 
   public_deps = [
+    "//base/hiviewdfx/hicollie/interfaces/native/innerkits:libhicollie",
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent:libhisysevent",
+    "//base/hiviewdfx/hitrace/interfaces/native/innerkits:hitrace_meter",
+    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler",
+    "//base/startup/init/interfaces/innerkits:libbeget_proxy",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//commonlibrary/c_utils/base:utils",
+    "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk:accessibilityconfig",
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/composer/vsync:libvsync",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
+    "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf:frame_trace_intf",
+    "//foundation/resourceschedule/resource_schedule_service/soc_perf:socperf_client",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/flutter/build/skia:ace_skia_ohos",
+    "//third_party/libpng:libpng",
   ]
 
   if (ace_enable_gpu) {
@@ -96,16 +109,6 @@ ohos_source_set("rosen_ohos_sources") {
       "//third_party/openssl:crypto_source",
     ]
   }
-
-  external_deps = [
-    "eventhandler:libeventhandler",
-    "hisysevent_native:libhisysevent",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
-    "init:libbegetutil",
-    "ipc:ipc_core",
-    "samgr:samgr_proxy",
-  ]
 
   if (defined(graphic_2d_ext_configs.vendor_root)) {
     sources -= [ "rs_render_service_client.cpp" ]

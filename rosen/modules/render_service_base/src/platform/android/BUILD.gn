@@ -11,19 +11,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import(
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
+group("android") {
+  deps = [ ":rosen_android_sources" ]
+}
 
-group("platform") {
-  if (rosen_is_ohos) {
-    public_deps = [ "ohos" ]
-  } else if (rosen_is_win) {
-    public_deps = [ "windows" ]
-  } else if (rosen_is_mac || rosen_is_ios) {
-    public_deps = [ "darwin" ]
-  } else if (rosen_is_android) {
-    public_deps = [ "android" ]
-  } else {
-    assert(false, "Unsupported platform")
-  }
+config("export_config") {
+  include_dirs = []
+}
+
+source_set("rosen_android_sources") {
+  public_configs = [ ":export_config" ]
+
+  sources = [
+    "rs_log.cpp",
+    "rs_system_properties.cpp",
+  ]
+
+  include_dirs = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include",
+  ]
+
+  deps = []
 }

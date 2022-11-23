@@ -52,11 +52,6 @@ void RSTransition::OnUpdateStagingValue(bool isFirstStart)
 
 void RSTransition::StartCustomTransition()
 {
-    auto target = GetTarget().lock();
-    if (target == nullptr) {
-        return;
-    }
-
     std::vector<std::shared_ptr<RSRenderTransitionEffect>> transitionEffects;
     auto& customEffects = isTransitionIn_ ? effect_->customTransitionInEffects_ : effect_->customTransitionOutEffects_;
     for (auto& customEffect : customEffects) {
@@ -68,15 +63,7 @@ void RSTransition::StartCustomTransition()
     transition->SetInterpolator(interpolator);
     UpdateParamToRenderAnimation(transition);
 
-    auto modifierManager = RSModifierManagerMap::Instance()->GetModifierManager(gettid());
-    if (modifierManager == nullptr) {
-        ROSEN_LOGE("Failed to start custom transition, modifier manager is null  id: %llu!", GetId());
-        return;
-    }
-
-    transition->SetFinishCallback([this]() { CallFinishCallback(); });
-    transition->Start();
-    modifierManager->AddAnimation(transition);
+    StartCustomAnimation(transition);
 }
 
 void RSTransition::StartRenderTransition()

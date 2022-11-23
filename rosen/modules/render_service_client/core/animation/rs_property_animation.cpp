@@ -128,29 +128,6 @@ void RSPropertyAnimation::OnUpdateStagingValue(bool isFirstStart)
     SetPropertyValue(targetValue);
 }
 
-void RSPropertyAnimation::StartCustomPropertyAnimation(const std::shared_ptr<RSRenderAnimation>& animation)
-{
-    auto target = GetTarget().lock();
-    if (target == nullptr) {
-        ROSEN_LOGE("Failed to start custom animation, target is null!");
-        return;
-    }
-
-    auto modifierManager = RSModifierManagerMap::Instance()->GetModifierManager(gettid());
-    if (modifierManager == nullptr) {
-        ROSEN_LOGE("Failed to start custom animation, modifier manager is null  animationId: %llu!", GetId());
-        return;
-    }
-
-    if (property_ == nullptr) {
-        return;
-    }
-
-    animation->SetFinishCallback([this]() { CallFinishCallback(); });
-    animation->Start();
-    modifierManager->AddAnimation(animation);
-}
-
 void RSPropertyAnimation::SetPropertyOnAllAnimationFinish()
 {
     if (property_ != nullptr) {

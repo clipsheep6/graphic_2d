@@ -20,5 +20,6 @@ group("unittest") {
     "image:unittest",
     "ndk:unittest",
     "utils:unittest",
+    "render_context:unittest",
   ]
 }

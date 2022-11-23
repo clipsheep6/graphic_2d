@@ -11,6 +11,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# source code for Windows.
+use_mingw_win = "${current_os}_${current_cpu}" == "mingw_x86_64"
+use_clang_mac = "${current_os}_${current_cpu}" == "mac_x64"
+use_clang_ios = current_os == "ios" || current_os == "tvos"
+use_clang_android = current_os == "android"
+use_clang_ohos = current_os == "ohos"
+
+# Defines
+graphic_decode_windows_defines = [ "_WIN32" ]
+graphic_decode_mac_defines = [ "_APPLE" ]
+graphic_decode_ios_defines = [ "_IOS" ]
+graphic_decode_android_defines = [ "_ANDROID" ]
+
 declare_args() {
   graphic_standard_feature_bootanimation_enable = true
   graphic_standard_feature_ace_enable_gpu = true

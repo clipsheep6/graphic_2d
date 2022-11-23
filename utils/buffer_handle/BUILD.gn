@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 ## buffer_handle.a {{{
 config("buffer_handle_public_config") {
@@ -22,18 +23,61 @@ config("buffer_handle_public_config") {
 }
 
 ohos_static_library("buffer_handle") {
+  if (!use_clang_android && !use_clang_ios) {
+    sanitize = {
+      cfi = true
+      debug = false
+    }
+  }
   sources = [ "src/buffer_handle.cpp" ]
 
   configs = [ "//commonlibrary/c_utils/base:utils_config" ]
 
   public_configs = [ ":buffer_handle_public_config" ]
 
-  deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
-  ]
-
-  public_deps = [ "//commonlibrary/c_utils/base:utils" ]
+  if (use_mingw_win) {
+    defines = graphic_decode_windows_defines
+    configs +=
+        [ "//foundation/graphic/graphic_2d/mock:graphic_mock_secure_config" ]
+    deps = [
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_ipc",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_log",
+    ]
+    public_deps = [ "//commonlibrary/c_utils/base:utils" ]
+  } else if (use_clang_mac) {
+    defines = graphic_decode_mac_defines
+    configs +=
+        [ "//foundation/graphic/graphic_2d/mock:graphic_mock_secure_config" ]
+    deps = [
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_ipc",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_log",
+    ]
+    public_deps = [ "//commonlibrary/c_utils/base:utils" ]
+  } else if (use_clang_ios) {
+    defines = graphic_decode_ios_defines
+    configs +=
+        [ "//foundation/graphic/graphic_2d/mock:graphic_mock_secure_config" ]
+    deps = [
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_ipc",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_log",
+    ]
+    public_deps = [ "//commonlibrary/c_utils/base:utils" ]
+  } else if (use_clang_android) {
+    defines = graphic_decode_android_defines
+    configs +=
+        [ "//foundation/graphic/graphic_2d/mock:graphic_mock_secure_config" ]
+    deps = [
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_ipc",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_log",
+    ]
+    public_deps = [ "//commonlibrary/c_utils/base:utils" ]
+  } else {
+    deps = [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+      "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
+    ]
+    public_deps = [ "//commonlibrary/c_utils/base:utils" ]
+  }
   subsystem_name = "graphic"
   part_name = "graphic_standard"
 }

@@ -10,13 +10,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 group("test") {
   testonly = true
-
-  deps = [
-    "fuzztest:fuzztest",
-    "systemtest:systemtest",
-    "unittest:unittest",
-  ]
+  if (use_clang_ohos) {
+    deps = [
+      "fuzztest:fuzztest",
+      "systemtest:systemtest",
+      "unittest:unittest",
+    ]
+  } else {
+    deps = [
+      "systemtest:systemtest",
+      "unittest:unittest",
+    ]
+  }
 }

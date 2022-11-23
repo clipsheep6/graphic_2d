@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 ## Build socketpair.so {{{
 config("socketpair_config") {
@@ -37,6 +38,12 @@ config("socketpair_all_dependent_config") {
 }
 
 ohos_shared_library("socketpair") {
+  if (!use_clang_android && !use_clang_ios) {
+    sanitize = {
+      cfi = true
+      debug = false
+    }
+  }
   sources = [ "src/local_socketpair.cpp" ]
 
   configs = [ ":socketpair_config" ]
@@ -44,11 +51,41 @@ ohos_shared_library("socketpair") {
   public_configs = [ ":socketpair_public_config" ]
   all_dependent_configs = [ ":socketpair_all_dependent_config" ]
 
-  public_deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//commonlibrary/c_utils/base:utils",
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
-  ]
+  if (use_mingw_win) {
+    defines = graphic_decode_windows_defines
+    public_deps = [
+      "//commonlibrary/c_utils/base:utils",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_ipc",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_log",
+    ]
+  } else if (use_clang_mac) {
+    defines = graphic_decode_mac_defines
+    public_deps = [
+      "//commonlibrary/c_utils/base:utils",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_ipc",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_log",
+    ]
+  } else if (use_clang_ios) {
+    defines = graphic_decode_ios_defines
+    public_deps = [
+      "//commonlibrary/c_utils/base:utils",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_ipc",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_log",
+    ]
+  } else if (use_clang_android) {
+    defines = graphic_decode_android_defines
+    public_deps = [
+      "//commonlibrary/c_utils/base:utils",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_ipc",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_log",
+    ]
+  } else {
+    public_deps = [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+      "//commonlibrary/c_utils/base:utils",
+      "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
+    ]
+  }
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

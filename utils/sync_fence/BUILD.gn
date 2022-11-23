@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 ## Build sync_fence.so {{{
 config("sync_fence_config") {
@@ -37,6 +38,12 @@ config("sync_fence_public_config") {
 }
 
 ohos_shared_library("sync_fence") {
+  if (!use_clang_android && !use_clang_ios) {
+    sanitize = {
+      cfi = true
+      debug = false
+    }
+  }
   sources = [
     "src/sync_fence.cpp",
     "src/sync_fence_timeline.cpp",
@@ -47,16 +54,57 @@ ohos_shared_library("sync_fence") {
 
   public_configs = [ ":sync_fence_public_config" ]
 
-  public_deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//commonlibrary/c_utils/base:utils",
-  ]
-
-  external_deps = [
-    "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "ipc:ipc_core",
-  ]
+  if (use_mingw_win) {
+    defines = graphic_decode_windows_defines
+    configs +=
+        [ "//foundation/graphic/graphic_2d/mock:graphic_mock_hitrace_config" ]
+    public_deps = [
+      "//commonlibrary/c_utils/base:utils",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_eventhandler",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_ipc",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_log",
+    ]
+  } else if (use_clang_mac) {
+    defines = graphic_decode_mac_defines
+    configs +=
+        [ "//foundation/graphic/graphic_2d/mock:graphic_mock_hitrace_config" ]
+    public_deps = [
+      "//commonlibrary/c_utils/base:utils",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_eventhandler",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_ipc",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_log",
+    ]
+  } else if (use_clang_ios) {
+    defines = graphic_decode_ios_defines
+    configs +=
+        [ "//foundation/graphic/graphic_2d/mock:graphic_mock_hitrace_config" ]
+    public_deps = [
+      "//commonlibrary/c_utils/base:utils",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_eventhandler",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_ipc",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_log",
+    ]
+  } else if (use_clang_android) {
+    defines = graphic_decode_android_defines
+    configs +=
+        [ "//foundation/graphic/graphic_2d/mock:graphic_mock_hitrace_config" ]
+    public_deps = [
+      "//commonlibrary/c_utils/base:utils",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_eventhandler",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_ipc",
+      "//foundation/graphic/graphic_2d/mock:graphic_mock_log",
+    ]
+  } else {
+    public_deps = [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+      "//commonlibrary/c_utils/base:utils",
+    ]
+    external_deps = [
+      "eventhandler:libeventhandler",
+      "hitrace_native:hitrace_meter",
+      "ipc:ipc_core",
+    ]
+  }
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

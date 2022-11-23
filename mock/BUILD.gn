@@ -1,0 +1,128 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
+
+## Build graphic_mock.so
+config("graphic_mock_config") {
+  visibility = [ ":*" ]
+}
+
+config("graphic_mock_all_public_config") {
+  include_dirs = [
+    "include",
+    "include/base/eventhandler",
+    "include/base/init",
+    "include/drivers",
+    "include/hitrace",
+    "include/ipc",
+    "include/secure",
+  ]
+}
+
+
+config("graphic_mock_eventhandler_config") {
+  include_dirs = [
+    "include/base/eventhandler",
+    "//commonlibrary/c_utils/base/include",    
+  ]
+}
+
+config("graphic_mock_secure_config") {
+  include_dirs = [
+    "include/secure",
+    "//commonlibrary/c_utils/base/include",
+    ]
+}
+
+config("graphic_mock_init_config") {
+  include_dirs = [
+    "include/base/init",
+    "//commonlibrary/c_utils/base/include",    ]
+}
+
+config("graphic_mock_drivers_config") {
+  include_dirs = [
+    "include/drivers",
+    "//commonlibrary/c_utils/base/include",
+    ]
+}
+
+config("graphic_mock_ipc_config") {
+  include_dirs = [
+    "include/ipc",
+    "//commonlibrary/c_utils/base/include",
+  ]
+}
+
+config("graphic_mock_log_config") {
+  include_dirs = [
+    "include",
+    "//commonlibrary/c_utils/base/include",
+    ]
+}
+
+config("graphic_mock_hitrace_config") {
+  include_dirs = [
+    "include/hitrace",
+    "//commonlibrary/c_utils/base/include",
+    ]
+}
+
+
+ohos_static_library("graphic_mock_log") {
+  sources = [
+    "src/hilog/HiLog.cpp",
+  ]
+  configs = [
+     ":graphic_mock_config",
+   ]
+  public_configs = [
+    ":graphic_mock_log_config",
+  ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_static_library("graphic_mock_ipc") {
+  sources = []
+  configs = [ ":graphic_mock_config" ]
+  public_configs = [
+    ":graphic_mock_ipc_config",
+  ]
+  public_deps = ["//commonlibrary/c_utils/base:utils"]
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_static_library("graphic_mock_eventhandler") {
+  sources = [
+    "src/eventhandler/event_handler.cpp",
+    "src/eventhandler/event_runner.cpp",
+    "src/eventhandler/file_descriptor_listener.cpp",
+    "src/eventhandler/inner_event.cpp",
+    "src/eventhandler/native_implement_eventhandler.cpp",
+  ]
+  configs = [ 
+    ":graphic_mock_config",
+    ":graphic_mock_log_config",
+    ":graphic_mock_hitrace_config",
+  ]
+  public_configs = [
+    ":graphic_mock_eventhandler_config",
+  ]
+  public_deps = ["//commonlibrary/c_utils/base:utils"]
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}

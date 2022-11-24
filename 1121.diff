@@ -1,0 +1,178 @@
+diff --git a/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.cpp b/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.cpp
+index e65d8f33..70a938b2 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.cpp
++++ b/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.cpp
+@@ -191,6 +191,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
+     node.CleanDstRectChanged();
+     node.ApplyModifiers();
+     bool dirtyFlag = dirtyFlag_;
++    bool isCustomizedDirtyRect = false;
+ 
+     // update geoptr with ContextMatrix
+     auto parentSurfaceNodeMatrix = parentSurfaceNodeMatrix_;
+@@ -233,13 +234,23 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
+                 curSurfaceDirtyManager_->MergeDirtyRect(node.GetDstRect());
+             }
+         }
++        isCustomizedDirtyRect = true;
+     }
+     dirtyFlag_ = dirtyFlag_ || node.GetDstRectChanged();
+     parentSurfaceNodeMatrix_ = geoPtr->GetAbsMatrix();
+     node.ResetSurfaceOpaqueRegion(RectI(0, 0, screenInfo_.width, screenInfo_.height), geoPtr->GetAbsRect(),
+         containerWindowConfig_, node.IsFocusedWindow(currentFocusedPid_));
+ 
++    // merge last childRect as dirty if any child has been removed
++    if (node.HasRemovedChild()) {
++        curSurfaceDirtyManager_->MergeDirtyRect(node.GetChildrenRect());
++        node.ResetHasRemovedChild();
++    }
++    // reset childRect before prepare children
++    node.ResetChildrenRect();
+     PrepareBaseRenderNode(node);
++    // [planning] apply dirty rect instead of customized rect
++    node.UpdateParentChildrenRect(node.GetParent().lock(), isCustomizedDirtyRect, node.GetDstRect());
+     // restore flags
+     parentSurfaceNodeMatrix_ = parentSurfaceNodeMatrix;
+     curAlpha_ = alpha;
+@@ -319,7 +330,16 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
+         dirtyFlag_);
+     float alpha = curAlpha_;
+     curAlpha_ *= node.GetRenderProperties().GetAlpha();
++    // merge last childRect as dirty if any child has been removed
++    if (node.HasRemovedChild()) {
++        curSurfaceDirtyManager_->MergeDirtyRect(node.GetChildrenRect());
++        node.ResetHasRemovedChild();
++    }
++    // reset childRect before prepare children
++    node.ResetChildrenRect();
+     PrepareBaseRenderNode(node);
++    // attention: accumulate direct parent's childrenRect
++    node.UpdateParentChildrenRect(node.GetParent().lock());
+ 
+     // [planning] Remove this after skia is upgraded, the clipRegion is supported
+     if (node.GetRenderProperties().GetBackgroundFilter()) {
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_base_render_node.h b/rosen/modules/render_service_base/include/pipeline/rs_base_render_node.h
+index ec20e8d6..f526aa71 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_base_render_node.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_base_render_node.h
+@@ -157,6 +157,29 @@ public:
+             paintOutOfParentRect_ = paintOutOfParentRect_.JoinRect(r);
+         }
+     }
++
++    inline void ResetHasRemovedChild()
++    {
++        hasRemovedChild_ = false;
++    }
++
++    inline bool HasRemovedChild() const
++    {
++        return hasRemovedChild_;
++    }
++
++    inline void ResetChildrenRect()
++    {
++        childrenRect_ = RectI();
++    }
++
++    inline RectI GetChildrenRect() const
++    {
++        return childrenRect_;
++    }
++
++    // accumulate all valid children's area
++    void UpdateChildrenRect(const RectI& subRect);
+ protected:
+     enum class NodeDirty {
+         CLEAN = 0,
+@@ -180,6 +203,10 @@ private:
+     WeakPtr parent_;
+     void SetParent(WeakPtr parent);
+     bool isOnTheTree_ = false;
++    // accumulate all children's region rect for dirty merging when
++    // any child has been removed 
++    bool hasRemovedChild_ = false;
++    RectI childrenRect_;
+ 
+     std::list<WeakPtr> children_;
+     std::list<std::pair<SharedPtr, uint32_t>> disappearingChildren_;
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_render_node.h b/rosen/modules/render_service_base/include/pipeline/rs_render_node.h
+index e418a544..29c66772 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_render_node.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_render_node.h
+@@ -97,6 +97,11 @@ public:
+         isShadowValidLastFrame_ = isShadowValidLastFrame;
+     }
+ 
++    // update parent's children rect including childRect and itself
++    // if not customized, it merge's node's dirtyRect
++    void UpdateParentChildrenRect(std::shared_ptr<RSBaseRenderNode> parentNode,
++        const bool isCustomized = false, const RectI subRect = RectI()) const;
++
+     // update node's out parent status
+     void SetPaintOutOfParentFlag(std::shared_ptr<RSRenderNode> rsParent);
+ 
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_base_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_base_render_node.cpp
+index 1565c879..812576b2 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_base_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_base_render_node.cpp
+@@ -118,6 +118,18 @@ void RSBaseRenderNode::SetIsOnTheTree(bool flag)
+     }
+ }
+ 
++void RSBaseRenderNode::UpdateChildrenRect(const RectI& subRect)
++{
++    if (!subRect.IsEmpty()) {
++        if (childrenRect_.IsEmpty()) {
++            // init as not empty subRect in case join RectI enlarging area 
++            childrenRect_ = subRect;
++        } else {
++            childrenRect_ = childrenRect_.JoinRect(subRect);
++        }
++    }
++}
++
+ void RSBaseRenderNode::AddCrossParentChild(const SharedPtr& child, int32_t index)
+ {
+     // AddCrossParentChild only used as: the child is under multiple parents(e.g. a window cross multi-screens),
+@@ -166,6 +178,8 @@ void RSBaseRenderNode::RemoveCrossParentChild(const SharedPtr& child, const Weak
+         disappearingChildren_.emplace_back(child, origPos);
+     } else {
+         child->SetParent(newParent);
++        // attention: set new parent means 'old' parent has removed this child
++        hasRemovedChild_ = true;
+     }
+     children_.erase(it);
+     SetDirty();
+@@ -223,6 +237,10 @@ void RSBaseRenderNode::SetParent(WeakPtr parent)
+ 
+ void RSBaseRenderNode::ResetParent()
+ {
++    auto parentNode = parent_.lock();
++    if (parentNode) {
++        parentNode->hasRemovedChild_ = true;
++    }
+     parent_.reset();
+     SetIsOnTheTree(false);
+ }
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
+index 5521e54a..988654a5 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
+@@ -154,6 +154,16 @@ void RSRenderNode::UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEn
+     }
+ }
+ 
++void RSRenderNode::UpdateParentChildrenRect(std::shared_ptr<RSBaseRenderNode> parentNode,
++        const bool isCustomized, const RectI subRect) const
++{
++    if (parentNode) {
++        RectI accumulatedRect = GetChildrenRect();
++        accumulatedRect = accumulatedRect.JoinRect((isCustomized ? subRect : renderProperties_.GetDirtyRect()));
++        parentNode->UpdateChildrenRect(accumulatedRect);
++    }
++}
++
+ void RSRenderNode::SetPaintOutOfParentFlag(std::shared_ptr<RSRenderNode> rsParent)
+ {
+     if (rsParent == nullptr) {

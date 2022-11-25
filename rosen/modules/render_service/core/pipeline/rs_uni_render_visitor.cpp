@@ -46,7 +46,9 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     auto mainThread = RSMainThread::Instance();
     renderEngine_ = mainThread->GetRenderEngine();
     partialRenderType_ = RSSystemProperties::GetUniPartialRenderEnabled();
-    isPartialRenderEnabled_ = (partialRenderType_ != PartialRenderType::DISABLED);
+    sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
+    auto screenNum = screenManager->GetAllScreenIds().size();
+    isPartialRenderEnabled_ = (screenNum <= 1) && (partialRenderType_ != PartialRenderType::DISABLED);
     isDirtyRegionDfxEnabled_ = (RSSystemProperties::GetDirtyRegionDebugType() == DirtyRegionDebugType::EGL_DAMAGE);
     isTargetDirtyRegionDfxEnabled_ = RSSystemProperties::GetTargetDirtyRegionDfxEnabled(dfxTargetSurfaceNames_);
     if (isDirtyRegionDfxEnabled_ && isTargetDirtyRegionDfxEnabled_) {
@@ -173,6 +175,11 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
         parentSurfaceNodeMatrix_ = geoPtr->GetAbsMatrix();
     }
     dirtyFlag_ = dirtyFlag_ || node.IsRotationChanged();
+    // when display is in rotation state, occlusion relationship will be ruined,
+    // hence partialrender quickreject should be disabled.
+    if(node.IsRotationChanged()) {
+        isOpDropped_ = false;
+    }
     node.UpdateRotation();
     curAlpha_ = node.GetRenderProperties().GetAlpha();
     PrepareBaseRenderNode(node);
@@ -293,11 +300,14 @@ void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
     node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
-    const auto& property = node.GetRenderProperties();
     float alpha = curAlpha_;
+    auto parentSurfaceNodeMatrix = parentSurfaceNodeMatrix_;
 
     auto rsParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(node.GetParent().lock());
+    const auto& property = node.GetRenderProperties();
     bool geoDirty = property.IsGeoDirty();
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+
     dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
         dirtyFlag_);
     curAlpha_ *= property.GetAlpha();
@@ -307,14 +317,18 @@ void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
         SkMatrix gravityMatrix;
         (void)RSPropertiesPainter::GetGravityMatrix(frameGravity_,
             RectF { 0.0f, 0.0f, boundsRect_.width(), boundsRect_.height() }, rootWidth, rootHeight, gravityMatrix);
-        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
         // Only Apply gravityMatrix when rootNode is dirty
         if (geoPtr != nullptr && (dirtyFlag || geoDirty)) {
             geoPtr->ConcatMatrix(gravityMatrix);
         }
     }
+
+    if (geoPtr != nullptr) {
+        parentSurfaceNodeMatrix_ = geoPtr->GetAbsMatrix();
+    }
     PrepareBaseRenderNode(node);
 
+    parentSurfaceNodeMatrix_ = parentSurfaceNodeMatrix;
     curAlpha_ = alpha;
     dirtyFlag_ = dirtyFlag;
 }
@@ -349,10 +363,8 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     node.UpdateParentChildrenRect(node.GetParent().lock());
 
     // [planning] Remove this after skia is upgraded, the clipRegion is supported
-    if (node.GetRenderProperties().GetBackgroundFilter()) {
-        needFilter_ = true;
-    }
     if (node.GetRenderProperties().NeedFilter()) {
+        needFilter_ = true;
         filterRects_[curSurfaceNode_->GetId()].push_back(node.GetOldDirtyInSurface());
     }
     curAlpha_ = alpha;
@@ -451,6 +463,12 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         node.GetDirtyManager()->GetDirtyRegion().ToString().c_str());
     RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode node: %" PRIu64 ", child size:%u", node.GetId(),
         node.GetChildrenCount());
+    sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
+    if (!screenManager) {
+        RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode ScreenManager is nullptr");
+        return;
+    }
+    screenInfo_ = screenManager->QueryScreenInfo(node.GetScreenId());
     isSecurityDisplay_ = node.GetSecurityDisplay();
     switch (screenInfo_.state) {
         case ScreenState::PRODUCER_SURFACE_ENABLE:

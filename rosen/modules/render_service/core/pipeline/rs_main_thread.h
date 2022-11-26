@@ -75,6 +75,7 @@ public:
     void RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void RequestNextVSync();
     void PostTask(RSTaskMessage::RSTask task);
+    void PostSyncTask(RSTaskMessage::RSTask task);
     void QosStateDump(std::string& dumpString);
     void RenderServiceTreeDump(std::string& dumpString);
     void RsEventParamDump(std::string& dumpString);
@@ -122,6 +123,8 @@ public:
 
     sptr<VSyncDistributor> rsVSyncDistributor_;
 
+    void SetDirtyFlag();
+    void ForceRefreshForUni();
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
         std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;
@@ -135,7 +138,6 @@ private:
 
     void OnVsync(uint64_t timestamp, void* data);
     void ProcessCommand();
-    void CheckAndNotifyFirstFrameCallback();
     void Animate(uint64_t timestamp);
     void ConsumeAndUpdateAllNodes();
     void ReleaseAllNodesBuffer();
@@ -165,9 +167,10 @@ private:
     void CheckDelayedSwitchTask();
     void UpdateRenderMode(bool useUniVisitor);
 
-    void SetDirtyFlag();
+    void CheckColdStartMap();
     void ClearDisplayBuffer();
     void PerfAfterAnim();
+    void PerfForBlurIfNeeded();
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;

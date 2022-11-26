@@ -50,6 +50,7 @@ constexpr float MAX_TRANS_RATIO = 0.95f;
 constexpr float MIN_SPOT_RATIO = 1.0f;
 constexpr float MAX_SPOT_RATIO = 1.95f;
 constexpr float MAX_AMBIENT_RADIUS = 150.0f;
+int g_blurCnt = 0;
 } // namespace
 
 SkRect RSPropertiesPainter::Rect2SkRect(const RectF& r)
@@ -254,9 +255,10 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilt
     }
 }
 
-void RSPropertiesPainter::DrawFilter(const RSProperties& properties, SkCanvas& canvas,
+void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
     std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect, SkSurface* skSurface)
 {
+    g_blurCnt++;
     if (rect != nullptr) {
         canvas.clipRect((*rect), true);
     } else if (properties.GetClipBounds() != nullptr) {
@@ -280,12 +282,37 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, SkCanvas& c
         ROSEN_LOGE("RSPropertiesPainter::DrawFilter image null");
         return;
     }
-    canvas.save();
-    canvas.resetMatrix();
+
     auto clipBounds = SkRect::Make(canvas.getDeviceClipBounds());
-    canvas.drawImageRect(imageSnapshot.get(), clipBounds, clipBounds, &paint);
-    filter->PostProcess(canvas);
-    canvas.restore();
+    auto visibleDirtyRects = canvas.GetVisibleRects();
+    for (auto rect : visibleDirtyRects) {
+        if (rect.intersect(clipBounds)) {
+            canvas.save();
+            canvas.resetMatrix();
+            canvas.drawImageRect(imageSnapshot.get(), rect, rect, &paint);
+            filter->PostProcess(canvas);
+            canvas.restore();
+        }
+    }
+
+// This is for separate render or unite render when PartialRenderType is DISABLED.
+    if (visibleDirtyRects.empty()) {
+        canvas.save();
+        canvas.resetMatrix();
+        canvas.drawImageRect(imageSnapshot.get(), clipBounds, clipBounds, &paint);
+        filter->PostProcess(canvas);
+        canvas.restore();
+    }
+}
+
+int RSPropertiesPainter::GetBlurCnt()
+{
+    return g_blurCnt;
+}
+
+void RSPropertiesPainter::ResetBlurCnt()
+{
+    g_blurCnt = 0;
 }
 
 void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas)
@@ -331,7 +358,7 @@ void RSPropertiesPainter::DrawFrame(const RSProperties& properties, RSPaintFilte
     auto frameRect = Rect2SkRect(properties.GetFrameRect());
     // Generate or clear cache on demand
     if (canvas.isCacheEnabled()) {
-        cmds->GenerateCache();
+        cmds->GenerateCache(canvas.GetSurface());
     } else {
         cmds->ClearCache();
     }
@@ -397,7 +424,7 @@ void RSPropertiesPainter::DrawMask(const RSProperties& properties, SkCanvas& can
     if (mask == nullptr) {
         return;
     }
-    if (mask->IsSvgMask() && !mask->GetSvgDom()) {
+    if (mask->IsSvgMask() && !mask->GetSvgDom() && !mask->GetSvgPicture()) {
         ROSEN_LOGD("RSPropertiesPainter::DrawMask not has Svg Mask property");
         return;
     }
@@ -414,7 +441,11 @@ void RSPropertiesPainter::DrawMask(const RSProperties& properties, SkCanvas& can
         SkAutoCanvasRestore maskSave(&canvas, true);
         canvas.translate(maskBounds.fLeft + mask->GetSvgX(), maskBounds.fTop + mask->GetSvgY());
         canvas.scale(mask->GetScaleX(), mask->GetScaleY());
-        mask->GetSvgDom()->render(&canvas);
+        if (mask->GetSvgDom()) {
+            mask->GetSvgDom()->render(&canvas);
+        } else if (mask->GetSvgPicture()) {
+            canvas.drawPicture(mask->GetSvgPicture());
+        }
     } else if (mask->IsGradientMask()) {
         SkAutoCanvasRestore maskSave(&canvas, true);
         canvas.translate(maskBounds.fLeft, maskBounds.fTop);

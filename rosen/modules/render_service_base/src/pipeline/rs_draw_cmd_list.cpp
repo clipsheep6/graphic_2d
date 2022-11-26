@@ -209,7 +209,7 @@ DrawCmdList* DrawCmdList::Unmarshalling(Parcel& parcel)
 }
 #endif
 
-void DrawCmdList::GenerateCache()
+void DrawCmdList::GenerateCache(SkSurface* surface)
 {
 #ifdef ROSEN_OHOS
     if (isCached_) {
@@ -221,7 +221,7 @@ void DrawCmdList::GenerateCache()
 
     for (auto index = 0u; index < ops_.size(); index++) {
         auto& op = ops_[index];
-        if (auto cached_op = op->GenerateCachedOpItem()) {
+        if (auto cached_op = op->GenerateCachedOpItem(surface)) {
             // backup the original op and position
             opReplacedByCache_.emplace(index, op.release());
             // replace the original op with the cached op
@@ -249,14 +249,12 @@ void DrawCmdList::ClearCache()
 #endif
 }
 
-// modify the mutex to global to extend life cycle, fix destructor crash
-// only for DrawCmdListManager
-static std::mutex listsMutex_;
+// modify the DrawCmdListManager instance to global to extend life cycle, fix destructor crash
+static DrawCmdListManager gDrawCmdListManagerInstance;
 
 DrawCmdListManager& DrawCmdListManager::Instance()
 {
-    static DrawCmdListManager instance;
-    return instance;
+    return gDrawCmdListManagerInstance;
 }
 
 void DrawCmdListManager::RegisterDrawCmdList(NodeId id, std::shared_ptr<DrawCmdList> drawCmdList)

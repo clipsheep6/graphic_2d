@@ -56,4 +56,19 @@ HWTEST_F(RSShadowTest, TestRSShadow002, TestSize.Level1)
     shadow.SetElevation(0.1);
     shadow.IsValid();
 }
+
+ * @tc.name: LifeCycle001
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSShadowTest, LifeCycle001, TestSize.Level1)
+{
+    /**
+     * @tc.steps: step1. create RSMask by Gradient
+     */
+    std::shared_ptr<RSShadow>rsShadow = std::make_shared<RSShadow>();
+    ASSERT_FALSE(rsShadow->IsValid());
+    rsShadow->SetElevation(5.f);
+    ASSERT_FALSE(rsShadow->IsValid());
+}
 } // namespace OHOS::Rosen

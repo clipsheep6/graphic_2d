@@ -38,35 +38,47 @@ void SimplifyPaint(uint32_t color, SkPaint* paint)
 }
 } // namespace
 
-std::unique_ptr<OpItem> OpItem::GenerateCachedOpItem() const
+std::unique_ptr<OpItem> OpItem::GenerateCachedOpItem(SkSurface* surface) const
 {
-    // check if need to cache
+    // check if this opItem can be cached
     auto optionalBounds = GetCacheBounds();
     if (!optionalBounds.has_value() || optionalBounds.value().isEmpty()) {
         return nullptr;
     }
     auto& bounds = optionalBounds.value();
 
-    // allocate a bitmap to draw self onto
-    auto imageInfo = SkImageInfo::Make(bounds.width(), bounds.height(), kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-    SkBitmap bitmap;
-    bitmap.allocPixels(imageInfo);
-    SkCanvas cacheCanvas(bitmap);
-    auto cachePaintFilterCanvas = RSPaintFilterCanvas(&cacheCanvas);
+    // create surface & canvas to draw onto
+    auto offscreenInfo =
+        SkImageInfo::Make(bounds.width(), bounds.height(), kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+    sk_sp<SkSurface> offscreenSurface;
+    if (surface != nullptr) {
+        // create GPU accelerated surface
+        offscreenSurface = surface->makeSurface(offscreenInfo);
+    } else {
+        // create CPU raster surface
+        offscreenSurface = SkSurface::MakeRaster(offscreenInfo);
+    }
+    if (offscreenSurface == nullptr) {
+        RS_LOGW("OpItem::GenerateCachedOpItem Failed to create offscreen surface, abort caching");
+        return nullptr;
+    }
+    auto offscreenCanvas = offscreenSurface->getCanvas();
+    auto offscreenPaintFilterCanvas = RSPaintFilterCanvas(offscreenCanvas);
 
-    // align bounds to [0, 0]
+    // align draw op to [0, 0]
     if (bounds.left() != 0 || bounds.top() != 0) {
         SkMatrix matrix;
         matrix.setTranslate(-bounds.left(), -bounds.top());
-        cacheCanvas.concat(matrix);
+        offscreenPaintFilterCanvas.concat(matrix);
     }
 
-    // draw on the bitmap
-    Draw(cachePaintFilterCanvas, nullptr);
-    cacheCanvas.flush();
+    // draw on the bitmap. NOTE: we cannot cache draw ops depending on rect, because the rect may be changed
+    Draw(offscreenPaintFilterCanvas, nullptr);
+    // flush to make sure all drawing commands are executed, maybe unnecessary
+    offscreenPaintFilterCanvas.flush();
 
-    // generate bitmap draw op with offset
-    return std::make_unique<BitmapOpItem>(SkImage::MakeFromBitmap(bitmap), bounds.x(), bounds.y(), nullptr);
+    // generate BitmapOpItem with correct offset
+    return std::make_unique<BitmapOpItem>(offscreenSurface->makeImageSnapshot(), bounds.x(), bounds.y(), nullptr);
 }
 
 RectOpItem::RectOpItem(SkRect rect, const SkPaint& paint) : OpItemWithPaint(sizeof(RectOpItem)), rect_(rect)
@@ -208,7 +220,7 @@ TextBlobOpItem::TextBlobOpItem(const sk_sp<SkTextBlob> textBlob, float x, float 
 
 void TextBlobOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
-    bool isHighContrastEnabled = canvas.isHighContrastEnabled() || RSSystemProperties::GetHighContrastStatus();
+    bool isHighContrastEnabled = canvas.isHighContrastEnabled();
     if (isHighContrastEnabled) {
         ROSEN_LOGD("TextBlobOpItem::Draw highContrastEnabled");
         uint32_t color = paint_.getColor();
@@ -295,25 +307,6 @@ void PixelMapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
     sk_sp<SkImage> skImage = Media::PixelMapRosenUtils::ExtractSkImage(pixelmap_);
     canvas.drawImageRect(skImage, src_, dst_, &paint_);
-}
-
-BitmapLatticeOpItem::BitmapLatticeOpItem(
-    const sk_sp<SkImage> bitmapInfo, const SkCanvas::Lattice& lattice, const SkRect& rect, const SkPaint* paint)
-    : OpItemWithPaint(sizeof(BitmapLatticeOpItem))
-{
-    rect_ = rect;
-    lattice_ = lattice;
-    if (bitmapInfo != nullptr) {
-        bitmapInfo_ = bitmapInfo;
-    }
-    if (paint) {
-        paint_ = *paint;
-    }
-}
-
-void BitmapLatticeOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
-{
-    canvas.drawImageLattice(bitmapInfo_.get(), lattice_, rect_, &paint_);
 }
 
 BitmapNineOpItem::BitmapNineOpItem(
@@ -427,9 +420,7 @@ ImageWithParmOpItem::ImageWithParmOpItem(const sk_sp<SkImage> img, const sk_sp<S
 {
     rsImage_ = std::make_shared<RSImage>();
     rsImage_->SetImage(img);
-    if (img) {
-        rsImage_->SetCompressData(data, img->width(), img->height());
-    }
+    rsImage_->SetCompressData(data, rsimageInfo.uniqueId_, rsimageInfo.width_, rsimageInfo.height_);
     rsImage_->SetImageFit(rsimageInfo.fitNum_);
     rsImage_->SetImageRepeat(rsimageInfo.repeatNum_);
     rsImage_->SetRadius(rsimageInfo.radius_);

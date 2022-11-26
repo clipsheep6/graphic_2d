@@ -34,6 +34,29 @@ void RSShadowTest::SetUp() {}
 void RSShadowTest::TearDown() {}
 
 /**
+ * @tc.name: TestRSShadow001
+ * @tc.desc: IsValid test.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RSShadowTest, TestRSShadow001, TestSize.Level1)
+{
+    RSShadow shadow;
+    shadow.SetRadius(0.1);
+    shadow.IsValid();
+}
+
+/**
+ * @tc.name: TestRSShadow002
+ * @tc.desc: IsValid test.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RSShadowTest, TestRSShadow002, TestSize.Level1)
+{
+    RSShadow shadow;
+    shadow.SetElevation(0.1);
+    shadow.IsValid();
+}
+
  * @tc.name: LifeCycle001
  * @tc.desc:
  * @tc.type:FUNC
@@ -48,4 +71,4 @@ HWTEST_F(RSShadowTest, LifeCycle001, TestSize.Level1)
     rsShadow->SetElevation(5.f);
     ASSERT_FALSE(rsShadow->IsValid());
 }
-}
+} // namespace OHOS::Rosen

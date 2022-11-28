@@ -17,10 +17,11 @@
 
 #include <sstream>
 
-#include "hilog/log.h"
-#include "parameter.h"
+// #include "hilog/log.h"
+// #include "parameter.h"
 
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_parameter.h"
 
 namespace OHOS {
 namespace Rosen {

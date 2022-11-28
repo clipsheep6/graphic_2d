@@ -907,10 +907,12 @@ void RSProperties::Reset()
 
     frameGravity_ = Gravity::DEFAULT;
     alpha_ = 1.f;
-
+#ifdef ROSEN_OHOS
     boundsGeo_ = std::make_shared<RSObjAbsGeometry>();
+#else
+    boundsGeo_ = std::make_shared<RSObjGeometry>();
+#endif
     frameGeo_ = std::make_shared<RSObjGeometry>();
-
     backgroundFilter_ = nullptr;
     border_ = nullptr;
     clipPath_ = nullptr;

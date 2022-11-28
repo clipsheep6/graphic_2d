@@ -33,7 +33,7 @@ RSVirtualScreenResolution& RSVirtualScreenResolution::operator=(const RSVirtualS
     height_ = other.height_;
     return *this;
 }
-
+#ifdef ROSEN_OHOS
 bool RSVirtualScreenResolution::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteUint32(width_) && parcel.WriteUint32(height_);
@@ -50,7 +50,7 @@ RSVirtualScreenResolution* RSVirtualScreenResolution::Unmarshalling(Parcel& parc
     RSVirtualScreenResolution* virtualScreenResolution = new RSVirtualScreenResolution(width, height);
     return virtualScreenResolution;
 }
-
+#endif
 uint32_t RSVirtualScreenResolution::GetVirtualScreenWidth() const
 {
     return width_;

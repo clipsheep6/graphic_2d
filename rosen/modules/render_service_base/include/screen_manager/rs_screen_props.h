@@ -17,22 +17,29 @@
 #define RS_SCREEN_PROPS
 
 #include <cstdint>
+#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <refbase.h>
+#endif
 #include <string>
 
 #include "screen_manager/screen_types.h"
 
 namespace OHOS {
 namespace Rosen {
+#ifdef ROSEN_OHOS
 class RSScreenProps : public Parcelable {
+#else
+class RSScreenProps {
+#endif
 public:
     RSScreenProps() = default;
     RSScreenProps(std::string propName, uint32_t propId, uint64_t value);
     ~RSScreenProps() = default;
+#ifdef ROSEN_OHOS
     static RSScreenProps* Unmarshalling(Parcel &parcel);
     bool Marshalling(Parcel &parcel) const override;
-
+#endif
     void SetPropertyName(const std::string& propName);
     void SetPropId(uint32_t propId);
     void SetValue(uint64_t value);

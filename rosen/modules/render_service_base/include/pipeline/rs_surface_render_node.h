@@ -287,9 +287,10 @@ public:
 
     // Only SurfaceNode in RS calls "RegisterBufferAvailableListener"
     // to save callback method sent by RT or UI which depends on the value of "isFromRenderThread".
+#ifdef ROSEN_OHOS
     void RegisterBufferAvailableListener(
         sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread);
-
+#endif
     // Only SurfaceNode in RT calls "ConnectToNodeInRenderService" to send callback method to RS
     void ConnectToNodeInRenderService();
 
@@ -573,8 +574,10 @@ private:
     std::atomic<bool> isNotifyRTBufferAvailable_ = false;
     std::atomic<bool> isNotifyUIBufferAvailable_ = false;
     std::atomic_bool isBufferAvailable_ = false;
+#ifdef ROSEN_OHOS
     sptr<RSIBufferAvailableCallback> callbackFromRT_;
     sptr<RSIBufferAvailableCallback> callbackFromUI_;
+#endif
     std::function<void(void)> callbackForRenderThreadRefresh_ = nullptr;
     std::vector<NodeId> childSurfaceNodeIds_;
     friend class RSRenderThreadVisitor;

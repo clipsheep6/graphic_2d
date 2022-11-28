@@ -17,11 +17,17 @@
 #define RS_SCREEN_MODE_INFO
 
 #include <cstdint>
+#ifdef ROSEN_OHOS
 #include <parcel.h>
+#endif
 
 namespace OHOS {
 namespace Rosen {
+#ifdef ROSEN_OHOS
 class RSScreenModeInfo : public Parcelable {
+#else
+class RSScreenModeInfo {
+#endif
 public:
     RSScreenModeInfo() = default;
     RSScreenModeInfo(int32_t width, int32_t height, uint32_t refreshRate, int32_t id);
@@ -29,10 +35,10 @@ public:
 
     RSScreenModeInfo(const RSScreenModeInfo& other);
     RSScreenModeInfo& operator=(const RSScreenModeInfo& other);
-
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel &parcel) const override;
     static RSScreenModeInfo *Unmarshalling(Parcel &parcel);
-
+#endif
     int32_t GetScreenWidth() const;
     int32_t GetScreenHeight() const;
     uint32_t GetScreenRefreshRate() const;

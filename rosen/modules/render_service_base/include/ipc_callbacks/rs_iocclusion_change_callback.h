@@ -15,7 +15,7 @@
 
 #ifndef ROSEN_RENDER_SERVICE_BASE_TRANSACTION_RS_IRENDER_OCCLUSION_CHANGE_CALLBACK_H
 #define ROSEN_RENDER_SERVICE_BASE_TRANSACTION_RS_IRENDER_OCCLUSION_CHANGE_CALLBACK_H
-
+#ifdef ROSEN_OHOS
 #include "transaction/rs_occlusion_data.h"
 
 namespace OHOS {
@@ -33,5 +33,5 @@ public:
 };
 }
 }
-
+#endif // ROSEN_OHOS
 #endif

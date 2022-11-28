@@ -62,7 +62,7 @@ void RSScreenHDRCapability::SetHdrFormats(const std::vector<ScreenHDRFormat>& fo
 {
     hdrFormats_ = formats;
 }
-
+#ifdef ROSEN_OHOS
 bool RSScreenHDRCapability::WriteVector(const std::vector<ScreenHDRFormat>& formats, Parcel &parcel) const
 {
     if (!parcel.WriteUint32(static_cast<uint32_t>(formats.size()))) {
@@ -130,5 +130,6 @@ RSScreenHDRCapability* RSScreenHDRCapability::Unmarshalling(Parcel &parcel)
     RSScreenHDRCapability* screenHdrCapability = new RSScreenHDRCapability(maxLum, minLum, maxAverageLum, formats);
     return screenHdrCapability;
 }
+#endif
 } // namespace Rosen
 } // namespace OHOS

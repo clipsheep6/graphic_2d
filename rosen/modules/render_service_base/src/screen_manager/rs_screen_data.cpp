@@ -64,7 +64,7 @@ ScreenPowerStatus RSScreenData::GetPowerStatus() const
 {
     return powerStatus_;
 }
-
+#ifdef ROSEN_OHOS
 bool RSScreenData::WriteVector(const std::vector<RSScreenModeInfo> &supportModes, Parcel &parcel) const
 {
     for (uint32_t modeIndex = 0; modeIndex < supportModes.size(); modeIndex++) {
@@ -136,5 +136,6 @@ RSScreenData* RSScreenData::Unmarshalling(Parcel &parcel)
         supportModeInfo, static_cast<ScreenPowerStatus>(powerStatus));
     return screenData;
 }
+#endif
 }
 }

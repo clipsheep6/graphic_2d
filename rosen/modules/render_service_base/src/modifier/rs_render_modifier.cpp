@@ -27,6 +27,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
+#ifdef ROSEN_OHOS
 using ModifierUnmarshallingFunc = RSRenderModifier* (*)(Parcel& parcel);
 
 #define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE, DELTA_OP)        \
@@ -85,11 +86,53 @@ static std::unordered_map<RSModifierType, ModifierUnmarshallingFunc> funcLUT = {
         },
     },
 };
+#else
+using ModifierFunc = RSRenderModifier* (*)();
+#define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE, DELTA_OP)        \
+    { RSModifierType::MODIFIER_TYPE, []() -> RSRenderModifier* {                         \
+            std::shared_ptr<RSRenderAnimatableProperty<TYPE>> prop;                      \
+            auto modifier = new RS##MODIFIER_NAME##RenderModifier(prop);                 \
+            if (!modifier) {                                                             \
+                return nullptr;                                                          \
+            }                                                                            \
+            return modifier;                                                             \
+        },                                                                               \
+    },
 
+#define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE)                \
+    { RSModifierType::MODIFIER_TYPE, []() -> RSRenderModifier* {                         \
+            std::shared_ptr<RSRenderProperty<TYPE>> prop;                                \
+            auto modifier = new RS##MODIFIER_NAME##RenderModifier(prop);                 \
+            if (!modifier) {                                                             \
+                return nullptr;                                                          \
+            }                                                                            \
+            return modifier;                                                             \
+        },                                                                               \
+    },
+static std::unordered_map<RSModifierType, ModifierFunc> funcLUT = {
+#include "modifier/rs_modifiers_def.in"
+    { RSModifierType::EXTENDED, []() -> RSRenderModifier* {
+            std::shared_ptr<RSRenderProperty<std::shared_ptr<DrawCmdList>>> prop;
+            int16_t type = 0;
+            bool hasOverlayBounds = false;
+            RSDrawCmdListRenderModifier* modifier = new RSDrawCmdListRenderModifier(prop);
+            modifier->SetType(static_cast<RSModifierType>(type));
+            if (hasOverlayBounds) {
+                // OVERLAY_STYLE
+                int32_t left;
+                int32_t top;
+                int32_t width;
+                int32_t height;
+                modifier->SetOverlayBounds(std::make_shared<RectI>(left, top, width, height));
+            }
+            return modifier;
+        },
+    },
+};
+#endif
 #undef DECLARE_ANIMATABLE_MODIFIER
 #undef DECLARE_NOANIMATABLE_MODIFIER
 }
-
 void RSDrawCmdListRenderModifier::Apply(RSModifierContext& context)
 {
     if (context.canvas_) {
@@ -104,7 +147,7 @@ void RSDrawCmdListRenderModifier::Update(const std::shared_ptr<RSRenderPropertyB
         property_->Set(property->Get());
     }
 }
-
+#ifdef ROSEN_OHOS
 bool RSDrawCmdListRenderModifier::Marshalling(Parcel& parcel)
 {
     if (parcel.WriteInt16(static_cast<int16_t>(RSModifierType::EXTENDED)) &&
@@ -132,7 +175,7 @@ RSRenderModifier* RSRenderModifier::Unmarshalling(Parcel& parcel)
     }
     return it->second(parcel);
 }
-
+#endif
 namespace {
 template<typename T>
 T Add(T a, T b)
@@ -150,7 +193,7 @@ T Replace(T a, T b)
     return b;
 }
 } // namespace
-
+#ifdef ROSEN_OHOS
 #define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE, DELTA_OP)                                     \
     bool RS##MODIFIER_NAME##RenderModifier::Marshalling(Parcel& parcel)                                               \
     {                                                                                                                 \
@@ -191,9 +234,37 @@ T Replace(T a, T b)
             renderProperty->Set(property->Get());                                                                     \
         }                                                                                                             \
     }
+#else
+#define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE, DELTA_OP)                                     \
+    void RS##MODIFIER_NAME##RenderModifier::Apply(RSModifierContext& context)                                         \
+    {                                                                                                                 \
+        auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<TYPE>>(property_);                  \
+        context.property_.Set##MODIFIER_NAME(                                                                         \
+            DELTA_OP(context.property_.Get##MODIFIER_NAME(), renderProperty->Get()));                                 \
+    }                                                                                                                 \
+    void RS##MODIFIER_NAME##RenderModifier::Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta)   \
+    {                                                                                                                 \
+        if (auto property = std::static_pointer_cast<RSRenderAnimatableProperty<TYPE>>(prop)) {                       \
+            auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<TYPE>>(property_);              \
+            renderProperty->Set(isDelta ? (renderProperty->Get() + property->Get()) : property->Get());               \
+        }                                                                                                             \
+    }
+#define DECLARE_NOANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE)                                             \
+    void RS##MODIFIER_NAME##RenderModifier::Apply(RSModifierContext& context)                                         \
+    {                                                                                                                 \
+        auto renderProperty = std::static_pointer_cast<RSRenderProperty<TYPE>>(property_);                            \
+        context.property_.Set##MODIFIER_NAME(renderProperty->Get());                                                  \
+    }                                                                                                                 \
+    void RS##MODIFIER_NAME##RenderModifier::Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta)   \
+    {                                                                                                                 \
+        if (auto property = std::static_pointer_cast<RSRenderProperty<TYPE>>(prop)) {                                 \
+            auto renderProperty = std::static_pointer_cast<RSRenderProperty<TYPE>>(property_);                        \
+            renderProperty->Set(property->Get());                                                                     \
+        }                                                                                                             \
+    }
+#endif
 
 #include "modifier/rs_modifiers_def.in"
-
 #undef DECLARE_ANIMATABLE_MODIFIER
 #undef DECLARE_NOANIMATABLE_MODIFIER
 } // namespace Rosen

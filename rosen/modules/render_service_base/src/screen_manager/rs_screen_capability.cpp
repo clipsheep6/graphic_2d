@@ -105,7 +105,7 @@ const std::vector<RSScreenProps>& RSScreenCapability::GetProps() const
 {
     return props_;
 }
-
+#ifdef ROSEN_OHOS
 bool RSScreenCapability::WriteVector(const std::vector<RSScreenProps> &props, Parcel &parcel) const
 {
     for (uint32_t propIndex = 0; propIndex < props.size(); propIndex++) {
@@ -203,5 +203,6 @@ RSScreenCapability* RSScreenCapability::Unmarshalling(Parcel &parcel)
         phyWidth, phyHeight, supportLayers, virtualDispCount, supportWriteBack, props);
     return screenCapability;
 }
+#endif
 }
 }

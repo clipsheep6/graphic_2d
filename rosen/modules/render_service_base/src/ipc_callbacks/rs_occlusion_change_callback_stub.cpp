@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#ifdef ROSEN_OHOS
 #include "rs_occlusion_change_callback_stub.h"
 
 #include "platform/common/rs_log.h"
@@ -44,3 +44,4 @@ int RSOcclusionChangeCallbackStub::OnRemoteRequest(
 }
 } // namespace Rosen
 } // namespace OHOS
+#endif

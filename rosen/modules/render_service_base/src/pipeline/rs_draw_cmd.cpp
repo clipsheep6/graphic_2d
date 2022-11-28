@@ -16,9 +16,10 @@
 #include "pipeline/rs_draw_cmd.h"
 
 #include "pixel_map_rosen_utils.h"
-#include "rs_trace.h"
+// #include "rs_trace.h"
+#include "platform/common/rs_trace.h"
 #include "securec.h"
-
+#include "include/core/SkSurface.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_root_render_node.h"
 #include "platform/common/rs_log.h"

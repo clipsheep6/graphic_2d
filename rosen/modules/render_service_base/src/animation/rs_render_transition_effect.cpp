@@ -23,7 +23,6 @@
 
 namespace OHOS {
 namespace Rosen {
-#ifdef ROSEN_OHOS
 namespace {
 enum RSTransitionEffectType : uint16_t {
     FADE = 1,
@@ -49,7 +48,7 @@ PropertyId GenerateTransitionPropertyId()
     return ((PropertyId)pid_ << PID_SHIFT) | currentId;
 }
 } // namespace
-
+#ifdef ROSEN_OHOS
 RSRenderTransitionEffect* RSRenderTransitionEffect::Unmarshalling(Parcel& parcel)
 {
     uint16_t transitionType = 0;
@@ -70,7 +69,7 @@ RSRenderTransitionEffect* RSRenderTransitionEffect::Unmarshalling(Parcel& parcel
             return nullptr;
     }
 }
-
+#endif
 const std::shared_ptr<RSRenderModifier>& RSRenderTransitionEffect::GetModifier()
 {
     if (modifier_ == nullptr) {
@@ -78,7 +77,7 @@ const std::shared_ptr<RSRenderModifier>& RSRenderTransitionEffect::GetModifier()
     }
     return modifier_;
 }
-
+#ifdef ROSEN_OHOS
 bool RSTransitionFade::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteUint16(RSTransitionEffectType::FADE) && parcel.WriteFloat(alpha_);

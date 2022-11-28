@@ -35,7 +35,7 @@ RSScreenModeInfo& RSScreenModeInfo::operator=(const RSScreenModeInfo& other)
     modeId_ = other.modeId_;
     return *this;
 }
-
+#ifdef ROSEN_OHOS
 bool RSScreenModeInfo::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteInt32(width_) && parcel.WriteInt32(height_) &&
@@ -56,7 +56,7 @@ RSScreenModeInfo* RSScreenModeInfo::Unmarshalling(Parcel& parcel)
     RSScreenModeInfo* screenModeInfo = new RSScreenModeInfo(width, height, refreshRate, id);
     return screenModeInfo;
 }
-
+#endif
 int32_t RSScreenModeInfo::GetScreenWidth() const
 {
     return width_;

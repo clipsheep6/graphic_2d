@@ -442,7 +442,9 @@ void RSPropertiesPainter::DrawMask(const RSProperties& properties, SkCanvas& can
         canvas.translate(maskBounds.fLeft + mask->GetSvgX(), maskBounds.fTop + mask->GetSvgY());
         canvas.scale(mask->GetScaleX(), mask->GetScaleY());
         if (mask->GetSvgDom()) {
+#ifdef ROSEN_OHOS
             mask->GetSvgDom()->render(&canvas);
+#endif
         } else if (mask->GetSvgPicture()) {
             canvas.drawPicture(mask->GetSvgPicture());
         }

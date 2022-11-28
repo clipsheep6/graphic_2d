@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "pipeline/rs_paint_filter_canvas.h"
 
 namespace OHOS {

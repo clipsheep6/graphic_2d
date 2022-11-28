@@ -107,7 +107,7 @@ void BufferClientProducerRemoteTest::SetUpTestCase()
 
         char buf[10] = "start";
         write(pipeFd[1], buf, sizeof(buf));
-        sleep(0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));  // wait 50ms
 
         read(pipeFd[0], buf, sizeof(buf));
 

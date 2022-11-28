@@ -90,7 +90,7 @@ void BootAnimation::Draw()
     RequestNextVsync();
 }
 
-void BootAnimation::Init(int32_t width, int32_t height, const std::shared_ptr<AppExecFwk::EventHandler>& handler)
+void BootAnimation::Init(int32_t width, int32_t height)
 {
     ROSEN_TRACE_BEGIN(BYTRACE_TAG_GRAPHIC_AGP, "BootAnimation::Init");
     windowWidth_ = width;
@@ -99,7 +99,7 @@ void BootAnimation::Init(int32_t width, int32_t height, const std::shared_ptr<Ap
 
     auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
     while (receiver_ == nullptr) {
-        receiver_ = rsClient.CreateVSyncReceiver("BootAnimation", handler);
+        receiver_ = rsClient.CreateVSyncReceiver("BootAnimation", mainHandler_);
     }
     receiver_->Init();
 
@@ -120,6 +120,15 @@ void BootAnimation::Init(int32_t width, int32_t height, const std::shared_ptr<Ap
 
     Draw();
     PostTask(std::bind(&BootAnimation::CheckExitAnimation, this), EXIT_TIME);
+}
+
+void BootAnimation::Run(std::vector<sptr<OHOS::Rosen::Display>>& displays)
+{
+    runner_ = AppExecFwk::EventRunner::Create(false);
+    mainHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+    Init(displays[0]->GetWidth(), displays[0]->GetHeight());
+    PostTask(std::bind(&BootAnimation::PlaySound, this));
+    runner_->Run();
 }
 
 void BootAnimation::InitBootWindow()

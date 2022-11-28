@@ -1,0 +1,4 @@
+[submodule "rosen/modules/render_service/core/pipeline/parallel_render"]
+	url  = https://gitee.com/yangchunlin4/graphic_graphic_2d
+	path = rosen/modules/render_service/core/pipeline/parallel_render
+

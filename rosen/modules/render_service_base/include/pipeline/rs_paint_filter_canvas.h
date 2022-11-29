@@ -19,9 +19,11 @@
 #ifdef ROSEN_OHOS
 #include <include/utils/SkPaintFilterCanvas.h>
 #include <stack>
+#include <vector>
+
+#include "include/core/SkSurface.h"
 
 #include "common/rs_macros.h"
-#include "include/core/SkSurface.h"
 
 class SkDrawable;
 namespace OHOS {
@@ -34,7 +36,7 @@ public:
     ~RSPaintFilterCanvas() override {};
 
     void MultiplyAlpha(float alpha);
-    float GetAlpha() { return alpha_; }
+    float GetAlpha() const;
 
     int SaveAlpha();
     void RestoreAlpha();
@@ -54,15 +56,30 @@ public:
         return isHighContrastEnabled_;
     }
 
+    void SetCacheEnabled(bool enabled)
+    {
+        isCacheEnabled_ = enabled;
+    }
+    bool isCacheEnabled() const
+    {
+        return isCacheEnabled_;
+    }
+
+    std::vector<SkRect>& GetVisibleRects()
+    {
+        return visibleRects_;
+    }
+
 protected:
     bool onFilter(SkPaint& paint) const override;
     void onDrawPicture(const SkPicture* picture, const SkMatrix* matrix, const SkPaint* paint) override;
 
 private:
-    std::stack<float> alphaStack_;
-    float alpha_ = 1.0f;
     SkSurface* skSurface_ = nullptr;
+    std::stack<float> alphaStack_;
     std::atomic_bool isHighContrastEnabled_ { false };
+    bool isCacheEnabled_ { false };
+    std::vector<SkRect> visibleRects_;
 };
 
 } // namespace Rosen

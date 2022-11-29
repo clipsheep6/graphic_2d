@@ -138,7 +138,7 @@ txt::TextDecorationStyle RosenConvertTxtTextDecorationStyle(TextDecorationStyle 
     return txtTextDecorationStyle;
 }
 
-minikin::BreakStrategy RosenConverMinkinBreakStrateg(BreakStrategy breakStrategy)
+minikin::BreakStrategy RosenConverMinkinBreakStrategy(BreakStrategy breakStrategy)
 {
     minikin::BreakStrategy minkinBreakStrategy;
     switch (breakStrategy) {
@@ -226,7 +226,7 @@ txt::TextAlign RosenConvertTxtTextAlign(TextAlign textAlign)
     return txtTextAlign;
 }
 
-txt::PlaceholderAlignment RosenConvertAlignment(PlaceholderAlignment& alignment)
+txt::PlaceholderAlignment RosenConvertAlignment(const PlaceholderAlignment& alignment)
 {
     txt::PlaceholderAlignment txtAalignment;
     switch (alignment) {
@@ -255,7 +255,7 @@ txt::PlaceholderAlignment RosenConvertAlignment(PlaceholderAlignment& alignment)
     return txtAalignment;
 }
 
-txt::PlaceholderRun RosenConvertPlaceholderRun(PlaceholderRun& placeholderRun)
+txt::PlaceholderRun RosenConvertPlaceholderRun(const PlaceholderRun& placeholderRun)
 {
     txt::PlaceholderRun txtPlaceholderRun;
     txtPlaceholderRun.width = placeholderRun.width_;
@@ -335,13 +335,13 @@ void RosenConvertTypographyStyle(const TypographyStyle& typographyStyle, txt::Pa
     txtParagraphStyle.max_lines = typographyStyle.maxLines_;
     txtParagraphStyle.ellipsis = typographyStyle.ellipsis_;
     txtParagraphStyle.locale = typographyStyle.locale_;
-    txtParagraphStyle.break_strategy = RosenConverMinkinBreakStrateg(typographyStyle.breakStrategy_);
+    txtParagraphStyle.break_strategy = RosenConverMinkinBreakStrategy(typographyStyle.breakStrategy_);
 #ifndef USE_CANVASKIT0310_SKIA
     txtParagraphStyle.word_break_type = RosenConverMinkinWordBreakType(typographyStyle.wordBreakType_);
 #endif
 }
 
-TextDirection TxtConvertRosenTextDirection(txt::TextDirection& txtTextBox)
+TextDirection TxtConvertRosenTextDirection(const txt::TextDirection& txtTextBox)
 {
     TextDirection textDirection;
     switch (txtTextBox) {
@@ -395,7 +395,6 @@ txt::Paragraph::RectHeightStyle RosenConvertTxtRectHeightStyle(TypographyPropert
     }
     return txtRectHeightStyle;
 }
-
 
 txt::Paragraph::RectWidthStyle RosenConvertTxtRectWidthStyle(TypographyProperties::RectWidthStyle widthStyle)
 {

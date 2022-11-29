@@ -350,17 +350,12 @@ bool RenderContextSample::FillDrawingLayer(std::shared_ptr<HdiLayerInfo> &showLa
     showLayer->SetBuffer(cbuffer, acquireSyncFence);
     showLayer->SetZorder(zorder);
     showLayer->SetAlpha(alpha);
-    showLayer->SetTransform(TransformType::ROTATE_NONE);
-    if (index == 0) {
-        // COMPOSITION_CLIENT
-        showLayer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
-    } else {
-        showLayer->SetCompositionType(CompositionType::COMPOSITION_DEVICE);
-    }
+    showLayer->SetTransform(GraphicTransformType::GRAPHIC_ROTATE_NONE);
+    showLayer->SetCompositionType(GraphicCompositionType::GRAPHIC_COMPOSITION_DEVICE);
     showLayer->SetVisibleRegion(1, srcRect);
     showLayer->SetDirtyRegion(srcRect);
     showLayer->SetLayerSize(dstRect);
-    showLayer->SetBlendType(BlendType::BLEND_SRC);
+    showLayer->SetBlendType(GraphicBlendType::GRAPHIC_BLEND_SRC);
     showLayer->SetCropRect(srcRect);
     showLayer->SetPreMulti(false);
 
@@ -445,7 +440,7 @@ void RenderContextSample::CreatePhysicalScreen()
     ready_ = true;
 }
 
-void RenderContextSample::OnHotPlugEvent(std::shared_ptr<HdiOutput> &output, bool connected)
+void RenderContextSample::OnHotPlugEvent(const std::shared_ptr<HdiOutput> &output, bool connected)
 {
     /*
      * Currently, IPC communication cannot be nested. Therefore, Vblank registration can be

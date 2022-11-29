@@ -18,6 +18,7 @@
 #include <algorithm>
 
 #include "pipeline/rs_context.h"
+#include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_transaction_proxy.h"
@@ -49,6 +50,7 @@ void RSBaseRenderNode::AddChild(SharedPtr child, int index)
     if (isOnTheTree_) {
         child->SetIsOnTheTree(true);
     }
+    SetDirty();
 }
 
 void RSBaseRenderNode::MoveChild(SharedPtr child, int index)
@@ -116,6 +118,18 @@ void RSBaseRenderNode::SetIsOnTheTree(bool flag)
     }
 }
 
+void RSBaseRenderNode::UpdateChildrenRect(const RectI& subRect)
+{
+    if (!subRect.IsEmpty()) {
+        if (childrenRect_.IsEmpty()) {
+            // init as not empty subRect in case join RectI enlarging area
+            childrenRect_ = subRect;
+        } else {
+            childrenRect_ = childrenRect_.JoinRect(subRect);
+        }
+    }
+}
+
 void RSBaseRenderNode::AddCrossParentChild(const SharedPtr& child, int32_t index)
 {
     // AddCrossParentChild only used as: the child is under multiple parents(e.g. a window cross multi-screens),
@@ -137,6 +151,7 @@ void RSBaseRenderNode::AddCrossParentChild(const SharedPtr& child, int32_t index
     if (isOnTheTree_) {
         child->SetIsOnTheTree(true);
     }
+    SetDirty();
 }
 
 void RSBaseRenderNode::RemoveCrossParentChild(const SharedPtr& child, const WeakPtr& newParent)
@@ -163,6 +178,8 @@ void RSBaseRenderNode::RemoveCrossParentChild(const SharedPtr& child, const Weak
         disappearingChildren_.emplace_back(child, origPos);
     } else {
         child->SetParent(newParent);
+        // attention: set new parent means 'old' parent has removed this child
+        hasRemovedChild_ = true;
     }
     children_.erase(it);
     SetDirty();
@@ -220,6 +237,10 @@ void RSBaseRenderNode::SetParent(WeakPtr parent)
 
 void RSBaseRenderNode::ResetParent()
 {
+    auto parentNode = parent_.lock();
+    if (parentNode) {
+        parentNode->hasRemovedChild_ = true;
+    }
     parent_.reset();
     SetIsOnTheTree(false);
 }
@@ -238,36 +259,28 @@ void RSBaseRenderNode::DumpTree(int32_t depth, std::string& out) const
     out += "| ";
     DumpNodeType(out);
     out += "[" + std::to_string(GetId()) + "]";
-    out += ", isOnTheTree: " + std::to_string(isOnTheTree_);
     if (GetType() == RSRenderNodeType::SURFACE_NODE) {
         auto surfaceNode = (static_cast<const RSSurfaceRenderNode*>(this));
+        auto p = parent_.lock();
+        out += ", Parent [" + (p != nullptr ? std::to_string(p->GetId()) : "null") + "]";
+        out += ", Name [" + surfaceNode->GetName() + "]";
         const RSSurfaceHandler& surfaceHandler = static_cast<const RSSurfaceHandler&>(*surfaceNode);
         out += ", hasConsumer: " + std::to_string(surfaceHandler.HasConsumer());
-        out += ", Name [" + surfaceNode->GetName() + "]";
-        auto p = parent_.lock();
-        out += ", parent [" + (p != nullptr ? std::to_string(p->GetId()) : "null") + "]";
-        out = out + ", " + surfaceNode->GetVisibleRegion().GetRegionInfo();
-        out += ", SurfaceBgAlpha[ " + std::to_string(surfaceNode->GetAbilityBgAlpha()) + " ]";
+        static int decimal = 3;
+        std::string contentAlpha = std::to_string(surfaceNode->GetContextAlpha());
+        contentAlpha = contentAlpha.substr(0, contentAlpha.find(".") + decimal);
+        std::string propertyAlpha = std::to_string(surfaceNode->GetRenderProperties().GetAlpha());
+        propertyAlpha = propertyAlpha.substr(0, propertyAlpha.find(".") + decimal);
+        out += ", Alpha: " + contentAlpha + "*" + propertyAlpha;
+        out += ", Visible: " + std::to_string(surfaceNode->GetRenderProperties().GetVisible());
+        out += ", " + surfaceNode->GetVisibleRegion().GetRegionInfo();
+        out += ", OcclusionBg: " + std::to_string(surfaceNode->GetAbilityBgAlpha());
     }
-    out += ", children[";
-    for (auto child : children_) {
-        auto c = child.lock();
-        if (c != nullptr) {
-            out += std::to_string(c->GetId()) + " ";
-        } else {
-            out += ", null";
-        }
+    if (GetType() == RSRenderNodeType::ROOT_NODE) {
+        auto rootNode = static_cast<const RSRootRenderNode*>(this);
+        out += ", Visible: " + std::to_string(rootNode->GetRenderProperties().GetVisible());
     }
-    if (!disappearingChildren_.empty()) {
-        out += "], disappearing children[";
-        int i = 0;
-        for (auto& disappearingChild : disappearingChildren_) {
-            out += "(" + std::to_string(i) + ": id:" + std::to_string(disappearingChild.first->GetId()) +
-                   ", Transition:" + std::to_string(disappearingChild.first->HasDisappearingTransition(false)) + "),";
-            ++i;
-        }
-    }
-    out += "]\n";
+    out += "\n";
 
     for (auto child : children_) {
         if (auto c = child.lock()) {

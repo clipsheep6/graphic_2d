@@ -115,8 +115,8 @@ void HdiLayer::CloseLayer()
 int32_t HdiLayer::SetLayerAlpha()
 {
     if (doLayerInfoCompare_) {
-        LayerAlpha& layerAlpha1 = layerInfo_->GetAlpha();
-        LayerAlpha& layerAlpha2 = prevLayerInfo_->GetAlpha();
+        const LayerAlpha& layerAlpha1 = layerInfo_->GetAlpha();
+        const LayerAlpha& layerAlpha2 = prevLayerInfo_->GetAlpha();
         bool isSame = layerAlpha1.enGlobalAlpha == layerAlpha2.enGlobalAlpha &&
                       layerAlpha1.enPixelAlpha == layerAlpha2.enPixelAlpha &&
                       layerAlpha1.alpha0 == layerAlpha2.alpha0 && layerAlpha1.alpha1 == layerAlpha2.alpha1 &&
@@ -147,12 +147,13 @@ int32_t HdiLayer::SetLayerSize()
 
 int32_t HdiLayer::SetTransformMode()
 {
-    if (layerInfo_->GetTransformType() == TransformType::ROTATE_BUTT || (doLayerInfoCompare_ &&
+    if (layerInfo_->GetTransformType() == GraphicTransformType::GRAPHIC_ROTATE_BUTT || (doLayerInfoCompare_ &&
         layerInfo_->GetTransformType() == prevLayerInfo_->GetTransformType())) {
         return DISPLAY_SUCCESS;
     }
 
-    int32_t ret = device_->SetTransformMode(screenId_, layerId_, layerInfo_->GetTransformType());
+    TransformType transFormType = static_cast<TransformType>(layerInfo_->GetTransformType());
+    int32_t ret = device_->SetTransformMode(screenId_, layerId_, transFormType);
     return ret;
 }
 
@@ -266,8 +267,8 @@ int32_t HdiLayer::SetLayerColorDataSpace()
 bool HdiLayer::IsSameLayerMetaData()
 {
     bool isSame = false;
-    std::vector<HDRMetaData>& metaData = layerInfo_->GetMetaData();
-    std::vector<HDRMetaData>& prevMetaData = prevLayerInfo_->GetMetaData();
+    std::vector<GraphicHDRMetaData>& metaData = layerInfo_->GetMetaData();
+    std::vector<GraphicHDRMetaData>& prevMetaData = prevLayerInfo_->GetMetaData();
     if (metaData.size() == prevMetaData.size()) {
         isSame = true;
         size_t metaDeataSize = metaData.size();
@@ -299,8 +300,8 @@ int32_t HdiLayer::SetLayerMetaData()
 bool HdiLayer::IsSameLayerMetaDataSet()
 {
     bool isSame = false;
-    HDRMetaDataSet &metaDataSet = layerInfo_->GetMetaDataSet();
-    HDRMetaDataSet &prevMetaDataSet = prevLayerInfo_->GetMetaDataSet();
+    GraphicHDRMetaDataSet &metaDataSet = layerInfo_->GetMetaDataSet();
+    GraphicHDRMetaDataSet &prevMetaDataSet = prevLayerInfo_->GetMetaDataSet();
     if (metaDataSet.key == prevMetaDataSet.key &&
         metaDataSet.metaData.size() == prevMetaDataSet.metaData.size()) {
         isSame = true;
@@ -352,9 +353,14 @@ int32_t HdiLayer::SetLayerPresentTimestamp()
     layerInfo_->SetIsSupportedPresentTimestamp(true);
     PresentTimestamp timestamp = {HARDWARE_DISPLAY_PTS_UNSUPPORTED, 0};
     int32_t ret = device_->GetPresentTimestamp(screenId_, layerId_, timestamp);
+    GraphicPresentTimestamp graphicTimestamp = {
+        .type = static_cast<GraphicPresentTimestampType>(timestamp.type),
+        .time = timestamp.time,
+    };
+
     CheckRet(ret, "GetPresentTimestamp");
     if (ret == DISPLAY_SUCCESS) {
-        layerInfo_->SetPresentTimestamp(timestamp);
+        layerInfo_->SetPresentTimestamp(graphicTimestamp);
     }
     return ret;
 }

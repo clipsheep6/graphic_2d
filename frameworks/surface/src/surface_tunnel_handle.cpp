@@ -20,6 +20,10 @@
 namespace OHOS {
 ExtDataHandle *AllocExtDataHandle(uint32_t reserveInts)
 {
+    if ((size_t)reserveInts > (SIZE_MAX - sizeof(ExtDataHandle)) / sizeof(int32_t)) {
+        BLOGE("AllocExtDataHandle failed, reserveInts: %u is too large", reserveInts);
+        return nullptr;
+    }
     size_t handleSize = sizeof(ExtDataHandle) + (sizeof(int32_t) * reserveInts);
     ExtDataHandle *handle = static_cast<ExtDataHandle *>(malloc(handleSize));
     if (handle == nullptr) {
@@ -28,6 +32,7 @@ ExtDataHandle *AllocExtDataHandle(uint32_t reserveInts)
     }
     auto ret = memset_s(handle, handleSize, 0, handleSize);
     if (ret != EOK) {
+        free(handle);
         BLOGE("AllocExtDataHandle memset_s failed");
         return nullptr;
     }

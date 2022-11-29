@@ -144,10 +144,10 @@ void RSSurfaceNode::ClearChildren()
 
 FollowType RSSurfaceNode::GetFollowType() const
 {
-    if (!isUniRenderEnabled_ && !isRenderServiceNode_) {
+    if (!IsUniRenderEnabled() && !isRenderServiceNode_) {
         return FollowType::FOLLOW_TO_PARENT;
     }
-    if (isUniRenderEnabled_ && !isRenderServiceNode_ && !RSSystemProperties::IsUniRenderMode()) {
+    if (IsUniRenderEnabled() && !isRenderServiceNode_ && !RSSystemProperties::IsUniRenderMode()) {
         return FollowType::FOLLOW_TO_PARENT;
     }
     return FollowType::NONE;
@@ -237,6 +237,16 @@ bool RSSurfaceNode::SetBufferAvailableCallback(BufferAvailableCallback callback)
         }
         actualCallback();
     });
+}
+
+void RSSurfaceNode::SetAnimationFinished()
+{
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetAnimationFinished>(GetId());
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, true);
+        transactionProxy->FlushImplicitTransaction();
+    }
 }
 
 bool RSSurfaceNode::Marshalling(Parcel& parcel) const
@@ -342,10 +352,10 @@ void RSSurfaceNode::SetAppFreeze(bool isAppFreeze)
     }
 }
 
-void RSSurfaceNode::SetContainerWindow(bool hasContainerWindow)
+void RSSurfaceNode::SetContainerWindow(bool hasContainerWindow, float density)
 {
     std::unique_ptr<RSCommand> command =
-        std::make_unique<RSSurfaceNodeSetContainerWindow>(GetId(), hasContainerWindow);
+        std::make_unique<RSSurfaceNodeSetContainerWindow>(GetId(), hasContainerWindow, density);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, true);

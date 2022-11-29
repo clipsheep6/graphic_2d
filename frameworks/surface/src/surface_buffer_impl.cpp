@@ -91,10 +91,18 @@ static const std::map<uint64_t, uint64_t> bufferUsageConvertMap = {
 };
 
 SurfaceBufferImpl::IDisplayGrallocSptr SurfaceBufferImpl::displayGralloc_ = nullptr;
+std::mutex SurfaceBufferImpl::displayGrallocMutex_;
+
+void SurfaceBufferImpl::DisplayGrallocDeathCallback(void* data)
+{
+    std::lock_guard<std::mutex> lock(displayGrallocMutex_);
+    displayGralloc_ = nullptr;
+    BLOGD("gralloc_host died and displayGralloc_ is nullptr.");
+}
+
 SurfaceBufferImpl::IDisplayGrallocSptr SurfaceBufferImpl::GetDisplayGralloc()
 {
-    static std::mutex mutex;
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(displayGrallocMutex_);
     if (displayGralloc_ != nullptr) {
         return displayGralloc_;
     }
@@ -104,6 +112,7 @@ SurfaceBufferImpl::IDisplayGrallocSptr SurfaceBufferImpl::GetDisplayGralloc()
         BLOGE("IDisplayGralloc::Get return nullptr.");
         return nullptr;
     }
+    displayGralloc_->RegAllocatorDeathCallback(&SurfaceBufferImpl::DisplayGrallocDeathCallback, nullptr);
     return displayGralloc_;
 }
 
@@ -165,8 +174,8 @@ GSError SurfaceBufferImpl::Alloc(const BufferRequestConfig &config)
     auto dret = displayGralloc_->AllocMem(info, handle);
     if (dret == DISPLAY_SUCCESS) {
         std::lock_guard<std::mutex> lock(mutex_);
-        surfaceBufferColorGamut_ = config.colorGamut;
-        transform_ = config.transform;
+        surfaceBufferColorGamut_ = static_cast<GraphicColorGamut>(config.colorGamut);
+        transform_ = static_cast<GraphicTransformType>(config.transform);
         surfaceBufferWidth_ = config.width;
         surfaceBufferHeight_ = config.height;
         handle_ = handle;
@@ -286,21 +295,12 @@ GSError SurfaceBufferImpl::InvalidateCache()
 
 void SurfaceBufferImpl::FreeBufferHandleLocked()
 {
-#ifdef SURFACE_ENABLE_FREEMEM
-    if (GetDisplayGralloc() == nullptr) {
-        BLOGE("GetDisplayGralloc failed!");
-        return;
-    }
-#endif
     if (handle_) {
-        if (handle_->virAddr != nullptr) {
+        if (handle_->virAddr != nullptr && displayGralloc_ != nullptr) {
             displayGralloc_->Unmap(*handle_);
+            handle_->virAddr = nullptr;
         }
-#ifdef SURFACE_ENABLE_FREEMEM
-        displayGralloc_->FreeMem(*handle_);
-#else
         FreeBufferHandle(handle_);
-#endif
     }
     handle_ = nullptr;
 }
@@ -311,25 +311,25 @@ BufferHandle *SurfaceBufferImpl::GetBufferHandle() const
     return handle_;
 }
 
-void SurfaceBufferImpl::SetSurfaceBufferColorGamut(const ColorGamut& colorGamut)
+void SurfaceBufferImpl::SetSurfaceBufferColorGamut(const GraphicColorGamut& colorGamut)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     surfaceBufferColorGamut_ = colorGamut;
 }
 
-const ColorGamut& SurfaceBufferImpl::GetSurfaceBufferColorGamut() const
+const GraphicColorGamut& SurfaceBufferImpl::GetSurfaceBufferColorGamut() const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return surfaceBufferColorGamut_;
 }
 
-void SurfaceBufferImpl::SetSurfaceBufferTransform(const TransformType& transform)
+void SurfaceBufferImpl::SetSurfaceBufferTransform(const GraphicTransformType& transform)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     transform_ = transform;
 }
 
-const TransformType& SurfaceBufferImpl::GetSurfaceBufferTransform() const
+const GraphicTransformType& SurfaceBufferImpl::GetSurfaceBufferTransform() const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return transform_;
@@ -538,8 +538,8 @@ GSError SurfaceBufferImpl::CheckBufferConfig(int32_t width, int32_t height,
         return GSERROR_INVALID_ARGUMENTS;
     }
 
-    if (format < 0 || format > PIXEL_FMT_BUTT) {
-        BLOGE("format [0, %{public}d], now is %{public}d", PIXEL_FMT_BUTT, format);
+    if (format < 0 || format > GRAPHIC_PIXEL_FMT_BUTT) {
+        BLOGE("format [0, %{public}d], now is %{public}d", GRAPHIC_PIXEL_FMT_BUTT, format);
         return GSERROR_INVALID_ARGUMENTS;
     }
 
@@ -556,4 +556,12 @@ uint64_t SurfaceBufferImpl::BufferUsageToGrallocUsage(uint64_t bufferUsage)
     }
     return grallocUsage;
 }
+
+BufferWrapper SurfaceBufferImpl::GetBufferWrapper()
+{
+    BufferWrapper wrapper;
+    return wrapper;
+}
+
+void SurfaceBufferImpl::SetBufferWrapper(BufferWrapper wrapper) {}
 } // namespace OHOS

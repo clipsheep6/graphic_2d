@@ -15,6 +15,10 @@
 
 #include "rs_composer_adapter.h"
 
+#include <fstream>
+#include <sstream>
+#include <sys/time.h>
+
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "platform/common/rs_log.h"
@@ -82,6 +86,8 @@ void RSComposerAdapter::CommitLayers(const std::vector<LayerInfoPtr>& layers)
         return;
     }
 
+    DumpLayersToFile(layers);
+
     // do composition.
     output_->SetLayerInfo(layers);
     std::vector<std::shared_ptr<HdiOutput>> outputs {output_};
@@ -121,6 +127,39 @@ void RSComposerAdapter::CommitLayers(const std::vector<LayerInfoPtr>& layers)
             continue;
         }
         surfaceHandler->SetReleaseFence(fence);
+    }
+}
+
+void RSComposerAdapter::DumpLayersToFile(const std::vector<LayerInfoPtr>& layers)
+{
+    if (!RSSystemProperties::GetDumpLayersEnabled()) {
+        return;
+    }
+
+    for (auto &layerInfo : layers) {
+        if (layerInfo == nullptr || layerInfo->GetSurface() == nullptr) {
+            continue;
+        }
+        struct timeval now;
+        gettimeofday(&now, nullptr);
+        constexpr int secToUsec = 1000 * 1000;
+        int64_t nowVal = static_cast<int64_t>(now.tv_sec) * secToUsec + static_cast<int64_t>(now.tv_usec);
+
+        std::stringstream ss;
+        ss << "/data/layer_" << layerInfo->GetSurface()->GetName()  << "_" << nowVal << ".raw";
+
+        std::ofstream rawDataFile(ss.str(), std::ofstream::binary);
+        if (!rawDataFile.good()) {
+            RS_LOGW("RSComposerAdapter::DumpLayersToFile: Open failed!");
+            return;
+        }
+        auto buffer = layerInfo->GetBuffer();
+        if (buffer == nullptr) {
+            RS_LOGW("RSComposerAdapter::DumpLayersToFile: Buffer is null");
+            return;
+        }
+        rawDataFile.write(static_cast<const char *>(buffer->GetVirAddr()), buffer->GetSize());
+        rawDataFile.close();
     }
 }
 
@@ -204,7 +243,7 @@ void RSComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& node, Com
     info.srcRect = newSrcRect;
 }
 
-void RSComposerAdapter::GetComposerInfoSrcRect(ComposeInfo &info, const RSSurfaceRenderNode& node) const
+void RSComposerAdapter::GetComposerInfoSrcRect(ComposeInfo &info, const RSSurfaceRenderNode& node)
 {
     const auto& property = node.GetRenderProperties();
     const auto bufferWidth = info.buffer->GetSurfaceBufferWidth();
@@ -224,7 +263,7 @@ void RSComposerAdapter::GetComposerInfoSrcRect(ComposeInfo &info, const RSSurfac
 bool RSComposerAdapter::GetComposerInfoNeedClient(const ComposeInfo &info, RSSurfaceRenderNode& node) const
 {
     bool needClient = RSDividedRenderUtil::IsNeedClient(node, info);
-    if (info.buffer->GetSurfaceBufferColorGamut() != static_cast<ColorGamut>(screenInfo_.colorGamut)) {
+    if (info.buffer->GetSurfaceBufferColorGamut() != static_cast<GraphicColorGamut>(screenInfo_.colorGamut)) {
         needClient = true;
     }
     return needClient;
@@ -290,7 +329,7 @@ void RSComposerAdapter::SetComposeInfoToLayer(
     const LayerInfoPtr& layer,
     const ComposeInfo& info,
     const sptr<Surface>& surface,
-    RSBaseRenderNode* node) const
+    RSBaseRenderNode* node)
 {
     if (layer == nullptr) {
         return;
@@ -319,7 +358,7 @@ void RSComposerAdapter::SetComposeInfoToLayer(
     }
     switch (type) {
         case HDRMetaDataType::HDR_META_DATA: {
-            std::vector<HDRMetaData> metaData;
+            std::vector<GraphicHDRMetaData> metaData;
             if (surface->GetMetaData(info.buffer->GetSeqNum(), metaData) != GSERROR_OK) {
                 RS_LOGE("RSComposerAdapter::SetComposeInfoToLayer: GetMetaData failed");
                 return;
@@ -328,13 +367,13 @@ void RSComposerAdapter::SetComposeInfoToLayer(
             break;
         }
         case HDRMetaDataType::HDR_META_DATA_SET: {
-            HDRMetadataKey key;
+            GraphicHDRMetadataKey key;
             std::vector<uint8_t> metaData;
             if (surface->GetMetaDataSet(info.buffer->GetSeqNum(), key, metaData) != GSERROR_OK) {
                 RS_LOGE("RSComposerAdapter::SetComposeInfoToLayer: GetMetaDataSet failed");
                 return;
             }
-            HDRMetaDataSet metaDataSet;
+            GraphicHDRMetaDataSet metaDataSet;
             metaDataSet.key = key;
             metaDataSet.metaData = metaData;
             layer->SetMetaDataSet(metaDataSet);
@@ -473,6 +512,11 @@ LayerInfoPtr RSComposerAdapter::CreateLayer(RSDisplayRenderNode& node)
         return nullptr;
     }
 
+    if (node.GetBuffer() == nullptr) {
+        RS_LOGE("RSComposerAdapter::CreateLayer buffer is nullptr.");
+        return nullptr;
+    }
+
     ComposeInfo info = BuildComposeInfo(node);
     RS_LOGD("RSComposerAdapter::ProcessSurface displayNode id:%" PRIu64 " dst [%d %d %d %d]"
             "SrcRect [%d %d] rawbuffer [%d %d] surfaceBuffer [%d %d] buffaddr:%p, globalZOrder:%d, blendType = %d",
@@ -517,22 +561,22 @@ static inline int RotateEnumToInt(ScreenRotation rotation)
     return iter != screenRotationEnumToIntMap.end() ? iter->second : 0;
 }
 
-static inline int RotateEnumToInt(TransformType rotation)
+static inline int RotateEnumToInt(GraphicTransformType rotation)
 {
-    static const std::map<TransformType, int> transformTypeEnumToIntMap = {
-        {TransformType::ROTATE_NONE, 0}, {TransformType::ROTATE_90, 90},
-        {TransformType::ROTATE_180, 180}, {TransformType::ROTATE_270, 270}};
+    static const std::map<GraphicTransformType, int> transformTypeEnumToIntMap = {
+        {GraphicTransformType::GRAPHIC_ROTATE_NONE, 0}, {GraphicTransformType::GRAPHIC_ROTATE_90, 90},
+        {GraphicTransformType::GRAPHIC_ROTATE_180, 180}, {GraphicTransformType::GRAPHIC_ROTATE_270, 270}};
     auto iter = transformTypeEnumToIntMap.find(rotation);
     return iter != transformTypeEnumToIntMap.end() ? iter->second : 0;
 }
 
-static inline TransformType RotateEnumToInt(int angle)
+static inline GraphicTransformType RotateEnumToInt(int angle)
 {
-    static const std::map<int, TransformType> intToEnumMap = {
-        {0, TransformType::ROTATE_NONE}, {90, TransformType::ROTATE_270},
-        {180, TransformType::ROTATE_180}, {270, TransformType::ROTATE_90}};
+    static const std::map<int, GraphicTransformType> intToEnumMap = {
+        {0, GraphicTransformType::GRAPHIC_ROTATE_NONE}, {90, GraphicTransformType::GRAPHIC_ROTATE_270},
+        {180, GraphicTransformType::GRAPHIC_ROTATE_180}, {270, GraphicTransformType::GRAPHIC_ROTATE_90}};
     auto iter = intToEnumMap.find(angle);
-    return iter != intToEnumMap.end() ? iter->second : TransformType::ROTATE_NONE;
+    return iter != intToEnumMap.end() ? iter->second : GraphicTransformType::GRAPHIC_ROTATE_NONE;
 }
 
 static void SetLayerTransform(const LayerInfoPtr& layer, RSBaseRenderNode& node,
@@ -543,7 +587,7 @@ static void SetLayerTransform(const LayerInfoPtr& layer, RSBaseRenderNode& node,
     int surfaceNodeRotation = GetSurfaceNodeRotation(node);
     int totalRotation = (RotateEnumToInt(screenRotation) + surfaceNodeRotation +
         RotateEnumToInt(surface->GetTransform())) % 360;
-    TransformType rotateEnum = RotateEnumToInt(totalRotation);
+    GraphicTransformType rotateEnum = RotateEnumToInt(totalRotation);
     layer->SetTransform(rotateEnum);
 }
 
@@ -627,7 +671,7 @@ void RSComposerAdapter::LayerCrop(const LayerInfoPtr& layer) const
 }
 
 // private func, guarantee the layer is valid
-void RSComposerAdapter::LayerScaleDown(const LayerInfoPtr& layer) const
+void RSComposerAdapter::LayerScaleDown(const LayerInfoPtr& layer)
 {
     ScalingMode scalingMode = ScalingMode::SCALING_MODE_SCALE_TO_WINDOW;
     const auto& buffer = layer->GetBuffer();
@@ -679,7 +723,7 @@ void RSComposerAdapter::LayerScaleDown(const LayerInfoPtr& layer) const
 }
 
 // private func, guarantee the layer and surface are valid
-void RSComposerAdapter::LayerPresentTimestamp(const LayerInfoPtr& layer, const sptr<Surface>& surface) const
+void RSComposerAdapter::LayerPresentTimestamp(const LayerInfoPtr& layer, const sptr<Surface>& surface)
 {
     if (!layer->IsSupportedPresentTimestamp()) {
         return;

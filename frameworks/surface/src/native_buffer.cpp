@@ -16,7 +16,7 @@
 #include "native_buffer.h"
 
 #include <cinttypes>
-#include <surface_type.h>
+#include "surface_type.h"
 #include "buffer_log.h"
 #include "external_window.h"
 #include "surface_buffer_impl.h"
@@ -46,8 +46,8 @@ OH_NativeBuffer* OH_NativeBuffer_Alloc(const OH_NativeBuffer_Config* config)
     bfConfig.format = config->format; // PixelFormat
     bfConfig.usage = config->usage;
     bfConfig.timeout = 0;
-    bfConfig.colorGamut = ColorGamut::COLOR_GAMUT_SRGB;
-    bfConfig.transform = TransformType::ROTATE_NONE;
+    bfConfig.colorGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
+    bfConfig.transform = GraphicTransformType::GRAPHIC_ROTATE_NONE;
     sptr<SurfaceBuffer> bufferImpl = new SurfaceBufferImpl();
     GSError ret = bufferImpl->Alloc(bfConfig);
     if (ret != GSERROR_OK) {

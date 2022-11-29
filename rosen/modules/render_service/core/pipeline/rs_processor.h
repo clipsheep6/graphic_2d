@@ -44,6 +44,9 @@ protected:
         float mirroredWidth, float mirroredHeight);
     void CalculateScreenTransformMatrix(const RSDisplayRenderNode& node);
 
+    void MultiLayersPerf(size_t layerNum);
+    void RequestPerf(uint32_t layerLevel, bool onOffTag);
+
     ScreenInfo screenInfo_;
     int32_t offsetX_ = 0;
     int32_t offsetY_ = 0;

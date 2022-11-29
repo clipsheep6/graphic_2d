@@ -147,14 +147,16 @@ void RSPropertyAnimation::StartCustomPropertyAnimation(const std::shared_ptr<RSR
         return;
     }
 
-    auto renderProperty = animationManager->GetRenderProperty(property_->GetId());
-    if (renderProperty == nullptr) {
-        renderProperty = property_->CreateRenderProperty();
-    }
-    animationManager->AddAnimatableProp(property_->GetId(), property_, renderProperty);
-    animation->AttachRenderProperty(renderProperty);
+    animation->SetFinishCallback([weakAnimation = weak_from_this()]() {
+        auto animation = std::static_pointer_cast<RSPropertyAnimation>(weakAnimation.lock());
+        if (animation == nullptr) {
+            ROSEN_LOGE("Failed to call finish callback, UI animation is null!");
+            return;
+        }
+        animation->CallFinishCallback();
+    });
     animation->Start();
-    animationManager->AddAnimation(animation, shared_from_this());
+    animationManager->AddAnimation(animation);
 }
 
 void RSPropertyAnimation::SetPropertyOnAllAnimationFinish()

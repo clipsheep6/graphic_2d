@@ -161,11 +161,10 @@ void RSRenderEngine::DrawSurfaceNode(RSPaintFilterCanvas& canvas, RSSurfaceRende
     float mirrorAdaptiveCoefficient, bool forceCPU)
 {
     // prepare BufferDrawParam
-    auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, false); // in display's coordinate.
+    auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, false, false, forceCPU); // in display's coordinate.
     const float adaptiveDstWidth = params.dstRect.width() * mirrorAdaptiveCoefficient;
     const float adaptiveDstHeight = params.dstRect.height() * mirrorAdaptiveCoefficient;
     params.dstRect.setWH(adaptiveDstWidth, adaptiveDstHeight);
-    params.useCPU = forceCPU;
 
     DrawSurfaceNodeWithParams(canvas, node, params, nullptr, nullptr);
 }
@@ -189,11 +188,6 @@ void RSRenderEngine::ClipHoleForLayer(RSPaintFilterCanvas& canvas, RSSurfaceRend
 
 void RSRenderEngine::SetColorFilterModeToPaint(SkPaint& paint)
 {
-    ColorFilterMode mode = static_cast<ColorFilterMode>(RSSystemProperties::GetCorrectionMode());
-    if (RSBaseRenderUtil::IsColorFilterModeValid(mode)) {
-        colorFilterMode_ = mode;
-    }
-
     // for test automation
     if (colorFilterMode_ != ColorFilterMode::COLOR_FILTER_END) {
         RS_LOGD("RSRenderEngine::SetColorFilterModeToPaint mode:%d", static_cast<int32_t>(colorFilterMode_));

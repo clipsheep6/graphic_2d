@@ -33,7 +33,7 @@ txt::FontWeight RosenConvertTxtFontWeight(FontWeight& fontWeight);
 txt::FontStyle RosenConvertTxtFontStyle(FontStyle& fontStyle);
 txt::TextBaseline RosenConvertTxtTextBaseline(TextBaseline& textBaseline);
 txt::TextAlign RosenConvertTxtTextAlign(TextAlign& textAlign);
-minikin::BreakStrategy RosenConverMinkinBreakStrateg(BreakStrategy& breakStrategy);
+minikin::BreakStrategy RosenConverMinkinBreakStrategy(BreakStrategy& breakStrategy);
 #ifndef USE_CANVASKIT0310_SKIA
 // new flutter libtxt not have WordBreakType
 minikin::WordBreakType RosenConverMinkinWordBreakType(WordBreakType& wordBreakType);
@@ -41,13 +41,13 @@ minikin::WordBreakType RosenConverMinkinWordBreakType(WordBreakType& wordBreakTy
 txt::TextDirection RosenConvertTxtTextDirection(TextDirection& textDirection);
 txt::TextDecoration RosenConvertTxtTextDecoration(TextDecoration& textDecoration);
 txt::TextDecorationStyle RosenConvertTxtTextDecorationStyle(TextDecorationStyle& textDecorationStyle);
-txt::PlaceholderAlignment RosenConvertAlignment(PlaceholderAlignment& alignment);
-txt::PlaceholderRun RosenConvertPlaceholderRun(PlaceholderRun& placeholderRun);
+txt::PlaceholderAlignment RosenConvertAlignment(const PlaceholderAlignment& alignment);
+txt::PlaceholderRun RosenConvertPlaceholderRun(const PlaceholderRun& placeholderRun);
 void RosenConvertTxtStyle(const TextStyle& textStyle, txt::TextStyle& txtStyle);
 void RosenConvertTypographyStyle(const TypographyStyle& typographyStyle, txt::ParagraphStyle& txtParagraphStyle);
 txt::Paragraph::RectHeightStyle RosenConvertTxtRectHeightStyle(TypographyProperties::RectHeightStyle heightStyle);
 txt::Paragraph::RectWidthStyle RosenConvertTxtRectWidthStyle(TypographyProperties::RectWidthStyle widthStyle);
-TextDirection TxtConvertRosenTextDirection(txt::TextDirection& txtTextBox);
+TextDirection TxtConvertRosenTextDirection(const txt::TextDirection& txtTextBox);
 TypographyProperties::TextBox TxtConvertRosenTextBox(txt::Paragraph::TextBox& txtTextBox);
 TypographyProperties::Affinity TxtConvertRosenAffinity(const txt::Paragraph::Affinity& txtAffinity);
 TypographyProperties::PositionAndAffinity TxtConvertPosAndAffinity(

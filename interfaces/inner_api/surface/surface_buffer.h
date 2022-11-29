@@ -27,6 +27,8 @@
 #include "buffer_extra_data.h"
 #include "native_buffer.h"
 
+struct BufferWrapper;
+
 namespace OHOS {
 class MessageParcel;
 class SurfaceBuffer : public RefBase {
@@ -43,10 +45,10 @@ public:
     virtual int32_t GetFileDescriptor() const = 0;
     virtual uint32_t GetSize() const = 0;
 
-    virtual const ColorGamut& GetSurfaceBufferColorGamut() const = 0;
-    virtual const TransformType& GetSurfaceBufferTransform() const = 0;
-    virtual void SetSurfaceBufferColorGamut(const ColorGamut& colorGamut) = 0;
-    virtual void SetSurfaceBufferTransform(const TransformType& transform) = 0;
+    virtual const GraphicColorGamut& GetSurfaceBufferColorGamut() const = 0;
+    virtual const GraphicTransformType& GetSurfaceBufferTransform() const = 0;
+    virtual void SetSurfaceBufferColorGamut(const GraphicColorGamut& colorGamut) = 0;
+    virtual void SetSurfaceBufferTransform(const GraphicTransformType& transform) = 0;
 
     virtual int32_t GetSurfaceBufferWidth() const = 0;
     virtual int32_t GetSurfaceBufferHeight() const = 0;
@@ -64,6 +66,9 @@ public:
     virtual GSError WriteToMessageParcel(MessageParcel &parcel) = 0;
     virtual GSError ReadFromMessageParcel(MessageParcel &parcel) = 0;
     virtual void SetBufferHandle(BufferHandle *handle) = 0;
+
+    virtual BufferWrapper GetBufferWrapper() = 0;
+    virtual void SetBufferWrapper(BufferWrapper wrapper) = 0;
 
     // gralloc
     virtual GSError Alloc(const BufferRequestConfig &config) = 0;

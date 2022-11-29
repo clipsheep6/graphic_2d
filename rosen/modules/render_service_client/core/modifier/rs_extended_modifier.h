@@ -103,6 +103,32 @@ protected:
     }
 };
 
+class RS_EXPORT RSTransitionModifier : public RSExtendedModifier {
+public:
+    RSTransitionModifier() : RSExtendedModifier(RSModifierType::TRANSITION)
+    {}
+
+    RSModifierType GetModifierType() const override
+    {
+        return RSModifierType::TRANSITION;
+    }
+
+    virtual void Active() = 0;
+
+    virtual void Identity() = 0;
+};
+
+class RS_EXPORT RSBackgroundStyleModifier : public RSExtendedModifier {
+public:
+    RSBackgroundStyleModifier() : RSExtendedModifier(RSModifierType::BACKGROUND_STYLE)
+    {}
+
+    RSModifierType GetModifierType() const override
+    {
+        return RSModifierType::BACKGROUND_STYLE;
+    }
+};
+
 class RS_EXPORT RSContentStyleModifier : public RSExtendedModifier {
 public:
     RSContentStyleModifier() : RSExtendedModifier(RSModifierType::CONTENT_STYLE)
@@ -111,6 +137,17 @@ public:
     RSModifierType GetModifierType() const override
     {
         return RSModifierType::CONTENT_STYLE;
+    }
+};
+
+class RS_EXPORT RSForegroundStyleModifier : public RSExtendedModifier {
+public:
+    RSForegroundStyleModifier() : RSExtendedModifier(RSModifierType::FOREGROUND_STYLE)
+    {}
+
+    RSModifierType GetModifierType() const override
+    {
+        return RSModifierType::FOREGROUND_STYLE;
     }
 };
 

@@ -102,8 +102,8 @@ GSError BufferManager::Alloc(const BufferRequestConfig &config, sptr<SurfaceBuff
         buffer->SetBufferHandle(handle);
         buffer->SetSurfaceBufferWidth(allocWidth);
         buffer->SetSurfaceBufferHeight(allocHeight);
-        buffer->SetSurfaceBufferColorGamut(config.colorGamut);
-        buffer->SetSurfaceBufferTransform(config.transform);
+        buffer->SetSurfaceBufferColorGamut(static_cast<GraphicColorGamut>(config.colorGamut));
+        buffer->SetSurfaceBufferTransform(static_cast<GraphicTransformType>(config.transform));
         BLOGI("buffer handle %{public}p w: %{public}d h: %{public}d t: %{public}d", handle,
             allocWidth, allocHeight, config.transform);
         return GSERROR_OK;
@@ -222,14 +222,15 @@ GSError BufferManager::Free(sptr<SurfaceBuffer> &buffer)
     return GSERROR_OK;
 }
 
-GSError BufferManager::IsSupportedAlloc(const std::vector<VerifyAllocInfo> &infos,
+GSError BufferManager::IsSupportedAlloc(const std::vector<BufferVerifyAllocInfo> &infos,
                                         std::vector<bool> &supporteds)
 {
     CHECK_INIT();
     // mock data
     supporteds.clear();
     for (uint32_t index = 0; index < infos.size(); index++) {
-        if (infos[index].format == PIXEL_FMT_RGBA_8888 || infos[index].format == PIXEL_FMT_YCRCB_420_SP) {
+        if (infos[index].format == GRAPHIC_PIXEL_FMT_RGBA_8888 ||
+            infos[index].format == GRAPHIC_PIXEL_FMT_YCRCB_420_SP) {
             supporteds.push_back(true);
         } else {
             supporteds.push_back(false);

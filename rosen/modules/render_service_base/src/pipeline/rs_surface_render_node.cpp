@@ -17,6 +17,7 @@
 
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
+#include "include/gpu/GrContext.h"
 
 #include "command/rs_surface_node_command.h"
 #include "common/rs_obj_abs_geometry.h"
@@ -145,7 +146,7 @@ void RSSurfaceRenderNode::CollectSurface(
     if (num != vec.end()) {
         return;
     }
-    if (isUniRender && GetRenderProperties().GetVisible()) {
+    if (isUniRender && ShouldPaint()) {
         vec.emplace_back(shared_from_this());
     } else {
         if (GetBuffer() != nullptr && ShouldPaint()) {
@@ -178,6 +179,7 @@ void RSSurfaceRenderNode::ResetParent()
         auto& consumer = GetConsumer();
         if (consumer != nullptr &&
             (GetSurfaceNodeType() != RSSurfaceNodeType::SELF_DRAWING_NODE &&
+            GetSurfaceNodeType() != RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE &&
             GetSurfaceNodeType() != RSSurfaceNodeType::ABILITY_COMPONENT_NODE)) {
             consumer->GoBackground();
         }
@@ -411,6 +413,17 @@ void RSSurfaceRenderNode::SetCallbackForRenderThreadRefresh(std::function<void(v
 bool RSSurfaceRenderNode::NeedSetCallbackForRenderThreadRefresh()
 {
     return (callbackForRenderThreadRefresh_ == nullptr);
+}
+
+bool RSSurfaceRenderNode::IsStartAnimationFinished() const
+{
+    return startAnimationFinished_;
+}
+
+void RSSurfaceRenderNode::SetStartAnimationFinished()
+{
+    RS_LOGD("RSSurfaceRenderNode::SetStartAnimationFinished");
+    startAnimationFinished_ = true;
 }
 
 void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& region,

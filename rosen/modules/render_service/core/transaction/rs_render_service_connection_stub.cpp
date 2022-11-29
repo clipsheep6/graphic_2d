@@ -47,7 +47,11 @@ void CopyFileDescriptor(MessageParcel& old, MessageParcel& copied)
         flat_binder_object* copiedFlat = reinterpret_cast<flat_binder_object*>(copiedData + copiedObject[i]);
 
         if (flat->hdr.type == BINDER_TYPE_FD && flat->handle > 0) {
-            copiedFlat->handle = dup(flat->handle);
+            int32_t val = dup(flat->handle);
+            if (val < 0) {
+                ROSEN_LOGW("CopyFileDescriptor dup failed, fd:%d", val);
+            }
+            copiedFlat->handle = static_cast<uint32_t>(val);
         }
     }
 }
@@ -123,7 +127,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 RSUnmarshalThread::Instance().RecvParcel(parsedParcel);
             } else {
                 // execute Unmarshalling immediately
-                auto transactionData = RSBaseRenderUtil::ParseTransactionData(data);
+                auto transactionData = RSBaseRenderUtil::ParseTransactionData(*parsedParcel);
                 CommitTransaction(transactionData);
             }
             break;
@@ -173,6 +177,21 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             sptr<Surface> surface = CreateNodeAndSurface(config);
             auto producer = surface->GetProducer();
             reply.WriteRemoteObject(producer->AsObject());
+            break;
+        }
+        case SET_FOCUS_APP_INFO: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+
+            int32_t pid = data.ReadInt32();
+            int32_t uid = data.ReadInt32();
+            std::string bundleName = data.ReadString();
+            std::string abilityName = data.ReadString();
+            int32_t status = SetFocusAppInfo(pid, uid, bundleName, abilityName);
+            reply.WriteInt32(status);
             break;
         }
         case GET_DEFAULT_SCREEN_ID: {
@@ -481,9 +500,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             if (result != StatusCode::SUCCESS) {
                 break;
             }
-            for (auto i : mode) {
-                modeSend.push_back(i);
-            }
+            std::copy(mode.begin(), mode.end(), std::back_inserter(modeSend));
             reply.WriteUInt32Vector(modeSend);
             break;
         }

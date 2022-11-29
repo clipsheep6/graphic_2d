@@ -104,16 +104,6 @@
           },
           {
             "type": "so",
-            "name": "//foundation/graphic/graphic_2d/frameworks/vsync:libvsync_client",
-            "header": {
-              "header_files": [
-                "vsync_helper.h"
-              ],
-              "header_base": "//foundation/graphic/graphic_2d/interfaces/inner_api/vsync"
-            }
-          },
-          {
-            "type": "so",
             "name": "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
             "header": {
               "header_files": [
@@ -152,7 +142,10 @@
         "test": [
           "//foundation/graphic/graphic_2d:graphic_2d_test",
           "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:test",
-          "//foundation/graphic/graphic_2d/rosen/test/2d_graphics:test"
+          "//foundation/graphic/graphic_2d/rosen/test/2d_graphics:test",
+          "//foundation/graphic/graphic_2d/rosen/modules/animation/window_animation/test:test",
+          "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/test:test",
+          "//foundation/graphic/graphic_2d/rosen/test/2d_engine:test"
         ]
       }
     }

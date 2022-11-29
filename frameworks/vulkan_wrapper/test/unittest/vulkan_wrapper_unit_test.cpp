@@ -141,8 +141,9 @@ OHNativeWindow* VulkanWrapperUnitTest::createNativeWindow(std::string name)
 
 uint32_t VulkanWrapperUnitTest::getQueueFamilyIndex(VkQueueFlagBits queueFlags)
 {
+    decltype(queueProps.size()) i = 0;
     if (queueFlags & VK_QUEUE_COMPUTE_BIT) {
-        for (uint32_t i = 0; i < static_cast<uint32_t>(queueProps.size()); i++) {
+        for (i = 0; i < queueProps.size(); i++) {
             if ((queueProps[i].queueFlags & queueFlags) &&
                 ((queueProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)) {
                 return i;
@@ -150,7 +151,7 @@ uint32_t VulkanWrapperUnitTest::getQueueFamilyIndex(VkQueueFlagBits queueFlags)
         }
     }
     if (queueFlags & VK_QUEUE_TRANSFER_BIT) {
-        for (uint32_t i = 0; i < static_cast<uint32_t>(queueProps.size()); i++) {
+        for (i = 0; i < queueProps.size(); i++) {
             if ((queueProps[i].queueFlags & queueFlags) &&
                 ((queueProps[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) &&
                 ((queueProps[i].queueFlags & VK_QUEUE_COMPUTE_BIT) == 0)) {
@@ -158,7 +159,7 @@ uint32_t VulkanWrapperUnitTest::getQueueFamilyIndex(VkQueueFlagBits queueFlags)
             }
         }
     }
-    for (uint32_t i = 0; i < static_cast<uint32_t>(queueProps.size()); i++) {
+    for (i = 0; i < queueProps.size(); i++) {
         if (queueProps[i].queueFlags & queueFlags) {
             return i;
         }
@@ -611,6 +612,105 @@ HWTEST_F(VulkanWrapperUnitTest, fpGetPhysicalDeviceSurfaceFormatsKHR_FAIL_Test, 
         VkResult err = fpGetPhysicalDeviceSurfaceFormatsKHR(
             physicalDevice, surface, &formatCount, surfaceFormats.data());
         EXPECT_NE(err, VK_SUCCESS);
+    }
+}
+
+/**
+ * @tc.name: test fpCreateSwapchainKHR Success
+ * @tc.desc: test fpCreateSwapchainKHR Success
+ * @tc.type: FUNC
+ * @tc.require: issueI5ODXM
+ */
+HWTEST_F(VulkanWrapperUnitTest, fpCreateSwapchainKHR_Success_Test, TestSize.Level1)
+{
+    if (isSupportedVulkan) {
+        EXPECT_NE(fpCreateSwapchainKHR, nullptr);
+        EXPECT_NE(device, nullptr);
+        EXPECT_NE(surface, VK_NULL_HANDLE);
+
+        std::vector<VkFormat> pixelFormatArray = {
+            VK_FORMAT_R8G8B8A8_UNORM,
+            VK_FORMAT_R8G8B8A8_SRGB,
+        };
+        std::vector<VkColorSpaceKHR> colorDataspaceArray = {
+            VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+            VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT,
+            VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT,
+            VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT,
+            VK_COLOR_SPACE_DCI_P3_LINEAR_EXT,
+            VK_COLOR_SPACE_DCI_P3_NONLINEAR_EXT,
+            VK_COLOR_SPACE_BT709_LINEAR_EXT,
+            VK_COLOR_SPACE_BT709_NONLINEAR_EXT,
+            VK_COLOR_SPACE_BT2020_LINEAR_EXT,
+            VK_COLOR_SPACE_HDR10_ST2084_EXT,
+            VK_COLOR_SPACE_DOLBYVISION_EXT,
+            VK_COLOR_SPACE_HDR10_HLG_EXT,
+            VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT,
+            VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT,
+            VK_COLORSPACE_SRGB_NONLINEAR_KHR,
+            VK_COLOR_SPACE_DCI_P3_LINEAR_EXT
+        };
+
+        for (decltype(pixelFormatArray.size()) i = 0; i < pixelFormatArray.size(); i++) {
+            for (decltype(colorDataspaceArray.size()) j = 0; j < colorDataspaceArray.size(); j++) {
+                VkSwapchainCreateInfoKHR swapchainCI = getSwapchainCreateInfo(
+                    pixelFormatArray[i], colorDataspaceArray[j]);
+
+                VkSwapchainKHR swapChainSuccess = VK_NULL_HANDLE;
+                VkSwapchainKHR swapChainSuccess2 = VK_NULL_HANDLE;
+
+                VkResult err = fpCreateSwapchainKHR(device, &swapchainCI, nullptr, &swapChainSuccess);
+                EXPECT_EQ(err, VK_SUCCESS);
+                EXPECT_NE(swapChainSuccess, VK_NULL_HANDLE);
+
+                swapchainCI.oldSwapchain = swapChainSuccess;
+                err = fpCreateSwapchainKHR(device, &swapchainCI, nullptr, &swapChainSuccess2);
+                EXPECT_EQ(err, VK_SUCCESS);
+                EXPECT_NE(swapChainSuccess2, VK_NULL_HANDLE);
+                fpDestroySwapchainKHR(device, swapChainSuccess, nullptr);
+                fpDestroySwapchainKHR(device, swapChainSuccess2, nullptr);
+            }
+        }
+    }
+}
+
+/**
+ * @tc.name: test fpCreateSwapchainKHR fail
+ * @tc.desc: test fpCreateSwapchainKHR fail
+ * @tc.type: FUNC
+ * @tc.require: issueI5ODXM
+ */
+HWTEST_F(VulkanWrapperUnitTest, fpCreateSwapchainKHR_Fail_Test, TestSize.Level1)
+{
+    if (isSupportedVulkan) {
+        EXPECT_NE(fpCreateSwapchainKHR, nullptr);
+        EXPECT_NE(device, nullptr);
+        EXPECT_NE(surface, VK_NULL_HANDLE);
+
+        std::vector<VkColorSpaceKHR> colorDataspaceArray = {
+            VK_COLOR_SPACE_PASS_THROUGH_EXT,
+            VK_COLOR_SPACE_DISPLAY_NATIVE_AMD,
+            VK_COLOR_SPACE_MAX_ENUM_KHR
+        };
+
+        for (decltype(colorDataspaceArray.size()) i = 0; i < colorDataspaceArray.size(); i++) {
+            VkSwapchainCreateInfoKHR swapchainCI = getSwapchainCreateInfo(
+                VK_FORMAT_R8G8B8A8_UNORM, colorDataspaceArray[i]);
+
+            VkSwapchainKHR swapChainFail = VK_NULL_HANDLE;
+            VkSwapchainKHR swapChainFail2 = VK_NULL_HANDLE;
+
+            VkResult err = fpCreateSwapchainKHR(device, &swapchainCI, nullptr, &swapChainFail);
+            EXPECT_NE(err, VK_SUCCESS);
+            EXPECT_EQ(swapChainFail, VK_NULL_HANDLE);
+
+            swapchainCI.oldSwapchain = swapChainFail;
+            err = fpCreateSwapchainKHR(device, &swapchainCI, nullptr, &swapChainFail2);
+            EXPECT_NE(err, VK_SUCCESS);
+            EXPECT_EQ(swapChainFail2, VK_NULL_HANDLE);
+            fpDestroySwapchainKHR(device, swapChainFail, nullptr);
+            fpDestroySwapchainKHR(device, swapChainFail2, nullptr);
+        }
     }
 }
 

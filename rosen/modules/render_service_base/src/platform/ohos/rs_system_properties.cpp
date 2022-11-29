@@ -21,7 +21,8 @@
 
 namespace OHOS {
 namespace Rosen {
-static void ParseDfxSurfaceNamesString(const std::string& paramsStr, std::vector<std::string>& splitStrs, const std::string seperator)
+static void ParseDfxSurfaceNamesString(const std::string& paramsStr,
+    std::vector<std::string>& splitStrs, const std::string& seperator)
 {
     std::string::size_type pos1 = 0;
     std::string::size_type pos2 = paramsStr.find(seperator);
@@ -89,6 +90,12 @@ PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
         std::atoi((system::GetParameter("rosen.uni.partialrender.enabled", "4")).c_str()));
 }
 
+ContainerWindowConfigType RSSystemProperties::GetContainerWindowConfig()
+{
+    return static_cast<ContainerWindowConfigType>(
+        std::atoi((system::GetParameter("rosen.uni.containerwindowconfig", "2")).c_str()));
+}
+
 bool RSSystemProperties::GetOcclusionEnabled()
 {
     return std::atoi((system::GetParameter("rosen.occlusion.enabled", "1")).c_str()) != 0;
@@ -141,6 +148,11 @@ DumpSurfaceType RSSystemProperties::GetDumpSurfaceType()
 uint64_t RSSystemProperties::GetDumpSurfaceId()
 {
     return std::atoi((system::GetParameter("rosen.dumpsurfaceid", "0")).c_str());
+}
+
+bool RSSystemProperties::GetDumpLayersEnabled()
+{
+    return std::atoi((system::GetParameter("rosen.dumplayer.enabled", "0")).c_str()) != 0;
 }
 
 void RSSystemProperties::SetDrawTextAsBitmap(bool flag)

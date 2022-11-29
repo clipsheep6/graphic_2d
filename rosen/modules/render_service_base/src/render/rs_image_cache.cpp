@@ -17,21 +17,25 @@
 
 namespace OHOS {
 namespace Rosen {
+// modify the RSImageCache instance as global to extend life cycle, fix destructor crash
+static RSImageCache gRSImageCacheInstance;
+
 RSImageCache& RSImageCache::Instance()
 {
-    static RSImageCache instance;
-    return instance;
+    return gRSImageCacheInstance;
 }
 
 void RSImageCache::CacheSkiaImage(uint64_t uniqueId, sk_sp<SkImage> img)
 {
     if (img) {
+        std::lock_guard<std::mutex> lock(mutex_);
         skiaImageCache_.emplace(uniqueId, img);
     }
 }
 
 sk_sp<SkImage> RSImageCache::GetSkiaImageCache(uint64_t uniqueId) const
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = skiaImageCache_.find(uniqueId);
     if (it != skiaImageCache_.end()) {
         return it->second;
@@ -42,6 +46,7 @@ sk_sp<SkImage> RSImageCache::GetSkiaImageCache(uint64_t uniqueId) const
 void RSImageCache::ReleaseSkiaImageCache(uint64_t uniqueId)
 {
     // release the skimage if nobody else holds it
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = skiaImageCache_.find(uniqueId);
     if (it != skiaImageCache_.end() && (!it->second || it->second->unique())) {
         skiaImageCache_.erase(it);

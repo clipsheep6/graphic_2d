@@ -79,6 +79,10 @@ ohos_shared_library("libcomposer") {
 
   external_deps = [ "drivers_interface_display:display_device_client" ]
 
+  if (defined(graphic_2d_ext_configs.vendor_root)) {
+    install_enable = false
+  }
+
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }

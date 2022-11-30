@@ -49,6 +49,9 @@
 #include "frame_trace.h"
 using namespace FRAME_TRACE;
 static const std::string RS_INTERVAL_NAME = "renderservice";
+static const std::string FPS_DUMP_NAME = "DoCompositionFPS";
+static const uint64_t RS_DURATION_SIZE = 100;
+static const uint64_t RS_DUMPER_INTERVAL = 30; // counter times
 
 using namespace OHOS::AccessibilityConfig;
 namespace OHOS {
@@ -59,6 +62,7 @@ constexpr int32_t PERF_ANIMATION_REQUESTED_CODE = 10017;
 constexpr uint64_t PERF_PERIOD = 250000000;
 constexpr uint64_t CLEAN_CACHE_FREQ = 60;
 constexpr uint64_t PERF_PERIOD_BLUR = 80000000;
+constexpr float MAX_FPS_VALUE = 60.0;
 const std::map<int, int32_t> BLUR_CNT_TO_BLUR_CODE {
     { 1, 10021 },
     { 2, 10022 },
@@ -153,6 +157,7 @@ void RSMainThread::Init()
         SendCommands();
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         SetRSEventDetectorLoopFinishTag();
+        UpdateDurationCounterAndDumpFps();
         rsEventManager_.UpdateParam();
         RS_LOGD("RsDebug mainLoop end");
     };
@@ -183,6 +188,10 @@ void RSMainThread::Init()
     receiver_->Init();
     renderEngine_ = std::make_shared<RSRenderEngine>();
     uniRenderEngine_ = std::make_shared<RSUniRenderEngine>();
+    durationList_.clear();
+    durationList_.resize(0);
+    totalMs_ = 0;
+    fpsCounter_ = 0;
     RSBaseRenderEngine::Init();
 #ifdef RS_ENABLE_GL
     int cacheLimitsTimes = 2; // double skia Resource Cache Limits
@@ -248,6 +257,33 @@ void RSMainThread::SetRSEventDetectorLoopFinishTag()
             std::string defaultFocusAppInfo = "";
             rsCompositionTimeoutDetector_->SetLoopFinishTag(
                 -1, -1, defaultFocusAppInfo, defaultFocusAppInfo);
+        }
+    }
+}
+
+void RSMainThread::UpdateDurationCounterAndDumpFps()
+{
+    size_t len = durationList_.size();
+    if (rsCompositionTimeoutDetector_ != nullptr) {
+        uint64_t val = rsCompositionTimeoutDetector_->GetDurationTimestampMs();
+        if (len == RS_DURATION_SIZE) {
+            totalMs_ -= durationList_.front();
+            durationList_.pop_front();
+            len--;
+        }
+        totalMs_ += val;
+        durationList_.emplace_back(val);
+        len++;
+    }
+    if (RSSystemProperties::IsDumpFpsEnabled() && len != 0) {
+        float avgDuration = static_cast<float>(totalMs_) / static_cast<float>(len);
+        float fpsVal = 1000.0 / avgDuration;
+        fpsDumper_ += std::to_string((fpsVal > MAX_FPS_VALUE) ? MAX_FPS_VALUE : fpsVal) + "\n";
+        RS_LOGD("RSMainThread::DumpFpsToFile, avgDuration = %f", avgDuration);
+        if (++fpsCounter_ == RS_DUMPER_INTERVAL) {
+            (void)RSBaseRenderUtil::DumpFpsToFile(FPS_DUMP_NAME, fpsDumper_);
+            fpsCounter_ = 0;
+            fpsDumper_ = "";
         }
     }
 }

@@ -101,6 +101,11 @@ bool RSSystemProperties::GetOcclusionEnabled()
     return std::atoi((system::GetParameter("rosen.occlusion.enabled", "1")).c_str()) != 0;
 }
 
+bool RSSystemProperties::IsDumpFpsEnabled()
+{
+    return system::GetParameter("rosen.dumpfps.enabled", "0") != "0";
+}
+
 std::string RSSystemProperties::GetRSEventProperty(const std::string &paraName)
 {
     return system::GetParameter(paraName, "0");

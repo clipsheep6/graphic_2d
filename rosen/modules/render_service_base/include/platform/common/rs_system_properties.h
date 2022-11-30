@@ -82,6 +82,7 @@ public:
     static uint64_t GetDumpSurfaceId();
     static bool GetTargetDirtyRegionDfxEnabled(std::vector<std::string>& dfxTargetSurfaceNames_);
     static bool GetDumpLayersEnabled();
+    static bool IsDumpFpsEnabled();
 
     static void SetDrawTextAsBitmap(bool flag);
     static bool GetDrawTextAsBitmap();

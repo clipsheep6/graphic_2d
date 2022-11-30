@@ -73,6 +73,7 @@ public:
     virtual void SetLoopFinishTag(
         int32_t focusAppPid, int32_t focusAppUid,
         std::string& focusAppBundleName, std::string& focusAppAbilityName) = 0;
+    virtual uint64_t GetDurationTimestampMs() const = 0;
 
 protected:
     RSBaseEventDetector() = default;
@@ -108,10 +109,15 @@ public:
     void SetLoopFinishTag(
         int32_t focusAppPid, int32_t focusAppUid,
         std::string& focusAppBundleName, std::string& focusAppAbilityName) override;
+    uint64_t GetDurationTimestampMs() const override
+    {
+        return durationTimestampMs_;
+    }
 private:
     void EventReport(uint64_t costTimeMs);
     int timeOutThresholdMs_ = INT_MAX; // default: No Detector
     std::atomic_uint64_t startTimeStampMs_ = 0;
+    uint64_t durationTimestampMs_ = 0;
 };
 }
 }

@@ -79,6 +79,8 @@ private:
     void CalcDirtyRegionForFilterNode(std::shared_ptr<RSDisplayRenderNode>& node) const;
     // set global dirty region to each surface node
     void SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node);
+    void SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
+        const Occlusion::Region alignedDirtyRegion);
 
     void InitCacheSurface(RSSurfaceRenderNode& node, int width, int height);
     void SetPaintOutOfParentFlag(RSBaseRenderNode& node);
@@ -87,6 +89,7 @@ private:
         std::shared_ptr<RSCanvasListener>& overdrawListener);
 
     void RecordAppWindowNodeAndPostTask(RSSurfaceRenderNode& node, float width, float height);
+    void AdaptiveSubRenderThreadMode(uint32_t renderNodeNum);
 
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;
@@ -130,6 +133,9 @@ private:
     bool needColdStartThread_ = false; // flag used for cold start app window
     bool needDrawStartingWindow_ = true; // flag used for avoiding drawing both app and starting window
     bool needCheckFirstFrame_ = false; // flag used for avoiding notifying first frame repeatedly
+
+    bool isDirtyRegionAlignedEnable_ = false;
+    std::mutex parallelMutex_;
 };
 } // namespace Rosen
 } // namespace OHOS

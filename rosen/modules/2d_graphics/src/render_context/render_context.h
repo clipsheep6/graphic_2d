@@ -17,6 +17,7 @@
 #define RENDER_CONTEXT_H
 
 #include <memory>
+#include <mutex>
 #include "common/rs_rect.h"
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
@@ -66,7 +67,10 @@ public:
     void DamageFrame(const std::vector<RectI> &rects);
     void ClearRedundantResources();
     void CreatePbufferSurface();
-
+    EGLSurface CreateNewPBufferSurface();
+    void ShareMakeCurrent(EGLContext shareContext);
+    void ShareMakeCurrentNoSurface(EGLContext shareContext);
+    void MakeSelfCurrent();
     EGLSurface GetEGLSurface() const
     {
         return eglSurface_;
@@ -82,6 +86,11 @@ public:
         return eglDisplay_;
     }
 
+    ColorGamut GetColorSpace() const
+    {
+        return colorSpace_;
+    }
+
     bool IsEglContextReady() const
     {
         return eglContext_ != EGL_NO_DISPLAY;
@@ -95,6 +104,16 @@ public:
     void SetUniRenderMode(bool isUni)
     {
         isUniRenderMode_ = isUni;
+    }
+
+    EGLContext CreateShareContext()
+    {
+        std::unique_lock<std::mutex> lock(shareContextMutex_);
+        constexpr int32_t EGL_CONTEXT_CLIENT_VERSION_NUM = 2;
+        static const EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, EGL_CONTEXT_CLIENT_VERSION_NUM, EGL_NONE };
+        auto eglShareContext = eglCreateContext(eglDisplay_, config_, eglContext_, context_attribs);
+        lock.unlock();
+        return eglShareContext;
     }
 
 private:
@@ -114,6 +133,7 @@ private:
     const std::string UNIRENDER_CACHE_DIR = "/data/service/el0/render_service";
     std::string cacheDir_;
     std::shared_ptr<MemoryHandler> mHandler_;
+    std::mutex shareContextMutex_;
 };
 
 class RenderContextFactory {

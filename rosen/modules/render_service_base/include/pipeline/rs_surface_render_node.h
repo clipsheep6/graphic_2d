@@ -237,6 +237,27 @@ public:
         visibleDirtyRegion_ = region;
     }
 
+    void SetAlignedVisibleDirtyRegion(const Occlusion::Region& alignedRegion)
+    {
+        alignedVisibleDirtyRegion_ = alignedRegion;
+    }
+
+    const Occlusion::Region& GetAlignedVisibleDirtyRegion()
+    {
+        return alignedVisibleDirtyRegion_;
+    }
+
+    void SetExtraDirtyRegionAfterAlignment(const Occlusion::Region& region)
+    {
+        extraDirtyRegionAfterAlignment_ = region;
+        extraDirtyRegionAfterAlignmentIsEmpty_ = extraDirtyRegionAfterAlignment_.IsEmpty();
+    }
+
+    void SetDirtyRegionAlignedEnable(bool enable)
+    {
+        isDirtyRegionAlignedEnable_ = enable;
+    }
+
     const Occlusion::Region& GetDirtyRegionBelowCurrentLayer() const
     {
         return dirtyRegionBelowCurrentLayer_;
@@ -338,6 +359,16 @@ public:
         return transparentRegion_.IsIntersectWith(nodeRect);
     }
 
+    bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const
+    {
+        if (!isDirtyRegionAlignedEnable_) {
+            return false;
+        }
+        if (!extraDirtyRegionAfterAlignmentIsEmpty_) {
+            return extraDirtyRegionAfterAlignment_.IsIntersectWith(r);
+        }
+    }
+
     bool SubNodeIntersectWithDirty(const RectI& r) const
     {
         Occlusion::Rect nodeRect { r.left_, r.top_, r.GetRight(), r.GetBottom() };
@@ -374,7 +405,9 @@ public:
             case PartialRenderType::SET_DAMAGE_AND_DROP_OP_OCCLUSION:
                 return SubNodeVisible(r);
             case PartialRenderType::SET_DAMAGE_AND_DROP_OP_NOT_VISIBLEDIRTY:
-                return SubNodeVisible(r) && SubNodeIntersectWithDirty(r);
+                // intersect with self visible dirty or other surfaces' extra dirty region after alignment
+                return SubNodeVisible(r) && (SubNodeIntersectWithDirty(r) ||
+                    SubNodeIntersectWithExtraDirtyRegion(r));
             case PartialRenderType::DISABLED:
             case PartialRenderType::SET_DAMAGE:
             default:
@@ -581,6 +614,8 @@ private:
     RectI clipRegionFromParent_;
     Occlusion::Region visibleRegion_;
     Occlusion::Region visibleDirtyRegion_;
+    bool isDirtyRegionAlignedEnable_ = false;
+    Occlusion::Region alignedVisibleDirtyRegion_;
     bool isOcclusionVisible_ = true;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
     RectI dstRect_;
@@ -588,6 +623,9 @@ private:
     uint8_t abilityBgAlpha_ = 0;
     bool alphaChanged_ = false;
     Occlusion::Region globalDirtyRegion_;
+    // dirtyRegion caused by surfaceNode visible region after alignment
+    Occlusion::Region extraDirtyRegionAfterAlignment_;
+    bool extraDirtyRegionAfterAlignmentIsEmpty_;
 
     std::atomic<bool> isAppFreeze_ = false;
     sk_sp<SkSurface> cacheSurface_ = nullptr;

@@ -15,6 +15,7 @@
 
 #include "platform/common/rs_system_properties.h"
 
+#include <cstdlib>
 #include <parameters.h>
 #include "platform/common/rs_log.h"
 #include "transaction/rs_render_service_client.h"
@@ -163,5 +164,12 @@ bool RSSystemProperties::GetDrawTextAsBitmap()
 {
     return isDrawTextAsBitmap_;
 }
+
+bool RSSystemProperities::GetParallelRenderingEnabled()
+{
+    return static_cast<ParallelRenderingType>(
+        std::atoi((system::GetParameter("rosen.parallelrender.enabled", "0")).c_str()));
+}
+
 } // namespace Rosen
 } // namespace OHOS

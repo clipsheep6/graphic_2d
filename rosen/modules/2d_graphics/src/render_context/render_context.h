@@ -106,15 +106,7 @@ public:
         isUniRenderMode_ = isUni;
     }
 
-    EGLContext CreateShareContext()
-    {
-        std::unique_lock<std::mutex> lock(shareContextMutex_);
-        constexpr int32_t EGL_CONTEXT_CLIENT_VERSION_NUM = 2;
-        static const EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, EGL_CONTEXT_CLIENT_VERSION_NUM, EGL_NONE };
-        auto eglShareContext = eglCreateContext(eglDisplay_, config_, eglContext_, context_attribs);
-        lock.unlock();
-        return eglShareContext;
-    }
+    EGLContext CreateShareContext();
 
 private:
     sk_sp<GrContext> grContext_;

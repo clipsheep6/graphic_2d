@@ -26,39 +26,41 @@ RSParallelTaskManager::RSParallelTaskManager()
     : isParallelRenderExtEnabled_(RSParallelRenderExt::OpenParallelRenderExt())
 {
     if (isParallelRenderExtEnabled_) {
-        auto InitParallelRenderExt = (void(*)())RSParallelRenderExt::initParallelRenderLBFunc_;
-        InitParallelRenderExt();
+        auto initParallelRenderExt = reinterpret_cast<void(*)()>(RSParallelRenderExt::initParallelRenderLBFunc_);
+        initParallelRenderExt();
     }
 }
 
 RSParallelTaskManager::~RSParallelTaskManager()
 {
     if (isParallelRenderExtEnabled_) {
-        auto FreeParallelRenderExt = (void(*)())RSParallelRenderExt::freeParallelRenderLBFunc_;
-        FreeParallelRenderExt();
+        auto freeParallelRenderExt = reinterpret_cast<void(*)()>(RSParallelRenderExt::freeParallelRenderLBFunc_);
+        freeParallelRenderExt();
     }
     RSParallelRenderExt::CloseParallelRenderExt();
 }
 
-void RSParallelTaskManager::Initialize(uint32_t threadNum) 
+void RSParallelTaskManager::Initialize(uint32_t threadNum)
 {
     threadNum_ = threadNum;
     if (isParallelRenderExtEnabled_) {
-        auto ParallelRenderExtSetThreadNumCall = (void(*)(uint32_t))RSParallelRenderExt::setSubRenderThreadNumFunc_;
-        ParallelRenderExtSetThreadNumCall();
+        auto parallelRenderExtSetThreadNumCall = reinterpret_cast<void(*)(uint32_t)>(
+            RSParallelRenderExt::setSubRenderThreadNumFunc_);
+        parallelRenderExtSetThreadNumCall(threadNum);
     }
 }
 
 void RSParallelTaskManager::PushRenderTask(std::unique_ptr<RSRenderTask> renderTask)
 {
     if (isParallelRenderExtEnabled_) {
-        auto ParallelRenderExtAddRenderLoad = (void(*)(uint64_t, float))RSParallelRenderExt::addRenderLoadFunc_;
-        ParallelRenderExtAddRenderLoad();
+        auto parallelRenderExtAddRenderLoad = reinterpret_cast<void(*)(uint64_t, float)>(
+            RSParallelRenderExt::addRenderLoadFunc_);
+        parallelRenderExtAddRenderLoad(renderTask->GetIdx(), 0.f);
     }
     renderTaskList_.push_back(std::move(renderTask));
 }
 
-void RSParallelTaskManager::LBCalcAndSubmitSuperTask(std::shared_ptr<RSBaseRenderNode> displayNode) 
+void RSParallelTaskManager::LBCalcAndSubmitSuperTask(std::shared_ptr<RSBaseRenderNode> displayNode)
 {
     if (renderTaskList_.size() == 0) {
         return;
@@ -74,7 +76,7 @@ void RSParallelTaskManager::LBCalcAndSubmitSuperTask(std::shared_ptr<RSBaseRende
             cachedSuperRenderTask_->AddTask(std::move(renderTaskList_[index]));
             index++;
         }
-        RSParallelTaskManager::Instance()->SubmitSuperTask(taskNum_, std::move(cachedSuperRenderTask_));
+        RSParallelRenderManager::Instance()->SubmitSuperTask(taskNum_, std::move(cachedSuperRenderTask_));
         taskNum_++;
         cachedSuperRenderTask_ = std::make_unique<RSSuperRenderTask>(displayNode);
     }
@@ -84,8 +86,9 @@ std::vector<uint32_t> RSParallelTaskManager::LoadBalancing()
 {
     std::vector<uint32_t> loadNumPerThread;
     if (isParallelRenderExtEnabled_) {
-        auto ParallelRenderExtLB = (void(*)(std::vector<uint32_t &>))RSParallelRenderExt::loadBalancingFunc_;
-        ParallelRenderExtLB(loadNumPerThread);
+        auto parallelRenderExtLB = reinterpret_cast<void(*)(std::vector<uint32_t> &)>(
+            RSParallelRenderExt::loadBalancingFunc_);
+        parallelRenderExtLB(loadNumPerThread);
     } else {
         uint32_t avgLoadNum = renderTaskList_.size() / threadNum_;
         uint32_t loadMod = renderTaskList_.size() % threadNum_;
@@ -93,7 +96,7 @@ std::vector<uint32_t> RSParallelTaskManager::LoadBalancing()
             if (i <= loadMod) {
                 loadNumPerThread.push_back(avgLoadNum + 1);
             } else {
-                loadNumPerThread.push_back(avgLoadNum)
+                loadNumPerThread.push_back(avgLoadNum);
             }
         }
     }
@@ -110,18 +113,18 @@ void RSParallelTaskManager::Reset()
     renderTaskList_.clear();
     superRenderTaskList_.clear();
     if (isParallelRenderExtEnabled_) {
-        auto ParallelRenderExtClearRenderLoad = (void(*)())RSParallelRenderExt::clearRenderLoadFunc_;
-        ParallelRenderExtClearRenderLoad();
+        auto parallelRenderExtClearRenderLoad = reinterpret_cast<void(*)()>(RSParallelRenderExt::clearRenderLoadFunc_);
+        parallelRenderExtClearRenderLoad();
     }
 }
 
 void RSParallelTaskManager::SetSubThreadRenderTaskLoad(uint32_t threadIdx, uint64_t loadId, float cost)
 {
     if (isParallelRenderExtEnabled_) {
-        auto ParallelRenderExtUpdateLoadCost =
-            (void(*)(uint32_t, uint64_t, float))RSParallelRenderExt::updateLoadCostFunc_;
-        ParallelRenderExtUpdateLoadCost(threadIdx, loadId, cost);
+        auto parallelRenderExtUpdateLoadCost = reinterpret_cast<void(*)(uint32_t, uint64_t, float)>(
+            RSParallelRenderExt::updateLoadCostFunc_);
+        parallelRenderExtUpdateLoadCost(threadIdx, loadId, cost);
     }
 }
-} // OHOS
-} // Rosen
+} // namespace Rosen
+} // namespace OHOS

@@ -142,7 +142,7 @@ void RSUniRenderUtil::DrawCachedSurface(RSSurfaceRenderNode& node, RSPaintFilter
     canvas.restore();
 }
 
-Occlusion::Region AlignedDirtyRegion(const Occlusion::Region& dirtyRegion, int32_t alignedBits)
+Occlusion::Region RSUniRenderUtil::AlignedDirtyRegion(const Occlusion::Region& dirtyRegion, int32_t alignedBits)
 {
     Occlusion::Region alignedRegion;
     if (alignedBits <= 1) {

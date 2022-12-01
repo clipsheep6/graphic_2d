@@ -14,15 +14,15 @@
  */
 
 #include "rs_render_task.h"
-#include "pipline/rs_base_render_node.h"
+#include "pipeline/rs_base_render_node.h"
 
 namespace OHOS {
 namespace Rosen {
 RSSuperRenderTask::~RSSuperRenderTask()
 {
     while (GetTaskSize() > 0) {
-        task_.pop();
-    }    
+        tasks_.pop();
+    }
 }
 
 void RSSuperRenderTask::AddTask(std::unique_ptr<RSRenderTask> &&task)

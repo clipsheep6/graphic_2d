@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_CORE_PIPLINE_PARALLEL_RENDER_RS_RENDER_TASK_H
-#define RENDER_SERVICE_CORE_PIPLINE_PARALLEL_RENDER_RS_RENDER_TASK_H
+#ifndef RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_RENDER_TASK_H
+#define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_RENDER_TASK_H
 
 #include <cstdint>
 #include <memory>
@@ -45,7 +45,7 @@ public:
         return node_;
     }
 
-private: 
+private:
     std::shared_ptr<RSBaseRenderNode> node_;
     uint64_t loadId_;
 };
@@ -60,7 +60,7 @@ class RSSuperRenderTask : public RSRenderTaskBase {
 public:
     explicit RSSuperRenderTask(RSDisplayRenderNode &node) : RSRenderTaskBase(node.shared_from_this()) {}
     explicit RSSuperRenderTask(std::shared_ptr<RSBaseRenderNode> node) : RSRenderTaskBase(node) {}
-    ~RSSuperRenderTask();
+    ~RSSuperRenderTask() override;
 
     void AddTask(std::unique_ptr<RSRenderTask> &&task);
 
@@ -77,4 +77,4 @@ private:
 };
 } // namespace Rosen
 } // namespace OHOS
-#endif // RENDER_SERVICE_CORE_PIPLINE_PARALLEL_RENDER_RS_RENDER_TASK_H
+#endif // RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_RENDER_TASK_H

@@ -91,7 +91,7 @@ public:
 
     static void SetDrawTextAsBitmap(bool flag);
     static bool GetDrawTextAsBitmap();
-    static bool GetParallelRenderingEnabled();
+    static ParallelRenderingType GetParallelRenderingEnabled();
 
 private:
     RSSystemProperties() = default;

@@ -246,7 +246,7 @@ RectI RSDirtyRegionManager::GetHistory(unsigned int i) const
 void RSDirtyRegionManager::AlignHistory()
 {
     for (uint8_t i = 0; i < dirtyHistory_.size(); i++) {
-        dirtyHistory_ = GetPixelAlignedRect(dirtyHistory_[i]);
+        dirtyHistory_[i] = GetPixelAlignedRect(dirtyHistory_[i]);
     }
 }
 

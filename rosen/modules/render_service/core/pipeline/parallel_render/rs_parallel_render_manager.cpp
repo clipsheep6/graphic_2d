@@ -8,7 +8,7 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRaANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -21,7 +21,7 @@
 #include "EGL/egl.h"
 #include "rs_render_task.h"
 #include "pipeline/rs_base_render_engine.h"
-#include "render_context?render_context.h"
+#include "render_context/render_context.h"
 #include "pipeline/rs_main_thread.h"
 
 namespace OHOS {
@@ -43,12 +43,12 @@ void RSParallelRenderManager::SetParallelMode(bool parallelMode)
 
 // You should always use GetParallelModeSafe() instead of GetParallelMode()
 // except initialize variable 'isParallel' in 'rs_uni_render_visitor.cpp'
-void RSParallelRenderManager::GetParallelModeSafe() const
+bool RSParallelRenderManager::GetParallelModeSafe() const
 {
     return GetParallelRenderingStatus() == ParallelStatus::ON;
 }
 
-void RSParallelRenderManager::GetParallelMode() const
+bool RSParallelRenderManager::GetParallelMode() const
 {
     ParallelStatus status = GetParallelRenderingStatus();
     return (status == ParallelStatus::ON) || (status == ParallelStatus::FIRSTFLUSH);
@@ -57,7 +57,7 @@ void RSParallelRenderManager::GetParallelMode() const
 void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum, RenderContext *context)
 {
     if (GetParallelRenderingStatus() == ParallelStatus::OFF) {
-        expectedSUbThreadNum_ = threadNum;
+        expectedSubThreadNum_ = threadNum;
         firstFlush_ = true;
         renderContext_ = context;
         for (int i = 0; i < threadNum; ++i) {
@@ -72,7 +72,7 @@ void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum, RenderCon
 void RSParallelRenderManager::EndSubRenderThread()
 {
     if (GetParallelRenderingStatus() == ParallelStatus::ON) {
-        readySubThreadNum_ = expectedSubThreaNum_ = 0;
+        readySubThreadNum_ = expectedSubThreadNum_ = 0;
         isTaskReady_ = true;
         cvTask_.notify_all();
         packVisitor_ = nullptr;
@@ -85,11 +85,11 @@ void RSParallelRenderManager::ReadySubThreadNumIncrement()
     ++readySubThreadNum_;
 }
 
-ParallelStatus RSParallelRenderManager::GetParallelRenderingStatus()
+ParallelStatus RSParallelRenderManager::GetParallelRenderingStatus() const
 {
-    if (expectedSubThreaNum_ == 0) {
+    if (expectedSubThreadNum_ == 0) {
         return ParallelStatus::OFF;
-    } else if (expectedSubThreaNum_ == readySubThreadNum_) {
+    } else if (expectedSubThreadNum_ == readySubThreadNum_) {
         return ParallelStatus::ON;
     } else if (firstFlush_) {
         return ParallelStatus::FIRSTFLUSH;
@@ -118,45 +118,39 @@ void RSParallelRenderManager::LoadBalanceAndNotify()
     cvTask_.notify_all();
 }
 
-void RSParallelRenderManager::UpdataTaskEvalCost()
-{
-}
-
 void RSParallelRenderManager::MergeRenderResult(std::shared_ptr<SkCanvas> canvas)
 {
     if (GetParallelRenderingStatus() == ParallelStatus::FIRSTFLUSH) {
         firstFlush_ = false;
-        for (int i = 0; i < expectedSubThreaNum_; ++i) {
+        for (int i = 0; i < expectedSubThreadNum_; ++i) {
             threadList_[i]->WaitFlushReady();
         }
-    } else {
-        if (renderType_ == ParallelRenderType::DRAW_IMAGE) {
-            for (int i = 0; i < taskManager_.GetTaskNum(); ++i) {
-                RS_TRACE_BEGIN("Wait Render finish");
-                threadList_[i]->WaitFlushReady();
-                RS_TRACE_END();
-                RS_TRACE_BEGIN("Wait Fence Ready");
-                threadList_[i]->WaitReleaseFence();
-                RS_TRACE_END();
-                auto texture = threadList_[i]->GetTexture();
-                if (texture == nullptr) {
-                    RS_LOGE("Texture %d is nullptr", i);
-                    continue;
-                }
-                canvas->drawImage(texture, 0, 0);
+    } else if (renderType_ == ParallelRenderType::DRAW_IMAGE) {
+        for (int i = 0; i < taskManager_.GetTaskNum(); ++i) {
+            RS_TRACE_BEGIN("Wait Render finish");
+            threadList_[i]->WaitFlushReady();
+            RS_TRACE_END();
+            RS_TRACE_BEGIN("Wait Fence Ready");
+            threadList_[i]->WaitReleaseFence();
+            RS_TRACE_END();
+            auto texture = threadList_[i]->GetTexture();
+            if (texture == nullptr) {
+                RS_LOGE("Texture %d is nullptr", i);
+                continue;
             }
-        } else {
-            renderContext_->ShareMakeCurrent(EGL_NO_CONTEXT);
-            for (int i = 0; i < threadList_.size(); ++i) {
-                threadList_[i]->WaitFlushReady();
-                renderContext_->ShareMakeCurrent(threadList_[i]->GetSharedContext());
-                RS_TRACE_BEGIN("Start Flush");
-                threadList_[i]->GetSkSurface()->flush();
-                RS_TRACE_END();
-                renderContext->ShareMakeCurrent(EGL_NO_CONTEXT);
-            }
-            renderContext_->MakeSelfCurrent();
+            canvas->drawImage(texture, 0, 0);
         }
+    } else {
+        renderContext_->ShareMakeCurrent(EGL_NO_CONTEXT);
+        for (int i = 0; i < threadList_.size(); ++i) {
+            threadList_[i]->WaitFlushReady();
+            renderContext_->ShareMakeCurrent(threadList_[i]->GetSharedContext());
+            RS_TRACE_BEGIN("Start Flush");
+            threadList_[i]->GetSkSurface()->flush();
+            RS_TRACE_END();
+            renderContext_->ShareMakeCurrent(EGL_NO_CONTEXT);
+        }
+        renderContext_->MakeSelfCurrent();
     }
     isTaskReady_ = false;
     cvTask_.notify_all();
@@ -204,12 +198,12 @@ void RSParallelRenderManager::SetRenderTaskCost(uint32_t subMainThreadIdx, uint6
     taskManager_.SetSubThreadRenderTaskLoad(subMainThreadIdx, loadId, cost);
 }
 
-bool RSParallelRenderManager::ParallelRenderExtEnabled()
+bool RSParallelRenderManager::ParallelRenderExtEnable()
 {
     return taskManager_.GetParallelRenderExtEnable();
 }
 
-void RSParallelRenderManager::TryEnableParallelRendering(ParallelRenderType parallelEnableOption)
+void RSParallelRenderManager::TryEnableParallelRendering()
 {
     if (parallelMode_) {
         StartSubRenderThread(PARALLEL_THREAD_NUM,

@@ -165,7 +165,7 @@ bool RSSystemProperties::GetDrawTextAsBitmap()
     return isDrawTextAsBitmap_;
 }
 
-bool RSSystemProperities::GetParallelRenderingEnabled()
+ParallelRenderingType RSSystemProperties::GetParallelRenderingEnabled()
 {
     return static_cast<ParallelRenderingType>(
         std::atoi((system::GetParameter("rosen.parallelrender.enabled", "0")).c_str()));

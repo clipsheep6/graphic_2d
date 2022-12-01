@@ -33,6 +33,7 @@ class RSPaintFilterCanvas;
 class RSUniRenderVisitor : public RSNodeVisitor {
 public:
     RSUniRenderVisitor();
+    RSUniRenderVisitor(std::shared_ptr<RSPaintFilterCanvas> canvas);
     ~RSUniRenderVisitor() override;
 
     void PrepareBaseRenderNode(RSBaseRenderNode& node) override;
@@ -62,6 +63,11 @@ public:
     void SetFocusedWindowPid(pid_t pid)
     {
         currentFocusedPid_ = pid;
+    }
+
+    bool GetAnimateState() const
+    {
+        return doAnimate_;
     }
 private:
     void DrawDirtyRectForDFX(const RectI& dirtyRect, const SkColor color,
@@ -135,7 +141,6 @@ private:
     bool needCheckFirstFrame_ = false; // flag used for avoiding notifying first frame repeatedly
 
     bool isDirtyRegionAlignedEnable_ = false;
-    std::mutex parallelMutex_;
 };
 } // namespace Rosen
 } // namespace OHOS

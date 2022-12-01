@@ -14,33 +14,27 @@
  */
 
 #include "rs_parallel_pack_visitor.h"
-#include "pipline/rs_base_render_node.h"
-#include "pipline/rs_surface_render_node.h"
-#include "pipline/rs_display_render_node.h"
-#include "pipline/parallel_render/rs_parallel_render_manager.h"
-#include "pipline/rs_uni_render_visitor.h"
+#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_surface_render_node.h"
+#include "pipeline/rs_display_render_node.h"
+#include "pipeline/parallel_render/rs_parallel_render_manager.h"
+#include "pipeline/rs_uni_render_visitor.h"
 #include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
 RSParallelPackVisitor::RSParallelPackVisitor(RSUniRenderVisitor &visitor)
 {
-    partialRenderType_ = RSSystemPropeties::GetUniPartialRenderEnable();
-    isPartialRenderEnable_ = (partialRenderType_ != PartialRenderType::DISABLED);
-    isDirtyRegionDfxEnable_ = (RSSystemProperties::GetDirtyRegionDebugType() == DirtyRegionDebufType::EGL_DAMAGE);
-    isTargetDirtyRegionDfxEnable_ = RSSystemProperties::GetTargetDirtyRegionEnaled(dfxTargetSurfaceNames_);
-    if (isDirtyRegionDfxEnable_ && isTargetDirtyRegionDfxEnable_) {
-        isDirtyRegionDfxEnable_ = false;
-    }
-    isOpDropped_ = isPartialRenderEnable_ && (partialRenderType_ != PartialRenderType::SET_DAMAGE) &&
-        (!isDirtyRegionDfxEnable_ && !isTargetDirtyRegionDfxEnable_);
+    partialRenderType_ = RSSystemProperties::GetUniPartialRenderEnabled();
+    isPartialRenderEnabled_ = (partialRenderType_ != PartialRenderType::DISABLED);
+    isOpDropped_ = isPartialRenderEnabled_ && (partialRenderType_ != PartialRenderType::SET_DAMAGE);
     doAnimate_ = visitor.GetAnimateState();
 }
 
 void RSParallelPackVisitor::ProcessBaseRenderNode(RSBaseRenderNode &node)
 {
-    for(auto &child : node.GetSortedChildren()) {
-        child->Process(shared_form_this());
+    for (auto &child : node.GetSortedChildren()) {
+        child->Process(shared_from_this());
     }
     // clear SortedChildren, it will be generated again in next frame
     node.ResetSortedChildren();
@@ -48,14 +42,14 @@ void RSParallelPackVisitor::ProcessBaseRenderNode(RSBaseRenderNode &node)
 
 void RSParallelPackVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node)
 {
-    isSecurityDisplay_ = node.GetSercurityDisplay();
+    isSecurityDisplay_ = node.GetSecurityDisplay();
     ProcessBaseRenderNode(node);
 }
 
 void RSParallelPackVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node)
 {
     if (isSecurityDisplay_ && node.GetSecurityLayer()) {
-        RS_TRACE_Name("SecurityLayer Skip");
+        RS_TRACE_NAME("SecurityLayer Skip");
         return;
     }
     const auto  &property = node.GetRenderProperties();
@@ -63,24 +57,24 @@ void RSParallelPackVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node)
         RS_LOGD("RSParallelPackVisitor::ProcessSurfaceRenderNode: %" PRIu64 " invisible", node.GetId());
         return;
     }
-    if (!node.GetOcclusionVisiable() && !doAnimate_ && RSSystemProperties::GetOcclusionEnable()) {
-        RS_TRACE_Name("Occlusion Skip");
+    if (!node.GetOcclusionVisible() && !doAnimate_ && RSSystemProperties::GetOcclusionEnabled()) {
+        RS_TRACE_NAME("Occlusion Skip");
         return;
     }
-    if (isOpDropped_ && node.isAppWindow()) {
+    if (isOpDropped_ && node.IsAppWindow()) {
         if (!node.SubNodeNeedDraw(node.GetOldDirty(), partialRenderType_)) {
-            RS_TRACE_Name("QuikReject Skip");
+            RS_TRACE_NAME("QuickReject Skip");
             RS_LOGD("RSParallelPackVisitor::ProcessSurfaceRenderNode skip: %s", node.GetName().c_str());
             return;
         }
     }
-    auto surfaceNode = std::static_pointer_case<RSSurfaceNode>(node.GetSortedChildren().front());
+    auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(node.GetSortedChildren().front());
     if (isOpDropped_ && (surfaceNode != nullptr) && surfaceNode->IsAppWindow() &&
-        !surfaceNode->SubNodeDraw(surfaceNode->GetDstRect(), partialRenderType_)) {
-            RS_TRACE_Name("Parallel QuikReject Skip");
+        !surfaceNode->SubNodeNeedDraw(surfaceNode->GetDstRect(), partialRenderType_)) {
+            RS_TRACE_NAME("Parallel QuickReject Skip");
             return;
     }
-    RSParellelRenderManager::Instance()->PaceRenderTask(node);
+    RSParallelRenderManager::Instance()->PackRenderTask(node);
 }
-} //namespace Rosen
-} //namespace OHOS
+} // namespace Rosen
+} // namespace OHOS

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_CORE_PIPLINE_PARALLEL_RENDER_RS_PARALLEL_RENDER_EXT_H
-#define RENDER_SERVICE_CORE_PIPLINE_PARALLEL_RENDER_RS_PARALLEL_RENDER_EXT_H
+#ifndef RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_RENDER_EXT_H
+#define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_RENDER_EXT_H
 #include <cstdint>
 #include <dlfcn.h>
 namespace OHOS {
@@ -29,7 +29,9 @@ public:
     static bool OpenParallelRenderExt()
     {
         parallelRenderExtHandle_ = dlopen("libparallel_render.z.so", RTLD_NOW);
-        if (parallelRenderExtHandle_ == nullptr) return false;
+        if (parallelRenderExtHandle_ == nullptr) {
+            return false;
+        }
         return GetParallelRenderEnable();
     }
 
@@ -86,7 +88,7 @@ private:
 
     static bool GetUpdateLoadCostFunc()
     {
-        updateLoadCostFunc_ = dlsym(parallelRenderExtHandle_, "UpateLoadCost");
+        updateLoadCostFunc_ = dlsym(parallelRenderExtHandle_, "UpdateLoadCost");
         return updateLoadCostFunc_ != nullptr;
     }
 
@@ -128,6 +130,6 @@ private:
     }
 };
 
-} // OHOS
-} // Rosen
-#endif // RENDER_SERVICE_CORE_PIPLINE_PARALLEL_RENDER_RS_PARALLEL_RENDER_EXT_H
+} // namespace Rosen
+} // namespace OHOS
+#endif // RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_RENDER_EXT_H

@@ -8,13 +8,13 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRaANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
-#ifndef RS_PARALLEL_RENDER_MANAGER_H
-#define RS_PARALLEL_RENDER_MANAGER_H
+#ifndef RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_RENDER_MANAGER_H
+#define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_RENDER_MANAGER_H
 
 #include <condition_variable>
 #include <memory>
@@ -34,30 +34,29 @@ class RSSurfaceRenderNode;
 class RSDisplayRenderNode;
 
 enum class ParallelRenderType {
-    DRAW_IMAGE = 0;
-    FLUSH_ONE_BUFFER
+    DRAW_IMAGE = 0,
+    FLUSH_ONE_BUFFER = 1
 };
 
 enum class ParallelStatus {
     OFF = 0,
-    ON,
-    FIRSTFLUSH,
-    WAITFIRSTFLUSH
+    ON = 1,
+    FIRSTFLUSH = 2,
+    WAITFIRSTFLUSH = 3
 };
 
 class RSParallelRenderManager {
 public:
     static RSParallelRenderManager *Instance();
     void SetParallelMode(bool parallelMode);
-    void GetParallelMode() const;
-    void GetParallelModeSafe() const;
+    bool GetParallelMode() const;
+    bool GetParallelModeSafe() const;
     void StartSubRenderThread(uint32_t threadNum, RenderContext *context);
     void EndSubRenderThread();
-    ParallelStatus GetParallelRenderingStatus();
+    ParallelStatus GetParallelRenderingStatus() const;
     void CopyVisitorAndPackTask(RSUniRenderVisitor &visitor, RSDisplayRenderNode &node);
     void PackRenderTask(RSSurfaceRenderNode &node);
     void LoadBalanceAndNotify();
-    void UpdataTaskEvalCost();
     void MergeRenderResult(std::shared_ptr<SkCanvas> canvas);
     void SetFrameSize(int height, int width);
     void GetFrameSize(int &height, int &width);
@@ -66,33 +65,33 @@ public:
     void WaitRenderFinish();
     void SetRenderTaskCost(uint32_t subMainThreadIdx, uint64_t loadId, float cost);
     bool ParallelRenderExtEnable();
-    void TryEnableParellerRendering(ParallelRenderingType parallelEnableOption);
-    bool ReadySubThreadNumIncrement();
+    void ReadySubThreadNumIncrement();
 
 private:
     RSParallelRenderManager() = default;
     ~RSParallelRenderManager() = default;
-    RSParallelRenderManager(const RSParelleRenderManager &) = delete;
-    RSParallelRenderManager(const RSParelleRenderManager &&) = delete;
+    RSParallelRenderManager(const RSParallelRenderManager &) = delete;
+    RSParallelRenderManager(const RSParallelRenderManager &&) = delete;
     RSParallelRenderManager &operator = (const RSParallelRenderManager &) = delete;
     RSParallelRenderManager &operator = (const RSParallelRenderManager &&) = delete;
+    void TryEnableParallelRendering();
 
     std::shared_ptr<RSParallelPackVisitor> packVisitor_;
     std::vector<std::unique_ptr<RSParallelSubThread>> threadList_;
-    RSParallelRenderManager taskManager_;
+    RSParallelTaskManager taskManager_;
     int height_;
     int width_;
     std::mutex taskMutex_;
     std::condition_variable cvTask_;
     RenderContext *renderContext_;
     ParallelRenderType renderType_ = ParallelRenderType::DRAW_IMAGE;
-    std::shared_ptr<RSBaseRenderNode> displayNode_ = 0;
+    std::shared_ptr<RSBaseRenderNode> displayNode_ = nullptr;
     bool isTaskReady_ = false;
-    uint32_t expectedSubThreaNum_= 0;
+    uint32_t expectedSubThreadNum_ = 0;
     std::atomic<uint32_t> readySubThreadNum_ = 0;
     bool firstFlush_ = false;
     bool parallelMode_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS
-#endif // RS_PARALLEL_RENDER_MANAGER_H
+#endif // RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_RENDER_MANAGER_H

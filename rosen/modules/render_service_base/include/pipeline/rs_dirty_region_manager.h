@@ -99,6 +99,7 @@ private:
     const unsigned HISTORY_QUEUE_MAX_SIZE = 4;
     // may add new set function for bufferAge
     unsigned int bufferAge_ = HISTORY_QUEUE_MAX_SIZE;
+    bool isDirtyRegionAlignedEnable_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

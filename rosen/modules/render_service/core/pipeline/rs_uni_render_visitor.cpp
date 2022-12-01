@@ -83,7 +83,7 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     containerWindowConfig_ = RSSystemProperties::GetContainerWindowConfig();
 }
 
-RSUniRenderVisitor::RSUniRenderVisitor(std::shared_ptr<RSPaintFilterCanvas> canvas) : RSUniRenderVisitor() 
+RSUniRenderVisitor::RSUniRenderVisitor(std::shared_ptr<RSPaintFilterCanvas> canvas) : RSUniRenderVisitor()
 {
     canvas_ = std::make_shared<RSPaintFilterCanvas>(canvas.get());
 }
@@ -592,29 +592,32 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         auto parallelRenderManager = RSParallelRenderManager::Instance();
         isParallel = parallelRenderManager->GetParallelMode();
         isDirtyRegionAlignedEnable_ = parallelRenderManager->GetParallelModeSafe();
+        bool isDirtyEmpty = false;
 #endif
 
 #ifdef RS_ENABLE_EGLQUERYSURFACE
         // Get displayNode buffer age in order to merge visible dirty region for displayNode.
         // And then set egl damage region to improve uni_render efficiency.
         if (isPartialRenderEnabled_) {
-#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
-            isDirtyEmpty = false;
-#endif
             // Early history buffer Merging will have impact on Overdraw display, so we need to
             // set the full screen dirty to avoid this impact.
             if (RSOverdrawController::GetInstance().IsEnabled()) {
                 node.GetDirtyManager()->ResetDirtyAsSurfaceSize();
             }
             int bufferAge = renderFrame->GetBufferAge();
-            RSUniRenderUtil::MergeDirtyHistory(displayNodePtr, bufferAge);
-            auto dirtyRegion = RSUniRenderUtil::MergeVisibleDirtyRegion(displayNodePtr);
+            RSUniRenderUtil::MergeDirtyHistory(displayNodePtr, bufferAge, isDirtyRegionAlignedEnable_);
+            Occlusion::Region dirtyRegion = RSUniRenderUtil::MergeVisibleDirtyRegion(
+                displayNodePtr, isDirtyRegionAlignedEnable_);
+            if (isDirtyRegionAlignedEnable_) {
+                SetSurfaceGlobalAlignedDirtyRegion(displayNodePtr, dirtyRegion);
+            } else {
+                SetSurfaceGlobalDirtyRegion(displayNodePtr);
+            }
             dirtyRegionTest = dirtyRegion;
-            SetSurfaceGlobalDirtyRegion(displayNodePtr);
             std::vector<RectI> rects = GetDirtyRects(dirtyRegion);
             RectI rect = node.GetDirtyManager()->GetDirtyRegionFlipWithinSurface();
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
-            isDirtyEmpty = (rect.size() == 0);
+            isDirtyEmpty = (rects.size() == 0);
 #endif
             if (!rect.IsEmpty()) {
                 rects.emplace_back(rect);
@@ -622,7 +625,8 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             if (!isDirtyRegionAlignedEnable_) {
                 auto disH = screenInfo_.GetRotatedHeight();
                 for (auto& r : rects) {
-                    region.op(SkIRect::MakeXYWH(r.left_, disH - r.GetBottom(), r.width_, r.height_), SkRegion::kUnion_Op);
+                    region.op(SkIRect::MakeXYWH(r.left_, disH - r.GetBottom(), r.width_, r.height_),
+                        SkRegion::kUnion_Op);
                     RS_LOGD("SetDamageRegion %s", r.ToString().c_str());
                 }
             }
@@ -666,8 +670,8 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             }
         }
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
-        if (isParallel && isDirtyEmpty) {
-            parallelRenderManager->SetFrameSize(screenInfo_.width, screenInfo_.height_);
+        if (isParallel && !isDirtyEmpty) {
+            parallelRenderManager->SetFrameSize(screenInfo_.width, screenInfo_.height);
             parallelRenderManager->CopyVisitorAndPackTask(*this, node);
             parallelRenderManager->LoadBalanceAndNotify();
             parallelRenderManager->MergeRenderResult(canvas_);
@@ -889,7 +893,7 @@ void RSUniRenderVisitor::SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRe
             continue;
         }
         // set display dirty region to surfaceNode
-        surfaceNode->SetGloblDirtyRegion(node->GetDirtyManager()->GetDirtyRegion());
+        surfaceNode->SetGlobalDirtyRegion(node->GetDirtyManager()->GetDirtyRegion());
         surfaceNode->SetDirtyRegionAlignedEnable(false);
     }
     Occlusion::Region curVisibleDirtyRegion;
@@ -909,7 +913,7 @@ void RSUniRenderVisitor::SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDi
     const Occlusion::Region alignedDirtyRegion)
 {
     RS_TRACE_FUNC();
-    if (isDirtyRegionAlignedEnable_) {
+    if (!isDirtyRegionAlignedEnable_) {
         return;
     }
     // calcultae extra dirty region after 32 bits alignedment
@@ -918,9 +922,9 @@ void RSUniRenderVisitor::SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDi
     Occlusion::Rect globalRect {globalRectI.left_, globalRectI.top_, globalRectI.GetRight(), globalRectI.GetBottom()};
     Occlusion::Region globalRegion{globalRect};
     dirtyRegion.SubSelf(globalRegion);
-    for (auto it = node->GetCurAllSurfaces.rbegin(); it != node->GetCurAllSurfaces.rend(); ++it) {
+    for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
         auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
-        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow) {
+        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
             continue;
         }
         surfaceNode->SetGlobalDirtyRegion(node->GetDirtyManager()->GetDirtyRegion());
@@ -935,9 +939,9 @@ void RSUniRenderVisitor::SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDi
         surfaceNode->SetDirtyRegionAlignedEnable(true);
     }
     Occlusion::Region curVisibleDirtyRegion;
-    for (auto it = node->GetCurAllSurfaces().begin(); it != node->GetCurAllSurfaces().end; ++it) {
+    for (auto it = node->GetCurAllSurfaces().begin(); it != node->GetCurAllSurfaces().end(); ++it) {
         auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
-        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow) {
+        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
             continue;
         }
         surfaceNode->SetDirtyRegionBelowCurrentLayer(curVisibleDirtyRegion);
@@ -1227,7 +1231,7 @@ void RSUniRenderVisitor::AdaptiveSubRenderThreadMode(uint32_t renderNodeNum)
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
     bool isParallel = renderNodeNum >= PARALLEL_RENDER_MINIMUN_RENDER_NODE_NUMBER;
     auto parallelRenderManager = RSParallelRenderManager::Instance();
-    switch (RSSystemProperities::GetParallelRenderingEnabled()) {
+    switch (RSSystemProperties::GetParallelRenderingEnabled()) {
         case ParallelRenderingType::AUTO:
             parallelRenderManager->SetParallelMode(isParallel);
             break;

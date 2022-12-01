@@ -8,13 +8,13 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRaANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
-#ifndef RS_PARALLEL_SUB_THREAD_H
-#define RS_PARALLEL_SUB_THREAD_H
+#ifndef RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_SUB_THREAD_H
+#define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_SUB_THREAD_H
 
 #include <condition_variable>
 #include <memory>
@@ -67,8 +67,8 @@ private:
 
     int threadIndex_;
     int surfaceWidth_ = 0;
-    int surfaeHeight_ = 0;
-    sk_sp<GrContext>  grContext_ = nullptr;
+    int surfaceHeight_ = 0;
+    sk_sp<GrContext> grContext_ = nullptr;
     sk_sp<SkSurface> skSurface_ = nullptr;
     SkCanvas *skCanvas_ = nullptr;
     std::shared_ptr<RSPaintFilterCanvas> canvas_ = nullptr;
@@ -88,10 +88,10 @@ private:
     bool subThreadFinish_;
     ParallelRenderType renderType_;
     sk_sp<SkImage> texture;
-    EGLSyncKHR eglSync_ = EGL_NO_SYTC_KHR;
+    EGLSyncKHR eglSync_ = EGL_NO_SYNC_KHR;
     timespec startTime_;
     timespec stopTime_;
 };
 } // namespace Rosen
 } // namespace OHOS
-#endif // RS_PARALLEL_SUB_THREAD_H
+#endif // RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_SUB_THREAD_H

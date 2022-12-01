@@ -52,7 +52,7 @@ public:
     // Get aligned rect as times of alignedBits
     static RectI GetPixelAlignedRect(const RectI& rect, int32_t alignedBits = ALIGNED_BITS);
     bool IsDirty() const;
-    void UpdateDirty();
+    void UpdateDirty(bool enableAligned = false);
     void UpdateDirtyByAligned(int32_t alignedBits = ALIGNED_BITS);
     void UpdateDirtyCanvasNodes(NodeId id, const RectI& rect);
     void UpdateDirtySurfaceNodes(NodeId id, const RectI& rect);
@@ -86,6 +86,7 @@ private:
     void PushHistory(RectI rect);
     // get his rect according to index offset
     RectI GetHistory(unsigned int i) const;
+    void AlignHistory();
 
     RectI surfaceRect_;
     RectI dirtyRegion_;

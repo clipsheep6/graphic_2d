@@ -39,6 +39,7 @@
 #include "platform/common/rs_system_properties.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_skia_filter.h"
+#include "pipeline/parallel_render/rs_parallel_render_manager.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -57,6 +58,11 @@ bool IsFirstFrameReadyToDraw(RSSurfaceRenderNode& node)
     return false;
 }
 }
+
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined (RS_ENABLE_GL)
+constexpr uint32_t PARALLEL_RENDER_MINIMUN_RENDER_NODE_NUMBER = 10;
+#endif
+
 RSUniRenderVisitor::RSUniRenderVisitor()
     : curSurfaceDirtyManager_(std::make_shared<RSDirtyRegionManager>())
 {
@@ -76,6 +82,12 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     // this config may downgrade the calcOcclusion performance when windows number become huge (i.e. > 30), keep it now
     containerWindowConfig_ = RSSystemProperties::GetContainerWindowConfig();
 }
+
+RSUniRenderVisitor::RSUniRenderVisitor(std::shared_ptr<RSPaintFilterCanvas> canvas) : RSUniRenderVisitor() 
+{
+    canvas_ = std::make_shared<RSPaintFilterCanvas>(canvas.get());
+}
+
 RSUniRenderVisitor::~RSUniRenderVisitor() {}
 
 void RSUniRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
@@ -574,10 +586,21 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         int saveLayerCnt = 0;
         SkRegion region;
         Occlusion::Region dirtyRegionTest;
+        bool isParallel = false;
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined (RS_ENABLE_GL)
+        AdaptiveSubRenderThreadMode(node.GetChildrenCount());
+        auto parallelRenderManager = RSParallelRenderManager::Instance();
+        isParallel = parallelRenderManager->GetParallelMode();
+        isDirtyRegionAlignedEnable_ = parallelRenderManager->GetParallelModeSafe();
+#endif
+
 #ifdef RS_ENABLE_EGLQUERYSURFACE
         // Get displayNode buffer age in order to merge visible dirty region for displayNode.
         // And then set egl damage region to improve uni_render efficiency.
         if (isPartialRenderEnabled_) {
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+            isDirtyEmpty = false;
+#endif
             // Early history buffer Merging will have impact on Overdraw display, so we need to
             // set the full screen dirty to avoid this impact.
             if (RSOverdrawController::GetInstance().IsEnabled()) {
@@ -590,20 +613,25 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             SetSurfaceGlobalDirtyRegion(displayNodePtr);
             std::vector<RectI> rects = GetDirtyRects(dirtyRegion);
             RectI rect = node.GetDirtyManager()->GetDirtyRegionFlipWithinSurface();
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+            isDirtyEmpty = (rect.size() == 0);
+#endif
             if (!rect.IsEmpty()) {
                 rects.emplace_back(rect);
             }
-            auto disH = screenInfo_.GetRotatedHeight();
-            for (auto& r : rects) {
-                region.op(SkIRect::MakeXYWH(r.left_, disH - r.GetBottom(), r.width_, r.height_), SkRegion::kUnion_Op);
-                RS_LOGD("SetDamageRegion %s", r.ToString().c_str());
+            if (!isDirtyRegionAlignedEnable_) {
+                auto disH = screenInfo_.GetRotatedHeight();
+                for (auto& r : rects) {
+                    region.op(SkIRect::MakeXYWH(r.left_, disH - r.GetBottom(), r.width_, r.height_), SkRegion::kUnion_Op);
+                    RS_LOGD("SetDamageRegion %s", r.ToString().c_str());
+                }
             }
             // SetDamageRegion and opDrop will be disabled for dirty region DFX visualization
             if (!isDirtyRegionDfxEnabled_ && !isTargetDirtyRegionDfxEnabled_) {
                 renderFrame->SetDamageRegion(rects);
             }
         }
-        if (isOpDropped_) {
+        if (isOpDropped_ && !isDirtyRegionAlignedEnable_) {
             if (region.isEmpty()) {
                 // [planning] Remove this after frame buffer can release
                 canvas_->clipRect(SkRect::MakeEmpty());
@@ -621,22 +649,30 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             canvas_->clear(SK_ColorTRANSPARENT);
         }
 #endif
-        int saveCount = canvas_->save();
-        canvas_->SetHighContrast(renderEngine_->IsHighContrastEnabled());
-        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
-        if (geoPtr != nullptr) {
-            canvas_->concat(geoPtr->GetMatrix());
-            // enable cache if screen rotation is not times of 90 degree
-            canvas_->SetCacheEnabled(geoPtr->IsNeedClientCompose());
+        if (!isParallel) {
+            int saveCount = canvas_->save();
+            canvas_->SetHighContrast(renderEngine_->IsHighContrastEnabled());
+            auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
+            if (geoPtr != nullptr) {
+                canvas_->concat(geoPtr->GetMatrix());
+                // enable cache if screen rotation is not times of 90 degree
+                canvas_->SetCacheEnabled(geoPtr->IsNeedClientCompose());
+            }
+            ProcessBaseRenderNode(node);
+            canvas_->restoreToCount(saveCount);
+            if (saveLayerCnt > 0) {
+                RS_TRACE_NAME("RSUniRender:RestoreLayer");
+                canvas_->restoreToCount(saveLayerCnt);
+            }
         }
-        ProcessBaseRenderNode(node);
-        canvas_->restoreToCount(saveCount);
-
-        if (saveLayerCnt > 0) {
-            RS_TRACE_NAME("RSUniRender:RestoreLayer");
-            canvas_->restoreToCount(saveLayerCnt);
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+        if (isParallel && isDirtyEmpty) {
+            parallelRenderManager->SetFrameSize(screenInfo_.width, screenInfo_.height_);
+            parallelRenderManager->CopyVisitorAndPackTask(*this, node);
+            parallelRenderManager->LoadBalanceAndNotify();
+            parallelRenderManager->MergeRenderResult(canvas_);
         }
-
+#endif
         if (overdrawListener != nullptr) {
             overdrawListener->Draw();
         }
@@ -854,6 +890,7 @@ void RSUniRenderVisitor::SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRe
         }
         // set display dirty region to surfaceNode
         surfaceNode->SetGloblDirtyRegion(node->GetDirtyManager()->GetDirtyRegion());
+        surfaceNode->SetDirtyRegionAlignedEnable(false);
     }
     Occlusion::Region curVisibleDirtyRegion;
     for (auto it = node->GetCurAllSurfaces().begin(); it != node->GetCurAllSurfaces().end(); ++it) {
@@ -865,6 +902,47 @@ void RSUniRenderVisitor::SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRe
         surfaceNode->SetDirtyRegionBelowCurrentLayer(curVisibleDirtyRegion);
         auto visibleDirtyRegion = surfaceNode->GetVisibleDirtyRegion();
         curVisibleDirtyRegion = curVisibleDirtyRegion.Or(visibleDirtyRegion);
+    }
+}
+
+void RSUniRenderVisitor::SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
+    const Occlusion::Region alignedDirtyRegion)
+{
+    RS_TRACE_FUNC();
+    if (isDirtyRegionAlignedEnable_) {
+        return;
+    }
+    // calcultae extra dirty region after 32 bits alignedment
+    Occlusion::Region dirtyRegion = alignedDirtyRegion;
+    auto globalRectI = node->GetDirtyManager()->GetDirtyRegion();
+    Occlusion::Rect globalRect {globalRectI.left_, globalRectI.top_, globalRectI.GetRight(), globalRectI.GetBottom()};
+    Occlusion::Region globalRegion{globalRect};
+    dirtyRegion.SubSelf(globalRegion);
+    for (auto it = node->GetCurAllSurfaces.rbegin(); it != node->GetCurAllSurfaces.rend(); ++it) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow) {
+            continue;
+        }
+        surfaceNode->SetGlobalDirtyRegion(node->GetDirtyManager()->GetDirtyRegion());
+        Occlusion::Region visibleRegion = surfaceNode->GetVisibleRegion();
+        Occlusion::Region surfaceAlignedDirtyRegion = surfaceNode->GetAlignedVisibleDirtyRegion();
+        if (dirtyRegion.IsEmpty()) {
+            surfaceNode->SetExtraDirtyRegionAfterAlignment(dirtyRegion);
+        } else {
+            auto extraDirtyRegion = (dirtyRegion.Sub(surfaceAlignedDirtyRegion)).And(visibleRegion);
+            surfaceNode->SetExtraDirtyRegionAfterAlignment(extraDirtyRegion);
+        }
+        surfaceNode->SetDirtyRegionAlignedEnable(true);
+    }
+    Occlusion::Region curVisibleDirtyRegion;
+    for (auto it = node->GetCurAllSurfaces().begin(); it != node->GetCurAllSurfaces().end; ++it) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow) {
+            continue;
+        }
+        surfaceNode->SetDirtyRegionBelowCurrentLayer(curVisibleDirtyRegion);
+        auto alignedVisibleDirtyRegion = surfaceNode->GetAlignedVisibleDirtyRegion();
+        curVisibleDirtyRegion.OrSelf(alignedVisibleDirtyRegion);
     }
 }
 
@@ -1143,5 +1221,25 @@ void RSUniRenderVisitor::RecordAppWindowNodeAndPostTask(RSSurfaceRenderNode& nod
     swap(canvas_, recordingCanvas);
     RSColdStartManager::Instance().PostPlayBackTask(node.GetId(), canvas.GetDrawCmdList(), width, height);
 }
+
+void RSUniRenderVisitor::AdaptiveSubRenderThreadMode(uint32_t renderNodeNum)
+{
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    bool isParallel = renderNodeNum >= PARALLEL_RENDER_MINIMUN_RENDER_NODE_NUMBER;
+    auto parallelRenderManager = RSParallelRenderManager::Instance();
+    switch (RSSystemProperities::GetParallelRenderingEnabled()) {
+        case ParallelRenderingType::AUTO:
+            parallelRenderManager->SetParallelMode(isParallel);
+            break;
+        case ParallelRenderingType::DISABLE:
+            parallelRenderManager->SetParallelMode(false);
+            break;
+        case ParallelRenderingType::ENABLE:
+            parallelRenderManager->SetParallelMode(true);
+            break;
+    }
+#endif
+}
+
 } // namespace Rosen
 } // namespace OHOS

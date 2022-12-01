@@ -45,13 +45,13 @@ void RSParallelSubThread::MainLoop()
     pthread_setname_np(pthread_self(), "SubMainThread");
     while (true) {
         WaitTaskSync();
-        if (RSParallelRenderManager::Instance()->IsParallelRendering() == ParallelStatus::OFF) {
+        if (RSParallelRenderManager::Instance()->GetParallelRenderingStatus() == ParallelStatus::OFF) {
             return;
         }
         StartRender();
         Render();
         // FIRSTFLUSH or WAITFIRSTFLUSH
-        if (RSParallelRenderManager::Instance()->IsParallelRendering() != ParallelStatus::ON) {
+        if (RSParallelRenderManager::Instance()->GetParallelRenderingStatus() != ParallelStatus::ON) {
             NotifyRenderEnd();
         }
         Flush();
@@ -173,7 +173,7 @@ void RSParallelSubThread::Flush()
         eglMakeCurrent(renderContext_->GetEGLDisplay(), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     }
     // FIRSTFLUSH or WAITFIRSTFLUSH
-    if (RSParallelRenderManager::Instance()->IsParallelRendering() != ParallelStatus::ON) {
+    if (RSParallelRenderManager::Instance()->GetParallelRenderingStatus() != ParallelStatus::ON) {
         RSParallelRenderManager::Instance()->ReadySubThreadNumIncrement();
     } else {
         NotifyRenderEnd();

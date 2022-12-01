@@ -35,26 +35,49 @@ RSParallelRenderManager* RSParallelRenderManager::Instance()
     return &instance;
 }
 
+void RSParallelRenderManager::SetParallelMode(bool parallelMode)
+{
+    parallelMode_ = parallelMode;
+    TryEnableParallelRendering();
+}
+
+// You should always use GetParallelModeSafe() instead of GetParallelMode()
+// except initialize variable 'isParallel' in 'rs_uni_render_visitor.cpp'
+void RSParallelRenderManager::GetParallelModeSafe() const
+{
+    return GetParallelRenderingStatus() == ParallelStatus::ON;
+}
+
+void RSParallelRenderManager::GetParallelMode() const
+{
+    ParallelStatus status = GetParallelRenderingStatus();
+    return (status == ParallelStatus::ON) || (status == ParallelStatus::FIRSTFLUSH);
+}
+ 
 void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum, RenderContext *context)
 {
-    expectedSUbThreadNum_ = threadNum;
-    firstFlush_ = true;
-    renderContext_ = context;
-    for (int i = 0; i < threadNum; ++i) {
-        auto curThread = std::make_unique<RSParallelSubThread>(context, renderType_, i);
-        curThread->StartSubThread();
-        threadList_.push_back(std::move(curThread));
+    if (GetParallelRenderingStatus() == ParallelStatus::OFF) {
+        expectedSUbThreadNum_ = threadNum;
+        firstFlush_ = true;
+        renderContext_ = context;
+        for (int i = 0; i < threadNum; ++i) {
+            auto curThread = std::make_unique<RSParallelSubThread>(context, renderType_, i);
+            curThread->StartSubThread();
+            threadList_.push_back(std::move(curThread));
+        }
+        taskManager_.Initialize(threadNum);
     }
-    taskManager_.Initialize(threadNum);
 }
 
 void RSParallelRenderManager::EndSubRenderThread()
 {
-    readySubThreadNum_ = expectedSubThreaNum_ = 0;
-    isTaskReady_ = true;
-    cvTask_.notify_all();
-    packVisitor_ = nullptr;
-    std::vector<std::unique_ptr<RSParallelSubThread>>().swap(threadList_);
+    if (GetParallelRenderingStatus() == ParallelStatus::ON) {
+        readySubThreadNum_ = expectedSubThreaNum_ = 0;
+        isTaskReady_ = true;
+        cvTask_.notify_all();
+        packVisitor_ = nullptr;
+        std::vector<std::unique_ptr<RSParallelSubThread>>().swap(threadList_);
+    }
 }
 
 void RSParallelRenderManager::ReadySubThreadNumIncrement()
@@ -62,7 +85,7 @@ void RSParallelRenderManager::ReadySubThreadNumIncrement()
     ++readySubThreadNum_;
 }
 
-ParallelStatus RSParallelRenderManager::isParallelRendering()
+ParallelStatus RSParallelRenderManager::GetParallelRenderingStatus()
 {
     if (expectedSubThreaNum_ == 0) {
         return ParallelStatus::OFF;
@@ -101,7 +124,7 @@ void RSParallelRenderManager::UpdataTaskEvalCost()
 
 void RSParallelRenderManager::MergeRenderResult(std::shared_ptr<SkCanvas> canvas)
 {
-    if (isParallelRendering() == ParallelStatus::FIRSTFLUSH) {
+    if (GetParallelRenderingStatus() == ParallelStatus::FIRSTFLUSH) {
         firstFlush_ = false;
         for (int i = 0; i < expectedSubThreaNum_; ++i) {
             threadList_[i]->WaitFlushReady();
@@ -188,20 +211,11 @@ bool RSParallelRenderManager::ParallelRenderExtEnabled()
 
 void RSParallelRenderManager::TryEnableParallelRendering(ParallelRenderType parallelEnableOption)
 {
-    switch (parallelEnableOption) {
-        case ParallelRenderType::AUTO:
-            break;
-        case ParallelRenderType::DISABLE:
-            if (IsParallelRendering() == ParallelStatus::ON) {
-                EndSubRenderThread();
-            }
-            break;
-        case ParallelRenderType::ENABLE:
-            if (IsParallelRendering() == ParallelStatus::OFF) {
-                StartSubRenderThread(PARALLEL_THREAD_NUM,
-                    RSMainThread::Instance()->GetRenderEngine()->GetRenderContext().get());
-            }
-            break;
+    if (parallelMode_) {
+        StartSubRenderThread(PARALLEL_THREAD_NUM,
+            RSMainThread::Instance()->GetRenderEngine()->GetRenderContext().get());
+    } else {
+        EndSubRenderThread();
     }
 }
 

@@ -48,9 +48,12 @@ enum class ParallelStatus {
 class RSParallelRenderManager {
 public:
     static RSParallelRenderManager *Instance();
+    void SetParallelMode(bool parallelMode);
+    void GetParallelMode() const;
+    void GetParallelModeSafe() const;
     void StartSubRenderThread(uint32_t threadNum, RenderContext *context);
     void EndSubRenderThread();
-    ParallelStatus isParallelRendering();
+    ParallelStatus GetParallelRenderingStatus();
     void CopyVisitorAndPackTask(RSUniRenderVisitor &visitor, RSDisplayRenderNode &node);
     void PackRenderTask(RSSurfaceRenderNode &node);
     void LoadBalanceAndNotify();
@@ -88,6 +91,7 @@ private:
     uint32_t expectedSubThreaNum_= 0;
     std::atomic<uint32_t> readySubThreadNum_ = 0;
     bool firstFlush_ = false;
+    bool parallelMode_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -20,6 +20,7 @@ declare_args() {
   graphic_standard_feature_wuji_enable = false
   graphic_standard_feature_enable_afbc = false
   graphic_standard_feature_freemem_enable = false
+  sk_use_hitrace = false
 }
 
 if (graphic_standard_feature_ace_enable_gpu) {
@@ -64,8 +65,11 @@ if (graphic_standard_feature_enable_afbc) {
   gpu_defines += [ "RS_ENABLE_AFBC" ]
 }
 
-graphic_2d_ext_configs = {
+if (target_os == "ohos" && target_cpu == "arm" && is_standard_system) {
+  sk_use_hitrace = true
 }
+
+graphic_2d_ext_configs = {
 check_graphic_ext_file_script = "//build/ohos/file_exists.py"
 check_graphic_ext_file_args = [
   "--filename",

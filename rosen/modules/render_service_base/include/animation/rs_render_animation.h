@@ -141,6 +141,10 @@ public:
 
     void SetStartTime(int64_t);
 
+    void SetIsRotationAnimation(bool isRotationAnimation)
+    {
+        isRotationAnimation_ = isRotationAnimation;
+    }
 protected:
     explicit RSRenderAnimation(AnimationId id);
     RSRenderAnimation() = default;
@@ -174,6 +178,7 @@ private:
     AnimationState state_ { AnimationState::INITIALIZED };
     bool needUpdateStartTime_ { true };
     bool needInitialize_ { true};
+    bool isRotationAnimation_ { false };
     RSRenderNode* target_ { nullptr };
 };
 } // namespace Rosen

@@ -89,6 +89,7 @@ void RSCurveAnimation::OnStart()
         originValue_->CreateRenderProperty(), startValue_->CreateRenderProperty(), endValue_->CreateRenderProperty());
     animation->SetInterpolator(interpolator);
     animation->SetAdditive(GetAdditive());
+    animation->SetIsRotationAnimation(property_->type_ == RSModifierType::ROTATION);
     UpdateParamToRenderAnimation(animation);
     if (isCustom_) {
         StartUIAnimation(animation);

@@ -86,12 +86,16 @@ public:
     static void SetDrawTextAsBitmap(bool flag);
     static bool GetDrawTextAsBitmap();
 
+    static void SetCacheForDrawTextAsBitmap(bool flag);
+    static bool GetCacheForDrawTextAsBitmap();
 private:
     RSSystemProperties() = default;
 
     static inline bool isUniRenderEnabled_ = false;
     static inline std::atomic_bool isUniRenderMode_ = false;
     inline static bool isDrawTextAsBitmap_ = false;
+    static inline int32_t rotationAnimationCount_ = 0;
+    static inline bool isCachedEnabled_ = false;
 };
 
 } // namespace Rosen

@@ -77,6 +77,8 @@ public:
         return isOnTheTree_;
     }
 
+    virtual bool IsNeedAnimate();
+
     const std::list<SharedPtr>& GetSortedChildren();
 
     void ResetSortedChildren()

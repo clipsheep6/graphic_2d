@@ -250,6 +250,16 @@ RSBaseRenderNode::WeakPtr RSBaseRenderNode::GetParent() const
     return parent_;
 }
 
+bool RSBaseRenderNode::IsNeedAnimate()
+{
+    auto parentNode = parent_.lock();
+    if (parentNode == nullptr) {
+        return false;
+    }
+
+    return parentNode->IsNeedAnimate();
+}
+
 void RSBaseRenderNode::DumpTree(int32_t depth, std::string& out) const
 {
     std::string space = "  ";

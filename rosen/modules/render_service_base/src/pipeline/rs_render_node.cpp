@@ -67,7 +67,8 @@ void RSRenderNode::FallbackAnimationsToRoot()
 
 std::pair<bool, bool> RSRenderNode::Animate(int64_t timestamp)
 {
-    return animationManager_.Animate(timestamp, IsOnTheTree());
+    bool isNeedAnimate = animationManager_.HasCircleAnimation() ? IsNeedAnimate() : true;
+    return animationManager_.Animate(timestamp, isNeedAnimate);
 }
 
 bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty)

@@ -20,6 +20,9 @@
 #include "rs_base_render_util.h"
 #include "rs_main_thread.h"
 #include "socperf_client.h"
+#include "frame_trace.h"
+
+using namespace FRAME_TRACE;
 
 namespace OHOS {
 namespace Rosen {
@@ -27,7 +30,6 @@ namespace {
 constexpr uint32_t PERF_LEVEL_0 = 0;
 constexpr uint32_t PERF_LEVEL_1 = 1;
 constexpr uint32_t PERF_LEVEL_2 = 2;
-constexpr int32_t PERF_LEVEL_1_REQUESTED_CODE = 10013;
 constexpr int32_t PERF_LEVEL_2_REQUESTED_CODE = 10014;
 constexpr int32_t PERF_LEVEL_3_REQUESTED_CODE = 10015;
 constexpr int64_t PERF_TIME_OUT = 1000;
@@ -38,20 +40,31 @@ void RequestPerf(uint32_t layerLevel, bool onOffTag)
     switch (layerLevel) {
         case PERF_LEVEL_0: {
             // do nothing
+            if (FrameAwareTraceIsOpen()) {
+                FrameAwareTraceClose();
+            }
             RS_LOGI("RsDebug RSProcessor::Perf: do nothing");
             break;
         }
         case PERF_LEVEL_1: {
-            OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequestEx(PERF_LEVEL_1_REQUESTED_CODE, onOffTag, "");
+            if (!FrameAwareTraceIsOpen()) {
+                FrameAwareTraceOpen();
+            }
             RS_LOGI("RsDebug RSProcessor::Perf: level1 %d", onOffTag);
             break;
         }
         case PERF_LEVEL_2: {
+            if (FrameAwareTraceIsOpen()) {
+                FrameAwareTraceClose();
+            }
             OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequestEx(PERF_LEVEL_2_REQUESTED_CODE, onOffTag, "");
             RS_LOGI("RsDebug RSProcessor::Perf: level2 %d", onOffTag);
             break;
         }
         default: {
+            if (FrameAwareTraceIsOpen()) {
+                FrameAwareTraceClose();
+            }
             OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequestEx(PERF_LEVEL_3_REQUESTED_CODE, onOffTag, "");
             RS_LOGI("RsDebug RSProcessor::Perf: level3 %d", onOffTag);
             break;

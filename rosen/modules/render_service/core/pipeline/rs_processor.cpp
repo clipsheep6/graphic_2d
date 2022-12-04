@@ -20,6 +20,9 @@
 #include "rs_base_render_util.h"
 #include "rs_main_thread.h"
 #include "socperf_client.h"
+#include "frame_trace.h"
+
+using namespace FRAME_TRACE;
 
 namespace OHOS {
 namespace Rosen {
@@ -32,6 +35,7 @@ constexpr int32_t PERF_LEVEL_2_REQUESTED_CODE = 10014;
 constexpr int32_t PERF_LEVEL_3_REQUESTED_CODE = 10015;
 constexpr int64_t PERF_TIME_OUT = 1000;
 constexpr uint32_t PERF_LEVEL_INTERVAL = 10;
+constexpr size_t FRAME_TRACE_LAYER_NUM = 11;
 
 void RequestPerf(uint32_t layerLevel, bool onOffTag)
 {
@@ -134,6 +138,15 @@ void RSProcessor::MultiLayersPerf(size_t layerNum)
     if (curLayerLevel != lastLayerLevel || isTimeOut) {
         if (!isTimeOut) {
             RequestPerf(lastLayerLevel, false);
+        }
+        if (layerNum == FRAME_TRACE_LAYER_NUM) {
+            if (!FrameAwareTraceIsOpen()) {
+              FrameAwareTraceOpen();
+            }
+        } else {
+            if (FrameAwareTraceIsOpen()) {
+                FrameAwareTraceClose();
+            }
         }
         RequestPerf(curLayerLevel, true);
         lastLayerLevel = curLayerLevel;

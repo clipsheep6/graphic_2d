@@ -114,7 +114,7 @@ sk_sp<SkImage> RSBaseRenderEngine::CreateEglImageFromBuffer(
 }
 
 std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::shared_ptr<RSSurfaceOhos>& rsSurface,
-    const BufferRequestConfig& config, bool forceCPU)
+    const BufferRequestConfig& config, bool forceCPU, bool useAFBC)
 {
     RS_TRACE_NAME("RSBaseRenderEngine::RequestFrame(RSSurface)");
     if (rsSurface == nullptr) {
@@ -139,7 +139,7 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
     }
 #endif
 
-    auto surfaceFrame = rsSurface->RequestFrame(config.width, config.height);
+    auto surfaceFrame = rsSurface->RequestFrame(config.width, config.height, 0, useAFBC);
     if (surfaceFrame == nullptr) {
         RS_LOGE("RSBaseRenderEngine::RequestFrame: request SurfaceFrame failed!");
         return nullptr;
@@ -149,7 +149,7 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
 }
 
 std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const sptr<Surface>& targetSurface,
-    const BufferRequestConfig& config, bool forceCPU)
+    const BufferRequestConfig& config, bool forceCPU, bool useAFBC)
 {
     RS_TRACE_NAME("RSBaseRenderEngine::RequestFrame(Surface)");
     if (targetSurface == nullptr) {
@@ -170,7 +170,7 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const sptr<Surfa
 #endif // (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
     }
 
-    return RequestFrame(rsSurfaces_.at(surfaceId), config, forceCPU);
+    return RequestFrame(rsSurfaces_.at(surfaceId), config, forceCPU, useAFBC);
 }
 
 void RSBaseRenderEngine::SetUiTimeStamp(const std::unique_ptr<RSRenderFrame>& renderFrame, const uint64_t surfaceId)

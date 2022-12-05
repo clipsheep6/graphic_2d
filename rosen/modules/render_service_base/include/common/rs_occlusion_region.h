@@ -46,7 +46,8 @@ public:
 
     bool operator==(const Rect& r) const
     {
-        return left_ == r.left_ && top_ == r.top_ && right_ == r.right_ && bottom_ == r.bottom_;
+        return (left_ == r.left_ && top_ == r.top_ && right_ == r.right_ && bottom_ == r.bottom_) ||
+            (IsEmpty() && r.IsEmpty());
     }
 
     bool operator!=(const Rect& r) const

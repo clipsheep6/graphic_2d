@@ -69,16 +69,16 @@ void RSAnimationManager::FilterAnimationByPid(pid_t pid)
     });
 }
 
-std::pair<bool, bool> RSAnimationManager::Animate(int64_t time, bool nodeIsOnTheTree)
+std::pair<bool, bool> RSAnimationManager::Animate(int64_t time, bool isNeedAnimate)
 {
     // process animation
     bool hasRunningAnimation = false;
     bool needRequestNextVsync = false;
     // iterate and execute all animations, remove finished animations
     std::__libcpp_erase_if_container(animations_, [this, &hasRunningAnimation, time,
-        &needRequestNextVsync, nodeIsOnTheTree](auto& iter) -> bool {
+        &needRequestNextVsync, isNeedAnimate](auto& iter) -> bool {
         auto& animation = iter.second;
-        if (!nodeIsOnTheTree && animation->GetRepeatCount() == -1) {
+        if (!isNeedAnimate && animation->GetRepeatCount() == -1) {
             hasRunningAnimation = animation->IsRunning() || hasRunningAnimation;
             return false;
         }
@@ -108,11 +108,22 @@ const std::shared_ptr<RSRenderAnimation> RSAnimationManager::GetAnimation(Animat
 void RSAnimationManager::OnAnimationRemove(const std::shared_ptr<RSRenderAnimation>& animation)
 {
     animationNum_[animation->GetPropertyId()]--;
+    if (animation->GetRepeatCount() == -1) {
+        circleAnimationCount_--;
+    }
 }
 
 void RSAnimationManager::OnAnimationAdd(const std::shared_ptr<RSRenderAnimation>& animation)
 {
     animationNum_[animation->GetPropertyId()]++;
+    if (animation->GetRepeatCount() == -1) {
+        circleAnimationCount_++;
+    }
+}
+
+bool RSAnimationManager::HasCircleAnimation()
+{
+    return circleAnimationCount_ > 0;
 }
 
 namespace {

@@ -72,6 +72,11 @@ public:
         return nodeType_;
     }
 
+    bool IsNeedAnimate() override
+    {
+        return IsOnTheTree();
+    }
+
     void SetSurfaceNodeType(RSSurfaceNodeType nodeType)
     {
         if (nodeType_ != RSSurfaceNodeType::ABILITY_COMPONENT_NODE) {

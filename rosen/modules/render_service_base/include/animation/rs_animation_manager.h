@@ -41,12 +41,14 @@ public:
     const std::shared_ptr<RSRenderAnimation> GetAnimation(AnimationId id) const;
     void FilterAnimationByPid(pid_t pid);
 
-    std::pair<bool, bool> Animate(int64_t time, bool nodeIsOnTheTree);
+    std::pair<bool, bool> Animate(int64_t time, bool isNeedAnimate);
 
     // spring animation related
     void RegisterSpringAnimation(PropertyId propertyId, AnimationId animId);
     void UnregisterSpringAnimation(PropertyId propertyId, AnimationId animId);
     std::shared_ptr<RSRenderAnimation> QuerySpringAnimation(PropertyId propertyId);
+
+    bool HasCircleAnimation();
 
 private:
     void OnAnimationRemove(const std::shared_ptr<RSRenderAnimation>& animation);
@@ -56,6 +58,7 @@ private:
     std::unordered_map<AnimationId, std::shared_ptr<RSRenderAnimation>> animations_;
     std::unordered_map<PropertyId, int> animationNum_;
     std::unordered_map<PropertyId, AnimationId> springAnimations_;
+    int32_t circleAnimationCount_ { 0 };
 
     friend class RSRenderNode;
 };

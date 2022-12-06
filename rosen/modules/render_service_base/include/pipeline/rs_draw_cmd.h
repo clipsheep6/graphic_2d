@@ -35,6 +35,7 @@
 #include "property/rs_properties_def.h"
 #include "render/rs_image.h"
 #include "transaction/rs_marshalling_helper.h"
+#include "memory/StringX.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -93,6 +94,9 @@ public:
     virtual ~OpItem() {}
 
     virtual void Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const {};
+
+    virtual void setImageNodeID(uint64_t nodeId) {}
+
     virtual RSOpType GetType() const = 0;
 
     std::unique_ptr<OpItem> GenerateCachedOpItem(SkSurface* surface) const;
@@ -173,6 +177,11 @@ public:
     RSOpType GetType() const override
     {
         return RSOpType::IMAGE_WITH_PARM_OPITEM;
+    }
+
+    void setImageNodeID(uint64_t nodeId) override{
+        StringX::GetInstance().LOG("setImageNodeID %s, %s", std::to_string(rsImage_->GetId()).c_str(), std::to_string(nodeId).c_str());
+        rsImage_->SetNodeID(nodeId);
     }
 
 #ifdef ROSEN_OHOS

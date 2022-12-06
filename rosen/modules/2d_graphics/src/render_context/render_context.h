@@ -97,6 +97,15 @@ public:
         isUniRenderMode_ = isUni;
     }
 
+    std::string GetShaderCacheSize() const
+    {
+        return mHandler_->QuerryShader();
+    }
+
+    std::string CleanAllShaderCache() const
+    {
+        return mHandler_->ClearShader();
+    }
 private:
     sk_sp<GrContext> grContext_;
     sk_sp<SkSurface> skSurface_;

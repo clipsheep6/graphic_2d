@@ -25,6 +25,7 @@
 #else
 #include "common/rs_obj_geometry.h"
 #endif
+#include "memory/StringX.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -527,6 +528,8 @@ std::shared_ptr<RSShader> RSProperties::GetBackgroundShader() const
 
 void RSProperties::SetBgImage(std::shared_ptr<RSImage> image)
 {
+    StringX::GetInstance().LOG("RSProperties::SetBgImage %s, SetNodeID %s", std::to_string(image->GetId()).c_str(), std::to_string(nodeId_).c_str());
+    image->SetNodeID(nodeId_);
     if (!decoration_) {
         decoration_ = std::make_unique<Decoration>();
     }

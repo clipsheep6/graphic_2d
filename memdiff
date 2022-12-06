@@ -1,0 +1,462 @@
+diff --git a/rosen/modules/render_service/BUILD.gn b/rosen/modules/render_service/BUILD.gn
+index 1c504e16..bc645422 100644
+--- a/rosen/modules/render_service/BUILD.gn
++++ b/rosen/modules/render_service/BUILD.gn
+@@ -54,6 +54,8 @@ ohos_shared_library("librender_service") {
+     "core/screen_manager/rs_screen_manager.cpp",
+     "core/transaction/rs_render_service_connection_stub.cpp",
+     "core/transaction/rs_render_service_stub.cpp",
++    "core/memory/MemoryManager.cpp",
++    "core/memory/SkiaMemoryTracer.cpp",
+   ]
+ 
+   if (rs_enable_eglimage) {
+diff --git a/rosen/modules/render_service/core/pipeline/rs_main_thread.cpp b/rosen/modules/render_service/core/pipeline/rs_main_thread.cpp
+index 74c1daca..e8bccee4 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_main_thread.cpp
++++ b/rosen/modules/render_service/core/pipeline/rs_main_thread.cpp
+@@ -45,6 +45,11 @@
+ #include "accessibility_config.h"
+ #include "rs_qos_thread.h"
+ #include "xcollie/watchdog.h"
++#include <SkGraphics.h>
++#include <parameters.h>
++#include "memory/MemoryManager.h"
++#include "render/rs_image_cache.h"
++#include "memory/StringX.h"
+ 
+ #include "frame_trace.h"
+ using namespace FRAME_TRACE;
+@@ -1118,6 +1123,73 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
+     }
+ }
+ 
++void RSMainThread::trimMem(std::unordered_set<std::u16string>& argSets, std::string& result)
++{
++    std::string type;
++    argSets.erase(u"trimMem");
++    if(!argSets.empty()) {
++        type = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(*argSets.begin());
++    }
++
++    result.append("trimMem: " + type + "\n");
++    auto grContext = renderEngine_->GetRenderContext()->GetGrContext();
++    if(type.empty() || type =="cpu") {
++        grContext->flush();
++        SkGraphics::PurgeAllCaches();
++        GrContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
++    } else if (type.empty() || type == "gpu") {
++        grContext->flush();
++        grContext->freeGpuResources();
++        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
++    } else if(type.empty() || type == "image") {
++        //
++        // clear node not on tree
++        auto& nodeMap = GetContext().GetNodeMap();
++        nodeMap.TraversalNodes([&result, &nodeMap](const std::shared_ptr<RSBaseRenderNode>& node) {
++            if (!node->IsOnTheTree()) {
++                if(node->IsInstanceOf<RSSurfaceRenderNode>()) {
++                    const auto& surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
++                    if (surfaceNode->GetName() == "RecentView") {
++                        result.append("find node\n");
++                        surfaceNode->DumpTree(10, result);
++                        auto children = node->GetSortedChildren();
++                        for (auto child : ClipByChildren) {
++                            result.append("\nrelease " + std::to_string(child->GetId())) + "\n";
++                            child->ClearChildren();
++                            child->RemoveFromTree();
++                            //
++                        }
++                    }
++                }
++            }
++//
++        });
++    } else if(type.empty() || type == "uihidden"){
++        grContext->flush();
++        //
++        //
++        //
++        grContext->purgeUnlockedResources(true);
++        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
++    } else if (type.empty() || type == "flog") {
++        result.append(StringX::GetInstance());
++    } else if(type.empty() || type == "flogc") {
++        StringX::GetInstance().clear();
++    } else {
++        type = "error";
++    }
++}
++
++void RSMainThread::dumpMem(std::string& result) const
++{
++    // dump skia
++    StringX log;
++
++    auto& coldstartthreadmap = RSColdStartManager::Instance().coldStartThreadMap_;
++    MemoryManager::dumpMemoryUsage(log, renderEngine_->GetRenderContext()->GetGrContext(), coldstartthreadmap);
++    result.append(log);
++}
++
+ void RSMainThread::AddTransactionDataPidInfo(pid_t remotePid)
+ {
+     if (!isUniRender_) {
+diff --git a/rosen/modules/render_service/core/pipeline/rs_main_thread.h b/rosen/modules/render_service/core/pipeline/rs_main_thread.h
+index 47b44bc3..35a464fb 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_main_thread.h
++++ b/rosen/modules/render_service/core/pipeline/rs_main_thread.h
+@@ -125,6 +125,8 @@ public:
+ 
+     void SetDirtyFlag();
+     void ForceRefreshForUni();
++    void trimMem(std::unordered_set<std::u16string>& argSets, std::string& result);
++    void dumpMem(std::string& result) const;
+ private:
+     using TransactionDataIndexMap = std::unordered_map<pid_t,
+         std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;
+diff --git a/rosen/modules/render_service/core/pipeline/rs_render_service.cpp b/rosen/modules/render_service/core/pipeline/rs_render_service.cpp
+index 6b06e094..77f6f5b9 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_render_service.cpp
++++ b/rosen/modules/render_service/core/pipeline/rs_render_service.cpp
+@@ -212,6 +212,7 @@ void RSRenderService::DumpHelpInfo(std::string& dumpString) const
+         .append("|dump EventParamList info\n")
+         .append("allInfo                        ")
+         .append("|dump all info\n");
++        .append("trimMem    | release memory");
+ }
+ 
+ void RSRenderService::FPSDUMPProcess(std::unordered_set<std::u16string>& argSets,
+@@ -257,6 +258,8 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
+     std::u16string arg7(u"EventParamList");
+     std::u16string arg8(u"h");
+     std::u16string arg9(u"allInfo");
++    std::u16string arg10(u"trimMem");
++    std::u16string arg11(u"dumpMem");
+     if (argSets.count(arg9) || argSets.count(arg1) != 0) {
+         mainThread_->ScheduleTask([this, &dumpString]() {
+             screenManager_->DisplayDump(dumpString);
+@@ -287,6 +290,16 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
+             DumpRSEvenParam(dumpString);
+         }).wait();
+     }
++    if (argSets.count(arg10)) {
++        maintThread_->ScheduleTask([this, &argSets, &dumpString]() {
++            return mainThread_->trimMem(argSets, dumpString);
++        }).wait();
++    }
++    if (argSets.count(arg11)) {
++        mainThread_->ScheduleTask([this, &dumpString]() {
++            return mainThread_->dumpMem(dumpString);
++        }).wait();
++    }
+     FPSDUMPProcess(argSets, dumpString, arg3);
+     if (argSets.size() == 0 || argSets.count(arg8) != 0 || dumpString.empty()) {
+         mainThread_->ScheduleTask([this, &dumpString]() {
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_draw_cmd.h b/rosen/modules/render_service_base/include/pipeline/rs_draw_cmd.h
+index 2ab74448..c91a55d1 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_draw_cmd.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_draw_cmd.h
+@@ -35,6 +35,7 @@
+ #include "property/rs_properties_def.h"
+ #include "render/rs_image.h"
+ #include "transaction/rs_marshalling_helper.h"
++#include "memory/StringX.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -93,6 +94,9 @@ public:
+     virtual ~OpItem() {}
+ 
+     virtual void Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const {};
++
++    virtual void setImageNodeID(uint64_t nodeId) {}
++
+     virtual RSOpType GetType() const = 0;
+ 
+     std::unique_ptr<OpItem> GenerateCachedOpItem(SkSurface* surface) const;
+@@ -175,6 +179,11 @@ public:
+         return RSOpType::IMAGE_WITH_PARM_OPITEM;
+     }
+ 
++    void setImageNodeID(uint64_t nodeId) override{
++        StringX::GetInstance().LOG("setImageNodeID %s, %s", std::to_string(rsImage_->GetId()).c_str(), std::to_string(nodeId).c_str());
++        rsImage_->SetNodeID(NodeId);
++    }
++
+ #ifdef ROSEN_OHOS
+     bool Marshalling(Parcel& parcel) const override;
+     static OpItem* Unmarshalling(Parcel& parcel);
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_draw_cmd_list.h b/rosen/modules/render_service_base/include/pipeline/rs_draw_cmd_list.h
+index 31e67165..0e8b4259 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_draw_cmd_list.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_draw_cmd_list.h
+@@ -55,6 +55,7 @@ public:
+     int GetWidth() const;
+     int GetHeight() const;
+ 
++    void setNodeId(uint64_t nodeId);
+     void GenerateCache(SkSurface* surface);
+     void ClearCache();
+ 
+diff --git a/rosen/modules/render_service_base/include/property/rs_properties.h b/rosen/modules/render_service_base/include/property/rs_properties.h
+index 8a1ca990..a7c53bbe 100644
+--- a/rosen/modules/render_service_base/include/property/rs_properties.h
++++ b/rosen/modules/render_service_base/include/property/rs_properties.h
+@@ -195,6 +195,11 @@ public:
+     void CheckEmptyBounds();
+     void ResetBounds();
+ 
++    void SetNodeID(uint64_t nodeId)
++    {
++        nodeId_ = nodeId;
++    }
++
+     bool IsGeoDirty() const;
+ 
+ private:
+@@ -226,6 +231,7 @@ private:
+ 
+     float alpha_ = 1.f;
+     bool alphaOffscreen_ = true;
++    uint64_t nodeId_;
+ 
+     std::shared_ptr<RSObjGeometry> boundsGeo_;
+     std::shared_ptr<RSObjGeometry> frameGeo_;
+diff --git a/rosen/modules/render_service_base/include/render/rs_image.h b/rosen/modules/render_service_base/include/render/rs_image.h
+index c34d0510..075daaf3 100644
+--- a/rosen/modules/render_service_base/include/render/rs_image.h
++++ b/rosen/modules/render_service_base/include/render/rs_image.h
+@@ -77,6 +77,9 @@ public:
+     void SetRadius(const SkVector radius[]);
+     void SetScale(double scale);
+     void SetCompressData(const sk_sp<SkData> data, uint32_t id, int width, int height);
++    uint64_t GetId() { return uniqueId_; }
++    void SetNodeID(uint64_t nodeId);
++    uint64_t GetNodeId() { return nodeId_; } 
+ #ifdef ROSEN_OHOS
+     bool Marshalling(Parcel& parcel) const;
+     static RSImage* Unmarshalling(Parcel& parcel);
+@@ -100,7 +103,7 @@ private:
+     RectF dstRect_;
+     RectF frameRect_;
+     double scale_ = 1.0;
+-    uint64_t uniqueId_;
++    uint64_t uniqueId_, nodeId_;
+ };
+ 
+ template<>
+diff --git a/rosen/modules/render_service_base/include/render/rs_image_cache.h b/rosen/modules/render_service_base/include/render/rs_image_cache.h
+index 64cff0f2..e03d1c8d 100644
+--- a/rosen/modules/render_service_base/include/render/rs_image_cache.h
++++ b/rosen/modules/render_service_base/include/render/rs_image_cache.h
+@@ -19,6 +19,7 @@
+ #include <mutex>
+ #include <unordered_map>
+ #include "include/core/SkImage.h"
++#include <functional>
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -27,9 +28,11 @@ public:
+     static RSImageCache& Instance();
+ 
+     void CacheSkiaImage(uint64_t uniqueId, sk_sp<SkImage> img);
++    void SetNodeId(uint64_t uniquedId, uint64_t nodeId);
+     sk_sp<SkImage> GetSkiaImageCache(uint64_t uniqueId) const;
+     void ReleaseSkiaImageCache(uint64_t uniqueId);
+ 
++    void DumpMemoryStatistics(std::string& log, std::function<std::string (uint64_t)> func);
+     RSImageCache() = default;
+     ~RSImageCache() = default;
+ 
+@@ -41,6 +44,7 @@ private:
+ 
+     mutable std::mutex mutex_;
+     std::unordered_map<uint64_t, sk_sp<SkImage>> skiaImageCache_;
++    std::unordered_map<uint64_t, uint64_t> IdMap_;
+ };
+ } // namespace Rosen
+ } // namespace OHOS
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_draw_cmd_list.cpp b/rosen/modules/render_service_base/src/pipeline/rs_draw_cmd_list.cpp
+index 69b1e116..65636e59 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_draw_cmd_list.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_draw_cmd_list.cpp
+@@ -88,6 +88,16 @@ DrawCmdList::~DrawCmdList()
+     ClearOp();
+ }
+ 
++void DrawCmdList::setNodeId(uint64_t nodeId){
++    for(auto& item : ops_){
++        if(item == nullptr){
++            return;
++        }
++        if(item->GetType() == RSOpType::IMAGE_WITH_PARM_OPITEM) {
++            item->setImageNodeID(nodeId);
++        }
++    }
++}
+ void DrawCmdList::AddOp(std::unique_ptr<OpItem>&& op)
+ {
+     std::lock_guard<std::mutex> lock(mutex_);
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
+index e2744618..130c1d21 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
+@@ -27,6 +27,7 @@
+ #include "pipeline/rs_paint_filter_canvas.h"
+ #include "property/rs_properties_painter.h"
+ #endif
++#include "memory/StringX.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -224,6 +225,13 @@ void RSRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
+ 
+ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
+ {
++    RSModifierType type = modifier->GetType();
++    if(type >= RSModifierType::CUSTOM) {
++        auto renderProperty = std::static_pointer_cast<RSRenderProperty<DrawCmdListPtr>>(modifier->GetProperty());
++        auto drawCmdList = renderProperty->Get();
++        drawCmdList->setNodeId(GetId());
++    }
++
+     if (!modifier) {
+         return;
+     }
+@@ -280,6 +288,7 @@ void RSRenderNode::ApplyModifiers()
+     }
+     RSModifierContext context = { GetMutableRenderProperties() };
+     context.property_.Reset();
++    context.property_.SetNodeID(GetId());
+     for (auto& [id, modifier] : modifiers_) {
+         if (modifier) {
+             modifier->Apply(context);
+diff --git a/rosen/modules/render_service_base/src/property/rs_properties.cpp b/rosen/modules/render_service_base/src/property/rs_properties.cpp
+index a0e79463..3a885d75 100644
+--- a/rosen/modules/render_service_base/src/property/rs_properties.cpp
++++ b/rosen/modules/render_service_base/src/property/rs_properties.cpp
+@@ -25,6 +25,7 @@
+ #else
+ #include "common/rs_obj_geometry.h"
+ #endif
++#include "memory/StringX.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -527,6 +528,8 @@ std::shared_ptr<RSShader> RSProperties::GetBackgroundShader() const
+ 
+ void RSProperties::SetBgImage(std::shared_ptr<RSImage> image)
+ {
++    StringX::GetInstance().LOG("RSProperties::SetBgImage %s, SetNodeID %s", std::to_string(image->GetId()).c_str(), std::to_string(nodeId_).c_str());
++    image->SetNodeID(nodeId_);
+     if (!decoration_) {
+         decoration_ = std::make_unique<Decoration>();
+     }
+diff --git a/rosen/modules/render_service_base/src/render/rs_image.cpp b/rosen/modules/render_service_base/src/render/rs_image.cpp
+index 723b9d9f..4d178809 100644
+--- a/rosen/modules/render_service_base/src/render/rs_image.cpp
++++ b/rosen/modules/render_service_base/src/render/rs_image.cpp
+@@ -23,6 +23,7 @@
+ #include "render/rs_image_cache.h"
+ #include "rs_trace.h"
+ #include "sandbox_utils.h"
++#include "memory/StringX.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -61,6 +62,12 @@ void RSImage::CanvasDrawImage(SkCanvas& canvas, const SkRect& rect, const SkPain
+     canvas.restore();
+ }
+ 
++void RSImage::SetNodeID(uint64_t nodeId)
++{
++    nodeId_ = nodeId;
++    RSImageCache::Instance().SetNodeId(uniqueId_, nodeId_);
++}
++
+ void RSImage::ApplyImageFit()
+ {
+     const float srcW = srcRect_.width_ / scale_;
+@@ -139,6 +146,7 @@ void RSImage::UploadGpu(SkCanvas& canvas)
+         }
+     }
+ #endif
++    RSImageCache::Instance().SetNodeId(uniqueId_, nodeId_);
+ }
+ 
+ void RSImage::DrawImageRepeatRect(const SkPaint& paint, SkCanvas& canvas)
+diff --git a/rosen/modules/render_service_base/src/render/rs_image_cache.cpp b/rosen/modules/render_service_base/src/render/rs_image_cache.cpp
+index 624adf1b..0bcc73bc 100644
+--- a/rosen/modules/render_service_base/src/render/rs_image_cache.cpp
++++ b/rosen/modules/render_service_base/src/render/rs_image_cache.cpp
+@@ -14,6 +14,8 @@
+  */
+ 
+ #include "render/rs_image_cache.h"
++#include "memory/StringX.h"
++#include "platform/common/rs_log.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -33,6 +35,11 @@ void RSImageCache::CacheSkiaImage(uint64_t uniqueId, sk_sp<SkImage> img)
+     }
+ }
+ 
++void RSImageCache::SetNodeId(unit64_t uniqueId, unit64_t nodeId)
++{
++    IdMap_.emplace(uniqueId, nodeId);
++}
++
+ sk_sp<SkImage> RSImageCache::GetSkiaImageCache(uint64_t uniqueId) const
+ {
+     std::lock_guard<std::mutex> lock(mutex_);
+@@ -51,6 +58,48 @@ void RSImageCache::ReleaseSkiaImageCache(uint64_t uniqueId)
+     if (it != skiaImageCache_.end() && (!it->second || it->second->unique())) {
+         skiaImageCache_.erase(it);
+     }
++    auto it2 = IdMap_.find(uniqueId);
++    if (it2 != IdMap_end()) {
++        IdMap_.erase(it2);
++    }
++}
++
++int CalcImageSize(sk_sp<SkImage> image) {
++    int bytes = 0;
++    auto colorType = image->colorType();
++    switch (colorType) {
++        case SkColorType::kRGBA_8888_SkColorType:
++        case SkColorType::kRGB_888x_SkColorType:
++        case SkColorType::KbGRA_8888_SkColorType:
++        case SkColorType::kRGBA_1010102_SkColorType:
++        case SkColorType::kRGB_101010x_SkColorType:
++            bytes = 4;
++            break;
++        case SkColorType::kAlpha_8_SkColorType:
++        case SkColorType::kGray_8_SkColorType:
++            bytes = 1;
++            break;
++        case SkColorType::kARGB_4444_SkColorType:
++        case SkColorType::kRGB_565_SkColorType:
++            bytes = 8;
++            break;
++        case SkColorType::kRGBA_F32_SkColorType:
++            bytes = 16;
++            break;
++        default:
++            break;
++    }
++    return bytes * image->width() * image->height() / 1024; 
++}
++
++void RSImageCache::DumpMemoryStatistics(std::string& log, std::function<std::string (uint64_t)>funlockfile) 
++{
++    std::lock_guard<std::mutex> lock(mutex_);
++    log.append("RSImageCache:\n");
++    log.append("id\t\tnid\t\tpid\tsize\trefcnt\ttype\t\twindow\n");
++
++    int totalsize = 0, size, count = 0;
++    for(auto)
+ }
+ } // namespace Rosen
+ } // namespace OHOS

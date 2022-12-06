@@ -55,6 +55,7 @@ public:
     int GetWidth() const;
     int GetHeight() const;
 
+    void SetNodeId(uint64_t nodeId);
     void GenerateCache(SkSurface* surface);
     void ClearCache();
 

@@ -88,6 +88,16 @@ DrawCmdList::~DrawCmdList()
     ClearOp();
 }
 
+void DrawCmdList::SetNodeId(uint64_t nodeId){
+    for(auto& item : ops_){
+        if(item == nullptr){
+            return;
+        }
+        if(item->GetType() == RSOpType::IMAGE_WITH_PARM_OPITEM) {
+            item->setImageNodeID(nodeId);
+        }
+    }
+}
 void DrawCmdList::AddOp(std::unique_ptr<OpItem>&& op)
 {
     std::lock_guard<std::mutex> lock(mutex_);

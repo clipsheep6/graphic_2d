@@ -45,6 +45,11 @@
 #include "accessibility_config.h"
 #include "rs_qos_thread.h"
 #include "xcollie/watchdog.h"
+#include <SkGraphics.h>
+#include <parameters.h>
+#include "memory/MemoryManager.h"
+#include "render/rs_image_cache.h"
+#include "memory/StringX.h"
 
 #include "frame_trace.h"
 using namespace FRAME_TRACE;
@@ -1116,6 +1121,70 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
         lastCleanCacheTimestamp_ = timestamp_;
 #endif
     }
+}
+
+void RSMainThread::trimMem(std::unordered_set<std::u16string>& argSets, std::string& result)
+{
+    std::string type;
+    argSets.erase(u"trimMem");
+    if(!argSets.empty()) {
+        type = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(*argSets.begin());
+    }
+
+    result.append("trimMem: " + type + "\n");
+    auto grContext = renderEngine_->GetRenderContext()->GetGrContext();
+    if(type.empty() || type =="cpu") {
+        grContext->flush();
+        SkGraphics::PurgeAllCaches();
+        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+    } else if (type.empty() || type == "gpu") {
+        grContext->flush();
+        grContext->freeGpuResources();
+        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+    } else if(type.empty() || type == "image") {
+        // clear node not on tree
+        auto& nodeMap = GetContext().GetNodeMap();
+        nodeMap.TraversalNodes([&result, &nodeMap](const std::shared_ptr<RSBaseRenderNode>& node) {
+            if (!node->IsOnTheTree()) {
+                if(node->IsInstanceOf<RSSurfaceRenderNode>()) {
+                    const auto& surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
+                    if (surfaceNode->GetName() == "RecentView") {
+                        result.append("find node\n");
+                        surfaceNode->DumpTree(10, result);
+                        auto children = node->GetSortedChildren();
+                        for (auto child : children) {
+                            result.append("\nrelease " + std::to_string(child->GetId())+ "\n");
+                            child->ClearChildren();
+                            child->RemoveFromTree();
+                        }
+                    }
+                }
+            }
+        });
+    } else if(type.empty() || type == "uihidden"){
+        grContext->flush();
+        //
+        //
+        //
+        grContext->purgeUnlockedResources(true);
+        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+    } else if (type.empty() || type == "flog") {
+        result.append(StringX::GetInstance());
+    } else if(type.empty() || type == "flogc") {
+        StringX::GetInstance().clear();
+    } else {
+        type = "error";
+    }
+}
+
+void RSMainThread::dumpMem(std::string& result) const
+{
+    // dump skia
+    StringX log;
+
+    auto& coldstartthreadmap = RSColdStartManager::Instance().coldStartThreadMap_;
+    MemoryManager::dumpMemoryUsage(log, renderEngine_->GetRenderContext()->GetGrContext(), coldstartthreadmap);
+    result.append(log);
 }
 
 void RSMainThread::AddTransactionDataPidInfo(pid_t remotePid)

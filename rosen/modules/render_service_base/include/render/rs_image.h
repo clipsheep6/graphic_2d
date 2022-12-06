@@ -77,6 +77,9 @@ public:
     void SetRadius(const SkVector radius[]);
     void SetScale(double scale);
     void SetCompressData(const sk_sp<SkData> data, uint32_t id, int width, int height);
+    uint64_t GetId() { return uniqueId_; }
+    void SetNodeID(uint64_t nodeId);
+    uint64_t GetNodeId() { return nodeId_; } 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const;
     static RSImage* Unmarshalling(Parcel& parcel);
@@ -100,7 +103,7 @@ private:
     RectF dstRect_;
     RectF frameRect_;
     double scale_ = 1.0;
-    uint64_t uniqueId_;
+    uint64_t uniqueId_, nodeId_;
 };
 
 template<>

@@ -45,6 +45,9 @@ public:
     void PostPlayBackTask(std::shared_ptr<DrawCmdList> drawCmdList, float width, float height);
     void Stop();
     void PostTask(std::function<void()> task);
+    std::vector<SurfaceNodeResource> GetResource() {
+        return resourceVector_;
+    }
 
 private:
 #ifdef RS_ENABLE_GL
@@ -77,6 +80,7 @@ public:
     void StopColdStartThread(NodeId id);
     void DestroyColdStartThread(NodeId id);
     void CheckColdStartMap(const RSRenderNodeMap& nodeMap);
+    std::map<NodeId, std::unique_ptr<RSColdStartThread>> coldStartThreadMap_;
 
 private:
     RSColdStartManager() = default;
@@ -86,7 +90,7 @@ private:
     RSColdStartManager& operator=(const RSColdStartManager& manager);
     RSColdStartManager& operator=(const RSColdStartManager&& manager);
 
-    std::map<NodeId, std::unique_ptr<RSColdStartThread>> coldStartThreadMap_;
+
 };
 } // namespace Rosen
 } // namespace OHOS

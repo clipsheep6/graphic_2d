@@ -54,6 +54,8 @@ ohos_shared_library("librender_service") {
     "core/screen_manager/rs_screen_manager.cpp",
     "core/transaction/rs_render_service_connection_stub.cpp",
     "core/transaction/rs_render_service_stub.cpp",
+    "core/memory/MemoryManager.cpp",
+    "core/memory/SkiaMemoryTracer.cpp",
   ]
 
   if (rs_enable_eglimage) {

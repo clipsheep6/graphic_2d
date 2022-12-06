@@ -19,6 +19,7 @@
 #include <mutex>
 #include <unordered_map>
 #include "include/core/SkImage.h"
+#include <functional>
 
 namespace OHOS {
 namespace Rosen {
@@ -27,9 +28,11 @@ public:
     static RSImageCache& Instance();
 
     void CacheSkiaImage(uint64_t uniqueId, sk_sp<SkImage> img);
+    void SetNodeId(uint64_t uniqueId, uint64_t nodeId);
     sk_sp<SkImage> GetSkiaImageCache(uint64_t uniqueId) const;
     void ReleaseSkiaImageCache(uint64_t uniqueId);
 
+    void DumpMemoryStatistics(std::string& log, std::function<std::string (uint64_t)> func);
     RSImageCache() = default;
     ~RSImageCache() = default;
 
@@ -41,6 +44,7 @@ private:
 
     mutable std::mutex mutex_;
     std::unordered_map<uint64_t, sk_sp<SkImage>> skiaImageCache_;
+    std::unordered_map<uint64_t, uint64_t> IdMap_;
 };
 } // namespace Rosen
 } // namespace OHOS

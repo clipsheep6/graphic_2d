@@ -195,6 +195,11 @@ public:
     void CheckEmptyBounds();
     void ResetBounds();
 
+    void SetNodeID(uint64_t nodeId)
+    {
+        nodeId_ = nodeId;
+    }
+
     bool IsGeoDirty() const;
 
 private:
@@ -226,6 +231,7 @@ private:
 
     float alpha_ = 1.f;
     bool alphaOffscreen_ = true;
+    uint64_t nodeId_;
 
     std::shared_ptr<RSObjGeometry> boundsGeo_;
     std::shared_ptr<RSObjGeometry> frameGeo_;

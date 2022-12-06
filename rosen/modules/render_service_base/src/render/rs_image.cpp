@@ -23,6 +23,7 @@
 #include "render/rs_image_cache.h"
 #include "rs_trace.h"
 #include "sandbox_utils.h"
+#include "memory/StringX.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -59,6 +60,12 @@ void RSImage::CanvasDrawImage(SkCanvas& canvas, const SkRect& rect, const SkPain
     }
     DrawImageRepeatRect(paint, canvas);
     canvas.restore();
+}
+
+void RSImage::SetNodeID(uint64_t nodeId)
+{
+    nodeId_ = nodeId;
+    RSImageCache::Instance().SetNodeId(uniqueId_, nodeId_);
 }
 
 void RSImage::ApplyImageFit()
@@ -139,6 +146,7 @@ void RSImage::UploadGpu(SkCanvas& canvas)
         }
     }
 #endif
+    RSImageCache::Instance().SetNodeId(uniqueId_, nodeId_);
 }
 
 void RSImage::DrawImageRepeatRect(const SkPaint& paint, SkCanvas& canvas)

@@ -27,6 +27,7 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties_painter.h"
 #endif
+#include "memory/StringX.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -224,6 +225,13 @@ void RSRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 
 void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
 {
+    RSModifierType type = modifier->GetType();
+    if(type >= RSModifierType::CUSTOM) {
+        auto renderProperty = std::static_pointer_cast<RSRenderProperty<DrawCmdListPtr>>(modifier->GetProperty());
+        auto drawCmdList = renderProperty->Get();
+        drawCmdList->SetNodeId(GetId());
+    }
+
     if (!modifier) {
         return;
     }
@@ -280,6 +288,7 @@ void RSRenderNode::ApplyModifiers()
     }
     RSModifierContext context = { GetMutableRenderProperties() };
     context.property_.Reset();
+    context.property_.SetNodeID(GetId());
     for (auto& [id, modifier] : modifiers_) {
         if (modifier) {
             modifier->Apply(context);

@@ -635,6 +635,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             // enable cache if screen rotation is not times of 90 degree
             canvas_->SetCacheEnabled(geoPtr->IsNeedClientCompose());
         }
+        canvas_->SetCacheEnabled(canvas_->isCacheEnabled() || RSSystemProperties::GetCacheForDrawTextAsBitmap());
         ProcessBaseRenderNode(node);
         canvas_->restoreToCount(saveCount);
 

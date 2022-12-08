@@ -65,6 +65,7 @@ void RSSpringAnimation::OnStart()
     UpdateParamToRenderAnimation(animation);
     animation->SetSpringParameters(timingCurve_.response_, timingCurve_.dampingRatio_);
     animation->SetAdditive(GetAdditive());
+    animation->SetIsRotationAnimation(property_->type_ == RSModifierType::ROTATION);
     if (isCustom_) {
         StartUIAnimation(animation);
     } else {

@@ -19,11 +19,14 @@
 #include <memory>
 
 #include "rs_surface_frame.h"
+#ifdef ROSEN_OHOS
 #include "surface_type.h"
-
+#endif
 namespace OHOS {
 namespace Rosen {
+#ifdef ROSEN_OHOS
 class RenderContext;
+#endif
 class RSSurface {
 public:
     RSSurface() = default;
@@ -37,11 +40,12 @@ public:
     virtual std::unique_ptr<RSSurfaceFrame> RequestFrame(int32_t width, int32_t height, uint64_t uiTimestamp = 0) = 0;
 
     virtual bool FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp = 0) = 0;
-
+#ifdef ROSEN_OHOS
     virtual RenderContext* GetRenderContext() = 0;
     virtual void SetRenderContext(RenderContext* context) = 0;
     virtual ColorGamut GetColorSpace() const = 0;
     virtual void SetColorSpace(ColorGamut colorSpace) = 0;
+#endif
     virtual uint32_t GetQueueSize() const = 0;
     virtual void ClearBuffer() = 0; // clear cache only for producer
 

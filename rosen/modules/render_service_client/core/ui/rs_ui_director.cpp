@@ -15,7 +15,6 @@
 
 #include "ui/rs_ui_director.h"
 
-#include "rs_trace.h"
 #include "sandbox_utils.h"
 
 #include "command/rs_animation_command.h"
@@ -26,8 +25,8 @@
 #include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_thread.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_trace.h"
 #include "transaction/rs_application_agent_impl.h"
-#include "transaction/rs_interfaces.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_root_node.h"
 #include "ui/rs_surface_extractor.h"
@@ -98,7 +97,7 @@ void RSUIDirector::GoBackground()
                 rsSurface->ClearBuffer();
             }
         });
-#ifdef ACE_ENABLE_GL
+#if defined(ROSEN_OHOS) && defined(ACE_ENABLE_GL)
         RSRenderThread::Instance().PostTask([this]() {
             auto renderContext = RSRenderThread::Instance().GetRenderContext();
             if (renderContext != nullptr) {

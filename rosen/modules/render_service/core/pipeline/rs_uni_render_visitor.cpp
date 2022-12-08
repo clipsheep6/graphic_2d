@@ -279,6 +279,10 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         }
         isCustomizedDirtyRect = true;
     }
+    // [planning] Remove this after skia is upgraded, the clipRegion is supported
+    if (node.GetRenderProperties().NeedFilter() && !node.IsAppFreeze()) {
+        needFilter_ = true;
+    }
     dirtyFlag_ = dirtyFlag_ || node.GetDstRectChanged();
     parentSurfaceNodeMatrix_ = geoPtr->GetAbsMatrix();
     node.ResetSurfaceOpaqueRegion(RectI(0, 0, screenInfo_.width, screenInfo_.height), geoPtr->GetAbsRect(),
@@ -705,7 +709,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
     // We should release DisplayNode's surface buffer after PostProcess(),
     // since the buffer's releaseFence was set in PostProcess().
     auto& surfaceHandler = static_cast<RSSurfaceHandler&>(node);
-    (void)RSBaseRenderUtil::ReleaseBuffer(surfaceHandler);
+    (void)RSUniRenderUtil::ReleaseBuffer(surfaceHandler);
     RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode end");
 }
 
@@ -1023,10 +1027,10 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
 
     if (node.IsAppWindow()) {
-        auto visibleDirtyRegions = node.GetVisibleDirtyRegion().GetRegionRects();
-        for (auto rect : visibleDirtyRegions) {
-            canvas_->GetVisibleRects().emplace_back(
-                SkRect::MakeLTRB(rect.left_, rect.top_, rect.right_, rect.bottom_));
+        auto visibleRegions = node.GetVisibleRegion().GetRegionRects();
+        if (visibleRegions.size() == 1) {
+            canvas_->SetVisibleRect(SkRect::MakeLTRB(
+                visibleRegions[0].left_, visibleRegions[0].top_, visibleRegions[0].right_, visibleRegions[0].bottom_));
         }
     }
 
@@ -1154,7 +1158,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     canvas_->RestoreCanvasAndAlpha(savedState);
     if (node.IsAppWindow()) {
-        canvas_->GetVisibleRects().clear();
+        canvas_->SetVisibleRect(SkRect::MakeLTRB(0, 0, 0, 0));
     }
 }
 

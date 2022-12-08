@@ -163,5 +163,23 @@ bool RSSystemProperties::GetDrawTextAsBitmap()
 {
     return isDrawTextAsBitmap_;
 }
+
+void RSSystemProperties::SetCacheForDrawTextAsBitmap(bool flag)
+{
+    if (flag) {
+        rotationAnimationCount_++;
+        isCachedEnabled_ = true;
+        return;
+    }
+    rotationAnimationCount_--;
+    if (rotationAnimationCount_ <= 0) {
+        isCachedEnabled_ = false;
+    }
+}
+
+bool RSSystemProperties::GetCacheForDrawTextAsBitmap()
+{
+    return isCachedEnabled_;
+}
 } // namespace Rosen
 } // namespace OHOS

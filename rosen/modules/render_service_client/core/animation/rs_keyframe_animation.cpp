@@ -110,6 +110,7 @@ void RSKeyframeAnimation::OnStart()
         animation->AddKeyframe(fraction, value->GetRenderProperty(), curve.GetInterpolator(GetDuration()));
     }
     animation->SetAdditive(GetAdditive());
+    animation->SetIsRotationAnimation(property_->type_ == RSModifierType::ROTATION);
     UpdateParamToRenderAnimation(animation);
     if (isCustom_) {
         animation->AttachRenderProperty(property_->GetRenderProperty());

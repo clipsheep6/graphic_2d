@@ -259,6 +259,16 @@ void VariantSpan::PaintShadow(SkCanvas &canvas, double offsetx, double offsety) 
     }
 }
 
+bool VariantSpan::IsRTL() const noexcept(false)
+{
+    CheckPointer();
+    if (ts_) {
+        return ts_->IsRTL();
+    }
+
+    return false;
+}
+
 void VariantSpan::CheckPointer(bool nullable) const noexcept(false)
 {
     if (!nullable && as_ == nullptr && ts_ == nullptr) {

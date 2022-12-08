@@ -27,8 +27,7 @@ void TextReverser::ReverseRTLText(std::vector<VariantSpan> &lineSpans)
     auto rtlSpansBeginIt = endit;
     auto rtlSpansEndIt = endit;
     bool rtl = false;
-    for (auto it = lineSpans.begin(); it !=lineSpans.end(); it++) {
-        it->Dump(DumpType::DontReturn);
+    for (auto it = lineSpans.begin(); it != lineSpans.end(); it++) {
         auto ts = it->TryToTextSpan();
         if (ts != nullptr) {
             rtl = ts->IsRTL();
@@ -64,6 +63,62 @@ void TextReverser::ReverseRTLText(std::vector<VariantSpan> &lineSpans)
             it->Dump();
         }
         std::reverse(rtlSpansBeginIt, rtlSpansEndIt);
+    }
+}
+
+void TextReverser::ReverseConDirectionText(std::vector<VariantSpan> &lineSpans, int begin, int end)
+{
+    while (begin < end) {
+        if (lineSpans[begin].GetVisibleWidth() == 0) {
+            begin++;
+        }
+
+        if (lineSpans[end].GetVisibleWidth() == 0) {
+            end--;
+        }
+
+        if (begin >= end) {
+            break;
+        }
+
+        auto temp = lineSpans[begin];
+        lineSpans[begin] = lineSpans[end];
+        lineSpans[end] = temp;
+        begin++;
+        end--;
+    }
+}
+
+void TextReverser::ProcessTypoDirection(std::vector<VariantSpan> &lineSpans, const TextDirection dir)
+{
+    ScopedTrace scope("ProcessTypoDirection");
+    LOGSCOPED(sl, LOG2EX_DEBUG(), "ProcessTypoDirection");
+    if (dir == TextDirection::LTR) {
+        return;
+    }
+
+    bool isConDirection = false;
+    int index = 0;
+    ReverseConDirectionText(lineSpans, 0, lineSpans.size() - 1);
+
+    for (auto i = 0; i < lineSpans.size() - 1; i++) {
+        if (lineSpans[i].GetVisibleWidth() == 0 || lineSpans[i + 1].GetVisibleWidth() == 0 ||
+            lineSpans[i].IsRTL() == lineSpans[i + 1].IsRTL()) {
+            isConDirection = true;
+            continue;
+        }
+
+        if (isConDirection == true) {
+            ReverseConDirectionText(lineSpans, index, i);
+            index = i + 1;
+            isConDirection = false;
+        } else {
+            index++;
+        }
+    }
+
+    if (isConDirection) {
+        ReverseConDirectionText(lineSpans, index, lineSpans.size() - 1);
     }
 }
 } // namespace Texgine

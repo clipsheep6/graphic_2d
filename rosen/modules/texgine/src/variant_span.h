@@ -70,6 +70,7 @@ public:
 
     void Paint(SkCanvas &canvas, double offsetx, double offsety) noexcept(false);
     void PaintShadow(SkCanvas &canvas, double offsetx, double offsety) noexcept(false);
+    bool IsRTL() const noexcept(false);
 
     operator bool() const noexcept(false);
     bool operator ==(std::nullptr_t) const noexcept(false);

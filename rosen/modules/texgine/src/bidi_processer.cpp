@@ -21,7 +21,7 @@
 #include "texgine/utils/trace.h"
 
 namespace Texgine {
-std::vector<VariantSpan> BidiProcesser::ProcessBidiText(std::vector<VariantSpan> &spans)
+std::vector<VariantSpan> BidiProcesser::ProcessBidiText(std::vector<VariantSpan> &spans, const TextDirection dir)
 {
     ScopedTrace scope("BidiProcesser::ProcessBidiText");
     LOGSCOPED(sl, LOG2EX_DEBUG(), "ProcessBidiText");
@@ -34,7 +34,7 @@ std::vector<VariantSpan> BidiProcesser::ProcessBidiText(std::vector<VariantSpan>
         }
 
         span.Dump();
-        auto nsis = DoBidiProcess(ts->cgs_);
+        auto nsis = DoBidiProcess(ts->cgs_, dir);
         for (auto const &nsi : nsis) {
             ts->rtl_ = nsi.rtl_;
             VariantSpan vs(ts->CloneWithCharGroups(nsi.cgs_));
@@ -46,7 +46,7 @@ std::vector<VariantSpan> BidiProcesser::ProcessBidiText(std::vector<VariantSpan>
     return newSpans;
 }
 
-std::vector<NewSpanInfo> BidiProcesser::DoBidiProcess(CharGroups &cgs)
+std::vector<NewSpanInfo> BidiProcesser::DoBidiProcess(CharGroups &cgs, const TextDirection dir)
 {
     LOGSCOPED(sl, LOG2EX_DEBUG(), "BidiProcesser::doBidiProcess");
     if (!cgs.IsValid() || cgs.GetSize() == 0) {
@@ -61,8 +61,9 @@ std::vector<NewSpanInfo> BidiProcesser::DoBidiProcess(CharGroups &cgs)
 
     auto u16vect = cgs.ToUTF16All();
     auto status = U_ZERO_ERROR;
+    auto level = dir == TextDirection::RTL ? UBIDI_RTL : UBIDI_LTR;
     ubidi_setPara(bidi.get(), reinterpret_cast<UChar *>(u16vect.data()),
-                      u16vect.size(), UBIDI_DEFAULT_LTR, nullptr, &status);
+                      u16vect.size(), level, nullptr, &status);
     if(!U_SUCCESS(status)) {
         throw APIFailedException("ubidi_setPara failed");
     }

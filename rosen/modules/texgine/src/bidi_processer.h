@@ -29,8 +29,8 @@ struct NewSpanInfo {
 
 class BidiProcesser {
 public:
-    std::vector<VariantSpan> ProcessBidiText(std::vector<VariantSpan> &spans);
-    std::vector<NewSpanInfo> DoBidiProcess(CharGroups &cgs);
+    std::vector<VariantSpan> ProcessBidiText(std::vector<VariantSpan> &spans, const TextDirection dir);
+    std::vector<NewSpanInfo> DoBidiProcess(CharGroups &cgs, const TextDirection dir);
 };
 } // namespace Texgine
 

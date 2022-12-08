@@ -32,15 +32,18 @@ public:
     FontCollection(std::vector<std::shared_ptr<FontStyleSet>> &&fontStyleSets);
 
     std::shared_ptr<Typeface> GetTypefaceForChar(const uint32_t &ch,
-                                                 const std::string &locale,
-                                                 const FontStyles &style) const;
+                                                 const FontStyles &style,
+                                                 const std::string &script,
+                                                 const std::string &locale) const;
 
     std::shared_ptr<Typeface> GetTypefaceForFontStyles(const FontStyles &style,
+                                                       const std::string &script,
                                                        const std::string &locale) const;
 
     std::shared_ptr<Typeface> FindFallBackTypeface(const uint32_t &ch,
-                                                  const FontStyles &style,
-                                                  const std::string &locale) const;
+                                                   const FontStyles &style,
+                                                   const std::string &script,
+                                                   const std::string &locale) const;
 
     void DisableFallback();
 
@@ -60,12 +63,13 @@ private:
     static inline std::map<struct TypefaceCacheKey, std::shared_ptr<Typeface>> typefaceCache_;
 
     struct FallbackCacheKey {
+        std::string script = "";
         std::string locale = "";
         FontStyles fs = {};
 
         bool operator <(const struct FallbackCacheKey &rhs) const
         {
-            return locale != rhs.locale ? locale < rhs.locale : fs < rhs.fs;
+            return script < rhs.script || locale < rhs.locale || fs < rhs.fs;
         }
     };
     static inline std::map<struct FallbackCacheKey, std::shared_ptr<Typeface>> fallbackCache_;

@@ -110,8 +110,8 @@ int MeasurerImpl::Measure(CharGroups &cgs)
     boundaries_ = wb.GetBoundary(text_);
 
     std::list<struct MeasuringRun> runs;
-    SeekTypeface(runs);
     SeekScript(runs);
+    SeekTypeface(runs);
     if (auto ret = Shape(cgs, runs, boundaries_); ret) {
         LOG2EX(ERROR) << "Shape错误";
         return ret;
@@ -128,7 +128,6 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
     ScopedTrace scope("MeasurerImpl::SeekTypeface");
     LOGSCOPED(sl, LOG2EX_DEBUG(), "typeface");
 
-    runs.push_back({.start = startIndex_, .end = endIndex_});
     int index = 0;
     for (auto runsit = runs.begin(); runsit != runs.end(); runsit++) {
         auto u16index = runsit->start;
@@ -158,12 +157,18 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
                 runs.insert(++next, {
                     .start = u16index - U16_LENGTH(cp),
                     .end = runsit->end,
+                    .script = runsit->script,
                 });
                 runsit->end = u16index - U16_LENGTH(cp);
                 break;
             }
 
-            lastTypeface = fontCollection_.GetTypefaceForChar(cp, locale_, style_);
+            char runScript[5] = {(char)(((runsit->script) >> 24) & 0xFF),
+                                 (char)(((runsit->script) >> 16) & 0xFF),
+                                 (char)(((runsit->script) >> 8) & 0xFF),
+                                 (char)((runsit->script) & 0xFF),
+                                 '\0'};
+            lastTypeface = fontCollection_.GetTypefaceForChar(cp, style_, runScript, locale_);
             if (lastTypeface == nullptr) {
                 LOGCEX_DEBUG() << " no typeface";
                 continue;
@@ -186,6 +191,7 @@ void MeasurerImpl::SeekScript(std::list<struct MeasuringRun> &runs)
     }
 
     auto index = 0;
+    runs.push_back({.start = startIndex_, .end = endIndex_});
     for (auto it = runs.begin(); it != runs.end(); it++) {
         std::stringstream ss;
         ss << "[" << it->start << ", " << it->end << ")";
@@ -223,7 +229,6 @@ void MeasurerImpl::SeekScript(std::list<struct MeasuringRun> &runs)
                 runs.insert(++next, {
                     .start = ri - U16_LENGTH(cp),
                     .end = it->end,
-                    .typeface = it->typeface,
                 });
                 it->end = ri - U16_LENGTH(cp);
                 break;
@@ -234,6 +239,8 @@ void MeasurerImpl::SeekScript(std::list<struct MeasuringRun> &runs)
             LOG2EX(ERROR) << "run have error range";
             throw TEXGINE_EXCEPTION(ErrorStatus);
         }
+
+        it->script = script;
     }
     hb_unicode_funcs_destroy(icuGetUnicodeFuncs);
 }

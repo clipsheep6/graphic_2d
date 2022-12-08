@@ -133,6 +133,30 @@ ohos_executable("texgine_sample_decoration") {
   subsystem_name = "graphic"
 }
 
+ohos_executable("texgine_sample_direction") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/direction_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
 ohos_executable("texgine_sample_mix") {
   install_enable = true
 

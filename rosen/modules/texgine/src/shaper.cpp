@@ -57,7 +57,7 @@ std::vector<LineMetrics> Shaper::Shape(std::vector<VariantSpan> spans,
     }
 
     BidiProcesser bp;
-    auto newSpans = bp.ProcessBidiText(spans);
+    auto newSpans = bp.ProcessBidiText(spans, ys.direction_);
     if (newSpans.empty()) {
         LOG2EX(ERROR) << "Process BidiText failed";
         return {};
@@ -75,6 +75,7 @@ std::vector<LineMetrics> Shaper::Shape(std::vector<VariantSpan> spans,
     TextReverser tr;
     for (auto &metric : lineMetrics) {
         tr.ReverseRTLText(metric.lineSpans_);
+        tr.ProcessTypoDirection(metric.lineSpans_, ys.direction_);
     }
 
     TextShaper textShaper;

@@ -169,7 +169,7 @@ bool Typeface::Has(uint32_t ch)
 }
 
 std::shared_ptr<Typeface> FontCollection::GetTypefaceForChar(const uint32_t &ch,
-    const std::string &locale, const FontStyles &style) const
+    const FontStyles &style, const std::string &script, const std::string &locale) const
 {
     return mockvars.typeface_;
 }

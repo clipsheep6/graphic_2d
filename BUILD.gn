@@ -26,6 +26,7 @@ group("default") {
     "rosen/samples/texgine:texgine_sample_bug",
     "rosen/samples/texgine:texgine_sample_calibrate",
     "rosen/samples/texgine:texgine_sample_decoration",
+    "rosen/samples/texgine:texgine_sample_direction",
     "rosen/samples/texgine:texgine_sample_dynamic_font",
     "rosen/samples/texgine:texgine_sample_ellipsis",
     "rosen/samples/texgine:texgine_sample_emoji",

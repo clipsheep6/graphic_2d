@@ -116,6 +116,8 @@ MergeResult TextMerger::MergeSpan(const VariantSpan &span, std::optional<bool> &
 
     if (cgs.IsValid() == false) {
         cgs = ts->cgs_;
+    } else if (cgs.Get(0).typeface_ != ts->typeface_) {
+        return MergeResult::rejected;
     } else {
         cgs.Merge(ts->cgs_);
     }

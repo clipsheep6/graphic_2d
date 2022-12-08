@@ -112,7 +112,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess1)
     CharGroups cgs = CharGroups::CreateEmpty();
 
     try {
-        bp.DoBidiProcess(cgs);
+        bp.DoBidiProcess(cgs, TextDirection::LTR);
     } catch(const TexgineException &err) {
         ASSERT_EQ(ExceptionType::InvalidArgument, err.code);
     }
@@ -126,7 +126,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess2)
     CharGroups cgs = {};
 
     try {
-        bp.DoBidiProcess(cgs);
+        bp.DoBidiProcess(cgs, TextDirection::LTR);
     } catch(const TexgineException &err) {
         ASSERT_EQ(ExceptionType::InvalidArgument, err.code);
     }
@@ -140,7 +140,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess3)
     InitMyMockVars({.bidi_ = nullptr});
 
     try {
-        bp.DoBidiProcess(cgs1_);
+        bp.DoBidiProcess(cgs1_, TextDirection::LTR);
     } catch(const TexgineException &err) {
         ASSERT_EQ(ExceptionType::APIFailed, err.code);
     }
@@ -154,7 +154,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess4)
     InitMyMockVars({.status_ = U_ILLEGAL_ARGUMENT_ERROR});
 
     try {
-        bp.DoBidiProcess(cgs1_);
+        bp.DoBidiProcess(cgs1_, TextDirection::LTR);
     } catch(const TexgineException &err) {
         ASSERT_EQ(ExceptionType::APIFailed, err.code);
     }
@@ -168,7 +168,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess5)
     InitMyMockVars({.size_ = 0,});
 
     EXPECT_NO_THROW({
-        auto ret = bp.DoBidiProcess(cgs1_);
+        auto ret = bp.DoBidiProcess(cgs1_, TextDirection::LTR);
         ASSERT_EQ(ret.size(), 0);
     });
 }
@@ -181,7 +181,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess6)
     InitMyMockVars({.start_ = {-1}, .length_ = {1},});
 
     try {
-        bp.DoBidiProcess(cgs1_);
+        bp.DoBidiProcess(cgs1_, TextDirection::LTR);
     } catch(const TexgineException &err) {
         ASSERT_EQ(ExceptionType::APIFailed, err.code);
     }
@@ -195,7 +195,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess7)
     InitMyMockVars({.start_ = {1}, .length_ = {-1},});
 
     try {
-        bp.DoBidiProcess(cgs1_);
+        bp.DoBidiProcess(cgs1_, TextDirection::LTR);
     } catch(const TexgineException &err) {
         ASSERT_EQ(ExceptionType::APIFailed, err.code);
     }
@@ -209,7 +209,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess8)
     InitMyMockVars({.size_ = 4, .start_ = {0, 1, 2, 3}, .length_ = {1, 1, 1, 1}});
     auto c = cgs1_.GetSub(0, 1);
     EXPECT_NO_THROW({
-        auto ret = bp.DoBidiProcess(c);
+        auto ret = bp.DoBidiProcess(c, TextDirection::LTR);
         ASSERT_EQ(ret.size(), 1);
     });
 }
@@ -222,7 +222,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess9)
     InitMyMockVars({});
 
     EXPECT_NO_THROW({
-        auto ret = bp.DoBidiProcess(cgs1_);
+        auto ret = bp.DoBidiProcess(cgs1_, TextDirection::LTR);
         ASSERT_EQ(ret.size(), 1);
         ASSERT_EQ(ret[0].rtl_, true);
     });
@@ -236,7 +236,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess10)
     InitMyMockVars({.rtl_ = UBIDI_LTR,});
 
     EXPECT_NO_THROW({
-        auto ret = bp.DoBidiProcess(cgs1_);
+        auto ret = bp.DoBidiProcess(cgs1_, TextDirection::LTR);
         ASSERT_EQ(ret.size(), 1);
         ASSERT_EQ(ret[0].rtl_, false);
     });
@@ -251,7 +251,7 @@ TEST_F(BidiProcesserTest, ProcessBidiText1)
     spans_ = {std::make_shared<MockAnySpan>(), TextSpan::MakeFromCharGroups(cgs1_), std::make_shared<MockAnySpan>()};
 
     EXPECT_NO_THROW({
-        auto ret = bp.ProcessBidiText(spans_);
+        auto ret = bp.ProcessBidiText(spans_, TextDirection::LTR);
         ASSERT_EQ(ret.size(), 3);
         ASSERT_NE(ret[0].TryToAnySpan(), nullptr);
         ASSERT_NE(ret[1].TryToTextSpan(), nullptr);
@@ -265,7 +265,7 @@ TEST_F(BidiProcesserTest, ProcessBidiText1)
 TEST_F(BidiProcesserTest, ProcessBidiText2)
 {
     EXPECT_NO_THROW({
-        auto ret = bp.ProcessBidiText(spans_);
+        auto ret = bp.ProcessBidiText(spans_, TextDirection::LTR);
         ASSERT_EQ(ret.size(), 0);
     });
 }
@@ -280,7 +280,7 @@ TEST_F(BidiProcesserTest, ProcessBidiText3)
     spans_ = {std::make_shared<MockAnySpan>(), TextSpan::MakeFromCharGroups(c), std::make_shared<MockAnySpan>()};
 
     EXPECT_NO_THROW({
-        auto ret = bp.ProcessBidiText(spans_);
+        auto ret = bp.ProcessBidiText(spans_, TextDirection::LTR);
         ASSERT_EQ(ret.size(), 3);
         ASSERT_NE(ret[0].TryToAnySpan(), nullptr);
         auto span1 = ret[1].TryToTextSpan();

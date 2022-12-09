@@ -22,6 +22,7 @@
 #include "ui/rs_display_node.h"
 #include "ui/rs_surface_node.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
+#include "platform/common/rs_event_handler.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -108,11 +109,11 @@ public:
        DEFAULT_SKIP_FRAME_INTERVAL means refresh each frame,
        change screen refresh rate finally */
     int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval);
-
+#ifdef ROSEN_OHOS
     std::shared_ptr<VSyncReceiver> CreateVSyncReceiver(
         const std::string& name,
         const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper = nullptr);
-
+#endif
     int32_t RegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback);
 
     int32_t UnRegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback);

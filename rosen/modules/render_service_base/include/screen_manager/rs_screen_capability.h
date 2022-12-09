@@ -17,8 +17,10 @@
 #define RS_SCREEN_CAPABILITY
 
 #include <cstdint>
+#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <refbase.h>
+#endif
 #include <string>
 #include <vector>
 
@@ -27,16 +29,21 @@
 
 namespace OHOS {
 namespace Rosen {
+#ifdef ROSEN_OHOS
 class RSScreenCapability : public Parcelable {
+#else
+class RSScreenCapability {
+#endif
 public:
     RSScreenCapability() = default;
     RSScreenCapability(std::string name, ScreenInterfaceType type, uint32_t phyWidth,
         uint32_t phyHeight, uint32_t supportLayers, uint32_t virtualDispCount,
         bool supportWriteBack, const std::vector<RSScreenProps>& props);
     ~RSScreenCapability() = default;
+#ifdef ROSEN_OHOS
     static RSScreenCapability* Unmarshalling(Parcel &parcel);
     bool Marshalling(Parcel &parcel) const override;
-
+#endif
     void SetName(const std::string& name);
     void SetType(ScreenInterfaceType type);
     void SetPhyWidth(uint32_t phyWidth);
@@ -56,8 +63,10 @@ public:
     const std::vector<RSScreenProps>& GetProps() const;
 
 private:
+#ifdef ROSEN_OHOS    
     bool WriteVector(const std::vector<RSScreenProps>& props, Parcel &parcel) const;
     static bool ReadVector(std::vector<RSScreenProps>& unmarProps, uint32_t unmarPropCount, Parcel &parcel);
+#endif
     std::string name_;
     ScreenInterfaceType type_ = DISP_INVALID;
     uint32_t phyWidth_ = 0;

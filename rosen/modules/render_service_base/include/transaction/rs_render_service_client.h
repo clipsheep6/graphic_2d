@@ -20,13 +20,16 @@
 #include <map>
 #include <memory>
 #include <mutex>
-#include <refbase.h>
 #include <surface.h>
 
+#ifdef ROSEN_OHOS
+#include <refbase.h>
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/iapplication_agent.h"
 #include "ipc_callbacks/screen_change_callback.h"
 #include "ipc_callbacks/surface_capture_callback.h"
+#endif
+
 #include "platform/drawing/rs_surface.h"
 #include "rs_irender_client.h"
 #include "screen_manager/rs_screen_capability.h"
@@ -35,12 +38,17 @@
 #include "screen_manager/rs_screen_mode_info.h"
 #include "screen_manager/screen_types.h"
 #include "screen_manager/rs_virtual_screen_resolution.h"
+#ifdef ROSEN_OHOS
 #include "vsync_receiver.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
 #include "ipc_callbacks/rs_irender_mode_change_callback.h"
+#endif
 #include "rs_occlusion_data.h"
 
 namespace OHOS {
+namespace Media {
+    class PixelMap;
+}
 namespace Rosen {
 // normal callback functor for client users.
 using ScreenChangeCallback = std::function<void(ScreenId, ScreenEvent)>;
@@ -71,11 +79,11 @@ public:
     bool QueryIfRTNeedRender();
     bool CreateNode(const RSSurfaceRenderNodeConfig& config);
     std::shared_ptr<RSSurface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config);
-
+#ifdef ROSEN_OHOS
     std::shared_ptr<VSyncReceiver> CreateVSyncReceiver(
         const std::string& name,
         const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper = nullptr);
-
+#endif
     bool TakeSurfaceCapture(NodeId id, std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY);
 
     int32_t SetFocusAppInfo(int32_t pid, int32_t uid, const std::string &bundleName, const std::string &abilityName);
@@ -143,16 +151,17 @@ public:
 private:
     void TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap);
     std::mutex mutex_;
+#ifdef ROSEN_OHOS
     std::map<NodeId, sptr<RSIBufferAvailableCallback>> bufferAvailableCbRTMap_;
     std::map<NodeId, sptr<RSIBufferAvailableCallback>> bufferAvailableCbUIMap_;
     sptr<RSIRenderModeChangeCallback> renderModeChangeCb_;
     sptr<RSIScreenChangeCallback> screenChangeCb_;
     sptr<RSISurfaceCaptureCallback> surfaceCaptureCbDirector_;
+#endif
     std::map<NodeId, std::shared_ptr<SurfaceCaptureCallback>> surfaceCaptureCbMap_;
 
     friend class SurfaceCaptureCallbackDirector;
 };
 } // namespace Rosen
 } // namespace OHOS
-
 #endif // ROSEN_RENDER_SERVICE_BASE_TRANSACTION_RS_RENDER_SERVICE_CLIENT_H

@@ -51,7 +51,7 @@ uint64_t RSScreenProps::GetValue() const
 {
     return value_;
 }
-
+#ifdef ROSEN_OHOS
 bool RSScreenProps::Marshalling(Parcel &parcel) const
 {
     if (!parcel.WriteString(propName_)) {
@@ -83,5 +83,6 @@ RSScreenProps* RSScreenProps::Unmarshalling(Parcel &parcel)
     RSScreenProps* screenProps = new RSScreenProps(propName, propId, value);
     return screenProps;
 }
+#endif
 }
 }

@@ -17,22 +17,28 @@
 #define RS_SCREEN_HDR_CAPABILITY
 
 #include <cstdint>
+#ifdef ROSEN_OHOS
 #include <parcel.h>
+#endif
 #include <vector>
 
 #include "screen_manager/screen_types.h"
 
 namespace OHOS {
 namespace Rosen {
+#ifdef ROSEN_OHOS
 class RSScreenHDRCapability : public Parcelable {
+#else
+class RSScreenHDRCapability {
+#endif
 public:
     RSScreenHDRCapability() = default;
     RSScreenHDRCapability(float maxLum, float minLum, float maxAverageLum, const std::vector<ScreenHDRFormat>& formats);
     ~RSScreenHDRCapability() noexcept = default;
-
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel &parcel) const override;
     static RSScreenHDRCapability *Unmarshalling(Parcel &parcel);
-
+#endif
     float GetMaxLum() const;
     float GetMinLum() const;
     float GetMaxAverageLum() const;
@@ -44,8 +50,10 @@ public:
     void SetHdrFormats(const std::vector<ScreenHDRFormat>& formats);
 
 private:
+#ifdef ROSEN_OHOS
     bool WriteVector(const std::vector<ScreenHDRFormat>& formats, Parcel &parcel) const;
     static bool ReadVector(std::vector<ScreenHDRFormat>& unmarFormats, Parcel &parcel);
+#endif
     float maxLum_ = 0.f;
     float minLum_ = 0.f;
     float maxAverageLum_ = 0.f;

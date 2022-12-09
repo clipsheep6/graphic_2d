@@ -119,7 +119,9 @@ bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
         RS_LOGI("RSDisplayRenderNode::CreateSurface already created, return");
         return true;
     }
+#ifdef ROSEN_OHOS
     consumer_ = Surface::CreateSurfaceAsConsumer("DisplayNode");
+#endif
     if (consumer_ == nullptr) {
         RS_LOGE("RSDisplayRenderNode::CreateSurface get consumer surface fail");
         return false;
@@ -131,6 +133,7 @@ bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
     }
     consumerListener_ = listener;
     auto producer = consumer_->GetProducer();
+#ifdef ROSEN_OHOS
     sptr<Surface> surface = Surface::CreateSurfaceAsProducer(producer);
 
 #ifdef ACE_ENABLE_GL
@@ -140,7 +143,7 @@ bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
     // CPU render
     surface_ = std::make_shared<RSSurfaceOhosRaster>(surface);
 #endif
-
+#endif
     RS_LOGI("RSDisplayRenderNode::CreateSurface end");
     surfaceCreated_ = true;
     return true;

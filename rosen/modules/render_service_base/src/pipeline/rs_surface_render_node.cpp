@@ -316,6 +316,7 @@ void RSSurfaceRenderNode::SetBlendType(GraphicBlendType blendType)
     blendType_ = blendType;
 }
 
+#ifdef ROSEN_OHOS
 void RSSurfaceRenderNode::RegisterBufferAvailableListener(
     sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread)
 {
@@ -327,9 +328,11 @@ void RSSurfaceRenderNode::RegisterBufferAvailableListener(
         callbackFromUI_ = callback;
     }
 }
+#endif
 
 void RSSurfaceRenderNode::ConnectToNodeInRenderService()
 {
+#ifdef ROSEN_OHOS
     ROSEN_LOGI("RSSurfaceRenderNode::ConnectToNodeInRenderService nodeId = %" PRIu64, GetId());
     auto renderServiceClient =
         std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
@@ -343,6 +346,7 @@ void RSSurfaceRenderNode::ConnectToNodeInRenderService()
                 node->NotifyRTBufferAvailable();
             }, true);
     }
+#endif
 }
 
 void RSSurfaceRenderNode::NotifyRTBufferAvailable()
@@ -360,7 +364,7 @@ void RSSurfaceRenderNode::NotifyRTBufferAvailable()
         ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %" PRIu64 " RenderThread", GetId());
         callbackForRenderThreadRefresh_();
     }
-
+#ifdef ROSEN_OHOS
     {
         std::lock_guard<std::mutex> lock(mutexRT_);
         if (callbackFromRT_) {
@@ -371,6 +375,7 @@ void RSSurfaceRenderNode::NotifyRTBufferAvailable()
             isNotifyRTBufferAvailable_ = false;
         }
     }
+#endif
 }
 
 void RSSurfaceRenderNode::NotifyUIBufferAvailable()
@@ -379,6 +384,7 @@ void RSSurfaceRenderNode::NotifyUIBufferAvailable()
         return;
     }
     isNotifyUIBufferAvailable_ = true;
+#ifdef ROSEN_OHOS
     {
         std::lock_guard<std::mutex> lock(mutexUI_);
         if (callbackFromUI_) {
@@ -388,6 +394,7 @@ void RSSurfaceRenderNode::NotifyUIBufferAvailable()
             isNotifyUIBufferAvailable_ = false;
         }
     }
+#endif
 }
 
 bool RSSurfaceRenderNode::IsNotifyRTBufferAvailable() const

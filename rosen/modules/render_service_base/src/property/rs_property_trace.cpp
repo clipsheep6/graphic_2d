@@ -21,7 +21,8 @@
 #include <securec.h>
 #include <sys/time.h>
 
-#include "rs_trace.h"
+// #include "rs_trace.h"
+#include "platform/common/rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {

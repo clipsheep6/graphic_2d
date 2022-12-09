@@ -224,6 +224,7 @@ bool RSSurfaceNode::SetBufferAvailableCallback(BufferAvailableCallback callback)
     if (renderServiceClient == nullptr) {
         return false;
     }
+#ifdef ROSEN_OHOS
     return renderServiceClient->RegisterBufferAvailableListener(GetId(), [weakThis = weak_from_this()]() {
         auto rsSurfaceNode = RSBaseNode::ReinterpretCast<RSSurfaceNode>(weakThis.lock());
         if (rsSurfaceNode == nullptr) {
@@ -237,6 +238,9 @@ bool RSSurfaceNode::SetBufferAvailableCallback(BufferAvailableCallback callback)
         }
         actualCallback();
     });
+#else
+    return false;
+#endif
 }
 
 void RSSurfaceNode::SetAnimationFinished()
@@ -248,7 +252,7 @@ void RSSurfaceNode::SetAnimationFinished()
         transactionProxy->FlushImplicitTransaction();
     }
 }
-
+#ifdef ROSEN_OHOS
 bool RSSurfaceNode::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteUint64(GetId()) && parcel.WriteString(name_) && parcel.WriteBool(IsRenderServiceNode());
@@ -292,17 +296,23 @@ RSNode::SharedPtr RSSurfaceNode::UnmarshallingAsProxyNode(Parcel& parcel)
     // Create RSProxyNode by unmarshalling RSSurfaceNode, return existing node if it exists in RSNodeMap.
     return RSProxyNode::Create(id, name);
 }
-
+#endif
 bool RSSurfaceNode::CreateNode(const RSSurfaceRenderNodeConfig& config)
 {
+#ifdef ROSEN_OHOS
     return std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
                ->CreateNode(config);
+#else
+    return false;
+#endif
 }
 
 bool RSSurfaceNode::CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config)
 {
+#ifdef ROSEN_OHOS
     surface_ = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
                    ->CreateNodeAndSurface(config);
+#endif
     return (surface_ != nullptr);
 }
 
@@ -384,7 +394,9 @@ RSSurfaceNode::~RSSurfaceNode()
     auto renderServiceClient =
         std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
     if (renderServiceClient != nullptr) {
+#ifdef ROSEN_OHOS
         renderServiceClient->UnregisterBufferAvailableListener(GetId());
+#endif
     }
     if (!IsRenderServiceNode() && transactionProxy != nullptr) {
         std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeDestroy>(GetId());

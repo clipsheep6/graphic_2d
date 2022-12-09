@@ -15,7 +15,7 @@
 
 #ifndef ROSEN_RENDER_SERVICE_BASE_IBUFFER_AVAILABLE_CALLBACK_PROXY_H
 #define ROSEN_RENDER_SERVICE_BASE_IBUFFER_AVAILABLE_CALLBACK_PROXY_H
-
+#ifdef ROSEN_OHOS
 #include <iremote_proxy.h>
 
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
@@ -34,3 +34,4 @@ private:
 } // namespace Rosen
 } // namespace OHOS
 #endif // ROSEN_OHOS
+#endif

@@ -24,8 +24,7 @@
 #include <include/core/SkPaint.h>
 #include <include/core/SkRect.h>
 
-#include "rs_trace.h"
-
+#include "platform/common/rs_trace.h"
 #include "command/rs_base_node_command.h"
 #include "common/rs_vector4.h"
 #include "overdraw/rs_cpu_overdraw_canvas_listener.h"

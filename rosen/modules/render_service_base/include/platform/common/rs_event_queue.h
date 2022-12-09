@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,19 +13,24 @@
  * limitations under the License.
  */
 
-#include "frame_painter.h"
+#ifndef BASE_EVENTHANDLER_INTERFACES_INNER_API_EVENT_QUEUE_H
+#define BASE_EVENTHANDLER_INTERFACES_INNER_API_EVENT_QUEUE_H
 
-#include "frame_collector.h"
+#include <list>
+#include <map>
 
 namespace OHOS {
-namespace Rosen {
-FramePainter::FramePainter(FrameCollector &collector) : collector_(collector)
-{
-}
+namespace AppExecFwk {
+class EventQueue final {
+public:
+    enum class Priority : uint32_t {
+        IMMEDIATE = 0,
+        HIGH,
+        LOW,
+        IDLE,
+    };
+};
+}  // namespace AppExecFwk
+}  // namespace OHOS
 
-void FramePainter::Draw(SkCanvas &canvas)
-{
-}
-
-} // namespace Rosen
-} // namespace OHOS
+#endif  // #ifndef BASE_EVENTHANDLER_INTERFACES_INNER_API_EVENT_QUEUE_H

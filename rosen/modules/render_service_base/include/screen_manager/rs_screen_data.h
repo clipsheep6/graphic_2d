@@ -17,8 +17,10 @@
 #define RS_SCREEN_DATA
 
 #include <cstdint>
+#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <refbase.h>
+#endif
 #include <string>
 #include <vector>
 
@@ -29,15 +31,20 @@
 
 namespace OHOS {
 namespace Rosen {
+#ifdef ROSEN_OHOS
 class RSScreenData : public Parcelable {
+#else
+class RSScreenData {
+#endif
 public:
     RSScreenData() = default;
     RSScreenData(RSScreenCapability capability, RSScreenModeInfo activityModeInfo,
         const std::vector<RSScreenModeInfo>& supportModeInfo, ScreenPowerStatus powerStatus);
     ~RSScreenData() = default;
+#ifdef ROSEN_OHOS
     static RSScreenData* Unmarshalling(Parcel &parcel);
     bool Marshalling(Parcel &parcel) const override;
-
+#endif
     void SetCapability(const RSScreenCapability& capability);
     void SetActivityModeInfo(const RSScreenModeInfo& activityModeInfo);
     void SetSupportModeInfo(const std::vector<RSScreenModeInfo>& supportModeInfo);
@@ -49,8 +56,10 @@ public:
     ScreenPowerStatus GetPowerStatus() const;
 
 private:
+#ifdef ROSEN_OHOS
     bool WriteVector(const std::vector<RSScreenModeInfo> &supportModes, Parcel &parcel) const;
     static bool ReadVector(std::vector<RSScreenModeInfo> &unmarsupportModes, uint32_t unmarModeCount, Parcel &parcel);
+#endif
     RSScreenCapability capability_;
     RSScreenModeInfo activityModeInfo_;
     std::vector<RSScreenModeInfo> supportModeInfo_;

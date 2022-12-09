@@ -17,8 +17,10 @@
 
 #include <cstdint>
 
+#ifdef ROSEN_OHOS
 #include "accessibility_config.h"
-#include "rs_trace.h"
+#endif
+#include "platform/common/rs_trace.h"
 #include "sandbox_utils.h"
 
 #include "animation/rs_animation_fraction.h"
@@ -48,9 +50,10 @@
 #include "res_sched_client.h"
 #include "res_type.h"
 #endif
-
+#ifdef ROSEN_OHOS
 #include "frame_trace.h"
 using namespace FRAME_TRACE;
+#endif
 static const std::string RT_INTERVAL_NAME = "renderthread";
 
 static void SystemCallSetThreadName(const std::string& name)
@@ -61,14 +64,16 @@ static void SystemCallSetThreadName(const std::string& name)
     }
 #endif
 }
-
+#ifdef ROSEN_OHOS
 using namespace OHOS::AccessibilityConfig;
+#endif
 namespace OHOS {
 namespace Rosen {
 namespace {
     static constexpr uint64_t REFRESH_PERIOD = 16666667;
     static constexpr uint64_t REFRESH_FREQ_IN_UNI_RENDER = 1200;
 }
+#ifdef ROSEN_OHOS
 class HighContrastObserver : public AccessibilityConfigObserver {
 public:
     HighContrastObserver() = default;
@@ -81,7 +86,7 @@ public:
         }
     }
 };
-
+#endif
 RSRenderThread& RSRenderThread::Instance()
 {
     static RSRenderThread renderThread;
@@ -98,7 +103,9 @@ RSRenderThread::RSRenderThread()
         }
 
         RS_TRACE_BEGIN("RSRenderThread DrawFrame: " + std::to_string(timestamp_));
+#ifdef ROSEN_OHOS
         QuickStartFrameTrace(RT_INTERVAL_NAME);
+#endif
         prevTimestamp_ = timestamp_;
         ProcessCommands();
         if (needRender_) {
@@ -109,19 +116,24 @@ RSRenderThread::RSRenderThread()
         Animate(prevTimestamp_);
         Render();
         SendCommands();
+#ifdef ROSEN_OHOS
         QuickEndFrameTrace(RT_INTERVAL_NAME);
+#endif
         RS_TRACE_END();
 
         if (needRender_) {
             jankDetector_.CalculateSkippedFrame(renderStartTimeStamp, jankDetector_.GetSysTimeNs());
         }
     };
-
+#ifdef ROSEN_OHOS
     highContrastObserver_ = std::make_shared<HighContrastObserver>();
+#endif
     context_ = std::make_shared<RSContext>();
+#ifdef ROSEN_OHOS
     auto &config = OHOS::AccessibilityConfig::AccessibilityConfig::GetInstance();
     config.InitializeContext();
     config.SubscribeConfigObserver(CONFIG_ID::CONFIG_HIGH_CONTRAST_TEXT, highContrastObserver_);
+#endif
 }
 
 RSRenderThread::~RSRenderThread()
@@ -152,7 +164,9 @@ void RSRenderThread::Stop()
         handler_->RemoveAllEvents();
         handler_ = nullptr;
     }
+#ifdef ROSEN_OHOS
     receiver_ = nullptr;
+#endif
     if (runner_) {
         runner_->Stop();
     }
@@ -188,6 +202,7 @@ void RSRenderThread::RequestNextVSync()
     if (handler_) {
         RS_TRACE_FUNC();
         FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::WaitVsyncStart);
+#ifdef ROSEN_OHOS
         VSyncReceiver::FrameCallback fcb = {
             .userData_ = this,
             .callback_ = std::bind(&RSRenderThread::OnVsync, this, std::placeholders::_1),
@@ -197,6 +212,9 @@ void RSRenderThread::RequestNextVSync()
         } else {
             hasSkipVsync_ = true;
         }
+#else
+        hasSkipVsync_ = true;
+#endif
     } else {
         hasSkipVsync_ = true;
     }
@@ -209,6 +227,7 @@ int32_t RSRenderThread::GetTid()
 
 void RSRenderThread::CreateAndInitRenderContextIfNeed()
 {
+#ifdef ROSEN_OHOS
 #ifdef ACE_ENABLE_GL
     if (needRender_ && renderContext_ == nullptr) {
         renderContext_ = new RenderContext();
@@ -219,6 +238,7 @@ void RSRenderThread::CreateAndInitRenderContextIfNeed()
             renderContext_->SetCacheDir(cacheDir_);
         }
     }
+#endif
 #endif
 }
 
@@ -237,8 +257,10 @@ void RSRenderThread::RenderLoop()
     tid_ = gettid();
 #endif
     if (RSSystemProperties::GetUniRenderEnabled()) {
+#ifdef ROSEN_OHOS
         needRender_ = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
             ->QueryIfRTNeedRender();
+#endif
         RSSystemProperties::SetRenderMode(!needRender_);
         DrawCmdListManager::Instance().MarkForceClear(!needRender_);
     }
@@ -247,12 +269,14 @@ void RSRenderThread::RenderLoop()
     runner_ = AppExecFwk::EventRunner::Create(false);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     auto rsClient = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
+#ifdef ROSEN_OHOS
     receiver_ = rsClient->CreateVSyncReceiver(name, handler_);
     if (receiver_ == nullptr) {
         ROSEN_LOGE("RSRenderThread CreateVSyncReceiver Error");
         return;
     }
     receiver_->Init();
+#endif
     if (hasSkipVsync_) {
         hasSkipVsync_ = false;
         RSRenderThread::Instance().RequestNextVSync();

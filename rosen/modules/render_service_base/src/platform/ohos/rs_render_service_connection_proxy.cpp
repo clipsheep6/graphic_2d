@@ -21,7 +21,8 @@
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "transaction/rs_ashmem_helper.h"
-#include "rs_trace.h"
+// #include "rs_trace.h"
+#include "platform/common/rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {

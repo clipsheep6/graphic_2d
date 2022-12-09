@@ -18,7 +18,9 @@
 #include <surface.h>
 
 #include "common/rs_common_def.h"
+#ifdef ROSEN_OHOS
 #include "sync_fence.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -27,23 +29,25 @@ public:
     // indicates which node this handler belongs to.
     explicit RSSurfaceHandler(NodeId id) : id_(id) {}
     virtual ~RSSurfaceHandler() noexcept = default;
-
     struct SurfaceBufferEntry {
         void Reset()
         {
             buffer = nullptr;
+#ifdef ROSEN_OHOS
             acquireFence = SyncFence::INVALID_FENCE;
             releaseFence = SyncFence::INVALID_FENCE;
+#endif
             damageRect = Rect {0, 0, 0, 0};
             timestamp = 0;
         }
         sptr<SurfaceBuffer> buffer;
+#ifdef ROSEN_OHOS
         sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
         sptr<SyncFence> releaseFence = SyncFence::INVALID_FENCE;
+#endif
         Rect damageRect = {0, 0, 0, 0};
         int64_t timestamp = 0;
     };
-
     void SetConsumer(const sptr<Surface>& consumer);
     void IncreaseAvailableBuffer();
     int32_t ReduceAvailableBuffer();

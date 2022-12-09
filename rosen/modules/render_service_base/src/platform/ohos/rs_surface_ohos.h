@@ -19,7 +19,7 @@
 #include <surface.h>
 
 #include "platform/drawing/rs_surface.h"
-#include "render_context/render_context.h"
+// #include "render_context/render_context.h"
 
 namespace OHOS {
 namespace Rosen {

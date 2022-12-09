@@ -18,7 +18,8 @@
 
 #include <mutex>
 
-#include "event_handler.h"
+// #include "event_handler.h"
+#include "platform/common/rs_event_handler.h"
 #include "message_parcel.h"
 
 #include "transaction/rs_transaction_data.h"

@@ -17,7 +17,8 @@
 
 #include "rs_animation_test_utils.h"
 
-#include "event_handler.h"
+// #include "event_handler.h"
+#include "platform/common/rs_event_handler.h"
 #include "common/rs_color.h"
 #include "transaction/rs_transaction.h"
 #include "wm/window_option.h"

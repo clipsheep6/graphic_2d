@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#ifdef ROSEN_OHOS
 #include "rs_occlusion_change_callback_proxy.h"
 
 #include <message_option.h>
@@ -46,3 +46,4 @@ void RSOcclusionChangeCallbackProxy::OnOcclusionVisibleChanged(std::shared_ptr<R
 }
 } // namespace Rosen
 } // namespace OHOS
+#endif

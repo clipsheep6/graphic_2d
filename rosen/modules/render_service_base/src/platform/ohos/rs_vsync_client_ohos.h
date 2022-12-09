@@ -19,7 +19,8 @@
 #include <functional>
 #include <vector>
 
-#include <event_handler.h>
+// #include <event_handler.h>
+#include "platform/common/rs_event_handler.h"
 #include "vsync_receiver.h"
 
 #include "platform/drawing/rs_vsync_client.h"

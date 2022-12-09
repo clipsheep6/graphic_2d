@@ -17,11 +17,16 @@
 #define RS_VIRTUAL_SCREEN_RESOLUTION
 
 #include <cstdint>
+#ifdef ROSEN_OHOS
 #include <parcel.h>
-
+#endif
 namespace OHOS {
 namespace Rosen {
+#ifdef ROSEN_OHOS
 class RSVirtualScreenResolution : public Parcelable {
+#else
+class RSVirtualScreenResolution {
+#endif
 public:
     RSVirtualScreenResolution() = default;
     RSVirtualScreenResolution(uint32_t width, uint32_t height);
@@ -29,10 +34,10 @@ public:
 
     RSVirtualScreenResolution(const RSVirtualScreenResolution& other);
     RSVirtualScreenResolution& operator=(const RSVirtualScreenResolution& other);
-
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel &parcel) const override;
     static RSVirtualScreenResolution *Unmarshalling(Parcel &parcel);
-
+#endif
     uint32_t GetVirtualScreenWidth() const;
     uint32_t GetVirtualScreenHeight() const;
     void SetVirtualScreenWidth(uint32_t width);

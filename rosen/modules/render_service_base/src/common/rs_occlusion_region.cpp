@@ -18,7 +18,6 @@
 #include <map>
 #include <set>
 #include <dlfcn.h>
-#include <parameters.h>
 
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_innovation.h"

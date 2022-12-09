@@ -14,6 +14,7 @@
  */
 
 #include <event_handler.h>
+#include "platform/common/rs_event_handler.h"
 #include <iostream>
 
 #include "animation/rs_curve_animation.h"

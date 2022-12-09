@@ -15,7 +15,7 @@
 
 #ifndef ROSEN_RENDER_SERVICE_BASE_OCCLUSION_CHANGE_CALLBACK_STUB_H
 #define ROSEN_RENDER_SERVICE_BASE_OCCLUSION_CHANGE_CALLBACK_STUB_H
-
+#ifdef ROSEN_OHOS
 #include <iremote_stub.h>
 
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
@@ -31,5 +31,5 @@ public:
 };
 } // namespace Rosen
 } // namespace OHOS
-
+#endif
 #endif

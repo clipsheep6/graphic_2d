@@ -17,6 +17,7 @@
 
 namespace OHOS {
 namespace Rosen {
+#ifdef ROSEN_OHOS
 RSInterfaces &RSInterfaces::GetInstance()
 {
     static RSInterfaces instance;
@@ -214,5 +215,6 @@ void RSInterfaces::UpdateRenderMode(bool isUniRender)
 {
     renderServiceClient_->UpdateRenderMode(isUniRender);
 }
+#endif
 } // namespace Rosen
 } // namespace OHOS

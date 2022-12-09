@@ -22,8 +22,8 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <event_handler.h>
-
+// #include <event_handler.h>
+#include "platform/common/rs_event_handler.h"
 #include "common/rs_thread_handler.h"
 #include "common/rs_thread_looper.h"
 #include "jank_detector/rs_jank_detector.h"
@@ -32,8 +32,9 @@
 #include "platform/drawing/rs_vsync_client.h"
 #include "render_context/render_context.h"
 #include "transaction/rs_transaction_proxy.h"
+#ifdef ROSEN_OHOS
 #include "vsync_receiver.h"
-
+#endif
 namespace OHOS {
 namespace Rosen {
 class HighContrastObserver;
@@ -126,7 +127,9 @@ private:
     std::unique_ptr<std::thread> thread_ = nullptr;
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
+#ifdef ROSEN_OHOS
     std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
+#endif
     RSTaskMessage::RSTask preTask_ = nullptr;
     RSTaskMessage::RSTask mainFunc_;
 

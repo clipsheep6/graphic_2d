@@ -15,8 +15,10 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_NODE_H
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_NODE_H
 
+#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <refbase.h>
+#endif
 #include <string>
 
 #include "surface.h"
@@ -70,12 +72,12 @@ public:
 
     bool SetBufferAvailableCallback(BufferAvailableCallback callback);
     void SetAnimationFinished();
-
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const;
     static SharedPtr Unmarshalling(Parcel& parcel);
     // Create RSProxyNode by unmarshalling RSSurfaceNode, return existing node if it exists in RSNodeMap.
     static RSNode::SharedPtr UnmarshallingAsProxyNode(Parcel& parcel);
-
+#endif
     sptr<OHOS::Surface> GetSurface() const;
     FollowType GetFollowType() const override;
 

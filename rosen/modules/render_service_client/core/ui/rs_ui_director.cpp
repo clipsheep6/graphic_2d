@@ -15,7 +15,7 @@
 
 #include "ui/rs_ui_director.h"
 
-#include "rs_trace.h"
+#include "platform/common/rs_trace.h"
 #include "sandbox_utils.h"
 
 #include "command/rs_animation_command.h"
@@ -102,7 +102,9 @@ void RSUIDirector::GoBackground()
         RSRenderThread::Instance().PostTask([this]() {
             auto renderContext = RSRenderThread::Instance().GetRenderContext();
             if (renderContext != nullptr) {
+#ifdef ROSEN_OHOS
                 renderContext->ClearRedundantResources();
+#endif
             }
         });
 #endif

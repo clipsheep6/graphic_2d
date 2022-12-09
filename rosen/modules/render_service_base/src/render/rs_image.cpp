@@ -21,7 +21,8 @@
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_image_cache.h"
-#include "rs_trace.h"
+// #include "rs_trace.h"
+#include "platform/common/rs_trace.h"
 #include "sandbox_utils.h"
 
 namespace OHOS {

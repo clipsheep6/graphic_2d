@@ -22,7 +22,9 @@
 #include <singleton_container.h>
 #include <window_adapter.h>
 
+#include "ipc_skeleton.h"
 #include "rs_window_animation_utils.h"
+#include "tokenid_kit.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -31,6 +33,13 @@ constexpr size_t ARGC_ONE = 1;
 constexpr size_t ARGC_TWO = 2;
 constexpr int32_t ERR_NOT_OK = -1;
 constexpr int32_t ERR_OK = 0;
+constexpr int32_t ERR_NOT_SYSTEM_APP = 222;
+
+bool IsSystemApp()
+{
+    uint64_t tokenId = OHOS::IPCSkeleton::GetCallingFullTokenID();
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
+}
 
 NativeValue* RSWindowAnimationManager::Init(NativeEngine* engine, NativeValue* exportObj)
 {
@@ -64,6 +73,12 @@ void RSWindowAnimationManager::Finalizer(NativeEngine* engine, void* data, void*
 NativeValue* RSWindowAnimationManager::SetController(NativeEngine* engine, NativeCallbackInfo* info)
 {
     WALOGD("SetController");
+    if (!IsSystemApp()) {
+        WALOGE("SetController failed");
+        engine->Throw(CreateJsError(*engine, ERR_NOT_SYSTEM_APP,
+            "WindowAnimationManager setController failed, is not system app"));
+        return nullptr;
+    }
     auto me = CheckParamsAndGetThis<RSWindowAnimationManager>(engine, info);
     return (me != nullptr) ? me->OnSetController(*engine, *info) : nullptr;
 }
@@ -71,6 +86,12 @@ NativeValue* RSWindowAnimationManager::SetController(NativeEngine* engine, Nativ
 NativeValue* RSWindowAnimationManager::MinimizeWindowWithAnimation(NativeEngine* engine, NativeCallbackInfo* info)
 {
     WALOGD("MinimizeWindowWithAnimation");
+    if (!IsSystemApp()) {
+        WALOGE("MinimizeWindowWithAnimation failed");
+        engine->Throw(CreateJsError(*engine, ERR_NOT_SYSTEM_APP,
+            "WindowAnimationManager minimizeWindowWithAnimation failed, is not system app"));
+        return nullptr;
+    }
     auto me = CheckParamsAndGetThis<RSWindowAnimationManager>(engine, info);
     return (me != nullptr) ? me->OnMinimizeWindowWithAnimation(*engine, *info) : nullptr;
 }

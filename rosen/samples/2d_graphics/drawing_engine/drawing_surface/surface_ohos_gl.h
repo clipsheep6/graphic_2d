@@ -34,7 +34,7 @@ public:
         return producer_ != nullptr;
     }
 
-    std::unique_ptr<SurfaceFrame> RequestFrame(int32_t width, int32_t height) override;
+    std::unique_ptr<SurfaceFrame> RequestFrame(int32_t width, int32_t height, bool useAFBC) override;
     bool FlushFrame(std::unique_ptr<SurfaceFrame>& frame) override;
     SkCanvas* GetCanvas(std::unique_ptr<SurfaceFrame>& frame) override;
 private:

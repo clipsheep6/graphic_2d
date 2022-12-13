@@ -42,7 +42,7 @@ RSSurfaceOhosGl::~RSSurfaceOhosGl()
     mEglSurface = EGL_NO_SURFACE;
 }
 
-std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int32_t height, uint64_t uiTimestamp)
+std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int32_t height, uint64_t uiTimestamp, bool useAFBC)
 {
     RenderContext* context = GetRenderContext();
     if (context == nullptr) {
@@ -66,7 +66,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int
 #ifdef RS_ENABLE_AFBC
     int32_t format = 0;
     NativeWindowHandleOpt(mWindow, GET_FORMAT, &format);
-    if (format == PIXEL_FMT_RGBA_8888) {
+    if (format == PIXEL_FMT_RGBA_8888 && useAFBC) {
         bufferUsage_ =
             (BUFFER_USAGE_HW_RENDER | BUFFER_USAGE_HW_TEXTURE | BUFFER_USAGE_HW_COMPOSER | BUFFER_USAGE_MEM_DMA);
     }

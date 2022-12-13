@@ -114,10 +114,10 @@ public:
     // There would only one user(thread) to renderFrame(request frame) at one time.
     // for framebuffer surface
     static std::unique_ptr<RSRenderFrame> RequestFrame(const sptr<Surface>& rsSurface,
-        const BufferRequestConfig& config, bool forceCPU = false);
+        const BufferRequestConfig& config, bool forceCPU = false, bool useAFBC = true);
     // There would only one user(thread) to renderFrame(request frame) at one time.
     static std::unique_ptr<RSRenderFrame> RequestFrame(const std::shared_ptr<RSSurfaceOhos>& rsSurface,
-        const BufferRequestConfig& config, bool forceCPU = false);
+        const BufferRequestConfig& config, bool forceCPU = false, bool useAFBC = true);
 
     static void SetUiTimeStamp(const std::unique_ptr<RSRenderFrame>& renderFrame, const uint64_t surfaceId);
 

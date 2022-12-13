@@ -611,7 +611,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         }
         if (isOpDropped_) {
             if (region.isEmpty()) {
-                // [planning] Remove this after frame buffer can release
+                // [planning] Remove this after frame buffer can cancel
                 canvas_->clipRect(SkRect::MakeEmpty());
             } else if (region.isRect()) {
                 canvas_->clipRegion(region);
@@ -624,7 +624,6 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                     saveLayerCnt = canvas_->saveLayer(SkRect::MakeWH(screenInfo_.width, screenInfo_.height), nullptr);
                 }
             }
-            canvas_->clear(SK_ColorTRANSPARENT);
         }
 #endif
         int saveCount = canvas_->save();

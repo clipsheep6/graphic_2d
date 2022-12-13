@@ -110,7 +110,7 @@ void RSImage::ApplyCanvasClip(SkCanvas& canvas)
     auto rect = (imageRepeat_ == ImageRepeat::NO_REPEAT) ? dstRect_.IntersectRect(frameRect_) : frameRect_;
     SkRRect rrect = SkRRect::MakeEmpty();
     rrect.setRectRadii(RSPropertiesPainter::Rect2SkRect(rect), radius_);
-    canvas.clipRRect(rrect, true);
+    canvas.clipRRect(rrect, !rrect.isRect());
 }
 
 void RSImage::UploadGpu(SkCanvas& canvas)

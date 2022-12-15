@@ -65,6 +65,7 @@ enum class RSModifierType : int16_t {
     CLIP_TO_BOUNDS,
     CLIP_TO_FRAME,
     VISIBLE,
+    FREEZE,
 
     SHADOW_COLOR,
     SHADOW_OFFSET_X,

@@ -91,7 +91,6 @@ public:
 
     void ResetContextAlpha() const;
 
-    void SetAppFreeze(bool isAppFreeze);
     void SetContainerWindow(bool hasContainerWindow, float density);
     void SetWindowId(uint32_t windowId);
 

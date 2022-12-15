@@ -23,6 +23,8 @@
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "property/rs_properties.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkRefCnt.h"
 
 class SkCanvas;
 namespace OHOS {
@@ -105,6 +107,21 @@ public:
     // update node's out parent status
     void SetPaintOutOfParentFlag(std::shared_ptr<RSRenderNode> rsParent);
 
+    void SetCacheSurface(sk_sp<SkSurface> cacheSurface)
+    {
+        cacheSurface_ = std::move(cacheSurface);
+    }
+
+    sk_sp<SkSurface> GetCacheSurface() const
+    {
+        return cacheSurface_;
+    }
+
+    void ClearCacheSurface()
+    {
+        cacheSurface_ = nullptr;
+    }
+
 protected:
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
     void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty);
@@ -132,6 +149,8 @@ private:
     // bounds and frame modifiers must be unique
     std::shared_ptr<RSRenderModifier> boundsModifier_;
     std::shared_ptr<RSRenderModifier> frameModifier_;
+
+    sk_sp<SkSurface> cacheSurface_ = nullptr;
 
     friend class RSRenderTransition;
     friend class RSRenderNodeMap;

@@ -268,7 +268,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         isCustomizedDirtyRect = true;
     }
     // [planning] Remove this after skia is upgraded, the clipRegion is supported
-    if (node.GetRenderProperties().NeedFilter() && !node.IsAppFreeze()) {
+    if (node.GetRenderProperties().NeedFilter() && !node.GetRenderProperties().IsFreeze()) {
         needFilter_ = true;
     }
     dirtyFlag_ = dirtyFlag_ || node.GetDstRectChanged();
@@ -384,7 +384,7 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     node.UpdateParentChildrenRect(node.GetParent().lock());
 
     if (node.GetRenderProperties().NeedFilter() && curSurfaceNode_) {
-        if (!curSurfaceNode_->IsAppFreeze()) {
+        if (!curSurfaceNode_->GetRenderProperties().IsFreeze()) {
             // [planning] Remove this after skia is upgraded, the clipRegion is supported
             needFilter_ = true;
         }
@@ -898,7 +898,7 @@ std::vector<RectI> RSUniRenderVisitor::GetDirtyRects(const Occlusion::Region &re
 }
 #endif
 
-void RSUniRenderVisitor::InitCacheSurface(RSSurfaceRenderNode& node, int width, int height)
+void RSUniRenderVisitor::InitCacheSurface(RSRenderNode& node, int width, int height)
 {
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
     SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
@@ -1053,7 +1053,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             node.NotifyUIBufferAvailable();
             needDrawStartingWindow_ = false;
         }
-        if (!node.IsAppFreeze()) {
+        if (!node.GetRenderProperties().IsFreeze()) {
             ProcessBaseRenderNode(node);
             node.ClearCacheSurface();
         } else if (node.GetCacheSurface()) {
@@ -1151,8 +1151,28 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         RS_LOGE("RSUniRenderVisitor::ProcessCanvasRenderNode, canvas is nullptr");
         return;
     }
+    const auto& property = node.GetRenderProperties();
     node.ProcessRenderBeforeChildren(*canvas_);
-    ProcessBaseRenderNode(node);
+    if (!node.GetRenderProperties().IsFreeze()) {
+        ProcessBaseRenderNode(node);
+        node.ClearCacheSurface();
+    } else if (node.GetCacheSurface()) {
+        RSUniRenderUtil::DrawCachedSurface(node, *canvas_, node.GetCacheSurface());
+    } else {
+        InitCacheSurface(node, property.GetBoundsRect().GetWidth(), property.GetBoundsRect().GetHeight());
+        if (node.GetCacheSurface()) {
+            auto cacheCanvas = std::make_shared<RSPaintFilterCanvas>(node.GetCacheSurface().get());
+
+            swap(cacheCanvas, canvas_);
+            ProcessBaseRenderNode(node);
+            swap(cacheCanvas, canvas_);
+
+            RSUniRenderUtil::DrawCachedSurface(node, *canvas_, node.GetCacheSurface());
+        } else {
+            RS_LOGE("RSUniRenderVisitor::ProcessCanvasRenderNode %" PRIu64 " Create CacheSurface failed",
+                node.GetId());
+        }
+    }
     node.ProcessRenderAfterChildren(*canvas_);
 }
 

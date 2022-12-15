@@ -73,7 +73,6 @@ bool RSSurfaceNodeCommandFuzzTest(const uint8_t* data, size_t size)
     float height = GetData<float>();
     uint8_t alpha = GetData<uint8_t>();
     bool available = GetData<bool>();
-    bool isAppFreeze = GetData<bool>();
     RSSurfaceNodeType type = GetData<RSSurfaceNodeType>();
     bool hasContainerWindow = GetData<bool>();
     float density = GetData<float>();
@@ -94,7 +93,6 @@ bool RSSurfaceNodeCommandFuzzTest(const uint8_t* data, size_t size)
     SurfaceNodeCommandHelper::UpdateParentWithoutTransition(context, static_cast<NodeId>(id),
                                                             static_cast<NodeId>(parentId));
     SurfaceNodeCommandHelper::SetIsNotifyUIBufferAvailable(context, static_cast<NodeId>(id), available);
-    SurfaceNodeCommandHelper::SetAppFreeze(context, static_cast<NodeId>(id), isAppFreeze);
     SurfaceNodeCommandHelper::SetSurfaceNodeType(context, static_cast<NodeId>(id), type);
     SurfaceNodeCommandHelper::SetContainerWindow(context, static_cast<NodeId>(id), hasContainerWindow, density);
 

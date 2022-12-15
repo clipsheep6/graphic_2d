@@ -406,6 +406,15 @@ protected:
     RSModifierType GetModifierType() const override;
     std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
 };
+
+class RS_EXPORT RSFreezeModifier : public RSModifier {
+public:
+    explicit RSFreezeModifier(const std::shared_ptr<RSPropertyBase>& property);
+    virtual ~RSFreezeModifier() = default;
+protected:
+    RSModifierType GetModifierType() const override;
+    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
+};
 } // namespace Rosen
 } // namespace OHOS
 

@@ -251,6 +251,11 @@ std::shared_ptr<RSMask> RSModifierExtractor::GetMask() const
     GET_PROPERTY_FROM_MODIFIERS(std::shared_ptr<RSMask>, MASK, nullptr, =);
 }
 
+bool RSModifierExtractor::GetFreeze() const
+{
+    GET_PROPERTY_FROM_MODIFIERS(bool, FREEZE, true, =);
+}
+
 std::string RSModifierExtractor::Dump() const
 {
     std::string dumpInfo;

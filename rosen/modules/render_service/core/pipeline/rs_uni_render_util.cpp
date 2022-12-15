@@ -137,15 +137,15 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSDisplayRenderNode
     return params;
 }
 
-void RSUniRenderUtil::DrawCachedSurface(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas,
+void RSUniRenderUtil::DrawCachedSurface(RSRenderNode& node, RSPaintFilterCanvas& canvas,
     sk_sp<SkSurface> surface)
 {
     if (surface == nullptr) {
         return;
     }
     canvas.save();
-    canvas.scale(node.GetRenderProperties().GetBoundsWidth() / surface->width(),
-        node.GetRenderProperties().GetBoundsHeight() / surface->height());
+    canvas.scale(node.GetRenderProperties().GetBoundsRect().GetWidth() / surface->width(),
+        node.GetRenderProperties().GetBoundsRect().GetHeight() / surface->height());
     SkPaint paint;
     surface->draw(&canvas, 0.0, 0.0, &paint);
     canvas.restore();

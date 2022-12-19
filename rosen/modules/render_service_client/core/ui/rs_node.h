@@ -91,6 +91,8 @@ public:
     virtual void SetFramePositionX(float positionX);
     virtual void SetFramePositionY(float positionY);
 
+    virtual void SetFreeze(bool isFreeze);
+
     void SetPositionZ(float positionZ);
 
     void SetPivot(const Vector2f& pivot);
@@ -165,8 +167,6 @@ public:
 
     void SetVisible(bool visible);
     void SetMask(const std::shared_ptr<RSMask>& mask);
-
-    void SetFreeze(bool isFreeze);
 
     void SetPaintOrder(bool drawContentLast);
 

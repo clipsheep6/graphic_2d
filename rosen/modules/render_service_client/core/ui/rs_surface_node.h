@@ -94,6 +94,8 @@ public:
     void SetContainerWindow(bool hasContainerWindow, float density);
     void SetWindowId(uint32_t windowId);
 
+    void SetFreeze(bool isFreeze) override;
+
 protected:
     bool NeedForcedSendToRemote() const override;
     RSSurfaceNode(const RSSurfaceNodeConfig& config, bool isRenderServiceNode);

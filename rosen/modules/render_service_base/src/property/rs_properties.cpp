@@ -992,16 +992,6 @@ std::shared_ptr<RSMask> RSProperties::GetMask() const
     return mask_;
 }
 
-void RSProperties::SetFreeze(bool isFreeze)
-{
-    isFreeze_ = isFreeze;
-}
-
-bool RSProperties::IsFreeze() const
-{
-    return isFreeze_;
-}
-
 std::string RSProperties::Dump() const
 {
     std::string dumpInfo;

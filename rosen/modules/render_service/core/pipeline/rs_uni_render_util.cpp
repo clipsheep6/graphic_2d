@@ -144,8 +144,16 @@ void RSUniRenderUtil::DrawCachedSurface(RSRenderNode& node, RSPaintFilterCanvas&
         return;
     }
     canvas.save();
-    canvas.scale(node.GetRenderProperties().GetBoundsRect().GetWidth() / surface->width(),
-        node.GetRenderProperties().GetBoundsRect().GetHeight() / surface->height());
+    int width = 0;
+    int height = 0;
+    if (node.HasChildrenOutOfRect()) {
+        width = node.GetPaintOutOfParentRect().GetWidth();
+        height = node.GetPaintOutOfParentRect().GetHeight();
+    } else {
+        width = std::ceil(property.GetBoundsRect().GetWidth());
+        height = std::ceil(property.GetBoundsRect().GetHeight());
+    }
+    canvas.scale(width / surface->width(), height / surface->height());
     SkPaint paint;
     surface->draw(&canvas, 0.0, 0.0, &paint);
     canvas.restore();

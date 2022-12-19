@@ -107,6 +107,16 @@ public:
     // update node's out parent status
     void SetPaintOutOfParentFlag(std::shared_ptr<RSRenderNode> rsParent);
 
+    void SetFreeze(bool isFreeze)
+    {
+        isFreeze_ = isFreeze;
+    }
+
+    bool IsFreeze() const
+    {
+        return isFreeze_;
+    }
+
     void SetCacheSurface(sk_sp<SkSurface> cacheSurface)
     {
         cacheSurface_ = std::move(cacheSurface);
@@ -150,6 +160,7 @@ private:
     std::shared_ptr<RSRenderModifier> boundsModifier_;
     std::shared_ptr<RSRenderModifier> frameModifier_;
 
+    std::atomic<bool> isFreeze_ = false;
     sk_sp<SkSurface> cacheSurface_ = nullptr;
 
     friend class RSRenderTransition;

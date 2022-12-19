@@ -198,9 +198,6 @@ public:
 
     bool IsGeoDirty() const;
 
-    void SetFreeze(bool isFreeze);
-    bool IsFreeze() const;
-
 private:
     void Reset();
     void SetDirty();
@@ -222,8 +219,6 @@ private:
     bool geoDirty_ = false;
 
     bool hasBounds_ = false;
-
-    std::atomic<bool> isFreeze_ = false;
 
     Gravity frameGravity_ = Gravity::DEFAULT;
 

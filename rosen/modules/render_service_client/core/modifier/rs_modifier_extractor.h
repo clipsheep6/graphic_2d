@@ -80,8 +80,6 @@ public:
 
     std::shared_ptr<RSMask> GetMask() const;
 
-    bool GetFreeze() const;
-
     std::string Dump() const;
 private:
     NodeId id_;

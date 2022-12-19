@@ -746,7 +746,7 @@ void RSNode::SetMask(const std::shared_ptr<RSMask>& mask)
 
 void RSNode::SetFreeze(bool isFreeze)
 {
-    SetProperty<RSFreezeModifier, RSProperty<bool>>(RSModifierType::FREEZE, isFreeze);
+    ROSEN_LOGE("SetFreeze only support RSSurfaceNode and RSCanvasNode in uniRender");
 }
 
 void RSNode::NotifyTransition(const std::shared_ptr<const RSTransitionEffect>& effect, bool isTransitionIn)

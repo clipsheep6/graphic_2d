@@ -181,7 +181,6 @@ bool RSUniRenderUtil::ReleaseBuffer(RSSurfaceHandler& surfaceHandler)
         // to avoid releasing the same buffer next frame in some situations.
         preBuffer.Reset();
     }
-
     return true;
 }
 

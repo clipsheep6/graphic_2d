@@ -19,8 +19,9 @@
 #include <limits>
 #include <memory>
 #include <tuple>
-
+#ifdef ROSEN_OHOS
 #include <surface.h>
+#endif
 #include "include/gpu/GrContext.h"
 
 #include "common/rs_vector4.h"
@@ -31,8 +32,10 @@
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
 #include "pipeline/rs_surface_handler.h"
+#ifdef ROSEN_OHOS
 #include "refbase.h"
 #include "sync_fence.h"
+#endif
 #include "common/rs_occlusion_region.h"
 #include "transaction/rs_occlusion_data.h"
 
@@ -135,10 +138,10 @@ public:
 
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
-
+#ifdef ROSEN_OHOS
     void SetColorSpace(ColorGamut colorSpace);
     ColorGamut GetColorSpace() const;
-
+#endif
     std::shared_ptr<RSDirtyRegionManager> GetDirtyManager() const;
 
     void SetSrcRect(const RectI& rect)
@@ -274,6 +277,7 @@ public:
         globalDirtyRegionIsEmpty_ = globalDirtyRegion_.IsEmpty();
     }
 
+#ifdef ROSEN_OHOS
     void SetConsumer(const sptr<Surface>& consumer);
 
     void UpdateSurfaceDefaultSize(float width, float height);
@@ -283,9 +287,10 @@ public:
 
     // Only SurfaceNode in RS calls "RegisterBufferAvailableListener"
     // to save callback method sent by RT or UI which depends on the value of "isFromRenderThread".
+
     void RegisterBufferAvailableListener(
         sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread);
-
+#endif
     // Only SurfaceNode in RT calls "ConnectToNodeInRenderService" to send callback method to RS
     void ConnectToNodeInRenderService();
 
@@ -552,7 +557,9 @@ private:
     SkRect contextClipRect_ = SkRect::MakeEmpty();
 
     bool isSecurityLayer_ = false;
+#ifdef ROSEN_OHOS
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
+#endif
     RectI srcRect_;
     SkMatrix totalMatrix_;
     int32_t offsetX_ = 0;
@@ -563,13 +570,17 @@ private:
 
     std::string name_;
     RSSurfaceNodeType nodeType_ = RSSurfaceNodeType::DEFAULT;
-    GraphicBlendType blendType_ = GraphicBlendType::GRAPHIC_BLEND_SRCOVER;
+#ifdef ROSEN_OHOS
+    BlendType blendType_ = BlendType::BLEND_SRCOVER;
+#endif
     bool isNotifyRTBufferAvailablePre_ = false;
     std::atomic<bool> isNotifyRTBufferAvailable_ = false;
     std::atomic<bool> isNotifyUIBufferAvailable_ = false;
     std::atomic_bool isBufferAvailable_ = false;
+#ifdef ROSEN_OHOS
     sptr<RSIBufferAvailableCallback> callbackFromRT_;
     sptr<RSIBufferAvailableCallback> callbackFromUI_;
+#endif
     std::function<void(void)> callbackForRenderThreadRefresh_ = nullptr;
     std::vector<NodeId> childSurfaceNodeIds_;
     friend class RSRenderThreadVisitor;

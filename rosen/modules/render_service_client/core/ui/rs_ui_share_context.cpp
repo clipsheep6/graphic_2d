@@ -23,6 +23,7 @@ RSUIShareContext& RSUIShareContext::GetInstance()
     return singleton;
 }
 
+#ifdef ROSEN_OHOS
 EGLContext RSUIShareContext::GetRsRenderContext() const
 {
     auto context = RSRenderThread::Instance().GetRenderContext();
@@ -31,5 +32,6 @@ EGLContext RSUIShareContext::GetRsRenderContext() const
     }
     return context->GetEGLContext();
 }
+#endif
 }
 }

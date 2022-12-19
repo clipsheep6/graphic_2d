@@ -14,17 +14,15 @@
  */
 #ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_DISPLAY_RENDER_NODE_H
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_DISPLAY_RENDER_NODE_H
-
+#ifdef ROSEN_OHOS
 #include <ibuffer_consumer_listener.h>
-#include <memory>
 #include <surface.h>
-
-#include "sync_fence.h"
+#endif
+#include <memory>
 
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
 #include "platform/drawing/rs_surface.h"
-#include "render_context/render_context.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -104,16 +102,18 @@ public:
         return false;
     }
 
+#ifdef ROSEN_OHOS
     bool CreateSurface(sptr<IBufferConsumerListener> listener);
-
-    std::shared_ptr<RSSurface> GetRSSurface() const
-    {
-        return surface_;
-    }
 
     sptr<IBufferConsumerListener> GetConsumerListener() const
     {
         return consumerListener_;
+    }
+#endif
+
+    std::shared_ptr<RSSurface> GetRSSurface() const
+    {
+        return surface_;
     }
 
     bool IsSurfaceCreated() const
@@ -180,7 +180,9 @@ private:
 
     std::shared_ptr<RSSurface> surface_;
     bool surfaceCreated_ { false };
+#ifdef ROSEN_OHOS
     sptr<IBufferConsumerListener> consumerListener_;
+#endif
     uint64_t frameCount_ = 0;
 
     std::map<NodeId, RectI> lastFrameSurfacePos_;

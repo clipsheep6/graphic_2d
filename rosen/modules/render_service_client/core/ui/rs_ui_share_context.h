@@ -23,7 +23,9 @@ class RS_EXPORT RSUIShareContext final {
 public:
     static RSUIShareContext& GetInstance();
     ~RSUIShareContext() = default;
+#ifdef ROSEN_OHOS
     EGLContext GetRsRenderContext() const;
+#endif
 private:
     RSUIShareContext() = default;
     RSUIShareContext(const RSUIShareContext&) = delete;

@@ -125,6 +125,9 @@ void RSPropertyAnimation::OnUpdateStagingValue(bool isFirstStart)
     }
 
     SetPropertyValue(targetValue);
+    if (property_ != nullptr) {
+        property_->UpdateFinalValueToRender();
+    }
 }
 
 void RSPropertyAnimation::SetPropertyOnAllAnimationFinish()

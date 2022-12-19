@@ -146,6 +146,10 @@ public:
         finishCallback_ = finishCallback;
     }
 
+    virtual void MarkAddAnimationToProperty() {}
+
+    virtual void MarkRemoveAnimationToProperty() {}
+
 protected:
     explicit RSRenderAnimation(AnimationId id);
     RSRenderAnimation() = default;

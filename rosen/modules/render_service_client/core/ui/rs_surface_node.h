@@ -15,12 +15,16 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_NODE_H
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_NODE_H
 
+#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <refbase.h>
+#endif
 #include <string>
 
+#ifdef ROSEN_OHOS
 #include "surface.h"
 #include "surface_type.h"
+#endif
 
 #include "platform/drawing/rs_surface.h"
 #include "transaction/rs_transaction_proxy.h"
@@ -61,8 +65,9 @@ public:
     void AddChild(std::shared_ptr<RSBaseNode> child, int index) override;
     void RemoveChild(std::shared_ptr<RSBaseNode> child) override;
     void ClearChildren() override;
-
+#ifdef ROSEN_OHOS
     void SetColorSpace(ColorGamut colorSpace);
+#endif
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
     void SetAbilityBGAlpha(uint8_t alpha);
@@ -70,18 +75,22 @@ public:
 
     bool SetBufferAvailableCallback(BufferAvailableCallback callback);
 
+#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const;
     static SharedPtr Unmarshalling(Parcel& parcel);
     // Create RSProxyNode by unmarshalling RSSurfaceNode, return existing node if it exists in RSNodeMap.
     static RSNode::SharedPtr UnmarshallingAsProxyNode(Parcel& parcel);
 
     sptr<OHOS::Surface> GetSurface() const;
-    FollowType GetFollowType() const override;
+#endif
 
+    FollowType GetFollowType() const override;
+#ifdef ROSEN_OHOS
     ColorGamut GetColorSpace()
     {
         return colorSpace_;
     }
+#endif
     std::string GetName() const
     {
         return name_;
@@ -109,7 +118,9 @@ private:
     std::string name_;
     std::mutex mutex_;
     BufferAvailableCallback callback_;
+#ifdef ROSEN_OHOS
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
+#endif
     bool isSecurityLayer_ = false;
     bool isChildOperationDisallowed_ { false };
 

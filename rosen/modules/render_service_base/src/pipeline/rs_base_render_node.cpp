@@ -247,7 +247,9 @@ void RSBaseRenderNode::DumpTree(int32_t depth, std::string& out) const
         out += ", Parent [" + (p != nullptr ? std::to_string(p->GetId()) : "null") + "]";
         out += ", Name [" + surfaceNode->GetName() + "]";
         const RSSurfaceHandler& surfaceHandler = static_cast<const RSSurfaceHandler&>(*surfaceNode);
+#ifdef ROSEN_OHOS
         out += ", hasConsumer: " + std::to_string(surfaceHandler.HasConsumer());
+#endif
         static int decimal = 3;
         std::string contentAlpha = std::to_string(surfaceNode->GetContextAlpha());
         contentAlpha = contentAlpha.substr(0, contentAlpha.find(".") + decimal);

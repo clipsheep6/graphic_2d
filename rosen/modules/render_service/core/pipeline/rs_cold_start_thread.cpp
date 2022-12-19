@@ -78,11 +78,11 @@ void RSColdStartThread::Stop()
     if (handler_ != nullptr) {
         handler_->PostSyncTask([this]() {
             RS_TRACE_NAME_FMT("RSColdStartThread abandonContext"); // abandonContext here to avoid crash
-            RS_LOGD("RSColdStartThread abandonContext");
+            RS_LOGD("RSColdStartThread releaseResourcesAndAbandonContext");
             for (auto& resource : resourceVector_) {
                 auto grContext = resource.grContext;
                 if (grContext != nullptr) {
-                    grContext->abandonContext();
+                    grContext->releaseResourcesAndAbandonContext();
                 }
             }
             resourceVector_.clear();
@@ -202,6 +202,7 @@ void RSColdStartThread::PostPlayBackTask(std::shared_ptr<DrawCmdList> drawCmdLis
             RS_LOGD("RSMainThread SetCachedResource");
             auto cachedResource = node->GetCachedResource();
             node->SetCachedResource(resource);
+            RSMainThread::Instance()->RequestNextVSync();
             if (cachedResource.skSurface != nullptr) {
                 PostTask([this, cachedResource]() {
                     RS_LOGD("RSColdStartThread push cachedResource to queue");

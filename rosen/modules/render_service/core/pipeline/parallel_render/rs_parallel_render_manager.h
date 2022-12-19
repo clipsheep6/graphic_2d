@@ -66,6 +66,7 @@ public:
     void SetRenderTaskCost(uint32_t subMainThreadIdx, uint64_t loadId, float cost);
     bool ParallelRenderExtEnable();
     void ReadySubThreadNumIncrement();
+    void CommitSurfaceNum(int surfaceNum);
 
 private:
     RSParallelRenderManager() = default;

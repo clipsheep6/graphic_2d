@@ -279,6 +279,10 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         }
         isCustomizedDirtyRect = true;
     }
+    // [planning] Remove this after skia is upgraded, the clipRegion is supported
+    if (node.GetRenderProperties().NeedFilter() && !node.IsAppFreeze()) {
+        needFilter_ = true;
+    }
     dirtyFlag_ = dirtyFlag_ || node.GetDstRectChanged();
     parentSurfaceNodeMatrix_ = geoPtr->GetAbsMatrix();
     node.ResetSurfaceOpaqueRegion(RectI(0, 0, screenInfo_.width, screenInfo_.height), geoPtr->GetAbsRect(),
@@ -586,6 +590,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         int saveLayerCnt = 0;
         SkRegion region;
         Occlusion::Region dirtyRegionTest;
+        std::vector<RectI> rects;
         bool isParallel = false;
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined (RS_ENABLE_GL)
         AdaptiveSubRenderThreadMode(node.GetChildrenCount());
@@ -608,17 +613,14 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             RSUniRenderUtil::MergeDirtyHistory(displayNodePtr, bufferAge, isDirtyRegionAlignedEnable_);
             Occlusion::Region dirtyRegion = RSUniRenderUtil::MergeVisibleDirtyRegion(
                 displayNodePtr, isDirtyRegionAlignedEnable_);
+            dirtyRegionTest = dirtyRegion;
             if (isDirtyRegionAlignedEnable_) {
                 SetSurfaceGlobalAlignedDirtyRegion(displayNodePtr, dirtyRegion);
             } else {
                 SetSurfaceGlobalDirtyRegion(displayNodePtr);
             }
-            dirtyRegionTest = dirtyRegion;
-            std::vector<RectI> rects = GetDirtyRects(dirtyRegion);
+            rects = GetDirtyRects(dirtyRegion);
             RectI rect = node.GetDirtyManager()->GetDirtyRegionFlipWithinSurface();
-#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
-            isDirtyEmpty = (rects.size() == 0);
-#endif
             if (!rect.IsEmpty()) {
                 rects.emplace_back(rect);
             }
@@ -664,19 +666,21 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             }
             ProcessBaseRenderNode(node);
             canvas_->restoreToCount(saveCount);
-            if (saveLayerCnt > 0) {
-                RS_TRACE_NAME("RSUniRender:RestoreLayer");
-                canvas_->restoreToCount(saveLayerCnt);
-            }
         }
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
-        if (isParallel && !isDirtyEmpty) {
+        if (isParallel && (rects.size() > 0)) {
             parallelRenderManager->SetFrameSize(screenInfo_.width, screenInfo_.height);
             parallelRenderManager->CopyVisitorAndPackTask(*this, node);
             parallelRenderManager->LoadBalanceAndNotify();
             parallelRenderManager->MergeRenderResult(canvas_);
+            parallelRenderManager->CommitSurfaceNum(node.GetChildrenCount());
         }
 #endif
+        if (saveLayerCnt > 0) {
+            RS_TRACE_NAME("RSUniRender:RestoreLayer");
+            canvas_->restoreToCount(saveLayerCnt);
+        }
+
         if (overdrawListener != nullptr) {
             overdrawListener->Draw();
         }
@@ -705,7 +709,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
     // We should release DisplayNode's surface buffer after PostProcess(),
     // since the buffer's releaseFence was set in PostProcess().
     auto& surfaceHandler = static_cast<RSSurfaceHandler&>(node);
-    (void)RSBaseRenderUtil::ReleaseBuffer(surfaceHandler);
+    (void)RSUniRenderUtil::ReleaseBuffer(surfaceHandler);
     RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode end");
 }
 
@@ -1023,10 +1027,10 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
 
     if (node.IsAppWindow()) {
-        auto visibleDirtyRegions = node.GetVisibleDirtyRegion().GetRegionRects();
-        for (auto rect : visibleDirtyRegions) {
-            canvas_->GetVisibleRects().emplace_back(
-                SkRect::MakeLTRB(rect.left_, rect.top_, rect.right_, rect.bottom_));
+        auto visibleRegions = node.GetVisibleRegion().GetRegionRects();
+        if (visibleRegions.size() == 1) {
+            canvas_->SetVisibleRect(SkRect::MakeLTRB(
+                visibleRegions[0].left_, visibleRegions[0].top_, visibleRegions[0].right_, visibleRegions[0].bottom_));
         }
     }
 
@@ -1154,7 +1158,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     canvas_->RestoreCanvasAndAlpha(savedState);
     if (node.IsAppWindow()) {
-        canvas_->GetVisibleRects().clear();
+        canvas_->SetVisibleRect(SkRect::MakeLTRB(0, 0, 0, 0));
     }
 }
 

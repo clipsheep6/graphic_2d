@@ -142,6 +142,49 @@ void RSUniRenderUtil::DrawCachedSurface(RSSurfaceRenderNode& node, RSPaintFilter
     canvas.restore();
 }
 
+bool RSUniRenderUtil::ReleaseBuffer(RSSurfaceHandler& surfaceHandler)
+{
+    auto& consumer = surfaceHandler.GetConsumer();
+    if (consumer == nullptr) {
+        return false;
+    }
+
+    static bool firstEntry = true;
+    static std::function<void()> firstBufferRelease = nullptr;
+
+    auto& preBuffer = surfaceHandler.GetPreBuffer();
+    if (preBuffer.buffer != nullptr) {
+        if (firstEntry) {
+            // In order to avoid waiting for buffers' fence, we delay the first ReleaseBuffer to alloc 3 buffers.
+            // [planning] delete this function after Repaint parallelization.
+            firstEntry = false;
+            firstBufferRelease = [consumer, buffer = preBuffer.buffer, fence = preBuffer.releaseFence]() mutable {
+                auto ret = consumer->ReleaseBuffer(buffer, fence);
+                if (ret != OHOS::SURFACE_ERROR_OK) {
+                    RS_LOGE("RsDebug firstBufferRelease failed(ret: %d)!", ret);
+                }
+            };
+            preBuffer.Reset();
+            return true;
+        }
+        if (firstBufferRelease) {
+            firstBufferRelease();
+            firstBufferRelease = nullptr;
+        }
+        auto ret = consumer->ReleaseBuffer(preBuffer.buffer, preBuffer.releaseFence);
+        if (ret != OHOS::SURFACE_ERROR_OK) {
+            RS_LOGE("RsDebug surfaceHandler(id: %" PRIu64 ") ReleaseBuffer failed(ret: %d)!",
+                surfaceHandler.GetNodeId(), ret);
+            return false;
+        }
+        // reset prevBuffer if we release it successfully,
+        // to avoid releasing the same buffer next frame in some situations.
+        preBuffer.Reset();
+    }
+
+    return true;
+}
+
 Occlusion::Region RSUniRenderUtil::AlignedDirtyRegion(const Occlusion::Region& dirtyRegion, int32_t alignedBits)
 {
     Occlusion::Region alignedRegion;
@@ -153,7 +196,7 @@ Occlusion::Region RSUniRenderUtil::AlignedDirtyRegion(const Occlusion::Region& d
         int32_t top = (dirtyRect.top_ / alignedBits) * alignedBits;
         int32_t width = ((dirtyRect.right_ + alignedBits - 1) / alignedBits) * alignedBits - left;
         int32_t height = ((dirtyRect.bottom_ + alignedBits - 1) / alignedBits) * alignedBits - top;
-        Occlusion::Rect rect = { left, top, width, height };
+        Occlusion::Rect rect = { left, top, left + width, top + height };
         Occlusion::Region singleAlignedRegion(rect);
         alignedRegion.OrSelf(singleAlignedRegion);
     }

@@ -43,6 +43,7 @@ public:
         bool useAlignedDirtyRegion = false);
     static BufferDrawParam CreateBufferDrawParam(const RSSurfaceRenderNode& node, bool forceCPU);
     static void DrawCachedSurface(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas, sk_sp<SkSurface> surface);
+    static bool ReleaseBuffer(RSSurfaceHandler& surfaceHandler);
     static Occlusion::Region AlignedDirtyRegion(const Occlusion::Region& dirtyRegion, int32_t alignedBits = 32);
 };
 }

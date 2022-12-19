@@ -26,7 +26,9 @@ namespace Rosen {
 RSParallelPackVisitor::RSParallelPackVisitor(RSUniRenderVisitor &visitor)
 {
     partialRenderType_ = RSSystemProperties::GetUniPartialRenderEnabled();
-    isPartialRenderEnabled_ = (partialRenderType_ != PartialRenderType::DISABLED);
+    sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
+    auto screenNum = screenManager->GetAllScreenIds().size();
+    isPartialRenderEnabled_ = (screenNum <= 1) && (partialRenderType_ != PartialRenderType::DISABLED);
     isOpDropped_ = isPartialRenderEnabled_ && (partialRenderType_ != PartialRenderType::SET_DAMAGE);
     doAnimate_ = visitor.GetAnimateState();
 }
@@ -48,32 +50,37 @@ void RSParallelPackVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node)
 
 void RSParallelPackVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node)
 {
+    RS_TRACE_NAME("RSUniRender::Process:[" + node.GetName() + "]" + node.GetDstRect().ToString());
+    RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode node: %" PRIu64 ", child size:%u %s", node.GetId(),
+        node.GetChildrenCount(), node.GetName().c_str());
+    node.UpdatePositionZ();
     if (isSecurityDisplay_ && node.GetSecurityLayer()) {
         RS_TRACE_NAME("SecurityLayer Skip");
         return;
     }
-    const auto  &property = node.GetRenderProperties();
-    if (!property.GetVisible()) {
-        RS_LOGD("RSParallelPackVisitor::ProcessSurfaceRenderNode: %" PRIu64 " invisible", node.GetId());
+    if (node.GetSurfaceNodeType() == RSSurfaceNodeType::STARTING_WINDOW_NODE && !needDrawStartingWindow_) {
+        RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode skip startingWindow");
+        return;
+    }
+    const auto& property = node.GetRenderProperties();
+    if (!node.ShouldPaint()) {
+        RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode node: %" PRIu64 " invisible", node.GetId());
         return;
     }
     if (!node.GetOcclusionVisible() && !doAnimate_ && RSSystemProperties::GetOcclusionEnabled()) {
         RS_TRACE_NAME("Occlusion Skip");
         return;
     }
+#ifdef RS_ENABLE_EGLQUERYSURFACE
+    // skip clean surface node
     if (isOpDropped_ && node.IsAppWindow()) {
-        if (!node.SubNodeNeedDraw(node.GetOldDirty(), partialRenderType_)) {
+        if (!node.SubNodeNeedDraw(node.GetOldDirtyInSurface(), partialRenderType_)) {
             RS_TRACE_NAME("QuickReject Skip");
-            RS_LOGD("RSParallelPackVisitor::ProcessSurfaceRenderNode skip: %s", node.GetName().c_str());
+            RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode skip: %s", node.GetName().c_str());
             return;
         }
     }
-    auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(node.GetSortedChildren().front());
-    if (isOpDropped_ && (surfaceNode != nullptr) && surfaceNode->IsAppWindow() &&
-        !surfaceNode->SubNodeNeedDraw(surfaceNode->GetDstRect(), partialRenderType_)) {
-            RS_TRACE_NAME("Parallel QuickReject Skip");
-            return;
-    }
+#endif
     RSParallelRenderManager::Instance()->PackRenderTask(node);
 }
 } // namespace Rosen

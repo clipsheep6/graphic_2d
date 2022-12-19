@@ -33,7 +33,7 @@
 
 namespace OHOS {
 namespace Rosen {
-constexpr unsigned int RS_SUBMAIN_THREAD_CORE_LEVEL = 400;
+constexpr int RS_SUBMAIN_THREAD_CORE_LEVEL = 400;
 RSParallelSubThread::RSParallelSubThread():renderType_(ParallelRenderType::DRAW_IMAGE) {}
 
 RSParallelSubThread::RSParallelSubThread(RenderContext *context, ParallelRenderType renderType, int threadIndex)
@@ -47,7 +47,7 @@ void RSParallelSubThread::MainLoop()
     pthread_setname_np(pthread_self(), "SubMainThread");
     while (true) {
         if (RSParallelRenderManager::Instance()->ParallelRenderExtEnable()) {
-            auto setCoreLevelFunc = reinterpret_cast<void(*)(unsigned int)>(
+            auto setCoreLevelFunc = reinterpret_cast<void(*)(int)>(
                 RSParallelRenderExt::setCoreLevelFunc_);
             setCoreLevelFunc(RS_SUBMAIN_THREAD_CORE_LEVEL);
         }
@@ -275,18 +275,16 @@ void RSParallelSubThread::AcquireSubSkSurface(int width, int height)
         sk_sp<SkColorSpace> skColorSpace = nullptr;
 
         auto colorSpace = renderContext_->GetColorSpace();
-
+        skcms_TransferFunction function = SkNamedTransferFn::kSRGB;
         switch (colorSpace) {
-            // [planning] in order to stay consistant with the colorspace used before, we disabled
-            // COLOR_GAMUT_SRGB to let the branch to default, then skColorSpace is set to nullptr
             case COLOR_GAMUT_DISPLAY_P3:
-                skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDCIP3);
+                skColorSpace = SkColorSpace::MakeRGB(function, SkNamedGamut::kDCIP3);
                 break;
             case COLOR_GAMUT_ADOBE_RGB:
-                skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kAdobeRGB);
+                skColorSpace = SkColorSpace::MakeRGB(function, SkNamedGamut::kAdobeRGB);
                 break;
             case COLOR_GAMUT_BT2020:
-                skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kRec2020);
+                skColorSpace = SkColorSpace::MakeRGB(function, SkNamedGamut::kRec2020);
                 break;
             default:
                 break;

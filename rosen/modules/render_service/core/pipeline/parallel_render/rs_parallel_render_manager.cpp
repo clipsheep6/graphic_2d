@@ -213,5 +213,13 @@ void RSParallelRenderManager::TryEnableParallelRendering()
     }
 }
 
+void RSParallelRenderManager::CommitSurfaceNum(int surfaceNum)
+{
+    if (ParallelRenderExtEnable()) {
+        auto SetCoreLevelFunc = (void(*)(int))RSParallelRenderExt::setCoreLevelFunc_;
+        SetCoreLevelFunc(surfaceNum);
+    }
+}
+
 } // namespace Rosen
 } // namespace OHOS

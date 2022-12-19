@@ -19,7 +19,7 @@
 #ifdef ROSEN_OHOS
 #include "platform/ohos/rs_render_service_connect_hub.h"
 #endif
-#include "rs_trace.h"
+#include "platform/common/rs_trace.h"
 #include "ui/rs_ui_director.h"
 #include "sandbox_utils.h"
 

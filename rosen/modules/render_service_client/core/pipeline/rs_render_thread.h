@@ -22,17 +22,19 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <event_handler.h>
 
 #include "common/rs_thread_handler.h"
 #include "common/rs_thread_looper.h"
 #include "jank_detector/rs_jank_detector.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_render_thread_visitor.h"
+#include "platform/common/rs_event_handler.h"
 #include "platform/drawing/rs_vsync_client.h"
+#include "platform/common/rs_vsync_receiver.h"
+#ifdef ROSEN_OHOS
 #include "render_context/render_context.h"
+#endif
 #include "transaction/rs_transaction_proxy.h"
-#include "vsync_receiver.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -56,10 +58,12 @@ public:
 
     std::string DumpRenderTree() const;
 
+#ifdef ROSEN_OHOS
     RenderContext* GetRenderContext()
     {
         return renderContext_;
     }
+#endif
 
     RSContext& GetContext()
     {
@@ -124,9 +128,10 @@ private:
     bool needRender_ = true;
     std::atomic_int activeWindowCnt_ = 0;
     std::unique_ptr<std::thread> thread_ = nullptr;
-    std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
-    std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
-    std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
+    std::shared_ptr<RSEventRunner> runner_ = nullptr;
+    std::shared_ptr<RSEventHandler> handler_ = nullptr;
+
+    std::shared_ptr<RSVSyncReceiver> receiver_ = nullptr;
     RSTaskMessage::RSTask preTask_ = nullptr;
     RSTaskMessage::RSTask mainFunc_;
 
@@ -151,8 +156,9 @@ private:
     RSJankDetector jankDetector_;
 
     std::shared_ptr<RSContext> context_;
-
+#ifdef ROSEN_OHOS
     RenderContext* renderContext_ = nullptr;
+#endif
     std::shared_ptr<HighContrastObserver> highContrastObserver_;
     std::atomic_bool isHighContrastEnabled_ = false;
 

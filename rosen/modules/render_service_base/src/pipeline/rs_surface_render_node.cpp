@@ -46,10 +46,12 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> con
 
 RSSurfaceRenderNode::~RSSurfaceRenderNode() {}
 
+#ifdef ROSEN_OHOS
 void RSSurfaceRenderNode::SetConsumer(const sptr<Surface>& consumer)
 {
     consumer_ = consumer;
 }
+#endif
 
 static SkRect getLocalClipBounds(const RSPaintFilterCanvas& canvas)
 {
@@ -136,7 +138,7 @@ void RSSurfaceRenderNode::CollectSurface(
         }
         return;
     }
-
+#ifdef ROSEN_OHOS
     auto& consumer = GetConsumer();
     if (consumer != nullptr && consumer->GetTunnelHandle() != nullptr) {
         return;
@@ -152,6 +154,7 @@ void RSSurfaceRenderNode::CollectSurface(
             vec.emplace_back(shared_from_this());
         }
     }
+#endif
 }
 
 void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node)
@@ -161,10 +164,12 @@ void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSBaseRenderN
         if (surfaceNode == nullptr) {
             continue;
         }
+#ifdef ROSEN_OHOS
         auto& consumer = surfaceNode->GetConsumer();
         if (consumer != nullptr) {
             consumer->GoBackground();
         }
+#endif
     }
 }
 
@@ -175,12 +180,14 @@ void RSSurfaceRenderNode::ResetParent()
     if (nodeType_ == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
         ClearChildrenCache(shared_from_this());
     } else {
+#ifdef ROSEN_OHOS
         auto& consumer = GetConsumer();
         if (consumer != nullptr &&
             (GetSurfaceNodeType() != RSSurfaceNodeType::SELF_DRAWING_NODE &&
             GetSurfaceNodeType() != RSSurfaceNodeType::ABILITY_COMPONENT_NODE)) {
             consumer->GoBackground();
         }
+#endif
     }
 }
 
@@ -287,6 +294,7 @@ bool RSSurfaceRenderNode::GetSecurityLayer() const
     return isSecurityLayer_;
 }
 
+#ifdef ROSEN_OHOS
 void RSSurfaceRenderNode::SetColorSpace(ColorGamut colorSpace)
 {
     colorSpace_ = colorSpace;
@@ -325,9 +333,11 @@ void RSSurfaceRenderNode::RegisterBufferAvailableListener(
         callbackFromUI_ = callback;
     }
 }
+#endif
 
 void RSSurfaceRenderNode::ConnectToNodeInRenderService()
 {
+#ifdef ROSEN_OHOS
     ROSEN_LOGI("RSSurfaceRenderNode::ConnectToNodeInRenderService nodeId = %" PRIu64, GetId());
     auto renderServiceClient =
         std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
@@ -341,6 +351,7 @@ void RSSurfaceRenderNode::ConnectToNodeInRenderService()
                 node->NotifyRTBufferAvailable();
             }, true);
     }
+#endif
 }
 
 void RSSurfaceRenderNode::NotifyRTBufferAvailable()
@@ -358,7 +369,7 @@ void RSSurfaceRenderNode::NotifyRTBufferAvailable()
         ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %" PRIu64 " RenderThread", GetId());
         callbackForRenderThreadRefresh_();
     }
-
+#ifdef ROSEN_OHOS
     {
         std::lock_guard<std::mutex> lock(mutexRT_);
         if (callbackFromRT_) {
@@ -369,6 +380,7 @@ void RSSurfaceRenderNode::NotifyRTBufferAvailable()
             isNotifyRTBufferAvailable_ = false;
         }
     }
+#endif
 }
 
 void RSSurfaceRenderNode::NotifyUIBufferAvailable()
@@ -377,6 +389,7 @@ void RSSurfaceRenderNode::NotifyUIBufferAvailable()
         return;
     }
     isNotifyUIBufferAvailable_ = true;
+#ifdef ROSEN_OHOS
     {
         std::lock_guard<std::mutex> lock(mutexUI_);
         if (callbackFromUI_) {
@@ -386,6 +399,7 @@ void RSSurfaceRenderNode::NotifyUIBufferAvailable()
             isNotifyUIBufferAvailable_ = false;
         }
     }
+#endif
 }
 
 bool RSSurfaceRenderNode::IsNotifyRTBufferAvailable() const

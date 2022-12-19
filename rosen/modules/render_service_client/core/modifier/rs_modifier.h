@@ -18,6 +18,7 @@
 
 #include "common/rs_macros.h"
 #include "modifier/rs_property.h"
+#include "modifier/rs_render_modifier.h"
 
 namespace OHOS {
 namespace Rosen {

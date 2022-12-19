@@ -24,8 +24,6 @@
 #include <include/core/SkPaint.h>
 #include <include/core/SkRect.h>
 
-#include "rs_trace.h"
-
 #include "command/rs_base_node_command.h"
 #include "common/rs_vector4.h"
 #include "overdraw/rs_cpu_overdraw_canvas_listener.h"
@@ -39,6 +37,7 @@
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_trace.h"
 #include "platform/drawing/rs_surface.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_surface_extractor.h"
@@ -305,8 +304,9 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     }
 
     curDirtyManager_ = node.GetDirtyManager();
-
+#ifdef ROSEN_OHOS
     auto surfaceNodeColorSpace = ptr->GetColorSpace();
+#endif
     std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(ptr);
     if (rsSurface == nullptr) {
         ROSEN_LOGE("ProcessRoot %s: No RSSurface found", ptr->GetName().c_str());
@@ -314,14 +314,14 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     }
     // Update queue size for each process loop in case it dynamically changes
     queueSize_ = rsSurface->GetQueueSize();
-
+#ifdef ROSEN_OHOS
     auto rsSurfaceColorSpace = rsSurface->GetColorSpace();
     if (surfaceNodeColorSpace != rsSurfaceColorSpace) {
         ROSEN_LOGD("Set new colorspace %d to rsSurface", surfaceNodeColorSpace);
         rsSurface->SetColorSpace(surfaceNodeColorSpace);
     }
-
-#ifdef ACE_ENABLE_GL
+#endif
+#if defined(ROSEN_OHOS) && defined(ACE_ENABLE_GL)
     RenderContext* rc = RSRenderThread::Instance().GetRenderContext();
     rsSurface->SetRenderContext(rc);
 #endif

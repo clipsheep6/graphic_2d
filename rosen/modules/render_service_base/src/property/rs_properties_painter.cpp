@@ -39,7 +39,6 @@
 #include "render/rs_path.h"
 #include "render/rs_shader.h"
 #include "render/rs_skia_filter.h"
-#include "render_context/render_context.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -442,7 +441,9 @@ void RSPropertiesPainter::DrawMask(const RSProperties& properties, SkCanvas& can
         canvas.translate(maskBounds.fLeft + mask->GetSvgX(), maskBounds.fTop + mask->GetSvgY());
         canvas.scale(mask->GetScaleX(), mask->GetScaleY());
         if (mask->GetSvgDom()) {
+#ifdef ROSEN_OHOS
             mask->GetSvgDom()->render(&canvas);
+#endif
         } else if (mask->GetSvgPicture()) {
             canvas.drawPicture(mask->GetSvgPicture());
         }

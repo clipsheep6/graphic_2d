@@ -16,7 +16,7 @@
 #ifndef RENDER_SERVICE_BASE_COMMON_RS_INNOVATION_H
 #define RENDER_SERVICE_BASE_COMMON_RS_INNOVATION_H
 #include <dlfcn.h>
-#include <parameters.h>
+#include "rs_parameters.h"
 namespace OHOS {
 namespace Rosen {
 class RSInnovation {

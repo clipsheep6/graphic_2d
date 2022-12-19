@@ -80,7 +80,8 @@ private:
     // set global dirty region to each surface node
     void SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node);
 
-    void InitCacheSurface(RSSurfaceRenderNode& node, int width, int height);
+    void InitCacheSurface(RSRenderNode& node, int width, int height);
+    void ProcessRenderNode(RSRenderNode& node)
     void SetPaintOutOfParentFlag(RSBaseRenderNode& node);
     void CheckColorSpace(RSSurfaceRenderNode& node);
     void AddOverDrawListener(std::unique_ptr<RSRenderFrame>& renderFrame,

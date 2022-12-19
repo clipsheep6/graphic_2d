@@ -61,7 +61,6 @@ public:
     static void SetAbilityBGAlpha(RSContext& context, NodeId id, uint8_t alpha);
     static void UpdateParentWithoutTransition(RSContext& context, NodeId nodeId, NodeId parentId);
     static void SetIsNotifyUIBufferAvailable(RSContext& context, NodeId nodeId, bool available);
-    static void SetAppFreeze(RSContext& context, NodeId nodeId, bool isAppFreeze);
     static void SetSurfaceNodeType(RSContext& context, NodeId nodeId, RSSurfaceNodeType type);
     static void SetContainerWindow(RSContext& context, NodeId nodeId, bool hasContainerWindow, float density);
     static void SetAnimationFinished(RSContext& context, NodeId nodeId);
@@ -96,8 +95,6 @@ ADD_COMMAND(RSSurfaceNodeUpdateParentWithoutTransition,
 ADD_COMMAND(RSSurfaceNodeSetIsNotifyUIBufferAvailable,
     ARG(SURFACE_NODE, SURFACE_NODE_SET_IS_NOTIFY_BUFFER_AVAILABLE,
     SurfaceNodeCommandHelper::SetIsNotifyUIBufferAvailable, NodeId, bool))
-ADD_COMMAND(RSSurfaceNodeSetAppFreeze,
-    ARG(SURFACE_NODE, SURFACE_NODE_SET_APP_FREEZE, SurfaceNodeCommandHelper::SetAppFreeze, NodeId, bool))
 ADD_COMMAND(RSSurfaceNodeSetSurfaceNodeType,
     ARG(SURFACE_NODE, SURFACE_NODE_SET_SURFACE_NODE_TYPE,
     SurfaceNodeCommandHelper::SetSurfaceNodeType, NodeId, RSSurfaceNodeType))

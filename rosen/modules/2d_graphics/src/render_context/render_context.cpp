@@ -137,6 +137,24 @@ void RenderContext::CreatePbufferSurface()
     }
 }
 
+EGLSurface RenderContext::CreateNewPBufferSurface()
+{
+    std::unique_lock<std::mutex> lock(shareContextMutex_);
+    const char* extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
+
+    EGLSurface curPBufferSurface = EGL_NO_SURFACE;
+    if ((extensions != nullptr) &&
+       (!CheckEglExtension(extensions, EGL_KHR_SURFACELESS_CONTEXT))) {
+        EGLint attribs[] = {EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
+        curPBufferSurface = eglCreatePbufferSurface(eglDisplay_, config_, attribs);
+        if (curPBufferSurface == EGL_NO_SURFACE) {
+            LOGE("Failed to create new pbuffer surface");
+        }
+    }
+    lock.unlock();
+    return curPBufferSurface;
+}
+
 void RenderContext::InitializeEglContext()
 {
     if (IsEglContextReady()) {
@@ -199,6 +217,30 @@ void RenderContext::MakeCurrent(EGLSurface surface, EGLContext context) const
             LOGE("Failed to make current on surface %{public}p, error is %{public}x", surface, eglGetError());
         }
     }
+}
+
+void RenderContext::ShareMakeCurrent(EGLContext shareContext)
+{
+    eglMakeCurrent(eglDisplay_, eglSurface_, eglSurface_, shareContext);
+}
+
+void RenderContext::ShareMakeCurrentNoSurface(EGLContext shareContext)
+{
+    eglMakeCurrent(eglDisplay_, EGL_NO_SURFACE, EGL_NO_SURFACE, shareContext);
+}
+
+void RenderContext::MakeSelfCurrent()
+{
+    eglMakeCurrent(eglDisplay_, eglSurface_, eglSurface_, eglContext_);
+}
+
+EGLContext RenderContext::CreateShareContext()
+{
+    std::unique_lock<std::mutex> lock(shareContextMutex_);
+    static const EGLint context_attribs[] = {EGL_CONTEXT_CLIENT_VERSION, EGL_CONTEXT_CLIENT_VERSION_NUM, EGL_NONE};
+    auto eglShareContext = eglCreateContext(eglDisplay_, config_, eglContext_, context_attribs);
+    lock.unlock();
+    return eglShareContext;
 }
 
 void RenderContext::SwapBuffers(EGLSurface surface) const

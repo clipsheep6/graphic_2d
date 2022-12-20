@@ -44,6 +44,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
+bool g_forceBgAntiAlias = true;
 constexpr int PARAM_DOUBLE = 2;
 constexpr float MIN_TRANS_RATIO = 0.0f;
 constexpr float MAX_TRANS_RATIO = 0.95f;
@@ -274,6 +275,8 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         ROSEN_LOGD("RSPropertiesPainter::DrawFilter skSurface null");
         SkCanvas::SaveLayerRec slr(nullptr, &paint, SkCanvas::kInitWithPrevious_SaveLayerFlag);
         canvas.saveLayer(slr);
+        filter->PostProcess(canvas);
+        canvas.restore();
         return;
     }
     // canvas draw by snapshot instead of SaveLayer, since the blur layer moves while using savelayer
@@ -309,31 +312,43 @@ void RSPropertiesPainter::ResetBlurCnt()
 void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
     DrawShadow(properties, canvas);
+    // only disable antialias when background is rect and g_forceBgAntiAlias is true
+    bool antiAlias = g_forceBgAntiAlias || !properties.GetCornerRadius().IsZero();
     // clip
     if (properties.GetClipBounds() != nullptr) {
-        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
+        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), antiAlias);
     } else if (properties.GetClipToBounds()) {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
+        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
     }
     // paint backgroundColor
     SkPaint paint;
-    paint.setAntiAlias(true);
+    paint.setAntiAlias(antiAlias);
     canvas.save();
     auto bgColor = properties.GetBackgroundColor();
     if (bgColor != RgbPalette::Transparent()) {
         paint.setColor(bgColor.AsArgbInt());
         canvas.drawRRect(RRect2SkRRect(properties.GetRRect()), paint);
     } else if (const auto& bgImage = properties.GetBgImage()) {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
+        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
         auto boundsRect = Rect2SkRect(properties.GetBoundsRect());
         bgImage->SetDstRect(properties.GetBgImageRect());
         bgImage->CanvasDrawImage(canvas, boundsRect, paint, true);
     } else if (const auto& bgShader = properties.GetBackgroundShader()) {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
+        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
         paint.setShader(bgShader->GetSkShader());
         canvas.drawPaint(paint);
     }
     canvas.restore();
+}
+
+void RSPropertiesPainter::SetBgAntiAlias(bool forceBgAntiAlias)
+{
+    g_forceBgAntiAlias = forceBgAntiAlias;
+}
+
+bool RSPropertiesPainter::GetBgAntiAlias()
+{
+    return g_forceBgAntiAlias;
 }
 
 void RSPropertiesPainter::DrawFrame(const RSProperties& properties, RSPaintFilterCanvas& canvas, DrawCmdListPtr& cmds)

@@ -11,16 +11,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("unittest") {
-  testonly = true
-
-  deps = [
-    "draw:unittest",
-    "effect:unittest",
-    "image:unittest",
-    "ndk:unittest",
-    "render_context:unittest",
-    "skia_adapter:unittest",
-    "utils:unittest",
-  ]
-}
+persist.sys.graphic.animationscale = accessibility:accessibility:0777

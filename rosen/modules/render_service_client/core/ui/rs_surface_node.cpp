@@ -77,8 +77,8 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
         transactionProxy->AddCommand(command, isWindow);
         node->SetFrameGravity(Gravity::RESIZE);
     }
-    if (std::strcmp(node->GetName().c_str(), "SystemUi_BatteryPanel") == 0 ||
-        std::strcmp(node->GetName().c_str(), "SystemUi_SoundPanel") == 0) {
+    if (node->GetName().find("battery_panel") != std::string::npos ||
+        node->GetName().find("sound_panel") != std::string::npos) {
         node->SetFrameGravity(Gravity::TOP_LEFT);
     } else {
         node->SetFrameGravity(Gravity::RESIZE);
@@ -360,6 +360,11 @@ void RSSurfaceNode::SetContainerWindow(bool hasContainerWindow, float density)
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, true);
     }
+}
+
+void RSSurfaceNode::SetWindowId(uint32_t windowId)
+{
+    windowId_ = windowId;
 }
 
 RSSurfaceNode::RSSurfaceNode(const RSSurfaceNodeConfig& config, bool isRenderServiceNode)

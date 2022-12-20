@@ -93,9 +93,13 @@ private:
     void CheckColorSpace(RSSurfaceRenderNode& node);
     void AddOverDrawListener(std::unique_ptr<RSRenderFrame>& renderFrame,
         std::shared_ptr<RSCanvasListener>& overdrawListener);
-
     void RecordAppWindowNodeAndPostTask(RSSurfaceRenderNode& node, float width, float height);
+    // offscreen render related
+    void PrepareOffscreenRender(RSRenderNode& node);
+    void FinishOffscreenRender();
     void AdaptiveSubRenderThreadMode(uint32_t renderNodeNum);
+    sk_sp<SkSurface> offscreenSurface_;                 // temporary holds offscreen surface
+    std::shared_ptr<RSPaintFilterCanvas> canvasBackup_; // backup current canvas before offscreen render
 
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;

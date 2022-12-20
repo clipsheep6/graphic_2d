@@ -82,7 +82,7 @@ Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDis
     Occlusion::Region allSurfaceVisibleDirtyRegion;
     for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
         auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
-        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
+        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow() || surfaceNode->GetDstRect().IsEmpty()) {
             continue;
         }
         auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
@@ -128,6 +128,24 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
     return params;
 }
 
+BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSDisplayRenderNode& node, bool forceCPU)
+{
+    BufferDrawParam params;
+#ifdef RS_ENABLE_EGLIMAGE
+    params.useCPU = forceCPU;
+#else // RS_ENABLE_EGLIMAGE
+    params.useCPU = true;
+#endif // RS_ENABLE_EGLIMAGE
+    params.isPosInfoSet = false;
+    params.paint.setAntiAlias(true);
+    params.paint.setFilterQuality(SkFilterQuality::kLow_SkFilterQuality);
+
+    const sptr<SurfaceBuffer>& buffer = node.GetBuffer();
+    params.buffer = buffer;
+    params.acquireFence = node.GetAcquireFence();
+    return params;
+}
+
 void RSUniRenderUtil::DrawCachedSurface(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas,
     sk_sp<SkSurface> surface)
 {
@@ -142,6 +160,19 @@ void RSUniRenderUtil::DrawCachedSurface(RSSurfaceRenderNode& node, RSPaintFilter
     canvas.restore();
 }
 
+void RSUniRenderUtil::DrawCachedImage(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas, sk_sp<SkImage> image)
+{
+    if (image == nullptr) {
+        return;
+    }
+    canvas.save();
+    canvas.scale(node.GetRenderProperties().GetBoundsWidth() / image->width(),
+        node.GetRenderProperties().GetBoundsHeight() / image->height());
+    SkPaint paint;
+    canvas.drawImage(image.get(), 0.0, 0.0, &paint);
+    canvas.restore();
+}
+
 bool RSUniRenderUtil::ReleaseBuffer(RSSurfaceHandler& surfaceHandler)
 {
     auto& consumer = surfaceHandler.GetConsumer();
@@ -149,11 +180,10 @@ bool RSUniRenderUtil::ReleaseBuffer(RSSurfaceHandler& surfaceHandler)
         return false;
     }
 
-    static bool firstEntry = true;
-    static std::function<void()> firstBufferRelease = nullptr;
-
     auto& preBuffer = surfaceHandler.GetPreBuffer();
     if (preBuffer.buffer != nullptr) {
+        static bool firstEntry = true;
+        static std::function<void()> firstBufferRelease = nullptr;
         if (firstEntry) {
             // In order to avoid waiting for buffers' fence, we delay the first ReleaseBuffer to alloc 3 buffers.
             // [planning] delete this function after Repaint parallelization.

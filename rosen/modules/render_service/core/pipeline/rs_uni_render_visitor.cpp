@@ -394,10 +394,15 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     PrepareBaseRenderNode(node);
     // attention: accumulate direct parent's childrenRect
     node.UpdateParentChildrenRect(node.GetParent().lock());
-
-    // [planning] Remove this after skia is upgraded, the clipRegion is supported
-    if (node.GetRenderProperties().NeedFilter()) {
-        needFilter_ = true;
+    if (node.GetRenderProperties().NeedFilter() && curSurfaceNode_) {
+        if (!curSurfaceNode_->IsAppFreeze()) {
+            // [planning] Remove this after skia is upgraded, the clipRegion is supported
+            needFilter_ = true;
+        }
+        // filterRects_ is used in RSUniRenderVisitor::CalcDirtyRegionForFilterNode
+        // When oldDirtyRect of node with filter has intersect with any surfaceNode or displayNode dirtyRegion,
+        // the whole oldDirtyRect should be render in this vsync.
+        // Partical rendering of node with filter would cause display problem.
         filterRects_[curSurfaceNode_->GetId()].push_back(node.GetOldDirtyInSurface());
     }
     curAlpha_ = alpha;
@@ -639,7 +644,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         }
         if (isOpDropped_ && !isDirtyRegionAlignedEnable_) {
             if (region.isEmpty()) {
-                // [planning] Remove this after frame buffer can release
+                // [planning] Remove this after frame buffer can cancel
                 canvas_->clipRect(SkRect::MakeEmpty());
             } else if (region.isRect()) {
                 canvas_->clipRegion(region);
@@ -652,9 +657,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                     saveLayerCnt = canvas_->saveLayer(SkRect::MakeWH(screenInfo_.width, screenInfo_.height), nullptr);
                 }
             }
-            canvas_->clear(SK_ColorTRANSPARENT);
         }
 #endif
+        RSPropertiesPainter::SetBgAntiAlias(true);
         if (!isParallel) {
             int saveCount = canvas_->save();
             canvas_->SetHighContrast(renderEngine_->IsHighContrastEnabled());
@@ -675,7 +680,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             parallelRenderManager->MergeRenderResult(canvas_);
             parallelRenderManager->CommitSurfaceNum(node.GetChildrenCount());
         }
-#endif
+#endif        
         if (saveLayerCnt > 0) {
             RS_TRACE_NAME("RSUniRender:RestoreLayer");
             canvas_->restoreToCount(saveLayerCnt);
@@ -699,9 +704,6 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         RS_TRACE_BEGIN("RSUniRender:WaitUtilUniRenderFinished");
         RSMainThread::Instance()->WaitUtilUniRenderFinished();
         RS_TRACE_END();
-        if (mirroredDisplays_.size() > 0) {
-            node.MakeSnapshot(canvas_->GetSurface());
-        }
         processor_->ProcessDisplaySurface(node);
     }
     processor_->PostProcess();
@@ -1052,11 +1054,27 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
 
     auto savedState = canvas_->SaveCanvasAndAlpha();
+    auto bgAntiAliasState = RSPropertiesPainter::GetBgAntiAlias();
+    if (doAnimate_ && (!ROSEN_EQ(geoPtr->GetScaleX(), 1.f) || !ROSEN_EQ(geoPtr->GetScaleY(), 1.f))) {
+        // disable background antialias when surfacenode has scale animation
+        RSPropertiesPainter::SetBgAntiAlias(false);
+    }
 
     canvas_->MultiplyAlpha(property.GetAlpha());
     canvas_->MultiplyAlpha(node.GetContextAlpha());
 
     bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
+    // [planning] surfaceNode use frame instead
+    // This is for SELF_DRAWING_NODE like RosenRenderTexture
+    // BoundsRect of RosenRenderTexture is the size of video, not the size of the component.
+    // The size of RosenRenderTexture is the paintRect (always be set to FrameRect) which is not passed to RenderNode
+    // because RSSurfaceRenderNode is designed only affected by BoundsRect.
+    // When RosenRenderTexture has child node, child node is layouted
+    // according to paintRect of RosenRenderTexture, not the BoundsRect.
+    // So when draw SELF_DRAWING_NODE, we should save canvas
+    // to avoid child node being layout according to the BoundsRect of RosenRenderTexture.
+    // Temporarily, we use parent of SELF_DRAWING_NODE which has the same paintRect with its child instead.
+    // to draw child node of SELF_DRAWING_NODE
     if (isSelfDrawingSurface) {
         canvas_->save();
     }
@@ -1067,10 +1085,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
     RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect);
 
-    if (isSelfDrawingSurface) {
-        canvas_->save();
-    }
-
+    // Fix bug that when AppWindow has shadow set by config.xml cannot be displayed for LEASH_WINDOW_NODE has clipped canvas.
     if (node.GetSurfaceNodeType() != RSSurfaceNodeType::LEASH_WINDOW_NODE) {
         if (!property.GetCornerRadius().IsZero()) {
             canvas_->clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
@@ -1086,10 +1101,6 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         auto skRectPtr = std::make_unique<SkRect>();
         skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
         RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
-    }
-
-    if (isSelfDrawingSurface) {
-        canvas_->restore();
     }
 
     node.SetTotalMatrix(canvas_->getTotalMatrix());
@@ -1108,7 +1119,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (node.IsAppWindow() &&
         (!needColdStartThread_ || !RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId()))) {
         if (RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId())) {
-            node.ClearCachedResource();
+            node.ClearCachedImage();
             RSColdStartManager::Instance().StopColdStartThread(node.GetId());
         }
         if (needCheckFirstFrame_ && IsFirstFrameReadyToDraw(node)) {
@@ -1136,8 +1147,10 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             }
         }
     } else if (node.IsAppWindow()) { // use skSurface drawn by cold start thread
-        needDrawStartingWindow_ = false;
-        RSUniRenderUtil::DrawCachedSurface(node, *canvas_, node.GetCachedResource().skSurface);
+        if (node.GetCachedImage() != nullptr) {
+            needDrawStartingWindow_ = false;
+            RSUniRenderUtil::DrawCachedImage(node, *canvas_, node.GetCachedImage());
+        }
         RecordAppWindowNodeAndPostTask(node, property.GetBoundsWidth(), property.GetBoundsHeight());
     } else {
         ProcessBaseRenderNode(node);
@@ -1156,6 +1169,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
     }
 
+    RSPropertiesPainter::SetBgAntiAlias(bgAntiAliasState);
     canvas_->RestoreCanvasAndAlpha(savedState);
     if (node.IsAppWindow()) {
         canvas_->SetVisibleRect(SkRect::MakeLTRB(0, 0, 0, 0));
@@ -1202,7 +1216,7 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         return;
     }
 #ifdef RS_ENABLE_EGLQUERYSURFACE
-    if (isOpDropped_ &&
+    if (isOpDropped_ && curSurfaceNode_ &&
         !curSurfaceNode_->SubNodeNeedDraw(node.GetOldDirtyInSurface(), partialRenderType_) &&
         !node.HasChildrenOutOfRect()) {
         return;
@@ -1230,6 +1244,7 @@ void RSUniRenderVisitor::RecordAppWindowNodeAndPostTask(RSSurfaceRenderNode& nod
     RSColdStartManager::Instance().PostPlayBackTask(node.GetId(), canvas.GetDrawCmdList(), width, height);
 }
 
+<<<<<<< HEAD
 void RSUniRenderVisitor::AdaptiveSubRenderThreadMode(uint32_t renderNodeNum)
 {
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
@@ -1249,5 +1264,55 @@ void RSUniRenderVisitor::AdaptiveSubRenderThreadMode(uint32_t renderNodeNum)
 #endif
 }
 
+=======
+void RSUniRenderVisitor::PrepareOffscreenRender(RSRenderNode& node)
+{
+    // cleanup
+    canvasBackup_ = nullptr;
+    offscreenSurface_ = nullptr;
+    // check offscreen size and hardware renderer
+    int32_t offscreenWidth = node.GetRenderProperties().GetFrameWidth();
+    int32_t offscreenHeight = node.GetRenderProperties().GetFrameHeight();
+    if (offscreenWidth <= 0 || offscreenHeight <= 0) {
+        RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, offscreenWidth or offscreenHeight is invalid");
+        return;
+    }
+    if (canvas_->GetSurface() == nullptr) {
+        canvas_->clipRect(SkRect::MakeWH(offscreenWidth, offscreenHeight));
+        RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, current surface is nullptr (software renderer?)");
+        return;
+    }
+    // create offscreen surface and canvas
+    auto offscreenInfo = SkImageInfo::Make(offscreenWidth, offscreenHeight, kRGBA_8888_SkColorType, kPremul_SkAlphaType,
+        canvas_->GetSurface()->imageInfo().refColorSpace());
+    offscreenSurface_ = canvas_->GetSurface()->makeSurface(offscreenInfo);
+    if (offscreenSurface_ == nullptr) {
+        RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, offscreenSurface is nullptr");
+        canvas_->clipRect(SkRect::MakeWH(offscreenWidth, offscreenHeight));
+        return;
+    }
+    auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface_.get());
+    // backup current canvas and replace with offscreen canvas
+    canvasBackup_ = std::move(canvas_);
+    canvas_ = std::move(offscreenCanvas);
+}
+
+void RSUniRenderVisitor::FinishOffscreenRender()
+{
+    if (canvasBackup_ == nullptr) {
+        RS_LOGD("RSUniRenderVisitor::FinishOffscreenRender, canvasBackup_ is nullptr");
+        return;
+    }
+    // flush offscreen canvas, maybe unnecessary
+    canvas_->flush();
+    // draw offscreen surface to current canvas
+    SkPaint paint;
+    paint.setAntiAlias(true);
+    canvasBackup_->drawImage(offscreenSurface_->makeImageSnapshot(), 0, 0, &paint);
+    // restore current canvas and cleanup
+    offscreenSurface_ = nullptr;
+    canvas_ = std::move(canvasBackup_);
+}
+>>>>>>> 0e99f2c03d1095223a9a34f5260eef6addfc2796
 } // namespace Rosen
 } // namespace OHOS

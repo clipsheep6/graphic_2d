@@ -93,6 +93,13 @@ int32_t HdiDeviceImpl::RegScreenVBlankCallback(uint32_t screenId, VBlankCallback
     return deviceFuncs_->RegDisplayVBlankCallback(screenId, callback, data);
 }
 
+int32_t HdiDeviceImpl::RegHwcDeadCallback(OnHwcDeadCallback callback, void *data)
+{
+    // CHECK_FUNC(deviceFuncs_, deviceFuncs_->RegComposerDeathCallback);
+    // return deviceFuncs_->RegComposerDeathCallback(callback, data);
+    return DISPLAY_NOT_SUPPORT;
+}
+
 int32_t HdiDeviceImpl::SetScreenVsyncEnabled(uint32_t screenId, bool enabled)
 {
     CHECK_FUNC(deviceFuncs_, deviceFuncs_->SetDisplayVsyncEnabled);

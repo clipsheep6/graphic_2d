@@ -31,6 +31,7 @@ public:
     /* set & get device screen info begin */
     int32_t RegHotPlugCallback(HotPlugCallback callback, void *data) override;
     int32_t RegScreenVBlankCallback(uint32_t screenId, VBlankCallback callback, void *data) override;
+    int32_t RegHwcDeadCallback(OnHwcDeadCallback callback, void *data) override;
     int32_t GetScreenCapability(uint32_t screenId, GraphicDisplayCapability &info) override;
     int32_t GetScreenSupportedModes(uint32_t screenId, std::vector<GraphicDisplayModeInfo> &modes) override;
     int32_t GetScreenMode(uint32_t screenId, uint32_t &modeId) override;

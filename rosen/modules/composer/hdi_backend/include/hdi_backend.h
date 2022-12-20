@@ -47,6 +47,7 @@ public:
     static HdiBackend* GetInstance();
     RosenError RegScreenHotplug(OnScreenHotplugFunc func, void* data);
     RosenError RegPrepareComplete(OnPrepareCompleteFunc func, void* data);
+    RosenError RegHwcDeadListener(OnHwcDeadCallback func, void* data);
     void Repaint(const OutputPtr &output);
     std::map<LayerInfoPtr, sptr<SyncFence>> GetLayersReleaseFence(const OutputPtr& output);
     /* for RS end */

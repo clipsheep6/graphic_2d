@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_PACK_VISITOR_H
-#define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_PACK_VISITOR_H
+#ifndef RS_PARALLEL_PACK_VISITOR_H
+#define RS_PARALLEL_PACK_VISITOR_H
 
 #include <vector>
 #include <string>
@@ -25,15 +25,16 @@ namespace Rosen {
 class RSUniRenderVisitor;
 class RSParallelPackVisitor : public RSNodeVisitor {
 public:
+    RSParallelPackVisitor() {}
     explicit RSParallelPackVisitor(RSUniRenderVisitor &visitor);
     ~RSParallelPackVisitor() = default;
 
-    void PrepareBaseRenderNode(RSBaseRenderNode& node) override {}
+    void PrepareBaseRenderNode(RSBaseRenderNode& node) override;
     void PrepareCanvasRenderNode(RSCanvasRenderNode& node) override {}
-    void PrepareDisplayRenderNode(RSDisplayRenderNode& node) override {}
+    void PrepareDisplayRenderNode(RSDisplayRenderNode& node) override;
     void PrepareProxyRenderNode(RSProxyRenderNode& node) override {}
     void PrepareRootRenderNode(RSRootRenderNode& node) override {}
-    void PrepareSurfaceRenderNode(RSSurfaceRenderNode& node) override {}
+    void PrepareSurfaceRenderNode(RSSurfaceRenderNode& node) override;
 
     void ProcessBaseRenderNode(RSBaseRenderNode& node) override;
     void ProcessCanvasRenderNode(RSCanvasRenderNode& node) override {}

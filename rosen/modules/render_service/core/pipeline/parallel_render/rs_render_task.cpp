@@ -47,7 +47,7 @@ std::shared_ptr<RSBaseRenderNode> RSSuperRenderTask::GetSurfaceNode()
 std::unique_ptr<RSRenderTask> RSSuperRenderTask::GetNextRenderTask()
 {
     if (GetTaskSize() == 0) {
-        return nullptr;
+        return std::unique_ptr<RSRenderTask>();
     }
     auto task = std::move(tasks_.front());
     tasks_.pop();

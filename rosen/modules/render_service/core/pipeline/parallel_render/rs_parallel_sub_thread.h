@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_SUB_THREAD_H
-#define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_SUB_THREAD_H
+#ifndef RS_PARALLEL_SUB_THREAD_H
+#define RS_PARALLEL_SUB_THREAD_H
 
 #include <condition_variable>
 #include <memory>
@@ -37,13 +37,12 @@ enum class ParallelRenderType;
 
 class RSParallelSubThread {
 public:
-    RSParallelSubThread();
+    explicit RSParallelSubThread(int threadIndex);
     RSParallelSubThread(RenderContext *context, ParallelRenderType renderType, int threadIndex);
     ~RSParallelSubThread();
 
     void StartSubThread();
     void WaitTaskSync();
-    void NotifyRenderEnd();
     void SetMainVisitor(RSUniRenderVisitor *mainVisitor);
     void SetDisplayRenderNode(RSDisplayRenderNode *displayNode);
     bool GetRenderFinish();
@@ -53,15 +52,26 @@ public:
     void WaitFlushReady();
     sk_sp<SkImage> GetTexture();
     bool WaitReleaseFence();
+    std::shared_ptr<RSUniRenderVisitor> GetUniVisitor()
+    {
+        return visitor_;
+    }
+    void WaitSubMainThreadEnd()
+    {
+        subThread_->join();
+    }
 
 private:
     void MainLoop();
     void StartRender();
+    void InitSubThread();
     void Render();
     void Flush();
     void CreateResource();
     void CreatePbufferSurface();
     void CreateShareEglContext();
+    void StartPrepare();
+    void Prepare();
     sk_sp<GrContext> CreateShareGrContext();
     void AcquireSubSkSurface(int width, int height);
 
@@ -85,7 +95,6 @@ private:
 
     RSUniRenderVisitor *mainVisitor_;
     RSDisplayRenderNode *displayNode_;
-    bool subThreadFinish_;
     ParallelRenderType renderType_;
     sk_sp<SkImage> texture;
     EGLSyncKHR eglSync_ = EGL_NO_SYNC_KHR;

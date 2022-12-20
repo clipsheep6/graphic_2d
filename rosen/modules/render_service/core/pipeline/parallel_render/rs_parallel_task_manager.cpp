@@ -14,10 +14,13 @@
  */
 
 #include "rs_parallel_task_manager.h"
-#include <cstdint>
+#include <cstint>
 #include <memory>
 #include "rs_parallel_render_manager.h"
 #include "rs_parallel_render_ext.h"
+#include "rs_trace.h"
+#include "platform/common/rs_log.h"
+
 
 namespace OHOS {
 namespace Rosen {
@@ -27,7 +30,13 @@ RSParallelTaskManager::RSParallelTaskManager()
 {
     if (isParallelRenderExtEnabled_) {
         auto initParallelRenderExt = reinterpret_cast<void(*)()>(RSParallelRenderExt::initParallelRenderLBFunc_);
-        initParallelRenderExt();
+        loadBalance_ = initParallelRenderExt();
+        if (loadBalance_ == nullptr) {
+            isParallelRenderExtEnabled_ = false;
+            RS_LOGE("init parallel render load balance failed!!!");
+        }
+    } else {
+        RS_LOGE("open graphic 2d extension failed!!!");
     }
 }
 
@@ -63,6 +72,7 @@ void RSParallelTaskManager::PushRenderTask(std::unique_ptr<RSRenderTask> renderT
 void RSParallelTaskManager::LBCalcAndSubmitSuperTask(std::shared_ptr<RSBaseRenderNode> displayNode)
 {
     if (renderTaskList_.size() == 0) {
+        taskNum_ = 0;
         return;
     }
     std::vector<uint32_t> loadNumPerThread = LoadBalancing();
@@ -84,6 +94,7 @@ void RSParallelTaskManager::LBCalcAndSubmitSuperTask(std::shared_ptr<RSBaseRende
 
 std::vector<uint32_t> RSParallelTaskManager::LoadBalancing()
 {
+    RS_TRACE_FUNC();
     std::vector<uint32_t> loadNumPerThread;
     if (isParallelRenderExtEnabled_) {
         auto parallelRenderExtLB = reinterpret_cast<void(*)(std::vector<uint32_t> &)>(
@@ -114,7 +125,7 @@ void RSParallelTaskManager::Reset()
     superRenderTaskList_.clear();
     if (isParallelRenderExtEnabled_) {
         auto parallelRenderExtClearRenderLoad = reinterpret_cast<void(*)()>(RSParallelRenderExt::clearRenderLoadFunc_);
-        parallelRenderExtClearRenderLoad();
+        parallelRenderExtClearRenderLoad(loadBalance_);
     }
 }
 

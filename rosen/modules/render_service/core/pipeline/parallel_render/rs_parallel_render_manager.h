@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_RENDER_MANAGER_H
-#define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_RENDER_MANAGER_H
+#ifndef RS_PARALLEL_RENDER_MANAGER_H
+#define RS_PARALLEL_RENDER_MANAGER_H
 
 #include <condition_variable>
 #include <memory>
@@ -35,14 +35,19 @@ class RSDisplayRenderNode;
 
 enum class ParallelRenderType {
     DRAW_IMAGE = 0,
-    FLUSH_ONE_BUFFER = 1
+    FLUSH_ONE_BUFFER
 };
 
 enum class ParallelStatus {
     OFF = 0,
-    ON = 1,
-    FIRSTFLUSH = 2,
-    WAITFIRSTFLUSH = 3
+    ON,
+    FIRSTFLUSH,
+    WAITFIRSTFLUSH
+};
+
+enum class TaskType {
+    PREPARE_TASK = 0,
+    PROCESS_TASK
 };
 
 class RSParallelRenderManager {
@@ -53,20 +58,29 @@ public:
     bool GetParallelModeSafe() const;
     void StartSubRenderThread(uint32_t threadNum, RenderContext *context);
     void EndSubRenderThread();
-    ParallelStatus GetParallelRenderingStatus() const;
     void CopyVisitorAndPackTask(RSUniRenderVisitor &visitor, RSDisplayRenderNode &node);
-    void PackRenderTask(RSSurfaceRenderNode &node);
-    void LoadBalanceAndNotify();
+    void CopyPrepareVisitorAndPackTask(RSUniRenderVisitor &visitor, RSDisplayRenderNode &node);
+    void PackRenderTask(RSSurfaceRenderNode &node, TaskType type = TaskType::PROCESS_TASK);
+    void LoadBalanceAndNotify(TaskType type = TaskType::PROCESS_TASK);
     void MergeRenderResult(std::shared_ptr<SkCanvas> canvas);
     void SetFrameSize(int height, int width);
     void GetFrameSize(int &height, int &width);
     void SubmitSuperTask(int taskIndex, std::unique_ptr<RSSuperRenderTask> superRenderTask);
-    void WaitTaskReady();
-    void WaitRenderFinish();
-    void SetRenderTaskCost(uint32_t subMainThreadIdx, uint64_t loadId, float cost);
-    bool ParallelRenderExtEnable();
+    void SubMainThreadNotify(int threadIndex);
+    void WaitSubMainThread(int threadIndex);
+    void SubMainThreadWait(int threadIndex);
+    void SetRenderTaskCost(uint32_t subMainThreadIdx, uint64_t loadId, float cost,
+        TaskType type = TaskType::PROCESS_TASK);
+    bool ParallelRenderExtEnabled();
+    bool TryEnableParallelRendering();
     void ReadySubThreadNumIncrement();
     void CommitSurfaceNum(int surfaceNum);
+    void WaitPrepareEnd(RSUniRenderVisitor &visitor);
+    TaskType GetTaskType();
+    RSUniRenderVisitor* GetUniVisitor() {
+        return uniVistor_;
+    }
+    ParallelStatus GetParallelRenderingStatus() cost;
 
 private:
     RSParallelRenderManager() = default;
@@ -75,23 +89,30 @@ private:
     RSParallelRenderManager(const RSParallelRenderManager &&) = delete;
     RSParallelRenderManager &operator = (const RSParallelRenderManager &) = delete;
     RSParallelRenderManager &operator = (const RSParallelRenderManager &&) = delete;
-    void TryEnableParallelRendering();
+    void DrawImageMergeFunc(std::shared_ptr<SkCanvas> canvas);
+    void FlushOneBufferFunc();
 
     std::shared_ptr<RSParallelPackVisitor> packVisitor_;
+    std::shared_ptr<RSParallelPackVisitor> packVisitorPrepare_;
     std::vector<std::unique_ptr<RSParallelSubThread>> threadList_;
-    RSParallelTaskManager taskManager_;
+    RSParallelTaskManager processTaskManager_;
+    RSParallelTaskManager prepareTaskManager_;
     int height_;
     int width_;
-    std::mutex taskMutex_;
-    std::condition_variable cvTask_;
+    std::vector<uint8_t> flipCoin_;
+    std::mutex parallelRenderMutex_;
+    std::mutex cvParallelRenderMutex_;
+    std::condition_variable cvParallelRender_;
     RenderContext *renderContext_;
     ParallelRenderType renderType_ = ParallelRenderType::DRAW_IMAGE;
     std::shared_ptr<RSBaseRenderNode> displayNode_ = nullptr;
-    bool isTaskReady_ = false;
+
     uint32_t expectedSubThreadNum_ = 0;
     std::atomic<uint32_t> readySubThreadNum_ = 0;
     bool firstFlush_ = false;
     bool parallelMode_ = false;
+    RSUniRenderVisitor *uniVistor_ = nullptr;
+    TaskType taskType_;
 };
 } // namespace Rosen
 } // namespace OHOS

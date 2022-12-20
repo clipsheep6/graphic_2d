@@ -58,7 +58,7 @@ private:
     
     static bool GetParallelRenderEnable()
     {
-        return GetInitParallelRenderLBFunc() &&
+        return GetInitParallelRenderLoaBalancingFunc() &&
             GetSetSubRenderThreadNumFunc() &&
             GetAddRenderLoadFunc() &&
             GetUpdateLoadCostFunc() &&
@@ -68,7 +68,7 @@ private:
             GetSetCoreLevelFunc();
     }
 
-    static bool GetInitParallelRenderLBFunc()
+    static bool GetInitParallelRenderLoaBalancingFunc()
     {
         initParallelRenderLBFunc_ = dlsym(parallelRenderExtHandle_, "InitParallelRenderLoadBalancing");
         return initParallelRenderLBFunc_ != nullptr;

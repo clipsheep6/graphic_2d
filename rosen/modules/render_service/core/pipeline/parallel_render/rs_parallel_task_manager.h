@@ -13,11 +13,10 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_TASK_MANAGER_H
-#define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_PARALLEL_TASK_MANAGER_H
+#ifndef RS_PARALLEL_TASK_MANAGER_H
+#define RS_PARALLEL_TASK_MANAGER_H
 
 #include "rs_render_task.h"
-#include <cstdint>
 #include <map>
 #include <vector>
 #include <memory>
@@ -45,9 +44,12 @@ private:
     std::vector<std::unique_ptr<RSRenderTask>> renderTaskList_;
     std::unique_ptr<RSSuperRenderTask> cachedSuperRenderTask_;
     std::vector<std::unique_ptr<RSSuperRenderTask>> superRenderTaskList_;
+    std::map<int, float> evalTaskCost_;
+    bool useMainTread_ = false;
     int threadNum_;
     int taskNum_;
     bool isParallelRenderExtEnabled_;
+    void *loadBalance_;
 };
 } // namespace Rosen
 } // namespace OHOS

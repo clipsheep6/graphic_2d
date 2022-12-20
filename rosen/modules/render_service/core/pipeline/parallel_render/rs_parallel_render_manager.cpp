@@ -23,6 +23,8 @@
 #include "pipeline/rs_base_render_engine.h"
 #include "render_context/render_context.h"
 #include "pipeline/rs_main_thread.h"
+#include "rs_parallel_render_ext.h"
+#include "pipline/rs_uni_render_visitor.h "
 
 namespace OHOS {
 namespace Rosen {
@@ -58,6 +60,7 @@ void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum, RenderCon
 {
     if (GetParallelRenderingStatus() == ParallelStatus::OFF) {
         expectedSubThreadNum_ = threadNum;
+        flipCoin_ = std::vector<uint8_t>(expectedSubThreadNum_, false);
         firstFlush_ = true;
         renderContext_ = context;
         for (int i = 0; i < threadNum; ++i) {
@@ -65,18 +68,26 @@ void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum, RenderCon
             curThread->StartSubThread();
             threadList_.push_back(std::move(curThread));
         }
-        taskManager_.Initialize(threadNum);
+        processTaskManager_.Initialize(threadNum);
+        prepareTaskManager_.Initialize(threadNum);
     }
 }
 
 void RSParallelRenderManager::EndSubRenderThread()
 {
     if (GetParallelRenderingStatus() == ParallelStatus::ON) {
+        for (int i = 0; i < expectedSubThreadNum_; ++i) {
+            flipCoin_[i] = true;
+        }
         readySubThreadNum_ = expectedSubThreadNum_ = 0;
-        isTaskReady_ = true;
-        cvTask_.notify_all();
+        cvParallelRender_.notify_all();
         packVisitor_ = nullptr;
+        packVisitorPrepare_ = nullptr;
+        for (auto &task : taskList_) {
+            task->WaitSubMainThreadEnd();
+        }
         std::vector<std::unique_ptr<RSParallelSubThread>>().swap(threadList_);
+        uniVistor_ = nullptr;
     }
 }
 
@@ -102,34 +113,75 @@ void RSParallelRenderManager::CopyVisitorAndPackTask(RSUniRenderVisitor &visitor
 {
     packVisitor_ = std::make_shared<RSParallelPackVisitor>(visitor);
     displayNode_ = node.shared_from_this();
-    taskManager_.Reset();
+    processTaskManager_.Reset();
     packVisitor_->ProcessDisplayRenderNode(node);
+    taskType_ = TaskType::PROCESS_TASK;
 }
 
-void RSParallelRenderManager::PackRenderTask(RSSurfaceRenderNode &node)
+void RSParallelRenderManager::CopyPrepareVisitorAndPackTask(RSUniRenderVisitor &visitor, RSDisplayRenderNode &node)
 {
-    taskManager_.PushRenderTask(std::make_unique<RSRenderTask>(node));
+    packVisitorPrepare_ = std::make_shared<RSParallelPackVisitor>();
+    displayNode_ = node.shared_form_this();
+    prepareTaskManager_.Reset();
+    packVisitorPrepare_->PrepareDisplayRenderNode(node);
+    uniVistor_ = &visitor;
+    taskType_ = TaskType::PREPARE_TASK;
 }
 
-void RSParallelRenderManager::LoadBalanceAndNotify()
+TaskType RSParallelRenderManager::GetTaskType()
 {
-    taskManager_.LBCalcAndSubmitSuperTask(displayNode_);
-    isTaskReady_ = true;
-    cvTask_.notify_all();
+    return taskType_;
 }
 
-void RSParallelRenderManager::MergeRenderResult(std::shared_ptr<SkCanvas> canvas)
+void RSParallelRenderManager::PackRenderTask(RSSurfaceRenderNode &node, TaskType type)
 {
-    if (GetParallelRenderingStatus() == ParallelStatus::FIRSTFLUSH) {
-        firstFlush_ = false;
-        for (int i = 0; i < expectedSubThreadNum_; ++i) {
-            threadList_[i]->WaitFlushReady();
-        }
-    } else if (renderType_ == ParallelRenderType::DRAW_IMAGE) {
-        for (int i = 0; i < taskManager_.GetTaskNum(); ++i) {
-            RS_TRACE_BEGIN("Wait Render finish");
-            threadList_[i]->WaitFlushReady();
-            RS_TRACE_END();
+    switch(type) {
+        case TaskType::PREPARE_TASK:
+            prepareTaskManager_.PushRenderTask(
+                std::make_unique<RSRenderTask>(node, RSRenderTask::RenderNodeStage::PREPARE));
+            break;
+        case TaskType::PROCESS_TASK:
+            processTaskManager_.PushRenderTask(
+                std::make_unique<RSRenderTask>(node, RSRenderTask::RenderNodeStage::PROCESS));
+            break;
+        default:
+            break;
+    }
+}
+
+void RSParallelRenderManager::LoadBalanceAndNotify(TaskType type)
+{
+    switch(type) {
+        case TaskType::PREPARE_TASK:
+            prepareTaskManager_.LBCalcAndSubmitSuperTask(displayNode_);
+            break;
+        case TaskType::PROCESS_TASK:
+            processTaskManager_.LBCalcAndSubmitSuperTask(displayNode_);
+            break;
+        default:
+            break;
+    }
+    for (int i = 0; i < expectedSubThreadNum_; ++i) {
+        flipCoin_[i] = true;
+    }
+    cvParallelRender_.notify_all();
+}
+
+void RSParallelRenderManager::WaitPrepareEnd(RSUniRender &visitor)
+{
+    for (int i = 0; i < expectedSubThreadNum_; ++i) {
+        WaitSubMainThread(i);
+        visitor.CopyForParallelPrepare(threadList_[i]->GetUniVisitor());
+    }
+}
+
+void RSParallelRenderManager::DrawImageMergeFunc(std::shared_ptr<SkCanvas> canvas)
+{
+    for (int i = 0; i < expectedSubThreadNum_; ++i) {
+        RS_TRACE_BEGIN("Wait Render finish");
+        WaitSubMainThread(i);
+        RS_TRACE_END();
+        if (i < prepareTaskManager_.GetTaskNum()) {
             RS_TRACE_BEGIN("Wait Fence Ready");
             threadList_[i]->WaitReleaseFence();
             RS_TRACE_END();
@@ -139,21 +191,38 @@ void RSParallelRenderManager::MergeRenderResult(std::shared_ptr<SkCanvas> canvas
                 continue;
             }
             canvas->drawImage(texture, 0, 0);
-        }
-    } else {
-        renderContext_->ShareMakeCurrent(EGL_NO_CONTEXT);
-        for (int i = 0; i < threadList_.size(); ++i) {
-            threadList_[i]->WaitFlushReady();
-            renderContext_->ShareMakeCurrent(threadList_[i]->GetSharedContext());
-            RS_TRACE_BEGIN("Start Flush");
-            threadList_[i]->GetSkSurface()->flush();
-            RS_TRACE_END();
-            renderContext_->ShareMakeCurrent(EGL_NO_CONTEXT);
-        }
-        renderContext_->MakeSelfCurrent();
+        }     
     }
-    isTaskReady_ = false;
-    cvTask_.notify_all();
+}
+
+void RSParallelRenderManager::FlushOneBufferFunc()
+{
+    renderContext_->ShareMakeCurrent(EGL_NO_CONTEXT);
+    for (int i = 0; i < threadList_.size(); ++i) {
+        renderContext_->ShareMakeCurrent(threadList_[i]->GetSharedContext());
+        RS_TRACE_BEGIN("Start Flush");
+        threadList_[i]->GetSkSurface()->flush();
+        RS_TRACE_END();
+        renderContext_->ShareMakeCurrent(EGL_NO_CONTEXT);
+    }
+    renderContext_->MakeSelfCurrent();
+}
+
+void RSParallelRenderManager::MergeRenderResult(std::shared_ptr<SkCanvas> canvas)
+{
+    if (GetParallelRenderingStatus() == ParallelStatus::FIRSTFLUSH) {
+        firstFlush_ = false;
+        for (int i = 0; i < expectedSubThreadNum_; ++i) {
+            threadList_[i]->WaitFlushReady();
+        }
+        return;
+    }
+    if (renderType_ == ParallelRenderType::DRAW_IMAGE) {
+        DrawImageMergeFunc(canvas);
+    } else {
+       FlushOneBufferFunc();
+    }
+
 }
 
 void RSParallelRenderManager::SetFrameSize(int width, int height)
@@ -177,30 +246,55 @@ void RSParallelRenderManager::SubmitSuperTask(int taskIndex, std::unique_ptr<RSS
     threadList_[taskIndex]->SetSuperTask(std::move(superRenderTask));
 }
 
-void RSParallelRenderManager::WaitTaskReady()
+// called by submain threads
+void RSParallelRenderManager::SubMainThreadNotify(int threadIndex)
 {
-    std::unique_lock<std::mutex> lock(taskMutex_);
-    cvTask_.wait(lock, [&]() {
-        return isTaskReady_;
+    flipCoin_[threadIndex] = 0;
+    std::unique_lock<std::mutex> lock(cvParallelRenderMutex_);
+    bool isNotify = true;
+    for (int i = 0; i < expectedSubThreadNum_; ++i) {
+        isNotify &= !flipCoin_[i];
+    }
+    if (isNotify) {
+        cvParallelRender_.notify_all();
+    }
+}
+
+// called by main thread
+void RSParallelRenderManager::WaitSubMainThread(int threadIndex)
+{
+    std::unique_lock<std::mutex> lock(parallelRenderMutex_);
+    cvParallelRender_.wait(lock, [&]() {
+        return !flipCoin_[threadIndex];
     });
 }
 
-void RSParallelRenderManager::WaitRenderFinish()
+// called by submain threads
+void RSParallelRenderManager::SubMainThreadWait(int threadIndex)
 {
-    std::unique_lock<std::mutex> lock(taskMutex_);
-    cvTask_.wait(lock, [&]() {
-        return !isTaskReady_;
+    std::unique_lock<std::mutex> lock(parallelRenderMutex_);
+    cvParallelRender_.wait(lock, [&](){
+        return flipCoin_[threadIndex];
     });
 }
 
-void RSParallelRenderManager::SetRenderTaskCost(uint32_t subMainThreadIdx, uint64_t loadId, float cost)
+void RSParallelRenderManager::SetRenderTaskCost(uint32_t subMainThreadIdx, uint64_t loadId, float cost, TaskType type)
 {
-    taskManager_.SetSubThreadRenderTaskLoad(subMainThreadIdx, loadId, cost);
+    switch (type) {
+        case TaskType::PREPARE_TASK:
+            prepareTaskManager_.SetSubThreadRenderTaskLoad(subMainThreadIdx, loadId, cost);
+            break;
+        case TaskType::PROCESS_TASK:
+            processTaskManager_.SetSubThreadRenderTaskLoad(subMainThreadIdx, loadId, cost);
+            break;
+        default:
+            break;
+    }
 }
 
-bool RSParallelRenderManager::ParallelRenderExtEnable()
+bool RSParallelRenderManager::ParallelRenderExtEnabled()
 {
-    return taskManager_.GetParallelRenderExtEnable();
+    return processTaskManager_.GetParallelRenderExtEnable();
 }
 
 void RSParallelRenderManager::TryEnableParallelRendering()
@@ -215,7 +309,7 @@ void RSParallelRenderManager::TryEnableParallelRendering()
 
 void RSParallelRenderManager::CommitSurfaceNum(int surfaceNum)
 {
-    if (ParallelRenderExtEnable()) {
+    if (ParallelRenderExtEnabled()) {
         auto SetCoreLevelFunc = (void(*)(int))RSParallelRenderExt::setCoreLevelFunc_;
         SetCoreLevelFunc(surfaceNum);
     }

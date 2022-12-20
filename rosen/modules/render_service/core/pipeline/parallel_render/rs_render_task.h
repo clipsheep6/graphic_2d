@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_RENDER_TASK_H
-#define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_RENDER_TASK_H
+#ifndef RS_RENDER_TASK_H
+#define RS_RENDER_TASK_H
 
 #include <cstdint>
 #include <memory>
@@ -28,8 +28,6 @@ namespace OHOS {
 namespace Rosen {
 class RSRenderTaskBase {
 public:
-    RSRenderTaskBase() = default;
-    explicit RSRenderTaskBase(uint64_t idx) : loadId_(idx) {}
     explicit RSRenderTaskBase(std::shared_ptr<RSBaseRenderNode> node) : node_(node), loadId_(node->GetId()) {}
     virtual ~RSRenderTaskBase() = default;
     void SetIdx(uint64_t idx)
@@ -52,8 +50,19 @@ private:
 
 class RSRenderTask : public RSRenderTaskBase {
 public:
-    explicit RSRenderTask(RSSurfaceRenderNode &node) : RSRenderTaskBase(node.shared_from_this()) {}
+    enum class RenderNodeStage {
+        PREPARE = 0,
+        PROCESS
+    };
+    explicit RSRenderTask(RSSurfaceRenderNode &node, RenderNodeStage stage)
+        : RSRenderTaskBase(node.shared_from_this()), stage_(stage) {}
     ~RSRenderTask() override {};
+    RenderNodeStage GetNodeStage() const
+    {
+        return stage_;    
+    }
+private:
+    RenderNodeStage stage_;
 };
 
 class RSSuperRenderTask : public RSRenderTaskBase {

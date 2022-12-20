@@ -33,6 +33,24 @@ RSParallelPackVisitor::RSParallelPackVisitor(RSUniRenderVisitor &visitor)
     doAnimate_ = visitor.GetAnimateState();
 }
 
+void RSParallelPackVisitor::PrepareBaseRenderNode(RSBaseRenderNode &node)
+{
+    node.ResetSortedChildren();
+    for (auto& child : node.GetSortedChildren()) {
+        child->Prepare(shared_form_this());
+    }
+}
+
+void RSParallelPackVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode &node)
+{
+    PrepareBaseRenderNode(node);
+}
+
+void RSParallelPackVisitor::PrepareSufaceRenderNode(RSSurfaceRenderNode &node)
+{
+    RSParallelRenderManager::Instance->PackRenderTask(node, TaskType::PREPARE_TASK);
+}
+
 void RSParallelPackVisitor::ProcessBaseRenderNode(RSBaseRenderNode &node)
 {
     for (auto &child : node.GetSortedChildren()) {
@@ -58,11 +76,7 @@ void RSParallelPackVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node)
         RS_TRACE_NAME("SecurityLayer Skip");
         return;
     }
-    if (node.GetSurfaceNodeType() == RSSurfaceNodeType::STARTING_WINDOW_NODE && !needDrawStartingWindow_) {
-        RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode skip startingWindow");
-        return;
-    }
-    const auto& property = node.GetRenderProperties();
+
     if (!node.ShouldPaint()) {
         RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode node: %" PRIu64 " invisible", node.GetId());
         return;
@@ -81,7 +95,7 @@ void RSParallelPackVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node)
         }
     }
 #endif
-    RSParallelRenderManager::Instance()->PackRenderTask(node);
+    RSParallelRenderManager::Instance()->PackRenderTask(node, TaskType::PROCESS_TASK);
 }
 } // namespace Rosen
 } // namespace OHOS

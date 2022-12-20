@@ -119,7 +119,7 @@ void RSSurfaceOhosGl::ClearBuffer()
     if (context_ != nullptr && mEglSurface != EGL_NO_SURFACE && producer_ != nullptr) {
         ROSEN_LOGD("RSSurfaceOhosGl: Clear surface buffer!");
         DestoryNativeWindow(mWindow);
-        context_->MakeCurrent(EGL_NO_SURFACE);
+        // context_->MakeCurrent(EGL_NO_SURFACE);
         context_->DestroyEGLSurface(mEglSurface);
         mEglSurface = EGL_NO_SURFACE;
         mWindow = nullptr;

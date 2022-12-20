@@ -42,30 +42,38 @@ RSParallelSubThread::RSParallelSubThread(int threadIndex)
 RSParallelSubThread::RSParallelSubThread(RenderContext *context, ParallelRenderType renderType, int threadIndex)
     : threadIndex_(threadIndex), renderContext_(context), renderType_(renderType) {}
 
-RSParallelSubThread::~RSParallelSubThread() {}
+RSParallelSubThread::~RSParallelSubThread()
+{
+    eglDestroyContext(renderContext_->GetEGLDisplay(), eglShareContext_);
+    eglShareContext_ = EGL_NO_CONTEXT;
+    eglMakeCurrent(renderContext_->GetEGLDisplay(), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    texture_ = nullptr;
+    canvas_ = nullptr;
+    skSurface_ = nullptr;
+    RS_LOGD("~RSParallelSubThread():%d", threadIndex_);
+}
 
 void RSParallelSubThread::MainLoop()
 {
     InitSubThread();
     CreateShareEglContext();
-    pthread_setname_np(pthread_self(), "SubMainThread");
     while (true) {
         WaitTaskSync();
         if (RSParallelRenderManager::Instance()->GetParallelRenderingStatus() == ParallelStatus::OFF) {
             return;
         }
         // parallel rendering will be enable when the windows number is greater than 50
-        RSParallelRenderManager::Instance->CommitSurfaceNum(50);
+        RSParallelRenderManager::Instance()->CommitSurfaceNum(50);
         if (RSParallelRenderManager::Instance()->GetTaskType() == TaskType::PREPARE_TASK) {
             StartPrepare();
             Prepare();
-            RSParallelRenderManager::Instance->SubMainThreadNotify(threadIndex_);
+            RSParallelRenderManager::Instance()->SubMainThreadNotify(threadIndex_);
         } else {
             StartRender();
             Render();
-            // FIRSTFLUSH or WAITFIRSTFLUSH
-            if (RSParallelRenderManager::Instance()->GetParallelRenderingStatus() != ParallelStatus::ON) {
-                NotifyRenderEnd();
+            ParallelStatus status = RSParallelRenderManager::Instance()->GetParallelRenderingStatus();
+            if (status == ParallelStatus::FIRSTFLUSH || status == ParallelStatus::WAITFIRSTFLUSH) {
+                RSParallelRenderManager::Instance()->SubMainThreadNotify(threadIndex_);
             }
             Flush();
         }
@@ -79,7 +87,6 @@ void RSParallelSubThread::StartSubThread()
 
 void RSParallelSubThread::WaitTaskSync()
 {
-    subThreadFinish_ = false;
     RSParallelRenderManager::Instance()->SubMainThreadWait(threadIndex_);
     if (renderType_ == ParallelRenderType::FLUSH_ONE_BUFFER) {
         eglMakeCurrent(renderContext_->GetEGLDisplay(), EGL_NO_SURFACE, EGL_NO_SURFACE, eglShareContext_);
@@ -120,39 +127,43 @@ void RSParallelSubThread::CreateShareEglContext()
 
 void RSParallelSubThread::StartPrepare()
 {
-    RSUniRenderVisitor *uniVistor = RSParallelRenderManager::Instance()->GetUniVisitor();
-    if (uniVistor == nullptr) {
+    RSUniRenderVisitor *uniVisitor = RSParallelRenderManager::Instance()->GetUniVisitor();
+    if (uniVisitor == nullptr) {
         RS_LOGE("uniVisitor is nullptr");
         return;
     }
-    visitor_ = std::make_shared<RSUniRenderVisitor>();
-    visitor_->CloneVisitorForSubThread(*uniVisitor);
+    visitor_ = std::make_shared<RSUniRenderVisitor>(*uniVisitor);
 }
 
 void RSParallelSubThread::Prepare()
 {
-   if (threadTask_ = nullptr) {
+   if (threadTask_ == nullptr) {
     RS_LOGE("threadTask is nullptr");
     return;
    }
-   while (threadTask->GetTaskSize() > 0) {
-    if (RSParallelRenderManager::Instance()->ParallelRenderExtEnabled()) {
-        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &startTime_);
+    while (threadTask_->GetTaskSize() > 0) {
+        if (RSParallelRenderManager::Instance()->ParallelRenderExtEnabled()) {
+            clock_gettime(CLOCK_THREAD_CPUTIME_ID, &startTime_);
+        }
+        auto task = threadTask_->GetNextRenderTask();
+        if (!task || (task->GetIdx() == 0)) {
+            RS_LOGE("surfaceNode is nullptr");
+            continue;
+        }
+        auto node = task->GetNode();
+        if (!node) {
+            RS_LOGE("surfaceNode is nullptr");
+            continue;
+        }
+        node->Prepare(visitor_);
+        if (RSParallelRenderManager::Instance()->ParallelRenderExtEnabled()) {
+            clock_gettime(CLOCK_THREAD_CPUTIME_ID, &stopTime_);
+            float cost = (stopTime_.tv_sec * 1000.0f + stopTime_.tv_nsec * 1e-6) - 
+                (startTime_.tv_sec * 1000.0f + startTime_.tv_nsec * 1e-6);
+            RSParallelRenderManager::Instance()->SetRenderTaskCost(threadIndex_, task->GetIdx(), cost,
+                TaskType::PREPARE_TASK);
+        }
     }
-    auto task = threadTask_->GetNextRenderTask();
-    if (!task || (task->GetIdx() == 0)) {
-        RS_LOGE("surfaceNode is nullptr");
-        continue;
-    }
-    node->Prepare(visitor_);
-    if (RSParallelRenderManager::Instance->ParallelRenderExtEnabled()) {
-        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &stopTime_);
-        float cost = (stopTime_.tv_sec * 1000.0f + stopTime_.tv_nsec * 1e-6) - 
-            (startTime_.tv_sec * 1000.0f + startTime_.tv_nsec * 1e-6);
-        RSParallelRenderManager::Instance()->SetRenderTaskCost(threadIndex_, task->GetIdx(), cost,
-            TaskType::PREPARE_TASK);
-    }
-   }
 }
 
 void RSParallelSubThread::StartRender()
@@ -218,7 +229,7 @@ void RSParallelSubThread::Flush()
         RS_TRACE_BEGIN("Create Fence");
         eglSync_ = eglCreateSyncKHR(renderContext_->GetEGLDisplay(), EGL_SYNC_FENCE_KHR, nullptr);
         RS_TRACE_END();
-        texture = skSurface_->makeImageSnapshot();
+        texture_ = skSurface_->makeImageSnapshot();
         skCanvas_->discard();
     } else {
         eglMakeCurrent(renderContext_->GetEGLDisplay(), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -355,7 +366,7 @@ void RSParallelSubThread::SetSuperTask(std::unique_ptr<RSSuperRenderTask> superR
 
 sk_sp<SkImage> RSParallelSubThread::GetTexture()
 {
-    return texture;
+    return texture_;
 }
 
 } // namespace Rosen

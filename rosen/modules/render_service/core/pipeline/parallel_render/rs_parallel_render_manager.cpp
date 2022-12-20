@@ -15,6 +15,7 @@
 
 #include "rs_parallel_render_manager.h"
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include "rs_trace.h"
@@ -24,7 +25,7 @@
 #include "render_context/render_context.h"
 #include "pipeline/rs_main_thread.h"
 #include "rs_parallel_render_ext.h"
-#include "pipline/rs_uni_render_visitor.h "
+#include "pipeline/rs_uni_render_visitor.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -63,7 +64,7 @@ void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum, RenderCon
         flipCoin_ = std::vector<uint8_t>(expectedSubThreadNum_, false);
         firstFlush_ = true;
         renderContext_ = context;
-        for (int i = 0; i < threadNum; ++i) {
+        for (uint32_t i = 0; i < threadNum; ++i) {
             auto curThread = std::make_unique<RSParallelSubThread>(context, renderType_, i);
             curThread->StartSubThread();
             threadList_.push_back(std::move(curThread));
@@ -76,15 +77,15 @@ void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum, RenderCon
 void RSParallelRenderManager::EndSubRenderThread()
 {
     if (GetParallelRenderingStatus() == ParallelStatus::ON) {
-        for (int i = 0; i < expectedSubThreadNum_; ++i) {
+        for (uint32_t i = 0; i < expectedSubThreadNum_; ++i) {
             flipCoin_[i] = true;
         }
         readySubThreadNum_ = expectedSubThreadNum_ = 0;
         cvParallelRender_.notify_all();
         packVisitor_ = nullptr;
         packVisitorPrepare_ = nullptr;
-        for (auto &task : taskList_) {
-            task->WaitSubMainThreadEnd();
+        for (auto &thread : threadList_) {
+            thread->WaitSubMainThreadEnd();
         }
         std::vector<std::unique_ptr<RSParallelSubThread>>().swap(threadList_);
         uniVistor_ = nullptr;
@@ -121,7 +122,7 @@ void RSParallelRenderManager::CopyVisitorAndPackTask(RSUniRenderVisitor &visitor
 void RSParallelRenderManager::CopyPrepareVisitorAndPackTask(RSUniRenderVisitor &visitor, RSDisplayRenderNode &node)
 {
     packVisitorPrepare_ = std::make_shared<RSParallelPackVisitor>();
-    displayNode_ = node.shared_form_this();
+    displayNode_ = node.shared_from_this();
     prepareTaskManager_.Reset();
     packVisitorPrepare_->PrepareDisplayRenderNode(node);
     uniVistor_ = &visitor;
@@ -161,15 +162,15 @@ void RSParallelRenderManager::LoadBalanceAndNotify(TaskType type)
         default:
             break;
     }
-    for (int i = 0; i < expectedSubThreadNum_; ++i) {
+    for (uint32_t i = 0; i < expectedSubThreadNum_; ++i) {
         flipCoin_[i] = true;
     }
     cvParallelRender_.notify_all();
 }
 
-void RSParallelRenderManager::WaitPrepareEnd(RSUniRender &visitor)
+void RSParallelRenderManager::WaitPrepareEnd(RSUniRenderVisitor &visitor)
 {
-    for (int i = 0; i < expectedSubThreadNum_; ++i) {
+    for (uint32_t i = 0; i < expectedSubThreadNum_; ++i) {
         WaitSubMainThread(i);
         visitor.CopyForParallelPrepare(threadList_[i]->GetUniVisitor());
     }
@@ -213,7 +214,7 @@ void RSParallelRenderManager::MergeRenderResult(std::shared_ptr<SkCanvas> canvas
     if (GetParallelRenderingStatus() == ParallelStatus::FIRSTFLUSH) {
         firstFlush_ = false;
         for (int i = 0; i < expectedSubThreadNum_; ++i) {
-            threadList_[i]->WaitFlushReady();
+            WaitSubMainThread(i);
         }
         return;
     }
@@ -222,7 +223,6 @@ void RSParallelRenderManager::MergeRenderResult(std::shared_ptr<SkCanvas> canvas
     } else {
        FlushOneBufferFunc();
     }
-
 }
 
 void RSParallelRenderManager::SetFrameSize(int width, int height)
@@ -261,7 +261,7 @@ void RSParallelRenderManager::SubMainThreadNotify(int threadIndex)
 }
 
 // called by main thread
-void RSParallelRenderManager::WaitSubMainThread(int threadIndex)
+void RSParallelRenderManager::WaitSubMainThread(uint32_t threadIndex)
 {
     std::unique_lock<std::mutex> lock(parallelRenderMutex_);
     cvParallelRender_.wait(lock, [&]() {
@@ -270,7 +270,7 @@ void RSParallelRenderManager::WaitSubMainThread(int threadIndex)
 }
 
 // called by submain threads
-void RSParallelRenderManager::SubMainThreadWait(int threadIndex)
+void RSParallelRenderManager::SubMainThreadWait(uint32_t threadIndex)
 {
     std::unique_lock<std::mutex> lock(parallelRenderMutex_);
     cvParallelRender_.wait(lock, [&](){

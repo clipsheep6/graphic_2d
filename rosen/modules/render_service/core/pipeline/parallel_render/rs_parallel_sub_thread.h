@@ -49,7 +49,6 @@ public:
     void SetSuperTask(std::unique_ptr<RSSuperRenderTask> superRenderTask);
     EGLContext GetSharedContext();
     sk_sp<SkSurface> GetSkSurface();
-    void WaitFlushReady();
     sk_sp<SkImage> GetTexture();
     bool WaitReleaseFence();
     std::shared_ptr<RSUniRenderVisitor> GetUniVisitor()
@@ -96,7 +95,7 @@ private:
     RSUniRenderVisitor *mainVisitor_;
     RSDisplayRenderNode *displayNode_;
     ParallelRenderType renderType_;
-    sk_sp<SkImage> texture;
+    sk_sp<SkImage> texture_;
     EGLSyncKHR eglSync_ = EGL_NO_SYNC_KHR;
     timespec startTime_;
     timespec stopTime_;

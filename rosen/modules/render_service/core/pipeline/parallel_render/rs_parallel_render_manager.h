@@ -67,12 +67,12 @@ public:
     void GetFrameSize(int &height, int &width);
     void SubmitSuperTask(int taskIndex, std::unique_ptr<RSSuperRenderTask> superRenderTask);
     void SubMainThreadNotify(int threadIndex);
-    void WaitSubMainThread(int threadIndex);
-    void SubMainThreadWait(int threadIndex);
+    void WaitSubMainThread(uint32_t threadIndex);
+    void SubMainThreadWait(uint32_t threadIndex);
     void SetRenderTaskCost(uint32_t subMainThreadIdx, uint64_t loadId, float cost,
         TaskType type = TaskType::PROCESS_TASK);
     bool ParallelRenderExtEnabled();
-    bool TryEnableParallelRendering();
+    void TryEnableParallelRendering();
     void ReadySubThreadNumIncrement();
     void CommitSurfaceNum(int surfaceNum);
     void WaitPrepareEnd(RSUniRenderVisitor &visitor);
@@ -80,7 +80,7 @@ public:
     RSUniRenderVisitor* GetUniVisitor() {
         return uniVistor_;
     }
-    ParallelStatus GetParallelRenderingStatus() cost;
+    ParallelStatus GetParallelRenderingStatus() const;
 
 private:
     RSParallelRenderManager() = default;

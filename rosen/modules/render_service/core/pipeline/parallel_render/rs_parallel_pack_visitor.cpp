@@ -37,7 +37,7 @@ void RSParallelPackVisitor::PrepareBaseRenderNode(RSBaseRenderNode &node)
 {
     node.ResetSortedChildren();
     for (auto& child : node.GetSortedChildren()) {
-        child->Prepare(shared_form_this());
+        child->Prepare(shared_from_this());
     }
 }
 
@@ -46,9 +46,9 @@ void RSParallelPackVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode &node)
     PrepareBaseRenderNode(node);
 }
 
-void RSParallelPackVisitor::PrepareSufaceRenderNode(RSSurfaceRenderNode &node)
+void RSParallelPackVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode &node)
 {
-    RSParallelRenderManager::Instance->PackRenderTask(node, TaskType::PREPARE_TASK);
+    RSParallelRenderManager::Instance()->PackRenderTask(node, TaskType::PREPARE_TASK);
 }
 
 void RSParallelPackVisitor::ProcessBaseRenderNode(RSBaseRenderNode &node)

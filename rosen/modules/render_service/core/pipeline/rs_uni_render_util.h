@@ -44,11 +44,7 @@ public:
     static BufferDrawParam CreateBufferDrawParam(const RSSurfaceRenderNode& node, bool forceCPU);
     static BufferDrawParam CreateBufferDrawParam(const RSDisplayRenderNode& node, bool forceCPU);
     static void DrawCachedSurface(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas, sk_sp<SkSurface> surface);
-<<<<<<< HEAD
-=======
     static void DrawCachedImage(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas, sk_sp<SkImage> image);
-
->>>>>>> 0e99f2c03d1095223a9a34f5260eef6addfc2796
     static bool ReleaseBuffer(RSSurfaceHandler& surfaceHandler);
     static Occlusion::Region AlignedDirtyRegion(const Occlusion::Region& dirtyRegion, int32_t alignedBits = 32);
 };

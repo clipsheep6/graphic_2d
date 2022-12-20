@@ -15,6 +15,8 @@
 #ifndef RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_VISITOR_H
 #define RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_VISITOR_H
 
+#include <memory>
+#include <mutex>
 #include <set>
 #include <parameters.h>
 
@@ -34,6 +36,7 @@ class RSUniRenderVisitor : public RSNodeVisitor {
 public:
     RSUniRenderVisitor();
     RSUniRenderVisitor(std::shared_ptr<RSPaintFilterCanvas> canvas);
+    explicit RSUniRenderVisitor(const RSUniRenderVisitor& visitor);
     ~RSUniRenderVisitor() override;
 
     void PrepareBaseRenderNode(RSBaseRenderNode& node) override;
@@ -69,6 +72,7 @@ public:
     {
         return doAnimate_;
     }
+    void CopyForParallelPrepare(std::shared_ptr<RSUniRenderVisitor> visitor);
 private:
     void DrawDirtyRectForDFX(const RectI& dirtyRect, const SkColor color,
         const SkPaint::Style fillType, float alpha);
@@ -145,6 +149,8 @@ private:
     bool needCheckFirstFrame_ = false; // flag used for avoiding notifying first frame repeatedly
 
     bool isDirtyRegionAlignedEnable_ = false;
+    bool isParallel_ = false;
+    std::shared_ptr<std::mutex> surfaceNodePrepareMutex_;
 };
 } // namespace Rosen
 } // namespace OHOS

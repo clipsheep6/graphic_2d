@@ -382,6 +382,9 @@ void RSUniRenderVisitor::DrawTargetSurfaceDirtyRegionForDFX(RSDisplayRenderNode&
 
 void RSUniRenderVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
 {
+    if (canvas_ && canvas->getDeviceClipBounds().isEmpty()) {
+        return;
+    }
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }

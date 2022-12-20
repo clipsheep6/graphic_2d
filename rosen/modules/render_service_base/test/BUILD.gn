@@ -12,14 +12,18 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import(
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
 
 group("test") {
   testonly = true
 
-  deps = [
-    "fuzztest:fuzztest",
-    "unittest:unittest",
-  ]
+  if (rosen_is_ohos) {
+    deps = [
+      "fuzztest:fuzztest",
+      "unittest:unittest",
+    ]
+  }
 }
 
 ohos_executable("render_service_client") {

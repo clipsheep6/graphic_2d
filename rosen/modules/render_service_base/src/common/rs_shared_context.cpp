@@ -19,7 +19,7 @@
 #include "tools/gpu/GrContextFactory.h"
 
 #include "platform/common/rs_log.h"
-#include "rs_trace.h"
+#include "platform/common/rs_trace.h"
 
 namespace OHOS::Rosen {
 std::shared_ptr<RSSharedContext> RSSharedContext::MakeSharedGLContext(EGLContext context)

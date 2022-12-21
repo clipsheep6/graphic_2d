@@ -35,6 +35,7 @@ namespace Rosen {
 using BufferAvailableCallback = std::function<void()>;
 struct RSSurfaceNodeConfig {
     std::string SurfaceNodeName = "SurfaceNode";
+    bool HighFefreshFlag = false; // only used for surfaceNode with opaque self-drawing buffer
 };
 
 class RS_EXPORT RSSurfaceNode : public RSNode {

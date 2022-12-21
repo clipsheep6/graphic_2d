@@ -80,6 +80,11 @@ public:
         return name_;
     }
 
+    bool IsHighRefresh() const
+    {
+        return isHighRefresh_;
+    }
+
     void SetOffSetX(int32_t offset)
     {
         offsetX_ = offset;
@@ -563,6 +568,7 @@ private:
 
     std::string name_;
     RSSurfaceNodeType nodeType_ = RSSurfaceNodeType::DEFAULT;
+    bool isHighRefresh_ = false;
     GraphicBlendType blendType_ = GraphicBlendType::GRAPHIC_BLEND_SRCOVER;
     bool isNotifyRTBufferAvailablePre_ = false;
     std::atomic<bool> isNotifyRTBufferAvailable_ = false;

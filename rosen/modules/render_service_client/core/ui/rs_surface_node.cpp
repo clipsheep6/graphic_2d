@@ -49,7 +49,8 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
     RSNodeMap::MutableInstance().RegisterNode(node);
 
     // create node in RS
-    RSSurfaceRenderNodeConfig config = { .id = node->GetId(), .name = node->name_ };
+    RSSurfaceRenderNodeConfig config = { .id = node->GetId(), .name = node->name_,
+                                         .highRefreshFlag = surfaceNodeConfig.HighFefreshFlag};
     if (!isWindow) {
         config.nodeType = RSSurfaceNodeType::SELF_DRAWING_NODE;
     } else {

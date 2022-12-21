@@ -70,7 +70,7 @@ std::pair<bool, bool> RSRenderNode::Animate(int64_t timestamp)
     return animationManager_.Animate(timestamp, IsOnTheTree());
 }
 
-bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty)
+bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, RectI clipRect)
 {
     // no need to update invisible nodes
     if (!ShouldPaint() && !isLastVisible_) {
@@ -81,7 +81,7 @@ bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties
         Vector2f { 0.f, 0.f } : Vector2f { parent->GetFrameOffsetX(), parent->GetFrameOffsetY() };
     bool dirty = renderProperties_.UpdateGeometry(parent, parentDirty, offset);
     isDirtyRegionUpdated_ = false;
-    UpdateDirtyRegion(dirtyManager, dirty);
+    UpdateDirtyRegion(dirtyManager, dirty, clipRect);
     isLastVisible_ = ShouldPaint();
     renderProperties_.ResetDirty();
     return dirty;
@@ -97,7 +97,7 @@ const RSProperties& RSRenderNode::GetRenderProperties() const
     return renderProperties_;
 }
 
-void RSRenderNode::UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty)
+void RSRenderNode::UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, RectI clipRect)
 {
     if (!IsDirty() && !geoDirty) {
         return;
@@ -124,6 +124,7 @@ void RSRenderNode::UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool ge
                 dirtyRect = dirtyRect.JoinRect(shadowDirty);
             }
         }
+        dirtyRect = dirtyRect.IntersectRect(clipRect);
         // filter invalid dirtyrect
         if (!dirtyRect.IsEmpty()) {
             dirtyManager.MergeDirtyRect(dirtyRect);

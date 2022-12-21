@@ -180,6 +180,7 @@ public:
     bool GetClipToBounds() const;
     void SetClipToFrame(bool clipToFrame);
     bool GetClipToFrame() const;
+    bool NeedClip() const;
 
     void SetVisible(bool visible);
     bool GetVisible() const;
@@ -209,8 +210,6 @@ private:
     RRect GetRRect() const;
     RRect GetInnerRRect() const;
     RectI GetDirtyRect() const;
-
-    bool NeedClip() const;
 
     bool visible_ = true;
     bool clipToBounds_ = false;

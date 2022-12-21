@@ -136,6 +136,8 @@ private:
     bool needColdStartThread_ = false; // flag used for cold start app window
     bool needDrawStartingWindow_ = true; // flag used for avoiding drawing both app and starting window
     bool needCheckFirstFrame_ = false; // flag used for avoiding notifying first frame repeatedly
+
+    RectI clipRect_{0, 0, 0, 0}; // Clip DirtyRegion in component visible rect
 };
 } // namespace Rosen
 } // namespace OHOS

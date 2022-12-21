@@ -103,6 +103,9 @@ void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
         }
         dirtyFlag_ = false;
         isIdle_ = false;
+        const auto& property = node.GetRenderProperties();
+        rootWidth_ = property.GetFrameWidth() * property.GetScaleX();
+        rootHeight_ = property.GetFrameHeight() * property.GetScaleY();
         PrepareCanvasRenderNode(node);
         isIdle_ = true;
     } else {
@@ -122,7 +125,8 @@ void RSRenderThreadVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
     if (nodeParent != nullptr) {
         rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
     }
-    dirtyFlag_ = node.Update(*curDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr, dirtyFlag_);
+    RectI clipRect{0, 0, rootWidth_, rootHeight_};
+    dirtyFlag_ = node.Update(*curDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr, dirtyFlag_, clipRect);
     if (node.IsDirtyRegionUpdated() && curDirtyManager_->IsDebugRegionTypeEnable(DebugRegionType::CURRENT_SUB)) {
         curDirtyManager_->UpdateDirtyCanvasNodes(node.GetId(), node.GetOldDirty());
     }
@@ -152,7 +156,8 @@ void RSRenderThreadVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         ROSEN_LOGD("NotifyRTBufferAvailable and set it dirty");
         node.SetDirty();
     }
-    dirtyFlag_ = node.Update(*curDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr, dirtyFlag_);
+    RectI clipRect{0, 0, rootWidth_, rootHeight_};
+    dirtyFlag_ = node.Update(*curDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr, dirtyFlag_, clipRect);
     if (node.IsDirtyRegionUpdated() && curDirtyManager_->IsDebugRegionTypeEnable(DebugRegionType::CURRENT_SUB)) {
         curDirtyManager_->UpdateDirtySurfaceNodes(node.GetId(), node.GetOldDirty());
     }
@@ -384,11 +389,9 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     // keep non-negative rect region within surface
     curDirtyManager_->ClipDirtyRectWithinSurface();
     // reset matrix
-    const float rootWidth = property.GetFrameWidth() * property.GetScaleX();
-    const float rootHeight = property.GetFrameHeight() * property.GetScaleY();
     SkMatrix gravityMatrix;
     (void)RSPropertiesPainter::GetGravityMatrix(
-        Gravity::RESIZE, RectF { 0.0f, 0.0f, bufferWidth, bufferHeight }, rootWidth, rootHeight, gravityMatrix);
+        Gravity::RESIZE, RectF { 0.0f, 0.0f, bufferWidth, bufferHeight }, rootWidth_, rootHeight_, gravityMatrix);
 
     if (isRenderForced_ ||
         curDirtyManager_->GetDirtyRegion().GetWidth() == 0 ||

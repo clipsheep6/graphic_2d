@@ -110,6 +110,7 @@ public:
     static bool WritePixelMapToPng(Media::PixelMap& pixelMap);
     static void DealWithSurfaceRotationAndGravity(
         const RSSurfaceRenderNode& node, RectF& localBounds, BufferDrawParam& params);
+    static bool DumpFpsToFile(const std::string &filename, const std::string &val);
 private:
     static bool CreateYuvToRGBABitMap(sptr<OHOS::SurfaceBuffer> buffer, std::vector<uint8_t>& newBuffer,
         SkBitmap& bitmap);

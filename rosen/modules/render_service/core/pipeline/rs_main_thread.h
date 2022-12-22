@@ -117,6 +117,7 @@ public:
 
     void ClearTransactionDataPidInfo(pid_t remotePid);
     void AddTransactionDataPidInfo(pid_t remotePid);
+    void UpdateDurationCounterAndDumpFps();
 
     void SetFocusAppInfo(
         int32_t pid, int32_t uid, const std::string &bundleName, const std::string &abilityName);
@@ -194,6 +195,10 @@ private:
     uint64_t prePerfTimestamp_ = 0;
     uint64_t lastCleanCacheTimestamp_ = 0;
     std::unordered_map<uint32_t, sptr<IApplicationAgent>> applicationAgentMap_;
+    std::deque<uint64_t> durationList_;
+    uint64_t totalMs_ = 0;
+    uint32_t fpsCounter_ = 0;
+    std::string fpsDumper_;
 
     std::shared_ptr<RSContext> context_;
     std::thread::id mainThreadId_;

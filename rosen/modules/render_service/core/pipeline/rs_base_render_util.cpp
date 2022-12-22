@@ -15,8 +15,10 @@
 
 #include "rs_base_render_util.h"
 
+#include <fstream>
 #include <sys/time.h>
 #include <unordered_set>
+#include <unistd.h>
 
 #include "common/rs_matrix3.h"
 #include "common/rs_obj_abs_geometry.h"
@@ -1186,6 +1188,39 @@ bool RSBaseRenderUtil::WritePixelMapToPng(Media::PixelMap& pixelMap)
     param.bitDepth = Detail::BITMAP_DEPTH;
 
     return WriteToPng(filename, param);
+}
+
+bool RSBaseRenderUtil::DumpFpsToFile(const std::string &filename, const std::string &val)
+{
+    if (filename.empty()) {
+        RS_LOGI("RSBaseRenderUtil::DumpFpsToFile filename is empty");
+        return false;
+    }
+    std::string::size_type iPos = filename.find_last_of('\\') + 1;
+    std::string pureName = filename.substr(iPos, filename.length() - iPos); // get file name without path dir
+    pureName = pureName.substr(0, pureName.rfind(".")); // get pure name without postfix
+    std::string filePath = "/data/" + pureName + ".txt";
+
+    RS_LOGD("RSBaseRenderUtil::DumpFpsToFile filename = %s, filePath=%s", filename.c_str(), filePath.c_str());
+    // char realPath[PATH_MAX] = {0};
+    // if (realpath(filename.c_str(), realPath) == nullptr) {
+    //     RS_LOGI("RSBaseRenderUtil::filePath[%s] is not realPath[%s]", filePath.c_str(), realPath);
+    // }
+    std::fstream dumperFile_(filePath.c_str(), std::fstream::in);
+    if (!dumperFile_) {
+        RS_LOGI("RSBaseRenderUtil::DumpFpsToFile file does not exist %s", filePath.c_str());
+        dumperFile_.open(filePath.c_str(), std::fstream::out);
+    } else {
+        dumperFile_.close();
+        dumperFile_.open(filePath.c_str(), std::fstream::out | std::fstream::app);
+    }
+    if (!dumperFile_) {
+        RS_LOGI("RSBaseRenderUtil::DumpFpsToFile fail to open file %s", filePath.c_str());
+        return false;
+    }
+    dumperFile_ << val;
+    dumperFile_.close();
+    return true;
 }
 
 bool RSBaseRenderUtil::WriteToPng(const std::string &filename, const WriteToPngParam &param)

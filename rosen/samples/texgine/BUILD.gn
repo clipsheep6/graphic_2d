@@ -37,7 +37,151 @@ ohos_prebuilt_etcs("texgine_sample_resources") {
   ]
 }
 
-ohos_executable("texgine_sample") {
+ohos_executable("texgine_sample_align") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/align_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_alignment") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/alignment_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_calibrate") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/calibrate_position_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_decoration") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/decoration_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_mix") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/mix_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_shadow") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/shadow_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_bug") {
   install_enable = true
 
   sources = [
@@ -46,27 +190,8 @@ ohos_executable("texgine_sample") {
   ]
 
   sources += [
-    "feature_test/align_test.cpp",
-    "feature_test/alignment_test.cpp",
     "feature_test/bug1.cpp",
-    "feature_test/calibrate_position_test.cpp",
-    "feature_test/decoration_test.cpp",
-    "feature_test/dynamic_font_test.cpp",
     "feature_test/ellipsis_bug1.cpp",
-    "feature_test/ellipsis_test.cpp",
-    "feature_test/emoji_test.cpp",
-    "feature_test/feature_test.cpp",
-    "feature_test/font_style_test.cpp",
-    "feature_test/glyph_position_test.cpp",
-    "feature_test/intrinsic_width_test.cpp",
-    "feature_test/layout_test.cpp",
-    "feature_test/mix_test.cpp",
-    "feature_test/shadow_test.cpp",
-    "feature_test/spacing_test.cpp",
-    "feature_test/strut_test.cpp",
-    "feature_test/text_color_test.cpp",
-    "feature_test/weight_style_test.cpp",
-    "feature_test/word_boundary_test.cpp",
   ]
 
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
@@ -78,6 +203,316 @@ ohos_executable("texgine_sample") {
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_dynamic_font") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/dynamic_font_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_emoji") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/emoji_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_font_style") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/font_style_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_feature") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/feature_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_glyph_position") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/glyph_position_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_intrinsic_width") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/intrinsic_width_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_spacing") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/spacing_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_strut") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/strut_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_text_color") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/text_color_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_weight_style") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/weight_style_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_word_boundary") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/word_boundary_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_ellipsis") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/ellipsis_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
+
+  external_deps = [ "hitrace_native:hitrace_meter" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_layout") {
+  install_enable = true
+
+  sources = [
+    "feature_test/feature_test_framework.cpp",
+    "texgine_sample.cpp",
+  ]
+
+  sources += [ "feature_test/layout_test.cpp" ]
+
+  defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
+
+  deps = [
+    ":libskia_rs_framework",
+    ":texgine_sample_resources",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+  ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

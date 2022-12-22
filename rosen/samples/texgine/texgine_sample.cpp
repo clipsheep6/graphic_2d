@@ -13,16 +13,17 @@
  * limitations under the License.
  */
 
-#include <hitrace_meter.h>
 #include <include/core/SkCanvas.h>
 #include <include/effects/SkDashPathEffect.h>
+#include <skia_framework.h>
 #include <texgine/typography.h>
+#include <texgine/utils/exlog.h>
+#include <texgine/utils/memory_usage_scope.h>
+#include <texgine/utils/trace.h>
 
 #include "feature_test/feature_test_framework.h"
-#include "skia_framework.h"
 
-#define TRACE_BEGIN(str) StartTrace(HITRACE_TAG_GRAPHIC_AGP, str);
-#define TRACE_END() FinishTrace(HITRACE_TAG_GRAPHIC_AGP);
+using namespace Texgine;
 
 namespace {
 SkColor colors[] = {
@@ -59,34 +60,33 @@ void OnDraw(SkCanvas &canvas)
         if (ptest == nullptr) {
             continue;
         }
-        TRACE_BEGIN(ptest->GetTestName());
 
         double yStart = y;
         canvas.save();
         canvas.translate(50, 50);
-        const auto &test = *ptest;
-        const auto &option = test.GetFeatureTestOption();
-        const auto &typographies = test.GetTypographies();
+        const auto &option = ptest->GetFeatureTestOption();
+        const auto &typographies = ptest->GetTypographies();
 
         double maxHeight = 0;
         double x = 0;
         for (const auto &data : typographies) {
             const auto &typography = data.typography;
-            if (x + typography->GetWidthLimit() >= 800) {
+            if ((x + typography->GetWidthLimit() >= 800) || (x != 0 && data.atNewline)) {
                 x = 0;
                 y += maxHeight + option.marginTop;
                 maxHeight = 0;
             }
 
-            TRACE_BEGIN("typography::Paint");
-            typography->Paint(canvas, x, y);
-            TRACE_END();
+            if (data.onPaint) {
+                data.onPaint(data, canvas, x, y);
+            } else {
+                typography->Paint(canvas, x, y);
+            }
 
             if (data.needRainbowChar.value_or(option.needRainbowChar)) {
-                TRACE_BEGIN("typography::Rainbow");
                 canvas.save();
                 canvas.translate(x, y);
-                Texgine::Boundary boundary = {data.rainbowStart, data.rainbowEnd};
+                Boundary boundary = {data.rainbowStart, data.rainbowEnd};
                 auto boxes = typography->GetTextRectsByBoundary(boundary, data.hs, data.ws);
                 int32_t rainbowColorIndex = 0;
                 for (auto &box : boxes) {
@@ -99,17 +99,13 @@ void OnDraw(SkCanvas &canvas)
                     rainbowColorIndex %= sizeof(colors) / sizeof(*colors);
                 }
                 canvas.restore();
-                TRACE_END();
             }
 
             if (!data.comment.empty()) {
-                TRACE_BEGIN("comment");
                 SkiaFramework::DrawString(canvas, data.comment, x, y);
-                TRACE_END();
             }
 
             if (option.needBorder) {
-                TRACE_BEGIN("border");
                 borderPaint.setColor(option.colorBorder);
                 canvas.drawRect(SkRect::MakeXYWH(x, y, typography->GetWidthLimit(),
                     typography->GetHeight()), borderPaint);
@@ -117,7 +113,6 @@ void OnDraw(SkCanvas &canvas)
                 actualBorderPaint.setColor(option.colorBorder);
                 canvas.drawRect(SkRect::MakeXYWH(x, y, typography->GetActualWidth(),
                     typography->GetHeight()), actualBorderPaint);
-                TRACE_END();
             }
 
             x += typography->GetWidthLimit() + option.marginLeft;
@@ -126,17 +121,29 @@ void OnDraw(SkCanvas &canvas)
         y += maxHeight + option.marginTop + 50;
 
         canvas.restore();
-        TRACE_BEGIN("TestBorderName");
         canvas.drawRect(SkRect::MakeXYWH(0, yStart, 800, y - yStart), testBorderPaint);
         SkiaFramework::DrawString(canvas, ptest->GetTestName(), 0, yStart);
-        TRACE_END();
-        TRACE_END();
     }
     canvas.restore();
 }
 
 int main()
 {
+    const auto &tests = FeatureTestCollection::GetInstance().GetTests();
+    for (const auto &ptest : tests) {
+        if (ptest == nullptr) {
+            continue;
+        }
+
+        MemoryUsageScope scope(ptest->GetTestName());
+        ScopedTrace layoutScope(ptest->GetTestName());
+        LOGSCOPED(sl, LOG2EX_DEBUG(), ptest->GetTestName());
+        ptest->Layout();
+        for (const auto &typography : ptest->GetTypographies()) {
+            ReportMemoryUsage("typography", *typography.typography, true);
+        }
+    }
+
     SkiaFramework sf;
     sf.SetWindowWidth(720);
     sf.SetWindowHeight(1280);

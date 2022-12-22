@@ -77,6 +77,9 @@ private:
 
     static void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType);
     static bool IsValidRootRenderNode(RSRootRenderNode& node);
+
+    float rootWidth_ = 0.0;
+    float rootHeight_ = 0.0;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -40,13 +40,17 @@
 #include "property/rs_property_trace.h"
 #include "property/rs_properties_painter.h"
 #include "screen_manager/rs_screen_manager.h"
-#include "socperf_client.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "accessibility_config.h"
 #include "rs_qos_thread.h"
 #include "xcollie/watchdog.h"
 
 #include "frame_trace.h"
+
+#ifdef SOC_PERF_ENABLE
+#include "socperf_client.h"
+#endif
+
 using namespace FRAME_TRACE;
 static const std::string RS_INTERVAL_NAME = "renderservice";
 
@@ -55,10 +59,14 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr uint64_t REFRESH_PERIOD = 16666667;
+constexpr uint64_t CLEAN_CACHE_FREQ = 60;
+
+#ifdef SOC_PERF_ENABLE
 constexpr int32_t PERF_ANIMATION_REQUESTED_CODE = 10017;
 constexpr uint64_t PERF_PERIOD = 250000000;
-constexpr uint64_t CLEAN_CACHE_FREQ = 60;
 constexpr uint64_t PERF_PERIOD_BLUR = 80000000;
+#endif
+
 const std::map<int, int32_t> BLUR_CNT_TO_BLUR_CODE {
     { 1, 10021 },
     { 2, 10022 },
@@ -1178,6 +1186,7 @@ void RSMainThread::SetDirtyFlag()
 
 void RSMainThread::PerfAfterAnim()
 {
+#ifdef SOC_PERF_ENABLE
     if (!IfUseUniVisitor()) {
         return;
     }
@@ -1190,6 +1199,7 @@ void RSMainThread::PerfAfterAnim()
         OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequestEx(PERF_ANIMATION_REQUESTED_CODE, false, "");
         prePerfTimestamp_ = 0;
     }
+#endif
 }
 void RSMainThread::ForceRefreshForUni()
 {
@@ -1212,6 +1222,7 @@ void RSMainThread::ForceRefreshForUni()
 
 void RSMainThread::PerfForBlurIfNeeded()
 {
+#ifdef SOC_PERF_ENABLE
     static int preBlurCnt = 0;
     int blurCnt = RSPropertiesPainter::GetBlurCnt();
     // clamp blurCnt to 0~3.
@@ -1229,6 +1240,7 @@ void RSMainThread::PerfForBlurIfNeeded()
         prePerfTimestamp = timestamp_;
         preBlurCnt = blurCnt;
     }
+#endif
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -50,7 +50,9 @@ bool RSProcessor::FrameAwareTraceBoost(size_t layerNum)
     if (layerNum != FRAME_TRACE_LAYER_NUM) {
         if (FrameAwareTraceIsOpen()) {
             FrameAwareTraceClose();
+#ifdef SOC_PERF_ENABLE
             OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequestEx(FRAME_TRACE_PERF_REQUESTED_CODE, false, "");
+#endif
             RS_LOGI("RsDebug RSProcessor::Perf: FrameTrace 0");
         }
         return false;
@@ -64,7 +66,9 @@ bool RSProcessor::FrameAwareTraceBoost(size_t layerNum)
         if (!FrameAwareTraceOpen()) {
             return false;
         }
+#ifdef SOC_PERF_ENABLE
         OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequestEx(FRAME_TRACE_PERF_REQUESTED_CODE, true, "");
+#endif
         RS_LOGI("RsDebug RSProcessor::Perf: FrameTrace 1");
         lastRequestPerfTime = currentTime;
     }
@@ -74,6 +78,7 @@ bool RSProcessor::FrameAwareTraceBoost(size_t layerNum)
 
 void RSProcessor::RequestPerf(uint32_t layerLevel, bool onOffTag)
 {
+#ifdef SOC_PERF_ENABLE
     switch (layerLevel) {
         case PERF_LEVEL_0: {
             // do nothing
@@ -96,6 +101,7 @@ void RSProcessor::RequestPerf(uint32_t layerLevel, bool onOffTag)
             break;
         }
     }
+#endif
 }
 
 bool RSProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId)

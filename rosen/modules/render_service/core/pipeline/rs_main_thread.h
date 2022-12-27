@@ -207,7 +207,9 @@ private:
 
     uint64_t timestamp_ = 0;
     uint64_t lastAnimateTimestamp_ = 0;
+#ifdef SOC_PERF_ENABLE
     uint64_t prePerfTimestamp_ = 0;
+#endif
     uint64_t lastCleanCacheTimestamp_ = 0;
     std::unordered_map<uint32_t, sptr<IApplicationAgent>> applicationAgentMap_;
 

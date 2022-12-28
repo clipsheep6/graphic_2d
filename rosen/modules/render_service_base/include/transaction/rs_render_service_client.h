@@ -20,15 +20,22 @@
 #include <map>
 #include <memory>
 #include <mutex>
+
+#ifdef ROSEN_OHOS
 #include <refbase.h>
 #include <surface.h>
-
+#endif
+#ifdef ROSEN_OHOS
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/iapplication_agent.h"
 #include "ipc_callbacks/screen_change_callback.h"
 #include "ipc_callbacks/surface_capture_callback.h"
+#endif
+
+#include "platform/common/rs_vsync_receiver.h"
 #include "platform/drawing/rs_surface.h"
 #include "rs_irender_client.h"
+#ifdef ROSEN_OHOS
 #include "screen_manager/rs_screen_capability.h"
 #include "screen_manager/rs_screen_data.h"
 #include "screen_manager/rs_screen_hdr_capability.h"
@@ -38,12 +45,15 @@
 #include "vsync_receiver.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
 #include "ipc_callbacks/rs_irender_mode_change_callback.h"
+#endif
 #include "rs_occlusion_data.h"
 
 namespace OHOS {
 namespace Rosen {
 // normal callback functor for client users.
+#ifdef ROSEN_OHOS
 using ScreenChangeCallback = std::function<void(ScreenId, ScreenEvent)>;
+#endif
 using BufferAvailableCallback = std::function<void()>;
 using OcclusionChangeCallback = std::function<void(std::shared_ptr<RSOcclusionData>)>;
 using RenderModeChangeCallback = std::function<void(bool)>;
@@ -51,7 +61,9 @@ class SurfaceCaptureCallback {
 public:
     SurfaceCaptureCallback() {}
     virtual ~SurfaceCaptureCallback() {}
+#ifdef ROSEN_OHOS
     virtual void OnSurfaceCapture(std::shared_ptr<Media::PixelMap> pixelmap) = 0;
+#endif
 };
 
 class RSRenderServiceClient : public RSIRenderClient {
@@ -71,15 +83,20 @@ public:
     bool QueryIfRTNeedRender();
     bool CreateNode(const RSSurfaceRenderNodeConfig& config);
     std::shared_ptr<RSSurface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config);
-
+#ifdef ROSEN_OHOS
     std::shared_ptr<VSyncReceiver> CreateVSyncReceiver(
         const std::string& name,
         const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper = nullptr);
+#endif
+    std::shared_ptr<RSVSyncReceiver> CreateRSVSyncReceiver(
+        const std::string& name,
+        const std::shared_ptr<RSEventHandler> &looper = nullptr);
 
     bool TakeSurfaceCapture(NodeId id, std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY);
 
     int32_t SetFocusAppInfo(int32_t pid, int32_t uid, const std::string &bundleName, const std::string &abilityName);
 
+#ifdef ROSEN_OHOS
     ScreenId GetDefaultScreenId();
 
     std::vector<ScreenId> GetAllScreenIds();
@@ -136,18 +153,23 @@ public:
     int32_t GetScreenType(ScreenId id, RSScreenType& screenType);
 
     int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval);
+#endif
 
     int32_t RegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback);
 
     int32_t UnRegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback);
 private:
+#ifdef ROSEN_OHOS
     void TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap);
+#endif
     std::mutex mutex_;
+#ifdef ROSEN_OHOS
     std::map<NodeId, sptr<RSIBufferAvailableCallback>> bufferAvailableCbRTMap_;
     std::map<NodeId, sptr<RSIBufferAvailableCallback>> bufferAvailableCbUIMap_;
     sptr<RSIRenderModeChangeCallback> renderModeChangeCb_;
     sptr<RSIScreenChangeCallback> screenChangeCb_;
     sptr<RSISurfaceCaptureCallback> surfaceCaptureCbDirector_;
+#endif
     std::map<NodeId, std::shared_ptr<SurfaceCaptureCallback>> surfaceCaptureCbMap_;
 
     friend class SurfaceCaptureCallbackDirector;

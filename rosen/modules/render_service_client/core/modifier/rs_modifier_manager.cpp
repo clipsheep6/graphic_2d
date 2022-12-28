@@ -21,6 +21,7 @@
 #include "command/rs_message_processor.h"
 #include "modifier/rs_property_modifier.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_utils.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -69,7 +70,7 @@ bool RSModifierManager::Animate(int64_t time)
     bool hasRunningAnimation = false;
 
     // iterate and execute all animations, remove finished animations
-    std::__libcpp_erase_if_container(animations_, [this, &hasRunningAnimation, time](auto& iter) -> bool {
+    erase_if_container(animations_, [this, &hasRunningAnimation, time](auto& iter) -> bool {
         auto& animation = iter.second;
         bool isFinished = animation->Animate(time);
         if (isFinished) {

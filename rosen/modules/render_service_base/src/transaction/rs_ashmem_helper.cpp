@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#ifdef ROSEN_OHOS
 #include "transaction/rs_ashmem_helper.h"
 
 #include <memory>
@@ -21,12 +21,11 @@
 
 #include "ashmem.h"
 #include "platform/common/rs_log.h"
-#include "rs_trace.h"
+#include "platform/common/rs_trace.h"
 #include "securec.h"
 #include "sys_binder.h"
 #include "sandbox_utils.h"
 
-#ifdef ROSEN_OHOS
 namespace OHOS {
 namespace Rosen {
 std::unique_ptr<AshmemAllocator> AshmemAllocator::CreateAshmemAllocator(size_t size, int mapType)

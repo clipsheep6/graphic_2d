@@ -14,7 +14,9 @@
  */
 #ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_UI_SHARE_CONTEXT_H
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_UI_SHARE_CONTEXT_H
+#ifdef ROSEN_OHOS
 #include <EGL/egl.h>
+#endif
 #include "common/rs_common_def.h"
 
 namespace OHOS {
@@ -23,7 +25,9 @@ class RS_EXPORT RSUIShareContext final {
 public:
     static RSUIShareContext& GetInstance();
     ~RSUIShareContext() = default;
+#ifdef ROSEN_OHOS
     EGLContext GetRsRenderContext() const;
+#endif
 private:
     RSUIShareContext() = default;
     RSUIShareContext(const RSUIShareContext&) = delete;

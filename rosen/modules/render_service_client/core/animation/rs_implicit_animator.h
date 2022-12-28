@@ -17,6 +17,8 @@
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_IMPLICIT_ANIMATOR_H
 
 #include <stack>
+#include <tuple>
+#include <memory>
 
 #include "animation/rs_animation_timing_curve.h"
 #include "animation/rs_animation_timing_protocol.h"

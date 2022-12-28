@@ -16,6 +16,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_MODIFIER_RS_MODIFIER_MANAGER_MAP_H
 
 #include <mutex>
+#include <memory>
 #include <unordered_map>
 
 #include "common/rs_macros.h"

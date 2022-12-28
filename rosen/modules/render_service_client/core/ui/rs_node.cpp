@@ -29,6 +29,7 @@
 #include "modifier/rs_modifier.h"
 #include "pipeline/rs_node_map.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_utils.h"
 #include "render/rs_path.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "modifier/rs_property_modifier.h"

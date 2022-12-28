@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
-constexpr float DEGREE_TO_RADIAN = M_PI / 180;
+const float DEGREE_TO_RADIAN = M_PI / 180;
 
 const std::shared_ptr<const RSTransitionEffect> RSTransitionEffect::EMPTY = RSTransitionEffect::Create();
 

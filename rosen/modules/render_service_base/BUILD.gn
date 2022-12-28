@@ -12,12 +12,13 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine/ace_config.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 import(
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
 
 config("export_config") {
-  cflags_cc = [ "-std=c++17" ]
+
   include_dirs = [
     "include",
     "//foundation/graphic/graphic_2d/rosen/include",
@@ -26,7 +27,20 @@ config("export_config") {
     "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
     "//foundation/graphic/graphic_2d/interfaces/inner_api/composer",
     "//foundation/graphic/graphic_2d/utils/sandbox",
+    "//foundation/graphic/graphic_2d/interfaces/inner_api/common",
+    "//foundation/graphic/graphic_2d/utils/buffer_handle/export",
+    "//foundation/graphic/graphic_2d/rosen/modules/composer/vsync/include",
+    "//third_party/flutter/skia",
   ]
+
+  cflags = [
+    "-Wno-error",
+    "-Wno-unused-private-field",
+    "-Wno-c++17-extensions",
+    "-Wno-inconsistent-dllimport",
+  ]
+
+  cflags_cc = ["-std=c++17"]
 
   defines = rs_common_define
 }
@@ -89,20 +103,6 @@ ohos_shared_library("librender_service_base") {
     #delegate
     "src/delegate/rs_functional_delegate.cpp",
 
-    #ipc_callbacks
-    "src/ipc_callbacks/buffer_available_callback_proxy.cpp",
-    "src/ipc_callbacks/buffer_available_callback_stub.cpp",
-    "src/ipc_callbacks/rs_application_agent_proxy.cpp",
-    "src/ipc_callbacks/rs_application_agent_stub.cpp",
-    "src/ipc_callbacks/rs_occlusion_change_callback_proxy.cpp",
-    "src/ipc_callbacks/rs_occlusion_change_callback_stub.cpp",
-    "src/ipc_callbacks/rs_render_mode_change_callback_proxy.cpp",
-    "src/ipc_callbacks/rs_render_mode_change_callback_stub.cpp",
-    "src/ipc_callbacks/screen_change_callback_proxy.cpp",
-    "src/ipc_callbacks/screen_change_callback_stub.cpp",
-    "src/ipc_callbacks/surface_capture_callback_proxy.cpp",
-    "src/ipc_callbacks/surface_capture_callback_stub.cpp",
-
     #pipeline
     "src/pipeline/rs_base_render_node.cpp",
     "src/pipeline/rs_canvas_render_node.cpp",
@@ -147,14 +147,6 @@ ohos_shared_library("librender_service_base") {
     "src/transaction/rs_transaction_data.cpp",
     "src/transaction/rs_transaction_proxy.cpp",
 
-    #screen_manager
-    "src/screen_manager/rs_screen_capability.cpp",
-    "src/screen_manager/rs_screen_data.cpp",
-    "src/screen_manager/rs_screen_hdr_capability.cpp",
-    "src/screen_manager/rs_screen_mode_info.cpp",
-    "src/screen_manager/rs_screen_props.cpp",
-    "src/screen_manager/rs_virtual_screen_resolution.cpp",
-
     #overdraw
     "src/overdraw/rs_cpu_overdraw_canvas_listener.cpp",
     "src/overdraw/rs_gpu_overdraw_canvas_listener.cpp",
@@ -162,32 +154,22 @@ ohos_shared_library("librender_service_base") {
     "src/overdraw/rs_overdraw_controller.cpp",
   ]
 
-  if (rs_enable_gpu) {
-    sources += [ "src/common/rs_shared_context.cpp" ]
-  }
-
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
     "//foundation/graphic/graphic_2d/utils/log",
     "//third_party/flutter/skia/src",
   ]
 
-  deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/platform:platform",
-    "//foundation/graphic/graphic_2d/utils:sandbox_utils",
-  ]
+  deps = []
 
-  external_deps = [
-    "hitrace_native:hitrace_meter",
-    "init:libbeget_proxy",
-    "init:libbegetutil",
-    "ipc:ipc_core",
-  ]
+  if (rosen_is_android) {
+    aosp_deps = [ "shared_library:libnativewindow" ]
+  }
 
   public_deps = [
     "src/platform:platform",
-    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
+    "//foundation/graphic/graphic_2d/utils/sandbox:sandbox_utils",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
 
   part_name = "graphic_standard"

@@ -19,10 +19,9 @@
 #include <functional>
 #include <vector>
 
-#include <event_handler.h>
-#include "vsync_receiver.h"
 
 #include "platform/drawing/rs_vsync_client.h"
+#include "platform/common/rs_vsync_receiver.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -40,10 +39,10 @@ private:
     void VsyncCallback(int64_t nanoTimestamp);
 
     std::atomic_bool requestFlag_ = false;
-    std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
-    std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
+    std::shared_ptr<RSEventRunner> runner_ = nullptr;
+    std::shared_ptr<RSEventHandler> handler_ = nullptr;
     RSVsyncClient::VsyncCallback vsyncCallback_ = nullptr;
-    std::shared_ptr<VSyncReceiver> receiver_ = nullptr;
+    std::shared_ptr<RSVSyncReceiver> receiver_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

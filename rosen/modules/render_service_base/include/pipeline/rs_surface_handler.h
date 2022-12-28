@@ -14,11 +14,15 @@
  */
 #ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_SURFACE_HANDLER_H
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_SURFACE_HANDLER_H
-
+#ifdef ROSEN_OHOS
 #include <surface.h>
+#endif
+#include <atomic>
 
 #include "common/rs_common_def.h"
+#ifdef ROSEN_OHOS
 #include "sync_fence.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -31,20 +35,25 @@ public:
     struct SurfaceBufferEntry {
         void Reset()
         {
+#ifdef ROSEN_OHOS
             buffer = nullptr;
             acquireFence = SyncFence::INVALID_FENCE;
             releaseFence = SyncFence::INVALID_FENCE;
             damageRect = Rect {0, 0, 0, 0};
+#endif
             timestamp = 0;
         }
+#ifdef ROSEN_OHOS
         sptr<SurfaceBuffer> buffer;
         sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
         sptr<SyncFence> releaseFence = SyncFence::INVALID_FENCE;
         Rect damageRect = {0, 0, 0, 0};
+#endif
         int64_t timestamp = 0;
     };
-
+#ifdef ROSEN_OHOS
     void SetConsumer(const sptr<Surface>& consumer);
+#endif
     void IncreaseAvailableBuffer();
     int32_t ReduceAvailableBuffer();
 
@@ -52,7 +61,7 @@ public:
     {
         return id_;
     }
-
+#ifdef ROSEN_OHOS
     void SetDefaultWidthAndHeight(int32_t width, int32_t height)
     {
         if (consumer_ != nullptr) {
@@ -93,17 +102,18 @@ public:
         // The fence which get from hdi is preBuffer's releaseFence now.
         preBuffer_.releaseFence = std::move(fence);
     }
-
+#endif
     SurfaceBufferEntry& GetPreBuffer()
     {
         return preBuffer_;
     }
 
+#ifdef ROSEN_OHOS
     const sptr<Surface>& GetConsumer() const
     {
         return consumer_;
     }
-
+#endif
     int32_t GetAvailableBufferCount() const
     {
         return bufferAvailableCount_;
@@ -128,10 +138,12 @@ public:
     void SetGlobalZOrder(float globalZOrder);
     float GetGlobalZOrder() const;
 
+#ifdef ROSEN_OHOS
     bool HasConsumer() const
     {
         return consumer_ != nullptr;
     }
+#endif
     inline bool IsCurrentFrameBufferConsumed()
     {
         return isCurrentFrameBufferConsumed_;
@@ -146,8 +158,9 @@ public:
     }
 
 protected:
+#ifdef ROSEN_OHOS
     sptr<Surface> consumer_;
-
+#endif
 private:
     NodeId id_ = 0;
     SurfaceBufferEntry buffer_;

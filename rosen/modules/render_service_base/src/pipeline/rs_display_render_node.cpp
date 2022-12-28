@@ -17,8 +17,10 @@
 
 #include "common/rs_obj_abs_geometry.h"
 #include "platform/common/rs_log.h"
+#ifdef ROSEN_OHOS
 #include "platform/ohos/backend/rs_surface_ohos_gl.h"
 #include "platform/ohos/backend/rs_surface_ohos_raster.h"
+#endif
 #include "screen_manager/screen_types.h"
 #include "visitor/rs_node_visitor.h"
 
@@ -113,6 +115,7 @@ void RSDisplayRenderNode::SetIsMirrorDisplay(bool isMirror)
         IsMirrorDisplay() ? "true" : "false");
 }
 
+#ifdef ROSEN_OHOS
 bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
 {
     if (consumer_ != nullptr && surface_ != nullptr) {
@@ -145,6 +148,7 @@ bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
     surfaceCreated_ = true;
     return true;
 }
+#endif
 
 bool RSDisplayRenderNode::SkipFrame(uint32_t skipFrameInterval)
 {

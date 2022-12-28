@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <unistd.h>
+#include <functional>
 
 #include "animation/rs_animation_common.h"
 #include "animation/rs_animation_timing_protocol.h"

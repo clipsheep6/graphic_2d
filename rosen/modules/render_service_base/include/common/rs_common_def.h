@@ -21,6 +21,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <vector>
+#include <unistd.h>
 
 #include "common/rs_macros.h"
 
@@ -96,7 +97,8 @@ struct RSDisplayNodeConfig {
 #if defined(M_PI)
 constexpr float PI = M_PI;
 #else
-constexpr float PI = std::atanf(1.0) * 4;
+const float PI = std::atanf(1.0) * 4;
+const float M_PI = PI;
 #endif
 
 template<typename T>

@@ -16,7 +16,9 @@
 #include "jank_detector/rs_jank_detector.h"
 
 #include <unistd.h>
+#ifdef ROSEN_OHOS
 #include "base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include/hisysevent.h"
+#endif
 #include "sandbox_utils.h"
 
 namespace {
@@ -31,18 +33,21 @@ struct FrameMsg {
 void DrawEventReport(FrameMsg& frameMsg, std::string stringId)
 {
     int32_t pid = OHOS::GetRealPid();
+#ifdef ROSEN_OHOS
     uint32_t uid = getuid();
+#endif
     std::string msg = "It took " + std::to_string(frameMsg.totalTime) + "ns to draw, "
         + "UI took " + std::to_string(frameMsg.uiDrawTime) + "ns to draw, "
         + "RSRenderThread took " + std::to_string(frameMsg.renderDrawTime) + "ns to draw, "
         + "RSRenderThread dropped " + std::to_string(frameMsg.dropUiFrameNum) + " UI Frames";
-
+#ifdef ROSEN_OHOS
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::GRAPHIC, stringId,
         OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
         "PID", pid,
         "UID", uid,
         "ABILITY_NAME", frameMsg.abilityName,
         "MSG", msg);
+#endif
 }
 }
 

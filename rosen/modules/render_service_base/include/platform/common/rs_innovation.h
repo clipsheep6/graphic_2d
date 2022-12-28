@@ -15,8 +15,12 @@
 
 #ifndef RENDER_SERVICE_BASE_COMMON_RS_INNOVATION_H
 #define RENDER_SERVICE_BASE_COMMON_RS_INNOVATION_H
+
+#ifdef ROSEN_OHOS
 #include <dlfcn.h>
-#include <parameters.h>
+#endif
+#include "rs_parameters.h"
+
 namespace OHOS {
 namespace Rosen {
 class RSInnovation {
@@ -24,7 +28,9 @@ public:
     ~RSInnovation() = default;
     static void OpenInnovationSo()
     {
+#ifdef ROSEN_OHOS
         innovationHandle = dlopen("libgraphic_innovation.z.so", RTLD_NOW);
+#endif
         GetParallelCompositionFunc();
         GetOcclusionCullingFunc();
         GetQosVSyncFunc();
@@ -36,7 +42,9 @@ public:
             ResetParallelCompositionFunc();
             ResetOcclusionCullingFunc();
             ResetQosVsyncFunc();
+#ifdef ROSEN_OHOS
             dlclose(innovationHandle);
+#endif
         }
     }
 
@@ -88,12 +96,14 @@ private:
     static void GetParallelCompositionFunc()
     {
         if (innovationHandle) {
+#ifdef ROSEN_OHOS  
             _s_createParallelSyncSignal = dlsym(innovationHandle, "CreateParallelSyncSignal");
             _s_signalCountDown = dlsym(innovationHandle, "SignalCountDown");
             _s_signalAwait = dlsym(innovationHandle, "SignalAwait");
             _s_assignTask = dlsym(innovationHandle, "AssignTask");
             _s_removeStoppedThreads = dlsym(innovationHandle, "RemoveStoppedThreads");
             _s_checkForSerialForced = dlsym(innovationHandle, "CheckForSerialForced");
+#endif
             _s_parallelCompositionLoaded =
                 (_s_createParallelSyncSignal != nullptr) &&
                 (_s_signalCountDown != nullptr) &&
@@ -120,7 +130,9 @@ private:
     static void GetOcclusionCullingFunc()
     {
         if (innovationHandle) {
+#ifdef ROSEN_OHOS
             _s_regionOpFromSo = dlsym(innovationHandle, "RegionOpFromSO");
+#endif
             _s_occlusionCullingFuncLoaded = (_s_regionOpFromSo != nullptr);
         }
     }
@@ -134,6 +146,7 @@ private:
     static void GetQosVSyncFunc()
     {
         if (innovationHandle) {
+#ifdef ROSEN_OHOS
             _s_createRSQosService = dlsym(innovationHandle, "CreateRSQosService");
             _s_qosThreadStart = dlsym(innovationHandle, "QosThreadStart");
             _s_qosThreadStop = dlsym(innovationHandle, "QosThreadStop");
@@ -141,6 +154,7 @@ private:
             _s_qosOnRSVisibilityChangeCB = dlsym(innovationHandle, "QosOnRSVisibilityChangeCB");
             _s_qosRegisteFuncCB = dlsym(innovationHandle, "QosRegisteFuncCB");
             _s_qosOnRSResetPid = dlsym(innovationHandle, "QosOnRSResetPid");
+#endif
             _s_qosVsyncFuncLoaded = (_s_createRSQosService != nullptr) &&
                                     (_s_qosThreadStart != nullptr) &&
                                     (_s_qosThreadStop != nullptr) &&

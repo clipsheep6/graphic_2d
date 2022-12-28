@@ -29,6 +29,7 @@ namespace Rosen {
 class RSDirtyRegionManager;
 class RSProperties;
 class RSRenderNode;
+class RSSurfaceFrame;
 
 class RSRenderThreadVisitor : public RSNodeVisitor {
 public:

@@ -39,7 +39,6 @@
 #include "render/rs_path.h"
 #include "render/rs_shader.h"
 #include "render/rs_skia_filter.h"
-#include "render_context/render_context.h"
 
 namespace OHOS {
 namespace Rosen {

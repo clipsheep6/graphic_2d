@@ -1,0 +1,55 @@
+/*
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "platform/ohos/event_runner_ohos.h"
+
+namespace OHOS {
+namespace Rosen {
+EventRunnerOhos::EventRunnerOhos(bool inNewThread) : RSEventRunner(inNewThread)
+{
+    runner_ = OHOS::AppExecFwk::EventRunner::Create(inNewThread);
+}
+
+EventRunnerOhos::~EventRunnerOhos() {}
+
+std::shared_ptr<RSEventRunner> RSEventRunner::Create(bool inNewThread)
+{
+    std::shared_ptr<EventRunnerOhos> ohosRunner = std::make_shared<EventRunnerOhos>(inNewThread);
+    std::shared_ptr<RSEventRunner> rsRunner = std::static_pointer_cast<RSEventRunner>(ohosRunner);
+    return rsRunner;
+}
+
+int EventRunnerOhos::Stop()
+{
+    if (runner_ != nullptr) {
+        return runner_->Stop();
+    }
+    return 0;
+}
+
+int EventRunnerOhos::Run()
+{
+    if (runner_ != nullptr) {
+        return runner_->Run();
+    }
+    return 0;
+}
+
+std::shared_ptr<OHOS::AppExecFwk::EventRunner> EventRunnerOhos::Get()
+{
+    return runner_;
+}
+} // namespace Rosen
+} // namespace OHOS

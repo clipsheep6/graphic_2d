@@ -150,6 +150,7 @@ void RSRecordingCanvas::DrawImageWithParm(const sk_sp<SkImage>img, const sk_sp<S
     AddOp(std::move(op));
 }
 
+#ifdef ROSEN_OHOS
 void RSRecordingCanvas::DrawPixelMap(
     const std::shared_ptr<Media::PixelMap>& pixelmap, SkScalar x, SkScalar y, const SkPaint* paint)
 {
@@ -176,6 +177,7 @@ void RSRecordingCanvas::DrawPixelMapWithParm(
     std::unique_ptr<OpItem> op = std::make_unique<ImageWithParmOpItem>(pixelmap, rsImageInfo, paint);
     AddOp(std::move(op));
 }
+#endif
 
 void RSRecordingCanvas::onDrawBehind(const SkPaint& paint)
 {

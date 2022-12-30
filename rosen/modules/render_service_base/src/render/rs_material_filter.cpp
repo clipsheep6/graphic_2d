@@ -18,6 +18,9 @@
 
 #include "include/effects/SkBlurImageFilter.h"
 
+#include "pipeline/rs_paint_filter_canvas.h"
+#include "property/rs_properties_painter.h"
+
 namespace OHOS {
 namespace Rosen {
 // namesapce
@@ -42,6 +45,9 @@ namespace {
     constexpr int STYLE_BACKGROUND_LARGE_DARK = 107;
     constexpr int STYLE_BACKGROUND_XLARGE_DARK = 108;
 
+    // color picker blur style
+    constexpr int STYLE_COLOR_PICKER = 201;
+
     // card blur params
     constexpr MaterialParam CARD_THIN_LIGHT = {75.0f, 1.22, 0x6BF0F0F0};
     constexpr MaterialParam CARD_LIGHT = {50.0f, 1.8, 0x99FAFAFA};
@@ -56,7 +62,7 @@ namespace {
     constexpr MaterialParam BACKGROUND_LARGE_LIGHT = {75.0f, 1.5, 0x4D262626};
     constexpr MaterialParam BACKGROUND_XLARGE_LIGHT = {120.0f, 1.3, 0x4C666666};
     constexpr MaterialParam BACKGROUND_SMALL_DARK = {15.0f, 1.1, 0x800D0D0D};
-    constexpr MaterialParam BACKGROUND_MEDIU_MDARK = {55.0f, 1.15, 0x800D0D0D};
+    constexpr MaterialParam BACKGROUND_MEDIUM_DARK = {55.0f, 1.15, 0x800D0D0D};
     constexpr MaterialParam BACKGROUND_LARGE_DARK = {75.0f, 1.5, 0x800D0D0D};
     constexpr MaterialParam BACKGROUND_XLARGE_DARK = {130.0f, 1.3, 0x800D0D0D};
 
@@ -73,9 +79,10 @@ namespace {
         {STYLE_BACKGROUND_LARGE_LIGHT, BACKGROUND_LARGE_LIGHT},
         {STYLE_BACKGROUND_XLARGE_LIGHT, BACKGROUND_XLARGE_LIGHT},
         {STYLE_BACKGROUND_SMALL_DARK, BACKGROUND_SMALL_DARK},
-        {STYLE_BACKGROUND_MEDIUM_DARK, BACKGROUND_MEDIU_MDARK},
+        {STYLE_BACKGROUND_MEDIUM_DARK, BACKGROUND_MEDIUM_DARK},
         {STYLE_BACKGROUND_LARGE_DARK, BACKGROUND_LARGE_DARK},
-        {STYLE_BACKGROUND_XLARGE_DARK, BACKGROUND_XLARGE_DARK}
+        {STYLE_BACKGROUND_XLARGE_DARK, BACKGROUND_XLARGE_DARK},
+        {STYLE_COLOR_PICKER, BACKGROUND_XLARGE_DARK}
     };
 }
 
@@ -124,7 +131,22 @@ sk_sp<SkImageFilter> RSMaterialFilter::CreateMaterialStyle(int style, float dipS
             RSMaterialFilter::RadiusVp2Sigma(materialParam.radius, dipScale),
             materialParam.saturation, materialParam.maskColor);
     }
+    // ??
     return nullptr;
+}
+
+void RSMaterialFilter::PreProcess(RSPaintFilterCanvas& canvas)
+{
+    if (style_ == STYLE_COLOR_PICKER) {
+        maskColor_ = RSPropertiesPainter::CalcAverageColor(canvas);
+    }
+}
+
+void RSMaterialFilter::PostProcess(RSPaintFilterCanvas& canvas)
+{
+    SkPaint paint;
+    paint.setColor(maskColor_);
+    canvas.drawPaint(paint);
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Add(const std::shared_ptr<RSFilter>& rhs)

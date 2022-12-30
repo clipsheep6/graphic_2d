@@ -41,10 +41,7 @@ public:
     {
         return type_ != FilterType::NONE;
     }
-    bool IsMaterial() const
-    {
-        return type_ == FilterType::MATERIAL;
-    }
+
 protected:
     FilterType type_;
     RSFilter();

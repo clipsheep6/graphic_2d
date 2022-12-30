@@ -34,6 +34,9 @@ class RSMaterialFilter : public RSSkiaFilter {
 public:
     RSMaterialFilter(int style, float dipScale);
     ~RSMaterialFilter() override;
+    void PreProcess(RSPaintFilterCanvas& canvas) override;
+    void PostProcess(RSPaintFilterCanvas& canvas) override;
+
     int GetStyle() const;
     float GetDipScale() const;
     std::shared_ptr<RSFilter> Add(const std::shared_ptr<RSFilter>& rhs) override;

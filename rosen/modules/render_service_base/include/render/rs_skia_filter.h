@@ -23,11 +23,13 @@
 
 namespace OHOS {
 namespace Rosen {
+class RSPaintFilterCanvas;
 class RSSkiaFilter : public RSFilter {
 public:
     ~RSSkiaFilter() override;
-    void ApplyTo(SkPaint& paint);
-    void PostProcess(SkCanvas& canvas);
+    SkPaint GetPaint() const;
+    virtual void PreProcess(RSPaintFilterCanvas& canvas) {};
+    virtual void PostProcess(RSPaintFilterCanvas& canvas) {};
 
 protected:
     RSSkiaFilter(sk_sp<SkImageFilter> imagefilter);

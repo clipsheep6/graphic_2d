@@ -357,9 +357,9 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         if (auto parentNode = node.GetParent().lock()) {
             auto rsParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(parentNode);
             dirtyFlag_ = node.Update(
-                *curSurfaceDirtyManager_, &(rsParent->GetRenderProperties()), dirtyFlag_, prepareClipRect_);
+                *curSurfaceDirtyManager_, &(rsParent->GetRenderProperties()), dirtyFlag_);
         } else {
-            dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, nullptr, dirtyFlag_, prepareClipRect_);
+            dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, nullptr, dirtyFlag_);
         }
         geoPtr->ConcatMatrix(node.GetContextMatrix());
         node.SetDstRect(geoPtr->GetAbsRect().IntersectRect(RectI(0, 0, screenInfo_.width, screenInfo_.height)));
@@ -467,7 +467,7 @@ void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
 
     dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
-        dirtyFlag_, prepareClipRect_);
+        dirtyFlag_);
     curAlpha_ *= property.GetAlpha();
     if (rsParent == curSurfaceNode_) {
         const float rootWidth = property.GetFrameWidth() * property.GetScaleX();
@@ -510,21 +510,25 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
         rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
     }
 
-    dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
-        dirtyFlag_, prepareClipRect_);
-
     const auto& property = node.GetRenderProperties();
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
-    // Dirty Region use abstract coordinate, property of node use relative coordinate
-    // BoundsRect(if exists) is mapped to absRect_ of RSObjAbsGeometry.
-    if (property.GetClipToBounds()) {
-        prepareClipRect_ = prepareClipRect_.IntersectRect(geoPtr->GetAbsRect());
-    }
-    // FrameRect(if exists) is mapped to rect using abstract coordinate explicitly by calling MapAbsRect.
-    if (property.GetClipToFrame()) {
-        RectF frameRect{property.GetFrameOffsetX(), property.GetFrameOffsetY(),
-            property.GetFrameWidth(), property.GetFrameHeight()};
-        prepareClipRect_ = prepareClipRect_.IntersectRect(geoPtr->MapAbsRect(frameRect));
+    if (!curSurfaceNode_->IsAppFreeze()) {
+        dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
+            dirtyFlag_, prepareClipRect_);
+        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+        // Dirty Region use abstract coordinate, property of node use relative coordinate
+        // BoundsRect(if exists) is mapped to absRect_ of RSObjAbsGeometry.
+        if (property.GetClipToBounds()) {
+            prepareClipRect_ = prepareClipRect_.IntersectRect(geoPtr->GetAbsRect());
+        }
+        // FrameRect(if exists) is mapped to rect using abstract coordinate explicitly by calling MapAbsRect.
+        if (property.GetClipToFrame()) {
+            RectF frameRect{property.GetFrameOffsetX(), property.GetFrameOffsetY(),
+                property.GetFrameWidth(), property.GetFrameHeight()};
+            prepareClipRect_ = prepareClipRect_.IntersectRect(geoPtr->MapAbsRect(frameRect));
+        }
+    } else {
+        dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
+            dirtyFlag_);
     }
 
     float alpha = curAlpha_;

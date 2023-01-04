@@ -38,6 +38,7 @@ ohos_shared_library("librender_service") {
     "core/pipeline/rs_processor.cpp",
     "core/pipeline/rs_processor_factory.cpp",
     "core/pipeline/rs_qos_thread.cpp",
+    "core/pipeline/rs_render_config.cpp",
     "core/pipeline/rs_render_engine.cpp",
     "core/pipeline/rs_render_service.cpp",
     "core/pipeline/rs_render_service_connection.cpp",
@@ -94,6 +95,7 @@ ohos_shared_library("librender_service") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf:frame_trace_intf",
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//third_party/libxml2:libxml2",
   ]
 
   public_deps = [
@@ -103,6 +105,7 @@ ohos_shared_library("librender_service") {
 
   external_deps = [
     "c_utils:utils",
+    "config_policy:configpolicy_util",
     "eventhandler:libeventhandler",
     "hicollie_native:libhicollie",
     "hitrace_native:hitrace_meter",

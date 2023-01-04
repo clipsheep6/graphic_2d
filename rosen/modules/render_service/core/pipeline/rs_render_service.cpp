@@ -16,6 +16,7 @@
 #include "rs_render_service.h"
 #include "rs_main_thread.h"
 #include "rs_qos_thread.h"
+#include "rs_render_config.h"
 #include "rs_render_service_connection.h"
 #include "vsync_generator.h"
 #include "pipeline/rs_surface_render_node.h"
@@ -31,9 +32,6 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace {
-    constexpr uint32_t UNI_RENDER_VSYNC_OFFSET = 10000000;
-}
 RSRenderService::RSRenderService() {}
 
 RSRenderService::~RSRenderService() noexcept {}
@@ -54,7 +52,9 @@ bool RSRenderService::Init()
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
     if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL ||
         renderType == UniRenderEnabledType::UNI_RENDER_DYNAMIC_SWITCH) {
-        offset = UNI_RENDER_VSYNC_OFFSET;
+        if (RenderConfig::LoadConfigXml()) {
+            offset = RenderConfig::GetVsyncOffset();
+        }
     }
     rsVSyncController_ = new VSyncController(generator, offset);
     appVSyncController_ = new VSyncController(generator, offset);

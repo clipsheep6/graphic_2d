@@ -40,9 +40,12 @@ ohos_source_set("rosen_ohos_sources") {
   sources = [
     "backend/rs_surface_frame_ohos_raster.cpp",
     "backend/rs_surface_ohos_raster.cpp",
+    "event_handler_ohos.cpp",
+    "event_runner_ohos.cpp",
     "rs_event_detector.cpp",
     "rs_event_manager.cpp",
     "rs_log.cpp",
+    "rs_parameters.cpp",
     "rs_render_service_client.cpp",
     "rs_render_service_connect_hub.cpp",
     "rs_render_service_connection_proxy.cpp",
@@ -51,7 +54,34 @@ ohos_source_set("rosen_ohos_sources") {
     "rs_surface_ohos.cpp",
     "rs_surface_ohos_converter.cpp",
     "rs_system_properties.cpp",
+    "rs_trace.cpp",
     "rs_vsync_client_ohos.cpp",
+    "vsync_receiver_ohos.cpp",
+
+    #screen_manager
+    "../../screen_manager/rs_screen_capability.cpp",
+    "../../screen_manager/rs_screen_data.cpp",
+    "../../screen_manager/rs_screen_hdr_capability.cpp",
+    "../../screen_manager/rs_screen_mode_info.cpp",
+    "../../screen_manager/rs_screen_props.cpp",
+    "../../screen_manager/rs_virtual_screen_resolution.cpp",
+
+    #ipc_callbacks
+    "../../ipc_callbacks/buffer_available_callback_proxy.cpp",
+    "../../ipc_callbacks/buffer_available_callback_stub.cpp",
+    "../../ipc_callbacks/rs_application_agent_proxy.cpp",
+    "../../ipc_callbacks/rs_application_agent_stub.cpp",
+    "../../ipc_callbacks/rs_occlusion_change_callback_proxy.cpp",
+    "../../ipc_callbacks/rs_occlusion_change_callback_stub.cpp",
+    "../../ipc_callbacks/rs_render_mode_change_callback_proxy.cpp",
+    "../../ipc_callbacks/rs_render_mode_change_callback_stub.cpp",
+    "../../ipc_callbacks/screen_change_callback_proxy.cpp",
+    "../../ipc_callbacks/screen_change_callback_stub.cpp",
+    "../../ipc_callbacks/surface_capture_callback_proxy.cpp",
+    "../../ipc_callbacks/surface_capture_callback_stub.cpp",
+
+    #interfaces
+    "../../../../render_service_client/core/transaction/rs_interfaces.cpp",
   ]
 
   if (ace_enable_gpu) {
@@ -68,6 +98,10 @@ ohos_source_set("rosen_ohos_sources") {
     ]
   }
 
+  if (rs_enable_gpu) {
+    sources += [ "../../common/rs_shared_context.cpp" ]
+  }
+
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
@@ -80,11 +114,21 @@ ohos_source_set("rosen_ohos_sources") {
   ]
 
   public_deps = [
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent:libhisysevent",
+    "//base/hiviewdfx/hitrace/interfaces/native/innerkits:hitrace_meter",
+    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler",
+    "//base/startup/init/interfaces/innerkits:libbeget_proxy",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
     "//commonlibrary/c_utils/base:utils",
+    "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk:accessibilityconfig",
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/composer/vsync:libvsync",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
+    "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf:frame_trace_intf",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/flutter/build/skia:ace_skia_ohos",
   ]
 
@@ -96,16 +140,6 @@ ohos_source_set("rosen_ohos_sources") {
       "//third_party/openssl:libcrypto_shared",
     ]
   }
-
-  external_deps = [
-    "eventhandler:libeventhandler",
-    "hisysevent_native:libhisysevent",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
-    "init:libbegetutil",
-    "ipc:ipc_core",
-    "samgr:samgr_proxy",
-  ]
 
   if (defined(graphic_2d_ext_configs.vendor_root)) {
     sources -= [

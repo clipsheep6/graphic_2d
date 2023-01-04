@@ -17,11 +17,13 @@
 
 #include "include/core/SkPaint.h"
 #include "include/core/SkRRect.h"
+#ifdef ROSEN_OHOS
 #include "pixel_map_rosen_utils.h"
+#endif
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_image_cache.h"
-#include "rs_trace.h"
+#include "platform/common/rs_trace.h"
 #include "sandbox_utils.h"
 
 namespace OHOS {
@@ -44,7 +46,10 @@ bool RSImage::IsEqual(const RSImage& other) const
     for (auto i = 0; i < CORNER_SIZE; i++) {
         radiusEq &= (radius_[i] == other.radius_[i]);
     }
-    return (image_ == other.image_) && (pixelmap_ == other.pixelmap_) &&
+    return (image_ == other.image_) && 
+#ifdef ROSEN_OHOS
+           (pixelmap_ == other.pixelmap_) &&
+#endif
            (imageFit_ == other.imageFit_) && (imageRepeat_ == other.imageRepeat_) &&
            (scale_ == other.scale_) && radiusEq && (compressData_ == other.compressData_);
 }
@@ -169,10 +174,12 @@ void RSImage::DrawImageRepeatRect(const SkPaint& paint, SkCanvas& canvas)
             ++maxY;
         }
     }
+#ifdef ROSEN_OHOS
     // draw repeat rect
     if (!image_ && pixelmap_) {
         image_ = Media::PixelMapRosenUtils::ExtractSkImage(pixelmap_);
     }
+#endif
     UploadGpu(canvas);
     auto src = RSPropertiesPainter::Rect2SkRect(srcRect_);
     for (int i = minX; i <= maxX; ++i) {
@@ -207,6 +214,7 @@ void RSImage::SetCompressData(const sk_sp<SkData> data, const uint32_t id, const
 #endif
 }
 
+#ifdef ROSEN_OHOS
 void RSImage::SetPixelMap(const std::shared_ptr<Media::PixelMap>& pixelmap)
 {
     pixelmap_ = pixelmap;
@@ -215,6 +223,7 @@ void RSImage::SetPixelMap(const std::shared_ptr<Media::PixelMap>& pixelmap)
         image_ = nullptr;
     }
 }
+#endif
 
 void RSImage::SetDstRect(const RectF& dstRect)
 {

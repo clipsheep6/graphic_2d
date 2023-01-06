@@ -38,7 +38,7 @@ void SimplifyPaint(uint32_t color, SkPaint* paint)
 }
 } // namespace
 
-std::unique_ptr<OpItem> OpItem::GenerateCachedOpItem(SkSurface* surface) const
+std::unique_ptr<OpItem> OpItem::GenerateCachedOpItem(const RSPaintFilterCanvas* canvas) const
 {
     // check if this opItem can be cached
     auto optionalBounds = GetCacheBounds();
@@ -47,28 +47,35 @@ std::unique_ptr<OpItem> OpItem::GenerateCachedOpItem(SkSurface* surface) const
     }
     auto& bounds = optionalBounds.value();
 
+    // extract surface and scale from current canvas if available
+    auto surface = canvas ? canvas->GetSurface() : nullptr;
+    auto& currentMatrix = canvas ? canvas->getTotalMatrix() : SkMatrix::I();
+    auto scaleX = currentMatrix.getScaleX();
+    auto scaleY = currentMatrix.getScaleY();
+
     // create surface & canvas to draw onto
-    auto offscreenInfo =
-        SkImageInfo::Make(bounds.width(), bounds.height(), kRGBA_8888_SkColorType, kPremul_SkAlphaType);
     sk_sp<SkSurface> offscreenSurface;
     if (surface != nullptr) {
         // create GPU accelerated surface
-        offscreenSurface = surface->makeSurface(offscreenInfo);
+        offscreenSurface = surface->makeSurface(bounds.width() * scaleX, bounds.height() * scaleY);
     } else {
         // create CPU raster surface
-        offscreenSurface = SkSurface::MakeRaster(offscreenInfo);
+        offscreenSurface = SkSurface::MakeRasterN32Premul(bounds.width() * scaleX, bounds.height() * scaleY);
     }
     if (offscreenSurface == nullptr) {
         RS_LOGW("OpItem::GenerateCachedOpItem Failed to create offscreen surface, abort caching");
         return nullptr;
     }
     auto offscreenCanvas = RSPaintFilterCanvas(offscreenSurface.get());
+    offscreenCanvas.SetHighContrast(canvas ? canvas->isHighContrastEnabled() : false);
 
-    // align draw op to [0, 0]
-    if (bounds.left() != 0 || bounds.top() != 0) {
-        SkMatrix matrix;
-        matrix.setTranslate(-bounds.left(), -bounds.top());
-        offscreenCanvas.concat(matrix);
+    // scale the canvas if necessary
+    if (ROSEN_EQ(scaleX, 1.0f) || ROSEN_EQ(scaleY, 1.0f)) {
+        offscreenCanvas.concat(SkMatrix::MakeScale(scaleX, scaleY));
+    }
+    // align draw op to [0, 0] if necessary
+    if (!ROSEN_EQ(bounds.left(), 0.0f) || !ROSEN_EQ(bounds.top(), 0.0f)) {
+        offscreenCanvas.concat(SkMatrix::MakeTrans(-bounds.left(), -bounds.top()));
     }
 
     // draw on the bitmap. NOTE: we cannot cache draw ops depending on rect, because the rect may be changed
@@ -263,7 +270,7 @@ BitmapRectOpItem::BitmapRectOpItem(
     : OpItemWithPaint(sizeof(BitmapRectOpItem)), rectDst_(rectDst)
 {
     if (bitmapInfo != nullptr) {
-        rectSrc_ = (rectSrc == nullptr) ? SkRect::MakeWH(bitmapInfo->width(), bitmapInfo->height()) : *rectSrc;
+        rectSrc_ = (rectSrc == nullptr) ? SkRect::MakeIWH(bitmapInfo->width(), bitmapInfo->height()) : *rectSrc;
         bitmapInfo_ = bitmapInfo;
     } else {
         if (rectSrc != nullptr) {
@@ -1173,8 +1180,8 @@ bool ClipAdaptiveRRectOpItem::Marshalling(Parcel& parcel) const
 OpItem* ClipAdaptiveRRectOpItem::Unmarshalling(Parcel& parcel)
 {
     SkVector radius[CORNER_SIZE];
-    for (auto i = 0; i < CORNER_SIZE; i++) {
-        if (!RSMarshallingHelper::Unmarshalling(parcel, radius[i])) {
+    for (auto& radiu : radius) {
+        if (!RSMarshallingHelper::Unmarshalling(parcel, radiu)) {
             ROSEN_LOGE("ClipAdaptiveRRectOpItem::Unmarshalling failed!");
             return nullptr;
         }

@@ -129,7 +129,7 @@ void DrawCmdList::Playback(RSPaintFilterCanvas& canvas, const SkRect* rect) cons
 #endif
 }
 
-int DrawCmdList::GetSize() const
+size_t DrawCmdList::GetSize() const
 {
     return ops_.size();
 }
@@ -209,7 +209,7 @@ DrawCmdList* DrawCmdList::Unmarshalling(Parcel& parcel)
 }
 #endif
 
-void DrawCmdList::GenerateCache(SkSurface* surface)
+void DrawCmdList::GenerateCache(const RSPaintFilterCanvas& canvas)
 {
 #ifdef ROSEN_OHOS
     if (isCached_) {
@@ -221,7 +221,7 @@ void DrawCmdList::GenerateCache(SkSurface* surface)
 
     for (auto index = 0u; index < ops_.size(); index++) {
         auto& op = ops_[index];
-        if (auto cached_op = op->GenerateCachedOpItem(surface)) {
+        if (auto cached_op = op->GenerateCachedOpItem(&canvas)) {
             // backup the original op and position
             opReplacedByCache_.emplace(index, op.release());
             // replace the original op with the cached op

@@ -56,7 +56,7 @@ public:
     int GetWidth() const;
     int GetHeight() const;
 
-    void GenerateCache(const RSPaintFilterCanvas& canvas);
+    void GenerateCache(const RSPaintFilterCanvas* canvas);
     void ClearCache();
 
 #ifdef ROSEN_OHOS

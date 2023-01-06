@@ -1471,27 +1471,26 @@ void RSUniRenderVisitor::PrepareOffscreenRender(RSRenderNode& node)
     canvasBackup_ = nullptr;
     offscreenSurface_ = nullptr;
     // check offscreen size and hardware renderer
-    int32_t offscreenWidth = node.GetRenderProperties().GetFrameWidth();
-    int32_t offscreenHeight = node.GetRenderProperties().GetFrameHeight();
+    auto offscreenWidth = node.GetRenderProperties().GetFrameWidth();
+    auto offscreenHeight = node.GetRenderProperties().GetFrameHeight();
     if (offscreenWidth <= 0 || offscreenHeight <= 0) {
-        RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, offscreenWidth or offscreenHeight is invalid");
+        RS_LOGE("RSUniRenderVisitor::PrepareOffscreenRender, offscreenWidth or offscreenHeight is invalid");
         return;
     }
+    canvas_->clipRect(SkRect::MakeWH(offscreenWidth, offscreenHeight));
     if (canvas_->GetSurface() == nullptr) {
-        canvas_->clipRect(SkRect::MakeWH(offscreenWidth, offscreenHeight));
-        RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, current surface is nullptr (software renderer?)");
+        RS_LOGE("RSUniRenderVisitor::PrepareOffscreenRender, current surface is nullptr (software renderer?)");
         return;
     }
     // create offscreen surface and canvas
-    auto offscreenInfo = SkImageInfo::Make(offscreenWidth, offscreenHeight, kRGBA_8888_SkColorType, kPremul_SkAlphaType,
-        canvas_->GetSurface()->imageInfo().refColorSpace());
-    offscreenSurface_ = canvas_->GetSurface()->makeSurface(offscreenInfo);
+    offscreenSurface_ = canvas_->GetSurface()->makeSurface(offscreenWidth, offscreenHeight);
     if (offscreenSurface_ == nullptr) {
-        RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, offscreenSurface is nullptr");
-        canvas_->clipRect(SkRect::MakeWH(offscreenWidth, offscreenHeight));
+        RS_LOGE("RSUniRenderVisitor::PrepareOffscreenRender, offscreenSurface is nullptr");
         return;
     }
     auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface_.get());
+    offscreenCanvas->SetCacheEnabled(canvas_->isCacheEnabled());
+    offscreenCanvas->SetHighContrast(canvas_->isHighContrastEnabled());
     // backup current canvas and replace with offscreen canvas
     canvasBackup_ = std::move(canvas_);
     canvas_ = std::move(offscreenCanvas);
@@ -1500,7 +1499,7 @@ void RSUniRenderVisitor::PrepareOffscreenRender(RSRenderNode& node)
 void RSUniRenderVisitor::FinishOffscreenRender()
 {
     if (canvasBackup_ == nullptr) {
-        RS_LOGD("RSUniRenderVisitor::FinishOffscreenRender, canvasBackup_ is nullptr");
+        RS_LOGE("RSUniRenderVisitor::FinishOffscreenRender, canvasBackup_ is nullptr");
         return;
     }
     // flush offscreen canvas, maybe unnecessary

@@ -180,7 +180,7 @@ DrawCmdList* DrawCmdList::Unmarshalling(Parcel& parcel)
 }
 #endif
 
-void DrawCmdList::GenerateCache(const RSPaintFilterCanvas& canvas)
+void DrawCmdList::GenerateCache(const RSPaintFilterCanvas* canvas)
 {
 #ifdef ROSEN_OHOS
     if (isCached_) {
@@ -192,7 +192,7 @@ void DrawCmdList::GenerateCache(const RSPaintFilterCanvas& canvas)
 
     for (auto index = 0u; index < ops_.size(); index++) {
         auto& op = ops_[index];
-        if (auto cached_op = op->GenerateCachedOpItem(&canvas)) {
+        if (auto cached_op = op->GenerateCachedOpItem(canvas)) {
             // backup the original op and position
             opReplacedByCache_.emplace_back(index, op.release());
             // replace the original op with the cached op

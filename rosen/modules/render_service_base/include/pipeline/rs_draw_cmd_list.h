@@ -51,11 +51,11 @@ public:
     void Playback(SkCanvas& canvas, const SkRect* rect = nullptr) const;
     void Playback(RSPaintFilterCanvas& canvas, const SkRect* rect = nullptr) const;
 
-    int GetSize() const;
+    size_t GetSize() const;
     int GetWidth() const;
     int GetHeight() const;
 
-    void GenerateCache(SkSurface* surface);
+    void GenerateCache(const RSPaintFilterCanvas& canvas);
     void ClearCache();
 
 #ifdef ROSEN_OHOS

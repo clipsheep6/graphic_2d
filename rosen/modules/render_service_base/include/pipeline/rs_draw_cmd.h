@@ -90,12 +90,12 @@ class OpItem : public MemObject {
 #endif
 public:
     explicit OpItem(size_t size) : MemObject(size) {}
-    virtual ~OpItem() {}
+    ~OpItem() override = default;
 
     virtual void Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const {};
     virtual RSOpType GetType() const = 0;
 
-    std::unique_ptr<OpItem> GenerateCachedOpItem(SkSurface* surface) const;
+    std::unique_ptr<OpItem> GenerateCachedOpItem(const RSPaintFilterCanvas* canvas = nullptr) const;
     virtual std::optional<SkRect> GetCacheBounds() const
     {
         // not cacheable by default

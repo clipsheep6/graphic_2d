@@ -221,7 +221,7 @@ void DrawCmdList::GenerateCache(const RSPaintFilterCanvas& canvas)
 
     for (auto index = 0u; index < ops_.size(); index++) {
         auto& op = ops_[index];
-        if (auto cached_op = op->GenerateCachedOpItem(&canvas)) {
+        if (auto cached_op = op->GenerateCachedOpItem(canvas)) {
             // backup the original op and position
             opReplacedByCache_.emplace(index, op.release());
             // replace the original op with the cached op

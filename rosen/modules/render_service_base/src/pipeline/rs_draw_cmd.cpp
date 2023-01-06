@@ -38,7 +38,7 @@ void SimplifyPaint(uint32_t color, SkPaint* paint)
 }
 } // namespace
 
-std::unique_ptr<OpItem> OpItem::GenerateCachedOpItem(const RSPaintFilterCanvas* canvas) const
+std::unique_ptr<OpItem> OpItem::GenerateCachedOpItem(const RSPaintFilterCanvas& canvas) const
 {
     // check if this opItem can be cached
     auto optionalBounds = GetCacheBounds();
@@ -48,8 +48,8 @@ std::unique_ptr<OpItem> OpItem::GenerateCachedOpItem(const RSPaintFilterCanvas* 
     auto& bounds = optionalBounds.value();
 
     // extract surface and scale from current canvas if available
-    auto surface = canvas ? canvas->GetSurface() : nullptr;
-    auto& currentMatrix = canvas ? canvas->getTotalMatrix() : SkMatrix::I();
+    auto surface = canvas.GetSurface();
+    auto& currentMatrix = canvas.getTotalMatrix();
     auto scaleX = currentMatrix.getScaleX();
     auto scaleY = currentMatrix.getScaleY();
 
@@ -67,7 +67,7 @@ std::unique_ptr<OpItem> OpItem::GenerateCachedOpItem(const RSPaintFilterCanvas* 
         return nullptr;
     }
     auto offscreenCanvas = RSPaintFilterCanvas(offscreenSurface.get());
-    offscreenCanvas.SetHighContrast(canvas ? canvas->isHighContrastEnabled() : false);
+    offscreenCanvas.SetHighContrast(canvas.isHighContrastEnabled());
 
     // scale the canvas if necessary
     if (ROSEN_EQ(scaleX, 1.0f) || ROSEN_EQ(scaleY, 1.0f)) {

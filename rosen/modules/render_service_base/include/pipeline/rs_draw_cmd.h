@@ -95,7 +95,7 @@ public:
     virtual void Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const {};
     virtual RSOpType GetType() const = 0;
 
-    std::unique_ptr<OpItem> GenerateCachedOpItem(const RSPaintFilterCanvas* canvas = nullptr) const;
+    std::unique_ptr<OpItem> GenerateCachedOpItem(const RSPaintFilterCanvas& canvas) const;
     virtual std::optional<SkRect> GetCacheBounds() const
     {
         // not cacheable by default

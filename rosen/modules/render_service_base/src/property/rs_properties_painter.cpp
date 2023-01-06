@@ -259,6 +259,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect, SkSurface* skSurface)
 {
     g_blurCnt++;
+    SkAutoCanvasRestore acr(&canvas, true);
     if (rect != nullptr) {
         canvas.clipRect((*rect), true);
     } else if (properties.GetClipBounds() != nullptr) {
@@ -273,7 +274,6 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         SkCanvas::SaveLayerRec slr(nullptr, &paint, SkCanvas::kInitWithPrevious_SaveLayerFlag);
         canvas.saveLayer(slr);
         filter->PostProcess(canvas);
-        canvas.restore();
         return;
     }
 
@@ -285,7 +285,6 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     }
 
     auto clipBounds = SkRect::Make(canvas.getDeviceClipBounds());
-    canvas.save();
     canvas.resetMatrix();
     auto visibleRect = canvas.GetVisibleRect();
     canvas.translate(clipBounds.left(), clipBounds.top());
@@ -295,12 +294,11 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         canvas.drawImageRect(imageSnapshot.get(), clipBounds, clipBounds, &paint);
     }
     filter->PostProcess(canvas);
-    canvas.restore();
 }
 
 SkColor RSPropertiesPainter::CalcAverageColor(RSPaintFilterCanvas& canvas, const std::unique_ptr<SkRect>& rect)
 {
-    auto saveCount = canvas.save();
+    SkAutoCanvasRestore acr(&canvas, true);
     if (rect) {
         canvas.clipRect(*rect, true);
     }
@@ -308,17 +306,23 @@ SkColor RSPropertiesPainter::CalcAverageColor(RSPaintFilterCanvas& canvas, const
     auto skSurface = canvas.GetSurface();
     if (skSurface == nullptr) {
         ROSEN_LOGE("RSPropertiesPainter::GetAverageColor skSurface null");
+        return SK_ColorTRANSPARENT;
     }
     // make snapshot
     auto imageSnapshot = skSurface->makeImageSnapshot(canvas.getDeviceClipBounds());
+    if (imageSnapshot == nullptr) {
+        ROSEN_LOGE("RSPropertiesPainter::GetAverageColor imageSnapshot null");
+        return SK_ColorTRANSPARENT;
+    }
+
     // resize snapshot to 1x1 to get average color
     uint32_t pixel[1] = { 0 };
-    SkPixmap single_pixel(SkImageInfo::MakeN32Premul(1, 1), pixel, 4);
+    auto single_pixel_info = SkImageInfo::MakeN32Premul(1, 1);
+    SkPixmap single_pixel(single_pixel_info, pixel, single_pixel_info.bytesPerPixel());
     imageSnapshot->scalePixels(single_pixel, SkFilterQuality::kMedium_SkFilterQuality);
 
-    canvas.restoreToCount(saveCount);
     // return average color
-    return pixel[0];
+    return SkColor4f::FromBytes_RGBA(pixel[0]).toSkColor();
 }
 
 int RSPropertiesPainter::GetAndResetBlurCnt()

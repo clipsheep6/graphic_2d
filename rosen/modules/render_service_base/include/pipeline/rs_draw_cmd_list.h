@@ -34,6 +34,7 @@ namespace OHOS {
 namespace Rosen {
 class OpItem;
 class RSPaintFilterCanvas;
+enum RSOpType : uint16_t;
 
 #ifdef ROSEN_OHOS
 class DrawCmdList : public Parcelable {
@@ -69,8 +70,14 @@ private:
     int width_;
     int height_;
 
-    std::unordered_map<int, std::unique_ptr<OpItem>> opReplacedByCache_;
+    std::vector<std::pair<int, std::unique_ptr<OpItem>>> opReplacedByCache_;
     bool isCached_ = false;
+
+    friend class RSMarshallingHelper;
+#ifdef ROSEN_OHOS
+    using OpUnmarshallingFunc = OpItem* (*)(Parcel& parcel);
+    static OpUnmarshallingFunc GetOpUnmarshallingFunc(RSOpType type);
+#endif
 };
 
 using DrawCmdListPtr = std::shared_ptr<DrawCmdList>;

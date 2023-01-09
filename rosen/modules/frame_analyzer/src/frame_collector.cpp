@@ -34,7 +34,6 @@ constexpr int32_t uimarksStart = static_cast<int32_t>(FrameEventType::UIMarksSta
 constexpr int32_t uimarksEnd = static_cast<int32_t>(FrameEventType::UIMarksEnd) - 1;
 constexpr int32_t loopEnd = static_cast<int32_t>(FrameEventType::LoopEnd) - 1;
 constexpr int32_t vsyncStart = static_cast<int32_t>(FrameEventType::WaitVsyncStart);
-constexpr int32_t vsyncEnd = static_cast<int32_t>(FrameEventType::WaitVsyncEnd);
 } // namespace
 
 FrameCollector &FrameCollector::GetInstance()
@@ -104,41 +103,57 @@ void FrameCollector::ProcessFrameEvent(int32_t index, int64_t timeNs)
     if (ProcessUIMarkLocked(index, timeNs)) {
         return;
     }
-
+    int nowFrameNumber = 0;
     if (index == vsyncStart) {
-        pbefore_ = &frameQueue_.Push(FrameInfo());
-        pbefore_->frameNumber = currentUIMarks_.frameNumber;
-        for (auto i = uimarksStart; i <= uimarksEnd; i++) {
-            pbefore_->times[i] = currentUIMarks_.times[i];
-        }
-        pbefore_->times[index] = timeNs;
-
-        if (haveAfterVsync_) {
-            pbefore_->skiped = true;
-            pbefore_->times[vsyncEnd] = pbefore_->times[vsyncStart];
+        nowFrameNumber = currentUIMarks_.frameNumber;
+        if (!haveAfterVsync_) {
+            pbefore_ = &frameQueue_.Push(FrameInfo());
+            pbefore_->frameNumber = currentUIMarks_.frameNumber;
+            for (auto i = uimarksStart; i <= uimarksEnd; i++) {
+                pbefore_->times[i] = currentUIMarks_.times[i];
+            }
+            pbefore_->times[index] = timeNs;
+            haveAfterVsync_ = true;
         } else {
-            StartAsyncTrace(HITRACE_TAG_GRAPHIC_AGP, GetAsyncNameByFrameEventType(index), pbefore_->frameNumber);
+            pafter_ = &frameQueue_.Push(FrameInfo());
+            for (auto i = uimarksStart; i <= uimarksEnd; i++) {
+                pafter_->times[i] = currentUIMarks_.times[i];
+            }
+            pafter_->frameNumber = currentUIMarks_.frameNumber;
+            pafter_->times[index] = timeNs;
         }
+        StartAsyncTrace(HITRACE_TAG_GRAPHIC_AGP, GetAsyncNameByFrameEventType(index), pbefore_->frameNumber);
         return;
     }
 
     if (!haveAfterVsync_) {
-        haveAfterVsync_ = true;
-        pafter_ = pbefore_;
+        return;
     }
-
-    if (pafter_ != nullptr) {
+    if (pbefore_ != nullptr && pbefore_->times[index] == 0) {
+        pbefore_->times[index] = timeNs;
+        nowFrameNumber = pbefore_->frameNumber;
+    } else if (pafter_ != nullptr) {
         pafter_->times[index] = timeNs;
-
-        if (IsStartFrameEventType(index)) {
-            StartAsyncTrace(HITRACE_TAG_GRAPHIC_AGP, GetAsyncNameByFrameEventType(index), pafter_->frameNumber);
-        } else {
-            FinishAsyncTrace(HITRACE_TAG_GRAPHIC_AGP, GetAsyncNameByFrameEventType(index), pafter_->frameNumber);
-        }
+        nowFrameNumber = pafter_->frameNumber;
+    } else {
+        ::OHOS::HiviewDFX::HiLog::Error(LABEL, "no FrameInfo, mark.markType is %{public}s",
+            GetAsyncNameByFrameEventType(index).c_str());
+        return;
+    }
+    if (IsStartFrameEventType(index)) {
+        StartAsyncTrace(HITRACE_TAG_GRAPHIC_AGP, GetAsyncNameByFrameEventType(index), nowFrameNumber);
+    } else {
+        FinishAsyncTrace(HITRACE_TAG_GRAPHIC_AGP, GetAsyncNameByFrameEventType(index), nowFrameNumber);
     }
 
     if (index == loopEnd) {
-        haveAfterVsync_ = false;
+        if (pafter_ == nullptr) {
+            haveAfterVsync_ = false;
+        } else {
+            pbefore_ = pafter_;
+            pafter_ = nullptr;
+            haveAfterVsync_ = true;
+        }
     }
 }
 

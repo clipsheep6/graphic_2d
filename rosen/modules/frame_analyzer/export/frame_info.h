@@ -71,16 +71,28 @@ enum class FrameEventType : int32_t {
  * Alpha will be determinated by runtime code.
  * If event doesn't exist, it won't draw.
  */
+enum  class FrameAnalyerColor {
+    MidGreen = 0x0000cc00,
+    Red = 0x00ff0000,
+    Cyan = 0x0000ffff,
+    Green = 0x0000ff00,
+    OldGreen = 0x00006600,
+    LightGreen = 0x00689F38,
+    Lime = 0x00CDDC39,
+    Blue = 0x000000ff,
+    Yellow = 0x00ffff00,
+};
+
 static const std::map<FrameEventType, uint32_t> frameEventColorMap = {
     // FrameEventType::HandleInputStart
-    {FrameEventType::AnimateStart,     0x0000cc00}, // mid green
-    {FrameEventType::BuildStart,       0x0000ffff}, // cyan
-    // FrameEventType::UploadStart
-    {FrameEventType::LayoutStart,      0x0000ff00}, // green
-    {FrameEventType::DrawStart,        0x000000ff}, // blue
-    {FrameEventType::WaitVsyncStart,   0x00006600}, // old green
-    {FrameEventType::ReleaseStart,     0x00ffff00}, // yellow
-    {FrameEventType::FlushStart,       0x00ff0000}, // red
+    {FrameEventType::AnimateStart,     static_cast<int32_t>(FrameAnalyerColor::MidGreen)},
+    {FrameEventType::UploadStart,      static_cast<int32_t>(FrameAnalyerColor::Cyan)},
+    // FrameEventType::BuildStart
+    {FrameEventType::LayoutStart,      static_cast<int32_t>(FrameAnalyerColor::Green)},
+    {FrameEventType::DrawStart,        static_cast<int32_t>(FrameAnalyerColor::Blue)},
+    {FrameEventType::WaitVsyncStart,   static_cast<int32_t>(FrameAnalyerColor::OldGreen)},
+    {FrameEventType::ReleaseStart,     static_cast<int32_t>(FrameAnalyerColor::Yellow)},
+    {FrameEventType::FlushStart,       static_cast<int32_t>(FrameAnalyerColor::Red)},
 };
 
 static const std::map<FrameEventType, std::string> frameEventTypeStringMap = {

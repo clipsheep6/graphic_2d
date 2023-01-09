@@ -27,6 +27,21 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr ::OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0xD001400, "FramePainter" };
+constexpr float FLUENCY_THRESHOLDS = 0.8f;
+constexpr float NORMAL_THRESHOLDS = 1.0f;
+constexpr float FREEZE_THRESHOLDS = 1.5f;
+
+
+struct Threshold {
+    uint32_t color;
+    float percentFrametime;
+};
+
+static constexpr std::array<Threshold, 3> THRESHOLDS {
+    Threshold{.color = static_cast<int32_t>(FrameAnalyerColor::LightGreen), .percentFrametime = FLUENCY_THRESHOLDS},
+    Threshold{.color = static_cast<int32_t>(FrameAnalyerColor::Lime), .percentFrametime = NORMAL_THRESHOLDS},
+    Threshold{.color = static_cast<int32_t>(FrameAnalyerColor::Red), .percentFrametime = FREEZE_THRESHOLDS},
+};
 } // namespace
 
 FramePainter::FramePainter(FrameCollector &collector) : collector_(collector)
@@ -41,10 +56,10 @@ void FramePainter::Draw(SkCanvas &canvas)
 
     auto width = canvas.imageInfo().width();
     auto height = canvas.imageInfo().height();
+    auto heightPerMs = height / frameTotalMs;
     ::OHOS::HiviewDFX::HiLog::Debug(LABEL, "FramePainter::Draw %{public}dx%{public}d", width, height);
 
-    constexpr auto normalFPS = 60;
-    constexpr auto slowFPS = normalFPS / 2;
+    const auto normalFPS = FrameCollector::GetInstance().GetFps();
     auto bars = GenerateTimeBars(width, height, normalFPS);
     SkPaint paint;
     paint.setStyle(paint.kFill_Style);
@@ -57,32 +72,30 @@ void FramePainter::Draw(SkCanvas &canvas)
         canvas.drawRect(SkRect::MakeXYWH(x, y, w, h), paint);
     }
 
-    // normal fps line: alpha: 0xbf, green #00ff00
-    DrawFPSLine(canvas, normalFPS, height / frameTotalMs, 0xbf00ff00);
-
-    // slow fps line: alpha: 0xbf, red #ff0000
-    DrawFPSLine(canvas, slowFPS, height / frameTotalMs, 0xbfff0000);
+    DrawFPSLine(canvas, normalFPS, heightPerMs);
 }
 
-void FramePainter::DrawFPSLine(SkCanvas &canvas, uint32_t fps, double thickness, uint32_t color)
+void FramePainter::DrawFPSLine(SkCanvas &canvas, uint32_t normalFps, uint32_t heightPerMs) 
 {
-    if (fps == 0) {
+    if (normalFps == 0) {
         return;
     }
-
+    SkPaint paint;
     auto width = canvas.imageInfo().width();
     auto height = canvas.imageInfo().height();
-    auto heightPerMs = height / frameTotalMs;
-
     constexpr auto OneSecondInMs = 1000.0;
-    auto bottom = OneSecondInMs / fps * heightPerMs;
-    auto lineOffset = thickness / 0x2; // vertical align center
-    auto fpsLine = SkRect::MakeXYWH(0, height - (bottom - lineOffset), width, thickness);
+    constexpr uint32_t lineAlpha = 0xFF;
+    constexpr uint32_t alphaOffset = 24;
+    for (auto& t : THRESHOLDS) {
+        auto fps = normalFps * t.percentFrametime;
+        auto bottom = OneSecondInMs / fps * heightPerMs;
+        auto lineOffset = heightPerMs / 0x2; // vertical align center
+        auto fpsLine = SkRect::MakeXYWH(0, height - (bottom - lineOffset), width, heightPerMs);
 
-    SkPaint paint;
-    paint.setStyle(paint.kFill_Style);
-    paint.setColor(color);
-    canvas.drawRect(fpsLine, paint);
+        paint.setStyle(paint.kFill_Style);
+        paint.setColor(t.color | (lineAlpha << alphaOffset));
+        canvas.drawRect(fpsLine, paint);
+    }
 }
 
 std::vector<struct FramePainter::TimeBar> FramePainter::GenerateTimeBars(

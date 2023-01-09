@@ -15,6 +15,8 @@
 #ifndef RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_VISITOR_H
 #define RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_VISITOR_H
 
+#include <memory>
+#include <mutex>
 #include <set>
 #include <parameters.h>
 
@@ -26,13 +28,15 @@
 #include "screen_manager/rs_screen_manager.h"
 #include "visitor/rs_node_visitor.h"
 
+class SkPicture;
 namespace OHOS {
 namespace Rosen {
 class RSPaintFilterCanvas;
-
 class RSUniRenderVisitor : public RSNodeVisitor {
 public:
     RSUniRenderVisitor();
+    RSUniRenderVisitor(std::shared_ptr<RSPaintFilterCanvas> canvas);
+    explicit RSUniRenderVisitor(const RSUniRenderVisitor& visitor);
     ~RSUniRenderVisitor() override;
 
     void PrepareBaseRenderNode(RSBaseRenderNode& node) override;
@@ -58,6 +62,17 @@ public:
     {
         isDirty_ = isDirty;
     }
+
+    void SetFocusedWindowPid(pid_t pid)
+    {
+        currentFocusedPid_ = pid;
+    }
+
+    bool GetAnimateState() const
+    {
+        return doAnimate_;
+    }
+    void CopyForParallelPrepare(std::shared_ptr<RSUniRenderVisitor> visitor);
 private:
     void DrawDirtyRectForDFX(const RectI& dirtyRect, const SkColor color,
         const SkPaint::Style fillType, float alpha);
@@ -71,15 +86,36 @@ private:
      * global dirty region will be skipped
      */
     void CalcDirtyDisplayRegion(std::shared_ptr<RSDisplayRenderNode>& node) const;
+    void CalcDirtyRegionForFilterNode(std::shared_ptr<RSDisplayRenderNode>& node) const;
     // set global dirty region to each surface node
     void SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node);
+    void SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
+        const Occlusion::Region alignedDirtyRegion);
 
     void InitCacheSurface(RSSurfaceRenderNode& node, int width, int height);
-    void DrawCacheSurface(RSSurfaceRenderNode& node);
     void SetPaintOutOfParentFlag(RSBaseRenderNode& node);
     void CheckColorSpace(RSSurfaceRenderNode& node);
     void AddOverDrawListener(std::unique_ptr<RSRenderFrame>& renderFrame,
         std::shared_ptr<RSCanvasListener>& overdrawListener);
+    /* Judge if surface render node could skip preparation:
+     * 1. not leash window
+     * 2. parent not dirty
+     * 3. no processWithCommands_ of node's corresponding pid
+     * If so, reset status flag and stop traversal
+     */
+    bool CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& node);
+    // [planning] Remove this after skia is upgraded, the clipRegion is supported
+    // recursively check if there is any node's child(including node itself) needs filter
+    bool CheckIfRenderNodeNeedFilter(RSBaseRenderNode& node);
+
+    void RecordAppWindowNodeAndPostTask(RSSurfaceRenderNode& node, float width, float height);
+    // offscreen render related
+    void PrepareOffscreenRender(RSRenderNode& node);
+    void FinishOffscreenRender();
+    void ParallelPrepareDisplayRenderNodeChildrens(RSDisplayRenderNode& node);
+    bool AdaptiveSubRenderThreadMode(uint32_t renderNodeNum);
+    sk_sp<SkSurface> offscreenSurface_;                 // temporary holds offscreen surface
+    std::shared_ptr<RSPaintFilterCanvas> canvasBackup_; // backup current canvas before offscreen render
 
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;
@@ -110,6 +146,7 @@ private:
     bool isOpDropped_ = false;
     bool isDirtyRegionDfxEnabled_ = false; // dirtyRegion DFX visualization
     bool isTargetDirtyRegionDfxEnabled_ = false;
+    bool isQuickSkipPreparationEnabled_ = false;
     std::vector<std::string> dfxTargetSurfaceNames_;
     PartialRenderType partialRenderType_;
     bool isDirty_ = false;
@@ -117,6 +154,23 @@ private:
     std::unordered_map<NodeId, std::vector<RectI>> filterRects_;
     ColorGamut newColorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
     std::vector<ScreenColorGamut> colorGamutmodes_;
+    ContainerWindowConfigType containerWindowConfig_;
+    pid_t currentFocusedPid_ = -1;
+
+    bool needColdStartThread_ = false; // flag used for cold start app window
+    bool needDrawStartingWindow_ = true; // flag used for avoiding drawing both app and starting window
+    bool needCheckFirstFrame_ = false; // flag used for avoiding notifying first frame repeatedly
+
+    bool isDirtyRegionAlignedEnable_ = false;
+    bool isParallel_ = false;
+    std::shared_ptr<std::mutex> surfaceNodePrepareMutex_;
+
+    RectI prepareClipRect_{0, 0, 0, 0}; // renderNode clip rect used in Prepare
+    
+    // count prepared and processed canvasnode numbers per app
+    // unirender visitor resets every frame, no overflow risk here
+    unsigned int preparedCanvasNodeInCurrentSurface_ = 0;
+    unsigned int processedCanvasNodeInCurrentSurface_ = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

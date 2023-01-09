@@ -17,6 +17,7 @@
 
 #include "animation/rs_render_transition.h"
 #include "command/rs_animation_command.h"
+#include "modifier/rs_property.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_node.h"
 
@@ -28,17 +29,59 @@ RSTransition::RSTransition(const std::shared_ptr<const RSTransitionEffect>& effe
 
 void RSTransition::OnStart()
 {
+    if (isCustom_) {
+        StartCustomTransition();
+    }
+    StartRenderTransition();
+}
+
+void RSTransition::OnUpdateStagingValue(bool isFirstStart)
+{
+    if (!isCustom_) {
+        return;
+    }
+    auto& customEffects = isTransitionIn_ ? effect_->customTransitionInEffects_ : effect_->customTransitionOutEffects_;
+    for (auto& customEffect : customEffects) {
+        for (auto& [property, endValue] : customEffect->properties_) {
+            property->SetValue(endValue);
+        }
+        customEffect->properties_.clear();
+        customEffect->customTransitionEffects_.clear();
+    }
+}
+
+void RSTransition::StartCustomTransition()
+{
+    std::vector<std::shared_ptr<RSRenderTransitionEffect>> transitionEffects;
+    auto& customEffects = isTransitionIn_ ? effect_->customTransitionInEffects_ : effect_->customTransitionOutEffects_;
+    for (auto& customEffect : customEffects) {
+        transitionEffects.insert(transitionEffects.end(), customEffect->customTransitionEffects_.begin(),
+            customEffect->customTransitionEffects_.end());
+    }
+    auto transition = std::make_shared<RSRenderTransition>(GetId(), transitionEffects, isTransitionIn_);
+    auto interpolator = timingCurve_.GetInterpolator(GetDuration());
+    transition->SetInterpolator(interpolator);
+    UpdateParamToRenderAnimation(transition);
+    StartCustomAnimation(transition);
+}
+
+void RSTransition::StartRenderTransition()
+{
     auto target = GetTarget().lock();
     if (target == nullptr) {
         return;
     }
-    auto transition = std::make_shared<RSRenderTransition>(GetId(), effect_, isTransitionIn_);
-    if (transition == nullptr) {
-        return;
+    std::vector<std::shared_ptr<RSRenderTransitionEffect>> transitionEffects;
+    if (isTransitionIn_) {
+        transitionEffects = effect_->transitionInEffects_;
+    } else {
+        transitionEffects = effect_->transitionOutEffects_;
     }
+    auto transition = std::make_shared<RSRenderTransition>(GetId(), transitionEffects, isTransitionIn_);
     auto interpolator = timingCurve_.GetInterpolator(GetDuration());
     transition->SetInterpolator(interpolator);
     UpdateParamToRenderAnimation(transition);
+
     std::unique_ptr<RSCommand> command =
         std::make_unique<RSAnimationCreateTransition>(target->GetId(), transition);
     auto transactionProxy = RSTransactionProxy::GetInstance();
@@ -48,12 +91,6 @@ void RSTransition::OnStart()
             std::unique_ptr<RSCommand> commandForRemote =
                 std::make_unique<RSAnimationCreateTransition>(target->GetId(), transition);
             transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
-        }
-        if (target->NeedSendExtraCommand()) {
-            std::unique_ptr<RSCommand> extraCommand =
-                std::make_unique<RSAnimationCreateTransition>(target->GetId(), transition);
-            transactionProxy->AddCommand(extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(),
-                target->GetId());
         }
     }
 }

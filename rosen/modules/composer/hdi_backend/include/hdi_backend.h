@@ -47,12 +47,12 @@ public:
     static HdiBackend* GetInstance();
     RosenError RegScreenHotplug(OnScreenHotplugFunc func, void* data);
     RosenError RegPrepareComplete(OnPrepareCompleteFunc func, void* data);
-    void Repaint(std::vector<OutputPtr> &outputs);
+    void Repaint(const OutputPtr &output);
     std::map<LayerInfoPtr, sptr<SyncFence>> GetLayersReleaseFence(const OutputPtr& output);
     /* for RS end */
 
     /* only used for mock tests */
-    void SetHdiBackendDevice(Base::HdiDevice* device);
+    void SetHdiBackendDevice(HdiDevice* device);
 private:
     HdiBackend() = default;
     virtual ~HdiBackend() = default;
@@ -62,7 +62,7 @@ private:
     HdiBackend(HdiBackend&& rhs) = delete;
     HdiBackend& operator=(HdiBackend&& rhs) = delete;
 
-    Base::HdiDevice *device_ = nullptr;
+    HdiDevice *device_ = nullptr;
     void* onHotPlugCbData_ = nullptr;
     void* onPrepareCompleteCbData_ = nullptr;
     OnScreenHotplugFunc onScreenHotplugCb_ = nullptr;
@@ -75,13 +75,15 @@ private:
     void CreateHdiOutput(uint32_t screenId);
     void OnScreenHotplug(uint32_t screenId, bool connected);
     void ReorderLayerInfo(std::vector<LayerInfoPtr> &newLayerInfos);
-    void OnPrepareComplete(bool needFlush, OutputPtr &output, std::vector<LayerInfoPtr> &newLayerInfos);
+    void OnPrepareComplete(bool needFlush, const OutputPtr &output, std::vector<LayerInfoPtr> &newLayerInfos);
     int32_t FlushScreen(const OutputPtr &output, std::vector<LayerPtr> &compClientLayers, sptr<SurfaceBuffer> &buffer);
     void ReleaseFramebuffer(const OutputPtr &output, sptr<SyncFence> &presentFence, const sptr<SurfaceBuffer> &buffer);
     int32_t SetScreenClientInfo(const FrameBufferEntry &fbEntry, const OutputPtr &output);
     int32_t UpdateLayerCompType(uint32_t screenId, const std::unordered_map<uint32_t, LayerPtr> &layersMap);
-    int32_t PreProcessLayersComp(const OutputPtr &output, const std::unordered_map<uint32_t, LayerPtr> &layersMap,
-                                 bool &needFlush);
+    int32_t PreProcessLayersComp(const OutputPtr &output, bool &needFlush);
+    int32_t PrepareCompleteIfNeed(const OutputPtr &output, bool needFlush, sptr<SurfaceBuffer> &buffer);
+    void UpdateInfosAfterCommit(const OutputPtr &output, sptr<SyncFence> fbFence);
+    
 
     sptr<VSyncSampler> sampler_ = nullptr;
     std::unordered_map<int, sptr<SurfaceBuffer>> lastFrameBuffers_;

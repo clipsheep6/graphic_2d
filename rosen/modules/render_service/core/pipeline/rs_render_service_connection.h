@@ -21,6 +21,7 @@
 
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "pipeline/rs_render_service.h"
+#include "pipeline/rs_hardware_thread.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "transaction/rs_render_service_connection_stub.h"
 #include "vsync_distributor.h"
@@ -57,7 +58,6 @@ private:
     int32_t SetRenderModeChangeCallback(sptr<RSIRenderModeChangeCallback> callback) override;
     void UpdateRenderMode(bool isUniRender) override;
     bool GetUniRenderEnabled() override;
-    bool QueryIfRTNeedRender() override;
 
     bool CreateNode(const RSSurfaceRenderNodeConfig& config) override;
     sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) override;

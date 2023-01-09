@@ -61,7 +61,6 @@ enum RSOpType : uint16_t {
     TEXTBLOB_OPITEM,
     BITMAP_OPITEM,
     BITMAP_RECT_OPITEM,
-    BITMAP_LATTICE_OPITEM, // marshalling func planning to be implemented
     BITMAP_NINE_OPITEM,
     PIXELMAP_OPITEM,
     PIXELMAP_RECT_OPITEM,
@@ -96,8 +95,12 @@ public:
     virtual void Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const {};
     virtual RSOpType GetType() const = 0;
 
-    std::unique_ptr<OpItem> GenerateCachedOpItem() const;
-    virtual std::optional<SkRect> GetCacheBounds() const { return std::nullopt; }
+    std::unique_ptr<OpItem> GenerateCachedOpItem(SkSurface* surface) const;
+    virtual std::optional<SkRect> GetCacheBounds() const
+    {
+        // not cacheable by default
+        return std::nullopt;
+    }
 
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override
@@ -430,6 +433,7 @@ public:
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
     std::optional<SkRect> GetCacheBounds() const override
     {
+        // bounds of textBlob_, with additional offset [x_, y_]. textBlob_ should never be null but we should check.
         return textBlob_ ? std::make_optional<SkRect>(textBlob_->bounds().makeOffset(x_, y_)) : std::nullopt;
     }
 
@@ -536,24 +540,6 @@ private:
     std::shared_ptr<Media::PixelMap> pixelmap_;
     SkRect src_;
     SkRect dst_;
-};
-
-class BitmapLatticeOpItem : public OpItemWithPaint {
-public:
-    BitmapLatticeOpItem(
-        const sk_sp<SkImage> bitmapInfo, const SkCanvas::Lattice& lattice, const SkRect& rect, const SkPaint* paint);
-    ~BitmapLatticeOpItem() override {}
-    void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
-
-    RSOpType GetType() const override
-    {
-        return RSOpType::BITMAP_LATTICE_OPITEM;
-    }
-
-private:
-    SkRect rect_;
-    SkCanvas::Lattice lattice_;
-    sk_sp<SkImage> bitmapInfo_;
 };
 
 class BitmapNineOpItem : public OpItemWithPaint {

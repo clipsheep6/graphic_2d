@@ -151,12 +151,13 @@ bool RSMarshallingHelper::SkipSkData(Parcel& parcel)
 
 bool RSMarshallingHelper::UnmarshallingWithCopy(Parcel& parcel, sk_sp<SkData>& val)
 {
-    if (Unmarshalling(parcel, val)) {
+    bool success = Unmarshalling(parcel, val);
+    if (success) {
         if (val && val->size() < MIN_DATA_SIZE) {
             val = SkData::MakeWithCopy(val->data(), val->size());
         }
     }
-    return val != nullptr;
+    return success;
 }
 
 // SkTypeface serial proc
@@ -844,8 +845,7 @@ bool RSMarshallingHelper::WriteToParcel(Parcel& parcel, const void* data, size_t
         return false;
     }
     if (size > MAX_DATA_SIZE) {
-        ROSEN_LOGE("RSMarshallingHelper::WriteToParcel data exceed MAX_DATA_SIZE");
-        return false;
+        ROSEN_LOGD("RSMarshallingHelper::WriteToParcel data exceed MAX_DATA_SIZE, size:%zu", size);
     }
 
     if (!parcel.WriteUint32(size)) {

@@ -41,6 +41,10 @@ bool RSVirtualScreenProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, 
         return false;
     }
 
+    if (mirroredId != INVALID_SCREEN_ID) {
+        SetMirrorScreenSwap(node);
+    }
+
     renderFrameConfig_.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_DMA;
 
     auto screenManager = CreateOrGetScreenManager();
@@ -51,11 +55,10 @@ bool RSVirtualScreenProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, 
         return false;
     }
 
-    // this is a work-around for the lack of color gamut conversion and yuv support in GPU.
-    // currently we must forceCPU to do the composition for virtual screen.
     bool forceCPU = false;
-    renderFrame_ = renderEngine_->RequestFrame(producerSurface_, renderFrameConfig_, forceCPU);
+    renderFrame_ = renderEngine_->RequestFrame(producerSurface_, renderFrameConfig_, forceCPU, false);
     if (renderFrame_ == nullptr) {
+        RS_LOGE("RSVirtualScreenProcessor::Init: renderFrame_ is null!");
         return false;
     }
     canvas_ = renderFrame_->GetCanvas();
@@ -69,7 +72,13 @@ bool RSVirtualScreenProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, 
 
 void RSVirtualScreenProcessor::PostProcess()
 {
-    SetBufferTimeStamp();
+    if (producerSurface_ == nullptr) {
+        RS_LOGE("RSVirtualScreenProcessor::PostProcess surface is null!");
+        return;
+    }
+    auto surfaceId = producerSurface_->GetUniqueId();
+    renderEngine_->SetUiTimeStamp(renderFrame_, surfaceId);
+    
     if (renderFrame_ == nullptr) {
         RS_LOGE("RSVirtualScreenProcessor::PostProcess renderFrame_ is null.");
         return;
@@ -102,29 +111,6 @@ void RSVirtualScreenProcessor::ProcessSurface(RSSurfaceRenderNode& node)
 void RSVirtualScreenProcessor::ProcessDisplaySurface(RSDisplayRenderNode& node)
 {
     RS_LOGI("RSVirtualScreenProcessor::ProcessDisplaySurface() is not supported.");
-}
-
-void RSVirtualScreenProcessor::SetBufferTimeStamp()
-{
-    if (renderFrame_ == nullptr) {
-        RS_LOGE("RSVirtualScreenProcessor::SetBufferTimeStamp: renderFrame_ is nullptr");
-        return;
-    }
-
-    auto frameOhosRaster =  static_cast<RSSurfaceFrameOhosRaster *>(renderFrame_->GetFrame().get());
-    if (frameOhosRaster == nullptr || frameOhosRaster->GetBuffer() == nullptr) {
-        RS_LOGE("RSVirtualScreenProcessor::SetBufferTimeStamp: buffer is nullptr");
-        return;
-    }
-
-    struct timespec curTime = {0, 0};
-    clock_gettime(CLOCK_MONOTONIC, &curTime);
-    // 1000000000 is used for transfer second to nsec
-    uint64_t duration = static_cast<uint64_t>(curTime.tv_sec) * 1000000000 + static_cast<uint64_t>(curTime.tv_nsec);
-    GSError ret = frameOhosRaster->GetBuffer()->GetExtraData()->ExtraSet("timeStamp", static_cast<int64_t>(duration));
-    if (ret != GSERROR_OK) {
-        RS_LOGE("RSProcessor::SetBufferTimeStamp buffer ExtraSet failed");
-    }
 }
 } // namespace Rosen
 } // namespace OHOS

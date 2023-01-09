@@ -18,7 +18,10 @@
 #include <functional>
 #include <limits>
 #include <memory>
+#include <tuple>
+
 #include <surface.h>
+#include "include/gpu/GrContext.h"
 
 #include "common/rs_vector4.h"
 #include "ipc_callbacks/buffer_available_callback.h"
@@ -26,6 +29,7 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties_painter.h"
 #include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
 #include "pipeline/rs_surface_handler.h"
 #include "refbase.h"
 #include "sync_fence.h"
@@ -229,6 +233,27 @@ public:
         visibleDirtyRegion_ = region;
     }
 
+    void SetAlignedVisibleDirtyRegion(const Occlusion::Region& alignedRegion)
+    {
+        alignedVisibleDirtyRegion_ = alignedRegion;
+    }
+
+    const Occlusion::Region& GetAlignedVisibleDirtyRegion()
+    {
+        return alignedVisibleDirtyRegion_;
+    }
+
+    void SetExtraDirtyRegionAfterAlignment(const Occlusion::Region& region)
+    {
+        extraDirtyRegionAfterAlignment_ = region;
+        extraDirtyRegionAfterAlignmentIsEmpty_ = extraDirtyRegionAfterAlignment_.IsEmpty();
+    }
+
+    void SetDirtyRegionAlignedEnable(bool enable)
+    {
+        isDirtyRegionAlignedEnable_ = enable;
+    }
+
     const Occlusion::Region& GetDirtyRegionBelowCurrentLayer() const
     {
         return dirtyRegionBelowCurrentLayer_;
@@ -262,7 +287,7 @@ public:
         alphaChanged_ = false;
     }
 
-    void SetGloblDirtyRegion(const RectI& rect)
+    void SetGlobalDirtyRegion(const RectI& rect)
     {
         Occlusion::Rect tmpRect { rect.left_, rect.top_, rect.GetRight(), rect.GetBottom() };
         Occlusion::Region region { tmpRect };
@@ -274,8 +299,8 @@ public:
 
     void UpdateSurfaceDefaultSize(float width, float height);
 
-    BlendType GetBlendType();
-    void SetBlendType(BlendType blendType);
+    GraphicBlendType GetBlendType();
+    void SetBlendType(GraphicBlendType blendType);
 
     // Only SurfaceNode in RS calls "RegisterBufferAvailableListener"
     // to save callback method sent by RT or UI which depends on the value of "isFromRenderThread".
@@ -330,50 +355,9 @@ public:
         return transparentRegion_.IsIntersectWith(nodeRect);
     }
 
-    bool SubNodeIntersectWithDirty(const RectI& r) const
-    {
-        Occlusion::Rect nodeRect { r.left_, r.top_, r.GetRight(), r.GetBottom() };
-        // if current node rect r is in global dirtyregion, it CANNOT be skipped
-        if (!globalDirtyRegionIsEmpty_) {
-            auto globalRect = globalDirtyRegion_.IsIntersectWith(nodeRect);
-            if (globalRect) {
-                return true;
-            }
-        }
-        // if current node is in visible dirtyRegion, it CANNOT be skipped
-        bool localIntersect = visibleDirtyRegion_.IsIntersectWith(nodeRect);
-        if (localIntersect) {
-            return true;
-        }
-        // if current node is transparent
-        if (IsTransparent() || IsCurrentNodeInTransparentRegion(nodeRect)) {
-            return dirtyRegionBelowCurrentLayer_.IsIntersectWith(nodeRect);
-        }
-        return false;
-    }
+    bool SubNodeIntersectWithDirty(const RectI& r) const;
 
-    bool SubNodeNeedDraw(const RectI &r, PartialRenderType opDropType) const
-    {
-        if (dirtyManager_ == nullptr) {
-            return true;
-        }
-        if (r.IsEmpty()) {
-            return true;
-        }
-        switch (opDropType) {
-            case PartialRenderType::SET_DAMAGE_AND_DROP_OP:
-                return SubNodeIntersectWithDirty(r);
-            case PartialRenderType::SET_DAMAGE_AND_DROP_OP_OCCLUSION:
-                return SubNodeVisible(r);
-            case PartialRenderType::SET_DAMAGE_AND_DROP_OP_NOT_VISIBLEDIRTY:
-                return SubNodeVisible(r) && SubNodeIntersectWithDirty(r);
-            case PartialRenderType::DISABLED:
-            case PartialRenderType::SET_DAMAGE:
-            default:
-                return true;
-        }
-        return true;
-    }
+    bool SubNodeNeedDraw(const RectI &r, PartialRenderType opDropType) const;
 
     void SetCacheSurface(sk_sp<SkSurface> cacheSurface)
     {
@@ -420,38 +404,57 @@ public:
         return hasContainerWindow_;
     }
 
-    void SetContainerWindow(bool hasContainerWindow)
+    void SetContainerWindow(bool hasContainerWindow, float density)
     {
         hasContainerWindow_ = hasContainerWindow;
+        // px = vp * density
+        containerTitleHeight_ = ceil(CONTAINER_TITLE_HEIGHT * density);
+        containerContentPadding_ = ceil(CONTENT_PADDING * density);
+        containerBorderWidth_ = ceil(CONTAINER_BORDER_WIDTH * density);
+        containerOutRadius_ = ceil(CONTAINER_OUTER_RADIUS * density);
+        containerInnerRadius_ = ceil(CONTAINER_INNER_RADIUS * density);
     }
 
-    void ResetSurfaceOpaqueRegion(const RectI& screeninfo, const RectI& absRect)
+    bool IsOpaqueRegionChanged() const
     {
-        Occlusion::Rect dirtyRect{GetOldDirtyInSurface()};
-        if (IsTransparent()) {
-            opaqueRegion_ = Occlusion::Region();
-            transparentRegion_ = Occlusion::Region{dirtyRect};
-        } else {
-            if (IsAppWindow() && HasContainerWindow()) {
-                Occlusion::Rect opaqueRect{ absRect.left_ + containerContentPadding + containerBorderWidth,
-                    absRect.top_ + containerTitleHeight,
-                    absRect.GetRight() - containerContentPadding - containerBorderWidth,
-                    absRect.GetBottom() - containerContentPadding - containerBorderWidth};
-                opaqueRegion_ = Occlusion::Region{opaqueRect};
-            } else {
-                Occlusion::Rect opaqueRect{absRect};
-                opaqueRegion_ = Occlusion::Region{opaqueRect};
-            }
-            transparentRegion_ = Occlusion::Region{dirtyRect};
-            transparentRegion_.SubSelf(opaqueRegion_);
-        }
-        Occlusion::Rect screen{screeninfo};
-        Occlusion::Region screenRegion{screen};
-        transparentRegion_.AndSelf(screenRegion);
-        opaqueRegion_.AndSelf(screenRegion);
+        return opaqueRegionChanged_;
     }
+
+    bool IsFocusedWindow(pid_t focusedWindowPid)
+    {
+        return ExtractPid(GetNodeId()) == focusedWindowPid;
+    }
+
+    Occlusion::Region ResetOpaqueRegion(const RectI& absRect,
+        const ContainerWindowConfigType containerWindowConfigType, const bool isFocusWindow);
+
+    void ResetSurfaceOpaqueRegion(const RectI& screeninfo, const RectI& absRect,
+        ContainerWindowConfigType containerWindowConfigType, bool isFocusWindow = true);
+
+    bool IsStartAnimationFinished() const;
+    void SetStartAnimationFinished();
+    void SetCachedImage(sk_sp<SkImage> image)
+    {
+        SetDirty();
+        std::lock_guard<std::mutex> lock(cachedImageMutex_);
+        cachedImage_ = image;
+    }
+
+    sk_sp<SkImage> GetCachedImage() const
+    {
+        std::lock_guard<std::mutex> lock(cachedImageMutex_);
+        return cachedImage_;
+    }
+
+    void ClearCachedImage()
+    {
+        std::lock_guard<std::mutex> lock(cachedImageMutex_);
+        cachedImage_ = nullptr;
+    }
+
 private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
+    bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
 
     std::mutex mutexRT_;
     std::mutex mutexUI_;
@@ -475,7 +478,7 @@ private:
 
     std::string name_;
     RSSurfaceNodeType nodeType_ = RSSurfaceNodeType::DEFAULT;
-    BlendType blendType_ = BlendType::BLEND_SRCOVER;
+    GraphicBlendType blendType_ = GraphicBlendType::GRAPHIC_BLEND_SRCOVER;
     bool isNotifyRTBufferAvailablePre_ = false;
     std::atomic<bool> isNotifyRTBufferAvailable_ = false;
     std::atomic<bool> isNotifyUIBufferAvailable_ = false;
@@ -488,6 +491,8 @@ private:
     RectI clipRegionFromParent_;
     Occlusion::Region visibleRegion_;
     Occlusion::Region visibleDirtyRegion_;
+    bool isDirtyRegionAlignedEnable_ = false;
+    Occlusion::Region alignedVisibleDirtyRegion_;
     bool isOcclusionVisible_ = true;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
     RectI dstRect_;
@@ -495,23 +500,37 @@ private:
     uint8_t abilityBgAlpha_ = 0;
     bool alphaChanged_ = false;
     Occlusion::Region globalDirtyRegion_;
+    // dirtyRegion caused by surfaceNode visible region after alignment
+    Occlusion::Region extraDirtyRegionAfterAlignment_;
+    bool extraDirtyRegionAfterAlignmentIsEmpty_ = true;
 
     std::atomic<bool> isAppFreeze_ = false;
     sk_sp<SkSurface> cacheSurface_ = nullptr;
     bool globalDirtyRegionIsEmpty_ = false;
     // if a there a dirty layer under transparent clean layer, transparent layer should refreshed
     Occlusion::Region dirtyRegionBelowCurrentLayer_;
-    bool dirtyRegionBelowCurrentLayerIsEmpty_;
+    bool dirtyRegionBelowCurrentLayerIsEmpty_ = false;
 
     // opaque region of the surface
     Occlusion::Region opaqueRegion_;
+    bool opaqueRegionChanged_ = false;
     // transparent region of the surface, floating window's container window is always treated as transparent
     Occlusion::Region transparentRegion_;
     // temporary const value from ACE container_modal_constants.h, will be replaced by uniform interface
     bool hasContainerWindow_ = false;           // set to false as default, set by arkui
-    int containerTitleHeight = 37 * 2;        // container title height = 74 px
-    int containerContentPadding = 4 * 2;      // container <--> content distance 8 px
-    int containerBorderWidth = 1 * 2;         // container border width 2px
+    const int CONTAINER_TITLE_HEIGHT = 37;        // container title height = 37 vp
+    const int CONTENT_PADDING = 4;      // container <--> content distance 4 vp
+    const int CONTAINER_BORDER_WIDTH = 1;          // container border width 2 vp
+    const int CONTAINER_OUTER_RADIUS = 16;         // container outter radius 16 vp
+    const int CONTAINER_INNER_RADIUS = 14;         // container inner radius 14 vp
+    int containerTitleHeight_ = 37 * 2;      // The density default value is 2
+    int containerContentPadding_ = 4 * 2;    // The density default value is 2
+    int containerBorderWidth_ = 1 * 2;       // The density default value is 2
+    int containerOutRadius_ = 16 * 2;        // The density default value is 2
+    int containerInnerRadius_ = 14 * 2;      // The density default value is 2
+    bool startAnimationFinished_ = false;
+    mutable std::mutex cachedImageMutex_;
+    sk_sp<SkImage> cachedImage_;
 };
 } // namespace Rosen
 } // namespace OHOS

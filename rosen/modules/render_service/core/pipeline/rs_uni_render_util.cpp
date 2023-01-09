@@ -14,6 +14,7 @@
  */
 
 #include "rs_uni_render_util.h"
+#include <cstdint>
 
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_main_thread.h"
@@ -51,7 +52,8 @@ void RSUniRenderUtil::UpdateRenderNodeDstRect(RSRenderNode& node, const SkMatrix
     }
 }
 
-void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge)
+void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge,
+    bool useAlignedDirtyRegion)
 {
     // update all child surfacenode history
     for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
@@ -64,29 +66,23 @@ void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& no
             ROSEN_LOGE("RSUniRenderUtil::MergeVisibleDirtyRegion with invalid buffer age %d", bufferAge);
         }
         surfaceDirtyManager->IntersectDirtyRect(surfaceNode->GetOldDirtyInSurface());
-        if (!node->GetDirtyManager()->GetDirtyRegion().IntersectRect(surfaceNode->GetOldDirtyInSurface()).IsEmpty() &&
-            surfaceNode->GetRenderProperties().NeedFilter()) {
-            if (surfaceNode->IsTransparent()) {
-                node->GetDirtyManager()->MergeDirtyRect(surfaceNode->GetOldDirtyInSurface());
-            }
-            surfaceDirtyManager->MergeDirtyRect(surfaceNode->GetOldDirtyInSurface());
-        }
-        surfaceDirtyManager->UpdateDirty();
+        surfaceDirtyManager->UpdateDirty(useAlignedDirtyRegion);
         if (surfaceNode->GetDstRect().IsInsideOf(surfaceDirtyManager->GetDirtyRegion())
             && surfaceNode->HasContainerWindow()) {
             node->GetDirtyManager()->MergeDirtyRect(surfaceNode->GetDstRect());
         }
     }
     // update display dirtymanager
-    node->UpdateDisplayDirtyManager(bufferAge);
+    node->UpdateDisplayDirtyManager(bufferAge, useAlignedDirtyRegion);
 }
 
-Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node)
+Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
+    bool useAlignedDirtyRegion)
 {
     Occlusion::Region allSurfaceVisibleDirtyRegion;
     for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
         auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
-        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
+        if (surfaceNode == nullptr || !surfaceNode->IsAppWindow() || surfaceNode->GetDstRect().IsEmpty()) {
             continue;
         }
         auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
@@ -97,7 +93,13 @@ Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDis
         Occlusion::Region surfaceDirtyRegion { dirtyRect };
         Occlusion::Region surfaceVisibleDirtyRegion = surfaceDirtyRegion.And(visibleRegion);
         surfaceNode->SetVisibleDirtyRegion(surfaceVisibleDirtyRegion);
-        allSurfaceVisibleDirtyRegion = allSurfaceVisibleDirtyRegion.Or(surfaceVisibleDirtyRegion);
+        if (useAlignedDirtyRegion) {
+            Occlusion::Region alignedRegion = AlignedDirtyRegion(surfaceVisibleDirtyRegion);
+            surfaceNode->SetAlignedVisibleDirtyRegion(alignedRegion);
+            allSurfaceVisibleDirtyRegion.OrSelf(alignedRegion);
+        } else {
+            allSurfaceVisibleDirtyRegion = allSurfaceVisibleDirtyRegion.Or(surfaceVisibleDirtyRegion);
+        }
     }
     return allSurfaceVisibleDirtyRegion;
 }
@@ -111,6 +113,7 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
     params.useCPU = true;
 #endif // RS_ENABLE_EGLIMAGE
     params.paint.setAntiAlias(true);
+    params.paint.setFilterQuality(SkFilterQuality::kLow_SkFilterQuality);
 
     const RSProperties& property = node.GetRenderProperties();
     params.dstRect = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
@@ -123,6 +126,111 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
     RectF localBounds = {0.0f, 0.0f, property.GetBoundsWidth(), property.GetBoundsHeight()};
     RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(node, localBounds, params);
     return params;
+}
+
+BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSDisplayRenderNode& node, bool forceCPU)
+{
+    BufferDrawParam params;
+#ifdef RS_ENABLE_EGLIMAGE
+    params.useCPU = forceCPU;
+#else // RS_ENABLE_EGLIMAGE
+    params.useCPU = true;
+#endif // RS_ENABLE_EGLIMAGE
+    params.paint.setAntiAlias(true);
+    params.paint.setFilterQuality(SkFilterQuality::kLow_SkFilterQuality);
+
+    const sptr<SurfaceBuffer>& buffer = node.GetBuffer();
+    params.buffer = buffer;
+    params.acquireFence = node.GetAcquireFence();
+    params.srcRect = SkRect::MakeWH(buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
+    params.dstRect = SkRect::MakeWH(buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
+    return params;
+}
+
+void RSUniRenderUtil::DrawCachedSurface(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas,
+    sk_sp<SkSurface> surface)
+{
+    if (surface == nullptr) {
+        return;
+    }
+    canvas.save();
+    canvas.scale(node.GetRenderProperties().GetBoundsWidth() / surface->width(),
+        node.GetRenderProperties().GetBoundsHeight() / surface->height());
+    SkPaint paint;
+    surface->draw(&canvas, 0.0, 0.0, &paint);
+    canvas.restore();
+}
+
+void RSUniRenderUtil::DrawCachedImage(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas, sk_sp<SkImage> image)
+{
+    if (image == nullptr) {
+        return;
+    }
+    canvas.save();
+    canvas.scale(node.GetRenderProperties().GetBoundsWidth() / image->width(),
+        node.GetRenderProperties().GetBoundsHeight() / image->height());
+    SkPaint paint;
+    canvas.drawImage(image.get(), 0.0, 0.0, &paint);
+    canvas.restore();
+}
+
+bool RSUniRenderUtil::ReleaseBuffer(RSSurfaceHandler& surfaceHandler)
+{
+    auto& consumer = surfaceHandler.GetConsumer();
+    if (consumer == nullptr) {
+        return false;
+    }
+
+    auto& preBuffer = surfaceHandler.GetPreBuffer();
+    if (preBuffer.buffer != nullptr) {
+        static bool firstEntry = true;
+        static std::function<void()> firstBufferRelease = nullptr;
+        if (firstEntry) {
+            // In order to avoid waiting for buffers' fence, we delay the first ReleaseBuffer to alloc 3 buffers.
+            // [planning] delete this function after Repaint parallelization.
+            firstEntry = false;
+            firstBufferRelease = [consumer, buffer = preBuffer.buffer, fence = preBuffer.releaseFence]() mutable {
+                auto ret = consumer->ReleaseBuffer(buffer, fence);
+                if (ret != OHOS::SURFACE_ERROR_OK) {
+                    RS_LOGE("RsDebug firstBufferRelease failed(ret: %d)!", ret);
+                }
+            };
+            preBuffer.Reset();
+            return true;
+        }
+        if (firstBufferRelease) {
+            firstBufferRelease();
+            firstBufferRelease = nullptr;
+        }
+        auto ret = consumer->ReleaseBuffer(preBuffer.buffer, preBuffer.releaseFence);
+        if (ret != OHOS::SURFACE_ERROR_OK) {
+            RS_LOGE("RsDebug surfaceHandler(id: %" PRIu64 ") ReleaseBuffer failed(ret: %d)!",
+                surfaceHandler.GetNodeId(), ret);
+            return false;
+        }
+        // reset prevBuffer if we release it successfully,
+        // to avoid releasing the same buffer next frame in some situations.
+        preBuffer.Reset();
+    }
+    return true;
+}
+
+Occlusion::Region RSUniRenderUtil::AlignedDirtyRegion(const Occlusion::Region& dirtyRegion, int32_t alignedBits)
+{
+    Occlusion::Region alignedRegion;
+    if (alignedBits <= 1) {
+        return dirtyRegion;
+    }
+    for (auto& dirtyRect : dirtyRegion.GetRegionRects()) {
+        int32_t left = (dirtyRect.left_ / alignedBits) * alignedBits;
+        int32_t top = (dirtyRect.top_ / alignedBits) * alignedBits;
+        int32_t width = ((dirtyRect.right_ + alignedBits - 1) / alignedBits) * alignedBits - left;
+        int32_t height = ((dirtyRect.bottom_ + alignedBits - 1) / alignedBits) * alignedBits - top;
+        Occlusion::Rect rect = { left, top, left + width, top + height };
+        Occlusion::Region singleAlignedRegion(rect);
+        alignedRegion.OrSelf(singleAlignedRegion);
+    }
+    return alignedRegion;
 }
 
 } // namespace Rosen

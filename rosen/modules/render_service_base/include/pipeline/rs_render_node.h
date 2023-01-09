@@ -41,8 +41,12 @@ public:
     }
 
     ~RSRenderNode() override;
+    bool IsDirty() const override;
 
-    bool Animate(int64_t timestamp) override;
+    std::pair<bool, bool> Animate(int64_t timestamp) override;
+    // PrepareCanvasRenderNode in UniRender
+    bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, RectI clipRect);
+    // Other situation
     bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty);
 
     RSProperties& GetMutableRenderProperties();
@@ -97,13 +101,16 @@ public:
         isShadowValidLastFrame_ = isShadowValidLastFrame;
     }
 
+    // update parent's children rect including childRect and itself
+    // if not customized, it merge's node's dirtyRect
+    void UpdateParentChildrenRect(std::shared_ptr<RSBaseRenderNode> parentNode,
+        const bool isCustomized = false, const RectI subRect = RectI()) const;
+
     // update node's out parent status
     void SetPaintOutOfParentFlag(std::shared_ptr<RSRenderNode> rsParent);
 
 protected:
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
-    void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty);
-    bool IsDirty() const override;
     void AddGeometryModifier(const std::shared_ptr<RSRenderModifier> modifier);
     std::pair<int, int> renderNodeSaveCount_ = { 0, 0 };
     std::map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>> drawCmdModifiers_;
@@ -115,6 +122,14 @@ private:
     void FallbackAnimationsToRoot();
     void UpdateOverlayBounds();
     void FilterModifiersByPid(pid_t pid);
+
+    // clipRect only used in UniRener when calling PrepareCanvasRenderNode
+    // PrepareCanvasRenderNode in UniRender: needClip = true and clipRect is meaningful
+    // Other situation: needClip = false and clipRect is meaningless
+    bool Update(
+        RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, bool needClip, RectI clipRect);
+    void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, bool needClip, RectI clipRect);
+
     bool isDirtyRegionUpdated_ = false;
     bool isLastVisible_ = false;
     bool fallbackAnimationOnDestroy_ = true;

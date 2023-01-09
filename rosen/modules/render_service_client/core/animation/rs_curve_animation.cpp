@@ -67,18 +67,12 @@ void RSCurveAnimation::StartRenderAnimation(const std::shared_ptr<RSRenderCurveA
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, target->IsRenderServiceNode(), target->GetFollowType(), target->GetId());
-        if (target->NeedSendExtraCommand()) {
-            std::unique_ptr<RSCommand> extraCommand =
-                std::make_unique<RSAnimationCreateCurve>(target->GetId(), animation);
-            transactionProxy->AddCommand(extraCommand,
-                !target->IsRenderServiceNode(), target->GetFollowType(), target->GetId());
-        }
     }
 }
 
 void RSCurveAnimation::StartUIAnimation(const std::shared_ptr<RSRenderCurveAnimation>& animation)
 {
-    StartCustomPropertyAnimation(animation);
+    StartCustomAnimation(animation);
 }
 
 void RSCurveAnimation::OnStart()
@@ -86,11 +80,12 @@ void RSCurveAnimation::OnStart()
     RSPropertyAnimation::OnStart();
     auto interpolator = timingCurve_.GetInterpolator(GetDuration());
     auto animation = std::make_shared<RSRenderCurveAnimation>(GetId(), GetPropertyId(),
-        originValue_->CreateRenderProperty(), startValue_->CreateRenderProperty(), endValue_->CreateRenderProperty());
+        originValue_->GetRenderProperty(), startValue_->GetRenderProperty(), endValue_->GetRenderProperty());
     animation->SetInterpolator(interpolator);
     animation->SetAdditive(GetAdditive());
     UpdateParamToRenderAnimation(animation);
     if (isCustom_) {
+        animation->AttachRenderProperty(property_->GetRenderProperty());
         StartUIAnimation(animation);
     } else {
         StartRenderAnimation(animation);

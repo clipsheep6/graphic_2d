@@ -24,6 +24,7 @@
 
 #include "common/rs_obj_abs_geometry.h"
 #include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_cold_start_thread.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_divided_render_util.h"
 #include "pipeline/rs_main_thread.h"
@@ -53,7 +54,7 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
     }
     std::unique_ptr<Media::PixelMap> pixelmap;
     std::shared_ptr<RSSurfaceCaptureVisitor> visitor = std::make_shared<RSSurfaceCaptureVisitor>(scaleX_, scaleY_,
-        RSMainThread::Instance()->IfUseUniVisitor());
+        RSUniRenderJudgement::IsUniRender());
     if (auto surfaceNode = node->ReinterpretCastTo<RSSurfaceRenderNode>()) {
         RS_LOGD("RSSurfaceCaptureTask::Run: Into SURFACE_NODE SurfaceRenderNodeId:[%" PRIu64 "]", node->GetId());
         pixelmap = CreatePixelMapBySurfaceNode(surfaceNode, visitor->IsUniRender());
@@ -292,8 +293,13 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWith
         }
     }
     canvas_->restore();
-
-    ProcessBaseRenderNode(node);
+    if (node.IsAppWindow() && RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId()) &&
+        node.GetCachedImage() != nullptr) {
+        RS_LOGD("RSSurfaceCaptureVisitor DrawCachedImage");
+        RSUniRenderUtil::DrawCachedImage(node, *canvas_, node.GetCachedImage());
+    } else {
+        ProcessBaseRenderNode(node);
+    }
 }
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode& node)
@@ -304,7 +310,8 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithU
             node.GetId());
         return;
     }
-    bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
+    bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE ||
+        node.GetSurfaceNodeType() == RSSurfaceNodeType::ABILITY_COMPONENT_NODE;
     if (!isSelfDrawingSurface) {
         canvas_->concat(node.GetContextMatrix());
         auto contextClipRect = node.GetContextClipRegion();
@@ -327,15 +334,13 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithU
         canvas_->save();
     }
 
-    boundsRect_ = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
-    frameGravity_ = property.GetFrameGravity();
     const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
     RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect);
     if (!property.GetCornerRadius().IsZero()) {
         canvas_->clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
     } else {
-        canvas_->clipRect(boundsRect_);
+        canvas_->clipRect(SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight()));
     }
     auto backgroundColor = static_cast<SkColor>(property.GetBackgroundColor().AsArgbInt());
     if (SkColorGetA(backgroundColor) != SK_AlphaTRANSPARENT) {
@@ -393,7 +398,7 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWith
 
 void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 {
-    if (!RSMainThread::Instance()->IfUseUniVisitor()) {
+    if (!RSUniRenderJudgement::IsUniRender()) {
         return;
     }
     if (!node.ShouldPaint()) {
@@ -407,17 +412,6 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessRootRenderNode(RSRoot
     }
 
     canvas_->save();
-    auto parent = node.GetParent().lock();
-    if (parent && parent->IsInstanceOf<RSSurfaceRenderNode>()) {
-        const auto &property = node.GetRenderProperties();
-        const float frameWidth = property.GetFrameWidth() * property.GetScaleX();
-        const float frameHeight = property.GetFrameHeight() * property.GetScaleY();
-        SkMatrix gravityMatrix;
-        (void) RSPropertiesPainter::GetGravityMatrix(frameGravity_,
-            RectF{0.0f, 0.0f, boundsRect_.width(), boundsRect_.height()},
-            frameWidth, frameHeight, gravityMatrix);
-        canvas_->concat(gravityMatrix);
-    }
     ProcessCanvasRenderNode(node);
     canvas_->restore();
 }

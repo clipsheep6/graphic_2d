@@ -59,13 +59,14 @@ void RSSpringAnimation::OnStart()
 {
     RSPropertyAnimation::OnStart();
     auto animation = std::make_shared<RSRenderSpringAnimation>(GetId(), GetPropertyId(),
-        originValue_->CreateRenderProperty(), startValue_->CreateRenderProperty(), endValue_->CreateRenderProperty());
+        originValue_->GetRenderProperty(), startValue_->GetRenderProperty(), endValue_->GetRenderProperty());
     // 300: placeholder for estimated duration, will be replaced by real duration on animation start.
     SetDuration(300);
     UpdateParamToRenderAnimation(animation);
-    animation->SetSpringParameters(timingCurve_.response_, timingCurve_.dampingRatio_);
+    animation->SetSpringParameters(timingCurve_.response_, timingCurve_.dampingRatio_, timingCurve_.blendDuration_);
     animation->SetAdditive(GetAdditive());
     if (isCustom_) {
+        animation->AttachRenderProperty(property_->GetRenderProperty());
         StartUIAnimation(animation);
     } else {
         StartRenderAnimation(animation);
@@ -91,16 +92,11 @@ void RSSpringAnimation::StartRenderAnimation(const std::shared_ptr<RSRenderSprin
             std::make_unique<RSAnimationCreateSpring>(target->GetId(), animation);
         transactionProxy->AddCommand(commandForRemote, true, target->GetFollowType(), target->GetId());
     }
-    if (target->NeedSendExtraCommand()) {
-        std::unique_ptr<RSCommand> extraCommand = std::make_unique<RSAnimationCreateSpring>(target->GetId(), animation);
-        transactionProxy->AddCommand(
-            extraCommand, !target->IsRenderServiceNode(), target->GetFollowType(), target->GetId());
-    }
 }
 
 void RSSpringAnimation::StartUIAnimation(const std::shared_ptr<RSRenderSpringAnimation>& animation)
 {
-    StartCustomPropertyAnimation(animation);
+    StartCustomAnimation(animation);
 }
 } // namespace Rosen
 } // namespace OHOS

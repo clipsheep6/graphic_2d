@@ -68,7 +68,7 @@ protected:
         return RSRenderPropertyType::INVALID;
     }
 
-    virtual float toFloat() const
+    virtual float ToFloat() const
     {
         return 1.f;
     }
@@ -127,6 +127,7 @@ private:
     friend class RSRenderKeyframeAnimation;
     template<typename T>
     friend class RSSpringModel;
+    friend class RSTransitionCustom;
 };
 
 template<typename T>
@@ -138,9 +139,13 @@ public:
 
     void Set(const T& value)
     {
-        if (stagingValue_ != value) {
-            stagingValue_ = value;
-            OnChange();
+        if (value == stagingValue_) {
+            return;
+        }
+        stagingValue_ = value;
+        OnChange();
+        if (updateUIPropertyFunc_) {
+            updateUIPropertyFunc_(shared_from_this());
         }
     }
 
@@ -149,8 +154,15 @@ public:
         return stagingValue_;
     }
 
+    void SetUpdateUIPropertyFunc(
+        const std::function<void(const std::shared_ptr<RSRenderPropertyBase>&)>& updateUIPropertyFunc)
+    {
+        updateUIPropertyFunc_ = updateUIPropertyFunc;
+    }
+
 protected:
     T stagingValue_;
+    std::function<void(const std::shared_ptr<RSRenderPropertyBase>&)> updateUIPropertyFunc_;
 };
 
 template<typename T>
@@ -189,7 +201,7 @@ protected:
         return type_;
     }
 
-    float toFloat() const override
+    float ToFloat() const override
     {
         return 1.f;
     }
@@ -251,13 +263,13 @@ private:
 };
 
 template<>
-float RSRenderAnimatableProperty<float>::toFloat() const;
+float RSRenderAnimatableProperty<float>::ToFloat() const;
 template<>
-float RSRenderAnimatableProperty<Vector4f>::toFloat() const;
+float RSRenderAnimatableProperty<Vector4f>::ToFloat() const;
 template<>
-float RSRenderAnimatableProperty<Quaternion>::toFloat() const;
+float RSRenderAnimatableProperty<Quaternion>::ToFloat() const;
 template<>
-float RSRenderAnimatableProperty<Vector2f>::toFloat() const;
+float RSRenderAnimatableProperty<Vector2f>::ToFloat() const;
 } // namespace Rosen
 } // namespace OHOS
 

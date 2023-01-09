@@ -56,6 +56,8 @@ private:
     void DrawDirtyRegion();
     // Update damageRegion based on buffer age, and then set it through egl api
     void UpdateDirtyAndSetEGLDamageRegion(std::unique_ptr<RSSurfaceFrame>& surfaceFrame);
+    // Reset and update children node's info like outOfParent and isRemoveChild
+    void ResetAndPrepareChildrenNode(RSRenderNode& node, std::shared_ptr<RSBaseRenderNode> nodeParent);
 
     std::shared_ptr<RSDirtyRegionManager> curDirtyManager_;
     bool isRenderForced_ = false;
@@ -73,7 +75,6 @@ private:
 
     std::vector<NodeId> childSurfaceNodeIds_;
     SkMatrix parentSurfaceNodeMatrix_;
-    bool needUpdateSurfaceNode_ = false;
 
     static void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType);
     static bool IsValidRootRenderNode(RSRootRenderNode& node);

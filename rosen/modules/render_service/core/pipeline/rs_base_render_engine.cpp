@@ -84,7 +84,7 @@ bool RSBaseRenderEngine::NeedForceCPU(const std::vector<LayerInfoPtr>& layers)
     return forceCPU;
 }
 
-sk_sp<SkImage> RSBaseRenderEngine::CreateEglImageFromBuffer(
+sk_sp<SkImage> RSBaseRenderEngine::CreateEglImageFromBuffer(RSPaintFilterCanvas& canvas,
     const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence)
 {
 #ifdef RS_ENABLE_EGLIMAGE
@@ -92,7 +92,7 @@ sk_sp<SkImage> RSBaseRenderEngine::CreateEglImageFromBuffer(
         RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer invalid param!");
         return nullptr;
     }
-    if (renderContext_->GetGrContext() == nullptr) {
+    if (canvas.getGrContext() == nullptr) {
         RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer GrContext is null!");
         return nullptr;
     }
@@ -106,7 +106,7 @@ sk_sp<SkImage> RSBaseRenderEngine::CreateEglImageFromBuffer(
     GrGLTextureInfo grExternalTextureInfo = { GL_TEXTURE_EXTERNAL_OES, eglTextureId, GL_RGBA8 };
     GrBackendTexture backendTexture(buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight(),
         GrMipMapped::kNo, grExternalTextureInfo);
-    return SkImage::MakeFromTexture(renderContext_->GetGrContext(), backendTexture,
+    return SkImage::MakeFromTexture(canvas.getGrContext(), backendTexture,
         kTopLeft_GrSurfaceOrigin, colorType, kPremul_SkAlphaType, nullptr);
 #else
     return nullptr;
@@ -114,7 +114,7 @@ sk_sp<SkImage> RSBaseRenderEngine::CreateEglImageFromBuffer(
 }
 
 std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::shared_ptr<RSSurfaceOhos>& rsSurface,
-    const BufferRequestConfig& config, bool forceCPU)
+    const BufferRequestConfig& config, bool forceCPU, bool useAFBC)
 {
     RS_TRACE_NAME("RSBaseRenderEngine::RequestFrame(RSSurface)");
     if (rsSurface == nullptr) {
@@ -139,7 +139,7 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
     }
 #endif
 
-    auto surfaceFrame = rsSurface->RequestFrame(config.width, config.height);
+    auto surfaceFrame = rsSurface->RequestFrame(config.width, config.height, 0, useAFBC);
     if (surfaceFrame == nullptr) {
         RS_LOGE("RSBaseRenderEngine::RequestFrame: request SurfaceFrame failed!");
         return nullptr;
@@ -149,7 +149,7 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
 }
 
 std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const sptr<Surface>& targetSurface,
-    const BufferRequestConfig& config, bool forceCPU)
+    const BufferRequestConfig& config, bool forceCPU, bool useAFBC)
 {
     RS_TRACE_NAME("RSBaseRenderEngine::RequestFrame(Surface)");
     if (targetSurface == nullptr) {
@@ -170,7 +170,42 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const sptr<Surfa
 #endif // (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
     }
 
-    return RequestFrame(rsSurfaces_.at(surfaceId), config, forceCPU);
+    return RequestFrame(rsSurfaces_.at(surfaceId), config, forceCPU, useAFBC);
+}
+
+void RSBaseRenderEngine::SetUiTimeStamp(const std::unique_ptr<RSRenderFrame>& renderFrame, const uint64_t surfaceId)
+{
+    std::shared_ptr<RSSurfaceOhos> surfaceOhos = nullptr;
+    for (auto it = rsSurfaces_.begin(); it != rsSurfaces_.end(); ++it) {
+        if (it->first == surfaceId) {
+            surfaceOhos = it->second;
+            break;
+        }
+    }
+
+    if (surfaceOhos == nullptr) {
+        RS_LOGE("RSBaseRenderEngine::SetUiTimeStamp: surfaceOhos is null!");
+        return;
+    }
+
+    if (renderFrame == nullptr) {
+        RS_LOGE("RSBaseRenderEngine::SetUiTimeStamp: renderFrame is null!.");
+        return;
+    }
+
+    auto& frame = renderFrame->GetFrame();
+    surfaceOhos->SetUiTimeStamp(frame);
+}
+
+void RSBaseRenderEngine::DrawDisplayNodeWithParams(RSPaintFilterCanvas& canvas, RSDisplayRenderNode& node,
+    BufferDrawParam& params)
+{
+    if (params.useCPU) {
+        DrawBuffer(canvas, params);
+    } else {
+        RegisterDeleteBufferListener(node.GetConsumer());
+        DrawImage(canvas, params);
+    }
 }
 
 void RSBaseRenderEngine::SetColorFilterMode(ColorFilterMode mode)
@@ -229,6 +264,7 @@ void RSBaseRenderEngine::SetColorFilterMode(ColorFilterMode mode)
 
 void RSBaseRenderEngine::DrawBuffer(RSPaintFilterCanvas& canvas, BufferDrawParam& params)
 {
+    RS_TRACE_NAME("RSBaseRenderEngine::DrawBuffer(CPU)");
     SkBitmap bitmap;
     std::vector<uint8_t> newBuffer;
     if (!RSBaseRenderUtil::ConvertBufferToBitmap(params.buffer, newBuffer, params.targetColorGamut, bitmap,
@@ -242,12 +278,11 @@ void RSBaseRenderEngine::DrawBuffer(RSPaintFilterCanvas& canvas, BufferDrawParam
 void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam& params)
 {
     RS_TRACE_NAME("RSBaseRenderEngine::DrawImage(GPU)");
-    auto image = CreateEglImageFromBuffer(params.buffer, params.acquireFence);
+    auto image = CreateEglImageFromBuffer(canvas, params.buffer, params.acquireFence);
     if (image == nullptr) {
         RS_LOGE("RSDividedRenderUtil::DrawImage: image is nullptr!");
         return;
     }
-
     canvas.drawImageRect(image, params.srcRect, params.dstRect, &(params.paint));
 }
 

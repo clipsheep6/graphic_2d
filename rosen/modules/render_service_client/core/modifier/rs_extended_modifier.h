@@ -93,14 +93,23 @@ protected:
                     node->GetId(), drawCmdList, property_->id_, false);
                 transactionProxy->AddCommand(commandForRemote, true, node->GetFollowType(), node->GetId());
             }
-            if (node->NeedSendExtraCommand()) {
-                std::unique_ptr<RSCommand> extraCommand = std::make_unique<RSUpdatePropertyDrawCmdList>(
-                    node->GetId(), drawCmdList, property_->id_, false);
-                transactionProxy->AddCommand(extraCommand, !node->IsRenderServiceNode(), node->GetFollowType(),
-                    node->GetId());
-            }
         }
     }
+};
+
+class RS_EXPORT RSTransitionModifier : public RSExtendedModifier {
+public:
+    RSTransitionModifier() : RSExtendedModifier(RSModifierType::TRANSITION)
+    {}
+
+    RSModifierType GetModifierType() const override
+    {
+        return RSModifierType::TRANSITION;
+    }
+
+    virtual void Active() = 0;
+
+    virtual void Identity() = 0;
 };
 
 class RS_EXPORT RSBackgroundStyleModifier : public RSExtendedModifier {

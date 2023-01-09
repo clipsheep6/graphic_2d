@@ -21,7 +21,6 @@
 #include <string>
 
 #include "animation/rs_animation.h"
-#include "animation/rs_animation_manager_map.h"
 #include "animation/rs_implicit_animator.h"
 #include "animation/rs_implicit_animator_map.h"
 #include "command/rs_node_command.h"
@@ -32,7 +31,6 @@
 #include "platform/common/rs_log.h"
 #include "render/rs_path.h"
 #include "transaction/rs_transaction_proxy.h"
-#include "animation/rs_ui_animation_manager.h"
 #include "modifier/rs_property_modifier.h"
 
 namespace OHOS {
@@ -143,6 +141,9 @@ void RSNode::FallbackAnimationsToRoot()
         return;
     }
     for (const auto& [animationId, animation] : animations_) {
+        if (animation && animation->GetRepeatCount() == -1) {
+            continue;
+        }
         target->AddAnimationInner(animation);
     }
 }
@@ -759,8 +760,19 @@ void RSNode::NotifyTransition(const std::shared_ptr<const RSTransitionEffect>& e
         return;
     }
 
-    implicitAnimator_->BeginImplicitTransition(effect);
-    implicitAnimator_->CreateImplicitTransition(*this, isTransitionIn);
+    auto& customEffects = isTransitionIn ? effect->customTransitionInEffects_ : effect->customTransitionOutEffects_;
+    // temporary close the implicit animation
+    implicitAnimator_->BeginShieldImplicitAnimation();
+    for (auto& customEffect : customEffects) {
+        customEffect->Active();
+    }
+    implicitAnimator_->EndShieldImplicitAnimation();
+
+    implicitAnimator_->BeginImplicitTransition(effect, isTransitionIn);
+    for (auto& customEffect : customEffects) {
+        customEffect->Identity();
+    }
+    implicitAnimator_->CreateImplicitTransition(*this);
     implicitAnimator_->EndImplicitTransition();
 }
 
@@ -806,12 +818,8 @@ void RSNode::SetPaintOrder(bool drawContentLast)
 
 void RSNode::ClearAllModifiers()
 {
-    if (animationManager_ == nullptr) {
-        animationManager_ = RSAnimationManagerMap::Instance()->GetAnimationManager(gettid());
-    }
     for (auto& [id, modifier] : modifiers_) {
         modifier->DetachFromNode();
-        animationManager_->RemoveProperty(id);
     }
 }
 
@@ -834,11 +842,6 @@ void RSNode::AddModifier(const std::shared_ptr<RSModifier>& modifier)
                 std::make_unique<RSAddModifier>(GetId(), modifier->CreateRenderModifier());
             transactionProxy->AddCommand(cmdForRemote, true, GetFollowType(), GetId());
         }
-        if (NeedSendExtraCommand()) {
-            std::unique_ptr<RSCommand> extraCommand =
-                std::make_unique<RSAddModifier>(GetId(), modifier->CreateRenderModifier());
-            transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode(), GetFollowType(), GetId());
-        }
     }
 }
 
@@ -854,10 +857,6 @@ void RSNode::RemoveModifier(const std::shared_ptr<RSModifier>& modifier)
 
     modifiers_.erase(iter);
     modifier->DetachFromNode();
-    if (animationManager_ == nullptr) {
-        animationManager_ = RSAnimationManagerMap::Instance()->GetAnimationManager(gettid());
-    }
-    animationManager_->RemoveProperty(modifier->GetPropertyId());
     std::unique_ptr<RSCommand> command = std::make_unique<RSRemoveModifier>(GetId(), modifier->GetPropertyId());
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
@@ -866,11 +865,6 @@ void RSNode::RemoveModifier(const std::shared_ptr<RSModifier>& modifier)
             std::unique_ptr<RSCommand> cmdForRemote =
                 std::make_unique<RSRemoveModifier>(GetId(), modifier->GetPropertyId());
             transactionProxy->AddCommand(cmdForRemote, true, GetFollowType(), GetId());
-        }
-        if (NeedSendExtraCommand()) {
-            std::unique_ptr<RSCommand> extraCommand =
-                std::make_unique<RSRemoveModifier>(GetId(), modifier->GetPropertyId());
-            transactionProxy->AddCommand(extraCommand, !IsRenderServiceNode(), GetFollowType(), GetId());
         }
     }
 }
@@ -896,13 +890,6 @@ void RSNode::UpdateModifierMotionPathOption()
         if (IsPathAnimatableModifier(modifier->GetModifierType())) {
             modifier->SetMotionPathOption(motionPathOption_);
         }
-    }
-}
-
-void RSNode::UpdateExtendedModifier(const std::weak_ptr<RSModifier>& modifier)
-{
-    if (auto sharedModifier = modifier.lock()) {
-        sharedModifier->UpdateToRender();
     }
 }
 
@@ -934,6 +921,26 @@ std::vector<PropertyId> RSNode::GetModifierIds() const
         ids.push_back(id);
     }
     return ids;
+}
+
+void RSNode::MarkAllExtendModifierDirty()
+{
+    if (extendModifierisDirty_) {
+        return;
+    }
+
+    extendModifierisDirty_ = true;
+    for (auto& [id, modifier] : modifiers_) {
+        if (modifier->GetModifierType() < RSModifierType::CUSTOM) {
+            continue;
+        }
+        modifier->SetDirty(true);
+    }
+}
+
+void RSNode::ResetExtendModifierDirty()
+{
+    extendModifierisDirty_ = false;
 }
 } // namespace Rosen
 } // namespace OHOS

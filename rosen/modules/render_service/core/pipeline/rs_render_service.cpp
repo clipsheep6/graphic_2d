@@ -20,6 +20,7 @@
 #include "vsync_generator.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_uni_render_judgement.h"
+#include "pipeline/rs_hardware_thread.h"
 
 #include <string>
 #include <unistd.h>
@@ -31,6 +32,9 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr uint32_t UNI_RENDER_VSYNC_OFFSET = 10000000;
+}
 RSRenderService::RSRenderService() {}
 
 RSRenderService::~RSRenderService() noexcept {}
@@ -39,16 +43,26 @@ bool RSRenderService::Init()
 {
     RSUniRenderJudgement::InitUniRenderConfig();
     screenManager_ = CreateOrGetScreenManager();
-    if (screenManager_ == nullptr || !screenManager_->Init()) {
-        RS_LOGE("RSRenderService CreateOrGetScreenManager fail.");
-        return false;
+    if (RSUniRenderJudgement::GetUniRenderEnabledType() != UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
+        // screenManager initializtion executes in RSHHardwareThread under UNI_RENDER mode
+        if (screenManager_ == nullptr || !screenManager_->Init()) {
+            RS_LOGE("RSRenderService CreateOrGetScreenManager fail.");
+            return false;
+        }
+    } else {
+        RSHardwareThread::Instance().Start();
     }
 
     auto generator = CreateVSyncGenerator();
 
     // The offset needs to be set
-    rsVSyncController_ = new VSyncController(generator, 0);
-    appVSyncController_ = new VSyncController(generator, 0);
+    int64_t offset = 0;
+    auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
+    if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
+        offset = UNI_RENDER_VSYNC_OFFSET;
+    }
+    rsVSyncController_ = new VSyncController(generator, offset);
+    appVSyncController_ = new VSyncController(generator, offset);
     rsVSyncDistributor_ = new VSyncDistributor(rsVSyncController_, "rs");
     appVSyncDistributor_ = new VSyncDistributor(appVSyncController_, "app");
 
@@ -249,9 +263,16 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
     std::u16string arg8(u"h");
     std::u16string arg9(u"allInfo");
     if (argSets.count(arg9) || argSets.count(arg1) != 0) {
-        mainThread_->ScheduleTask([this, &dumpString]() {
-            screenManager_->DisplayDump(dumpString);
-        }).wait();
+        auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
+        if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
+            RSHardwareThread::Instance().ScheduleTask([this, &dumpString]() {
+                screenManager_->DisplayDump(dumpString);
+            }).wait();
+        } else {
+            mainThread_->ScheduleTask([this, &dumpString]() {
+                screenManager_->DisplayDump(dumpString);
+            }).wait();
+        }
     }
     if (argSets.count(arg9) || argSets.count(arg2) != 0) {
         mainThread_->ScheduleTask([this, &dumpString]() {

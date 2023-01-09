@@ -51,15 +51,7 @@ protected:
         return RSModifierType::INVALID;
     }
 
-    void AttachProperty(const std::shared_ptr<RSPropertyBase>& property)
-    {
-        if (property != nullptr) {
-            property->target_ = property_->target_;
-            property->SetIsCustom(true);
-            property->AttachModifier(shared_from_this());
-            property->UpdateExtendedProperty();
-        }
-    }
+    void AttachProperty(const std::shared_ptr<RSPropertyBase>& property);
 
     void AttachToNode(const std::weak_ptr<RSNode>& target)
     {
@@ -76,21 +68,27 @@ protected:
         property_->SetMotionPathOption(motionPathOption);
     }
 
-    std::shared_ptr<RSRenderPropertyBase> CreateRenderProperty() const
+    std::shared_ptr<RSRenderPropertyBase> GetRenderProperty() const
     {
-        return property_->CreateRenderProperty();
+        return property_->GetRenderProperty();
     }
 
     virtual std::shared_ptr<RSRenderModifier> CreateRenderModifier() const = 0;
 
     virtual void UpdateToRender() {}
 
+    void SetDirty(const bool isDirty);
+
+    void ResetRSNodeExtendModifierDirty();
+
+    bool isDirty_ { false };
     std::shared_ptr<RSPropertyBase> property_;
 
     friend class RSModifierExtractor;
     friend class RSModifierManager;
     friend class RSNode;
     friend class RSPathAnimation;
+    friend class RSPropertyBase;
 };
 } // namespace Rosen
 } // namespace OHOS

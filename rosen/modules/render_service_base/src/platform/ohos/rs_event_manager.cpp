@@ -186,25 +186,22 @@ void RSEventManager::EventReport(const RSSysEventMsg& eventMsg)
     uint64_t currentTimeMs = RSEventTimer::GetSysTimeMs();
     if (currentTimeMs > state.prevEventTimeStampMs&&
     	currentTimeMs - state.prevEventTimeStampMs > static_cast<uint64_t>(state.eventIntervalMs)) {
-            std::string domain = "GRAPHIC";
             if (eventMsg.pid != -1) {
-                OHOS::HiviewDFX::HiSysEvent::Write(
-                    domain,
+                HiSysEventWrite(
+                    OHOS::HiviewDFX::HiSysEvent::Domain::GRAPHIC,
                     eventMsg.stringId,
                     eventMsg.eventType,
                     "PID", eventMsg.pid,
                     "UID", eventMsg.uid,
                     "BUNDLE_NAME", eventMsg.bundleName,
                     "ABILITY_NAME", eventMsg.abilityName,
-                    "MSG", eventMsg.msg
-                );
+                    "MSG", eventMsg.msg);
             } else {
-                OHOS::HiviewDFX::HiSysEvent::Write(
-                    domain,
+                HiSysEventWrite(
+                    OHOS::HiviewDFX::HiSysEvent::Domain::GRAPHIC,
                     eventMsg.stringId,
                     eventMsg.eventType,
-                    "MSG", eventMsg.msg
-                );
+                    "MSG", eventMsg.msg);
             }
             state.prevEventTimeStampMs = currentTimeMs;
             RS_LOGD("RSEventManager::EventReport %s success ", eventMsg.stringId.c_str());

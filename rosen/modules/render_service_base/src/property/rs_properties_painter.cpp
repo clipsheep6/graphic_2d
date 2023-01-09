@@ -44,12 +44,14 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
+bool g_forceBgAntiAlias = true;
 constexpr int PARAM_DOUBLE = 2;
 constexpr float MIN_TRANS_RATIO = 0.0f;
 constexpr float MAX_TRANS_RATIO = 0.95f;
 constexpr float MIN_SPOT_RATIO = 1.0f;
 constexpr float MAX_SPOT_RATIO = 1.95f;
 constexpr float MAX_AMBIENT_RADIUS = 150.0f;
+int g_blurCnt = 0;
 } // namespace
 
 SkRect RSPropertiesPainter::Rect2SkRect(const RectF& r)
@@ -254,9 +256,10 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilt
     }
 }
 
-void RSPropertiesPainter::DrawFilter(const RSProperties& properties, SkCanvas& canvas,
+void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
     std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect, SkSurface* skSurface)
 {
+    g_blurCnt++;
     if (rect != nullptr) {
         canvas.clipRect((*rect), true);
     } else if (properties.GetClipBounds() != nullptr) {
@@ -272,6 +275,8 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, SkCanvas& c
         ROSEN_LOGD("RSPropertiesPainter::DrawFilter skSurface null");
         SkCanvas::SaveLayerRec slr(nullptr, &paint, SkCanvas::kInitWithPrevious_SaveLayerFlag);
         canvas.saveLayer(slr);
+        filter->PostProcess(canvas);
+        canvas.restore();
         return;
     }
     // canvas draw by snapshot instead of SaveLayer, since the blur layer moves while using savelayer
@@ -280,42 +285,70 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, SkCanvas& c
         ROSEN_LOGE("RSPropertiesPainter::DrawFilter image null");
         return;
     }
+
+    auto clipBounds = SkRect::Make(canvas.getDeviceClipBounds());
     canvas.save();
     canvas.resetMatrix();
-    auto clipBounds = SkRect::Make(canvas.getDeviceClipBounds());
-    canvas.drawImageRect(imageSnapshot.get(), clipBounds, clipBounds, &paint);
+    auto visibleRect = canvas.GetVisibleRect();
+    if (visibleRect.intersect(clipBounds)) {
+        canvas.drawImageRect(imageSnapshot.get(), visibleRect, visibleRect, &paint);
+    } else {
+        canvas.drawImageRect(imageSnapshot.get(), clipBounds, clipBounds, &paint);
+    }
     filter->PostProcess(canvas);
     canvas.restore();
+}
+
+int RSPropertiesPainter::GetBlurCnt()
+{
+    return g_blurCnt;
+}
+
+void RSPropertiesPainter::ResetBlurCnt()
+{
+    g_blurCnt = 0;
 }
 
 void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
     DrawShadow(properties, canvas);
+    // only disable antialias when background is rect and g_forceBgAntiAlias is true
+    bool antiAlias = g_forceBgAntiAlias || !properties.GetCornerRadius().IsZero();
     // clip
     if (properties.GetClipBounds() != nullptr) {
-        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
+        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), antiAlias);
     } else if (properties.GetClipToBounds()) {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
+        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
     }
     // paint backgroundColor
     SkPaint paint;
-    paint.setAntiAlias(true);
+    paint.setAntiAlias(antiAlias);
     canvas.save();
     auto bgColor = properties.GetBackgroundColor();
     if (bgColor != RgbPalette::Transparent()) {
         paint.setColor(bgColor.AsArgbInt());
         canvas.drawRRect(RRect2SkRRect(properties.GetRRect()), paint);
     } else if (const auto& bgImage = properties.GetBgImage()) {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
+        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
         auto boundsRect = Rect2SkRect(properties.GetBoundsRect());
         bgImage->SetDstRect(properties.GetBgImageRect());
         bgImage->CanvasDrawImage(canvas, boundsRect, paint, true);
     } else if (const auto& bgShader = properties.GetBackgroundShader()) {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
+        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
         paint.setShader(bgShader->GetSkShader());
         canvas.drawPaint(paint);
     }
     canvas.restore();
+}
+
+void RSPropertiesPainter::SetBgAntiAlias(bool forceBgAntiAlias)
+{
+    g_forceBgAntiAlias = forceBgAntiAlias;
+}
+
+bool RSPropertiesPainter::GetBgAntiAlias()
+{
+    return g_forceBgAntiAlias;
 }
 
 void RSPropertiesPainter::DrawFrame(const RSProperties& properties, RSPaintFilterCanvas& canvas, DrawCmdListPtr& cmds)
@@ -331,7 +364,7 @@ void RSPropertiesPainter::DrawFrame(const RSProperties& properties, RSPaintFilte
     auto frameRect = Rect2SkRect(properties.GetFrameRect());
     // Generate or clear cache on demand
     if (canvas.isCacheEnabled()) {
-        cmds->GenerateCache();
+        cmds->GenerateCache(canvas.GetSurface());
     } else {
         cmds->ClearCache();
     }
@@ -397,7 +430,7 @@ void RSPropertiesPainter::DrawMask(const RSProperties& properties, SkCanvas& can
     if (mask == nullptr) {
         return;
     }
-    if (mask->IsSvgMask() && !mask->GetSvgDom()) {
+    if (mask->IsSvgMask() && !mask->GetSvgDom() && !mask->GetSvgPicture()) {
         ROSEN_LOGD("RSPropertiesPainter::DrawMask not has Svg Mask property");
         return;
     }
@@ -414,7 +447,11 @@ void RSPropertiesPainter::DrawMask(const RSProperties& properties, SkCanvas& can
         SkAutoCanvasRestore maskSave(&canvas, true);
         canvas.translate(maskBounds.fLeft + mask->GetSvgX(), maskBounds.fTop + mask->GetSvgY());
         canvas.scale(mask->GetScaleX(), mask->GetScaleY());
-        mask->GetSvgDom()->render(&canvas);
+        if (mask->GetSvgDom()) {
+            mask->GetSvgDom()->render(&canvas);
+        } else if (mask->GetSvgPicture()) {
+            canvas.drawPicture(mask->GetSvgPicture());
+        }
     } else if (mask->IsGradientMask()) {
         SkAutoCanvasRestore maskSave(&canvas, true);
         canvas.translate(maskBounds.fLeft, maskBounds.fTop);

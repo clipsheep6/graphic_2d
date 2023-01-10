@@ -63,7 +63,7 @@ bool IsFirstFrameReadyToDraw(RSSurfaceRenderNode& node)
 }
 
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined (RS_ENABLE_GL)
-constexpr uint32_t PARALLEL_RENDER_MINIMUN_RENDER_NODE_NUMBER = 50;
+constexpr uint32_t PARALLEL_RENDER_MINIMUM_RENDER_NODE_NUMBER = 50;
 #endif
 
 RSUniRenderVisitor::RSUniRenderVisitor()
@@ -98,7 +98,7 @@ RSUniRenderVisitor::RSUniRenderVisitor(const RSUniRenderVisitor& visitor)
     currentVisitDisplay_ = visitor.currentVisitDisplay_;
     curDisplayDirtyManager_ = visitor.curDisplayDirtyManager_;
     screenInfo_ = visitor.screenInfo_;
-    colorGamutmodes_ = visitor.colorGamutmodes_;
+    colorGamutModes_ = visitor.colorGamutModes_;
     newColorSpace_ = visitor.newColorSpace_;
     displayHasSecSurface_ = visitor.displayHasSecSurface_;
     isOpDropped_ = visitor.isOpDropped_;
@@ -199,8 +199,8 @@ void RSUniRenderVisitor::CheckColorSpace(RSSurfaceRenderNode& node)
         if (surfaceNodeColorSpace != ColorGamut::COLOR_GAMUT_SRGB) {
             ROSEN_LOGD("RSUniRenderVisitor::CheckColorSpace: node (%s) set new colorspace %d",
                 node.GetName().c_str(), surfaceNodeColorSpace);
-            if (std::find(colorGamutmodes_.begin(), colorGamutmodes_.end(),
-                static_cast<ScreenColorGamut>(surfaceNodeColorSpace)) != colorGamutmodes_.end()) {
+            if (std::find(colorGamutModes_.begin(), colorGamutModes_.end(),
+                static_cast<ScreenColorGamut>(surfaceNodeColorSpace)) != colorGamutModes_.end()) {
                 newColorSpace_ = surfaceNodeColorSpace;
             } else {
                 RS_LOGD("RSUniRenderVisitor::CheckColorSpace: colorSpace is not supported on current screen");
@@ -238,7 +238,7 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     }
     screenInfo_ = screenManager->QueryScreenInfo(node.GetScreenId());
     prepareClipRect_.SetAll(0, 0, screenInfo_.width, screenInfo_.height);
-    screenManager->GetScreenSupportedColorGamuts(node.GetScreenId(), colorGamutmodes_);
+    screenManager->GetScreenSupportedColorGamuts(node.GetScreenId(), colorGamutModes_);
     for (auto& child : node.GetSortedChildren()) {
         auto surfaceNodePtr = child->ReinterpretCastTo<RSSurfaceRenderNode>();
         if (!surfaceNodePtr) {
@@ -255,7 +255,7 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     }
     dirtyFlag_ = dirtyFlag_ || node.IsRotationChanged();
     // when display is in rotation state, occlusion relationship will be ruined,
-    // hence partialrender quickreject should be disabled.
+    // hence partial render quick reject should be disabled.
     if(node.IsRotationChanged()) {
         isOpDropped_ = false;
     }
@@ -283,7 +283,7 @@ void RSUniRenderVisitor::ParallelPrepareDisplayRenderNodeChildrens(RSDisplayRend
     isParallel_ = AdaptiveSubRenderThreadMode(node.GetChildrenCount()) &&
         parallelRenderManager->GetParallelMode();
     isDirtyRegionAlignedEnable_ = parallelRenderManager->GetParallelModeSafe();
-    // we will open prepare parallel after checjing all properties.
+    // we will open prepare parallel after checking all properties.
     if (isParallel_ &&
         RSSystemProperties::GetPrepareParallelRenderingEnabled() != ParallelRenderingType::DISABLE) {
         parallelRenderManager->CopyPrepareVisitorAndPackTask(*this, node);
@@ -575,7 +575,7 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
         // filterRects_ is used in RSUniRenderVisitor::CalcDirtyRegionForFilterNode
         // When oldDirtyRect of node with filter has intersect with any surfaceNode or displayNode dirtyRegion,
         // the whole oldDirtyRect should be render in this vsync.
-        // Partical rendering of node with filter would cause display problem.
+        // Partial rendering of node with filter would cause display problem.
         filterRects_[curSurfaceNode_->GetId()].push_back(node.GetOldDirtyInSurface());
     }
     curAlpha_ = alpha;
@@ -852,7 +852,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 #endif
         RSPropertiesPainter::SetBgAntiAlias(true);
         if (!isParallel_) {
-            int saveCount = canvas_->save();
+            SkAutoCanvasRestore acr(canvas_.get(), true);
             canvas_->SetHighContrast(renderEngine_->IsHighContrastEnabled());
             auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
             if (geoPtr != nullptr) {
@@ -863,15 +863,12 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             canvas_->SetCacheEnabled(canvas_->isCacheEnabled() ||
                 node.GetCurAllSurfaces().size() > USE_CACHE_SURFACE_NUM);
             if (canvas_->isCacheEnabled()) {
-                // we are doing rotation animation, try offscreen render if capable
-                PrepareOffscreenRender(node);
-                ProcessBaseRenderNode(node);
-                FinishOffscreenRender();
-            } else {
-                // render directly
-                ProcessBaseRenderNode(node);
+                // trigger offscreen render if needed
+                auto rect = SkRect::MakeWH(
+                    node.GetRenderProperties().GetFrameWidth(), node.GetRenderProperties().GetFrameHeight());
+                canvas_->saveLayer(rect, nullptr);
             }
-            canvas_->restoreToCount(saveCount);
+            ProcessBaseRenderNode(node);
         }
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
         if (isParallel_ && ((rects.size() > 0) || !isPartialRenderEnabled_)) {
@@ -1127,7 +1124,7 @@ void RSUniRenderVisitor::SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDi
     if (!isDirtyRegionAlignedEnable_) {
         return;
     }
-    // calcultae extra dirty region after 32 bits alignedment
+    // calculate extra dirty region after 32 bits alignment
     Occlusion::Region dirtyRegion = alignedDirtyRegion;
     auto globalRectI = node->GetDirtyManager()->GetDirtyRegion();
     Occlusion::Rect globalRect {globalRectI.left_, globalRectI.top_, globalRectI.GetRight(), globalRectI.GetBottom()};
@@ -1388,7 +1385,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (node.IsAppWindow()) {
         canvas_->SetVisibleRect(SkRect::MakeLTRB(0, 0, 0, 0));
 
-        // count processed canvasnodes number
+        // count processed canvas nodes
         RS_TRACE_NAME("ProcessedNodes: " + std::to_string(processedCanvasNodeInCurrentSurface_));
         processedCanvasNodeInCurrentSurface_ = 0; // reset
     }
@@ -1413,18 +1410,18 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     }
 
     ColorFilterMode colorFilterMode = renderEngine_->GetColorFilterMode();
-    int saveCount;
+    auto rect = SkRect::MakeWH(node.GetRenderProperties().GetFrameWidth(), node.GetRenderProperties().GetFrameHeight());
+    SkAutoCanvasRestore acr(canvas_.get(), false);
     if (colorFilterMode >= ColorFilterMode::INVERT_COLOR_ENABLE_MODE &&
         colorFilterMode <= ColorFilterMode::INVERT_DALTONIZATION_TRITANOMALY_MODE) {
         RS_LOGD("RsDebug RSBaseRenderEngine::SetColorFilterModeToPaint mode:%d", static_cast<int32_t>(colorFilterMode));
         SkPaint paint;
         RSBaseRenderUtil::SetColorFilterModeToPaint(colorFilterMode, paint);
-        saveCount = canvas_->saveLayer(nullptr, &paint);
+        canvas_->saveLayer(rect, &paint);
     } else {
-        saveCount = canvas_->save();
+        canvas_->saveLayer(rect, nullptr);
     }
     ProcessCanvasRenderNode(node);
-    canvas_->restoreToCount(saveCount);
 }
 
 void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
@@ -1465,59 +1462,10 @@ void RSUniRenderVisitor::RecordAppWindowNodeAndPostTask(RSSurfaceRenderNode& nod
     RSColdStartManager::Instance().PostPlayBackTask(node.GetId(), canvas.GetDrawCmdList(), width, height);
 }
 
-void RSUniRenderVisitor::PrepareOffscreenRender(RSRenderNode& node)
-{
-    // cleanup
-    canvasBackup_ = nullptr;
-    offscreenSurface_ = nullptr;
-    // check offscreen size and hardware renderer
-    int32_t offscreenWidth = node.GetRenderProperties().GetFrameWidth();
-    int32_t offscreenHeight = node.GetRenderProperties().GetFrameHeight();
-    if (offscreenWidth <= 0 || offscreenHeight <= 0) {
-        RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, offscreenWidth or offscreenHeight is invalid");
-        return;
-    }
-    if (canvas_->GetSurface() == nullptr) {
-        canvas_->clipRect(SkRect::MakeWH(offscreenWidth, offscreenHeight));
-        RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, current surface is nullptr (software renderer?)");
-        return;
-    }
-    // create offscreen surface and canvas
-    auto offscreenInfo = SkImageInfo::Make(offscreenWidth, offscreenHeight, kRGBA_8888_SkColorType, kPremul_SkAlphaType,
-        canvas_->GetSurface()->imageInfo().refColorSpace());
-    offscreenSurface_ = canvas_->GetSurface()->makeSurface(offscreenInfo);
-    if (offscreenSurface_ == nullptr) {
-        RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, offscreenSurface is nullptr");
-        canvas_->clipRect(SkRect::MakeWH(offscreenWidth, offscreenHeight));
-        return;
-    }
-    auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface_.get());
-    // backup current canvas and replace with offscreen canvas
-    canvasBackup_ = std::move(canvas_);
-    canvas_ = std::move(offscreenCanvas);
-}
-
-void RSUniRenderVisitor::FinishOffscreenRender()
-{
-    if (canvasBackup_ == nullptr) {
-        RS_LOGD("RSUniRenderVisitor::FinishOffscreenRender, canvasBackup_ is nullptr");
-        return;
-    }
-    // flush offscreen canvas, maybe unnecessary
-    canvas_->flush();
-    // draw offscreen surface to current canvas
-    SkPaint paint;
-    paint.setAntiAlias(true);
-    canvasBackup_->drawImage(offscreenSurface_->makeImageSnapshot(), 0, 0, &paint);
-    // restore current canvas and cleanup
-    offscreenSurface_ = nullptr;
-    canvas_ = std::move(canvasBackup_);
-}
-
 bool RSUniRenderVisitor::AdaptiveSubRenderThreadMode(uint32_t renderNodeNum)
 {
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
-    bool isParallel = (renderNodeNum >= PARALLEL_RENDER_MINIMUN_RENDER_NODE_NUMBER) &&
+    bool isParallel = (renderNodeNum >= PARALLEL_RENDER_MINIMUM_RENDER_NODE_NUMBER) &&
         (RSSystemProperties::GetParallelRenderingEnabled() != ParallelRenderingType::DISABLE);
     if (!isParallel) {
         return isParallel;

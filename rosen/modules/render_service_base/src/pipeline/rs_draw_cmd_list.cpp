@@ -71,7 +71,7 @@ static std::unordered_map<RSOpType, OpUnmarshallingFunc> opUnmarshallingFuncLUT 
     { RESTORE_ALPHA_OPITEM,        RestoreAlphaOpItem::Unmarshalling },
 };
 
-static OpUnmarshallingFunc GetOpUnmarshallingFunc(RSOpType type)
+OpUnmarshallingFunc DrawCmdList::GetOpUnmarshallingFunc(RSOpType type)
 {
     auto it = opUnmarshallingFuncLUT.find(type);
     if (it == opUnmarshallingFuncLUT.end()) {
@@ -129,7 +129,7 @@ void DrawCmdList::Playback(RSPaintFilterCanvas& canvas, const SkRect* rect) cons
 #endif
 }
 
-int DrawCmdList::GetSize() const
+size_t DrawCmdList::GetSize() const
 {
     return ops_.size();
 }
@@ -150,25 +150,12 @@ bool DrawCmdList::Marshalling(Parcel& parcel) const
     std::lock_guard<std::mutex> lock(mutex_);
     bool success = RSMarshallingHelper::Marshalling(parcel, width_) &&
                    RSMarshallingHelper::Marshalling(parcel, height_) &&
-                   RSMarshallingHelper::Marshalling(parcel, GetSize());
+                   RSMarshallingHelper::Marshalling(parcel, ops_) &&
+                   RSMarshallingHelper::Marshalling(parcel, isCached_) &&
+                   RSMarshallingHelper::Marshalling(parcel, opReplacedByCache_);
     if (!success) {
         ROSEN_LOGE("DrawCmdList::Marshalling failed!");
         return false;
-    }
-    for (const auto& item : ops_) {
-        auto type = item->GetType();
-        success = success && RSMarshallingHelper::Marshalling(parcel, type);
-        auto func = GetOpUnmarshallingFunc(type);
-        if (!func) {
-            ROSEN_LOGW("unirender: opItem Unmarshalling func not define, skip Marshalling, optype = %d", type);
-            continue;
-        }
-
-        success = success && item->Marshalling(parcel);
-        if (!success) {
-            ROSEN_LOGE("unirender: failed opItem Marshalling, optype = %d", type);
-            return success;
-        }
     }
     return success;
 }
@@ -177,39 +164,23 @@ DrawCmdList* DrawCmdList::Unmarshalling(Parcel& parcel)
 {
     int width;
     int height;
-    int size;
     if (!(RSMarshallingHelper::Unmarshalling(parcel, width) &&
-            RSMarshallingHelper::Unmarshalling(parcel, height) &&
-            RSMarshallingHelper::Unmarshalling(parcel, size))) {
-        ROSEN_LOGE("DrawCmdList::Unmarshalling failed!");
+            RSMarshallingHelper::Unmarshalling(parcel, height))) {
+        ROSEN_LOGE("DrawCmdList::Unmarshalling width&height failed!");
         return nullptr;
     }
-    std::unique_ptr<DrawCmdList> drawCmdList = std::make_unique<DrawCmdList>(width, height);
-    for (int i = 0; i < size; ++i) {
-        RSOpType type;
-        if (!RSMarshallingHelper::Unmarshalling(parcel, type)) {
-            ROSEN_LOGE("DrawCmdList::Unmarshalling failed, current processing:%d", i);
-            return nullptr;
-        }
-        auto func = GetOpUnmarshallingFunc(type);
-        if (!func) {
-            ROSEN_LOGW("unirender: opItem Unmarshalling func not define, optype = %d", type);
-            continue;
-        }
-
-        OpItem* item = (*func)(parcel);
-        if (!item) {
-            ROSEN_LOGE("unirender: failed opItem Unmarshalling, optype = %d", type);
-            return nullptr;
-        }
-
-        drawCmdList->AddOp(std::unique_ptr<OpItem>(item));
+    auto drawCmdList = std::make_unique<DrawCmdList>(width, height);
+    if (!(RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->ops_) &&
+            RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->isCached_) &&
+            RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->opReplacedByCache_))) {
+        ROSEN_LOGE("DrawCmdList::Unmarshalling contents failed!");
+        return nullptr;
     }
     return drawCmdList.release();
 }
 #endif
 
-void DrawCmdList::GenerateCache(SkSurface* surface)
+void DrawCmdList::GenerateCache(const RSPaintFilterCanvas* canvas)
 {
 #ifdef ROSEN_OHOS
     if (isCached_) {
@@ -221,9 +192,9 @@ void DrawCmdList::GenerateCache(SkSurface* surface)
 
     for (auto index = 0u; index < ops_.size(); index++) {
         auto& op = ops_[index];
-        if (auto cached_op = op->GenerateCachedOpItem(surface)) {
+        if (auto cached_op = op->GenerateCachedOpItem(canvas)) {
             // backup the original op and position
-            opReplacedByCache_.emplace(index, op.release());
+            opReplacedByCache_.emplace_back(index, op.release());
             // replace the original op with the cached op
             op.reset(cached_op.release());
         }

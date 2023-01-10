@@ -82,7 +82,7 @@ private:
     std::vector<RectI> GetDirtyRects(const Occlusion::Region &region);
     /* calculate display/global (between windows) level dirty region, current include:
      * 1. window move/add/remove 2. transparent dirty region
-     * when process canvas culling, canvas intersect with surface's visibledirty region or
+     * when process canvas culling, canvas intersect with surface's visible dirty region or
      * global dirty region will be skipped
      */
     void CalcDirtyDisplayRegion(std::shared_ptr<RSDisplayRenderNode>& node) const;
@@ -109,13 +109,8 @@ private:
     bool CheckIfRenderNodeNeedFilter(RSBaseRenderNode& node);
 
     void RecordAppWindowNodeAndPostTask(RSSurfaceRenderNode& node, float width, float height);
-    // offscreen render related
-    void PrepareOffscreenRender(RSRenderNode& node);
-    void FinishOffscreenRender();
     void ParallelPrepareDisplayRenderNodeChildrens(RSDisplayRenderNode& node);
     bool AdaptiveSubRenderThreadMode(uint32_t renderNodeNum);
-    sk_sp<SkSurface> offscreenSurface_;                 // temporary holds offscreen surface
-    std::shared_ptr<RSPaintFilterCanvas> canvasBackup_; // backup current canvas before offscreen render
 
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;
@@ -153,7 +148,7 @@ private:
     bool needFilter_ = false;
     std::unordered_map<NodeId, std::vector<RectI>> filterRects_;
     ColorGamut newColorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
-    std::vector<ScreenColorGamut> colorGamutmodes_;
+    std::vector<ScreenColorGamut> colorGamutModes_;
     ContainerWindowConfigType containerWindowConfig_;
     pid_t currentFocusedPid_ = -1;
 
@@ -167,7 +162,7 @@ private:
 
     RectI prepareClipRect_{0, 0, 0, 0}; // renderNode clip rect used in Prepare
     
-    // count prepared and processed canvasnode numbers per app
+    // count prepared and processed canvas node numbers per app
     // unirender visitor resets every frame, no overflow risk here
     unsigned int preparedCanvasNodeInCurrentSurface_ = 0;
     unsigned int processedCanvasNodeInCurrentSurface_ = 0;

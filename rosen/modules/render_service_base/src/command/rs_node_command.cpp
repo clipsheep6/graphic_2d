@@ -14,6 +14,7 @@
  */
 
 #include "command/rs_node_command.h"
+#include <memory>
 
 namespace OHOS {
 namespace Rosen {
@@ -33,6 +34,20 @@ void RSNodeCommandHelper::RemoveModifier(RSContext& context, NodeId nodeId, Prop
     auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId);
     if (node) {
         node->RemoveModifier(propertyId);
+    }
+}
+
+void RSNodeCommandHelper::SetExtendedModifierRect(
+    RSContext& context, NodeId nodeId, std::shared_ptr<RectI> rect, PropertyId id)
+{
+    auto& nodeMap = context.GetNodeMap();
+    auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId);
+    if (!node) {
+        return;
+    }
+    auto modifier = node->GetModifier(id);
+    if (auto drawCmdListModifier = std::static_pointer_cast<RSDrawCmdListRenderModifier>(modifier)) {
+        drawCmdListModifier->SetOverlayBounds(rect);
     }
 }
 } // namespace Rosen

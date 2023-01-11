@@ -44,6 +44,7 @@ enum RSNodeCommandType : uint16_t {
     UPDATE_MODIFIER_VECTOR4_COLOR,
     UPDATE_MODIFIER_VECTOR4F,
     UPDATE_MODIFIER_DRAW_CMD_LIST,
+    SET_EXTENDED_MODIFIER_RECT,
 };
 
 class RSNodeCommandHelper {
@@ -65,6 +66,7 @@ public:
             modifier->Update(prop, isDelta);
         }
     }
+    static void SetExtendedModifierRect(RSContext& context, NodeId nodeId, std::shared_ptr<RectI> rect, PropertyId id);
 };
 
 ADD_COMMAND(RSAddModifier,
@@ -123,6 +125,9 @@ ADD_COMMAND(RSUpdatePropertyVector4f,
 ADD_COMMAND(RSUpdatePropertyDrawCmdList,
     ARG(RS_NODE, UPDATE_MODIFIER_DRAW_CMD_LIST, RSNodeCommandHelper::UpdateModifier<DrawCmdListPtr>,
         NodeId, DrawCmdListPtr, PropertyId, bool))
+ADD_COMMAND(RSSetExtendedModifierRect,
+    ARG(RS_NODE, SET_EXTENDED_MODIFIER_RECT, RSNodeCommandHelper::SetExtendedModifierRect,
+        NodeId, std::shared_ptr<RectI>, PropertyId))
 
 } // namespace Rosen
 } // namespace OHOS

@@ -169,6 +169,7 @@ private:
     friend class RSImplicitSpringAnimationParam;
     friend class RSImplicitTransitionParam;
     friend class RSModifier;
+    friend class RSOverlayStyleModifier;
     friend class RSPropertyAnimation;
     friend class RSPathAnimation;
     friend class RSKeyframeAnimation;

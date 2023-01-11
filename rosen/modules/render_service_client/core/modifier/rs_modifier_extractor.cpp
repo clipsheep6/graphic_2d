@@ -283,6 +283,12 @@ std::string RSModifierExtractor::Dump() const
     if (!GetVisible()) {
         dumpInfo.append(", IsVisible[false]");
     }
+    if (GetClipBounds()) {
+        dumpInfo.append(", GetClipBounds[true]");
+    }
+    if (GetClipToFrame()) {
+        dumpInfo.append(", GetClipToFrame[true]");
+    }
     return dumpInfo;
 }
 } // namespace Rosen

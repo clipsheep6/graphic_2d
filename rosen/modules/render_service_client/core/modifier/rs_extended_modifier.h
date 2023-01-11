@@ -155,9 +155,30 @@ public:
         return RSModifierType::OVERLAY_STYLE;
     }
 
-    void SetOverlayBounds(std::shared_ptr<RectI> rect)
+    void SetOverlayBounds(std::shared_ptr<RectI> rect) const
     {
+        if (!overlayRect_ && !rect) {
+            return;
+        }
+        if (overlayRect_ && rect && (*overlayRect_ == *rect)) {
+            return;
+        }
         overlayRect_ = rect;
+        auto node = property_->target_.lock();
+        if (node == nullptr) {
+            return;
+        }
+        std::unique_ptr<RSCommand> command = std::make_unique<RSSetExtendedModifierRect>(
+            node->GetId(), rect, property_->id_);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(command, node->IsRenderServiceNode());
+            if (node->NeedForcedSendToRemote()) {
+                std::unique_ptr<RSCommand> commandForRemote = std::make_unique<RSSetExtendedModifierRect>(
+                    node->GetId(), rect, property_->id_);
+                transactionProxy->AddCommand(commandForRemote, true, node->GetFollowType(), node->GetId());
+            }
+        }
     }
 
     std::shared_ptr<RectI> GetOverlayBounds() const
@@ -176,7 +197,7 @@ public:
     }
 
 private:
-    std::shared_ptr<RectI> overlayRect_ = nullptr;
+    mutable std::shared_ptr<RectI> overlayRect_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

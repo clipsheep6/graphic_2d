@@ -238,6 +238,7 @@ private:
     friend class RSAnimatableProperty;
     friend class RSPathAnimation;
     friend class RSExtendedModifier;
+    friend class RSOverlayStyleModifier;
     friend class RSTransition;
     friend class RSUIDirector;
     friend class RSImplicitAnimator;

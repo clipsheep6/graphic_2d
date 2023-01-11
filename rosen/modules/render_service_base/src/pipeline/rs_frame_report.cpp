@@ -18,7 +18,9 @@
 
 #include "platform/common/rs_log.h"
 
+#ifdef ROSEN_OHOS
 #include <dlfcn.h>
+#endif
 #include <cstdio>
 #include <unistd.h>
 
@@ -57,9 +59,13 @@ void RsFrameReport::Init()
 bool RsFrameReport::LoadLibrary()
 {
     if (!frameSchedSoLoaded_) {
+#ifdef ROSEN_OHOS
         frameSchedHandle_ = dlopen(FRAME_AWARE_SO_PATH.c_str(), RTLD_LAZY);
+#endif
         if (frameSchedHandle_ == nullptr) {
+#ifdef ROSEN_OHOS
             ROSEN_LOGE("RsFrameReport:[LoadLibrary]dlopen libframe_ui_intf.so failed! error = %s\n", dlerror());
+#endif
             return false;
         }
         frameSchedSoLoaded_ = true;
@@ -69,10 +75,12 @@ bool RsFrameReport::LoadLibrary()
 
 void RsFrameReport::CloseLibrary()
 {
+#ifdef ROSEN_OHOS
     if (dlclose(frameSchedHandle_) != 0) {
         ROSEN_LOGE("RsFrameReport:[CloseLibrary]libframe_ui_intf.so failed!\n");
         return;
     }
+#endif
     frameSchedHandle_ = nullptr;
     frameSchedSoLoaded_ = false;
     ROSEN_LOGD("RsFrameReport:[CloseLibrary]libframe_ui_intf.so close success!\n");
@@ -85,9 +93,15 @@ void *RsFrameReport::LoadSymbol(const char *symName)
         return nullptr;
     }
 
+#ifdef ROSEN_OHOS
     void *funcSym = dlsym(frameSchedHandle_, symName);
+#else
+    void *funcSym = nullptr;
+#endif
     if (funcSym == nullptr) {
+#ifdef ROSEN_OHOS
         ROSEN_LOGE("RsFrameReport:[loadSymbol]Get %{public}s symbol failed: %{public}s\n", symName, dlerror());
+#endif
         return nullptr;
     }
     return funcSym;

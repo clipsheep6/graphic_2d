@@ -17,6 +17,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_COMMON_RS_MATRIX3_H
 
 #define USE_MATH_DEFINES
+#include <algorithm>
 #include <cmath>
 
 #include "common/rs_macros.h"

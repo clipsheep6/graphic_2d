@@ -22,5 +22,83 @@ bool RSSystemProperties::GetUniRenderEnabled()
 {
     return isUniRenderEnabled_;
 }
+
+DirtyRegionDebugType RSSystemProperties::GetDirtyRegionDebugType()
+{
+    return static_cast<DirtyRegionDebugType>(0);
+}
+
+bool RSSystemProperties::GetDrawTextAsBitmap()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetRenderNodeTraceEnabled()
+{
+    return false;
+}
+
+PartialRenderType RSSystemProperties::GetPartialRenderEnabled()
+{
+    return static_cast<PartialRenderType>(0);
+}
+
+PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
+{
+    return static_cast<PartialRenderType>(0);
+}
+
+ContainerWindowConfigType RSSystemProperties::GetContainerWindowConfig()
+{
+    return static_cast<ContainerWindowConfigType>(0);
+}
+bool RSSystemProperties::GetOcclusionEnabled()
+{
+    return false;
+}
+
+std::string RSSystemProperties::GetRSEventProperty(const std::string& paraName)
+{
+    return {};
+}
+
+bool RSSystemProperties::GetDirectClientCompEnableStatus()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetHighContrastStatus()
+{
+    return false;
+}
+
+uint32_t RSSystemProperties::GetCorrectionMode()
+{
+    return 0;
+}
+
+DumpSurfaceType RSSystemProperties::GetDumpSurfaceType()
+{
+    return static_cast<DumpSurfaceType>(0);
+}
+
+uint64_t RSSystemProperties::GetDumpSurfaceId()
+{
+    return 0;
+}
+
+bool RSSystemProperties::GetTargetDirtyRegionDfxEnabled(std::vector<std::string>& dfxTargetSurfaceNames_)
+{
+    return false;
+}
+bool RSSystemProperties::GetDumpLayersEnabled()
+{
+    return false;
+}
+
+void RSSystemProperties::SetDrawTextAsBitmap(bool flag)
+{
+    return;
+}
 } // namespace Rosen
 } // namespace OHOS

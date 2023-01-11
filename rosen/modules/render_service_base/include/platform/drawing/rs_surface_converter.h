@@ -16,8 +16,9 @@
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_CONVERTER_H
 
 #include "platform/drawing/rs_surface.h"
+#ifdef ROSEN_OHOS
 #include "surface.h"
-
+#endif
 namespace OHOS {
 namespace Rosen {
 

@@ -16,6 +16,7 @@
 #ifndef ROSEN_RENDER_SERVICE_BASE_RS_OCCLUSION_DATA_H
 #define ROSEN_RENDER_SERVICE_BASE_RS_OCCLUSION_DATA_H
 
+#include <cstdint>
 #include <vector>
 #ifdef ROSEN_OHOS
 #include <parcel.h>

@@ -15,13 +15,15 @@
 
 #include "property/rs_property_trace.h"
 
+#include <climits>
 #include <cstdarg>
 #include <fstream>
 #include <regex>
 #include <securec.h>
 #include <sys/time.h>
 
-#include "rs_trace.h"
+#include "platform/common/rs_trace.h"
+#include "platform/common/rs_utils.h"
 
 namespace OHOS {
 namespace Rosen {

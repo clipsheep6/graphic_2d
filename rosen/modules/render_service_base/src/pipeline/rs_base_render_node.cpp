@@ -362,6 +362,10 @@ void RSBaseRenderNode::SetClean()
 void RSBaseRenderNode::CollectSurface(
     const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender)
 {
+    if (node == nullptr) {
+        RS_LOGW("RSBaseRenderNode::CollectSurface node is nullptr");
+        return;
+    }
     for (auto& child : node->GetSortedChildren()) {
         child->CollectSurface(child, vec, isUniRender);
     }

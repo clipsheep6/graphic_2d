@@ -24,7 +24,9 @@
 
 namespace OHOS {
 namespace Rosen {
+#ifdef ROSEN_OHOS
 class RenderContext;
+#endif
 class RSSurfaceFrame {
 public:
     RSSurfaceFrame() = default;
@@ -35,7 +37,9 @@ public:
     virtual int32_t GetBufferAge() const = 0;
     virtual SkCanvas* GetCanvas() = 0;
     virtual sk_sp<SkSurface> GetSurface() = 0;
+#ifdef ROSEN_OHOS
     virtual void SetRenderContext(RenderContext* context) = 0;
+#endif
 protected:
     sk_sp<SkSurface> skSurface_ = nullptr;
 private:

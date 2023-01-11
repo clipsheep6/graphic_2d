@@ -12,14 +12,17 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("../config.gni")
 
 group("test") {
   testonly = true
 
-  deps = [
-    "fuzztest:fuzztest",
-    "unittest:unittest",
-  ]
+  if (rosen_is_ohos) {
+    deps = [
+      "fuzztest:fuzztest",
+      "unittest:unittest",
+    ]
+  }
 }
 
 ohos_executable("render_service_client") {

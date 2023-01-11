@@ -19,6 +19,7 @@
 #include <memory>
 #include <set>
 
+#include "platform/drawing/rs_surface_frame.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "transaction/rs_transaction_proxy.h"

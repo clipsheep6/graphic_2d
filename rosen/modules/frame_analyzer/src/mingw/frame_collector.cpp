@@ -17,7 +17,10 @@
 
 namespace OHOS {
 namespace Rosen {
-FrameCollector &FrameCollector::GetInstance()
+namespace {
+std::unique_ptr<FrameCollector> instance;
+}
+FrameCollector& FrameCollector::GetInstance()
 {
     if (instance == nullptr) {
         static std::mutex mutex;
@@ -47,6 +50,10 @@ FrameCollector::FrameCollector()
 }
 
 void FrameCollector::SwitchFunction(const char *key, const char *value, void *context)
+{
+}
+
+void FrameCollector::SetRepaintCallback(std::function<void()> repaint)
 {
 }
 } // namespace Rosen

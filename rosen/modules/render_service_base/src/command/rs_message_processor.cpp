@@ -17,7 +17,6 @@
 
 #include "command/rs_command.h"
 #include "platform/common/rs_log.h"
-#include "transaction/rs_transaction_data.h"
 
 namespace OHOS {
 namespace Rosen {

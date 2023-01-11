@@ -27,9 +27,5 @@ void FramePainter::Draw(SkCanvas &canvas)
 {
 }
 
-double FramePainter::SumHeight(const struct FrameInfo &info)
-{
-    return 0;
-}
 } // namespace Rosen
 } // namespace OHOS

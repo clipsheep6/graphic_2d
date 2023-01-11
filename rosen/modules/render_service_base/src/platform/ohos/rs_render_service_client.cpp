@@ -24,6 +24,7 @@
 #include "ipc_callbacks/rs_occlusion_change_callback_stub.h"
 #include "ipc_callbacks/rs_render_mode_change_callback_stub.h"
 #include "platform/common/rs_log.h"
+#include "platform/ohos/vsync_receiver_ohos.h"
 #include "rs_render_service_connect_hub.h"
 #include "rs_surface_ohos.h"
 
@@ -132,6 +133,20 @@ std::shared_ptr<VSyncReceiver> RSRenderServiceClient::CreateVSyncReceiver(
     }
     sptr<IVSyncConnection> conn = renderService->CreateVSyncConnection(name);
     return std::make_shared<VSyncReceiver>(conn, looper, name);
+}
+
+std::shared_ptr<RSVSyncReceiver> RSRenderServiceClient::CreateRSVSyncReceiver(
+    const std::string& name,
+    const std::shared_ptr<RSEventHandler> &looper)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return nullptr;
+    }
+    sptr<IVSyncConnection> conn = renderService->CreateVSyncConnection(name);
+    auto ohosReceiver = std::make_shared<VSyncReceiverOhos>(conn, looper, name);
+    auto rsReceiver = std::static_pointer_cast<RSVSyncReceiver>(ohosReceiver);
+    return rsReceiver;
 }
 
 void RSRenderServiceClient::TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap)

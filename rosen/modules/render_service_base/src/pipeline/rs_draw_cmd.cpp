@@ -15,14 +15,16 @@
 
 #include "pipeline/rs_draw_cmd.h"
 
+#ifdef ROSEN_OHOS
 #include "pixel_map_rosen_utils.h"
-#include "rs_trace.h"
+#endif
 #include "securec.h"
 
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_root_render_node.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
+#include "platform/common/rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -280,6 +282,7 @@ void BitmapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     canvas.drawImageRect(bitmapInfo_, rectSrc_, rectDst_, &paint_);
 }
 
+#ifdef ROSEN_OHOS
 PixelMapOpItem::PixelMapOpItem(
     const std::shared_ptr<Media::PixelMap>& pixelmap, float left, float top, const SkPaint* paint)
     : OpItemWithPaint(sizeof(PixelMapOpItem)), pixelmap_(pixelmap), left_(left), top_(top)
@@ -309,6 +312,7 @@ void PixelMapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     sk_sp<SkImage> skImage = Media::PixelMapRosenUtils::ExtractSkImage(pixelmap_);
     canvas.drawImageRect(skImage, src_, dst_, &paint_);
 }
+#endif
 
 BitmapNineOpItem::BitmapNineOpItem(
     const sk_sp<SkImage> bitmapInfo, const SkIRect& center, const SkRect& rectDst, const SkPaint* paint)
@@ -428,7 +432,7 @@ ImageWithParmOpItem::ImageWithParmOpItem(const sk_sp<SkImage> img, const sk_sp<S
     rsImage_->SetScale(rsimageInfo.scale_);
     paint_ = paint;
 }
-
+#ifdef ROSEN_OHOS
 ImageWithParmOpItem::ImageWithParmOpItem(
     const std::shared_ptr<Media::PixelMap>& pixelmap, const RsImageInfo& rsimageInfo, const SkPaint& paint)
     : OpItemWithPaint(sizeof(ImageWithParmOpItem))
@@ -441,7 +445,7 @@ ImageWithParmOpItem::ImageWithParmOpItem(
     rsImage_->SetScale(rsimageInfo.scale_);
     paint_ = paint;
 }
-
+#endif
 ImageWithParmOpItem::ImageWithParmOpItem(const std::shared_ptr<RSImage>& rsImage, const SkPaint& paint)
     : OpItemWithPaint(sizeof(ImageWithParmOpItem)), rsImage_(rsImage)
 {

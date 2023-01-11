@@ -28,8 +28,9 @@
 #include "include/core/SkRect.h"
 #include "include/core/SkRegion.h"
 #include "include/core/SkTextBlob.h"
+#ifdef ROSEN_OHOS
 #include "pixel_map.h"
-
+#endif
 #include "common/rs_common_def.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "property/rs_properties_def.h"
@@ -163,8 +164,10 @@ class ImageWithParmOpItem : public OpItemWithPaint {
 public:
     ImageWithParmOpItem(
         const sk_sp<SkImage> img, const sk_sp<SkData> data, const RsImageInfo& rsimageInfo, const SkPaint& paint);
+#ifdef ROSEN_OHOS
     ImageWithParmOpItem(
         const std::shared_ptr<Media::PixelMap>& pixelmap, const RsImageInfo& rsimageInfo, const SkPaint& paint);
+#endif
     ImageWithParmOpItem(const std::shared_ptr<RSImage>& rsImage, const SkPaint& paint);
 
     ~ImageWithParmOpItem() override {}
@@ -497,6 +500,7 @@ private:
     sk_sp<SkImage> bitmapInfo_;
 };
 
+#ifdef ROSEN_OHOS
 class PixelMapOpItem : public OpItemWithPaint {
 public:
     PixelMapOpItem(const std::shared_ptr<Media::PixelMap>& pixelmap, float left, float top, const SkPaint* paint);
@@ -541,6 +545,7 @@ private:
     SkRect src_;
     SkRect dst_;
 };
+#endif
 
 class BitmapNineOpItem : public OpItemWithPaint {
 public:

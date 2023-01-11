@@ -15,6 +15,8 @@
 
 #include "animation/rs_animation_timing_curve.h"
 
+#include <memory>
+
 #include "animation/rs_cubic_bezier_interpolator.h"
 #include "animation/rs_interpolator.h"
 #include "animation/rs_spring_interpolator.h"

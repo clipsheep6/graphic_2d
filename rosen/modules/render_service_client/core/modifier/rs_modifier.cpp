@@ -18,6 +18,7 @@
 
 #include "modifier/rs_modifier_manager.h"
 #include "modifier/rs_modifier_manager_map.h"
+#include "platform/common/rs_utils.h"
 
 namespace OHOS {
 namespace Rosen {

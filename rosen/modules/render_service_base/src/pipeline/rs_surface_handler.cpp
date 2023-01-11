@@ -17,11 +17,12 @@
 
 namespace OHOS {
 namespace Rosen {
+#ifdef ROSEN_OHOS
 void RSSurfaceHandler::SetConsumer(const sptr<Surface>& consumer)
 {
     consumer_ = consumer;
 }
-
+#endif
 void RSSurfaceHandler::IncreaseAvailableBuffer()
 {
     bufferAvailableCount_++;

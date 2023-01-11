@@ -15,12 +15,15 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_BASE_RENDER_NODE_H
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_BASE_RENDER_NODE_H
 
+#include <atomic>
 #include <list>
 #include <memory>
+#include <vector>
 
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
 #include "common/rs_rect.h"
+
 namespace OHOS {
 namespace Rosen {
 class RSContext;

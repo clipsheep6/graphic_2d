@@ -14,8 +14,9 @@
  */
 #ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_PROXY_NODE_H
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_PROXY_NODE_H
-
+#ifdef ROSEN_OHOS
 #include <parcel.h>
+#endif
 #include <string>
 
 #include "ui/rs_node.h"

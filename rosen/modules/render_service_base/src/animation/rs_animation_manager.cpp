@@ -25,6 +25,7 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_render_node.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_utils.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -58,7 +59,7 @@ void RSAnimationManager::FilterAnimationByPid(pid_t pid)
 {
     ROSEN_LOGI("RSAnimationManager::FilterAnimationByPid removing all animations belong to pid %d", pid);
     // remove all animations belong to given pid (by matching higher 32 bits of animation id)
-    std::__libcpp_erase_if_container(animations_, [pid, this](const auto& pair) -> bool {
+    erase_if_container(animations_, [pid, this](const auto& pair) -> bool {
         if (ExtractPid(pair.first) != pid) {
             return false;
         }
@@ -75,7 +76,7 @@ std::pair<bool, bool> RSAnimationManager::Animate(int64_t time, bool nodeIsOnThe
     bool hasRunningAnimation = false;
     bool needRequestNextVsync = false;
     // iterate and execute all animations, remove finished animations
-    std::__libcpp_erase_if_container(animations_, [this, &hasRunningAnimation, time,
+    erase_if_container(animations_, [this, &hasRunningAnimation, time,
         &needRequestNextVsync, nodeIsOnTheTree](auto& iter) -> bool {
         auto& animation = iter.second;
         if (!nodeIsOnTheTree && animation->GetRepeatCount() == -1) {

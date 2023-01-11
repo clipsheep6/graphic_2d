@@ -15,14 +15,15 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_NODE_H
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_NODE_H
 
+#include <string>
+#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <refbase.h>
-#include <string>
 
 #include "surface.h"
 #include "surface_delegate.h"
 #include "surface_type.h"
-
+#endif
 #include "platform/drawing/rs_surface.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_node.h"
@@ -63,7 +64,6 @@ public:
     void RemoveChild(std::shared_ptr<RSBaseNode> child) override;
     void ClearChildren() override;
 
-    void SetColorSpace(ColorGamut colorSpace);
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
     void SetAbilityBGAlpha(uint8_t alpha);
@@ -71,6 +71,12 @@ public:
 
     bool SetBufferAvailableCallback(BufferAvailableCallback callback);
     void SetAnimationFinished();
+#ifdef ROSEN_OHOS
+    void SetColorSpace(ColorGamut colorSpace);
+    ColorGamut GetColorSpace()
+    {
+        return colorSpace_;
+    }
 
     bool Marshalling(Parcel& parcel) const;
     static SharedPtr Unmarshalling(Parcel& parcel);
@@ -78,12 +84,10 @@ public:
     static RSNode::SharedPtr UnmarshallingAsProxyNode(Parcel& parcel);
 
     sptr<OHOS::Surface> GetSurface() const;
+#endif
+
     FollowType GetFollowType() const override;
 
-    ColorGamut GetColorSpace()
-    {
-        return colorSpace_;
-    }
     std::string GetName() const
     {
         return name_;
@@ -112,13 +116,14 @@ private:
     std::string name_;
     std::mutex mutex_;
     BufferAvailableCallback callback_;
+#ifdef ROSEN_OHOS
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
-    bool isSecurityLayer_ = false;
-    bool isChildOperationDisallowed_ { false };
-
-    uint32_t windowId_;
     sptr<SurfaceDelegate> surfaceDelegate_;
     sptr<SurfaceDelegate::ISurfaceCallback> surfaceCallback_;
+#endif
+    bool isSecurityLayer_ = false;
+    bool isChildOperationDisallowed_ { false };
+    uint32_t windowId_;
 
     friend class RSUIDirector;
     friend class RSAnimation;

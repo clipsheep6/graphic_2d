@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <vector>
+#include <unistd.h>
 
 #include "command/rs_command.h"
 #include "common/rs_macros.h"

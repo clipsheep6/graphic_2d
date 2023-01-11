@@ -13,6 +13,7 @@
 
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
+import("../render_service_base/config.gni")
 import("render_service_client.gni")
 
 config("render_service_client_config") {
@@ -26,6 +27,8 @@ config("render_service_client_config") {
     "//drivers/peripheral/display/interfaces/include",
     "//drivers/peripheral/base",
   ]
+
+  defines = rs_common_define
 }
 
 ohos_source_set("render_service_client_src") {
@@ -111,18 +114,21 @@ ohos_source_set("render_service_client_src") {
     "-fvisibility=hidden",
   ]
 
+  if (!rosen_is_ohos) {
+    cflags += [
+      "-Wno-error",
+      "-Wno-unused-variable",
+      "-Wno-unused-function",
+      "-Wno-unused-private-field",
+    ]
+  }
+
   cflags_cc = [
     "-std=c++17",
     "-fvisibility-inlines-hidden",
   ]
 
-  deps = []
-
-  deps += [
-    "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk:accessibilityconfig",
-    "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
-    "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf:frame_trace_intf",
-  ]
+  deps = [ "../frame_analyzer:libframe_analyzer" ]
 
   if (rss_enabled) {
     deps += [ "//foundation/resourceschedule/resource_schedule_service/ressched/interfaces/innerkits/ressched_client:ressched_client" ]
@@ -136,21 +142,26 @@ ohos_source_set("render_service_client_src") {
     defines += [ "OHOS_RSS_CLIENT" ]
   }
 
-  external_deps = [
-    "eventhandler:libeventhandler",
-    "hisysevent_native:libhisysevent",
-    "hitrace_native:hitrace_meter",
-    "ipc:ipc_core",
-  ]
+  if (rosen_is_ohos) {
+    external_deps = [
+      "eventhandler:libeventhandler",
+      "hisysevent_native:libhisysevent",
+      "hitrace_native:hitrace_meter",
+      "ipc:ipc_core",
+    ]
+
+    deps += [
+      "../../../../../barrierfree/accessibility/interfaces/innerkits/acfwk:accessibilityconfig",
+      "../../../../../resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf:frame_trace_intf",
+    ]
+  }
+
   public_deps =
       [ "$rosen_root/modules/render_service_base:librender_service_base" ]
 }
 
 ohos_shared_library("librender_service_client") {
-  public_deps = [
-    ":render_service_client_src",
-    "//third_party/flutter/build/skia:ace_skia_ohos",
-  ]
+  public_deps = [ ":render_service_client_src" ]
 
   public_configs = [ ":render_service_client_config" ]
 
@@ -160,6 +171,7 @@ ohos_shared_library("librender_service_client") {
 
 group("test") {
   testonly = true
-
-  deps = [ "test:test" ]
+  if (rosen_is_ohos) {
+    deps = [ "test:test" ]
+  }
 }

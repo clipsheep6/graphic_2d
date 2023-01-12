@@ -44,20 +44,13 @@ enum MATERIAL_BLUR_STYLE : int {
     STYLE_BACKGROUND_XLARGE_DARK = 108
 };
 
-enum MATERIAL_BLUR_COLOR_MODE : int {
-    PRESENT = 0,
-    AVERAGE = 1
-};
-
 class RSMaterialFilter : public RSSkiaFilter {
 public:
-    RSMaterialFilter(int style, float dipScale, MATERIAL_BLUR_COLOR_MODE = PRESENT);
+    RSMaterialFilter(int style, float dipScale, BLUR_COLOR_MODE = PRESENT);
     ~RSMaterialFilter() override;
     void PreProcess(RSPaintFilterCanvas& canvas) override;
     void PostProcess(RSPaintFilterCanvas& canvas) override;
 
-    int GetStyle() const;
-    float GetDipScale() const;
     std::shared_ptr<RSFilter> Add(const std::shared_ptr<RSFilter>& rhs) override;
     std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs) override;
     std::shared_ptr<RSFilter> Multiply(float rhs) override;
@@ -65,12 +58,14 @@ public:
 private:
     float dipScale_;
     MATERIAL_BLUR_STYLE style_;
-    MATERIAL_BLUR_COLOR_MODE colorMode_;
+    BLUR_COLOR_MODE colorMode_;
     SkColor maskColor_;
 
     sk_sp<SkImageFilter> CreateMaterialStyle(MATERIAL_BLUR_STYLE style, float dipScale);
     sk_sp<SkImageFilter> CreateMaterialFilter(float radius, float sat, SkColor maskColor);
     static float RadiusVp2Sigma(float radiusVp, float dipScale);
+
+    friend class RSMarshallingHelper;
 };
 } // namespace Rosen
 } // namespace OHOS

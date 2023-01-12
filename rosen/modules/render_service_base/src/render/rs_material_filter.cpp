@@ -52,7 +52,7 @@ std::unordered_map<MATERIAL_BLUR_STYLE, MaterialParam> materialParams_ {
 };
 } // namespace
 
-RSMaterialFilter::RSMaterialFilter(int style, float dipScale, MATERIAL_BLUR_COLOR_MODE mode)
+RSMaterialFilter::RSMaterialFilter(int style, float dipScale, BLUR_COLOR_MODE mode)
     : RSSkiaFilter(RSMaterialFilter::CreateMaterialStyle(static_cast<MATERIAL_BLUR_STYLE>(style), dipScale)),
       dipScale_(dipScale), style_(static_cast<MATERIAL_BLUR_STYLE>(style)), colorMode_(mode)
 {
@@ -60,16 +60,6 @@ RSMaterialFilter::RSMaterialFilter(int style, float dipScale, MATERIAL_BLUR_COLO
 }
 
 RSMaterialFilter::~RSMaterialFilter() = default;
-
-int RSMaterialFilter::GetStyle() const
-{
-    return style_;
-}
-
-float RSMaterialFilter::GetDipScale() const
-{
-    return dipScale_;
-}
 
 float RSMaterialFilter::RadiusVp2Sigma(float radiusVp, float dipScale)
 {

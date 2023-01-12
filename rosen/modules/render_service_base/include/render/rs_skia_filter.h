@@ -33,7 +33,6 @@ public:
 
 protected:
     RSSkiaFilter(sk_sp<SkImageFilter> imagefilter);
-    SkColor maskColor_;
 
 private:
     sk_sp<SkImageFilter> imageFilter_;

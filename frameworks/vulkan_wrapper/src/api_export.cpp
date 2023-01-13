@@ -23,6 +23,13 @@ VKAPI_ATTR VkResult vkCreateInstance(const VkInstanceCreateInfo* pCreateInfo,
 }
 
 __attribute__((visibility("default")))
+VKAPI_ATTR VkResult vkCreateOHOSSurfaceOpenHarmony(VkInstance instance, const VkOHOSSurfaceCreateInfoOpenHarmony* pCreateInfo,
+                                           const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface)
+{
+    return vulkan::driver::CreateOHOSSurfaceOpenHarmony(instance, pCreateInfo, pAllocator, pSurface);
+}
+
+__attribute__((visibility("default")))
 VKAPI_ATTR VkResult vkEnumerateInstanceExtensionProperties(const char* pLayerName,
 uint32_t* pPropertyCount, VkExtensionProperties* pProperties)
 {
@@ -41,7 +48,8 @@ VKAPI_ATTR PFN_vkVoidFunction vkGetDeviceProcAddr(VkDevice device, const char* p
     return vulkan::driver::GetDeviceProcAddr(device, pName);
 }
 
-__attribute__((visibility("default"))) bool IsSupportedVulkan()
+__attribute__((visibility("default")))
+bool IsSupportedVulkan()
 {
     return vulkan::driver::IsSupportedVulkan();
 }

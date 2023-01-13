@@ -1,0 +1,89 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
+
+config("vulkan_shell_config") {
+  visibility = [ ":*" ]
+
+  include_dirs = [ "include" ]
+
+  cflags = [
+    "-Wall",
+    "-Wno-unused-function",
+    "-Wno-unused-variable",
+    "-Wno-missing-braces",
+    "-Wno-unused-private-field",
+    "-Werror",
+    "-g3",
+  ]
+}
+
+config("vulkan_shell_public_config") {
+  include_dirs = [
+    "//foundation/graphic/graphic_2d/frameworks/vulkan_shell/include",
+    "//foundation/graphic/graphic_2d/frameworks/surface/include",
+    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
+    "//foundation/graphic/graphic_2d/interfaces/innerkits/surface",
+    "//foundation/graphic/graphic_2d/frameworks/vulkan_wrapper/include",
+    "//commonlibrary/c_utils/base/include",
+    "//third_party/flutter/skia",
+  ]
+
+  cflags = [ "-Wno-error=deprecated-declarations" ]
+
+  defines = [
+    "VK_USE_PLATFORM_OHOS_KHR",
+    "NDEBUG",
+  ]
+}
+
+ohos_shared_library("vulkan_shell") {
+  sources = [
+    "src/vulkan_application.cpp",
+    "src/vulkan_backbuffer.cpp",
+    "src/vulkan_command_buffer.cpp",
+    "src/vulkan_debug_report.cpp",
+    "src/vulkan_device.cpp",
+    "src/vulkan_handle.cpp",
+    "src/vulkan_image.cpp",
+    "src/vulkan_interface.cpp",
+    "src/vulkan_native_surface.cpp",
+    "src/vulkan_native_surface_ohos.cpp",
+    "src/vulkan_proc_table.cpp",
+    "src/vulkan_provider.cpp",
+    "src/vulkan_surface.cpp",
+    "src/vulkan_swapchain.cpp",
+    "src/vulkan_utilities.cpp",
+    "src/vulkan_window.cpp",
+  ]
+
+  configs = [ ":vulkan_shell_config" ]
+
+  public_configs = [ ":vulkan_shell_public_config" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog_native:libhilog",
+  ]
+
+  public_deps = [
+    "//foundation/graphic/graphic_2d:libsurface",
+    "//foundation/graphic/graphic_2d/frameworks/vulkan_wrapper:vulkan",
+    "//third_party/flutter/build/skia:ace_skia_ohos",
+  ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}

@@ -1,0 +1,10 @@
+diff a/rosen/modules/render_service_base/include/modifier/rs_render_modifier.h b/rosen/modules/render_service_base/include/modifier/rs_render_modifier.h	(rejected hunks)
+@@ -131,7 +132,7 @@ protected:
+ 
+ // declare RenderModifiers like RSBoundsRenderModifier
+ #define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE, DELTA_OP)                        \
+-    class RS##MODIFIER_NAME##RenderModifier : public RSAnimatableRenderModifier {                        \
++    class RS_EXPORT RS##MODIFIER_NAME##RenderModifier : public RSAnimatableRenderModifier {                        \
+     public:                                                                                              \
+         RS##MODIFIER_NAME##RenderModifier(const std::shared_ptr<RSRenderPropertyBase>& property)         \
+             : RSAnimatableRenderModifier(property)                                                       \

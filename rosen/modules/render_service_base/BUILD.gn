@@ -162,6 +162,24 @@ ohos_shared_library("librender_service_base") {
     "src/overdraw/rs_overdraw_controller.cpp",
   ]
 
+  cflags = [
+    "-Wall",
+    "-Wno-pointer-arith",
+    "-Wno-non-virtual-dtor",
+    "-Wno-missing-field-initializers",
+    "-Wno-c++11-narrowing",
+    "-fvisibility=hidden",
+  ]
+
+  cflags_cc = [
+    "-std=c++17",
+    "-fvisibility-inlines-hidden",
+  ]
+
+  if (enable_export_macro) {
+    defines += [ "ENABLE_EXPORT_MACRO" ]
+  }
+
   if (rs_enable_gpu) {
     sources += [ "src/common/rs_shared_context.cpp" ]
   }

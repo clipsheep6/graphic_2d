@@ -1,0 +1,61 @@
+diff a/rosen/modules/render_service_base/BUILD.gn b/rosen/modules/render_service_base/BUILD.gn	(rejected hunks)
+@@ -15,7 +15,6 @@ import("//build/ohos.gni")
+ import("//foundation/graphic/graphic_2d/graphic_config.gni")
+ import(
+     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
+-import("../render_service_client/render_service_client.gni")
+ 
+ config("export_config") {
+   cflags_cc = [ "-std=c++17" ]
+@@ -36,22 +35,6 @@ config("render_service_base_all_deps_config") {
+   include_dirs = [ "include" ]
+ }
+ 
+-ohos_source_set("render_service_base_set") {
+-  cflags = [
+-    "-Wall",
+-    "-Wno-pointer-arith",
+-    "-Wno-non-virtual-dtor",
+-    "-Wno-missing-field-initializers",
+-    "-Wno-c++11-narrowing",
+-    "-fvisibility=hidden",
+-  ]
+-
+-  cflags_cc = [
+-    "-std=c++17",
+-    "-fvisibility-inlines-hidden",
+-  ]
+-}
+-
+ ohos_shared_library("librender_service_base") {
+   public_configs = [ ":export_config" ]
+   all_dependent_configs = [ ":render_service_base_all_deps_config" ]
+@@ -179,6 +162,20 @@ ohos_shared_library("librender_service_base") {
+     "src/overdraw/rs_overdraw_controller.cpp",
+   ]
+ 
++  cflags = [
++    "-Wall",
++    "-Wno-pointer-arith",
++    "-Wno-non-virtual-dtor",
++    "-Wno-missing-field-initializers",
++    "-Wno-c++11-narrowing",
++    "-fvisibility=hidden",
++  ]
++
++  cflags_cc = [
++    "-std=c++17",
++    "-fvisibility-inlines-hidden",
++  ]
++
+   if (enable_export_macro) {
+     defines += [ "ENABLE_EXPORT_MACRO" ]
+   }
+@@ -207,7 +204,6 @@ ohos_shared_library("librender_service_base") {
+   ]
+ 
+   public_deps = [
+-    ":render_service_base_set",
+     "src/platform:platform",
+     "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
+   ]

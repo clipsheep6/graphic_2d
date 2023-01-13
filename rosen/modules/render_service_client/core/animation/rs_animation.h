@@ -16,6 +16,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_ANIMATION_H
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_ANIMATION_H
 
+#include <functional>
 #include <memory>
 #include <unistd.h>
 

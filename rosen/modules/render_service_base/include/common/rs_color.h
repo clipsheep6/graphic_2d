@@ -16,6 +16,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_COMMON_RS_COLOR_H
 #define RENDER_SERVICE_CLIENT_CORE_COMMON_RS_COLOR_H
 
+#include <cstdint>
 #include <sys/types.h>
 
 namespace OHOS {

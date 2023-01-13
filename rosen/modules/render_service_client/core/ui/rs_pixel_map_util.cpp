@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#ifdef ROSEN_OHOS
 #include "ui/rs_pixel_map_util.h"
 
 #include "pixel_map_rosen_utils.h"
@@ -30,3 +30,4 @@ bool RSPixelMapUtil::UploadToGpuIfNeeded(
 }
 } // namespace Rosen
 } // namespace OHOS
+#endif

@@ -10,26 +10,45 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import("//build/ohos.gni")
+import("../../../config.gni")
 
 group("darwin") {
   deps = [ ":rosen_darwin_sources" ]
 }
 
 config("export_config") {
-  include_dirs = []
+  include_dirs = [
+    "../../../../../../interfaces/inner_api/common",
+    "../../../../../../rosen/modules/composer/vsync/include",
+    "../../../../../../rosen/modules/render_service_base/include",
+  ]
+
+  defines = rs_common_define
 }
 
 source_set("rosen_darwin_sources") {
   public_configs = [ ":export_config" ]
 
   sources = [
+    "event_handler_darwin.cpp",
+    "event_runner_darwin.cpp",
+    "rs_irender_client.cpp",
     "rs_log.cpp",
+    "rs_parameters.cpp",
     "rs_system_properties.cpp",
-  ]
-
-  include_dirs = [
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include",
+    "rs_trace.cpp",
+    "rs_utils.cpp",
+    "vsync_receiver_darwin.cpp",
   ]
 
   deps = []
+
+  if (rosen_is_ios) {
+    deps += [ "//third_party/flutter/build/skia:ace_skia_ios" ]
+  }
+
+  if (rosen_is_mac) {
+    deps += [ "//third_party/flutter/build/skia:ace_skia_mac" ]
+  }
 }

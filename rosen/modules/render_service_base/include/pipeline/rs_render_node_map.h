@@ -15,6 +15,7 @@
 #ifndef RENDER_SERVICE_BASE_PIPELINE_RS_RENDER_NODE_MAP_H
 #define RENDER_SERVICE_BASE_PIPELINE_RS_RENDER_NODE_MAP_H
 
+#include <functional>
 #include <mutex>
 #include <unordered_map>
 

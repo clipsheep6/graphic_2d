@@ -18,6 +18,7 @@
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_utils.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -51,7 +52,7 @@ void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
 {
     ROSEN_LOGI("RSRenderNodeMap::FilterNodeByPid removing all nodes belong to pid %d", pid);
     // remove all nodes belong to given pid (by matching higher 32 bits of node id)
-    std::__libcpp_erase_if_container(renderNodeMap_, [pid](const auto& pair) -> bool {
+    erase_if_container(renderNodeMap_, [pid](const auto& pair) -> bool {
         if (ExtractPid(pair.first) != pid) {
             return false;
         }
@@ -64,7 +65,7 @@ void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
         return true;
     });
 
-    std::__libcpp_erase_if_container(surfaceNodeMap_, [pid](const auto& pair) -> bool {
+    erase_if_container(surfaceNodeMap_, [pid](const auto& pair) -> bool {
         return ExtractPid(pair.first) == pid;
     });
 

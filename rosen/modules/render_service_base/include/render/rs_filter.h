@@ -22,11 +22,16 @@
 
 namespace OHOS {
 namespace Rosen {
+enum BLUR_COLOR_MODE : int {
+    PRESENT = 0,
+    AVERAGE = 1
+};
+
 class RS_EXPORT RSFilter : public std::enable_shared_from_this<RSFilter> {
 public:
     virtual ~RSFilter();
     static std::shared_ptr<RSFilter> CreateBlurFilter(float blurRadiusX, float blurRadiusY);
-    static std::shared_ptr<RSFilter> CreateMaterialFilter(int style, float dipScale);
+    static std::shared_ptr<RSFilter> CreateMaterialFilter(int style, float dipScale, BLUR_COLOR_MODE = PRESENT);
 
     enum FilterType {
         NONE = 0,
@@ -41,10 +46,7 @@ public:
     {
         return type_ != FilterType::NONE;
     }
-    bool IsMaterial() const
-    {
-        return type_ == FilterType::MATERIAL;
-    }
+
 protected:
     FilterType type_;
     RSFilter();

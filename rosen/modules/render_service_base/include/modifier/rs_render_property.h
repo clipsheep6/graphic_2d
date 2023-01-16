@@ -58,6 +58,8 @@ protected:
     {
         return nullptr;
     }
+    
+    virtual void Absolute() {}
 
     virtual void SetValue(const std::shared_ptr<RSRenderPropertyBase>& value) {}
 
@@ -123,6 +125,7 @@ private:
     friend class RSValueEstimator;
     friend class RSRenderPathAnimation;
     friend class RSRenderSpringAnimation;
+    friend class RSRenderSpringCurveAnimation;
     friend class RSRenderCurveAnimation;
     friend class RSRenderKeyframeAnimation;
     template<typename T>
@@ -182,6 +185,8 @@ protected:
         return std::make_shared<RSRenderAnimatableProperty<T>>(
             RSRenderProperty<T>::stagingValue_, RSRenderProperty<T>::id_, type_);
     }
+
+    void Absolute() override {}
 
     void SetValue(const std::shared_ptr<RSRenderPropertyBase>& value) override
     {
@@ -270,6 +275,14 @@ template<>
 float RSRenderAnimatableProperty<Quaternion>::ToFloat() const;
 template<>
 float RSRenderAnimatableProperty<Vector2f>::ToFloat() const;
+template<>
+void RSRenderAnimatableProperty<float>::Absolute();
+template<>
+void RSRenderAnimatableProperty<Vector4f>::Absolute();
+template<>
+void RSRenderAnimatableProperty<Quaternion>::Absolute();
+template<>
+void RSRenderAnimatableProperty<Vector2f>::Absolute();
 } // namespace Rosen
 } // namespace OHOS
 

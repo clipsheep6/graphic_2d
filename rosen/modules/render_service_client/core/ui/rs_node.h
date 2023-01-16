@@ -231,6 +231,7 @@ private:
     friend class RSKeyframeAnimation;
     friend class RSPropertyAnimation;
     friend class RSSpringAnimation;
+    friend class RSSpringCurveAnimation;
     friend class RSPropertyBase;
     template<typename T>
     friend class RSProperty;

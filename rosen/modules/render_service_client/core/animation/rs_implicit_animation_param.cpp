@@ -20,6 +20,7 @@
 #include "animation/rs_motion_path_option.h"
 #include "animation/rs_path_animation.h"
 #include "animation/rs_spring_animation.h"
+#include "animation/rs_spring_curve_animation.h"
 #include "animation/rs_transition.h"
 #include "modifier/rs_extended_modifier.h"
 #include "platform/common/rs_log.h"
@@ -136,6 +137,23 @@ std::shared_ptr<RSAnimation> RSImplicitSpringAnimationParam::CreateAnimation(std
     springAnimation->SetIsCustom(property->GetIsCustom());
     ApplyTimingProtocol(springAnimation);
     return springAnimation;
+}
+
+RSImplicitSpringCurveAnimationParam::RSImplicitSpringCurveAnimationParam(
+    const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve)
+    : RSImplicitAnimationParam(timingProtocol), timingCurve_(timingCurve)
+{
+    animationType_ = ImplicitAnimationParamType::SPRING_CURVE;
+}
+
+std::shared_ptr<RSAnimation> RSImplicitSpringCurveAnimationParam::CreateAnimation(std::shared_ptr<RSPropertyBase> property,
+    const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const
+{
+    auto springCurveAnimation = std::make_shared<RSSpringCurveAnimation>(property, startValue, endValue);
+    springCurveAnimation->SetTimingCurve(timingCurve_);
+    springCurveAnimation->SetIsCustom(property->GetIsCustom());
+    ApplyTimingProtocol(springCurveAnimation);
+    return springCurveAnimation;
 }
 
 RSImplicitTransitionParam::RSImplicitTransitionParam(const RSAnimationTimingProtocol& timingProtocol,

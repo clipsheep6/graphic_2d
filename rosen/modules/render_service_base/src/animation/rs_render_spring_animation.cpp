@@ -216,7 +216,7 @@ void RSRenderSpringAnimation::OnInitialize(int64_t time)
     } else {
         // blend finished, estimate duration until the spring system reaches rest
         SetDuration(std::lroundf(EstimateDuration() * SECOND_TO_MILLISECOND));
-        // this will set needInitialize_ to false
+        // this will set needInitializeByTime_ to false
         RSRenderPropertyAnimation::OnInitialize(time);
     }
 }

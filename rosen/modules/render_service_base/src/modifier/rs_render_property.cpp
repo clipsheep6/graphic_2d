@@ -197,6 +197,27 @@ float RSRenderAnimatableProperty<Vector2f>::ToFloat() const
     return RSRenderProperty<Vector2f>::stagingValue_.GetLength();
 }
 
+template<>
+void RSRenderAnimatableProperty<float>::Absolute()
+{
+    stagingValue_ = std::fabs(stagingValue_);
+}
+template<>
+void RSRenderAnimatableProperty<Vector4f>::Absolute()
+{
+    stagingValue_.Absolute();
+}
+template<>
+void RSRenderAnimatableProperty<Quaternion>::Absolute()
+{
+    stagingValue_.Absolute();
+}
+template<>
+void RSRenderAnimatableProperty<Vector2f>::Absolute()
+{
+    stagingValue_.Absolute();
+}
+
 std::shared_ptr<RSRenderPropertyBase> operator+=(
     const std::shared_ptr<RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b)
 {

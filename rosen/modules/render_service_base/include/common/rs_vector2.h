@@ -60,6 +60,7 @@ public:
     T Normalize();
     bool IsInfinite() const;
     bool IsNaN() const;
+    void Absolute();
 };
 
 typedef Vector2<int> UIPoint;
@@ -267,6 +268,13 @@ template<typename T>
 bool Vector2<T>::IsNaN() const
 {
     return IsNan(data_[0]) || IsNan(data_[1]);
+}
+
+template<typename T>
+void Vector2<T>::Absolute()
+{
+    data_[1] = abs(data_[1]);
+    data_[0] = abs(data_[0]);
 }
 } // namespace Rosen
 } // namespace OHOS

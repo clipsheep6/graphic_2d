@@ -155,9 +155,11 @@ protected:
 
     virtual void OnDetach() {}
 
+    virtual void OnInitialize() {}
+
     virtual void OnInitialize(int64_t time)
     {
-        needInitialize_ = false;
+        needInitializeByTime_ = false;
     }
 
     virtual void OnAnimate(float fraction) {}
@@ -178,6 +180,7 @@ private:
     AnimationState state_ { AnimationState::INITIALIZED };
     bool needUpdateStartTime_ { true };
     bool needInitialize_ { true };
+    bool needInitializeByTime_ { true };
     RSRenderNode* target_ { nullptr };
 };
 } // namespace Rosen

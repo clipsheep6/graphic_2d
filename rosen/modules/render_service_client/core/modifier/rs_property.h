@@ -167,12 +167,14 @@ private:
     friend class RSImplicitCurveAnimationParam;
     friend class RSImplicitKeyframeAnimationParam;
     friend class RSImplicitSpringAnimationParam;
+    friend class RSImplicitSpringCurveAnimationParam;
     friend class RSImplicitTransitionParam;
     friend class RSModifier;
     friend class RSPropertyAnimation;
     friend class RSPathAnimation;
     friend class RSKeyframeAnimation;
     friend class RSSpringAnimation;
+    friend class RSSpringCurveAnimation;
     friend class RSTransition;
     template<typename T1>
     friend class RSAnimatableProperty;

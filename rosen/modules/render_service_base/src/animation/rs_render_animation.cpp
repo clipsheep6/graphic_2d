@@ -250,6 +250,10 @@ bool RSRenderAnimation::Animate(int64_t time)
     }
 
     if (needInitialize_) {
+        OnInitialize();
+    }
+
+    if (needInitializeByTime_) {
         // normally this only run once, but in spring animation with blendDuration, it may run multiple times
         OnInitialize(time);
     }

@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Rosen {
-enum class ImplicitAnimationParamType { NONE, CURVE, KEYFRAME, PATH, SPRING, TRANSITION };
+enum class ImplicitAnimationParamType { NONE, CURVE, KEYFRAME, PATH, SPRING, SPRING_CURVE, TRANSITION };
 
 class RSAnimation;
 class RSPropertyBase;
@@ -105,6 +105,19 @@ public:
     RSImplicitSpringAnimationParam(
         const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve);
     virtual ~RSImplicitSpringAnimationParam() = default;
+
+    std::shared_ptr<RSAnimation> CreateAnimation(std::shared_ptr<RSPropertyBase> property,
+        const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const;
+
+private:
+    RSAnimationTimingCurve timingCurve_;
+};
+
+class RSImplicitSpringCurveAnimationParam : public RSImplicitAnimationParam {
+public:
+    RSImplicitSpringCurveAnimationParam(
+        const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve);
+    virtual ~RSImplicitSpringCurveAnimationParam() = default;
 
     std::shared_ptr<RSAnimation> CreateAnimation(std::shared_ptr<RSPropertyBase> property,
         const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const;

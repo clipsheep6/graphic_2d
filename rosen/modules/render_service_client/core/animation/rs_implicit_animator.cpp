@@ -39,6 +39,9 @@ void RSImplicitAnimator::OpenImplicitAnimation(const RSAnimationTimingProtocol& 
         case RSAnimationTimingCurve::CurveType::SPRING:
             BeginImplicitSpringAnimation();
             break;
+        case RSAnimationTimingCurve::CurveType::SPRING_CURVE:
+            BeginImplicitSpringCurveAnimation();
+            break;
         default:
             ROSEN_LOGE("Wrong type of timing curve!");
             return;
@@ -168,7 +171,8 @@ void RSImplicitAnimator::EndImplicitAnimation()
 {
     if (implicitAnimationParams_.empty() ||
         (implicitAnimationParams_.top()->GetType() != ImplicitAnimationParamType::CURVE &&
-            implicitAnimationParams_.top()->GetType() != ImplicitAnimationParamType::SPRING)) {
+            implicitAnimationParams_.top()->GetType() != ImplicitAnimationParamType::SPRING &&
+            implicitAnimationParams_.top()->GetType() != ImplicitAnimationParamType::SPRING_CURVE)) {
         ROSEN_LOGE("Failed to end implicit animation, need to begin implicit animation firstly!");
         return;
     }
@@ -217,6 +221,22 @@ void RSImplicitAnimator::BeginImplicitSpringAnimation()
     }
     auto springParam = std::make_shared<RSImplicitSpringAnimationParam>(protocol, curve);
     PushImplicitParam(springParam);
+}
+
+void RSImplicitAnimator::BeginImplicitSpringCurveAnimation()
+{
+    if (globalImplicitParams_.empty()) {
+        ROSEN_LOGD("Failed to begin implicit transition, need to open implicit transition firstly!");
+        return;
+    }
+
+    [[maybe_unused]] auto& [protocol, curve, unused] = globalImplicitParams_.top();
+    if (curve.type_ != RSAnimationTimingCurve::CurveType::SPRING_CURVE) {
+        ROSEN_LOGD("Wrong type of timing curve!");
+        return;
+    }
+    auto springCurveParam = std::make_shared<RSImplicitSpringCurveAnimationParam>(protocol, curve);
+    PushImplicitParam(springCurveParam);
 }
 
 void RSImplicitAnimator::BeginImplicitTransition(const std::shared_ptr<const RSTransitionEffect>& effect,
@@ -343,6 +363,11 @@ std::shared_ptr<RSAnimation> RSImplicitAnimator::CreateImplicitAnimation(const s
         case ImplicitAnimationParamType::SPRING: {
             auto springImplicitParam = static_cast<RSImplicitSpringAnimationParam*>(params.get());
             animation = springImplicitParam->CreateAnimation(property, startValue, endValue);
+            break;
+        }
+        case ImplicitAnimationParamType::SPRING_CURVE: {
+            auto springCurveImplicitParam = static_cast<RSImplicitSpringCurveAnimationParam*>(params.get());
+            animation = springCurveImplicitParam->CreateAnimation(property, startValue, endValue);
             break;
         }
         case ImplicitAnimationParamType::PATH: {

@@ -125,6 +125,10 @@ void RSSurfaceRenderNode::PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas
 void RSSurfaceRenderNode::CollectSurface(
     const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender)
 {
+    if (node == nullptr) {
+        RS_LOGW("RSSurfaceRenderNode::CollectSurface node is nullptr");
+        return;
+    }
     if (nodeType_ == RSSurfaceNodeType::STARTING_WINDOW_NODE) {
         if (isUniRender) {
             vec.emplace_back(shared_from_this());

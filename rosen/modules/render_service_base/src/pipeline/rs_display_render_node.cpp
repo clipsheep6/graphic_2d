@@ -35,6 +35,10 @@ RSDisplayRenderNode::~RSDisplayRenderNode() = default;
 void RSDisplayRenderNode::CollectSurface(
     const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender)
 {
+    if (node == nullptr) {
+        RS_LOGW("RSDisplayRenderNode::CollectSurface node is nullptr");
+        return;
+    }
     ResetSortedChildren();
     for (auto& child : node->GetSortedChildren()) {
         child->CollectSurface(child, vec, isUniRender);

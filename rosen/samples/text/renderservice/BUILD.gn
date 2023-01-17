@@ -30,6 +30,7 @@ ohos_executable("drawing_text_sample") {
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
 
   external_deps = [

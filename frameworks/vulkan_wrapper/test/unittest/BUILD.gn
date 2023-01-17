@@ -69,6 +69,7 @@ ohos_static_library("vulkan_wrapper_test_common") {
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/window/window_manager/wm:libwm",
     "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/googletest:gtest_main",
     "//third_party/vulkan-headers:vulkan_headers",
     "//third_party/zlib:libz",

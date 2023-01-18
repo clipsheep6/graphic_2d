@@ -83,6 +83,7 @@ struct RSSurfaceRenderNodeConfig {
     NodeId id = 0;
     std::string name = "SurfaceNode";
     RSSurfaceNodeType nodeType = RSSurfaceNodeType::DEFAULT;
+    bool highRefreshFlag = false;
 };
 
 struct RSDisplayNodeConfig {

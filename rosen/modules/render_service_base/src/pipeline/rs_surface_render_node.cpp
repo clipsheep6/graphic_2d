@@ -38,6 +38,7 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config
       RSSurfaceHandler(config.id),
       name_(config.name),
       nodeType_(config.nodeType),
+      isHighRefresh_(config.highRefreshFlag),
       dirtyManager_(std::make_shared<RSDirtyRegionManager>())
 {}
 

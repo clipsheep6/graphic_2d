@@ -735,6 +735,18 @@ void RSMainThread::RequestNextVSync()
 
 void RSMainThread::OnVsync(uint64_t timestamp, void* data)
 {
+    auto now = std::chrono::steady_clock::now().time_since_epoch();
+    auto current = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+    if (current - timestamp > 4000000) {
+        overTimeCnt_++;
+        if (overTimeCnt_ > 5) {
+            RequestNextVSync();
+            overTimeCnt_ = 0;
+            return;
+        }
+    } else {
+        overTimeCnt_ = 0;
+    }
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::OnVsync");
     timestamp_ = timestamp;
     if (isUniRender_) {

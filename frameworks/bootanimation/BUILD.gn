@@ -57,7 +57,7 @@ ohos_executable("bootanimation") {
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/platform:platform",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
@@ -74,7 +74,10 @@ ohos_executable("bootanimation") {
   ]
 
   if (is_standard_system) {
-    external_deps += [ "init:libbegetutil" ]
+    external_deps += [
+      "eventhandler:libeventhandler",
+      "init:libbegetutil",
+    ]
   } else {
     external_deps += [ "startup:syspara" ]
   }

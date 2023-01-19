@@ -144,7 +144,7 @@ public:
     {
         return isHighContrastEnabled_;
     }
-#ifdef RS_ENABLE_GL
+#if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
     static const std::shared_ptr<RenderContext>& GetRenderContext()
     {
         return renderContext_;
@@ -163,7 +163,7 @@ private:
 
     static inline std::atomic_bool isHighContrastEnabled_ = false;
 
-#ifdef RS_ENABLE_GL
+#if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
     static inline std::shared_ptr<RenderContext> renderContext_ = nullptr;
 #endif // RS_ENABLE_GL
 

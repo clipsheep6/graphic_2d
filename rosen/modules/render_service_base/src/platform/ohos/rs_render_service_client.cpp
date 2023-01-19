@@ -17,6 +17,9 @@
 
 #include "backend/rs_surface_ohos_gl.h"
 #include "backend/rs_surface_ohos_raster.h"
+#ifdef RS_ENABLE_VK
+#include "backend/rs_surface_ohos_vulkan.h"
+#endif
 #include "command/rs_command.h"
 #include "ipc_callbacks/screen_change_callback_stub.h"
 #include "ipc_callbacks/surface_capture_callback_stub.h"
@@ -112,7 +115,9 @@ std::shared_ptr<RSSurface> RSRenderServiceClient::CreateNodeAndSurface(const RSS
     }
     sptr<Surface> surface = renderService->CreateNodeAndSurface(config);
 
-#ifdef ACE_ENABLE_GL
+#if defined(ACE_ENABLE_VK)
+    std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosVulkan>(surface);
+#elif defined(ACE_ENABLE_GL)
     // GPU render
     std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosGl>(surface);
 #else

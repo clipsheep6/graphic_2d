@@ -57,7 +57,9 @@ ohos_source_set("rosen_ohos_sources") {
   if (ace_enable_gpu) {
     sources += [
       "backend/rs_surface_frame_ohos_gl.cpp",
+      "backend/rs_surface_frame_ohos_vulkan.cpp",
       "backend/rs_surface_ohos_gl.cpp",
+      "backend/rs_surface_ohos_vulkan.cpp",
     ]
 
     sources += [
@@ -89,10 +91,19 @@ ohos_source_set("rosen_ohos_sources") {
   ]
 
   if (ace_enable_gpu) {
-    include_dirs += [ "//third_party/openssl/include" ]
+    include_dirs += [
+      "//third_party/openssl/include",
+      "//foundation/graphic/graphic_2d/frameworks/vulkan_wrapper/include",
+      "//foundation/graphic/graphic_2d/frameworks/vulkan_shell/include",
+      "//foundation/graphic/graphic_2d/frameworks/surface/include",
+      "//foundation/graphic/graphic_2d/interfaces/innerkits/common",
+      "//foundation/ace/ace_engine/frameworks",
+      "//third_party/flutter/skia",
+    ]
 
     public_deps += [
       "//foundation/graphic/graphic_2d:libgl",
+      "//foundation/graphic/graphic_2d:libvulkan",
       "//third_party/openssl:libcrypto_shared",
     ]
   }

@@ -73,33 +73,35 @@ void RSColdStartThread::Stop()
     if (!isRunning_.load()) {
         return;
     }
-    RS_LOGD("RSColdStartThread::Stop");
-    RS_TRACE_NAME_FMT("RSColdStartThread::Stop");
-    isRunning_.store(false);
-    if (handler_ != nullptr) {
-        handler_->PostSyncTask([this]() {
-            RS_TRACE_NAME_FMT("RSColdStartThread abandonContext"); // abandonContext here to avoid crash
-            RS_LOGD("RSColdStartThread releaseResourcesAndAbandonContext");
-            if (grContext_ != nullptr) {
-                grContext_->releaseResourcesAndAbandonContext();
-            }
-            skSurface_ = nullptr;
+    RSMainThread::Instance()->PostTask([this]() {
+        RS_LOGD("RSColdStartThread::Stop");
+        RS_TRACE_NAME_FMT("RSColdStartThread::Stop");
+        isRunning_.store(false);
+        if (handler_ != nullptr) {
+            handler_->PostSyncTask([this]() {
+                RS_TRACE_NAME_FMT("RSColdStartThread abandonContext"); // abandonContext here to avoid crash
+                RS_LOGD("RSColdStartThread releaseResourcesAndAbandonContext");
+                if (grContext_ != nullptr) {
+                    grContext_->releaseResourcesAndAbandonContext();
+                }
+                skSurface_ = nullptr;
 #ifdef RS_ENABLE_GL
-            context_ = nullptr;
+                context_ = nullptr;
 #endif
-        }, AppExecFwk::EventQueue::Priority::IMMEDIATE);
-    }
-    RS_TRACE_NAME_FMT("RSColdStartThread runner stop");
-    RS_LOGD("RSColdStartThread runner stop");
-    if (runner_ != nullptr) {
-        runner_->Stop();
-    }
-    if (thread_ != nullptr && thread_->joinable()) {
-        thread_->detach();
-    }
-    RSMainThread::Instance()->PostTask([id = surfaceNodeId_]() {
-        RS_LOGD("RSMainThread DestroyColdStartThread id:%" PRIu64 "", id);
-        RSColdStartManager::Instance().DestroyColdStartThread(id);
+            }, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        }
+        RS_TRACE_NAME_FMT("RSColdStartThread runner stop");
+        RS_LOGD("RSColdStartThread runner stop");
+        if (runner_ != nullptr) {
+            runner_->Stop();
+        }
+        if (thread_ != nullptr && thread_->joinable()) {
+            thread_->detach();
+        }
+        RSMainThread::Instance()->PostTask([id = surfaceNodeId_]() {
+            RS_LOGD("RSMainThread DestroyColdStartThread id:%" PRIu64 "", id);
+            RSColdStartManager::Instance().DestroyColdStartThread(id);
+        });
     });
 }
 

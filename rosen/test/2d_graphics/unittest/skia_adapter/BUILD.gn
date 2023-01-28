@@ -43,6 +43,7 @@ ohos_unittest("2d_graphics_skia_canvas_test") {
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/flutter/build/skia:ace_skia_ohos",
   ]
 

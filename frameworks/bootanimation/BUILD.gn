@@ -63,6 +63,7 @@ ohos_executable("bootanimation") {
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//foundation/window/window_manager/dm:libdm",
     "//foundation/window/window_manager/wm:libwm",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/cJSON:cjson_static",
     "//third_party/flutter/build/skia:ace_skia_ohos",
     "//third_party/zlib:libz",

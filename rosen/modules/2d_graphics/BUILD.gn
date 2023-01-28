@@ -105,7 +105,7 @@ template("graphics2d_source_set") {
         "$ace_flutter_engine_root:flutter_engine_fml_$platform",
         "//foundation/graphic/graphic_2d/rosen/build/flutter/icu:rosen_libicu_$platform",
         "//foundation/graphic/graphic_2d/rosen/build/flutter/libtxt:thirdparty_lib_txt_rosen_$platform",
-        "//third_party/bounds_checking_function:libsec_static",
+        "//third_party/bounds_checking_function:libsec_shared",
       ]
       include_dirs += [
         "$flutter_root/engine",

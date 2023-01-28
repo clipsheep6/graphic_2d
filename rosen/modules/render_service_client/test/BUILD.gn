@@ -39,6 +39,7 @@ ohos_executable("render_service_client_rs_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/zlib:libz",
   ]
 
@@ -61,6 +62,7 @@ ohos_executable("render_service_client_app_demo") {
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/window/window_manager/wm:libwm",
     "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/zlib:libz",
   ]
 
@@ -83,6 +85,7 @@ ohos_executable("render_service_client_modifier_demo") {
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/window/window_manager/wm:libwm",
     "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/zlib:libz",
   ]
 
@@ -105,6 +108,7 @@ ohos_executable("render_service_client_transition_demo") {
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/window/window_manager/wm:libwm",
     "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/zlib:libz",
   ]
 
@@ -127,6 +131,7 @@ ohos_executable("render_service_client_gravity_demo") {
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/window/window_manager/wm:libwm",
     "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/zlib:libz",
   ]
 
@@ -149,6 +154,7 @@ ohos_executable("render_service_client_scale_demo") {
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/window/window_manager/wm:libwm",
     "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/zlib:libz",
   ]
 
@@ -171,6 +177,7 @@ ohos_executable("render_service_client_rs_animation_demo") {
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/window/window_manager/wm:libwm",
     "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/zlib:libz",
   ]
 
@@ -189,6 +196,7 @@ ohos_executable("surface_capture_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/zlib:libz",
   ]
 
@@ -267,6 +275,7 @@ ohos_executable("rs_uni_render_pixelmap_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/window/window_manager/wm:libwm",
     "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/zlib:libz",
   ]
 
@@ -292,6 +301,7 @@ ohos_executable("render_service_display_mode_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/zlib:libz",
   ]
 
@@ -319,6 +329,7 @@ ohos_executable("render_service_client_tunnel_handle_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/window/window_manager/wm:libwm",
     "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/zlib:libz",
   ]
 
@@ -345,6 +356,7 @@ ohos_executable("render_service_client_overlay_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/window/window_manager/wm:libwm",
     "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/bounds_checking_function:libsec_shared",
     "//third_party/zlib:libz",
   ]
 

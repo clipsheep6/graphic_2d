@@ -17,12 +17,11 @@
 
 #include <unordered_map>
 
-#include "rs_trace.h"
-
 #include "pipeline/rs_draw_cmd.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
+#include "platform/common/rs_trace.h"
 #include "transaction/rs_marshalling_helper.h"
 
 namespace OHOS {

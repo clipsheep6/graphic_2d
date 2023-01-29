@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#ifdef ROSEN_OHOS
 #include "rs_interfaces.h"
 
 namespace OHOS {
@@ -221,3 +221,4 @@ void RSInterfaces::SetAppWindowNum(uint32_t num)
 }
 } // namespace Rosen
 } // namespace OHOS
+#endif

@@ -22,6 +22,7 @@
 #include "modifier/rs_modifier_manager.h"
 #include "modifier/rs_modifier_manager_map.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_utils.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_node.h"
 #include "sandbox_utils.h"

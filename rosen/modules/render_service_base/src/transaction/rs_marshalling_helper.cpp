@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#ifdef ROSEN_OHOS
 #include "transaction/rs_marshalling_helper.h"
 
 #include <memory>
@@ -58,7 +58,6 @@
 #include "render/rs_shader.h"
 #include "transaction/rs_ashmem_helper.h"
 
-#ifdef ROSEN_OHOS
 namespace OHOS {
 namespace Rosen {
 

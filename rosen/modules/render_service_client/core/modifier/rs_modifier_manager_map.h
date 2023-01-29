@@ -15,6 +15,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_MODIFIER_RS_MODIFIER_MANAGER_MAP_H
 #define RENDER_SERVICE_CLIENT_CORE_MODIFIER_RS_MODIFIER_MANAGER_MAP_H
 
+#include <memory>
 #include <mutex>
 #include <unordered_map>
 

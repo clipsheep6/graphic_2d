@@ -15,14 +15,13 @@
 
 #include "animation/rs_animation_fraction.h"
 
+#include <algorithm>
 #include <cstdlib>
-#include <parameters.h>
-#include <string>
-
-#include "parameter.h"
+#include <cstring>
 
 #include "common/rs_common_def.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_parameters.h"
 
 namespace OHOS {
 namespace Rosen {

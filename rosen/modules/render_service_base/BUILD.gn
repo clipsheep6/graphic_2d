@@ -28,6 +28,23 @@ config("export_config") {
     "//foundation/graphic/graphic_2d/utils/sandbox",
   ]
 
+  if (!rosen_is_ohos) {
+    include_dirs += [
+      "../../../interfaces/inner_api/common",
+      "../../../rosen/modules/composer/vsync/include",
+      "../../../utils/buffer_handle/export",
+      "//third_party/flutter/skia",
+    ]
+
+    cflags = [
+      "-Wno-error",
+      "-Wno-unused-private-field",
+      "-Wno-c++17-extensions",
+      "-Wno-inconsistent-dllimport",
+      "-Wno-unused-variable",
+    ]
+  }
+
   defines = rs_common_define
 }
 
@@ -83,20 +100,6 @@ ohos_source_set("render_service_base_src") {
     #delegate
     "src/delegate/rs_functional_delegate.cpp",
 
-    #ipc_callbacks
-    "src/ipc_callbacks/buffer_available_callback_proxy.cpp",
-    "src/ipc_callbacks/buffer_available_callback_stub.cpp",
-    "src/ipc_callbacks/rs_application_agent_proxy.cpp",
-    "src/ipc_callbacks/rs_application_agent_stub.cpp",
-    "src/ipc_callbacks/rs_occlusion_change_callback_proxy.cpp",
-    "src/ipc_callbacks/rs_occlusion_change_callback_stub.cpp",
-    "src/ipc_callbacks/rs_render_mode_change_callback_proxy.cpp",
-    "src/ipc_callbacks/rs_render_mode_change_callback_stub.cpp",
-    "src/ipc_callbacks/screen_change_callback_proxy.cpp",
-    "src/ipc_callbacks/screen_change_callback_stub.cpp",
-    "src/ipc_callbacks/surface_capture_callback_proxy.cpp",
-    "src/ipc_callbacks/surface_capture_callback_stub.cpp",
-
     #pipeline
     "src/pipeline/rs_base_render_node.cpp",
     "src/pipeline/rs_canvas_render_node.cpp",
@@ -141,14 +144,6 @@ ohos_source_set("render_service_base_src") {
     "src/transaction/rs_transaction_data.cpp",
     "src/transaction/rs_transaction_proxy.cpp",
 
-    #screen_manager
-    "src/screen_manager/rs_screen_capability.cpp",
-    "src/screen_manager/rs_screen_data.cpp",
-    "src/screen_manager/rs_screen_hdr_capability.cpp",
-    "src/screen_manager/rs_screen_mode_info.cpp",
-    "src/screen_manager/rs_screen_props.cpp",
-    "src/screen_manager/rs_virtual_screen_resolution.cpp",
-
     #overdraw
     "src/overdraw/rs_cpu_overdraw_canvas_listener.cpp",
     "src/overdraw/rs_gpu_overdraw_canvas_listener.cpp",
@@ -165,20 +160,23 @@ ohos_source_set("render_service_base_src") {
     "-fvisibility=hidden",
   ]
 
+  if (!rosen_is_ohos) {
+    cflags -= [ "-fvisibility=hidden" ]
+  }
+
   cflags_cc = [
     "-std=c++17",
     "-fvisibility-inlines-hidden",
   ]
 
   public_configs = [ ":export_config" ]
-  public_deps = [ "src/platform:platform" ]
+  public_deps = [
+    "src/platform:platform",
+    "//third_party/bounds_checking_function:libsec_shared",
+  ]
 
   if (enable_export_macro) {
     defines += [ "ENABLE_EXPORT_MACRO" ]
-  }
-
-  if (rs_enable_gpu) {
-    sources += [ "src/common/rs_shared_context.cpp" ]
   }
 
   include_dirs = [
@@ -187,21 +185,25 @@ ohos_source_set("render_service_base_src") {
     "//third_party/flutter/skia/src",
   ]
 
-  deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/graphic/graphic_2d/utils:sandbox_utils",
-  ]
+  deps = [ "../../../utils/sandbox:sandbox_utils" ]
 
-  external_deps = [
-    "hitrace_native:hitrace_meter",
-    "init:libbeget_proxy",
-    "init:libbegetutil",
-    "ipc:ipc_core",
-    "multimedia_image_framework:image_native",
-  ]
+  if (rosen_is_ohos) {
+    external_deps = [
+      "hitrace_native:hitrace_meter",
+      "hiviewdfx_hilog_native:libhilog",
+      "init:libbeget_proxy",
+      "init:libbegetutil",
+      "ipc:ipc_core",
+      "multimedia_image_framework:image_native",
+    ]
+  }
 
   if (rosen_is_win) {
     defines += [ "_USE_MATH_DEFINES" ]
+  }
+
+  if (rosen_is_android) {
+    aosp_deps = [ "shared_library:libnativewindow" ]
   }
 
   if (defined(graphic_2d_ext_configs.vendor_root)) {

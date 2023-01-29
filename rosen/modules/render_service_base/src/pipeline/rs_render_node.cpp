@@ -22,6 +22,7 @@
 #include "pipeline/rs_context.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_utils.h"
 #include "property/rs_property_trace.h"
 #ifdef ROSEN_OHOS
 #include "pipeline/rs_paint_filter_canvas.h"
@@ -332,7 +333,7 @@ std::shared_ptr<RSRenderModifier> RSRenderNode::GetModifier(const PropertyId& id
 void RSRenderNode::FilterModifiersByPid(pid_t pid)
 {
     // remove all modifiers added by given pid (by matching higher 32 bits of node id)
-    std::__libcpp_erase_if_container(
+    erase_if_container(
         modifiers_, [pid](const auto& pair) -> bool { return ExtractPid(pair.first) == pid; });
 
     // remove all modifiers added by given pid (by matching higher 32 bits of node id)

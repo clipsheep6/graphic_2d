@@ -25,7 +25,9 @@
 #include "pipeline/rs_render_thread.h"
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_surface_converter.h"
+#ifdef ROSEN_OHOS
 #include "render_context/render_context.h"
+#endif
 #include "transaction/rs_render_service_client.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_proxy_node.h"
@@ -158,6 +160,7 @@ FollowType RSSurfaceNode::GetFollowType() const
 
 void RSSurfaceNode::OnBoundsSizeChanged() const
 {
+#ifdef ROSEN_OHOS
     auto bounds = GetStagingProperties().GetBounds();
     std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeUpdateSurfaceDefaultSize>(
         GetId(), bounds.z_, bounds.w_);
@@ -165,6 +168,7 @@ void RSSurfaceNode::OnBoundsSizeChanged() const
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, true);
     }
+#endif
 }
 
 void RSSurfaceNode::SetSecurityLayer(bool isSecurityLayer)
@@ -185,6 +189,7 @@ bool RSSurfaceNode::GetSecurityLayer() const
     return isSecurityLayer_;
 }
 
+#ifdef ROSEN_OHOS
 void RSSurfaceNode::SetColorSpace(ColorGamut colorSpace)
 {
     colorSpace_ = colorSpace;
@@ -195,6 +200,7 @@ void RSSurfaceNode::SetColorSpace(ColorGamut colorSpace)
         transactionProxy->AddCommand(command, true);
     }
 }
+#endif
 
 void RSSurfaceNode::SetAbilityBGAlpha(uint8_t alpha)
 {
@@ -227,6 +233,7 @@ bool RSSurfaceNode::SetBufferAvailableCallback(BufferAvailableCallback callback)
     if (renderServiceClient == nullptr) {
         return false;
     }
+#ifdef ROSEN_OHOS
     return renderServiceClient->RegisterBufferAvailableListener(GetId(), [weakThis = weak_from_this()]() {
         auto rsSurfaceNode = RSBaseNode::ReinterpretCast<RSSurfaceNode>(weakThis.lock());
         if (rsSurfaceNode == nullptr) {
@@ -240,6 +247,9 @@ bool RSSurfaceNode::SetBufferAvailableCallback(BufferAvailableCallback callback)
         }
         actualCallback();
     });
+#else
+    return false;
+#endif
 }
 
 void RSSurfaceNode::SetAnimationFinished()
@@ -251,7 +261,7 @@ void RSSurfaceNode::SetAnimationFinished()
         transactionProxy->FlushImplicitTransaction();
     }
 }
-
+#ifdef ROSEN_OHOS
 bool RSSurfaceNode::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteUint64(GetId()) && parcel.WriteString(name_) && parcel.WriteBool(IsRenderServiceNode());
@@ -295,17 +305,23 @@ RSNode::SharedPtr RSSurfaceNode::UnmarshallingAsProxyNode(Parcel& parcel)
     // Create RSProxyNode by unmarshalling RSSurfaceNode, return existing node if it exists in RSNodeMap.
     return RSProxyNode::Create(id, name);
 }
-
+#endif
 bool RSSurfaceNode::CreateNode(const RSSurfaceRenderNodeConfig& config)
 {
+#ifdef ROSEN_OHOS
     return std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
                ->CreateNode(config);
+#else
+    return false;
+#endif
 }
 
 bool RSSurfaceNode::CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config)
 {
+#ifdef ROSEN_OHOS
     surface_ = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
                    ->CreateNodeAndSurface(config);
+#endif
     return (surface_ != nullptr);
 }
 
@@ -398,7 +414,9 @@ RSSurfaceNode::~RSSurfaceNode()
     auto renderServiceClient =
         std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
     if (renderServiceClient != nullptr) {
+#ifdef ROSEN_OHOS
         renderServiceClient->UnregisterBufferAvailableListener(GetId());
+#endif
     }
 
     // For self-drawing surfaceNode, we should destroy the corresponding render node in RenderService

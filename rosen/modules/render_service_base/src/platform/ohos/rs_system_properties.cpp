@@ -16,8 +16,8 @@
 #include "platform/common/rs_system_properties.h"
 
 #include <cstdlib>
-#include <parameters.h>
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_parameters.h"
 #include "transaction/rs_render_service_client.h"
 
 namespace OHOS {

@@ -56,6 +56,7 @@ void SurfaceNodeCommandHelper::SetSecurityLayer(RSContext& context, NodeId id, b
     }
 }
 
+#ifdef ROSEN_OHOS
 void SurfaceNodeCommandHelper::SetColorSpace(RSContext& context, NodeId id, ColorGamut colorSpace)
 {
     if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
@@ -69,6 +70,7 @@ void SurfaceNodeCommandHelper::UpdateSurfaceDefaultSize(RSContext& context, Node
         node->UpdateSurfaceDefaultSize(width, height);
     }
 }
+#endif
 
 void SurfaceNodeCommandHelper::ConnectToNodeInRenderService(RSContext& context, NodeId id)
 {

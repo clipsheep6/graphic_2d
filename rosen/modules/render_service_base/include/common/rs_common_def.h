@@ -18,7 +18,9 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <unistd.h>
 #include <unordered_map>
 
 #include "common/rs_macros.h"
@@ -94,7 +96,8 @@ struct RSDisplayNodeConfig {
 #if defined(M_PI)
 constexpr float PI = M_PI;
 #else
-constexpr float PI = std::atanf(1.0) * 4;
+constexpr float M_PI = 3.14159265358979323846;
+constexpr float PI = M_PI;
 #endif
 
 template<typename T>

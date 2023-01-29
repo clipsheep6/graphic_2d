@@ -20,11 +20,8 @@
 
 #include "platform/common/rs_log.h"
 #include "render/rs_filter.h"
-#ifdef ROSEN_OHOS
 #include "common/rs_obj_abs_geometry.h"
-#else
 #include "common/rs_obj_geometry.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {

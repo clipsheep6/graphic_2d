@@ -75,21 +75,29 @@ void RSParallelPackVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node)
 void RSParallelPackVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node)
 {
     RS_TRACE_NAME("RSUniRender::Process:[" + node.GetName() + "]" + node.GetDstRect().ToString());
-    RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode node: %" PRIu64 ", child size:%u %s", node.GetId(),
+    RS_LOGD("RSParallelPackVisitor::ProcessSurfaceRenderNode node: %" PRIu64 ", child size:%u %s", node.GetId(),
         node.GetChildrenCount(), node.GetName().c_str());
     node.UpdatePositionZ();
+    if (!IsNodeNeedToHandled(node)) {
+        return;
+    }
+    RSParallelRenderManager::Instance()->PackRenderTask(node, TaskType::PROCESS_TASK);
+}
+
+bool RSParallelPackVisitor::IsNodeNeedToHandled(RSSurfaceRenderNode& node)
+{
     if (isSecurityDisplay_ && node.GetSecurityLayer()) {
         RS_TRACE_NAME("SecurityLayer Skip");
-        return;
+        return false;
     }
 
     if (!node.ShouldPaint()) {
         RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode node: %" PRIu64 " invisible", node.GetId());
-        return;
+        return false;
     }
     if (!node.GetOcclusionVisible() && !doAnimate_ && RSSystemProperties::GetOcclusionEnabled()) {
         RS_TRACE_NAME("Occlusion Skip");
-        return;
+        return false;
     }
 #ifdef RS_ENABLE_EGLQUERYSURFACE
     // skip clean surface node
@@ -97,11 +105,31 @@ void RSParallelPackVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node)
         if (!node.SubNodeNeedDraw(node.GetOldDirtyInSurface(), partialRenderType_)) {
             RS_TRACE_NAME("QuickReject Skip");
             RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode skip: %s", node.GetName().c_str());
-            return;
+            return false;
         }
     }
 #endif
-    RSParallelRenderManager::Instance()->PackRenderTask(node, TaskType::PROCESS_TASK);
+    return true;
+}
+
+void RSParallelPackVisitor::CalcSurfaceRenderNodeCost(RSSurfaceRenderNode& node)
+{
+    if (!IsNodeNeedToHandled(node)) {
+        return;
+    }
+    RSParallelRenderManager::Instance()->PackRenderTask(node, TaskType::CALC_COST_TASK);
+}
+
+void RSParallelPackVisitor::CalcBaseRenderNodeCost(RSBaseRenderNode& node)
+{
+    for (auto& child : node.GetSortedChildren()) {
+        child->CalcCost(shared_from_this());
+    }
+}
+
+void RSParallelPackVisitor::CalcDisplayRenderNodeCost(RSDisplayRenderNode& node)
+{
+    CalcBaseRenderNodeCost(node);
 }
 } // namespace Rosen
 } // namespace OHOS

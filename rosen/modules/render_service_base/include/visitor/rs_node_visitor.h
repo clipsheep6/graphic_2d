@@ -46,6 +46,13 @@ public:
     virtual void ProcessProxyRenderNode(RSProxyRenderNode& node) = 0;
     virtual void ProcessRootRenderNode(RSRootRenderNode& node) = 0;
     virtual void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) = 0;
+
+    virtual void CalcBaseRenderNodeCost(RSBaseRenderNode& node) = 0;
+    virtual void CalcCanvasRenderNodeCost(RSCanvasRenderNode& node) = 0;
+    virtual void CalcDisplayRenderNodeCost(RSDisplayRenderNode& node) = 0;
+    virtual void CalcProxyRenderNodeCost(RSProxyRenderNode& node) = 0;
+    virtual void CalcRootRenderNodeCost(RSRootRenderNode& node) = 0;
+    virtual void CalcSurfaceRenderNodeCost(RSSurfaceRenderNode& node) = 0;
 };
 
 } // namespace Rosen

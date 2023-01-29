@@ -81,5 +81,13 @@ void RSRootRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     RSRenderNode::RenderTraceDebug();
     visitor->ProcessRootRenderNode(*this);
 }
+
+void RSRootRenderNode::CalcCost(const std::shared_ptr<RSNodeVisitor>& visitor)
+{
+    if (!visitor) {
+        return;
+    }
+    visitor->CalcRootRenderNodeCost(*this);
+}
 } // namespace Rosen
 } // namespace OHOS

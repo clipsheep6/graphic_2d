@@ -44,6 +44,7 @@ public:
 
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
+    void CalcCost(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
     RSRenderNodeType GetType() const override
     {

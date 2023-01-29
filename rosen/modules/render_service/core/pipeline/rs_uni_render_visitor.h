@@ -24,6 +24,7 @@
 #include "platform/ohos/overdraw/rs_cpu_overdraw_canvas_listener.h"
 #include "platform/ohos/overdraw/rs_gpu_overdraw_canvas_listener.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
+#include "pipeline/rs_node_cost_manager.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_processor.h"
 #include "screen_manager/rs_screen_manager.h"
@@ -55,6 +56,13 @@ public:
     void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
 
     bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
+
+    void CalcBaseRenderNodeCost(RSBaseRenderNode& node) override;
+    void CalcCanvasRenderNodeCost(RSCanvasRenderNode& node) override;
+    void CalcDisplayRenderNodeCost(RSDisplayRenderNode& node) override;
+    void CalcProxyRenderNodeCost(RSProxyRenderNode& node) override;
+    void CalcRootRenderNodeCost(RSRootRenderNode& node) override;
+    void CalcSurfaceRenderNodeCost(RSSurfaceRenderNode& node) override;
 
     void SetAnimateState(bool doAnimate)
     {
@@ -140,6 +148,7 @@ private:
 
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;
+    std::shared_ptr<RSNodeCostManager> curSurfaceCostManager_;
     std::shared_ptr<RSSurfaceRenderNode> curSurfaceNode_;
     float curAlpha_ = 1.f;
     bool dirtyFlag_ { false };
@@ -200,6 +209,8 @@ private:
     bool isFreeze_ = false;
     bool isHardwareForcedDisabled_ = false; // indicates if hardware composer is totally disabled
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> hardwareEnabledNodes_;
+
+    bool isCalcCostEnable_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

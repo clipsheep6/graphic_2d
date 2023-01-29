@@ -35,6 +35,7 @@ public:
 
     virtual void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     virtual void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
+    virtual void CalcCost(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
     void AttachRSSurfaceNode(NodeId SurfaceNodeId);
 

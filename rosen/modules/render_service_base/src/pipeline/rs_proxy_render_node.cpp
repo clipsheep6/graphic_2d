@@ -49,6 +49,14 @@ void RSProxyRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->ProcessProxyRenderNode(*this);
 }
 
+void RSProxyRenderNode::CalcCost(const std::shared_ptr<RSNodeVisitor>& visitor)
+{
+    if (!visitor) {
+        return;
+    }
+    visitor->CalcProxyRenderNodeCost(*this);
+}
+
 void RSProxyRenderNode::SetContextMatrix(const SkMatrix& matrix)
 {
     if (contextMatrix_ == matrix) {

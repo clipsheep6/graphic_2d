@@ -59,6 +59,7 @@ public:
     virtual void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor);
     virtual void Process(const std::shared_ptr<RSNodeVisitor>& visitor);
     virtual bool IsDirty() const;
+    virtual void CalcCost(const std::shared_ptr<RSNodeVisitor>& visitor);
 
     // return if any animation is running
     virtual std::pair<bool, bool> Animate(int64_t timestamp)

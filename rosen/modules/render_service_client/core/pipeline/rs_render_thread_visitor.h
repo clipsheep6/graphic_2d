@@ -52,6 +52,13 @@ public:
     // Partial render status and renderForce flag should be updated by rt thread
     void SetPartialRenderStatus(PartialRenderType status, bool isRenderForced);
 private:
+    void CalcBaseRenderNodeCost(RSBaseRenderNode& node) override {}
+    void CalcCanvasRenderNodeCost(RSCanvasRenderNode& node) override {}
+    void CalcDisplayRenderNodeCost(RSDisplayRenderNode& node) override {}
+    void CalcProxyRenderNodeCost(RSProxyRenderNode& node) override {}
+    void CalcRootRenderNodeCost(RSRootRenderNode& node) override {}
+    void CalcSurfaceRenderNodeCost(RSSurfaceRenderNode& node) override {}
+
     void DrawRectOnCanvas(const RectI& dirtyRect, const SkColor color, const SkPaint::Style fillType, float alpha);
     void DrawDirtyRegion();
     // Update damageRegion based on buffer age, and then set it through egl api

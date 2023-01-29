@@ -386,6 +386,14 @@ void RSBaseRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->ProcessBaseRenderNode(*this);
 }
 
+void RSBaseRenderNode::CalcCost(const std::shared_ptr<RSNodeVisitor>& visitor)
+{
+    if (!visitor) {
+        return;
+    }
+    visitor->CalcBaseRenderNodeCost(*this);
+}
+
 const std::list<RSBaseRenderNode::SharedPtr>& RSBaseRenderNode::GetSortedChildren()
 {
     // generate sorted children list if it's empty

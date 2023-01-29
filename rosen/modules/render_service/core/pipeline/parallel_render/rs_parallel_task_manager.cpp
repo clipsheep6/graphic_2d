@@ -19,7 +19,7 @@
 #include "rs_parallel_render_ext.h"
 #include "rs_trace.h"
 #include "platform/common/rs_log.h"
-
+#include "pipeline/rs_node_cost_manager.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -94,6 +94,10 @@ void RSParallelTaskManager::LBCalcAndSubmitSuperTask(std::shared_ptr<RSBaseRende
 std::vector<uint32_t> RSParallelTaskManager::LoadBalancing()
 {
     RS_TRACE_FUNC();
+    if (parallelPolicy_.size() > 0) {
+        return parallelPolicy_;
+    }
+
     std::vector<uint32_t> loadNumPerThread;
     if (isParallelRenderExtEnabled_) {
         auto parallelRenderExtLB = reinterpret_cast<void(*)(int*, std::vector<uint32_t> &)>(
@@ -122,6 +126,7 @@ void RSParallelTaskManager::Reset()
 {
     renderTaskList_.clear();
     superRenderTaskList_.clear();
+    parallelPolicy_.clear();
     if (isParallelRenderExtEnabled_) {
         auto parallelRenderExtClearRenderLoad = reinterpret_cast<void(*)(int*)>(
             RSParallelRenderExt::clearRenderLoadFunc_);
@@ -136,6 +141,52 @@ void RSParallelTaskManager::SetSubThreadRenderTaskLoad(uint32_t threadIdx, uint6
             RSParallelRenderExt::updateLoadCostFunc_);
         parallelRenderExtUpdateLoadCost(loadBalance_, threadIdx, loadId, cost);
     }
+}
+
+void RSParallelTaskManager::UpdateNodeCost(RSDisplayRenderNode& node, std::vector<uint32_t> parallelPolicy)
+{
+    if (!isParallelRenderExtEnabled_) {
+        return;
+    }
+    RS_TRACE_NAME("UpdateNodeCost");
+    auto surfaceNodes = node.GetSortedChildren();
+    std::map<uint64_t, int32_t> costs;
+    for (auto it = surfaceNodes.begin(); it != surfaceNodes.end(); ++it) {
+        auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        if (surface->GetSurfaceNodeType() != RSSurfaceNodeType::LEASH_WINDOW_NODE) {
+            costs.insert(std::pair<uint64_t, int32_t>(surface->GetId(),
+                surface->GetNodeCostManager()->GetDirtyNodeCost()));
+            continue;
+        }
+        int32_t cost = 1;
+        for (auto child : surface->GetSortedChildren()) {
+            auto childNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+            if (childNode->IsAppWindow()) {
+                cost = childNode->GetNodeCostManager()->GetDirtyNodeCost();
+                break;
+            }
+        }
+        costs.insert(std::pair<uint64_t, int32_t>(surface->GetId(), cost));
+    }
+    auto updateNodeCost = reinterpret_cast<void(*)(int*, std::map<uint64_t, int32_t> &, std::vector<uint32_t> &)>(
+        RSParallelRenderExt::updateNodeCostFunc_);
+    updateNodeCost(loadBalance_, costs, parallelPolicy);
+}
+
+void RSParallelTaskManager::GetCostFactor(std::map<std::string, int32_t>& costFactor,
+    std::map<int64_t, int32_t>& imageFactor)
+{
+    if (!isParallelRenderExtEnabled_) {
+        return;
+    }
+    auto getCostFactor = reinterpret_cast<void(*)(int*, std::map<std::string, int32_t> &,
+        std::map<int64_t, int32_t> &)>(RSParallelRenderExt::getCostFactorFunc_);
+    getCostFactor(loadBalance_, costFactor, imageFactor);
+}
+
+void RSParallelTaskManager::LoadParallelPolicy(std::vector<uint32_t>& parallelPolicy)
+{
+    parallelPolicy_.swap(parallelPolicy);
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -57,6 +57,14 @@ void RSDisplayRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->ProcessDisplayRenderNode(*this);
 }
 
+void RSDisplayRenderNode::CalcCost(const std::shared_ptr<RSNodeVisitor>& visitor)
+{
+    if (!visitor) {
+        return;
+    }
+    visitor->CalcDisplayRenderNodeCost(*this);
+}
+
 RSDisplayRenderNode::CompositeType RSDisplayRenderNode::GetCompositeType() const
 {
     return compositeType_;

@@ -38,7 +38,8 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config
       RSSurfaceHandler(config.id),
       name_(config.name),
       nodeType_(config.nodeType),
-      dirtyManager_(std::make_shared<RSDirtyRegionManager>())
+      dirtyManager_(std::make_shared<RSDirtyRegionManager>()),
+      nodeCostManager_(std::make_shared<RSNodeCostManager>())
 {}
 
 RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context)
@@ -228,6 +229,14 @@ void RSSurfaceRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     }
     RSRenderNode::RenderTraceDebug();
     visitor->ProcessSurfaceRenderNode(*this);
+}
+
+void RSSurfaceRenderNode::CalcCost(const std::shared_ptr<RSNodeVisitor>& visitor)
+{
+    if (!visitor) {
+        return;
+    }
+    visitor->CalcSurfaceRenderNodeCost(*this);
 }
 
 void RSSurfaceRenderNode::SetContextBounds(const Vector4f bounds)

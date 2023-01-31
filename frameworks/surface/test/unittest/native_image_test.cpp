@@ -129,7 +129,8 @@ void NativeImageTest::InitEglContext()
         return;
     }
 
-    EGLint major, minor;
+    EGLint major;
+    EGLint minor;
     if (eglInitialize(eglDisplay_, &major, &minor) == EGL_FALSE) {
         BLOGE("Failed to initialize EGLDisplay");
         return;

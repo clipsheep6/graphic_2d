@@ -46,7 +46,6 @@ public:
     std::vector<ScreenId> GetAllScreenIds();
 
     // mirrorId: decide which screen id to mirror, INVALID_SCREEN_ID means do not mirror any screen.
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
     ScreenId CreateVirtualScreen(
         const std::string &name,
         uint32_t width,
@@ -56,7 +55,6 @@ public:
         int flags = 0);
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface);
-#endif
 
     void RemoveVirtualScreen(ScreenId id);
 

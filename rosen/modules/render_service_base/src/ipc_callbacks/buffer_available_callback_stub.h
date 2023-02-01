@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSBufferAvailableCallbackStub : public IRemoteStub<RSIBufferAvailableCallback> {
+class RSB_EXPORT RSBufferAvailableCallbackStub : public IRemoteStub<RSIBufferAvailableCallback> {
 public:
     RSBufferAvailableCallbackStub() = default;
     ~RSBufferAvailableCallbackStub() = default;

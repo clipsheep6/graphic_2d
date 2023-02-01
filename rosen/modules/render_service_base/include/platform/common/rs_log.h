@@ -31,7 +31,7 @@ public:
     virtual ~RSLog() = default;
 };
 
-void RSLogOutput(RSLog::Tag tag, RSLog::Level level, const char* format, ...);
+void RSB_EXPORT RSLogOutput(RSLog::Tag tag, RSLog::Level level, const char* format, ...);
 } // namespace Rosen
 } // namespace OHOS
 

@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSScreenChangeCallbackStub : public IRemoteStub<RSIScreenChangeCallback> {
+class RSB_EXPORT RSScreenChangeCallbackStub : public IRemoteStub<RSIScreenChangeCallback> {
 public:
     RSScreenChangeCallbackStub() = default;
     ~RSScreenChangeCallbackStub() = default;

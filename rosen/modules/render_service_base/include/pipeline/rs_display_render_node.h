@@ -30,7 +30,7 @@
 namespace OHOS {
 namespace Rosen {
 enum class ScreenRotation : uint32_t;
-class RS_EXPORT RSDisplayRenderNode : public RSRenderNode, public RSSurfaceHandler {
+class RSB_EXPORT RSDisplayRenderNode : public RSRenderNode, public RSSurfaceHandler {
 public:
     enum CompositeType {
         UNI_RENDER_COMPOSITE = 0,

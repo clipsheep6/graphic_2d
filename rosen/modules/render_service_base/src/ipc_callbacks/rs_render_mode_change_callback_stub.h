@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSRenderModeChangeCallbackStub : public IRemoteStub<RSIRenderModeChangeCallback> {
+class RSB_EXPORT RSRenderModeChangeCallbackStub : public IRemoteStub<RSIRenderModeChangeCallback> {
 public:
     RSRenderModeChangeCallbackStub() = default;
     ~RSRenderModeChangeCallbackStub() = default;

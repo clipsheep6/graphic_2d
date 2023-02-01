@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSSurfaceCaptureCallbackStub : public IRemoteStub<RSISurfaceCaptureCallback> {
+class RSB_EXPORT RSSurfaceCaptureCallbackStub : public IRemoteStub<RSISurfaceCaptureCallback> {
 public:
     RSSurfaceCaptureCallbackStub() = default;
     ~RSSurfaceCaptureCallbackStub() = default;

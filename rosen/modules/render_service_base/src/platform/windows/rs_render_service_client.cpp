@@ -49,11 +49,6 @@ bool RSRenderServiceClient::GetUniRenderEnabled()
     return {};
 }
 
-bool RSRenderServiceClient::QueryIfRTNeedRender()
-{
-    return {};
-}
-
 bool RSRenderServiceClient::CreateNode(const RSSurfaceRenderNodeConfig& config)
 {
     return {};
@@ -171,6 +166,12 @@ std::shared_ptr<IVSyncReceiver> RSRenderServiceClient::CreateVSyncReceiver(
 
 bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<SurfaceCaptureCallback> callback,
     float scaleX, float scaleY)
+{
+    return false;
+}
+
+int32_t RSRenderServiceClient::SetFocusAppInfo(
+    int32_t pid, int32_t uid, const std::string &bundleName, const std::string &abilityName)
 {
     return false;
 }
@@ -320,6 +321,10 @@ int32_t RSRenderServiceClient::RegisterOcclusionChangeCallback(const OcclusionCh
 int32_t RSRenderServiceClient::UnRegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback)
 {
     return {};
+}
+
+void RSRenderServiceClient::SetAppWindowNum(uint32_t num)
+{
 }
 } // namespace Rosen
 } // namespace OHOS

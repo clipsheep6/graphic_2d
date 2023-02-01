@@ -35,7 +35,10 @@ public:
     bool IsValid() const override;
     sptr<Surface> GetSurface() const;
 
-    std::unique_ptr<RSSurfaceFrame> RequestFrame(int32_t width, int32_t height, uint64_t uiTimestamp) override;
+    void SetUiTimeStamp(const std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp = 0) override;
+
+    std::unique_ptr<RSSurfaceFrame> RequestFrame(
+        int32_t width, int32_t height, uint64_t uiTimestamp, bool useAFBC = true) override;
 
     bool FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp) override;
     RenderContext* GetRenderContext() override;

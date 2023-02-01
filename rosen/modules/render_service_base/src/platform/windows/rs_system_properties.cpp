@@ -69,15 +69,6 @@ uint32_t RSSystemProperties::GetCorrectionMode()
     return {};
 }
 
-bool RSSystemProperties::IsUniRenderMode()
-{
-    return {};
-}
-
-void RSSystemProperties::SetRenderMode(bool isUni)
-{
-}
-
 DumpSurfaceType RSSystemProperties::GetDumpSurfaceType()
 {
     return {};

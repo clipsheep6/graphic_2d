@@ -77,7 +77,25 @@ public:
 
         auto csurface = csurface_.promote();
         if (csurface && onRender_) {
-            onRender_(csurface);
+            sptr<SurfaceBuffer> buffer = nullptr;
+            int32_t fence = -1;
+            int64_t timestamp = 0;
+            Rect damage;
+            if (csurface == nullptr) {
+                RS_LOGE("CSurface is nullptr");
+                return;
+            }
+
+            if (auto err = csurface->AcquireBuffer(buffer, fence, timestamp, damage); err) {
+                RS_LOGE("AcquireBuffer failed");
+                return;
+            }
+
+            auto width = buffer->GetWidth();
+            auto height = buffer->GetHeight();
+            auto size = buffer->GetStride() * height;
+            onRender_(buffer->GetVirAddr(), size, width, height);
+            csurface->ReleaseBuffer(buffer, -1);
         }
     }
 };

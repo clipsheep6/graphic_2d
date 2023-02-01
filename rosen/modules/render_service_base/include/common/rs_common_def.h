@@ -83,7 +83,7 @@ enum class RSSurfaceNodeType : uint8_t {
     SELF_DRAWING_WINDOW_NODE, // create by wms, such as pointer window and bootanimation
 };
 
-using UseSurfaceToRenderFunc = std::function<void(Surface *csurface)>;
+using UseSurfaceToRenderFunc = bool (*)(const void*, const size_t, const int32_t, const int32_t);
 struct RSSurfaceRenderNodeConfig {
     NodeId id = 0;
     std::string name = "SurfaceNode";

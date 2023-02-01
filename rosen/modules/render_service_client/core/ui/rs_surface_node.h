@@ -19,9 +19,11 @@
 #include <refbase.h>
 #include <string>
 
+#ifdef ROSEN_OHOS
 #include "surface.h"
 #include "surface_delegate.h"
 #include "surface_type.h"
+#endif
 
 #include "platform/drawing/rs_surface.h"
 #include "transaction/rs_transaction_proxy.h"
@@ -64,7 +66,9 @@ public:
     void RemoveChild(std::shared_ptr<RSBaseNode> child) override;
     void ClearChildren() override;
 
+#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
     void SetColorSpace(ColorGamut colorSpace);
+#endif
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
     void SetAbilityBGAlpha(uint8_t alpha);
@@ -78,13 +82,17 @@ public:
     // Create RSProxyNode by unmarshalling RSSurfaceNode, return existing node if it exists in RSNodeMap.
     static RSNode::SharedPtr UnmarshallingAsProxyNode(Parcel& parcel);
 
+#ifdef ROSEN_OHOS
     sptr<OHOS::Surface> GetSurface() const;
+#endif
     FollowType GetFollowType() const override;
 
+#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
     ColorGamut GetColorSpace()
     {
         return colorSpace_;
     }
+#endif
     std::string GetName() const
     {
         return name_;
@@ -113,13 +121,17 @@ private:
     std::string name_;
     std::mutex mutex_;
     BufferAvailableCallback callback_;
+#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
+#endif
     bool isSecurityLayer_ = false;
     bool isChildOperationDisallowed_ { false };
 
     uint32_t windowId_;
+#ifdef ROSEN_OHOS
     sptr<SurfaceDelegate> surfaceDelegate_;
     sptr<SurfaceDelegate::ISurfaceCallback> surfaceCallback_;
+#endif
 
     friend class RSUIDirector;
     friend class RSAnimation;

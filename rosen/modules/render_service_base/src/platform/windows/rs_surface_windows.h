@@ -33,15 +33,14 @@ public:
     ~RSSurfaceWindows() override = default;
 
     bool IsValid() const override;
-    sptr<Surface> GetSurface() const;
+
+    void SetUiTimeStamp(const std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp = 0) override;
 
     std::unique_ptr<RSSurfaceFrame> RequestFrame(int32_t width, int32_t height, uint64_t uiTimestamp) override;
 
     bool FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp) override;
     RenderContext* GetRenderContext() override;
     void SetRenderContext(RenderContext* context) override;
-    ColorGamut GetColorSpace() const override;
-    void SetColorSpace(ColorGamut colorSpace) override;
     uint32_t GetQueueSize() const override;
     void ClearBuffer() override;
     void ClearAllBuffer() override;
@@ -53,7 +52,6 @@ private:
 
     sptr<Surface> producer_ = nullptr;
     RenderContext* renderContext_ = nullptr;
-    ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
     sk_sp<GrContext> grContext_ = nullptr;
     sk_sp<SkColorSpace> skColorSpace_ = nullptr;
 };

@@ -53,6 +53,9 @@ inline GSError GenerateError(GSError err, int32_t code)
 
 class DisplayGrallocMingw : public HDI::Display::V1_0::IDisplayGralloc {
 public:
+    int32_t RegAllocatorDeathCallback(
+        HDI::Display::V1_0::AllocatorDeathCallback func, void* data) override { return 0; };
+
     int32_t AllocMem(const AllocInfo &info, BufferHandle *&handle) const override
     {
         handle = new BufferHandle();
@@ -295,25 +298,25 @@ BufferHandle *SurfaceBufferImpl::GetBufferHandle() const
     return handle_;
 }
 
-void SurfaceBufferImpl::SetSurfaceBufferColorGamut(const ColorGamut& colorGamut)
+void SurfaceBufferImpl::SetSurfaceBufferColorGamut(const GraphicColorGamut& colorGamut)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     surfaceBufferColorGamut_ = colorGamut;
 }
 
-const ColorGamut& SurfaceBufferImpl::GetSurfaceBufferColorGamut() const
+const GraphicColorGamut& SurfaceBufferImpl::GetSurfaceBufferColorGamut() const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return surfaceBufferColorGamut_;
 }
 
-void SurfaceBufferImpl::SetSurfaceBufferTransform(const TransformType& transform)
+void SurfaceBufferImpl::SetSurfaceBufferTransform(const GraphicTransformType& transform)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     transform_ = transform;
 }
 
-const TransformType& SurfaceBufferImpl::GetSurfaceBufferTransform() const
+const GraphicTransformType& SurfaceBufferImpl::GetSurfaceBufferTransform() const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return transform_;
@@ -513,4 +516,12 @@ void SurfaceBufferImpl::SetEglData(const sptr<EglData>& data)
 {
     eglData_ = data;
 }
+
+BufferWrapper SurfaceBufferImpl::GetBufferWrapper()
+{
+    BufferWrapper wrapper;
+    return wrapper;
+}
+
+void SurfaceBufferImpl::SetBufferWrapper(BufferWrapper wrapper) {}
 } // namespace OHOS

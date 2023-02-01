@@ -50,6 +50,7 @@ std::vector<ScreenId> RSInterfaces::GetAllScreenIds()
     return renderServiceClient_->GetAllScreenIds();
 }
 
+#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
 ScreenId RSInterfaces::CreateVirtualScreen(
     const std::string &name,
     uint32_t width,
@@ -65,6 +66,7 @@ int32_t RSInterfaces::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface
 {
     return renderServiceClient_->SetVirtualScreenSurface(id, surface);
 }
+#endif
 
 void RSInterfaces::RemoveVirtualScreen(ScreenId id)
 {

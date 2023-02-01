@@ -21,6 +21,7 @@ RenderContext::RenderContext()
 {
     (void)nativeWindow_;
     (void)config_;
+    (void)colorSpace_;
 }
 
 RenderContext::~RenderContext()
@@ -34,6 +35,10 @@ void RenderContext::CreateCanvas(int width, int height)
 sk_sp<SkSurface> RenderContext::AcquireSurface(int width, int height)
 {
     return {};
+}
+
+void RenderContext::SetColorSpace(ColorGamut colorSpace)
+{
 }
 
 void RenderContext::InitializeEglContext()

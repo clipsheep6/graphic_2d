@@ -20,9 +20,7 @@
 #include <memory>
 #include <tuple>
 
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
 #include <surface.h>
-#endif
 #include "include/gpu/GrContext.h"
 
 #include "common/rs_macros.h"
@@ -315,9 +313,7 @@ public:
         globalDirtyRegionIsEmpty_ = globalDirtyRegion_.IsEmpty();
     }
 
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
     void SetConsumer(const sptr<Surface>& consumer);
-#endif
 
     void UpdateSurfaceDefaultSize(float width, float height);
 

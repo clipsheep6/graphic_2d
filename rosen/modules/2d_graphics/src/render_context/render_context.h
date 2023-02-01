@@ -30,9 +30,7 @@
 #include "include/gpu/GrContext.h"
 #include "include/gpu/gl/GrGLInterface.h"
 #include "memory_handler.h"
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
 #include "surface_type.h"
-#endif
 
 #define GLES_VERSION 2
 namespace OHOS {
@@ -44,9 +42,7 @@ public:
     void CreateCanvas(int width, int height);
     sk_sp<SkSurface> AcquireSurface(int width, int height);
 
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
     void SetColorSpace(ColorGamut colorSpace);
-#endif
     void InitializeEglContext();
 
     GrContext* GetGrContext() const
@@ -89,12 +85,10 @@ public:
         return eglDisplay_;
     }
 
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
     ColorGamut GetColorSpace() const
     {
         return colorSpace_;
     }
-#endif
 
     bool IsEglContextReady() const
     {
@@ -134,9 +128,7 @@ private:
     EGLSurface eglSurface_ = EGL_NO_SURFACE;
     EGLSurface pbufferSurface_= EGL_NO_SURFACE;
     EGLConfig config_;
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
-#endif
 
     bool isUniRenderMode_ = false;
     const std::string UNIRENDER_CACHE_DIR = "/data/service/el0/render_service";

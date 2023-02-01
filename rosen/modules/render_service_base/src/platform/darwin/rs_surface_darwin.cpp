@@ -150,6 +150,31 @@ void RSSurfaceDarwin::SetRenderContext(RenderContext* context)
     renderContext_ = context;
 }
 
+ColorGamut RSSurfaceDarwin::GetColorSpace() const
+{
+    return colorSpace_;
+}
+
+void RSSurfaceDarwin::SetColorSpace(ColorGamut colorSpace)
+{
+    colorSpace_ = colorSpace;
+    switch (colorSpace_) {
+        // [planning] in order to stay consistant with the colorspace used before, we disabled
+        // COLOR_GAMUT_SRGB to let the branch to default, then skColorSpace is set to nullptr
+        case COLOR_GAMUT_DISPLAY_P3:
+            skColorSpace_ = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDCIP3);
+            break;
+        case COLOR_GAMUT_ADOBE_RGB:
+            skColorSpace_ = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kAdobeRGB);
+            break;
+        case COLOR_GAMUT_BT2020:
+            skColorSpace_ = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kRec2020);
+            break;
+        default:
+            break;
+    }
+}
+
 void RSSurfaceDarwin::YInvert(void *addr, int32_t width, int32_t height)
 {
     const auto &pixels = reinterpret_cast<uint32_t *>(addr);

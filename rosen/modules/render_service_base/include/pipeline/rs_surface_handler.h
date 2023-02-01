@@ -15,7 +15,9 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_SURFACE_HANDLER_H
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_SURFACE_HANDLER_H
 
+#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
 #include <surface.h>
+#endif
 
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"

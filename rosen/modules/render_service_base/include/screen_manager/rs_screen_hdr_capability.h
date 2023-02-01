@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSScreenHDRCapability : public Parcelable {
+class RSB_EXPORT RSScreenHDRCapability : public Parcelable {
 public:
     RSScreenHDRCapability() = default;
     RSScreenHDRCapability(float maxLum, float minLum, float maxAverageLum, const std::vector<ScreenHDRFormat>& formats);

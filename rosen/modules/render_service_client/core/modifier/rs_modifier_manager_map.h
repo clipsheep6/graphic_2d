@@ -17,6 +17,7 @@
 
 #include <mutex>
 #include <unordered_map>
+#include <memory>
 
 #include "common/rs_macros.h"
 
@@ -24,7 +25,7 @@ namespace OHOS {
 namespace Rosen {
 class RSModifierManager;
 
-class RS_EXPORT RSModifierManagerMap final {
+class RSC_EXPORT RSModifierManagerMap final {
 public:
     ~RSModifierManagerMap() = default;
     static std::shared_ptr<RSModifierManagerMap>& Instance();

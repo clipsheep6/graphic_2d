@@ -46,7 +46,7 @@ private:
     void* data_ = nullptr;
 };
 
-class RS_EXPORT RSAshmemHelper {
+class RSB_EXPORT RSAshmemHelper {
 public:
     static std::shared_ptr<MessageParcel> CreateAshmemParcel(std::shared_ptr<MessageParcel>& dataParcel);
     static std::shared_ptr<MessageParcel> ParseFromAshmemParcel(MessageParcel* ashmemParcel);

@@ -262,13 +262,13 @@ private:
 };
 
 template<>
-float RSRenderAnimatableProperty<float>::ToFloat() const;
+RSB_EXPORT float RSRenderAnimatableProperty<float>::ToFloat() const;
 template<>
-float RSRenderAnimatableProperty<Vector4f>::ToFloat() const;
+RSB_EXPORT float RSRenderAnimatableProperty<Vector4f>::ToFloat() const;
 template<>
-float RSRenderAnimatableProperty<Quaternion>::ToFloat() const;
+RSB_EXPORT float RSRenderAnimatableProperty<Quaternion>::ToFloat() const;
 template<>
-float RSRenderAnimatableProperty<Vector2f>::ToFloat() const;
+RSB_EXPORT float RSRenderAnimatableProperty<Vector2f>::ToFloat() const;
 
 extern template class RSRenderAnimatableProperty<float>;
 extern template class RSRenderAnimatableProperty<Vector4f>;

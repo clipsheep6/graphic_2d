@@ -30,7 +30,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSScreenData : public Parcelable {
+class RSB_EXPORT RSScreenData : public Parcelable {
 public:
     RSScreenData() = default;
     RSScreenData(RSScreenCapability capability, RSScreenModeInfo activityModeInfo,

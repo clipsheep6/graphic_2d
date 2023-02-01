@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <string>
+#include <vector>
 
 #include "common/rs_macros.h"
 

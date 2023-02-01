@@ -43,7 +43,12 @@ sptr<Surface> RSSurfaceWindows::GetSurface() const
     return producer_;
 }
 
-std::unique_ptr<RSSurfaceFrame> RSSurfaceWindows::RequestFrame(int32_t width, int32_t height, uint64_t uiTimestamp)
+void RSSurfaceWindows::SetUiTimeStamp(const std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp)
+{
+}
+
+std::unique_ptr<RSSurfaceFrame> RSSurfaceWindows::RequestFrame(
+    int32_t width, int32_t height, uint64_t uiTimestamp, bool useAFBC)
 {
     if (producer_ == nullptr) {
         ROSEN_LOGE("RSSurfaceWindows::RequestFrame, producer is nullptr");

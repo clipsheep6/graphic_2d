@@ -180,6 +180,10 @@ ohos_source_set("render_service_base_src") {
     sources += [ "src/common/rs_shared_context.cpp" ]
   }
 
+  if (current_os == "mingw" || current_os == "mac" || current_os == "linux") {
+    sources -= [ "src/common/rs_shared_context.cpp" ]
+  }
+
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
     "//foundation/graphic/graphic_2d/utils/log",

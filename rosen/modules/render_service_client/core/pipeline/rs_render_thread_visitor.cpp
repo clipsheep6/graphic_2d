@@ -28,9 +28,6 @@
 
 #include "command/rs_base_node_command.h"
 #include "common/rs_vector4.h"
-#include "overdraw/rs_cpu_overdraw_canvas_listener.h"
-#include "overdraw/rs_gpu_overdraw_canvas_listener.h"
-#include "overdraw/rs_overdraw_controller.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_node_map.h"
@@ -43,6 +40,12 @@
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
+
+#ifdef ROSEN_OHOS
+#include "platform/ohos/overdraw/rs_cpu_overdraw_canvas_listener.h"
+#include "platform/ohos/overdraw/rs_gpu_overdraw_canvas_listener.h"
+#include "platform/ohos/overdraw/rs_overdraw_controller.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -352,6 +355,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         return;
     }
 
+#ifdef ROSEN_OHOS
     // if listenedCanvas is nullptr, that means disabled or listen failed
     std::shared_ptr<RSListenedCanvas> listenedCanvas = nullptr;
     std::shared_ptr<RSCanvasListener> overdrawListener = nullptr;
@@ -377,6 +381,9 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     } else {
         canvas_ = std::make_shared<RSPaintFilterCanvas>(skSurface.get());
     }
+#else
+    canvas_ = std::make_shared<RSPaintFilterCanvas>(skSurface.get());
+#endif
 
     canvas_->SetHighContrast(RSRenderThread::Instance().isHighContrastEnabled());
 

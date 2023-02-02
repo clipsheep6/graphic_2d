@@ -16,6 +16,7 @@
 #include "platform/common/rs_system_properties.h"
 
 #include <cstdlib>
+#include <parameter.h>
 #include <parameters.h>
 #include "platform/common/rs_log.h"
 #include "transaction/rs_render_service_client.h"
@@ -184,6 +185,21 @@ ParallelRenderingType RSSystemProperties::GetParallelRenderingEnabled()
 bool RSSystemProperties::GetColdStartThreadEnabled()
 {
     return std::atoi((system::GetParameter("rosen.coldstartthread.enabled", "1")).c_str()) != 0;
+}
+
+float RSSystemProperties::GetAnimationScale()
+{
+    return std::atof((system::GetParameter("persist.sys.graphic.animationscale", "1.0")).c_str());
+}
+
+bool RSSystemProperties::GetBoolSystemProperty(const char* name, bool defaultValue)
+{
+    return std::atoi((system::GetParameter(name, defaultValue ? "1" : "0")).c_str()) != 0;
+}
+
+int RSSystemProperties::WatchSystemProperty(const char* name, OnSystemPropertyChanged func, void* context)
+{
+    return WatchParameter(name, func, context);
 }
 } // namespace Rosen
 } // namespace OHOS

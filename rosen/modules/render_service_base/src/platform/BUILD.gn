@@ -21,6 +21,7 @@ group("platform") {
     public_deps = [ "windows" ]
   } else if (rosen_is_mac || rosen_is_ios) {
     public_deps = [ "darwin" ]
+  } else if (rosen_is_linux) {
   } else {
     assert(false, "Unsupported platform")
   }

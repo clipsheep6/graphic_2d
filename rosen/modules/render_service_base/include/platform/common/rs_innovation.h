@@ -16,7 +16,7 @@
 #ifndef RENDER_SERVICE_BASE_COMMON_RS_INNOVATION_H
 #define RENDER_SERVICE_BASE_COMMON_RS_INNOVATION_H
 #include <dlfcn.h>
-#include <parameters.h>
+#include "platform/common/rs_system_properties.h"
 namespace OHOS {
 namespace Rosen {
 class RSInnovation {
@@ -46,7 +46,7 @@ public:
     static bool GetParallelCompositionEnabled()
     {
         return _s_parallelCompositionLoaded &&
-            std::atoi((system::GetParameter("rosen.parallelcomposition.enabled", "0")).c_str()) != 0;
+            RSSystemProperties::GetBoolSystemProperty("rosen.parallelcomposition.enabled", false);
     }
 
     static inline bool _s_parallelCompositionLoaded = false;
@@ -61,7 +61,7 @@ public:
     static void UpdateOcclusionCullingSoEnabled()
     {
         _s_occlusionCullingSoEnabled =
-            std::atoi((system::GetParameter("rosen.occlusion.so.enabled", "0")).c_str()) != 0;
+            RSSystemProperties::GetBoolSystemProperty("rosen.occlusion.so.enabled", false);
     }
     static inline bool _s_occlusionCullingFuncLoaded = false;
     static inline bool _s_occlusionCullingSoEnabled = false;
@@ -71,7 +71,7 @@ public:
     static bool UpdateQosVsyncEnabled()
     {
         return _s_qosVsyncFuncLoaded &&
-            (std::atoi((system::GetParameter("rosen.qos_vsync.enabled", "0")).c_str()) != 0);
+            RSSystemProperties::GetBoolSystemProperty("rosen.qos_vsync.enabled", false);
     }
     static inline bool _s_qosVsyncFuncLoaded = false;
     static inline void* _s_createRSQosService = nullptr;

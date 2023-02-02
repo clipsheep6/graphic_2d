@@ -23,9 +23,7 @@
 
 #include "animation/rs_animation_fraction.h"
 #include "command/rs_surface_node_command.h"
-#include "frame_collector.h"
 #include "delegate/rs_functional_delegate.h"
-#include "overdraw/rs_overdraw_controller.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_node_map.h"
@@ -43,6 +41,8 @@
 #ifdef ROSEN_OHOS
 #include <sys/prctl.h>
 #include <unistd.h>
+#include "frame_collector.h"
+#include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #endif
 #ifdef OHOS_RSS_CLIENT
 #include "res_sched_client.h"
@@ -237,11 +237,13 @@ void RSRenderThread::RenderLoop()
         RSRenderThread::Instance().RequestNextVSync();
     }
 
+#ifdef ROSEN_OHOS
     FrameCollector::GetInstance().SetRepaintCallback([this]() { this->RequestNextVSync(); });
 
     auto delegate = RSFunctionalDelegate::Create();
     delegate->SetRepaintCallback([this]() { this->RequestNextVSync(); });
     RSOverdrawController::GetInstance().SetDelegate(delegate);
+#endif
 
     if (runner_) {
         runner_->Run();

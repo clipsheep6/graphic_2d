@@ -24,8 +24,8 @@
 #include <include/core/SkTextBlob.h>
 #include <test_header.h>
 
-#include "overdraw/rs_cpu_overdraw_canvas_listener.h"
-#include "overdraw/rs_listened_canvas.h"
+#include "platform/ohos/overdraw/rs_cpu_overdraw_canvas_listener.h"
+#include "platform/ohos/overdraw/rs_listened_canvas.h"
 
 using namespace testing;
 using namespace testing::ext;

@@ -47,6 +47,9 @@ std::shared_ptr<RSRenderModifier> RSExtendedModifierHelper::CreateRenderModifier
 
 std::shared_ptr<DrawCmdList> RSExtendedModifierHelper::FinishDrawing(RSDrawingContext& ctx)
 {
+    if (!ctx.canvas) {
+        return nullptr;
+    }
     auto recording = static_cast<RSRecordingCanvas*>(ctx.canvas)->GetDrawCmdList();
     delete ctx.canvas;
     ctx.canvas = nullptr;

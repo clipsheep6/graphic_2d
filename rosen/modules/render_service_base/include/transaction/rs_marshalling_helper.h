@@ -62,6 +62,8 @@ template<typename T>
 class RSRenderProperty;
 template<typename T>
 class RSRenderAnimatableProperty;
+template<typename T>
+class RectT;
 
 class RS_EXPORT RSMarshallingHelper {
 public:
@@ -135,6 +137,7 @@ public:
     static bool SkipSkData(Parcel& parcel);
     static bool SkipSkImage(Parcel& parcel);
     // RS types
+    DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RectT<int>>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSShader>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSPath>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSFilter>)

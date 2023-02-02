@@ -46,6 +46,7 @@
 #include "common/rs_color.h"
 #include "common/rs_common_def.h"
 #include "common/rs_matrix3.h"
+#include "common/rs_rect.h"
 #include "common/rs_vector4.h"
 #include "modifier/rs_render_modifier.h"
 #include "pipeline/rs_draw_cmd_list.h"
@@ -553,6 +554,31 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImageFilter>& va
     }
     val = sk_reinterpret_cast<SkImageFilter>(flattenablePtr);
     return true;
+}
+
+// RectI
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RectI>& val)
+{
+    if (!val) {
+        ROSEN_LOGD("unirender: RSMarshallingHelper::Marshalling RectI is nullptr");
+        return parcel.WriteInt32(-1);
+    }
+    return parcel.WriteInt32(1) && parcel.WriteInt32(val->left_) && parcel.WriteInt32(val->top_) &&
+        parcel.WriteInt32(val->width_) && parcel.WriteInt32(val->height_);
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RectI>& val)
+{
+    if (parcel.ReadInt32() == -1) {
+        val = nullptr;
+        return true;
+    }
+    auto rect = std::make_shared<RectI>();
+    if (rect && parcel.ReadInt32(rect->left_) && parcel.ReadInt32(rect->top_) &&
+        parcel.ReadInt32(rect->width_) && parcel.ReadInt32(rect->height_)) {
+        val = rect;
+        return true;
+    }
+    return false;
 }
 
 // RSShader

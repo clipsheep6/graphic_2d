@@ -25,7 +25,7 @@
 #include "surface_buffer.h"
 
 namespace OHOS {
-class ProducerEglSurface : public EglSurface {
+class SURFACE_NOT_EXPORT ProducerEglSurface : public EglSurface {
 public:
     ProducerEglSurface(sptr<IBufferProducer>& producer);
     virtual ~ProducerEglSurface();

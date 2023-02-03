@@ -28,7 +28,7 @@
 #include "surface_buffer.h"
 
 namespace OHOS {
-class ProducerSurface : public Surface {
+class SURFACE_NOT_EXPORT ProducerSurface : public Surface {
 public:
     ProducerSurface(sptr<IBufferProducer>& producer);
     virtual ~ProducerSurface();

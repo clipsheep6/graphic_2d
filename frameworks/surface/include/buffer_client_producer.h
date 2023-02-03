@@ -28,7 +28,7 @@
 #include "surface_buffer_impl.h"
 
 namespace OHOS {
-class BufferClientProducer : public IRemoteProxy<IBufferProducer> {
+class SURFACE_NOT_EXPORT BufferClientProducer : public IRemoteProxy<IBufferProducer> {
 public:
     BufferClientProducer(const sptr<IRemoteObject>& impl);
     virtual ~BufferClientProducer();

@@ -21,7 +21,7 @@
 #include "consumer_surface.h"
 
 namespace OHOS {
-class EglConsumerSurface : public ConsumerSurface {
+class SURFACE_NOT_EXPORT EglConsumerSurface : public ConsumerSurface {
 public:
     EglConsumerSurface(const std::string &name, bool isShared = false);
     virtual ~EglConsumerSurface();

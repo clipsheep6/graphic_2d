@@ -27,7 +27,7 @@
 struct BufferWrapper {};
 
 namespace OHOS {
-class SurfaceBufferImpl : public SurfaceBuffer {
+class SURFACE_NOT_EXPORT SurfaceBufferImpl : public SurfaceBuffer {
 public:
     using IDisplayGrallocSptr = std::shared_ptr<::OHOS::HDI::Display::V1_0::IDisplayGralloc>;
     static IDisplayGrallocSptr GetDisplayGralloc();

@@ -29,7 +29,7 @@
 #include "buffer_queue.h"
 
 namespace OHOS {
-class BufferQueueProducer : public IRemoteStub<IBufferProducer> {
+class SURFACE_NOT_EXPORT BufferQueueProducer : public IRemoteStub<IBufferProducer> {
 public:
     BufferQueueProducer(sptr<BufferQueue>& bufferQueue);
     virtual ~BufferQueueProducer();

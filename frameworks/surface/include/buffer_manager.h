@@ -24,7 +24,7 @@
 #include "surface_buffer.h"
 
 namespace OHOS {
-class BufferManager : public RefBase {
+class SURFACE_NOT_EXPORT BufferManager : public RefBase {
 public:
     static sptr<BufferManager> GetInstance();
 

@@ -149,6 +149,9 @@ using SceneType = enum {
     SURFACE_SCENE_TYPE_CAMERA,
     SURFACE_SCENE_TYPE_CPU,
 };
+
+#define SURFACE_NOT_EXPORT __attribute__((visibility("hidden")))
+#define SURFACE_EXPORT __attribute__((visibility("default")))
 } // namespace OHOS
 
 #endif // INTERFACES_INNERKITS_SURFACE_SURFACE_TYPE_H

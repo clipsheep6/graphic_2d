@@ -16,8 +16,10 @@
 #include "jank_detector/rs_jank_detector.h"
 
 #include <unistd.h>
+#ifdef ROSEN_OHOS
 #include "base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include/hisysevent.h"
 #include "sandbox_utils.h"
+#endif
 
 namespace {
 struct FrameMsg {
@@ -30,6 +32,7 @@ struct FrameMsg {
 
 void DrawEventReport(FrameMsg& frameMsg, std::string stringId)
 {
+#ifdef ROSEN_OHOS
     int32_t pid = OHOS::GetRealPid();
     uint32_t uid = getuid();
     std::string msg = "It took " + std::to_string(frameMsg.totalTime) + "ns to draw, "
@@ -43,6 +46,7 @@ void DrawEventReport(FrameMsg& frameMsg, std::string stringId)
         "UID", uid,
         "ABILITY_NAME", frameMsg.abilityName,
         "MSG", msg);
+#endif
 }
 }
 

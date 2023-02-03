@@ -190,10 +190,13 @@ ohos_source_set("render_service_base_src") {
   ]
 
   external_deps = [
-    "hitrace_native:hitrace_meter",
     "ipc:ipc_core",
     "multimedia_image_framework:image_native",
   ]
+
+  if (!rosen_cross_platform) {
+    external_deps += [ "hitrace_native:hitrace_meter" ]
+  }
 
   if (rosen_is_win) {
     defines += [ "_USE_MATH_DEFINES" ]

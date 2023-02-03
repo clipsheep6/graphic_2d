@@ -17,7 +17,6 @@
 
 #include <cstdint>
 
-#include "accessibility_config.h"
 #include "rs_trace.h"
 #include "sandbox_utils.h"
 
@@ -41,6 +40,7 @@
 #ifdef ROSEN_OHOS
 #include <sys/prctl.h>
 #include <unistd.h>
+#include "accessibility_config.h"
 #include "frame_collector.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #endif
@@ -62,24 +62,27 @@ static void SystemCallSetThreadName(const std::string& name)
 #endif
 }
 
-using namespace OHOS::AccessibilityConfig;
 namespace OHOS {
 namespace Rosen {
 namespace {
     static constexpr uint64_t REFRESH_PERIOD = 16666667;
 }
-class HighContrastObserver : public AccessibilityConfigObserver {
+
+#ifdef ROSEN_OHOS
+class HighContrastObserver : public OHOS::AccessibilityConfig::AccessibilityConfigObserver {
 public:
     HighContrastObserver() = default;
-    void OnConfigChanged(const CONFIG_ID id, const ConfigValue &value) override
+    void OnConfigChanged(
+        const OHOS::AccessibilityConfig::CONFIG_ID id, const OHOS::AccessibilityConfig::ConfigValue &value) override
     {
         ROSEN_LOGD("HighContrastObserver OnConfigChanged");
         auto& renderThread = RSRenderThread::Instance();
-        if (id == CONFIG_ID::CONFIG_HIGH_CONTRAST_TEXT) {
+        if (id == OHOS::AccessibilityConfig::CONFIG_ID::CONFIG_HIGH_CONTRAST_TEXT) {
             renderThread.SetHighContrast(value.highContrastText);
         }
     }
 };
+#endif
 
 RSRenderThread& RSRenderThread::Instance()
 {
@@ -105,12 +108,14 @@ RSRenderThread::RSRenderThread()
         RS_TRACE_END();
     };
 
-    highContrastObserver_ = std::make_shared<HighContrastObserver>();
     context_ = std::make_shared<RSContext>();
     jankDetector_ = std::make_shared<RSJankDetector>();
+#ifdef ROSEN_OHOS
+    highContrastObserver_ = std::make_shared<HighContrastObserver>();
     auto &config = OHOS::AccessibilityConfig::AccessibilityConfig::GetInstance();
     config.InitializeContext();
-    config.SubscribeConfigObserver(CONFIG_ID::CONFIG_HIGH_CONTRAST_TEXT, highContrastObserver_);
+    config.SubscribeConfigObserver(OHOS::AccessibilityConfig::CONFIG_HIGH_CONTRAST_TEXT, highContrastObserver_);
+#endif
 }
 
 RSRenderThread::~RSRenderThread()

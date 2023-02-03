@@ -21,7 +21,7 @@
 #include <any>
 
 namespace OHOS {
-class BufferExtraDataImpl : public BufferExtraData {
+class SURFACE_NOT_EXPORT BufferExtraDataImpl : public BufferExtraData {
 public:
     virtual GSError ReadFromParcel(MessageParcel &parcel) override;
     virtual GSError WriteToParcel(MessageParcel &parcel) override;

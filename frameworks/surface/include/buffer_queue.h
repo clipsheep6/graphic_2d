@@ -55,7 +55,7 @@ using BufferElement = struct BufferElement {
     PresentTimestamp presentTimestamp = {HARDWARE_DISPLAY_PTS_UNSUPPORTED, 0};
 };
 
-class BufferQueue : public RefBase {
+class SURFACE_NOT_EXPORT BufferQueue : public RefBase {
 public:
     BufferQueue(const std::string &name, bool isShared = false);
     virtual ~BufferQueue();

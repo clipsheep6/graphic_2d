@@ -26,7 +26,7 @@
 #include "buffer_queue_consumer.h"
 
 namespace OHOS {
-class ConsumerSurface : public Surface {
+class SURFACE_NOT_EXPORT ConsumerSurface : public Surface {
 public:
     ConsumerSurface(const std::string &name, bool isShared = false);
     virtual ~ConsumerSurface();

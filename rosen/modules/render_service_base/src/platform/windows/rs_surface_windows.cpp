@@ -88,6 +88,12 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceWindows::RequestFrame(
         if (canvas != nullptr) {
             canvas->translate(0, frame->buffer_->GetHeight());
             canvas->scale(1, -1);
+
+            SkPaint paint;
+            paint.setColor(SK_ColorBLACK);
+            paint.setStyle(paint.kStroke_Style);
+            paint.setStrokeWidth(1);
+            canvas->drawLine(0, 0, 100, 100, paint);
         }
     }
 #endif
@@ -112,6 +118,10 @@ bool RSSurfaceWindows::FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64
     } else {
         addr = frameWindows->buffer_->GetVirAddr();
     }
+    ((uint32_t *)addr)[0] = 0xffff0000;
+    ((uint32_t *)addr)[1] = 0xffff0000;
+    ((uint32_t *)addr)[2] = 0xffff0000;
+    ((uint32_t *)addr)[3] = 0xffff0000;
 
     if (addr == nullptr) {
         ROSEN_LOGW("RSSurfaceWindows::FlushFrame buffer.addr is nullptr");

@@ -18,6 +18,7 @@
 #include <mutex>
 
 #include <GLFW/glfw3.h>
+#include <scoped_bytrace.h>
 
 #include "hilog/log.h"
 
@@ -41,6 +42,7 @@ std::shared_ptr<GlfwRenderContext> GlfwRenderContext::GetGlobal()
 
 int GlfwRenderContext::Init()
 {
+    ScopedBytrace func(std::string("glfw ") + __func__);
     ::OHOS::HiviewDFX::HiLog::Info(LABEL, "Init");
     external_ = false;
     return glfwInit();
@@ -48,6 +50,7 @@ int GlfwRenderContext::Init()
 
 void GlfwRenderContext::InitFrom(void *glfwWindow)
 {
+    ScopedBytrace func(std::string("glfw ") + __func__);
     if (glfwWindow == nullptr) {
         ::OHOS::HiviewDFX::HiLog::Error(LABEL, "InitFrom glfwWindow is nullptr");
         return;
@@ -73,6 +76,7 @@ void GlfwRenderContext::InitFrom(void *glfwWindow)
 
 void GlfwRenderContext::Terminate()
 {
+    ScopedBytrace func(std::string("glfw ") + __func__);
     if (external_) {
         return;
     }
@@ -82,6 +86,7 @@ void GlfwRenderContext::Terminate()
 
 int GlfwRenderContext::CreateWindow(int32_t width, int32_t height, bool visible)
 {
+    ScopedBytrace func(std::string("glfw ") + __func__);
     if (external_) {
         return 0;
     }
@@ -104,6 +109,7 @@ int GlfwRenderContext::CreateWindow(int32_t width, int32_t height, bool visible)
 
 void GlfwRenderContext::DestroyWindow()
 {
+    ScopedBytrace func(std::string("glfw ") + __func__);
     if (external_) {
         return;
     }
@@ -130,11 +136,13 @@ void GlfwRenderContext::GetWindowSize(int32_t &width, int32_t &height)
 
 void GlfwRenderContext::SetWindowSize(int32_t width, int32_t height)
 {
+    ScopedBytrace func(std::string("glfw ") + __func__);
     glfwSetWindowSize(window_, width, height);
 }
 
 void GlfwRenderContext::SetWindowTitle(const std::string &title)
 {
+    ScopedBytrace func(std::string("glfw ") + __func__);
     glfwSetWindowTitle(window_, title.c_str());
 }
 
@@ -145,16 +153,19 @@ std::string GlfwRenderContext::GetClipboardData()
 
 void GlfwRenderContext::SetClipboardData(const std::string &data)
 {
+    ScopedBytrace func(std::string("glfw ") + __func__);
     glfwSetClipboardString(window_, data.c_str());
 }
 
 void GlfwRenderContext::MakeCurrent()
 {
+    ScopedBytrace func(std::string("glfw ") + __func__);
     glfwMakeContextCurrent(window_);
 }
 
 void GlfwRenderContext::SwapBuffers()
 {
+    ScopedBytrace func(std::string("glfw ") + __func__);
     glfwSwapBuffers(window_);
 }
 

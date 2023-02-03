@@ -22,7 +22,7 @@
 
 struct GLFWwindow;
 namespace OHOS::Rosen {
-class GlfwRenderContext {
+class OHOS_EXPORT GlfwRenderContext {
 public:
     using OnMouseButtonFunc = std::function<void(int button, bool pressed, int mods)>;
     using OnCursorPosFunc = std::function<void(double x, double y)>;

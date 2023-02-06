@@ -87,5 +87,20 @@ bool RSSystemProperties::GetDrawTextAsBitmap()
 {
     return {};
 }
+
+float RSSystemProperties::GetAnimationScale()
+{
+    return {};
+}
+
+bool RSSystemProperties::GetBoolSystemProperty(const char* name, bool defaultValue)
+{
+    return {};
+}
+
+int RSSystemProperties::WatchSystemProperty(const char* name, OnSystemPropertyChanged func, void* context)
+{
+    return {};
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -85,20 +85,6 @@ ohos_source_set("render_service_base_src") {
     #delegate
     "src/delegate/rs_functional_delegate.cpp",
 
-    #ipc_callbacks
-    "src/ipc_callbacks/buffer_available_callback_proxy.cpp",
-    "src/ipc_callbacks/buffer_available_callback_stub.cpp",
-    "src/ipc_callbacks/rs_application_agent_proxy.cpp",
-    "src/ipc_callbacks/rs_application_agent_stub.cpp",
-    "src/ipc_callbacks/rs_occlusion_change_callback_proxy.cpp",
-    "src/ipc_callbacks/rs_occlusion_change_callback_stub.cpp",
-    "src/ipc_callbacks/rs_render_mode_change_callback_proxy.cpp",
-    "src/ipc_callbacks/rs_render_mode_change_callback_stub.cpp",
-    "src/ipc_callbacks/screen_change_callback_proxy.cpp",
-    "src/ipc_callbacks/screen_change_callback_stub.cpp",
-    "src/ipc_callbacks/surface_capture_callback_proxy.cpp",
-    "src/ipc_callbacks/surface_capture_callback_stub.cpp",
-
     #pipeline
     "src/pipeline/rs_base_render_node.cpp",
     "src/pipeline/rs_canvas_render_node.cpp",
@@ -147,12 +133,6 @@ ohos_source_set("render_service_base_src") {
     "src/screen_manager/rs_screen_mode_info.cpp",
     "src/screen_manager/rs_screen_props.cpp",
     "src/screen_manager/rs_virtual_screen_resolution.cpp",
-
-    #overdraw
-    "src/overdraw/rs_cpu_overdraw_canvas_listener.cpp",
-    "src/overdraw/rs_gpu_overdraw_canvas_listener.cpp",
-    "src/overdraw/rs_listened_canvas.cpp",
-    "src/overdraw/rs_overdraw_controller.cpp",
   ]
 
   cflags = [
@@ -196,12 +176,34 @@ ohos_source_set("render_service_base_src") {
   ]
 
   external_deps = [
-    "hitrace_native:hitrace_meter",
-    "init:libbeget_proxy",
-    "init:libbegetutil",
     "ipc:ipc_core",
     "multimedia_image_framework:image_native",
   ]
+
+  if (!rosen_cross_platform) {
+    sources += [
+      #ipc_callbacks
+      "src/ipc_callbacks/buffer_available_callback_proxy.cpp",
+      "src/ipc_callbacks/buffer_available_callback_stub.cpp",
+      "src/ipc_callbacks/rs_application_agent_proxy.cpp",
+      "src/ipc_callbacks/rs_application_agent_stub.cpp",
+      "src/ipc_callbacks/rs_occlusion_change_callback_proxy.cpp",
+      "src/ipc_callbacks/rs_occlusion_change_callback_stub.cpp",
+      "src/ipc_callbacks/rs_render_mode_change_callback_proxy.cpp",
+      "src/ipc_callbacks/rs_render_mode_change_callback_stub.cpp",
+      "src/ipc_callbacks/screen_change_callback_proxy.cpp",
+      "src/ipc_callbacks/screen_change_callback_stub.cpp",
+      "src/ipc_callbacks/surface_capture_callback_proxy.cpp",
+      "src/ipc_callbacks/surface_capture_callback_stub.cpp",
+
+      #overdraw
+      "src/overdraw/rs_cpu_overdraw_canvas_listener.cpp",
+      "src/overdraw/rs_gpu_overdraw_canvas_listener.cpp",
+      "src/overdraw/rs_listened_canvas.cpp",
+      "src/overdraw/rs_overdraw_controller.cpp",
+    ]
+    external_deps += [ "hitrace_native:hitrace_meter" ]
+  }
 
   if (rosen_is_win) {
     defines += [ "_USE_MATH_DEFINES" ]

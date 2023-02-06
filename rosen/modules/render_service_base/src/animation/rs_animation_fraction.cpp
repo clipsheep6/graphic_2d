@@ -17,13 +17,11 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <parameters.h>
 #include <string>
-
-#include "parameter.h"
 
 #include "common/rs_common_def.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -48,9 +46,8 @@ void RSAnimationFraction::Init()
     if (isInitialized_) {
         return;
     }
-    float animationScale = std::atof((system::GetParameter(ANIMATION_SCALE_NAME, "1.0")).c_str());
-    SetAnimationScale(animationScale);
-    WatchParameter(ANIMATION_SCALE_NAME, OnAnimationScaleChangedCallback, nullptr);
+    SetAnimationScale(RSSystemProperties::GetAnimationScale());
+    RSSystemProperties::WatchSystemProperty(ANIMATION_SCALE_NAME, OnAnimationScaleChangedCallback, nullptr);
     isInitialized_ = true;
 }
 

@@ -17,15 +17,12 @@
 
 #include <cstdint>
 
-#include "accessibility_config.h"
 #include "rs_trace.h"
 #include "sandbox_utils.h"
 
 #include "animation/rs_animation_fraction.h"
 #include "command/rs_surface_node_command.h"
-#include "frame_collector.h"
 #include "delegate/rs_functional_delegate.h"
-#include "overdraw/rs_overdraw_controller.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_node_map.h"
@@ -43,6 +40,9 @@
 #ifdef ROSEN_OHOS
 #include <sys/prctl.h>
 #include <unistd.h>
+#include "accessibility_config.h"
+#include "frame_collector.h"
+#include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #endif
 #ifdef OHOS_RSS_CLIENT
 #include "res_sched_client.h"
@@ -62,24 +62,27 @@ static void SystemCallSetThreadName(const std::string& name)
 #endif
 }
 
-using namespace OHOS::AccessibilityConfig;
 namespace OHOS {
 namespace Rosen {
 namespace {
     static constexpr uint64_t REFRESH_PERIOD = 16666667;
 }
-class HighContrastObserver : public AccessibilityConfigObserver {
+
+#ifdef ROSEN_OHOS
+class HighContrastObserver : public OHOS::AccessibilityConfig::AccessibilityConfigObserver {
 public:
     HighContrastObserver() = default;
-    void OnConfigChanged(const CONFIG_ID id, const ConfigValue &value) override
+    void OnConfigChanged(
+        const OHOS::AccessibilityConfig::CONFIG_ID id, const OHOS::AccessibilityConfig::ConfigValue &value) override
     {
         ROSEN_LOGD("HighContrastObserver OnConfigChanged");
         auto& renderThread = RSRenderThread::Instance();
-        if (id == CONFIG_ID::CONFIG_HIGH_CONTRAST_TEXT) {
+        if (id == OHOS::AccessibilityConfig::CONFIG_ID::CONFIG_HIGH_CONTRAST_TEXT) {
             renderThread.SetHighContrast(value.highContrastText);
         }
     }
 };
+#endif
 
 RSRenderThread& RSRenderThread::Instance()
 {
@@ -105,12 +108,14 @@ RSRenderThread::RSRenderThread()
         RS_TRACE_END();
     };
 
-    highContrastObserver_ = std::make_shared<HighContrastObserver>();
     context_ = std::make_shared<RSContext>();
     jankDetector_ = std::make_shared<RSJankDetector>();
+#ifdef ROSEN_OHOS
+    highContrastObserver_ = std::make_shared<HighContrastObserver>();
     auto &config = OHOS::AccessibilityConfig::AccessibilityConfig::GetInstance();
     config.InitializeContext();
-    config.SubscribeConfigObserver(CONFIG_ID::CONFIG_HIGH_CONTRAST_TEXT, highContrastObserver_);
+    config.SubscribeConfigObserver(OHOS::AccessibilityConfig::CONFIG_HIGH_CONTRAST_TEXT, highContrastObserver_);
+#endif
 }
 
 RSRenderThread::~RSRenderThread()
@@ -237,11 +242,13 @@ void RSRenderThread::RenderLoop()
         RSRenderThread::Instance().RequestNextVSync();
     }
 
+#ifdef ROSEN_OHOS
     FrameCollector::GetInstance().SetRepaintCallback([this]() { this->RequestNextVSync(); });
 
     auto delegate = RSFunctionalDelegate::Create();
     delegate->SetRepaintCallback([this]() { this->RequestNextVSync(); });
     RSOverdrawController::GetInstance().SetDelegate(delegate);
+#endif
 
     if (runner_) {
         runner_->Run();

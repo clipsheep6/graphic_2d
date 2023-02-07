@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "overdraw/rs_cpu_overdraw_canvas_listener.h"
+#include "platform/ohos/overdraw/rs_cpu_overdraw_canvas_listener.h"
 
 #include <include/core/SkDrawable.h>
 #include <include/core/SkPath.h>
@@ -21,7 +21,7 @@
 #include <include/core/SkRegion.h>
 #include <include/core/SkTextBlob.h>
 
-#include "overdraw/rs_overdraw_controller.h"
+#include "platform/ohos/overdraw/rs_overdraw_controller.h"
 
 namespace OHOS {
 namespace Rosen {

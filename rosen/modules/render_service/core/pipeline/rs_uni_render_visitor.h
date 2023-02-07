@@ -21,9 +21,9 @@
 #include <set>
 #include <parameters.h>
 
-#include "overdraw/rs_cpu_overdraw_canvas_listener.h"
-#include "overdraw/rs_gpu_overdraw_canvas_listener.h"
-#include "overdraw/rs_overdraw_controller.h"
+#include "platform/ohos/overdraw/rs_cpu_overdraw_canvas_listener.h"
+#include "platform/ohos/overdraw/rs_gpu_overdraw_canvas_listener.h"
+#include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_processor.h"
 #include "screen_manager/rs_screen_manager.h"

@@ -66,6 +66,8 @@ enum class ParallelRenderingType {
     ENABLE = 2
 };
 
+using OnSystemPropertyChanged = void(*)(const char*, const char*, void*);
+
 class RSSystemProperties final {
 public:
     ~RSSystemProperties() = default;
@@ -96,7 +98,10 @@ public:
     static ParallelRenderingType GetParallelRenderingEnabled();
 
     static bool GetColdStartThreadEnabled();
+    static float GetAnimationScale();
 
+    static bool GetBoolSystemProperty(const char* name, bool defaultValue);
+    static int WatchSystemProperty(const char* name, OnSystemPropertyChanged func, void* context);
 private:
     RSSystemProperties() = default;
 

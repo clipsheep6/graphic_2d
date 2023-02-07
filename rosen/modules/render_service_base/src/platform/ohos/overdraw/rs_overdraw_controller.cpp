@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "overdraw/rs_overdraw_controller.h"
+#include "platform/ohos/overdraw/rs_overdraw_controller.h"
 
 #include <sstream>
 

@@ -18,7 +18,7 @@
 #include <cstdint>
 #include <securec.h>
 
-#include "overdraw/rs_cpu_overdraw_canvas_listener.h"
+#include "platform/ohos/overdraw/rs_cpu_overdraw_canvas_listener.h"
 #include <include/core/SkDrawable.h>
 #include <include/core/SkPath.h>
 #include <include/core/SkPicture.h>

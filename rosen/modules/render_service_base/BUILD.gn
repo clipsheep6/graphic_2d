@@ -26,7 +26,6 @@ config("export_config") {
     "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
     "//foundation/graphic/graphic_2d/interfaces/inner_api/composer",
     "//foundation/graphic/graphic_2d/utils/sandbox",
-    "//commonlibrary/c_utils/base/include",
   ]
 
   defines = rs_common_define
@@ -160,10 +159,6 @@ ohos_source_set("render_service_base_src") {
     sources += [ "src/common/rs_shared_context.cpp" ]
   }
 
-  if (current_os == "mingw" || current_os == "mac" || current_os == "linux") {
-    sources -= [ "src/common/rs_shared_context.cpp" ]
-  }
-
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
     "//foundation/graphic/graphic_2d/utils/log",
@@ -176,11 +171,12 @@ ohos_source_set("render_service_base_src") {
   ]
 
   external_deps = [
-    "ipc:ipc_core",
     "multimedia_image_framework:image_native",
   ]
 
-  if (!rosen_cross_platform) {
+  if (rosen_cross_platform) {
+    sources -= [ "src/common/rs_shared_context.cpp" ]
+  } else {
     sources += [
       #ipc_callbacks
       "src/ipc_callbacks/buffer_available_callback_proxy.cpp",
@@ -202,7 +198,10 @@ ohos_source_set("render_service_base_src") {
       "src/overdraw/rs_listened_canvas.cpp",
       "src/overdraw/rs_overdraw_controller.cpp",
     ]
-    external_deps += [ "hitrace_native:hitrace_meter" ]
+    external_deps += [
+      "hitrace_native:hitrace_meter",
+      "ipc:ipc_core",
+    ]
   }
 
   if (rosen_is_win) {

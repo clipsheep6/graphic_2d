@@ -142,7 +142,6 @@ ohos_source_set("render_service_client_src") {
 
   external_deps = [
     "eventhandler:libeventhandler",
-    "ipc:ipc_core",
   ]
 
   if (rosen_cross_platform) {
@@ -154,14 +153,15 @@ ohos_source_set("render_service_client_src") {
       "eventhandler:libeventhandler",
     ]
   } else {
-  deps += [
-    "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
-    "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf:frame_trace_intf",
-  ]
+    deps += [
+      "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
+      "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf:frame_trace_intf",
+    ]
     external_deps += [
       "c_utils:utils",
       "hisysevent_native:libhisysevent",
       "hitrace_native:hitrace_meter",
+      "ipc:ipc_core",
     ]
   }
 

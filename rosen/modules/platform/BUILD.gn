@@ -13,6 +13,38 @@
 
 import("//build/ohos.gni")
 
+# ipc_core {{{
+group("ipc_core") {
+  if (current_os == "ohos") {
+    public_deps = [
+      "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
+    ]
+  } else {
+    public_deps = [ ":mock_ipc_core" ]
+  }
+}
+
+config("ipc_core_config") {
+  include_dirs = [ "ipc_core" ]
+}
+
+ohos_source_set("mock_ipc_core") {
+  public_configs = [ ":ipc_core_config" ]
+  sources = [
+    "ipc_core/ipc_file_descriptor.cpp",
+    "ipc_core/ipc_object_stub.cpp",
+    "ipc_core/ipc_skeleton.cpp",
+    "ipc_core/iremote_broker.cpp",
+    "ipc_core/iremote_object.cpp",
+    "ipc_core/message_option.cpp",
+    "ipc_core/message_parcel.cpp",
+    "ipc_core/peer_holder.cpp",
+  ]
+  deps = [ ":utils" ]
+}
+
+# ipc_core }}}
+
 # utils {{{
 group("utils") {
   if (current_os == "ohos") {

@@ -193,6 +193,7 @@ ohos_source_set("render_service_base_src") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:ipc_core",
     "//foundation/graphic/graphic_2d/utils:sandbox_utils",
   ]
 
@@ -200,7 +201,6 @@ ohos_source_set("render_service_base_src") {
     "hitrace_native:hitrace_meter",
     "init:libbeget_proxy",
     "init:libbegetutil",
-    "ipc:ipc_core",
     "multimedia_image_framework:image_native",
   ]
 

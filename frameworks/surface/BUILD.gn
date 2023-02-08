@@ -110,6 +110,10 @@ ohos_shared_library("surface") {
     public_deps -= [ "//drivers/peripheral/display/hdi_service/gralloc/client:hdi_gralloc_client" ]
   }
 
+  innerapi_tags = [
+    "chipsetsdk",
+    "platformsdk",
+  ]
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }

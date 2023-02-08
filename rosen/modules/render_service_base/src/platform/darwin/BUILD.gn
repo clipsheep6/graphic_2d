@@ -11,19 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("darwin") {
-  deps = [ ":rosen_darwin_sources" ]
-}
+import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine/ace_config.gni")
 
-config("export_config") {
-  include_dirs = []
-}
-
-source_set("rosen_darwin_sources") {
-  public_configs = [ ":export_config" ]
-
+ohos_source_set("darwin") {
   sources = [
     "rs_log.cpp",
+    "rs_render_service_client.cpp",
+    "rs_surface_darwin.cpp",
+    "rs_surface_frame_darwin.cpp",
     "rs_system_properties.cpp",
   ]
 
@@ -31,5 +27,18 @@ source_set("rosen_darwin_sources") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include",
   ]
 
+  defines = []
+  if (enable_glfw_window) {
+    defines += [ "USE_GLFW_WINDOW" ]
+  }
+
+  configs = [ "//base/notification/eventhandler/frameworks/eventhandler:public_libeventhandler_config" ]
+
   deps = []
+
+  public_deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/glfw_render_context:libglfw_render_context",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:ipc_core",
+    "//third_party/flutter/build/skia:ace_skia",
+  ]
 }

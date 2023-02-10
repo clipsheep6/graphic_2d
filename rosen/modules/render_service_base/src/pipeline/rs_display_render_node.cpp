@@ -19,6 +19,9 @@
 #include "platform/common/rs_log.h"
 #include "platform/ohos/backend/rs_surface_ohos_gl.h"
 #include "platform/ohos/backend/rs_surface_ohos_raster.h"
+#ifdef RS_ENABLE_VK
+#include "platform/ohos/backend/rs_surface_ohos_vulkan.h"
+#endif
 #include "screen_manager/screen_types.h"
 #include "visitor/rs_node_visitor.h"
 
@@ -133,7 +136,9 @@ bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
     auto producer = consumer_->GetProducer();
     sptr<Surface> surface = Surface::CreateSurfaceAsProducer(producer);
 
-#ifdef ACE_ENABLE_GL
+#if defined(ACE_ENABLE_VK)
+    surface_ = std::make_shared<RSSurfaceOhosVulkan>(surface);
+#elif defined(ACE_ENABLE_GL)
     // GPU render
     surface_ = std::make_shared<RSSurfaceOhosGl>(surface);
 #else

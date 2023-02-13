@@ -15,7 +15,6 @@
 
 #ifndef RENDER_SERVICE_BASE_COMMON_RS_INNOVATION_H
 #define RENDER_SERVICE_BASE_COMMON_RS_INNOVATION_H
-
 namespace OHOS {
 namespace Rosen {
 class RSInnovation {

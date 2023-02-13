@@ -22,9 +22,7 @@
 
 #include "animation/rs_animation_fraction.h"
 #include "command/rs_surface_node_command.h"
-#include "frame_collector.h"
 #include "delegate/rs_functional_delegate.h"
-#include "overdraw/rs_overdraw_controller.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_node_map.h"
@@ -40,19 +38,20 @@
 #include "ui/rs_surface_node.h"
 #include "ui/rs_ui_director.h"
 
-#ifdef ROSEN_OHOS
-#include <sys/prctl.h>
-#include <unistd.h>
-#endif
 #ifdef OHOS_RSS_CLIENT
 #include "res_sched_client.h"
 #include "res_type.h"
 #endif
-#include "sandbox_utils.h"
-
+#ifdef ROSEN_OHOS
+#include <sys/prctl.h>
+#include <unistd.h>
+#include "accessibility_config.h"
+#include "frame_collector.h"
 #include "frame_trace.h"
-using namespace FRAME_TRACE;
+#include "platform/ohos/overdraw/rs_overdraw_controller.h"
+
 static const std::string RT_INTERVAL_NAME = "renderthread";
+#endif
 
 static void SystemCallSetThreadName(const std::string& name)
 {
@@ -60,6 +59,13 @@ static void SystemCallSetThreadName(const std::string& name)
     if (prctl(PR_SET_NAME, name.c_str()) < 0) {
         return;
     }
+#endif
+}
+
+void SendFrameEvent(bool start)
+{
+#ifdef ROSEN_OHOS
+    FrameCollector::GetInstance().MarkFrameEvent(start ? FrameEventType::WaitVsyncStart : FrameEventType::WaitVsyncEnd);
 #endif
 }
 
@@ -82,7 +88,9 @@ RSRenderThread::RSRenderThread()
         uint64_t renderStartTimeStamp = jankDetector_->GetSysTimeNs();
         RS_TRACE_BEGIN("RSRenderThread DrawFrame: " + std::to_string(timestamp_));
         if (RSSystemProperties::FrameTraceEnabled()) {
+#ifdef ROSEN_OHOS
             QuickStartFrameTrace(RT_INTERVAL_NAME);
+#endif
         }
         prevTimestamp_ = timestamp_;
         ProcessCommands();
@@ -91,7 +99,9 @@ RSRenderThread::RSRenderThread()
         Render();
         SendCommands();
         if (RSSystemProperties::FrameTraceEnabled()) {
+#ifdef ROSEN_OHOS
             QuickEndFrameTrace(RT_INTERVAL_NAME);
+#endif
         }
         jankDetector_->CalculateSkippedFrame(renderStartTimeStamp, jankDetector_->GetSysTimeNs());
         RS_TRACE_END();
@@ -164,7 +174,7 @@ void RSRenderThread::RequestNextVSync()
 {
     if (handler_) {
         RS_TRACE_FUNC();
-        FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::WaitVsyncStart);
+        SendFrameEvent(true);
         VSyncReceiver::FrameCallback fcb = {
             .userData_ = this,
             .callback_ = std::bind(&RSRenderThread::OnVsync, this, std::placeholders::_1),
@@ -229,11 +239,13 @@ void RSRenderThread::RenderLoop()
         RSRenderThread::Instance().RequestNextVSync();
     }
 
+#ifdef ROSEN_OHOS
     FrameCollector::GetInstance().SetRepaintCallback([this]() { this->RequestNextVSync(); });
 
     auto delegate = RSFunctionalDelegate::Create();
     delegate->SetRepaintCallback([this]() { this->RequestNextVSync(); });
     RSOverdrawController::GetInstance().SetDelegate(delegate);
+#endif
 
     if (runner_) {
         runner_->Run();
@@ -243,7 +255,7 @@ void RSRenderThread::RenderLoop()
 void RSRenderThread::OnVsync(uint64_t timestamp)
 {
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderThread::OnVsync");
-    FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::WaitVsyncEnd);
+    SendFrameEvent(false);
     mValue = (mValue + 1) % 2; // 1 and 2 is Calculated parameters
     RS_TRACE_INT("Vsync-client", mValue);
     timestamp_ = timestamp;

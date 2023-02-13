@@ -16,8 +16,6 @@
 #include "pipeline/rs_render_thread_visitor.h"
 
 #include <cmath>
-#include <frame_collector.h>
-#include <frame_painter.h>
 #include <include/core/SkColor.h>
 #include <include/core/SkFont.h>
 #include <include/core/SkMatrix.h>
@@ -28,9 +26,6 @@
 
 #include "command/rs_base_node_command.h"
 #include "common/rs_vector4.h"
-#include "overdraw/rs_cpu_overdraw_canvas_listener.h"
-#include "overdraw/rs_gpu_overdraw_canvas_listener.h"
-#include "overdraw/rs_overdraw_controller.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_node_map.h"
@@ -43,6 +38,14 @@
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
+
+#ifdef ROSEN_OHOS
+#include <frame_collector.h>
+#include <frame_painter.h>
+#include "platform/ohos/overdraw/rs_cpu_overdraw_canvas_listener.h"
+#include "platform/ohos/overdraw/rs_gpu_overdraw_canvas_listener.h"
+#include "platform/ohos/overdraw/rs_overdraw_controller.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -334,7 +337,9 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 #endif
     uiTimestamp_ = RSRenderThread::Instance().GetUITimestamp();
     RS_TRACE_BEGIN(ptr->GetName() + " rsSurface->RequestFrame");
+#ifdef ROSEN_OHOS
     FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::ReleaseStart);
+#endif
 
     const auto& property = node.GetRenderProperties();
     const float bufferWidth = node.GetSuggestedBufferWidth() * property.GetScaleX();
@@ -343,7 +348,9 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     RS_TRACE_END();
     if (surfaceFrame == nullptr) {
         ROSEN_LOGI("ProcessRoot %s: Request Frame Failed", ptr->GetName().c_str());
+#ifdef ROSEN_OHOS
         FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::ReleaseEnd);
+#endif
         return;
     }
 
@@ -357,6 +364,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         return;
     }
 
+#ifdef ROSEN_OHOS
     // if listenedCanvas is nullptr, that means disabled or listen failed
     std::shared_ptr<RSListenedCanvas> listenedCanvas = nullptr;
     std::shared_ptr<RSCanvasListener> overdrawListener = nullptr;
@@ -382,6 +390,9 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     } else {
         canvas_ = std::make_shared<RSPaintFilterCanvas>(skSurface.get());
     }
+#else
+    canvas_ = std::make_shared<RSPaintFilterCanvas>(skSurface.get());
+#endif
 
     canvas_->SetHighContrast(RSRenderThread::Instance().isHighContrastEnabled());
 
@@ -441,6 +452,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         DrawDirtyRegion();
     }
 
+#ifdef ROSEN_OHOS
     if (overdrawListener != nullptr) {
         overdrawListener->Draw();
     }
@@ -449,12 +461,15 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     fpainter.Draw(*canvas_);
     FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::ReleaseEnd);
     FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::FlushStart);
+#endif
 
     RS_TRACE_BEGIN(ptr->GetName() + " rsSurface->FlushFrame");
     ROSEN_LOGD("RSRenderThreadVisitor FlushFrame surfaceNodeId = %" PRIu64 ", uiTimestamp = %" PRIu64,
         node.GetRSSurfaceNodeId(), uiTimestamp_);
     rsSurface->FlushFrame(surfaceFrame, uiTimestamp_);
+#ifdef ROSEN_OHOS
     FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::FlushEnd);
+#endif
     RS_TRACE_END();
 
     canvas_ = nullptr;

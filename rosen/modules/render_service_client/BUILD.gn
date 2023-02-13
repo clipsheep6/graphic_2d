@@ -13,6 +13,8 @@
 
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
+import(
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
 import("render_service_client.gni")
 
 config("render_service_client_config") {
@@ -123,9 +125,7 @@ ohos_source_set("render_service_client_src") {
   deps = []
 
   deps += [
-    "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:ipc_core",
-    "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf:frame_trace_intf",
     "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
   ]
 
@@ -141,20 +141,23 @@ ohos_source_set("render_service_client_src") {
     defines += [ "OHOS_RSS_CLIENT" ]
   }
 
-  external_deps = [
-    "eventhandler:libeventhandler",
-    "hisysevent_native:libhisysevent",
-    "hitrace_native:hitrace_meter",
-  ]
+  external_deps = [ "eventhandler:libeventhandler" ]
 
-  if (current_os == "mingw" || current_os == "mac" || current_os == "linux") {
+  if (rosen_cross_platform) {
     deps += [
       "//foundation/graphic/graphic_2d:libgl",
       "//foundation/graphic/graphic_2d/rosen/modules/glfw_render_context:libglfw_render_context",
     ]
+    external_deps += [ "eventhandler:libeventhandler" ]
+  } else {
+    deps += [
+      "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
+      "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf:frame_trace_intf",
+    ]
     external_deps += [
       "c_utils:utils",
-      "eventhandler:libeventhandler",
+      "hisysevent_native:libhisysevent",
+      "hitrace_native:hitrace_meter",
     ]
   }
 

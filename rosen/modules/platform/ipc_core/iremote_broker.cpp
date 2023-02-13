@@ -14,9 +14,6 @@
  */
 
 #include "iremote_broker.h"
-// #include <utility>
-// #include "ipc_debug.h"
-// #include "log_tags.h"
 
 namespace OHOS {
 BrokerRegistration &BrokerRegistration::Get()

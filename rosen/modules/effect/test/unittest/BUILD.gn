@@ -60,7 +60,7 @@ ohos_unittest("EffectTest") {
     "//foundation/graphic/graphic_2d/utils/color_manager:color_manager",
     "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
     "//foundation/multimedia/image_framework/interfaces/kits/js/common:image",
-    "//foundation/graphic/graphic_2d/rosen/modules/platform:ace_skia",
+    "//third_party/flutter/build/skia:ace_skia_ohos",
   ]
 
   configs = [

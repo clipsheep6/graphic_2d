@@ -62,17 +62,17 @@ ohos_source_set("impl_eventhandler") {
 
 # hilog {{{
 group("hilog") {
-  platform = current_os
-  if (current_os == "mingw") {
-    platform = "windows"
-  }
-  if (platform == "ohos") {
+  if (current_os == "ohos") {
     public_deps = [
       "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     ]
+  } else if (current_os == "mingw") {
+    public_deps = [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
+    ]
   } else {
     public_deps = [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_$platform",
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_$current_os",
     ]
   }
 }
@@ -118,9 +118,7 @@ config("ipc_core_config") {
 ohos_source_set("mock_ipc_core") {
   public_configs = [ ":ipc_core_config" ]
   sources = [
-    "ipc_core/ipc_file_descriptor.cpp",
     "ipc_core/ipc_object_stub.cpp",
-    "ipc_core/ipc_skeleton.cpp",
     "ipc_core/iremote_broker.cpp",
     "ipc_core/iremote_object.cpp",
     "ipc_core/message_option.cpp",
@@ -149,13 +147,8 @@ ohos_source_set("mock_utils") {
   public_configs = [ ":utils_config" ]
   sources = [
     "utils/directory_ex.cpp",
-    "utils/observer.cpp",
     "utils/parcel.cpp",
     "utils/refbase.cpp",
-    "utils/rwlock.cpp",
-    "utils/string_ex.cpp",
-    "utils/thread_pool.cpp",
-    "utils/unicode_ex.cpp",
   ]
   public_deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
 }

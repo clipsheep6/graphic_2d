@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,18 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef INTERFACES_INNERKITS_INCLUDE_DECODE_LISTENER_H_
-#define INTERFACES_INNERKITS_INCLUDE_DECODE_LISTENER_H_
+#include "frame_painter.h"
+
+#include "frame_collector.h"
 
 namespace OHOS {
-namespace Media {
-class DecodeListener {
-public:
-    DecodeListener() = default;
-    virtual ~DecodeListener() = default;
-    virtual void OnEvent(int event) = 0;
-};
-} // namespace Media
-} // namespace OHOS
+namespace Rosen {
+FramePainter::FramePainter(FrameCollector &collector) : collector_(collector)
+{
+}
 
-#endif // INTERFACES_INNERKITS_INCLUDE_DECODE_LISTENER_H_
+void FramePainter::Draw(SkCanvas &canvas)
+{
+}
+
+double FramePainter::SumHeight(const struct FrameInfo &info)
+{
+    return 0;
+}
+} // namespace Rosen
+} // namespace OHOS

@@ -15,7 +15,6 @@
 
 #include "frame_saver.h"
 
-#include <cstring>
 #include <map>
 #include <sstream>
 #include <string>
@@ -26,10 +25,6 @@
 
 #include "frame_info.h"
 #include "sandbox_utils.h"
-
-#ifdef _WIN32
-#define mkdir(a, b) (void)b; mkdir(a)
-#endif
 
 namespace OHOS {
 namespace Rosen {

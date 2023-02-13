@@ -113,8 +113,9 @@ ohos_source_set("render_service_client_src") {
   deps = []
 
   deps += [
-    "//foundation/graphic/graphic_2d/rosen/modules/platform:ipc_core",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:eventhandler",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:ipc_core",
+
     # "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
   ]
 

@@ -60,8 +60,8 @@ ohos_executable("drawing_sample") {
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
-    "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:ace_skia",
+    "//foundation/graphic/graphic_2d/utils:sync_fence",
   ]
 
   external_deps = [

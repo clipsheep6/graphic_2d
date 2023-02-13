@@ -93,6 +93,16 @@ void GlfwRenderContext::SetWindowTitle(const std::string &title)
     glfwSetWindowTitle(window_, title.c_str());
 }
 
+std::string GlfwRenderContext::GetClipboardData()
+{
+    return glfwGetClipboardString(window_);
+}
+
+void GlfwRenderContext::SetClipboardData(const std::string &data)
+{
+    glfwSetClipboardString(window_, data.c_str());
+}
+
 void GlfwRenderContext::MakeCurrent()
 {
     glfwMakeContextCurrent(window_);
@@ -115,6 +125,18 @@ void GlfwRenderContext::OnCursorPos(const OnCursorPosFunc &onCursorPos)
     glfwSetCursorPosCallback(window_, GlfwRenderContext::OnCursorPos);
 }
 
+void GlfwRenderContext::OnKey(const OnKeyFunc &onKey)
+{
+    onKey_ = onKey;
+    glfwSetKeyCallback(window_, GlfwRenderContext::OnKey);
+}
+
+void GlfwRenderContext::OnChar(const OnCharFunc &onChar)
+{
+    onChar_ = onChar;
+    glfwSetCharCallback(window_, GlfwRenderContext::OnChar);
+}
+
 void GlfwRenderContext::OnMouseButton(GLFWwindow *window, int button, int action, int mods)
 {
     const auto &that = reinterpret_cast<GlfwRenderContext *>(glfwGetWindowUserPointer(window));
@@ -128,6 +150,22 @@ void GlfwRenderContext::OnCursorPos(GLFWwindow *window, double x, double y)
     const auto &that = reinterpret_cast<GlfwRenderContext *>(glfwGetWindowUserPointer(window));
     if (that->onCursorPos_) {
         that->onCursorPos_(x, y);
+    }
+}
+
+void GlfwRenderContext::OnKey(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+    const auto &that = reinterpret_cast<GlfwRenderContext *>(glfwGetWindowUserPointer(window));
+    if (that->onKey_) {
+        that->onKey_(key, scancode, action, mods);
+    }
+}
+
+void GlfwRenderContext::OnChar(GLFWwindow *window, unsigned int codepoint)
+{
+    const auto &that = reinterpret_cast<GlfwRenderContext *>(glfwGetWindowUserPointer(window));
+    if (that->onChar_) {
+        that->onChar_(codepoint);
     }
 }
 } // namespace OHOS::Rosen

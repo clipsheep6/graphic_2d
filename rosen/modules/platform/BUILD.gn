@@ -50,6 +50,7 @@ ohos_source_set("impl_eventhandler") {
     "eventhandler_impl/none_io_waiter.cpp",
   ]
   defines = [ "LOG_DOMAIN=0xD001200" ]
+  cflags = [ "-std=c++17" ]
   deps = [
     ":hilog",
     ":utils",

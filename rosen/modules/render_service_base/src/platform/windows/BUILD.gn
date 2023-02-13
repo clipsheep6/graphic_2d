@@ -37,6 +37,8 @@ ohos_source_set("windows") {
     defines += [ "USE_GLFW_WINDOW" ]
   }
 
+  cflags = [ "-std=c++17" ]
+
   configs = [ "//base/notification/eventhandler/frameworks/eventhandler:public_libeventhandler_config" ]
 
   public_configs = [ "//foundation/graphic/graphic_2d/rosen/modules/composer:composer_public_config" ]

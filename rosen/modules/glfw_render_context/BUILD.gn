@@ -21,6 +21,7 @@ config("libglfw_render_context_config") {
     "-Wall",
     "-Werror",
     "-g3",
+    "-std=c++17",
   ]
 }
 

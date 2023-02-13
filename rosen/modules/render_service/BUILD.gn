@@ -103,7 +103,7 @@ ohos_shared_library("librender_service") {
   ]
 
   public_deps = [
-    "//third_party/flutter/build/skia:ace_skia_ohos",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:ace_skia",
     "//third_party/libpng:libpng",
   ]
 

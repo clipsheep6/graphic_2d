@@ -50,7 +50,7 @@ ohos_shared_library("skeffectchain") {
     "//foundation/multimedia/image_framework/frameworks/innerkitsimpl/pixelconverter:pixelconvertadapter",
     "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
     "//foundation/multimedia/image_framework/interfaces/kits/js/common:image",
-    "//third_party/flutter/build/skia:ace_skia_ohos",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:ace_skia",
   ]
 
   if (ace_enable_gpu) {

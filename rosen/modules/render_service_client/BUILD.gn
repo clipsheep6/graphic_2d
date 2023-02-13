@@ -44,6 +44,7 @@ ohos_source_set("render_service_client_src") {
     "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
     "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk/include",
     "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf",
+    "//foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/include",
   ]
 
   sources = [
@@ -125,6 +126,7 @@ ohos_source_set("render_service_client_src") {
     "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:ipc_core",
     "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf:frame_trace_intf",
+    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
   ]
 
   if (rss_enabled) {

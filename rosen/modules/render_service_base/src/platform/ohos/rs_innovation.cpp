@@ -43,11 +43,6 @@ bool RSInnovation::UpdateQosVsyncEnabled()
         (std::atoi((system::GetParameter("rosen.qos_vsync.enabled", "0")).c_str()) != 0);
 }
 
-bool RSInnovation::GetParallelRenderingEnabled()
-{
-    return _s_parallelRenderingLoaded;
-}
-
 void RSInnovation::GetParallelCompositionFunc()
 {
     if (innovationHandle) {

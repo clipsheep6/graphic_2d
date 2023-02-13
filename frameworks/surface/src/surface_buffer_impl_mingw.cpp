@@ -88,6 +88,7 @@ public:
     int32_t FlushMCache(const BufferHandle &handle) const override { return 0; }
     int32_t InvalidateCache(const BufferHandle &handle) const override { return 0; }
     int32_t IsSupportedAlloc(const std::vector<VerifyAllocInfo> &infos, std::vector<bool> &supporteds) const override { return 0; }
+    int32_t RegAllocatorDeathCallback(HDI::Display::V1_0::AllocatorDeathCallback func, void* data) override { return 0; }
 };
 
 namespace HDI::Display::V1_0 {

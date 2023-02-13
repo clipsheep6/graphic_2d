@@ -17,6 +17,7 @@
 
 #include <mutex>
 #include <unordered_map>
+#include <memory>
 
 #include "common/rs_macros.h"
 

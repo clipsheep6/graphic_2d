@@ -46,6 +46,7 @@ ohos_source_set("windows") {
       [ "//foundation/graphic/graphic_2d/rosen/modules/platform:image_native" ]
 
   public_deps = [
+    "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/glfw_render_context:libglfw_render_context",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:ace_skia",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:ipc_core",

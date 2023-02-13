@@ -38,19 +38,27 @@ namespace Rosen {
  *          extern template class RSRenderAnimatableProperty<float>;
  */
 
-#ifdef MODULE_RSB
-#define RSB_EXPORT      OHOS_EXPORT
-#define RSB_EXPORT_TMP  OHOS_EXPORT
+#ifdef _WIN32
+#define RS_EXPORT __attribute__((dllexport))
+#define RS_IMPORT __attribute__((dllimport))
 #else
-#define RSB_EXPORT      OHOS_IMPORT
+#define RS_EXPORT __attribute__((visibility("default")))
+#define RS_IMPORT __attribute__((visibility("default")))
+#endif
+
+#ifdef MODULE_RSB
+#define RSB_EXPORT      RS_EXPORT
+#define RSB_EXPORT_TMP  RS_EXPORT
+#else
+#define RSB_EXPORT      RS_IMPORT
 #define RSB_EXPORT_TMP
 #endif
 
 #ifdef MODULE_RSC
-#define RSC_EXPORT      OHOS_EXPORT
-#define RSC_EXPORT_TMP  OHOS_EXPORT
+#define RSC_EXPORT      RS_EXPORT
+#define RSC_EXPORT_TMP  RS_EXPORT
 #else
-#define RSC_EXPORT      OHOS_IMPORT
+#define RSC_EXPORT      RS_IMPORT
 #define RSC_EXPORT_TMP
 #endif
 

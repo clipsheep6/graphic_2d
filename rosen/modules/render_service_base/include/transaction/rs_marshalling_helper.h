@@ -18,7 +18,6 @@
 
 #include <memory>
 #include "common/rs_macros.h"
-#ifdef ROSEN_OHOS
 
 #include <parcel.h>
 
@@ -226,5 +225,4 @@ private:
 } // namespace Rosen
 } // namespace OHOS
 
-#endif // ROSEN_OHOS
 #endif // RENDER_SERVICE_BASE_TRANSACTION_RS_MARSHALLING_HELPER_H

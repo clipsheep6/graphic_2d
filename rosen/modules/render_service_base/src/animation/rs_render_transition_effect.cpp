@@ -23,7 +23,6 @@
 
 namespace OHOS {
 namespace Rosen {
-#ifdef ROSEN_OHOS
 namespace {
 enum RSTransitionEffectType : uint16_t {
     FADE = 1,
@@ -149,7 +148,6 @@ RSRenderTransitionEffect* RSTransitionRotate::Unmarshalling(Parcel& parcel)
     }
     return new RSTransitionRotate(dx, dy, dz, radian);
 }
-#endif
 
 const std::shared_ptr<RSRenderModifier> RSTransitionFade::CreateModifier()
 {

@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#ifdef ROSEN_OHOS
 #include "rs_application_agent_proxy.h"
 
 #include <message_option.h>
@@ -51,4 +50,3 @@ void RSApplicationAgentProxy::OnTransaction(std::shared_ptr<RSTransactionData> t
 }
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS

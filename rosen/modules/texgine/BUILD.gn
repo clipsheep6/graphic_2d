@@ -32,7 +32,10 @@ config("libtexgine_config") {
 }
 
 config("libtexgine_public_config") {
-  include_dirs = [ "export" ]
+  include_dirs = [
+    "export",
+    "texgine_drawing",
+  ]
 }
 
 ohos_shared_library("libtexgine") {
@@ -92,6 +95,7 @@ ohos_shared_library("libtexgine") {
   deps = [
     "//foundation/graphic/graphic_2d/rosen/build/flutter/icu:rosen_libicu_$platform",
     "//third_party/harfbuzz:harfbuzz_static",
+    "texgine_drawing:texgine_drawing",
   ]
 
   public_deps = [ "//third_party/flutter/build/skia:ace_skia_$platform" ]

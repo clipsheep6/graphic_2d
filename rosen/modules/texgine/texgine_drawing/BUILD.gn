@@ -1,0 +1,61 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+config("texgine_drawing_public_config") {
+  include_dirs = [
+    ".",
+  ]
+}
+
+shared_library("texgine_drawing") {
+  public_configs = [ ":texgine_drawing_public_config" ]
+
+  public_deps = [
+    "//third_party/skia:libskia",
+    "//interfaces:skia_framework",
+    "//interfaces:skp_helper",
+    ]
+
+  sources = [
+    "texgine_canvas.cpp",
+    "texgine_dash_path_effect.cpp",
+    "texgine_data.cpp",
+    "texgine_font_manager.cpp",
+    "texgine_font_metrics.cpp",
+    "texgine_font_style_set.cpp",
+    "texgine_font_style.cpp",
+    "texgine_font.cpp",
+    "texgine_framework.cpp",
+    "texgine_helper.cpp",
+    "texgine_mask_filter.cpp",
+    "texgine_paint.cpp",
+    "texgine_path_1d_path_effect.cpp",
+    "texgine_path_effect.cpp",
+    "texgine_path.cpp",
+    "texgine_picture.cpp",
+    "texgine_rect.cpp",
+    "texgine_stream.cpp",
+    "texgine_string.cpp",
+    "texgine_text_blob_builder.cpp",
+    "texgine_text_blob.cpp",
+    "texgine_typeface.cpp",
+  ]
+
+  deps = [
+  ]
+
+  platform = current_os
+  if (platform == "mingw") {
+    platform = "windows"
+  }
+}

@@ -51,7 +51,11 @@ uint32_t ThreadPool::Start(int numThreads)
         std::thread t(&ThreadPool::WorkInThread, this);
 #ifndef _WIN32
         // Give the name of ThreadPool to threads created by the ThreadPool.
+#ifdef __APPLE__
+        int err = pthread_setname_np((myName_ + std::to_string(i)).c_str());
+#else
         int err = pthread_setname_np(t.native_handle(), (myName_ + std::to_string(i)).c_str());
+#endif
         if (err != 0) {
             UTILS_LOGW("Failed to set name to thread. %{public}s", strerror(err));
         }

@@ -37,20 +37,22 @@ ohos_source_set("darwin") {
     defines += [ "USE_GLFW_WINDOW" ]
   }
 
+  cflags = [ "-std=c++17" ]
+
   configs = [ "//base/notification/eventhandler/frameworks/eventhandler:public_libeventhandler_config" ]
 
   public_configs = [ "//foundation/graphic/graphic_2d/rosen/modules/composer:composer_public_config" ]
 
-  deps =
-      [ "//foundation/graphic/graphic_2d/rosen/modules/platform:image_native" ]
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:hilog",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:image_native",
+  ]
 
   public_deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/glfw_render_context:libglfw_render_context",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:ace_skia",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:ipc_core",
-    "//foundation/graphic/graphic_2d/utils:sync_fence",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:utils",
     "//third_party/EGL:libEGL",
   ]
-
-  external_deps = [ "hilog_native:libhilog" ]
 }

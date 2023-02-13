@@ -35,9 +35,10 @@ ohos_shared_library("libglfw_render_context") {
 
   public_configs = [ ":libglfw_render_context_public_config" ]
 
-  deps = [ "//third_party/flutter/glfw:glfw" ]
-
-  external_deps = [ "hilog_native:libhilog" ]
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:hilog",
+    "//third_party/flutter/glfw:glfw",
+  ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

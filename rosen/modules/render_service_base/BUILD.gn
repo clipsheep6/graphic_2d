@@ -18,9 +18,7 @@ import(
 
 config("export_config") {
   cflags_cc = [ "-std=c++17" ]
-  include_dirs = [
-    "include",
-  ]
+  include_dirs = [ "include" ]
 
   defines = rs_common_define
 }
@@ -186,8 +184,8 @@ ohos_source_set("render_service_base_src") {
   ]
 
   deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:eventhandler",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:hilog",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:ipc_core",
     "//foundation/graphic/graphic_2d/utils:sandbox_utils",
   ]

@@ -51,10 +51,10 @@ ohos_source_set("impl_eventhandler") {
   ]
   defines = [ "LOG_DOMAIN=0xD001200" ]
   deps = [
+    ":hilog",
     ":utils",
     "//third_party/libuv:uv",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 }
 
 # eventhandler }}}
@@ -91,7 +91,7 @@ config("hitrace_meter_config") {
 ohos_source_set("impl_hitrace_meter") {
   public_configs = [ ":hitrace_meter_config" ]
   sources = [ "hitrace_meter_impl/hitrace_meter_mingw.cpp" ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  deps = [ ":hilog" ]
 }
 
 ohos_source_set("mock_hitrace_meter") {

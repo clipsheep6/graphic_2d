@@ -88,6 +88,26 @@ bool RSSystemProperties::GetDrawTextAsBitmap()
     return {};
 }
 
+ParallelRenderingType RSSystemProperties::GetPrepareParallelRenderingEnabled()
+{
+    return {};
+}
+
+ParallelRenderingType RSSystemProperties::GetParallelRenderingEnabled()
+{
+    return {};
+}
+
+bool RSSystemProperties::GetColdStartThreadEnabled()
+{
+    return {};
+}
+
+bool RSSystemProperties::FrameTraceEnabled()
+{
+    return {};
+}
+
 float RSSystemProperties::GetAnimationScale()
 {
     return {};

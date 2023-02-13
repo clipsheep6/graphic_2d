@@ -15,16 +15,11 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_DISPLAY_RENDER_NODE_H
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_DISPLAY_RENDER_NODE_H
 
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
-#include <ibuffer_consumer_listener.h>
-#endif
 #include <memory>
 #include <mutex>
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
+#ifndef ROSEN_CROSS_PLATFORM
+#include <ibuffer_consumer_listener.h>
 #include <surface.h>
-#endif
-
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
 #include "sync_fence.h"
 #endif
 
@@ -112,16 +107,13 @@ public:
         return false;
     }
 
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
-    bool CreateSurface(sptr<IBufferConsumerListener> listener);
-#endif
-
     std::shared_ptr<RSSurface> GetRSSurface() const
     {
         return surface_;
     }
 
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
+#ifndef ROSEN_CROSS_PLATFORM
+    bool CreateSurface(sptr<IBufferConsumerListener> listener);
     sptr<IBufferConsumerListener> GetConsumerListener() const
     {
         return consumerListener_;
@@ -197,7 +189,7 @@ private:
 
     std::shared_ptr<RSSurface> surface_;
     bool surfaceCreated_ { false };
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
+#ifndef ROSEN_CROSS_PLATFORM
     sptr<IBufferConsumerListener> consumerListener_;
 #endif
     uint64_t frameCount_ = 0;

@@ -19,7 +19,7 @@
 #include "command/rs_command_templates.h"
 #include "common/rs_macros.h"
 #include "common/rs_vector4.h"
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
+#ifndef ROSEN_CROSS_PLATFORM
 #include "surface_type.h"
 #endif
 
@@ -54,7 +54,7 @@ public:
     static void SetContextAlpha(RSContext& context, NodeId nodeId, float alpha);
     static void SetContextClipRegion(RSContext& context, NodeId nodeId, SkRect clipRect);
     static void SetSecurityLayer(RSContext& context, NodeId nodeId, bool isSecurityLayer);
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
+#ifndef ROSEN_CROSS_PLATFORM
     static void SetColorSpace(RSContext& context, NodeId nodeId, ColorGamut colorSpace);
 #endif
     static void UpdateSurfaceDefaultSize(RSContext& context, NodeId nodeId, float width, float height);
@@ -77,10 +77,6 @@ ADD_COMMAND(RSSurfaceNodeSetContextClipRegion, ARG(SURFACE_NODE, SURFACE_NODE_SE
     SurfaceNodeCommandHelper::SetContextClipRegion, NodeId, SkRect))
 ADD_COMMAND(RSSurfaceNodeSetSecurityLayer,
     ARG(SURFACE_NODE, SURFACE_NODE_SET_SECURITY_LAYER, SurfaceNodeCommandHelper::SetSecurityLayer, NodeId, bool))
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
-ADD_COMMAND(RSSurfaceNodeSetColorSpace,
-    ARG(SURFACE_NODE, SURFACE_NODE_SET_COLOR_SPACE, SurfaceNodeCommandHelper::SetColorSpace, NodeId, ColorGamut))
-#endif
 ADD_COMMAND(RSSurfaceNodeUpdateSurfaceDefaultSize, ARG(SURFACE_NODE, SURFACE_NODE_UPDATE_SURFACE_SIZE,
     SurfaceNodeCommandHelper::UpdateSurfaceDefaultSize, NodeId, float, float))
 ADD_COMMAND(RSSurfaceNodeConnectToNodeInRenderService,
@@ -104,6 +100,11 @@ ADD_COMMAND(RSSurfaceNodeSetContainerWindow,
     NodeId, bool, float))
 ADD_COMMAND(RSSurfaceNodeSetAnimationFinished,
     ARG(SURFACE_NODE, SURFACE_NODE_SET_ANIMATION_FINISHED, SurfaceNodeCommandHelper::SetAnimationFinished, NodeId))
+
+#ifndef ROSEN_CROSS_PLATFORM
+ADD_COMMAND(RSSurfaceNodeSetColorSpace,
+    ARG(SURFACE_NODE, SURFACE_NODE_SET_COLOR_SPACE, SurfaceNodeCommandHelper::SetColorSpace, NodeId, ColorGamut))
+#endif
 } // namespace Rosen
 } // namespace OHOS
 #endif // ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_SURFACE_NODE_COMMAND_H

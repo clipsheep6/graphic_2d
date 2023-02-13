@@ -22,6 +22,7 @@ config("render_service_client_config") {
     "$rosen_root/modules",
     "$rosen_root/modules/render_service_client/core",
   ]
+  defines = rs_common_define
 }
 
 ohos_source_set("render_service_client_src") {

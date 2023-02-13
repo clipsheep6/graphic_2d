@@ -13,8 +13,11 @@
 
 import("//build/ohos.gni")
 import("//foundation/arkui/ace_engine/ace_config.gni")
+import("//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
 
 ohos_source_set("darwin") {
+  defines = rs_common_define
+
   sources = [
     "../ohos/rs_log.cpp",
     "rs_accessibility.cpp",
@@ -32,7 +35,7 @@ ohos_source_set("darwin") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include",
   ]
 
-  defines = [ "MODULE_RSB" ]
+  defines += [ "MODULE_RSB" ]
   if (enable_glfw_window) {
     defines += [ "USE_GLFW_WINDOW" ]
   }

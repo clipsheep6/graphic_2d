@@ -47,7 +47,7 @@ public:
     std::vector<ScreenId> GetAllScreenIds();
 
     // mirrorId: decide which screen id to mirror, INVALID_SCREEN_ID means do not mirror any screen.
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
+#ifndef ROSEN_CROSS_PLATFORM
     ScreenId CreateVirtualScreen(
         const std::string &name,
         uint32_t width,

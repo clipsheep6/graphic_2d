@@ -15,14 +15,12 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_SURFACE_HANDLER_H
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_SURFACE_HANDLER_H
 
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
-#include <surface.h>
-#endif
 #include <atomic>
 
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
+#ifndef ROSEN_CROSS_PLATFORM
+#include <surface.h>
 #include "sync_fence.h"
 #endif
 
@@ -37,7 +35,7 @@ public:
     struct SurfaceBufferEntry {
         void Reset()
         {
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
+#ifndef ROSEN_CROSS_PLATFORM
             buffer = nullptr;
             acquireFence = SyncFence::INVALID_FENCE;
             releaseFence = SyncFence::INVALID_FENCE;
@@ -45,7 +43,7 @@ public:
 #endif
             timestamp = 0;
         }
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
+#ifndef ROSEN_CROSS_PLATFORM
         sptr<SurfaceBuffer> buffer;
         sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
         sptr<SyncFence> releaseFence = SyncFence::INVALID_FENCE;
@@ -54,9 +52,6 @@ public:
         int64_t timestamp = 0;
     };
 
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
-    void SetConsumer(const sptr<Surface>& consumer);
-#endif
     void IncreaseAvailableBuffer();
     int32_t ReduceAvailableBuffer();
 
@@ -67,14 +62,21 @@ public:
 
     void SetDefaultWidthAndHeight(int32_t width, int32_t height)
     {
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
+#ifndef ROSEN_CROSS_PLATFORM
         if (consumer_ != nullptr) {
             consumer_->SetDefaultWidthAndHeight(width, height);
         }
 #endif
     }
 
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
+#ifndef ROSEN_CROSS_PLATFORM
+    void SetConsumer(const sptr<Surface>& consumer);
+
+    const sptr<Surface>& GetConsumer() const
+    {
+        return consumer_;
+    }
+
     void SetBuffer(
         const sptr<SurfaceBuffer>& buffer,
         const sptr<SyncFence>& acquireFence,
@@ -115,13 +117,6 @@ public:
         return preBuffer_;
     }
 
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
-    const sptr<Surface>& GetConsumer() const
-    {
-        return consumer_;
-    }
-#endif
-
     int32_t GetAvailableBufferCount() const
     {
         return bufferAvailableCount_;
@@ -148,7 +143,7 @@ public:
 
     bool HasConsumer() const
     {
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
+#ifndef ROSEN_CROSS_PLATFORM
         return consumer_ != nullptr;
 #else
         return false;
@@ -168,7 +163,7 @@ public:
     }
 
 protected:
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
+#ifndef ROSEN_CROSS_PLATFORM
     sptr<Surface> consumer_;
 #endif
     bool isCurrentFrameBufferConsumed_ = false;

@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "rs_surface_frame.h"
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
+#ifndef ROSEN_CROSS_PLATFORM
 #include "surface_type.h"
 #endif
 
@@ -43,7 +43,7 @@ public:
 
     virtual RenderContext* GetRenderContext() = 0;
     virtual void SetRenderContext(RenderContext* context) = 0;
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
+#ifndef ROSEN_CROSS_PLATFORM
     virtual ColorGamut GetColorSpace() const = 0;
     virtual void SetColorSpace(ColorGamut colorSpace) = 0;
 #endif

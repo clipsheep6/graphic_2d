@@ -66,9 +66,6 @@ public:
     void RemoveChild(std::shared_ptr<RSBaseNode> child) override;
     void ClearChildren() override;
 
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
-    void SetColorSpace(ColorGamut colorSpace);
-#endif
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
     void SetAbilityBGAlpha(uint8_t alpha);
@@ -82,12 +79,12 @@ public:
     // Create RSProxyNode by unmarshalling RSSurfaceNode, return existing node if it exists in RSNodeMap.
     static RSNode::SharedPtr UnmarshallingAsProxyNode(Parcel& parcel);
 
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
-    sptr<OHOS::Surface> GetSurface() const;
-#endif
     FollowType GetFollowType() const override;
 
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
+#ifndef ROSEN_CROSS_PLATFORM
+    sptr<OHOS::Surface> GetSurface() const;
+
+    void SetColorSpace(ColorGamut colorSpace);
     ColorGamut GetColorSpace()
     {
         return colorSpace_;
@@ -122,14 +119,14 @@ private:
     std::string name_;
     std::mutex mutex_;
     BufferAvailableCallback callback_;
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
+#ifndef ROSEN_CROSS_PLATFORM
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
 #endif
     bool isSecurityLayer_ = false;
     bool isChildOperationDisallowed_ { false };
 
     uint32_t windowId_;
-#ifdef ROSEN_OHOS
+#ifndef ROSEN_CROSS_PLATFORM
     sptr<SurfaceDelegate> surfaceDelegate_;
     sptr<SurfaceDelegate::ISurfaceCallback> surfaceCallback_;
 #endif

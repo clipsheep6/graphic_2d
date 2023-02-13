@@ -21,7 +21,7 @@
 #include <memory>
 #include <mutex>
 #include <refbase.h>
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
+#ifndef ROSEN_CROSS_PLATFORM
 #include <surface.h>
 #endif
 
@@ -72,9 +72,6 @@ public:
     bool GetUniRenderEnabled();
     bool CreateNode(const RSSurfaceRenderNodeConfig& config);
     std::shared_ptr<RSSurface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config);
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
-    std::shared_ptr<RSSurface> CreateRSSurface(const sptr<Surface> &surface);
-#endif
 
     std::shared_ptr<VSyncReceiver> CreateVSyncReceiver(
         const std::string& name,
@@ -88,7 +85,9 @@ public:
 
     std::vector<ScreenId> GetAllScreenIds();
 
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
+#ifndef ROSEN_CROSS_PLATFORM
+    std::shared_ptr<RSSurface> CreateRSSurface(const sptr<Surface> &surface);
+
     ScreenId CreateVirtualScreen(const std::string& name, uint32_t width, uint32_t height, sptr<Surface> surface,
         ScreenId mirrorId, int32_t flags);
 

@@ -34,6 +34,7 @@ public:
 
     /* before CreateWindow */
     int Init();
+    void InitFrom(void *glfwWindow);
     void Terminate();
 
     /* before window operation */
@@ -66,6 +67,7 @@ private:
     static void OnChar(GLFWwindow *window, unsigned int codepoint);
 
     static inline std::shared_ptr<GlfwRenderContext> global_ = nullptr;
+    bool external_ = false;
     GLFWwindow *window_ = nullptr;
     OnMouseButtonFunc onMouseBotton_ = nullptr;
     OnCursorPosFunc onCursorPos_ = nullptr;

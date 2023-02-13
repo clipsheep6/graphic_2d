@@ -116,7 +116,9 @@ void RSUIDirector::GoBackground()
         RSRenderThread::Instance().PostTask([this]() {
             auto renderContext = RSRenderThread::Instance().GetRenderContext();
             if (renderContext != nullptr) {
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
                 renderContext->ClearRedundantResources();
+#endif
             }
         });
 #endif

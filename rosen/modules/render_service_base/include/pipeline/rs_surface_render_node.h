@@ -20,7 +20,9 @@
 #include <memory>
 #include <tuple>
 
+#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
 #include <surface.h>
+#endif
 #include "include/gpu/GrContext.h"
 
 #include "common/rs_macros.h"
@@ -195,8 +197,10 @@ public:
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
 
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
     void SetColorSpace(ColorGamut colorSpace);
     ColorGamut GetColorSpace() const;
+#endif
 
     std::shared_ptr<RSDirtyRegionManager> GetDirtyManager() const;
 
@@ -320,10 +324,12 @@ public:
 
     void SetDirtyRegionBelowCurrentLayer(Occlusion::Region& region)
     {
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
         Occlusion::Rect dirtyRect{GetOldDirtyInSurface()};
         Occlusion::Region dirtyRegion {dirtyRect};
         dirtyRegionBelowCurrentLayer_ = dirtyRegion.And(region);
         dirtyRegionBelowCurrentLayerIsEmpty_ = dirtyRegionBelowCurrentLayer_.IsEmpty();
+#endif
     }
 
     bool GetDstRectChanged() const
@@ -359,12 +365,16 @@ public:
         return globalDirtyRegion_;
     }
 
+#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
     void SetConsumer(const sptr<Surface>& consumer);
+#endif
 
     void UpdateSurfaceDefaultSize(float width, float height);
 
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
     GraphicBlendType GetBlendType();
     void SetBlendType(GraphicBlendType blendType);
+#endif
 
     // Only SurfaceNode in RS calls "RegisterBufferAvailableListener"
     // to save callback method sent by RT or UI which depends on the value of "isFromRenderThread".
@@ -529,7 +539,9 @@ private:
     SkRect contextClipRect_ = SkRect::MakeEmpty();
 
     bool isSecurityLayer_ = false;
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
+#endif
     RectI srcRect_;
     SkMatrix totalMatrix_;
     int32_t offsetX_ = 0;
@@ -540,7 +552,9 @@ private:
 
     std::string name_;
     RSSurfaceNodeType nodeType_ = RSSurfaceNodeType::DEFAULT;
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
     GraphicBlendType blendType_ = GraphicBlendType::GRAPHIC_BLEND_SRCOVER;
+#endif
     bool isNotifyRTBufferAvailablePre_ = false;
     std::atomic<bool> isNotifyRTBufferAvailable_ = false;
     std::atomic<bool> isNotifyUIBufferAvailable_ = false;

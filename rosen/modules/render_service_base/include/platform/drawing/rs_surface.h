@@ -19,7 +19,9 @@
 #include <memory>
 
 #include "rs_surface_frame.h"
+#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
 #include "surface_type.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -41,8 +43,10 @@ public:
 
     virtual RenderContext* GetRenderContext() = 0;
     virtual void SetRenderContext(RenderContext* context) = 0;
+#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
     virtual ColorGamut GetColorSpace() const = 0;
     virtual void SetColorSpace(ColorGamut colorSpace) = 0;
+#endif
     virtual uint32_t GetQueueSize() const = 0;
     virtual void ClearBuffer() = 0; // clear cache only for producer
 

@@ -15,7 +15,9 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_SURFACE_HANDLER_H
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_SURFACE_HANDLER_H
 
+#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
 #include <surface.h>
+#endif
 #include <atomic>
 
 #include "common/rs_common_def.h"
@@ -35,20 +37,26 @@ public:
     struct SurfaceBufferEntry {
         void Reset()
         {
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
             buffer = nullptr;
             acquireFence = SyncFence::INVALID_FENCE;
             releaseFence = SyncFence::INVALID_FENCE;
             damageRect = Rect {0, 0, 0, 0};
+#endif
             timestamp = 0;
         }
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
         sptr<SurfaceBuffer> buffer;
         sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
         sptr<SyncFence> releaseFence = SyncFence::INVALID_FENCE;
         Rect damageRect = {0, 0, 0, 0};
+#endif
         int64_t timestamp = 0;
     };
 
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
     void SetConsumer(const sptr<Surface>& consumer);
+#endif
     void IncreaseAvailableBuffer();
     int32_t ReduceAvailableBuffer();
 
@@ -59,11 +67,14 @@ public:
 
     void SetDefaultWidthAndHeight(int32_t width, int32_t height)
     {
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
         if (consumer_ != nullptr) {
             consumer_->SetDefaultWidthAndHeight(width, height);
         }
+#endif
     }
 
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
     void SetBuffer(
         const sptr<SurfaceBuffer>& buffer,
         const sptr<SyncFence>& acquireFence,
@@ -97,16 +108,19 @@ public:
         // The fence which get from hdi is preBuffer's releaseFence now.
         preBuffer_.releaseFence = std::move(fence);
     }
+#endif
 
     SurfaceBufferEntry& GetPreBuffer()
     {
         return preBuffer_;
     }
 
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
     const sptr<Surface>& GetConsumer() const
     {
         return consumer_;
     }
+#endif
 
     int32_t GetAvailableBufferCount() const
     {
@@ -134,7 +148,11 @@ public:
 
     bool HasConsumer() const
     {
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
         return consumer_ != nullptr;
+#else
+        return false;
+#endif
     }
     inline bool IsCurrentFrameBufferConsumed()
     {
@@ -150,7 +168,9 @@ public:
     }
 
 protected:
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
     sptr<Surface> consumer_;
+#endif
     bool isCurrentFrameBufferConsumed_ = false;
 
 private:

@@ -112,6 +112,7 @@ void RSDisplayRenderNode::SetIsMirrorDisplay(bool isMirror)
         IsMirrorDisplay() ? "true" : "false");
 }
 
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
 bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
 {
     if (consumer_ != nullptr && surface_ != nullptr) {
@@ -137,6 +138,7 @@ bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
     surfaceCreated_ = true;
     return true;
 }
+#endif
 
 bool RSDisplayRenderNode::SkipFrame(uint32_t skipFrameInterval)
 {

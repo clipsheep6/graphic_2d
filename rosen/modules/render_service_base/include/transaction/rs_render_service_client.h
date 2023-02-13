@@ -21,7 +21,9 @@
 #include <memory>
 #include <mutex>
 #include <refbase.h>
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
 #include <surface.h>
+#endif
 
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/iapplication_agent.h"
@@ -70,7 +72,9 @@ public:
     bool GetUniRenderEnabled();
     bool CreateNode(const RSSurfaceRenderNodeConfig& config);
     std::shared_ptr<RSSurface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config);
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
     std::shared_ptr<RSSurface> CreateRSSurface(const sptr<Surface> &surface);
+#endif
 
     std::shared_ptr<VSyncReceiver> CreateVSyncReceiver(
         const std::string& name,
@@ -84,10 +88,12 @@ public:
 
     std::vector<ScreenId> GetAllScreenIds();
 
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
     ScreenId CreateVirtualScreen(const std::string& name, uint32_t width, uint32_t height, sptr<Surface> surface,
         ScreenId mirrorId, int32_t flags);
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface);
+#endif
 
     void RemoveVirtualScreen(ScreenId id);
 

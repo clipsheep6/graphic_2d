@@ -167,7 +167,10 @@ ohos_source_set("render_service_base_src") {
     "-fvisibility-inlines-hidden",
   ]
 
-  public_configs = [ ":export_config" ]
+  public_configs = [
+    ":export_config",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:eventhandler_config",
+  ]
   public_deps = [ "src/platform:platform" ]
 
   if (enable_export_macro) {
@@ -190,14 +193,13 @@ ohos_source_set("render_service_base_src") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:eventhandler",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:ipc_core",
     "//foundation/graphic/graphic_2d/utils:sandbox_utils",
   ]
 
-  external_deps = [ "eventhandler:libeventhandler" ]
-
   if (!rosen_cross_platform) {
-    external_deps += [ "hitrace_native:hitrace_meter" ]
+    external_deps = [ "hitrace_native:hitrace_meter" ]
   }
 
   if (rosen_is_win) {
@@ -215,7 +217,6 @@ config("render_service_base_all_deps_config") {
 }
 
 ohos_shared_library("librender_service_base") {
-  public_configs = [ ":export_config" ]
   all_dependent_configs = [ ":render_service_base_all_deps_config" ]
 
   public_deps = [

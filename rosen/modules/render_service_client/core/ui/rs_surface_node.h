@@ -82,7 +82,7 @@ public:
     // Create RSProxyNode by unmarshalling RSSurfaceNode, return existing node if it exists in RSNodeMap.
     static RSNode::SharedPtr UnmarshallingAsProxyNode(Parcel& parcel);
 
-#ifdef ROSEN_OHOS
+#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
     sptr<OHOS::Surface> GetSurface() const;
 #endif
     FollowType GetFollowType() const override;

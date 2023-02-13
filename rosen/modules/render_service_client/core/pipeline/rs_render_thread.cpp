@@ -62,17 +62,17 @@ static void SystemCallSetThreadName(const std::string& name)
 #endif
 }
 
+namespace OHOS {
+namespace Rosen {
+namespace {
+    static constexpr uint64_t REFRESH_PERIOD = 16666667;
+}
+
 void SendFrameEvent(bool start)
 {
 #ifdef ROSEN_OHOS
     FrameCollector::GetInstance().MarkFrameEvent(start ? FrameEventType::WaitVsyncStart : FrameEventType::WaitVsyncEnd);
 #endif
-}
-
-namespace OHOS {
-namespace Rosen {
-namespace {
-    static constexpr uint64_t REFRESH_PERIOD = 16666667;
 }
 
 RSRenderThread& RSRenderThread::Instance()
@@ -89,7 +89,7 @@ RSRenderThread::RSRenderThread()
         RS_TRACE_BEGIN("RSRenderThread DrawFrame: " + std::to_string(timestamp_));
         if (RSSystemProperties::FrameTraceEnabled()) {
 #ifdef ROSEN_OHOS
-            QuickStartFrameTrace(RT_INTERVAL_NAME);
+            FRAME_TRACE::QuickStartFrameTrace(RT_INTERVAL_NAME);
 #endif
         }
         prevTimestamp_ = timestamp_;
@@ -100,7 +100,7 @@ RSRenderThread::RSRenderThread()
         SendCommands();
         if (RSSystemProperties::FrameTraceEnabled()) {
 #ifdef ROSEN_OHOS
-            QuickEndFrameTrace(RT_INTERVAL_NAME);
+            FRAME_TRACE::QuickEndFrameTrace(RT_INTERVAL_NAME);
 #endif
         }
         jankDetector_->CalculateSkippedFrame(renderStartTimeStamp, jankDetector_->GetSysTimeNs());

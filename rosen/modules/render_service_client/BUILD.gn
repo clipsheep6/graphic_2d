@@ -30,8 +30,10 @@ ohos_source_set("render_service_client_src") {
   defines += [ "MODULE_RSC" ]
   include_dirs = [
     "$rosen_root/modules/2d_graphics/src",
+    "$rosen_root/modules/render_service_base/src",
     "//foundation/graphic/graphic_2d/utils/log",
     "//foundation/graphic/graphic_2d/utils/sandbox",
+    "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf",
   ]
 
   sources = [
@@ -134,6 +136,7 @@ ohos_source_set("render_service_client_src") {
     ]
   } else {
     deps += [
+      "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk:accessibilityconfig",
       "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
       "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf:frame_trace_intf",
     ]

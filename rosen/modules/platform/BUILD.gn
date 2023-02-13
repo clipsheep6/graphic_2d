@@ -23,3 +23,32 @@ group("ace_skia") {
 }
 
 # ace_skia }}}
+
+# utils {{{
+group("utils") {
+  if (current_os == "ohos") {
+    public_deps = [ "//commonlibrary/c_utils/base:utils" ]
+  } else {
+    public_deps = [ ":mock_utils" ]
+  }
+}
+
+config("utils_config") {
+  include_dirs = [ "utils" ]
+}
+
+ohos_source_set("mock_utils") {
+  public_configs = [ ":utils_config" ]
+  sources = [
+    "utils/directory_ex.cpp",
+    "utils/observer.cpp",
+    "utils/parcel.cpp",
+    "utils/refbase.cpp",
+    "utils/rwlock.cpp",
+    "utils/string_ex.cpp",
+    "utils/thread_pool.cpp",
+    "utils/unicode_ex.cpp",
+  ]
+  public_deps = [ "//third_party/bounds_checking_function:libsec_shared" ]
+}
+# utils }}}

@@ -272,7 +272,8 @@ void SkiaFramework::Run()
     };
 
     auto filter = std::make_shared<PointerFilter>(this);
-    mmi->AddInputEventFilter(filter, 201);
+    uint32_t touchTags = CapabilityToTags(OHOS::MMI::InputDeviceCapability::INPUT_DEV_CAP_POINTER);
+    mmi->AddInputEventFilter(filter, 201, touchTags);
     rsdata.snode_ = RSSurfaceNode::Create({});
     rsdata.dnode_ = RSDisplayNode::Create({});
     rsdata.snode_->SetBounds(0, 0, windowWidth_, windowHeight_);

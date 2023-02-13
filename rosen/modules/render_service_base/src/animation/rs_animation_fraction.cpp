@@ -16,6 +16,7 @@
 #include "animation/rs_animation_fraction.h"
 
 #include <cstdlib>
+#include <cstring>
 #include <parameters.h>
 #include <string>
 

@@ -92,6 +92,12 @@ private:
         std::vector<Boundary> boundaries_;
     };
 
+    void DoSeekScript(std::list<struct MeasuringRun> &runs, hb_unicode_funcs_t *icuGetUnicodeFuncs);
+    int DoHb(CharGroups &cgs, MeasuringRun &run, int &index);
+    int GetGlyphs(CharGroups &cgs, MeasuringRun &run, int &index, hb_buffer_t *hbuffer,
+        std::shared_ptr<Texgine::Typeface> typeface);
+    void DoCgsByCluster(std::map<uint32_t, Texgine::CharGroup> &cgsByCluster);
+
     static inline std::map<struct MeasurerCacheKey, struct MeasurerCacheVal> cache_;
     std::vector<Boundary> boundaries_;
 };

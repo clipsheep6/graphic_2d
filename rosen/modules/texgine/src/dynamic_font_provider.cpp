@@ -27,6 +27,9 @@
 #include "typeface.h"
 
 namespace Texgine {
+#define PARAMETERERROR 1;
+#define APIERROR 2;
+
 std::shared_ptr<DynamicFontProvider> DynamicFontProvider::Create() noexcept(true)
 {
     return std::shared_ptr<DynamicFontProvider>(new DynamicFontProvider());
@@ -36,24 +39,24 @@ int DynamicFontProvider::LoadFont(const std::string &familyName, const void *dat
 {
     if (data == nullptr) {
         LOG2EX(ERROR) << "data is nullptr!";
-        return 1;
+        return PARAMETERERROR;
     }
 
     if (datalen == 0) {
         LOG2EX(ERROR) << "datalen is 0!";
-        return 1;
+        return PARAMETERERROR;
     }
 
     auto stream = SkMemoryStream::MakeCopy(data, datalen);
     if (stream == nullptr) {
         LOG2EX(ERROR) << "stream is nullptr!";
-        return 2;
+        return APIERROR;
     }
 
     auto skTypeface = SkTypeface::MakeFromStream(std::move(stream));
     if (skTypeface == nullptr) {
         LOG2EX(ERROR) << "skTypeface is nullptr!";
-        return 2;
+        return APIERROR;
     }
 
     auto typeface = std::make_unique<Typeface>(skTypeface);

@@ -22,8 +22,9 @@
 #include "texgine/utils/trace.h"
 
 namespace Texgine {
-int TextShaper::Shape(const VariantSpan &span,
-                      const TypographyStyle &ys,
+#define DOUBLE 2
+
+int TextShaper::Shape(const VariantSpan &span, const TypographyStyle &ys,
                       const std::unique_ptr<FontProviders> &fontProviders)
 {
     ScopedTrace scope("TextShaper::ShapeLineSpans");
@@ -132,8 +133,8 @@ sk_sp<SkTextBlob> TextShaper::GenerateTextBlob(const SkFont &font, const CharGro
         offset += cg.GetWidth();
         for (const auto &[cp, ax, ay, ox, oy] : cg.glyphs_) {
             blob.glyphs[index] = cp;
-            blob.pos[index * 2 + 0] = drawingOffset + ox;
-            blob.pos[index * 2 + 1] = ay - oy;
+            blob.pos[index * DOUBLE] = drawingOffset + ox;
+            blob.pos[index * DOUBLE + 1] = ay - oy;
             index++;
             drawingOffset += ax;
         }

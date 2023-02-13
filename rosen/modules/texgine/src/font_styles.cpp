@@ -20,6 +20,9 @@
 #include "texgine/utils/exlog.h"
 
 namespace Texgine {
+#define MULTIPLE 100
+#define DIFFERENCE 1
+
 namespace {
 FontStyles::Slant ToSlant(const FontStyle style)
 {
@@ -54,7 +57,7 @@ FontStyles::FontStyles(FontWeight weight, FontStyle style)
     }
 
     slant_ = ToSlant(style);
-    weight_ = static_cast<Weight>(static_cast<int>(weight) + 1);
+    weight_ = static_cast<Weight>(static_cast<int>(weight) + DIFFERENCE);
 }
 
 FontStyles::FontStyles(FontStyles::Weight weight, FontStyles::Width width, FontStyles::Slant slant)
@@ -81,7 +84,7 @@ FontStyles::FontStyles(FontStyles::Weight weight, FontStyles::Width width, FontS
 
 SkFontStyle FontStyles::ToSkFontStyle() const
 {
-    return SkFontStyle(static_cast<int>(weight_) * 100, static_cast<int>(width_) + 1, ToSkSlant(slant_));
+    return SkFontStyle(static_cast<int>(weight_) * MULTIPLE, static_cast<int>(width_) + DIFFERENCE, ToSkSlant(slant_));
 }
 
 bool FontStyles::operator ==(const FontStyles &rhs) const

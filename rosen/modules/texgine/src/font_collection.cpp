@@ -21,6 +21,13 @@
 #include "texgine/utils/exlog.h"
 
 namespace Texgine {
+#define MAXWIDTH 10
+#define MAXSLANT 2
+#define MAXWEIGHT 10
+#define FIRSTPRIORITY 10000
+#define SECONDPRIORITY 100
+#define MULTIPLE 100
+
 FontCollection::FontCollection(std::vector<std::shared_ptr<FontStyleSet>> &&fontStyleSets)
     : fontStyleSets_(fontStyleSets)
 {
@@ -73,9 +80,9 @@ std::shared_ptr<Typeface> FontCollection::GetTypefaceForFontStyles(const FontSty
             fontStyleSet->Get()->getStyle(i, &matchingStyle, &styleName);
 
             int score = 0;
-            score += (10 - std::abs(providingStyle.width() - matchingStyle.width())) * 100;
-            score += (2- std::abs(providingStyle.slant() - matchingStyle.slant())) * 10000;
-            score += (10 - std::abs(providingStyle.weight() / 100 - matchingStyle.weight() / 100));
+            score += (MAXWIDTH - std::abs(providingStyle.width() - matchingStyle.width())) * SECONDPRIORITY;
+            score += (MAXSLANT- std::abs(providingStyle.slant() - matchingStyle.slant())) * FIRSTPRIORITY;
+            score += (MAXWEIGHT - std::abs(providingStyle.weight() / MULTIPLE - matchingStyle.weight() / MULTIPLE));
             if (score > bestScore) {
                 bestScore = score;
                 bestIndex = i;

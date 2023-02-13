@@ -33,6 +33,12 @@ struct StrutMetrics {
     double halfLeading_ = 0;
 };
 
+struct CalcResult {
+    bool need_ = true;
+    double ascent_ = 0;
+    double descent_ = 0;
+};
+
 class TypographyImpl : public Typography {
 public:
     TypographyImpl(TypographyStyle &ys,
@@ -106,6 +112,8 @@ private:
     size_t FindGlyphTargetIndex(size_t line, double x, double &offsetX, std::vector<double> &widths) const;
     std::vector<TextRect> MergeRects(const std::vector<TextRect> &boxes, Boundary boundary) const;
     void ComputeWordBoundary() const;
+    std::map<TextRectHeightStyle, std::function<struct CalcResult()>> GetCalcMap(int i) const;
+    void GetLocation(std::vector<TextRect> spanBoxes, const VariantSpan &span) const;
 
     TypographyStyle typographyStyle_;
     std::vector<VariantSpan> spans_;

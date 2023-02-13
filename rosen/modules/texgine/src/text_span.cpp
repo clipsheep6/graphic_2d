@@ -37,6 +37,28 @@
 #include "word_breaker.h"
 
 namespace Texgine {
+#define MAXRGB 255
+#define OFFSETY 3
+#define HALF 0.5f
+#define WIDTHSCALAR 5.0f
+#define HEIGHTSCALAR 5.0f
+#define DOTTEDADVANCE 10.0f
+#define WAVYADVANCE 6.0f
+#define PHASE 0.0f
+#define COUNT 2
+#define MAXBLURRADIUS 64u
+#define POINTX0 0
+#define POINTX1 1
+#define POINTX2 2
+#define POINTX3 3
+#define POINTX4 4
+#define POINTX5 5
+#define POINTX6 6
+#define POINTY0 0
+#define POINTY2 2
+#define POINTY4 4
+#define POINTY6 6
+
 std::shared_ptr<TextSpan> TextSpan::MakeEmpty()
 {
     return std::make_shared<TextSpan>();
@@ -137,7 +159,7 @@ void TextSpan::Paint(SkCanvas &canvas, double offsetx, double offsety, const Tex
 {
     SkPaint paint;
     paint.setAntiAlias(true);
-    paint.setARGB(255, 255, 0, 0);
+    paint.setARGB(MAXRGB, MAXRGB, 0, 0);
     paint.setColor(xs.color_);
     if (xs.background_.has_value()) {
         auto rect = SkRect::MakeXYWH(offsetx, offsety + smetrics_.fAscent, width_,
@@ -167,7 +189,7 @@ void TextSpan::PaintDecoration(SkCanvas &canvas, double offsetx, double offsety,
         PaintDecorationStyle(canvas, left, right, y, xs);
     }
     if ((xs.decoration_ & TextDecoration::Linethrough) == TextDecoration::Linethrough) {
-        double y = offsety - (smetrics_.fCapHeight / 2);
+        double y = offsety - (smetrics_.fCapHeight * HALF);
         PaintDecorationStyle(canvas, left, right, y, xs);
     }
     if ((xs.decoration_ & TextDecoration::Baseline) == TextDecoration::Baseline) {
@@ -180,7 +202,7 @@ void TextSpan::PaintDecorationStyle(SkCanvas &canvas, double left, double right,
 {
     SkPaint paint;
     paint.setAntiAlias(true);
-    paint.setARGB(255, 255, 0, 0);
+    paint.setARGB(MAXRGB, MAXRGB, 0, 0);
     paint.setColor(xs.decorationColor_.value_or(xs.color_));
     paint.setStrokeWidth(xs.decorationThicknessScale_);
 
@@ -189,35 +211,35 @@ void TextSpan::PaintDecorationStyle(SkCanvas &canvas, double left, double right,
             break;
         case TextDecorationStyle::Double:
             canvas.drawLine(left, y, right, y, paint);
-            y += 3;
+            y += OFFSETY;
             break;
         case TextDecorationStyle::Dotted: {
             SkPath circle;
-            circle.addOval(SkRect::MakeWH(5.0f, 5.0f));
-            paint.setPathEffect(SkPath1DPathEffect::Make(circle, 10.0f, 0.0f, SkPath1DPathEffect::kRotate_Style));
+            circle.addOval(SkRect::MakeWH(WIDTHSCALAR, HEIGHTSCALAR));
+            paint.setPathEffect(SkPath1DPathEffect::Make(circle, DOTTEDADVANCE, PHASE, SkPath1DPathEffect::kRotate_Style));
             break;
         }
         case TextDecorationStyle::Dashed: {
-            const SkScalar intervals[2] = {5.0f, 5.0f};
-            paint.setPathEffect(SkDashPathEffect::Make(intervals, 2, 0.0f));
+            const SkScalar intervals[2] = {WIDTHSCALAR, HEIGHTSCALAR};
+            paint.setPathEffect(SkDashPathEffect::Make(intervals, COUNT, PHASE));
             paint.setStyle(SkPaint::kStroke_Style);
             break;
         }
         case TextDecorationStyle::Wavy: {
             SkPath wavy;
             float thickness = xs.decorationThicknessScale_;
-            wavy.moveTo({0, 2 - thickness});
-            wavy.quadTo({1, 0 - thickness}, {2, 2 - thickness});
-            wavy.lineTo({3, 4 - thickness});
-            wavy.quadTo({4, 6 - thickness}, {5, 4 - thickness});
-            wavy.lineTo({6, 2 - thickness});
-            wavy.lineTo({6, 2 + thickness});
-            wavy.lineTo({5, 4 + thickness});
-            wavy.quadTo({4, 6 + thickness}, {3, 4 + thickness});
-            wavy.lineTo({2, 2 + thickness});
-            wavy.quadTo({1, 0 + thickness}, {0, 2 + thickness});
-            wavy.lineTo({0, 2 - thickness});
-            paint.setPathEffect(SkPath1DPathEffect::Make(wavy, 6.0f, 0.0f, SkPath1DPathEffect::kRotate_Style));
+            wavy.moveTo({POINTX0, POINTY2 - thickness});
+            wavy.quadTo({POINTX1, POINTY0 - thickness}, {POINTX2, POINTY2 - thickness});
+            wavy.lineTo({POINTX3, POINTY4 - thickness});
+            wavy.quadTo({POINTX4, POINTY6 - thickness}, {POINTX5, POINTY4 - thickness});
+            wavy.lineTo({POINTX6, POINTY2 - thickness});
+            wavy.lineTo({POINTX6, POINTY2 + thickness});
+            wavy.lineTo({POINTX5, POINTY4 + thickness});
+            wavy.quadTo({POINTX4, POINTY6 + thickness}, {POINTX3, POINTY4 + thickness});
+            wavy.lineTo({POINTX2, POINTY2 + thickness});
+            wavy.quadTo({POINTX1, POINTY0 + thickness}, {POINTX0, POINTY2 + thickness});
+            wavy.lineTo({POINTX0, POINTY2 - thickness});
+            paint.setPathEffect(SkPath1DPathEffect::Make(wavy, WAVYADVANCE, PHASE, SkPath1DPathEffect::kRotate_Style));
             paint.setStyle(SkPaint::kStroke_Style);
             break;
         }
@@ -230,7 +252,7 @@ void TextSpan::PaintShadow(SkCanvas &canvas, double offsetx, double offsety, con
     for (const auto &shadow : shadows) {
         auto x = offsetx + shadow.offsetX_;
         auto y = offsety + shadow.offsetY_;
-        auto blurRadius = std::min(shadow.blurLeave_, 64u);
+        auto blurRadius = std::min(shadow.blurLeave_, MAXBLURRADIUS);
 
         SkPaint paint;
         paint.setAntiAlias(true);

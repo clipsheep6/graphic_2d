@@ -32,7 +32,7 @@ std::shared_ptr<FontCollection> FontProviders::GenerateFontCollection(
     const std::vector<std::string> &families) const noexcept(true)
 {
     families_ = families;
-    std::vector<std::shared_ptr<FontStyleSet>> sets;
+    std::vector<std::shared_ptr<VariantFontStyleSet>> sets;
     return std::make_shared<FontCollection>(std::move(sets));
 }
 
@@ -99,7 +99,7 @@ public:
     CharGroups emptyCgs_ = CharGroups::CreateEmpty();
     static inline CharGroups cgs1_ = CharGroups::CreateEmpty();
     static inline CharGroups cgs2_ = CharGroups::CreateEmpty();
-    FontCollection fontCollection_ = std::vector<std::shared_ptr<FontStyleSet>>{};
+    FontCollection fontCollection_ = std::vector<std::shared_ptr<VariantFontStyleSet>>{};
     std::vector<VariantSpan> spans_;
     TextBreaker breaker;
     std::vector<Boundary> boundaries_;

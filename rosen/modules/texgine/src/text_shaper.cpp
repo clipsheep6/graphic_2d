@@ -17,6 +17,8 @@
 
 #include "measurer.h"
 #include "texgine_exception.h"
+#include "texgine_font.h"
+#include "texgine_text_blob_builder.h"
 #include "texgine/typography_types.h"
 #include "texgine/utils/exlog.h"
 #include "texgine/utils/trace.h"
@@ -61,10 +63,10 @@ int TextShaper::Shape(const VariantSpan &span, const TypographyStyle &ys,
         throw TEXGINE_EXCEPTION(InvalidArgument);
     }
 
-    SkFont font;
-    font.setTypeface(ts->cgs_.Get(0).typeface_->Get());
-    font.setSize(xs.fontSize_);
-    font.getMetrics(&ts->smetrics_);
+    TexgineFont font;
+    font.SetTypeface(ts->cgs_.Get(0).typeface_->Get());
+    font.SetSize(xs.fontSize_);
+    font.GetMetrics(&ts->tmetrics_);
 
     auto blob = GenerateTextBlob(font, ts->cgs_, ts->width_, ts->glyphWidths_);
     if (blob == nullptr) {
@@ -115,12 +117,12 @@ int TextShaper::DoShape(std::shared_ptr<TextSpan> &span,
     return 0;
 }
 
-sk_sp<SkTextBlob> TextShaper::GenerateTextBlob(const SkFont &font, const CharGroups &cgs,
+std::shared_ptr<TexgineTextBlob> TextShaper::GenerateTextBlob(const TexgineFont &font, const CharGroups &cgs,
     double &spanWidth, std::vector<double> &glyphWidths)
 {
-    SkTextBlobBuilder builder;
-    auto blob = builder.allocRunPos(font, cgs.GetNumberOfGlyph());
-    if (blob.glyphs == nullptr || blob.pos == nullptr) {
+    TexgineTextBlobBuilder builder;
+    auto blob = builder.AllocRunPos(font, cgs.GetNumberOfGlyph());
+    if (blob.glyphs_ == nullptr || blob.pos_ == nullptr) {
         LOG2EX(ERROR) << "allocRunPos return unavailable buffer";
         throw TEXGINE_EXCEPTION(APIFailed);
     }
@@ -132,15 +134,15 @@ sk_sp<SkTextBlob> TextShaper::GenerateTextBlob(const SkFont &font, const CharGro
         auto drawingOffset = offset;
         offset += cg.GetWidth();
         for (const auto &[cp, ax, ay, ox, oy] : cg.glyphs_) {
-            blob.glyphs[index] = cp;
-            blob.pos[index * DOUBLE] = drawingOffset + ox;
-            blob.pos[index * DOUBLE + 1] = ay - oy;
+            blob.glyphs_[index] = cp;
+            blob.pos_[index * DOUBLE] = drawingOffset + ox;
+            blob.pos_[index * DOUBLE + 1] = ay - oy;
             index++;
             drawingOffset += ax;
         }
     }
 
     spanWidth = offset;
-    return builder.make();
+    return builder.Make();
 }
 } // namespace Texgine

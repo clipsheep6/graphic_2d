@@ -42,7 +42,7 @@ public:
     int LoadFont(const std::string &familyName, const std::string &path) noexcept(true);
 
 private:
-    std::map<std::string, std::shared_ptr<FontStyleSet>> fontStyleSetMap_;
+    std::map<std::string, std::shared_ptr<VariantFontStyleSet>> fontStyleSetMap_;
 };
 } // namespace Texgine
 

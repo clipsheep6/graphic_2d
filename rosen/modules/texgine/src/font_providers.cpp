@@ -52,7 +52,7 @@ void FontProviders::DisableFallback()
 
 std::shared_ptr<FontCollection> FontProviders::GenerateFontCollection(const std::vector<std::string> &families) const noexcept(true)
 {
-    std::vector<std::shared_ptr<FontStyleSet>> sets;
+    std::vector<std::shared_ptr<VariantFontStyleSet>> sets;
     for (const auto &familyName : families) {
         for (const auto &provider : providers_) {
             auto it = fontStyleSetCache_.find(familyName);

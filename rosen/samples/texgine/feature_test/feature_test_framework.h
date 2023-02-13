@@ -24,6 +24,8 @@
 
 #include <texgine/typography.h>
 
+#include "texgine_canvas.h"
+
 struct FeatureTestOption {
     // border
     bool needBorder = true;
@@ -47,7 +49,7 @@ struct TypographyData {
     std::optional<bool> needRainbowChar = std::nullopt;
     bool atNewline = false;
 
-    std::function<void(const struct TypographyData &, SkCanvas &, double, double)> onPaint = nullptr;
+    std::function<void(const struct TypographyData &, Texgine::TexgineCanvas &, double, double)> onPaint = nullptr;
 };
 
 class TestFeature {

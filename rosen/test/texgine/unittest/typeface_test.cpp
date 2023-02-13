@@ -18,10 +18,6 @@
 
 #include <gtest/gtest.h>
 #include <hb.h>
-#include <include/core/SkFontMgr.h>
-#include <include/core/SkString.h>
-#include <include/core/SkTypeface.h>
-#include <src/ports/SkFontMgr_custom.h>
 
 #include "opentype_parser/cmap_parser.h"
 #include "param_test_macros.h"
@@ -30,6 +26,7 @@
 
 struct hb_blob_t {};
 
+namespace Texgine {
 struct Mockvars {
     const char *name_ = "";
     int sizeIndex_ = 0;
@@ -39,7 +36,7 @@ struct Mockvars {
     std::vector<int> dataLength_ = {1};
     int parseRetval_ = 0;
     std::vector<int> glyphId_ = {0};
-    sk_sp<SkTypeface> skTypeface_ = sk_make_sp<SkTypeface_Empty>();
+    std::shared_ptr<Texgine::TexgineTypeface> texgineTypeface_ = std::make_shared<Texgine::TexgineTypeface>();
     std::unique_ptr<hb_blob_t> blob_ = std::make_unique<hb_blob_t>();
     std::unique_ptr<Texgine::Typeface> typeface_ = nullptr;
 } mockvars;
@@ -47,28 +44,28 @@ struct Mockvars {
 void InitMyMockVars(Mockvars vars)
 {
     mockvars = std::move(vars);
-    mockvars.typeface_ = std::make_unique<Texgine::Typeface>(mockvars.skTypeface_);
+    mockvars.typeface_ = std::make_unique<Texgine::Typeface>(mockvars.texgineTypeface_);
 }
 
-sk_sp<SkTypeface> SkTypeface::MakeFromFile(const char path[], int index)
+std::shared_ptr<TexgineTypeface> TexgineTypeface::MakeFromFile(const char path[], int index)
 {
-    return mockvars.skTypeface_;
+    return mockvars.texgineTypeface_;
 }
 
-size_t SkTypeface::getTableSize(SkFontTableTag tag) const
+size_t TexgineTypeface::GetTableSize(uint32_t tag)
 {
     assert(mockvars.sizeIndex_ < mockvars.tableSize_.size());
     return mockvars.tableSize_[mockvars.sizeIndex_++];
 }
 
-size_t SkTypeface::getTableData(SkFontTableTag tag, size_t offset, size_t length,void* data) const
+size_t TexgineTypeface::GetTableData(uint32_t tag, size_t offset, size_t length,void* data)
 {
     return mockvars.dataLength_[mockvars.lengthIndex_++];
 }
 
-void SkTypeface::getFamilyName(SkString* name) const
+void TexgineTypeface::GetFamilyName(TexgineString* name)
 {
-    *name = mockvars.name_;
+    name->SetString(mockvars.name_);
 }
 
 extern "C" {
@@ -82,7 +79,6 @@ void hb_blob_destroy(hb_blob_t *)
 }
 }
 
-namespace Texgine {
 int CmapParser::Parse(const char *data, int32_t size)
 {
     return mockvars.parseRetval_;
@@ -98,7 +94,7 @@ public:
 };
 
 // 逻辑测试
-// 设置sktypeface_为非空
+// 设置texgineTypeface_为非空
 // 判定返回值不为空指针，可以得到name
 TEST_F(TypefaceTest, MakeFromFile1)
 {
@@ -109,11 +105,11 @@ TEST_F(TypefaceTest, MakeFromFile1)
 }
 
 // 异常测试
-// 设置sktypeface_为空
+// 设置texgineTypeface_为空
 // 判定得不到name并抛出异常
 TEST_F(TypefaceTest, MakeFromFile2)
 {
-    InitMyMockVars({ .name_ = "cxxt", .skTypeface_ = nullptr });
+    InitMyMockVars({ .name_ = "cxxt", .texgineTypeface_ = nullptr });
     ASSERT_EXCEPTION(ExceptionType::APIFailed, Typeface::MakeFromFile("aaa"));
     EXPECT_NE(mockvars.typeface_->GetName(), "cxxt");
 }
@@ -123,7 +119,7 @@ TEST_F(TypefaceTest, MakeFromFile2)
 // 判定返回值为false
 TEST_F(TypefaceTest, Has1)
 {
-    InitMyMockVars({ .name_ = "one", .skTypeface_ = nullptr });
+    InitMyMockVars({ .name_ = "one", .texgineTypeface_ = nullptr });
     EXPECT_EQ(mockvars.typeface_->Has(0x0006), false);
 }
 

@@ -14,10 +14,11 @@
  */
 
 #include "char_groups.h"
-#include "texgine_exception.h"
 
 #include <algorithm>
 #include <cassert>
+
+#include "texgine_exception.h"
 
 namespace Texgine {
 std::ostream &operator <<(std::ostream &os, const struct IndexRange &range)

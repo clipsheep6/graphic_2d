@@ -17,7 +17,6 @@
 
 #include <sstream>
 
-#include <include/core/SkCanvas.h>
 #include <texgine/system_font_provider.h>
 #include <texgine/typography_builder.h>
 

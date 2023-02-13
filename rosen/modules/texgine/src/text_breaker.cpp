@@ -113,7 +113,6 @@ int TextBreaker::Measure(const TextStyle &xs,
         LOG2EX(ERROR) << "Measure failed!";
         return ret;
     }
-
     boundaries = measurer->GetWordBoundary();
     if (boundaries.size() == 0) {
         LOG2EX(ERROR) << "Measurer GetWordBoundary failed!";

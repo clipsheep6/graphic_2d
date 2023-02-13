@@ -20,13 +20,10 @@
 #include <optional>
 #include <vector>
 
-#include <include/core/SkPaint.h>
-
+#include "texgine_canvas.h"
 #include "texgine/font_providers.h"
 #include "texgine/any_span.h"
 #include "text_span.h"
-
-class SkCanvas;
 
 namespace Texgine {
 enum class DumpType {
@@ -68,8 +65,8 @@ public:
     void AdjustOffsetX(double offset) noexcept(true);
     void AdjustOffsetY(double offset) noexcept(true);
 
-    void Paint(SkCanvas &canvas, double offsetx, double offsety) noexcept(false);
-    void PaintShadow(SkCanvas &canvas, double offsetx, double offsety) noexcept(false);
+    void Paint(TexgineCanvas &canvas, double offsetx, double offsety) noexcept(false);
+    void PaintShadow(TexgineCanvas &canvas, double offsetx, double offsety) noexcept(false);
     bool IsRTL() const noexcept(false);
 
     operator bool() const noexcept(false);

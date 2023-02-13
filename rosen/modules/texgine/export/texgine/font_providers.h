@@ -25,7 +25,6 @@
 
 namespace Texgine {
 class FontCollection;
-class FontStyleSet;
 
 /** \class FontProviders
  *  FontProviders providers an interface for developers to determine the order in
@@ -86,7 +85,7 @@ private:
     std::vector<std::shared_ptr<IFontProvider>> providers_ = {};
 
     // Cache of font selection.
-    mutable std::map<std::string, std::shared_ptr<FontStyleSet>> fontStyleSetCache_ = {};
+    mutable std::map<std::string, std::shared_ptr<VariantFontStyleSet>> fontStyleSetCache_ = {};
 };
 } // namespace Texgine
 

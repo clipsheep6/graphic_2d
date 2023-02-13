@@ -18,13 +18,12 @@
 #include <iostream>
 #include <mutex>
 
-#include "include/core/SkStream.h"
-
 #include "dynamic_font_style_set.h"
-#include "font_style_set.h"
 #include "texgine_exception.h"
+#include "texgine_stream.h"
 #include "texgine/utils/exlog.h"
 #include "typeface.h"
+#include "variant_font_style_set.h"
 
 namespace Texgine {
 #define PARAMETERERROR 1;
@@ -47,26 +46,26 @@ int DynamicFontProvider::LoadFont(const std::string &familyName, const void *dat
         return PARAMETERERROR;
     }
 
-    auto stream = SkMemoryStream::MakeCopy(data, datalen);
+    auto stream = TexgineMemoryStream::MakeCopy(data, datalen);
     if (stream == nullptr) {
         LOG2EX(ERROR) << "stream is nullptr!";
         return APIERROR;
     }
 
-    auto skTypeface = SkTypeface::MakeFromStream(std::move(stream));
-    if (skTypeface == nullptr) {
-        LOG2EX(ERROR) << "skTypeface is nullptr!";
+    auto texgineTypeface = TexgineTypeface::MakeFromStream(std::move(stream));
+    if (texgineTypeface == nullptr) {
+        LOG2EX(ERROR) << "texgineTypeface is nullptr!";
         return APIERROR;
     }
 
-    auto typeface = std::make_unique<Typeface>(skTypeface);
+    auto typeface = std::make_unique<Typeface>(texgineTypeface);
     LOG2EX_DEBUG() << "load font name:" << familyName;
-    auto dfss = new DynamicFontStyleSet(std::move(typeface));
-    fontStyleSetMap_[familyName] = std::make_shared<FontStyleSet>(dfss);
+    auto dfss = std::make_shared<DynamicFontStyleSet>(std::move(typeface));
+    fontStyleSetMap_[familyName] = std::make_shared<VariantFontStyleSet>(dfss);
     return 0;
 }
 
-std::shared_ptr<FontStyleSet> DynamicFontProvider::MatchFamily(const std::string &familyName) noexcept(true)
+std::shared_ptr<VariantFontStyleSet> DynamicFontProvider::MatchFamily(const std::string &familyName) noexcept(true)
 {
     for (auto &[name, fss] : fontStyleSetMap_) {
         if (familyName == name) {

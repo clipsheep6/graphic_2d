@@ -15,8 +15,6 @@
 
 #include <sstream>
 
-#include <include/core/SkCanvas.h>
-
 #include "texgine/system_font_provider.h"
 #include "texgine/typography_builder.h"
 
@@ -26,6 +24,7 @@
 using namespace Texgine;
 
 namespace {
+// std::vector<size_t> positions = {0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 13, 17, 18, 19};
 std::vector<size_t> positions = {0, 1, 2, 3, 4, 5, 6, 7, 11, 12, 13, 17, 18, 19};
 
 class WordBoundaryTest : public TestFeature {
@@ -50,30 +49,30 @@ public:
         typography->Layout(200);
 
         for (const auto &index : positions) {
-            auto onPaint = [index](const struct TypographyData &tyData, SkCanvas &canvas, double x, double y) {
+            auto onPaint = [index](const struct TypographyData &tyData, TexgineCanvas &canvas, double x, double y) {
                 const auto &ty = tyData.typography;
                 ty->Paint(canvas, x, y);
 
-                SkPaint paint;
-                paint.setAntiAlias(true);
-                paint.setColor(0x5500FF00);
-                paint.setStyle(SkPaint::kFill_Style);
+                TexginePaint paint;
+                paint.SetAntiAlias(true);
+                paint.SetColor(0x5500FF00);
+                paint.SetStyle(TexginePaint::kFill_Style);
                 constexpr auto ws = TextRectWidthStyle::Tight;
                 constexpr auto hs = TextRectHeightStyle::Tight;
 
                 const auto &[left, right] = ty->GetWordBoundaryByIndex(index);
                 auto wordRects = ty->GetTextRectsByBoundary(Boundary{left, right}, hs, ws);
                 for (auto &[rect, _] : wordRects) {
-                    rect.offset(x, y);
-                    canvas.drawRect(rect, paint);
+                    rect.GetRect()->offset(x, y);
+                    canvas.DrawRect(rect, paint);
                 }
 
-                paint.setColor(0xFF000000);
-                paint.setStyle(SkPaint::kStroke_Style);
+                paint.SetColor(0xFF000000);
+                paint.SetStyle(TexginePaint::kStroke_Style);
                 auto indexRect = ty->GetTextRectsByBoundary(Boundary{index, index + 1}, hs, ws);
                 for (auto &[rect, _] : indexRect) {
-                    rect.offset(x, y);
-                    canvas.drawRect(rect, paint);
+                    rect.GetRect()->offset(x, y);
+                    canvas.DrawRect(rect, paint);
                 }
             };
 

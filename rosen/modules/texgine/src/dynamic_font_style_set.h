@@ -16,22 +16,19 @@
 #ifndef ROSEN_MODULES_TEXGINE_SRC_DYNAMIC_FONT_STYLE_SET_H
 #define ROSEN_MODULES_TEXGINE_SRC_DYNAMIC_FONT_STYLE_SET_H
 
-#include <include/core/SkFontMgr.h>
-#include <include/core/SkTypeface.h>
-
+#include "texgine_font_style.h"
+#include "texgine_font_style_set.h"
 #include "typeface.h"
 
-class SkTypeface;
-
 namespace Texgine {
-class DynamicFontStyleSet : public SkFontStyleSet {
+class DynamicFontStyleSet {
 public:
-    DynamicFontStyleSet(std::unique_ptr<Typeface> typeface) noexcept(true);
+    DynamicFontStyleSet(std::unique_ptr<Typeface> typeface);
 
-    int count() noexcept(true) override;
-    void getStyle(int index, SkFontStyle *style, SkString *name) noexcept(false) override;
-    SkTypeface* createTypeface(int index) noexcept(true) override;
-    SkTypeface* matchStyle(const SkFontStyle& pattern) noexcept(true) override;
+    int Count();
+    void GetStyle(int index, std::shared_ptr<TexgineFontStyle> style, std::shared_ptr<TexgineString> name);
+    std::shared_ptr<TexgineTypeface> CreateTypeface(int index);
+    std::shared_ptr<TexgineTypeface> MatchStyle(std::shared_ptr<TexgineFontStyle> pattern);
 
 private:
     std::unique_ptr<Typeface> typeface_ = nullptr;

@@ -18,14 +18,12 @@
 
 #include <any>
 
-#include <include/core/SkFontMetrics.h>
-#include <include/core/SkTextBlob.h>
-
 #include "char_groups.h"
+#include "texgine_canvas.h"
+#include "texgine_font_metrics.h"
+#include "texgine_text_blob.h"
 #include "texgine/typography.h"
 #include "texgine/typography_style.h"
-
-class SkCanvas;
 
 namespace Texgine {
 class TextSpan : public std::enable_shared_from_this<TextSpan> {
@@ -47,8 +45,8 @@ public:
     double GetPostBreak() const;
     double GetPreBreak() const;
     bool IsRTL() const;
-    void Paint(SkCanvas &canvas, double offsetx, double offsety, const TextStyle &xs);
-    void PaintShadow(SkCanvas &canvas, double offsetx, double offsety, const std::vector<TextShadow> &shadows);
+    void Paint(TexgineCanvas &canvas, double offsetx, double offsety, const TextStyle &xs);
+    void PaintShadow(TexgineCanvas &canvas, double offsetx, double offsety, const std::vector<TextShadow> &shadows);
     std::shared_ptr<TextSpan> CloneWithCharGroups(CharGroups const &cgs);
 
     void operator +=(TextSpan const &textSpan)
@@ -56,12 +54,12 @@ public:
         u16vect_.insert(u16vect_.end(), textSpan.u16vect_.begin(), textSpan.u16vect_.end());
     }
 
-    SkFontMetrics smetrics_;
+    TexgineFontMetrics tmetrics_;
     bool rtl_ = false;
     std::shared_ptr<Typeface> typeface_ = nullptr;
 
     std::vector<uint16_t> u16vect_;
-    sk_sp<SkTextBlob> textBlob_ = nullptr;
+    std::shared_ptr<TexgineTextBlob> textBlob_ = nullptr;
     std::vector<double> glyphWidths_;
 
     CharGroups cgs_;
@@ -82,8 +80,8 @@ private:
     friend class TextReverser;
     friend void ReportMemoryUsage(std::string const &member, TextSpan const &that, bool needThis);
 
-    void PaintDecoration(SkCanvas &canvas, double offsetx, double offsety, const TextStyle &xs);
-    void PaintDecorationStyle(SkCanvas &canvas, double left, double right, double y, const TextStyle &xs);
+    void PaintDecoration(TexgineCanvas &canvas, double offsetx, double offsety, const TextStyle &xs);
+    void PaintDecorationStyle(TexgineCanvas &canvas, double left, double right, double y, const TextStyle &xs);
 };
 } // namespace Texgine
 

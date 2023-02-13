@@ -28,7 +28,7 @@ public:
                 const TextStyle &xs,
                 const TypographyStyle &ys,
                 const std::unique_ptr<FontProviders> &fontProviders);
-    sk_sp<SkTextBlob> GenerateTextBlob(const SkFont &font, const CharGroups &cgs,
+    std::shared_ptr<TexgineTextBlob> GenerateTextBlob(const TexgineFont &font, const CharGroups &cgs,
         double &spanWidth, std::vector<double> &glyphWidths);
 };
 } // namespace Texgine

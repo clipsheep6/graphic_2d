@@ -28,7 +28,7 @@ public:
     MOCK_CONST_METHOD0(GetAlignment, AnySpanAlignment());
     MOCK_CONST_METHOD0(GetBaseline, TextBaseline());
     MOCK_CONST_METHOD0(GetLineOffset, double());
-    MOCK_METHOD3(Paint, void(SkCanvas &canvas, double offsetx, double offsety));
+    MOCK_METHOD3(Paint, void(TexgineCanvas &canvas, double offsetx, double offsety));
 };
 } // namespace Texgine
 

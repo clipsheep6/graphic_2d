@@ -33,12 +33,12 @@ FontStyles::Slant ToSlant(const FontStyle style)
     return switchMap[style];
 }
 
-SkFontStyle::Slant ToSkSlant(const FontStyles::Slant slant)
+TexgineFontStyle::Slant ToTexgineSlant(const FontStyles::Slant slant)
 {
-    std::map<FontStyles::Slant, SkFontStyle::Slant> switchMap = {
-        {FontStyles::Slant::UPRIGHT, SkFontStyle::Slant::kUpright_Slant},
-        {FontStyles::Slant::ITALIC, SkFontStyle::Slant::kItalic_Slant},
-        {FontStyles::Slant::OBLIQUE, SkFontStyle::Slant::kOblique_Slant},
+    std::map<FontStyles::Slant, TexgineFontStyle::Slant> switchMap = {
+        {FontStyles::Slant::UPRIGHT, TexgineFontStyle::Slant::kUpright_Slant},
+        {FontStyles::Slant::ITALIC, TexgineFontStyle::Slant::kItalic_Slant},
+        {FontStyles::Slant::OBLIQUE, TexgineFontStyle::Slant::kOblique_Slant},
     };
     return switchMap[slant];
 }
@@ -82,9 +82,10 @@ FontStyles::FontStyles(FontStyles::Weight weight, FontStyles::Width width, FontS
     slant_ = slant;
 }
 
-SkFontStyle FontStyles::ToSkFontStyle() const
+TexgineFontStyle FontStyles::ToTexgineFontStyle() const
 {
-    return SkFontStyle(static_cast<int>(weight_) * MULTIPLE, static_cast<int>(width_) + DIFFERENCE, ToSkSlant(slant_));
+    return TexgineFontStyle(static_cast<int>(weight_) * MULTIPLE,
+        static_cast<int>(width_) + DIFFERENCE, ToTexgineSlant(slant_));
 }
 
 bool FontStyles::operator ==(const FontStyles &rhs) const

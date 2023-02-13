@@ -23,9 +23,9 @@
 #include <string>
 #include <vector>
 
-#include "font_style_set.h"
 #include "texgine/typography.h"
 #include "texgine/utils/memory_usage_scope.h"
+#include "variant_font_style_set.h"
 #include "variant_span.h"
 
 struct hb_blob_t;

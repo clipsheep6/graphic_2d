@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include <include/core/SkCanvas.h>
-#include <include/core/SkImage.h>
 #include <texgine/any_span.h>
 #include <texgine/system_font_provider.h>
 #include <texgine/typography_builder.h>

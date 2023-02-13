@@ -19,7 +19,6 @@
 #include <list>
 #include <queue>
 
-#include <include/core/SkFont.h>
 #include <hb.h>
 #include <hb-icu.h>
 #include <unicode/utf16.h>
@@ -102,5 +101,5 @@ private:
     std::vector<Boundary> boundaries_;
 };
 
-hb_blob_t *HbFaceReferenceTableSkTypeface(hb_face_t *face, hb_tag_t tag, void *context);
+hb_blob_t *HbFaceReferenceTableTypeface(hb_face_t *face, hb_tag_t tag, void *context);
 } // namespace Texgine

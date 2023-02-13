@@ -48,12 +48,12 @@ public:
     int LoadFont(const std::string &familyName, const void *data, size_t datalen) noexcept(true);
 
     // |IFontProvider|
-    std::shared_ptr<FontStyleSet> MatchFamily(const std::string &familyName) noexcept(true) override;
+    std::shared_ptr<VariantFontStyleSet> MatchFamily(const std::string &familyName) noexcept(true) override;
 
 private:
     void ReportMemoryUsage(const std::string &member, bool needThis) const override;
 
-    std::map<std::string, std::shared_ptr<FontStyleSet>> fontStyleSetMap_;
+    std::map<std::string, std::shared_ptr<VariantFontStyleSet>> fontStyleSetMap_;
 };
 } // namespace Texgine
 

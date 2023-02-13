@@ -16,9 +16,9 @@
 #ifndef ROSEN_MODULES_TEXGINE_SRC_FONT_STYLES_H
 #define ROSEN_MODULES_TEXGINE_SRC_FONT_STYLES_H
 
-#include <include/core/SkFontStyle.h>
-
 #include <texgine/typography_types.h>
+
+#include "texgine_font_style.h"
 
 namespace Texgine {
 class FontStyles {
@@ -62,7 +62,7 @@ public:
     FontStyles(FontWeight weight, FontStyle style);
     FontStyles(Weight weight, Width width, Slant slant);
 
-    SkFontStyle ToSkFontStyle() const;
+    TexgineFontStyle ToTexgineFontStyle() const;
 
     bool operator ==(const FontStyles &rhs) const;
     bool operator !=(const FontStyles &rhs) const;

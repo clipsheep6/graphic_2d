@@ -15,8 +15,6 @@
 
 #include <gtest/gtest.h>
 #include <hb.h>
-#include <include/core/SkTypeface.h>
-#include "src/ports/SkFontMgr_custom.h"
 
 #include "measurer_impl.h"
 #include "param_test_macros.h"
@@ -45,23 +43,8 @@ struct MockVars {
     size_t retvalGetTableData_ = 1;
 
     std::shared_ptr<Texgine::Typeface> typeface_ =
-        std::make_shared<Texgine::Typeface>(sk_make_sp<SkTypeface_Empty>());
+        std::make_shared<Texgine::Typeface>(std::make_shared<Texgine::TexgineTypeface>());
 } mockvars;
-
-size_t SkTypeface::getTableSize(SkFontTableTag tag) const
-{
-    return mockvars.retvalGetTableSize_;
-}
-
-size_t SkTypeface::getTableData(SkFontTableTag tag, size_t offset, size_t length, void *data) const
-{
-    return mockvars.retvalGetTableData_;
-}
-
-int SkTypeface::getUnitsPerEm() const
-{
-    return mockvars.retvalGetUnitsPerEm_;
-}
 
 hb_blob_t *hb_blob_create(const char *, unsigned int, hb_memory_mode_t, void *, hb_destroy_func_t)
 {
@@ -158,6 +141,21 @@ U_CAPI UBool U_EXPORT2 u_isWhitespace(UChar32 c)
 }
 
 namespace Texgine {
+size_t TexgineTypeface::GetTableSize(uint32_t tag)
+{
+    return mockvars.retvalGetTableSize_;
+}
+
+size_t TexgineTypeface::GetTableData(uint32_t tag, size_t offset, size_t length, void *data)
+{
+    return mockvars.retvalGetTableData_;
+}
+
+int TexgineTypeface::GetUnitsPerEm()
+{
+    return mockvars.retvalGetUnitsPerEm_;
+}
+
 std::vector<Boundary> WordBreaker::GetBoundary(const std::vector<uint16_t> &u16str, bool)
 {
     return {};
@@ -187,34 +185,34 @@ public:
     }
 
     std::vector<uint16_t> text_ = {};
-    FontCollection fontCollection_ = std::vector<std::shared_ptr<FontStyleSet>>{};
+    FontCollection fontCollection_ = std::vector<std::shared_ptr<VariantFontStyleSet>>{};
     FontFeatures emptyff_;
     FontFeatures normalff_;
     CharGroups charGroups_;
 };
 
 // 过程测试
-// 调用HbFaceReferenceTableSkTypeface函数
-TEST_F(MeasurerImplTest, HbFaceReferenceTableSkTypeface)
+// 调用HbFaceReferenceTableTypeface函数
+TEST_F(MeasurerImplTest, HbFaceReferenceTableTypeface)
 {
     // path: typeface is nullptr
-    EXPECT_EQ(HbFaceReferenceTableSkTypeface({}, {}, nullptr), nullptr);
+    EXPECT_EQ(HbFaceReferenceTableTypeface({}, {}, nullptr), nullptr);
 
     // path: tableSize is 0
     InitMockVars({.retvalGetTableSize_ = 0});
-    EXPECT_EQ(HbFaceReferenceTableSkTypeface({}, {}, this), nullptr);
+    EXPECT_EQ(HbFaceReferenceTableTypeface({}, {}, this), nullptr);
 
     // path: buffer is nullptr
     InitMockVars({.retvalGetTableSize_ = 100000000000});
-    EXPECT_EQ(HbFaceReferenceTableSkTypeface({}, {}, this), nullptr);
+    EXPECT_EQ(HbFaceReferenceTableTypeface({}, {}, this), nullptr);
 
     // path: tableSize != actualSize
     InitMockVars({.retvalGetTableSize_ = 2, .retvalGetTableData_ = 1});
-    EXPECT_EQ(HbFaceReferenceTableSkTypeface({}, {}, this), nullptr);
+    EXPECT_EQ(HbFaceReferenceTableTypeface({}, {}, this), nullptr);
 
     // path: normal
     InitMockVars({});
-    EXPECT_NE(HbFaceReferenceTableSkTypeface({}, {}, this), nullptr);
+    EXPECT_NE(HbFaceReferenceTableTypeface({}, {}, this), nullptr);
 }
 
 // 过程测试

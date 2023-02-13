@@ -21,8 +21,7 @@
 #include <string>
 #include <vector>
 
-#include <include/core/SkPaint.h>
-
+#include "texgine_paint.h"
 #include "texgine/typography_types.h"
 
 namespace Texgine {
@@ -92,8 +91,8 @@ struct TextStyle {
     double heightScale_ = 1.0;
     double letterSpacing_ = 0.0;
     double wordSpacing_ = 0.0;
-    std::optional<SkPaint> foreground_ = std::nullopt;
-    std::optional<SkPaint> background_ = std::nullopt;
+    std::optional<TexginePaint> foreground_ = std::nullopt;
+    std::optional<TexginePaint> background_ = std::nullopt;
     std::vector<TextShadow> shadows_;
 
     // Implements the equality operator.

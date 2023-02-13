@@ -20,11 +20,8 @@
 #include <optional>
 #include <vector>
 
-#include <include/core/SkPaint.h>
-
 #include "texgine/font_providers.h"
-
-class SkCanvas;
+#include "texgine_paint.h"
 
 namespace Texgine {
 /** \enum BreakStrategy

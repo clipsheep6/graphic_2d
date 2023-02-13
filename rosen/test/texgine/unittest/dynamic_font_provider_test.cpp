@@ -18,42 +18,40 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-#include "include/core/SkFontStyle.h"
-#include "include/core/SkStream.h"
-#include "src/ports/SkFontMgr_custom.h"
-
 #include "dynamic_font_style_set.h"
-#include "font_style_set.h"
 #include "param_test_macros.h"
 #include "texgine_exception.h"
+#include "texgine_font_style_set.h"
+#include "texgine_stream.h"
+#include "texgine_typeface.h"
 #include "typeface.h"
 
-SkTypeface_Empty::SkTypeface_Empty() :SkTypeface_Custom({}, {}, {}, {}, {}) {}
+namespace Texgine {
+std::unique_ptr<TexgineMemoryStream> memoryStream = nullptr;
+std::shared_ptr<TexgineTypeface> typeface = nullptr;
 
-std::unique_ptr<SkMemoryStream> skMemoryStream = nullptr;
-sk_sp<SkTypeface> skTypeface = nullptr;
 struct Style {
-    std::unique_ptr<SkMemoryStream> skMemoryStream_ = std::make_unique<SkMemoryStream>();
-    sk_sp<SkTypeface> skTypeface_ = sk_make_sp<SkTypeface_Empty>();
+    std::unique_ptr<TexgineMemoryStream> memoryStream_ = std::make_unique<TexgineMemoryStream>();
+    std::shared_ptr<TexgineTypeface> typeface_ = std::make_shared<TexgineTypeface>();
 };
 
 void InitMyMockVars(Style style)
 {
-    skMemoryStream = std::move(style.skMemoryStream_);
-    skTypeface = style.skTypeface_;
+    memoryStream = std::move(style.memoryStream_);
+    typeface = style.typeface_;
 }
 
-std::unique_ptr<SkMemoryStream> SkMemoryStream::MakeCopy(const void *data, size_t length)
+std::unique_ptr<TexgineMemoryStream> TexgineMemoryStream::MakeCopy(const void *data, size_t length)
 {
-    return std::move(skMemoryStream);
+    return std::move(memoryStream);
 }
 
-sk_sp<SkTypeface> SkTypeface::MakeFromStream(std::unique_ptr<SkStreamAsset> stream, int index)
+std::shared_ptr<TexgineTypeface> TexgineTypeface::MakeFromStream(
+    std::unique_ptr<TexgineMemoryStream> stream, int index)
 {
-    return skTypeface;
+    return typeface;
 }
 
-namespace Texgine {
 class DynamicFontProviderTest : public testing::Test {
 public:
     std::shared_ptr<DynamicFontProvider> dynamicFontProvider = DynamicFontProvider::Create();
@@ -90,7 +88,7 @@ TEST_F(DynamicFontProviderTest, LoadFont2)
 // 判定不抛出异常，并且返回值为2
 TEST_F(DynamicFontProviderTest, LoadFont3)
 {
-    InitMyMockVars({.skMemoryStream_ = nullptr});
+    InitMyMockVars({.memoryStream_ = nullptr});
     EXPECT_NO_THROW({ EXPECT_EQ(dynamicFontProvider->LoadFont("LF3", this, 4), 2); });
 }
 
@@ -99,7 +97,7 @@ TEST_F(DynamicFontProviderTest, LoadFont3)
 // 判定不抛出异常，并且返回值为2
 TEST_F(DynamicFontProviderTest, LoadFont4)
 {
-    InitMyMockVars({.skTypeface_ = nullptr});
+    InitMyMockVars({.typeface_ = nullptr});
     EXPECT_NO_THROW({ EXPECT_EQ(dynamicFontProvider->LoadFont("LF4", this, 4), 2); });
 }
 

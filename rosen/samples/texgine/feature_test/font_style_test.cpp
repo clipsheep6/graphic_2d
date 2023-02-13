@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include <include/core/SkMaskFilter.h>
 #include <texgine/system_font_provider.h>
 #include <texgine/typography_builder.h>
 
@@ -26,18 +25,18 @@ struct MyPaint {
     uint32_t color = 0xFF000000;
     bool isAntiAlias = false;
     float blurRadius = 0;
-    SkPaint::Style style = SkPaint::kFill_Style;
+    TexginePaint::Style style = TexginePaint::kFill_Style;
     float strokeWidth = 0;
 };
 
-SkPaint ConvertMyPaintToSkPaint(const MyPaint& data)
+TexginePaint ConvertMyPaintToTexginePaint(const MyPaint& data)
 {
-    SkPaint paint;
-    paint.setAntiAlias(data.isAntiAlias);
-    paint.setColor(data.color);
-    paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, data.blurRadius));
-    paint.setStrokeWidth(data.strokeWidth);
-    paint.setStyle(data.style);
+    TexginePaint paint;
+    paint.SetAntiAlias(data.isAntiAlias);
+    paint.SetColor(data.color);
+    paint.SetMaskFilter(TexgineMaskFilter::MakeBlur(TexgineBlurStyle::kNormal_SkBlurStyle, data.blurRadius));
+    paint.SetStrokeWidth(data.strokeWidth);
+    paint.SetStyle(data.style);
     return paint;
 }
 
@@ -55,7 +54,7 @@ struct FontStyleTestData {
         .text = "前景样式：颜色",
         .style = {
             .fontSize_ = 32,
-            .foreground_ = ConvertMyPaintToSkPaint({
+            .foreground_ = ConvertMyPaintToTexginePaint({
                 .color = 0xFF00FF00,
             }),
         }
@@ -64,7 +63,7 @@ struct FontStyleTestData {
         .text = "前景样式：模糊",
         .style = {
             .fontSize_ = 32,
-            .foreground_ = ConvertMyPaintToSkPaint({
+            .foreground_ = ConvertMyPaintToTexginePaint({
                 .blurRadius = 2.0f,
             }),
         }
@@ -73,7 +72,7 @@ struct FontStyleTestData {
         .text = "背景样式：颜色",
         .style = {
             .fontSize_ = 32,
-            .background_ = ConvertMyPaintToSkPaint({
+            .background_ = ConvertMyPaintToTexginePaint({
                 .color = 0x5500FF00,
             }),
         }
@@ -82,9 +81,9 @@ struct FontStyleTestData {
         .text = "背景样式：边框",
         .style = {
             .fontSize_ = 32,
-            .background_ = ConvertMyPaintToSkPaint({
+            .background_ = ConvertMyPaintToTexginePaint({
                 .color = 0x5500FF00,
-                .style = SkPaint::kStroke_Style,
+                .style = TexginePaint::kStroke_Style,
                 .strokeWidth = 2.0f,
             }),
         }

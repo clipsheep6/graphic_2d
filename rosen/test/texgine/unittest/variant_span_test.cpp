@@ -20,18 +20,16 @@
 #include "texgine/typography_types.h"
 #include "variant_span.h"
 
-class SkCanvas {};
-
 namespace Texgine {
 struct Mockvars {
     double tsWidth_ = 0;
     double tsHeight_ = 0;
     int calledTimesPaint_ = 0;
     int calledTimesPaintShadow_ = 0;
-    SkCanvas *catchedPaintCanvas_ = nullptr;
+    TexgineCanvas *catchedPaintCanvas_ = nullptr;
     double catchedPaintOffsetX_ = 0;
     double catchedPaintOffsetY_ = 0;
-    SkCanvas *catchedPaintShadowCanvas_ = nullptr;
+    TexgineCanvas *catchedPaintShadowCanvas_ = nullptr;
     double catchedPaintShadowOffsetX_ = 0;
     double catchedPaintShadowOffsetY_ = 0;
 } mockvars;
@@ -51,7 +49,7 @@ double TextSpan::GetHeight() const
     return mockvars.tsHeight_;
 }
 
-void TextSpan::Paint(SkCanvas &canvas, double offsetx, double offsety, const TextStyle &xs)
+void TextSpan::Paint(TexgineCanvas &canvas, double offsetx, double offsety, const TextStyle &xs)
 {
     mockvars.calledTimesPaint_++;
     mockvars.catchedPaintCanvas_ = &canvas;
@@ -59,7 +57,7 @@ void TextSpan::Paint(SkCanvas &canvas, double offsetx, double offsety, const Tex
     mockvars.catchedPaintOffsetY_ = offsety;
 }
 
-void TextSpan::PaintShadow(SkCanvas &canvas, double offsetx, double offsety, const std::vector<TextShadow> &shadows)
+void TextSpan::PaintShadow(TexgineCanvas &canvas, double offsetx, double offsety, const std::vector<TextShadow> &shadows)
 {
     mockvars.calledTimesPaintShadow_++;
     mockvars.catchedPaintShadowCanvas_ = &canvas;
@@ -129,12 +127,12 @@ TEST_F(VariantSpanTest, GetWidthAndHeight)
 
 TEST_F(VariantSpanTest, PaintAndPaintShadow)
 {
-    SkCanvas canvas, canvas1, canvas2, canvas3, canvas4;
+    TexgineCanvas canvas, canvas1, canvas2, canvas3, canvas4;
     InitMockvars({});
-    SkCanvas *pcanvas = nullptr;
+    TexgineCanvas *pcanvas = nullptr;
     double asX = 0;
     double asY = 0;
-    EXPECT_CALL(*as, Paint).Times(1).WillOnce([&](SkCanvas &canvas, double offsetx, double offsety) {
+    EXPECT_CALL(*as, Paint).Times(1).WillOnce([&](TexgineCanvas &canvas, double offsetx, double offsety) {
         pcanvas = &canvas;
         asX = offsetx;
         asY = offsety;

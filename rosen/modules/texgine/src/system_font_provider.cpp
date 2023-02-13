@@ -17,9 +17,9 @@
 
 #include <mutex>
 
-#include "font_style_set.h"
 #include "texgine_exception.h"
 #include "texgine/utils/exlog.h"
+#include "variant_font_style_set.h"
 
 namespace Texgine {
 std::shared_ptr<SystemFontProvider> SystemFontProvider::GetInstance() noexcept(true)
@@ -34,19 +34,19 @@ std::shared_ptr<SystemFontProvider> SystemFontProvider::GetInstance() noexcept(t
     return sfp;
 }
 
-std::shared_ptr<FontStyleSet> SystemFontProvider::MatchFamily(const std::string &familyName) noexcept(true)
+std::shared_ptr<VariantFontStyleSet> SystemFontProvider::MatchFamily(const std::string &familyName) noexcept(true)
 {
-    auto skFontMgr = SkFontMgr::RefDefault();
-    if (skFontMgr == nullptr) {
-        LOG2EX(ERROR) << "skFontMgr is nullptr!";
+    auto fontMgr = TexgineFontManager::RefDefault();
+    if (fontMgr == nullptr || fontMgr->GetFontMgr() == nullptr) {
+        LOG2EX(ERROR) << "fontMgr is nullptr!";
         return nullptr;
     }
 
-    auto skFontStyleSet = skFontMgr->matchFamily(familyName.c_str());
-    if (skFontStyleSet == nullptr) {
-        LOG2EX_DEBUG() << "skFontStyleSet is nullptr!";
+    auto fontStyleSet = fontMgr->MatchFamily(familyName.c_str());
+    if (fontStyleSet == nullptr || fontStyleSet->Get() == nullptr) {
+        LOG2EX_DEBUG() << "fontStyleSet is nullptr!";
     }
 
-    return std::make_shared<FontStyleSet>(skFontStyleSet);
+    return std::make_shared<VariantFontStyleSet>(fontStyleSet);
 }
 } // namespace Texgine

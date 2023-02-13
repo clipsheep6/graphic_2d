@@ -22,19 +22,22 @@
 #include "param_test_macros.h"
 #include "texgine_exception.h"
 #include "texgine/font_providers.h"
+#include "texgine_text_blob.h"
+#include "texgine_text_blob_builder.h"
 #include "texgine/typography_types.h"
 #include "text_shaper.h"
 #include "typeface.h"
 
+namespace Texgine {
 struct MockVars {
     std::vector<uint16_t> catchedBufferGlyphs_;
     std::vector<float> catchedBufferPos_;
     std::vector<std::string> catchedGenerateFontCollectionFamilies_;
 
-    sk_sp<SkTextBlob> retvalSkTextBlobBuilderMake_ = nullptr;
-    std::shared_ptr<Texgine::FontCollection> retvalGenerateFontCollection_ =
-        std::make_shared<Texgine::FontCollection>(std::vector<std::shared_ptr<Texgine::FontStyleSet>>{});
-    std::unique_ptr<Texgine::MockMeasurer> retvalMeasurerCreate_ = std::make_unique<Texgine::MockMeasurer>();
+    std::shared_ptr<TexgineTextBlob> retvalTextBlobBuilderMake_ = nullptr;
+    std::shared_ptr<FontCollection> retvalGenerateFontCollection_ =
+        std::make_shared<FontCollection>(std::vector<std::shared_ptr<VariantFontStyleSet>>{});
+    std::unique_ptr<MockMeasurer> retvalMeasurerCreate_ = std::make_unique<MockMeasurer>();
 } mockvars;
 
 void InitMockVars(struct MockVars &&vars)
@@ -42,43 +45,21 @@ void InitMockVars(struct MockVars &&vars)
     mockvars = std::move(vars);
 }
 
-const SkTextBlobBuilder::RunBuffer& SkTextBlobBuilder::allocRunPos(const SkFont& font, int count, const SkRect* bounds)
+TexgineTextBlobBuilder::RunBuffer& TexgineTextBlobBuilder::AllocRunPos(const TexgineFont& font, int count)
 {
-    static SkTextBlobBuilder::RunBuffer buffer;
+    static TexgineTextBlobBuilder::RunBuffer buffer;
     mockvars.catchedBufferGlyphs_.resize(count);
     mockvars.catchedBufferPos_.resize(count * 2);
-    buffer.glyphs = mockvars.catchedBufferGlyphs_.data();
-    buffer.pos = mockvars.catchedBufferPos_.data();
+    buffer.glyphs_ = mockvars.catchedBufferGlyphs_.data();
+    buffer.pos_ = mockvars.catchedBufferPos_.data();
     return buffer;
 }
 
-void SkTextBlob::operator delete(void* p)
+std::shared_ptr<TexgineTextBlob> TexgineTextBlobBuilder::Make()
 {
-    delete[](reinterpret_cast<char *>(p));
+    return mockvars.retvalTextBlobBuilderMake_;
 }
 
-void* SkTextBlob::operator new(size_t size, void* p)
-{
-    return new char[size];
-}
-
-sk_sp<SkTextBlob> SkTextBlob::MakeFromText(const void* text,
-    size_t byteLength, const SkFont& font, SkTextEncoding encoding)
-{
-    return sk_sp<SkTextBlob>(new (nullptr) SkTextBlob({}));
-}
-
-SkTextBlob::SkTextBlob(const SkRect& bounds)
-    : fBounds(bounds) , fUniqueID(0) , fCacheID(SK_InvalidUniqueID) {}
-
-SkTextBlob::~SkTextBlob() {}
-
-sk_sp<SkTextBlob> SkTextBlobBuilder::make()
-{
-    return mockvars.retvalSkTextBlobBuilderMake_;
-}
-
-namespace Texgine {
 std::shared_ptr<FontCollection> FontProviders::GenerateFontCollection(
     const std::vector<std::string> &families) const noexcept(true)
 {
@@ -315,7 +296,7 @@ TEST_F(TextShaperTest, Shape6)
 {
     InitMockVars({});
     EXPECT_CALL(*mockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(0));
-    mockvars.retvalSkTextBlobBuilderMake_ = SkTextBlob::MakeFromText("hello", 5, {});
+    mockvars.retvalTextBlobBuilderMake_ = std::shared_ptr<TexgineTextBlob>(new TexgineTextBlob());
 
     EXPECT_NO_THROW({
         TextShaper shaper;

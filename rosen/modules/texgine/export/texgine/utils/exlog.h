@@ -16,7 +16,7 @@
 #ifndef ROSEN_MODULES_TEXGINE_EXPORT_TEXGINE_UTILS_EXLOG_H
 #define ROSEN_MODULES_TEXGINE_EXPORT_TEXGINE_UTILS_EXLOG_H
 
-#include "texgine/utils/logger.h"
+#include "logger.h"
 
 namespace Texgine {
 void ExTime(Logger &logger, enum Logger::LOG_PHASE phase);

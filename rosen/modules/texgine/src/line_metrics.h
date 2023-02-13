@@ -20,8 +20,6 @@
 
 #include "variant_span.h"
 
-class SkCanvas;
-
 namespace Texgine {
 struct LineMetrics {
     std::vector<VariantSpan> lineSpans_;

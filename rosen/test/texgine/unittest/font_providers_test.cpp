@@ -23,12 +23,12 @@
 namespace Texgine {
 class MockFontProvider : public IFontProvider {
 public:
-    MOCK_METHOD(std::shared_ptr<FontStyleSet>, MatchFamily, (const std::string &familyName), (noexcept(true)));
+    MOCK_METHOD(std::shared_ptr<VariantFontStyleSet>, MatchFamily, (const std::string &familyName), (noexcept(true)));
 };
 
 struct MockVars {
-    std::shared_ptr<FontStyleSet> systemFontProviderMatchFamilyRetval;
-    std::vector<std::shared_ptr<FontStyleSet>> catchedFontStyleSets;
+    std::shared_ptr<VariantFontStyleSet> systemFontProviderMatchFamilyRetval;
+    std::vector<std::shared_ptr<VariantFontStyleSet>> catchedFontStyleSets;
 } mockvars;
 
 void InitMockVars(struct MockVars &&vars)
@@ -36,12 +36,12 @@ void InitMockVars(struct MockVars &&vars)
     mockvars = std::move(vars);
 }
 
-FontCollection::FontCollection(std::vector<std::shared_ptr<FontStyleSet>> &&fontStyleSets)
+FontCollection::FontCollection(std::vector<std::shared_ptr<VariantFontStyleSet>> &&fontStyleSets)
 {
     mockvars.catchedFontStyleSets = std::move(fontStyleSets);
 }
 
-std::shared_ptr<FontStyleSet> SystemFontProvider::MatchFamily(const std::string &familyName) noexcept(true)
+std::shared_ptr<VariantFontStyleSet> SystemFontProvider::MatchFamily(const std::string &familyName) noexcept(true)
 {
     return mockvars.systemFontProviderMatchFamilyRetval;
 }
@@ -51,13 +51,13 @@ public:
     std::unique_ptr<FontProviders> fontProviders_ = FontProviders::Create();
     std::shared_ptr<MockFontProvider> msfp1_ = std::make_shared<MockFontProvider>();
     std::shared_ptr<MockFontProvider> msfp2_ = std::make_shared<MockFontProvider>();
-    std::shared_ptr<FontStyleSet> fontStyleSet1_ = std::make_shared<FontStyleSet>(nullptr);
-    std::shared_ptr<FontStyleSet> fontStyleSet2_ = std::make_shared<FontStyleSet>(nullptr);
+    std::shared_ptr<VariantFontStyleSet> fontStyleSet1_ = std::make_shared<VariantFontStyleSet>(nullptr);
+    std::shared_ptr<VariantFontStyleSet> fontStyleSet2_ = std::make_shared<VariantFontStyleSet>(nullptr);
 };
 
 TEST_F(FontProvidersTest, CreateAndSystemOnly)
 {
-    std::shared_ptr<FontStyleSet> fss1 = std::make_shared<FontStyleSet>(nullptr);
+    std::shared_ptr<VariantFontStyleSet> fss1 = std::make_shared<VariantFontStyleSet>(nullptr);
 
     // Create
     InitMockVars({});
@@ -79,8 +79,8 @@ TEST_F(FontProvidersTest, CreateAndSystemOnly)
 
 TEST_F(FontProvidersTest, AppendFontProvider)
 {
-    std::shared_ptr<FontStyleSet> fss1 = std::make_shared<FontStyleSet>(nullptr);
-    std::shared_ptr<FontStyleSet> fss2 = std::make_shared<FontStyleSet>(nullptr);
+    std::shared_ptr<VariantFontStyleSet> fss1 = std::make_shared<VariantFontStyleSet>(nullptr);
+    std::shared_ptr<VariantFontStyleSet> fss2 = std::make_shared<VariantFontStyleSet>(nullptr);
 
     // AppendFontProvider nullptr
     InitMockVars({});
@@ -140,8 +140,8 @@ TEST_F(FontProvidersTest, AppendFontProvider)
 
 TEST_F(FontProvidersTest, GenerateFontCollection)
 {
-    std::shared_ptr<FontStyleSet> fss1 = std::make_shared<FontStyleSet>(nullptr);
-    std::shared_ptr<FontStyleSet> fss2 = std::make_shared<FontStyleSet>(nullptr);
+    std::shared_ptr<VariantFontStyleSet> fss1 = std::make_shared<VariantFontStyleSet>(nullptr);
+    std::shared_ptr<VariantFontStyleSet> fss2 = std::make_shared<VariantFontStyleSet>(nullptr);
 
     // GenerateFontCollection set=nullptr
     InitMockVars({});

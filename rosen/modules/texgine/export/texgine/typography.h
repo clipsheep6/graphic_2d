@@ -19,11 +19,11 @@
 #include <string>
 #include <vector>
 
-#include <include/core/SkRect.h>
-
+#include "texgine_canvas.h"
+#include "texgine_font.h"
+#include "texgine_rect.h"
 #include "texgine/typography_types.h"
 
-class SkCanvas;
 namespace Texgine {
 /** \enum TextRectWidthStyle
  *  TextRectWidthStyle is the width option for various types
@@ -68,10 +68,10 @@ struct IndexAndAffinity {
 };
 
 /** \struct TextRect
- *  TextRect contains a SkRect and a text direction.
+ *  TextRect contains a TexgineRect and a text direction.
  */
 struct TextRect {
-    SkRect rect_;
+    TexgineRect rect_;
     TextDirection direction_;
 };
 
@@ -147,7 +147,7 @@ public:
      *  @param offsetx The Offset in x-asix of the starting point for drawing the Typography
      *  @param offsety The Offset in y-asix of the starting point for drawing the Typography
      */
-    virtual void Paint(SkCanvas &canvas, double offsetx, double offsety) = 0;
+    virtual void Paint(TexgineCanvas &canvas, double offsetx, double offsety) = 0;
 
     /** Returns a vector of bounding boxes that enclose all text
      *  between start and end glyph indexes. The bounding boxes

@@ -102,15 +102,15 @@ TEST_F(FontStylesTest, FontStyles2)
 
 // 过程测试
 // 创建FontStyles对象
-// 调用ToSkFontStyle函数
+// 调用ToTexgineFontStyle函数
 // 检查weight、width、slant值
-TEST_F(FontStylesTest, ToSkFontStyle)
+TEST_F(FontStylesTest, ToTexgineFontStyle)
 {
-    EXPECT_EQ(GetFontStyles(0, 0).ToSkFontStyle().weight(), 100);
-    EXPECT_EQ(GetFontStyles(0, 0).ToSkFontStyle().slant(), 0);
-    EXPECT_EQ(GetFontStyles(1, 0, 0).ToSkFontStyle().weight(), 100);
-    EXPECT_EQ(GetFontStyles(1, 0, 0).ToSkFontStyle().width(), 1);
-    EXPECT_EQ(GetFontStyles(1, 0, 0).ToSkFontStyle().slant(), 0);
+    EXPECT_EQ(GetFontStyles(0, 0).ToTexgineFontStyle().GetFontStyle()->weight(), 100);
+    EXPECT_EQ(GetFontStyles(0, 0).ToTexgineFontStyle().GetFontStyle()->slant(), 0);
+    EXPECT_EQ(GetFontStyles(1, 0, 0).ToTexgineFontStyle().GetFontStyle()->weight(), 100);
+    EXPECT_EQ(GetFontStyles(1, 0, 0).ToTexgineFontStyle().GetFontStyle()->width(), 1);
+    EXPECT_EQ(GetFontStyles(1, 0, 0).ToTexgineFontStyle().GetFontStyle()->slant(), 0);
 }
 
 // 过程测试

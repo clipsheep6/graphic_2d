@@ -19,18 +19,16 @@
 #include <stack>
 
 #include <hb-icu.h>
-#include <include/core/SkCanvas.h>
-#include <include/core/SkFont.h>
-#include <include/core/SkMaskFilter.h>
-#include <include/core/SkPath.h>
-#include <include/effects/Sk1DPathEffect.h>
-#include <include/effects/SkDashPathEffect.h>
 #include <unicode/ubidi.h>
 
 #include "font_collection.h"
 #include "font_styles.h"
 #include "measurer.h"
+#include "texgine_dash_path_effect.h"
 #include "texgine_exception.h"
+#include "texgine_mask_filter.h"
+#include "texgine_path.h"
+#include "texgine_path_1d_path_effect.h"
 #include "texgine/utils/exlog.h"
 #include "texgine/utils/trace.h"
 #include "text_converter.h"
@@ -132,7 +130,7 @@ std::shared_ptr<TextSpan> TextSpan::CloneWithCharGroups(const CharGroups &cgs)
 
 double TextSpan::GetHeight() const
 {
-    return smetrics_.fDescent - smetrics_.fAscent;
+    return *tmetrics_.fDescent_ - *tmetrics_.fAscent_;
 }
 
 double TextSpan::GetWidth() const
@@ -155,41 +153,41 @@ bool TextSpan::IsRTL() const
     return rtl_;
 }
 
-void TextSpan::Paint(SkCanvas &canvas, double offsetx, double offsety, const TextStyle &xs)
+void TextSpan::Paint(TexgineCanvas &canvas, double offsetx, double offsety, const TextStyle &xs)
 {
-    SkPaint paint;
-    paint.setAntiAlias(true);
-    paint.setARGB(MAXRGB, MAXRGB, 0, 0);
-    paint.setColor(xs.color_);
+    TexginePaint paint;
+    paint.SetAntiAlias(true);
+    paint.SetARGB(MAXRGB, MAXRGB, 0, 0);
+    paint.SetColor(xs.color_);
     if (xs.background_.has_value()) {
-        auto rect = SkRect::MakeXYWH(offsetx, offsety + smetrics_.fAscent, width_,
-            smetrics_.fDescent - smetrics_.fAscent);
-        canvas.drawRect(rect, xs.background_.value());
+        auto rect = TexgineRect::MakeXYWH(offsetx, offsety + *tmetrics_.fAscent_, width_,
+            *tmetrics_.fDescent_ - *tmetrics_.fAscent_);
+        canvas.DrawRect(rect, xs.background_.value());
     }
 
     if (xs.foreground_.has_value()) {
         paint = xs.foreground_.value();
     }
 
-    canvas.drawTextBlob(textBlob_, offsetx, offsety, paint);
+    canvas.DrawTextBlob(textBlob_, offsetx, offsety, paint);
     PaintDecoration(canvas, offsetx, offsety, xs);
 }
 
-void TextSpan::PaintDecoration(SkCanvas &canvas, double offsetx, double offsety, const TextStyle &xs)
+void TextSpan::PaintDecoration(TexgineCanvas &canvas, double offsetx, double offsety, const TextStyle &xs)
 {
     double left = offsetx;
     double right = left + GetWidth();
 
     if ((xs.decoration_ & TextDecoration::Underline) == TextDecoration::Underline) {
-        double y = offsety + smetrics_.fUnderlinePosition;
+        double y = offsety + *tmetrics_.fUnderlinePosition_;
         PaintDecorationStyle(canvas, left, right, y, xs);
     }
     if ((xs.decoration_ & TextDecoration::Overline) == TextDecoration::Overline) {
-        double y = offsety - abs(smetrics_.fAscent);
+        double y = offsety - abs(*tmetrics_.fAscent_);
         PaintDecorationStyle(canvas, left, right, y, xs);
     }
     if ((xs.decoration_ & TextDecoration::Linethrough) == TextDecoration::Linethrough) {
-        double y = offsety - (smetrics_.fCapHeight * HALF);
+        double y = offsety - (*tmetrics_.fCapHeight_ * HALF);
         PaintDecorationStyle(canvas, left, right, y, xs);
     }
     if ((xs.decoration_ & TextDecoration::Baseline) == TextDecoration::Baseline) {
@@ -198,68 +196,71 @@ void TextSpan::PaintDecoration(SkCanvas &canvas, double offsetx, double offsety,
     }
 }
 
-void TextSpan::PaintDecorationStyle(SkCanvas &canvas, double left, double right, double y, const TextStyle &xs)
+void TextSpan::PaintDecorationStyle(TexgineCanvas &canvas, double left, double right, double y, const TextStyle &xs)
 {
-    SkPaint paint;
-    paint.setAntiAlias(true);
-    paint.setARGB(MAXRGB, MAXRGB, 0, 0);
-    paint.setColor(xs.decorationColor_.value_or(xs.color_));
-    paint.setStrokeWidth(xs.decorationThicknessScale_);
+    TexginePaint paint;
+    paint.SetAntiAlias(true);
+    paint.SetARGB(MAXRGB, MAXRGB, 0, 0);
+    paint.SetColor(xs.decorationColor_.value_or(xs.color_));
+    paint.SetStrokeWidth(xs.decorationThicknessScale_);
 
     switch (xs.decorationStyle_) {
         case TextDecorationStyle::Solid:
             break;
         case TextDecorationStyle::Double:
-            canvas.drawLine(left, y, right, y, paint);
+            canvas.DrawLine(left, y, right, y, paint);
             y += OFFSETY;
             break;
         case TextDecorationStyle::Dotted: {
-            SkPath circle;
-            circle.addOval(SkRect::MakeWH(WIDTHSCALAR, HEIGHTSCALAR));
-            paint.setPathEffect(SkPath1DPathEffect::Make(circle, DOTTEDADVANCE, PHASE, SkPath1DPathEffect::kRotate_Style));
+            TexginePath circle;
+            auto rect = TexgineRect::MakeWH(WIDTHSCALAR, HEIGHTSCALAR);
+            circle.AddOval(rect);
+            paint.SetPathEffect(TexginePath1DPathEffect::Make(circle, DOTTEDADVANCE, PHASE,
+                                                              TexginePath1DPathEffect::kRotate_Style));
             break;
         }
         case TextDecorationStyle::Dashed: {
-            const SkScalar intervals[2] = {WIDTHSCALAR, HEIGHTSCALAR};
-            paint.setPathEffect(SkDashPathEffect::Make(intervals, COUNT, PHASE));
-            paint.setStyle(SkPaint::kStroke_Style);
+            const float intervals[2] = {WIDTHSCALAR, HEIGHTSCALAR};
+            paint.SetPathEffect(TexgineDashPathEffect::Make(intervals, COUNT, PHASE));
+            paint.SetStyle(TexginePaint::kStroke_Style);
             break;
         }
         case TextDecorationStyle::Wavy: {
-            SkPath wavy;
+            TexginePath wavy;
             float thickness = xs.decorationThicknessScale_;
-            wavy.moveTo({POINTX0, POINTY2 - thickness});
-            wavy.quadTo({POINTX1, POINTY0 - thickness}, {POINTX2, POINTY2 - thickness});
-            wavy.lineTo({POINTX3, POINTY4 - thickness});
-            wavy.quadTo({POINTX4, POINTY6 - thickness}, {POINTX5, POINTY4 - thickness});
-            wavy.lineTo({POINTX6, POINTY2 - thickness});
-            wavy.lineTo({POINTX6, POINTY2 + thickness});
-            wavy.lineTo({POINTX5, POINTY4 + thickness});
-            wavy.quadTo({POINTX4, POINTY6 + thickness}, {POINTX3, POINTY4 + thickness});
-            wavy.lineTo({POINTX2, POINTY2 + thickness});
-            wavy.quadTo({POINTX1, POINTY0 + thickness}, {POINTX0, POINTY2 + thickness});
-            wavy.lineTo({POINTX0, POINTY2 - thickness});
-            paint.setPathEffect(SkPath1DPathEffect::Make(wavy, WAVYADVANCE, PHASE, SkPath1DPathEffect::kRotate_Style));
-            paint.setStyle(SkPaint::kStroke_Style);
+            wavy.MoveTo({POINTX0, POINTY2 - thickness});
+            wavy.QuadTo({POINTX1, POINTY0 - thickness}, {POINTX2, POINTY2 - thickness});
+            wavy.LineTo({POINTX3, POINTY4 - thickness});
+            wavy.QuadTo({POINTX4, POINTY6 - thickness}, {POINTX5, POINTY4 - thickness});
+            wavy.LineTo({POINTX6, POINTY2 - thickness});
+            wavy.LineTo({POINTX6, POINTY2 + thickness});
+            wavy.LineTo({POINTX5, POINTY4 + thickness});
+            wavy.QuadTo({POINTX4, POINTY6 + thickness}, {POINTX3, POINTY4 + thickness});
+            wavy.LineTo({POINTX2, POINTY2 + thickness});
+            wavy.QuadTo({POINTX1, POINTY0 + thickness}, {POINTX0, POINTY2 + thickness});
+            wavy.LineTo({POINTX0, POINTY2 - thickness});
+            paint.SetPathEffect(TexginePath1DPathEffect::Make(wavy, WAVYADVANCE, PHASE,
+                                                              TexginePath1DPathEffect::kRotate_Style));
+            paint.SetStyle(TexginePaint::kStroke_Style);
             break;
         }
     }
-    canvas.drawLine(left, y, right, y, paint);
+    canvas.DrawLine(left, y, right, y, paint);
 }
 
-void TextSpan::PaintShadow(SkCanvas &canvas, double offsetx, double offsety, const std::vector<TextShadow> &shadows)
+void TextSpan::PaintShadow(TexgineCanvas &canvas, double offsetx, double offsety, const std::vector<TextShadow> &shadows)
 {
     for (const auto &shadow : shadows) {
         auto x = offsetx + shadow.offsetX_;
         auto y = offsety + shadow.offsetY_;
         auto blurRadius = std::min(shadow.blurLeave_, MAXBLURRADIUS);
 
-        SkPaint paint;
-        paint.setAntiAlias(true);
-        paint.setColor(shadow.color_);
-        paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, blurRadius));
+        TexginePaint paint;
+        paint.SetAntiAlias(true);
+        paint.SetColor(shadow.color_);
+        paint.SetMaskFilter(TexgineMaskFilter::MakeBlur(kNormal_SkBlurStyle, blurRadius));
 
-        canvas.drawTextBlob(textBlob_, x, y, paint);
+        canvas.DrawTextBlob(textBlob_, x, y, paint);
     }
 }
 } // namespace Texgine

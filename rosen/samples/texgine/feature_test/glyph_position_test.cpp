@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include <include/core/SkCanvas.h>
-
 #include <sstream>
 
 #include <texgine/dynamic_file_font_provider.h>
@@ -84,26 +82,26 @@ public:
             builder->AppendSpan(emojiText);
             builder->PopStyle();
 
-            auto onPaint = [data](const struct TypographyData &tyData, SkCanvas &canvas, double x, double y) {
+            auto onPaint = [data](const struct TypographyData &tyData, TexgineCanvas &canvas, double x, double y) {
                 auto &typography = tyData.typography;
                 typography->Paint(canvas, x, y);
-                SkPaint paint;
-                paint.setAntiAlias(true);
-                paint.setColor(0x7F00FF00);
-                paint.setStrokeWidth(5);
-                canvas.drawLine(x + data.x_ - 10, y + data.y_, x + data.x_ + 10, y + data.y_, paint);
-                canvas.drawLine(x + data.x_, y + data.y_ - 10, x + data.x_, y + data.y_ + 10, paint);
-                paint.setColor(0xFF00FF);
-                paint.setAlpha(255 * 0.3);
-                canvas.save();
-                canvas.translate(x, y);
+                TexginePaint paint;
+                paint.SetAntiAlias(true);
+                paint.SetColor(0x7F00FF00);
+                paint.SetStrokeWidth(5);
+                canvas.DrawLine(x + data.x_ - 10, y + data.y_, x + data.x_ + 10, y + data.y_, paint);
+                canvas.DrawLine(x + data.x_, y + data.y_ - 10, x + data.x_, y + data.y_ + 10, paint);
+                paint.SetColor(0xFF00FF);
+                paint.SetAlpha(255 * 0.3);
+                canvas.Save();
+                canvas.Translate(x, y);
                 auto ia = typography->GetGlyphIndexByCoordinate(data.x_, data.y_);
                 auto rects = typography->GetTextRectsByBoundary(Boundary{ia.index_, ia.index_ + 1},
                     TextRectHeightStyle::CoverTopAndBottom, TextRectWidthStyle::Tight);
                 if (rects.size()) {
-                    canvas.drawRect(rects.back().rect_, paint);
+                    canvas.DrawRect(rects.back().rect_, paint);
                 }
-                canvas.restore();
+                canvas.Restore();
             };
 
             std::stringstream ss;

@@ -24,26 +24,19 @@
 namespace Texgine {
 std::unique_ptr<Typeface> Typeface::MakeFromFile(const std::string &filename)
 {
-    auto st = SkTypeface::MakeFromFile(filename.c_str());
-    if (st == nullptr) {
+    auto st = TexgineTypeface::MakeFromFile(filename.c_str());
+    if (st == nullptr || st->GetTypeface() == nullptr) {
         throw TEXGINE_EXCEPTION(APIFailed);
     }
 
     return std::make_unique<Typeface>(st);
 }
 
-Typeface::Typeface(SkTypeface *tf) : Typeface(sk_sp<SkTypeface>(tf))
-{
-    if (tf) {
-        tf->ref();
-    }
-}
-
-Typeface::Typeface(sk_sp<SkTypeface> tf)
+Typeface::Typeface(std::shared_ptr<TexgineTypeface> tf)
     : typeface_(tf)
 {
     if (typeface_ != nullptr) {
-        typeface_->getFamilyName(&name_);
+        typeface_->GetFamilyName(&name_);
     }
 }
 
@@ -56,7 +49,7 @@ Typeface::~Typeface()
 
 std::string Typeface::GetName()
 {
-    return name_.c_str();
+    return name_.ToString();
 }
 
 bool Typeface::ParseCmap(const std::shared_ptr<CmapParser> &parser)
@@ -64,19 +57,19 @@ bool Typeface::ParseCmap(const std::shared_ptr<CmapParser> &parser)
     LOG2EX(DEBUG) << "Parse Cmap: " << GetName();
     ScopedTrace scope("Typeface::InitCmap");
     auto tag = HB_TAG('c', 'm', 'a', 'p');
-    if (typeface_ == nullptr) {
+    if (typeface_ == nullptr || typeface_->GetTypeface() == nullptr) {
         LOG2EX(WARN) << "typeface_ is nullptr";
         return false;
     }
 
-    auto size = typeface_->getTableSize(tag);
+    auto size = typeface_->GetTableSize(tag);
     if (size <= 0) {
-        LOG2EX(ERROR) << name_.c_str() << " haven't cmap";
+        LOG2EX(ERROR) << name_.ToString() << " haven't cmap";
         throw TEXGINE_EXCEPTION(APIFailed);
     }
 
     cmapData_ = std::make_unique<char[]>(size);
-    auto retv = typeface_->getTableData(tag, 0, size, cmapData_.get());
+    auto retv = typeface_->GetTableData(tag, 0, size, cmapData_.get());
     if (size != retv) {
         LOG2EX(ERROR) << "getTableData failed size: " << size << ", retv: " << retv;
         throw TEXGINE_EXCEPTION(APIFailed);

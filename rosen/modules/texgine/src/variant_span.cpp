@@ -239,7 +239,7 @@ void VariantSpan::AdjustOffsetY(double offset) noexcept(true)
     offsetY_ += offset;
 }
 
-void VariantSpan::Paint(SkCanvas &canvas, double offsetx, double offsety) noexcept(false)
+void VariantSpan::Paint(TexgineCanvas &canvas, double offsetx, double offsety) noexcept(false)
 {
     CheckPointer();
     if (as_) {
@@ -251,7 +251,7 @@ void VariantSpan::Paint(SkCanvas &canvas, double offsetx, double offsety) noexce
     }
 }
 
-void VariantSpan::PaintShadow(SkCanvas &canvas, double offsetx, double offsety) noexcept(false)
+void VariantSpan::PaintShadow(TexgineCanvas &canvas, double offsetx, double offsety) noexcept(false)
 {
     CheckPointer();
     if (ts_) {

@@ -19,8 +19,8 @@
 
 #include "texgine_exception.h"
 #include "texgine/utils/exlog.h"
-#include "text_span.h"
 #include "texgine/utils/trace.h"
+#include "text_span.h"
 
 namespace Texgine {
 std::ostream &operator <<(std::ostream &os, const MergeResult &result)

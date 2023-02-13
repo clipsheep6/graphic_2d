@@ -19,40 +19,41 @@
 #include "texgine/utils/exlog.h"
 
 namespace Texgine {
-DynamicFontStyleSet::DynamicFontStyleSet(std::unique_ptr<Typeface> typeface) noexcept(true)
+DynamicFontStyleSet::DynamicFontStyleSet(std::unique_ptr<Typeface> typeface)
 {
     typeface_ = std::move(typeface);
 }
 
-int DynamicFontStyleSet::count() noexcept(true)
+int DynamicFontStyleSet::Count()
 {
     return typeface_ != nullptr ? 1 : 0;
 }
 
-void DynamicFontStyleSet::getStyle(int index, SkFontStyle *style, SkString *name) noexcept(false)
+void DynamicFontStyleSet::GetStyle(int index, std::shared_ptr<TexgineFontStyle> style,
+    std::shared_ptr<TexgineString> name)
 {
-    if (style == nullptr) {
+    if (style == nullptr || style->GetFontStyle() == nullptr) {
         LOG2EX(ERROR) << "style is nullptr";
         throw TEXGINE_EXCEPTION(InvalidArgument);
     }
 
     if (index == 0 && typeface_ != nullptr && typeface_->Get() != nullptr) {
-        *style = typeface_->Get()->fontStyle();
+        *style = *typeface_->Get()->FontStyle();
     }
 }
 
-SkTypeface* DynamicFontStyleSet::createTypeface(int index) noexcept(true)
+std::shared_ptr<TexgineTypeface> DynamicFontStyleSet::CreateTypeface(int index)
 {
     if (index == 0 && typeface_ != nullptr) {
-        return typeface_->Get().get();
+        return typeface_->Get();
     }
     return nullptr;
 }
 
-SkTypeface* DynamicFontStyleSet::matchStyle(const SkFontStyle& pattern) noexcept(true)
+std::shared_ptr<TexgineTypeface> DynamicFontStyleSet::MatchStyle(std::shared_ptr<TexgineFontStyle> pattern)
 {
     if (typeface_ != nullptr) {
-        return typeface_->Get().get();
+        return typeface_->Get();
     }
     return nullptr;
 }

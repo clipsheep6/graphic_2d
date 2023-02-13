@@ -16,9 +16,9 @@
 #include "measurer_impl.h"
 
 #include "texgine_exception.h"
-#include "text_converter.h"
 #include "texgine/utils/exlog.h"
 #include "texgine/utils/trace.h"
+#include "text_converter.h"
 
 namespace Texgine {
 #define FIELDWIDTH1 2
@@ -46,14 +46,14 @@ void DumpCharGroup(int32_t index, const CharGroup &cg, double glyphEm, hb_glyph_
 }
 } // namespace
 
-hb_blob_t *HbFaceReferenceTableSkTypeface(hb_face_t *face, hb_tag_t tag, void *context)
+hb_blob_t *HbFaceReferenceTableTypeface(hb_face_t *face, hb_tag_t tag, void *context)
 {
-    SkTypeface *typeface = reinterpret_cast<SkTypeface *>(context);
-    if (typeface == nullptr) {
+    std::shared_ptr<TexgineTypeface> typeface = std::make_shared<TexgineTypeface>(context);
+    if (typeface->GetTypeface() == nullptr) {
         return nullptr;
     }
 
-    const size_t tableSize = typeface->getTableSize(tag);
+    const size_t tableSize = typeface->GetTableSize(tag);
     if (tableSize == 0) {
         return nullptr;
     }
@@ -63,7 +63,7 @@ hb_blob_t *HbFaceReferenceTableSkTypeface(hb_face_t *face, hb_tag_t tag, void *c
         return nullptr;
     }
 
-    size_t actualSize = typeface->getTableData(tag, 0, tableSize, buffer);
+    size_t actualSize = typeface->GetTableData(tag, 0, tableSize, buffer);
     if (tableSize != actualSize) {
         free(buffer);
         return nullptr;
@@ -278,14 +278,12 @@ int MeasurerImpl::Shape(CharGroups &cgs, std::list<struct MeasuringRun> &runs, s
 
 int MeasurerImpl::DoHb(CharGroups &cgs, MeasuringRun &run, int &index)
 {
-    SkFont font;
     auto typeface = run.typeface;
     if (typeface == nullptr) {
         LOG2EX(ERROR) << "there is no typeface";
         return 1;
     }
 
-    font.setTypeface(typeface->Get());
     auto hbuffer = hb_buffer_create();
     if (!hbuffer) {
         LOG2EX(ERROR) << "hbuffer is nullptr";
@@ -299,7 +297,7 @@ int MeasurerImpl::DoHb(CharGroups &cgs, MeasuringRun &run, int &index)
     hb_buffer_set_script(hbuffer, run.script);
     hb_buffer_set_language(hbuffer, hb_language_from_string(locale_.c_str(), TEXTLENGTH));
 
-    auto hface = hb_face_create_for_tables(HbFaceReferenceTableSkTypeface, font.getTypeface(), 0);
+    auto hface = hb_face_create_for_tables(HbFaceReferenceTableTypeface, typeface->Get()->GetTypeface().get(), 0);
     if (!hface) {
         LOG2EX(ERROR) << "hface is nullptr";
         return 1;
@@ -342,7 +340,7 @@ int MeasurerImpl::GetGlyphs(CharGroups &cgs, MeasuringRun &run, int &index, hb_b
     }
 
     LOG2EX_DEBUG() << "ng: " << ng;
-    auto upe = typeface->Get()->getUnitsPerEm();
+    auto upe = typeface->Get()->GetUnitsPerEm();
     if (!upe) {
         LOG2EX(ERROR) << "upe is 0";
         return 1;

@@ -16,11 +16,11 @@
 #ifndef ROSEN_MODULES_TEXGINE_EXPORT_TEXGINE_ANY_SPAN_H
 #define ROSEN_MODULES_TEXGINE_EXPORT_TEXGINE_ANY_SPAN_H
 
+#include "texgine_canvas.h"
 #include "texgine/text_style.h"
 #include "texgine/typography_types.h"
 #include "texgine/utils/memory_object.h"
 
-class SkCanvas;
 namespace Texgine {
 /** \enum AnySpanAlignment
  *  AnySpanAlignment is the alignment of the AnySpan in a Typography.
@@ -67,7 +67,7 @@ public:
      *  @param offsetx The Offset in x-asix of the starting point for drawing the AnySpan
      *  @param offsety The Offset in y-asix of the starting point for drawing the AnySpan
      */
-    virtual void Paint(SkCanvas &canvas, double offsetx, double offsety) = 0;
+    virtual void Paint(TexgineCanvas &canvas, double offsetx, double offsety) = 0;
 
 private:
     friend void ReportMemoryUsage(const std::string &member, const AnySpan &that, bool needThis);

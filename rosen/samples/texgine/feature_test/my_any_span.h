@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include <include/core/SkCanvas.h>
-
 #include "texgine/any_span.h"
 
 namespace Texgine {
@@ -24,7 +22,7 @@ public:
               AnySpanAlignment align = AnySpanAlignment::AboveBaseline,
               TextBaseline baseline = TextBaseline::Alphabetic,
               double offset = 0.0,
-              SkColor color = SK_ColorGRAY)
+              uint32_t color = SK_ColorGRAY)
     {
         width_ = width;
         height_ = height;
@@ -61,12 +59,13 @@ public:
         return offset_;
     }
 
-    void Paint(SkCanvas &canvas, double offsetx, double offsety) override
+    void Paint(TexgineCanvas &canvas, double offsetx, double offsety) override
     {
-        SkPaint paint;
-        paint.setColor(color_);
-        paint.setStyle(paint.kFill_Style);
-        canvas.drawRect(SkRect::MakeXYWH(offsetx, offsety, width_, height_), paint);
+        TexginePaint paint;
+        paint.SetColor(color_);
+        paint.SetStyle(paint.kFill_Style);
+        auto rect = TexgineRect::MakeXYWH(offsetx, offsety, width_, height_);
+        canvas.DrawRect(rect, paint);
     }
 
 private:
@@ -75,6 +74,6 @@ private:
     AnySpanAlignment align_ = AnySpanAlignment::AboveBaseline;
     TextBaseline baseline_ = TextBaseline::Alphabetic;
     double offset_ = 0.0;
-    SkColor color_ = SK_ColorGRAY;
+    uint32_t color_ = SK_ColorGRAY;
 };
 } // namespace Texgine

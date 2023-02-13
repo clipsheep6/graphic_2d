@@ -19,6 +19,7 @@
 #include "texgine/system_font_provider.h"
 #include "texgine/typography_types.h"
 #include "texgine/utils/exlog.h"
+#include "texgine_string.h"
 
 namespace Texgine {
 #define MAXWIDTH 10
@@ -28,7 +29,7 @@ namespace Texgine {
 #define SECONDPRIORITY 100
 #define MULTIPLE 100
 
-FontCollection::FontCollection(std::vector<std::shared_ptr<FontStyleSet>> &&fontStyleSets)
+FontCollection::FontCollection(std::vector<std::shared_ptr<VariantFontStyleSet>> &&fontStyleSets)
     : fontStyleSets_(fontStyleSets)
 {
 }
@@ -42,17 +43,16 @@ std::shared_ptr<Typeface> FontCollection::GetTypefaceForChar(const uint32_t &ch,
         if (auto it = typefaceCache_.find(key); it != typefaceCache_.end()) {
             typeface = it->second;
         } else {
-            auto styleSet = fontStyleSet->Get();
-            if (styleSet == nullptr) {
+            if (fontStyleSet == nullptr) {
                 continue;
             }
-
-            auto skTypeface = styleSet->matchStyle(style.ToSkFontStyle());
-            if (skTypeface == nullptr) {
+            auto fs = std::make_shared<TexgineFontStyle>();
+            *fs = style.ToTexgineFontStyle();
+            auto texgineTypeface = fontStyleSet->MatchStyle(fs);
+            if (texgineTypeface == nullptr || texgineTypeface->GetTypeface() == nullptr) {
                 continue;
             }
-
-            typeface = std::make_shared<Typeface>(skTypeface);
+            typeface = std::make_shared<Typeface>(texgineTypeface);
             typefaceCache_[key] = typeface;
         }
 
@@ -67,22 +67,25 @@ std::shared_ptr<Typeface> FontCollection::GetTypefaceForChar(const uint32_t &ch,
 std::shared_ptr<Typeface> FontCollection::GetTypefaceForFontStyles(const FontStyles &style,
     const std::string &script, const std::string &locale) const
 {
-    auto providingStyle = style.ToSkFontStyle();
+    auto providingStyle = style.ToTexgineFontStyle();
 
     int bestScore = 0;
     int bestIndex = 0;
-    std::shared_ptr<FontStyleSet> bestFontStyleSet = nullptr;
+    std::shared_ptr<VariantFontStyleSet> bestFontStyleSet = nullptr;
     for (auto &fontStyleSet : fontStyleSets_) {
-        auto count = fontStyleSet->Get()->count();
+        auto count = fontStyleSet->Count();
         for (auto i = 0; i < count; i++) {
-            SkFontStyle matchingStyle;
-            SkString styleName;
-            fontStyleSet->Get()->getStyle(i, &matchingStyle, &styleName);
+            auto matchingStyle = std::make_shared<TexgineFontStyle>();
+            auto styleName = std::make_shared<TexgineString>();
+            fontStyleSet->GetStyle(i, matchingStyle, styleName);
 
             int score = 0;
-            score += (MAXWIDTH - std::abs(providingStyle.width() - matchingStyle.width())) * SECONDPRIORITY;
-            score += (MAXSLANT- std::abs(providingStyle.slant() - matchingStyle.slant())) * FIRSTPRIORITY;
-            score += (MAXWEIGHT - std::abs(providingStyle.weight() / MULTIPLE - matchingStyle.weight() / MULTIPLE));
+            score += (MAXWIDTH - std::abs(providingStyle.GetFontStyle()->width() -
+                                          matchingStyle->GetFontStyle()->width())) * SECONDPRIORITY;
+            score += (MAXSLANT - std::abs(providingStyle.GetFontStyle()->slant() -
+                                          matchingStyle->GetFontStyle()->slant())) * FIRSTPRIORITY;
+            score += (MAXWEIGHT - std::abs(providingStyle.GetFontStyle()->weight() / 100 -
+                                           matchingStyle->GetFontStyle()->weight() / MULTIPLE));
             if (score > bestScore) {
                 bestScore = score;
                 bestIndex = i;
@@ -91,8 +94,10 @@ std::shared_ptr<Typeface> FontCollection::GetTypefaceForFontStyles(const FontSty
         }
     }
 
-    if (bestFontStyleSet != nullptr && bestFontStyleSet->Get() != nullptr) {
-        return std::make_shared<Typeface>(bestFontStyleSet->Get()->createTypeface(bestIndex));
+    if (bestFontStyleSet != nullptr &&
+        (bestFontStyleSet->TryToTexgineFontStyleSet() != nullptr || bestFontStyleSet->TryToDynamicFontStyleSet())) {
+        auto ttf = bestFontStyleSet->CreateTypeface(bestIndex);
+        return std::make_shared<Typeface>(ttf);
     }
 
     return FindFallBackTypeface(' ', style, script, locale);
@@ -104,7 +109,6 @@ std::shared_ptr<Typeface> FontCollection::FindFallBackTypeface(const uint32_t &c
     if (!enableFallback_) {
         return nullptr;
     }
-
     // fallback cache
     struct FallbackCacheKey key = {.script = script, .locale = locale, .fs = style};
     if (auto it = fallbackCache_.find(key); it != fallbackCache_.end()) {
@@ -119,18 +123,20 @@ std::shared_ptr<Typeface> FontCollection::FindFallBackTypeface(const uint32_t &c
         bcp47.push_back(locale.data());
     }
 
-    auto fm = SkFontMgr::RefDefault();
+    auto fm = TexgineFontManager::RefDefault();
     if (fm == nullptr) {
         return nullptr;
     }
-    auto fallbackSkTypeface = fm->matchFamilyStyleCharacter(nullptr, style.ToSkFontStyle(),
+
+    auto tfs = style.ToTexgineFontStyle();
+    auto fallbackTypeface = fm->MatchFamilyStyleCharacter(nullptr, tfs,
         bcp47.data(), bcp47.size(), ch);
 
-    if (fallbackSkTypeface == nullptr) {
+    if (fallbackTypeface == nullptr || fallbackTypeface->GetTypeface() == nullptr) {
         return nullptr;
     }
 
-    auto typeface = std::make_shared<Typeface>(fallbackSkTypeface);
+    auto typeface = std::make_shared<Typeface>(fallbackTypeface);
     fallbackCache_[key] = typeface;
     return typeface;
 }

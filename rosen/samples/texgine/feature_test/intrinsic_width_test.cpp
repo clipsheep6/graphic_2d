@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include <include/core/SkCanvas.h>
-
 #include "texgine/any_span.h"
 #include "texgine/system_font_provider.h"
 #include "texgine/typography_builder.h"
@@ -90,27 +88,29 @@ public:
 
             auto typography = builder->Build();
             typography->Layout(limit);
-            auto onPaint = [&](const struct TypographyData &tyData, SkCanvas &canvas, double x, double y) {
+            auto onPaint = [&](const struct TypographyData &tyData, TexgineCanvas &canvas, double x, double y) {
                 // typography
                 tyData.typography->Paint(canvas, x, y);
 
-                SkPaint paint;
-                paint.setAntiAlias(true);
-                paint.setStyle(SkPaint::kFill_Style);
+                TexginePaint paint;
+                paint.SetAntiAlias(true);
+                paint.SetStyle(TexginePaint::kFill_Style);
 
                 // max
-                paint.setColor(0x5500FF00);
-                canvas.drawRect(SkRect::MakeXYWH(x, y, tyData.typography->GetMaxIntrinsicWidth(), 10), paint);
+                paint.SetColor(0x5500FF00);
+                auto rect1 = TexgineRect::MakeXYWH(x, y, tyData.typography->GetMaxIntrinsicWidth(), 10);
+                canvas.DrawRect(rect1, paint);
 
                 // min
-                paint.setColor(0x5500FFCC);
-                canvas.drawRect(SkRect::MakeXYWH(x, y + 10, tyData.typography->GetMinIntrinsicWidth(), 10), paint);
+                paint.SetColor(0x5500FFCC);
+                auto rect2 = TexgineRect::MakeXYWH(x, y + 10, tyData.typography->GetMinIntrinsicWidth(), 10);
+                canvas.DrawRect(rect2, paint);
 
                 // placeholder
                 auto rects = tyData.typography->GetTextRectsOfPlaceholders();
                 for (auto &[rect, _] : rects) {
-                    rect.offset(x, y);
-                    canvas.drawRect(rect, paint);
+                    rect.GetRect()->offset(x, y);
+                    canvas.DrawRect(rect, paint);
                 }
             };
 

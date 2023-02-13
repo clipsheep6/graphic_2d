@@ -19,13 +19,10 @@
 #include <string>
 #include <vector>
 
-#include <include/core/SkRect.h>
-
 #include "line_metrics.h"
 #include "texgine/typography.h"
 #include "texgine/typography_types.h"
 
-class SkCanvas;
 namespace Texgine {
 struct StrutMetrics {
     double ascent_ = 0;
@@ -79,7 +76,7 @@ public:
     void Layout(double widthLimit) override;
 
     // |Typography|
-    void Paint(SkCanvas &canvas, double offsetx, double offsety) override;
+    void Paint(TexgineCanvas &canvas, double offsetx, double offsety) override;
 
     // |Typography|
     std::vector<TextRect> GetTextRectsByBoundary(Boundary boundary,
@@ -112,8 +109,7 @@ private:
     size_t FindGlyphTargetIndex(size_t line, double x, double &offsetX, std::vector<double> &widths) const;
     std::vector<TextRect> MergeRects(const std::vector<TextRect> &boxes, Boundary boundary) const;
     void ComputeWordBoundary() const;
-    std::map<TextRectHeightStyle, std::function<struct CalcResult()>> GetCalcMap(int i) const;
-    void GetLocation(std::vector<TextRect> spanBoxes, const VariantSpan &span) const;
+    void ComputeSpans(int i, double baseline, const CalcResult &calcResult, std::vector<TextRect> &lineBoxes) const;
 
     TypographyStyle typographyStyle_;
     std::vector<VariantSpan> spans_;

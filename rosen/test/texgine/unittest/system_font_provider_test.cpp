@@ -15,18 +15,19 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "include/core/SkData.h"
-#include "include/core/SkStream.h"
-#include "include/core/SkTypeface.h"
 
-#include "font_style_set.h"
-#include "mock/mock_sk_font_mgr.h"
 #include "param_test_macros.h"
+#include "texgine_data.h"
+#include "texgine_font_manager.h"
+#include "texgine_stream.h"
 #include "texgine/system_font_provider.h"
+#include "texgine_typeface.h"
+#include "variant_font_style_set.h"
 
+namespace Texgine {
 struct MockVars {
-    sk_sp<SkFontStyleSet> skFontStyleSet_{SkFontStyleSet::CreateEmpty()};
-    sk_sp<SkFontMgr> skFontMgr_ = sk_make_sp<Texgine::MockSkFontMgr>();
+    std::shared_ptr<TexgineFontStyleSet> fontStyleSet_ = TexgineFontStyleSet::CreateEmpty();
+    std::shared_ptr<TexgineFontManager> fontMgr_ = std::make_shared<TexgineFontManager>();
 } mockVars;
 
 void InitMockVars(MockVars vars)
@@ -34,17 +35,16 @@ void InitMockVars(MockVars vars)
     mockVars = std::move(vars);
 }
 
-sk_sp<SkFontMgr> SkFontMgr::RefDefault()
+std::shared_ptr<TexgineFontManager> TexgineFontManager::RefDefault()
 {
-    return mockVars.skFontMgr_;
+    return mockVars.fontMgr_;
 }
 
-SkFontStyleSet *SkFontMgr::matchFamily(const char familyName[]) const
+std::shared_ptr<TexgineFontStyleSet> TexgineFontManager::MatchFamily(const char familyName[])
 {
-    return mockVars.skFontStyleSet_.release();
+    return mockVars.fontStyleSet_;
 }
 
-namespace Texgine {
 class SystemFontProviderTest : public testing::Test {
 public:
     std::shared_ptr<SystemFontProvider> systemFontProvider = SystemFontProvider::GetInstance();
@@ -64,21 +64,21 @@ TEST_F(SystemFontProviderTest, GetInstance)
 // 判定返回空指针
 TEST_F(SystemFontProviderTest, MatchFamily1)
 {
-    InitMockVars({.skFontMgr_ = nullptr});
+    InitMockVars({.fontMgr_ = nullptr});
     auto fss = systemFontProvider->MatchFamily("");
     EXPECT_EQ(fss, nullptr);
 }
 
 // 异常测试
-// 控制matchFamily函数返回空指针
+// 控制MatchFamily函数返回空指针
 // 调用MatchFamily函数
 // 调用Get方法
 // 判定返回空指针
 TEST_F(SystemFontProviderTest, MatchFamily2)
 {
-    InitMockVars({.skFontStyleSet_ = nullptr});
+    InitMockVars({.fontStyleSet_ = nullptr});
     auto fss = systemFontProvider->MatchFamily("");
-    EXPECT_EQ(fss->Get(), nullptr);
+    EXPECT_EQ(fss->TryToTexgineFontStyleSet(), nullptr);
 }
 
 // 逻辑测试
@@ -89,8 +89,8 @@ TEST_F(SystemFontProviderTest, MatchFamily2)
 TEST_F(SystemFontProviderTest, MatchFamily3)
 {
     InitMockVars({});
-    auto fontStyleSet = systemFontProvider->MatchFamily("");
-    EXPECT_NE(fontStyleSet, nullptr);
-    EXPECT_NE(fontStyleSet->Get(), nullptr);
+    auto fss = systemFontProvider->MatchFamily("");
+    EXPECT_NE(fss, nullptr);
+    EXPECT_NE(fss->TryToTexgineFontStyleSet()->Get(), nullptr);
 }
 } // namespace Texgine

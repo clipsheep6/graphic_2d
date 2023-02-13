@@ -70,10 +70,10 @@ public:
 
     void Layout()
     {
-        SkPaint background;
-        background.setColor(0xff00ff00);
-        background.setStrokeWidth(2.0f);
-        background.setStyle(SkPaint::kStroke_Style);
+        TexginePaint background;
+        background.SetColor(0xff00ff00);
+        background.SetStrokeWidth(2.0f);
+        background.SetStyle(TexginePaint::kStroke_Style);
         TextStyle style = {
             .fontSize_ = 16,
             .background_ = background,

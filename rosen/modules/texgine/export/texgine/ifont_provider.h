@@ -19,12 +19,11 @@
 #include <memory>
 #include <string>
 
-#include <include/core/SkFontMgr.h>
-
 #include "texgine/utils/memory_object.h"
+#include "texgine_font_manager.h"
 
 namespace Texgine {
-class FontStyleSet;
+class VariantFontStyleSet;
 
 /** \class IFontProvider
  *  IFontProvider is abstraction for a source of fonts. Subclasses can be backed by
@@ -39,7 +38,7 @@ public:
     /** Returns FontStyleSet when familyName can correspond to a FontStyleSet.
      *  This may return nullptr if there is no FontStyleSet correspond to familyName.
      */
-    virtual std::shared_ptr<FontStyleSet> MatchFamily(const std::string &familyName) noexcept(true) = 0;
+    virtual std::shared_ptr<VariantFontStyleSet> MatchFamily(const std::string &familyName) noexcept(true) = 0;
 
 protected:
     IFontProvider() = default;

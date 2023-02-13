@@ -19,9 +19,9 @@
 #include <iostream>
 #include <memory>
 
-#include <include/core/SkTypeface.h>
-
 #include "opentype_parser/cmap_parser.h"
+#include "texgine_string.h"
+#include "texgine_typeface.h"
 
 struct hb_blob_t;
 
@@ -30,21 +30,20 @@ class Typeface {
 public:
     static std::unique_ptr<Typeface> MakeFromFile(const std::string &filename);
 
-    Typeface(SkTypeface *tf);
-    Typeface(sk_sp<SkTypeface> tf);
+    Typeface(std::shared_ptr<TexgineTypeface> tf);
     ~Typeface();
 
     std::string GetName();
     bool Has(uint32_t ch);
-    sk_sp<SkTypeface> Get() const { return typeface_; }
+    std::shared_ptr<TexgineTypeface> Get() const { return typeface_; }
 
 private:
     friend void ReportMemoryUsage(const std::string &member, const Typeface &str, bool needThis);
 
     bool ParseCmap(const std::shared_ptr<CmapParser> &parser);
 
-    sk_sp<SkTypeface> typeface_ = nullptr;
-    SkString name_;
+    std::shared_ptr<TexgineTypeface> typeface_ = nullptr;
+    TexgineString name_;
     hb_blob_t *hblob_ = nullptr;
     std::shared_ptr<CmapParser> cmapParser_ = nullptr;
     std::unique_ptr<char[]> cmapData_ = nullptr;

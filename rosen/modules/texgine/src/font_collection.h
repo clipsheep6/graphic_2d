@@ -20,16 +20,15 @@
 #include <string>
 #include <vector>
 
-#include <include/core/SkFontMgr.h>
-
-#include "font_style_set.h"
 #include "font_styles.h"
+#include "texgine_font_manager.h"
 #include "typeface.h"
+#include "variant_font_style_set.h"
 
 namespace Texgine {
 class FontCollection {
 public:
-    FontCollection(std::vector<std::shared_ptr<FontStyleSet>> &&fontStyleSets);
+    FontCollection(std::vector<std::shared_ptr<VariantFontStyleSet>> &&fontStyleSets);
 
     std::shared_ptr<Typeface> GetTypefaceForChar(const uint32_t &ch,
                                                  const FontStyles &style,
@@ -49,10 +48,10 @@ public:
 
 private:
     bool enableFallback_ = true;
-    std::vector<std::shared_ptr<FontStyleSet>> fontStyleSets_;
+    std::vector<std::shared_ptr<VariantFontStyleSet>> fontStyleSets_;
 
     struct TypefaceCacheKey {
-        std::shared_ptr<FontStyleSet> fss = {};
+        std::shared_ptr<VariantFontStyleSet> fss = {};
         FontStyles fs = {};
 
         bool operator <(const struct TypefaceCacheKey &rhs) const

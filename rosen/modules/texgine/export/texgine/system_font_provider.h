@@ -31,7 +31,7 @@ public:
     static std::shared_ptr<SystemFontProvider> GetInstance() noexcept(true);
 
     // |IFontProvider|
-    std::shared_ptr<FontStyleSet> MatchFamily(const std::string &familyName) noexcept(true) override;
+    std::shared_ptr<VariantFontStyleSet> MatchFamily(const std::string &familyName) noexcept(true) override;
 
 private:
     void ReportMemoryUsage(const std::string &member, bool needThis) const override;

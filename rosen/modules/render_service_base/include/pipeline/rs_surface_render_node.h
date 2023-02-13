@@ -34,7 +34,9 @@
 #include "pipeline/rs_surface_handler.h"
 #include "refbase.h"
 #include "screen_manager/screen_types.h"
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
 #include "sync_fence.h"
+#endif
 #include "common/rs_occlusion_region.h"
 #include "transaction/rs_occlusion_data.h"
 

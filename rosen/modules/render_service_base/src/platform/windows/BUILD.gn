@@ -16,11 +16,13 @@ import("//foundation/arkui/ace_engine/ace_config.gni")
 
 ohos_source_set("windows") {
   sources = [
-    "rs_log.cpp",
+    "../ohos/rs_log.cpp",
     "rs_render_service_client.cpp",
     "rs_surface_frame_windows.cpp",
+    "rs_surface_ohos_converter.cpp",
     "rs_surface_windows.cpp",
     "rs_system_properties.cpp",
+    "rs_vsync_client_windows.cpp",
   ]
 
   include_dirs = [
@@ -34,11 +36,18 @@ ohos_source_set("windows") {
 
   configs = [ "//base/notification/eventhandler/frameworks/eventhandler:public_libeventhandler_config" ]
 
-  deps = []
+  public_configs = [ "//foundation/graphic/graphic_2d/rosen/modules/composer:composer_public_config" ]
+
+  deps =
+      [ "//foundation/graphic/graphic_2d/rosen/modules/platform:image_native" ]
 
   public_deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/glfw_render_context:libglfw_render_context",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:ace_skia",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:ipc_core",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:utils",
+    "//third_party/EGL:libEGL",
   ]
+
+  external_deps = [ "hilog_native:libhilog" ]
 }

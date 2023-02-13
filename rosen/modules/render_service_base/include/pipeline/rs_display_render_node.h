@@ -20,7 +20,9 @@
 #include <mutex>
 #include <surface.h>
 
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
 #include "sync_fence.h"
+#endif
 
 #include "common/rs_macros.h"
 #include "pipeline/rs_render_node.h"

@@ -16,10 +16,13 @@
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_SURFACE_HANDLER_H
 
 #include <surface.h>
+#include <atomic>
 
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
 #include "sync_fence.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {

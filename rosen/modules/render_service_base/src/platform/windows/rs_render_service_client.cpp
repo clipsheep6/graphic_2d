@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -59,11 +59,49 @@ std::shared_ptr<RSSurface> RSRenderServiceClient::CreateNodeAndSurface(const RSS
     return std::make_shared<RSSurfaceWindows>(config.onRender);
 }
 
+class VSyncReceiverWindows : public VSyncReceiver {
+    std::unique_ptr<RSVsyncClient> client_ = nullptr;
+
+public:
+    VsyncError Init() override
+    {
+        client_ = RSVsyncClient::Create();
+        if (client_ == nullptr) {
+            return GSERROR_NO_MEM;
+        }
+
+        return GSERROR_OK;
+    }
+
+    VsyncError RequestNextVSync(FrameCallback callback) override
+    {
+        if (client_ == nullptr) {
+            return GSERROR_NOT_INIT;
+        }
+
+        auto func = [callback](int64_t time) {
+            callback.callback_(time, callback.userData_);
+        };
+        client_->SetVsyncCallback(func);
+        client_->RequestNextVsync();
+        return GSERROR_OK;
+    }
+
+    VsyncError SetVSyncRate(FrameCallback callback, int32_t rate) override
+    {
+        if (client_ == nullptr) {
+            return GSERROR_NOT_INIT;
+        }
+
+        return GSERROR_OK;
+    }
+};
+
 std::shared_ptr<VSyncReceiver> RSRenderServiceClient::CreateVSyncReceiver(
     const std::string& name,
     const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper)
 {
-    return nullptr;
+    return std::make_shared<VSyncReceiverWindows>();
 }
 
 bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<SurfaceCaptureCallback> callback,

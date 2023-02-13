@@ -20,7 +20,7 @@
 #include <unistd.h>
 
 namespace OHOS {
-pid_t GetRealPid(void);
+OHOS_EXPORT pid_t GetRealPid(void);
 } // namespace OHOS
 
 #endif // SANDBOX_UTILS_H

@@ -142,8 +142,9 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
         }
         payload_.emplace_back(nodeId, static_cast<FollowType>(followType), std::move(command));
     }
-    return parcel.ReadUint64(timestamp_) && parcel.ReadInt32(pid_) && parcel.ReadUint64(index_) &&
-        parcel.ReadBool(isUniRender_);
+    int32_t pid;
+    return parcel.ReadUint64(timestamp_) && parcel.ReadInt32(pid) && ({pid_ = pid; true;}) &&
+        parcel.ReadUint64(index_) && parcel.ReadBool(isUniRender_);
 }
 
 #endif // ROSEN_OHOS

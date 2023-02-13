@@ -24,6 +24,27 @@ group("ace_skia") {
 
 # ace_skia }}}
 
+# image_native {{{
+group("image_native") {
+  if (current_os == "ohos") {
+    public_deps = [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
+  } else {
+    public_deps = [ ":mock_image_native" ]
+  }
+}
+
+config("image_native_config") {
+  include_dirs = [ "image_native" ]
+}
+
+ohos_source_set("mock_image_native") {
+  public_configs = [ ":image_native_config" ]
+  sources = [ "image_native/pixel_map.cpp" ]
+  deps = [ ":utils" ]
+}
+
+# image_native }}}
+
 # ipc_core {{{
 group("ipc_core") {
   if (current_os == "ohos") {

@@ -194,7 +194,7 @@ ohos_source_set("render_service_base_src") {
     "//foundation/graphic/graphic_2d/utils:sandbox_utils",
   ]
 
-  external_deps = [ "multimedia_image_framework:image_native" ]
+  external_deps = [ "eventhandler:libeventhandler" ]
 
   if (!rosen_cross_platform) {
     external_deps += [ "hitrace_native:hitrace_meter" ]

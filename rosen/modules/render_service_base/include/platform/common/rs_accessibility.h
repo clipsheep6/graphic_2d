@@ -18,9 +18,11 @@
 
 #include <functional>
 
+#include "common/rs_macros.h"
+
 namespace OHOS {
 namespace Rosen {
-class RSAccessibility {
+class RSB_EXPORT RSAccessibility {
 public:
     static RSAccessibility &GetInstance();
     RSAccessibility() = default;

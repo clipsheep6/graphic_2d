@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSSurfaceHandler {
+class RSB_EXPORT RSSurfaceHandler {
 public:
     // indicates which node this handler belongs to.
     explicit RSSurfaceHandler(NodeId id) : id_(id) {}

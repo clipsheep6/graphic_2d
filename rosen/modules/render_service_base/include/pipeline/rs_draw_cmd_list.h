@@ -34,7 +34,7 @@ namespace Rosen {
 class OpItem;
 class RSPaintFilterCanvas;
 
-class RS_EXPORT DrawCmdList : public Parcelable {
+class RSB_EXPORT DrawCmdList : public Parcelable {
 public:
     DrawCmdList(int w, int h);
     DrawCmdList& operator=(DrawCmdList&& that);
@@ -54,7 +54,7 @@ public:
     void ClearCache();
 
     bool Marshalling(Parcel& parcel) const override;
-    static DrawCmdList* Unmarshalling(Parcel& parcel);
+    static RSB_EXPORT DrawCmdList* Unmarshalling(Parcel& parcel);
 
 private:
     std::vector<std::unique_ptr<OpItem>> ops_;

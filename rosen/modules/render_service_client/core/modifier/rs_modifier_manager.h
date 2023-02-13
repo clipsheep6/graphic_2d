@@ -28,7 +28,7 @@ namespace Rosen {
 class RSModifier;
 class RSRenderAnimation;
 
-class RS_EXPORT RSModifierManager {
+class RSC_EXPORT RSModifierManager {
 public:
     RSModifierManager() = default;
     virtual ~RSModifierManager() = default;

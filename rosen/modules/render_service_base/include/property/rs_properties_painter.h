@@ -25,7 +25,7 @@ namespace Rosen {
 class RSSkiaFilter;
 class RSPaintFilterCanvas;
 
-class RS_EXPORT RSPropertiesPainter {
+class RSB_EXPORT RSPropertiesPainter {
 public:
     static void Clip(SkCanvas& canvas, RectF rect);
     static void SetBgAntiAlias(bool forceBgAntiAlias);

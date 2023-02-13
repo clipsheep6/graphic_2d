@@ -29,7 +29,7 @@ class RSRenderTransitionEffect;
 class RSTransitionModifier;
 class RSPropertyBase;
 
-class RSCustomTransitionEffect final {
+class RSC_EXPORT RSCustomTransitionEffect final {
 public:
     RSCustomTransitionEffect(const std::shared_ptr<RSTransitionModifier>& modifier) : modifier_(modifier)
     {}
@@ -51,7 +51,7 @@ private:
     friend class RSImplicitTransitionParam;
 };
 
-class RS_EXPORT RSTransitionEffect final : public std::enable_shared_from_this<RSTransitionEffect> {
+class RSC_EXPORT RSTransitionEffect final : public std::enable_shared_from_this<RSTransitionEffect> {
 public:
     static const std::shared_ptr<const RSTransitionEffect> EMPTY;
     static const std::shared_ptr<const RSTransitionEffect> OPACITY;

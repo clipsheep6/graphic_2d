@@ -28,7 +28,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSObjAbsGeometry : public RSObjGeometry {
+class RSB_EXPORT RSObjAbsGeometry : public RSObjGeometry {
 public:
     RSObjAbsGeometry();
     ~RSObjAbsGeometry() override;

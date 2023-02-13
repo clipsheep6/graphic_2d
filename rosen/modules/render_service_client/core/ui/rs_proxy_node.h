@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSProxyNode : public RSNode {
+class RSC_EXPORT RSProxyNode : public RSNode {
 public:
     using WeakPtr = std::weak_ptr<RSProxyNode>;
     using SharedPtr = std::shared_ptr<RSProxyNode>;

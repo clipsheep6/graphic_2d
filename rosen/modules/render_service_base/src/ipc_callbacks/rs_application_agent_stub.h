@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSApplicationAgentStub : public IRemoteStub<IApplicationAgent> {
+class RSB_EXPORT RSApplicationAgentStub : public IRemoteStub<IApplicationAgent> {
 public:
     RSApplicationAgentStub() = default;
     ~RSApplicationAgentStub() = default;

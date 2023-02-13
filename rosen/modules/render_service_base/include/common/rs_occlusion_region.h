@@ -174,7 +174,7 @@ public:
     void GetSubRange(std::vector<Range>& res, bool isParentNodePos, bool isParentNodeNeg);
 };
 
-class RS_EXPORT Region {
+class RSB_EXPORT Region {
 public:
     enum OP {
         // bit index 0: lhs

@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSVirtualScreenResolution : public Parcelable {
+class RSB_EXPORT RSVirtualScreenResolution : public Parcelable {
 public:
     RSVirtualScreenResolution() = default;
     RSVirtualScreenResolution(uint32_t width, uint32_t height);

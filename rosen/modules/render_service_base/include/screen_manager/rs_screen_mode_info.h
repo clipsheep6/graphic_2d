@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSScreenModeInfo : public Parcelable {
+class RSB_EXPORT RSScreenModeInfo : public Parcelable {
 public:
     RSScreenModeInfo() = default;
     RSScreenModeInfo(int32_t width, int32_t height, uint32_t refreshRate, int32_t id);

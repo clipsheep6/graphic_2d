@@ -30,9 +30,9 @@ namespace OHOS {
 namespace Rosen {
 constexpr auto OverdrawColorArrayLength = 6;
 using OverdrawColorArray = std::array<SkColor, OverdrawColorArrayLength>;
-class RS_EXPORT RSOverdrawController {
+class RSB_EXPORT RSOverdrawController {
 public:
-    static RS_EXPORT RSOverdrawController &GetInstance();
+    static RSB_EXPORT RSOverdrawController &GetInstance();
 
     ~RSOverdrawController() = default;
 

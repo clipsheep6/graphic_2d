@@ -3077,7 +3077,7 @@ HWTEST_F(RSNodeTest, SetModifier001, TestSize.Level1)
 }
 
 
-class RS_EXPORT MockRSNode : public RSNode {
+class RSC_EXPORT MockRSNode : public RSNode {
 public:
     MockRSNode() : RSNode(false) {}
     virtual ~MockRSNode() = default;

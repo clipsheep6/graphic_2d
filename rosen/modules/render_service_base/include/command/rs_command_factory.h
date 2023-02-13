@@ -27,7 +27,7 @@ namespace Rosen {
 class RSCommand;
 using UnmarshallingFunc = RSCommand* (*)(Parcel& parcel);
 
-class RS_EXPORT RSCommandFactory {
+class RSB_EXPORT RSCommandFactory {
 public:
     static RSCommandFactory& Instance();
 

@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSRenderPropertyBase : public std::enable_shared_from_this<RSRenderPropertyBase> {
+class RSB_EXPORT RSRenderPropertyBase : public std::enable_shared_from_this<RSRenderPropertyBase> {
 public:
     RSRenderPropertyBase() = default;
     RSRenderPropertyBase(const PropertyId& id) : id_(id) {}
@@ -165,7 +165,7 @@ protected:
 };
 
 template<typename T>
-class RS_EXPORT RSRenderAnimatableProperty : public RSRenderProperty<T> {
+class RSB_EXPORT RSRenderAnimatableProperty : public RSRenderProperty<T> {
 public:
     RSRenderAnimatableProperty() : RSRenderProperty<T>() {}
     RSRenderAnimatableProperty(const T& value) : RSRenderProperty<T>(value, 0) {}
@@ -262,13 +262,14 @@ private:
 };
 
 template<>
-RS_EXPORT float RSRenderAnimatableProperty<float>::ToFloat() const;
+RSB_EXPORT float RSRenderAnimatableProperty<float>::ToFloat() const;
 template<>
-RS_EXPORT float RSRenderAnimatableProperty<Vector4f>::ToFloat() const;
+RSB_EXPORT float RSRenderAnimatableProperty<Vector4f>::ToFloat() const;
 template<>
-RS_EXPORT float RSRenderAnimatableProperty<Quaternion>::ToFloat() const;
+RSB_EXPORT float RSRenderAnimatableProperty<Quaternion>::ToFloat() const;
 template<>
-RS_EXPORT float RSRenderAnimatableProperty<Vector2f>::ToFloat() const;
+RSB_EXPORT float RSRenderAnimatableProperty<Vector2f>::ToFloat() const;
+
 } // namespace Rosen
 } // namespace OHOS
 

@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace Rosen {
 class RSSurfaceRenderNode;
-class RS_EXPORT RSProxyRenderNode : public RSRenderNode {
+class RSB_EXPORT RSProxyRenderNode : public RSRenderNode {
 public:
     using WeakPtr = std::weak_ptr<RSProxyRenderNode>;
     using SharedPtr = std::shared_ptr<RSProxyRenderNode>;

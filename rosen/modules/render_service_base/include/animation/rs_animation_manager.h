@@ -32,7 +32,7 @@ class RSProperties;
 class RSRenderAnimation;
 class RSRenderNode;
 
-class RS_EXPORT RSAnimationManager {
+class RSB_EXPORT RSAnimationManager {
 public:
     RSAnimationManager() = default;
     ~RSAnimationManager() = default;

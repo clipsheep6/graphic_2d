@@ -32,7 +32,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSProperties final {
+class RSB_EXPORT RSProperties final {
 public:
     RSProperties();
     virtual ~RSProperties();

@@ -63,7 +63,7 @@ enum class ImageFit {
     TOP_LEFT,
 };
 
-class RS_EXPORT RSImage {
+class RSB_EXPORT RSImage {
 public:
     RSImage() = default;
     ~RSImage();

@@ -24,6 +24,41 @@ group("ace_skia") {
 
 # ace_skia }}}
 
+# eventhandler {{{
+group("eventhandler") {
+  if (current_os == "ohos") {
+    public_deps = [ "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler" ]
+  } else {
+    public_deps = [ ":impl_eventhandler" ]
+  }
+}
+
+config("eventhandler_config") {
+  include_dirs = [ "eventhandler" ]
+}
+
+ohos_source_set("impl_eventhandler") {
+  public_configs = [ ":eventhandler_config" ]
+  sources = [
+    "eventhandler_impl/epoll_io_waiter_mingw.cpp",
+    "eventhandler_impl/event_handler.cpp",
+    "eventhandler_impl/event_queue.cpp",
+    "eventhandler_impl/event_runner.cpp",
+    "eventhandler_impl/file_descriptor_listener.cpp",
+    "eventhandler_impl/inner_event.cpp",
+    "eventhandler_impl/native_implement_eventhandler.cpp",
+    "eventhandler_impl/none_io_waiter.cpp",
+  ]
+  defines = [ "LOG_DOMAIN=0xD001200" ]
+  deps = [
+    ":utils",
+    "//third_party/libuv:uv",
+  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+}
+
+# eventhandler }}}
+
 # image_native {{{
 group("image_native") {
   if (current_os == "ohos") {

@@ -59,6 +59,35 @@ ohos_source_set("impl_eventhandler") {
 
 # eventhandler }}}
 
+# hitrace_meter {{{
+group("hitrace_meter") {
+  if (current_os == "ohos") {
+    public_deps =
+        [ "//base/hiviewdfx/hitrace/interfaces/native/innerkits:hitrace_meter" ]
+  } else if (current_os == "mingw") {
+    public_deps = [ ":impl_hitrace_meter" ]
+  } else {
+    public_deps = [ ":mock_hitrace_meter" ]
+  }
+}
+
+config("hitrace_meter_config") {
+  include_dirs = [ "hitrace_meter" ]
+}
+
+ohos_source_set("impl_hitrace_meter") {
+  public_configs = [ ":hitrace_meter_config" ]
+  sources = [ "hitrace_meter_impl/hitrace_meter_mingw.cpp" ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+}
+
+ohos_source_set("mock_hitrace_meter") {
+  public_configs = [ ":hitrace_meter_config" ]
+  sources = [ "hitrace_meter_impl/hitrace_meter_mock.cpp" ]
+}
+
+# hitrace_meter }}}
+
 # image_native {{{
 group("image_native") {
   if (current_os == "ohos") {

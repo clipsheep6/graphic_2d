@@ -21,14 +21,6 @@ config("render_service_client_config") {
   include_dirs = [
     "$rosen_root/modules",
     "$rosen_root/modules/render_service_client/core",
-    "$rosen_root/modules/render_service_base/include",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/common",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/composer",
-    "//drivers/peripheral/display/interfaces/include",
-    "//drivers/peripheral/base",
-    "//utils/native/base/include",
-    "//commonlibrary/c_utils/base/include",
   ]
 }
 
@@ -37,16 +29,9 @@ ohos_source_set("render_service_client_src") {
   defines += gpu_defines
   defines += [ "MODULE_RSC" ]
   include_dirs = [
-    "core",
-    "$rosen_root/modules/render_service_base/src",
     "$rosen_root/modules/2d_graphics/src",
-    "//foundation/graphic/utils/log",
     "//foundation/graphic/graphic_2d/utils/log",
     "//foundation/graphic/graphic_2d/utils/sandbox",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
-    "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk/include",
-    "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf",
-    "//foundation/multimedia/image_framework/frameworks/innerkitsimpl/converter/include",
   ]
 
   sources = [
@@ -161,6 +146,8 @@ ohos_source_set("render_service_client_src") {
 
   public_deps =
       [ "$rosen_root/modules/render_service_base:librender_service_base" ]
+
+  public_configs = [ ":render_service_client_config" ]
 }
 
 ohos_shared_library("librender_service_client") {
@@ -168,8 +155,6 @@ ohos_shared_library("librender_service_client") {
     ":render_service_client_src",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:ace_skia",
   ]
-
-  public_configs = [ ":render_service_client_config" ]
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

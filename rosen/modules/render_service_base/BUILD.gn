@@ -20,13 +20,6 @@ config("export_config") {
   cflags_cc = [ "-std=c++17" ]
   include_dirs = [
     "include",
-    "//foundation/graphic/graphic_2d/rosen/include",
-    "//drivers/peripheral/display/interfaces/include",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/composer",
-    "//foundation/graphic/graphic_2d/utils/sandbox",
-    "//commonlibrary/c_utils/base/include",
   ]
 
   defines = rs_common_define
@@ -170,6 +163,7 @@ ohos_source_set("render_service_base_src") {
   public_configs = [
     ":export_config",
     "//foundation/graphic/graphic_2d/rosen/modules/platform:eventhandler_config",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:image_native_config",
   ]
   public_deps = [ "src/platform:platform" ]
 

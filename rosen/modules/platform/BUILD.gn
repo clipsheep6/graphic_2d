@@ -59,6 +59,19 @@ ohos_source_set("impl_eventhandler") {
 
 # eventhandler }}}
 
+# hilog {{{
+group("hilog") {
+  platform = current_os
+  if (current_os == "mingw") {
+    platform = "windows"
+  }
+  public_deps = [
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_$platform",
+  ]
+}
+
+# hilog }}}
+
 # hitrace_meter {{{
 group("hitrace_meter") {
   if (current_os == "ohos") {

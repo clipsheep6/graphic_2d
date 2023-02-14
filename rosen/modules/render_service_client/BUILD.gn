@@ -121,6 +121,7 @@ ohos_source_set("render_service_client_src") {
   deps += [
     "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk:accessibilityconfig",
     "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:ipc_core",
     "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf:frame_trace_intf",
   ]
 
@@ -140,7 +141,6 @@ ohos_source_set("render_service_client_src") {
     "eventhandler:libeventhandler",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
-    "ipc:ipc_core",
   ]
   public_deps =
       [ "$rosen_root/modules/render_service_base:librender_service_base" ]
@@ -149,7 +149,7 @@ ohos_source_set("render_service_client_src") {
 ohos_shared_library("librender_service_client") {
   public_deps = [
     ":render_service_client_src",
-    "//third_party/flutter/build/skia:ace_skia_ohos",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:ace_skia",
   ]
 
   public_configs = [ ":render_service_client_config" ]

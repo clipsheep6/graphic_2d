@@ -16,6 +16,7 @@
 #ifndef FRAMEWORKS_SURFACE_INCLUDE_BUFFER_QUEUE_H
 #define FRAMEWORKS_SURFACE_INCLUDE_BUFFER_QUEUE_H
 
+#include <condition_variable>
 #include <map>
 #include <list>
 #include <vector>

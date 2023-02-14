@@ -32,7 +32,7 @@ enum DebugRegionType {
     TYPE_MAX
 };
 
-class RS_EXPORT RSDirtyRegionManager final {
+class RSB_EXPORT RSDirtyRegionManager final {
 public:
     static constexpr int32_t ALIGNED_BITS = 32;
     RSDirtyRegionManager();

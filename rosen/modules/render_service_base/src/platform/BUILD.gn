@@ -17,10 +17,11 @@ import(
 group("platform") {
   if (rosen_is_ohos) {
     public_deps = [ "ohos" ]
-  } else if (rosen_is_win) {
+  } else if (rosen_is_win || current_os == "linux") {
     public_deps = [ "windows" ]
   } else if (rosen_is_mac || rosen_is_ios) {
     public_deps = [ "darwin" ]
+  } else if (rosen_is_linux) {
   } else {
     assert(false, "Unsupported platform")
   }

@@ -30,7 +30,7 @@ namespace OHOS {
 namespace Rosen {
 class RSPath;
 
-class RS_EXPORT RSPathAnimation : public RSPropertyAnimation {
+class RSC_EXPORT RSPathAnimation : public RSPropertyAnimation {
 public:
     RSPathAnimation(std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPath>& animationPath);
     RSPathAnimation(std::shared_ptr<RSPropertyBase> property, const std::string& path,

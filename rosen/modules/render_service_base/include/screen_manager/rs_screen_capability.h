@@ -28,7 +28,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSScreenCapability : public Parcelable {
+class RSB_EXPORT RSScreenCapability : public Parcelable {
 public:
     RSScreenCapability() = default;
     RSScreenCapability(std::string name, ScreenInterfaceType type, uint32_t phyWidth,

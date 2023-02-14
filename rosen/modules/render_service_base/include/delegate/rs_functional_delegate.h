@@ -19,11 +19,12 @@
 #include <functional>
 #include <memory>
 
+#include "common/rs_common_def.h"
 #include "delegate/rs_delegate.h"
 #include "common/rs_macros.h"
 
 namespace OHOS::Rosen {
-class RS_EXPORT RSFunctionalDelegate : public RSDelegate {
+class RSB_EXPORT RSFunctionalDelegate : public RSDelegate {
 public:
     static std::shared_ptr<RSFunctionalDelegate> Create()
     {

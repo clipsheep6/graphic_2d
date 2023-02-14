@@ -19,8 +19,14 @@
 #include <cstdio>
 #include <unistd.h>
 
+#ifdef _WIN32
+#define SANDBOX_UTILS_EXPORT __attribute__((dllexport))
+#else
+#define SANDBOX_UTILS_EXPORT __attribute__((visibility("default")))
+#endif
+
 namespace OHOS {
-pid_t GetRealPid(void);
+SANDBOX_UTILS_EXPORT pid_t GetRealPid(void);
 } // namespace OHOS
 
 #endif // SANDBOX_UTILS_H

@@ -22,17 +22,15 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSSpringInterpolator : public RSSpringModel<float>, public RSInterpolator {
+class RSB_EXPORT RSSpringInterpolator : public RSSpringModel<float>, public RSInterpolator {
 public:
     RSSpringInterpolator(float response, float dampingRatio, float initialVelocity);
 
     ~RSSpringInterpolator() override {};
 
     float Interpolate(float fraction) const override;
-#ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     static RSSpringInterpolator* Unmarshalling(Parcel& parcel);
-#endif
 
 private:
     float estimatedDuration_ = 0.0f;

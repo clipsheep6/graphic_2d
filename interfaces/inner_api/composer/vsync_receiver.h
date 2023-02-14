@@ -57,6 +57,7 @@ private:
     std::mutex mtx_;
 };
 
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
 class VSyncReceiver : public RefBase {
 public:
     // check
@@ -84,6 +85,22 @@ private:
     int32_t fd_;
     std::string name_;
 };
+#else
+class VSyncReceiver {
+public:
+    // check
+    using FrameCallback = VSyncCallBackListener::FrameCallback;
+
+    VSyncReceiver() = default;
+    virtual ~VSyncReceiver() = default;
+    VSyncReceiver(const VSyncReceiver &) = delete;
+    VSyncReceiver &operator=(const VSyncReceiver &) = delete;
+
+    virtual VsyncError Init() = 0;
+    virtual VsyncError RequestNextVSync(FrameCallback callback) = 0;
+    virtual VsyncError SetVSyncRate(FrameCallback callback, int32_t rate) = 0;
+};
+#endif
 } // namespace Rosen
 } // namespace OHOS
 

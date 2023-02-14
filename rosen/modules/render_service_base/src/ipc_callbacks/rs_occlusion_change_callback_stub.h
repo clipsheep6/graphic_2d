@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSOcclusionChangeCallbackStub : public IRemoteStub<RSIOcclusionChangeCallback> {
+class RSB_EXPORT RSOcclusionChangeCallbackStub : public IRemoteStub<RSIOcclusionChangeCallback> {
 public:
     RSOcclusionChangeCallbackStub() = default;
     ~RSOcclusionChangeCallbackStub() = default;

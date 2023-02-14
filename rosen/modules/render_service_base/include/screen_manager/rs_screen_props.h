@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSScreenProps : public Parcelable {
+class RSB_EXPORT RSScreenProps : public Parcelable {
 public:
     RSScreenProps() = default;
     RSScreenProps(std::string propName, uint32_t propId, uint64_t value);

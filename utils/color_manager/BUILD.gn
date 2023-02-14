@@ -26,7 +26,9 @@ config("color_manager_config") {
     "-Os",
   ]
 
-  ldflags = [ "-Wl,--no-as-needed" ]
+  if (current_os == "ohos") {
+    ldflags = [ "-Wl,--no-as-needed" ]
+  }
 }
 
 config("color_manager_public_config") {

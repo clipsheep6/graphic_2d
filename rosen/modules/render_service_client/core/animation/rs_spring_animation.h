@@ -26,7 +26,7 @@ namespace OHOS {
 namespace Rosen {
 class RSRenderSpringAnimation;
 
-class RS_EXPORT RSSpringAnimation : public RSPropertyAnimation {
+class RSC_EXPORT RSSpringAnimation : public RSPropertyAnimation {
 public:
     RSSpringAnimation(std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& byValue);
 

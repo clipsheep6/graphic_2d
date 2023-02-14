@@ -16,10 +16,11 @@
 #define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_BLUR_FILTER_H
 
 #include "render/rs_skia_filter.h"
+#include "common/rs_macros.h"
 
 namespace OHOS {
 namespace Rosen {
-class RSBlurFilter : public RSSkiaFilter {
+class RSB_EXPORT RSBlurFilter : public RSSkiaFilter {
 public:
     RSBlurFilter(float blurRadiusX, float blurRadiusY);
     ~RSBlurFilter() override;

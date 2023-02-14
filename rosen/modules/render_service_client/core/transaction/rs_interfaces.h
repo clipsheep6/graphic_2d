@@ -34,7 +34,7 @@ struct FocusAppInfo {
     std::string abilityName;
 };
 
-class RS_EXPORT RSInterfaces {
+class RSC_EXPORT RSInterfaces {
 public:
     static RSInterfaces &GetInstance();
     RSInterfaces(const RSInterfaces &) = delete;
@@ -47,6 +47,7 @@ public:
     std::vector<ScreenId> GetAllScreenIds();
 
     // mirrorId: decide which screen id to mirror, INVALID_SCREEN_ID means do not mirror any screen.
+#ifndef ROSEN_CROSS_PLATFORM
     ScreenId CreateVirtualScreen(
         const std::string &name,
         uint32_t width,
@@ -56,6 +57,7 @@ public:
         int flags = 0);
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface);
+#endif
 
     void RemoveVirtualScreen(ScreenId id);
 

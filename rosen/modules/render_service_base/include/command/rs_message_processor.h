@@ -17,16 +17,16 @@
 
 #include <memory>
 #include <unordered_map>
+#include "transaction/rs_transaction_data.h"
 
 #include "common/rs_macros.h"
 
 namespace OHOS {
 namespace Rosen {
 class RSCommand;
-class RSTransactionData;
-class RS_EXPORT RSMessageProcessor final {
+class RSB_EXPORT RSMessageProcessor final {
 public:
-    static RSMessageProcessor& Instance();
+    static RSB_EXPORT RSMessageProcessor& Instance();
 
     void AddUIMessage(uint32_t pid, std::unique_ptr<RSCommand>& command);
     void AddUIMessage(uint32_t pid, std::unique_ptr<RSCommand>&& command);

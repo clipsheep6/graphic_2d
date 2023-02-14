@@ -22,6 +22,15 @@ rosen_is_linux = current_os == "linux"
 
 rs_common_define = []
 
+rosen_cross_platform =
+    current_os == "mac" || current_os == "mingw" || current_os == "linux"
+if (rosen_cross_platform) {
+  rs_common_define += [
+    "ROSEN_CROSS_PLATFORM",
+    "ROSEN_TRACE_DISABLE",
+  ]
+}
+
 if (rosen_is_ohos) {
   rs_common_define += [ "ROSEN_OHOS" ]
 }

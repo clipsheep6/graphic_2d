@@ -59,7 +59,6 @@ void RSRenderPropertyAnimation::AttachRenderProperty(const std::shared_ptr<RSRen
     }
 }
 
-#ifdef ROSEN_OHOS
 bool RSRenderPropertyAnimation::Marshalling(Parcel& parcel) const
 {
     if (!RSRenderAnimation::Marshalling(parcel)) {
@@ -96,7 +95,6 @@ bool RSRenderPropertyAnimation::ParseParam(Parcel& parcel)
 
     return true;
 }
-#endif
 
 void RSRenderPropertyAnimation::SetPropertyValue(const std::shared_ptr<RSRenderPropertyBase>& value)
 {

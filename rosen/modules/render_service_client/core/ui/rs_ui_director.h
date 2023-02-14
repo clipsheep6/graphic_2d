@@ -16,6 +16,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_UI_DIRECTOR_H
 
 #include <atomic>
+#include <functional>
 #include <mutex>
 
 #include "common/rs_common_def.h"
@@ -27,7 +28,7 @@ class RSSurfaceNode;
 class RSTransactionData;
 using TaskRunner = std::function<void(const std::function<void()>&)>;
 
-class RS_EXPORT RSUIDirector final {
+class RSC_EXPORT RSUIDirector final {
 public:
     static std::shared_ptr<RSUIDirector> Create();
 

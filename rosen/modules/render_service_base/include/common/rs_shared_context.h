@@ -29,7 +29,7 @@ typedef void* EGLDisplay;
 
 namespace OHOS::Rosen {
 
-class RS_EXPORT RSSharedContext final : public std::enable_shared_from_this<RSSharedContext> {
+class RSB_EXPORT RSSharedContext final : public std::enable_shared_from_this<RSSharedContext> {
 public:
     static std::shared_ptr<RSSharedContext> MakeSharedGLContext(EGLContext context);
 

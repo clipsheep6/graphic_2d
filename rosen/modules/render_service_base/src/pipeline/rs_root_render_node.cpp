@@ -18,7 +18,7 @@
 #include "platform/drawing/rs_surface.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
-#ifdef ROSEN_OHOS
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
 #include <surface.h>
 #endif
 

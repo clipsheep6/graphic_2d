@@ -16,7 +16,6 @@
 #ifndef ROSEN_RENDER_SERVICE_BASE_ISCREEN_CHANGE_CALLBACK_STUB_H
 #define ROSEN_RENDER_SERVICE_BASE_ISCREEN_CHANGE_CALLBACK_STUB_H
 
-#ifdef ROSEN_OHOS
 #include <iremote_stub.h>
 
 #include "ipc_callbacks/screen_change_callback.h"
@@ -24,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RS_EXPORT RSScreenChangeCallbackStub : public IRemoteStub<RSIScreenChangeCallback> {
+class RSB_EXPORT RSScreenChangeCallbackStub : public IRemoteStub<RSIScreenChangeCallback> {
 public:
     RSScreenChangeCallbackStub() = default;
     ~RSScreenChangeCallbackStub() = default;
@@ -33,6 +32,5 @@ public:
 };
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS
 
 #endif // ROSEN_RENDER_SERVICE_BASE_ISCREEN_CHANGE_CALLBACK_STUB_H

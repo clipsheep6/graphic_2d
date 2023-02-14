@@ -26,7 +26,7 @@ namespace OHOS {
 namespace Rosen {
 class RSRenderCurveAnimation;
 
-class RS_EXPORT RSCurveAnimation : public RSPropertyAnimation {
+class RSC_EXPORT RSCurveAnimation : public RSPropertyAnimation {
 public:
     RSCurveAnimation(std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& byValue);
     RSCurveAnimation(std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,

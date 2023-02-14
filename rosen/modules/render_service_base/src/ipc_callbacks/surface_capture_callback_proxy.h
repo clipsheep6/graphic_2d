@@ -16,7 +16,6 @@
 #ifndef ROSEN_RENDER_SERVICE_BASE_ISURFACE_CAPTURE_CALLBACK_PROXY_H
 #define ROSEN_RENDER_SERVICE_BASE_ISURFACE_CAPTURE_CALLBACK_PROXY_H
 
-#ifdef ROSEN_OHOS
 #include <iremote_proxy.h>
 
 #include "ipc_callbacks/surface_capture_callback.h"
@@ -35,6 +34,5 @@ private:
 };
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS
 
 #endif // ROSEN_RENDER_SERVICE_BASE_ISURFACE_CAPTURE_CALLBACK_PROXY_H

@@ -16,7 +16,6 @@
 #ifndef ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_COMMAND_FACTORY_H
 #define ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_COMMAND_FACTORY_H
 
-#ifdef ROSEN_OHOS
 #include <parcel.h>
 #include <unordered_map>
 
@@ -28,7 +27,7 @@ namespace Rosen {
 class RSCommand;
 using UnmarshallingFunc = RSCommand* (*)(Parcel& parcel);
 
-class RS_EXPORT RSCommandFactory {
+class RSB_EXPORT RSCommandFactory {
 public:
     static RSCommandFactory& Instance();
 
@@ -54,6 +53,5 @@ public:
 
 } // namespace Rosen
 } // namespace OHOS
-#endif // ROSEN_OHOS
 
 #endif // ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_COMMAND_FACTORY_H

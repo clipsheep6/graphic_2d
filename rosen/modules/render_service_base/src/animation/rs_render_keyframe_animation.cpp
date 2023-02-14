@@ -54,7 +54,6 @@ void RSRenderKeyframeAnimation::AddKeyframes(const std::vector<std::tuple<float,
     keyframes_ = keyframes;
 }
 
-#ifdef ROSEN_OHOS
 bool RSRenderKeyframeAnimation::Marshalling(Parcel& parcel) const
 {
     if (!RSRenderPropertyAnimation::Marshalling(parcel)) {
@@ -101,7 +100,7 @@ bool RSRenderKeyframeAnimation::ParseParam(Parcel& parcel)
     }
     float tupValue0 = 0;
     keyframes_.clear();
-    for (u_int32_t i = 0; i < size; i++) {
+    for (uint32_t i = 0; i < size; i++) {
         if (!(parcel.ReadFloat(tupValue0))) {
             ROSEN_LOGE("RSRenderKeyframeAnimation::ParseParam, Unmarshalling value failed");
             return false;
@@ -115,7 +114,6 @@ bool RSRenderKeyframeAnimation::ParseParam(Parcel& parcel)
     }
     return true;
 }
-#endif
 
 void RSRenderKeyframeAnimation::OnAnimate(float fraction)
 {

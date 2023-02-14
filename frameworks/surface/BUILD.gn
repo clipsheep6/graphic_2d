@@ -25,6 +25,10 @@ config("surface_config") {
     "-Werror",
     "-g3",
   ]
+
+  if (current_os == "mingw") {
+    ldflags = [ "-Wl,--export-all-symbols" ]
+  }
 }
 
 config("surface_public_config") {
@@ -49,6 +53,14 @@ config("surface_public_config") {
   defines += gpu_defines
 
   cflags = [ "-Wno-error=deprecated-declarations" ]
+}
+
+config("surface_mingw_public_config") {
+  visibility = [ ":surface" ]
+  include_dirs = [
+    "//drivers/peripheral/display/interfaces/include",
+    "//drivers/peripheral/display/hdi_service/gralloc/include",
+  ]
 }
 
 ohos_shared_library("surface") {
@@ -98,6 +110,20 @@ ohos_shared_library("surface") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_single",
   ]
+
+  if (current_os == "mingw" || current_os == "mac" || current_os == "linux") {
+    sources -= [
+      "src/buffer_manager.cpp",
+      "src/surface_buffer_impl.cpp",
+    ]
+    sources += [
+      "src/buffer_manager_mingw.cpp",
+      "src/surface_buffer_impl_mingw.cpp",
+    ]
+    cflags_cc = [ "-Wno-inconsistent-dllimport" ]
+    public_deps -= [ "//drivers/peripheral/display/hdi_service/gralloc/client:hdi_gralloc_client" ]
+    public_configs += [ ":surface_mingw_public_config" ]
+  }
 
   symlink_target_name = [ "libnative_window.so" ]
 

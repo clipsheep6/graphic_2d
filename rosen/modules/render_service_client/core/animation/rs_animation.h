@@ -24,13 +24,22 @@
 #include "common/rs_common_def.h"
 #include "modifier/rs_modifier_type.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#define gettid GetCurrentThreadId
+#endif
+
+#ifdef __APPLE__
+#define gettid getpid
+#endif
+
 namespace OHOS {
 namespace Rosen {
 class RSNode;
 class AnimationFinishCallback;
 class RSRenderAnimation;
 
-class RS_EXPORT RSAnimation : public RSAnimationTimingProtocol, public std::enable_shared_from_this<RSAnimation> {
+class RSC_EXPORT RSAnimation : public RSAnimationTimingProtocol, public std::enable_shared_from_this<RSAnimation> {
 public:
     virtual ~RSAnimation() = default;
 

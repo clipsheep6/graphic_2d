@@ -169,8 +169,8 @@ void RSMainThread::Init()
         ConsumeAndUpdateAllNodes();
         WaitUntilUnmarshallingTaskFinished();
         ProcessCommand();
-        CollectInfoForHardwareComposer();
         Animate(timestamp_);
+        CollectInfoForHardwareComposer();
         CheckColdStartMap();
         Render();
         ReleaseAllNodesBuffer();
@@ -482,8 +482,17 @@ void RSMainThread::CollectInfoForHardwareComposer()
 
             if (surfaceNode->IsHardwareEnabledType() && surfaceNode->GetBuffer() != nullptr) {
                 hardwareEnabledNodes_.emplace_back(surfaceNode);
+                if (!surfaceNode->IsLastFrameHardwareEnabled()) {
+                    doDirectComposition_ = false;
+                }
             }
         });
+    for (auto& surfaceNode : hardwareEnabledNodes_) {
+        if (surfaceNode->IsLastFrameHardwareEnabled() && (doWindowAnimate_ || isHardwareForcedDisabled_)) {
+            surfaceNode->SetDirty();
+            activeProcessPids_.emplace(ExtractPid(surfaceNode->GetId()));
+        }
+    }
 }
 
 void RSMainThread::ReleaseAllNodesBuffer()
@@ -497,7 +506,7 @@ void RSMainThread::ReleaseAllNodesBuffer()
         // surfaceNode's buffer will be released in hardware thread if last frame enables hardware composer
         if (surfaceNode->IsHardwareEnabledType()) {
             surfaceNode->ResetCurrentFrameHardwareEnabledState();
-            if (!surfaceNode->IsReleaseBufferInMainThread()) {
+            if (surfaceNode->IsLastFrameHardwareEnabled()) {
                 return;
             }
         }

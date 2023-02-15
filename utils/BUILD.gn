@@ -41,6 +41,10 @@ group("socketpair") {
   public_deps = [ "socketpair:socketpair" ]
 }
 
+group("hookclose") {
+  public_deps = [ "hookclose:hookclose" ]
+}
+
 group("test_header") {
   public_deps = [ "test_header:test_header" ]
 }

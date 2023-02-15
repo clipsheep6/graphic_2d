@@ -84,7 +84,8 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
         node->SetFrameGravity(Gravity::RESIZE);
     }
     if (node->GetName().find("battery_panel") != std::string::npos ||
-        node->GetName().find("sound_panel") != std::string::npos) {
+        node->GetName().find("sound_panel") != std::string::npos ||
+        node->GetName().find("RosenWeb") != std::string::npos) {
         node->SetFrameGravity(Gravity::TOP_LEFT);
     } else {
         node->SetFrameGravity(Gravity::RESIZE);

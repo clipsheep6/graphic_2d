@@ -36,14 +36,11 @@ public:
         .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
         .timeout = 0,
     };
-    static inline BufferFlushConfig flushConfig = {
-        .damage = {
-            .w = 0x100,
-            .h = 0x100,
-        },
-    };
+    static inline BufferFlushConfig flushConfig;
+    Rect rect = { .w = 0x100, .h = 0x100, };
+	flushConfig.damages.push_back(rect);
     static inline int64_t timestamp = 0;
-    static inline Rect damage = {};
+    std::vector<Rect> damages;
     static inline sptr<Surface> cs = nullptr;
     static inline sptr<Surface> ps = nullptr;
 };
@@ -170,7 +167,7 @@ HWTEST_F(ConsumerSurfaceTest, ReqCanFluAcqRel002, Function | MediumTest | Level2
     sptr<SurfaceBuffer> buffer;
     int32_t flushFence;
 
-    GSError ret = cs->AcquireBuffer(buffer, flushFence, timestamp, damage);
+    GSError ret = cs->AcquireBuffer(buffer, flushFence, timestamp, damages);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
     ASSERT_NE(buffer, nullptr);
 
@@ -192,7 +189,7 @@ HWTEST_F(ConsumerSurfaceTest, ReqCanFluAcqRel003, Function | MediumTest | Level2
     sptr<SurfaceBuffer> buffer;
     int32_t flushFence;
 
-    GSError ret = cs->AcquireBuffer(buffer, flushFence, timestamp, damage);
+    GSError ret = cs->AcquireBuffer(buffer, flushFence, timestamp, damages);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
     ASSERT_NE(buffer, nullptr);
 
@@ -280,7 +277,7 @@ HWTEST_F(ConsumerSurfaceTest, RegisterConsumerListener001, Function | MediumTest
             sptr<SurfaceBuffer> buffer;
             int32_t flushFence;
 
-            cs->AcquireBuffer(buffer, flushFence, timestamp, damage);
+            cs->AcquireBuffer(buffer, flushFence, timestamp, damages);
             int32_t *p = (int32_t*)buffer->GetVirAddr();
             if (p != nullptr) {
                 for (int32_t i = 0; i < 128; i++) {

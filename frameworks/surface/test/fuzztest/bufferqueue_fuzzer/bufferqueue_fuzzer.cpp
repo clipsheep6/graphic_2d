@@ -16,6 +16,7 @@
 #include "bufferqueue_fuzzer.h"
 
 #include <securec.h>
+#include <vector>
 
 #include "buffer_queue.h"
 #include "surface.h"
@@ -159,7 +160,7 @@ namespace OHOS {
         BufferFlushConfig flushConfig = GetData<BufferFlushConfig>();
         uint32_t sequence = GetData<uint32_t>();
         int64_t timestamp = GetData<int64_t>();
-        Rect damage = GetData<Rect>();
+        std::vector<Rect> damages;
 
         // test
         sptr<BufferQueue> bufferqueue = new BufferQueue(name, isShared);
@@ -173,7 +174,7 @@ namespace OHOS {
         sptr<SyncFence> syncFence = SyncFence::INVALID_FENCE;
         bufferqueue->FlushBuffer(sequence, bedata, syncFence, flushConfig);
         bufferqueue->DoFlushBuffer(sequence, bedata, syncFence, flushConfig);
-        bufferqueue->AcquireBuffer(buffer, syncFence, timestamp, damage);
+        bufferqueue->AcquireBuffer(buffer, syncFence, timestamp, damages);
         bufferqueue->ReleaseBuffer(buffer, syncFence);
         bufferqueue->AttachBuffer(buffer);
         bufferqueue->DetachBuffer(buffer);

@@ -81,17 +81,17 @@ void HdiFramebufferSurface::OnBufferAvailable()
 {
     sptr<SurfaceBuffer> buffer;
     int64_t timestamp = 0;
-    Rect damage = {0};
+    std::vector<Rect> damages;
     sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
     SurfaceError ret = consumerSurface_->AcquireBuffer(buffer, acquireFence,
-                                                       timestamp, damage);
+                                                       timestamp, damages);
     if (ret != SURFACE_ERROR_OK || buffer == nullptr) {
         HLOGE("AcquireBuffer failed, ret is %{public}d", ret);
         return;
     }
 
     std::lock_guard<std::mutex> lock(mutex_);
-    availableBuffers_.push(std::make_unique<FrameBufferEntry>(buffer, acquireFence, timestamp, damage));
+    availableBuffers_.push(std::make_unique<FrameBufferEntry>(buffer, acquireFence, timestamp, damages));
     bufferCond_.notify_one();
 }
 

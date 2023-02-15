@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <vector>
 #include "gtest/gtest.h"
 #include "limit_number.h"
 #include "pipeline/rs_base_render_util.h"
@@ -39,9 +40,9 @@ private:
         .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
         .timeout = 0,
     };
-    static inline BufferFlushConfig flushConfig = {
-        .damage = { .w = 0x100, .h = 0x100, },
-    };
+    static inline BufferFlushConfig flushConfig;
+    Rect rect = { .w = 0x100, .h = 0x100, };
+    flushConfig.damages.push_back(rect);
     static inline SkMatrix matrix = SkMatrix::MakeAll(1, 2, 3, 4, 5, 6, 7, 8, 9);
 };
 std::shared_ptr<RSSurfaceRenderNode> node_ = nullptr;
@@ -211,10 +212,10 @@ HWTEST_F(RSBaseRenderUtilTest, ConvertBufferToBitmap_002, TestSize.Level2)
     sptr<SyncFence> flushFence = SyncFence::INVALID_FENCE;
     ret = psurf->FlushBuffer(buffer, flushFence, flushConfig);
     OHOS::sptr<SurfaceBuffer> cbuffer;
-    Rect damage;
+    std::vector<Rect> damages;
     sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
     int64_t timestamp = 0;
-    ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
+    ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damages);
 
     std::vector<uint8_t> newBuffer;
     ColorGamut dstGamut = ColorGamut::COLOR_GAMUT_SRGB;
@@ -242,10 +243,10 @@ HWTEST_F(RSBaseRenderUtilTest, ConvertBufferToBitmap_003, TestSize.Level2)
     sptr<SyncFence> flushFence = SyncFence::INVALID_FENCE;
     ret = psurf->FlushBuffer(buffer, flushFence, flushConfig);
     OHOS::sptr<SurfaceBuffer> cbuffer;
-    Rect damage;
+    std::vector<Rect> damages;
     sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
     int64_t timestamp = 0;
-    ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
+    ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damages);
 
     std::vector<uint8_t> newBuffer;
     ColorGamut dstGamut = ColorGamut::COLOR_GAMUT_INVALID;

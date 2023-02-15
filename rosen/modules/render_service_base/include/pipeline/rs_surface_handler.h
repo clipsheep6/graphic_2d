@@ -16,6 +16,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_SURFACE_HANDLER_H
 
 #include <surface.h>
+#include <vector>
 
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
@@ -35,13 +36,13 @@ public:
             buffer = nullptr;
             acquireFence = SyncFence::INVALID_FENCE;
             releaseFence = SyncFence::INVALID_FENCE;
-            damageRect = Rect {0, 0, 0, 0};
+            damagesRect.clear();
             timestamp = 0;
         }
         sptr<SurfaceBuffer> buffer;
         sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
         sptr<SyncFence> releaseFence = SyncFence::INVALID_FENCE;
-        Rect damageRect = {0, 0, 0, 0};
+        std::vector<Rect> damagesRect;
         int64_t timestamp = 0;
     };
 
@@ -64,13 +65,15 @@ public:
     void SetBuffer(
         const sptr<SurfaceBuffer>& buffer,
         const sptr<SyncFence>& acquireFence,
-        const Rect& damage,
+        const std::vector<Rect>& damages,
         const int64_t timestamp)
     {
         preBuffer_ = buffer_;
         buffer_.buffer = buffer;
         buffer_.acquireFence = acquireFence;
-        buffer_.damageRect = damage;
+        for (const auto& rect : damages) {
+            buffer_.damagesRect.push_back(rect);
+        }
         buffer_.timestamp = timestamp;
     }
 
@@ -84,9 +87,9 @@ public:
         return buffer_.acquireFence;
     }
 
-    const Rect& GetDamageRegion() const
+    const std::vector<Rect>& GetDamageRegion() const
     {
-        return buffer_.damageRect;
+        return buffer_.damagesRect;
     }
 
     void SetReleaseFence(sptr<SyncFence> fence)

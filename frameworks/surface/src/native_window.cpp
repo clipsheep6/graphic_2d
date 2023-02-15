@@ -115,16 +115,20 @@ int32_t NativeWindowFlushBuffer(OHNativeWindow *window, OHNativeWindowBuffer *bu
 
     OHOS::BufferFlushConfig config;
     if ((region.rectNumber != 0) && (region.rects != nullptr)) {
-        config.damage.x = region.rects->x;
-        config.damage.y = region.rects->y;
-        config.damage.w = static_cast<int32_t>(region.rects->w);
-        config.damage.h = static_cast<int32_t>(region.rects->h);
+        config.damages.resize(region.rectNumber);
+        for (int32_t i = 0; i < region.rectNumber; i++) {
+            config.damages[i].x = region.rects[i].x;
+            config.damages[i].y = region.rects[i].y;
+            config.damages[i].w = region.rects[i].w;
+            config.damages[i].h = region.rects[i].h;
+        }
         config.timestamp = buffer->uiTimestamp;
     } else {
-        config.damage.x = 0;
-        config.damage.y = 0;
-        config.damage.w = window->config.width;
-        config.damage.h = window->config.height;
+        config.damages.resize(1);
+        config.damages[0].x = 0;
+        config.damages[0].y = 0;
+        config.damages[0].w = window->config.width;
+        config.damages[0].h = window->config.height;
         config.timestamp = buffer->uiTimestamp;
     }
 

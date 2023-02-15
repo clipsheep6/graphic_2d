@@ -221,8 +221,8 @@ bool DrawingEngineSample::DrawDrawingLayer(std::shared_ptr<HdiLayerInfo> &layer)
     OHOS::sptr<SurfaceBuffer> cbuffer = nullptr;
     int32_t fence = -1;
     int64_t timestamp;
-    Rect damage;
-    SurfaceError ret = drawingCSurface->AcquireBuffer(cbuffer, fence, timestamp, damage);
+    std::vector<Rect> damages;
+    SurfaceError ret = drawingCSurface->AcquireBuffer(cbuffer, fence, timestamp, damages);
     sptr<SyncFence> acquireSyncFence = new SyncFence(fence);
     if (ret != SURFACE_ERROR_OK) {
         std::cout << "Acquire cBuffer failed: " << ret << std::endl;
@@ -369,12 +369,9 @@ void DrawingEngineSample::DoPrepareCompleted(sptr<Surface> surface, const struct
         std::cout << "memset_s failed" << std::endl;
     }
 
-    BufferFlushConfig flushConfig = {
-        .damage = {
-            .w = display_w,
-            .h = display_h,
-        }
-    };
+    BufferFlushConfig flushConfig;
+    Rect rect = { .w = display_w, .h = display_h, };
+	flushConfig.damages.push_back(rect);
 
     /*
      * if use GPU produce data, flush with gpu fence

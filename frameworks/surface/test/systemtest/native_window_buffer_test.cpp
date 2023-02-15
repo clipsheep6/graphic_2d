@@ -230,8 +230,8 @@ HWTEST_F(NativeWindowBufferTest, Surface001, Function | MediumTest | Level2)
     OHOS::sptr<SurfaceBuffer> buffer = nullptr;
     int32_t fence = -1;
     int64_t timestamp;
-    Rect damage;
-    auto ret = cSurface->AcquireBuffer(buffer, fence, timestamp, damage);
+    std::vector<Rect> damages;
+    auto ret = cSurface->AcquireBuffer(buffer, fence, timestamp, damages);
     EXPECT_EQ(ret, OHOS::GSERROR_OK);
     EXPECT_NE(buffer, nullptr);
     EXPECT_EQ(GetData(buffer), true);

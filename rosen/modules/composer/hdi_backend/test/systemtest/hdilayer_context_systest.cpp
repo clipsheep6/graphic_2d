@@ -67,12 +67,9 @@ GSError HdiLayerContext::DrawBufferColor()
     auto addr = static_cast<uint8_t *>(buffer->GetVirAddr());
     DrawColor(addr, (uint32_t)buffer->GetWidth(), (uint32_t)buffer->GetHeight());
 
-    BufferFlushConfig flushConfig = {
-        .damage = {
-        .w = srcRect_.w,
-        .h = srcRect_.h,
-        },
-    };
+    BufferFlushConfig flushConfig;
+    Rect rect = { .w = srcRect_.w, .h = srcRect_.h, };
+	flushConfig.damages.push_back(rect);
 
     ret = pSurface_->FlushBuffer(buffer, -1, flushConfig);
     return ret;
@@ -94,8 +91,8 @@ GSError HdiLayerContext::FillHdiLayer()
     sptr<SurfaceBuffer> buffer = nullptr;
     int32_t acquireFence = -1;
     int64_t timestamp;
-    Rect damage;
-    GSError ret = cSurface_->AcquireBuffer(buffer, acquireFence, timestamp, damage);
+    std::vector<Rect> damages;
+    GSError ret = cSurface_->AcquireBuffer(buffer, acquireFence, timestamp, damages);
     sptr<SyncFence> acquireSyncFence = new SyncFence(acquireFence);
     if (ret != SURFACE_ERROR_OK) {
         return ret;

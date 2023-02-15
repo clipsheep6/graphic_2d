@@ -141,7 +141,7 @@ namespace OHOS {
         BufferRequestConfig requestConfig = GetData<BufferRequestConfig>();
         BufferFlushConfig flushConfig = GetData<BufferFlushConfig>();
         int64_t timestamp = GetData<int64_t>();
-        Rect damage = GetData<Rect>();
+        std::vector<Rect> damages;
         uint32_t seqNum = GetData<uint32_t>();
         uint32_t queueSize = GetData<uint32_t>();
         int32_t width = GetData<int32_t>();
@@ -160,7 +160,7 @@ namespace OHOS {
         pSurface->RequestBuffer(buffer, fenceFd, requestConfig);
         pSurface->CancelBuffer(buffer);
         pSurface->FlushBuffer(buffer, fenceFd, flushConfig);
-        pSurface->AcquireBuffer(buffer, fenceFd, timestamp, damage);
+        pSurface->AcquireBuffer(buffer, fenceFd, timestamp, damages);
         pSurface->ReleaseBuffer(buffer, fenceFd);
         pSurface->AttachBuffer(buffer);
         pSurface->DetachBuffer(buffer);
@@ -172,7 +172,7 @@ namespace OHOS {
         cSurface->RequestBuffer(buffer, fenceFd, requestConfig);
         cSurface->CancelBuffer(buffer);
         cSurface->FlushBuffer(buffer, fenceFd, flushConfig);
-        cSurface->AcquireBuffer(buffer, fenceFd, timestamp, damage);
+        cSurface->AcquireBuffer(buffer, fenceFd, timestamp, damages);
         cSurface->ReleaseBuffer(buffer, fenceFd);
         cSurface->AttachBuffer(buffer);
         cSurface->DetachBuffer(buffer);

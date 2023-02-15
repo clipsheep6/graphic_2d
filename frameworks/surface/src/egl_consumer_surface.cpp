@@ -42,9 +42,9 @@ GSError EglConsumerSurface::Init()
 }
 
 GSError EglConsumerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
-    int64_t &timestamp, Rect &damage)
+    int64_t &timestamp, std::vector<Rect>& damages)
 {
-    auto ret = ConsumerSurface::AcquireBuffer(buffer, fence, timestamp, damage);
+    auto ret = ConsumerSurface::AcquireBuffer(buffer, fence, timestamp, damages);
     if (ret) {
         return ret;
     }

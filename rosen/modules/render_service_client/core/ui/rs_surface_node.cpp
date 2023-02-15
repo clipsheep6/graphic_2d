@@ -50,11 +50,13 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
     RSNodeMap::MutableInstance().RegisterNode(node);
 
     // create node in RS
-    RSSurfaceRenderNodeConfig config = { .id = node->GetId(), .name = node->name_ };
+    RSSurfaceRenderNodeConfig config = { .id = node->GetId(), .name = node->name_,
+                                         .hardwareEnabled = surfaceNodeConfig.HardwareEnabled};
     if (!isWindow) {
         config.nodeType = RSSurfaceNodeType::SELF_DRAWING_NODE;
     } else {
         config.nodeType = type;
+        config.hardwareEnabled = false;
     }
 
     RS_LOGD("RSSurfaceNode::Create %s type %d", config.name.c_str(), config.nodeType);

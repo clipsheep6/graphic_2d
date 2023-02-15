@@ -38,7 +38,8 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config
       RSSurfaceHandler(config.id),
       name_(config.name),
       nodeType_(config.nodeType),
-      dirtyManager_(std::make_shared<RSDirtyRegionManager>())
+      dirtyManager_(std::make_shared<RSDirtyRegionManager>()),
+      hardwareEnabledConfig_(config.hardwareEnabled)
 {}
 
 RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context)

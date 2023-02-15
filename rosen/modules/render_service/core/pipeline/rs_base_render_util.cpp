@@ -865,10 +865,10 @@ GSError RSBaseRenderUtil::DropFrameProcess(RSSurfaceHandler& node)
     if (maxDirtyListSize > 2 && availableBufferCnt >= maxDirtyListSize) {
         RS_TRACE_NAME("DropFrame");
         OHOS::sptr<SurfaceBuffer> cbuffer;
-        Rect damage;
+        std::vector<Rect> damages;
         sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
         int64_t timestamp = 0;
-        auto ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
+        auto ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damages);
         if (ret != OHOS::SURFACE_ERROR_OK) {
             RS_LOGW("RSBaseRenderUtil::DropFrameProcess(node: %" PRIu64 "): AcquireBuffer failed(ret: %d), do nothing ",
                 node.GetNodeId(), ret);
@@ -904,15 +904,15 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler)
     sptr<SurfaceBuffer> buffer;
     sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
     int64_t timestamp = 0;
-    Rect damage;
-    auto ret = consumer->AcquireBuffer(buffer, acquireFence, timestamp, damage);
+    std::vector<Rect> damages;
+    auto ret = consumer->AcquireBuffer(buffer, acquireFence, timestamp, damages);
     if (buffer == nullptr || ret != SURFACE_ERROR_OK) {
         RS_LOGE("RsDebug surfaceHandler(id: %" PRIu64 ") AcquireBuffer failed(ret: %d)!",
             surfaceHandler.GetNodeId(), ret);
         return false;
     }
 
-    surfaceHandler.SetBuffer(buffer, acquireFence, damage, timestamp);
+    surfaceHandler.SetBuffer(buffer, acquireFence, damages, timestamp);
     surfaceHandler.SetCurrentFrameBufferConsumed();
     RS_LOGD("RsDebug surfaceHandler(id: %" PRIu64 ") AcquireBuffer success, timestamp = %" PRId64 ".",
         surfaceHandler.GetNodeId(), timestamp);

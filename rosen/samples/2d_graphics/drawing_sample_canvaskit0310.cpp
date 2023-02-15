@@ -260,12 +260,9 @@ SurfaceError HelloDrawing::ProduceBuffer(sptr<Surface> &produceSurface, uint32_t
         DoDrawData(addr, buffer->GetWidth(), buffer->GetHeight());
     }
 
-    BufferFlushConfig flushConfig = {
-        .damage = {
-            .w = width,
-            .h = height,
-        },
-    };
+    BufferFlushConfig flushConfig;
+    Rect rect = { .w = width, .h = height, };
+	flushConfig.damages.push_back(rect);
 
     int32_t acquireFence = -1;
     ret = produceSurface->FlushBuffer(buffer, acquireFence, flushConfig);
@@ -368,8 +365,8 @@ bool HelloDrawing::FillBaseLayer(std::shared_ptr<HdiLayerInfo> &showLayer, uint3
     OHOS::sptr<SurfaceBuffer> cbuffer = nullptr;
     int32_t fence;
     int64_t timestamp;
-    OHOS::Rect damage;
-    SurfaceError ret = cSurface->AcquireBuffer(cbuffer, fence, timestamp, damage);
+    std::vector<OHOS::Rect> damages;
+    SurfaceError ret = cSurface->AcquireBuffer(cbuffer, fence, timestamp, damages);
     if (ret != SURFACE_ERROR_OK) {
         LOGE("Acquire cBuffer failed");
         return false;
@@ -576,12 +573,9 @@ void HelloDrawing::DoPrepareCompleted(sptr<Surface>& surface, const struct Prepa
         }
     }
 
-    BufferFlushConfig flushConfig = {
-        .damage = {
-            .w = display_w,
-            .h = display_h,
-        }
-    };
+    BufferFlushConfig flushConfig;
+    Rect rect = { .w = display_w, .h = display_h, };
+	flushConfig.damages.push_back(rect);
 
     /*
      * if use GPU produce data, flush with gpu fence

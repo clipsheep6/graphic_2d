@@ -46,14 +46,7 @@ private:
         .timeout = 0,
     };
 
-    BufferFlushConfig flushConfig_ = {
-        .damage = {
-            .x = 0,
-            .y = 0,
-            .w = 0x100,
-            .h = 0x100,
-        },
-    };
+    BufferFlushConfig flushConfig_;
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
 };
 } // namespace Rosen

@@ -71,7 +71,7 @@ HWTEST_F(FenceFdTest, BufferQueueFenceItem, testing::ext::TestSize.Level0) {
             STEP_ASSERT_EQ(ret, GSERROR_OK);
 
             int32_t outAcquireFence = 0;
-            ret = csurf->AcquireBuffer(buffer, outAcquireFence, timestamp, damage);
+            ret = csurf->AcquireBuffer(buffer, outAcquireFence, timestamp, damages);
             STEP_ASSERT_EQ(ret, GSERROR_OK);
             STEP_ASSERT_EQ(outAcquireFence, acquireFence);
         }

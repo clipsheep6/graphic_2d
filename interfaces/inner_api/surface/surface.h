@@ -17,6 +17,7 @@
 #define INTERFACES_INNERKITS_SURFACE_SURFACE_H
 
 #include <refbase.h>
+#include <vector>
 
 #include "ibuffer_consumer_listener.h"
 #include "ibuffer_producer.h"
@@ -44,7 +45,7 @@ public:
                                 int32_t fence, BufferFlushConfig &config) = 0;
 
     virtual GSError AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
-                                  int64_t &timestamp, Rect &damage) = 0;
+                                  int64_t &timestamp, std::vector<Rect>& damages) = 0;
     virtual GSError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fence) = 0;
 
     virtual GSError RequestBuffer(sptr<SurfaceBuffer>& buffer,
@@ -52,7 +53,7 @@ public:
     virtual GSError FlushBuffer(sptr<SurfaceBuffer>& buffer,
                                 const sptr<SyncFence>& fence, BufferFlushConfig &config) = 0;
     virtual GSError AcquireBuffer(sptr<SurfaceBuffer>& buffer, sptr<SyncFence>& fence,
-                                  int64_t &timestamp, Rect &damage) = 0;
+                                  int64_t &timestamp, std::vector<Rect>& damages) = 0;
     virtual GSError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& fence) = 0;
 
     virtual GSError AttachBuffer(sptr<SurfaceBuffer>& buffer) = 0;

@@ -84,9 +84,9 @@ GSError ConsumerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
     return GSERROR_NOT_SUPPORT;
 }
 GSError ConsumerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, sptr<SyncFence>& fence,
-                                       int64_t &timestamp, Rect &damage)
+                                       int64_t &timestamp, std::vector<Rect>& damages)
 {
-    return consumer_->AcquireBuffer(buffer, fence, timestamp, damage);
+    return consumer_->AcquireBuffer(buffer, fence, timestamp, damages);
 }
 GSError ConsumerSurface::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& fence)
 {
@@ -110,10 +110,10 @@ GSError ConsumerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
 }
 
 GSError ConsumerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
-                                       int64_t &timestamp, Rect &damage)
+                                       int64_t &timestamp, std::vector<Rect>& damages)
 {
     sptr<SyncFence> syncFence = SyncFence::INVALID_FENCE;
-    auto ret = AcquireBuffer(buffer, syncFence, timestamp, damage);
+    auto ret = AcquireBuffer(buffer, syncFence, timestamp, damages);
     if (ret != GSERROR_OK) {
         fence = -1;
         return ret;

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <vector>
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
 
@@ -145,9 +146,9 @@ SurfaceError SurfaceImage::UpdateSurfaceImage()
     sptr<SurfaceBuffer> buffer = nullptr;
     int32_t fence;
     int64_t timestamp;
-    Rect damage;
+    std::vector<Rect> damages;
 
-    ret = AcquireBuffer(buffer, fence, timestamp, damage);
+    ret = AcquireBuffer(buffer, fence, timestamp, damages);
     if (ret != SURFACE_ERROR_OK) {
         if (ret == SURFACE_ERROR_NO_BUFFER) {
             glBindTexture(textureTarget_, textureId_);
@@ -189,7 +190,7 @@ SurfaceError SurfaceImage::UpdateSurfaceImage()
     currentSurfaceBuffer_ = buffer;
     currentSurfaceBufferFence_ = fence;
     currentTimeStamp_ = timestamp;
-    currentCrop_ = damage;
+    currentCrop_ = damages[0]; // hjj
     currentTransformType_ = ConsumerSurface::GetTransform();
 
     ComputeTransformMatrix();
@@ -280,9 +281,9 @@ SurfaceError SurfaceImage::GetTransformMatrix(float matrix[16])
 }
 
 SurfaceError SurfaceImage::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
-                                         int64_t &timestamp, Rect &damage)
+                                         int64_t &timestamp, std::vector<Rect>& damages)
 {
-    SurfaceError ret = ConsumerSurface::AcquireBuffer(buffer, fence, timestamp, damage);
+    SurfaceError ret = ConsumerSurface::AcquireBuffer(buffer, fence, timestamp, damages);
     if (ret != SURFACE_ERROR_OK) {
         BLOGE("AcquireBuffer error");
         return ret;

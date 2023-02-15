@@ -52,10 +52,11 @@ void SurfaceIPCTest::SetUpTestCase()
         .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
         .timeout = 0,
     };
-    flushConfig = { .damage = {
+    Rect rect = {
         .w = 0x100,
         .h = 0x100,
-    } };
+    };
+    flushConfig.damages.push_back(rect);
 }
 
 void SurfaceIPCTest::OnBufferAvailable()
@@ -207,8 +208,8 @@ HWTEST_F(SurfaceIPCTest, BufferIPC001, Function | MediumTest | Level2)
     sptr<SurfaceBuffer> buffer = nullptr;
     int32_t fence = -1;
     int64_t timestamp;
-    Rect damage;
-    auto sRet = cSurface->AcquireBuffer(buffer, fence, timestamp, damage);
+    std::vector<Rect> damages;
+    auto sRet = cSurface->AcquireBuffer(buffer, fence, timestamp, damages);
     EXPECT_EQ(sRet, OHOS::GSERROR_OK);
     EXPECT_NE(buffer, nullptr);
     EXPECT_EQ(GetData(buffer), true);

@@ -101,11 +101,9 @@ void NativeWindowTest::SetUpTestCase()
 }
 
 void NativeWindowTest::TearDownTestCase()
-{
-    flushConfig = { .damage = {
-        .w = 0x100,
-        .h = 0x100,
-    } };
+{;
+    Rect rect = { .w = 0x100, .h = 0x100, };
+	flushConfig.damages.push_back(rect);
     pSurface->FlushBuffer(sBuffer, -1, flushConfig);
     sBuffer = nullptr;
     cSurface = nullptr;

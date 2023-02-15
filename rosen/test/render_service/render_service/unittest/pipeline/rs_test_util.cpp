@@ -44,12 +44,12 @@ std::shared_ptr<RSSurfaceRenderNode> RSTestUtil::CreateSurfaceNodeWithBuffer()
     sptr<SyncFence> flushFence = SyncFence::INVALID_FENCE;
     ret = psurf->FlushBuffer(buffer, flushFence, flushConfig);
     OHOS::sptr<SurfaceBuffer> cbuffer;
-    Rect damage;
+    std::vector<Rect> damages;
     sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
     int64_t timestamp = 0;
-    ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
+    ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damages);
     auto& surfaceHandler = static_cast<RSSurfaceHandler&>(*(rsSurfaceRenderNode.get()));
-    surfaceHandler.SetBuffer(cbuffer, acquireFence, damage, timestamp);
+    surfaceHandler.SetBuffer(cbuffer, acquireFence, damages, timestamp);
     return rsSurfaceRenderNode;
 }
 }

@@ -316,14 +316,9 @@ GSError ProducerEglSurface::FlushBufferProc()
     }
     BLOGNE("flush fence fd %{public}d.", fd);
 
-    BufferFlushConfig fconfig = {
-        .damage = {
-            .x = 0,
-            .y = 0,
-            .w = currentBuffer_->GetWidth(),
-            .h = currentBuffer_->GetHeight(),
-        },
-    };
+    BufferFlushConfig fconfig;
+    Rect rect = { .x = 0, .y = 0, .w = currentBuffer_->GetWidth(), .h = currentBuffer_->GetHeight(), };
+	fconfig.damages.push_back(rect);
     if (FlushBuffer(currentBuffer_, fd, fconfig) != GSERROR_OK) {
         BLOGNE("FlushBuffer failed.");
         return GSERROR_INTERNAL;

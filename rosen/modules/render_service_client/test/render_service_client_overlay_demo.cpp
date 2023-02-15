@@ -78,12 +78,9 @@ int main()
         return 0;
     }
     std::cout << "RequestBuffer Success" << std::endl;
-    OHOS::BufferFlushConfig flushConfig = {
-        .damage = {
-            .w = buffer->GetWidth(),
-            .h = buffer->GetHeight(),
-        },
-    };
+    OHOS::BufferFlushConfig flushConfig;
+    Rect rect = { .w = buffer->GetWidth(), .h = buffer->GetHeight(), };
+	flushConfig.damages.push_back(rect);
     ret = surface->FlushBuffer(buffer, -1, flushConfig);
     if (ret != SURFACE_ERROR_OK) {
         std::cout << "flush buffer failed" << std::endl;

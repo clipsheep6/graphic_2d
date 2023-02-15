@@ -21,21 +21,32 @@
 #include <refbase.h>
 #include <surface.h>
 #include <sync_fence.h>
+#include <vector>
 #include "surface_buffer.h"
 
 namespace OHOS {
 namespace Rosen {
 struct FrameBufferEntry {
-    FrameBufferEntry(sptr<SurfaceBuffer> buf, sptr<SyncFence> fence, int64_t timeStamp, const Rect& damage)
-        : buffer(std::move(buf)), acquireFence(std::move(fence)), acquireTime(timeStamp), damageRect(damage)
+    FrameBufferEntry(sptr<SurfaceBuffer> buf, sptr<SyncFence> fence, int64_t timeStamp, const std::vector<Rect>& damages)
+        : buffer(std::move(buf)), acquireFence(std::move(fence)), acquireTime(timeStamp)
     {
+        damageRects.clear();
+        for (decltype(damages.size()) i = 0; i < damages.size(); i++) {
+            Rect rect = {
+                .x = damages[i].x,
+                .y = damages[i].y,
+                .w = damages[i].w,
+                .h = damages[i].h,
+            };
+            damageRects.emplace_back(rect);
+        }
     }
     ~FrameBufferEntry() noexcept = default;
 
     sptr<SurfaceBuffer> buffer;
     sptr<SyncFence> acquireFence;
     int64_t acquireTime = 0;
-    Rect damageRect = {0};
+    std::vector<Rect> damageRects;
 };
 
 class HdiFramebufferSurface : public IBufferConsumerListener {

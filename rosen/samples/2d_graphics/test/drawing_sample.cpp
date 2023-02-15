@@ -289,11 +289,9 @@ void DrawingSample::DoPrepareCompleted(sptr<Surface> surface, const struct Prepa
         LOGE("memset_s failed");
     }
 
-    BufferFlushConfig flushConfig = { .damage = {
-                                          .w = displayWidth,
-                                          .h = displayHeight,
-                                      } };
-
+    BufferFlushConfig flushConfig;
+    Rect rect = { .w = displayWidth, .h = displayHeight, };
+	flushConfig.damages.push_back(rect);
     /*
      * if use GPU produce data, flush with gpu fence
      */

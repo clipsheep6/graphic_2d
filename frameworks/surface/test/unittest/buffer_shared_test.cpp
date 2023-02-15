@@ -144,7 +144,9 @@ HWTEST_F(BufferSharedTest, FlushBuffer001,  Function | MediumTest | Level2)
     PART("FlushBuffer") {
         GSError ret1, ret2;
         STEP("1: FlushBuffer two times") {
-            BufferFlushConfig flushConfig = { .damage = { .w = 0x100, .h = 0x100, }, };
+            BufferFlushConfig flushConfig;
+            Rect rect = { .w = 0x100, .h = 0x100, };
+	        flushConfig.damages.push_back(rect);
             ret1 = producerSurface1->FlushBuffer(buffer1, -1, flushConfig);
             ret2 = producerSurface2->FlushBuffer(buffer2, -1, flushConfig);
         }
@@ -168,11 +170,11 @@ HWTEST_F(BufferSharedTest, AquiredBuffer001, Function | MediumTest | Level2)
         GSError ret1, ret2;
         STEP("1: AcquireBuffer two times") {
             int64_t timestamp = 0;
-            Rect damage = {};
+            std::vector<Rect> damages;
             int32_t fence = -1;
 
-            ret1 = surf->AcquireBuffer(sbuffer1, fence, timestamp, damage);
-            ret2 = surf->AcquireBuffer(sbuffer2, fence, timestamp, damage);
+            ret1 = surf->AcquireBuffer(sbuffer1, fence, timestamp, damages);
+            ret2 = surf->AcquireBuffer(sbuffer2, fence, timestamp, damages);
         }
         STEP("2: check ret1 ret2") {
             STEP_ASSERT_EQ(ret1, OHOS::GSERROR_OK);

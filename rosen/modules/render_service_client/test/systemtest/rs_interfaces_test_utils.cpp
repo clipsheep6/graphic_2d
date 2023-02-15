@@ -74,12 +74,12 @@ void RSInterfacesTestUtils::OnVsync()
     sptr<SurfaceBuffer> cbuffer = nullptr;
     int32_t fence = -1;
     int64_t timestamp = 0;
-    OHOS::Rect damage;
+    std::vector<OHOS::Rect> damages;
     if (cSurface_ == nullptr) {
         ROSEN_LOGE("cSurface_ is null");
         return;
     }
-    auto sret = cSurface_->AcquireBuffer(cbuffer, fence, timestamp, damage);
+    auto sret = cSurface_->AcquireBuffer(cbuffer, fence, timestamp, damages);
     UniqueFd fenceFd(fence);
     if (cbuffer == nullptr || sret != OHOS::SURFACE_ERROR_OK) {
         ROSEN_LOGE("acquire buffer failed");

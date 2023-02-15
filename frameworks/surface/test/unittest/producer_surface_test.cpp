@@ -35,14 +35,11 @@ public:
         .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
         .timeout = 0,
     };
-    static inline BufferFlushConfig flushConfig = {
-        .damage = {
-            .w = 0x100,
-            .h = 0x100,
-        },
-    };
+    static inline BufferFlushConfig flushConfig;
+    Rect rect = { .w = 0x100, .h = 0x100, };
+	flushConfig.damages.push_back(rect);
     static inline int64_t timestamp = 0;
-    static inline Rect damage = {};
+    static inline std::vector<Rect> damages;
     static inline sptr<Surface> csurf = nullptr;
     static inline sptr<IBufferProducer> producer = nullptr;
     static inline sptr<Surface> pSurface = nullptr;
@@ -159,19 +156,19 @@ HWTEST_F(ProducerSurfaceTest, ReqCanFluAcqRel003, Function | MediumTest | Level2
     sptr<SurfaceBuffer> buffer;
     int32_t flushFence;
 
-    GSError ret = pSurface->AcquireBuffer(buffer, flushFence, timestamp, damage);
+    GSError ret = pSurface->AcquireBuffer(buffer, flushFence, timestamp, damages);
     ASSERT_NE(ret, OHOS::GSERROR_OK);
 
     ret = pSurface->ReleaseBuffer(buffer, -1);
     ASSERT_NE(ret, OHOS::GSERROR_OK);
 
-    ret = csurf->AcquireBuffer(buffer, flushFence, timestamp, damage);
+    ret = csurf->AcquireBuffer(buffer, flushFence, timestamp, damages);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
 
     ret = csurf->ReleaseBuffer(buffer, -1);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
 
-    ret = csurf->AcquireBuffer(buffer, flushFence, timestamp, damage);
+    ret = csurf->AcquireBuffer(buffer, flushFence, timestamp, damages);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
 
     ret = csurf->ReleaseBuffer(buffer, -1);

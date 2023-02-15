@@ -24,8 +24,9 @@ SurfaceFrameOhosRaster::SurfaceFrameOhosRaster(int32_t width, int32_t height)
 {
     requestConfig_.width = width;
     requestConfig_.height = height;
-    flushConfig_.damage.w = width;
-    flushConfig_.damage.h = height;
+    flushConfig_.damages.clear();
+    Rect rect = { .x = 0, .y = 0, .w = width, .h = height, };
+	flushConfig_.damages.push_back(rect);
 }
 
 SurfaceFrameOhosRaster::~SurfaceFrameOhosRaster()
@@ -34,10 +35,9 @@ SurfaceFrameOhosRaster::~SurfaceFrameOhosRaster()
 
 void SurfaceFrameOhosRaster::SetDamageRegion(int32_t left, int32_t top, int32_t width, int32_t height)
 {
-    flushConfig_.damage.x = left;
-    flushConfig_.damage.y = top;
-    flushConfig_.damage.w = width;
-    flushConfig_.damage.h = height;
+    flushConfig_.damages.clear();
+    Rect rect = { .x = left, .y = top, .w = width, .h = height, };
+	flushConfig_.damages.push_back(rect);
 }
 
 void SurfaceFrameOhosRaster::SetColorSpace(ColorGamut colorSpace)

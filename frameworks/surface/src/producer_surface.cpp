@@ -126,7 +126,7 @@ GSError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
     return producer_->FlushBuffer(buffer->GetSeqNum(), bedata, fence, config);
 }
 GSError ProducerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, sptr<SyncFence>& fence,
-                                       int64_t &timestamp, Rect &damage)
+                                       int64_t &timestamp, std::vector<Rect>& damages)
 {
     return GSERROR_NOT_SUPPORT;
 }
@@ -167,7 +167,7 @@ GSError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer,
 }
 
 GSError ProducerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
-    int64_t &timestamp, Rect &damage)
+    int64_t &timestamp, std::vector<Rect>& damages)
 {
     return GSERROR_NOT_SUPPORT;
 }

@@ -53,14 +53,7 @@ private:
         .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
         .timeout = 0,
     };
-    BufferFlushConfig flushConfig_ = {
-        .damage = {
-            .x = 0,
-            .y = 0,
-            .w = 0x100,
-            .h = 0x100,
-        },
-    };
+    BufferFlushConfig flushConfig_;
 
     void CreateSurface();
 };

@@ -181,12 +181,9 @@ static void DrawSurface(std::shared_ptr<RSSurfaceNode> surfaceNode, int32_t widt
     LOGI("buffer width:%{public}d, height:%{public}d", buffer->GetWidth(), buffer->GetHeight());
     DoDraw(addr, buffer->GetWidth(), buffer->GetHeight(), index);
 
-    BufferFlushConfig flushConfig = {
-        .damage = {
-            .w = buffer->GetWidth(),
-            .h = buffer->GetHeight(),
-        },
-    };
+    BufferFlushConfig flushConfig;
+    Rect rect = { .w = buffer->GetWidth(), .h = buffer->GetHeight(), };
+	flushConfig.damages.push_back(rect);
     ret = surface->FlushBuffer(buffer, -1, flushConfig);
     LOGI("flushBuffer ret is: %{public}s", SurfaceErrorStr(ret).c_str());
 }

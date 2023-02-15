@@ -84,12 +84,9 @@ SurfaceError LayerContext::DrawBuffer(TestFunc testFunc)
         buffer->GetBufferHandle()->stride);
     DrawBaseLayer(addr, buffer->GetWidth(), buffer->GetHeight(), testFunc);
 
-    BufferFlushConfig flushConfig = {
-        .damage = {
-        .w = src_.w,
-        .h = src_.h,
-        },
-    };
+    BufferFlushConfig flushConfig;
+    Rect rect = { .w = src_.w, .h = src_.h, };
+	flushConfig.damages.push_back(rect);
 
     ret = pSurface_->FlushBuffer(buffer, -1, flushConfig);
     if (ret != SURFACE_ERROR_OK) {
@@ -104,8 +101,8 @@ SurfaceError LayerContext::FillHDILayer()
     OHOS::sptr<SurfaceBuffer> buffer = nullptr;
     int32_t acquireFence = -1;
     int64_t timestamp;
-    OHOS::Rect damage;
-    SurfaceError ret = cSurface_->AcquireBuffer(buffer, acquireFence, timestamp, damage);
+    std::vector<OHOS::Rect> damages;
+    SurfaceError ret = cSurface_->AcquireBuffer(buffer, acquireFence, timestamp, damageS);
     UniqueFd acquireFenceFd(acquireFence);
     if (ret != SURFACE_ERROR_OK) {
         LOGE("Acquire buffer failed");

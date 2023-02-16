@@ -44,7 +44,7 @@ int TextShaper::Shape(const VariantSpan &span, const TypographyStyle &ys,
     auto ts = span.TryToTextSpan();
     auto ret = DoShape(ts, xs, ys, fontProviders);
     if (ret) {
-        LOG2EX(ERROR) << "DoShape is failed";
+        LOG2EX(ERROR) << "DoShape failed";
         return 1;
     }
 

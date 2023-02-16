@@ -16,6 +16,7 @@
 #include "typography.h"
 
 #include "engine_adapter/skia_adapter/skia_canvas.h"
+#include "texgine_canvas.h"
 
 #include "convert.h"
 
@@ -52,7 +53,7 @@ Typography::Typography(std::shared_ptr<Texgine::Typography> typography)
 
 double Typography::GetMaxWidth() const
 {
-    return typography_->GetWidthLimit();
+    return typography_->GetMaxWidth();
 }
 
 double Typography::GetHeight() const
@@ -107,14 +108,16 @@ void Typography::Layout(double width)
 
 void Typography::Paint(SkCanvas *canvas, double x, double y)
 {
-    return typography_->Paint(*canvas, x, y);
+    auto texgineCanvas = std::make_shared<Texgine::TexgineCanvas>();
+    texgineCanvas->SetCanvas(canvas);
+    return typography_->Paint(*texgineCanvas, x, y);
 }
 
 void Typography::Paint(Drawing::Canvas *drawCanvas, double x, double y)
 {
     std::shared_ptr<Drawing::CoreCanvasImpl> coreCanvas = drawCanvas->GetCanvasData();
-    auto skiacavas = static_cast<Drawing::SkiaCanvas *>(coreCanvas.get());
-    auto canvas = skiacavas->ExportSkCanvas();
+    auto drawingCanvas = static_cast<Drawing::SkiaCanvas *>(coreCanvas.get());
+    auto canvas = drawingCanvas->ExportSkCanvas();
     Paint(canvas, x, y);
 }
 

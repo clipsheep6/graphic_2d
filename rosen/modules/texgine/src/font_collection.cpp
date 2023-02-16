@@ -117,9 +117,9 @@ std::shared_ptr<Typeface> FontCollection::FindFallBackTypeface(const uint32_t &c
 
     // fallback
     std::vector<const char *> bcp47;
-    if (script.empty() == false) {
+    if (!script.empty()) {
         bcp47.push_back(script.data());
-    } else if (locale.empty() == false) {
+    } else if (!locale.empty()) {
         bcp47.push_back(locale.data());
     }
 

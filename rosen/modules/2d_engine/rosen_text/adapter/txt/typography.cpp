@@ -121,8 +121,8 @@ void Typography::Paint(SkCanvas *canvas, double x, double y)
 void Typography::Paint(Drawing::Canvas *drawCanvas, double x, double y)
 {
     std::shared_ptr<Drawing::CoreCanvasImpl> coreCanvas = drawCanvas->GetCanvasData();
-    auto skiacavas = static_cast<Drawing::SkiaCanvas *>(coreCanvas.get());
-    auto canvas = skiacavas->ExportSkCanvas();
+    auto drawingCanvas = static_cast<Drawing::SkiaCanvas *>(coreCanvas.get());
+    auto canvas = drawingCanvas->ExportSkCanvas();
     paragraph_->Paint(canvas, x, y);
 }
 

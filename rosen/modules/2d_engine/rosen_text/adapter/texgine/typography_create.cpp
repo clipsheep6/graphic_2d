@@ -15,6 +15,8 @@
 
 #include "typography_create.h"
 
+#include "texgine_canvas.h"
+
 #include "convert.h"
 #include "typography.h"
 
@@ -82,7 +84,7 @@ public:
         return span_.baselineOffset;
     }
 
-    void Paint(SkCanvas &canvas, double offsetx, double offsety) override
+    void Paint(Texgine::TexgineCanvas &canvas, double offsetx, double offsety) override
     {
     }
 

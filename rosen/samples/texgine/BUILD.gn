@@ -50,9 +50,9 @@ ohos_executable("texgine_sample_align") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -74,9 +74,9 @@ ohos_executable("texgine_sample_alignment") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -98,9 +98,9 @@ ohos_executable("texgine_sample_calibrate") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -122,9 +122,9 @@ ohos_executable("texgine_sample_decoration") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -146,9 +146,9 @@ ohos_executable("texgine_sample_direction") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -170,9 +170,9 @@ ohos_executable("texgine_sample_mix") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -194,9 +194,9 @@ ohos_executable("texgine_sample_shadow") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -221,9 +221,9 @@ ohos_executable("texgine_sample_bug") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -245,9 +245,9 @@ ohos_executable("texgine_sample_dynamic_font") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -269,9 +269,9 @@ ohos_executable("texgine_sample_emoji") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -293,9 +293,9 @@ ohos_executable("texgine_sample_font_style") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -317,9 +317,9 @@ ohos_executable("texgine_sample_feature") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -341,9 +341,9 @@ ohos_executable("texgine_sample_glyph_position") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -365,9 +365,9 @@ ohos_executable("texgine_sample_intrinsic_width") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -389,9 +389,9 @@ ohos_executable("texgine_sample_spacing") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -413,9 +413,9 @@ ohos_executable("texgine_sample_strut") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -437,9 +437,9 @@ ohos_executable("texgine_sample_text_color") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -461,9 +461,9 @@ ohos_executable("texgine_sample_weight_style") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -485,9 +485,9 @@ ohos_executable("texgine_sample_word_boundary") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -509,9 +509,9 @@ ohos_executable("texgine_sample_ellipsis") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]
@@ -533,9 +533,9 @@ ohos_executable("texgine_sample_layout") {
   defines = [ "RESOURCE_PATH_PREFIX=\"/system/etc/test_resources/\"" ]
 
   deps = [
-    ":libskia_rs_framework",
     ":texgine_sample_resources",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
   part_name = "graphic_standard"

@@ -29,10 +29,10 @@ namespace Texgine {
  *  there are multiple lines of text.
  */
 enum class BreakStrategy {
-    Greedy,                 //!< this strategy wraps lines when they have to.
-    HighQuality,            //!< this strategy aims to make the line-wrapped result
-                            //   look as neat as possible, not jagged.
-    Balanced = HighQuality, //!< to be done.
+    Greedy,                 // this strategy wraps lines when they have to.
+    HighQuality,            // this strategy aims to make the line-wrapped result
+                            // look as neat as possible, not jagged.
+    Balanced = HighQuality, // to be done.
 };
 
 /** \enum FontStyle
@@ -48,16 +48,16 @@ enum class FontStyle {
  *  FontWeight is font weight style.
  */
 enum class FontWeight {
-    W100 = 0, //!< weight value 100 thin.
-    W200 = 1, //!< weight value 200.
-    W300 = 2, //!< weight value 300.
-    W400 = 3, //!< weight value 400 normal.
-    W500 = 4, //!< weight value 500.
-    W600 = 5, //!< weight value 600.
-    W700 = 6, //!< weight value 700 bold.
-    W800 = 7, //!< weight value 800.
-    W900 = 8, //!< weight value 900.
-    MAX,      //!< use for check.
+    W100 = 0, // weight value 100 thin.
+    W200 = 1, // weight value 200.
+    W300 = 2, // weight value 300.
+    W400 = 3, // weight value 400 normal.
+    W500 = 4, // weight value 500.
+    W600 = 5, // weight value 600.
+    W700 = 6, // weight value 700 bold.
+    W800 = 7, // weight value 800.
+    W900 = 8, // weight value 900.
+    MAX,      // use for check.
 };
 
 /** \enum TextAlign
@@ -65,16 +65,16 @@ enum class FontWeight {
  *  The bit field has an alignment style and trim style.
  */
 enum class TextAlign {
-    Default = 0,   //!< alias for Start.
-    Start = 1,     //!< LTR: align left, RTL: align right.
-    End = 2,       //!< LTR: align right, RTL: align left.
-    Left = 3,      //!< align left.
-    Right = 4,     //!< align right.
-    Center = 5,    //!< center alignment.
-    Justify = 6,   //!< justified alignment.
-    Scattered = 7, //!< scatter alignment.
+    Default = 0,   // alias for Start.
+    Start = 1,     // LTR: align left, RTL: align right.
+    End = 2,       // LTR: align right, RTL: align left.
+    Left = 3,      // align left.
+    Right = 4,     // align right.
+    Center = 5,    // center alignment.
+    Justify = 6,   // justified alignment.
+    Scattered = 7, // scatter alignment.
     // trim part
-    Trim = 0x8,    //!< when trim is enabled, whitespace is not considered.
+    Trim = 0x8,    // when trim is enabled, whitespace is not considered.
     StartTrim = Start | Trim,
     EndTrim = End | Trim,
     LeftTrim = Left | Trim,
@@ -104,11 +104,11 @@ enum class TextBaseline {
  *  Use bit fields for storage.
  */
 enum class TextDecoration : int {
-    None = 0x0,        //!< no style.
-    Underline = 0x1,   //!< draw underline.
-    Overline = 0x2,    //!< draw overline.
-    Linethrough = 0x4, //!< draw line through text.
-    Baseline = 0x8,    //!< draw baseline.
+    None = 0x0,        // no style.
+    Underline = 0x1,   // draw underline.
+    Overline = 0x2,    // draw overline.
+    Linethrough = 0x4, // draw line through text.
+    Baseline = 0x8,    // draw baseline.
 };
 TextDecoration operator &(TextDecoration const &lhs, TextDecoration const &rhs);
 TextDecoration operator |(TextDecoration const &lhs, TextDecoration const &rhs);
@@ -123,28 +123,28 @@ void operator +=(TextDecoration &lhs, TextDecoration const &rhs);
  *  TextDecorationStyle is decoration line style.
  */
 enum class TextDecorationStyle {
-    Solid,  //!< solid line
-    Double, //!< double line
-    Dotted, //!< dotted line
-    Dashed, //!< dashed line
-    Wavy,   //!< wavy line
+    Solid,  // solid line
+    Double, // double line
+    Dotted, // dotted line
+    Dashed, // dashed line
+    Wavy,   // wavy line
 };
 
 /** \enum TextDirection
  *  TextDirection is text direction style.
  */
 enum class TextDirection {
-    LTR, //!< left to right
-    RTL, //!< right to left
+    LTR, // left to right
+    RTL, // right to left
 };
 
 /** \enum WordBreakType
  *  WordBreakType is the type of word break when multiline text wraps.
  */
 enum class WordBreakType {
-    Normal,    //!< to be done.
-    BreakAll,  //!< break occur after any characters.
-    BreakWord, //!< break only occur after word.
+    Normal,    // to be done.
+    BreakAll,  // break occur after any characters.
+    BreakWord, // break only occur after word.
 };
 } // namespace Texgine
 

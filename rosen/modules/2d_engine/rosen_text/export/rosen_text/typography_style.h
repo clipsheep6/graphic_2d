@@ -30,21 +30,21 @@ struct TypographyStyle {
     FontWeight fontWeight_ = FontWeight::W400;
     FontStyle fontStyle_ = FontStyle::Normal;
     std::string fontFamily_ = "";
-    double fontSize_ = 14;
-    double heightScale_ = 1;
+    double fontSize_ = 14.0;
+    double heightScale_ = 1.0;
     bool heightOnly_ = false;
     bool useLineStyle_ = false;
 
     FontWeight lineStyleFontWeight_ = FontWeight::W400;
     FontStyle lineStyleFontStyle_ = FontStyle::Normal;
     std::vector<std::string> lineStyleFontFamilies_;
-    double lineStyleFontSize_ = 14;
-    double lineStyleHeightScale_ = 1;
+    double lineStyleFontSize_ = 14.0;
+    double lineStyleHeightScale_ = 1.0;
     bool lineStyleHeightOnly_ = false;
-    double lineStyleSpacingScale_ = -1;
+    double lineStyleSpacingScale_ = -1.0;
     bool lineStyleOnly_ = false;
 
-    TextAlign textAlign_ = TextAlign::Start;
+    TextAlign textAlign_ = TextAlign::START;
     TextDirection textDirection_ = TextDirection::LTR;
     size_t maxLines_ = 1e9;
     std::u16string ellipsis_;

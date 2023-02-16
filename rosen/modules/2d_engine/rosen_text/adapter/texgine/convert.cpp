@@ -67,6 +67,10 @@ Texgine::TextStyle Convert(const TextStyle &style)
                                           style.decorationColor_.GetRed(),
                                           style.decorationColor_.GetGreen(),
                                           style.decorationColor_.GetBlue());
+    auto foreground = std::make_shared<Texgine::TexginePaint>();
+    foreground->SetPaint(*style.foreground_);
+    auto background = std::make_shared<Texgine::TexginePaint>();
+    background->SetPaint(*style.background_);
     Texgine::TextStyle xs = {
         .fontWeight_ = Convert(style.fontWeight_),
         .fontStyle_ = Convert(style.fontStyle_),
@@ -83,8 +87,8 @@ Texgine::TextStyle Convert(const TextStyle &style)
         .heightScale_ = style.heightScale_,
         .letterSpacing_ = style.letterSpacing_,
         .wordSpacing_ = style.wordSpacing_,
-        .foreground_ = style.foreground_,
-        .background_ = style.background_,
+        .foreground_ = *foreground,
+        .background_ = *background,
     };
 
     for (const auto &[tag, value] : style.fontFeatures_.GetFontFeatures()) {
@@ -117,7 +121,7 @@ Boundary Convert(const Texgine::Boundary &range)
 
 TextRect Convert(const Texgine::TextRect &box)
 {
-    Drawing::RectF rect(box.rect_.fLeft, box.rect_.fTop, box.rect_.fRight, box.rect_.fBottom);
+    Drawing::RectF rect(*box.rect_.fLeft_, *box.rect_.fTop_, *box.rect_.fRight_, *box.rect_.fBottom_);
     return { rect, Convert(box.direction_) };
 }
 
@@ -238,17 +242,17 @@ Texgine::FontStyle Convert(const FontStyle &style)
 Texgine::TextAlign Convert(const TextAlign &align)
 {
     switch (align) {
-        case TextAlign::Left:
+        case TextAlign::LEFT:
             return Texgine::TextAlign::Left;
-        case TextAlign::Right:
+        case TextAlign::RIGHT:
             return Texgine::TextAlign::Right;
-        case TextAlign::Center:
+        case TextAlign::CENTER:
             return Texgine::TextAlign::Center;
-        case TextAlign::Justify:
+        case TextAlign::JUSTIFY:
             return Texgine::TextAlign::Justify;
-        case TextAlign::Start:
+        case TextAlign::START:
             return Texgine::TextAlign::Start;
-        case TextAlign::End:
+        case TextAlign::END:
             return Texgine::TextAlign::End;
     }
     return Texgine::TextAlign::Start;

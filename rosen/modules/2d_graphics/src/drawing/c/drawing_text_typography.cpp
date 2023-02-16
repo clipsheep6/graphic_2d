@@ -86,31 +86,31 @@ void OH_Drawing_SetTypographyTextAlign(OH_Drawing_TypographyStyle* style, int al
     TextAlign textAlign;
     switch (align) {
         case TEXT_ALIGN_LEFT: {
-            textAlign = TextAlign::Left;
+            textAlign = TextAlign::LEFT;
             break;
         }
         case TEXT_ALIGN_RIGHT: {
-            textAlign = TextAlign::Right;
+            textAlign = TextAlign::RIGHT;
             break;
         }
         case TEXT_ALIGN_CENTER: {
-            textAlign = TextAlign::Center;
+            textAlign = TextAlign::CENTER;
             break;
         }
         case TEXT_ALIGN_JUSTIFY: {
-            textAlign = TextAlign::Justify;
+            textAlign = TextAlign::JUSTIFY;
             break;
         }
         case TEXT_ALIGN_START: {
-            textAlign = TextAlign::Start;
+            textAlign = TextAlign::START;
             break;
         }
         case TEXT_ALIGN_END: {
-            textAlign = TextAlign::End;
+            textAlign = TextAlign::END;
             break;
         }
         default: {
-            textAlign = TextAlign::Left;
+            textAlign = TextAlign::LEFT;
         }
     }
     ConvertToOriginalText<TypographyStyle>(style)->textAlign_ = textAlign;

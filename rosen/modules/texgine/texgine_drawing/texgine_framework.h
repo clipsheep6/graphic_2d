@@ -18,9 +18,8 @@
 
 #include <memory>
 
-#include <skia_framework.h>
-
 #include "texgine_canvas.h"
+#include "skia_framework.h"
 
 namespace Texgine {
 class TexgineFramework {
@@ -29,6 +28,8 @@ public:
 
     static void DrawString(TexgineCanvas &canvas, const std::string &str, double x, double y);
     void SetWindowWidth(int width);
+    void SetWindowHeight(int height);
+    void SetWindowScale(double scale);
     void SetDrawFunc(const DrawFunc &onDraw);
     void Run();
 

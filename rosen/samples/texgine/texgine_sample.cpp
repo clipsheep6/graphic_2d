@@ -13,20 +13,20 @@
  * limitations under the License.
  */
 
-#include <include/core/SkCanvas.h>
-#include <include/effects/SkDashPathEffect.h>
-#include <skia_framework.h>
 #include <texgine/typography.h>
 #include <texgine/utils/exlog.h>
 #include <texgine/utils/memory_usage_scope.h>
 #include <texgine/utils/trace.h>
 
 #include "feature_test/feature_test_framework.h"
+#include "texgine_canvas.h"
+#include "texgine_dash_path_effect.h"
+#include "texgine_framework.h"
 
 using namespace Texgine;
 
 namespace {
-SkColor colors[] = {
+uint32_t colors[] = {
     SK_ColorRED,
     SK_ColorYELLOW,
     SK_ColorGREEN,
@@ -36,23 +36,23 @@ SkColor colors[] = {
 };
 } // namespace
 
-void OnDraw(SkCanvas &canvas)
+void OnDraw(TexgineCanvas &canvas)
 {
-    SkPaint actualBorderPaint;
-    actualBorderPaint.setStyle(SkPaint::kStroke_Style);
+    TexginePaint actualBorderPaint;
+    actualBorderPaint.SetStyle(TexginePaint::kStroke_Style);
 
-    SkPaint borderPaint = actualBorderPaint;
-    const SkScalar intervals[2] = {1.0f, 1.0f};
-    borderPaint.setPathEffect(SkDashPathEffect::Make(intervals, 2, 0.0f));
+    TexginePaint borderPaint = actualBorderPaint;
+    const float intervals[2] = {1.0f, 1.0f};
+    borderPaint.SetPathEffect(TexgineDashPathEffect::Make(intervals, 2, 0.0f));
 
-    SkPaint testBorderPaint = borderPaint;
-    testBorderPaint.setColor(0xff000000);
+    TexginePaint testBorderPaint = borderPaint;
+    testBorderPaint.SetColor(0xff000000);
 
-    SkPaint rainbowPaint;
-    rainbowPaint.setStyle(SkPaint::kFill_Style);
+    TexginePaint rainbowPaint;
+    rainbowPaint.SetStyle(TexginePaint::kFill_Style);
 
-    canvas.save();
-    canvas.translate(50, 50);
+    canvas.Save();
+    canvas.Translate(50, 50);
     double y = 0;
 
     const auto &tests = FeatureTestCollection::GetInstance().GetTests();
@@ -62,8 +62,8 @@ void OnDraw(SkCanvas &canvas)
         }
 
         double yStart = y;
-        canvas.save();
-        canvas.translate(50, 50);
+        canvas.Save();
+        canvas.Translate(50, 50);
         const auto &option = ptest->GetFeatureTestOption();
         const auto &typographies = ptest->GetTypographies();
 
@@ -71,7 +71,7 @@ void OnDraw(SkCanvas &canvas)
         double x = 0;
         for (const auto &data : typographies) {
             const auto &typography = data.typography;
-            if ((x + typography->GetWidthLimit() >= 800) || (x != 0 && data.atNewline)) {
+            if ((x + typography->GetMaxWidth() >= 800) || (x != 0 && data.atNewline)) {
                 x = 0;
                 y += maxHeight + option.marginTop;
                 maxHeight = 0;
@@ -84,47 +84,48 @@ void OnDraw(SkCanvas &canvas)
             }
 
             if (data.needRainbowChar.value_or(option.needRainbowChar)) {
-                canvas.save();
-                canvas.translate(x, y);
+                canvas.Save();
+                canvas.Translate(x, y);
                 Boundary boundary = {data.rainbowStart, data.rainbowEnd};
                 auto boxes = typography->GetTextRectsByBoundary(boundary, data.hs, data.ws);
                 int32_t rainbowColorIndex = 0;
                 for (auto &box : boxes) {
-                    rainbowPaint.setColor(colors[rainbowColorIndex++]);
-                    rainbowPaint.setAlpha(255 * 0.2);
-                    canvas.drawRect(box.rect_, rainbowPaint);
-                    rainbowPaint.setColor(SK_ColorGRAY);
-                    rainbowPaint.setAlpha(255 * 0.3);
-                    canvas.drawRect(box.rect_, rainbowPaint);
+                    rainbowPaint.SetColor(colors[rainbowColorIndex++]);
+                    rainbowPaint.SetAlpha(255 * 0.2);
+                    canvas.DrawRect(box.rect_, rainbowPaint);
+                    rainbowPaint.SetColor(SK_ColorGRAY);
+                    rainbowPaint.SetAlpha(255 * 0.3);
+                    canvas.DrawRect(box.rect_, rainbowPaint);
                     rainbowColorIndex %= sizeof(colors) / sizeof(*colors);
                 }
-                canvas.restore();
+                canvas.Restore();
             }
 
             if (!data.comment.empty()) {
-                SkiaFramework::DrawString(canvas, data.comment, x, y);
+                TexgineFramework::DrawString(canvas, data.comment, x, y);
             }
 
             if (option.needBorder) {
-                borderPaint.setColor(option.colorBorder);
-                canvas.drawRect(SkRect::MakeXYWH(x, y, typography->GetWidthLimit(),
-                    typography->GetHeight()), borderPaint);
+                borderPaint.SetColor(option.colorBorder);
+                auto rectLimit = TexgineRect::MakeXYWH(x, y, typography->GetMaxWidth(), typography->GetHeight());
+                canvas.DrawRect(rectLimit, borderPaint);
 
-                actualBorderPaint.setColor(option.colorBorder);
-                canvas.drawRect(SkRect::MakeXYWH(x, y, typography->GetActualWidth(),
-                    typography->GetHeight()), actualBorderPaint);
+                actualBorderPaint.SetColor(option.colorBorder);
+                auto rectActual = TexgineRect::MakeXYWH(x, y, typography->GetActualWidth(), typography->GetHeight());
+                canvas.DrawRect(rectActual, actualBorderPaint);
             }
 
-            x += typography->GetWidthLimit() + option.marginLeft;
+            x += typography->GetMaxWidth() + option.marginLeft;
             maxHeight = std::max(maxHeight, typography->GetHeight());
         }
         y += maxHeight + option.marginTop + 50;
 
-        canvas.restore();
-        canvas.drawRect(SkRect::MakeXYWH(0, yStart, 800, y - yStart), testBorderPaint);
-        SkiaFramework::DrawString(canvas, ptest->GetTestName(), 0, yStart);
+        canvas.Restore();
+        auto rect = TexgineRect::MakeXYWH(0, yStart, 800, y - yStart);
+        canvas.DrawRect(rect, testBorderPaint);
+        TexgineFramework::DrawString(canvas, ptest->GetTestName(), 0, yStart);
     }
-    canvas.restore();
+    canvas.Restore();
 }
 
 int main()
@@ -144,11 +145,11 @@ int main()
         }
     }
 
-    SkiaFramework sf;
-    sf.SetWindowWidth(720);
-    sf.SetWindowHeight(1280);
-    sf.SetWindowScale(720.0 / 900.0);
-    sf.SetDrawFunc(OnDraw);
-    sf.Run();
+    TexgineFramework tf;
+    tf.SetWindowWidth(720);
+    tf.SetWindowHeight(1280);
+    tf.SetWindowScale(720.0 / 900.0);
+    tf.SetDrawFunc(OnDraw);
+    tf.Run();
     return 0;
 }

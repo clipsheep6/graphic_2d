@@ -20,6 +20,9 @@
 #include "opentype_basic_type.h"
 
 namespace Texgine {
+#define FORMAT4 4
+#define FORMAT12 12
+
 struct CmapSubtable {
     OpenTypeBasicType::Uint16 format;
 };
@@ -104,7 +107,7 @@ int CmapParser::Parse(const char *data, int32_t size)
         const auto &subtable = *record.GetSubtable(data);
         // printf(" - platformID: %u, encodingID: %u, format: %u\n",
         //        record.platformID.get(), record.encodingID.get(), subtable.format.get());
-        if (subtable.format.Get() == 4) {
+        if (subtable.format.Get() == FORMAT4) {
             auto offset = record.subtableOffset.Get();
             if (ret = ParseFormat4(subtable, size - offset); ret) {
                 LOG2SO(WARN) << "ParseFormat4 failed with " << ret;
@@ -113,7 +116,7 @@ int CmapParser::Parse(const char *data, int32_t size)
             }
         }
 
-        if (subtable.format.Get() == 12) {
+        if (subtable.format.Get() == FORMAT12) {
             auto offset = record.subtableOffset.Get();
             if (ret = ParseFormat12(subtable, size - offset); ret) {
                 LOG2SO(WARN) << "ParseFormat12 failed with " << ret;

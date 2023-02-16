@@ -24,12 +24,12 @@ enum class TextDirection {
 };
 
 enum class TextAlign {
-    Left,
-    Right,
-    Center,
-    Justify,
-    Start,
-    End,
+    LEFT,
+    RIGHT,
+    CENTER,
+    JUSTIFY,
+    START,
+    END,
 };
 
 enum class BreakStrategy {
@@ -63,10 +63,10 @@ enum class FontWeight {
     W100, // thin
     W200,
     W300,
-    W400,
+    W400, // normal
     W500,
     W600,
-    W700,
+    W700, // bold
     W800,
     W900,
 };

@@ -34,7 +34,7 @@ public:
 
     TexginePaint();
     SkPaint GetPaint() const;
-    void SetStroke(bool isSet);
+    void SetPaint(SkPaint paint);
     void SetColor(uint32_t color);
     void SetAlphaf(float alpha);
     void SetStrokeWidth(double width);

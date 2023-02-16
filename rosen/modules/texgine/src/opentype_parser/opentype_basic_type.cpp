@@ -17,6 +17,8 @@
 
 namespace Texgine {
 namespace OpenTypeBasicType {
+#define MAXNUM 65536.0
+
 constexpr union {
     unsigned int i;
     unsigned char big;
@@ -73,7 +75,7 @@ uint32_t Uint32::Get() const
 
 float Fixed::Get() const
 {
-    return data.Get() / 65536.0;
+    return data.Get() / MAXNUM;
 }
 } // namespace OpenTypeBasicType
 } // namespace Texgine

@@ -20,7 +20,7 @@
 namespace Texgine {
 TexgineTypeface::TexgineTypeface()
 {
-    typeface_ = sk_make_sp<SkTypeface_Empty>();
+    typeface_ = SkTypeface::MakeDefault();
 }
 
 TexgineTypeface::TexgineTypeface(SkTypeface *tf): TexgineTypeface(sk_sp<SkTypeface>(tf))
@@ -67,7 +67,7 @@ int TexgineTypeface::GetUnitsPerEm()
 std::shared_ptr<TexgineTypeface> TexgineTypeface::MakeFromStream(
     std::unique_ptr<TexgineMemoryStream> stream, int index)
 {
-    auto skTypeface = SkTypeface::MakeFromStream(std::move(stream->GetStream()));
+    auto skTypeface = SkTypeface::MakeFromStream(stream->GetStream());
     return std::make_shared<TexgineTypeface>(skTypeface);
 }
 

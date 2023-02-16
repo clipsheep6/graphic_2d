@@ -11,21 +11,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//build/ohos.gni")
+
 config("texgine_drawing_public_config") {
   include_dirs = [
     ".",
+    "//foundation/graphic/graphic_2d/rosen/samples/texgine",
   ]
 }
 
-shared_library("texgine_drawing") {
-  public_configs = [ ":texgine_drawing_public_config" ]
-
-  public_deps = [
-    "//third_party/skia:libskia",
-    "//interfaces:skia_framework",
-    "//interfaces:skp_helper",
-    ]
-
+ohos_shared_library("libtexgine_drawing") {
   sources = [
     "texgine_canvas.cpp",
     "texgine_dash_path_effect.cpp",
@@ -36,7 +31,6 @@ shared_library("texgine_drawing") {
     "texgine_font_style.cpp",
     "texgine_font.cpp",
     "texgine_framework.cpp",
-    "texgine_helper.cpp",
     "texgine_mask_filter.cpp",
     "texgine_paint.cpp",
     "texgine_path_1d_path_effect.cpp",
@@ -51,11 +45,21 @@ shared_library("texgine_drawing") {
     "texgine_typeface.cpp",
   ]
 
-  deps = [
-  ]
+  public_configs = [ ":texgine_drawing_public_config" ]
 
   platform = current_os
   if (platform == "mingw") {
     platform = "windows"
   }
+
+  public_deps = [
+    "//third_party/flutter/build/skia:ace_skia_$platform",
+    "//foundation/graphic/graphic_2d/rosen/samples/texgine/:libskia_rs_framework",
+  ]
+
+  deps = [
+  ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }

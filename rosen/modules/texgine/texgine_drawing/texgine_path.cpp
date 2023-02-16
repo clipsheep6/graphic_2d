@@ -28,7 +28,7 @@ void TexginePath::SetPath(std::shared_ptr<SkPath> path)
 
 TexginePath &TexginePath::AddOval(TexgineRect &oval, TexginePathDirection dir)
 {
-    *path_ = path_->addOval(*oval.GetRect(), static_cast<SkPathDirection>(dir));
+    *path_ = path_->addOval(*oval.GetRect(), static_cast<SkPath::Direction>(dir));
     return *this;
 }
 

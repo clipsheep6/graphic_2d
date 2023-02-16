@@ -97,9 +97,9 @@ double TypographyImpl::GetHeight() const
     return height_;
 }
 
-double TypographyImpl::GetWidthLimit() const
+double TypographyImpl::GetMaxWidth() const
 {
-    return widthLimit_;
+    return maxWidth_;
 }
 
 double TypographyImpl::GetActualWidth() const
@@ -268,16 +268,16 @@ Boundary TypographyImpl::GetWordBoundaryByIndex(size_t index) const
     return {right, right};
 }
 
-void TypographyImpl::Layout(double widthLimit)
+void TypographyImpl::Layout(double maxWidth)
 {
     boundariesCache_ = {};
     try {
         ScopedTrace scope("TypographyImpl::Layout");
         LOGSCOPED(sl, LOG2EX_DEBUG(), "TypographyImpl::Layout");
-        LOG2EX(INFO) << "Layout widthLimit: " << widthLimit << ", spans.size(): " << spans_.size();
-        widthLimit_ = widthLimit;
+        LOG2EX(INFO) << "Layout maxWidth: " << maxWidth << ", spans.size(): " << spans_.size();
+        maxWidth_ = maxWidth;
 
-        lineMetrics_ = Shaper::Shape(spans_, typographyStyle_, fontProviders_, widthLimit);
+        lineMetrics_ = Shaper::Shape(spans_, typographyStyle_, fontProviders_, maxWidth);
         if (lineMetrics_.size() == 0) {
             LOG2EX(ERROR) << "Shape failed";
             return;
@@ -358,7 +358,7 @@ void TypographyImpl::ConsiderEllipsis()
     }
 
     // 对第一个span和省略号进行保护
-    while (width > widthLimit_ - ellipsisWidth && lastline.lineSpans_.size() > 1) {
+    while (width > maxWidth_ - ellipsisWidth && lastline.lineSpans_.size() > 1) {
         width -= lastline.lineSpans_.back().GetWidth();
         lastline.lineSpans_.pop_back();
     }
@@ -721,9 +721,9 @@ void TypographyImpl::ApplyAlignment()
         if (TextAlign::Right == align_
             || (TextAlign::Justify == align_
                 && TextDirection::RTL == typographyStyle_.direction_)) {
-            typographyOffsetX = widthLimit_ - line.width_;
+            typographyOffsetX = maxWidth_ - line.width_;
         } else if (TextAlign::Center == align_) {
-            typographyOffsetX = (widthLimit_ - line.width_) * HALF;
+            typographyOffsetX = (maxWidth_ - line.width_) * HALF;
         }
 
         for (auto &span : line.lineSpans_) {

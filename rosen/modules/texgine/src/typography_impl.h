@@ -43,7 +43,7 @@ public:
                    std::unique_ptr<FontProviders> providers);
 
     // |Typography|
-    double GetWidthLimit() const override;
+    double GetMaxWidth() const override;
 
     // |Typography|
     double GetHeight() const override;
@@ -123,7 +123,7 @@ private:
     std::vector<double> lineMaxAscent_;
     std::vector<double> lineMaxCoveredAscent_;
     std::vector<double> lineMaxCoveredDescent_;
-    double widthLimit_ = 0.0;
+    double maxWidth_ = 0.0;
     double maxLineWidth_ = 0.0;
     double height_ = 0.0;
     double maxIntrinsicWidth_ = 0.0;

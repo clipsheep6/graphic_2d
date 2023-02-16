@@ -26,9 +26,9 @@ SkPaint TexginePaint::GetPaint() const
     return *paint_.get();
 }
 
-void TexginePaint::SetStroke(bool isSet)
+void TexginePaint::SetPaint(SkPaint paint)
 {
-    paint_->setStroke(isSet);
+    *paint_ = paint;
 }
 
 void TexginePaint::SetColor(uint32_t color)

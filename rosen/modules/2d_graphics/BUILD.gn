@@ -130,7 +130,7 @@ template("graphics2d_source_set") {
       }
     }
 
-    deps += [ "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text:rosen_text_inner" ]
+    deps += [ "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text:rosen_text_texgine" ]
 
     part_name = "graphic_standard"
     subsystem_name = "graphic"

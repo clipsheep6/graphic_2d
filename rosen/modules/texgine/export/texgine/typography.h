@@ -97,7 +97,7 @@ public:
 
     // Returns the width limit provided in Layout() method.
     // This is the maximum width limit for multi-line text.
-    virtual double GetWidthLimit() const = 0;
+    virtual double GetMaxWidth() const = 0;
 
     // Returns the height of the laid out Typography.
     virtual double GetHeight() const = 0;

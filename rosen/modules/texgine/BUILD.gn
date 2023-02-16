@@ -47,7 +47,6 @@ ohos_shared_library("libtexgine") {
     "src/dynamic_font_style_set.cpp",
     "src/font_collection.cpp",
     "src/font_providers.cpp",
-    "src/font_style_set.cpp",
     "src/font_styles.cpp",
     "src/init.cpp",
     "src/line_breaker.cpp",
@@ -76,6 +75,7 @@ ohos_shared_library("libtexgine") {
     "src/utils/logger.cpp",
     "src/utils/memory_reporter.cpp",
     "src/utils/trace_ohos.cpp",
+    "src/variant_font_style_set.cpp",
     "src/variant_span.cpp",
     "src/word_breaker.cpp",
   ]
@@ -95,7 +95,7 @@ ohos_shared_library("libtexgine") {
   deps = [
     "//foundation/graphic/graphic_2d/rosen/build/flutter/icu:rosen_libicu_$platform",
     "//third_party/harfbuzz:harfbuzz_static",
-    "texgine_drawing:texgine_drawing",
+    "texgine_drawing:libtexgine_drawing",
   ]
 
   public_deps = [ "//third_party/flutter/build/skia:ace_skia_$platform" ]

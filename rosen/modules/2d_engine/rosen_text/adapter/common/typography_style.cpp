@@ -37,10 +37,10 @@ TextStyle TypographyStyle::GetTextStyle() const
 
 TextAlign TypographyStyle::GetEffectiveAlign() const
 {
-    if (textAlign_ == TextAlign::Start) {
-        return (textDirection_ == TextDirection::LTR) ? TextAlign::Left : TextAlign::Right;
-    } else if (textAlign_ == TextAlign::End) {
-        return (textDirection_ == TextDirection::RTL) ? TextAlign::Left : TextAlign::Right;
+    if (textAlign_ == TextAlign::START) {
+        return (textDirection_ == TextDirection::LTR) ? TextAlign::LEFT : TextAlign::RIGHT;
+    } else if (textAlign_ == TextAlign::END) {
+        return (textDirection_ == TextDirection::RTL) ? TextAlign::LEFT : TextAlign::RIGHT;
     } else {
         return textAlign_;
     }

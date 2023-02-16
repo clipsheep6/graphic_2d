@@ -35,6 +35,16 @@ void TexgineFramework::SetWindowWidth(int width)
     framework_->SetWindowWidth(width);
 }
 
+void TexgineFramework::SetWindowHeight(int height)
+{
+    framework_->SetWindowHeight(height);
+}
+
+void TexgineFramework::SetWindowScale(double scale)
+{
+    framework_->SetWindowScale(scale);
+}
+
 void TexgineFramework::SetDrawFunc(const DrawFunc &onDraw)
 {
     drawFunc = onDraw;

@@ -34,15 +34,15 @@ DEFINE_CONVERT_FUNC(std::shared_ptr<OHOS::Rosen::FontCollection>,
 
 // from txt to rosen_text
 DEFINE_CONVERT_FUNC(txt::Paragraph::PositionWithAffinity, IndexAndAffinity);
-DEFINE_CONVERT_FUNC(txt::Paragraph::Range<size_t>,        Boundary);
-DEFINE_CONVERT_FUNC(txt::Paragraph::TextBox,              TextRect);
+DEFINE_CONVERT_FUNC(txt::Paragraph::Range<size_t>, Boundary);
+DEFINE_CONVERT_FUNC(txt::Paragraph::TextBox, TextRect);
 
 // from rosen_text to txt
 DEFINE_CONVERT_FUNC(TextRectHeightStyle, txt::Paragraph::RectHeightStyle);
 DEFINE_CONVERT_FUNC(TextRectWidthStyle,  txt::Paragraph::RectWidthStyle);
 DEFINE_CONVERT_FUNC(TypographyStyle, txt::ParagraphStyle);
-DEFINE_CONVERT_FUNC(PlaceholderSpan,  txt::PlaceholderRun);
-DEFINE_CONVERT_FUNC(TextStyle,       txt::TextStyle);
+DEFINE_CONVERT_FUNC(PlaceholderSpan, txt::PlaceholderRun);
+DEFINE_CONVERT_FUNC(TextStyle, txt::TextStyle);
 
 #undef DEFINE_CONVERT_FUNC
 } // namespace AdapterTxt

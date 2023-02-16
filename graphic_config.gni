@@ -21,6 +21,7 @@ declare_args() {
   graphic_standard_feature_enable_afbc = false
   graphic_standard_feature_freemem_enable = false
   graphic_standard_feature_parallel_render_enable = true
+  graphic_standard_feature_new_skia_enable = true
 }
 
 if (graphic_standard_feature_ace_enable_gpu) {

@@ -52,7 +52,7 @@ void SkiaCamera::RotateZ(scalar deg)
 
 void SkiaCamera::SetCameraPos(scalar x, scalar y, scalar z)
 {
-#if defined(USE_CANVASKIT0310_SKIA)
+#if defined(USE_CANVASKIT0310_SKIA) || defined(USE_NEW_SKIA)
     return;
 #else
     view_.setCameraLocation(x, y, z);
@@ -61,7 +61,7 @@ void SkiaCamera::SetCameraPos(scalar x, scalar y, scalar z)
 
 scalar SkiaCamera::GetCameraPosX() const
 {
-#if defined(USE_CANVASKIT0310_SKIA)
+#if defined(USE_CANVASKIT0310_SKIA) || defined(USE_NEW_SKIA)
     return 0;
 #else
     return view_.getCameraLocationX();
@@ -70,7 +70,7 @@ scalar SkiaCamera::GetCameraPosX() const
 
 scalar SkiaCamera::GetCameraPosY() const
 {
-#if defined(USE_CANVASKIT0310_SKIA)
+#if defined(USE_CANVASKIT0310_SKIA) || defined(USE_NEW_SKIA)
     return 0;
 #else
     return view_.getCameraLocationY();
@@ -79,7 +79,7 @@ scalar SkiaCamera::GetCameraPosY() const
 
 scalar SkiaCamera::GetCameraPosZ() const
 {
-#if defined(USE_CANVASKIT0310_SKIA)
+#if defined(USE_CANVASKIT0310_SKIA) || defined(USE_NEW_SKIA)
     return 0;
 #else
     return view_.getCameraLocationZ();

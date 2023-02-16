@@ -292,6 +292,9 @@ void RSMainThread::SetFocusAppInfo(
 
 void RSMainThread::Start()
 {
+    std::string dumpString;
+    MemoryManager::DisableMallocCache(dumpString);
+    RS_LOGI("RSMainThread::Start %s\n", dumpString.c_str());
     if (runner_) {
         runner_->Run();
     }

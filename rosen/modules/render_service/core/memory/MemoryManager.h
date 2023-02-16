@@ -20,5 +20,7 @@ namespace OHOS::Rosen {
 class MemoryManager {
 public:
     static void DumpMemoryUsage(DfxString& log, const GrContext* grContext);
+    static void DisableMallocCache(std::string& log);
+    static void EnableMallocCache(std::string& log);
 };
 } // namespace OHOS::Rosen

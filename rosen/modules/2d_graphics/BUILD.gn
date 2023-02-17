@@ -71,19 +71,6 @@ template("graphics2d_source_set") {
       "$drawing_src_dir/utils/matrix.cpp",
     ]
 
-    sources += [
-      "$rosen_text_root/properties/font_collection_txt.cpp",
-      "$rosen_text_root/properties/placeholder_run.cpp",
-      "$rosen_text_root/properties/rosen_converter_txt.cpp",
-      "$rosen_text_root/properties/text_style.cpp",
-      "$rosen_text_root/properties/typography_create_txt.cpp",
-      "$rosen_text_root/properties/typography_style.cpp",
-      "$rosen_text_root/properties/typography_txt.cpp",
-      "$rosen_text_root/ui/font_collection.cpp",
-      "$rosen_text_root/ui/typography.cpp",
-      "$rosen_text_root/ui/typography_create.cpp",
-    ]
-
     include_dirs = [
       "include",
       "$src_dir",
@@ -107,14 +94,14 @@ template("graphics2d_source_set") {
         "//foundation/graphic/graphic_2d/rosen/build/flutter/libtxt:thirdparty_lib_txt_rosen_$platform",
         "//third_party/bounds_checking_function:libsec_static",
       ]
-      include_dirs += [
-        "$flutter_root/engine",
-        "$flutter_root/engine/flutter/third_party/txt/src",
-      ]
+      include_dirs += [ "$flutter_root/engine" ]
       defines += [ "SUPPORT_OHOS_PIXMAP" ]
 
-      if (graphic_standard_feature_new_skia_enable) {
+      if (use_new_skia) {
         defines += [ "USE_NEW_SKIA" ]
+        include_dirs += [ "$flutter_root/txt/src" ]
+      } else {
+        include_dirs += [ "$flutter_root/engine/flutter/third_party/txt/src" ]
       }
 
     } else {

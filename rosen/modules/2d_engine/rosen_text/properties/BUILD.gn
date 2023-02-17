@@ -23,9 +23,17 @@ config("rosen_text_config") {
   ]
   include_dirs = [
     "$rosen_2d_engine_root",
-    "$flutter_root/engine/flutter/third_party/txt/src",
     "//third_party_icu/icu4c/source/common",
   ]
+
+  if (use_new_skia) {
+    include_dirs += [ 
+      "$flutter_root/txt/src",
+      "//third_party/skia/third_party/externals/harfbuzz/src",
+    ]
+  } else {
+    include_dirs += [ "$flutter_root/engine/flutter/third_party/txt/src" ]
+  }
 }
 
 template("rosen_text_properties") {

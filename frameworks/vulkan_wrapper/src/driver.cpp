@@ -162,24 +162,26 @@ VkResult CreateDevice(VkPhysicalDevice physicalDevice,
                       const VkAllocationCallbacks* pAllocator,
                       VkDevice* pDevice)
 {
-    VkResult result = VK_SUCCESS;
-    if (pfn_vkCreateDevice) {
-        std::vector<const char*> deviceExtensions;
-
-        auto& ext_names = (*pCreateInfo).ppEnabledExtensionNames;
-        auto& ext_count = (*pCreateInfo).enabledExtensionCount;
-        for (uint32_t i = 0; i < ext_count; i++) {
-            deviceExtensions.push_back(ext_names[i]);
-        }
-        deviceExtensions.push_back(VK_OHOS_NATIVE_BUFFER_EXTENSION_NAME);
-        deviceExtensions.push_back(VK_OPENHARMONY_EXTERNAL_MEMORY_OHOS_NATIVE_BUFFER_EXTENSION_NAME);
-        VkDeviceCreateInfo createInfo(*pCreateInfo);
-
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-        createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-
-        result = pfn_vkCreateDevice(physicalDevice, &createInfo, pAllocator, pDevice);
+    if (!pfn_vkCreateDevice) {
+        WLOGE("vkCreateDevice Func is null, please Check CreateInstance Func");
+        return VK_NOT_READY;
     }
+
+    std::vector<const char*> deviceExtensions;
+
+    auto& ext_names = (*pCreateInfo).ppEnabledExtensionNames;
+    auto& ext_count = (*pCreateInfo).enabledExtensionCount;
+    for (uint32_t i = 0; i < ext_count; i++) {
+        deviceExtensions.push_back(ext_names[i]);
+    }
+    deviceExtensions.push_back(VK_OHOS_NATIVE_BUFFER_EXTENSION_NAME);
+    deviceExtensions.push_back(VK_OPENHARMONY_EXTERNAL_MEMORY_OHOS_NATIVE_BUFFER_EXTENSION_NAME);
+    VkDeviceCreateInfo createInfo(*pCreateInfo);
+
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+    createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+
+    VkResult result = pfn_vkCreateDevice(physicalDevice, &createInfo, pAllocator, pDevice);
 
     if ((result == VK_SUCCESS) && (pfn_vkGetDeviceProcAddr != nullptr)) {
         pfn_vkGetNativeFenceFdOpenHarmony= reinterpret_cast<PFN_vkGetNativeFenceFdOpenHarmony>(

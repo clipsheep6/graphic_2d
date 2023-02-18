@@ -151,6 +151,10 @@ ohos_shared_library("librender_service_client") {
     ":render_service_client_src",
     "//third_party/flutter/build/skia:ace_skia_ohos",
   ]
+  if (graphic_standard_feature_new_skia_enable) {
+    public_deps += ["//third_party/skia:skia",]
+    public_deps -= ["//third_party/flutter/build/skia:ace_skia_ohos",]
+  }
 
   public_configs = [ ":render_service_client_config" ]
 

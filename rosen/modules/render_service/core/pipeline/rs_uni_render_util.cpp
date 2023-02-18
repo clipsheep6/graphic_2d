@@ -201,10 +201,10 @@ void RSUniRenderUtil::DrawCachedSpherizeSurface(RSRenderNode& node, RSPaintFilte
     };
     float offsetSquare = 0.f;
     if (isWidthGreater) {
-        offsetSquare = (width - height) * degree / 2.0;
+        offsetSquare = (width - height) * degree / 2.0; // half of the change distance
         width = width -  (width - height) * degree;
     } else {
-        offsetSquare = (height - width) * degree / 2.0;
+        offsetSquare = (height - width) * degree / 2.0; // half of the change distance
         height = height -  (height - width) * degree;
     }
 
@@ -216,19 +216,19 @@ void RSUniRenderUtil::DrawCachedSpherizeSurface(RSRenderNode& node, RSPaintFilte
     float offsetSphereHeight = height / 6  *degree;
 
     SkPoint cubics[12] = {
-        //top control points
+        // top control points
         {0.0f, 0.0f}, {segmentWidthOne, 0.0f}, {segmentWidthTwo, 0.0f}, {width, 0.0f},
-        //right control points
+        // right control points
         {width, segmentHeightOne}, {width, segmentHeightTwo},
-        //bottom control points
+        // bottom control points
         {width, height}, {segmentWidthTwo, height}, {segmentWidthOne, height}, {0.0f, height},
-        //left control points
+        // left control points
         {0.0f, segmentHeightTwo}, {0.0f, segmentHeightOne}
     };
-    cubics[0].offset(offsetSphereWidth, offsetSphereHeight); //top left control point
-    cubics[3].offset(-offsetSphereWidth, offsetSphereHeight); //top right control point
-    cubics[6].offset(-offsetSphereWidth, -offsetSphereHeight); //bottom right control point
-    cubics[9].offset(offsetSphereWidth, -offsetSphereHeight); //bottom left control point
+    cubics[0].offset(offsetSphereWidth, offsetSphereHeight); // top left control point
+    cubics[3].offset(-offsetSphereWidth, offsetSphereHeight); // top right control point
+    cubics[6].offset(-offsetSphereWidth, -offsetSphereHeight); // bottom right control point
+    cubics[9].offset(offsetSphereWidth, -offsetSphereHeight); // bottom left control point
     if (isWidthGreater) {
         SkPoint::Offset(cubics, SK_ARRAY_COUNT(cubics), offsetSquare, 0);
     } else {
@@ -236,10 +236,10 @@ void RSUniRenderUtil::DrawCachedSpherizeSurface(RSRenderNode& node, RSPaintFilte
     }
     SkPath path;
     path.moveTo(cubics[0]);
-    path.cubicTo(cubics[1], cubics[2], cubics[3]);
-    path.cubicTo(cubics[4], cubics[5], cubics[6]);
-    path.cubicTo(cubics[7], cubics[8], cubics[9]);
-    path.cubicTo(cubics[10], cubics[11], cubics[0]);
+    path.cubicTo(cubics[1], cubics[2], cubics[3]); // upper edge
+    path.cubicTo(cubics[4], cubics[5], cubics[6]); // right edge
+    path.cubicTo(cubics[7], cubics[8], cubics[9]); // bottom edge
+    path.cubicTo(cubics[10], cubics[11], cubics[0]); // left edge
     canvas.clipPath(path, true);
     canvas.drawPatch(cubics, nullptr, texCoords, SkBlendMode::kSrcOver, paint);
     canvas.restore();

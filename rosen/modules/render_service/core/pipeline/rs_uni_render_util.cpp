@@ -19,6 +19,7 @@
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
+#include "render/rs_path.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -153,7 +154,7 @@ BufferDrawParam RSUniRenderUtil::CreateLayerBufferDrawParam(const LayerInfoPtr& 
     return params;
 }
 
-void RSUniRenderUtil::DrawCachedSurface(RSRenderNode& node, RSPaintFilterCanvas& canvas,
+void RSUniRenderUtil::DrawCachedFreezeSurface(RSRenderNode& node, RSPaintFilterCanvas& canvas,
     sk_sp<SkSurface> surface)
 {
     if (surface == nullptr) {
@@ -165,6 +166,80 @@ void RSUniRenderUtil::DrawCachedSurface(RSRenderNode& node, RSPaintFilterCanvas&
     canvas.scale(width / surface->width(), height / surface->height());
     SkPaint paint;
     surface->draw(&canvas, 0.0, 0.0, &paint);
+    canvas.restore();
+}
+
+void RSUniRenderUtil::DrawCachedSpherizeSurface(RSRenderNode& node, RSPaintFilterCanvas& canvas,
+    sk_sp<SkSurface> surface)
+{
+    if (surface == nullptr) {
+        return;
+    }
+    canvas.save();
+    float canvasWidth = node.GetRenderProperties().GetBoundsRect().GetWidth();
+    float canvasHeight = node.GetRenderProperties().GetBoundsRect().GetHeight();
+    canvas.scale(canvasWidth / surface->width(), canvasHeight / surface->height());
+    const RSProperties& properties = node.GetRenderProperties();
+
+    auto imageSnapshot = surface->makeImageSnapshot();
+    if (imageSnapshot == nullptr) {
+        ROSEN_LOGE("RSUniRenderUtil::DrawCachedSpherizeSurface image  is null");
+        return;
+    }
+
+    SkPaint paint;
+    paint.setBlendMode(SkBlendMode::kSrcOver);
+    paint.setShader(imageSnapshot->makeShader(SkTileMode::kClamp, SkTileMode::kClamp));
+    float width = imageSnapshot->width();
+    float height = imageSnapshot->height();
+    float degree = properties.GetSpherize();
+    bool isWidthGreater = width > height;
+    ROSEN_LOGI("RSUniRenderUtil::DrawCachedSpherizeSurface spherize degree [%f]", degree);
+
+    const SkPoint texCoords[4] = {
+        {0.0f, 0.0f}, {width, 0.0f}, {width, height}, {0.0f, height}
+    };
+    float offsetSquare = 0.f;
+    if (isWidthGreater) {
+        offsetSquare = (width - height) * degree / 2;
+        width = width -  (width - height) * degree;
+    }
+    else {
+        offsetSquare = (height - width) * degree / 2;
+        height = height -  (height - width) * degree;
+    }
+
+    float segmentWidthOne = width / 3.0;
+    float segmentWidthTwo = width / 3.0 * 2.0;
+    float segmentHeightOne = height / 3.0;
+    float segmentHeightTwo = height / 3.0 * 2.0;
+    float offsetSphereWidth = width / 6 * degree;
+    float offsetSphereHeight = height / 6  *degree;
+
+    SkPoint cubics[12] = {
+        {0.0f, 0.0f}, {segmentWidthOne, 0.0f}, {segmentWidthTwo, 0.0f}, {width, 0.0f},
+        {width, segmentHeightOne}, {width, segmentHeightTwo},
+        {width, height}, {segmentWidthTwo, height}, {segmentWidthOne, height}, {0.0f, height},
+        {0.0f, segmentHeightTwo}, {0.0f, segmentHeightOne}
+    };
+    cubics[0].offset(offsetSphereWidth, offsetSphereHeight);
+    cubics[3].offset(-offsetSphereWidth, offsetSphereHeight);
+    cubics[6].offset(-offsetSphereWidth, -offsetSphereHeight);
+    cubics[9].offset(offsetSphereWidth, -offsetSphereHeight);
+    if (isWidthGreater) {
+        SkPoint::Offset(cubics, SK_ARRAY_COUNT(cubics), offsetSquare, 0);
+    }
+    else {
+        SkPoint::Offset(cubics, SK_ARRAY_COUNT(cubics), 0, offsetSquare);
+    }
+    SkPath path;
+    path.moveTo(cubics[0]);
+    path.cubicTo(cubics[1], cubics[2], cubics[3]);
+    path.cubicTo(cubics[4], cubics[5], cubics[6]);
+    path.cubicTo(cubics[7], cubics[8], cubics[9]);
+    path.cubicTo(cubics[10], cubics[11], cubics[0]);
+    canvas.clipPath(path, true);
+    canvas.drawPatch(cubics, nullptr, texCoords, SkBlendMode::kSrcOver, paint);
     canvas.restore();
 }
 

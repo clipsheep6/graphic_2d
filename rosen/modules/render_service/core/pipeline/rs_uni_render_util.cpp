@@ -216,15 +216,19 @@ void RSUniRenderUtil::DrawCachedSpherizeSurface(RSRenderNode& node, RSPaintFilte
     float offsetSphereHeight = height / 6  *degree;
 
     SkPoint cubics[12] = {
+        //top control points
         {0.0f, 0.0f}, {segmentWidthOne, 0.0f}, {segmentWidthTwo, 0.0f}, {width, 0.0f},
+        //right control points
         {width, segmentHeightOne}, {width, segmentHeightTwo},
+        //bottom control points
         {width, height}, {segmentWidthTwo, height}, {segmentWidthOne, height}, {0.0f, height},
+        //left control points
         {0.0f, segmentHeightTwo}, {0.0f, segmentHeightOne}
     };
-    cubics[0].offset(offsetSphereWidth, offsetSphereHeight);
-    cubics[3].offset(-offsetSphereWidth, offsetSphereHeight);
-    cubics[6].offset(-offsetSphereWidth, -offsetSphereHeight);
-    cubics[9].offset(offsetSphereWidth, -offsetSphereHeight);
+    cubics[0].offset(offsetSphereWidth, offsetSphereHeight); //top left control point
+    cubics[3].offset(-offsetSphereWidth, offsetSphereHeight); //top right control point
+    cubics[6].offset(-offsetSphereWidth, -offsetSphereHeight); //bottom right control point
+    cubics[9].offset(offsetSphereWidth, -offsetSphereHeight); //bottom left control point
     if (isWidthGreater) {
         SkPoint::Offset(cubics, SK_ARRAY_COUNT(cubics), offsetSquare, 0);
     } else {

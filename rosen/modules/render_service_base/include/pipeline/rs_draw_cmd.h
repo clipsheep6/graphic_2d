@@ -36,6 +36,10 @@
 #include "render/rs_image.h"
 #include "transaction/rs_marshalling_helper.h"
 
+#ifdef USE_NEW_SKIA
+#include "src/core/SkVerticesPriv.h"
+#endif
+
 namespace OHOS {
 namespace Rosen {
 class RSPaintFilterCanvas;
@@ -829,8 +833,13 @@ private:
 
 class VerticesOpItem : public OpItemWithPaint {
 public:
+#ifdef USE_NEW_SKIA
+    VerticesOpItem(const SkVertices* vertices, const SkVertices_DeprecatedBone bones[],
+        int boneCount, SkBlendMode mode, const SkPaint& paint);
+#else
     VerticesOpItem(const SkVertices* vertices, const SkVertices::Bone bones[],
         int boneCount, SkBlendMode mode, const SkPaint& paint);
+#endif
     ~VerticesOpItem() override;
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 
@@ -846,7 +855,11 @@ public:
 
 private:
     sk_sp<SkVertices> vertices_;
+#ifdef USE_NEW_SKIA
+    SkVertices_DeprecatedBone* bones_;
+#else
     SkVertices::Bone* bones_;
+#endif
     int boneCount_;
     SkBlendMode mode_;
 };

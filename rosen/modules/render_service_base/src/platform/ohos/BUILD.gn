@@ -87,6 +87,10 @@ ohos_source_set("rosen_ohos_sources") {
     "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
     "//third_party/flutter/build/skia:ace_skia_ohos",
   ]
+  if (graphic_standard_feature_new_skia_enable) {
+    public_deps += ["//third_party/skia:skia",]
+    public_deps -= ["//third_party/flutter/build/skia:ace_skia_ohos",]
+  }
 
   if (ace_enable_gpu) {
     include_dirs += [ "//third_party/openssl/include" ]

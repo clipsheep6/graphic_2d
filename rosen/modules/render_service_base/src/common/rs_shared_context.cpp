@@ -87,7 +87,16 @@ void RSSharedContext::MakeCurrent()
         RS_LOGE("eglMakeCurrent failed");
     }
 }
-
+#ifdef USE_NEW_SKIA
+sk_sp<GrDirectContext> RSSharedContext::MakeGrContext()
+{
+    GrContextOptions options;
+    // options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+    options.fPreferExternalImagesOverES3 = true;
+    options.fDisableDistanceFieldPaths = true;
+    return GrDirectContext::MakeGL(GrGLMakeNativeInterface(), options);
+}
+#else
 sk_sp<GrContext> RSSharedContext::MakeGrContext()
 {
     GrContextOptions options;
@@ -96,4 +105,5 @@ sk_sp<GrContext> RSSharedContext::MakeGrContext()
     options.fDisableDistanceFieldPaths = true;
     return GrContext::MakeGL(GrGLMakeNativeInterface(), options);
 }
+#endif
 } // namespace OHOS::Rosen

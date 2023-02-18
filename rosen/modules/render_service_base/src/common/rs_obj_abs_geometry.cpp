@@ -16,7 +16,11 @@
 #include "common/rs_obj_abs_geometry.h"
 
 #include "include/utils/SkCamera.h"
+#ifdef USE_NEW_SKIA
+#include "include/core/SkM44.h"
+#else
 #include "include/core/SkMatrix44.h"
+#endif
 namespace OHOS {
 namespace Rosen {
 constexpr unsigned RECT_POINT_NUM = 4;
@@ -110,19 +114,37 @@ void RSObjAbsGeometry::UpdateAbsMatrix2D()
 void RSObjAbsGeometry::UpdateAbsMatrix3D()
 {
     if (!trans_->quaternion_.IsIdentity()) {
+#ifdef USE_NEW_SKIA
+        SkM44 matrix3D;
+#else
         SkMatrix44 matrix3D;
+#endif
         // Translate
         matrix3D.setTranslate(trans_->pivotX_ * width_ + x_ + trans_->translateX_,
             trans_->pivotY_ * height_ + y_ + trans_->translateY_, z_ + trans_->translateZ_);
         // Rotate
+#ifdef USE_NEW_SKIA
+        SkM44 matrix4;
+#else
         SkMatrix44 matrix4;
+#endif
         float x = trans_->quaternion_[0];
         float y = trans_->quaternion_[1];
         float z = trans_->quaternion_[2];
         float w = trans_->quaternion_[3];
+#ifdef USE_NEW_SKIA
+        SkScalar r[16] = {
+            1.f - 2.f * (y * y + z * z), 2.f * (x * y + z * w), 2.f * (x * z - y * w), 0,
+            2.f * (x * y - z * w), 1.f - 2.f * (x * x + z * z), 2.f * (y * z + x * w), 0,
+            2.f * (x * z + y * w), 2.f * (y * z - x * w), 1.f - 2.f * (x * x + y * y), 0,
+            0, 0, 0, 1
+        };
+        matrix4.RowMajor(r);
+#else
         matrix4.set3x3(1.f - 2.f * (y * y + z * z), 2.f * (x * y + z * w), 2.f * (x * z - y * w), 2.f * (x * y - z * w),
             1.f - 2.f * (x * x + z * z), 2.f * (y * z + x * w), 2.f * (x * z + y * w), 2.f * (y * z - x * w),
             1.f - 2.f * (x * x + y * y));
+#endif
         matrix3D = matrix3D * matrix4;
 
         // Scale
@@ -131,7 +153,11 @@ void RSObjAbsGeometry::UpdateAbsMatrix3D()
         }
         // Translate
         matrix3D.preTranslate(-trans_->pivotX_ * width_, -trans_->pivotY_ * height_, 0);
+#ifdef USE_NEW_SKIA
+        matrix_.preConcat(matrix3D.asM33());
+#else
         matrix_.preConcat(SkMatrix(matrix3D));
+#endif
     } else {
         SkMatrix matrix3D;
         Sk3DView camera;

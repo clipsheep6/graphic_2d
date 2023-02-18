@@ -165,7 +165,11 @@ void RSListenedCanvas::onDrawPicture(const SkPicture* picture, const SkMatrix* m
 void RSListenedCanvas::onDrawImageRect(const SkImage* image, const SkRect* src, const SkRect& dst,
                                        const SkPaint* paint, SrcRectConstraint constraint)
 {
+#ifdef USE_NEW_SKIA
+    RSPaintFilterCanvas::onDrawImageRect2(image, *src, dst, SkSamplingOptions(), paint, constraint);
+#else
     RSPaintFilterCanvas::onDrawImageRect(image, src, dst, paint, constraint);
+#endif
     if (listener_ != nullptr) {
         listener_->onDrawRect(dst, {});
     }

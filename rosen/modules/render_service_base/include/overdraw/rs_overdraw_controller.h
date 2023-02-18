@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <mutex>
 
 #include "common/rs_macros.h"
 #include "delegate/rs_delegate.h"

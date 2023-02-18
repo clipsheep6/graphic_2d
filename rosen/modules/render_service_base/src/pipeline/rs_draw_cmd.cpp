@@ -255,7 +255,11 @@ BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float to
 
 void BitmapOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
+#ifdef USE_NEW_SKIA
+    canvas.drawImage(bitmapInfo_, left_, top_, SkSamplingOptions(), &paint_);
+#else
     canvas.drawImage(bitmapInfo_, left_, top_, &paint_);
+#endif
 }
 
 BitmapRectOpItem::BitmapRectOpItem(
@@ -277,7 +281,11 @@ BitmapRectOpItem::BitmapRectOpItem(
 
 void BitmapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
+#ifdef USE_NEW_SKIA
+    canvas.drawImageRect(bitmapInfo_, rectSrc_, rectDst_, SkSamplingOptions(), &paint_, SkCanvas::kStrict_SrcRectConstraint);
+#else
     canvas.drawImageRect(bitmapInfo_, rectSrc_, rectDst_, &paint_);
+#endif
 }
 
 PixelMapOpItem::PixelMapOpItem(
@@ -294,7 +302,11 @@ void PixelMapOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     if (!renderImage_) {
         renderImage_ = RSPixelMapUtil::ExtractSkImage(pixelmap_);
     }
+#ifdef USE_NEW_SKIA
+    canvas.drawImage(renderImage_, left_, top_, SkSamplingOptions(), &paint_);
+#else
     canvas.drawImage(renderImage_, left_, top_, &paint_);
+#endif
 }
 
 PixelMapRectOpItem::PixelMapRectOpItem(
@@ -311,7 +323,11 @@ void PixelMapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     if (!renderImage_) {
         renderImage_ = RSPixelMapUtil::ExtractSkImage(pixelmap_);
     }
+#ifdef USE_NEW_SKIA
+    canvas.drawImageRect(renderImage_.get(), src_, dst_, SkSamplingOptions(), &paint_, SkCanvas::kStrict_SrcRectConstraint);
+#else
     canvas.drawImageRect(renderImage_, src_, dst_, &paint_);
+#endif
 }
 
 BitmapNineOpItem::BitmapNineOpItem(
@@ -328,7 +344,11 @@ BitmapNineOpItem::BitmapNineOpItem(
 
 void BitmapNineOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
+#ifdef USE_NEW_SKIA
+    canvas.drawImageNine(bitmapInfo_.get(), center_, rectDst_, SkFilterMode::kNearest, &paint_);
+#else
     canvas.drawImageNine(bitmapInfo_, center_, rectDst_, &paint_);
+#endif
 }
 
 AdaptiveRRectOpItem::AdaptiveRRectOpItem(float radius, const SkPaint& paint)
@@ -386,7 +406,11 @@ ClipOutsetRectOpItem::ClipOutsetRectOpItem(float dx, float dy)
 void ClipOutsetRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const
 {
     auto clipRect = canvas.getLocalClipBounds().makeOutset(dx_, dy_);
+#ifdef USE_NEW_SKIA
+    canvas.clipRect(clipRect, SkClipOp::kIntersect, true);
+#else
     canvas.clipRect(clipRect, SkClipOp::kExtraEnumNeedInternallyPleaseIgnoreWillGoAway5, true);
+#endif
 }
 
 PathOpItem::PathOpItem(const SkPath& path, const SkPaint& paint) : OpItemWithPaint(sizeof(PathOpItem))
@@ -478,15 +502,22 @@ SaveLayerOpItem::SaveLayerOpItem(const SkCanvas::SaveLayerRec& rec) : OpItemWith
         paint_ = *rec.fPaint;
     }
     backdrop_ = sk_ref_sp(rec.fBackdrop);
+#ifndef USE_NEW_SKIA
     mask_ = sk_ref_sp(rec.fClipMask);
     matrix_ = rec.fClipMatrix ? *(rec.fClipMatrix) : SkMatrix::I();
+#endif
     flags_ = rec.fSaveLayerFlags;
 }
 
 void SaveLayerOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
+#ifdef USE_NEW_SKIA
+    canvas.saveLayer(
+        { rectPtr_, &paint_, backdrop_.get(), flags_ });
+#else
     canvas.saveLayer(
         { rectPtr_, &paint_, backdrop_.get(), mask_.get(), matrix_.isIdentity() ? nullptr : &matrix_, flags_ });
+#endif
 }
 
 DrawableOpItem::DrawableOpItem(SkDrawable* drawable, const SkMatrix* matrix) : OpItem(sizeof(DrawableOpItem))
@@ -533,6 +564,19 @@ void PointsOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     canvas.drawPoints(mode_, count_, processedPoints_, paint_);
 }
 
+#ifdef USE_NEW_SKIA
+VerticesOpItem::VerticesOpItem(const SkVertices* vertices, const SkVertices_DeprecatedBone bones[],
+    int boneCount, SkBlendMode mode, const SkPaint& paint)
+    : OpItemWithPaint(sizeof(VerticesOpItem)), vertices_(sk_ref_sp(const_cast<SkVertices*>(vertices))),
+      bones_(new SkVertices_DeprecatedBone[boneCount]), boneCount_(boneCount), mode_(mode)
+{
+    errno_t ret = memcpy_s(bones_, boneCount * sizeof(SkVertices_DeprecatedBone), bones, boneCount * sizeof(SkVertices_DeprecatedBone));
+    if (ret != EOK) {
+        ROSEN_LOGE("VerticesOpItem: memcpy failed!");
+    }
+    paint_ = paint;
+}
+#else
 VerticesOpItem::VerticesOpItem(const SkVertices* vertices, const SkVertices::Bone bones[],
     int boneCount, SkBlendMode mode, const SkPaint& paint)
     : OpItemWithPaint(sizeof(VerticesOpItem)), vertices_(sk_ref_sp(const_cast<SkVertices*>(vertices))),
@@ -544,6 +588,7 @@ VerticesOpItem::VerticesOpItem(const SkVertices* vertices, const SkVertices::Bon
     }
     paint_ = paint;
 }
+#endif
 
 VerticesOpItem::~VerticesOpItem()
 {
@@ -552,7 +597,7 @@ VerticesOpItem::~VerticesOpItem()
 
 void VerticesOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
-    canvas.drawVertices(vertices_, bones_, boneCount_, mode_, paint_);
+    canvas.drawVertices(vertices_, mode_, paint_);
 }
 
 ShadowRecOpItem::ShadowRecOpItem(const SkPath& path, const SkDrawShadowRec& rec)
@@ -1351,7 +1396,11 @@ OpItem* SaveLayerOpItem::Unmarshalling(Parcel& parcel)
         ROSEN_LOGE("SaveLayerOpItem::Unmarshalling failed!");
         return nullptr;
     }
+#ifdef USE_NEW_SKIA
+    SkCanvas::SaveLayerRec rec = { rectPtr, &paint, backdrop.get(), flags };
+#else
     SkCanvas::SaveLayerRec rec = { rectPtr, &paint, backdrop.get(), mask.get(), &matrix, flags };
+#endif
     return new SaveLayerOpItem(rec);
 }
 
@@ -1457,7 +1506,11 @@ bool VerticesOpItem::Marshalling(Parcel& parcel) const
 OpItem* VerticesOpItem::Unmarshalling(Parcel& parcel)
 {
     sk_sp<SkVertices> vertices;
+#ifdef USE_NEW_SKIA
+    const SkVertices_DeprecatedBone* bones = nullptr;
+#else
     const SkVertices::Bone* bones = nullptr;
+#endif
     int boneCount;
     SkBlendMode mode;
     SkPaint paint;

@@ -1365,6 +1365,10 @@ void RSUniRenderVisitor::DrawCacheSpherizeSurfaceRenderNode(RSSurfaceRenderNode&
 void RSUniRenderVisitor::ProcessSurfaceRenderNodeContent(RSSurfaceRenderNode& node)
 {
     const auto& property = node.GetRenderProperties();
+    bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
+    if (property.IsSpherizeValid() && isSelfDrawingSurface) {
+        canvas_->save();
+    }
     const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
     RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect);
@@ -1421,7 +1425,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNodeContent(RSSurfaceRenderNode& no
             renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
         }
     }
-    bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
+    
     if (isSelfDrawingSurface) {
         canvas_->restore();
     }
@@ -1435,12 +1439,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNodeContent(RSSurfaceRenderNode& no
         if (needCheckFirstFrame_ && IsFirstFrameReadyToDraw(node)) {
             node.NotifyUIBufferAvailable();
         }
-        if (property.IsSpherizeValid()) {
-            ProcessBaseRenderNode(node);
-        }
-        else {
-            DrawChildRenderNode(node);
-        }
+        DrawChildRenderNode(node);
     } else if (node.IsAppWindow()) { // use skSurface drawn by cold start thread
         if (node.GetCachedImage() != nullptr) {
             RSUniRenderUtil::DrawCachedImage(node, *canvas_, node.GetCachedImage());

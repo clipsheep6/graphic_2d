@@ -1291,6 +1291,7 @@ void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
 
 void RSUniRenderVisitor::DrawCacheSpherizeCanvasRenderNode(RSCanvasRenderNode& node)
 {
+    RS_LOGI("RSUniRenderVisitor::DrawCacheSpherizeCanvasRenderNode start");
     if (node.GetCacheSpherizeSurface()) {
         RS_TRACE_BEGIN("RSUniRenderVisitor::DrawCacheSpherizeCanvasRenderNode Draw Full Cache nodeId = " +
             std::to_string(node.GetId()));
@@ -1329,6 +1330,7 @@ void RSUniRenderVisitor::DrawCacheSpherizeCanvasRenderNode(RSCanvasRenderNode& n
 
 void RSUniRenderVisitor::DrawCacheSpherizeSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
+    RS_LOGI("RSUniRenderVisitor::DrawCacheSpherizeSurfaceRenderNode start");
     if (node.GetCacheSpherizeSurface()) {
         RS_TRACE_BEGIN("RSUniRenderVisitor::DrawCacheSpherizeSurfaceRenderNode Draw Full Cache nodeId = " +
             std::to_string(node.GetId()));

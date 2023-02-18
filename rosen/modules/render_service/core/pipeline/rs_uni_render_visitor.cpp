@@ -1425,7 +1425,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNodeContent(RSSurfaceRenderNode& no
             renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
         }
     }
-    
+
     if (isSelfDrawingSurface) {
         canvas_->restore();
     }
@@ -1572,8 +1572,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     if (property.IsSpherizeValid()) {
         DrawCacheSpherizeSurfaceRenderNode(node);
-    }
-    else {
+    } else {
         node.ClearCacheSpherizeSurface();
         ProcessSurfaceRenderNodeContent(node);
     }
@@ -1647,14 +1646,12 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         node.ProcessTransitionBeforeChildren(*canvas_);
         DrawCacheSpherizeCanvasRenderNode(node);
         node.ProcessTransitionAfterChildren(*canvas_);
-    }
-    else if (!node.IsFreeze()) {
+    } else if (!node.IsFreeze()) {
         node.ClearCacheSpherizeSurface();
         node.ProcessRenderBeforeChildren(*canvas_);
         DrawChildRenderNode(node);
         node.ProcessRenderAfterChildren(*canvas_);
-    }
-    else {
+    } else {
         node.ClearCacheSpherizeSurface();
         node.ProcessTransitionBeforeChildren(*canvas_);
         node.ProcessAnimatePropertyBeforeChildren(*canvas_);

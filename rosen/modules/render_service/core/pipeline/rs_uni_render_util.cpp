@@ -201,11 +201,10 @@ void RSUniRenderUtil::DrawCachedSpherizeSurface(RSRenderNode& node, RSPaintFilte
     };
     float offsetSquare = 0.f;
     if (isWidthGreater) {
-        offsetSquare = (width - height) * degree / 2;
+        offsetSquare = (width - height) * degree / 2.0;
         width = width -  (width - height) * degree;
-    }
-    else {
-        offsetSquare = (height - width) * degree / 2;
+    } else {
+        offsetSquare = (height - width) * degree / 2.0;
         height = height -  (height - width) * degree;
     }
 
@@ -228,8 +227,7 @@ void RSUniRenderUtil::DrawCachedSpherizeSurface(RSRenderNode& node, RSPaintFilte
     cubics[9].offset(offsetSphereWidth, -offsetSphereHeight);
     if (isWidthGreater) {
         SkPoint::Offset(cubics, SK_ARRAY_COUNT(cubics), offsetSquare, 0);
-    }
-    else {
+    } else {
         SkPoint::Offset(cubics, SK_ARRAY_COUNT(cubics), 0, offsetSquare);
     }
     SkPath path;

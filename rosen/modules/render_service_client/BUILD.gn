@@ -13,6 +13,7 @@
 
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
+import("//foundation/arkui/ace_engine/ace_config.gni")
 import("render_service_client.gni")
 
 config("render_service_client_config") {
@@ -151,7 +152,7 @@ ohos_shared_library("librender_service_client") {
     ":render_service_client_src",
     "//third_party/flutter/build/skia:ace_skia_ohos",
   ]
-  if (graphic_standard_feature_new_skia_enable) {
+  if (use_new_skia) {
     public_deps += ["//third_party/skia:skia",]
     public_deps -= ["//third_party/flutter/build/skia:ace_skia_ohos",]
   }

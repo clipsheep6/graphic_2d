@@ -30,9 +30,6 @@ config("export_config") {
   ]
 
   defines = rs_common_define
-  if (use_new_skia) {
-    defines += [ "USE_NEW_SKIA" ]
-  }
 }
 
 ohos_source_set("render_service_base_src") {
@@ -191,12 +188,13 @@ ohos_source_set("render_service_base_src") {
 
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
-    "//foundation/graphic/graphic_2d/utils/log",
-    "//third_party/flutter/skia/src",
+    "//foundation/graphic/graphic_2d/utils/log"
   ]
   if (use_new_skia) {
-    include_dirs += ["//third_party/skia/src",]
-    include_dirs -= ["//third_party/flutter/skia/src",]
+    include_dirs += [ "//third_party/skia/src" ]
+    defines += [ "USE_NEW_SKIA" ]
+  } else {
+    include_dirs += [ "//third_party/flutter/skia/src" ]
   }
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",

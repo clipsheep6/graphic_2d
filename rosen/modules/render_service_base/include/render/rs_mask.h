@@ -16,8 +16,11 @@
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_MASK_H
 
 #include <memory>
-
+#if defined(USE_NEW_SKIA)
+#include "modules/svg/include/SkSVGDOM.h"
+#else
 #include "experimental/svg/model/SkSVGDOM.h"
+#endif
 #include "third_party/skia/include/core/SkPaint.h"
 #include "third_party/skia/include/core/SkPath.h"
 #include "third_party/skia/include/core/SkPicture.h"

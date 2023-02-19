@@ -15,15 +15,29 @@
 
 #include "render/rs_blur_filter.h"
 
+#if defined(USE_NEW_SKIA)
+#include "include/effects/SkImageFilters.h"
+#include "include/core/SkTileMode.h"
+#else
 #include "include/effects/SkBlurImageFilter.h"
+#endif
 namespace OHOS {
 namespace Rosen {
+#if defined(USE_NEW_SKIA)
+RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY): RSSkiaFilter(SkImageFilters::Blur(blurRadiusX,
+    blurRadiusY, nullptr, nullptr, SkTileMode::kClamp)), blurRadiusX_(blurRadiusX),
+    blurRadiusY_(blurRadiusY)
+{
+    type_ = FilterType::BLUR;
+}
+#else
 RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY): RSSkiaFilter(SkBlurImageFilter::Make(blurRadiusX,
     blurRadiusY, nullptr, nullptr, SkBlurImageFilter::kClamp_TileMode)), blurRadiusX_(blurRadiusX),
     blurRadiusY_(blurRadiusY)
 {
     type_ = FilterType::BLUR;
 }
+#endif
 
 RSBlurFilter::~RSBlurFilter() {}
 

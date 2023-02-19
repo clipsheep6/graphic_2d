@@ -13,6 +13,7 @@
 
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
+import("//foundation/arkui/ace_engine/ace_config.gni")
 
 ## Build librender_service.so
 ohos_shared_library("librender_service") {
@@ -102,10 +103,13 @@ ohos_shared_library("librender_service") {
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
   ]
 
-  public_deps = [
-    "//third_party/flutter/build/skia:ace_skia_ohos",
-    "//third_party/libpng:libpng",
-  ]
+  public_deps = [ "//third_party/libpng:libpng" ]
+
+  if (use_new_skia) {
+    public_deps += [ "//third_party/skia:skia" ] 
+  } else {
+    public_deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ] 
+  }
 
   external_deps = [
     "c_utils:utils",

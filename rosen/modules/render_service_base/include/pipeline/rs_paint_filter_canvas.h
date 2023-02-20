@@ -44,6 +44,9 @@ public:
     std::pair<int, int> SaveCanvasAndAlpha();
     void RestoreCanvasAndAlpha(std::pair<int, int>& count);
 
+    int SaveEnvColor();
+    void RestoreEnvColor();
+
     SkSurface* GetSurface() const;
 
     void SetHighContrast(bool enabled)
@@ -81,6 +84,7 @@ protected:
 private:
     SkSurface* skSurface_ = nullptr;
     std::stack<float> alphaStack_;
+    std::stack<float> envColorStack_;
     std::atomic_bool isHighContrastEnabled_ { false };
     bool isCacheEnabled_ { false };
     SkRect visibleRect_ = SkRect::MakeEmpty();

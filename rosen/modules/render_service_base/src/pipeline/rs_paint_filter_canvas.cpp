@@ -34,6 +34,11 @@ SkSurface* RSPaintFilterCanvas::GetSurface() const
 
 bool RSPaintFilterCanvas::onFilter(SkPaint& paint) const
 {
+
+    if (paint.getColor() == 0x00000001) {
+        paint.setColor(envColorStack_.top());
+    }
+
     if (alphaStack_.top() >= 1.f) {
         return true;
     } else if (alphaStack_.top() <= 0.f) {
@@ -57,6 +62,7 @@ void RSPaintFilterCanvas::MultiplyAlpha(float alpha)
     // multiply alpha to top of stack
     alphaStack_.top() *= std::clamp(alpha, 0.f, 1.f);
 }
+
 
 int RSPaintFilterCanvas::SaveAlpha()
 {
@@ -106,5 +112,24 @@ void RSPaintFilterCanvas::RestoreCanvasAndAlpha(std::pair<int, int>& count)
     restoreToCount(count.first);
     RestoreAlphaToCount(count.second);
 }
+
+int RSPaintFilterCanvas::SaveEnvColor()
+{
+    // make a copy of top of stack
+    envColorStack_.push(envColorStack_.top());
+    // return prev stack height
+    return envColorStack_.size() - 1;
+}
+
+
+void RSPaintFilterCanvas::RestoreEnvColor()
+{
+    // sanity check, stack should not be empty
+    if (envColorStack_.size() <= 1) {
+        return;
+    }
+    envColorStack_.pop();
+}
+
 } // namespace Rosen
 } // namespace OHOS

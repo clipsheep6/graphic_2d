@@ -76,8 +76,7 @@ sk_sp<SkImageFilter> RSMaterialFilter::CreateMaterialFilter(float radius, float 
 {
     maskColor_ = maskColor;
 #if defined(USE_NEW_SKIA)
-    sk_sp<SkImageFilter> blurFilter = SkImageFilters::Blur(radius, radius, nullptr, nullptr,
-        SkTileMode::kClamp); // blur
+    sk_sp<SkImageFilter> blurFilter = SkImageFilters::Blur(radius, radius, SkTileMode::kClamp, nullptr); // blur
 #else
     sk_sp<SkImageFilter> blurFilter = SkBlurImageFilter::Make(radius, radius, nullptr, nullptr,
         SkBlurImageFilter::kClamp_TileMode); // blur

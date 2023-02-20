@@ -25,7 +25,7 @@ namespace OHOS {
 namespace Rosen {
 #if defined(USE_NEW_SKIA)
 RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY): RSSkiaFilter(SkImageFilters::Blur(blurRadiusX,
-    blurRadiusY, nullptr, nullptr, SkTileMode::kClamp)), blurRadiusX_(blurRadiusX),
+    blurRadiusY, SkTileMode::kClamp, nullptr)), blurRadiusX_(blurRadiusX),
     blurRadiusY_(blurRadiusY)
 {
     type_ = FilterType::BLUR;

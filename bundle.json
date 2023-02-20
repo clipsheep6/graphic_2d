@@ -31,7 +31,8 @@
         "graphic_standard_feature_wuji_enable",
         "graphic_standard_feature_enable_afbc",
         "graphic_standard_feature_freemem_enable",
-        "graphic_standard_feature_parallel_render_enable"
+        "graphic_standard_feature_parallel_render_enable",
+        "graphic_standard_feature_frame_trace_enable"
       ],
       "rom": "10000KB",
       "ram": "10000KB",

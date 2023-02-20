@@ -69,6 +69,10 @@ public:
     virtual void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas);
     virtual void ProcessRenderContents(RSPaintFilterCanvas& canvas) {}
     virtual void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas);
+    virtual void ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas) {}
+    virtual void ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas) {}
+    virtual void ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas) {}
+    virtual void ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas) {}
     void RenderTraceDebug() const;
     bool HasDisappearingTransition(bool recursive) const override
     {
@@ -132,6 +136,21 @@ public:
         cacheSurface_ = nullptr;
     }
 
+    void SetCacheSpherizeSurface(sk_sp<SkSurface> cacheSpherizeSurface)
+    {
+        cacheSpherizeSurface_ = std::move(cacheSpherizeSurface);
+    }
+
+    sk_sp<SkSurface> GetCacheSpherizeSurface() const
+    {
+        return cacheSpherizeSurface_;
+    }
+
+    void ClearCacheSpherizeSurface()
+    {
+        cacheSpherizeSurface_ = nullptr;
+    }
+
 protected:
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
     void AddGeometryModifier(const std::shared_ptr<RSRenderModifier> modifier);
@@ -168,6 +187,7 @@ private:
 
     std::atomic<bool> isFreeze_ = false;
     sk_sp<SkSurface> cacheSurface_ = nullptr;
+    sk_sp<SkSurface> cacheSpherizeSurface_ = nullptr;
 
     friend class RSRenderTransition;
     friend class RSRenderNodeMap;

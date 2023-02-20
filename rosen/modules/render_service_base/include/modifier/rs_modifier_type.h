@@ -42,6 +42,8 @@ enum class RSModifierType : int16_t {
     ALPHA_OFFSCREEN,
 
     FOREGROUND_COLOR,
+    ENV_FOREGROUND_COLOR,
+    ENV_FOREGROUND_COLOR_STRATEGY,
     BACKGROUND_COLOR,
     BACKGROUND_SHADER,
     BG_IMAGE,
@@ -94,6 +96,11 @@ enum class RSRenderPropertyType : int16_t {
     PROPERTY_VECTOR2F,
     PROPERTY_VECTOR4F,
     PROPERTY_VECTOR4_COLOR,
+};
+
+enum class ForegroundColorStrategyType : int16_t {
+    INVALID = 0,
+    INVERT_BACKGROUNDCOLOR,
 };
 } // namespace Rosen
 } // namespace OHOS

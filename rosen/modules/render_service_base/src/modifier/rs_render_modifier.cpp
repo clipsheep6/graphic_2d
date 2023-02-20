@@ -83,9 +83,7 @@ static std::unordered_map<RSModifierType, ModifierUnmarshallingFunc> funcLUT = {
             }
             return modifier;
         },
-    },
-
-#define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE, DELTA_OP, MODIFIER_TIER)        \
+    },  
     { RSModifierType::ENV_FOREGROUND_COLOR, [](Parcel& parcel) -> RSRenderModifier* {                          \
             std::shared_ptr<RSRenderAnimatableProperty<uint32_t>> prop;                                     \
             if (!RSMarshallingHelper::Unmarshalling(parcel, prop)) {                                    \

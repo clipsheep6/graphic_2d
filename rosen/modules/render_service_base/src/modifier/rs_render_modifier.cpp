@@ -84,7 +84,36 @@ static std::unordered_map<RSModifierType, ModifierUnmarshallingFunc> funcLUT = {
             return modifier;
         },
     },
+
+#define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE, DELTA_OP, MODIFIER_TIER)        \
+    { RSModifierType::ENV_FOREGROUND_COLOR, [](Parcel& parcel) -> RSRenderModifier* {                          \
+            std::shared_ptr<RSRenderAnimatableProperty<uint32_t>> prop;                                     \
+            if (!RSMarshallingHelper::Unmarshalling(parcel, prop)) {                                    \
+                return nullptr;                                                                         \
+            }                                                                                           \
+            auto modifier = new RSEnvForegroundColorModifier(prop);                                \
+            if (!modifier) {                                                                            \
+                return nullptr;                                                                         \
+            }                                                                                           \
+            return modifier;                                                                            \
+        },                                                                                              \
+    },
+    { RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY, [](Parcel& parcel) -> RSRenderModifier* {                          \
+            std::shared_ptr<RSRenderAnimatableProperty<uint32_t>> prop;                                     \
+            if (!RSMarshallingHelper::Unmarshalling(parcel, prop)) {                                    \
+                return nullptr;                                                                         \
+            }                                                                                           \
+            auto modifier = new RSEnvForegroundColorStrategyModifier(prop);                                \
+            if (!modifier) {                                                                            \
+                return nullptr;                                                                         \
+            }                                                                                           \
+            return modifier;                                                                            \
+        },                                                                                              \
+    },
+
 };
+
+
 
 #undef DECLARE_ANIMATABLE_MODIFIER
 #undef DECLARE_NOANIMATABLE_MODIFIER
@@ -117,6 +146,64 @@ bool RSDrawCmdListRenderModifier::Marshalling(Parcel& parcel)
         return true;
     }
     return false;
+}
+
+// RSEnvForegroundColorModifier
+bool RSEnvForegroundColorModifier::Marshalling(Parcel& parcel)                                               
+{                                                                                                                 
+    auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<uint32_t>>(property_);                  
+    return parcel.WriteInt16(static_cast<int16_t>(RSModifierType::ENV_FOREGROUND_COLOR)) &&                              
+            RSMarshallingHelper::Marshalling(parcel, renderProperty);                                              
+}     
+
+void RSEnvForegroundColorModifier::Apply(RSModifierContext& context)                                         
+{                                                                                                                 
+    auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<uint32_t>>(property_);   
+    if (context.canvas_->envColorStack_.size() < 1) {
+        return;
+    }
+    context.canvas_->envColorStack_.top() = renderProperty->Get();                                           
+}  
+
+void RSEnvForegroundColorModifier::Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta)   
+{                                                                                                                 
+    if (auto property = std::static_pointer_cast<RSRenderAnimatableProperty<uint32_t>>(prop)) {                       
+        auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<uint32_t>>(property_);              
+        renderProperty->Set(isDelta ? (renderProperty->Get() + property->Get()) : property->Get());               
+    }                                                                                                             
+}
+
+// RSEnvForegroundColorStrategyModifier
+bool RSEnvForegroundColorStrategyModifier ::Marshalling(Parcel& parcel)                                               
+{                                                                                                                 
+    auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<ForegroundColorStrategyType >>(property_);                  
+    return parcel.WriteInt16(static_cast<int16_t>(RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY)) &&                              \
+            RSMarshallingHelper::Marshalling(parcel, renderProperty);                                              
+}  
+
+void RSEnvForegroundColorStrategyModifier ::Apply(RSModifierContext& context)                                         
+{                                                                                                                 
+    auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<ForegroundColorStrategyType >>(property_);                      
+    if (context.canvas_->envColorStack_.size() < 1) {
+        return;
+    }
+    switch (renderProperty->Get()) {
+        case INVERT_BACKGROUNDCOLOR: {
+            // 截图调用取色接口算颜色
+            context.canvas_->envColorStack_.top() = 0x00000000; 
+        }
+        default: {
+            break;
+        }
+    }
+
+} 
+void RSEnvForegroundColorStrategyModifier ::Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta)   
+{                                                                                                                 
+    if (auto property = std::static_pointer_cast<RSRenderAnimatableProperty<ForegroundColorStrategyType >>(prop)) {                       
+        auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<ForegroundColorStrategyType >>(property_);              
+        renderProperty->Set(isDelta ? (renderProperty->Get() + property->Get()) : property->Get());               
+    }                                                                                                             
 }
 
 RSRenderModifier* RSRenderModifier::Unmarshalling(Parcel& parcel)

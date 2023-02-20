@@ -73,6 +73,11 @@ void RSParallelSubThread::MainLoop()
             Prepare();
             RSParallelRenderManager::Instance()->SubMainThreadNotify(threadIndex_);
             RS_TRACE_END();
+        } else if (RSParallelRenderManager::Instance()->GetTaskType() == TaskType::CALC_COST_TASK) {
+            RS_TRACE_BEGIN("SubThreadCalcCost[" + std::to_string(threadIndex_) + "]");
+            CalcCost();
+            RSParallelRenderManager::Instance()->SubMainThreadNotify(threadIndex_);
+            RS_TRACE_END();
         } else {
             RS_TRACE_BEGIN("SubThreadCostProcess[" + std::to_string(threadIndex_) + "]");
             StartRender();
@@ -163,6 +168,44 @@ void RSParallelSubThread::Prepare()
                 (startTime_.tv_sec * 1000.0f + startTime_.tv_nsec * 1e-6);
             RSParallelRenderManager::Instance()->SetRenderTaskCost(threadIndex_, task->GetIdx(), cost,
                 TaskType::PREPARE_TASK);
+        }
+    }
+}
+
+void RSParallelSubThread::CalcCost()
+{
+    if (threadTask_ == nullptr) {
+        RS_LOGE("CalcCost thread task is null");
+        return;
+    }
+    RSUniRenderVisitor *uniVisitor = RSParallelRenderManager::Instance()->GetUniVisitor();
+    if (uniVisitor == nullptr) {
+        RS_LOGE("CalcCost visitor is null");
+        return;
+    }
+    visitor_ = std::make_shared<RSUniRenderVisitor>(*uniVisitor);
+
+    while (threadTask_->GetTaskSize() > 0) {
+        if (RSParallelRenderManager::Instance()->ParallelRenderExtEnabled()) {
+            clock_gettime(CLOCK_THREAD_CPUTIME_ID, &startTime_);
+        }
+        auto task = threadTask_->GetNextRenderTask();
+        if (task == nullptr || task->GetIdx() == 0) {
+            RS_LOGI("CalcCost task is invalid");
+            continue;
+        }
+        auto node = task->GetNode();
+        if (node == nullptr) {
+            RS_LOGI("CalcCost node is null");
+            continue;
+        }
+        node->CalcCost(visitor_);
+        if (RSParallelRenderManager::Instance()->ParallelRenderExtEnabled()) {
+            clock_gettime(CLOCK_THREAD_CPUTIME_ID, &stopTime_);
+            float cost = (stopTime_.tv_sec * 1000.0f + stopTime_.tv_nsec * 1e-6) -
+                (startTime_.tv_sec * 1000.0f + startTime_.tv_nsec * 1e-6);
+            RSParallelRenderManager::Instance()->SetRenderTaskCost(threadIndex_, task->GetIdx(), cost,
+                TaskType::CALC_COST_TASK);
         }
     }
 }

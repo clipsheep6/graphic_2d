@@ -67,6 +67,13 @@ private:
         }
 
     private:
+        void CalcBaseRenderNodeCost(RSBaseRenderNode& node) override {}
+        void CalcCanvasRenderNodeCost(RSCanvasRenderNode& node) override {}
+        void CalcDisplayRenderNodeCost(RSDisplayRenderNode& node) override {}
+        void CalcProxyRenderNodeCost(RSProxyRenderNode& node) override {}
+        void CalcRootRenderNodeCost(RSRootRenderNode& node) override {}
+        void CalcSurfaceRenderNodeCost(RSSurfaceRenderNode& node) override {}
+
         void ProcessSurfaceRenderNodeWithUni(RSSurfaceRenderNode& node);
         void CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNode& node);
         void CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode& node);

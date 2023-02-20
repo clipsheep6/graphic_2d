@@ -42,7 +42,16 @@ public:
     void ProcessProxyRenderNode(RSProxyRenderNode& node) override {}
     void ProcessRootRenderNode(RSRootRenderNode& node) override {}
     void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
+
+    void CalcBaseRenderNodeCost(RSBaseRenderNode& node) override;
+    void CalcCanvasRenderNodeCost(RSCanvasRenderNode& node) override {}
+    void CalcDisplayRenderNodeCost(RSDisplayRenderNode& node) override;
+    void CalcProxyRenderNodeCost(RSProxyRenderNode& node) override {}
+    void CalcRootRenderNodeCost(RSRootRenderNode& node) override {}
+    void CalcSurfaceRenderNodeCost(RSSurfaceRenderNode& node) override;
+
 private:
+    bool IsNodeNeedToHandled(RSSurfaceRenderNode& node);
     bool isOpDropped_ = false;
     bool isPartialRenderEnabled_ = false;
     bool isSecurityDisplay_ = false;

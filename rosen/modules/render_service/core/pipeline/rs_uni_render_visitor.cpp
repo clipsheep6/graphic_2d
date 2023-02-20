@@ -90,6 +90,7 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     isHardwareComposerEnabled_ = RSSystemProperties::GetHardwareComposerEnabled();
     surfaceNodePrepareMutex_ = std::make_shared<std::mutex>();
     parallelRenderType_ = RSSystemProperties::GetParallelRenderingEnabled();
+    isCalcCostEnable_ = RSSystemProperties::GetCalcCostEnabled();
 }
 
 RSUniRenderVisitor::RSUniRenderVisitor(std::shared_ptr<RSPaintFilterCanvas> canvas, uint32_t surfaceIndex)
@@ -709,6 +710,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         node.GetDirtyManager()->GetDirtyRegion().ToString().c_str());
     RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode node: %" PRIu64 ", child size:%u", node.GetId(),
         node.GetChildrenCount());
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    bool isNeedCalcCost = node.GetSurfaceChangedRects().size() > 0;
+#endif
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
         RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode ScreenManager is nullptr");
@@ -892,6 +896,15 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             canvas_->restoreToCount(saveCount);
         }
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+        if ((isParallel_ && ((rects.size() > 0) || !isPartialRenderEnabled_)) && isCalcCostEnable_) {
+            auto parallelRenderManager = RSParallelRenderManager::Instance();
+            parallelRenderManager->CopyCalcCostVisitorAndPackTask(*this, node, isNeedCalcCost);
+            if (parallelRenderManager->IsNeedCalcCost()) {
+                parallelRenderManager->LoadBalanceAndNotify(TaskType::CALC_COST_TASK);
+                parallelRenderManager->WaitCalcCostEnd();
+                parallelRenderManager->UpdateNodeCost(node);
+            }
+        }
         if (isParallel_ && ((rects.size() > 0) || !isPartialRenderEnabled_)) {
             ClearTransparentBeforeSaveLayer();
             auto parallelRenderManager = RSParallelRenderManager::Instance();
@@ -1691,6 +1704,69 @@ bool RSUniRenderVisitor::DoDirectComposition(std::shared_ptr<RSBaseRenderNode> r
     processor_->PostProcess();
     RS_LOGD("RSUniRenderVisitor::DoDirectComposition end");
     return true;
+}
+
+void RSUniRenderVisitor::CalcBaseRenderNodeCost(RSBaseRenderNode& node)
+{
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    for (auto& child : node.GetSortedChildren()) {
+        child->CalcCost(shared_from_this());
+    }
+#endif
+}
+
+void RSUniRenderVisitor::CalcCanvasRenderNodeCost(RSCanvasRenderNode& node)
+{
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    const auto& property = node.GetRenderProperties();
+    if (!property.GetVisible()) {
+        return;
+    }
+    if (!curSurfaceNode_->SubNodeNeedDraw(node.GetOldDirtyInSurface(), partialRenderType_) &&
+        !node.HasChildrenOutOfRect()) {
+        return;
+    }
+    auto parallelRenderManager = RSParallelRenderManager::Instance();
+    curSurfaceCostManager_->AddNodeCost(parallelRenderManager->GetCost(node));
+    CalcBaseRenderNodeCost(node);
+#endif
+}
+
+void RSUniRenderVisitor::CalcDisplayRenderNodeCost(RSDisplayRenderNode& node)
+{
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    CalcBaseRenderNodeCost(node);
+#endif
+}
+
+void RSUniRenderVisitor::CalcProxyRenderNodeCost(RSProxyRenderNode& node)
+{
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    CalcBaseRenderNodeCost(node);
+#endif
+}
+
+void RSUniRenderVisitor::CalcRootRenderNodeCost(RSRootRenderNode& node)
+{
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    CalcCanvasRenderNodeCost(node);
+#endif
+}
+
+void RSUniRenderVisitor::CalcSurfaceRenderNodeCost(RSSurfaceRenderNode& node)
+{
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    RS_TRACE_NAME_FMT("CalcSurfaceRenderNodeCost %s", node.GetName().c_str());
+    if (node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE) {
+        auto parallelRenderManager = RSParallelRenderManager::Instance();
+        curSurfaceCostManager_->AddNodeCost(parallelRenderManager->GetSelfDrawNodeCost());
+        return;
+    }
+    curSurfaceNode_ = node.ReinterpretCastTo<RSSurfaceRenderNode>();
+    curSurfaceCostManager_ = node.GetNodeCostManager();
+    curSurfaceCostManager_->Reset();
+    CalcBaseRenderNodeCost(node);
+#endif
 }
 } // namespace Rosen
 } // namespace OHOS

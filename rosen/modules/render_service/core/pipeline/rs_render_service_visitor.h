@@ -56,6 +56,13 @@ public:
     }
 
 private:
+    void CalcBaseRenderNodeCost(RSBaseRenderNode& node) override {}
+    void CalcCanvasRenderNodeCost(RSCanvasRenderNode& node) override {}
+    void CalcDisplayRenderNodeCost(RSDisplayRenderNode& node) override {}
+    void CalcProxyRenderNodeCost(RSProxyRenderNode& node) override {}
+    void CalcRootRenderNodeCost(RSRootRenderNode& node) override {}
+    void CalcSurfaceRenderNodeCost(RSSurfaceRenderNode& node) override {}
+
     std::unique_ptr<SkCanvas> skCanvas_;
     std::shared_ptr<RSPaintFilterCanvas> canvas_;
     float globalZOrder_ = 0.0f;

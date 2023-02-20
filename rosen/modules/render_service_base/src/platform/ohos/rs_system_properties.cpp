@@ -120,6 +120,11 @@ bool RSSystemProperties::GetDirectClientCompEnableStatus()
     return std::atoi((system::GetParameter("rosen.directClientComposition.enabled", "1")).c_str()) != 0;
 }
 
+bool RSSystemProperties::GetCalcCostEnabled()
+{
+    return std::atoi((system::GetParameter("rosen.calcCost.enabled", "0")).c_str()) != 0;
+}
+
 bool RSSystemProperties::GetHighContrastStatus()
 {
     // If the value of rosen.directClientComposition.enabled is not 0 then enable the direct CLIENT composition.

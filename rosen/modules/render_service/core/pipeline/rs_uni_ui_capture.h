@@ -62,6 +62,13 @@ private:
         void SetCanvas(std::shared_ptr<RSRecordingCanvas> canvas);
 
     private:
+        void CalcBaseRenderNodeCost(RSBaseRenderNode& node) override {}
+        void CalcCanvasRenderNodeCost(RSCanvasRenderNode& node) override {}
+        void CalcDisplayRenderNodeCost(RSDisplayRenderNode& node) override {}
+        void CalcProxyRenderNodeCost(RSProxyRenderNode& node) override {}
+        void CalcRootRenderNodeCost(RSRootRenderNode& node) override {}
+        void CalcSurfaceRenderNodeCost(RSSurfaceRenderNode& node) override {}
+
         void ProcessSurfaceRenderNodeWithUni(RSSurfaceRenderNode& node);
         void ProcessSurfaceViewWithUni(RSSurfaceRenderNode& node);
         void ProcessSurfaceViewWithoutUni(RSSurfaceRenderNode& node);

@@ -51,7 +51,8 @@ enum class ParallelStatus {
 
 enum class TaskType {
     PREPARE_TASK = 0,
-    PROCESS_TASK
+    PROCESS_TASK,
+    CALC_COST_TASK
 };
 
 class RSParallelRenderManager {
@@ -64,6 +65,7 @@ public:
     void EndSubRenderThread();
     void CopyVisitorAndPackTask(RSUniRenderVisitor &visitor, RSDisplayRenderNode &node);
     void CopyPrepareVisitorAndPackTask(RSUniRenderVisitor &visitor, RSDisplayRenderNode &node);
+    void CopyCalcCostVisitorAndPackTask(RSUniRenderVisitor &visitor, RSDisplayRenderNode &node, bool isNeedCalc);
     void PackRenderTask(RSSurfaceRenderNode &node, TaskType type = TaskType::PROCESS_TASK);
     void LoadBalanceAndNotify(TaskType type = TaskType::PROCESS_TASK);
     void MergeRenderResult(std::shared_ptr<RSPaintFilterCanvas> canvas);
@@ -73,6 +75,11 @@ public:
     void SubMainThreadNotify(int threadIndex);
     void WaitSubMainThread(uint32_t threadIndex);
     void SubMainThreadWait(uint32_t threadIndex);
+    void WaitCalcCostEnd();
+    void UpdateNodeCost(RSDisplayRenderNode& node);
+    bool IsNeedCalcCost() const;
+    int32_t GetCost(RSRenderNode &node) const;
+    int32_t GetSelfDrawNodeCost() const;
     void SetRenderTaskCost(uint32_t subMainThreadIdx, uint64_t loadId, float cost,
         TaskType type = TaskType::PROCESS_TASK);
     bool ParallelRenderExtEnabled();
@@ -109,12 +116,15 @@ private:
     RSParallelRenderManager &operator = (const RSParallelRenderManager &&) = delete;
     void DrawImageMergeFunc(std::shared_ptr<RSPaintFilterCanvas> canvas);
     void FlushOneBufferFunc();
+    void GetCostFactor();
 
     std::shared_ptr<RSParallelPackVisitor> packVisitor_;
     std::shared_ptr<RSParallelPackVisitor> packVisitorPrepare_;
+    std::shared_ptr<RSParallelPackVisitor> calcCostVisitor_;
     std::vector<std::unique_ptr<RSParallelSubThread>> threadList_;
     RSParallelTaskManager processTaskManager_;
     RSParallelTaskManager prepareTaskManager_;
+    RSParallelTaskManager calcCostTaskManager_;
     int height_;
     int width_;
     std::vector<uint8_t> flipCoin_;
@@ -133,6 +143,11 @@ private:
     RSUniRenderVisitor *uniVisitor_ = nullptr;
     TaskType taskType_;
     std::unique_ptr<RSParallelHardwareComposer> parallelHardwareComposer_;
+
+    std::vector<uint32_t> parallelPolicy_;
+    int32_t calcCostCount_ = 0;
+    std::map<std::string, int32_t> costFactor_;
+    std::map<int64_t, int32_t> imageFactor_;
 };
 } // namespace Rosen
 } // namespace OHOS

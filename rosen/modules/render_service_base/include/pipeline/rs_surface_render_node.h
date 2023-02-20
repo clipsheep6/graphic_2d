@@ -29,6 +29,7 @@
 #include "common/rs_occlusion_region.h"
 #include "common/rs_vector4.h"
 #include "ipc_callbacks/buffer_available_callback.h"
+#include "pipeline/rs_node_cost_manager.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
@@ -176,6 +177,7 @@ public:
         bool isUniRender) override;
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
+    void CalcCost(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
     void SetContextBounds(const Vector4f bounds);
 
@@ -202,6 +204,11 @@ public:
     bool GetSecurityLayer() const;
 
     std::shared_ptr<RSDirtyRegionManager> GetDirtyManager() const;
+
+    std::shared_ptr<RSNodeCostManager> GetNodeCostManager() const
+    {
+        return nodeCostManager_;
+    }
 
     void SetSrcRect(const RectI& rect)
     {
@@ -566,6 +573,7 @@ private:
     Occlusion::Region alignedVisibleDirtyRegion_;
     bool isOcclusionVisible_ = true;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
+    std::shared_ptr<RSNodeCostManager> nodeCostManager_ = nullptr;
     RectI dstRect_;
     bool dstRectChanged_ = false;
     uint8_t abilityBgAlpha_ = 0;

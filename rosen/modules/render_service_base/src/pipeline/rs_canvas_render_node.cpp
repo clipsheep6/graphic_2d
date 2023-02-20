@@ -69,6 +69,14 @@ void RSCanvasRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->ProcessCanvasRenderNode(*this);
 }
 
+void RSCanvasRenderNode::CalcCost(const std::shared_ptr<RSNodeVisitor>& visitor)
+{
+    if (!visitor) {
+        return;
+    }
+    visitor->CalcCanvasRenderNodeCost(*this);
+}
+
 void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     RSRenderNode::ProcessRenderBeforeChildren(canvas);

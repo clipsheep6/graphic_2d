@@ -475,6 +475,34 @@ Matrix3f RSProperties::GetSublayerTransform() const
     return (sublayerTransform_ != nullptr) ? *sublayerTransform_ : Matrix3f::IDENTITY;
 }
 
+void RSProperties::SetEnvForegroundColor(Color color)
+{
+    if (!decoration_) {
+        decoration_ = std::make_unique<Decoration>();
+    }
+
+    decoration_->envForegroundColorStack_.top().envForegroundColor = color;
+    SetDirty();
+}
+void RSProperties::SetEnvForegroundColorStrategy(ForegroundColorStrategyType colorType)
+{
+    if (!decoration_) {
+        decoration_ = std::make_unique<Decoration>();
+    }
+
+    switch (colorType) {
+        case ForegroundColorStrategyType::INVERT_BACKGROUNDCOLOR:
+            // 调用取色接口取值设置给栈顶
+            decoration_->envForegroundColorStack_.top().envForegroundColor = 0xFFFFFFFF;
+            break;
+
+        default:
+            break;
+    }
+
+    SetDirty();
+}
+
 // foreground properties
 void RSProperties::SetForegroundColor(Color color)
 {
@@ -992,9 +1020,9 @@ std::string RSProperties::Dump() const
 {
     std::string dumpInfo;
     char buffer[UINT8_MAX] = { 0 };
-    if (sprintf_s(buffer, UINT8_MAX, "Bounds[%.1f %.1f %.1f %.1f] Frame[%.1f %.1f %.1f %.1f]",
-        GetBoundsPositionX(), GetBoundsPositionY(), GetBoundsWidth(), GetBoundsHeight(),
-        GetFramePositionX(), GetFramePositionY(), GetFrameWidth(), GetFrameHeight()) != -1) {
+    if (sprintf_s(buffer, UINT8_MAX, "Bounds[%.1f %.1f %.1f %.1f] Frame[%.1f %.1f %.1f %.1f]", GetBoundsPositionX(),
+            GetBoundsPositionY(), GetBoundsWidth(), GetBoundsHeight(), GetFramePositionX(), GetFramePositionY(),
+            GetFrameWidth(), GetFrameHeight()) != -1) {
         dumpInfo.append(buffer);
     }
 
@@ -1003,8 +1031,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for PositionZ, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetPositionZ(), 0.f) &&
-        sprintf_s(buffer, UINT8_MAX, ", PositionZ[%.1f]", GetPositionZ()) != -1) {
+    if (!ROSEN_EQ(GetPositionZ(), 0.f) && sprintf_s(buffer, UINT8_MAX, ", PositionZ[%.1f]", GetPositionZ()) != -1) {
         dumpInfo.append(buffer);
     }
 
@@ -1026,8 +1053,8 @@ std::string RSProperties::Dump() const
         return "Failed to memset_s for CornerRadius, ret=" + std::to_string(ret);
     }
     if (!GetCornerRadius().IsZero() &&
-        sprintf_s(buffer, UINT8_MAX, ", CornerRadius[%.1f %.1f %.1f %.1f]",
-            GetCornerRadius().x_, GetCornerRadius().y_, GetCornerRadius().z_, GetCornerRadius().w_) != -1) {
+        sprintf_s(buffer, UINT8_MAX, ", CornerRadius[%.1f %.1f %.1f %.1f]", GetCornerRadius().x_, GetCornerRadius().y_,
+            GetCornerRadius().z_, GetCornerRadius().w_) != -1) {
         dumpInfo.append(buffer);
     }
 
@@ -1114,8 +1141,7 @@ std::string RSProperties::Dump() const
     if (ret != EOK) {
         return "Failed to memset_s for Alpha, ret=" + std::to_string(ret);
     }
-    if (!ROSEN_EQ(GetAlpha(), 1.f) &&
-        sprintf_s(buffer, UINT8_MAX, ", Alpha[%.1f]", GetAlpha()) != -1) {
+    if (!ROSEN_EQ(GetAlpha(), 1.f) && sprintf_s(buffer, UINT8_MAX, ", Alpha[%.1f]", GetAlpha()) != -1) {
         dumpInfo.append(buffer);
     }
 
@@ -1146,11 +1172,11 @@ std::string RSProperties::Dump() const
         return "Failed to memset_s for BgImage, ret=" + std::to_string(ret);
     }
     if ((!ROSEN_EQ(GetBgImagePositionX(), defaultDecoration->bgImageRect_.left_) ||
-        !ROSEN_EQ(GetBgImagePositionY(), defaultDecoration->bgImageRect_.top_) ||
-        !ROSEN_EQ(GetBgImageWidth(), defaultDecoration->bgImageRect_.width_) ||
-        !ROSEN_EQ(GetBgImageHeight(), defaultDecoration->bgImageRect_.height_)) &&
-        sprintf_s(buffer, UINT8_MAX, ", BgImage[%.1f %.1f %.1f %.1f]", GetBgImagePositionX(),
-            GetBgImagePositionY(), GetBgImageWidth(), GetBgImageHeight()) != -1) {
+            !ROSEN_EQ(GetBgImagePositionY(), defaultDecoration->bgImageRect_.top_) ||
+            !ROSEN_EQ(GetBgImageWidth(), defaultDecoration->bgImageRect_.width_) ||
+            !ROSEN_EQ(GetBgImageHeight(), defaultDecoration->bgImageRect_.height_)) &&
+        sprintf_s(buffer, UINT8_MAX, ", BgImage[%.1f %.1f %.1f %.1f]", GetBgImagePositionX(), GetBgImagePositionY(),
+            GetBgImageWidth(), GetBgImageHeight()) != -1) {
         dumpInfo.append(buffer);
     }
 

@@ -33,6 +33,7 @@ ohos_source_set("render_service_client_src") {
   defines += gpu_defines
   include_dirs = [
     "core",
+    "$rosen_root/modules/render_frame_tarce/include",
     "$rosen_root/modules/render_service_base/src",
     "$rosen_root/modules/2d_graphics/src",
     "//foundation/graphic/utils/log",
@@ -120,7 +121,7 @@ ohos_source_set("render_service_client_src") {
   deps += [
     "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk:accessibilityconfig",
     "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
-    "//foundation/resourceschedule/frame_aware_sched/interfaces/innerkits/frameintf:frame_trace_intf",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_frame_trace:render_frame_trace",
   ]
 
   if (rss_enabled) {

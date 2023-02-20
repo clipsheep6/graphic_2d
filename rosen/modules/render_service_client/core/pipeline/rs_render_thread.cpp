@@ -49,9 +49,9 @@
 #include "res_type.h"
 #endif
 
-#include "frame_trace.h"
+#include "render_frame_trace.h"
+
 using namespace FRAME_TRACE;
-static const std::string RT_INTERVAL_NAME = "renderthread";
 
 static void SystemCallSetThreadName(const std::string& name)
 {
@@ -97,18 +97,14 @@ RSRenderThread::RSRenderThread()
             renderStartTimeStamp = jankDetector_->GetSysTimeNs();
         }
         RS_TRACE_BEGIN("RSRenderThread DrawFrame: " + std::to_string(timestamp_));
-        if (RSSystemProperties::FrameTraceEnabled()) {
-            QuickStartFrameTrace(RT_INTERVAL_NAME);
-        }
+        RenderFrameTrace::GetInstance().RenderStartFrameTrace();
         prevTimestamp_ = timestamp_;
         ProcessCommands();
         ROSEN_LOGD("RSRenderThread DrawFrame(%" PRIu64 ") in %s", prevTimestamp_, renderContext_ ? "GPU" : "CPU");
         Animate(prevTimestamp_);
         Render();
         SendCommands();
-        if (RSSystemProperties::FrameTraceEnabled()) {
-            QuickEndFrameTrace(RT_INTERVAL_NAME);
-        }
+        RenderFrameTrace::GetInstance().QuickEndFrameTrace();
         if (needRender_) {
             jankDetector_->CalculateSkippedFrame(renderStartTimeStamp, jankDetector_->GetSysTimeNs());
         }

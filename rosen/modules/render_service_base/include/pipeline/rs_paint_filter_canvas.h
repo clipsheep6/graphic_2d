@@ -84,7 +84,10 @@ protected:
 private:
     SkSurface* skSurface_ = nullptr;
     std::stack<float> alphaStack_;
-    std::stack<float> envColorStack_;
+    typedef struct {
+        uint32_t envForegroundColor;
+    } EnvColor;
+    std::stack<EnvColor> envColorStack_;
     std::atomic_bool isHighContrastEnabled_ { false };
     bool isCacheEnabled_ { false };
     SkRect visibleRect_ = SkRect::MakeEmpty();

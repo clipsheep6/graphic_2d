@@ -183,6 +183,8 @@ public:
     virtual ~RSAppearanceRenderModifier() = default;
 };
 
+
+
 // declare RenderModifiers like RSBoundsRenderModifier
 #define DECLARE_ANIMATABLE_MODIFIER(MODIFIER_NAME, TYPE, MODIFIER_TYPE, DELTA_OP, MODIFIER_TIER)         \
     class RSB_EXPORT RS##MODIFIER_NAME##RenderModifier : public RS##MODIFIER_TIER##RenderModifier {                 \

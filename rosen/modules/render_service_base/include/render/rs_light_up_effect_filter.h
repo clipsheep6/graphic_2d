@@ -35,6 +35,8 @@ public:
 private:
     float lightUpDegree_ = 0.f;
     sk_sp<SkImageFilter> CreateLightUpEffectFilter(float lightUpDegree);
+
+    friend class RSMarshallingHelper;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -236,7 +236,7 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
     if (modifier->GetType() == RSModifierType::BOUNDS || modifier->GetType() == RSModifierType::FRAME) {
         AddGeometryModifier(modifier);
     } else if (modifier->GetType() < RSModifierType::CUSTOM) {
-        modifiers_.emplace( ->GetPropertyId(), modifier);
+        modifiers_.emplace(modifier->GetPropertyId(), modifier);
     } else {
         drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
     }

@@ -66,6 +66,7 @@ public:
         return animationManager_;
     }
 
+    virtual void ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas) {}
     virtual void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas);
     virtual void ProcessRenderContents(RSPaintFilterCanvas& canvas) {}
     virtual void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas);

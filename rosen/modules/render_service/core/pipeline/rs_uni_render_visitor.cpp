@@ -1286,8 +1286,13 @@ void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
         ProcessBaseRenderNode(node);
         node.ClearCacheSurface();
     } else if (node.GetCacheSurface()) {
+        RS_TRACE_BEGIN("RSUniRenderVisitor::DrawChildRenderNode Freeze Draw nodeId = " +
+            std::to_string(node.GetId()));
         RSUniRenderUtil::DrawCachedSurface(node, *canvas_, node.GetCacheSurface());
+        RS_TRACE_END();
     } else {
+        RS_TRACE_BEGIN("RSUniRenderVisitor::DrawChildRenderNode Freeze Init nodeId = " +
+            std::to_string(node.GetId()));
         isFreeze_ = true;
         int width = std::ceil(node.GetRenderProperties().GetBoundsRect().GetWidth());
         int height = std::ceil(node.GetRenderProperties().GetBoundsRect().GetHeight());
@@ -1301,6 +1306,7 @@ void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
             isOpDropped_ = false;
 
             swap(cacheCanvas, canvas_);
+            node.ProcessRenderContents(*canvas_);
             ProcessBaseRenderNode(node);
             swap(cacheCanvas, canvas_);
 
@@ -1319,6 +1325,7 @@ void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
                 node.GetId());
         }
         isFreeze_ = false;
+        RS_TRACE_END();
     }
 }
 
@@ -1588,7 +1595,11 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     }
     // in case preparation'update is skipped
     node.GetMutableRenderProperties().CheckEmptyBounds();
-    node.ProcessRenderBeforeChildren(*canvas_);
+    if (!node.IsFreeze()) {
+        node.ProcessRenderBeforeChildren(*canvas_);
+    } else {
+        node.ProcessAnimatePropertyBeforeChildren(*canvas_);
+    }
     DrawChildRenderNode(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }

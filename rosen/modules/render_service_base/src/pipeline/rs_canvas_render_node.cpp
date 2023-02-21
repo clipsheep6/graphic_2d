@@ -69,7 +69,8 @@ void RSCanvasRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->ProcessCanvasRenderNode(*this);
 }
 
-void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
+void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(
+    RSPaintFilterCanvas& canvas)
 {
     RSRenderNode::ProcessRenderBeforeChildren(canvas);
 
@@ -89,7 +90,22 @@ void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas
     if (GetRenderProperties().GetClipToFrame()) {
         RSPropertiesPainter::Clip(canvas, GetRenderProperties().GetFrameRect());
     }
+#endif
+}
+
+void RSCanvasRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canvas)
+{
+#ifdef ROSEN_OHOS
+    RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::CONTENT_STYLE);
+}
+
+void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
+{
+#ifdef ROSEN_OHOS
+    ProcessAnimatePropertyBeforeChildren(canvas);
+    ProcessRenderContents(canvas);
+#endif
 }
 
 void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)

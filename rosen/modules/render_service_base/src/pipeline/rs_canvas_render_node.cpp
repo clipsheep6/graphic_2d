@@ -103,10 +103,12 @@ void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas
     }
 #endif
     ApplyDrawCmdModifier(context, RSModifierType::CONTENT_STYLE);
+    canvas.SaveEnvColor();
 }
 
 void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 {
+    canvas.RestoreEnvColor();
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::FOREGROUND_STYLE);
 

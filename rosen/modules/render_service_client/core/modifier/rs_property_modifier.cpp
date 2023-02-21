@@ -31,7 +31,7 @@ RSModifierType RSEnvForegroundColorModifier::GetModifierType() const            
 std::shared_ptr<RSRenderModifier> RSEnvForegroundColorModifier::CreateRenderModifier() const                     \
 {                                                                                                               \
     auto renderProperty = GetRenderProperty();                                                                  \
-    auto renderModifier = std::make_shared<RSEnvForegroundColorModifier>(renderProperty);                  \
+    auto renderModifier = std::make_shared<RSEnvForegroundColorRenderModifier>(renderProperty);                  \
     return renderModifier;                                                                                      \
 }
 
@@ -45,7 +45,7 @@ RSModifierType RSEnvForegroundColorStrategyModifier::GetModifierType() const    
 std::shared_ptr<RSRenderModifier> RSEnvForegroundColorStrategyModifier::CreateRenderModifier() const                     \
 {                                                                                                               \
     auto renderProperty = GetRenderProperty();                                                                  \
-    auto renderModifier = std::make_shared<RSEnvForegroundColorStrategyModifier>(renderProperty);                  \
+    auto renderModifier = std::make_shared<RSEnvForegroundColorStrategyRenderModifier>(renderProperty);                  \
     return renderModifier;                                                                                      \
 }
 

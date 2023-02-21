@@ -160,7 +160,8 @@ void RSEnvForegroundColorModifier::Apply(RSModifierContext& context)
     if (context.canvas_->envColorStack_.size() < 1) {
         return;
     }
-    context.canvas_->envColorStack_.top() = renderProperty->Get();                                           
+
+    context.canvas_->envColorStack_.top().envForegroundColor = renderProperty->Get();                                         
 }  
 
 void RSEnvForegroundColorModifier::Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta)   
@@ -188,7 +189,7 @@ void RSEnvForegroundColorStrategyModifier ::Apply(RSModifierContext& context)
     switch (renderProperty->Get()) {
         case INVERT_BACKGROUNDCOLOR: {
             // 截图调用取色接口算颜色
-            context.canvas_->envColorStack_.top() = 0x00000000; 
+            context.canvas_->envColorStack_.top().envForegroundColor = 0x00000000; 
         }
         default: {
             break;

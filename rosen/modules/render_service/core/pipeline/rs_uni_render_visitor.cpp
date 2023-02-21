@@ -817,7 +817,9 @@ void RSUniRenderVisitor::DrawSurfaceOpaqueRegionForDFX(RSSurfaceRenderNode& node
 void RSUniRenderVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
 {
     for (auto& child : node.GetSortedChildren()) {
+        canvas_->SaveEnvColor();
         child->Process(shared_from_this());
+        canvas_->RestoreEnvColor();
     }
     // clear SortedChildren, it will be generated again in next frame
     node.ResetSortedChildren();

@@ -84,29 +84,29 @@ static std::unordered_map<RSModifierType, ModifierUnmarshallingFunc> funcLUT = {
             return modifier;
         },
     },  
-    { RSModifierType::ENV_FOREGROUND_COLOR, [](Parcel& parcel) -> RSRenderModifier* {                          \
-            std::shared_ptr<RSRenderAnimatableProperty<uint32_t>> prop;                                     \
-            if (!RSMarshallingHelper::Unmarshalling(parcel, prop)) {                                    \
-                return nullptr;                                                                         \
-            }                                                                                           \
-            auto modifier = new RSEnvForegroundColorModifier(prop);                                \
-            if (!modifier) {                                                                            \
-                return nullptr;                                                                         \
-            }                                                                                           \
-            return modifier;                                                                            \
-        },                                                                                              \
+    { RSModifierType::ENV_FOREGROUND_COLOR, [](Parcel& parcel) -> RSRenderModifier* {                          
+            std::shared_ptr<RSRenderAnimatableProperty<uint32_t>> prop;                                     
+            if (!RSMarshallingHelper::Unmarshalling(parcel, prop)) {                                    
+                return nullptr;                                                                         
+            }                                                                                           
+            auto modifier = new RSEnvForegroundColorModifier(prop);                                
+            if (!modifier) {                                                                            
+                return nullptr;                                                                         
+            }                                                                                           
+            return modifier;                                                                            
+        },                                                                                              
     },
-    { RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY, [](Parcel& parcel) -> RSRenderModifier* {                          \
-            std::shared_ptr<RSRenderAnimatableProperty<uint32_t>> prop;                                     \
-            if (!RSMarshallingHelper::Unmarshalling(parcel, prop)) {                                    \
-                return nullptr;                                                                         \
-            }                                                                                           \
-            auto modifier = new RSEnvForegroundColorStrategyModifier(prop);                                \
-            if (!modifier) {                                                                            \
-                return nullptr;                                                                         \
-            }                                                                                           \
-            return modifier;                                                                            \
-        },                                                                                              \
+    { RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY, [](Parcel& parcel) -> RSRenderModifier* {                          
+            std::shared_ptr<RSRenderAnimatableProperty<uint32_t>> prop;                                     
+            if (!RSMarshallingHelper::Unmarshalling(parcel, prop)) {                                    
+                return nullptr;                                                                         
+            }                                                                                           
+            auto modifier = new RSEnvForegroundColorStrategyModifier(prop);                                
+            if (!modifier) {                                                                            
+                return nullptr;                                                                         
+            }                                                                                           
+            return modifier;                                                                            
+        },                                                                                              
     },
 
 };
@@ -176,7 +176,7 @@ void RSEnvForegroundColorModifier::Update(const std::shared_ptr<RSRenderProperty
 bool RSEnvForegroundColorStrategyModifier ::Marshalling(Parcel& parcel)                                               
 {                                                                                                                 
     auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<ForegroundColorStrategyType >>(property_);                  
-    return parcel.WriteInt16(static_cast<int16_t>(RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY)) &&                              \
+    return parcel.WriteInt16(static_cast<int16_t>(RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY)) &&                              
             RSMarshallingHelper::Marshalling(parcel, renderProperty);                                              
 }  
 

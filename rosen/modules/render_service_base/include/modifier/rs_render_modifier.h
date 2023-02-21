@@ -199,7 +199,7 @@ public:
     }                                                                                                
 };
 
-class RSB_EXPORT RSEnvForegroundColorStrategyRenderModifier : public RSForegroundRenderModifier {                 \
+class RSB_EXPORT RSEnvForegroundColorStrategyRenderModifier : public RSForegroundRenderModifier {                 
 public:                                                                                              
     RSEnvForegroundColorStrategyRenderModifier(const std::shared_ptr<RSRenderPropertyBase>& property)         
         : RSForegroundRenderModifier(property)                                                
@@ -210,7 +210,7 @@ public:
     bool Marshalling(Parcel& parcel) override;                                                       
     RSModifierType GetType() override                                                                
     {                                                                                                
-        return RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY;                                                    \
+        return RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY;                                                    
     }                                                                                                
 };
 

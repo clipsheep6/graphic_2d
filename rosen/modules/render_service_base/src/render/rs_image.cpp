@@ -134,6 +134,7 @@ void RSImage::UploadGpu(SkCanvas& canvas)
             }
             RS_TRACE_NAME("make compress img");
 #ifdef NEW_SKIA
+            // TODO
             sk_sp<SkImage> image = nullptr;
 #else
             auto image = SkImage::MakeFromCompressed(canvas.getGrContext(), compressData_,

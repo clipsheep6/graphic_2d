@@ -28,7 +28,11 @@
 #include "rs_trace.h"
 #include "pipeline/rs_display_render_node.h"
 #include "rs_parallel_render_manager.h"
+#ifdef NEW_SKIA
+#include "include/gpu/GrDirectContext.h"
+#else
 #include "include/gpu/GrContext.h"
+#endif
 #include "common/rs_obj_abs_geometry.h"
 #include "pipeline/rs_uni_render_visitor.h"
 #include "rs_parallel_render_ext.h"
@@ -287,6 +291,11 @@ void RSParallelSubThread::CreateResource()
 }
 
 sk_sp<GrContext> RSParallelSubThread::CreateShareGrContext()
+#ifdef NEW_SKIA
+sk_sp<GrDirectContext> RSParallelSubThread::CreateShareGrContext()
+#else
+sk_sp<GrContext> RSParallelSubThread::CreateShareGrContext()
+#endif
 {
     const GrGLInterface *grGlInterface = GrGLCreateNativeInterface();
     sk_sp<const GrGLInterface> glInterface(grGlInterface);
@@ -299,8 +308,11 @@ sk_sp<GrContext> RSParallelSubThread::CreateShareGrContext()
     options.fGpuPathRenderers = GpuPathRenderers::kAll & ~GpuPathRenderers::kCoverageCounting;
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
-
+#ifdef NEW_SKIA
+    sk_sp<GrDirectContext> grContext = GrDirectContext::MakeGL(GrGLMakeNativeInterface(), options);
+#else
     sk_sp<GrContext> grContext = GrContext::MakeGL(std::move(glInterface), options);
+#endif
     if (grContext == nullptr) {
         RS_LOGE("nullptr grContext is null");
         return nullptr;

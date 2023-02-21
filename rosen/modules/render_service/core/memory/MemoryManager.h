@@ -23,6 +23,10 @@
 namespace OHOS::Rosen {
 class MemoryManager {
 public:
+#ifdef NEW_SKIA
+    static void DumpMemoryUsage(DfxString& log, const GrDirectContext* grContext);
+#else
     static void DumpMemoryUsage(DfxString& log, const GrContext* grContext);
+#endif
 };
 } // namespace OHOS::Rosen

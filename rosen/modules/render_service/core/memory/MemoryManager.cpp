@@ -18,14 +18,21 @@
 #include <SkGraphics.h>
 
 #include "SkiaMemoryTracer.h"
+#ifdef NEW_SKIA
+#include "include/gpu/GrDirectContext.h"
+#else
 #include "include/gpu/GrContext.h"
+#endif
 
 #include "pipeline/rs_main_thread.h"
 
 namespace OHOS::Rosen {
 constexpr uint32_t MEMUNIT_RATE = 1024;
-
+#ifdef NEW_SKIA
+void MemoryManager::DumpMemoryUsage(DfxString& log, const GrDirectContext* grContext)
+#else
 void MemoryManager::DumpMemoryUsage(DfxString& log, const GrContext* grContext)
+#endif
 {
     //////////////////////////////CPU/////////////////////////
     log.AppendFormat("\n---------------\nSkia CPU Caches:\n");

@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef RENDER_SERVICE_CLIENT_CORE_RENDER_RS_MATERIAL_FILTER_H
-#define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_MATERIAL_FILTER_H
+#ifndef RENDER_SERVICE_CLIENT_CORE_RENDER_RS_LIGHT_UP_EFFECT_FILTER_H
+#define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_LIGHT_UP_EFFECT_FILTER_H
 
 #include "render/rs_skia_filter.h"
 
@@ -22,12 +22,12 @@
 
 namespace OHOS {
 namespace Rosen {
-
 class RSLightUpEffectFilter : public RSSkiaFilter {
 public:
     RSLightUpEffectFilter(float lightUpDegree);
     ~RSLightUpEffectFilter() override;
-
+    float GetLightUpDegree();
+    
     std::shared_ptr<RSFilter> Add(const std::shared_ptr<RSFilter>& rhs) override;
     std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs) override;
     std::shared_ptr<RSFilter> Multiply(float rhs) override;
@@ -35,10 +35,8 @@ public:
 private:
     float lightUpDegree_ = 0.f;
     sk_sp<SkImageFilter> CreateLightUpEffectFilter(float lightUpDegree);
-
-    friend class RSMarshallingHelper;
 };
 } // namespace Rosen
 } // namespace OHOS
 
-#endif // RENDER_SERVICE_CLIENT_CORE_RENDER_RS_BLUR_FILTER_H
+#endif // RENDER_SERVICE_CLIENT_CORE_RENDER_RS_LIGHT_UP_EFFECT_FILTER_H

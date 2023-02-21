@@ -39,6 +39,11 @@ sk_sp<SkImageFilter> RSLightUpEffectFilter::CreateLightUpEffectFilter(float ligh
     return SkImageFilters::ColorFilter(lightUpFilter, nullptr);
 }
 
+float RSLightUpEffectFilter::GetLightUpDegree()
+{
+    return lightUpDegree_;
+}
+
 std::shared_ptr<RSFilter> RSLightUpEffectFilter::Add(const std::shared_ptr<RSFilter>& rhs)
 {
     if ((rhs == nullptr) || (rhs->GetFilterType() != FilterType::LIGHTUPEFFECT)) {
@@ -50,7 +55,7 @@ std::shared_ptr<RSFilter> RSLightUpEffectFilter::Add(const std::shared_ptr<RSFil
 
 std::shared_ptr<RSFilter> RSLightUpEffectFilter::Sub(const std::shared_ptr<RSFilter>& rhs)
 {
-    if ((rhs == nullptr) || (rhs->GetFilterType() != FilterType::BLUR)) {
+    if ((rhs == nullptr) || (rhs->GetFilterType() != FilterType::LIGHTUPEFFECT)) {
         return shared_from_this();
     }
     auto lightUpFilter = std::static_pointer_cast<RSLightUpEffectFilter>(rhs);
@@ -59,12 +64,12 @@ std::shared_ptr<RSFilter> RSLightUpEffectFilter::Sub(const std::shared_ptr<RSFil
 
 std::shared_ptr<RSFilter> RSLightUpEffectFilter::Multiply(float rhs)
 {
-    return std::make_shared<RSBlurFilter>(lightUpDegree_ * rhs);
+    return std::make_shared<RSLightUpEffectFilter>(lightUpDegree_ * rhs);
 }
 
 std::shared_ptr<RSFilter> RSLightUpEffectFilter::Negate()
 {
-    return std::make_shared<RSBlurFilter>(-lightUpDegree_);
+    return std::make_shared<RSLightUpEffectFilter>(-lightUpDegree_);
 }
 } // namespace Rosen
 } // namespace OHOS

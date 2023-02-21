@@ -644,7 +644,7 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSFi
         }
         case RSFilter::LIGHTUPEFFECT: {
             auto lightUp = std::static_pointer_cast<RSLightUpEffectFilter>(val);
-            success = success && parcel.WriteFloat(lightUp->lightUpDegree_);
+            success = success && parcel.WriteFloat(lightUp->GetLightUpDegree());
             break;
         }
         default:

@@ -75,7 +75,9 @@ void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas
 
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::TRANSITION);
-
+    ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR);
+    ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY);
+    
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     bool isDrivenVisitMode = IsMarkDriven() && IsDrivenVisitMode();
     RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas, isDrivenVisitMode);
@@ -103,12 +105,10 @@ void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas
     }
 #endif
     ApplyDrawCmdModifier(context, RSModifierType::CONTENT_STYLE);
-    canvas.SaveEnvColor();
 }
 
 void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 {
-    canvas.RestoreEnvColor();
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::FOREGROUND_STYLE);
 

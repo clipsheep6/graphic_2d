@@ -41,6 +41,15 @@ std::shared_ptr<RSFilter> RSFilter::CreateMaterialFilter(int style, float dipSca
 #endif
 }
 
+std::shared_ptr<RSFilter> RSFilter::CreateLightUpEffectFilter(float lightUpDegree)
+{
+#ifdef ROSEN_OHOS
+    return std::make_shared<RSLightUpEffectFilter>(lightUpDegree);
+#else
+    return nullptr;
+#endif
+}
+
 std::shared_ptr<RSFilter> operator+(const std::shared_ptr<RSFilter>& lhs, const std::shared_ptr<RSFilter>& rhs)
 {
     if (lhs == nullptr) {

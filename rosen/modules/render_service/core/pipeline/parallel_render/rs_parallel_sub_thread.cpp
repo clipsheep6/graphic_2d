@@ -290,7 +290,6 @@ void RSParallelSubThread::CreateResource()
         RSParallelRenderManager::Instance()->GetUniVisitor());
 }
 
-sk_sp<GrContext> RSParallelSubThread::CreateShareGrContext()
 #ifdef NEW_SKIA
 sk_sp<GrDirectContext> RSParallelSubThread::CreateShareGrContext()
 #else
@@ -305,7 +304,9 @@ sk_sp<GrContext> RSParallelSubThread::CreateShareGrContext()
     }
 
     GrContextOptions options = {};
+#ifndef NEW_SKIA
     options.fGpuPathRenderers = GpuPathRenderers::kAll & ~GpuPathRenderers::kCoverageCounting;
+#endif
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
 #ifdef NEW_SKIA

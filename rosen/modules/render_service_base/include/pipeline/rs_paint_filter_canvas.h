@@ -30,8 +30,8 @@ namespace Rosen {
 
 class RSB_EXPORT RSPaintFilterCanvas : public SkPaintFilterCanvas {
 public:
-    RSPaintFilterCanvas(SkCanvas* canvas, float alpha = 1.0f);
-    RSPaintFilterCanvas(SkSurface* skSurface, float alpha = 1.0f);
+    RSPaintFilterCanvas(SkCanvas* canvas, float alpha = 1.0f, Env env = {0});
+    RSPaintFilterCanvas(SkSurface* skSurface, float alpha = 1.0f, Env env = {0});
     ~RSPaintFilterCanvas() override {};
 
     void MultiplyAlpha(float alpha);
@@ -46,8 +46,9 @@ public:
     std::pair<int, int> GetSaveCount() const;
     void RestoreCanvasAndAlpha(std::pair<int, int>& count);
 
-    int SaveEnvColor();
-    void RestoreEnvColor();
+    int SaveEnv();
+    void RestoreEnv();
+    void SetEnvForegroundColor (uint32_t color);
 
     SkSurface* GetSurface() const;
 
@@ -88,8 +89,8 @@ private:
     std::stack<float> alphaStack_;
     typedef struct {
         uint32_t envForegroundColor;
-    } EnvColor;
-    std::stack<EnvColor> envColorStack_;
+    } Env;
+    std::stack<Env> envStack_;
     std::atomic_bool isHighContrastEnabled_ { false };
     bool isCacheEnabled_ { false };
     SkRect visibleRect_ = SkRect::MakeEmpty();

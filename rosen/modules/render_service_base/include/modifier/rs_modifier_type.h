@@ -42,8 +42,6 @@ enum class RSModifierType : int16_t {
     ALPHA_OFFSCREEN,
 
     FOREGROUND_COLOR,
-    ENV_FOREGROUND_COLOR,
-    ENV_FOREGROUND_COLOR_STRATEGY,
     BACKGROUND_COLOR,
     BACKGROUND_SHADER,
     BG_IMAGE,
@@ -87,6 +85,8 @@ enum class RSModifierType : int16_t {
     CONTENT_STYLE,
     FOREGROUND_STYLE,
     OVERLAY_STYLE,
+    ENV_FOREGROUND_COLOR,
+    ENV_FOREGROUND_COLOR_STRATEGY,
 };
 
 enum class RSRenderPropertyType : int16_t {

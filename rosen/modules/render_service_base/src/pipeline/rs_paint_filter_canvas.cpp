@@ -18,13 +18,13 @@
 namespace OHOS {
 namespace Rosen {
 
-RSPaintFilterCanvas::RSPaintFilterCanvas(SkCanvas* canvas, float alpha)
-    : SkPaintFilterCanvas(canvas), alphaStack_({ std::clamp(alpha, 0.f, 1.f) }) // construct stack with given alpha
+RSPaintFilterCanvas::RSPaintFilterCanvas(SkCanvas* canvas, float alpha, Env env)
+    : SkPaintFilterCanvas(canvas), alphaStack_({ std::clamp(alpha, 0.f, 1.f) }), envStack_({env}) // construct stack with given alpha and env
 {}
 
-RSPaintFilterCanvas::RSPaintFilterCanvas(SkSurface* skSurface, float alpha)
+RSPaintFilterCanvas::RSPaintFilterCanvas(SkSurface* skSurface, float alpha, Env env)
     : SkPaintFilterCanvas(skSurface ? skSurface->getCanvas() : nullptr), skSurface_(skSurface),
-      alphaStack_({ std::clamp(alpha, 0.f, 1.f) }) // construct stack with given alpha
+      alphaStack_({ std::clamp(alpha, 0.f, 1.f) }), envStack_({env}) // construct stack with given alpha and env
 {}
 
 SkSurface* RSPaintFilterCanvas::GetSurface() const
@@ -36,7 +36,7 @@ bool RSPaintFilterCanvas::onFilter(SkPaint& paint) const
 {
 
     if (paint.getColor() == 0x00000001) {
-        paint.setColor(envColorStack_.top());
+        paint.setColor(envStack_.top().envForegroundColor);
     }
 
     if (alphaStack_.top() >= 1.f) {
@@ -123,22 +123,31 @@ void RSPaintFilterCanvas::RestoreCanvasAndAlpha(std::pair<int, int>& count)
     RestoreAlphaToCount(count.second);
 }
 
-int RSPaintFilterCanvas::SaveEnvColor()
+int RSPaintFilterCanvas::SaveEnv()
 {
     // make a copy of top of stack
-    envColorStack_.push(envColorStack_.top());
+    envStack_.push(envStack_.top());
     // return prev stack height
-    return envColorStack_.size() - 1;
+    return envStack_.size() - 1;
 }
 
 
-void RSPaintFilterCanvas::RestoreEnvColor()
+void RSPaintFilterCanvas::RestoreEnv()
 {
     // sanity check, stack should not be empty
-    if (envColorStack_.size() <= 1) {
+    if (envStack_.size() <= 1) {
         return;
     }
-    envColorStack_.pop();
+    envStack_.pop();
+}
+
+void RSPaintFilterCanvas::SetEnvForegroundColor (uint32_t color)
+{
+    // sanity check, stack should not be empty
+    if (envStack_.empty()) {
+        return;
+    }
+    envStack_.top().envForegroundColor  = color;
 }
 
 } // namespace Rosen

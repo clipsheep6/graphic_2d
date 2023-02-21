@@ -51,7 +51,7 @@ public:
     void onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) override;
     void onDrawPicture(const SkPicture* picture, const SkMatrix* matrix,
                        const SkPaint* paint) override;
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
     void onDrawImageRect(const SkImage* image, const SkRect* src, const SkRect& dst,
             const SkPaint* paint, SrcRectConstraint constraint);
 #else

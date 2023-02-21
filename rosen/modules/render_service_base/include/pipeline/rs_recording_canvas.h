@@ -28,7 +28,7 @@
 #include "pipeline/rs_draw_cmd_list.h"
 #include "property/rs_properties_def.h"
 #include "render/rs_image.h"
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
 #include "src/core/SkVerticesPriv.h"
 #endif
 
@@ -47,7 +47,7 @@ public:
     void Clear() const;
     void AddOp(std::unique_ptr<OpItem>&& opItem);
 
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
     GrDirectContext* getGrContext();
     void SetGrContext(GrDirectContext* grContext);
 #else
@@ -55,7 +55,7 @@ public:
     void SetGrContext(GrContext* grContext);
 #endif
     
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
 	void didConcat(const SkMatrix& matrix);
     void didSetMatrix(const SkMatrix& matrix);
 	void onDrawBitmap(const SkBitmap& bm, SkScalar x, SkScalar y, const SkPaint* paint);
@@ -161,7 +161,7 @@ private:
 
     std::shared_ptr<DrawCmdList> drawCmdList_ { nullptr };
     int saveCount_ = 0;
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
     GrDirectContext* grContext_ = nullptr;
 #else
     GrContext* grContext_ = nullptr;

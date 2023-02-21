@@ -225,7 +225,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SkPaint& val)
         return false;
     }
     SkReadBuffer reader(data->data(), data->size());
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
     val = reader.readPaint();
 #else
     reader.readPaint(&val, nullptr);
@@ -251,7 +251,7 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const sk_sp<SkImage>& val)
         return Marshalling(parcel, data);
     } else {
         SkBitmap bitmap;
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
         if (!as_IB(val.get())->getROPixels(nullptr, &bitmap)) {
 #else
         if (!as_IB(val.get())->getROPixels(&bitmap)) {
@@ -415,7 +415,7 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const sk_sp<SkVertices>& v
         ROSEN_LOGD("unirender: RSMarshallingHelper::Marshalling SkVertices is nullptr");
         return Marshalling(parcel, data);
     }
-#ifndef USE_NEW_SKIA
+#ifndef NEW_SKIA
     data = val->encode();
 #endif
     return Marshalling(parcel, data);
@@ -431,7 +431,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkVertices>& val)
         val = nullptr;
         return true;
     }
-#ifndef USE_NEW_SKIA
+#ifndef NEW_SKIA
     val = SkVertices::Decode(data->data(), data->size());
 #endif
     return val != nullptr;

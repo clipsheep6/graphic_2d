@@ -21,9 +21,7 @@
 #include <tuple>
 
 #include <surface.h>
-#ifdef USE_NEW_SKIA
-#include "include/gpu/GrDirectContext.h"
-#else
+#ifndef NEW_SKIA
 #include "include/gpu/GrContext.h"
 #endif
 

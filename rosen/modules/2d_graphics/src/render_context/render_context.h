@@ -27,7 +27,7 @@
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrBackendSurface.h"
-#if defined(USE_NEW_SKIA)
+#if defined(NEW_SKIA)
 #include "include/gpu/GrDirectContext.h"
 #else
 #include "include/gpu/GrContext.h"
@@ -48,7 +48,7 @@ public:
 
     void SetColorSpace(ColorGamut colorSpace);
     void InitializeEglContext();
-#if defined(USE_NEW_SKIA)
+#if defined(NEW_SKIA)
     GrDirectContext* GetGrContext() const
     {
         return grContext_.get();
@@ -127,7 +127,7 @@ public:
     EGLContext CreateShareContext();
 
 private:
-#if defined(USE_NEW_SKIA)
+#if defined(NEW_SKIA)
     sk_sp<GrDirectContext> grContext_;
 #else
     sk_sp<GrContext> grContext_;

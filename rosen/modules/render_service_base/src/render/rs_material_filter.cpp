@@ -16,7 +16,7 @@
 
 #include <unordered_map>
 
-#if defined(USE_NEW_SKIA)
+#if defined(NEW_SKIA)
 #include "include/effects/SkImageFilters.h"
 #include "include/core/SkTileMode.h"
 #else
@@ -75,7 +75,7 @@ float RSMaterialFilter::RadiusVp2Sigma(float radiusVp, float dipScale)
 sk_sp<SkImageFilter> RSMaterialFilter::CreateMaterialFilter(float radius, float sat, SkColor maskColor)
 {
     maskColor_ = maskColor;
-#if defined(USE_NEW_SKIA)
+#if defined(NEW_SKIA)
     sk_sp<SkImageFilter> blurFilter = SkImageFilters::Blur(radius, radius, nullptr, nullptr,
         SkTileMode::kClamp); // blur
 #else

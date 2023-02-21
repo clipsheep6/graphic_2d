@@ -15,7 +15,7 @@
 
 #include "render/rs_blur_filter.h"
 
-#if defined(USE_NEW_SKIA)
+#if defined(NEW_SKIA)
 #include "include/effects/SkImageFilters.h"
 #include "include/core/SkTileMode.h"
 #else
@@ -23,7 +23,7 @@
 #endif
 namespace OHOS {
 namespace Rosen {
-#if defined(USE_NEW_SKIA)
+#if defined(NEW_SKIA)
 RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY): RSSkiaFilter(SkImageFilters::Blur(blurRadiusX,
     blurRadiusY, nullptr, nullptr, SkTileMode::kClamp)), blurRadiusX_(blurRadiusX),
     blurRadiusY_(blurRadiusY)

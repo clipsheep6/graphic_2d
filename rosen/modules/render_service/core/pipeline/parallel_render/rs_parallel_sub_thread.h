@@ -24,7 +24,11 @@
 #include "EGL/eglext.h"
 #include "SkImage.h"
 #include "include/core/SkSurface.h"
+#if defined(NEW_SKIA)
+#include "include/gpu/GrDirectContext.h"
+#else
 #include "include/gpu/GrContext.h"
+#endif
 #include "pipeline/parallel_render/rs_render_task.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_paint_filter_canvas.h"

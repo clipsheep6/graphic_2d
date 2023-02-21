@@ -36,7 +36,7 @@
 #include "render/rs_image.h"
 #include "transaction/rs_marshalling_helper.h"
 
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
 #include "src/core/SkVerticesPriv.h"
 #endif
 
@@ -833,7 +833,7 @@ private:
 
 class VerticesOpItem : public OpItemWithPaint {
 public:
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
     VerticesOpItem(const SkVertices* vertices, const SkVertices_DeprecatedBone bones[],
         int boneCount, SkBlendMode mode, const SkPaint& paint);
 #else
@@ -855,7 +855,7 @@ public:
 
 private:
     sk_sp<SkVertices> vertices_;
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
     SkVertices_DeprecatedBone* bones_;
 #else
     SkVertices::Bone* bones_;

@@ -50,7 +50,7 @@ void RSRecordingCanvas::AddOp(std::unique_ptr<OpItem>&& opItem)
     drawCmdList_->AddOp(std::move(opItem));
 }
 
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
     GrDirectContext* RSRecordingCanvas::getGrContext()
 #else
     GrContext* RSRecordingCanvas::getGrContext()
@@ -59,7 +59,7 @@ void RSRecordingCanvas::AddOp(std::unique_ptr<OpItem>&& opItem)
     return grContext_;
 }
 
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
     void RSRecordingCanvas::SetGrContext(GrDirectContext* grContext)
 #else
     void RSRecordingCanvas::SetGrContext(GrContext* grContext)
@@ -330,14 +330,14 @@ void RSRecordingCanvas::DrawImageLatticeAsBitmap(
     SkCanvas tempCanvas(bitmap);
     // align to [0, 0]
     tempCanvas.translate(-dst.left(), -dst.top());
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
     tempCanvas.drawImageLattice(image, lattice, dst);
 #else
     tempCanvas.drawImageLattice(image, lattice, dst, paint);
 #endif
     tempCanvas.flush();
     // draw on canvas with correct offset
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
     drawImage(bitmap.asImage(), dst.left(), dst.top());
 #else
     drawBitmap(bitmap, dst.left(), dst.top());
@@ -381,7 +381,7 @@ void RSRecordingCanvas::onDrawPoints(SkCanvas::PointMode mode, size_t count, con
     AddOp(std::move(op));
 }
 
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
 void RSRecordingCanvas::onDrawVerticesObject(
     const SkVertices* vertices, const SkVertices_DeprecatedBone bones[], int boneCount, SkBlendMode mode, const SkPaint& paint)
 #else

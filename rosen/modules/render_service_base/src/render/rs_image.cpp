@@ -125,7 +125,7 @@ void RSImage::UploadGpu(SkCanvas& canvas)
         if (cache) {
             image_ = cache;
         } else {
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
             if (canvas.recordingContext() == nullptr) {
 #else
             if (canvas.getGrContext() == nullptr) {
@@ -133,7 +133,7 @@ void RSImage::UploadGpu(SkCanvas& canvas)
                 return;
             }
             RS_TRACE_NAME("make compress img");
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
             sk_sp<SkImage> image = nullptr;
 #else
             auto image = SkImage::MakeFromCompressed(canvas.getGrContext(), compressData_,
@@ -190,7 +190,7 @@ void RSImage::DrawImageRepeatRect(const SkPaint& paint, SkCanvas& canvas)
         for (int j = minY; j <= maxY; ++j) {
             auto dst = SkRect::MakeXYWH(dstRect_.left_ + i * dstRect_.width_, dstRect_.top_ + j * dstRect_.height_,
                 dstRect_.width_, dstRect_.height_);
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
             canvas.drawImageRect(image_, src, dst, SkSamplingOptions(), &paint, SkCanvas::kFast_SrcRectConstraint);
 #else
             canvas.drawImageRect(image_, src, dst, &paint, SkCanvas::kFast_SrcRectConstraint);

@@ -87,7 +87,7 @@ void RSSharedContext::MakeCurrent()
         RS_LOGE("eglMakeCurrent failed");
     }
 }
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
 sk_sp<GrDirectContext> RSSharedContext::MakeGrContext()
 {
     GrContextOptions options;

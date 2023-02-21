@@ -16,7 +16,7 @@
 #include "common/rs_obj_abs_geometry.h"
 
 #include "include/utils/SkCamera.h"
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
 #include "include/core/SkM44.h"
 #else
 #include "include/core/SkMatrix44.h"
@@ -114,7 +114,7 @@ void RSObjAbsGeometry::UpdateAbsMatrix2D()
 void RSObjAbsGeometry::UpdateAbsMatrix3D()
 {
     if (!trans_->quaternion_.IsIdentity()) {
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
         SkM44 matrix3D;
 #else
         SkMatrix44 matrix3D;
@@ -123,7 +123,7 @@ void RSObjAbsGeometry::UpdateAbsMatrix3D()
         matrix3D.setTranslate(trans_->pivotX_ * width_ + x_ + trans_->translateX_,
             trans_->pivotY_ * height_ + y_ + trans_->translateY_, z_ + trans_->translateZ_);
         // Rotate
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
         SkM44 matrix4;
 #else
         SkMatrix44 matrix4;
@@ -132,7 +132,7 @@ void RSObjAbsGeometry::UpdateAbsMatrix3D()
         float y = trans_->quaternion_[1];
         float z = trans_->quaternion_[2];
         float w = trans_->quaternion_[3];
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
         SkScalar r[16] = {
             1.f - 2.f * (y * y + z * z), 2.f * (x * y + z * w), 2.f * (x * z - y * w), 0,
             2.f * (x * y - z * w), 1.f - 2.f * (x * x + z * z), 2.f * (y * z + x * w), 0,
@@ -153,7 +153,7 @@ void RSObjAbsGeometry::UpdateAbsMatrix3D()
         }
         // Translate
         matrix3D.preTranslate(-trans_->pivotX_ * width_, -trans_->pivotY_ * height_, 0);
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
         matrix_.preConcat(matrix3D.asM33());
 #else
         matrix_.preConcat(SkMatrix(matrix3D));

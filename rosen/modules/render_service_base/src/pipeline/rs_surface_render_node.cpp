@@ -17,7 +17,7 @@
 
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
 #include "include/gpu/GrDirectContext.h"
 #else
 #include "include/gpu/GrContext.h"

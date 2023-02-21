@@ -48,7 +48,7 @@ void RSGPUOverdrawCanvasListener::Draw()
     auto image = listenedSurface_->makeImageSnapshot();
     SkPaint paint;
     auto overdrawColors = RSOverdrawController::GetInstance().GetColorArray();
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
     paint.setColorFilter(SkOverdrawColorFilter::MakeWithSkColors(overdrawColors.data()));
     canvas_.drawImage(image, 0, 0, SkSamplingOptions(), &paint);
 #else

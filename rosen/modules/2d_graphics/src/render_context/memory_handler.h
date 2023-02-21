@@ -17,7 +17,7 @@
 #define OHOS_MEMORY_HANDLER_H
 
 #include <include/core/SkSurface.h>
-#if defined(USE_NEW_SKIA)
+#if defined(NEW_SKIA)
 #include <include/gpu/GrDirectContext.h>
 #else
 #include <include/gpu/GrContext.h>

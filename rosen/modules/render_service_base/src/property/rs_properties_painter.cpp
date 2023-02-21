@@ -289,7 +289,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     auto visibleRect = canvas.GetVisibleRect();
     if (visibleRect.intersect(clipBounds)) {
         // the snapshot only contains the clip region, so we need to offset the src rect
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
         canvas.drawImageRect(
             imageSnapshot.get(), visibleRect.makeOffset(-clipBounds.left(), -clipBounds.top()), visibleRect,
                 SkSamplingOptions(), &paint, SkCanvas::kStrict_SrcRectConstraint);
@@ -299,7 +299,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
 #endif
     } else {
         // the snapshot only contains the clip region, so we need to offset the src rect
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
         canvas.drawImageRect(
             imageSnapshot.get(), clipBounds.makeOffset(-clipBounds.left(), -clipBounds.top()), clipBounds,
                 SkSamplingOptions(), &paint, SkCanvas::kStrict_SrcRectConstraint);
@@ -320,7 +320,7 @@ SkColor RSPropertiesPainter::CalcAverageColor(sk_sp<SkImage> imageSnapshot)
 
     // resize snapshot to 1x1 to calculate average color
     // kMedium_SkFilterQuality will do bilerp + mipmaps for down-scaling, we can easily get average color
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
     imageSnapshot->scalePixels(single_pixel, SkSamplingOptions());
 #else
     imageSnapshot->scalePixels(single_pixel, SkFilterQuality::kMedium_SkFilterQuality);

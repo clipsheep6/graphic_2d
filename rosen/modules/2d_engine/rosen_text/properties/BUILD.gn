@@ -59,8 +59,10 @@ template("rosen_text_properties") {
       "typography_txt.cpp",
     ]
 
-    public_deps =
+    if (!use_new_skia) {
+      public_deps =
         [ "//third_party/flutter/build/libtxt:thirdparty_lib_txt_$current_os" ]
+    }
   }
 }
 

@@ -21,7 +21,7 @@
 
 #include "common/rs_macros.h"
 #include "include/core/SkRefCnt.h"
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
 #include "include/gpu/GrDirectContext.h"
 #else
 #include "include/gpu/GrContext.h"
@@ -39,7 +39,7 @@ public:
 
     ~RSSharedContext();
     void MakeCurrent();
-#ifdef USE_NEW_SKIA
+#ifdef NEW_SKIA
     sk_sp<GrDirectContext> MakeGrContext();
 #else
     sk_sp<GrContext> MakeGrContext();

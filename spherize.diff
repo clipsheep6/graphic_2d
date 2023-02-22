@@ -1,0 +1,824 @@
+diff --git a/rosen/modules/render_service/core/pipeline/rs_uni_render_util.cpp b/rosen/modules/render_service/core/pipeline/rs_uni_render_util.cpp
+index 9d399004b29e5f96f4485d4b65fbbab7b0cb9ffe..dce7f680ee9421497200a1c432164d98505dc74b 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_uni_render_util.cpp
++++ b/rosen/modules/render_service/core/pipeline/rs_uni_render_util.cpp
+@@ -19,6 +19,7 @@
+ #include "pipeline/rs_base_render_util.h"
+ #include "pipeline/rs_main_thread.h"
+ #include "platform/common/rs_log.h"
++#include "render/rs_path.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -153,7 +154,7 @@ BufferDrawParam RSUniRenderUtil::CreateLayerBufferDrawParam(const LayerInfoPtr&
+     return params;
+ }
+ 
+-void RSUniRenderUtil::DrawCachedSurface(RSRenderNode& node, RSPaintFilterCanvas& canvas,
++void RSUniRenderUtil::DrawCachedFreezeSurface(RSRenderNode& node, RSPaintFilterCanvas& canvas,
+     sk_sp<SkSurface> surface)
+ {
+     if (surface == nullptr) {
+@@ -168,6 +169,81 @@ void RSUniRenderUtil::DrawCachedSurface(RSRenderNode& node, RSPaintFilterCanvas&
+     canvas.restore();
+ }
+ 
++void RSUniRenderUtil::DrawCachedSpherizeSurface(RSRenderNode& node, RSPaintFilterCanvas& canvas,
++    sk_sp<SkSurface> surface)
++{
++    if (surface == nullptr) {
++        return;
++    }
++    SkAutoCanvasRestore acr(&canvas, true);
++    const RSProperties& properties = node.GetRenderProperties();
++    float canvasWidth = properties.GetBoundsRect().GetWidth();
++    float canvasHeight = properties.GetBoundsRect().GetHeight();
++    canvas.scale(canvasWidth / surface->width(), canvasHeight / surface->height());
++
++    auto imageSnapshot = surface->makeImageSnapshot();
++    if (imageSnapshot == nullptr) {
++        ROSEN_LOGE("RSUniRenderUtil::DrawCachedSpherizeSurface image  is null");
++        return;
++    }
++
++    SkPaint paint;
++    paint.setBlendMode(SkBlendMode::kSrcOver);
++    paint.setShader(imageSnapshot->makeShader(SkTileMode::kClamp, SkTileMode::kClamp));
++    float width = imageSnapshot->width();
++    float height = imageSnapshot->height();
++    float degree = properties.GetSpherize();
++    bool isWidthGreater = width > height;
++    ROSEN_LOGI("RSUniRenderUtil::DrawCachedSpherizeSurface spherize degree [%f]", degree);
++
++    const SkPoint texCoords[4] = {
++        {0.0f, 0.0f}, {width, 0.0f}, {width, height}, {0.0f, height}
++    };
++    float offsetSquare = 0.f;
++    if (isWidthGreater) {
++        offsetSquare = (width - height) * degree / 2.0; // half of the change distance
++        width = width -  (width - height) * degree;
++    } else {
++        offsetSquare = (height - width) * degree / 2.0; // half of the change distance
++        height = height -  (height - width) * degree;
++    }
++
++    float segmentWidthOne = width / 3.0;
++    float segmentWidthTwo = width / 3.0 * 2.0;
++    float segmentHeightOne = height / 3.0;
++    float segmentHeightTwo = height / 3.0 * 2.0;
++    float offsetSphereWidth = width / 6 * degree;
++    float offsetSphereHeight = height / 6  *degree;
++
++    SkPoint cubics[12] = {
++        // top control points
++        {0.0f, 0.0f}, {segmentWidthOne, 0.0f}, {segmentWidthTwo, 0.0f}, {width, 0.0f},
++        // right control points
++        {width, segmentHeightOne}, {width, segmentHeightTwo},
++        // bottom control points
++        {width, height}, {segmentWidthTwo, height}, {segmentWidthOne, height}, {0.0f, height},
++        // left control points
++        {0.0f, segmentHeightTwo}, {0.0f, segmentHeightOne}
++    };
++    cubics[0].offset(offsetSphereWidth, offsetSphereHeight); // top left control point
++    cubics[3].offset(-offsetSphereWidth, offsetSphereHeight); // top right control point
++    cubics[6].offset(-offsetSphereWidth, -offsetSphereHeight); // bottom right control point
++    cubics[9].offset(offsetSphereWidth, -offsetSphereHeight); // bottom left control point
++    if (isWidthGreater) {
++        SkPoint::Offset(cubics, SK_ARRAY_COUNT(cubics), offsetSquare, 0);
++    } else {
++        SkPoint::Offset(cubics, SK_ARRAY_COUNT(cubics), 0, offsetSquare);
++    }
++    SkPath path;
++    path.moveTo(cubics[0]);
++    path.cubicTo(cubics[1], cubics[2], cubics[3]); // upper edge
++    path.cubicTo(cubics[4], cubics[5], cubics[6]); // right edge
++    path.cubicTo(cubics[7], cubics[8], cubics[9]); // bottom edge
++    path.cubicTo(cubics[10], cubics[11], cubics[0]); // left edge
++    canvas.clipPath(path, true);
++    canvas.drawPatch(cubics, nullptr, texCoords, SkBlendMode::kSrcOver, paint);
++}
++
+ void RSUniRenderUtil::DrawCachedImage(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas, sk_sp<SkImage> image)
+ {
+     if (image == nullptr) {
+diff --git a/rosen/modules/render_service/core/pipeline/rs_uni_render_util.h b/rosen/modules/render_service/core/pipeline/rs_uni_render_util.h
+index 76ac680a680e80badc7588521d672bc4415ac8f6..5f743c51cdefc66cdd11dd36b7651f2a2852d47f 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_uni_render_util.h
++++ b/rosen/modules/render_service/core/pipeline/rs_uni_render_util.h
+@@ -42,7 +42,8 @@ public:
+     static BufferDrawParam CreateBufferDrawParam(const RSSurfaceRenderNode& node, bool forceCPU);
+     static BufferDrawParam CreateBufferDrawParam(const RSDisplayRenderNode& node, bool forceCPU);
+     static BufferDrawParam CreateLayerBufferDrawParam(const LayerInfoPtr& layer, bool forceCPU);
+-    static void DrawCachedSurface(RSRenderNode& node, RSPaintFilterCanvas& canvas, sk_sp<SkSurface> surface);
++    static void DrawCachedFreezeSurface(RSRenderNode& node, RSPaintFilterCanvas& canvas, sk_sp<SkSurface> surface);
++    static void DrawCachedSpherizeSurface(RSRenderNode& node, RSPaintFilterCanvas& canvas, sk_sp<SkSurface> surface);
+     static void DrawCachedImage(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas, sk_sp<SkImage> image);
+     static Occlusion::Region AlignedDirtyRegion(const Occlusion::Region& dirtyRegion, int32_t alignedBits = 32);
+ };
+diff --git a/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.cpp b/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.cpp
+index 195098a72a1571b691f475255ea110217489b32a..4bd2d7f04eee759eaffd337bb1c92be4e36f9afc 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.cpp
++++ b/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.cpp
+@@ -1282,12 +1282,20 @@ void RSUniRenderVisitor::InitCacheSurface(RSRenderNode& node, int width, int hei
+ 
+ void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
+ {
+-    if (!node.IsFreeze()) {
+-        ProcessBaseRenderNode(node);
++    if (node.GetCacheTypeChanged) {
+         node.ClearCacheSurface();
++    }
++
++    if (node.GetCacheType() == CacheType::NONE) {
++        ProcessBaseRenderNode(node);
+     } else if (node.GetCacheSurface()) {
++        RS_TRACE_BEGIN("RSUniRenderVisitor::DrawChildRenderNode Freeze Draw nodeId = " +
++            std::to_string(node.GetId()));
+         RSUniRenderUtil::DrawCachedSurface(node, *canvas_, node.GetCacheSurface());
++        RS_TRACE_END();
+     } else {
++        RS_TRACE_BEGIN("RSUniRenderVisitor::DrawChildRenderNode Freeze Init nodeId = " +
++            std::to_string(node.GetId()));
+         isFreeze_ = true;
+         int width = std::ceil(node.GetRenderProperties().GetBoundsRect().GetWidth());
+         int height = std::ceil(node.GetRenderProperties().GetBoundsRect().GetHeight());
+@@ -1301,12 +1309,13 @@ void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
+             isOpDropped_ = false;
+ 
+             swap(cacheCanvas, canvas_);
++            node.ProcessRenderContents(*canvas_);
+             ProcessBaseRenderNode(node);
+             swap(cacheCanvas, canvas_);
+ 
+             isOpDropped_ = isOpDropped;
+ 
+-            RSUniRenderUtil::DrawCachedSurface(node, *canvas_, node.GetCacheSurface());
++            RSUniRenderUtil::DrawCachedFreezeSurface(node, *canvas_, node.GetCacheSurface());
+             // To get all FreezeNode
+             // execute: "set param rosen.dumpsurfacetype.enabled 2 && setenforce 0"
+             // To get specific FreezeNode
+@@ -1319,7 +1328,63 @@ void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
+                 node.GetId());
+         }
+         isFreeze_ = false;
++        RS_TRACE_END();
++    }
++}
++
++void RSUniRenderVisitor::DrawCacheSpherizeRenderNode(RSRenderNode& node)
++{
++    RS_LOGI("RSUniRenderVisitor::DrawCacheSpherizeRenderNode start");
++    if (node.GetCacheTypeChanged || !node.GetCacheSurface()) {
++        RS_TRACE_BEGIN("RSUniRenderVisitor::DrawCacheSpherizeRenderNode Init Draw Full Cache nodeId = " +
++            std::to_string(node.GetId()));
++        isFreeze_ = true;
++        int width = std::ceil(node.GetRenderProperties().GetBoundsRect().GetWidth());
++        int height = std::ceil(node.GetRenderProperties().GetBoundsRect().GetHeight());
++        InitCacheSurface(node, width, height);
++
++        if (node.GetCacheSurface()) {
++            auto cacheCanvas = std::make_shared<RSPaintFilterCanvas>(node.GetCacheSurface().get());
++            bool isOpDropped = isOpDropped_;
++            isOpDropped_ = false;
++
++            swap(cacheCanvas, canvas_);
++            if (node.GetType == RSRenderNodeType::CANVAS_NODE) {
++                node.ProcessAnimatePropertyBeforeChildren(*canvas_);
++                node.ProcessRenderContents(*canvas_);
++                ProcessBaseRenderNode(node);
++                node.ProcessAnimatePropertyAfterChildren(*canvas_);
++            } else if (node.GetType == RSRenderNodeType::SURFACE_NODE) {
++                node.ProcessAnimatePropertyBeforeChildren(*canvas_);
++                ProcessSurfaceRenderNodeBuffer(node);
++                ProcessBaseRenderNode(node);
++                node.ProcessAnimatePropertyAfterChildren(*canvas_);
++            }
++            swap(cacheCanvas, canvas_);
++
++            isOpDropped_ = isOpDropped;
++            RSUniRenderUtil::DrawCachedSpherizeSurface(node, *canvas_, node.GetCacheSpherizeSurface());
++            RSBaseRenderUtil::WriteFreezeRenderNodeToPng(node);
++        } else {
++            RS_LOGE("RSUniRenderVisitor::DrawCacheSpherizeCanvasRenderNode %" PRIu64 " Create CacheSurface failed",
++                node.GetId());
++        }
++        isFreeze_ = false;
++        RS_TRACE_END();
+     }
++    else {
++        RS_TRACE_BEGIN("RSUniRenderVisitor::DrawCacheSpherizeRenderNode Draw Full Cache nodeId = " +
++            std::to_string(node.GetId()));
++        RSUniRenderUtil::DrawCachedSpherizeSurface(node, *canvas_, node.GetCacheSurface());
++        RS_TRACE_END();
++    }
++}
++
++void RSUniRenderVisitor::ProcessSurfaceRenderNodeBuffer(RSSurfaceRenderNode& node)
++{
++    node.SetGlobalAlpha(1.0f);
++    auto params = RSUniRenderUtil::CreateBufferDrawParam(node, false);
++    renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
+ }
+ 
+ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
+@@ -1430,100 +1495,74 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
+     }
+ 
+     canvas_->concat(geoPtr->GetMatrix());
++    CheckCacheType(node);
++    if (node.GetCacheType() == cacheType::SPHERIZE) {
++        DrawCacheSpherizeRenderNode(node);
++    } else {
++        node.ProcessAnimatePropertyBeforeChildren(*canvas_);
+ 
+-    const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
+-    RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
+-    RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect);
+-
+-    // Fix bug that when AppWindow has shadow set by config.xml cannot be displayed for LEASH_WINDOW_NODE has clipped canvas.
+-    if (node.GetSurfaceNodeType() != RSSurfaceNodeType::LEASH_WINDOW_NODE) {
+-        if (!property.GetCornerRadius().IsZero()) {
+-            canvas_->clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
+-        } else {
+-            canvas_->clipRect(SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight()));
+-        }
+-    }
+-
+-    RSPropertiesPainter::DrawBackground(property, *canvas_);
+-    RSPropertiesPainter::DrawMask(property, *canvas_);
+-    auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
+-    if (filter != nullptr) {
+-        auto skRectPtr = std::make_unique<SkRect>();
+-        skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
+-        RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
+-    }
+-
+-    node.SetTotalMatrix(canvas_->getTotalMatrix());
+-
+-    if (node.GetBuffer() != nullptr) {
+-        if (node.IsHardwareEnabledType()) {
+-            node.SetHardwareForcedDisabledState(isFreeze_);
+-        }
+-        // if this window is in freeze state, disable hardware composer for its child surfaceView
+-        if (IsHardwareComposerEnabled() && !isFreeze_ && node.IsHardwareEnabledType() &&
+-            node.GetDstRect().GetWidth() > 1 && node.GetDstRect().GetHeight() > 1) { // avoid fallback by composer
+-            canvas_->clear(SK_ColorTRANSPARENT);
+-            node.SetGlobalAlpha(canvas_->GetAlpha());
+-            node.SetLocalZOrder(localZOrder_++);
+-            ParallelRenderEnableHardwareComposer(node);
+-            auto dstRect = node.GetDstRect();
+-            SkIRect dst = { dstRect.GetLeft(), dstRect.GetTop(), dstRect.GetRight(), dstRect.GetBottom()};
+-            node.UpdateSrcRect(*canvas_, dst);
+-            RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode src:%s, dst:%s name:%s id:%" PRIu64 "",
+-                node.GetSrcRect().ToString().c_str(), node.GetDstRect().ToString().c_str(),
+-                node.GetName().c_str(), node.GetId());
+-        } else {
++        if (node.GetBuffer() != nullptr) {
+             if (node.IsHardwareEnabledType()) {
+-                auto iter = std::find_if(hardwareEnabledNodes_.begin(), hardwareEnabledNodes_.end(),
+-                    [id = node.GetId()](std::shared_ptr<RSSurfaceRenderNode> surfaceNode) -> bool {
+-                    return id == surfaceNode->GetId();
+-                });
+-                if (iter != hardwareEnabledNodes_.end()) {
+-                    hardwareEnabledNodes_.erase(iter);
++                node.SetHardwareForcedDisabledState(isFreeze_);
++            }
++            // if this window is in freeze state, disable hardware composer for its child surfaceView
++            if (IsHardwareComposerEnabled() && !isFreeze_ && node.IsHardwareEnabledType() &&
++                node.GetDstRect().GetWidth() > 1 && node.GetDstRect().GetHeight() > 1) { // avoid fallback by composer
++                canvas_->clear(SK_ColorTRANSPARENT);
++                node.SetGlobalAlpha(canvas_->GetAlpha());
++                node.SetLocalZOrder(localZOrder_++);
++                ParallelRenderEnableHardwareComposer(node);
++                auto dstRect = node.GetDstRect();
++                SkIRect dst = { dstRect.GetLeft(), dstRect.GetTop(), dstRect.GetRight(), dstRect.GetBottom()};
++                node.UpdateSrcRect(*canvas_, dst);
++                RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode src:%s, dst:%s name:%s id:%" PRIu64 "",
++                    node.GetSrcRect().ToString().c_str(), node.GetDstRect().ToString().c_str(),
++                    node.GetName().c_str(), node.GetId());
++            } else {
++                if (node.IsHardwareEnabledType()) {
++                    auto iter = std::find_if(hardwareEnabledNodes_.begin(), hardwareEnabledNodes_.end(),
++                        [id = node.GetId()](std::shared_ptr<RSSurfaceRenderNode> surfaceNode) -> bool {
++                        return id == surfaceNode->GetId();
++                    });
++                    if (iter != hardwareEnabledNodes_.end()) {
++                        hardwareEnabledNodes_.erase(iter);
++                    }
+                 }
++                ProcessSurfaceRenderNodeBuffer(node);
+             }
+-            node.SetGlobalAlpha(1.0f);
+-            auto params = RSUniRenderUtil::CreateBufferDrawParam(node, false);
+-            renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
+         }
+-    }
+-
+-    if (isSelfDrawingSurface) {
+-        canvas_->restore();
+-    }
+ 
+-    if (node.IsAppWindow() &&
+-        (!needColdStartThread_ || !RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId()))) {
+-        if (RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId())) {
+-            node.ClearCachedImage();
+-            RSColdStartManager::Instance().StopColdStartThread(node.GetId());
+-        }
+-        if (needCheckFirstFrame_ && IsFirstFrameReadyToDraw(node)) {
+-            node.NotifyUIBufferAvailable();
++        if (isSelfDrawingSurface) {
++            canvas_->restore();
+         }
+-        DrawChildRenderNode(node);
+-    } else if (node.IsAppWindow()) { // use skSurface drawn by cold start thread
+-        if (node.GetCachedImage() != nullptr) {
+-            RSUniRenderUtil::DrawCachedImage(node, *canvas_, node.GetCachedImage());
++
++        if (node.IsAppWindow() &&
++            (!needColdStartThread_ || !RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId()))) {
++            if (RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId())) {
++                node.ClearCachedImage();
++                RSColdStartManager::Instance().StopColdStartThread(node.GetId());
++            }
++            if (needCheckFirstFrame_ && IsFirstFrameReadyToDraw(node)) {
++                node.NotifyUIBufferAvailable();
++            }
++            DrawChildRenderNode(node);
++        } else if (node.IsAppWindow()) { // use skSurface drawn by cold start thread
++            if (node.GetCachedImage() != nullptr) {
++                RSUniRenderUtil::DrawCachedImage(node, *canvas_, node.GetCachedImage());
++            }
++            RecordAppWindowNodeAndPostTask(node, property.GetBoundsWidth(), property.GetBoundsHeight());
++        } else {
++            ProcessBaseRenderNode(node);
+         }
+-        RecordAppWindowNodeAndPostTask(node, property.GetBoundsWidth(), property.GetBoundsHeight());
+-    } else {
+-        ProcessBaseRenderNode(node);
+-    }
+ 
+-    if (node.GetSurfaceNodeType() == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
+-        // reset to default value
+-        needColdStartThread_ = false;
+-        needCheckFirstFrame_ = false;
+-    }
++        if (node.GetSurfaceNodeType() == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
++            // reset to default value
++            needColdStartThread_ = false;
++            needCheckFirstFrame_ = false;
++        }
+ 
+-    filter = std::static_pointer_cast<RSSkiaFilter>(property.GetFilter());
+-    if (filter != nullptr) {
+-        auto skRectPtr = std::make_unique<SkRect>();
+-        skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
+-        RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
++        node.ProcessAnimatePropertyAfterChildren(*canvas_);
+     }
+-
+     RSPropertiesPainter::SetBgAntiAlias(bgAntiAliasState);
+     canvas_->RestoreCanvasAndAlpha(savedState);
+     if (node.IsAppWindow()) {
+@@ -1568,6 +1607,28 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
+     canvas_->restoreToCount(saveCount);
+ }
+ 
++void RSUniRenderVisitor::CheckCacheType(RSRenderNode& node)
++{
++    const auto& property = node.GetRenderProperties();
++    CacheType cacheType = node.GetCacheType();
++    if (property.IsSpherizeValid() && cacheType != cacheType::SPHERIZE) {
++        node.SetCacheType(cacheType::SPHERIZE);
++        node.SetCacheTypeChanged(true);
++    }
++    else if (!property.IsSpherizeValid() && cacheType == cacheType::SPHERIZE) {
++        node.SetCacheType(cacheType::NONE);
++        node.SetCacheTypeChanged(true);
++    }
++    else if (node.IsFreeze() && cacheType == cacheType::NONE) {
++        node.SetCacheType(cacheType::FREEZE);
++        node.SetCacheTypeChanged(true);
++    }
++    else if (!node.IsFreeze() && cacheType == cacheType::FREEZE) {
++        node.SetCacheType(cacheType::NONE);
++        node.SetCacheTypeChanged(true);
++    }
++}
++
+ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
+ {
+     processedCanvasNodeInCurrentSurface_++;
+@@ -1587,10 +1648,24 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
+         return;
+     }
+     // in case preparation'update is skipped
++    const auto& property = node.GetRenderProperties();
++    CheckCacheType(node);
++    CacheType cacheType = node.GetCacheType();
+     node.GetMutableRenderProperties().CheckEmptyBounds();
+-    node.ProcessRenderBeforeChildren(*canvas_);
+-    DrawChildRenderNode(node);
+-    node.ProcessRenderAfterChildren(*canvas_);
++    if (cacheType == cacheType::SPHERIZE) {
++        node.ProcessTransitionBeforeChildren(*canvas_);
++        DrawCacheSpherizeRenderNode(node);
++        node.ProcessTransitionAfterChildren(*canvas_);
++    } else {
++        if (cacheType == cacheType::NONE) {
++            node.ProcessRenderBeforeChildren(*canvas_);
++        } else {
++            node.ProcessTransitionBeforeChildren(*canvas_);
++            node.ProcessAnimatePropertyBeforeChildren(*canvas_);
++        }
++        DrawChildRenderNode(node);
++        node.ProcessRenderAfterChildren(*canvas_);
++    }
+ }
+ 
+ void RSUniRenderVisitor::RecordAppWindowNodeAndPostTask(RSSurfaceRenderNode& node, float width, float height)
+diff --git a/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.h b/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.h
+index 9c0343d7d0ba0f2e72e329ec3f4677ad212e5349..8b028ac5d2b6361939a595b9b1138f5d286c9d18 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.h
++++ b/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.h
+@@ -112,6 +112,8 @@ private:
+ 
+     void InitCacheSurface(RSRenderNode& node, int width, int height);
+     void DrawChildRenderNode(RSRenderNode& node);
++    void DrawCacheSpherizeRenderNode(RSRenderNode& node);
++    void ProcessSurfaceRenderNodeBuffer(RSSurfaceRenderNode& node);
+     void CheckColorSpace(RSSurfaceRenderNode& node);
+     void AddOverDrawListener(std::unique_ptr<RSRenderFrame>& renderFrame,
+         std::shared_ptr<RSCanvasListener>& overdrawListener);
+diff --git a/rosen/modules/render_service_base/include/modifier/rs_modifier_type.h b/rosen/modules/render_service_base/include/modifier/rs_modifier_type.h
+index d424d4e74b0057f79ab8c0206a4a23849552c662..8891d9f5e6908fbf70fe63f2391319862aed8e96 100644
+--- a/rosen/modules/render_service_base/include/modifier/rs_modifier_type.h
++++ b/rosen/modules/render_service_base/include/modifier/rs_modifier_type.h
+@@ -74,6 +74,7 @@ enum class RSModifierType : int16_t {
+     SHADOW_RADIUS,
+     SHADOW_PATH,
+     MASK,
++    SPHERIZE,
+ 
+     CUSTOM,
+     EXTENDED,
+diff --git a/rosen/modules/render_service_base/include/modifier/rs_modifiers_def.in b/rosen/modules/render_service_base/include/modifier/rs_modifiers_def.in
+index b2b7d644ebf1643cf27e0f015d6428b49aee7c37..26a24127cf41d9cd04d7dbc7473868db68124ff9 100644
+--- a/rosen/modules/render_service_base/include/modifier/rs_modifiers_def.in
++++ b/rosen/modules/render_service_base/include/modifier/rs_modifiers_def.in
+@@ -99,3 +99,5 @@ DECLARE_ANIMATABLE_MODIFIER(ShadowRadius, float, SHADOW_RADIUS, Replace, Backgro
+ DECLARE_NOANIMATABLE_MODIFIER(ShadowPath, std::shared_ptr<RSPath>, SHADOW_PATH, Background)
+ 
+ DECLARE_NOANIMATABLE_MODIFIER(Mask, std::shared_ptr<RSMask>, MASK, Foreground)
++
++DECLARE_ANIMATABLE_MODIFIER(Spherize, float, SPHERIZE, Replace, Appearance)
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_canvas_render_node.h b/rosen/modules/render_service_base/include/pipeline/rs_canvas_render_node.h
+index ce5158bd0a628294900474be27b8ed6b5be81e4f..ce7a7316c9bd4f7b0dce46d2a969149c1ab1e1bf 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_canvas_render_node.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_canvas_render_node.h
+@@ -41,6 +41,11 @@ public:
+ 
+     void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
+     void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
++    void ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas) override;
++    void ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas) override;
++    void ProcessRenderContents(RSPaintFilterCanvas& canvas) override;
++    void ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas) override;
++    void ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas) override;
+ 
+     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
+     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_render_node.h b/rosen/modules/render_service_base/include/pipeline/rs_render_node.h
+index 1bb4df0da14609504a3bef4de31ce646573982c2..644f71cd6891036c7409f0357a2c5c870312ee1e 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_render_node.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_render_node.h
+@@ -43,6 +43,11 @@ public:
+         return Type;
+     }
+ 
++    enum CacheType {
++        NONE = 0,
++        FREEZE,
++        SPHERIZE,
++    };
+     ~RSRenderNode() override;
+     bool IsDirty() const override;
+ 
+@@ -69,6 +74,10 @@ public:
+     virtual void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas);
+     virtual void ProcessRenderContents(RSPaintFilterCanvas& canvas) {}
+     virtual void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas);
++    virtual void ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas) {}
++    virtual void ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas) {}
++    virtual void ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas) {}
++    virtual void ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas) {}
+     void RenderTraceDebug() const;
+     bool HasDisappearingTransition(bool recursive) const override
+     {
+@@ -131,6 +140,26 @@ public:
+     {
+         cacheSurface_ = nullptr;
+     }
++
++    void SetCacheType(CacheType cacheType)
++    {
++        cacheType_ = cacheType;
++    }
++
++    CacheType GetCacheType() const
++    {
++        return cacheType_;
++    }
++
++    void SetCacheTypeChanged(bool cacheTypeChanged)
++    {
++        cacheTypeChanged_ = cacheTypeChanged;
++    }
++
++    bool GetCacheTypeChanged() const
++    {
++        return cacheTypeChanged_;
++    }
+ 
+ protected:
+     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
+@@ -168,6 +197,8 @@ private:
+ 
+     std::atomic<bool> isFreeze_ = false;
+     sk_sp<SkSurface> cacheSurface_ = nullptr;
++    CacheType cacheType_ = CacheType::NONE;
++    bool cacheTypeChanged_ = false;
+ 
+     friend class RSRenderTransition;
+     friend class RSRenderNodeMap;
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_surface_render_node.h b/rosen/modules/render_service_base/include/pipeline/rs_surface_render_node.h
+index ad0d3cd89e57a9ed126d9f29dbe5879c60084ef4..a803b9a83c81c592940e2f434afc9fca7f6166b0 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_surface_render_node.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_surface_render_node.h
+@@ -176,6 +176,8 @@ public:
+         bool isUniRender) override;
+     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
+     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
++    void ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas) override;
++    void ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas) override;
+ 
+     void SetContextBounds(const Vector4f bounds);
+ 
+diff --git a/rosen/modules/render_service_base/include/property/rs_properties.h b/rosen/modules/render_service_base/include/property/rs_properties.h
+index 0847d5efcefdc61dfd1199272726da52ac153373..b5d1bc9efea544da1e09a28e69e9daccec31c1a4 100644
+--- a/rosen/modules/render_service_base/include/property/rs_properties.h
++++ b/rosen/modules/render_service_base/include/property/rs_properties.h
+@@ -199,6 +199,10 @@ public:
+ 
+     bool IsGeoDirty() const;
+ 
++    void SetSpherize(float spherizeDegree);
++    float GetSpherize() const;
++    bool IsSpherizeValid() const;
++
+ private:
+     void Reset();
+     void SetDirty();
+@@ -240,6 +244,7 @@ private:
+     std::shared_ptr<RSMask> mask_ = nullptr;
+     std::unique_ptr<RSShadow> shadow_ = nullptr;
+     std::unique_ptr<Matrix3f> sublayerTransform_ = nullptr;
++    float spherizeDegree_ = 0.f;
+ 
+     friend class RSCanvasRenderNode;
+     friend class RSPropertiesPainter;
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_canvas_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_canvas_render_node.cpp
+index 5e6eb2ed4cb2c77cb3a9e00559a938c1f7cbd4bb..e1892b60f8434ca9789af0a6b6a840ce57afccf5 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_canvas_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_canvas_render_node.cpp
+@@ -69,10 +69,13 @@ void RSCanvasRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
+     visitor->ProcessCanvasRenderNode(*this);
+ }
+ 
+-void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
++void RSCanvasRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas)
+ {
+     RSRenderNode::ProcessRenderBeforeChildren(canvas);
++}
+ 
++void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas)
++{
+     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
+     ApplyDrawCmdModifier(context, RSModifierType::TRANSITION);
+ 
+@@ -89,10 +92,22 @@ void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas
+     if (GetRenderProperties().GetClipToFrame()) {
+         RSPropertiesPainter::Clip(canvas, GetRenderProperties().GetFrameRect());
+     }
++}
++
++void RSCanvasRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canvas)
++{
++    RSModifierContext context = { GetMutableRenderProperties(), &canvas };
+     ApplyDrawCmdModifier(context, RSModifierType::CONTENT_STYLE);
+ }
+ 
+-void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
++void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
++{
++    ProcessTransitionBeforeChildren(canvas);
++    ProcessAnimatePropertyBeforeChildren(canvas);
++    ProcessRenderContents(canvas);
++}
++
++void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas)
+ {
+     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
+     ApplyDrawCmdModifier(context, RSModifierType::FOREGROUND_STYLE);
+@@ -105,9 +120,19 @@ void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
+     RSPropertiesPainter::DrawBorder(GetRenderProperties(), canvas);
+     ApplyDrawCmdModifier(context, RSModifierType::OVERLAY_STYLE);
+     RSPropertiesPainter::DrawForegroundColor(GetRenderProperties(), canvas);
++}
++
++void RSCanvasRenderNode::ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas)
++{
+     RSRenderNode::ProcessRenderAfterChildren(canvas);
+ }
+ 
++void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
++{
++    ProcessAnimatePropertyAfterChildren(canvas);
++    ProcessTransitionAfterChildren(canvas);
++}
++
+ void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type)
+ {
+     if (drawCmdModifiers_.count(type)) {
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp
+index d1b3cdba483fa057144023ce144069f1022557ee..284eb0e7813886337f5995457c0f29b54c137f5a 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp
+@@ -28,6 +28,7 @@
+ #include "pipeline/rs_root_render_node.h"
+ #include "platform/common/rs_log.h"
+ #include "property/rs_properties_painter.h"
++#include "render/rs_skia_filter.h"
+ #include "transaction/rs_render_service_client.h"
+ #include "visitor/rs_node_visitor.h"
+ 
+@@ -230,6 +231,44 @@ void RSSurfaceRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
+     visitor->ProcessSurfaceRenderNode(*this);
+ }
+ 
++void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas)
++{
++    const auto& property = GetRenderProperties();
++    const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
++    RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
++    RSPropertiesPainter::DrawShadow(property, canvas, &absClipRRect);
++
++    // Fix bug that when AppWindow has shadow set by config.xml cannot be displayed for LEASH_WINDOW_NODE has clipped canvas.
++    if (GetSurfaceNodeType() != RSSurfaceNodeType::LEASH_WINDOW_NODE) {
++        if (!property.GetCornerRadius().IsZero()) {
++            canvas.clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
++        } else {
++            canvas.clipRect(SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight()));
++        }
++    }
++
++    RSPropertiesPainter::DrawBackground(property, canvas);
++    RSPropertiesPainter::DrawMask(property, canvas);
++    auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
++    if (filter != nullptr) {
++        auto skRectPtr = std::make_unique<SkRect>();
++        skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
++        RSPropertiesPainter::DrawFilter(property, canvas, filter, skRectPtr, canvas.GetSurface());
++    }
++    SetTotalMatrix(canvas.getTotalMatrix());
++}
++
++void RSSurfaceRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas)
++{
++    const auto& property = GetRenderProperties();
++    auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetFilter());
++    if (filter != nullptr) {
++        auto skRectPtr = std::make_unique<SkRect>();
++        skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
++        RSPropertiesPainter::DrawFilter(property, canvas, filter, skRectPtr, canvas.GetSurface());
++    }
++}
++
+ void RSSurfaceRenderNode::SetContextBounds(const Vector4f bounds)
+ {
+     std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetBounds>(GetId(), bounds);
+diff --git a/rosen/modules/render_service_base/src/property/rs_properties.cpp b/rosen/modules/render_service_base/src/property/rs_properties.cpp
+index b7c69d7cf6dbac59a30a6bc64fbeec23cb8a7501..a04f5489a3e41b2f36dbd13188e5f0e2eafe13de 100644
+--- a/rosen/modules/render_service_base/src/property/rs_properties.cpp
++++ b/rosen/modules/render_service_base/src/property/rs_properties.cpp
+@@ -988,6 +988,22 @@ std::shared_ptr<RSMask> RSProperties::GetMask() const
+     return mask_;
+ }
+ 
++void RSProperties::SetSpherize(float spherizeDegree)
++{
++    spherizeDegree_ = spherizeDegree;
++}
++
++float RSProperties::GetSpherize() const
++{
++    return spherizeDegree_;
++}
++
++bool RSProperties::IsSpherizeValid() const
++{
++    constexpr float epsilon = 0.001f;
++    return GetSpherize() - 0.0 > epsilon;
++}
++
+ std::string RSProperties::Dump() const
+ {
+     std::string dumpInfo;
+diff --git a/rosen/modules/render_service_base/src/property/rs_properties_painter.cpp b/rosen/modules/render_service_base/src/property/rs_properties_painter.cpp
+index 039c5935375314dced4b5c8ee1b264eede125529..4c4592bf0a2931e5271570438df145f75ca69c5d 100644
+--- a/rosen/modules/render_service_base/src/property/rs_properties_painter.cpp
++++ b/rosen/modules/render_service_base/src/property/rs_properties_painter.cpp
+@@ -211,7 +211,7 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
+ void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect)
+ {
+     // skip shadow if not valid or cache is enabled
+-    if (!properties.IsShadowValid() || canvas.isCacheEnabled()) {
++    if (properties.IsSpherizeValid() || !properties.IsShadowValid() || canvas.isCacheEnabled()) {
+         return;
+     }
+     SkAutoCanvasRestore acr(&canvas, true);
+diff --git a/rosen/modules/render_service_client/core/modifier/rs_modifier_extractor.cpp b/rosen/modules/render_service_client/core/modifier/rs_modifier_extractor.cpp
+index f525b5fe46d665b0d0f3a12f9be73c0ba7f648cc..b4fbe6b6ce34db5918aec071dd0224d96defa28f 100644
+--- a/rosen/modules/render_service_client/core/modifier/rs_modifier_extractor.cpp
++++ b/rosen/modules/render_service_client/core/modifier/rs_modifier_extractor.cpp
+@@ -251,6 +251,11 @@ std::shared_ptr<RSMask> RSModifierExtractor::GetMask() const
+     GET_PROPERTY_FROM_MODIFIERS(std::shared_ptr<RSMask>, MASK, nullptr, =);
+ }
+ 
++float RSModifierExtractor::GetSpherizeDegree() const
++{
++    GET_PROPERTY_FROM_MODIFIERS(float, SPHERIZE, 0.f, =);
++}
++
+ std::string RSModifierExtractor::Dump() const
+ {
+     std::string dumpInfo;
+diff --git a/rosen/modules/render_service_client/core/modifier/rs_modifier_extractor.h b/rosen/modules/render_service_client/core/modifier/rs_modifier_extractor.h
+index 20c604e5b44d6603bbb900b8c3edb35eee37a7c5..7f3f52ec06be4fb1d77fb19989e82326a857397b 100644
+--- a/rosen/modules/render_service_client/core/modifier/rs_modifier_extractor.h
++++ b/rosen/modules/render_service_client/core/modifier/rs_modifier_extractor.h
+@@ -79,6 +79,7 @@ public:
+     bool GetVisible() const;
+ 
+     std::shared_ptr<RSMask> GetMask() const;
++    float GetSpherizeDegree() const;
+ 
+     std::string Dump() const;
+ private:
+diff --git a/rosen/modules/render_service_client/core/modifier/rs_property_modifier.h b/rosen/modules/render_service_client/core/modifier/rs_property_modifier.h
+index 15d0b3818b52d18726e89cd0f1c1df5afc327b3b..73d9629ffba997c47ba61672f37c790da5d2f76e 100644
+--- a/rosen/modules/render_service_client/core/modifier/rs_property_modifier.h
++++ b/rosen/modules/render_service_client/core/modifier/rs_property_modifier.h
+@@ -326,6 +326,15 @@ protected:
+     std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
+ };
+ 
++class RSC_EXPORT RSSpherizeModifier : public RSAppearanceModifier {
++public:
++    explicit RSSpherizeModifier(const std::shared_ptr<RSPropertyBase>& property);
++    virtual ~RSSpherizeModifier() = default;
++protected:
++    RSModifierType GetModifierType() const override;
++    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
++};
++
+ class RSC_EXPORT RSShadowColorModifier : public RSBackgroundModifier {
+ public:
+     explicit RSShadowColorModifier(const std::shared_ptr<RSPropertyBase>& property);
+diff --git a/rosen/modules/render_service_client/core/ui/rs_node.cpp b/rosen/modules/render_service_client/core/ui/rs_node.cpp
+index 617fee9a552eee8ce0938f8589b79e67b61d84d3..a61ffb2f142bb33ba2f3016490298d093b4d2e7f 100644
+--- a/rosen/modules/render_service_client/core/ui/rs_node.cpp
++++ b/rosen/modules/render_service_client/core/ui/rs_node.cpp
+@@ -767,6 +767,11 @@ void RSNode::SetFreeze(bool isFreeze)
+     ROSEN_LOGE("SetFreeze only support RSSurfaceNode and RSCanvasNode in uniRender");
+ }
+ 
++void RSNode::SetSpherizeDegree(float spherizeDegree)
++{
++    SetProperty<RSSpherizeModifier, RSAnimatableProperty<float>>(RSModifierType::SPHERIZE, spherizeDegree);
++}
++
+ void RSNode::NotifyTransition(const std::shared_ptr<const RSTransitionEffect>& effect, bool isTransitionIn)
+ {
+     // temporary fix for multithread issue in implicit animator
+diff --git a/rosen/modules/render_service_client/core/ui/rs_node.h b/rosen/modules/render_service_client/core/ui/rs_node.h
+index 246c537a06153a2db2efed49b6797f6243475aa4..f14f06263bbdb813ce849f22e27a9487b91dbac6 100644
+--- a/rosen/modules/render_service_client/core/ui/rs_node.h
++++ b/rosen/modules/render_service_client/core/ui/rs_node.h
+@@ -168,6 +168,7 @@ public:
+ 
+     void SetVisible(bool visible);
+     void SetMask(const std::shared_ptr<RSMask>& mask);
++    void SetSpherizeDegree(float spherizeDegree);
+ 
+     void SetPaintOrder(bool drawContentLast);
+ 

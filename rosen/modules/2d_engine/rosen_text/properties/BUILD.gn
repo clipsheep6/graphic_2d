@@ -27,10 +27,7 @@ config("rosen_text_config") {
   ]
 
   if (use_new_skia) {
-    include_dirs += [ 
-      "$flutter_root/txt/src",
-      "//third_party/skia/third_party/externals/harfbuzz/src",
-    ]
+    include_dirs += [ "$flutter_root/txt/src" ]
   } else {
     include_dirs += [ "$flutter_root/engine/flutter/third_party/txt/src" ]
   }
@@ -59,7 +56,10 @@ template("rosen_text_properties") {
       "typography_txt.cpp",
     ]
 
-    if (!use_new_skia) {
+    if (use_new_skia) {
+      public_deps =
+       [ "//foundation/graphic/graphic_2d/rosen/build/flutter/harfbuzz:rosen_libharfbuzz_$platform" ]
+    } else {
       public_deps =
         [ "//third_party/flutter/build/libtxt:thirdparty_lib_txt_$current_os" ]
     }

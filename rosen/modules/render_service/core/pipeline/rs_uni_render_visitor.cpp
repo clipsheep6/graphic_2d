@@ -1282,16 +1282,16 @@ void RSUniRenderVisitor::InitCacheSurface(RSRenderNode& node, int width, int hei
 
 void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
 {
-    if (node.GetCacheTypeChanged) {
+    if (node.GetCacheTypeChanged()) {
         node.ClearCacheSurface();
     }
 
-    if (node.GetCacheType() == CacheType::NONE) {
+    if (node.GetCacheType() == RSRenderNode::NONE) {
         ProcessBaseRenderNode(node);
     } else if (node.GetCacheSurface()) {
         RS_TRACE_BEGIN("RSUniRenderVisitor::DrawChildRenderNode Freeze Draw nodeId = " +
             std::to_string(node.GetId()));
-        RSUniRenderUtil::DrawCachedSurface(node, *canvas_, node.GetCacheSurface());
+        RSUniRenderUtil::DrawCachedFreezeSurface(node, *canvas_, node.GetCacheSurface());
         RS_TRACE_END();
     } else {
         RS_TRACE_BEGIN("RSUniRenderVisitor::DrawChildRenderNode Freeze Init nodeId = " +
@@ -1335,7 +1335,7 @@ void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
 void RSUniRenderVisitor::DrawCacheSpherizeRenderNode(RSRenderNode& node)
 {
     RS_LOGI("RSUniRenderVisitor::DrawCacheSpherizeRenderNode start");
-    if (node.GetCacheTypeChanged || !node.GetCacheSurface()) {
+    if (node.GetCacheTypeChanged() || !node.GetCacheSurface()) {
         RS_TRACE_BEGIN("RSUniRenderVisitor::DrawCacheSpherizeRenderNode Init Draw Full Cache nodeId = " +
             std::to_string(node.GetId()));
         isFreeze_ = true;
@@ -1349,21 +1349,19 @@ void RSUniRenderVisitor::DrawCacheSpherizeRenderNode(RSRenderNode& node)
             isOpDropped_ = false;
 
             swap(cacheCanvas, canvas_);
-            if (node.GetType == RSRenderNodeType::CANVAS_NODE) {
-                node.ProcessAnimatePropertyBeforeChildren(*canvas_);
+            node.ProcessAnimatePropertyBeforeChildren(*canvas_);
+            if (node.GetType() == RSRenderNodeType::CANVAS_NODE) {   
                 node.ProcessRenderContents(*canvas_);
-                ProcessBaseRenderNode(node);
-                node.ProcessAnimatePropertyAfterChildren(*canvas_);
-            } else if (node.GetType == RSRenderNodeType::SURFACE_NODE) {
-                node.ProcessAnimatePropertyBeforeChildren(*canvas_);
-                ProcessSurfaceRenderNodeBuffer(node);
-                ProcessBaseRenderNode(node);
-                node.ProcessAnimatePropertyAfterChildren(*canvas_);
+            } else if (node.GetType() == RSRenderNodeType::SURFACE_NODE) {
+                auto surfaceNode = reinterpret_cast<RSSurfaceRenderNode *>(&node);
+                ProcessSurfaceRenderNodeBuffer(*surfaceNode);
             }
+            ProcessBaseRenderNode(node); 
+            node.ProcessAnimatePropertyAfterChildren(*canvas_);
             swap(cacheCanvas, canvas_);
 
             isOpDropped_ = isOpDropped;
-            RSUniRenderUtil::DrawCachedSpherizeSurface(node, *canvas_, node.GetCacheSpherizeSurface());
+            RSUniRenderUtil::DrawCachedSpherizeSurface(node, *canvas_, node.GetCacheSurface());
             RSBaseRenderUtil::WriteFreezeRenderNodeToPng(node);
         } else {
             RS_LOGE("RSUniRenderVisitor::DrawCacheSpherizeCanvasRenderNode %" PRIu64 " Create CacheSurface failed",
@@ -1496,7 +1494,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     canvas_->concat(geoPtr->GetMatrix());
     CheckCacheType(node);
-    if (node.GetCacheType() == cacheType::SPHERIZE) {
+    if (node.GetCacheType() == RSRenderNode::SPHERIZE) {
         DrawCacheSpherizeRenderNode(node);
     } else {
         node.ProcessAnimatePropertyBeforeChildren(*canvas_);
@@ -1610,21 +1608,21 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 void RSUniRenderVisitor::CheckCacheType(RSRenderNode& node)
 {
     const auto& property = node.GetRenderProperties();
-    CacheType cacheType = node.GetCacheType();
-    if (property.IsSpherizeValid() && cacheType != cacheType::SPHERIZE) {
-        node.SetCacheType(cacheType::SPHERIZE);
+    auto cacheType = node.GetCacheType();
+    if (property.IsSpherizeValid() && cacheType != RSRenderNode::SPHERIZE) {
+        node.SetCacheType(RSRenderNode::SPHERIZE);
         node.SetCacheTypeChanged(true);
     }
-    else if (!property.IsSpherizeValid() && cacheType == cacheType::SPHERIZE) {
-        node.SetCacheType(cacheType::NONE);
+    else if (!property.IsSpherizeValid() && cacheType == RSRenderNode::SPHERIZE) {
+        node.SetCacheType(RSRenderNode::NONE);
         node.SetCacheTypeChanged(true);
     }
-    else if (node.IsFreeze() && cacheType == cacheType::NONE) {
-        node.SetCacheType(cacheType::FREEZE);
+    else if (node.IsFreeze() && cacheType == RSRenderNode::NONE) {
+        node.SetCacheType(RSRenderNode::FREEZE);
         node.SetCacheTypeChanged(true);
     }
-    else if (!node.IsFreeze() && cacheType == cacheType::FREEZE) {
-        node.SetCacheType(cacheType::NONE);
+    else if (!node.IsFreeze() && cacheType == RSRenderNode::FREEZE) {
+        node.SetCacheType(RSRenderNode::NONE);
         node.SetCacheTypeChanged(true);
     }
 }
@@ -1648,16 +1646,15 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         return;
     }
     // in case preparation'update is skipped
-    const auto& property = node.GetRenderProperties();
     CheckCacheType(node);
-    CacheType cacheType = node.GetCacheType();
+    auto cacheType = node.GetCacheType();
     node.GetMutableRenderProperties().CheckEmptyBounds();
-    if (cacheType == cacheType::SPHERIZE) {
+    if (cacheType == RSRenderNode::SPHERIZE) {
         node.ProcessTransitionBeforeChildren(*canvas_);
         DrawCacheSpherizeRenderNode(node);
         node.ProcessTransitionAfterChildren(*canvas_);
     } else {
-        if (cacheType == cacheType::NONE) {
+        if (cacheType == RSRenderNode::NONE) {
             node.ProcessRenderBeforeChildren(*canvas_);
         } else {
             node.ProcessTransitionBeforeChildren(*canvas_);

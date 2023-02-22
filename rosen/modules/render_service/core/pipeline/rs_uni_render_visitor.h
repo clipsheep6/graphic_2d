@@ -113,6 +113,7 @@ private:
     void InitCacheSurface(RSRenderNode& node, int width, int height);
     void DrawChildRenderNode(RSRenderNode& node);
     void DrawCacheSpherizeRenderNode(RSRenderNode& node);
+    void CheckCacheType(RSRenderNode& node);
     void ProcessSurfaceRenderNodeBuffer(RSSurfaceRenderNode& node);
     void CheckColorSpace(RSSurfaceRenderNode& node);
     void AddOverDrawListener(std::unique_ptr<RSRenderFrame>& renderFrame,

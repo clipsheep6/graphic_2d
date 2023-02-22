@@ -97,7 +97,7 @@ static std::unordered_map<RSModifierType, ModifierUnmarshallingFunc> funcLUT = {
         },                                                                                              
     },
     { RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY, [](Parcel& parcel) -> RSRenderModifier* {                          
-            std::shared_ptr<RSRenderAnimatableProperty<ForegroundColorStrategyType>> prop;                                     
+            std::shared_ptr<RSRenderProperty<ForegroundColorStrategyType>> prop;                                     
             if (!RSMarshallingHelper::Unmarshalling(parcel, prop)) {                                    
                 return nullptr;                                                                         
             }                                                                                           
@@ -146,7 +146,7 @@ bool RSDrawCmdListRenderModifier::Marshalling(Parcel& parcel)
     return false;
 }
 
-// RSEnvForegroundColorRenderModifier
+// RSEnvForegroundColorRenderModifier--ANIMATABLE_MODIFIER
 bool RSEnvForegroundColorRenderModifier::Marshalling(Parcel& parcel)                                               
 {                                                                                                                 
     auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<Color>>(property_);                  
@@ -168,18 +168,17 @@ void RSEnvForegroundColorRenderModifier::Update(const std::shared_ptr<RSRenderPr
     }                                                                                                             
 }
 
-// RSEnvForegroundColorStrategyRenderModifier
+// RSEnvForegroundColorStrategyRenderModifier--NOANIMATABLE_MODIFIER
 bool RSEnvForegroundColorStrategyRenderModifier ::Marshalling(Parcel& parcel)                                               
 {                                                                                                                 
-    auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<ForegroundColorStrategyType >>(property_);                  
+    auto renderProperty = std::static_pointer_cast<RSRenderProperty<ForegroundColorStrategyType >>(property_);                  
     return parcel.WriteInt16(static_cast<int16_t>(RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY)) &&                              
             RSMarshallingHelper::Marshalling(parcel, renderProperty);                                              
 }  
 
 void RSEnvForegroundColorStrategyRenderModifier ::Apply(RSModifierContext& context)                                         
 {                                                                                                                 
-    auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<ForegroundColorStrategyType >>(property_);                      
-
+    auto renderProperty = std::static_pointer_cast<RSRenderProperty<ForegroundColorStrategyType>>(property_);              
     switch (renderProperty->Get()) {
         case ForegroundColorStrategyType::INVERT_BACKGROUNDCOLOR: {
             // 截图调用取色接口算颜色
@@ -190,13 +189,13 @@ void RSEnvForegroundColorStrategyRenderModifier ::Apply(RSModifierContext& conte
             break;
         }
     }
-
 } 
+
 void RSEnvForegroundColorStrategyRenderModifier ::Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta)   
 {                                                                                                                 
-    if (auto property = std::static_pointer_cast<RSRenderAnimatableProperty<ForegroundColorStrategyType >>(prop)) {                       
-        auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<ForegroundColorStrategyType >>(property_);              
-        renderProperty->Set(isDelta ? (renderProperty->Get() + property->Get()) : property->Get());               
+    if (auto property = std::static_pointer_cast<RSRenderProperty<ForegroundColorStrategyType >>(prop)) {                       
+        auto renderProperty = std::static_pointer_cast<RSRenderProperty<ForegroundColorStrategyType >>(property_);  
+        renderProperty->Set(property->Get());                            
     }                                                                                                             
 }
 

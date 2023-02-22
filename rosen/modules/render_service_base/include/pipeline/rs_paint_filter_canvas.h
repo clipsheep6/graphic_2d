@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "include/core/SkSurface.h"
-
+#include "common/rs_color.h"
 #include "common/rs_macros.h"
 
 class SkDrawable;
@@ -89,7 +89,7 @@ private:
         Color envForegroundColor;
     } Env;
 
-    Env envDefault = {Color(0)};
+    Env envDefault = { Color(0) };
     std::stack<Env> envStack_ = std::stack<Env>({envDefault});
     std::atomic_bool isHighContrastEnabled_ { false };
     bool isCacheEnabled_ { false };

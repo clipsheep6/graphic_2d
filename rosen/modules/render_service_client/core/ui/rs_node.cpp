@@ -562,7 +562,8 @@ void RSNode::SetScaleY(float scaleY)
 // Set the foreground color of the control
 void RSNode::SetEnvForegroundColor(uint32_t colorValue)
 {
-    SetProperty<RSEnvForegroundColorModifier, RSAnimatableProperty<uint32_t>>(RSModifierType::ENV_FOREGROUND_COLOR, colorValue);
+    auto color = Color::FromArgbInt(colorValue);
+    SetProperty<RSEnvForegroundColorModifier, RSAnimatableProperty<Color>>(RSModifierType::ENV_FOREGROUND_COLOR, color);
 }
 
 // Set the foreground color strategy of the control

@@ -60,9 +60,7 @@ void RSParallelPackVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode &node)
 void RSParallelPackVisitor::ProcessBaseRenderNode(RSBaseRenderNode &node)
 {
     for (auto &child : node.GetSortedChildren()) {
-        canvas_->SaveEnv();
         child->Process(shared_from_this());
-        canvas_->RestoreEnv();
     }
     // clear SortedChildren, it will be generated again in next frame
     node.ResetSortedChildren();

@@ -52,7 +52,7 @@ RSCanvasNode::~RSCanvasNode() {}
 SkCanvas* RSCanvasNode::BeginRecording(int width, int height)
 {
 #ifdef ROSEN_OHOS
-    recordingCanvas_ = std::make_shared<RSRecordingCanvas>(width, height).get();
+    recordingCanvas_ = new RSRecordingCanvas(width, height);
 #endif
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy == nullptr) {

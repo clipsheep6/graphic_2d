@@ -1537,7 +1537,8 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
 void RSUniRenderVisitor::RecordAppWindowNodeAndPostTask(RSSurfaceRenderNode& node, float width, float height)
 {
     RSRecordingCanvas canvas(width, height);
-#ifdef RS_ENABLE_GL
+#if (defined RS_ENABLE_GL) && (!defined NEW_SKIA)
+    //TODO
     canvas.SetGrContext(canvas_->getGrContext()); // SkImage::MakeFromCompressed need GrContext
 #endif
     auto recordingCanvas = std::make_shared<RSPaintFilterCanvas>(&canvas);
@@ -1591,7 +1592,11 @@ void RSUniRenderVisitor::FinishOffscreenRender()
     // draw offscreen surface to current canvas
     SkPaint paint;
     paint.setAntiAlias(true);
+#ifdef NEW_SKIA
+    canvasBackup_->drawImage(offscreenSurface_->makeImageSnapshot(), 0, 0, SkSamplingOptions(), &paint);
+#else
     canvasBackup_->drawImage(offscreenSurface_->makeImageSnapshot(), 0, 0, &paint);
+#endif
     // restore current canvas and cleanup
     offscreenSurface_ = nullptr;
     canvas_ = std::move(canvasBackup_);

@@ -31,7 +31,7 @@ RSDrawingContext RSExtendedModifierHelper::CreateDrawingContext(NodeId nodeId)
     if (!node) {
         return { nullptr };
     }
-    auto recordingCanvas = std::make_shared<RSRecordingCanvas>(node->GetPaintWidth(), node->GetPaintHeight()).get();
+    auto recordingCanvas = new RSRecordingCanvas(node->GetPaintWidth(), node->GetPaintHeight());
     return { recordingCanvas, node->GetPaintWidth(), node->GetPaintHeight() };
 }
 

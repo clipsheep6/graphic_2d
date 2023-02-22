@@ -67,6 +67,7 @@ struct TextStyle {
     double wordSpacing_ = 0.0;
     double heightScale_ = 1.0;
     bool heightOnly_ = false;
+    std::u16string ellipsis_;
     std::string locale_;
     std::optional<SkPaint> background_; // SKIA
     std::optional<SkPaint> foreground_; // SKIA

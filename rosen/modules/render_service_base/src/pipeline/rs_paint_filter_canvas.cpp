@@ -18,13 +18,13 @@
 namespace OHOS {
 namespace Rosen {
 
-RSPaintFilterCanvas::RSPaintFilterCanvas(SkCanvas* canvas, float alpha, Env env)
-    : SkPaintFilterCanvas(canvas), alphaStack_({ std::clamp(alpha, 0.f, 1.f) }), envStack_({env}) // construct stack with given alpha and env
+RSPaintFilterCanvas::RSPaintFilterCanvas(SkCanvas* canvas, float alpha)
+    : SkPaintFilterCanvas(canvas), alphaStack_({ std::clamp(alpha, 0.f, 1.f) }) // construct stack with given alpha
 {}
 
-RSPaintFilterCanvas::RSPaintFilterCanvas(SkSurface* skSurface, float alpha, Env env)
+RSPaintFilterCanvas::RSPaintFilterCanvas(SkSurface* skSurface, float alpha)
     : SkPaintFilterCanvas(skSurface ? skSurface->getCanvas() : nullptr), skSurface_(skSurface),
-      alphaStack_({ std::clamp(alpha, 0.f, 1.f) }), envStack_({env}) // construct stack with given alpha and env
+      alphaStack_({ std::clamp(alpha, 0.f, 1.f) }) // construct stack with given alpha
 {}
 
 SkSurface* RSPaintFilterCanvas::GetSurface() const
@@ -34,9 +34,8 @@ SkSurface* RSPaintFilterCanvas::GetSurface() const
 
 bool RSPaintFilterCanvas::onFilter(SkPaint& paint) const
 {
-
     if (paint.getColor() == 0x00000001) {
-        paint.setColor(envStack_.top().envForegroundColor);
+        paint.setColor(envStack_.top().envForegroundColor.AsArgbInt());
     }
 
     if (alphaStack_.top() >= 1.f) {
@@ -141,7 +140,7 @@ void RSPaintFilterCanvas::RestoreEnv()
     envStack_.pop();
 }
 
-void RSPaintFilterCanvas::SetEnvForegroundColor (uint32_t color)
+void RSPaintFilterCanvas::SetEnvForegroundColor(Color color)
 {
     // sanity check, stack should not be empty
     if (envStack_.empty()) {

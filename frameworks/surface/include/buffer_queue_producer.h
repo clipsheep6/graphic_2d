@@ -60,7 +60,7 @@ public:
     int32_t GetDefaultHeight() override;
     uint32_t GetDefaultUsage() override;
 
-    GSError CleanCache() override;
+    GSError CleanCache(CleanCacheType type = CLEAN_CACHE_TYPE_BUFFER_QUEUE) override;
     GSError GoBackground() override;
 
     GSError RegisterReleaseListener(OnReleaseFunc func) override;

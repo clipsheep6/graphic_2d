@@ -246,7 +246,7 @@ GSError ConsumerSurface::UnregisterConsumerListener()
     return consumer_->UnregisterConsumerListener();
 }
 
-GSError ConsumerSurface::CleanCache()
+GSError ConsumerSurface::CleanCache(CleanCacheType type)
 {
     return GSERROR_NOT_SUPPORT;
 }

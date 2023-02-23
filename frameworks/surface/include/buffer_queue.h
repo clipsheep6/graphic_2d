@@ -102,7 +102,7 @@ public:
     GSError SetDefaultUsage(uint32_t usage);
     uint32_t GetDefaultUsage();
 
-    GSError CleanCache();
+    GSError CleanCache(CleanCacheType type = CLEAN_CACHE_TYPE_BUFFER_QUEUE);
     GSError GoBackground();
     GSError OnConsumerDied();
 

@@ -58,7 +58,7 @@ public:
     virtual int32_t GetDefaultHeight() = 0;
     virtual uint32_t GetDefaultUsage() = 0;
 
-    virtual GSError CleanCache() = 0;
+    virtual GSError CleanCache(CleanCacheType type = CLEAN_CACHE_TYPE_BUFFER_QUEUE) = 0;
     virtual GSError GoBackground() = 0;
 
     virtual GSError RegisterReleaseListener(OnReleaseFunc func) = 0;

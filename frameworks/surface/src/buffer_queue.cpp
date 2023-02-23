@@ -887,16 +887,16 @@ GSError BufferQueue::GoBackground()
     return GSERROR_OK;
 }
 
-GSError BufferQueue::CleanCache()
+GSError BufferQueue::CleanCache(CleanCacheType type)
 {
     {
         std::lock_guard<std::mutex> lockGuard(listenerMutex_);
         if (listener_ != nullptr) {
             ScopedBytrace bufferIPCSend("OnCleanCache");
-            listener_->OnCleanCache();
+            listener_->OnCleanCache(type);
         } else if (listenerClazz_ != nullptr) {
             ScopedBytrace bufferIPCSend("OnCleanCache");
-            listenerClazz_->OnCleanCache();
+            listenerClazz_->OnCleanCache(type);
         }
     }
     std::lock_guard<std::mutex> lockGuard(mutex_);

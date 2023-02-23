@@ -263,9 +263,11 @@ uint32_t BufferClientProducer::GetDefaultUsage()
     return reply.ReadUint32();
 }
 
-GSError BufferClientProducer::CleanCache()
+GSError BufferClientProducer::CleanCache(CleanCacheType type)
 {
     DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
+
+    arguments.WriteUint32(static_cast<uint32_t>(type));
 
     SEND_REQUEST(BUFFER_PRODUCER_CLEAN_CACHE, arguments, reply, option);
     int32_t ret = reply.ReadInt32();

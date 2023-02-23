@@ -26,7 +26,7 @@ public:
     virtual void OnBufferAvailable() = 0;
     virtual void OnTunnelHandleChange() {};
     virtual void OnGoBackground() {};
-    virtual void OnCleanCache() {};
+    virtual void OnCleanCache([[maybe_unused]] CleanCacheType type) {};
 };
 
 class IBufferConsumerListenerClazz {
@@ -35,7 +35,7 @@ public:
     virtual void OnBufferAvailable() = 0;
     virtual void OnTunnelHandleChange() {};
     virtual void OnGoBackground() {};
-    virtual void OnCleanCache() {};
+    virtual void OnCleanCache([[maybe_unused]] CleanCacheType type) {};
 };
 } // namespace OHOS
 

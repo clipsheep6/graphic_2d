@@ -126,7 +126,7 @@ public:
     void SetAlphaOffscreen(bool alphaOffscreen);
 
 
-    void SetEnvForegroundColor(Color colorValue);
+    void SetEnvForegroundColor(uint32_t colorValue);
     void SetEnvForegroundColorStrategy(ForegroundColorStrategyType colorType);
     void SetForegroundColor(uint32_t colorValue);
     void SetBackgroundColor(uint32_t colorValue);

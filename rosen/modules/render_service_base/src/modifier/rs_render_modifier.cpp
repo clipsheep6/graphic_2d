@@ -22,6 +22,7 @@
 #include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties.h"
+#include "property/rs_properties_def.h"
 #include "property/rs_properties_painter.h"
 
 namespace OHOS {
@@ -85,7 +86,7 @@ static std::unordered_map<RSModifierType, ModifierUnmarshallingFunc> funcLUT = {
         },
     },  
     { RSModifierType::ENV_FOREGROUND_COLOR, [](Parcel& parcel) -> RSRenderModifier* {                          
-            std::shared_ptr<RSRenderAnimatableProperty<Color> prop;                                     
+            std::shared_ptr<RSRenderAnimatableProperty<Color>> prop;                                     
             if (!RSMarshallingHelper::Unmarshalling(parcel, prop)) {                                    
                 return nullptr;                                                                         
             }                                                                                           
@@ -168,13 +169,15 @@ void RSEnvForegroundColorRenderModifier::Update(const std::shared_ptr<RSRenderPr
     }                                                                                                             
 }
 
+
 // RSEnvForegroundColorStrategyRenderModifier--NOANIMATABLE_MODIFIER
-bool RSEnvForegroundColorStrategyRenderModifier ::Marshalling(Parcel& parcel)                                               
+bool RSEnvForegroundColorStrategyRenderModifier::Marshalling(Parcel& parcel)                                               
 {                                                                                                                 
-    auto renderProperty = std::static_pointer_cast<RSRenderProperty<ForegroundColorStrategyType >>(property_);                  
-    return parcel.WriteInt16(static_cast<int16_t>(RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY)) &&                              
+    auto renderProperty = std::static_pointer_cast<RSRenderProperty<ForegroundColorStrategyType>>(property_);                  
+    return parcel.WriteInt16(static_cast<short>(RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY)) &&                              
             RSMarshallingHelper::Marshalling(parcel, renderProperty);                                              
-}  
+}
+
 
 void RSEnvForegroundColorStrategyRenderModifier ::Apply(RSModifierContext& context)                                         
 {                                                                                                                 
@@ -184,6 +187,7 @@ void RSEnvForegroundColorStrategyRenderModifier ::Apply(RSModifierContext& conte
             // 截图调用取色接口算颜色
             Color color(0);
             context.canvas_->SetEnvForegroundColor(color);   
+            break;
         }
         default: {
             break;

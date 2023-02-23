@@ -101,10 +101,7 @@ enum class RSRenderPropertyType : int16_t {
     PROPERTY_VECTOR4_COLOR,
 };
 
-enum class ForegroundColorStrategyType : int16_t {
-    INVALID = 0,
-    INVERT_BACKGROUNDCOLOR,
-};
+
 } // namespace Rosen
 } // namespace OHOS
 

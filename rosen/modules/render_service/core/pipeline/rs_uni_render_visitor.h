@@ -112,7 +112,8 @@ private:
         const Occlusion::Region alignedDirtyRegion);
 
     void InitCacheSurface(RSRenderNode& node, int width, int height);
-    void DrawChildRenderNode(RSRenderNode& node);
+    void DrawCacheRenderNode(RSRenderNode& node);
+    void ProcessSurfaceRenderNodeBuffer(RSSurfaceRenderNode& node);
     void CheckColorSpace(RSSurfaceRenderNode& node);
     void AddOverDrawListener(std::unique_ptr<RSRenderFrame>& renderFrame,
         std::shared_ptr<RSCanvasListener>& overdrawListener);

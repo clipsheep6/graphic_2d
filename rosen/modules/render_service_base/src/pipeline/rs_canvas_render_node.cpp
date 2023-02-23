@@ -106,6 +106,7 @@ void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
     ApplyDrawCmdModifier(context, RSModifierType::OVERLAY_STYLE);
     RSPropertiesPainter::DrawForegroundColor(GetRenderProperties(), canvas);
     RSRenderNode::ProcessRenderAfterChildren(canvas);
+    RSPropertiesPainter::DrawPixelStretch(GetRenderProperties(), canvas);
 }
 
 void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type)

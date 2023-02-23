@@ -190,6 +190,9 @@ public:
     void SetMask(std::shared_ptr<RSMask> mask);
     std::shared_ptr<RSMask> GetMask() const;
 
+    void SetPixelStretch(Vector4f stretchSize);
+    Vector4f GetPixelStretch() const;
+
     const std::shared_ptr<RSObjGeometry>& GetBoundsGeometry() const;
     const std::shared_ptr<RSObjGeometry>& GetFrameGeometry() const;
     bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag, Vector2f& offset);
@@ -240,6 +243,7 @@ private:
     std::shared_ptr<RSMask> mask_ = nullptr;
     std::unique_ptr<RSShadow> shadow_ = nullptr;
     std::unique_ptr<Matrix3f> sublayerTransform_ = nullptr;
+    std::unique_ptr<Vector4f> pixelStretch = nullptr;
 
     friend class RSCanvasRenderNode;
     friend class RSPropertiesPainter;

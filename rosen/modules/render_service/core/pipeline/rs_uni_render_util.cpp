@@ -154,8 +154,8 @@ BufferDrawParam RSUniRenderUtil::CreateLayerBufferDrawParam(const LayerInfoPtr& 
     return params;
 }
 
-void RSUniRenderUtil::DrawCachedFreezeSurface(RSRenderNode& node, RSPaintFilterCanvas& canvas,
-    sk_sp<SkSurface> surface)
+void RSUniRenderUtil::DrawCachedFreezeSurface(const RSRenderNode& node, RSPaintFilterCanvas& canvas,
+    const sk_sp<SkSurface>& surface)
 {
     if (surface == nullptr) {
         return;
@@ -169,8 +169,8 @@ void RSUniRenderUtil::DrawCachedFreezeSurface(RSRenderNode& node, RSPaintFilterC
     canvas.restore();
 }
 
-void RSUniRenderUtil::DrawCachedSpherizeSurface(RSRenderNode& node, RSPaintFilterCanvas& canvas,
-    sk_sp<SkSurface> surface)
+void RSUniRenderUtil::DrawCachedSpherizeSurface(const RSRenderNode& node, RSPaintFilterCanvas& canvas,
+    const sk_sp<SkSurface>& surface)
 {
     if (surface == nullptr) {
         return;
@@ -215,33 +215,33 @@ void RSUniRenderUtil::DrawCachedSpherizeSurface(RSRenderNode& node, RSPaintFilte
     float offsetSphereWidth = width / 6 * degree;
     float offsetSphereHeight = height / 6  *degree;
 
-    SkPoint cubics[12] = {
-        // top control points
+    SkPoint ctrlPoints[12] = {
+        // top edge control points
         {0.0f, 0.0f}, {segmentWidthOne, 0.0f}, {segmentWidthTwo, 0.0f}, {width, 0.0f},
-        // right control points
+        // right edge control points
         {width, segmentHeightOne}, {width, segmentHeightTwo},
-        // bottom control points
+        // bottom edge control points
         {width, height}, {segmentWidthTwo, height}, {segmentWidthOne, height}, {0.0f, height},
-        // left control points
+        // left edge control points
         {0.0f, segmentHeightTwo}, {0.0f, segmentHeightOne}
     };
-    cubics[0].offset(offsetSphereWidth, offsetSphereHeight); // top left control point
-    cubics[3].offset(-offsetSphereWidth, offsetSphereHeight); // top right control point
-    cubics[6].offset(-offsetSphereWidth, -offsetSphereHeight); // bottom right control point
-    cubics[9].offset(offsetSphereWidth, -offsetSphereHeight); // bottom left control point
+    ctrlPoints[0].offset(offsetSphereWidth, offsetSphereHeight); // top left control point
+    ctrlPoints[3].offset(-offsetSphereWidth, offsetSphereHeight); // top right control point
+    ctrlPoints[6].offset(-offsetSphereWidth, -offsetSphereHeight); // bottom right control point
+    ctrlPoints[9].offset(offsetSphereWidth, -offsetSphereHeight); // bottom left control point
     if (isWidthGreater) {
-        SkPoint::Offset(cubics, SK_ARRAY_COUNT(cubics), offsetSquare, 0);
+        SkPoint::Offset(ctrlPoints, SK_ARRAY_COUNT(ctrlPoints), offsetSquare, 0);
     } else {
-        SkPoint::Offset(cubics, SK_ARRAY_COUNT(cubics), 0, offsetSquare);
+        SkPoint::Offset(ctrlPoints, SK_ARRAY_COUNT(ctrlPoints), 0, offsetSquare);
     }
     SkPath path;
-    path.moveTo(cubics[0]);
-    path.cubicTo(cubics[1], cubics[2], cubics[3]); // upper edge
-    path.cubicTo(cubics[4], cubics[5], cubics[6]); // right edge
-    path.cubicTo(cubics[7], cubics[8], cubics[9]); // bottom edge
-    path.cubicTo(cubics[10], cubics[11], cubics[0]); // left edge
+    path.moveTo(ctrlPoints[0]);
+    path.cubicTo(ctrlPoints[1], ctrlPoints[2], ctrlPoints[3]); // upper edge
+    path.cubicTo(ctrlPoints[4], ctrlPoints[5], ctrlPoints[6]); // right edge
+    path.cubicTo(ctrlPoints[7], ctrlPoints[8], ctrlPoints[9]); // bottom edge
+    path.cubicTo(ctrlPoints[10], ctrlPoints[11], ctrlPoints[0]); // left edge
     canvas.clipPath(path, true);
-    canvas.drawPatch(cubics, nullptr, texCoords, SkBlendMode::kSrcOver, paint);
+    canvas.drawPatch(ctrlPoints, nullptr, texCoords, SkBlendMode::kSrcOver, paint);
 }
 
 void RSUniRenderUtil::DrawCachedImage(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas, sk_sp<SkImage> image)

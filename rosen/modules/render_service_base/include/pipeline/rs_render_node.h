@@ -78,6 +78,7 @@ public:
     virtual void ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas) {}
     virtual void ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas) {}
     virtual void ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas) {}
+    void CheckCacheType();
     void RenderTraceDebug() const;
     bool HasDisappearingTransition(bool recursive) const override
     {

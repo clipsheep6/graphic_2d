@@ -1109,7 +1109,7 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
         auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
         grContext->flush();
         SkGraphics::PurgeAllCaches();
-        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+        grContext->flushAndSubmit(true);
         lastCleanCacheTimestamp_ = timestamp_;
 #endif
     }
@@ -1135,19 +1135,19 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         grContext->purgeUnlockedResources(true);
         std::shared_ptr<RenderContext> rendercontext = std::make_shared<RenderContext>();
         rendercontext->CleanAllShaderCache();
-        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+        grContext->flushAndSubmit(true);
     } else if (type == "cpu") {
         grContext->flush();
         SkGraphics::PurgeAllCaches();
-        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+        grContext->flushAndSubmit(true);
     } else if (type == "gpu") {
         grContext->flush();
         grContext->freeGpuResources();
-        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+        grContext->flushAndSubmit(true);
     } else if (type == "uihidden") {
         grContext->flush();
         grContext->purgeUnlockedResources(true);
-        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+        grContext->flushAndSubmit(true);
     } else if (type == "shader") {
         std::shared_ptr<RenderContext> rendercontext = std::make_shared<RenderContext>();
         rendercontext->CleanAllShaderCache();

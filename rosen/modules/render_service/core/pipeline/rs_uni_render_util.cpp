@@ -213,7 +213,7 @@ void RSUniRenderUtil::DrawCachedSpherizeSurface(const RSRenderNode& node, RSPain
     float segmentHeightOne = height / 3.0;
     float segmentHeightTwo = height / 3.0 * 2.0;
     float offsetSphereWidth = width / 6 * degree;
-    float offsetSphereHeight = height / 6  *degree;
+    float offsetSphereHeight = height / 6  * degree;
 
     SkPoint ctrlPoints[12] = {
         // top edge control points

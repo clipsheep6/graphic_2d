@@ -1420,8 +1420,7 @@ void RSUniRenderVisitor::DrawCacheRenderNode(RSRenderNode& node)
             std::to_string(node.GetId()));
         if (node.GetCacheType() == RSRenderNode::SPHERIZE) {
             RSUniRenderUtil::DrawCachedSpherizeSurface(node, *canvas_, node.GetCacheSurface());
-        }
-        else {
+        } else {
             RSUniRenderUtil::DrawCachedFreezeSurface(node, *canvas_, node.GetCacheSurface());
         }
         RS_TRACE_END();
@@ -1460,8 +1459,7 @@ void RSUniRenderVisitor::DrawCacheRenderNode(RSRenderNode& node)
 
             if (node.GetCacheType() == RSRenderNode::SPHERIZE) {
                 RSUniRenderUtil::DrawCachedSpherizeSurface(node, *canvas_, node.GetCacheSurface());
-            }
-            else {
+            } else {
                 RSUniRenderUtil::DrawCachedFreezeSurface(node, *canvas_, node.GetCacheSurface());
             }
             // To get all FreezeNode
@@ -1645,7 +1643,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             if (needCheckFirstFrame_ && IsFirstFrameReadyToDraw(node)) {
                 node.NotifyUIBufferAvailable();
             }
-            DrawChildRenderNode(node);
+            DrawCacheRenderNode(node);
         } else if (node.IsAppWindow()) { // use skSurface drawn by cold start thread
             if (node.GetCachedImage() != nullptr) {
                 RSUniRenderUtil::DrawCachedImage(node, *canvas_, node.GetCachedImage());

@@ -238,15 +238,12 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanv
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
     RSPropertiesPainter::DrawShadow(property, canvas, &absClipRRect);
 
-    // Fix bug that when AppWindow has shadow set by config.xml cannot be displayed for LEASH_WINDOW_NODE has clipped canvas.
-    if (GetSurfaceNodeType() != RSSurfaceNodeType::LEASH_WINDOW_NODE) {
-        if (!property.GetCornerRadius().IsZero()) {
-            canvas.clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
-        } else {
-            canvas.clipRect(SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight()));
-        }
+    if (!property.GetCornerRadius().IsZero()) {
+        canvas.clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
+    } else {
+        canvas.clipRect(SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight()));
     }
-
+    
     RSPropertiesPainter::DrawBackground(property, canvas);
     RSPropertiesPainter::DrawMask(property, canvas);
     auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());

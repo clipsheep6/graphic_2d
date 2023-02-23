@@ -876,7 +876,9 @@ void RSNode::MarkContentChanged(bool isChanged)
 void RSNode::ClearAllModifiers()
 {
     for (auto& [id, modifier] : modifiers_) {
-        modifier->DetachFromNode();
+        if (modifier) {
+            modifier->DetachFromNode();
+        }
     }
 }
 

@@ -274,6 +274,7 @@ void RSNode::SetProperty(RSModifierType modifierType, T value)
 // alpha
 void RSNode::SetAlpha(float alpha)
 {
+    ROSEN_LOGE("ZTE setAlpha %{public}f", alpha);
     SetProperty<RSAlphaModifier, RSAnimatableProperty<float>>(RSModifierType::ALPHA, alpha);
 }
 

@@ -15,6 +15,7 @@
 
 #include "pipeline/rs_unmarshal_thread.h"
 
+#include "memory/MemoryManager.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
@@ -31,6 +32,12 @@ void RSUnmarshalThread::Start()
 {
     runner_ = AppExecFwk::EventRunner::Create("RSUnmarshalThread");
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+    auto task = [] {
+        std::string dumpString;
+        MemoryManager::DisableMallocCache(dumpString);
+        RS_LOGI("RSUnmarshalThread::Start %s\n", dumpString.c_str());
+    };
+    PostTask(task);
 }
 
 void RSUnmarshalThread::PostTask(const std::function<void()>& task)

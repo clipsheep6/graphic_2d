@@ -15,6 +15,7 @@
 
 #include "MemoryManager.h"
 
+#include <malloc.h>
 #include <SkGraphics.h>
 
 #include "SkiaMemoryTracer.h"
@@ -63,4 +64,23 @@ void MemoryManager::DumpMemoryUsage(DfxString& log, const GrContext* grContext)
     log.AppendFormat(rendercontext->GetShaderCacheSize().c_str());
 #endif
 }
+
+void MemoryManager::DisableMallocCache(std::string& log)
+{
+#ifdef CONFIG_USE_JEMALLOC_DFX_INTF
+    int ret1 = mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_DISABLE);
+    int ret2 = mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
+    log.append("disable: tcache and delay free, result = " + std::to_string(ret1) + ", " + std::to_string(ret2) + "\n");
+#endif
+}
+
+void MemoryManager::EnableMallocCache(std::string& log)
+{
+#ifdef CONFIG_USE_JEMALLOC_DFX_INTF
+    int ret1 = mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_ENABLE);
+    int ret2 = mallopt(M_DELAYED_FREE, M_DELAYED_FREE_ENABLE);
+    log.append("enable: tcache and delay free, result = " + std::to_string(ret1) + ", " + std::to_string(ret2) + "\n");
+#endif
+}
+
 } // namespace OHOS::Rosen

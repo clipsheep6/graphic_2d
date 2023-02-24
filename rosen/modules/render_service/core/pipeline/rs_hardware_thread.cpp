@@ -15,14 +15,16 @@
 
 #include "pipeline/rs_hardware_thread.h"
 
+#include "hdi_backend.h"
+#include "rs_trace.h"
+
+#include "memory/MemoryManager.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_uni_render_engine.h"
 #include "platform/common/rs_log.h"
 #include "screen_manager/rs_screen_manager.h"
-#include "rs_trace.h"
-#include "hdi_backend.h"
 
 #ifdef RS_ENABLE_EGLIMAGE
 #include "rs_egl_image_manager.h"
@@ -37,12 +39,17 @@ RSHardwareThread& RSHardwareThread::Instance()
 
 void RSHardwareThread::Start()
 {
-    RS_LOGI("RSHardwareThread::Start()!");
     hdiBackend_ = HdiBackend::GetInstance();
     runner_ = AppExecFwk::EventRunner::Create("RSHardwareThread");
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     fallbackCb_ = std::bind(&RSHardwareThread::Redraw, this,std::placeholders::_1, std::placeholders::_2,
         std::placeholders::_3);
+    auto task = [] {
+        std::string dumpString;
+        MemoryManager::DisableMallocCache(dumpString);
+        RS_LOGI("RSHardwareThread::Start %s\n", dumpString.c_str());
+    };
+    PostTask(task);
     if (handler_) {
         ScheduleTask([=]() {
             auto screenManager = CreateOrGetScreenManager();

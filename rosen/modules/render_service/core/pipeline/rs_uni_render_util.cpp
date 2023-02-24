@@ -179,6 +179,9 @@ void RSUniRenderUtil::DrawCachedSpherizeSurface(const RSRenderNode& node, RSPain
     const RSProperties& properties = node.GetRenderProperties();
     float canvasWidth = properties.GetBoundsRect().GetWidth();
     float canvasHeight = properties.GetBoundsRect().GetHeight();
+    if (surface->width() == 0 || surface->height() == 0) {
+        return;
+    }
     canvas.scale(canvasWidth / surface->width(), canvasHeight / surface->height());
 
     auto imageSnapshot = surface->makeImageSnapshot();

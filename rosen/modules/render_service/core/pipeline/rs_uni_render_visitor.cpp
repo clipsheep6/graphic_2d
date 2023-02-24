@@ -1404,9 +1404,9 @@ void RSUniRenderVisitor::InitCacheSurface(RSRenderNode& node, int width, int hei
 #endif
 }
 
-void RSUniRenderVisitor::DrawCacheRenderNode(RSRenderNode& node)
+void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
 {
-    RS_LOGI("RSUniRenderVisitor::DrawCacheRenderNode, cacheType: {%d}, cacheChanged: {%d}",
+    RS_LOGI("RSUniRenderVisitor::DrawChildRenderNode, cacheType: {%d}, cacheChanged: {%d}",
         node.GetCacheType(), node.GetCacheTypeChanged());
     if (node.GetCacheTypeChanged()) {
         node.ClearCacheSurface();
@@ -1416,7 +1416,7 @@ void RSUniRenderVisitor::DrawCacheRenderNode(RSRenderNode& node)
     if (node.GetCacheType() == RSRenderNode::NONE) {
         ProcessBaseRenderNode(node);
     } else if (node.GetCacheSurface()) {
-        RS_TRACE_BEGIN("RSUniRenderVisitor::DrawCacheRenderNode Draw nodeId = " +
+        RS_TRACE_BEGIN("RSUniRenderVisitor::DrawChildRenderNode Draw nodeId = " +
             std::to_string(node.GetId()));
         if (node.GetCacheType() == RSRenderNode::SPHERIZE) {
             RSUniRenderUtil::DrawCachedSpherizeSurface(node, *canvas_, node.GetCacheSurface());
@@ -1425,7 +1425,7 @@ void RSUniRenderVisitor::DrawCacheRenderNode(RSRenderNode& node)
         }
         RS_TRACE_END();
     } else {
-        RS_TRACE_BEGIN("RSUniRenderVisitor::DrawCacheRenderNode Init Draw nodeId = " +
+        RS_TRACE_BEGIN("RSUniRenderVisitor::DrawChildRenderNode Init Draw nodeId = " +
             std::to_string(node.GetId()));
         isFreeze_ = true;
         int width = std::ceil(node.GetRenderProperties().GetBoundsRect().GetWidth());
@@ -1466,7 +1466,7 @@ void RSUniRenderVisitor::DrawCacheRenderNode(RSRenderNode& node)
             // Png file could be found in /data
             RSBaseRenderUtil::WriteCacheRenderNodeToPng(node);
         } else {
-            RS_LOGE("RSUniRenderVisitor::DrawCacheRenderNode %" PRIu64 " Create CacheSurface failed",
+            RS_LOGE("RSUniRenderVisitor::DrawChildRenderNode %" PRIu64 " Create CacheSurface failed",
                 node.GetId());
         }
         isFreeze_ = false;
@@ -1584,7 +1584,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     canvas_->concat(geoPtr->GetMatrix());
     if (node.GetCacheType() == RSRenderNode::SPHERIZE) {
-        DrawCacheRenderNode(node);
+        DrawChildRenderNode(node);
     } else {
         node.ProcessAnimatePropertyBeforeChildren(*canvas_);
 
@@ -1593,8 +1593,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
                 node.SetHardwareForcedDisabledState(isFreeze_);
             }
             // if this window is in freeze state, disable hardware composer for its child surfaceView
-            if (IsHardwareComposerEnabled() && !isFreeze_ && node.IsHardwareEnabledType() &&
-                node.GetDstRect().GetWidth() > 1 && node.GetDstRect().GetHeight() > 1) { // avoid fallback by composer
+            if (IsHardwareComposerEnabled() && !node.IsHardwareForcedDisabled() && node.IsHardwareEnabledType()) {
                 canvas_->clear(SK_ColorTRANSPARENT);
                 node.SetGlobalAlpha(canvas_->GetAlpha());
                 node.SetLocalZOrder(localZOrder_++);
@@ -1606,15 +1605,6 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
                     node.GetSrcRect().ToString().c_str(), node.GetDstRect().ToString().c_str(),
                     node.GetName().c_str(), node.GetId());
             } else {
-                if (node.IsHardwareEnabledType()) {
-                    auto iter = std::find_if(hardwareEnabledNodes_.begin(), hardwareEnabledNodes_.end(),
-                        [id = node.GetId()](std::shared_ptr<RSSurfaceRenderNode> surfaceNode) -> bool {
-                        return id == surfaceNode->GetId();
-                    });
-                    if (iter != hardwareEnabledNodes_.end()) {
-                        hardwareEnabledNodes_.erase(iter);
-                    }
-                }
                 node.SetGlobalAlpha(1.0f);
                 auto params = RSUniRenderUtil::CreateBufferDrawParam(node, false);
                 renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
@@ -1634,7 +1624,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             if (needCheckFirstFrame_ && IsFirstFrameReadyToDraw(node)) {
                 node.NotifyUIBufferAvailable();
             }
-            DrawCacheRenderNode(node);
+            DrawChildRenderNode(node);
         } else if (node.IsAppWindow()) { // use skSurface drawn by cold start thread
             if (node.GetCachedImage() != nullptr) {
                 RSUniRenderUtil::DrawCachedImage(node, *canvas_, node.GetCachedImage());
@@ -1720,16 +1710,16 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     auto cacheType = node.GetCacheType();
     if (cacheType == RSRenderNode::NONE) {
         node.ProcessRenderBeforeChildren(*canvas_);
-        DrawCacheRenderNode(node);
+        DrawChildRenderNode(node);
         node.ProcessRenderAfterChildren(*canvas_);
     } else if (cacheType == RSRenderNode::SPHERIZE) {
         node.ProcessTransitionBeforeChildren(*canvas_);
-        DrawCacheRenderNode(node);
+        DrawChildRenderNode(node);
         node.ProcessTransitionAfterChildren(*canvas_);
     } else {
         node.ProcessTransitionBeforeChildren(*canvas_);
         node.ProcessAnimatePropertyBeforeChildren(*canvas_);
-        DrawCacheRenderNode(node);
+        DrawChildRenderNode(node);
         node.ProcessRenderAfterChildren(*canvas_);
     }
 

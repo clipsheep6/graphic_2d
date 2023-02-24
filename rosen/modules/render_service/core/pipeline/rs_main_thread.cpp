@@ -1109,7 +1109,11 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
         auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
         grContext->flush();
         SkGraphics::PurgeAllCaches();
+#ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
+#else
+        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+#endif
         lastCleanCacheTimestamp_ = timestamp_;
 #endif
     }
@@ -1135,19 +1139,35 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         grContext->purgeUnlockedResources(true);
         std::shared_ptr<RenderContext> rendercontext = std::make_shared<RenderContext>();
         rendercontext->CleanAllShaderCache();
+#ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
+#else
+        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+#endif
     } else if (type == "cpu") {
         grContext->flush();
         SkGraphics::PurgeAllCaches();
+#ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
+#else
+        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+#endif
     } else if (type == "gpu") {
         grContext->flush();
         grContext->freeGpuResources();
+#ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
+#else
+        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+#endif
     } else if (type == "uihidden") {
         grContext->flush();
         grContext->purgeUnlockedResources(true);
+#ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
+#else
+        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
+#endif
     } else if (type == "shader") {
         std::shared_ptr<RenderContext> rendercontext = std::make_shared<RenderContext>();
         rendercontext->CleanAllShaderCache();

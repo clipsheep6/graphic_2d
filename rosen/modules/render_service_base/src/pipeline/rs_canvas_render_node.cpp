@@ -125,6 +125,7 @@ void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
     RSPropertiesPainter::DrawForegroundColor(GetRenderProperties(), canvas);
 #endif
     RSRenderNode::ProcessRenderAfterChildren(canvas);
+    RSPropertiesPainter::DrawPixelStretch(GetRenderProperties(), canvas);
 }
 
 void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type)

@@ -914,6 +914,7 @@ void RSProperties::Reset()
     mask_ = nullptr;
     shadow_ = nullptr;
     sublayerTransform_ = nullptr;
+    pixelStretch = nullptr;
 }
 
 void RSProperties::SetDirty()
@@ -986,6 +987,22 @@ void RSProperties::SetMask(std::shared_ptr<RSMask> mask)
 std::shared_ptr<RSMask> RSProperties::GetMask() const
 {
     return mask_;
+}
+
+void RSProperties::SetPixelStretch(Vector4f stretchSize)
+{
+    if (!pixelStretch) {
+        pixelStretch = std::make_unique<Vector4f>();
+    }
+
+    pixelStretch->SetValues(stretchSize.x_, stretchSize.y_, stretchSize.z_, stretchSize.w_);
+
+    SetDirty(); // No need to relayout, need call this?
+}
+
+Vector4f RSProperties::GetPixelStretch() const
+{
+    return pixelStretch ? *pixelStretch : Vector4f();
 }
 
 std::string RSProperties::Dump() const

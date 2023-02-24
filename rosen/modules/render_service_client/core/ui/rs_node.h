@@ -169,6 +169,8 @@ public:
     void SetVisible(bool visible);
     void SetMask(const std::shared_ptr<RSMask>& mask);
 
+    void SetPixelStretch(const Vector4f& stretchSize);
+
     void SetPaintOrder(bool drawContentLast);
 
     void SetTransitionEffect(const std::shared_ptr<const RSTransitionEffect>& effect)

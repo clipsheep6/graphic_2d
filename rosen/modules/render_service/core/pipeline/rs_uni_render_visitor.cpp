@@ -1407,7 +1407,7 @@ void RSUniRenderVisitor::InitCacheSurface(RSRenderNode& node, int width, int hei
 void RSUniRenderVisitor::DrawCacheRenderNode(RSRenderNode& node)
 {
     RS_LOGI("RSUniRenderVisitor::DrawCacheRenderNode, cacheType: {%d}, cacheChanged: {%d}",
-    node.GetCacheType(), node.GetCacheTypeChanged());
+        node.GetCacheType(), node.GetCacheTypeChanged());
     if (node.GetCacheTypeChanged()) {
         node.ClearCacheSurface();
         node.SetCacheTypeChanged(false);
@@ -1448,9 +1448,14 @@ void RSUniRenderVisitor::DrawCacheRenderNode(RSRenderNode& node)
                 node.ProcessRenderContents(*canvas_);
                 if (node.GetType() == RSRenderNodeType::SURFACE_NODE) {
                     auto surfaceNode = reinterpret_cast<RSSurfaceRenderNode *>(&node);
-                    ProcessSurfaceRenderNodeBuffer(*surfaceNode);
+                    if (surfaceNode->GetBuffer() != nullptr) {
+                        if (!IsHardwareComposerEnabled() || isFreeze_ || !surfaceNode->IsHardwareEnabledType() ||
+                            surfaceNode.GetDstRect().GetWidth() <= 1 || surfaceNode.GetDstRect().GetHeight() <= 1) {
+                                ProcessSurfaceRenderNodeBuffer(*surfaceNode);
+                        }
+                    }
                 }
-                ProcessBaseRenderNode(node); 
+                ProcessBaseRenderNode(node);
                 node.ProcessAnimatePropertyAfterChildren(*canvas_);
             }
             swap(cacheCanvas, canvas_);
@@ -1588,12 +1593,12 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     // to avoid child node being layout according to the BoundsRect of RosenRenderTexture.
     // Temporarily, we use parent of SELF_DRAWING_NODE which has the same paintRect with its child instead.
     // to draw child node of SELF_DRAWING_NODE
-    if (isSelfDrawingSurface) {
+    node.CheckCacheType();
+    if (isSelfDrawingSurface && node.GetCacheType() != RSRenderNode::SPHERIZE) {
         canvas_->save();
     }
 
     canvas_->concat(geoPtr->GetMatrix());
-    node.CheckCacheType();
     if (node.GetCacheType() == RSRenderNode::SPHERIZE) {
         DrawCacheRenderNode(node);
     } else {

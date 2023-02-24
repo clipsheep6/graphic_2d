@@ -1446,15 +1446,6 @@ void RSUniRenderVisitor::DrawCacheRenderNode(RSRenderNode& node)
             } else {
                 node.ProcessAnimatePropertyBeforeChildren(*canvas_);
                 node.ProcessRenderContents(*canvas_);
-                if (node.GetType() == RSRenderNodeType::SURFACE_NODE) {
-                    auto surfaceNode = reinterpret_cast<RSSurfaceRenderNode *>(&node);
-                    if (surfaceNode->GetBuffer() != nullptr) {
-                        if (!IsHardwareComposerEnabled() || isFreeze_ || !surfaceNode->IsHardwareEnabledType() ||
-                            surfaceNode.GetDstRect().GetWidth() <= 1 || surfaceNode.GetDstRect().GetHeight() <= 1) {
-                                ProcessSurfaceRenderNodeBuffer(*surfaceNode);
-                        }
-                    }
-                }
                 ProcessBaseRenderNode(node);
                 node.ProcessAnimatePropertyAfterChildren(*canvas_);
             }
@@ -1481,13 +1472,6 @@ void RSUniRenderVisitor::DrawCacheRenderNode(RSRenderNode& node)
         isFreeze_ = false;
         RS_TRACE_END();
     }
-}
-
-void RSUniRenderVisitor::ProcessSurfaceRenderNodeBuffer(RSSurfaceRenderNode& node)
-{
-    node.SetGlobalAlpha(1.0f);
-    auto params = RSUniRenderUtil::CreateBufferDrawParam(node, false);
-    renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
 }
 
 void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
@@ -1631,7 +1615,9 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
                         hardwareEnabledNodes_.erase(iter);
                     }
                 }
-                ProcessSurfaceRenderNodeBuffer(node);
+                node.SetGlobalAlpha(1.0f);
+                auto params = RSUniRenderUtil::CreateBufferDrawParam(node, false);
+                renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
             }
         }
 

@@ -509,5 +509,64 @@ HWTEST_F(RSSurfaceCaptureTaskTest, ProcessSurfaceRenderNode002, Function | Small
     node.renderProperties_.SetAlpha(0.0f);
     visitor->ProcessSurfaceRenderNode(node);
 }
+
+/*
+ * @tc.name: TakeSurfaceCaptureOfMirrorDisplayNode
+ * @tc.desc: Generate valid mirror display node and take securitylayer capture
+ * @tc.type: FUNC
+ * @tc.require: 
+*/
+HWTEST_F(RSSurfaceCaptureTaskTest, TakeSurfaceCaptureOfMirrorDisplayNode, Function | SmallTest | Level2)
+{
+    RSDisplayNode::SharedPtr displayNode = RSDisplayNode::Create(mirrorConfig_);
+    ASSERT_NE(displayNode, nullptr);
+    surfaceNode_->SetSecurityLayer(true);
+    displayNode->AddChild(surfaceNode_, -1);
+    RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
+    usleep(SLEEP_TIME_FOR_PROXY);
+
+    bool ret = rsInterfaces_->TakeSurfaceCapture(displayNode, surfaceCaptureCb_);
+    ASSERT_EQ(ret, true);
+    ASSERT_EQ(CheckSurfaceCaptureCallback(), true);
+    ASSERT_EQ(surfaceCaptureCb_->IsTestSuccess(), true);
+    displayNode = nullptr;
+    RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
+    usleep(SLEEP_TIME_FOR_PROXY);
+}
+
+/*
+ * @tc.name: ProcessDisplayRenderNode001
+ * @tc.desc: Test RSSurfaceCaptureTaskTest.ProcessDisplayRenderNode
+ * @tc.type:
+ * @tc.require:
+*/
+HWTEST_F(RSSurfaceCaptureTaskTest, ProcessDisplayRenderNode001, Function | SmallTest | Level2)
+{
+    NodeId id = 0;
+    float scaleX = 1.0;
+    float scaleY = 1.0;
+    std::shared_ptr<RSSurfaceCaptureTask> captureTask = std::make_shared<RSSurfaceCaptureTask>(id, scaleX, scaleY);
+
+    auto rsContext = std::make_shared<RSContext>();
+    RSDisplayNodeConfig displayConfig;
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(12, displayConfig, rsContext->weak_from_this());
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    ASSERT_NE(surfaceNode->GetBuffer(), nullptr);
+
+    displayNode->AddChild(surfaceNode_, -1);
+    RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
+    usleep(SLEEP_TIME_FOR_PROXY);
+
+    auto pixelmap = captureTask->CreatePixelMapByDisplayNode(rsDisplayRenderNode);
+    auto skSurface = captureTask->CreateSurface(pixelmap);
+    
+    
+    std::shared_ptr<RSSurfaceCaptureTask::RSSurfaceCaptureVisitor> visitor =
+        std::make_shared<RSSurfaceCaptureTask::RSSurfaceCaptureVisitor>(scaleX, scaleY, true);
+    visitor->IsDisplayNode(true);
+    visitor->SetSurface(SkSurface.get());
+    visitor->ProcessDisplayRenderNode(*rsDisplayRenderNode);
+}
 } // namespace Rosen
 } // namespace OHOS

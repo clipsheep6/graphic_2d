@@ -49,6 +49,10 @@ inline GSError GenerateError(GSError err, int32_t code)
 {
     return GenerateError(err, static_cast<GraphicDispErrCode>(code));
 }
+
+inline int32_t StrideAlign(int32_t val, int32_t stride) {
+    return (val + (stride - 1)) & (~(stride - 1));
+}
 }
 
 static const std::map<uint64_t, uint64_t> bufferUsageConvertMap = {
@@ -168,16 +172,19 @@ GSError SurfaceBufferImpl::Alloc(const BufferRequestConfig &config)
         return GSERROR_INVALID_ARGUMENTS;
     }
 
+    int32_t allocWidth = StrideAlign(config.width, config.strideAlignment);
+    int32_t allocHeight = StrideAlign(config.height, config.strideAlignment);
+
     BufferHandle *handle = nullptr;
     uint64_t usage = BufferUsageToGrallocUsage(config.usage);
-    AllocInfo info = {config.width, config.height, usage, (PixelFormat)config.format};
+    AllocInfo info = {allocWidth, allocHeight, usage, (PixelFormat)config.format};
     auto dret = displayGralloc_->AllocMem(info, handle);
     if (dret == GRAPHIC_DISPLAY_SUCCESS) {
         std::lock_guard<std::mutex> lock(mutex_);
         surfaceBufferColorGamut_ = static_cast<GraphicColorGamut>(config.colorGamut);
         transform_ = static_cast<GraphicTransformType>(config.transform);
-        surfaceBufferWidth_ = config.width;
-        surfaceBufferHeight_ = config.height;
+        surfaceBufferWidth_ = allocWidth;
+        surfaceBufferHeight_ = allocHeight;
         handle_ = handle;
         BLOGD("buffer handle %{public}p w: %{public}d h: %{public}d t: %{public}d", handle_,
             handle_->width, handle_->height, config.transform);

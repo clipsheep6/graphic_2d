@@ -415,7 +415,9 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const sk_sp<SkVertices>& v
         ROSEN_LOGD("unirender: RSMarshallingHelper::Marshalling SkVertices is nullptr");
         return Marshalling(parcel, data);
     }
-#ifndef NEW_SKIA
+#ifdef NEW_SKIA
+// TODO
+#else
     data = val->encode();
 #endif
     return Marshalling(parcel, data);
@@ -431,7 +433,9 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkVertices>& val)
         val = nullptr;
         return true;
     }
-#ifndef NEW_SKIA
+#ifdef NEW_SKIA
+// TODO
+#else
     val = SkVertices::Decode(data->data(), data->size());
 #endif
     return val != nullptr;

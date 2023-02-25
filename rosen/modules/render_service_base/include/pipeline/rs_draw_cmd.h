@@ -36,10 +36,6 @@
 #include "render/rs_image.h"
 #include "transaction/rs_marshalling_helper.h"
 
-#ifdef NEW_SKIA
-#include "src/core/SkVerticesPriv.h"
-#endif
-
 namespace OHOS {
 namespace Rosen {
 class RSPaintFilterCanvas;
@@ -739,6 +735,8 @@ private:
     SkMatrix matrix_;
 };
 
+#ifdef NEW_SKIA
+#else
 class SaveLayerOpItem : public OpItemWithPaint {
 public:
     SaveLayerOpItem(const SkCanvas::SaveLayerRec& rec);
@@ -763,6 +761,7 @@ private:
     SkMatrix matrix_;
     SkCanvas::SaveLayerFlags flags_;
 };
+#endif
 
 class DrawableOpItem : public OpItem {
 public:
@@ -830,16 +829,12 @@ private:
     int count_;
     SkPoint* processedPoints_;
 };
-
+#ifdef NEW_SKIA
+#else
 class VerticesOpItem : public OpItemWithPaint {
 public:
-#ifdef NEW_SKIA
-    VerticesOpItem(const SkVertices* vertices, const SkVertices_DeprecatedBone bones[],
-        int boneCount, SkBlendMode mode, const SkPaint& paint);
-#else
     VerticesOpItem(const SkVertices* vertices, const SkVertices::Bone bones[],
         int boneCount, SkBlendMode mode, const SkPaint& paint);
-#endif
     ~VerticesOpItem() override;
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 
@@ -855,14 +850,11 @@ public:
 
 private:
     sk_sp<SkVertices> vertices_;
-#ifdef NEW_SKIA
-    SkVertices_DeprecatedBone* bones_;
-#else
     SkVertices::Bone* bones_;
-#endif
     int boneCount_;
     SkBlendMode mode_;
 };
+#endif
 
 class ShadowRecOpItem : public OpItem {
 public:

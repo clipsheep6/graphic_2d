@@ -46,37 +46,45 @@ public:
     std::shared_ptr<DrawCmdList> GetDrawCmdList() const;
     void Clear() const;
     void AddOp(std::unique_ptr<OpItem>&& opItem);
-
 #ifdef NEW_SKIA
-    GrDirectContext* getGrContext();
-    void SetGrContext(GrDirectContext* grContext);
+    SkISize getBaseLayerSize() const override;
+    GrRecordingContext* recordingContext() override;
+    bool isClipEmpty() const override;
+    bool isClipRect() const override;
+    bool onPeekPixels(SkPixmap* pixmap) override;
+    bool onAccessTopLayerPixels(SkPixmap* pixmap) override;
+    SkImageInfo onImageInfo() const override;
+    bool onGetProps(SkSurfaceProps* props) const override;
+    bool onDoSaveBehind(const SkRect*) override { return true; }
+    void didRestore() override {}
+    void onMarkCTM(const char*) override {}
+    void didConcat44(const SkM44&) override {}
+    void didSetM44(const SkM44&) override {}
+    void didScale(SkScalar, SkScalar) override {}
+    void onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) override;
+    void onDrawImage2(const SkImage*, SkScalar dx, SkScalar dy, const SkSamplingOptions& samplingOptions,
+        const SkPaint* paint) override;
+    void onDrawImageRect2(const SkImage*, const SkRect& src, const SkRect& dst,
+        const SkSamplingOptions& samplingOptions, const SkPaint* paint, SrcRectConstraint constraint) override;
+    void onDrawImageLattice2(const SkImage*, const Lattice&, const SkRect& dst,
+                                        SkFilterMode mode, const SkPaint* paint) override;
+    void onDrawAtlas2(const SkImage*, const SkRSXform[], const SkRect src[],
+        const SkColor[], int count, SkBlendMode mode, const SkSamplingOptions& samplingOptions,
+        const SkRect* cull, const SkPaint* paint) override;
+    void onDrawEdgeAAImageSet2(const ImageSetEntry imageSet[], int count,
+        const SkPoint dstClips[], const SkMatrix preViewMatrices[],
+        const SkSamplingOptions& samplingOptions, const SkPaint* paint,
+        SrcRectConstraint constraint) override;
+    void onDrawVerticesObject(const SkVertices* vertices, SkBlendMode mode, const SkPaint& paint) override;
+    void onDrawEdgeAAQuad(const SkRect& rect, const SkPoint clip[4], QuadAAFlags aaFlags,
+        const SkColor4f& color, SkBlendMode mode) override;
+    void onClipShader(sk_sp<SkShader>, SkClipOp) override;
+    void onResetClip() override;
+    void onDiscard() override;
+    SkPaintFilterCanvas* internal_private_asPaintFilterCanvas() const override { return nullptr; }
 #else
     GrContext* getGrContext() override;
     void SetGrContext(GrContext* grContext);
-#endif
-    
-#ifdef NEW_SKIA
-	void didConcat(const SkMatrix& matrix);
-    void didSetMatrix(const SkMatrix& matrix);
-	void onDrawBitmap(const SkBitmap& bm, SkScalar x, SkScalar y, const SkPaint* paint);
-    void onDrawBitmapLattice(const SkBitmap& bm, const SkCanvas::Lattice& lattice, const SkRect& dst,
-        const SkPaint* paint);
-    void onDrawBitmapNine(const SkBitmap& bm, const SkIRect& center, const SkRect& dst, const SkPaint* paint);
-    void onDrawBitmapRect(const SkBitmap& bm, const SkRect* src, const SkRect& dst,
-        const SkPaint* paint, SrcRectConstraint constraint);
-
-    void onDrawImage(const SkImage* img, SkScalar x, SkScalar y, const SkPaint* paint);
-    void onDrawImageLattice(const SkImage* img, const SkCanvas::Lattice& lattice,
-        const SkRect& dst, const SkPaint* paint);
-    void onDrawImageNine(const SkImage* img, const SkIRect& center, const SkRect& dst, const SkPaint* paint);
-    void onDrawImageRect(const SkImage* img, const SkRect* src, const SkRect& dst, const SkPaint* paint,
-        SrcRectConstraint constraint);
-    using SkNoDrawCanvas::onDrawVerticesObject;
-	void onDrawVerticesObject(
-        const SkVertices*, const SkVertices_DeprecatedBone bones[], int boneCount, SkBlendMode, const SkPaint&);
-    void onDrawAtlas(const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int, SkBlendMode,
-        const SkRect*, const SkPaint*);
-#else
 	void didConcat(const SkMatrix& matrix) override;
     void didSetMatrix(const SkMatrix& matrix) override;
 	void onDrawBitmap(const SkBitmap& bm, SkScalar x, SkScalar y, const SkPaint* paint) override;
@@ -85,7 +93,6 @@ public:
     void onDrawBitmapNine(const SkBitmap& bm, const SkIRect& center, const SkRect& dst, const SkPaint* paint) override;
     void onDrawBitmapRect(const SkBitmap& bm, const SkRect* src, const SkRect& dst,
         const SkPaint* paint, SrcRectConstraint constraint) override;
-
     void onDrawImage(const SkImage* img, SkScalar x, SkScalar y, const SkPaint* paint)override;
     void onDrawImageLattice(const SkImage* img, const SkCanvas::Lattice& lattice,
         const SkRect& dst, const SkPaint* paint) override;
@@ -156,13 +163,14 @@ public:
     void RestoreAlpha();
 
 private:
+#ifndef NEW_SKIA
     void DrawImageLatticeAsBitmap(
         const SkImage* image, const SkCanvas::Lattice& lattice, const SkRect& dst, const SkPaint* paint);
+#endif
 
     std::shared_ptr<DrawCmdList> drawCmdList_ { nullptr };
     int saveCount_ = 0;
 #ifdef NEW_SKIA
-    GrDirectContext* grContext_ = nullptr;
 #else
     GrContext* grContext_ = nullptr;
 #endif

@@ -117,6 +117,10 @@ VSyncReceiver::~VSyncReceiver()
         looper_->RemoveFileDescriptorListener(fd_);
         close(fd_);
         fd_ = INVALID_FD;
+        auto runner = looper_->GetEventRunner();
+        if (runner != nullptr) {
+            runner->Stop();
+        }
     }
 }
 

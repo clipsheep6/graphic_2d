@@ -27,11 +27,11 @@
 #include "common/rs_color.h"
 #include "common/rs_obj_geometry.h"
 #include "modifier/rs_modifier.h"
+#include "modifier/rs_property_modifier.h"
 #include "pipeline/rs_node_map.h"
 #include "platform/common/rs_log.h"
 #include "render/rs_path.h"
 #include "transaction/rs_transaction_proxy.h"
-#include "modifier/rs_property_modifier.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -58,10 +58,9 @@ bool IsPathAnimatableModifier(const RSModifierType& type)
     }
     return false;
 }
-}
+} // namespace
 
-RSNode::RSNode(bool isRenderServiceNode)
-    : RSBaseNode(isRenderServiceNode), stagingPropertiesExtractor_(GetId())
+RSNode::RSNode(bool isRenderServiceNode) : RSBaseNode(isRenderServiceNode), stagingPropertiesExtractor_(GetId())
 {
     UpdateImplicitAnimator();
 }
@@ -560,6 +559,17 @@ void RSNode::SetScaleY(float scaleY)
     property->Set(scale);
 }
 
+void RSNode::SetEnvForegroundColor(uint32_t colorValue)
+{
+    auto color = Color::FromArgbInt(colorValue);
+    SetProperty<RSEnvForegroundColorModifier, RSAnimatableProperty<Color>>(RSModifierType::ENV_FOREGROUND_COLOR, color);
+}
+
+void RSNode::SetEnvForegroundColorStrategy(ForegroundColorStrategyType colorType)
+{
+    SetProperty<RSEnvForegroundColorStrategyModifier, RSAnimatableProperty<ForegroundColorStrategyType>>(RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY, colorType);
+}
+
 // foreground
 void RSNode::SetForegroundColor(uint32_t colorValue)
 {
@@ -627,8 +637,8 @@ void RSNode::SetBorderColor(uint32_t colorValue)
 
 void RSNode::SetBorderColor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom)
 {
-    Vector4<Color> color(Color::FromArgbInt(left), Color::FromArgbInt(top),
-                         Color::FromArgbInt(right), Color::FromArgbInt(bottom));
+    Vector4<Color> color(
+        Color::FromArgbInt(left), Color::FromArgbInt(top), Color::FromArgbInt(right), Color::FromArgbInt(bottom));
     SetBorderColor(color);
 }
 
@@ -661,14 +671,14 @@ void RSNode::SetBorderStyle(uint32_t styleValue)
 void RSNode::SetBorderStyle(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom)
 {
     Vector4<BorderStyle> style(static_cast<BorderStyle>(left), static_cast<BorderStyle>(top),
-                               static_cast<BorderStyle>(right), static_cast<BorderStyle>(bottom));
+        static_cast<BorderStyle>(right), static_cast<BorderStyle>(bottom));
     SetBorderStyle(style);
 }
 
 void RSNode::SetBorderStyle(const Vector4<BorderStyle>& style)
 {
     Vector4<uint32_t> styles(static_cast<uint32_t>(style.x_), static_cast<uint32_t>(style.y_),
-                             static_cast<uint32_t>(style.z_), static_cast<uint32_t>(style.w_));
+        static_cast<uint32_t>(style.z_), static_cast<uint32_t>(style.w_));
     SetProperty<RSBorderStyleModifier, RSProperty<Vector4<uint32_t>>>(RSModifierType::BORDER_STYLE, styles);
 }
 

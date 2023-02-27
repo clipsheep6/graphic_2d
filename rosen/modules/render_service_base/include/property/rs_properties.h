@@ -116,6 +116,8 @@ public:
     void SetSublayerTransform(Matrix3f sublayerTransform);
     Matrix3f GetSublayerTransform() const;
 
+    void SetEnvForegroundColor(Color color);
+    void SetEnvForegroundColorStrategy(ForegroundColorStrategyType colorType);
     // foreground properties
     void SetForegroundColor(Color color);
     Color GetForegroundColor() const;

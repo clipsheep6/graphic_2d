@@ -167,116 +167,119 @@ protected:
 template<typename T>
 class RSB_EXPORT_TMP RSRenderAnimatableProperty : public RSRenderProperty<T> {
 public:
-    RSRenderAnimatableProperty() : RSRenderProperty<T>() {}
-    RSRenderAnimatableProperty(const T& value) : RSRenderProperty<T>(value, 0) {}
-    RSRenderAnimatableProperty(const T& value, const PropertyId& id) : RSRenderProperty<T>(value, id) {}
-    RSRenderAnimatableProperty(const T& value, const PropertyId& id, const RSRenderPropertyType type)
-        : RSRenderProperty<T>(value, id), type_(type)
-    {}
-    virtual ~RSRenderAnimatableProperty() = default;
+    class RS_EXPORT RSRenderAnimatableProperty : public RSRenderProperty<T> {
+        RSRenderAnimatableProperty() : RSRenderProperty<T>() {}
+        RSRenderAnimatableProperty(const T& value) : RSRenderProperty<T>(value, 0) {}
+        RSRenderAnimatableProperty(const T& value, const PropertyId& id) : RSRenderProperty<T>(value, id) {}
+        RSRenderAnimatableProperty(const T& value, const PropertyId& id, const RSRenderPropertyType type)
+            : RSRenderProperty<T>(value, id), type_(type)
+        {}
+        virtual ~RSRenderAnimatableProperty() = default;
 
-protected:
-    const std::shared_ptr<RSRenderPropertyBase> Clone() const override
-    {
-        return std::make_shared<RSRenderAnimatableProperty<T>>(
-            RSRenderProperty<T>::stagingValue_, RSRenderProperty<T>::id_, type_);
-    }
-
-    void SetValue(const std::shared_ptr<RSRenderPropertyBase>& value) override
-    {
-        auto property = std::static_pointer_cast<RSRenderAnimatableProperty<T>>(value);
-        if (property != nullptr && property->GetPropertyType() == type_) {
-            RSRenderProperty<T>::Set(property->Get());
+    protected:
+        const std::shared_ptr<RSRenderPropertyBase> Clone() const override
+        {
+            return std::make_shared<RSRenderAnimatableProperty<T>>(
+                RSRenderProperty<T>::stagingValue_, RSRenderProperty<T>::id_, type_);
         }
-    }
 
-    void SetPropertyType(const RSRenderPropertyType type) override
-    {
-        type_ = type;
-    }
-
-    virtual RSRenderPropertyType GetPropertyType() const override
-    {
-        return type_;
-    }
-
-    float ToFloat() const override
-    {
-        return 1.f;
-    }
-
-    std::shared_ptr<RSValueEstimator> CreateRSValueEstimator(const RSValueEstimatorType type) override
-    {
-        switch (type) {
-            case RSValueEstimatorType::CURVE_VALUE_ESTIMATOR: {
-                return std::make_shared<RSCurveValueEstimator<T>>();
-            }
-            case RSValueEstimatorType::KEYFRAME_VALUE_ESTIMATOR: {
-                return std::make_shared<RSKeyframeValueEstimator<T>>();
-            }
-            default: {
-                return nullptr;
+        void SetValue(const std::shared_ptr<RSRenderPropertyBase>& value) override
+        {
+            auto property = std::static_pointer_cast<RSRenderAnimatableProperty<T>>(value);
+            if (property != nullptr && property->GetPropertyType() == type_) {
+                RSRenderProperty<T>::Set(property->Get());
             }
         }
-    }
 
-private:
-    RSRenderPropertyType type_ = RSRenderPropertyType::INVALID;
-
-    std::shared_ptr<RSRenderPropertyBase> Add(const std::shared_ptr<const RSRenderPropertyBase>& value) override
-    {
-        auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(value);
-        if (animatableProperty != nullptr) {
-            RSRenderProperty<T>::stagingValue_ = RSRenderProperty<T>::stagingValue_ + animatableProperty->stagingValue_;
+        void SetPropertyType(const RSRenderPropertyType type) override
+        {
+            type_ = type;
         }
-        return RSRenderProperty<T>::shared_from_this();
-    }
 
-    std::shared_ptr<RSRenderPropertyBase> Minus(const std::shared_ptr<const RSRenderPropertyBase>& value) override
-    {
-        auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(value);
-        if (animatableProperty != nullptr) {
-            RSRenderProperty<T>::stagingValue_ = RSRenderProperty<T>::stagingValue_ - animatableProperty->stagingValue_;
+        virtual RSRenderPropertyType GetPropertyType() const override
+        {
+            return type_;
         }
-        return RSRenderProperty<T>::shared_from_this();
-    }
 
-    std::shared_ptr<RSRenderPropertyBase> Multiply(const float scale) override
-    {
-        RSRenderProperty<T>::stagingValue_ = RSRenderProperty<T>::stagingValue_ * scale;
-        return RSRenderProperty<T>::shared_from_this();
-    }
-
-    bool IsEqual(const std::shared_ptr<const RSRenderPropertyBase>& value) const override
-    {
-        auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(value);
-        if (animatableProperty != nullptr) {
-            return RSRenderProperty<T>::stagingValue_ == animatableProperty->stagingValue_;
+        float ToFloat() const override
+        {
+            return 1.f;
         }
-        return true;
-    }
 
-    friend class RSMarshallingHelper;
-    friend class RSRenderPathAnimation;
-    friend class RSRenderPropertyBase;
-};
+        std::shared_ptr<RSValueEstimator> CreateRSValueEstimator(const RSValueEstimatorType type) override
+        {
+            switch (type) {
+                case RSValueEstimatorType::CURVE_VALUE_ESTIMATOR: {
+                    return std::make_shared<RSCurveValueEstimator<T>>();
+                }
+                case RSValueEstimatorType::KEYFRAME_VALUE_ESTIMATOR: {
+                    return std::make_shared<RSKeyframeValueEstimator<T>>();
+                }
+                default: {
+                    return nullptr;
+                }
+            }
+        }
 
-template<>
-RSB_EXPORT float RSRenderAnimatableProperty<float>::ToFloat() const;
-template<>
-RSB_EXPORT float RSRenderAnimatableProperty<Vector4f>::ToFloat() const;
-template<>
-RSB_EXPORT float RSRenderAnimatableProperty<Quaternion>::ToFloat() const;
-template<>
-RSB_EXPORT float RSRenderAnimatableProperty<Vector2f>::ToFloat() const;
+    private:
+        RSRenderPropertyType type_ = RSRenderPropertyType::INVALID;
+
+        std::shared_ptr<RSRenderPropertyBase> Add(const std::shared_ptr<const RSRenderPropertyBase>& value) override
+        {
+            auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(value);
+            if (animatableProperty != nullptr) {
+                RSRenderProperty<T>::stagingValue_ =
+                    RSRenderProperty<T>::stagingValue_ + animatableProperty->stagingValue_;
+            }
+            return RSRenderProperty<T>::shared_from_this();
+        }
+
+        std::shared_ptr<RSRenderPropertyBase> Minus(const std::shared_ptr<const RSRenderPropertyBase>& value) override
+        {
+            auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(value);
+            if (animatableProperty != nullptr) {
+                RSRenderProperty<T>::stagingValue_ =
+                    RSRenderProperty<T>::stagingValue_ - animatableProperty->stagingValue_;
+            }
+            return RSRenderProperty<T>::shared_from_this();
+        }
+
+        std::shared_ptr<RSRenderPropertyBase> Multiply(const float scale) override
+        {
+            RSRenderProperty<T>::stagingValue_ = RSRenderProperty<T>::stagingValue_ * scale;
+            return RSRenderProperty<T>::shared_from_this();
+        }
+
+        bool IsEqual(const std::shared_ptr<const RSRenderPropertyBase>& value) const override
+        {
+            auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(value);
+            if (animatableProperty != nullptr) {
+                return RSRenderProperty<T>::stagingValue_ == animatableProperty->stagingValue_;
+            }
+            return true;
+        }
+
+        friend class RSMarshallingHelper;
+        friend class RSRenderPathAnimation;
+        friend class RSRenderPropertyBase;
+    };
+
+    template<>
+    RSB_EXPORT float RSRenderAnimatableProperty<float>::ToFloat() const;
+    template<>
+    RSB_EXPORT float RSRenderAnimatableProperty<Vector4f>::ToFloat() const;
+    template<>
+    RSB_EXPORT float RSRenderAnimatableProperty<Quaternion>::ToFloat() const;
+    template<>
+    RSB_EXPORT float RSRenderAnimatableProperty<Vector2f>::ToFloat() const;
 
 #if defined(_WIN32)
-extern template class RSRenderAnimatableProperty<float>;
-extern template class RSRenderAnimatableProperty<Vector4f>;
-extern template class RSRenderAnimatableProperty<Quaternion>;
-extern template class RSRenderAnimatableProperty<Vector2f>;
+    extern template class RSRenderAnimatableProperty<float>;
+    extern template class RSRenderAnimatableProperty<Vector4f>;
+    extern template class RSRenderAnimatableProperty<Quaternion>;
+    extern template class RSRenderAnimatableProperty<Vector2f>;
 #endif
 } // namespace Rosen
-} // namespace OHOS
+} // namespace Rosen
 
 #endif // RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_PROP_H

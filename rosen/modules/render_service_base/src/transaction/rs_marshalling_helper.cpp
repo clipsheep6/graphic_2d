@@ -30,6 +30,10 @@
 #include "include/core/SkTextBlob.h"
 #include "include/core/SkTypeface.h"
 #include "include/core/SkVertices.h"
+#ifdef NEW_SKIA
+#include "include/core/SkSamplingOptions.h"
+#include "src/core/SkVerticesPriv.h"
+#endif
 #include "pixel_map.h"
 #include "securec.h"
 #include "src/core/SkAutoMalloc.h"
@@ -416,7 +420,12 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const sk_sp<SkVertices>& v
         return Marshalling(parcel, data);
     }
 #ifdef NEW_SKIA
-// TODO
+    SkBinaryWriteBuffer writer;
+    SkVerticesPriv info(val->priv());
+    info.encode(writer);
+    size_t length = writer.bytesWritten();
+    data = SkData::MakeUninitialized(length);
+    writer.writeToMemory(data->writable_data());
 #else
     data = val->encode();
 #endif
@@ -434,7 +443,9 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkVertices>& val)
         return true;
     }
 #ifdef NEW_SKIA
-// TODO
+    SkReadBuffer reader(data->data(), data->size());
+    SkVerticesPriv info(val->priv());
+    val = info.Decode(reader);
 #else
     val = SkVertices::Decode(data->data(), data->size());
 #endif
@@ -740,6 +751,46 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Media::P
     }
     return true;
 }
+
+#ifdef NEW_SKIA
+// SkPaint
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SkSamplingOptions& val)
+{
+    bool success = parcel.WriteBool(val.useCubic) &&
+                   parcel.WriteFloat(val.cubic.B) &&
+                   parcel.WriteFloat(val.cubic.C) &&
+                   parcel.WriteInt32(static_cast<int32_t>(val.filter)) &&
+                   parcel.WriteInt32(static_cast<int32_t>(val.mipmap));
+    return success;
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SkSamplingOptions& val)
+{
+    bool useCubic;
+    float b, c;
+    int32_t filter, mipmap;
+    bool success = parcel.ReadBool(useCubic) &&
+                   parcel.ReadFloat(b) &&
+                   parcel.ReadFloat(c) &&
+                   parcel.ReadInt32(filter) &&
+                   parcel.ReadInt32(mipmap);
+    if (!success) {
+        ROSEN_LOGE("failed RSMarshallingHelper::Unmarshalling SkSamplingOptions");
+        return false;
+    }
+    if (useCubic) {
+        SkCubicResampler cubicResampler;
+        cubicResampler.B = b;
+        cubicResampler.C = c;
+        SkSamplingOptions options(cubicResampler);
+        val = options;
+    } else {
+        SkSamplingOptions options(static_cast<SkFilterMode>(filter), static_cast<SkMipmapMode>(mipmap));
+        val = options;
+    }
+    return true;
+}
+#endif
+
 
 #define MARSHALLING_AND_UNMARSHALLING(TYPE)                                                 \
     bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<TYPE>& val) \

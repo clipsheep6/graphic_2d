@@ -41,7 +41,12 @@ SkISize RSRecordingCanvas::getBaseLayerSize() const
 
 GrRecordingContext* RSRecordingCanvas::recordingContext()
 {
-    return nullptr;
+    return grContext_;
+}
+
+void RSRecordingCanvas::SetGrRecordingContext(GrRecordingContext* context)
+{
+    grContext_ = context;
 }
 
 bool RSRecordingCanvas::isClipEmpty() const
@@ -76,60 +81,64 @@ bool RSRecordingCanvas::onGetProps(SkSurfaceProps* props) const
 
 void RSRecordingCanvas::onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint)
 {
-
+    ROSEN_LOGI("RSRecordingCanvas::onDrawGlyphRunList not support yet");
 }
-void RSRecordingCanvas::onDrawImage2(const SkImage*, SkScalar dx, SkScalar dy,
+void RSRecordingCanvas::onDrawImage2(const SkImage* img, SkScalar dx, SkScalar dy,
     const SkSamplingOptions& samplingOptions, const SkPaint* paint)
 {
-
+    std::unique_ptr<OpItem> op = std::make_unique<BitmapOpItem>(sk_ref_sp(img), dx, dy, samplingOptions, paint);
+    AddOp(std::move(op));
 }
-void RSRecordingCanvas::onDrawImageRect2(const SkImage*, const SkRect& src, const SkRect& dst,
+void RSRecordingCanvas::onDrawImageRect2(const SkImage* img, const SkRect& src, const SkRect& dst,
     const SkSamplingOptions& samplingOptions, const SkPaint* paint, SrcRectConstraint constraint)
 {
-
+    std::unique_ptr<OpItem> op =
+        std::make_unique<BitmapRectOpItem>(sk_ref_sp(img), &src, dst, samplingOptions, paint, constraint);
+    AddOp(std::move(op));
 }
-void RSRecordingCanvas::onDrawImageLattice2(const SkImage*, const Lattice&, const SkRect& dst,
+void RSRecordingCanvas::onDrawImageLattice2(const SkImage* img, const Lattice& lattice, const SkRect& dst,
     SkFilterMode mode, const SkPaint* paint)
 {
-
+    DrawImageLatticeAsBitmap(img, lattice, dst, paint);
 }
 
 void RSRecordingCanvas::onDrawAtlas2(const SkImage*, const SkRSXform[], const SkRect src[],
                             const SkColor[], int count, SkBlendMode mode, const SkSamplingOptions& samplingOptions,
                             const SkRect* cull, const SkPaint* paint)
 {
-
+    ROSEN_LOGI("RSRecordingCanvas::onDrawAtlas2 not support yet");
 }
 void RSRecordingCanvas::onDrawEdgeAAImageSet2(const ImageSetEntry imageSet[], int count,
                                     const SkPoint dstClips[], const SkMatrix preViewMatrices[],
                                     const SkSamplingOptions& SamplingOptions, const SkPaint* paint,
                                     SrcRectConstraint constraint)
 {
-
+    ROSEN_LOGI("RSRecordingCanvas::onDrawEdgeAAImageSet2 not support yet");
 }
 void RSRecordingCanvas::onDrawVerticesObject(const SkVertices* vertices, SkBlendMode mode,
                                     const SkPaint& paint)
 {
-
+    std::unique_ptr<OpItem> op = std::make_unique<VerticesOpItem>(vertices, mode, paint);
+    AddOp(std::move(op));
 }
 void RSRecordingCanvas::onDrawEdgeAAQuad(const SkRect& rect, const SkPoint clip[4], QuadAAFlags aaFlags,
                                 const SkColor4f& color, SkBlendMode mode)
 {
-
+    ROSEN_LOGI("RSRecordingCanvas::onDrawEdgeAAQuad not support yet");
 }
 void RSRecordingCanvas::onClipShader(sk_sp<SkShader>, SkClipOp)
 {
-
+    ROSEN_LOGI("RSRecordingCanvas::onClipShader not support yet");
 }
 
 void RSRecordingCanvas::onResetClip()
 {
-
+    ROSEN_LOGI("RSRecordingCanvas::onResetClip not support yet");
 }
 
 void RSRecordingCanvas::onDiscard()
 {
-
+    ROSEN_LOGI("RSRecordingCanvas::onDiscard not support yet");
 }
 #else
 GrContext* RSRecordingCanvas::getGrContext()
@@ -222,6 +231,7 @@ void RSRecordingCanvas::onDrawAtlas(const SkImage* atlas, const SkRSXform xforms
     // [PLANNING]: To be implemented
     ROSEN_LOGE("RSRecordingCanvas::onDrawAtlas not support yet");
 }
+#endif
 
 void RSRecordingCanvas::DrawImageLatticeAsBitmap(
     const SkImage* image, const SkCanvas::Lattice& lattice, const SkRect& dst, const SkPaint* paint)
@@ -232,12 +242,19 @@ void RSRecordingCanvas::DrawImageLatticeAsBitmap(
     SkCanvas tempCanvas(bitmap);
     // align to [0, 0]
     tempCanvas.translate(-dst.left(), -dst.top());
+#ifdef NEW_SKIA
+    tempCanvas.drawImageLattice(image, lattice, dst, SkFilterMode::kNearest, paint);
+#else
     tempCanvas.drawImageLattice(image, lattice, dst, paint);
+#endif
     tempCanvas.flush();
     // draw on canvas with correct offset
+#ifdef NEW_SKIA
+    drawImage(bitmap.asImage(), dst.left(), dst.top());
+#else
     drawBitmap(bitmap, dst.left(), dst.top());
-}
 #endif
+}
 
 void RSRecordingCanvas::Clear() const
 {

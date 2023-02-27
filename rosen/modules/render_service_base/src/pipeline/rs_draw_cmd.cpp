@@ -254,6 +254,22 @@ BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float to
 }
 
 #ifdef NEW_SKIA
+BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top, 
+    SkSamplingOptions samplingOptions, const SkPaint* paint)
+    : OpItemWithPaint(sizeof(BitmapOpItem)), left_(left), top_(top), samplingOptions_(samplingOptions)
+{
+    if (bitmapInfo != nullptr) {
+        bitmapInfo_ = bitmapInfo;
+    }
+    if (paint) {
+        paint_ = *paint;
+    }
+}
+
+void BitmapOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
+{
+    canvas.drawImage(bitmapInfo_, left_, top_, samplingOptions_, &paint_);
+}
 #else
 void BitmapOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
@@ -279,6 +295,30 @@ BitmapRectOpItem::BitmapRectOpItem(
 }
 
 #ifdef NEW_SKIA
+BitmapRectOpItem::BitmapRectOpItem(const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst,
+        const SkSamplingOptions& samplingOptions, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint)
+    : OpItemWithPaint(sizeof(BitmapRectOpItem)),
+    rectDst_(rectDst),
+    samplingOptions_(samplingOptions), 
+    constraint_(constraint)
+{
+    if (bitmapInfo != nullptr) {
+        rectSrc_ = (rectSrc == nullptr) ? SkRect::MakeWH(bitmapInfo->width(), bitmapInfo->height()) : *rectSrc;
+        bitmapInfo_ = bitmapInfo;
+    } else {
+        if (rectSrc != nullptr) {
+            rectSrc_ = *rectSrc;
+        }
+    }
+    if (paint) {
+        paint_ = *paint;
+    }
+}
+
+void BitmapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
+{
+    canvas.drawImageRect(bitmapInfo_, rectSrc_, rectDst_, samplingOptions_, &paint_, constraint_);
+}
 #else
 void BitmapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
@@ -487,8 +527,6 @@ void ConcatOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     canvas.concat(matrix_);
 }
 
-#ifdef NEW_SKIA
-#else
 SaveLayerOpItem::SaveLayerOpItem(const SkCanvas::SaveLayerRec& rec) : OpItemWithPaint(sizeof(SaveLayerOpItem))
 {
     if (rec.fBounds) {
@@ -499,64 +537,23 @@ SaveLayerOpItem::SaveLayerOpItem(const SkCanvas::SaveLayerRec& rec) : OpItemWith
         paint_ = *rec.fPaint;
     }
     backdrop_ = sk_ref_sp(rec.fBackdrop);
+    flags_ = rec.fSaveLayerFlags;
+#ifndef NEW_SKIA
     mask_ = sk_ref_sp(rec.fClipMask);
     matrix_ = rec.fClipMatrix ? *(rec.fClipMatrix) : SkMatrix::I();
-    flags_ = rec.fSaveLayerFlags;
+#endif
 }
 
 void SaveLayerOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
+#ifdef NEW_SKIA
+    canvas.saveLayer(
+        { rectPtr_, &paint_, backdrop_.get(), flags_ });
+#else
     canvas.saveLayer(
         { rectPtr_, &paint_, backdrop_.get(), mask_.get(), matrix_.isIdentity() ? nullptr : &matrix_, flags_ });
-}
-
-// SaveLayerOpItem
-bool SaveLayerOpItem::Marshalling(Parcel& parcel) const
-{
-    bool success = parcel.WriteBool(rectPtr_ != nullptr);
-    if (rectPtr_) {
-        success = success && RSMarshallingHelper::Marshalling(parcel, rect_);
-    }
-    success = success && RSMarshallingHelper::Marshalling(parcel, backdrop_) &&
-               RSMarshallingHelper::Marshalling(parcel, mask_) &&
-               RSMarshallingHelper::Marshalling(parcel, matrix_) &&
-               RSMarshallingHelper::Marshalling(parcel, flags_) &&
-               RSMarshallingHelper::Marshalling(parcel, paint_);
-    if (!success) {
-        ROSEN_LOGE("SaveLayerOpItem::Marshalling failed!");
-        return false;
-    }
-    return success;
-}
-
-OpItem* SaveLayerOpItem::Unmarshalling(Parcel& parcel)
-{
-    bool isRectExist;
-    SkRect rect;
-    SkRect* rectPtr = nullptr;
-    sk_sp<SkImageFilter> backdrop;
-    sk_sp<SkImage> mask;
-    SkMatrix matrix;
-    SkCanvas::SaveLayerFlags flags;
-    SkPaint paint;
-    bool success = parcel.ReadBool(isRectExist);
-    if (isRectExist) {
-        success = success && RSMarshallingHelper::Unmarshalling(parcel, rect);
-        rectPtr = &rect;
-    }
-    success = success && RSMarshallingHelper::Unmarshalling(parcel, backdrop) &&
-               RSMarshallingHelper::Unmarshalling(parcel, mask) &&
-               RSMarshallingHelper::Unmarshalling(parcel, matrix) &&
-               RSMarshallingHelper::Unmarshalling(parcel, flags) &&
-               RSMarshallingHelper::Unmarshalling(parcel, paint);
-    if (!success) {
-        ROSEN_LOGE("SaveLayerOpItem::Unmarshalling failed!");
-        return nullptr;
-    }
-    SkCanvas::SaveLayerRec rec = { rectPtr, &paint, backdrop.get(), mask.get(), &matrix, flags };
-    return new SaveLayerOpItem(rec);
-}
 #endif
+}
 
 DrawableOpItem::DrawableOpItem(SkDrawable* drawable, const SkMatrix* matrix) : OpItem(sizeof(DrawableOpItem))
 {
@@ -603,6 +600,13 @@ void PointsOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 }
 
 #ifdef NEW_SKIA
+VerticesOpItem::VerticesOpItem(const SkVertices* vertices, SkBlendMode mode, const SkPaint& paint)
+    : OpItemWithPaint(sizeof(VerticesOpItem)),
+      vertices_(sk_ref_sp(const_cast<SkVertices*>(vertices))),
+      mode_(mode)
+{
+    paint_ = paint;
+}
 #else
 VerticesOpItem::VerticesOpItem(const SkVertices* vertices, const SkVertices::Bone bones[],
     int boneCount, SkBlendMode mode, const SkPaint& paint)
@@ -615,52 +619,18 @@ VerticesOpItem::VerticesOpItem(const SkVertices* vertices, const SkVertices::Bon
     }
     paint_ = paint;
 }
-
+#endif
 VerticesOpItem::~VerticesOpItem()
 {
+#ifndef NEW_SKIA
     delete[] bones_;
+#endif
 }
 
 void VerticesOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
     canvas.drawVertices(vertices_, mode_, paint_);
 }
-
-
-// VerticesOpItem
-bool VerticesOpItem::Marshalling(Parcel& parcel) const
-{
-    bool success = RSMarshallingHelper::Marshalling(parcel, vertices_) &&
-                   RSMarshallingHelper::Marshalling(parcel, boneCount_) &&
-                   RSMarshallingHelper::MarshallingArray(parcel, bones_, boneCount_) &&
-                   RSMarshallingHelper::Marshalling(parcel, mode_) &&
-                   RSMarshallingHelper::Marshalling(parcel, paint_);
-    if (!success) {
-        ROSEN_LOGE("VerticesOpItem::Marshalling failed!");
-        return false;
-    }
-    return success;
-}
-
-OpItem* VerticesOpItem::Unmarshalling(Parcel& parcel)
-{
-    sk_sp<SkVertices> vertices;
-    const SkVertices::Bone* bones = nullptr;
-    int boneCount;
-    SkBlendMode mode;
-    SkPaint paint;
-    bool success = RSMarshallingHelper::Unmarshalling(parcel, vertices) &&
-                   RSMarshallingHelper::Unmarshalling(parcel, boneCount) &&
-                   RSMarshallingHelper::UnmarshallingArray(parcel, bones, boneCount) &&
-                   RSMarshallingHelper::Unmarshalling(parcel, mode) &&
-                   RSMarshallingHelper::Unmarshalling(parcel, paint);
-    if (!success) {
-        ROSEN_LOGE("VerticesOpItem::Unmarshalling failed!");
-        return nullptr;
-    }
-    return new VerticesOpItem(vertices.get(), bones, boneCount, mode, paint);
-}
-#endif
 
 ShadowRecOpItem::ShadowRecOpItem(const SkPath& path, const SkDrawShadowRec& rec)
     : OpItem(sizeof(ShadowRecOpItem)), path_(path), rec_(rec)
@@ -700,6 +670,102 @@ void RestoreAlphaOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 }
 
 #ifdef ROSEN_OHOS
+// VerticesOpItem
+bool VerticesOpItem::Marshalling(Parcel& parcel) const
+{
+    bool success = RSMarshallingHelper::Marshalling(parcel, vertices_) &&
+                   RSMarshallingHelper::Marshalling(parcel, mode_) &&
+                   RSMarshallingHelper::Marshalling(parcel, paint_);
+#ifndef NEW_SKIA
+    success = success && RSMarshallingHelper::Marshalling(parcel, boneCount_);
+    success = success && RSMarshallingHelper::MarshallingArray(parcel, bones_, boneCount_);
+#endif
+    if (!success) {
+        ROSEN_LOGE("VerticesOpItem::Marshalling failed!");
+        return false;
+    }
+    return success;
+}
+
+OpItem* VerticesOpItem::Unmarshalling(Parcel& parcel)
+{
+    sk_sp<SkVertices> vertices;
+    SkBlendMode mode;
+    SkPaint paint;
+    bool success = RSMarshallingHelper::Unmarshalling(parcel, vertices) &&
+                   RSMarshallingHelper::Unmarshalling(parcel, mode) &&
+                   RSMarshallingHelper::Unmarshalling(parcel, paint);
+#ifndef NEW_SKIA
+    const SkVertices::Bone* bones = nullptr;
+    int boneCount;
+    success = success && RSMarshallingHelper::Unmarshalling(parcel, boneCount);
+    success = success && RSMarshallingHelper::UnmarshallingArray(parcel, bones, boneCount);
+#endif
+    if (!success) {
+        ROSEN_LOGE("VerticesOpItem::Unmarshalling failed!");
+        return nullptr;
+    }
+#ifdef NEW_SKIA
+    return new VerticesOpItem(vertices.get(), mode, paint);
+#else
+    return new VerticesOpItem(vertices.get(), bones, boneCount, mode, paint);
+#endif
+}
+
+// SaveLayerOpItem
+bool SaveLayerOpItem::Marshalling(Parcel& parcel) const
+{
+    bool success = parcel.WriteBool(rectPtr_ != nullptr);
+    if (rectPtr_) {
+        success = success && RSMarshallingHelper::Marshalling(parcel, rect_);
+    }
+    success = success && RSMarshallingHelper::Marshalling(parcel, backdrop_) &&
+               RSMarshallingHelper::Marshalling(parcel, flags_) &&
+               RSMarshallingHelper::Marshalling(parcel, paint_);
+#ifndef NEW_SKIA
+    success = success && RSMarshallingHelper::Marshalling(parcel, mask_) &&
+               RSMarshallingHelper::Marshalling(parcel, matrix_);
+#endif
+    if (!success) {
+        ROSEN_LOGE("SaveLayerOpItem::Marshalling failed!");
+        return false;
+    }
+    return success;
+}
+
+OpItem* SaveLayerOpItem::Unmarshalling(Parcel& parcel)
+{
+    bool isRectExist;
+    SkRect rect;
+    SkRect* rectPtr = nullptr;
+    sk_sp<SkImageFilter> backdrop;
+    SkCanvas::SaveLayerFlags flags;
+    SkPaint paint;
+    bool success = parcel.ReadBool(isRectExist);
+    if (isRectExist) {
+        success = success && RSMarshallingHelper::Unmarshalling(parcel, rect);
+        rectPtr = &rect;
+    }
+    success = success && RSMarshallingHelper::Unmarshalling(parcel, backdrop) &&
+               RSMarshallingHelper::Unmarshalling(parcel, flags) &&
+               RSMarshallingHelper::Unmarshalling(parcel, paint);
+#ifndef NEW_SKIA
+    sk_sp<SkImage> mask;
+    SkMatrix matrix;
+    success = success && RSMarshallingHelper::Unmarshalling(parcel, mask) && 
+               RSMarshallingHelper::Unmarshalling(parcel, matrix);
+#endif
+    if (!success) {
+        ROSEN_LOGE("SaveLayerOpItem::Unmarshalling failed!");
+        return nullptr;
+    }
+#ifdef NEW_SKIA
+    SkCanvas::SaveLayerRec rec = { rectPtr, &paint, backdrop.get(), flags };
+#else
+    SkCanvas::SaveLayerRec rec = { rectPtr, &paint, backdrop.get(), mask.get(), &matrix, flags };
+#endif
+    return new SaveLayerOpItem(rec);
+}
 
 // RectOpItem
 bool RectOpItem::Marshalling(Parcel& parcel) const
@@ -1072,6 +1138,9 @@ bool BitmapOpItem::Marshalling(Parcel& parcel) const
                    RSMarshallingHelper::Marshalling(parcel, left_) &&
                    RSMarshallingHelper::Marshalling(parcel, top_) &&
                    RSMarshallingHelper::Marshalling(parcel, paint_);
+#ifdef NEW_SKIA
+    success = success && RSMarshallingHelper::Marshalling(parcel, samplingOptions_);
+#endif
     if (!success) {
         ROSEN_LOGE("BitmapOpItem::Marshalling failed!");
         return false;
@@ -1089,11 +1158,19 @@ OpItem* BitmapOpItem::Unmarshalling(Parcel& parcel)
                    RSMarshallingHelper::Unmarshalling(parcel, left) &&
                    RSMarshallingHelper::Unmarshalling(parcel, top) &&
                    RSMarshallingHelper::Unmarshalling(parcel, paint);
+#ifdef NEW_SKIA
+    SkSamplingOptions samplingOptions;
+    success = success && RSMarshallingHelper::Marshalling(parcel, samplingOptions);
+#endif
     if (!success) {
         ROSEN_LOGE("BitmapOpItem::Unmarshalling failed!");
         return nullptr;
     }
+#ifdef NEW_SKIA
+    return new BitmapOpItem(bitmapInfo, left, top, samplingOptions, &paint);
+#else
     return new BitmapOpItem(bitmapInfo, left, top, &paint);
+#endif
 }
 
 // BitmapRectOpItem
@@ -1103,6 +1180,10 @@ bool BitmapRectOpItem::Marshalling(Parcel& parcel) const
                    RSMarshallingHelper::Marshalling(parcel, rectSrc_) &&
                    RSMarshallingHelper::Marshalling(parcel, rectDst_) &&
                    RSMarshallingHelper::Marshalling(parcel, paint_);
+#ifdef NEW_SKIA
+    success = success && RSMarshallingHelper::Marshalling(parcel, samplingOptions_);
+    success = success && RSMarshallingHelper::Marshalling(parcel, static_cast<int32_t>(constraint_));
+#endif
     if (!success) {
         ROSEN_LOGE("BitmapRectOpItem::Marshalling failed!");
         return false;
@@ -1120,11 +1201,22 @@ OpItem* BitmapRectOpItem::Unmarshalling(Parcel& parcel)
                    RSMarshallingHelper::Unmarshalling(parcel, rectSrc) &&
                    RSMarshallingHelper::Unmarshalling(parcel, rectDst) &&
                    RSMarshallingHelper::Unmarshalling(parcel, paint);
+#ifdef NEW_SKIA
+    SkSamplingOptions samplingOptions;
+    int32_t constraint;
+    success = success && RSMarshallingHelper::Unmarshalling(parcel, samplingOptions);
+    success = success && RSMarshallingHelper::Unmarshalling(parcel, constraint);
+#endif
     if (!success) {
         ROSEN_LOGE("BitmapRectOpItem::Unmarshalling failed!");
         return nullptr;
     }
+#ifdef NEW_SKIA
+    return new BitmapRectOpItem(bitmapInfo, &rectSrc, rectDst,
+        samplingOptions, &paint, static_cast<SkCanvas::SrcRectConstraint>(constraint));
+#else
     return new BitmapRectOpItem(bitmapInfo, &rectSrc, rectDst, &paint);
+#endif
 }
 
 // PixelMapOpItem

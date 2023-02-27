@@ -49,6 +49,7 @@ public:
 #ifdef NEW_SKIA
     SkISize getBaseLayerSize() const override;
     GrRecordingContext* recordingContext() override;
+    void SetGrRecordingContext(GrRecordingContext* context);
     bool isClipEmpty() const override;
     bool isClipRect() const override;
     bool onPeekPixels(SkPixmap* pixmap) override;
@@ -62,11 +63,11 @@ public:
     void didSetM44(const SkM44&) override {}
     void didScale(SkScalar, SkScalar) override {}
     void onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) override;
-    void onDrawImage2(const SkImage*, SkScalar dx, SkScalar dy, const SkSamplingOptions& samplingOptions,
+    void onDrawImage2(const SkImage* img, SkScalar dx, SkScalar dy, const SkSamplingOptions& samplingOptions,
         const SkPaint* paint) override;
-    void onDrawImageRect2(const SkImage*, const SkRect& src, const SkRect& dst,
+    void onDrawImageRect2(const SkImage* img, const SkRect& src, const SkRect& dst,
         const SkSamplingOptions& samplingOptions, const SkPaint* paint, SrcRectConstraint constraint) override;
-    void onDrawImageLattice2(const SkImage*, const Lattice&, const SkRect& dst,
+    void onDrawImageLattice2(const SkImage* img, const Lattice& lattice, const SkRect& dst,
                                         SkFilterMode mode, const SkPaint* paint) override;
     void onDrawAtlas2(const SkImage*, const SkRSXform[], const SkRect src[],
         const SkColor[], int count, SkBlendMode mode, const SkSamplingOptions& samplingOptions,
@@ -163,14 +164,13 @@ public:
     void RestoreAlpha();
 
 private:
-#ifndef NEW_SKIA
     void DrawImageLatticeAsBitmap(
         const SkImage* image, const SkCanvas::Lattice& lattice, const SkRect& dst, const SkPaint* paint);
-#endif
 
     std::shared_ptr<DrawCmdList> drawCmdList_ { nullptr };
     int saveCount_ = 0;
 #ifdef NEW_SKIA
+    GrRecordingContext* grContext_ = nullptr;
 #else
     GrContext* grContext_ = nullptr;
 #endif

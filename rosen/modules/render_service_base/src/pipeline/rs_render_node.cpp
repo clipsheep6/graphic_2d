@@ -91,6 +91,14 @@ bool RSRenderNode::Update(
     Vector2f offset = (parent == nullptr || IsInstanceOf<RSSurfaceRenderNode>()) ?
         Vector2f { 0.f, 0.f } : Vector2f { parent->GetFrameOffsetX(), parent->GetFrameOffsetY() };
     bool dirty = renderProperties_.UpdateGeometry(parent, parentDirty, offset);
+    if (dirty) {
+        for (auto& [id, modifier] : modifiers_) {
+            if (modifier->GetType() == RSModifierType::GEOMETRYTRANS) {
+                RSModifierContext context = { GetMutableRenderProperties() };
+                modifier->Apply(context);
+            }
+        }
+    }
     isDirtyRegionUpdated_ = false;
     UpdateDirtyRegion(dirtyManager, dirty, needClip, clipRect);
     isLastVisible_ = ShouldPaint();

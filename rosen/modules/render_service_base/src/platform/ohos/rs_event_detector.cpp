@@ -13,10 +13,26 @@
  * limitations under the License.
  */
 
+#include "sandbox_utils.h"
 #include "platform/common/rs_event_manager.h"
+
+#ifdef SOC_PERF_ENABLE
+#include "res_sched_client.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+#ifdef SOC_PERF_ENABLE
+constexpr uint32_t FRAME_RATE_NUM           = 60;
+constexpr uint32_t RES_TYPE_CLICK_ANIMATION = 34;
+constexpr int32_t CLICK_ANIMATION_NORMAL    = 1;
+constexpr int32_t CLICK_ANIMATION_SOON      = 2;
+constexpr int32_t CLICK_ANIMATION_BOOST     = 3;
+constexpr int32_t COUNTER_TIMES             = 4;
+#endif
+int32_t g_detectorCount = 4;
+}
 uint64_t RSEventTimer::GetSysTimeMs()
 {
     auto now = std::chrono::steady_clock::now().time_since_epoch();
@@ -39,7 +55,6 @@ RSTimeOutDetector::RSTimeOutDetector(int timeOutThresholdMs,
     paramList_["timeOutThresholdMs"] = std::to_string(timeOutThresholdMs_);
 }
 
-
 void RSTimeOutDetector::SetParam(const std::string& key, const std::string& value)
 {
     if (paramList_.count(key) == 0) {
@@ -55,10 +70,39 @@ void RSTimeOutDetector::SetParam(const std::string& key, const std::string& valu
     paramList_[key] = value;
 }
 
-
 void RSTimeOutDetector::SetLoopStartTag()
 {
     startTimeStampMs_ = RSEventTimer::GetSysTimeMs();
+}
+
+void RSTimeOutDetector::ResSchedDataReport(uint64_t costTimeMs)
+{
+    if (g_detectorCount > 0) {
+        g_detectorCount--;
+        return;
+    }
+    g_detectorCount = COUNTER_TIMES;
+#ifdef SOC_PERF_ENABLE
+    uint32_t frameRate = FRAME_RATE_NUM;
+    uint32_t refreshTimeMs = ceil((float)(1 * 1000) / (float)frameRate); // 1s->1000Ms
+    uint32_t thresholdBoostValueMs = refreshTimeMs + refreshTimeMs / 2;
+    std::unordered_map<std::string, std::string> payload;
+    payload["uid"] = std::to_string(getuid());
+    payload["pid"] = std::to_string(GetRealPid());
+    if (costTimeMs <= refreshTimeMs) {
+        RS_LOGD("Animate :: animation normal.");
+        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE_CLICK_ANIMATION,
+            CLICK_ANIMATION_NORMAL, payload);
+    } else if (costTimeMs > refreshTimeMs && costTimeMs <= thresholdBoostValueMs) {
+        RS_LOGD("Animate :: animation frame loss soon.");
+        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE_CLICK_ANIMATION,
+            CLICK_ANIMATION_SOON, payload);
+    } else if (costTimeMs > thresholdBoostValueMs) {
+        RS_LOGD("Animate :: animation boost.");
+        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE_CLICK_ANIMATION,
+            CLICK_ANIMATION_BOOST, payload);
+    }
+#endif
 }
 
 void RSTimeOutDetector::SetLoopFinishTag(
@@ -75,6 +119,9 @@ void RSTimeOutDetector::SetLoopFinishTag(
             focusAppAbilityName_ = focusAppAbilityName;
             EventReport(durationStampMs);
         }
+#ifdef SOC_PERF_ENABLE
+        ResSchedDataReport(durationStampMs);
+#endif
     }
 }
 

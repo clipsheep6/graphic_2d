@@ -73,8 +73,7 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     renderEngine_ = mainThread->GetRenderEngine();
     partialRenderType_ = RSSystemProperties::GetUniPartialRenderEnabled();
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
-    auto screenNum = screenManager->GetAllScreenIds().size();
-    isPartialRenderEnabled_ = (screenNum <= 1) && (partialRenderType_ != PartialRenderType::DISABLED);
+    isPartialRenderEnabled_ = (partialRenderType_ != PartialRenderType::DISABLED);
     isDirtyRegionDfxEnabled_ = (RSSystemProperties::GetDirtyRegionDebugType() == DirtyRegionDebugType::EGL_DAMAGE);
     isTargetDirtyRegionDfxEnabled_ = RSSystemProperties::GetTargetDirtyRegionDfxEnabled(dfxTargetSurfaceNames_);
     isOpaqueRegionDfxEnabled_ = RSSystemProperties::GetOpaqueRegionDfxEnabled();
@@ -191,12 +190,12 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
 {
     currentVisitDisplay_ = node.GetScreenId();
     displayHasSecSurface_.emplace(currentVisitDisplay_, false);
-    dirtySurfaceNodeMap_.clear();
 
     RS_TRACE_NAME("RSUniRender:PrepareDisplay " + std::to_string(currentVisitDisplay_));
     curDisplayDirtyManager_ = node.GetDirtyManager();
     curDisplayDirtyManager_->Clear();
     curDisplayNode_ = node.shared_from_this()->ReinterpretCastTo<RSDisplayRenderNode>();
+    curDisplayNode_->SetDirtySurfaceProp(false);
 
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     // driven render
@@ -536,7 +535,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     isQuickSkipPreparationEnabled_ = isQuickSkipPreparationEnabled;
     prepareClipRect_ = prepareClipRect;
     if (node.GetDstRectChanged() || (node.GetDirtyManager() && node.GetDirtyManager()->IsDirty())) {
-        dirtySurfaceNodeMap_.emplace(node.GetId(), node.ReinterpretCastTo<RSSurfaceRenderNode>());
+        curDisplayNode_->SetDirtySurfaceProp(true);
     }
     if (node.IsAppWindow()) {
         RS_TRACE_NAME(node.GetName() + " PreparedNodes: " + std::to_string(preparedCanvasNodeInCurrentSurface_));
@@ -712,10 +711,6 @@ void RSUniRenderVisitor::CopyForParallelPrepare(std::shared_ptr<RSUniRenderVisit
     needFilter_ |= visitor->needFilter_;
     for (auto &u : visitor->displayHasSecSurface_) {
         displayHasSecSurface_[u.first] |= u.second;
-    }
-
-    for (auto &u : visitor->dirtySurfaceNodeMap_) {
-        dirtySurfaceNodeMap_[u.first] = u.second;
     }
 #endif
 }
@@ -913,15 +908,16 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
     } else {
 #ifdef RS_ENABLE_EGLQUERYSURFACE
         if (isPartialRenderEnabled_) {
+            curDisplayDirtyManager_ = node.GetDirtyManager();
             curDisplayDirtyManager_->SetSurfaceSize(screenInfo_.width, screenInfo_.height);
             CalcDirtyDisplayRegion(displayNodePtr);
             CalcDirtyRegionForFilterNode(displayNodePtr);
             displayNodePtr->ClearCurrentSurfacePos();
-        }
-        if (isOpDropped_ && dirtySurfaceNodeMap_.empty() && !curDisplayDirtyManager_->IsDirty()) {
-            RS_LOGD("DisplayNode skip");
-            RS_TRACE_NAME("DisplayNode skip");
-            return;
+            if (isOpDropped_ && !node.GetDirtySurfaceProp() && !curDisplayDirtyManager_->IsDirty()) {
+                RS_LOGD("DisplayNode skip");
+                RS_TRACE_NAME("DisplayNode skip");
+                return;
+            }
         }
 #endif
         auto rsSurface = node.GetRSSurface();

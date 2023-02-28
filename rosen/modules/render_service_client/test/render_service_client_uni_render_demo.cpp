@@ -30,6 +30,8 @@
 #include "ui/rs_surface_node.h"
 #include "ui/rs_ui_director.h"
 
+#include "modifier/rs_property_modifier.h"
+
 using namespace OHOS;
 using namespace OHOS::Rosen;
 using namespace std;
@@ -50,13 +52,14 @@ static void Init(std::shared_ptr<RSUIDirector> rsUiDirector, int width, int heig
     canvasNode->SetBounds(100, 100, 300, 200);
     canvasNode->SetFrame(100, 100, 300, 200);
     canvasNode->SetBackgroundColor(0x6600ff00);
+    canvasNode->SetPixelStretch(Vector4f{1, 2, 3, 4});
 
     rootNode->AddChild(canvasNode, -1);
 
     rsUiDirector->SetRoot(rootNode->GetId());
 }
 
-int main()
+int main(int argc, char**argv)
 {
     std::cout << "rs uni render demo start!" << std::endl;
     RSSystemProperties::GetUniRenderEnabled();
@@ -79,7 +82,7 @@ int main()
 
     std::cout << "rs uni render demo create window " << rect.width_ << " " << rect.height_ << std::endl;
     auto surfaceNode = window->GetSurfaceNode();
-    if (!RSSystemProperties::GetUniRenderEnabled() || surfaceNode->GetSurface() != nullptr) {
+    if (!RSSystemProperties::GetUniRenderEnabled() /*|| surfaceNode->GetSurface() != nullptr*/) {
         std::cout << "rs uni render demo not in uni render mode, exit! " << std::endl;
         return 0;
     }
@@ -92,6 +95,28 @@ int main()
     std::cout << "rs uni render demo stage 1 " << std::endl;
     rsUiDirector->SetRSSurfaceNode(surfaceNode);
     Init(rsUiDirector, rect.width_, rect.height_);
+
+    if (argc > 0) {
+        Vector4f stretchData;
+        for (int i = 1; i < argc; i++) {
+            stretchData.data_[i-1] = atoi(argv[i]);
+        }
+
+        auto property = std::make_shared<RSAnimatableProperty<Vector4f>>(Vector4f(0, 0, 0, 0));
+
+        auto modifier = std::make_shared<RSPixelStretchModifier>(property);
+        canvasNode->AddModifier(modifier);
+        RSAnimationTimingProtocol protocol;
+        protocol.SetDuration(500);
+        RSNode::Animate(protocol, RSAnimationTimingCurve::SPRING, [&]() {
+            property->Set(stretchData);
+        },
+        []{}
+        );
+
+        //canvasNode->SetPixelStretch(stretchData);
+    }
+    
     rsUiDirector->SendMessages();
     sleep(1);
 

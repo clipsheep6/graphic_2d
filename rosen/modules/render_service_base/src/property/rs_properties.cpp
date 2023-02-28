@@ -991,13 +991,14 @@ std::shared_ptr<RSMask> RSProperties::GetMask() const
 
 void RSProperties::SetPixelStretch(Vector4f stretchSize)
 {
+    ROSEN_LOGE("RSProperties::SetPixelStretch stretch parameter(%f, %f, %f, %f).", stretchSize.x_, stretchSize.y_, stretchSize.z_, stretchSize.w_);
     if (!pixelStretch) {
         pixelStretch = std::make_unique<Vector4f>();
     }
 
     pixelStretch->SetValues(stretchSize.x_, stretchSize.y_, stretchSize.z_, stretchSize.w_);
 
-    SetDirty(); // No need to relayout, need call this?
+    SetDirty();
 }
 
 Vector4f RSProperties::GetPixelStretch() const

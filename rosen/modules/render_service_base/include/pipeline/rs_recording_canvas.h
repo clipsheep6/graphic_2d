@@ -83,6 +83,12 @@ public:
     void onResetClip() override;
     void onDiscard() override;
     SkPaintFilterCanvas* internal_private_asPaintFilterCanvas() const override { return nullptr; }
+    void DrawPixelMapRect(const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src, const SkRect& dst,
+        const SkSamplingOptions& samplingOptions, const SkPaint* paint, SrcRectConstraint constraint = kStrict_SrcRectConstraint);
+    void DrawPixelMapRect(const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& dst,
+        const SkSamplingOptions& samplingOptions, const SkPaint* paint);
+    void DrawPixelMap(const std::shared_ptr<Media::PixelMap>& pixelmap, SkScalar x, SkScalar y,
+        const SkSamplingOptions& samplingOptions, const SkPaint* paint = nullptr);
 #else
     GrContext* getGrContext() override;
     void SetGrContext(GrContext* grContext);
@@ -108,6 +114,11 @@ public:
                           SkBlendMode) override {}
     void onDrawEdgeAAImageSet(const ImageSetEntry[], int, const SkPoint[],
                               const SkMatrix[], const SkPaint*, SrcRectConstraint) override {}
+    void DrawPixelMapRect(const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src, const SkRect& dst,
+        const SkPaint* paint, SrcRectConstraint constraint = kStrict_SrcRectConstraint);
+    void DrawPixelMapRect(const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& dst, const SkPaint* paint);
+    void DrawPixelMap(const std::shared_ptr<Media::PixelMap>& pixelmap, SkScalar x, SkScalar y,
+        const SkPaint* paint = nullptr);
 #endif
     sk_sp<SkSurface> onNewSurface(const SkImageInfo& info, const SkSurfaceProps& props) override;
 
@@ -151,11 +162,6 @@ public:
     void ClipAdaptiveRRect(const SkVector radius[]);
     void DrawImageWithParm(const sk_sp<SkImage> image, const sk_sp<SkData> data,
         const Rosen::RsImageInfo& rsImageInfo, const SkPaint& paint);
-    void DrawPixelMap(const std::shared_ptr<Media::PixelMap>& pixelmap, SkScalar x, SkScalar y,
-        const SkPaint* paint = nullptr);
-    void DrawPixelMapRect(const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src, const SkRect& dst,
-        const SkPaint* paint, SrcRectConstraint constraint = kStrict_SrcRectConstraint);
-    void DrawPixelMapRect(const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& dst, const SkPaint* paint);
     void DrawPixelMapWithParm(
         const std::shared_ptr<Media::PixelMap>& pixelmap, const Rosen::RsImageInfo& rsImageInfo, const SkPaint& paint);
 

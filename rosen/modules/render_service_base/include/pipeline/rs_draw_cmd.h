@@ -457,10 +457,11 @@ private:
 
 class BitmapOpItem : public OpItemWithPaint {
 public:
-    BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top, const SkPaint* paint);
 #ifdef NEW_SKIA
     BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top,
         SkSamplingOptions samplingOptions, const SkPaint* paint);
+#else
+    BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top, const SkPaint* paint);
 #endif
     ~BitmapOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
@@ -486,11 +487,12 @@ private:
 
 class BitmapRectOpItem : public OpItemWithPaint {
 public:
-    BitmapRectOpItem(
-        const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst, const SkPaint* paint);
 #ifdef NEW_SKIA
     BitmapRectOpItem(const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst,
         const SkSamplingOptions& samplingOptions, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint);
+#else
+    BitmapRectOpItem(
+        const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst, const SkPaint* paint);
 #endif
     ~BitmapRectOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
@@ -517,7 +519,12 @@ private:
 
 class PixelMapOpItem : public OpItemWithPaint {
 public:
+#ifdef NEW_SKIA
+    PixelMapOpItem(const std::shared_ptr<Media::PixelMap>& pixelmap, float left, float top,
+        SkSamplingOptions samplingOptions, const SkPaint* paint);
+#else
     PixelMapOpItem(const std::shared_ptr<Media::PixelMap>& pixelmap, float left, float top, const SkPaint* paint);
+#endif
     ~PixelMapOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 
@@ -535,14 +542,22 @@ private:
     std::shared_ptr<Media::PixelMap> pixelmap_;
     float left_;
     float top_;
-
     mutable sk_sp<SkImage> renderImage_;
+#ifdef NEW_SKIA
+    SkSamplingOptions samplingOptions_;
+#endif
 };
 
 class PixelMapRectOpItem : public OpItemWithPaint {
 public:
+#ifdef NEW_SKIA
+    PixelMapRectOpItem(
+        const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src, const SkRect& dst,
+        const SkSamplingOptions& samplingOptions, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint);
+#else
     PixelMapRectOpItem(
         const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src, const SkRect& dst, const SkPaint* paint);
+#endif
     ~PixelMapRectOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 
@@ -560,14 +575,22 @@ private:
     std::shared_ptr<Media::PixelMap> pixelmap_;
     SkRect src_;
     SkRect dst_;
-
     mutable sk_sp<SkImage> renderImage_;
+#ifdef NEW_SKIA
+    SkSamplingOptions samplingOptions_;
+    SkCanvas::SrcRectConstraint constraint_;
+#endif
 };
 
 class BitmapNineOpItem : public OpItemWithPaint {
 public:
+#ifdef NEW_SKIA
+    BitmapNineOpItem(const sk_sp<SkImage> bitmapInfo, const SkIRect& center, const SkRect& rectDst,
+        SkFilterMode filter, const SkPaint* paint);
+#else
     BitmapNineOpItem(
         const sk_sp<SkImage> bitmapInfo, const SkIRect& center, const SkRect& rectDst, const SkPaint* paint);
+#endif
     ~BitmapNineOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 
@@ -585,6 +608,9 @@ private:
     SkIRect center_;
     SkRect rectDst_;
     sk_sp<SkImage> bitmapInfo_;
+#ifdef NEW_SKIA
+    SkFilterMode filter_;
+#endif
 };
 
 class AdaptiveRRectOpItem : public OpItemWithPaint {

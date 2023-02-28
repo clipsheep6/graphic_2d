@@ -162,6 +162,7 @@ public:
     void SetShadowElevation(float elevation);
     void SetShadowRadius(float radius);
     void SetShadowPath(const std::shared_ptr<RSPath>& shadowPath);
+    void SetShadowMask(bool shadowMask);
 
     void SetFrameGravity(Gravity gravity);
 
@@ -171,6 +172,7 @@ public:
 
     void SetVisible(bool visible);
     void SetMask(const std::shared_ptr<RSMask>& mask);
+    void SetSpherizeDegree(float spherizeDegree);
 
     void SetPaintOrder(bool drawContentLast);
 

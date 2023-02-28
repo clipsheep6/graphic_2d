@@ -86,6 +86,11 @@ void RSPaintFilterCanvas::RestoreAlpha()
     alphaStack_.pop();
 }
 
+int RSPaintFilterCanvas::GetAlphaSaveCount() const
+{
+    return alphaStack_.size();
+}
+
 void RSPaintFilterCanvas::RestoreAlphaToCount(int count)
 {
     // sanity check, stack should not be empty
@@ -103,6 +108,11 @@ std::pair<int, int> RSPaintFilterCanvas::SaveCanvasAndAlpha()
 {
     // simultaneously save canvas and alpha
     return { save(), SaveAlpha() };
+}
+
+std::pair<int, int> RSPaintFilterCanvas::GetSaveCount() const
+{
+    return { getSaveCount(), GetAlphaSaveCount() };
 }
 
 void RSPaintFilterCanvas::RestoreCanvasAndAlpha(std::pair<int, int>& count)

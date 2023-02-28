@@ -69,10 +69,13 @@ void RSCanvasRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->ProcessCanvasRenderNode(*this);
 }
 
-void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
+void RSCanvasRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     RSRenderNode::ProcessRenderBeforeChildren(canvas);
+}
 
+void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas)
+{
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::TRANSITION);
     ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR);
@@ -104,10 +107,22 @@ void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas
         RSPropertiesPainter::Clip(canvas, GetRenderProperties().GetFrameRect());
     }
 #endif
+}
+
+void RSCanvasRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canvas)
+{
+    RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::CONTENT_STYLE);
 }
 
-void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
+void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
+{
+    ProcessTransitionBeforeChildren(canvas);
+    ProcessAnimatePropertyBeforeChildren(canvas);
+    ProcessRenderContents(canvas);
+}
+
+void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas)
 {
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::FOREGROUND_STYLE);
@@ -126,16 +141,45 @@ void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 #else
     RSPropertiesPainter::DrawForegroundColor(GetRenderProperties(), canvas);
 #endif
+}
+
+void RSCanvasRenderNode::ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas)
+{
     RSRenderNode::ProcessRenderAfterChildren(canvas);
 }
 
-void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type)
+void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 {
-    if (drawCmdModifiers_.count(type)) {
-        for (auto& modifier : drawCmdModifiers_[type]) {
-            modifier->Apply(context);
-        }
+    ProcessAnimatePropertyAfterChildren(canvas);
+    ProcessTransitionAfterChildren(canvas);
+}
+
+void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const
+{
+    auto itr = drawCmdModifiers_.find(type);
+    if (itr == drawCmdModifiers_.end() || itr->second.empty()) {
+        return;
     }
+    for (const auto& modifier : itr->second) {
+        modifier->Apply(context);
+    }
+}
+
+void RSCanvasRenderNode::InternalDrawContent(RSPaintFilterCanvas& canvas)
+{
+    RSModifierContext context = { GetMutableRenderProperties(), &canvas };
+    canvas.translate(GetRenderProperties().GetFrameOffsetX(), GetRenderProperties().GetFrameOffsetY());
+
+    if (GetRenderProperties().GetClipToFrame()) {
+        RSPropertiesPainter::Clip(canvas, GetRenderProperties().GetFrameRect());
+    }
+    ApplyDrawCmdModifier(context, RSModifierType::CONTENT_STYLE);
+}
+
+void RSCanvasRenderNode::ApplyModifiers()
+{
+    RSRenderNode::ApplyModifiers();
+    GetMutableRenderProperties().backref_ = ReinterpretCastTo<RSRenderNode>();
 }
 
 } // namespace Rosen

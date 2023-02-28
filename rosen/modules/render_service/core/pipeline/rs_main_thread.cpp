@@ -68,6 +68,7 @@ constexpr uint32_t RUQUEST_VSYNC_NUMBER_LIMIT = 10;
 constexpr uint64_t REFRESH_PERIOD = 16666667;
 constexpr int32_t PERF_ANIMATION_REQUESTED_CODE = 10017;
 constexpr int32_t PERF_MULTI_WINDOW_REQUESTED_CODE = 10026;
+constexpr int32_t FLUSH_SYNC_TRANSACTION_TIMEOUT = 100;
 constexpr uint64_t PERF_PERIOD = 250000000;
 constexpr uint64_t CLEAN_CACHE_FREQ = 60;
 constexpr uint64_t SKIP_COMMAND_FREQ_LIMIT = 30;
@@ -169,7 +170,6 @@ void RSMainThread::Init()
         }
         SetRSEventDetectorLoopStartTag();
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
-        activeProcessPids_.clear();
         ConsumeAndUpdateAllNodes();
         WaitUntilUnmarshallingTaskFinished();
         ProcessCommand();
@@ -179,6 +179,7 @@ void RSMainThread::Init()
         Render();
         ReleaseAllNodesBuffer();
         SendCommands();
+        activeProcessPids_.clear();
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         SetRSEventDetectorLoopFinishTag();
         rsEventManager_.UpdateParam();
@@ -377,9 +378,11 @@ void RSMainThread::ProcessCommandForUniRender()
     for (auto& rsTransactionElem: transactionDataEffective) {
         for (auto& rsTransaction: rsTransactionElem.second) {
             if (rsTransaction) {
-                context_->transactionTimestamp_ = rsTransaction->GetTimestamp();
-                rsTransaction->Process(*context_);
-                activeProcessPids_.emplace(rsTransactionElem.first);
+                if (rsTransaction->IsNeedSync() || syncTransactionDatas_.count(rsTransactionElem.first) > 0) {
+                    ProcessSyncRSTransactionData(rsTransaction, rsTransactionElem.first);
+                    continue;
+                }
+                ProcessRSTransactionData(rsTransaction, rsTransactionElem.first);
             }
         }
     }
@@ -425,6 +428,69 @@ void RSMainThread::ProcessCommandForDividedRender()
     }
     effectiveCommands_.clear();
     RS_TRACE_END();
+}
+
+void RSMainThread::ProcessRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData, pid_t pid)
+{
+    context_->transactionTimestamp_ = rsTransactionData->GetTimestamp();
+    rsTransactionData->Process(*context_);
+    activeProcessPids_.emplace(pid);
+}
+
+void RSMainThread::ProcessSyncRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData, pid_t pid)
+{
+    if (!rsTransactionData->IsNeedSync()) {
+        syncTransactionDatas_[pid].emplace_back(std::move(rsTransactionData));
+        return;
+    }
+
+    if (!syncTransactionDatas_.empty() && syncTransactionDatas_.begin()->second.front() &&
+        (syncTransactionDatas_.begin()->second.front()->GetSyncId() > rsTransactionData->GetSyncId())) {
+        ROSEN_LOGD("RSMainThread ProcessSyncRSTransactionData while syncId less GetCommandCount: %lu pid: %llu",
+            rsTransactionData->GetCommandCount(), rsTransactionData->GetSendingPid());
+        ProcessRSTransactionData(rsTransactionData, pid);
+        return;
+    }
+
+    bool isNeedCloseSync = rsTransactionData->IsNeedCloseSync();
+    if (syncTransactionDatas_.empty()) {
+        if (handler_) {
+            auto task = [this]() {
+                ROSEN_LOGD("RSMainThread ProcessAllSyncTransactionDatas timeout task");
+                ProcessAllSyncTransactionDatas();
+            };
+            handler_->PostTask(task, "ProcessAllSyncTransactionsTimeoutTask", FLUSH_SYNC_TRANSACTION_TIMEOUT);
+        }
+    }
+    if (!syncTransactionDatas_.empty() && syncTransactionDatas_.begin()->second.front() &&
+        (syncTransactionDatas_.begin()->second.front()->GetSyncId() != rsTransactionData->GetSyncId())) {
+        ProcessAllSyncTransactionDatas();
+    }
+    if (syncTransactionDatas_.count(pid) == 0) {
+        syncTransactionDatas_.insert({ pid, std::vector<std::unique_ptr<RSTransactionData>>() });
+    }
+    if (isNeedCloseSync) {
+        syncTransactionCount_ += rsTransactionData->GetSyncTransactionNum();
+    } else {
+        syncTransactionCount_ -= 1;
+    }
+    syncTransactionDatas_[pid].emplace_back(std::move(rsTransactionData));
+    if (syncTransactionCount_ == 0) {
+        ProcessAllSyncTransactionDatas();
+    }
+}
+
+void RSMainThread::ProcessAllSyncTransactionDatas()
+{
+    for (auto& [pid, transactions] : syncTransactionDatas_) {
+        for (auto& transaction: transactions) {
+            ROSEN_LOGD("RSMainThread ProcessAllSyncTransactionDatas GetCommandCount: %lu pid: %llu",
+                transaction->GetCommandCount(), pid);
+            ProcessRSTransactionData(transaction, pid);
+        }
+    }
+    syncTransactionDatas_.clear();
+    syncTransactionCount_ = 0;
 }
 
 void RSMainThread::ConsumeAndUpdateAllNodes()
@@ -642,7 +708,6 @@ void RSMainThread::Render()
             doDirectComposition_ = false;
         }
         bool needTraverseNodeTree = true;
-        doDirectComposition_ = false;
         if (doDirectComposition_ && !isDirty_) {
             if (isHardwareEnabledBufferUpdated_) {
                 needTraverseNodeTree = !uniVisitor->DoDirectComposition(rootNode);
@@ -716,7 +781,7 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
     std::map<uint32_t, bool> pidVisMap;
     for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
         auto curSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
-        if (curSurface == nullptr || curSurface->GetDstRect().IsEmpty()) {
+        if (curSurface == nullptr || curSurface->GetDstRect().IsEmpty() || curSurface->IsLeashWindow()) {
             continue;
         }
         Occlusion::Rect occlusionRect;
@@ -792,7 +857,7 @@ void RSMainThread::CalcOcclusion()
     if (!winDirty) {
         for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
             auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
-            if (surface == nullptr) {
+            if (surface == nullptr || surface->IsLeashWindow()) {
                 continue;
             }
             if (surface->GetZorderChanged() || surface->GetDstRectChanged() ||
@@ -1335,6 +1400,11 @@ void RSMainThread::PerfMultiWindow()
 void RSMainThread::SetAppWindowNum(uint32_t num)
 {
     appWindowNum_ = num;
+}
+
+void RSMainThread::AddActivePid(pid_t pid)
+{
+    activeProcessPids_.emplace(pid);
 }
 
 void RSMainThread::ResetHardwareEnabledState()

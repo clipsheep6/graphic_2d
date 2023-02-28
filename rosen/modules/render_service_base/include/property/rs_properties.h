@@ -32,6 +32,7 @@
 
 namespace OHOS {
 namespace Rosen {
+class RSRenderNode;
 class RSB_EXPORT RSProperties final {
 public:
     RSProperties();
@@ -159,7 +160,8 @@ public:
     void SetShadowAlpha(float alpha);
     void SetShadowElevation(float radius);
     void SetShadowRadius(float radius);
-    void SetShadowPath(std::shared_ptr<RSPath> shadowpath);
+    void SetShadowPath(std::shared_ptr<RSPath> shadowPath);
+    void SetShadowMask(bool shadowMask);
     Color GetShadowColor() const;
     float GetShadowOffsetX() const;
     float GetShadowOffsetY() const;
@@ -167,6 +169,7 @@ public:
     float GetShadowElevation() const;
     float GetShadowRadius() const;
     std::shared_ptr<RSPath> GetShadowPath() const;
+    bool GetShadowMask() const;
     bool IsShadowValid() const;
 
     void SetFrameGravity(Gravity gravity);
@@ -198,6 +201,10 @@ public:
     RectF GetBoundsRect() const;
 
     bool IsGeoDirty() const;
+
+    void SetSpherize(float spherizeDegree);
+    float GetSpherize() const;
+    bool IsSpherizeValid() const;
 
 private:
     void Reset();
@@ -240,6 +247,9 @@ private:
     std::shared_ptr<RSMask> mask_ = nullptr;
     std::unique_ptr<RSShadow> shadow_ = nullptr;
     std::unique_ptr<Matrix3f> sublayerTransform_ = nullptr;
+    float spherizeDegree_ = 0.f;
+
+    std::weak_ptr<RSRenderNode> backref_;
 
     friend class RSCanvasRenderNode;
     friend class RSPropertiesPainter;

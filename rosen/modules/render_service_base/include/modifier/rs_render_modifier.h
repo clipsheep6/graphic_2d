@@ -191,7 +191,7 @@ public:
         : RSForegroundRenderModifier(property)                                                
     {}                                                                                               
     virtual ~RSEnvForegroundColorRenderModifier() = default;                                          
-    void Apply(RSModifierContext& context) override;                                                 
+    void Apply(RSModifierContext& context) const override;                                                 
     void Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) override;           
     bool Marshalling(Parcel& parcel) override;                                                       
     RSModifierType GetType() override                                                                
@@ -206,7 +206,7 @@ public:
         : RSForegroundRenderModifier(property)                                                
     {}                                                                                               
     virtual ~RSEnvForegroundColorStrategyRenderModifier() = default;                                          
-    void Apply(RSModifierContext& context) override;                                                 
+    void Apply(RSModifierContext& context) const override;                                                 
     void Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) override;           
     bool Marshalling(Parcel& parcel) override;                                                       
     RSModifierType GetType() override                                                                

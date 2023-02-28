@@ -15,6 +15,9 @@
 
 #include "render/rs_image.h"
 
+#ifdef NEW_SKIA
+#include <include/gpu/GrDirectContext.h>
+#endif
 #include "include/core/SkPaint.h"
 #include "include/core/SkRRect.h"
 #include "platform/common/rs_log.h"
@@ -134,8 +137,9 @@ void RSImage::UploadGpu(SkCanvas& canvas)
             }
             RS_TRACE_NAME("make compress img");
 #ifdef NEW_SKIA
-            // TODO
-            sk_sp<SkImage> image = nullptr;
+            // TODO: kASTC_CompressionType == kBC1_RGBA8_UNORM? 
+            auto image = SkImage::MakeTextureFromCompressed(GrAsDirectContext(canvas.recordingContext()), compressData_,
+                static_cast<int>(srcRect_.width_), static_cast<int>(srcRect_.height_), SkImage::CompressionType::kBC1_RGBA8_UNORM);
 #else
             auto image = SkImage::MakeFromCompressed(canvas.getGrContext(), compressData_,
                 static_cast<int>(srcRect_.width_), static_cast<int>(srcRect_.height_), SkImage::kASTC_CompressionType);

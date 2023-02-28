@@ -28,6 +28,9 @@
 #include "include/core/SkRect.h"
 #include "include/core/SkRegion.h"
 #include "include/core/SkTextBlob.h"
+#ifdef NEW_SKIA
+#include "include/core/SkVertices.h"
+#endif
 #include "pixel_map.h"
 
 #include "common/rs_common_def.h"
@@ -35,10 +38,6 @@
 #include "property/rs_properties_def.h"
 #include "render/rs_image.h"
 #include "transaction/rs_marshalling_helper.h"
-
-#ifdef NEW_SKIA
-#include "src/core/SkVerticesPriv.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -459,6 +458,10 @@ private:
 class BitmapOpItem : public OpItemWithPaint {
 public:
     BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top, const SkPaint* paint);
+#ifdef NEW_SKIA
+    BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top,
+        SkSamplingOptions samplingOptions, const SkPaint* paint);
+#endif
     ~BitmapOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 
@@ -476,12 +479,19 @@ private:
     float left_;
     float top_;
     sk_sp<SkImage> bitmapInfo_;
+#ifdef NEW_SKIA
+    SkSamplingOptions samplingOptions_;
+#endif
 };
 
 class BitmapRectOpItem : public OpItemWithPaint {
 public:
     BitmapRectOpItem(
         const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst, const SkPaint* paint);
+#ifdef NEW_SKIA
+    BitmapRectOpItem(const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst,
+        const SkSamplingOptions& samplingOptions, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint);
+#endif
     ~BitmapRectOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 
@@ -499,6 +509,10 @@ private:
     SkRect rectSrc_;
     SkRect rectDst_;
     sk_sp<SkImage> bitmapInfo_;
+#ifdef NEW_SKIA
+    SkSamplingOptions samplingOptions_;
+    SkCanvas::SrcRectConstraint constraint_;
+#endif
 };
 
 class PixelMapOpItem : public OpItemWithPaint {
@@ -759,9 +773,11 @@ private:
     SkRect* rectPtr_ = nullptr;
     SkRect rect_ = SkRect::MakeEmpty();
     sk_sp<SkImageFilter> backdrop_;
+    SkCanvas::SaveLayerFlags flags_;
+#ifndef NEW_SKIA
     sk_sp<SkImage> mask_;
     SkMatrix matrix_;
-    SkCanvas::SaveLayerFlags flags_;
+#endif
 };
 
 class DrawableOpItem : public OpItem {
@@ -834,8 +850,7 @@ private:
 class VerticesOpItem : public OpItemWithPaint {
 public:
 #ifdef NEW_SKIA
-    VerticesOpItem(const SkVertices* vertices, const SkVertices_DeprecatedBone bones[],
-        int boneCount, SkBlendMode mode, const SkPaint& paint);
+    VerticesOpItem(const SkVertices* vertices, SkBlendMode mode, const SkPaint& paint);
 #else
     VerticesOpItem(const SkVertices* vertices, const SkVertices::Bone bones[],
         int boneCount, SkBlendMode mode, const SkPaint& paint);
@@ -855,12 +870,10 @@ public:
 
 private:
     sk_sp<SkVertices> vertices_;
-#ifdef NEW_SKIA
-    SkVertices_DeprecatedBone* bones_;
-#else
+#ifndef NEW_SKIA
     SkVertices::Bone* bones_;
-#endif
     int boneCount_;
+#endif
     SkBlendMode mode_;
 };
 

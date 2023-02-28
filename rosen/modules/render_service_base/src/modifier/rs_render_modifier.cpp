@@ -155,7 +155,7 @@ bool RSEnvForegroundColorRenderModifier::Marshalling(Parcel& parcel)
             RSMarshallingHelper::Marshalling(parcel, renderProperty);                                              
 }     
 
-void RSEnvForegroundColorRenderModifier::Apply(RSModifierContext& context)                                         
+void RSEnvForegroundColorRenderModifier::Apply(RSModifierContext& context) const                                       
 {                                                                                                                 
     auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<Color>>(property_);   
     context.canvas_->SetEnvForegroundColor(renderProperty->Get());                                       
@@ -179,7 +179,7 @@ bool RSEnvForegroundColorStrategyRenderModifier::Marshalling(Parcel& parcel)
 }
 
 
-void RSEnvForegroundColorStrategyRenderModifier ::Apply(RSModifierContext& context)                                         
+void RSEnvForegroundColorStrategyRenderModifier ::Apply(RSModifierContext& context) const                                          
 {                                                                                                                 
     auto renderProperty = std::static_pointer_cast<RSRenderProperty<ForegroundColorStrategyType>>(property_);              
     switch (renderProperty->Get()) {

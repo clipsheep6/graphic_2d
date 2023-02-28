@@ -310,8 +310,7 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithU
             node.GetId());
         return;
     }
-    bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE ||
-        node.IsAbilityComponent();
+    bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
     if (!isSelfDrawingSurface) {
         canvas_->concat(node.GetContextMatrix());
         auto contextClipRect = node.GetContextClipRegion();

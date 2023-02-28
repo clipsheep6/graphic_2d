@@ -140,6 +140,28 @@ void RSRecordingCanvas::onDiscard()
 {
     ROSEN_LOGI("RSRecordingCanvas::onDiscard not support yet");
 }
+
+void RSRecordingCanvas::DrawPixelMapRect(
+    const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src, const SkRect& dst,
+    const SkSamplingOptions& samplingOptions, const SkPaint* paint, SrcRectConstraint constraint)
+{
+    std::unique_ptr<OpItem> op =
+        std::make_unique<PixelMapRectOpItem>(pixelmap, src, dst, samplingOptions, paint, constraint);
+    AddOp(std::move(op));
+}
+
+void RSRecordingCanvas::DrawPixelMapRect(const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& dst,
+    const SkSamplingOptions& samplingOptions, const SkPaint* paint)
+{
+    DrawPixelMapRect(pixelmap, SkRect::MakeIWH(pixelmap->GetWidth(), pixelmap->GetHeight()), dst, samplingOptions, paint);
+}
+
+void RSRecordingCanvas::DrawPixelMap(const std::shared_ptr<Media::PixelMap>& pixelmap, SkScalar x, SkScalar y,
+    const SkSamplingOptions& samplingOptions, const SkPaint* paint)
+{
+    std::unique_ptr<OpItem> op = std::make_unique<PixelMapOpItem>(pixelmap, x, y, samplingOptions, paint);
+    AddOp(std::move(op));
+}
 #else
 GrContext* RSRecordingCanvas::getGrContext()
 {
@@ -230,6 +252,26 @@ void RSRecordingCanvas::onDrawAtlas(const SkImage* atlas, const SkRSXform xforms
 {
     // [PLANNING]: To be implemented
     ROSEN_LOGE("RSRecordingCanvas::onDrawAtlas not support yet");
+}
+
+void RSRecordingCanvas::DrawPixelMapRect(const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src,
+    const SkRect& dst, const SkPaint* paint, SrcRectConstraint constraint)
+{
+    std::unique_ptr<OpItem> op = std::make_unique<PixelMapRectOpItem>(pixelmap, src, dst, paint);
+    AddOp(std::move(op));
+}
+
+void RSRecordingCanvas::DrawPixelMapRect(
+    const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& dst, const SkPaint* paint)
+{
+    DrawPixelMapRect(pixelmap, SkRect::MakeIWH(pixelmap->GetWidth(), pixelmap->GetHeight()), dst, paint);
+}
+
+void RSRecordingCanvas::DrawPixelMap(
+    const std::shared_ptr<Media::PixelMap>& pixelmap, SkScalar x, SkScalar y, const SkPaint* paint)
+{
+    std::unique_ptr<OpItem> op = std::make_unique<PixelMapOpItem>(pixelmap, x, y, paint);
+    AddOp(std::move(op));
 }
 #endif
 
@@ -349,26 +391,6 @@ void RSRecordingCanvas::DrawImageWithParm(const sk_sp<SkImage>img, const sk_sp<S
 {
     std::unique_ptr<OpItem> op = std::make_unique<ImageWithParmOpItem>(img, data, rsimageInfo, paint);
     AddOp(std::move(op));
-}
-
-void RSRecordingCanvas::DrawPixelMap(
-    const std::shared_ptr<Media::PixelMap>& pixelmap, SkScalar x, SkScalar y, const SkPaint* paint)
-{
-    std::unique_ptr<OpItem> op = std::make_unique<PixelMapOpItem>(pixelmap, x, y, paint);
-    AddOp(std::move(op));
-}
-
-void RSRecordingCanvas::DrawPixelMapRect(const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src,
-    const SkRect& dst, const SkPaint* paint, SrcRectConstraint constraint)
-{
-    std::unique_ptr<OpItem> op = std::make_unique<PixelMapRectOpItem>(pixelmap, src, dst, paint);
-    AddOp(std::move(op));
-}
-
-void RSRecordingCanvas::DrawPixelMapRect(
-    const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& dst, const SkPaint* paint)
-{
-    DrawPixelMapRect(pixelmap, SkRect::MakeIWH(pixelmap->GetWidth(), pixelmap->GetHeight()), dst, paint);
 }
 
 void RSRecordingCanvas::DrawPixelMapWithParm(

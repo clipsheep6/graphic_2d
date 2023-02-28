@@ -79,7 +79,12 @@ std::unique_ptr<OpItem> OpItem::GenerateCachedOpItem(SkSurface* surface) const
     // generate BitmapOpItem with correct offset
     SkPaint paint;
     paint.setAntiAlias(true);
+#ifdef NEW_SKIA
+    return std::make_unique<BitmapOpItem>(offscreenSurface->makeImageSnapshot(), bounds.x(), bounds.y(),
+        SkSamplingOptions(), &paint);
+#else
     return std::make_unique<BitmapOpItem>(offscreenSurface->makeImageSnapshot(), bounds.x(), bounds.y(), &paint);
+#endif
 }
 
 RectOpItem::RectOpItem(SkRect rect, const SkPaint& paint) : OpItemWithPaint(sizeof(RectOpItem)), rect_(rect)
@@ -242,17 +247,6 @@ void TextBlobOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     }
 }
 
-BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top, const SkPaint* paint)
-    : OpItemWithPaint(sizeof(BitmapOpItem)), left_(left), top_(top)
-{
-    if (bitmapInfo != nullptr) {
-        bitmapInfo_ = bitmapInfo;
-    }
-    if (paint) {
-        paint_ = *paint;
-    }
-}
-
 #ifdef NEW_SKIA
 BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top, 
     SkSamplingOptions samplingOptions, const SkPaint* paint)
@@ -271,35 +265,29 @@ void BitmapOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     canvas.drawImage(bitmapInfo_, left_, top_, samplingOptions_, &paint_);
 }
 #else
-void BitmapOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
-{
-    canvas.drawImage(bitmapInfo_, left_, top_, &paint_);
-}
-#endif
-
-BitmapRectOpItem::BitmapRectOpItem(
-    const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst, const SkPaint* paint)
-    : OpItemWithPaint(sizeof(BitmapRectOpItem)), rectDst_(rectDst)
+BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top, const SkPaint* paint)
+    : OpItemWithPaint(sizeof(BitmapOpItem)), left_(left), top_(top)
 {
     if (bitmapInfo != nullptr) {
-        rectSrc_ = (rectSrc == nullptr) ? SkRect::MakeWH(bitmapInfo->width(), bitmapInfo->height()) : *rectSrc;
         bitmapInfo_ = bitmapInfo;
-    } else {
-        if (rectSrc != nullptr) {
-            rectSrc_ = *rectSrc;
-        }
     }
     if (paint) {
         paint_ = *paint;
     }
 }
 
+void BitmapOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
+{
+    canvas.drawImage(bitmapInfo_, left_, top_, &paint_);
+}
+#endif
+
 #ifdef NEW_SKIA
 BitmapRectOpItem::BitmapRectOpItem(const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst,
         const SkSamplingOptions& samplingOptions, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint)
     : OpItemWithPaint(sizeof(BitmapRectOpItem)),
     rectDst_(rectDst),
-    samplingOptions_(samplingOptions), 
+    samplingOptions_(samplingOptions),
     constraint_(constraint)
 {
     if (bitmapInfo != nullptr) {
@@ -320,12 +308,49 @@ void BitmapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     canvas.drawImageRect(bitmapInfo_, rectSrc_, rectDst_, samplingOptions_, &paint_, constraint_);
 }
 #else
+BitmapRectOpItem::BitmapRectOpItem(
+    const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst, const SkPaint* paint)
+    : OpItemWithPaint(sizeof(BitmapRectOpItem)), rectDst_(rectDst)
+{
+    if (bitmapInfo != nullptr) {
+        rectSrc_ = (rectSrc == nullptr) ? SkRect::MakeWH(bitmapInfo->width(), bitmapInfo->height()) : *rectSrc;
+        bitmapInfo_ = bitmapInfo;
+    } else {
+        if (rectSrc != nullptr) {
+            rectSrc_ = *rectSrc;
+        }
+    }
+    if (paint) {
+        paint_ = *paint;
+    }
+}
+
 void BitmapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
     canvas.drawImageRect(bitmapInfo_, rectSrc_, rectDst_, &paint_);
 }
 #endif
 
+#ifdef NEW_SKIA
+PixelMapOpItem::PixelMapOpItem(const std::shared_ptr<Media::PixelMap>& pixelmap, float left, float top,
+        SkSamplingOptions samplingOptions, const SkPaint* paint)
+    : OpItemWithPaint(sizeof(PixelMapOpItem)),
+    pixelmap_(pixelmap), left_(left), top_(top),
+    samplingOptions_(samplingOptions)
+{
+    if (paint) {
+        paint_ = *paint;
+    }
+}
+
+void PixelMapOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
+{
+    if (!renderImage_) {
+        renderImage_ = RSPixelMapUtil::ExtractSkImage(pixelmap_);
+    }
+    canvas.drawImage(renderImage_, left_, top_, samplingOptions_, &paint_);
+}
+#else
 PixelMapOpItem::PixelMapOpItem(
     const std::shared_ptr<Media::PixelMap>& pixelmap, float left, float top, const SkPaint* paint)
     : OpItemWithPaint(sizeof(PixelMapOpItem)), pixelmap_(pixelmap), left_(left), top_(top)
@@ -335,8 +360,6 @@ PixelMapOpItem::PixelMapOpItem(
     }
 }
 
-#ifdef NEW_SKIA
-#else
 void PixelMapOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
     if (!renderImage_) {
@@ -346,6 +369,27 @@ void PixelMapOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 }
 #endif
 
+#ifdef NEW_SKIA
+PixelMapRectOpItem::PixelMapRectOpItem(
+    const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src, const SkRect& dst,
+    const SkSamplingOptions& samplingOptions, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint)
+    : OpItemWithPaint(sizeof(PixelMapRectOpItem)), pixelmap_(pixelmap), src_(src), dst_(dst),
+      samplingOptions_(samplingOptions),
+      constraint_(constraint)
+{
+    if (paint) {
+        paint_ = *paint;
+    }
+}
+
+void PixelMapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
+{
+    if (!renderImage_) {
+        renderImage_ = RSPixelMapUtil::ExtractSkImage(pixelmap_);
+    }
+    canvas.drawImageRect(renderImage_, src_, dst_, samplingOptions_, &paint_, constraint_);
+}
+#else
 PixelMapRectOpItem::PixelMapRectOpItem(
     const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src, const SkRect& dst, const SkPaint* paint)
     : OpItemWithPaint(sizeof(PixelMapRectOpItem)), pixelmap_(pixelmap), src_(src), dst_(dst)
@@ -355,8 +399,6 @@ PixelMapRectOpItem::PixelMapRectOpItem(
     }
 }
 
-#ifdef NEW_SKIA
-#else
 void PixelMapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
     if (!renderImage_) {
@@ -366,6 +408,24 @@ void PixelMapRectOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 }
 #endif
 
+#ifdef NEW_SKIA
+BitmapNineOpItem::BitmapNineOpItem(const sk_sp<SkImage> bitmapInfo, const SkIRect& center, const SkRect& rectDst,
+        SkFilterMode filter, const SkPaint* paint)
+    : OpItemWithPaint(sizeof(BitmapNineOpItem)), center_(center), rectDst_(rectDst), filter_(filter)
+{
+    if (bitmapInfo != nullptr) {
+        bitmapInfo_ = bitmapInfo;
+    }
+    if (paint) {
+        paint_ = *paint;
+    }
+}
+
+void BitmapNineOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
+{
+    canvas.drawImageNine(bitmapInfo_.get(), center_, rectDst_, filter_, &paint_);
+}
+#else
 BitmapNineOpItem::BitmapNineOpItem(
     const sk_sp<SkImage> bitmapInfo, const SkIRect& center, const SkRect& rectDst, const SkPaint* paint)
     : OpItemWithPaint(sizeof(BitmapNineOpItem)), center_(center), rectDst_(rectDst)
@@ -378,8 +438,6 @@ BitmapNineOpItem::BitmapNineOpItem(
     }
 }
 
-#ifdef NEW_SKIA
-#else
 void BitmapNineOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
     canvas.drawImageNine(bitmapInfo_, center_, rectDst_, &paint_);
@@ -1226,6 +1284,9 @@ bool PixelMapOpItem::Marshalling(Parcel& parcel) const
                    RSMarshallingHelper::Marshalling(parcel, left_) &&
                    RSMarshallingHelper::Marshalling(parcel, top_) &&
                    RSMarshallingHelper::Marshalling(parcel, paint_);
+#ifdef NEW_SKIA
+    success = success && RSMarshallingHelper::Marshalling(parcel, samplingOptions_);
+#endif
     if (!success) {
         ROSEN_LOGE("PixelMapOpItem::Marshalling failed!");
         return false;
@@ -1243,11 +1304,19 @@ OpItem* PixelMapOpItem::Unmarshalling(Parcel& parcel)
                    RSMarshallingHelper::Unmarshalling(parcel, left) &&
                    RSMarshallingHelper::Unmarshalling(parcel, top) &&
                    RSMarshallingHelper::Unmarshalling(parcel, paint);
+#ifdef NEW_SKIA
+    SkSamplingOptions samplingOptions;
+    success = success && RSMarshallingHelper::Unmarshalling(parcel, samplingOptions);
+#endif
     if (!success) {
         ROSEN_LOGE("PixelMapOpItem::Unmarshalling failed!");
         return nullptr;
     }
+#ifdef NEW_SKIA
+    return new PixelMapOpItem(pixelmap, left, top, samplingOptions, &paint);
+#else
     return new PixelMapOpItem(pixelmap, left, top, &paint);
+#endif
 }
 
 // PixelMapRectOpItem
@@ -1257,6 +1326,10 @@ bool PixelMapRectOpItem::Marshalling(Parcel& parcel) const
                    RSMarshallingHelper::Marshalling(parcel, src_) &&
                    RSMarshallingHelper::Marshalling(parcel, dst_) &&
                    RSMarshallingHelper::Marshalling(parcel, paint_);
+#ifdef NEW_SKIA
+    success = success && RSMarshallingHelper::Marshalling(parcel, samplingOptions_);
+    success = success && RSMarshallingHelper::Marshalling(parcel, static_cast<int32_t>(constraint_));
+#endif
     if (!success) {
         ROSEN_LOGE("PixelMapRectOpItem::Marshalling failed!");
         return false;
@@ -1274,11 +1347,22 @@ OpItem* PixelMapRectOpItem::Unmarshalling(Parcel& parcel)
                    RSMarshallingHelper::Unmarshalling(parcel, rectSrc) &&
                    RSMarshallingHelper::Unmarshalling(parcel, rectDst) &&
                    RSMarshallingHelper::Unmarshalling(parcel, paint);
+#ifdef NEW_SKIA
+    SkSamplingOptions samplingOptions;
+    int32_t constraint;
+    success = success && RSMarshallingHelper::Unmarshalling(parcel, samplingOptions);
+    success = success && RSMarshallingHelper::Unmarshalling(parcel, constraint);
+#endif
     if (!success) {
         ROSEN_LOGE("PixelMapRectOpItem::Unmarshalling failed!");
         return nullptr;
     }
+#ifdef NEW_SKIA
+    return new PixelMapRectOpItem(pixelmap, rectSrc, rectDst,
+        samplingOptions, &paint, static_cast<SkCanvas::SrcRectConstraint>(constraint));
+#else
     return new PixelMapRectOpItem(pixelmap, rectSrc, rectDst, &paint);
+#endif
 }
 
 // BitmapNineOpItem
@@ -1288,6 +1372,9 @@ bool BitmapNineOpItem::Marshalling(Parcel& parcel) const
                    RSMarshallingHelper::Marshalling(parcel, center_) &&
                    RSMarshallingHelper::Marshalling(parcel, rectDst_) &&
                    RSMarshallingHelper::Marshalling(parcel, paint_);
+#ifdef NEW_SKIA
+    success = success && RSMarshallingHelper::Marshalling(parcel, static_cast<int32_t>(filter_));
+#endif
     if (!success) {
         ROSEN_LOGE("BitmapNineOpItem::Marshalling failed!");
         return false;
@@ -1305,11 +1392,20 @@ OpItem* BitmapNineOpItem::Unmarshalling(Parcel& parcel)
                    RSMarshallingHelper::Unmarshalling(parcel, center) &&
                    RSMarshallingHelper::Unmarshalling(parcel, rectDst) &&
                    RSMarshallingHelper::Unmarshalling(parcel, paint);
+#ifdef NEW_SKIA
+    int32_t fliter;
+    success = success && RSMarshallingHelper::Unmarshalling(parcel, fliter);
+#endif
     if (!success) {
         ROSEN_LOGE("BitmapNineOpItem::Unmarshalling failed!");
         return nullptr;
     }
+#ifdef NEW_SKIA
+    return new BitmapNineOpItem(bitmapInfo, center, rectDst,
+        static_cast<SkFilterMode>(fliter), &paint);
+#else
     return new BitmapNineOpItem(bitmapInfo, center, rectDst, &paint);
+#endif
 }
 
 // AdaptiveRRectOpItem

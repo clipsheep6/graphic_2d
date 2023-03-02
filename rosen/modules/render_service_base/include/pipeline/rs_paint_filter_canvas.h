@@ -93,6 +93,7 @@ private:
 
     Env envDefault = { Color(0) };
     std::stack<Env> envStack_ = std::stack<Env>({envDefault});
+
     std::atomic_bool isHighContrastEnabled_ { false };
     bool isCacheEnabled_ { false };
     SkRect visibleRect_ = SkRect::MakeEmpty();

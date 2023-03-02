@@ -122,6 +122,8 @@ void RSPaintFilterCanvas::RestoreCanvasAndAlpha(std::pair<int, int>& count)
     RestoreAlphaToCount(count.second);
 }
 
+
+
 int RSPaintFilterCanvas::SaveEnv()
 {
     // make a copy of top of stack

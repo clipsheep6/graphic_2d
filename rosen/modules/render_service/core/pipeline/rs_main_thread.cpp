@@ -87,6 +87,7 @@ constexpr int32_t ANIMATION_START               = 0;
 constexpr int32_t ANIMATION_COMPLETE            = 1;
 bool g_requestResschedReport    = true;
 bool g_animationTimeout         = false;
+bool g_isMutiWindowTimeout      = false;
 #endif
 const std::map<int, int32_t> BLUR_CNT_TO_BLUR_CODE {
     { 1, 10021 },
@@ -1026,7 +1027,23 @@ void RSMainThread::ResSchedDataCompleteReport(bool needRequestNextVsync)
             RS_LOGD("Animate :: animation complete event to soc perf.");
             g_requestResschedReport = true;
             g_animationTimeout = false;
+            g_isMutiWindowTimeout = false;
             animateStartTimestamp_ = 0;
+            previousPerfTimestamp_ = 0;
+            return;
+        }
+        // Under loop animation and multi-window status
+        if (appWindowNum_ >= MULTI_WINDOW_PERF_START_NUM) {
+            if (previousPerfTimestamp_ == 0 && g_isMutiWindowTimeout == false) {
+                previousPerfTimestamp_ = timestamp_;
+            }
+            if (timestamp_ - previousPerfTimestamp_ > CLICK_ANIMATION_DURATION && g_isMutiWindowTimeout == false) {
+                OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE_CLICK_ANIMATION,
+                    CLICK_ANIMATION_COMPLETE, payload);
+                RS_LOGD("Animate :: animation multi_window timeout complete event to soc perf.");
+                g_isMutiWindowTimeout = true;
+                previousPerfTimestamp_ = 0;
+            }
         }
     }
 #endif
@@ -1465,6 +1482,7 @@ void RSMainThread::PerfMultiWindow()
 void RSMainThread::SetAppWindowNum(uint32_t num)
 {
     appWindowNum_ = num;
+    g_isMutiWindowTimeout = false;
 }
 
 void RSMainThread::AddActivePid(pid_t pid)

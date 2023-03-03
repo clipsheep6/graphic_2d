@@ -43,6 +43,9 @@ ohos_systemtest("RSBaseRenderEngineTest") {
   deps = [ ":rs_test_common" ]
   defines = []
   defines += gpu_defines
+  if (use_new_skia) {
+    defines += [ "NEW_SKIA" ]
+  }
 }
 
 ## Build RSDropFrameProcessorSystemTest
@@ -52,6 +55,9 @@ ohos_systemtest("RSDropFrameProcessorSystemTest") {
   deps = [ ":rs_test_common" ]
   defines = []
   defines += gpu_defines
+  if (use_new_skia) {
+    defines += [ "NEW_SKIA" ]
+  }
 }
 
 ## Build RSRenderServiceTest
@@ -61,6 +67,9 @@ ohos_systemtest("RSRenderServiceTest") {
   deps = [ ":rs_test_common" ]
   defines = []
   defines += gpu_defines
+  if (use_new_skia) {
+    defines += [ "NEW_SKIA" ]
+  }
 }
 
 if (graphic_standard_feature_rs_enable_uni_render) {
@@ -72,6 +81,9 @@ if (graphic_standard_feature_rs_enable_uni_render) {
     external_deps = [ "init:libbegetutil" ]
     defines = []
     defines += gpu_defines
+    if (use_new_skia) {
+      defines += [ "NEW_SKIA" ]
+    }
   }
 }
 
@@ -101,6 +113,9 @@ ohos_static_library("rs_test_common") {
   testonly = true
   defines = []
   defines += gpu_defines
+  if (use_new_skia) {
+    defines += [ "NEW_SKIA" ]
+  }
 
   public_configs = [ ":rs_test_common_public_config" ]
 

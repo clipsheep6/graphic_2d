@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/test.gni")
+import("//foundation/arkui/ace_engine/ace_config.gni")
 
 module_output_path = "graphic/rosen_engine/render_service_client/modifier"
 
@@ -35,6 +36,10 @@ ohos_unittest("RSRenderServiceClientModifierTest") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
     "//third_party/googletest:gtest_main",
   ]
+
+  if (use_new_skia) {
+    defines = [ "NEW_SKIA" ]
+  }
 
   subsystem_name = "graphic"
   external_deps = [ "c_utils:utils" ]

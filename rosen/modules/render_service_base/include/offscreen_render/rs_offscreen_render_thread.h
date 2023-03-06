@@ -38,8 +38,6 @@ private:
     RSOffscreenRenderThread& operator=(const RSOffscreenRenderThread&);
     RSOffscreenRenderThread& operator=(const RSOffscreenRenderThread&&);
 
-    std::mutex mutex_;
-
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
 };

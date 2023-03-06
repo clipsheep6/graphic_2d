@@ -25,14 +25,12 @@ RSOffscreenRenderThread& RSOffscreenRenderThread::Instance()
 
 void RSOffscreenRenderThread::Start()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     runner_ = AppExecFwk::EventRunner::Create("RSOffscreenRender");
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
 }
 
 void RSOffscreenRenderThread::PostTask(const std::function<void()>& task)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     if (handler_) {
         handler_->PostTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
@@ -40,18 +38,13 @@ void RSOffscreenRenderThread::PostTask(const std::function<void()>& task)
 
 void RSOffscreenRenderThread::Stop()
 {
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (handler_) {
-            handler_->RemoveAllEvents();
-            handler_ = nullptr;
-        }
-
-        if (runner_) {
-            runner_->Stop();
-        }
+    if (handler_) {
+        handler_->RemoveAllEvents();
+        handler_ = nullptr;
     }
 
-    ROSEN_LOGD("RSOffscreenRenderThread stopped");
+    if (runner_) {
+        runner_->Stop();
+    }
 }
 }

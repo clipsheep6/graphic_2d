@@ -182,6 +182,15 @@ public:
         return curAllSurfaces_;
     }
 
+    void SetDirtySurfaceProp(bool hasDirtySurface)
+    {
+        hasDirtySurface_ = hasDirtySurface;
+    }
+    bool GetDirtySurfaceProp() const
+    {
+        return hasDirtySurface_;
+    }
+
     void UpdateRotation();
     bool IsRotationChanged() const;
 private:
@@ -192,6 +201,7 @@ private:
     bool forceSoftComposite_ { false };
     bool isMirroredDisplay_ = false;
     bool isSecurityDisplay_ = false;
+    bool hasDirtySurface_ = false;
     WeakPtr mirrorSource_;
     float lastRotation_ = 0.f;
 

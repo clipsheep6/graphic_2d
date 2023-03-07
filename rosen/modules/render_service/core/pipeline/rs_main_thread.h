@@ -164,6 +164,8 @@ private:
     void ProcessCommand();
     void Animate(uint64_t timestamp);
     void ConsumeAndUpdateAllNodes();
+    void ResSchedDataStartReport(bool needRequestNextVsync);
+    void ResSchedDataCompleteReport(bool needRequestNextVsync);
     void CollectInfoForHardwareComposer();
     void ReleaseAllNodesBuffer();
     void Render();
@@ -221,6 +223,8 @@ private:
     uint64_t lastAnimateTimestamp_ = 0;
     uint64_t prePerfTimestamp_ = 0;
     uint64_t lastCleanCacheTimestamp_ = 0;
+    uint64_t animateStartTimestamp_ = 0;
+    uint64_t previousPerfTimestamp_ = 0;
     std::unordered_map<uint32_t, sptr<IApplicationAgent>> applicationAgentMap_;
 
     std::shared_ptr<RSContext> context_;

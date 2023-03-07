@@ -39,6 +39,7 @@ public:
     virtual double GetAlphabeticBaseline();
     virtual double GetIdeographicBaseline();
     virtual bool DidExceedMaxLines();
+    virtual size_t GetLineCount();
     virtual void Layout(double width);
     virtual void Paint(Canvas* canvas, double x, double y);
     virtual std::vector<TypographyProperties::TextBox> GetRectsForRange(

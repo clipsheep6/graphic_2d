@@ -63,6 +63,11 @@ double Typography::GetIdeographicBaseline()
     return typography_->GetIdeographicBaseline();
 }
 
+size_t Typography::GetLineCount()
+{
+    return typography_->GetLineCount();
+}
+
 bool Typography::DidExceedMaxLines()
 {
     return typography_->DidExceedMaxLines();

@@ -183,7 +183,7 @@ void SKImageChain::Draw()
     canvas_->save();
     canvas_->resetMatrix();
 #if defined(NEW_SKIA)
-    // todo
+    canvas_->drawImage(image_.get(), 0, 0, SkSamplingOptions(), &paint);
 #else
     canvas_->drawImage(image_.get(), 0, 0, &paint);
 #endif

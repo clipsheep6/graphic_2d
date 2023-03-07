@@ -42,7 +42,7 @@ void BootAnimation::OnDraw(SkCanvas* canvas, int32_t curNo)
     SkRect rect;
     rect.setXYWH(pointX_, pointY_, realWidth_, realHeight_);
 #ifdef NEW_SKIA
-    // todo
+    canvas->drawImageRect(image.get(), rect, SkSamplingOptions(), &paint);
 #else
     canvas->drawImageRect(image.get(), rect, &paint);
 #endif

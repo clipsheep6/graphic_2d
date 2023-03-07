@@ -26,6 +26,7 @@
 
 namespace OHOS {
 namespace Rosen {
+class AnimationFinishCallback;
 class RSAnimation;
 class RSPropertyBase;
 class RSImplicitAnimationParam;
@@ -38,9 +39,15 @@ public:
     RSImplicitAnimator() = default;
     virtual ~RSImplicitAnimator() = default;
 
-    void OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
+    // open implicit animation with given animation options and finish callback
+    int OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
         const RSAnimationTimingCurve& timingCurve, const std::function<void()>& finishCallback);
-    void OpenImplicitAnimation(const std::function<void()>& finishCallback);
+    // open implicit animation with current options and given finish callback
+    int OpenImplicitAnimation(const std::function<void()>& finishCallback);
+    // open implicit animation with current callback and given timing protocol & curve
+    int OpenImplicitAnimation(
+        const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve);
+    // close implicit animation and return all animations
     std::vector<std::shared_ptr<RSAnimation>> CloseImplicitAnimation();
 
     void BeginImplicitKeyFrameAnimation(float fraction, const RSAnimationTimingCurve& timingCurve);
@@ -62,6 +69,8 @@ public:
     std::shared_ptr<RSAnimation> CreateImplicitTransition(RSNode& target);
 
 private:
+    int OpenImplicitAnimationInner(const RSAnimationTimingProtocol& timingProtocol,
+        const RSAnimationTimingCurve& timingCurve, const std::shared_ptr<AnimationFinishCallback>& finishCallback);
     void EndImplicitAnimation();
     void BeginImplicitCurveAnimation();
     void BeginImplicitSpringAnimation();
@@ -83,7 +92,7 @@ private:
         implicitAnimationDisabled_ = false;
     }
 
-    std::stack<std::tuple<RSAnimationTimingProtocol, RSAnimationTimingCurve, std::function<void()>>>
+    std::stack<std::tuple<RSAnimationTimingProtocol, RSAnimationTimingCurve, std::shared_ptr<AnimationFinishCallback>>>
         globalImplicitParams_;
     std::stack<std::shared_ptr<RSImplicitAnimationParam>> implicitAnimationParams_;
     std::stack<std::vector<std::pair<std::shared_ptr<RSAnimation>, NodeId>>> implicitAnimations_;

@@ -26,8 +26,8 @@
 
 namespace OHOS {
 namespace Rosen {
-void RSImplicitAnimator::OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
-    const RSAnimationTimingCurve& timingCurve, const std::function<void()>& finishCallback)
+int RSImplicitAnimator::OpenImplicitAnimationInner(const RSAnimationTimingProtocol& timingProtocol,
+    const RSAnimationTimingCurve& timingCurve, const std::shared_ptr<AnimationFinishCallback>& finishCallback)
 {
     globalImplicitParams_.push({ timingProtocol, timingCurve, finishCallback });
     implicitAnimations_.push({});
@@ -44,19 +44,49 @@ void RSImplicitAnimator::OpenImplicitAnimation(const RSAnimationTimingProtocol& 
             break;
         default:
             ROSEN_LOGE("Wrong type of timing curve!");
-            return;
+            return 0;
+    }
+    return globalImplicitParams_.size() - 1;
+}
+
+int RSImplicitAnimator::OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
+    const RSAnimationTimingCurve& timingCurve, const std::function<void()>& finishCallback)
+{
+    std::shared_ptr<AnimationFinishCallback> animationFinishCallback;
+    if (finishCallback != nullptr) {
+        animationFinishCallback = std::make_shared<AnimationFinishCallback>(finishCallback);
+    }
+    return OpenImplicitAnimationInner(timingProtocol, timingCurve, animationFinishCallback);
+}
+
+int RSImplicitAnimator::OpenImplicitAnimation(const std::function<void()>& finishCallback)
+{
+    std::shared_ptr<AnimationFinishCallback> animationFinishCallback;
+    if (finishCallback != nullptr) {
+        animationFinishCallback = std::make_shared<AnimationFinishCallback>(finishCallback);
+    }
+    if (globalImplicitParams_.empty()) {
+        // current implicit animation params is empty, use default params
+        static RSAnimationTimingProtocol fallbackProtocol(0);
+        return OpenImplicitAnimationInner(fallbackProtocol, RSAnimationTimingCurve::LINEAR, animationFinishCallback);
+    } else {
+        // copy current implicit animation params and replace finish callback
+        [[maybe_unused]] auto& [protocol, curve, unused] = globalImplicitParams_.top();
+        return OpenImplicitAnimationInner(protocol, curve, animationFinishCallback);
     }
 }
-void RSImplicitAnimator::OpenImplicitAnimation(const std::function<void()>& finishCallback)
+
+int RSImplicitAnimator::OpenImplicitAnimation(
+    const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve)
 {
     if (globalImplicitParams_.empty()) {
-        ROSEN_LOGE("Failed to open implicit animation, need to set implicit animation params firstly!");
-        OpenImplicitAnimation({}, {}, finishCallback);
-        return;
+        // current implicit animation params is empty, use empty
+        return OpenImplicitAnimationInner(timingProtocol, timingCurve, nullptr);
+    } else {
+        // copy current implicit animation callback and replace timing protocol and curve
+        [[maybe_unused]] auto& [protocol, curve, callback] = globalImplicitParams_.top();
+        return OpenImplicitAnimationInner(timingProtocol, timingCurve, callback);
     }
-    // copy current implicit animation params and replace finish callback
-    [[maybe_unused]] auto& [protocol, curve, unused] = globalImplicitParams_.top();
-    OpenImplicitAnimation(protocol, curve, finishCallback);
 }
 
 std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnimation()
@@ -67,7 +97,7 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
         return {};
     }
 
-    auto finishCallback = std::get<std::function<void()>>(globalImplicitParams_.top());
+    auto finishCallback = std::get<std::shared_ptr<AnimationFinishCallback>>(globalImplicitParams_.top());
     if (implicitAnimations_.top().empty()) {
         ROSEN_LOGD("No implicit animations created!");
         if (finishCallback == nullptr) {
@@ -93,19 +123,14 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
         target->AddAnimation(keyframeAnimation);
     }
 
-    std::shared_ptr<AnimationFinishCallback> animationFinishCallback;
-    if (finishCallback != nullptr) {
-        animationFinishCallback = std::make_shared<AnimationFinishCallback>(finishCallback);
-    }
-
     std::vector<std::shared_ptr<RSAnimation>> resultAnimations;
     for (const auto& [animation, nodeId] : currentAnimations) {
         if (animation == nullptr) {
             continue;
         }
 
-        if (animationFinishCallback != nullptr) {
-            animation->SetFinishCallback(animationFinishCallback);
+        if (finishCallback != nullptr) {
+            animation->SetFinishCallback(finishCallback);
         }
 
         resultAnimations.emplace_back(animation);

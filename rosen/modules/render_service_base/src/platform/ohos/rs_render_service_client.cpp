@@ -99,6 +99,15 @@ bool RSRenderServiceClient::GetUniRenderEnabled()
     return renderService->GetUniRenderEnabled();
 }
 
+MemoryGraphic RSRenderServiceClient::GetMemoryGraphic(int pid)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return MemoryGraphic {};
+    }
+    return renderService->GetMemoryGraphic(pid);
+}
+
 bool RSRenderServiceClient::CreateNode(const RSSurfaceRenderNodeConfig& config)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();

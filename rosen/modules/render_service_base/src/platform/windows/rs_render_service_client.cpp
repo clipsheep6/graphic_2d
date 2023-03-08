@@ -49,6 +49,11 @@ bool RSRenderServiceClient::GetUniRenderEnabled()
     return {};
 }
 
+MemoryGraphic RSRenderServiceClient::GetMemoryGraphic()
+{
+    return {};
+}
+
 bool RSRenderServiceClient::CreateNode(const RSSurfaceRenderNodeConfig& config)
 {
     return {};

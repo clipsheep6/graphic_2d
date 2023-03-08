@@ -164,6 +164,9 @@ private:
     void ProcessCommand();
     void Animate(uint64_t timestamp);
     void ConsumeAndUpdateAllNodes();
+    void ResSchedDataStartReport(bool needRequestNextVsync);
+    void ResSchedDataCompleteReport(bool needRequestNextVsync);
+    void ResSchedMultiWindowReport();
     void CollectInfoForHardwareComposer();
     void ReleaseAllNodesBuffer();
     void Render();
@@ -221,6 +224,7 @@ private:
     uint64_t lastAnimateTimestamp_ = 0;
     uint64_t prePerfTimestamp_ = 0;
     uint64_t lastCleanCacheTimestamp_ = 0;
+    uint64_t previousPerfTimestamp_ = 0;
     std::unordered_map<uint32_t, sptr<IApplicationAgent>> applicationAgentMap_;
 
     std::shared_ptr<RSContext> context_;
@@ -262,6 +266,8 @@ private:
     std::string focusAppAbilityName_ = "";
     uint32_t appWindowNum_ = 0;
     uint32_t requestNextVsyncNum_ = 0;
+    bool requestResschedReport_ = true;
+    bool isMultiWindowTimeout_ = false;
 
     std::shared_ptr<RSBaseRenderEngine> renderEngine_;
     std::shared_ptr<RSBaseRenderEngine> uniRenderEngine_;

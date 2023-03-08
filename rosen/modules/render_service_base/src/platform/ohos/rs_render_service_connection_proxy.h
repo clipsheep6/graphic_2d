@@ -35,6 +35,7 @@ public:
 
     int32_t SetRenderModeChangeCallback(sptr<RSIRenderModeChangeCallback> callback) override;
     void UpdateRenderMode(bool isUniRender) override;
+    MemoryGraphic GetMemoryGraphic(int pid) override;
     bool GetUniRenderEnabled() override;
     bool CreateNode(const RSSurfaceRenderNodeConfig& config) override;
     sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) override;

@@ -29,6 +29,7 @@
 #include "ipc_callbacks/iapplication_agent.h"
 #include "ipc_callbacks/screen_change_callback.h"
 #include "ipc_callbacks/surface_capture_callback.h"
+#include "memory/MemoryGraphic.h"
 #include "platform/drawing/rs_surface.h"
 #include "rs_irender_client.h"
 #include "screen_manager/rs_screen_capability.h"
@@ -115,6 +116,8 @@ public:
     ScreenPowerStatus GetScreenPowerStatus(ScreenId id);
 
     RSScreenData GetScreenData(ScreenId id);
+
+    MemoryGraphic GetMemoryGraphic(int pid);
 
     int32_t GetScreenBacklight(ScreenId id);
 

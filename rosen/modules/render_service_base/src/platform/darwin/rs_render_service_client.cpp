@@ -44,6 +44,11 @@ void RSRenderServiceClient::UpdateRenderMode(bool isUniRender)
 {
 }
 
+MemoryGraphic RSRenderServiceClient::GetMemoryGraphic()
+{
+    return {};
+}
+
 bool RSRenderServiceClient::GetUniRenderEnabled()
 {
     return {};

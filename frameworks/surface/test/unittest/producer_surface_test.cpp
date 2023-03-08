@@ -17,7 +17,7 @@
 #include <surface.h>
 #include <consumer_surface.h>
 #include "buffer_consumer_listener.h"
-
+#include "buffer_log.h"
 using namespace testing;
 using namespace testing::ext;
 
@@ -46,6 +46,11 @@ public:
     static inline sptr<IConsumerSurface> csurf = nullptr;
     static inline sptr<IBufferProducer> producer = nullptr;
     static inline sptr<Surface> pSurface = nullptr;
+
+    static inline GSError OnBufferRelease(sptr<SurfaceBuffer> &buffer)
+{
+    return GSERROR_OK;
+}
 };
 
 void ProducerSurfaceTest::SetUpTestCase()
@@ -55,6 +60,10 @@ void ProducerSurfaceTest::SetUpTestCase()
     csurf->RegisterConsumerListener(listener);
     producer = csurf->GetProducer();
     pSurface = Surface::CreateSurfaceAsProducer(producer);
+    GSError error = pSurface->RegisterReleaseListener(OnBufferRelease);
+    if (error != GSERROR_OK) {
+        BLOGE("RegisterReleaseListener failed");
+    }
 }
 
 void ProducerSurfaceTest::TearDownTestCase()

@@ -21,6 +21,8 @@
 #include "sync_fence.h"
 #include "sync_fence_tracker.h"
 
+#include "message_option.h"
+
 #define DEFINE_MESSAGE_VARIABLES(arg, ret, opt, LOGE) \
     MessageOption opt;                                \
     MessageParcel arg;                                \
@@ -129,9 +131,20 @@ GSError BufferClientProducer::DetachBuffer(sptr<SurfaceBuffer>& buffer)
     return GSERROR_NOT_SUPPORT;
 }
 
-GSError BufferClientProducer::RegisterReleaseListener(OnReleaseFunc func)
+GSError BufferClientProducer::RegisterReleaseListener(sptr<IProducerListener> listener)
 {
-    return GSERROR_NOT_SUPPORT;
+    DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
+    option.SetFlags(MessageOption::TF_ASYNC);
+
+    arguments.WriteRemoteObject(listener->AsObject());
+
+    SEND_REQUEST(BUFFER_PRODUCER_REGISTER_RELEASE_LISTENER, arguments, reply, option);
+    int32_t ret = reply.ReadInt32();
+    if (ret != GSERROR_OK) {
+        BLOGN_FAILURE("Remote return %{public}d", ret);
+        return (GSError)ret;
+    }
+    return GSERROR_OK;
 }
 
 uint32_t BufferClientProducer::GetQueueSize()

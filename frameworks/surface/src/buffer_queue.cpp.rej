@@ -1,0 +1,41 @@
+diff a/frameworks/surface/src/buffer_queue.cpp b/frameworks/surface/src/buffer_queue.cpp	(rejected hunks)
+@@ -529,14 +529,14 @@ GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, const sptr<SyncF
+         }
+     }
+ 
+-    if (onBufferRelease != nullptr) {
+-        ScopedBytrace func("OnBufferRelease");
+-        sptr<SurfaceBuffer> buf = buffer;
+-        auto sret = onBufferRelease(buf);
+-        if (sret == GSERROR_OK) {   // need to check why directly return?
+-            return sret;
+-        }
+-    }
++    // if (onBufferRelease != nullptr) {
++    //     ScopedBytrace func("OnBufferRelease");
++    //     sptr<SurfaceBuffer> buf = buffer;
++    //     auto sret = onBufferRelease(buf);
++    //     if (sret == GSERROR_OK) {   // need to check why directly return?
++    //         return sret;
++    //     }
++    // }
+ 
+     std::lock_guard<std::mutex> lockGuard(mutex_);
+     if (bufferQueueCache_.find(sequence) == bufferQueueCache_.end()) {
+@@ -555,6 +555,16 @@ GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, const sptr<SyncF
+             sequence, uniqueId_, fence->Get());
+     }
+     waitReqCon_.notify_all();
++
++    BLOGE("lmz BufferQueue Release buffer");
++    if (producerListener_ != nullptr) {
++        BLOGE("lmz BufferQueue Release buffer producerListener_ != nullptr");
++        ScopedBytrace func("onBufferReleasedForProducer");
++        if (producerListener_->OnBufferReleased() != GSERROR_OK) {
++            BLOGE("lmz BufferQueue Release buffer producerListener_->OnBufferReleased() XXX");
++            BLOGN_FAILURE_ID(sequence, "OnBufferReleased failed, Queue id: %{public}" PRIu64 "", uniqueId_);
++        }
++    }
+     return GSERROR_OK;
+ }
+ 

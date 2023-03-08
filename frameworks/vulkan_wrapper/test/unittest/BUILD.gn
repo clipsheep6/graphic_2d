@@ -30,6 +30,9 @@ ohos_unittest("vulkan_wrapper_unit_test") {
     "vulkan_wrapper_unit_test.cpp",
   ]
   deps = [ ":vulkan_wrapper_test_common" ]
+  if (use_new_skia) {
+    defines = [ "NEW_SKIA" ]
+  }
 }
 
 config("vulkan_wrapper_test_common_public_config") {

@@ -40,6 +40,9 @@ ohos_fuzztest("RSNodeFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "rsnode_fuzzer.cpp" ]
+  if (use_new_skia) {
+    defines = [ "NEW_SKIA" ]
+  }
 }
 
 ###############################################################################

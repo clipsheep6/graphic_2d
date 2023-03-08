@@ -18,12 +18,16 @@
 #include <memory>
 #if defined(NEW_SKIA)
 #include "modules/svg/include/SkSVGDOM.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPicture.h"
 #else
 #include "experimental/svg/model/SkSVGDOM.h"
-#endif
 #include "third_party/skia/include/core/SkPaint.h"
 #include "third_party/skia/include/core/SkPath.h"
 #include "third_party/skia/include/core/SkPicture.h"
+#endif
+
 
 #include "common/rs_macros.h"
 #include "transaction/rs_marshalling_helper.h"

@@ -40,6 +40,9 @@ ohos_fuzztest("RSUiSurfaceFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "rsuisurface_fuzzer.cpp" ]
+  if (use_new_skia) {
+    defines = [ "NEW_SKIA" ]
+  }
 }
 
 ###############################################################################

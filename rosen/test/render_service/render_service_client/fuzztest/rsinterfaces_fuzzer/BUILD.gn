@@ -43,6 +43,10 @@ ohos_fuzztest("RSInterfacesFuzzTest") {
   ]
 
   sources = [ "rsinterfaces_fuzzer.cpp" ]
+  
+  if (use_new_skia) {
+    defines = [ "NEW_SKIA" ]
+  }
 }
 
 ###############################################################################

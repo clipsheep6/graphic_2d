@@ -94,6 +94,10 @@ ohos_shared_library("libeffectchain") {
     install_enable = false
   }
 
+  if (defined(graphic_2d_ext_configs.vendor_root)) {
+    install_enable = false
+  }
+
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 }

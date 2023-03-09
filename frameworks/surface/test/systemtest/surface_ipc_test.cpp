@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <chrono>
+#include <ostream>
 #include <thread>
 #include <unistd.h>
 #include <gtest/gtest.h>
@@ -40,6 +41,11 @@ public:
     static inline int32_t ipcSystemAbilityID = 34156;
     static inline BufferRequestConfig requestConfig = {};
     static inline BufferFlushConfig flushConfig = {};
+    static inline GSError OnBufferRelease(sptr<SurfaceBuffer> &buffer)
+{
+    std::cout<<"lmz success" << std::endl;
+    return GSERROR_OK;
+}
 };
 
 void SurfaceIPCTest::SetUpTestCase()
@@ -125,7 +131,10 @@ pid_t SurfaceIPCTest::ChildProcessMain()
 
     auto producer = iface_cast<IBufferProducer>(robj);
     auto pSurface = Surface::CreateSurfaceAsProducer(producer);
-
+    GSError error = pSurface->RegisterReleaseListener(OnBufferRelease);
+    if (error != GSERROR_OK) {
+        std::cout<<"lmz RegisterReleaseListener failed" << std::endl;;
+    }
     sptr<SurfaceBuffer> buffer = nullptr;
     int releaseFence = -1;
     auto sRet = pSurface->RequestBuffer(buffer, releaseFence, requestConfig);

@@ -1,0 +1,13 @@
+diff a/frameworks/surface/test/unittest/producer_surface_test.cpp b/frameworks/surface/test/unittest/producer_surface_test.cpp	(rejected hunks)
+@@ -46,6 +46,11 @@ public:
+     static inline sptr<Surface> csurf = nullptr;
+     static inline sptr<IBufferProducer> producer = nullptr;
+     static inline sptr<Surface> pSurface = nullptr;
++
++    static inline GSError OnBufferRelease(sptr<SurfaceBuffer> &buffer)
++{
++    return GSERROR_OK;
++}
+ };
+ 
+ void ProducerSurfaceTest::SetUpTestCase()

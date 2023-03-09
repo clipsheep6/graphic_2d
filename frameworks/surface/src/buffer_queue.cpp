@@ -551,6 +551,12 @@ GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, const sptr<SyncF
         }
     }
 
+    if (producerListener_ != nullptr) {
+        ScopedBytrace func("onBufferReleasedForProducer");
+        if (producerListener_->OnBufferReleased() != GSERROR_OK) {
+            BLOGN_FAILURE_ID(sequence, "OnBufferReleased failed, Queue id: %{public}" PRIu64 "", uniqueId_);
+        }
+    }
     return GSERROR_OK;
 }
 
@@ -789,6 +795,12 @@ GSError BufferQueue::UnregisterConsumerListener()
 GSError BufferQueue::RegisterReleaseListener(OnReleaseFunc func)
 {
     onBufferRelease = func;
+    return GSERROR_OK;
+}
+
+GSError BufferQueue::RegisterProducerReleaseListener(sptr<IProducerListener> listener)
+{
+    producerListener_ = listener;
     return GSERROR_OK;
 }
 

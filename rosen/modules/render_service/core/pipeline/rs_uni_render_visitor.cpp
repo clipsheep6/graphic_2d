@@ -1914,6 +1914,8 @@ void RSUniRenderVisitor::PrepareOffscreenRender(RSRenderNode& node)
         return;
     }
     auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface_.get());
+    offscreenCanvas->SetHighContrast(canvas_->isHighContrastEnabled());
+    
     // backup current canvas and replace with offscreen canvas
     canvasBackup_ = std::move(canvas_);
     canvas_ = std::move(offscreenCanvas);

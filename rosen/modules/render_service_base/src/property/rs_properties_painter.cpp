@@ -467,12 +467,6 @@ void RSPropertiesPainter::DrawFrame(const RSProperties& properties, RSPaintFilte
         canvas.concat(mat);
     }
     auto frameRect = Rect2SkRect(properties.GetFrameRect());
-    // Generate or clear cache on demand
-    if (canvas.isCacheEnabled()) {
-        cmds->GenerateCache(canvas.GetSurface());
-    } else {
-        cmds->ClearCache();
-    }
     cmds->Playback(canvas, &frameRect);
 }
 

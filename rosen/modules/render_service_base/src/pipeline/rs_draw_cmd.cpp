@@ -38,50 +38,6 @@ void SimplifyPaint(uint32_t color, SkPaint* paint)
 }
 } // namespace
 
-std::unique_ptr<OpItem> OpItem::GenerateCachedOpItem(SkSurface* surface) const
-{
-    // check if this opItem can be cached
-    auto optionalBounds = GetCacheBounds();
-    if (!optionalBounds.has_value() || optionalBounds.value().isEmpty()) {
-        return nullptr;
-    }
-    auto& bounds = optionalBounds.value();
-
-    // create surface & canvas to draw onto
-    auto offscreenInfo =
-        SkImageInfo::Make(bounds.width(), bounds.height(), kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-    sk_sp<SkSurface> offscreenSurface;
-    if (surface != nullptr) {
-        // create GPU accelerated surface
-        offscreenSurface = surface->makeSurface(offscreenInfo);
-    } else {
-        // create CPU raster surface
-        offscreenSurface = SkSurface::MakeRaster(offscreenInfo);
-    }
-    if (offscreenSurface == nullptr) {
-        RS_LOGW("OpItem::GenerateCachedOpItem Failed to create offscreen surface, abort caching");
-        return nullptr;
-    }
-    auto offscreenCanvas = RSPaintFilterCanvas(offscreenSurface.get());
-
-    // align draw op to [0, 0]
-    if (bounds.left() != 0 || bounds.top() != 0) {
-        SkMatrix matrix;
-        matrix.setTranslate(-bounds.left(), -bounds.top());
-        offscreenCanvas.concat(matrix);
-    }
-
-    // draw on the bitmap. NOTE: we cannot cache draw ops depending on rect, because the rect may be changed
-    Draw(offscreenCanvas, nullptr);
-    // flush to make sure all drawing commands are executed, maybe unnecessary
-    offscreenCanvas.flush();
-
-    // generate BitmapOpItem with correct offset
-    SkPaint paint;
-    paint.setAntiAlias(true);
-    return std::make_unique<BitmapOpItem>(offscreenSurface->makeImageSnapshot(), bounds.x(), bounds.y(), &paint);
-}
-
 void OpItemWithRSImage::Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const
 {
     if (rsImage_) {

@@ -36,6 +36,7 @@ void RSTransaction::OpenSyncTransaction()
     syncId_ = GenerateSyncId();
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
+        transactionProxy->FlushImplicitTransaction();
         transactionProxy->StartSyncTransaction();
         transactionProxy->Begin();
     }
@@ -57,6 +58,7 @@ void RSTransaction::Begin()
 {
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
+        transactionProxy->FlushImplicitTransaction();
         transactionProxy->StartSyncTransaction();
         transactionProxy->Begin();
     }

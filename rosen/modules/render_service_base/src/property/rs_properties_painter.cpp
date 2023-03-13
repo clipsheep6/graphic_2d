@@ -309,9 +309,9 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         filter->PostProcess(canvas);
         return;
     }
-
+C:\Users\Gao Weihua\Desktop\graphi\graphic_graphic_2d_4\rosen\modules\render_service_base\src\property\rs_properties_painter.cpp
     // canvas draw by snapshot instead of SaveLayer, since the blur layer moves while using saveLayer
-    auto imageSnapshot = skSurface->makeImageSnapshot(canvas.getDeviceClipBounds());
+    auto imageSnapshot = skSurface->makeImageSnapshot();
     if (imageSnapshot == nullptr) {
         ROSEN_LOGE("RSPropertiesPainter::DrawFilter image null");
         return;
@@ -322,13 +322,9 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     canvas.resetMatrix();
     auto visibleRect = canvas.GetVisibleRect();
     if (visibleRect.intersect(clipBounds)) {
-        // the snapshot only contains the clip region, so we need to offset the src rect
-        canvas.drawImageRect(
-            imageSnapshot.get(), visibleRect.makeOffset(-clipBounds.left(), -clipBounds.top()), visibleRect, &paint);
+        canvas.drawImageRect(imageSnapshot.get(), visibleRect, visibleRect, &paint);
     } else {
-        // the snapshot only contains the clip region, so we need to offset the src rect
-        canvas.drawImageRect(
-            imageSnapshot.get(), clipBounds.makeOffset(-clipBounds.left(), -clipBounds.top()), clipBounds, &paint);
+        canvas.drawImageRect(imageSnapshot.get(), clipBounds, clipBounds, &paint);
     }
     filter->PostProcess(canvas);
 }

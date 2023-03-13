@@ -19,6 +19,7 @@
 #include <unordered_map>
 #include "pixel_map.h"
 
+#include "common/rs_obj_abs_geometry.h"
 #include "modifier/rs_modifier_type.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_paint_filter_canvas.h"
@@ -64,7 +65,7 @@ static std::unordered_map<RSModifierType, ModifierUnmarshallingFunc> funcLUT = {
     { RSModifierType::EXTENDED, [](Parcel& parcel) -> RSRenderModifier* {
             std::shared_ptr<RSRenderProperty<std::shared_ptr<DrawCmdList>>> prop;
             int16_t type;
-            bool hasOverlayBounds = false;
+            bool hasOverlayBounds;
             if (!RSMarshallingHelper::Unmarshalling(parcel, prop) || !parcel.ReadInt16(type) ||
                 !parcel.ReadBool(hasOverlayBounds)) {
                 return nullptr;
@@ -72,16 +73,12 @@ static std::unordered_map<RSModifierType, ModifierUnmarshallingFunc> funcLUT = {
             RSDrawCmdListRenderModifier* modifier = new RSDrawCmdListRenderModifier(prop);
             modifier->SetType(static_cast<RSModifierType>(type));
             if (hasOverlayBounds) {
-                // OVERLAY_STYLE
-                float left;
-                float top;
-                float width;
-                float height;
-                if (!(parcel.ReadFloat(left) && parcel.ReadFloat(top) &&
-                    parcel.ReadFloat(width) && parcel.ReadFloat(height))) {
+                RectF overlayBounds;
+                if (!RSMarshallingHelper::Unmarshalling(parcel, overlayBounds)) {
+                    delete modifier;
                     return nullptr;
                 }
-                modifier->SetOverlayBounds(std::make_shared<RectF>(left, top, width, height));
+                modifier->SetOverlayBounds(std::make_shared<RectF>(overlayBounds));
             }
             return modifier;
         },
@@ -111,6 +108,17 @@ static std::unordered_map<RSModifierType, ModifierUnmarshallingFunc> funcLUT = {
         },
     },
 
+    { RSModifierType::GEOMETRYTRANS, [](Parcel& parcel) -> RSRenderModifier* {
+            std::shared_ptr<RSRenderProperty<SkMatrix>> prop;
+            int16_t type;
+            if (!RSMarshallingHelper::Unmarshalling(parcel, prop) || !parcel.ReadInt16(type)) {
+                return nullptr;
+            }
+            auto modifier = new RSGeometryTransRenderModifier(prop);
+            modifier->SetType(static_cast<RSModifierType>(type));
+            return modifier;
+        },
+    },
 };
 
 #undef DECLARE_ANIMATABLE_MODIFIER
@@ -138,8 +146,7 @@ bool RSDrawCmdListRenderModifier::Marshalling(Parcel& parcel)
         RSMarshallingHelper::Marshalling(parcel, property_) && parcel.WriteInt16(static_cast<int16_t>(GetType())) &&
         parcel.WriteBool(overlayRect_ != nullptr)) {
         if (overlayRect_ != nullptr) {
-            return parcel.WriteInt32(overlayRect_->GetLeft()) && parcel.WriteInt32(overlayRect_->GetTop()) &&
-                parcel.WriteInt32(overlayRect_->GetWidth()) && parcel.WriteInt32(overlayRect_->GetHeight());
+            return RSMarshallingHelper::Marshalling(parcel, *overlayRect_);
         }
         return true;
     }
@@ -249,6 +256,26 @@ void RSEnvForegroundColorStrategyRenderModifier::Update(const std::shared_ptr<RS
         auto renderProperty = std::static_pointer_cast<RSRenderProperty<ForegroundColorStrategyType >>(property_);
         renderProperty->Set(property->Get());
     }
+}
+
+void RSGeometryTransRenderModifier::Apply(RSModifierContext& context) const
+{
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(context.property_.GetBoundsGeometry());
+    auto property = property_->Get();
+    geoPtr->ConcatMatrix(property);
+}
+
+void RSGeometryTransRenderModifier::Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta)
+{
+    if (auto property = std::static_pointer_cast<RSRenderProperty<SkMatrix>>(prop)) {
+        property_->Set(property->Get());
+    }
+}
+
+bool RSGeometryTransRenderModifier::Marshalling(Parcel& parcel)
+{
+    return parcel.WriteInt16(static_cast<int16_t>(RSModifierType::GEOMETRYTRANS)) &&
+           RSMarshallingHelper::Marshalling(parcel, property_) && parcel.WriteInt16(static_cast<int16_t>(GetType()));
 }
 
 RSRenderModifier* RSRenderModifier::Unmarshalling(Parcel& parcel)

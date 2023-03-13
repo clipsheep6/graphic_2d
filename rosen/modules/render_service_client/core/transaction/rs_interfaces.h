@@ -19,6 +19,7 @@
 #include <memory>
 #include <mutex>
 
+#include "memory/MemoryGraphic.h"
 #include "transaction/rs_render_service_client.h"
 #include "ui/rs_display_node.h"
 #include "ui/rs_surface_node.h"
@@ -77,6 +78,10 @@ public:
 
     void SetScreenActiveMode(ScreenId id, uint32_t modeId);
 
+    MemoryGraphic GetMemoryGraphic(int pid);
+
+    std::vector<MemoryGraphic> GetMemoryGraphics();
+
     int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height);
 
     RSVirtualScreenResolution GetVirtualScreenResolution(ScreenId id);
@@ -125,10 +130,6 @@ public:
     int32_t RegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback);
 
     int32_t UnRegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback);
-
-    int32_t SetRenderModeChangeCallback(const RenderModeChangeCallback& callback);
-
-    void UpdateRenderMode(bool isUniRender);
 
     void SetAppWindowNum(uint32_t num);
 

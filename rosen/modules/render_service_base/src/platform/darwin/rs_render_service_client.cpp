@@ -31,17 +31,14 @@ void RSRenderServiceClient::CommitTransaction(std::unique_ptr<RSTransactionData>
 {
 }
 
-void RSRenderServiceClient::ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task)
-{
-}
-
-int32_t RSRenderServiceClient::SetRenderModeChangeCallback(const RenderModeChangeCallback& callback)
+MemoryGraphic RSRenderServiceClient::GetMemoryGraphic()
 {
     return {};
 }
 
-void RSRenderServiceClient::UpdateRenderMode(bool isUniRender)
+std::vector<MemoryGraphic> RSRenderServiceClient::GetMemoryGraphics()
 {
+    return {};
 }
 
 bool RSRenderServiceClient::GetUniRenderEnabled()

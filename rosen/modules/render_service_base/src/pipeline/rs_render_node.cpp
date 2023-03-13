@@ -91,6 +91,12 @@ bool RSRenderNode::Update(
     Vector2f offset = (parent == nullptr || IsInstanceOf<RSSurfaceRenderNode>()) ?
         Vector2f { 0.f, 0.f } : Vector2f { parent->GetFrameOffsetX(), parent->GetFrameOffsetY() };
     bool dirty = renderProperties_.UpdateGeometry(parent, parentDirty, offset);
+    if ((IsDirty() || dirty) && drawCmdModifiers_.count(RSModifierType::GEOMETRYTRANS)) {
+        RSModifierContext context = { GetMutableRenderProperties() };
+        for (auto& modifier : drawCmdModifiers_[RSModifierType::GEOMETRYTRANS]) {
+            modifier->Apply(context);
+        }
+    }
     isDirtyRegionUpdated_ = false;
     UpdateDirtyRegion(dirtyManager, dirty, needClip, clipRect);
     isLastVisible_ = ShouldPaint();
@@ -192,12 +198,12 @@ void RSRenderNode::UpdateParentChildrenRect(std::shared_ptr<RSBaseRenderNode> pa
 {
     auto renderParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(parentNode);
     if (renderParent) {
-        // [planning] could set each child's outofparent rect and flag
         // accumulate current node's all children region(including itself)
-        RectI accumulatedRect = GetChildrenRect().JoinRect(renderProperties_.GetDirtyRect());
+        // apply oldDirty_ as node's real region(including overlay and shadow)
+        RectI accumulatedRect = GetChildrenRect().JoinRect(oldDirty_);
         renderParent->UpdateChildrenRect(accumulatedRect);
         // check each child is inside of parent
-        if (!accumulatedRect.IsInsideOf(renderParent->GetRenderProperties().GetDirtyRect())) {
+        if (!accumulatedRect.IsInsideOf(renderParent->GetOldDirty())) {
             renderParent->UpdateChildrenOutOfRectFlag(true);
         }
     }
@@ -215,20 +221,9 @@ void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     renderNodeSaveCount_ = canvas.SaveCanvasAndAlpha();
     auto boundsGeo = std::static_pointer_cast<RSObjAbsGeometry>(GetRenderProperties().GetBoundsGeometry());
-
-#if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
-    bool isDrivenVisitMode = IsMarkDriven() && IsDrivenVisitMode();
-    if (!isDrivenVisitMode) {
-        if (boundsGeo && !boundsGeo->IsEmpty()) {
-            canvas.concat(boundsGeo->GetMatrix());
-        }
-    }
-#else
     if (boundsGeo && !boundsGeo->IsEmpty()) {
         canvas.concat(boundsGeo->GetMatrix());
     }
-#endif
-
     auto alpha = renderProperties_.GetAlpha();
     if (alpha < 1.f) {
         if ((GetChildrenCount() == 0) || !GetRenderProperties().GetAlphaOffscreen()) {
@@ -249,17 +244,15 @@ void RSRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 
 void RSRenderNode::CheckCacheType()
 {
-    if (GetRenderProperties().IsSpherizeValid() && cacheType_ != CacheType::SPHERIZE) {
-        cacheType_ = CacheType::SPHERIZE;
+    auto newCacheType = CacheType::NONE;
+    if (GetRenderProperties().IsSpherizeValid()) {
+        newCacheType = CacheType::SPHERIZE;
+    } else if (isFreeze_) {
+        newCacheType = CacheType::FREEZE;
+    }
+    if (cacheType_ != newCacheType) {
+        cacheType_ = newCacheType;
         cacheTypeChanged_ = true;
-    } else if (!GetRenderProperties().IsSpherizeValid()) {
-        if (isFreeze_ && cacheType_ != CacheType::FREEZE) {
-            cacheTypeChanged_ = true;
-            cacheType_ = CacheType::FREEZE;
-        } else if (cacheType_ != CacheType::NONE) {
-            cacheTypeChanged_ = true;
-            cacheType_ = CacheType::NONE;
-        }
     }
 }
 
@@ -300,8 +293,8 @@ void RSRenderNode::AddGeometryModifier(const std::shared_ptr<RSRenderModifier> m
 void RSRenderNode::RemoveModifier(const PropertyId& id)
 {
     bool success = modifiers_.erase(id);
+    SetDirty();
     if (success) {
-        SetDirty();
         return;
     }
     for (auto& [type, modifiers] : drawCmdModifiers_) {
@@ -326,6 +319,7 @@ void RSRenderNode::ApplyModifiers()
             modifier->Apply(context);
         }
     }
+    OnApplyModifiers();
 
     UpdateOverlayBounds();
 }
@@ -335,6 +329,9 @@ void RSRenderNode::UpdateOverlayBounds()
     RSModifierContext context = { GetMutableRenderProperties() };
     RectF joinRect = RectF();
     for (auto& iterator : drawCmdModifiers_) {
+        if (iterator.first == RSModifierType::GEOMETRYTRANS) {
+            continue;
+        }
         for (auto& overlayModifier : iterator.second) {
             auto drawCmdModifier = std::static_pointer_cast<RSDrawCmdListRenderModifier>(overlayModifier);
             if (!drawCmdModifier) {

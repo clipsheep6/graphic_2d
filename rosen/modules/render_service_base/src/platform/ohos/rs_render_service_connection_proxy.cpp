@@ -63,7 +63,6 @@ void RSRenderServiceConnectionProxy::CommitTransaction(std::unique_ptr<RSTransac
     option.SetFlags(MessageOption::TF_ASYNC);
     for (auto& parcel : parcelVector) {
         MessageParcel reply;
-        RS_ASYNC_TRACE_BEGIN("RSProxySendRequest", parcel->GetDataSize());
         int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::COMMIT_TRANSACTION, *parcel, reply, option);
         if (err != NO_ERROR) {
             ROSEN_LOGE("RSRenderServiceConnectionProxy::CommitTransaction SendRequest failed, err = %d", err);
@@ -100,76 +99,6 @@ bool RSRenderServiceConnectionProxy::FillParcelWithTransactionData(
         data = ashmemParcel;
     }
     return true;
-}
-
-void RSRenderServiceConnectionProxy::ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
-        return;
-    }
-
-    if (!task->Marshalling(data)) {
-        return;
-    }
-
-    option.SetFlags(MessageOption::TF_SYNC);
-    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::EXECUTE_SYNCHRONOUS_TASK, data, reply, option);
-    if (err != NO_ERROR) {
-        return;
-    }
-
-    if (task->CheckHeader(reply)) {
-        task->ReadFromParcel(reply);
-    }
-}
-
-int32_t RSRenderServiceConnectionProxy::SetRenderModeChangeCallback(sptr<RSIRenderModeChangeCallback> callback)
-{
-    if (callback == nullptr) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::SetRenderModeChangeCallback: callback is nullptr.");
-        return INVALID_ARGUMENTS;
-    }
-
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
-        return WRITE_PARCEL_ERR;
-    }
-
-    option.SetFlags(MessageOption::TF_ASYNC);
-    data.WriteRemoteObject(callback->AsObject());
-    int32_t err =
-        Remote()->SendRequest(RSIRenderServiceConnection::SET_RENDER_MODE_CHANGE_CALLBACK, data, reply, option);
-    if (err != NO_ERROR) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::SetRenderModeChangeCallback: Send Request err.");
-        return RS_CONNECTION_ERROR;
-    }
-    int32_t result = reply.ReadInt32();
-    return result;
-}
-
-void RSRenderServiceConnectionProxy::UpdateRenderMode(bool isUniRender)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    if (!data.WriteBool(isUniRender)) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::UpdateRenderMode WriteBool failed!");
-        return;
-    }
-    option.SetFlags(MessageOption::TF_ASYNC);
-    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::UPDATE_RENDER_MODE, data, reply, option);
-    if (err != NO_ERROR) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::UpdateRenderMode SendRequest failed, err = %d", err);
-        return;
-    }
 }
 
 bool RSRenderServiceConnectionProxy::GetUniRenderEnabled()
@@ -615,6 +544,60 @@ std::vector<RSScreenModeInfo> RSRenderServiceConnectionProxy::GetScreenSupported
         }
     }
     return screenSupportedModes;
+}
+
+std::vector<MemoryGraphic> RSRenderServiceConnectionProxy::GetMemoryGraphics()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    std::vector<MemoryGraphic> memoryGraphics;
+
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return memoryGraphics;
+    }
+
+    option.SetFlags(MessageOption::TF_SYNC);
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::GET_MEMORY_GRAPHICS, data, reply, option);
+    if (err != NO_ERROR) {
+        return memoryGraphics;
+    }
+
+    uint64_t count = reply.ReadUint64();
+    memoryGraphics.resize(count);
+    for (uint64_t index = 0; index < count; index++) {
+        sptr<MemoryGraphic> item = reply.ReadParcelable<MemoryGraphic>();
+        if (item == nullptr) {
+            continue;
+        } else {
+            memoryGraphics[index] = *item;
+        }
+    }
+    return memoryGraphics;
+}
+
+MemoryGraphic RSRenderServiceConnectionProxy::GetMemoryGraphic(int pid)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    MemoryGraphic memoryGraphic;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return memoryGraphic;
+    }
+
+    option.SetFlags(MessageOption::TF_SYNC);
+    data.WriteInt32(pid);
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::GET_MEMORY_GRAPHIC, data, reply, option);
+    if (err != NO_ERROR) {
+        return memoryGraphic;
+    }
+    sptr<MemoryGraphic> pMemoryGraphic(reply.ReadParcelable<MemoryGraphic>());
+    if (pMemoryGraphic == nullptr) {
+        return memoryGraphic;
+    }
+    memoryGraphic = *pMemoryGraphic;
+    return memoryGraphic;
 }
 
 RSScreenCapability RSRenderServiceConnectionProxy::GetScreenCapability(ScreenId id)

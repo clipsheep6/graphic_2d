@@ -266,16 +266,6 @@ int32_t RSInterfaces::UnRegisterOcclusionChangeCallback(const OcclusionChangeCal
     return renderServiceClient_->UnRegisterOcclusionChangeCallback(callback);
 }
 
-int32_t RSInterfaces::SetRenderModeChangeCallback(const RenderModeChangeCallback& callback)
-{
-    return renderServiceClient_->SetRenderModeChangeCallback(callback);
-}
-
-void RSInterfaces::UpdateRenderMode(bool isUniRender)
-{
-    renderServiceClient_->UpdateRenderMode(isUniRender);
-}
-
 void RSInterfaces::SetAppWindowNum(uint32_t num)
 {
     renderServiceClient_->SetAppWindowNum(num);
@@ -285,5 +275,16 @@ void RSInterfaces::ShowWatermark(const std::shared_ptr<Media::PixelMap> &waterma
 {
     renderServiceClient_->ShowWatermark(watermarkImg, isShow);
 }
+
+MemoryGraphic RSInterfaces::GetMemoryGraphic(int pid)
+{
+    return renderServiceClient_->GetMemoryGraphic(pid);
+}
+
+std::vector<MemoryGraphic> RSInterfaces::GetMemoryGraphics()
+{
+    return renderServiceClient_->GetMemoryGraphics();
+}
+
 } // namespace Rosen
 } // namespace OHOS

@@ -31,6 +31,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr size_t MAX_DATA_SIZE_FOR_UNMARSHALLING_IN_PLACE = 1024 * 30; // 30kB
+constexpr size_t FILE_DESCRIPTOR_LIMIT = 15;
 
 void CopyFileDescriptor(MessageParcel& old, MessageParcel& copied)
 {
@@ -59,7 +60,7 @@ void CopyFileDescriptor(MessageParcel& old, MessageParcel& copied)
 std::shared_ptr<MessageParcel> CopyParcelIfNeed(MessageParcel& old)
 {
     auto dataSize = old.GetDataSize();
-    if (dataSize <= MAX_DATA_SIZE_FOR_UNMARSHALLING_IN_PLACE) {
+    if (dataSize <= MAX_DATA_SIZE_FOR_UNMARSHALLING_IN_PLACE && old.GetOffsetsSize() < FILE_DESCRIPTOR_LIMIT) {
         return nullptr;
     }
     RS_TRACE_NAME("CopyParcelForUnmarsh: size:" + std::to_string(dataSize));
@@ -96,7 +97,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
     int ret = ERR_NONE;
     switch (code) {
         case COMMIT_TRANSACTION: {
-            RS_ASYNC_TRACE_END("RSProxySendRequest", data.GetDataSize());
+            RS_TRACE_NAME_FMT("Recv Parcel Size:%zu, fdCnt:%zu", data.GetDataSize(), data.GetOffsetsSize());
             static bool isUniRender = RSUniRenderJudgement::IsUniRender();
             std::shared_ptr<MessageParcel> parsedParcel;
             if (data.ReadInt32() == 0) { // indicate normal parcel
@@ -130,28 +131,6 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 auto transactionData = RSBaseRenderUtil::ParseTransactionData(*parsedParcel);
                 CommitTransaction(transactionData);
             }
-            break;
-        }
-        case SET_RENDER_MODE_CHANGE_CALLBACK: {
-            auto token = data.ReadInterfaceToken();
-            if (token != RSIRenderServiceConnection::GetDescriptor()) {
-                ret = ERR_INVALID_STATE;
-                break;
-            }
-
-            auto remoteObject = data.ReadRemoteObject();
-            if (remoteObject == nullptr) {
-                ret = ERR_NULL_OBJECT;
-                break;
-            }
-            sptr<RSIRenderModeChangeCallback> cb = iface_cast<RSIRenderModeChangeCallback>(remoteObject);
-            int32_t status = SetRenderModeChangeCallback(cb);
-            reply.WriteInt32(status);
-            break;
-        }
-        case UPDATE_RENDER_MODE: {
-            bool isUniRender = data.ReadBool();
-            UpdateRenderMode(isUniRender);
             break;
         }
         case GET_UNI_RENDER_ENABLED: {
@@ -381,6 +360,30 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             break;
         }
+        case GET_MEMORY_GRAPHIC: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            auto pid = data.ReadInt32();
+            MemoryGraphic memoryGraphic = GetMemoryGraphic(pid);
+            reply.WriteParcelable(&memoryGraphic);
+            break;
+        }
+        case GET_MEMORY_GRAPHICS: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            std::vector<MemoryGraphic> memoryGraphics = GetMemoryGraphics();
+            reply.WriteUint64(static_cast<uint64_t>(memoryGraphics.size()));
+            for (uint32_t index = 0; index < memoryGraphics.size(); index++) {
+                reply.WriteParcelable(&memoryGraphics[index]);
+            }
+            break;
+        }
         case GET_SCREEN_CAPABILITY: {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {
@@ -412,35 +415,6 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             ScreenId id = data.ReadUint64();
             RSScreenData screenData = GetScreenData(id);
             reply.WriteParcelable(&screenData);
-            break;
-        }
-        case EXECUTE_SYNCHRONOUS_TASK: {
-            auto token = data.ReadInterfaceToken();
-            if (token != RSIRenderServiceConnection::GetDescriptor()) {
-                ret = ERR_INVALID_STATE;
-                break;
-            }
-            auto type = data.ReadUint16();
-            auto subType = data.ReadUint16();
-            if (type != RS_NODE_SYNCHRONOUS_READ_PROPERTY) {
-                ret = ERR_INVALID_STATE;
-                break;
-            }
-            auto func = RSCommandFactory::Instance().GetUnmarshallingFunc(type, subType);
-            if (func == nullptr) {
-                ret = ERR_INVALID_STATE;
-                break;
-            }
-            auto command = static_cast<RSSyncTask*>((*func)(data));
-            if (command == nullptr) {
-                ret = ERR_INVALID_STATE;
-                break;
-            }
-            std::shared_ptr<RSSyncTask> task(command);
-            ExecuteSynchronousTask(task);
-            if (!task->Marshalling(reply)) {
-                ret = ERR_INVALID_STATE;
-            }
             break;
         }
         case GET_SCREEN_BACK_LIGHT: {

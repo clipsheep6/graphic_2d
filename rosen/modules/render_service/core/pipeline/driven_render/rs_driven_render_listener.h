@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,27 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef ROSEN_RENDER_SERVICE_BASE_RS_IRENDER_MODE_CHANGE_CALLBACK_H
-#define ROSEN_RENDER_SERVICE_BASE_RS_IRENDER_MODE_CHANGE_CALLBACK_H
+#ifndef RENDER_SERVICE_CORE_RS_DRIVEN_RENDER_LISTENER_H
+#define RENDER_SERVICE_CORE_RS_DRIVEN_RENDER_LISTENER_H
 
-#include <iremote_broker.h>
+#include <ibuffer_consumer_listener.h>
+#include "rs_driven_surface_render_node.h"
 
 namespace OHOS {
 namespace Rosen {
-class RSIRenderModeChangeCallback : public IRemoteBroker {
+class RSDrivenRenderListener : public IBufferConsumerListener {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.rosen.RSIRenderModeChangeCallback");
+    RSDrivenRenderListener(std::weak_ptr<RSDrivenSurfaceRenderNode> surfaceRenderNode);
+    ~RSDrivenRenderListener() override;
+    void OnBufferAvailable() override;
+    void OnGoBackground() override;
 
-    RSIRenderModeChangeCallback() = default;
-    virtual ~RSIRenderModeChangeCallback() noexcept = default;
-
-    enum {
-        ON_RENDER_MODE_CHANGED,
-    };
-
-    virtual void OnRenderModeChanged(bool isUniRender) = 0;
+private:
+    std::weak_ptr<RSDrivenSurfaceRenderNode> surfaceRenderNode_;
 };
 } // namespace Rosen
 } // namespace OHOS
-
-#endif // ROSEN_RENDER_SERVICE_BASE_RS_IRENDER_MODE_CHANGE_CALLBACK_H
+#endif // RENDER_SERVICE_CORE_RS_DRIVEN_RENDER_LISTENER_H

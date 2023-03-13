@@ -45,6 +45,7 @@ enum RSNodeCommandType : uint16_t {
     UPDATE_MODIFIER_VECTOR4_COLOR,
     UPDATE_MODIFIER_VECTOR4F,
     UPDATE_MODIFIER_DRAW_CMD_LIST,
+    UPDATE_MODIFIER_SKMATRIX,
 
     SET_FREEZE,
     MARK_DRIVEN_RENDER,
@@ -136,19 +137,22 @@ ADD_COMMAND(RSUpdatePropertyVector4f,
 ADD_COMMAND(RSUpdatePropertyDrawCmdList,
     ARG(RS_NODE, UPDATE_MODIFIER_DRAW_CMD_LIST, RSNodeCommandHelper::UpdateModifier<DrawCmdListPtr>,
         NodeId, DrawCmdListPtr, PropertyId, bool))
+ADD_COMMAND(RSUpdatePropertySkMatrix,
+    ARG(RS_NODE, UPDATE_MODIFIER_SKMATRIX, RSNodeCommandHelper::UpdateModifier<SkMatrix>,
+        NodeId, SkMatrix, PropertyId, bool))
 
 ADD_COMMAND(RSSetFreeze,
     ARG(RS_NODE, SET_FREEZE, RSNodeCommandHelper::SetFreeze, NodeId, bool))
 
 ADD_COMMAND(RSMarkDrivenRender,
-    ARG(BASE_NODE, MARK_DRIVEN_RENDER, RSNodeCommandHelper::MarkDrivenRender, NodeId, bool))
-ADD_COMMAND(RSMarkDrivenRenderItemIndex, ARG(BASE_NODE, MARK_DRIVEN_RENDER_ITEM_INDEX,
-                                             RSNodeCommandHelper::MarkDrivenRenderItemIndex, NodeId, int32_t))
+    ARG(RS_NODE, MARK_DRIVEN_RENDER, RSNodeCommandHelper::MarkDrivenRender, NodeId, bool))
+ADD_COMMAND(RSMarkDrivenRenderItemIndex,
+    ARG(RS_NODE, MARK_DRIVEN_RENDER_ITEM_INDEX, RSNodeCommandHelper::MarkDrivenRenderItemIndex, NodeId, int32_t))
 ADD_COMMAND(RSMarkDrivenRenderFramePaintState,
-    ARG(BASE_NODE, MARK_DRIVEN_RENDER_FRAME_PAINT_STATE,
+    ARG(RS_NODE, MARK_DRIVEN_RENDER_FRAME_PAINT_STATE,
         RSNodeCommandHelper::MarkDrivenRenderFramePaintState, NodeId, bool))
 ADD_COMMAND(RSMarkContentChanged,
-    ARG(BASE_NODE, MARK_CONTENT_CHANGED, RSNodeCommandHelper::MarkContentChanged, NodeId, bool))
+    ARG(RS_NODE, MARK_CONTENT_CHANGED, RSNodeCommandHelper::MarkContentChanged, NodeId, bool))
 } // namespace Rosen
 } // namespace OHOS
 

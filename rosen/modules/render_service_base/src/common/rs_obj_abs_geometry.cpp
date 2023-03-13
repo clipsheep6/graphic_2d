@@ -36,7 +36,6 @@ RSObjAbsGeometry::~RSObjAbsGeometry() {}
 
 void RSObjAbsGeometry::ConcatMatrix(const SkMatrix& matrix)
 {
-    matrix_.preConcat(matrix);
     absMatrix_.preConcat(matrix);
     SetAbsRect();
 }

@@ -471,7 +471,7 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWith
     }
 
     RSAutoCanvasRestore acr(canvas_);
-    canvas_->MultiplyAlpha(node.GetRenderProperties().GetAlpha() * node.GetContextAlpha());
+    canvas_->SetAlpha(node.GetRenderProperties().GetAlpha() * node.GetContextAlpha());
     if (isDisplayNode_) {
         CaptureSurfaceInDisplayWithUni(node);
     } else {
@@ -526,10 +526,10 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWith
         auto parentNode = std::static_pointer_cast<RSSurfaceRenderNode>(parentPtr);
         const float parentNodeTranslateX = parentNode->GetTotalMatrix().getTranslateX();
         const float parentNodeTranslateY = parentNode->GetTotalMatrix().getTranslateY();
-        const float thisNodetranslateX = node.GetTotalMatrix().getTranslateX();
-        const float thisNodetranslateY = node.GetTotalMatrix().getTranslateY();
+        const float thisNodeTranslateX = node.GetTotalMatrix().getTranslateX();
+        const float thisNodeTranslateY = node.GetTotalMatrix().getTranslateY();
         translateMatrix.preTranslate(
-            thisNodetranslateX - parentNodeTranslateX, thisNodetranslateY - parentNodeTranslateY);
+            thisNodeTranslateX - parentNodeTranslateX, thisNodeTranslateY - parentNodeTranslateY);
     }
     if (node.GetSecurityLayer()) {
         RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithoutUni: \

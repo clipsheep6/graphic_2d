@@ -121,7 +121,7 @@ void RSSurfaceRenderNode::PrepareRenderBeforeChildren(RSPaintFilterCanvas& canva
     renderNodeSaveCount_ = canvas.SaveCanvasAndAlpha();
 
     // apply intermediate properties from RT to canvas
-    canvas.MultiplyAlpha(GetContextAlpha());
+    canvas.SetAlpha(GetContextAlpha());
     canvas.concat(GetContextMatrix());
     auto clipRectFromRT = GetContextClipRegion();
     if (clipRectFromRT.width() > std::numeric_limits<float>::epsilon() &&
@@ -261,8 +261,14 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanv
     RectF bounds = {0, 0, properties.GetBoundsWidth(), properties.GetBoundsHeight()};
     if (contextClipRect_.width() > std::numeric_limits<float>::epsilon() &&
         contextClipRect_.height() > std::numeric_limits<float>::epsilon()) {
-        bounds = bounds.IntersectRect(
-            { contextClipRect_.left(), contextClipRect_.top(), contextClipRect_.width(), contextClipRect_.height() });
+        // transform context clipRect to local coordinate
+        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+        SkMatrix invertMatrix;
+        auto clipRect = contextClipRect_;
+        if (geoPtr->GetMatrix().invert(&invertMatrix)) {
+            clipRect = invertMatrix.mapRect(contextClipRect_);
+        }
+        bounds = bounds.IntersectRect({ clipRect.left(), clipRect.top(), clipRect.width(), clipRect.height() });
     }
     RRect absClipRRect = RRect(bounds, properties.GetCornerRadius());
     RSPropertiesPainter::DrawShadow(properties, canvas, &absClipRRect);

@@ -56,6 +56,12 @@ void RSPaintFilterCanvas::onDrawPicture(const SkPicture* picture, const SkMatrix
     }
 }
 
+void RSPaintFilterCanvas::SetAlpha(float alpha)
+{
+    // directly set alpha to top of stack
+    alphaStack_.top() = std::clamp(alpha, 0.f, 1.f);
+}
+
 void RSPaintFilterCanvas::MultiplyAlpha(float alpha)
 {
     // multiply alpha to top of stack

@@ -199,7 +199,13 @@ public:
         return totalMatrix_;
     }
 
-    // pass render context (matrix/alpha/clip) from RT to RS
+    // pass render context variables (matrix/alpha/clip) from source (surface node in RT or proxy node in RS) to target
+    // (surface node in RS)
+    // NOTE:
+    // 1. alpha is absolute value
+    // 2. since matrix would be affected by Gravity in runtime, so matrix is relative value (based on parent surface
+    // node's matrix)
+    // 3. since clipRegion would be affected by matrix, so clipRegion is local value (based on context matrix)
     void SetContextMatrix(const SkMatrix& transform, bool sendMsg = true);
     const SkMatrix& GetContextMatrix() const;
 

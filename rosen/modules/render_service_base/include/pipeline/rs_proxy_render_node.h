@@ -36,13 +36,15 @@ public:
         NodeId id, std::weak_ptr<RSSurfaceRenderNode> target, NodeId targetId, std::weak_ptr<RSContext> context = {});
     ~RSProxyRenderNode() override;
 
-    // void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
-    // void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
-
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
-    // pass render context (matrix/alpha/clip) from proxy to target
+    // pass render context variables (matrix/alpha/clip) from proxy node to target node (typically surface node)
+    // NOTE:
+    // 1. alpha is absolute value
+    // 2. since matrix would be affected by Gravity in runtime, so matrix is relative value (based on parent surface
+    // node's matrix)
+    // 3. since clipRegion would be affected by matrix, so clipRegion is local value (based on context matrix)
     void SetContextMatrix(const SkMatrix& transform);
     void SetContextAlpha(float alpha);
     void SetContextClipRegion(SkRect clipRegion);

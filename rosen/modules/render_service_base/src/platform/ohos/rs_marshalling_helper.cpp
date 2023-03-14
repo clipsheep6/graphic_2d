@@ -170,7 +170,7 @@ sk_sp<SkData> RSMarshallingHelper::SerializeTypeface(SkTypeface* tf, void* ctx)
         ROSEN_LOGD("unirender: RSMarshallingHelper::SerializeTypeface SkTypeface is nullptr");
         return nullptr;
     }
-    return tf->serialize();
+    return tf->serialize(SkTypeface::SerializeBehavior::kDoIncludeData);
 }
 
 // SkTypeface deserial proc

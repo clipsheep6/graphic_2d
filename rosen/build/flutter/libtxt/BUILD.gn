@@ -98,7 +98,8 @@ template("thirdparty_lib_txt_rosen") {
       ]
       include_dirs += [
          "$flutter_root/txt/src",
-         "//third_party/skia/third_party/externals/harfbuzz/src"
+         "//third_party/skia/third_party/externals/harfbuzz/src",
+         "//",
       ]
     } else {
       public_deps = [ "$ace_flutter_engine_root/skia:ace_skia_$platform" ]

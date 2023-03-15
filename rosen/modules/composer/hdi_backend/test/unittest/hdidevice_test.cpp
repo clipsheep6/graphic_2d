@@ -15,6 +15,7 @@
 
 #include "hdi_device.h"
 #include <gtest/gtest.h>
+#include <vector>
 
 using namespace testing;
 using namespace testing::ext;
@@ -77,8 +78,8 @@ HWTEST_F(HdiDeviceTest, DeviceFuncs001, Function | MediumTest| Level3)
     BufferHandle *buffer = nullptr;
     sptr<SyncFence> fence = nullptr;
     ASSERT_EQ(HdiDeviceTest::hdiDevice_->SetScreenClientBuffer(screenId, buffer, fence), GRAPHIC_DISPLAY_NULL_PTR);
-    GraphicIRect damageRect = {0, 0, 0, 0};
-    ASSERT_EQ(HdiDeviceTest::hdiDevice_->SetScreenClientDamage(screenId, num, damageRect), GRAPHIC_DISPLAY_NULL_PTR);
+    std::vector<GraphicIRect> damageRects = { {0, 0, 0, 0} };
+    ASSERT_EQ(HdiDeviceTest::hdiDevice_->SetScreenClientDamage(screenId, damageRects), GRAPHIC_DISPLAY_NULL_PTR);
     std::vector<uint32_t> layers;
     std::vector<sptr<SyncFence>> fences;
     ASSERT_EQ(HdiDeviceTest::hdiDevice_->GetScreenReleaseFence(screenId, layers, fences), GRAPHIC_DISPLAY_NULL_PTR);
@@ -117,11 +118,13 @@ HWTEST_F(HdiDeviceTest, LayerFuncs001, Function | MediumTest| Level3)
     GraphicTransformType type = GRAPHIC_ROTATE_NONE;
     ASSERT_EQ(HdiDeviceTest::hdiDevice_->SetTransformMode(screenId, layerId, type), GRAPHIC_DISPLAY_NULL_PTR);
     uint32_t num = 1;
-    GraphicIRect visible = {0, 0, 0, 0};
-    ASSERT_EQ(HdiDeviceTest::hdiDevice_->SetLayerVisibleRegion(screenId, layerId, num, visible),
+    std::vector<GraphicIRect> visibles = { {0, 0, 0, 0} };
+    ASSERT_EQ(HdiDeviceTest::hdiDevice_->SetLayerVisibleRegion(screenId, layerId, visibles),
               GRAPHIC_DISPLAY_NULL_PTR);
     GraphicIRect dirty = {0, 0, 0, 0};
-    ASSERT_EQ(HdiDeviceTest::hdiDevice_->SetLayerDirtyRegion(screenId, layerId, dirty), GRAPHIC_DISPLAY_NULL_PTR);
+    std::vector<GraphicIRect> dirtyRegions;
+    dirtyRegions.emplace_back(dirty);
+    ASSERT_EQ(HdiDeviceTest::hdiDevice_->SetLayerDirtyRegion(screenId, layerId, dirtyRegions), GRAPHIC_DISPLAY_NULL_PTR);
     BufferHandle *handle = nullptr;
     sptr<SyncFence> acquireFence = nullptr;
     ASSERT_EQ(HdiDeviceTest::hdiDevice_->SetLayerBuffer(screenId, layerId, handle, acquireFence),

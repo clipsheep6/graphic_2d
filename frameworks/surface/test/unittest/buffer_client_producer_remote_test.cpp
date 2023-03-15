@@ -29,6 +29,7 @@
 #include "accesstoken_kit.h"
 #include "nativetoken_kit.h"
 #include "token_setproc.h"
+#include "buffer_log.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -61,6 +62,7 @@ public:
     static inline int pipe1Fd[2] = {};
     static inline int32_t systemAbilityID = 345135;
     static inline sptr<BufferExtraData> bedata = new BufferExtraDataImpl;
+    static inline std::string name_ = "test";
 };
 
 static void InitNativeTokenInfo()

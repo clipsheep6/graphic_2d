@@ -20,6 +20,8 @@
 #include "iconsumer_surface.h"
 #include <surface.h>
 #include <sync_fence.h>
+#include <vector>
+#include "hdi_log.h"
 namespace OHOS {
 namespace Rosen {
 static const std::map<GraphicTransformType, std::string> TransformTypeStrs = {
@@ -116,15 +118,34 @@ public:
         compositionType_ = type;
     }
 
-    void SetVisibleRegion(uint32_t num, const GraphicIRect &visibleRegion)
+    void SetVisibleRegions(const std::vector<GraphicIRect> &visibleRegions)
     {
-        visibleNum_ = num;
-        visibleRegion_ = visibleRegion;
+        visibleRegions_.clear();
+        visibleRegions_.reserve(visibleRegions.size());
+        for (auto iter = visibleRegions.begin(); iter != visibleRegions.end(); iter++) {
+            GraphicIRect region = {
+                .x = iter->x,
+                .y = iter->y,
+                .w = iter->w,
+                .h = iter->h,
+            };
+            visibleRegions_.emplace_back(region);
+        }
     }
 
-    void SetDirtyRegion(const GraphicIRect &dirtyRegion)
+    void SetDirtyRegions(const std::vector<GraphicIRect> &dirtyRegions)
     {
-        dirtyRegion_ = dirtyRegion;
+        dirtyRegions_.clear();
+        dirtyRegions_.reserve(dirtyRegions.size());
+        for (auto iter = dirtyRegions.begin(); iter != dirtyRegions.end(); iter++) {
+            GraphicIRect region = {
+                .x = iter->x,
+                .y = iter->y,
+                .w = iter->w,
+                .h = iter->h,
+            };
+            dirtyRegions_.emplace_back(region);
+        }
     }
 
     void SetBlendType(GraphicBlendType type)
@@ -250,19 +271,14 @@ public:
         return compositionType_;
     }
 
-    uint32_t GetVisibleNum() const
+    /* const */ std::vector<GraphicIRect>& GetVisibleRegions()
     {
-        return visibleNum_;
+        return visibleRegions_;
     }
 
-    /* const */ GraphicIRect& GetVisibleRegion()
+    /* const */ std::vector<GraphicIRect>& GetDirtyRegions()
     {
-        return visibleRegion_;
-    }
-
-    /* const */ GraphicIRect& GetDirtyRegion()
-    {
-        return dirtyRegion_;
+        return dirtyRegions_;
     }
 
     GraphicBlendType GetBlendType() const
@@ -338,11 +354,33 @@ public:
     void CopyLayerInfo(const std::shared_ptr<HdiLayerInfo> &layerInfo)
     {
         zOrder_ = layerInfo->GetZorder();
-        visibleNum_ = layerInfo->GetVisibleNum();
         layerRect_ = layerInfo->GetLayerSize();
         boundRect_ = layerInfo->GetBoundSize();
-        visibleRegion_ = layerInfo->GetVisibleRegion();
-        dirtyRegion_ = layerInfo->GetDirtyRegion();
+        std::vector<GraphicIRect>& visibleRegions = layerInfo->GetVisibleRegions();
+        visibleRegions_.clear();
+        visibleRegions_.reserve(visibleRegions.size());
+        for (auto iter = visibleRegions.begin(); iter != visibleRegions.end(); iter++) {
+            GraphicIRect region = {
+                .x = iter->x,
+                .y = iter->y,
+                .w = iter->w,
+                .h = iter->h,
+            };
+            visibleRegions_.emplace_back(region);
+        }
+
+        std::vector<GraphicIRect>& dirtyRegions = layerInfo->GetDirtyRegions();
+        dirtyRegions_.clear();
+        dirtyRegions_.reserve(dirtyRegions.size());
+        for (auto iter = dirtyRegions.begin(); iter != dirtyRegions.end(); iter++) {
+            GraphicIRect region = {
+                .x = iter->x,
+                .y = iter->y,
+                .w = iter->w,
+                .h = iter->h,
+            };
+            dirtyRegions_.emplace_back(region);
+        }
         cropRect_ = layerInfo->GetCropRect();
         matrix_ = layerInfo->GetMatrix();
         layerAlpha_ = layerInfo->GetAlpha();
@@ -367,7 +405,7 @@ public:
             CompositionTypeStrs.find(compositionType_) != CompositionTypeStrs.end() &&
             BlendTypeStrs.find(blendType_) != BlendTypeStrs.end()) {
             result += " zOrder = " + std::to_string(zOrder_) +
-                ", visibleNum = " + std::to_string(visibleNum_) +
+                ", visibleNum = " + std::to_string(visibleRegions_.size()) +
                 ", transformType = " + TransformTypeStrs.at(transformType_) +
                 ", compositionType = " + CompositionTypeStrs.at(compositionType_) +
                 ", blendType = " + BlendTypeStrs.at(blendType_) +
@@ -381,18 +419,24 @@ public:
             std::to_string(layerRect_.y) + ", " +
             std::to_string(layerRect_.w) + ", " +
             std::to_string(layerRect_.h) + "], ";
-        result += "visibleRegion = [" + std::to_string(visibleRegion_.x) + ", " +
-            std::to_string(visibleRegion_.y) + ", " +
-            std::to_string(visibleRegion_.w) + ", " +
-            std::to_string(visibleRegion_.h) + "], ";
-        result += "dirtyRegion = [" + std::to_string(dirtyRegion_.x) + ", " +
-            std::to_string(dirtyRegion_.y) + ", " +
-            std::to_string(dirtyRegion_.w) + ", " +
-            std::to_string(dirtyRegion_.h) + "], ";
         result += "cropRect = [" + std::to_string(cropRect_.x) + ", " +
             std::to_string(cropRect_.y) + ", " +
             std::to_string(cropRect_.w) + ", " +
-            std::to_string(cropRect_.h) + "].\n";
+            std::to_string(cropRect_.h) + "],";
+        for (decltype(visibleRegions_.size()) i = 0; i < visibleRegions_.size(); i++) {
+            result += "visibleRegions[" + std::to_string(i) + "] = [" +
+                std::to_string(visibleRegions_[i].x) + ", " +
+                std::to_string(visibleRegions_[i].y) + ", " +
+                std::to_string(visibleRegions_[i].w) + ", " +
+                std::to_string(visibleRegions_[i].h) + "], ";
+        }
+        for (decltype(dirtyRegions_.size()) i = 0; i < dirtyRegions_.size(); i++) {
+            result += "dirtyRegions[" + std::to_string(i) + "] = [" +
+                std::to_string(dirtyRegions_[i].x) + ", " +
+                std::to_string(dirtyRegions_[i].y) + ", " +
+                std::to_string(dirtyRegions_[i].w) + ", " +
+                std::to_string(dirtyRegions_[i].h) + "], ";
+        }
         if (cSurface_ != nullptr) {
             cSurface_->Dump(result);
         }
@@ -401,11 +445,10 @@ public:
 
 private:
     uint32_t zOrder_ = 0;
-    uint32_t visibleNum_ = 0;
     GraphicIRect layerRect_;
     GraphicIRect boundRect_; // node's bound width and height related to this layer, used for uni render redraw
-    GraphicIRect visibleRegion_;
-    GraphicIRect dirtyRegion_;
+    std::vector<GraphicIRect> visibleRegions_;
+    std::vector<GraphicIRect> dirtyRegions_;
     GraphicIRect cropRect_;
     GraphicMatrix matrix_; // matrix used for uni render redraw
     GraphicLayerAlpha layerAlpha_;

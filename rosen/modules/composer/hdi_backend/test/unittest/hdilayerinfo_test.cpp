@@ -19,6 +19,7 @@
 #include "sync_fence.h"
 
 #include <gtest/gtest.h>
+#include <vector>
 
 using namespace testing;
 using namespace testing::ext;
@@ -164,32 +165,13 @@ HWTEST_F(HdiLayerInfoTest, GetCompositionType001, Function | MediumTest| Level3)
 }
 
 /**
- * @tc.name: GetVisibleNum001
- * @tc.desc: Verify the GetVisibleNum of hdilayerinfo
- * @tc.type:FUNC
- * @tc.require:AR000GGP0P
- * @tc.author:
- */
-HWTEST_F(HdiLayerInfoTest, GetVisibleNum001, Function | MediumTest| Level3)
-{
-    GraphicIRect iRect = {
-        .x = 0,
-        .y = 0,
-        .w = 800,
-        .h = 600,
-    };
-    HdiLayerInfoTest::hdiLayerInfo_->SetVisibleRegion(1, iRect);
-    ASSERT_NE(HdiLayerInfoTest::hdiLayerInfo_->GetVisibleNum(), 0u);
-}
-
-/**
  * @tc.name: GetVisibleRegion001
- * @tc.desc: Verify the GetVisibleRegion of hdilayerinfo
+ * @tc.desc: Verify the GetVisibleRegions of hdilayerinfo
  * @tc.type:FUNC
  * @tc.require:AR000GGP0P
  * @tc.author:
  */
-HWTEST_F(HdiLayerInfoTest, GetVisibleRegion001, Function | MediumTest| Level3)
+HWTEST_F(HdiLayerInfoTest, GetVisibleRegions001, Function | MediumTest| Level3)
 {
     GraphicIRect iRect = {
         .x = 0,
@@ -197,16 +179,20 @@ HWTEST_F(HdiLayerInfoTest, GetVisibleRegion001, Function | MediumTest| Level3)
         .w = 800,
         .h = 600,
     };
-    HdiLayerInfoTest::hdiLayerInfo_->SetVisibleRegion(1, iRect);
-    ASSERT_EQ(HdiLayerInfoTest::hdiLayerInfo_->GetVisibleRegion().x, iRect.x);
-    ASSERT_EQ(HdiLayerInfoTest::hdiLayerInfo_->GetVisibleRegion().y, iRect.y);
-    ASSERT_EQ(HdiLayerInfoTest::hdiLayerInfo_->GetVisibleRegion().w, iRect.w);
-    ASSERT_EQ(HdiLayerInfoTest::hdiLayerInfo_->GetVisibleRegion().h, iRect.h);
+    std::vector<GraphicIRect> inVisibles;
+    inVisibles.emplace_back(iRect);
+    HdiLayerInfoTest::hdiLayerInfo_->SetVisibleRegions(inVisibles);
+    std::vector<GraphicIRect>& outVisibles = HdiLayerInfoTest::hdiLayerInfo_->GetVisibleRegions();
+    ASSERT_EQ(outVisibles.size(), 1);
+    ASSERT_EQ(outVisibles[0].x, iRect.x);
+    ASSERT_EQ(outVisibles[0].y, iRect.y);
+    ASSERT_EQ(outVisibles[0].w, iRect.w);
+    ASSERT_EQ(outVisibles[0].h, iRect.h);
 }
 
 /**
  * @tc.name: GetDirtyRegion001
- * @tc.desc: Verify the GetDirtyRegion of hdilayerinfo
+ * @tc.desc: Verify the GetDirtyRegions of hdilayerinfo
  * @tc.type:FUNC
  * @tc.require:AR000GGP0P
  * @tc.author:
@@ -219,11 +205,15 @@ HWTEST_F(HdiLayerInfoTest, GetDirtyRegion001, Function | MediumTest| Level3)
         .w = 800,
         .h = 600,
     };
-    HdiLayerInfoTest::hdiLayerInfo_->SetDirtyRegion(iRect);
-    ASSERT_EQ(HdiLayerInfoTest::hdiLayerInfo_->GetDirtyRegion().x, iRect.x);
-    ASSERT_EQ(HdiLayerInfoTest::hdiLayerInfo_->GetDirtyRegion().y, iRect.y);
-    ASSERT_EQ(HdiLayerInfoTest::hdiLayerInfo_->GetDirtyRegion().w, iRect.w);
-    ASSERT_EQ(HdiLayerInfoTest::hdiLayerInfo_->GetDirtyRegion().h, iRect.h);
+    std::vector<GraphicIRect> inDirtyRegions;
+    inDirtyRegions.emplace_back(iRect);
+    HdiLayerInfoTest::hdiLayerInfo_->SetDirtyRegions(inDirtyRegions);
+    std::vector<GraphicIRect>& outDirtyRegions = HdiLayerInfoTest::hdiLayerInfo_->GetDirtyRegions();
+    ASSERT_EQ(outDirtyRegions.size(), 1);
+    ASSERT_EQ(outDirtyRegions[0].x, iRect.x);
+    ASSERT_EQ(outDirtyRegions[0].y, iRect.y);
+    ASSERT_EQ(outDirtyRegions[0].w, iRect.w);
+    ASSERT_EQ(outDirtyRegions[0].h, iRect.h);
 }
 
 /**

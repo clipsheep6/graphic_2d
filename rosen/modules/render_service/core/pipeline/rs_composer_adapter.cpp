@@ -18,6 +18,7 @@
 #include <fstream>
 #include <sstream>
 #include <sys/time.h>
+#include <vector>
 
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
@@ -60,7 +61,9 @@ bool RSComposerAdapter::Init(const ScreenInfo& screenInfo, int32_t offsetX, int3
     screenInfo_ = screenInfo;
 
     GraphicIRect damageRect {0, 0, static_cast<int32_t>(screenInfo_.width), static_cast<int32_t>(screenInfo_.height)};
-    output_->SetOutputDamage(1, damageRect);
+    std::vector<GraphicIRect> damageRects;
+    damageRects.emplace_back(damageRect);
+    output_->SetOutputDamages(damageRects);
     bool directClientCompEnableStatus = RSSystemProperties::GetDirectClientCompEnableStatus();
     output_->SetDirectClientCompEnableStatus(directClientCompEnableStatus);
 
@@ -342,8 +345,12 @@ void RSComposerAdapter::SetComposeInfoToLayer(
     layer->SetLayerAdditionalInfo(node);
     layer->SetCompositionType(info.needClient ?
         GraphicCompositionType::GRAPHIC_COMPOSITION_CLIENT : GraphicCompositionType::GRAPHIC_COMPOSITION_DEVICE);
-    layer->SetVisibleRegion(1, info.visibleRect);
-    layer->SetDirtyRegion(info.srcRect);
+    std::vector<GraphicIRect> visibleRegions;
+    visibleRegions.emplace_back(info.visibleRect);
+    layer->SetVisibleRegions(visibleRegions);
+    std::vector<GraphicIRect> dirtyRegions;
+    dirtyRegions.emplace_back(info.srcRect);
+    layer->SetDirtyRegions(dirtyRegions);
     layer->SetBlendType(info.blendType);
     layer->SetCropRect(info.srcRect);
     if (node -> GetTunnelHandleChange()) {
@@ -641,7 +648,9 @@ void RSComposerAdapter::LayerCrop(const LayerInfoPtr& layer) const
     srcRect.w = dstRectI.IsEmpty() ? 0 : originSrcRect.w * resDstRect.width_ / dstRectI.width_;
     srcRect.h = dstRectI.IsEmpty() ? 0 : originSrcRect.h * resDstRect.height_ / dstRectI.height_;
     layer->SetLayerSize(dstRect);
-    layer->SetDirtyRegion(srcRect);
+    std::vector<GraphicIRect> dirtyRegions;
+    dirtyRegions.emplace_back(srcRect);
+    layer->SetDirtyRegions(dirtyRegions);
     layer->SetCropRect(srcRect);
     RS_LOGD("RsDebug RSComposerAdapter::LayerCrop layer has been cropped dst[%d %d %d %d] src[%d %d %d %d]",
         dstRect.x, dstRect.y, dstRect.w, dstRect.h, srcRect.x, srcRect.y, srcRect.w, srcRect.h);
@@ -691,7 +700,9 @@ void RSComposerAdapter::LayerScaleDown(const LayerInfoPtr& layer)
             srcRect.y += halfdh;
             srcRect.h = newHeight;
         }
-        layer->SetDirtyRegion(srcRect);
+        std::vector<GraphicIRect> dirtyRegions;
+        dirtyRegions.emplace_back(srcRect);
+        layer->SetDirtyRegions(dirtyRegions);
         layer->SetCropRect(srcRect);
         RS_LOGD("RsDebug RSComposerAdapter::LayerScaleDown layer has been scaledown dst[%d %d %d %d]"\
             "src[%d %d %d %d]", dstRect.x, dstRect.y, dstRect.w, dstRect.h,

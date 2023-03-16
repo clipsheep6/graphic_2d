@@ -37,10 +37,6 @@ ohos_unittest("RSRenderServiceClientModifierTest") {
     "//third_party/googletest:gtest_main",
   ]
 
-  if (use_new_skia) {
-    defines = [ "NEW_SKIA" ]
-  }
-
   subsystem_name = "graphic"
   external_deps = [ "c_utils:utils" ]
 }

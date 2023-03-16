@@ -51,9 +51,6 @@ ohos_shared_library("libnative_vsync") {
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
   ]
-  if (use_new_skia) {
-    defines = [ "NEW_SKIA" ]
-  }
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

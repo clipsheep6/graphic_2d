@@ -27,10 +27,7 @@ ohos_shared_library("window_animation") {
     "src/rs_window_animation_stub.cpp",
     "src/rs_window_animation_target.cpp",
   ]
-  
-  if (use_new_skia) {
-    defines = [ "NEW_SKIA" ]
-  }
+
   public_configs = [ ":window_animation_config" ]
 
   cflags_cc = [ "-std=c++17" ]

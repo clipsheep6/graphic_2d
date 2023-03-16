@@ -33,9 +33,6 @@ ohos_fuzztest("RSPropertyFuzzTest") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//third_party/zlib:libz",
   ]
-  if (use_new_skia) {
-    defines = [ "NEW_SKIA" ]
-  }
   cflags = [
     "-g",
     "-O0",

@@ -68,7 +68,6 @@ ohos_executable("bootanimation") {
     "//third_party/zlib:libz",
   ]
   if (use_new_skia) {
-    defines = [ "NEW_SKIA" ]
     deps += [ "//third_party/skia:skia" ]
   } else {
     deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]

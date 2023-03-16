@@ -39,9 +39,6 @@ ohos_unittest("RSRenderServiceConnectionStubTest") {
   deps = [ ":rs_test_common" ]
   defines = []
   defines += gpu_defines
-  if (use_new_skia) {
-    defines += [ "NEW_SKIA" ]
-  }
 }
 
 ## Build RSRenderServiceStubTest
@@ -51,9 +48,6 @@ ohos_unittest("RSRenderServiceStubTest") {
   deps = [ ":rs_test_common" ]
   defines = []
   defines += gpu_defines
-  if (use_new_skia) {
-    defines += [ "NEW_SKIA" ]
-  }
 }
 
 ## Build rs_test_common.a {{{
@@ -82,9 +76,6 @@ ohos_static_library("rs_test_common") {
   testonly = true
   defines = []
   defines += gpu_defines
-  if (use_new_skia) {
-    defines += [ "NEW_SKIA" ]
-  }
 
   public_configs = [ ":rs_test_common_public_config" ]
 

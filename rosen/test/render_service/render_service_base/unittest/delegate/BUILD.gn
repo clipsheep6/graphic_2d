@@ -42,7 +42,6 @@ ohos_unittest("RSRenderServiceBaseDelegateTest") {
   ]
   if (use_new_skia) {
     deps += [ "//third_party/skia:skia" ] 
-    defines = [ "NEW_SKIA" ]
     include_dirs += [ "//third_party/skia/src" ]
   } else {
     deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]

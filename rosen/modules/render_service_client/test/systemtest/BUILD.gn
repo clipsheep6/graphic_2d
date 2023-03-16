@@ -27,9 +27,6 @@ ohos_systemtest("RSInterfacesSystemTest") {
   module_out_path = module_out_path
   sources = [ "rs_interfaces_system_test.cpp" ]
   deps = [ ":rs_client_test_common" ]
-  if (use_new_skia) {
-    defines = [ "NEW_SKIA" ]
-  }
 }
 
 ## Build rs_client_test_common.a {{{
@@ -77,10 +74,6 @@ ohos_static_library("rs_client_test_common") {
     "//foundation/window/window_manager/wmserver:libwms",
     "//third_party/googletest:gtest_main",
   ]
-
-  if (use_new_skia) {
-    defines = [ "NEW_SKIA" ]
-  }
   
   subsystem_name = "graphic"
   part_name = "graphic_standard"

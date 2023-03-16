@@ -52,7 +52,4 @@ ohos_shared_library("windowanimationmanager_napi") {
   part_name = "graphic_standard"
   subsystem_name = "graphic"
 
-  if (use_new_skia) {
-    defines = [ "NEW_SKIA" ]
-  }
 }

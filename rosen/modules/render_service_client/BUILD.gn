@@ -145,9 +145,6 @@ ohos_source_set("render_service_client_src") {
   ]
   public_deps =
       [ "$rosen_root/modules/render_service_base:librender_service_base" ]
-  if (use_new_skia) {
-    defines += [ "NEW_SKIA" ]
-  }
 }
 
 ohos_shared_library("librender_service_client") {

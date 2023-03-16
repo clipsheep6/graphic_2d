@@ -43,8 +43,7 @@ ColorExtract::ColorExtract(std::shared_ptr<Media::PixelMap> pixmap)
     colorVal_ = std::move(colorShared);
     for (int i = 0; i < pixmap->GetHeight(); i++) {
         for (int j = 0; j < pixmap->GetWidth(); j++) {
-            pixmap->
-            (j, i, colorVal[i * pixmap->GetWidth() + j]);
+            pixmap->GetARGB32Color(j, i, colorVal[i * pixmap->GetWidth() + j]);
         }
     }
     grayMsd_ = CalcGrayMsd();
@@ -187,7 +186,7 @@ uint32_t ColorExtract::CalcGrayMsd() const
         grayVar += pow(static_cast<uint64_t>(Rgb2Gray(colorVal[i]) - grayAve), 2);
     }
     grayVar /= colorValLen_;
-    return static_cast<uint32_t> grayVar;
+    return static_cast<uint32_t>(grayVar);
 }
 
 float ColorExtract::NormalizeRgb(uint32_t val) const

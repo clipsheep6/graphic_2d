@@ -77,5 +77,10 @@ void CanvasContext::SwapBuffers()
 {
     renderBackend_->SwapBuffers();
 }
+
+SkSurface* CanvasContext::GetSurface(std::unique_ptr<SurfaceFrame>& frame)
+{
+	return renderBackend_->GetSurface(frame);
+}
 }
 }

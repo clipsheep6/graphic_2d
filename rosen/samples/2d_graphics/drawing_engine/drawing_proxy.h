@@ -30,6 +30,7 @@ public:
     void SwapBuffers();
     void Destroy();
     void RenderFrame();
+    SkSurface* GetSurface(std::unique_ptr<SurfaceFrame>& frame);
 private:
     CanvasContext* canvasContext_;
 };

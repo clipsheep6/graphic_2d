@@ -12,24 +12,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef DRAWING_MULTITHREAD_H
-#define DRAWING_MULTITHREAD_H
-#include "benchmark.h"
-#include "../windowSimulator/winSimulator.h"
+#ifndef WINSIMULATOR_H
+#define WINSIMULATOR_H
+#include "include/core/SkCanvas.h"
+#include "include/core/SkSurface.h"
 
-namespace OHOS {
-namespace Rosen {
-class DrawingMultithread : public BenchMark {
+class WinSimulator {
 public:
-    DrawingMultithread() {}
-    ~DrawingMultithread() {}
-    virtual void Start() override;
-    virtual void Stop() override;
-    virtual void Test(SkSurface* surface, int width, int height) override;
-    virtual void Output() override;
+    WinSimulator() {}
+    int setWindowInfo(int width, int height);
+    int onPaint(SkSurface *surface);
+    int onFlush();
+    void setMode(int mode, int wins);
+    void useMultiThread(int multiThread);
+    float getPaintTime();
 private:
-	WinSimulator mTester;
-};
-}
-}
+    int mWindowWidth;
+    int mWindowHeight;
+    int mDisplayMode;
+    int mSubWindows;
+    int mMultiThread = 0;
+    float mFrameTime_paint = 0;
+    double mDrawTime = 0;
+    int mFrameCount = 0;
+    };
 #endif

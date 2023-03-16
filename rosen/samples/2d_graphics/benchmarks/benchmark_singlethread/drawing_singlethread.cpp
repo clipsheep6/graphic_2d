@@ -29,29 +29,18 @@ void DrawingSinglethread::Stop()
     std::cout << "DrawingSinglethread::Stop-" << std::endl;
 }
 
-void DrawingSinglethread::Test(SkCanvas* canvas, int width, int height)
+void DrawingSinglethread::Test(SkSurface* surface, int width, int height)
 {
     std::cout << "DrawingSinglethread::Test+" << std::endl;
-    SkBitmap bitmap;
-    bitmap.allocN32Pixels(width, height);
-
-    SkCanvas skiaCanvas(bitmap);
-    
-    SkPaint paint;
-    paint.setAntiAlias(true);
-    paint.setColor(0xFF9A67BE);
-    paint.setStrokeWidth(20); // storke width
-    skiaCanvas.skew(1, 0); // skew in direction x and y
-    skiaCanvas.drawLine(32, 96,32, 160, paint); // point position
-    skiaCanvas.skew(-2, 0); // skew in direction x and y
-    skiaCanvas.drawLine(288, 96, 288, 160, paint); // point position
-
-    canvas->drawBitmap(bitmap, 0, 0);
+    mTester.setWindowInfo(width, height);
+    mTester.setMode(0, 3);
+    mTester.onPaint(surface);
     std::cout << "DrawingSinglethread::Test-" << std::endl;
 }
 
 void DrawingSinglethread::Output()
 {
+	std::cout <<"whole draw time = "<<mTester.getPaintTime()<<"ms"<<std::endl;
 }
 }
 }

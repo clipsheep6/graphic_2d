@@ -69,5 +69,10 @@ void DrawingProxy::Destroy()
         canvasContext_ = nullptr;
     }
 }
+
+SkSurface* DrawingProxy::GetSurface(std::unique_ptr<SurfaceFrame>& frame)
+{
+	return canvasContext_->GetSurface(frame);
+}
 }
 }

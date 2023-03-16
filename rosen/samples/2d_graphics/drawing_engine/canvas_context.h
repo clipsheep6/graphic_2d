@@ -32,6 +32,7 @@ public:
     void MakeCurrent();
     void* CreateSurface(void* window);
     void SwapBuffers();
+    SkSurface* GetSurface(std::unique_ptr<SurfaceFrame>& frame);
 private:
     explicit CanvasContext(std::unique_ptr<IRenderBackend> renderBackend);
     std::unique_ptr<IRenderBackend> renderBackend_;

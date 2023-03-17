@@ -247,6 +247,16 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSD
             }
 
             auto params = RSUniRenderUtil::CreateBufferDrawParam(node, false);
+
+            // Screen capture considering color inversion
+            ColorFilterMode colorFilterMode = renderEngine_->GetColorFilterMode();
+            if (colorFilterMode >= ColorFilterMode::INVERT_COLOR_ENABLE_MODE &&
+                colorFilterMode <= ColorFilterMode::INVERT_DALTONIZATION_TRITANOMALY_MODE) {
+                RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode: \
+                    SetColorFilterModeToPaint mode:%d.", static_cast<int32_t>(colorFilterMode));
+                RSBaseRenderUtil::SetColorFilterModeToPaint(colorFilterMode, params.paint);
+            }
+
             renderEngine_->DrawDisplayNodeWithParams(*canvas_, node, params);
         }
     } else {

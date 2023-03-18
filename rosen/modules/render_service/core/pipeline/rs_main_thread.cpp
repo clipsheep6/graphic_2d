@@ -178,6 +178,7 @@ void RSMainThread::Init()
         SetRSEventDetectorLoopStartTag();
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
         ConsumeAndUpdateAllNodes();
+        ProcessFingerPrint();
         WaitUntilUnmarshallingTaskFinished();
         ProcessCommand();
         Animate(timestamp_);
@@ -1535,6 +1536,32 @@ sk_sp<SkImage> RSMainThread::GetWatermarkImg()
 bool RSMainThread::GetWatermarkFlag()
 {
     return isShow_;
+}
+
+void RSMainThread::ProcessFingerPrint()
+{
+    std::lock_guard<std::mutex> lock(fingerprintMutex_);
+    const auto& nodeMap = GetContext().GetNodeMap();
+    bool hasFingerprint = false;
+    nodeMap.TraverseSurfaceNodes([&hasFingerprint](const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) mutable {
+        if (surfaceNode == nullptr) {
+            return;
+        }
+        if (surfaceNode->GetBuffer()->GetSurfaceBufferType() == SurfaceBufferType::BUFFER_TYPE_FINGERPRINT) {
+            hasFingerprint = true;
+        } else {
+            return;
+        }
+    });  
+    if (hasFingerprint_ != hasFingerprint) {
+        hasFingerprint_ = hasFingerprint;
+        RequestNextVSync();
+    }
+}
+
+bool RSMainThread::GetFingerPrint()
+{
+    return hasFingerprint_;
 }
 } // namespace Rosen
 } // namespace OHOS

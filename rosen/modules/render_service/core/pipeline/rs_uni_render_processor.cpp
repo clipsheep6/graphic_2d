@@ -73,6 +73,11 @@ void RSUniRenderProcessor::ProcessDisplaySurface(RSDisplayRenderNode& node)
             node.GetId());
         return;
     }
+    if (node.GetFingerprint()) {
+        layer->SetFingerprint(true);
+    } else {
+        layer->SetFingerprint(false);
+    }
     layers_.emplace_back(layer);
     for (auto surface : node.GetCurAllSurfaces()) {
         auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(surface);

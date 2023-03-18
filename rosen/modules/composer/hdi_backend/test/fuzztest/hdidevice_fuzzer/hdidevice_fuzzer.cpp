@@ -65,9 +65,10 @@ namespace OHOS {
         GraphicLayerAlpha alpha = GetData<GraphicLayerAlpha>();
         GraphicIRect layerRect = GetData<GraphicIRect>();
         GraphicTransformType ttype = GetData<GraphicTransformType>();
-        uint32_t num = GetData<uint32_t>();
         GraphicIRect visible = GetData<GraphicIRect>();
+        std::vector<GraphicIRect> visibles = { visible };
         GraphicIRect dirty = GetData<GraphicIRect>();
+        std::vector<GraphicIRect> dirtyRegions = { dirty };
         GraphicCompositionType ctype = GetData<GraphicCompositionType>();
         GraphicBlendType btype = GetData<GraphicBlendType>();
         GraphicIRect crop = GetData<GraphicIRect>();
@@ -86,8 +87,8 @@ namespace OHOS {
         device->SetLayerAlpha(screenId, layerId, alpha);
         device->SetLayerSize(screenId, layerId, layerRect);
         device->SetTransformMode(screenId, layerId, ttype);
-        device->SetLayerVisibleRegion(screenId, layerId, num, visible);
-        device->SetLayerDirtyRegion(screenId, layerId, dirty);
+        // device->SetLayerVisibleRegion(screenId, layerId, visibles);
+        device->SetLayerDirtyRegion(screenId, layerId, dirtyRegions);
         device->SetLayerBuffer(screenId, layerId, nullptr, fence);
         device->SetLayerCompositionType(screenId, layerId, ctype);
         device->SetLayerBlendType(screenId, layerId, btype);
@@ -125,8 +126,8 @@ namespace OHOS {
             fenceFd = DEFAULT_FENCE;
         }
         sptr<SyncFence> fence = new SyncFence(fenceFd);
-        uint32_t num = GetData<uint32_t>();
         GraphicIRect damageRect = GetData<GraphicIRect>();
+        std::vector<GraphicIRect> damageRects = { damageRect };
         GraphicGamutMap gamutMap = GetData<GraphicGamutMap>();
 
         uint32_t formatCount = GetData<uint32_t>();
@@ -142,7 +143,7 @@ namespace OHOS {
         std::vector<int32_t> types;
         device->GetScreenCompChange(screenId, layersId, types);
         device->SetScreenClientBuffer(screenId, nullptr, fence);
-        device->SetScreenClientDamage(screenId, num, damageRect);
+        // device->SetScreenClientDamage(screenId, damageRects);
         std::vector<uint32_t> layers;
         std::vector<sptr<SyncFence>> fences;
         device->GetScreenReleaseFence(screenId, layers, fences);

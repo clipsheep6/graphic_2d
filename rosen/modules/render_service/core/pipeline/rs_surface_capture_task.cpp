@@ -102,11 +102,15 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         Media::AllocatorType::HEAP_ALLOC, nullptr);
 #endif
     if (auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>()) {
-        RS_LOGD("RSSurfaceCaptureTask::Run: Into DISPLAY_NODE DisplayRenderNodeId:[%" PRIu64 "]", node->GetId());
         auto rotation = displayNode->GetRotation();
-        if (rotation == ScreenRotation::ROTATION_90 || rotation == ScreenRotation::ROTATION_270) {
-            pixelmap->rotate(static_cast<int32_t>(rotation));
+        if (rotation == ScreenRotation::ROTATION_90) {
+            pixelmap->rotate(90); // 90 degrees
         }
+
+        if (rotation == ScreenRotation::ROTATION_270) {
+            pixelmap->rotate(270); // 270 degrees
+        }
+        RS_LOGD("RSSurfaceCaptureTask::Run: PixelmapRotation: %d", static_cast<int32_t>(rotation));
     }
 
     return pixelmap;
@@ -214,6 +218,8 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSD
 {
     RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode child size:[%d] total size:[%d]",
         node.GetChildrenCount(), node.GetSortedChildren().size());
+    RS_TRACE_NAME("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode:" +
+        std::to_string(node.GetId()));
 
     // Mirror Display is unable to snapshot.
     if (node.IsMirrorDisplay()) {
@@ -230,8 +236,6 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSD
     if (IsUniRender()) {
         FindSecurityLayerAndHardwareEnabledNodes();
         if (hasSecurityLayer_) {
-            RS_TRACE_NAME("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode:" +
-                std::to_string(node.GetId()));
             RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode: \
                 process RSDisplayRenderNode(id:[%" PRIu64 "]) Not using UniRender buffer.", node.GetId());
             ProcessBaseRenderNode(node);
@@ -241,8 +245,6 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSD
                 return;
             }
 
-            RS_TRACE_NAME("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode:" +
-                std::to_string(node.GetId()));
             RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode: \
                 process RSDisplayRenderNode(id:[%" PRIu64 "]) using UniRender buffer.", node.GetId());
 

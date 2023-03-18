@@ -60,5 +60,6 @@ ohos_systemtest("vulkan_wrapper_api_test") {
     "//third_party/vulkan-headers:vulkan_headers",
     "//third_party/zlib:libz",
   ]
+
 }
 ## SystemTest vulkan_wrapper_api_test }}}

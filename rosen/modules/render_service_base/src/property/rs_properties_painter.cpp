@@ -325,12 +325,24 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     auto visibleRect = canvas.GetVisibleRect();
     if (visibleRect.intersect(clipBounds)) {
         // the snapshot only contains the clip region, so we need to offset the src rect
+#ifdef NEW_SKIA
+        canvas.drawImageRect(
+            imageSnapshot.get(), visibleRect.makeOffset(-clipBounds.left(), -clipBounds.top()), visibleRect,
+                SkSamplingOptions(), &paint, SkCanvas::kStrict_SrcRectConstraint);
+#else
         canvas.drawImageRect(
             imageSnapshot.get(), visibleRect.makeOffset(-clipBounds.left(), -clipBounds.top()), visibleRect, &paint);
+#endif
     } else {
         // the snapshot only contains the clip region, so we need to offset the src rect
+#ifdef NEW_SKIA
+        canvas.drawImageRect(
+            imageSnapshot.get(), clipBounds.makeOffset(-clipBounds.left(), -clipBounds.top()), clipBounds,
+                SkSamplingOptions(), &paint, SkCanvas::kStrict_SrcRectConstraint);
+#else
         canvas.drawImageRect(
             imageSnapshot.get(), clipBounds.makeOffset(-clipBounds.left(), -clipBounds.top()), clipBounds, &paint);
+#endif
     }
     filter->PostProcess(canvas);
 }
@@ -403,8 +415,11 @@ SkColor RSPropertiesPainter::CalcAverageColor(sk_sp<SkImage> imageSnapshot)
 
     // resize snapshot to 1x1 to calculate average color
     // kMedium_SkFilterQuality will do bilerp + mipmaps for down-scaling, we can easily get average color
+#ifdef NEW_SKIA
+    imageSnapshot->scalePixels(single_pixel, SkSamplingOptions());
+#else
     imageSnapshot->scalePixels(single_pixel, SkFilterQuality::kMedium_SkFilterQuality);
-
+#endif
     // convert color format and return average color
     return SkColor4f::FromBytes_RGBA(pixel[0]).toSkColor();
 }

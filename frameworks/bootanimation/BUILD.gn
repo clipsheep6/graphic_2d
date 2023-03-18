@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine/ace_config.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 ## Build bootanimation {{{
@@ -64,9 +65,13 @@ ohos_executable("bootanimation") {
     "//foundation/window/window_manager/dm:libdm",
     "//foundation/window/window_manager/wm:libwm",
     "//third_party/cJSON:cjson_static",
-    "//third_party/flutter/build/skia:ace_skia_ohos",
     "//third_party/zlib:libz",
   ]
+  if (use_new_skia) {
+    deps += [ "//third_party/skia:skia" ]
+  } else {
+    deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  }
 
   external_deps = [
     "hitrace_native:hitrace_meter",

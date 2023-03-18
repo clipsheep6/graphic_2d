@@ -19,7 +19,11 @@
 #include <SkGraphics.h>
 
 #include "SkiaMemoryTracer.h"
+#ifdef NEW_SKIA
+#include "include/gpu/GrDirectContext.h"
+#else
 #include "include/gpu/GrContext.h"
+#endif
 #include "src/gpu/GrContextPriv.h"
 
 #include "pipeline/rs_main_thread.h"
@@ -35,7 +39,11 @@ constexpr const char* MEM_JEMALLOC_TYPE = "jemalloc";
 }
 
 
-void MemoryManager::DumpMemoryUsage(DfxString& log, const GrContext* grContext, std::string& type)
+#ifdef NEW_SKIA
+void MemoryManager::DumpMemoryUsage(DfxString& log, const GrDirectContext* grContext)
+#else
+void MemoryManager::DumpMemoryUsage(DfxString& log, const GrContext* grContext)
+#endif
 {
     if (type.empty() || type == MEM_RS_TYPE) {
         DumpRenderServiceMemory(log);

@@ -15,7 +15,11 @@
 
 #include <vector>
 
+#if defined(NEW_SKIA)
+#include "include/gpu/GrDirectContext.h"
+#else
 #include "include/gpu/GrContext.h"
+#endif
 #include "memory/DfxString.h"
 #include "memory/MemoryGraphic.h"
 #include "memory/MemoryTrack.h"
@@ -34,7 +38,11 @@ private:
     // rs memory = rs + skia cpu + skia gpu
     static void DumpRenderServiceMemory(DfxString& log);
     static void DumpDrawingCpuMemory(DfxString& log);
-    static void DumpDrawingGpuMemory(DfxString& log, const GrContext* grContext);
+#ifdef NEW_SKIA
+    static void DumpMemoryUsage(DfxString& log, const GrDirectContext* grContext);
+#else
+    static void DumpMemoryUsage(DfxString& log, const GrContext* grContext);
+#endif
 
     //jemalloc info
     static void DumpMallocStat(std::string& log);

@@ -14,10 +14,13 @@
  */
 
 #include "pipeline/rs_cold_start_thread.h"
-
 #ifdef RS_ENABLE_GL
 #include <EGL/egl.h>
+#if defined(NEW_SKIA)
+#include "include/gpu/GrDirectContext.h"
+#else
 #include "include/gpu/GrContext.h"
+#endif
 #endif
 #ifdef ROSEN_OHOS
 #include <sys/prctl.h>

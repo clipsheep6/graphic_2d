@@ -76,6 +76,11 @@ void TexginePaint::SetAlpha(unsigned int alpha)
     paint_->setAlpha(alpha);
 }
 
+void TexginePaint::SetBlendMode(TexgineBlendMode mode)
+{
+    paint_->setBlendMode(static_cast<SkBlendMode>(mode));
+}
+
 bool TexginePaint::operator ==(const TexginePaint &rhs) const
 {
     return *paint_ == rhs.GetPaint();

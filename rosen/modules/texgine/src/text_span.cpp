@@ -159,16 +159,19 @@ void TextSpan::Paint(TexgineCanvas &canvas, double offsetx, double offsety, cons
     paint.SetAntiAlias(true);
     paint.SetARGB(MAXRGB, MAXRGB, 0, 0);
     paint.SetColor(xs.color_);
-    if (xs.background_.has_value()) {
-        auto rect = TexgineRect::MakeXYWH(offsetx, offsety + *tmetrics_.fAscent_, width_,
-            *tmetrics_.fDescent_ - *tmetrics_.fAscent_);
-        canvas.DrawRect(rect, xs.background_.value());
-    }
+    paint.SetStyle(TexginePaint::STROKEANDFILL);
+    paint.SetBlendMode(TexginePaint::SRC_OVER);
+    // if (xs.background_.has_value()) {
+    //     auto rect = TexgineRect::MakeXYWH(offsetx, offsety + *tmetrics_.fAscent_, width_,
+    //         *tmetrics_.fDescent_ - *tmetrics_.fAscent_);
+    //     canvas.DrawRect(rect, xs.background_.value());
+    // }
 
     if (xs.foreground_.has_value()) {
         paint = xs.foreground_.value();
+        paint.SetAlpha(255);
     }
-
+    paint.SetBlendMode(TexginePaint::SRC_OVER);
     canvas.DrawTextBlob(textBlob_, offsetx, offsety, paint);
     PaintDecoration(canvas, offsetx, offsety, xs);
 }
@@ -222,7 +225,7 @@ void TextSpan::PaintDecorationStyle(TexgineCanvas &canvas, double left, double r
         case TextDecorationStyle::DASHED: {
             const float intervals[2] = {WIDTHSCALAR, HEIGHTSCALAR};
             paint.SetPathEffect(TexgineDashPathEffect::Make(intervals, COUNT, PHASE));
-            paint.SetStyle(TexginePaint::kStroke_Style);
+            paint.SetStyle(TexginePaint::STROKE);
             break;
         }
         case TextDecorationStyle::WAVY: {
@@ -241,7 +244,7 @@ void TextSpan::PaintDecorationStyle(TexgineCanvas &canvas, double left, double r
             wavy.LineTo({POINTX0, POINTY2 - thickness});
             paint.SetPathEffect(TexginePath1DPathEffect::Make(wavy, WAVYADVANCE, PHASE,
                                                               TexginePath1DPathEffect::kRotate_Style));
-            paint.SetStyle(TexginePaint::kStroke_Style);
+            paint.SetStyle(TexginePaint::STROKE);
             break;
         }
     }

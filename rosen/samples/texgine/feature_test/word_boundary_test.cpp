@@ -56,7 +56,7 @@ public:
                 TexginePaint paint;
                 paint.SetAntiAlias(true);
                 paint.SetColor(0x5500FF00);
-                paint.SetStyle(TexginePaint::kFill_Style);
+                paint.SetStyle(TexginePaint::FILL);
                 constexpr auto ws = TextRectWidthStyle::TIGHT;
                 constexpr auto hs = TextRectHeightStyle::TIGHT;
 
@@ -68,7 +68,7 @@ public:
                 }
 
                 paint.SetColor(0xFF000000);
-                paint.SetStyle(TexginePaint::kStroke_Style);
+                paint.SetStyle(TexginePaint::STROKE);
                 auto indexRect = ty->GetTextRectsByBoundary(Boundary{index, index + 1}, hs, ws);
                 for (auto &[rect, _] : indexRect) {
                     rect.GetRect()->offset(x, y);

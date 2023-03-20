@@ -25,7 +25,7 @@ struct MyPaint {
     uint32_t color = 0xFF000000;
     bool isAntiAlias = false;
     float blurRadius = 0;
-    TexginePaint::Style style = TexginePaint::kFill_Style;
+    TexginePaint::Style style = TexginePaint::FILL;
     float strokeWidth = 0;
 };
 
@@ -83,7 +83,7 @@ struct FontStyleTestData {
             .fontSize_ = 32,
             .background_ = ConvertMyPaintToTexginePaint({
                 .color = 0x5500FF00,
-                .style = TexginePaint::kStroke_Style,
+                .style = TexginePaint::STROKE,
                 .strokeWidth = 2.0f,
             }),
         }

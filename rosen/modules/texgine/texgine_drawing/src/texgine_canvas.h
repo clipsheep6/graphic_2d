@@ -30,6 +30,7 @@ public:
     void DrawLine(double x0, double y0, double x1, double y1, TexginePaint &paint);
     void DrawRect(TexgineRect &rect, const TexginePaint &paint) const;
     void DrawTextBlob(std::shared_ptr<TexgineTextBlob> &blob, float x, float y, TexginePaint &paint);
+    void Clear(uint32_t clolor);
     int Save();
     void Translate(float dx, float dy);
     SkCanvas *GetCanvas();

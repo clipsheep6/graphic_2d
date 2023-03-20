@@ -73,7 +73,7 @@ public:
         TexginePaint background;
         background.SetColor(0xff00ff00);
         background.SetStrokeWidth(2.0f);
-        background.SetStyle(TexginePaint::kStroke_Style);
+        background.SetStyle(TexginePaint::STROKE);
         TextStyle style = {
             .fontSize_ = 16,
             .background_ = background,

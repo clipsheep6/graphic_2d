@@ -19,6 +19,7 @@
 #include <memory>
 
 #include <include/core/SkPaint.h>
+#include <include/core/SkBlendMode.h>
 
 #include "texgine_mask_filter.h"
 #include "texgine_path_effect.h"
@@ -27,9 +28,41 @@ namespace Texgine {
 class TexginePaint {
 public:
     enum Style : uint8_t {
-        kFill_Style,
-        kStroke_Style,
-        kStrokeAndFill_Style,
+        FILL,
+        STROKE,
+        STROKEANDFILL,
+    };
+
+    enum TexgineBlendMode : uint8_t {
+        CLEAR,
+        SRC,
+        DST,
+        SRC_OVER,
+        DST_OVER,
+        SRC_IN,
+        DST_IN,
+        SRC_OUT,
+        DST_OUT,
+        SRC_ATOP,
+        DST_ATOP,
+        XOR,
+        PLUS,
+        MODULATE,
+        SCREEN,
+        OVERLAY,
+        DARKEN,
+        LIGHTEN,
+        COLOR_DODGE,
+        COLOR_BURN,
+        HARD_LIGHT,
+        SOFT_LIGHT,
+        DIFFERENCE,
+        EXCLUSION,
+        MULTIPLY,
+        HUE,
+        STATURATION,
+        COLOR,
+        LUMINOSITY,
     };
 
     TexginePaint();
@@ -44,6 +77,7 @@ public:
     void SetPathEffect(std::shared_ptr<TexginePathEffect> pathEffect);
     void SetMaskFilter(std::shared_ptr<TexgineMaskFilter> maskFilter);
     void SetAlpha(unsigned int alpha);
+    void SetBlendMode(TexgineBlendMode mode);
     bool operator ==(const TexginePaint &rhs) const;
 
 private:

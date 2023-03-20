@@ -94,7 +94,7 @@ public:
 
                 TexginePaint paint;
                 paint.SetAntiAlias(true);
-                paint.SetStyle(TexginePaint::kFill_Style);
+                paint.SetStyle(TexginePaint::FILL);
 
                 // max
                 paint.SetColor(0x5500FF00);

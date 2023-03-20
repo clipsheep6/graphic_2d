@@ -97,7 +97,7 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         return nullptr;
     }
     SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
-        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+        kRGB_565_SkColorType, kPremul_SkAlphaType);
     if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
         RS_LOGE("RSSurfaceCaptureTask::Run: readPixels failed");
         free(data);
@@ -126,6 +126,7 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::CreatePixelMapBySurfaceNo
     Media::InitializationOptions opts;
     opts.size.width = ceil(pixmapWidth * scaleX_);
     opts.size.height = ceil(pixmapHeight * scaleY_);
+    opts.pixelFormat = Media::PixelFormat::RGB_565;
     RS_LOGD("RSSurfaceCaptureTask::CreatePixelMapBySurfaceNode: origin pixelmap width is [%u], height is [%u], "\
         "created pixelmap width is [%u], height is [%u], the scale is scaleY:[%f], scaleY:[%f]",
         pixmapWidth, pixmapHeight, opts.size.width, opts.size.height, scaleX_, scaleY_);
@@ -156,6 +157,7 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::CreatePixelMapByDisplayNo
     Media::InitializationOptions opts;
     opts.size.width = ceil(pixmapWidth * scaleX_);
     opts.size.height = ceil(pixmapHeight * scaleY_);
+    opts.pixelFormat = Media::PixelFormat::RGB_565;
     RS_LOGD("RSSurfaceCaptureTask::CreatePixelMapByDisplayNode: origin pixelmap width is [%u], height is [%u], "\
         "created pixelmap width is [%u], height is [%u], the scale is scaleY:[%f], scaleY:[%f]",
         pixmapWidth, pixmapHeight, opts.size.width, opts.size.height, scaleX_, scaleY_);
@@ -168,13 +170,13 @@ sk_sp<SkSurface> RSSurfaceCaptureTask::CreateSurface(const std::unique_ptr<Media
         RS_LOGE("RSSurfaceCaptureTask::CreateSurface: pixelmap == nullptr");
         return nullptr;
     }
-    auto address = const_cast<uint32_t*>(pixelmap->GetPixel32(0, 0));
+    auto address = const_cast<uint16_t*>(pixelmap->GetPixel16(0, 0));
     if (address == nullptr) {
         RS_LOGE("RSSurfaceCaptureTask::CreateSurface: address == nullptr");
         return nullptr;
     }
     SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
-        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+        kRGB_565_SkColorType, kPremul_SkAlphaType);
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
     auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
     if (renderContext == nullptr) {

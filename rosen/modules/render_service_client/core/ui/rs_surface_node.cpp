@@ -25,7 +25,7 @@
 #include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_thread.h"
 #include "platform/common/rs_log.h"
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
+#ifndef ROSEN_CROSS_PLATFORM
 #include "platform/drawing/rs_surface_converter.h"
 #endif
 #include "render_context/render_context.h"
@@ -55,7 +55,7 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
     RSSurfaceRenderNodeConfig config = {
         .id = node->GetId(),
         .name = node->name_,
-        .onRender = surfaceNodeConfig.onRender,
+        .additionalData = surfaceNodeConfig.additionalData,
     };
     if (!isWindow) {
         config.nodeType = RSSurfaceNodeType::SELF_DRAWING_NODE;
@@ -110,8 +110,8 @@ void RSSurfaceNode::CreateNodeInRenderThread()
 
     isChildOperationDisallowed_ = true;
     isRenderServiceNode_ = false;
-    std::unique_ptr<RSCommand> command =
-        std::make_unique<RSSurfaceNodeSetSurfaceNodeType>(GetId(), RSSurfaceNodeType::ABILITY_COMPONENT_NODE);
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeSetSurfaceNodeType>(GetId(),
+        static_cast<uint8_t>(RSSurfaceNodeType::ABILITY_COMPONENT_NODE));
     transactionProxy->AddCommand(command, true);
 
     // create node in RT (only when in divided render and isRenderServiceNode_ == false)
@@ -193,7 +193,7 @@ bool RSSurfaceNode::GetSecurityLayer() const
     return isSecurityLayer_;
 }
 
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
+#ifndef ROSEN_CROSS_PLATFORM
 void RSSurfaceNode::SetColorSpace(ColorGamut colorSpace)
 {
     colorSpace_ = colorSpace;
@@ -319,7 +319,7 @@ bool RSSurfaceNode::CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config
     return (surface_ != nullptr);
 }
 
-#if !defined(__gnu_linux__) && !defined(_WIN32) && !defined(__APPLE__)
+#ifndef ROSEN_CROSS_PLATFORM
 sptr<OHOS::Surface> RSSurfaceNode::GetSurface() const
 {
     if (surface_ == nullptr) {

@@ -56,7 +56,7 @@ void SurfaceNodeCommandHelper::SetSecurityLayer(RSContext& context, NodeId id, b
     }
 }
 
-#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
+#ifndef ROSEN_CROSS_PLATFORM
 void SurfaceNodeCommandHelper::SetColorSpace(RSContext& context, NodeId id, ColorGamut colorSpace)
 {
     if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
@@ -109,8 +109,9 @@ void SurfaceNodeCommandHelper::SetIsNotifyUIBufferAvailable(RSContext& context, 
     }
 }
 
-void SurfaceNodeCommandHelper::SetSurfaceNodeType(RSContext& context, NodeId nodeId, RSSurfaceNodeType type)
+void SurfaceNodeCommandHelper::SetSurfaceNodeType(RSContext& context, NodeId nodeId, uint8_t surfaceNodeType)
 {
+    auto type = static_cast<RSSurfaceNodeType>(surfaceNodeType);
     if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(nodeId)) {
         node->SetSurfaceNodeType(type);
     }

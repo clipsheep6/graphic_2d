@@ -27,6 +27,7 @@
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_cold_start_thread.h"
 #include "pipeline/rs_divided_render_util.h"
+#include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_render_engine.h"
 #include "pipeline/rs_render_service_visitor.h"
 #include "pipeline/rs_root_render_node.h"
@@ -174,8 +175,8 @@ void RSMainThread::Init()
 {
     mainLoop_ = [&]() {
         RS_LOGD("RsDebug mainLoop start");
+        RenderFrameStart();
         PerfMultiWindow();
-        RenderFrameTrace::GetInstance().RenderStartFrameTrace(RS_INTERVAL_NAME);
         SetRSEventDetectorLoopStartTag();
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
         ConsumeAndUpdateAllNodes();
@@ -196,7 +197,7 @@ void RSMainThread::Init()
         rsEventManager_.UpdateParam();
         RS_LOGD("RsDebug mainLoop end");
     };
-
+    RsFrameReport::GetInstance().Init();
     if (isUniRender_) {
         unmarshalBarrierTask_ = [this]() {
             auto cachedTransactionData = RSUnmarshalThread::Instance().GetCachedTransactionData();
@@ -1050,7 +1051,9 @@ void RSMainThread::OnVsync(uint64_t timestamp, void* data)
 void RSMainThread::Animate(uint64_t timestamp)
 {
     RS_TRACE_FUNC();
-
+    if (RsFrameReport::GetInstance().GetEnable()) {
+        RsFrameReport::GetInstance().AnimateStart();
+    }
     lastAnimateTimestamp_ = timestamp;
 
     if (context_->animatingNodeList_.empty()) {
@@ -1190,6 +1193,9 @@ void RSMainThread::CleanOcclusionListener()
 void RSMainThread::SendCommands()
 {
     RS_TRACE_FUNC();
+    if (RsFrameReport::GetInstance().GetEnable()) {
+        RsFrameReport::GetInstance().SendCommandsStart();
+    }
     if (!RSMessageProcessor::Instance().HasTransaction()) {
         return;
     }
@@ -1501,6 +1507,14 @@ void RSMainThread::PerfMultiWindow()
         RS_LOGD("RSMainThread::PerfMultiWindow soc perf off");
         PerfRequest(PERF_MULTI_WINDOW_REQUESTED_CODE, false);
     }
+}
+
+void RSMainThread::RenderFrameStart()
+{
+    if (RsFrameReport::GetInstance().GetEnable()) {
+        RsFrameReport::GetInstance().RenderStart();
+    }
+    RenderFrameTrace::GetInstance().RenderStartFrameTrace(RS_INTERVAL_NAME);
 }
 
 void RSMainThread::SetAppWindowNum(uint32_t num)

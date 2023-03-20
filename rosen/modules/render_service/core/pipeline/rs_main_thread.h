@@ -201,6 +201,7 @@ private:
     void PerfAfterAnim();
     void PerfForBlurIfNeeded();
     void PerfMultiWindow();
+    void RenderFrameStart();
     void ResetHardwareEnabledState();
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;

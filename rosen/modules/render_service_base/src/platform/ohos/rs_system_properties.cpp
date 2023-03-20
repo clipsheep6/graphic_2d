@@ -211,5 +211,10 @@ int RSSystemProperties::WatchSystemProperty(const char* name, OnSystemPropertyCh
 {
     return WatchParameter(name, func, context);
 }
+
+bool RSSystemProperties::GetUseGpuDrawImageForVulkanEnabled()
+{
+    return std::atoi((system::GetParameter("rosen.usegpudrawforvulkan.enabled", "0")).c_str()) != 0;
+}
 } // namespace Rosen
 } // namespace OHOS

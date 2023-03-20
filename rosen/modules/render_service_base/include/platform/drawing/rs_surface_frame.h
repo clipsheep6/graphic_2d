@@ -36,6 +36,7 @@ public:
     virtual SkCanvas* GetCanvas() = 0;
     virtual sk_sp<SkSurface> GetSurface() = 0;
     virtual void SetRenderContext(RenderContext* context) = 0;
+    virtual std::shared_ptr<vulkan::VulkanWindow> GetVulkanWindow() const { return nullptr; }
 protected:
     sk_sp<SkSurface> skSurface_ = nullptr;
 private:

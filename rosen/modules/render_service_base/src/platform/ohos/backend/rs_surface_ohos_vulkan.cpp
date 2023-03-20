@@ -15,6 +15,7 @@
 
 #include "rs_surface_ohos_vulkan.h"
 
+#include <memory>
 #include <vulkan_proc_table.h>
 #include <vulkan_native_surface_ohos.h>
 
@@ -63,18 +64,18 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(int32_t width,
 
     if (mVulkanWindow == nullptr) {
         auto vulkanSurface = std::make_unique<vulkan::VulkanNativeSurfaceOHOS>(mNativeWindow);
-        mVulkanWindow = new vulkan::VulkanWindow(std::move(vulkanSurface));
-        ROSEN_LOGD("RSSurfaceOhosVulkan: create vulkan window");
+        mVulkanWindow = std::make_shared<vulkan::VulkanWindow>(std::move(vulkanSurface));
+        ROSEN_LOGI("RSSurfaceOhosVulkan::RequestFrame create vulkan window %p", mVulkanWindow.get());
     }
 
     if (mVulkanWindow == nullptr) {
-        ROSEN_LOGE("RSSurfaceOhosVulkan: Invalid VulkanWindow, return");
+        ROSEN_LOGE("RSSurfaceOhosVulkan::RequestFrame mVulkanWindow is nullptr");
         return nullptr;
     }
 
     sk_sp<SkSurface> skSurface = mVulkanWindow->AcquireSurface();
     if (!skSurface) {
-        ROSEN_LOGE("RSSurfaceOhosVulkan: skSurface is null, return");
+        ROSEN_LOGE("RSSurfaceOhosVulkan::RequestFrame skSurface is nullptr");
         return nullptr;
     }
 
@@ -120,6 +121,8 @@ void RSSurfaceOhosVulkan::ClearBuffer()
 {
     if (producer_ != nullptr) {
         ROSEN_LOGD("RSSurfaceOhosVulkan: Clear surface buffer!");
+        DestoryNativeWindow(mNativeWindow);
+        mNativeWindow = nullptr;
         producer_->GoBackground();
     }
 }

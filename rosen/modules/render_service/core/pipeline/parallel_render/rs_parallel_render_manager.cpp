@@ -525,7 +525,8 @@ void RSParallelRenderManager::InitDisplayNodeAndRequestFrame(
 {
 #ifdef RS_ENABLE_VK
     auto& context = RSMainThread::Instance()->GetContext();
-    parallelFrames_.clear();
+    parallelSurfaces_.clear();
+    renderEngine->ClearParallelFrames();
     for (int i = 0; i < PARALLEL_THREAD_NUM; i++) {
         if(!parallelDisplayNodes_[i]) {
             RSDisplayNodeConfig config;
@@ -551,7 +552,8 @@ void RSParallelRenderManager::InitDisplayNodeAndRequestFrame(
         std::unique_ptr<RSRenderFrame> renderFrame =
             renderEngine->RequestFrame(std::static_pointer_cast<RSSurfaceOhos>(rsSurface),
             RSBaseRenderUtil::GetFrameBufferRequestConfig(screenInfo, true));
-        parallelFrames_.push_back(std::move(renderFrame));
+        renderEngine->AddParallelSurface(rsSurface);
+        parallelFrames_.push_back(renderFrame);
     }
 #endif
 }
@@ -607,7 +609,7 @@ std::unique_ptr<RSRenderFrame> RSParallelRenderManager::GetParallelFrame(
     uint32_t subMainThreadIdx)
 {
 #ifdef RS_ENABLE_VK
-    return std::move(parallelFrames_[subMainThreadIdx]);
+    return parallelFrames_[subMainThreadIdx];
 #else
     return nullptr;
 #endif

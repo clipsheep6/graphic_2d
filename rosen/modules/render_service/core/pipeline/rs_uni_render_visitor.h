@@ -87,7 +87,7 @@ public:
         if (!drivenInfo_) {
             return;
         }
-        drivenInfo_->hasDrivenNodeOnUniTree = hasDrivenNodeOnUniTree;
+        drivenInfo_->prepareInfo.hasDrivenNodeOnUniTree = hasDrivenNodeOnUniTree;
         drivenInfo_->hasDrivenNodeMarkRender = hasDrivenNodeMarkRender;
     }
 
@@ -106,7 +106,7 @@ public:
     {
         return isOpDropped_;
     }
-
+    // Use in vulkan parallel rendering
     ColorGamut GetColorGamut() const
     {
         return newColorSpace_;
@@ -117,7 +117,7 @@ public:
         return processor_;
     }
 
-    void SetRenderFrame(std::unique_ptr<RSRenderFrame>& renderFrame)
+    void SetRenderFrame(std::unique_ptr<RSRenderFrame> renderFrame)
     {
         renderFrame_ = std::move(renderFrame);
     }
@@ -185,11 +185,15 @@ private:
     sk_sp<SkSurface> offscreenSurface_;                 // temporary holds offscreen surface
     std::shared_ptr<RSPaintFilterCanvas> canvasBackup_; // backup current canvas before offscreen render
 
+    // Use in vulkan parallel rendering
+    void ProcessParallelDisplayRenderNode(RSDisplayRenderNode& node);
+
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;
     std::shared_ptr<RSSurfaceRenderNode> curSurfaceNode_;
     float curAlpha_ = 1.f;
     bool dirtyFlag_ { false };
+    std::unique_ptr<RSRenderFrame> renderFrame_;
     std::shared_ptr<RSPaintFilterCanvas> canvas_;
     std::map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> dirtySurfaceNodeMap_;
     SkRect boundsRect_ {};
@@ -253,12 +257,10 @@ private:
     float localZOrder_ = 0.0f; // local zOrder for surfaceView under same app window node
 
     // driven render
-    std::unique_ptr<DrivenPrepareInfo> drivenInfo_ = nullptr;
+    std::unique_ptr<DrivenInfo> drivenInfo_ = nullptr;
 
     bool isCalcCostEnable_ = false;
 
-    bool isVkSub_ = false;
-    std::unique_ptr<RSRenderFrame> renderFrame_;
     uint32_t appWindowNum_ = 0;
 };
 } // namespace Rosen

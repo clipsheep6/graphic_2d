@@ -159,9 +159,7 @@ void RSParallelSubThread::Prepare()
         return;
     }
     while (threadTask_->GetTaskSize() > 0) {
-        if (RSParallelRenderManager::Instance()->ParallelRenderExtEnabled()) {
-            clock_gettime(CLOCK_THREAD_CPUTIME_ID, &startTime_);
-        }
+        RSParallelRenderManager::Instance()->StartTiming(threadIndex_);
         auto task = threadTask_->GetNextRenderTask();
         if (!task || (task->GetIdx() == 0)) {
             RS_LOGE("surfaceNode is nullptr");
@@ -173,13 +171,8 @@ void RSParallelSubThread::Prepare()
             continue;
         }
         node->Prepare(visitor_);
-        if (RSParallelRenderManager::Instance()->ParallelRenderExtEnabled()) {
-            clock_gettime(CLOCK_THREAD_CPUTIME_ID, &stopTime_);
-            float cost = (stopTime_.tv_sec * 1000.0f + stopTime_.tv_nsec * 1e-6) -
-                (startTime_.tv_sec * 1000.0f + startTime_.tv_nsec * 1e-6);
-            RSParallelRenderManager::Instance()->SetRenderTaskCost(threadIndex_, task->GetIdx(), cost,
-                TaskType::PREPARE_TASK);
-        }
+        RSParallelRenderManager::Instance()->StopTimingAndSetRenderTaskCost(
+            threadIndex_, task->GetIdx(), TaskType::PREPARE_TASK);
     }
 }
 
@@ -200,9 +193,7 @@ void RSParallelSubThread::CalcCost()
         RSParallelRenderManager::Instance()->IsSecurityDisplay());
 
     while (threadTask_->GetTaskSize() > 0) {
-        if (RSParallelRenderManager::Instance()->ParallelRenderExtEnabled()) {
-            clock_gettime(CLOCK_THREAD_CPUTIME_ID, &startTime_);
-        }
+        RSParallelRenderManager::Instance()->StartTiming(threadIndex_);
         auto task = threadTask_->GetNextRenderTask();
         if (task == nullptr || task->GetIdx() == 0) {
             RS_LOGI("CalcCost task is invalid");
@@ -220,13 +211,8 @@ void RSParallelSubThread::CalcCost()
         }
         manager->CalcNodeCost(*surfaceNodePtr);
         surfaceNodePtr->SetNodeCost(manager->GetDirtyNodeCost());
-        if (RSParallelRenderManager::Instance()->ParallelRenderExtEnabled()) {
-            clock_gettime(CLOCK_THREAD_CPUTIME_ID, &stopTime_);
-            float cost = (stopTime_.tv_sec * 1000.0f + stopTime_.tv_nsec * 1e-6) -
-                (startTime_.tv_sec * 1000.0f + startTime_.tv_nsec * 1e-6);
-            RSParallelRenderManager::Instance()->SetRenderTaskCost(threadIndex_, task->GetIdx(), cost,
-                TaskType::CALC_COST_TASK);
-        }
+        RSParallelRenderManager::Instance()->StopTimingAndSetRenderTaskCost(
+            threadIndex_, task->GetIdx(), TaskType::CALC_COST_TASK);
     }
 }
 
@@ -262,9 +248,7 @@ void RSParallelSubThread::Render()
         canvas_->SetCacheEnabled(geoPtr->IsNeedClientCompose());
     }
     while (threadTask_->GetTaskSize() > 0) {
-        if (RSParallelRenderManager::Instance()->ParallelRenderExtEnabled()) {
-            clock_gettime(CLOCK_THREAD_CPUTIME_ID, &startTime_);
-        }
+        RSParallelRenderManager::Instance()->StartTiming(threadIndex_);
         auto task = threadTask_->GetNextRenderTask();
         if (!task || (task->GetIdx() == 0)) {
             RS_LOGE("renderTask is nullptr");
@@ -276,13 +260,8 @@ void RSParallelSubThread::Render()
             continue;
         }
         node->Process(visitor_);
-        if (RSParallelRenderManager::Instance()->ParallelRenderExtEnabled()) {
-            clock_gettime(CLOCK_THREAD_CPUTIME_ID, &stopTime_);
-            float cost = (stopTime_.tv_sec * 1000.0f + stopTime_.tv_nsec * 1e-6) -
-                (startTime_.tv_sec * 1000.0f + startTime_.tv_nsec * 1e-6);
-            RSParallelRenderManager::Instance()->SetRenderTaskCost(threadIndex_, task->GetIdx(), cost,
-                TaskType::PROCESS_TASK);
-        }
+        RSParallelRenderManager::Instance()->StopTimingAndSetRenderTaskCost(
+            threadIndex_, task->GetIdx(), TaskType::PROCESS_TASK);
     }
     canvas_->restoreToCount(saveCount);
 #elif RS_ENABLE_VK

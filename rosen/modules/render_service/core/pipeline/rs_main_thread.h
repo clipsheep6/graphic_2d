@@ -153,6 +153,7 @@ public:
     sk_sp<SkImage> GetWatermarkImg();
     bool GetWatermarkFlag();
     void AddActivePid(pid_t pid);
+    bool GetFingerPrint();
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
         std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;
@@ -202,6 +203,8 @@ private:
     void PerfForBlurIfNeeded();
     void PerfMultiWindow();
     void ResetHardwareEnabledState();
+
+    void ProcessFingerPrint();
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
@@ -290,6 +293,9 @@ private:
     // driven render
     bool hasDrivenNodeOnUniTree_ = false;
     bool hasDrivenNodeMarkRender_ = false;
+
+    std::mutex fingerprintMutex_;
+    bool hasFingerprint_ = false;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

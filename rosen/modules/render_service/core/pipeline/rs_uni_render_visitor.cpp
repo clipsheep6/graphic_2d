@@ -1118,9 +1118,13 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             rsSurface->SetColorSpace(newColorSpace_);
             // we should request a framebuffer whose size is equals to the physical screen size.
             RS_TRACE_BEGIN("RSUniRender:RequestFrame");
-            renderFrame_ = renderEngine_->RequestFrame(
-                std::static_pointer_cast<RSSurfaceOhos>(rsSurface),
-                RSBaseRenderUtil::GetFrameBufferRequestConfig(screenInfo_, true));
+            BufferRequestConfig bufferConfig = RSBaseRenderUtil::GetFrameBufferRequestConfig(screenInfo_, true);
+            if (RSMainThread::Instance()->GetFingerPrint()) {
+                uint32_t STUB_PIXEL_FMT_RGBA_1010102 = 0X7fff0002;
+                bufferConfig.format = STUB_PIXEL_FMT_RGBA_1010102;
+            }
+            node.SetFingerprint(RSMainThread::Instance()->GetFingerPrint());
+            renderFrame_ = renderEngine_->RequestFrame(std::static_pointer_cast<RSSurfaceOhos>(rsSurface), bufferConfig);
             RS_TRACE_BEGIN("RSUniRender::wait for bufferRequest cond");
             RSMainThread::Instance()->WaitUntilDisplayNodeBufferReleased(node);
             RS_TRACE_END();

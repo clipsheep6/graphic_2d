@@ -18,6 +18,7 @@
 
 #include <cstdint>
 
+
 namespace OHOS {
 namespace Rosen {
 static constexpr float FRACTION_MIN = 0.0f;

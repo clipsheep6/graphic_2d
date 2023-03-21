@@ -237,6 +237,18 @@ void RSUIDirector::SetUITaskRunner(const TaskRunner& uiTaskRunner)
     g_uiTaskRunner = uiTaskRunner;
 }
 
+void RSUIDirector::PostTask(const std::function<void()>& task)
+{
+    if (g_uiTaskRunner == nullptr) {
+        ROSEN_LOGE("RSUIDirector::RecvMessages, Notify ui message failed, uiTaskRunner is null");
+        return;
+    }
+    if (task == nullptr) {
+        return;
+    }
+    g_uiTaskRunner(task);
+}
+
 void RSUIDirector::SendMessages()
 {
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "SendCommands");
@@ -252,7 +264,7 @@ void RSUIDirector::RecvMessages()
     if (GetRealPid() == -1) {
         return;
     }
-    static const uint32_t pid = static_cast<uint32_t>(GetRealPid());
+    static const auto pid = static_cast<uint32_t>(GetRealPid());
     if (!RSMessageProcessor::Instance().HasTransaction(pid)) {
         return;
     }
@@ -262,15 +274,11 @@ void RSUIDirector::RecvMessages()
 
 void RSUIDirector::RecvMessages(std::shared_ptr<RSTransactionData> cmds)
 {
-    if (g_uiTaskRunner == nullptr) {
-        ROSEN_LOGE("RSUIDirector::RecvMessages, Notify ui message failed, uiTaskRunner is null");
-        return;
-    }
     if (cmds == nullptr || cmds->IsEmpty()) {
         return;
     }
 
-    g_uiTaskRunner([cmds]() { RSUIDirector::ProcessMessages(cmds); });
+    PostTask([cmds]() { RSUIDirector::ProcessMessages(cmds); });
 }
 
 void RSUIDirector::ProcessMessages(std::shared_ptr<RSTransactionData> cmds)

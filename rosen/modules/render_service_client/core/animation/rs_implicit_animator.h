@@ -62,11 +62,11 @@ public:
 
     bool NeedImplicitAnimation();
 
-    std::shared_ptr<RSAnimation> CreateImplicitAnimation(const std::shared_ptr<RSNode>& target,
+    void CreateImplicitAnimation(const std::shared_ptr<RSNode>& target,
         std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
         const std::shared_ptr<RSPropertyBase>& endValue);
 
-    std::shared_ptr<RSAnimation> CreateImplicitTransition(RSNode& target);
+    void CreateImplicitTransition(RSNode& target);
 
 private:
     int OpenImplicitAnimationInner(const RSAnimationTimingProtocol& timingProtocol,

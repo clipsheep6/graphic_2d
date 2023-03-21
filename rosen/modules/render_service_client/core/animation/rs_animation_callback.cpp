@@ -30,5 +30,12 @@ AnimationFinishCallback::AnimationFinishCallback(const std::function<void()>& ca
     : AnimationCallback(callback)
 {}
 
+void AnimationFinishCallback::Execute()
+{
+    if (callback_ != nullptr) {
+        callback_();
+        callback_ = nullptr;
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

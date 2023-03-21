@@ -32,7 +32,8 @@ protected:
 class AnimationFinishCallback : public AnimationCallback {
 public:
     AnimationFinishCallback(const std::function<void()>& callback);
-    virtual ~AnimationFinishCallback() = default;
+    ~AnimationFinishCallback() override = default;
+    void Execute();
 
 private:
 };

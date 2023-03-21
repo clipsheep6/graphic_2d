@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/arkui/ace_engine/ace_config.gni")
 
 ohos_shared_library("windowanimationmanager_napi") {
   include_dirs = [
@@ -51,5 +50,4 @@ ohos_shared_library("windowanimationmanager_napi") {
   relative_install_dir = "module/animation"
   part_name = "graphic_standard"
   subsystem_name = "graphic"
-
 }

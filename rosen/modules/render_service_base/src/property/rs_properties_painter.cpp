@@ -24,7 +24,12 @@
 #include "include/core/SkRRect.h"
 #include "include/core/SkSurface.h"
 #include "include/effects/Sk1DPathEffect.h"
+#ifdef NEW_SKIA
+#include "include/effects/SkImageFilters.h"
+#else
 #include "include/effects/SkBlurImageFilter.h"
+#endif
+
 #include "include/effects/SkDashPathEffect.h"
 #include "include/effects/SkLumaColorFilter.h"
 #include "include/utils/SkShadowUtils.h"
@@ -252,7 +257,11 @@ void RSPropertiesPainter::DrawColorfulShadowInner(
 
     // save layer, draw image with clipPath, blur and draw back
     SkPaint blurPaint;
+#ifdef NEW_SKIA
+    blurPaint.setImageFilter(SkImageFilters::Blur(blurRadius, blurRadius, SkTileMode::kDecal, nullptr));
+#else
     blurPaint.setImageFilter(SkBlurImageFilter::Make(blurRadius, blurRadius, SkTileMode::kDecal, nullptr));
+#endif
     canvas.saveLayer(nullptr, &blurPaint);
 
     canvas.translate(properties.GetShadowOffsetX(), properties.GetShadowOffsetY());

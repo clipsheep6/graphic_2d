@@ -40,9 +40,9 @@ constexpr const char* MEM_JEMALLOC_TYPE = "jemalloc";
 
 
 #ifdef NEW_SKIA
-void MemoryManager::DumpMemoryUsage(DfxString& log, const GrDirectContext* grContext)
+void MemoryManager::DumpMemoryUsage(DfxString& log, const GrDirectContext* grContext, std::string& type)
 #else
-void MemoryManager::DumpMemoryUsage(DfxString& log, const GrContext* grContext)
+void MemoryManager::DumpMemoryUsage(DfxString& log, const GrContext* grContext, std::string& type)
 #endif
 {
     if (type.empty() || type == MEM_RS_TYPE) {

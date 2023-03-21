@@ -39,9 +39,9 @@ private:
     static void DumpRenderServiceMemory(DfxString& log);
     static void DumpDrawingCpuMemory(DfxString& log);
 #ifdef NEW_SKIA
-    static void DumpMemoryUsage(DfxString& log, const GrDirectContext* grContext);
+    static void DumpDrawingGpuMemory(DfxString& log, const GrDirectContext* grContext);
 #else
-    static void DumpMemoryUsage(DfxString& log, const GrContext* grContext);
+    static void DumpDrawingGpuMemory(DfxString& log, const GrContext* grContext);
 #endif
 
     //jemalloc info

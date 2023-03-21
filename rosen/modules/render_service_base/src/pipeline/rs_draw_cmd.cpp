@@ -720,7 +720,6 @@ void RestoreAlphaOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     canvas.RestoreAlpha();
 }
 
-#ifdef ROSEN_OHOS
 // VerticesOpItem
 bool VerticesOpItem::Marshalling(Parcel& parcel) const
 {
@@ -1575,53 +1574,6 @@ OpItem* ConcatOpItem::Unmarshalling(Parcel& parcel)
     return new ConcatOpItem(matrix);
 }
 
-// SaveLayerOpItem
-bool SaveLayerOpItem::Marshalling(Parcel& parcel) const
-{
-    bool success = parcel.WriteBool(rectPtr_ != nullptr);
-    if (rectPtr_) {
-        success = success && RSMarshallingHelper::Marshalling(parcel, rect_);
-    }
-    success = success && RSMarshallingHelper::Marshalling(parcel, backdrop_) &&
-               RSMarshallingHelper::Marshalling(parcel, mask_) &&
-               RSMarshallingHelper::Marshalling(parcel, matrix_) &&
-               RSMarshallingHelper::Marshalling(parcel, flags_) &&
-               RSMarshallingHelper::Marshalling(parcel, paint_);
-    if (!success) {
-        ROSEN_LOGE("SaveLayerOpItem::Marshalling failed!");
-        return false;
-    }
-    return success;
-}
-
-OpItem* SaveLayerOpItem::Unmarshalling(Parcel& parcel)
-{
-    bool isRectExist;
-    SkRect rect;
-    SkRect* rectPtr = nullptr;
-    sk_sp<SkImageFilter> backdrop;
-    sk_sp<SkImage> mask;
-    SkMatrix matrix;
-    SkCanvas::SaveLayerFlags flags;
-    SkPaint paint;
-    bool success = parcel.ReadBool(isRectExist);
-    if (isRectExist) {
-        success = success && RSMarshallingHelper::Unmarshalling(parcel, rect);
-        rectPtr = &rect;
-    }
-    success = success && RSMarshallingHelper::Unmarshalling(parcel, backdrop) &&
-               RSMarshallingHelper::Unmarshalling(parcel, mask) &&
-               RSMarshallingHelper::Unmarshalling(parcel, matrix) &&
-               RSMarshallingHelper::Unmarshalling(parcel, flags) &&
-               RSMarshallingHelper::Unmarshalling(parcel, paint);
-    if (!success) {
-        ROSEN_LOGE("SaveLayerOpItem::Unmarshalling failed!");
-        return nullptr;
-    }
-    SkCanvas::SaveLayerRec rec = { rectPtr, &paint, backdrop.get(), mask.get(), &matrix, flags };
-    return new SaveLayerOpItem(rec);
-}
-
 // DrawableOpItem
 bool DrawableOpItem::Marshalling(Parcel& parcel) const
 {
@@ -1704,40 +1656,6 @@ OpItem* PointsOpItem::Unmarshalling(Parcel& parcel)
         return nullptr;
     }
     return new PointsOpItem(mode, count, processedPoints, paint);
-}
-
-// VerticesOpItem
-bool VerticesOpItem::Marshalling(Parcel& parcel) const
-{
-    bool success = RSMarshallingHelper::Marshalling(parcel, vertices_) &&
-                   RSMarshallingHelper::Marshalling(parcel, boneCount_) &&
-                   RSMarshallingHelper::MarshallingArray(parcel, bones_, boneCount_) &&
-                   RSMarshallingHelper::Marshalling(parcel, mode_) &&
-                   RSMarshallingHelper::Marshalling(parcel, paint_);
-    if (!success) {
-        ROSEN_LOGE("VerticesOpItem::Marshalling failed!");
-        return false;
-    }
-    return success;
-}
-
-OpItem* VerticesOpItem::Unmarshalling(Parcel& parcel)
-{
-    sk_sp<SkVertices> vertices;
-    const SkVertices::Bone* bones = nullptr;
-    int boneCount;
-    SkBlendMode mode;
-    SkPaint paint;
-    bool success = RSMarshallingHelper::Unmarshalling(parcel, vertices) &&
-                   RSMarshallingHelper::Unmarshalling(parcel, boneCount) &&
-                   RSMarshallingHelper::UnmarshallingArray(parcel, bones, boneCount) &&
-                   RSMarshallingHelper::Unmarshalling(parcel, mode) &&
-                   RSMarshallingHelper::Unmarshalling(parcel, paint);
-    if (!success) {
-        ROSEN_LOGE("VerticesOpItem::Unmarshalling failed!");
-        return nullptr;
-    }
-    return new VerticesOpItem(vertices.get(), bones, boneCount, mode, paint);
 }
 
 // ShadowRecOpItem

@@ -61,7 +61,7 @@ public:
         const std::function<void()>& finishCallback = nullptr);
 
     static std::vector<std::shared_ptr<RSAnimation>> AnimateWithCurrentOptions(
-        const PropertyCallback& callback, const std::function<void()>& finishCallback);
+        const PropertyCallback& callback, const std::function<void()>& finishCallback, bool timingSensitive = true);
     static std::vector<std::shared_ptr<RSAnimation>> AnimateWithCurrentCallback(
         const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve,
         const PropertyCallback& callback);

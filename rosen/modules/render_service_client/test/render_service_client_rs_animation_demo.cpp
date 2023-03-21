@@ -134,9 +134,6 @@ int main()
     auto animation2 = std::make_shared<RSTransition>(RSTransitionEffect::OPACITY, true);
     animation2->SetDuration(100);
     animation2->SetTimingCurve(RSAnimationTimingCurve::EASE_IN_OUT);
-    animation2->SetFinishCallback([]() {
-        std::cout << "animation2 finish" << std::endl;
-    });
     surfaceNode->AddAnimation(animation2);
 
     RSTransaction::FlushImplicitTransaction();

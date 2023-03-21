@@ -41,12 +41,14 @@ public:
 
     // open implicit animation with given animation options and finish callback
     int OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
-        const RSAnimationTimingCurve& timingCurve, const std::function<void()>& finishCallback);
+        const RSAnimationTimingCurve& timingCurve, const std::shared_ptr<AnimationFinishCallback>& finishCallback);
     // open implicit animation with current options and given finish callback
-    int OpenImplicitAnimation(const std::function<void()>& finishCallback);
+    int OpenImplicitAnimation(
+        const std::shared_ptr<AnimationFinishCallback>& finishCallback);
     // open implicit animation with current callback and given timing protocol & curve
     int OpenImplicitAnimation(
         const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve);
+
     // close implicit animation and return all animations
     std::vector<std::shared_ptr<RSAnimation>> CloseImplicitAnimation();
 
@@ -69,8 +71,6 @@ public:
     void CreateImplicitTransition(RSNode& target);
 
 private:
-    int OpenImplicitAnimationInner(const RSAnimationTimingProtocol& timingProtocol,
-        const RSAnimationTimingCurve& timingCurve, const std::shared_ptr<AnimationFinishCallback>& finishCallback);
     void EndImplicitAnimation();
     void BeginImplicitCurveAnimation();
     void BeginImplicitSpringAnimation();
@@ -82,15 +82,7 @@ private:
 
     void SetPropertyValue(std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& value);
 
-    void ExecuteWithoutAnimation(const std::function<void()>& callback)
-    {
-        if (callback == nullptr) {
-            return;
-        }
-        implicitAnimationDisabled_ = true;
-        callback();
-        implicitAnimationDisabled_ = false;
-    }
+    void ExecuteWithoutAnimation(const std::function<void()>& callback);
 
     std::stack<std::tuple<RSAnimationTimingProtocol, RSAnimationTimingCurve, std::shared_ptr<AnimationFinishCallback>>>
         globalImplicitParams_;

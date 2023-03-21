@@ -45,16 +45,6 @@ AnimationId RSAnimation::GenerateId()
 
 RSAnimation::RSAnimation() : id_(GenerateId()) {}
 
-void RSAnimation::SetFinishCallback(const std::function<void()>& finishCallback)
-{
-    if (finishCallback == nullptr) {
-        ROSEN_LOGE("Failed to set finish callback, callback is null!");
-        return;
-    }
-
-    SetFinishCallback(std::make_shared<AnimationFinishCallback>(finishCallback));
-}
-
 void RSAnimation::SetFinishCallback(const std::shared_ptr<AnimationFinishCallback>& finishCallback)
 {
     finishCallback_ = finishCallback;

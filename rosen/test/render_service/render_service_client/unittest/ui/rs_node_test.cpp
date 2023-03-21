@@ -3137,7 +3137,6 @@ HWTEST_F(RSNodeTest, SetModifier002, TestSize.Level1)
     auto animation = std::make_shared<RSTransition>(RSTransitionEffect::OPACITY, true);
     animation->SetDuration(100);
     animation->SetTimingCurve(RSAnimationTimingCurve::EASE_IN_OUT);
-    animation->SetFinishCallback([]() {});
     node1->AddAnimation(animation);
     node1->DumpNode(0);
     ASSERT_TRUE(node1->GetModifierIds().size() == 0);

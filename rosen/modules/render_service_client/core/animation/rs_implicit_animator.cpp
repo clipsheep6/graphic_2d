@@ -27,7 +27,7 @@
 
 namespace OHOS {
 namespace Rosen {
-int RSImplicitAnimator::OpenImplicitAnimationInner(const RSAnimationTimingProtocol& timingProtocol,
+int RSImplicitAnimator::OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
     const RSAnimationTimingCurve& timingCurve, const std::shared_ptr<AnimationFinishCallback>& finishCallback)
 {
     globalImplicitParams_.push({ timingProtocol, timingCurve, finishCallback });
@@ -50,30 +50,17 @@ int RSImplicitAnimator::OpenImplicitAnimationInner(const RSAnimationTimingProtoc
     return static_cast<int>(globalImplicitParams_.size()) - 1;
 }
 
-int RSImplicitAnimator::OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
-    const RSAnimationTimingCurve& timingCurve, const std::function<void()>& finishCallback)
+int RSImplicitAnimator::OpenImplicitAnimation(const std::shared_ptr<AnimationFinishCallback>& finishCallback)
 {
-    std::shared_ptr<AnimationFinishCallback> animationFinishCallback;
-    if (finishCallback != nullptr) {
-        animationFinishCallback = std::make_shared<AnimationFinishCallback>(finishCallback);
-    }
-    return OpenImplicitAnimationInner(timingProtocol, timingCurve, animationFinishCallback);
-}
-
-int RSImplicitAnimator::OpenImplicitAnimation(const std::function<void()>& finishCallback)
-{
-    std::shared_ptr<AnimationFinishCallback> animationFinishCallback;
-    if (finishCallback != nullptr) {
-        animationFinishCallback = std::make_shared<AnimationFinishCallback>(finishCallback);
-    }
     if (globalImplicitParams_.empty()) {
-        // current implicit animation params is empty, use default params
-        static const RSAnimationTimingProtocol fallbackProtocol(0);
-        return OpenImplicitAnimationInner(fallbackProtocol, RSAnimationTimingCurve::LINEAR, animationFinishCallback);
+        // if current implicit animation params is empty, use default params, if no animation created, call finish
+        // callback immediately
+        return OpenImplicitAnimation(
+            RSAnimationTimingProtocol::IMMEDIATE, RSAnimationTimingCurve::LINEAR, finishCallback);
     } else {
         // copy current implicit animation params and replace finish callback
         [[maybe_unused]] auto& [protocol, curve, unused] = globalImplicitParams_.top();
-        return OpenImplicitAnimationInner(protocol, curve, animationFinishCallback);
+        return OpenImplicitAnimation(protocol, curve, finishCallback);
     }
 }
 
@@ -82,11 +69,11 @@ int RSImplicitAnimator::OpenImplicitAnimation(
 {
     if (globalImplicitParams_.empty()) {
         // current implicit animation params is empty, use empty
-        return OpenImplicitAnimationInner(timingProtocol, timingCurve, nullptr);
+        return OpenImplicitAnimation(timingProtocol, timingCurve, nullptr);
     } else {
         // copy current implicit animation callback and replace timing protocol and curve
         [[maybe_unused]] auto& [protocol, curve, callback] = globalImplicitParams_.top();
-        return OpenImplicitAnimationInner(timingProtocol, timingCurve, callback);
+        return OpenImplicitAnimation(timingProtocol, timingCurve, callback);
     }
 }
 
@@ -101,26 +88,22 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
     auto& currentAnimations = implicitAnimations_.top();
     auto& currentKeyframeAnimations = keyframeAnimations_.top();
     if (currentAnimations.empty() && currentKeyframeAnimations.empty()) {
+        // no implicit animation created
         ROSEN_LOGD("No implicit animations created!");
-        if (finishCallback == nullptr) {
-            // no implicit animation created and finish callback is null, we need to return empty vector
+        if (finishCallback != nullptr && finishCallback.use_count() == 1 &&
+            finishCallback->isTimingSensitive_ == true) {
+            // If finish callback 1. is not null and 2. not referenced by any animation and 3. timing sensitive (i.e.
+            // callbacks created by user), we need to create an empty animation that act like a timer, in order to
+            // execute finish callback on the right time.
+            CreateEmptyAnimation();
+        } else {
+            // If finish callback either 1. is null or 2. is referenced by any animation or 3. timing insensitive. We
+            // don't need to create an empty animation, just pop the stack and return. finish callback, if exist, will
+            // be executed when shared_ptr use_count goes to zero.
             globalImplicitParams_.pop();
             implicitAnimations_.pop();
             keyframeAnimations_.pop();
             EndImplicitAnimation();
-            return {};
-        } else if (implicitAnimationDisabled_) {
-            // implicit animation is disabled, but finish callback is not null, we need to execute finish callback
-            // immediately
-            RSUIDirector::PostTask([finishCallback]() { finishCallback->Execute(); });
-            return {};
-        } else if (finishCallback.use_count() == 1){
-            // finish callback is not null but not referenced by any animation, we need to create an empty animation
-            // that act like a timer, in order to execute finish callback on the right time.
-            CreateEmptyAnimation();
-        } else {
-            ROSEN_LOGE("ooxxcc RSImplicitAnimator::CloseImplicitAnimation finishCallback.use_count() = %d",
-                finishCallback.use_count());
             return {};
         }
     }
@@ -163,7 +146,7 @@ void RSImplicitAnimator::BeginImplicitKeyFrameAnimation(float fraction, const RS
         return;
     }
 
-    [[maybe_unused]] auto& [protocol, unused_curve, unused_callback] = globalImplicitParams_.top();
+    [[maybe_unused]] auto& [protocol, unused_curve, unused] = globalImplicitParams_.top();
     auto keyframeAnimationParam = std::make_shared<RSImplicitKeyframeAnimationParam>(protocol, timingCurve, fraction);
     PushImplicitParam(keyframeAnimationParam);
 }
@@ -191,7 +174,7 @@ void RSImplicitAnimator::EndImplicitKeyFrameAnimation()
 
 bool RSImplicitAnimator::NeedImplicitAnimation()
 {
-    return !implicitAnimationParams_.empty() && !implicitAnimationDisabled_;
+    return !implicitAnimationDisabled_ && !implicitAnimationParams_.empty();
 }
 
 void RSImplicitAnimator::BeginImplicitCurveAnimation()
@@ -416,6 +399,18 @@ void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& 
     implicitAnimations_.top().emplace_back(animation, target->GetId());
 
     return;
+}
+
+void RSImplicitAnimator::ExecuteWithoutAnimation(const std::function<void()>& callback)
+{
+    if (callback == nullptr) {
+        return;
+    }
+    // disable implicit animation and execute callback, restore previous state after callback.
+    auto implicitAnimationDisabled = implicitAnimationDisabled_;
+    implicitAnimationDisabled_ = true;
+    callback();
+    implicitAnimationDisabled_ = implicitAnimationDisabled;
 }
 } // namespace Rosen
 } // namespace OHOS

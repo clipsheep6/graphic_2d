@@ -51,8 +51,6 @@ public:
 
     AnimationId GetId() const;
 
-    void SetFinishCallback(const std::function<void()>& finishCallback);
-
     void Start(const std::shared_ptr<RSNode>& target);
 
     const std::weak_ptr<RSNode> GetTarget() const;
@@ -96,7 +94,6 @@ protected:
 
     void StartInner(const std::shared_ptr<RSNode>& target);
     bool IsReversed() const;
-    void CallFinishCallback();
     void UpdateParamToRenderAnimation(const std::shared_ptr<RSRenderAnimation>& animation);
     virtual void OnCallFinishCallback() {}
     virtual void SetPropertyOnAllAnimationFinish() {}
@@ -109,6 +106,7 @@ private:
 
     void SetFinishCallback(const std::shared_ptr<AnimationFinishCallback>& finishCallback);
     void UpdateStagingValue(bool isFirstStart);
+    void CallFinishCallback();
 
     bool isReversed_ { false };
     AnimationState state_ { AnimationState::INITIALIZED };

@@ -201,6 +201,7 @@ private:
     void PerfAfterAnim();
     void PerfForBlurIfNeeded();
     void PerfMultiWindow();
+    void RenderFrameStart();
     void ResetHardwareEnabledState();
 
     // Click animation, report the start event to RS

@@ -52,6 +52,10 @@ void RsFrameReport::Init()
         return;
     }
     ROSEN_LOGD("RsFrameReport:[Init] dlopen libframe_ui_intf.so success!");
+    initFunc_ = (InitFunc)LoadSymbol("Init");
+    if (initFunc_ != nullptr) {
+        initFunc_();
+    }
 }
 
 bool RsFrameReport::LoadLibrary()

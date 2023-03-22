@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+using InitFunc = void (*)();
 using FrameGetEnableFunc = int (*)();
 using ProcessCommandsStartFunc = void(*)();
 using AnimateStartFunc = void(*)();
@@ -48,6 +49,7 @@ private:
     void *frameSchedHandle_ = nullptr;
     bool frameSchedSoLoaded_ = false;
 
+    InitFunc initFunc_ = nullptr;
     FrameGetEnableFunc frameGetEnableFunc_ = nullptr;
     ProcessCommandsStartFunc processCommandsStartFun_ = nullptr;
     AnimateStartFunc animateStartFunc_ = nullptr;

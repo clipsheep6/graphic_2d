@@ -166,15 +166,6 @@ bool RSSystemProperties::GetReleaseGpuResourceEnabled()
     return std::atoi((system::GetParameter("release.gpuresource.enabled", "0")).c_str()) != 0;
 }
 
-void RSSystemProperties::SetDrawTextAsBitmap(bool flag)
-{
-    isDrawTextAsBitmap_ = flag;
-}
-bool RSSystemProperties::GetDrawTextAsBitmap()
-{
-    return isDrawTextAsBitmap_;
-}
-
 ParallelRenderingType RSSystemProperties::GetPrepareParallelRenderingEnabled()
 {
     return static_cast<ParallelRenderingType>(

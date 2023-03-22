@@ -151,5 +151,22 @@ void RSPaintFilterCanvas::SetEnvForegroundColor(Color color)
     envStack_.top().envForegroundColor  = color;
 }
 
+Color RSPaintFilterCanvas::GetEnvForegroundColor() const
+{
+    // sanity check, stack should not be empty
+    if (envStack_.empty()) {
+        return Color { 0xFF000000 }; // 0xFF000000 is default value -- black
+    }
+    return envStack_.top().envForegroundColor;
+}
+
+void RSPaintFilterCanvas::CopyConfiguration(const RSPaintFilterCanvas& other)
+{
+    // copy alpha stack
+    alphaStack_ = other.alphaStack_;
+    // copy env stack
+    envStack_ = other.envStack_;
+    // maybe we should also copy cache status, but this may affect performance for first frame
+}
 } // namespace Rosen
 } // namespace OHOS

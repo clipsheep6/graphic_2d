@@ -34,6 +34,8 @@ public:
     RSPaintFilterCanvas(SkSurface* skSurface, float alpha = 1.0f);
     ~RSPaintFilterCanvas() override {};
 
+    void CopyConfiguration(const RSPaintFilterCanvas& other);
+
     void MultiplyAlpha(float alpha);
     float GetAlpha() const;
 
@@ -49,6 +51,7 @@ public:
     int SaveEnv();
     void RestoreEnv();
     void SetEnvForegroundColor(Color color);
+    Color GetEnvForegroundColor() const;
 
     SkSurface* GetSurface() const;
 
@@ -87,9 +90,9 @@ protected:
 private:
     SkSurface* skSurface_ = nullptr;
     std::stack<float> alphaStack_;
-    typedef struct {
+    using Env = struct {
         Color envForegroundColor;
-    } Env;
+    };
 
     Env envDefault = { Color(0xFF000000) }; // 0xFF000000 is default value -- black
     std::stack<Env> envStack_ = std::stack<Env>({envDefault});

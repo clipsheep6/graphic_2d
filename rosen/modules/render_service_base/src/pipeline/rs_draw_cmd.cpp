@@ -255,7 +255,7 @@ void TextBlobOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 }
 
 #ifdef NEW_SKIA
-BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top, 
+BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top,
     SkSamplingOptions samplingOptions, const SkPaint* paint)
     : OpItemWithRSImage(sizeof(BitmapOpItem)), samplingOptions_(samplingOptions)
 {
@@ -269,6 +269,11 @@ BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float to
         paint_ = *paint;
     }
 }
+
+BitmapOpItem::BitmapOpItem(std::shared_ptr<RSImageBase> rsImage, SkSamplingOptions samplingOptions,
+    const SkPaint& paint)
+    : OpItemWithRSImage(rsImage, paint, sizeof(BitmapOpItem)), samplingOptions_(samplingOptions)
+{}
 #else
 BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top, const SkPaint* paint)
     : OpItemWithRSImage(sizeof(BitmapOpItem))
@@ -283,14 +288,15 @@ BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float to
         paint_ = *paint;
     }
 }
-#endif
+
 BitmapOpItem::BitmapOpItem(std::shared_ptr<RSImageBase> rsImage, const SkPaint& paint)
     : OpItemWithRSImage(rsImage, paint, sizeof(BitmapOpItem))
 {}
+#endif
 
 #ifdef NEW_SKIA
 BitmapRectOpItem::BitmapRectOpItem(
-    const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst, 
+    const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst,
     const SkSamplingOptions& samplingOptions, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint)
     : OpItemWithRSImage(sizeof(BitmapRectOpItem)), samplingOptions_(samplingOptions), constraint_(constraint)
 {
@@ -305,6 +311,12 @@ BitmapRectOpItem::BitmapRectOpItem(
         paint_ = *paint;
     }
 }
+
+BitmapRectOpItem::BitmapRectOpItem(std::shared_ptr<RSImageBase> rsImage, const SkSamplingOptions& samplingOptions,
+    const SkPaint& paint, SkCanvas::SrcRectConstraint constraint)
+    : OpItemWithRSImage(rsImage, paint, sizeof(BitmapRectOpItem)), 
+    samplingOptions_(samplingOptions), constraint_(constraint)
+{}
 #else
 BitmapRectOpItem::BitmapRectOpItem(
     const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst, const SkPaint* paint)
@@ -321,16 +333,16 @@ BitmapRectOpItem::BitmapRectOpItem(
         paint_ = *paint;
     }
 }
-#endif
 
 BitmapRectOpItem::BitmapRectOpItem(std::shared_ptr<RSImageBase> rsImage, const SkPaint& paint)
     : OpItemWithRSImage(rsImage, paint, sizeof(BitmapRectOpItem))
 {}
+#endif
 
 #ifdef NEW_SKIA
 PixelMapOpItem::PixelMapOpItem(
     const std::shared_ptr<Media::PixelMap>& pixelmap, float left, float top,
-     SkSamplingOptions samplingOptions, const SkPaint* paint)
+    SkSamplingOptions samplingOptions, const SkPaint* paint)
     : OpItemWithRSImage(sizeof(PixelMapOpItem)), samplingOptions_(samplingOptions)
 {
     if (pixelmap) {
@@ -343,6 +355,11 @@ PixelMapOpItem::PixelMapOpItem(
         paint_ = *paint;
     }
 }
+
+PixelMapOpItem::PixelMapOpItem(std::shared_ptr<RSImageBase> rsImage, SkSamplingOptions samplingOptions,
+    const SkPaint& paint)
+    : OpItemWithRSImage(rsImage, paint, sizeof(PixelMapOpItem)), samplingOptions_(samplingOptions)
+{}
 #else
 PixelMapOpItem::PixelMapOpItem(
     const std::shared_ptr<Media::PixelMap>& pixelmap, float left, float top, const SkPaint* paint)
@@ -358,16 +375,16 @@ PixelMapOpItem::PixelMapOpItem(
         paint_ = *paint;
     }
 }
-#endif
 
 PixelMapOpItem::PixelMapOpItem(std::shared_ptr<RSImageBase> rsImage, const SkPaint& paint)
     : OpItemWithRSImage(rsImage, paint, sizeof(PixelMapOpItem))
 {}
+#endif
 
 #ifdef NEW_SKIA
 PixelMapRectOpItem::PixelMapRectOpItem(
     const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src, const SkRect& dst,
-     const SkSamplingOptions& samplingOptions, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint)
+    const SkSamplingOptions& samplingOptions, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint)
     : OpItemWithRSImage(sizeof(PixelMapRectOpItem)), samplingOptions_(samplingOptions), constraint_(constraint)
 {
     if (pixelmap) {
@@ -380,6 +397,12 @@ PixelMapRectOpItem::PixelMapRectOpItem(
         paint_ = *paint;
     }
 }
+
+PixelMapRectOpItem::PixelMapRectOpItem(std::shared_ptr<RSImageBase> rsImage, const SkSamplingOptions& samplingOptions,
+    const SkPaint& paint, SkCanvas::SrcRectConstraint constraint)
+    : OpItemWithRSImage(rsImage, paint, sizeof(PixelMapRectOpItem)),
+    samplingOptions_(samplingOptions), constraint_(constraint)
+{}
 #else
 PixelMapRectOpItem::PixelMapRectOpItem(
     const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src, const SkRect& dst, const SkPaint* paint)
@@ -395,11 +418,11 @@ PixelMapRectOpItem::PixelMapRectOpItem(
         paint_ = *paint;
     }
 }
-#endif
 
 PixelMapRectOpItem::PixelMapRectOpItem(std::shared_ptr<RSImageBase> rsImage, const SkPaint& paint)
     : OpItemWithRSImage(rsImage, paint, sizeof(PixelMapRectOpItem))
 {}
+#endif
 
 #ifdef NEW_SKIA
 BitmapNineOpItem::BitmapNineOpItem(const sk_sp<SkImage> bitmapInfo, const SkIRect& center, const SkRect& rectDst,

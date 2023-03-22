@@ -28,12 +28,20 @@ namespace OHOS::Rosen {
 
 class MemoryManager {
 public:
+#ifdef NEW_SKIA
+    static void DumpMemoryUsage(DfxString& log, const GrDirectContext* grContext, std::string& type);
+
+    // Count memory for hidumper
+    static MemoryGraphic CountPidMemory(int pid, const GrDirectContext* grContext);
+    static void CountMemory(std::vector<pid_t> pids, const GrDirectContext* grContext , std::vector<MemoryGraphic>& mems);
+#else
     static void DumpMemoryUsage(DfxString& log, const GrContext* grContext, std::string& type);
-    static void DumpPidMemory(DfxString& log, int pid);
 
     // Count memory for hidumper
     static MemoryGraphic CountPidMemory(int pid, const GrContext* grContext);
     static void CountMemory(std::vector<pid_t> pids, const GrContext* grContext , std::vector<MemoryGraphic>& mems);
+#endif
+    static void DumpPidMemory(DfxString& log, int pid);
 private:
     // rs memory = rs + skia cpu + skia gpu
     static void DumpRenderServiceMemory(DfxString& log);

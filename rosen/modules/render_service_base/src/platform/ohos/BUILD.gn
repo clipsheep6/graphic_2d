@@ -124,8 +124,12 @@ ohos_source_set("rosen_ohos_sources") {
       "$graphic_2d_root/frameworks/vulkan_wrapper/include",
       "$graphic_2d_root/frameworks/surface/include",
       "$graphic_2d_root/interfaces/inner_api/common",
-      "//third_party/flutter/skia",
     ]
+    if (use_new_skia) {
+      include_dirs += [ "//third_party/skia" ]
+    } else {
+      include_dirs += [ "//third_party/flutter/skia" ]
+    }
 
     if (graphic_standard_feature_enable_vulkan) {
       include_dirs += [ "//third_party/flutter/engine/flutter/vulkan" ]

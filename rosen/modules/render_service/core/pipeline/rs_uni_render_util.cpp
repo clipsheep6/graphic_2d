@@ -206,7 +206,12 @@ void RSUniRenderUtil::DrawCachedSpherizeSurface(const RSRenderNode& node, RSPain
 
     SkPaint paint;
     paint.setBlendMode(SkBlendMode::kSrcOver);
+#ifdef NEW_SKIA
+    paint.setShader(imageSnapshot->makeShader(SkTileMode::kClamp, SkTileMode::kClamp, SkSamplingOptions()));
+#else
     paint.setShader(imageSnapshot->makeShader(SkTileMode::kClamp, SkTileMode::kClamp));
+#endif
+    
     float width = imageSnapshot->width();
     float height = imageSnapshot->height();
     float degree = properties.GetSpherize();

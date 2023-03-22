@@ -399,15 +399,24 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
     }
 
     if (properties.IsPixelStretchExpanded()) {
+#ifdef NEW_SKIA
+        paint.setShader(image->makeShader(SkTileMode::kClamp, SkTileMode::kClamp, SkSamplingOptions(), &scaleMat));
+#else
         paint.setShader(image->makeShader(SkTileMode::kClamp, SkTileMode::kClamp, &scaleMat));
+#endif
         canvas.drawRect(SkRect::MakeXYWH(-stretchSize.x_, -stretchSize.y_, scaledBounds.width(), scaledBounds.height()),
             paint);
     } else {
         SkBitmap bitmap;
         bitmap.allocN32Pixels(scaledBounds.width(), scaledBounds.height());
         auto tempCanvas = std::make_unique<SkCanvas>(bitmap);
+#ifdef NEW_SKIA
+        tempCanvas->drawImageRect(image.get(), SkRect::MakeWH(scaledBounds.width(), scaledBounds.height()), SkSamplingOptions(), nullptr);
+        paint.setShader(bitmap.makeShader(SkTileMode::kClamp, SkTileMode::kClamp, SkSamplingOptions()));
+#else
         tempCanvas->drawImageRect(image.get(), SkRect::MakeWH(scaledBounds.width(), scaledBounds.height()), nullptr);
         paint.setShader(bitmap.makeShader(SkTileMode::kClamp, SkTileMode::kClamp));
+#endif
         canvas.save();
         canvas.translate(-stretchSize.x_, -stretchSize.y_);
         canvas.drawRect(SkRect::MakeXYWH(stretchSize.x_, stretchSize.y_, bounds.width(), bounds.height()), paint);

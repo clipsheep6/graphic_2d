@@ -1311,11 +1311,12 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
         auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
         grContext->flush();
         SkGraphics::PurgeAllCaches(); // clear cpu cache
-
+#ifndef NEW_SKIA
         if (RSSystemProperties::GetReleaseGpuResourceEnabled()) {
             GrGpuResourceTag tag(remotePid, 0, 0, 0);
             grContext->releaseByTag(tag); // clear gpu resource by pid
         }
+#endif
 #ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
 #else

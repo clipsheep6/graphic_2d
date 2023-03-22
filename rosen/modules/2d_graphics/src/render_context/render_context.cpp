@@ -21,8 +21,9 @@
 #include "EGL/egl.h"
 #include "rs_trace.h"
 #include "window.h"
-
+#ifndef NEW_SKIA
 #include "memory/rs_tag_tracker.h"
+#endif
 #include "utils/log.h"
 
 namespace OHOS {
@@ -350,7 +351,9 @@ sk_sp<SkSurface> RenderContext::AcquireSurface(int width, int height)
         default:
             break;
     }
+#ifndef NEW_SKIA
     RSTagTracker tagTracker(GetGrContext(), RSTagTracker::TAGTYPE::TAG_ACQUIRE_SURFACE);
+#endif
     skSurface_ = SkSurface::MakeFromBackendRenderTarget(
         GetGrContext(), backendRenderTarget, kBottomLeft_GrSurfaceOrigin, colorType, skColorSpace, &surfaceProps);
     if (skSurface_ == nullptr) {

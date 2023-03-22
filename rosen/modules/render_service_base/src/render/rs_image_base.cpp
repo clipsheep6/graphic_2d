@@ -49,7 +49,7 @@ void RSImageBase::DrawImage(SkCanvas& canvas, const SkPaint& paint)
     auto src = RSPropertiesPainter::Rect2SkRect(srcRect_);
     auto dst = RSPropertiesPainter::Rect2SkRect(dstRect_);
 #ifdef NEW_SKIA
-    canvas.drawImageRect(image, src, dst, SkSamplingOptions(), &paint, SkCanvas::kStrict_SrcRectConstraint);
+    canvas.drawImageRect(image_, src, dst, SkSamplingOptions(), &paint, SkCanvas::kStrict_SrcRectConstraint);
 #else
     canvas.drawImageRect(image_, src, dst, &paint);
 #endif

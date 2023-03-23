@@ -107,6 +107,18 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
     pixelmap->SetPixelsAddr(data, nullptr, pixelmap->GetRowBytes() * pixelmap->GetHeight(),
         Media::AllocatorType::HEAP_ALLOC, nullptr);
 #endif
+    if (auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>()) {
+        auto rotation = displayNode->GetRotation();
+        if (rotation == ScreenRotation::ROTATION_90) {
+            pixelmap->rotate(90); // 90 degrees
+        }
+
+        if (rotation == ScreenRotation::ROTATION_270) {
+            pixelmap->rotate(270); // 270 degrees
+        }
+        RS_LOGD("RSSurfaceCaptureTask::Run: PixelmapRotation: %d", static_cast<int32_t>(rotation));
+    }
+
     return pixelmap;
 }
 
@@ -149,10 +161,6 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::CreatePixelMapByDisplayNo
     auto screenInfo = screenManager->QueryScreenInfo(screenId);
     uint32_t pixmapWidth = screenInfo.width;
     uint32_t pixmapHeight = screenInfo.height;
-    auto rotation = node->GetRotation();
-    if (rotation == ScreenRotation::ROTATION_90 || rotation == ScreenRotation::ROTATION_270) {
-        std::swap(pixmapWidth, pixmapHeight);
-    }
     Media::InitializationOptions opts;
     opts.size.width = ceil(pixmapWidth * scaleX_);
     opts.size.height = ceil(pixmapHeight * scaleY_);
@@ -218,6 +226,8 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSD
         std::to_string(node.GetId()));
     RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode child size:[%d] total size:[%d]",
         node.GetChildrenCount(), node.GetSortedChildren().size());
+    RS_TRACE_NAME("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode:" +
+        std::to_string(node.GetId()));
 
     // Mirror Display is unable to snapshot.
     if (node.IsMirrorDisplay()) {

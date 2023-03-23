@@ -25,9 +25,10 @@
 
 namespace OHOS {
 namespace Rosen {
-bool RSUniRenderVirtualProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId)
+bool RSUniRenderVirtualProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId,
+                                       std::shared_ptr<RSBaseRenderEngine> renderEngine)
 {
-    if (!RSProcessor::Init(node, offsetX, offsetY, mirroredId)) {
+    if (!RSProcessor::Init(node, offsetX, offsetY, mirroredId, renderEngine)) {
         return false;
     }
 
@@ -55,7 +56,19 @@ bool RSUniRenderVirtualProcessor::Init(RSDisplayRenderNode& node, int32_t offset
     if (canvas_ == nullptr) {
         return false;
     }
-
+    auto mirrorNode = node.GetMirrorSource().lock();
+    if (mirrorNode && node.IsFirstTimeToProcessor()) {
+        auto boundsGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(mirrorNode->GetRenderProperties().GetBoundsGeometry());
+        if (boundsGeoPtr != nullptr) {
+            boundsGeoPtr->UpdateByMatrixFromSelf();
+            node.SetInitMatrix(boundsGeoPtr->GetMatrix());
+        }
+    }
+    SkMatrix invertMatrix;
+    if (node.GetInitMatrix().invert(&invertMatrix)) {
+        screenTransformMatrix_.postConcat(invertMatrix);
+    }
+    canvas_->concat(screenTransformMatrix_);
     return true;
 }
 
@@ -71,7 +84,6 @@ void RSUniRenderVirtualProcessor::PostProcess()
         RS_LOGE("RSUniRenderVirtualProcessor::PostProcess renderFrame_ is null.");
         return;
     }
-    RSProcessor::RequestPerf(3, true); // set perf level 3 in mirrorScreen state
     renderFrame_->Flush();
 }
 

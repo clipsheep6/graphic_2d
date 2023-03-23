@@ -17,6 +17,7 @@
 #include <SkGraphics.h>
 #include <securec.h>
 #include "rs_trace.h"
+#include "sandbox_utils.h"
 
 #include "animation/rs_animation_fraction.h"
 #include "command/rs_message_processor.h"
@@ -51,6 +52,10 @@
 
 #include "render_frame_trace.h"
 
+#ifdef RES_SCHED_ENABLE
+#include "res_sched_client.h"
+#endif
+
 #if defined(ACCESSIBILITY_ENABLE)
 #include "accessibility_config.h"
 #endif
@@ -75,16 +80,23 @@ namespace Rosen {
 namespace {
 constexpr uint32_t RUQUEST_VSYNC_NUMBER_LIMIT = 10;
 constexpr uint64_t REFRESH_PERIOD = 16666667;
-constexpr int32_t PERF_ANIMATION_REQUESTED_CODE = 10017;
 constexpr int32_t PERF_MULTI_WINDOW_REQUESTED_CODE = 10026;
 constexpr int32_t FLUSH_SYNC_TRANSACTION_TIMEOUT = 100;
-constexpr uint64_t PERF_PERIOD = 250000000;
 constexpr uint64_t CLEAN_CACHE_FREQ = 60;
 constexpr uint64_t SKIP_COMMAND_FREQ_LIMIT = 30;
 constexpr uint64_t PERF_PERIOD_BLUR = 80000000;
 constexpr uint64_t PERF_PERIOD_MULTI_WINDOW = 80000000;
 constexpr uint32_t MULTI_WINDOW_PERF_START_NUM = 2;
 constexpr uint32_t MULTI_WINDOW_PERF_END_NUM = 4;
+#ifdef RES_SCHED_ENABLE
+constexpr uint64_t PERF_PERIOD                  = 250000000;
+constexpr uint32_t RES_TYPE_CLICK_ANIMATION     = 35;
+constexpr uint32_t RES_TYPE_CONTINUE_ANIMATION  = 36;
+constexpr int32_t CLICK_ANIMATION_START         = 0;
+constexpr int32_t CLICK_ANIMATION_COMPLETE      = 4;
+constexpr int32_t ANIMATION_START               = 0;
+constexpr int32_t ANIMATION_COMPLETE            = 1;
+#endif
 const std::map<int, int32_t> BLUR_CNT_TO_BLUR_CODE {
     { 1, 10021 },
     { 2, 10022 },
@@ -197,6 +209,7 @@ void RSMainThread::Init()
         RS_LOGD("RsDebug mainLoop end");
     };
 
+    isUniRender_ = RSUniRenderJudgement::IsUniRender();
     if (isUniRender_) {
         unmarshalBarrierTask_ = [this]() {
             auto cachedTransactionData = RSUnmarshalThread::Instance().GetCachedTransactionData();
@@ -753,6 +766,59 @@ void RSMainThread::NotifyDrivenRenderFinish()
 #endif
 }
 
+void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
+{
+    auto uniVisitor = std::make_shared<RSUniRenderVisitor>();
+#if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
+    uniVisitor->SetDrivenRenderFlag(hasDrivenNodeOnUniTree_, hasDrivenNodeMarkRender_);
+#endif
+    uniVisitor->SetHardwareEnabledNodes(hardwareEnabledNodes_);
+    uniVisitor->SetAppWindowNum(appWindowNum_);
+    uniVisitor->SetProcessorRenderEngine(GetRenderEngine());
+    if (isHardwareForcedDisabled_ || rootNode->GetChildrenCount() > 1) {
+        // [PLANNING] GetChildrenCount > 1 indicates multi display, only Mirror Mode need be marked here
+        // Mirror Mode reuses display node's buffer, so mark it and disable hardware composer in this case
+        uniVisitor->MarkHardwareForcedDisabled();
+        doDirectComposition_ = false;
+    }
+    bool needTraverseNodeTree = true;
+    if (doDirectComposition_ && !isDirty_) {
+        if (isHardwareEnabledBufferUpdated_) {
+            needTraverseNodeTree = !uniVisitor->DoDirectComposition(rootNode);
+        } else {
+            RS_LOGI("RSMainThread::Render nothing to update");
+            for (auto& node: hardwareEnabledNodes_) {
+                if (!node->IsHardwareForcedDisabled()) {
+                    node->MarkCurrentFrameHardwareEnabled();
+                }
+            }
+            return;
+        }
+    }
+    if (needTraverseNodeTree) {
+        uniVisitor->SetAnimateState(doWindowAnimate_);
+        uniVisitor->SetDirtyFlag(isDirty_);
+        uniVisitor->SetFocusedWindowPid(focusAppPid_);
+        rootNode->Prepare(uniVisitor);
+        CalcOcclusion();
+        bool doParallelComposition = RSInnovation::GetParallelCompositionEnabled(isUniRender_);
+        if (doParallelComposition && rootNode->GetChildrenCount() > 1) {
+            RS_LOGD("RSMainThread::Render multi-threads parallel composition begin.");
+            doParallelComposition = uniVisitor->ParallelComposition(rootNode);
+            if (doParallelComposition) {
+                RS_LOGD("RSMainThread::Render multi-threads parallel composition end.");
+                isDirty_ = false;
+                uniRenderEngine_->ShrinkCachesIfNeeded();
+                PerfForBlurIfNeeded();
+                return;
+            }
+        }
+        rootNode->Process(uniVisitor);
+    }
+    isDirty_ = false;
+    uniRenderEngine_->ShrinkCachesIfNeeded();
+}
+
 void RSMainThread::Render()
 {
     const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
@@ -766,37 +832,7 @@ void RSMainThread::Render()
     RS_LOGD("RSMainThread::Render isUni:%d", isUniRender_);
 
     if (isUniRender_) {
-        auto uniVisitor = std::make_shared<RSUniRenderVisitor>();
-#if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
-        uniVisitor->SetDrivenRenderFlag(hasDrivenNodeOnUniTree_, hasDrivenNodeMarkRender_);
-#endif
-        uniVisitor->SetHardwareEnabledNodes(hardwareEnabledNodes_);
-        uniVisitor->SetAppWindowNum(appWindowNum_);
-        if (isHardwareForcedDisabled_ || rootNode->GetChildrenCount() > 1) {
-            // [PLANNING] GetChildrenCount > 1 indicates multi display, only Mirror Mode need be marked here
-            // Mirror Mode reuses display node's buffer, so mark it and disable hardware composer in this case
-            uniVisitor->MarkHardwareForcedDisabled();
-            doDirectComposition_ = false;
-        }
-        bool needTraverseNodeTree = true;
-        if (doDirectComposition_ && !isDirty_) {
-            if (isHardwareEnabledBufferUpdated_) {
-                needTraverseNodeTree = !uniVisitor->DoDirectComposition(rootNode);
-            } else {
-                RS_LOGI("RSMainThread::Render nothing to update");
-                return;
-            }
-        }
-        if (needTraverseNodeTree) {
-            uniVisitor->SetAnimateState(doWindowAnimate_);
-            uniVisitor->SetDirtyFlag(isDirty_);
-            uniVisitor->SetFocusedWindowPid(focusAppPid_);
-            rootNode->Prepare(uniVisitor);
-            CalcOcclusion();
-            rootNode->Process(uniVisitor);
-        }
-        isDirty_ = false;
-        uniRenderEngine_->ShrinkCachesIfNeeded();
+        UniRender(rootNode);
     } else {
         auto rsVisitor = std::make_shared<RSRenderServiceVisitor>();
         rsVisitor->SetAnimateState(doWindowAnimate_);
@@ -804,7 +840,7 @@ void RSMainThread::Render()
         CalcOcclusion();
 
         bool doParallelComposition = false;
-        if (!rsVisitor->ShouldForceSerial() && RSInnovation::GetParallelCompositionEnabled()) {
+        if (!rsVisitor->ShouldForceSerial() && RSInnovation::GetParallelCompositionEnabled(isUniRender_)) {
             doParallelComposition = DoParallelComposition(rootNode);
         }
         if (doParallelComposition) {
@@ -853,6 +889,11 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
     for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
         auto curSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (curSurface == nullptr || curSurface->GetDstRect().IsEmpty() || curSurface->IsLeashWindow()) {
+            continue;
+        }
+        // When a surfacenode is in animation (i.e. 3d animation), its dstrect cannot be trusted, we treated it as
+        // a full transparent layer.
+        if (curSurface->GetAnimateState()) {
             continue;
         }
         Occlusion::Rect occlusionRect;
@@ -1047,6 +1088,37 @@ void RSMainThread::OnVsync(uint64_t timestamp, void* data)
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }
 
+void RSMainThread::ResSchedDataStartReport(bool needRequestNextVsync)
+{
+#ifdef RES_SCHED_ENABLE
+    RS_TRACE_FUNC();
+    if (needRequestNextVsync && requestResschedReport_) {
+        std::unordered_map<std::string, std::string> payload;
+        payload["uid"] = std::to_string(getuid());
+        payload["pid"] = std::to_string(GetRealPid());
+        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE_CLICK_ANIMATION,
+            CLICK_ANIMATION_START, payload);
+        RS_LOGD("Animate :: animation start event to soc perf.");
+        requestResschedReport_ = false;
+    }
+#endif
+}
+
+void RSMainThread::ResSchedDataCompleteReport(bool needRequestNextVsync)
+{
+#ifdef RES_SCHED_ENABLE
+    RS_TRACE_FUNC();
+    if (!requestResschedReport_ && !needRequestNextVsync) {
+        std::unordered_map<std::string, std::string> payload;
+        payload["uid"] = std::to_string(getuid());
+        payload["pid"] = std::to_string(GetRealPid());
+        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE_CLICK_ANIMATION,
+            CLICK_ANIMATION_COMPLETE, payload);
+        requestResschedReport_ = true;
+    }
+#endif
+}
+
 void RSMainThread::Animate(uint64_t timestamp)
 {
     RS_TRACE_FUNC();
@@ -1078,24 +1150,25 @@ void RSMainThread::Animate(uint64_t timestamp)
             RS_LOGD("RSMainThread::Animate removing finished animating node %" PRIu64, node->GetId());
         }
         needRequestNextVsync = needRequestNextVsync || result.second;
-        if (node->template IsInstanceOf<RSSurfaceRenderNode>()) {
+        if (node->template IsInstanceOf<RSSurfaceRenderNode>() && result.first) {
+            auto surfacenode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
+            surfacenode->SetAnimateState();
             curWinAnim = true;
         }
         return !result.first;
     });
-
+    ResSchedDataStartReport(needRequestNextVsync);
     if (!doWindowAnimate_ && curWinAnim && RSInnovation::UpdateQosVsyncEnabled()) {
         RSQosThread::ResetQosPid();
     }
-    doWindowAnimate_ = std::any_of(context_->animatingNodeList_.begin(), context_->animatingNodeList_.end(), [](const auto& iter) {
-        return RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(iter.second.lock()) != nullptr;
-    });
+    doWindowAnimate_ = curWinAnim;
     RS_LOGD("RSMainThread::Animate end, %d animating nodes remains, has window animation: %d",
         context_->animatingNodeList_.size(), curWinAnim);
 
     if (needRequestNextVsync) {
         RequestNextVSync();
     }
+    ResSchedDataCompleteReport(needRequestNextVsync);
     PerfAfterAnim();
 }
 
@@ -1453,16 +1526,25 @@ void RSMainThread::PerfAfterAnim()
     if (!isUniRender_) {
         return;
     }
+#ifdef RES_SCHED_ENABLE
+    RS_TRACE_FUNC();
+    std::unordered_map<std::string, std::string> payload;
+    payload["uid"] = std::to_string(getuid());
+    payload["pid"] = std::to_string(GetRealPid());
     if (!context_->animatingNodeList_.empty() && timestamp_ - prePerfTimestamp_ > PERF_PERIOD) {
         RS_LOGD("RSMainThread:: soc perf to render_service_animation");
-        PerfRequest(PERF_ANIMATION_REQUESTED_CODE, true);
+        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE_CONTINUE_ANIMATION,
+            ANIMATION_START, payload);
         prePerfTimestamp_ = timestamp_;
     } else if (context_->animatingNodeList_.empty()) {
         RS_LOGD("RSMainThread:: soc perf off render_service_animation");
-        PerfRequest(PERF_ANIMATION_REQUESTED_CODE, false);
+        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE_CONTINUE_ANIMATION,
+            ANIMATION_COMPLETE, payload);
         prePerfTimestamp_ = 0;
     }
+#endif
 }
+
 void RSMainThread::ForceRefreshForUni()
 {
     if (isUniRender_) {

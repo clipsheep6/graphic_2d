@@ -34,6 +34,7 @@
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "render_context/render_context.h"
+#include "pipeline/rs_base_render_engine.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -52,6 +53,7 @@ public:
     void SetMainVisitor(RSUniRenderVisitor *mainVisitor);
     bool GetRenderFinish();
     void SetSuperTask(std::unique_ptr<RSSuperRenderTask> superRenderTask);
+    void SetCompositionTask(std::unique_ptr<RSCompositionTask> compositionTask);
     EGLContext GetSharedContext();
     sk_sp<SkSurface> GetSkSurface();
     sk_sp<SkImage> GetTexture();
@@ -77,6 +79,8 @@ private:
     void StartPrepare();
     void Prepare();
     void CalcCost();
+    void StartComposition();
+    void Composition();
 #ifdef NEW_SKIA
     sk_sp<GrDirectContext> CreateShareGrContext();
 #else
@@ -96,7 +100,8 @@ private:
     SkCanvas *skCanvas_ = nullptr;
     std::shared_ptr<RSPaintFilterCanvas> canvas_ = nullptr;
     std::shared_ptr<RSUniRenderVisitor> visitor_;
-
+    std::shared_ptr<RSUniRenderVisitor> compositionVisitor_ = nullptr;
+    std::shared_ptr<RSBaseRenderEngine> processorRenderEngine_ = nullptr;
     EGLContext eglShareContext_ = EGL_NO_CONTEXT;
     EGLSurface eglPSurface_ = EGL_NO_SURFACE;
     std::function<void()> mainLoop_;
@@ -105,6 +110,7 @@ private:
     std::mutex flushMutex_;
     RenderContext *renderContext_ = nullptr;
     std::unique_ptr<RSSuperRenderTask> threadTask_;
+    std::unique_ptr<RSCompositionTask> compositionTask_ = nullptr;
 
     RSUniRenderVisitor *mainVisitor_;
     ParallelRenderType renderType_;

@@ -51,6 +51,9 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr uint32_t USE_CACHE_APP_WINDOW_NUM = 7;
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined (RS_ENABLE_GL)
+constexpr uint32_t PHONE_MAX_APP_WINDOW_NUM = 1;
+#endif
 
 bool IsFirstFrameReadyToDraw(RSSurfaceRenderNode& node)
 {
@@ -74,8 +77,6 @@ constexpr uint32_t PARALLEL_RENDER_MINIMUN_RENDER_NODE_NUMBER = 50;
 RSUniRenderVisitor::RSUniRenderVisitor()
     : curSurfaceDirtyManager_(std::make_shared<RSDirtyRegionManager>())
 {
-    auto mainThread = RSMainThread::Instance();
-    renderEngine_ = mainThread->GetRenderEngine();
     partialRenderType_ = RSSystemProperties::GetUniPartialRenderEnabled();
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     auto screenNum = screenManager->GetAllScreenIds().size();
@@ -131,9 +132,32 @@ RSUniRenderVisitor::RSUniRenderVisitor(const RSUniRenderVisitor& visitor) : RSUn
     prepareClipRect_ = visitor.prepareClipRect_;
     isOpDropped_ = visitor.isOpDropped_;
     isPartialRenderEnabled_ = visitor.isPartialRenderEnabled_;
+    isHardwareForcedDisabled_ = visitor.isHardwareForcedDisabled_;
+    doAnimate_ = visitor.doAnimate_;
+    isDirty_ = visitor.isDirty_;
 }
 
 RSUniRenderVisitor::~RSUniRenderVisitor() {}
+
+void RSUniRenderVisitor::CopyVisitorInfos(std::shared_ptr<RSUniRenderVisitor> visitor)
+{
+    std::unique_lock<std::mutex> lock(copyVisitorInfosMutex_);
+    currentVisitDisplay_ = visitor->currentVisitDisplay_;
+    screenInfo_ = visitor->screenInfo_;
+    displayHasSecSurface_ = visitor->displayHasSecSurface_;
+    parentSurfaceNodeMatrix_ = visitor->parentSurfaceNodeMatrix_;
+    curAlpha_ = visitor->curAlpha_;
+    dirtyFlag_ = visitor->dirtyFlag_;
+    curDisplayNode_ = visitor->curDisplayNode_;
+    currentFocusedPid_ = visitor->currentFocusedPid_;
+    surfaceNodePrepareMutex_ = visitor->surfaceNodePrepareMutex_;
+    prepareClipRect_ = visitor->prepareClipRect_;
+    isOpDropped_ = visitor->isOpDropped_;
+    isPartialRenderEnabled_ = visitor->isPartialRenderEnabled_;
+    isHardwareForcedDisabled_ = visitor->isHardwareForcedDisabled_;
+    doAnimate_ = visitor->doAnimate_;
+    isDirty_ = visitor->isDirty_;
+}
 
 void RSUniRenderVisitor::CopyPropertyForParallelVisitor(RSUniRenderVisitor *mainVisitor)
 {
@@ -171,6 +195,17 @@ void RSUniRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
                 DirtyRegionType::REMOVE_CHILD_RECT, dirtyRect);
         }
         node.ResetHasRemovedChild();
+    }
+    // collect extensionAbility children nodeIds since they belong to another process, managing different view
+    auto surfaceNode = node.ReinterpretCastTo<RSSurfaceRenderNode>();
+    if (surfaceNode != nullptr && surfaceNode->IsExtensionAbility() && curSurfaceNode_) {
+        std::string childInfo = "ExtensionAbility has " + std::to_string(children.size()) + " children:[";
+        // check child in GetSortedChildren considering disappearingChildren_
+        for (auto& child : children) {
+            curSurfaceNode_->UpdateAbilityNodeIds(child->GetId());
+            childInfo += std::to_string(child->GetId()) + ",";
+        }
+        RS_TRACE_NAME(childInfo + "]");
     }
 
     // reset childRect before prepare children
@@ -286,8 +321,9 @@ void RSUniRenderVisitor::ParallelPrepareDisplayRenderNodeChildrens(RSDisplayRend
 {
 #if defined(RS_ENABLE_PARALLEL_RENDER) && (defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK))
     auto parallelRenderManager = RSParallelRenderManager::Instance();
-    isParallel_ = AdaptiveSubRenderThreadMode(node.GetChildrenCount()) &&
-        parallelRenderManager->GetParallelMode();
+    doParallelRender_ = (node.GetChildrenCount() >= PARALLEL_RENDER_MINIMUN_RENDER_NODE_NUMBER) &&
+                        (!doParallelComposition_);
+    isParallel_ = AdaptiveSubRenderThreadMode(doParallelRender_) && parallelRenderManager->GetParallelMode();
     isDirtyRegionAlignedEnable_ = isParallel_;
     // we will open prepare parallel after check all properties.
     if (isParallel_ &&
@@ -422,8 +458,8 @@ void RSUniRenderVisitor::AdjustLocalZOrder(std::shared_ptr<RSSurfaceRenderNode> 
 
 void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
-    RS_TRACE_NAME("RSUniRender::Prepare:[" + node.GetName() + "]" + " pid: " +
-        std::to_string(ExtractPid(node.GetId())));
+    RS_TRACE_NAME("RSUniRender::Prepare:[" + node.GetName() + "] pid: " + std::to_string(ExtractPid(node.GetId())) +
+        ", nodeType " + std::to_string(static_cast<uint>(node.GetSurfaceNodeType())));
     if (node.GetSecurityLayer()) {
         displayHasSecSurface_[currentVisitDisplay_] = true;
     }
@@ -454,13 +490,6 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     float alpha = curAlpha_;
     curAlpha_ *= (property.GetAlpha() * node.GetContextAlpha());
     node.SetGlobalAlpha(curAlpha_);
-    
-    if (isSkipForAlphaZero_) {
-        if (ROSEN_EQ(node.GetGlobalAlpha(), 0.f)) {
-            ROSEN_LOGW("RSUniRenderVisitor::PrepareSurfaceRenderNode skip because node.GlobalAlpha is 0.f");
-            return;
-        }
-    }
 
     // if currentsurfacenode is a main window type, reset the curSurfaceDirtyManager
     // reset leash window's dirtyManager pointer to avoid curSurfaceDirtyManager mis-pointing
@@ -472,8 +501,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
             curSurfaceDirtyManager_->MarkAsTargetForDfx();
         }
     }
-    // [planning] IsMainWindowType should contain ABILITY_COMPONENT_NODE
-    // this branch should be included in other judgment
+    // collect ability nodeId info within same app since it belongs to another process
     if (node.IsAbilityComponent() && curSurfaceNode_) {
         curSurfaceNode_->UpdateAbilityNodeIds(node.GetId());
     }
@@ -958,8 +986,6 @@ void RSUniRenderVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
-    // clear SortedChildren, it will be generated again in next frame
-    node.ResetSortedChildren();
 }
 
 void RSUniRenderVisitor::ProcessParallelDisplayRenderNode(RSDisplayRenderNode& node)
@@ -1096,8 +1122,13 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: RSProcessor is null!");
         return;
     }
+
+    if (renderEngine_ == nullptr) {
+        RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: renderEngine is null!");
+        return;
+    }
     if (!processor_->Init(node, node.GetDisplayOffsetX(), node.GetDisplayOffsetY(),
-        mirrorNode ? mirrorNode->GetScreenId() : INVALID_SCREEN_ID)) {
+        mirrorNode ? mirrorNode->GetScreenId() : INVALID_SCREEN_ID, renderEngine_)) {
         RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: processor init failed!");
         return;
     }
@@ -1128,8 +1159,14 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         if (displayHasSecSurface_[mirrorNode->GetScreenId()] && mirrorNode->GetSecurityDisplay() != isSecurityDisplay_
             && processor) {
             canvas_ = processor->GetCanvas();
+            if (canvas_ == nullptr) {
+                RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode failed to get canvas.");
+                return;
+            }
+            int saveCount = canvas_->save();
             ProcessBaseRenderNode(*mirrorNode);
             DrawWatermarkIfNeed();
+            canvas_->restoreToCount(saveCount);
         } else {
             processor_->ProcessDisplaySurface(*mirrorNode);
         }
@@ -1150,8 +1187,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 #endif
     } else {
 #ifdef RS_ENABLE_EGLQUERYSURFACE
+        curDisplayDirtyManager_->SetSurfaceSize(screenInfo_.width, screenInfo_.height);
+        ClosePartialRenderWhenAnimatingWindows(displayNodePtr);
         if (isPartialRenderEnabled_) {
-            curDisplayDirtyManager_->SetSurfaceSize(screenInfo_.width, screenInfo_.height);
             CalcDirtyDisplayRegion(displayNodePtr);
             CalcDirtyRegionForFilterNode(displayNodePtr);
             displayNodePtr->ClearCurrentSurfacePos();
@@ -1807,15 +1845,14 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         AdjustLocalZOrder(curSurfaceNode_);
     }
     // skip clean surface node
-    if (isOpDropped_ && node.IsAppWindow()) {
-        if (!node.SubNodeNeedDraw(node.GetOldDirtyInSurface(), partialRenderType_)) {
-            RS_TRACE_NAME(node.GetName() + " QuickReject Skip");
-            RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode skip: %s", node.GetName().c_str());
-            return;
-        }
+    if (isOpDropped_ && node.IsAppWindow() && !node.GetAnimateState() &&
+        !node.SubNodeNeedDraw(node.GetOldDirtyInSurface(), partialRenderType_)) {
+        RS_TRACE_NAME(node.GetName() + " QuickReject Skip");
+        RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode skip: %s", node.GetName().c_str());
+        return;
     }
 #endif
-
+    node.ResetAnimateState();
     if (!canvas_) {
         RS_LOGE("RSUniRenderVisitor::ProcessSurfaceRenderNode, canvas is nullptr");
         return;
@@ -1839,8 +1876,10 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 #endif
 
     if (node.GetSurfaceNodeType() == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
+        sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
+        auto screenNum = screenManager->GetAllScreenIds().size();
         needColdStartThread_ = RSSystemProperties::GetColdStartThreadEnabled() &&
-                               !node.IsStartAnimationFinished() && doAnimate_;
+                               !node.IsStartAnimationFinished() && doAnimate_ && screenNum <= 1;
         needCheckFirstFrame_ = node.GetChildrenCount() > 1; // childCount > 1 means startingWindow and appWindow
     }
 
@@ -2012,9 +2051,8 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         return;
     }
 #ifdef RS_ENABLE_EGLQUERYSURFACE
-    if (isOpDropped_ && curSurfaceNode_ &&
-        !curSurfaceNode_->SubNodeNeedDraw(node.GetOldDirtyInSurface(), partialRenderType_) &&
-        !node.HasChildrenOutOfRect()) {
+    if (isOpDropped_ && curSurfaceNode_ && !node.HasChildrenOutOfRect() &&
+        !curSurfaceNode_->SubNodeNeedDraw(node.GetOldDirtyInSurface(), partialRenderType_)) {
         return;
     }
 #endif
@@ -2121,18 +2159,17 @@ void RSUniRenderVisitor::FinishOffscreenRender()
     canvas_ = std::move(canvasBackup_);
 }
 
-bool RSUniRenderVisitor::AdaptiveSubRenderThreadMode(uint32_t renderNodeNum)
+bool RSUniRenderVisitor::AdaptiveSubRenderThreadMode(bool doParallel)
 {
 #if defined(RS_ENABLE_PARALLEL_RENDER) && (defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK))
-    bool isParallel = (renderNodeNum >= PARALLEL_RENDER_MINIMUN_RENDER_NODE_NUMBER) &&
-        (parallelRenderType_ != ParallelRenderingType::DISABLE);
-    if (!isParallel) {
-        return isParallel;
+    doParallel = doParallel && (parallelRenderType_ != ParallelRenderingType::DISABLE);
+    if (!doParallel) {
+        return doParallel;
     }
     auto parallelRenderManager = RSParallelRenderManager::Instance();
     switch (parallelRenderType_) {
         case ParallelRenderingType::AUTO:
-            parallelRenderManager->SetParallelMode(isParallel);
+            parallelRenderManager->SetParallelMode(doParallel);
             break;
         case ParallelRenderingType::DISABLE:
             parallelRenderManager->SetParallelMode(false);
@@ -2141,7 +2178,7 @@ bool RSUniRenderVisitor::AdaptiveSubRenderThreadMode(uint32_t renderNodeNum)
             parallelRenderManager->SetParallelMode(true);
             break;
     }
-    return isParallel;
+    return doParallel;
 #else
     return false;
 #endif
@@ -2155,6 +2192,21 @@ void RSUniRenderVisitor::ParallelRenderEnableHardwareComposer(RSSurfaceRenderNod
         RectF clipRect = {dstRect.GetLeft(), dstRect.GetTop(), dstRect.GetWidth(), dstRect.GetHeight()};
         RSParallelRenderManager::Instance()->AddSelfDrawingSurface(parallelRenderVisitorIndex_,
             property.GetCornerRadius().IsZero(), clipRect, property.GetCornerRadius());
+    }
+#endif
+}
+
+void RSUniRenderVisitor::ClosePartialRenderWhenAnimatingWindows(std::shared_ptr<RSDisplayRenderNode>& node)
+{
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined (RS_ENABLE_GL)
+    if (!doAnimate_) {
+        return;
+    }
+    if (appWindowNum_ > PHONE_MAX_APP_WINDOW_NUM) {
+        node->GetDirtyManager()->MergeSurfaceRect();
+    } else {
+        isPartialRenderEnabled_ = 0;
+        isOpDropped_ = 0;
     }
 #endif
 }
@@ -2194,8 +2246,13 @@ bool RSUniRenderVisitor::DoDirectComposition(std::shared_ptr<RSBaseRenderNode> r
         RS_LOGE("RSUniRenderVisitor::DoDirectComposition: RSProcessor is null!");
         return false;
     }
+
+    if (renderEngine_ == nullptr) {
+        RS_LOGE("RSUniRenderVisitor::DoDirectComposition: renderEngine is null!");
+        return false;
+    }
     if (!processor_->Init(*displayNode, displayNode->GetDisplayOffsetX(), displayNode->GetDisplayOffsetY(),
-        INVALID_SCREEN_ID)) {
+        INVALID_SCREEN_ID, renderEngine_)) {
         RS_LOGE("RSUniRenderVisitor::DoDirectComposition: processor init failed!");
         return false;
     }
@@ -2225,9 +2282,31 @@ void RSUniRenderVisitor::DrawWatermarkIfNeed()
     }
 }
 
+
 void RSUniRenderVisitor::SetAppWindowNum(uint32_t num)
 {
     appWindowNum_ = num;
 }
+
+bool RSUniRenderVisitor::ParallelComposition(const std::shared_ptr<RSBaseRenderNode> rootNode)
+{
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined (RS_ENABLE_GL)
+    auto parallelRenderManager = RSParallelRenderManager::Instance();
+    doParallelComposition_ = true;
+    doParallelComposition_ = AdaptiveSubRenderThreadMode(doParallelComposition_) &&
+                             parallelRenderManager->GetParallelMode();
+    if (doParallelComposition_) {
+        parallelRenderManager->PackParallelCompositionTask(shared_from_this(), rootNode);
+        parallelRenderManager->LoadBalanceAndNotify(TaskType::COMPOSITION_TASK);
+        parallelRenderManager->WaitCompositionEnd();
+    } else {
+        return false;
+    }
+    return true;
+#else
+    return false;
+#endif
+}
+
 } // namespace Rosen
 } // namespace OHOS

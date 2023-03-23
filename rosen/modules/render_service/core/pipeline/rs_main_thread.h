@@ -172,6 +172,7 @@ private:
     void CollectInfoForDrivenRender();
     void ReleaseAllNodesBuffer();
     void Render();
+    void UniRender(std::shared_ptr<RSBaseRenderNode> rootNode);
     bool CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
     void CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
     void CalcOcclusion();
@@ -202,6 +203,11 @@ private:
     void PerfForBlurIfNeeded();
     void PerfMultiWindow();
     void ResetHardwareEnabledState();
+
+    // Click animation, report the start event to RS
+    void ResSchedDataStartReport(bool needRequestNextVsync);
+    // Click animation, report the complete event to RS
+    void ResSchedDataCompleteReport(bool needRequestNextVsync);
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
@@ -290,6 +296,9 @@ private:
     // driven render
     bool hasDrivenNodeOnUniTree_ = false;
     bool hasDrivenNodeMarkRender_ = false;
+
+    // used for control start and end of the click animation
+    bool requestResschedReport_ = true;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

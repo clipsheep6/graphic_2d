@@ -218,6 +218,8 @@ void RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSD
         std::to_string(node.GetId()));
     RS_LOGD("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode child size:[%d] total size:[%d]",
         node.GetChildrenCount(), node.GetSortedChildren().size());
+    RS_TRACE_NAME("RSSurfaceCaptureTask::RSSurfaceCaptureVisitor::ProcessDisplayRenderNode:" +
+        std::to_string(node.GetId()));
 
     // Mirror Display is unable to snapshot.
     if (node.IsMirrorDisplay()) {

@@ -96,6 +96,7 @@ ohos_shared_library("libtexgine") {
     "texgine_drawing:libtexgine_drawing",
     "//foundation/graphic/graphic_2d/rosen/build/flutter/icu:rosen_libicu_$platform",
     "//third_party/harfbuzz:harfbuzz_static",
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
   ]
 
   external_deps = [ "hitrace_native:hitrace_meter" ]

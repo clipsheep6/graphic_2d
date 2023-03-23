@@ -15,16 +15,29 @@
 
 #include "c/drawing_text_typography.h"
 
-#include "rosen_text/ui/font_collection.h"
-#include "rosen_text/ui/typography.h"
-#include "rosen_text/ui/typography_create.h"
+#include "rosen_text/font_collection.h"
+#include "rosen_text/typography.h"
+#include "rosen_text/typography_create.h"
+#include "unicode/putil.h"
 
 #include <codecvt>
 #include <locale>
 #include <vector>
 #include <string>
 
-using namespace rosen;
+using namespace OHOS::Rosen;
+
+namespace {
+__attribute__((constructor))
+void init()
+{
+#ifndef _WIN32
+    u_setDataDirectory("/system/usr/ohos_icu");
+#else
+    u_setDataDirectory(".");
+#endif
+}
+} // namespace
 
 template<typename T1, typename T2>
 inline T1* ConvertToOriginalText(T2* ptr)
@@ -191,7 +204,7 @@ void OH_Drawing_SetTextStyleBaseLine(OH_Drawing_TextStyle* style, int baseline)
             rosenBaseLine = TextBaseline::ALPHABETIC;
         }
     }
-    ConvertToOriginalText<TextStyle>(style)->textBaseline_ = rosenBaseLine;
+    ConvertToOriginalText<TextStyle>(style)->baseline_ = rosenBaseLine;
 }
 
 void OH_Drawing_SetTextStyleDecoration(OH_Drawing_TextStyle* style, int decoration)
@@ -228,7 +241,7 @@ void OH_Drawing_SetTextStyleDecorationColor(OH_Drawing_TextStyle* style, uint32_
 
 void OH_Drawing_SetTextStyleFontHeight(OH_Drawing_TextStyle* style, double fontHeight)
 {
-    ConvertToOriginalText<TextStyle>(style)->height_ = fontHeight;
+    ConvertToOriginalText<TextStyle>(style)->heightScale_ = fontHeight;
 }
 
 void OH_Drawing_SetTextStyleFontFamilies(OH_Drawing_TextStyle* style,
@@ -269,7 +282,7 @@ OH_Drawing_TypographyCreate* OH_Drawing_CreateTypographyHandler(OH_Drawing_Typog
     OH_Drawing_FontCollection* fontCollection)
 {
     const TypographyStyle* typoStyle = ConvertToOriginalText<TypographyStyle>(style);
-    std::unique_ptr<TypographyCreate> handler = TypographyCreate::CreateRosenBuilder(*typoStyle,
+    std::unique_ptr<OHOS::Rosen::TypographyCreate> handler = OHOS::Rosen::TypographyCreate::Create(*typoStyle,
         std::shared_ptr<FontCollection>(ConvertToOriginalText<FontCollection>(fontCollection)));
     return ConvertToNDKText<OH_Drawing_TypographyCreate>(handler.release());
 }
@@ -289,18 +302,18 @@ void OH_Drawing_TypographyHandlerAddText(OH_Drawing_TypographyCreate* handler, c
 {
     const std::u16string wideText =
         std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.from_bytes(text);
-    ConvertToOriginalText<TypographyCreate>(handler)->AddText(wideText);
+    ConvertToOriginalText<TypographyCreate>(handler)->AppendText(wideText);
 }
 
 void OH_Drawing_TypographyHandlerPopTextStyle(OH_Drawing_TypographyCreate* handler)
 {
-    ConvertToOriginalText<TypographyCreate>(handler)->Pop();
+    ConvertToOriginalText<TypographyCreate>(handler)->PopStyle();
 }
 
 OH_Drawing_Typography* OH_Drawing_CreateTypography(OH_Drawing_TypographyCreate* handler)
 {
     TypographyCreate* rosenHandler = ConvertToOriginalText<TypographyCreate>(handler);
-    std::unique_ptr<Typography> typography = rosenHandler->Build();
+    std::unique_ptr<Typography> typography = rosenHandler->CreateTypography();
     return ConvertToNDKText<OH_Drawing_Typography>(typography.release());
 }
 
@@ -333,7 +346,7 @@ double OH_Drawing_TypographyGetHeight(OH_Drawing_Typography* typography)
 
 double OH_Drawing_TypographyGetLongestLine(OH_Drawing_Typography* typography)
 {
-    return ConvertToOriginalText<Typography>(typography)->GetLongestLine();
+    return ConvertToOriginalText<Typography>(typography)->GetActualWidth();
 }
 
 double OH_Drawing_TypographyGetMinIntrinsicWidth(OH_Drawing_Typography* typography)

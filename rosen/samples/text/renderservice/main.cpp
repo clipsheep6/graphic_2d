@@ -43,7 +43,7 @@
 #include "pipeline/rs_render_thread.h"
 #include "rosen_text/properties/text_style.h"
 #include "rosen_text/properties/typography_properties.h"
-#include "rosen_text/ui/font_collection.h"
+#include "rosen_text/font_collection.h"
 #include "rosen_text/ui/typography.h"
 #include "rosen_text/ui/typography_create.h"
 #include "ui/rs_canvas_node.h"
@@ -90,7 +90,7 @@ void DoDraw(uint8_t *addr, uint32_t width, uint32_t height, size_t index)
     builder->AddText(u16Text);
     builder->Pop();
     // layout
-    std::unique_ptr<rosen::Typography> typography;
+    std::unique_ptr<Rosen::Typography> typography;
     typography = builder->Build();
     if (typography == nullptr) {
         LOGD("typography == nullptr");

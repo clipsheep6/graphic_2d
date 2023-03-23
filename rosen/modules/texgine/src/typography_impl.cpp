@@ -79,11 +79,19 @@ TypographyImpl::TypographyImpl(TypographyStyle &ys,
 
 double TypographyImpl::GetAlphabeticBaseline() const
 {
+    if (lineMaxCoveredAscent_.empty()) {
+        return 0.0;
+    }
+
     return lineMaxCoveredAscent_[0];
 }
 
 double TypographyImpl::GetIdeographicBaseline() const
 {
+    if (lineMaxCoveredAscent_.empty() || lineMaxCoveredDescent_.empty()) {
+        return 0.0;
+    }
+
     return lineMaxCoveredAscent_[0] + lineMaxCoveredDescent_[0];
 }
 

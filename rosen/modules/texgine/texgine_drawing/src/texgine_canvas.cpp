@@ -31,6 +31,11 @@ void TexgineCanvas::DrawTextBlob(std::shared_ptr<TexgineTextBlob> &blob, float x
     canvas_->drawTextBlob(blob->GetTextBlob(), x, y, paint.GetPaint());
 }
 
+void TexgineCanvas::Clear(uint32_t clolor)
+{
+    canvas_->clear(clolor);
+}
+
 int TexgineCanvas::Save()
 {
     return canvas_->save();

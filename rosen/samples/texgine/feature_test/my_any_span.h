@@ -63,7 +63,7 @@ public:
     {
         TexginePaint paint;
         paint.SetColor(color_);
-        paint.SetStyle(paint.FILL);
+        paint.SetStyle(TexginePaint::FILL);
         auto rect = TexgineRect::MakeXYWH(offsetx, offsety, width_, height_);
         canvas.DrawRect(rect, paint);
     }

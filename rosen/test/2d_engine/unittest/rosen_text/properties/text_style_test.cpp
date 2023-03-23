@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "text_style.h"
+#include "rosen_text/text_style.h"
 #include "gtest/gtest.h"
 
 
-using namespace rosen;
+using namespace OHOS::Rosen;
 using namespace testing;
 using namespace testing::ext;
 
@@ -50,13 +50,13 @@ HWTEST_F(OH_Drawing_TextShadowTest, OH_Drawing_TextShadowTest002, TestSize.Level
 {
     OHOS::Rosen::Drawing::Point offset;
     TextShadow textShadow(Rosen::Drawing::Color::COLOR_BLACK, offset, 0.0);
-    EXPECT_EQ(textShadow.hasShadow(), false);
+    EXPECT_EQ(textShadow.HasShadow(), false);
     textShadow.blurRadius_ = 1.0f;
-    EXPECT_EQ(textShadow.hasShadow(), true);
+    EXPECT_EQ(textShadow.HasShadow(), true);
     textShadow.offset_.SetY(1.0f);
-    EXPECT_EQ(textShadow.hasShadow(), true);
+    EXPECT_EQ(textShadow.HasShadow(), true);
     textShadow.offset_.SetX(1.0f);
-    EXPECT_EQ(textShadow.hasShadow(), true);
+    EXPECT_EQ(textShadow.HasShadow(), true);
 }
 
 
@@ -72,7 +72,7 @@ HWTEST_F(OH_Drawing_TextStyleTest, OH_Drawing_TextStyleTest001, TestSize.Level1)
 {
     TextStyle textStyle;
     TextStyle textStyle2;
-    EXPECT_EQ(textStyle.equals(textStyle2), true);
+    EXPECT_EQ(textStyle, textStyle2);
 }
 
 /*

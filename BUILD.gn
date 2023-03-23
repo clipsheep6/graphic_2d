@@ -22,7 +22,6 @@ group("default") {
     "frameworks/dumper:gdumper.ini",
     "frameworks/dumper:graphic_dumper_server",
     "frameworks/vulkan_wrapper:vulkan",
-    "rosen/samples/texgine:texgine_feature_test",
   ]
 
   if (graphic_standard_feature_bootanimation_enable) {
@@ -47,6 +46,7 @@ group("graphic_2d_test") {
     "utils/color_manager:test",
     "utils/socketpair:test",
     "utils/sync_fence:test",
+    "rosen/samples/texgine:texgine_feature_test",
   ]
 }
 

@@ -80,7 +80,9 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
     params.useCPU = true;
 #endif // RS_ENABLE_EGLIMAGE
     params.paint.setAntiAlias(true);
+#ifndef NEW_SKIA
     params.paint.setFilterQuality(SkFilterQuality::kLow_SkFilterQuality);
+#endif
 
     const RSProperties& property = node.GetRenderProperties();
     params.dstRect = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
@@ -110,7 +112,9 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSDisplayRenderNode
     params.useCPU = true;
 #endif // RS_ENABLE_EGLIMAGE
     params.paint.setAntiAlias(true);
+#ifndef NEW_SKIA
     params.paint.setFilterQuality(SkFilterQuality::kLow_SkFilterQuality);
+#endif
 
     const sptr<SurfaceBuffer>& buffer = node.GetBuffer();
     params.buffer = buffer;
@@ -129,7 +133,9 @@ BufferDrawParam RSUniRenderUtil::CreateLayerBufferDrawParam(const LayerInfoPtr& 
     params.useCPU = true;
 #endif // RS_ENABLE_EGLIMAGE
     params.paint.setAntiAlias(true);
+#ifndef NEW_SKIA
     params.paint.setFilterQuality(SkFilterQuality::kLow_SkFilterQuality);
+#endif
     params.paint.setAlphaf(layer->GetAlpha().gAlpha);
 
     sptr<SurfaceBuffer> buffer = layer->GetBuffer();
@@ -200,7 +206,12 @@ void RSUniRenderUtil::DrawCachedSpherizeSurface(const RSRenderNode& node, RSPain
 
     SkPaint paint;
     paint.setBlendMode(SkBlendMode::kSrcOver);
+#ifdef NEW_SKIA
+    paint.setShader(imageSnapshot->makeShader(SkTileMode::kClamp, SkTileMode::kClamp, SkSamplingOptions()));
+#else
     paint.setShader(imageSnapshot->makeShader(SkTileMode::kClamp, SkTileMode::kClamp));
+#endif
+    
     float width = imageSnapshot->width();
     float height = imageSnapshot->height();
     float degree = properties.GetSpherize();
@@ -264,7 +275,11 @@ void RSUniRenderUtil::DrawCachedImage(RSSurfaceRenderNode& node, RSPaintFilterCa
     canvas.scale(node.GetRenderProperties().GetBoundsWidth() / image->width(),
         node.GetRenderProperties().GetBoundsHeight() / image->height());
     SkPaint paint;
+#ifdef NEW_SKIA
+    canvas.drawImage(image.get(), 0.0, 0.0, SkSamplingOptions(), &paint);
+#else
     canvas.drawImage(image.get(), 0.0, 0.0, &paint);
+#endif
     canvas.restore();
 }
 

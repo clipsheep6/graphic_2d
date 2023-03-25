@@ -417,6 +417,8 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
         tempCanvas->drawImageRect(image.get(), SkRect::MakeWH(scaledBounds.width(), scaledBounds.height()), nullptr);
         paint.setShader(bitmap.makeShader(SkTileMode::kClamp, SkTileMode::kClamp));
 #endif
+        scaleMat.setScale(scaledBounds.width() / bounds.width(), scaledBounds.height() / bounds.height());
+        paint.setShader(image->makeShader(SkTileMode::kClamp, SkTileMode::kClamp, &scaleMat));
         canvas.save();
         canvas.translate(-stretchSize.x_, -stretchSize.y_);
         canvas.drawRect(SkRect::MakeXYWH(stretchSize.x_, stretchSize.y_, bounds.width(), bounds.height()), paint);

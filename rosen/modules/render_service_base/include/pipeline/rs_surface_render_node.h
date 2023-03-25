@@ -568,6 +568,7 @@ public:
 private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
+    Vector4f GetWindowCornerRadius();
 
     std::mutex mutexRT_;
     std::mutex mutexUI_;

@@ -84,7 +84,7 @@ bool RSRenderNode::Update(
     RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, bool needClip, RectI clipRect)
 {
     // no need to update invisible nodes
-    if (!ShouldPaint() && !isLastVisible_ && RSSystemProperties::GetSkipForAlphaZeroEnabled()) {
+    if (!ShouldPaint() && !isLastVisible_) {
         return false;
     }
     // [planning] surfaceNode use frame instead

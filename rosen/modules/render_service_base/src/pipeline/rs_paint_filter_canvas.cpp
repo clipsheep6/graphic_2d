@@ -162,11 +162,13 @@ Color RSPaintFilterCanvas::GetEnvForegroundColor() const
 
 void RSPaintFilterCanvas::CopyConfiguration(const RSPaintFilterCanvas& other)
 {
-    // copy alpha stack
-    alphaStack_ = other.alphaStack_;
-    // copy env stack
-    envStack_ = other.envStack_;
-    // maybe we should also copy cache status, but this may affect performance for first frame
+    // copy high contrast flag
+    isHighContrastEnabled_.store(other.isHighContrastEnabled_.load());
+    // copy env
+    envStack_.top() = other.envStack_.top();
+    // Note:
+    // 1. we don't need to copy alpha status, alpha will be applied when drawing cache.
+    // 2: we should consider also copying cache flag.
 }
 } // namespace Rosen
 } // namespace OHOS

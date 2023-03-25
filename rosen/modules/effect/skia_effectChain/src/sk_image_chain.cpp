@@ -14,7 +14,11 @@
  */
 
 #include "egl_manager.h"
-#include "include/gpu/GrContext.h"
+#if defined(NEW_SKIA)
+#include <include/gpu/GrDirectContext.h>
+#else
+#include <include/gpu/GrContext.h>
+#endif
 #include "include/gpu/gl/GrGLInterface.h"
 #include "rs_trace.h"
 #include "sk_image_chain.h"
@@ -71,7 +75,11 @@ bool SKImageChain::CreateGPUCanvas()
 #ifdef ACE_ENABLE_GL
     EglManager::GetInstance().Init();
     sk_sp<const GrGLInterface> glInterface(GrGLCreateNativeInterface());
+#if defined(NEW_SKIA)
+    sk_sp<GrDirectContext> grContext(GrDirectContext::MakeGL(std::move(glInterface)));
+#else
     sk_sp<GrContext> grContext(GrContext::MakeGL(std::move(glInterface)));
+#endif
     gpuSurface_ = SkSurface::MakeRenderTarget(grContext.get(), SkBudgeted::kNo, imageInfo_);
     if (!gpuSurface_) {
         LOGE("Failed to create surface for GPU.");
@@ -174,7 +182,11 @@ void SKImageChain::Draw()
     }
     canvas_->save();
     canvas_->resetMatrix();
+#if defined(NEW_SKIA)
+    canvas_->drawImage(image_.get(), 0, 0, SkSamplingOptions(), &paint);
+#else
     canvas_->drawImage(image_.get(), 0, 0, &paint);
+#endif
     if (!forceCPU_ && dstPixmap_ != nullptr) {
         if (!canvas_->readPixels(*dstPixmap_.get(), 0, 0)) {
             LOGE("Failed to readPixels to target Pixmap.");

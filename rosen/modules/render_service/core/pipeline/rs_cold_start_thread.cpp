@@ -17,7 +17,11 @@
 
 #ifdef RS_ENABLE_GL
 #include <EGL/egl.h>
+#if defined(NEW_SKIA)
+#include "include/gpu/GrDirectContext.h"
+#else
 #include "include/gpu/GrContext.h"
+#endif
 #endif
 #ifdef ROSEN_OHOS
 #include <sys/prctl.h>
@@ -25,8 +29,9 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkSurface.h"
 #include "include/core/SkImageInfo.h"
-
+#ifndef NEW_SKIA
 #include "memory/rs_tag_tracker.h"
+#endif
 #include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
@@ -181,7 +186,9 @@ void RSColdStartThread::PostPlayBackTask(std::shared_ptr<DrawCmdList> drawCmdLis
         if (grContext_ == nullptr) {
             grContext_ = context_->MakeGrContext();
         }
+#ifndef NEW_SKIA
         RSTagTracker tagTracker(grContext_.get(), node->GetId(), RSTagTracker::TAGTYPE::TAG_COLD_START);
+#endif
         SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
         skSurface_ = SkSurface::MakeRenderTarget(grContext_.get(), SkBudgeted::kYes, info);
 #else

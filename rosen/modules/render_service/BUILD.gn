@@ -113,10 +113,23 @@ ohos_shared_library("librender_service") {
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
   ]
 
-  public_deps = [
-    "//third_party/flutter/build/skia:ace_skia_ohos",
-    "//third_party/libpng:libpng",
-  ]
+  public_deps = [ "//third_party/libpng:libpng" ]
+
+  if (use_new_skia) {
+    public_deps += [ "//third_party/skia:skia" ] 
+  } else {
+    public_deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ] 
+  }
+
+  if (rs_enable_gpu) {
+    include_dirs += [ "$graphic_2d_root/frameworks/vulkan_wrapper/include" ]
+
+    if (graphic_standard_feature_enable_vulkan) {
+      include_dirs += [ "//third_party/flutter/engine/flutter/vulkan" ]
+    }
+
+    public_deps += [ "$graphic_2d_root:libvulkan" ]
+  }
 
   if (rs_enable_gpu) {
     include_dirs += [ "$graphic_2d_root/frameworks/vulkan_wrapper/include" ]

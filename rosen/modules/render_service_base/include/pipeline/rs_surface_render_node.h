@@ -22,8 +22,11 @@
 
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
+#include <surface.h>
+#ifndef NEW_SKIA
 #include "include/gpu/GrContext.h"
 #include "refbase.h"
+#endif
 
 #include "common/rs_macros.h"
 #include "common/rs_occlusion_region.h"
@@ -72,6 +75,11 @@ public:
     bool IsAbilityComponent() const
     {
         return nodeType_ == RSSurfaceNodeType::ABILITY_COMPONENT_NODE;
+    }
+
+    bool IsExtensionAbility() const
+    {
+        return nodeType_ == RSSurfaceNodeType::EXTENSION_ABILITY_NODE;
     }
 
     bool IsLeashWindow() const

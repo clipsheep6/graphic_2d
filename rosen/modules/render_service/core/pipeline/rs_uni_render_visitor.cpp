@@ -92,7 +92,9 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     isQuickSkipPreparationEnabled_ = RSSystemProperties::GetQuickSkipPrepareEnabled();
     isHardwareComposerEnabled_ = RSSystemProperties::GetHardwareComposerEnabled();
     isSkipForAlphaZero_ = RSSystemProperties::GetSkipForAlphaZeroEnabled();
+#ifndef NEW_SKIA
     RSTagTracker::UpdateReleseGpuReousrceEnable(RSSystemProperties::GetReleaseGpuResourceEnabled());
+#endif
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     if (RSDrivenRenderManager::GetInstance().GetDrivenRenderEnabled()) {
         drivenInfo_ = std::make_unique<DrivenInfo>();
@@ -193,6 +195,17 @@ void RSUniRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
                 DirtyRegionType::REMOVE_CHILD_RECT, dirtyRect);
         }
         node.ResetHasRemovedChild();
+    }
+    // collect extensionAbility children nodeIds since they belong to another process, managing different view
+    auto surfaceNode = node.ReinterpretCastTo<RSSurfaceRenderNode>();
+    if (surfaceNode != nullptr && surfaceNode->IsExtensionAbility() && curSurfaceNode_) {
+        std::string childInfo = "ExtensionAbility has " + std::to_string(children.size()) + " children:[";
+        // check child in GetSortedChildren considering disappearingChildren_
+        for (auto& child : children) {
+            curSurfaceNode_->UpdateAbilityNodeIds(child->GetId());
+            childInfo += std::to_string(child->GetId()) + ",";
+        }
+        RS_TRACE_NAME(childInfo + "]");
     }
 
     // reset childRect before prepare children
@@ -445,8 +458,8 @@ void RSUniRenderVisitor::AdjustLocalZOrder(std::shared_ptr<RSSurfaceRenderNode> 
 
 void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
-    RS_TRACE_NAME("RSUniRender::Prepare:[" + node.GetName() + "]" + " pid: " +
-        std::to_string(ExtractPid(node.GetId())));
+    RS_TRACE_NAME("RSUniRender::Prepare:[" + node.GetName() + "] pid: " + std::to_string(ExtractPid(node.GetId())) +
+        ", nodeType " + std::to_string(static_cast<uint>(node.GetSurfaceNodeType())));
     if (node.GetSecurityLayer()) {
         displayHasSecSurface_[currentVisitDisplay_] = true;
     }
@@ -477,7 +490,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     float alpha = curAlpha_;
     curAlpha_ *= (property.GetAlpha() * node.GetContextAlpha());
     node.SetGlobalAlpha(curAlpha_);
-    
+
     if (isSkipForAlphaZero_) {
         if (ROSEN_EQ(node.GetGlobalAlpha(), 0.f)) {
             ROSEN_LOGW("RSUniRenderVisitor::PrepareSurfaceRenderNode skip because node.GlobalAlpha is 0.f");
@@ -495,8 +508,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
             curSurfaceDirtyManager_->MarkAsTargetForDfx();
         }
     }
-    // [planning] IsMainWindowType should contain ABILITY_COMPONENT_NODE
-    // this branch should be included in other judgment
+    // collect ability nodeId info within same app since it belongs to another process
     if (node.IsAbilityComponent() && curSurfaceNode_) {
         curSurfaceNode_->UpdateAbilityNodeIds(node.GetId());
     }
@@ -1318,7 +1330,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 // [planning] Remove this after skia is upgraded, the clipRegion is supported
                 if (!needFilter_) {
                     ClearTransparentBeforeSaveLayer();
+#ifndef NEW_SKIA
                     RSTagTracker tagTracker(canvas_->getGrContext(), RSTagTracker::TAGTYPE::TAG_SAVELAYER_DRAW_NODE);
+#endif
                     saveLayerCnt = canvas_->saveLayer(SkRect::MakeWH(screenInfo_.width, screenInfo_.height), nullptr);
                 }
             }
@@ -1369,7 +1383,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         }
 #endif
         if (saveLayerCnt > 0) {
+#ifndef NEW_SKIA
             RSTagTracker tagTracker(canvas_->getGrContext(), RSTagTracker::TAGTYPE::TAG_RESTORELAYER_DRAW_NODE);
+#endif
             RS_TRACE_NAME("RSUniRender:RestoreLayer");
             canvas_->restoreToCount(saveLayerCnt);
         }
@@ -1806,7 +1822,9 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
                     + " Alpha: " + std::to_string(node.GetGlobalAlpha()).substr(0, 4));
     RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode node: %" PRIu64 ", child size:%u %s", node.GetId(),
         node.GetChildrenCount(), node.GetName().c_str());
+#ifndef NEW_SKIA
     RSTagTracker tagTracker(canvas_->getGrContext(), node.GetId(), RSTagTracker::TAGTYPE::TAG_DRAW_SURFACENODE);
+#endif
     node.UpdatePositionZ();
     if (isSecurityDisplay_ && node.GetSecurityLayer()) {
         RS_TRACE_NAME(node.GetName() + " SecurityLayer Skip");
@@ -2021,7 +2039,9 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         RS_LOGD("RsDebug RSBaseRenderEngine::SetColorFilterModeToPaint mode:%d", static_cast<int32_t>(colorFilterMode));
         SkPaint paint;
         RSBaseRenderUtil::SetColorFilterModeToPaint(colorFilterMode, paint);
+#ifndef NEW_SKIA
         RSTagTracker tagTracker(canvas_->getGrContext(), RSTagTracker::TAGTYPE::TAG_SAVELAYER_COLOR_FILTER);
+#endif
         saveCount = canvas_->saveLayer(nullptr, &paint);
     } else {
         saveCount = canvas_->save();
@@ -2080,7 +2100,8 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
 void RSUniRenderVisitor::RecordAppWindowNodeAndPostTask(RSSurfaceRenderNode& node, float width, float height)
 {
     RSRecordingCanvas canvas(width, height);
-#ifdef RS_ENABLE_GL
+#if (defined RS_ENABLE_GL) && (!defined NEW_SKIA)
+    //TODO
     canvas.SetGrContext(canvas_->getGrContext()); // SkImage::MakeFromCompressed need GrContext
 #endif
     auto recordingCanvas = std::make_shared<RSPaintFilterCanvas>(&canvas);
@@ -2135,7 +2156,11 @@ void RSUniRenderVisitor::FinishOffscreenRender()
     // draw offscreen surface to current canvas
     SkPaint paint;
     paint.setAntiAlias(true);
+#ifdef NEW_SKIA
+    canvasBackup_->drawImage(offscreenSurface_->makeImageSnapshot(), 0, 0, SkSamplingOptions(), &paint);
+#else
     canvasBackup_->drawImage(offscreenSurface_->makeImageSnapshot(), 0, 0, &paint);
+#endif
     // restore current canvas and cleanup
     offscreenSurface_ = nullptr;
     canvas_ = std::move(canvasBackup_);
@@ -2253,7 +2278,11 @@ void RSUniRenderVisitor::DrawWatermarkIfNeed()
 {
     if (RSMainThread::Instance()->GetWatermarkFlag()) {
         sk_sp<SkImage> skImage = RSMainThread::Instance()->GetWatermarkImg();
+#ifdef NEW_SKIA
+        sk_sp<SkShader> shader = skImage->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions());
+#else
         sk_sp<SkShader> shader = skImage->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat);
+#endif
         SkPaint rectPaint;
         rectPaint.setShader(shader);
         canvas_->drawRect(SkRect::MakeWH(screenInfo_.width, screenInfo_.height), rectPaint);

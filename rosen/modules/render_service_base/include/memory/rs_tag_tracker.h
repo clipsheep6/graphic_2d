@@ -14,6 +14,7 @@
  */
 #ifndef RS_TAG_TRACKER
 #define RS_TAG_TRACKER
+#ifndef NEW_SKIA
 #include "include/gpu/GrContext.h"
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
@@ -31,17 +32,22 @@ public:
         TAG_ACQUIRE_SURFACE,
         TAG_DRAW_SURFACENODE,
     };
+
     RSTagTracker(GrContext* grContext, RSTagTracker::TAGTYPE tagType);
     RSTagTracker(GrContext* grContext, NodeId nodeId, RSTagTracker::TAGTYPE tagType);
     RSTagTracker(GrContext* grContext, GrGpuResourceTag& tag);
+
     void SetTagEnd();
     ~RSTagTracker();
     static void UpdateReleseGpuReousrceEnable(bool releaseResEnable);
 private:
     bool isSetTagEnd_ = false;
+
     GrContext* grContext_ = nullptr;
+
     static bool releaseGpuResourceEnable_;
 }; 
 } // namespace OHOS  
 } // namespace Rosen
+#endif
 #endif

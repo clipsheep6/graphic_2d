@@ -84,7 +84,7 @@ public:
 
     void Dump(std::string &result) const override;
 
-    GSError CleanCache() override;
+    GSError CleanCache(CleanCacheType type = CLEAN_CACHE_TYPE_BUFFER_QUEUE) override;
     GSError GoBackground() override;
 
     GSError SetTransform(GraphicTransformType transform) override;

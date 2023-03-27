@@ -60,7 +60,7 @@ public:
     GSError IsSupportedAlloc(const std::vector<BufferVerifyAllocInfo> &infos, std::vector<bool> &supporteds) override;
 
     // Call carefully. This interface will empty all caches of the current process
-    GSError CleanCache() override;
+    GSError CleanCache(CleanCacheType type = CLEAN_CACHE_TYPE_BUFFER_QUEUE) override;
     GSError Disconnect() override;
     GSError GoBackground() override;
 

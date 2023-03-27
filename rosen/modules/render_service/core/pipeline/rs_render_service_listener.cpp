@@ -63,10 +63,10 @@ void RSRenderServiceListener::OnTunnelHandleChange()
     RSMainThread::Instance()->RequestNextVSync();
 }
 
-void RSRenderServiceListener::OnCleanCache()
+void RSRenderServiceListener::OnCleanCache(CleanCacheType type)
 {
     std::weak_ptr<RSSurfaceRenderNode> surfaceNode = surfaceRenderNode_;
-    RSMainThread::Instance()->PostTask([surfaceNode]() {
+    RSMainThread::Instance()->PostTask([surfaceNode, type]() {
         auto node = surfaceNode.lock();
         if (node == nullptr) {
             RS_LOGW("RSRenderServiceListener::OnBufferAvailable node is nullptr");
@@ -74,6 +74,9 @@ void RSRenderServiceListener::OnCleanCache()
         }
         RS_LOGD("RsDebug RSRenderServiceListener::OnCleanCache node id:%" PRIu64, node->GetId());
         node->ResetBufferAvailableCount();
+        if (type == CLEAN_CACHE_TYPE_ALL) {
+            node->CleanCache();
+        }
     });
 }
 

@@ -232,7 +232,8 @@ int32_t BufferQueueProducer::GetUniqueIdRemote(MessageParcel &arguments, Message
 
 int32_t BufferQueueProducer::CleanCacheRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
 {
-    reply.WriteInt32(CleanCache());
+    CleanCacheType type = static_cast<CleanCacheType>(arguments.ReadUint32());
+    reply.WriteInt32(CleanCache(type));
     return 0;
 }
 
@@ -448,7 +449,7 @@ uint64_t BufferQueueProducer::GetUniqueId()
     return bufferQueue_->GetUniqueId();
 }
 
-GSError BufferQueueProducer::CleanCache()
+GSError BufferQueueProducer::CleanCache(CleanCacheType type)
 {
     if (bufferQueue_ == nullptr) {
         return GSERROR_INVALID_ARGUMENTS;
@@ -462,7 +463,7 @@ GSError BufferQueueProducer::CleanCache()
         }
     }
 
-    return bufferQueue_->CleanCache();
+    return bufferQueue_->CleanCache(type);
 }
 
 GSError BufferQueueProducer::GoBackground()
@@ -530,7 +531,7 @@ GSError BufferQueueProducer::Disconnect()
         }
         connectedPid_ = 0;
     }
-    return bufferQueue_->GoBackground();
+    return bufferQueue_->CleanCache(CLEAN_CACHE_TYPE_ALL);
 }
 
 GSError BufferQueueProducer::SetScalingMode(uint32_t sequence, ScalingMode scalingMode)

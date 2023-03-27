@@ -312,14 +312,14 @@ bool ProducerSurface::IsRemote()
     return producer_->AsObject()->IsProxyObject();
 }
 
-GSError ProducerSurface::CleanCache()
+GSError ProducerSurface::CleanCache(CleanCacheType type)
 {
     BLOGND("Queue Id:%{public}" PRIu64, queueId_);
     {
         std::lock_guard<std::mutex> lockGuard(mutex_);
         bufferProducerCache_.clear();
     }
-    return producer_->CleanCache();
+    return producer_->CleanCache(type);
 }
 
 GSError ProducerSurface::GoBackground()

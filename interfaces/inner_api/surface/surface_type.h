@@ -386,6 +386,11 @@ using SceneType = enum {
     SURFACE_SCENE_TYPE_CAMERA,
     SURFACE_SCENE_TYPE_CPU,
 };
+
+using CleanCacheType = enum {
+    CLEAN_CACHE_TYPE_BUFFER_QUEUE = 0,
+    CLEAN_CACHE_TYPE_ALL,
+};
 } // namespace OHOS
 
 #endif // INTERFACES_INNERKITS_SURFACE_SURFACE_TYPE_H

@@ -485,7 +485,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     auto& property = node.GetMutableRenderProperties();
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
     float alpha = curAlpha_;
-    curAlpha_ *= (property.GetAlpha() * node.GetContextAlpha());
+    curAlpha_ = (property.GetAlpha() * node.GetContextAlpha());
     node.SetGlobalAlpha(curAlpha_);
 
     // if currentsurfacenode is a main window type, reset the curSurfaceDirtyManager
@@ -523,8 +523,16 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     // apply context clip rect
     const auto& clipRect = node.GetContextClipRegion();
     if (clipRect.width() >= 1 && clipRect.height() >= 1) {
-        // map local rect to global rect
-        auto globalClipRect = geoPtr->GetAbsMatrix().mapRect(clipRect);
+        // GetContextClipRegion() is in local coordinate, so we need to map it to global coordinate.
+        // Note: we should use (parent matrix * context matrix) to map local coordinate to global coordinate.
+        // but we only got: 1. GetAbsMatrix = parent matrix * context matrix * local matrix 2. GetMatrix = local matrix.
+        // So we can use GetAbsMatrix().preConcat(GetMatrix().invert()) to get the desired matrix.
+        auto absMatrix = geoPtr->GetAbsMatrix();
+        SkMatrix invertMatrix;
+        if (geoPtr->GetMatrix().invert(&invertMatrix)) {
+            absMatrix.preConcat(invertMatrix);
+        }
+        auto globalClipRect = absMatrix.mapRect(clipRect);
         dstRect = dstRect.IntersectRect(
             RectI(globalClipRect.left(), globalClipRect.top(), globalClipRect.width(), globalClipRect.height()));
     }
@@ -1894,8 +1902,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         RSPropertiesPainter::SetBgAntiAlias(false);
     }
 
-    canvas_->MultiplyAlpha(property.GetAlpha());
-    canvas_->MultiplyAlpha(node.GetContextAlpha());
+    canvas_->SetAlpha(node.GetContextAlpha() * property.GetAlpha());
 
     bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
     // [planning] surfaceNode use frame instead

@@ -34,6 +34,7 @@ public:
     RSPaintFilterCanvas(SkSurface* skSurface, float alpha = 1.0f);
     ~RSPaintFilterCanvas() override {};
 
+    void SetAlpha(float alpha);
     void MultiplyAlpha(float alpha);
     float GetAlpha() const;
 

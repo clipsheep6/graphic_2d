@@ -20,7 +20,7 @@ module_output_path = "graphic/rosen_engine/render_service_base/offscreen_render"
 ohos_unittest("RSRenderServiceBaseOffscreenRenderTest") {
   module_out_path = module_output_path
 
-  sources = [ "rs_offscreen_render_thread_test.cpp", ]
+  sources = [ "rs_offscreen_render_thread_test.cpp" ]
 
   cflags = [
     "-Wall",

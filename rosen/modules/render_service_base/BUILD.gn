@@ -20,6 +20,17 @@ config("export_config") {
   cflags_cc = [ "-std=c++17" ]
   include_dirs = [ "include" ]
 
+  if (rosen_is_ohos) {
+    include_dirs += [
+      "//foundation/graphic/graphic_2d/rosen/modules/composer/vsync/include",
+      "//commonlibrary/c_utils/base/include",
+      "//utils/system/safwk/native/include",
+      "//foundation/graphic/graphic_2d/frameworks/surface/src",
+      "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src",
+      "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
+    ]
+  }
+
   defines = rs_common_define
 }
 
@@ -220,10 +231,26 @@ config("render_service_base_all_deps_config") {
 ohos_shared_library("librender_service_base") {
   all_dependent_configs = [ ":render_service_base_all_deps_config" ]
 
-  public_deps = [
-    ":render_service_base_src",
-    "src/platform:platform",
-  ]
+  deps = [ ":render_service_base_src" ]
+
+  if (rosen_is_ohos) {
+    public_deps = [
+      "//commonlibrary/c_utils/base:utils",
+      "//foundation/graphic/graphic_2d:libsurface",
+      "//foundation/graphic/graphic_2d/rosen/modules/composer/vsync:libvsync",
+      "//foundation/graphic/graphic_2d/utils:sync_fence",
+      "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
+      "//third_party/flutter/build/skia:ace_skia_ohos",
+    ]
+    if (ace_enable_gpu) {
+      public_deps += [
+        "//foundation/graphic/graphic_2d:libgl",
+        "//third_party/openssl:libcrypto_shared",
+      ]
+    }
+  } else {
+    public_deps = [ "src/platform:platform" ]
+  }
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

@@ -1886,7 +1886,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         return;
     }
 
-    auto savedState = canvas_->SaveCanvasAndAlpha();
+    RSAutoCanvasRestore acr(canvas_);
     auto bgAntiAliasState = RSPropertiesPainter::GetBgAntiAlias();
     if (doAnimate_ && (!ROSEN_EQ(geoPtr->GetScaleX(), 1.f) || !ROSEN_EQ(geoPtr->GetScaleY(), 1.f))) {
         // disable background antialias when surfacenode has scale animation
@@ -1989,7 +1989,6 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
 
     RSPropertiesPainter::SetBgAntiAlias(bgAntiAliasState);
-    canvas_->RestoreCanvasAndAlpha(savedState);
     if (node.IsAppWindow()) {
         canvas_->SetVisibleRect(SkRect::MakeLTRB(0, 0, 0, 0));
 

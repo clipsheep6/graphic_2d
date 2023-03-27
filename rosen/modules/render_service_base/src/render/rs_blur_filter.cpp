@@ -16,12 +16,14 @@
 #include "render/rs_blur_filter.h"
 
 #include "include/effects/SkBlurImageFilter.h"
+#include "platform/common/rs_log.h"
 namespace OHOS {
 namespace Rosen {
 RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY): RSSkiaFilter(SkBlurImageFilter::Make(blurRadiusX,
     blurRadiusY, nullptr, nullptr, SkBlurImageFilter::kClamp_TileMode)), blurRadiusX_(blurRadiusX),
     blurRadiusY_(blurRadiusY)
 {
+    RS_LOGD("RSBlurFilter::RSBlurFilter blur radiusX{%f}, radiusY{%f}", blurRadiusX, blurRadiusY);
     type_ = FilterType::BLUR;
 }
 

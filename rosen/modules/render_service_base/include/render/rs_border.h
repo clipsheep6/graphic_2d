@@ -35,7 +35,8 @@ enum class BorderStyle : uint32_t {
     SOLID = 0,
     DASHED,
     DOTTED,
-    NONE
+    BORDER3D,
+    NONE,
 };
 
 class RSBorder final {

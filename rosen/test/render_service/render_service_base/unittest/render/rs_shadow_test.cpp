@@ -72,4 +72,16 @@ HWTEST_F(RSShadowTest, TestRSShadow002, TestSize.Level1)
     shadow.SetElevation(0.1);
     shadow.IsValid();
 }
+
+/**
+ * @tc.name: TestRSShadow003
+ * @tc.desc: IsValid test.
+ * @tc.type: FUNC
+ */
+HWTEST_F(RSShadowTest, TestRSShadow003, TestSize.Level1)
+{
+    RSShadow shadow;
+    shadow.SetMask(true);
+    shadow.IsValid();
+}
 } // namespace OHOS::Rosen

@@ -46,4 +46,37 @@ HWTEST_F(RSTransactionTest, FlushImplicitTransaction001, TestSize.Level1)
     //      Only use its static function.
     RSTransaction::FlushImplicitTransaction();
 }
+
+/**
+ * @tc.name: Marshalling001
+ * @tc.desc:
+ * @tc.type:
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RSTransactionTest, Marshalling001, TestSize.Level1)
+{
+    RSTransaction rsTransaction;
+    rsTransaction.Begin();
+    Parcel parcel;
+    rsTransaction.Marshalling(parcel);
+    rsTransaction.Unmarshalling(parcel);
+}
+
+/**
+ * @tc.name: MarshallTransactionSyncController001
+ * @tc.desc:
+ * @tc.type:
+ * @tc.require:
+ * @tc.author:
+ */
+HWTEST_F(RSTransactionTest, MarshallTransactionSyncController001, TestSize.Level1)
+{
+    RSTransaction rsTransaction;
+    rsTransaction.OpenSyncTransaction();
+    MessageParcel parcel;
+    rsTransaction.MarshallTransactionSyncController(parcel);
+    rsTransaction.UnmarshallTransactionSyncController(parcel);
+    rsTransaction.Commit();
+}
 } // namespace OHOS::Rosen

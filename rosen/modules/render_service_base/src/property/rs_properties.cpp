@@ -1115,6 +1115,13 @@ bool RSProperties::IsPixelStretchExpanded() const
             return true;
         }
     }
+    if (IsPixelStretchPercentValid()) {
+        constexpr static float EPS = 1e-5f;
+        if (pixelStretchPercent_->x_ >= -EPS && pixelStretchPercent_->y_ >= -EPS && pixelStretchPercent_->z_ >= -EPS
+            && pixelStretchPercent_->w_ >= -EPS) {
+            return true;
+        }
+    }
     return false;
 }
 
@@ -1150,6 +1157,7 @@ void RSProperties::SetPixelStretchPercent(Vector4f stretchPercent)
 
 Vector4f RSProperties::GetPixelStretchPercent() const
 {
+    ROSEN_LOGE("gaoguanghui RSProperties::GetPixelStretchPercent() PixelStretch(x: %f, y: %f, z: %f, w: %f)", widthLeft, heightUp, widthRight, heightBottom);
     return pixelStretchPercent_ ? *pixelStretchPercent_ : Vector4f();
 }
 
@@ -1160,7 +1168,7 @@ Vector4f RSProperties::GetPixelStretchByPercent() const
     float heightUp = bounds.height_ * GetPixelStretchPercent().y_;
     float widthRight = bounds.width_ * GetPixelStretchPercent().z_;
     float heightBottom = bounds.height_ * GetPixelStretchPercent().w_;
-
+    ROSEN_LOGE("gaoguanghui RSProperties::GetPixelStretchByPercent() bounds(x: %f, y: %f, z: %f, w: %f)", widthLeft, heightUp, widthRight, heightBottom);
     return Vector4f(widthLeft, heightUp, widthRight, heightBottom);
 }
 

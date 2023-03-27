@@ -831,7 +831,9 @@ void RSNode::SetPixelStretch(const Vector4f& stretchSize)
 
 void RSNode::SetPixelStretchPercent(const Vector4f& stretchPercent)
 {
-    SetProperty<RSPixelStretchPercentModifier, RSAnimatableProperty<Vector4f>>(RSModifierType::PIXEL_STRETCH_PERCENT, stretchPercent);
+    ROSEN_LOGE("gaoguanghui RSNode::SetPixelStretchPercent stretchPercent(x: %f, y: %f, z: %f, w: %f)", stretchPercent.x_, stretchPercent.y_, stretchPercent.z_, stretchPercent.w_);
+    SetProperty<RSPixelStretchPercentModifier, RSAnimatableProperty<Vector4f>>(RSModifierType::PIXEL_STRETCH_PERCENT,
+        stretchPercent);
 }
 
 void RSNode::SetFreeze(bool isFreeze)

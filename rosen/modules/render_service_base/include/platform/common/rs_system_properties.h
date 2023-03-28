@@ -89,8 +89,6 @@ public:
     static bool GetHardwareComposerEnabled();
     static bool GetReleaseGpuResourceEnabled();
 
-    static void SetDrawTextAsBitmap(bool flag);
-    static bool GetDrawTextAsBitmap();
     static ParallelRenderingType GetPrepareParallelRenderingEnabled();
     static ParallelRenderingType GetParallelRenderingEnabled();
 
@@ -104,7 +102,6 @@ private:
     RSSystemProperties() = default;
 
     static inline bool isUniRenderEnabled_ = false;
-    inline static bool isDrawTextAsBitmap_ = false;
 };
 
 } // namespace Rosen

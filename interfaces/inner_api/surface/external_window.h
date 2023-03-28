@@ -214,6 +214,7 @@ typedef enum {
 
 /**
  * @brief Enumerates the HDR metadata keys.
+ * @deprecated
  */
 typedef enum {
     OH_METAKEY_RED_PRIMARY_X = 0,
@@ -234,6 +235,7 @@ typedef enum {
 
 /**
  * @brief Defines the HDR metadata.
+ * @deprecated
  */
 typedef struct {
     OHHDRMetadataKey key;
@@ -405,6 +407,7 @@ int32_t OH_NativeWindow_NativeWindowSetScalingMode(OHNativeWindow *window, uint3
  * @return Returns an error code defined in <b>GSError</b>.
  * @since 9
  * @version 1.0
+ * @deprecated
  */
 int32_t OH_NativeWindow_NativeWindowSetMetaData(OHNativeWindow *window, uint32_t sequence, int32_t size,
                                                 const OHHDRMetaData *metaData);
@@ -421,6 +424,7 @@ int32_t OH_NativeWindow_NativeWindowSetMetaData(OHNativeWindow *window, uint32_t
  * @return Returns an error code defined in <b>GSError</b>.
  * @since 9
  * @version 1.0
+ * @deprecated
  */
 int32_t OH_NativeWindow_NativeWindowSetMetaDataSet(OHNativeWindow *window, uint32_t sequence, OHHDRMetadataKey key,
                                                    int32_t size, const uint8_t *metaData);
@@ -434,6 +438,7 @@ int32_t OH_NativeWindow_NativeWindowSetMetaDataSet(OHNativeWindow *window, uint3
  * @return Returns an error code defined in <b>GSError</b>.
  * @since 9
  * @version 1.0
+ * @deprecated
  */
 int32_t OH_NativeWindow_NativeWindowSetTunnelHandle(OHNativeWindow *window, const OHExtDataHandle *handle);
 

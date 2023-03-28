@@ -29,6 +29,12 @@ public:
 
     void DrawSurfaceNodeWithParams(RSPaintFilterCanvas& canvas, RSSurfaceRenderNode& node, BufferDrawParam& params,
         PreProcessFunc preProcess, PostProcessFunc postProcess) override;
+
+    void DrawSurfaceNodeWithSurfaceIndexAndParams(RSPaintFilterCanvas& canvas, RSSurfaceRenderNode& node,
+        uint32_t surfaceIndex, BufferDrawParam& params, PreProcessFunc preProcess = nullptr,
+        PostProcessFunc postProcess = nullptr) override
+    {}
+
     void DrawLayers(RSPaintFilterCanvas& canvas, const std::vector<LayerInfoPtr>& layers, bool forceCPU,
         float mirrorAdaptiveCoefficient) override;
 

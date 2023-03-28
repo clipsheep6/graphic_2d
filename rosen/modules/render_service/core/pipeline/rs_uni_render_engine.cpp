@@ -70,5 +70,19 @@ void RSUniRenderEngine::DrawHdiLayerWithParams(RSPaintFilterCanvas& canvas, cons
     }
     canvas.restore();
 }
+
+void RSUniRenderEngine::DrawSurfaceNodeWithSurfaceIndexAndParams(RSPaintFilterCanvas& canvas, RSSurfaceRenderNode& node,
+    uint32_t surfaceIndex, BufferDrawParam& params, PreProcessFunc preProcess, PostProcessFunc postProcess)
+{
+    canvas.save();
+    canvas.concat(params.matrix);
+    if (!params.useCPU) {
+        RegisterDeleteBufferListener(node.GetConsumer());
+        DrawImageWithSurfaceIndex(canvas, params, surfaceIndex);
+    } else {
+        DrawBuffer(canvas, params);
+    }
+    canvas.restore();
+}
 } // namespace Rosen
 } // namespace OHOS

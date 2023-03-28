@@ -36,7 +36,6 @@ public:
     int32_t GetReleaseFence() const;
     void SetReleaseFence(const int32_t& fence);
     int32_t GetBufferAge() const override;
-
 private:
     int32_t releaseFence_ = 0;
     sk_sp<SkSurface> surface_;

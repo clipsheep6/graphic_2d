@@ -33,6 +33,11 @@ public:
         float mirrorAdaptiveCoefficient) override;
     void DrawHdiLayerWithParams(RSPaintFilterCanvas& canvas, const LayerInfoPtr& layer,
         BufferDrawParam& params);
+    void DrawSurfaceNodeWithSurfaceIndexAndParams(RSPaintFilterCanvas& canvas, RSSurfaceRenderNode& node,
+        uint32_t surfaceIndex, BufferDrawParam& params, PreProcessFunc preProcess,
+        PostProcessFunc postProcess) override;
+    // void DrawSurfaceNodeWithSurfaceIndexAndParams(RSPaintFilterCanvas& canvas, RSSurfaceRenderNode& node,
+    //     uint32_t surfaceIndex, BufferDrawParam& params);
 };
 } // namespace Rosen
 } // namespace OHOS

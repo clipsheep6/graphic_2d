@@ -24,6 +24,7 @@
 #include "platform/ohos/backend/rs_surface_ohos_gl.h"
 #include "platform/ohos/backend/rs_surface_ohos_raster.h"
 #ifdef RS_ENABLE_VK
+#include <vulkan_window.h>
 #include "platform/ohos/backend/rs_surface_ohos_vulkan.h"
 #endif
 #include "render/rs_skia_filter.h"
@@ -114,6 +115,35 @@ sk_sp<SkImage> RSBaseRenderEngine::CreateEglImageFromBuffer(RSPaintFilterCanvas&
 #else
     return nullptr;
 #endif // RS_ENABLE_EGLIMAGE
+}
+
+sk_sp<SkImage> RSBaseRenderEngine::CreateVulkanImageFromBuffer(const std::shared_ptr<vulkan::VulkanWindow> vulkanWindow, const sptr<SurfaceBuffer>& buffer,
+    const sptr<SyncFence>& acquireFence)
+{
+#ifdef RS_ENABLE_VK
+    if (!RSBaseRenderUtil::IsBufferValid(buffer)) {
+        RS_LOGE("RSBaseRenderEngine::CreateVulkanImageFromBuffer invalid param!");
+        return nullptr;
+    }
+    if (vulkanWindow == nullptr) {
+        RS_LOGE("RSBaseRenderEngine::CreateVulkanImageFromBuffer vulkanWindow is nullptr!");
+        return nullptr;
+    }
+    int32_t format = buffer->GetFormat();
+    GrBackendTexture backendTexture = vulkanWindow->GetBackendTexture(buffer->GetWidth(), buffer->GetHeight(), format,
+                                                                      buffer->SurfaceBufferToNativeBuffer());
+    SkColorType colorType = GetSkColorTypeFromBufferFormat(format);
+
+    GrContext* context = vulkanWindow->GetSkiaGrContext();
+    if (context == nullptr) {
+        RS_LOGE("RSBaseRenderEngine::CreateVulkanImageFromBuffer context is nullptr!");
+        return nullptr;
+    }
+    return SkImage::MakeFromTexture(context, backendTexture, kTopLeft_GrSurfaceOrigin, colorType,
+                                    kPremul_SkAlphaType, nullptr);
+#else
+    return nullptr;
+#endif
 }
 
 std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::shared_ptr<RSSurfaceOhos>& rsSurface,
@@ -282,13 +312,57 @@ void RSBaseRenderEngine::DrawBuffer(RSPaintFilterCanvas& canvas, BufferDrawParam
 
 void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam& params)
 {
+#if defined (RS_ENABLE_EGLIMAGE) || defined (RS_ENABLE_VK)
     RS_TRACE_NAME("RSBaseRenderEngine::DrawImage(GPU)");
+#ifdef RS_ENABLE_EGLIMAGE
     auto image = CreateEglImageFromBuffer(canvas, params.buffer, params.acquireFence);
+#elif RS_ENABLE_VK
+    std::shared_ptr<RSSurface> rsSurface = GetParallelSurface(surfaceIndex);
+    std::shared_ptr<vulkan::VulkanWindow> vulkanWindow = rsSurface->GetVulkanWindow();
+    auto image = CreateVulkanImageFromBuffer(vulkanWindow, params.buffer, params.acquireFence);
+#endif
     if (image == nullptr) {
-        RS_LOGE("RSDividedRenderUtil::DrawImage: image is nullptr!");
+        RS_LOGE("RSBaseRenderEngine::DrawImage: image is nullptr!");
         return;
     }
     canvas.drawImageRect(image, params.srcRect, params.dstRect, &(params.paint));
+#endif
+}
+
+void RSBaseRenderEngine::DrawImageWithSurfaceIndex(RSPaintFilterCanvas& canvas, BufferDrawParam& params,
+    uint32_t surfaceIndex)
+{
+#if defined (RS_ENABLE_VK) && defined (RS_ENABLE_PARALLEL_RENDER)
+    RS_TRACE_NAME("RSBaseRenderEngine::DrawImageWithFrameIndex(GPU)");
+    std::shared_ptr<RSSurface> rsSurface = GetParallelSurface(surfaceIndex);
+    std::shared_ptr<vulkan::VulkanWindow> vulkanWindow = rsSurface->GetVulkanWindow();
+    auto image = CreateVulkanImageFromBuffer(vulkanWindow, params.buffer, params.acquireFence);
+    if (image == nullptr) {
+        RS_LOGE("RSBaseRenderEngine::DrawImage: image is nullptr!");
+        return;
+    }
+    canvas.drawImageRect(image, params.srcRect, params.dstRect, &(params.paint));
+#endif
+}
+
+SkColorType RSBaseRenderEngine::GetSkColorTypeFromBufferFormat(int32_t bufferFormat)
+{
+    switch (bufferFormat) {
+        case PIXEL_FMT_RGBA_8888:
+            return kRGBA_8888_SkColorType;
+        case PIXEL_FMT_RGBX_8888:
+            return kRGB_888x_SkColorType;
+        case PIXEL_FMT_RGB_888:
+            return kRGB_888x_SkColorType;
+        case PIXEL_FMT_RGB_565:
+            return kRGB_565_SkColorType;
+        case STUB_PIXEL_FMT_RGBA_16161616:
+            return kRGBA_F16_SkColorType;
+        case STUB_PIXEL_FMT_RGBA_1010102:
+            return kRGBA_1010102_SkColorType;
+        default:
+            return kRGBA_8888_SkColorType;
+    }
 }
 
 void RSBaseRenderEngine::RegisterDeleteBufferListener(const sptr<IConsumerSurface>& consumer, bool isForUniRedraw)

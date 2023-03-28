@@ -22,7 +22,9 @@
 #ifndef ROSEN_CROSS_PLATFORM
 #include "surface_type.h"
 #endif
-
+namespace vulkan {
+    class VulkanWindow;
+}
 namespace OHOS {
 namespace Rosen {
 class RenderContext;
@@ -53,6 +55,7 @@ public:
     // clear buffer for both producer and consumer and will receive OnGoBackground callback
     virtual void ClearAllBuffer() = 0;
     virtual void ResetBufferAge() = 0;
+    virtual std::shared_ptr<vulkan::VulkanWindow> GetVulkanWindow() const { return nullptr; }
 protected:
 private:
 };

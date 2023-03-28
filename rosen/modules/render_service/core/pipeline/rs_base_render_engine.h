@@ -16,6 +16,7 @@
 #ifndef RS_CORE_PIPELINE_BASE_RENDER_ENGINE_H
 #define RS_CORE_PIPELINE_BASE_RENDER_ENGINE_H
 
+#include <cstdint>
 #include <memory>
 
 #include "hdi_layer_info.h"
@@ -33,6 +34,10 @@
 #ifdef RS_ENABLE_EGLIMAGE
 #include "rs_egl_image_manager.h"
 #endif // RS_ENABLE_EGLIMAGE
+
+namespace vulkan {
+    class VulkanWindow;
+}
 
 namespace OHOS {
 namespace Rosen {
@@ -124,6 +129,10 @@ public:
     virtual void DrawSurfaceNodeWithParams(RSPaintFilterCanvas& canvas, RSSurfaceRenderNode& node,
         BufferDrawParam& params, PreProcessFunc preProcess = nullptr, PostProcessFunc postProcess = nullptr) = 0;
 
+    virtual void DrawSurfaceNodeWithSurfaceIndexAndParams(RSPaintFilterCanvas& canvas, RSSurfaceRenderNode& node,
+        uint32_t surfaceIndex, BufferDrawParam& params, PreProcessFunc preProcess = nullptr,
+        PostProcessFunc postProcess = nullptr) = 0;
+
     void DrawDisplayNodeWithParams(RSPaintFilterCanvas& canvas, RSDisplayRenderNode& node,
         BufferDrawParam& params);
 
@@ -153,22 +162,48 @@ public:
     }
 #endif // RS_ENABLE_GL || RS_ENABLE_VK
 
+#if defined(RS_ENABLE_VK) && defined(RS_ENABLE_PARALLEL_RENDER)
+    void AddParallelSurface(std::shared_ptr<RSSurface> parallelSurface)
+    {
+        parallelSurfaces_.push_back(parallelSurface);
+    }
+    std::shared_ptr<RSSurface> GetParallelSurface(uint32_t index)
+    {
+        return parallelSurfaces_[index];
+    }
+    void ClearParallelSurfaces()
+    {
+        parallelSurfaces_.clear();
+    }
+#endif
+    void SetCurSurface(const std::shared_ptr<RSSurface> curSurface)
+    {
+        curSurface_ = curSurface;
+    }
+    std::shared_ptr<RSSurface> GetCurSurface() const
+    {
+        return curSurface_;
+    }
 #ifdef RS_ENABLE_EGLIMAGE
     const std::shared_ptr<RSEglImageManager>& GetEglImageManager()
     {
         return eglImageManager_;
     }
 #endif // RS_ENABLE_EGLIMAGE
+
 protected:
     void RegisterDeleteBufferListener(const sptr<IConsumerSurface>& consumer, bool isForUniRedraw = false);
     void DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam& params);
+    void DrawImageWithSurfaceIndex(RSPaintFilterCanvas& canvas, BufferDrawParam& params, uint32_t frameIndex);
 
+    SkColorType GetSkColorTypeFromBufferFormat(int32_t bufferFormat);
     static inline ColorFilterMode colorFilterMode_ = ColorFilterMode::COLOR_FILTER_END;
 
 private:
     sk_sp<SkImage> CreateEglImageFromBuffer(RSPaintFilterCanvas& canvas,
         const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence);
-
+    sk_sp<SkImage> CreateVulkanImageFromBuffer(const std::shared_ptr<vulkan::VulkanWindow> vulkanWindow,
+        const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence);
     static inline std::atomic_bool isHighContrastEnabled_ = false;
 
 #if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
@@ -183,6 +218,14 @@ private:
     static constexpr size_t MAX_RS_SURFACE_SIZE = 32; // used for rsSurfaces_.
     using SurfaceId = uint64_t;
     std::unordered_map<SurfaceId, std::shared_ptr<RSSurfaceOhos>> rsSurfaces_;
+#if defined(RS_ENABLE_VK) && defined(RS_ENABLE_PARALLEL_RENDER)
+    std::vector<std::shared_ptr<RSSurface>> parallelSurfaces_;
+#endif
+    std::shared_ptr<RSSurface> curSurface_;
+    enum {
+        STUB_PIXEL_FMT_RGBA_16161616 = 0X7fff0001,
+        STUB_PIXEL_FMT_RGBA_1010102 = 0X7fff0002
+    };
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -19,6 +19,7 @@
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 #include "render/rs_path.h"
 
 namespace OHOS {
@@ -76,6 +77,11 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
     BufferDrawParam params;
 #ifdef RS_ENABLE_EGLIMAGE
     params.useCPU = forceCPU;
+#elif RS_ENABLE_VK
+    params.useCPU = forceCPU;
+    if (!GetUseGpuDrawImageForVulkanEnabled()) {
+        params.useCPU = true;
+    }
 #else // RS_ENABLE_EGLIMAGE
     params.useCPU = true;
 #endif // RS_ENABLE_EGLIMAGE

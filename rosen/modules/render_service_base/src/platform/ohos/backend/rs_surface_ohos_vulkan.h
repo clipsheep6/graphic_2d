@@ -42,9 +42,13 @@ public:
     void ClearBuffer() override;
     void ResetBufferAge() override;
     void SetUiTimeStamp(const std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp) override;
+    std::shared_ptr<vulkan::VulkanWindow> GetVulkanWindow() const override
+    {
+        return mVulkanWindow;
+    }
 private:
     struct NativeWindow* mNativeWindow = nullptr;
-    vulkan::VulkanWindow* mVulkanWindow = nullptr;
+    std::shared_ptr<vulkan::VulkanWindow> mVulkanWindow;
     int mWidth = -1;
     int mHeight = -1;
 };

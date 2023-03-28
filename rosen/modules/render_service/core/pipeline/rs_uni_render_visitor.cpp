@@ -1220,8 +1220,8 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             return;
         }
 #endif
-
         auto rsSurface = node.GetRSSurface();
+        renderEngine_->SetCurSurface(rsSurface);
         if (rsSurface == nullptr) {
             RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode No RSSurface found");
             return;
@@ -1929,7 +1929,16 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             } else {
                 node.SetGlobalAlpha(1.0f);
                 auto params = RSUniRenderUtil::CreateBufferDrawParam(node, false);
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_VK)
+                if (isParallel_) {
+                    uint32_t surfaceIndex = parallelRenderVisitorIndex_;
+                    renderEngine_->DrawSurfaceNodeWithSurfaceIndexAndParams(*canvas_, node, surfaceIndex, params);
+                } else {
+                    renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
+                }
+#else
                 renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
+#endif
             }
         }
 

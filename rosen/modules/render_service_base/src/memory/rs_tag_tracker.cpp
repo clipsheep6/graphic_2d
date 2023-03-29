@@ -40,6 +40,38 @@ void RSTagTracker::UpdateReleaseGpuResourceEnable(bool releaseResEnable)
     releaseGpuResourceEnable_ = releaseResEnable;
 }
 
+std::string RSTagTracker::TagType2String(TAGTYPE type)
+{
+    std::string tagType;
+    switch(type) {
+        case TAG_SAVELAYER_DRAW_NODE :
+            tagType = "savelayer_draw_node";
+            break;
+        case TAG_RESTORELAYER_DRAW_NODE :
+            tagType = "restorelayer_draw_node";
+            break;
+        case TAG_SAVELAYER_COLOR_FILTER :
+            tagType = "savelayer_color_filter";
+            break;
+        case TAG_CAPTURE :
+            tagType = "capture";
+            break;
+        case TAG_COLD_START :
+            tagType = "cold_start";
+            break;
+        case TAG_ACQUIRE_SURFACE :
+            tagType = "acquire_surface";
+            break;
+        case TAG_DRAW_SURFACENODE :
+            tagType = "draw_surface_node";
+            break;
+        default :
+            tagType = "";
+            break;
+    }
+    return tagType;
+}
+
 RSTagTracker::RSTagTracker(GrContext* grContext, NodeId nodeId, RSTagTracker::TAGTYPE tagType)
     : grContext_(grContext)
 {

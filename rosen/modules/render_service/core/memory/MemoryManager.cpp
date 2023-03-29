@@ -22,18 +22,20 @@
 #include "include/gpu/GrContext.h"
 #include "src/gpu/GrContextPriv.h"
 
+#include "common/rs_obj_abs_geometry.h"
+#include "memory/rs_tag_tracker.h"
 #include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS::Rosen {
 namespace {
 constexpr uint32_t MEMUNIT_RATE = 1024;
-constexpr const char* MEM_RS_TYPE = "rs";
+constexpr const char* MEM_RS_TYPE = "renderservice";
 constexpr const char* MEM_CPU_TYPE = "cpu";
 constexpr const char* MEM_GPU_TYPE = "gpu";
 constexpr const char* MEM_JEMALLOC_TYPE = "jemalloc";
 }
-
+static std::unordered_map<NodeId, std::string> trashMap;
 
 void MemoryManager::DumpMemoryUsage(DfxString& log, const GrContext* grContext, std::string& type)
 {
@@ -44,7 +46,8 @@ void MemoryManager::DumpMemoryUsage(DfxString& log, const GrContext* grContext, 
         DumpDrawingCpuMemory(log);
     }
     if (type.empty() || type == MEM_GPU_TYPE) {
-        DumpDrawingGpuMemory(log, grContext);
+        std::string gpuInfo;
+        DumpDrawingGpuMemory(log, grContext, gpuInfo);
     }
     if (type.empty() || type == MEM_JEMALLOC_TYPE) {
         std::string out;
@@ -58,11 +61,22 @@ void MemoryManager::DumpPidMemory(DfxString& log, int pid)
     MemoryTrack::Instance().DumpMemoryStatistics(log, pid);
 }
 
+void MemoryManager::ReleaseGpuResByTag(GrContext* grContext, GrGpuResourceTag& tag)
+{
+#ifdef RS_ENABLE_GL    
+    if(!grContext) {
+        RS_LOGE("ReleaseGpuResByTag fail, grContext is nullptr");
+    }
+    grContext->releaseByTag(tag);
+#endif
+}
+
 MemoryGraphic MemoryManager::CountPidMemory(int pid, const GrContext* grContext)
 {
     MemoryGraphic totalMemGraphic;
 
     // Count mem of RS
+    totalMemGraphic.SetPid(pid);
     MemoryGraphic rsMemGraphic = MemoryTrack::Instance().CountRSMemory(pid);
     totalMemGraphic += rsMemGraphic;
 
@@ -89,10 +103,34 @@ void MemoryManager::CountMemory(std::vector<pid_t> pids, const GrContext* grCont
     std::for_each(pids.begin(), pids.end(), countMem);
 }
 
+static std::tuple<uint64_t, std::string, RectI> FindGeoById(uint64_t nodeId)
+{
+    const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
+    auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId);
+    uint64_t wId = nodeId;
+    std::string wName = "NONE";
+    RectI wframe;
+    if (!node) {
+        return { wId, wName, wframe };
+    }
+    wframe = std::static_pointer_cast<RSObjAbsGeometry>(node->GetRenderProperties().GetBoundsGeometry())->GetAbsRect();
+    // Obtain the window according to childId
+    auto parent = node->GetParent().lock();
+    while(parent) {
+        if (parent->IsInstanceOf<RSSurfaceRenderNode>()) {
+            const auto& surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parent);
+            wName = surfaceNode->GetName();
+            break;
+        }
+        parent = parent->GetParent().lock();
+    }
+    return { wId, wName, wframe };
+}
+
 void MemoryManager::DumpRenderServiceMemory(DfxString& log)
 {
     log.AppendFormat("\n----------\nRenderService caches:\n");
-    MemoryTrack::Instance().DumpMemoryStatistics(log);
+    MemoryTrack::Instance().DumpMemoryStatistics(log, FindGeoById);
 }
 
 void MemoryManager::DumpDrawingCpuMemory(DfxString& log)
@@ -124,20 +162,92 @@ void MemoryManager::DumpDrawingCpuMemory(DfxString& log)
     log.AppendFormat("\ncpu cache limit = %zu ( fontcache = %zu ):\n", cacheLimit, fontCacheLimit);
 }
 
-void MemoryManager::DumpDrawingGpuMemory(DfxString& log, const GrContext* grContext)
+void MemoryManager::DumpGpuCache(DfxString& log, const GrContext* grContext, GrGpuResourceTag* tag, std::string& name)
 {
     if (!grContext) {
-        log.AppendFormat("No valid cache instance.\n");
+        log.AppendFormat("grContext is nullptr.\n");
+        return;
+    }
+#ifdef RS_ENABLE_GL
+    log.AppendFormat("\n---------------\nSkia GPU Caches:%s\n", name.c_str());
+    SkiaMemoryTracer gpuTracer("category", true);
+    if (tag) {
+        grContext->dumpMemoryStatisticsByTag(&gpuTracer, *tag);
+    } else {
+        grContext->dumpMemoryStatistics(&gpuTracer);
+    }
+    gpuTracer.LogOutput(log);
+    log.AppendFormat("Total GPU memory usage:\n");
+    gpuTracer.LogTotals(log);
+#endif
+}
+
+void MemoryManager::DumpAllWindow(DfxString& log, const GrContext* grContext)
+{
+    if (!grContext) {
+        log.AppendFormat("No valid gpu cache instance.\n");
+        return;
+    }
+#ifdef RS_ENABLE_GL
+    const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
+    nodeMap.TraverseSurfaceNodes([&log, &grContext](const std::shared_ptr<RSSurfaceRenderNode> node) {
+        GrGpuResourceTag tag(ExtractPid(node->GetId()), 0, node->GetId(), 0);
+        std::string name = node->GetName() + " " + std::to_string(node->GetId());
+        DumpGpuCache(log, grContext, &tag, name);
+    });
+#endif
+}
+
+ void MemoryManager::DumpTrashWindow(DfxString& log, const GrContext* grContext)
+ {
+    if (!grContext) {
+        log.AppendFormat("No valid gpu cache instance.\n");
+        return;
+    }
+#ifdef RS_ENABLE_GL
+    for (auto& trash : trashMap) {
+        GrGpuResourceTag tag(ExtractPid(trash.first), 0, trash.first, 0);
+        std::string trashName = "*" + trash.second + " " + std::to_string(trash.first);
+        DumpGpuCache(log, grContext, &tag, trashName);
+    }
+#endif
+ }
+
+void MemoryManager::CollectTrashInfo(pid_t pid)
+{
+    const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
+    nodeMap.TraverseSurfaceNodes([&pid](const std::shared_ptr<RSSurfaceRenderNode> node) {
+        if (ExtractPid(node->GetId()) == pid) {
+            trashMap.emplace(node->GetId(), node->GetName());
+        }
+    });
+}
+
+void MemoryManager::DumpDrawingGpuMemory(DfxString& log, const GrContext* grContext, std::string& tag)
+{
+    if (!grContext) {
+        log.AppendFormat("No valid gpu cache instance.\n");
         return;
     }
     /////////////////////////////GPU/////////////////////////
 #ifdef RS_ENABLE_GL
-    log.AppendFormat("\n---------------\nSkia GPU Caches:\n");
-    SkiaMemoryTracer gpuTracer("category", true);
-    grContext->dumpMemoryStatistics(&gpuTracer);
-    gpuTracer.LogOutput(log);
-    log.AppendFormat("Total GPU memory usage:\n");
-    gpuTracer.LogTotals(log);
+    // total
+    DumpGpuCache(log, grContext, nullptr, tag);
+
+    if (tag.empty()) {
+        // Get memory of window by tag
+        DumpAllWindow(log, grContext);
+
+        // get memory of rs
+        for (uint32_t tagtype = RSTagTracker::TAG_DRAW_SURFACENODE; tagtype <= RSTagTracker::TAG_CAPTURE; tagtype++) {
+            GrGpuResourceTag tag(0, 0, 0, tagtype);
+            std::string tagType = RSTagTracker::TagType2String(static_cast<RSTagTracker::TAGTYPE>(tagtype));
+            DumpGpuCache(log, grContext, &tag, tagType);
+        }
+
+        // collect trash
+        DumpTrashWindow(log, grContext);
+    }
 
     // cache limit
     size_t cacheLimit = 0;

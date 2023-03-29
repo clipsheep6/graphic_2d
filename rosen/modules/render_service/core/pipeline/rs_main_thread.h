@@ -134,6 +134,7 @@ public:
     void NotifyDrivenRenderFinish();
     void WaitUtilDrivenRenderFinished();
 
+    void OnHapExit(pid_t remotePid);
     void ClearTransactionDataPidInfo(pid_t remotePid);
     void AddTransactionDataPidInfo(pid_t remotePid);
 

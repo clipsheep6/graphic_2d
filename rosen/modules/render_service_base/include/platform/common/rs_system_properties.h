@@ -87,7 +87,9 @@ public:
     static bool GetDumpLayersEnabled();
     static bool GetQuickSkipPrepareEnabled();
     static bool GetHardwareComposerEnabled();
+#ifndef NEW_SKIA
     static bool GetReleaseGpuResourceEnabled();
+#endif
 
     static void SetDrawTextAsBitmap(bool flag);
     static bool GetDrawTextAsBitmap();

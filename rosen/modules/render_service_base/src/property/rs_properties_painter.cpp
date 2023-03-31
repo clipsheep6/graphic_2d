@@ -439,7 +439,16 @@ void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaint
     if (properties.GetClipBounds() != nullptr) {
         canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), antiAlias);
     } else if (properties.GetClipToBounds()) {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
+        RRect rect = properties.GetRRect();
+        if (properties.IsPixelStretchExpanded()) {
+            Vector4f stretchSize = properties.GetPixelStretch();
+            rect.rect_.left_ -= stretchSize.x_;
+            rect.rect_.top_ -= stretchSize.y_;
+            rect.rect_.width_ += stretchSize.x_ + stretchSize.z_;
+            rect.rect_.height_ += stretchSize.y_ + stretchSize.w_;
+        }
+        canvas.clipRRect(RRect2SkRRect(rect), antiAlias);
+        //canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
     }
     // paint backgroundColor
     SkPaint paint;

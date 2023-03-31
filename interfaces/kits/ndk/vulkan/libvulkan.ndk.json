@@ -103,7 +103,6 @@
     { "name": "vkCreateFramebuffer" },
     { "name": "vkCreateGraphicsPipelines" },
     { "name": "vkCreateImage" },
-    { "name": "vkCreateImagePipeSurfaceFUCHSIA" },
     { "name": "vkCreateImageView" },
     { "name": "vkCreateInstance" },
     { "name": "vkCreateOHOSSurfaceOpenHarmony" },

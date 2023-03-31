@@ -44,8 +44,8 @@ public:
     void AddOp(std::unique_ptr<OpItem>&& op);
     void ClearOp();
 
-    void Playback(SkCanvas& canvas, const SkRect* rect = nullptr);
-    void Playback(RSPaintFilterCanvas& canvas, const SkRect* rect = nullptr);
+    void Playback(SkCanvas& canvas, const SkRect* rect = nullptr) const;
+    void Playback(RSPaintFilterCanvas& canvas, const SkRect* rect = nullptr) const;
 
     size_t GetSize() const;
     int GetWidth() const;
@@ -53,10 +53,6 @@ public:
 
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static RSB_EXPORT DrawCmdList* Unmarshalling(Parcel& parcel);
-
-    // cache related, only available on OHOS
-    void GenerateCache(const RSPaintFilterCanvas* canvas = nullptr, const SkRect* rect = nullptr);
-    void ClearCache();
 
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     // functions that are dedicated to driven render [start]
@@ -73,10 +69,6 @@ private:
     int height_;
 
 #ifdef ROSEN_OHOS
-    // cache related, only available on OHOS
-    std::vector<std::pair<int, std::unique_ptr<OpItem>>> opReplacedByCache_;
-    bool isCached_ = false;
-    bool cachedHighContrast_ = false;
     friend class RSMarshallingHelper;
     using OpUnmarshallingFunc = OpItem* (*)(Parcel& parcel);
     static OpUnmarshallingFunc GetOpUnmarshallingFunc(RSOpType type);

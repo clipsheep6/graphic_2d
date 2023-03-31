@@ -107,30 +107,18 @@ DrawCmdList& DrawCmdList::operator=(DrawCmdList&& that)
     return *this;
 }
 
-void DrawCmdList::Playback(SkCanvas& canvas, const SkRect* rect)
+void DrawCmdList::Playback(SkCanvas& canvas, const SkRect* rect) const
 {
     RSPaintFilterCanvas filterCanvas(&canvas);
     Playback(filterCanvas, rect);
 }
 
-void DrawCmdList::Playback(RSPaintFilterCanvas& canvas, const SkRect* rect)
+void DrawCmdList::Playback(RSPaintFilterCanvas& canvas, const SkRect* rect) const
 {
     if (width_ <= 0 || height_ <= 0) {
         return;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-#ifdef ROSEN_OHOS
-    // invalidate cache if high contrast flag changed
-    if (isCached_ && canvas.isHighContrastEnabled() != cachedHighContrast_) {
-        ClearCache();
-    }
-    // Generate or clear cache if cache state changed.
-    if (canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED && !isCached_) {
-        GenerateCache(&canvas, rect);
-    } else if (canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::DISABLED && isCached_) {
-        ClearCache();
-    }
-#endif
     for (auto& it : ops_) {
         if (it == nullptr) {
             continue;
@@ -160,10 +148,7 @@ bool DrawCmdList::Marshalling(Parcel& parcel) const
     std::lock_guard<std::mutex> lock(mutex_);
     bool success = RSMarshallingHelper::Marshalling(parcel, width_) &&
                    RSMarshallingHelper::Marshalling(parcel, height_) &&
-                   RSMarshallingHelper::Marshalling(parcel, ops_) &&
-                   RSMarshallingHelper::Marshalling(parcel, isCached_) &&
-                   RSMarshallingHelper::Marshalling(parcel, cachedHighContrast_) &&
-                   RSMarshallingHelper::Marshalling(parcel, opReplacedByCache_);
+                   RSMarshallingHelper::Marshalling(parcel, ops_);
     if (!success) {
         ROSEN_LOGE("DrawCmdList::Marshalling failed!");
         return false;
@@ -185,50 +170,13 @@ DrawCmdList* DrawCmdList::Unmarshalling(Parcel& parcel)
         return nullptr;
     }
     std::unique_ptr<DrawCmdList> drawCmdList = std::make_unique<DrawCmdList>(width, height);
-    if (!(RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->ops_) &&
-            RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->isCached_) &&
-            RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->cachedHighContrast_) &&
-            RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->opReplacedByCache_))) {
+    if (!RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->ops_)) {
         ROSEN_LOGE("DrawCmdList::Unmarshalling contents failed!");
         return nullptr;
     }
     return drawCmdList.release();
 #else
     return nullptr;
-#endif
-}
-
-void DrawCmdList::GenerateCache(const RSPaintFilterCanvas* canvas, const SkRect* rect)
-{
-#ifdef ROSEN_OHOS
-    RS_TRACE_FUNC();
-    for (auto index = 0u; index < ops_.size(); index++) {
-        auto& op = ops_[index];
-        if (op == nullptr) {
-            continue;
-        }
-        if (auto cached_op = op->GenerateCachedOpItem(canvas, rect)) {
-            // backup the original op and position
-            opReplacedByCache_.emplace_back(index, op.release());
-            // replace the original op with the cached op
-            op.reset(cached_op.release());
-        }
-    }
-    isCached_ = true;
-    cachedHighContrast_ = canvas && canvas->isHighContrastEnabled();
-#endif
-}
-
-void DrawCmdList::ClearCache()
-{
-#ifdef ROSEN_OHOS
-    RS_TRACE_FUNC();
-    // restore the original op
-    for (auto& [index, op] : opReplacedByCache_) {
-        ops_[index].reset(op.release());
-    }
-    opReplacedByCache_.clear();
-    isCached_ = false;
 #endif
 }
 

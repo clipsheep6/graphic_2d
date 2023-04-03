@@ -47,6 +47,10 @@ void RSCPUOverdrawCanvasListener::Draw()
 
         auto todraw = regions[i];
         todraw.op(drawed, SkRegion::kDifference_Op);
+        if (canvas_ == nullptr) {
+            ROSEN_LOGE("overdraw cpuCanvas_ is nullptr");
+            return;
+        }
         canvas_.drawRegion(todraw, paint);
         drawed.op(todraw, SkRegion::kUnion_Op);
     }

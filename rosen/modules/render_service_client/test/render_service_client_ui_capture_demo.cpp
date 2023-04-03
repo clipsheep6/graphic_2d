@@ -132,7 +132,11 @@ void DrawSurfaceNode(shared_ptr<RSSurfaceNode> surfaceNode)
     auto y = surfaceGeometry.y();
     auto width = surfaceGeometry.width();
     auto height = surfaceGeometry.height();
+    cout << "SurfaceNodeId:" << surfaceNode->GetId() <<endl;
     surfaceNode->SetBounds(x, y, width, height);
+    surfaceNode->SetBorderColor(SK_ColorBLACK);
+    surfaceNode->SetBorderStyle((uint32_t)BorderStyle::SOLID);
+    surfaceNode->SetBorderWidth(10);
     shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
     if (rsSurface == nullptr) {
         cout << "surface is nullptr" << endl;

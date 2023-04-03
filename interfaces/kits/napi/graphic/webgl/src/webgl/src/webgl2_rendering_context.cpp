@@ -1746,6 +1746,7 @@ bool WebGL2RenderingContext::Export(napi_env env, napi_value exports)
         NVal::DeclareNapiGetter("TIMEOUT_IGNORED", GetTimeoutIgnored),
         NVal::DeclareNapiGetter("MAX_CLIENT_WAIT_TIMEOUT_WEBGL", GetMaxClientWaitTimeoutWebgl),
         NVal::DeclareNapiProperty("WebGLRenderingContext", instanceValue),
+        NVal::DeclareNapiFunction("getParameter", WebGL2RenderingContextBase::GetParameter),
     };
     status = napi_define_properties(env, exports, sizeof(props) / sizeof(props[0]), props);
     if (status != napi_ok) {

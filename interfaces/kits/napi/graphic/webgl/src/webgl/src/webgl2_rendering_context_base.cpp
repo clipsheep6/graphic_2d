@@ -4651,6 +4651,191 @@ napi_value WebGL2RenderingContextBase::GetActiveUniformBlockName(napi_env env, n
     string str = buf.get();
     return NVal::CreateUTF8String(env, str).val_;
 }
+
+napi_value WebGL2RenderingContextBase::GetParameter(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ONE)) {
+        return nullptr;
+    }
+    bool succ = false;
+    LOGI("WebGL2 getParameter start");
+    int64_t pname;
+    tie(succ, pname) = NVal(env, funcArg[NARG_POS::FIRST]).ToInt64();
+    if (!succ) {
+        return nullptr;
+    }
+    LOGI("WebGL2 WebGL2RenderContextBase::getParameter pname = %{public}lld", pname);
+    if (pname == GL_MAX_TEXTURE_LOD_BIAS) {
+        GLfloat params;
+        glGetFloatv(static_cast<GLenum>(pname), &params);
+        float res = static_cast<float>(params);
+        LOGI("WebGL2 getFloatParameter end");
+        return NVal::CreateDouble(env, (double)res).val_;
+    } else if (pname == GL_COPY_READ_BUFFER_BINDING || pname == GL_COPY_WRITE_BUFFER_BINDING ||
+               pname == GL_PIXEL_PACK_BUFFER_BINDING || pname == GL_PIXEL_PACK_BUFFER_BINDING ||
+               pname == GL_PIXEL_UNPACK_BUFFER_BINDING || pname == GL_UNIFORM_BUFFER_BINDING ||
+               pname == GL_TRANSFORM_FEEDBACK_BUFFER_BINDING) {
+        GLint params;
+        glGetIntegerv(static_cast<GLenum>(pname), &params);
+        napi_value objBuffer = NClass::InstantiateClass(env, WebGLBuffer::className, {});
+        if (!objBuffer) {
+            return nullptr;
+        }
+        auto webGlBuffer = NClass::GetEntityOf<WebGLBuffer>(env, objBuffer);
+        if (!webGlBuffer) {
+            return nullptr;
+        }
+        webGlBuffer->SetBuffer(params);
+        LOGI("WebGL2 getWebGlBufferParameter end");
+        return objBuffer;
+    } else if (pname == GL_DRAW_FRAMEBUFFER_BINDING || pname == GL_READ_FRAMEBUFFER_BINDING) {
+        GLint params;
+        glGetIntegerv(static_cast<GLenum>(pname), &params);
+        napi_value objFramebuffer = NClass::InstantiateClass(env, WebGLFramebuffer::className, {});
+        if (!objFramebuffer) {
+            return nullptr;
+        }
+        auto webGLFramebuffer = NClass::GetEntityOf<WebGLFramebuffer>(env, objFramebuffer);
+        if (!webGLFramebuffer) {
+            return nullptr;
+        }
+        webGLFramebuffer->SetFramebuffer(params);
+        LOGI("WebGL2 getFramebufferParameter end");
+        return objFramebuffer;
+    } else if (pname == GL_TEXTURE_BINDING_2D_ARRAY || pname == GL_TEXTURE_BINDING_3D) {
+        GLint params;
+        glGetIntegerv(static_cast<GLenum>(pname), &params);
+        napi_value objTexture = NClass::InstantiateClass(env, WebGLTexture::className, {});
+        if (!objTexture) {
+            return nullptr;
+        }
+        auto webGlTexture = NClass::GetEntityOf<WebGLTexture>(env, objTexture);
+        if (!webGlTexture) {
+            return nullptr;
+        }
+        webGlTexture->SetTexture(params);
+        LOGI("WebGL2 getTextureParameter end");
+        return objTexture;
+    } else if (pname == GL_SAMPLER_BINDING) {
+        GLint params;
+        glGetIntegerv(static_cast<GLenum>(pname), &params);
+        napi_value objSampler = NClass::InstantiateClass(env, WebGLSampler::className, {});
+        if (!objSampler) {
+            return nullptr;
+        }
+        auto webGlSampler = NClass::GetEntityOf<WebGLSampler>(env, objSampler);
+        if (!webGlSampler) {
+            return nullptr;
+        }
+        webGlSampler->SetSampler(params);
+        LOGI("WebGL2 getWebGLSamplerParameter end");
+        return objSampler;
+    } else if (pname == GL_TRANSFORM_FEEDBACK_BINDING) {
+        GLint params;
+        glGetIntegerv(static_cast<GLenum>(pname), &params);
+        napi_value objTransformFeedback = NClass::InstantiateClass(env, WebGLTransformFeedback::className, {});
+        if (!objTransformFeedback) {
+            return nullptr;
+        }
+        auto webGLTransformFeedback = NClass::GetEntityOf<WebGLTransformFeedback>(env, objTransformFeedback);
+        if (!webGLTransformFeedback) {
+            return nullptr;
+        }
+        webGLTransformFeedback->SetTransformFeedback(params);
+        LOGI("WebGL2 getTransformFeedbackParameter end");
+        return objTransformFeedback;
+    } else if (pname == GL_VERTEX_ARRAY_BINDING) {
+        GLint params;
+        glGetIntegerv(static_cast<GLenum>(pname), &params);
+        napi_value objVertexArrayObject = NClass::InstantiateClass(env, WebGLVertexArrayObject::className, {});
+        if (!objVertexArrayObject) {
+            return nullptr;
+        }
+        auto webGlVertexArrayObject = NClass::GetEntityOf<WebGLVertexArrayObject>(env, objVertexArrayObject);
+        if (!webGlVertexArrayObject) {
+            return nullptr;
+        }
+        webGlVertexArrayObject->SetVertexArrays(params);
+        LOGI("WebGL2 getVertexArrayObjectParameter end");
+        return objVertexArrayObject;
+    } else if (pname == GL_RASTERIZER_DISCARD ||
+               pname == GL_TRANSFORM_FEEDBACK_ACTIVE ||
+               pname == GL_TRANSFORM_FEEDBACK_PAUSED) {
+        GLboolean params;
+        glGetBooleanv(static_cast<GLenum>(pname), &params);
+        bool res = static_cast<bool>(params);
+        LOGI("WebGL2 getBoolParameter end");
+        return NVal::CreateBool(env, res).val_;
+    } else if (pname == GL_DRAW_BUFFER0 ||
+               pname == GL_DRAW_BUFFER1 ||
+               pname == GL_DRAW_BUFFER2 ||
+               pname == GL_DRAW_BUFFER3 ||
+               pname == GL_DRAW_BUFFER4 ||
+               pname == GL_DRAW_BUFFER5 ||
+               pname == GL_DRAW_BUFFER6 ||
+               pname == GL_DRAW_BUFFER7 ||
+               pname == GL_DRAW_BUFFER8 ||
+               pname == GL_DRAW_BUFFER9 ||
+               pname == GL_DRAW_BUFFER10 ||
+               pname == GL_DRAW_BUFFER11 ||
+               pname == GL_DRAW_BUFFER12 ||
+               pname == GL_DRAW_BUFFER13 ||
+               pname == GL_DRAW_BUFFER14 ||
+               pname == GL_DRAW_BUFFER15 ||
+               pname == GL_FRAGMENT_SHADER_DERIVATIVE_HINT ||
+               pname == GL_MAX_3D_TEXTURE_SIZE ||
+               pname == GL_MAX_ARRAY_TEXTURE_LAYERS ||
+               pname == GL_MAX_COLOR_ATTACHMENTS ||
+               pname == GL_MAX_COMBINED_UNIFORM_BLOCKS ||
+               pname == GL_MAX_DRAW_BUFFERS ||
+               pname == GL_MAX_ELEMENTS_INDICES ||
+               pname == GL_MAX_ELEMENTS_VERTICES ||
+               pname == GL_MAX_FRAGMENT_INPUT_COMPONENTS ||
+               pname == GL_MAX_FRAGMENT_UNIFORM_BLOCKS ||
+               pname == GL_MAX_FRAGMENT_UNIFORM_COMPONENTS ||
+               pname == GL_MAX_PROGRAM_TEXEL_OFFSET ||
+               pname == GL_MAX_SAMPLES ||
+               pname == GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS ||
+               pname == GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS ||
+               pname == GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS ||
+               pname == GL_MAX_UNIFORM_BUFFER_BINDINGS ||
+               pname == GL_MAX_VARYING_COMPONENTS ||
+               pname == GL_MAX_VERTEX_OUTPUT_COMPONENTS ||
+               pname == GL_MAX_VERTEX_UNIFORM_BLOCKS ||
+               pname == GL_MAX_VERTEX_UNIFORM_COMPONENTS ||
+               pname == GL_MIN_PROGRAM_TEXEL_OFFSET ||
+               pname == GL_PACK_ROW_LENGTH ||
+               pname == GL_PACK_SKIP_PIXELS ||
+               pname == GL_PACK_SKIP_ROWS ||
+               pname == GL_READ_BUFFER ||
+               pname == GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT ||
+               pname == GL_UNPACK_IMAGE_HEIGHT ||
+               pname == GL_UNPACK_ROW_LENGTH ||
+               pname == GL_UNPACK_SKIP_IMAGES ||
+               pname == GL_UNPACK_SKIP_PIXELS ||
+               pname == GL_UNPACK_SKIP_ROWS) {
+        GLint params;
+        glGetIntegerv(static_cast<GLenum>(pname), &params);
+        int64_t res = static_cast<int64_t>(params);
+        LOGI("WebGL2 getIntParameter end");
+        return NVal::CreateInt64(env, res).val_;
+    } else if (pname == WebGL2RenderingContextBase::MAX_CLIENT_WAIT_TIMEOUT_WEBGL ||
+               pname == GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS ||
+               pname == GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS ||
+               pname == GL_MAX_ELEMENT_INDEX ||
+               pname == GL_MAX_SERVER_WAIT_TIMEOUT ||
+               pname == GL_MAX_UNIFORM_BLOCK_SIZE) {
+        GLint64 params;
+        glGetInteger64v(static_cast<GLenum>(pname), &params);
+        int64_t res = params;
+        LOGI("WebGL2 getIn64tParameter end");
+        return NVal::CreateInt64(env, res).val_;
+    } else {
+        LOGI("WebGL getParameter : pname is wrong");
+        return nullptr;
+    }
+}
 } // namespace Rosen
 } // namespace OHOS
 

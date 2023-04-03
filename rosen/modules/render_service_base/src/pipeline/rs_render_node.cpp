@@ -263,6 +263,10 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
     if (modifier->GetType() == RSModifierType::BOUNDS || modifier->GetType() == RSModifierType::FRAME) {
         AddGeometryModifier(modifier);
     } else if (modifier->GetType() < RSModifierType::CUSTOM) {
+        if (modifier->GetType() == RSModifierType::FRAME_GRAVITY) {
+            EraseIf(modifiers_,
+                [](const auto& pair) -> bool { return pair.second->GetType() == RSModifierType::FRAME_GRAVITY; });
+        }
         modifiers_.emplace(modifier->GetPropertyId(), modifier);
     } else {
         drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);

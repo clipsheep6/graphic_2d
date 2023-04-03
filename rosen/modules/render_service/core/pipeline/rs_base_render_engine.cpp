@@ -277,7 +277,12 @@ void RSBaseRenderEngine::DrawBuffer(RSPaintFilterCanvas& canvas, BufferDrawParam
         RS_LOGE("RSDividedRenderUtil::DrawBuffer: create bitmap failed.");
         return;
     }
+#ifdef NEW_SKIA
+    canvas.drawImageRect(bitmap.asImage(), params.srcRect, params.dstRect,
+        SkSamplingOptions(), &(params.paint), SkCanvas::kStrict_SrcRectConstraint);
+#else
     canvas.drawBitmapRect(bitmap, params.srcRect, params.dstRect, &(params.paint));
+#endif
 }
 
 void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam& params)
@@ -288,7 +293,12 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
         RS_LOGE("RSDividedRenderUtil::DrawImage: image is nullptr!");
         return;
     }
+#ifdef NEW_SKIA
+    canvas.drawImageRect(image, params.srcRect, params.dstRect,
+        SkSamplingOptions(), &(params.paint), SkCanvas::kStrict_SrcRectConstraint);
+#else
     canvas.drawImageRect(image, params.srcRect, params.dstRect, &(params.paint));
+#endif
 }
 
 void RSBaseRenderEngine::RegisterDeleteBufferListener(const sptr<IConsumerSurface>& consumer, bool isForUniRedraw)

@@ -103,12 +103,11 @@ void RSSurfaceRenderNode::PrepareRenderBeforeChildren(RSPaintFilterCanvas& canva
 
     // extract srcDest and dstRect from SkCanvas, localCLipBounds as SrcRect, deviceClipBounds as DstRect
     auto localClipRect = getLocalClipBounds(canvas);
-    RectI srcRect = {
-        std::clamp<int>(localClipRect.left(), 0, properties.GetBoundsWidth()),
-        std::clamp<int>(localClipRect.top(), 0, properties.GetBoundsHeight()),
-        std::clamp<int>(localClipRect.width(), 0, properties.GetBoundsWidth() - localClipRect.left()),
-        std::clamp<int>(localClipRect.height(), 0, properties.GetBoundsHeight() - localClipRect.top())
-    };
+    int left = std::clamp<int>(localClipRect.left(), 0, properties.GetBoundsWidth());
+    int top = std::clamp<int>(localClipRect.top(), 0, properties.GetBoundsHeight());
+    int width = std::clamp<int>(localClipRect.width(), 0, properties.GetBoundsWidth() - left);
+    int height = std::clamp<int>(localClipRect.height(), 0, properties.GetBoundsHeight() - top);
+    RectI srcRect = {left, top, width, height};
     SetSrcRect(srcRect);
     auto deviceClipRect = canvas.getDeviceClipBounds();
     RectI dstRect = { deviceClipRect.left(), deviceClipRect.top(), deviceClipRect.width(), deviceClipRect.height() };

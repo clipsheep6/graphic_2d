@@ -90,6 +90,7 @@ void RSRenderCurveAnimation::OnSetFraction(float fraction)
 void RSRenderCurveAnimation::OnAnimate(float fraction)
 {
     OnAnimateInner(fraction, interpolator_);
+    AddAnimationTrace(fraction);
 }
 
 void RSRenderCurveAnimation::OnAnimateInner(float fraction, const std::shared_ptr<RSInterpolator>& interpolator)

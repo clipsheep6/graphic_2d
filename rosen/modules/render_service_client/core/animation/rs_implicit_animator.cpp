@@ -17,6 +17,7 @@
 
 #include "animation/rs_animation.h"
 #include "animation/rs_animation_callback.h"
+#include "animation/rs_animation_trace_utils.h"
 #include "animation/rs_path_animation.h"
 #include "pipeline/rs_node_map.h"
 #include "animation/rs_implicit_animation_param.h"
@@ -404,6 +405,11 @@ std::shared_ptr<RSAnimation> RSImplicitAnimator::CreateImplicitAnimation(const s
 
     if (params->GetType() != ImplicitAnimationParamType::KEYFRAME) {
         target->AddAnimation(animation);
+    }
+
+    if (RSSystemProperties::GetAnimationTraceEnabled()) {
+        RSAnimationTraceUtils::GetInstance().addAnimationCreateTrace(target->GetId(), property->GetId(),
+            static_cast<int>(params->GetType()), startValue->GetRenderProperty(), endValue->GetRenderProperty());
     }
 
     implicitAnimations_.top().push_back({ animation, target->GetId() });

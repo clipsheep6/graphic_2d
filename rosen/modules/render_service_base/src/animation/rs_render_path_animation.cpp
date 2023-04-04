@@ -211,6 +211,7 @@ void RSRenderPathAnimation::OnAnimate(float fraction)
         UpdateVector4fPathValue(animationValue, position);
         SetPathValue(animationValue, tangent);
     }
+    AddAnimationTrace(fraction);
 }
 
 void RSRenderPathAnimation::OnRemoveOnCompletion()

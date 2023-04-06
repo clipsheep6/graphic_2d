@@ -21,6 +21,8 @@
 
 namespace OHOS {
 namespace Rosen {
+constexpr int16_t COLOR_CHANNEL_MAX = 255;
+
 RSColor::RSColor(uint32_t rgba) noexcept
 {
     alpha_ = static_cast<int16_t>(rgba & 0xFF);               // 0xff byte mask
@@ -29,7 +31,7 @@ RSColor::RSColor(uint32_t rgba) noexcept
     blue_ = static_cast<int16_t>((rgba & 0x0000FF00) >> 8);   // 0x0000ff00 blue mask, 8 blue shift
 }
 
-RSColor::RSColor(int16_t red, int16_t green, int16_t blue) noexcept : RSColor(red, green, blue, UINT8_MAX) {}
+RSColor::RSColor(int16_t red, int16_t green, int16_t blue) noexcept : RSColor(red, green, blue, COLOR_CHANNEL_MAX) {}
 
 RSColor::RSColor(int16_t red, int16_t green, int16_t blue, int16_t alpha) noexcept
 {
@@ -78,8 +80,10 @@ RSColor RSColor::operator/(float scale) const
 
 uint32_t RSColor::AsRgbaInt() const
 {
-    return (std::clamp<uint32_t>(alpha_, 0, UINT8_MAX)) | (std::clamp<uint32_t>(red_, 0, UINT8_MAX) << 24) |
-           (std::clamp<uint32_t>(green_, 0, UINT8_MAX) << 16) | (std::clamp<uint32_t>(blue_, 0, UINT8_MAX) << 8);
+    return (static_cast<uint32_t>(std::clamp<int16_t>(alpha_, 0, COLOR_CHANNEL_MAX))) |
+            (static_cast<uint32_t>(std::clamp<int16_t>(red_, 0, COLOR_CHANNEL_MAX)) << 24) |
+            (static_cast<uint32_t>(std::clamp<int16_t>(green_, 0, COLOR_CHANNEL_MAX)) << 16) |
+            (static_cast<uint32_t>(std::clamp<int16_t>(blue_, 0, COLOR_CHANNEL_MAX)) << 8);
 }
 
 RSColor RSColor::FromRgbaInt(uint32_t rgba)
@@ -89,8 +93,10 @@ RSColor RSColor::FromRgbaInt(uint32_t rgba)
 
 uint32_t RSColor::AsArgbInt() const
 {
-    return ((std::clamp<uint32_t>(alpha_, 0, UINT8_MAX)) << 24) | ((std::clamp<uint32_t>(red_, 0, UINT8_MAX)) << 16) |
-           ((std::clamp<uint32_t>(green_, 0, UINT8_MAX)) << 8) | (std::clamp<uint32_t>(blue_, 0, UINT8_MAX));
+    return (static_cast<uint32_t>(std::clamp<int16_t>(alpha_, 0, COLOR_CHANNEL_MAX)) << 24) |
+            (static_cast<uint32_t>(std::clamp<int16_t>(red_, 0, COLOR_CHANNEL_MAX)) << 16) |
+            (static_cast<uint32_t>(std::clamp<int16_t>(green_, 0, COLOR_CHANNEL_MAX)) << 8) |
+            (static_cast<uint32_t>(std::clamp<int16_t>(blue_, 0, COLOR_CHANNEL_MAX)));
 }
 
 RSColor RSColor::FromArgbInt(uint32_t argb)
@@ -101,8 +107,10 @@ RSColor RSColor::FromArgbInt(uint32_t argb)
 
 uint32_t RSColor::AsBgraInt() const
 {
-    return (std::clamp<uint32_t>(alpha_, 0, UINT8_MAX)) | ((std::clamp<uint32_t>(red_, 0, UINT8_MAX)) << 8) |
-           ((std::clamp<uint32_t>(green_, 0, UINT8_MAX)) << 16) | ((std::clamp<uint32_t>(blue_, 0, UINT8_MAX)) << 24);
+    return (static_cast<uint32_t>(std::clamp<int16_t>(alpha_, 0, COLOR_CHANNEL_MAX))) |
+            (static_cast<uint32_t>(std::clamp<int16_t>(red_, 0, COLOR_CHANNEL_MAX)) << 8) |
+            (static_cast<uint32_t>(std::clamp<int16_t>(green_, 0, COLOR_CHANNEL_MAX) << 16)) |
+            (static_cast<uint32_t>(std::clamp<int16_t>(blue_, 0, COLOR_CHANNEL_MAX)) << 24);
 }
 
 RSColor RSColor::FromBgraInt(uint32_t bgra)

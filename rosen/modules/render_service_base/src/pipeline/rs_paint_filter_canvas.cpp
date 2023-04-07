@@ -181,20 +181,13 @@ void RSPaintFilterCanvas::RestoreStatus(const SaveStatus& status)
 
 void RSPaintFilterCanvas::CopyConfiguration(const RSPaintFilterCanvas& other)
 {
-    // Note:
-    // 1. we don't need to copy alpha status, alpha will be applied when drawing cache.
+    // Note: we don't need to copy alpha status, alpha will be applied when drawing cache.
     // copy high contrast flag
     isHighContrastEnabled_.store(other.isHighContrastEnabled_.load());
     // copy env
     envStack_.top() = other.envStack_.top();
-    // cache related
-    if (other.isHighContrastEnabled()) {
-        // explicit disable cache for high contrast mode
-        SetCacheType(RSPaintFilterCanvas::CacheType::DISABLED);
-    } else {
-        // planning: maybe we should copy source cache status
-        SetCacheType(RSPaintFilterCanvas::CacheType::UNDEFINED);
-    }
+    // copy cache status
+    SetCacheType(other.GetCacheType());
 }
 
 RSColorFilterCanvas::RSColorFilterCanvas(RSPaintFilterCanvas* canvas)

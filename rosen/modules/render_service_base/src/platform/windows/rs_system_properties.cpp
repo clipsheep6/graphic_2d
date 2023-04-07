@@ -84,15 +84,6 @@ long long int RSSystemProperties::GetDumpSurfaceId()
     return {};
 }
 
-void RSSystemProperties::SetDrawTextAsBitmap(bool flag)
-{
-}
-
-bool RSSystemProperties::GetDrawTextAsBitmap()
-{
-    return {};
-}
-
 ParallelRenderingType RSSystemProperties::GetPrepareParallelRenderingEnabled()
 {
     return {};

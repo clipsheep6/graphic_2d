@@ -1334,7 +1334,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 #endif
         RSPropertiesPainter::SetBgAntiAlias(true);
         if (!isParallel_) {
-            int saveCount = canvas_->save();
+            SkAutoCanvasRestore acr(canvas_.get(), true);
             canvas_->SetHighContrast(renderEngine_->IsHighContrastEnabled());
             auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
             if (geoPtr != nullptr) {
@@ -1356,7 +1356,6 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 // render directly
                 ProcessBaseRenderNode(node);
             }
-            canvas_->restoreToCount(saveCount);
         }
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
         if ((isParallel_ && ((rects.size() > 0) || !isPartialRenderEnabled_)) && isCalcCostEnable_) {
@@ -2153,6 +2152,7 @@ void RSUniRenderVisitor::FinishOffscreenRender()
     // draw offscreen surface to current canvas
     SkPaint paint;
     paint.setAntiAlias(true);
+    // note: current canvas alpha/matrix will be applied when offscreen buffer is drawn back.
     canvasBackup_->drawImage(offscreenSurface_->makeImageSnapshot(), 0, 0, &paint);
     // restore current canvas and cleanup
     offscreenSurface_ = nullptr;

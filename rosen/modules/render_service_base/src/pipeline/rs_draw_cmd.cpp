@@ -15,6 +15,7 @@
 
 #include "pipeline/rs_draw_cmd.h"
 
+#include "include/effects/SkImageFilters.h"
 #include "rs_trace.h"
 #include "securec.h"
 
@@ -237,8 +238,20 @@ TextBlobOpItem::TextBlobOpItem(const sk_sp<SkTextBlob> textBlob, float x, float 
 
 void TextBlobOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
-    bool isHighContrastEnabled = canvas.isHighContrastEnabled();
-    if (isHighContrastEnabled) {
+    RSAutoCanvasRestore acr(&canvas, RSAutoCanvasRestore::SaveType::kNone);
+    if (canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED) {
+        // This hack is to avoid glyph cache invalidation during screen rotation animation.
+        // 1. Begin offscreen render with saveLayer.
+        // 2. Reset offscreen canvas matrix to identity.
+        // 3. Apply previous matrix with a MatrixTransform filter when offscreen buffer is drawn back.
+        auto filter = SkImageFilters::MatrixTransform(canvas.getTotalMatrix(), kLow_SkFilterQuality, nullptr);
+        SkPaint paint;
+        paint.setImageFilter(filter);
+        canvas.saveLayer(textBlob_->bounds(), &paint);
+        canvas.resetMatrix();
+    }
+    
+    if (canvas.isHighContrastEnabled()) {
         ROSEN_LOGD("TextBlobOpItem::Draw highContrastEnabled");
         uint32_t color = paint_.getColor();
         uint32_t channelSum = SkColorGetR(color) + SkColorGetG(color) + SkColorGetB(color);
@@ -432,6 +445,18 @@ PathOpItem::PathOpItem(const SkPath& path, const SkPaint& paint) : OpItemWithPai
 
 void PathOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
+    RSAutoCanvasRestore acr(&canvas, RSAutoCanvasRestore::SaveType::kNone);
+    if (canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED) {
+        // This hack is to avoid path cache invalidation during screen rotation animation.
+        // 1. Begin offscreen render with saveLayer.
+        // 2. Reset offscreen canvas matrix to identity.
+        // 3. Apply previous matrix with a MatrixTransform filter when offscreen buffer is drawn back.
+        auto filter = SkImageFilters::MatrixTransform(canvas.getTotalMatrix(), kLow_SkFilterQuality, nullptr);
+        SkPaint paint;
+        paint.setImageFilter(filter);
+        canvas.saveLayer(path_.getBounds(), &paint);
+        canvas.resetMatrix();
+    }
     canvas.drawPath(path_, paint_);
 }
 

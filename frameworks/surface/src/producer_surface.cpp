@@ -115,11 +115,19 @@ GSError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
     }
     buffer = retval.buffer;
     fence = retval.fence;
+    bufferRequestConfigCache_[retval.sequence] = config;
 
-    if (static_cast<uint64_t>(config.usage) & BUFFER_USAGE_CPU_WRITE) {
+    if (static_cast<uint64_t>(config.usage) & BUFFER_USAGE_CPU_READ) {
         ret = buffer->InvalidateCache();
         if (ret != GSERROR_OK) {
             BLOGNW("Warning [%{public}d], InvalidateCache failed", retval.sequence);
+        }
+    }
+
+    if (static_cast<uint64_t>(config.usage) & (BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE)) {
+        ret = buffer->Map();
+        if (ret != GSERROR_OK) {
+            BLOGNW("Warning [%{public}d], Map failed", retval.sequence);
         }
     }
 
@@ -129,6 +137,7 @@ GSError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
 
     for (auto it = retval.deletingBuffers.begin(); it != retval.deletingBuffers.end(); it++) {
         bufferProducerCache_.erase(*it);
+        bufferRequestConfigCache_.erase(*it);
     }
     return GSERROR_OK;
 }
@@ -148,8 +157,14 @@ GSError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer, const sptr<Syn
         return GSERROR_INVALID_ARGUMENTS;
     }
 
+    auto sequence = buffer->GetSeqNum();
     const sptr<BufferExtraData>& bedata = buffer->GetExtraData();
-    return producer_->FlushBuffer(buffer->GetSeqNum(), bedata, fence, config);
+    auto requestConfig = bufferRequestConfigCache_[sequence];
+    if (static_cast<uint64_t>(requestConfig.usage) & BUFFER_USAGE_CPU_WRITE) {
+        buffer->FlushCache();
+    }
+
+    return producer_->FlushBuffer(sequence, bedata, fence, config);
 }
 
 GSError ProducerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, sptr<SyncFence>& fence,

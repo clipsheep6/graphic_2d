@@ -18,6 +18,9 @@
 #include "mock/mock_any_span.h"
 #include "text_reverser.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 namespace Texgine {
 class ControllerForTest {
 public:
@@ -33,7 +36,7 @@ public:
 class TextReverserTest : public testing::Test {
 };
 
-TEST_F(TextReverserTest, ReverseRTLText)
+HWTEST_F(TextReverserTest, ReverseRTLText, TestSize.Level1)
 {
     std::shared_ptr<AnySpan> a1 = std::make_shared<MockAnySpan>();
     std::shared_ptr<AnySpan> a2 = std::make_shared<MockAnySpan>();

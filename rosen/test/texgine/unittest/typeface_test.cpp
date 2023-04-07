@@ -24,6 +24,9 @@
 #include "texgine_exception.h"
 #include "typeface.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 struct hb_blob_t {};
 
 namespace Texgine {
@@ -39,39 +42,40 @@ struct Mockvars {
     std::shared_ptr<Texgine::TexgineTypeface> texgineTypeface_ = std::make_shared<Texgine::TexgineTypeface>();
     std::unique_ptr<hb_blob_t> blob_ = std::make_unique<hb_blob_t>();
     std::unique_ptr<Texgine::Typeface> typeface_ = nullptr;
-} mockvars;
+} typefaceMockvars;
 
 void InitMyMockVars(Mockvars vars)
 {
-    mockvars = std::move(vars);
-    mockvars.typeface_ = std::make_unique<Texgine::Typeface>(mockvars.texgineTypeface_);
+    typefaceMockvars = std::move(vars);
+    typefaceMockvars.typeface_ = std::make_unique<Texgine::Typeface>(typefaceMockvars.texgineTypeface_);
 }
 
 std::shared_ptr<TexgineTypeface> TexgineTypeface::MakeFromFile(const char path[], int index)
 {
-    return mockvars.texgineTypeface_;
+    return typefaceMockvars.texgineTypeface_;
 }
 
 size_t TexgineTypeface::GetTableSize(uint32_t tag)
 {
-    assert(mockvars.sizeIndex_ < mockvars.tableSize_.size());
-    return mockvars.tableSize_[mockvars.sizeIndex_++];
+    assert(typefaceMockvars.sizeIndex_ < typefaceMockvars.tableSize_.size());
+    return typefaceMockvars.tableSize_[typefaceMockvars.sizeIndex_++];
 }
 
 size_t TexgineTypeface::GetTableData(uint32_t tag, size_t offset, size_t length,void* data)
 {
-    return mockvars.dataLength_[mockvars.lengthIndex_++];
+    return typefaceMockvars.dataLength_[typefaceMockvars.lengthIndex_++];
 }
 
 void TexgineTypeface::GetFamilyName(TexgineString* name)
 {
-    name->SetString(mockvars.name_);
+    name->SetString(typefaceMockvars.name_);
 }
 
 extern "C" {
-hb_blob_t * hb_blob_create (const char *data, unsigned int length, hb_memory_mode_t mode, void *user_data, hb_destroy_func_t destroy)
+hb_blob_t * hb_blob_create (const char *data, unsigned int length, hb_memory_mode_t mode,
+    void *user_data, hb_destroy_func_t destroy)
 {
-    return mockvars.blob_.get();
+    return typefaceMockvars.blob_.get();
 }
 
 void hb_blob_destroy(hb_blob_t *)
@@ -81,12 +85,12 @@ void hb_blob_destroy(hb_blob_t *)
 
 int CmapParser::Parse(const char *data, int32_t size)
 {
-    return mockvars.parseRetval_;
+    return typefaceMockvars.parseRetval_;
 }
 
 int32_t CmapParser::GetGlyphId(int32_t codepoint) const
 {
-    return mockvars.glyphId_[mockvars.idIndex_++];
+    return typefaceMockvars.glyphId_[typefaceMockvars.idIndex_++];
 }
 
 class TypefaceTest : public testing::Test {
@@ -96,7 +100,7 @@ public:
 // 逻辑测试
 // 设置texgineTypeface_为非空
 // 判定返回值不为空指针，可以得到name
-TEST_F(TypefaceTest, MakeFromFile1)
+HWTEST_F(TypefaceTest, MakeFromFile1, TestSize.Level1)
 {
     InitMyMockVars({ .name_ = "cxt" });
     auto typeface = Typeface::MakeFromFile("aaa");
@@ -107,100 +111,100 @@ TEST_F(TypefaceTest, MakeFromFile1)
 // 异常测试
 // 设置texgineTypeface_为空
 // 判定得不到name并抛出异常
-TEST_F(TypefaceTest, MakeFromFile2)
+HWTEST_F(TypefaceTest, MakeFromFile2, TestSize.Level1)
 {
     InitMyMockVars({ .name_ = "cxxt", .texgineTypeface_ = nullptr });
     ASSERT_EXCEPTION(ExceptionType::APIFailed, Typeface::MakeFromFile("aaa"));
-    EXPECT_NE(mockvars.typeface_->GetName(), "cxxt");
+    EXPECT_NE(typefaceMockvars.typeface_->GetName(), "cxxt");
 }
 
 // 异常测试
 // 设置typeface_为空
 // 判定返回值为false
-TEST_F(TypefaceTest, Has1)
+HWTEST_F(TypefaceTest, Has1, TestSize.Level1)
 {
     InitMyMockVars({ .name_ = "one", .texgineTypeface_ = nullptr });
-    EXPECT_EQ(mockvars.typeface_->Has(0x0006), false);
+    EXPECT_EQ(typefaceMockvars.typeface_->Has(0x0006), false);
 }
 
 // 异常测试
 // 设置size为0
 // 判定抛出异常
-TEST_F(TypefaceTest, Has2)
+HWTEST_F(TypefaceTest, Has2, TestSize.Level1)
 {
     InitMyMockVars({ .name_ = "two", .tableSize_ = {0} });
-    ASSERT_EXCEPTION(ExceptionType::APIFailed, mockvars.typeface_->Has(0x0006));
+    ASSERT_EXCEPTION(ExceptionType::APIFailed, typefaceMockvars.typeface_->Has(0x0006));
 }
 
 // 异常测试
 // 设置retv为2，不等于size
 // 判定抛出异常
-TEST_F(TypefaceTest, Has3)
+HWTEST_F(TypefaceTest, Has3, TestSize.Level1)
 {
     InitMyMockVars({ .name_ = "three", .tableSize_ = {3}, .dataLength_ = {2} });
-    ASSERT_EXCEPTION(ExceptionType::APIFailed, mockvars.typeface_->Has(0x0006));
+    ASSERT_EXCEPTION(ExceptionType::APIFailed, typefaceMockvars.typeface_->Has(0x0006));
 }
 
 // 异常测试
 // 设置blob_为空
 // 判定抛出异常
-TEST_F(TypefaceTest, Has4)
+HWTEST_F(TypefaceTest, Has4, TestSize.Level1)
 {
     InitMyMockVars({ .name_ = "four", .blob_ = nullptr });
-    ASSERT_EXCEPTION(ExceptionType::APIFailed, mockvars.typeface_->Has(0x0006));
+    ASSERT_EXCEPTION(ExceptionType::APIFailed, typefaceMockvars.typeface_->Has(0x0006));
 }
 
 // 过程测试
 // 设置parseRetval_ 为-1
 // 判定返回值为false
-TEST_F(TypefaceTest, Has5)
+HWTEST_F(TypefaceTest, Has5, TestSize.Level1)
 {
     InitMyMockVars({ .name_ = "five", .parseRetval_ = -1 });
-    EXPECT_EQ(mockvars.typeface_->Has(0x0006), false);
+    EXPECT_EQ(typefaceMockvars.typeface_->Has(0x0006), false);
 }
 
 // 过程测试
 // 设置parseRetval_ 为0
 // 判定返回值为true
-TEST_F(TypefaceTest, Has6)
+HWTEST_F(TypefaceTest, Has6, TestSize.Level1)
 {
     InitMyMockVars({ .name_ = "six" });
-    EXPECT_EQ(mockvars.typeface_->Has(0x0006), true);
+    EXPECT_EQ(typefaceMockvars.typeface_->Has(0x0006), true);
 }
 
 // 逻辑测试
 // 设置两次都是成功走通
 // 第一次返回值为true，第二次返回值为false，判定sizeIndex_为1
-TEST_F(TypefaceTest, Has7)
+HWTEST_F(TypefaceTest, Has7, TestSize.Level1)
 {
     InitMyMockVars({ .name_ = "seven", .tableSize_ = {1, 1}, .dataLength_ = {1, 1}, .glyphId_ = {0, -1} });
-    auto bool1 = mockvars.typeface_->Has(0x0006);
-    auto bool2 = mockvars.typeface_->Has(0x0006);
+    auto bool1 = typefaceMockvars.typeface_->Has(0x0006);
+    auto bool2 = typefaceMockvars.typeface_->Has(0x0006);
     EXPECT_EQ(bool1, true);
     EXPECT_EQ(bool2, false);
-    EXPECT_EQ(mockvars.sizeIndex_, 1);
+    EXPECT_EQ(typefaceMockvars.sizeIndex_, 1);
 }
 
 // 逻辑测试
 // 设置第一次失败，第二次成功走通
 // 第一次会抛出异常，第二次返回值为true，判定sizeIndex_为2
-TEST_F(TypefaceTest, Has8)
+HWTEST_F(TypefaceTest, Has8, TestSize.Level1)
 {
     InitMyMockVars({ .name_ = "eight", .tableSize_ = {2, 1}, .dataLength_ = {1, 1} });
-    ASSERT_EXCEPTION(ExceptionType::APIFailed, mockvars.typeface_->Has(0x0006));
-    auto bool1 = mockvars.typeface_->Has(0x0006);
+    ASSERT_EXCEPTION(ExceptionType::APIFailed, typefaceMockvars.typeface_->Has(0x0006));
+    auto bool1 = typefaceMockvars.typeface_->Has(0x0006);
     EXPECT_EQ(bool1, true);
-    EXPECT_EQ(mockvars.sizeIndex_, 2);
+    EXPECT_EQ(typefaceMockvars.sizeIndex_, 2);
 }
 
 // 逻辑测试
 // 设置第一次失败，第二次失败
 // 第一次会抛出异常，第二次也会抛出异常，判定sizeIndex_为2
-TEST_F(TypefaceTest, Has9)
+HWTEST_F(TypefaceTest, Has9, TestSize.Level1)
 {
     InitMyMockVars({ .name_ = "nine", .tableSize_ = {0, 0} });
-    ASSERT_EXCEPTION(ExceptionType::APIFailed, mockvars.typeface_->Has(0x0006));
-    ASSERT_EXCEPTION(ExceptionType::APIFailed, mockvars.typeface_->Has(0x0006));
-    EXPECT_EQ(mockvars.sizeIndex_, 2);
+    ASSERT_EXCEPTION(ExceptionType::APIFailed, typefaceMockvars.typeface_->Has(0x0006));
+    ASSERT_EXCEPTION(ExceptionType::APIFailed, typefaceMockvars.typeface_->Has(0x0006));
+    EXPECT_EQ(typefaceMockvars.sizeIndex_, 2);
 }
 } // namespace Texgine

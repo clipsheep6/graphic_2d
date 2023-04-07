@@ -17,12 +17,15 @@
 
 #include "text_converter.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 namespace Texgine {
 namespace {
 class TextConverterTest : public testing::Test {
 };
 
-TEST(TextConverterTest, ToUTF8)
+HWTEST_F(TextConverterTest, ToUTF8, TestSize.Level1)
 {
     UTF16String u16 = {0x00, 0x20, 0x41, 0x7f, 0x00, 0x80, 0x100, 0x601, 0x7ff, 0x800, 0xffff};
     auto u8 = TextConverter::ToUTF8(u16);
@@ -53,7 +56,7 @@ TEST(TextConverterTest, ToUTF8)
     EXPECT_EQ(u8[18], 0b10111111);
 }
 
-TEST(TextConverterTest, ToStr)
+HWTEST_F(TextConverterTest, ToStr, TestSize.Level1)
 {
     UTF16String u16 = {0x20, 0x41, 0x7f, 0x80, 0x100, 0x601, 0x7ff, 0x800, 0xffff};
     auto str = TextConverter::ToStr(u16);
@@ -82,7 +85,7 @@ TEST(TextConverterTest, ToStr)
     EXPECT_EQ(str[16], static_cast<char>(0b10111111));
 }
 
-TEST(TextConverterTest, ToUTF16)
+HWTEST_F(TextConverterTest, ToUTF16, TestSize.Level1)
 {
     auto u16 = TextConverter::ToUTF16("\U0001ffff\uffff a1");
     EXPECT_EQ(u16[0], 0xd83f);
@@ -113,7 +116,7 @@ TEST(TextConverterTest, ToUTF16)
     EXPECT_EQ(u16[5], static_cast<uint16_t>('1'));
 }
 
-TEST(TextConverterTest, ToUTF32)
+HWTEST_F(TextConverterTest, ToUTF32, TestSize.Level1)
 {
     auto u32 = TextConverter::ToUTF32(UTF16String{0xd83f, 0xdfff, 0xffff, 0x20, 0x61, 0x31});
     EXPECT_EQ(u32[0], 0x1ffff);

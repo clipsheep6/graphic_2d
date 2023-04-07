@@ -20,6 +20,9 @@
 #include "mock.h"
 #include "texgine/dynamic_file_font_provider.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 struct MockVars {
     bool existsReturnValue_ = true;
     std::error_code errorCode_;
@@ -30,7 +33,7 @@ struct MockVars {
     std::ios_base::iostate readState_ = std::ios_base::goodbit;
 } mockVars;
 
-void InitMockVars(MockVars vars)
+void InitDffpMockVars(MockVars vars)
 {
     mockVars = vars;
 }
@@ -89,7 +92,7 @@ public:
 // 过程测试
 // 调用Create函数
 // 判定返回值为非空指针
-TEST_F(DynamicFileFontProviderTest, Create)
+HWTEST_F(DynamicFileFontProviderTest, Create, TestSize.Level1)
 {
     EXPECT_NE(DynamicFileFontProvider::Create(), nullptr);
 }
@@ -97,72 +100,72 @@ TEST_F(DynamicFileFontProviderTest, Create)
 // 异常测试
 // 重写StdFilesystemExists函数，控制ec的__val值为1
 // 判定返回值为1
-TEST_F(DynamicFileFontProviderTest, LoadFont1)
+HWTEST_F(DynamicFileFontProviderTest, LoadFont1, TestSize.Level1)
 {
-    InitMockVars({.errorCode_ = std::make_error_code(std::errc::file_exists)});
+    InitDffpMockVars({.errorCode_ = std::make_error_code(std::errc::file_exists)});
     EXPECT_EQ(dynamicFileFontProvider->LoadFont("LF1", {}), 1);
 }
 
 // 异常测试
 // 重写StdFilesystemExists函数，控制返回值为false
 // 判定返回值为1
-TEST_F(DynamicFileFontProviderTest, LoadFont2)
+HWTEST_F(DynamicFileFontProviderTest, LoadFont2, TestSize.Level1)
 {
-    InitMockVars({.existsReturnValue_ = false});
+    InitDffpMockVars({.existsReturnValue_ = false});
     EXPECT_EQ(dynamicFileFontProvider->LoadFont("LF2", {}), 1);
 }
 
 // 异常测试
 // 重写StdFilesystemIsOpen函数，控制返回值为false
 // 判定返回值为1
-TEST_F(DynamicFileFontProviderTest, LoadFont3)
+HWTEST_F(DynamicFileFontProviderTest, LoadFont3, TestSize.Level1)
 {
-    InitMockVars({.openReturnValue_ = false});
+    InitDffpMockVars({.openReturnValue_ = false});
     EXPECT_EQ(dynamicFileFontProvider->LoadFont("LF3", {}), 1);
 }
 
 // 异常测试
 // 重写StdFilesystemSeekg(off_type off, std::ios_base::seekdir dir)函数,将流状态设置为badbit
 // 判定返回值为1
-TEST_F(DynamicFileFontProviderTest, LoadFont4)
+HWTEST_F(DynamicFileFontProviderTest, LoadFont4, TestSize.Level1)
 {
-    InitMockVars({.seekg2State_ = std::ios_base::badbit});
+    InitDffpMockVars({.seekg2State_ = std::ios_base::badbit});
     EXPECT_EQ(dynamicFileFontProvider->LoadFont("LF4", {}), 1);
 }
 
 // 异常测试
 // 重写StdFilesystemTellg函数，将流状态设置为failbit
 // 判定返回值为1
-TEST_F(DynamicFileFontProviderTest, LoadFont5)
+HWTEST_F(DynamicFileFontProviderTest, LoadFont5, TestSize.Level1)
 {
-    InitMockVars({.tellgState_ = std::ios_base::failbit});
+    InitDffpMockVars({.tellgState_ = std::ios_base::failbit});
     EXPECT_EQ(dynamicFileFontProvider->LoadFont("LF5", {}), 1);
 }
 
 // 异常测试
 // 重写StdFilesystemSeekg(pos_type pos)函数,将流状态设置为badbit
 // 判定返回值为1
-TEST_F(DynamicFileFontProviderTest, LoadFont6)
+HWTEST_F(DynamicFileFontProviderTest, LoadFont6, TestSize.Level1)
 {
-    InitMockVars({.seekg1State_ = std::ios_base::badbit});
+    InitDffpMockVars({.seekg1State_ = std::ios_base::badbit});
     EXPECT_EQ(dynamicFileFontProvider->LoadFont("LF6", {}), 1);
 }
 
 // 异常测试
 // 重写StdFilesystemRead函数,将流状态设置为badbit
 // 判定返回值为1
-TEST_F(DynamicFileFontProviderTest, LoadFont7)
+HWTEST_F(DynamicFileFontProviderTest, LoadFont7, TestSize.Level1)
 {
-    InitMockVars({.readState_ = std::ios_base::badbit});
+    InitDffpMockVars({.readState_ = std::ios_base::badbit});
     EXPECT_EQ(dynamicFileFontProvider->LoadFont("LF7", {}), 1);
 }
 
 // 逻辑测试
 // 参数设为默认状态
 // 判定返回值为0
-TEST_F(DynamicFileFontProviderTest, LoadFont8)
+HWTEST_F(DynamicFileFontProviderTest, LoadFont8, TestSize.Level1)
 {
-    InitMockVars({});
+    InitDffpMockVars({});
     EXPECT_EQ(dynamicFileFontProvider->LoadFont("LF8", {}), 0);
 }
 } // namespace Texgine

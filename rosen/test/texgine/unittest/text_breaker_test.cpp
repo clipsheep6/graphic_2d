@@ -26,6 +26,9 @@
 #include "text_breaker.h"
 #include "text_converter.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 namespace Texgine {
 std::vector<std::string> families_;
 std::shared_ptr<FontCollection> FontProviders::GenerateFontCollection(
@@ -108,7 +111,7 @@ public:
 // 逻辑测试
 // 设置textStyle的fontFamilies_为空
 // 判定返回值不为空指针，并且最后传出的families为tpstyle的families
-TEST_F(TextBreakerTest, GenerateFontCollection1)
+HWTEST_F(TextBreakerTest, GenerateFontCollection1, TestSize.Level1)
 {
     textStyle_.fontFamilies_ = {};
 
@@ -123,7 +126,7 @@ TEST_F(TextBreakerTest, GenerateFontCollection1)
 // 异常测试
 // 设置providers_为空
 // 判定返回值为空指针
-TEST_F(TextBreakerTest, GenerateFontCollection2)
+HWTEST_F(TextBreakerTest, GenerateFontCollection2, TestSize.Level1)
 {
     ASSERT_EXCEPTION(ExceptionType::InvalidArgument, breaker.GenerateFontCollection(tpstyle_, textStyle_, nullptr));
 }
@@ -131,7 +134,7 @@ TEST_F(TextBreakerTest, GenerateFontCollection2)
 // 过程测试
 // 设置textStyle的fontFamilies_不为空，并且providers_不为空，typoStyle不为空
 // 判定返回值不为空指针，并且传出的families==textStyle的fontFamilies_
-TEST_F(TextBreakerTest, GenerateFontCollection3)
+HWTEST_F(TextBreakerTest, GenerateFontCollection3, TestSize.Level1)
 {
     tpstyle_.fontFamilies_ = {"seguiemj"};
     textStyle_.fontFamilies_ = {"robot"};
@@ -146,7 +149,7 @@ TEST_F(TextBreakerTest, GenerateFontCollection3)
 // 逻辑测试
 // 让Measurer的Measure失败
 // 判定返回值不为0
-TEST_F(TextBreakerTest, Measure1)
+HWTEST_F(TextBreakerTest, Measure1, TestSize.Level1)
 {
     boundaries = {{ 0, 5 }};
     PrepareWordBreak(1, emptyCgs_);
@@ -160,7 +163,7 @@ TEST_F(TextBreakerTest, Measure1)
 // 逻辑测试
 // 让Measurer的GetWordBoundary返回值为空，measure成功
 // 判定返回值为1
-TEST_F(TextBreakerTest, Measure2)
+HWTEST_F(TextBreakerTest, Measure2, TestSize.Level1)
 {
     boundaries = {};
     PrepareWordBreak(0, emptyCgs_);
@@ -174,7 +177,7 @@ TEST_F(TextBreakerTest, Measure2)
 // 逻辑测试
 // 让Measurer的GetWordBoundary返回值不为空，measure成功
 // 判定返回值为0
-TEST_F(TextBreakerTest, Measure3)
+HWTEST_F(TextBreakerTest, Measure3, TestSize.Level1)
 {
     boundaries = {{ 0, 5 }};
     PrepareWordBreak(0, emptyCgs_);
@@ -188,7 +191,7 @@ TEST_F(TextBreakerTest, Measure3)
 // 过程测试
 // wordcgs为空，未进入循环
 // 判定返回值为0
-TEST_F(TextBreakerTest, BreakWord1)
+HWTEST_F(TextBreakerTest, BreakWord1, TestSize.Level1)
 {
     EXPECT_NO_THROW({
         breaker.BreakWord(emptyCgs_, tpstyle_, textStyle_, spans_);
@@ -200,7 +203,7 @@ TEST_F(TextBreakerTest, BreakWord1)
 // 逻辑测试
 // 设置wordcgs中的内容为“most”不包含空格，选择分词策略为WordBreakType::breakWord
 // 判定返回值为0，spans_的大小为1，并且这1个span的preBreak==postBreak
-TEST_F(TextBreakerTest, BreakWord2)
+HWTEST_F(TextBreakerTest, BreakWord2, TestSize.Level1)
 {
     EXPECT_NO_THROW({
         breaker.BreakWord(cgs1_, tpstyle_, textStyle_, spans_);
@@ -213,7 +216,7 @@ TEST_F(TextBreakerTest, BreakWord2)
 // 逻辑测试
 // 设置wordcgs中的内容为“most ”包含空格，选择分词策略为WordBreakType::breakWord
 // 判定返回值为0，spans_的大小为1，并且这1个span的preBreak！=postBreak
-TEST_F(TextBreakerTest, BreakWord3)
+HWTEST_F(TextBreakerTest, BreakWord3, TestSize.Level1)
 {
     EXPECT_NO_THROW({
         breaker.BreakWord(cgs2_, tpstyle_, textStyle_, spans_);
@@ -226,7 +229,7 @@ TEST_F(TextBreakerTest, BreakWord3)
 // 逻辑测试
 // 设置wordcgs中的内容为“most”不包含空格，选择分词策略为WordBreakType::breakAll
 // 判定返回值为0，spans_的大小为4，并且每一个span的preBreak==postBreak
-TEST_F(TextBreakerTest, BreakWord4)
+HWTEST_F(TextBreakerTest, BreakWord4, TestSize.Level1)
 {
     tpstyle_.wordBreakType_ = WordBreakType::BREAKALL;
 
@@ -243,7 +246,7 @@ TEST_F(TextBreakerTest, BreakWord4)
 // 逻辑测试
 // 设置wordcgs中的内容为“most ”包含空格，选择分词策略为WordBreakType::breakAll
 // 判定返回值为0，spans_的大小为5，并且前4个span的preBreak==postBreak，最后一个span的preBreak！=postBreak
-TEST_F(TextBreakerTest, BreakWord5)
+HWTEST_F(TextBreakerTest, BreakWord5, TestSize.Level1)
 {
     tpstyle_.wordBreakType_ = WordBreakType::BREAKALL;
 
@@ -262,7 +265,7 @@ TEST_F(TextBreakerTest, BreakWord5)
 // 异常测试
 // 设置currentCgs为空
 // 判定抛出TexgineException类型异常
-TEST_F(TextBreakerTest, GenerateSpan1)
+HWTEST_F(TextBreakerTest, GenerateSpan1, TestSize.Level1)
 {
     ASSERT_EXCEPTION(ExceptionType::InvalidArgument,
         breaker.GenerateSpan(emptyCgs_, tpstyle_, textStyle_, spans_));
@@ -271,7 +274,7 @@ TEST_F(TextBreakerTest, GenerateSpan1)
 // 异常测试
 // 设置currentCgsbu为{}
 // 判定抛出TexgineException类型异常
-TEST_F(TextBreakerTest, GenerateSpan2)
+HWTEST_F(TextBreakerTest, GenerateSpan2, TestSize.Level1)
 {
     ASSERT_EXCEPTION(ExceptionType::InvalidArgument,
         breaker.GenerateSpan({}, tpstyle_, textStyle_, spans_));
@@ -280,7 +283,7 @@ TEST_F(TextBreakerTest, GenerateSpan2)
 // 过程测试
 // 设置currentCgsbu为空
 // 判定不抛出异常, spans_的大小为1
-TEST_F(TextBreakerTest, GenerateSpan3)
+HWTEST_F(TextBreakerTest, GenerateSpan3, TestSize.Level1)
 {
     EXPECT_NO_THROW({
         breaker.GenerateSpan(cgs2_, tpstyle_, textStyle_, spans_);
@@ -291,7 +294,7 @@ TEST_F(TextBreakerTest, GenerateSpan3)
 // 逻辑测试
 // 传入一个AnySpan
 // 判定返回值为0，出参spans_中的内容转化后不为空指针
-TEST_F(TextBreakerTest, WordBreak1)
+HWTEST_F(TextBreakerTest, WordBreak1, TestSize.Level1)
 {
     spans_ = {std::make_shared<MockAnySpan>()};
     EXPECT_NO_THROW({
@@ -305,7 +308,7 @@ TEST_F(TextBreakerTest, WordBreak1)
 // 逻辑测试
 // 在fontCollection不为空指针的情况下，让Measure返回值不为0
 // 判定返回值不为0，出参spans_的大小为0
-TEST_F(TextBreakerTest, WordBreak2)
+HWTEST_F(TextBreakerTest, WordBreak2, TestSize.Level1)
 {
     PrepareWordBreak(1, cgs1_);
 
@@ -319,7 +322,7 @@ TEST_F(TextBreakerTest, WordBreak2)
 // 过程测试
 // 传入spans为空
 // 判定返回值为0，出参spans_的大小为0
-TEST_F(TextBreakerTest, WordBreak3)
+HWTEST_F(TextBreakerTest, WordBreak3, TestSize.Level1)
 {
     EXPECT_NO_THROW({
         breaker.WordBreak(spans_, tpstyle_, FontProviders::Create());
@@ -331,7 +334,7 @@ TEST_F(TextBreakerTest, WordBreak3)
 // 在fontCollection不为空指针的情况下，让Measure成功，boundaries = {{0, 4}}
 // 分词策略为WordBreakType::breakWord
 // 判定返回值为0，出参spans_的大小为1
-TEST_F(TextBreakerTest, WordBreak4)
+HWTEST_F(TextBreakerTest, WordBreak4, TestSize.Level1)
 {
     auto type = WordBreakType::BREAKWORD;
     boundaries = {{ 0, 4 }};
@@ -348,7 +351,7 @@ TEST_F(TextBreakerTest, WordBreak4)
 // 在fontCollection不为空指针的情况下，让Measure成功，boundaries = {{0, 4}}
 // 分词策略为WordBreakType::breakAll
 // 判定返回值为0，出参spans_的大小为4
-TEST_F(TextBreakerTest, WordBreak5)
+HWTEST_F(TextBreakerTest, WordBreak5, TestSize.Level1)
 {
     auto type = WordBreakType::BREAKALL;
     boundaries = {{ 0, 4 }};
@@ -364,7 +367,7 @@ TEST_F(TextBreakerTest, WordBreak5)
 // 过程测试
 // 在fontCollection不为空指针的情况下，让Measure成功，boundaries = {}
 // 判定返回值为0，出参spans_的大小为0
-TEST_F(TextBreakerTest, WordBreak6)
+HWTEST_F(TextBreakerTest, WordBreak6, TestSize.Level1)
 {
     auto type = WordBreakType::BREAKALL;
     boundaries = {};

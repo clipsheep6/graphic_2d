@@ -16,12 +16,15 @@
 #include "bidi_processer.h"
 #include "mock/mock_any_span.h"
 #include "texgine_exception.h"
-#include "text_span.h"
 #include "text_breaker.h"
 #include "text_converter.h"
+#include "text_span.h"
 
 #include <gtest/gtest.h>
 #include <unicode/ubidi.h>
+
+using namespace testing;
+using namespace testing::ext;
 
 struct UBiDi {};
 std::unique_ptr<UBiDi> bidi = nullptr;
@@ -107,7 +110,7 @@ public:
 // 异常测试
 // 设置cgs为空
 // 判定抛出TexgineException异常
-TEST_F(BidiProcesserTest, DoBidiProcess1)
+HWTEST_F(BidiProcesserTest, DoBidiProcess1, TestSize.Level1)
 {
     CharGroups cgs = CharGroups::CreateEmpty();
 
@@ -121,7 +124,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess1)
 // 异常测试
 // 设置cgs为{}
 // 判定抛出TexgineException异常
-TEST_F(BidiProcesserTest, DoBidiProcess2)
+HWTEST_F(BidiProcesserTest, DoBidiProcess2, TestSize.Level1)
 {
     CharGroups cgs = {};
 
@@ -135,7 +138,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess2)
 // 异常测试
 // 控制ubidi_open()返回值为nullptr
 // 判定抛出TexgineException异常
-TEST_F(BidiProcesserTest, DoBidiProcess3)
+HWTEST_F(BidiProcesserTest, DoBidiProcess3, TestSize.Level1)
 {
     InitMyMockVars({.bidi_ = nullptr});
 
@@ -149,7 +152,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess3)
 // 异常测试
 // 控制ubidi_setPara，中status返回值为U_ILLEGAL_ARGUMENT_ERROR, ubidi_open()返回值不为nullptr
 // 判定抛出TexgineException异常
-TEST_F(BidiProcesserTest, DoBidiProcess4)
+HWTEST_F(BidiProcesserTest, DoBidiProcess4, TestSize.Level1)
 {
     InitMyMockVars({.status_ = U_ILLEGAL_ARGUMENT_ERROR});
 
@@ -163,7 +166,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess4)
 // 过程测试
 // 控制ubidi_countRuns返回值为0
 // 判定无异常抛出，并且返回值的大小为0
-TEST_F(BidiProcesserTest, DoBidiProcess5)
+HWTEST_F(BidiProcesserTest, DoBidiProcess5, TestSize.Level1)
 {
     InitMyMockVars({.size_ = 0,});
 
@@ -176,7 +179,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess5)
 // 异常测试
 // 控制ubidi_countRuns返回值为4,控制ubidi_getVisualRun(bidi, i, &start, &length)中start=-1, length=1
 // 判定抛出TexgineException异常
-TEST_F(BidiProcesserTest, DoBidiProcess6)
+HWTEST_F(BidiProcesserTest, DoBidiProcess6, TestSize.Level1)
 {
     InitMyMockVars({.start_ = {-1}, .length_ = {1},});
 
@@ -190,7 +193,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess6)
 // 异常测试
 // 控制ubidi_countRuns返回值为1,控制ubidi_getVisualRun(bidi, i, &start, &length)中start=1, length=-1
 // 判定抛出TexgineException异常
-TEST_F(BidiProcesserTest, DoBidiProcess7)
+HWTEST_F(BidiProcesserTest, DoBidiProcess7, TestSize.Level1)
 {
     InitMyMockVars({.start_ = {1}, .length_ = {-1},});
 
@@ -204,7 +207,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess7)
 // 逻辑测试
 // 控制ubidi_countRuns返回值为4,每次修改start{0，1，2，3}和length{1, 1, 1, 1}的值，使IsIntersect的返回值为false
 // 判定不抛出异常, 并且返回值为1
-TEST_F(BidiProcesserTest, DoBidiProcess8)
+HWTEST_F(BidiProcesserTest, DoBidiProcess8, TestSize.Level1)
 {
     InitMyMockVars({.size_ = 4, .start_ = {0, 1, 2, 3}, .length_ = {1, 1, 1, 1}});
     auto c = cgs1_.GetSub(0, 1);
@@ -217,7 +220,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess8)
 // 逻辑测试
 // 控制ubidi_getVisualRun的返回值为UBIDI_RTL
 // 判定不抛出异常，并且获取返回值中rtl为true
-TEST_F(BidiProcesserTest, DoBidiProcess9)
+HWTEST_F(BidiProcesserTest, DoBidiProcess9, TestSize.Level1)
 {
     InitMyMockVars({});
 
@@ -231,7 +234,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess9)
 // 逻辑测试
 // 控制ubidi_getVisualRun的返回值为UBIDI_LTR
 // 判定不抛出异常，并且返回值中rtl为false
-TEST_F(BidiProcesserTest, DoBidiProcess10)
+HWTEST_F(BidiProcesserTest, DoBidiProcess10, TestSize.Level1)
 {
     InitMyMockVars({.rtl_ = UBIDI_LTR,});
 
@@ -245,7 +248,7 @@ TEST_F(BidiProcesserTest, DoBidiProcess10)
 // 逻辑测试
 // 设置spans中的内容是AnySpan、TextSpan、AnySpan
 // 判定不抛出异常，返回值的大小为3，并且转换成相应的类型之后不为空指针
-TEST_F(BidiProcesserTest, ProcessBidiText1)
+HWTEST_F(BidiProcesserTest, ProcessBidiText1, TestSize.Level1)
 {
     InitMyMockVars({});
     spans_ = {std::make_shared<MockAnySpan>(), TextSpan::MakeFromCharGroups(cgs1_), std::make_shared<MockAnySpan>()};
@@ -262,7 +265,7 @@ TEST_F(BidiProcesserTest, ProcessBidiText1)
 // 过程测试
 // 设置spans为空
 // 判定不抛出异常，返回值的大小为0
-TEST_F(BidiProcesserTest, ProcessBidiText2)
+HWTEST_F(BidiProcesserTest, ProcessBidiText2, TestSize.Level1)
 {
     EXPECT_NO_THROW({
         auto ret = bp.ProcessBidiText(spans_, TextDirection::LTR);
@@ -273,7 +276,7 @@ TEST_F(BidiProcesserTest, ProcessBidiText2)
 // 过程测试
 // 所有参数均正常设置，测试正确流程
 // 判定不抛出异常，返回值的大小为3，返回值中span类型正确
-TEST_F(BidiProcesserTest, ProcessBidiText3)
+HWTEST_F(BidiProcesserTest, ProcessBidiText3, TestSize.Level1)
 {
     InitMyMockVars({.size_ = 4, .start_ = {0, 1, 2, 3}, .length_ = {1, 1, 1, 1}});
     auto c = cgs1_.GetSub(0, 1);

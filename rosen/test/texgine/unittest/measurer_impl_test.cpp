@@ -20,6 +20,9 @@
 #include "param_test_macros.h"
 #include "texgine_exception.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 struct hb_buffer_t {};
 struct hb_unicode_funcs_t {};
 struct hb_font_t {};
@@ -44,7 +47,7 @@ struct MockVars {
 
     std::shared_ptr<Texgine::Typeface> typeface_ =
         std::make_shared<Texgine::Typeface>(std::make_shared<Texgine::TexgineTypeface>());
-} mockvars;
+} measurerMockvars;
 
 std::list<Texgine::MeasuringRun> mRuns = {};
 
@@ -55,23 +58,23 @@ hb_blob_t *hb_blob_create(const char *, unsigned int, hb_memory_mode_t, void *, 
 
 hb_unicode_funcs_t *hb_unicode_funcs_create(hb_unicode_funcs_t *)
 {
-    return mockvars.retvalUnicodeFuncsCreate_.get();
+    return measurerMockvars.retvalUnicodeFuncsCreate_.get();
 }
 
 hb_script_t hb_unicode_script(hb_unicode_funcs_t *, hb_codepoint_t)
 {
-    assert(mockvars.retvalUnicodeScript_.size() > mockvars.calledUnicodeScript_);
-    return mockvars.retvalUnicodeScript_[mockvars.calledUnicodeScript_++];
+    assert(measurerMockvars.retvalUnicodeScript_.size() > measurerMockvars.calledUnicodeScript_);
+    return measurerMockvars.retvalUnicodeScript_[measurerMockvars.calledUnicodeScript_++];
 }
 
 hb_bool_t hb_feature_from_string(const char *, int, hb_feature_t *)
 {
-    return mockvars.retvalHBFeatureFromString_;
+    return measurerMockvars.retvalHBFeatureFromString_;
 }
 
 hb_buffer_t *hb_buffer_create()
 {
-    return mockvars.retvalBufferCreate_.get();
+    return measurerMockvars.retvalBufferCreate_.get();
 }
 
 void hb_buffer_destroy(hb_buffer_t *)
@@ -94,7 +97,7 @@ void hb_buffer_set_direction(hb_buffer_t *, hb_direction_t)
 {
 }
 
-void hb_buffer_set_unicode_funcs(hb_buffer_t *, hb_unicode_funcs_t)
+void hb_buffer_set_unicode_funcs(hb_buffer_t *, hb_unicode_funcs_t*)
 {
 }
 
@@ -113,13 +116,13 @@ void hb_buffer_set_language(hb_buffer_t *, hb_language_t)
 
 hb_face_t *hb_face_create_for_tables(hb_reference_table_func_t, void *, hb_destroy_func_t)
 {
-    return mockvars.retvalFaceCreate_.get();
+    return measurerMockvars.retvalFaceCreate_.get();
 }
 
 hb_font_t *hb_font_create(hb_face_t *face)
 {
-    mockvars.calledHBFontCreate_++;
-    return mockvars.retvalFontCreate_.get();
+    measurerMockvars.calledHBFontCreate_++;
+    return measurerMockvars.retvalFontCreate_.get();
 }
 
 void hb_shape(hb_font_t *, hb_buffer_t *, const hb_feature_t *, unsigned int)
@@ -128,34 +131,34 @@ void hb_shape(hb_font_t *, hb_buffer_t *, const hb_feature_t *, unsigned int)
 
 hb_glyph_info_t *hb_buffer_get_glyph_infos(hb_buffer_t *buffer, unsigned int *length)
 {
-    *length = mockvars.retvalGetGlyphInfo_.size();
-    return mockvars.retvalGetGlyphInfo_.data();
+    *length = measurerMockvars.retvalGetGlyphInfo_.size();
+    return measurerMockvars.retvalGetGlyphInfo_.data();
 }
 
 hb_glyph_position_t *hb_buffer_get_glyph_positions(hb_buffer_t *buffer, unsigned int *length)
 {
-    return mockvars.retvalGetGlyphPosition_.data();
+    return measurerMockvars.retvalGetGlyphPosition_.data();
 }
 
 U_CAPI UBool U_EXPORT2 u_isWhitespace(UChar32 c)
 {
-    return mockvars.retvalIsWhitespace;
+    return measurerMockvars.retvalIsWhitespace;
 }
 
 namespace Texgine {
 size_t TexgineTypeface::GetTableSize(uint32_t tag)
 {
-    return mockvars.retvalGetTableSize_;
+    return measurerMockvars.retvalGetTableSize_;
 }
 
 size_t TexgineTypeface::GetTableData(uint32_t tag, size_t offset, size_t length, void *data)
 {
-    return mockvars.retvalGetTableData_;
+    return measurerMockvars.retvalGetTableData_;
 }
 
 int TexgineTypeface::GetUnitsPerEm()
 {
-    return mockvars.retvalGetUnitsPerEm_;
+    return measurerMockvars.retvalGetUnitsPerEm_;
 }
 
 std::vector<Boundary> WordBreaker::GetBoundary(const std::vector<uint16_t> &u16str, bool)
@@ -165,18 +168,18 @@ std::vector<Boundary> WordBreaker::GetBoundary(const std::vector<uint16_t> &u16s
 
 bool Typeface::Has(uint32_t ch)
 {
-    return mockvars.retvalTypefaceHas_;
+    return measurerMockvars.retvalTypefaceHas_;
 }
 
 std::shared_ptr<Typeface> FontCollection::GetTypefaceForChar(const uint32_t &ch,
     const FontStyles &style, const std::string &script, const std::string &locale) const
 {
-    return mockvars.typeface_;
+    return measurerMockvars.typeface_;
 }
 
-void InitMockVars(MockVars vars, std::list<struct MeasuringRun> runs)
+void InitMiMockVars(MockVars vars, std::list<struct MeasuringRun> runs)
 {
-    mockvars = std::move(vars);
+    measurerMockvars = std::move(vars);
     mRuns.clear();
     mRuns.insert(mRuns.begin(), runs.begin(), runs.end());
 }
@@ -197,84 +200,84 @@ public:
 
 // 过程测试
 // 调用HbFaceReferenceTableTypeface函数
-TEST_F(MeasurerImplTest, HbFaceReferenceTableTypeface)
+HWTEST_F(MeasurerImplTest, HbFaceReferenceTableTypeface, TestSize.Level1)
 {
     // path: typeface is nullptr
     EXPECT_EQ(HbFaceReferenceTableTypeface({}, {}, nullptr), nullptr);
 
     // path: tableSize is 0
-    InitMockVars({.retvalGetTableSize_ = 0}, {});
+    InitMiMockVars({.retvalGetTableSize_ = 0}, {});
     EXPECT_EQ(HbFaceReferenceTableTypeface({}, {}, this), nullptr);
 
     // path: buffer is nullptr
-    InitMockVars({.retvalGetTableSize_ = 100000000000}, {});
+    InitMiMockVars({.retvalGetTableSize_ = static_cast<size_t>(1000)}, {});
     EXPECT_EQ(HbFaceReferenceTableTypeface({}, {}, this), nullptr);
 
     // path: tableSize != actualSize
-    InitMockVars({.retvalGetTableSize_ = 2, .retvalGetTableData_ = 1}, {});
+    InitMiMockVars({.retvalGetTableSize_ = 2, .retvalGetTableData_ = 1}, {});
     EXPECT_EQ(HbFaceReferenceTableTypeface({}, {}, this), nullptr);
 
     // path: normal
-    InitMockVars({}, {});
+    InitMiMockVars({}, {});
     EXPECT_NE(HbFaceReferenceTableTypeface({}, {}, this), nullptr);
 }
 
 // 过程测试
 // 调用Create创建对象
 // 判定不抛出异常
-TEST_F(MeasurerImplTest, Create)
+HWTEST_F(MeasurerImplTest, Create, TestSize.Level1)
 {
     EXPECT_NE(MeasurerImpl::Create({}, fontCollection_), nullptr);
 }
 
 // 控制shape返回1
-TEST_F(MeasurerImplTest, Measure1)
+HWTEST_F(MeasurerImplTest, Measure1, TestSize.Level1)
 {
-    InitMockVars({.retvalBufferCreate_ = nullptr}, {});
+    InitMiMockVars({.retvalBufferCreate_ = nullptr}, {});
     text_ = {1};
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetRange(0, 1);
     mi.SetFontFeatures(emptyff_);
 
     EXPECT_EQ(mi.Measure(charGroups_), 1);
-    EXPECT_EQ(mockvars.calledHBFontCreate_, 0);
+    EXPECT_EQ(measurerMockvars.calledHBFontCreate_, 0);
 }
 
 // 调用两次Measure方法，走找到缓存路径
-TEST_F(MeasurerImplTest, Measure2)
+HWTEST_F(MeasurerImplTest, Measure2, TestSize.Level1)
 {
-    InitMockVars({}, {});
+    InitMiMockVars({}, {});
     text_ = {2};
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetRange(0, 1);
     mi.SetFontFeatures(emptyff_);
 
     EXPECT_EQ(mi.Measure(charGroups_), 0);
-    EXPECT_EQ(mockvars.calledHBFontCreate_, 1);
+    EXPECT_EQ(measurerMockvars.calledHBFontCreate_, 1);
     EXPECT_EQ(mi.Measure(charGroups_), 0);
-    EXPECT_EQ(mockvars.calledHBFontCreate_, 1);
+    EXPECT_EQ(measurerMockvars.calledHBFontCreate_, 1);
 }
 
 // 创建对象，传入非空FontFeatures
-TEST_F(MeasurerImplTest, Measure3)
+HWTEST_F(MeasurerImplTest, Measure3, TestSize.Level1)
 {
-    InitMockVars({}, {});
+    InitMiMockVars({}, {});
     text_ = {3};
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetRange(0, 1);
     mi.SetFontFeatures(normalff_);
 
     EXPECT_EQ(mi.Measure(charGroups_), 0);
-    EXPECT_EQ(mockvars.calledHBFontCreate_, 1);
+    EXPECT_EQ(measurerMockvars.calledHBFontCreate_, 1);
 }
 
 // 过程测试
 // 创建对象，控制GetTypefaceForChar返回nullptr
 // 控制while循环1次
 // 判定runs.size()为1
-TEST_F(MeasurerImplTest, SeekTypeface1)
+HWTEST_F(MeasurerImplTest, SeekTypeface1, TestSize.Level1)
 {
-    InitMockVars({.typeface_ = nullptr}, {{.start = 0, .end = 1}});
+    InitMiMockVars({.typeface_ = nullptr}, {{.start = 0, .end = 1}});
     text_ = {'a'};
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetRange(0, 1);
@@ -289,39 +292,39 @@ TEST_F(MeasurerImplTest, SeekTypeface1)
 // 创建对象，控制GetTypefaceForChar返回非空指针
 // 控制while循环2次
 // 判定runs.size()为1
-TEST_F(MeasurerImplTest, SeekTypeface2)
+HWTEST_F(MeasurerImplTest, SeekTypeface2, TestSize.Level1)
 {
-    InitMockVars({}, {{.start = 0, .end = 2},});
+    InitMiMockVars({}, {{.start = 0, .end = 2},});
     text_ = {'a', 'b'};
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetRange(0, 2);
 
     mi.SeekTypeface(mRuns);
     EXPECT_EQ(mRuns.size(), 1);
-    EXPECT_EQ(mRuns.front().typeface, mockvars.typeface_);
+    EXPECT_EQ(mRuns.front().typeface, measurerMockvars.typeface_);
 }
 
 // 过程测试
 // 创建对象，控制GetTypefaceForChar返回非空指针
 // 控制Has返回false，控制while循环2次
 // 判定runs.size()为2
-TEST_F(MeasurerImplTest, SeekTypeface3)
+HWTEST_F(MeasurerImplTest, SeekTypeface3, TestSize.Level1)
 {
-    InitMockVars({.retvalTypefaceHas_ = false}, {{.start = 0, .end = 2},});
+    InitMiMockVars({.retvalTypefaceHas_ = false}, {{.start = 0, .end = 2},});
     text_ = {'a', 'b'};
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetRange(0, 2);
     mi.SeekTypeface(mRuns);
     EXPECT_EQ(mRuns.size(), 2);
-    EXPECT_EQ(mRuns.front().typeface, mockvars.typeface_);
+    EXPECT_EQ(mRuns.front().typeface, measurerMockvars.typeface_);
 }
 
 // 创建对象，控制GetTypefaceForChar返回非空指针
 // 控制Has返回false，控制while循环2次，第二次因text_.size()抛出异常
 // 判定runs.size()为2
-TEST_F(MeasurerImplTest, SeekTypeface4)
+HWTEST_F(MeasurerImplTest, SeekTypeface4, TestSize.Level1)
 {
-    InitMockVars({.retvalTypefaceHas_ = false}, {{.start = 0, .end = 2},});
+    InitMiMockVars({.retvalTypefaceHas_ = false}, {{.start = 0, .end = 2},});
     text_ = {'a'};
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetRange(0, 2);
@@ -332,9 +335,9 @@ TEST_F(MeasurerImplTest, SeekTypeface4)
 // 创建对象，控制hb_unicode_funcs_create返回空指针
 // 调用SeekScript方法，走第一个if路径
 // 判定抛出APIFailed异常
-TEST_F(MeasurerImplTest, SeekScript1)
+HWTEST_F(MeasurerImplTest, SeekScript1, TestSize.Level1)
 {
-    InitMockVars({.retvalUnicodeFuncsCreate_ = nullptr}, {});
+    InitMiMockVars({.retvalUnicodeFuncsCreate_ = nullptr}, {});
     MeasurerImpl mi(text_, fontCollection_);
     ASSERT_EXCEPTION(ExceptionType::APIFailed, mi.SeekScript(mRuns));
 }
@@ -343,9 +346,9 @@ TEST_F(MeasurerImplTest, SeekScript1)
 // 创建对象，控制while循环一次
 // 调用SeekScript方法，走第二个if路径
 // 判定runs.size()为1
-TEST_F(MeasurerImplTest, SeekScript2)
+HWTEST_F(MeasurerImplTest, SeekScript2, TestSize.Level1)
 {
-    InitMockVars({.retvalUnicodeScript_ = {HB_SCRIPT_HAN}}, {{.start = 0, .end = 1},});
+    InitMiMockVars({.retvalUnicodeScript_ = {HB_SCRIPT_HAN}}, {{.start = 0, .end = 1},});
     MeasurerImpl mi(text_, fontCollection_);
 
     ASSERT_EXCEPTION(ExceptionType::ErrorStatus, mi.SeekScript(mRuns));
@@ -355,9 +358,9 @@ TEST_F(MeasurerImplTest, SeekScript2)
 // 创建对象，控制while循环一次
 // 调用SeekScript方法，走第三个第四个if路径
 // 判定runs.size()为1
-TEST_F(MeasurerImplTest, SeekScript3)
+HWTEST_F(MeasurerImplTest, SeekScript3, TestSize.Level1)
 {
-    InitMockVars({.retvalUnicodeScript_ = {HB_SCRIPT_HAN}}, {});
+    InitMiMockVars({.retvalUnicodeScript_ = {HB_SCRIPT_HAN}}, {});
     text_ = {'a'};
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetRange(0, 1);
@@ -372,9 +375,9 @@ TEST_F(MeasurerImplTest, SeekScript3)
 // 创建对象，控制while循环一次
 // 调用两次SeekScript方法，走第六个if路径
 // 判定runs.size()为1
-TEST_F(MeasurerImplTest, SeekScript4)
+HWTEST_F(MeasurerImplTest, SeekScript4, TestSize.Level1)
 {
-    InitMockVars({.retvalUnicodeScript_ = {HB_SCRIPT_HAN, HB_SCRIPT_INHERITED}}, {});
+    InitMiMockVars({.retvalUnicodeScript_ = {HB_SCRIPT_HAN, HB_SCRIPT_INHERITED}}, {});
     text_ = {'a', 'b'};
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetRange(0, 2);
@@ -383,7 +386,7 @@ TEST_F(MeasurerImplTest, SeekScript4)
     EXPECT_EQ(mRuns.size(), 1);
     EXPECT_EQ(mRuns.front().script, HB_SCRIPT_HAN);
 
-    InitMockVars({.retvalUnicodeScript_ = {HB_SCRIPT_HAN, HB_SCRIPT_COMMON}}, {});
+    InitMiMockVars({.retvalUnicodeScript_ = {HB_SCRIPT_HAN, HB_SCRIPT_COMMON}}, {});
     mi.SeekScript(mRuns);
     EXPECT_EQ(mRuns.size(), 1);
     EXPECT_EQ(mRuns.front().script, HB_SCRIPT_HAN);
@@ -391,9 +394,9 @@ TEST_F(MeasurerImplTest, SeekScript4)
 
 // 创建对象，控制while循环一次
 // 调用SeekScript方法，走第九个if路径，触发异常
-TEST_F(MeasurerImplTest, SeekScript5)
+HWTEST_F(MeasurerImplTest, SeekScript5, TestSize.Level1)
 {
-    InitMockVars({.retvalUnicodeScript_ = {HB_SCRIPT_LATIN}}, {});
+    InitMiMockVars({.retvalUnicodeScript_ = {HB_SCRIPT_LATIN}}, {});
     text_ = {'a'};
     MeasurerImpl mi(text_, fontCollection_);
 
@@ -405,20 +408,20 @@ TEST_F(MeasurerImplTest, SeekScript5)
 // 过程测试
 // 调用Shape方法，控制不进入循环
 // 判定返回0
-TEST_F(MeasurerImplTest, Shape1)
+HWTEST_F(MeasurerImplTest, Shape1, TestSize.Level1)
 {
-    InitMockVars({}, {});
+    InitMiMockVars({}, {});
     MeasurerImpl mi(text_, fontCollection_);
 
     std::list<struct MeasuringRun> runs;
     EXPECT_EQ(mi.Shape(charGroups_, runs, {}), 0);
-    EXPECT_EQ(mockvars.calledHBFontCreate_, 0);
+    EXPECT_EQ(measurerMockvars.calledHBFontCreate_, 0);
 }
 
 // 调用Shape方法，触发错误区间异常
-TEST_F(MeasurerImplTest, Shape2)
+HWTEST_F(MeasurerImplTest, Shape2, TestSize.Level1)
 {
-    InitMockVars({}, {});
+    InitMiMockVars({}, {});
     MeasurerImpl mi(text_, fontCollection_);
 
     std::list<struct MeasuringRun> runs;
@@ -429,118 +432,118 @@ TEST_F(MeasurerImplTest, Shape2)
 // 过程测试
 // 调用Shape方法，控制run.typeface为空
 // 判定返回1
-TEST_F(MeasurerImplTest, Shape3)
+HWTEST_F(MeasurerImplTest, Shape3, TestSize.Level1)
 {
-    InitMockVars({}, {});
+    InitMiMockVars({}, {});
     MeasurerImpl mi(text_, fontCollection_);
 
     std::list<struct MeasuringRun> runs;
     runs.push_back({.start = 0, .end = 1, .typeface = nullptr});
     EXPECT_EQ(mi.Shape(charGroups_, runs, {}), 1);
-    EXPECT_EQ(mockvars.calledHBFontCreate_, 0);
+    EXPECT_EQ(measurerMockvars.calledHBFontCreate_, 0);
 }
 
 // 过程测试
 // 调用Shape方法，控制hb_buffer_create返回空指针
 // 判定返回1
-TEST_F(MeasurerImplTest, Shape4)
+HWTEST_F(MeasurerImplTest, Shape4, TestSize.Level1)
 {
-    InitMockVars({.retvalBufferCreate_ = nullptr}, {});
+    InitMiMockVars({.retvalBufferCreate_ = nullptr}, {});
     MeasurerImpl mi(text_, fontCollection_);
 
     std::list<struct MeasuringRun> runs;
-    runs.push_back({.start = 0, .end = 1, .typeface = mockvars.typeface_});
+    runs.push_back({.start = 0, .end = 1, .typeface = measurerMockvars.typeface_});
     EXPECT_EQ(mi.Shape(charGroups_, runs, {}), 1);
-    EXPECT_EQ(mockvars.calledHBFontCreate_, 0);
+    EXPECT_EQ(measurerMockvars.calledHBFontCreate_, 0);
 }
 
 // 过程测试
 // 调用Shape方法，控制hb_face_create_for_tables返回空指针
 // 判定返回1
-TEST_F(MeasurerImplTest, Shape5)
+HWTEST_F(MeasurerImplTest, Shape5, TestSize.Level1)
 {
-    InitMockVars({.retvalFaceCreate_ = nullptr}, {});
+    InitMiMockVars({.retvalFaceCreate_ = nullptr}, {});
     MeasurerImpl mi(text_, fontCollection_);
 
     std::list<struct MeasuringRun> runs;
-    runs.push_back({.start = 0, .end = 1, .typeface = mockvars.typeface_});
+    runs.push_back({.start = 0, .end = 1, .typeface = measurerMockvars.typeface_});
     EXPECT_EQ(mi.Shape(charGroups_, runs, {}), 1);
-    EXPECT_EQ(mockvars.calledHBFontCreate_, 0);
+    EXPECT_EQ(measurerMockvars.calledHBFontCreate_, 0);
 }
 
 // 过程测试
 // 调用Shape方法，控制hb_font_create返回空指针
 // 判定返回1
-TEST_F(MeasurerImplTest, Shape6)
+HWTEST_F(MeasurerImplTest, Shape6, TestSize.Level1)
 {
-    InitMockVars({.retvalFontCreate_ = nullptr}, {});
+    InitMiMockVars({.retvalFontCreate_ = nullptr}, {});
     MeasurerImpl mi(text_, fontCollection_);
 
     std::list<struct MeasuringRun> runs;
-    runs.push_back({.start = 0, .end = 1, .typeface = mockvars.typeface_});
+    runs.push_back({.start = 0, .end = 1, .typeface = measurerMockvars.typeface_});
     EXPECT_EQ(mi.Shape(charGroups_, runs, {}), 1);
-    EXPECT_EQ(mockvars.calledHBFontCreate_, 1);
+    EXPECT_EQ(measurerMockvars.calledHBFontCreate_, 1);
 }
 
 // 过程测试
 // 调用Shape方法，控制hb_buffer_get_glyph_infos返回空指针
 // 判定返回1
-TEST_F(MeasurerImplTest, Shape7)
+HWTEST_F(MeasurerImplTest, Shape7, TestSize.Level1)
 {
-    InitMockVars({.retvalGetGlyphInfo_ = {}}, {});
+    InitMiMockVars({.retvalGetGlyphInfo_ = {}}, {});
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetFontFeatures(normalff_);
 
     std::list<struct MeasuringRun> runs;
-    runs.push_back({.start = 0, .end = 1, .typeface = mockvars.typeface_});
+    runs.push_back({.start = 0, .end = 1, .typeface = measurerMockvars.typeface_});
     EXPECT_EQ(mi.Shape(charGroups_, runs, {}), 1);
-    EXPECT_EQ(mockvars.calledHBFontCreate_, 1);
+    EXPECT_EQ(measurerMockvars.calledHBFontCreate_, 1);
 }
 
 // 过程测试
 // 调用Shape方法，控制hb_buffer_get_glyph_positions返回空指针
 // 判定返回1
-TEST_F(MeasurerImplTest, Shape8)
+HWTEST_F(MeasurerImplTest, Shape8, TestSize.Level1)
 {
-    InitMockVars({.retvalGetGlyphPosition_ = {}}, {});
+    InitMiMockVars({.retvalGetGlyphPosition_ = {}}, {});
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetFontFeatures(normalff_);
 
     std::list<struct MeasuringRun> runs;
-    runs.push_back({.start = 0, .end = 1, .typeface = mockvars.typeface_});
+    runs.push_back({.start = 0, .end = 1, .typeface = measurerMockvars.typeface_});
     EXPECT_EQ(mi.Shape(charGroups_, runs, {}), 1);
-    EXPECT_EQ(mockvars.calledHBFontCreate_, 1);
+    EXPECT_EQ(measurerMockvars.calledHBFontCreate_, 1);
 }
 
 // 过程测试
 // 调用Shape方法，控制getUnitsPerEm返回0
 // 判定返回1
-TEST_F(MeasurerImplTest, Shape9)
+HWTEST_F(MeasurerImplTest, Shape9, TestSize.Level1)
 {
-    InitMockVars({.retvalGetUnitsPerEm_ = 0}, {});
+    InitMiMockVars({.retvalGetUnitsPerEm_ = 0}, {});
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetFontFeatures(normalff_);
 
     std::list<struct MeasuringRun> runs;
-    runs.push_back({.start = 0, .end = 1, .typeface = mockvars.typeface_});
+    runs.push_back({.start = 0, .end = 1, .typeface = measurerMockvars.typeface_});
     EXPECT_EQ(mi.Shape(charGroups_, runs, {}), 1);
-    EXPECT_EQ(mockvars.calledHBFontCreate_, 1);
+    EXPECT_EQ(measurerMockvars.calledHBFontCreate_, 1);
 }
 
 // 过程测试
 // 调用Shape方法,走for循环
 // 控制u_isWhitespace返回true
 // 判定返回0，charGroups.GetSize()为1
-TEST_F(MeasurerImplTest, Shape10)
+HWTEST_F(MeasurerImplTest, Shape10, TestSize.Level1)
 {
-    InitMockVars({.retvalIsWhitespace = true}, {});
-    mockvars.retvalGetGlyphPosition_[0].x_advance = 10;
+    InitMiMockVars({.retvalIsWhitespace = true}, {});
+    measurerMockvars.retvalGetGlyphPosition_[0].x_advance = 10;
     text_ = {'a'};
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetFontFeatures(normalff_);
 
     std::list<struct MeasuringRun> runs;
-    runs.push_back({.start = 0, .end = 1, .typeface = mockvars.typeface_});
+    runs.push_back({.start = 0, .end = 1, .typeface = measurerMockvars.typeface_});
     EXPECT_EQ(mi.Shape(charGroups_, runs, {}), 0);
     EXPECT_EQ(charGroups_.GetSize(), 1);
     EXPECT_GT(charGroups_.Get(0).invisibleWidth_, charGroups_.Get(0).visibleWidth_);
@@ -549,25 +552,25 @@ TEST_F(MeasurerImplTest, Shape10)
 // 过程测试
 // 调用Shape方法，设置RTL为true，走if路径
 // 判定返回0，charGroups.GetSize()为1
-TEST_F(MeasurerImplTest, Shape11)
+HWTEST_F(MeasurerImplTest, Shape11, TestSize.Level1)
 {
-    InitMockVars({}, {});
+    InitMiMockVars({}, {});
     text_ = {'a', 'b'};
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetFontFeatures(normalff_);
     mi.SetRTL(true);
 
     std::list<struct MeasuringRun> runs;
-    runs.push_back({.start = 0, .end = 1, .typeface = mockvars.typeface_});
-    runs.push_back({.start = 1, .end = 2, .typeface = mockvars.typeface_});
+    runs.push_back({.start = 0, .end = 1, .typeface = measurerMockvars.typeface_});
+    runs.push_back({.start = 1, .end = 2, .typeface = measurerMockvars.typeface_});
     EXPECT_EQ(mi.Shape(charGroups_, runs, {}), 0);
     EXPECT_EQ(charGroups_.GetSize(), 2);
 }
 
 // spacing
-TEST_F(MeasurerImplTest, Shape12)
+HWTEST_F(MeasurerImplTest, Shape12, TestSize.Level1)
 {
-    InitMockVars({.retvalGetGlyphInfo_ = {{.cluster = 0}, {.cluster = 1}},
+    InitMiMockVars({.retvalGetGlyphInfo_ = {{.cluster = 0}, {.cluster = 1}},
                   .retvalGetGlyphPosition_ = {{}, {}}}, {});
     text_ = {'a', 'b'};
     MeasurerImpl mi(text_, fontCollection_);
@@ -575,7 +578,7 @@ TEST_F(MeasurerImplTest, Shape12)
     mi.SetSpacing(5, 10);
 
     std::list<struct MeasuringRun> runs;
-    runs.push_back({.start = 0, .end = 2, .typeface = mockvars.typeface_});
+    runs.push_back({.start = 0, .end = 2, .typeface = measurerMockvars.typeface_});
     std::vector<Boundary> boundaries;
     boundaries.emplace_back(0, 2);
     EXPECT_EQ(mi.Shape(charGroups_, runs, boundaries), 0);
@@ -587,9 +590,9 @@ TEST_F(MeasurerImplTest, Shape12)
 // 过程测试
 // 调用GenerateHBFeatures方法，第二个参数为空指针
 // 判定features.size()为0
-TEST_F(MeasurerImplTest, GenerateHBFeatures1)
+HWTEST_F(MeasurerImplTest, GenerateHBFeatures1, TestSize.Level1)
 {
-    InitMockVars({}, {});
+    InitMiMockVars({}, {});
     MeasurerImpl mi(text_, fontCollection_);
     std::vector<hb_feature_t> features;
     mi.GenerateHBFeatures(features, nullptr);
@@ -599,9 +602,9 @@ TEST_F(MeasurerImplTest, GenerateHBFeatures1)
 // 过程测试
 // 调用GenerateHBFeatures方法，传入空FontFeatures
 // 判定features.size()为0
-TEST_F(MeasurerImplTest, GenerateHBFeatures2)
+HWTEST_F(MeasurerImplTest, GenerateHBFeatures2, TestSize.Level1)
 {
-    InitMockVars({}, {});
+    InitMiMockVars({}, {});
     MeasurerImpl mi(text_, fontCollection_);
     std::vector<hb_feature_t> features;
     mi.GenerateHBFeatures(features, &emptyff_);
@@ -612,9 +615,9 @@ TEST_F(MeasurerImplTest, GenerateHBFeatures2)
 // 调用GenerateHBFeatures方法，传入非空FontFeatures
 // 控制hb_feature_from_string返回false
 // 判定features.size()为0，fontFeatures.size()为1
-TEST_F(MeasurerImplTest, GenerateHBFeatures3)
+HWTEST_F(MeasurerImplTest, GenerateHBFeatures3, TestSize.Level1)
 {
-    InitMockVars({.retvalHBFeatureFromString_ = false}, {});
+    InitMiMockVars({.retvalHBFeatureFromString_ = false}, {});
     MeasurerImpl mi(text_, fontCollection_);
     std::vector<hb_feature_t> features;
     mi.GenerateHBFeatures(features, &normalff_);
@@ -625,9 +628,9 @@ TEST_F(MeasurerImplTest, GenerateHBFeatures3)
 // 过程测试
 // 调用GenerateHBFeatures方法，传入非空FontFeatures
 // 判定features.size()为1，fontFeatures.size()为1
-TEST_F(MeasurerImplTest, GenerateHBFeatures4)
+HWTEST_F(MeasurerImplTest, GenerateHBFeatures4, TestSize.Level1)
 {
-    InitMockVars({}, {});
+    InitMiMockVars({}, {});
     MeasurerImpl mi(text_, fontCollection_);
     std::vector<hb_feature_t> features;
     mi.GenerateHBFeatures(features, &normalff_);

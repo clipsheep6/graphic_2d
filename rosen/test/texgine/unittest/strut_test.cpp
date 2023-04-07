@@ -19,13 +19,14 @@
 #include "texgine/typography_builder.h"
 
 using namespace testing;
+using namespace testing::ext;
 
 namespace Texgine {
 namespace {
 class StrutTest : public testing::Test {
 };
 
-TEST_F(StrutTest, Height)
+HWTEST_F(StrutTest, Height, TestSize.Level1)
 {
     auto builder = TypographyBuilder::Create({});
     builder->PushStyle({});
@@ -38,7 +39,7 @@ TEST_F(StrutTest, Height)
     EXPECT_NEAR(ty->GetIdeographicBaseline(), 18.7, 0.5);
 }
 
-TEST_F(StrutTest, Width)
+HWTEST_F(StrutTest, Width, TestSize.Level1)
 {
     {
         auto builder = TypographyBuilder::Create({});

@@ -28,6 +28,9 @@
 #include "text_shaper.h"
 #include "typeface.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 namespace Texgine {
 struct MockVars {
     std::vector<uint16_t> catchedBufferGlyphs_;
@@ -38,39 +41,39 @@ struct MockVars {
     std::shared_ptr<FontCollection> retvalGenerateFontCollection_ =
         std::make_shared<FontCollection>(std::vector<std::shared_ptr<VariantFontStyleSet>>{});
     std::unique_ptr<MockMeasurer> retvalMeasurerCreate_ = std::make_unique<MockMeasurer>();
-} mockvars;
+} tsMockvars;
 
-void InitMockVars(struct MockVars &&vars)
+void InitTsMockVars(struct MockVars &&vars)
 {
-    mockvars = std::move(vars);
+    tsMockvars = std::move(vars);
 }
 
 TexgineTextBlobBuilder::RunBuffer& TexgineTextBlobBuilder::AllocRunPos(const TexgineFont& font, int count)
 {
     static TexgineTextBlobBuilder::RunBuffer buffer;
-    mockvars.catchedBufferGlyphs_.resize(count);
-    mockvars.catchedBufferPos_.resize(count * 2);
-    buffer.glyphs_ = mockvars.catchedBufferGlyphs_.data();
-    buffer.pos_ = mockvars.catchedBufferPos_.data();
+    tsMockvars.catchedBufferGlyphs_.resize(count);
+    tsMockvars.catchedBufferPos_.resize(count * 2);
+    buffer.glyphs_ = tsMockvars.catchedBufferGlyphs_.data();
+    buffer.pos_ = tsMockvars.catchedBufferPos_.data();
     return buffer;
 }
 
 std::shared_ptr<TexgineTextBlob> TexgineTextBlobBuilder::Make()
 {
-    return mockvars.retvalTextBlobBuilderMake_;
+    return tsMockvars.retvalTextBlobBuilderMake_;
 }
 
 std::shared_ptr<FontCollection> FontProviders::GenerateFontCollection(
     const std::vector<std::string> &families) const noexcept(true)
 {
-    mockvars.catchedGenerateFontCollectionFamilies_ = families;
-    return mockvars.retvalGenerateFontCollection_;
+    tsMockvars.catchedGenerateFontCollectionFamilies_ = families;
+    return tsMockvars.retvalGenerateFontCollection_;
 }
 
 std::unique_ptr<Measurer> Measurer::Create(const std::vector<uint16_t> &text,
     const FontCollection &fontCollection)
 {
-    return std::move(mockvars.retvalMeasurerCreate_);
+    return std::move(tsMockvars.retvalMeasurerCreate_);
 }
 
 struct TextSpanInfo {
@@ -107,7 +110,7 @@ public:
     static inline std::shared_ptr<TypographyStyle> ysNoProvider_ = std::make_shared<TypographyStyle>();
 };
 
-TEST_F(TextShaperTest, DoShape1)
+HWTEST_F(TextShaperTest, DoShape1, TestSize.Level1)
 {
     TextShaper shaper;
     auto fp = FontProviders::Create();
@@ -119,10 +122,10 @@ TEST_F(TextShaperTest, DoShape1)
 
 // 逻辑测试
 // TextStyle设置为空
-TEST_F(TextShaperTest, DoShape2)
+HWTEST_F(TextShaperTest, DoShape2, TestSize.Level1)
 {
-    InitMockVars({});
-    EXPECT_CALL(*mockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(0));
+    InitTsMockVars({});
+    EXPECT_CALL(*tsMockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(0));
     TypographyStyle ys;
     ys.fontFamilies_ = {"Roboto"};
     auto span = GenerateTextSpan({.cgs_ = cgs1_});
@@ -130,30 +133,30 @@ TEST_F(TextShaperTest, DoShape2)
     EXPECT_NO_THROW({
         TextShaper shaper;
         shaper.DoShape(span, {}, ys, FontProviders::Create());
-        ASSERT_EQ(ys.fontFamilies_, mockvars.catchedGenerateFontCollectionFamilies_);
+        ASSERT_EQ(ys.fontFamilies_, tsMockvars.catchedGenerateFontCollectionFamilies_);
     });
 }
 
 // 逻辑测试
 // TextStyle设置不为空
-TEST_F(TextShaperTest, DoShape3)
+HWTEST_F(TextShaperTest, DoShape3, TestSize.Level1)
 {
-    InitMockVars({});
-    EXPECT_CALL(*mockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(0));
+    InitTsMockVars({});
+    EXPECT_CALL(*tsMockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(0));
     TextStyle style = {.fontFamilies_ = {"Sans"}};
     auto span = GenerateTextSpan({.cgs_ = cgs1_});
 
     EXPECT_NO_THROW({
         TextShaper shaper;
         shaper.DoShape(span, style, {}, FontProviders::Create());
-        ASSERT_EQ(style.fontFamilies_ , mockvars.catchedGenerateFontCollectionFamilies_);
+        ASSERT_EQ(style.fontFamilies_ , tsMockvars.catchedGenerateFontCollectionFamilies_);
     });
 }
 
 // 逻辑测试
-TEST_F(TextShaperTest, DoShape4)
+HWTEST_F(TextShaperTest, DoShape4, TestSize.Level1)
 {
-    InitMockVars({.retvalGenerateFontCollection_ = nullptr});
+    InitTsMockVars({.retvalGenerateFontCollection_ = nullptr});
     auto span = GenerateTextSpan({});
 
     EXPECT_NO_THROW({
@@ -164,10 +167,10 @@ TEST_F(TextShaperTest, DoShape4)
 }
 
 // 逻辑测试
-TEST_F(TextShaperTest, DoShape5)
+HWTEST_F(TextShaperTest, DoShape5, TestSize.Level1)
 {
-    InitMockVars({});
-    EXPECT_CALL(*mockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(1));
+    InitTsMockVars({});
+    EXPECT_CALL(*tsMockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(1));
     auto span = GenerateTextSpan({.cgs_ = cgs1_});
 
     EXPECT_NO_THROW({
@@ -178,10 +181,10 @@ TEST_F(TextShaperTest, DoShape5)
 }
 
 // 逻辑测试
-TEST_F(TextShaperTest, DoShape6)
+HWTEST_F(TextShaperTest, DoShape6, TestSize.Level1)
 {
-    InitMockVars({});
-    EXPECT_CALL(*mockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(0));
+    InitTsMockVars({});
+    EXPECT_CALL(*tsMockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(0));
     auto span = GenerateTextSpan({.cgs_ = cgs1_});
 
     EXPECT_NO_THROW({
@@ -191,7 +194,7 @@ TEST_F(TextShaperTest, DoShape6)
     });
 }
 
-TEST_F(TextShaperTest, GenerateTextBlob1)
+HWTEST_F(TextShaperTest, GenerateTextBlob1, TestSize.Level1)
 {
     double spanWidth = 0.0;
     std::vector<double> glyphWidths;
@@ -200,7 +203,7 @@ TEST_F(TextShaperTest, GenerateTextBlob1)
         CharGroups::CreateEmpty(), spanWidth, glyphWidths));
 }
 
-TEST_F(TextShaperTest, GenerateTextBlob2)
+HWTEST_F(TextShaperTest, GenerateTextBlob2, TestSize.Level1)
 {
     EXPECT_NO_THROW({
         double spanWidth = 0.0;
@@ -209,12 +212,12 @@ TEST_F(TextShaperTest, GenerateTextBlob2)
         shaper.GenerateTextBlob({}, cgs1_, spanWidth, glyphWidths);
         ASSERT_EQ(spanWidth, 2);
         ASSERT_EQ(glyphWidths, (std::vector<double>{2.0}));
-        ASSERT_EQ(mockvars.catchedBufferPos_, (std::vector<float>{0.1, -0.1, 1.2, -0.2}));
-        ASSERT_EQ(mockvars.catchedBufferGlyphs_, (std::vector<uint16_t>{1, 2}));
+        ASSERT_EQ(tsMockvars.catchedBufferPos_, (std::vector<float>{0.1, -0.1, 1.2, -0.2}));
+        ASSERT_EQ(tsMockvars.catchedBufferGlyphs_, (std::vector<uint16_t>{1, 2}));
     });
 }
 
-TEST_F(TextShaperTest, GenerateTextBlob3)
+HWTEST_F(TextShaperTest, GenerateTextBlob3, TestSize.Level1)
 {
     EXPECT_NO_THROW({
         double spanWidth = 0.0;
@@ -223,13 +226,13 @@ TEST_F(TextShaperTest, GenerateTextBlob3)
         shaper.GenerateTextBlob({}, cgs2_, spanWidth, glyphWidths);
         ASSERT_EQ(spanWidth, 2);
         ASSERT_EQ(glyphWidths, (std::vector<double>{1.0, 1.0}));
-        ASSERT_EQ(mockvars.catchedBufferPos_, (std::vector<float>{0.1, -0.1, 1.2, -0.2}));
-        ASSERT_EQ(mockvars.catchedBufferGlyphs_, (std::vector<uint16_t>{1, 2}));
+        ASSERT_EQ(tsMockvars.catchedBufferPos_, (std::vector<float>{0.1, -0.1, 1.2, -0.2}));
+        ASSERT_EQ(tsMockvars.catchedBufferGlyphs_, (std::vector<uint16_t>{1, 2}));
     });
 }
 
 // 异常测试，设置参数中的span为nullptr
-TEST_F(TextShaperTest, Shape1)
+HWTEST_F(TextShaperTest, Shape1, TestSize.Level1)
 {
     std::shared_ptr<TextSpan> tsNullptr = nullptr;
     std::shared_ptr<AnySpan> asNullptr = nullptr;
@@ -239,9 +242,9 @@ TEST_F(TextShaperTest, Shape1)
 }
 
 // 逻辑测试 AnySpan
-TEST_F(TextShaperTest, Shape2)
+HWTEST_F(TextShaperTest, Shape2, TestSize.Level1)
 {
-    InitMockVars({.retvalGenerateFontCollection_ = nullptr});
+    InitTsMockVars({.retvalGenerateFontCollection_ = nullptr});
 
     EXPECT_NO_THROW({
         std::shared_ptr<MockAnySpan> mas = std::make_shared<MockAnySpan>();
@@ -252,9 +255,9 @@ TEST_F(TextShaperTest, Shape2)
 }
 
 // 逻辑测试 控制GenerateFontCollection返回值为nullptr从而使DoShape返回值为1
-TEST_F(TextShaperTest, Shape3)
+HWTEST_F(TextShaperTest, Shape3, TestSize.Level1)
 {
-    InitMockVars({.retvalGenerateFontCollection_ = nullptr});
+    InitTsMockVars({.retvalGenerateFontCollection_ = nullptr});
 
     EXPECT_NO_THROW({
         TextShaper shaper;
@@ -264,25 +267,25 @@ TEST_F(TextShaperTest, Shape3)
 }
 
 // span的cgs_的异常测试
-TEST_F(TextShaperTest, Shape4)
+HWTEST_F(TextShaperTest, Shape4, TestSize.Level1)
 {
-    InitMockVars({});
+    InitTsMockVars({});
     TextShaper shaper;
     ASSERT_EXCEPTION(ExceptionType::InvalidCharGroups,
         shaper.Shape(GenerateTextSpan({.cgs_ = {}}), {}, FontProviders::Create()));
 
-    InitMockVars({});
-    EXPECT_CALL(*mockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(0));
+    InitTsMockVars({});
+    EXPECT_CALL(*tsMockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(0));
     cgs1_.Get(0).typeface_ = nullptr;
 
     ASSERT_EXCEPTION(ExceptionType::InvalidArgument,
         shaper.Shape(GenerateTextSpan({.cgs_ = cgs1_}), {}, FontProviders::Create()));
 }
 
-TEST_F(TextShaperTest, Shape5)
+HWTEST_F(TextShaperTest, Shape5, TestSize.Level1)
 {
-    InitMockVars({});
-    EXPECT_CALL(*mockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(0));
+    InitTsMockVars({});
+    EXPECT_CALL(*tsMockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(0));
     cgs1_.Get(0).typeface_ = std::make_unique<Typeface>(nullptr);
 
     EXPECT_NO_THROW({
@@ -292,11 +295,11 @@ TEST_F(TextShaperTest, Shape5)
     });
 }
 
-TEST_F(TextShaperTest, Shape6)
+HWTEST_F(TextShaperTest, Shape6, TestSize.Level1)
 {
-    InitMockVars({});
-    EXPECT_CALL(*mockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(0));
-    mockvars.retvalTextBlobBuilderMake_ = std::shared_ptr<TexgineTextBlob>(new TexgineTextBlob());
+    InitTsMockVars({});
+    EXPECT_CALL(*tsMockvars.retvalMeasurerCreate_, Measure).Times(1).WillOnce(testing::Return(0));
+    tsMockvars.retvalTextBlobBuilderMake_ = std::shared_ptr<TexgineTextBlob>(new TexgineTextBlob());
 
     EXPECT_NO_THROW({
         TextShaper shaper;

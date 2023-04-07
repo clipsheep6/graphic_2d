@@ -20,13 +20,14 @@
 #include "texgine/typography_builder.h"
 
 using namespace testing;
+using namespace testing::ext;
 
 namespace Texgine {
 namespace {
 class FontFeatureTest : public testing::Test {
 };
 
-TEST_F(FontFeatureTest, FontFeature)
+HWTEST_F(FontFeatureTest, FontFeature, TestSize.Level1)
 {
     auto dfprovider = DynamicFileFontProvider::Create();
     dfprovider->LoadFont("Roboto", "out/Roboto-Black.ttf");

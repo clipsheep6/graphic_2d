@@ -18,49 +18,150 @@ module_output_path = "graphic_standard/rosen/test/texgine/unittest"
 group("unittest") {
   testonly = true
 
-  deps = [ ":texgine_unittest" ]
+  deps = [
+    ":texgine_unittest_part1",
+    ":texgine_unittest_part2",
+    ":texgine_unittest_part3",
+    ":texgine_unittest_part4",
+    ":texgine_unittest_part5",
+  ]
 }
 
-ohos_unittest("texgine_unittest") {
+ohos_unittest("texgine_unittest_part1") {
   module_out_path = module_output_path
 
   sources = [
     "bidi_processer_test.cpp",
     "char_groups_test.cpp",
     "dynamic_file_font_provider_test.cpp",
-    "dynamic_font_provider_test.cpp",
     "dynamic_font_style_set_test.cpp",
-    "font_collection_test.cpp",
-    "font_feature_test.cpp",
-    "font_providers_test.cpp",
     "font_styles_test.cpp",
-    "line_breaker_test.cpp",
-    "measurer_test.cpp",
-    "strut_test.cpp",
-    "system_font_provider_test.cpp",
-    "text_breaker_test.cpp",
     "text_converter_test.cpp",
     "text_merger_test.cpp",
     "text_reverser_test.cpp",
-    "text_shaper_test.cpp",
-    "typeface_test.cpp",
     "typography_builder_impl_test.cpp",
     "variant_span_test.cpp",
-    "word_breaker_test.cpp",
   ]
 
-  include_dirs = [
-    "//foundation/graphic/graphic_2d/rosen/modules/texgine/exports/texgine",
-    "//foundation/graphic/graphic_2d/rosen/modules/texgine/src",
-    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing",
-  ]
+  configs = [ ":texgine_test_config" ]
 
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
     "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
     "//foundation/graphic/graphic_2d/utils/test_header:test_header",
+    "//third_party/googletest:gmock",
+    "//third_party/googletest:gtest",
   ]
+
+  use_exceptions = true
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
+}
+
+ohos_unittest("texgine_unittest_part2") {
+  module_out_path = module_output_path
+
+  sources = [
+    "dynamic_font_provider_test.cpp",
+    "system_font_provider_test.cpp",
+    "text_shaper_test.cpp",
+    "typeface_test.cpp",
+    "word_breaker_test.cpp",
+  ]
+
+  configs = [ ":texgine_test_config" ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/build/flutter/icu:rosen_libicu_ohos",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
+    "//foundation/graphic/graphic_2d/utils/test_header:test_header",
+    "//third_party/googletest:gmock",
+    "//third_party/googletest:gtest",
+  ]
+
+  use_exceptions = true
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_unittest("texgine_unittest_part3") {
+  module_out_path = module_output_path
+
+  sources = [
+    "font_collection_test.cpp",
+    "line_breaker_test.cpp",
+    "text_breaker_test.cpp",
+  ]
+
+  configs = [ ":texgine_test_config" ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
+    "//foundation/graphic/graphic_2d/utils/test_header:test_header",
+    "//third_party/googletest:gmock",
+    "//third_party/googletest:gtest",
+  ]
+
+  use_exceptions = true
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_unittest("texgine_unittest_part4") {
+  module_out_path = module_output_path
+
+  sources = [
+    "font_providers_test.cpp",
+    "measurer_test.cpp",
+  ]
+
+  configs = [ ":texgine_test_config" ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
+    "//foundation/graphic/graphic_2d/utils/test_header:test_header",
+    "//third_party/googletest:gmock",
+    "//third_party/googletest:gtest",
+  ]
+
+  use_exceptions = true
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_unittest("texgine_unittest_part5") {
+  module_out_path = module_output_path
+
+  sources = [ "measurer_impl_test.cpp" ]
+
+  configs = [ ":texgine_test_config" ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
+    "//foundation/graphic/graphic_2d/utils/test_header:test_header",
+    "//third_party/googletest:gmock",
+    "//third_party/googletest:gtest",
+  ]
+
+  use_exceptions = true
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+config("texgine_test_config") {
+  visibility = [ ":*" ]
+  include_dirs = [
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/exports/texgine",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/src",
+    "//foundation/graphic/graphic_2d/rosen/modules/texgine/texgine_drawing",
+  ]
 }

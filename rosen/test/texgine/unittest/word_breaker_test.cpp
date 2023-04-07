@@ -15,40 +15,22 @@
 
 #include <gmock/gmock.h>
 
+#include "mock/mock_break_iterator.h"
 #include "param_test_macros.h"
+
 #include "word_breaker.h"
 
-namespace Texgine {
-class MockBreakIterator : public icu::BreakIterator {
-public:
-    bool operator ==(const icu::BreakIterator &rhs) const override { return false; }
-    MOCK_METHOD(BreakIterator *, clone, (), (const, override));
-    MOCK_METHOD(UClassID, getDynamicClassID, (), (const, override));
-    MOCK_METHOD(icu::CharacterIterator &, getText, (), (const, override));
-    MOCK_METHOD(UText *, getUText, (UText *fillIn, UErrorCode &status), (const, override));
-    MOCK_METHOD(void, setText, (const icu::UnicodeString &text), (override));
-    MOCK_METHOD(void, setText, (UText *text, UErrorCode &status), (override));
-    MOCK_METHOD(void, adoptText, (icu::CharacterIterator* it), (override));
-    MOCK_METHOD(int32_t, first, (), (override));
-    MOCK_METHOD(int32_t, last, (), (override));
-    MOCK_METHOD(int32_t, previous, (), (override));
-    MOCK_METHOD(int32_t, next, (), (override));
-    MOCK_METHOD(int32_t, current, (), (const, override));
-    MOCK_METHOD(int32_t, following, (int32_t offset), (override));
-    MOCK_METHOD(int32_t, preceding, (int32_t offset), (override));
-    MOCK_METHOD(UBool, isBoundary, (int32_t offset), (override));
-    MOCK_METHOD(int32_t, next, (int32_t offset), (override));
-    MOCK_METHOD(BreakIterator *, createBufferClone, (void *stackBuffer, int32_t &BufferSize, UErrorCode &status), (override));
-    MOCK_METHOD(BreakIterator &, refreshInputText, (UText *input, UErrorCode &status), (override));
-};
+using namespace testing;
+using namespace testing::ext;
 
+namespace Texgine {
 struct Mockvars {
     std::unique_ptr<MockBreakIterator> iterator_ = std::make_unique<MockBreakIterator>();
     UErrorCode createLineInstanceStatus_ = U_ZERO_ERROR;
     icu::Locale catchedLocale_;
 } mockvars;
 
-void InitMockvars(struct Mockvars &&vars)
+void WbInitMockvars(struct Mockvars &&vars)
 {
     mockvars = std::move(vars);
 }
@@ -69,7 +51,7 @@ public:
 };
 
 // 尝试捕获locale
-TEST_F(WordBreakerTest, SetLocale)
+HWTEST_F(WordBreakerTest, SetLocale, TestSize.Level1)
 {
     WordBreaker wbreaker;
 
@@ -82,65 +64,65 @@ TEST_F(WordBreakerTest, SetLocale)
     }
 
     wbreaker.SetLocale(targetLocale);
-    InitMockvars({.iterator_ = nullptr, .catchedLocale_ = defaultLocale});
+    WbInitMockvars({.iterator_ = nullptr, .catchedLocale_ = defaultLocale});
     ASSERT_NE(mockvars.catchedLocale_, targetLocale);
     ASSERT_EXCEPTION(ExceptionType::APIFailed, wbreaker.GetBoundary(u16str););
     ASSERT_EQ(mockvars.catchedLocale_, targetLocale);
 }
 
 // 返回值为nullptr，抛出APIFailed异常
-TEST_F(WordBreakerTest, GetBoundary1)
+HWTEST_F(WordBreakerTest, GetBoundary1, TestSize.Level1)
 {
     WordBreaker wbreaker;
 
-    InitMockvars({.iterator_ = nullptr});
+    WbInitMockvars({.iterator_ = nullptr});
     ASSERT_EXCEPTION(ExceptionType::APIFailed, wbreaker.GetBoundary(u16str););
 }
 
 // 状态为U_ILLEGAL_ARGUMENT_ERROR，抛出APIFailed异常
-TEST_F(WordBreakerTest, GetBoundary2)
+HWTEST_F(WordBreakerTest, GetBoundary2, TestSize.Level1)
 {
     WordBreaker wbreaker;
 
-    InitMockvars({.createLineInstanceStatus_ = U_ILLEGAL_ARGUMENT_ERROR});
+    WbInitMockvars({.createLineInstanceStatus_ = U_ILLEGAL_ARGUMENT_ERROR});
     ASSERT_EXCEPTION(ExceptionType::APIFailed, wbreaker.GetBoundary(u16str););
 }
 
 // 没设置Range，抛出InvalidArgument异常
-TEST_F(WordBreakerTest, GetBoundary3)
+HWTEST_F(WordBreakerTest, GetBoundary3, TestSize.Level1)
 {
     WordBreaker wbreaker;
 
-    InitMockvars({});
+    WbInitMockvars({});
     ASSERT_EXCEPTION(ExceptionType::InvalidArgument, wbreaker.GetBoundary(u16str););
 }
 
 // 设置倒置范围，抛出InvalidArgument异常
-TEST_F(WordBreakerTest, GetBoundary4)
+HWTEST_F(WordBreakerTest, GetBoundary4, TestSize.Level1)
 {
     WordBreaker wbreaker;
 
-    InitMockvars({});
+    WbInitMockvars({});
     wbreaker.SetRange(2, 0);
     ASSERT_EXCEPTION(ExceptionType::InvalidArgument, wbreaker.GetBoundary(u16str););
 }
 
 // 设置过大范围，抛出InvalidArgument异常
-TEST_F(WordBreakerTest, GetBoundary5)
+HWTEST_F(WordBreakerTest, GetBoundary5, TestSize.Level1)
 {
     WordBreaker wbreaker;
 
-    InitMockvars({});
+    WbInitMockvars({});
     wbreaker.SetRange(0, 3);
     ASSERT_EXCEPTION(ExceptionType::InvalidArgument, wbreaker.GetBoundary(u16str););
 }
 
 // 逻辑测试
-TEST_F(WordBreakerTest, GetBoundary6)
+HWTEST_F(WordBreakerTest, GetBoundary6, TestSize.Level1)
 {
     WordBreaker wbreaker;
     wbreaker.SetRange(0, 2);
-    InitMockvars({});
+    WbInitMockvars({});
     EXPECT_CALL(*mockvars.iterator_, setText(testing::_)).Times(1);
     EXPECT_CALL(*mockvars.iterator_, first())
         .Times(1)

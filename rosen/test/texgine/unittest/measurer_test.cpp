@@ -20,6 +20,7 @@
 #include "text_converter.h"
 
 using namespace testing;
+using namespace testing::ext;
 
 // #define DEBUG_MEASURER_TEST
 #ifdef DEBUG_MEASURER_TEST
@@ -33,7 +34,7 @@ namespace {
 class MeasurerTest : public testing::Test {
 };
 
-TEST_F(MeasurerTest, MeasureText)
+HWTEST_F(MeasurerTest, MeasureText, TestSize.Level1)
 {
     auto providers = FontProviders::Create();
     auto fc = providers->GenerateFontCollection({});

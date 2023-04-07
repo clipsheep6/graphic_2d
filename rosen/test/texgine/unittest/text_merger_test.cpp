@@ -25,6 +25,9 @@
 #include "text_merger.h"
 #include "my_any_span.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 namespace Texgine {
 int tempCount = 0;
 
@@ -198,7 +201,7 @@ public:
 };
 
 #define PARAMFUNC MergeSpan
-TEST_F(TextMergerTest, MergeSpan)
+HWTEST_F(TextMergerTest, MergeSpan, TestSize.Level1)
 {
     DEFINE_ALL_TESTINFO3(VariantSpan, std::optional<bool> , CharGroups);
 
@@ -217,27 +220,30 @@ TEST_F(TextMergerTest, MergeSpan)
      .checkFunc = GetMergerResultChecker(MergeResult::REJECTED) });
     RUN_ALL_TESTINFO3(tm, {.arg1 = GenTestSpan({.rtl_ = false, .cgs_ = {}}), .arg2 = false, .arg3 = {},
      .exception = ExceptionType::ErrorStatus });
-    RUN_ALL_TESTINFO3(tm, {.arg1 = GenTestSpan({.rtl_ = false, .cgs_ = CharGroups::CreateEmpty()}), .arg2 = false, .arg3 = {},
-     .exception = ExceptionType::ErrorStatus });
-    RUN_ALL_TESTINFO3(tm, {.arg1 = GenTestSpan({.rtl_ = false, .cgs_ = cgs1_}), .arg2 = false, .arg3 = CharGroups::CreateEmpty(),
-     .checkFunc = GetMergerResultChecker(MergeResult::REJECTED) });
+    RUN_ALL_TESTINFO3(tm, {.arg1 = GenTestSpan({.rtl_ = false, .cgs_ = CharGroups::CreateEmpty()}),
+     .arg2 = false, .arg3 = {}, .exception = ExceptionType::ErrorStatus });
+    RUN_ALL_TESTINFO3(tm, {.arg1 = GenTestSpan({.rtl_ = false, .cgs_ = cgs1_}),
+     .arg2 = false, .arg3 = CharGroups::CreateEmpty(), .checkFunc = GetMergerResultChecker(MergeResult::REJECTED) });
     RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({1}, {0}), .arg1 = tsCgs1_, .arg2 = false, .arg3 = {},
      .checkFunc = GetMergerResultChecker(MergeResult::ACCEPTED, ControllerForTest::GetCharGroups(tsCgs1_)) });
     RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({0}, {1}), .arg1 = tsCgs1_, .arg2 = false, .arg3 = {},
      .checkFunc = GetMergerResultChecker(MergeResult::BREAKED, ControllerForTest::GetCharGroups(tsCgs1_)) });
     RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({0}, {0}), .arg1 = tsCgs1_, .arg2 = false, .arg3 = {},
      .checkFunc = GetMergerResultChecker(MergeResult::ACCEPTED, ControllerForTest::GetCharGroups(tsCgs1_)) });
-    RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({1}, {0}), .arg1 = tsSubCgs12_, .arg2 = false, .arg3 = cgs1_.GetSub(0, 1),
+    RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({1}, {0}), .arg1 = tsSubCgs12_,
+     .arg2 = false, .arg3 = cgs1_.GetSub(0, 1),
      .checkFunc = GetMergerResultChecker(MergeResult::ACCEPTED, {}, true, {0, 2}) });
-    RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({0}, {1}), .arg1 = tsSubCgs12_, .arg2 = false, .arg3 = cgs1_.GetSub(0, 1),
+    RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({0}, {1}), .arg1 = tsSubCgs12_,
+     .arg2 = false, .arg3 = cgs1_.GetSub(0, 1),
      .checkFunc = GetMergerResultChecker(MergeResult::BREAKED, {}, true, {0, 2}) });
-    RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({0}, {0}), .arg1 = tsSubCgs12_, .arg2 = false, .arg3 = cgs1_.GetSub(0, 1),
+    RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({0}, {0}), .arg1 = tsSubCgs12_,
+     .arg2 = false, .arg3 = cgs1_.GetSub(0, 1),
      .checkFunc = GetMergerResultChecker(MergeResult::ACCEPTED, {}, true, {0, 2}) });
 }
 #undef PARAMFUNC
 
 #define PARAMFUNC MergeSpans
-TEST_F(TextMergerTest, MergeSpans)
+HWTEST_F(TextMergerTest, MergeSpans, TestSize.Level1)
 {
     DEFINE_TESTINFO1(std::vector<VariantSpan>);
 
@@ -253,8 +259,10 @@ TEST_F(TextMergerTest, MergeSpans)
     RUN_TESTINFO1(tm, { .arg1 = {}, .checkFunc = CreateVecSizeChecker<VariantSpan>(0) });
     RUN_TESTINFO1(tm, { .arg1 = seqA, .checkFunc = MergedSpanChecker({{.isAnySpan_ = true}}) });
     RUN_TESTINFO1(tm, { .arg1 = seqAA, .checkFunc = MergedSpanChecker({{.isAnySpan_ = true}, {.isAnySpan_ = true}}) });
-    RUN_TESTINFO1(tm, { .init = InitMockArgs({0}, {0}), .arg1 = seqT_, .checkFunc = MergedSpanChecker({{.range_ = {0, 1}}}) });
-    RUN_TESTINFO1(tm, { .init = InitMockArgs({0, 0}, {0, 0}), .arg1 = seqTT_, .checkFunc = MergedSpanChecker({{.range_ = {0, 2}}}) });
+    RUN_TESTINFO1(tm, { .init = InitMockArgs({0}, {0}), .arg1 = seqT_,
+     .checkFunc = MergedSpanChecker({{.range_ = {0, 1}}}) });
+    RUN_TESTINFO1(tm, { .init = InitMockArgs({0, 0}, {0, 0}), .arg1 = seqTT_,
+     .checkFunc = MergedSpanChecker({{.range_ = {0, 2}}}) });
     RUN_TESTINFO1(tm, { .init = InitMockArgs({0, 0, 0}, {0, 1, 0}), .arg1 = seqTTST_,
      .checkFunc = MergedSpanChecker({{.range_ = {0, 5}}, {.range_ = {0, 1}}}) });
     RUN_TESTINFO1(tm, { .init = InitMockArgs({1, 1}, {0, 0}), .arg1 = seqTiTi_,

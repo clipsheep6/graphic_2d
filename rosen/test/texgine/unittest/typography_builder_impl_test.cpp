@@ -23,33 +23,36 @@
 #include "typography_builder_impl.h"
 #include "typography_impl.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 namespace Texgine {
 struct MockVars {
     TextStyle ys_;
     std::vector<VariantSpan> catchedSpans_;
     std::vector<TextStyle> catchedStyles_;
-} mockvars;
+} tbMockvars;
 
 void InitMockVars(struct MockVars &&vars)
 {
-    mockvars = std::move(vars);
+    tbMockvars = std::move(vars);
 }
 
 TypographyImpl::TypographyImpl(TypographyStyle &ys,
                                std::vector<VariantSpan> &spans,
                                std::unique_ptr<FontProviders> providers)
 {
-    mockvars.catchedSpans_ = spans;
+    tbMockvars.catchedSpans_ = spans;
 }
 
 void VariantSpan::SetTextStyle(const TextStyle &style) noexcept(true)
 {
-    mockvars.catchedStyles_.push_back(style);
+    tbMockvars.catchedStyles_.push_back(style);
 }
 
 TextStyle TypographyStyle::ConvertToTextStyle() const
 {
-    return mockvars.ys_;
+    return tbMockvars.ys_;
 }
 
 class TypographyBuilderImplTest : public testing::Test {
@@ -58,12 +61,12 @@ public:
         std::make_shared<TypographyBuilderImpl>(TypographyStyle{}, FontProviders::Create());
 };
 
-TEST_F(TypographyBuilderImplTest, Create)
+HWTEST_F(TypographyBuilderImplTest, Create, TestSize.Level1)
 {
     EXPECT_NE(TypographyBuilder::Create(), nullptr);
 }
 
-TEST_F(TypographyBuilderImplTest, PushPopStyle)
+HWTEST_F(TypographyBuilderImplTest, PushPopStyle, TestSize.Level1)
 {
     TextStyle s1 = {.fontSize_ = 1};
     TextStyle s2 = {.fontSize_ = 2};
@@ -75,7 +78,7 @@ TEST_F(TypographyBuilderImplTest, PushPopStyle)
     TypographyBuilderImpl builder1({}, FontProviders::Create());
     builder1.AppendSpan(normalAnySpan);
     EXPECT_NE(builder1.Build(), nullptr);
-    EXPECT_EQ(mockvars.catchedStyles_[0], s1);
+    EXPECT_EQ(tbMockvars.catchedStyles_[0], s1);
 
     // YS Push
     InitMockVars({.ys_ = s1});
@@ -83,7 +86,7 @@ TEST_F(TypographyBuilderImplTest, PushPopStyle)
     builder2.PushStyle(s2);
     builder2.AppendSpan(normalAnySpan);
     EXPECT_NE(builder2.Build(), nullptr);
-    EXPECT_EQ(mockvars.catchedStyles_[0], s2);
+    EXPECT_EQ(tbMockvars.catchedStyles_[0], s2);
 
     // YS Push Push
     InitMockVars({.ys_ = s1});
@@ -92,7 +95,7 @@ TEST_F(TypographyBuilderImplTest, PushPopStyle)
     builder3.PushStyle(s3);
     builder3.AppendSpan(normalAnySpan);
     EXPECT_NE(builder3.Build(), nullptr);
-    EXPECT_EQ(mockvars.catchedStyles_[0], s3);
+    EXPECT_EQ(tbMockvars.catchedStyles_[0], s3);
 
     // YS Push Push Pop
     InitMockVars({.ys_ = s1});
@@ -102,10 +105,10 @@ TEST_F(TypographyBuilderImplTest, PushPopStyle)
     builder4.PopStyle();
     builder4.AppendSpan(normalAnySpan);
     EXPECT_NE(builder4.Build(), nullptr);
-    EXPECT_EQ(mockvars.catchedStyles_[0], s2);
+    EXPECT_EQ(tbMockvars.catchedStyles_[0], s2);
 }
 
-TEST_F(TypographyBuilderImplTest, AppendSpan)
+HWTEST_F(TypographyBuilderImplTest, AppendSpan, TestSize.Level1)
 {
     TextStyle xs = {};
     std::shared_ptr<AnySpan> nullptrAnySpan = nullptr;
@@ -116,14 +119,14 @@ TEST_F(TypographyBuilderImplTest, AppendSpan)
     TypographyBuilderImpl builder1({}, FontProviders::Create());
     builder1.AppendSpan(nullptrAnySpan);
     EXPECT_NE(builder1.Build(), nullptr);
-    EXPECT_EQ(mockvars.catchedSpans_.size(), 0u);
+    EXPECT_EQ(tbMockvars.catchedSpans_.size(), 0u);
 
     // T(nullptr)
     InitMockVars({});
     TypographyBuilderImpl builder2({}, FontProviders::Create());
     builder2.AppendSpan(nullptrTextSpan);
     EXPECT_NE(builder2.Build(), nullptr);
-    EXPECT_EQ(mockvars.catchedSpans_.size(), 0u);
+    EXPECT_EQ(tbMockvars.catchedSpans_.size(), 0u);
 
     // A
     auto as1 = std::make_shared<MockAnySpan>();
@@ -131,8 +134,8 @@ TEST_F(TypographyBuilderImplTest, AppendSpan)
     TypographyBuilderImpl builder3({}, FontProviders::Create());
     builder3.AppendSpan(as1);
     EXPECT_NE(builder3.Build(), nullptr);
-    EXPECT_EQ(mockvars.catchedSpans_.size(), 1u);
-    EXPECT_EQ(mockvars.catchedSpans_[0], as1);
+    EXPECT_EQ(tbMockvars.catchedSpans_.size(), 1u);
+    EXPECT_EQ(tbMockvars.catchedSpans_[0], as1);
 
     // T
     auto ts1 = TextSpan::MakeEmpty();
@@ -140,8 +143,8 @@ TEST_F(TypographyBuilderImplTest, AppendSpan)
     TypographyBuilderImpl builder4({}, FontProviders::Create());
     builder4.AppendSpan(ts1);
     EXPECT_NE(builder4.Build(), nullptr);
-    EXPECT_EQ(mockvars.catchedSpans_.size(), 1u);
-    EXPECT_EQ(mockvars.catchedSpans_[0], ts1);
+    EXPECT_EQ(tbMockvars.catchedSpans_.size(), 1u);
+    EXPECT_EQ(tbMockvars.catchedSpans_[0], ts1);
 
     // A A
     auto as2 = std::make_shared<MockAnySpan>();
@@ -151,9 +154,9 @@ TEST_F(TypographyBuilderImplTest, AppendSpan)
     builder5.AppendSpan(as2);
     builder5.AppendSpan(as3);
     EXPECT_NE(builder5.Build(), nullptr);
-    EXPECT_EQ(mockvars.catchedSpans_.size(), 2u);
-    EXPECT_EQ(mockvars.catchedSpans_[0], as2);
-    EXPECT_EQ(mockvars.catchedSpans_[1], as3);
+    EXPECT_EQ(tbMockvars.catchedSpans_.size(), 2u);
+    EXPECT_EQ(tbMockvars.catchedSpans_[0], as2);
+    EXPECT_EQ(tbMockvars.catchedSpans_[1], as3);
 
     // T T
     auto ts2 = TextSpan::MakeEmpty();
@@ -163,8 +166,8 @@ TEST_F(TypographyBuilderImplTest, AppendSpan)
     builder6.AppendSpan(ts2);
     builder6.AppendSpan(ts3);
     EXPECT_NE(builder6.Build(), nullptr);
-    EXPECT_EQ(mockvars.catchedSpans_.size(), 1u);
-    EXPECT_EQ(mockvars.catchedSpans_[0], ts2);
+    EXPECT_EQ(tbMockvars.catchedSpans_.size(), 1u);
+    EXPECT_EQ(tbMockvars.catchedSpans_[0], ts2);
 
     // T Style T
     auto ts4 = TextSpan::MakeEmpty();
@@ -175,9 +178,9 @@ TEST_F(TypographyBuilderImplTest, AppendSpan)
     builder7.PushStyle(xs);
     builder7.AppendSpan(ts5);
     EXPECT_NE(builder7.Build(), nullptr);
-    EXPECT_EQ(mockvars.catchedSpans_.size(), 2u);
-    EXPECT_EQ(mockvars.catchedSpans_[0], ts4);
-    EXPECT_EQ(mockvars.catchedSpans_[1], ts5);
+    EXPECT_EQ(tbMockvars.catchedSpans_.size(), 2u);
+    EXPECT_EQ(tbMockvars.catchedSpans_[0], ts4);
+    EXPECT_EQ(tbMockvars.catchedSpans_[1], ts5);
 
     // T A T
     auto ts6 = TextSpan::MakeEmpty();
@@ -189,9 +192,9 @@ TEST_F(TypographyBuilderImplTest, AppendSpan)
     builder8.AppendSpan(as4);
     builder8.AppendSpan(ts7);
     EXPECT_NE(builder8.Build(), nullptr);
-    EXPECT_EQ(mockvars.catchedSpans_.size(), 3u);
-    EXPECT_EQ(mockvars.catchedSpans_[0], ts6);
-    EXPECT_EQ(mockvars.catchedSpans_[1], as4);
-    EXPECT_EQ(mockvars.catchedSpans_[2], ts7);
+    EXPECT_EQ(tbMockvars.catchedSpans_.size(), 3u);
+    EXPECT_EQ(tbMockvars.catchedSpans_[0], ts6);
+    EXPECT_EQ(tbMockvars.catchedSpans_[1], as4);
+    EXPECT_EQ(tbMockvars.catchedSpans_[2], ts7);
 }
 } // namespace Texgine

@@ -26,6 +26,9 @@
 #include "texgine_typeface.h"
 #include "typeface.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 namespace Texgine {
 std::unique_ptr<TexgineMemoryStream> memoryStream = nullptr;
 std::shared_ptr<TexgineTypeface> typeface = nullptr;
@@ -60,7 +63,7 @@ public:
 // 过程测试
 // 调用Create函数
 // 判定返回值为非空指针
-TEST_F(DynamicFontProviderTest, Create)
+HWTEST_F(DynamicFontProviderTest, Create, TestSize.Level1)
 {
     EXPECT_NE(DynamicFontProvider::Create(), nullptr);
 }
@@ -68,7 +71,7 @@ TEST_F(DynamicFontProviderTest, Create)
 // 异常测试
 // 调用LoadFont函数，第二个参数为nullptr
 // 判定不抛出异常，并且返回值为1
-TEST_F(DynamicFontProviderTest, LoadFont1)
+HWTEST_F(DynamicFontProviderTest, LoadFont1, TestSize.Level1)
 {
     InitMyMockVars({});
     EXPECT_NO_THROW({ EXPECT_EQ(dynamicFontProvider->LoadFont("LF1", nullptr, 4), 1); });
@@ -77,16 +80,17 @@ TEST_F(DynamicFontProviderTest, LoadFont1)
 // 异常测试
 // 调用LoadFont函数，第三个参数为0
 // 判定不抛出异常，并且返回值为1
-TEST_F(DynamicFontProviderTest, LoadFont2)
+HWTEST_F(DynamicFontProviderTest, LoadFont2, TestSize.Level1)
 {
     InitMyMockVars({});
+    dynamicFontProvider = DynamicFontProvider::Create();
     EXPECT_NO_THROW({ EXPECT_EQ(dynamicFontProvider->LoadFont("LF2", this, 0), 1); });
 }
 
 // 异常测试
 // 重写MakeCopy函数返回nullptr，调用LoadFont函数
 // 判定不抛出异常，并且返回值为2
-TEST_F(DynamicFontProviderTest, LoadFont3)
+HWTEST_F(DynamicFontProviderTest, LoadFont3, TestSize.Level1)
 {
     InitMyMockVars({.memoryStream_ = nullptr});
     EXPECT_NO_THROW({ EXPECT_EQ(dynamicFontProvider->LoadFont("LF3", this, 4), 2); });
@@ -95,7 +99,7 @@ TEST_F(DynamicFontProviderTest, LoadFont3)
 // 异常测试
 // 重写MakeFromStream函数返回nullptr，调用LoadFont函数
 // 判定不抛出异常，并且返回值为2
-TEST_F(DynamicFontProviderTest, LoadFont4)
+HWTEST_F(DynamicFontProviderTest, LoadFont4, TestSize.Level1)
 {
     InitMyMockVars({.typeface_ = nullptr});
     EXPECT_NO_THROW({ EXPECT_EQ(dynamicFontProvider->LoadFont("LF4", this, 4), 2); });
@@ -104,7 +108,7 @@ TEST_F(DynamicFontProviderTest, LoadFont4)
 // 逻辑测试
 // 调用LoadFont函数
 // 判定不抛出异常，并且返回值为0
-TEST_F(DynamicFontProviderTest, LoadFont5)
+HWTEST_F(DynamicFontProviderTest, LoadFont5, TestSize.Level1)
 {
     InitMyMockVars({});
     EXPECT_NO_THROW({
@@ -117,7 +121,7 @@ TEST_F(DynamicFontProviderTest, LoadFont5)
 // 未调用LoadFont函数加载任何Family
 // 调用MatchFamily函数查找名为“aaa”的Family
 // 判定返回值为空指针
-TEST_F(DynamicFontProviderTest, MatchFamily1)
+HWTEST_F(DynamicFontProviderTest, MatchFamily1, TestSize.Level1)
 {
     EXPECT_EQ(dynamicFontProvider->MatchFamily("aaa"), nullptr);
 }
@@ -126,7 +130,7 @@ TEST_F(DynamicFontProviderTest, MatchFamily1)
 // 调用LoadFont函数加载名为“aaa”的Family
 // 调用MatchFamily函数查找名为“aaa”的Family
 // 判定返回值为非空指针
-TEST_F(DynamicFontProviderTest, MatchFamily2)
+HWTEST_F(DynamicFontProviderTest, MatchFamily2, TestSize.Level1)
 {
     InitMyMockVars({});
     dynamicFontProvider->LoadFont("aaa", this, 4);
@@ -136,7 +140,7 @@ TEST_F(DynamicFontProviderTest, MatchFamily2)
 // 过程测试
 // 调用MatchFamily函数查找名为“bbb”的Family
 // 判定返回值为空指针
-TEST_F(DynamicFontProviderTest, MatchFamily3)
+HWTEST_F(DynamicFontProviderTest, MatchFamily3, TestSize.Level1)
 {
     InitMyMockVars({});
     dynamicFontProvider->LoadFont("aaa", this, 4);

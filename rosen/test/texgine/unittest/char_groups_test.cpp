@@ -21,6 +21,9 @@
 #include "texgine_exception.h"
 #include "text_converter.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 #define INVALID_CGS(...) \
     {.object = invalid1Cgs_, ##__VA_ARGS__, .exception = ExceptionType::ErrorStatus}, \
     {.object = invalid2Cgs_, ##__VA_ARGS__, .exception = ExceptionType::ErrorStatus}, \

@@ -24,25 +24,28 @@
 #include "texgine_typeface.h"
 #include "variant_font_style_set.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 namespace Texgine {
 struct MockVars {
     std::shared_ptr<TexgineFontStyleSet> fontStyleSet_ = TexgineFontStyleSet::CreateEmpty();
     std::shared_ptr<TexgineFontManager> fontMgr_ = std::make_shared<TexgineFontManager>();
-} mockVars;
+} sfpMockvars;
 
-void InitMockVars(MockVars vars)
+void InitSfpMockVars(MockVars vars)
 {
-    mockVars = std::move(vars);
+    sfpMockvars = std::move(vars);
 }
 
 std::shared_ptr<TexgineFontManager> TexgineFontManager::RefDefault()
 {
-    return mockVars.fontMgr_;
+    return sfpMockvars.fontMgr_;
 }
 
 std::shared_ptr<TexgineFontStyleSet> TexgineFontManager::MatchFamily(const char familyName[])
 {
-    return mockVars.fontStyleSet_;
+    return sfpMockvars.fontStyleSet_;
 }
 
 class SystemFontProviderTest : public testing::Test {
@@ -53,7 +56,7 @@ public:
 // 过程测试
 // 调用GetInstance函数
 // 判定返回值为非空指针
-TEST_F(SystemFontProviderTest, GetInstance)
+HWTEST_F(SystemFontProviderTest, GetInstance, TestSize.Level1)
 {
     EXPECT_NE(SystemFontProvider::GetInstance(), nullptr);
 }
@@ -62,9 +65,9 @@ TEST_F(SystemFontProviderTest, GetInstance)
 // 控制RefDefault函数返回空指针
 // 调用MatchFamily函数
 // 判定返回空指针
-TEST_F(SystemFontProviderTest, MatchFamily1)
+HWTEST_F(SystemFontProviderTest, MatchFamily1, TestSize.Level1)
 {
-    InitMockVars({.fontMgr_ = nullptr});
+    InitSfpMockVars({.fontMgr_ = nullptr});
     auto fss = systemFontProvider->MatchFamily("");
     EXPECT_EQ(fss, nullptr);
 }
@@ -74,9 +77,9 @@ TEST_F(SystemFontProviderTest, MatchFamily1)
 // 调用MatchFamily函数
 // 调用Get方法
 // 判定返回空指针
-TEST_F(SystemFontProviderTest, MatchFamily2)
+HWTEST_F(SystemFontProviderTest, MatchFamily2, TestSize.Level1)
 {
-    InitMockVars({.fontStyleSet_ = nullptr});
+    InitSfpMockVars({.fontStyleSet_ = nullptr});
     auto fss = systemFontProvider->MatchFamily("");
     EXPECT_EQ(fss->TryToTexgineFontStyleSet(), nullptr);
 }
@@ -86,9 +89,9 @@ TEST_F(SystemFontProviderTest, MatchFamily2)
 // 判定返回非空指针
 // 调用Get方法
 // 判定返回非空指针
-TEST_F(SystemFontProviderTest, MatchFamily3)
+HWTEST_F(SystemFontProviderTest, MatchFamily3, TestSize.Level1)
 {
-    InitMockVars({});
+    InitSfpMockVars({});
     auto fss = systemFontProvider->MatchFamily("");
     EXPECT_NE(fss, nullptr);
     EXPECT_NE(fss->TryToTexgineFontStyleSet()->Get(), nullptr);

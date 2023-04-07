@@ -92,7 +92,7 @@ namespace Texgine {
     }                                                                        \
 
 #define DEFINE_PARAM_TEST(CHECKING, N, CLASS, FUNC, ...)                               \
-TEST_F(CLASS##Test, FUNC)                                                              \
+HWTEST_F(CLASS##Test, FUNC, testing::ext::TestSize.Level1)                                                              \
 {                                                                                      \
     PARAM_DEFINE_ARG##N(__VA_ARGS__);                                                  \
     struct TestInfo {                                                                  \

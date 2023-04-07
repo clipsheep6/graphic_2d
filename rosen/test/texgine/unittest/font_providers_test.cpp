@@ -20,6 +20,9 @@
 #include "texgine/font_providers.h"
 #include "texgine/system_font_provider.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 namespace Texgine {
 class MockFontProvider : public IFontProvider {
 public:
@@ -29,21 +32,21 @@ public:
 struct MockVars {
     std::shared_ptr<VariantFontStyleSet> systemFontProviderMatchFamilyRetval;
     std::vector<std::shared_ptr<VariantFontStyleSet>> catchedFontStyleSets;
-} mockvars;
+} fpMockvars;
 
-void InitMockVars(struct MockVars &&vars)
+void InitFpMockVars(struct MockVars &&vars)
 {
-    mockvars = std::move(vars);
+    fpMockvars = std::move(vars);
 }
 
 FontCollection::FontCollection(std::vector<std::shared_ptr<VariantFontStyleSet>> &&fontStyleSets)
 {
-    mockvars.catchedFontStyleSets = std::move(fontStyleSets);
+    fpMockvars.catchedFontStyleSets = std::move(fontStyleSets);
 }
 
 std::shared_ptr<VariantFontStyleSet> SystemFontProvider::MatchFamily(const std::string &familyName) noexcept(true)
 {
-    return mockvars.systemFontProviderMatchFamilyRetval;
+    return fpMockvars.systemFontProviderMatchFamilyRetval;
 }
 
 class FontProvidersTest : public testing::Test {
@@ -55,44 +58,44 @@ public:
     std::shared_ptr<VariantFontStyleSet> fontStyleSet2_ = std::make_shared<VariantFontStyleSet>(nullptr);
 };
 
-TEST_F(FontProvidersTest, CreateAndSystemOnly)
+HWTEST_F(FontProvidersTest, CreateAndSystemOnly, TestSize.Level1)
 {
     std::shared_ptr<VariantFontStyleSet> fss1 = std::make_shared<VariantFontStyleSet>(nullptr);
 
     // Create
-    InitMockVars({});
+    InitFpMockVars({});
     auto fp1 = FontProviders::Create();
     ASSERT_NE(fp1, nullptr);
     auto fc1 = fp1->GenerateFontCollection({"Create"});
     ASSERT_NE(fc1, nullptr);
-    ASSERT_EQ(mockvars.catchedFontStyleSets.size(), 0u);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets.size(), 0u);
 
     // SystemFontOnly
-    InitMockVars({.systemFontProviderMatchFamilyRetval = fss1});
+    InitFpMockVars({.systemFontProviderMatchFamilyRetval = fss1});
     auto fp2 = FontProviders::SystemFontOnly();
     ASSERT_NE(fp2, nullptr);
     auto fc2 = fp2->GenerateFontCollection({"SystemFontOnly"});
     ASSERT_NE(fc2, nullptr);
-    ASSERT_EQ(mockvars.catchedFontStyleSets.size(), 1u);
-    ASSERT_EQ(mockvars.catchedFontStyleSets[0], fss1);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets.size(), 1u);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets[0], fss1);
 }
 
-TEST_F(FontProvidersTest, AppendFontProvider)
+HWTEST_F(FontProvidersTest, AppendFontProvider, TestSize.Level1)
 {
     std::shared_ptr<VariantFontStyleSet> fss1 = std::make_shared<VariantFontStyleSet>(nullptr);
     std::shared_ptr<VariantFontStyleSet> fss2 = std::make_shared<VariantFontStyleSet>(nullptr);
 
     // AppendFontProvider nullptr
-    InitMockVars({});
+    InitFpMockVars({});
     auto fp1 = FontProviders::Create();
     ASSERT_NE(fp1, nullptr);
     fp1->AppendFontProvider(nullptr);
     auto fc1 = fp1->GenerateFontCollection({"AppendFontProvider1"});
     ASSERT_NE(fc1, nullptr);
-    ASSERT_EQ(mockvars.catchedFontStyleSets.size(), 0u);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets.size(), 0u);
 
     // AppendFontProvider mock1 once
-    InitMockVars({});
+    InitFpMockVars({});
     auto fp2 = FontProviders::Create();
     ASSERT_NE(fp2, nullptr);
     auto mfp1 = std::make_shared<MockFontProvider>();
@@ -100,11 +103,11 @@ TEST_F(FontProvidersTest, AppendFontProvider)
     fp2->AppendFontProvider(mfp1);
     auto fc2 = fp2->GenerateFontCollection({"AppendFontProvider2"});
     ASSERT_NE(fc2, nullptr);
-    ASSERT_EQ(mockvars.catchedFontStyleSets.size(), 1u);
-    ASSERT_EQ(mockvars.catchedFontStyleSets[0], fss1);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets.size(), 1u);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets[0], fss1);
 
     // AppendFontProvider mock1 twice
-    InitMockVars({});
+    InitFpMockVars({});
     auto fp3 = FontProviders::Create();
     ASSERT_NE(fp3, nullptr);
     auto mfp2 = std::make_shared<MockFontProvider>();
@@ -113,11 +116,11 @@ TEST_F(FontProvidersTest, AppendFontProvider)
     fp3->AppendFontProvider(mfp2);
     auto fc3 = fp3->GenerateFontCollection({"AppendFontProvider3"});
     ASSERT_NE(fc3, nullptr);
-    ASSERT_EQ(mockvars.catchedFontStyleSets.size(), 1u);
-    ASSERT_EQ(mockvars.catchedFontStyleSets[0], fss1);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets.size(), 1u);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets[0], fss1);
 
     // AppendFontProvider mock1 mock2
-    InitMockVars({});
+    InitFpMockVars({});
     auto fp4 = FontProviders::Create();
     ASSERT_NE(fp4, nullptr);
     auto mfp3 = std::make_shared<MockFontProvider>();
@@ -133,18 +136,18 @@ TEST_F(FontProvidersTest, AppendFontProvider)
     fp4->AppendFontProvider(mfp4);
     auto fc4 = fp4->GenerateFontCollection({"AppendFontProvider4", "AppendFontProvider5"});
     ASSERT_NE(fc4, nullptr);
-    ASSERT_EQ(mockvars.catchedFontStyleSets.size(), 2u);
-    ASSERT_EQ(mockvars.catchedFontStyleSets[0], fss1);
-    ASSERT_EQ(mockvars.catchedFontStyleSets[1], fss2);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets.size(), 2u);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets[0], fss1);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets[1], fss2);
 }
 
-TEST_F(FontProvidersTest, GenerateFontCollection)
+HWTEST_F(FontProvidersTest, GenerateFontCollection, TestSize.Level1)
 {
     std::shared_ptr<VariantFontStyleSet> fss1 = std::make_shared<VariantFontStyleSet>(nullptr);
     std::shared_ptr<VariantFontStyleSet> fss2 = std::make_shared<VariantFontStyleSet>(nullptr);
 
     // GenerateFontCollection set=nullptr
-    InitMockVars({});
+    InitFpMockVars({});
     auto fp1 = FontProviders::Create();
     ASSERT_NE(fp1, nullptr);
     auto mfp1 = std::make_shared<MockFontProvider>();
@@ -152,10 +155,10 @@ TEST_F(FontProvidersTest, GenerateFontCollection)
     fp1->AppendFontProvider(mfp1);
     auto fc1 = fp1->GenerateFontCollection({"GenerateFontCollection1"});
     ASSERT_NE(fc1, nullptr);
-    ASSERT_EQ(mockvars.catchedFontStyleSets.size(), 0u);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets.size(), 0u);
 
     // GenerateFontCollection use cache
-    InitMockVars({});
+    InitFpMockVars({});
     auto fp2 = FontProviders::Create();
     ASSERT_NE(fp2, nullptr);
     auto mfp2 = std::make_shared<MockFontProvider>();
@@ -163,14 +166,14 @@ TEST_F(FontProvidersTest, GenerateFontCollection)
     fp2->AppendFontProvider(mfp2);
     auto fc21 = fp2->GenerateFontCollection({"GenerateFontCollection2"});
     ASSERT_NE(fc21, nullptr);
-    ASSERT_EQ(mockvars.catchedFontStyleSets.size(), 1u);
-    ASSERT_EQ(mockvars.catchedFontStyleSets[0], fss1);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets.size(), 1u);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets[0], fss1);
     auto fc22 = fp2->GenerateFontCollection({"GenerateFontCollection2"});
-    ASSERT_EQ(mockvars.catchedFontStyleSets.size(), 1u);
-    ASSERT_EQ(mockvars.catchedFontStyleSets[0], fss1);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets.size(), 1u);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets[0], fss1);
 
     // GenerateFontCollection first failed, second success
-    InitMockVars({});
+    InitFpMockVars({});
     auto fp3 = FontProviders::Create();
     ASSERT_NE(fp3, nullptr);
     auto mfp3 = std::make_shared<MockFontProvider>();
@@ -181,7 +184,7 @@ TEST_F(FontProvidersTest, GenerateFontCollection)
     fp3->AppendFontProvider(mfp4);
     auto fc3 = fp3->GenerateFontCollection({"GenerateFontCollection3"});
     ASSERT_NE(fc3, nullptr);
-    ASSERT_EQ(mockvars.catchedFontStyleSets.size(), 1u);
-    ASSERT_EQ(mockvars.catchedFontStyleSets[0], fss2);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets.size(), 1u);
+    ASSERT_EQ(fpMockvars.catchedFontStyleSets[0], fss2);
 }
 } // namespace Texgine

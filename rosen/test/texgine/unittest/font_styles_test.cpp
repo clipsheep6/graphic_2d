@@ -18,6 +18,9 @@
 #include "font_styles.h"
 #include "param_test_macros.h"
 
+using namespace testing;
+using namespace testing::ext;
+
 namespace Texgine {
 class FontStylesTest : public testing::Test {
 };
@@ -39,7 +42,7 @@ FontStyles GetFontStyles(int weight, int width, int slant)
 
 // 异常测试
 // 等价类测试
-TEST_F(FontStylesTest, FontStyles1)
+HWTEST_F(FontStylesTest, FontStyles1, TestSize.Level1)
 {
     constexpr auto excption = ExceptionType::InvalidArgument;
     constexpr auto weight = 0;
@@ -65,7 +68,7 @@ TEST_F(FontStylesTest, FontStyles1)
 
 // 异常测试
 // 等价类测试
-TEST_F(FontStylesTest, FontStyles2)
+HWTEST_F(FontStylesTest, FontStyles2, TestSize.Level1)
 {
     constexpr auto excption = ExceptionType::InvalidArgument;
     constexpr auto weight = 0;
@@ -104,7 +107,7 @@ TEST_F(FontStylesTest, FontStyles2)
 // 创建FontStyles对象
 // 调用ToTexgineFontStyle函数
 // 检查weight、width、slant值
-TEST_F(FontStylesTest, ToTexgineFontStyle)
+HWTEST_F(FontStylesTest, ToTexgineFontStyle, TestSize.Level1)
 {
     EXPECT_EQ(GetFontStyles(0, 0).ToTexgineFontStyle().GetFontStyle()->weight(), 100);
     EXPECT_EQ(GetFontStyles(0, 0).ToTexgineFontStyle().GetFontStyle()->slant(), 0);
@@ -116,7 +119,7 @@ TEST_F(FontStylesTest, ToTexgineFontStyle)
 // 过程测试
 // 创建fontStyles对象，传参为1，1，1
 // 创建对象传入不同参数判断是否等于fontStyles
-TEST_F(FontStylesTest, OperatorEqual)
+HWTEST_F(FontStylesTest, OperatorEqual, TestSize.Level1)
 {
     auto fontStyles = GetFontStyles(1, 1, 1);
     EXPECT_NE(GetFontStyles(0, 1, 1), fontStyles);
@@ -128,7 +131,7 @@ TEST_F(FontStylesTest, OperatorEqual)
 // 过程测试
 // 创建fontStyles对象，传参为1，1，1
 // 创建对象传入不同参数判断是否小于fontStyles
-TEST_F(FontStylesTest, OperatorLessThan)
+HWTEST_F(FontStylesTest, OperatorLessThan, TestSize.Level1)
 {
     auto fontStyles = GetFontStyles(1, 1, 1);
     EXPECT_TRUE(GetFontStyles(0, 1, 1) < fontStyles);

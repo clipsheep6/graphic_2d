@@ -288,6 +288,16 @@ BitmapOpItem::BitmapOpItem(std::shared_ptr<RSImageBase> rsImage, SkSamplingOptio
     const SkPaint& paint)
     : OpItemWithRSImage(rsImage, paint, sizeof(BitmapOpItem)), samplingOptions_(samplingOptions)
 {}
+
+ColorFilterBitmapOpItem::ColorFilterBitmapOpItem(
+    const sk_sp<SkImage> bitmapInfo, float left, float top, SkSamplingOptions samplingOptions, const SkPaint* paint)
+    : BitmapOpItem(bitmapInfo, left, top, SkSamplingOptions(), paint)
+{}
+
+ColorFilterBitmapOpItem::ColorFilterBitmapOpItem(std::shared_ptr<RSImageBase> rsImage, SkSamplingOptions samplingOptions,
+    const SkPaint& paint)
+    : BitmapOpItem(rsImage, SkSamplingOptions(), paint)
+{}
 #else
 BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top, const SkPaint* paint)
     : OpItemWithRSImage(sizeof(BitmapOpItem))
@@ -306,7 +316,6 @@ BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float to
 BitmapOpItem::BitmapOpItem(std::shared_ptr<RSImageBase> rsImage, const SkPaint& paint)
     : OpItemWithRSImage(rsImage, paint, sizeof(BitmapOpItem))
 {}
-#endif
 
 ColorFilterBitmapOpItem::ColorFilterBitmapOpItem(
     const sk_sp<SkImage> bitmapInfo, float left, float top, const SkPaint* paint)
@@ -316,6 +325,7 @@ ColorFilterBitmapOpItem::ColorFilterBitmapOpItem(
 ColorFilterBitmapOpItem::ColorFilterBitmapOpItem(std::shared_ptr<RSImageBase> rsImage, const SkPaint& paint)
     : BitmapOpItem(rsImage, paint)
 {}
+#endif
 
 void ColorFilterBitmapOpItem::Draw(RSPaintFilterCanvas &canvas, const SkRect *) const
 {
@@ -732,7 +742,11 @@ VerticesOpItem::~VerticesOpItem()
 
 void VerticesOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
+#ifdef NEW_SKIA
+    canvas.drawVertices(vertices_, mode_, paint_);
+#else
     canvas.drawVertices(vertices_, bones_, boneCount_, mode_, paint_);
+#endif
 }
 
 ShadowRecOpItem::ShadowRecOpItem(const SkPath& path, const SkDrawShadowRec& rec)

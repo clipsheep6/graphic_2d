@@ -110,7 +110,7 @@ template("thirdparty_lib_txt_rosen") {
       if (defined(oem_commercial_build) && oem_commercial_build) {
         sources += [ "$txt_root/src/txt/platform_android.cc" ]
       } else {
-        sources += [ "$txt_root/src/txt/platform_android.cc" ]  # todo modify
+        sources += [ "$txt_root/src/txt/platform_ohos.cc" ]
       }
     } else if (platform == "windows") {
       sources +=

@@ -474,8 +474,15 @@ private:
 
 class ColorFilterBitmapOpItem : public BitmapOpItem {
 public:
+#ifdef NEW_SKIA
+    ColorFilterBitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top,
+        SkSamplingOptions samplingOptions, const SkPaint* paint);
+    ColorFilterBitmapOpItem(std::shared_ptr<RSImageBase> rsImage,
+        SkSamplingOptions samplingOptions, const SkPaint& paint);
+#else
     ColorFilterBitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top, const SkPaint* paint);
     ColorFilterBitmapOpItem(std::shared_ptr<RSImageBase> rsImage, const SkPaint& paint);
+#endif
     ~ColorFilterBitmapOpItem() override {}
 
     RSOpType GetType() const override

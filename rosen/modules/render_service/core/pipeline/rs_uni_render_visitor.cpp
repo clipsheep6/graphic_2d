@@ -1743,7 +1743,11 @@ void RSUniRenderVisitor::InitCacheSurface(RSRenderNode& node, int width, int hei
 {
 #if ((defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)) || (defined RS_ENABLE_VK)
     SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
+#ifdef NEW_SKIA
+    node.SetCacheSurface(SkSurface::MakeRenderTarget(canvas_->recordingContext(), SkBudgeted::kYes, info));
+#else
     node.SetCacheSurface(SkSurface::MakeRenderTarget(canvas_->getGrContext(), SkBudgeted::kYes, info));
+#endif
 #else
     node.SetCacheSurface(SkSurface::MakeRasterN32Premul(width, height));
 #endif

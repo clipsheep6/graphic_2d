@@ -338,6 +338,20 @@ void ColorFilterBitmapOpItem::Draw(RSPaintFilterCanvas &canvas, const SkRect *) 
     BitmapOpItem::Draw(*colorFilterCanvas, nullptr);
 }
 
+void OpItemWithRSImage::SetNodeId(NodeId id)
+{
+    if (rsImage_) {
+        rsImage_->SetNodeId(id);
+    }
+}
+
+void ImageWithParmOpItem::SetNodeId(NodeId id)
+{
+    if (rsImage_) {
+        rsImage_->SetNodeId(id);
+    }
+}
+
 #ifdef NEW_SKIA
 BitmapRectOpItem::BitmapRectOpItem(
     const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst,
@@ -598,7 +612,7 @@ void PaintOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 
 ImageWithParmOpItem::ImageWithParmOpItem(const sk_sp<SkImage> img, const sk_sp<SkData> data,
     const RsImageInfo& rsimageInfo, const SkPaint& paint)
-    : OpItemWithPaint(sizeof(ImageWithParmOpItem))
+    : OpItemWithImage(sizeof(ImageWithParmOpItem))
 {
     rsImage_ = std::make_shared<RSImage>();
     rsImage_->SetImage(img);
@@ -612,7 +626,7 @@ ImageWithParmOpItem::ImageWithParmOpItem(const sk_sp<SkImage> img, const sk_sp<S
 
 ImageWithParmOpItem::ImageWithParmOpItem(
     const std::shared_ptr<Media::PixelMap>& pixelmap, const RsImageInfo& rsimageInfo, const SkPaint& paint)
-    : OpItemWithPaint(sizeof(ImageWithParmOpItem))
+    : OpItemWithImage(sizeof(ImageWithParmOpItem))
 {
     rsImage_ = std::make_shared<RSImage>();
     rsImage_->SetPixelMap(pixelmap);
@@ -624,7 +638,7 @@ ImageWithParmOpItem::ImageWithParmOpItem(
 }
 
 ImageWithParmOpItem::ImageWithParmOpItem(const std::shared_ptr<RSImage>& rsImage, const SkPaint& paint)
-    : OpItemWithPaint(sizeof(ImageWithParmOpItem)), rsImage_(rsImage)
+    : OpItemWithImage(sizeof(ImageWithParmOpItem)), rsImage_(rsImage)
 {
     paint_ = paint;
 }

@@ -145,7 +145,7 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const sk_sp<SkImage>& val)
     return {};
 }
 
-bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val)
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val, NodeId nodeId)
 {
     return {};
 }
@@ -300,7 +300,7 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<Medi
 {
     return {};
 }
-bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Media::PixelMap>& val)
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Media::PixelMap>& val, NodeId nodeId)
 {
     return {};
 }

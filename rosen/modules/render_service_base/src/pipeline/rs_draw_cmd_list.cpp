@@ -157,12 +157,18 @@ int DrawCmdList::GetHeight() const
     return height_;
 }
 
+void DrawCmdList::SetNodeId(NodeId nodeId)
+{
+    nodeId_ = nodeId;
+}
+
 bool DrawCmdList::Marshalling(Parcel& parcel) const
 {
 #ifdef ROSEN_OHOS
     std::lock_guard<std::mutex> lock(mutex_);
     bool success = RSMarshallingHelper::Marshalling(parcel, width_) &&
                    RSMarshallingHelper::Marshalling(parcel, height_) &&
+                   RSMarshallingHelper::Marshalling(parcel, nodeId_) &&
                    RSMarshallingHelper::Marshalling(parcel, ops_) &&
                    RSMarshallingHelper::Marshalling(parcel, isCached_) &&
                    RSMarshallingHelper::Marshalling(parcel, cachedHighContrast_) &&
@@ -177,6 +183,13 @@ bool DrawCmdList::Marshalling(Parcel& parcel) const
 #endif
 }
 
+static void SetNodeIdToNode(std::vector<std::unique_ptr<OpItem>>& ops, NodeId nodeId)
+{
+    std::for_each(ops.begin(), ops.end(), [nodeId] (std::unique_ptr<OpItem>& opItem) {
+        opItem->SetNodeId(opItem->IsImageOptem() ? nodeId : 0);
+    });
+}
+
 DrawCmdList* DrawCmdList::Unmarshalling(Parcel& parcel)
 {
 #ifdef ROSEN_OHOS
@@ -188,13 +201,15 @@ DrawCmdList* DrawCmdList::Unmarshalling(Parcel& parcel)
         return nullptr;
     }
     std::unique_ptr<DrawCmdList> drawCmdList = std::make_unique<DrawCmdList>(width, height);
-    if (!(RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->ops_) &&
+    if (!(RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->nodeId_) &&
+            RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->ops_) &&
             RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->isCached_) &&
             RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->cachedHighContrast_) &&
             RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->opReplacedByCache_))) {
         ROSEN_LOGE("DrawCmdList::Unmarshalling contents failed!");
         return nullptr;
     }
+    SetNodeIdToNode(drawCmdList->ops_, drawCmdList->nodeId_);
     return drawCmdList.release();
 #else
     return nullptr;

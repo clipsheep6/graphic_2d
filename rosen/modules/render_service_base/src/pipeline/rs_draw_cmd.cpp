@@ -1173,7 +1173,7 @@ OpItem* BitmapOpItem::Unmarshalling(Parcel& parcel)
                    RSMarshallingHelper::Unmarshalling(parcel, paint);
 #ifdef NEW_SKIA
     SkSamplingOptions samplingOptions;
-    success = success && RSMarshallingHelper::Marshalling(parcel, samplingOptions);
+    success = success && RSMarshallingHelper::Unmarshalling(parcel, samplingOptions);
 #endif
     if (!success) {
         ROSEN_LOGE("BitmapOpItem::Unmarshalling failed!");

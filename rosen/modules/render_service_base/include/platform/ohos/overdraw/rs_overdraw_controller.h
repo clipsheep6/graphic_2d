@@ -21,6 +21,7 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <mutex>
 
 #include "common/rs_macros.h"
 #include "delegate/rs_delegate.h"

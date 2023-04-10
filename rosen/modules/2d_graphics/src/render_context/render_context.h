@@ -27,7 +27,11 @@
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrBackendSurface.h"
+#if defined(NEW_SKIA)
+#include "include/gpu/GrDirectContext.h"
+#else
 #include "include/gpu/GrContext.h"
+#endif
 #include "include/gpu/gl/GrGLInterface.h"
 #include "memory_handler.h"
 #ifndef ROSEN_CROSS_PLATFORM
@@ -45,12 +49,17 @@ public:
     sk_sp<SkSurface> AcquireSurface(int width, int height);
 
     void InitializeEglContext();
-
+#if defined(NEW_SKIA)
+    GrDirectContext* GetGrContext() const
+    {
+        return grContext_.get();
+    }
+#else
     GrContext* GetGrContext() const
     {
         return grContext_.get();
     }
-
+#endif
     sk_sp<SkSurface> GetSurface() const
     {
         return skSurface_;
@@ -122,7 +131,11 @@ public:
     EGLContext CreateShareContext();
 
 private:
+#if defined(NEW_SKIA)
+    sk_sp<GrDirectContext> grContext_;
+#else
     sk_sp<GrContext> grContext_;
+#endif
     sk_sp<SkSurface> skSurface_;
 
     EGLNativeWindowType nativeWindow_;

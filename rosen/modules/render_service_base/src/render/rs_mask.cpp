@@ -16,7 +16,11 @@
 #include "render/rs_mask.h"
 
 #include "platform/common/rs_log.h"
+#ifdef NEW_SKIA
+#include "include/core/SkPictureRecorder.h"
+#else
 #include "third_party/skia/include/core/SkPictureRecorder.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {

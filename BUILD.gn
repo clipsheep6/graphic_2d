@@ -46,6 +46,7 @@ group("graphic_2d_test") {
     "utils/color_manager:test",
     "utils/socketpair:test",
     "utils/sync_fence:test",
+    "rosen/samples/texgine:texgine_feature_test",
   ]
 }
 

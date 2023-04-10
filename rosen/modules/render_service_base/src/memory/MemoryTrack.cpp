@@ -14,6 +14,7 @@
  */
 #include "memory/MemoryTrack.h"
 
+#include "platform/common/rs_log.h"
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -46,14 +47,22 @@ void MemoryTrack::AddNodeRecord(const NodeId id, const MemoryInfo& info)
     memNodeOfPidMap_[info.pid].push_back(nodeInfoOfPid);
 }
 
-void MemoryTrack::RemoveNodeRecord(const NodeId id)
+bool MemoryTrack::RemoveNodeFromMap(const NodeId id, pid_t& pid, size_t& size)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    pid_t pid = memNodeMap_[id].pid;
-    size_t size = memNodeMap_[id].size;
+    if (memNodeMap_.find(id) == memNodeMap_.end()) {
+        RS_LOGW("MemoryTrack::RemoveNodeFromMap no this nodeId = %" PRIu64, id);
+        return false;
+    }
+    pid = memNodeMap_[id].pid;
+    size = memNodeMap_[id].size;
     memNodeMap_.erase(id);
-    auto pidItr = memNodeOfPidMap_.find(pid);
-    if (pidItr == memNodeOfPidMap_.end()) {
+    return true;
+}
+
+void MemoryTrack::RemoveNodeOfPidFromMap(const pid_t pid, const size_t size, const NodeId id)
+{
+    if (memNodeOfPidMap_.find(pid) == memNodeOfPidMap_.end()) {
+        RS_LOGW("MemoryTrack::RemoveNodeOfPidFromMap no this nodeId = %" PRIu64, id);
         return;
     }
     MemoryNodeOfPid nodeInfoOfPid = {size, id};
@@ -61,6 +70,18 @@ void MemoryTrack::RemoveNodeRecord(const NodeId id)
     if (itr != memNodeOfPidMap_[pid].end()) {
         memNodeOfPidMap_[pid].erase(itr);
     }
+}
+
+void MemoryTrack::RemoveNodeRecord(const NodeId id)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    pid_t pid = 0;
+    size_t size = 0;
+    bool isSuccess = RemoveNodeFromMap(id, pid, size);
+    if (!isSuccess) {
+        return;
+    }
+    RemoveNodeOfPidFromMap(pid, size, id);
 }
 
 void MemoryTrack::DumpMemoryStatistics(DfxString& log, const pid_t pid)

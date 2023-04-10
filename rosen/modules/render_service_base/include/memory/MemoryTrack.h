@@ -71,6 +71,8 @@ private:
     const char* MemoryType2String(MEMORY_TYPE type);
     void DumpMemoryNodeStatistics(DfxString& log);
     void DumpMemoryPicStatistics(DfxString& log);
+    bool RemoveNodeFromMap(const NodeId id, pid_t& pid, size_t& size);
+    void RemoveNodeOfPidFromMap(const pid_t pid, const size_t size, const NodeId id);
     std::mutex mutex_;
     std::unordered_map<NodeId, MemoryInfo> memNodeMap_;
     std::unordered_map<const void*, MemoryInfo> memPicRecord_;

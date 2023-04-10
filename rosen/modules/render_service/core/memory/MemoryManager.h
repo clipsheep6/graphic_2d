@@ -30,11 +30,17 @@ public:
     // Count memory for hidumper
     static MemoryGraphic CountPidMemory(int pid, const GrContext* grContext);
     static void CountMemory(std::vector<pid_t> pids, const GrContext* grContext , std::vector<MemoryGraphic>& mems);
+    static void ReleaseGpuResByTag(GrContext* grContext, GrGpuResourceTag& tag);
+    static void CollectTrashInfo(pid_t pid);
 private:
     // rs memory = rs + skia cpu + skia gpu
     static void DumpRenderServiceMemory(DfxString& log);
     static void DumpDrawingCpuMemory(DfxString& log);
-    static void DumpDrawingGpuMemory(DfxString& log, const GrContext* grContext);
+    static void DumpDrawingGpuMemory(DfxString& log, const GrContext* grContext, std::string& tag);
+
+    static void DumpGpuCache(DfxString& log, const GrContext* grContext, GrGpuResourceTag* tag, std::string& name);
+    static void DumpAllWindow(DfxString& log, const GrContext* grContext);
+    static void DumpTrashWindow(DfxString& log, const GrContext* grContext);
 
     //jemalloc info
     static void DumpMallocStat(std::string& log);

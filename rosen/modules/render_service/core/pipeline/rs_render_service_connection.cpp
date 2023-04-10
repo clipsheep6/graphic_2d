@@ -92,6 +92,7 @@ void RSRenderServiceConnection::CleanAll(bool toDelete) noexcept
     }
     RS_LOGD("RSRenderServiceConnection::CleanAll() start.");
     mainThread_->ScheduleTask([this]() {
+        mainThread_->OnHapExit(remotePid_);
         CleanVirtualScreens();
         CleanRenderNodes();
         mainThread_->ClearTransactionDataPidInfo(remotePid_);

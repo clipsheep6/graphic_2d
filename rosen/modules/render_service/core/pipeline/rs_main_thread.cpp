@@ -23,6 +23,7 @@
 #include "command/rs_message_processor.h"
 #include "delegate/rs_functional_delegate.h"
 #include "memory/MemoryManager.h"
+#include "memory/MemoryTrack.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_base_render_util.h"
@@ -1373,6 +1374,13 @@ void RSMainThread::ResetSortedChildren(std::shared_ptr<RSBaseRenderNode> node)
     node->ResetSortedChildren();
 }
 
+void RSMainThread::OnHapExit(pid_t remotePid)
+{
+    // if pid tag is not clear, that is garbage
+    // Need to call before window is clean.
+    MemoryManager::CollectTrashInfo(remotePid);
+}
+
 void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
 {
     if (!isUniRender_) {
@@ -1397,8 +1405,9 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
 
         if (RSSystemProperties::GetReleaseGpuResourceEnabled()) {
             GrGpuResourceTag tag(remotePid, 0, 0, 0);
-            grContext->releaseByTag(tag); // clear gpu resource by pid
+            MemoryManager::ReleaseGpuResByTag(grContext, tag);
         }
+        MemoryTrack::Instance().freeAllLazyPicture(remotePid);
         grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
         lastCleanCacheTimestamp_ = timestamp_;
 #endif
@@ -1486,7 +1495,7 @@ void RSMainThread::CountMem(std::vector<MemoryGraphic>& mems)
     nodeMap.TraverseSurfaceNodes([&pids] (const std::shared_ptr<RSSurfaceRenderNode>& node) {
         auto pid = ExtractPid(node->GetId());
         if (std::find(pids.begin(), pids.end(), pid) == pids.end()) {
-            pids.emplace_back();
+            pids.emplace_back(pid);
         }
     });
     MemoryManager::CountMemory(pids, GetRenderEngine()->GetRenderContext()->GetGrContext(), mems);

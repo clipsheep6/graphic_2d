@@ -317,6 +317,8 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val)
         }
         SkReadBuffer reader(data->data(), data->size());
         val = reader.readImage();
+        MemoryInfo info = { MemoryTrack::Instance().CalcImageSize(val), 0, 0, MEMORY_TYPE::MEM_SKIMAGE_LAZY };
+        MemoryTrack::Instance().AddPictureRecord(data->data(), info);
         return val != nullptr;
     } else {
         size_t pixmapSize = parcel.ReadUint32();
@@ -357,7 +359,8 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val)
         val = SkImage::MakeRasterData(imageInfo, skData, rb);
         // add to MemoryTrack for memoryManager
         if (pixmapSize >= MIN_DATA_SIZE) {
-            MemoryInfo info = { pixmapSize, 0, MEMORY_TYPE::MEM_SKIMAGE }; // pid is set to 0 temporarily.
+            // pid and nodeid is set correctly by EndNodeRecord.
+            MemoryInfo info = { pixmapSize, 0, 0, MEMORY_TYPE::MEM_SKIMAGE };
             MemoryTrack::Instance().AddPictureRecord(addr, info);
         }
         return val != nullptr;
@@ -782,7 +785,8 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Media::P
         ROSEN_LOGE("failed RSMarshallingHelper::Unmarshalling Media::PixelMap");
         return false;
     }
-    MemoryInfo info = {val->GetByteCount(), 0, MEMORY_TYPE::MEM_PIXELMAP}; // pid is set to 0 temporarily.
+    // pid and nodeid is set correctly by EndNodeRecord.
+    MemoryInfo info = {val->GetByteCount(), 0, 0, MEMORY_TYPE::MEM_PIXELMAP};
     MemoryTrack::Instance().AddPictureRecord(val->GetPixels(), info);
     val->SetFreePixelMapProc(CustomFreePixelMap);
     return true;

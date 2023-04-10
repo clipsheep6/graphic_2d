@@ -41,7 +41,7 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config
       nodeType_(config.nodeType),
       dirtyManager_(std::make_shared<RSDirtyRegionManager>())
 {
-    MemoryInfo info = {sizeof(*this), ExtractPid(config.id), MEMORY_TYPE::MEM_RENDER_NODE};
+    MemoryInfo info = {sizeof(*this), ExtractPid(config.id), config.id, MEMORY_TYPE::MEM_RENDER_NODE};
     MemoryTrack::Instance().AddNodeRecord(config.id, info);
 }
 

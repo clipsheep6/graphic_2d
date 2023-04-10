@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/test.gni")
+import("//foundation/arkui/ace_engine/ace_config.gni")
 import(
     "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/config.gni")
 
@@ -21,7 +22,6 @@ module_output_path =
 ohos_unittest("2d_engine_rosen_text_prop_test") {
   module_out_path = module_output_path
   sources = [
-    "place_holder_test.cpp",
     "rosen_coverter_txt_test.cpp",
     "text_style_test.cpp",
     "typography_style_test.cpp",
@@ -30,15 +30,18 @@ ohos_unittest("2d_engine_rosen_text_prop_test") {
   include_dirs = [
     "//third_party/googletest/googletest/include",
     "$rosen_2d_engine_root",
-    "$rosen_2d_engine_root/rosen_text/properties",
+    "$rosen_2d_engine_root/rosen_text",
+    "$rosen_2d_engine_root/rosen_text/export",
     "$rosen_root/modules/2d_graphics/include",
     "$rosen_root/modules/2d_graphics/src",
     "//third_party/flutter/engine/flutter/third_party/txt/src",
     "//third_party/flutter/skia/third_party/externals/harfbuzz/src",
     "//third_party/flutter/skia",
+    "//third_party/flutter/engine",
   ]
 
   deps = [
+    "$ace_flutter_engine_root:flutter_engine_fml_ohos",
     "$rosen_root/modules/2d_graphics:2d_graphics",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
   ]

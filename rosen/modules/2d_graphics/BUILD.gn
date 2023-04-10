@@ -14,11 +14,11 @@
 import("//build/ohos.gni")
 import("//foundation/arkui/ace_engine/ace_config.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
-import(
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/config.gni")
 
-drawing_src_dir = "$rosen_root/modules/2d_graphics/src/drawing"
-src_dir = "$rosen_root/modules/2d_graphics/src"
+drawing_src_dir =
+    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/drawing"
+src_dir = "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src"
+is_use_texgine = false
 
 template("graphics2d_source_set") {
   forward_variables_from(invoker, "*")
@@ -41,6 +41,7 @@ template("graphics2d_source_set") {
       "$drawing_src_dir/draw/path.cpp",
       "$drawing_src_dir/draw/pen.cpp",
       "$drawing_src_dir/effect/color_filter.cpp",
+      "$drawing_src_dir/effect/color_matrix.cpp",
       "$drawing_src_dir/effect/color_space.cpp",
       "$drawing_src_dir/effect/filter.cpp",
       "$drawing_src_dir/effect/image_filter.cpp",
@@ -70,28 +71,25 @@ template("graphics2d_source_set") {
       "$drawing_src_dir/utils/camera3d.cpp",
       "$drawing_src_dir/utils/matrix.cpp",
     ]
-
-    sources += [
-      "$rosen_text_root/properties/font_collection_txt.cpp",
-      "$rosen_text_root/properties/placeholder_run.cpp",
-      "$rosen_text_root/properties/rosen_converter_txt.cpp",
-      "$rosen_text_root/properties/text_style.cpp",
-      "$rosen_text_root/properties/typography_create_txt.cpp",
-      "$rosen_text_root/properties/typography_style.cpp",
-      "$rosen_text_root/properties/typography_txt.cpp",
-      "$rosen_text_root/ui/font_collection.cpp",
-      "$rosen_text_root/ui/typography.cpp",
-      "$rosen_text_root/ui/typography_create.cpp",
-    ]
+    if (!is_use_texgine) {
+      sources += [
+        "../2d_engine/rosen_text/adapter/common/text_style.cpp",
+        "../2d_engine/rosen_text/adapter/common/typography_style.cpp",
+        "../2d_engine/rosen_text/adapter/txt/convert.cpp",
+        "../2d_engine/rosen_text/adapter/txt/font_collection.cpp",
+        "../2d_engine/rosen_text/adapter/txt/typography.cpp",
+        "../2d_engine/rosen_text/adapter/txt/typography_create.cpp",
+      ]
+    }
 
     include_dirs = [
       "include",
       "$src_dir",
       "$drawing_src_dir",
       "$drawing_src_dir/engine_adapter",
-      "$rosen_2d_engine_root",
       "//foundation/arkui/ace_engine/frameworks",
       "//third_party/bounds_checking_function/include",
+      "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/export",
     ]
 
     defines += [ "USE_ACE_SKIA" ]
@@ -129,6 +127,9 @@ template("graphics2d_source_set") {
       if (!is_cross_platform_build) {
         deps += [ "//base/hiviewdfx/hilog/frameworks/libhilog:libhilog_source_$platform" ]
       }
+    }
+    if (is_use_texgine) {
+      deps += [ "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text:rosen_text_texgine" ]
     }
 
     part_name = "graphic_standard"

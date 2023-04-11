@@ -44,6 +44,7 @@ std::shared_ptr<Media::PixelMap> RSUniUICapture::TakeLocalCapture()
         RS_LOGE("RSUniUICapture::TakeLocalCapture node is nullptr return");
         return nullptr;
     }
+    node->ApplyModifiers();
     std::shared_ptr<Media::PixelMap> pixelmap = CreatePixelMapByNode(node);
     if (pixelmap == nullptr) {
         RS_LOGE("RSUniUICapture::TakeLocalCapture: pixelmap == nullptr!");

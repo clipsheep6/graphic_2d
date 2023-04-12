@@ -72,6 +72,11 @@ ImageFilter::ImageFilter(FilterType t, std::shared_ptr<ImageFilter> f1, std::sha
     impl_->InitWithCompose(f1, f2);
 }
 
+ImageFilter::ImageFilter(FilterType t) noexcept : ImageFilter()
+{
+    type_ = t;
+}
+
 ImageFilter::ImageFilter() noexcept
     : type_(ImageFilter::FilterType::NO_TYPE), impl_(ImplFactory::CreateImageFilterImpl())
 {}

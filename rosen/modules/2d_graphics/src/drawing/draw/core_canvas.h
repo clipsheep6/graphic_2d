@@ -29,10 +29,20 @@ enum class SrcRectConstraint {
 };
 class CoreCanvas {
 public:
+    enum class Type {
+        COMMON,
+        RECORDING,
+    };
+
     CoreCanvas();
     explicit CoreCanvas(void* rawCanvas);
     virtual ~CoreCanvas() {}
     void Bind(const Bitmap& bitmap);
+
+	virtual Type GetType() const
+    {
+        return Type::COMMON;
+    }
 
     // shapes
     void DrawPoint(const Point& point);

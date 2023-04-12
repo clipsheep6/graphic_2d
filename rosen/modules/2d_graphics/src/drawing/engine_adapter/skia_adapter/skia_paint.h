@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,6 +43,9 @@ public:
     void BrushToSkPaint(const Brush& brush, SkPaint& paint) const;
     void PenToSkPaint(const Pen& pen, SkPaint& paint) const;
 
+    void SkPaintToBrush(Brush& brush, const SkPaint& paint) const;
+    void SkPaintToPen(Pen& pen, const SkPaint& paint) const;
+
     void DisableStroke();
     void DisableFill();
 
@@ -52,6 +55,7 @@ public:
 
 private:
     void ApplyFilter(SkPaint& paint, const Filter& filter) const;
+    void GetFilter(const SkPaint& paint, Filter& filter) const;
 
     std::shared_ptr<PaintData> stroke_;
     std::shared_ptr<PaintData> fill_;

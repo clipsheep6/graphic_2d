@@ -29,6 +29,7 @@
 #include "impl_interface/path_impl.h"
 #include "impl_interface/picture_impl.h"
 #include "impl_interface/shader_effect_impl.h"
+#include "impl_interface/svg_dom_impl.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -46,6 +47,7 @@ public:
     static std::unique_ptr<ImageFilterImpl> CreateImageFilterImpl();
     static std::unique_ptr<PictureImpl> CreatePictureImpl();
     static std::unique_ptr<ShaderEffectImpl> CreateShaderEffectImpl();
+    static std::unique_ptr<SVGDOMImpl> CreateSVGDOMImpl();
     static std::unique_ptr<PathEffectImpl> CreatePathEffectImpl();
     static std::unique_ptr<ColorSpaceImpl> CreateColorSpaceImpl();
     static std::unique_ptr<MatrixImpl> CreateMatrixImpl();

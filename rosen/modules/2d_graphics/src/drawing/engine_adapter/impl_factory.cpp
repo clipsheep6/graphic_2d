@@ -76,6 +76,11 @@ std::unique_ptr<ShaderEffectImpl> ImplFactory::CreateShaderEffectImpl()
     return EngineImplFactory::CreateShaderEffect();
 }
 
+std::unique_ptr<SVGDOMImpl> ImplFactory::CreateSVGDOMImpl()
+{
+    return EngineImplFactory::CreateSVGDOM();
+}
+
 std::unique_ptr<PathEffectImpl> ImplFactory::CreatePathEffectImpl()
 {
     return EngineImplFactory::CreatePathEffect();

@@ -28,6 +28,7 @@
 #include "skia_adapter/skia_path_effect.h"
 #include "skia_adapter/skia_picture.h"
 #include "skia_adapter/skia_shader_effect.h"
+#include "skia_adapter/skia_svg_dom.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -87,6 +88,11 @@ std::unique_ptr<ImageFilterImpl> SkiaImplFactory::CreateImageFilter()
 std::unique_ptr<ShaderEffectImpl> SkiaImplFactory::CreateShaderEffect()
 {
     return std::make_unique<SkiaShaderEffect>();
+}
+
+std::unique_ptr<SVGDOMImpl> SkiaImplFactory::CreateSVGDOM()
+{
+    return std::make_unique<SkiaSVGDOM>();
 }
 
 std::unique_ptr<PathEffectImpl> SkiaImplFactory::CreatePathEffect()

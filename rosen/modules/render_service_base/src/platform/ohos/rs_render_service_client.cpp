@@ -123,20 +123,22 @@ void RSRenderServiceClient::TriggerSurfaceCaptureCallback(NodeId id, Media::Pixe
 {
     ROSEN_LOGI("RSRenderServiceClient::Into TriggerSurfaceCaptureCallback nodeId:[%" PRIu64 "]", id);
     std::shared_ptr<Media::PixelMap> surfaceCapture(pixelmap);
-    std::shared_ptr<SurfaceCaptureCallback> callback = nullptr;
+    std::vector<std::shared_ptr<SurfaceCaptureCallback>> surfaceCaptureVector;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         auto iter = surfaceCaptureCbMap_.find(id);
         if (iter != surfaceCaptureCbMap_.end()) {
-            callback = iter->second;
+            surfaceCaptureVector = iter->second;
             surfaceCaptureCbMap_.erase(iter);
         }
     }
-    if (callback == nullptr) {
+    if (!surfaceCaptureVector.size()) {
         ROSEN_LOGE("RSRenderServiceClient::TriggerSurfaceCaptureCallback: callback is nullptr!");
         return;
     }
-    callback->OnSurfaceCapture(surfaceCapture);
+    for (auto callback : surfaceCaptureVector) {
+        callback->OnSurfaceCapture(surfaceCapture);
+    }
 }
 
 class SurfaceCaptureCallbackDirector : public RSSurfaceCaptureCallbackStub
@@ -168,10 +170,12 @@ bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<Surfac
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (surfaceCaptureCbMap_.count(id) != 0) {
-            ROSEN_LOGW("RSRenderServiceClient::TakeSurfaceCapture surfaceCaptureCbMap_.count(id) != 0");
-            return false;
+            ROSEN_LOGI("RSRenderServiceClient::TakeSurfaceCapture surfaceCaptureCbMap_.count(id) != 0");
+            surfaceCaptureCbMap_[id].push_back(callback);
+            return true;
         }
-        surfaceCaptureCbMap_.emplace(id, callback);
+        std::vector<std::shared_ptr<SurfaceCaptureCallback>> surfaceCaptureVector = {callback};
+        surfaceCaptureCbMap_.emplace(id, surfaceCaptureVector);
     }
 
     if (surfaceCaptureCbDirector_ == nullptr) {

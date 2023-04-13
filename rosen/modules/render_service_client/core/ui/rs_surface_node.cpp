@@ -382,6 +382,11 @@ void RSSurfaceNode::SetWindowId(uint32_t windowId)
     windowId_ = windowId;
 }
 
+void RSSurfaceNode::SetSurface(sptr<Surface> surface)
+{
+    return;
+}
+
 void RSSurfaceNode::SetFreeze(bool isFreeze)
 {
     if (!IsUniRenderEnabled()) {

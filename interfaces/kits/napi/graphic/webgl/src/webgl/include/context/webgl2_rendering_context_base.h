@@ -471,6 +471,8 @@ public:
 
     static napi_value GetActiveUniforms(napi_env env, napi_callback_info info);
 
+    static napi_value GetParameter(napi_env env, napi_callback_info info);
+
 public:
     std::map<GLenum, GLuint> queryMaps;
 };

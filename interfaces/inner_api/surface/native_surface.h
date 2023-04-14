@@ -48,7 +48,6 @@ public:
      */
     void* Get();
 
-private:
     /*
      * Callback when the compat native window is created.
      *
@@ -56,6 +55,7 @@ private:
      */
     void OnNativeWindowCreated(void* nativeWindow);
 
+private:
     /*
      * Callback when the compat native window is destroyed.
      */

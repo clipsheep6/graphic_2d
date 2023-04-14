@@ -46,6 +46,9 @@ public:
 
     void Playback(SkCanvas& canvas, const SkRect* rect = nullptr);
     void Playback(RSPaintFilterCanvas& canvas, const SkRect* rect = nullptr);
+    
+    void PlaybackWithParam(SkCanvas& canvas, int start, int end, int recordStart, const SkRect* rect = nullptr);
+    void PlaybackWithParam(RSPaintFilterCanvas& canvas, int start, int end, int recordStart, const SkRect* rect = nullptr);
 
     size_t GetSize() const;
     int GetWidth() const;

@@ -57,7 +57,7 @@ ohos_shared_library("skeffectchain") {
     public_deps += [ "//foundation/graphic/graphic_2d:libgl" ]
   }
 
-  if (use_new_skia) {
+  if (defined(use_new_skia) && use_new_skia) {
     public_deps += [ "//third_party/skia:skia" ]
   } else {
     public_deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]

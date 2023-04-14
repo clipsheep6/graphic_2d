@@ -29,7 +29,7 @@ group("test") {
     ":render_service_client_ui_capture_demo",
     ":render_service_client_scale_demo",
     #":render_service_client_rs_animation_demo",
-    ":surface_capture_demo",
+    #":surface_capture_demo",
     ":security_layer_demo",
     #":render_service_client_surface_node_demo",
     ":render_service_client_uni_render_demo",
@@ -41,7 +41,7 @@ group("test") {
   ]
 }
 
-if (use_new_skia) {
+if (defined(use_new_skia) && use_new_skia) {
   public_deps_skia = "//third_party/skia:skia"
 } else {
   public_deps_skia = "//third_party/flutter/build/skia:ace_skia_ohos"
@@ -320,7 +320,11 @@ ohos_executable("render_service_client_watermark_demo") {
 
   deps = [ "../../render_service_client:librender_service_client" ]
 
-  public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  if (defined(use_new_skia) && use_new_skia) {
+    public_deps = [ "//third_party/skia:skia" ]
+  } else {
+    public_deps = [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  }
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

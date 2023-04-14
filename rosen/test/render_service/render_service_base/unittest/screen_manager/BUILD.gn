@@ -43,7 +43,7 @@ ohos_unittest("RSRenderServiceBaseScreenMangerTest") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//third_party/googletest:gtest_main",
   ]
-  if (use_new_skia) {
+  if (defined(use_new_skia) && use_new_skia) {
     deps += [ "//third_party/skia:skia" ]
     include_dirs += [ "//third_party/skia/src" ]
   } else {

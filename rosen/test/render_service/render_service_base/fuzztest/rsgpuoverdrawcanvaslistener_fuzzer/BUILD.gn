@@ -26,7 +26,7 @@ ohos_fuzztest("RSGpuOverdrawCanvasListenerFuzzTest") {
     "//foundation/graphic/graphic_2d/utils/log",
   ]
 
-  if (use_new_skia) {
+  if (defined(use_new_skia) && use_new_skia) {
     include_dirs += [ "//third_party/skia" ]
   } else {
     include_dirs += [ "//third_party/flutter/skia" ]

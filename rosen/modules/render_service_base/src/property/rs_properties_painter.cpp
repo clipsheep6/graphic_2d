@@ -447,7 +447,7 @@ SkColor RSPropertiesPainter::CalcAverageColor(sk_sp<SkImage> imageSnapshot)
     // resize snapshot to 1x1 to calculate average color
     // kMedium_SkFilterQuality will do bilerp + mipmaps for down-scaling, we can easily get average color
 #ifdef NEW_SKIA
-    imageSnapshot->scalePixels(single_pixel, SkSamplingOptions());
+    imageSnapshot->scalePixels(single_pixel, SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kLinear));
 #else
     imageSnapshot->scalePixels(single_pixel, SkFilterQuality::kMedium_SkFilterQuality);
 #endif

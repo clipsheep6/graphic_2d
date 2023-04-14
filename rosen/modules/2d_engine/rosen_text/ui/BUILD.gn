@@ -22,8 +22,8 @@ config("rosen_text_ui_config") {
     "$rosen_2d_engine_root_ui",
   ]
 
-  if (use_new_skia) {
-    include_dirs += [ 
+  if (defined(use_new_skia) && use_new_skia) {
+    include_dirs += [
       "$flutter_root/txt/src",
       "//third_party/skia/third_party/externals/harfbuzz/src"
     ]
@@ -43,8 +43,8 @@ config("rosen_text_config") {
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src",
     "//third_party/bounds_checking_function/include",
   ]
-  if (use_new_skia) {
-    include_dirs += [ 
+  if (defined(use_new_skia) && use_new_skia) {
+    include_dirs += [
       "$flutter_root/txt/src",
       "//third_party/skia/third_party/externals/harfbuzz/src"
     ]

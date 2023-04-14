@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("//foundation/arkui/ace_engine/ace_config.gni")
 
-if (use_new_skia) {
+if (defined(use_new_skia) && use_new_skia) {
   skia_root = "//third_party/skia"
 } else {
   skia_root = "$flutter_root/skia"
@@ -123,7 +123,7 @@ template("rosen_libharfbuzz") {
       "$skia_root/third_party/externals/harfbuzz/src/hb-unicode.cc",
       "$skia_root/third_party/externals/harfbuzz/src/hb-warning.cc",
     ]
-    if (use_new_skia) {
+    if (defined(use_new_skia) && use_new_skia) {
       sources -= [
         "$skia_root/third_party/externals/harfbuzz/src/hb-ot-shape-complex-use-table.cc",
         "$skia_root/third_party/externals/harfbuzz/src/hb-warning.cc"

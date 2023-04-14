@@ -465,7 +465,7 @@ public:
 
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static OpItem* Unmarshalling(Parcel& parcel);
-    
+
 #ifdef NEW_SKIA
 private:
     SkSamplingOptions samplingOptions_;
@@ -501,7 +501,7 @@ public:
 #ifdef NEW_SKIA
     BitmapRectOpItem(const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst,
         const SkSamplingOptions& samplingOptions, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint);
-    BitmapRectOpItem(std::shared_ptr<RSImageBase> rsImage, const SkSamplingOptions& samplingOptions, 
+    BitmapRectOpItem(std::shared_ptr<RSImageBase> rsImage, const SkSamplingOptions& samplingOptions,
         const SkPaint& paint, SkCanvas::SrcRectConstraint constraint);
 #else
     BitmapRectOpItem(
@@ -517,7 +517,7 @@ public:
 
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static OpItem* Unmarshalling(Parcel& parcel);
-    
+
 #ifdef NEW_SKIA
 private:
     SkSamplingOptions samplingOptions_;
@@ -544,7 +544,7 @@ public:
 
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static OpItem* Unmarshalling(Parcel& parcel);
-    
+
 #ifdef NEW_SKIA
 private:
     SkSamplingOptions samplingOptions_;
@@ -557,7 +557,7 @@ public:
     PixelMapRectOpItem(
         const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src, const SkRect& dst,
         const SkSamplingOptions& samplingOptions, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint);
-    PixelMapRectOpItem(std::shared_ptr<RSImageBase> rsImage,  const SkSamplingOptions& samplingOptions, 
+    PixelMapRectOpItem(std::shared_ptr<RSImageBase> rsImage,  const SkSamplingOptions& samplingOptions,
     const SkPaint& paint, SkCanvas::SrcRectConstraint constraint);
 #else
     PixelMapRectOpItem(
@@ -573,7 +573,7 @@ public:
 
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static OpItem* Unmarshalling(Parcel& parcel);
-    
+
 #ifdef NEW_SKIA
 private:
     SkSamplingOptions samplingOptions_;

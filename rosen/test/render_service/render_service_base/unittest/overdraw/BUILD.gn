@@ -30,10 +30,10 @@ ohos_unittest("overdraw_test") {
     "//foundation/graphic/graphic_2d/utils/test_header:test_header",
     "//third_party/googletest:gmock",
   ]
-  if (use_new_skia) {
-    deps += [ "//third_party/skia:skia" ] 
+  if (defined(use_new_skia) && use_new_skia) {
+    deps += [ "//third_party/skia:skia" ]
   } else {
-    deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ] 
+    deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
   }
   part_name = "graphic_standard"
   subsystem_name = "graphic"

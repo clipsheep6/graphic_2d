@@ -25,8 +25,13 @@ ohos_unittest("frame_analyzer_test") {
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/frame_analyzer:libframe_analyzer",
     "//foundation/graphic/graphic_2d/utils/test_header:test_header",
-    "//third_party/flutter/build/skia:ace_skia_ohos",
   ]
+
+  if (defined(use_new_skia) && use_new_skia) {
+    deps += [ "//third_party/skia:skia" ]
+  } else {
+    deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  }
 
   cflags = [
     "-Wall",

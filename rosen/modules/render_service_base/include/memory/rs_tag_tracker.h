@@ -14,6 +14,7 @@
  */
 #ifndef RS_TAG_TRACKER
 #define RS_TAG_TRACKER
+#ifndef NEW_SKIA
 #include "include/gpu/GrContext.h"
 
 #include "common/rs_common_def.h"
@@ -47,4 +48,5 @@ private:
 }; 
 } // namespace OHOS  
 } // namespace Rosen
+#endif
 #endif

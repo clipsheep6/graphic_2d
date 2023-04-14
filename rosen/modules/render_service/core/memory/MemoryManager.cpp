@@ -19,8 +19,12 @@
 #include <SkGraphics.h>
 
 #include "SkiaMemoryTracer.h"
+#ifdef NEW_SKIA
+#include "include/gpu/GrDirectContext.h"
+#else
 #include "include/gpu/GrContext.h"
 #include "src/gpu/GrContextPriv.h"
+#endif
 
 #include "common/rs_obj_abs_geometry.h"
 #include "memory/rs_tag_tracker.h"
@@ -37,7 +41,12 @@ constexpr const char* MEM_GPU_TYPE = "gpu";
 constexpr const char* MEM_JEMALLOC_TYPE = "jemalloc";
 }
 
+
+#ifdef NEW_SKIA
+void MemoryManager::DumpMemoryUsage(DfxString& log, const GrDirectContext* grContext, std::string& type)
+#else
 void MemoryManager::DumpMemoryUsage(DfxString& log, const GrContext* grContext, std::string& type)
+#endif
 {
     if (type.empty() || type == MEM_RS_TYPE) {
         DumpRenderServiceMemory(log);
@@ -108,7 +117,11 @@ void MemoryManager::DumpPidMemory(DfxString& log, int pid)
     MemoryTrack::Instance().DumpMemoryStatistics(log, pid);
 }
 
+#ifdef NEW_SKIA
+MemoryGraphic MemoryManager::CountPidMemory(int pid, const GrDirectContext* grContext)
+#else
 MemoryGraphic MemoryManager::CountPidMemory(int pid, const GrContext* grContext)
+#endif
 {
     MemoryGraphic totalMemGraphic;
 
@@ -118,6 +131,7 @@ MemoryGraphic MemoryManager::CountPidMemory(int pid, const GrContext* grContext)
     totalMemGraphic += rsMemGraphic;
 
 #ifdef RS_ENABLE_GL
+#ifndef NEW_SKIA
     // Count mem of Skia GPU
     if (grContext) {
         SkiaMemoryTracer gpuTracer("category", true);
@@ -127,11 +141,16 @@ MemoryGraphic MemoryManager::CountPidMemory(int pid, const GrContext* grContext)
         totalMemGraphic.IncreaseGpuMemory(gpuMem);
     }
 #endif
+#endif
 
     return totalMemGraphic;
 }
 
+#ifdef NEW_SKIA
+void MemoryManager::CountMemory(std::vector<pid_t> pids, const GrDirectContext* grContext, std::vector<MemoryGraphic>& mems)
+#else
 void MemoryManager::CountMemory(std::vector<pid_t> pids, const GrContext* grContext, std::vector<MemoryGraphic>& mems)
+#endif
 {
     auto countMem = [&grContext, &mems] (pid_t pid) {
        mems.emplace_back(CountPidMemory(pid, grContext));
@@ -199,8 +218,11 @@ void MemoryManager::DumpDrawingCpuMemory(DfxString& log)
     size_t fontCacheLimit = SkGraphics::GetFontCacheLimit();
     log.AppendFormat("\ncpu cache limit = %zu ( fontcache = %zu ):\n", cacheLimit, fontCacheLimit);
 }
-
+#ifdef NEW_SKIA
+void MemoryManager::DumpGpuCache(DfxString& log, const GrDirectContext* grContext, GrGpuResourceTag* tag, std::string& name)
+#else
 void MemoryManager::DumpGpuCache(DfxString& log, const GrContext* grContext, GrGpuResourceTag* tag, std::string& name)
+#endif
 {
     if (!grContext) {
         log.AppendFormat("grContext is nullptr.\n");
@@ -245,6 +267,7 @@ void MemoryManager::DumpDrawingGpuMemory(DfxString& log, const GrContext* grCont
     std::string gpuInfo;
     /////////////////////////////GPU/////////////////////////
 #ifdef RS_ENABLE_GL
+#ifndef NEW_SKIA
     // total
     DumpGpuCache(log, grContext, nullptr, gpuInfo);
 
@@ -274,6 +297,7 @@ void MemoryManager::DumpDrawingGpuMemory(DfxString& log, const GrContext* grCont
     SkString stat;
     grContext->priv().dumpGpuStats(&stat);
     log.AppendFormat("%s\n", stat.c_str());
+#endif
 #endif
 }
 

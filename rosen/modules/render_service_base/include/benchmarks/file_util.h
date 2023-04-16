@@ -13,38 +13,31 @@
  * limitations under the License.
  */
 
-#ifndef SURFACE_OHOS_H
-#define SURFACE_OHOS_H
+#ifndef RS_FILE_UTIL
+#define RS_FILE_UTIL
 
-#include <surface.h>
-#include "surface.h"
-#include "window.h"
-#include "surface_frame_ohos.h"
-#include "drawing_utils.h"
-#include "drawing_proxy.h"
+#include <string>
+#include "nlohmann/json.hpp"
 
 namespace OHOS {
 namespace Rosen {
-class SurfaceOhos : public SurfaceBase {
-public:
-    static std::shared_ptr<SurfaceBase> CreateSurface(sptr<Surface> surface);
+std::string FormatString(const char* fmt, va_list vararg);
 
-    explicit SurfaceOhos(const sptr<Surface>& producer);
-    ~SurfaceOhos() override {};
+std::string StringPrintf(const char* fmt, ...);
 
-    bool IsValid() const override
-    {
-        return producer_ != nullptr;
-    }
+bool GetRealPath(const std::string& path, std::string& realPath);
 
-    sptr<Surface> GetSurface() const
-    {
-        return producer_;
-    }
-protected:
-    sptr<Surface> producer_;
-    ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
-};
+bool ReadFileToString(const std::string& filePath, std::string& content);
+
+bool WriteStringToFile(int fd, const std::string& content);
+
+bool WriteStringToFile(const std::string& content, const std::string& filePath);
+
+bool ReadFileToStringForVFS(const std::string& filePath, std::string& content);
+
+bool WriteToFile(uintptr_t data, size_t size, const std::string& filePath);
+
 } // namespace Rosen
 } // namespace OHOS
-#endif
+
+#endif // RS_FILE_UTIL

@@ -13,38 +13,36 @@
  * limitations under the License.
  */
 
-#ifndef SURFACE_OHOS_H
-#define SURFACE_OHOS_H
-
-#include <surface.h>
-#include "surface.h"
-#include "window.h"
-#include "surface_frame_ohos.h"
-#include "drawing_utils.h"
-#include "drawing_proxy.h"
+#include "surface_frame_ohos_vulkan.h"
 
 namespace OHOS {
 namespace Rosen {
-class SurfaceOhos : public SurfaceBase {
-public:
-    static std::shared_ptr<SurfaceBase> CreateSurface(sptr<Surface> surface);
+SurfaceFrameOhosVulkan::SurfaceFrameOhosVulkan(sk_sp<SkSurface> surface, int32_t width, int32_t height)
+    : SurfaceFrameOhos(width, height), surface_(surface), colorSpace_(ColorGamut::COLOR_GAMUT_SRGB)
+{
+}
 
-    explicit SurfaceOhos(const sptr<Surface>& producer);
-    ~SurfaceOhos() override {};
+SurfaceFrameOhosVulkan::~SurfaceFrameOhosVulkan()
+{
+}
 
-    bool IsValid() const override
-    {
-        return producer_ != nullptr;
-    }
+void SurfaceFrameOhosVulkan::SetColorSpace(ColorGamut colorSpace)
+{
+    colorSpace_ = colorSpace;
+}
 
-    sptr<Surface> GetSurface() const
-    {
-        return producer_;
-    }
-protected:
-    sptr<Surface> producer_;
-    ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
-};
+ColorGamut SurfaceFrameOhosVulkan::GetColorSpace() const
+{
+    return colorSpace_;
+}
+
+SkCanvas* SurfaceFrameOhosVulkan::GetCanvas() 
+{
+    return surface_ != nullptr > surface_->GetCanvas() : nullptr;
+}
+
+sk_sp<SkSurface> SurfaceFrameOhosVulkan::GetSurface() {
+    return surface_;
+}
 } // namespace Rosen
 } // namespace OHOS
-#endif

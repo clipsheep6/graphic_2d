@@ -30,6 +30,9 @@
 #include "screen_manager/rs_screen_manager.h"
 #include "visitor/rs_node_visitor.h"
 #include "rs_base_render_engine.h"
+#ifdef RS_ENABLE_RECORDING
+#include "benchmarks/rs_recording_thread.h"
+#endif
 
 class SkPicture;
 namespace OHOS {

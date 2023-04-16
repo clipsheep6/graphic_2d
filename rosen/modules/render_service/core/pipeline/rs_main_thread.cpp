@@ -54,6 +54,9 @@
 #include "xcollie/watchdog.h"
 
 #include "render_frame_trace.h"
+#ifdef RS_ENABLE_RECORDING
+#include "benchmark/rs_recording_thread.h"
+#endif
 
 #ifdef RES_SCHED_ENABLE
 #include "res_sched_client.h"
@@ -213,7 +216,9 @@ void RSMainThread::Init()
         rsEventManager_.UpdateParam();
         RS_LOGD("RsDebug mainLoop end");
     };
-
+#ifdef RS_ENABLE_RECORDING
+    RSRecordingThread::Instance().Start();
+#endif
     isUniRender_ = RSUniRenderJudgement::IsUniRender();
     if (isUniRender_) {
         unmarshalBarrierTask_ = [this]() {

@@ -41,6 +41,7 @@ ohos_shared_library("librender_service") {
     "core/pipeline/rs_processor.cpp",
     "core/pipeline/rs_processor_factory.cpp",
     "core/pipeline/rs_qos_thread.cpp",
+    "core/pipeline/rs_recording_thread.cpp",
     "core/pipeline/rs_render_engine.cpp",
     "core/pipeline/rs_render_service.cpp",
     "core/pipeline/rs_render_service_connection.cpp",
@@ -111,6 +112,7 @@ ohos_shared_library("librender_service") {
     "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/graphic/graphic_2d/rosen/samples/2d_graphics:drawing_engine_sample",
   ]
 
   public_deps = [

@@ -141,13 +141,13 @@ void DrawCmdList::Playback(RSPaintFilterCanvas& canvas, const SkRect* rect)
     }
 }
 
-void DrawCmdList::PlaybackWithParam(SkCanvas& canvas, int start, int end, int recordStart, const SkRect* rect = nullptr)
+void DrawCmdList::PlaybackWithParam(SkCanvas& canvas, int start, int end, int recordStart, const SkRect* rect)
 {
     RSPaintFilterCanvas filterCanvas(&canvas);
     PlaybackWithParam(filterCanvas, start, end, recordStart, rect);
 }
 
-void DrawCmdList::PlaybackWithParam(RSPaintFilterCanvas& canvas, int start, int end, int recordStart, const SkRect* rect = nullptr)
+void DrawCmdList::PlaybackWithParam(RSPaintFilterCanvas& canvas, int start, int end, int recordStart, const SkRect* rect)
 {
     std::string str;
     if (width_ <= 0 || height_ <= 0) {

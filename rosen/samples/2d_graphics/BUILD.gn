@@ -106,7 +106,7 @@ ohos_executable("drawing_engine_sample") {
     #"//third_party/skia:skia",
   ]
   if (graphic_standard_feature_enable_vulkan) {
-    include_dirs == [ "//third_party/flutter/engine/flutter/vulkan" ]
+    include_dirs += [ "//third_party/flutter/engine/flutter/vulkan" ]
   }
   public_deps += [
     "$graphic_2d_root:libvulkan",

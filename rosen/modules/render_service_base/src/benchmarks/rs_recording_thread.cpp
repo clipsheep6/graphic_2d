@@ -49,11 +49,11 @@ bool RSRecordingThread::CheckAndRecording()
     }
     RSTaskMessage::RSTask task = [this]() {
         std::string line = "RSRecordingThread::CheckAndRecording curDumpFrame = " + std::to_string(curDumpFrame) + ", dumpFrameNum = " + std::to_string(dumpFrameNum);
-        RS_LOGD(line);
+        RS_LOGD(line.c_str());
         RS_TRACE_NAME(line);
         isRecordingEnabled = RSSystemProperties::GetRecordingEnabled();
         // init curDumpFrame
-        if (isRecordingEnabled && curDumpFrame = 0) {
+        if (isRecordingEnabled && curDumpFrame == 0) {
             dumpFrameNum = RSSystemProperties::GetDumpFrameNum();
             fileDir = RSSystemProperties::GetRecordingFile();
             if (access(fileDir.c_str(), F_OK) != 0) {
@@ -67,7 +67,7 @@ bool RSRecordingThread::CheckAndRecording()
 
 void RSRecordingThread::FinishRecordingOneFrame(){
     std::string line = "RSRecordingThread::FinishRecordingOneFrame curDumpFrame = " + std::to_string(curDumpFrame) + ", dumpFrameNum = " + std::to_string(dumpFrameNum);
-    RS_LOGD(line);
+    RS_LOGD(line.c_str());
     RS_TRACE_NAME(line);
     if (curDumpFrame < dumpFrameNum){
         curDumpFrame++;
@@ -87,7 +87,7 @@ void RSRecordingThread::RecordingToFile(const std::shared_ptr<DrawCmdList> & dra
     FinishRecordingOneFrame();
     RSTaskMessage::RSTask task = [this, drawCmdList, tmpCurDumpFrame]() {
         std::string line = "RSRecordingThread::RecordingToFile curDumpFrame = " + std::to_string(curDumpFrame) + ", dumpFrameNum = " + std::to_string(dumpFrameNum);
-        RS_LOGD(line);
+        RS_LOGD(line.c_str());
         RS_TRACE_NAME(line);
         // file name
         std::string file = fileDir + "/frame" + std::to_string(tmpCurDumpFrame) + ".txt";

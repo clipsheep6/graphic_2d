@@ -34,6 +34,7 @@ public:
     void RecordingToFile(const std::shared_ptr<DrawCmdList> & drawCmdList);
     [[nodiscard]] int GetCurDumpFrame() const {return curDumpFrame;}
 
+    const static size_t RECORDING_PARCEL_MAX_CAPCITY = 234 * 1000 * 1024;
 private:
     RSRecordingThread() = default;
     ~RSRecordingThread() = default;
@@ -44,7 +45,6 @@ private:
     bool isRecordingEnabled = false;
     int dumpFrameNum = 0;
     int curDumpFrame = 0;
-    const static size_t RECORDING_PARCEL_MAX_CAPCITY = 234 * 1000 * 1024;
 };
 } // namespace OHOS::Rosen
 

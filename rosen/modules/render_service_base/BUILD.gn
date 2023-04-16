@@ -152,8 +152,8 @@ ohos_source_set("render_service_base_src") {
     "src/screen_manager/rs_virtual_screen_resolution.cpp",
     
     #benchmarks
-    "src/benchmark/file_utils.cpp",
-    "src/benchmark/rs_recording_thread.cpp",
+    "src/benchmarks/file_utils.cpp",
+    "src/benchmarks/rs_recording_thread.cpp",
   ]
 
   cflags = [

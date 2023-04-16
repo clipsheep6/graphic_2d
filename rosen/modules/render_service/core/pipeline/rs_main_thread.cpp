@@ -52,7 +52,7 @@
 
 #include "render_frame_trace.h"
 #ifdef RS_ENABLE_RECORDING
-#include "benchmark/rs_recording_thread.h"
+#include "benchmarks/rs_recording_thread.h"
 #endif
 
 #ifdef RES_SCHED_ENABLE

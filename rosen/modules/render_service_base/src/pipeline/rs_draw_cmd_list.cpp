@@ -16,6 +16,8 @@
 #include "pipeline/rs_draw_cmd_list.h"
 
 #include <unordered_map>
+#include <fstream>
+#include <string>
 
 #include "rs_trace.h"
 
@@ -137,6 +139,35 @@ void DrawCmdList::Playback(RSPaintFilterCanvas& canvas, const SkRect* rect)
         }
         it->Draw(canvas, rect);
     }
+}
+
+std::string DrawCmdList::PlaybackWithParam(SkCanvas& canvas, int start, int end, int recordStart, const SkRect* rect)
+{
+    RSPaintFilterCanvas filterCanvas(&canvas);
+    return PlaybackWithParam(filterCanvas, start, end, recordStart, rect);
+}
+
+std::string DrawCmdList::PlaybackWithParam(RSPaintFilterCanvas& canvas, int start, int end, int recordStart,
+    const SkRect* rect)
+{
+    std::string str;
+    if (width_ <= 0 || height_ <= 0) {
+        return str;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (int i = start; i < end; ++i) {
+        if (ops_[i] == nullptr) {
+            continue;
+        }
+        if (i < recordStart) {
+            ops_[i]->GetType();
+        } else {
+            str += std::to_string(i) + ":";
+            ops_[i]->GetType();
+        }
+        ops_[i]->Draw(canvas, rect);
+    }
+    return str;
 }
 
 size_t DrawCmdList::GetSize() const

@@ -17,7 +17,6 @@
 #define RS_FILE_UTIL
 
 #include <string>
-#include "nlohmann/json.hpp"
 
 namespace OHOS {
 namespace Rosen {

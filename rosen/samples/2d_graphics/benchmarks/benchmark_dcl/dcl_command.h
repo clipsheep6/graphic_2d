@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace Rosen {
 enum class IterateType {
-    ITREATE_FRAME,
+    ITERATE_FRAME,
     ITERATE_OPITEM,
     ITERATE_OPITEM_MANUALLY,
     OTHER,
@@ -36,7 +36,7 @@ public:
     void HandleCommand(std::string argStr, std::string value);
     void CheckParameter();
 private:
-    IterateType iterateType = IterateType::ITREATE_FRAME;
+    IterateType iterateType = IterateType::ITERATE_FRAME;
     int beginFrame = 0;
     int endFrame = 100;
     int loop = 1;
@@ -69,7 +69,7 @@ private:
     };
 
     const std::string dclMsgErr = "error input!\n use command '--help' get more information\n";
-    const std::string breakLine(80, '-');
+    const std::string breakLine = std::string(80, '-');
     const std::string dclMsg = "usage: /data/drawing_engine_sample dcl <option> <argument> \n" + breakLine +
                                 "\nThere are common commands list:\n"
                                 " -t,--type                  set the type of playback, \n"

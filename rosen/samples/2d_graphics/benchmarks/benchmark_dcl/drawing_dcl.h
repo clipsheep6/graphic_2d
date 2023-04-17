@@ -62,7 +62,7 @@ public:
 private:
     friend class DCLCommand;
     std::unique_ptr<DrawCmdList> dcl = nullptr;
-    IterateType iterateType = IterateType::ITREATE_FRAME;
+    IterateType iterateType = IterateType::ITERATE_FRAME;
     int beginFrame = 0;
     int endFrame = 100;
     int loop = 1;

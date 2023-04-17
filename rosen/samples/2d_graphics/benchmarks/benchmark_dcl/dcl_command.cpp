@@ -66,13 +66,11 @@ DCLCommand::DCLCommand(std::string commandLine)
 
 void DCLCommand::HandleCommand(std::string option, std::string augment)
 {
-    switch (commandMap.at(option))
-    {
+    switch (commandMap.at(option)) {
         case CommandType::CT_T:
-            switch (std::stoi(augment.c_str()))
-            {
-                case int(IterateType::ITREATE_FRAME):
-                    iterateType = IterateType::ITREATE_FRAME;
+            switch (std::stoi(augment.c_str())) {
+                case int(IterateType::ITERATE_FRAME):
+                    iterateType = IterateType::ITERATE_FRAME;
                     break;
                 case int(IterateType::ITERATE_OPITEM):
                     iterateType = IterateType::ITERATE_OPITEM;

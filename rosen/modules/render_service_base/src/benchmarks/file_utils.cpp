@@ -21,7 +21,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <linux/limits.h>
-#include "nlohmann/json.hpp"
 #include "securec.h"
 
 #include "platform/common/rs_log.h"
@@ -43,10 +42,7 @@ bool GetRealPath(const std::string& path, std::string& realPath)
 bool WriteToFile(uintptr_t data, size_t size, const std::string& filePath)
 {
     std::string realPath;
-    if (!GetRealPath(filePath, realPath)) {
-        return false;
-    }
-    if (access(realPath.c_str(), W_OK)) {
+    if (!GetRealPath(filePath, realPath) || access(realPath.c_str(), W_OK) {
         return false;
     }
     int fd = open(realPath.c_str(), O_WRONLY | O_CLOEXEC);

@@ -66,7 +66,8 @@ bool RSRecordingThread::CheckAndRecording()
     return isRecordingEnabled;
 }
 
-void RSRecordingThread::FinishRecordingOneFrame() {
+void RSRecordingThread::FinishRecordingOneFrame()
+{
     std::string line = "RSRecordingThread::FinishRecordingOneFrame curDumpFrame = " + std::to_string(curDumpFrame) +
         ", dumpFrameNum = " + std::to_string(dumpFrameNum);
     RS_LOGD(line.c_str());

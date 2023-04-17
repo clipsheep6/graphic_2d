@@ -182,11 +182,11 @@ void DrawingDCL::Test(SkCanvas* canvas, int width, int height)
     std::cout << "DrawingDCL::Test+" << std::endl;
     auto start = std::chrono::system_clock::now();
 
-    if (iterateType == IterateFrame::ITERATE_FRAME) {
+    if (iterateType == IterateType::ITERATE_FRAME) {
         UpdateParameters(PlayBackByFrame(canvas));
-    } else if (iterateType == IterateFrame::ITERATE_OPITEM) {
+    } else if (iterateType == IterateType::ITERATE_OPITEM) {
         UpdateParameters(PlayBackByOpItem(canvas));
-    } else if (iterateType == IterateFrame::ITERATE_OPITEM_MANUALLY) {
+    } else if (iterateType == IterateType::ITERATE_OPITEM_MANUALLY) {
         static bool isMoreOps = true;
         std::string opActionsStr = isMoreOps ? "more" : "less";
         std::cout << "Do you want to execute " << opItemStep << " OpItems " << opActionsStr << " ?\n"
@@ -227,7 +227,7 @@ public:
     }
 private:
     int fd_;
-    size_t size;
+    size_t size_;
     uint8_t *mapFile_;
 };
 

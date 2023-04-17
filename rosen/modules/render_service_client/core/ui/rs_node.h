@@ -60,8 +60,11 @@ public:
         const RSAnimationTimingCurve& timingCurve, const PropertyCallback& callback,
         const std::function<void()>& finishCallback = nullptr);
 
-    static std::vector<std::shared_ptr<RSAnimation>> Animate(
-        const PropertyCallback& callback, const std::function<void()>& finishCallback);
+    static std::vector<std::shared_ptr<RSAnimation>> AnimateWithCurrentOptions(
+        const PropertyCallback& callback, const std::function<void()>& finishCallback, bool timingSensitive = true);
+    static std::vector<std::shared_ptr<RSAnimation>> AnimateWithCurrentCallback(
+        const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve,
+        const PropertyCallback& callback);
 
     static void OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
         const RSAnimationTimingCurve& timingCurve, const std::function<void()>& finishCallback = nullptr);
@@ -205,6 +208,7 @@ public:
 
     void SetIsCustomTextType(bool isCustomTextType);
 
+    void SetDrawRegion(std::shared_ptr<RectF> rect);
 protected:
     explicit RSNode(bool isRenderServiceNode);
     explicit RSNode(bool isRenderServiceNode, NodeId id);

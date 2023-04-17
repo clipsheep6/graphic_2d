@@ -38,7 +38,7 @@ if (graphic_standard_feature_ace_enable_gpu && current_os != "ios") {
       "RS_ENABLE_GL",
     ]
   }
-  gpu_defines += ["RS_ENABLE_RECORDING"]
+  gpu_defines += [ "RS_ENABLE_RECORDING" ]
   ace_enable_gpu = true
   rs_enable_gpu = true
   surface_enable_gpu = true

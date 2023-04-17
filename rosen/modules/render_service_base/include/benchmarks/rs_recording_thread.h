@@ -21,7 +21,6 @@
 #include "event_handler.h"
 
 #include <sys/stat.h>
-#include "rs_trace.h"
 
 namespace OHOS::Rosen {
 class RSB_EXPORT RSRecordingThread {

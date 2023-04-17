@@ -70,7 +70,7 @@ bool DrawingDCL::PlayBackByFrame(SkCanvas * skiaCanvas, bool isDumpPictures)
 
 bool DrawingDCL::PlayBackByOpItem(SkCanvas * skiaCanvas, bool isMoreOps) 
 {
-    auto start = sted::chrono::system_clock::now();
+    auto start = std::chrono::system_clock::now();
     // read drawCmdList from file
     std::string dcl_file = inputFilePath + "frameByOpItem.txt";
     std::cout << "PlayBackFrame dcl_file:" << dcl_file << std::endl;
@@ -92,9 +92,9 @@ bool DrawingDCL::PlayBackByOpItem(SkCanvas * skiaCanvas, bool isMoreOps)
     }
     std::cout << "play back to op_id = " << int(op_id) << std::endl;
     if (op_id < dcl->GetSize()) {
-        std::cout << dcl->Playback_lkx(*skiaCanvas, 0, int(op_id), oldOpId) << std::endl;
+        std::cout << dcl->PlaybackWithParam(*skiaCanvas, 0, int(op_id), oldOpId) << std::endl;
     } else {
-        std::cout << dcl->Playback_lkx(*skiaCanvas, 0, dcl->GetSize(), oldOpId) << std::endl;
+        std::cout << dcl->PlaybackWithParam(*skiaCanvas, 0, dcl->GetSize(), oldOpId) << std::endl;
         op_id = 0;
         return false;
     }
@@ -115,9 +115,9 @@ bool DrawingDCL::GetDirectionAndStep(std::string command, bool &isMoreOps)
         return false;
     }
     if (std::strcmp(words[0].c_str(), "l") == 0 || std::strcmp(words[0].c_str(), "L") == 0) {
-        isMoreOps == false;
+        isMoreOps = false;
     } else if (std::strcmp(words[0].c_str(), "m") == 0 || std::strcmp(words[0].c_str(), "M") == 0) {
-        isMoreOps == true;
+        isMoreOps = true;
     } else {
         std::cout << "Wrong Direction!" << std::endl;
         return false;
@@ -130,7 +130,7 @@ bool DrawingDCL::GetDirectionAndStep(std::string command, bool &isMoreOps)
         } else if (words[1][i] >= '0' && words[1][i] <= '9') {
             continue;
         } else {
-            std:cout << "Please enter right step!" << std::endl;
+            std::cout << "Please enter right step!" << std::endl;
             return false;
         }
     }
@@ -155,7 +155,7 @@ void DrawingDCL::UpdateParameters(bool notNeeded)
     std::cout << "Please re-enter the parameters" << std::endl;
     std::string line;
     getline(std::cin, line);
-    if (line.empty) return;
+    if (line.empty()) return;
     std::unique_ptr<DCLCommand> dclCommand(new DCLCommand(line));
     UpdateParametersFromDCLCommand(std::move(dclCommand));
 }
@@ -256,7 +256,7 @@ int DrawingDCL::LoadDrawCmdList(std::string dcl_file)
     }
     std::cout << "messageParcel GetDataSize() = " << messageParcel.GetDataSize() << std::endl;
 
-    dcl = DrawCmdList::Unmarshalling(messageParcel);
+    dcl = std::unique_ptr<DrawCmdList>(DrawCmdList::Unmarshalling(messageParcel));
     if (dcl == nullptr) {
         std::cout << "dcl is nullptr" << std::endl;
         munmap(mapFile, statbuf.st_size);

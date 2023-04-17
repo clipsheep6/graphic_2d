@@ -46,7 +46,7 @@ public:
 
     void UpdateParameters(bool isNeeded);
 
-    void UpdateParametersFromDCLCommand(DCLCommand * dclCommand);
+    void UpdateParametersFromDCLCommand(std::unique_ptr<DCLCommand> dclCommand);
 
     void PrintDurationTime(const std::string & description, std::chrono::time_point<std::chrono::system_clock> start);
 

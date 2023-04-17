@@ -74,7 +74,7 @@ ohos_executable("drawing_engine_sample") {
     "benchmarks/benchmark_multithread/drawing_mutilthread.cpp",
     "benchmarks/benchmark_singlethread/drawing_singlethread.cpp",
     "benchmarks/benchmark_dcl/drawing_dcl.cpp",
-    "benchmarks/benchmark_dcl/dcl_utils.cpp",
+    #"benchmarks/benchmark_dcl/dcl_utils.cpp",
     "benchmarks/benchmark_dcl/dcl_command.cpp",
   ]
 

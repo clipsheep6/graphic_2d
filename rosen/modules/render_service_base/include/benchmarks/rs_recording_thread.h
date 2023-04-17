@@ -24,7 +24,7 @@
 #include "rs_trace.h"
 
 namespace OHOS::Rosen {
-class RSRecordingThread {
+class RSB_EXPORT RSRecordingThread {
 public:
     static RSRecordingThread& Instance();
     void Start();

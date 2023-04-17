@@ -126,6 +126,7 @@ void RSRenderKeyframeAnimation::OnAnimate(float fraction)
         return;
     }
     valueEstimator_->UpdateAnimationValue(fraction, GetAdditive());
+    AddAnimationTrace(fraction);
 }
 
 void RSRenderKeyframeAnimation::InitValueEstimator()

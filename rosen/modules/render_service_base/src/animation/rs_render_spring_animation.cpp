@@ -125,6 +125,7 @@ void RSRenderSpringAnimation::OnAnimate(float fraction)
 
     // keep the mapped time, this will be used to calculate instantaneous velocity
     prevMappedTime_ = mappedTime;
+    AddAnimationTrace(fraction);
 }
 
 void RSRenderSpringAnimation::OnAttach()

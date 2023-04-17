@@ -18,6 +18,7 @@
 #include <climits>
 
 #include "animation/rs_animation_common.h"
+#include "animation/rs_animation_trace_utils.h"
 #include "animation/rs_value_estimator.h"
 #include "modifier/rs_render_modifier.h"
 #include "platform/common/rs_log.h"
@@ -166,6 +167,8 @@ void RSTransitionFade::UpdateFraction(float fraction) const
     float endValue(alpha_);
     auto value = startValue * (1.0f - fraction) + endValue * fraction;
     property_->Set(value);
+    RSAnimationTraceUtils::GetInstance().addTranstionEffectValueTrace(property_->GetId(), fraction,
+        RSTransitionEffectType::FADE, property_);
 }
 
 const std::shared_ptr<RSRenderModifier> RSTransitionScale::CreateModifier()
@@ -184,6 +187,8 @@ void RSTransitionScale::UpdateFraction(float fraction) const
     Vector2f endValue(scaleX_, scaleY_);
     auto value = startValue * (1.0f - fraction) + endValue * fraction;
     property_->Set(value);
+    RSAnimationTraceUtils::GetInstance().addTranstionEffectValueTrace(property_->GetId(), fraction,
+        RSTransitionEffectType::SCALE, property_);
 }
 
 const std::shared_ptr<RSRenderModifier> RSTransitionTranslate::CreateModifier()
@@ -202,6 +207,8 @@ void RSTransitionTranslate::UpdateFraction(float fraction) const
     Vector2f endValue(translateX_, translateY_);
     auto value = startValue * (1.0f - fraction) + endValue * fraction;
     property_->Set(value);
+    RSAnimationTraceUtils::GetInstance().addTranstionEffectValueTrace(property_->GetId(), fraction,
+        RSTransitionEffectType::TRANSLATE, property_);
 }
 
 const std::shared_ptr<RSRenderModifier> RSTransitionRotate::CreateModifier()
@@ -223,6 +230,8 @@ void RSTransitionRotate::UpdateFraction(float fraction) const
     float qw = std::cos(radian / 2);
     Quaternion value(qx, qy, qz, qw);
     property_->Set(value);
+    RSAnimationTraceUtils::GetInstance().addTranstionEffectValueTrace(property_->GetId(), fraction,
+        RSTransitionEffectType::ROTATE, property_);
 }
 } // namespace Rosen
 } // namespace OHOS

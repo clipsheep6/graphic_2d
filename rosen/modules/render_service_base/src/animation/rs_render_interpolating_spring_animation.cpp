@@ -118,6 +118,7 @@ void RSRenderInterpolatingSpringAnimation::OnAnimate(float fraction)
         return;
     }
     valueEstimator_->UpdateAnimationValue(displacement, GetAdditive());
+    AddAnimationTrace(fraction);
 }
 
 void RSRenderInterpolatingSpringAnimation::OnInitialize(int64_t time)

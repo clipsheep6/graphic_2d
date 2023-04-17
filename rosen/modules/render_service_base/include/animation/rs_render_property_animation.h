@@ -58,6 +58,8 @@ protected:
 
     virtual void InitValueEstimator() {}
 
+    void AddAnimationTrace(float fraction);
+
 protected:
     PropertyId propertyId_;
     std::shared_ptr<RSRenderPropertyBase> originValue_;

@@ -384,7 +384,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val)
         #else
         if (pixmapSize >= MIN_DATA_SIZE) {
         #endif
-            MemoryInfo info = { pixmapSize, 0, MEMORY_TYPE::MEM_SKIMAGE }; // pid is set to 0 temporarily.
+            MemoryInfo info = { pixmapSize, 0, 0, MEMORY_TYPE::MEM_SKIMAGE }; // pid is set to 0 temporarily.
             MemoryTrack::Instance().AddPictureRecord(addr, info);
         }
         return val != nullptr;

@@ -83,7 +83,8 @@ void RSRecordingThread::FinishRecordingOneFrame() {
     }
 }
 
-void RSRecordingThread::RecordingToFile(const std::shared_ptr<DrawCmdList> & drawCmdList) {
+void RSRecordingThread::RecordingToFile(const std::shared_ptr<DrawCmdList> & drawCmdList)
+{
     if (curDumpFrame < 0) return;
     int tmpCurDumpFrame = curDumpFrame;
     FinishRecordingOneFrame();

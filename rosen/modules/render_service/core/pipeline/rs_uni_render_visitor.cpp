@@ -1258,7 +1258,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         AddOverDrawListener(renderFrame_, overdrawListener);
         #ifdef RS_ENABLE_RECORDING
         RS_TRACE_BEGIN("RSUniRender:Recording begin");
-        RSRecordingCanvas canvas(node.GetRenderProperties().GetBoundsWidth(), 
+        RSRecordingCanvas canvas(node.GetRenderProperties().GetBoundsWidth(),
             node.GetRenderProperties().GetBoundsHeight());
         #ifdef RS_ENABLE_GL
         canvas.SetGrContext(canvas_->getGrContext()); // SkImage::MakeFromCompressed need GrContext

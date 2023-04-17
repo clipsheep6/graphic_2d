@@ -31,7 +31,7 @@ void DCLCommand::ParseCommand(std::vector<std::string> argv)
         std::cout << "iterate frame by default, beginFrame = " << beginFrame << ", endFrame = " <<
             endFrame << std::endl;
     } else if (argv.size() == threeParam) {
-        if ( strcmp(argv.back().c_str(), "--help") != 0 || strcmp(argv.back().c_str(), "-h") != 0) {
+        if (strcmp(argv.back().c_str(), "--help") != 0 || strcmp(argv.back().c_str(), "-h") != 0) {
             std::cout << dclMsg << std::endl;
         }
     } else {
@@ -64,19 +64,20 @@ DCLCommand::DCLCommand(std::string commandLine)
     ParseCommand(params);
 }
 
-void DCLCommand::HandleCommand(std::string option, std::string augment) {
+void DCLCommand::HandleCommand(std::string option, std::string augment)
+{
     switch (commandMap.at(option))
     {
         case CommandType::CT_T:
             switch (std::stoi(augment.c_str()))
             {
-                case 0:
+                case int(IterateType::ITREATE_FRAME):
                     iterateType = IterateType::ITREATE_FRAME;
                     break;
-                case 1:
+                case int(IterateType::ITERATE_OPITEM):
                     iterateType = IterateType::ITERATE_OPITEM;
                     break;
-                case 2:
+                case int(IterateType::ITERATE_OPITEM_MANUALLY):
                     iterateType = IterateType::ITERATE_OPITEM_MANUALLY;
                     break;
                 default:

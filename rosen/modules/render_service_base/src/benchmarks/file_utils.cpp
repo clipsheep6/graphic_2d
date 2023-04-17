@@ -29,6 +29,17 @@
 namespace OHOS {
 namespace Rosen {
 
+bool GetRealPath(const std::string& path, std::string& realPath)
+{
+    char resolvedPath[PATH_MAX] = { 0 };
+    if (path.size() > PATH_MAX || !realpath(path.c_str(), resolvedPath)) {
+        RS_LOGE("%{public}s realpath for %s failed", __func__, path.c_str());
+        return false;
+    }
+    realPath = std::string(resolvedPath);
+    return true;
+}
+
 bool WriteToFile(uintptr_t data, size_t size, const std::string& filePath)
 {
     std::string realPath;

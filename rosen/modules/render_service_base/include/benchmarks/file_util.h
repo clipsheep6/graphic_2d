@@ -21,6 +21,8 @@
 
 namespace OHOS {
 namespace Rosen {
+bool GetRealPath(const std::string& path, std::string& realPath);
+
 bool WriteToFile(uintptr_t data, size_t size, const std::string& filePath);
 
 } // namespace Rosen

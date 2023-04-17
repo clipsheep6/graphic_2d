@@ -58,7 +58,6 @@ std::unique_ptr<SurfaceFrame> SurfaceOhosVulkan::RequestFrame(int32_t width, int
     NativeWindowHandleOpt(mNativeWindow, SET_BUFFER_GEOMETRY, width, height);
     NativeWindowHandleOpt(mNativeWindow, SET_COLOR_GAMUT, frame_->GetColorSpace());
     
-
     std::unique_ptr<SurfaceFrame> ret(std::move(frame_));
     DestoryNativeWindow(nativeWindow);
     return ret;

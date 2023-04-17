@@ -38,7 +38,7 @@ public:
 private:
     RSRecordingThread() = default;
     ~RSRecordingThread() = default;
-    
+
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     std::string fileDir = "";

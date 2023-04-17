@@ -169,7 +169,7 @@ bool WriteToFile(uintptr_t data, size_t size, const std::string& filePath)
         RS_LOGE("%{public}s failed to persist data: %p, size = %d,  fd = %{public}d", __func__, data, size, fd);
     }
     close(fd);
-    return result;
+    return true;
 }
 } // namespace Rosen
 } // namespace OHOS

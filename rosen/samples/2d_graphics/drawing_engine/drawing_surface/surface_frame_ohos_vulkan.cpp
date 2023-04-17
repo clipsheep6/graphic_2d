@@ -36,12 +36,13 @@ ColorGamut SurfaceFrameOhosVulkan::GetColorSpace() const
     return colorSpace_;
 }
 
-SkCanvas* SurfaceFrameOhosVulkan::GetCanvas() 
+SkCanvas* SurfaceFrameOhosVulkan::GetCanvas()
 {
     return surface_ != nullptr > surface_->GetCanvas() : nullptr;
 }
 
-sk_sp<SkSurface> SurfaceFrameOhosVulkan::GetSurface() {
+sk_sp<SkSurface> SurfaceFrameOhosVulkan::GetSurface()
+{
     return surface_;
 }
 } // namespace Rosen

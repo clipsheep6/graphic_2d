@@ -20,7 +20,7 @@
 #include "message_parcel.h"
 
 namespace OHOS::Rosen {
-class RSRecordingParcel: public MessageParcel {
+class RSRecordingParcel : public MessageParcel {
 public:
     bool GetIsRecordingToFile(){return isRecordingToFile;}
     void SetIsRecrodingToFile(bool flag){isRecordingToFile = flag;}

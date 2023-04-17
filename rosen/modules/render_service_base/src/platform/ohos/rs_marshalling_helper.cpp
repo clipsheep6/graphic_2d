@@ -140,7 +140,8 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkData>& val)
         return false;
     }
     #ifdef RS_ENABLE_RECORDING
-    if (static_cast<uint32_t>(size) < MIN_DATA_SIZE || parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
+    if (static_cast<uint32_t>(size) < MIN_DATA_SIZE ||
+        parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
     #else
     if (static_cast<uint32_t>(size) < MIN_DATA_SIZE) {
     #endif
@@ -164,7 +165,8 @@ bool RSMarshallingHelper::UnmarshallingWithCopy(Parcel& parcel, sk_sp<SkData>& v
     bool success = Unmarshalling(parcel, val);
     if (success) {
         #ifdef RS_ENABLE_RECORDING
-        if (val && (val->size() < MIN_DATA_SIZE || parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY)) {
+        if (val && (val->size() < MIN_DATA_SIZE ||
+            parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY)) {
         #else
         if (val && val->size() < MIN_DATA_SIZE) {
         #endif
@@ -353,7 +355,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val)
                 return false;
             }
             colorSpace = SkColorSpace::Deserialize(data, size);
-            
+
             #ifdef RS_ENABLE_RECORDING
             if (size >= MIN_DATA_SIZE && parcel.GetMaxCapacity() != RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
             #else
@@ -367,15 +369,18 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val)
         // use this proc to follow release step
         SkImageInfo imageInfo = SkImageInfo::Make(width, height, colorType, alphaType, colorSpace);
         #ifdef RS_ENABLE_RECORDING
-        auto skData = (pixmapSize < MIN_DATA_SIZE || parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) ? SkData::MakeWithCopy(addr, pixmapSize)
+        auto skData = (pixmapSize < MIN_DATA_SIZE ||
+            parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY)
+                ? SkData::MakeWithCopy(addr, pixmapSize)
         #else
         auto skData = pixmapSize < MIN_DATA_SIZE ? SkData::MakeWithCopy(addr, pixmapSize)
         #endif
-                                                 : SkData::MakeWithProc(addr, pixmapSize, sk_free_releaseproc, nullptr);
+                                                : SkData::MakeWithProc(addr, pixmapSize, sk_free_releaseproc, nullptr);
         val = SkImage::MakeRasterData(imageInfo, skData, rb);
         // add to MemoryTrack for memoryManager
         #ifdef RS_ENABLE_RECORDING
-        if (pixmapSize >= MIN_DATA_SIZE && parcel.GetMaxCapacity() != RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
+        if (pixmapSize >= MIN_DATA_SIZE &&
+            parcel.GetMaxCapacity() != RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
         #else
         if (pixmapSize >= MIN_DATA_SIZE) {
         #endif
@@ -983,7 +988,8 @@ const void* RSMarshallingHelper::ReadFromParcel(Parcel& parcel, size_t size)
         return nullptr;
     }
     #ifdef RS_ENABLE_RECORDING
-    if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE || parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
+    if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE ||
+        parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
     #else
     if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE) {
     #endif
@@ -1007,7 +1013,8 @@ bool RSMarshallingHelper::SkipFromParcel(Parcel& parcel, size_t size)
         return false;
     }
     #ifdef RS_ENABLE_RECORDING
-    if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE || parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
+    if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE ||
+        parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
     #else
     if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE) {
     #endif

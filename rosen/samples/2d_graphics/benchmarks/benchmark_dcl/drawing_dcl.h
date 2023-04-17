@@ -27,18 +27,17 @@
 
 namespace OHOS {
 namespace Rosen {
-class DrawingDCL : public BenchMark
-{
+class DrawingDCL : public BenchMark {
 public:
     DrawingDCL() { std::cout << "DrawingDCL" << std::endl; }
-    
+
     DrawingDCL(int32_t argc, char* argvp[]);
-    
+
     ~DrawingDCL() { std::cout << "~DrawingDCL" << std::endl; }
 
-    bool GetDirectionAndStep(std::string command, bool & isMoreOps);
+    bool GetDirectionAndStep(std::string command, bool &isMoreOps);
 
-    bool IterateFrame(int &cur_loop, int &frame);
+    bool IterateFrame(int &curLoop, int &frame);
 
     bool PlayBackByFrame(SkCanvas *skiaCanvas, bool isDumpPicture = false);
 
@@ -48,29 +47,29 @@ public:
 
     void UpdateParametersFromDCLCommand(std::unique_ptr<DCLCommand> dclCommand);
 
-    void PrintDurationTime(const std::string & description, std::chrono::time_point<std::chrono::system_clock> start);
+    void PrintDurationTime(const std::string &description, std::chrono::time_point<std::chrono::system_clock> start);
 
-    virtual void Start() override;
+    void Start() override;
 
-    virtual void Stop() override;
+    void Stop() override;
 
-    virtual void Test(SkCanvas * canvas, int width, int height) override;
+    void Test(SkCanvas *canvas, int width, int height) override;
 
-    virtual void Output() override;
+    void Output() override;
 
-    int LoadDrawCmdList(std::string dcl_file);
-
+    int LoadDrawCmdList(std::string dclFile);
 
 private:
     friend class DCLCommand;
     std::unique_ptr<DrawCmdList> dcl = nullptr;
-    int iterateType = 0;
+    IterateType iterateType = IterateType::ITREATE_FRAME;
     int beginFrame = 0;
     int endFrame = 100;
     int loop = 1;
     double opItemStep = 1;
     std::string inputFilePath = "/data/lkx/";
     std::string outputFilePath = "/data/lkx/";
+    const static size_t RECORDING_PARCEL_MAX_CAPCITY = 234 * 1000 * 1024;
 };
 
 }

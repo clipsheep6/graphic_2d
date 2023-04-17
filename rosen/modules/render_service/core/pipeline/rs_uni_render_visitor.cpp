@@ -1258,13 +1258,14 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         AddOverDrawListener(renderFrame_, overdrawListener);
         #ifdef RS_ENABLE_RECORDING
         RS_TRACE_BEGIN("RSUniRender:Recording begin");
-        RSRecordingCanvas canvas(node.GetRenderProperties().GetBoundsWidth(), node.GetRenderProperties().GetBoundsHeight());
+        RSRecordingCanvas canvas(node.GetRenderProperties().GetBoundsWidth(), 
+            node.GetRenderProperties().GetBoundsHeight());
         #ifdef RS_ENABLE_GL
         canvas.SetGrContext(canvas_->getGrContext()); // SkImage::MakeFromCompressed need GrContext
         #endif
         auto recordingCanvas = std::make_shared<RSPaintFilterCanvas>(&canvas);
         bool recordingEnabled = false;
-        if (RSSystemProperties::GetRecordingEnabled()){
+        if (RSSystemProperties::GetRecordingEnabled()) {
             recordingEnabled = true;
             swap(canvas_, recordingCanvas);
             RSRecordingThread::Instance().CheckAndRecording();
@@ -1426,7 +1427,8 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             RS_TRACE_BEGIN("RSUniRender:DrawCmdList Playback");
             drawCmdList->Playback(*canvas_);
             RS_TRACE_END();
-            RS_TRACE_BEGIN("RSUniRender:RecordingToFile curFrameNum = %d", RSRecordingThread::Instance().GetCurDumpFrame());
+            RS_TRACE_BEGIN("RSUniRender:RecordingToFile curFrameNum = " +
+                std::to_string(RSRecordingThread::Instance().GetCurDumpFrame()));
             RSRecordingThread::Instance().RecordingToFile(drawCmdList);
             RS_TRACE_END();
         }

@@ -22,7 +22,7 @@
 #include "platform/common/rs_log.h"
 
 namespace OHOS::Rosen {
-RSRecordingThread & RSRecordingThread::Instance()
+RSRecordingThread &RSRecordingThread::Instance()
 {
     static RSRecordingThread instance;
     return instance;
@@ -48,7 +48,8 @@ bool RSRecordingThread::CheckAndRecording()
         return false;
     }
     RSTaskMessage::RSTask task = [this]() {
-        std::string line = "RSRecordingThread::CheckAndRecording curDumpFrame = " + std::to_string(curDumpFrame) + ", dumpFrameNum = " + std::to_string(dumpFrameNum);
+        std::string line = "RSRecordingThread::CheckAndRecording curDumpFrame = " + std::to_string(curDumpFrame) +
+            ", dumpFrameNum = " + std::to_string(dumpFrameNum);
         RS_LOGD(line.c_str());
         RS_TRACE_NAME(line);
         isRecordingEnabled = RSSystemProperties::GetRecordingEnabled();
@@ -65,11 +66,12 @@ bool RSRecordingThread::CheckAndRecording()
     return isRecordingEnabled;
 }
 
-void RSRecordingThread::FinishRecordingOneFrame(){
-    std::string line = "RSRecordingThread::FinishRecordingOneFrame curDumpFrame = " + std::to_string(curDumpFrame) + ", dumpFrameNum = " + std::to_string(dumpFrameNum);
+void RSRecordingThread::FinishRecordingOneFrame() {
+    std::string line = "RSRecordingThread::FinishRecordingOneFrame curDumpFrame = " + std::to_string(curDumpFrame) +
+        ", dumpFrameNum = " + std::to_string(dumpFrameNum);
     RS_LOGD(line.c_str());
     RS_TRACE_NAME(line);
-    if (curDumpFrame < dumpFrameNum){
+    if (curDumpFrame < dumpFrameNum) {
         curDumpFrame++;
     } else {
         isRecordingEnabled = false;
@@ -86,7 +88,8 @@ void RSRecordingThread::RecordingToFile(const std::shared_ptr<DrawCmdList> & dra
     int tmpCurDumpFrame = curDumpFrame;
     FinishRecordingOneFrame();
     RSTaskMessage::RSTask task = [this, drawCmdList, tmpCurDumpFrame]() {
-        std::string line = "RSRecordingThread::RecordingToFile curDumpFrame = " + std::to_string(curDumpFrame) + ", dumpFrameNum = " + std::to_string(dumpFrameNum);
+        std::string line = "RSRecordingThread::RecordingToFile curDumpFrame = " + std::to_string(curDumpFrame) +
+            ", dumpFrameNum = " + std::to_string(dumpFrameNum);
         RS_LOGD(line.c_str());
         RS_TRACE_NAME(line);
         // file name
@@ -99,11 +102,8 @@ void RSRecordingThread::RecordingToFile(const std::shared_ptr<DrawCmdList> & dra
         drawCmdList->Marshalling(recordingParcel);
         size_t sz = recordingParcel.GetDataSize();
         uintptr_t buf = recordingParcel.GetData();
-        // TODO: print the description of opitem
-        //std::string str = drawCmdList->GetOpWithDesc();
-        
+
         WriteToFile(buf, sz, file);
-        //WriteStringToFile(str, file_ops);        
     };
     PostTask(task);
 }

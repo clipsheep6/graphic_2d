@@ -17,20 +17,21 @@
 #include <sstream>
 #include <vector>
 
-namespace OHOS{
-namespace Rosen{
+namespace OHOS {
+namespace Rosen {
 DCLCommand::DCLCommand(int32_t argc, char* argv[])
 {
-    std::vector<std::string> argv_new(argv, argv+argc);
-    ParseCommand(argv_new);
+    std::vector<std::string> argvNew(argv, argv + argc);
+    ParseCommand(argvNew);
 }
 
-void DCLCommand::ParseCommand(std::vector<std::string> argv) 
+void DCLCommand::ParseCommand(std::vector<std::string> argv)
 {
     if (argv.size() == twoParam) {
-        std::cout << "iterate frame by default, beginFrame = " << beginFrame << ", endFrame = " << endFrame << std::endl;
+        std::cout << "iterate frame by default, beginFrame = " << beginFrame << ", endFrame = " <<
+            endFrame << std::endl;
     } else if (argv.size() == threeParam) {
-        if ( strcmp(argv[2].c_str(), "--help") != 0 || strcmp(argv[2].c_str(), "-h") != 0) {
+        if ( strcmp(argv.back().c_str(), "--help") != 0 || strcmp(argv.back().c_str(), "-h") != 0) {
             std::cout << dclMsg << std::endl;
         }
     } else {
@@ -53,7 +54,7 @@ DCLCommand::DCLCommand(std::string commandLine)
     std::istringstream ss(commandLine);
     std::string param;
     std::vector<std::string> params;
-    if (commandLine.find("drawing_ending_sample") == std::string::npos){
+    if (commandLine.find("drawing_ending_sample") == std::string::npos) {
         params.emplace_back("drawing_engine_sample");
         params.emplace_back("dcl");
     }
@@ -63,61 +64,72 @@ DCLCommand::DCLCommand(std::string commandLine)
     ParseCommand(params);
 }
 
-void DCLCommand::HandleCommand(std::string option, std::string augment){
+void DCLCommand::HandleCommand(std::string option, std::string augment) {
     switch (commandMap.at(option))
     {
-    case CommandType::CT_T:
-        iterateType = std::stoi(augment.c_str());
-        break;
-    case CommandType::CT_B:
-        beginFrame = std::stoi(augment.c_str());
-        break;
-    case CommandType::CT_E:
-        endFrame = std::stoi(augment.c_str());
-        break;
-    case CommandType::CT_L:
-        loop = std::stoi(augment.c_str());
-        break;
-    case CommandType::CT_S:
-        opItemStep = std::stoi(augment.c_str());
-        break;
-    case CommandType::CT_I:
-        inputFilePath = augment;
-        if (inputFilePath.back() != '/'){
-            inputFilePath += '/';
-        }
-        break;
-    case CommandType::CT_O:
-        outputFilePath = augment;
-        if (outputFilePath.back() != '/'){
-            outputFilePath += '/';
-        }
-        break;
-    case CommandType::CT_H:
-        std::cout << dclMsg <<std::endl;
-        break;
-    
-    default:
-        std::cout << "other unknown args:" <<std::endl;
-        break;
+        case CommandType::CT_T:
+            switch (std::stoi(augment.c_str()))
+            {
+                case 0:
+                    iterateType = IterateType::ITREATE_FRAME;
+                    break;
+                case 1:
+                    iterateType = IterateType::ITERATE_OPITEM;
+                    break;
+                case 2:
+                    iterateType = IterateType::ITERATE_OPITEM_MANUALLY;
+                    break;
+                default:
+                    std::cout <<"Wrong Parameter: iterateType" << std::endl;
+                    return;
+            }
+            break;
+        case CommandType::CT_B:
+            beginFrame = std::stoi(augment.c_str());
+            break;
+        case CommandType::CT_E:
+            endFrame = std::stoi(augment.c_str());
+            break;
+        case CommandType::CT_L:
+            loop = std::stoi(augment.c_str());
+            break;
+        case CommandType::CT_S:
+            opItemStep = std::stoi(augment.c_str());
+            break;
+        case CommandType::CT_I:
+            inputFilePath = augment;
+            if (inputFilePath.back() != '/') {
+                inputFilePath += '/';
+            }
+            break;
+        case CommandType::CT_O:
+            outputFilePath = augment;
+            if (outputFilePath.back() != '/') {
+                outputFilePath += '/';
+            }
+            break;
+        case CommandType::CT_H:
+            std::cout << dclMsg <<std::endl;
+            break;
+        default:
+            std::cout << "other unknown args:" <<std::endl;
+            break;
     }
 }
 
 void DCLCommand::CheckParameter()
 {
-    if (0 > iterateType || iterateType > 3) {
-        std::cout <<"Wrong Parameter: iterateType" << std::endl;
-    }
-    if (0 > beginFrame || beginFrame > endFrame) {
+    if (beginFrame < 0 || beginFrame > endFrame) {
         std::cout << "Wrong Parameter: beginFrame or endFrame!" << std::endl;
         beginFrame = 0;
-        endFrame = 100;
+        int initEndFrame = 100;
+        endFrame = initEndFrame;
     }
-    if (0 > loop) {
+    if (loop < 0) {
         std::cout << "Wrong parameter: loop!" << std::endl;
         loop = 1;
     }
-    if (0 > opItemStep) {
+    if (opItemStep < 0) {
         std::cout << "Wrong Parameter: opItemStep!" << std::endl;
         opItemStep = 1;
     }

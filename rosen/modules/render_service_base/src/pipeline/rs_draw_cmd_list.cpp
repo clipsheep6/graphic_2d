@@ -147,18 +147,18 @@ std::string DrawCmdList::PlaybackWithParam(SkCanvas& canvas, int start, int end,
     return PlaybackWithParam(filterCanvas, start, end, recordStart, rect);
 }
 
-std::string DrawCmdList::PlaybackWithParam(RSPaintFilterCanvas& canvas, int start, int end, int recordStart, const SkRect* rect)
+std::string DrawCmdList::PlaybackWithParam(RSPaintFilterCanvas& canvas, int start, int end, int recordStart,
+    const SkRect* rect)
 {
     std::string str;
     if (width_ <= 0 || height_ <= 0) {
-        return;
+        return str;
     }
     std::lock_guard<std::mutex> lock(mutex_);
     for (int i = start; i < end; ++i) {
         if (ops_[i] == nullptr) {
             continue;
         }
-        // TODO: impletate the founctions that returns the descriptions of opitems.
         if (i < recordStart) {
             ops_[i]->GetType();
         } else {

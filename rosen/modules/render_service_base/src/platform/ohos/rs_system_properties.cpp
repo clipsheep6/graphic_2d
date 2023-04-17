@@ -63,7 +63,7 @@ void RSSystemProperties::SetRecordingDisenabled()
 
 std::string RSSystemProperties::GetRecordingFile()
 {
-    return system::GetParameter("rosen.dumpfile.path", ""); 
+    return system::GetParameter("rosen.dumpfile.path", "");
 }
 
 bool RSSystemProperties::GetUniRenderEnabled()

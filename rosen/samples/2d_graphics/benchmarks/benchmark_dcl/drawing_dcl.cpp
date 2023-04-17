@@ -17,27 +17,29 @@
 #include "platform/common/rs_log.h"
 
 
-namespace OHOS{
-namespace Rosen{
+namespace OHOS {
+namespace Rosen {
 DrawingDCL::DrawingDCL(int32_t argc, char* argv[])
 {
-    std::unique_ptr<DCLCommand> dclCommand(new DCLCommand(argc, argv));
+    std::unique_ptr<DCLCommand> dclCommand = std::make_unique<DCLCommand>(DCLCommand(argc, argv));
     UpdateParametersFromDCLCommand(std::move(dclCommand));
 }
 
-void DrawingDCL::PrintDurationTime(const std::string & description, std::chrono::time_point<std::chrono::system_clock> start)
+void DrawingDCL::PrintDurationTime(const std::string & description,
+    std::chrono::time_point<std::chrono::system_clock> start)
 {
     auto end = std::chrono::system_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds> (end - start);
-    std::cout << description << duration.count() / 1000000.0 << "ms" << std::endl;
+    double convertToMs = 1000000.0;
+    std::cout << description << duration.count() / convertToMs << "ms" << std::endl;
 }
 
-bool DrawingDCL::IterateFrame(int &cur_loop, int &frame)
+bool DrawingDCL::IterateFrame(int &curLoop, int &frame)
 {
     ++frame;
     if (frame > endFrame) {
         frame = beginFrame;
-        if (++cur_loop == loop) {
+        if (++curLoop == loop) {
             return false;
         }
     }
@@ -49,53 +51,53 @@ bool DrawingDCL::PlayBackByFrame(SkCanvas * skiaCanvas, bool isDumpPictures)
     //read DrawCmdList from file
     auto start = std::chrono::system_clock::now();
     static int frame = beginFrame;
-    static int cur_loop = 0;
-    std::string dcl_file = inputFilePath + "frame" + std::to_string(frame) + ".txt";
-    std::cout << "PlayBackFrame dcl_file:" << dcl_file << std::endl;
-    
-    if (LoadDrawCmdList(dcl_file) < 0){
+    static int curLoop = 0;
+    std::string dclFile = inputFilePath + "frame" + std::to_string(frame) + ".txt";
+    std::cout << "PlayBackFrame dclFile:" << dclFile << std::endl;
+
+    if (LoadDrawCmdList(dclFile) < 0) {
         std::cout << "failed to loadDrawCmdList" << std::endl;
-        IterateFrame(cur_loop, frame);
+        IterateFrame(curLoop, frame);
         return false;
     }
     PrintDurationTime("Load DrawCmdList file time is ", start);
     start = std::chrono::system_clock::now();
     dcl->Playback(*skiaCanvas);
-    PrintDurationTime("The frame PlayBack time is ", start); 
-    //if (isDumpPictures) {
-        // TODO: dump bitmap from skia Canvas.
-    //}
-    return IterateFrame(cur_loop, frame);
+    PrintDurationTime("The frame PlayBack time is ", start);
+
+    return IterateFrame(curLoop, frame);
 }
 
-bool DrawingDCL::PlayBackByOpItem(SkCanvas * skiaCanvas, bool isMoreOps) 
+bool DrawingDCL::PlayBackByOpItem(SkCanvas * skiaCanvas, bool isMoreOps)
 {
     auto start = std::chrono::system_clock::now();
     // read drawCmdList from file
-    std::string dcl_file = inputFilePath + "frameByOpItem.txt";
-    std::cout << "PlayBackFrame dcl_file:" << dcl_file << std::endl;
+    std::string dclFile = inputFilePath + "frameByOpItem.txt";
+    std::cout << "PlayBackFrame dclFile:" << dclFile << std::endl;
 
-    if (LoadDrawCmdList(dcl_file) < 0){
+    if (LoadDrawCmdList(dclFile) < 0) {
         std::cout << "failed to loadDrawCmdList" << std::endl;
         return false;
     }
     PrintDurationTime("Load DrawCmdList file time is ", start);
     // Playback
-    static double op_id = 0;
-    int oldOpId = int(op_id);
+    static double opitemId = 0;
+    int oldOpId = int(opitemId);
     if (!isMoreOps) {
-        op_id -= opItemStep;
-        if (op_id < 0) op_id = 0;
+        opitemId -= opItemStep;
+        if (opitemId < 0) {
+            opitemId = 0;
+        }
         std::cout<< "This is already the first OpItem." << std::endl;
     } else {
-        op_id += opItemStep;
+        opitemId += opItemStep;
     }
-    std::cout << "play back to op_id = " << int(op_id) << std::endl;
-    if (op_id < dcl->GetSize()) {
-        std::cout << dcl->PlaybackWithParam(*skiaCanvas, 0, int(op_id), oldOpId) << std::endl;
+    std::cout << "play back to opitemId = " << int(opitemId) << std::endl;
+    if (opitemId < dcl->GetSize()) {
+        std::cout << dcl->PlaybackWithParam(*skiaCanvas, 0, int(opitemId), oldOpId) << std::endl;
     } else {
         std::cout << dcl->PlaybackWithParam(*skiaCanvas, 0, dcl->GetSize(), oldOpId) << std::endl;
-        op_id = 0;
+        opitemId = 0;
         return false;
     }
     return true;
@@ -103,14 +105,17 @@ bool DrawingDCL::PlayBackByOpItem(SkCanvas * skiaCanvas, bool isMoreOps)
 
 bool DrawingDCL::GetDirectionAndStep(std::string command, bool &isMoreOps)
 {
-    if (command.empty()) return true;
+    if (command.empty()) {
+        return true;
+    }
     std::vector<std::string> words;
     std::stringstream ss(command);
     std::string word;
     while (ss >> word) {
         words.emplace_back(word);
     }
-    if (words.size() > 2) {
+    int twoParam = 2;
+    if (words.size() > twoParam) {
         std::cout << "Too Many Parameter!" << std::endl;
         return false;
     }
@@ -123,10 +128,10 @@ bool DrawingDCL::GetDirectionAndStep(std::string command, bool &isMoreOps)
         return false;
     }
     // check if the input for step is valid
-    int dot_pos = -1;
+    int dotPostion = -1;
     for (int i = 0; i < words[1].size(); ++i) {
-        if (words[1][i] == '.' && dot_pos == -1){
-            dot_pos = i;
+        if (words[1][i] == '.' && dotPostion == -1) {
+            dotPostion = i;
         } else if (words[1][i] >= '0' && words[1][i] <= '9') {
             continue;
         } else {
@@ -149,14 +154,14 @@ void DrawingDCL::UpdateParametersFromDCLCommand(std::unique_ptr<DCLCommand> dclC
     outputFilePath = dclCommand -> outputFilePath;
 }
 
-void DrawingDCL::UpdateParameters(bool notNeeded) 
+void DrawingDCL::UpdateParameters(bool notNeeded)
 {
     if (notNeeded) return;
     std::cout << "Please re-enter the parameters" << std::endl;
     std::string line;
     getline(std::cin, line);
     if (line.empty()) return;
-    std::unique_ptr<DCLCommand> dclCommand(new DCLCommand(line));
+    std::unique_ptr<DCLCommand> dclCommand = std::make_unique<DCLCommand>(DCLCommand(line));
     UpdateParametersFromDCLCommand(std::move(dclCommand));
 }
 
@@ -177,11 +182,11 @@ void DrawingDCL::Test(SkCanvas* canvas, int width, int height)
     std::cout << "DrawingDCL::Test+" << std::endl;
     auto start = std::chrono::system_clock::now();
 
-    if (iterateType == 0) {
+    if (iterateType == IterateFrame::ITERATE_FRAME) {
         UpdateParameters(PlayBackByFrame(canvas));
-    } else if (iterateType == 1) {
+    } else if (iterateType == IterateFrame::ITERATE_OPITEM) {
         UpdateParameters(PlayBackByOpItem(canvas));
-    } else if (iterateType == 2) {
+    } else if (iterateType == IterateFrame::ITERATE_OPITEM_MANUALLY) {
         static bool isMoreOps = true;
         std::string opActionsStr = isMoreOps ? "more" : "less";
         std::cout << "Do you want to execute " << opItemStep << " OpItems " << opActionsStr << " ?\n"
@@ -206,7 +211,8 @@ class MyAllocator : public DefaultAllocator {
 public:
     MyAllocator(int fd, size_t size, uint8_t * mapFile) : fd_(fd), size_(size), mapFile_(mapFile) {}
 
-    void Dealloc(void *mapFile) {
+    void Dealloc(void *mapFile)
+    {
         if (mapFile != mapFile_) {
             std::cout << "MyAllocator::Deallo data addr not match!" << std::endl;
         }
@@ -222,14 +228,14 @@ public:
 private:
     int fd_;
     size_t size;
-    uint8_t * mapFile_;
+    uint8_t *mapFile_;
 };
 
-int DrawingDCL::LoadDrawCmdList(std::string dcl_file)
+int DrawingDCL::LoadDrawCmdList(std::string dclFile)
 {
-    int32_t fd = open(dcl_file.c_str(), O_RDONLY);
+    int32_t fd = open(dclFile.c_str(), O_RDONLY);
     if (fd <= 0) {
-        std::cout << "Open file failed" << dcl_file.c_str() << std::endl;
+        std::cout << "Open file failed" << dclFile.c_str() << std::endl;
         return -1;
     }
     struct stat statbuf;
@@ -239,7 +245,7 @@ int DrawingDCL::LoadDrawCmdList(std::string dcl_file)
     }
     std::cout << "statbuf.st_size = " << statbuf.st_size << std::endl;
 
-    auto mapFile = static_cast<uint8_t *> (mmap(NULL, statbuf.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
+    auto mapFile = static_cast<uint8_t *>(mmap(nullptr, statbuf.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
     if (mapFile == MAP_FAILED) {
         close(fd);
         return -1;
@@ -247,7 +253,6 @@ int DrawingDCL::LoadDrawCmdList(std::string dcl_file)
     std::cout << "mapFile OK" << std::endl;
 
     MessageParcel messageParcel(new MyAllocator(fd, statbuf.st_size, mapFile));
-    size_t RECORDING_PARCEL_MAX_CAPCITY = 234 * 1000 * 1024;
     messageParcel.SetMaxCapacity(RECORDING_PARCEL_MAX_CAPCITY);
     if (!messageParcel.ParseFrom(reinterpret_cast<uintptr_t>(mapFile), statbuf.st_size)) {
         munmap(mapFile, statbuf.st_size);
@@ -266,7 +271,7 @@ int DrawingDCL::LoadDrawCmdList(std::string dcl_file)
     std::cout << "The size of Ops is " << dcl->GetSize() << std::endl;
     munmap(mapFile, statbuf.st_size);
     close(fd);
-    return 0;    
+    return 0;
 }
 
 }

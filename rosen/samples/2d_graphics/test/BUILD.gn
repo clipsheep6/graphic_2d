@@ -61,8 +61,13 @@ ohos_executable("drawing_sample") {
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
-    "//third_party/flutter/build/skia:ace_skia_ohos",
   ]
+
+  if (defined(use_new_skia) && use_new_skia) {
+    deps += [ "//third_party/skia:skia" ]
+  } else {
+    deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  }
 
   external_deps = [
     "eventhandler:libeventhandler",

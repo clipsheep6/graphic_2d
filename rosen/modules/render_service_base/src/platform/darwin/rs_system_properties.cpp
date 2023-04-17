@@ -87,12 +87,12 @@ bool RSSystemProperties::GetDrawTextAsBitmap()
 {
     return {};
 }
-
+#ifndef NEW_SKIA
 ReleaseGpuResourceType RSSystemProperties::GetReleaseGpuResourceEnabled()
 {
     return {};
 }
-
+#endif
 ParallelRenderingType RSSystemProperties::GetPrepareParallelRenderingEnabled()
 {
     return {};

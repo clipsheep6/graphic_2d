@@ -43,6 +43,7 @@ ohos_fuzztest("RSInterfacesFuzzTest") {
   ]
 
   sources = [ "rsinterfaces_fuzzer.cpp" ]
+  
 }
 
 ###############################################################################

@@ -164,6 +164,12 @@ template("render_service_client_source_set") {
       deps += [ "$rosen_root/modules/platform:eventhandler" ]
     }
 
+    if (defined(use_new_skia) && use_new_skia) {
+      public_deps += [ "//third_party/skia:skia" ]
+    } else {
+      public_deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+    }
+
     public_configs = [ ":render_service_client_config" ]
   }
 }

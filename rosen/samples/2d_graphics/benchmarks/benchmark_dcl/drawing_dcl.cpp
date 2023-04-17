@@ -14,6 +14,7 @@
  */
 #include "drawing_dcl.h"
 #include <sstream>
+#include <fcntl.h>
 #include "platform/common/rs_log.h"
 
 

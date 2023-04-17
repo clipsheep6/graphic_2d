@@ -66,7 +66,6 @@ ohos_executable("drawing_engine_sample") {
     "//foundation/graphic/graphic_2d/utils/sync_fence/export",
     "//foundation/graphic/graphic_2d/rosen/include/common",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
-    "//foundation/graphic/graphic_2d/frameworks/vulkan_wrapper",
   ]
 
   sources += [
@@ -91,13 +90,9 @@ ohos_executable("drawing_engine_sample") {
     "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//third_party/flutter/build/skia:ace_skia_ohos",
-    "//foundation/graphic/graphic_2d/frameworks/vulkan_wrapper:vulkan",
     "//third_party/libjpeg-turbo:turbojpeg_static",
   ]
-  # public_deps = libgl
-  public_deps = [
-    "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
-  ]
+  public_deps = libgl
   defines = gpu_defines
 
   #defines = [ "USE_CANVASKIT0310_SKIA" ]
@@ -109,8 +104,8 @@ ohos_executable("drawing_engine_sample") {
     include_dirs += [ "//third_party/flutter/engine/flutter/vulkan" ]
   }
   public_deps += [
+    "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
     "$graphic_2d_root:libvulkan",
-    "//foundation/graphic/graphic_2d:libgl",
     "//third_party/openssl:libcrypto_shared",
   ]
   external_deps = [
@@ -145,7 +140,6 @@ ohos_executable("drawing_sample_rs") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//third_party/zlib:libz",
-    "//foundation/graphic/graphic_2d/frameworks/vulkan_wrapper:vulkan",
 ]
 
   external_deps = [ "hilog_native:libhilog" ]

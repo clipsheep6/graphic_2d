@@ -1512,7 +1512,7 @@ void RSUniRenderVisitor::AddOverDrawListener(std::unique_ptr<RSRenderFrame>& ren
         return;
     }
     RS_TRACE_BEGIN("RSUniRender::GetSurface");
-    auto skSurface = renderFrame->GetFrame()->GetSurface();
+    auto skSurface = renderFrame->GetSurface()->GetSkSurface(renderFrame->GetFrame());
     RS_TRACE_END();
     if (skSurface == nullptr) {
         RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: skSurface is null");

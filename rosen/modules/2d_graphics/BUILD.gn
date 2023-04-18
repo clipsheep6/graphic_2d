@@ -106,20 +106,33 @@ template("graphics2d_source_set") {
       "$drawing_src_dir/engine_adapter",
       "$rosen_2d_engine_root",
       "//foundation/arkui/ace_engine/frameworks",
+      "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
+      "//foundation/graphic/graphic_2d/rosen/modules/render_service/core",
+      "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/core/pipeline",
+      "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include",
+      "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
+      "//foundation/graphic/graphic_2d/rosen/modules/utils",
       "//third_party/bounds_checking_function/include",
     ]
 
     defines += [ "USE_ACE_SKIA" ]
 
+    defines += gpu_defines
+
     if (platform == "ohos") {
       external_deps = [
         "hilog_native:libhilog",
+        "hitrace_native:hitrace_meter",
         "multimedia_image_framework:image_native",
       ]
       deps = [
         "$ace_flutter_engine_root:flutter_engine_fml_$platform",
+        "//foundation/graphic/graphic_2d:libgl",
+        "//foundation/graphic/graphic_2d/utils/sync_fence:sync_fence",
         "//foundation/graphic/graphic_2d/rosen/build/flutter/icu:rosen_libicu_$platform",
         "//foundation/graphic/graphic_2d/rosen/build/flutter/libtxt:thirdparty_lib_txt_rosen_$platform",
+        "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
+        "//foundation/graphic/graphic_2d/rosen/modules/render_service:librender_service",
         "//third_party/bounds_checking_function:libsec_static",
       ]
       include_dirs += [ "$flutter_root/engine" ]

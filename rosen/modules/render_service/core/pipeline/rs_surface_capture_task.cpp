@@ -74,7 +74,7 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         return nullptr;
     }
 #ifdef RS_ENABLE_GL
-    auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
+    auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderProxy();
     GrContext* grContext = renderContext != nullptr ? renderContext->GetGrContext() : nullptr;
     RSTagTracker tagTracker(grContext, node->GetId(), RSTagTracker::TAGTYPE::TAG_CAPTURE);
 #endif
@@ -192,7 +192,7 @@ sk_sp<SkSurface> RSSurfaceCaptureTask::CreateSurface(const std::unique_ptr<Media
     SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
         kRGBA_8888_SkColorType, kPremul_SkAlphaType);
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
-    auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
+    auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderProxy();
     if (renderContext == nullptr) {
         RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderContext is nullptr");
         return nullptr;

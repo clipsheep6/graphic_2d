@@ -19,26 +19,33 @@
 #include <memory>
 
 #include "common/rs_rect.h"
-#include "include/core/SkCanvas.h"
-#include "include/core/SkSurface.h"
 
 namespace OHOS {
 namespace Rosen {
-class RenderContext;
+class RenderProxy;
 class RSSurfaceFrame {
 public:
     RSSurfaceFrame() = default;
+    explicit RSSurfaceFrame(int32_t width, int32_t height)
+        : width_(width), height_(height)
+    {
+    }
     virtual ~RSSurfaceFrame() = default;
-
     virtual void SetDamageRegion(int32_t left, int32_t top, int32_t width, int32_t height) {};
     virtual void SetDamageRegion(const std::vector<RectI> &rects) {};
     virtual int32_t GetBufferAge() const = 0;
-    virtual SkCanvas* GetCanvas() = 0;
-    virtual sk_sp<SkSurface> GetSurface() = 0;
-    virtual void SetRenderContext(RenderContext* context) = 0;
+    int32_t GetWidth() const
+    {
+        return width_;
+    }
+
+    int32_t GetHeight() const
+    {
+        return height_;
+    }
 protected:
-    sk_sp<SkSurface> skSurface_ = nullptr;
-private:
+    int32_t width_ = -1;
+    int32_t height_ = -1;
 };
 
 } // namespace Rosen

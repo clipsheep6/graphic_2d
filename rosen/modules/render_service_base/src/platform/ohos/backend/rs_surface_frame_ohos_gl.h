@@ -28,22 +28,13 @@ namespace Rosen {
 
 class RSSurfaceFrameOhosGl : public RSSurfaceFrameOhos {
 public:
-    RSSurfaceFrameOhosGl(int32_t width, int32_t height);
+    explicit RSSurfaceFrameOhosGl(int32_t width, int32_t height) : RSSurfaceFrameOhos(width, height)
+    {
+    }
     ~RSSurfaceFrameOhosGl() = default;
-
-    SkCanvas* GetCanvas() override;
-    sk_sp<SkSurface> GetSurface() override;
     void SetDamageRegion(int32_t left, int32_t top, int32_t width, int32_t height) override;
     void SetDamageRegion(const std::vector<RectI> &rects) override;
     int32_t GetBufferAge() const override;
-    int32_t GetReleaseFence() const;
-    void SetReleaseFence(const int32_t& fence);
-
-private:
-    int32_t releaseFence_ = 0;
-    int width_ = 0;
-    int height_ = 0;
-    void CreateSurface();
 };
 } // namespace Rosen
 } // namespace OHOS

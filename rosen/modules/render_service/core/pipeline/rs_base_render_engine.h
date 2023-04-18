@@ -28,6 +28,7 @@
 
 #if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
 #include "render_context/render_context.h"
+#include "drawing_engine/render_proxy.h"
 #endif // RS_ENABLE_GL || RS_ENABLE_VK
 
 #ifdef RS_ENABLE_EGLIMAGE
@@ -74,7 +75,7 @@ public:
 
     std::unique_ptr<RSPaintFilterCanvas> GetCanvas()
     {
-        return std::make_unique<RSPaintFilterCanvas>(surfaceFrame_->GetSurface().get());
+        return std::make_unique<RSPaintFilterCanvas>(targetSurface_->GetCanvas(surfaceFrame_));
     }
 
     int32_t GetBufferAge()
@@ -151,6 +152,11 @@ public:
     {
         return renderContext_;
     }
+
+    const std::shared_ptr<OHOS::Rosen::RenderProxy>& GetRenderProxy()
+    {
+        return renderProxy_;
+    }
 #endif // RS_ENABLE_GL || RS_ENABLE_VK
 
 #ifdef RS_ENABLE_EGLIMAGE
@@ -172,7 +178,8 @@ private:
     static inline std::atomic_bool isHighContrastEnabled_ = false;
 
 #if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
-    std::shared_ptr<RenderContext> renderContext_ = nullptr;
+    std::shared_ptr<RenderContext> renderContext_;
+    std::shared_ptr<OHOS::Rosen::RenderProxy> renderProxy_;
 #endif // RS_ENABLE_GL || RS_ENABLE_VK
 
 #ifdef RS_ENABLE_EGLIMAGE

@@ -29,6 +29,7 @@
 #include <ipc_skeleton.h>
 #include <iremote_broker.h>
 #include <iservice_registry.h>
+#include <memory>
 #include <platform/ohos/rs_irender_service.h>
 #include <parameters.h>
 #include <render_context/render_context.h>
@@ -43,6 +44,7 @@
 #include "player.h"
 #include "vsync_receiver.h"
 #include "util.h"
+#include "drawing_engine/render_proxy.h"
 
 namespace OHOS {
 class BootAnimation {
@@ -67,7 +69,7 @@ private:
     sptr<OHOS::Rosen::WindowScene> scene_;
     std::unique_ptr<OHOS::Rosen::RSSurfaceFrame> framePtr_;
     std::shared_ptr<OHOS::Rosen::RSSurface> rsSurface_;
-    OHOS::Rosen::RenderContext* rc_;
+    std::shared_ptr<OHOS::Rosen::RenderProxy> renderProxy_;
     int32_t freq_ = 30;
     int32_t realHeight_ = 0;
     int32_t realWidth_ = 0;

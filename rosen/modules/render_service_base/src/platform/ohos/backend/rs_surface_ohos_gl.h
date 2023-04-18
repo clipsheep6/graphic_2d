@@ -20,7 +20,6 @@
 
 #include "platform/drawing/rs_surface.h"
 #include "platform/ohos/rs_surface_ohos.h"
-#include "EGL/egl.h"
 #include "rs_surface_frame_ohos_gl.h"
 #include "window.h"
 
@@ -31,11 +30,6 @@ public:
     explicit RSSurfaceOhosGl(const sptr<Surface>& producer);
     ~RSSurfaceOhosGl();
 
-    bool IsValid() const override
-    {
-        return producer_ != nullptr;
-    }
-
     std::unique_ptr<RSSurfaceFrame> RequestFrame(
         int32_t width, int32_t height, uint64_t uiTimestamp, bool useAFBC = true) override;
     bool FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp) override;
@@ -44,11 +38,6 @@ public:
     void ClearBuffer() override;
     void ResetBufferAge() override;
     void SetUiTimeStamp(const std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp) override;
-private:
-    EGLSurface mEglSurface = EGL_NO_SURFACE;
-    struct NativeWindow* mWindow = nullptr;
-    int mWidth = -1;
-    int mHeight = -1;
 };
 
 } // namespace Rosen

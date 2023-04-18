@@ -40,12 +40,16 @@ float RSBlurFilter::GetBlurRadiusY()
 
 float RSBlurFilter::GetBlurRadiusPx() const
 {
-    return (blurRadiusX_ - SK_ScalarHalf) / BLUR_SIGMA_SCALE;
+    // sigma -> px
+    if (blurRadiusX_ > SK_ScalarHalf) {
+        return (blurRadiusX_ - SK_ScalarHalf) / BLUR_SIGMA_SCALE;
+    }
+    return 0.f;
 }
 
 std::string RSBlurFilter::GetDescription()
 {
-    return "RSBlurFilter blur radius is " + std::to_string(blurRadiusX_) + " sigma";
+    return "RSBlurFilter blur radius is " + std::to_string(GetBlurRadiusPx()) + " px";
 }
 
 std::shared_ptr<RSFilter> RSBlurFilter::Add(const std::shared_ptr<RSFilter>& rhs)

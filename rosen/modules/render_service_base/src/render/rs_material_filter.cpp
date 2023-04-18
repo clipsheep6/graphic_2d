@@ -81,6 +81,16 @@ float RSMaterialFilter::GetTraceBlurRadius() const
     return 0.f;
 }
 
+float RSMaterialFilter::GetBlurRadiusPx() const
+{
+    if (materialParams_.find(style_) != materialParams_.end()) {
+        MaterialParam materialParam = materialParams_[style_];
+        // vp -> px
+        return materialParam.radius * dipScale_;
+    }
+    return 0.f;
+}
+
 sk_sp<SkImageFilter> RSMaterialFilter::CreateMaterialFilter(float radius, float sat, SkColor maskColor)
 {
     maskColor_ = maskColor;

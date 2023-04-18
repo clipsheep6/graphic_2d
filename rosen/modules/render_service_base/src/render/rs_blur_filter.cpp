@@ -18,6 +18,7 @@
 #include "include/effects/SkBlurImageFilter.h"
 namespace OHOS {
 namespace Rosen {
+constexpr float BLUR_SIGMA_SCALE = 0.57735f;
 RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY): RSSkiaFilter(SkBlurImageFilter::Make(blurRadiusX,
     blurRadiusY, nullptr, nullptr, SkBlurImageFilter::kClamp_TileMode)), blurRadiusX_(blurRadiusX),
     blurRadiusY_(blurRadiusY)
@@ -35,6 +36,11 @@ float RSBlurFilter::GetBlurRadiusX()
 float RSBlurFilter::GetBlurRadiusY()
 {
     return blurRadiusY_;
+}
+
+float RSBlurFilter::GetBlurRadiusPx() const
+{
+    return (blurRadiusX_ - SK_ScalarHalf) / BLUR_SIGMA_SCALE;
 }
 
 std::string RSBlurFilter::GetDescription()

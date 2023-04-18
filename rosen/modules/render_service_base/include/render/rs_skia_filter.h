@@ -35,6 +35,7 @@ public:
         const std::shared_ptr<RSSkiaFilter>& inner);
     virtual void PreProcess(sk_sp<SkImage> image) {};
     virtual void PostProcess(RSPaintFilterCanvas& canvas) {};
+    virtual float GetBlurRadiusPx() const;
 
 private:
     sk_sp<SkImageFilter> imageFilter_ = nullptr;

@@ -314,24 +314,35 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     }
 
     // canvas draw by snapshot instead of SaveLayer, since the blur layer moves while using saveLayer
-    auto imageSnapshot = skSurface->makeImageSnapshot(canvas.getDeviceClipBounds());
+    auto imageSnapshot = skSurface->makeImageSnapshot();
     if (imageSnapshot == nullptr) {
         ROSEN_LOGE("RSPropertiesPainter::DrawFilter image null");
         return;
     }
-
-    filter->PreProcess(imageSnapshot);
     auto clipBounds = SkRect::Make(canvas.getDeviceClipBounds());
+    SkScalar radius = filter->GetBlurRadiusPx();
+    // Expand the screenshot range to avoid flickering issues
+    auto clipIPadding = SkIRect::MakeXYWH((int32_t)(clipBounds.left() - radius), (int32_t)(clipBounds.top() - radius),
+        (int32_t)(clipBounds.width() + radius * 2), (int32_t)(clipBounds.height() + radius * 2));
+    auto clipPadding = SkRect::MakeXYWH(clipIPadding.left(), clipIPadding.top(),
+        clipIPadding.width(), clipIPadding.height());
+    auto clipIBound = SkIRect::MakeXYWH((int32_t)clipBounds.left(), (int32_t)clipBounds.top(),
+        (int32_t)clipBounds.width(), (int32_t)clipBounds.height());
+    auto imageSub = imageSnapshot->makeSubset(clipIBound);
+    filter->PreProcess(imageSub);
     canvas.resetMatrix();
     auto visibleRect = canvas.GetVisibleRect();
+    auto visiblePadding = SkRect::MakeXYWH(visibleRect.left() - radius, visibleRect.top() - radius, 
+        visibleRect.width() + radius * 2, visibleRect.height() + radius * 2);
+    if (visibleRect.intersect(clipBounds)) {
+        canvas.clipRect(visibleRect);
+    }
     if (visibleRect.intersect(clipBounds)) {
         // the snapshot only contains the clip region, so we need to offset the src rect
-        canvas.drawImageRect(
-            imageSnapshot.get(), visibleRect.makeOffset(-clipBounds.left(), -clipBounds.top()), visibleRect, &paint);
+        canvas.drawImageRect(imageSnapshot.get(), visiblePadding, visiblePadding, &paint);
     } else {
         // the snapshot only contains the clip region, so we need to offset the src rect
-        canvas.drawImageRect(
-            imageSnapshot.get(), clipBounds.makeOffset(-clipBounds.left(), -clipBounds.top()), clipBounds, &paint);
+        canvas.drawImageRect(imageSnapshot.get(), clipPadding, clipPadding, &paint);
     }
     filter->PostProcess(canvas);
 }

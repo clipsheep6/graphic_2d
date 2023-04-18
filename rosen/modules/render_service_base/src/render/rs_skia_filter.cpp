@@ -52,5 +52,10 @@ std::shared_ptr<RSSkiaFilter> RSSkiaFilter::Compose(const std::shared_ptr<RSSkia
     sk_sp<SkImageFilter> composedFilter = SkImageFilters::Compose(outerFilter, innerFilter);
     return std::make_shared<RSSkiaFilter>(composedFilter);
 }
+
+float RSSkiaFilter::GetBlurRadiusPx() const
+{
+    return 0.0f;
+}
 } // namespace Rosen
 } // namespace OHOS

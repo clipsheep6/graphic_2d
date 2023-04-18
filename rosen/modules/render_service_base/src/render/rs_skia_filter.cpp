@@ -55,7 +55,7 @@ std::shared_ptr<RSSkiaFilter> RSSkiaFilter::Compose(const std::shared_ptr<RSSkia
 
 float RSSkiaFilter::GetBlurRadiusPx() const
 {
-    return 0.0f;
+    return 0.f;
 }
 } // namespace Rosen
 } // namespace OHOS

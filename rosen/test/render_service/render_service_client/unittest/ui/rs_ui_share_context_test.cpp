@@ -15,6 +15,8 @@
 
 #include "gtest/gtest.h"
 #include "ui/rs_ui_share_context.h"
+#include "pipeline/rs_render_thread.h"
+
 using namespace testing;
 using namespace testing::ext;
 
@@ -28,17 +30,6 @@ public:
 };
 
 /**
- * @tc.name: GetInstance001
- * @tc.desc:
- * @tc.type:FUNC
- */
-HWTEST_F(RSUIShareContextTest, GetInstance001, TestSize.Level1)
-{
-    auto& rs = RSUIShareContext::GetInstance();
-    (void)(rs);
-}
-
-/**
  * @tc.name: GetRsRenderContext001
  * @tc.desc:
  * @tc.type:FUNC
@@ -46,6 +37,11 @@ HWTEST_F(RSUIShareContextTest, GetInstance001, TestSize.Level1)
 HWTEST_F(RSUIShareContextTest, GetRsRenderContext001, TestSize.Level1)
 {
     auto context = RSUIShareContext::GetInstance().GetRsRenderContext();
-    (void)(context);
+    auto refCtx = RSRenderThread::Instance().GetRenderContext();
+    if (!refCtx) {
+        ASSERT_EQ(EGL_NO_CONTEXT, context);
+    } else {
+        ASSERT_EQ(refCtx->GetEGLContext(), context);
+    }
 }
 } // namespace OHOS::Rosen

@@ -230,7 +230,16 @@ private:
      * 3. no processWithCommands_ of node's corresponding pid
      * If so, reset status flag and stop traversal
      */
-    bool CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& node);
+    bool CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& node, std::set<NodeId>& activeNodeIds);
+    bool ClassifyGeoContentDirtyNodes(std::set<NodeId>& activeNodeIds,
+        std::set<std::shared_ptr<RSRenderNode>>& geoDirtyNodes,
+        std::set<std::shared_ptr<RSRenderNode>>& contentDirtyNodes) const;
+    bool RecognizeGeoDirtyMainWindow(const std::set<std::shared_ptr<RSRenderNode>>& geoDirtyNodes);
+    bool CheckIfDynamicWidgetPrepared(std::set<NodeId>& activeNodeIds);
+    void UpdateFilterInfoAntiTraversal(std::shared_ptr<RSRenderNode> node,
+        std::shared_ptr<RSSurfaceRenderNode> nodeParent);
+    void UpdateAppSelfDrawingSurfaceInfo(std::shared_ptr<RSSurfaceRenderNode> nodeParent);
+    
     void PrepareTypesOfSurfaceRenderNodeBeforeUpdate(RSSurfaceRenderNode& node);
     void PrepareTypesOfSurfaceRenderNodeAfterUpdate(RSSurfaceRenderNode& node);
     // judge if node's cache changes
@@ -325,6 +334,9 @@ private:
     bool isDrawingCacheChanged_ = false;
     int markedCachedNodes_ = 0;
     std::vector<RectI> accumulatedDirtyRegions_ = {};
+    // add it for static widget check
+    std::set<NodeId> activeProcessVisitedNodes_ = {};
+    std::set<NodeId> activeGeoDirtyNodes_ = {};
 
     bool needFilter_ = false;
     GraphicColorGamut newColorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;

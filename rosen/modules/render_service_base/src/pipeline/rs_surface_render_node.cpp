@@ -1109,6 +1109,23 @@ std::vector<std::weak_ptr<RSSurfaceRenderNode>> RSSurfaceRenderNode::GetChildHar
     return childHardwareEnabledNodes_;
 }
 
+void RSSurfaceRenderNode::ResetChildSelfDrawingNodes()
+{
+    childSelfDrawingNodes_.clear();
+}
+
+void RSSurfaceRenderNode::AddChildSelfDrawingNode(WeakPtr childNode)
+{
+    if (childNode.lock()) {
+        childSelfDrawingNodes_.emplace_back(childNode);
+    }
+}
+
+std::vector<std::weak_ptr<RSSurfaceRenderNode>> RSSurfaceRenderNode::GetChildSelfDrawingNodes() const
+{
+    return childSelfDrawingNodes_;
+}
+
 void RSSurfaceRenderNode::SetLocalZOrder(float localZOrder)
 {
     localZOrder_ = localZOrder;

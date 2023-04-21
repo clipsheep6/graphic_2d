@@ -127,10 +127,10 @@ void RSUIDirector::GoBackground()
         });
 #ifdef ACE_ENABLE_GL
         RSRenderThread::Instance().PostTask([this]() {
-            auto renderContext = RSRenderThread::Instance().GetRenderContext();
-            if (renderContext != nullptr) {
+            auto renderProxy = RSRenderThread::Instance().GetRenderProxy();
+            if (renderProxy != nullptr) {
 #ifndef ROSEN_CROSS_PLATFORM
-                renderContext->ClearRedundantResources();
+                renderProxy->ClearRedundantResources();
 #endif
             }
         });

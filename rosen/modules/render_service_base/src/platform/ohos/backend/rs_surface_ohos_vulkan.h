@@ -42,6 +42,9 @@ public:
     void ClearBuffer() override;
     void ResetBufferAge() override;
     void SetUiTimeStamp(const std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp) override;
+    
+    SkCanvas* GetCanvas(const std::unique_ptr<RSSurfaceFrame>& frame) override { return nullptr; };
+    sk_sp<SkSurface> GetSkSurface(const std::unique_ptr<RSSurfaceFrame>& frame) override { return nullptr };
 private:
     struct NativeWindow* mNativeWindow = nullptr;
     vulkan::VulkanWindow* mVulkanWindow = nullptr;

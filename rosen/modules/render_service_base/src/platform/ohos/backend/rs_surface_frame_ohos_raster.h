@@ -26,11 +26,14 @@ namespace Rosen {
 
 class RSSurfaceFrameOhosRaster : public RSSurfaceFrameOhos {
 public:
-    RSSurfaceFrameOhosRaster(int32_t width, int32_t height);
+    explicit RSSurfaceFrameOhosRaster(int32_t width, int32_t height) : RSSurfaceFrameOhos(width, height)
+    {
+        requestConfig_.width = width;
+        requestConfig_.height = height;
+        flushConfig_.damage.w = width;
+        flushConfig_.damage.h = height;
+    }
     ~RSSurfaceFrameOhosRaster() = default;
-
-    SkCanvas* GetCanvas() override;
-    sk_sp<SkSurface> GetSurface() override;
 
     sptr<SurfaceBuffer> GetBuffer() const
     {
@@ -44,7 +47,6 @@ public:
     friend class RSSurfaceOhosRaster;
 private:
     sptr<SurfaceBuffer> buffer_;
-    int32_t releaseFence_ = -1;
     BufferRequestConfig requestConfig_ = {
         .width = 0x100,
         .height = 0x100,
@@ -61,8 +63,6 @@ private:
             .h = 0x100,
         },
     };
-
-    void CreateSurface();
 };
 
 } // namespace Rosen

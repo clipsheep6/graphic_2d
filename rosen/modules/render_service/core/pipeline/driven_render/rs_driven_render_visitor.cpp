@@ -231,7 +231,7 @@ void RSDrivenRenderVisitor::RenderExpandedFrame(RSDrivenSurfaceRenderNode& node)
         RS_LOGE("RSDrivenRenderVisitor::RenderExpandedFrame: RSSurfaceFrame is null");
         return;
     }
-    auto skSurface = renderFrame->GetFrame()->GetSurface();
+    auto skSurface = renderFrame->GetSurface()->GetSkSurface(renderFrame->GetFrame());
     if (skSurface == nullptr) {
         RS_LOGE("RSDrivenRenderVisitor::RenderExpandedFrame: skSurface is null");
         return;

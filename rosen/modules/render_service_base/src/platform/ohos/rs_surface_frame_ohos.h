@@ -16,18 +16,42 @@
 #ifndef RENDER_SERVICE_BASE_PLATFORM_RS_SURFACE_FRAME_OHOS_H
 #define RENDER_SERVICE_BASE_PLATFORM_RS_SURFACE_FRAME_OHOS_H
 
+#include <memory>
 #include <surface.h>
+#include "drawing_engine/render_proxy.h"
 
 #include "platform/drawing/rs_surface_frame.h"
 
 namespace OHOS {
 namespace Rosen {
-class RenderContext;
+class RenderProxy;
 class RSSurfaceFrameOhos : public RSSurfaceFrame {
 public:
-    virtual void SetRenderContext(RenderContext* context);
+    RSSurfaceFrameOhos() = default;
+    RSSurfaceFrameOhos(int32_t width, int32_t height) : RSSurfaceFrame(width, height)
+    { 
+    }
+    
+    virtual ~RSSurfaceFrameOhos() = default;
+    
+    void SetRenderProxy(const std::shared_ptr<RenderProxy> renderProxy)
+    {
+        renderProxy_ = renderProxy;
+    }
+    
+    void SetReleaseFence(const int32_t& fence)
+    {
+        releaseFence_ = fence;
+    }
+
+    int32_t GetReleaseFence() const
+    {
+        return releaseFence_;
+    }
+
 protected:
-    RenderContext* renderContext_;
+    std::shared_ptr<RenderProxy> renderProxy_;
+    int32_t releaseFence_ = 0;
 };
 
 } // namespace Rosen

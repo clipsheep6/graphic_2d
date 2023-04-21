@@ -41,17 +41,17 @@ RSBaseRenderEngine::~RSBaseRenderEngine() noexcept
 void RSBaseRenderEngine::Init()
 {
 #if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
-    renderContext_ = std::make_shared<RenderContext>();
-    renderContext_->InitializeEglContext();
+    renderProxy_ = std::make_shared<OHOS::Rosen::RenderProxy>();
+    renderProxy_->InitRSRenderContext();
     if (RSUniRenderJudgement::IsUniRender()) {
         RS_LOGI("RSRenderEngine::RSRenderEngine set new cacheDir");
-        renderContext_->SetUniRenderMode(true);
+        renderProxy_->SetUniRenderMode(true);
     }
-    renderContext_->SetUpGrContext();
+    renderProxy_->SetUpGrContext();
 #endif // RS_ENABLE_GL || RS_ENABLE_VK
 
 #ifdef RS_ENABLE_EGLIMAGE
-    eglImageManager_ = std::make_shared<RSEglImageManager>(renderContext_->GetEGLDisplay());
+    eglImageManager_ = std::shared_ptr<RSEglImageManager>(renderProxy_->GetEGLDisplay());
 #endif // RS_ENABLE_EGLIMAGE
 }
 
@@ -137,8 +137,8 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
 
     // check if we can use GPU context
 #ifdef RS_ENABLE_GL
-    if (renderContext_ != nullptr) {
-        rsSurface->SetRenderContext(renderContext_.get());
+    if (renderProxy_ != nullptr) {
+        rsSurface->SetRenderProxy(renderProxy_);
     }
 #endif
 

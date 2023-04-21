@@ -22,10 +22,12 @@
 #ifndef ROSEN_CROSS_PLATFORM
 #include "surface_type.h"
 #endif
+#include "include/core/SkCanvas.h"
+#include "include/core/SkSurface.h"
 
 namespace OHOS {
 namespace Rosen {
-class RenderContext;
+class RenderProxy;
 class RSSurface {
 public:
     RSSurface() = default;
@@ -40,9 +42,19 @@ public:
         int32_t width, int32_t height, uint64_t uiTimestamp = 0, bool useAFBC = true) = 0;
 
     virtual bool FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp = 0) = 0;
+    
+    void SetRenderProxy(const std::shared_ptr<RenderProxy> renderProxy)
+    {
+        renderProxy_ = renderProxy;
+    }
 
-    virtual RenderContext* GetRenderContext() = 0;
-    virtual void SetRenderContext(RenderContext* context) = 0;
+    std::shared_ptr<RenderProxy> GetRenderProxy() const
+    {
+        return renderProxy_;
+    }
+    
+    virtual SkCanvas* GetCanvas(const std::unique_ptr<RSSurfaceFrame>& frame) = 0;
+    virtual sk_sp<SkSurface> GetSkSurface(const std::unique_ptr<RSSurfaceFrame>& frame) = 0;
 #ifndef ROSEN_CROSS_PLATFORM
     virtual ColorGamut GetColorSpace() const = 0;
     virtual void SetColorSpace(ColorGamut colorSpace) = 0;
@@ -54,7 +66,7 @@ public:
     virtual void ClearAllBuffer() = 0;
     virtual void ResetBufferAge() = 0;
 protected:
-private:
+    std::shared_ptr<RenderProxy> renderProxy_;
 };
 
 } // namespace Rosen

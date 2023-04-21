@@ -13,19 +13,13 @@
  * limitations under the License.
  */
 
-#include "rs_surface_frame_ohos.h"
+#include "drawing_engine/drawing_utils.h"
+
 #include "rs_surface_ohos.h"
+#include "backend/rs_surface_ohos_raster.h"
+#include "backend/rs_surface_ohos_gl.h"
 namespace OHOS {
 namespace Rosen {
-RenderContext* RSSurfaceOhos::GetRenderContext()
-{
-    return context_;
-}
-
-void RSSurfaceOhos::SetRenderContext(RenderContext* context)
-{
-    context_ = context;
-}
 
 void RSSurfaceOhos::SetColorSpace(ColorGamut colorSpace)
 {
@@ -47,6 +41,37 @@ void RSSurfaceOhos::ClearAllBuffer()
     if (producer_ != nullptr) {
         producer_->Disconnect();
     }
+}
+
+std::shared_ptr<RSSurface> RSSurfaceOhos::CreateRSSurface(sptr<Surface> surface)
+{
+    auto type = Setting::GetRenderBackendType();
+    std::shared_ptr<RSSurface> rsSurface = nullptr;
+    switch (type) {
+        case RenderBackendType::GLES:
+#ifdef ACE_ENABLE_GL
+            LOGI("RSSurfaceOhos::CreateSurface with gles backend");
+            rsSurface = std::make_shared<RSSurfaceOhosGl>(surface);
+#endif
+            break;
+        case RenderBackendType::SOFTWARE:
+            LOGI("RSSurfaceOhos::CreateSurface with software backend");
+            rsSurface = std::make_shared<RSSurfaceOhosRaster>(surface);
+            break;
+        default:
+            break;
+    }
+    return rsSurface;
+}
+
+SkCanvas* RSSurfaceOhos::GetCanvas(const std::unique_ptr<RSSurfaceFrame>& frame)
+{
+    return renderProxy_->GetCanvas(frame);
+}
+
+sk_sp<SkSurface> RSSurfaceOhos::GetSkSurface(const std::unique_ptr<RSSurfaceFrame>& frame)
+{
+    return renderProxy_->GetSkSurface(frame);
 }
 } // namespace Rosen
 } // namespace OHOS

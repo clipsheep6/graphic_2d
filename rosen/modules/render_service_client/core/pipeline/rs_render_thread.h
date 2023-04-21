@@ -18,6 +18,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <functional>
+#include <memory>
 #include <mutex>
 #include <thread>
 #include <unordered_map>
@@ -30,7 +31,7 @@
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_render_thread_visitor.h"
 #include "platform/drawing/rs_vsync_client.h"
-#include "render_context/render_context.h"
+#include "drawing_engine/render_proxy.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "vsync_receiver.h"
 
@@ -56,9 +57,9 @@ public:
 
     std::string DumpRenderTree() const;
 
-    RenderContext* GetRenderContext()
+    std::shared_ptr<RenderProxy> GetRenderProxy()
     {
-        return renderContext_;
+        return renderProxy_;
     }
 
     RSContext& GetContext()
@@ -143,7 +144,7 @@ private:
 
     std::shared_ptr<RSContext> context_;
 
-    RenderContext* renderContext_ = nullptr;
+    std::shared_ptr<RenderProxy> renderProxy_;
     std::shared_ptr<HighContrastObserver> highContrastObserver_;
     std::atomic_bool isHighContrastEnabled_ = false;
 

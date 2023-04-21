@@ -29,22 +29,26 @@ public:
     {
     }
 
+    bool IsValid() const override
+    {
+        return producer_ != nullptr;
+    }
+
     sptr<Surface> GetSurface() const
     {
         return producer_;
     }
-
-    virtual RenderContext* GetRenderContext() override;
-    virtual void SetRenderContext(RenderContext* context) override;
     virtual void SetColorSpace(ColorGamut colorSpace) override;
     virtual ColorGamut GetColorSpace() const override;
     virtual uint32_t GetQueueSize() const override;
 
     virtual void SetSurfaceBufferUsage(uint64_t usage) = 0;
     void ClearAllBuffer() override;
+    std::shared_ptr<RSSurface> CreateRSSurface(sptr<Surface> surface);
+    virtual SkCanvas* GetCanvas(const std::unique_ptr<RSSurfaceFrame>& frame) override;
+    virtual sk_sp<SkSurface> GetSkSurface(const std::unique_ptr<RSSurfaceFrame>& frame) override;
 protected:
     sptr<Surface> producer_;
-    RenderContext* context_ = nullptr;
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
     uint64_t bufferUsage_ = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA;
 };

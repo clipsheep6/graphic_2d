@@ -97,7 +97,7 @@ RSRenderThread::RSRenderThread()
 #endif
         prevTimestamp_ = timestamp_;
         ProcessCommands();
-        ROSEN_LOGD("RSRenderThread DrawFrame(%" PRIu64 ") in %s", prevTimestamp_, renderContext_ ? "GPU" : "CPU");
+        ROSEN_LOGD("RSRenderThread DrawFrame(%" PRIu64 ") in %s", prevTimestamp_, renderProxy_ ? "GPU" : "CPU");
         Animate(prevTimestamp_);
         Render();
         SendCommands();
@@ -121,12 +121,6 @@ RSRenderThread::RSRenderThread()
 RSRenderThread::~RSRenderThread()
 {
     Stop();
-
-    if (renderContext_ != nullptr) {
-        ROSEN_LOGD("Destroy renderContext!!");
-        delete renderContext_;
-        renderContext_ = nullptr;
-    }
 }
 
 void RSRenderThread::Start()
@@ -200,14 +194,14 @@ int32_t RSRenderThread::GetTid()
 void RSRenderThread::CreateAndInitRenderContextIfNeed()
 {
 #if defined(RS_ENABLE_GL) && !defined(ROSEN_PREVIEW)
-    if (renderContext_ == nullptr) {
-        renderContext_ = new RenderContext();
+    if (renderProxy_ == nullptr) {
+        renderProxy_ = std::make_shared<RenderProxy>();
         ROSEN_LOGD("Create RenderContext");
         RS_TRACE_NAME("InitializeEglContext");
 #ifdef ROSEN_OHOS
-        renderContext_->InitializeEglContext(); // init egl context on RT
+        renderProxy_->InitRSRenderContext(); // init egl context on RT
         if (!cacheDir_.empty()) {
-            renderContext_->SetCacheDir(cacheDir_);
+            renderProxy_->SetCacheDir(cacheDir_);
         }
 #endif
     }

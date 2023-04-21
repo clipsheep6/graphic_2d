@@ -415,7 +415,7 @@ public:
         dstRectChanged_ = false;
     }
 
-    bool GetAlphaChanged() const
+    bool GetAlphaChanged() const override
     {
         return alphaChanged_;
     }
@@ -554,6 +554,11 @@ public:
     void ResetChildHardwareEnabledNodes();
     void AddChildHardwareEnabledNode(WeakPtr childNode);
     std::vector<WeakPtr> GetChildHardwareEnabledNodes() const;
+    // manage all self-drawing nodes for quick widget preparation
+    void ResetChildSelfDrawingNodes();
+    void AddChildSelfDrawingNode(WeakPtr childNode);
+    std::vector<WeakPtr> GetChildSelfDrawingNodes() const;
+
 
     bool IsFocusedWindow(pid_t focusedWindowPid)
     {
@@ -812,6 +817,7 @@ private:
     bool isHardwareDisabledByCache_ = false;
     float localZOrder_ = 0.0f;
     std::vector<WeakPtr> childHardwareEnabledNodes_;
+    std::vector<WeakPtr> childSelfDrawingNodes_;
     int32_t nodeCost_ = 0;
 
     bool animateState_ = false;

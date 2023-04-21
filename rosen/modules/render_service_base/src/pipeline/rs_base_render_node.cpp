@@ -51,6 +51,7 @@ void RSBaseRenderNode::AddChild(SharedPtr child, int index)
         child->SetIsOnTheTree(true);
     }
     SetContentDirty();
+    isTreeRelationshipChanged_ = true;
 }
 
 void RSBaseRenderNode::MoveChild(SharedPtr child, int index)
@@ -72,6 +73,7 @@ void RSBaseRenderNode::MoveChild(SharedPtr child, int index)
     }
     children_.erase(it);
     SetContentDirty();
+    isTreeRelationshipChanged_ = true;
 }
 
 void RSBaseRenderNode::RemoveChild(SharedPtr child, bool skipTransition)
@@ -161,6 +163,7 @@ void RSBaseRenderNode::AddCrossParentChild(const SharedPtr& child, int32_t index
         child->SetIsOnTheTree(true);
     }
     SetContentDirty();
+    isTreeRelationshipChanged_ = true;
 }
 
 void RSBaseRenderNode::RemoveCrossParentChild(const SharedPtr& child, const WeakPtr& newParent)
@@ -374,6 +377,7 @@ void RSBaseRenderNode::SetDirty()
 void RSBaseRenderNode::SetClean()
 {
     isContentDirty_ = false;
+    isTreeRelationshipChanged_ = false;
     dirtyStatus_ = NodeDirty::CLEAN;
 }
 

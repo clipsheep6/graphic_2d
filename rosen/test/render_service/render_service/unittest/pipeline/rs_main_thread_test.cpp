@@ -563,19 +563,20 @@ HWTEST_F(RSMainThreadTest, ResetSortedChildren, TestSize.Level1)
 }
 
 /**
- * @tc.name: AddActivePid
- * @tc.desc: Test AddActivePid, add pid, check if success
+ * @tc.name: AddActiveNodeId
+ * @tc.desc: Test AddActiveNodeId, add nodeid info, check if success
  * @tc.type: FUNC
  * @tc.require: issueI6Q9A2
  */
-HWTEST_F(RSMainThreadTest, AddActivePid, TestSize.Level1)
+HWTEST_F(RSMainThreadTest, AddActiveNodeId, TestSize.Level1)
 {
     auto mainThread = RSMainThread::Instance();
-    mainThread->activeProcessPids_.clear();
+    mainThread->activeProcessNodeIds_.clear();
     pid_t pid = 1;
-    mainThread->AddActivePid(pid);
-    ASSERT_EQ(static_cast<int>(mainThread->activeProcessPids_.size()), 1);
-    ASSERT_EQ(*(mainThread->activeProcessPids_.begin()), pid);
+    NodeId id = (pid << 32) + 1;
+    mainThread->AddActiveNodeId(id);
+    ASSERT_EQ(static_cast<int>(mainThread->activeProcessNodeIds_[pid].size()), 1);
+    ASSERT_EQ(*(mainThread->activeProcessNodeIds_.begin()), pid);
 }
 
 /**

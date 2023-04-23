@@ -14,7 +14,6 @@
  */
 #include "filter_napi.h"
 #include "effect_utils.h"
-#include "sk_image_chain.h"
 #include "image_napi_utils.h"
 #include "sk_image_filter_factory.h"
 
@@ -43,6 +42,7 @@ napi_value FilterNapi::Init(napi_env env, napi_value exports)
     napi_status status;
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("blur", Blur),
+        DECLARE_NAPI_FUNCTION("gradientBlur", GradientBlur),
         DECLARE_NAPI_FUNCTION("brightness", Brightness),
         DECLARE_NAPI_FUNCTION("grayscale", Grayscale),
         DECLARE_NAPI_FUNCTION("getPixelMap", GetPixelMap),
@@ -174,6 +174,21 @@ void FilterNapi::Render(bool forceCPU)
     dstPixelMap_ =  skImage.GetPixelMap();
 }
 
+void FilterNapi::GradientBlurRender(bool forceCPU)
+{
+    Rosen::SKImageChain skImage(srcPixelMap_);
+    if (gradientBlurMode_ == VERTICAL_GRADIENT_BLUR_MODE) {
+        skImage.GenerateVerticalGradientFilters(gradientRadius_, fullBlurStart_, fullBlurEnd_, gradientBlurEnd_);
+    } else if (gradientBlurMode_ == HORIZONTAL_GRADIENT_BLUR_MODE) {
+        skImage.GenerateHorizontalGradientFilters(gradientRadius_, fullBlurStart_, fullBlurEnd_, gradientBlurEnd_);
+    } else {
+        return;
+    }
+    skImage.ForceCPU(forceCPU);
+    skImage.GradientBlurDraw(gradientBlurMode_);
+    dstPixelMap_ =  skImage.GetPixelMap();
+}
+
 void FilterNapi::AddNextFilter(sk_sp<SkImageFilter> filter)
 {
     skFilters_.emplace_back(filter);
@@ -207,7 +222,11 @@ napi_value FilterNapi::GetPixelMap(napi_env env, napi_callback_info info)
         EFFECT_LOG_I("FilterNapi CreatPixelMap is Faild");
         return nullptr;
     }
-    thisFilter->Render(forceCPU);
+    if (thisFilter->gradientBlurMode_ != INVALID_GRADIENT_BLUR_MODE) {
+        thisFilter->GradientBlurRender(forceCPU);
+    } else {
+        thisFilter->Render(forceCPU);
+    }
     return Media::PixelMapNapi::CreatePixelMap(env, thisFilter->GetDstPixelMap());
 }
 
@@ -242,6 +261,76 @@ napi_value FilterNapi::Blur(napi_env env, napi_callback_info info)
     }
     auto blur = Rosen::SKImageFilterFactory::Blur(radius);
     thisFilter->AddNextFilter(blur);
+    return _this;
+}
+
+napi_value FilterNapi::GradientBlur(napi_env env, napi_callback_info info)
+{
+    size_t argc = 5;
+    napi_value argv[5];
+    napi_value _this;
+    napi_status status;
+    IMG_JS_ARGS(env, info, status, argc, argv, _this);
+    if (!IMG_IS_OK(status)) {
+        EFFECT_LOG_I("FilterNapi parse input falid");
+        return nullptr;
+    }
+    if (argc != 5) {
+        return nullptr;
+    }
+    // parse mode
+    GradientBlurMode mode = INVALID_GRADIENT_BLUR_MODE;
+    if (Media::ImageNapiUtils::getType(env, argv[0]) == napi_number) {
+        uint32_t modeIn = 0;
+        if (IMG_IS_OK(napi_get_value_uint32(env, argv[0], &modeIn))) {
+            mode = static_cast<GradientBlurMode>(modeIn);
+        }
+    }
+    // parse radius
+    float radius = 0.0f;
+    if (Media::ImageNapiUtils::getType(env, argv[1]) == napi_number) {
+        double scale = -1.0f;
+        if (IMG_IS_OK(napi_get_value_double(env, argv[0], &scale))) {
+            if (scale >= 0) {
+                radius = static_cast<float>(scale);
+            }
+        }
+    }
+    // parse full blur start
+    float fullBlurStart = 0;
+    if (Media::ImageNapiUtils::getType(env, argv[2]) == napi_number) {
+        double fullBlurStartIn = 0;
+        if (IMG_IS_OK(napi_get_value_double(env, argv[2], &fullBlurStartIn))) {
+            fullBlurStart = static_cast<float>(fullBlurStartIn);
+        }
+    }
+    // parse full blur end
+    float fullBlurEnd = 0;
+    if (Media::ImageNapiUtils::getType(env, argv[3]) == napi_number) {
+        double fullBlurEndIn = 0;
+        if (IMG_IS_OK(napi_get_value_double(env, argv[3], &fullBlurEndIn))) {
+            fullBlurEnd = static_cast<float>(fullBlurEndIn);
+        }
+    }
+    // parse gradient blur end
+    float gradientBlurEnd = 0;
+    if (Media::ImageNapiUtils::getType(env, argv[4]) == napi_number) {
+        double radientBlurEndIn = 0;
+        if (IMG_IS_OK(napi_get_value_double(env, argv[4], &radientBlurEndIn))) {
+            gradientBlurEnd = static_cast<float>(radientBlurEndIn);
+        }
+    }
+    FilterNapi* thisFilter = nullptr;
+    NAPI_CALL(env, napi_unwrap(env, _this, reinterpret_cast<void**>(&thisFilter)));
+    if (thisFilter == nullptr) {
+        EFFECT_LOG_I("FilterNapi napi_unwrap is Faild");
+        return nullptr;
+    }
+    thisFilter->gradientBlurMode_ = mode;
+    thisFilter->gradientRadius_ = radius;
+    thisFilter->fullBlurStart_ = fullBlurStart;
+    thisFilter->fullBlurEnd_ = fullBlurEnd;
+    thisFilter->gradientBlurEnd_ = gradientBlurEnd;
     return _this;
 }
 

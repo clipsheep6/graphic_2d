@@ -37,18 +37,30 @@
 
 namespace OHOS {
 namespace Rosen {
+
+enum GradientBlurMode {
+    INVALID_GRADIENT_BLUR_MODE = 0,
+    VERTICAL_GRADIENT_BLUR_MODE = 1,
+    HORIZONTAL_GRADIENT_BLUR_MODE = 2,
+};
+
 class SKImageChain {
 public:
     SKImageChain(SkCanvas* canvas, sk_sp<SkImage> image);
     SKImageChain(std::shared_ptr<Media::PixelMap> srcPxielMap);
     virtual ~SKImageChain() = default;
     void Draw();
+    void GradientBlurDraw(GradientBlurMode mode);
     void ForceCPU(bool forceCPU);
     void SetFilters(sk_sp<SkImageFilter> filter);
     void SetClipRect(SkRect* rect);
     void SetClipPath(SkPath* path);
     void SetClipRRect(SkRRect* rRect);
     std::shared_ptr<Media::PixelMap> GetPixelMap();
+    void GenerateVerticalGradientFilters(float gradientRadius_,
+                    float fullBlurStart_, float fullBlurEnd_, float gradientBlurEnd_);
+    void GenerateHorizontalGradientFilters(float gradientRadius_,
+                    float fullBlurStart_, float fullBlurEnd_, float gradientBlurEnd_);
 
 private:
     void InitWithoutCanvas();
@@ -68,6 +80,9 @@ private:
     sk_sp<SkImageFilter> filters_ = nullptr;
     sk_sp<SkSurface> gpuSurface_ = nullptr;
     sk_sp<SkSurface> cpuSurface_ = nullptr;
+    static constexpr int LINES_PER_FILTER = 10;
+    int filterNum_ = 0;
+    std::vector<sk_sp<SkImageFilter> > gradientFilters_;
 };
 } // namespace Rosen
 } // namespace OHOS

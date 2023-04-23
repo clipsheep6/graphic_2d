@@ -20,9 +20,11 @@
 #include <vector>
 #include "pixel_map_napi.h"
 #include "include/core/SkImageFilter.h"
+#include "sk_image_chain.h"
 
 namespace OHOS {
 namespace Rosen {
+
 class FilterNapi {
 public:
     FilterNapi();
@@ -36,10 +38,17 @@ private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static napi_value GetPixelMap(napi_env env, napi_callback_info info);
     static napi_value Blur(napi_env env, napi_callback_info info);
+    static napi_value GradientBlur(napi_env env, napi_callback_info info);
     static napi_value Brightness(napi_env env, napi_callback_info info);
     static napi_value Grayscale(napi_env env, napi_callback_info info);
     void AddNextFilter(sk_sp<SkImageFilter> filter);
     void Render(bool forceCPU);
+    void GradientBlurRender(bool forceCPU);
+    GradientBlurMode gradientBlurMode_ = INVALID_GRADIENT_BLUR_MODE;
+    float gradientRadius_ = 0.0;
+    float fullBlurStart_ = 0.0;
+    float fullBlurEnd_ = 0.0;
+    float gradientBlurEnd_ = 0.0;
     std::vector<sk_sp<SkImageFilter> > skFilters_;
     std::shared_ptr<Media::PixelMap> srcPixelMap_ = nullptr;
     std::shared_ptr<Media::PixelMap> dstPixelMap_ = nullptr;

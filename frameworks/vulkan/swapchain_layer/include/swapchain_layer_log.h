@@ -16,7 +16,7 @@
 #define SWAPCHAIN_LAYER_LOG_H
 
 #include <hilog/log.h>
-namespace OHOS {
+namespace OHOS::SWAPCHAIN {
 namespace {
 // The "0xD001402" is the domain ID for graphic module that alloted by the OS.
 constexpr ::OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0xD001402, "SwapchainLayer" };

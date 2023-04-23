@@ -31,103 +31,17 @@
 #include <window.h>
 #include <graphic_common.h>
 #include <native_window.h>
-#include <vulkan/vulkan.h>
-#include "vulkan/vk_ohos_native_buffer.h"
 #include "vk_dispatch_table_helper.h"
 #include "vk_layer_dispatch_table.h"
-#include "swapchain_layer_log.h"
 #include "sync_fence.h"
 
-#define SWAPCHAIN_SURFACE_NAME "VK_LAYER_OpenHarmony_OHOS_surface"
+#include "vulkan/vk_ohos_native_buffer.h"
+#include "swapchain_layer_log.h"
+#include "swapchain_utils.h"
+#include "swapchain_layer.h"
+#include "layer_data.h"
 
-using namespace OHOS;
-struct LayerData {
-    VkInstance instance = VK_NULL_HANDLE;
-    uint32_t instanceVersion = VK_API_VERSION_1_0;
-    std::unique_ptr<VkLayerDispatchTable> deviceDispatchTable;
-    std::unique_ptr<VkLayerInstanceDispatchTable> instanceDispatchTable;
-    std::unordered_map<VkDebugUtilsMessengerEXT, VkDebugUtilsMessengerCreateInfoEXT> debugCallbacks;
-    PFN_vkSetDeviceLoaderData fpSetDeviceLoaderData = nullptr;
-};
-
-namespace {
-constexpr uint32_t MIN_BUFFER_SIZE = 3;
-constexpr uint32_t MAX_BUFFER_SIZE = 32;
-struct LoaderVkLayerDispatchTable;
-typedef uintptr_t DispatchKey;
-
-template <typename T>
-inline DispatchKey GetDispatchKey(const T object)
-{
-    return reinterpret_cast<DispatchKey>(*reinterpret_cast<LoaderVkLayerDispatchTable* const*>(object));
-}
-
-VkLayerInstanceCreateInfo* GetChainInfo(const VkInstanceCreateInfo* pCreateInfo, VkLayerFunction func)
-{
-    auto chainInfo = static_cast<const VkLayerInstanceCreateInfo*>(pCreateInfo->pNext);
-    while (chainInfo) {
-        if (chainInfo->sType == VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO && chainInfo->function == func) {
-            return const_cast<VkLayerInstanceCreateInfo*>(chainInfo);
-        }
-        chainInfo = static_cast<const VkLayerInstanceCreateInfo*>(chainInfo->pNext);
-    }
-    SWLOGE("Failed to find VkLayerInstanceCreateInfo");
-    return nullptr;
-}
-
-VkLayerDeviceCreateInfo* GetChainInfo(const VkDeviceCreateInfo* pCreateInfo, VkLayerFunction func)
-{
-    auto chainInfo = static_cast<const VkLayerDeviceCreateInfo*>(pCreateInfo->pNext);
-    while (chainInfo) {
-        if (chainInfo->sType == VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO && chainInfo->function == func) {
-            return const_cast<VkLayerDeviceCreateInfo*>(chainInfo);
-        }
-        chainInfo = static_cast<const VkLayerDeviceCreateInfo*>(chainInfo->pNext);
-    }
-    SWLOGE("Failed to find VkLayerDeviceCreateInfo");
-    return nullptr;
-}
-}  // namespace
-
-#define VK_LAYER_API_VERSION VK_MAKE_VERSION(1, 1, VK_HEADER_VERSION)
-
-static inline uint32_t ToUint32(uint64_t val)
-{
-    if (val > UINT32_MAX) {
-        SWLOGE("%{public}" PRIu64 " is too large to convert to uint32", val);
-    }
-    return static_cast<uint32_t>(val);
-}
-
-namespace SWAPCHAIN {
-std::unordered_map<DispatchKey, LayerData*> g_layerDataMap;
-PFN_vkGetNativeFenceFdOpenHarmony pfn_vkGetNativeFenceFdOpenHarmony = nullptr;
-
-template <typename DATA_T>
-DATA_T* GetLayerDataPtr(DispatchKey dataKey, std::unordered_map<DispatchKey, DATA_T*> &g_layerDataMap)
-{
-    DATA_T* debugData;
-    auto got = g_layerDataMap.find(dataKey);
-    if (got == g_layerDataMap.end()) {
-        debugData = new DATA_T;
-        g_layerDataMap[dataKey] = debugData;
-    } else {
-        debugData = got->second;
-    }
-    return debugData;
-}
-
-template <typename DATA_T>
-void FreeLayerDataPtr(DispatchKey dataKey, std::unordered_map<DispatchKey, DATA_T*> &g_layerDataMap)
-{
-    auto got = g_layerDataMap.find(dataKey);
-    if (got == g_layerDataMap.end()) {
-        return;
-    }
-    delete got->second;
-    g_layerDataMap.erase(got);
-}
-
+namespace OHOS::SWAPCHAIN {
 VkResult GetExtensionProperties(const uint32_t count, const VkExtensionProperties* layerExtensions,
                                 uint32_t* pCount, VkExtensionProperties* pProperties)
 {
@@ -174,182 +88,6 @@ VkResult GetLayerProperties(const uint32_t count, const VkLayerProperties* layer
     }
 
     return VK_SUCCESS;
-}
-
-static const VkExtensionProperties instanceExtensions[] = {
-    {
-        .extensionName = VK_KHR_SURFACE_EXTENSION_NAME,
-        .specVersion = 25,
-    },
-    {
-        .extensionName = VK_OPENHARMONY_OHOS_SURFACE_EXTENSION_NAME,
-        .specVersion = 1,
-    }
-};
-
-static const VkExtensionProperties deviceExtensions[] = {{
-    .extensionName = VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    .specVersion = 70,
-}};
-
-constexpr VkLayerProperties swapchainLayer = {
-    SWAPCHAIN_SURFACE_NAME,
-    VK_LAYER_API_VERSION,
-    1,
-    "Vulkan Swapchain",
-};
-
-struct Surface {
-    NativeWindow* window;
-    VkSwapchainKHR swapchainHandle;
-    int32_t consumerUsage;
-};
-
-struct Swapchain {
-    Swapchain(Surface& surface, uint32_t numImages, VkPresentModeKHR presentMode, int preTransform)
-        : surface(surface), numImages(numImages), mailboxMode(presentMode == VK_PRESENT_MODE_MAILBOX_KHR),
-          preTransform(preTransform), frameTimestampsEnabled(false),
-          shared(presentMode == VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR ||
-                 presentMode == VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR) {}
-
-    Surface& surface;
-    uint32_t numImages;
-    bool mailboxMode;
-    int preTransform;
-    bool frameTimestampsEnabled;
-    bool shared;
-
-    struct Image {
-        Image() : image(VK_NULL_HANDLE), buffer(nullptr), requestFence(-1), releaseFence(-1), requested(false) {}
-        VkImage image;
-        NativeWindowBuffer* buffer;
-        int requestFence;
-        int releaseFence;
-        bool requested;
-    } images[MAX_BUFFER_SIZE];
-};
-
-VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetDeviceProcAddr(VkDevice device, const char* funcName);
-VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetInstanceProcAddr(VkInstance instance,
-                                                             const char* funcName);
-
-VkSurfaceKHR HandleFromSurface(Surface* surface)
-{
-    return VkSurfaceKHR(reinterpret_cast<uint64_t>(surface));
-}
-
-Surface* SurfaceFromHandle(VkSurfaceKHR handle)
-{
-    return reinterpret_cast<Surface*>(handle);
-}
-
-Swapchain* SwapchainFromHandle(VkSwapchainKHR handle)
-{
-    return reinterpret_cast<Swapchain*>(handle);
-}
-
-VkSwapchainKHR HandleFromSwapchain(Swapchain* swapchain)
-{
-    return VkSwapchainKHR(reinterpret_cast<uint64_t>(swapchain));
-}
-
-VKAPI_ATTR void* DefaultAllocate(void*, size_t size, size_t alignment, VkSystemAllocationScope)
-{
-    void* ptr = nullptr;
-    int ret = posix_memalign(&ptr, std::max(alignment, sizeof(void*)), size);
-    return ret == 0 ? ptr : nullptr;
-}
-
-VKAPI_ATTR void* DefaultReallocate(void*, void* ptr, size_t size, size_t alignment, VkSystemAllocationScope)
-{
-    if (size == 0) {
-        free(ptr);
-        return nullptr;
-    }
-
-    size_t oldSize = ptr ? malloc_usable_size(ptr) : 0;
-    if (size <= oldSize) {
-        return ptr;
-    }
-
-    void* newPtr = nullptr;
-    if (posix_memalign(&newPtr, std::max(alignment, sizeof(void*)), size) != 0) {
-        return nullptr;
-    }
-
-    if (ptr != nullptr) {
-        auto ret = memcpy_s(newPtr, size, ptr, oldSize);
-        if (ret != EOK) {
-            free(newPtr);
-            return nullptr;
-        }
-        free(ptr);
-    }
-    return newPtr;
-}
-
-VKAPI_ATTR void DefaultFree(void*, void* ptr)
-{
-    free(ptr);
-}
-
-const VkAllocationCallbacks& GetDefaultAllocator()
-{
-    static const VkAllocationCallbacks defaultAllocCallbacks = {
-        .pUserData = nullptr,
-        .pfnAllocation = DefaultAllocate,
-        .pfnReallocation = DefaultReallocate,
-        .pfnFree = DefaultFree,
-    };
-
-    return defaultAllocCallbacks;
-}
-
-GraphicColorDataSpace GetColorDataspace(VkColorSpaceKHR colorspace)
-{
-    switch (colorspace) {
-        case VK_COLOR_SPACE_SRGB_NONLINEAR_KHR:
-            return GRAPHIC_BT709_SRGB_FULL;
-        case VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT:
-            return GRAPHIC_DCI_P3_GAMMA26_FULL;
-        case VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT:
-            return GRAPHIC_BT709_LINEAR_EXTENDED;
-        case VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT:
-            return GRAPHIC_BT709_SRGB_EXTENDED;
-        case VK_COLOR_SPACE_DCI_P3_LINEAR_EXT:
-            return GRAPHIC_DCI_P3_LINEAR_FULL;
-        case VK_COLOR_SPACE_DCI_P3_NONLINEAR_EXT:
-            return GRAPHIC_DCI_P3_GAMMA26_FULL;
-        case VK_COLOR_SPACE_BT709_LINEAR_EXT:
-            return GRAPHIC_BT709_LINEAR_FULL;
-        case VK_COLOR_SPACE_BT709_NONLINEAR_EXT:
-            return GRAPHIC_BT709_SRGB_FULL;
-        case VK_COLOR_SPACE_BT2020_LINEAR_EXT:
-            return GRAPHIC_BT2020_LINEAR_FULL;
-        case VK_COLOR_SPACE_HDR10_ST2084_EXT:
-            return GRAPHIC_BT2020_ST2084_FULL;
-        case VK_COLOR_SPACE_DOLBYVISION_EXT:
-            return GRAPHIC_BT2020_ST2084_FULL;
-        case VK_COLOR_SPACE_HDR10_HLG_EXT:
-            return GRAPHIC_BT2020_HLG_FULL;
-        case VK_COLOR_SPACE_ADOBERGB_LINEAR_EXT:
-            return static_cast<GraphicColorDataSpace>(GRAPHIC_GAMUT_ADOBE_RGB |
-                                                      GRAPHIC_TRANSFORM_FUNC_LINEAR | GRAPHIC_PRECISION_FULL);
-        case VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT:
-            return GRAPHIC_ADOBE_RGB_GAMMA22_FULL;
-        default:
-            return GRAPHIC_COLOR_DATA_SPACE_UNKNOWN;
-    }
-}
-
-static bool IsFencePending(int fd)
-{
-    if (fd < 0) {
-        return false;
-    }
-    errno = 0;
-    sptr<OHOS::SyncFence> syncFence = new OHOS::SyncFence(fd);
-    return syncFence->Wait(0) == -1 && errno == ETIME;
 }
 
 VKAPI_ATTR VkResult GetSwapchainGrallocUsageOpenHarmony(VkDevice device,
@@ -435,24 +173,6 @@ void ReleaseSwapchain(VkDevice device, Swapchain* swapchain)
     swapchain->surface.swapchainHandle = VK_NULL_HANDLE;
 }
 
-GraphicPixelFormat GetPixelFormat(VkFormat format)
-{
-    GraphicPixelFormat nativeFormat = GRAPHIC_PIXEL_FMT_RGBA_8888;
-    switch (format) {
-        case VK_FORMAT_R8G8B8A8_UNORM:
-        case VK_FORMAT_R8G8B8A8_SRGB:
-            nativeFormat = GRAPHIC_PIXEL_FMT_RGBA_8888;
-            break;
-        case VK_FORMAT_R5G6B5_UNORM_PACK16:
-            nativeFormat = GRAPHIC_PIXEL_FMT_RGB_565;
-            break;
-        default:
-            SWLOGE("unsupported swapchain format %{public}d", format);
-            break;
-    }
-    return nativeFormat;
-}
-
 VKAPI_ATTR VkResult SetWindowInfo(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo, int32_t* numImages)
 {
     GraphicPixelFormat pixelFormat = GetPixelFormat(createInfo->imageFormat);
@@ -509,30 +229,6 @@ VkResult SetSwapchainCreateInfo(VkDevice device, const VkSwapchainCreateInfoKHR*
     }
 
     return SetWindowInfo(device, createInfo, numImages);
-}
-
-int TranslateVulkanToNativeTransform(VkSurfaceTransformFlagBitsKHR transform)
-{
-    switch (transform) {
-        case VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR:
-            return GRAPHIC_ROTATE_90;
-        case VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR:
-            return GRAPHIC_ROTATE_180;
-        case VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR:
-            return GRAPHIC_ROTATE_270;
-        case VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_BIT_KHR:
-            return GRAPHIC_FLIP_H;
-        case VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_90_BIT_KHR:
-            return GRAPHIC_FLIP_H_ROT90;
-        case VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_180_BIT_KHR:
-            return GRAPHIC_FLIP_H_ROT180;
-        case VK_SURFACE_TRANSFORM_HORIZONTAL_MIRROR_ROTATE_270_BIT_KHR:
-            return GRAPHIC_FLIP_H_ROT270;
-        case VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR:
-        case VK_SURFACE_TRANSFORM_INHERIT_BIT_KHR:
-        default:
-            return GRAPHIC_ROTATE_NONE;
-    }
 }
 
 void InitImageCreateInfo(const VkSwapchainCreateInfoKHR* createInfo, VkImageCreateInfo* imageCreate)
@@ -789,6 +485,8 @@ const VkPresentRegionKHR* GetPresentRegions(const VkPresentInfoKHR* presentInfo)
         return presentRegions->pRegions;
     }
 }
+
+PFN_vkGetNativeFenceFdOpenHarmony pfn_vkGetNativeFenceFdOpenHarmony = nullptr;
 
 VkResult GetNativeFenceFdOpenHarmony(
     VkQueue queue,
@@ -1082,6 +780,32 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfacePresentModesKHR(
     return result;
 }
 
+VkLayerInstanceCreateInfo* GetChainInfo(const VkInstanceCreateInfo* pCreateInfo, VkLayerFunction func)
+{
+    auto chainInfo = static_cast<const VkLayerInstanceCreateInfo*>(pCreateInfo->pNext);
+    while (chainInfo) {
+        if (chainInfo->sType == VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO && chainInfo->function == func) {
+            return const_cast<VkLayerInstanceCreateInfo*>(chainInfo);
+        }
+        chainInfo = static_cast<const VkLayerInstanceCreateInfo*>(chainInfo->pNext);
+    }
+    SWLOGE("Failed to find VkLayerInstanceCreateInfo");
+    return nullptr;
+}
+
+VkLayerDeviceCreateInfo* GetChainInfo(const VkDeviceCreateInfo* pCreateInfo, VkLayerFunction func)
+{
+    auto chainInfo = static_cast<const VkLayerDeviceCreateInfo*>(pCreateInfo->pNext);
+    while (chainInfo) {
+        if (chainInfo->sType == VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO && chainInfo->function == func) {
+            return const_cast<VkLayerDeviceCreateInfo*>(chainInfo);
+        }
+        chainInfo = static_cast<const VkLayerDeviceCreateInfo*>(chainInfo->pNext);
+    }
+    SWLOGE("Failed to find VkLayerDeviceCreateInfo");
+    return nullptr;
+}
+
 VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(
     const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance)
 {
@@ -1307,124 +1031,16 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetPhysicalDeviceProcAddr(VkInstance in
     return pTable->GetPhysicalDeviceProcAddr(instance, funcName);
 }
 
-static inline PFN_vkVoidFunction GetDebugUtilsProc(const char* name)
-{
-    if (!name) {
-        return nullptr;
-    }
-    if (!strcmp(name, "vkCreateDebugUtilsMessengerEXT")) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateDebugUtilsMessengerEXT);
-    }
-    if (!strcmp(name, "vkDestroyDebugUtilsMessengerEXT")) {
-        return reinterpret_cast<PFN_vkVoidFunction>(DestroyDebugUtilsMessengerEXT);
-    }
-    return nullptr;
-}
-
-static inline PFN_vkVoidFunction GetBaseProc(const char* name)
-{
-    if (!name) {
-        return nullptr;
-    }
-    if (!strcmp("vkEnumerateInstanceExtensionProperties", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateInstanceExtensionProperties);
-    }
-    if (!strcmp("vkEnumerateDeviceExtensionProperties", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateDeviceExtensionProperties);
-    }
-    if (!strcmp("vkEnumerateInstanceLayerProperties", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateInstanceLayerProperties);
-    }
-    if (!strcmp("vkEnumerateDeviceLayerProperties", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateDeviceLayerProperties);
-    }
-    if (!strcmp("vkGetInstanceProcAddr", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(GetInstanceProcAddr);
-    }
-    if (!strcmp("vkGetDeviceProcAddr", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(GetDeviceProcAddr);
-    }
-    return nullptr;
-}
-
 static inline PFN_vkVoidFunction LayerInterceptProc(const char* name)
 {
     if (!name) {
         return nullptr;
     }
-    if (!strcmp("vkCreateInstance", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateInstance);
+    const auto it = layerInterceptProcMap.find(name);
+    if (it != layerInterceptProcMap.end()) {
+        return it->second;
     }
-    if (!strcmp("vkDestroyInstance", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(DestroyInstance);
-    }
-    if (!strcmp("vkCreateDevice", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateDevice);
-    }
-    if (!strcmp("vkDestroyDevice", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(DestroyDevice);
-    }
-    if (!strcmp("vkCreateSwapchainKHR", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateSwapchainKHR);
-    }
-    if (!strcmp("vkDestroySwapchainKHR", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(DestroySwapchainKHR);
-    }
-    if (!strcmp("vkAcquireNextImageKHR", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(AcquireNextImageKHR);
-    }
-    if (!strcmp("vkAcquireNextImage2KHR", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(AcquireNextImage2KHR);
-    }
-    if (!strcmp("vkQueuePresentKHR", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(QueuePresentKHR);
-    }
-    if (!strcmp("vkGetSwapchainImagesKHR", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(GetSwapchainImagesKHR);
-    }
-    PFN_vkVoidFunction func = GetDebugUtilsProc(name);
-    if (func != nullptr) {
-        return func;
-    }
-    return GetBaseProc(name);
-}
-
-static inline PFN_vkVoidFunction LayerInterceptInstanceProc(const char* name)
-{
-    if (!name) {
-        return nullptr;
-    }
-    if (!strcmp("vkCreateInstance", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateInstance);
-    }
-    if (!strcmp("vkDestroyInstance", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(DestroyInstance);
-    }
-    if (!strcmp("vkGetPhysicalDeviceSurfaceFormatsKHR", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceSurfaceFormatsKHR);
-    }
-    if (!strcmp("vkGetPhysicalDeviceSurfacePresentModesKHR", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceSurfacePresentModesKHR);
-    }
-    if (!strcmp("vkGetPhysicalDeviceSurfaceSupportKHR", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceSurfaceSupportKHR);
-    }
-    if (!strcmp("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceSurfaceCapabilitiesKHR);
-    }
-    if (!strcmp("vkCreateDebugUtilsMessengerEXT", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateDebugUtilsMessengerEXT);
-    }
-    if (!strcmp("vkDestroyDebugUtilsMessengerEXT", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(DestroyDebugUtilsMessengerEXT);
-    }
-    if (!strcmp("vkCreateOHOSSurfaceOpenHarmony", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateOHOSSurfaceOpenHarmony);
-    }
-    if (!strcmp("vkDestroySurfaceKHR", name)) {
-        return reinterpret_cast<PFN_vkVoidFunction>(DestroySurfaceKHR);
-    }
-    return GetBaseProc(name);
+    return nullptr;
 }
 
 VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetDeviceProcAddr(VkDevice device, const char* funcName)
@@ -1448,10 +1064,7 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetDeviceProcAddr(VkDevice device, cons
 
 VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetInstanceProcAddr(VkInstance instance, const char* funcName)
 {
-    PFN_vkVoidFunction addr = LayerInterceptInstanceProc(funcName);
-    if (addr == nullptr) {
-        addr = LayerInterceptProc(funcName);
-    }
+    PFN_vkVoidFunction addr = LayerInterceptProc(funcName);
     if (addr != nullptr) {
         return addr;
     }
@@ -1478,41 +1091,4 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetInstanceProcAddr(VkInstance instance
 
     return addr;
 }
-}  // namespace SWAPCHAIN
-
-extern "C" {
-VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceExtensionProperties(
-    const char* pLayerName, uint32_t* pCount, VkExtensionProperties* pProperties)
-{
-    return SWAPCHAIN::EnumerateInstanceExtensionProperties(pLayerName, pCount, pProperties);
-}
-
-VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL
-vkEnumerateInstanceLayerProperties(uint32_t* pCount, VkLayerProperties* pProperties)
-{
-    return SWAPCHAIN::EnumerateInstanceLayerProperties(pCount, pProperties);
-}
-
-VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateDeviceLayerProperties(
-    VkPhysicalDevice physicalDevice, uint32_t* pCount, VkLayerProperties* pProperties)
-{
-    return SWAPCHAIN::EnumerateDeviceLayerProperties(VK_NULL_HANDLE, pCount, pProperties);
-}
-
-VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateDeviceExtensionProperties(
-    VkPhysicalDevice physicalDevice, const char* pLayerName, uint32_t* pCount, VkExtensionProperties* pProperties)
-{
-    return SWAPCHAIN::EnumerateDeviceExtensionProperties(VK_NULL_HANDLE, pLayerName, pCount, pProperties);
-}
-
-VK_LAYER_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetDeviceProcAddr(VkDevice dev, const char* funcName)
-{
-    return SWAPCHAIN::GetDeviceProcAddr(dev, funcName);
-}
-
-VK_LAYER_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL
-vkGetInstanceProcAddr(VkInstance instance, const char* funcName)
-{
-    return SWAPCHAIN::GetInstanceProcAddr(instance, funcName);
-}
-}
+}  // namespace OHOS::SWAPCHAIN

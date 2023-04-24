@@ -100,6 +100,7 @@ public:
     void SetAppFreeze(bool isAppFreeze);
     void SetContainerWindow(bool hasContainerWindow, float density);
     void SetWindowId(uint32_t windowId);
+    void SetSurface(const sptr<Surface>& surface);
 
 protected:
     bool NeedForcedSendToRemote() const override;

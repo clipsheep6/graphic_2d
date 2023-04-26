@@ -86,9 +86,22 @@ ohos_source_set("rosen_ohos_sources") {
     sources += [
       "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/cache_data.cpp",
       "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/memory_handler.cpp",
-      "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/render_context.cpp",
       "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/shader_cache.cpp",
     ]
+
+    if (current_os == "ios") {
+      sources += [
+        "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/render_context_eagl.mm",
+        "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/render_context.mm",
+       ]
+    } else {
+      sources += [
+        #"//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/render_context_egl.cpp",
+        "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/render_context.cpp",
+       ]
+    }
+          
+
   }
 
   include_dirs = [
@@ -159,10 +172,14 @@ ohos_source_set("rosen_ohos_sources") {
         graphic_2d_ext_configs.librender_service_base_platform_ohos_ext_sources
 
     if (ace_enable_gpu && is_emulator) {
-      sources -= [ "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/render_context.cpp" ]
-
+      sources -= [ "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/render_context.cpp", ]
+      sources -= [ "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/render_context.mm", ]
       sources +=
           graphic_2d_ext_configs.librender_service_base_2d_graphics_ext_sources
+    }
+
+    if (current_os == "ios" && !ace_enable_gpu) {
+      sources -= [ "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/render_context/render_context_egl.cpp", ]
     }
   }
 

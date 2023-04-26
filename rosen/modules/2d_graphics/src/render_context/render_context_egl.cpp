@@ -22,7 +22,7 @@
 #include "rs_trace.h"
 //#include "window.h"
 
-#ifndef NEW_SKIA
+#if !defined(NEW_SKIA)
 #include "memory/rs_tag_tracker.h"
 #endif
 #include "utils/log.h"
@@ -273,7 +273,7 @@ void RenderContextEGL::SetColorSpace(ColorGamut colorSpace)
     colorSpace_ = colorSpace;
 }
 
-bool RenderContextEGL::SetUpGrContext() override
+bool RenderContextEGL::SetUpGrContext()
 {
     if (grContext_ != nullptr) {
         LOGD("grContext has already created!!");
@@ -287,7 +287,9 @@ bool RenderContextEGL::SetUpGrContext() override
     }
 
     GrContextOptions options;
+#if !defined(NEW_SKIA)
     options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+#endif
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
 
@@ -299,7 +301,11 @@ bool RenderContextEGL::SetUpGrContext() override
     }
     mHandler_->ConfigureContext(&options, glesVersion, size, cacheDir_, isUniRenderMode_);
 
+#if defined(NEW_SKIA)
+    sk_sp<GrDirectContext> grContext(GrDirectContext::MakeGL(std::move(glInterface), options));
+#else
     sk_sp<GrContext> grContext(GrContext::MakeGL(std::move(glInterface), options));
+#endif
     if (grContext == nullptr) {
         LOGE("SetUpGrContext grContext is null");
         return false;
@@ -308,7 +314,7 @@ bool RenderContextEGL::SetUpGrContext() override
     return true;
 }
 
-sk_sp<SkSurface> RenderContextEGL::AcquireSurface(int width, int height) override
+sk_sp<SkSurface> RenderContextEGL::AcquireSurface(int width, int height) 
 {
     if (!SetUpGrContext()) {
         LOGE("GrContext is not ready!!!");
@@ -322,7 +328,11 @@ sk_sp<SkSurface> RenderContextEGL::AcquireSurface(int width, int height) overrid
     SkColorType colorType = kRGBA_8888_SkColorType;
 
     GrBackendRenderTarget backendRenderTarget(width, height, 0, 8, framebufferInfo);
+#if defined(NEW_SKIA)
+    SkSurfaceProps surfaceProps(0, kRGB_H_SkPixelGeometry);
+#else
     SkSurfaceProps surfaceProps = SkSurfaceProps::kLegacyFontHost_InitType;
+#endif
 
     sk_sp<SkColorSpace> skColorSpace = nullptr;
 
@@ -330,7 +340,11 @@ sk_sp<SkSurface> RenderContextEGL::AcquireSurface(int width, int height) overrid
         // [planning] in order to stay consistant with the colorspace used before, we disabled
         // COLOR_GAMUT_SRGB to let the branch to default, then skColorSpace is set to nullptr
         case COLOR_GAMUT_DISPLAY_P3:
+#if defined(NEW_SKIA)
+            skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDisplayP3);
+#else
             skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDCIP3);
+#endif
             break;
         case COLOR_GAMUT_ADOBE_RGB:
             skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kAdobeRGB);
@@ -341,7 +355,9 @@ sk_sp<SkSurface> RenderContextEGL::AcquireSurface(int width, int height) overrid
         default:
             break;
     }
+#if !defined(NEW_SKIA)
     RSTagTracker tagTracker(GetGrContext(), RSTagTracker::TAGTYPE::TAG_ACQUIRE_SURFACE);
+#endif
     skSurface_ = SkSurface::MakeFromBackendRenderTarget(
         GetGrContext(), backendRenderTarget, kBottomLeft_GrSurfaceOrigin, colorType, skColorSpace, &surfaceProps);
     if (skSurface_ == nullptr) {
@@ -353,7 +369,7 @@ sk_sp<SkSurface> RenderContextEGL::AcquireSurface(int width, int height) overrid
     return skSurface_;
 }
 
-void RenderContextEGL::RenderFrame() override
+void RenderContextEGL::RenderFrame()
 {
     RS_TRACE_FUNC();
     // flush commands
@@ -438,7 +454,3 @@ void RenderContextEGL::ClearRedundantResources()
         grContext_->purgeResourcesNotUsedInMs(std::chrono::seconds(10));
     }
 }
-
-
-} // namespace Rosen
-} // namespace OHOS

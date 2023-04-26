@@ -16,7 +16,11 @@ import("//foundation/graphic/graphic_2d/rosen/modules/platform/config.gni")
 
 # ace_skia {{{
 group("ace_skia") {
-  public_deps = [ "//third_party/flutter/build/skia:ace_skia_$platform" ]
+  if (defined(use_new_skia) && use_new_skia) {
+    public_deps = [ "//third_party/skia:skia_$platform" ]
+  } else {
+    public_deps = [ "//third_party/flutter/build/skia:ace_skia_$platform" ]
+  }
 }
 
 # ace_skia }}}
@@ -77,7 +81,7 @@ group("image_native") {
   if (platform == "ohos") {
     public_deps = image_deps
   } else if (platform == "android" || platform == "ios") {
-    public_deps = [ "$image_framework_root/interfaces/innerkits:image_static" ]
+    public_deps = [ "$image_framework_root/interfaces/innerkits:image_native" ]
   } else {
     public_deps = [ ":mock_image_native" ]
   }
@@ -131,6 +135,8 @@ ohos_source_set("mock_ipc_core") {
 group("utils") {
   if (platform == "ohos") {
     public_deps = utils_deps
+  } else if (platform == "android" || platform == "ios") {
+    public_deps = [ "$c_utils_root/base:utilsbase" ]
   } else {
     public_deps = [ ":mock_utils" ]
   }

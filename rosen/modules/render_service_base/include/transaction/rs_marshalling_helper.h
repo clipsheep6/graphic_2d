@@ -17,6 +17,7 @@
 #define RENDER_SERVICE_BASE_TRANSACTION_RS_MARSHALLING_HELPER_H
 
 #include <memory>
+#include <optional>
 #include "common/rs_macros.h"
 
 #include <parcel.h>

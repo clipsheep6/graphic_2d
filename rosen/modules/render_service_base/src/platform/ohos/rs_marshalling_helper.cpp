@@ -313,7 +313,7 @@ static void sk_free_releaseproc(const void* ptr, void*)
     free(const_cast<void*>(ptr));
 }
 
-bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val)
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val, NodeId nodeId)
 {
     int32_t type = parcel.ReadInt32();
     if (type == -1) {
@@ -369,7 +369,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val)
         val = SkImage::MakeRasterData(imageInfo, skData, rb);
         // add to MemoryTrack for memoryManager
         if (pixmapSize >= MIN_DATA_SIZE) {
-            MemoryInfo info = { pixmapSize, 0, 0, MEMORY_TYPE::MEM_SKIMAGE }; // pid is set to 0 temporarily.
+            MemoryInfo info = { pixmapSize, ExtractPid(nodeId), nodeId, MEMORY_TYPE::MEM_SKIMAGE };
             MemoryTrack::Instance().AddPictureRecord(addr, info);
         }
         return val != nullptr;
@@ -802,7 +802,7 @@ static void CustomFreePixelMap(void* addr, void* context, uint32_t size)
     MemoryTrack::Instance().RemovePictureRecord(addr);
 }
 
-bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Media::PixelMap>& val)
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Media::PixelMap>& val, NodeId nodeId)
 {
     if (parcel.ReadInt32() == -1) {
         val = nullptr;
@@ -813,7 +813,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Media::P
         ROSEN_LOGE("failed RSMarshallingHelper::Unmarshalling Media::PixelMap");
         return false;
     }
-    MemoryInfo info = {val->GetByteCount(), 0, 0, MEMORY_TYPE::MEM_PIXELMAP}; // pid is set to 0 temporarily.
+    MemoryInfo info = {val->GetByteCount(), ExtractPid(nodeId), nodeId, MEMORY_TYPE::MEM_PIXELMAP};
     MemoryTrack::Instance().AddPictureRecord(val->GetPixels(), info);
     val->SetFreePixelMapProc(CustomFreePixelMap);
     return true;
@@ -1102,7 +1102,6 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::unique_ptr<OpItem>&
         ROSEN_LOGE("unirender: failed opItem Unmarshalling, optype = %d", type);
         return false;
     }
-
     val.reset(item);
     return true;
 }

@@ -32,6 +32,7 @@ struct SkRect;
 namespace OHOS {
 namespace Rosen {
 class OpItem;
+class OpItemWithImage;
 class RSPaintFilterCanvas;
 enum RSOpType : uint16_t;
 
@@ -43,6 +44,8 @@ public:
 
     void AddOp(std::unique_ptr<OpItem>&& op);
     void ClearOp();
+
+    void SetNodeId(NodeId nodeId);
 
     void Playback(SkCanvas& canvas, const SkRect* rect = nullptr);
     void Playback(RSPaintFilterCanvas& canvas, const SkRect* rect = nullptr);
@@ -72,6 +75,7 @@ private:
     int width_;
     int height_;
 
+    NodeId nodeId_ = 0;
 #ifdef ROSEN_OHOS
     // cache related, only available on OHOS
     std::vector<std::pair<int, std::unique_ptr<OpItem>>> opReplacedByCache_;

@@ -195,7 +195,7 @@ std::string MemoryTrack::GenerateDumpTitle()
 
 std::string MemoryTrack::GenerateDetail(MemoryInfo info, uint64_t wId, std::string& wName, RectI& nFrame)
 {
-    std::string size_str = Data2String(std::to_string(info.size), MEM_SIZE_STRING_LEN);
+    std::string size_str = Data2String(std::to_string(info.size / BYTE_CONVERT), MEM_SIZE_STRING_LEN);
     std::string type_str = Data2String(MemoryType2String(info.type), MEM_TYPE_STRING_LEN);
     std::string pid_str = Data2String(std::to_string(ExtractPid(info.nid)), MEM_PID_STRING_LEN);
     std::string wid_str = Data2String(std::to_string(wId), MEM_WID_STRING_LEN);

@@ -16,6 +16,7 @@
 #include "render/rs_image_base.h"
 
 #include "include/core/SkImage.h"
+#include "command/rs_node_command.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_image_cache.h"
@@ -79,13 +80,18 @@ void RSImageBase::SetSrcRect(const RectF& srcRect)
     srcRect_ = srcRect;
 }
 
+void RSImageBase::SetNodeId(NodeId nodeId)
+{
+    nodeId_ = nodeId;
+}
+
 void RSImageBase::SetDstRect(const RectF& dstRect)
 {
     dstRect_ = dstRect;
 }
 
 #ifdef ROSEN_OHOS
-static bool UnmarshallingAndCacheSkImage(Parcel& parcel, sk_sp<SkImage>& img, uint64_t uniqueId)
+static bool UnmarshallingAndCacheSkImage(Parcel& parcel, sk_sp<SkImage>& img, uint64_t uniqueId, NodeId nodeId)
 {
     if (img != nullptr) {
         // match a cached SkImage
@@ -93,7 +99,7 @@ static bool UnmarshallingAndCacheSkImage(Parcel& parcel, sk_sp<SkImage>& img, ui
             RS_LOGE("UnmarshalAndCacheSkImage SkipSkImage fail");
             return false;
         }
-    } else if (RSMarshallingHelper::Unmarshalling(parcel, img)) {
+    } else if (RSMarshallingHelper::Unmarshalling(parcel, img, nodeId)) {
         // unmarshalling the SkImage and cache it
         RSImageCache::Instance().CacheSkiaImage(uniqueId, img);
     } else {
@@ -103,14 +109,15 @@ static bool UnmarshallingAndCacheSkImage(Parcel& parcel, sk_sp<SkImage>& img, ui
     return true;
 }
 
-static bool UnmarshallingAndCachePixelMap(Parcel& parcel, std::shared_ptr<Media::PixelMap>& pixelMap, uint64_t uniqueId)
+static bool UnmarshallingAndCachePixelMap(Parcel& parcel, std::shared_ptr<Media::PixelMap>& pixelMap, uint64_t uniqueId,
+    NodeId nodeId)
 {
     if (pixelMap != nullptr) {
         // match a cached pixelMap
         if (!RSMarshallingHelper::SkipPixelMap(parcel)) {
             return false;
         }
-    } else if (RSMarshallingHelper::Unmarshalling(parcel, pixelMap)) {
+    } else if (RSMarshallingHelper::Unmarshalling(parcel, pixelMap, nodeId)) {
         if (pixelMap && !pixelMap->IsEditable()) {
             // unmarshalling the pixelMap and cache it
             RSImageCache::Instance().CachePixelMap(uniqueId, pixelMap);
@@ -139,7 +146,7 @@ static bool UnmarshallingIdAndRect(Parcel& parcel, uint64_t& uniqueId, RectF& sr
 }
 
 bool RSImageBase::UnmarshallingSkImageAndPixelMap(Parcel& parcel, uint64_t uniqueId, bool& useSkImage,
-    sk_sp<SkImage>& img, std::shared_ptr<Media::PixelMap>& pixelMap)
+    sk_sp<SkImage>& img, std::shared_ptr<Media::PixelMap>& pixelMap, NodeId nodeId)
 {
     if (!RSMarshallingHelper::Unmarshalling(parcel, useSkImage)) {
         return false;
@@ -148,7 +155,7 @@ bool RSImageBase::UnmarshallingSkImageAndPixelMap(Parcel& parcel, uint64_t uniqu
         img = RSImageCache::Instance().GetSkiaImageCache(uniqueId);
         RS_TRACE_NAME_FMT("RSImageBase::Unmarshalling skImage uniqueId:%lu, size:[%d %d], cached:%d",
             uniqueId, img ? img->width() : 0, img ? img->height() : 0, img != nullptr);
-        if (!UnmarshallingAndCacheSkImage(parcel, img, uniqueId)) {
+        if (!UnmarshallingAndCacheSkImage(parcel, img, uniqueId, nodeId)) {
             RS_LOGE("RSImageBase::Unmarshalling UnmarshalAndCacheSkImage fail");
             return false;
         }
@@ -160,7 +167,7 @@ bool RSImageBase::UnmarshallingSkImageAndPixelMap(Parcel& parcel, uint64_t uniqu
         pixelMap = RSImageCache::Instance().GetPixelMapCache(uniqueId);
         RS_TRACE_NAME_FMT("RSImageBase::Unmarshalling pixelMap uniqueId:%lu, size:[%d %d], cached:%d",
             uniqueId, pixelMap ? pixelMap->GetWidth() : 0, pixelMap ? pixelMap->GetHeight() : 0, pixelMap != nullptr);
-        if (!UnmarshallingAndCachePixelMap(parcel, pixelMap, uniqueId)) {
+        if (!UnmarshallingAndCachePixelMap(parcel, pixelMap, uniqueId, nodeId)) {
             RS_LOGE("RSImageBase::Unmarshalling UnmarshalAndCachePixelMap fail");
             return false;
         }
@@ -184,6 +191,7 @@ bool RSImageBase::Marshalling(Parcel& parcel) const
     bool success = RSMarshallingHelper::Marshalling(parcel, uniqueId_) &&
                    RSMarshallingHelper::Marshalling(parcel, srcRect_) &&
                    RSMarshallingHelper::Marshalling(parcel, dstRect_) &&
+                   RSMarshallingHelper::Marshalling(parcel, nodeId_) &&
                    parcel.WriteBool(pixelMap_ == nullptr) &&
                    RSMarshallingHelper::Marshalling(parcel, image_) &&
                    RSMarshallingHelper::Marshalling(parcel, pixelMap_);
@@ -199,11 +207,15 @@ RSImageBase* RSImageBase::Unmarshalling(Parcel& parcel)
         RS_LOGE("RSImage::Unmarshalling UnmarshalIdAndSize fail");
         return nullptr;
     }
-
+    NodeId nodeId;
+    if (!RSMarshallingHelper::Unmarshalling(parcel, nodeId)) {
+        RS_LOGE("RSImageBase::Unmarshalling nodeId fail");
+        return nullptr;
+    }
     bool useSkImage;
     sk_sp<SkImage> img;
     std::shared_ptr<Media::PixelMap> pixelMap;
-    if (!UnmarshallingSkImageAndPixelMap(parcel, uniqueId, useSkImage, img, pixelMap)) {
+    if (!UnmarshallingSkImageAndPixelMap(parcel, uniqueId, useSkImage, img, pixelMap, nodeId)) {
         return nullptr;
     }
 

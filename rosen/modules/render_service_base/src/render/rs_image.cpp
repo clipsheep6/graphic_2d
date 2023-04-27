@@ -283,6 +283,7 @@ bool RSImage::Marshalling(Parcel& parcel) const
     bool success = RSMarshallingHelper::Marshalling(parcel, uniqueId_) &&
                    RSMarshallingHelper::Marshalling(parcel, static_cast<int>(srcRect_.width_)) &&
                    RSMarshallingHelper::Marshalling(parcel, static_cast<int>(srcRect_.height_)) &&
+                   RSMarshallingHelper::Marshalling(parcel, nodeId_) &&
                    parcel.WriteBool(pixelMap_ == nullptr) &&
                    RSMarshallingHelper::Marshalling(parcel, image) &&
                    RSMarshallingHelper::Marshalling(parcel, pixelMap_) &&
@@ -305,9 +306,14 @@ RSImage* RSImage::Unmarshalling(Parcel& parcel)
     }
 
     bool useSkImage;
+    NodeId nodeId;
+    if (!RSMarshallingHelper::Unmarshalling(parcel, nodeId)) {
+        RS_LOGE("RSImage::Unmarshalling nodeId fail");
+        return nullptr;
+    }
     sk_sp<SkImage> img;
     std::shared_ptr<Media::PixelMap> pixelMap;
-    if (!UnmarshallingSkImageAndPixelMap(parcel, uniqueId, useSkImage, img, pixelMap)) {
+    if (!UnmarshallingSkImageAndPixelMap(parcel, uniqueId, useSkImage, img, pixelMap, nodeId)) {
         return nullptr;
     }
     sk_sp<SkData> compressData;
@@ -344,6 +350,7 @@ RSImage* RSImage::Unmarshalling(Parcel& parcel)
 
     RSImage* rsImage = new RSImage();
     rsImage->SetImage(img);
+    rsImage->SetNodeId(nodeId);
     rsImage->SetCompressData(compressData, uniqueId, width, height);
     rsImage->SetPixelMap(pixelMap);
     rsImage->SetImageFit(fitNum);

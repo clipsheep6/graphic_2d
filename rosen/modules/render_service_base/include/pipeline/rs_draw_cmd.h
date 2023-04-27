@@ -123,6 +123,16 @@ public:
     {
         return true;
     }
+    virtual bool IsImageOptem() const
+    {
+        return GetType() == RSOpType::IMAGE_WITH_PARM_OPITEM ||
+            GetType() == RSOpType::BITMAP_RECT_OPITEM ||
+            GetType() == RSOpType::BITMAP_OPITEM ||
+            GetType() == RSOpType::COLOR_FILTER_BITMAP_OPITEM ||
+            GetType() == RSOpType::PIXELMAP_OPITEM ||
+            GetType() == RSOpType::BITMAP_NINE_OPITEM;
+    }
+    virtual void SetNodeId(NodeId id) {}
 };
 
 class OpItemWithPaint : public OpItem {
@@ -136,17 +146,24 @@ protected:
     SkPaint paint_;
 };
 
-class OpItemWithRSImage : public OpItemWithPaint {
+class OpItemWithImage : public OpItemWithPaint {
+public:
+    OpItemWithImage(size_t size) : OpItemWithPaint(size) {}
+    ~OpItemWithImage() override {}
+    virtual void SetNodeId(NodeId id) override {}
+};
+
+class OpItemWithRSImage : public OpItemWithImage {
 public:
     OpItemWithRSImage(std::shared_ptr<RSImageBase> rsImage, const SkPaint& paint, size_t size)
-        : OpItemWithPaint(size), rsImage_(rsImage)
+        : OpItemWithImage(size), rsImage_(rsImage)
     {
         paint_ = paint;
     }
-    explicit OpItemWithRSImage(size_t size) : OpItemWithPaint(size) {}
+    explicit OpItemWithRSImage(size_t size) : OpItemWithImage(size) {}
     ~OpItemWithRSImage() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
-
+    void SetNodeId(NodeId id) override;
 protected:
     std::shared_ptr<RSImageBase> rsImage_;
 };
@@ -187,7 +204,7 @@ private:
     SkRRect rrect_;
 };
 
-class ImageWithParmOpItem : public OpItemWithPaint {
+class ImageWithParmOpItem : public OpItemWithImage {
 public:
     ImageWithParmOpItem(
         const sk_sp<SkImage> img, const sk_sp<SkData> data, const RsImageInfo& rsimageInfo, const SkPaint& paint);
@@ -202,6 +219,7 @@ public:
     {
         return RSOpType::IMAGE_WITH_PARM_OPITEM;
     }
+    void SetNodeId(NodeId id) override;
 
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static OpItem* Unmarshalling(Parcel& parcel);

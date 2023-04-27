@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -152,6 +152,92 @@ HWTEST_F(MatrixTest, MatrixScaleTest002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: MatrixPreRotateTest001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixPreRotateTest001, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrix = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrix != nullptr);
+    matrix->PreRotate(0.1f);
+}
+
+/**
+ * @tc.name: MatrixPreTranslateTest001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixPreTranslateTest001, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrix = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrix != nullptr);
+    matrix->PreTranslate(20.8f, 100);
+}
+
+/**
+ * @tc.name: MatrixPreTranslateTest002
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixPreTranslateTest002, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrix = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrix != nullptr);
+    matrix->PreTranslate(77.7f, 190.2f);
+}
+
+/**
+ * @tc.name: MatrixPreScaleTest001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixPreScaleTest001, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrix = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrix != nullptr);
+    matrix->PreScale(32.1f, 10.6f);
+}
+
+/**
+ * @tc.name: MatrixPreScaleTest002
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixPreScaleTest002, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrix = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrix != nullptr);
+    matrix->PreScale(16.5f, 50.6f);
+}
+
+/**
+ * @tc.name: MatrixPreConcatTest001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixPreConcatTest001, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrix1 = std::make_unique<Matrix>();
+    std::unique_ptr<Matrix> matrix2 = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrix1 != nullptr);
+    ASSERT_TRUE(matrix2 != nullptr);
+    matrix1->PreConcat(*matrix2.get());
+}
+
+/**
  * @tc.name: MatrixMultiplyTest001
  * @tc.desc:
  * @tc.type: FUNC
@@ -288,6 +374,69 @@ HWTEST_F(MatrixTest, MatrixMapPointsTest002, TestSize.Level1)
     std::vector<Point> dst = { { 3, 2 } };
     std::vector<Point> src = { { 1, 3 } };
     matrix->MapPoints(dst, src, 1);
+}
+
+/**
+ * @tc.name: MatrixMapRectTest001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixMapRectTest001, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrix = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrix != nullptr);
+    RectF dst;
+    RectF src(40, 50, 190, 200);
+    EXPECT_TRUE(matrix->MapRect(dst, src));
+}
+
+/**
+ * @tc.name: MatrixMapRectTest002
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixMapRectTest002, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrix = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrix != nullptr);
+    RectF dst;
+    RectF src(80, 100, 190, 200);
+    EXPECT_TRUE(matrix->MapRect(dst, src));
+}
+
+/**
+ * @tc.name: MatrixSetTest001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(MatrixTest, MatrixSetTest001, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrix = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrix != nullptr);
+    matrix->Set(Matrix::SCALE_X, 20.9f);
+    EXPECT_EQ(matrix->Get(Matrix::SCALE_X), 20.9f);
+    matrix->Set(Matrix::SKEW_X, 15.8f);
+    EXPECT_EQ(matrix->Get(Matrix::SKEW_X), 15.8f);
+    matrix->Set(Matrix::TRANS_X, 80.8f);
+    EXPECT_EQ(matrix->Get(Matrix::TRANS_X), 80.8f);
+    matrix->Set(Matrix::SKEW_Y, 60.6f);
+    EXPECT_EQ(matrix->Get(Matrix::SKEW_Y), 60.6f);
+    matrix->Set(Matrix::SCALE_Y, 2.4f);
+    EXPECT_EQ(matrix->Get(Matrix::SCALE_Y), 2.4f);
+    matrix->Set(Matrix::TRANS_Y, 99.9f);
+    EXPECT_EQ(matrix->Get(Matrix::TRANS_Y), 99.9f);
+    matrix->Set(Matrix::PERSP_0, 60.5f);
+    EXPECT_EQ(matrix->Get(Matrix::PERSP_0), 60.5f);
+    matrix->Set(Matrix::PERSP_1, 60.1f);
+    EXPECT_EQ(matrix->Get(Matrix::PERSP_1), 60.1f);
+    matrix->Set(Matrix::PERSP_2, 90.5f);
+    EXPECT_EQ(matrix->Get(Matrix::PERSP_2), 90.5f);
 }
 
 /**

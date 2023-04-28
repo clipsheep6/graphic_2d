@@ -25,11 +25,11 @@ RSUIShareContext& RSUIShareContext::GetInstance()
 
 EGLContext RSUIShareContext::GetRsRenderContext() const
 {
-    auto context = RSRenderThread::Instance().GetRenderContext();
-    if (!context) {
+    auto proxy = RSRenderThread::Instance().GetRenderProxy();
+    if (!proxy) {
         return EGL_NO_CONTEXT;
     }
-    return context->GetEGLContext();
+    return proxy->GetEGLContext();
 }
 }
 }

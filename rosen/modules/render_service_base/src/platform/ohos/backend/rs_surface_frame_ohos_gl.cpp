@@ -15,32 +15,31 @@
 
 #include "rs_surface_frame_ohos_gl.h"
 #include "platform/common/rs_log.h"
-#include "render_context/render_context.h"
-
+// #include "render_context/render_context.h"
+#include "drawing_engine/render_proxy.h"
 #include <hilog/log.h>
 #include "pipeline/rs_render_thread.h"
 
 namespace OHOS {
 namespace Rosen {
-
 RSSurfaceFrameOhosGl::RSSurfaceFrameOhosGl(int32_t width, int32_t height)
-    : width_(width), height_(height)
+    : RSSurfaceFrameOhos(width, height), width_(width), height_(height)
 {
 }
 
 void RSSurfaceFrameOhosGl::SetDamageRegion(int32_t left, int32_t top, int32_t width, int32_t height)
 {
-    renderContext_->DamageFrame(left, top, width, height);
+    renderProxy_->DamageFrame(left, top, width, height);
 }
 
 void RSSurfaceFrameOhosGl::SetDamageRegion(const std::vector<RectI> &rects)
 {
-    renderContext_->DamageFrame(rects);
+    renderProxy_->DamageFrame(rects);
 }
 
 int32_t RSSurfaceFrameOhosGl::GetBufferAge() const
 {
-    return static_cast<int32_t>(renderContext_->QueryEglBufferAge());
+    return renderProxy_->GetBufferAge();
 }
 
 SkCanvas* RSSurfaceFrameOhosGl::GetCanvas()
@@ -71,7 +70,9 @@ void RSSurfaceFrameOhosGl::SetReleaseFence(const int32_t& fence)
 
 void RSSurfaceFrameOhosGl::CreateSurface()
 {
-    skSurface_ = renderContext_->AcquireSurface(width_, height_);
+    std::unique_ptr<RSSurfaceFrame> frame = std::make_unique<RSSurfaceFrameOhosGl>(width_, height_);
+    skSurface_ = renderProxy_->AcquireSurface(frame);
 }
+
 } // namespace Rosen
 } // namespace OHOS

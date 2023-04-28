@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RenderContext;
+class RenderProxy;
 class RSSurface {
 public:
     RSSurface() = default;
@@ -41,8 +41,16 @@ public:
 
     virtual bool FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp = 0) = 0;
 
-    virtual RenderContext* GetRenderContext() = 0;
-    virtual void SetRenderContext(RenderContext* context) = 0;
+    void SetRenderProxy(const std::shared_ptr<RenderProxy> renderProxy)
+    {
+        renderProxy_ = renderProxy;
+    }
+    
+    std::shared_ptr<RenderProxy> GetRenderProxy() const
+    {
+        return renderProxy_;
+    }
+
 #ifndef ROSEN_CROSS_PLATFORM
     virtual ColorGamut GetColorSpace() const = 0;
     virtual void SetColorSpace(ColorGamut colorSpace) = 0;
@@ -54,7 +62,7 @@ public:
     virtual void ClearAllBuffer() = 0;
     virtual void ResetBufferAge() = 0;
 protected:
-private:
+    std::shared_ptr<RenderProxy> renderProxy_;
 };
 
 } // namespace Rosen

@@ -12,20 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "drawing_engine/drawing_utils.h"
 
 #include "rs_surface_frame_ohos.h"
 #include "rs_surface_ohos.h"
+#include "backend/rs_surface_ohos_raster.h"
+#include "backend/rs_surface_ohos_gl.h"
 namespace OHOS {
 namespace Rosen {
-RenderContext* RSSurfaceOhos::GetRenderContext()
-{
-    return context_;
-}
-
-void RSSurfaceOhos::SetRenderContext(RenderContext* context)
-{
-    context_ = context;
-}
 
 void RSSurfaceOhos::SetColorSpace(ColorGamut colorSpace)
 {
@@ -47,6 +41,27 @@ void RSSurfaceOhos::ClearAllBuffer()
     if (producer_ != nullptr) {
         producer_->Disconnect();
     }
+}
+
+std::shared_ptr<RSSurface> RSSurfaceOhos::CreateRSSurface(sptr<Surface> surface)
+{
+    auto type = Setting::GetRenderBackendType();
+    std::shared_ptr<RSSurface> rsSurface = nullptr;
+    switch (type) {
+        case RenderBackendType::GLES:
+#ifdef RS_ENABLE_GL
+            LOGI("RSSurfaceOhos::CreateSurface with gles backend");
+            rsSurface = std::make_shared<RSSurfaceOhosGl>(surface);
+#endif
+            break;
+        case RenderBackendType::SOFTWARE:
+            LOGI("RSSurfaceOhos::CreateSurface with software backend");
+            rsSurface = std::make_shared<RSSurfaceOhosRaster>(surface);
+            break;
+        default:
+            break;
+    }
+    return rsSurface;
 }
 } // namespace Rosen
 } // namespace OHOS

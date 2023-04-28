@@ -345,8 +345,8 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 #endif
 
 #ifdef ACE_ENABLE_GL
-    RenderContext* rc = RSRenderThread::Instance().GetRenderContext();
-    rsSurface->SetRenderContext(rc);
+    std::shared_ptr<OHOS::Rosen::RenderProxy> rp = RSRenderThread::Instance().GetRenderProxy();
+    rsSurface->SetRenderProxy(rp);
 #endif
     uiTimestamp_ = RSRenderThread::Instance().GetUITimestamp();
     RS_TRACE_BEGIN(ptr->GetName() + " rsSurface->RequestFrame");

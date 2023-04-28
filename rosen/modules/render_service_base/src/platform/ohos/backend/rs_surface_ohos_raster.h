@@ -28,11 +28,6 @@ public:
     explicit RSSurfaceOhosRaster(const sptr<Surface>& producer);
     ~RSSurfaceOhosRaster() = default;
 
-    bool IsValid() const override
-    {
-        return producer_ != nullptr;
-    }
-
     std::unique_ptr<RSSurfaceFrame> RequestFrame(
         int32_t width, int32_t height, uint64_t uiTimestamp, bool useAFBC = true) override;
     bool FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp) override;

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "render_context.h"
+#include "egl_manager.h"
 
 #include <sstream>
 #include <string>
@@ -22,9 +22,7 @@
 #include "rs_trace.h"
 #include "window.h"
 
-#if !defined(NEW_SKIA)
 #include "memory/rs_tag_tracker.h"
-#endif
 #include "utils/log.h"
 
 namespace OHOS {
@@ -91,18 +89,15 @@ static EGLDisplay GetPlatformEglDisplay(EGLenum platform, void* native_display, 
     return eglGetDisplay(static_cast<EGLNativeDisplayType>(native_display));
 }
 
-RenderContext::RenderContext()
-    : grContext_(nullptr),
-      skSurface_(nullptr),
-      nativeWindow_(nullptr),
+EGLManager::EGLManager() noexcept
+    : nativeWindow_(nullptr),
       eglDisplay_(EGL_NO_DISPLAY),
       eglContext_(EGL_NO_CONTEXT),
       eglSurface_(EGL_NO_SURFACE),
-      config_(nullptr),
-      mHandler_(nullptr)
+      config_(nullptr)
 {}
 
-RenderContext::~RenderContext()
+EGLManager::~EGLManager()
 {
     if (eglDisplay_ == EGL_NO_DISPLAY) {
         return;
@@ -120,12 +115,11 @@ RenderContext::~RenderContext()
     eglContext_ = EGL_NO_CONTEXT;
     eglSurface_ = EGL_NO_SURFACE;
     pbufferSurface_ = EGL_NO_SURFACE;
-    grContext_ = nullptr;
-    skSurface_ = nullptr;
-    mHandler_ = nullptr;
+
+    LOGD("EGLManager::~EGLManager");
 }
 
-void RenderContext::CreatePbufferSurface()
+void EGLManager::CreatePbufferSurface()
 {
     const char* extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
 
@@ -141,7 +135,7 @@ void RenderContext::CreatePbufferSurface()
     }
 }
 
-void RenderContext::InitializeEglContext()
+void EGLManager::Initialize()
 {
     if (IsEglContextReady()) {
         return;
@@ -189,10 +183,10 @@ void RenderContext::InitializeEglContext()
         return;
     }
 
-    LOGD("Create EGL context successfully, version %{public}d.%{public}d", major, minor);
+    LOGD("EGLManager::Initialize successfully, version %{public}d.%{public}d", major, minor);
 }
 
-void RenderContext::MakeCurrent(EGLSurface surface, EGLContext context)
+void EGLManager::MakeCurrent(EGLSurface surface, EGLContext context)
 {
     if (surface == EGL_NO_SURFACE) {
         if (!eglMakeCurrent(eglDisplay_, EGL_NO_SURFACE, EGL_NO_SURFACE, context)) {
@@ -206,22 +200,22 @@ void RenderContext::MakeCurrent(EGLSurface surface, EGLContext context)
     eglSurface_ = surface;
 }
 
-void RenderContext::ShareMakeCurrent(EGLContext shareContext)
+void EGLManager::ShareMakeCurrent(EGLContext shareContext)
 {
     eglMakeCurrent(eglDisplay_, eglSurface_, eglSurface_, shareContext);
 }
 
-void RenderContext::ShareMakeCurrentNoSurface(EGLContext shareContext)
+void EGLManager::ShareMakeCurrentNoSurface(EGLContext shareContext)
 {
     eglMakeCurrent(eglDisplay_, EGL_NO_SURFACE, EGL_NO_SURFACE, shareContext);
 }
 
-void RenderContext::MakeSelfCurrent()
+void EGLManager::MakeSelfCurrent()
 {
     eglMakeCurrent(eglDisplay_, eglSurface_, eglSurface_, eglContext_);
 }
 
-EGLContext RenderContext::CreateShareContext()
+EGLContext EGLManager::CreateShareContext()
 {
     std::unique_lock<std::mutex> lock(shareContextMutex_);
     static const EGLint context_attribs[] = {EGL_CONTEXT_CLIENT_VERSION, EGL_CONTEXT_CLIENT_VERSION_NUM, EGL_NONE};
@@ -229,24 +223,24 @@ EGLContext RenderContext::CreateShareContext()
     return eglShareContext;
 }
 
-void RenderContext::SwapBuffers(EGLSurface surface) const
+void EGLManager::SwapBuffers() const
 {
     RS_TRACE_FUNC();
-    if (!eglSwapBuffers(eglDisplay_, surface)) {
+    if (!eglSwapBuffers(eglDisplay_, eglSurface_)) {
         LOGE("Failed to SwapBuffers on surface, error is %{public}x", eglGetError());
     } else {
         LOGD("SwapBuffers successfully");
     }
 }
 
-void RenderContext::DestroyEGLSurface(EGLSurface surface)
+void EGLManager::DestroyEGLSurface(EGLSurface surface)
 {
     if (!eglDestroySurface(eglDisplay_, surface)) {
         LOGE("Failed to DestroyEGLSurface surface, error is %{public}x", eglGetError());
     }
 }
 
-EGLSurface RenderContext::CreateEGLSurface(EGLNativeWindowType eglNativeWindow)
+EGLSurface EGLManager::CreateEGLSurface(EGLNativeWindowType eglNativeWindow)
 {
     if (!IsEglContextReady()) {
         LOGE("EGL context has not initialized");
@@ -268,120 +262,7 @@ EGLSurface RenderContext::CreateEGLSurface(EGLNativeWindowType eglNativeWindow)
     return surface;
 }
 
-void RenderContext::SetColorSpace(ColorGamut colorSpace)
-{
-    colorSpace_ = colorSpace;
-}
-
-bool RenderContext::SetUpGrContext()
-{
-    if (grContext_ != nullptr) {
-        LOGD("grContext has already created!!");
-        return true;
-    }
-
-    sk_sp<const GrGLInterface> glInterface(GrGLCreateNativeInterface());
-    if (glInterface.get() == nullptr) {
-        LOGE("SetUpGrContext failed to make native interface");
-        return false;
-    }
-
-    GrContextOptions options;
-#if !defined(NEW_SKIA)
-    options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
-#endif
-    options.fPreferExternalImagesOverES3 = true;
-    options.fDisableDistanceFieldPaths = true;
-
-    mHandler_ = std::make_shared<MemoryHandler>();
-    auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    auto size = glesVersion ? strlen(glesVersion) : 0;
-    if (isUniRenderMode_) {
-        cacheDir_ = UNIRENDER_CACHE_DIR;
-    }
-    mHandler_->ConfigureContext(&options, glesVersion, size, cacheDir_, isUniRenderMode_);
-
-#if defined(NEW_SKIA)
-    sk_sp<GrDirectContext> grContext(GrDirectContext::MakeGL(std::move(glInterface), options));
-#else
-    sk_sp<GrContext> grContext(GrContext::MakeGL(std::move(glInterface), options));
-#endif
-    if (grContext == nullptr) {
-        LOGE("SetUpGrContext grContext is null");
-        return false;
-    }
-    grContext_ = std::move(grContext);
-    return true;
-}
-
-sk_sp<SkSurface> RenderContext::AcquireSurface(int width, int height)
-{
-    if (!SetUpGrContext()) {
-        LOGE("GrContext is not ready!!!");
-        return nullptr;
-    }
-
-    GrGLFramebufferInfo framebufferInfo;
-    framebufferInfo.fFBOID = 0;
-    framebufferInfo.fFormat = GL_RGBA8;
-
-    SkColorType colorType = kRGBA_8888_SkColorType;
-
-    GrBackendRenderTarget backendRenderTarget(width, height, 0, 8, framebufferInfo);
-#if defined(NEW_SKIA)
-    SkSurfaceProps surfaceProps(0, kRGB_H_SkPixelGeometry);
-#else
-    SkSurfaceProps surfaceProps = SkSurfaceProps::kLegacyFontHost_InitType;
-#endif
-
-    sk_sp<SkColorSpace> skColorSpace = nullptr;
-
-    switch (colorSpace_) {
-        // [planning] in order to stay consistant with the colorspace used before, we disabled
-        // COLOR_GAMUT_SRGB to let the branch to default, then skColorSpace is set to nullptr
-        case COLOR_GAMUT_DISPLAY_P3:
-#if defined(NEW_SKIA)
-            skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDisplayP3);
-#else
-            skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDCIP3);
-#endif
-            break;
-        case COLOR_GAMUT_ADOBE_RGB:
-            skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kAdobeRGB);
-            break;
-        case COLOR_GAMUT_BT2020:
-            skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kRec2020);
-            break;
-        default:
-            break;
-    }
-#if !defined(NEW_SKIA)
-    RSTagTracker tagTracker(GetGrContext(), RSTagTracker::TAGTYPE::TAG_ACQUIRE_SURFACE);
-#endif
-    skSurface_ = SkSurface::MakeFromBackendRenderTarget(
-        GetGrContext(), backendRenderTarget, kBottomLeft_GrSurfaceOrigin, colorType, skColorSpace, &surfaceProps);
-    if (skSurface_ == nullptr) {
-        LOGW("skSurface is nullptr");
-        return nullptr;
-    }
-
-    LOGD("CreateCanvas successfully!!!");
-    return skSurface_;
-}
-
-void RenderContext::RenderFrame()
-{
-    RS_TRACE_FUNC();
-    // flush commands
-    if (skSurface_->getCanvas() != nullptr) {
-        LOGD("RenderFrame: Canvas");
-        skSurface_->getCanvas()->flush();
-    } else {
-        LOGW("canvas is nullptr!!!");
-    }
-}
-
-EGLint RenderContext::QueryEglBufferAge()
+EGLint EGLManager::QueryEglBufferAge()
 {
     if ((eglDisplay_ == nullptr) || (eglSurface_ == nullptr)) {
         LOGE("eglDisplay or eglSurface is nullptr");
@@ -396,7 +277,7 @@ EGLint RenderContext::QueryEglBufferAge()
     return bufferAge;
 }
 
-void RenderContext::DamageFrame(int32_t left, int32_t top, int32_t width, int32_t height)
+void EGLManager::DamageFrame(int32_t left, int32_t top, int32_t width, int32_t height)
 {
     if ((eglDisplay_ == nullptr) || (eglSurface_ == nullptr)) {
         LOGE("eglDisplay or eglSurface is nullptr");
@@ -415,7 +296,7 @@ void RenderContext::DamageFrame(int32_t left, int32_t top, int32_t width, int32_
     }
 }
 
-void RenderContext::DamageFrame(const std::vector<RectI> &rects)
+void EGLManager::DamageFrame(const std::vector<RectI> &rects)
 {
     if ((eglDisplay_ == nullptr) || (eglSurface_ == nullptr)) {
         LOGE("eglDisplay or eglSurface is nullptr");
@@ -444,21 +325,5 @@ void RenderContext::DamageFrame(const std::vector<RectI> &rects)
     }
 }
 
-void RenderContext::ClearRedundantResources()
-{
-    RS_TRACE_FUNC();
-    if (grContext_ != nullptr) {
-        LOGD("grContext clear redundant resources");
-        grContext_->flush();
-        // GPU resources that haven't been used in the past 10 seconds
-        grContext_->purgeResourcesNotUsedInMs(std::chrono::seconds(10));
-    }
-}
-
-RenderContextFactory& RenderContextFactory::GetInstance()
-{
-    static RenderContextFactory rf;
-    return rf;
-}
 } // namespace Rosen
 } // namespace OHOS

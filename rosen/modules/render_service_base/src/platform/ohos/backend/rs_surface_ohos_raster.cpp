@@ -59,6 +59,8 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosRaster::RequestFrame(int32_t width,
     if (res < 0) {
         ROSEN_LOGE("RsDebug RSProcessor::RequestFrame this buffer is not available");
     }
+    ROSEN_LOGD("RSSurfaceOhosGl:RequestFrame, width is %d, height is %d",
+        width, height);
     std::unique_ptr<RSSurfaceFrame> ret(std::move(frame));
     return ret;
 }
@@ -97,7 +99,7 @@ bool RSSurfaceOhosRaster::FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uin
         ROSEN_LOGE("RSSurfaceOhosRaster::Flushframe Failed, error is : %s", SurfaceErrorStr(err).c_str());
         return false;
     }
-    ROSEN_LOGD("RsDebug RSSurfaceOhosRaster::FlushFrame fence:%d", oriFramePtr->releaseFence_);
+    ROSEN_LOGD("RSSurfaceOhosRaster::FlushFrame fence:%d", oriFramePtr->releaseFence_);
     return true;
 }
 

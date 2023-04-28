@@ -28,6 +28,7 @@
 
 #if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
 #include "render_context/render_context.h"
+#include "drawing_engine/render_proxy.h"
 #endif // RS_ENABLE_GL || RS_ENABLE_VK
 
 #ifdef RS_ENABLE_EGLIMAGE
@@ -147,9 +148,9 @@ public:
         return isHighContrastEnabled_;
     }
 #if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
-    const std::shared_ptr<RenderContext>& GetRenderContext()
+    const std::shared_ptr<OHOS::Rosen::RenderProxy>& GetRenderProxy()
     {
-        return renderContext_;
+        return renderProxy_;
     }
 #endif // RS_ENABLE_GL || RS_ENABLE_VK
 
@@ -172,7 +173,7 @@ private:
     static inline std::atomic_bool isHighContrastEnabled_ = false;
 
 #if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
-    std::shared_ptr<RenderContext> renderContext_ = nullptr;
+    std::shared_ptr<OHOS::Rosen::RenderProxy> renderProxy_ = nullptr;
 #endif // RS_ENABLE_GL || RS_ENABLE_VK
 
 #ifdef RS_ENABLE_EGLIMAGE

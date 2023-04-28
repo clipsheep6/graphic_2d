@@ -75,8 +75,8 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
     }
 #ifdef RS_ENABLE_GL
 #ifndef NEW_SKIA
-    auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
-    GrContext* grContext = renderContext != nullptr ? renderContext->GetGrContext() : nullptr;
+    auto renderProxy = RSMainThread::Instance()->GetRenderEngine()->GetRenderProxy();
+    GrContext* grContext = renderProxy != nullptr ? renderProxy->GetGrContext() : nullptr;
     RSTagTracker tagTracker(grContext, node->GetId(), RSTagTracker::TAGTYPE::TAG_CAPTURE);
 #endif
 #endif
@@ -194,13 +194,12 @@ sk_sp<SkSurface> RSSurfaceCaptureTask::CreateSurface(const std::unique_ptr<Media
     SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
         kRGBA_8888_SkColorType, kPremul_SkAlphaType);
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
-    auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
-    if (renderContext == nullptr) {
-        RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderContext is nullptr");
+    auto renderProxy = RSMainThread::Instance()->GetRenderEngine()->GetRenderProxy();
+    if (renderProxy == nullptr) {
+        RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderProxy is nullptr");
         return nullptr;
     }
-    renderContext->SetUpGrContext();
-    return SkSurface::MakeRenderTarget(renderContext->GetGrContext(), SkBudgeted::kNo, info);
+    return SkSurface::MakeRenderTarget(renderProxy->GetGrContext(), SkBudgeted::kNo, info);
 #endif
     return SkSurface::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
 }

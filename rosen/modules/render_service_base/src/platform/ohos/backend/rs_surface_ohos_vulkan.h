@@ -17,7 +17,8 @@
 #define RS_SURFACE_OHOS_VULKAN_H
 
 #include <surface.h>
-#include <vulkan_window.h>
+
+#include "window.h"
 
 #include "platform/ohos/rs_surface_ohos.h"
 #include "rs_surface_frame_ohos_vulkan.h"
@@ -30,11 +31,6 @@ public:
     explicit RSSurfaceOhosVulkan(const sptr<Surface>& producer);
     ~RSSurfaceOhosVulkan() override;
 
-    bool IsValid() const override
-    {
-        return producer_ != nullptr;
-    }
-
     std::unique_ptr<RSSurfaceFrame> RequestFrame(
         int32_t width, int32_t height, uint64_t uiTimestamp, bool useAFBC = true) override;
     bool FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp) override;
@@ -44,9 +40,7 @@ public:
     void SetUiTimeStamp(const std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp) override;
 private:
     struct NativeWindow* mNativeWindow = nullptr;
-    vulkan::VulkanWindow* mVulkanWindow = nullptr;
-    int mWidth = -1;
-    int mHeight = -1;
+    bool hasSetUpVulkanWindow_ = false;
 };
 
 } // namespace Rosen

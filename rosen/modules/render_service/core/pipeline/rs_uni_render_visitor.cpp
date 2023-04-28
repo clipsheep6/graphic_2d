@@ -15,10 +15,6 @@
 
 #include "pipeline/rs_uni_render_visitor.h"
 
-#ifdef RS_ENABLE_VK
-#include <vulkan_window.h>
-#endif
-
 #include "include/core/SkRegion.h"
 #include "include/core/SkTextBlob.h"
 #include "rs_trace.h"
@@ -1237,18 +1233,19 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_VK)
         if (isParallel_ &&!isPartialRenderEnabled_) {
             auto parallelRenderManager = RSParallelRenderManager::Instance();
-            vulkan::VulkanWindow::InitializeVulkan(
+            auto renderProxy = renderEngine_->GetRenderProxy();
+            renderProxy->InitializeVulkan(
                 parallelRenderManager->GetParallelThreadNumber());
             RS_TRACE_BEGIN("RSUniRender::VK::WaitFence");
-            vulkan::VulkanWindow::WaitForSharedFence();
-            vulkan::VulkanWindow::ResetSharedFence();
+            renderProxy->WaitForSharedFence();
+            renderProxy->ResetSharedFence();
             RS_TRACE_END();
             parallelRenderManager->CopyVisitorAndPackTask(*this, node);
             parallelRenderManager->InitDisplayNodeAndRequestFrame(renderEngine_, screenInfo_);
             parallelRenderManager->LoadBalanceAndNotify(TaskType::PROCESS_TASK);
             parallelRenderManager->WaitProcessEnd(*this);
             parallelRenderManager->CommitSurfaceNum(node.GetChildrenCount());
-            vulkan::VulkanWindow::PresentAll();
+            renderProxy->PresentAll();
 
             RS_TRACE_BEGIN("RSUniRender:WaitUtilUniRenderFinished");
             RSMainThread::Instance()->WaitUtilUniRenderFinished();

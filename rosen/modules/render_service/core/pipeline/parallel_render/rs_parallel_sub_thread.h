@@ -45,7 +45,8 @@ enum class ParallelRenderType;
 class RSParallelSubThread {
 public:
     explicit RSParallelSubThread(int threadIndex);
-    RSParallelSubThread(RenderContext *context, ParallelRenderType renderType, int threadIndex);
+    RSParallelSubThread(std::shared_ptr<OHOS::Rosen::RenderProxy> renderProxy,
+        ParallelRenderType renderType, int threadIndex);
     ~RSParallelSubThread();
 
     void StartSubThread();
@@ -108,7 +109,7 @@ private:
     std::thread *subThread_;
     std::condition_variable cvFlush_;
     std::mutex flushMutex_;
-    RenderContext *renderContext_ = nullptr;
+    std::shared_ptr<OHOS::Rosen::RenderProxy> renderProxy_;
     std::unique_ptr<RSSuperRenderTask> threadTask_;
     std::unique_ptr<RSCompositionTask> compositionTask_ = nullptr;
 

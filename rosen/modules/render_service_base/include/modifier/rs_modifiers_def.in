@@ -76,6 +76,10 @@ DECLARE_ANIMATABLE_MODIFIER(Filter, std::shared_ptr<RSFilter>, FILTER, Add, Fore
 
 DECLARE_ANIMATABLE_MODIFIER(BackgroundFilter, std::shared_ptr<RSFilter>, BACKGROUND_FILTER, Add, Background)
 
+DECLARE_ANIMATABLE_MODIFIER(GradientBlurRadius, float, GRADIENT_BLUR_PARA, Replace, Foreground)
+
+DECLARE_NOANIMATABLE_MODIFIER(GradientBlurPara, Vector4<uint32_t>, GRADIENT_BLUR_PARA, Foreground)
+
 DECLARE_NOANIMATABLE_MODIFIER(FrameGravity, Gravity, FRAME_GRAVITY, Appearance)
 
 DECLARE_NOANIMATABLE_MODIFIER(ClipBounds, std::shared_ptr<RSPath>, CLIP_BOUNDS, Appearance)

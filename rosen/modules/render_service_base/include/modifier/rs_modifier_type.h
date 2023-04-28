@@ -60,6 +60,9 @@ enum class RSModifierType : int16_t {
     FILTER,
     BACKGROUND_FILTER,
 
+    GRADIENT_BLUR_RADIUS,
+    GRADIENT_BLUR_PARA,
+
     FRAME_GRAVITY,
 
     CLIP_BOUNDS,

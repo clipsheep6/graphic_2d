@@ -19,7 +19,6 @@
 #include <vulkan_native_surface_ohos.h>
 
 #include "platform/common/rs_log.h"
-#include "window.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -33,9 +32,7 @@ RSSurfaceOhosVulkan::~RSSurfaceOhosVulkan()
 {
     DestoryNativeWindow(mNativeWindow);
     mNativeWindow = nullptr;
-    if (mVulkanWindow) {
-        delete mVulkanWindow;
-    }
+    hasSetUpVulkanWindow_ = false;
 }
 
 std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(int32_t width, int32_t height,
@@ -59,22 +56,26 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(int32_t width,
 
     NativeWindowHandleOpt(mNativeWindow, SET_USAGE, bufferUsage_);
     NativeWindowHandleOpt(mNativeWindow, SET_BUFFER_GEOMETRY, width, height);
-    NativeWindowHandleOpt(mNativeWindow, GET_BUFFER_GEOMETRY, &mHeight, &mWidth);
     NativeWindowHandleOpt(mNativeWindow, SET_COLOR_GAMUT, colorSpace_);
     NativeWindowHandleOpt(mNativeWindow, SET_UI_TIMESTAMP, uiTimestamp);
 
-    if (mVulkanWindow == nullptr) {
-        auto vulkanSurface = std::make_unique<vulkan::VulkanNativeSurfaceOHOS>(mNativeWindow);
-        mVulkanWindow = new vulkan::VulkanWindow(std::move(vulkanSurface));
-        ROSEN_LOGD("RSSurfaceOhosVulkan: create vulkan window");
-    }
-
-    if (mVulkanWindow == nullptr) {
-        ROSEN_LOGE("RSSurfaceOhosVulkan: Invalid VulkanWindow, return");
+    if (mNativeWindow == nullptr) {
+        ROSEN_LOGE("RSSurfaceOhosVulkan: create native window failed");
         return nullptr;
     }
 
-    sk_sp<SkSurface> skSurface = mVulkanWindow->AcquireSurface();
+    if (renderProxy_ == nullptr) {
+        renderProxy_ = std::make_shared<OHOS::Rosen::RenderProxy>();
+        ROSEN_LOGD("create a render proxy");
+    }
+
+    if (!hasSetUpVulkanWindow_) {
+        auto vulkanSurface = std::make_unique<vulkan::VulkanNativeSurfaceOHOS>(mNativeWindow);
+        renderProxy_->SetUpVulkanWindow(std::move(vulkanSurface));
+        ROSEN_LOGD("set up vulkan window");
+    }
+
+    sk_sp<SkSurface> skSurface = renderProxy_->AcquireSurface();
     if (!skSurface) {
         ROSEN_LOGE("RSSurfaceOhosVulkan: skSurface is null, return");
         return nullptr;
@@ -83,6 +84,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(int32_t width,
     std::unique_ptr<RSSurfaceFrameOhosVulkan> frame =
         std::make_unique<RSSurfaceFrameOhosVulkan>(skSurface, width, height);
 
+    frame->SetRenderProxy(renderProxy_);
     std::unique_ptr<RSSurfaceFrame> ret(std::move(frame));
 
     return ret;
@@ -104,12 +106,12 @@ void RSSurfaceOhosVulkan::SetUiTimeStamp(const std::unique_ptr<RSSurfaceFrame>& 
 
 bool RSSurfaceOhosVulkan::FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp)
 {
-    if (mVulkanWindow == nullptr) {
-        ROSEN_LOGE("RSSurfaceOhosVulkan: Invalid VulkanWindow, return");
+    if (renderProxy_ == nullptr) {
+        ROSEN_LOGE("RSSurfaceOhosVulkan: Invalid render proxy, return");
         return false;
     }
 
-    mVulkanWindow->SwapBuffers();
+    renderProxy_->SwapBuffers();
     return true;
 }
 

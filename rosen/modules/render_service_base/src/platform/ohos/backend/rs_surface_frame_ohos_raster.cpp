@@ -21,7 +21,7 @@
 namespace OHOS {
 namespace Rosen {
 
-RSSurfaceFrameOhosRaster::RSSurfaceFrameOhosRaster(int32_t width, int32_t height)
+RSSurfaceFrameOhosRaster::RSSurfaceFrameOhosRaster(int32_t width, int32_t height) : RSSurfaceFrameOhos(width, height)
 {
     requestConfig_.width = width;
     requestConfig_.height = height;

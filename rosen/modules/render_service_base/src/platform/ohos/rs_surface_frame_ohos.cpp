@@ -19,9 +19,5 @@
 
 namespace OHOS {
 namespace Rosen {
-void RSSurfaceFrameOhos::SetRenderContext(RenderContext* context)
-{
-    renderContext_ = context;
-}
 } // namespace Rosen
 } // namespace OHOS

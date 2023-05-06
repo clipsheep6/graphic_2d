@@ -35,25 +35,25 @@ void RSSurfaceOhosGl::SetSurfaceBufferUsage(uint64_t usage)
 RSSurfaceOhosGl::~RSSurfaceOhosGl()
 {
     DestoryNativeWindow(mWindow);
-    if (context_ != nullptr) {
-        context_->DestroyEGLSurface(mEglSurface);
+    if (renderProxy_ != nullptr) {
+        renderProxy_->DestroyEGLSurface(mEglSurface);
     }
     mWindow = nullptr;
     mEglSurface = EGL_NO_SURFACE;
+    ROSEN_LOGD("RSSurfaceOhosGl::~RSSurfaceOhosGl");
 }
 
 std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int32_t height,
     uint64_t uiTimestamp, bool useAFBC)
 {
-    RenderContext* context = GetRenderContext();
-    if (context == nullptr) {
-        ROSEN_LOGE("RSSurfaceOhosGl::RequestFrame, GetRenderContext failed!");
+    if (renderProxy_ == nullptr) {
+        ROSEN_LOGE("RSSurfaceOhosGl::RequestFrame, renderProxy_ is nullptr!");
         return nullptr;
     }
-    context->SetColorSpace(colorSpace_);
+    renderProxy_->SetColorSpace(colorSpace_);
     if (mWindow == nullptr) {
         mWindow = CreateNativeWindowFromSurface(&producer_);
-        mEglSurface = context->CreateEGLSurface((EGLNativeWindowType)mWindow);
+        mEglSurface = renderProxy_->CreateEGLSurface((EGLNativeWindowType)mWindow);
         ROSEN_LOGD("RSSurfaceOhosGl: create and Init EglSurface");
     }
 
@@ -76,16 +76,15 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(int32_t width, int
 #endif
     NativeWindowHandleOpt(mWindow, SET_USAGE, bufferUsage_);
     NativeWindowHandleOpt(mWindow, SET_BUFFER_GEOMETRY, width, height);
-    NativeWindowHandleOpt(mWindow, GET_BUFFER_GEOMETRY, &mHeight, &mWidth);
     NativeWindowHandleOpt(mWindow, SET_COLOR_GAMUT, colorSpace_);
     NativeWindowHandleOpt(mWindow, SET_UI_TIMESTAMP, uiTimestamp);
 
-    context->MakeCurrent(mEglSurface);
+    renderProxy_->MakeCurrent(mEglSurface);
 
     ROSEN_LOGD("RSSurfaceOhosGl:RequestFrame, width is %d, height is %d",
-        mWidth, mHeight);
+        width, height);
 
-    frame->SetRenderContext(context);
+    frame->SetRenderProxy(renderProxy_);
 
     std::unique_ptr<RSSurfaceFrame> ret(std::move(frame));
 
@@ -103,26 +102,25 @@ void RSSurfaceOhosGl::SetUiTimeStamp(const std::unique_ptr<RSSurfaceFrame>& fram
 
 bool RSSurfaceOhosGl::FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp)
 {
-    RenderContext* context = GetRenderContext();
-    if (context == nullptr) {
-        ROSEN_LOGE("RSSurfaceOhosGl::FlushFrame, GetRenderContext failed!");
+    if (renderProxy_ == nullptr) {
+        ROSEN_LOGD("RSSurfaceOhosGl::FlushFrame, GetrenderProxy_ failed!");
         return false;
     }
 
     // gpu render flush
-    context->RenderFrame();
-    context->SwapBuffers(mEglSurface);
+    renderProxy_->RenderFrame();
+    renderProxy_->SwapBuffers();
     ROSEN_LOGD("RSSurfaceOhosGl: FlushFrame, SwapBuffers eglsurface");
     return true;
 }
 
 void RSSurfaceOhosGl::ClearBuffer()
 {
-    if (context_ != nullptr && mEglSurface != EGL_NO_SURFACE && producer_ != nullptr) {
+    if (renderProxy_ != nullptr && mEglSurface != EGL_NO_SURFACE && producer_ != nullptr) {
         ROSEN_LOGD("RSSurfaceOhosGl: Clear surface buffer!");
         DestoryNativeWindow(mWindow);
-        context_->MakeCurrent(EGL_NO_SURFACE);
-        context_->DestroyEGLSurface(mEglSurface);
+        renderProxy_->MakeCurrent(EGL_NO_SURFACE);
+        renderProxy_->DestroyEGLSurface(mEglSurface);
         mEglSurface = EGL_NO_SURFACE;
         mWindow = nullptr;
         producer_->GoBackground();
@@ -131,11 +129,11 @@ void RSSurfaceOhosGl::ClearBuffer()
 
 void RSSurfaceOhosGl::ResetBufferAge()
 {
-    if (context_ != nullptr && mEglSurface != EGL_NO_SURFACE && producer_ != nullptr) {
+    if (renderProxy_ != nullptr && mEglSurface != EGL_NO_SURFACE && producer_ != nullptr) {
         ROSEN_LOGD("RSSurfaceOhosGl: Reset Buffer Age!");
         DestoryNativeWindow(mWindow);
-        context_->MakeCurrent(EGL_NO_SURFACE, context_->GetEGLContext());
-        context_->DestroyEGLSurface(mEglSurface);
+        renderProxy_->MakeCurrent(EGL_NO_SURFACE, renderProxy_->GetEGLContext());
+        renderProxy_->DestroyEGLSurface(mEglSurface);
         mEglSurface = EGL_NO_SURFACE;
         mWindow = nullptr;
     }

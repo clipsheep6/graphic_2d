@@ -261,8 +261,8 @@ void RSMainThread::Init()
     }
 #ifdef RS_ENABLE_GL
     int cacheLimitsTimes = 3; // double skia Resource Cache Limits
-    auto grContext = isUniRender_? uniRenderEngine_->GetRenderContext()->GetGrContext() :
-        renderEngine_->GetRenderContext()->GetGrContext();
+    auto grContext = isUniRender_? uniRenderEngine_->GetRenderProxy()->GetGrContext() :
+        renderEngine_->GetRenderProxy()->GetGrContext();
     int maxResources = 0;
     size_t maxResourcesSize = 0;
     grContext->getResourceCacheLimits(&maxResources, &maxResourcesSize);
@@ -703,7 +703,7 @@ void RSMainThread::ReleaseBackGroundNodeUnlockGpuResource(const std::shared_ptr<
         return;
     }
 #ifdef RS_ENABLE_GL
-    auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
+    auto grContext = GetRenderEngine()->GetRenderProxy()->GetGrContext();
     const auto& nodeMap = context_->GetNodeMap();
     switch (RSSystemProperties::GetReleaseGpuResourceEnabled()) {
         case ReleaseGpuResourceType::WINDOW_HIDDEN:
@@ -1434,7 +1434,7 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
     if ((timestamp_ - lastCleanCacheTimestamp_) / REFRESH_PERIOD > CLEAN_CACHE_FREQ) {
 #ifdef RS_ENABLE_GL
         RS_LOGD("RSMainThread: clear cpu cache pid:%d", remotePid);
-        auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
+        auto grContext = GetRenderEngine()->GetRenderProxy()->GetGrContext();
         grContext->flush();
         SkGraphics::PurgeAllCaches(); // clear cpu cache
         ReleaseExitSurfaceNodeAllGpuResource(grContext, remotePid);
@@ -1492,14 +1492,15 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
     if (!argSets.empty()) {
         type = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.to_bytes(*argSets.begin());
     }
-    auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
+    auto grContext = GetRenderEngine()->GetRenderProxy()->GetGrContext();
     if (type.empty()) {
         grContext->flush();
         SkGraphics::PurgeAllCaches();
         grContext->freeGpuResources();
         grContext->purgeUnlockedResources(true);
-        std::shared_ptr<RenderContext> rendercontext = std::make_shared<RenderContext>();
-        rendercontext->CleanAllShaderCache();
+        
+        std::shared_ptr<RenderProxy> renderProxy = std::make_shared<OHOS::Rosen::RenderProxy>();
+        renderProxy->CleanAllShaderCache();
 #ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
 #else
@@ -1530,8 +1531,8 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
 #endif
     } else if (type == "shader") {
-        std::shared_ptr<RenderContext> rendercontext = std::make_shared<RenderContext>();
-        rendercontext->CleanAllShaderCache();
+        std::shared_ptr<RenderProxy> renderProxy = std::make_shared<OHOS::Rosen::RenderProxy>();
+        renderProxy->CleanAllShaderCache();
     } else {
         uint32_t pid = std::stoll(type);
         GrGpuResourceTag tag(pid, 0, 0, 0);
@@ -1551,7 +1552,7 @@ void RSMainThread::DumpMem(std::unordered_set<std::u16string>& argSets, std::str
     if(pid != 0) {
         MemoryManager::DumpPidMemory(log, pid);
     } else {
-        MemoryManager::DumpMemoryUsage(log, GetRenderEngine()->GetRenderContext()->GetGrContext(), type);
+        MemoryManager::DumpMemoryUsage(log, GetRenderEngine()->GetRenderProxy()->GetGrContext(), type);
     }
     dumpString.append("dumpMem: " + type + "\n");
     dumpString.append(log.GetString());
@@ -1563,7 +1564,7 @@ void RSMainThread::DumpMem(std::unordered_set<std::u16string>& argSets, std::str
 void RSMainThread::CountMem(int pid, MemoryGraphic& mem)
 {
 #ifdef RS_ENABLE_GL
-    mem = MemoryManager::CountPidMemory(pid, GetRenderEngine()->GetRenderContext()->GetGrContext());
+    mem = MemoryManager::CountPidMemory(pid, GetRenderEngine()->GetRenderProxy()->GetGrContext());
 #endif
 }
 
@@ -1582,7 +1583,7 @@ void RSMainThread::CountMem(std::vector<MemoryGraphic>& mems)
             pids.emplace_back(pid);
         }
     });
-    MemoryManager::CountMemory(pids, GetRenderEngine()->GetRenderContext()->GetGrContext(), mems);
+    MemoryManager::CountMemory(pids, GetRenderEngine()->GetRenderProxy()->GetGrContext(), mems);
 #endif
 }
 

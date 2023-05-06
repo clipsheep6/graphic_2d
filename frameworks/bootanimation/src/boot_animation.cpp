@@ -172,19 +172,15 @@ void BootAnimation::InitRsSurface()
         return;
     }
 #ifdef ACE_ENABLE_GL
-    rc_ = OHOS::Rosen::RenderContextFactory::GetInstance().CreateEngine();
-    if (rc_ == nullptr) {
-        LOGE("InitilizeEglContext failed");
-        return;
+    renderProxy_ = std::make_unique<OHOS::Rosen::RenderProxy>();
+    if (renderProxy_ != nullptr) {
+        renderProxy_->InitRSRenderContext();
+        rsSurface_->SetRenderProxy(std::move(renderProxy_));
     } else {
-        LOGI("init egl context");
-        rc_->InitializeEglContext();
-        rsSurface_->SetRenderContext(rc_);
+        LOGE("BootAnimation::InitRsSurface Initilize render proxy failed");
+        return;
     }
 #endif
-    if (rc_ == nullptr) {
-        LOGI("rc is nullptr, use cpu");
-    }
 }
 
 BootAnimation::~BootAnimation()

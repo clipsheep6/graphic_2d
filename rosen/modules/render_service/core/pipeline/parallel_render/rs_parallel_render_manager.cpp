@@ -89,18 +89,19 @@ bool RSParallelRenderManager::GetParallelMode() const
     return (status == ParallelStatus::ON) || (status == ParallelStatus::FIRSTFLUSH);
 }
  
-void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum, RenderContext *context)
+void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum,
+    std::shared_ptr<OHOS::Rosen::RenderProxy> renderProxy)
 {
     if (GetParallelRenderingStatus() == ParallelStatus::OFF) {
         expectedSubThreadNum_ = threadNum;
         flipCoin_ = std::vector<uint8_t>(expectedSubThreadNum_, 0);
         firstFlush_ = true;
-        renderContext_ = context;
+        renderProxy_ = renderProxy;
 #ifdef RS_ENABLE_GL
-        if (context) {
+        if (renderProxy_) {
 #endif
             for (uint32_t i = 0; i < threadNum; ++i) {
-                auto curThread = std::make_unique<RSParallelSubThread>(context, renderType_, i);
+                auto curThread = std::make_unique<RSParallelSubThread>(renderProxy_, renderType_, i);
                 curThread->StartSubThread();
                 threadList_.push_back(std::move(curThread));
             }
@@ -329,12 +330,12 @@ void RSParallelRenderManager::DrawImageMergeFunc(RSPaintFilterCanvas& canvas)
 
 void RSParallelRenderManager::FlushOneBufferFunc()
 {
-    renderContext_->ShareMakeCurrent(EGL_NO_CONTEXT);
+    renderProxy_->ShareMakeCurrent(EGL_NO_CONTEXT);
     for (unsigned int i = 0; i < threadList_.size(); ++i) {
         if (threadList_[i] == nullptr) {
             return;
         }
-        renderContext_->ShareMakeCurrent(threadList_[i]->GetSharedContext());
+        renderProxy_->ShareMakeCurrent(threadList_[i]->GetSharedContext());
         RS_TRACE_BEGIN("Start Flush");
         auto skSurface = threadList_[i]->GetSkSurface();
         if (skSurface) {
@@ -343,9 +344,9 @@ void RSParallelRenderManager::FlushOneBufferFunc()
             RS_LOGE("skSurface is nullptr, thread index:%d", i);
         }
         RS_TRACE_END();
-        renderContext_->ShareMakeCurrent(EGL_NO_CONTEXT);
+        renderProxy_->ShareMakeCurrent(EGL_NO_CONTEXT);
     }
-    renderContext_->MakeSelfCurrent();
+    renderProxy_->MakeSelfCurrent();
 }
 
 void RSParallelRenderManager::MergeRenderResult(RSPaintFilterCanvas& canvas)
@@ -478,7 +479,7 @@ void RSParallelRenderManager::TryEnableParallelRendering()
     }
     if (parallelMode_) {
         StartSubRenderThread(PARALLEL_THREAD_NUM,
-            renderEngine->GetRenderContext().get());
+            renderEngine->GetRenderProxy());
     } else {
         EndSubRenderThread();
     }

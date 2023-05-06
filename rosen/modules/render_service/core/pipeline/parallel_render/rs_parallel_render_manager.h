@@ -63,7 +63,7 @@ public:
     void SetParallelMode(bool parallelMode);
     bool GetParallelMode() const;
     bool GetParallelModeSafe() const;
-    void StartSubRenderThread(uint32_t threadNum, RenderContext *context);
+    void StartSubRenderThread(uint32_t threadNum, std::shared_ptr<OHOS::Rosen::RenderProxy> renderProxy);
     void EndSubRenderThread();
     void CopyVisitorAndPackTask(RSUniRenderVisitor &visitor, RSDisplayRenderNode &node);
     void CopyPrepareVisitorAndPackTask(RSUniRenderVisitor &visitor, RSDisplayRenderNode &node);
@@ -178,7 +178,7 @@ private:
     std::mutex cvParallelRenderMutex_;
     std::mutex flushMutex_;
     std::condition_variable cvParallelRender_;
-    RenderContext *renderContext_;
+    std::shared_ptr<OHOS::Rosen::RenderProxy> renderProxy_;
     ParallelRenderType renderType_ = ParallelRenderType::DRAW_IMAGE;
     std::shared_ptr<RSBaseRenderNode> displayNode_ = nullptr;
     std::shared_ptr<RSDisplayRenderNode> mainDisplayNode_ = nullptr;

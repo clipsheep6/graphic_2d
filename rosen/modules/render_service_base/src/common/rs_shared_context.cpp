@@ -91,6 +91,8 @@ void RSSharedContext::MakeCurrent()
         RS_LOGE("eglMakeCurrent failed");
     }
 }
+
+#ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
 sk_sp<GrDirectContext> RSSharedContext::MakeGrContext()
 {
@@ -108,6 +110,15 @@ sk_sp<GrContext> RSSharedContext::MakeGrContext()
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
     return GrContext::MakeGL(GrGLMakeNativeInterface(), options);
+}
+#endif
+#else // USE_ROSEN_DRAWING
+std::shared_ptr<Drawing::GPUContext> RSSharedContext::MakeDrContext()
+{
+    Drawing::GPUContextOptions options;
+    std::shared_ptr<Drawing::GPUContext> GPUContext = std::make_shared<Drawing::GPUContext>();
+    GPUContext->BuildFromGL(options);
+    return GPUContext;
 }
 #endif
 } // namespace OHOS::Rosen

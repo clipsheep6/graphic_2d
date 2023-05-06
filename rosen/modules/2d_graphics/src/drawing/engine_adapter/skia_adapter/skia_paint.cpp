@@ -141,6 +141,90 @@ void SkiaPaint::PenToSkPaint(const Pen& pen, SkPaint& paint) const
     paint.setStyle(SkPaint::kStroke_Style);
 }
 
+void SkiaPaint::SkPaintToBrush(Brush& brush, const SkPaint& paint) const
+{
+    brush.SetColor(Color(paint.getColor()));
+    brush.SetAlphaF(paint.getAlphaf());
+    brush.SetBlendMode(static_cast<BlendMode>(paint.getBlendMode()));
+
+    auto skShader = paint.refShader();
+    if (skShader) {
+        std::shared_ptr<ShaderEffect> shaderEffect = std::make_shared<ShaderEffect>(ShaderEffect::ShaderEffectType::NO_TYPE);
+        auto skiaShaderImpl = shaderEffect->GetImpl<SkiaShaderEffect>();
+        skiaShaderImpl->SetShader(skShader);
+        brush.SetShaderEffect(shaderEffect);
+    } else {
+        brush.SetShaderEffect(nullptr);
+    }
+
+    Filter filter;
+    GetFilter(paint, filter);
+
+    brush.SetFilter(filter);
+}
+
+void SkiaPaint::SkPaintToPen(Pen& pen, const SkPaint& paint) const
+{
+    pen.SetColor(paint.getColor());
+    pen.SetWidth(paint.getStrokeWidth());
+    pen.SetAntiAlias(paint.isAntiAlias());
+    pen.SetAlpha(paint.getAlpha());
+    pen.SetBlendMode(static_cast<BlendMode>(paint.getBlendMode()));
+
+    switch (paint.getStrokeCap()) {
+        case SkPaint::kButt_Cap:
+            pen.SetCapStyle(Pen::CapStyle::FLAT_CAP);
+            break;
+        case SkPaint::kSquare_Cap:
+            pen.SetCapStyle(Pen::CapStyle::SQUARE_CAP);
+            break;
+        case SkPaint::kRound_Cap:
+            pen.SetCapStyle(Pen::CapStyle::ROUND_CAP);
+            break;
+        default:
+            break;
+    }
+
+    switch (paint.getStrokeJoin()) {
+        case SkPaint::kMiter_Join:
+            pen.SetJoinStyle(Pen::JoinStyle::MITER_JOIN);
+            break;
+        case SkPaint::kRound_Join:
+            pen.SetJoinStyle(Pen::JoinStyle::ROUND_JOIN);
+            break;
+        case SkPaint::kBevel_Join:
+            pen.SetJoinStyle(Pen::JoinStyle::BEVEL_JOIN);
+            break;
+        default:
+            break;
+    }
+
+    auto skPathEffect = paint.refPathEffect();
+    if (skPathEffect) {
+        auto pathEffect = std::make_shared<PathEffect>(PathEffect::PathEffectType::NO_TYPE);
+        auto skiaPathEffect = pathEffect->GetImpl<SkiaPathEffect>();
+        skiaPathEffect->SetSkPathEffect(skPathEffect);
+        pen.SetPathEffect(pathEffect);
+    } else {
+        pen.SetPathEffect(nullptr);
+    }
+
+    auto skShader = paint.refShader();
+    if (skShader) {
+        auto shaderEffect = std::make_shared<ShaderEffect>(ShaderEffect::ShaderEffectType::NO_TYPE);
+        auto skiaShaderImpl = shaderEffect->GetImpl<SkiaShaderEffect>();
+        skiaShaderImpl->SetSkShader(skShader);
+        pen.SetShaderEffect(shaderEffect);
+    } else {
+        pen.SetShaderEffect(nullptr);
+    }
+
+    Filter filter;
+    GetFilter(paint, filter);
+
+    pen.SetFilter(filter);
+}
+
 void SkiaPaint::DisableStroke()
 {
     stroke_->isEnabled = false;
@@ -227,6 +311,39 @@ void SkiaPaint::ApplyFilter(SkPaint& paint, const Filter& filter) const
         paint.setMaskFilter(maskFilter);
     } else {
         paint.setMaskFilter(nullptr);
+    }
+}
+
+void SkiaPaint::GetFilter(const SkPaint& paint, Filter& filter) const
+{
+    auto skColorFilter = paint.refColorFilter();
+    if (skColorFilter) {
+        auto colorFilter = std::make_shared<ColorFilter>(ColorFilter::FilterType::NO_TYPE);
+        auto skiaColorFilter = colorFilter->GetImpl<SkiaColorFilter>();
+        skiaColorFilter->SetColorFilter(skColorFilter);
+        filter.SetColorFilter(colorFilter);
+    } else {
+        filter.SetColorFilter(nullptr);
+    }
+
+    auto skImageFilter = paint.refImageFilter();
+    if (skImageFilter) {
+        auto imageFilter = std::make_shared<ImageFilter>(ImageFilter::FilterType::NO_TYPE);
+        auto skiaImageFilter = imageFilter->GetImpl<SkiaImageFilter>();
+        skiaImageFilter->SetSkImageFilter(skImageFilter);
+        filter.SetImageFilter(imageFilter);
+    } else {
+        filter.SetImageFilter(nullptr);
+    }
+
+    auto skMaskFilter = paint.refMaskFilter();
+    if (skMaskFilter) {
+        auto maskFilter = std::make_shared<MaskFilter>(MaskFilter::FilterType::NO_TYPE);
+        auto skiaMaskFilter = maskFilter->GetImpl<SkiaMaskFilter>();
+        skiaMaskFilter->SetSkMaskFilter(skMaskFilter);
+        filter.SetMaskFilter(maskFilter);
+    } else {
+        filter.SetMaskFilter(nullptr);
     }
 }
 } // namespace Drawing

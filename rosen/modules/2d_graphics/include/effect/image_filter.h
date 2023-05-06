@@ -89,6 +89,7 @@ public:
         return impl_->DowncastingTo<T>();
     }
 
+    ImageFilter(FilterType t) noexcept;
     ImageFilter(FilterType t, scalar x, scalar y, std::shared_ptr<ImageFilter> input) noexcept;
     ImageFilter(FilterType t, scalar x, scalar y, TileMode mode, std::shared_ptr<ImageFilter> input) noexcept;
     ImageFilter(FilterType t, const ColorFilter& cf, std::shared_ptr<ImageFilter> input) noexcept;

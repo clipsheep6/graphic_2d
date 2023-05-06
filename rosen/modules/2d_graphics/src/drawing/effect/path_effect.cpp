@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,6 +49,11 @@ PathEffect::PathEffect(PathEffectType t, PathEffect& e1, PathEffect& e2) noexcep
     } else if (type_ == PathEffect::PathEffectType::COMPOSE) {
         impl_->InitWithCompose(e1, e2);
     }
+}
+
+PathEffect::PathEffect(PathEffectType t) noexcept : PathEffect()
+{
+    type_ = t;
 }
 
 PathEffect::PathEffect() noexcept

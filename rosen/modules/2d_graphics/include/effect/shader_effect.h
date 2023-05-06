@@ -67,6 +67,7 @@ public:
         return impl_->DowncastingTo<T>();
     }
 
+    ShaderEffect(ShaderEffectType t) noexcept;
     ShaderEffect(ShaderEffectType t, ColorQuad color) noexcept;
     ShaderEffect(ShaderEffectType t, ShaderEffect& dst, ShaderEffect& src, BlendMode mode) noexcept;
     ShaderEffect(ShaderEffectType t, const Image& image, TileMode tileX, TileMode tileY,

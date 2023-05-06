@@ -28,6 +28,7 @@
 #include "hitrace_meter.h"
 #include "surface_buffer_impl.h"
 #include "sync_fence.h"
+#include "sync_fence_tracker.h"
 #include "sandbox_utils.h"
 
 namespace OHOS {
@@ -306,6 +307,10 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, sptr<BufferE
     }
 
     ScopedBytrace bufferName(name_ + ":" + std::to_string(retval.sequence));
+    if (GetRealPid() == gettid()) {
+        static SyncFenceTracker releaseFenceThread("Release Fence");
+        releaseFenceThread.TrackFence(retval.fence);
+    }
     return GSERROR_OK;
 }
 
@@ -462,6 +467,10 @@ GSError BufferQueue::DoFlushBuffer(uint32_t sequence, const sptr<BufferExtraData
     }
 
     DumpToFile(sequence);
+    if (GetRealPid() == gettid()) {
+        static SyncFenceTracker acquireFenceThread("Acquire Fence");
+        acquireFenceThread.TrackFence(fence);
+    }
     return GSERROR_OK;
 }
 

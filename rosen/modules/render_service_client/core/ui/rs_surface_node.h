@@ -101,6 +101,8 @@ public:
     void SetContainerWindow(bool hasContainerWindow, float density);
     void SetWindowId(uint32_t windowId);
 
+    void SetSurface(sptr<Surface> surface);
+
 protected:
     bool NeedForcedSendToRemote() const override;
     RSSurfaceNode(const RSSurfaceNodeConfig& config, bool isRenderServiceNode);

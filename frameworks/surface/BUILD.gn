@@ -69,6 +69,7 @@ ohos_shared_library("surface") {
     "src/surface_delegate.cpp",
     "src/surface_tunnel_handle.cpp",
     "src/surface_utils.cpp",
+    "src/form_surface_delegate.cpp",
   ]
 
   configs = [ ":surface_config" ]
@@ -94,6 +95,7 @@ ohos_shared_library("surface") {
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
+    "input:libmmi-client",
   ]
 
   symlink_target_name = [ "libnative_window.so" ]

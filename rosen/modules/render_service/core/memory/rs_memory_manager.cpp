@@ -152,6 +152,20 @@ void MemoryManager::ReleaseUnlockGpuResource(GrContext* grContext, bool scratchR
 }
 
 #ifdef NEW_SKIA
+void MemoryManager::ClearRedundantResources(GrDirectContext* grContext)
+#else
+void MemoryManager::ClearRedundantResources(GrContext* grContext)
+#endif
+{
+    if (grContext != nullptr) {
+        RS_LOGD("grContext clear redundant resources");
+        grContext->flush();
+        // GPU resources that haven't been used in the past 10 seconds
+        grContext->purgeResourcesNotUsedInMs(std::chrono::seconds(10));
+    }
+}
+
+#ifdef NEW_SKIA
 void MemoryManager::DumpPidMemory(DfxString& log, int pid, const GrDirectContext* grContext)
 #else
 void MemoryManager::DumpPidMemory(DfxString& log, int pid, const GrContext* grContext)
@@ -349,8 +363,7 @@ void MemoryManager::DumpDrawingGpuMemory(DfxString& log, const GrContext* grCont
 
     //////////////////////////ShaderCache///////////////////
     log.AppendFormat("\n---------------\nShader Caches:\n");
-    auto rendercontext = std::shared_ptr<RenderContext>(RenderContextFactory::GetInstance().CreateNewEngine());
-    log.AppendFormat(rendercontext->GetShaderCacheSize().c_str());
+    log.AppendFormat(MemoryHandler::QuerryShader().c_str());
 
     // gpu stat
     log.AppendFormat("\n---------------\ndumpGpuStats:\n");

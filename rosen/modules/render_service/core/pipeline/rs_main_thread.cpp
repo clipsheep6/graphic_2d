@@ -1500,8 +1500,7 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         SkGraphics::PurgeAllCaches();
         grContext->freeGpuResources();
         grContext->purgeUnlockedResources(true);
-        auto rendercontext = std::shared_ptr<RenderContext>(RenderContextFactory::GetInstance().CreateNewEngine());
-        rendercontext->CleanAllShaderCache();
+        MemoryHandler::ClearShader();
 #ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
 #else
@@ -1532,8 +1531,12 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
 #endif
     } else if (type == "shader") {
+<<<<<<< HEAD
         auto rendercontext = std::shared_ptr<RenderContext>(RenderContextFactory::GetInstance().CreateNewEngine());
         rendercontext->CleanAllShaderCache();
+=======
+        MemoryHandler::ClearShader();
+>>>>>>> f327627a6... reconstruct render backend first commit
     } else {
         uint32_t pid = std::stoll(type);
 #ifndef NEW_SKIA

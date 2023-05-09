@@ -19,6 +19,9 @@
 #include "transaction/rs_interfaces.h"
 #include "transaction/rs_transaction.h"
 
+#include "render_context_factory.h"
+#include "render_surface_factory.h"
+
 using namespace OHOS;
 
 void BootAnimation::OnDraw(SkCanvas* canvas, int32_t curNo)
@@ -59,17 +62,20 @@ void BootAnimation::Draw()
         return;
     }
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "BootAnimation::Draw RequestFrame");
-    auto frame = rsSurface_->RequestFrame(windowWidth_, windowHeight_);
+    // auto frame = rsSurface_->RequestFrame(windowWidth_, windowHeight_);
+    auto frame = renderSurface_->RequestFrame(windowWidth_, windowHeight_);
     if (frame == nullptr) {
         LOGE("Draw frame is nullptr");
         return;
     }
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
-    framePtr_ = std::move(frame);
-    auto canvas = framePtr_->GetCanvas();
+    // framePtr_ = std::move(frame);
+    // auto canvas = framePtr_->GetCanvas();
+    auto canvas = renderSurface_->GetSkCanvas();
     OnDraw(canvas, picCurNo_);
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "BootAnimation::Draw FlushFrame");
-    rsSurface_->FlushFrame(framePtr_);
+    // rsSurface_->FlushFrame(framePtr_);
+    renderSurface_->FlushFrame();
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }
 
@@ -174,24 +180,42 @@ void BootAnimation::InitBootWindow()
 
 void BootAnimation::InitRsSurface()
 {
-    rsSurface_ = OHOS::Rosen::RSSurfaceExtractor::ExtractRSSurface(window_->GetSurfaceNode());
-    if (rsSurface_ == nullptr) {
-        LOGE("rsSurface is nullptr");
-        return;
-    }
+//     rsSurface_ = OHOS::Rosen::RSSurfaceExtractor::ExtractRSSurface(window_->GetSurfaceNode());
+//     if (rsSurface_ == nullptr) {
+//         LOGE("rsSurface is nullptr");
+//         return;
+//     }
+// #ifdef ACE_ENABLE_GL
+//     rc_ = OHOS::Rosen::RenderContextFactory::GetInstance().CreateEngine();
+//     if (rc_ == nullptr) {
+//         LOGE("InitilizeEglContext failed");
+//         return;
+//     } else {
+//         LOGI("init egl context");
+//         rc_->InitializeEglContext();
+//         rsSurface_->SetRenderContext(rc_);
+//     }
+// #endif
+//     if (rc_ == nullptr) {
+//         LOGI("rc is nullptr, use cpu");
+//     }
 #ifdef ACE_ENABLE_GL
-    rc_ = OHOS::Rosen::RenderContextFactory::GetInstance().CreateEngine();
-    if (rc_ == nullptr) {
-        LOGE("InitilizeEglContext failed");
+    renderContext_ = Rosen::RenderContextFactory::CreateRenderContext();
+    if (renderContext_ == nullptr) {
+        LOGE("ZJ Create Render Context failed");
         return;
     } else {
-        LOGI("init egl context");
-        rc_->InitializeEglContext();
-        rsSurface_->SetRenderContext(rc_);
+        LOGE("ZJ Init render context");
+        renderContext_->Init();
+        renderContext_->SetUpGrContext();
     }
 #endif
-    if (rc_ == nullptr) {
-        LOGI("rc is nullptr, use cpu");
+    sptr<Surface> surface = window_->GetSurfaceNode()->GetSurface();
+    renderSurface_ = Rosen::RenderSurfaceFactory::CreateRenderSurface(renderContext_,
+        surface);
+    if (renderSurface_ == nullptr) {
+        LOGE("ZJ renderSurface_ is nullptr");
+        return;
     }
 }
 

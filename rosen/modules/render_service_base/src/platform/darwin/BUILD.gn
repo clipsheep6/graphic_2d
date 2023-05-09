@@ -56,4 +56,7 @@ ohos_source_set("darwin") {
     "$rosen_root/modules/platform:utils",
     "//third_party/EGL:libEGL",
   ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }

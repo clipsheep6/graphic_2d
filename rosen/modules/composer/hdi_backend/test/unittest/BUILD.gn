@@ -154,5 +154,8 @@ ohos_static_library("hdibackend_test_common") {
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }
 ## Build hdibackend_test_common.a }}}

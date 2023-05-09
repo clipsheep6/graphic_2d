@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/graphic/graphic_2d/graphic_config.gni")
+import("../../../graphic_config.gni")
 
 ohos_executable("drawing_engine_sample") {
   install_enable = true
@@ -54,9 +54,9 @@ ohos_executable("drawing_engine_sample") {
     "include",
     "drawing_engine",
     "drawing_engine/drawing_surface",
-    "//foundation/graphic/graphic_2d/rosen/modules/composer/hdi_backend/include",
-    "//foundation/graphic/graphic_2d/utils/sync_fence/export",
-    "//foundation/graphic/graphic_2d/rosen/include/common",
+    "../../modules/composer/hdi_backend/include",
+    "../../../utils/sync_fence/export",
+    "../../include/common",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
   ]
 
@@ -74,9 +74,9 @@ ohos_executable("drawing_engine_sample") {
   ]
 
   deps = [
-    "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
-    "//foundation/graphic/graphic_2d/utils:sync_fence",
+    "../../..:libsurface",
+    "../../modules/composer:libcomposer",
+    "../../../utils:sync_fence",
     "//third_party/flutter/build/skia:ace_skia_ohos",
   ]
   public_deps = libgl
@@ -104,19 +104,19 @@ ohos_executable("drawing_sample_rs") {
   sources = [ "drawing_c_sample.cpp" ]
 
   include_dirs = [
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client",
-    "//foundation/graphic/graphic_2d/rosen/include/common",
+    "../../modules/2d_graphics/include",
+    "../../modules/2d_graphics/src",
+    "../../modules/render_service_base/src",
+    "../../modules/render_service_base/include",
+    "../../modules/render_service_client",
+    "../../include/common",
     "//foundation/window/window_manager/interfaces/innerkits/wm",
   ]
 
   deps = [
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "../../modules/2d_graphics:2d_graphics",
+    "../../modules/render_service_base:librender_service_base",
+    "../../modules/render_service_client:librender_service_client",
     "//third_party/zlib:libz",
   ]
 
@@ -132,20 +132,20 @@ ohos_executable("drawing_sample_canvaskit0310") {
   sources = [ "drawing_sample_canvaskit0310.cpp" ]
 
   include_dirs = [
-    "//foundation/graphic/graphic_2d/rosen/modules/composer/hdi_backend/include",
-    "//foundation/graphic/graphic_2d/rosen/include/common",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/common",
-    "//foundation/graphic/graphic_2d/rosen/modules/composer/vsync/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src",
+    "../../modules/composer/hdi_backend/include",
+    "../../include/common",
+    "../../../interfaces/inner_api/common",
+    "../../modules/composer/vsync/include",
+    "../../modules/2d_graphics/include",
+    "../../modules/2d_graphics/src",
   ]
 
   deps = [
-    "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics_canvaskit0310",
-    "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
-    "//foundation/graphic/graphic_2d/utils:libgraphic_utils",
-    "//foundation/graphic/graphic_2d/utils:sync_fence",
+    "../../..:libsurface",
+    "../../modules/2d_graphics:2d_graphics_canvaskit0310",
+    "../../modules/composer:libcomposer",
+    "../../../utils:libgraphic_utils",
+    "../../../utils:sync_fence",
   ]
 
   external_deps = [

@@ -59,6 +59,9 @@ template("flutter_engine") {
       ":flutter_config",
       "icu:icu_config_$platform",
     ]
+    
+    part_name = "graphic_standard"
+    subsystem_name = "graphic"
   }
 }
 
@@ -82,6 +85,9 @@ ohos_source_set("flutter_engine_asset_manager") {
   ]
 
   configs = [ ":flutter_config" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }
 
 # ------------------------------------------------

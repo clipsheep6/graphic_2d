@@ -37,4 +37,7 @@ ohos_source_set("flutter_ohos_layers") {
   ]
 
   deps = [ "$ace_flutter_engine_root/skia:ace_skia_ohos" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }

@@ -101,4 +101,7 @@ ohos_source_set("ace_libjpeg") {
   }
 
   defines = [ "TURBO_FOR_WINDOWS" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }

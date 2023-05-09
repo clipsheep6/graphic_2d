@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/graphic/graphic_2d/graphic_config.gni")
+import("../../../../graphic_config.gni")
 
 ohos_executable("drawing_text_sample") {
   install_enable = true
@@ -20,16 +20,16 @@ ohos_executable("drawing_text_sample") {
   sources = [ "drawing_text_c_sample.cpp" ]
 
   include_dirs = [
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client",
+    "../../../modules/2d_graphics/include",
+    "../../../modules/2d_graphics/src",
+    "../../../modules/render_service_client",
   ]
 
-  configs = [ "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/ui:rosen_text_ui_config" ]
+  configs = [ "../../../modules/2d_engine/rosen_text/ui:rosen_text_ui_config" ]
 
   deps = [
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "../../../modules/2d_graphics:2d_graphics",
+    "../../../modules/render_service_client:librender_service_client",
   ]
 
   external_deps = [

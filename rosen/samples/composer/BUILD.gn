@@ -26,11 +26,11 @@ config("hello_composer_config") {
 
 config("hello_composer_public_config") {
   include_dirs = [
-    "//foundation/graphic/graphic_2d/rosen/modules/composer/hdi_backend/include",
-    "//foundation/graphic/graphic_2d/rosen/include/common",
-    "//foundation/graphic/graphic_2d/rosen/modules/composer/vsync/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/composer",
+    "../../modules/composer/hdi_backend/include",
+    "../../include/common",
+    "../../modules/composer/vsync/include",
+    "../../modules/render_service_base/src",
+    "../../../interfaces/inner_api/composer",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
   ]
 }
@@ -50,9 +50,9 @@ ohos_executable("hello_composer") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
-    "//foundation/graphic/graphic_2d/utils:sync_fence",
+    "../../..:libsurface",
+    "../../modules/composer:libcomposer",
+    "../../../utils:sync_fence",
   ]
 
   external_deps = [ "eventhandler:libeventhandler" ]

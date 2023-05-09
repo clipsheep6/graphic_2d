@@ -58,6 +58,9 @@ template("rosen_text_properties") {
 
     public_deps =
         [ "//third_party/flutter/build/libtxt:thirdparty_lib_txt_$current_os" ]
+
+    part_name = "graphic_standard"
+    subsystem_name = "graphic"
   }
 }
 

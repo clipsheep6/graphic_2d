@@ -43,6 +43,9 @@ ohos_source_set("flutter_platform_common_client_wrapper") {
   ]
 
   defines = [ "FLUTTER_DESKTOP_LIBRARY" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }
 
 template("flutter_embedder_with_symbol_prefix") {

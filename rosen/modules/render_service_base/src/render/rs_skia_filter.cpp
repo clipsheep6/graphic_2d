@@ -38,19 +38,17 @@ sk_sp<SkImageFilter> RSSkiaFilter::GetImageFilter() const
 std::shared_ptr<RSSkiaFilter> RSSkiaFilter::Compose(const std::shared_ptr<RSSkiaFilter>& outer,
     const std::shared_ptr<RSSkiaFilter>& inner)
 {
-    if (outer == nullptr && inner == nullptr) {
-        return nullptr;
+    if (outer == nullptr) {
+        return inner;
     }
-    sk_sp<SkImageFilter> outerFilter = nullptr;
-    sk_sp<SkImageFilter> innerFilter = nullptr;
-    if (outer != nullptr) {
-        outerFilter = outer->GetImageFilter();
+    if (inner == nullptr) {
+        return outer;
     }
-    if (inner != nullptr) {
-        innerFilter = inner->GetImageFilter();
-    }
+    sk_sp<SkImageFilter> outerFilter = outer->GetImageFilter();
+    sk_sp<SkImageFilter> innerFilter = inner->GetImageFilter();
     sk_sp<SkImageFilter> composedFilter = SkImageFilters::Compose(outerFilter, innerFilter);
-    return std::make_shared<RSSkiaFilter>(composedFilter);
+    outer->imageFilter_ = composedFilter;
+    return outer;
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 #include "ashmem.h"
+#ifndef USE_ROSEN_DRAWING
 #include "include/core/SkDrawable.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkMatrix.h"
@@ -35,14 +36,23 @@
 #include "include/core/SkSamplingOptions.h"
 #include "src/core/SkVerticesPriv.h"
 #endif
+#else
+#include "recording/draw_cmd_list.h"
+#include "recording/recording_shader_effect.h"
+#include "recording/shader_effect_cmd_list.h"
+#include "recording/recording_path.h"
+#include "recording/path_cmd_list.h"
+#endif
 #include "memory/MemoryTrack.h"
 #include "pixel_map.h"
 #include "securec.h"
+#ifndef USE_ROSEN_DRAWING
 #include "src/core/SkAutoMalloc.h"
 #include "src/core/SkPaintPriv.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/image/SkImage_Base.h"
+#endif
 
 #include "animation/rs_render_curve_animation.h"
 #include "animation/rs_render_interpolating_spring_animation.h"
@@ -55,8 +65,10 @@
 #include "common/rs_matrix3.h"
 #include "common/rs_vector4.h"
 #include "modifier/rs_render_modifier.h"
+#ifndef USE_ROSEN_DRAWING
 #include "pipeline/rs_draw_cmd.h"
 #include "pipeline/rs_draw_cmd_list.h"
+#endif
 #include "platform/common/rs_log.h"
 #include "render/rs_blur_filter.h"
 #include "render/rs_filter.h"
@@ -625,6 +637,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImageFilter>& va
 }
 
 // RSShader
+#ifndef USE_ROSEN_DRAWING
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSShader>& val)
 {
     if (!val) {
@@ -648,8 +661,55 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSShader
     val = RSShader::CreateRSShader(shaderPtr);
     return val != nullptr;
 }
+#else
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSShader>& val)
+{
+    if (!val) {
+        ROSEN_LOGD("unirender: RSMarshallingHelper::Marshalling RSShader is nullptr");
+        return parcel.WriteInt32(-1);
+    }
+    auto recordingShaderEffect = static_cast<Drawing::RecordingShaderEffect*>(val->GetDrawingShader().get());
+    auto cmdListData = recordingShaderEffect->GetCmdList()->GetData();
+    bool ret = parcel.WriteInt32(cmdListData.second);
+    if (cmdListData.second == 0) {
+        ROSEN_LOGW("unirender: RSMarshallingHelper::Marshalling RecordingShaderEffectCmdList size is 0");
+        return ret;
+    }
+
+    ret &= RSMarshallingHelper::WriteToParcel(parcel, cmdListData.first, cmdListData.second);
+    if (!ret) {
+        ROSEN_LOGE("unirender: failed RSMarshallingHelper::Marshalling Drawing::RecordingShaderEffect");
+    }
+
+    return ret;
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSShader>& val)
+{
+    int32_t size = parcel.ReadInt32();
+    if (size == -1) {
+        val = nullptr;
+        return true;
+    }
+    if (size == 0) {
+        ROSEN_LOGW("unirender: RSMarshallingHelper::Unmarshalling Drawing::ShaderEffectCmdList size is 0");
+        val = RSShader::CreateRSShader();
+        return true;
+    }
+
+    const void* data = RSMarshallingHelper::ReadFromParcel(parcel, size);
+    if (data == nullptr) {
+        ROSEN_LOGE("unirender: failed RSMarshallingHelper::Unmarshalling RSShader");
+        return false;
+    }
+    auto shaderEffectCmdList = Drawing::ShaderEffectCmdList::CreateFromData({data, size});
+    auto shaderEffect = shaderEffectCmdList->Playback();
+    val = RSShader::CreateRSShader(shaderEffect);
+    return val != nullptr;
+}
+#endif
 
 // RSPath
+#ifndef USE_ROSEN_DRAWING
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSPath>& val)
 {
     if (!val) {
@@ -673,6 +733,53 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSPath>&
     val = RSPath::CreateRSPath(path);
     return val != nullptr;
 }
+#else
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSPath>& val)
+{
+    if (!val) {
+        ROSEN_LOGD("unirender: RSMarshallingHelper::Marshalling RSPath is nullptr");
+        return parcel.WriteInt32(-1);
+    }
+    auto recordingPath = static_cast<const Drawing::RecordingPath&>(val->GetDrawingPath());
+    auto cmdListData = recordingPath.GetCmdList()->GetData();
+    bool ret = parcel.WriteInt32(cmdListData.second);
+    if (cmdListData.second == 0) {
+        ROSEN_LOGW("unirender: RSMarshallingHelper::Marshalling RecordingPathCmdList size is 0");
+        return ret;
+    }
+
+    ret &= RSMarshallingHelper::WriteToParcel(parcel, cmdListData.first, cmdListData.second);
+    if (!ret) {
+        ROSEN_LOGE("unirender: failed RSMarshallingHelper::Marshalling Drawing::RecordingPathCmdList");
+    }
+
+    return ret;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSPath>& val)
+{
+    int32_t size = parcel.ReadInt32();
+    if (size == -1) {
+        val = nullptr;
+        return true;
+    }
+    if (size == 0) {
+        ROSEN_LOGW("unirender: RSMarshallingHelper::Unmarshalling Drawing::PathCmdList size is 0");
+        val = RSPath::CreateRSPath();
+        return true;
+    }
+    const void* data = RSMarshallingHelper::ReadFromParcel(parcel, size);
+    if (data == nullptr) {
+        ROSEN_LOGE("unirender: failed RSMarshallingHelper::Unmarshalling RSShader");
+        return false;
+    }
+    Drawing::Path path;
+    auto pathCmdList = std::make_shared<Drawing::PathCmdList>(data, size);
+    pathCmdList->Playback(path);
+    val = RSPath::CreateRSPath(path);
+    return val != nullptr;
+}
+#endif
 
 // RSMask
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSMask>& val)
@@ -924,6 +1031,58 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SkSamplingOptions& val)
 }
 #endif
 
+#ifdef USE_ROSEN_DRAWING
+// Drawing::DrawCmdList
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<Drawing::DrawCmdList>& val)
+{
+    if (!val) {
+        return parcel.WriteInt32(-1);
+    }
+    auto cmdListData = val->GetData();
+    bool ret = parcel.WriteInt32(cmdListData.second);
+    parcel.WriteInt32(val->GetWidth());
+    parcel.WriteInt32(val->GetHeight());
+    if (cmdListData.second == 0) {
+        ROSEN_LOGW("unirender: RSMarshallingHelper::Marshalling SkData size is 0");
+        return ret;
+    }
+
+    ret &= RSMarshallingHelper::WriteToParcel(parcel, cmdListData.first, cmdListData.second);
+    if (!ret) {
+        ROSEN_LOGE("unirender: failed RSMarshallingHelper::Marshalling Drawing::DrawCmdList");
+    }
+
+    return ret;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Drawing::DrawCmdList>& val)
+{
+    int32_t size = parcel.ReadInt32();
+    int width = parcel.ReadInt32();
+    int height = parcel.ReadInt32();
+    if (size == -1) {
+        val = nullptr;
+        return true;
+    }
+    if (size == 0) {
+        ROSEN_LOGW("unirender: RSMarshallingHelper::Unmarshalling Drawing::DrawCmdList size is 0");
+        val = std::make_shared<Drawing::DrawCmdList>(width, height);
+        return true;
+    }
+
+    const void* data = RSMarshallingHelper::ReadFromParcel(parcel, size);
+    if (data == nullptr) {
+        ROSEN_LOGE("unirender: failed RSMarshallingHelper::Unmarshalling Drawing::DrawCmdList");
+        return false;
+    }
+    val = std::make_shared<Drawing::DrawCmdList>(data, size);
+    val->SetWidth(width);
+    val->SetHeight(height);
+
+    return val != nullptr;
+}
+#endif
+
 #define MARSHALLING_AND_UNMARSHALLING(TYPE)                                                 \
     bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<TYPE>& val) \
     {                                                                                       \
@@ -936,7 +1095,9 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SkSamplingOptions& val)
     }
 MARSHALLING_AND_UNMARSHALLING(RSRenderTransition)
 MARSHALLING_AND_UNMARSHALLING(RSRenderTransitionEffect)
+#ifndef USE_ROSEN_DRAWING
 MARSHALLING_AND_UNMARSHALLING(DrawCmdList)
+#endif
 #undef MARSHALLING_AND_UNMARSHALLING
 
 #define MARSHALLING_AND_UNMARSHALLING(TEMPLATE)                                                 \
@@ -1154,6 +1315,7 @@ bool RSMarshallingHelper::SkipFromParcel(Parcel& parcel, size_t size)
     return ashmemAllocator != nullptr;
 }
 
+#ifndef USE_ROSEN_DRAWING
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::unique_ptr<OpItem>& val)
 {
     return RSMarshallingHelper::Marshalling(parcel, val->GetType()) && val->Marshalling(parcel);
@@ -1181,5 +1343,6 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::unique_ptr<OpItem>&
     val.reset(item);
     return true;
 }
+#endif
 } // namespace Rosen
 } // namespace OHOS

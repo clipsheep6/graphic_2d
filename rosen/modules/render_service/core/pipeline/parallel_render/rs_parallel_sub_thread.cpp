@@ -100,6 +100,12 @@ void RSParallelSubThread::MainLoop()
                 Flush();
                 break;
             }
+            case TaskType::CACHE_TASK: {
+                RS_TRACE_BEGIN("SubThreadCacheProcess[" + std::to_string(threadIndex_) + "]");
+                RenderCache();
+                RS_TRACE_END();
+                break;
+            }
             default: {
                 StartComposition();
                 Composition();
@@ -228,6 +234,27 @@ void RSParallelSubThread::StartRender()
 {
     CreateResource();
 }
+
+void RSParallelSubThread::RenderCache()
+{
+    while (threadTask_->GetTaskSize() > 0) {
+        RSParallelRenderManager::Instance()->StartTiming(threadIndex_);
+        auto task = threadTask_->GetNextRenderTask();
+        if (!task || (task->GetIdx() == 0)) {
+            RS_LOGE("renderTask is nullptr");
+            continue;
+        }
+        auto node = task->GetNode();
+        if (!node) {
+            RS_LOGE("surfaceNode is nullptr");
+            continue;
+        }
+        node->Process(visitor_);
+        RSParallelRenderManager::Instance()->StopTimingAndSetRenderTaskCost(
+            threadIndex_, task->GetIdx(), TaskType::CACHE_TASK);
+    }
+}
+
 
 void RSParallelSubThread::Render()
 {

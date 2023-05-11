@@ -53,6 +53,7 @@ enum class ParallelStatus {
 enum class TaskType {
     PREPARE_TASK = 0,
     PROCESS_TASK,
+    CACHE_TASK,
     CALC_COST_TASK,
     COMPOSITION_TASK
 };

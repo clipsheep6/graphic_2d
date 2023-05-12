@@ -231,6 +231,13 @@ public:
     void SetLightUpEffect(float lightUpEffectDegree);
     float GetLightUpEffect() const;
     bool IsLightUpEffectValid() const;
+
+    void SetGradientBlurRadius(float gradientBlurRadius);
+    float GetGradientBlurRadius() const;
+
+    void SetGradientBlurPara(Vector4<int32_t> gradientBlurPara);
+    Vector4<int32_t> GetGradientBlurPara() const;
+
 private:
     void Reset();
     void SetDirty();
@@ -276,6 +283,9 @@ private:
     std::unique_ptr<Matrix3f> sublayerTransform_ = nullptr;
     float spherizeDegree_ = 0.f;
     float lightUpEffectDegree_ = 1.0f;
+
+    float gradientBlurRadius_ = 0.0;
+    std::shared_ptr<Vector4<int32_t>> gradientBlurPara_ = nullptr;
 
     std::weak_ptr<RSRenderNode> backref_;
 

@@ -1076,6 +1076,30 @@ float RSProperties::GetLightUpEffect() const
 {
     return lightUpEffectDegree_;
 }
+//doing
+void RSProperties::SetGradientBlurRadius(float gradientBlurRadius)
+{
+    gradientBlurRadius_ = gradientBlurRadius;
+    SetDirty();
+}
+
+float RSProperties::GetGradientBlurRadius() const
+{
+    return gradientBlurRadius_;
+}
+
+void RSProperties::SetGradientBlurPara(Vector4<int32_t> gradientBlurPara)
+{
+    if (!gradientBlurPara_) {
+        gradientBlurPara_ = std::make_shared<Vector4<int32_t>>();
+    }
+    gradientBlurPara_ = gradientBlurPara;
+    SetDirty();
+}
+Vector4f RSProperties::GetGradientBlurPara() const
+{
+    return gradientBlurPara_ ? gradientBlurPara_ : Vector4<int32_t>(0);
+}
 
 bool RSProperties::IsLightUpEffectValid() const
 {

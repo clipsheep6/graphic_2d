@@ -31,8 +31,8 @@ inline bool IsScalarAlmostEqual(scalar a, scalar b)
     return fabs(a - b) < std::numeric_limits<scalar>::min();
 }
 
-inline scalar ConvertRadiusToSigma(scalar radius)
 {
+inline scalar ConvertRadiusToSigma(scalar radius)
     return radius > 0 ? BLUR_SIGMA_SCALE * radius + 0.5f : 0.0f;
 }
 

@@ -35,6 +35,6 @@ ohos_static_library("buffer_handle") {
 
   public_deps = [ "//commonlibrary/c_utils/base:utils" ]
   subsystem_name = "graphic"
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
 }
 ## buffer_handle.a }}}

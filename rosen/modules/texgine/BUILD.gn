@@ -105,7 +105,7 @@ ohos_shared_library("libtexgine") {
     external_deps = [ "hitrace_native:hitrace_meter" ]
   }
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 ## Build libtexgine.so }}}

@@ -43,7 +43,7 @@ config("surface_public_config") {
   if (ace_enable_gpu) {
     defines = [ "ACE_ENABLE_GPU" ]
   }
-  if (graphic_standard_feature_freemem_enable) {
+  if (graphic_2d_feature_freemem_enable) {
     defines += [ "SURFACE_ENABLE_FREEMEM" ]
   }
   defines += gpu_defines
@@ -111,7 +111,7 @@ ohos_shared_library("surface") {
     public_deps -= [ "//drivers/peripheral/display/hdi_service/gralloc/client:hdi_gralloc_client" ]
   }
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 

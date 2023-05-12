@@ -62,7 +62,7 @@ ohos_shared_library("vulkan") {
   output_name = "vulkan_wrapper"
   output_extension = "so"
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
   license_file = "//third_party/vulkan-headers/LICENSE.txt"
 }
@@ -86,7 +86,7 @@ ohos_executable("vulkan_wrapper_native_test") {
 
   deps = [ "//third_party/vulkan-headers:vulkan_headers" ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 ## Build vulkan_wrapper_native_test }}}

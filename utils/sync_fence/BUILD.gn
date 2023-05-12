@@ -58,7 +58,7 @@ ohos_shared_library("sync_fence") {
     "ipc:ipc_single",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 

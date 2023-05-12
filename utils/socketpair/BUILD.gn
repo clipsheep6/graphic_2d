@@ -52,7 +52,7 @@ ohos_shared_library("socketpair") {
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 

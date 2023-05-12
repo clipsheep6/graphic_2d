@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
-module_output_path = "graphic_standard/rosen/test/texgine/unittest"
+module_output_path = "graphic_2d/rosen/test/texgine/unittest"
 is_ok = false
 
 group("unittest") {
@@ -72,7 +72,7 @@ ohos_unittest("texgine_unittest_part1") {
 
   use_exceptions = true
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -92,7 +92,7 @@ ohos_unittest("texgine_unittest_part2") {
 
   use_exceptions = true
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -110,7 +110,7 @@ ohos_unittest("texgine_unittest_part3") {
 
   use_exceptions = true
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -127,7 +127,7 @@ ohos_unittest("texgine_unittest_part4") {
 
   use_exceptions = true
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -141,6 +141,6 @@ ohos_unittest("texgine_unittest_part5") {
 
   use_exceptions = true
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

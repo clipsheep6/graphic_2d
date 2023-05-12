@@ -15,6 +15,8 @@
 
 #include "ui/rs_ui_director.h"
 
+#include <src/core/SkTraceEventCommon.h>
+
 #include "rs_trace.h"
 #include "sandbox_utils.h"
 
@@ -82,6 +84,9 @@ void RSUIDirector::Init(bool shouldCreateRenderThread)
     RSApplicationAgentImpl::Instance().RegisterRSApplicationAgent();
 
     GoForeground();
+
+    bool skiaTraceEnabled = RSSystemProperties::GetSkiaTraceEnabled();
+    SkOHOSTraceUtil::setEnableTracing(skiaTraceEnabled);
 }
 
 void RSUIDirector::GoForeground()

@@ -17,6 +17,7 @@
 #include <list>
 #include <SkGraphics.h>
 #include <securec.h>
+#include <src/core/SkTraceEventCommon.h>
 #include <stdint.h>
 #include <string>
 #ifdef NEW_SKIA
@@ -290,6 +291,9 @@ void RSMainThread::Init()
     auto delegate = RSFunctionalDelegate::Create();
     delegate->SetRepaintCallback([]() { RSMainThread::Instance()->RequestNextVSync(); });
     RSOverdrawController::GetInstance().SetDelegate(delegate);
+
+    bool skiaTraceEnabled = RSSystemProperties::GetSkiaTraceEnabled();
+    SkOHOSTraceUtil::setEnableTracing(skiaTraceEnabled);
 }
 
 void RSMainThread::RsEventParamDump(std::string& dumpString)

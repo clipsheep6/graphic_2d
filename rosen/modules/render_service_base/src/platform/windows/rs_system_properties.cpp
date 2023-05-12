@@ -54,6 +54,11 @@ bool RSSystemProperties::GetDrawOpTraceEnabled()
     return false;
 }
 
+bool RSSystemProperties::GetSkiaTraceEnabled()
+{
+    return false;
+}
+
 DirtyRegionDebugType RSSystemProperties::GetDirtyRegionDebugType()
 {
     return {};

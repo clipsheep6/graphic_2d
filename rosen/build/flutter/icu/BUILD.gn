@@ -564,6 +564,9 @@ template("rosen_libicu") {
         "$ace_flutter_engine_root/icu:ace_icu_make_data_assembly_$platform",
       ]
     }
+
+    part_name = "graphic_standard"
+    subsystem_name = "graphic"
   }
 }
 

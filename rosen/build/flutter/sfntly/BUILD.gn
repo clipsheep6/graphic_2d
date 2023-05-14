@@ -120,6 +120,9 @@ template("ace_libsfntly") {
 
     deps = [ "$ace_flutter_engine_root/icu:ace_libicu_$platform" ]
   }
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }
 
 foreach(item, ace_platforms) {

@@ -61,4 +61,7 @@ ohos_source_set("ace_libpng") {
   ]
 
   defines = [ "PNG_SET_OPTION_SUPPORTED" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }

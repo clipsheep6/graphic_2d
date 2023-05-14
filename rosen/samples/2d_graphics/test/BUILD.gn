@@ -46,21 +46,21 @@ ohos_executable("drawing_sample") {
   configs = [ ":drawing_sample_config" ]
 
   include_dirs = [
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src",
-    "//foundation/graphic/graphic_2d/rosen/samples/2d_graphics/test/include",
+    "../../../modules/2d_graphics/include",
+    "../../../modules/2d_graphics/src",
+    "include",
     "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/composer/hdi_backend/include",
-    "//foundation/graphic/graphic_2d/rosen/include/common",
-    "//foundation/graphic/graphic_2d/rosen/modules/composer/vsync/include",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/composer",
+    "../../../modules/composer/hdi_backend/include",
+    "../../../include/common",
+    "../../../modules/composer/vsync/include",
+    "../../../../interfaces/inner_api/composer",
   ]
 
   deps = [
-    "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
-    "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
-    "//foundation/graphic/graphic_2d/utils:sync_fence",
+    "../../../..:libsurface",
+    "../../../modules/2d_graphics:2d_graphics",
+    "../../../modules/composer:libcomposer",
+    "../../../../utils:sync_fence",
     "//third_party/flutter/build/skia:ace_skia_ohos",
   ]
 

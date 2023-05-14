@@ -31,16 +31,16 @@ ohos_unittest("2d_graphics_skia_canvas_test") {
 
   include_dirs = [
     "//third_party/googletest/googletest/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src",
+    "../../../../modules/2d_graphics/include",
+    "../../../../modules/2d_graphics/src",
     "//commonlibrary/c_utils/base/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/drawing/engine_adapter",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src/drawing",
+    "../../../../modules/2d_graphics/src/drawing/engine_adapter",
+    "../../../../modules/2d_graphics/src/drawing",
   ]
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
+    "../../../../modules/2d_graphics:2d_graphics",
   ]
 
   if (defined(use_new_skia) && use_new_skia) {

@@ -153,6 +153,9 @@ ohos_source_set("ace_libwebp") {
   ]
 
   defines = [ "WEBP_SWAP_16BIT_CSP" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }
 
 config("ace_libwebp_sse41_config") {
@@ -187,4 +190,7 @@ ohos_source_set("ace_libwebp_sse41") {
   ]
 
   defines = [ "WEBP_SWAP_16BIT_CSP" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }

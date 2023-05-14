@@ -165,6 +165,9 @@ template("render_service_client_source_set") {
     }
 
     public_configs = [ ":render_service_client_config" ]
+
+    part_name = "graphic_standard"
+    subsystem_name = "graphic"
   }
 }
 

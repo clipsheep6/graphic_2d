@@ -22,7 +22,11 @@
 #include <memory>
 #include <mutex>
 #include "EGL/egl.h"
+#ifdef NEW_RENDER_CONTEXT
+#include "render_context.h"
+#else
 #include "render_context/render_context_egl.h"
+#endif
 #include "rs_parallel_hardware_composer.h"
 #include "rs_parallel_sub_thread.h"
 #include "rs_parallel_pack_visitor.h"
@@ -181,7 +185,11 @@ private:
     std::mutex cvParallelRenderMutex_;
     std::mutex flushMutex_;
     std::condition_variable cvParallelRender_;
-    RenderContextEGL *renderContext_;
+#ifdef NEW_RENDER_CONTEXT
+    RenderContext* renderContext_ = nullptr;
+#else
+    RenderContextEGL *renderContext_ = nullptr;
+#endif
     ParallelRenderType renderType_ = ParallelRenderType::DRAW_IMAGE;
     std::shared_ptr<RSBaseRenderNode> displayNode_ = nullptr;
     std::shared_ptr<RSDisplayRenderNode> mainDisplayNode_ = nullptr;

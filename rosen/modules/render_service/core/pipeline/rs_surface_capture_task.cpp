@@ -35,7 +35,11 @@
 #include "pipeline/rs_uni_render_judgement.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "platform/common/rs_log.h"
+#ifdef NEW_RENDER_CONTEXT
+#include "rs_surface.h"
+#else
 #include "platform/drawing/rs_surface.h"
+#endif
 #include "render/rs_skia_filter.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "screen_manager/rs_screen_mode_info.h"

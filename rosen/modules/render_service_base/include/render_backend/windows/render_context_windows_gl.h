@@ -13,38 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_RENDER_CONTEXT_OHOS_VK_H
-#define RENDER_SERVICE_RENDER_CONTEXT_OHOS_VK_H
+#ifndef RENDER_SERVICE_RENDER_CONTEXT_DARWIN_GL_H
+#define RENDER_SERVICE_RENDER_CONTEXT_DARWIN_GL_H
 
 #include <memory>
 
-#include <vulkan_window.h>
-
 #include "render_context.h"
-#include "rs_surface_frame.h"
 
 namespace OHOS {
 namespace Rosen {
-class RenderContextOhosVk : public RenderContext {
+class RenderContextWindowsGl : public RenderContext {
 public:
-    explicit RenderContextOhosVk() noexcept = default;
-    ~RenderContextOhosVk();
+    explicit RenderContextWindowsGl() noexcept = default;
+    ~RenderContextWindowsGl();
     void Init() override;
-    bool IsContextReady() override;
+    bool SetUpGrContext() override;
     void MakeCurrent(void* curSurface = nullptr, void* curContext = nullptr) override;
-    void DamageFrame(int32_t left, int32_t top, int32_t width, int32_t height) override;
-    void DamageFrame(const std::vector<RectI> &rects) override;
-    int32_t GetBufferAge() override;
     void SwapBuffers() override;
-    void Destroy() override;
-
-    static void WaitForSharedFence();
-    static void ResetSharedFence();
-    static void PresentAll();
-private:
-    void InitializeVulkan(uint32_t num);
-
-    std::shared_ptr<vulkan::VulkanWindow> vulkanWindow_;
 };
 }
 }

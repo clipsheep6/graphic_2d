@@ -13,21 +13,46 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_BASE_RENDER_SURFACE_FACTORY_H
-#define RENDER_SERVICE_BASE_RENDER_SURFACE_FACTORY_H
 
-#include "render_context_base.h"
+#include "pipeline/rs_frame_report.h"
 
-#include "rs_render_surface.h"
-
-namespace OHOS {
-namespace Rosen {
-class RenderSurfaceFactory {
-public:
-    static std::shared_ptr<RenderSurface> CreateRenderSurface(
-        std::shared_ptr<RenderContextBase>& renderContext,
-        sptr<Surface>& surface);
-};
+namespace OHOS::Rosen {
+RsFrameReport& RsFrameReport::GetInstance()
+{
+    static RsFrameReport instance;
+    return instance;
 }
+
+RsFrameReport::RsFrameReport()
+{
 }
-#endif
+
+RsFrameReport::~RsFrameReport()
+{
+}
+
+void RsFrameReport::Init()
+{
+}
+
+int RsFrameReport::GetEnable()
+{
+    return 0;
+}
+
+void RsFrameReport::ProcessCommandsStart()
+{
+}
+
+void RsFrameReport::AnimateStart()
+{
+}
+
+void RsFrameReport::RenderStart()
+{
+}
+
+void RsFrameReport::SendCommandsStart()
+{
+}
+} // namespace OHOS::Rosen

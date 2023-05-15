@@ -14,11 +14,18 @@
  */
 
 #include "transaction/rs_render_service_client.h"
-
+#if defined(NEW_RENDER_CONTEXT)
+#include "render_backend/ohos/rs_surface_ohos_gl.h"
+#include "render_backend/ohos/rs_surface_ohos_raster.h"
+#ifdef RS_ENABLE_VK
+#include "render_backend/ohos/rs_surface_ohos_vulkan.h"
+#endif
+#else
 #include "backend/rs_surface_ohos_gl.h"
 #include "backend/rs_surface_ohos_raster.h"
 #ifdef RS_ENABLE_VK
 #include "backend/rs_surface_ohos_vulkan.h"
+#endif
 #endif
 
 #include "command/rs_command.h"
@@ -28,8 +35,12 @@
 #include "ipc_callbacks/rs_occlusion_change_callback_stub.h"
 #include "platform/common/rs_log.h"
 #include "rs_render_service_connect_hub.h"
+#ifdef NEW_RENDER_CONTEXT
+#include "render_backend/ohos/rs_surface_ohos.h"
+#include "render_backend/rs_surface_factory.h"
+#else
 #include "rs_surface_ohos.h"
-
+#endif
 namespace OHOS {
 namespace Rosen {
 std::shared_ptr<RSIRenderClient> RSIRenderClient::CreateRenderServiceClient()
@@ -94,6 +105,10 @@ std::shared_ptr<RSSurface> RSRenderServiceClient::CreateNodeAndSurface(const RSS
 
 std::shared_ptr<RSSurface> RSRenderServiceClient::CreateRSSurface(const sptr<Surface> &surface)
 {
+#ifdef NEW_RENDER_CONTEXT
+    std::shared_ptr<RSSurface> producer = OHOS::Rosen::RSSurfaceFactory::CreateRSSurface(surface);
+    return producer;
+#else
 #if defined(ACE_ENABLE_VK)
     // GPU render
     std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosVulkan>(surface);
@@ -105,6 +120,7 @@ std::shared_ptr<RSSurface> RSRenderServiceClient::CreateRSSurface(const sptr<Sur
     std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosRaster>(surface);
 #endif
     return producer;
+#endif
 }
 
 std::shared_ptr<VSyncReceiver> RSRenderServiceClient::CreateVSyncReceiver(

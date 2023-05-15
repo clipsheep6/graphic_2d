@@ -13,29 +13,37 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_BASE_RENDER_SURFACE_OHOS_VK_H
-#define RENDER_SERVICE_BASE_RENDER_SURFACE_OHOS_VK_H
+#ifndef RENDER_SERVICE_BASE_RS_SURFACE_OHOS_VULKAN_H
+#define RENDER_SERVICE_BASE_RS_SURFACE_OHOS_VULKAN_H
 
-#include "render_surface_ohos.h"
+#include "rs_surface_ohos.h"
 
 #include <vulkan_window.h>
 
+#include "common/rs_rect.h"
+
 namespace OHOS {
 namespace Rosen {
-class RenderSurfaceOhosVk : public RenderSurfaceOhos {
+class RSSurfaceOhosVulkan : public RSSurfaceOhos {
 public:
-    explicit RenderSurfaceOhosVk(const sptr<Surface>& producer) : RenderSurfaceOhos(producer)
+    explicit RSSurfaceOhosVulkan(const sptr<Surface>& producer) : RSSurfaceOhos(producer)
     {
     }
 
-    ~RenderSurfaceOhosVk();
+    ~RSSurfaceOhosVulkan();
 
-    std::shared_ptr<RenderSurfaceFrame> RequestFrame(
+    std::shared_ptr<RSSurfaceFrame> RequestFrame(
         int32_t width, int32_t height, uint64_t uiTimestamp = 0, bool useAFBC = true) override;
     
     bool FlushFrame(uint64_t uiTimestamp = 0) override;
 
     void SetUiTimeStamp(uint64_t uiTimestamp = 0) override;
+
+    void SetDamageRegion(int32_t left, int32_t top, int32_t width, int32_t height) override;
+
+    void SetDamageRegion(const std::vector<RectI> &rects) override;
+    
+    int32_t GetBufferAge() override;
 
     void ClearBuffer() override;
 

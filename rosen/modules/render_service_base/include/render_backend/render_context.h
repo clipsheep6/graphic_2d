@@ -13,18 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_BASE_RENDER_CONTEXT_BASE_H
-#define RENDER_SERVICE_BASE_RENDER_CONTEXT_BASE_H
+#ifndef RENDER_SERVICE_BASE_RENDER_CONTEXT_H
+#define RENDER_SERVICE_BASE_RENDER_CONTEXT_H
 
+#include <EGL/egl.h>
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColorSpace.h"
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrBackendSurface.h"
-#include "include/gpu/GrContext.h"
+#if defined(NEW_SKIA)
+#include <include/gpu/GrDirectContext.h>
+#else
+#include <include/gpu/GrContext.h>
+#endif
 #include "include/gpu/gl/GrGLInterface.h"
 
-#include "rs_render_surface_frame.h"
+#include "common/rs_rect.h"
+
+#include "rs_surface_frame.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -33,10 +40,10 @@ const std::string PLATFORM_ANDROID = "android";
 const std::string PLATFORM_IOS = "ios";
 const std::string PLATFORM_WINDOWS = "windows";
 const std::string PLATFORM_DARWIN = "darwin";
-class RenderContextBase {
+class RenderContext {
 public:
-    explicit RenderContextBase() noexcept = default;
-    virtual ~RenderContextBase() = default;
+    explicit RenderContext() noexcept = default;
+    virtual ~RenderContext() = default;
     virtual void Init() = 0;
     virtual bool IsContextReady() { return false; }
     virtual void MakeCurrent(void* curSurface = nullptr, void* curContext = nullptr) {}
@@ -44,10 +51,13 @@ public:
     virtual void* CreateContext(bool share = false) { return nullptr; };
     virtual void* CreateSurface(void* window) { return nullptr; }
     virtual void DestroySurface(void* curSurface) {}
+    virtual void DamageFrame(int32_t left, int32_t top, int32_t width, int32_t height) {};
     virtual void DamageFrame(const std::vector<RectI> &rects) {}
     virtual int32_t GetBufferAge() { return 0; }
     virtual void SwapBuffers() {}
     virtual void Destroy() {}
+    virtual EGLContext GetEGLContext() { return EGL_NO_CONTEXT; }
+    virtual EGLDisplay GetEGLDisplay() { return EGL_NO_DISPLAY; }
 
     void SetPlatformName(const std::string& platformName)
     {
@@ -58,14 +68,24 @@ public:
     {
         return platformName_;
     }
-    
+#if defined(NEW_SKIA)
+    GrDirectContext* GetGrContext() const
+    {
+        return grContext_.get();
+    }
+#else
     GrContext* GetGrContext() const
     {
         return grContext_.get();
     }
+#endif
 
 protected:
+#if defined(NEW_SKIA)
+    sk_sp<GrDirectContext> grContext_ = nullptr;
+#else
     sk_sp<GrContext> grContext_ = nullptr;
+#endif
     std::string platformName_ = PLATFORM_OHOS;
 };
 }

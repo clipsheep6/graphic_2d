@@ -28,7 +28,11 @@
 #include "memory/rs_memory_track.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
+#ifdef NEW_RENDER_CONTEXT
+#include "rs_surface.h"
+#else
 #include "platform/drawing/rs_surface.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {

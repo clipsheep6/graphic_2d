@@ -1619,6 +1619,15 @@ void RSUniRenderVisitor::AssignGlobalZOrderAndCreateLayer()
 void RSUniRenderVisitor::AddOverDrawListener(std::unique_ptr<RSRenderFrame>& renderFrame,
     std::shared_ptr<RSCanvasListener>& overdrawListener)
 {
+#ifdef NEW_RENDER_CONTEXT
+    if (renderFrame->GetSurface() == nullptr) {
+        RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: RSSurface is null");
+        return;
+    }
+    RS_TRACE_BEGIN("RSUniRender::GetSkSurface");
+    auto skSurface = renderFrame->GetSurface()->GetSkSurface();
+    RS_TRACE_END();
+#else
     if (renderFrame->GetFrame() == nullptr) {
         RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: RSSurfaceFrame is null");
         return;
@@ -1626,6 +1635,7 @@ void RSUniRenderVisitor::AddOverDrawListener(std::unique_ptr<RSRenderFrame>& ren
     RS_TRACE_BEGIN("RSUniRender::GetSurface");
     auto skSurface = renderFrame->GetFrame()->GetSurface();
     RS_TRACE_END();
+#endif
     if (skSurface == nullptr) {
         RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: skSurface is null");
         return;

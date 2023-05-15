@@ -17,16 +17,15 @@
 #define RENDER_SERVICE_BASE_RENDER_SURFACE_FRAME_H
 
 #include <surface.h>
-#include "common/rs_rect.h"
 #include "EGL/egl.h"
 #include "surface_type.h"
 
 namespace OHOS {
 namespace Rosen {
-class RenderSurfaceFrame {
+class RSSurfaceFrame {
 public:
-    explicit RenderSurfaceFrame() noexcept = default;
-    ~RenderSurfaceFrame() = default;
+    explicit RSSurfaceFrame() noexcept = default;
+    ~RSSurfaceFrame() = default;
 
     int32_t width_ = 0;
     int32_t height_ = 0;
@@ -50,6 +49,7 @@ public:
             .h = 0x100,
         },
     };
+    int32_t pixelFormat_ = PIXEL_FMT_RGBA_8888;
     ColorGamut colorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
     sk_sp<SkSurface> skSurface_ = nullptr;
 };

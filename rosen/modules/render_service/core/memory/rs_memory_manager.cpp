@@ -31,6 +31,7 @@
 
 #include "common/rs_obj_abs_geometry.h"
 #include "memory/rs_tag_tracker.h"
+#include "render_context/memory_handler.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
@@ -150,7 +151,7 @@ void MemoryManager::ReleaseUnlockGpuResource(GrContext* grContext, bool scratchR
     grContext->purgeUnlockedResources(scratchResourcesOnly);
 #endif
 }
-
+#if defined(NEW_RENDER_CONTEXT)
 #ifdef NEW_SKIA
 void MemoryManager::ClearRedundantResources(GrDirectContext* grContext)
 #else
@@ -164,7 +165,7 @@ void MemoryManager::ClearRedundantResources(GrContext* grContext)
         grContext->purgeResourcesNotUsedInMs(std::chrono::seconds(10));
     }
 }
-
+#endif
 #ifdef NEW_SKIA
 void MemoryManager::DumpPidMemory(DfxString& log, int pid, const GrDirectContext* grContext)
 #else

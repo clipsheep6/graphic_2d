@@ -25,8 +25,11 @@
 #include "surface_delegate.h"
 #include "surface_type.h"
 #endif
-
+#ifdef NEW_RENDER_CONTEXT
+#include "rs_surface.h"
+#else
 #include "platform/drawing/rs_surface.h"
+#endif
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_node.h"
 

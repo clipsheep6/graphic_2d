@@ -32,6 +32,7 @@
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "property/rs_property_trace.h"
+#include "render_context/shader_cache.h"
 #include "transaction/rs_render_service_client.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
@@ -126,12 +127,8 @@ RSRenderThread::RSRenderThread()
 RSRenderThread::~RSRenderThread()
 {
     Stop();
-
-    if (renderContext_ != nullptr) {
-        ROSEN_LOGD("Destroy renderContext!!");
-        delete renderContext_;
-        renderContext_ = nullptr;
-    }
+    renderContext_ = nullptr;
+    ROSEN_LOGD("~RSRenderThread");
 }
 
 void RSRenderThread::Start()
@@ -208,6 +205,20 @@ void RSRenderThread::CreateAndInitRenderContextIfNeed()
         return;
 #else
 #if defined(IOS_PLATFORM) || (defined(RS_ENABLE_GL) && !defined(ROSEN_PREVIEW))
+#if defined(NEW_RENDER_CONTEXT)
+    if (renderContext_ == nullptr) {
+        renderContext_ = RenderContextFactory::CreateRenderContext();
+        RS_TRACE_NAME("Init Context");
+#ifdef ROSEN_OHOS
+        renderContext_->Init(); // init egl context on RT
+        if (!cacheDir_.empty()) {
+            ShaderCache::Instance().SetFilePath(cacheDir_);
+        }
+        renderContext_->SetUpGrContext();
+        ROSEN_LOGD("Create and Init RenderContext");
+#endif
+    }
+#else
     if (renderContext_ == nullptr) {
         renderContext_ = RenderContextFactory::GetInstance().CreateEngine();
         ROSEN_LOGD("Create RenderContext");
@@ -219,6 +230,7 @@ void RSRenderThread::CreateAndInitRenderContextIfNeed()
         }
 #endif
     }
+#endif
 #endif
 #endif
 

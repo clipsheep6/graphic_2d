@@ -14,12 +14,22 @@
  */
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_surface_converter.h"
+#if defined(NEW_RENDER_CONTEXT)
+#include "render_backend/ohos/rs_surface_ohos.h"
+#include "render_backend/ohos/rs_surface_ohos_raster.h"
+#include "render_backend/ohos/rs_surface_ohos_gl.h"
+#ifdef RS_ENABLE_VK
+#include "render_backend/ohos/rs_surface_ohos_vulkan.h"
+#endif
+#else
 #include "rs_surface_ohos.h"
 #include "platform/ohos/backend/rs_surface_ohos_raster.h"
 #include "platform/ohos/backend/rs_surface_ohos_gl.h"
 #ifdef RS_ENABLE_VK
 #include "platform/ohos/backend/rs_surface_ohos_vulkan.h"
 #endif
+#endif
+
 
 namespace OHOS {
 namespace Rosen {

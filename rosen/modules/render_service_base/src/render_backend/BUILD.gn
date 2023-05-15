@@ -4,16 +4,17 @@ import("//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config
 
 config("export_config") {
   include_dirs = [
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include/render_backend"
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include/render_backend",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
   ]
+  defines = [ "NEW_RENDER_CONTEXT" ]
 }
 
 ohos_source_set("render_backend") {
   public_configs = [ ":export_config" ]
 
   include_dirs = [
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
     "//commonlibrary/c_utils/base/include",
     "//utils/system/safwk/native/include",
     "//foundation/graphic/graphic_2d/prebuilts/librarys/gpu/include",
@@ -22,14 +23,15 @@ ohos_source_set("render_backend") {
     "//foundation/graphic/graphic_2d/utils/log",
   ]
 
-  defines = [ "ROSEN_OHOS" ]
+  defines = []
   defines += gpu_defines
+  defines += rs_common_define
   
   sources = [
     "render_context_factory.cpp",
-    "render_surface_factory.cpp",
-    "ohos/render_surface_ohos.cpp",
-    "ohos/render_surface_ohos_raster.cpp"
+    "rs_surface_factory.cpp",
+    "ohos/rs_surface_ohos.cpp",
+    "ohos/rs_surface_ohos_raster.cpp"
   ]
 
   public_deps = [
@@ -47,7 +49,10 @@ ohos_source_set("render_backend") {
 
     sources += [
       "ohos/render_context_ohos_gl.cpp",
-      "ohos/render_surface_ohos_gl.cpp",
+      "ohos/rs_surface_ohos_gl.cpp",
+      "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/cache_data.cpp",
+      "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/memory_handler.cpp",
+      "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/shader_cache.cpp",
     ]
 
     if (defined(use_new_skia) && use_new_skia) {
@@ -63,7 +68,7 @@ ohos_source_set("render_backend") {
       ]
       sources += [
         "ohos/render_context_ohos_vk.cpp",
-        "ohos/render_surface_ohos_vk.cpp",
+        "ohos/rs_surface_ohos_vulkan.cpp",
       ]
     }
 

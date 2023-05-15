@@ -61,8 +61,6 @@ ohos_executable("bootanimation") {
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/platform:platform",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/render_backend:render_backend",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
@@ -71,6 +69,12 @@ ohos_executable("bootanimation") {
     "//third_party/cJSON:cjson_static",
     "//third_party/zlib:libz",
   ]
+
+  if (defined(use_new_render_context) && use_new_render_context) {
+    deps += [ "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/render_backend:render_backend" ]
+  } else {
+    deps += [ "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/platform:platform" ]
+  }
 
   if (defined(use_new_skia) && use_new_skia) {
     deps += [ "//third_party/skia:skia_ohos" ]

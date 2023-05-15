@@ -13,36 +13,32 @@
  * limitations under the License.
  */
 
-#include "render_context_factory.h"
+#include "rs_surface_factory.h"
 
-#include "ohos/render_context_ohos_gl.h"
+#include "render_context.h"
+#include "ohos/rs_surface_ohos_gl.h"
+#include "ohos/rs_surface_ohos_raster.h"
 #ifdef RS_ENABLE_VK
-#include "ohos/render_context_ohos_vk.h"
+#include "ohos/rs_surface_ohos_vulkan.h"
 #endif
-#ifdef ROSEN_WIN
-#include "ohos/render_context_windows_gl.h"
-#endif
-
-#include "platform/common/rs_log.h"
+#include "utils/log.h"
 
 namespace OHOS {
 namespace Rosen {
-std::shared_ptr<RenderContext> RenderContextFactory::CreateRenderContext()
+std::shared_ptr<RSSurface> RSSurfaceFactory::CreateRSSurface(const sptr<Surface>& surface)
 {
-    std::shared_ptr<RenderContext> renderContext;
+    std::shared_ptr<RSSurface> rsSurface;
 #ifdef ROSEN_OHOS
 #ifdef RS_ENABLE_GL
-    renderContext = std::make_shared<RenderContextOhosGl>();
+            rsSurface = std::make_shared<RSSurfaceOhosGl>(surface);
 #elif RS_ENABLE_VK
-    renderContext = std::make_shared<RenderContextOhosVk>();
+            rsSurface = std::make_shared<RSSurfaceOhosVk>(surface);
+#else
+            rsSurface = std::make_shared<RSSurfaceOhosRaster>(surface);
 #endif
-    renderContext->SetPlatformName(PLATFORM_OHOS);
-#elif ROSEN_WIN
-    renderContext = std::make_shared<RenderContextWindowsGl>();
 #endif
-    ROSEN_LOGD("ZJ RenderContextFactory::CreateRenderContext");
-    return renderContext;
+    LOGD("ZJ RSSurfaceFactory::CreateRSSurface");
+    return rsSurface;
 }
-
 }
 }

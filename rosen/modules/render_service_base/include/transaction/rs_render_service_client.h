@@ -30,7 +30,11 @@
 #include "ipc_callbacks/screen_change_callback.h"
 #include "ipc_callbacks/surface_capture_callback.h"
 #include "memory/rs_memory_graphic.h"
+#ifdef NEW_RENDER_CONTEXT
+#include "render_backend/rs_surface.h"
+#else
 #include "platform/drawing/rs_surface.h"
+#endif
 #include "rs_irender_client.h"
 #include "screen_manager/rs_screen_capability.h"
 #include "screen_manager/rs_screen_data.h"

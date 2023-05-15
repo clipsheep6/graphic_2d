@@ -153,10 +153,9 @@ HWTEST_F(MatrixTest, MatrixScaleTest002, TestSize.Level1)
 
 /**
  * @tc.name: MatrixPreRotateTest001
- * @tc.desc:
+ * @tc.desc: test for seting Matrix to Matrix multiplied by Matrix constructed from rotating by degrees.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZCLN
  */
 HWTEST_F(MatrixTest, MatrixPreRotateTest001, TestSize.Level1)
 {
@@ -167,10 +166,9 @@ HWTEST_F(MatrixTest, MatrixPreRotateTest001, TestSize.Level1)
 
 /**
  * @tc.name: MatrixPreTranslateTest001
- * @tc.desc:
+ * @tc.desc: test for seting Matrix to Matrix constructed from translation (dx, dy) multiplied by Matrix.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZCLN
  */
 HWTEST_F(MatrixTest, MatrixPreTranslateTest001, TestSize.Level1)
 {
@@ -181,10 +179,9 @@ HWTEST_F(MatrixTest, MatrixPreTranslateTest001, TestSize.Level1)
 
 /**
  * @tc.name: MatrixPreTranslateTest002
- * @tc.desc:
+ * @tc.desc: test for sets Matrix to Matrix constructed from translation (dx, dy) multiplied by Matrix.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZCLN
  */
 HWTEST_F(MatrixTest, MatrixPreTranslateTest002, TestSize.Level1)
 {
@@ -195,10 +192,9 @@ HWTEST_F(MatrixTest, MatrixPreTranslateTest002, TestSize.Level1)
 
 /**
  * @tc.name: MatrixPreScaleTest001
- * @tc.desc:
+ * @tc.desc: test for seting Matrix to Matrix multiplied by Matrix constructed from scaling by (sx, sy).
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZCLN
  */
 HWTEST_F(MatrixTest, MatrixPreScaleTest001, TestSize.Level1)
 {
@@ -209,10 +205,9 @@ HWTEST_F(MatrixTest, MatrixPreScaleTest001, TestSize.Level1)
 
 /**
  * @tc.name: MatrixPreScaleTest002
- * @tc.desc:
+ * @tc.desc: test for seting Matrix to Matrix multiplied by Matrix constructed from scaling by (sx, sy).
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZCLN
  */
 HWTEST_F(MatrixTest, MatrixPreScaleTest002, TestSize.Level1)
 {
@@ -223,10 +218,9 @@ HWTEST_F(MatrixTest, MatrixPreScaleTest002, TestSize.Level1)
 
 /**
  * @tc.name: MatrixPreConcatTest001
- * @tc.desc:
+ * @tc.desc: test for seting Matrix to Matrix other multiplied by Matrix.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZCLN
  */
 HWTEST_F(MatrixTest, MatrixPreConcatTest001, TestSize.Level1)
 {
@@ -378,10 +372,9 @@ HWTEST_F(MatrixTest, MatrixMapPointsTest002, TestSize.Level1)
 
 /**
  * @tc.name: MatrixMapRectTest001
- * @tc.desc:
+ * @tc.desc: test for seting dst to bounds of src corners mapped by Matrix.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZCLN
  */
 HWTEST_F(MatrixTest, MatrixMapRectTest001, TestSize.Level1)
 {
@@ -394,10 +387,9 @@ HWTEST_F(MatrixTest, MatrixMapRectTest001, TestSize.Level1)
 
 /**
  * @tc.name: MatrixMapRectTest002
- * @tc.desc:
+ * @tc.desc: test for seting dst to bounds of src corners mapped by Matrix.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZCLN
  */
 HWTEST_F(MatrixTest, MatrixMapRectTest002, TestSize.Level1)
 {
@@ -410,10 +402,9 @@ HWTEST_F(MatrixTest, MatrixMapRectTest002, TestSize.Level1)
 
 /**
  * @tc.name: MatrixSetTest001
- * @tc.desc:
+ * @tc.desc: test for seting Matrix value.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZCLN
  */
 HWTEST_F(MatrixTest, MatrixSetTest001, TestSize.Level1)
 {
@@ -451,6 +442,21 @@ HWTEST_F(MatrixTest, MatrixGetTest001, TestSize.Level1)
     std::unique_ptr<Matrix> matrix = std::make_unique<Matrix>();
     ASSERT_TRUE(matrix != nullptr);
     ASSERT_EQ(1, matrix->Get(0));
+}
+
+/**
+ * @tc.name: GetAll001
+ * @tc.desc: the test copies the nine scalar values contained in the matrix into a buffer.
+ * @tc.type: FUNC
+ * @tc.require: I6ZCLN
+ */
+HWTEST_F(MatrixTest, GetAll001, TestSize.Level1)
+{
+    std::unique_ptr<Matrix> matrix = std::make_unique<Matrix>();
+    ASSERT_TRUE(matrix != nullptr);
+    matrix->SetMatrix(20.9f, 15.8f, 80.8f, 60.6f, 2.4f, 99.9f, 60.5f, 60.1f, 90.5f);
+    Matrix::Buffer buffer;
+    matrix->GetAll(buffer);
 }
 } // namespace Drawing
 } // namespace Rosen

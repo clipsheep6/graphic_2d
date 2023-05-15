@@ -353,6 +353,11 @@ bool RSBaseRenderNode::IsDirty() const
     return dirtyStatus_ == NodeDirty::DIRTY;
 }
 
+bool RSBaseRenderNode::IsContentDirty() const
+{
+    return dirtyStatus_ == NodeDirty::DIRTY;
+}
+
 void RSBaseRenderNode::SetDirty()
 {
     dirtyStatus_ = NodeDirty::DIRTY;

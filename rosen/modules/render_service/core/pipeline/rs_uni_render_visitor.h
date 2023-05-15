@@ -208,6 +208,11 @@ private:
      */
     bool CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& node);
     void PrepareTypesOfSurfaceRenderNodeBeforeUpdate(RSSurfaceRenderNode& node);
+    // judge if node's cache changes
+    void UpdateIfCacheChanges(RSBaseRenderNode& node);
+    // set node cacheable animation after checking whold child tree
+    void SetNodeCacheChangeStatus(RSBaseRenderNode& node);
+
     bool IsHardwareComposerEnabled();
 
     void ClearTransparentBeforeSaveLayer();
@@ -272,6 +277,8 @@ private:
     PartialRenderType partialRenderType_;
     DirtyRegionDebugType dirtyRegionDebugType_;
     bool isDirty_ = false;
+    bool isDrawingCacheEnabled_ = false;
+    bool isDrawingCacheChanged_ = false;
     bool needFilter_ = false;
     ColorGamut newColorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
     std::vector<ScreenColorGamut> colorGamutModes_;

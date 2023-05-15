@@ -558,6 +558,11 @@ public:
 
     // if surfacenode's buffer has been comsumed, it should be set dirty
     bool UpdateDirtyIfFrameBufferConsumed();
+    // if buffer content updated, marked it as content dirty
+    void SetBufferContentDirty();
+    bool IsDirty() const override;
+    bool IsContentDirty() const override;
+    void SetClean() override;
 
     void UpdateSrcRect(const RSPaintFilterCanvas& canvas, const SkIRect& dstRect);
 
@@ -717,6 +722,7 @@ private:
     bool startAnimationFinished_ = false;
     mutable std::mutex cachedImageMutex_;
     sk_sp<SkImage> cachedImage_;
+    bool isBufferContentDirty_ = false;
 
     // used for hardware enabled nodes
     bool isCurrentFrameHardwareEnabled_ = false;

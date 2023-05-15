@@ -36,12 +36,11 @@ void ShaderEffectCmdListTest::TearDownTestCase() {}
 void ShaderEffectCmdListTest::SetUp() {}
 void ShaderEffectCmdListTest::TearDown() {}
 
-/*
+/**
  * @tc.name: CreateFromData001
- * @tc.desc:
+ * @tc.desc: test for creating ShaderEffectCmdList.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I71UEN
  */
 HWTEST_F(ShaderEffectCmdListTest, CreateFromData001, TestSize.Level1)
 {
@@ -50,12 +49,11 @@ HWTEST_F(ShaderEffectCmdListTest, CreateFromData001, TestSize.Level1)
     EXPECT_TRUE(newShaderEffectCmdList != nullptr);
 }
 
-/*
+/**
  * @tc.name: CreateFromData002
- * @tc.desc:
+ * @tc.desc: test for creating ShaderEffectCmdList.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I71UEN
  */
 HWTEST_F(ShaderEffectCmdListTest, CreateFromData002, TestSize.Level1)
 {
@@ -65,12 +63,11 @@ HWTEST_F(ShaderEffectCmdListTest, CreateFromData002, TestSize.Level1)
     EXPECT_TRUE(newShaderEffectCmdList != nullptr);
 }
 
-/*
+/**
  * @tc.name: AddLargeObject001
- * @tc.desc:
+ * @tc.desc: test for adding largeObjectData to ShaderEffectCmdList.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I71UEN
  */
 HWTEST_F(ShaderEffectCmdListTest, AddLargeObject001, TestSize.Level1)
 {
@@ -78,15 +75,14 @@ HWTEST_F(ShaderEffectCmdListTest, AddLargeObject001, TestSize.Level1)
     LargeObjectData largeObjectData;
     auto newShaderEffectCmdList = ShaderEffectCmdList::CreateFromData(data);
     EXPECT_TRUE(newShaderEffectCmdList != nullptr);
-    EXPECT_TRUE(newShaderEffectCmdList ->AddLargeObject(largeObjectData) == 0);
+    EXPECT_TRUE(newShaderEffectCmdList->AddLargeObject(largeObjectData) == 0);
 }
 
-/*
+/**
  * @tc.name: GetLargeObjectData001
- * @tc.desc:
+ * @tc.desc: test for geting largeObjectData.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I71UEN
  */
 HWTEST_F(ShaderEffectCmdListTest, GetLargeObjectData001, TestSize.Level1)
 {
@@ -94,16 +90,15 @@ HWTEST_F(ShaderEffectCmdListTest, GetLargeObjectData001, TestSize.Level1)
     LargeObjectData largeObjectData;
     auto newShaderEffectCmdList = ShaderEffectCmdList::CreateFromData(data, largeObjectData);
     EXPECT_TRUE(newShaderEffectCmdList != nullptr);
-    auto ret = newShaderEffectCmdList ->GetLargeObjectData();
+    auto ret = newShaderEffectCmdList->GetLargeObjectData();
     EXPECT_EQ(ret, largeObjectData);
 }
 
-/*
+/**
  * @tc.name: Playback001
- * @tc.desc:
+ * @tc.desc: test for ShaderEffectCmdList Playback function
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I71UEN
  */
 HWTEST_F(ShaderEffectCmdListTest, Playback001, TestSize.Level1)
 {
@@ -111,7 +106,7 @@ HWTEST_F(ShaderEffectCmdListTest, Playback001, TestSize.Level1)
     LargeObjectData largeObjectData;
     auto newShaderEffectCmdList = ShaderEffectCmdList::CreateFromData(data, largeObjectData);
     EXPECT_TRUE(newShaderEffectCmdList != nullptr);
-    auto ret = newShaderEffectCmdList ->Playback();
+    auto ret = newShaderEffectCmdList->Playback();
     EXPECT_TRUE(ret == nullptr);
 }
 } // namespace Drawing

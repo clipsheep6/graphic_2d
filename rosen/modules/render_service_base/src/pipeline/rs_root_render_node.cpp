@@ -15,7 +15,11 @@
 
 #include "pipeline/rs_root_render_node.h"
 
+#ifdef NEW_RENDER_CONTEXT
+#include "rs_surface.h"
+#else
 #include "platform/drawing/rs_surface.h"
+#endif
 #include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
 #ifndef ROSEN_CROSS_PLATFORM

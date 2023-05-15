@@ -18,10 +18,10 @@
 #include "transaction/rs_render_service_client.h"
 #include "transaction/rs_interfaces.h"
 #include "transaction/rs_transaction.h"
-
+#ifdef NEW_RENDER_CONTEXT
 #include "render_context_factory.h"
-#include "render_surface_factory.h"
-
+#include "rs_surface_factory.h"
+#endif
 using namespace OHOS;
 
 void BootAnimation::OnDraw(SkCanvas* canvas, int32_t curNo)
@@ -62,21 +62,26 @@ void BootAnimation::Draw()
         return;
     }
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "BootAnimation::Draw RequestFrame");
-    // auto frame = rsSurface_->RequestFrame(windowWidth_, windowHeight_);
-    auto frame = renderSurface_->RequestFrame(windowWidth_, windowHeight_);
+    auto frame = rsSurface_->RequestFrame(windowWidth_, windowHeight_);
     if (frame == nullptr) {
         LOGE("Draw frame is nullptr");
         return;
     }
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
-    // framePtr_ = std::move(frame);
-    // auto canvas = framePtr_->GetCanvas();
-    auto canvas = renderSurface_->GetSkCanvas();
+#ifdef NEW_RENDER_CONTEXT
+    auto canvas = rsSurface_->GetSkCanvas();
     OnDraw(canvas, picCurNo_);
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "BootAnimation::Draw FlushFrame");
-    // rsSurface_->FlushFrame(framePtr_);
-    renderSurface_->FlushFrame();
+    rsSurface_->FlushFrame();
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
+#else
+    framePtr_ = std::move(frame);
+    auto canvas = framePtr_->GetCanvas();
+    OnDraw(canvas, picCurNo_);
+    ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "BootAnimation::Draw FlushFrame");
+    rsSurface_->FlushFrame(framePtr_);
+    ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
+#endif
 }
 
 void BootAnimation::Init(int32_t width, int32_t height)
@@ -180,43 +185,48 @@ void BootAnimation::InitBootWindow()
 
 void BootAnimation::InitRsSurface()
 {
-//     rsSurface_ = OHOS::Rosen::RSSurfaceExtractor::ExtractRSSurface(window_->GetSurfaceNode());
-//     if (rsSurface_ == nullptr) {
-//         LOGE("rsSurface is nullptr");
-//         return;
-//     }
-// #ifdef ACE_ENABLE_GL
-//     rc_ = OHOS::Rosen::RenderContextFactory::GetInstance().CreateEngine();
-//     if (rc_ == nullptr) {
-//         LOGE("InitilizeEglContext failed");
-//         return;
-//     } else {
-//         LOGI("init egl context");
-//         rc_->InitializeEglContext();
-//         rsSurface_->SetRenderContext(rc_);
-//     }
-// #endif
-//     if (rc_ == nullptr) {
-//         LOGI("rc is nullptr, use cpu");
-//     }
+#if defined(NEW_RENDER_CONTEXT)
 #ifdef ACE_ENABLE_GL
     renderContext_ = Rosen::RenderContextFactory::CreateRenderContext();
     if (renderContext_ == nullptr) {
-        LOGE("ZJ Create Render Context failed");
+        LOGE("Create Render Context failed");
         return;
     } else {
-        LOGE("ZJ Init render context");
+        LOGE("Init render context");
         renderContext_->Init();
         renderContext_->SetUpGrContext();
     }
 #endif
     sptr<Surface> surface = window_->GetSurfaceNode()->GetSurface();
-    renderSurface_ = Rosen::RenderSurfaceFactory::CreateRenderSurface(renderContext_,
-        surface);
-    if (renderSurface_ == nullptr) {
-        LOGE("ZJ renderSurface_ is nullptr");
+    rsSurface_ = Rosen::RSSurfaceFactory::CreateRSSurface(surface);
+    rsSurface_->SetRenderContext(renderContext_);
+    if (rsSurface_ == nullptr) {
+        LOGE("rsSurface_ is nullptr");
         return;
     }
+
+#else
+
+    rsSurface_ = OHOS::Rosen::RSSurfaceExtractor::ExtractRSSurface(window_->GetSurfaceNode());
+    if (rsSurface_ == nullptr) {
+        LOGE("rsSurface is nullptr");
+        return;
+    }
+#ifdef ACE_ENABLE_GL
+    rc_ = OHOS::Rosen::RenderContextFactory::GetInstance().CreateEngine();
+    if (rc_ == nullptr) {
+        LOGE("InitilizeEglContext failed");
+        return;
+    } else {
+        LOGI("init egl context");
+        rc_->InitializeEglContext();
+        rsSurface_->SetRenderContext(rc_);
+    }
+#endif
+    if (rc_ == nullptr) {
+        LOGI("rc is nullptr, use cpu");
+    }
+#endif
 }
 
 BootAnimation::~BootAnimation()

@@ -28,7 +28,12 @@
 #ifndef ROSEN_CROSS_PLATFORM
 #include "platform/drawing/rs_surface_converter.h"
 #endif
+#ifdef NEW_RENDER_CONTEXT
+#include "render_context.h"
+#else
+#include "platform/drawing/rs_surface_converter.h"
 #include "render_context/render_context.h"
+#endif
 #include "transaction/rs_render_service_client.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_proxy_node.h"

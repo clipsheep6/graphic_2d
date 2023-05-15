@@ -30,7 +30,11 @@
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_render_thread_visitor.h"
 #include "platform/drawing/rs_vsync_client.h"
+#ifdef NEW_RENDER_CONTEXT
+#include "render_backend/render_context_factory.h"
+#else
 #include "render_context/render_context.h"
+#endif
 #include "transaction/rs_transaction_proxy.h"
 #include "vsync_receiver.h"
 
@@ -56,11 +60,17 @@ public:
 
     std::string DumpRenderTree() const;
 
+#ifdef NEW_RENDER_CONTEXT
+    std::shared_ptr<RenderContext> GetRenderContext()
+    {
+        return renderContext_;
+    }
+#else
     RenderContext* GetRenderContext()
     {
         return renderContext_;
     }
-
+#endif
     RSContext& GetContext()
     {
         return *context_;
@@ -142,8 +152,11 @@ private:
     std::shared_ptr<RSJankDetector> jankDetector_;
 
     std::shared_ptr<RSContext> context_;
-
+#ifdef NEW_RENDER_CONTEXT
+    std::shared_ptr<RenderContext> renderContext_;
+#else
     RenderContext* renderContext_ = nullptr;
+#endif
     std::shared_ptr<HighContrastObserver> highContrastObserver_;
     std::atomic_bool isHighContrastEnabled_ = false;
 

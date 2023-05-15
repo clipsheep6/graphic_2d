@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_BASE_RENDER_SURFACE_H
-#define RENDER_SERVICE_BASE_RENDER_SURFACE_H
+#ifndef RENDER_SERVICE_BASE_RS_SURFACE_H
+#define RENDER_SERVICE_BASE_RS_SURFACE_H
 
 #include <memory>
 
@@ -26,26 +26,36 @@
 #include "surface_type.h"
 #endif
 
-#include "rs_render_surface_frame.h"
-#include "render_context_base.h"
+#include "rs_surface_frame.h"
+#include "render_context.h"
 
 namespace OHOS {
 namespace Rosen {
-class RenderSurface {
+class RSSurface {
 public:
-    explicit RenderSurface()
+    explicit RSSurface()
     {
-        frame_ = std::make_shared<RenderSurfaceFrame>();
+        frame_ = std::make_shared<RSSurfaceFrame>();
     }
 
-    virtual ~RenderSurface() = default;
+    virtual ~RSSurface() = default;
 
-    virtual std::shared_ptr<RenderSurfaceFrame> RequestFrame(
+    virtual bool IsValid() = 0;
+
+    virtual uint32_t GetQueueSize() const = 0;
+
+    virtual std::shared_ptr<RSSurfaceFrame> RequestFrame(
         int32_t width, int32_t height, uint64_t uiTimestamp = 0, bool useAFBC = true) = 0;
 
     virtual bool FlushFrame(uint64_t uiTimestamp = 0) = 0;
     
     virtual void SetUiTimeStamp(uint64_t uiTimestamp = 0) = 0;
+
+    virtual void SetDamageRegion(int32_t left, int32_t top, int32_t width, int32_t height) = 0;
+
+    virtual void SetDamageRegion(const std::vector<RectI> &rects) = 0;
+    
+    virtual int32_t GetBufferAge() = 0;
 
 #ifndef ROSEN_CROSS_PLATFORM
     virtual ColorGamut GetColorSpace() = 0;
@@ -57,18 +67,18 @@ public:
     
     virtual sk_sp<SkSurface> GetSkSurface() = 0;
 
-    void SetRenderContext(const std::shared_ptr<RenderContextBase>& renderContext)
+    void SetRenderContext(const std::shared_ptr<RenderContext>& renderContext)
     {
         renderContext_ = renderContext;
     }
 
-    const std::shared_ptr<RenderContextBase>& GetRenderContext() const
+    const std::shared_ptr<RenderContext>& GetRenderContext() const
     {
         return renderContext_;
     }
 protected:
-    std::shared_ptr<RenderSurfaceFrame> frame_;
-    std::shared_ptr<RenderContextBase> renderContext_;
+    std::shared_ptr<RSSurfaceFrame> frame_;
+    std::shared_ptr<RenderContext> renderContext_;
 };
 }
 } // namespace Rosen

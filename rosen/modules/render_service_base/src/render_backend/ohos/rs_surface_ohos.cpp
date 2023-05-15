@@ -13,68 +13,73 @@
  * limitations under the License.
  */
 
-#include "ohos/render_surface_ohos.h"
+#include "ohos/rs_surface_ohos.h"
 
 #include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
-bool RenderSurfaceOhos::IsValid()
+bool RSSurfaceOhos::IsValid()
 {
     return producer_ != nullptr;
 }
 
-sptr<Surface> RenderSurfaceOhos::GetSurface() const
+sptr<Surface> RSSurfaceOhos::GetSurface() const
 {
     return producer_;
 }
 
+uint32_t RSSurfaceOhos::GetQueueSize() const
+{
+    return producer_->GetQueueSize();
+}
+
 #ifndef ROSEN_CROSS_PLATFORM
-ColorGamut RenderSurfaceOhos::GetColorSpace()
+ColorGamut RSSurfaceOhos::GetColorSpace()
 {
     return frame_->colorSpace_;
 }
 
-void RenderSurfaceOhos::SetColorSpace(ColorGamut colorSpace)
+void RSSurfaceOhos::SetColorSpace(ColorGamut colorSpace)
 {
     frame_->colorSpace_ = colorSpace;
 }
 #endif
 
-SkCanvas* RenderSurfaceOhos::GetSkCanvas()
+SkCanvas* RSSurfaceOhos::GetSkCanvas()
 {
     if (frame_->skSurface_ == nullptr) {
-        ROSEN_LOGE("ZJ RenderSurfaceOhos::GetSkCanvas frame_->skSurface_ is nullptr");
+        ROSEN_LOGE("RSSurfaceOhos::GetSkCanvas frame_->skSurface_ is nullptr");
         frame_->skSurface_ = this->AcquireSurface();
     }
     return frame_->skSurface_->getCanvas();
 }
 
-sk_sp<SkSurface> RenderSurfaceOhos::GetSkSurface()
+sk_sp<SkSurface> RSSurfaceOhos::GetSkSurface()
 {
     if (frame_->skSurface_ == nullptr) {
-        ROSEN_LOGE("ZJ RenderSurfaceOhos::GetSkSurface frame_->skSurface_ is nullptr");
+        ROSEN_LOGE("RSSurfaceOhos::GetSkSurface frame_->skSurface_ is nullptr");
         frame_->skSurface_ = this->AcquireSurface();
     }
     return frame_->skSurface_;
 }
 
-void RenderSurfaceOhos::SetSurfaceBufferUsage(uint64_t usage)
+void RSSurfaceOhos::SetSurfaceBufferUsage(uint64_t usage)
 {
     bufferUsage_ = usage;
 }
 
-void RenderSurfaceOhos::SetSurfacePixelFormat(uint64_t pixelFormat)
+void RSSurfaceOhos::SetSurfacePixelFormat(uint64_t pixelFormat)
 {
     pixelFormat_ = pixelFormat;
 }
 
-void RenderSurfaceOhos::SetReleaseFence(const int32_t& fence)
+void RSSurfaceOhos::SetReleaseFence(const int32_t& fence)
 {
     frame_->releaseFence_ = fence;
 }
 
-int32_t RenderSurfaceOhos::GetReleaseFence() const
+int32_t RSSurfaceOhos::GetReleaseFence() const
 {
     return frame_->releaseFence_;
 }

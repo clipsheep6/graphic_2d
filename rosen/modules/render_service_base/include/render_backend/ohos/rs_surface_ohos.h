@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_BASE_RENDER_SURFACE_OHOS_H
-#define RENDER_SERVICE_BASE_RENDER_SURFACE_OHOS_H
+#ifndef RENDER_SERVICE_BASE_RS_SURFACE_OHOS_H
+#define RENDER_SERVICE_BASE_RS_SURFACE_OHOS_H
 
 #include <memory>
 
@@ -22,30 +22,31 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkSurface.h"
 
-#include "rs_render_surface.h"
-#include "rs_render_surface_frame.h"
+#include "rs_surface.h"
+#include "rs_surface_frame.h"
 #ifndef ROSEN_CROSS_PLATFORM
 #include "surface_type.h"
 #endif
 
 namespace OHOS {
 namespace Rosen {
-class RenderContextBase;
-class RenderSurfaceOhos : public RenderSurface {
+class RSSurfaceOhos : public RSSurface {
 public:
-    RenderSurfaceOhos(const sptr<Surface>& producer) : producer_(producer)
+    RSSurfaceOhos(const sptr<Surface>& producer) : producer_(producer)
     {
         bufferUsage_ = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_DMA;
     }
 
-    ~RenderSurfaceOhos()
+    ~RSSurfaceOhos()
     {
         producer_ = nullptr;
     }
 
-    bool IsValid();
+    bool IsValid() override;
 
     sptr<Surface> GetSurface() const;
+
+    uint32_t GetQueueSize() const override;
 
     SkCanvas* GetSkCanvas() override;
     
@@ -58,10 +59,11 @@ public:
 #endif
 
     virtual sk_sp<SkSurface> AcquireSurface() = 0;
-protected:
+
     void SetSurfaceBufferUsage(uint64_t usage);
 
     void SetSurfacePixelFormat(uint64_t pixelFormat);
+protected:
 
     void SetReleaseFence(const int32_t& fence);
 

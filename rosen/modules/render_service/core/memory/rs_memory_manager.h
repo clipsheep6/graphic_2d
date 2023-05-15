@@ -42,7 +42,9 @@ public:
     static void ReleaseAllGpuResource(GrDirectContext* grContext, pid_t pid);
 
     static void ReleaseUnlockGpuResource(GrDirectContext* grContext, bool scratchResourcesOnly = true);
+#if defined(NEW_RENDER_CONTEXT)
     static void ClearRedundantResources(GrDirectContext* grContext);
+#endif
 #else
     static void DumpMemoryUsage(DfxString& log, const GrContext* grContext, std::string& type);
     static void DumpPidMemory(DfxString& log, int pid, const GrContext* grContext);
@@ -55,7 +57,9 @@ public:
     static void ReleaseAllGpuResource(GrContext* grContext, GrGpuResourceTag& tag);
     static void ReleaseAllGpuResource(GrContext* grContext, pid_t pid);
     static void ReleaseUnlockGpuResource(GrContext* grContext, bool scratchResourcesOnly = true);
+#if defined(NEW_RENDER_CONTEXT)
     static void ClearRedundantResources(GrContext* grContext);
+#endif
 #endif
 
 private:

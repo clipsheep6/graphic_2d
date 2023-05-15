@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
-#include "ohos/render_surface_ohos_gl.h"
+#include "ohos/rs_surface_ohos_gl.h"
 
 #include "platform/common/rs_log.h"
 #include "rs_trace.h"
 #include "window.h"
 #include <hilog/log.h>
+#include "include/core/SkSurface.h"
 
 #if !defined(NEW_SKIA)
 #include "memory/rs_tag_tracker.h"
@@ -28,7 +29,7 @@
 
 namespace OHOS {
 namespace Rosen {
-RenderSurfaceOhosGl::~RenderSurfaceOhosGl()
+RSSurfaceOhosGl::~RSSurfaceOhosGl()
 {
     DestoryNativeWindow(nativeWindow_);
     if (renderContext_ != nullptr) {
@@ -39,24 +40,24 @@ RenderSurfaceOhosGl::~RenderSurfaceOhosGl()
     frame_ = nullptr;
 }
 
-std::shared_ptr<RenderSurfaceFrame> RenderSurfaceOhosGl::RequestFrame(
+std::shared_ptr<RSSurfaceFrame> RSSurfaceOhosGl::RequestFrame(
     int32_t width, int32_t height, uint64_t uiTimestamp, bool useAFBC)
 {
     if (renderContext_ == nullptr) {
-        ROSEN_LOGE("RenderSurfaceOhosGl::RequestFrame, renderContext_ is nullptr");
+        ROSEN_LOGE("RSSurfaceOhosGl::RequestFrame, renderContext_ is nullptr");
         return nullptr;
     }
     if (nativeWindow_ == nullptr) {
         nativeWindow_ = CreateNativeWindowFromSurface(&producer_);
         eglSurface_ = static_cast<EGLSurface>(renderContext_->CreateSurface(nativeWindow_));
-        ROSEN_LOGD("RenderSurfaceOhosGl:: create and Init EglSurface");
+        ROSEN_LOGD("RSSurfaceOhosGl:: create and Init EglSurface");
     }
 
     if (eglSurface_ == EGL_NO_SURFACE) {
-        ROSEN_LOGE("RenderSurfaceOhosGl:: Invalid eglSurface, return");
+        ROSEN_LOGE("RSSurfaceOhosGl:: Invalid eglSurface, return");
         return nullptr;
     }
-
+    NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, frame_->pixelFormat_);
 #ifdef RS_ENABLE_AFBC
     if (RSSystemProperties::GetAFBCEnabled()) {
         int32_t format = 0;
@@ -76,27 +77,27 @@ std::shared_ptr<RenderSurfaceFrame> RenderSurfaceOhosGl::RequestFrame(
 
     frame_->width_ = width;
     frame_->height_ = height;
-ROSEN_LOGD("RenderSurfaceOhosGl::RequestFrame, width is %d, height is %d",
+    ROSEN_LOGD("RSSurfaceOhosGl::RequestFrame, width is %d, height is %d",
         width, height);
 
     return frame_;
 }
 
-bool RenderSurfaceOhosGl::FlushFrame(uint64_t uiTimestamp)
+bool RSSurfaceOhosGl::FlushFrame(uint64_t uiTimestamp)
 {
     if (renderContext_ == nullptr) {
-        ROSEN_LOGE("RenderSurfaceOhosGl::FlushFrame, GetRenderContext failed!");
+        ROSEN_LOGE("RSSurfaceOhosGl::FlushFrame, GetRenderContext failed!");
         return false;
     }
 
     // gpu render flush
     RenderFrame();
     renderContext_->SwapBuffers();
-    ROSEN_LOGD("RenderSurfaceOhosGl:: FlushFrame, SwapBuffers eglsurface");
+    ROSEN_LOGD("RSSurfaceOhosGl:: FlushFrame, SwapBuffers eglsurface");
     return true;
 }
 
-void RenderSurfaceOhosGl::SetUiTimeStamp(uint64_t uiTimestamp)
+void RSSurfaceOhosGl::SetUiTimeStamp(uint64_t uiTimestamp)
 {
     struct timespec curTime = {0, 0};
     clock_gettime(CLOCK_MONOTONIC, &curTime);
@@ -105,27 +106,45 @@ void RenderSurfaceOhosGl::SetUiTimeStamp(uint64_t uiTimestamp)
     NativeWindowHandleOpt(nativeWindow_, SET_UI_TIMESTAMP, duration);
 }
 
-void RenderSurfaceOhosGl::ClearBuffer()
+void RSSurfaceOhosGl::SetDamageRegion(int32_t left, int32_t top, int32_t width, int32_t height)
+{
+    renderContext_->DamageFrame(left, top, width, height);
+}
+
+void RSSurfaceOhosGl::SetDamageRegion(const std::vector<RectI> &rects)
+{
+    renderContext_->DamageFrame(rects);
+}
+
+int32_t RSSurfaceOhosGl::GetBufferAge()
+{
+    return renderContext_->GetBufferAge();
+}
+
+void RSSurfaceOhosGl::ClearBuffer()
 {
     if (renderContext_ != nullptr && eglSurface_ != EGL_NO_SURFACE && producer_ != nullptr) {
-        ROSEN_LOGD("RenderSurfaceOhosGl:: Clear surface buffer!");
+        ROSEN_LOGD("RSSurfaceOhosGl:: Clear surface buffer!");
         DestoryNativeWindow(nativeWindow_);
-        renderContext_->MakeCurrent((void*) EGL_NO_SURFACE);
-        renderContext_->DestroySurface((void*) eglSurface_);
+        renderContext_->MakeCurrent(EGL_NO_SURFACE);
+        renderContext_->DestroySurface(eglSurface_);
         eglSurface_ = EGL_NO_SURFACE;
         nativeWindow_ = nullptr;
         producer_->GoBackground();
     }
 }
 
-sk_sp<SkSurface> RenderSurfaceOhosGl::AcquireSurface()
+sk_sp<SkSurface> RSSurfaceOhosGl::AcquireSurface()
 {
-    GrContext* grContext = renderContext_->GetGrContext();
-    if (grContext == nullptr) {
-        ROSEN_LOGE("GrContext is not ready!!!");
+    if (!renderContext_->SetUpGrContext()) {
+        ROSEN_LOGE("RSSurfaceOhosGl::AcquireSurface GrContext is not ready!!!");
         return nullptr;
     }
-
+#if defined(NEW_SKIA)
+    GrDirectContext* grContext = renderContext_->GetGrContext();
+#else
+    GrContext* grContext = renderContext_->GetGrContext();
+#endif
     GrGLFramebufferInfo framebufferInfo;
     framebufferInfo.fFBOID = 0;
     framebufferInfo.fFormat = GL_RGBA8;
@@ -164,19 +183,19 @@ sk_sp<SkSurface> RenderSurfaceOhosGl::AcquireSurface()
 #if !defined(NEW_SKIA)
     RSTagTracker tagTracker(grContext, RSTagTracker::TAGTYPE::TAG_ACQUIRE_SURFACE);
 #endif
-    frame_->skSurface_ = SkSurface::MakeFromBackendRenderTarget(
+    sk_sp<SkSurface> skSurface = SkSurface::MakeFromBackendRenderTarget(
         grContext, backendRenderTarget, kBottomLeft_GrSurfaceOrigin, colorType,
         skColorSpace, &surfaceProps);
-    if (frame_->skSurface_ == nullptr) {
+    if (skSurface == nullptr) {
         ROSEN_LOGE("skSurface is nullptr");
         return nullptr;
     }
 
-    ROSEN_LOGE("ZJ RenderSurfaceOhosGl::AcquireSurface");
-    return frame_->skSurface_;
+    ROSEN_LOGD("RSSurfaceOhosGl::AcquireSurface successfully");
+    return skSurface;
 }
 
-void RenderSurfaceOhosGl::RenderFrame()
+void RSSurfaceOhosGl::RenderFrame()
 {
     RS_TRACE_FUNC();
     // flush commands

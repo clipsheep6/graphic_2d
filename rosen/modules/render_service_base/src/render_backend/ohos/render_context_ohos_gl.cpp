@@ -14,6 +14,7 @@
  */
 
 #include "ohos/render_context_ohos_gl.h"
+#include <EGL/egl.h>
 
 #include "rs_trace.h"
 #include "window.h"
@@ -111,10 +112,10 @@ RenderContextOhosGl::~RenderContextOhosGl()
 void RenderContextOhosGl::Init()
 {
     if (IsContextReady()) {
+        LOGD("Egl context has ready initialized");
         return;
     }
 
-    LOGD("Creating EGLContext!!!");
     eglDisplay_ = GetPlatformEglDisplay(EGL_PLATFORM_OHOS_KHR, EGL_DEFAULT_DISPLAY, NULL);
     if (eglDisplay_ == EGL_NO_DISPLAY) {
         LOGW("Failed to create EGLDisplay gl errno : %{public}x", eglGetError());
@@ -156,7 +157,7 @@ void RenderContextOhosGl::Init()
         return;
     }
 
-    LOGD("Create EGL context successfully, version %{public}d.%{public}d", major, minor);
+    LOGD("Init context successfully, version %{public}d.%{public}d", major, minor);
 }
 
 bool RenderContextOhosGl::IsContextReady()
@@ -168,9 +169,21 @@ void RenderContextOhosGl::MakeCurrent(void* curSurface, void* curContext)
 {
     EGLSurface surface = EGL_NO_SURFACE;
     EGLContext context = EGL_NO_CONTEXT;
+    // if (curSurface != nullptr) {
+    //     surface = static_cast<EGLSurface>(curSurface);
+    // } else {
+    //     surface = eglSurface_;
+    // }
+    
+    // if (curContext != nullptr) {
+    //     context = static_cast<EGLContext>(curContext);
+    // } else {
+    //     context = eglContext_;
+    // }
     if (curSurface != nullptr) {
         surface = static_cast<EGLSurface>(curSurface);
     }
+
     if (curContext != nullptr) {
         context = static_cast<EGLContext>(curContext);
     }
@@ -190,7 +203,7 @@ void RenderContextOhosGl::MakeCurrent(void* curSurface, void* curContext)
 bool RenderContextOhosGl::SetUpGrContext()
 {
     if (grContext_ != nullptr) {
-        LOGD("grContext has already created!!");
+        LOGD("grContext has already initialized");
         return true;
     }
 
@@ -201,9 +214,7 @@ bool RenderContextOhosGl::SetUpGrContext()
     }
 
     GrContextOptions options;
-#if !defined(NEW_SKIA)
     options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
-#endif
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
     options.fAllowPathMaskCaching = true;
@@ -223,7 +234,7 @@ bool RenderContextOhosGl::SetUpGrContext()
     sk_sp<GrContext> grContext(GrContext::MakeGL(std::move(glInterface), options));
 #endif
     if (grContext == nullptr) {
-        LOGE("SetUpGrContext grContext is null");
+        LOGE("Failed to create grContext, grContext is nullptr");
         return false;
     }
     grContext_ = std::move(grContext);
@@ -241,7 +252,6 @@ void* RenderContextOhosGl::CreateContext(bool share)
         context = eglCreateContext(eglDisplay_, config_, eglContext_, context_attribs);
     }
     return static_cast<void*>(context);
-
 }
 
 void* RenderContextOhosGl::CreateSurface(void* window)
@@ -260,7 +270,7 @@ void* RenderContextOhosGl::CreateSurface(void* window)
         return EGL_NO_SURFACE;
     }
 
-    LOGD("CreateEGLSurface");
+    LOGD("Create egl surface successfully");
 
     eglSurface_ = surface;
     return static_cast<void*>(surface);
@@ -271,6 +281,25 @@ void RenderContextOhosGl::DestroySurface(void* curSurface)
     EGLSurface surface = static_cast<EGLSurface>(curSurface);
     if (!eglDestroySurface(eglDisplay_, surface)) {
         LOGE("Failed to DestroyEGLSurface surface, error is %{public}x", eglGetError());
+    }
+}
+
+void RenderContextOhosGl::DamageFrame(int32_t left, int32_t top, int32_t width, int32_t height)
+{
+    if ((eglDisplay_ == nullptr) || (eglSurface_ == nullptr)) {
+        LOGE("eglDisplay or eglSurface is nullptr");
+        return;
+    }
+
+    EGLint rect[4];
+    rect[0] = left;
+    rect[1] = top;
+    rect[2] = width;
+    rect[3] = height;
+
+    EGLBoolean ret = GetEGLSetDamageRegionKHRFunc()(eglDisplay_, eglSurface_, rect, 1);
+    if (ret == EGL_FALSE) {
+        LOGE("eglSetDamageRegionKHR is failed");
     }
 }
 

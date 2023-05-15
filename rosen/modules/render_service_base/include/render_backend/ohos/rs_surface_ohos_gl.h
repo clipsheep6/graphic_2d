@@ -13,34 +13,47 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_BASE_RENDER_SURFACE_OHOS_RASTER_H
-#define RENDER_SERVICE_BASE_RENDER_SURFACE_OHOS_RASTER_H
+#ifndef RENDER_SERVICE_BASE_RS_SURFACE_OHOS_GL_H
+#define RENDER_SERVICE_BASE_RS_SURFACE_OHOS_GL_H
+#include <surface.h>
 
-#include "render_surface_ohos.h"
+#include <EGL/egl.h>
+#include "window.h"
+
+#include "rs_surface_ohos.h"
 
 namespace OHOS {
 namespace Rosen {
-class RenderSurfaceOhosRaster : public RenderSurfaceOhos {
+class RSSurfaceOhosGl : public RSSurfaceOhos {
 public:
-    explicit RenderSurfaceOhosRaster(const sptr<Surface>& producer) : RenderSurfaceOhos(producer)
+    explicit RSSurfaceOhosGl(const sptr<Surface>& producer) : RSSurfaceOhos(producer)
     {
     }
 
-    ~RenderSurfaceOhosRaster()
-    {
-        frame_ = nullptr;
-    }
+    ~RSSurfaceOhosGl();
 
-    std::shared_ptr<RenderSurfaceFrame> RequestFrame(
+    std::shared_ptr<RSSurfaceFrame> RequestFrame(
         int32_t width, int32_t height, uint64_t uiTimestamp = 0, bool useAFBC = true) override;
     
     bool FlushFrame(uint64_t uiTimestamp = 0) override;
 
     void SetUiTimeStamp(uint64_t uiTimestamp = 0) override;
 
+    void SetDamageRegion(int32_t left, int32_t top, int32_t width, int32_t height) override;
+
+    void SetDamageRegion(const std::vector<RectI> &rects) override;
+    
+    int32_t GetBufferAge() override;
+
     void ClearBuffer() override;
 
     sk_sp<SkSurface> AcquireSurface() override;
+
+private:
+    void RenderFrame();
+    
+    EGLSurface eglSurface_ = EGL_NO_SURFACE;
+    struct NativeWindow* nativeWindow_ = nullptr;
 };
 }
 } // namespace Rosen

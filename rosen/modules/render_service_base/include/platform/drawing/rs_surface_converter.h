@@ -15,7 +15,11 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_CONVERTER_H
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_CONVERTER_H
 
+#ifdef NEW_RENDER_CONTEXT
+#include "render_backend/rs_surface.h"
+#else
 #include "platform/drawing/rs_surface.h"
+#endif
 #include "surface.h"
 
 namespace OHOS {

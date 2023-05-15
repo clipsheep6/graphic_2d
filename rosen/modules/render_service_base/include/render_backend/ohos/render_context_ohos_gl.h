@@ -19,7 +19,7 @@
 #include <memory>
 #include <mutex>
 
-#include "render_context_base.h"
+#include "render_context.h"
 #include "common/rs_rect.h"
 
 #ifdef ROSEN_IOS
@@ -47,7 +47,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RenderContextOhosGl : public RenderContextBase {
+class RenderContextOhosGl : public RenderContext {
 public:
     explicit RenderContextOhosGl() noexcept;
     ~RenderContextOhosGl();
@@ -58,17 +58,18 @@ public:
     void* CreateContext(bool share = false) override;
     void* CreateSurface(void* window) override;
     void DestroySurface(void* curSurface) override;
+    void DamageFrame(int32_t left, int32_t top, int32_t width, int32_t height) override;
     void DamageFrame(const std::vector<RectI> &rects) override;
     int32_t GetBufferAge() override;
     void SwapBuffers() override;
     void Destroy() override;
 
-    EGLContext GetEGLContext()
+    EGLContext GetEGLContext() override
     {
         return eglContext_;
     }
 
-    EGLDisplay GetEGLDisplay()
+    EGLDisplay GetEGLDisplay() override
     {
         return eglDisplay_;
     }

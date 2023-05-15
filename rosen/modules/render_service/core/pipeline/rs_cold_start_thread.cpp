@@ -17,7 +17,7 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkSurface.h"
 #include "include/core/SkImageInfo.h"
-#ifdef RS_ENABLE_GL
+#if defined(RS_ENABLE_GL)
 #include <EGL/egl.h>
 #include <GLES3/gl32.h>
 #if defined(NEW_SKIA)

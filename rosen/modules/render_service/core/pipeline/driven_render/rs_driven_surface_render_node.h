@@ -24,8 +24,13 @@
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
+#ifdef NEW_RENDER_CONTEXT
+#include "rs_surface.h"
+#include "render_context.h"
+#else
 #include "platform/drawing/rs_surface.h"
 #include "render_context/render_context.h"
+#endif
 #include "sync_fence.h"
 
 namespace OHOS {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,24 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_EXECTOR_H
-#define RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_EXECTOR_H
 
-#ifdef NEW_RENDER_CONTEXT
+#ifndef RENDER_SERVICE_BASE_RS_SURFACE_FACTORY_H
+#define RENDER_SERVICE_BASE_RS_SURFACE_FACTORY_H
+
+#include "render_context.h"
+
 #include "rs_surface.h"
-#else
-#include "platform/drawing/rs_surface.h"
-#endif
-#include "ui/rs_surface_node.h"
 
 namespace OHOS {
 namespace Rosen {
-
-class RSC_EXPORT RSSurfaceExtractor {
+class RSSurfaceFactory {
 public:
-    static std::shared_ptr<RSSurface> ExtractRSSurface(std::shared_ptr<RSSurfaceNode> node);
+    static std::shared_ptr<RSSurface> CreateRSSurface(const sptr<Surface>& surface);
 };
-} // namespace Rosen
-} // namespace OHOS
-
-#endif // RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_EXECTOR_H
+}
+}
+#endif

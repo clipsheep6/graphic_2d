@@ -16,7 +16,7 @@
 #ifndef RENDER_SERVICE_BASE_RENDER_CONTEXT_FACTORY_H
 #define RENDER_SERVICE_BASE_RENDER_CONTEXT_FACTORY_H
 
-#include "render_context_base.h"
+#include "render_context.h"
 
 #include <memory>
 
@@ -24,7 +24,7 @@ namespace OHOS {
 namespace Rosen {
 class RenderContextFactory {
 public:
-    static std::shared_ptr<RenderContextBase> CreateRenderContext();
+    static std::shared_ptr<RenderContext> CreateRenderContext();
 };
 }
 }

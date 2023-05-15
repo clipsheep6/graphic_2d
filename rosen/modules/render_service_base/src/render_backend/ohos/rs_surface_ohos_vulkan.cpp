@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "ohos/render_surface_ohos_vk.h"
+#include "ohos/rs_surface_ohos_vulkan.h"
 
 #include <vulkan_proc_table.h>
 #include <vulkan_native_surface_ohos.h>
@@ -24,7 +24,7 @@
 namespace OHOS {
 namespace Rosen {
 
-RenderSurfaceOhosVk::~RenderSurfaceOhosVk()
+RSSurfaceOhosVulkan::~RSSurfaceOhosVulkan()
 {
     frame_ = nullptr;
     DestoryNativeWindow(nativeWindow_);
@@ -32,12 +32,12 @@ RenderSurfaceOhosVk::~RenderSurfaceOhosVk()
     vulkanWindow_ = nullptr;
 }
 
-std::shared_ptr<RenderSurfaceFrame> RenderSurfaceOhosVk::RequestFrame(int32_t width, int32_t height,
+std::shared_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(int32_t width, int32_t height,
     uint64_t uiTimestamp, bool useAFBC)
 {
     if (nativeWindow_ == nullptr) {
         nativeWindow_ = CreateNativeWindowFromSurface(&producer_);
-        ROSEN_LOGD("RenderSurfaceOhosVk: create native window");
+        ROSEN_LOGD("RSSurfaceOhosVulkan: create native window");
     }
 
     NativeWindowHandleOpt(nativeWindow_, SET_FORMAT, pixelFormat_);
@@ -60,12 +60,12 @@ std::shared_ptr<RenderSurfaceFrame> RenderSurfaceOhosVk::RequestFrame(int32_t wi
     if (vulkanWindow_ == nullptr) {
         auto vulkanSurface = std::make_unique<vulkan::VulkanNativeSurfaceOHOS>(nativeWindow_);
         vulkanWindow_ = std::make_shared<vulkan::VulkanWindow>(std::move(vulkanSurface));
-        renderContext_->MakeCurrent((void*) vulkanWindow_.get());
-        ROSEN_LOGD("RenderSurfaceOhosVk: create vulkan window");
+        renderContext_->MakeCurrent(vulkanWindow_.get());
+        ROSEN_LOGD("RSSurfaceOhosVulkan: create vulkan window");
     }
 
     if (vulkanWindow_ == nullptr) {
-        ROSEN_LOGE("RenderSurfaceOhosVk: Invalid VulkanWindow, return");
+        ROSEN_LOGE("RSSurfaceOhosVulkan: Invalid VulkanWindow, return");
         return nullptr;
     }
 
@@ -75,11 +75,22 @@ std::shared_ptr<RenderSurfaceFrame> RenderSurfaceOhosVk::RequestFrame(int32_t wi
     return frame_;
 }
 
-void RenderSurfaceOhosVk::SetUiTimeStamp(uint64_t uiTimestamp)
+bool RSSurfaceOhosVulkan::FlushFrame(uint64_t uiTimestamp)
+{
+    if (renderContext_ == nullptr) {
+        ROSEN_LOGE("RSSurfaceOhosVulkan::FlushFrame, renderContext_ failed!");
+        return false;
+    }
+
+    renderContext_->SwapBuffers();
+    return true;
+}
+
+void RSSurfaceOhosVulkan::SetUiTimeStamp(uint64_t uiTimestamp)
 {
     if (nativeWindow_ == nullptr) {
         nativeWindow_ = CreateNativeWindowFromSurface(&producer_);
-        ROSEN_LOGD("RenderSurfaceOhosVk: create native window");
+        ROSEN_LOGD("RSSurfaceOhosVulkan: create native window");
     }
 
     struct timespec curTime = {0, 0};
@@ -89,29 +100,32 @@ void RenderSurfaceOhosVk::SetUiTimeStamp(uint64_t uiTimestamp)
     NativeWindowHandleOpt(nativeWindow_, SET_UI_TIMESTAMP, duration);
 }
 
-bool RenderSurfaceOhosVk::FlushFrame(uint64_t uiTimestamp)
+void RSSurfaceOhosVulkan::SetDamageRegion(int32_t left, int32_t top, int32_t width, int32_t height)
 {
-    if (renderContext_ == nullptr) {
-        ROSEN_LOGE("RenderSurfaceOhosVk::FlushFrame, renderContext_ failed!");
-        return false;
-    }
-
-    renderContext_->SwapBuffers();
-    return true;
+    renderContext_->DamageFrame(left, top, width, height);
 }
 
-void RenderSurfaceOhosVk::ClearBuffer()
+void RSSurfaceOhosVulkan::SetDamageRegion(const std::vector<RectI> &rects)
+{
+    renderContext_->DamageFrame(rects);
+}
+
+int32_t RSSurfaceOhosVulkan::GetBufferAge()
+{
+    return renderContext_->GetBufferAge();
+}
+
+void RSSurfaceOhosVulkan::ClearBuffer()
 {
     if (producer_ != nullptr) {
-        ROSEN_LOGD("RenderSurfaceOhosVk: Clear surface buffer!");
+        ROSEN_LOGD("RSSurfaceOhosVulkan: Clear surface buffer!");
         producer_->GoBackground();
     }
 }
 
-sk_sp<SkSurface> RenderSurfaceOhosVk::AcquireSurface()
+sk_sp<SkSurface> RSSurfaceOhosVulkan::AcquireSurface()
 {
-    frame_->skSurface_ = vulkanWindow_->AcquireSurface();
-    return frame_->skSurface_;
+    return vulkanWindow_->AcquireSurface();
 }
 
 } // namespace Rosen

@@ -182,13 +182,8 @@ ohos_source_set("rosen_ohos_sources") {
         graphic_2d_ext_configs.librender_service_base_platform_ohos_ext_sources
 
     if (ace_enable_gpu && is_emulator) {
-<<<<<<< HEAD
-      sources -= [ "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/render_context.cpp" ]
-
-=======
       sources -= [ "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/render_context.cpp", ]
       sources -= [ "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/render_context.mm", ]
->>>>>>> gpuPush
       sources +=
           graphic_2d_ext_configs.librender_service_base_2d_graphics_ext_sources
     }

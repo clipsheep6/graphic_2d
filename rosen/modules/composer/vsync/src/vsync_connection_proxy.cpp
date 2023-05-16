@@ -23,6 +23,15 @@ VSyncConnectionProxy::VSyncConnectionProxy(const sptr<IRemoteObject>& impl)
 {
 }
 
+VSyncConnectionProxy::~VSyncConnectionProxy()
+{
+    if (fd_ != INVALID_FD) {
+        // close fd here to avoid double close fd when vsync_receiver and vsync_distributor are in the same process.
+        close(fd_);
+        fd_ = INVALID_FD;
+    }
+}
+
 VsyncError VSyncConnectionProxy::RequestNextVSync()
 {
     MessageOption opt;
@@ -49,6 +58,7 @@ VsyncError VSyncConnectionProxy::GetReceiveFd(int32_t &fd)
         return VSYNC_ERROR_BINDER_ERROR;
     }
     fd = ret.ReadFileDescriptor();
+    fd_ = fd;
     return VSYNC_ERROR_OK;
 }
 

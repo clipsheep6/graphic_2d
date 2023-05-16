@@ -26,7 +26,7 @@ namespace Rosen {
 class VSyncConnectionProxy : public IRemoteProxy<IVSyncConnection> {
 public:
     explicit VSyncConnectionProxy(const sptr<IRemoteObject>& impl);
-    virtual ~VSyncConnectionProxy() = default;
+    virtual ~VSyncConnectionProxy();
 
     virtual VsyncError RequestNextVSync() override;
     virtual VsyncError GetReceiveFd(int32_t &fd) override;

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <cmath>
+#include "third_party/skia/include/effects/SkImageFilters.h"
 #include "property/rs_properties_painter.h"
 
 #include "rs_trace.h"
@@ -31,6 +33,7 @@
 
 #include "common/rs_obj_abs_geometry.h"
 #include "common/rs_vector2.h"
+#include "effect/shader_effect.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_root_render_node.h"
@@ -41,6 +44,7 @@
 #include "render/rs_path.h"
 #include "render/rs_shader.h"
 #include "render/rs_skia_filter.h"
+
 
 namespace OHOS {
 namespace Rosen {
@@ -291,18 +295,125 @@ void RSPropertiesPainter::DrawShadowInner(const RSProperties& properties, RSPain
     }
 }
 
+void RSPropertiesPainter::CalcBlurRect(const RSProperties& properties, const SkRect clipBounds, SkRect& blurRect, SkRect& gradientBlurRect)
+{
+    if (properties.GetGradientBlurPara().x_ == VERTICAL_GRADIENT_BLUR_MODE) {
+        int32_t fullBlurStartPos = properties.GetGradientBlurPara().y_ * clipBounds.height() / 100;
+        int32_t fullBlurEndPos = properties.GetGradientBlurPara().z_ * clipBounds.height() / 100;
+        int32_t gradientBlurSEndPos = properties.GetGradientBlurPara().w_ * clipBounds.height() / 100;
+        blurRect.setXYWH(0, std::min(fullBlurStartPos, fullBlurEndPos), clipBounds.width(), abs(fullBlurStartPos - fullBlurEndPos));
+        gradientBlurRect.setXYWH(0, std::min(gradientBlurSEndPos, fullBlurEndPos), clipBounds.width(), abs(gradientBlurSEndPos - fullBlurEndPos));
+
+    } else if (properties.GetGradientBlurPara().x_ == HORIZONTAL_GRADIENT_BLUR_MODE) {
+        int32_t fullBlurStartPos = properties.GetGradientBlurPara().y_ * clipBounds.width() / 100;
+        int32_t fullBlurEndPos = properties.GetGradientBlurPara().z_ * clipBounds.width() / 100;
+        int32_t gradientBlurSEndPos = properties.GetGradientBlurPara().w_ * clipBounds.width() / 100;
+        blurRect.setXYWH(std::min(fullBlurStartPos, fullBlurEndPos), 0, abs(fullBlurStartPos - fullBlurEndPos), clipBounds.height());
+        gradientBlurRect.setXYWH(std::min(gradientBlurSEndPos, fullBlurEndPos), 0, abs(gradientBlurSEndPos - fullBlurEndPos), clipBounds.height());
+    }
+}
+
+void RSPropertiesPainter::DrawGradientBlurFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas, std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect)
+{
+    ROSEN_LOGE("[PP TS]**DrawGradientBlurFilter**");
+    RS_TRACE_NAME("DrawGradientBlurFilter " + filter->GetDescription());
+    g_blurCnt++;
+    SkAutoCanvasRestore acr(&canvas, true);
+
+    if (rect != nullptr) {
+        canvas.clipRect((*rect), true);
+        ROSEN_LOGE("[PP TS]clipRect1");
+    } else if (properties.GetClipBounds() != nullptr) {
+        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
+        ROSEN_LOGE("[PP TS]clipRect2");
+    } else {
+        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
+        ROSEN_LOGE("[PP TS]clipRect3");
+    }
+
+    auto clipBounds = SkRect::Make(canvas.getDeviceClipBounds());
+    ROSEN_LOGE("[PP TS]DrawFilter:clipBounds left:%f, top:%f right:%f, bottom:%f", clipBounds.left(), clipBounds.top(), clipBounds.right(), clipBounds.bottom());
+
+    canvas.resetMatrix();
+    auto visibleRect = canvas.GetVisibleRect();
+    ROSEN_LOGE("[PP TS]DrawFilter:visibleRect left:%f, top:%f right:%f, bottom:%f", visibleRect.left(), visibleRect.top(), visibleRect.right(), visibleRect.bottom());
+
+    SkRect blurRect = SkRect::MakeEmpty();
+    SkRect gradientBlurRect = SkRect::MakeEmpty();
+    CalcBlurRect(properties, clipBounds, blurRect, gradientBlurRect);
+
+    // draw full blur part.
+    SkRect blurCropRect = SkRect::MakeEmpty();
+    if (visibleRect.intersect(clipBounds)) {
+        ROSEN_LOGE("[PP TS]DrawFilter:blur intersect");
+        if (visibleRect.intersect(blurRect)) {
+            blurCropRect = visibleRect;
+        }    
+    } else {
+        ROSEN_LOGE("[PP TS]DrawFilter:blur not intersect");
+        blurCropRect = blurRect;     
+    }
+
+    if (!blurCropRect.isEmpty()) {
+        auto paint = filter->GetPaint();
+        SkCanvas::SaveLayerRec slr(&blurCropRect, &paint, SkCanvas::kInitWithPrevious_SaveLayerFlag);
+        canvas.saveLayer(slr);
+        canvas.drawColor(0x00FFFFFF);
+        canvas.restore();
+    }
+
+    // draw gradient blur part.
+    SkRect gradientBlurCropRect = SkRect::MakeEmpty();
+    if (visibleRect.intersect(clipBounds)) {
+        ROSEN_LOGE("[PP TS]DrawFilter:gradient blur intersect");
+        if (visibleRect.intersect(gradientBlurRect)) {
+            gradientBlurCropRect = visibleRect;
+        }    
+    } else {
+        ROSEN_LOGE("[PP TS]DrawFilter:gradient blur not intersect");
+        gradientBlurCropRect = gradientBlurRect;     
+    }
+
+    auto gradientBlurPara = properties.GetGradientBlurPara();
+    if (gradientBlurPara.x_ == VERTICAL_GRADIENT_BLUR_MODE) {
+        if (gradientBlurPara.w_ >= gradientBlurPara.z_) {
+            std::vector<Drawing::ColorQuad> colors{Drawing::Color::COLOR_WHITE, Drawing::Color::COLOR_TRANSPARENT};
+            std::vector<Drawing::scalar> pos{0.0, 1.0};
+            //auto shader = Drawing::ShaderEffect::CreateLinearGradient({gradientBlurRect.left(), gradientBlurRect.top()},
+                                // {gradientBlurRect.right(), gradientBlurRect.bottom()}, colors, pos, Drawing::TileMode::CLAMP);
+            //auto compose = SkImageFilters::Blend(SkBlendMode::kSrcIn, shader, filter);
+            SkPaint paint;
+            //paint.setImageFilter(std::move(compose));
+            SkCanvas::SaveLayerRec slr(&gradientBlurCropRect, &paint, SkCanvas::kInitWithPrevious_SaveLayerFlag);
+            canvas.saveLayer(slr);
+            canvas.drawColor(0x00FFFFFF);
+            canvas.restore();
+        } else {
+
+        }
+    } else if (gradientBlurPara.x_ == HORIZONTAL_GRADIENT_BLUR_MODE) {
+        if (gradientBlurPara.w_ >= gradientBlurPara.z_) {
+        } else {
+        }
+    }
+}
+
 void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
     std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect, SkSurface* skSurface)
 {
+    ROSEN_LOGE("[PP TS]**DrawFilter**");
     RS_TRACE_NAME("DrawFilter " + filter->GetDescription());
     g_blurCnt++;
     SkAutoCanvasRestore acr(&canvas, true);
     if (rect != nullptr) {
         canvas.clipRect((*rect), true);
+        ROSEN_LOGE("[PP TS]clipRect1");
     } else if (properties.GetClipBounds() != nullptr) {
         canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
+        ROSEN_LOGE("[PP TS]clipRect2");
     } else {
         canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
+        ROSEN_LOGE("[PP TS]clipRect3");
     }
     auto paint = filter->GetPaint();
     if (skSurface == nullptr) {
@@ -312,23 +423,36 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         filter->PostProcess(canvas);
         return;
     }
-
+    ROSEN_LOGE("[PP TS]DrawFilter:canvas.getDeviceClipBounds1 left:%d, top:%d right:%d, bottom:%d", canvas.getDeviceClipBounds().left(), canvas.getDeviceClipBounds().top(),
+                                                         canvas.getDeviceClipBounds().right(), canvas.getDeviceClipBounds().bottom());
     // canvas draw by snapshot instead of SaveLayer, since the blur layer moves while using saveLayer
     auto imageSnapshot = skSurface->makeImageSnapshot(canvas.getDeviceClipBounds());
     if (imageSnapshot == nullptr) {
         ROSEN_LOGE("RSPropertiesPainter::DrawFilter image null");
         return;
     }
-
+    ROSEN_LOGE("[PP TS]DrawFilter:imageSnapshot width:%d, height:%d", imageSnapshot->width(), imageSnapshot->height());
     filter->PreProcess(imageSnapshot);
+
+    ROSEN_LOGE("[PP TS]DrawFilter:canvas.getDeviceClipBounds2left:%d, top:%d right:%d, bottom:%d", canvas.getDeviceClipBounds().left(), canvas.getDeviceClipBounds().top(),
+                                                         canvas.getDeviceClipBounds().right(), canvas.getDeviceClipBounds().bottom());
     auto clipBounds = SkRect::Make(canvas.getDeviceClipBounds());
+    
+    ROSEN_LOGE("[PP TS]DrawFilter:clipBounds left:%f, top:%f right:%f, bottom:%f", clipBounds.left(), clipBounds.top(), clipBounds.right(), clipBounds.bottom());
+
     canvas.resetMatrix();
     auto visibleRect = canvas.GetVisibleRect();
+    ROSEN_LOGE("[PP TS]DrawFilter:visibleRect left:%f, top:%f right:%f, bottom:%f", visibleRect.left(), visibleRect.top(), visibleRect.right(), visibleRect.bottom());
+    ROSEN_LOGE("[PP TS]DrawFilter:visibleRect offset left:%f, top:%f, right:%f, bottom:%f", 
+                                visibleRect.makeOffset(-clipBounds.left(), -clipBounds.top()).left(), visibleRect.makeOffset(-clipBounds.left(), -clipBounds.top()).top(),
+                                visibleRect.makeOffset(-clipBounds.left(), -clipBounds.top()).right(), visibleRect.makeOffset(-clipBounds.left(), -clipBounds.top()).bottom());
     if (visibleRect.intersect(clipBounds)) {
+        ROSEN_LOGE("[PP TS]DrawFilter:intersect");
         // the snapshot only contains the clip region, so we need to offset the src rect
         canvas.drawImageRect(
             imageSnapshot.get(), visibleRect.makeOffset(-clipBounds.left(), -clipBounds.top()), visibleRect, &paint);
     } else {
+        ROSEN_LOGE("[PP TS]DrawFilter:not intersect");
         // the snapshot only contains the clip region, so we need to offset the src rect
         canvas.drawImageRect(
             imageSnapshot.get(), clipBounds.makeOffset(-clipBounds.left(), -clipBounds.top()), clipBounds, &paint);

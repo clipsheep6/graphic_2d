@@ -156,6 +156,12 @@ void RSRenderEngine::RSSurfaceNodeCommonPostProcess(RSSurfaceRenderNode& node, R
         skRectPtr->setXYWH(0, 0, params.srcRect.width(), params.srcRect.height());
         RSPropertiesPainter::DrawFilter(property, canvas, filter, skRectPtr, canvas.GetSurface());
     }
+    auto gradientBlurFilter = std::static_pointer_cast<RSSkiaFilter>(property.GetGradientBlurFilter());
+    if (gradientBlurFilter != nullptr) {
+        RS_LOGE("[PP TS]------------------------RSRenderEngine");
+        // RSPropertiesPainter::DrawGradientBlurFilter(property, canvas, params.srcRect.width(), params.srcRect.height());
+    }
+
 }
 
 void RSRenderEngine::DrawSurfaceNode(RSPaintFilterCanvas& canvas, RSSurfaceRenderNode& node,

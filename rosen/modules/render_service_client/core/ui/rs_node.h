@@ -164,6 +164,8 @@ public:
 
     void SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter);
     void SetFilter(const std::shared_ptr<RSFilter>& filter);
+    void SetGradientBlurFilter(const std::shared_ptr<RSFilter>& filter);
+    void SetGradientBlurPara(const Vector4<int32_t>& gradientBlurPara);
     void SetCompositingFilter(const std::shared_ptr<RSFilter>& compositingFilter);
 
     void SetShadowColor(uint32_t colorValue);

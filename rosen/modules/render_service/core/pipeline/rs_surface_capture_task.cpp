@@ -415,6 +415,11 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
             skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
             RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
         }
+        auto gradientBlurFilter = std::static_pointer_cast<RSSkiaFilter>(property.GetGradientBlurFilter());
+        if (gradientBlurFilter != nullptr) {
+            RS_LOGE("[PP TS]------------------------RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni");
+            // RSPropertiesPainter::DrawGradientBlurFilter(property, *canvas_, property.GetBoundsWidth(), property.GetBoundsHeight());
+        }
     }
 
     if (isSelfDrawingSurface) {
@@ -492,6 +497,11 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
         auto skRectPtr = std::make_unique<SkRect>();
         skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
         RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
+    }
+    auto gradientBlurFilter = std::static_pointer_cast<RSSkiaFilter>(property.GetGradientBlurFilter());
+    if (gradientBlurFilter != nullptr) {
+        RS_LOGE("[PP TS]------------------------RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni");
+        // RSPropertiesPainter::DrawGradientBlurFilter(property, *canvas_, property.GetBoundsWidth(), property.GetBoundsHeight());
     }
     DrawWatermarkIfNeed(property.GetBoundsWidth(), property.GetBoundsHeight());
 }

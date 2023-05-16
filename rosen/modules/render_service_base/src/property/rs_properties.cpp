@@ -659,6 +659,12 @@ void RSProperties::SetFilter(std::shared_ptr<RSFilter> filter)
     SetDirty();
 }
 
+void RSProperties::SetGradientBlurFilter(std::shared_ptr<RSFilter> filter)
+{
+    gradientBlurFilter_ = filter;
+    SetDirty();
+}
+
 std::shared_ptr<RSFilter> RSProperties::GetBackgroundFilter() const
 {
     return backgroundFilter_;
@@ -667,6 +673,11 @@ std::shared_ptr<RSFilter> RSProperties::GetBackgroundFilter() const
 std::shared_ptr<RSFilter> RSProperties::GetFilter() const
 {
     return filter_;
+}
+
+std::shared_ptr<RSFilter> RSProperties::GetGradientBlurFilter() const
+{
+    return gradientBlurFilter_;
 }
 
 // shadow properties
@@ -935,6 +946,8 @@ void RSProperties::Reset()
     cornerRadius_ = nullptr;
     decoration_ = nullptr;
     filter_ = nullptr;
+    gradientBlurFilter_ = nullptr;
+    gradientBlurPara_ = nullptr;
     mask_ = nullptr;
     shadow_ = nullptr;
     sublayerTransform_ = nullptr;
@@ -1065,6 +1078,21 @@ void RSProperties::SetLightUpEffect(float lightUpEffectDegree)
 float RSProperties::GetLightUpEffect() const
 {
     return lightUpEffectDegree_;
+}
+
+
+void RSProperties::SetGradientBlurPara(Vector4<int32_t> gradientBlurPara) //??对象赋值给指针
+{
+    if (!gradientBlurPara_) {
+        gradientBlurPara_ = std::make_unique<Vector4<int32_t>>();
+    }
+    gradientBlurPara_->SetValues(gradientBlurPara.x_, gradientBlurPara.y_, gradientBlurPara.z_, gradientBlurPara.w_);
+    SetDirty();
+}
+
+Vector4<int32_t> RSProperties::GetGradientBlurPara() const
+{
+    return gradientBlurPara_ ? *gradientBlurPara_ : Vector4<int32_t>(0);
 }
 
 bool RSProperties::IsLightUpEffectValid() const

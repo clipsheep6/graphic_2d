@@ -183,6 +183,7 @@ ohos_source_set("render_service_base_src") {
   }
 
   include_dirs = [
+    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
     "//foundation/graphic/graphic_2d/utils/log",
     "//third_party/flutter/skia/src",

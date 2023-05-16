@@ -772,6 +772,17 @@ void RSNode::SetFilter(const std::shared_ptr<RSFilter>& filter)
     SetProperty<RSFilterModifier, RSAnimatableProperty<std::shared_ptr<RSFilter>>>(RSModifierType::FILTER, filter);
 }
 
+void RSNode::SetGradientBlurFilter(const std::shared_ptr<RSFilter>& filter)
+{
+    SetProperty<RSGradientBlurFilterModifier, RSAnimatableProperty<std::shared_ptr<RSFilter>>>(RSModifierType::GRADIENT_BLUR_FILTER, filter);
+}
+
+void RSNode::SetGradientBlurPara(const Vector4<int32_t>& gradientBlurPara)
+{
+    ROSEN_LOGE("[PP TS]SetGradientBlurPara: %d, %d, %d, %d",gradientBlurPara.x_, gradientBlurPara.y_, gradientBlurPara.z_, gradientBlurPara.w_);
+    SetProperty<RSGradientBlurParaModifier, RSProperty<Vector4<int32_t>>>(RSModifierType::GRADIENT_BLUR_PARA, gradientBlurPara);
+}
+
 void RSNode::SetCompositingFilter(const std::shared_ptr<RSFilter>& compositingFilter) {}
 
 void RSNode::SetShadowColor(uint32_t colorValue)

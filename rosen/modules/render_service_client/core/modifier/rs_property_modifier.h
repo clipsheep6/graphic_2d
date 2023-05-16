@@ -311,6 +311,24 @@ protected:
     std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
 };
 
+class RSC_EXPORT RSGradientBlurFilterModifier : public RSForegroundModifier {
+public:
+    explicit RSGradientBlurFilterModifier(const std::shared_ptr<RSPropertyBase>& property);
+    virtual ~RSGradientBlurFilterModifier() = default;
+protected:
+    RSModifierType GetModifierType() const override;
+    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
+};
+
+class RSC_EXPORT RSGradientBlurParaModifier : public RSForegroundModifier {
+public:
+    explicit RSGradientBlurParaModifier(const std::shared_ptr<RSPropertyBase>& property);
+    virtual ~RSGradientBlurParaModifier() = default;
+protected:
+    RSModifierType GetModifierType() const override;
+    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
+};
+
 class RSC_EXPORT RSBackgroundFilterModifier : public RSBackgroundModifier {
 public:
     explicit RSBackgroundFilterModifier(const std::shared_ptr<RSPropertyBase>& property);

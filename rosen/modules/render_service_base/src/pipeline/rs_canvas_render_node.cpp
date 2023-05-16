@@ -135,6 +135,11 @@ void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas
     if (composedFilter != nullptr) {
         RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, composedFilter, nullptr, canvas.GetSurface());
     }
+    auto gradientBlurFilter = std::static_pointer_cast<RSSkiaFilter>(GetRenderProperties().GetGradientBlurFilter());
+    if (gradientBlurFilter != nullptr) {
+        RS_LOGE("[PP TS]------------------------RSCanvasRenderNode");
+        RSPropertiesPainter::DrawGradientBlurFilter(GetRenderProperties(), canvas, gradientBlurFilter, nullptr);
+    }
     RSPropertiesPainter::DrawBorder(GetRenderProperties(), canvas);
     ApplyDrawCmdModifier(context, RSModifierType::OVERLAY_STYLE);
     RSPropertiesPainter::DrawForegroundColor(GetRenderProperties(), canvas);

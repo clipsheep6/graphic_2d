@@ -152,8 +152,10 @@ public:
     // filter properties
     void SetBackgroundFilter(std::shared_ptr<RSFilter> backgroundFilter);
     void SetFilter(std::shared_ptr<RSFilter> filter);
+    void SetGradientBlurFilter(std::shared_ptr<RSFilter> filter);
     std::shared_ptr<RSFilter> GetBackgroundFilter() const;
     std::shared_ptr<RSFilter> GetFilter() const;
+    std::shared_ptr<RSFilter> GetGradientBlurFilter() const;
     bool NeedFilter() const;
 
     // shadow properties
@@ -228,6 +230,9 @@ public:
     void SetLightUpEffect(float lightUpEffectDegree);
     float GetLightUpEffect() const;
     bool IsLightUpEffectValid() const;
+
+    void SetGradientBlurPara(Vector4<int32_t> gradientBlurPara);
+    Vector4<int32_t> GetGradientBlurPara() const;
 private:
     void Reset();
     void SetDirty();
@@ -268,12 +273,13 @@ private:
     std::unique_ptr<Vector4f> cornerRadius_ = nullptr;
     std::unique_ptr<Decoration> decoration_ = nullptr;
     std::shared_ptr<RSFilter> filter_ = nullptr;
+    std::shared_ptr<RSFilter> gradientBlurFilter_ = nullptr;
     std::shared_ptr<RSMask> mask_ = nullptr;
     std::unique_ptr<RSShadow> shadow_ = nullptr;
     std::unique_ptr<Matrix3f> sublayerTransform_ = nullptr;
     float spherizeDegree_ = 0.f;
     float lightUpEffectDegree_ = 1.0f;
-
+    std::shared_ptr<Vector4<int32_t>> gradientBlurPara_ = nullptr;
     std::weak_ptr<RSRenderNode> backref_;
 
     std::unique_ptr<Vector4f> pixelStretch_ = nullptr;

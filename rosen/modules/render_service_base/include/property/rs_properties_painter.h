@@ -25,6 +25,23 @@ namespace Rosen {
 class RSSkiaFilter;
 class RSPaintFilterCanvas;
 
+enum GradientBlurMode {
+    INVALID_GRADIENT_BLUR_MODE = 0,
+    VERTICAL_GRADIENT_BLUR_MODE = 1,
+    HORIZONTAL_GRADIENT_BLUR_MODE = 2,
+};
+
+class GradientBlurRectsInfo {
+public:
+    int32_t fullBlurStartPos = 0;
+    int32_t fullBlurEndPos = 0;
+    int32_t gradientBlurEndPos = 0;
+    int32_t moreLineFiltersNum = 0;
+    int32_t lessLineFiltersNum = 0;
+    int32_t moreLineNum = 0;
+    int32_t lessLineNum = 0;
+};
+
 class RSB_EXPORT RSPropertiesPainter {
 public:
     static void Clip(SkCanvas& canvas, RectF rect);
@@ -34,10 +51,15 @@ public:
     static void DrawBorder(const RSProperties& properties, SkCanvas& canvas);
     static void DrawFrame(const RSProperties& properties, RSPaintFilterCanvas& canvas, DrawCmdListPtr& drawCmdList);
     static void GetShadowDirtyRect(RectI& dirtyShadow, const RSProperties& properties, const RRect* rrect = nullptr);
+    static void CalcBlurRect(const RSProperties& properties, const SkRect clipBounds, SkRect& blurRect, SkRect& gradientBlurRect);
+    static void DrawGradientBlurFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
+                                         std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect);
     static void DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect = nullptr);
     static void DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
         std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect = nullptr,
         SkSurface* sKSurface = nullptr);
+    static void DrawImageFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
+        std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect, sk_sp<SkImage> imageSnapshot);
     static void DrawForegroundColor(const RSProperties& properties, SkCanvas& canvas);
     static void DrawMask(const RSProperties& properties, SkCanvas& canvas);
     static void DrawMask(const RSProperties& properties, SkCanvas& canvas, SkRect maskBounds);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,12 +16,15 @@
 #include "render_context_eagl.h"
 
 #include <sstream>
+
 #import <UIKit/UIKit.h>
+
+#include "third_party/skia/include/gpu/gl/GrGLAssembleInterface.h"
+#include "third_party/skia/include/gpu/GrContextOptions.h"
+
 #include "rs_trace.h"
 #include "memory/rs_tag_tracker.h"
 #include "platform/common/rs_log.h"
-#include "third_party/skia/include/gpu/gl/GrGLAssembleInterface.h"
-#include "third_party/skia/include/gpu/GrContextOptions.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -45,15 +48,14 @@ RenderContextEAGL::RenderContextEAGL()
     if (@available(iOS 10, *)) {
         UIDisplayGamut displayGamut = [UIScreen mainScreen].traitCollection.displayGamut;
         switch (displayGamut) {
-        case UIDisplayGamutP3:
-            color_space_ = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDCIP3);
-            break;
-        default:
-            break;
+            case UIDisplayGamutP3:
+                color_space_ = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDCIP3);
+                break;
+            default:
+                break;
         }
     }
     InitializeEglContext();
-
 }
 
 RenderContextEAGL::~RenderContextEAGL()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +15,6 @@
 
 #ifndef RENDER_CONTEXT_EAGL_H
 #define RENDER_CONTEXT_EAGL_H
-
 
 #include <memory>
 #include <mutex>
@@ -33,6 +32,7 @@
 #include "include/gpu/GrBackendSurface.h"
 #include "include/gpu/GrContext.h"
 #include "include/gpu/gl/GrGLInterface.h"
+
 #include "render_context/render_context.h"
 #include "render_context_egl_defines.h"
 #ifndef ROSEN_CROSS_PLATFORM

@@ -32,5 +32,10 @@ RenderContext* RenderContextFactory::CreateEngine()
 
     return context_;
 }
+
+RenderContext* RenderContextFactory::CreateNewEngine()
+{
+    return new RenderContextEGL();
+}
 } // namespace Rosen
 } // namespace OHOS

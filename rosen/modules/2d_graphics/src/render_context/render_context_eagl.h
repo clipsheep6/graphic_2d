@@ -45,7 +45,7 @@ class RenderContextEAGL : public RenderContext {
 public:
     RenderContextEAGL();
     ~RenderContextEAGL();
-    
+
     sk_sp<SkSurface> AcquireSurface(int width, int height) override;
     void MakeCurrent(void* surface = nullptr, void* context = EGL_NO_CONTEXT) override;
     void InitializeEglContext() override;
@@ -59,10 +59,10 @@ public:
 
     bool ResourceMakeCurrent();
     void SwapBuffers(EGLSurface surface = nullptr) const override;
-    
+
     bool UpdateStorageSizeIfNecessary();
     sk_sp<SkColorSpace> ColorSpace() const { return color_space_; }
-    
+
 private:
     sk_sp<SkSurface> skSurface_ = nullptr;
     sk_sp<GrContext> grContext_ = nullptr;

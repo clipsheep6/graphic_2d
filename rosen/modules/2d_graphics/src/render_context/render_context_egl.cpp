@@ -274,7 +274,7 @@ void RenderContextEGL::SetColorSpace(ColorGamut colorSpace)
     colorSpace_ = colorSpace;
 }
 
-bool RenderContextEGL::SetUpGrContext() override
+bool RenderContextEGL::SetUpGrContext()
 {
     if (grContext_ != nullptr) {
         LOGD("grContext has already created!!");
@@ -315,7 +315,7 @@ bool RenderContextEGL::SetUpGrContext() override
     return true;
 }
 
-sk_sp<SkSurface> RenderContextEGL::AcquireSurface(int width, int height) override
+sk_sp<SkSurface> RenderContextEGL::AcquireSurface(int width, int height)
 {
     if (!SetUpGrContext()) {
         LOGE("GrContext is not ready!!!");
@@ -369,7 +369,7 @@ sk_sp<SkSurface> RenderContextEGL::AcquireSurface(int width, int height) overrid
     return skSurface_;
 }
 
-void RenderContextEGL::RenderFrame() override
+void RenderContextEGL::RenderFrame()
 {
     RS_TRACE_FUNC();
     // flush commands

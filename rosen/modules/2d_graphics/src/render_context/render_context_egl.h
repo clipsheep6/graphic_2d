@@ -53,10 +53,17 @@ public:
 
     void InitializeEglContext() override;
 
+#if defined(NEW_SKIA)
+    GrDirectContext* GetGrContext() const override
+    {
+        return grContext_.get();
+    }
+#else
     GrContext* GetGrContext() const override
     {
         return grContext_.get();
     }
+#endif
 
     sk_sp<SkSurface> GetSurface() const override
     {
@@ -74,7 +81,7 @@ public:
     EGLint QueryEglBufferAge() override;
     void DamageFrame(int32_t left, int32_t top, int32_t width, int32_t height);
     void DamageFrame(const std::vector<RectI> &rects);
-    void ClearRedundantResources();
+    void ClearRedundantResources() override;
     void CreatePbufferSurface();
     void ShareMakeCurrent(EGLContext shareContext);
     void ShareMakeCurrentNoSurface(EGLContext shareContext);
@@ -112,17 +119,17 @@ public:
         cacheDir_ = filePath;
     }
 
-    void SetUniRenderMode(bool isUni)
+    void SetUniRenderMode(bool isUni) override
     {
         isUniRenderMode_ = isUni;
     }
 #ifdef RS_ENABLE_GL
-    std::string GetShaderCacheSize() const
+    std::string GetShaderCacheSize() const override
     {
         return mHandler_->QuerryShader();
     }
 
-    std::string CleanAllShaderCache() const
+    std::string CleanAllShaderCache() const override
     {
         return mHandler_->ClearShader();
     }
@@ -130,7 +137,11 @@ public:
     EGLContext CreateShareContext();
 
 private:
+#if defined(NEW_SKIA)
+    sk_sp<GrDirectContext> grContext_;
+#else
     sk_sp<GrContext> grContext_;
+#endif
     sk_sp<SkSurface> skSurface_;
 
     EGLNativeWindowType nativeWindow_;

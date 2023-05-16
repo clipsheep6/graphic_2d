@@ -88,7 +88,7 @@ void RenderContextEAGL::InitializeEglContext()
     if (valid_) {
         return;
     }
-    
+
     bool isContentCurrent = [EAGLContext setCurrentContext:context_];
     if (!isContentCurrent){
         ROSEN_LOGE("Failed to set current OpenGL context");
@@ -135,7 +135,7 @@ bool RenderContextEAGL::UpdateStorageSizeIfNecessary()
 void RenderContextEAGL::MakeCurrent(void* surface, void* context)
 {
     [EAGLContext setCurrentContext:context_];
-    UpdateStorageSizeIfNecessary();    
+    UpdateStorageSizeIfNecessary();
 }
 
 bool RenderContextEAGL::ResourceMakeCurrent() 

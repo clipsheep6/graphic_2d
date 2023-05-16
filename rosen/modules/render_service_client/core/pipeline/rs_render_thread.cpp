@@ -209,7 +209,7 @@ void RSRenderThread::CreateAndInitRenderContextIfNeed()
 #else
 #if defined(IOS_PLATFORM) || (defined(RS_ENABLE_GL) && !defined(ROSEN_PREVIEW))
     if (renderContext_ == nullptr) {
-        renderContext_ = RenderContextFactory::GetInstance().CreateEngine();;
+        renderContext_ = RenderContextFactory::GetInstance().CreateEngine();
         ROSEN_LOGD("Create RenderContext");
         RS_TRACE_NAME("InitializeEglContext");
 #ifdef ROSEN_OHOS

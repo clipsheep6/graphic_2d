@@ -2092,6 +2092,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     canvas_->concat(geoPtr->GetMatrix());
     if (node.GetCacheType() == CacheType::SPHERIZE) {
+        UpdateCacheCanvasNodeMap(node);
         DrawChildRenderNode(node);
     } else {
         node.ProcessRenderBeforeChildren(*canvas_);
@@ -2149,6 +2150,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
                 node.NotifyUIBufferAvailable();
             }
             if (!needDrawCachedImage || node.GetCachedImage() == nullptr) {
+                UpdateCacheCanvasNodeMap(node);
                 DrawChildRenderNode(node);
             } else {
                 RS_LOGD("RSUniRenderVisitor cold start thread not idle, don't stop it, still use cached image");
@@ -2224,6 +2226,79 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     ProcessCanvasRenderNode(node);
 }
 
+// Control subtree cache
+void RSUniRenderVisitor::UpdateCacheCanvasNodeMap(RSCanvasRenderNode& node)
+{
+    // The node goes down the tree to clear the cache.
+    if (!node.IsOnTheTree() && cacheCanvasNodeMap_.count(node.GetId())) {
+        node.SetCacheType(CacheType::NONE);
+        node.ClearCacheSurface();
+        cacheCanvasNodeMap_.erase(node.GetId());
+        return;
+    }
+
+    RSDrawingCacheType drawingCacheType = node.GetDrawingCacheType();
+    bool isDrawingCacheChanged = node.GetDrawingCacheChanged();
+    
+    // Node cannot have cache.
+    if (drawingCacheType == RSDrawingCacheType::DISABLED) {
+        if (cacheCanvasNodeMap_.count(node.GetId())) {
+            node.SetCacheType(CacheType::NONE);
+            node.ClearCacheSurface();
+            cacheCanvasNodeMap_.erase(node.GetId());
+        }
+    }
+
+    if (drawingCacheType == RSDrawingCacheType::FORCED_CACHE ||
+        drawingCacheType == RSDrawingCacheType::TARGETED_CACHE) {
+        // Generate the node cache for the first time.
+        if (!cacheCanvasNodeMap_.count(node.GetId())) {
+            node.SetCacheType(CacheType::CONTENT);
+            node.InitCacheSurface();
+            if (UpdateCacheSurface(node)) {
+                cacheCanvasNodeMap_[node.GetId()] = 0;
+            }
+            return;
+        }
+    }
+
+    int updateTimes = 0;
+    if (drawingCacheType == RSDrawingCacheType::FORCED_CACHE) {
+        // Regardless of the number of consecutive refreshes,
+        // The current cache is forced to be updated.
+        if (isDrawingCacheChanged) {
+            updateTimes = cacheCanvasNodeMap_[node.GetId()] + 1;
+            node.SetCacheType(CacheType::CONTENT);
+            if (UpdateCacheSurface(node)) {
+                cacheCanvasNodeMap_[node.GetId()] = updateTimes;
+            }
+            return;
+        }
+
+        // The cache is not refreshed continuously.
+        cacheCanvasNodeMap_[node.GetId()] = 0;
+    }
+
+    if (drawingCacheType == RSDrawingCacheType::TARGETED_CACHE) {
+        // If the number of consecutive refreshes exceeds 5 times, 
+        // the cache is cleaned,
+        // otherwise the cache is updated.
+        if (isDrawingCacheChanged) {
+            updateTimes = cacheCanvasNodeMap_[node.GetId()] + 1;
+            if (updateTimes >= 5) {
+                node.SetCacheType(CacheType::NONE);
+                ClearCacheSurface(node);
+                cacheCanvasNodeMap_.erase(node.GetId());
+                return;
+            }
+            node.SetCacheType(CacheType::CONTENT);
+            UpdateCacheSurface(node);
+            cacheCanvasNodeMap_[node.GetId()] = updateTimes;
+            return;
+        }
+    }
+}
+
 void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
 {
     processedCanvasNodeInCurrentSurface_++;
@@ -2258,6 +2333,7 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
 #endif
     // in case preparation'update is skipped
     node.GetMutableRenderProperties().CheckEmptyBounds();
+    UpdateCacheCanvasNodeMap(node);
     DrawChildRenderNode(node);
 }
 

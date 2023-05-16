@@ -38,10 +38,9 @@ void RegionTest::TearDown() {}
 
 /**
  * @tc.name: CreateRegion001
- * @tc.desc:
+ * @tc.desc: test for creating Regin.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, CreateRegion001, TestSize.Level1)
 {
@@ -51,10 +50,9 @@ HWTEST_F(RegionTest, CreateRegion001, TestSize.Level1)
 
 /**
  * @tc.name: SetRectTest001
- * @tc.desc:
+ * @tc.desc: test for constructs a rectangular Region matching the bounds of rect.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, SetRectTest001, TestSize.Level1)
 {
@@ -66,10 +64,9 @@ HWTEST_F(RegionTest, SetRectTest001, TestSize.Level1)
 
 /**
  * @tc.name: SetRectTest002
- * @tc.desc:
+ * @tc.desc: test for constructs a rectangular Region matching the bounds of rect.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, SetRectTest002, TestSize.Level1)
 {
@@ -81,10 +78,9 @@ HWTEST_F(RegionTest, SetRectTest002, TestSize.Level1)
 
 /**
  * @tc.name: SetPathTest001
- * @tc.desc:
+ * @tc.desc: test for constructs Region to match outline of path within clip.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, SetPathTest001, TestSize.Level1)
 {
@@ -97,10 +93,9 @@ HWTEST_F(RegionTest, SetPathTest001, TestSize.Level1)
 
 /**
  * @tc.name: SetPathTest002
- * @tc.desc:
+ * @tc.desc: test for constructs Region to match outline of path within clip.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, SetPathTest002, TestSize.Level1)
 {
@@ -114,10 +109,9 @@ HWTEST_F(RegionTest, SetPathTest002, TestSize.Level1)
 
 /**
  * @tc.name: IsIntersectsTest001
- * @tc.desc:
+ * @tc.desc: test for IsIntersects function
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, IsIntersectsTest001, TestSize.Level1)
 {
@@ -129,10 +123,9 @@ HWTEST_F(RegionTest, IsIntersectsTest001, TestSize.Level1)
 
 /**
  * @tc.name: IsIntersectsTest002
- * @tc.desc:
+ * @tc.desc: test for IsIntersects function
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, IsIntersectsTest002, TestSize.Level1)
 {
@@ -147,10 +140,9 @@ HWTEST_F(RegionTest, IsIntersectsTest002, TestSize.Level1)
 
 /**
  * @tc.name: OpTest001
- * @tc.desc:
+ * @tc.desc: test for OP function with DIFFERENCE option
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, OpTest001, TestSize.Level1)
 {
@@ -162,10 +154,9 @@ HWTEST_F(RegionTest, OpTest001, TestSize.Level1)
 
 /**
  * @tc.name: OpTest002
- * @tc.desc:
+ * @tc.desc: test for OP function with DIFFERENCE option
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, OpTest002, TestSize.Level1)
 {
@@ -181,10 +172,9 @@ HWTEST_F(RegionTest, OpTest002, TestSize.Level1)
 
 /**
  * @tc.name: OpTest003
- * @tc.desc:
+ * @tc.desc: test for OP function with INTERSECT option
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, OpTest003, TestSize.Level1)
 {
@@ -200,10 +190,9 @@ HWTEST_F(RegionTest, OpTest003, TestSize.Level1)
 
 /**
  * @tc.name: OpTest004
- * @tc.desc:
+ * @tc.desc: test for OP function with UNION option
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, OpTest004, TestSize.Level1)
 {
@@ -219,10 +208,9 @@ HWTEST_F(RegionTest, OpTest004, TestSize.Level1)
 
 /**
  * @tc.name: OpTest005
- * @tc.desc:
+ * @tc.desc: test for OP function with XOR option
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, OpTest005, TestSize.Level1)
 {
@@ -238,10 +226,9 @@ HWTEST_F(RegionTest, OpTest005, TestSize.Level1)
 
 /**
  * @tc.name: OpTest006
- * @tc.desc:
+ * @tc.desc: test for OP function with REVERSE_DIFFERENCE option
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, OpTest006, TestSize.Level1)
 {
@@ -257,10 +244,9 @@ HWTEST_F(RegionTest, OpTest006, TestSize.Level1)
 
 /**
  * @tc.name: OpTest007
- * @tc.desc:
+ * @tc.desc: test for OP function with REPLACE option
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZG1S
  */
 HWTEST_F(RegionTest, OpTest007, TestSize.Level1)
 {

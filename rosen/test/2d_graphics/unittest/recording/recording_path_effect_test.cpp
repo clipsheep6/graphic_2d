@@ -41,10 +41,9 @@ void RecordingPathEffectTest::TearDown() {}
 
 /**
  * @tc.name: CreateDashPathEffect001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateDashPathEffect function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72IPM
  */
 HWTEST_F(RecordingPathEffectTest, CreateDashPathEffect001, TestSize.Level1)
 {
@@ -63,10 +62,9 @@ HWTEST_F(RecordingPathEffectTest, CreateDashPathEffect001, TestSize.Level1)
 
 /**
  * @tc.name: CreatePathDashEffect001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreatePathDashEffect function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72IPM
  */
 HWTEST_F(RecordingPathEffectTest, CreatePathDashEffect001, TestSize.Level1)
 {
@@ -81,10 +79,9 @@ HWTEST_F(RecordingPathEffectTest, CreatePathDashEffect001, TestSize.Level1)
 
 /**
  * @tc.name: CreatePathDashEffect002
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreatePathDashEffect function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72IPM
  */
 HWTEST_F(RecordingPathEffectTest, CreatePathDashEffect002, TestSize.Level1)
 {
@@ -100,10 +97,9 @@ HWTEST_F(RecordingPathEffectTest, CreatePathDashEffect002, TestSize.Level1)
 
 /**
  * @tc.name: CreateCornerPathEffect001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateCornerPathEffect function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72IPM
  */
 HWTEST_F(RecordingPathEffectTest, CreateCornerPathEffect001, TestSize.Level1)
 {
@@ -117,10 +113,9 @@ HWTEST_F(RecordingPathEffectTest, CreateCornerPathEffect001, TestSize.Level1)
 
 /**
  * @tc.name: CreateSumPathEffect001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateSumPathEffect function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72IPM
  */
 HWTEST_F(RecordingPathEffectTest, CreateSumPathEffect001, TestSize.Level1)
 {
@@ -136,10 +131,9 @@ HWTEST_F(RecordingPathEffectTest, CreateSumPathEffect001, TestSize.Level1)
 
 /**
  * @tc.name: CreateComposePathEffect001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateComposePathEffect function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72IPM
  */
 HWTEST_F(RecordingPathEffectTest, CreateComposePathEffect001, TestSize.Level1)
 {

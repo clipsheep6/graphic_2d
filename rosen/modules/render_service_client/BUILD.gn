@@ -105,17 +105,15 @@ template("render_service_client_source_set") {
       sources -= graphic_2d_ext_configs.librender_service_client_ext_sources_del
     }
 
-    if (current_os == "ios" && ace_enable_gpu) {
-      sources += [
-        "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/render_context.mm",
-        "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/render_context_eagl.mm",
-      ]
-    } else {
+    if (rosen_is_ios) {
+      if (ace_enable_gpu) {
+        sources += [
+          "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/render_context.mm",
+          "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/render_context_eagl.mm",
+        ]
+      }
+    } else if (!rosen_preview) {
       sources += [ "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/render_context.cpp" ]
-    }
-
-    if (current_os == "ios" && !ace_enable_gpu) {
-      sources -= [ "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/render_context.cpp" ]
     }
 
     cflags = [

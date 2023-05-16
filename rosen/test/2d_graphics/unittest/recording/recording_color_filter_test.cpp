@@ -38,10 +38,9 @@ void RecordingColorFilterTest::TearDown() {}
 
 /**
  * @tc.name: CreateBlendModeColorFilter001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateBlendModeColorFilter function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingColorFilterTest, CreateBlendModeColorFilter001, TestSize.Level1)
 {
@@ -56,10 +55,9 @@ HWTEST_F(RecordingColorFilterTest, CreateBlendModeColorFilter001, TestSize.Level
 
 /**
  * @tc.name: CreateBlendModeColorFilter002
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateBlendModeColorFilter function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingColorFilterTest, CreateBlendModeColorFilter002, TestSize.Level1)
 {
@@ -74,10 +72,9 @@ HWTEST_F(RecordingColorFilterTest, CreateBlendModeColorFilter002, TestSize.Level
 
 /**
  * @tc.name: CreateComposeColorFilter001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateComposeColorFilter function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingColorFilterTest, CreateComposeColorFilter001, TestSize.Level1)
 {
@@ -94,10 +91,9 @@ HWTEST_F(RecordingColorFilterTest, CreateComposeColorFilter001, TestSize.Level1)
 
 /**
  * @tc.name: CreateComposeColorFilter002
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateComposeColorFilter function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingColorFilterTest, CreateComposeColorFilter002, TestSize.Level1)
 {
@@ -114,10 +110,9 @@ HWTEST_F(RecordingColorFilterTest, CreateComposeColorFilter002, TestSize.Level1)
 
 /**
  * @tc.name: CreateMatrixColorFilter001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateMatrixColorFilter function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingColorFilterTest, CreateMatrixColorFilter001, TestSize.Level1)
 {
@@ -132,10 +127,9 @@ HWTEST_F(RecordingColorFilterTest, CreateMatrixColorFilter001, TestSize.Level1)
 
 /**
  * @tc.name: CreateLinearToSrgbGamma001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateLinearToSrgbGamma function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingColorFilterTest, CreateLinearToSrgbGamma001, TestSize.Level1)
 {
@@ -149,10 +143,9 @@ HWTEST_F(RecordingColorFilterTest, CreateLinearToSrgbGamma001, TestSize.Level1)
 
 /**
  * @tc.name: CreateSrgbGammaToLinear001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateSrgbGammaToLinear function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingColorFilterTest, CreateSrgbGammaToLinear001, TestSize.Level1)
 {
@@ -166,10 +159,9 @@ HWTEST_F(RecordingColorFilterTest, CreateSrgbGammaToLinear001, TestSize.Level1)
 
 /**
  * @tc.name: CreateLumaColorFilter001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateLumaColorFilter function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingColorFilterTest, CreateLumaColorFilter001, TestSize.Level1)
 {
@@ -183,10 +175,9 @@ HWTEST_F(RecordingColorFilterTest, CreateLumaColorFilter001, TestSize.Level1)
 
 /**
  * @tc.name: Compose001
- * @tc.desc:
+ * @tc.desc: Test the playback of the Compose function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingColorFilterTest, Compose001, TestSize.Level1)
 {

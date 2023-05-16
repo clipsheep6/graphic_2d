@@ -40,10 +40,9 @@ void Matrix44Test::TearDown() {}
 
 /**
  * @tc.name: CreateMatrix44Test001
- * @tc.desc:
+ * @tc.desc: test for creating Matrix44.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZJZ7
  */
 HWTEST_F(Matrix44Test, CreateMatrix44Test001, TestSize.Level1)
 {
@@ -53,10 +52,9 @@ HWTEST_F(Matrix44Test, CreateMatrix44Test001, TestSize.Level1)
 
 /**
  * @tc.name: Matrix44TranslateTest001
- * @tc.desc:
+ * @tc.desc: test seting Matrix44 to translate by (dx, dy, dz).
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZJZ7
  */
 HWTEST_F(Matrix44Test, Matrix44TranslateTest001, TestSize.Level1)
 {
@@ -67,10 +65,9 @@ HWTEST_F(Matrix44Test, Matrix44TranslateTest001, TestSize.Level1)
 
 /**
  * @tc.name: Matrix44TranslateTest002
- * @tc.desc:
+ * @tc.desc: test seting Matrix44 to translate by (dx, dy, dz).
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZJZ7
  */
 HWTEST_F(Matrix44Test, Matrix44TranslateTest002, TestSize.Level1)
 {
@@ -81,10 +78,9 @@ HWTEST_F(Matrix44Test, Matrix44TranslateTest002, TestSize.Level1)
 
 /**
  * @tc.name: Matrix44ScaleTest001
- * @tc.desc:
+ * @tc.desc: test for seting Matrix44 to scale by sx, sy and sz about pivot point at (0, 0, 0).
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZJZ7
  */
 HWTEST_F(Matrix44Test, Matrix44ScaleTest001, TestSize.Level1)
 {
@@ -95,10 +91,9 @@ HWTEST_F(Matrix44Test, Matrix44ScaleTest001, TestSize.Level1)
 
 /**
  * @tc.name: Matrix44ScaleTest002
- * @tc.desc:
+ * @tc.desc: test for seting Matrix44 to scale by sx, sy and sz about pivot point at (0, 0, 0).
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZJZ7
  */
 HWTEST_F(Matrix44Test, Matrix44ScaleTest002, TestSize.Level1)
 {
@@ -109,10 +104,9 @@ HWTEST_F(Matrix44Test, Matrix44ScaleTest002, TestSize.Level1)
 
 /**
  * @tc.name: Matrix44SetMatrix44Test001
- * @tc.desc:
+ * @tc.desc: test for setong Matrix44 to sixteen values in buffer.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZJZ7
  */
 HWTEST_F(Matrix44Test, Matrix44SetMatrix44Test001, TestSize.Level1)
 {
@@ -124,10 +118,9 @@ HWTEST_F(Matrix44Test, Matrix44SetMatrix44Test001, TestSize.Level1)
 
 /**
  * @tc.name: Matrix44SetMatrix44Test002
- * @tc.desc:
+ * @tc.desc: test for setong Matrix44 to sixteen values in buffer.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZJZ7
  */
 HWTEST_F(Matrix44Test, Matrix44SetMatrix44Test002, TestSize.Level1)
 {
@@ -140,10 +133,9 @@ HWTEST_F(Matrix44Test, Matrix44SetMatrix44Test002, TestSize.Level1)
 
 /**
  * @tc.name: Matrix44SetMatrix44Test003
- * @tc.desc:
+ * @tc.desc: test for setong Matrix44 to sixteen values in buffer.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZJZ7
  */
 HWTEST_F(Matrix44Test, Matrix44SetMatrix44Test003, TestSize.Level1)
 {
@@ -156,10 +148,9 @@ HWTEST_F(Matrix44Test, Matrix44SetMatrix44Test003, TestSize.Level1)
 
 /**
  * @tc.name: Matrix44MultiplyTest001
- * @tc.desc:
+ * @tc.desc: testing Matrix44 multiplication.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZJZ7
  */
 HWTEST_F(Matrix44Test, Matrix44MultiplyTest001, TestSize.Level1)
 {
@@ -172,10 +163,9 @@ HWTEST_F(Matrix44Test, Matrix44MultiplyTest001, TestSize.Level1)
 
 /**
  * @tc.name: Matrix44MultiplyTest002
- * @tc.desc:
+ * @tc.desc: testing Matrix44 multiplication.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I6ZJZ7
  */
 HWTEST_F(Matrix44Test, Matrix44MultiplyTest002, TestSize.Level1)
 {

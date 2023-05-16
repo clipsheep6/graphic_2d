@@ -39,10 +39,9 @@ void RecordingRegionTest::TearDown() {}
 
 /**
  * @tc.name: SetRectTest001
- * @tc.desc:
+ * @tc.desc: Test the playback of the SetRect function.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I72HWB
  */
 HWTEST_F(RecordingRegionTest, SetRectTest001, TestSize.Level1)
 {
@@ -58,10 +57,9 @@ HWTEST_F(RecordingRegionTest, SetRectTest001, TestSize.Level1)
 
 /**
  * @tc.name: SetRectTest002
- * @tc.desc:
+ * @tc.desc: Test the playback of the SetRect function.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I72HWB
  */
 HWTEST_F(RecordingRegionTest, SetRectTest002, TestSize.Level1)
 {
@@ -77,10 +75,9 @@ HWTEST_F(RecordingRegionTest, SetRectTest002, TestSize.Level1)
 
 /**
  * @tc.name: SetPathTest001
- * @tc.desc:
+ * @tc.desc: Test the playback of the SetPath function.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I72HWB
  */
 HWTEST_F(RecordingRegionTest, SetPathTest001, TestSize.Level1)
 {
@@ -97,10 +94,9 @@ HWTEST_F(RecordingRegionTest, SetPathTest001, TestSize.Level1)
 
 /**
  * @tc.name: SetPathTest002
- * @tc.desc:
+ * @tc.desc: Test the playback of the SetPath function.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I72HWB
  */
 HWTEST_F(RecordingRegionTest, SetPathTest002, TestSize.Level1)
 {
@@ -118,10 +114,9 @@ HWTEST_F(RecordingRegionTest, SetPathTest002, TestSize.Level1)
 
 /**
  * @tc.name: OpTest001
- * @tc.desc:
+ * @tc.desc: Test the playback of the Op function.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I72HWB
  */
 HWTEST_F(RecordingRegionTest, OpTest001, TestSize.Level1)
 {
@@ -141,10 +136,9 @@ HWTEST_F(RecordingRegionTest, OpTest001, TestSize.Level1)
 
 /**
  * @tc.name: OpTest002
- * @tc.desc:
+ * @tc.desc: Test the playback of the Op function.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I72HWB
  */
 HWTEST_F(RecordingRegionTest, OpTest002, TestSize.Level1)
 {

@@ -38,10 +38,9 @@ void RecordingMaskFilterTest::TearDown() {}
 
 /**
  * @tc.name: CreateBlurMaskFilter001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateBlurMaskFilter function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingMaskFilterTest, CreateBlurMaskFilter001, TestSize.Level1)
 {
@@ -55,10 +54,9 @@ HWTEST_F(RecordingMaskFilterTest, CreateBlurMaskFilter001, TestSize.Level1)
 
 /**
  * @tc.name: CreateBlurMaskFilter002
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateBlurMaskFilter function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingMaskFilterTest, CreateBlurMaskFilter002, TestSize.Level1)
 {

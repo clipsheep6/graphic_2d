@@ -41,10 +41,9 @@ void RecordingImageFilterTest::TearDown() {}
 
 /*
  * @tc.name: CreateBlurImageFilterTest001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateBlurImageFilter function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingImageFilterTest, CreateBlurImageFilterTest001, TestSize.Level1)
 {
@@ -58,10 +57,9 @@ HWTEST_F(RecordingImageFilterTest, CreateBlurImageFilterTest001, TestSize.Level1
 
 /*
  * @tc.name: CreateColorFilterImageFilterTest001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateColorFilterImageFilter function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingImageFilterTest, CreateColorFilterImageFilterTest001, TestSize.Level1)
 {
@@ -77,10 +75,9 @@ HWTEST_F(RecordingImageFilterTest, CreateColorFilterImageFilterTest001, TestSize
 
 /*
  * @tc.name: CreateOffsetImageFilterTest001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateOffsetImageFilter function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingImageFilterTest, CreateOffsetImageFilterTest001, TestSize.Level1)
 {
@@ -94,10 +91,9 @@ HWTEST_F(RecordingImageFilterTest, CreateOffsetImageFilterTest001, TestSize.Leve
 
 /*
  * @tc.name: CreateArithmeticImageFilterTest001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateArithmeticImageFilter function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingImageFilterTest, CreateArithmeticImageFilterTest001, TestSize.Level1)
 {
@@ -116,10 +112,9 @@ HWTEST_F(RecordingImageFilterTest, CreateArithmeticImageFilterTest001, TestSize.
 
 /*
  * @tc.name: CreateComposeImageFilterTest001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateComposeImageFilter function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DAE
  */
 HWTEST_F(RecordingImageFilterTest, CreateComposeImageFilterTest001, TestSize.Level1)
 {

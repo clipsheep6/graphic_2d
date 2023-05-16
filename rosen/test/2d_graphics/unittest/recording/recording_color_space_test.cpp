@@ -39,10 +39,9 @@ void RecordingColorSpaceTest::TearDown() {}
 
 /**
  * @tc.name: CreateSRGB001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateSRGB function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DLF
  */
 HWTEST_F(RecordingColorSpaceTest, CreateSRGB001, TestSize.Level1)
 {
@@ -56,10 +55,9 @@ HWTEST_F(RecordingColorSpaceTest, CreateSRGB001, TestSize.Level1)
 
 /**
  * @tc.name: CreateSRGBLinear001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateSRGBLinear function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DLF
  */
 HWTEST_F(RecordingColorSpaceTest, CreateSRGBLinear001, TestSize.Level1)
 {
@@ -73,10 +71,9 @@ HWTEST_F(RecordingColorSpaceTest, CreateSRGBLinear001, TestSize.Level1)
 
 /**
  * @tc.name: CreateRefImage001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateRefImage function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DLF
  */
 HWTEST_F(RecordingColorSpaceTest, CreateRefImage001, TestSize.Level1)
 {
@@ -95,10 +92,9 @@ HWTEST_F(RecordingColorSpaceTest, CreateRefImage001, TestSize.Level1)
 
 /**
  * @tc.name: CreateRGB001
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateRGB function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DLF
  */
 HWTEST_F(RecordingColorSpaceTest, CreateRGB001, TestSize.Level1)
 {
@@ -112,10 +108,9 @@ HWTEST_F(RecordingColorSpaceTest, CreateRGB001, TestSize.Level1)
 
 /**
  * @tc.name: CreateRGB002
- * @tc.desc:
+ * @tc.desc: Test the playback of the CreateRGB function.
  * @tc.type: FUNC
- * @tc.require: AR000GGNV3
- * @tc.author:
+ * @tc.require: I72DLF
  */
 HWTEST_F(RecordingColorSpaceTest, CreateRGB002, TestSize.Level1)
 {

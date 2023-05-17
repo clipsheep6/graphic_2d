@@ -129,6 +129,7 @@ void RSDrivenRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         return;
     }
     node.GetMutableRenderProperties().CheckEmptyBounds();
+    RSAutoCanvasRestore autoRestore(canvas_);
     node.ProcessRenderBeforeChildren(*canvas_);
     node.ProcessRenderContents(*canvas_);
     ProcessBaseRenderNode(node);
@@ -151,6 +152,7 @@ void RSDrivenRenderVisitor::ProcessDrivenSurfaceRenderNode(RSDrivenSurfaceRender
 void RSDrivenRenderVisitor::ProcessDrivenCanvasRenderNode(RSCanvasRenderNode& node)
 {
     node.GetMutableRenderProperties().CheckEmptyBounds();
+    RSAutoCanvasRestore autoRestore(canvas_);
     if (currDrivenSurfaceNode_->IsBackgroundSurface()) {
         node.ProcessDrivenBackgroundRender(*canvas_);
     } else {

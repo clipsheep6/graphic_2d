@@ -134,9 +134,8 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessRootRenderNode(RSRoot
         return;
     }
 
-    canvas_->save();
+    RSAutoCanvasRestore autoRestore(canvas_);
     ProcessCanvasRenderNode(node);
-    canvas_->restore();
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
@@ -149,6 +148,7 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessCanvasRenderNode(RSCa
         ROSEN_LOGE("RSDividedUICaptureVisitor::ProcessCanvasRenderNode, canvas is nullptr");
         return;
     }
+    RSAutoCanvasRestore autoRestore(canvas_);
     if (node.GetId() == nodeId_) {
         // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
         const auto& property = node.GetRenderProperties();
@@ -209,6 +209,7 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessSurfaceRenderNode(RSS
             "RSDividedUICaptureVisitor::ProcessSurfaceRenderNode node : %" PRIu64 " is invisible", node.GetId());
         return;
     }
+    RSAutoCanvasRestore autoRestore(canvas_, RSAutoCanvasRestore::SaveType::kCanvas);
     if (node.GetId() == nodeId_) {
         // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
         const auto& property = node.GetRenderProperties();

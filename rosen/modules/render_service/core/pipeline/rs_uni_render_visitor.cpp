@@ -427,11 +427,10 @@ void RSUniRenderVisitor::ClearTransparentBeforeSaveLayer()
         if (dstRect.IsEmpty()) {
             continue;
         }
-        canvas_->save();
+        SkAutoCanvasRestore acr(canvas_.get(), true);
         canvas_->clipRect({ static_cast<float>(dstRect.GetLeft()), static_cast<float>(dstRect.GetTop()),
                             static_cast<float>(dstRect.GetRight()), static_cast<float>(dstRect.GetBottom()) });
         canvas_->clear(SK_ColorTRANSPARENT);
-        canvas_->restore();
     }
 }
 
@@ -1257,10 +1256,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 canvas_->restore();
                 DrawWatermarkIfNeed();
             } else {
-                int saveCount = canvas_->save();
+                SkAutoCanvasRestore acr(canvas_.get(), true);
                 ProcessBaseRenderNode(*mirrorNode);
                 DrawWatermarkIfNeed();
-                canvas_->restoreToCount(saveCount);
             }
         } else {
             processor_->ProcessDisplaySurface(*mirrorNode);
@@ -1453,7 +1451,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 #endif
         RSPropertiesPainter::SetBgAntiAlias(true);
         if (!isParallel_) {
-            int saveCount = canvas_->save();
+            SkAutoCanvasRestore acr(canvas_.get(), true);
             canvas_->SetHighContrast(renderEngine_->IsHighContrastEnabled());
             auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
             if (geoPtr != nullptr) {
@@ -1479,7 +1477,6 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 // render directly
                 ProcessBaseRenderNode(node);
             }
-            canvas_->restoreToCount(saveCount);
         }
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
         if ((isParallel_ && ((rects.size() > 0) || !isPartialRenderEnabled_)) && isCalcCostEnable_) {
@@ -1961,7 +1958,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (RSSystemProperties::GetProxyNodeDebugEnabled() && node.contextClipRect_.has_value() && canvas_ != nullptr) {
         // draw transparent red rect to indicate valid clip area
         {
-            RSAutoCanvasRestore acr(canvas_);
+            RSAutoCanvasRestore acr(canvas_, RSAutoCanvasRestore::SaveType::kCanvas);
             canvas_->concat(node.contextMatrix_.value_or(SkMatrix::I()));
             SkPaint paint;
             paint.setARGB(0x80, 0xFF, 0, 0); // transparent red
@@ -2212,7 +2209,7 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     }
 
     ColorFilterMode colorFilterMode = renderEngine_->GetColorFilterMode();
-    int saveCount;
+    RSAutoCanvasRestore acr(canvas_, RSAutoCanvasRestore::SaveType::kCanvas);
     if (colorFilterMode >= ColorFilterMode::INVERT_COLOR_ENABLE_MODE &&
         colorFilterMode <= ColorFilterMode::INVERT_DALTONIZATION_TRITANOMALY_MODE) {
         RS_LOGD("RsDebug RSBaseRenderEngine::SetColorFilterModeToPaint mode:%d", static_cast<int32_t>(colorFilterMode));
@@ -2221,9 +2218,7 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 #ifndef NEW_SKIA
         RSTagTracker tagTracker(canvas_->getGrContext(), RSTagTracker::TAGTYPE::TAG_SAVELAYER_COLOR_FILTER);
 #endif
-        saveCount = canvas_->saveLayer(nullptr, &paint);
-    } else {
-        saveCount = canvas_->save();
+        canvas_->saveLayer(nullptr, &paint);
     }
 
     if (node.GetChildrenCount() > 0) {
@@ -2231,7 +2226,6 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     }
 
     ProcessCanvasRenderNode(node);
-    canvas_->restoreToCount(saveCount);
 }
 
 void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
@@ -2268,6 +2262,7 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
 #endif
     // in case preparation'update is skipped
     node.GetMutableRenderProperties().CheckEmptyBounds();
+    RSAutoCanvasRestore acr(canvas_);
     // draw self and children in sandbox which will not be affected by parent's transition
     const auto& sandboxPos = node.GetRenderProperties().GetSandBox();
     if (!sandboxPos.IsInfinite()) {

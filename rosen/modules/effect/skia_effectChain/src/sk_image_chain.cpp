@@ -180,7 +180,7 @@ void SKImageChain::Draw()
     } else if (rRect_ != nullptr) {
         canvas_->clipRRect(*rRect_, true);
     }
-    canvas_->save();
+    SkAutoCanvasRestore acr(canvas_, true);
     canvas_->resetMatrix();
 #if defined(NEW_SKIA)
     canvas_->drawImage(image_.get(), 0, 0, SkSamplingOptions(), &paint);
@@ -192,7 +192,6 @@ void SKImageChain::Draw()
             LOGE("Failed to readPixels to target Pixmap.");
         }
     }
-    canvas_->restore();
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }
 

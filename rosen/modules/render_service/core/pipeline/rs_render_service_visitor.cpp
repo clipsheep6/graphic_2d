@@ -200,9 +200,9 @@ void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         return;
     }
     node.SetOffset(offsetX_, offsetY_);
-    node.PrepareRenderBeforeChildren(*canvas_);
+    RSAutoCanvasRestore autoRestore(canvas_);
+    node.ExtractSurfaceParams(*canvas_);
     PrepareBaseRenderNode(node);
-    node.PrepareRenderAfterChildren(*canvas_);
 }
 
 void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)

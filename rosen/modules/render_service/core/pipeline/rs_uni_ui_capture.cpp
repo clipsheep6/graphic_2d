@@ -156,9 +156,8 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessRootRenderNode(RSRootRenderNo
         return;
     }
 
-    canvas_->save();
+    RSAutoCanvasRestore acr(canvas_, RSAutoCanvasRestore::SaveType::kCanvas);
     ProcessCanvasRenderNode(node);
-    canvas_->restore();
 }
 
 void RSUniUICapture::RSUniUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
@@ -171,6 +170,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRend
         RS_LOGE("RSUniUICaptureVisitor::ProcessCanvasRenderNode, canvas is nullptr");
         return;
     }
+    RSAutoCanvasRestore acr(canvas_);
     if (node.GetId() == nodeId_) {
         // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
         const auto& property = node.GetRenderProperties();
@@ -202,6 +202,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceRenderNode(RSSurfaceRe
         RS_LOGD("RSUniUICaptureVisitor::ProcessSurfaceRenderNode node: %" PRIu64 " invisible", node.GetId());
         return;
     }
+    RSAutoCanvasRestore acr(canvas_);
     if (isUniRender_) {
         ProcessSurfaceRenderNodeWithUni(node);
     } else {
@@ -218,7 +219,6 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceRenderNodeWithUni(RSSu
         return;
     }
 
-    RSAutoCanvasRestore acr(canvas_);
     canvas_->MultiplyAlpha(node.GetRenderProperties().GetAlpha());
     ProcessSurfaceViewWithUni(node);
 }
@@ -308,7 +308,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithoutUni(RSSurfa
             renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
         }
     } else {
-        canvas_->save();
+        RSAutoCanvasRestore acr(canvas_, RSAutoCanvasRestore::SaveType::kCanvas);
         if (node.GetId() != nodeId_) {
             canvas_->concat(translateMatrix);
         }
@@ -317,7 +317,6 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithoutUni(RSSurfa
             auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
             renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
         }
-        canvas_->restore();
     }
 }
 

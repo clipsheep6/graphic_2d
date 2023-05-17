@@ -544,6 +544,7 @@ void RSSurfaceCaptureVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         return;
     }
     node.GetMutableRenderProperties().CheckEmptyBounds();
+    RSAutoCanvasRestore acr(canvas_);
     node.ProcessRenderBeforeChildren(*canvas_);
     node.ProcessRenderContents(*canvas_);
     ProcessBaseRenderNode(node);
@@ -576,9 +577,7 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithoutUni(RSSurfaceRender
 
     if (node.GetChildrenCount() > 0) {
         canvas_->concat(translateMatrix);
-        const auto saveCnt = canvas_->save();
         ProcessBaseRenderNode(node);
-        canvas_->restoreToCount(saveCnt);
         if (node.GetBuffer() != nullptr) {
             // in node's local coordinate.
             auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
@@ -634,6 +633,7 @@ void RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node
         return;
     }
 
+    RSAutoCanvasRestore acr(canvas_);
     // execute security layer in each case, ignore display snapshot and set it white for surface snapshot
     if (IsUniRender()) {
         ProcessSurfaceRenderNodeWithUni(node);

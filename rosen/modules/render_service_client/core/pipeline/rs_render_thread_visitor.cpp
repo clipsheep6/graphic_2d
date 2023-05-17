@@ -508,6 +508,7 @@ void RSRenderThreadVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         return;
     }
 #endif
+    RSAutoCanvasRestore acr(canvas_);
     node.CheckCacheType();
     node.ProcessTransitionBeforeChildren(*canvas_);
     DrawChildRenderNode(node);
@@ -585,11 +586,10 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     parentSurfaceNodeMatrix_ = parentSurfaceNodeMatrix;
 
     // 6.draw border
-    canvas_->save();
+    RSAutoCanvasRestore acr(canvas_, RSAutoCanvasRestore::SaveType::kCanvas);
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
     canvas_->concat(geoPtr->GetMatrix());
     RSPropertiesPainter::DrawBorder(node.GetRenderProperties(), *canvas_);
-    canvas_->restore();
 }
 
 void RSRenderThreadVisitor::ProcessProxyRenderNode(RSProxyRenderNode& node)
@@ -631,7 +631,7 @@ void RSRenderThreadVisitor::ClipHoleForSurfaceNode(RSSurfaceRenderNode& node)
     auto y = std::ceil(node.GetRenderProperties().GetBoundsPositionY() + pixel); // y increase 1 pixel
     auto width = std::floor(node.GetRenderProperties().GetBoundsWidth() - (2 * pixel)); // width decrease 2 pixels
     auto height = std::floor(node.GetRenderProperties().GetBoundsHeight() - (2 * pixel)); // height decrease 2 pixels
-    canvas_->save();
+    RSAutoCanvasRestore acr(canvas_, RSAutoCanvasRestore::SaveType::kCanvas);
     SkRect originRect = SkRect::MakeXYWH(x, y, width, height);
     canvas_->clipRect(originRect);
     if (node.IsNotifyRTBufferAvailable()) {
@@ -646,7 +646,6 @@ void RSRenderThreadVisitor::ClipHoleForSurfaceNode(RSSurfaceRenderNode& node)
             canvas_->clear(backgroundColor.AsArgbInt());
         }
     }
-    canvas_->restore();
 }
 
 void RSRenderThreadVisitor::SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType)

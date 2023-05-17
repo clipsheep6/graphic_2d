@@ -40,17 +40,34 @@
       ],
       "deps": {
         "components": [
-          "libhilog",
-          "ipc_core",
-          "samgr_proxy",
-          "utils",
-          "libeventhandler",
-          "image_native",
-          "hdi_display_device",
-          "bytrace_core"
+          "common",
+          "window_manager",
+          "resource_management",
+          "napi",
+          "samgr",
+          "zlib",
+          "hiviewdfx_hilog_native",
+          "hitrace_native",
+          "ability_runtime",
+          "drivers_interface_display",
+          "hilog_native",
+          "c_utils",
+          "access_token",
+          "safwk",
+          "hisysevent_native",
+          "eventhandler",
+          "config_policy",
+          "init",
+          "hicollie_native",
+          "bounds_checking_function",
+          "multimedia_image_framework",
+          "cjson",
+          "ipc",
+          "multimedia_player_framework"
         ],
         "third_party": [
-          "libz"
+          "flutter",
+          "libuv"
         ]
       },
       "build": {
@@ -69,6 +86,7 @@
             "//foundation/graphic/graphic_2d/frameworks/surfaceimage:libnative_image",
             "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect",
             "//foundation/graphic/graphic_2d/frameworks/vulkan_wrapper:vulkan",
+            "//third_party/vulkan-loader/openharmony:vulkan_loader",
             "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer",
             "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer_json"
           ],

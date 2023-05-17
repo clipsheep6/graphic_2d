@@ -450,6 +450,19 @@ void RSNode::SetFramePositionY(float positionY)
     property->Set(frame);
 }
 
+void RSNode::SetSandBox(std::optional<Vector2f> parentPosition)
+{
+    if (!parentPosition.has_value()) {
+        auto iter = propertyModifiers_.find(RSModifierType::SANDBOX);
+        if (iter != propertyModifiers_.end()) {
+            RemoveModifier(iter->second);
+            propertyModifiers_.erase(iter);
+        }
+        return;
+    }
+    SetProperty<RSSandBoxModifier, RSAnimatableProperty<Vector2f>>(RSModifierType::SANDBOX, parentPosition.value());
+}
+
 void RSNode::SetPositionZ(float positionZ)
 {
     SetProperty<RSPositionZModifier, RSAnimatableProperty<float>>(RSModifierType::POSITION_Z, positionZ);
@@ -831,6 +844,11 @@ void RSNode::SetFrameGravity(Gravity gravity)
     SetProperty<RSFrameGravityModifier, RSProperty<Gravity>>(RSModifierType::FRAME_GRAVITY, gravity);
 }
 
+void RSNode::SetClipRRect(const Vector4f& clipRect, const Vector4f& clipRadius)
+{
+    SetProperty<RSClipRRectModifier, RSAnimatableProperty<RRect>>(RSModifierType::CLIP_RRECT, RRect(clipRect, clipRadius));
+}
+
 void RSNode::SetClipBounds(const std::shared_ptr<RSPath>& path)
 {
     SetProperty<RSClipBoundsModifier, RSProperty<std::shared_ptr<RSPath>>>(RSModifierType::CLIP_BOUNDS, path);
@@ -967,10 +985,13 @@ void RSNode::SetPaintOrder(bool drawContentLast)
 
 void RSNode::MarkDrivenRender(bool flag)
 {
-    std::unique_ptr<RSCommand> command = std::make_unique<RSMarkDrivenRender>(GetId(), flag);
-    auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    if (drivenFlag_ != flag) {
+        std::unique_ptr<RSCommand> command = std::make_unique<RSMarkDrivenRender>(GetId(), flag);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(command, IsRenderServiceNode());
+        }
+        drivenFlag_ = flag;
     }
 }
 
@@ -1149,6 +1170,26 @@ void RSNode::SetDrawRegion(std::shared_ptr<RectF> rect)
         if (transactionProxy != nullptr) {
             transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), GetId());
         }
+    }
+}
+
+void RSNode::RegisterTransitionPair(NodeId inNodeId, NodeId outNodeId)
+{
+    std::unique_ptr<RSCommand> command =
+        std::make_unique<RSRegisterGeometryTransitionNodePair>(inNodeId, outNodeId);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, true);
+    }
+}
+
+void RSNode::UnregisterTransitionPair(NodeId inNodeId, NodeId outNodeId)
+{
+    std::unique_ptr<RSCommand> command =
+        std::make_unique<RSUnregisterGeometryTransitionNodePair>(inNodeId, outNodeId);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, true);
     }
 }
 } // namespace Rosen

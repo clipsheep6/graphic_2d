@@ -314,15 +314,44 @@ void RSParallelRenderManager::DrawImageMergeFunc(RSPaintFilterCanvas& canvas)
             RS_TRACE_END();
             auto texture = threadList_[i]->GetTexture();
             if (texture == nullptr) {
-                RS_LOGE("Texture %d is nullptr", i);
+                RS_LOGE("Texture of subThread(%d) is nullptr", i);
                 continue;
             }
+#ifdef NEW_SKIA
+            if (renderContext_ == nullptr) {
+                RS_LOGE("RS main thread render context is nullptr");
+                continue;
+            }
+            auto mainGrContext = renderContext_->GetGrContext();
+            if (mainGrContext == nullptr) {
+                RS_LOGE("RS main thread GrDirectContext is nullptr");
+                continue;
+            }
+            auto sharedBackendTexture = texture->getBackendTexture(false);
+            if (!sharedBackendTexture.isValid()) {
+                RS_LOGE("Texture of subThread(%d) does not has GPU backend", i);
+                continue;
+            }
+            auto sharedTexture = SkImage::MakeFromTexture(mainGrContext, sharedBackendTexture,
+                kBottomLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
+            if (sharedTexture == nullptr) {
+                RS_LOGE("SharedTexture of subThread(%d) is nullptr", i);
+            }
+            canvas.drawImage(sharedTexture, 0, 0);
+#else
             canvas.drawImage(texture, 0, 0);
+#endif
             // For any one subMainThread' sksurface, we just clear transparent color of self drawing
             // surface drawed in larger skSurface, such as skSurface 0 should clear self drawing surface
             // areas drawed in skSurface 1.
             auto clearTransparentColorSurfaceIndex = i + 1;
             ClearSelfDrawingSurface(canvas, clearTransparentColorSurfaceIndex);
+#ifdef NEW_SKIA
+            sharedTexture.reset();
+            sharedTexture = nullptr;
+            texture.reset();
+            texture = nullptr;
+#endif
         }
     }
 }
@@ -386,6 +415,38 @@ void RSParallelRenderManager::SubmitSuperTask(uint32_t taskIndex, std::unique_pt
         return;
     }
     threadList_[taskIndex]->SetSuperTask(std::move(superRenderTask));
+}
+
+void RSParallelRenderManager::SubmitSubThreadTask(const std::shared_ptr<RSDisplayRenderNode>& node,
+    const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes)
+{
+    if (node == nullptr) {
+        ROSEN_LOGE("RSUniRenderUtil::AssignSubThreadNodes display node is null");
+        return;
+    }
+    auto nodeNum = subThreadNodes.size();
+    if (nodeNum == 0) {
+        ROSEN_LOGD("RSUniRenderUtil::AssignSubThreadNodes subThread does not have any nodes");
+        return;
+    }
+    std::vector<std::unique_ptr<RSRenderTask>> renderTaskList;
+    for (auto& child : subThreadNodes) {
+        renderTaskList.push_back(std::make_unique<RSRenderTask>(*child, RSRenderTask::RenderNodeStage::CACHE));
+    }
+
+    std::vector<std::unique_ptr<RSSuperRenderTask>> superRenderTaskList;
+    for (uint32_t i = 0; i < PARALLEL_THREAD_NUM; i++) {
+        superRenderTaskList[i] = std::make_unique<RSSuperRenderTask>(node);
+    }
+    for (size_t i = 0; i < nodeNum; i++) {
+        uint32_t taskIndex = i % PARALLEL_THREAD_NUM;
+        if (superRenderTaskList[taskIndex]) {
+            superRenderTaskList[taskIndex]->AddTask(std::move(renderTaskList[i]));
+        }
+    }
+    for (uint32_t i = 0; i < PARALLEL_THREAD_NUM; i++) {
+        SubmitSuperTask(i, std::move(superRenderTaskList[i]));
+    }
 }
 
 void RSParallelRenderManager::SubmitCompositionTask(uint32_t taskIndex,

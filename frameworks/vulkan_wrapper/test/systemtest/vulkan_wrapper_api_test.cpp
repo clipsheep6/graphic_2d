@@ -86,9 +86,9 @@ public:
 HWTEST_F(VulkanWrapperApiTest, dlopen_Test, TestSize.Level1)
 {
 #ifdef __aarch64__
-    const char *path = "/system/lib64/libvulkan.so";
+    const char *path = "/system/lib64/libvulkan_wrapper.so";
 #else
-    const char *path = "/system/lib/libvulkan.so";
+    const char *path = "/system/lib/libvulkan_wrapper.so";
 #endif
     libVulkan = dlopen(path, RTLD_NOW | RTLD_LOCAL);
     EXPECT_NE(libVulkan, nullptr);

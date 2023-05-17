@@ -44,6 +44,7 @@ enum RSNodeCommandType : uint16_t {
     UPDATE_MODIFIER_VECTOR4_BORDER_STYLE,
     UPDATE_MODIFIER_VECTOR4_COLOR,
     UPDATE_MODIFIER_VECTOR4F,
+    UPDATE_MODIFIER_RRECT,
     UPDATE_MODIFIER_DRAW_CMD_LIST,
     UPDATE_MODIFIER_SKMATRIX,
 
@@ -53,6 +54,9 @@ enum RSNodeCommandType : uint16_t {
     MARK_DRIVEN_RENDER_FRAME_PAINT_STATE,
     MARK_CONTENT_CHANGED,
     SET_DRAW_REGION,
+
+    REGISTER_GEOMETRY_TRANSITION,
+    UNREGISTER_GEOMETRY_TRANSITION,
 };
 
 class RSB_EXPORT RSNodeCommandHelper {
@@ -81,6 +85,9 @@ public:
     static void MarkDrivenRenderFramePaintState(RSContext& context, NodeId nodeId, bool flag);
     static void MarkContentChanged(RSContext& context, NodeId nodeId, bool isChanged);
     static void SetDrawRegion(RSContext& context, NodeId nodeId, std::shared_ptr<RectF> rect);
+
+    static void RegisterGeometryTransitionPair(RSContext& context, NodeId inNodeId, NodeId outNodeId);
+    static void UnregisterGeometryTransitionPair(RSContext& context, NodeId inNodeId, NodeId outNodeId);
 };
 
 ADD_COMMAND(RSAddModifier,
@@ -136,6 +143,9 @@ ADD_COMMAND(RSUpdatePropertyVector4Color,
 ADD_COMMAND(RSUpdatePropertyVector4f,
     ARG(RS_NODE, UPDATE_MODIFIER_VECTOR4F, RSNodeCommandHelper::UpdateModifier<Vector4f>,
         NodeId, Vector4f, PropertyId, bool))
+ADD_COMMAND(RSUpdatePropertyRRect,
+    ARG(RS_NODE, UPDATE_MODIFIER_RRECT, RSNodeCommandHelper::UpdateModifier<RRect>,
+        NodeId, RRect, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyDrawCmdList,
     ARG(RS_NODE, UPDATE_MODIFIER_DRAW_CMD_LIST, RSNodeCommandHelper::UpdateModifier<DrawCmdListPtr>,
         NodeId, DrawCmdListPtr, PropertyId, bool))
@@ -159,6 +169,11 @@ ADD_COMMAND(RSMarkContentChanged,
 ADD_COMMAND(RSSetDrawRegion,
     ARG(RS_NODE, SET_DRAW_REGION, RSNodeCommandHelper::SetDrawRegion,
         NodeId, std::shared_ptr<RectF>))
+
+ADD_COMMAND(RSRegisterGeometryTransitionNodePair,
+    ARG(RS_NODE, REGISTER_GEOMETRY_TRANSITION, RSNodeCommandHelper::RegisterGeometryTransitionPair, NodeId, NodeId))
+ADD_COMMAND(RSUnregisterGeometryTransitionNodePair,
+    ARG(RS_NODE, UNREGISTER_GEOMETRY_TRANSITION, RSNodeCommandHelper::UnregisterGeometryTransitionPair, NodeId, NodeId))
 } // namespace Rosen
 } // namespace OHOS
 

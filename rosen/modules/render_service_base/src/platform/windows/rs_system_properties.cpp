@@ -19,6 +19,26 @@
 
 namespace OHOS {
 namespace Rosen {
+int RSSystemProperties::GetDumpFrameNum()
+{
+    return 0;
+}
+
+bool RSSystemProperties::GetRecordingEnabled()
+{
+    return false;
+}
+
+void RSSystemProperties::SetRecordingDisenabled()
+{
+    return;
+}
+
+std::string RSSystemProperties::GetRecordingFile()
+{
+    return "";
+}
+
 bool RSSystemProperties::GetUniRenderEnabled()
 {
     return isUniRenderEnabled_;
@@ -27,6 +47,11 @@ bool RSSystemProperties::GetUniRenderEnabled()
 bool RSSystemProperties::GetRenderNodeTraceEnabled()
 {
     return {};
+}
+
+bool RSSystemProperties::GetDrawOpTraceEnabled()
+{
+    return false;
 }
 
 DirtyRegionDebugType RSSystemProperties::GetDirtyRegionDebugType()
@@ -131,6 +156,11 @@ bool RSSystemProperties::GetBoolSystemProperty(const char* name, bool defaultVal
 }
 
 int RSSystemProperties::WatchSystemProperty(const char* name, OnSystemPropertyChanged func, void* context)
+{
+    return {};
+}
+
+bool RSSystemProperties::GetAFBCEnabled()
 {
     return {};
 }

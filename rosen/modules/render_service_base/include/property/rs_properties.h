@@ -72,6 +72,9 @@ public:
     float GetFrameOffsetX() const;
     float GetFrameOffsetY() const;
 
+    void SetSandBox(Vector2f parentPosition);
+    Vector2f GetSandBox() const;
+
     void SetPositionZ(float positionZ);
     float GetPositionZ() const;
 
@@ -181,6 +184,9 @@ public:
     void SetDrawRegion(std::shared_ptr<RectF> rect);
     std::shared_ptr<RectF> GetDrawRegion() const;
 
+    void SetClipRRect(RRect clipRRect);
+    RRect GetClipRRect() const;
+    bool GetClipToRRect() const;
     void SetClipBounds(std::shared_ptr<RSPath> path);
     std::shared_ptr<RSPath> GetClipBounds() const;
     void SetClipToBounds(bool clipToBounds);
@@ -276,9 +282,12 @@ private:
 
     std::weak_ptr<RSRenderNode> backref_;
 
+    std::unique_ptr<Vector2f> sandboxPosition_ = nullptr;
+
     std::unique_ptr<Vector4f> pixelStretch_ = nullptr;
 
     std::unique_ptr<Vector4f> pixelStretchPercent_ = nullptr;
+    std::unique_ptr<RRect> clipRRect_ = nullptr;
 
     friend class RSCanvasRenderNode;
     friend class RSPropertiesPainter;

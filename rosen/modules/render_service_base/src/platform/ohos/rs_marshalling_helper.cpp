@@ -35,7 +35,7 @@
 #include "include/core/SkSamplingOptions.h"
 #include "src/core/SkVerticesPriv.h"
 #endif
-#include "memory/MemoryTrack.h"
+#include "memory/rs_memory_track.h"
 #include "pixel_map.h"
 #include "securec.h"
 #include "src/core/SkAutoMalloc.h"
@@ -141,8 +141,12 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkData>& val)
         ROSEN_LOGE("unirender: failed RSMarshallingHelper::Unmarshalling SkData");
         return false;
     }
-
+#ifdef RS_ENABLE_RECORDING
+    if (static_cast<uint32_t>(size) < MIN_DATA_SIZE ||
+        parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
+#else
     if (static_cast<uint32_t>(size) < MIN_DATA_SIZE) {
+#endif
         val = SkData::MakeWithoutCopy(data, size);
     } else {
         val = SkData::MakeFromMalloc(data, size);
@@ -162,7 +166,12 @@ bool RSMarshallingHelper::UnmarshallingWithCopy(Parcel& parcel, sk_sp<SkData>& v
 {
     bool success = Unmarshalling(parcel, val);
     if (success) {
+#ifdef RS_ENABLE_RECORDING
+        if (val && (val->size() < MIN_DATA_SIZE ||
+            parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY)) {
+#else
         if (val && val->size() < MIN_DATA_SIZE) {
+#endif
             val = SkData::MakeWithCopy(val->data(), val->size());
         }
     }
@@ -356,7 +365,12 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val)
                 return false;
             }
             colorSpace = SkColorSpace::Deserialize(data, size);
+
+#ifdef RS_ENABLE_RECORDING
+            if (size >= MIN_DATA_SIZE && parcel.GetMaxCapacity() != RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
+#else
             if (size >= MIN_DATA_SIZE) {
+#endif
                 free(const_cast<void*>(data));
             }
         }
@@ -364,11 +378,22 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val)
         // if pixelmapSize >= MIN_DATA_SIZE(copyFromAshMem). record this memory size
         // use this proc to follow release step
         SkImageInfo imageInfo = SkImageInfo::Make(width, height, colorType, alphaType, colorSpace);
+#ifdef RS_ENABLE_RECORDING
+        auto skData = (pixmapSize < MIN_DATA_SIZE ||
+            parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY)
+                ? SkData::MakeWithCopy(addr, pixmapSize)
+#else
         auto skData = pixmapSize < MIN_DATA_SIZE ? SkData::MakeWithCopy(addr, pixmapSize)
-                                                 : SkData::MakeWithProc(addr, pixmapSize, sk_free_releaseproc, nullptr);
+#endif
+                                                : SkData::MakeWithProc(addr, pixmapSize, sk_free_releaseproc, nullptr);
         val = SkImage::MakeRasterData(imageInfo, skData, rb);
         // add to MemoryTrack for memoryManager
+#ifdef RS_ENABLE_RECORDING
+        if (pixmapSize >= MIN_DATA_SIZE &&
+            parcel.GetMaxCapacity() != RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
+#else
         if (pixmapSize >= MIN_DATA_SIZE) {
+#endif
             MemoryInfo info = { pixmapSize, 0, 0, MEMORY_TYPE::MEM_SKIMAGE }; // pid is set to 0 temporarily.
             MemoryTrack::Instance().AddPictureRecord(addr, info);
         }
@@ -451,10 +476,6 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const sk_sp<SkVertices>& v
 }
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkVertices>& val)
 {
-    if (!val) {
-        ROSEN_LOGD("unirender: RSMarshallingHelper::Unmarshalling SkVertices is nullptr");
-        return false;
-    }
     sk_sp<SkData> data;
     if (!Unmarshalling(parcel, data)) {
         ROSEN_LOGE("unirender: failed RSMarshallingHelper::Unmarshalling SkVertices");
@@ -466,8 +487,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkVertices>& val)
     }
 #ifdef NEW_SKIA
     SkReadBuffer reader(data->data(), data->size());
-    SkVerticesPriv info(val->priv());
-    val = info.Decode(reader);
+    val = SkVerticesPriv::Decode(reader);
 #else
     val = SkVertices::Decode(data->data(), data->size());
 #endif
@@ -688,7 +708,9 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSFi
         }
         case RSFilter::MATERIAL: {
             auto material = std::static_pointer_cast<RSMaterialFilter>(val);
-            success = success && parcel.WriteInt32(material->style_) && parcel.WriteFloat(material->dipScale_) &&
+            success = success && parcel.WriteFloat(material->radius_) && parcel.WriteFloat(material->saturation_) &&
+                      parcel.WriteFloat(material->brightness_) &&
+                      RSMarshallingHelper::Marshalling(parcel, material->maskColor_) &&
                       parcel.WriteInt32(material->colorMode_);
             break;
         }
@@ -717,12 +739,14 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSFilter
             break;
         }
         case RSFilter::MATERIAL: {
-            int style;
-            float dipScale;
+            MaterialParam materialParam;
             int colorMode;
-            success = success && parcel.ReadInt32(style) && parcel.ReadFloat(dipScale) && parcel.ReadInt32(colorMode);
+            success = success && parcel.ReadFloat(materialParam.radius) && parcel.ReadFloat(materialParam.saturation) &&
+                      parcel.ReadFloat(materialParam.brightness) &&
+                      RSMarshallingHelper::Unmarshalling(parcel, materialParam.maskColor) &&
+                      parcel.ReadInt32(colorMode);
             if (success) {
-                val = RSFilter::CreateMaterialFilter(style, dipScale, static_cast<BLUR_COLOR_MODE>(colorMode));
+                val = std::make_shared<RSMaterialFilter>(materialParam, static_cast<BLUR_COLOR_MODE>(colorMode));
             }
             break;
         }
@@ -846,6 +870,20 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RectT<fl
     return val != nullptr;
 }
 
+//RRect
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const RRectT<float>& val)
+{
+    return Marshalling(parcel, val.rect_) && Marshalling(parcel, val.radius_[0]) &&
+        Marshalling(parcel, val.radius_[1]) && Marshalling(parcel, val.radius_[2]) &&
+        Marshalling(parcel, val.radius_[3]);
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RRectT<float>& val)
+{
+    return Unmarshalling(parcel, val.rect_) && Unmarshalling(parcel, val.radius_[0]) &&
+        Unmarshalling(parcel, val.radius_[1]) && Unmarshalling(parcel, val.radius_[2]) &&
+        Unmarshalling(parcel, val.radius_[3]);
+}
+
 #ifdef NEW_SKIA
 // SkPaint
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SkSamplingOptions& val)
@@ -959,6 +997,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     template bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<TEMPLATE<TYPE>>& val); \
     template bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<TEMPLATE<TYPE>>& val);
 
+#ifdef NEW_SKIA
 #define BATCH_EXPLICIT_INSTANTIATION(TEMPLATE)                     \
     EXPLICIT_INSTANTIATION(TEMPLATE, bool)                         \
     EXPLICIT_INSTANTIATION(TEMPLATE, float)                        \
@@ -978,7 +1017,31 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<Color>)               \
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                     \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<DrawCmdList>) \
+    EXPLICIT_INSTANTIATION(TEMPLATE, SkMatrix)                     \
+    EXPLICIT_INSTANTIATION(TEMPLATE, SkM44)
+#else
+#define BATCH_EXPLICIT_INSTANTIATION(TEMPLATE)                     \
+    EXPLICIT_INSTANTIATION(TEMPLATE, bool)                         \
+    EXPLICIT_INSTANTIATION(TEMPLATE, float)                        \
+    EXPLICIT_INSTANTIATION(TEMPLATE, int)                          \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Color)                        \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Gravity)                      \
+    EXPLICIT_INSTANTIATION(TEMPLATE, ForegroundColorStrategyType)  \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Matrix3f)                     \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Quaternion)                   \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSFilter>)    \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSImage>)     \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSMask>)      \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSPath>)      \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSShader>)    \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector2f)                     \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<uint32_t>)            \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<Color>)               \
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                     \
+    EXPLICIT_INSTANTIATION(TEMPLATE, RRectT<float>)                \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<DrawCmdList>) \
     EXPLICIT_INSTANTIATION(TEMPLATE, SkMatrix)
+#endif
 
 BATCH_EXPLICIT_INSTANTIATION(RSRenderProperty)
 
@@ -998,7 +1061,8 @@ BATCH_EXPLICIT_INSTANTIATION(RSRenderProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSFilter>) \
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector2f)                  \
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<Color>)            \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)
+    EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                  \
+    EXPLICIT_INSTANTIATION(TEMPLATE, RRectT<float>)
 
 BATCH_EXPLICIT_INSTANTIATION(RSRenderAnimatableProperty)
 
@@ -1018,7 +1082,11 @@ bool RSMarshallingHelper::WriteToParcel(Parcel& parcel, const void* data, size_t
     if (!parcel.WriteUint32(size)) {
         return false;
     }
+#ifdef RS_ENABLE_RECORDING
+    if (size < MIN_DATA_SIZE || parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
+#else
     if (size < MIN_DATA_SIZE) {
+#endif
         return parcel.WriteUnpadBuffer(data, size);
     }
 
@@ -1047,8 +1115,12 @@ const void* RSMarshallingHelper::ReadFromParcel(Parcel& parcel, size_t size)
         ROSEN_LOGE("RSMarshallingHelper::ReadFromParcel size mismatch");
         return nullptr;
     }
-
+#ifdef RS_ENABLE_RECORDING
+    if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE ||
+        parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
+#else
     if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE) {
+#endif
         return parcel.ReadUnpadBuffer(size);
     }
     // read from ashmem
@@ -1068,8 +1140,12 @@ bool RSMarshallingHelper::SkipFromParcel(Parcel& parcel, size_t size)
         ROSEN_LOGE("RSMarshallingHelper::SkipFromParcel size mismatch");
         return false;
     }
-
+#ifdef RS_ENABLE_RECORDING
+    if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE ||
+        parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
+#else
     if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE) {
+#endif
         parcel.SkipBytes(size);
         return true;
     }

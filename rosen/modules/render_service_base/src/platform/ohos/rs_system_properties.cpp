@@ -44,6 +44,28 @@ static void ParseDfxSurfaceNamesString(const std::string& paramsStr,
 }
 
 // used by clients
+int RSSystemProperties::GetDumpFrameNum()
+{
+    return std::atoi((system::GetParameter("rosen.recording.frameNum", "0")).c_str());
+}
+
+bool RSSystemProperties::GetRecordingEnabled()
+{
+    return (system::GetParameter("rosen.recording.enabled", "0") != "0") && isRecordingEnabled_;
+}
+
+void RSSystemProperties::SetRecordingDisenabled()
+{
+    isRecordingEnabled_ = false;
+    system::SetParameter("rosen.recording enabled", "0");
+    RS_LOGD("RSSystemProperties::SetRecordingDisenabled");
+}
+
+std::string RSSystemProperties::GetRecordingFile()
+{
+    return system::GetParameter("rosen.dumpfile.path", "");
+}
+
 bool RSSystemProperties::GetUniRenderEnabled()
 {
     static bool inited = false;
@@ -56,6 +78,12 @@ bool RSSystemProperties::GetUniRenderEnabled()
     inited = true;
     ROSEN_LOGI("RSSystemProperties::GetUniRenderEnabled:%d", isUniRenderEnabled_);
     return isUniRenderEnabled_;
+}
+
+bool RSSystemProperties::GetDrawOpTraceEnabled()
+{
+    static bool code = system::GetParameter("persist.rosen.drawoptrace.enabled", "0") != "0";
+    return code;
 }
 
 bool RSSystemProperties::GetRenderNodeTraceEnabled()
@@ -87,13 +115,16 @@ PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
 #endif
 }
 
-#ifndef NEW_SKIA
 ReleaseGpuResourceType RSSystemProperties::GetReleaseGpuResourceEnabled()
 {
+#ifdef NEW_SKIA
+    return static_cast<ReleaseGpuResourceType>(
+        std::atoi((system::GetParameter("persist.release.gpuresource.enabled", "0")).c_str()));
+#else
     return static_cast<ReleaseGpuResourceType>(
         std::atoi((system::GetParameter("persist.release.gpuresource.enabled", "2")).c_str()));
-}
 #endif
+}
 
 bool RSSystemProperties::GetOcclusionEnabled()
 {
@@ -108,6 +139,11 @@ bool RSSystemProperties::GetQuickSkipPrepareEnabled()
 bool RSSystemProperties::GetHardwareComposerEnabled()
 {
     return system::GetParameter("rosen.hardwarecomposer.enabled", "1") != "0";
+}
+
+bool RSSystemProperties::GetAFBCEnabled()
+{
+    return system::GetParameter("rosen.afbc.enabled", "1") != "0";
 }
 
 std::string RSSystemProperties::GetRSEventProperty(const std::string &paraName)

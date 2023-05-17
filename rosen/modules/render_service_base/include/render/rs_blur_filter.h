@@ -26,8 +26,8 @@ public:
     ~RSBlurFilter() override;
     float GetBlurRadiusX();
     float GetBlurRadiusY();
+    std::shared_ptr<RSSkiaFilter> Compose(const std::shared_ptr<RSSkiaFilter>& inner) override;
     std::string GetDescription() override;
-    float GetBlurRadiusPx() const override;
 
     std::shared_ptr<RSFilter> Add(const std::shared_ptr<RSFilter>& rhs) override;
     std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs) override;

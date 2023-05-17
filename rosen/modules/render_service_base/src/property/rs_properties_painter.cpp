@@ -322,26 +322,19 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         return;
     }
 
-    // Expand the screenshot area to avoid animation flickering caused by floating points.
-    // Interset with the screen to prevent exceeding the screen and ensure that the boundary is greater than zero.
     auto clipIBounds = canvas.getDeviceClipBounds();
-    auto screenIRect = SkIRect::MakeWH(skSurface->width(), skSurface->height());
-    auto radius = static_cast<int32_t>(filter->GetBlurRadiusPx());
-    auto clipIPadding = clipIBounds.makeOutset(radius, radius);
-    clipIPadding.intersect(screenIRect);
+    auto clipIPadding = clipIBounds.makeOutset(-1, -1);
     auto imageSnapshot = skSurface->makeImageSnapshot(clipIPadding);
     if (imageSnapshot == nullptr) {
         ROSEN_LOGE("RSPropertiesPainter::DrawFilter image null");
         return;
     }
-    auto imgSub = imageSnapshot->makeSubset(clipIBounds.makeOffset(-clipIPadding.left(), -clipIPadding.top()));
-    filter->PreProcess(imgSub);
+    filter->PreProcess(imageSnapshot);
     canvas.resetMatrix();
     auto visibleIRect = canvas.GetVisibleRect().round();
     if (visibleIRect.intersect(clipIBounds)) {
         canvas.clipRect(SkRect::Make(visibleIRect));
-        auto visibleIPadding = visibleIRect.makeOutset(radius, radius);
-        visibleIPadding.intersect(screenIRect);
+        auto visibleIPadding = visibleIRect.makeOutset(-1, -1);
 #ifdef NEW_SKIA
         canvas.drawImageRect(imageSnapshot.get(),
             SkRect::Make(visibleIPadding.makeOffset(-clipIPadding.left(), -clipIPadding.top())),
@@ -480,6 +473,8 @@ void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaint
         canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), antiAlias);
     } else if (properties.GetClipToBounds()) {
         canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
+    } else if (properties.GetClipToRRect()) {
+        canvas.clipRRect(RRect2SkRRect(properties.GetClipRRect()), antiAlias);
     }
     // paint backgroundColor
     SkPaint paint;
@@ -493,7 +488,11 @@ void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaint
         canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
         auto boundsRect = Rect2SkRect(properties.GetBoundsRect());
         bgImage->SetDstRect(properties.GetBgImageRect());
+#ifdef NEW_SKIA
+        bgImage->CanvasDrawImage(canvas, boundsRect, SkSamplingOptions(), paint, true);
+#else
         bgImage->CanvasDrawImage(canvas, boundsRect, paint, true);
+#endif
     } else if (const auto& bgShader = properties.GetBackgroundShader()) {
         canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
         paint.setShader(bgShader->GetSkShader());
@@ -571,6 +570,8 @@ void RSPropertiesPainter::DrawForegroundColor(const RSProperties& properties, Sk
         canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
     } else if (properties.GetClipToBounds()) {
         canvas.clipRect(Rect2SkRect(properties.GetBoundsRect()), true);
+    } else if (properties.GetClipToRRect()) {
+        canvas.clipRRect(RRect2SkRRect(properties.GetClipRRect()), true);
     }
 
     SkPaint paint;
@@ -669,22 +670,21 @@ void RSPropertiesPainter::DrawFrameForDriven(const RSProperties& properties, RSP
 #endif
 }
 
-void RSPropertiesPainter::DrawCachedSpherizeSurface(const RSRenderNode& node, RSPaintFilterCanvas& canvas,
-    const sk_sp<SkSurface>& cacheSurface)
+void RSPropertiesPainter::DrawSpherize(const RSProperties& properties, RSPaintFilterCanvas& canvas,
+    const sk_sp<SkSurface>& spherizeSurface)
 {
-    if (cacheSurface == nullptr) {
+    if (spherizeSurface == nullptr) {
         return;
     }
     SkAutoCanvasRestore acr(&canvas, true);
-    const RSProperties& properties = node.GetRenderProperties();
     float canvasWidth = properties.GetBoundsRect().GetWidth();
     float canvasHeight = properties.GetBoundsRect().GetHeight();
-    if (cacheSurface->width() == 0 || cacheSurface->height() == 0) {
+    if (spherizeSurface->width() == 0 || spherizeSurface->height() == 0) {
         return;
     }
-    canvas.scale(canvasWidth / cacheSurface->width(), canvasHeight / cacheSurface->height());
+    canvas.scale(canvasWidth / spherizeSurface->width(), canvasHeight / spherizeSurface->height());
 
-    auto imageSnapshot = cacheSurface->makeImageSnapshot();
+    auto imageSnapshot = spherizeSurface->makeImageSnapshot();
     if (imageSnapshot == nullptr) {
         ROSEN_LOGE("RSPropertiesPainter::DrawCachedSpherizeSurface image  is null");
         return;

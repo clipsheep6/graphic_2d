@@ -31,7 +31,7 @@
 #include "common/rs_occlusion_region.h"
 #include "common/rs_vector4.h"
 #include "ipc_callbacks/buffer_available_callback.h"
-#include "memory/MemoryTrack.h"
+#include "memory/rs_memory_track.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
@@ -193,8 +193,14 @@ public:
         bool isUniRender) override;
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
+
+    void ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas) override {}
     void ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas) override;
+    void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
+
+    void ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas) override {}
     void ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas) override;
+    void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
 
     void SetContextBounds(const Vector4f bounds);
 
@@ -221,6 +227,9 @@ public:
 
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
+
+    void SetFingerprint(bool hasFingerprint);
+    bool GetFingerprint() const;
 
     std::shared_ptr<RSDirtyRegionManager> GetDirtyManager() const;
 
@@ -262,18 +271,8 @@ public:
         return containerRegion_;
     }
 
-    void SetGlobalAlpha(float alpha)
-    {
-        if (globalAlpha_ == alpha) {
-            return;
-        }
+    void OnAlphaChanged() override {
         alphaChanged_ = true;
-        globalAlpha_ = alpha;
-    }
-
-    float GetGlobalAlpha() const
-    {
-        return globalAlpha_;
     }
 
     void SetOcclusionVisible(bool visible)
@@ -569,6 +568,7 @@ public:
     bool GetAnimateState() const{
         return animateState_;
     }
+    bool LeashWindowRelatedAppWindowOccluded();
 
 private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
@@ -586,11 +586,11 @@ private:
     std::optional<SkRect> contextClipRect_;
 
     bool isSecurityLayer_ = false;
+    bool hasFingerprint_ = false;
     RectI srcRect_;
     SkMatrix totalMatrix_;
     int32_t offsetX_ = 0;
     int32_t offsetY_ = 0;
-    float globalAlpha_ = 1.0f;
     float positionZ_ = 0.0f;
     bool qosPidCal_ = false;
 
@@ -602,7 +602,7 @@ private:
 #endif
     bool isNotifyRTBufferAvailablePre_ = false;
     std::atomic<bool> isNotifyRTBufferAvailable_ = false;
-    std::atomic<bool> isNotifyUIBufferAvailable_ = false;
+    std::atomic<bool> isNotifyUIBufferAvailable_ = true;
     std::atomic_bool isBufferAvailable_ = false;
     sptr<RSIBufferAvailableCallback> callbackFromRT_;
     sptr<RSIBufferAvailableCallback> callbackFromUI_;
@@ -688,6 +688,8 @@ private:
     int32_t nodeCost_ = 0;
 
     bool animateState_ = false;
+
+    bool needDrawAnimateProperty_ = false;
 
     friend class RSUniRenderVisitor;
     friend class RSBaseRenderNode;

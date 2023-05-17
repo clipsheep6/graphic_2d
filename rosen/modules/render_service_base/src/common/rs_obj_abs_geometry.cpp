@@ -107,7 +107,11 @@ void RSObjAbsGeometry::UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& par
             mappedClipRect.offset(GetX(), GetY());
         }
 
+#ifdef NEW_SKIA
+        if (!mappedClipRect.intersect({x_, y_, x_ + width_, y_ + height_})) {
+#else
         if (!mappedClipRect.intersect(x_, y_, x_ + width_, y_ + height_)) {
+#endif
             // No visible area
             x_ = y_ = width_ = height_ = 0.0f;
             return;
@@ -198,27 +202,22 @@ void RSObjAbsGeometry::UpdateAbsMatrix3D()
             trans_->pivotY_ * height_ + y_ + trans_->translateY_, z_ + trans_->translateZ_);
 
         // Rotate
-#ifdef NEW_SKIA
-        SkM44 matrix4;
-#else
-        SkMatrix44 matrix4;
-#endif
         float x = trans_->quaternion_[0];
         float y = trans_->quaternion_[1];
         float z = trans_->quaternion_[2];
         float w = trans_->quaternion_[3];
 #ifdef NEW_SKIA
-        SkScalar r[16] = {
-            1.f - 2.f * (y * y + z * z), 2.f * (x * y + z * w), 2.f * (x * z - y * w), 0,
-            2.f * (x * y - z * w), 1.f - 2.f * (x * x + z * z), 2.f * (y * z + x * w), 0,
-            2.f * (x * z + y * w), 2.f * (y * z - x * w), 1.f - 2.f * (x * x + y * y), 0,
-            0, 0, 0, 1
-        };
-        matrix4.RowMajor(r);
+        SkMatrix mat = SkMatrix::MakeAll(
+            1.f - 2.f * (y * y + z * z), 2.f * (x * y - z * w), 2.f * (x * z + y * w),
+            2.f * (x * y + z * w), 1.f - 2.f * (x * x + z * z), 2.f * (y * z - x * w),
+            2.f * (x * z - y * w), 2.f * (y * z + x * w), 1.f - 2.f * (x * x + y * y));
+        SkM44 matrix4 = SkM44(mat);
 #else
-        matrix4.set3x3(1.f - 2.f * (y * y + z * z), 2.f * (x * y + z * w), 2.f * (x * z - y * w), 2.f * (x * y - z * w),
-            1.f - 2.f * (x * x + z * z), 2.f * (y * z + x * w), 2.f * (x * z + y * w), 2.f * (y * z - x * w),
-            1.f - 2.f * (x * x + y * y));
+        SkMatrix44 matrix4;
+        matrix4.set3x3(
+            1.f - 2.f * (y * y + z * z), 2.f * (x * y + z * w), 2.f * (x * z - y * w),
+            2.f * (x * y - z * w), 1.f - 2.f * (x * x + z * z), 2.f * (y * z + x * w),
+            2.f * (x * z + y * w), 2.f * (y * z - x * w), 1.f - 2.f * (x * x + y * y));
 #endif
         matrix3D = matrix3D * matrix4;
 
@@ -310,12 +309,26 @@ RectI RSObjAbsGeometry::MapAbsRect(const RectF& rect) const
         absRect.height_ = static_cast<int>(std::ceil(yRange[1] - absRect.top_));
     } else {
         // Calculate the absolute rectangle based on the matrix's translation and scaling
-        absRect.left_ = static_cast<int>(rect.left_ + matrix.getTranslateX());
-        absRect.top_ = static_cast<int>(rect.top_ + matrix.getTranslateY());
-        float right = rect.left_ + matrix.getTranslateX() + rect.width_ * matrix.getScaleX();
-        float bottom = rect.top_ + matrix.getTranslateY() + rect.height_ * matrix.getScaleY();
-        absRect.width_ = static_cast<int>(std::ceil(right - absRect.left_));
-        absRect.height_ = static_cast<int>(std::ceil(bottom - absRect.top_));
+        absRect.left_ = static_cast<int>(std::ceil(rect.left_ + matrix.getTranslateX()));
+        absRect.top_ = static_cast<int>(std::ceil(rect.top_ + matrix.getTranslateY()));
+        int right = static_cast<int>(std::ceil(rect.left_ + matrix.getTranslateX() +
+            rect.width_ * matrix.getScaleX()));
+        int bottom = static_cast<int>(std::ceil(rect.top_ + matrix.getTranslateY() +
+            rect.height_ * matrix.getScaleY()));
+
+        // Assuming matrix is identity,
+        // if rect.left_ = 100.5, rect.width_ = 0.5,
+        // then absRect.left_ = 101, right = 101, absRect.width_ = 0, the node cannot be drawn.
+        // So if right - absRect.left_ == 0 and rect.width_ * matrix.getScaleX() > 0,
+        // we should decrease absRect.left_ to make sure absRect.width_ would not be zero
+        if (right - absRect.left_ == 0 && rect.width_ * matrix.getScaleX() > 0) {
+            absRect.left_ = absRect.left_ - 1;
+        }
+        if (bottom - absRect.top_ == 0 && rect.height_ * matrix.getScaleY() > 0) {
+            absRect.top_ = absRect.top_ - 1;
+        }
+        absRect.width_ = right - absRect.left_;
+        absRect.height_ = bottom - absRect.top_;
     }
     return absRect;
 }

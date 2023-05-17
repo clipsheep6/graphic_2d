@@ -40,9 +40,8 @@ struct CalcResult {
 
 class TypographyImpl : public Typography {
 public:
-    TypographyImpl(TypographyStyle &ys,
-                   std::vector<VariantSpan> &spans,
-                   std::unique_ptr<FontProviders> providers);
+    TypographyImpl(TypographyStyle &ys, std::vector<VariantSpan> &spans,
+        std::unique_ptr<FontProviders> providers);
 
     double GetMaxWidth() const override;
     double GetHeight() const override;
@@ -72,9 +71,8 @@ private:
     void DoLayout();
     int UpdateMetrics();
     int UpdateSpanMetrics(VariantSpan &span, double &ascent);
-    void UpadateAnySpanMetrics(std::shared_ptr<AnySpan> &span,
-                               double &coveredAscent,
-                               double &coveredDescent);
+    int DoUpdateSpanMetrics(const TexgineFontMetrics &metrics, const TextStyle &style);
+    void UpadateAnySpanMetrics(std::shared_ptr<AnySpan> &span, double &coveredAscent, double &coveredDescent);
     void ApplyAlignment();
     size_t FindGlyphTargetLine(double y) const;
     size_t FindGlyphTargetIndex(size_t line, double x, double &offsetX, std::vector<double> &widths) const;

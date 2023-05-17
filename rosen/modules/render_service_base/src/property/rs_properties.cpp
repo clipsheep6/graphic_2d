@@ -241,6 +241,21 @@ bool RSProperties::UpdateGeometry(const RSProperties* parent, bool dirtyFlag, co
     return false;
 }
 
+void RSProperties::SetSandBox(Vector2f parentPosition)
+{
+    if (!sandboxPosition_) {
+        sandboxPosition_ = std::make_unique<Vector2f>();
+    }
+    *sandboxPosition_ = parentPosition;
+    geoDirty_ = true;
+    SetDirty();
+}
+
+Vector2f RSProperties::GetSandBox() const
+{
+    return sandboxPosition_ ? *sandboxPosition_ : Vector2f(-INFINITY, -INFINITY);
+}
+
 void RSProperties::SetPositionZ(float positionZ)
 {
     boundsGeo_->SetZ(positionZ);
@@ -810,6 +825,25 @@ std::shared_ptr<RectF> RSProperties::GetDrawRegion() const
     return drawRegion_;
 }
 
+void RSProperties::SetClipRRect(RRect clipRRect)
+{
+    if (!clipRRect_) {
+        clipRRect_ = std::make_unique<RRect>();
+    }
+    clipRRect_->SetValues(clipRRect.rect_, clipRRect.radius_);
+    SetDirty();
+}
+
+RRect RSProperties::GetClipRRect() const
+{
+    return clipRRect_ ? *clipRRect_ : RRect();
+}
+
+bool RSProperties::GetClipToRRect() const
+{
+    return clipRRect_ != nullptr;
+}
+
 void RSProperties::SetClipBounds(std::shared_ptr<RSPath> path)
 {
     if (clipPath_ != path) {
@@ -931,6 +965,7 @@ void RSProperties::Reset()
 
     backgroundFilter_ = nullptr;
     border_ = nullptr;
+    clipRRect_ = nullptr;
     clipPath_ = nullptr;
     cornerRadius_ = nullptr;
     decoration_ = nullptr;
@@ -941,6 +976,8 @@ void RSProperties::Reset()
     lightUpEffectDegree_ = 1.0f;
     pixelStretch_ = nullptr;
     pixelStretchPercent_ = nullptr;
+
+    sandboxPosition_ = nullptr;
 }
 
 void RSProperties::SetDirty()
@@ -979,11 +1016,6 @@ RectI RSProperties::GetDirtyRect() const
         return dirtyRect;
     } else {
         auto drawRegion = boundsGeometry->MapAbsRect(*drawRegion_);
-        // this is used to fix the scene with drawRegion problem, which is need to be optimized
-        drawRegion.SetRight(drawRegion.GetRight() + 1);
-        drawRegion.SetBottom(drawRegion.GetBottom() + 1);
-        drawRegion.SetAll(drawRegion.left_ - 1, drawRegion.top_ - 1,
-            drawRegion.width_ + 1, drawRegion.height_ + 1);
         return dirtyRect.JoinRect(drawRegion);
     }
 }
@@ -1004,11 +1036,6 @@ RectI RSProperties::GetDirtyRect(RectI& drawRegion) const
         return dirtyRect;
     } else {
         drawRegion = boundsGeometry->MapAbsRect(*drawRegion_);
-        // this is used to fix the scene with drawRegion problem, which is need to be optimized
-        drawRegion.SetRight(drawRegion.GetRight() + 1);
-        drawRegion.SetBottom(drawRegion.GetBottom() + 1);
-        drawRegion.SetAll(drawRegion.left_ - 1, drawRegion.top_ - 1,
-            drawRegion.width_ + 1, drawRegion.height_ + 1);
         return dirtyRect.JoinRect(drawRegion);
     }
 }

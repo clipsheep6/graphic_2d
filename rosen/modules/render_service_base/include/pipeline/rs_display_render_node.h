@@ -25,7 +25,7 @@
 #endif
 
 #include "common/rs_macros.h"
-#include "memory/MemoryTrack.h"
+#include "memory/rs_memory_track.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
 #include "platform/drawing/rs_surface.h"
@@ -73,6 +73,16 @@ public:
     int32_t GetDisplayOffsetY() const
     {
         return offsetY_;
+    }
+
+    bool GetFingerprint() const
+    {
+        return hasFingerprint_;
+    }
+
+    void SetFingerprint(bool hasFingerprint)
+    {
+        hasFingerprint_ = hasFingerprint;
     }
 
     void CollectSurface(
@@ -222,6 +232,7 @@ private:
 
     std::shared_ptr<RSSurface> surface_;
     bool surfaceCreated_ { false };
+    bool hasFingerprint_ = false;
 #ifndef ROSEN_CROSS_PLATFORM
     sptr<IBufferConsumerListener> consumerListener_;
 #endif

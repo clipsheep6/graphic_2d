@@ -18,6 +18,7 @@
 #include "egl_manager.h"
 #include "drawing_utils.h"
 #include "surface_ohos_gl.h"
+#include "iostream"
 
 namespace OHOS {
 namespace Rosen {
@@ -59,6 +60,7 @@ bool GLESRenderBackend::SetUpGrContext()
     GrContextOptions options;
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
+    options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
 #if defined(USE_CANVASKIT0310_SKIA)
     sk_sp<GrDirectContext> grContext(GrDirectContext::MakeGL(std::move(glInterface), options));
     if (grContext == nullptr) {
@@ -66,7 +68,6 @@ bool GLESRenderBackend::SetUpGrContext()
         return false;
     }
 #else
-    options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
     sk_sp<GrContext> grContext(GrContext::MakeGL(std::move(glInterface), options));
     if (grContext == nullptr) {
         LOGE("SetUpGrContext grContext is null");
@@ -125,6 +126,7 @@ void GLESRenderBackend::RenderFrame()
     // flush commands
     if (skSurface_->getCanvas() != nullptr) {
         LOGD("RenderFrame: Canvas");
+        std::cout << "GLESRenderBackend::RenderFrame flushing" << std::endl;
         skSurface_->getCanvas()->flush();
     } else {
         LOGW("canvas is nullptr!!!");

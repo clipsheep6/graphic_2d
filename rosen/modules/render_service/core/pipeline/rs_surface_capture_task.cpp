@@ -113,12 +113,8 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
     if (auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>()) {
         if (visitor_->IsUniRender() && !visitor_->GetHasingSecurityLayer()) {
             auto rotation = displayNode->GetRotation();
-            if (rotation == ScreenRotation::ROTATION_90) {
+            if (rotation == ScreenRotation::ROTATION_90 || rotation == ScreenRotation::ROTATION_270) {
                 pixelmap->rotate(static_cast<int32_t>(90)); // 90 degrees
-            }
-
-            if (rotation == ScreenRotation::ROTATION_270) {
-                pixelmap->rotate(static_cast<int32_t>(270)); // 270 degrees
             }
             RS_LOGD("RSSurfaceCaptureTask::Run: PixelmapRotation: %d", static_cast<int32_t>(rotation));
         }
@@ -549,6 +545,7 @@ void RSSurfaceCaptureVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     }
     node.GetMutableRenderProperties().CheckEmptyBounds();
     node.ProcessRenderBeforeChildren(*canvas_);
+    node.ProcessRenderContents(*canvas_);
     ProcessBaseRenderNode(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }

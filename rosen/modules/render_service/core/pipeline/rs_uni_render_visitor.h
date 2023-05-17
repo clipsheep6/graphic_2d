@@ -16,6 +16,7 @@
 #define RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_VISITOR_H
 
 #include <cstdint>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -81,6 +82,13 @@ public:
         currentFocusedPid_ = pid;
     }
 
+    void SetAssignedWindowNodes(const std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
+        const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes)
+    {
+        mainThreadNodes_ = mainThreadNodes;
+        subThreadNodes_ = subThreadNodes;
+    }
+
     bool GetAnimateState() const
     {
         return doAnimate_;
@@ -104,7 +112,7 @@ public:
     void AssignGlobalZOrderAndCreateLayer();
 
     void CopyForParallelPrepare(std::shared_ptr<RSUniRenderVisitor> visitor);
-    // Some properties defiend before ProcessSurfaceRenderNode() may be used in
+    // Some properties defined before ProcessSurfaceRenderNode() may be used in
     // ProcessSurfaceRenderNode() method. We should copy these properties in parallel render.
     void CopyPropertyForParallelVisitor(RSUniRenderVisitor *mainVisitor);
     bool GetIsPartialRenderEnabled() const
@@ -164,7 +172,6 @@ private:
     void SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
         const Occlusion::Region alignedDirtyRegion);
 
-    void InitCacheSurface(RSRenderNode& node, int width, int height);
     void DrawChildRenderNode(RSRenderNode& node);
     void CheckColorSpace(RSSurfaceRenderNode& node);
     void AddOverDrawListener(std::unique_ptr<RSRenderFrame>& renderFrame,
@@ -217,9 +224,11 @@ private:
     SkMatrix parentSurfaceNodeMatrix_;
 
     ScreenId currentVisitDisplay_;
-    std::map<ScreenId, bool> displayHasSecSurface_;
+    std::map<ScreenId, int> displayHasSecSurface_;
     std::set<ScreenId> mirroredDisplays_;
     bool isSecurityDisplay_ = false;
+
+    bool hasFingerprint_ = false;
 
     std::shared_ptr<RSBaseRenderEngine> renderEngine_;
 
@@ -243,8 +252,10 @@ private:
     std::vector<ScreenColorGamut> colorGamutModes_;
     pid_t currentFocusedPid_ = -1;
 
+    std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes_;
+    std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes_;
+
     bool needColdStartThread_ = false; // flag used for cold start app window
-    bool needCheckFirstFrame_ = false; // flag used for avoiding notifying first frame repeatedly
 
     bool isDirtyRegionAlignedEnable_ = false;
     std::shared_ptr<std::mutex> surfaceNodePrepareMutex_;
@@ -259,7 +270,7 @@ private:
     unsigned int processedCanvasNodeInCurrentSurface_ = 0;
 
     float globalZOrder_ = 0.0f;
-    bool isFreeze_ = false;
+    bool isStaticCached_ = false;
     bool isHardwareForcedDisabled_ = false; // indicates if hardware composer is totally disabled
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> hardwareEnabledNodes_;
     // vector of all app window nodes with surfaceView, sorted by zOrder
@@ -269,7 +280,24 @@ private:
     // driven render
     std::unique_ptr<DrivenInfo> drivenInfo_ = nullptr;
 
+    using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, float, std::optional<SkMatrix>>;
+    // Note: we use the NodeId of in node as the key
+    std::unordered_map<NodeId, RenderParam> unpairedTransitionNodes_;
+    std::vector<std::pair<RenderParam, RenderParam>> pairedTransitionNodes_;
+    // return true if we should prepare/process, false if we should skip.
+    bool PrepareSharedTransitionNode(RSBaseRenderNode& node);
+    bool ProcessSharedTransitionNode(RSBaseRenderNode& node);
+    // try to pair nodes, call func on paired ones, and move unpaired ones to outList
+    void FindPairedSharedTransitionNodes(std::unordered_map<NodeId, RenderParam>& outList,
+        void (RSUniRenderVisitor::*func)(const RenderParam&, const RenderParam&));
+    void PreparePairedSharedTransitionNodes(const RenderParam& first, const RenderParam& second);
+    void ProcessPairedSharedTransitionNodes(const RenderParam& first, const RenderParam& second);
+
+    std::weak_ptr<RSBaseRenderNode> logicParentNode_;
+
     bool isCalcCostEnable_ = false;
+
+    SkMatrix rootMatrix_;
 
     uint32_t appWindowNum_ = 0;
 
@@ -280,6 +308,8 @@ private:
     // displayNodeMatrix indicates display node's matrix info
     std::optional<SkMatrix> displayNodeMatrix_;
     mutable std::mutex copyVisitorInfosMutex_;
+    sk_sp<SkImage> cacheImgForCapture_ = nullptr;
+    bool resetRotate_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

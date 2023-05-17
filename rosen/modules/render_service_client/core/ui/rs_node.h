@@ -67,6 +67,9 @@ public:
         const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve,
         const PropertyCallback& callback);
 
+    static void RegisterTransitionPair(NodeId inNodeId, NodeId outNodeId);
+    static void UnregisterTransitionPair(NodeId inNodeId, NodeId outNodeId);
+
     static void OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
         const RSAnimationTimingCurve& timingCurve, const std::function<void()>& finishCallback = nullptr);
     static std::vector<std::shared_ptr<RSAnimation>> CloseImplicitAnimation();
@@ -105,6 +108,8 @@ public:
 
     // The property is valid only for CanvasNode and SurfaceNode in uniRender.
     virtual void SetFreeze(bool isFreeze);
+
+    void SetSandBox(std::optional<Vector2f> parentPosition);
 
     void SetPositionZ(float positionZ);
 
@@ -179,6 +184,7 @@ public:
 
     void SetFrameGravity(Gravity gravity);
 
+    void SetClipRRect(const Vector4f& clipRect, const Vector4f& clipRadius);
     void SetClipBounds(const std::shared_ptr<RSPath>& clipToBounds);
     void SetClipToBounds(bool clipToBounds);
     void SetClipToFrame(bool clipToFrame);
@@ -261,6 +267,9 @@ private:
     bool extendModifierIsDirty_ { false };
 
     RSModifierExtractor stagingPropertiesExtractor_;
+
+    // driven render
+    bool drivenFlag_ = false;
 
     friend class RSAnimation;
     friend class RSCurveAnimation;

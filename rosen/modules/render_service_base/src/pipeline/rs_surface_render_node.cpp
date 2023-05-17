@@ -234,8 +234,18 @@ void RSSurfaceRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->ProcessSurfaceRenderNode(*this);
 }
 
+void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
+{
+    needDrawAnimateProperty_ = true;
+    ProcessAnimatePropertyBeforeChildren(canvas);
+    needDrawAnimateProperty_ = false;
+}
+
 void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas)
 {
+    if (GetCacheType() != CacheType::SPHERIZE && !needDrawAnimateProperty_) {
+        return;
+    }
     const auto& property = GetRenderProperties();
     const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
@@ -256,6 +266,13 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanv
         RSPropertiesPainter::DrawFilter(property, canvas, filter, skRectPtr, canvas.GetSurface());
     }
     SetTotalMatrix(canvas.getTotalMatrix());
+}
+
+void RSSurfaceRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
+{
+    needDrawAnimateProperty_ = true;
+    ProcessAnimatePropertyAfterChildren(canvas);
+    needDrawAnimateProperty_ = false;
 }
 
 void RSSurfaceRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas)
@@ -352,6 +369,16 @@ bool RSSurfaceRenderNode::GetSecurityLayer() const
     return isSecurityLayer_;
 }
 
+void RSSurfaceRenderNode::SetFingerprint(bool hasFingerprint)
+{
+    hasFingerprint_ = hasFingerprint;
+}
+
+bool RSSurfaceRenderNode::GetFingerprint() const
+{
+    return hasFingerprint_;
+}
+
 #ifndef ROSEN_CROSS_PLATFORM
 void RSSurfaceRenderNode::SetColorSpace(ColorGamut colorSpace)
 {
@@ -392,8 +419,11 @@ void RSSurfaceRenderNode::RegisterBufferAvailableListener(
         std::lock_guard<std::mutex> lock(mutexRT_);
         callbackFromRT_ = callback;
     } else {
-        std::lock_guard<std::mutex> lock(mutexUI_);
-        callbackFromUI_ = callback;
+        {
+            std::lock_guard<std::mutex> lock(mutexUI_);
+            callbackFromUI_ = callback;
+        }
+        isNotifyUIBufferAvailable_ = false;
     }
 }
 
@@ -453,20 +483,26 @@ void RSSurfaceRenderNode::NotifyUIBufferAvailable()
         if (callbackFromUI_) {
             ROSEN_LOGD("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %" PRIu64, GetId());
             callbackFromUI_->OnBufferAvailable();
-        } else {
-            isNotifyUIBufferAvailable_ = false;
         }
     }
 }
 
 bool RSSurfaceRenderNode::IsNotifyRTBufferAvailable() const
 {
+#if defined(ROSEN_ANDROID) || defined(ROSEN_IOS)
+    return true;
+#else
     return isNotifyRTBufferAvailable_;
+#endif
 }
 
 bool RSSurfaceRenderNode::IsNotifyRTBufferAvailablePre() const
 {
+#if defined(ROSEN_ANDROID) || defined(ROSEN_IOS)
+    return true;
+#else
     return isNotifyRTBufferAvailablePre_;
+#endif
 }
 
 bool RSSurfaceRenderNode::IsNotifyUIBufferAvailable() const
@@ -971,5 +1007,21 @@ std::optional<SkRect> RSSurfaceRenderNode::GetContextClipRegion() const
 {
     return contextClipRect_;
 }
+
+bool RSSurfaceRenderNode::LeashWindowRelatedAppWindowOccluded()
+{
+    if (!IsLeashWindow()) {
+        return false;
+    }
+    for (auto& child : GetChildren()) {
+        auto childNode = child.lock();
+        const auto& childNodeSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
+        if (childNodeSurface->GetVisibleRegion().IsEmpty()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 } // namespace Rosen
 } // namespace OHOS

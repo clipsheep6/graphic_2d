@@ -64,7 +64,12 @@ public:
     ~RSImage();
 
     bool IsEqual(const RSImage& other) const;
+#ifdef NEW_SKIA
+    void CanvasDrawImage(SkCanvas& canvas, const SkRect& rect, const SkSamplingOptions& samplingOptions,
+        const SkPaint& paint, bool isBackground = false);
+#else
     void CanvasDrawImage(SkCanvas& canvas, const SkRect& rect, const SkPaint& paint, bool isBackground = false);
+#endif
     void SetImageFit(int fitNum);
     void SetImageRepeat(int repeatNum);
     void SetRadius(const SkVector radius[]);
@@ -74,12 +79,29 @@ public:
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static RSImage* Unmarshalling(Parcel& parcel);
 #endif
-
+    void dump(std::string &desc, int depth) const
+    {
+        std::string split(depth, '\t');
+        desc += split + "RSImage:{";
+        desc += split + "\timageFit_: " + std::to_string(static_cast<int>(imageFit_)) + "\n";
+        desc += split + "\timageRepeat_: " + std::to_string(static_cast<int>(imageRepeat_)) + "\n";
+        int radiusSize = 4;
+        for (int i = 0; i < radiusSize; i++) {
+            radius_[i].dump(desc, depth + 1);
+        }
+        desc += split + frameRect_.ToString();
+        desc += split + "\tscale_: " + std::to_string(scale_) + "\n";
+        desc += split + "}\n";
+    }
 private:
     void ApplyImageFit();
     void ApplyCanvasClip(SkCanvas& canvas);
-    void DrawImageRepeatRect(const SkPaint& paint, SkCanvas& canvas);
     void UploadGpu(SkCanvas& canvas);
+#ifdef NEW_SKIA
+    void DrawImageRepeatRect(const SkSamplingOptions& samplingOptions, const SkPaint& paint, SkCanvas& canvas);
+#else
+    void DrawImageRepeatRect(const SkPaint& paint, SkCanvas& canvas);
+#endif
 
     sk_sp<SkData> compressData_;
     ImageFit imageFit_ = ImageFit::COVER;

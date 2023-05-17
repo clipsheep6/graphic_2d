@@ -44,11 +44,6 @@ public:
         return Type;
     }
 
-    enum CacheType {
-        NONE = 0,
-        FREEZE,
-        SPHERIZE,
-    };
     ~RSRenderNode() override;
     bool IsDirty() const override;
 
@@ -73,13 +68,16 @@ public:
         return animationManager_;
     }
 
-    virtual void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas);
-    virtual void ProcessRenderContents(RSPaintFilterCanvas& canvas) {}
-    virtual void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas);
-    virtual void ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas) {}
+    virtual void ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas);
     virtual void ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas) {}
+    virtual void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas);
+
+    virtual void ProcessRenderContents(RSPaintFilterCanvas& canvas) {}
+
+    virtual void ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas);
     virtual void ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas) {}
-    virtual void ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas) {}
+    virtual void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas);
+
     void CheckCacheType();
     void RenderTraceDebug() const;
     bool HasDisappearingTransition(bool recursive) const override
@@ -120,30 +118,39 @@ public:
     // update parent's children rect including childRect and itself
     void UpdateParentChildrenRect(std::shared_ptr<RSBaseRenderNode> parentNode) const;
 
-    void SetFreeze(bool isFreeze)
+    void SetStaticCached(bool isStaticCached)
     {
-        isFreeze_ = isFreeze;
+        isStaticCached_ = isStaticCached;
     }
 
-    bool IsFreeze() const
+    bool IsStaticCached() const
     {
-        return isFreeze_;
+        return isStaticCached_;
     }
 
-    void SetCacheSurface(sk_sp<SkSurface> cacheSurface)
-    {
-        cacheSurface_ = std::move(cacheSurface);
-    }
-
+    void InitCacheSurface(RSPaintFilterCanvas& canvas, int width, int height);
     sk_sp<SkSurface> GetCacheSurface() const
     {
         return cacheSurface_;
     }
 
+    void UpdateCompletedCacheSurface()
+    {
+        std::swap(cacheSurface_, cacheCompletedSurface_);
+    }
+
+    sk_sp<SkSurface> GetCompletedCacheSurface() const
+    {
+        return cacheCompletedSurface_;
+    }
+
     void ClearCacheSurface()
     {
         cacheSurface_ = nullptr;
+        cacheCompletedSurface_ = nullptr;
     }
+
+    void DrawCacheSurface(RSPaintFilterCanvas& canvas) const;
 
     void SetCacheType(CacheType cacheType)
     {
@@ -213,7 +220,48 @@ public:
 
     bool IsContentChanged() const
     {
-        return isContentChanged_ || !animationManager_.animations_.empty();
+        return isContentChanged_ || HasAnimation();
+    }
+
+    bool HasAnimation() const
+    {
+        return !animationManager_.animations_.empty();
+    }
+
+    bool HasFilter() const
+    {
+        return hasFilter_;
+    }
+
+    void SetHasFilter(bool hasFilter)
+    {
+        hasFilter_ = hasFilter;
+    }
+
+    bool IsMainThreadNode() const
+    {
+        return isMainThreadNode_;
+    }
+
+    void SetIsMainThreadNode(bool isMainThreadNode)
+    {
+        isMainThreadNode_ = isMainThreadNode;
+    }
+
+    void SetPriority(NodePriorityType priority)
+    {
+        priority_ = priority;
+    }
+
+    NodePriorityType GetPriority()
+    {
+        return priority_;
+    }
+
+    bool HasCachedTexture() const
+    {
+        // return true if cached texture existed, include itself or its children
+        return false;
     }
 
     void SetDrawRegion(std::shared_ptr<RectF> rect)
@@ -224,6 +272,15 @@ public:
     void UpdateDrawRegion();
 
     /////////////////////////////////////////////
+
+    // shared transition params, in format <InNodeId, target weakPtr>, nullopt means no transition
+    using SharedTransitionParam = std::pair<NodeId, std::weak_ptr<RSRenderNode>>;
+    void SetSharedTransitionParam(const std::optional<SharedTransitionParam>&& sharedTransitionParam);
+    const std::optional<SharedTransitionParam>& GetSharedTransitionParam() const;
+
+    void SetGlobalAlpha(float alpha);
+    float GetGlobalAlpha() const;
+    virtual void OnAlphaChanged() {}
 
 protected:
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
@@ -258,10 +315,15 @@ private:
     std::shared_ptr<RSRenderModifier> boundsModifier_;
     std::shared_ptr<RSRenderModifier> frameModifier_;
 
-    std::atomic<bool> isFreeze_ = false;
     sk_sp<SkSurface> cacheSurface_ = nullptr;
+    sk_sp<SkSurface> cacheCompletedSurface_ = nullptr;
+    std::atomic<bool> isStaticCached_ = false;
     CacheType cacheType_ = CacheType::NONE;
     bool cacheTypeChanged_ = false;
+
+    bool isMainThreadNode_ = false;
+    bool hasFilter_ = false;
+    NodePriorityType priority_ = NodePriorityType::MAIN_PRIORITY;
 
     // driven render
     int itemIndex_ = -1;
@@ -269,11 +331,15 @@ private:
     bool isMarkDrivenRender_ = false;
     bool paintState_ = false;
     bool isContentChanged_ = false;
+    float globalAlpha_ = 1.0f;
+    std::optional<SharedTransitionParam> sharedTransitionParam_;
+
     std::shared_ptr<RectF> drawRegion_ = nullptr;
 
     friend class RSRenderTransition;
     friend class RSRenderNodeMap;
     friend class RSProxyRenderNode;
+    friend class RSBaseRenderNode;
 };
 } // namespace Rosen
 } // namespace OHOS

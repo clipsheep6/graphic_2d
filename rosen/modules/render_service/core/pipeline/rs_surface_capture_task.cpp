@@ -74,11 +74,14 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         return nullptr;
     }
 #ifdef RS_ENABLE_GL
-#ifndef NEW_SKIA
+
     auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
+#ifndef NEW_SKIA
     GrContext* grContext = renderContext != nullptr ? renderContext->GetGrContext() : nullptr;
-    RSTagTracker tagTracker(grContext, node->GetId(), RSTagTracker::TAGTYPE::TAG_CAPTURE);
+#else
+    GrDirectContext* grContext = renderContext != nullptr ? renderContext -> GetGrContext() : nullptr;
 #endif
+    RSTagTracker tagTracker(grContext, node->GetId(),RSTagTracker::TAGTYPE::TAG_CAPTURE);
 #endif
     auto skSurface = CreateSurface(pixelmap);
     if (skSurface == nullptr) {

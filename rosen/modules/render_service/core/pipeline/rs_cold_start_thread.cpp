@@ -187,7 +187,7 @@ void RSColdStartThread::PostPlayBackTask(std::shared_ptr<DrawCmdList> drawCmdLis
             grContext_ = context_->MakeGrContext();
         }
 #ifndef NEW_SKIA
-        RSTagTracker tagTracker(grContext_.get(), node->GetId(), RSTagTracker::TAGTYPE::TAG_COLD_START);
+        //RSTagTracker tagTracker(grContext_.get(), node->GetId(), RSTagTracker::TAGTYPE::TAG_COLD_START);
 #endif
         SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
         skSurface_ = SkSurface::MakeRenderTarget(grContext_.get(), SkBudgeted::kYes, info);

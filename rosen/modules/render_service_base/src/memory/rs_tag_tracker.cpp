@@ -16,10 +16,14 @@
 #include "memory/rs_tag_tracker.h"
 
 #include "platform/common/rs_log.h"
-#ifndef NEW_SKIA
+
 namespace OHOS::Rosen {
 ReleaseGpuResourceType RSTagTracker::releaseGpuResourceEnable_ = ReleaseGpuResourceType::DISABLED;
+#if defined(NEW_SKIA)
+RSTagTracker::RSTagTracker(GrDirectContext* grContext , RSTagTracker::TAGTYPE tagType)
+#else
 RSTagTracker::RSTagTracker(GrContext* grContext, RSTagTracker::TAGTYPE tagType)
+#endif
     : grContext_(grContext)
 {
     if (!grContext_) {
@@ -62,6 +66,9 @@ std::string RSTagTracker::TagType2String(TAGTYPE type)
         case TAG_ACQUIRE_SURFACE :
             tagType = "acquire_surface";
             break;
+        case TAG_RENDER_FRAME :
+            tagType = "render_frame";
+            break;
         case TAG_DRAW_SURFACENODE :
             tagType = "draw_surface_node";
             break;
@@ -88,7 +95,11 @@ RSTagTracker::RSTagTracker(GrContext* grContext, NodeId nodeId, RSTagTracker::TA
 #endif
 }
 
+#if defined(NEW_SKIA)
+RSTagTracker::RSTagTracker(GrDirectContext* grContext, GrGpuResourceTag& tag)
+#else
 RSTagTracker::RSTagTracker(GrContext* grContext, GrGpuResourceTag& tag)
+#endif
     : grContext_(grContext)
 {
     if (!grContext_) {
@@ -133,4 +144,3 @@ RSTagTracker::~RSTagTracker()
 #endif
 }
 } // namespace OHOS::Rosen
-#endif

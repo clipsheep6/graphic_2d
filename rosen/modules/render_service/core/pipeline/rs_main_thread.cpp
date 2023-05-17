@@ -1541,6 +1541,7 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         GrGpuResourceTag tag(pid, 0, 0, 0);
         MemoryManager::ReleaseAllGpuResource(grContext, tag);
 #endif
+//
     }
     dumpString.append("trimMem: " + type + "\n");
 #else

@@ -80,7 +80,7 @@ ohos_shared_library("libcomposer") {
     "drivers_interface_display:libdisplay_composer_hdi_impl",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 

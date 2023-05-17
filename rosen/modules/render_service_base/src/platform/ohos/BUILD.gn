@@ -74,7 +74,7 @@ ohos_source_set("rosen_ohos_sources") {
       "backend/rs_surface_ohos_gl.cpp",
     ]
 
-    if (graphic_standard_feature_enable_vulkan) {
+    if (graphic_2d_feature_enable_vulkan) {
       sources += [
         "backend/rs_surface_frame_ohos_vulkan.cpp",
         "backend/rs_surface_ohos_vulkan.cpp",
@@ -130,7 +130,7 @@ ohos_source_set("rosen_ohos_sources") {
       include_dirs += [ "//third_party/flutter/skia" ]
     }
 
-    if (graphic_standard_feature_enable_vulkan) {
+    if (graphic_2d_feature_enable_vulkan) {
       include_dirs += [ "//third_party/flutter/engine/flutter/vulkan" ]
     }
     public_deps += [

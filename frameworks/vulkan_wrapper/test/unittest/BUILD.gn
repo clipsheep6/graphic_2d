@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-module_out_path = "graphic_standard/vulkan_wrapper"
+module_out_path = "graphic_2d/vulkan_wrapper"
 
 group("unittest") {
   testonly = true
@@ -73,5 +73,5 @@ ohos_static_library("vulkan_wrapper_test_common") {
     "//third_party/zlib:libz",
   ]
   subsystem_name = "graphic"
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
 }

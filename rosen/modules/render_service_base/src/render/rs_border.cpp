@@ -176,6 +176,9 @@ void SetBorderEffect(SkPaint& paint, BorderStyle style, float width, float space
 
 bool RSBorder::ApplyFillStyle(SkPaint& paint) const
 {
+    if (GetStyle() == BorderStyle::SOLID3D) {
+        return false;
+    }
     if (colors_.size() != 1) {
         return false;
     }
@@ -189,6 +192,9 @@ bool RSBorder::ApplyFillStyle(SkPaint& paint) const
 
 bool RSBorder::ApplyPathStyle(SkPaint& paint) const
 {
+    if (GetStyle() == BorderStyle::SOLID3D) {
+        return false;
+    }
     if (colors_.size() != 1 || widths_.size() != 1 || styles_.size() != 1) {
         return false;
     }
@@ -201,6 +207,9 @@ bool RSBorder::ApplyPathStyle(SkPaint& paint) const
 
 bool RSBorder::ApplyFourLine(SkPaint& paint) const
 {
+    if (GetStyle() == BorderStyle::SOLID3D) {
+        return false;
+    }
     if (colors_.size() != 1 || styles_.size() != 1) {
         return false;
     }
@@ -304,6 +313,10 @@ void RSBorder::PaintTopPath(SkCanvas& canvas, SkPaint& paint, SkRRect& rrect) co
             topClipPath.close();
             canvas.clipPath(topClipPath, SkClipOp::kDifference, true);
         }
+
+        if (GetStyle() == BorderStyle::SOLID3D) {
+            paint.setColor(SK_ColorWHITE);
+        }
         canvas.drawPath(topBorder, paint);
     }
 }
@@ -353,6 +366,10 @@ void RSBorder::PaintRightPath(SkCanvas& canvas, SkPaint& paint, SkRRect& rrect) 
             rightClipPath.lineTo(offsetX + width - rightW * EXTEND, offsetY + height);
             rightClipPath.close();
             canvas.clipPath(rightClipPath, SkClipOp::kDifference, true);
+        }
+
+        if (GetStyle() == BorderStyle::SOLID3D) {
+            paint.setColor(SK_ColorGRAY);
         }
         canvas.drawPath(rightBorder, paint);
     }
@@ -406,6 +423,10 @@ void RSBorder::PaintBottomPath(SkCanvas& canvas, SkPaint& paint, SkRRect& rrect)
             bottomClipPath.close();
             canvas.clipPath(bottomClipPath, SkClipOp::kDifference, true);
         }
+
+        if (GetStyle() == BorderStyle::SOLID3D) {
+            paint.setColor(SK_ColorGRAY);
+        }
         canvas.drawPath(bottomBorder, paint);
     }
 }
@@ -455,6 +476,10 @@ void RSBorder::PaintLeftPath(SkCanvas& canvas, SkPaint& paint, SkRRect& rrect) c
             topClipPath.lineTo(offsetX + leftW * EXTEND, offsetY);
             topClipPath.close();
             canvas.clipPath(topClipPath, SkClipOp::kDifference, true);
+        }
+
+        if (GetStyle() == BorderStyle::SOLID3D) {
+            paint.setColor(SK_ColorWHITE);
         }
         canvas.drawPath(leftBorder, paint);
     }

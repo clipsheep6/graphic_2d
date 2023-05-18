@@ -106,6 +106,8 @@ public:
 
     void SetFreeze(bool isFreeze) override;
 
+    void SetSurface(sptr<Surface> surface);
+
 protected:
     bool NeedForcedSendToRemote() const override;
     RSSurfaceNode(const RSSurfaceNodeConfig& config, bool isRenderServiceNode);

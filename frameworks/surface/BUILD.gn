@@ -61,6 +61,7 @@ ohos_shared_library("surface") {
     "src/buffer_queue_producer.cpp",
     "src/buffer_utils.cpp",
     "src/consumer_surface.cpp",
+    "src/form_surface_delegate.cpp",
     "src/native_buffer.cpp",
     "src/native_window.cpp",
     "src/producer_surface.cpp",
@@ -97,6 +98,7 @@ ohos_shared_library("surface") {
     "drivers_interface_display:libdisplay_buffer_hdi_impl",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
+    "input:libmmi-client",
     "ipc:ipc_single",
   ]
 

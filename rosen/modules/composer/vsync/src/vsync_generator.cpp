@@ -18,6 +18,7 @@
 #include <sched.h>
 #include <sys/resource.h>
 #include <string>
+#include "vsync_log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -126,6 +127,10 @@ void VSyncGenerator::ThreadLoop()
         }
         ScopedBytrace func("GenerateVsyncCount:" + std::to_string(listeners.size()));
         for (uint32_t i = 0; i < listeners.size(); i++) {
+            if (listeners[i].callback_ == nullptr) {
+                VLOGE("VsyncGenerator Callback %{public}d is invalid", i);
+                continue;
+            }
             listeners[i].callback_->OnVSyncEvent(listeners[i].lastTime_, period_);
         }
     }

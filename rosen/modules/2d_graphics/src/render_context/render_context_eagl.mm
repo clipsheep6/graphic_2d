@@ -186,10 +186,6 @@ bool RenderContextEAGL::SetUpGrContext()
 
 sk_sp<SkSurface> RenderContextEAGL::AcquireSurface(int width, int height)
 {
-    if (width != storage_size_width_ && storage_size_width_ > 0) {
-        static_cast<CAEAGLLayer*>(layer_).contentsScale = width * 1.0 / storage_size_width_;
-    }
-
     GrGLFramebufferInfo framebufferInfo;
     framebufferInfo.fFBOID = framebuffer_;
     framebufferInfo.fFormat = 0x8058;

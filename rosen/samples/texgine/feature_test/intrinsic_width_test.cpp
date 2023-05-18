@@ -43,14 +43,14 @@ struct IntrinsicTestData {
     {
         .ys = {
             .ellipsis_ = u"",
-            .wordBreakType_ = WordBreakType::BREAKWORD,
+            .wordBreakType_ = WordBreakType::BREAK_WORD,
         },
         .title = "breakWord",
     },
     {
         .ys = {
             .ellipsis_ = u"",
-            .wordBreakType_ = WordBreakType::BREAKALL,
+            .wordBreakType_ = WordBreakType::BREAK_ALL,
         },
         .title = "breakAll",
     },
@@ -63,7 +63,7 @@ struct IntrinsicTestData {
     {
         .ys = {
             .ellipsis_ = u"",
-            .wordBreakType_ = WordBreakType::BREAKALL,
+            .wordBreakType_ = WordBreakType::BREAK_ALL,
         },
         .title = "breakAll，中文",
         .widthLimit = 120,

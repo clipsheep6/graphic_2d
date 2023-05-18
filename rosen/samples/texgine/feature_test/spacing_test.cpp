@@ -37,7 +37,7 @@ struct TestInfo {
     { .xs_ = { .wordSpacing_ = 20, }, },
     {
         .xs_ = { .letterSpacing_ = 20, .wordSpacing_ = 20, },
-        .ys_ = { .wordBreakType_ = WordBreakType::BREAKALL, },
+        .ys_ = { .wordBreakType_ = WordBreakType::BREAK_ALL, },
     },
 };
 
@@ -66,7 +66,7 @@ public:
             if (xs.wordSpacing_) {
                 ss << "WordSpacing: " << xs.wordSpacing_ << " ";
             }
-            if (ys.wordBreakType_ == WordBreakType::BREAKALL) {
+            if (ys.wordBreakType_ == WordBreakType::BREAK_ALL) {
                 ss << "BreakAll";
             }
 

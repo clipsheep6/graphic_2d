@@ -89,7 +89,7 @@ public:
         cgs2_.PushBack({.chars_ = TextConverter::ToUTF16(" "), .glyphs_ = {{0x0002, 4.32}}, .invisibleWidth_ = 5,});
     }
 
-    void PrepareWordBreak(int ret, CharGroups &cgs, WordBreakType type = WordBreakType::BREAKWORD)
+    void PrepareWordBreak(int ret, CharGroups &cgs, WordBreakType type = WordBreakType::BREAK_WORD)
     {
         tpstyle_.wordBreakType_ = type;
         auto m = std::make_unique<MeasurerForTest>();
@@ -255,7 +255,7 @@ HWTEST_F(TextBreakerTest, BreakWord3, TestSize.Level1)
  */
 HWTEST_F(TextBreakerTest, BreakWord4, TestSize.Level1)
 {
-    tpstyle_.wordBreakType_ = WordBreakType::BREAKALL;
+    tpstyle_.wordBreakType_ = WordBreakType::BREAK_ALL;
 
     EXPECT_NO_THROW({
         breaker.BreakWord(cgs1_, tpstyle_, textStyle_, spans_);
@@ -274,7 +274,7 @@ HWTEST_F(TextBreakerTest, BreakWord4, TestSize.Level1)
  */
 HWTEST_F(TextBreakerTest, BreakWord5, TestSize.Level1)
 {
-    tpstyle_.wordBreakType_ = WordBreakType::BREAKALL;
+    tpstyle_.wordBreakType_ = WordBreakType::BREAK_ALL;
 
     EXPECT_NO_THROW({
         breaker.BreakWord(cgs2_, tpstyle_, textStyle_, spans_);
@@ -376,7 +376,7 @@ HWTEST_F(TextBreakerTest, WordBreak3, TestSize.Level1)
  */
 HWTEST_F(TextBreakerTest, WordBreak4, TestSize.Level1)
 {
-    auto type = WordBreakType::BREAKWORD;
+    auto type = WordBreakType::BREAK_WORD;
     // {0, 4} is {leftIndex, rightIndex}
     boundaries = {{ 0, 4 }};
     PrepareWordBreak(0, cgs1_, type);
@@ -395,7 +395,7 @@ HWTEST_F(TextBreakerTest, WordBreak4, TestSize.Level1)
  */
 HWTEST_F(TextBreakerTest, WordBreak5, TestSize.Level1)
 {
-    auto type = WordBreakType::BREAKALL;
+    auto type = WordBreakType::BREAK_ALL;
     boundaries = {{ 0, 4 }};
     PrepareWordBreak(0, cgs1_, type);
 
@@ -413,7 +413,7 @@ HWTEST_F(TextBreakerTest, WordBreak5, TestSize.Level1)
  */
 HWTEST_F(TextBreakerTest, WordBreak6, TestSize.Level1)
 {
-    auto type = WordBreakType::BREAKALL;
+    auto type = WordBreakType::BREAK_ALL;
     boundaries = {};
     PrepareWordBreak(0, cgs1_, type);
 

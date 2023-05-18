@@ -55,7 +55,7 @@ std::vector<LineMetrics> CreateEllipsisSpan(const TypographyStyle &ys,
     std::vector<VariantSpan> spans = {TextSpan::MakeFromText(ys.ellipsis_)};
     spans[0].SetTextStyle(xs);
     auto ys2 = ys;
-    ys2.wordBreakType_ = WordBreakType::BREAKALL;
+    ys2.wordBreakType_ = WordBreakType::BREAK_ALL;
     ys2.breakStrategy_ = BreakStrategy::GREEDY;
     return Shaper::Shape(spans, ys2, fontProviders, MAXWIDTH);
 }

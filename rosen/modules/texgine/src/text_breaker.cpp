@@ -135,8 +135,8 @@ void TextBreaker::BreakWord(const CharGroups &wordcgs, const TypographyStyle &ys
             << " preBreak_: " << preBreak_ << ", postBreak_: " << postBreak_;
 
         const auto &breakType = ys.wordBreakType_;
-        bool isBreakAll = (breakType == WordBreakType::BREAKALL);
-        bool isBreakWord = (breakType == WordBreakType::BREAKWORD);
+        bool isBreakAll = (breakType == WordBreakType::BREAK_ALL);
+        bool isBreakWord = (breakType == WordBreakType::BREAK_WORD);
         bool isFinalCharGroup = (i == wordcgs.GetNumberOfCharGroup() - 1);
         bool needGenerateSpan = isBreakAll;
         needGenerateSpan = needGenerateSpan || (isBreakWord && isFinalCharGroup);

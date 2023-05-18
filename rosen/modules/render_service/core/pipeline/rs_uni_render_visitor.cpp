@@ -1152,6 +1152,13 @@ void RSUniRenderVisitor::ProcessParallelDisplayRenderNode(RSDisplayRenderNode& n
 
 void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 {
+    // Determine the draw subtree node cache
+    for (auto &cacheCanvasNode : cacheCanvasNodeMap_) {
+        if (cacheCanvasNode.second >= 5) { // cache node not be used 5 frame
+            cacheCanvasNodeMap_.erase(cacheCanvasNode.first);
+        }
+    }
+
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_VK)
     if (node.IsParallelDisplayNode()) {
         ProcessParallelDisplayRenderNode(node);
@@ -2235,6 +2242,19 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 
 void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
 {
+    // Record the node cache status
+    if (cacheCanvasNodeMap_.count(node.GetId())) {
+        if (!node.enableCache_) {
+            auto cacheCanvasNode = cacheCanvasNodeMap_.find(node.GetId());
+            cacheCanvasNode->second++;
+            cacheCanvasNodeMap_[cacheCanvasNode->first] = cacheCanvasNode->second;
+        }
+    } else {
+        if (node.enableCache_) {
+            cacheCanvasNodeMap_[node.GetId()] = 0;
+        }
+    }
+
     processedCanvasNodeInCurrentSurface_++;
     if (!node.ShouldPaint()) {
         return;

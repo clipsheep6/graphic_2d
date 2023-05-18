@@ -64,6 +64,8 @@ public:
     {
         return RSRenderNodeType::CANVAS_NODE;
     }
+    bool enableCache_ = false;
+    std::shared_ptr<SkImage> GetCanvasNodeCache();
 private:
     void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const;
     void InternalDrawContent(RSPaintFilterCanvas& canvas);

@@ -162,7 +162,7 @@ void RSCPUOverdrawCanvasListener::onDrawDrawable(SkDrawable* drawable, const SkM
         return;
     }
 
-    canvas_.save();
+    SkAutoCanvasRestore acr(&canvas_, true);
     if (matrix) {
         auto nowMatrix = canvas_.getTotalMatrix();
         nowMatrix.postConcat(*matrix);
@@ -170,7 +170,6 @@ void RSCPUOverdrawCanvasListener::onDrawDrawable(SkDrawable* drawable, const SkM
     }
 
     onDrawRect(drawable->getBounds(), {});
-    canvas_.restore();
 }
 
 void RSCPUOverdrawCanvasListener::onDrawPicture(const SkPicture* picture, const SkMatrix* matrix,
@@ -180,7 +179,7 @@ void RSCPUOverdrawCanvasListener::onDrawPicture(const SkPicture* picture, const 
         return;
     }
 
-    canvas_.save();
+    SkAutoCanvasRestore acr(&canvas_, true);
     if (matrix) {
         auto nowMatrix = canvas_.getTotalMatrix();
         nowMatrix.postConcat(*matrix);
@@ -193,7 +192,6 @@ void RSCPUOverdrawCanvasListener::onDrawPicture(const SkPicture* picture, const 
     }
 
     onDrawRect(picture->cullRect(), p);
-    canvas_.restore();
 }
 
 void RSCPUOverdrawCanvasListener::AppendRegion(SkPath &path)

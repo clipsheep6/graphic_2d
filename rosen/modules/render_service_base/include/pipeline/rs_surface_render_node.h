@@ -57,8 +57,7 @@ public:
     explicit RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, std::weak_ptr<RSContext> context = {});
     ~RSSurfaceRenderNode() override;
 
-    void PrepareRenderBeforeChildren(RSPaintFilterCanvas& canvas);
-    void PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas);
+    void ExtractSurfaceParams(RSPaintFilterCanvas& canvas);
     void ResetParent() override;
 
     bool IsAppWindow() const
@@ -203,8 +202,6 @@ public:
     void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
 
     void SetContextBounds(const Vector4f bounds);
-
-    void OnApplyModifiers() override;
 
     void SetTotalMatrix(const SkMatrix& totalMatrix)
     {
@@ -581,6 +578,8 @@ private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
     Vector4f GetWindowCornerRadius();
+
+    void OnApplyModifiers() override;
 
     std::mutex mutexRT_;
     std::mutex mutexUI_;

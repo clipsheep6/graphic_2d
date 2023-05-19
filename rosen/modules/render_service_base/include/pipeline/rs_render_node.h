@@ -45,13 +45,13 @@ public:
     }
 
     ~RSRenderNode() override;
-    bool IsDirty() const override;
+    uint8_t GetDirtyFlag() const override;
 
     std::pair<bool, bool> Animate(int64_t timestamp) override;
-    // PrepareCanvasRenderNode in UniRender
-    bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, RectI clipRect);
-    // Other situation
-    bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty);
+
+    bool Update(RSDirtyRegionManager& dirtyManager, bool useParent, bool parentDirty,
+        const std::optional<RectI>& clipRect = std::nullopt);
+
     virtual std::optional<SkRect> GetContextClipRegion() const { return std::nullopt; }
 
     RSProperties& GetMutableRenderProperties();
@@ -103,7 +103,6 @@ public:
     void RemoveModifier(const PropertyId& id);
 
     void ApplyModifiers();
-    virtual void OnApplyModifiers() {}
     std::shared_ptr<RSRenderModifier> GetModifier(const PropertyId& id);
 
     bool IsShadowValidLastFrame() const
@@ -285,22 +284,19 @@ public:
 protected:
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
     void AddGeometryModifier(const std::shared_ptr<RSRenderModifier> modifier);
-    RSPaintFilterCanvas::SaveStatus renderNodeSaveCount_;
     std::map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>> drawCmdModifiers_;
     // if true, it means currently it's in partial render mode and this node is intersect with dirtyRegion
     bool isRenderUpdateIgnored_ = false;
     bool isShadowValidLastFrame_ = false;
 
+    virtual void OnApplyModifiers() {}
+
 private:
+    void UpdateImpl(bool useParent);
     void FallbackAnimationsToRoot();
     void FilterModifiersByPid(pid_t pid);
 
-    // clipRect only used in UniRener when calling PrepareCanvasRenderNode
-    // PrepareCanvasRenderNode in UniRender: needClip = true and clipRect is meaningful
-    // Other situation: needClip = false and clipRect is meaningless
-    bool Update(
-        RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, bool needClip, RectI clipRect);
-    void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, bool needClip, RectI clipRect);
+    void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, const std::optional<RectI>& clipRect);
 
     bool isDirtyRegionUpdated_ = false;
     bool isLastVisible_ = false;

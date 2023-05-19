@@ -38,7 +38,7 @@ public:
     {
         return transferMatrix;
     }
-    
+
     Vector3 Convert(const Vector3& v) const;
     Vector3 ConvertLinear(const Vector3& v) const;
 

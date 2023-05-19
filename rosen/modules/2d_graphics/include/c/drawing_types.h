@@ -21,7 +21,7 @@
  * @{
  *
  * @brief Provides functions such as 2D graphics rendering, text drawing, and image display.
- * 
+ *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  *
  * @since 8
@@ -46,7 +46,7 @@ extern "C" {
 /**
  * @brief Defines a rectangular canvas on which various shapes, images,
  * and texts can be drawn by using the brush and pen.
- * 
+ *
  * @since 8
  * @version 1.0
  */
@@ -54,7 +54,7 @@ typedef struct OH_Drawing_Canvas OH_Drawing_Canvas;
 
 /**
  * @brief Defines a pen, which is used to describe the style and color to outline a shape.
- * 
+ *
  * @since 8
  * @version 1.0
  */
@@ -62,7 +62,7 @@ typedef struct OH_Drawing_Pen OH_Drawing_Pen;
 
 /**
  * @brief Defines as a brush, which is used to describe the style and color to fill in a shape.
- * 
+ *
  * @since 8
  * @version 1.0
  */
@@ -70,7 +70,7 @@ typedef struct OH_Drawing_Brush OH_Drawing_Brush;
 
 /**
  * @brief Defines a path, which is used to customize various shapes.
- * 
+ *
  * @since 8
  * @version 1.0
  */
@@ -78,7 +78,7 @@ typedef struct OH_Drawing_Path OH_Drawing_Path;
 
 /**
  * @brief Defines a bitmap, which is a memory that contains the pixel data of a shape.
- * 
+ *
  * @since 8
  * @version 1.0
  */
@@ -86,7 +86,7 @@ typedef struct OH_Drawing_Bitmap OH_Drawing_Bitmap;
 
 /**
  * @brief Enumerates storage formats of bitmap pixels.
- * 
+ *
  * @since 8
  * @version 1.0
  */
@@ -119,7 +119,7 @@ typedef enum {
 
 /**
  * @brief Enumerates alpha formats of bitmap pixels.
- * 
+ *
  * @since 8
  * @version 1.0
  */

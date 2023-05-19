@@ -88,7 +88,7 @@ bool RSParallelRenderManager::GetParallelMode() const
     ParallelStatus status = GetParallelRenderingStatus();
     return (status == ParallelStatus::ON) || (status == ParallelStatus::FIRSTFLUSH);
 }
- 
+
 void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum, RenderContext *context)
 {
     if (GetParallelRenderingStatus() == ParallelStatus::OFF) {

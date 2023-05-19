@@ -37,7 +37,7 @@ public:
 private:
     RenderFrameTraceImpl();
     bool AccessFrameTrace();
- 
+
     static RenderFrameTraceImpl* instance_;
     bool judgeFrameTrace_ = false;
     bool accessFrameTrace_ = false;

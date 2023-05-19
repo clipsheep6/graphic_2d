@@ -118,8 +118,6 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessBaseRenderNode(RSBase
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
-    // clear SortedChildren, it will be generated again in next frame
-    node.ResetSortedChildren();
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
@@ -134,9 +132,8 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessRootRenderNode(RSRoot
         return;
     }
 
-    canvas_->save();
+    RSAutoCanvasRestore autoRestore(canvas_);
     ProcessCanvasRenderNode(node);
-    canvas_->restore();
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
@@ -149,6 +146,7 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessCanvasRenderNode(RSCa
         ROSEN_LOGE("RSDividedUICaptureVisitor::ProcessCanvasRenderNode, canvas is nullptr");
         return;
     }
+    RSAutoCanvasRestore autoRestore(canvas_);
     if (node.GetId() == nodeId_) {
         // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
         const auto& property = node.GetRenderProperties();
@@ -209,6 +207,7 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessSurfaceRenderNode(RSS
             "RSDividedUICaptureVisitor::ProcessSurfaceRenderNode node : %" PRIu64 " is invisible", node.GetId());
         return;
     }
+    RSAutoCanvasRestore autoRestore(canvas_, RSAutoCanvasRestore::SaveType::kCanvas);
     if (node.GetId() == nodeId_) {
         // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
         const auto& property = node.GetRenderProperties();
@@ -246,23 +245,20 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareBaseRenderNode(RSBase
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
-    node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
-    node.Update(*dirtyManager, nullptr, false);
+    node.Update(*dirtyManager, false, false);
     PrepareBaseRenderNode(node);
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
-    node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
-    node.Update(*dirtyManager, nullptr, false);
+    node.Update(*dirtyManager, false, false);
     PrepareBaseRenderNode(node);
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
-    node.ApplyModifiers();
     PrepareCanvasRenderNode(node);
 }
 

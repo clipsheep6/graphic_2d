@@ -82,7 +82,7 @@ EGLBoolean EglWrapperDisplay::Terminate()
         WLOGI("display is not Init.");
         return EGL_TRUE;
     }
-    
+
     refCnt_--;
     if (refCnt_ > 0) {
         return EGL_TRUE;

@@ -239,8 +239,6 @@ void RSSurfaceCaptureVisitor::ProcessBaseRenderNode(RSBaseRenderNode &node)
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
-    // clear SortedChildren, it will be generated again in next frame
-    node.ResetSortedChildren();
 }
 
 void RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node)
@@ -248,7 +246,7 @@ void RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node
     RS_TRACE_NAME("RSSurfaceCaptureVisitor::ProcessDisplayRenderNode:" +
         std::to_string(node.GetId()));
     RS_LOGD("RSSurfaceCaptureVisitor::ProcessDisplayRenderNode child size:[%d] total size:[%d]",
-        node.GetChildrenCount(), node.GetSortedChildren().size());
+        node.GetChildrenCount(), node.GetChildren().size());
 
     // Mirror Display is unable to snapshot.
     if (node.IsMirrorDisplay()) {
@@ -544,6 +542,7 @@ void RSSurfaceCaptureVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         return;
     }
     node.GetMutableRenderProperties().CheckEmptyBounds();
+    RSAutoCanvasRestore acr(canvas_);
     node.ProcessRenderBeforeChildren(*canvas_);
     node.ProcessRenderContents(*canvas_);
     ProcessBaseRenderNode(node);
@@ -576,9 +575,7 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithoutUni(RSSurfaceRender
 
     if (node.GetChildrenCount() > 0) {
         canvas_->concat(translateMatrix);
-        const auto saveCnt = canvas_->save();
         ProcessBaseRenderNode(node);
-        canvas_->restoreToCount(saveCnt);
         if (node.GetBuffer() != nullptr) {
             // in node's local coordinate.
             auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
@@ -634,6 +631,7 @@ void RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node
         return;
     }
 
+    RSAutoCanvasRestore acr(canvas_);
     // execute security layer in each case, ignore display snapshot and set it white for surface snapshot
     if (IsUniRender()) {
         ProcessSurfaceRenderNodeWithUni(node);

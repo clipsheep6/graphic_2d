@@ -519,35 +519,6 @@ HWTEST_F(RSMainThreadTest, ClassifyRSTransactionData004, TestSize.Level1)
 }
 
 /**
- * @tc.name: ResetSortedChildren
- * @tc.desc: Test ResetSortedChildren, clear sortedChildren_ when it is not empty
- * @tc.type: FUNC
- * @tc.require: issueI6Q9A2
- */
-HWTEST_F(RSMainThreadTest, ResetSortedChildren, TestSize.Level1)
-{
-    auto mainThread = RSMainThread::Instance();
-    NodeId nodeId = 0;
-    std::weak_ptr<RSContext> context = {};
-    auto node = std::make_shared<RSBaseRenderNode>(nodeId, context);
-    auto childNode = std::make_shared<RSBaseRenderNode>(nodeId + 1, context);
-    int index = -1;
-    node->SetIsOnTheTree(true);
-    node->AddChild(node, index);
-    ASSERT_EQ(node->GetChildrenCount(), 0);
-
-    node->AddChild(childNode, index);
-    ASSERT_EQ(node->GetChildrenCount(), 1);
-    ASSERT_TRUE(childNode->IsOnTheTree());
-
-    node->GetSortedChildren();
-    ASSERT_EQ(node->sortedChildren_.size(), 1);
-
-    mainThread->ResetSortedChildren(node);
-    ASSERT_EQ(node->sortedChildren_.size(), 0);
-}
-
-/**
  * @tc.name: AddActivePid
  * @tc.desc: Test AddActivePid, add pid, check if success
  * @tc.type: FUNC

@@ -91,9 +91,8 @@ void RSRenderThreadVisitor::SetPartialRenderStatus(PartialRenderType status, boo
 
 void RSRenderThreadVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 {
-    node.ResetSortedChildren();
     for (auto& child : node.GetChildren()) {
-        if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child.lock())) {
+        if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child)) {
             renderChild->ApplyModifiers();
         }
     }
@@ -110,7 +109,6 @@ void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
         curDirtyManager_->UpdateDebugRegionTypeEnable(dfxDirtyType_);
         // After the node calls ApplyModifiers, the modifiers assign the renderProperties to the node
         // Otherwise node.GetSuggestedBufferHeight always less than 0, causing black screen
-        node.ApplyModifiers();
         if (!IsValidRootRenderNode(node)) {
             return;
         }
@@ -141,17 +139,12 @@ void RSRenderThreadVisitor::ResetAndPrepareChildrenNode(RSRenderNode& node,
 
 void RSRenderThreadVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
-    node.ApplyModifiers();
     if (!node.ShouldPaint()) {
         return;
     }
     bool dirtyFlag = dirtyFlag_;
     auto nodeParent = node.GetParent().lock();
-    std::shared_ptr<RSRenderNode> rsParent = nullptr;
-    if (nodeParent != nullptr) {
-        rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
-    }
-    dirtyFlag_ = node.Update(*curDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr, dirtyFlag_);
+    dirtyFlag_ = node.Update(*curDirtyManager_, true, dirtyFlag_);
     if (node.IsDirtyRegionUpdated() && curDirtyManager_ != nullptr &&
         curDirtyManager_->IsDebugRegionTypeEnable(DebugRegionType::CURRENT_SUB)) {
         curDirtyManager_->UpdateDirtyRegionInfoForDfx(node.GetId(), RSRenderNodeType::CANVAS_NODE,
@@ -163,20 +156,15 @@ void RSRenderThreadVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 
 void RSRenderThreadVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
-    node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
     auto nodeParent = node.GetParent().lock();
-    std::shared_ptr<RSRenderNode> rsParent = nullptr;
-    if (nodeParent != nullptr) {
-        rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
-    }
     // If rt buffer switches to be available
     // set its SurfaceRenderNode's render dirty
     if (!node.IsNotifyRTBufferAvailablePre() && node.IsNotifyRTBufferAvailable()) {
         ROSEN_LOGD("NotifyRTBufferAvailable and set it dirty");
         node.SetDirty();
     }
-    dirtyFlag_ = node.Update(*curDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr, dirtyFlag_);
+    dirtyFlag_ = node.Update(*curDirtyManager_, true, dirtyFlag_);
     if (node.IsDirtyRegionUpdated() && curDirtyManager_ != nullptr &&
         curDirtyManager_->IsDebugRegionTypeEnable(DebugRegionType::CURRENT_SUB)) {
         curDirtyManager_->UpdateDirtyRegionInfoForDfx(node.GetId(), RSRenderNodeType::SURFACE_NODE,
@@ -249,7 +237,7 @@ void RSRenderThreadVisitor::DrawDirtyRegion()
                 nid, subRect.ToString().c_str());
             DrawRectOnCanvas(subRect, 0x88FF0000, SkPaint::kStroke_Style, edgeAlpha, strokeWidth);
         }
-        
+
         curDirtyManager_->GetDirtyRegionInfo(dirtyRegionRects_, RSRenderNodeType::SURFACE_NODE,
             DirtyRegionType::UPDATE_DIRTY_REGION);
         ROSEN_LOGD("DrawDirtyRegion surface dirtyRegionRects_ size %zu", dirtyRegionRects_.size());
@@ -308,8 +296,6 @@ void RSRenderThreadVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
-    // clear SortedChildren, it will be generated again in next frame
-    node.ResetSortedChildren();
 }
 
 void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
@@ -508,6 +494,7 @@ void RSRenderThreadVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         return;
     }
 #endif
+    RSAutoCanvasRestore acr(canvas_);
     node.CheckCacheType();
     node.ProcessTransitionBeforeChildren(*canvas_);
     DrawChildRenderNode(node);
@@ -585,11 +572,10 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     parentSurfaceNodeMatrix_ = parentSurfaceNodeMatrix;
 
     // 6.draw border
-    canvas_->save();
+    RSAutoCanvasRestore acr(canvas_, RSAutoCanvasRestore::SaveType::kCanvas);
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
     canvas_->concat(geoPtr->GetMatrix());
     RSPropertiesPainter::DrawBorder(node.GetRenderProperties(), *canvas_);
-    canvas_->restore();
 }
 
 void RSRenderThreadVisitor::ProcessProxyRenderNode(RSProxyRenderNode& node)
@@ -616,9 +602,8 @@ void RSRenderThreadVisitor::ProcessProxyRenderNode(RSProxyRenderNode& node)
     auto clipRect = RSPaintFilterCanvas::GetLocalClipBounds(*canvas_);
     node.SetContextClipRegion(clipRect);
 
-    // for proxied nodes (i.e. remote window components), we only extract matrix & alpha, do not change their hierarchy
-    // or clip or other properties.
-    node.ResetSortedChildren();
+    // proxy node usually has no children by design, this is just in case
+    ProcessBaseRenderNode(node);
 #endif
 }
 
@@ -631,7 +616,7 @@ void RSRenderThreadVisitor::ClipHoleForSurfaceNode(RSSurfaceRenderNode& node)
     auto y = std::ceil(node.GetRenderProperties().GetBoundsPositionY() + pixel); // y increase 1 pixel
     auto width = std::floor(node.GetRenderProperties().GetBoundsWidth() - (2 * pixel)); // width decrease 2 pixels
     auto height = std::floor(node.GetRenderProperties().GetBoundsHeight() - (2 * pixel)); // height decrease 2 pixels
-    canvas_->save();
+    RSAutoCanvasRestore acr(canvas_, RSAutoCanvasRestore::SaveType::kCanvas);
     SkRect originRect = SkRect::MakeXYWH(x, y, width, height);
     canvas_->clipRect(originRect);
     if (node.IsNotifyRTBufferAvailable()) {
@@ -646,7 +631,6 @@ void RSRenderThreadVisitor::ClipHoleForSurfaceNode(RSSurfaceRenderNode& node)
             canvas_->clear(backgroundColor.AsArgbInt());
         }
     }
-    canvas_->restore();
 }
 
 void RSRenderThreadVisitor::SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType)

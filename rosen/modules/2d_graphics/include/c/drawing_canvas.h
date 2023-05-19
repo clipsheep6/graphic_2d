@@ -21,7 +21,7 @@
  * @{
  *
  * @brief Provides functions such as 2D graphics rendering, text drawing, and image display.
- * 
+ *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  *
  * @since 8
@@ -64,7 +64,7 @@ OH_Drawing_Canvas* OH_Drawing_CanvasCreate(void);
 void OH_Drawing_CanvasDestroy(OH_Drawing_Canvas*);
 
 /**
- * @brief Binds a bitmap to a canvas so that the content drawn on the canvas 
+ * @brief Binds a bitmap to a canvas so that the content drawn on the canvas
  * is output to the bitmap (this process is called CPU rendering).
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
@@ -87,7 +87,7 @@ void OH_Drawing_CanvasBind(OH_Drawing_Canvas*, OH_Drawing_Bitmap*);
 void OH_Drawing_CanvasAttachPen(OH_Drawing_Canvas*, const OH_Drawing_Pen*);
 
 /**
- * @brief Detaches the pen from a canvas so that the canvas will not use the style 
+ * @brief Detaches the pen from a canvas so that the canvas will not use the style
  * and color of the pen to outline a shape.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

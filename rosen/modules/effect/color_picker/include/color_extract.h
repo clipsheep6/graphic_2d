@@ -39,7 +39,7 @@ namespace ColorManager {
 class Color;
 }
 namespace Rosen {
-    
+
 class ColorExtract {
 public:
     virtual ~ColorExtract() {};
@@ -140,7 +140,7 @@ private:
             uint32_t maxRed = 0;
             uint32_t maxGreen = 0;
             uint32_t maxBlue = 0;
-            
+
             int count = 0;
 
             for (int i = lowerIndex_; i <= upperIndex_; i++) {

@@ -21,7 +21,7 @@
  * @{
  *
  * @brief Provides functions such as 2D graphics rendering, text drawing, and image display.
- * 
+ *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  *
  * @since 8
@@ -45,7 +45,7 @@ extern "C" {
 
 /**
  * @brief Defines the pixel format of a bitmap, including the color type and alpha type.
- * 
+ *
  * @since 8
  * @version 1.0
  */

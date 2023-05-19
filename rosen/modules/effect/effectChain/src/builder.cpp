@@ -25,7 +25,7 @@ ImageChain* Builder::CreateFromConfig(std::string path)
     if (strlen(path.c_str()) > PATH_MAX || realpath(path.c_str(), newpath) == NULL) {
         return nullptr;
     }
-    
+
     std::ifstream configFile;
     configFile.open(newpath);
     std::stringstream JFilterParamsStream;

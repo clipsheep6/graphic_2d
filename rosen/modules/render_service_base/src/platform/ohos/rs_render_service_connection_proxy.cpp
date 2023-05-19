@@ -276,14 +276,14 @@ ScreenId RSRenderServiceConnectionProxy::CreateVirtualScreen(
     data.WriteString(name);
     data.WriteUint32(width);
     data.WriteUint32(height);
-    
+
     if (surface==nullptr) {
         data.WriteRemoteObject(nullptr);
     } else {
         auto producer = surface->GetProducer();
         data.WriteRemoteObject(producer->AsObject());
     }
-    
+
     data.WriteUint64(mirrorId);
     data.WriteInt32(flags);
     int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::CREATE_VIRTUAL_SCREEN, data, reply, option);
@@ -318,7 +318,7 @@ int32_t RSRenderServiceConnectionProxy::SetVirtualScreenSurface(ScreenId id, spt
     if (err != NO_ERROR) {
         ROSEN_LOGE("RSRenderServiceConnectionProxy::SetVirtualScreenSurface: Send Request err.");
     }
-    
+
     int32_t status = reply.ReadInt32();
     return status;
 }

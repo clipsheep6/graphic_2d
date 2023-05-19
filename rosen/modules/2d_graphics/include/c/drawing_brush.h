@@ -21,7 +21,7 @@
  * @{
  *
  * @brief Provides functions such as 2D graphics rendering, text drawing, and image display.
- * 
+ *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  *
  * @since 8
@@ -81,7 +81,7 @@ bool OH_Drawing_BrushIsAntiAlias(const OH_Drawing_Brush*);
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Brush Indicates the pointer to an <b>OH_Drawing_Brush</b> object.
- * @param bool Specifies whether to enable anti-aliasing. The value <b>true</b> means 
+ * @param bool Specifies whether to enable anti-aliasing. The value <b>true</b> means
  *             to enable anti-aliasing, and <b>false</b> means the opposite.
  * @since 8
  * @version 1.0

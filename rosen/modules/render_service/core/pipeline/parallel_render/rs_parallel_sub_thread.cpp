@@ -306,7 +306,7 @@ void RSParallelSubThread::Render()
     }
     displayNode_->Process(visitor_);
     for (auto& child : displayNode_->GetChildren()) {
-        if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child.lock())) {
+        if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child)) {
             displayNode_->RemoveCrossParentChild(renderChild, physicalDisplayNode);
         }
     }
@@ -433,7 +433,7 @@ void RSParallelSubThread::AcquireSubSkSurface(int width, int height)
     if (grContext_ == nullptr) {
         grContext_ = CreateShareGrContext();
     }
-    
+
     if (grContext_ == nullptr) {
         RS_LOGE("Share GrContext is not ready!!!");
         return;
@@ -468,7 +468,7 @@ void RSParallelSubThread::Composition()
         RS_LOGE("compositionTask is nullptr or displayNodeId is 0");
         return;
     }
-    
+
     auto node = compositionTask_->GetNode();
     if (node == nullptr || compositionVisitor_ == nullptr) {
         RS_LOGE("displayNode or visitor is nullptr.");

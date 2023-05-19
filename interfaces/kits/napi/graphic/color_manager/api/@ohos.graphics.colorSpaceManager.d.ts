@@ -145,14 +145,14 @@ declare namespace colorSpaceManager {
      * @throws {BusinessError} 18600001 - If param value is abnormal
      */
     getColorSpaceName(): ColorSpace;
-  
+
     /**
      * Get white point(x, y) of color space.
      * @since 9
      * @throws {BusinessError} 18600001 - If param value is abnormal
      */
     getWhitePoint(): Array<number>;
-  
+
     /**
      * Get gamma value of color space.
      * @since 9

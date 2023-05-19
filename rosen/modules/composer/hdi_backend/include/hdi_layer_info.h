@@ -452,7 +452,7 @@ private:
     sptr<SurfaceBuffer> sbuffer_ = nullptr;
     sptr<SurfaceBuffer> pbuffer_ = nullptr;
     bool preMulti_ = false;
-    LayerMask layerMask_ = LayerMask::LAYER_MASK_NORMAL; 
+    LayerMask layerMask_ = LayerMask::LAYER_MASK_NORMAL;
 };
 } // namespace Rosen
 } // namespace OHOS

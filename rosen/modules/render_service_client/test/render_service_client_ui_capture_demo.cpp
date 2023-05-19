@@ -50,7 +50,7 @@ using WriteToPngParam = struct {
     uint32_t bitDepth;
     const uint8_t *data;
 };
-    
+
 constexpr int BITMAP_DEPTH = 8;
 
 shared_ptr<RSNode> rootNode;

@@ -98,8 +98,8 @@ declare namespace display {
     /**
      * the width of display, unit: pixel
      */
-    width: number;    
-    
+    width: number;
+
     /**
      * the height of display, unit: pixel
      */

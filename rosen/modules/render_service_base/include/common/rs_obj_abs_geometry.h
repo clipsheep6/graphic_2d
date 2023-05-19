@@ -31,9 +31,11 @@ namespace OHOS {
 namespace Rosen {
 class RSB_EXPORT RSObjAbsGeometry : public RSObjGeometry {
 public:
-    RSObjAbsGeometry();
-    ~RSObjAbsGeometry() override;
+    RSObjAbsGeometry() = default;
+    ~RSObjAbsGeometry() override = default;
     void ConcatMatrix(const SkMatrix& matrix);
+
+    // Calculate the matrix_ and absMatrix_ with parent's absMatrix
     void UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& parent, const std::optional<SkPoint>& offset,
         const std::optional<SkRect>& clipRect);
 
@@ -45,30 +47,38 @@ public:
         return absRect_;
     }
     RectI MapAbsRect(const RectF& rect) const;
-    
+
     // return transform matrix (context + self)
     const SkMatrix& GetMatrix() const;
     // return transform matrix (parent + context + self)
     const SkMatrix& GetAbsMatrix() const;
 
-    bool IsPointInHotZone(const float x, const float y) const;
-
     bool IsNeedClientCompose() const;
 
     void SetContextMatrix(const std::optional<SkMatrix>& matrix);
 
+    void Reset() override;
+
+    // Since all the member variables are trivial copyable, the default copy constructor and assignment operator are ok.
+    RSObjAbsGeometry(const RSObjAbsGeometry& other) = default;
+    RSObjAbsGeometry& operator=(const RSObjAbsGeometry& other) = default;
+
 private:
-    void UpdateAbsMatrix2D();
-    void UpdateAbsMatrix3D();
+    SkMatrix UpdateAbsMatrix2D(const std::optional<Transform>& trans) const;
+    SkMatrix UpdateAbsMatrix3D(const std::optional<Transform>& trans) const;
     void SetAbsRect();
-    float GetCross(const SkPoint& p1, const SkPoint& p2, const SkPoint& p) const;
+    void ApplyContextClipRect(const SkMatrix& matrix, const std::optional<SkRect>& clipRect);
     Vector2f GetDataRange(float d0, float d1, float d2, float d3) const;
-    bool IsPointInLine(const SkPoint& p1, const SkPoint& p2, const SkPoint& p, const float crossRes) const;
     RectI absRect_;
-    SkMatrix matrix_;
-    std::optional<SkMatrix> absMatrix_;
+
+    // external matrixes to be concatenated
+    std::optional<SkMatrix> concatMatrix_;
     std::optional<SkMatrix> contextMatrix_;
-    SkPoint vertices_[4];
+
+    // only contains the transform of the current node
+    SkMatrix matrix_;
+    // contains the transform of the current node and all its parents
+    std::optional<SkMatrix> absMatrix_;
 };
 } // namespace Rosen
 } // namespace OHOS

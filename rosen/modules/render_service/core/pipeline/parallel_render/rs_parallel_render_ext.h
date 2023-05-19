@@ -60,7 +60,7 @@ public:
 
 private:
     RSParallelRenderExt() = default;
-    
+
     static bool GetParallelRenderEnable()
     {
         return GetInitParallelRenderLoadBalancingFunc() &&

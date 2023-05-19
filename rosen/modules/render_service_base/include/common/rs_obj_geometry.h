@@ -27,7 +27,7 @@ public:
         : pivotX_(0.5f), pivotY_(0.5f), scaleX_(1.f), scaleY_(1.f), rotation_(0.f), rotationX_(0.f), rotationY_(0.f),
           translateX_(0), translateY_(0), translateZ_(0), cameraDistance_(0.f)
     {}
-    ~Transform() {}
+    ~Transform() = default;
     float pivotX_;
     float pivotY_;
     float scaleX_;
@@ -44,41 +44,29 @@ public:
 
 class RSObjGeometry {
 public:
-    RSObjGeometry()
-        : x_(-INFINITY), y_(-INFINITY), z_(0), width_(-INFINITY), height_(-INFINITY), trans_(nullptr)
-    {}
+    RSObjGeometry() : x_(-INFINITY), y_(-INFINITY), z_(0), width_(-INFINITY), height_(-INFINITY) {}
 
-    virtual ~RSObjGeometry() {}
+    virtual ~RSObjGeometry() = default;
 
     void SetX(float x)
     {
-        if (!ROSEN_EQ(x_, x)) {
-            x_ = x;
-        }
+        x_ = x;
     }
     void SetY(float y)
     {
-        if (!ROSEN_EQ(y_, y)) {
-            y_ = y;
-        }
+        y_ = y;
     }
     void SetZ(float z)
     {
-        if (!ROSEN_EQ(z_, z)) {
-            z_ = z;
-        }
+        z_ = z;
     }
     void SetWidth(float w)
     {
-        if (!ROSEN_EQ(width_, w)) {
-            width_ = w;
-        }
+        width_ = w;
     }
     void SetHeight(float h)
     {
-        if (!ROSEN_EQ(height_, h)) {
-            height_ = h;
-        }
+        height_ = h;
     }
     void SetPosition(float x, float y)
     {
@@ -97,21 +85,17 @@ public:
     }
     void SetPivotX(float x)
     {
-        if (trans_ == nullptr) {
-            trans_ = std::make_unique<Transform>();
+        if (!trans_.has_value()) {
+            trans_ = Transform();
         }
-        if (!ROSEN_EQ(trans_->pivotX_, x)) {
-            trans_->pivotX_ = x;
-        }
+        trans_->pivotX_ = x;
     }
     void SetPivotY(float y)
     {
-        if (trans_ == nullptr) {
-            trans_ = std::make_unique<Transform>();
+        if (!trans_.has_value()) {
+            trans_ = Transform();
         }
-        if (!ROSEN_EQ(trans_->pivotY_, y)) {
-            trans_->pivotY_ = y;
-        }
+        trans_->pivotY_ = y;
     }
     void SetPivot(float x, float y)
     {
@@ -120,21 +104,17 @@ public:
     }
     void SetScaleX(float x)
     {
-        if (trans_ == nullptr) {
-            trans_ = std::make_unique<Transform>();
+        if (!trans_.has_value()) {
+            trans_ = Transform();
         }
-        if (!ROSEN_EQ(trans_->scaleX_, x)) {
-            trans_->scaleX_ = x;
-        }
+        trans_->scaleX_ = x;
     }
     void SetScaleY(float y)
     {
-        if (trans_ == nullptr) {
-            trans_ = std::make_unique<Transform>();
+        if (!trans_.has_value()) {
+            trans_ = Transform();
         }
-        if (!ROSEN_EQ(trans_->scaleY_, y)) {
-            trans_->scaleY_ = y;
-        }
+        trans_->scaleY_ = y;
     }
     void SetScale(float x, float y)
     {
@@ -143,75 +123,59 @@ public:
     }
     void SetRotation(float rotation)
     {
-        if (trans_ == nullptr) {
-            trans_ = std::make_unique<Transform>();
+        if (!trans_.has_value()) {
+            trans_ = Transform();
         }
-        if (!ROSEN_EQ(trans_->rotation_, rotation)) {
-            trans_->rotation_ = rotation;
-        }
+        trans_->rotation_ = rotation;
     }
     void SetRotationX(float rotationX)
     {
-        if (trans_ == nullptr) {
-            trans_ = std::make_unique<Transform>();
+        if (!trans_.has_value()) {
+            trans_ = Transform();
         }
-        if (!ROSEN_EQ(trans_->rotationX_, rotationX)) {
-            trans_->rotationX_ = rotationX;
-        }
+        trans_->rotationX_ = rotationX;
     }
     void SetRotationY(float rotationY)
     {
-        if (trans_ == nullptr) {
-            trans_ = std::make_unique<Transform>();
+        if (!trans_.has_value()) {
+            trans_ = Transform();
         }
-        if (!ROSEN_EQ(trans_->rotationY_, rotationY)) {
-            trans_->rotationY_ = rotationY;
-        }
+        trans_->rotationY_ = rotationY;
     }
     void SetTranslateX(float translateX)
     {
-        if (trans_ == nullptr) {
-            trans_ = std::make_unique<Transform>();
+        if (!trans_.has_value()) {
+            trans_ = Transform();
         }
-        if (!ROSEN_EQ(trans_->translateX_, translateX)) {
-            trans_->translateX_ = translateX;
-        }
+        trans_->translateX_ = translateX;
     }
     void SetTranslateY(float translateY)
     {
-        if (trans_ == nullptr) {
-            trans_ = std::make_unique<Transform>();
+        if (!trans_.has_value()) {
+            trans_ = Transform();
         }
-        if (!ROSEN_EQ(trans_->translateY_, translateY)) {
-            trans_->translateY_ = translateY;
-        }
+        trans_->translateY_ = translateY;
     }
     void SetTranslateZ(float translateZ)
     {
-        if (trans_ == nullptr) {
-            trans_ = std::make_unique<Transform>();
+        if (!trans_.has_value()) {
+            trans_ = Transform();
         }
-        if (!ROSEN_EQ(trans_->translateZ_, translateZ)) {
-            trans_->translateZ_ = translateZ;
-        }
+        trans_->translateZ_ = translateZ;
     }
     void SetCameraDistance(float cameraDistance)
     {
-        if (trans_ == nullptr) {
-            trans_ = std::make_unique<Transform>();
+        if (!trans_.has_value()) {
+            trans_ = Transform();
         }
-        if (!ROSEN_EQ(trans_->cameraDistance_, cameraDistance)) {
-            trans_->cameraDistance_ = cameraDistance;
-        }
+        trans_->cameraDistance_ = cameraDistance;
     }
     void SetQuaternion(const Quaternion& quaternion)
     {
-        if (trans_ == nullptr) {
-            trans_ = std::make_unique<Transform>();
+        if (!trans_.has_value()) {
+            trans_ = Transform();
         }
-        if (trans_->quaternion_ != quaternion) {
-            trans_->quaternion_ = quaternion;
-        }
+        trans_->quaternion_ = quaternion;
     }
 
     float GetX() const
@@ -286,27 +250,24 @@ public:
     {
         return width_ <= 0 && height_ <= 0;
     }
-    RSObjGeometry& operator=(const RSObjGeometry& geo)
+    RSObjGeometry& operator=(const RSObjGeometry& other)
     {
-        if (&geo != this) {
-            SetRect(geo.x_, geo.y_, geo.width_, geo.height_);
-            SetZ(geo.z_);
-            if (geo.trans_) {
-                SetPivot(geo.trans_->pivotX_, geo.trans_->pivotY_);
-                SetScale(geo.trans_->scaleX_, geo.trans_->scaleY_);
-                SetRotation(geo.trans_->rotation_);
-                SetRotationX(geo.trans_->rotationX_);
-                SetRotationY(geo.trans_->rotationY_);
-                SetTranslateX(geo.trans_->translateX_);
-                SetTranslateY(geo.trans_->translateY_);
-                SetTranslateZ(geo.trans_->translateZ_);
-                SetCameraDistance(geo.trans_->cameraDistance_);
-                SetQuaternion(geo.trans_->quaternion_);
-            } else if (trans_) {
-                trans_ = nullptr;
-            }
+        if (&other != this) {
+            SetRect(other.x_, other.y_, other.width_, other.height_);
+            SetZ(other.z_);
+            trans_ = other.trans_;
         }
         return *this;
+    }
+
+    virtual void Reset()
+    {
+        x_ = -INFINITY;
+        y_ = -INFINITY;
+        z_ = 0;
+        width_ = -INFINITY;
+        height_ = -INFINITY;
+        trans_.reset();
     }
 
 protected:
@@ -315,7 +276,7 @@ protected:
     float z_;
     float width_;
     float height_;
-    std::unique_ptr<Transform> trans_;
+    std::optional<Transform> trans_;
 };
 } // namespace Rosen
 } // namespace OHOS

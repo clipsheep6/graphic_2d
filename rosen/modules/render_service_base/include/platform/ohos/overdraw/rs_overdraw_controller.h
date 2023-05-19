@@ -63,7 +63,7 @@ private:
     RSOverdrawController(const RSOverdrawController &) = delete;
     RSOverdrawController &operator =(RSOverdrawController &&) = delete;
     RSOverdrawController &operator =(const RSOverdrawController &) = delete;
-    
+
     static void SwitchFunction(const char *key, const char *value, void *context);
     static void OnColorChange(const char *key, const char *value, void *context);
 

@@ -308,7 +308,7 @@ void RenderContextSample::Draw()
         std::vector<GraphicIRect> outputDamages;
         outputDamages.emplace_back(damageRect);
         output_->SetOutputDamages(outputDamages);
-        
+
         backend_->Repaint(output_);
         for (auto layerI : layers) {
             int32_t releaseFence = -1;

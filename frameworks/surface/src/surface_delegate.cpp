@@ -25,7 +25,7 @@ SurfaceDelegate::SurfaceDelegate(int windowId)
 {
     windowId_ = windowId;
 }
-    
+
 SurfaceDelegateError SurfaceDelegate::CreateSurface(bool isWindowSurface)
 {
     return SurfaceDelegateError::SURFACE_DELEGATE_ERROR_DEFAULT;

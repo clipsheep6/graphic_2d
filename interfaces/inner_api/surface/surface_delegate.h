@@ -96,7 +96,7 @@ public:
      * Destructor of SurfaceDelegate.
      */
     ~SurfaceDelegate() = default;
-    
+
     /*
      * Create the surface.
      *

@@ -74,7 +74,7 @@ HWTEST_F(ColorPickerUnittest, CreateColorPickerFromPixelmapTest002, TestSize.Lev
     size_t bufferSize = 0;
     uint8_t *buffer = GetPngBuffer(bufferSize);
     ASSERT_NE(buffer, nullptr);
-    
+
     /**
      * @tc.steps: step1. Create a ImageSource
      */

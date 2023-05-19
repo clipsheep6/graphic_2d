@@ -84,7 +84,7 @@ private:
     int32_t PreProcessLayersComp(const OutputPtr &output, bool &needFlush);
     int32_t PrepareCompleteIfNeed(const OutputPtr &output, bool needFlush, sptr<SurfaceBuffer> &buffer);
     void UpdateInfosAfterCommit(const OutputPtr &output, sptr<SyncFence> fbFence);
-    
+
 
     sptr<VSyncSampler> sampler_ = nullptr;
     std::unordered_map<int, sptr<SurfaceBuffer>> lastFrameBuffers_;

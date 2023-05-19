@@ -72,8 +72,8 @@ public:
     float GetFrameOffsetX() const;
     float GetFrameOffsetY() const;
 
-    void SetSandBox(Vector2f parentPosition);
-    Vector2f GetSandBox() const;
+    void SetSandBox(const std::optional<Vector2f>& parentPosition);
+    const std::optional<Vector2f>& GetSandBox() const;
 
     void SetPositionZ(float positionZ);
     float GetPositionZ() const;
@@ -120,8 +120,8 @@ public:
     void SetAlphaOffscreen(bool alphaOffscreen);
     bool GetAlphaOffscreen() const;
 
-    void SetSublayerTransform(Matrix3f sublayerTransform);
-    Matrix3f GetSublayerTransform() const;
+    void SetSublayerTransform(const std::optional<Matrix3f>& sublayerTransform);
+    const std::optional<Matrix3f>& GetSublayerTransform() const;
 
     // foreground properties
     void SetForegroundColor(Color color);
@@ -219,8 +219,7 @@ public:
 
     const std::shared_ptr<RSObjGeometry>& GetBoundsGeometry() const;
     const std::shared_ptr<RSObjGeometry>& GetFrameGeometry() const;
-    bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag, const std::optional<SkPoint>& offset,
-        const std::optional<SkRect>& clipRect);
+
     void CheckEmptyBounds();
     void ResetBounds();
     RectF GetBoundsRect() const;
@@ -271,23 +270,21 @@ private:
     std::shared_ptr<RSFilter> backgroundFilter_ = nullptr;
     std::shared_ptr<RSBorder> border_ = nullptr;
     std::shared_ptr<RSPath> clipPath_ = nullptr;
-    std::unique_ptr<Vector4f> cornerRadius_ = nullptr;
-    std::unique_ptr<Decoration> decoration_ = nullptr;
+    std::optional<Vector4f> cornerRadius_;
+    std::optional<Decoration> decoration_;
     std::shared_ptr<RSFilter> filter_ = nullptr;
     std::shared_ptr<RSMask> mask_ = nullptr;
-    std::unique_ptr<RSShadow> shadow_ = nullptr;
-    std::unique_ptr<Matrix3f> sublayerTransform_ = nullptr;
+    std::optional<RSShadow> shadow_;
+    std::optional<Matrix3f> sublayerTransform_;
     float spherizeDegree_ = 0.f;
     float lightUpEffectDegree_ = 1.0f;
 
     std::weak_ptr<RSRenderNode> backref_;
 
-    std::unique_ptr<Vector2f> sandboxPosition_ = nullptr;
-
-    std::unique_ptr<Vector4f> pixelStretch_ = nullptr;
-
-    std::unique_ptr<Vector4f> pixelStretchPercent_ = nullptr;
-    std::unique_ptr<RRect> clipRRect_ = nullptr;
+    std::optional<Vector2f> sandboxPosition_;
+    std::optional<Vector4f> pixelStretch_;
+    std::optional<Vector4f> pixelStretchPercent_;
+    std::optional<RRect> clipRRect_;
 
     friend class RSCanvasRenderNode;
     friend class RSPropertiesPainter;

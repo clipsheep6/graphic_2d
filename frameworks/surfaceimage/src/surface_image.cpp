@@ -177,7 +177,7 @@ SurfaceError SurfaceImage::UpdateSurfaceImage()
         ReleaseBuffer(buffer, -1);
         return ret;
     }
-    
+
     if (seqNum != currentSurfaceImage_) {
         ret = ReleaseBuffer(currentSurfaceBuffer_, -1);
         if (ret != SURFACE_ERROR_OK) {

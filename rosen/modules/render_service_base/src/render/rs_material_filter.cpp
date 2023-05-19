@@ -104,7 +104,7 @@ sk_sp<SkImageFilter> RSMaterialFilter::CreateMaterialFilter(float radius, float 
         0.000000f, 0.000000f, 1.000000f, 0.000000f, normalizedDegree,
         0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f,
     };
-    
+
     sk_sp<SkColorFilter> brightnessFilter = SkColorFilters::Matrix(brightnessMat); // brightness
     SkColorMatrix cm;
     cm.setSaturation(sat);

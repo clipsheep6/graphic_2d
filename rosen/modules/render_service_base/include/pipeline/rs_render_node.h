@@ -52,7 +52,6 @@ public:
     }
 
     ~RSRenderNode() override;
-    bool IsDirty() const override;
     bool IsContentDirty() const override;
 
     std::pair<bool, bool> Animate(int64_t timestamp) override;
@@ -115,7 +114,6 @@ public:
     void RemoveModifier(const PropertyId& id);
 
     void ApplyModifiers();
-    virtual void OnApplyModifiers() {}
     std::shared_ptr<RSRenderModifier> GetModifier(const PropertyId& id);
 
     bool IsShadowValidLastFrame() const
@@ -401,11 +399,14 @@ protected:
     bool isRenderUpdateIgnored_ = false;
     bool isShadowValidLastFrame_ = false;
 
+    virtual void OnApplyModifiers() {}
+    uint8_t GetDirtyFlag() const override;
+
 private:
     void FallbackAnimationsToRoot();
     void FilterModifiersByPid(pid_t pid);
 
-    // clipRect only used in UniRener when calling PrepareCanvasRenderNode
+    // clipRect only used in UniRender when calling PrepareCanvasRenderNode
     // PrepareCanvasRenderNode in UniRender: needClip = true and clipRect is meaningful
     // Other situation: needClip = false and clipRect is meaningless
     bool Update(RSDirtyRegionManager& dirtyManager,

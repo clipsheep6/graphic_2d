@@ -50,7 +50,9 @@ void RSBaseRenderNode::AddChild(SharedPtr child, int index)
     if (isOnTheTree_) {
         child->SetIsOnTheTree(true);
     }
-    SetDirty();
+    SetDirty(NodeDirty::HIERARCHY_DIRTY);
+    // regenerate children list on next visit
+    fullChildrenList_.clear();
 }
 
 void RSBaseRenderNode::MoveChild(SharedPtr child, int index)
@@ -70,8 +72,10 @@ void RSBaseRenderNode::MoveChild(SharedPtr child, int index)
     } else {
         children_.emplace(std::next(children_.begin(), index), child);
     }
+    SetDirty(NodeDirty::HIERARCHY_DIRTY);
     children_.erase(it);
-    SetDirty();
+    // resort children on next visit
+    isChildrenSorted_ = false;
 }
 
 void RSBaseRenderNode::RemoveChild(SharedPtr child, bool skipTransition)
@@ -97,8 +101,10 @@ void RSBaseRenderNode::RemoveChild(SharedPtr child, bool skipTransition)
     } else {
         child->ResetParent();
     }
+    SetDirty(NodeDirty::HIERARCHY_DIRTY);
     children_.erase(it);
-    SetDirty();
+    // regenerate children list on next visit
+    fullChildrenList_.clear();
 }
 
 void RSBaseRenderNode::SetIsOnTheTree(bool flag)
@@ -160,7 +166,9 @@ void RSBaseRenderNode::AddCrossParentChild(const SharedPtr& child, int32_t index
     if (isOnTheTree_) {
         child->SetIsOnTheTree(true);
     }
-    SetDirty();
+    SetDirty(NodeDirty::HIERARCHY_DIRTY);
+    // regenerate children list on next visit
+    fullChildrenList_.clear();
 }
 
 void RSBaseRenderNode::RemoveCrossParentChild(const SharedPtr& child, const WeakPtr& newParent)
@@ -190,8 +198,10 @@ void RSBaseRenderNode::RemoveCrossParentChild(const SharedPtr& child, const Weak
         // attention: set new parent means 'old' parent has removed this child
         hasRemovedChild_ = true;
     }
+    SetDirty(NodeDirty::HIERARCHY_DIRTY);
     children_.erase(it);
-    SetDirty();
+    // regenerate children list on next visit
+    fullChildrenList_.clear();
 }
 
 void RSBaseRenderNode::RemoveFromTree(bool skipTransition)
@@ -207,8 +217,8 @@ void RSBaseRenderNode::RemoveFromTree(bool skipTransition)
     }
     // force remove child from disappearingChildren_ and clean sortChildren_ cache
     parentPtr->disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
-    parentPtr->sortedChildren_.clear();
-    child->ResetParent();
+    parentPtr->fullChildrenList_.clear();
+    ResetParent();
 }
 
 void RSBaseRenderNode::ClearChildren()
@@ -236,7 +246,8 @@ void RSBaseRenderNode::ClearChildren()
         ++pos;
     }
     children_.clear();
-    SetDirty();
+    fullChildrenList_.clear();
+    SetDirty(NodeDirty::HIERARCHY_DIRTY);
 }
 
 void RSBaseRenderNode::SetParent(WeakPtr parent)
@@ -295,7 +306,7 @@ void RSBaseRenderNode::DumpTree(int32_t depth, std::string& out) const
         auto rootNode = static_cast<const RSRootRenderNode*>(this);
         out += ", Visible: " + std::to_string(rootNode->GetRenderProperties().GetVisible());
         out += ", Size: [" + std::to_string(rootNode->GetRenderProperties().GetFrameWidth()) + ", " +
-            std::to_string(rootNode->GetRenderProperties().GetFrameHeight()) + "]";
+               std::to_string(rootNode->GetRenderProperties().GetFrameHeight()) + "]";
         out += ", EnableRender: " + std::to_string(rootNode->GetEnableRender());
     }
     out += "\n";
@@ -350,36 +361,45 @@ void RSBaseRenderNode::DumpNodeType(std::string& out) const
     }
 }
 
-bool RSBaseRenderNode::IsDirty() const
+// return dirty flag
+uint8_t RSBaseRenderNode::GetDirtyFlag() const
 {
-    return dirtyStatus_ == NodeDirty::DIRTY;
+    return dirtyStatus_;
+}
+
+// check dirty bits
+bool RSBaseRenderNode::IsDirty(NodeDirty bitMask) const
+{
+    return GetDirtyFlag() & bitMask;
+}
+
+// set dirty bits
+void RSBaseRenderNode::SetDirty(NodeDirty bitMask)
+{
+    dirtyStatus_ = dirtyStatus_ | bitMask;
+}
+
+// reset dirty bits
+void RSBaseRenderNode::ResetDirty(NodeDirty bitMask)
+{
+    dirtyStatus_ = dirtyStatus_ & (~bitMask);
 }
 
 // attention: current all base node's dirty ops causing content dirty
 bool RSBaseRenderNode::IsContentDirty() const
 {
-    return dirtyStatus_ == NodeDirty::DIRTY;
+    return IsDirty();
 }
 
 void RSBaseRenderNode::SetContentDirty()
 {
-    dirtyStatus_ = NodeDirty::DIRTY;
-}
-
-void RSBaseRenderNode::SetDirty()
-{
-    dirtyStatus_ = NodeDirty::DIRTY;
-}
-
-void RSBaseRenderNode::SetClean()
-{
-    dirtyStatus_ = NodeDirty::CLEAN;
+    SetDirty();
 }
 
 void RSBaseRenderNode::CollectSurface(
     const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender)
 {
-    for (auto& child : node->GetSortedChildren()) {
+    for (auto& child : node->GetChildren()) {
         child->CollectSurface(child, vec, isUniRender);
     }
 }
@@ -400,61 +420,70 @@ void RSBaseRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->ProcessBaseRenderNode(*this);
 }
 
-const std::list<RSBaseRenderNode::SharedPtr>& RSBaseRenderNode::GetSortedChildren()
+const std::list<RSBaseRenderNode::SharedPtr>& RSBaseRenderNode::GetChildren()
 {
-    // generate sorted children list if it's empty
-    if (sortedChildren_.empty() && (!children_.empty() || !disappearingChildren_.empty())) {
-        GenerateSortedChildren();
-    }
-    return sortedChildren_;
+    GenerateFullChildrenList();
+    return fullChildrenList_;
 }
 
-void RSBaseRenderNode::GenerateSortedChildren()
+const std::list<RSBaseRenderNode::SharedPtr>& RSBaseRenderNode::GetSortedChildren()
 {
-    sortedChildren_.clear();
+    GenerateFullChildrenList();
+    SortChildren();
+    return fullChildrenList_;
+}
 
-    // Step 1: copy all existing children to sortedChildren (skip and clean expired children)
+void RSBaseRenderNode::GenerateFullChildrenList()
+{
+    // if allChildren_ is not empty, it means it's already generated, just return
+    // if both children_ and disappearingChildren_ are empty, it means there's no child, just return
+    if (!fullChildrenList_.empty() || (children_.empty() && disappearingChildren_.empty())) {
+        return;
+    }
+
+    // Step 1: Copy all children into sortedChildren while checking and removing expired children.
     children_.remove_if([this](const auto& child) -> bool {
         auto existingChild = child.lock();
         if (existingChild == nullptr) {
             ROSEN_LOGI("RSBaseRenderNode::GenerateSortedChildren removing expired child, this is rare but possible.");
             return true;
         }
-        sortedChildren_.emplace_back(std::move(existingChild));
+        fullChildrenList_.emplace_back(std::move(existingChild));
         return false;
     });
 
-    // Step 2: insert disappearing children into sortedChildren, at it's original position, remove if it's transition
-    // finished
-    // If exist disappearing Children, cache the parent's transition state to avoid redundant recursively check
-    bool parentHasDisappearingTransition = disappearingChildren_.empty() ? false : HasDisappearingTransition(true);
-    disappearingChildren_.remove_if([this, parentHasDisappearingTransition](const auto& pair) -> bool {
+    // Step 2: Insert disappearing children into sortedChildren at their original position.
+    // Note:
+    //     1. We don't need to check if the disappearing transition is finished; it's already handled in
+    //     RSRenderTransition::OnDetach.
+    //     2. We don't need to check if the disappearing child is expired; it's already been checked when moving from
+    //     children_ to disappearingChildren_. We hold ownership of the shared_ptr of the child after that.
+    std::for_each(disappearingChildren_.begin(), disappearingChildren_.end(), [this](const auto& pair) -> void {
         auto& disappearingChild = pair.first;
         const auto& origPos = pair.second;
-        // if neither parent node or child node has transition, we can safely remove it
-        if (!parentHasDisappearingTransition && !disappearingChild->HasDisappearingTransition(false)) {
-            ROSEN_LOGD("RSBaseRenderNode::GenerateSortedChildren removing finished transition child(id %" PRIu64 ")",
-                disappearingChild->GetId());
-            if (ROSEN_EQ<RSBaseRenderNode>(disappearingChild->GetParent(), weak_from_this())) {
-                disappearingChild->ResetParent();
-            }
-            return true;
-        }
-        if (origPos < sortedChildren_.size()) {
-            sortedChildren_.emplace(std::next(sortedChildren_.begin(), origPos), disappearingChild);
+
+        if (origPos < fullChildrenList_.size()) {
+            fullChildrenList_.emplace(std::next(fullChildrenList_.begin(), origPos), disappearingChild);
         } else {
-            sortedChildren_.emplace_back(disappearingChild);
+            fullChildrenList_.emplace_back(disappearingChild);
         }
-        return false;
     });
 
-    // Step 3: sort all children by z-order (std::list::sort is stable)
-    sortedChildren_.sort([](const auto& first, const auto& second) -> bool {
+    // reset the sorted flag
+    isChildrenSorted_ = false;
+}
+
+void RSBaseRenderNode::SortChildren()
+{
+    // if children are already sorted, just return
+    if (isChildrenSorted_) {
+        return;
+    }
+    // sort all children by z-order (note: std::list::sort is stable) if needed
+    fullChildrenList_.sort([](const auto& first, const auto& second) -> bool {
         auto node1 = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(first);
         auto node2 = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(second);
         if (node1 == nullptr || node2 == nullptr) {
-            ROSEN_LOGE(
-                "RSBaseRenderNode::GenerateSortedChildren nullptr found in sortedChildren_, this should not happen");
             return false;
         }
         return node1->GetRenderProperties().GetPositionZ() < node2->GetRenderProperties().GetPositionZ();
@@ -466,23 +495,6 @@ void RSBaseRenderNode::SendCommandFromRT(std::unique_ptr<RSCommand>& command, No
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommandFromRT(command, nodeId);
-    }
-}
-
-void RSBaseRenderNode::InternalRemoveSelfFromDisappearingChildren()
-{
-    // internal use only, force remove self from parent's disappearingChildren_
-    if (auto parent = parent_.lock()) {
-        parent->disappearingChildren_.remove_if(
-            [childPtr = shared_from_this()](const auto& pair) -> bool {
-                if (pair.first == childPtr) {
-                    childPtr ->ResetParent(); // when child been removed, notify dirty by ResetParent()
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        );
     }
 }
 } // namespace Rosen

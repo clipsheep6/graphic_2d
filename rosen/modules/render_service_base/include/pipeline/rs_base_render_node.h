@@ -30,6 +30,16 @@ class RSCommand;
 
 class RSB_EXPORT RSBaseRenderNode : public std::enable_shared_from_this<RSBaseRenderNode> {
 public:
+    enum NodeDirty : uint8_t {
+        CLEAN                  = 0,
+        HIERARCHY_DIRTY        = 0x01,
+        PROPERTY_DIRTY         = 0x02,
+        CONTEXT_VARIABLE_DIRTY = 0x04,
+        CONTENT_DIRTY          = 0x08,
+        TRANSITION_DIRTY       = 0x10,
+        GENERIC_DIRTY          = 0xFF,
+    };
+
     using WeakPtr = std::weak_ptr<RSBaseRenderNode>;
     using SharedPtr = std::shared_ptr<RSBaseRenderNode>;
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::BASE_NODE;
@@ -58,7 +68,7 @@ public:
                                 bool isUniRender);
     virtual void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor);
     virtual void Process(const std::shared_ptr<RSNodeVisitor>& visitor);
-    virtual bool IsDirty() const;
+
     // attention: current all base node's dirty ops causing content dirty
     // if there is any new dirty op, check it
     virtual bool IsContentDirty() const;
@@ -84,16 +94,15 @@ public:
         return isOnTheTree_;
     }
 
+    // return children and disappeared children, not guaranteed to be sorted by z-index
+    const std::list<SharedPtr>& GetChildren();
+    // return children and disappeared children, sorted by z-index
+    // NOTE: caller should call ApplyModifiers() of all children before calling this function
     const std::list<SharedPtr>& GetSortedChildren();
 
     void ResetSortedChildren()
     {
-        sortedChildren_.clear();
-    }
-
-    const std::list<WeakPtr>& GetChildren()
-    {
-        return children_;
+        isChildrenSorted_ = false;
     }
 
     uint32_t GetChildrenCount() const
@@ -112,7 +121,7 @@ public:
             return parent ? parent->HasDisappearingTransition(true) : false;
         }
     }
-    
+
     void SetTunnelHandleChange(bool change)
     {
         isTunnelHandleChange_ = change;
@@ -127,7 +136,13 @@ public:
     template<typename T>
     bool IsInstanceOf() const
     {
-        constexpr uint32_t targetType = static_cast<uint32_t>(T::Type);
+        constexpr auto targetType = static_cast<uint32_t>(T::Type);
+        return (static_cast<uint32_t>(GetType()) & targetType) == targetType;
+    }
+
+    bool IsInstanceOf(RSRenderNodeType type) const
+    {
+        auto targetType = static_cast<uint32_t>(type);
         return (static_cast<uint32_t>(GetType()) & targetType) == targetType;
     }
     template<typename T>
@@ -183,13 +198,13 @@ public:
 
     // accumulate all valid children's area
     void UpdateChildrenRect(const RectI& subRect);
-    void SetDirty();
+
+    void SetDirty(NodeDirty bitMask = NodeDirty::GENERIC_DIRTY);
+    bool IsDirty(NodeDirty bitMask = NodeDirty::GENERIC_DIRTY) const;
+
 protected:
-    enum class NodeDirty {
-        CLEAN = 0,
-        DIRTY,
-    };
-    virtual void SetClean();
+    virtual uint8_t GetDirtyFlag() const;
+    void ResetDirty(NodeDirty filter = NodeDirty::GENERIC_DIRTY);
 
     void DumpNodeType(std::string& out) const;
 
@@ -210,11 +225,12 @@ private:
     std::list<WeakPtr> children_;
     std::list<std::pair<SharedPtr, uint32_t>> disappearingChildren_;
 
-    std::list<SharedPtr> sortedChildren_;
-    void GenerateSortedChildren();
+    std::list<SharedPtr> fullChildrenList_;
+    void GenerateFullChildrenList();
+    void SortChildren();
 
     const std::weak_ptr<RSContext> context_;
-    NodeDirty dirtyStatus_ = NodeDirty::DIRTY;
+    uint8_t dirtyStatus_ = NodeDirty::GENERIC_DIRTY;
     friend class RSRenderPropertyBase;
     friend class RSRenderTransition;
     std::atomic<bool> isTunnelHandleChange_ = false;
@@ -222,9 +238,8 @@ private:
     bool hasRemovedChild_ = false;
     bool hasChildrenOutOfRect_ = false;
     RectI childrenRect_;
-    bool childHasFilter_ = false;  // only cllect children filter status
-
-    void InternalRemoveSelfFromDisappearingChildren();
+    bool childHasFilter_ = false;  // only collect children filter status
+    bool isChildrenSorted_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

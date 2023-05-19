@@ -196,7 +196,7 @@ void RSSurfaceRenderNode::CollectSurface(
         if (isUniRender) {
             vec.emplace_back(shared_from_this());
         }
-        for (auto& child : node->GetSortedChildren()) {
+        for (auto& child : node->GetChildren()) {
             child->CollectSurface(child, vec, isUniRender);
         }
         return;
@@ -225,7 +225,7 @@ void RSSurfaceRenderNode::CollectSurface(
 
 void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node)
 {
-    for (auto& child : node->GetSortedChildren()) {
+    for (auto& child : node->GetChildren()) {
         auto surfaceNode = child->ReinterpretCastTo<RSSurfaceRenderNode>();
         if (surfaceNode == nullptr) {
             continue;
@@ -430,7 +430,7 @@ void RSSurfaceRenderNode::SetContextMatrix(const std::optional<Drawing::Matrix>&
         return;
     }
     contextMatrix_ = matrix;
-    SetDirty();
+    SetDirty(RSBaseRenderNode::NodeDirty::CONTEXT_VARIABLE_DIRTY);
     if (!sendMsg) {
         return;
     }
@@ -445,7 +445,8 @@ void RSSurfaceRenderNode::SetContextAlpha(float alpha, bool sendMsg)
         return;
     }
     contextAlpha_ = alpha;
-    SetDirty();
+    // context alpha was multiplied into the alpha, so we need to mark property dirty here.
+    SetDirty(RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY);
     if (!sendMsg) {
         return;
     }
@@ -464,7 +465,7 @@ void RSSurfaceRenderNode::SetContextClipRegion(const std::optional<Drawing::Rect
         return;
     }
     contextClipRect_ = clipRegion;
-    SetDirty();
+    SetDirty(RSBaseRenderNode::NodeDirty::CONTEXT_VARIABLE_DIRTY);
     if (!sendMsg) {
         return;
     }
@@ -679,7 +680,7 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
     }
 
     SetOcclusionVisible(vis);
-    for (auto& child : GetSortedChildren()) {
+    for (auto& child : GetChildren()) {
         if (auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)) {
             surface->SetVisibleRegionRecursive(region, visibleVec, pidVisMap);
         }
@@ -1135,8 +1136,7 @@ bool RSSurfaceRenderNode::LeashWindowRelatedAppWindowOccluded(std::shared_ptr<RS
         return false;
     }
     for (auto& child : GetChildren()) {
-        auto childNode = child.lock();
-        const auto& childNodeSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
+        const auto& childNodeSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
         if (childNodeSurface->GetVisibleRegion().IsEmpty()) {
             appNode = childNodeSurface;
             return true;
@@ -1151,12 +1151,9 @@ std::shared_ptr<RSSurfaceRenderNode> RSSurfaceRenderNode::GetLeashWindowNestedAp
         return nullptr;
     }
     for (auto& child : GetChildren()) {
-        auto childNode = child.lock();
-        if (childNode) {
-            auto childNodeSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
-            if (childNodeSurface) {
-                return childNodeSurface;
-            }
+        auto childNodeSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+        if (childNodeSurface) {
+            return childNodeSurface;
         }
     }
     return nullptr;
@@ -1164,7 +1161,7 @@ std::shared_ptr<RSSurfaceRenderNode> RSSurfaceRenderNode::GetLeashWindowNestedAp
 
 bool RSSurfaceRenderNode::IsCurrentFrameStatic()
 {
-    if (dirtyManager_ == nullptr || !dirtyManager_->GetLastestHistory().IsEmpty()) {
+    if (dirtyManager_ == nullptr || !dirtyManager_->GetLatestHistory().IsEmpty()) {
         return false;
     }
     if (IsMainWindowType()) {
@@ -1185,7 +1182,7 @@ void RSSurfaceRenderNode::UpdateCacheSurfaceDirtyManager(int bufferAge)
         return;
     }
     cacheSurfaceDirtyManager_->Clear();
-    cacheSurfaceDirtyManager_->MergeDirtyRect(dirtyManager_->GetLastestHistory());
+    cacheSurfaceDirtyManager_->MergeDirtyRect(dirtyManager_->GetLatestHistory());
     cacheSurfaceDirtyManager_->SetBufferAge(bufferAge);
     cacheSurfaceDirtyManager_->UpdateDirty(false);
     // for leashwindow type, nested app surfacenode's cacheSurfaceDirtyManager update is required

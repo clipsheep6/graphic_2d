@@ -97,9 +97,8 @@ void RSRenderThreadVisitor::SetPartialRenderStatus(PartialRenderType status, boo
 
 void RSRenderThreadVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 {
-    node.ResetSortedChildren();
     for (auto& child : node.GetChildren()) {
-        if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child.lock())) {
+        if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child)) {
             renderChild->ApplyModifiers();
         }
     }
@@ -116,7 +115,6 @@ void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
         curDirtyManager_->UpdateDebugRegionTypeEnable(dfxDirtyType_);
         // After the node calls ApplyModifiers, the modifiers assign the renderProperties to the node
         // Otherwise node.GetSuggestedBufferHeight always less than 0, causing black screen
-        node.ApplyModifiers();
         if (!IsValidRootRenderNode(node)) {
             return;
         }
@@ -147,7 +145,6 @@ void RSRenderThreadVisitor::ResetAndPrepareChildrenNode(RSRenderNode& node,
 
 void RSRenderThreadVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
-    node.ApplyModifiers();
     if (!node.ShouldPaint()) {
         return;
     }
@@ -169,7 +166,6 @@ void RSRenderThreadVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 
 void RSRenderThreadVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
-    node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
     auto nodeParent = node.GetParent().lock();
     std::shared_ptr<RSRenderNode> rsParent = nullptr;
@@ -194,7 +190,6 @@ void RSRenderThreadVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 
 void RSRenderThreadVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
 {
-    node.ApplyModifiers();
     if (!node.ShouldPaint()) {
         return;
     }
@@ -377,8 +372,6 @@ void RSRenderThreadVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
-    // clear SortedChildren, it will be generated again in next frame
-    node.ResetSortedChildren();
 }
 
 void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
@@ -831,9 +824,8 @@ void RSRenderThreadVisitor::ProcessProxyRenderNode(RSProxyRenderNode& node)
     auto clipRect = RSPaintFilterCanvas::GetLocalClipBounds(*canvas_);
     node.SetContextClipRegion(clipRect);
 
-    // for proxied nodes (i.e. remote window components), we only extract matrix & alpha, do not change their hierarchy
-    // or clip or other properties.
-    node.ResetSortedChildren();
+    // proxy node usually has no children by design, this is just in case
+    ProcessBaseRenderNode(node);
 #endif
 }
 

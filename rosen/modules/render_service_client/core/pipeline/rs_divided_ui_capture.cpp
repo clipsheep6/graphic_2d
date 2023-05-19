@@ -164,8 +164,6 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessBaseRenderNode(RSBase
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
-    // clear SortedChildren, it will be generated again in next frame
-    node.ResetSortedChildren();
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
@@ -335,6 +333,11 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessSurfaceRenderNode(RSS
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 {
+    for (auto& child : node.GetChildren()) {
+        if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child)) {
+            renderChild->ApplyModifiers();
+        }
+    }
     for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
     }
@@ -342,7 +345,6 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareBaseRenderNode(RSBase
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
-    node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
     node.Update(*dirtyManager, nullptr, false);
     PrepareBaseRenderNode(node);
@@ -350,7 +352,6 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareCanvasRenderNode(RSCa
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
-    node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
     node.Update(*dirtyManager, nullptr, false);
     PrepareBaseRenderNode(node);
@@ -358,13 +359,11 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareSurfaceRenderNode(RSS
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
-    node.ApplyModifiers();
     PrepareCanvasRenderNode(node);
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
 {
-    node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
     node.Update(*dirtyManager, nullptr, false);
     PrepareBaseRenderNode(node);

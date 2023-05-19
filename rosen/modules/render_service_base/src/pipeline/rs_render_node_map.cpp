@@ -98,6 +98,10 @@ bool RSRenderNodeMap::RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>
 
 void RSRenderNodeMap::UnregisterRenderNode(NodeId id)
 {
+    // Node 0 should not be used as a normal node
+    if (id == 0) {
+        return;
+    }
     renderNodeMap_.erase(id);
     surfaceNodeMap_.erase(id);
     drivenRenderNodeMap_.erase(id);
@@ -123,6 +127,10 @@ void RSRenderNodeMap::RemoveDrivenRenderNode(NodeId id)
 
 void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
 {
+    // pid 0 is reserved for init process, it should not appear in render node map
+    if (pid == 0) {
+        return;
+    }
     ROSEN_LOGI("RSRenderNodeMap::FilterNodeByPid removing all nodes belong to pid %d", pid);
     // remove all nodes belong to given pid (by matching higher 32 bits of node id)
     EraseIf(renderNodeMap_, [pid](const auto& pair) -> bool {

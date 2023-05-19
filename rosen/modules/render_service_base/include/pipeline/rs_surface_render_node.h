@@ -234,8 +234,6 @@ public:
 
     void SetContextBounds(const Vector4f bounds);
 
-    void OnApplyModifiers() override;
-
 #ifndef USE_ROSEN_DRAWING
     void SetTotalMatrix(const SkMatrix& totalMatrix)
 #else
@@ -667,6 +665,8 @@ private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
     Vector4f GetWindowCornerRadius();
+
+    void OnApplyModifiers() override;
 
     std::mutex mutexRT_;
     std::mutex mutexUI_;

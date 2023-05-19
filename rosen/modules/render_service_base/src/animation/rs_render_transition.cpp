@@ -94,7 +94,12 @@ void RSRenderTransition::OnAttach()
     }
     // create "transition" modifier and add it to target
     for (auto& effect : effects_) {
-        target->AddModifier(effect->GetModifier());
+        const auto& modifier = effect->GetModifier();
+        if (modifier == nullptr) {
+            // custom effect may not have modifier
+            continue;
+        }
+        target->AddModifier(modifier);
     }
     // update number of disappearing transition animation
     if (!isTransitionIn_) {
@@ -121,7 +126,7 @@ void RSRenderTransition::OnDetach()
         ROSEN_LOGD("RSRenderTransition::OnDetach, target have %u disappearing Transitions",
             target->disappearingTransitionCount_);
         if (target->disappearingTransitionCount_ == 0) {
-            target->InternalRemoveSelfFromDisappearingChildren();
+            target->RemoveFromTree(true);
         }
     }
 }

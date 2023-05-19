@@ -65,7 +65,7 @@ static std::map<NodeId, uint32_t> cacheRenderNodeMap = {};
 
 bool IsFirstFrameReadyToDraw(RSSurfaceRenderNode& node)
 {
-    for (auto& child : node.GetSortedChildren()) {
+    for (auto& child : node.GetChildren()) {
         if (child != nullptr && child->IsInstanceOf<RSRootRenderNode>()) {
             auto rootNode = child->ReinterpretCastTo<RSRootRenderNode>();
             const auto& property = rootNode->GetRenderProperties();
@@ -186,9 +186,8 @@ void RSUniRenderVisitor::CopyPropertyForParallelVisitor(RSUniRenderVisitor *main
 
 void RSUniRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 {
-    node.ResetSortedChildren();
     for (auto& child : node.GetChildren()) {
-        if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child.lock())) {
+        if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child)) {
             renderChild->ApplyModifiers();
         }
     }
@@ -340,7 +339,6 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
 
     dirtyFlag_ = isDirty_;
 
-    node.ApplyModifiers();
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
         RS_LOGE("RSUniRenderVisitor::PrepareDisplayRenderNode ScreenManager is nullptr");
@@ -550,7 +548,7 @@ void RSUniRenderVisitor::MarkSubHardwareEnableNodeState(RSSurfaceRenderNode& sur
         hardwareEnabledNodes = surfaceNode.GetChildHardwareEnabledNodes();
     } else {
         for (auto& child : surfaceNode.GetChildren()) {
-            auto appNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child.lock());
+            auto appNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
             if (appNode && appNode->IsAppWindow()) {
                 hardwareEnabledNodes = appNode->GetChildHardwareEnabledNodes();
                 break;
@@ -667,7 +665,6 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         }
     }
     node.CleanDstRectChanged();
-    node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
     RectI prepareClipRect = prepareClipRect_;
     bool isQuickSkipPreparationEnabled = isQuickSkipPreparationEnabled_;
@@ -887,7 +884,6 @@ void RSUniRenderVisitor::PrepareProxyRenderNode(RSProxyRenderNode& node)
 
 void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
-    node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
     float alpha = curAlpha_;
     auto parentSurfaceNodeMatrix = parentSurfaceNodeMatrix_;
@@ -950,10 +946,9 @@ void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
     prepareClipRect_ = prepareClipRect;
 }
 
-void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
+void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
     preparedCanvasNodeInCurrentSurface_++;
-    node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
     RectI prepareClipRect = prepareClipRect_;
 
@@ -1072,7 +1067,6 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
 
 void RSUniRenderVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
 {
-    node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
     RectI prepareClipRect = prepareClipRect_;
     float alpha = curAlpha_;
@@ -1253,9 +1247,9 @@ void RSUniRenderVisitor::DrawAndTraceSingleDirtyRegionTypeForDFX(RSSurfaceRender
     }
     std::map<NodeId, RectI> dirtyInfo;
     float fillAlpha = 0.2;
-    std::map<RSRenderNodeType, std::pair<std::string, SkColor>> nodeConfig = {
-        {RSRenderNodeType::CANVAS_NODE, std::make_pair("canvas", SK_ColorRED)},
-        {RSRenderNodeType::SURFACE_NODE, std::make_pair("surface", SK_ColorGREEN)},
+    static const std::map<RSRenderNodeType, std::pair<std::string, SkColor>> nodeConfig = {
+        { RSRenderNodeType::CANVAS_NODE, { "canvas", SK_ColorRED } },
+        { RSRenderNodeType::SURFACE_NODE, { "surface", SK_ColorGREEN } },
     };
 
     std::string subInfo;
@@ -1290,7 +1284,7 @@ bool RSUniRenderVisitor::DrawDetailedTypesOfDirtyRegionForDFX(RSSurfaceRenderNod
         }
         return true;
     }
-    const std::map<DirtyRegionDebugType, DirtyRegionType> DIRTY_REGION_DEBUG_TYPE_MAP {
+    static const std::map<DirtyRegionDebugType, DirtyRegionType> DIRTY_REGION_DEBUG_TYPE_MAP {
         { DirtyRegionDebugType::UPDATE_DIRTY_REGION, DirtyRegionType::UPDATE_DIRTY_REGION },
         { DirtyRegionDebugType::OVERLAY_RECT, DirtyRegionType::OVERLAY_RECT },
         { DirtyRegionDebugType::FILTER_RECT, DirtyRegionType::FILTER_RECT },
@@ -1409,14 +1403,10 @@ void RSUniRenderVisitor::ProcessParallelDisplayRenderNode(RSDisplayRenderNode& n
         canvas_->concat(geoPtr->GetMatrix());
     }
     for (auto& child : node.GetChildren()) {
-        auto childNode = child.lock();
-        if (!childNode) {
-            continue;
-        }
         RSParallelRenderManager::Instance()->StartTiming(parallelRenderVisitorIndex_);
-        childNode->Process(shared_from_this());
+        child->Process(shared_from_this());
         RSParallelRenderManager::Instance()->StopTimingAndSetRenderTaskCost(
-            parallelRenderVisitorIndex_, childNode->GetId(), TaskType::PROCESS_TASK);
+            parallelRenderVisitorIndex_, child->GetId(), TaskType::PROCESS_TASK);
     }
     canvas_->restoreToCount(saveCount);
 

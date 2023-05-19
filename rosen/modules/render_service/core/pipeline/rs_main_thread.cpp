@@ -1141,9 +1141,8 @@ void RSMainThread::CalcOcclusion()
     }
     RSInnovation::UpdateOcclusionCullingSoEnabled();
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-    if (node->GetSortedChildren().size() == 1) {
-        auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
-            node->GetSortedChildren().front());
+    if (node->GetChildren().size() == 1) {
+        auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(node->GetChildren().front());
         if (displayNode) {
             curAllSurfaces = displayNode->GetCurAllSurfaces();
         }
@@ -1567,16 +1566,7 @@ bool RSMainThread::DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootN
         }
     }
     (*SignalAwait)(syncSignal);
-    ResetSortedChildren(rootNode);
     return true;
-}
-
-void RSMainThread::ResetSortedChildren(std::shared_ptr<RSBaseRenderNode> node)
-{
-    for (auto& child : node->GetSortedChildren()) {
-        ResetSortedChildren(child);
-    }
-    node->ResetSortedChildren();
 }
 
 void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)

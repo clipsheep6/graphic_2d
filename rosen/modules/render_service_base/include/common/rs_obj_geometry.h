@@ -167,9 +167,7 @@ public:
         if (!trans_) {
             trans_ = std::make_optional<Transform>();
         }
-        if (!ROSEN_EQ(trans_->translateZ_, translateZ)) {
-            trans_->translateZ_ = translateZ;
-        }
+        trans_->translateZ_ = translateZ;
     }
     void SetCameraDistance(float cameraDistance)
     {
@@ -270,6 +268,16 @@ public:
             trans_ = geo.trans_;
         }
         return *this;
+    }
+
+    virtual void Reset()
+    {
+        x_ = -INFINITY;
+        y_ = -INFINITY;
+        z_ = 0;
+        width_ = -INFINITY;
+        height_ = -INFINITY;
+        trans_.reset();
     }
 
 protected:

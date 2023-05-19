@@ -22,14 +22,19 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
-#include "platform/drawing/rs_surface_frame.h"
-#include "platform/ohos/rs_surface_ohos.h"
 #include "rs_base_render_util.h"
 
+#ifdef NEW_RENDER_CONTEXT
+#include "render_backend/rs_surface_frame.h"
+#include "ohos/rs_surface_ohos.h"
+#include "render_context_factory.h"
+#else
+#include "platform/drawing/rs_surface_frame.h"
+#include "platform/ohos/rs_surface_ohos.h"
 #if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
 #include "render_context/render_context.h"
 #endif // RS_ENABLE_GL || RS_ENABLE_VK
-
+#endif
 #ifdef RS_ENABLE_EGLIMAGE
 #include "rs_egl_image_manager.h"
 #endif // RS_ENABLE_EGLIMAGE
@@ -40,10 +45,17 @@ namespace Rosen {
 class RSRenderFrame {
 public:
     // we guarantee when constructing this object, all parameters are valid.
-    RSRenderFrame(const std::shared_ptr<RSSurfaceOhos>& target, std::unique_ptr<RSSurfaceFrame>&& frame)
-        : targetSurface_(target), surfaceFrame_(std::move(frame))
+#ifdef NEW_RENDER_CONTEXT
+    RSRenderFrame(const std::shared_ptr<RSSurfaceOhos>& target)
+        : targetSurface_(target)
     {
     }
+#else
+    RSRenderFrame(const std::shared_ptr<RSSurfaceOhos>& target, std::unique_ptr<RSSurfaceFrame>&& frame)
+    : targetSurface_(target), surfaceFrame_(std::move(frame))
+    {
+    }
+#endif
     ~RSRenderFrame() noexcept
     {
         Flush();
@@ -52,7 +64,15 @@ public:
     // noncopyable
     RSRenderFrame(const RSRenderFrame&) = delete;
     void operator=(const RSRenderFrame&) = delete;
-
+#ifdef NEW_RENDER_CONTEXT
+    void Flush() noexcept
+    {
+        if (targetSurface_ != nullptr) {
+            targetSurface_->FlushFrame();
+            targetSurface_ = nullptr;
+        }
+    }
+#else
     void Flush() noexcept
     {
         if (targetSurface_ != nullptr && surfaceFrame_ != nullptr) {
@@ -61,36 +81,54 @@ public:
             surfaceFrame_ = nullptr;
         }
     }
+#endif
 
     const std::shared_ptr<RSSurfaceOhos>& GetSurface() const
     {
         return targetSurface_;
     }
-
+#ifndef NEW_RENDER_CONTEXT
     const std::unique_ptr<RSSurfaceFrame>& GetFrame() const
     {
         return surfaceFrame_;
     }
+#endif
 
     std::unique_ptr<RSPaintFilterCanvas> GetCanvas()
     {
+#ifdef NEW_RENDER_CONTEXT
+        return std::make_unique<RSPaintFilterCanvas>(targetSurface_->GetSkSurface().get());
+#else
         return std::make_unique<RSPaintFilterCanvas>(surfaceFrame_->GetSurface().get());
+#endif
     }
 
     int32_t GetBufferAge()
     {
+#ifdef NEW_RENDER_CONTEXT
+        return targetSurface_ != nullptr ? targetSurface_->GetBufferAge() : 0;
+#else
         return surfaceFrame_ != nullptr ? surfaceFrame_->GetBufferAge() : 0;
+#endif
     }
 
     void SetDamageRegion(const std::vector<RectI> &rects)
     {
+#ifdef NEW_RENDER_CONTEXT
+        if (targetSurface_ != nullptr) {
+            targetSurface_ ->SetDamageRegion(rects);
+        }
+#else
         if (surfaceFrame_ != nullptr) {
             surfaceFrame_->SetDamageRegion(rects);
         }
+#endif
     }
 private:
     std::shared_ptr<RSSurfaceOhos> targetSurface_;
+#ifndef NEW_RENDER_CONTEXT
     std::unique_ptr<RSSurfaceFrame> surfaceFrame_;
+#endif
 };
 
 // function that will be called before drawing Buffer / Image.

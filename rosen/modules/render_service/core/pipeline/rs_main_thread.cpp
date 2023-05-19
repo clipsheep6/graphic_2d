@@ -56,6 +56,9 @@
 #include "property/rs_property_trace.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_pixel_map_util.h"
+#ifdef NEW_RENDER_CONTEXT
+#include "render_context/memory_handler.h"
+#endif
 #include "screen_manager/rs_screen_manager.h"
 #include "transaction/rs_transaction_proxy.h"
 
@@ -1503,8 +1506,12 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         SkGraphics::PurgeAllCaches();
         grContext->freeGpuResources();
         grContext->purgeUnlockedResources(true);
+#ifdef NEW_RENDER_CONTEXT
+        MemoryHandler::ClearShader();
+#else
         auto rendercontext = std::shared_ptr<RenderContext>(RenderContextFactory::GetInstance().CreateNewEngine());
         rendercontext->CleanAllShaderCache();
+#endif
 #ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
 #else
@@ -1535,8 +1542,12 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
 #endif
     } else if (type == "shader") {
+#ifdef NEW_RENDER_CONTEXT
+        MemoryHandler::ClearShader();
+#else
         auto rendercontext = std::shared_ptr<RenderContext>(RenderContextFactory::GetInstance().CreateNewEngine());
         rendercontext->CleanAllShaderCache();
+#endif
     } else {
         uint32_t pid = std::stoll(type);
 #ifndef NEW_SKIA

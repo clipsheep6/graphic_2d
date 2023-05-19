@@ -168,7 +168,15 @@ ohos_source_set("render_service_base_src") {
   ]
 
   public_configs = [ ":export_config" ]
-  public_deps = [ "src/platform:platform" ]
+  public_deps = [ 
+    "src/platform:platform",
+  ]
+
+  if (defined(use_new_render_context) && use_new_render_context) {
+    public_deps += [
+      "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/render_backend:render_backend"
+    ]
+  }
 
   if (enable_export_macro) {
     defines += [ "ENABLE_EXPORT_MACRO" ]
@@ -233,11 +241,19 @@ config("render_service_base_all_deps_config") {
 ohos_shared_library("librender_service_base") {
   all_dependent_configs = [ ":render_service_base_all_deps_config" ]
 
-  deps = [ "$rosen_root/modules/platform:eventhandler" ]
+  deps = [ 
+    "$rosen_root/modules/platform:eventhandler",
+  ]
   public_deps = [
     ":render_service_base_src",
     "src/platform:platform",
   ]
+
+  if (defined(use_new_render_context) && use_new_render_context) {
+    public_deps += [
+      "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/render_backend:render_backend"
+    ]
+  }
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"
@@ -250,6 +266,12 @@ ohos_source_set("librender_service_base_static") {
     ":render_service_base_src",
     "src/platform:platform",
   ]
+
+  if (defined(use_new_render_context) && use_new_render_context) {
+    public_deps += [
+      "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/render_backend:render_backend"
+    ]
+  }
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

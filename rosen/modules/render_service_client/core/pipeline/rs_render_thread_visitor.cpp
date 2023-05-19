@@ -35,7 +35,11 @@
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
+#ifdef NEW_RENDER_CONTEXT
+#include "rs_surface.h"
+#else
 #include "platform/drawing/rs_surface.h"
+#endif
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
@@ -261,14 +265,21 @@ void RSRenderThreadVisitor::DrawDirtyRegion()
         }
     }
 }
-
+#ifdef NEW_RENDER_CONTEXT
+void RSRenderThreadVisitor::UpdateDirtyAndSetEGLDamageRegion(std::shared_ptr<RSSurface>& surface)
+#else
 void RSRenderThreadVisitor::UpdateDirtyAndSetEGLDamageRegion(std::unique_ptr<RSSurfaceFrame>& surfaceFrame)
+#endif
 {
     RS_TRACE_BEGIN("UpdateDirtyAndSetEGLDamageRegion");
 #ifdef RS_ENABLE_EGLQUERYSURFACE
     if (isEglSetDamageRegion_) {
         // get and update valid buffer age(>0) to merge history
+#if defined(NEW_RENDER_CONTEXT)
+        int32_t bufferAge = surface->GetBufferAge();
+#else
         int32_t bufferAge = surfaceFrame->GetBufferAge();
+#endif
         if (!curDirtyManager_->SetBufferAge(bufferAge)) {
             ROSEN_LOGD("ProcessRootRenderNode SetBufferAge with invalid buffer age %d", bufferAge);
             curDirtyManager_->ResetDirtyAsSurfaceSize();
@@ -281,8 +292,13 @@ void RSRenderThreadVisitor::UpdateDirtyAndSetEGLDamageRegion(std::unique_ptr<RSS
             // get dirty rect coordinated from upper left to lower left corner in current surface
             RectI dirtyRectFlip = curDirtyManager_->GetRectFlipWithinSurface(curDirtyRegion_);
             // set dirty rect as eglSurfaceFrame's damage region
+#if defined(NEW_RENDER_CONTEXT)
+            surface->SetDamageRegion(dirtyRectFlip.left_, dirtyRectFlip.top_, dirtyRectFlip.width_,
+                dirtyRectFlip.height_);
+#else
             surfaceFrame->SetDamageRegion(dirtyRectFlip.left_, dirtyRectFlip.top_, dirtyRectFlip.width_,
                 dirtyRectFlip.height_);
+#endif
             // flip aligned rect for op drops
             curDirtyRegion_ = curDirtyManager_->GetRectFlipWithinSurface(dirtyRectFlip);
             ROSEN_LOGD("GetPartialRenderEnabled buffer age %d, dirtyRectFlip = [%d, %d, %d, %d], "
@@ -298,7 +314,7 @@ void RSRenderThreadVisitor::UpdateDirtyAndSetEGLDamageRegion(std::unique_ptr<RSS
     curDirtyManager_->UpdateDirty();
     curDirtyRegion_ = curDirtyManager_->GetDirtyRegion();
 #endif
-    ROSEN_LOGD("UpdateDirtyAndSetEGLDamageRegion dirtyRect = [%d, %d, %d, %d]",
+    ROSEN_LOGE("UpdateDirtyAndSetEGLDamageRegion dirtyRect = [%d, %d, %d, %d]",
         curDirtyRegion_.left_, curDirtyRegion_.top_, curDirtyRegion_.width_, curDirtyRegion_.height_);
     RS_TRACE_END();
 }
@@ -345,7 +361,11 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 #endif
 
 #ifdef ACE_ENABLE_GL
+#if defined(NEW_RENDER_CONTEXT)
+    std::shared_ptr<RenderContext> rc = RSRenderThread::Instance().GetRenderContext();
+#else
     RenderContext* rc = RSRenderThread::Instance().GetRenderContext();
+#endif
     rsSurface->SetRenderContext(rc);
 #endif
     uiTimestamp_ = RSRenderThread::Instance().GetUITimestamp();
@@ -370,8 +390,11 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 #endif
         return;
     }
-
+#ifdef NEW_RENDER_CONTEXT
+    auto skSurface = rsSurface->GetSkSurface();
+#else
     auto skSurface = surfaceFrame->GetSurface();
+#endif
     if (skSurface == nullptr) {
         ROSEN_LOGE("skSurface null.");
         return;
@@ -431,8 +454,11 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         !gravityMatrix.isIdentity()) {
         curDirtyManager_->ResetDirtyAsSurfaceSize();
     }
+#ifdef NEW_RENDER_CONTEXT
+    UpdateDirtyAndSetEGLDamageRegion(rsSurface);
+#else
     UpdateDirtyAndSetEGLDamageRegion(surfaceFrame);
-
+#endif
     canvas_->clipRect(SkRect::MakeWH(bufferWidth, bufferHeight));
     canvas_->clear(SK_ColorTRANSPARENT);
     isIdle_ = false;
@@ -483,7 +509,11 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     RS_TRACE_BEGIN(ptr->GetName() + " rsSurface->FlushFrame");
     ROSEN_LOGD("RSRenderThreadVisitor FlushFrame surfaceNodeId = %" PRIu64 ", uiTimestamp = %" PRIu64,
         node.GetRSSurfaceNodeId(), uiTimestamp_);
+#ifdef NEW_RENDER_CONTEXT
+    rsSurface->FlushFrame(uiTimestamp_);
+#else
     rsSurface->FlushFrame(surfaceFrame, uiTimestamp_);
+#endif
 #ifdef ROSEN_OHOS
     FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::FlushEnd);
 #endif

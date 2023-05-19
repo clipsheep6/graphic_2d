@@ -38,6 +38,7 @@ template("render_service_client_source_set") {
     include_dirs = [
       "$graphic_2d_root/rosen/modules/2d_graphics/src",
       "$graphic_2d_root/rosen/modules/render_frame_trace/include",
+      "$graphic_2d_root/rosen/modules/render_service/core",
       "$graphic_2d_root/rosen/modules/render_service_base/src",
       "$graphic_2d_root/utils/log",
       "$graphic_2d_root/utils/sandbox",
@@ -175,8 +176,17 @@ template("render_service_client_source_set") {
     if (is_static_lib) {
       public_deps = [ "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base_static" ]
     } else {
-      public_deps = [ "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base" ]
+      public_deps = [
+        "$graphic_2d_root/rosen/modules/render_service:librender_service",
+        "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base"
+      ]
       deps += [ "$rosen_root/modules/platform:eventhandler" ]
+    }
+
+    if (defined(use_new_render_context) && use_new_render_context) {
+      public_deps += [
+        "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/render_backend:render_backend"
+      ]
     }
 
     public_configs = [ ":render_service_client_config" ]

@@ -25,6 +25,7 @@
 
 namespace OHOS {
 namespace Rosen {
+const std::string UNIRENDER_CACHE_DIR = "/data/service/el0/render_service";
 ShaderCache& ShaderCache::Instance()
 {
     static ShaderCache cache_;
@@ -39,7 +40,9 @@ ShaderCache::~ShaderCache()
 void ShaderCache::InitShaderCache(const char* identity, const size_t size, bool isUni)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-
+    if (isUni) {
+        SetFilePath(UNIRENDER_CACHE_DIR);
+    }
     if (filePath_.length() <= 0) {
         LOGE("abandon, illegal cacheDir length");
         return;

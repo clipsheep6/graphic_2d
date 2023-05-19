@@ -42,12 +42,19 @@ namespace OHOS {
 namespace Rosen {
 RSParallelSubThread::RSParallelSubThread(int threadIndex)
     : threadIndex_(threadIndex), subThread_(nullptr), renderType_(ParallelRenderType::DRAW_IMAGE) {}
-
+#ifdef NEW_RENDER_CONTEXT
+RSParallelSubThread::RSParallelSubThread(RenderContext *context, ParallelRenderType renderType, int threadIndex)
+    : threadIndex_(threadIndex), subThread_(nullptr),
+      renderContext_(context), renderType_(renderType)
+{
+}
+#else
 RSParallelSubThread::RSParallelSubThread(RenderContext *context, ParallelRenderType renderType, int threadIndex)
     : threadIndex_(threadIndex), subThread_(nullptr),
       renderContext_(static_cast<RenderContextEGL*>(context)), renderType_(renderType)
 {
 }
+#endif
 
 RSParallelSubThread::~RSParallelSubThread()
 {
@@ -139,7 +146,11 @@ void RSParallelSubThread::CreateShareEglContext()
         RS_LOGE("renderContext_ is nullptr");
         return;
     }
+#ifdef NEW_RENDER_CONTEXT
+    eglShareContext_ = renderContext_->CreateContext(true);
+#else
     eglShareContext_ = renderContext_->CreateShareContext();
+#endif
     if (eglShareContext_ == EGL_NO_CONTEXT) {
         RS_LOGE("eglShareContext_ is EGL_NO_CONTEXT");
         return;

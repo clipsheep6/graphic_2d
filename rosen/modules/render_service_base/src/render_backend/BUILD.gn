@@ -1,0 +1,105 @@
+import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
+import("//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
+
+config("export_config") {
+  include_dirs = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include/render_backend",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
+  ]
+  defines = [ "NEW_RENDER_CONTEXT" ]
+}
+
+ohos_source_set("render_backend") {
+  public_configs = [ ":export_config" ]
+
+  include_dirs = [
+    "//commonlibrary/c_utils/base/include",
+    "//utils/system/safwk/native/include",
+    "//foundation/graphic/graphic_2d/prebuilts/librarys/gpu/include",
+    "//drivers/peripheral/display/interfaces/include/",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/core",
+    "//foundation/graphic/graphic_2d/utils/log",
+  ]
+
+  defines = []
+  defines += gpu_defines
+  defines += rs_common_define
+  
+  sources = [
+    "render_context_factory.cpp",
+    "rs_surface_factory.cpp",
+    "ohos/rs_surface_ohos.cpp",
+    "ohos/rs_surface_ohos_raster.cpp"
+  ]
+
+  public_deps = [
+    "//commonlibrary/c_utils/base:utils",
+    "//foundation/graphic/graphic_2d:libsurface",
+    "//foundation/graphic/graphic_2d/utils:sync_fence",
+  ]
+
+  if (rs_enable_gpu) {
+    include_dirs += [
+      "//third_party/openssl/include",
+      "$graphic_2d_root/frameworks/surface/include",
+      "$graphic_2d_root/interfaces/inner_api/common",
+    ]
+
+    sources += [
+      "ohos/render_context_ohos_gl.cpp",
+      "ohos/rs_surface_ohos_gl.cpp",
+      "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/cache_data.cpp",
+      "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/memory_handler.cpp",
+      "$graphic_2d_root/rosen/modules/2d_graphics/src/render_context/shader_cache.cpp",
+    ]
+
+    if (defined(use_new_skia) && use_new_skia) {
+      include_dirs += [ "//third_party/skia" ]
+    } else {
+      include_dirs += [ "//third_party/flutter/skia" ]
+    }
+
+    if (graphic_standard_feature_enable_vulkan) {
+      include_dirs += [
+        "$graphic_2d_root/frameworks/vulkan_wrapper/include", 
+        "//third_party/flutter/engine/flutter/vulkan"
+      ]
+      sources += [
+        "ohos/render_context_ohos_vk.cpp",
+        "ohos/rs_surface_ohos_vulkan.cpp",
+      ]
+    }
+
+    public_deps += [
+      "$graphic_2d_root:libvulkan",
+      "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
+      "//commonlibrary/c_utils/base:utils",
+      "//foundation/graphic/graphic_2d:libsurface",
+      "//foundation/graphic/graphic_2d:libgl",
+      "//foundation/graphic/graphic_2d/utils:sync_fence",
+      "//third_party/openssl:libcrypto_shared",
+    ]
+  }
+
+  if (defined(use_new_skia) && use_new_skia) {
+    public_deps += [
+      "//third_party/skia:skia_ohos",
+      "//third_party/skia/modules/svg:svg",
+    ]
+  } else {
+    public_deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  }
+
+  external_deps = [
+    "eventhandler:libeventhandler",
+    "hisysevent_native:libhisysevent",
+    "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
+    "init:libbeget_proxy",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+}

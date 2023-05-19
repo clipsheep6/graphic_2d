@@ -21,11 +21,20 @@
 #include "pipeline/rs_uni_render_judgement.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
+#if defined(NEW_RENDER_CONTEXT)
+#include "ohos/rs_surface_ohos_gl.h"
+#include "ohos/rs_surface_ohos_raster.h"
+#ifdef RS_ENABLE_VK
+#include "ohos/rs_surface_ohos_vulkan.h"
+#endif
+#else
 #include "platform/ohos/backend/rs_surface_ohos_gl.h"
 #include "platform/ohos/backend/rs_surface_ohos_raster.h"
 #ifdef RS_ENABLE_VK
 #include "platform/ohos/backend/rs_surface_ohos_vulkan.h"
 #endif
+#endif
+
 #include "render/rs_skia_filter.h"
 
 namespace OHOS {
@@ -40,6 +49,11 @@ RSBaseRenderEngine::~RSBaseRenderEngine() noexcept
 
 void RSBaseRenderEngine::Init()
 {
+#if defined(NEW_RENDER_CONTEXT)
+    renderContext_ = RenderContextFactory::CreateRenderContext();
+    renderContext_->Init();
+    RS_LOGI("ZJ RSRenderEngine::RSRenderEngine create new render context");
+#else
 #if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
     renderContext_ = std::shared_ptr<RenderContext>(RenderContextFactory::GetInstance().CreateNewEngine());
     renderContext_->InitializeEglContext();
@@ -47,9 +61,9 @@ void RSBaseRenderEngine::Init()
         RS_LOGI("RSRenderEngine::RSRenderEngine set new cacheDir");
         renderContext_->SetUniRenderMode(true);
     }
+#endif
+#endif
     renderContext_->SetUpGrContext();
-#endif // RS_ENABLE_GL || RS_ENABLE_VK
-
 #ifdef RS_ENABLE_EGLIMAGE
     eglImageManager_ = std::make_shared<RSEglImageManager>(renderContext_->GetEGLDisplay());
 #endif // RS_ENABLE_EGLIMAGE
@@ -149,7 +163,11 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
     // check if we can use GPU context
 #ifdef RS_ENABLE_GL
     if (renderContext_ != nullptr) {
+#ifdef NEW_RENDER_CONTEXT
+        rsSurface->SetRenderContext(renderContext_);
+#else
         rsSurface->SetRenderContext(renderContext_.get());
+#endif
     }
 #endif
 
@@ -158,8 +176,11 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
         RS_LOGE("RSBaseRenderEngine::RequestFrame: request SurfaceFrame failed!");
         return nullptr;
     }
-
+#ifdef NEW_RENDER_CONTEXT
+    return std::make_unique<RSRenderFrame>(rsSurface);
+#else
     return std::make_unique<RSRenderFrame>(rsSurface, std::move(surfaceFrame));
+#endif
 }
 
 std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const sptr<Surface>& targetSurface,
@@ -208,9 +229,12 @@ void RSBaseRenderEngine::SetUiTimeStamp(const std::unique_ptr<RSRenderFrame>& re
         RS_LOGE("RSBaseRenderEngine::SetUiTimeStamp: renderFrame is null!.");
         return;
     }
-
+#ifdef NEW_RENDER_CONTEXT
+    surfaceOhos->SetUiTimeStamp();
+#else
     auto& frame = renderFrame->GetFrame();
     surfaceOhos->SetUiTimeStamp(frame);
+#endif
 }
 
 void RSBaseRenderEngine::DrawDisplayNodeWithParams(RSPaintFilterCanvas& canvas, RSDisplayRenderNode& node,

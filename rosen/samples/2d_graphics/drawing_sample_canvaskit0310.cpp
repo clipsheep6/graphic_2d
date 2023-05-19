@@ -310,7 +310,7 @@ void HelloDrawing::Draw()
             baseCSurfaceVec_[i]->ReleaseBuffer(baseCSurfaceVec_[i]->GetBuffer(), tempFence);
             tempFence->Wait(100); // 100 ms
         }
-        
+
         count++;
 #ifdef DEBUG_DUMP
         std::string result;

@@ -44,7 +44,7 @@ public:
     void WriteToFile();
 
     void ReadFromFile();
-    
+
     int DeSerialize(uint8_t const *buffer, const size_t size);
 
     void Clear()

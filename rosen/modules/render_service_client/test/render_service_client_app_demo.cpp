@@ -54,7 +54,7 @@ int main()
     option->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     option->SetWindowRect({0, 0, 2560, 112});
     auto window = Window::Create("app_demo", option);
-    
+
     window->Show();
     auto rect = window->GetRect();
     while (rect.width_ == 0 && rect.height_ == 0) {
@@ -96,7 +96,7 @@ int main()
     rootNode->SetBackgroundColor(SK_ColorYELLOW);
     rsUiDirector->SendMessages();
     sleep(1);
-    
+
     std::cout << "rs app demo stage 3 " << std::endl;
     rootNode->SetBackgroundColor(SK_ColorBLUE);
     rsUiDirector->SendMessages();

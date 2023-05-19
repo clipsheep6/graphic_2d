@@ -378,7 +378,7 @@ napi_value ColorPickerNapi::GetMainColor(napi_env env, napi_callback_info info)
     IMG_NAPI_CHECK_RET_D(IMG_IS_OK(status),
                          nullptr,
                          EFFECT_LOG_E("fail to napi_get_cb_info"));
-    
+
     std::unique_ptr<ColorPickerAsyncContext> asyncContext = std::make_unique<ColorPickerAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->nConstructor));
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, asyncContext->nConstructor),
@@ -431,7 +431,7 @@ napi_value BuildJsColor(napi_env env, ColorManager::Color color)
 
     napi_create_int32(env, color_blue, &clrBlue);
     napi_set_named_property(env, result, "blue", clrBlue);
-    
+
     napi_create_int32(env, color_alpha, &clrAlpha);
     napi_set_named_property(env, result, "alpha", clrAlpha);
 
@@ -457,7 +457,7 @@ napi_value ColorPickerNapi::GetMainColorSync(napi_env env, napi_callback_info in
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker),
                          nullptr,
                          EFFECT_LOG_E("fail to unwrap context"));
-    
+
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker->nativeColorPicker_),
                          nullptr,
                          EFFECT_LOG_E("empty native ColorPicker"));
@@ -494,7 +494,7 @@ napi_value ColorPickerNapi::GetLargestProportionColor(napi_env env, napi_callbac
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker),
                          nullptr,
                          EFFECT_LOG_E("fail to unwrap context"));
-    
+
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker->nativeColorPicker_),
                          nullptr,
                          EFFECT_LOG_E("empty native ColorPicker"));
@@ -530,7 +530,7 @@ napi_value ColorPickerNapi::GetHighestSaturationColor(napi_env env, napi_callbac
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker),
                          nullptr,
                          EFFECT_LOG_E("fail to unwrap context"));
-    
+
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker->nativeColorPicker_),
                          nullptr,
                          EFFECT_LOG_E("empty native ColorPicker"));
@@ -566,7 +566,7 @@ napi_value ColorPickerNapi::GetAverageColor(napi_env env, napi_callback_info inf
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker),
                          nullptr,
                          EFFECT_LOG_E("fail to unwrap context"));
-    
+
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker->nativeColorPicker_),
                          nullptr,
                          EFFECT_LOG_E("empty native ColorPicker"));
@@ -602,7 +602,7 @@ napi_value ColorPickerNapi::IsBlackOrWhiteOrGrayColor(napi_env env, napi_callbac
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker),
                          nullptr,
                          EFFECT_LOG_E("fail to unwrap context"));
-    
+
     IMG_NAPI_CHECK_RET_D(IMG_IS_READY(status, thisColorPicker->nativeColorPicker_),
                          nullptr,
                          EFFECT_LOG_E("empty native ColorPicker"));

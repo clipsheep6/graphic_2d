@@ -192,7 +192,7 @@ public:
         rects_.push_back(r);
         bound_ = Rect { r };
     }
-    
+
     Region(const Region& reg) : rects_(reg.rects_), bound_(reg.bound_) {}
     ~Region() {}
 
@@ -293,7 +293,7 @@ public:
     Region Xor(Region& r);
     // return region belongs to Region(lhs) but not Region(rhs)
     Region Sub(Region& r);
-    
+
 public:
     static void (*regionOpFromSO)(Region& r1, Region& r2, Region& res, Region::OP op);
     static void InitDynamicLibraryFunction();
@@ -310,7 +310,7 @@ private:
     void getRange(std::vector<Range>& ranges, Node& node, OP op);
     // update tmp rects and region according to current ranges
     void UpdateRects(Rects& r, std::vector<Range>& ranges, std::vector<int>& indexAt, Region& res);
-    
+
 private:
     std::vector<Rect> rects_;
     Rect bound_;

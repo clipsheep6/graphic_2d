@@ -237,7 +237,7 @@ void RSRenderThreadVisitor::DrawDirtyRegion()
                 nid, subRect.ToString().c_str());
             DrawRectOnCanvas(subRect, 0x88FF0000, SkPaint::kStroke_Style, edgeAlpha, strokeWidth);
         }
-        
+
         curDirtyManager_->GetDirtyRegionInfo(dirtyRegionRects_, RSRenderNodeType::SURFACE_NODE,
             DirtyRegionType::UPDATE_DIRTY_REGION);
         ROSEN_LOGD("DrawDirtyRegion surface dirtyRegionRects_ size %zu", dirtyRegionRects_.size());

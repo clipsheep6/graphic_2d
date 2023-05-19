@@ -180,7 +180,7 @@ public:
 
     Vector3 ToLinear(Vector3 color) const;
     Vector3 ToNonLinear(Vector3 color) const;
-    
+
     // convert OHOS ColorSpce to SKColorSpace
     sk_sp<SkColorSpace> ToSkColorSpace() const;
 

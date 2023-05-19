@@ -59,7 +59,7 @@ private:
         }
         return result;
     }
-    
+
     std::string str_;
 };
 } // namespace OHOS::Rosen

@@ -193,7 +193,7 @@ public:
     {
         return memoryFd_;
     };
-    
+
 private:
     int memoryFd_; // corresponding file descriptor of ashmem.
     int32_t memorySize_; // size of ashmem.

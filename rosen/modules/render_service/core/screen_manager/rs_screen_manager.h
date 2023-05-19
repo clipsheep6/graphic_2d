@@ -261,7 +261,7 @@ public:
     int32_t GetScreenType(ScreenId id, RSScreenType& type) const override;
 
     int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval) override;
-    
+
     /* only used for mock tests */
     void MockHdiScreenConnected(std::unique_ptr<impl::RSScreen>& rsScreen) override
     {

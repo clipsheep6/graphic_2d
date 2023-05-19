@@ -21,7 +21,7 @@
  * @{
  *
  * @brief Provides functions such as 2D graphics rendering, text drawing, and image display.
- * 
+ *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  *
  * @since 8
@@ -88,11 +88,11 @@ void OH_Drawing_PathMoveTo(OH_Drawing_Path*, float x, float y);
 void OH_Drawing_PathLineTo(OH_Drawing_Path*, float x, float y);
 
 /**
- * @brief Draws an arc to a path. 
- * 
+ * @brief Draws an arc to a path.
+ *
  * This is done by using angle arc mode. In this mode, a rectangle that encloses an ellipse is specified first,
  * and then a start angle and a sweep angle are specified.
- * The arc is a portion of the ellipse defined by the start angle and the sweep angle. 
+ * The arc is a portion of the ellipse defined by the start angle and the sweep angle.
  * By default, a line segment from the last point of the path to the start point of the arc is also added.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

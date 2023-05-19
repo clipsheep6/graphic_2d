@@ -14,7 +14,7 @@
  */
 
 #include "rs_parallel_hardware_composer.h"
- 
+
 namespace OHOS {
 namespace Rosen {
 

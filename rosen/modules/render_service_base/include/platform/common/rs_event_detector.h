@@ -62,7 +62,7 @@ public:
     {
         return paramList_;
     }
-	
+
     void AddEventReportCallback(const EventReportCallback& callback)
     {
         eventCallback_ = callback;
@@ -80,7 +80,7 @@ protected:
     {
         stringId_ = stringId;
     }
-    
+
     void ClearParamList()
     {
         paramList_.clear();

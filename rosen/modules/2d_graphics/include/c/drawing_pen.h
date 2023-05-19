@@ -21,7 +21,7 @@
  * @{
  *
  * @brief Provides functions such as 2D graphics rendering, text drawing, and image display.
- * 
+ *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  *
  * @since 8
@@ -161,9 +161,9 @@ float OH_Drawing_PenGetMiterLimit(const OH_Drawing_Pen*);
 void OH_Drawing_PenSetMiterLimit(OH_Drawing_Pen*, float miter);
 
 /**
- * @brief Enumerates line cap styles of a pen. The line cap style defines 
+ * @brief Enumerates line cap styles of a pen. The line cap style defines
  * the style of both ends of a line segment drawn by the pen.
- * 
+ *
  * @since 8
  * @version 1.0
  */
@@ -209,7 +209,7 @@ void OH_Drawing_PenSetCap(OH_Drawing_Pen*, OH_Drawing_PenLineCapStyle);
 /**
  * @brief Enumerates pen line join styles. The line join style defines
  * the shape of the joints of a polyline segment drawn by the pen.
- * 
+ *
  * @since 8
  * @version 1.0
  */

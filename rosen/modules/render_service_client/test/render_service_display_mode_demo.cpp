@@ -176,7 +176,7 @@ namespace pipelineTestUtils {
                     paint);
             })
             .Run();
-        
+
         return surfaceNode;
     }
 
@@ -217,7 +217,7 @@ public:
                 cin >> param;
             }
             cout << " " << endl;
-         
+
             if (testType == 1) {
                 auto isMirrorDisplay = targetDisplayNode->IsMirrorDisplay() ? "is mirror" : "not mirror";
                 cout << "Get display mode result: "<< isMirrorDisplay << endl;
@@ -239,7 +239,7 @@ public:
     {
         ScreenId id = RSInterfaces::GetInstance().GetDefaultScreenId();
         auto activeModeInfo = RSInterfaces::GetInstance().GetScreenActiveMode(id);
-        
+
         screenWidth_ = activeModeInfo.GetScreenWidth();
         screenHeight_ = activeModeInfo.GetScreenHeight();
         std::cout << "Display " << id << " active mode info:\n";
@@ -266,7 +266,7 @@ public:
 
         sourceDisplayNode->RemoveFromTree();
         targetDisplayNode->RemoveFromTree();
-        
+
         if (transactionProxy != nullptr) {
             transactionProxy->FlushImplicitTransaction();
         }

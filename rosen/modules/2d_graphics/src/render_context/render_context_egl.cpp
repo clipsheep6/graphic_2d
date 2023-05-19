@@ -288,9 +288,9 @@ bool RenderContextEGL::SetUpGrContext()
     }
 
     GrContextOptions options;
-#if !defined(NEW_SKIA)    
+#if !defined(NEW_SKIA)
     options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
-#endif    
+#endif
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
 
@@ -306,7 +306,7 @@ bool RenderContextEGL::SetUpGrContext()
     sk_sp<GrDirectContext> grContext(GrDirectContext::MakeGL(std::move(glInterface), options));
 #else
     sk_sp<GrContext> grContext(GrContext::MakeGL(std::move(glInterface), options));
-#endif    
+#endif
     if (grContext == nullptr) {
         LOGE("SetUpGrContext grContext is null");
         return false;

@@ -36,7 +36,7 @@ void DrawingSinglethread::Test(SkCanvas* canvas, int width, int height)
     bitmap.allocN32Pixels(width, height);
 
     SkCanvas skiaCanvas(bitmap);
-    
+
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setColor(0xFF9A67BE);

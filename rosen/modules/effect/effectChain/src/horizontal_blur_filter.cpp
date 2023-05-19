@@ -75,7 +75,7 @@ std::string HorizontalBlurFilter::GetFragmentShader()
         const int RADIUS = 3;
         in vec2 texCoord;
         out vec4 fragColor;
-        
+
         uniform sampler2D uTexture;
         uniform float weight[3];
         uniform float offset[3];

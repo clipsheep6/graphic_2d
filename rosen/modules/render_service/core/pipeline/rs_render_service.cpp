@@ -73,7 +73,7 @@ bool RSRenderService::Init()
     }
     mainThread_->rsVSyncDistributor_ = rsVSyncDistributor_;
     mainThread_->Init();
- 
+
     RSQosThread::GetInstance()->appVSyncDistributor_ = appVSyncDistributor_;
     RSQosThread::ThreadStart();
 

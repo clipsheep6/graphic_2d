@@ -30,7 +30,7 @@ using namespace std;
 class RSDemoDisplayNode : public RSDisplayNode {
 public:
     RSDemoDisplayNode() : RSDisplayNode(RSDisplayNodeConfig()) {}
-    
+
     static shared_ptr<RSDemoDisplayNode> CreateForDemo(NodeId id)
     {
         shared_ptr<RSDemoDisplayNode> node = make_shared<RSDemoDisplayNode>();
@@ -56,7 +56,7 @@ private:
 class RSDemoSurfaceNode : public RSSurfaceNode {
 public:
     RSDemoSurfaceNode() : RSSurfaceNode(RSSurfaceNodeConfig(), true) {}
-    
+
     static shared_ptr<RSDemoSurfaceNode> CreateForDemo(NodeId id)
     {
         shared_ptr<RSDemoSurfaceNode> node = make_shared<RSDemoSurfaceNode>();

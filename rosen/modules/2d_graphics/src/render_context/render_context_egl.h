@@ -75,7 +75,7 @@ public:
     EGLSurface CreateEGLSurface(EGLNativeWindowType eglNativeWindow) override;
     void DestroyEGLSurface(EGLSurface surface);
     void MakeCurrent(EGLSurface surface = nullptr, EGLContext context = EGL_NO_CONTEXT) override;
-    
+
     void SwapBuffers(EGLSurface surface = nullptr) const override;
     void RenderFrame() override;
     EGLint QueryEglBufferAge() override;

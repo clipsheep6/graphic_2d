@@ -62,7 +62,7 @@ private:
 
     private:
         std::shared_ptr<RSPaintFilterCanvas> canvas_ = nullptr;
-        
+
         NodeId nodeId_;
         float scaleX_ = 1.0f;
         float scaleY_ = 1.0f;

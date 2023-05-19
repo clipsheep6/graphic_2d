@@ -31,7 +31,7 @@ python raw_maker.py (-m <*.mp4> | -i <directory>) [-o <directory>] [-d <size>] [
 
 ```
 -h, --help            查看命令帮助并退出
--m <*.mp4>, --mp4 <*.mp4>    
+-m <*.mp4>, --mp4 <*.mp4>
                       制作开机动画所依赖的<*.mp4>源文件
 -i <directory>, --image <directory>
                       制作开机动画所依赖的源image文件存放路径<directory>

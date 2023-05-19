@@ -21,7 +21,7 @@
  * @{
  *
  * @brief Provides functions such as 2D graphics rendering, text drawing, and image display.
- * 
+ *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  *
  * @since 8

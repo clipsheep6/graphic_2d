@@ -180,7 +180,7 @@ bool NVal::HasProp(string propName) const
     if (!env_ || !val_ || !TypeIs(napi_object)) {
         return false;
     }
-        
+
     napi_status status = napi_has_named_property(env_, val_, propName.c_str(), &res);
     return (status == napi_ok) && res;
 }

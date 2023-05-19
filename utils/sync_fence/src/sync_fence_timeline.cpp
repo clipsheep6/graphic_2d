@@ -45,7 +45,7 @@ ns_sec_t SyncFenceTime::GetSignalTimestamp()
     }
 
     sptr<SyncFence> fence;
-    
+
     std::lock_guard<std::mutex> lock(mutex_);
     if (fence_.GetRefPtr() == nullptr) {
         return signaledTimestamps_.load(std::memory_order_relaxed);

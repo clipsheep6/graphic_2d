@@ -96,7 +96,7 @@ bool HdiScreen::SetHdiDevice(HdiDevice* device)
         HLOGE("Input HdiDevice is null");
         return false;
     }
-    
+
     device_ = device;
     return true;
 }

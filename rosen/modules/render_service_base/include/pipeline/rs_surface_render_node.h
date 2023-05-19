@@ -203,8 +203,6 @@ public:
 
     void SetContextBounds(const Vector4f bounds);
 
-    void OnApplyModifiers() override;
-
     void SetTotalMatrix(const SkMatrix& totalMatrix)
     {
         totalMatrix_ = totalMatrix;
@@ -580,6 +578,8 @@ private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
     Vector4f GetWindowCornerRadius();
+
+    void OnApplyModifiers() override;
 
     std::mutex mutexRT_;
     std::mutex mutexUI_;

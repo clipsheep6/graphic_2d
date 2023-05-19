@@ -20,11 +20,11 @@
 #include "animation/rs_render_animation.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "pipeline/rs_context.h"
+#include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
-#include "property/rs_property_trace.h"
-#include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties_painter.h"
+#include "property/rs_property_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -69,41 +69,54 @@ std::pair<bool, bool> RSRenderNode::Animate(int64_t timestamp)
 }
 
 bool RSRenderNode::Update(
-    RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, RectI clipRect)
-{
-    return Update(dirtyManager, parent, parentDirty, true, clipRect);
-}
-
-bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty)
-{
-    RectI clipRect{0, 0, 0, 0};
-    return Update(dirtyManager, parent, parentDirty, false, clipRect);
-}
-
-bool RSRenderNode::Update(
-    RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, bool needClip, RectI clipRect)
+    RSDirtyRegionManager& dirtyManager, bool useParent, bool parentDirty, const std::optional<RectI>& clipRect)
 {
     // no need to update invisible nodes
     if (!ShouldPaint() && !isLastVisible_) {
         return false;
     }
-    // [planning] surfaceNode use frame instead
-    std::optional<SkPoint> offset;
-    if (parent != nullptr && !IsInstanceOf<RSSurfaceRenderNode>()) {
-        offset = SkPoint { parent->GetFrameOffsetX(), parent->GetFrameOffsetY() };
+    auto& renderProperties = GetMutableRenderProperties();
+    renderProperties.CheckEmptyBounds();
+    auto& transitionParam = GetSharedTransitionParam();
+
+    // both parent and self geo are not dirty, no need to update
+    if (!parentDirty && !renderProperties.IsGeoDirty() && !transitionParam.has_value()) {
+        UpdateDirtyRegion(dirtyManager, false, clipRect);
+        return false;
     }
-    bool dirty = renderProperties_.UpdateGeometry(parent, parentDirty, offset, GetContextClipRegion());
-    if ((IsDirty() || dirty) && drawCmdModifiers_.count(RSModifierType::GEOMETRYTRANS)) {
-        RSModifierContext context = { GetMutableRenderProperties() };
-        for (auto& modifier : drawCmdModifiers_[RSModifierType::GEOMETRYTRANS]) {
-            modifier->Apply(context);
-        }
-    }
+
+    // Calculate own abs matrix
+    UpdateImpl(useParent);
+
     isDirtyRegionUpdated_ = false;
-    UpdateDirtyRegion(dirtyManager, dirty, needClip, clipRect);
+    UpdateDirtyRegion(dirtyManager, true, clipRect);
     isLastVisible_ = ShouldPaint();
     renderProperties_.ResetDirty();
-    return dirty;
+    return true;
+}
+
+void RSRenderNode::UpdateImpl(bool useParent)
+{
+    auto nodeParent = useParent ? GetParent().lock() : nullptr;
+    // [planning] surfaceNode use frame instead
+    if (IsInstanceOf(RSRenderNodeType::CANVAS_NODE)) {
+        // workaround for SELF_DRAWING_NODE, moved from RSUniRenderVisitor::PrepareCanvasRenderNode
+        while (nodeParent && nodeParent->IsInstanceOf<RSSurfaceRenderNode>() &&
+            nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>()->GetSurfaceNodeType() ==
+            RSSurfaceNodeType::SELF_DRAWING_NODE) {
+            nodeParent = nodeParent->GetParent().lock();
+        }
+    }
+    auto rsParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(nodeParent);
+    auto parentProperties = rsParent ? &rsParent->GetRenderProperties() : nullptr;
+    auto parentBoundsGeo =
+        parentProperties ? std::static_pointer_cast<RSObjAbsGeometry>(parentProperties->GetBoundsGeometry()) : nullptr;
+    std::optional<SkPoint> offset;
+    if (parentProperties != nullptr && !IsInstanceOf<RSSurfaceRenderNode>()) {
+        offset = SkPoint { parentProperties->GetFrameOffsetX(), parentProperties->GetFrameOffsetY() };
+    }
+    auto boundsGeo = std::static_pointer_cast<RSObjAbsGeometry>(GetRenderProperties().GetBoundsGeometry());
+    boundsGeo->UpdateMatrix(parentBoundsGeo, offset, GetContextClipRegion());
 }
 
 RSProperties& RSRenderNode::GetMutableRenderProperties()
@@ -117,7 +130,7 @@ const RSProperties& RSRenderNode::GetRenderProperties() const
 }
 
 void RSRenderNode::UpdateDirtyRegion(
-    RSDirtyRegionManager& dirtyManager, bool geoDirty, bool needClip, RectI clipRect)
+    RSDirtyRegionManager& dirtyManager, bool geoDirty, const std::optional<RectI>& clipRect)
 {
     if (!IsDirty() && !geoDirty) {
         return;
@@ -151,8 +164,8 @@ void RSRenderNode::UpdateDirtyRegion(
             dirtyRect = dirtyRect.JoinRect(stretchDirtyRect);
         }
 
-        if (needClip) {
-            dirtyRect = dirtyRect.IntersectRect(clipRect);
+        if (clipRect.has_value()) {
+            dirtyRect = dirtyRect.IntersectRect(clipRect.value());
         }
         oldDirty_ = dirtyRect;
         oldDirtyInSurface_ = oldDirty_.IntersectRect(dirtyManager.GetSurfaceRect());
@@ -166,20 +179,17 @@ void RSRenderNode::UpdateDirtyRegion(
                 dirtyManager.UpdateDirtyRegionInfoForDfx(
                     GetId(), GetType(), DirtyRegionType::UPDATE_DIRTY_REGION, oldDirtyInSurface_);
                 dirtyManager.UpdateDirtyRegionInfoForDfx(
-                    GetId(), GetType(), DirtyRegionType::OVERLAY_RECT, drawRegion);
-                dirtyManager.UpdateDirtyRegionInfoForDfx(
-                    GetId(), GetType(), DirtyRegionType::SHADOW_RECT, shadowDirty);
-                dirtyManager.UpdateDirtyRegionInfoForDfx(
-                    GetId(), GetType(), DirtyRegionType::PREPARE_CLIP_RECT, clipRect);
+                    GetId(), GetType(), DirtyRegionType::PREPARE_CLIP_RECT, clipRect.value_or(RectI { 0, 0, 0, 0 }));
             }
         }
     }
-    SetClean();
+    ResetDirty();
 }
 
-bool RSRenderNode::IsDirty() const
+uint8_t RSRenderNode::GetDirtyFlag() const
 {
-    return RSBaseRenderNode::IsDirty() || renderProperties_.IsDirty();
+    return RSBaseRenderNode::GetDirtyFlag() |
+           (renderProperties_.IsDirty() ? RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY : 0u);
 }
 
 void RSRenderNode::UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEnabled)
@@ -278,7 +288,7 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
         drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
     }
     modifier->GetProperty()->Attach(shared_from_this());
-    SetDirty();
+    SetDirty(RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY);
 }
 
 void RSRenderNode::AddGeometryModifier(const std::shared_ptr<RSRenderModifier> modifier)
@@ -302,31 +312,45 @@ void RSRenderNode::AddGeometryModifier(const std::shared_ptr<RSRenderModifier> m
 void RSRenderNode::RemoveModifier(const PropertyId& id)
 {
     bool success = modifiers_.erase(id);
-    SetDirty();
+    SetDirty(RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY);
     if (success) {
         return;
     }
     for (auto& [type, modifiers] : drawCmdModifiers_) {
-        modifiers.remove_if([id](const auto& modifier) -> bool {
-            return modifier ? modifier->GetPropertyId() == id : true;
-        });
+        modifiers.remove_if(
+            [id](const auto& modifier) -> bool { return modifier ? modifier->GetPropertyId() == id : true; });
     }
 }
 
 void RSRenderNode::ApplyModifiers()
 {
-    if (!RSBaseRenderNode::IsDirty()) {
+    if (!IsDirty(RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY)) {
         return;
     }
     RSModifierContext context = { GetMutableRenderProperties() };
+    auto prevZIndex = context.property_.GetPositionZ();
     context.property_.Reset();
+    // apply all modifiers
     for (auto& [id, modifier] : modifiers_) {
         if (modifier) {
             modifier->Apply(context);
         }
     }
+    if (drawCmdModifiers_.count(RSModifierType::GEOMETRYTRANS)) {
+        for (auto& modifier : drawCmdModifiers_[RSModifierType::GEOMETRYTRANS]) {
+            modifier->Apply(context);
+        }
+    }
+
     OnApplyModifiers();
     UpdateDrawRegion();
+    // z index changed, tell parent to sort children
+    if (prevZIndex != context.property_.GetPositionZ()) {
+        auto parent = GetParent().lock();
+        if (parent) {
+            parent->ResetSortedChildren();
+        }
+    }
 }
 
 void RSRenderNode::UpdateDrawRegion()
@@ -396,7 +420,7 @@ void RSRenderNode::SetSharedTransitionParam(const std::optional<SharedTransition
         return;
     }
     sharedTransitionParam_ = sharedTransitionParam;
-    SetDirty();
+    SetDirty(NodeDirty::PROPERTY_DIRTY);
 }
 
 const std::optional<RSRenderNode::SharedTransitionParam>& RSRenderNode::GetSharedTransitionParam() const

@@ -118,8 +118,6 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessBaseRenderNode(RSBase
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
-    // clear SortedChildren, it will be generated again in next frame
-    node.ResetSortedChildren();
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
@@ -247,23 +245,20 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareBaseRenderNode(RSBase
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
-    node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
-    node.Update(*dirtyManager, nullptr, false);
+    node.Update(*dirtyManager, false, false);
     PrepareBaseRenderNode(node);
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
-    node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
-    node.Update(*dirtyManager, nullptr, false);
+    node.Update(*dirtyManager, false, false);
     PrepareBaseRenderNode(node);
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
-    node.ApplyModifiers();
     PrepareCanvasRenderNode(node);
 }
 

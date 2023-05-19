@@ -15,6 +15,8 @@
 
 #include "modifier/rs_render_property.h"
 
+#include <memory>
+
 namespace OHOS {
 namespace Rosen {
 
@@ -101,7 +103,7 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
     if (!parcel.ReadInt16(typeId)) {
         return false;
     }
-    RSRenderPropertyType type = static_cast<RSRenderPropertyType>(typeId);
+    auto type = static_cast<RSRenderPropertyType>(typeId);
     PropertyId id = 0;
     if (!parcel.ReadUint64(id)) {
         return false;
@@ -112,7 +114,7 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
             if (!RSMarshallingHelper::Unmarshalling(parcel, value)) {
                 return false;
             }
-            val.reset(new RSRenderAnimatableProperty<float>(value, id, type));
+            val = std::make_shared<RSRenderAnimatableProperty<float>>(value, id, type);
             break;
         }
         case RSRenderPropertyType::PROPERTY_COLOR: {
@@ -120,7 +122,7 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
             if (!RSMarshallingHelper::Unmarshalling(parcel, value)) {
                 return false;
             }
-            val.reset(new RSRenderAnimatableProperty<Color>(value, id, type));
+            val = std::make_shared<RSRenderAnimatableProperty<Color>>(value, id, type);
             break;
         }
         case RSRenderPropertyType::PROPERTY_MATRIX3F: {
@@ -128,7 +130,7 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
             if (!RSMarshallingHelper::Unmarshalling(parcel, value)) {
                 return false;
             }
-            val.reset(new RSRenderAnimatableProperty<Matrix3f>(value, id, type));
+            val = std::make_shared<RSRenderAnimatableProperty<Matrix3f>>(value, id, type);
             break;
         }
         case RSRenderPropertyType::PROPERTY_QUATERNION: {
@@ -136,7 +138,7 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
             if (!RSMarshallingHelper::Unmarshalling(parcel, value)) {
                 return false;
             }
-            val.reset(new RSRenderAnimatableProperty<Quaternion>(value, id, type));
+            val = std::make_shared<RSRenderAnimatableProperty<Quaternion>>(value, id, type);
             break;
         }
         case RSRenderPropertyType::PROPERTY_FILTER: {
@@ -144,7 +146,7 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
             if (!RSMarshallingHelper::Unmarshalling(parcel, value)) {
                 return false;
             }
-            val.reset(new RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>(value, id, type));
+            val = std::make_shared<RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>>(value, id, type);
             break;
         }
         case RSRenderPropertyType::PROPERTY_VECTOR2F: {
@@ -152,7 +154,7 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
             if (!RSMarshallingHelper::Unmarshalling(parcel, value)) {
                 return false;
             }
-            val.reset(new RSRenderAnimatableProperty<Vector2f>(value, id, type));
+            val = std::make_shared<RSRenderAnimatableProperty<Vector2f>>(value, id, type);
             break;
         }
         case RSRenderPropertyType::PROPERTY_VECTOR4F: {
@@ -160,7 +162,7 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
             if (!RSMarshallingHelper::Unmarshalling(parcel, value)) {
                 return false;
             }
-            val.reset(new RSRenderAnimatableProperty<Vector4f>(value, id, type));
+            val = std::make_shared<RSRenderAnimatableProperty<Vector4f>>(value, id, type);
             break;
         }
         case RSRenderPropertyType::PROPERTY_VECTOR4_COLOR: {
@@ -168,7 +170,7 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
             if (!RSMarshallingHelper::Unmarshalling(parcel, value)) {
                 return false;
             }
-            val.reset(new RSRenderAnimatableProperty<Vector4<Color>>(value, id, type));
+            val = std::make_shared<RSRenderAnimatableProperty<Vector4<Color>>>(value, id, type);
             break;
         }
         case RSRenderPropertyType::PROPERTY_RRECT: {
@@ -189,25 +191,25 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
 template<>
 float RSRenderAnimatableProperty<float>::ToFloat() const
 {
-    return std::fabs(RSRenderProperty<float>::stagingValue_);
+    return std::fabs(this->value_);
 }
 
 template<>
 float RSRenderAnimatableProperty<Vector4f>::ToFloat() const
 {
-    return RSRenderProperty<Vector4f>::stagingValue_.GetLength();
+    return this->value_.GetLength();
 }
 
 template<>
 float RSRenderAnimatableProperty<Quaternion>::ToFloat() const
 {
-    return RSRenderProperty<Quaternion>::stagingValue_.GetLength();
+    return this->value_.GetLength();
 }
 
 template<>
 float RSRenderAnimatableProperty<Vector2f>::ToFloat() const
 {
-    return RSRenderProperty<Vector2f>::stagingValue_.GetLength();
+    return this->value_.GetLength();
 }
 
 std::shared_ptr<RSRenderPropertyBase> operator+=(

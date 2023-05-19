@@ -206,7 +206,7 @@ public:
     {
         stagingValue_ = value;
     }
-    virtual ~RSProperty() = default;
+    ~RSProperty() override = default;
 
     virtual void Set(const T& value)
     {
@@ -427,8 +427,8 @@ protected:
             renderProperty_ = std::make_shared<RSRenderAnimatableProperty<T>>(
                 RSProperty<T>::stagingValue_, RSProperty<T>::id_, GetPropertyType());
             auto weak = RSProperty<T>::weak_from_this();
-            renderProperty_->SetUpdateUIPropertyFunc(
-                [weak](const std::shared_ptr<RSRenderPropertyBase>& renderProperty) {
+            renderProperty_->SetValueChangeListener(
+                [weak](const std::shared_ptr<const RSRenderPropertyBase>& renderProperty) {
                     auto property = weak.lock();
                     if (property == nullptr) {
                         return;

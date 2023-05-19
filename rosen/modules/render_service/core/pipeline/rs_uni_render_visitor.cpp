@@ -58,7 +58,7 @@ static const std::string CAPTURE_WINDOW_NAME = "CapsuleWindow";
 
 bool IsFirstFrameReadyToDraw(RSSurfaceRenderNode& node)
 {
-    for (auto& child : node.GetSortedChildren()) {
+    for (auto& child : node.GetChildren()) {
         if (child != nullptr && child->IsInstanceOf<RSRootRenderNode>()) {
             auto rootNode = child->ReinterpretCastTo<RSRootRenderNode>();
             const auto& property = rootNode->GetRenderProperties();
@@ -177,9 +177,8 @@ void RSUniRenderVisitor::CopyPropertyForParallelVisitor(RSUniRenderVisitor *main
 
 void RSUniRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 {
-    node.ResetSortedChildren();
     for (auto& child : node.GetChildren()) {
-        if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child.lock())) {
+        if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child)) {
             renderChild->ApplyModifiers();
         }
     }
@@ -270,7 +269,6 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
 
     dirtyFlag_ = isDirty_;
 
-    node.ApplyModifiers();
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
         RS_LOGE("RSUniRenderVisitor::PrepareDisplayRenderNode ScreenManager is nullptr");
@@ -515,7 +513,6 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         return;
     }
     node.CleanDstRectChanged();
-    node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
     RectI prepareClipRect = prepareClipRect_;
     bool isQuickSkipPreparationEnabled = isQuickSkipPreparationEnabled_;
@@ -551,14 +548,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         curSurfaceNode_->AddChildHardwareEnabledNode(node.ReinterpretCastTo<RSSurfaceRenderNode>());
     }
 
-    // Update node properties, including position (dstrect), OldDirty()
-    if (auto parentNode = node.GetParent().lock()) {
-        auto rsParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(parentNode);
-        dirtyFlag_ = node.Update(
-            *curSurfaceDirtyManager_, &(rsParent->GetRenderProperties()), dirtyFlag_, prepareClipRect_);
-    } else {
-        dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, nullptr, dirtyFlag_, prepareClipRect_);
-    }
+    dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, true, dirtyFlag_, prepareClipRect_);
 
     // Calculate the absolute destination rectangle of the node, initialize with absolute bounds rect
     auto dstRect = geoPtr->GetAbsRect();
@@ -710,7 +700,6 @@ void RSUniRenderVisitor::PrepareProxyRenderNode(RSProxyRenderNode& node)
 
 void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
-    node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
     float alpha = curAlpha_;
     auto parentSurfaceNodeMatrix = parentSurfaceNodeMatrix_;
@@ -721,8 +710,7 @@ void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
     bool geoDirty = property.IsGeoDirty();
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
 
-    dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
-        dirtyFlag_);
+    dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, true, dirtyFlag_);
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     if (drivenInfo_) {
         drivenInfo_->currentRootNode = node.shared_from_this();
@@ -762,26 +750,13 @@ void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
     prepareClipRect_ = prepareClipRect;
 }
 
-void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
+void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
     preparedCanvasNodeInCurrentSurface_++;
-    node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
     RectI prepareClipRect = prepareClipRect_;
 
-    auto nodeParent = node.GetParent().lock();
-    while (nodeParent && nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>() &&
-        nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>()->GetSurfaceNodeType() ==
-        RSSurfaceNodeType::SELF_DRAWING_NODE) {
-        nodeParent = nodeParent->GetParent().lock();
-    }
-    std::shared_ptr<RSRenderNode> rsParent = nullptr;
-    if (nodeParent != nullptr) {
-        rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
-    }
-
-    dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
-        dirtyFlag_, prepareClipRect_);
+    dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, true, dirtyFlag_, prepareClipRect_);
 
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     // driven render
@@ -869,7 +844,6 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     }
 #endif
 }
-
 
 void RSUniRenderVisitor::CopyForParallelPrepare(std::shared_ptr<RSUniRenderVisitor> visitor)
 {
@@ -987,9 +961,9 @@ void RSUniRenderVisitor::DrawAndTraceSingleDirtyRegionTypeForDFX(RSSurfaceRender
     }
     std::map<NodeId, RectI> dirtyInfo;
     float fillAlpha = 0.2;
-    std::map<RSRenderNodeType, std::pair<std::string, SkColor>> nodeConfig = {
-        {RSRenderNodeType::CANVAS_NODE, std::make_pair("canvas", SK_ColorRED)},
-        {RSRenderNodeType::SURFACE_NODE, std::make_pair("surface", SK_ColorGREEN)},
+    static const std::map<RSRenderNodeType, std::pair<std::string, SkColor>> nodeConfig = {
+        { RSRenderNodeType::CANVAS_NODE, { "canvas", SK_ColorRED } },
+        { RSRenderNodeType::SURFACE_NODE, { "surface", SK_ColorGREEN } },
     };
 
     std::string subInfo;
@@ -1020,7 +994,7 @@ bool RSUniRenderVisitor::DrawDetailedTypesOfDirtyRegionForDFX(RSSurfaceRenderNod
         }
         return true;
     }
-    const std::map<DirtyRegionDebugType, DirtyRegionType> DIRTY_REGION_DEBUG_TYPE_MAP {
+    static const std::map<DirtyRegionDebugType, DirtyRegionType> DIRTY_REGION_DEBUG_TYPE_MAP {
         { DirtyRegionDebugType::UPDATE_DIRTY_REGION, DirtyRegionType::UPDATE_DIRTY_REGION },
         { DirtyRegionDebugType::OVERLAY_RECT, DirtyRegionType::OVERLAY_RECT },
         { DirtyRegionDebugType::FILTER_RECT, DirtyRegionType::FILTER_RECT },
@@ -1127,14 +1101,10 @@ void RSUniRenderVisitor::ProcessParallelDisplayRenderNode(RSDisplayRenderNode& n
         canvas_->concat(geoPtr->GetMatrix());
     }
     for (auto& child : node.GetChildren()) {
-        auto childNode = child.lock();
-        if (!childNode) {
-            continue;
-        }
         RSParallelRenderManager::Instance()->StartTiming(parallelRenderVisitorIndex_);
-        childNode->Process(shared_from_this());
+        child->Process(shared_from_this());
         RSParallelRenderManager::Instance()->StopTimingAndSetRenderTaskCost(
-            parallelRenderVisitorIndex_, childNode->GetId(), TaskType::PROCESS_TASK);
+            parallelRenderVisitorIndex_, child->GetId(), TaskType::PROCESS_TASK);
     }
     canvas_->restoreToCount(saveCount);
 

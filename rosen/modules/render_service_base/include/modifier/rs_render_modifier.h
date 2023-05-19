@@ -17,6 +17,8 @@
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_MODIFIER_H
 
 #include <memory>
+
+#include "include/core/SkMatrix.h"
 #include "parcel.h"
 
 #include "common/rs_color.h"
@@ -24,7 +26,6 @@
 #include "common/rs_matrix3.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
-#include "include/core/SkMatrix.h"
 #include "modifier/rs_modifier_type.h"
 #include "modifier/rs_render_property.h"
 #include "pipeline/rs_draw_cmd_list.h"
@@ -67,11 +68,11 @@ public:
     RSGeometryTransRenderModifier(const std::shared_ptr<RSRenderProperty<SkMatrix>>& property)
         : property_(property ? property : std::make_shared<RSRenderProperty<SkMatrix>>())
     {}
-    virtual ~RSGeometryTransRenderModifier() = default;
+    ~RSGeometryTransRenderModifier() override = default;
     void Apply(RSModifierContext& context) const override;
     void Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) override;
     bool Marshalling(Parcel& parcel) override;
-    virtual PropertyId GetPropertyId() override
+    PropertyId GetPropertyId() override
     {
         return property_->GetId();
     }
@@ -101,12 +102,12 @@ public:
     RSDrawCmdListRenderModifier(const std::shared_ptr<RSRenderProperty<DrawCmdListPtr>>& property)
         : property_(property ? property : std::make_shared<RSRenderProperty<DrawCmdListPtr>>())
     {}
-    virtual ~RSDrawCmdListRenderModifier() = default;
+    ~RSDrawCmdListRenderModifier() override = default;
     void Apply(RSModifierContext& context) const override;
     void Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) override;
     bool Marshalling(Parcel& parcel) override;
 
-    virtual PropertyId GetPropertyId() override
+    PropertyId GetPropertyId() override
     {
         return property_->GetId();
     }
@@ -140,9 +141,9 @@ public:
         : property_(property ? property : std::make_shared<RSRenderPropertyBase>())
     {}
 
-    virtual ~RSAnimatableRenderModifier() = default;
+    ~RSAnimatableRenderModifier() override = default;
 
-    virtual PropertyId GetPropertyId() override
+    PropertyId GetPropertyId() override
     {
         return property_->GetId();
     }
@@ -164,7 +165,7 @@ public:
         : RSAnimatableRenderModifier(property)
     {}
 
-    virtual ~RSGeometryRenderModifier() = default;
+    ~RSGeometryRenderModifier() override = default;
 };
 
 class RSBackgroundRenderModifier : public RSAnimatableRenderModifier {
@@ -173,7 +174,7 @@ public:
         : RSAnimatableRenderModifier(property)
     {}
 
-    virtual ~RSBackgroundRenderModifier() = default;
+    ~RSBackgroundRenderModifier() override = default;
 };
 
 class RSContentRenderModifier : public RSAnimatableRenderModifier {
@@ -182,7 +183,7 @@ public:
         : RSAnimatableRenderModifier(property)
     {}
 
-    virtual ~RSContentRenderModifier() = default;
+    ~RSContentRenderModifier() override = default;
 };
 
 class RSForegroundRenderModifier : public RSAnimatableRenderModifier {
@@ -191,7 +192,7 @@ public:
         : RSAnimatableRenderModifier(property)
     {}
 
-    virtual ~RSForegroundRenderModifier() = default;
+    ~RSForegroundRenderModifier() override = default;
 };
 
 class RSOverlayRenderModifier : public RSAnimatableRenderModifier {
@@ -200,7 +201,7 @@ public:
         : RSAnimatableRenderModifier(property)
     {}
 
-    virtual ~RSOverlayRenderModifier() = default;
+    ~RSOverlayRenderModifier() override = default;
 };
 
 class RSAppearanceRenderModifier : public RSAnimatableRenderModifier {
@@ -209,16 +210,15 @@ public:
         : RSAnimatableRenderModifier(property)
     {}
 
-    virtual ~RSAppearanceRenderModifier() = default;
+    ~RSAppearanceRenderModifier() override = default;
 };
-
 
 class RSB_EXPORT RSEnvForegroundColorRenderModifier : public RSForegroundRenderModifier {
 public:
     RSEnvForegroundColorRenderModifier(const std::shared_ptr<RSRenderPropertyBase>& property)
         : RSForegroundRenderModifier(property)
     {}
-    virtual ~RSEnvForegroundColorRenderModifier() = default;
+    ~RSEnvForegroundColorRenderModifier() override = default;
     void Apply(RSModifierContext& context) const override;
     void Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) override;
     bool Marshalling(Parcel& parcel) override;
@@ -233,7 +233,7 @@ public:
     RSEnvForegroundColorStrategyRenderModifier(const std::shared_ptr<RSRenderPropertyBase>& property)
         : RSForegroundRenderModifier(property)
     {}
-    virtual ~RSEnvForegroundColorStrategyRenderModifier() = default;
+    ~RSEnvForegroundColorStrategyRenderModifier() override = default;
     void Apply(RSModifierContext& context) const override;
     void Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) override;
     bool Marshalling(Parcel& parcel) override;
@@ -252,7 +252,7 @@ public:
         RS##MODIFIER_NAME##RenderModifier(const std::shared_ptr<RSRenderPropertyBase>& property)    \
             : RS##MODIFIER_TIER##RenderModifier(property)                                           \
         {}                                                                                          \
-        virtual ~RS##MODIFIER_NAME##RenderModifier() = default;                                     \
+        ~RS##MODIFIER_NAME##RenderModifier() override = default;                                    \
         void Apply(RSModifierContext& context) const override;                                      \
         void Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) override;      \
         bool Marshalling(Parcel& parcel) override;                                                  \

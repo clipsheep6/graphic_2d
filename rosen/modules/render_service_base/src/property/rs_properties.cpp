@@ -18,9 +18,9 @@
 #include <algorithm>
 #include <securec.h>
 
+#include "common/rs_obj_abs_geometry.h"
 #include "platform/common/rs_log.h"
 #include "render/rs_filter.h"
-#include "common/rs_obj_abs_geometry.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -222,23 +222,6 @@ const std::shared_ptr<RSObjGeometry>& RSProperties::GetBoundsGeometry() const
 const std::shared_ptr<RSObjGeometry>& RSProperties::GetFrameGeometry() const
 {
     return frameGeo_;
-}
-
-bool RSProperties::UpdateGeometry(const RSProperties* parent, bool dirtyFlag, const std::optional<SkPoint>& offset,
-    const std::optional<SkRect>& clipRect)
-{
-    if (boundsGeo_ == nullptr) {
-        return false;
-    }
-    CheckEmptyBounds();
-    auto boundsGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(boundsGeo_);
-
-    if (dirtyFlag || geoDirty_) {
-        auto parentGeo = parent == nullptr ? nullptr : std::static_pointer_cast<RSObjAbsGeometry>(parent->boundsGeo_);
-        boundsGeoPtr->UpdateMatrix(parentGeo, offset, clipRect);
-        return true;
-    }
-    return false;
 }
 
 void RSProperties::SetSandBox(Vector2f parentPosition)
@@ -960,8 +943,8 @@ void RSProperties::Reset()
     frameGravity_ = Gravity::DEFAULT;
     alpha_ = 1.f;
 
-    boundsGeo_ = std::make_shared<RSObjAbsGeometry>();
-    frameGeo_ = std::make_shared<RSObjGeometry>();
+    boundsGeo_->Reset();
+    frameGeo_->Reset();
 
     backgroundFilter_ = nullptr;
     border_ = nullptr;

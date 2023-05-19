@@ -140,8 +140,6 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessBaseRenderNode(RSBaseRenderNo
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
-    // clear SortedChildren, it will be generated again in next frame
-    node.ResetSortedChildren();
 }
 
 void RSUniUICapture::RSUniUICaptureVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
@@ -329,23 +327,20 @@ void RSUniUICapture::RSUniUICaptureVisitor::PrepareBaseRenderNode(RSBaseRenderNo
 
 void RSUniUICapture::RSUniUICaptureVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
-    node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
-    node.Update(*dirtyManager, nullptr, false);
+    node.Update(*dirtyManager, false, false);
     PrepareBaseRenderNode(node);
 }
 
 void RSUniUICapture::RSUniUICaptureVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
-    node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
-    node.Update(*dirtyManager, nullptr, false);
+    node.Update(*dirtyManager, false, false);
     PrepareBaseRenderNode(node);
 }
 
 void RSUniUICapture::RSUniUICaptureVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
-    node.ApplyModifiers();
     PrepareCanvasRenderNode(node);
 }
 

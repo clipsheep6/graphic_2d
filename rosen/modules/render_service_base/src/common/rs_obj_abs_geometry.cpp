@@ -32,26 +32,24 @@ constexpr unsigned LEFT_BOTTOM_POINT = 3;
 constexpr float INCH_TO_PIXEL = 72;
 constexpr float EPSILON = 1e-4f;
 
-RSObjAbsGeometry::RSObjAbsGeometry() : RSObjGeometry()
-{
-    vertices_[LEFT_TOP_POINT].set(0, 0);
-    vertices_[RIGHT_TOP_POINT].set(0, 0);
-    vertices_[RIGHT_BOTTOM_POINT].set(0, 0);
-    vertices_[LEFT_BOTTOM_POINT].set(0, 0);
-}
-
-RSObjAbsGeometry::~RSObjAbsGeometry() {}
-
 void RSObjAbsGeometry::ConcatMatrix(const SkMatrix& matrix)
 {
     if (matrix.isIdentity()) {
         return;
     }
-    matrix_.preConcat(matrix);
+    // we already calculate the matrixes, so we just update them and return
     if (absMatrix_.has_value()) {
+        matrix_.preConcat(matrix);
         absMatrix_->preConcat(matrix);
+        SetAbsRect();
+        return;
     }
-    SetAbsRect();
+    // we haven't calculate the matrixes, so we just record the matrix and calculate it later
+    if (!concatMatrix_.has_value()) {
+        concatMatrix_ = matrix;
+    } else {
+        concatMatrix_->preConcat(matrix);
+    }
 }
 
 /**
@@ -73,20 +71,23 @@ void RSObjAbsGeometry::UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& par
     if (absMatrix_.has_value() && offset.has_value() && !offset.value().isZero()) {
         absMatrix_->preTranslate(offset->x(), offset->y());
     }
-    // Reset the matrix of the current view
-    matrix_.reset();
     // filter invalid width and height
     if (IsEmpty()) {
+        matrix_.reset();
         return;
     }
     // If the view has no transformations or only 2D transformations, update the absolute matrix with 2D
     // transformations
     if (!trans_ || (ROSEN_EQ(trans_->translateZ_, 0.f) && ROSEN_EQ(trans_->rotationX_, 0.f) &&
         ROSEN_EQ(trans_->rotationY_, 0.f) && trans_->quaternion_.IsIdentity())) {
-        UpdateAbsMatrix2D();
+        matrix_ = UpdateAbsMatrix2D(trans_);
     } else {
         // Otherwise, update the absolute matrix with 3D transformations
-        UpdateAbsMatrix3D();
+        matrix_ = UpdateAbsMatrix3D(trans_);
+    }
+    // We have pending matrix to apply, just preConcat it
+    if (concatMatrix_.has_value()) {
+        matrix_.preConcat(*concatMatrix_);
     }
     // If the absolute matrix of the current view exists, update it with the context matrix and the current matrix
     if (absMatrix_.has_value()) {
@@ -95,32 +96,8 @@ void RSObjAbsGeometry::UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& par
         }
         absMatrix_->preConcat(matrix_);
     }
-    // if clipRect is valid, update rect with clipRect
-    if (clipRect.has_value() && !clipRect.value().isEmpty()) {
-        auto mappedClipRect = clipRect.value();
-        if (!matrix_.isIdentity()) {
-            SkMatrix invertMatrix;
-            if (matrix_.invert(&invertMatrix)) {
-                mappedClipRect = invertMatrix.mapRect(mappedClipRect);
-            }
-            // matrix_ already includes bounds offset, we need to revert it
-            mappedClipRect.offset(GetX(), GetY());
-        }
-
-#ifdef NEW_SKIA
-        if (!mappedClipRect.intersect({x_, y_, x_ + width_, y_ + height_})) {
-#else
-        if (!mappedClipRect.intersect(x_, y_, x_ + width_, y_ + height_)) {
-#endif
-            // No visible area
-            x_ = y_ = width_ = height_ = 0.0f;
-            return;
-        }
-        x_ = mappedClipRect.left();
-        y_ = mappedClipRect.top();
-        width_ = mappedClipRect.width();
-        height_ = mappedClipRect.height();
-    }
+    // Update self relative rect with respect to clipRect
+    ApplyContextClipRect(matrix_, clipRect);
     // If the context matrix of the current view exists, update the current matrix with it
     if (contextMatrix_.has_value()) {
         matrix_.preConcat(*contextMatrix_);
@@ -129,21 +106,47 @@ void RSObjAbsGeometry::UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& par
     SetAbsRect();
 }
 
+void RSObjAbsGeometry::ApplyContextClipRect(const SkMatrix& matrix, const std::optional<SkRect>& clipRect)
+{
+    // if clipRect is valid, update rect with clipRect
+    if (!clipRect.has_value() || clipRect.value().isEmpty()) {
+        return;
+    }
+    auto mappedClipRect = clipRect.value();
+    // map the clip rect (in parent coordinate system) to the current view coordinate system
+    if (!matrix.isIdentity()) {
+        SkMatrix invertMatrix;
+        if (matrix.invert(&invertMatrix)) {
+            mappedClipRect = invertMatrix.mapRect(mappedClipRect);
+        }
+        // matrix already includes bounds offset, we need to revert it
+        mappedClipRect.offset(GetX(), GetY());
+    }
+    // intersect with current rect
+    if (!mappedClipRect.intersect({ x_, y_, x_ + width_, y_ + height_ })) {
+        // No visible area
+        x_ = y_ = width_ = height_ = 0.0f;
+        return;
+    }
+    x_ = mappedClipRect.left();
+    y_ = mappedClipRect.top();
+    width_ = mappedClipRect.width();
+    height_ = mappedClipRect.height();
+}
+
 /**
  * @brief Updates the matrix of the view without its parent view.
  */
 void RSObjAbsGeometry::UpdateByMatrixFromSelf()
 {
     absMatrix_.reset();
-    matrix_.reset();
-
     // If the view has no transformations or only 2D transformations, update the absolute matrix with 2D transformations
     if (!trans_ || (ROSEN_EQ(trans_->translateZ_, 0.f) && ROSEN_EQ(trans_->rotationX_, 0.f) &&
         ROSEN_EQ(trans_->rotationY_, 0.f) && trans_->quaternion_.IsIdentity())) {
-        UpdateAbsMatrix2D();
+        matrix_ = UpdateAbsMatrix2D(trans_);
     } else {
         // Otherwise, update the absolute matrix with 3D transformations
-        UpdateAbsMatrix3D();
+        matrix_ = UpdateAbsMatrix3D(trans_);
     }
 
     // If the context matrix of the view exists, update the current matrix with it
@@ -164,33 +167,34 @@ bool RSObjAbsGeometry::IsNeedClientCompose() const
     return !ROSEN_EQ(std::remainder(trans_->rotation_, 90.f), 0.f, EPSILON);
 }
 
-void RSObjAbsGeometry::UpdateAbsMatrix2D()
+SkMatrix RSObjAbsGeometry::UpdateAbsMatrix2D(const std::optional<Transform>& trans) const
 {
-    if (!trans_) {
-        matrix_.preTranslate(x_, y_);
-    } else {
-        // Translate
-        if ((x_ + trans_->translateX_ != 0) || (y_ + trans_->translateY_ != 0)) {
-            matrix_.preTranslate(x_ + trans_->translateX_, y_ + trans_->translateY_);
-        }
-        // rotation
-        if (!ROSEN_EQ(trans_->rotation_, 0.f, EPSILON)) {
-            matrix_.preRotate(trans_->rotation_, trans_->pivotX_ * width_, trans_->pivotY_ * height_);
-        }
-        // Scale
-        if (!ROSEN_EQ(trans_->scaleX_, 1.f) || !ROSEN_EQ(trans_->scaleY_, 1.f)) {
-            matrix_.preScale(trans_->scaleX_, trans_->scaleY_, trans_->pivotX_ * width_, trans_->pivotY_ * height_);
-        }
+    if (!trans) {
+        return SkMatrix::MakeTrans(x_, y_);
     }
+    auto matrix = SkMatrix::I();
+    // Translate
+    if ((x_ + trans->translateX_ != 0) || (y_ + trans->translateY_ != 0)) {
+        matrix.preTranslate(x_ + trans->translateX_, y_ + trans->translateY_);
+    }
+    // rotation
+    if (!ROSEN_EQ(trans->rotation_, 0.f, EPSILON)) {
+        matrix.preRotate(trans->rotation_, trans->pivotX_ * width_, trans->pivotY_ * height_);
+    }
+    // Scale
+    if (!ROSEN_EQ(trans->scaleX_, 1.f) || !ROSEN_EQ(trans->scaleY_, 1.f)) {
+        matrix.preScale(trans->scaleX_, trans->scaleY_, trans->pivotX_ * width_, trans->pivotY_ * height_);
+    }
+    return matrix;
 }
 
 /**
  * Update the absolute matrix in 3D space
  */
-void RSObjAbsGeometry::UpdateAbsMatrix3D()
+SkMatrix RSObjAbsGeometry::UpdateAbsMatrix3D(const std::optional<Transform>& trans) const
 {
     // If the view has a non-identity quaternion, apply 3D transformations
-    if (!trans_->quaternion_.IsIdentity()) {
+    if (!trans->quaternion_.IsIdentity()) {
 #ifdef NEW_SKIA
         SkM44 matrix3D;
 #else
@@ -198,14 +202,14 @@ void RSObjAbsGeometry::UpdateAbsMatrix3D()
 #endif
 
         // Translate
-        matrix3D.setTranslate(trans_->pivotX_ * width_ + x_ + trans_->translateX_,
-            trans_->pivotY_ * height_ + y_ + trans_->translateY_, z_ + trans_->translateZ_);
+        matrix3D.setTranslate(trans->pivotX_ * width_ + x_ + trans->translateX_,
+            trans->pivotY_ * height_ + y_ + trans->translateY_, z_ + trans->translateZ_);
 
         // Rotate
-        float x = trans_->quaternion_[0];
-        float y = trans_->quaternion_[1];
-        float z = trans_->quaternion_[2];
-        float w = trans_->quaternion_[3];
+        float x = trans->quaternion_[0];
+        float y = trans->quaternion_[1];
+        float z = trans->quaternion_[2];
+        float w = trans->quaternion_[3];
 #ifdef NEW_SKIA
         SkScalar r[16] = {
             1.f - 2.f * (y * y + z * z), 2.f * (x * y + z * w), 2.f * (x * z - y * w), 0,
@@ -224,52 +228,52 @@ void RSObjAbsGeometry::UpdateAbsMatrix3D()
         matrix3D = matrix3D * matrix4;
 
         // Scale
-        if (!ROSEN_EQ(trans_->scaleX_, 1.f) || !ROSEN_EQ(trans_->scaleY_, 1.f)) {
-            matrix3D.preScale(trans_->scaleX_, trans_->scaleY_, 1.f);
+        if (!ROSEN_EQ(trans->scaleX_, 1.f) || !ROSEN_EQ(trans->scaleY_, 1.f)) {
+            matrix3D.preScale(trans->scaleX_, trans->scaleY_, 1.f);
         }
 
         // Translate
-        matrix3D.preTranslate(-trans_->pivotX_ * width_, -trans_->pivotY_ * height_, 0);
+        matrix3D.preTranslate(-trans->pivotX_ * width_, -trans->pivotY_ * height_, 0);
 
         // Concatenate the 3D matrix with the 2D matrix
 #ifdef NEW_SKIA
-        matrix_.preConcat(matrix3D.asM33());
+        return matrix3D.asM33();
 #else
-        matrix_.preConcat(SkMatrix(matrix3D));
+        return SkMatrix(matrix3D);
 #endif
     } else {
         SkMatrix matrix3D;
         Sk3DView camera;
 
         // Z Position
-        camera.translate(0, 0, z_ + trans_->translateZ_);
+        camera.translate(0, 0, z_ + trans->translateZ_);
 
         // Set camera distance
-        if (trans_->cameraDistance_ == 0) {
+        if (trans->cameraDistance_ == 0) {
             float zOffSet = sqrt(width_ * width_ + height_ * height_) / 2;
             camera.setCameraLocation(0, 0, camera.getCameraLocationZ() - zOffSet / INCH_TO_PIXEL);
         } else {
-            camera.setCameraLocation(0, 0, trans_->cameraDistance_);
+            camera.setCameraLocation(0, 0, trans->cameraDistance_);
         }
 
         // Rotate
-        camera.rotateX(-trans_->rotationX_);
-        camera.rotateY(-trans_->rotationY_);
-        camera.rotateZ(-trans_->rotation_);
+        camera.rotateX(-trans->rotationX_);
+        camera.rotateY(-trans->rotationY_);
+        camera.rotateZ(-trans->rotation_);
         camera.getMatrix(&matrix3D);
 
         // Scale
-        if (!ROSEN_EQ(trans_->scaleX_, 1.f) || !ROSEN_EQ(trans_->scaleY_, 1.f)) {
-            matrix3D.preScale(trans_->scaleX_, trans_->scaleY_);
+        if (!ROSEN_EQ(trans->scaleX_, 1.f) || !ROSEN_EQ(trans->scaleY_, 1.f)) {
+            matrix3D.preScale(trans->scaleX_, trans->scaleY_);
         }
 
         // Translate
-        matrix3D.preTranslate(-trans_->pivotX_ * width_, -trans_->pivotY_ * height_);
+        matrix3D.preTranslate(-trans->pivotX_ * width_, -trans->pivotY_ * height_);
 
         // Concatenate the 3D matrix with the 2D matrix
         matrix3D.postTranslate(
-            trans_->pivotX_ * width_ + x_ + trans_->translateX_, trans_->pivotY_ * height_ + y_ + trans_->translateY_);
-        matrix_.preConcat(matrix3D);
+            trans->pivotX_ * width_ + x_ + trans->translateX_, trans->pivotY_ * height_ + y_ + trans->translateY_);
+        return matrix3D;
     }
 }
 
@@ -359,59 +363,7 @@ Vector2f RSObjAbsGeometry::GetDataRange(float d0, float d1, float d2, float d3) 
             max = d3;
         }
     }
-    return Vector2f(min, max);
-}
-
-/**
- * calculate | p1 p2 | X | p1 p |
- * @param p1 a point on a line
- * @param p2 a point on a line
- * @param p a point on a line
- * @return the result of two cross multiplications
- */
-float RSObjAbsGeometry::GetCross(const SkPoint& p1, const SkPoint& p2, const SkPoint& p) const
-{
-    return (p2.x() - p1.x()) * (p.y() - p1.y()) - (p.x() - p1.x()) * (p2.y() - p1.y());
-}
-
-/**
- * Determine whether a point is within a rectangle.
- *
- * Determine whether a point is between two line segments by the sign of cross multiplication.
- * For example (AB X AE ) * (CD X CE)  >= 0 This indicates that E is between AD and BC.
- * Two judgments can prove whether the point is in the rectangle.
- *
- * @param x x-coordinate of the point to be judged
- * @param y y-coordinate of the point to be judged
- * @return true if the point is in the rectangle, false otherwise
- */
-bool RSObjAbsGeometry::IsPointInHotZone(const float x, const float y) const
-{
-    SkPoint p = SkPoint::Make(x, y);
-    float crossResult1 = GetCross(vertices_[LEFT_TOP_POINT], vertices_[RIGHT_TOP_POINT], p);
-    float crossResult2 = GetCross(vertices_[RIGHT_BOTTOM_POINT], vertices_[LEFT_BOTTOM_POINT], p);
-    float crossResult3 = GetCross(vertices_[RIGHT_TOP_POINT], vertices_[RIGHT_BOTTOM_POINT], p);
-    float crossResult4 = GetCross(vertices_[LEFT_BOTTOM_POINT], vertices_[LEFT_TOP_POINT], p);
-    return IsPointInLine(vertices_[LEFT_TOP_POINT], vertices_[RIGHT_TOP_POINT], p, crossResult1) ||
-           IsPointInLine(vertices_[RIGHT_BOTTOM_POINT], vertices_[LEFT_BOTTOM_POINT], p, crossResult2) ||
-           IsPointInLine(vertices_[RIGHT_TOP_POINT], vertices_[RIGHT_BOTTOM_POINT], p, crossResult3) ||
-           IsPointInLine(vertices_[LEFT_BOTTOM_POINT], vertices_[LEFT_TOP_POINT], p, crossResult4) ||
-           (crossResult1 * crossResult2 > 0 && crossResult3 * crossResult4 > 0);
-}
-
-/**
- * Determine whether a point is on a line.
- *
- * @param p1 a point on the line
- * @param p2 a point on the line
- * @param p the point to be judged
- * @param crossRes the result of two cross multiplications
- * @return true if the point is on the line, false otherwise
- */
-bool RSObjAbsGeometry::IsPointInLine(const SkPoint& p1, const SkPoint& p2, const SkPoint& p, const float crossRes) const
-{
-    return ROSEN_EQ(crossRes, 0.0f) && std::min(p1.x(), p2.x()) <= p.x() && p.x() <= std::max(p1.x(), p2.x()) &&
-           std::min(p1.y(), p2.y()) <= p.y() && p.y() <= std::max(p1.y(), p2.y());
+    return { min, max };
 }
 
 void RSObjAbsGeometry::SetContextMatrix(const std::optional<SkMatrix>& matrix)
@@ -428,6 +380,16 @@ const SkMatrix& RSObjAbsGeometry::GetAbsMatrix() const
 {
     // if absMatrix_ is empty, return matrix_ instead
     return absMatrix_ ? *absMatrix_ : matrix_;
+}
+
+void RSObjAbsGeometry::Reset()
+{
+    RSObjGeometry::Reset();
+
+    matrix_.reset();
+    absMatrix_.reset();
+    concatMatrix_.reset();
+    contextMatrix_.reset();
 }
 } // namespace Rosen
 } // namespace OHOS

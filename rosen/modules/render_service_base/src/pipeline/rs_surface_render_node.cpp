@@ -147,7 +147,7 @@ void RSSurfaceRenderNode::CollectSurface(
         if (isUniRender) {
             vec.emplace_back(shared_from_this());
         }
-        for (auto& child : node->GetSortedChildren()) {
+        for (auto& child : node->GetChildren()) {
             child->CollectSurface(child, vec, isUniRender);
         }
         return;
@@ -176,7 +176,7 @@ void RSSurfaceRenderNode::CollectSurface(
 
 void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node)
 {
-    for (auto& child : node->GetSortedChildren()) {
+    for (auto& child : node->GetChildren()) {
         auto surfaceNode = child->ReinterpretCastTo<RSSurfaceRenderNode>();
         if (surfaceNode == nullptr) {
             continue;
@@ -325,7 +325,7 @@ void RSSurfaceRenderNode::SetContextMatrix(const std::optional<SkMatrix>& matrix
         return;
     }
     contextMatrix_ = matrix;
-    SetDirty();
+    SetDirty(RSBaseRenderNode::NodeDirty::CONTEXT_VARIABLE_DIRTY);
     if (!sendMsg) {
         return;
     }
@@ -340,7 +340,8 @@ void RSSurfaceRenderNode::SetContextAlpha(float alpha, bool sendMsg)
         return;
     }
     contextAlpha_ = alpha;
-    SetDirty();
+    // context alpha was multiplied into the alpha, so we need to mark property dirty here.
+    SetDirty(RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY);
     if (!sendMsg) {
         return;
     }
@@ -355,7 +356,7 @@ void RSSurfaceRenderNode::SetContextClipRegion(const std::optional<SkRect>& clip
         return;
     }
     contextClipRect_ = clipRegion;
-    SetDirty();
+    SetDirty(RSBaseRenderNode::NodeDirty::CONTEXT_VARIABLE_DIRTY);
     if (!sendMsg) {
         return;
     }
@@ -570,7 +571,7 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
     }
 
     SetOcclusionVisible(vis);
-    for (auto& child : GetSortedChildren()) {
+    for (auto& child : GetChildren()) {
         if (auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)) {
             surface->SetVisibleRegionRecursive(region, visibleVec, pidVisMap);
         }

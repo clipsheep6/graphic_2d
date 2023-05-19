@@ -219,8 +219,7 @@ public:
 
     const std::shared_ptr<RSObjGeometry>& GetBoundsGeometry() const;
     const std::shared_ptr<RSObjGeometry>& GetFrameGeometry() const;
-    bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag, const std::optional<SkPoint>& offset,
-        const std::optional<SkRect>& clipRect);
+
     void CheckEmptyBounds();
     void ResetBounds();
     RectF GetBoundsRect() const;

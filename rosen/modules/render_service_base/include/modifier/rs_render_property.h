@@ -46,10 +46,10 @@ public:
     [[nodiscard]] static bool Unmarshalling(Parcel& parcel, std::shared_ptr<RSRenderPropertyBase>& val);
 
 protected:
-    void OnChange() const
+    virtual void OnValueChanged() const
     {
         if (auto node = node_.lock()) {
-            node->SetDirty();
+            node->SetDirty(RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY);
         }
     }
 
@@ -134,35 +134,40 @@ template<typename T>
 class RSRenderProperty : public RSRenderPropertyBase {
 public:
     RSRenderProperty() : RSRenderPropertyBase(0) {}
-    RSRenderProperty(const T& value, const PropertyId& id) : RSRenderPropertyBase(id), stagingValue_(value) {}
-    virtual ~RSRenderProperty() = default;
+    RSRenderProperty(const T& value, const PropertyId& id) : RSRenderPropertyBase(id), value_(value) {}
+    ~RSRenderProperty() override = default;
 
     void Set(const T& value)
     {
-        if (value == stagingValue_) {
+        if (value == value_) {
             return;
         }
-        stagingValue_ = value;
-        OnChange();
-        if (updateUIPropertyFunc_) {
-            updateUIPropertyFunc_(shared_from_this());
-        }
+        value_ = value;
+        OnValueChanged();
     }
 
-    T Get() const
+    const T& Get() const
     {
-        return stagingValue_;
+        return value_;
     }
 
-    void SetUpdateUIPropertyFunc(
-        const std::function<void(const std::shared_ptr<RSRenderPropertyBase>&)>& updateUIPropertyFunc)
+    void SetValueChangeListener(
+        const std::function<void(const std::shared_ptr<const RSRenderPropertyBase>&)>& valueChangeListener)
     {
-        updateUIPropertyFunc_ = updateUIPropertyFunc;
+        valueChangeListener_ = valueChangeListener;
     }
 
 protected:
-    T stagingValue_;
-    std::function<void(const std::shared_ptr<RSRenderPropertyBase>&)> updateUIPropertyFunc_;
+    void OnValueChanged() const override
+    {
+        RSRenderPropertyBase::OnValueChanged();
+        if (valueChangeListener_) {
+            valueChangeListener_(shared_from_this());
+        }
+    }
+
+    T value_;
+    std::function<void(const std::shared_ptr<const RSRenderPropertyBase>&)> valueChangeListener_;
 };
 
 template<typename T>
@@ -174,13 +179,13 @@ public:
     RSRenderAnimatableProperty(const T& value, const PropertyId& id, const RSRenderPropertyType type)
         : RSRenderProperty<T>(value, id), type_(type)
     {}
-    virtual ~RSRenderAnimatableProperty() = default;
+    ~RSRenderAnimatableProperty() override = default;
 
 protected:
     const std::shared_ptr<RSRenderPropertyBase> Clone() const override
     {
         return std::make_shared<RSRenderAnimatableProperty<T>>(
-            RSRenderProperty<T>::stagingValue_, RSRenderProperty<T>::id_, type_);
+            RSRenderProperty<T>::value_, RSRenderProperty<T>::id_, type_);
     }
 
     void SetValue(const std::shared_ptr<RSRenderPropertyBase>& value) override
@@ -196,7 +201,7 @@ protected:
         type_ = type;
     }
 
-    virtual RSRenderPropertyType GetPropertyType() const override
+    RSRenderPropertyType GetPropertyType() const override
     {
         return type_;
     }
@@ -228,31 +233,31 @@ private:
     {
         auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(value);
         if (animatableProperty != nullptr) {
-            RSRenderProperty<T>::stagingValue_ = RSRenderProperty<T>::stagingValue_ + animatableProperty->stagingValue_;
+            RSRenderProperty<T>::value_ = RSRenderProperty<T>::value_ + animatableProperty->value_;
         }
-        return RSRenderProperty<T>::shared_from_this();
+        return this->shared_from_this();
     }
 
     std::shared_ptr<RSRenderPropertyBase> Minus(const std::shared_ptr<const RSRenderPropertyBase>& value) override
     {
         auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(value);
         if (animatableProperty != nullptr) {
-            RSRenderProperty<T>::stagingValue_ = RSRenderProperty<T>::stagingValue_ - animatableProperty->stagingValue_;
+            RSRenderProperty<T>::value_ = RSRenderProperty<T>::value_ - animatableProperty->value_;
         }
-        return RSRenderProperty<T>::shared_from_this();
+        return this->shared_from_this();
     }
 
     std::shared_ptr<RSRenderPropertyBase> Multiply(const float scale) override
     {
-        RSRenderProperty<T>::stagingValue_ = RSRenderProperty<T>::stagingValue_ * scale;
-        return RSRenderProperty<T>::shared_from_this();
+        RSRenderProperty<T>::value_ = RSRenderProperty<T>::value_ * scale;
+        return this->shared_from_this();
     }
 
     bool IsEqual(const std::shared_ptr<const RSRenderPropertyBase>& value) const override
     {
         auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(value);
         if (animatableProperty != nullptr) {
-            return RSRenderProperty<T>::stagingValue_ == animatableProperty->stagingValue_;
+            return RSRenderProperty<T>::value_ == animatableProperty->value_;
         }
         return true;
     }

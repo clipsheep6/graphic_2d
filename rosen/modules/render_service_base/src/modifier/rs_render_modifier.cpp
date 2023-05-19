@@ -14,9 +14,10 @@
  */
 
 #include "modifier/rs_render_modifier.h"
-#include "modifier/rs_modifier_type.h"
+
 #include <memory>
 #include <unordered_map>
+
 #include "pixel_map.h"
 
 #include "common/rs_obj_abs_geometry.h"
@@ -190,7 +191,7 @@ void RSEnvForegroundColorStrategyRenderModifier ::Apply(RSModifierContext& conte
     auto renderProperty = std::static_pointer_cast<RSRenderProperty<ForegroundColorStrategyType>>(property_);
     switch (renderProperty->Get()) {
         case ForegroundColorStrategyType::INVERT_BACKGROUNDCOLOR: {
-            // calculate the color by screebshot
+            // calculate the color by screenshot
             Color color = GetInvertBackgroundColor(context);
             context.canvas_->SetEnvForegroundColor(color);
             break;
@@ -345,7 +346,8 @@ T Replace(T a, T b)
     {                                                                                                                  \
         if (auto property = std::static_pointer_cast<RSRenderAnimatableProperty<TYPE>>(prop)) {                        \
             auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<TYPE>>(property_);               \
-            renderProperty->Set(isDelta ? (renderProperty->Get() + property->Get()) : property->Get());                \
+            renderProperty->Set(                                                                                       \
+                isDelta ? static_cast<TYPE>(renderProperty->Get() + property->Get()) : property->Get());               \
         }                                                                                                              \
     }
 

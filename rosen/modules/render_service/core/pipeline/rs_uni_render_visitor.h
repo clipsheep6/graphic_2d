@@ -59,6 +59,7 @@ public:
     void ProcessRootRenderNode(RSRootRenderNode& node) override;
     void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
 
+    void UpdateCacheCanvasNodeMap(RSRenderNode& node);
     bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
     bool ParallelComposition(const std::shared_ptr<RSBaseRenderNode> rootNode);
     void CopyVisitorInfos(std::shared_ptr<RSUniRenderVisitor> visitor);
@@ -172,7 +173,11 @@ private:
     void SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
         const Occlusion::Region alignedDirtyRegion);
 
+    bool UpdateContextCacheSurface(RSRenderNode& node);
+    bool UpdateAnimatePropertyCacheSurface(RSRenderNode& node);
+    bool UpdateCacheSurface(RSRenderNode& node);
     void DrawChildRenderNode(RSRenderNode& node);
+
     void CheckColorSpace(RSSurfaceRenderNode& node);
     void AddOverDrawListener(std::unique_ptr<RSRenderFrame>& renderFrame,
         std::shared_ptr<RSCanvasListener>& overdrawListener);
@@ -215,6 +220,7 @@ private:
     std::unique_ptr<RSRenderFrame> renderFrame_;
     std::shared_ptr<RSPaintFilterCanvas> canvas_;
     std::map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> dirtySurfaceNodeMap_;
+    std::map<NodeId, uint32_t> cacheCanvasNodeMap_;
     SkRect boundsRect_ {};
     Gravity frameGravity_ = Gravity::DEFAULT;
 

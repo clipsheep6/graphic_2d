@@ -78,7 +78,6 @@ public:
     virtual void ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas) {}
     virtual void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas);
 
-    void CheckCacheType();
     void RenderTraceDebug() const;
     bool HasDisappearingTransition(bool recursive) const override
     {
@@ -121,6 +120,7 @@ public:
     void SetStaticCached(bool isStaticCached)
     {
         isStaticCached_ = isStaticCached;
+        cacheType_ = isStaticCached_ ? CacheType::CONTENT : CacheType::NONE;
     }
 
     bool IsStaticCached() const
@@ -128,7 +128,7 @@ public:
         return isStaticCached_;
     }
 
-    void InitCacheSurface(RSPaintFilterCanvas& canvas, int width, int height);
+    void InitCacheSurface(RSPaintFilterCanvas& canvas);
     sk_sp<SkSurface> GetCacheSurface() const
     {
         return cacheSurface_;
@@ -146,6 +146,7 @@ public:
 
     void ClearCacheSurface()
     {
+        surfaceCacheType_ = CacheType::NONE;
         cacheSurface_ = nullptr;
         cacheCompletedSurface_ = nullptr;
     }
@@ -162,14 +163,24 @@ public:
         return cacheType_;
     }
 
-    void SetCacheTypeChanged(bool cacheTypeChanged)
+    void SetSurfaceCacheType(CacheType surfaceCacheType)
     {
-        cacheTypeChanged_ = cacheTypeChanged;
+        surfaceCacheType_ = surfaceCacheType;
     }
 
-    bool GetCacheTypeChanged() const
+    CacheType GetSurfaceCacheType() const
     {
-        return cacheTypeChanged_;
+        return surfaceCacheType_;
+    }
+
+    RSDrawingCacheType GetDrawingCacheType() const
+    {
+        return drawingCacheType_;
+    }
+
+    bool GetDrawingCacheChanged() const
+    {
+        return isDrawingCacheChanged_;
     }
 
     // driven render ///////////////////////////////////
@@ -319,7 +330,7 @@ private:
     sk_sp<SkSurface> cacheCompletedSurface_ = nullptr;
     std::atomic<bool> isStaticCached_ = false;
     CacheType cacheType_ = CacheType::NONE;
-    bool cacheTypeChanged_ = false;
+    CacheType surfaceCacheType_ = CacheType::NONE;
 
     bool isMainThreadNode_ = false;
     bool hasFilter_ = false;

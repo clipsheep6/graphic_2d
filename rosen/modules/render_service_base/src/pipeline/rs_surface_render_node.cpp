@@ -1020,8 +1020,7 @@ bool RSSurfaceRenderNode::LeashWindowRelatedAppWindowOccluded()
         return false;
     }
     for (auto& child : GetChildren()) {
-        auto childNode = child.lock();
-        const auto& childNodeSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
+        const auto& childNodeSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
         if (childNodeSurface->GetVisibleRegion().IsEmpty()) {
             return true;
         }

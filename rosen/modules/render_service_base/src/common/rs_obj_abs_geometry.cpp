@@ -170,7 +170,11 @@ bool RSObjAbsGeometry::IsNeedClientCompose() const
 SkMatrix RSObjAbsGeometry::UpdateAbsMatrix2D(const std::optional<Transform>& trans) const
 {
     if (!trans) {
+#ifdef NEW_SKIA
+        return SkMatrix::Translate(x_, y_);
+#else
         return SkMatrix::MakeTrans(x_, y_);
+#endif
     }
     auto matrix = SkMatrix::I();
     // Translate

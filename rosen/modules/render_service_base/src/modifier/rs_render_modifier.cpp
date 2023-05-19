@@ -323,8 +323,8 @@ T Multiply(T a, T b)
 {
     return a * b;
 }
-template<typename T>
-T Replace(T a, T b)
+template<typename T, typename P>
+P Replace(T a, P b)
 {
     return b;
 }

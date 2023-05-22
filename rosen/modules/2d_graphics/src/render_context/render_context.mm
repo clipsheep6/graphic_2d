@@ -14,7 +14,7 @@
  */
 
 #include "render_context.h"
-#include "render_context_egl.h"
+#include "render_context_eagl.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -27,7 +27,7 @@ RenderContextFactory& RenderContextFactory::GetInstance()
 RenderContext* RenderContextFactory::CreateEngine()
 {
     if (context_ == nullptr) {
-        context_ = new RenderContextEGL();
+        context_ = new RenderContextEAGL();
     }
 
     return context_;

@@ -349,8 +349,62 @@ void RSRenderServiceConnection::SetScreenPowerStatus(ScreenId id, ScreenPowerSta
     }
 }
 
+std::unique_ptr<Media::PixelMap> RSRenderServiceConnection::TakeSurfaceCaptureCPU(
+    std::shared_ptr<RSSurfaceRenderNode> node, float scaleX, float scaleY)
+{
+    RS_TRACE_NAME("TakeSurfaceCaptureCPU");
+    RSSurfaceCaptureTask task(node->GetId(), scaleX, scaleY);
+    auto pixelMap = task.CreatePixelMapBySurfaceNode(node, true);
+    if (pixelMap == nullptr) {
+        return nullptr;
+    }
+    auto address = const_cast<uint32_t*>(pixelMap->GetPixel32(0, 0));
+    if (address == nullptr) {
+        return nullptr;
+    }
+    SkImageInfo info = SkImageInfo::Make(pixelMap->GetWidth(), pixelMap->GetHeight(),
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+    auto skSurface = SkSurface::MakeRasterDirect(info, address, pixelMap->GetRowBytes());
+    if (skSurface == nullptr || skSurface->getCanvas() == nullptr) {
+        return nullptr;
+    }
+
+#if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
+    auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
+    if (renderContext == nullptr) {
+        return nullptr;
+    }
+#endif
+    auto canvas = std::make_shared<RSRecordingCanvas>(pixelMap->GetWidth(), pixelMap->GetHeight());
+    auto visitor = std::make_shared<RSSurfaceCaptureVisitor>(scaleX, scaleY, true);
+    visitor->SetCanvas(canvas);
+    visitor->MarkForceCPU();
+
+    RS_TRACE_BEGIN("Wait for record");
+#if (defined RS_ENABLE_GL)  && (defined RS_ENABLE_EGLIMAGE)
+    auto recordTask = [canvas, node, visitor, renderContext]() {
+#ifdef NEW_SKIA
+        canvas->SetGrRecordingContext(renderContext->GetGrContext());
+#else
+        canvas->SetGrContext(renderContext->GetGrContext());
+#endif
+#else
+    auto recordTask = [node, visitor]() {
+#endif
+        node->Process(visitor);
+    };
+    RSMainThread::Instance()->PostSyncTask(recordTask);
+    RS_TRACE_END();
+
+    RS_TRACE_BEGIN("Playback");
+    auto drawCmdList = canvas->GetDrawCmdList();
+    drawCmdList->Playback(*skSurface->getCanvas());
+    RS_TRACE_END();
+    return pixelMap;
+}
+
 void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback,
-    float scaleX, float scaleY)
+    float scaleX, float scaleY, SnapshotScene snapshotScene)
 {
     auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode<RSRenderNode>(id);
     if (node == nullptr) {
@@ -358,7 +412,18 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
         callback->OnSurfaceCapture(id, nullptr);
         return;
     }
-    if ((node->GetType() == RSRenderNodeType::DISPLAY_NODE) ||
+
+    static bool isUniRender = RSUniRenderJudgement::IsUniRender();
+    if (isUniRender && snapshotScene == SnapshotScene::WINDOW_DESTROY &&
+        node->GetType() == RSRenderNodeType::SURFACE_NODE &&
+        node->ReinterpretCastTo<RSSurfaceRenderNode>()->IsMainWindowType()) {
+        auto snapshotTask = [node, callback, scaleX, scaleY, this]() {
+            auto pixelMap = TakeSurfaceCaptureCPU(node->ReinterpretCastTo<RSSurfaceRenderNode>(), scaleX, scaleY);
+            RS_TRACE_NAME("OnSurfaceCapture");
+            callback->OnSurfaceCapture(node->GetId(), pixelMap.get());
+        };
+        RSOffscreenRenderThread::Instance().PostTask(snapshotTask);
+    } else if ((node->GetType() == RSRenderNodeType::DISPLAY_NODE) ||
         ((node->GetType() == RSRenderNodeType::SURFACE_NODE) &&
             (node->ReinterpretCastTo<RSSurfaceRenderNode>()->IsMainWindowType()))) {
         std::function<void()> captureTask = [scaleY, scaleX, callback, id]() -> void {
@@ -385,20 +450,8 @@ void RSRenderServiceConnection::TakeSurfaceCaptureForUIWithUni(NodeId id, sptr<R
             std::make_shared<RSUniUICapture>(id, scaleX, scaleY);
         std::shared_ptr<Media::PixelMap> pixelmap = rsUniUICapture->TakeLocalCapture();
         callback->OnSurfaceCapture(id, pixelmap.get());
-        std::lock_guard<std::mutex> lock(offscreenRenderMutex_);
-        offscreenRenderNum_--;
-        if (offscreenRenderNum_ == 0) {
-            RSOffscreenRenderThread::Instance().Stop();
-        }
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
     };
-    {
-        std::lock_guard<std::mutex> lock(offscreenRenderMutex_);
-        if (offscreenRenderNum_ == 0) {
-            RSOffscreenRenderThread::Instance().Start();
-        }
-        offscreenRenderNum_++;
-    }
     RSOffscreenRenderThread::Instance().PostTask(offscreenRenderTask);
 }
 

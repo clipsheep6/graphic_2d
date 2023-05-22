@@ -315,7 +315,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             sptr<RSISurfaceCaptureCallback> cb = iface_cast<RSISurfaceCaptureCallback>(remoteObject);
             float scaleX = data.ReadFloat();
             float scaleY = data.ReadFloat();
-            TakeSurfaceCapture(id, cb, scaleX, scaleY);
+            auto snapshotScene = static_cast<SnapshotScene>(data.ReadUint8());
+            TakeSurfaceCapture(id, cb, scaleX, scaleY, snapshotScene);
             break;
         }
         case REGISTER_APPLICATION_AGENT: {

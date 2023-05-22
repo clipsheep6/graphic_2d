@@ -51,6 +51,11 @@ enum class FollowType : uint8_t {
     FOLLOW_TO_SELF,
 };
 
+enum class SnapshotScene : uint8_t {
+    DEFAULT = 0,
+    WINDOW_DESTROY,
+};
+
 static inline const std::unordered_map<RSUINodeType, std::string> RSUINodeTypeStrs = {
     {RSUINodeType::BASE_NODE,    "BaseNode"},
     {RSUINodeType::DISPLAY_NODE, "DisplayNode"},

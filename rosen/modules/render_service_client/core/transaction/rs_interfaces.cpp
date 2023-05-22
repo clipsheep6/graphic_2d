@@ -88,9 +88,9 @@ int32_t RSInterfaces::SetScreenChangeCallback(const ScreenChangeCallback &callba
 }
 
 bool RSInterfaces::TakeSurfaceCapture(std::shared_ptr<RSSurfaceNode> node,
-    std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY)
+    std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY, SnapshotScene snapshotScene)
 {
-    return renderServiceClient_->TakeSurfaceCapture(node->GetId(), callback, scaleX, scaleY);
+    return renderServiceClient_->TakeSurfaceCapture(node->GetId(), callback, scaleX, scaleY, snapshotScene);
 }
 
 bool RSInterfaces::TakeSurfaceCapture(std::shared_ptr<RSDisplayNode> node,
@@ -100,9 +100,9 @@ bool RSInterfaces::TakeSurfaceCapture(std::shared_ptr<RSDisplayNode> node,
 }
 
 bool RSInterfaces::TakeSurfaceCapture(NodeId id,
-    std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY)
+    std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY, SnapshotScene snapshotScene)
 {
-    return renderServiceClient_->TakeSurfaceCapture(id, callback, scaleX, scaleY);
+    return renderServiceClient_->TakeSurfaceCapture(id, callback, scaleX, scaleY, snapshotScene);
 }
 
 void RSInterfaces::SetScreenActiveMode(ScreenId id, uint32_t modeId)
@@ -165,9 +165,6 @@ bool RSInterfaces::TakeSurfaceCaptureForUIWithoutUni(NodeId id,
     };
     {
         std::lock_guard<std::mutex> lock(offscreenRenderMutex_);
-        if (offscreenRenderNum_ == 0) {
-            RSOffscreenRenderThread::Instance().Start();
-        }
         offscreenRenderNum_++;
     }
     RSOffscreenRenderThread::Instance().PostTask(offscreenRenderTask);

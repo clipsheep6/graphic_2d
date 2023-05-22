@@ -23,11 +23,16 @@ void RSUniRenderEngine::DrawSurfaceNodeWithParams(RSPaintFilterCanvas& canvas, R
 {
     canvas.save();
     canvas.concat(params.matrix);
-    if (!params.useCPU) {
+    if (params.useCPU) {
+#ifdef RS_ENABLE_EGLIMAGE
+        RegisterDeleteBufferListener(node.GetConsumer());
+        DrawImage(canvas, params, true);
+#else
+        DrawBuffer(canvas, params);
+#endif
+    } else {
         RegisterDeleteBufferListener(node.GetConsumer());
         DrawImage(canvas, params);
-    } else {
-        DrawBuffer(canvas, params);
     }
     canvas.restore();
 }

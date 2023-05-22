@@ -234,6 +234,16 @@ void RSSurfaceCaptureVisitor::SetSurface(SkSurface* surface)
     canvas_->scale(scaleX_, scaleY_);
 }
 
+void RSSurfaceCaptureVisitor::SetCanvas(std::shared_ptr<RSRecordingCanvas> canvas)
+{
+    if (canvas == nullptr) {
+        RS_LOGE("RSSurfaceCaptureVisitor::SetCanvas canvas == nullptr");
+        return;
+    }
+    canvas_ = std::make_unique<RSPaintFilterCanvas>(canvas.get());
+    canvas_->scale(scaleX_, scaleY_);
+}
+
 void RSSurfaceCaptureVisitor::ProcessBaseRenderNode(RSBaseRenderNode &node)
 {
     for (auto& child : node.GetSortedChildren()) {
@@ -403,7 +413,7 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
     }
     canvas_->restore();
     if (!node.IsAppWindow() && node.GetBuffer() != nullptr) {
-        auto params = RSUniRenderUtil::CreateBufferDrawParam(node, false);
+        auto params = RSUniRenderUtil::CreateBufferDrawParam(node, isForceCPU_);
         renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
     }
     if (isSelfDrawingSurface) {

@@ -23,7 +23,7 @@ RSOffscreenRenderThread& RSOffscreenRenderThread::Instance()
     return instance;
 }
 
-void RSOffscreenRenderThread::Start()
+RSOffscreenRenderThread::RSOffscreenRenderThread()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     runner_ = AppExecFwk::EventRunner::Create("RSOffscreenRender");
@@ -46,10 +46,7 @@ void RSOffscreenRenderThread::Stop()
             handler_->RemoveAllEvents();
             handler_ = nullptr;
         }
-
-        if (runner_) {
-            runner_->Stop();
-        }
+        runner_ = nullptr;
     }
 
     ROSEN_LOGD("RSOffscreenRenderThread stopped");

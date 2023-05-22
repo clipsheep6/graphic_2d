@@ -22,6 +22,7 @@
 #include "include/core/SkSurface.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
+#include "pipeline/rs_recording_canvas.h"
 #include "pixel_map.h"
 #include "rs_base_render_engine.h"
 #include "visitor/rs_node_visitor.h"
@@ -47,9 +48,15 @@ class RSSurfaceCaptureVisitor : public RSNodeVisitor {
         void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
 
         void SetSurface(SkSurface* surface);
+        void SetCanvas(std::shared_ptr<RSRecordingCanvas> canvas);
         void IsDisplayNode(bool isDisplayNode)
         {
             isDisplayNode_ = isDisplayNode;
+        }
+
+        void MarkForceCPU()
+        {
+            isForceCPU_ = true;
         }
 
         bool IsUniRender() const
@@ -79,6 +86,7 @@ class RSSurfaceCaptureVisitor : public RSNodeVisitor {
         void AdjustZOrderAndDrawSurfaceNode();
         std::unique_ptr<RSPaintFilterCanvas> canvas_ = nullptr;
         bool isDisplayNode_ = false;
+        bool isForceCPU_ = false;
         float scaleX_ = 1.0f;
         float scaleY_ = 1.0f;
         bool isUniRender_ = false;
@@ -116,6 +124,8 @@ private:
     float scaleX_;
 
     float scaleY_;
+
+    friend class RSRenderServiceConnection;
 };
 } // namespace Rosen
 } // namespace OHOS

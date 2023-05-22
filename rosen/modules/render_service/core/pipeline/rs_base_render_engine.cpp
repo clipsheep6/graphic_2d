@@ -88,7 +88,7 @@ bool RSBaseRenderEngine::NeedForceCPU(const std::vector<LayerInfoPtr>& layers)
 }
 
 sk_sp<SkImage> RSBaseRenderEngine::CreateEglImageFromBuffer(RSPaintFilterCanvas& canvas,
-    const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence)
+    const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence, bool forceCPU)
 {
 #ifdef RS_ENABLE_EGLIMAGE
     if (!RSBaseRenderUtil::IsBufferValid(buffer)) {
@@ -113,13 +113,19 @@ sk_sp<SkImage> RSBaseRenderEngine::CreateEglImageFromBuffer(RSPaintFilterCanvas&
     GrGLTextureInfo grExternalTextureInfo = { GL_TEXTURE_EXTERNAL_OES, eglTextureId, GL_RGBA8 };
     GrBackendTexture backendTexture(buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight(),
         GrMipMapped::kNo, grExternalTextureInfo);
+    sk_sp<SkImage> skImage;
 #ifdef NEW_SKIA
-    return SkImage::MakeFromTexture(canvas.recordingContext(), backendTexture,
+    skImage = SkImage::MakeFromTexture(canvas.recordingContext(), backendTexture,
         kTopLeft_GrSurfaceOrigin, colorType, kPremul_SkAlphaType, nullptr);
 #else
-    return SkImage::MakeFromTexture(canvas.getGrContext(), backendTexture,
+    skImage = SkImage::MakeFromTexture(canvas.getGrContext(), backendTexture,
         kTopLeft_GrSurfaceOrigin, colorType, kPremul_SkAlphaType, nullptr);
 #endif
+    if (forceCPU) {
+        RS_TRACE_NAME("makeRasterImage");
+        return skImage ? skImage->makeRasterImage() : nullptr;
+    }
+    return skImage;
 #else
     return nullptr;
 #endif // RS_ENABLE_EGLIMAGE
@@ -296,10 +302,10 @@ void RSBaseRenderEngine::DrawBuffer(RSPaintFilterCanvas& canvas, BufferDrawParam
 #endif
 }
 
-void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam& params)
+void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam& params, bool forceCPU)
 {
     RS_TRACE_NAME("RSBaseRenderEngine::DrawImage(GPU)");
-    auto image = CreateEglImageFromBuffer(canvas, params.buffer, params.acquireFence);
+    auto image = CreateEglImageFromBuffer(canvas, params.buffer, params.acquireFence, forceCPU);
     if (image == nullptr) {
         RS_LOGE("RSDividedRenderUtil::DrawImage: image is nullptr!");
         return;

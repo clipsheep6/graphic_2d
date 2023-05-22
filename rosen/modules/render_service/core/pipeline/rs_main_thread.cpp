@@ -208,6 +208,9 @@ void RSMainThread::Init()
 {
     mainLoop_ = [&]() {
         RS_LOGD("RsDebug mainLoop start");
+        SetVsyncReceivedStatus(true);
+        RSParallelRenderManager::Instance()->WaitProcessEnd();
+        SetVsyncReceivedStatus(false);
         PerfMultiWindow();
         RenderFrameTrace::GetInstance().RenderStartFrameTrace(RS_INTERVAL_NAME);
         SetRSEventDetectorLoopStartTag();
@@ -1348,6 +1351,17 @@ void RSMainThread::SendCommands()
             app->OnTransaction(transactionPtr);
         }
     });
+}
+
+bool RSMainThread::GetVsyncReceivedStatus() const
+{
+    return isVsyncReceived_;
+}
+
+void SetVsyncReceivedStatus(bool isNextVsyncArrived)
+{
+    std::lock_guard<std::mutex> lock(vsyncReceivedMutex_);
+    isVsyncReceived_ = isNextVsyncArrived;
 }
 
 void RSMainThread::QosStateDump(std::string& dumpString)

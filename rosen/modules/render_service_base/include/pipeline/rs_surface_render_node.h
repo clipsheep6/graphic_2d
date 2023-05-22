@@ -598,6 +598,16 @@ public:
         return submittedSubThreadIndex_;        
     }
 
+    void SetCacheSurfaceProcessedStatus(bool isCacheSurfaceProcessed)
+    {
+        isCacheSurfaceProcessed_ = isCacheSurfaceProcessed;
+    }
+
+    bool GetCacheSurfaceProcessedStatus() const
+    {
+        return isCacheSurfaceProcessed_;
+    }
+
 private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
@@ -724,6 +734,7 @@ private:
 
     // UIFirst
     uint32_t submittedSubThreadIndex_ = INT_MAX;
+    bool isCacheSurfaceProcessed_ = false;
 
     friend class RSUniRenderVisitor;
     friend class RSBaseRenderNode;

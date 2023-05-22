@@ -154,6 +154,8 @@ public:
     sk_sp<SkImage> GetWatermarkImg();
     bool GetWatermarkFlag();
     void AddActivePid(pid_t pid);
+
+    bool GetVsyncReceivedStatus() const;
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
         std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;
@@ -316,6 +318,9 @@ private:
 
     // used for control start and end of the click animation
     bool requestResschedReport_ = true;
+
+    bool isVsyncReceived_ = false;
+    mutable std::mutex vsyncReceivedMutex_;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

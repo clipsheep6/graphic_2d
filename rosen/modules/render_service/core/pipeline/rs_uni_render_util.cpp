@@ -313,7 +313,15 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
         } else {
             subThreadNodes.emplace_back(node);
             node->SetIsMainThreadNode(false);
-            if (node->HasCachedTexture()) {
+
+            if (!node->GetCacheSurfaceProcessedStatus()) {
+                node->SetPriority(NodePriorityType::SUB_INTERMEDIATE_PRIORITY);
+                continue;
+            } else if (node->GetCacheSurface()) { // cachedSurface
+                node->UpdateCompletedCacheSurface();
+            }
+
+            if (node->HasCachedTexture()) { // cacheCompletedSurfce_
                 node->SetPriority(NodePriorityType::SUB_LOW_PRIORITY);
             } else {
                 node->SetPriority(NodePriorityType::SUB_HIGH_PRIORITY);

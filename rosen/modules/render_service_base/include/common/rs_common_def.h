@@ -82,6 +82,7 @@ enum class CacheType : uint8_t {
 enum class NodePriorityType : uint32_t {
     MAIN_PRIORITY = 0, // node must render in main thread
     SUB_HIGH_PRIORITY, // node render in sub thread with high priority
+    SUB_INTERMEDIATE_PRIORITY, // node render in sub thread with intermediate priority, residual task from last frame
     SUB_LOW_PRIORITY, // node render in sub thread with low priority
 };
 

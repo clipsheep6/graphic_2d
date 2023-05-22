@@ -22,6 +22,7 @@ group("default") {
     "frameworks/dumper:gdumper.ini",
     "frameworks/dumper:graphic_dumper_server",
     "frameworks/vulkan_wrapper:vulkan",
+    "rosen/modules/hyper_graphic_manager:hgm_policy_config,xml",
   ]
 
   if (graphic_standard_feature_bootanimation_enable) {
@@ -43,6 +44,7 @@ group("graphic_2d_test") {
     "rosen/modules/composer:test",
     "rosen/modules/effect/test/unittest:test",
     "rosen/test/frame_analyzer:test",
+    "rosen/test/hyper_graphic_manager:test",
     "rosen/test/render_frame_trace:test",
     "rosen/test/render_service:test",
     "utils/color_manager:test",

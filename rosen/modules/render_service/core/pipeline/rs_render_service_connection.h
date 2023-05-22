@@ -19,6 +19,7 @@
 #include <mutex>
 #include <unordered_set>
 
+#include "hgm_core.h"
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "pipeline/rs_render_service.h"
 #include "pipeline/rs_hardware_thread.h"
@@ -86,6 +87,14 @@ private:
     int32_t SetScreenChangeCallback(sptr<RSIScreenChangeCallback> callback) override;
 
     void SetScreenActiveMode(ScreenId id, uint32_t modeId) override;
+
+    void SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate) override;
+
+    void SetRefreshRateMode(int32_t refreshRateMode) override;
+
+    uint32_t GetScreenCurrentRefreshRate(ScreenId id) override;
+
+    std::vector<uint32_t> GetScreenSupportedRefreshRates(ScreenId id) override;
 
     int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height) override;
 

@@ -18,6 +18,7 @@
 #include "rs_interfaces.h"
 #include "rs_trace.h"
 
+#include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "pipeline/rs_divided_ui_capture.h"
 #include "offscreen_render/rs_offscreen_render_thread.h"
@@ -108,6 +109,26 @@ bool RSInterfaces::TakeSurfaceCapture(NodeId id,
 void RSInterfaces::SetScreenActiveMode(ScreenId id, uint32_t modeId)
 {
     renderServiceClient_->SetScreenActiveMode(id, modeId);
+}
+
+void RSInterfaces::SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate)
+{
+    renderServiceClient_->SetScreenRefreshRate(id, sceneId, rate);
+}
+
+void RSInterfaces::SetRefreshRateMode(int32_t refreshRateMode)
+{
+    renderServiceClient_->SetRefreshRateMode(refreshRateMode);
+}
+
+uint32_t RSInterfaces::GetScreenCurrentRefreshRate(ScreenId id)
+{
+    return renderServiceClient_->GetScreenCurrentRefreshRate(id);
+}
+
+std::vector<uint32_t> RSInterfaces::GetScreenSupportedRefreshRates(ScreenId id)
+{
+    return renderServiceClient_->GetScreenSupportedRefreshRates(id);
 }
 
 bool RSInterfaces::TakeSurfaceCaptureForUI(

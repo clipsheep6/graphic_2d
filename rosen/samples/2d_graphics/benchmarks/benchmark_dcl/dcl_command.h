@@ -25,6 +25,9 @@ enum class IterateType {
     ITERATE_FRAME,
     ITERATE_OPITEM,
     ITERATE_OPITEM_MANUALLY,
+    PAUSE,
+    RESUME,
+    STOP,
     OTHER,
 };
 class DCLCommand {

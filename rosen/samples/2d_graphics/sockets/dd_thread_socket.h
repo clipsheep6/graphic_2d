@@ -19,37 +19,15 @@
 #include <string.h>
 #include <error.h>
 #include "json/json.h"
+#include "drawing_dcl.h"
 
 namespace OHOS {
 namespace Rosen {
 class DdThreadSocket {
 public:
-    void Process() const;
-
-    std::string MapToString(std::map<std::string, std::string> dataMap) const
-    {
-        std::string result;
-        int i = 0;
-        std::string splitStr = "";
-        for (auto iter = dataMap.cbegin(); iter != dataMap.cend(); ++iter) {
-            printf("%s = %s\n", iter->first.c_str(), iter->second.c_str());
-            if (i > 0) {
-                splitStr = "$$";
-            }
-            result += splitStr + iter->first.c_str() + "||" + iter->second.c_str();
-            i++;
-        }
-        return result;
-    }
-
-    std::string ResPkgOrPid(const SpServerSocket &spSocket) const
-    {
-        std::vector<std::string> sps;
-        SPUtils::StrSplit(spSocket.RecvBuf(), "::", sps);
-        return sps[1];
-    }
-
-    void HandleMsg(DdServerSocket &ddSocket) const;
+    void Process(std::shared_ptr<DrawingDCL> drawingDcl) const;
+    void HandleMsg(DdServerSocket &ddSocket, std::shared_ptr<DrawingDCL> drawingDcl) const;
+    void HandleMsgParams(DdServerSocket &ddSocket, std::shared_ptr<DrawingDCL> drawingDcl, Json::Value& clientJsonRoot) const;
 private:
     enum class ReturnCode {
         SUCCESS,
@@ -61,18 +39,18 @@ private:
         PAUSE,
         RESUME,
         STOP,
-        TRICKPLAY,
         MULTIPLE_FRAMES,
         SINGLE_FRAME,
+        SINGLE_OPERATER,
     };
 
     const std::unordered_map<std::string, CommandType> commandMap_ = {
         { std::string("play"), CommandType::PLAY },
         { std::string("pause"), CommandType::PAUSE },
         { std::string("resume"), CommandType::RESUME },
-        { std::string("trickPlay"), CommandType::TRICKPLAY },
         { std::string("MULTIPLE_FRAMES"), CommandType::MULTIPLE_FRAMES },
         { std::string("SINGLE_FRAME"), CommandType::SINGLE_FRAME },
+        { std::string("SINGLE_OPERATER"), CommandType::SINGLE_OPERATER },
     };
 };
 }

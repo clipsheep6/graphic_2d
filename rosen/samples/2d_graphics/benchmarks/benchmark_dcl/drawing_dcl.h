@@ -49,6 +49,8 @@ public:
     std::string GetRealPathStr(std::string filePath);
     bool IsValidFile(std::string realPathStr);
 
+    void SetIterateType(IterateType type);
+
 private:
     friend class DCLCommand;
     const static size_t recordingParcelMaxCapcity_ = 234 * 1000 * 1024;
@@ -57,6 +59,8 @@ private:
     IterateType iterateType = IterateType::ITERATE_FRAME;
     int beginFrame_ = 0;
     int endFrame_ = 100;
+    int curFrame_ = 0;
+    int curOpItemId_ = 0;
     int loop_ = 1;
     double opItemStep_ = 1;
     std::string inputFilePath_ = "/data/lkx/";

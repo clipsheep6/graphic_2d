@@ -183,6 +183,11 @@ public:
         return context_;
     }
 
+    RenderContext* CreateNewEngine()
+    {
+        return context_;
+    }
+
 private:
     RenderContextFactory() : context_(nullptr) {}
     RenderContextFactory(const RenderContextFactory&) = delete;

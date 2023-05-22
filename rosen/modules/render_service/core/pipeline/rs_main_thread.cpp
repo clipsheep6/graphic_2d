@@ -113,8 +113,10 @@ constexpr int32_t CLICK_ANIMATION_COMPLETE      = 4;
 constexpr int32_t ANIMATION_START               = 0;
 constexpr int32_t ANIMATION_COMPLETE            = 1;
 #endif
+#ifdef RS_ENABLE_GL
 constexpr size_t DEFAULT_SKIA_CACHE_SIZE        = 96 * (1 << 20);
 constexpr int DEFAULT_SKIA_CACHE_COUNT          = 2 * (1 << 12);
+#endif
 const std::map<int, int32_t> BLUR_CNT_TO_BLUR_CODE {
     { 1, 10021 },
     { 2, 10022 },
@@ -670,6 +672,24 @@ void RSMainThread::CollectInfoForDrivenRender()
 #endif
 }
 
+bool RSMainThread::NeedReleaseGpuResource(const RSRenderNodeMap& nodeMap)
+{
+    bool needReleaseGpuResource = lastFrameHasFilter_;
+    bool currentFrameHasFilter = false;
+    auto residentSurfaceNodeMap = nodeMap.GetResidentSurfaceNodeMap();
+    for (const auto& [_, surfaceNode] : residentSurfaceNodeMap) {
+        if (!surfaceNode || !surfaceNode->IsOnTheTree()) {
+            continue;
+        }
+        // needReleaseGpuResource will be set true when all nodes don't need filter, otherwise false.
+        needReleaseGpuResource = needReleaseGpuResource && !(surfaceNode->HasFilter());
+        // currentFrameHasFilter will be set true when one node needs filter, otherwise false.
+        currentFrameHasFilter = currentFrameHasFilter || surfaceNode->HasFilter();
+    }
+    lastFrameHasFilter_ = currentFrameHasFilter;
+    return needReleaseGpuResource;
+}
+
 void RSMainThread::ReleaseAllNodesBuffer()
 {
     RS_TRACE_NAME("RSMainThread::ReleaseAllNodesBuffer");
@@ -678,7 +698,6 @@ void RSMainThread::ReleaseAllNodesBuffer()
         if (surfaceNode == nullptr) {
             return;
         }
-        ReleaseBackGroundNodeUnlockGpuResource(surfaceNode);
         // surfaceNode's buffer will be released in hardware thread if last frame enables hardware composer
         if (surfaceNode->IsHardwareEnabledType()) {
             if (surfaceNode->IsLastFrameHardwareEnabled()) {
@@ -697,28 +716,13 @@ void RSMainThread::ReleaseAllNodesBuffer()
         }
         RSBaseRenderUtil::ReleaseBuffer(static_cast<RSSurfaceHandler&>(*surfaceNode));
     });
-}
-
-void RSMainThread::ReleaseBackGroundNodeUnlockGpuResource(const std::shared_ptr<RSSurfaceRenderNode> surfaceNode)
-{
-    if (surfaceNode == nullptr || !surfaceNode->IsUIHidden()) {
-        return;
-    }
 #ifdef RS_ENABLE_GL
-    auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
-    switch (RSSystemProperties::GetReleaseGpuResourceEnabled()) {
-        case ReleaseGpuResourceType::WINDOW_HIDDEN:
-            MemoryManager::ReleaseUnlockGpuResource(grContext, surfaceNode->GetId());
-            break;
-        case ReleaseGpuResourceType::WINDOW_HIDDEN_AND_LAUCHER:
-            MemoryManager::ReleaseUnlockGpuResource(grContext, surfaceNode->GetId());
-            MemoryManager::ReleaseUnlockGpuResource(grContext);
-            break;
-        default:
-            break;
+    if (NeedReleaseGpuResource(nodeMap)) {
+        PostTask([this]() {
+            MemoryManager::ReleaseUnlockGpuResource(GetRenderEngine()->GetRenderContext()->GetGrContext());
+        });
     }
 #endif
-    surfaceNode->MarkUIHidden(false);
 }
 
 void RSMainThread::WaitUtilUniRenderFinished()
@@ -1100,6 +1104,7 @@ void RSMainThread::CallbackToWMS(VisibleData& curVisVec)
         }
     }
     if (visibleChanged) {
+        std::lock_guard<std::mutex> lock(occlusionMutex_);
         for (auto it = occlusionListeners_.begin(); it != occlusionListeners_.end(); it++) {
             if (it->second) {
                 RS_LOGD("RSMainThread::CallbackToWMS curVisVec size:%u", curVisVec.size());
@@ -1308,11 +1313,13 @@ void RSMainThread::UnRegisterApplicationAgent(sptr<IApplicationAgent> app)
 
 void RSMainThread::RegisterOcclusionChangeCallback(pid_t pid, sptr<RSIOcclusionChangeCallback> callback)
 {
+    std::lock_guard<std::mutex> lock(occlusionMutex_);
     occlusionListeners_[pid] = callback;
 }
 
 void RSMainThread::UnRegisterOcclusionChangeCallback(pid_t pid)
 {
+    std::lock_guard<std::mutex> lock(occlusionMutex_);
     occlusionListeners_.erase(pid);
 }
 
@@ -1440,7 +1447,11 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
         auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
         grContext->flush();
         SkGraphics::PurgeAllCaches(); // clear cpu cache
-        ReleaseExitSurfaceNodeAllGpuResource(grContext, remotePid);
+        if (!IsResidentProcess(remotePid)) {
+            ReleaseExitSurfaceNodeAllGpuResource(grContext, remotePid);
+        } else {
+            RS_LOGW("this pid:%d is resident process, no need release gpu resource", remotePid);
+        }
 #ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
 #else
@@ -1464,16 +1475,9 @@ void RSMainThread::ReleaseExitSurfaceNodeAllGpuResource(GrDirectContext* grConte
 void RSMainThread::ReleaseExitSurfaceNodeAllGpuResource(GrContext* grContext, pid_t pid)
 #endif
 {
-    if (IsResidentProcess(pid)) {
-        RS_LOGW("ReleaseExitSurfaceNodeAllGpuResource pid:%d", pid);
-        return;
-    }
     switch (RSSystemProperties::GetReleaseGpuResourceEnabled()) {
         case ReleaseGpuResourceType::WINDOW_HIDDEN:
-            MemoryManager::ReleaseUnlockGpuResource(grContext, pid);
-            break;
         case ReleaseGpuResourceType::WINDOW_HIDDEN_AND_LAUCHER:
-            MemoryManager::ReleaseUnlockGpuResource(grContext, pid);
             MemoryManager::ReleaseUnlockGpuResource(grContext);
             break;
         default:

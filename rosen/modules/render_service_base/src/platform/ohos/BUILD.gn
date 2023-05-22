@@ -109,10 +109,7 @@ ohos_source_set("rosen_ohos_sources") {
     "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
   ]
   if (defined(use_new_skia) && use_new_skia) {
-    public_deps += [
-      "//third_party/skia:skia_ohos",
-      "//third_party/skia/modules/svg:svg",
-    ]
+    public_deps += [ "//third_party/skia:skia_ohos" ]
   } else {
     public_deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
   }
@@ -120,7 +117,6 @@ ohos_source_set("rosen_ohos_sources") {
   if (rs_enable_gpu) {
     include_dirs += [
       "//third_party/openssl/include",
-      "$graphic_2d_root/frameworks/vulkan_wrapper/include",
       "$graphic_2d_root/frameworks/surface/include",
       "$graphic_2d_root/interfaces/inner_api/common",
     ]

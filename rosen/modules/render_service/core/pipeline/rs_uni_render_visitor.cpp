@@ -1410,6 +1410,8 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             int bufferAge = renderFrame_->GetBufferAge();
             RS_TRACE_END();
             RSUniRenderUtil::MergeDirtyHistory(displayNodePtr, bufferAge, isDirtyRegionAlignedEnable_);
+            // The global dirty region caused by container dirty should be calculated after merge dirty history
+            AddContainerDirtyToGlobalDirty(displayNodePtr);
             Occlusion::Region dirtyRegion = RSUniRenderUtil::MergeVisibleDirtyRegion(
                 displayNodePtr, isDirtyRegionAlignedEnable_);
             dirtyRegionTest = dirtyRegion;
@@ -1721,6 +1723,28 @@ void RSUniRenderVisitor::CalcDirtyDisplayRegion(std::shared_ptr<RSDisplayRenderN
                 surfaceNode->SetShadowValidLastFrame(false);
             }
         }
+    }
+    std::vector<RectI> surfaceChangedRects = node->GetSurfaceChangedRects();
+    for (auto& surfaceChangedRect : surfaceChangedRects) {
+        RS_LOGD("CalcDirtyDisplayRegion merge Surface closed %s", surfaceChangedRect.ToString().c_str());
+        if (!surfaceChangedRect.IsEmpty()) {
+            displayDirtyManager->MergeDirtyRect(surfaceChangedRect);
+        }
+    }
+}
+
+void RSUniRenderVisitor::AddContainerDirtyToGlobalDirty(std::shared_ptr<RSDisplayRenderNode>& node) const
+{
+    RS_TRACE_FUNC();
+    auto displayDirtyManager = node->GetDirtyManager();
+    for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        if (surfaceNode == nullptr) {
+            continue;
+        }
+        auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
+        RectI surfaceDirtyRect = surfaceDirtyManager->GetDirtyRegion();
+
         // If a surface's dirty is intersect with container region (which can be considered transparent)
         // should be added to display dirty region.
         // Note: we use containerRegion rather transparentRegion to bypass inner corner dirty problem.
@@ -1735,13 +1759,6 @@ void RSUniRenderVisitor::CalcDirtyDisplayRegion(std::shared_ptr<RSDisplayRenderN
                 displayDirtyManager->MergeDirtyRect(RectI
                     { rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
             }
-        }
-    }
-    std::vector<RectI> surfaceChangedRects = node->GetSurfaceChangedRects();
-    for (auto& surfaceChangedRect : surfaceChangedRects) {
-        RS_LOGD("CalcDirtyDisplayRegion merge Surface closed %s", surfaceChangedRect.ToString().c_str());
-        if (!surfaceChangedRect.IsEmpty()) {
-            displayDirtyManager->MergeDirtyRect(surfaceChangedRect);
         }
     }
 }

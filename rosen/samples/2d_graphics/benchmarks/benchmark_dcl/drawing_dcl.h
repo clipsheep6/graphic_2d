@@ -50,9 +50,12 @@ public:
     bool IsValidFile(std::string realPathStr);
 
     void SetModeType(ModeType modeType);
+    ModeType GetModeType() const;
     void SetIterateType(IterateType iterateType);
     void SetSpeedType(SpeedType speedType);
     void SetDestOpItemId(int destOpItemId);
+    bool GetLoadDclError() const;
+    int GetCurOpItemId() const;
 
 private:
     friend class DCLCommand;
@@ -62,6 +65,7 @@ private:
     ModeType modeType_ = ModeType::PLAY;
     IterateType iterateType = IterateType::ITERATE_FRAME;
     SpeedType speedType_ = SpeedType::NORMAL;
+    bool loadDclError = false;
     int beginFrame_ = 0;
     int endFrame_ = 100;
     int curFrame_ = 0;

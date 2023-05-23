@@ -318,25 +318,39 @@ int DrawingDCL::LoadDrawCmdList(std::string dclFile)
     return 0;
 }
 
-void SetModeType(ModeType modeType)
+void DrawingDCL::SetModeType(ModeType modeType)
 {
     this->modeType_ = modeType;
 }
 
-void SetIterateType(IterateType iterateType)
+ModeType DrawingDCL::GetModeType() const
+{
+    return this->modeType_;
+}
+
+void DrawingDCL::SetIterateType(IterateType iterateType)
 {
     this->iterateType_ = iterateType;
 }
 
-void SetSpeedType(SpeedType speedType)
+void DrawingDCL::SetSpeedType(SpeedType speedType)
 {
     this->speedType_ = speedType;
 }
 
-void SetDestOpItemId(int destOpItemId)
+void DrawingDCL::SetDestOpItemId(int destOpItemId)
 {
     this->destOpItemId_ = destOpItemId;
 }
 
+bool DrawingDCL::GetLoadDclError() const
+{
+    return this->loadDclError;
+}
+
+int DrawingDCL::GetCurOpItemId() const
+{
+    return this->curOpItemId_;
+}
 }
 }

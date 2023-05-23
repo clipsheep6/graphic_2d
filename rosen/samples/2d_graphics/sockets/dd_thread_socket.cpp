@@ -28,12 +28,22 @@ void DdThreadSocket::Process(std::shared_ptr<DrawingDCL> drawingDcl) const
             }
             connected = true;
         }
-        if (connected && ddSocket.Recv() <=0 && errno != EINTR){
+        if (connected && ddSocket.Recv() <=0 && errno != EINTR) {
             ddSocket.CloseClient();
             connected = false;
             continue;
         }
         HandleMsg(ddSocket, drawingDcl);
+        Json::Value serverJsonRoot;
+        serverJsonRoot["type"] = "NOTIFY";
+        if (drawingDcl->GetLoadCmdError()) {
+            serverJsonRoot["retCode"] = std::to_string(static_cast<int>(ReturnCode::EXECUTE_FAIL));
+            serverJsonRoot["result"] = "FAIL";
+            ddSocket.Send(serverJsonRoot.toStyledString());
+        } else if(drawingDcl->GetModeType() == ModeType::PLAY) {
+            serverJsonRoot["params"]["indicator"] = drawingDcl->GetCurOpItemId();
+            ddSocket.Send(serverJsonRoot.toStyledString());
+        }
     }
     std::cout << "Socket Process finished!" << std::endl;
     ddSocket.Close();
@@ -47,7 +57,7 @@ bool DdThreadSocket::HandleMsgParams(DdServerSocket &ddSocket, std::shared_ptr<D
     }
     if (clientJsonRoot["params"].isMember("mode")) {
         std::string iterateStr = clientJsonRoot["params"]["mode"].asString();
-        if (iterateCmdType_.at(iterateStr) == iterateCmdType_.end()){
+        if (iterateCmdType_.at(iterateStr) == iterateCmdType_.end()) {
             std::cout << "Invalid iterate type." << std::endl;
             return false;
         } else {
@@ -56,7 +66,7 @@ bool DdThreadSocket::HandleMsgParams(DdServerSocket &ddSocket, std::shared_ptr<D
     }
     if (clientJsonRoot["params"].isMember("speed")) {
         std::string speedStr = clientJsonRoot["params"]["speed"].asString();
-        if (speedCommandMap_.find(speedStr) == speedCommandMap_.end()){
+        if (speedCommandMap_.find(speedStr) == speedCommandMap_.end()) {
             std::cout << "Invalid speed type." << std::endl;
             return false;
         } else {
@@ -77,12 +87,12 @@ void DdThreadSocket::HandleMsg(DdServerSocket &ddSocket, std::shared_ptr<Drawing
     Json::Reader reader;
     serverJsonRoot["type"] = "RESPONSE";
     bool isSucess = true;
-    if (!reader.parse(ddSocket.GetRecvBuf(), clientJsonRoot)){
+    if (!reader.parse(ddSocket.GetRecvBuf(), clientJsonRoot)) {
         std::cout << "json parse error" << std::endl;
         isSucess = false;
         serverJsonRoot["retCode"] = std::to_string(static_cast<int>(ReturnCode::PARSE_FAIL));
         serverJsonRoot["result"] = "fail";
-    } else if(!clientJsonRoot.isMember("cmd") || modeCmdMap_.find(clientJsonRoot["cmd"]) == modeCmdMap_.end()){
+    } else if(!clientJsonRoot.isMember("cmd") || modeCmdMap_.find(clientJsonRoot["cmd"]) == modeCmdMap_.end()) {
         std::cout << "The \'cmd\' property not found or invalid cmd type." << std::endl;
     } else {
         drawingDcl->SetModeType(modeCmdMap_.at(clientJsonRoot["cmd"].asString()));

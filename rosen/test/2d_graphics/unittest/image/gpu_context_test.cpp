@@ -39,10 +39,9 @@ void GpuContextTest::TearDown() {}
 
 /**
  * @tc.name: GPUContextCreateTest001
- * @tc.desc:
+ * @tc.desc: Test for creating GPUContext.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I71P4N
  */
 HWTEST_F(GpuContextTest, GPUContextCreateTest001, TestSize.Level1)
 {
@@ -52,10 +51,9 @@ HWTEST_F(GpuContextTest, GPUContextCreateTest001, TestSize.Level1)
 
 /**
  * @tc.name: FlushTest001
- * @tc.desc:
+ * @tc.desc: Test for flushing to underlying 3D API specific objects.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I71P4N
  */
 HWTEST_F(GpuContextTest, FlushTest001, TestSize.Level1)
 {
@@ -66,10 +64,9 @@ HWTEST_F(GpuContextTest, FlushTest001, TestSize.Level1)
 
 /**
  * @tc.name: PerformDeferredCleanupTest001
- * @tc.desc:
+ * @tc.desc: Test for Purging GPU resources that haven't been used in the past 'msNotUsed' milliseconds.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I71P4N
  */
 HWTEST_F(GpuContextTest, PerformDeferredCleanupTest001, TestSize.Level1)
 {
@@ -81,10 +78,9 @@ HWTEST_F(GpuContextTest, PerformDeferredCleanupTest001, TestSize.Level1)
 
 /**
  * @tc.name: GetResourceCacheLimitsTest001
- * @tc.desc:
+ * @tc.desc: Test for geting the current GPU resource cache limits.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I71P4N
  */
 HWTEST_F(GpuContextTest, GetResourceCacheLimitsTest001, TestSize.Level1)
 {
@@ -97,10 +93,9 @@ HWTEST_F(GpuContextTest, GetResourceCacheLimitsTest001, TestSize.Level1)
 
 /**
  * @tc.name: GetResourceCacheLimitsTest002
- * @tc.desc:
+ * @tc.desc: Test for geting the current GPU resource cache limits.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I71P4N
  */
 HWTEST_F(GpuContextTest, GetResourceCacheLimitsTest002, TestSize.Level1)
 {
@@ -113,10 +108,9 @@ HWTEST_F(GpuContextTest, GetResourceCacheLimitsTest002, TestSize.Level1)
 
 /**
  * @tc.name: SetResourceCacheLimitsTest001
- * @tc.desc:
+ * @tc.desc: Test for set specify the GPU resource cache limits.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I71P4N
  */
 HWTEST_F(GpuContextTest, SetResourceCacheLimitsTest001, TestSize.Level1)
 {
@@ -129,10 +123,9 @@ HWTEST_F(GpuContextTest, SetResourceCacheLimitsTest001, TestSize.Level1)
 
 /**
  * @tc.name: SetResourceCacheLimitsTest002
- * @tc.desc:
+ * @tc.desc: Test for set specify the GPU resource cache limits.
  * @tc.type: FUNC
- * @tc.require:AR000GGNV3
- * @tc.author:
+ * @tc.require: I71P4N
  */
 HWTEST_F(GpuContextTest, SetResourceCacheLimitsTest002, TestSize.Level1)
 {

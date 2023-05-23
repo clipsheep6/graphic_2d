@@ -78,7 +78,6 @@ public:
     virtual void ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas) {}
     virtual void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas);
 
-    void CheckCacheType();
     void RenderTraceDebug() const;
     bool HasDisappearingTransition(bool recursive) const override
     {
@@ -128,7 +127,13 @@ public:
         return isStaticCached_;
     }
 
-    void InitCacheSurface(RSPaintFilterCanvas& canvas, int width, int height);
+    void InitCacheSurface(RSPaintFilterCanvas& canvas);
+    
+    void InitCacheSurface(sk_sp<SkSurface> cacheSurface)
+    {
+        cacheSurface_ = cacheSurface;
+    }
+
     sk_sp<SkSurface> GetCacheSurface() const
     {
         return cacheSurface_;
@@ -160,16 +165,6 @@ public:
     CacheType GetCacheType() const
     {
         return cacheType_;
-    }
-
-    void SetCacheTypeChanged(bool cacheTypeChanged)
-    {
-        cacheTypeChanged_ = cacheTypeChanged;
-    }
-
-    bool GetCacheTypeChanged() const
-    {
-        return cacheTypeChanged_;
     }
 
     // driven render ///////////////////////////////////
@@ -260,8 +255,7 @@ public:
 
     bool HasCachedTexture() const
     {
-        // return true if cached texture existed, include itself or its children
-        return false;
+        return cacheCompletedSurface_ != nullptr;
     }
 
     void SetDrawRegion(std::shared_ptr<RectF> rect)
@@ -270,6 +264,22 @@ public:
     }
 
     void UpdateDrawRegion();
+
+    bool HasGroupableAnimations() const;
+    bool isForcedDrawInGroup() const;
+    bool isSuggestedDrawInGroup() const;
+
+    enum NodeGroupType {
+        NONE,
+        GROUPED_BY_ANIM,
+        GROUPED_BY_UI,
+        GROUPED_BY_USER,
+    };
+    void MarkNodeGroup(NodeGroupType type);
+    NodeGroupType GetNodeGroupType()
+    {
+        return nodeGroupType_;
+    }
 
     /////////////////////////////////////////////
 
@@ -319,9 +329,8 @@ private:
     sk_sp<SkSurface> cacheCompletedSurface_ = nullptr;
     std::atomic<bool> isStaticCached_ = false;
     CacheType cacheType_ = CacheType::NONE;
-    bool cacheTypeChanged_ = false;
 
-    bool isMainThreadNode_ = false;
+    bool isMainThreadNode_ = true;
     bool hasFilter_ = false;
     NodePriorityType priority_ = NodePriorityType::MAIN_PRIORITY;
 
@@ -335,6 +344,7 @@ private:
     std::optional<SharedTransitionParam> sharedTransitionParam_;
 
     std::shared_ptr<RectF> drawRegion_ = nullptr;
+    NodeGroupType nodeGroupType_ = NodeGroupType::NONE;
 
     friend class RSRenderTransition;
     friend class RSRenderNodeMap;

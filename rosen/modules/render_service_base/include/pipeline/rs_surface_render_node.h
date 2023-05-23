@@ -15,6 +15,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_SURFACE_RENDER_NODE_H
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_SURFACE_RENDER_NODE_H
 
+#include <climits>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -22,7 +23,9 @@
 
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
-#ifndef NEW_SKIA
+#ifdef NEW_SKIA
+#include "include/gpu/GrDirectContext.h"
+#else
 #include "include/gpu/GrContext.h"
 #include "refbase.h"
 #endif
@@ -120,6 +123,16 @@ public:
         isHardwareForcedDisabled_ = forcesDisabled;
     }
 
+    void SetHardwareForcedDisabledStateByFilter(bool forcesDisabled)
+    {
+        isHardwareForcedDisabledByFilter_ = forcesDisabled;
+    }
+
+    bool IsHardwareForcedDisabledByFilter() const
+    {
+        return isHardwareForcedDisabledByFilter_;
+    }
+
     bool IsHardwareForcedDisabled() const
     {
         return isHardwareForcedDisabled_ ||
@@ -142,6 +155,9 @@ public:
         return nodeType_ == RSSurfaceNodeType::SELF_DRAWING_NODE ||
                nodeType_ == RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
     }
+
+    // used to determine whether the layer-1 surfacenodes can be skipped in the subthread of focus-first framework
+    bool IsCurrentFrameStatic();
 
     RSSurfaceNodeType GetSurfaceNodeType() const
     {
@@ -570,6 +586,27 @@ public:
     }
     bool LeashWindowRelatedAppWindowOccluded();
 
+    void OnTreeStateChanged() override;
+
+#ifdef NEW_SKIA
+    void SetGrContext(GrDirectContext* grContext)
+#else
+    void SetGrContext(GrContext* grContext)
+#endif
+    {
+        grContext_ = grContext;
+    }
+
+    void SetSubmittedSubThreadIndex(uint32_t index)
+    {
+        submittedSubThreadIndex_ = index;
+    }
+
+    uint32_t GetSubmittedSubThreadIndex() const
+    {
+        return submittedSubThreadIndex_;        
+    }
+
 private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
@@ -578,7 +615,11 @@ private:
     std::mutex mutexRT_;
     std::mutex mutexUI_;
     std::mutex mutex_;
-
+#ifdef NEW_SKIA
+    GrDirectContext* grContext_;
+#else
+    GrContext* grContext_;
+#endif
     std::mutex parallelVisitMutex_;
 
     float contextAlpha_ = 1.0f;
@@ -683,6 +724,7 @@ private:
     // mark if this self-drawing node is forced not to use hardware composer
     // in case where this node's parent window node is occluded or is appFreeze, this variable will be marked true
     bool isHardwareForcedDisabled_ = false;
+    bool isHardwareForcedDisabledByFilter_ = false;
     float localZOrder_ = 0.0f;
     std::vector<WeakPtr> childHardwareEnabledNodes_;
     int32_t nodeCost_ = 0;
@@ -690,6 +732,9 @@ private:
     bool animateState_ = false;
 
     bool needDrawAnimateProperty_ = false;
+
+    // UIFirst
+    uint32_t submittedSubThreadIndex_ = INT_MAX;
 
     friend class RSUniRenderVisitor;
     friend class RSBaseRenderNode;

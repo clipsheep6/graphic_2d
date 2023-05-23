@@ -16,9 +16,11 @@
 #include "pipeline/rs_render_node.h"
 
 #include <algorithm>
+#include <set>
 
 #include "animation/rs_render_animation.h"
 #include "common/rs_obj_abs_geometry.h"
+#include "modifier/rs_modifier_type.h"
 #include "pipeline/rs_context.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
@@ -28,6 +30,14 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+const std::set<RSModifierType> GROUPABLE_ANIMATION_TYPE = {
+    RSModifierType::ALPHA,
+    RSModifierType::ROTATION,
+    RSModifierType::SCALE,
+};
+}
+
 RSRenderNode::RSRenderNode(NodeId id, std::weak_ptr<RSContext> context) : RSBaseRenderNode(id, context) {}
 
 RSRenderNode::~RSRenderNode()
@@ -227,7 +237,7 @@ void RSRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas)
     }
     auto alpha = renderProperties_.GetAlpha();
     if (alpha < 1.f) {
-        if ((GetChildrenCount() == 0) || !GetRenderProperties().GetAlphaOffscreen()) {
+        if ((GetChildrenCount() == 0) || !(GetRenderProperties().GetAlphaOffscreen() || isForcedDrawInGroup())) {
             canvas.MultiplyAlpha(alpha);
         } else {
             auto rect = RSPropertiesPainter::Rect2SkRect(GetRenderProperties().GetBoundsRect());
@@ -251,20 +261,6 @@ void RSRenderNode::ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas)
 void RSRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 {
     RSRenderNode::ProcessTransitionAfterChildren(canvas);
-}
-
-void RSRenderNode::CheckCacheType()
-{
-    auto newCacheType = CacheType::NONE;
-    if (GetRenderProperties().IsSpherizeValid()) {
-        newCacheType = CacheType::SPHERIZE;
-    } else if (isStaticCached_) {
-        newCacheType = CacheType::STATIC;
-    }
-    if (cacheType_ != newCacheType) {
-        cacheType_ = newCacheType;
-        cacheTypeChanged_ = true;
-    }
 }
 
 void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
@@ -420,8 +416,11 @@ float RSRenderNode::GetGlobalAlpha() const
     return globalAlpha_;
 }
 
-void RSRenderNode::InitCacheSurface(RSPaintFilterCanvas& canvas, int width, int height)
+void RSRenderNode::InitCacheSurface(RSPaintFilterCanvas& canvas)
 {
+    ClearCacheSurface();
+    float width = GetRenderProperties().GetBoundsRect().GetWidth();
+    float height = GetRenderProperties().GetBoundsRect().GetHeight();
 #if ((defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)) || (defined RS_ENABLE_VK)
     SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
 #ifdef NEW_SKIA
@@ -440,17 +439,43 @@ void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas) const
     if (surface == nullptr || (surface->width() == 0 || surface->height() == 0)) {
         return;
     }
-    if (GetCacheType() == CacheType::SPHERIZE) {
-        RSPropertiesPainter::DrawSpherize(GetRenderProperties(), canvas, surface);
-    } else {
-        canvas.save();
-        float width = GetRenderProperties().GetBoundsRect().GetWidth();
-        float height = GetRenderProperties().GetBoundsRect().GetHeight();
-        canvas.scale(width / surface->width(), height / surface->height());
-        SkPaint paint;
-        surface->draw(&canvas, 0.0, 0.0, &paint);
-        canvas.restore();
-    }
+    canvas.save();
+    float width = GetRenderProperties().GetBoundsRect().GetWidth();
+    float height = GetRenderProperties().GetBoundsRect().GetHeight();
+    canvas.scale(width / surface->width(), height / surface->height());
+    SkPaint paint;
+    surface->draw(&canvas, 0.0, 0.0, &paint);
+    canvas.restore();
 }
+
+bool RSRenderNode::HasGroupableAnimations() const
+{
+    for (auto& [_, animation] : animationManager_.animations_) {
+        if (!animation || !modifiers_.count(animation->GetPropertyId())) {
+            continue;
+        }
+        const auto& modifier = modifiers_.at(animation->GetPropertyId());
+        if (modifier && GROUPABLE_ANIMATION_TYPE.count(modifier->GetType())) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool RSRenderNode::isForcedDrawInGroup() const
+{
+    return (nodeGroupType_ == NodeGroupType::GROUPED_BY_UI) && (renderProperties_.GetAlpha() < 1.f);
+}
+
+bool RSRenderNode::isSuggestedDrawInGroup() const
+{
+    return nodeGroupType_ != NodeGroupType::NONE;
+}
+
+void RSRenderNode::MarkNodeGroup(NodeGroupType type)
+{
+    nodeGroupType_ = type;
+}
+
 } // namespace Rosen
 } // namespace OHOS

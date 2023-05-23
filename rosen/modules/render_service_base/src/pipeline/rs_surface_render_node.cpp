@@ -17,6 +17,7 @@
 
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
+#include "rs_trace.h"
 #ifdef NEW_SKIA
 #include "include/gpu/GrDirectContext.h"
 #else
@@ -196,6 +197,18 @@ void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSBaseRenderN
     }
 }
 
+void RSSurfaceRenderNode::OnTreeStateChanged()
+{
+    if (!RSSystemProperties::GetUniRenderEnabled()) {
+        return;
+    }
+    if (grContext_ && !IsOnTheTree() && IsLeashWindow()) {
+        RS_TRACE_NAME_FMT("purgeUnlockedResources this SurfaceNode isn't onthe tree Id:%" PRIu64 " Name:%s",
+            GetId(), GetName().c_str());
+        grContext_->purgeUnlockedResources(true);
+    }
+}
+
 void RSSurfaceRenderNode::ResetParent()
 {
     RSBaseRenderNode::ResetParent();
@@ -243,7 +256,7 @@ void RSSurfaceRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canva
 
 void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas)
 {
-    if (GetCacheType() != CacheType::SPHERIZE && !needDrawAnimateProperty_) {
+    if (GetCacheType() != CacheType::ANIMATE_PROPERTY && !needDrawAnimateProperty_) {
         return;
     }
     const auto& property = GetRenderProperties();
@@ -1021,6 +1034,29 @@ bool RSSurfaceRenderNode::LeashWindowRelatedAppWindowOccluded()
         }
     }
     return false;
+}
+
+bool RSSurfaceRenderNode::IsCurrentFrameStatic()
+{
+    if (dirtyManager_ == nullptr || !dirtyManager_->GetLastestHistory().IsEmpty()) {
+        return false;
+    }
+    if (IsMainWindowType()) {
+        return true;
+    } else if (IsLeashWindow()) {
+        for(auto& child : GetChildren()) {
+            auto childNode = child.lock();
+            const auto childNodeSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
+            if (!childNodeSurface->IsCurrentFrameStatic()) {
+                return false;
+            }
+        }
+        return true;
+    } else if (IsSelfDrawingType()) {
+        return isCurrentFrameBufferConsumed_;
+    } else {
+        return false;
+    }
 }
 
 } // namespace Rosen

@@ -465,7 +465,6 @@ int RSPropertiesPainter::GetAndResetBlurCnt()
 
 void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
-    DrawShadow(properties, canvas);
     // only disable antialias when background is rect and g_forceBgAntiAlias is true
     bool antiAlias = g_forceBgAntiAlias || !properties.GetCornerRadius().IsZero();
     // clip

@@ -15,8 +15,13 @@
 
 #include "gtest/gtest.h"
 
+#include "EGL/egl.h"
+#include "EGL/eglext.h"
+#include "GLES3/gl32.h"
+
 #include "draw/color.h"
 #include "image/gpu_context.h"
+#include "utils/log.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -24,18 +29,100 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+constexpr int32_t EGL_CONTEXT_CLIENT_VERSION_NUM = 2;
+
 class GpuContextTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+
+    static void InitEGL();
+    static void DestroyEGL();
+
+private:
+    static EGLDisplay eglDisplay_;
+    static EGLContext eglContext_;
 };
 
-void GpuContextTest::SetUpTestCase() {}
-void GpuContextTest::TearDownTestCase() {}
+EGLDisplay GpuContextTest::eglDisplay_ = EGL_NO_DISPLAY;
+EGLContext GpuContextTest::eglContext_ = EGL_NO_CONTEXT;
+
+void GpuContextTest::SetUpTestCase()
+{
+    InitEGL();
+}
+
+void GpuContextTest::TearDownTestCase()
+{
+    DestroyEGL();
+}
+
 void GpuContextTest::SetUp() {}
 void GpuContextTest::TearDown() {}
+
+void GpuContextTest::InitEGL()
+{
+    LOGI("Creating EGLContext!!!");
+    eglDisplay_ = eglGetDisplay(static_cast<EGLNativeDisplayType>(EGL_DEFAULT_DISPLAY));
+    if (eglDisplay_ == EGL_NO_DISPLAY) {
+        LOGW("Failed to create EGLDisplay gl errno : %{public}x", eglGetError());
+        return;
+    }
+
+    EGLint major, minor;
+    if (eglInitialize(eglDisplay_, &major, &minor) == EGL_FALSE) {
+        LOGE("Failed to initialize EGLDisplay");
+        return;
+    }
+
+    if (eglBindAPI(EGL_OPENGL_ES_API) == EGL_FALSE) {
+        LOGE("Failed to bind OpenGL ES API");
+        return;
+    }
+
+    unsigned int ret;
+    EGLConfig config;
+    EGLint count;
+    EGLint config_attribs[] = { EGL_SURFACE_TYPE, EGL_WINDOW_BIT, EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 8, EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT, EGL_NONE };
+
+    ret = eglChooseConfig(eglDisplay_, config_attribs, &config, 1, &count);
+    if (!(ret && static_cast<unsigned int>(count) >= 1)) {
+        LOGE("Failed to eglChooseConfig");
+        return;
+    }
+
+    static const EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, EGL_CONTEXT_CLIENT_VERSION_NUM, EGL_NONE };
+
+    eglContext_ = eglCreateContext(eglDisplay_, config, EGL_NO_CONTEXT, context_attribs);
+    if (eglContext_ == EGL_NO_CONTEXT) {
+        LOGE("Failed to create egl context %{public}x", eglGetError());
+        return;
+    }
+    if (!eglMakeCurrent(eglDisplay_, EGL_NO_SURFACE, EGL_NO_SURFACE, eglContext_)) {
+        LOGE("Failed to make current on surface, error is %{public}x", eglGetError());
+        return;
+    }
+
+    LOGI("Create EGL context successfully, version %{public}d.%{public}d", major, minor);
+}
+
+void GpuContextTest::DestroyEGL()
+{
+    if (eglDisplay_ == EGL_NO_DISPLAY) {
+        return;
+    }
+
+    eglDestroyContext(eglDisplay_, eglContext_);
+    eglMakeCurrent(eglDisplay_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    eglTerminate(eglDisplay_);
+    eglReleaseThread();
+
+    eglDisplay_ = EGL_NO_DISPLAY;
+    eglContext_ = EGL_NO_CONTEXT;
+}
 
 /**
  * @tc.name: GPUContextCreateTest001
@@ -47,6 +134,20 @@ HWTEST_F(GpuContextTest, GPUContextCreateTest001, TestSize.Level1)
 {
     std::unique_ptr<GPUContext> gpuContext = std::make_unique<GPUContext>();
     ASSERT_TRUE(gpuContext != nullptr);
+}
+
+/**
+ * @tc.name: GPUContextCreateTest001
+ * @tc.desc: Test for creating a GL GPUContext for a backend context.
+ * @tc.type: FUNC
+ * @tc.require: I71P4N
+ */
+HWTEST_F(GpuContextTest, BuildFromGLTest001, TestSize.Level1)
+{
+    std::unique_ptr<GPUContext> gpuContext = std::make_unique<GPUContext>();
+    ASSERT_TRUE(gpuContext != nullptr);
+    GPUContextOptions options;
+    EXPECT_TRUE(gpuContext->BuildFromGL(options));
 }
 
 /**

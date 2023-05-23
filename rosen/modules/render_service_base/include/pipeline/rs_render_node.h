@@ -256,7 +256,7 @@ public:
     bool HasCachedTexture() const
     {
         // return true if cached texture existed, include itself or its children
-        return false;
+        return cacheCompletedSurfce_ != nullptr;
     }
 
     void SetDrawRegion(std::shared_ptr<RectF> rect)

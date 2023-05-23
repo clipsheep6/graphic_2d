@@ -253,6 +253,21 @@ void RSParallelSubThread::RenderCache()
 {
 #ifdef RS_ENABLE_GL
     while (threadTask_->GetTaskSize() > 0) {
+        if (RSMainThread::Instance()->GetVsyncReceivedStatus()) {
+            auto taskLeft = threadTask_->GetNextRenderTask();
+            while (taskLeft && taskLeft-GetIdx() != 0) {
+                auto nodeLeft = taskLeft->GetNode();
+                if (!nodeLeft) {
+                    RS_LOGE("abandon renderTask is nullptr");
+                    continue;
+                }
+                RS_TRACE_NAME_FMT("nodeTask abandoned, %llu", nodeLeft->GetId());
+                auto node = nodeLeft->ReinterpretCastTo<RSSurfaceRenderNode>();
+                node->SetCacheSurfaceProcessedStatus(false);
+                taskLeft = threadTask_->GetNextRenderTask();
+            }
+            break;
+        }
         auto task = threadTask_->GetNextRenderTask();
         if (!task || (task->GetIdx() == 0)) {
             RS_LOGE("renderTask is nullptr");

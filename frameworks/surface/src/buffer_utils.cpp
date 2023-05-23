@@ -79,6 +79,10 @@ void ReadFlushConfig(MessageParcel &parcel, BufferFlushConfigWithDamages &config
         BLOGE("The size of damages read from message parcel is 0");
         return;
     }
+    if (size > SURFACE_PARCEL_SIZE_LIMIT) {
+        BLOGE("The size of damages read from message parcel exceed the limit");
+        return;
+    }
     config.damages.clear();
     config.damages.reserve(size);
     for (uint32_t i = 0; i < size; i++) {
@@ -129,6 +133,10 @@ void WriteSurfaceBufferImpl(MessageParcel &parcel,
 void ReadVerifyAllocInfo(MessageParcel &parcel, std::vector<BufferVerifyAllocInfo> &infos)
 {
     uint32_t size = parcel.ReadUint32();
+    if (size > SURFACE_PARCEL_SIZE_LIMIT) {
+        BLOGE("The size of damages read from message parcel exceed the limit 1024");
+        return;
+    }
     infos.clear();
     BufferVerifyAllocInfo info;
     for (uint32_t index = 0; index < size; index++) {
@@ -154,6 +162,10 @@ void WriteVerifyAllocInfo(MessageParcel &parcel, const std::vector<BufferVerifyA
 void ReadHDRMetaData(MessageParcel &parcel, std::vector<GraphicHDRMetaData> &metaData)
 {
     uint32_t size = parcel.ReadUint32();
+    if (size > SURFACE_PARCEL_SIZE_LIMIT) {
+        BLOGE("The size of damages read from message parcel exceed the limit 1024");
+        return;
+    }
     metaData.clear();
     GraphicHDRMetaData data;
     for (uint32_t index = 0; index < size; index++) {
@@ -175,6 +187,10 @@ void WriteHDRMetaData(MessageParcel &parcel, const std::vector<GraphicHDRMetaDat
 void ReadHDRMetaDataSet(MessageParcel &parcel, std::vector<uint8_t> &metaData)
 {
     uint32_t size = parcel.ReadUint32();
+    if (size > SURFACE_PARCEL_SIZE_LIMIT) {
+        BLOGE("The size of damages read from message parcel exceed the limit 1024");
+        return;
+    }
     metaData.clear();
     for (uint32_t index = 0; index < size; index++) {
         uint8_t data = parcel.ReadUint8();
@@ -197,6 +213,10 @@ void ReadExtDataHandle(MessageParcel &parcel, sptr<SurfaceTunnelHandle> &handle)
         return;
     }
     uint32_t reserveInts = parcel.ReadUint32();
+    if (reserveInts > SURFACE_PARCEL_SIZE_LIMIT) {
+        BLOGE("The size of damages read from message parcel exceed the limit 1024");
+        return;
+    }
     OHExtDataHandle *tunnelHandle = AllocExtDataHandle(reserveInts);
     if (tunnelHandle == nullptr) {
         BLOGE("AllocExtDataHandle failed");

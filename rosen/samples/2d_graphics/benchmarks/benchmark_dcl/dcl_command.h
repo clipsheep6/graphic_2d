@@ -21,12 +21,27 @@
 
 namespace OHOS {
 namespace Rosen {
+enum class ModeType {
+    PLAY,
+    PAUSE,
+    RESUME,
+    OTHER,
+};
+
 enum class IterateType {
     ITERATE_FRAME,
     ITERATE_OPITEM,
     ITERATE_OPITEM_MANUALLY,
     OTHER,
 };
+
+enum class SpeedType {
+    NORMAL,
+    SPEED_UP,
+    SPEED_DOWN,
+    OTHER,
+};
+
 class DCLCommand {
 public:
     DCLCommand(int32_t argc, char* argv[]);

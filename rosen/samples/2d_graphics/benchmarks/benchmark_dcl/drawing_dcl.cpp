@@ -158,7 +158,7 @@ bool DrawingDCL::GetDirectionAndStep(std::string command, bool &isMoreOps)
 
 void DrawingDCL::UpdateParametersFromDCLCommand(const DCLCommand &dclCommand)
 {
-    iterateType = dclCommand.iterateType_;
+    iterateType_ = dclCommand.iterateType_;
     beginFrame_ = dclCommand.beginFrame_;
     endFrame_ = dclCommand.endFrame_;
     loop_ = dclCommand.loop_;
@@ -186,7 +186,7 @@ void DrawingDCL::Test(SkCanvas* canvas, int width, int height)
 {
     std::cout << "DrawingDCL::Test+" << std::endl;
     auto start = std::chrono::system_clock::now();
-    switch (iterateType) {
+    switch (iterateType_) {
         case IterateType::ITERATE_FRAME:
             UpdateParameters(PlayBackByFrame(canvas));
             break;
@@ -262,6 +262,7 @@ std::string DrawingDCL::GetRealPathStr(std::string filePath)
         return realPathStr;
     }
     realPathStr = realDclFilePath;
+    free(realDclFilePath);
     realDclFilePath = nullptr;
     return realPathStr;
 }
@@ -315,6 +316,41 @@ int DrawingDCL::LoadDrawCmdList(std::string dclFile)
     std::cout << "The size of Ops is " << dcl_->GetSize() << std::endl;
         munmap(mapFile, statbuf.st_size);
     return 0;
+}
+
+void DrawingDCL::SetModeType(ModeType modeType)
+{
+    this->modeType_ = modeType;
+}
+
+ModeType DrawingDCL::GetModeType() const
+{
+    return this->modeType_;
+}
+
+void DrawingDCL::SetIterateType(IterateType iterateType)
+{
+    this->iterateType_ = iterateType;
+}
+
+void DrawingDCL::SetSpeedType(SpeedType speedType)
+{
+    this->speedType_ = speedType;
+}
+
+void DrawingDCL::SetDestOpItemId(int destOpItemId)
+{
+    this->destOpItemId_ = destOpItemId;
+}
+
+bool DrawingDCL::GetLoadDclError() const
+{
+    return this->loadDclError;
+}
+
+int DrawingDCL::GetCurOpItemId() const
+{
+    return this->curOpItemId_;
 }
 }
 }

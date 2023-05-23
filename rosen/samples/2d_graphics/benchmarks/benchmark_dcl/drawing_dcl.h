@@ -49,18 +49,24 @@ public:
     std::string GetRealPathStr(std::string filePath);
     bool IsValidFile(std::string realPathStr);
 
-    void SetIterateType(IterateType type);
+    void SetModeType(ModeType modeType);
+    void SetIterateType(IterateType iterateType);
+    void SetSpeedType(SpeedType speedType);
+    void SetDestOpItemId(int destOpItemId);
 
 private:
     friend class DCLCommand;
     const static size_t recordingParcelMaxCapcity_ = 234 * 1000 * 1024;
     inline const static std::string dclFileDir_ = "/data/";
     DrawCmdList* dcl_ = nullptr;
+    ModeType modeType_ = ModeType::PLAY;
     IterateType iterateType = IterateType::ITERATE_FRAME;
+    SpeedType speedType_ = SpeedType::NORMAL;
     int beginFrame_ = 0;
     int endFrame_ = 100;
     int curFrame_ = 0;
     int curOpItemId_ = 0;
+    int destOpItemId_ = -1;
     int loop_ = 1;
     double opItemStep_ = 1;
     std::string inputFilePath_ = "/data/lkx/";

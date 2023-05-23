@@ -39,29 +39,36 @@ void DdThreadSocket::Process(std::shared_ptr<DrawingDCL> drawingDcl) const
     ddSocket.Close();
 }
 
-void DdThreadSocket::HandleMsg(DdServerSocket &ddSocket, std::shared_ptr<DrawingDCL> drawingDcl) const
+bool DdThreadSocket::HandleMsgParams(DdServerSocket &ddSocket, std::shared_ptr<DrawingDCL> drawingDcl,
+    Json::Value& clientJsonRoot)
 {
-
-    if (!clientJsonRoot.isMember("params") || !clientJsonRoot["params"].isMember("mode")) {
-        std::cout << "The \'params\' or \'mode\' property not found" << std::endl;
-        serverJsonRoot["retCode"] = std::to_string(static_cast<int>(ReturnCode::PARSE_FAIL));
+    if (!clientJsonRoot.isMember("params")) {
+        return false;
     }
-    switch (commandMap_.at(clientJsonRoot['params']["mode"])) {
-        case CommandType::MULTIPLE_FRAMES:
-            drawingDcl->SetIterateType(IterateType::ITERATE_FRAME);
-            break;
-        case CommandType::SINGLE_FRAME:
-            drawingDcl->SetIterateType(IterateType::ITERATE_OPITEM);
-            
-            break;
-        case CommandType::SINGLE_OPERATER:
-            drawingDcl->SetIterateType(IterateType::ITERATE_OPITEM_MANUALLY);
-            break;
-        default:
-            std::cout << "Invalid mode type." << std::endl;
-            break;
+    if (clientJsonRoot["params"].isMember("mode")) {
+        std::string iterateStr = clientJsonRoot["params"]["mode"].asString();
+        if (iterateCmdType_.at(iterateStr) == iterateCmdType_.end()){
+            std::cout << "Invalid iterate type." << std::endl;
+            return false;
+        } else {
+            drawingDcl->SetIterateType(iterateCmdMap_.at(iterateStr));
+        }
     }
+    if (clientJsonRoot["params"].isMember("speed")) {
+        std::string speedStr = clientJsonRoot["params"]["speed"].asString();
+        if (speedCommandMap_.find(speedStr) == speedCommandMap_.end()){
+            std::cout << "Invalid speed type." << std::endl;
+            return false;
+        } else {
+            drawingDcl->SetSpeedType(speedCommandMap_.at(speedStr));
+        }
     }
+    if (clientJsonRoot["params"].isMember("indicator")) {
+        int opId = clientJsonRoot["params"]["indicator"].asInt();
+        drawingDcl->SetDestOpItemId(opId);
+    }
+    return true;
+}
 
 void DdThreadSocket::HandleMsg(DdServerSocket &ddSocket, std::shared_ptr<DrawingDCL> drawingDcl) const
 {
@@ -75,51 +82,21 @@ void DdThreadSocket::HandleMsg(DdServerSocket &ddSocket, std::shared_ptr<Drawing
         isSucess = false;
         serverJsonRoot["retCode"] = std::to_string(static_cast<int>(ReturnCode::PARSE_FAIL));
         serverJsonRoot["result"] = "fail";
-    } else if(!clientJsonRoot.isMember("cmd") || commandMap_.find(clientJsonRoot["cmd"]) == commandMap_.end()){
+    } else if(!clientJsonRoot.isMember("cmd") || modeCmdMap_.find(clientJsonRoot["cmd"]) == modeCmdMap_.end()){
         std::cout << "The \'cmd\' property not found or invalid cmd type." << std::endl;
     } else {
-        switch (commandMap_.at(clientJsonRoot["cmd"])) {
-            case CommandType::PLAY:
-                HandleMsgParams();
-                break;
-            case CommandType::STOP
-            default:
-                break;
-        }
+        drawingDcl->SetModeType(modeCmdMap_.at(clientJsonRoot["cmd"].asString()));
+        isSuccess = HandleMsgParams();
     }
+
     if (isSucess) {
         serverJsonRoot["retCode"] = std::to_string(static_cast<int>(ReturnCode::SUCCESS));
         serverJsonRoot["result"] = "SUCCESS";
     } else {
+        serverJsonRoot["retCode"] = std::to_string(static_cast<int>(ReturnCode::PARSE_FAIL));
         serverJsonRoot["result"] = "FAIL";
     }
-    auto iterator = messageMap.begin();
-    while (iterator != messageMap.end()) {
-        if (SPUtils::IsSubString(spSocket.RecvBuf(), iterator->second)) {
-            SpProfiler *profiler = SpProfilerFactory::GetProfilerItem(iterator->first);
-            if (profiler == nullptr && (iterator->first == MessageType::SET_PKG_NAME)) {
-                std::string curPkgName = ResPkgOrPid(spSocket);
-                SpProfilerFactory::SetProfilerPkg(curPkgName);
-                std::string pidCmd = "pidof " + curPkgName;
-                std::string pidResult;
-                if (SPUtils::LoadCmd(pidCmd, pidResult)) {
-                    SpProfilerFactory::SetProfilerPid(pidResult);
-                }
-                spSocket.Sendto(curPkgName);
-            } else if (profiler == nullptr && (iterator->first == MessageType::SET_PROCESS_ID)) {
-                SpProfilerFactory::SetProfilerPid(ResPkgOrPid(spSocket));
-            } else if (profiler == nullptr) {
-                std::string returnStr = iterator->second;
-                spSocket.Sendto(returnStr);
-            } else {
-                std::map<std::string, std::string> data = profiler->ItemData();
-                std::string sendData = MapToString(data);
-                spSocket.Sendto(sendData);
-            }
-            break;
-        }
-        ++iterator;
-    }
+    ddSocket.Send(serverJsonRoot.toStyledString());
 }
 }
 }

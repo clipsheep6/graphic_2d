@@ -34,24 +34,24 @@ private:
         PARSE_FAIL,
         EXECUTE_FAIL,
     };
-    enum class CommandType {
-        PLAY,
-        PAUSE,
-        RESUME,
-        STOP,
-        MULTIPLE_FRAMES,
-        SINGLE_FRAME,
-        SINGLE_OPERATER,
+
+    const std::unordered_map<std::string, ModeType> modeCmdMap_ = {
+        { std::string("play"), ModeType::PLAY },
+        { std::string("pause"), ModeType::PAUSE },
+        { std::string("resume"), ModeType::RESUME },
     };
 
-    const std::unordered_map<std::string, CommandType> commandMap_ = {
-        { std::string("play"), CommandType::PLAY },
-        { std::string("pause"), CommandType::PAUSE },
-        { std::string("resume"), CommandType::RESUME },
-        { std::string("MULTIPLE_FRAMES"), CommandType::MULTIPLE_FRAMES },
-        { std::string("SINGLE_FRAME"), CommandType::SINGLE_FRAME },
-        { std::string("SINGLE_OPERATER"), CommandType::SINGLE_OPERATER },
+    const std::unordered_map<std::string, IterateType> iterateCmdType_ = {
+        { std::string("MULTIPLE_FRAMES"), IterateType::MULTIPLE_FRAMES },
+        { std::string("SINGLE_FRAME"), IterateType::SINGLE_FRAME },
+        { std::string("SINGLE_OPERATER"), IterateType::ITERATE_OPITEM_MANUALLY },
     };
+
+    const std::unordered_map<std::string, SpeedType> speedCmdMap_ = {
+    { std::string("SPEEDDOWN"), SpeedType::SPEEDDOWN },
+    { std::string("NORMAL"), SpeedType::NORMAL },
+    { std::string("SPEEDUP"), SpeedType::SPEEDUP },
+};
 };
 }
 }

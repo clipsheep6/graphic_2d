@@ -21,6 +21,7 @@ ohos_unittest("2d_graphics_image_test") {
 
   sources = [
     "bitmap_test.cpp",
+    "gpu_context_test.cpp",
     "image_test.cpp",
     "picture_test.cpp",
   ]

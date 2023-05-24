@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine/ace_config.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 ohos_executable("drawing_engine_sample") {
@@ -88,8 +89,14 @@ ohos_executable("drawing_engine_sample") {
     "$graphic_2d_root:libsurface",
     "$graphic_2d_root/rosen/modules/composer:libcomposer",
     "$graphic_2d_root/utils:sync_fence",
-    "//third_party/flutter/build/skia:ace_skia_ohos",
   ]
+
+  if (defined(use_new_skia) && use_new_skia) {
+    deps += [ "//third_party/skia:skia_ohos" ]
+  } else {
+    deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  }
+
   public_deps = libgl
   defines = gpu_defines
 

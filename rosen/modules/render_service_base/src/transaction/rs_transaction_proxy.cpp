@@ -135,14 +135,27 @@ void RSTransactionProxy::FlushImplicitTransactionFromRT(uint64_t timestamp)
     }
 }
 
-void RSTransactionProxy::StartSyncTransaction()
+bool RSTransactionProxy::StartSyncTransaction()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
+    startCount_++;
+    if (needSync_) {
+        return false;
+    }
     needSync_ = true;
+    return true;
 }
 
-void RSTransactionProxy::CloseSyncTransaction()
+bool RSTransactionProxy::CloseSyncTransaction()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
+    startCount_--;
+    if (startCount_ > 0) {
+        return false;
+    }
+    startCount_ = 0;
     needSync_ = false;
+    return true;
 }
 
 void RSTransactionProxy::Begin()

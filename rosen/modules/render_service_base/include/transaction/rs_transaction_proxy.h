@@ -51,8 +51,8 @@ public:
     void MarkTransactionNeedSync();
     void MarkTransactionNeedCloseSync(const int32_t transactionCount);
 
-    void StartSyncTransaction();
-    void CloseSyncTransaction();
+    bool StartSyncTransaction();
+    bool CloseSyncTransaction();
 
     void SetSyncId(const uint64_t syncId)
     {
@@ -92,6 +92,7 @@ private:
     static RSTransactionProxy* instance_;
     bool needSync_ { false };
     uint64_t syncId_ { 0 };
+    int32_t startCount_ { 0 };
 };
 } // namespace Rosen
 } // namespace OHOS

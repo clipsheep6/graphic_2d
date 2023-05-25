@@ -29,10 +29,11 @@
 #define RS_TRACE_INT(name, value) CountTrace(HITRACE_TAG_GRAPHIC_AGP, name, value)
 #define RS_TRACE_FUNC() RS_TRACE_NAME(__func__)
 #else
-#define ROSEN_TRACE_BEGIN(tag, name)
-#define RS_TRACE_BEGIN(name)
-#define ROSEN_TRACE_END(tag)
-#define RS_TRACE_END()
+#include "foundation/appframework/graphic_2d/android/rs_trace_android.h"
+#define ROSEN_TRACE_BEGIN(tag, name) RosenTraceBegin(name)
+#define RS_TRACE_BEGIN(name) RosenTraceBegin(name)
+#define ROSEN_TRACE_END(tag) RosenTraceEnd()
+#define RS_TRACE_END() RosenTraceEnd()
 #define RS_TRACE_NAME(name)
 #define RS_TRACE_NAME_FMT(fmt, ...)
 #define RS_ASYNC_TRACE_BEGIN(name, value)

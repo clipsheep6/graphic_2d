@@ -233,13 +233,18 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilt
         skPath = properties.GetClipBounds()->GetSkiaPath();
         canvas.clipPath(skPath, SkClipOp::kDifference, true);
     } else {
-        if (rrect != nullptr) {
+        float shadowAlpha = properties.GetShadowAlpha();
+	if (rrect != nullptr) {
             skPath.addRRect(RRect2SkRRect(*rrect));
-            canvas.clipRRect(RRect2SkRRect(*rrect), SkClipOp::kDifference, true);
-        } else {
+            if (shadowAlpha == 1.0f) {
+		canvas.clipRRect(RRect2SkRRect(*rrect), SkClipOp::kDifference, true);
+	    }
+	} else {
             skPath.addRRect(RRect2SkRRect(properties.GetRRect()));
-            canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), SkClipOp::kDifference, true);
-        }
+            if (shadowAlpha == 1.0f) {
+	        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), SkClipOp::kDifference, true);
+	    }
+	}
     }
     if (properties.GetShadowMask()) {
         DrawColorfulShadowInner(properties, canvas, skPath);

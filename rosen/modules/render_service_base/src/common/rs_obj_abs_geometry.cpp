@@ -107,7 +107,8 @@ void RSObjAbsGeometry::UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& par
         absMatrix_->preTranslate(offset->x(), offset->y());
     }
 #else
-    if (absMatrix_.has_value() && offset.has_value() && !((offset.value().GetX() == 0) && (offset.value().GetY() == 0))) {
+    if (absMatrix_.has_value() && offset.has_value() &&
+        !((offset.value().GetX() == 0) && (offset.value().GetY() == 0))) {
         absMatrix_->PreTranslate(offset->GetX(), offset->GetY());
     }
 #endif
@@ -175,7 +176,6 @@ void RSObjAbsGeometry::UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& par
         width_ = mappedClipRect.width();
         height_ = mappedClipRect.height();
 #else
-        //if (matrix_ != Drawing::Matrix()) {
         if (matrix_.Get(Drawing::Matrix::Index::SCALE_X) == 1 && matrix_.Get(Drawing::Matrix::Index::SCALE_Y) == 1 &&
             matrix_.Get(Drawing::Matrix::Index::PERSP_2) == 1) {
             Drawing::Matrix invertMatrix;
@@ -277,7 +277,6 @@ void RSObjAbsGeometry::UpdateAbsMatrix2D()
             Drawing::Matrix other;
             other.Rotate(trans_->rotation_, trans_->pivotX_ * width_, trans_->pivotY_ * height_);
             matrix_.PreConcat(other);
-            //matrix_.PreRotate(trans_->rotation_, trans_->pivotX_ * width_, trans_->pivotY_ * height_);
 #endif
         }
         // Scale
@@ -290,7 +289,6 @@ void RSObjAbsGeometry::UpdateAbsMatrix2D()
                 other.Scale(trans_->scaleX_, trans_->scaleY_, trans_->pivotX_ * width_, trans_->pivotY_ * height_);
                 matrix_.PreConcat(other);
             }
-            //matrix_.PreScale(trans_->scaleX_, trans_->scaleY_, trans_->pivotX_ * width_, trans_->pivotY_ * height_);
 #endif
         }
     }
@@ -520,8 +518,10 @@ RectI RSObjAbsGeometry::MapAbsRect(const RectF& rect) const
 #else
         absRect.left_ = static_cast<int>(rect.left_ + matrix.Get(Drawing::Matrix::TRANS_X));
         absRect.top_ = static_cast<int>(rect.top_ + matrix.Get(Drawing::Matrix::TRANS_Y));
-        float right = rect.left_ + matrix.Get(Drawing::Matrix::TRANS_X) + rect.width_ * matrix.Get(Drawing::Matrix::SCALE_X);
-        float bottom = rect.top_ + matrix.Get(Drawing::Matrix::TRANS_Y) + rect.height_ * matrix.Get(Drawing::Matrix::SCALE_Y);
+        float right = rect.left_ + matrix.Get(Drawing::Matrix::TRANS_X) +
+            rect.width_ * matrix.Get(Drawing::Matrix::SCALE_X);
+        float bottom = rect.top_ + matrix.Get(Drawing::Matrix::TRANS_Y) +
+            rect.height_ * matrix.Get(Drawing::Matrix::SCALE_Y);
         absRect.width_ = static_cast<int>(std::ceil(right - absRect.left_));
         absRect.height_ = static_cast<int>(std::ceil(bottom - absRect.top_));
 #endif

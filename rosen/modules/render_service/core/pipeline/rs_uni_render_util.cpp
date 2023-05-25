@@ -272,10 +272,11 @@ bool RSUniRenderUtil::HandleCachedNode(const RSRenderNode& node, RSPaintFilterCa
         return false;
     }
     RS_TRACE_NAME_FMT("Handle Cached Node %llu", node.GetId());
-    if (!node.HasCachedTexture()) {
-        RSParallelRenderManager::Instance()->WaitNodeTask(node.GetId());
-    }
+#ifdef NEW_SKIA
+    RSParallelRenderManager::Instance()->DrawCacheSurface(canvas, node);
+#else
     node.DrawCacheSurface(canvas);
+#endif
     return true;
 }
 
@@ -328,6 +329,7 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
             node->SetIsMainThreadNode(false);
         } else {
             subThreadNodes.emplace_back(node);
+            node->UpdateCacheSurfaceDirtyManager(2);
             node->SetIsMainThreadNode(false);
             if (node->GetCacheSurface()) {
                 node->UpdateCompletedCacheSurface();

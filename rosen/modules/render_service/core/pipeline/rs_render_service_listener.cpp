@@ -90,7 +90,7 @@ void RSRenderServiceListener::OnGoBackground()
         node->ResetBufferAvailableCount();
         node->CleanCache();
         if (node->IsLastFrameHardwareEnabled()) {
-            node->SetDirty();
+            node->SetBufferContentDirty();
             RSMainThread::Instance()->AddActivePid(ExtractPid(node->GetId()));
         }
         node->ResetHardwareEnabledStates();

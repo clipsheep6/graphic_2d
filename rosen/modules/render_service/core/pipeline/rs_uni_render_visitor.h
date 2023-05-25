@@ -60,6 +60,7 @@ public:
     void ProcessRootRenderNode(RSRootRenderNode& node) override;
     void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
 
+    void UpdateCacheRenderNodeMap(RSRenderNode& node);
     bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
     bool ParallelComposition(const std::shared_ptr<RSBaseRenderNode> rootNode);
     void CopyVisitorInfos(std::shared_ptr<RSUniRenderVisitor> visitor);
@@ -207,6 +208,11 @@ private:
      */
     bool CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& node);
     void PrepareTypesOfSurfaceRenderNodeBeforeUpdate(RSSurfaceRenderNode& node);
+    // judge if node's cache changes
+    void UpdateIfCacheChanges(RSBaseRenderNode& node);
+    // set node cacheable animation after checking whold child tree
+    void SetNodeCacheChangeStatus(RSBaseRenderNode& node);
+
     bool IsHardwareComposerEnabled();
 
     void ClearTransparentBeforeSaveLayer();
@@ -239,6 +245,7 @@ private:
     std::unique_ptr<RSRenderFrame> renderFrame_;
     std::shared_ptr<RSPaintFilterCanvas> canvas_;
     std::map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> dirtySurfaceNodeMap_;
+    std::map<NodeId, uint32_t> cacheRenderNodeMap_;
     SkRect boundsRect_ {};
     Gravity frameGravity_ = Gravity::DEFAULT;
 
@@ -271,6 +278,8 @@ private:
     PartialRenderType partialRenderType_;
     DirtyRegionDebugType dirtyRegionDebugType_;
     bool isDirty_ = false;
+    bool isDrawingCacheEnabled_ = false;
+    bool isDrawingCacheChanged_ = false;
     bool needFilter_ = false;
     ColorGamut newColorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
     std::vector<ScreenColorGamut> colorGamutModes_;

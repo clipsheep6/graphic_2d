@@ -556,10 +556,31 @@ void RSSurfaceRenderNode::SetStartAnimationFinished()
 bool RSSurfaceRenderNode::UpdateDirtyIfFrameBufferConsumed()
 {
     if (isCurrentFrameBufferConsumed_) {
-        SetDirty();
+        SetBufferContentDirty();
         return true;
     }
     return false;
+}
+
+void RSSurfaceRenderNode::SetBufferContentDirty()
+{
+    isBufferContentDirty_ = true;
+}
+
+bool RSSurfaceRenderNode::IsDirty() const
+{
+    return RSRenderNode::IsDirty() || isBufferContentDirty_;
+}
+
+bool RSSurfaceRenderNode::IsContentDirty() const
+{
+    return RSRenderNode::IsContentDirty() || isBufferContentDirty_;
+}
+
+void RSSurfaceRenderNode::SetClean()
+{
+    RSRenderNode::SetClean();
+    isBufferContentDirty_ = false;
 }
 
 void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& region,

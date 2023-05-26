@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <atomic>
+
 #include "ui/rs_ui_director.h"
 
 #include "rs_trace.h"
@@ -50,6 +52,7 @@
 namespace OHOS {
 namespace Rosen {
 static TaskRunner g_uiTaskRunner;
+static std::atomic_bool g_instance_valid = false;
 
 std::shared_ptr<RSUIDirector> RSUIDirector::Create()
 {
@@ -58,7 +61,13 @@ std::shared_ptr<RSUIDirector> RSUIDirector::Create()
 
 RSUIDirector::~RSUIDirector()
 {
+    g_instance_valid.store(false);
     Destroy();
+}
+
+RSUIDirector::RSUIDirector()
+{
+    g_instance_valid.store(true);
 }
 
 void RSUIDirector::Init(bool shouldCreateRenderThread)
@@ -277,6 +286,9 @@ void RSUIDirector::RecvMessages(std::shared_ptr<RSTransactionData> cmds)
 
 void RSUIDirector::ProcessMessages(std::shared_ptr<RSTransactionData> cmds)
 {
+    if (!g_instance_valid.load()) {
+        return;
+    }
     static RSContext context; // RSCommand->process() needs it
     cmds->Process(context);
 }

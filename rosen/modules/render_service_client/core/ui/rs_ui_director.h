@@ -67,7 +67,7 @@ private:
     static void AnimationCallbackProcessor(NodeId nodeId, AnimationId animId, AnimationCallbackEvent event);
     static void PostTask(const std::function<void()>& task);
 
-    RSUIDirector() = default;
+    RSUIDirector();
     RSUIDirector(const RSUIDirector&) = delete;
     RSUIDirector(const RSUIDirector&&) = delete;
     RSUIDirector& operator=(const RSUIDirector&) = delete;

@@ -38,6 +38,8 @@ public:
     static void DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
         std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect = nullptr,
         SkSurface* sKSurface = nullptr);
+    static void DrawLinearGradientBlurFilter(const RSProperties& properties, 
+                                RSPaintFilterCanvas& canvas, const std::unique_ptr<SkRect>& rect);
     static void DrawForegroundColor(const RSProperties& properties, SkCanvas& canvas);
     static void DrawMask(const RSProperties& properties, SkCanvas& canvas);
     static void DrawMask(const RSProperties& properties, SkCanvas& canvas, SkRect maskBounds);

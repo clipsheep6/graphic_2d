@@ -96,6 +96,11 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     if (filter != nullptr) {
         RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, filter, nullptr, canvas.GetSurface());
     }
+    auto para = GetRenderProperties().GetLinearGradientBlurPara();
+    if (filter != nullptr) {
+        RSPropertiesPainter::DrawLinearGradientBlurFilter(GetRenderProperties(), canvas, nullptr);
+    }
+
     ApplyDrawCmdModifier(context, RSModifierType::BACKGROUND_STYLE);
 
     canvasNodeSaveCount_ = canvas.Save();

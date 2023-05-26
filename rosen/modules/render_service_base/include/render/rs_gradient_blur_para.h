@@ -47,7 +47,7 @@ public:
         fractionStops_ = fractionStops;
         direction_ = direction;
     }
-    ~RSLinearGradientBlurPara();
+    ~RSLinearGradientBlurPara() = default;
 };
 } // namespace Rosen
 } // namespace OHOS

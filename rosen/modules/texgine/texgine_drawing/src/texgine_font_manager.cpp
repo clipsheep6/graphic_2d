@@ -16,7 +16,7 @@
 #include "texgine_font_manager.h"
 
 #include <mutex>
-
+#include "texgine/utils/exlog.h"
 #include "texgine_font_style_set.h"
 
 namespace OHOS {

@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
-is_ok = false
+is_ok = true
 
 ## Build libtexgine.so {{{
 config("libtexgine_config") {

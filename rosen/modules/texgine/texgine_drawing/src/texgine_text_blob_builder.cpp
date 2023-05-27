@@ -15,6 +15,7 @@
 
 #include "texgine_text_blob_builder.h"
 
+#include "texgine/utils/exlog.h"
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -23,17 +24,17 @@ std::shared_ptr<SkTextBlobBuilder> TexgineTextBlobBuilder::GetTextBlobBuilder() 
     return textBlobBuilder_;
 }
 
-TexgineTextBlobBuilder::RunBuffer &TexgineTextBlobBuilder::AllocRunPos(const TexgineFont &font, int count)
+std::shared_ptr<TexgineTextBlobBuilder::RunBuffer> TexgineTextBlobBuilder::AllocRunPos(const TexgineFont &font, int count)
 {
     if (textBlobBuilder_ == nullptr || font.GetFont() == nullptr) {
-        return NULL;
+        return nullptr;
     }
 
     auto &runBuffer = textBlobBuilder_->allocRunPos(*font.GetFont(), count);
-    buffer_.glyphs = runBuffer.glyphs;
-    buffer_.pos = runBuffer.pos;
-    buffer_.utf8text = runBuffer.utf8text;
-    buffer_.clusters = runBuffer.clusters;
+    buffer_->glyphs = runBuffer.glyphs;
+    buffer_->pos = runBuffer.pos;
+    buffer_->utf8Text = runBuffer.utf8text;
+    buffer_->clusters = runBuffer.clusters;
     return buffer_;
 }
 

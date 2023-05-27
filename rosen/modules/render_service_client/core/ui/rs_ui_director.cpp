@@ -266,17 +266,25 @@ void RSUIDirector::RecvMessages()
     RecvMessages(transactionDataPtr);
 }
 
+std::atomic_int g_cnt = 0;
+
 void RSUIDirector::RecvMessages(std::shared_ptr<RSTransactionData> cmds)
 {
     if (cmds == nullptr || cmds->IsEmpty()) {
         return;
     }
     ROSEN_LOGD("RSUIDirector::RecvMessages success");
-    PostTask([cmds]() { RSUIDirector::ProcessMessages(cmds); });
+    PostTask([cmds]() {
+        ROSEN_LOGE("RSUIDirector::RecvMessages task inner");
+        if (g_cnt < 10) {
+            RSUIDirector::ProcessMessages(cmds);
+        } 
+    });
 }
 
 void RSUIDirector::ProcessMessages(std::shared_ptr<RSTransactionData> cmds)
 {
+    ROSEN_LOGE("RSUIDirector::ProcessMessages");
     static RSContext context; // RSCommand->process() needs it
     cmds->Process(context);
 }
@@ -289,6 +297,7 @@ void RSUIDirector::AnimationCallbackProcessor(NodeId nodeId, AnimationId animId,
             ROSEN_LOGE("RSUIDirector::AnimationCallbackProcessor, could not find animation %" PRIu64 " on node %" PRIu64
                        ".", animId, nodeId);
         }
+        g_cnt++;
         return;
     }
 
@@ -308,7 +317,7 @@ void RSUIDirector::PostTask(const std::function<void()>& task)
         ROSEN_LOGE("RSUIDirector::PostTask, uiTaskRunner is null");
         return;
     }
-    ROSEN_LOGD("RSUIDirector::PostTask success");
+    ROSEN_LOGE("RSUIDirector::PostTask uiTaskRunner is not null");
     g_uiTaskRunner(task);
 }
 } // namespace Rosen

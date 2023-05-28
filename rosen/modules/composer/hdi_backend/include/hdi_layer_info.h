@@ -241,7 +241,7 @@ public:
         return acquireFence_;
     }
 
-    /* const */ GraphicLayerAlpha& GetAlpha()
+    GraphicLayerAlpha& GetAlpha()
     {
         return layerAlpha_;
     }
@@ -271,12 +271,12 @@ public:
         return blendType_;
     }
 
-    /* const */ GraphicIRect& GetCropRect()
+    GraphicIRect& GetCropRect()
     {
         return cropRect_;
     }
 
-    /* const */ GraphicIRect& GetLayerSize()
+    GraphicIRect& GetLayerSize()
     {
         return layerRect_;
     }
@@ -452,7 +452,7 @@ private:
     sptr<SurfaceBuffer> sbuffer_ = nullptr;
     sptr<SurfaceBuffer> pbuffer_ = nullptr;
     bool preMulti_ = false;
-    LayerMask layerMask_ = LayerMask::LAYER_MASK_NORMAL; 
+    LayerMask layerMask_ = LayerMask::LAYER_MASK_NORMAL;
 };
 } // namespace Rosen
 } // namespace OHOS

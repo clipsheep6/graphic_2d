@@ -217,14 +217,24 @@ void RSSurfaceRenderNode::SetCacheSurfaceDirtyManagerOffset()
     }
     int offsetX = 0;
     int offsetY = 0;
-    if (node.GetRenderProperties().IsShadowValid()) {
-        auto& property = node.GetMutableRenderProperties();
+    if (GetRenderProperties().IsShadowValid()) {
+        auto& property = GetRenderProperties();
         auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
         auto absRect = geoPtr->GetAbsRect();
-        offSetX = - absRect.left_ + node.GetShadowRectOffsetX();
-        offSetY = - absRect.top + node.GetShadowRectOffsetY();
+        offsetX = - absRect.left_ + GetShadowRectOffsetX();
+        offsetY = - absRect.top_ + GetShadowRectOffsetY();
     }
-    cacheSurfaceDirtyManager_->SetOffset(offSetX, offSetY);
+    cacheSurfaceDirtyManager_->SetOffset(offsetX, offsetY);
+
+    // if subthread task is run in leashwindownode, set dirtymanager offset to nested appsurface too
+    if (IsLeashWindow()) {
+        auto appSurfaceNodePtr = GetLeashWindowNestedAppSurface();
+        if (appSurfaceNodePtr) {
+            if (appSurfaceNodePtr->GetCacheSurfaceDirtyManager()) {
+                appSurfaceNodePtr->GetCacheSurfaceDirtyManager()->SetOffset(offsetX, offsetY);
+            }
+        }
+    }
 }
 
 void RSSurfaceRenderNode::ResetParent()
@@ -659,6 +669,38 @@ bool RSSurfaceRenderNode::SubNodeIntersectWithDirty(const RectI& r) const
     return false;
 }
 
+bool RSSurfaceRenderNode::SubNodeIntersectWithCacheDirty(const RectI& r) const
+{
+    Occlusion::Rect nodeRect { r.left_, r.top_, r.GetRight(), r.GetBottom() };
+    auto dirtyRegion = cacheSurfaceDirtyManager_->GetDirtyRegion();
+    auto intersectRes = dirtyRegion.IntersectRect(r);
+    return !intersectRes.IsEmpty();
+
+}
+
+void RSSurfaceRenderNode::SetCacheSurfaceClip(std::shared_ptr<RSPaintFilterCanvas> canvas)
+{
+    if (cacheSurfaceDirtyManager_ == nullptr) {
+        return;
+    }
+    auto dirtyRect = cacheSurfaceDirtyManager_->GetOffsetedDirtyRegion();
+    if (!dirtyRect.IsEmpty()) {
+        auto skRect = SkRect::MakeXYWH(dirtyRect.left_, dirtyRect.top_, dirtyRect.width_, dirtyRect.height_);
+        canvas->clipRect(skRect);
+    }
+    if (IsLeashWindow() && dirtyRect.IsEmpty()) {
+        // if leashwindow dirtymanager is not empty, then we already has a larger clip
+        // else, we need to clip nested appwindows dirtyregion
+        auto surfaceNodePtr = GetLeashWindowNestedAppSurface();
+        if (surfaceNodePtr && surfaceNodePtr->cacheSurfaceDirtyManager_) {
+            auto appWindowDirtyRect = surfaceNodePtr->cacheSurfaceDirtyManager_->GetOffsetedDirtyRegion();
+            auto appWindowDirtySkRect = SkRect::MakeXYWH(appWindowDirtyRect.left_, appWindowDirtyRect.top_,
+                appWindowDirtyRect.width_, appWindowDirtyRect.height_);
+            canvas->clipRect(appWindowDirtySkRect);
+        }
+    }
+}
+
 bool RSSurfaceRenderNode::SubNodeNeedDraw(const RectI &r, PartialRenderType opDropType) const
 {
     if (dirtyManager_ == nullptr) {
@@ -674,11 +716,34 @@ bool RSSurfaceRenderNode::SubNodeNeedDraw(const RectI &r, PartialRenderType opDr
             return SubNodeVisible(r) && (SubNodeIntersectWithDirty(r) ||
                 SubNodeIntersectWithExtraDirtyRegion(r));
         case PartialRenderType::DISABLED:
+            [[fallthrough]];
         case PartialRenderType::SET_DAMAGE:
+            [[fallthrough]];
         default:
             return true;
     }
     return true;
+}
+
+bool RSSurfaceRenderNode::SubNodeNeedDrawInCacheThread(const RectI &r, PartialRenderType opDropType) const
+{
+    if (cacheSurfaceDirtyManager_ == nullptr) {
+        return true;
+    }
+    switch (opDropType) {
+        case PartialRenderType::SET_DAMAGE_AND_DROP_OP:
+            [[fallthrough]];
+        case PartialRenderType::SET_DAMAGE_AND_DROP_OP_OCCLUSION:
+            [[fallthrough]];
+        case PartialRenderType::SET_DAMAGE_AND_DROP_OP_NOT_VISIBLEDIRTY:
+            return SubNodeIntersectWithCacheDirty(r);
+        case PartialRenderType::DISABLED:
+            [[fallthrough]];
+        case PartialRenderType::SET_DAMAGE:
+            [[fallthrough]];
+        default:
+            return true;
+    }
 }
 
 void RSSurfaceRenderNode::ResetSurfaceOpaqueRegion(const RectI& screeninfo, const RectI& absRect,

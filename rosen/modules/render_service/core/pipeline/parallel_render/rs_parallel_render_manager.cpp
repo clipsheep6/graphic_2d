@@ -488,6 +488,7 @@ void RSParallelRenderManager::SubmitSubThreadTask(const std::shared_ptr<RSDispla
             continue;
         }
         // skip static subthread cache surface render task
+        // update cache surface dirty manager if and only if dirtyRegion of (leashwindow and appwindow) is not empty
         if (surfaceNode->IsCurrentFrameStatic() && surfaceNode->HasCachedTexture()) {
             continue;
         }

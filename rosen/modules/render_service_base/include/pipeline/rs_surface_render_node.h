@@ -491,9 +491,17 @@ public:
 
     bool SubNodeIntersectWithDirty(const RectI& r) const;
 
+    bool SubNodeIntersectWithCacheDirty(const RectI& r) const;
+
+    // Set cache canvas's clipregion according to leashwindow and appwindow dirtymanager
+    void SetCacheSurfaceClip(std::shared_ptr<RSPaintFilterCanvas> canvas);
+
     // judge if a rect r is intersect with existing dirtyregion, include current surfacenode's dirtyregion, display
     // dirtyregion, and dirtyregion from other surfacenode because of 32/64 bits alignment.
     bool SubNodeNeedDraw(const RectI& r, PartialRenderType opDropType) const;
+
+    // judge if a rect r is intersect with cursurface dirtyregion
+    bool SubNodeNeedDrawInCacheThread(const RectI& r, PartialRenderType opDropType) const;
 
     bool GetZorderChanged() const
     {
@@ -642,7 +650,7 @@ public:
     {
         return submittedSubThreadIndex_;        
     }
-    void SetCacheSurfaceDirtyManagerOffset(int x, int y);
+    void SetCacheSurfaceDirtyManagerOffset();
 
 private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);

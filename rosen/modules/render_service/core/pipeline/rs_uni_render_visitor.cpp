@@ -2202,16 +2202,9 @@ bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node)
 
     swap(cacheCanvas, canvas_);
     // when cache surface render node in subthread, canvas dirtyregion is used
-    if (node.IsInstanceOf<RSSurfaceRenderNode>()) {
-        auto surfaceNodePtr = node.ReinterpretCastTo<RSSurfaceRenderNode>();
-        auto cacheSurfaceDirtyManager = surfaceNodePtr->GetCacheSurfaceDirtyManager();
-        if (cacheSurfaceDirtyManager != nullptr) {
-            auto dirtyRect = cacheSurfaceDirtyManager->GetOffsetedDirtyRegion();
-            if (!dirtyRect.IsEmpty()) {
-                auto skRect = SkRect::MakeXYWH(dirtyRect.left_, dirtyRect.top_, dirtyRect.width_, dirtyRect.height_);
-                canvas_->clipRect(skRect);
-            }
-        }
+    if (node.IsInstanceOf<RSSurfaceRenderNode>() && isUIFirst_) {
+        auto surfacenode = node.ReinterpretCastTo<RSSurfaceRenderNode>();
+        surfacenode->SetCacheSurfaceClip(canvas_);
     }
     // When cacheType == CacheType::ANIMATE_PROPERTY,
     // we should draw AnimateProperty on cacheCanvas
@@ -2372,10 +2365,15 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         AdjustLocalZOrder(curSurfaceNode_);
     }
     // skip clean surface node
-    if (isOpDropped_ && node.IsAppWindow() &&
+    if (!(isUIFirst_ && isSubThread_) && isOpDropped_ && node.IsAppWindow() &&
         !node.SubNodeNeedDraw(node.GetOldDirtyInSurface(), partialRenderType_)) {
         RS_TRACE_NAME(node.GetName() + " QuickReject Skip");
         RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode skip: %s", node.GetName().c_str());
+        return;
+    }
+    if (isUIFirst_ && isSubThread_ && isOpDropped_ && node.IsAppWindow() &&
+        !node.SubNodeNeedDrawInCacheThread(node.GetOldDirtyInSurface(), partialRenderType_)) {
+        RS_TRACE_NAME(node.GetName() + "SubThread QuickReject Skip");
         return;
     }
 #endif
@@ -2393,7 +2391,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 #ifdef RS_ENABLE_EGLQUERYSURFACE
     // when display is in rotation state, occlusion relationship will be ruined,
     // hence visibleRegions cannot be used.
-    if (isOpDropped_ && node.IsAppWindow()) {
+    if (!(isUIFirst_ && isSubThread_) && isOpDropped_ && node.IsAppWindow()) {
         auto visibleRegions = node.GetVisibleRegion().GetRegionRects();
         if (visibleRegions.size() == 1) {
             canvas_->SetVisibleRect(SkRect::MakeLTRB(
@@ -2616,7 +2614,10 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         // Otherwise, its childrenRect_ should be considered.
         RectI dirtyRect = node.HasChildrenOutOfRect() ?
             node.GetOldDirtyInSurface().JoinRect(node.GetChildrenRect()) : node.GetOldDirtyInSurface();
-        if (!curSurfaceNode_->SubNodeNeedDraw(dirtyRect, partialRenderType_)) {
+        if (!(isUIFirst_ && isSubThread_) && !curSurfaceNode_->SubNodeNeedDraw(dirtyRect, partialRenderType_)) {
+            return;
+        }
+        if (isUIFirst_ && isSubThread_ && !curSurfaceNode_->SubNodeNeedDrawInCacheThread(dirtyRect, partialRenderType_)) {
             return;
         }
     }

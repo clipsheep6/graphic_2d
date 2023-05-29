@@ -1698,6 +1698,27 @@ void RSUniRenderVisitor::DrawSurfaceLayer(RSDisplayRenderNode& node)
     parallelRenderManager->SubmitSubThreadTask(displayNodePtr, subThreadNodes_);
 }
 
+bool RSUniRenderVisitor::SubthreadNeedProcessLeashwindowShadow(RSRenderNode& node)
+{
+    if (!(isPartialRenderEnabled_ && isSubThread_)) {
+        return true;
+    }
+    if (!node.IsInstanceOf<RSSurfaceRenderNode>()) {
+        return true;
+    }
+    auto surfaceNode = node.ReinterpretCastTo<RSSurfaceRenderNode>();
+    if (!surfaceNode->IsLeashWindow()) {
+        return true;
+    }
+    auto dirtyManager = surfaceNode->GetCacheSurfaceDirtyManager();
+    if (!dirtyManager) {
+        RS_LOGE("SubthreadNeedProcessLeashwindowShadow cacheSurfaceDirty is nullptr.");
+        return true;
+    }
+    auto dirtyRect = dirtyManager->GetDirtyRegion();
+    return !dirtyRect.IsEmpty();
+}
+
 void RSUniRenderVisitor::AssignGlobalZOrderAndCreateLayer()
 {
     if (!IsHardwareComposerEnabled()) {
@@ -2180,6 +2201,18 @@ bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node)
     cacheCanvas->clear(SK_ColorTRANSPARENT);
 
     swap(cacheCanvas, canvas_);
+    // when cache surface render node in subthread, canvas dirtyregion is used
+    if (node.IsInstanceOf<RSSurfaceRenderNode>()) {
+        auto surfaceNodePtr = node.ReinterpretCastTo<RSSurfaceRenderNode>();
+        auto cacheSurfaceDirtyManager = surfaceNodePtr->GetCacheSurfaceDirtyManager();
+        if (cacheSurfaceDirtyManager != nullptr) {
+            auto dirtyRect = cacheSurfaceDirtyManager->GetOffsetedDirtyRegion();
+            if (!dirtyRect.IsEmpty()) {
+                auto skRect = SkRect::MakeXYWH(dirtyRect.left_, dirtyRect.top_, dirtyRect.width_, dirtyRect.height_);
+                canvas_->clipRect(skRect);
+            }
+        }
+    }
     // When cacheType == CacheType::ANIMATE_PROPERTY,
     // we should draw AnimateProperty on cacheCanvas
     if (cacheType == CacheType::ANIMATE_PROPERTY) {
@@ -2188,7 +2221,9 @@ bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node)
             canvas_->save();
             canvas_->translate(node.GetShadowRectOffsetX(), node.GetShadowRectOffsetY());
         }
-        node.ProcessAnimatePropertyBeforeChildren(*canvas_);
+        if (SubthreadNeedProcessLeashwindowShadow(node)) {
+            node.ProcessAnimatePropertyBeforeChildren(*canvas_);
+        }
     }
 
     node.ProcessRenderContents(*canvas_);
@@ -2199,7 +2234,9 @@ bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node)
             && !node.GetRenderProperties().IsSpherizeValid()) {
             canvas_->restore();
         }
-        node.ProcessAnimatePropertyAfterChildren(*canvas_);
+        if (SubthreadNeedProcessLeashwindowShadow(node)) {
+            node.ProcessAnimatePropertyAfterChildren(*canvas_);
+        }
     }
     swap(cacheCanvas, canvas_);
 
@@ -2275,7 +2312,8 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeNeedProcess(RSSurfaceRenderNode
         RS_LOGD("RSUniRenderVisitor::IfSurfaceRenderNodeNeedProcess node: %" PRIu64 " invisible", node.GetId());
         return false;
     }
-    if (!node.GetOcclusionVisible() && !doAnimate_ && isOcclusionEnabled_ && !isSecurityDisplay_) {
+    if (!node.GetOcclusionVisible() && !doAnimate_ && isOcclusionEnabled_ && !isSecurityDisplay_
+        && !(isSubThread_ && isUIFirst_)) {
         MarkSubHardwareEnableNodeState(node);
         RS_TRACE_NAME(node.GetName() + " Occlusion Skip");
         return false;
@@ -2284,7 +2322,7 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeNeedProcess(RSSurfaceRenderNode
         RS_TRACE_NAME(node.GetName() + " Empty AbilityComponent Skip");
         return false;
     }
-    if (node.LeashWindowRelatedAppWindowOccluded()) {
+    if (node.LeashWindowRelatedAppWindowOccluded() && !(isSubThread_ && isUIFirst_)) {
         RS_TRACE_NAME(node.GetName() + " App Occluded Leashwindow Skip");
         return false;
     }
@@ -2295,6 +2333,8 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
     if (isUIFirst_ && isSubThread_) {
         if (auto parentNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(node.GetParent().lock())) {
+            node.UpdateCacheSurfaceDirtyManager(2); // we use two buffers for subthread cache surface generation
+            node.SetCacheSurfaceDirtyManagerOffset();
             UpdateCacheSurface(node);
             return;
         }

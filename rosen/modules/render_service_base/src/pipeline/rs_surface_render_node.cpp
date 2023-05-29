@@ -210,6 +210,23 @@ void RSSurfaceRenderNode::OnTreeStateChanged()
     }
 }
 
+void RSSurfaceRenderNode::SetCacheSurfaceDirtyManagerOffset()
+{
+    if (!cacheSurfaceDirtyManager_) {
+        return;
+    }
+    int offsetX = 0;
+    int offsetY = 0;
+    if (node.GetRenderProperties().IsShadowValid()) {
+        auto& property = node.GetMutableRenderProperties();
+        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+        auto absRect = geoPtr->GetAbsRect();
+        offSetX = - absRect.left_ + node.GetShadowRectOffsetX();
+        offSetY = - absRect.top + node.GetShadowRectOffsetY();
+    }
+    cacheSurfaceDirtyManager_->SetOffset(offSetX, offSetY);
+}
+
 void RSSurfaceRenderNode::ResetParent()
 {
     RSBaseRenderNode::ResetParent();

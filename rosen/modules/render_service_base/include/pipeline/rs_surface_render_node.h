@@ -642,6 +642,7 @@ public:
     {
         return submittedSubThreadIndex_;        
     }
+    void SetCacheSurfaceDirtyManagerOffset(int x, int y);
 
 private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);

@@ -487,6 +487,10 @@ void RSParallelRenderManager::SubmitSubThreadTask(const std::shared_ptr<RSDispla
             ROSEN_LOGE("RSParallelRenderManager::SubmitSubThreadTask surfaceNode is null");
             continue;
         }
+        // skip static subthread cache surface render task
+        if (surfaceNode->IsCurrentFrameStatic() && surfaceNode->HasCachedTexture()) {
+            continue;
+        }
         auto threadIndex = surfaceNode->GetSubmittedSubThreadIndex();
         if (threadIndex != INT_MAX && superRenderTaskList[threadIndex]) {
             superRenderTaskList[threadIndex]->AddTask(std::move(renderTaskList[i]));
@@ -498,7 +502,7 @@ void RSParallelRenderManager::SubmitSubThreadTask(const std::shared_ptr<RSDispla
         }
         uint32_t minLoadThreadIndex = 0;
         auto minNodesNum = superRenderTaskList[0]->GetTaskSize();
-        for (auto i = 0; i < PARALLEL_THREAD_NUM; i++) {
+        for (size_t i = 0; i < PARALLEL_THREAD_NUM; i++) {
             auto num = superRenderTaskList[i]->GetTaskSize();
             if (num < minNodesNum) {
                 minNodesNum = num;
@@ -508,7 +512,7 @@ void RSParallelRenderManager::SubmitSubThreadTask(const std::shared_ptr<RSDispla
         minLoadThreadIndex_ = minLoadThreadIndex;
     }
 
-    for (auto i = 0; i < PARALLEL_THREAD_NUM; i++) {
+    for (size_t i = 0; i < PARALLEL_THREAD_NUM; i++) {
         SubmitSuperTask(i, std::move(superRenderTaskList[i]));
         flipCoin_[i] = 1;
     }

@@ -239,6 +239,9 @@ private:
     // Use in vulkan parallel rendering
     void ProcessParallelDisplayRenderNode(RSDisplayRenderNode& node);
 
+    // Use to skip leashwindow shadow when draw in subthread and leashwindow dirtymanager is empty
+    bool SubthreadNeedProcessLeashwindowShadow(RSRenderNode& node);
+
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;
     std::shared_ptr<RSSurfaceRenderNode> curSurfaceNode_;

@@ -323,11 +323,8 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
             node->SetIsMainThreadNode(true);
             node->SetCacheType(CacheType::NONE);
             node->ClearCacheSurface();
-        } else if (node->IsCurrentFrameStatic() && node->HasCachedTexture()) {
-            node->SetIsMainThreadNode(false);
         } else {
             subThreadNodes.emplace_back(node);
-            node->UpdateCacheSurfaceDirtyManager(2);
             node->SetIsMainThreadNode(false);
             node->SetCacheType(CacheType::ANIMATE_PROPERTY);
             if (node->GetCacheSurface()) {

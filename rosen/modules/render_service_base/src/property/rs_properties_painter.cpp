@@ -305,7 +305,40 @@ void RSPropertiesPainter::DrawShadowInner(const RSProperties& properties, RSPain
         canvas.drawPath(skPath, paint);
     }
 }
+void RSPropertiesPainter::DrawLinearGradientBlurFilter(const RSProperties& properties, 
+                                RSPaintFilterCanvas& canvas, const std::unique_ptr<SkRect>& rect)
+{
+    constexpr char prog[] = R"(
+        uniform float2 iResolution;
+        uniform sampler2D image;
+        half4 main(float2 fragCoord) {
+            float2 uv = fragCoord.xy / iResolution.xy;
+            float bias = 9.0 * (uv.y - 0.5);
+            return sample(image, uv, bias);
+        }
 
+    )";
+    
+    auto clipBounds = SkRect::Make(canvas.getDeviceClipBounds());
+    auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
+    if (!effect) {
+        ROSEN_LOGE("[PP TS] create effect err");
+        return;
+    }
+    SkRuntimeShaderBuilder builder(effect);
+    builder.uniform("iResolution") = SkV2{clipBounds.width(), clipBounds.height()};
+    builder.child("imageIn") = canvas.GetSurface()->makeImageSnapshot()->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
+
+    sk_sp<SkShader> shader = builder.makeShader();
+    if (!shader) {
+        ROSEN_LOGE("[PP TS] create effect err");
+        return;
+    }
+    SkPaint paint;
+    paint.setShader(shader);
+    canvas->drawPaint(paint);
+
+}
 void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
     std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect, SkSurface* skSurface)
 {

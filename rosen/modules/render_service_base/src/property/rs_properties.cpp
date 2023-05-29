@@ -681,6 +681,12 @@ void RSProperties::SetBackgroundFilter(std::shared_ptr<RSFilter> backgroundFilte
     contentDirty_ = true;
 }
 
+void RSProperties::SetLinearGradientBlurPara(std::shared_ptr<RSLinearGradientBlurPara> para)
+{
+    linearGradientBlurPara_ = para;
+    SetDirty();
+}
+
 void RSProperties::SetFilter(std::shared_ptr<RSFilter> filter)
 {
     filter_ = filter;
@@ -691,6 +697,11 @@ void RSProperties::SetFilter(std::shared_ptr<RSFilter> filter)
 std::shared_ptr<RSFilter> RSProperties::GetBackgroundFilter() const
 {
     return backgroundFilter_;
+}
+
+std::shared_ptr<RSLinearGradientBlurPara> RSProperties::GetLinearGradientBlurPara() const
+{
+    return linearGradientBlurPara_;
 }
 
 std::shared_ptr<RSFilter> RSProperties::GetFilter() const
@@ -1010,6 +1021,7 @@ void RSProperties::Reset()
     frameGeo_ = std::make_shared<RSObjGeometry>();
 
     backgroundFilter_ = nullptr;
+    linearGradientBlurPara_ = nullptr;
     border_ = nullptr;
     clipRRect_ = nullptr;
     clipPath_ = nullptr;

@@ -161,13 +161,13 @@ public:
 #endif // RS_ENABLE_EGLIMAGE
 protected:
     void RegisterDeleteBufferListener(const sptr<IConsumerSurface>& consumer, bool isForUniRedraw = false);
-    void DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam& params);
+    void DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam& params, bool forceCPU = false);
 
     static inline ColorFilterMode colorFilterMode_ = ColorFilterMode::COLOR_FILTER_END;
 
 private:
     sk_sp<SkImage> CreateEglImageFromBuffer(RSPaintFilterCanvas& canvas,
-        const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence);
+        const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence, bool forceCPU = false);
 
     static inline std::atomic_bool isHighContrastEnabled_ = false;
 

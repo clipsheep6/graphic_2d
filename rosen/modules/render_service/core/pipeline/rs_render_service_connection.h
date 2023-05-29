@@ -91,10 +91,14 @@ private:
 
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) override;
 
-    void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY) override;
+    void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
+        SnapshotScene snapshotScene) override;
 
     void TakeSurfaceCaptureForUIWithUni(
         NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY);
+
+    std::unique_ptr<Media::PixelMap> TakeSurfaceCaptureCPU(std::shared_ptr<RSSurfaceRenderNode> node, float scaleX,
+        float scaleY);
 
     void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app) override;
 
@@ -177,9 +181,6 @@ private:
 
     mutable std::mutex mutex_;
     bool cleanDone_ = false;
-
-    int offscreenRenderNum_ = 0;
-    std::mutex offscreenRenderMutex_;
 
     // save all virtual screenIds created by this connection.
     std::unordered_set<ScreenId> virtualScreenIds_;

@@ -128,7 +128,8 @@ public:
     virtual void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) = 0;
 
     virtual void TakeSurfaceCapture(
-        NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY) = 0;
+        NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
+        SnapshotScene snapshotScene) = 0;
 
     virtual void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app) = 0;
 

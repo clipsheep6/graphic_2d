@@ -74,6 +74,8 @@ public:
 
     void SetSandBox(Vector2f parentPosition);
     Vector2f GetSandBox() const;
+    void UpdateSandBoxMatrix(const std::optional<SkMatrix>& rootMatrix);
+    std::optional<SkMatrix> GetSandBoxMatrix() const;
 
     void SetPositionZ(float positionZ);
     float GetPositionZ() const;
@@ -289,7 +291,7 @@ private:
 
     std::weak_ptr<RSRenderNode> backref_;
 
-    std::unique_ptr<Vector2f> sandboxPosition_ = nullptr;
+    std::shared_ptr<Sandbox> sandbox_ = nullptr;
 
     std::unique_ptr<Vector4f> pixelStretch_ = nullptr;
 

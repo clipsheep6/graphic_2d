@@ -240,6 +240,11 @@ bool RSProperties::UpdateGeometry(const RSProperties* parent, bool dirtyFlag, co
 
     if (dirtyFlag || geoDirty_) {
         auto parentGeo = parent == nullptr ? nullptr : std::static_pointer_cast<RSObjAbsGeometry>(parent->boundsGeo_);
+        if (parentGeo != nullptr && GetSandBoxMatrix()) {
+            std::shared_ptr<RSObjAbsGeometry> fakeParentGeo = std::make_shared<RSObjAbsGeometry>();
+            fakeParentGeo->ConcatMatrix(*GetSandBoxMatrix());
+            parentGeo = fakeParentGeo;
+        }
         boundsGeoPtr->UpdateMatrix(parentGeo, offset, clipRect);
         return true;
     }
@@ -248,17 +253,32 @@ bool RSProperties::UpdateGeometry(const RSProperties* parent, bool dirtyFlag, co
 
 void RSProperties::SetSandBox(Vector2f parentPosition)
 {
-    if (!sandboxPosition_) {
-        sandboxPosition_ = std::make_unique<Vector2f>();
+    if (!sandbox_) {
+        sandbox_ = std::make_unique<Sandbox>();
     }
-    *sandboxPosition_ = parentPosition;
+    sandbox_->position_ = parentPosition;
     geoDirty_ = true;
     SetDirty();
 }
 
 Vector2f RSProperties::GetSandBox() const
 {
-    return sandboxPosition_ ? *sandboxPosition_ : Vector2f(-INFINITY, -INFINITY);
+    return sandbox_ ? sandbox_->position_ : Vector2f(-INFINITY, -INFINITY);
+}
+
+void RSProperties::UpdateSandBoxMatrix(const std::optional<SkMatrix>& rootMatrix)
+{
+    if (!rootMatrix.has_value() || !sandbox_) {
+        return;
+    }
+    auto matrix = rootMatrix.value();
+    matrix.preTranslate(sandbox_->position_.x_, sandbox_->position_.y_);
+    sandbox_->matrix_ = matrix;
+}
+
+std::optional<SkMatrix> RSProperties::GetSandBoxMatrix() const
+{
+    return sandbox_ ? sandbox_->matrix_ : std::nullopt;
 }
 
 void RSProperties::SetPositionZ(float positionZ)
@@ -1028,7 +1048,7 @@ void RSProperties::Reset()
     pixelStretch_ = nullptr;
     pixelStretchPercent_ = nullptr;
 
-    sandboxPosition_ = nullptr;
+    sandbox_ = nullptr;
 }
 
 void RSProperties::SetDirty()

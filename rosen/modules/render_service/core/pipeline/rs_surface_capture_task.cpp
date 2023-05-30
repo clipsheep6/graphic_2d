@@ -332,7 +332,7 @@ void RSSurfaceCaptureVisitor::AdjustZOrderAndDrawSurfaceNode()
     // draw hardwareEnabledNodes
     for (auto& surfaceNode : hardwareEnabledNodes_) {
         if (surfaceNode->IsLastFrameHardwareEnabled() && surfaceNode->GetBuffer() != nullptr) {
-            CaptureSingleSurfaceNodeWithUni(*surfaceNode);
+            CaptureSurfaceInDisplayWithUni(*surfaceNode);
         }
     }
 }
@@ -350,23 +350,6 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
     bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
     if (isSelfDrawingSurface) {
         canvas_->save();
-    }
-
-    if (node.IsAppWindow()) {
-        // When CaptureSingleSurfaceNodeWithUni, we should consider scale factor of canvas_ and
-        // child nodes (self-drawing surfaceNode) of AppWindow should use relative coordinates
-        // which is the node relative to the upper-left corner of the window.
-        // So we have to get the invert matrix of AppWindow here and apply it to canvas_
-        // when we calculate the position of self-drawing surfaceNode.
-        captureMatrix_.setScaleX(scaleX_);
-        captureMatrix_.setScaleY(scaleY_);
-        SkMatrix invertMatrix;
-        if (geoPtr->GetAbsMatrix().invert(&invertMatrix)) {
-            captureMatrix_.preConcat(invertMatrix);
-        }
-    } else if (!node.IsStartingWindow() && !isSelfDrawingSurface) {
-        canvas_->setMatrix(captureMatrix_);
-        canvas_->concat(geoPtr->GetAbsMatrix());
     }
 
     const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
@@ -416,9 +399,6 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
             skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
             RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
         }
-    }
-
-    if (isSelfDrawingSurface) {
         canvas_->restore();
     }
     if (node.IsAppWindow() && RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId()) &&
@@ -439,7 +419,6 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
         return;
     }
     bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
-
     if (isSelfDrawingSurface) {
         canvas_->save();
     }
@@ -479,8 +458,11 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
     }
 
     if (!node.IsAppWindow() && node.GetBuffer() != nullptr) {
+        canvas_->save();
+        canvas_->setMatrix(node.GetTotalMatrix());
         auto params = RSUniRenderUtil::CreateBufferDrawParam(node, false);
         renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
+        canvas_->restore();
     }
 
     if (isSelfDrawingSurface) {

@@ -175,6 +175,10 @@ public:
         T height = std::max(GetBottom(), rect.GetBottom()) - top;
         return ((width <= 0) || (height <= 0)) ? RectT<T>() : RectT<T>(left, top, width, height);
     }
+    RectT<T> Offset(const T x, const T y) const
+    {
+        return RectT<T>(left_ + x, top_ + y, width_, height_);
+    }
     template<typename P>
     RectT<P> ConvertTo()
     {
@@ -229,7 +233,8 @@ struct RectIComparator {
 };
 
 struct RectI_Hash_Func {
-    size_t operator()(const RectI& _r) const {
+    size_t operator()(const RectI& _r) const
+    {
         // this is set for all rects can be compared
         int hash_value = 0;
         return std::hash<int>()(hash_value);

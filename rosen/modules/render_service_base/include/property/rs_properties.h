@@ -219,13 +219,19 @@ public:
 
     const std::shared_ptr<RSObjGeometry>& GetBoundsGeometry() const;
     const std::shared_ptr<RSObjGeometry>& GetFrameGeometry() const;
+#ifndef USE_ROSEN_DRAWING
     bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag, const std::optional<SkPoint>& offset,
         const std::optional<SkRect>& clipRect);
+#else
+    bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag, const std::optional<Drawing::Point>& offset,
+        const std::optional<Drawing::Rect>& clipRect);
+#endif
     void CheckEmptyBounds();
     void ResetBounds();
     RectF GetBoundsRect() const;
 
     bool IsGeoDirty() const;
+    bool IsContentDirty() const;
 
     void SetSpherize(float spherizeDegree);
     float GetSpherize() const;
@@ -255,6 +261,7 @@ private:
     bool clipToFrame_ = false;
     bool isDirty_ = false;
     bool geoDirty_ = false;
+    bool contentDirty_ = false;
 
     bool hasBounds_ = false;
 

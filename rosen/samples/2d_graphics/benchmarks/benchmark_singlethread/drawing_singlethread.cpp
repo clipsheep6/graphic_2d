@@ -46,7 +46,11 @@ void DrawingSinglethread::Test(SkCanvas* canvas, int width, int height)
     skiaCanvas.skew(-2, 0); // skew in direction x and y
     skiaCanvas.drawLine(288, 96, 288, 160, paint); // point position
 
+#if defined(NEW_SKIA)
+    canvas->drawImage(bitmap.asImage(), 0, 0);
+#else
     canvas->drawBitmap(bitmap, 0, 0);
+#endif
     std::cout << "DrawingSinglethread::Test-" << std::endl;
 }
 

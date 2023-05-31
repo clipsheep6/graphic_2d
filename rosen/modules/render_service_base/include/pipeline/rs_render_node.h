@@ -52,6 +52,7 @@ public:
 
     ~RSRenderNode() override;
     bool IsDirty() const override;
+    bool IsContentDirty() const override;
 
     std::pair<bool, bool> Animate(int64_t timestamp) override;
     // PrepareCanvasRenderNode in UniRender
@@ -137,20 +138,15 @@ public:
         return isStaticCached_;
     }
 
-    void InitCacheSurface(RSPaintFilterCanvas& canvas);
-#ifndef USE_ROSEN_DRAWING
-    void InitCacheSurface(sk_sp<SkSurface> cacheSurface)
-    {
-        cacheSurface_ = cacheSurface;
-    }
+#ifdef NEW_SKIA
+    void InitCacheSurface(GrRecordingContext* grContext);
+#else
+    void InitCacheSurface(GrContext* grContext);
+#endif
 
+#ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> GetCacheSurface() const
 #else
-    void InitCacheSurface(std::shared_ptr<Drawing::Surface> cacheSurface)
-    {
-        cacheSurface_ = cacheSurface;
-    }
-
     std::shared_ptr<Drawing::Surface> GetCacheSurface() const
 #endif
     {
@@ -177,7 +173,7 @@ public:
         cacheCompletedSurface_ = nullptr;
     }
 
-    void DrawCacheSurface(RSPaintFilterCanvas& canvas) const;
+    void DrawCacheSurface(RSPaintFilterCanvas& canvas, bool isSubThreadNode = false) const;
 
     void SetCacheType(CacheType cacheType)
     {
@@ -197,6 +193,26 @@ public:
     float GetShadowRectOffsetY() const
     {
         return shadowRectOffsetY_;
+    }
+    
+    void SetDrawingCacheType(RSDrawingCacheType cacheType)
+    {
+        drawingCacheType_ = cacheType;
+    }
+
+    RSDrawingCacheType GetDrawingCacheType() const
+    {
+        return drawingCacheType_;
+    }
+
+    void SetDrawingCacheChanged(bool cacheChanged)
+    {
+        isDrawingCacheChanged_ = cacheChanged;
+    }
+
+    bool GetDrawingCacheChanged() const
+    {
+        return isDrawingCacheChanged_;
     }
 
     // driven render ///////////////////////////////////
@@ -275,6 +291,16 @@ public:
         isMainThreadNode_ = isMainThreadNode;
     }
 
+    bool IsScale() const
+    {
+        return isScale_;
+    }
+
+    void SetIsScale(bool isScale)
+    {
+        isScale_ = isScale;
+    }
+
     void SetPriority(NodePriorityType priority)
     {
         priority_ = priority;
@@ -288,6 +314,16 @@ public:
     bool HasCachedTexture() const
     {
         return cacheCompletedSurface_ != nullptr;
+    }
+
+    void SetCacheTexture(sk_sp<SkImage> texture)
+    {
+        cacheTexture_ = texture;
+    }
+
+    sk_sp<SkImage> GetCacheTexture() const
+    {
+        return cacheTexture_;
     }
 
     void SetDrawRegion(std::shared_ptr<RectF> rect)
@@ -340,8 +376,8 @@ private:
     // clipRect only used in UniRener when calling PrepareCanvasRenderNode
     // PrepareCanvasRenderNode in UniRender: needClip = true and clipRect is meaningful
     // Other situation: needClip = false and clipRect is meaningless
-    bool Update(
-        RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, bool needClip, RectI clipRect);
+    bool Update(RSDirtyRegionManager& dirtyManager,
+        const RSProperties* parent, bool parentDirty, bool needClip, RectI clipRect);
     void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, bool needClip, RectI clipRect);
 
     bool isDirtyRegionUpdated_ = false;
@@ -366,8 +402,13 @@ private:
 #endif
     std::atomic<bool> isStaticCached_ = false;
     CacheType cacheType_ = CacheType::NONE;
+    // drawing group cache
+    RSDrawingCacheType drawingCacheType_ = RSDrawingCacheType::DISABLED_CACHE;
+    bool isDrawingCacheChanged_ = false;
 
+    sk_sp<SkImage> cacheTexture_;
     bool isMainThreadNode_ = true;
+    bool isScale_ = false;
     bool hasFilter_ = false;
     NodePriorityType priority_ = NodePriorityType::MAIN_PRIORITY;
 

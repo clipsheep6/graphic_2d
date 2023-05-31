@@ -40,7 +40,7 @@ namespace Rosen {
 class RSPaintFilterCanvas;
 class RSUniRenderVisitor : public RSNodeVisitor {
 public:
-    using SurfaceDirtyMgrPair = std::pair<std::weak_ptr<RSSurfaceRenderNode>, std::shared_ptr<RSDirtyRegionManager>>;
+    using SurfaceDirtyMgrPair = std::pair<std::weak_ptr<RSSurfaceRenderNode>, std::shared_ptr<RSSurfaceRenderNode>>;
     RSUniRenderVisitor();
     RSUniRenderVisitor(std::shared_ptr<RSPaintFilterCanvas> canvas, uint32_t surfaceIndex);
     explicit RSUniRenderVisitor(const RSUniRenderVisitor& visitor);
@@ -62,6 +62,9 @@ public:
 
     bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
     bool ParallelComposition(const std::shared_ptr<RSBaseRenderNode> rootNode);
+    void UpdateCacheRenderNodeMap(RSRenderNode& node);
+    bool GenerateNodeContentCache(RSRenderNode& node);
+    bool InitNodeCache(RSRenderNode& node);
     void CopyVisitorInfos(std::shared_ptr<RSUniRenderVisitor> visitor);
     void SetProcessorRenderEngine(std::shared_ptr<RSBaseRenderEngine> renderEngine)
     {
@@ -91,7 +94,6 @@ public:
     }
 
     void DrawSurfaceLayer(RSDisplayRenderNode& node);
-    void DrawCacheRenderNode(RSRenderNode& node);
 
     bool GetAnimateState() const
     {
@@ -180,12 +182,12 @@ private:
      */
     void UpdateHardwardNodeStatusBasedOnFilter(std::shared_ptr<RSSurfaceRenderNode>& node,
         std::vector<SurfaceDirtyMgrPair>& prevHwcEnabledNodes,
-        std::shared_ptr<RSDirtyRegionManager>& displayDirtyManager) const;
+        std::shared_ptr<RSDirtyRegionManager>& displayDirtyManager);
     /* Disable hwc surface intersect with filter rects and merge dirty filter region
      * [planning] If invisible filterRects could be removed
      */
     RectI UpdateHardwardEnableList(std::vector<RectI>& filterRects,
-        std::vector<SurfaceDirtyMgrPair>& validHwcNodes) const;
+        std::vector<SurfaceDirtyMgrPair>& validHwcNodes);
     void AddContainerDirtyToGlobalDirty(std::shared_ptr<RSDisplayRenderNode>& node) const;
 
     // set global dirty region to each surface node
@@ -193,7 +195,9 @@ private:
     void SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
         const Occlusion::Region alignedDirtyRegion);
 
+    void CheckAndSetNodeCacheType(RSRenderNode& node);
     bool UpdateCacheSurface(RSRenderNode& node);
+    void DrawSpherize(RSRenderNode& node);
     void DrawChildRenderNode(RSRenderNode& node);
 
     void CheckColorSpace(RSSurfaceRenderNode& node);
@@ -207,7 +211,14 @@ private:
      */
     bool CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& node);
     void PrepareTypesOfSurfaceRenderNodeBeforeUpdate(RSSurfaceRenderNode& node);
+    // judge if node's cache changes
+    void UpdateCacheChangeStatus(RSBaseRenderNode& node);
+    // set node cacheable animation after checking whold child tree
+    void SetNodeCacheChangeStatus(RSBaseRenderNode& node, int markedCachedNodeCnt);
+
     bool IsHardwareComposerEnabled();
+
+    bool CheckIfSurfaceRenderNodeNeedProcess(RSSurfaceRenderNode& node);
 
     void ClearTransparentBeforeSaveLayer();
     // mark surfaceNode's child surfaceView nodes hardware forced disabled
@@ -238,6 +249,7 @@ private:
     bool dirtyFlag_ { false };
     std::unique_ptr<RSRenderFrame> renderFrame_;
     std::shared_ptr<RSPaintFilterCanvas> canvas_;
+    std::map<NodeId, uint32_t> cacheRenderNodeMap_;
     std::map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> dirtySurfaceNodeMap_;
     SkRect boundsRect_ {};
     Gravity frameGravity_ = Gravity::DEFAULT;
@@ -271,6 +283,11 @@ private:
     PartialRenderType partialRenderType_;
     DirtyRegionDebugType dirtyRegionDebugType_;
     bool isDirty_ = false;
+    // added for judge if drawing cache changes
+    bool isDrawingCacheEnabled_ = false;
+    bool isDrawingCacheChanged_ = false;
+    int markedCachedNodes_ = 0;
+
     bool needFilter_ = false;
     ColorGamut newColorSpace_ = ColorGamut::COLOR_GAMUT_SRGB;
     std::vector<ScreenColorGamut> colorGamutModes_;

@@ -192,6 +192,12 @@ bool RSRenderNode::IsDirty() const
     return RSBaseRenderNode::IsDirty() || renderProperties_.IsDirty();
 }
 
+bool RSRenderNode::IsContentDirty() const
+{
+    // Considering renderNode, it should consider both basenode's case and its properties
+    return RSBaseRenderNode::IsContentDirty() || renderProperties_.IsContentDirty();
+}
+
 void RSRenderNode::UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEnabled)
 {
     auto dirtyRect = renderProperties_.GetDirtyRect();
@@ -416,9 +422,13 @@ float RSRenderNode::GetGlobalAlpha() const
     return globalAlpha_;
 }
 
-void RSRenderNode::InitCacheSurface(RSPaintFilterCanvas& canvas)
+#ifdef NEW_SKIA
+void RSRenderNode::InitCacheSurface(GrRecordingContext* grContext)
+#else
+void RSRenderNode::InitCacheSurface(GrContext* grContext)
+#endif
 {
-    ClearCacheSurface();
+    cacheSurface_ = nullptr;
     auto cacheType = GetCacheType();
     float width = 0.0f, height = 0.0f;
     boundsWidth_ = renderProperties_.GetBoundsRect().GetWidth();
@@ -439,17 +449,13 @@ void RSRenderNode::InitCacheSurface(RSPaintFilterCanvas& canvas)
     }
 #if ((defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)) || (defined RS_ENABLE_VK)
     SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
-#ifdef NEW_SKIA
-    cacheSurface_ = SkSurface::MakeRenderTarget(canvas.recordingContext(), SkBudgeted::kYes, info);
-#else
-    cacheSurface_ = SkSurface::MakeRenderTarget(canvas.getGrContext(), SkBudgeted::kYes, info);
-#endif
+    cacheSurface_ = SkSurface::MakeRenderTarget(grContext, SkBudgeted::kYes, info);
 #else
     cacheSurface_ = SkSurface::MakeRasterN32Premul(width, height);
 #endif
 }
 
-void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas) const
+void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, bool isSubThreadNode) const
 {
     auto surface = GetCompletedCacheSurface();
     if (surface == nullptr || (boundsWidth_ == 0 || boundsHeight_ == 0)) {
@@ -461,6 +467,16 @@ void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas) const
     float scaleY = renderProperties_.GetBoundsRect().GetHeight() / boundsHeight_;
     canvas.scale(scaleX, scaleY);
     SkPaint paint;
+#ifdef NEW_SKIA
+    if (isSubThreadNode) {
+        if (cacheTexture_ == nullptr) {
+            RS_LOGE("invalid cache texture");
+            return;
+        }
+        canvas.drawImage(cacheTexture_, -shadowRectOffsetX_ * scaleX, -shadowRectOffsetY_ * scaleY);
+        return;
+    }
+#endif
     if (cacheType == CacheType::ANIMATE_PROPERTY && renderProperties_.IsShadowValid()) {
         surface->draw(&canvas, -shadowRectOffsetX_ * scaleX, -shadowRectOffsetY_ * scaleY, &paint);
     } else {

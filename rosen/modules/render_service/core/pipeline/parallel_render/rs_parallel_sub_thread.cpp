@@ -271,10 +271,14 @@ void RSParallelSubThread::RenderCache()
         RS_TRACE_NAME_FMT("draw cache render node: [%s, %llu]", surfaceNodePtr->GetName().c_str(),
             surfaceNodePtr->GetId());
         if (surfaceNodePtr->GetCacheSurface() == nullptr) {
-            int width = std::ceil(surfaceNodePtr->GetRenderProperties().GetBoundsRect().GetWidth());
-            int height = std::ceil(surfaceNodePtr->GetRenderProperties().GetBoundsRect().GetHeight());
-            AcquireSubSkSurface(width, height);
-            surfaceNodePtr->InitCacheSurface(skSurface_);
+            if (grContext_ == nullptr) {
+                grContext_ = CreateShareGrContext();
+            }
+            if (grContext_ == nullptr) {
+                RS_LOGE("Share GrContext is not ready!!!");
+                return;
+            }
+            surfaceNodePtr->InitCacheSurface(grContext_.get());
         }
         node->Process(visitor_);
 #ifndef NEW_SKIA
@@ -455,6 +459,7 @@ void RSParallelSubThread::CreateResource()
         }
         skCanvas_ = skSurface_->getCanvas();
         canvas_ = std::make_shared<RSPaintFilterCanvas>(skCanvas_);
+        canvas_->SetIsParallelCanvas(true);
     }
     visitor_ = std::make_shared<RSUniRenderVisitor>(canvas_, threadIndex_);
 #elif RS_ENABLE_VK

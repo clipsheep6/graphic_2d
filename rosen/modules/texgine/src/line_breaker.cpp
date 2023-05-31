@@ -89,7 +89,7 @@ void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, cons
 {
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "UpadateLineBreaksData");
     scoredSpans.emplace(scoredSpans.cbegin());
-    double isCoreTotal = 0;
+    double iscoreTotal = 0;
     double curIscore = 0;
     for (size_t i = 1; i < scoredSpans.size(); i++) {
         auto &is = scoredSpans[i];
@@ -111,14 +111,14 @@ void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, cons
         is.score = delta * delta + scoredSpans[is.prev].score;
 
         if (ys.breakStrategy_ == BreakStrategy::BALANCED) {
-            isCoreTotal += is.score;
-            curIscore = isCoreTotal / i;
+            iscoreTotal += is.score;
+            curIscore = iscoreTotal / i;
         }
 
         std::stringstream ss;
         ss << i;
         LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), ss.str());
-        double jsCoreTotal = 0;
+        double jscoreTotal = 0;
         double weightSum = 0;
         for (size_t j = 0; j < i; j++) {
             auto &js = scoredSpans[j];
@@ -140,8 +140,8 @@ void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, cons
             if (ys.breakStrategy_ == BreakStrategy::BALANCED) {
                 double weight = pow((j - i), 2);
                 weightSum += weight;
-                jsCoreTotal += jscore * (weightSum / j);
-                double curJscore = jsCoreTotal / weightSum;
+                jscoreTotal += jscore * (weightSum / j);
+                double curJscore = jscoreTotal / weightSum;
 
                 if (curJscore < curIscore) {
                     curIscore = curJscore;

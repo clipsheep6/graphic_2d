@@ -17,7 +17,7 @@
 
 #include "feature_test_framework.h"
 
-using namespace Texgine;
+using namespace OHOS::Rosen::TextEngine;
 
 namespace {
 
@@ -34,15 +34,15 @@ struct LayoutTestData {
 } datas[] = {
     {
         .text = "GREEDY",
-        .typographystyle = { .breakStrategy_ = BreakStrategy::GREEDY },
+        .typographystyle = { .breakStrategy = BreakStrategy::GREEDY },
     },
     {
         .text = "HIGHQUALITY",
-	.typographystyle = { .breakStrategy_ = BreakStrategy::HIGHQUALITY },
+        .typographystyle = { .breakStrategy = BreakStrategy::HIGH_QUALITY },
     },
     {
         .text = "BALANCED",
-	.typographystyle = { .breakStrategy_ = BreakStrategy::BALANCED },
+        .typographystyle = { .breakStrategy = BreakStrategy::BALANCED },
     },
 };
 
@@ -54,9 +54,9 @@ public:
 
     void Layout()
     {
-	TextStyle style = {
+       TextStyle style = {
             .fontSize_ = 16,
-        };
+       };
 
         for (auto &[text, typographystyle] : datas) {
              option_.needRainbowChar = true;
@@ -65,13 +65,13 @@ public:
              builder->AppendSpan(exampleText);
              builder->PopStyle();
 
-	     auto typography = builder->Build();
-             typography->Layout(300);
-             typographies_.push_back({
-                 .typography = typography,
-		 .comment = text,
-             });
-        }
+            auto typography = builder->Build();
+                 typography->Layout(300);
+                 typographies_.push_back({
+                     .typography = typography,
+                     .comment = text,
+                });
+          }
     }
 } g_test;
 } // namespace

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include "texgine/system_font_provider.h"
-#include "texgine/typography_builder.h"
+#include <texgine/system_font_provider.h>
+#include <texgine/typography_builder.h>
 
 #include "feature_test_framework.h"
 
@@ -23,11 +23,11 @@ using namespace Texgine;
 namespace {
 
 constexpr auto exampleText = "Typography is the open and technique of arranging type to make written "
-                             "language legible, readable and appealing when displayed. The "
-                             "arrangement of type involves selecting typefaces, point sizes, "
-                             "line lengths, line-spacing (leading), and letter-spacing "
-                             "(tracking), as well as adjusting the space between pairs of "
-                             "letters (kerning).";
+    "language legible, readable and appealing when displayed. The "
+    "arrangement of type involves selecting typefaces, point sizes, "
+    "line lengths, line-spacing (leading), and letter-spacing "
+    "(tracking), as well as adjusting the space between pairs of "
+    "letters (kerning).";
 
 struct LayoutTestData {
     std::string text;

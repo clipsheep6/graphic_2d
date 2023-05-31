@@ -948,6 +948,7 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
         RS_LOGE("RSUniRenderVisitor::PrepareCanvasRenderNode curSurfaceDirtyManager is nullptr");
         return;
     }
+    node.GetMutableRenderProperties().UpdateSandBoxMatrix(parentSurfaceNodeMatrix_);
     dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
         dirtyFlag_, prepareClipRect_);
 
@@ -2918,16 +2919,8 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     } else {
         saveCount = canvas_->save();
     }
-
-    bool saveRootMatrix = node.GetChildrenCount() > 0 && !rootMatrix_.has_value();
-    if (saveRootMatrix) {
-        rootMatrix_ = canvas_->getTotalMatrix();
-    }
     ProcessCanvasRenderNode(node);
     canvas_->restoreToCount(saveCount);
-    if (saveRootMatrix) {
-        rootMatrix_.reset();
-    }
 #else
         Drawing::Brush brush;
         RSBaseRenderUtil::SetColorFilterModeToPaint(colorFilterMode, brush);
@@ -2940,9 +2933,6 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     }
     ProcessCanvasRenderNode(node);
     canvas_->RestoreToCount(saveCount);
-    if (saveRootMatrix) {
-        rootMatrix_.Reset();
-    }
 #endif
 }
 
@@ -3063,15 +3053,14 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     // in case preparation'update is skipped
     node.GetMutableRenderProperties().CheckEmptyBounds();
     // draw self and children in sandbox which will not be affected by parent's transition
-    if (const auto& sandboxPos = node.GetRenderProperties().GetSandBox();
-        sandboxPos.has_value() && rootMatrix_.has_value()) {
+    const auto& sandboxMatrix = node.GetRenderProperties().GetSandBoxMatrix();
+    if (sandboxMatrix) {
 #ifndef USE_ROSEN_DRAWING
         canvas_->setMatrix(*rootMatrix_);
-        canvas_->translate(sandboxPos->x_, sandboxPos->y_);
 #else
         canvas_->SetMatrix(rootMatrix_.value());
-        canvas_->Translate(sandboxPos->x_, sandboxPos->y_);
 #endif
+        canvas_->setMatrix(*sandboxMatrix);
     }
 
     const auto& property = node.GetRenderProperties();

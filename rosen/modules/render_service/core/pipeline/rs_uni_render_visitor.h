@@ -40,6 +40,12 @@ namespace Rosen {
 class RSPaintFilterCanvas;
 class RSUniRenderVisitor : public RSNodeVisitor {
 public:
+#ifndef USE_ROSEN_DRAWING
+    using Matrix = SkMatrix;
+#else
+    using Matrix = Drawing::Matrix;
+#endif
+
     using SurfaceDirtyMgrPair = std::pair<std::weak_ptr<RSSurfaceRenderNode>, std::shared_ptr<RSSurfaceRenderNode>>;
     RSUniRenderVisitor();
     RSUniRenderVisitor(std::shared_ptr<RSPaintFilterCanvas> canvas, uint32_t surfaceIndex);
@@ -364,12 +370,6 @@ private:
     std::weak_ptr<RSBaseRenderNode> logicParentNode_;
 
     bool isCalcCostEnable_ = false;
-
-#ifndef USE_ROSEN_DRAWING
-    std::optional<SkMatrix> rootMatrix_ = std::nullopt;
-#else
-    std::optional<Drawing::Matrix> rootMatrix_ = std::nullopt;
-#endif
 
     uint32_t appWindowNum_ = 0;
 

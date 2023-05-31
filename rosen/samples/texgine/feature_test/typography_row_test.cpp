@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-#include "feature_test_framework.h"
 #include "texgine/system_font_provider.h"
 #include "texgine/typography_builder.h"
+
+#include "feature_test_framework.h"
 
 using namespace Texgine;
 

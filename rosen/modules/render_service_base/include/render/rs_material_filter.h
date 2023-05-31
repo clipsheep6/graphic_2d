@@ -64,10 +64,11 @@ class RSB_EXPORT RSMaterialFilter : public RSSkiaFilter {
 class RSB_EXPORT RSMaterialFilter : public RSDrawingFilter {
 #endif
 public:
-    static std::shared_ptr<RSMaterialFilter> CreateInstance(int style, float dipScale, BLUR_COLOR_MODE mode, float ratio);
+    static std::shared_ptr<RSMaterialFilter> CreateInstance(int style, float dipScale,
+        BLUR_COLOR_MODE mode, float ratio);
     static std::shared_ptr<RSMaterialFilter> CreateInstance(MaterialParam materialParam, BLUR_COLOR_MODE mode);
     ~RSMaterialFilter() override;
-    std::shared_ptr<RSFilter> TransformFilter(float fraction); 
+    std::shared_ptr<RSFilter> TransformFilter(float fraction);
 #ifndef USE_ROSEN_DRAWING
     void PreProcess(sk_sp<SkImage> image) override;
 #else

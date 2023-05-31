@@ -110,7 +110,7 @@ void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, cons
         double delta = widthLimit - (is.preBreak - scoredSpans[is.prev].postBreak);
         is.score = delta * delta + scoredSpans[is.prev].score;
 
-        if (ys.breakStrategy_ == BreakStrategy::BALANCED) {
+        if (ys.breakStrategy == BreakStrategy::BALANCED) {
             iscoreTotal += is.score;
             curIscore = iscoreTotal / i;
         }
@@ -137,7 +137,7 @@ void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, cons
                 is.prev = j;
             }
 
-            if (ys.breakStrategy_ == BreakStrategy::BALANCED) {
+            if (ys.breakStrategy == BreakStrategy::BALANCED) {
                 double weight = pow((j - i), 2);
                 weightSum += weight;
                 jscoreTotal += jscore * (weightSum / j);

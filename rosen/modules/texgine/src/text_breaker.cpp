@@ -140,7 +140,7 @@ void TextBreaker::BreakWord(const CharGroups &wordcgs, const TypographyStyle &ys
         bool isNormal = (breakType == WordBreakType::NORMAL);
         bool isFinalCharGroup = (i == wordcgs.GetNumberOfCharGroup() - 1);
         bool isBreakWordCharGroup = (1 == u_getIntPropertyValue(cg.chars[0], UCHAR_WORD_BREAK));
-        LOG2EX_DEBUG() << "isFinalCharGroup: " << isFinalCharGroup << " > !isBreakWordCharGroup: " << !isBreakWordCharGroup;
+        LOGEX_FUNC_LINE_DEBUG() << "isFinalCharGroup: " << isFinalCharGroup << " > !isBreakWordCharGroup: " << !isBreakWordCharGroup;
         bool needGenerateSpan = isBreakAll;
         needGenerateSpan = needGenerateSpan || (isBreakWord && !isBreakWordCharGroup) || (isNormal && isFinalCharGroup);
         if (needGenerateSpan == false) {

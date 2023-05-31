@@ -59,7 +59,7 @@ struct IntrinsicTestData {
             .ellipsis_ = u"",
             .wordBreakType_ = WordBreakType::NORMAL,
         },
-        .title_ = "NORMAL",
+        .title = "NORMAL",
     },
     {
         .ys = {

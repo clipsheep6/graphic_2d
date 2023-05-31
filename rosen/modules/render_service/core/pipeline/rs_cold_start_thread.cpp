@@ -94,12 +94,10 @@ void RSColdStartThread::Stop()
                 images_.pop();
             }
         }
-#ifdef RS_ENABLE_GL
         if (grContext_ != nullptr) {
             grContext_->releaseResourcesAndAbandonContext();
             grContext_ = nullptr;
         }
-#endif
         skSurface_ = nullptr;
 #ifdef RS_ENABLE_GL
         context_ = nullptr;

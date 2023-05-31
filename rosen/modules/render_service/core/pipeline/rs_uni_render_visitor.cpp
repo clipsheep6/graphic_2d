@@ -54,6 +54,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr uint32_t PHONE_MAX_APP_WINDOW_NUM = 1;
+constexpr uint32_t CACHE_MAX_UPDATE_TIME = 5;
 static const std::string CAPTURE_WINDOW_NAME = "CapsuleWindow";
 
 bool IsFirstFrameReadyToDraw(RSSurfaceRenderNode& node)
@@ -269,8 +270,10 @@ void RSUniRenderVisitor::SetNodeCacheChangeStatus(RSBaseRenderNode& node, int ma
     }
     auto targetNode = node.ReinterpretCastTo<RSRenderNode>();
     if (targetNode != nullptr && targetNode->GetDrawingCacheType() != RSDrawingCacheType::DISABLED_CACHE) {
-        // only enable lowest marked cached node
-        if (targetNode->ChildHasFilter() || (markedCachedNodeCnt != markedCachedNodes_)) {
+        // Attention: currently not support filter and out of parent
+        // Only enable lowest marked cached node
+        if (targetNode->ChildHasFilter() || targetNode->HasChildrenOutOfRect() ||
+            (markedCachedNodeCnt != markedCachedNodes_)) {
             ROSEN_LOGD("RSUniRenderVisitor::SetNodeCacheChangeStatus: disable node %" PRIu64 ", "
                 "childHasFilter %d, markedCachedNodeCnt|markedCachedNodes_: (%d, %d)", targetNode->GetId(),
                 static_cast<int>(targetNode->ChildHasFilter()), markedCachedNodeCnt, markedCachedNodes_);
@@ -612,8 +615,11 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (node.GetSecurityLayer()) {
         displayHasSecSurface_[currentVisitDisplay_]++;
     }
+    if (curDisplayNode_ == nullptr) {
+        return;
+    }
     // avoid EntryView upload texture while screen rotation
-    if (node.GetName() == "EntryView" && curDisplayNode_) {
+    if (node.GetName() == "EntryView") {
         node.SetStaticCached(curDisplayNode_->IsRotationChanged());
     }
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
@@ -759,6 +765,13 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     if (parentNode != nullptr && node.GetRenderProperties().NeedFilter()) {
         parentNode->SetChildHasFilter(true);
+    }
+    if (isUIFirst_ && node.IsLeashWindow()) {
+        auto matrix = geoPtr->GetAbsMatrix();
+        // 1.0f means node does not have scale
+        bool isScale = (matrix.getScaleX() > 0 && matrix.getScaleX() != 1.0f)
+            || (matrix.getScaleY() > 0 && matrix.getScaleY() != 1.0f);
+        node.SetIsScale(isScale);
     }
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     if (drivenInfo_ && isLeashWindowNode) {
@@ -988,7 +1001,7 @@ void RSUniRenderVisitor::CopyForParallelPrepare(std::shared_ptr<RSUniRenderVisit
     isPartialRenderEnabled_ = isPartialRenderEnabled_ && visitor->isPartialRenderEnabled_;
     isOpDropped_ = isOpDropped_ && visitor->isOpDropped_;
     needFilter_ = needFilter_ || visitor->needFilter_;
-    for (auto &u : visitor->displayHasSecSurface_) {
+    for (const auto &u : visitor->displayHasSecSurface_) {
         displayHasSecSurface_[u.first] += u.second;
     }
 
@@ -1502,7 +1515,11 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         if (RSSystemProperties::GetRecordingEnabled()) {
             RS_TRACE_BEGIN("RSUniRender:Recording begin");
 #ifdef RS_ENABLE_GL
+#ifdef NEW_SKIA
+            canvas.SetGrRecordingContext(canvas_->recordingContext());
+#else
             canvas.SetGrContext(canvas_->getGrContext()); // SkImage::MakeFromCompressed need GrContext
+#endif
 #endif
             recordingCanvas = std::make_shared<RSPaintFilterCanvas>(&canvas);
             recordingEnabled = true;
@@ -1631,8 +1648,10 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         }
 #endif
         if (saveLayerCnt > 0) {
+#ifdef RS_ENABLE_GL
             RSTagTracker tagTracker(
                 renderEngine_->GetRenderContext()->GetGrContext(), RSTagTracker::TAGTYPE::TAG_RESTORELAYER_DRAW_NODE);
+#endif
             RS_TRACE_NAME("RSUniRender:RestoreLayer");
             canvas_->restoreToCount(saveLayerCnt);
         }
@@ -2053,8 +2072,8 @@ void RSUniRenderVisitor::AddContainerDirtyToGlobalDirty(std::shared_ptr<RSDispla
                 surfaceNode->GetName().c_str(), containerDirtyRegion.GetRegionInfo().c_str());
             std::vector<Occlusion::Rect> rects = containerDirtyRegion.GetRegionRects();
             for (const auto& rect : rects) {
-                displayDirtyManager->MergeDirtyRect(RectI
-                    { rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
+                displayDirtyManager->MergeDirtyRect(RectI{
+                    rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
             }
         }
     }
@@ -2156,6 +2175,8 @@ void RSUniRenderVisitor::CheckAndSetNodeCacheType(RSRenderNode& node)
         if (!node.GetCompletedCacheSurface() && UpdateCacheSurface(node)) {
             node.UpdateCompletedCacheSurface();
         }
+    } else if (isDrawingCacheEnabled_ && GenerateNodeContentCache(node)) {
+        UpdateCacheRenderNodeMap(node);
     } else {
         node.SetCacheType(CacheType::NONE);
         if (node.GetCompletedCacheSurface()) {
@@ -2335,12 +2356,14 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
                     + " Alpha: " + std::to_string(node.GetGlobalAlpha()).substr(0, 4));
     RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode node:%" PRIu64 ",child size:%u,name:%s,OcclusionVisible:%d",
         node.GetId(), node.GetChildrenCount(), node.GetName().c_str(), node.GetOcclusionVisible());
+#ifdef RS_ENABLE_GL
 #ifdef NEW_SKIA
     GrDirectContext* grContext = renderEngine_->GetRenderContext()->GetGrContext();
 #else
     GrContext* grContext = renderEngine_->GetRenderContext()->GetGrContext();
 #endif
     RSTagTracker tagTracker(grContext, node.GetId(), RSTagTracker::TAGTYPE::TAG_DRAW_SURFACENODE);
+#endif
     node.SetGrContext(grContext);
     node.UpdatePositionZ();
     if (!CheckIfSurfaceRenderNodeNeedProcess(node)) {
@@ -2565,14 +2588,101 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         RS_LOGD("RsDebug RSBaseRenderEngine::SetColorFilterModeToPaint mode:%d", static_cast<int32_t>(colorFilterMode));
         SkPaint paint;
         RSBaseRenderUtil::SetColorFilterModeToPaint(colorFilterMode, paint);
+#ifdef RS_ENABLE_GL
         RSTagTracker tagTracker(
             renderEngine_->GetRenderContext()->GetGrContext(), RSTagTracker::TAG_SAVELAYER_COLOR_FILTER);
+#endif
         saveCount = canvas_->saveLayer(nullptr, &paint);
     } else {
         saveCount = canvas_->save();
     }
     ProcessCanvasRenderNode(node);
     canvas_->restoreToCount(saveCount);
+}
+
+bool RSUniRenderVisitor::GenerateNodeContentCache(RSRenderNode& node)
+{
+    // Node cannot have cache.
+    if (node.GetDrawingCacheType() == RSDrawingCacheType::DISABLED_CACHE) {
+        if (cacheRenderNodeMap_.count(node.GetId()) > 0) {
+            node.SetCacheType(CacheType::NONE);
+            node.ClearCacheSurface();
+            cacheRenderNodeMap_.erase(node.GetId());
+        }
+        return false;
+    }
+
+    // The node goes down the tree to clear the cache.
+    if (!node.IsOnTheTree() && cacheRenderNodeMap_.count(node.GetId()) > 0) {
+        node.SetCacheType(CacheType::NONE);
+        node.ClearCacheSurface();
+        cacheRenderNodeMap_.erase(node.GetId());
+        return false;
+    }
+    return true;
+}
+
+bool RSUniRenderVisitor::InitNodeCache(RSRenderNode& node)
+{
+    if (node.GetDrawingCacheType() == RSDrawingCacheType::FORCED_CACHE ||
+        node.GetDrawingCacheType() == RSDrawingCacheType::TARGETED_CACHE) {
+        if (cacheRenderNodeMap_.count(node.GetId()) == 0) {
+            node.SetCacheType(CacheType::CONTENT);
+            node.ClearCacheSurface();
+#ifdef NEW_SKIA
+            node.InitCacheSurface(canvas_->recordingContext());
+#else
+            node.InitCacheSurface(canvas_->getGrContext());
+#endif
+            if (UpdateCacheSurface(node)) {
+                node.UpdateCompletedCacheSurface();
+                cacheRenderNodeMap_[node.GetId()] = 0;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
+{
+    if (InitNodeCache(node)) {
+        RS_LOGD("RSUniRenderVisitor::UpdateCacheRenderNodeMap, generate the node cache for the first time.");
+        return;
+    }
+    uint32_t updateTimes = 0;
+    if (node.GetDrawingCacheType() == RSDrawingCacheType::FORCED_CACHE) {
+        // Regardless of the number of consecutive refreshes, the current cache is forced to be updated.
+        if (node.GetDrawingCacheChanged()) {
+            updateTimes = cacheRenderNodeMap_[node.GetId()] + 1;
+            node.SetCacheType(CacheType::CONTENT);
+            if (UpdateCacheSurface(node)) {
+                node.UpdateCompletedCacheSurface();
+                cacheRenderNodeMap_[node.GetId()] = updateTimes;
+            }
+            return;
+        }
+        // The cache is not refreshed continuously.
+        cacheRenderNodeMap_[node.GetId()] = 0;
+        return;
+    }
+    if (node.GetDrawingCacheType() == RSDrawingCacheType::TARGETED_CACHE) {
+        // If the number of consecutive refreshes exceeds CACHE_MAX_UPDATE_TIME times, the cache is cleaned,
+        // otherwise the cache is updated.
+        if (node.GetDrawingCacheChanged()) {
+            updateTimes = cacheRenderNodeMap_[node.GetId()] + 1;
+            if (updateTimes >= CACHE_MAX_UPDATE_TIME) {
+                node.SetCacheType(CacheType::NONE);
+                node.ClearCacheSurface();
+                cacheRenderNodeMap_.erase(node.GetId());
+                return;
+            }
+            node.SetCacheType(CacheType::CONTENT);
+            UpdateCacheSurface(node);
+            node.UpdateCompletedCacheSurface();
+            cacheRenderNodeMap_[node.GetId()] = updateTimes;
+        }
+    }
 }
 
 void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)

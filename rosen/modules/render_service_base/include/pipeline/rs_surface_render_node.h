@@ -586,10 +586,6 @@ public:
 
     // if surfacenode's buffer has been comsumed, it should be set dirty
     bool UpdateDirtyIfFrameBufferConsumed();
-    // if buffer content updated, marked it as content dirty
-    bool IsDirty() const override;
-    bool IsContentDirty() const override;
-    void SetClean() override;
 
 #ifndef USE_ROSEN_DRAWING
     void UpdateSrcRect(const RSPaintFilterCanvas& canvas, const SkIRect& dstRect);
@@ -652,9 +648,9 @@ private:
     std::mutex mutexUI_;
     std::mutex mutex_;
 #ifdef NEW_SKIA
-    GrDirectContext* grContext_;
+    GrDirectContext* grContext_ = nullptr;
 #else
-    GrContext* grContext_;
+    GrContext* grContext_ = nullptr;
 #endif
     std::mutex parallelVisitMutex_;
 

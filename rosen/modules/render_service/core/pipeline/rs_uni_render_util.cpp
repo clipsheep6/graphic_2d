@@ -25,6 +25,9 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr const char* ENTRY_VIEW = "EntryView";
+}
 void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge,
     bool useAlignedDirtyRegion)
 {
@@ -150,12 +153,15 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
     params.dstRect = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
 
     const sptr<SurfaceBuffer>& buffer = node.GetBuffer();
+    if (buffer == nullptr) {
+        return params;
+    }
     params.buffer = buffer;
     params.acquireFence = node.GetAcquireFence();
     params.srcRect = SkRect::MakeWH(buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
 
     auto& consumer = node.GetConsumer();
-    if (consumer == nullptr || buffer == nullptr) {
+    if (consumer == nullptr) {
         return params;
     }
     auto transform = consumer->GetTransform();
@@ -285,63 +291,108 @@ int RSUniRenderUtil::GetRotationFromMatrix(SkMatrix matrix)
     // transfer the result to anti-clockwise degrees
     // only rotation with 90°, 180°, 270° are composed through hardware,
     // in which situation the transformation of the layer needs to be set.
-    static const std::map<int, int> supportedDegrees = {{90, 270}, {180, 180}, {-90, 90}};
+    static const std::map<int, int> supportedDegrees = {{90, 270}, {180, 180}, {-90, 90}, {-180, 180}};
     auto iter = supportedDegrees.find(rAngle);
     return iter != supportedDegrees.end() ? iter->second : 0;
 }
 
-void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNode>& node, uint64_t focusNodeId,
+void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNode>& displayNode, uint64_t focusNodeId,
     std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
     std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes)
 {
-    if (node == nullptr) {
+    if (displayNode == nullptr) {
         ROSEN_LOGE("RSUniRenderUtil::AssignWindowNodes display node is null");
         return;
     }
     RS_TRACE_NAME("AssignWindowNodes");
-    bool focusedNodeFound = false;
-    for (auto iter = node->GetSortedChildren().begin(); iter != node->GetSortedChildren().end(); iter++) {
+    std::shared_ptr<RSSurfaceRenderNode> entryViewNode = nullptr;
+    bool entryViewNeedReassign = false;
+    for (auto iter = displayNode->GetSortedChildren().begin(); iter != displayNode->GetSortedChildren().end(); iter++) {
         auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*iter);
         if (node == nullptr) {
-            ROSEN_LOGE(
-                "RSUniRenderUtil::AssignWindowNodes nullptr found in sortedChildren, this should not happen");
+            ROSEN_LOGE("RSUniRenderUtil::AssignWindowNodes nullptr found in sortedChildren, this should not happen");
             continue;
         }
-        if (node->GetId() == focusNodeId) {
-            focusedNodeFound = true;
+        if (node->GetName() == ENTRY_VIEW) {
+            entryViewNode = node;
+            continue;
         }
-        if (!focusedNodeFound && node->IsLeashWindow()) {
+        if (node->IsLeashWindow() && node->IsScale()) {
+            entryViewNeedReassign = true;
+        }
+        bool isFocusNode = false;
+        if (node->GetId() == focusNodeId) {
+            isFocusNode = true;
+        }
+        if (!isFocusNode && node->IsLeashWindow()) {
             for (auto& child : node->GetSortedChildren()) {
                 if (child && child->GetId() == focusNodeId) {
-                    focusedNodeFound = true;
+                    isFocusNode = true;
                     break;
                 }
             }
         }
-        if (focusedNodeFound || node->HasFilter()) { // assign focus, above focus and has filter node to main thread
-            mainThreadNodes.emplace_back(node);
-            node->SetIsMainThreadNode(true);
-            node->SetCacheType(CacheType::NONE);
-            node->ClearCacheSurface();
+        if (node->HasFilter() || (!node->IsScale() && isFocusNode)) {
+            AssignMainThreadNode(mainThreadNodes, node);
         } else if (node->IsCurrentFrameStatic() && node->HasCachedTexture()) {
             node->SetIsMainThreadNode(false);
         } else {
-            subThreadNodes.emplace_back(node);
-            node->UpdateCacheSurfaceDirtyManager(2);
-            node->SetIsMainThreadNode(false);
-            node->SetCacheType(CacheType::ANIMATE_PROPERTY);
-            if (node->GetCacheSurface()) {
-                node->UpdateCompletedCacheSurface();
-                RSParallelRenderManager::Instance()->SaveCacheTexture(*node);
-            }
-            if (node->HasCachedTexture()) {
-                node->SetPriority(NodePriorityType::SUB_LOW_PRIORITY);
-            } else {
-                node->SetPriority(NodePriorityType::SUB_HIGH_PRIORITY);
-            }
+            AssignSubThreadNode(subThreadNodes, node);
         }
     }
+    if (entryViewNode) {
+        if (entryViewNeedReassign) {
+            AssignMainThreadNode(mainThreadNodes, entryViewNode);
+        } else {
+            if (entryViewNode->HasFilter() || (!entryViewNode->IsScale() && entryViewNode->GetId() == focusNodeId)) {
+                AssignMainThreadNode(mainThreadNodes, entryViewNode);
+            } else {
+                AssignSubThreadNode(subThreadNodes, entryViewNode);
+            }
+        }
+    } else {
+        ROSEN_LOGW("RSUniRenderUtil::AssignWindowNodes EntryView is nullptr, should not happen");
+    }
+    SortSubThreadNodes(subThreadNodes);
+}
 
+void RSUniRenderUtil::AssignMainThreadNode(std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
+    const std::shared_ptr<RSSurfaceRenderNode>& node)
+{
+    if (node == nullptr) {
+        ROSEN_LOGW("RSUniRenderUtil::AssignMainThreadNode node is nullptr");
+        return;
+    }
+    mainThreadNodes.emplace_back(node);
+    node->SetIsMainThreadNode(true);
+    node->SetCacheType(CacheType::NONE);
+    node->ClearCacheSurface();
+}
+
+void RSUniRenderUtil::AssignSubThreadNode(std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes,
+    const std::shared_ptr<RSSurfaceRenderNode>& node)
+{
+    if (node == nullptr) {
+        ROSEN_LOGW("RSUniRenderUtil::AssignSubThreadNode node is nullptr");
+        return;
+    }
+    subThreadNodes.emplace_back(node);
+    node->SetIsMainThreadNode(false);
+    node->UpdateCacheSurfaceDirtyManager(2); // 2 means buffer age
+    node->SetCacheType(CacheType::ANIMATE_PROPERTY);
+    if (node->GetCacheSurface()) {
+        node->UpdateCompletedCacheSurface();
+        RSParallelRenderManager::Instance()->SaveCacheTexture(*node);
+    }
+    if (node->HasCachedTexture()) {
+        node->SetPriority(NodePriorityType::SUB_LOW_PRIORITY);
+    } else {
+        node->SetPriority(NodePriorityType::SUB_HIGH_PRIORITY);
+    }
+}
+
+void RSUniRenderUtil::SortSubThreadNodes(std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes)
+{
     // sort subThreadNodes by priority and z-order
     subThreadNodes.sort([](const auto& first, const auto& second) -> bool {
         auto node1 = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(first);

@@ -74,9 +74,14 @@ enum class RSRenderNodeType : uint32_t {
 
 enum class CacheType : uint8_t {
     NONE = 0,
-    STATIC,
-    DYNAMIC,
-    SPHERIZE,
+    CONTENT,
+    ANIMATE_PROPERTY,
+};
+
+enum RSDrawingCacheType : uint16_t {
+    DISABLED_CACHE = 0,
+    FORCED_CACHE,    // must-to-do case
+    TARGETED_CACHE   // suggested case which could be disabled by optimized strategy
 };
 
 // priority for node, higher number means lower priority

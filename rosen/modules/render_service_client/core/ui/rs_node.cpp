@@ -689,6 +689,7 @@ void RSNode::SetBackgroundShader(const std::shared_ptr<RSShader>& shader)
 // background
 void RSNode::SetBgImage(const std::shared_ptr<RSImage>& image)
 {
+    image->SetNodeId(GetId());
     SetProperty<RSBgImageModifier, RSProperty<std::shared_ptr<RSImage>>>(RSModifierType::BG_IMAGE, image);
 }
 
@@ -846,7 +847,8 @@ void RSNode::SetFrameGravity(Gravity gravity)
 
 void RSNode::SetClipRRect(const Vector4f& clipRect, const Vector4f& clipRadius)
 {
-    SetProperty<RSClipRRectModifier, RSAnimatableProperty<RRect>>(RSModifierType::CLIP_RRECT, RRect(clipRect, clipRadius));
+    SetProperty<RSClipRRectModifier, RSAnimatableProperty<RRect>>(
+        RSModifierType::CLIP_RRECT, RRect(clipRect, clipRadius));
 }
 
 void RSNode::SetClipBounds(const std::shared_ptr<RSPath>& path)
@@ -961,14 +963,14 @@ bool RSNode::AnimationCallback(AnimationId animationId, AnimationCallbackEvent e
         return false;
     }
 
-    auto& animation = animationItr->second;
+    auto animation = animationItr->second;
     if (animation == nullptr) {
         ROSEN_LOGE("Failed to callback animation[%" PRIu64 "], animation is null!", animationId);
         return false;
     }
     if (event == FINISHED) {
-        animation->CallFinishCallback();
         RemoveAnimationInner(animation);
+        animation->CallFinishCallback();
         return true;
     } else if (event == REPEAT_FINISHED) {
         animation->CallRepeatCallback();
@@ -1191,6 +1193,61 @@ void RSNode::UnregisterTransitionPair(NodeId inNodeId, NodeId outNodeId)
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, true);
     }
+}
+
+void RSNode::MarkNodeGroup(bool isNodeGroup)
+{
+    if (isNodeGroup_ == isNodeGroup) {
+        return;
+    }
+    isNodeGroup_ = isNodeGroup;
+    std::unique_ptr<RSCommand> command = std::make_unique<RSMarkNodeGroup>(GetId(), isNodeGroup);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    }
+}
+
+
+void RSNode::SetGrayScale(float grayScale)
+{
+    SetProperty<RSGrayScaleModifier, RSAnimatableProperty<float>>(RSModifierType::GRAY_SCALE, grayScale);
+}
+
+void RSNode::SetBrightness(float brightness)
+{
+    SetProperty<RSBrightnessModifier, RSAnimatableProperty<float>>(RSModifierType::BRIGHTNESS, brightness);
+}
+
+void RSNode::SetContrast(float contrast)
+{
+    SetProperty<RSContrastModifier, RSAnimatableProperty<float>>(RSModifierType::CONTRAST, contrast);
+}
+
+void RSNode::SetSaturate(float saturate)
+{
+    SetProperty<RSSaturateModifier, RSAnimatableProperty<float>>(RSModifierType::SATURATE, saturate);
+}
+
+void RSNode::SetSepia(float sepia)
+{
+    SetProperty<RSSepiaModifier, RSAnimatableProperty<float>>(RSModifierType::SEPIA, sepia);
+}
+
+void RSNode::SetInvert(float invert)
+{
+    SetProperty<RSInvertModifier, RSAnimatableProperty<float>>(RSModifierType::INVERT, invert);
+}
+
+void RSNode::SetHueRotate(float hueRotate)
+{
+    SetProperty<RSHueRotateModifier, RSAnimatableProperty<float>>(RSModifierType::HUE_ROTATE, hueRotate);
+}
+
+void RSNode::SetColorBlend(uint32_t colorValue)
+{
+    auto colorBlend = Color::FromArgbInt(colorValue);
+    SetProperty<RSColorBlendModifier, RSAnimatableProperty<Color>>(RSModifierType::COLOR_BLEND, colorBlend);
 }
 } // namespace Rosen
 } // namespace OHOS

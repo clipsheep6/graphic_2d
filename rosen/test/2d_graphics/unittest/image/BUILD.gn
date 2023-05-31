@@ -25,6 +25,10 @@ ohos_unittest("2d_graphics_image_test") {
     "picture_test.cpp",
   ]
 
+  if (ace_enable_gpu) {
+    sources += [ "gpu_context_test.cpp" ]
+  }
+
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/src",
@@ -32,13 +36,15 @@ ohos_unittest("2d_graphics_image_test") {
   ]
 
   deps = [
+    "$graphic_2d_root:libgl",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//third_party/googletest:gtest_main",
   ]
 
+  defines = [ "ROSEN_OHOS" ]
   if (ace_enable_gpu) {
-    defines = [ "ACE_ENABLE_GPU" ]
+    defines += [ "ACE_ENABLE_GPU" ]
   }
 
   subsystem_name = "graphic"

@@ -33,7 +33,7 @@
 #include "pipeline/rs_base_render_engine.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_paint_filter_canvas.h"
-#include "render_context/render_context_egl.h"
+#include "render_context/render_context.h"
 #include "pipeline/rs_base_render_engine.h"
 
 namespace OHOS {
@@ -54,9 +54,9 @@ public:
     bool GetRenderFinish();
     void SetSuperTask(std::unique_ptr<RSSuperRenderTask> superRenderTask);
     void SetCompositionTask(std::unique_ptr<RSCompositionTask> compositionTask);
-    EGLContext GetSharedContext();
-    sk_sp<SkSurface> GetSkSurface();
-    sk_sp<SkImage> GetTexture();
+    EGLContext GetSharedContext() const;
+    sk_sp<SkSurface> GetSkSurface() const;
+    sk_sp<SkImage> GetTexture() const;
     bool WaitReleaseFence();
     std::shared_ptr<RSUniRenderVisitor> GetUniVisitor() const
     {
@@ -72,6 +72,9 @@ private:
     void StartRender();
     void InitSubThread();
     void Render();
+    void InitUniVisitor();
+    void StartRenderCache();
+    void RenderCache();
     void Flush();
     void CreateResource();
     void CreatePbufferSurface();
@@ -108,11 +111,11 @@ private:
     std::thread *subThread_;
     std::condition_variable cvFlush_;
     std::mutex flushMutex_;
-    RenderContextEGL *renderContext_ = nullptr;
+    RenderContext *renderContext_ = nullptr;
     std::unique_ptr<RSSuperRenderTask> threadTask_;
     std::unique_ptr<RSCompositionTask> compositionTask_ = nullptr;
 
-    RSUniRenderVisitor *mainVisitor_;
+    RSUniRenderVisitor *mainVisitor_ = nullptr;
     ParallelRenderType renderType_;
     sk_sp<SkImage> texture_;
     EGLSyncKHR eglSync_ = EGL_NO_SYNC_KHR;

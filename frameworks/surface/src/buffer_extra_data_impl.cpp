@@ -14,9 +14,7 @@
  */
 
 #include "buffer_extra_data_impl.h"
-
 #include <message_parcel.h>
-
 #include "buffer_log.h"
 
 namespace OHOS {
@@ -33,6 +31,10 @@ GSError BufferExtraDataImpl::ReadFromParcel(MessageParcel &parcel)
     }
 
     int32_t size = parcel.ReadInt32();
+    if (size > SURFACE_MAX_USER_DATA_COUNT) {
+        BLOGE("Too much data obtained from Parcel");
+        return GSERROR_INTERNAL;
+    }
     for (int32_t i = 0; i < size; i++) {
         auto key = parcel.ReadString();
         auto type = static_cast<ExtraDataType>(parcel.ReadInt32());

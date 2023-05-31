@@ -145,14 +145,15 @@ void DrawCmdList::Playback(RSPaintFilterCanvas& canvas, const SkRect* rect)
     }
 }
 
-std::string DrawCmdList::PlayBackForRecord(SkCanvas& canvas, int startOpId, int endOpId, int descStartOpId, const SkRect* rect)
+std::string DrawCmdList::PlayBackForRecord(SkCanvas& canvas, int startOpId, int endOpId, int descStartOpId,
+    const SkRect* rect)
 {
     RSPaintFilterCanvas filterCanvas(&canvas);
     return PlayBackForRecord(filterCanvas, startOpId, endOpId, descStartOpId, rect);
 }
 
-std::string DrawCmdList::PlayBackForRecord(RSPaintFilterCanvas& canvas, int startOpId, int endOpId, int descStartOpId,
-    const SkRect* rect)
+std::string DrawCmdList::PlayBackForRecord(RSPaintFilterCanvas& canvas, int startOpId, int endOpId,
+    int descStartOpId, const SkRect* rect)
 {
     std::string str;
     if (width_ <= 0 || height_ <= 0) {
@@ -177,7 +178,10 @@ std::string DrawCmdList::PlayBackForRecord(RSPaintFilterCanvas& canvas, int star
 std::string DrawCmdList::GetOpsWithDesc() const
 {
     std::string desc;
-    for (const auto& item : ops_) {
+    for (auto& item : ops_) {
+        if (item == nullptr) {
+            continue;
+        }
         desc += item->GetTypeWithDesc();
     }
     return desc + "\n";
@@ -198,12 +202,42 @@ int DrawCmdList::GetHeight() const
     return height_;
 }
 
+void DrawCmdList::UpdateNodeIdToPicture(NodeId nodeId)
+{
+#ifdef ROSEN_OHOS
+    if (imageIndexs_.empty()) {
+        RS_LOGD("DrawCmdList::UpdateNodeIdToPicture no need update");
+        return;
+    }
+    for (size_t i = 0; i < imageIndexs_.size(); i++) {
+        auto index = imageIndexs_[i];
+        if (index > ops_.size()) {
+            RS_LOGW("DrawCmdList::UpdateNodeIdToPicture index[%d] error", index);
+            continue;
+        }
+        ops_[index]->SetNodeId(nodeId);
+    }
+#endif
+}
+
+void DrawCmdList::FindIndexOfImage() const
+{
+    for (size_t index = 0; index < ops_.size(); index++) {
+        if (ops_[index]->IsImageOp()) {
+            imageIndexs_.emplace_back(index);
+        }
+    }
+
+}
+
 bool DrawCmdList::Marshalling(Parcel& parcel) const
 {
 #ifdef ROSEN_OHOS
     std::lock_guard<std::mutex> lock(mutex_);
+    FindIndexOfImage();
     bool success = RSMarshallingHelper::Marshalling(parcel, width_) &&
                    RSMarshallingHelper::Marshalling(parcel, height_) &&
+                   RSMarshallingHelper::Marshalling(parcel, imageIndexs_) &&
                    RSMarshallingHelper::Marshalling(parcel, ops_) &&
                    RSMarshallingHelper::Marshalling(parcel, isCached_) &&
                    RSMarshallingHelper::Marshalling(parcel, cachedHighContrast_) &&
@@ -229,7 +263,8 @@ DrawCmdList* DrawCmdList::Unmarshalling(Parcel& parcel)
         return nullptr;
     }
     std::unique_ptr<DrawCmdList> drawCmdList = std::make_unique<DrawCmdList>(width, height);
-    if (!(RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->ops_) &&
+    if (!(RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->imageIndexs_) &&
+            RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->ops_) &&
             RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->isCached_) &&
             RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->cachedHighContrast_) &&
             RSMarshallingHelper::Unmarshalling(parcel, drawCmdList->opReplacedByCache_))) {

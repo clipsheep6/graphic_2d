@@ -266,7 +266,7 @@ void RSMainThread::Init()
         renderEngine_->Init();
     }
 #ifdef RS_ENABLE_GL
-    int cacheLimitsTimes = 3; // double skia Resource Cache Limits
+    int cacheLimitsTimes = 3;
     auto grContext = isUniRender_? uniRenderEngine_->GetRenderContext()->GetGrContext() :
         renderEngine_->GetRenderContext()->GetGrContext();
     int maxResources = 0;
@@ -564,7 +564,7 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
         surfaceHandler.ResetCurrentFrameBufferConsumed();
         if (RSBaseRenderUtil::ConsumeAndUpdateBuffer(surfaceHandler)) {
             this->bufferTimestamps_[surfaceNode->GetId()] = static_cast<uint64_t>(surfaceNode->GetTimestamp());
-            if (surfaceNode->UpdateDirtyIfFrameBufferConsumed()) {
+            if (surfaceNode->IsCurrentFrameBufferConsumed()) {
                 // collect surface view's pid to prevent wrong skip
                 activeProcessPids_.emplace(ExtractPid(surfaceNode->GetId()));
             }
@@ -621,7 +621,7 @@ void RSMainThread::CollectInfoForHardwareComposer()
         // setDirty for surfaceView if last frame is hardware enabled
         for (auto& surfaceNode : hardwareEnabledNodes_) {
             if (surfaceNode->IsLastFrameHardwareEnabled()) {
-                surfaceNode->SetDirty();
+                surfaceNode->SetContentDirty();
                 activeProcessPids_.emplace(ExtractPid(surfaceNode->GetId()));
             }
         }
@@ -863,7 +863,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
                 return;
             }
         }
-        if (IsSingleDisplay()) {
+        if (RSSystemProperties::GetUIFirstEnabled() && IsSingleDisplay()) {
             auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
                 rootNode->GetSortedChildren().front());
             std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes;
@@ -912,12 +912,14 @@ void RSMainThread::Render()
     PerfForBlurIfNeeded();
 }
 
-bool RSMainThread::CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface)
+bool RSMainThread::CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces,
+    std::shared_ptr<RSSurfaceRenderNode> curSurface)
 {
     bool needProcess = false;
     if (curSurface->IsFocusedWindow(focusAppPid_)) {
         needProcess = true;
-        if (!curSurface->HasContainerWindow() && !curSurface->IsTransparent()) {
+        if (!curSurface->HasContainerWindow() && !curSurface->IsTransparent() &&
+            curSurface->GetName().find("hisearch") == std::string::npos) {
             occlusionSurfaces.insert(curSurface->GetDstRect());
         }
     } else {
@@ -926,7 +928,7 @@ bool RSMainThread::CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces,
         bool insertSuccess = occlusionSurfaces.size() > beforeSize ? true : false;
         if (insertSuccess) {
             needProcess = true;
-            if (curSurface->IsTransparent()) {
+            if (curSurface->IsTransparent() || curSurface->GetName().find("hisearch") != std::string::npos) {
                 auto iter = std::find_if(occlusionSurfaces.begin(), occlusionSurfaces.end(),
                     [&curSurface](RectI r) -> bool {return r == curSurface->GetDstRect();});
                 if (iter != occlusionSurfaces.end()) {
@@ -974,12 +976,14 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
                 }
             }
             if (isUniRender_) {
-                // When a surfacenode is in animation (i.e. 3d animation), its dstrect cannot be trusted, we treated
-                // it as a full transparent layer.
-                if (!(curSurface->GetAnimateState())) {
-                    accumulatedRegion.OrSelf(curSurface->GetOpaqueRegion());
-                } else {
-                    curSurface->ResetAnimateState();
+                if (curSurface->GetName().find("hisearch") == std::string::npos) {
+                    // When a surfacenode is in animation (i.e. 3d animation), its dstrect cannot be trusted, we treated
+                    // it as a full transparent layer.
+                    if (!(curSurface->GetAnimateState())) {
+                        accumulatedRegion.OrSelf(curSurface->GetOpaqueRegion());
+                    } else {
+                        curSurface->ResetAnimateState();
+                    }
                 }
             } else {
                 bool diff = (curSurface->GetDstRect().width_ > curSurface->GetBuffer()->GetWidth() ||
@@ -1104,6 +1108,7 @@ void RSMainThread::CallbackToWMS(VisibleData& curVisVec)
         }
     }
     if (visibleChanged) {
+        std::lock_guard<std::mutex> lock(occlusionMutex_);
         for (auto it = occlusionListeners_.begin(); it != occlusionListeners_.end(); it++) {
             if (it->second) {
                 RS_LOGD("RSMainThread::CallbackToWMS curVisVec size:%u", curVisVec.size());
@@ -1312,11 +1317,13 @@ void RSMainThread::UnRegisterApplicationAgent(sptr<IApplicationAgent> app)
 
 void RSMainThread::RegisterOcclusionChangeCallback(pid_t pid, sptr<RSIOcclusionChangeCallback> callback)
 {
+    std::lock_guard<std::mutex> lock(occlusionMutex_);
     occlusionListeners_[pid] = callback;
 }
 
 void RSMainThread::UnRegisterOcclusionChangeCallback(pid_t pid)
 {
+    std::lock_guard<std::mutex> lock(occlusionMutex_);
     occlusionListeners_.erase(pid);
 }
 
@@ -1500,7 +1507,7 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         SkGraphics::PurgeAllCaches();
         grContext->freeGpuResources();
         grContext->purgeUnlockedResources(true);
-        auto rendercontext = std::shared_ptr<RenderContext>(RenderContextFactory::GetInstance().CreateNewEngine());
+        std::shared_ptr<RenderContext> rendercontext = std::make_shared<RenderContext>();
         rendercontext->CleanAllShaderCache();
 #ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
@@ -1532,14 +1539,12 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
 #endif
     } else if (type == "shader") {
-        auto rendercontext = std::shared_ptr<RenderContext>(RenderContextFactory::GetInstance().CreateNewEngine());
+        std::shared_ptr<RenderContext> rendercontext = std::make_shared<RenderContext>();
         rendercontext->CleanAllShaderCache();
     } else {
-        uint32_t pid = std::stoll(type);
-#ifndef NEW_SKIA
+        uint32_t pid = static_cast<uint32_t>(std::stoll(type));
         GrGpuResourceTag tag(pid, 0, 0, 0);
         MemoryManager::ReleaseAllGpuResource(grContext, tag);
-#endif
     }
     dumpString.append("trimMem: " + type + "\n");
 #else
@@ -1553,7 +1558,7 @@ void RSMainThread::DumpMem(std::unordered_set<std::u16string>& argSets, std::str
 #ifdef RS_ENABLE_GL
     DfxString log;
     auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
-    if(pid != 0) {
+    if (pid != 0) {
         MemoryManager::DumpPidMemory(log, pid, grContext);
     } else {
         MemoryManager::DumpMemoryUsage(log, grContext, type);

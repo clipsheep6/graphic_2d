@@ -62,7 +62,7 @@ bool DrawingDCL::PlayBackByFrame(SkCanvas* skiaCanvas, bool isDumpPictures)
     static int frame = beginFrame_;
     static int curLoop = 0;
     std::string dclFile = inputFilePath_ + "frame" + std::to_string(frame) + ".txt";
-    std::cout << "PlayBackFrame dclFile:" << dclFile << std::endl;
+    std::cout << "PlayBackByFrame dclFile:" << dclFile << std::endl;
 
     if (LoadDrawCmdList(dclFile) < 0) {
         std::cout << "failed to loadDrawCmdList" << std::endl;
@@ -252,27 +252,24 @@ private:
     uint8_t *mapFile_;
 };
 
-std::string DrawingDCL::GetRealPathStr(std::string filePath)
+std::string DrawingDCL::GetRealPathStr(const std::string& filePath)
 {
     std::string realPathStr = "";
     char actualPath[PATH_MAX + 1] = {0};
-    char* realDclFilePath = realpath(filePath.c_str(), actualPath);
-    if (realDclFilePath == nullptr) {
+    if (realpath(filePath.c_str(), actualPath) == nullptr) {
         std::cout << "The path of DrawCmdList file is empty!" << std::endl;
         return realPathStr;
     }
-    realPathStr = realDclFilePath;
-    free(realDclFilePath);
-    realDclFilePath = nullptr;
+    realPathStr = actualPath;
     return realPathStr;
 }
 
-bool DrawingDCL::IsValidFile(std::string realPathStr)
+bool DrawingDCL::IsValidFile(const std::string& realPathStr)
 {
     return realPathStr.find(dclFileDir_) == 0;
 }
 
-int DrawingDCL::LoadDrawCmdList(std::string dclFile)
+int DrawingDCL::LoadDrawCmdList(const std::string& dclFile)
 {
     std::string realDclFilePathStr = GetRealPathStr(dclFile);
     if (realDclFilePathStr.empty()) {
@@ -293,18 +290,16 @@ int DrawingDCL::LoadDrawCmdList(std::string dclFile)
     }
     std::cout << "statbuf.st_size = " << statbuf.st_size << std::endl;
 
-    auto mapFile = std::unique_ptr<uint8_t, void(*)(void*)>(
-        static_cast<uint8_t*>(mmap(nullptr, statbuf.st_size, PROT_READ, MAP_PRIVATE, fd, 0)),
-        [](void* p) { struct stat statbuf; munmap(p, statbuf.st_size); });
-
-    if (mapFile.get() == MAP_FAILED) {
+    auto mapFile = static_cast<uint8_t *>(mmap(nullptr, statbuf.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
+    if (mapFile == MAP_FAILED) {
         return -1;
     }
     std::cout << "mapFile OK" << std::endl;
 
-    MessageParcel messageParcel(new MyAllocator(fd.Get(), statbuf.st_size, mapFile.get()));
+    MessageParcel messageParcel(new MyAllocator(fd.Get(), statbuf.st_size, mapFile));
     messageParcel.SetMaxCapacity(recordingParcelMaxCapcity_);
-    if (!messageParcel.ParseFrom(reinterpret_cast<uintptr_t>(mapFile.get()), statbuf.st_size)) {
+    if (!messageParcel.ParseFrom(reinterpret_cast<uintptr_t>(mapFile), statbuf.st_size)) {
+        munmap(mapFile, statbuf.st_size);
         return -1;
     }
     std::cout << "messageParcel GetDataSize() = " << messageParcel.GetDataSize() << std::endl;
@@ -312,9 +307,11 @@ int DrawingDCL::LoadDrawCmdList(std::string dclFile)
     dcl_ = DrawCmdList::Unmarshalling(messageParcel);
     if (dcl_ == nullptr) {
         std::cout << "dcl is nullptr" << std::endl;
+        munmap(mapFile, statbuf.st_size);
         return -1;
     }
     std::cout << "The size of Ops is " << dcl_->GetSize() << std::endl;
+        munmap(mapFile, statbuf.st_size);
     return 0;
 }
 }

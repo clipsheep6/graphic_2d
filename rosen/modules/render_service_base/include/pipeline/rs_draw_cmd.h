@@ -24,6 +24,7 @@
 #include "GLES2/gl2.h"
 #include "GLES2/gl2ext.h"
 #endif
+#ifndef USE_ROSEN_DRAWING
 #include "include/core/SkCanvas.h"
 #include "include/core/SkDrawable.h"
 #include "include/core/SkImage.h"
@@ -181,6 +182,11 @@ public:
     {
         return true;
     }
+    virtual bool IsImageOp() const
+    {
+        return false;
+    }
+    virtual void SetNodeId(NodeId id) {}
 };
 
 class OpItemWithPaint : public OpItem {
@@ -204,7 +210,11 @@ public:
     explicit OpItemWithRSImage(size_t size) : OpItemWithPaint(size) {}
     ~OpItemWithRSImage() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
-
+    void SetNodeId(NodeId id) override;
+    bool IsImageOp() const override
+    {
+        return true;
+    }
 protected:
     std::shared_ptr<RSImageBase> rsImage_;
 };
@@ -301,6 +311,11 @@ public:
     {
         return RSOpType::IMAGE_WITH_PARM_OPITEM;
     }
+    bool IsImageOp() const override
+    {
+        return true;
+    }
+    void SetNodeId(NodeId id) override;
 
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static OpItem* Unmarshalling(Parcel& parcel);
@@ -510,8 +525,8 @@ public:
     std::string GetTypeWithDesc() const override
     {
         std::string desc = "{OpType: " + GetOpTypeString(GetType()) +", Description:{";
-        int depth = 1;
 #ifndef NEW_SKIA
+        int depth = 1;
         matrix_.dump(desc, depth);
 #endif
         desc += "}, \n";
@@ -1155,8 +1170,8 @@ public:
     std::string GetTypeWithDesc() const override
     {
         std::string desc = "{OpType: " + GetOpTypeString(GetType()) +", Description:{";
-        int depth = 1;
 #ifndef NEW_SKIA
+        int depth = 1;
         matrix_.dump(desc, depth);
 #endif
         desc += "}, \n";
@@ -1509,4 +1524,5 @@ private:
 } // namespace Rosen
 } // namespace OHOS
 
+#endif // USE_ROSEN_DRAWING
 #endif // RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_DRAW_CMD_H

@@ -143,6 +143,16 @@ void MemoryTrack::DumpMemoryNodeStatistics(DfxString& log)
     log.AppendFormat("Total Node Size = %d KB (%d entries)\n", totalSize / BYTE_CONVERT, count);
 }
 
+void MemoryTrack::UpdatePictureInfo(const void* addr, NodeId nodeId, pid_t pid)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto itr = memPicRecord_.find(addr);
+    if (itr != memPicRecord_.end()) {
+        itr->second.pid = pid;
+        itr->second.nid = nodeId;
+    }
+}
+
 const char* MemoryTrack::MemoryType2String(MEMORY_TYPE type)
 {
     switch (type) {
@@ -198,8 +208,8 @@ void MemoryTrack::DumpMemoryPicStatistics(DfxString& log,
     log.AppendFormat("RSImageCache:\n");
     log.AppendFormat("%s:\n", GenerateDumpTitle().c_str());
 
-    int arrTotal[MEM_MAX_SIZE];
-    int arrCount[MEM_MAX_SIZE];
+    int arrTotal[MEM_MAX_SIZE] = {0};
+    int arrCount[MEM_MAX_SIZE] = {0};
     int totalSize = 0;
     int count = 0;
     //calculate by byte

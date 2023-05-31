@@ -198,7 +198,7 @@ std::shared_ptr<RSFilter> RSMaterialFilter::Sub(const std::shared_ptr<RSFilter>&
     MaterialParam materialParam;
     materialParam.radius = radius_ - materialR->radius_;
     materialParam.saturation = saturation_ - materialR->saturation_ + 1;
-    materialParam.brightness = brightness_ - materialR->brightness_ +  1;
+    materialParam.brightness = brightness_ - materialR->brightness_ + 1;
     materialParam.maskColor = maskColor_ - materialR->maskColor_;
     return RSMaterialFilter::CreateInstance(materialParam, materialR->colorMode_);
 }

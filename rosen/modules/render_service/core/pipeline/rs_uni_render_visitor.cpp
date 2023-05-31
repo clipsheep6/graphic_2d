@@ -900,6 +900,7 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
         RS_LOGE("RSUniRenderVisitor::PrepareCanvasRenderNode curSurfaceDirtyManager is nullptr");
         return;
     }
+    node.GetMutableRenderProperties().UpdateSandBoxMatrix(parentSurfaceNodeMatrix_);
     dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
         dirtyFlag_, prepareClipRect_);
 
@@ -2595,16 +2596,8 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     } else {
         saveCount = canvas_->save();
     }
-
-    bool saveRootMatrix = node.GetChildrenCount() > 0 && !rootMatrix_.has_value();
-    if (saveRootMatrix) {
-        rootMatrix_ = canvas_->getTotalMatrix();
-    }
     ProcessCanvasRenderNode(node);
     canvas_->restoreToCount(saveCount);
-    if (saveRootMatrix) {
-        rootMatrix_.reset();
-    }
 }
 
 bool RSUniRenderVisitor::GenerateNodeContentCache(RSRenderNode& node)
@@ -2727,10 +2720,10 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     // in case preparation'update is skipped
     node.GetMutableRenderProperties().CheckEmptyBounds();
     // draw self and children in sandbox which will not be affected by parent's transition
-    const auto& sandboxPos = node.GetRenderProperties().GetSandBox();
-    if (sandboxPos.has_value() && rootMatrix_.has_value()) {
-        canvas_->setMatrix(rootMatrix_.value());
-        canvas_->translate(sandboxPos->x_, sandboxPos->y_);
+    node.GetMutableRenderProperties().UpdateSandBoxMatrix(parentSurfaceNodeMatrix_);
+    const auto& sandboxMatrix = node.GetRenderProperties().GetSandBoxMatrix();
+    if (sandboxMatrix) {
+        canvas_->setMatrix(*sandboxMatrix);
     }
 
     const auto& property = node.GetRenderProperties();
@@ -3005,7 +2998,7 @@ bool RSUniRenderVisitor::PrepareSharedTransitionNode(RSBaseRenderNode& node)
     // use transition key (aka in node id) as map index.
     auto key = transitionParam->first;
     // add this node and render params (only alpha for prepare phase) into unpairedTransitionNodes_.
-    RenderParam value { std::move(renderChild), curAlpha_, std::nullopt };
+    RenderParam value { std::move(renderChild), curAlpha_, std::nullopt, parentSurfaceNodeMatrix_ };
     unpairedTransitionNodes_.emplace_back(key, std::move(value));
 
     // skip prepare for shared transition node and its children
@@ -3038,7 +3031,8 @@ bool RSUniRenderVisitor::ProcessSharedTransitionNode(RSBaseRenderNode& node)
     // use transition key (in node id) as map index.
     auto key = transitionParam->first;
     // add this node and render params (alpha and matrix) into unpairedTransitionNodes_.
-    RenderParam value { std::move(renderChild), canvas_->GetAlpha(), canvas_->getTotalMatrix() };
+    RenderParam value { std::move(renderChild), canvas_->GetAlpha(), canvas_->getTotalMatrix(),
+        parentSurfaceNodeMatrix_ };
     unpairedTransitionNodes_.emplace_back(key, std::move(value));
 
     // skip processing the current node and all its children.
@@ -3082,14 +3076,16 @@ RSUniRenderVisitor::TransitionNodeList RSUniRenderVisitor::PreparePairedSharedTr
     auto curAlpha = curAlpha_;
     {
         // restore curAlpha_ and prepare first node
-        auto& [node, alpha, matrix] = first;
+        auto& [node, alpha, matrix, surfaceMatrix] = first;
         curAlpha_ = alpha;
+        parentSurfaceNodeMatrix_ = surfaceMatrix;
         node->Prepare(shared_from_this());
     }
     {
         // restore curAlpha_ and prepare second node
-        auto& [node, alpha, matrix] = second;
+        auto& [node, alpha, matrix, surfaceMatrix] = second;
         curAlpha_ = alpha;
+        parentSurfaceNodeMatrix_ = surfaceMatrix;
         node->Prepare(shared_from_this());
     }
     curAlpha_ = curAlpha;
@@ -3103,17 +3099,19 @@ RSUniRenderVisitor::TransitionNodeList RSUniRenderVisitor::ProcessPairedSharedTr
     {
         RSAutoCanvasRestore acr(canvas_);
         // restore render context and process first node, we don't need to check validity of params again
-        auto& [node, alpha, matrix] = first;
+        auto& [node, alpha, matrix, surfaceMatrix] = first;
         canvas_->SetAlpha(alpha);
         canvas_->setMatrix(matrix.value());
+        parentSurfaceNodeMatrix_ = surfaceMatrix;
         node->Process(shared_from_this());
     }
     {
         RSAutoCanvasRestore acr(canvas_);
         // restore render context and process second node, we don't need to check validity of params again
-        auto& [node, alpha, matrix] = second;
+        auto& [node, alpha, matrix, surfaceMatrix] = second;
         canvas_->SetAlpha(alpha);
         canvas_->setMatrix(matrix.value());
+        parentSurfaceNodeMatrix_ = surfaceMatrix;
         node->Process(shared_from_this());
     }
     auto newUnpairedNodes = std::move(unpairedTransitionNodes_);

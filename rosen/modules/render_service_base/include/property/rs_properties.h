@@ -74,8 +74,10 @@ public:
     float GetFrameOffsetX() const;
     float GetFrameOffsetY() const;
 
-    void SetSandBox(const std::optional<Vector2f>& parentPosition);
-    const std::optional<Vector2f>& GetSandBox() const;
+    void SetSandBox(Vector2f parentPosition);
+    Vector2f GetSandBox() const;
+    void UpdateSandBoxMatrix(const std::optional<SkMatrix>& rootMatrix);
+    std::optional<SkMatrix> GetSandBoxMatrix() const;
 
     void SetPositionZ(float positionZ);
     float GetPositionZ() const;
@@ -312,7 +314,7 @@ private:
 
     std::weak_ptr<RSRenderNode> backref_;
 
-    std::optional<Vector2f> sandboxPosition_;
+    std::shared_ptr<Sandbox> sandbox_ = nullptr;
 
     std::unique_ptr<Vector4f> pixelStretch_ = nullptr;
 

@@ -323,7 +323,7 @@ private:
     // driven render
     std::unique_ptr<DrivenInfo> drivenInfo_ = nullptr;
 
-    using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, float, std::optional<SkMatrix>>;
+    using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, float, std::optional<SkMatrix>, SkMatrix>;
     using TransitionNodeList = std::vector<std::pair<NodeId, RenderParam>>;
     TransitionNodeList unpairedTransitionNodes_;
     // return true if we should prepare/process, false if we should skip.
@@ -338,8 +338,6 @@ private:
     std::weak_ptr<RSBaseRenderNode> logicParentNode_;
 
     bool isCalcCostEnable_ = false;
-
-    std::optional<SkMatrix> rootMatrix_ = std::nullopt;
 
     uint32_t appWindowNum_ = 0;
 

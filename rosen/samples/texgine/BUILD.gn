@@ -35,6 +35,7 @@ group("texgine_feature_test") {
     ":texgine_sample_text_color",
     ":texgine_sample_weight_style",
     ":texgine_sample_word_boundary",
+    ":texgine_sample_typography_row",
   ]
 }
 
@@ -320,6 +321,17 @@ ohos_executable("texgine_sample_layout") {
   install_enable = true
 
   sources = [ "feature_test/layout_test.cpp" ]
+
+  deps = [ ":texgine_sample" ]
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_executable("texgine_sample_typography_row") {
+  install_enable = true
+
+  sources = [ "feature_test/typography_row_test.cpp" ]
 
   deps = [ ":texgine_sample" ]
 

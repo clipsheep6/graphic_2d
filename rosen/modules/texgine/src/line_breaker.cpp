@@ -89,6 +89,7 @@ void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, cons
 {
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "UpadateLineBreaksData");
     scoredSpans.emplace(scoredSpans.cbegin());
+    double iscoreTotal = 0;
     for (size_t i = 1; i < scoredSpans.size(); i++) {
         auto &is = scoredSpans[i];
         is.prev = scoredSpans[i - 1].prev;
@@ -108,9 +109,17 @@ void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, cons
         double delta = widthLimit - (is.preBreak - scoredSpans[is.prev].postBreak);
         is.score = delta * delta + scoredSpans[is.prev].score;
 
+        if (ys.breakStrategy_ == BreakStrategy::BALANCED) {
+            iscoreTotal += is.score;
+            double curiscoreTotal = iscoreTotal / i;
+            is.score = curiscoreTotal;
+        }
+
         std::stringstream ss;
         ss << i;
         LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), ss.str());
+        double jscoreTotal = 0;
+        double weight_sum = 0;
         for (size_t j = 0; j < i; j++) {
             auto &js = scoredSpans[j];
             double jdelta = widthLimit - (is.preBreak - js.postBreak);
@@ -126,6 +135,18 @@ void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, cons
             if (jscore < is.score) {
                 is.score = jscore;
                 is.prev = j;
+            }
+
+			if (ys.breakStrategy_ == BreakStrategy::BALANCED) {
+                double weight = pow((j - i), 2);
+                weight_sum += weight;
+                jscoreTotal += jscore * (weight_sum / j);
+                double curjscore = jscoreTotal / weight_sum;
+
+                if (curjscore < is.score) {
+                    is.score = curjscore;
+                    is.prev = j;
+				}
             }
         }
         LOGEX_FUNC_LINE_DEBUG() << "[" << i << "] Any{" << is.prev << "<-" << " b(" << is.preBreak << ", "

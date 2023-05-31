@@ -682,9 +682,11 @@ bool RSMainThread::NeedReleaseGpuResource(const RSRenderNodeMap& nodeMap)
             continue;
         }
         // needReleaseGpuResource will be set true when all nodes don't need filter, otherwise false.
-        needReleaseGpuResource = needReleaseGpuResource && !(surfaceNode->HasFilter());
+        needReleaseGpuResource = needReleaseGpuResource &&
+            !(surfaceNode->HasFilter() || !(surfaceNode->GetChildrenNeedFilterRects().empty()));
         // currentFrameHasFilter will be set true when one node needs filter, otherwise false.
-        currentFrameHasFilter = currentFrameHasFilter || surfaceNode->HasFilter();
+        currentFrameHasFilter = currentFrameHasFilter ||
+            surfaceNode->HasFilter() || !(surfaceNode->GetChildrenNeedFilterRects().empty());
     }
     lastFrameHasFilter_ = currentFrameHasFilter;
     return needReleaseGpuResource;
@@ -823,7 +825,10 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
     uniVisitor->SetHardwareEnabledNodes(hardwareEnabledNodes_);
     uniVisitor->SetAppWindowNum(appWindowNum_);
     uniVisitor->SetProcessorRenderEngine(GetRenderEngine());
-    if (isHardwareForcedDisabled_ || rootNode->GetChildrenCount() > 1) {
+    ColorFilterMode colorFilterMode = renderEngine_->GetColorFilterMode();
+    bool hasColorFilter = colorFilterMode >= ColorFilterMode::INVERT_COLOR_ENABLE_MODE &&
+        colorFilterMode <= ColorFilterMode::INVERT_DALTONIZATION_TRITANOMALY_MODE;
+    if (isHardwareForcedDisabled_ || rootNode->GetChildrenCount() > 1 || hasColorFilter) {
         // [PLANNING] GetChildrenCount > 1 indicates multi display, only Mirror Mode need be marked here
         // Mirror Mode reuses display node's buffer, so mark it and disable hardware composer in this case
         uniVisitor->MarkHardwareForcedDisabled();

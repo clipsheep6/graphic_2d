@@ -56,7 +56,8 @@ public:
 
     std::pair<bool, bool> Animate(int64_t timestamp) override;
     // PrepareCanvasRenderNode in UniRender
-    bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, RectI clipRect);
+    bool Update(
+        RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, RectI clipRect);
     // Other situation
     bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty);
 #ifndef USE_ROSEN_DRAWING
@@ -291,6 +292,16 @@ public:
         isMainThreadNode_ = isMainThreadNode;
     }
 
+    bool IsScale() const
+    {
+        return isScale_;
+    }
+
+    void SetIsScale(bool isScale)
+    {
+        isScale_ = isScale;
+    }
+
     void SetPriority(NodePriorityType priority)
     {
         priority_ = priority;
@@ -366,8 +377,8 @@ private:
     // clipRect only used in UniRener when calling PrepareCanvasRenderNode
     // PrepareCanvasRenderNode in UniRender: needClip = true and clipRect is meaningful
     // Other situation: needClip = false and clipRect is meaningless
-    bool Update(
-        RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, bool needClip, RectI clipRect);
+    bool Update(RSDirtyRegionManager& dirtyManager,
+        const RSProperties* parent, bool parentDirty, bool needClip, RectI clipRect);
     void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, bool needClip, RectI clipRect);
 
     bool isDirtyRegionUpdated_ = false;
@@ -398,6 +409,7 @@ private:
 
     sk_sp<SkImage> cacheTexture_;
     bool isMainThreadNode_ = true;
+    bool isScale_ = false;
     bool hasFilter_ = false;
     NodePriorityType priority_ = NodePriorityType::MAIN_PRIORITY;
 

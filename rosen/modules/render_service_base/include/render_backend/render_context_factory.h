@@ -13,24 +13,19 @@
  * limitations under the License.
  */
 
-#include "post_table_parser.h"
+#ifndef RENDER_CONTEXT_FACTORY_H
+#define RENDER_CONTEXT_FACTORY_H
 
-#include "texgine/utils/exlog.h"
+#include "render_context_base.h"
+
+#include <memory>
 
 namespace OHOS {
 namespace Rosen {
-namespace TextEngine {
-const struct PostTable* PostTableParser::Parse(const char* data, int32_t size) const
-{
-    return reinterpret_cast<const struct PostTable*>(data);
+class RenderContextFactory {
+public:
+    static std::shared_ptr<RenderContextBase> CreateRenderContext(RenderType renderType = RenderType::GLES);
+};
 }
-
-void PostTableParser::Dump() const
-{
-    const auto& table = *reinterpret_cast<const struct PostTable*>(data_);
-    LOGSO_FUNC_LINE(INFO) << "postTable size: " << size_ << "version: " << table.version.Get()
-        << "italicAngle: " << table.italicAngle.Get() << "isFixedPitch: " << table.isFixedPitch.Get();
 }
-} // namespace TextEngine
-} // namespace Rosen
-} // namespace OHOS
+#endif

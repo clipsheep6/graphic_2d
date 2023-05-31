@@ -13,24 +13,22 @@
  * limitations under the License.
  */
 
-#include "post_table_parser.h"
+#include "rs_surface_factory.h"
 
-#include "texgine/utils/exlog.h"
-
+#include "render_context_base.h"
+#include "utils/log.h"
+#include "ohos/rs_render_surface_ohos.h"
 namespace OHOS {
 namespace Rosen {
-namespace TextEngine {
-const struct PostTable* PostTableParser::Parse(const char* data, int32_t size) const
+std::shared_ptr<RSRenderSurface> RSSurfaceFactory::CreateRSSurface(const PlatformName& platformName,
+    const sptr<Surface>& surface, std::shared_ptr<DrawingContext> drawingContext)
 {
-    return reinterpret_cast<const struct PostTable*>(data);
+    std::shared_ptr<RSRenderSurface> rsSurface;
+    if (platformName == PlatformName::OHOS) {
+        rsSurface = std::make_shared<RSRenderSurfaceOhos>(surface, drawingContext);
+    }
+    LOGD("Create rsSurface successfully");
+    return rsSurface;
 }
-
-void PostTableParser::Dump() const
-{
-    const auto& table = *reinterpret_cast<const struct PostTable*>(data_);
-    LOGSO_FUNC_LINE(INFO) << "postTable size: " << size_ << "version: " << table.version.Get()
-        << "italicAngle: " << table.italicAngle.Get() << "isFixedPitch: " << table.isFixedPitch.Get();
 }
-} // namespace TextEngine
-} // namespace Rosen
-} // namespace OHOS
+}

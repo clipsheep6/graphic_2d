@@ -330,10 +330,12 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
             node->UpdateCacheSurfaceDirtyManager(2);
             node->SetIsMainThreadNode(false);
             node->SetCacheType(CacheType::ANIMATE_PROPERTY);
+#ifdef RS_ENABLE_GL
             if (node->GetCacheSurface()) {
                 node->UpdateCompletedCacheSurface();
                 RSParallelRenderManager::Instance()->SaveCacheTexture(*node);
             }
+#endif
             if (node->HasCachedTexture()) {
                 node->SetPriority(NodePriorityType::SUB_LOW_PRIORITY);
             } else {

@@ -54,7 +54,7 @@ struct IntrinsicTestData {
         },
         .title = "breakAll",
     },
-	{
+    {
         .ys = {
             .ellipsis = u"",
             .wordBreakType = WordBreakType::NORMAL,

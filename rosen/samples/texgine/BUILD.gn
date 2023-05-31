@@ -33,9 +33,9 @@ group("texgine_feature_test") {
     ":texgine_sample_shadow",
     ":texgine_sample_spacing",
     ":texgine_sample_text_color",
+    ":texgine_sample_typography_row",
     ":texgine_sample_weight_style",
     ":texgine_sample_word_boundary",
-    ":texgine_sample_typography_row",
   ]
 }
 

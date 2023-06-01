@@ -307,6 +307,8 @@ void RSUIDirector::AnimationCallbackProcessor(NodeId nodeId, AnimationId animId,
 
 void RSUIDirector::PostTask(const std::function<void()>& task)
 {
+    static std::mutex taskMutex;
+    std::unique_lock<std::mutex> lock(taskMutex);
     if (g_uiTaskRunner == nullptr) {
         ROSEN_LOGE("RSUIDirector::PostTask, uiTaskRunner is null");
         return;

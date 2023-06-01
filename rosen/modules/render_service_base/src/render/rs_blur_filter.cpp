@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "common/rs_common_def.h"
 #include "render/rs_blur_filter.h"
 
 #if defined(NEW_SKIA)
@@ -23,6 +24,15 @@
 #endif
 namespace OHOS {
 namespace Rosen {
+std::shared_ptr<RSBlurFilter> RSBlurFilter::CreateInstance(float blurRadiusX, float blurRadiusY)
+{
+    constexpr float epsilon = 0.001f;
+    if (ROSEN_EQ(blurRadiusX, 0.f, epsilon) && ROSEN_EQ(blurRadiusY, 0.f, epsilon)) {
+        return nullptr;
+    }
+    return std::shared_ptr<RSBlurFilter>(new RSBlurFilter(blurRadiusX, blurRadiusY));
+}
+
 #if defined(NEW_SKIA)
 RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY): RSSkiaFilter(SkImageFilters::Blur(blurRadiusX,
     blurRadiusY, SkTileMode::kClamp, nullptr)), blurRadiusX_(blurRadiusX),
@@ -58,7 +68,7 @@ std::string RSBlurFilter::GetDescription()
 
 std::shared_ptr<RSSkiaFilter> RSBlurFilter::Compose(const std::shared_ptr<RSSkiaFilter>& inner)
 {
-    std::shared_ptr<RSBlurFilter> blur = std::make_shared<RSBlurFilter>(blurRadiusX_, blurRadiusY_);
+    std::shared_ptr<RSBlurFilter> blur = RSBlurFilter::CreateInstance(blurRadiusX_, blurRadiusY_);
     blur->imageFilter_ = SkImageFilters::Compose(imageFilter_, inner->GetImageFilter());
     return blur;
 }
@@ -69,7 +79,7 @@ std::shared_ptr<RSFilter> RSBlurFilter::Add(const std::shared_ptr<RSFilter>& rhs
         return shared_from_this();
     }
     auto blurR = std::static_pointer_cast<RSBlurFilter>(rhs);
-    return std::make_shared<RSBlurFilter>(blurRadiusX_ + blurR->GetBlurRadiusX(),
+    return RSBlurFilter::CreateInstance(blurRadiusX_ + blurR->GetBlurRadiusX(),
         blurRadiusY_ + blurR->GetBlurRadiusY());
 }
 
@@ -79,18 +89,18 @@ std::shared_ptr<RSFilter> RSBlurFilter::Sub(const std::shared_ptr<RSFilter>& rhs
         return shared_from_this();
     }
     auto blurR = std::static_pointer_cast<RSBlurFilter>(rhs);
-    return std::make_shared<RSBlurFilter>(blurRadiusX_ - blurR->GetBlurRadiusX(),
+    return RSBlurFilter::CreateInstance(blurRadiusX_ - blurR->GetBlurRadiusX(),
         blurRadiusY_ - blurR->GetBlurRadiusY());
 }
 
 std::shared_ptr<RSFilter> RSBlurFilter::Multiply(float rhs)
 {
-    return std::make_shared<RSBlurFilter>(blurRadiusX_ * rhs, blurRadiusY_ * rhs);
+    return RSBlurFilter::CreateInstance(blurRadiusX_ * rhs, blurRadiusY_ * rhs);
 }
 
 std::shared_ptr<RSFilter> RSBlurFilter::Negate()
 {
-    return std::make_shared<RSBlurFilter>(-blurRadiusX_, -blurRadiusY_);
+    return RSBlurFilter::CreateInstance(-blurRadiusX_, -blurRadiusY_);
 }
 
 bool RSBlurFilter::IsNearEqual(const std::shared_ptr<RSFilter>& other, float threshold) const

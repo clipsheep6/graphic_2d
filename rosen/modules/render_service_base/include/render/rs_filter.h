@@ -28,12 +28,14 @@ enum BLUR_COLOR_MODE : int {
     AVERAGE     = 1,           // use the average color of the blurred area as mask color
     DEFAULT     = PRE_DEFINED
 };
+struct MaterialParam;
 
 class RSB_EXPORT RSFilter : public std::enable_shared_from_this<RSFilter> {
 public:
     virtual ~RSFilter();
     virtual std::string GetDescription();
     static std::shared_ptr<RSFilter> CreateBlurFilter(float blurRadiusX, float blurRadiusY);
+    static std::shared_ptr<RSFilter> CreateMaterialFilter(MaterialParam materialParam, BLUR_COLOR_MODE mode);
     static std::shared_ptr<RSFilter> CreateMaterialFilter(
         int style, float dipScale, BLUR_COLOR_MODE mode = DEFAULT, float ratio = 1.0);
     static std::shared_ptr<RSFilter> CreateLightUpEffectFilter(float lightUpDegree);

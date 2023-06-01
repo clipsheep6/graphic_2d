@@ -64,9 +64,11 @@ class RSB_EXPORT RSMaterialFilter : public RSSkiaFilter {
 class RSB_EXPORT RSMaterialFilter : public RSDrawingFilter {
 #endif
 public:
-    RSMaterialFilter(int style, float dipScale, BLUR_COLOR_MODE mode, float ratio);
-    RSMaterialFilter(MaterialParam materialParam, BLUR_COLOR_MODE mode);
+    static std::shared_ptr<RSMaterialFilter> CreateInstance(int style, float dipScale,
+        BLUR_COLOR_MODE mode, float ratio);
+    static std::shared_ptr<RSMaterialFilter> CreateInstance(MaterialParam materialParam, BLUR_COLOR_MODE mode);
     ~RSMaterialFilter() override;
+    std::shared_ptr<RSFilter> TransformFilter(float fraction);
 #ifndef USE_ROSEN_DRAWING
     void PreProcess(sk_sp<SkImage> image) override;
 #else
@@ -102,6 +104,8 @@ private:
     std::shared_ptr<Drawing::ImageFilter> CreateMaterialFilter(float radius, float sat, float brightness);
 #endif
     static float RadiusVp2Sigma(float radiusVp, float dipScale);
+    RSMaterialFilter(int style, float dipScale, BLUR_COLOR_MODE mode, float ratio);
+    RSMaterialFilter(MaterialParam materialParam, BLUR_COLOR_MODE mode);
 
     friend class RSMarshallingHelper;
 };

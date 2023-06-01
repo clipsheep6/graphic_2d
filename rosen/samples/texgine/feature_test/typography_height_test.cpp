@@ -83,10 +83,10 @@ public:
     {
         for (auto &[text, typographystyle] : g_datas) {
              auto builder = TypographyBuilder::Create(typographystyle);
-	         TextStyle tstyle;
+             TextStyle tstyle;
              builder->PushStyle(tstyle);
              builder->AppendSpan(text);
-	         builder->PopStyle();
+             builder->PopStyle();
              auto typography = builder->Build();
              typography->Layout(300);
              typographies_.push_back({

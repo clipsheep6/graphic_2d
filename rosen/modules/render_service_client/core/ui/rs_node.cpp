@@ -513,6 +513,11 @@ void RSNode::SetPivotY(float pivotY)
     property->Set(pivot);
 }
 
+void RSNode::SetPivotZ(const float pivotZ)
+{
+    SetProperty<RSPivotZModifier, RSAnimatableProperty<float>>(RSModifierType::PIVOTZ, pivotZ);
+}
+
 void RSNode::SetCornerRadius(float cornerRadius)
 {
     SetCornerRadius(Vector4f(cornerRadius));

@@ -55,7 +55,7 @@ public:
     void Layout()
     {
        TextStyle style = {
-            .fontSize_ = 16,
+           .fontSize = 16.0,
        };
 
         for (auto &[text, typographystyle] : datas) {

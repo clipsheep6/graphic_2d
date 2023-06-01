@@ -65,13 +65,13 @@ public:
              builder->AppendSpan(exampleText);
              builder->PopStyle();
 
-            auto typography = builder->Build();
-                 typography->Layout(300);
-                 typographies_.push_back({
-                     .typography = typography,
-                     .comment = text,
-                });
-          }
+             auto typography = builder->Build();
+                  typography->Layout(300);
+                  typographies_.push_back({
+                      .typography = typography,
+                      .comment = text,
+                 });
+         }
     }
 } g_test;
 } // namespace

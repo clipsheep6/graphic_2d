@@ -90,15 +90,15 @@ bool RSBlurFilterFuzzTest(const uint8_t* data, size_t size)
 
     float blurRadiusX1 = GetData<float>();
     float blurRadiusY1 = GetData<float>();
-    RSBlurFilter blurFilter(blurRadiusX1, blurRadiusY1);
+    auto blurFilter = RSBlurFilter::CreateInstance(blurRadiusX1, blurRadiusY1);
     float blurRadiusX2 = GetData<float>();
     float blurRadiusY2 = GetData<float>();
     std::shared_ptr<RSFilter> rhs = RSFilter::CreateBlurFilter(blurRadiusX2, blurRadiusY2);
     float fRhs = GetData<float>();
 
-    blurFilter.Add(rhs);
-    blurFilter.Sub(rhs);
-    blurFilter.Multiply(fRhs);
+    blurFilter->Add(rhs);
+    blurFilter->Sub(rhs);
+    blurFilter->Multiply(fRhs);
 
     return true;
 }

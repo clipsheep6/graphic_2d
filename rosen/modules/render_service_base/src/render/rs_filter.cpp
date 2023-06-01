@@ -35,12 +35,17 @@ std::string RSFilter::GetDescription()
 
 std::shared_ptr<RSFilter> RSFilter::CreateBlurFilter(float blurRadiusX, float blurRadiusY)
 {
-    return std::make_shared<RSBlurFilter>(blurRadiusX, blurRadiusY);
+    return RSBlurFilter::CreateInstance(blurRadiusX, blurRadiusY);
 }
 
 std::shared_ptr<RSFilter> RSFilter::CreateMaterialFilter(int style, float dipScale, BLUR_COLOR_MODE mode, float ratio)
 {
-    return std::make_shared<RSMaterialFilter>(style, dipScale, mode, ratio);
+    return RSMaterialFilter::CreateInstance(style, dipScale, mode, ratio);
+}
+
+std::shared_ptr<RSFilter> RSFilter::CreateMaterialFilter(MaterialParam materialParam, BLUR_COLOR_MODE mode)
+{
+    return RSMaterialFilter::CreateInstance(materialParam, mode);
 }
 
 std::shared_ptr<RSFilter> RSFilter::CreateLightUpEffectFilter(float lightUpDegree)

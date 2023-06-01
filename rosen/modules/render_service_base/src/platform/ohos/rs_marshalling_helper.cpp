@@ -1006,7 +1006,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSFilter
                       RSMarshallingHelper::Unmarshalling(parcel, materialParam.maskColor) &&
                       parcel.ReadInt32(colorMode);
             if (success) {
-                val = std::make_shared<RSMaterialFilter>(materialParam, static_cast<BLUR_COLOR_MODE>(colorMode));
+                val = RSFilter::CreateMaterialFilter(materialParam, static_cast<BLUR_COLOR_MODE>(colorMode));
             }
             break;
         }

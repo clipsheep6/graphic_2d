@@ -23,6 +23,7 @@
 #include "include/effects/SkBlurImageFilter.h"
 #endif
 
+#include "common/rs_common_def.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties_painter.h"
 
@@ -51,6 +52,25 @@ std::unordered_map<MATERIAL_BLUR_STYLE, MaterialParam> materialParams_ {
     { STYLE_BACKGROUND_XLARGE_DARK,  { 130.0f, 1.3,  1.0,  RSColor(0x0D0D0D80) } },
 };
 } // namespace
+
+std::shared_ptr<RSMaterialFilter> RSMaterialFilter::CreateInstance(int style, float dipScale,
+    BLUR_COLOR_MODE mode, float ratio)
+{
+    constexpr float epsilon = 0.001f;
+    if (ROSEN_EQ(ratio, 0.f, epsilon)) {
+        return nullptr;
+    }
+    return std::shared_ptr<RSMaterialFilter>(new RSMaterialFilter(style, dipScale, mode, ratio));
+}
+
+std::shared_ptr<RSMaterialFilter> RSMaterialFilter::CreateInstance(MaterialParam materialParam, BLUR_COLOR_MODE mode)
+{
+    constexpr float epsilon = 0.001f;
+    if (ROSEN_EQ(materialParam.radius, 0.f, epsilon)) {
+        return nullptr;
+    }
+    return std::shared_ptr<RSMaterialFilter>(new RSMaterialFilter(materialParam, mode));
+}
 
 RSMaterialFilter::RSMaterialFilter(int style, float dipScale, BLUR_COLOR_MODE mode, float ratio)
     : RSSkiaFilter(nullptr), colorMode_(mode)
@@ -84,7 +104,7 @@ std::string RSMaterialFilter::GetDescription()
 std::shared_ptr<RSSkiaFilter> RSMaterialFilter::Compose(const std::shared_ptr<RSSkiaFilter>& inner)
 {
     MaterialParam materialParam = {radius_, saturation_, brightness_, maskColor_};
-    std::shared_ptr<RSMaterialFilter> material = std::make_shared<RSMaterialFilter>(materialParam, colorMode_);
+    std::shared_ptr<RSMaterialFilter> material = RSMaterialFilter::CreateInstance(materialParam, colorMode_);
     material->imageFilter_ = SkImageFilters::Compose(imageFilter_, inner->GetImageFilter());
     return material;
 }
@@ -145,6 +165,17 @@ void RSMaterialFilter::PostProcess(RSPaintFilterCanvas& canvas)
     canvas.drawPaint(paint);
 }
 
+std::shared_ptr<RSFilter> RSMaterialFilter::TransformFilter(float fraction)
+{
+    MaterialParam materialParam;
+    materialParam.radius = radius_ * fraction;
+    materialParam.saturation = (saturation_ - 1) * fraction + 1.0;
+    materialParam.brightness = (brightness_ - 1) * fraction + 1.0;
+    materialParam.maskColor = RSColor(maskColor_.GetRed(), maskColor_.GetGreen(),
+        maskColor_.GetBlue(), maskColor_.GetAlpha() * fraction);
+    return RSMaterialFilter::CreateInstance(materialParam, colorMode_);
+}
+
 std::shared_ptr<RSFilter> RSMaterialFilter::Add(const std::shared_ptr<RSFilter>& rhs)
 {
     if ((rhs == nullptr) || (rhs->GetFilterType() != FilterType::MATERIAL)) {
@@ -154,10 +185,10 @@ std::shared_ptr<RSFilter> RSMaterialFilter::Add(const std::shared_ptr<RSFilter>&
 
     MaterialParam materialParam;
     materialParam.radius = radius_ + materialR->radius_;
-    materialParam.saturation = saturation_ + materialR->saturation_;
-    materialParam.brightness = brightness_ + materialR->brightness_;
+    materialParam.saturation = saturation_ + materialR->saturation_ - 1;
+    materialParam.brightness = brightness_ + materialR->brightness_ - 1;
     materialParam.maskColor = maskColor_ + materialR->maskColor_;
-    return std::make_shared<RSMaterialFilter>(materialParam, materialR->colorMode_);
+    return RSMaterialFilter::CreateInstance(materialParam, materialR->colorMode_);
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Sub(const std::shared_ptr<RSFilter>& rhs)
@@ -168,30 +199,30 @@ std::shared_ptr<RSFilter> RSMaterialFilter::Sub(const std::shared_ptr<RSFilter>&
     auto materialR = std::static_pointer_cast<RSMaterialFilter>(rhs);
     MaterialParam materialParam;
     materialParam.radius = radius_ - materialR->radius_;
-    materialParam.saturation = saturation_ - materialR->saturation_;
-    materialParam.brightness = brightness_ - materialR->brightness_;
+    materialParam.saturation = saturation_ - materialR->saturation_ + 1;
+    materialParam.brightness = brightness_ - materialR->brightness_ + 1;
     materialParam.maskColor = maskColor_ - materialR->maskColor_;
-    return std::make_shared<RSMaterialFilter>(materialParam, materialR->colorMode_);
+    return RSMaterialFilter::CreateInstance(materialParam, materialR->colorMode_);
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Multiply(float rhs)
 {
     MaterialParam materialParam;
     materialParam.radius = radius_ * rhs;
-    materialParam.saturation = saturation_ * rhs;
-    materialParam.brightness = brightness_ * rhs;
+    materialParam.saturation = (saturation_ - 1) * rhs + 1.0;
+    materialParam.brightness = (brightness_ - 1) * rhs + 1.0;
     materialParam.maskColor = maskColor_ * rhs;
-    return std::make_shared<RSMaterialFilter>(materialParam, colorMode_);
+    return RSMaterialFilter::CreateInstance(materialParam, colorMode_);
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Negate()
 {
     MaterialParam materialParam;
     materialParam.radius = -radius_;
-    materialParam.saturation = -saturation_;
-    materialParam.brightness = -brightness_;
+    materialParam.saturation = 2 - saturation_; //A+(-B)=A-B, A+(-B)=satA+(2-satB)-1=satA-satB+1=A-B
+    materialParam.brightness = 2 - brightness_; //A+(-B)=A-B, A+(-B)=briA+(2-briB)-1=briA-briB+1=A-B
     materialParam.maskColor = RSColor(0x00000000) - maskColor_;
-    return std::make_shared<RSMaterialFilter>(materialParam, colorMode_);
+    return RSMaterialFilter::CreateInstance(materialParam, colorMode_);
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -26,7 +26,7 @@ class RSB_EXPORT RSBlurFilter : public RSSkiaFilter {
 class RSB_EXPORT RSBlurFilter : public RSDrawingFilter {
 #endif
 public:
-    RSBlurFilter(float blurRadiusX, float blurRadiusY);
+    static std::shared_ptr<RSBlurFilter> CreateInstance(float blurRadiusX, float blurRadiusY);
     ~RSBlurFilter() override;
     float GetBlurRadiusX();
     float GetBlurRadiusY();
@@ -42,6 +42,7 @@ public:
     std::shared_ptr<RSFilter> Multiply(float rhs) override;
     std::shared_ptr<RSFilter> Negate() override;
 private:
+    RSBlurFilter(float blurRadiusX, float blurRadiusY);
     float blurRadiusX_;
     float blurRadiusY_;
 };

@@ -25,7 +25,9 @@ struct TextHeightTestData {
 } g_datas[] = {
     {
         .text = "文本字高默认.",
-        .style = {.heightOnly = true,},
+        .style = {
+            .heightOnly = true,
+        },
     },
     {
         .text = "文本字高test1.",
@@ -41,22 +43,26 @@ struct TextHeightTestData {
     },
     {
         .text = "文本字高test3.",
-        .style = { .heightOnly = true, .fontSize = 10.0, .heightScale = 2.0,
+        .style = { 
+            .heightOnly = true, .fontSize = 10.0, .heightScale = 2.0,
         },
     },
     {
         .text = "文本字高test4.",
-        .style = { .heightOnly = true, .fontSize = 15.0, .heightScale = 2.0,
+        .style = {
+            .heightOnly = true, .fontSize = 15.0, .heightScale = 2.0,
         },
     },
     {
         .text = "文本字高test5.",
-        .style = {.heightOnly = true, .fontSize = 20.0, .heightScale = 2.0,
+        .style = {
+            .heightOnly = true, .fontSize = 20.0, .heightScale = 2.0,
         },
     },
     {
         .text = "文本字高test6.",
-        .style = {.heightOnly = true, .fontSize = 20.0, .heightScale = 2.5,
+        .style = {
+            .heightOnly = true, .fontSize = 20.0, .heightScale = 2.5,
         },
     },
 };

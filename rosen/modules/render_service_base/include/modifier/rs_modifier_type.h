@@ -28,7 +28,7 @@ enum class RSModifierType : int16_t {
     POSITION_Z,
 
     PIVOT,
-    PIVOTZ,
+    PIVOT_Z,
     QUATERNION,
     ROTATION,
     ROTATION_X,

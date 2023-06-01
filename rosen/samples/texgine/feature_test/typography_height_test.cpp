@@ -14,6 +14,7 @@
  */
 
 #include <texgine/typography_builder.h>
+
 #include "texgine/typography_types.h"
 #include "feature_test_framework.h"
 
@@ -25,47 +26,47 @@ struct TypographyHeightTestData {
     TypographyStyle typographystyle;
 } g_datas[] = {
     {
-        .text = "段落高默认.",
+        .text = "Default paragraph height.",
         .typographystyle.useLineStyle = true,
         .typographystyle.lineStyle.heightOnly = true,
     },
     {
-        .text = "段落高test1.",
+        .text = "Paragraph height test1.",
         .typographystyle.useLineStyle = true,
         .typographystyle.lineStyle.heightOnly = true,
         .typographystyle.lineStyle.fontSize = 10.0,
         .typographystyle.lineStyle.heightScale = 1.5,
     },
     {
-        .text = "段落高test2.",
+        .text = "Paragraph height test2.",
         .typographystyle.useLineStyle = true,
         .typographystyle.lineStyle.heightOnly = true,
         .typographystyle.lineStyle.fontSize = 15.0,
         .typographystyle.lineStyle.heightScale = 1.5,
     },
     {
-        .text = "段落高test3.",
+        .text = "Paragraph height test3.",
         .typographystyle.useLineStyle = true,
         .typographystyle.lineStyle.heightOnly = true,
         .typographystyle.lineStyle.fontSize = 15.0,
         .typographystyle.lineStyle.heightScale = 2.0,
     },
     {
-        .text = "段落高test4.",
+        .text = "Paragraph height test4.",
         .typographystyle.useLineStyle = true,
         .typographystyle.lineStyle.heightOnly = true,
         .typographystyle.lineStyle.fontSize = 20.0,
         .typographystyle.lineStyle.heightScale = 2.0,
     },
     {
-        .text = "段落高test5.",
+        .text = "Paragraph height test5.",
         .typographystyle.useLineStyle = true,
         .typographystyle.lineStyle.heightOnly = true,
         .typographystyle.lineStyle.fontSize = 25.0,
         .typographystyle.lineStyle.heightScale = 2.0,
     },
     {
-        .text = "段落高test6.",
+        .text = "Paragraph height test6.",
         .typographystyle.useLineStyle = true,
         .typographystyle.lineStyle.heightOnly = true,
         .typographystyle.lineStyle.fontSize = 30.0,

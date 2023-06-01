@@ -14,6 +14,7 @@
  */
 
 #include <texgine/typography_builder.h>
+
 #include "feature_test_framework.h"
 
 using namespace OHOS::Rosen::TextEngine;
@@ -24,43 +25,43 @@ struct TextHeightTestData {
     TextStyle style;
 } g_datas[] = {
     {
-        .text = "文本字高默认.",
+        .text = "Default text height.",
         .style = {
             .heightOnly = true,
         },
     },
     {
-        .text = "文本字高test1.",
+        .text = "Text height test1.",
         .style = {
             .heightOnly = true, .fontSize = 10.0, .heightScale = 1.0,
         },
     },
     {
-        .text = "文本字高test2.",
+        .text = "Text height test2.",
         .style = {
             .heightOnly = true, .fontSize = 10.0, .heightScale = 1.5,
         },
     },
     {
-        .text = "文本字高test3.",
+        .text = "Text height test3.",
         .style = { 
             .heightOnly = true, .fontSize = 10.0, .heightScale = 2.0,
         },
     },
     {
-        .text = "文本字高test4.",
+        .text = "Text height test4.",
         .style = {
             .heightOnly = true, .fontSize = 15.0, .heightScale = 2.0,
         },
     },
     {
-        .text = "文本字高test5.",
+        .text = "Text height test5.",
         .style = {
             .heightOnly = true, .fontSize = 20.0, .heightScale = 2.0,
         },
     },
     {
-        .text = "文本字高test6.",
+        .text = "Text height test6.",
         .style = {
             .heightOnly = true, .fontSize = 20.0, .heightScale = 2.5,
         },

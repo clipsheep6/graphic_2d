@@ -23,7 +23,7 @@
 using namespace OHOS::Rosen::TextEngine;
 
 namespace {
-constexpr auto EXAMPLE_TEXT = "hello world, hello openharmony!";
+constexpr auto EXAMPLE_TEXT = "hello world, 123hello open~harmony!";
 constexpr auto EXAMPLE_TEXT2 = "你 好 世 界 你好鸿蒙！";
 
 struct IntrinsicTestData {
@@ -53,6 +53,13 @@ struct IntrinsicTestData {
             .wordBreakType = WordBreakType::BREAK_ALL,
         },
         .title = "breakAll",
+    },
+    {
+        .ys = {
+            .ellipsis = u"",
+            .wordBreakType = WordBreakType::NORMAL,
+        },
+        .title = "NORMAL",
     },
     {
         .ys = {

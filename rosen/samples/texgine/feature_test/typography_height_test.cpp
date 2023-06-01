@@ -26,39 +26,50 @@ struct TypographyHeightTestData {
 } g_datas[] = {
     {
         .text = "段落高默认.",
-        .typographystyle = {.useLineStyle = true,.useLineStyle.heightOnly = true,},
+        .typographystyle.useLineStyle = true,
+        .typographystyle.lineStyle.heightOnly = true,
     },
     {
         .text = "段落高test1.",
-        .typographystyle = {
-            .useLineStyle = true,.lineStyle.heightOnly = true, .lineStyle.fontSize = 10.0, .lineStyle.heightScale = 1.5,
-        },
+        .typographystyle.useLineStyle = true,
+        .typographystyle.lineStyle.heightOnly = true,
+        .typographystyle.lineStyle.fontSize = 10.0,
+        .typographystyle.lineStyle.heightScale = 1.5,
     },
     {
         .text = "段落高test2.",
-        .typographystyle = {
-            .useLineStyle = true,.lineStyle.heightOnly = true, .lineStyle.fontSize = 15.0, .lineStyle.heightScale = 1.5,
-        },
+        .typographystyle.useLineStyle = true,
+        .typographystyle.lineStyle.heightOnly = true,
+        .typographystyle.lineStyle.fontSize = 15.0,
+        .typographystyle.lineStyle.heightScale = 1.5,
     },
     {
         .text = "段落高test3.",
-        .typographystyle = { .useLineStyle = true,.lineStyle.heightOnly = true, .lineStyle.fontSize = 15.0, .lineStyle.heightScale = 2.0,
-        },
+        .typographystyle.useLineStyle = true,
+        .typographystyle.lineStyle.heightOnly = true,
+        .typographystyle.lineStyle.fontSize = 15.0,
+        .typographystyle.lineStyle.heightScale = 2.0,
     },
     {
         .text = "段落高test4.",
-        .typographystyle = { .useLineStyle = true,.lineStyle.heightOnly = true, .lineStyle.fontSize = 20.0, .lineStyle.heightScale = 2.0,
-        },
+        .typographystyle.useLineStyle = true,
+        .typographystyle.lineStyle.heightOnly = true,
+        .typographystyle.lineStyle.fontSize = 20.0,
+        .typographystyle.lineStyle.heightScale = 2.0,
     },
     {
         .text = "段落高test5.",
-        .typographystyle = {.useLineStyle = true,.lineStyle.heightOnly = true, .lineStyle.fontSize = 25.0, .lineStyle.heightScale = 2.0,
-        },
+        .typographystyle.useLineStyle = true,
+        .typographystyle.lineStyle.heightOnly = true,
+        .typographystyle.lineStyle.fontSize = 25.0,
+        .typographystyle.lineStyle.heightScale = 2.0,
     },
     {
         .text = "段落高test6.",
-        .typographystyle = {.useLineStyle = true,.lineStyle.heightOnly = true, .lineStyle.fontSize = 30.0, .lineStyle.heightScale = 3.0,
-        },
+        .typographystyle.useLineStyle = true,
+        .typographystyle.lineStyle.heightOnly = true,
+        .typographystyle.lineStyle.fontSize = 30.0,
+        .typographystyle.lineStyle.heightScale = 3.0,
     },
 };
 

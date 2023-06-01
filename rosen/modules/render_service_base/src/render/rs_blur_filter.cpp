@@ -27,7 +27,7 @@ namespace Rosen {
 std::shared_ptr<RSBlurFilter> RSBlurFilter::CreateInstance(float blurRadiusX, float blurRadiusY)
 {
     constexpr float epsilon = 0.001f;
-    if (ROSEN_EQ(blurRadiusX, 0.f, epsilon)&&ROSEN_EQ(blurRadiusY, 0.f, epsilon)){
+    if (ROSEN_EQ(blurRadiusX, 0.f, epsilon) && ROSEN_EQ(blurRadiusY, 0.f, epsilon)) {
         return nullptr;
     }
     return std::shared_ptr<RSBlurFilter>(new RSBlurFilter(blurRadiusX, blurRadiusY));

@@ -53,10 +53,11 @@ std::unordered_map<MATERIAL_BLUR_STYLE, MaterialParam> materialParams_ {
 };
 } // namespace
 
-std::shared_ptr<RSMaterialFilter> RSMaterialFilter::CreateInstance(int style, float dipScale, BLUR_COLOR_MODE mode, float ratio)
+std::shared_ptr<RSMaterialFilter> RSMaterialFilter::CreateInstance(int style, float dipScale,
+    BLUR_COLOR_MODE mode, float ratio)
 {
     constexpr float epsilon = 0.001f;
-    if(ROSEN_EQ(ratio, 0.f, epsilon)) {
+    if (ROSEN_EQ(ratio, 0.f, epsilon)) {
         return nullptr;
     }
     return std::shared_ptr<RSMaterialFilter>(new RSMaterialFilter(style, dipScale, mode, ratio));
@@ -65,7 +66,7 @@ std::shared_ptr<RSMaterialFilter> RSMaterialFilter::CreateInstance(int style, fl
 std::shared_ptr<RSMaterialFilter> RSMaterialFilter::CreateInstance(MaterialParam materialParam, BLUR_COLOR_MODE mode)
 {
     constexpr float epsilon = 0.001f;
-    if(ROSEN_EQ(materialParam.radius, 0.f, epsilon)) {
+    if (ROSEN_EQ(materialParam.radius, 0.f, epsilon)) {
         return nullptr;
     }
     return std::shared_ptr<RSMaterialFilter>(new RSMaterialFilter(materialParam, mode));
@@ -170,7 +171,8 @@ std::shared_ptr<RSFilter> RSMaterialFilter::TransformFilter(float fraction)
     materialParam.radius = radius_ * fraction;
     materialParam.saturation = (saturation_ - 1) * fraction + 1.0;
     materialParam.brightness = (brightness_ - 1) * fraction + 1.0;
-    materialParam.maskColor = RSColor(maskColor_.GetRed(), maskColor_.GetGreen(), maskColor_.GetBlue(), maskColor_.GetAlpha() * fraction);
+    materialParam.maskColor = RSColor(maskColor_.GetRed(), maskColor_.GetGreen(),
+        maskColor_.GetBlue(), maskColor_.GetAlpha() * fraction);
     return RSMaterialFilter::CreateInstance(materialParam, colorMode_);
 }
 
@@ -217,8 +219,8 @@ std::shared_ptr<RSFilter> RSMaterialFilter::Negate()
 {
     MaterialParam materialParam;
     materialParam.radius = -radius_;
-    materialParam.saturation = 2 - saturation_;
-    materialParam.brightness = 2 - brightness_;
+    materialParam.saturation = 2 - saturation_; //A+(-B)=A-B, A+(-B)=satA+(2-satB)-1=satA-satB+1=A-B
+    materialParam.brightness = 2 - brightness_; //A+(-B)=A-B, A+(-B)=briA+(2-briB)-1=briA-briB+1=A-B
     materialParam.maskColor = RSColor(0x00000000) - maskColor_;
     return RSMaterialFilter::CreateInstance(materialParam, colorMode_);
 }

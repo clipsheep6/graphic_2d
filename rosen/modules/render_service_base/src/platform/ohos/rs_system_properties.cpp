@@ -86,6 +86,12 @@ bool RSSystemProperties::GetDrawOpTraceEnabled()
     return code;
 }
 
+bool RSSystemProperties::GetSkiaTraceEnabled()
+{
+    static bool isSkiaTraceEnabled = system::GetParameter("persist.rosen.skiatrace.enabled", "0") != "0";
+    return isSkiaTraceEnabled;
+}
+
 bool RSSystemProperties::GetRenderNodeTraceEnabled()
 {
     static bool isNeedTrace = system::GetParameter("persist.rosen.rendernodetrace.enabled", "0") != "0";

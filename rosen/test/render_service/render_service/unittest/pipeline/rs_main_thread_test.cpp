@@ -12,16 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <parameter.h>
+#include <parameters.h>
 
 #include "gtest/gtest.h"
 #include "limit_number.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_qos_thread.h"
+#include "platform/common/rs_system_properties.h"
+#include "rs_test_util.h"
+#if defined(ACCESSIBILITY_ENABLE)
+#include "accessibility_config.h"
+#endif
 
 using namespace testing;
 using namespace testing::ext;
 
 namespace OHOS::Rosen {
+namespace {
+constexpr uint64_t REFRESH_PERIOD = 16666667;
+constexpr uint64_t SKIP_COMMAND_FREQ_LIMIT = 30;
+};
 class RSMainThreadTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -625,5 +636,106 @@ HWTEST_F(RSMainThreadTest, ShowWatermark, TestSize.Level1)
     ASSERT_EQ(mainThread->GetWatermarkFlag(), true);
     mainThread->ShowWatermark(nullptr, false);
     ASSERT_EQ(mainThread->GetWatermarkFlag(), false);
+}
+
+/**
+ * @tc.name: ProcessCommandForUniRender
+ * @tc.desc: ProcessCommandForUniRender test with invalid data
+ * @tc.type: FUNC
+ * @tc.require: issueI7A9ZX
+ */
+HWTEST_F(RSMainThreadTest, ProcessCommandForUniRender, TestSize.Level1)
+{
+    auto mainThread = RSMainThread::Instance();
+    ASSERT_EQ(mainThread->effectiveTransactionDataIndexMap_.empty(), true);
+    std::vector<std::unique_ptr<RSTransactionData>> invalidData;
+    // timeout
+    invalidData.emplace_back(std::make_unique<RSTransactionData>());
+    // empty data
+    invalidData.emplace_back(nullptr);
+    // default data without record
+    invalidData.emplace_back(std::make_unique<RSTransactionData>());
+
+    // let lastindex same as timeout index and test timeout case at first
+    mainThread->transactionDataLastWaitTime_[0] = 0;
+    mainThread->timestamp_ = REFRESH_PERIOD * SKIP_COMMAND_FREQ_LIMIT + 1;
+    mainThread->effectiveTransactionDataIndexMap_[0] = std::make_pair(0, invalidData);
+    mainThread->ProcessCommandForUniRender();
+}
+
+/**
+ * @tc.name: ObserverConfigChangeColorFilter
+ * @tc.desc: AccessibilityObserver changes different config of case ColorFilter
+ * @tc.type: FUNC
+ * @tc.require: issueI7A9ZX
+ */
+#if defined(ACCESSIBILITY_ENABLE)
+HWTEST_F(RSMainThreadTest, ObserverConfigChangeColorFilter, TestSize.Level1)
+{
+    auto mainThread = RSMainThread::Instance();
+    auto observer = mainThread->accessibilityObserver_;
+    ASSERT_NE(observer, nullptr);
+
+    CONFIG_ID id = CONFIG_ID::CONFIG_DALTONIZATION_COLOR_FILTER;
+    std::vector<DALTONIZATION_TYPE> delTypes = {DALTONIZATION_TYPE::Normal, DALTONIZATION_TYPE::Protanomaly, 
+        DALTONIZATION_TYPE::Deuteranomaly, DALTONIZATION_TYPE::Tritanomaly};
+    ConfigValue value; 
+    for (auto dalType : delTypes) {
+        value.daltonizationColorFilter = dalType;
+        observer->OnConfigChanged(id, value);
+    }
+}
+#endif
+
+/**
+ * @tc.name: CollectInfoForHardwareComposer001
+ * @tc.desc: CollectInfoForHardwareComposer test with disable status
+ * @tc.type: FUNC
+ * @tc.require: issueI7A9ZX
+ */
+HWTEST_F(RSMainThreadTest, CollectInfoForHardwareComposer001, TestSize.Level1)
+{
+    int param = (int)RSSystemProperties::GetHardwareComposerEnabled();
+
+    auto mainThread = RSMainThread::Instance();
+    system::SetParameter("rosen.hardwarecomposer.enabled", "0");
+    mainThread->CollectInfoForHardwareComposer();
+    // register hwc node
+    auto& nodemap = mainThread->GetContext().GetMutableNodeMap();
+    auto surfacenode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    ASSERT_NE(surfacenode, nullptr);
+    surfacenode->SetSurfaceNodeType(RSSurfaceNodeType::SELF_DRAWING_NODE);
+    nodemap.RegisterRenderNode(surfacenode);
+    
+    system::SetParameter("rosen.hardwarecomposer.enabled", "1");
+    mainThread->doWindowAnimate_ = false;
+    mainThread->isHardwareForcedDisabled_ = true;
+    mainThread->CollectInfoForHardwareComposer();
+    system::SetParameter("rosen.hardwarecomposer.enabled", std::to_string(param));
+}
+
+/**
+ * @tc.name: CollectInfoForHardwareComposer002
+ * @tc.desc: CollectInfoForHardwareComposer test with valid status
+ * @tc.type: FUNC
+ * @tc.require: issueI7A9ZX
+ */
+HWTEST_F(RSMainThreadTest, CollectInfoForHardwareComposer002, TestSize.Level1)
+{
+    int param = (int)RSSystemProperties::GetHardwareComposerEnabled();
+
+    auto mainThread = RSMainThread::Instance();
+    // register hwc node
+    auto& nodemap = mainThread->GetContext().GetMutableNodeMap();
+    auto surfacenode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    ASSERT_NE(surfacenode, nullptr);
+    surfacenode->SetSurfaceNodeType(RSSurfaceNodeType::SELF_DRAWING_NODE);
+    nodemap.RegisterRenderNode(surfacenode);
+    
+    system::SetParameter("rosen.hardwarecomposer.enabled", "1");
+    mainThread->doWindowAnimate_ = false;
+    mainThread->isHardwareForcedDisabled_ = false;
+    mainThread->CollectInfoForHardwareComposer();
+    system::SetParameter("rosen.hardwarecomposer.enabled", std::to_string(param));
 }
 } // namespace OHOS::Rosen

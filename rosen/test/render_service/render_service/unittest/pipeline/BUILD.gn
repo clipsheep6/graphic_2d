@@ -33,6 +33,7 @@ group("unittest") {
     ":RSProcessorFactoryTest",
     ":RSQosThreadTest",
     ":RSRenderEngineTest",
+    ":RSRenderServiceConnectionUnitTest",
     ":RSRenderServiceListenerTest",
     ":RSRenderServiceVisitorTest",
     ":RSSurfaceCaptureTaskTest",
@@ -350,6 +351,15 @@ ohos_unittest("RSBaseRenderEngineUnitTest") {
 ohos_unittest("RSRenderEngineTest") {
   module_out_path = module_output_path
   sources = [ "rs_render_engine_test.cpp" ]
+  deps = [ ":rs_test_common" ]
+  defines = []
+  defines += gpu_defines
+}
+
+## Build RSRenderServiceConnectionUnitTest
+ohos_unittest("RSRenderServiceConnectionUnitTest") {
+  module_out_path = module_output_path
+  sources = [ "rs_render_service_connection_test.cpp" ]
   deps = [ ":rs_test_common" ]
   defines = []
   defines += gpu_defines

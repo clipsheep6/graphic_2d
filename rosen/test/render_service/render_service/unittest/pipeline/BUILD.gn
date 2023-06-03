@@ -426,8 +426,6 @@ config("rs_test_common_public_config") {
     "$graphic_2d_root/rosen/modules/render_service_client/core",
     "$graphic_2d_root/rosen/modules/render_service_base/src",
     "$graphic_2d_root/rosen/test/include",
-    "$graphic_2d_root/rosen/modules/render_service_base/include/platform/ohos",
-    "$graphic_2d_root/rosen/modules/render_service_base/include/ipc_callbacks",
     "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk/include",
   ]
 
@@ -460,7 +458,6 @@ ohos_static_library("rs_test_common") {
   external_deps = [
     "c_utils:utils",
     "init:libbegetutil",
-    "ipc:ipc_core",
   ]
 
   subsystem_name = "graphic"

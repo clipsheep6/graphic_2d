@@ -184,7 +184,7 @@ HWTEST_F(RSHardwareThreadTest, Start004, TestSize.Level1)
 HWTEST_F(RSHardwareThreadTest, Redraw001, TestSize.Level2)
 {
     auto& hardwareThread = RSHardwareThread::Instance();
-    auto fbSurface = composerAdapter_->output->GetFrameBufferSurface();
+    auto fbSurface = composerAdapter_->output_->GetFrameBufferSurface();
     auto surfaceNode1 = RSTestUtil::CreateSurfaceNodeWithBuffer();
     auto surfaceNode2 = RSTestUtil::CreateSurfaceNodeWithBuffer();
     auto surfaceNode3 = RSTestUtil::CreateSurfaceNodeWithBuffer();
@@ -206,7 +206,7 @@ HWTEST_F(RSHardwareThreadTest, Redraw001, TestSize.Level2)
     layers.emplace_back(layer1);
     layers.emplace_back(layer2);
     layers.emplace_back(layer3);
-    hardwareThread->Redraw(fbSurface, layers, screenId_);
+    hardwareThread.Redraw(fbSurface, layers, screenId_);
 }
 
 /**
@@ -218,7 +218,7 @@ HWTEST_F(RSHardwareThreadTest, Redraw001, TestSize.Level2)
 HWTEST_F(RSHardwareThreadTest, Redraw002, TestSize.Level2)
 {
     auto& hardwareThread = RSHardwareThread::Instance();
-    auto fbSurface = composerAdapter_->output->GetFrameBufferSurface();
+    auto fbSurface = composerAdapter_->output_->GetFrameBufferSurface();
     auto surfaceNode1 = RSTestUtil::CreateSurfaceNodeWithBuffer();
     RectI dstRect{0, 0, 400, 600};
     surfaceNode1->SetSrcRect(dstRect);
@@ -226,6 +226,6 @@ HWTEST_F(RSHardwareThreadTest, Redraw002, TestSize.Level2)
     ASSERT_NE(layer1, nullptr);
     std::vector<LayerInfoPtr> layers;
     layers.emplace_back(layer1);
-    hardwareThread->Redraw(nullptr, layers, screenId_);
+    hardwareThread.Redraw(nullptr, layers, screenId_);
 }
 } // namespace OHOS::Rosen

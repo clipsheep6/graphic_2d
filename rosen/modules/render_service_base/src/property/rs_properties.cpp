@@ -229,8 +229,8 @@ const std::shared_ptr<RSObjGeometry>& RSProperties::GetFrameGeometry() const
 bool RSProperties::UpdateGeometry(const RSProperties* parent, bool dirtyFlag, const std::optional<SkPoint>& offset,
     const std::optional<SkRect>& clipRect)
 #else
-bool RSProperties::UpdateGeometry(const RSProperties* parent, bool dirtyFlag, const std::optional<Drawing::Point>& offset,
-    const std::optional<Drawing::Rect>& clipRect)
+bool RSProperties::UpdateGeometry(const RSProperties* parent, bool dirtyFlag,
+    const std::optional<Drawing::Point>& offset, const std::optional<Drawing::Rect>& clipRect)
 #endif
 {
     if (boundsGeo_ == nullptr) {
@@ -293,6 +293,13 @@ void RSProperties::SetPivotY(float pivotY)
     SetDirty();
 }
 
+void RSProperties::SetPivotZ(float pivotZ)
+{
+    boundsGeo_->SetPivotZ(pivotZ);
+    geoDirty_ = true;
+    SetDirty();
+}
+
 Vector2f RSProperties::GetPivot() const
 {
     return { boundsGeo_->GetPivotX(), boundsGeo_->GetPivotY() };
@@ -306,6 +313,11 @@ float RSProperties::GetPivotX() const
 float RSProperties::GetPivotY() const
 {
     return boundsGeo_->GetPivotY();
+}
+
+float RSProperties::GetPivotZ() const
+{
+    return boundsGeo_->GetPivotZ();
 }
 
 void RSProperties::SetCornerRadius(Vector4f cornerRadius)

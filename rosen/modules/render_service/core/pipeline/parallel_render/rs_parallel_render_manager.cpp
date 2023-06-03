@@ -471,8 +471,13 @@ void RSParallelRenderManager::SubmitSubThreadTask(const std::shared_ptr<RSDispla
         return;
     }
     std::vector<std::unique_ptr<RSRenderTask>> renderTaskList;
+    auto cacheSkippedNodeMap = RSMainThread::Instance()->GetCacheCmdSkippedNodes();
     for (const auto& child : subThreadNodes) {
         if (!child->ShouldPaint()) {
+            continue;
+        }
+        if (cacheSkippedNodeMap.count(child->GetId()) != 0) {
+            RS_TRACE_NAME_FMT("SubmitTask cacheCmdSkippedNode: %s", child->GetName().c_str());
             continue;
         }
         renderTaskList.push_back(std::make_unique<RSRenderTask>(*child, RSRenderTask::RenderNodeStage::CACHE));
@@ -501,7 +506,7 @@ void RSParallelRenderManager::SubmitSubThreadTask(const std::shared_ptr<RSDispla
         }
         uint32_t minLoadThreadIndex = 0;
         auto minNodesNum = superRenderTaskList[0]->GetTaskSize();
-        for (auto i = 0; i < PARALLEL_THREAD_NUM; i++) {
+        for (uint32_t i = 0; i < PARALLEL_THREAD_NUM; i++) {
             auto num = superRenderTaskList[i]->GetTaskSize();
             if (num < minNodesNum) {
                 minNodesNum = num;

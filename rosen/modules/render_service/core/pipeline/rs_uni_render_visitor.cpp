@@ -631,6 +631,13 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (isQuickSkipPreparationEnabled_ && CheckIfSurfaceRenderNodeStatic(node)) {
         return;
     }
+    if (isUIFirst_) {
+        auto skipNodeMap = RSMainThread::Instance()->GetCacheCmdSkippedNodes();
+        if (skipNodeMap.count(node.GetId()) != 0) {
+            RS_TRACE_NAME(node.GetName() + " PreparedNodes cacheCmdSkiped");
+            return;
+        }
+    }
     node.CleanDstRectChanged();
     node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
@@ -959,7 +966,10 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     }
     // FrameRect(if exists) is mapped to rect using abstract coordinate explicitly by calling MapAbsRect.
     if (property.GetClipToFrame()) {
-        RectF frameRect{property.GetFrameOffsetX(), property.GetFrameOffsetY(),
+        // MapAbsRect do not handle the translation of OffsetX and OffsetY
+        RectF frameRect{
+            property.GetFrameOffsetX() * geoPtr->GetAbsMatrix().getScaleX(),
+            property.GetFrameOffsetY() * geoPtr->GetAbsMatrix().getScaleY(),
             property.GetFrameWidth(), property.GetFrameHeight()};
         prepareClipRect_ = prepareClipRect_.IntersectRect(geoPtr->MapAbsRect(frameRect));
     }
@@ -1716,9 +1726,6 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             std::get<std::shared_ptr<RSRenderNode>>(params)->SetSharedTransitionParam(std::nullopt);
         }
         unpairedTransitionNodes_.clear();
-    }
-    if (isUIFirst_) {
-        RSParallelRenderManager::Instance()->WaitProcessEnd();
     }
     RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode end");
 }

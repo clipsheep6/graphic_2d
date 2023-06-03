@@ -16,7 +16,6 @@
 #include "gtest/gtest.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_render_service_connection.h"
-#include "rs_irender_service.h"
 #include "screen_manager/rs_screen_manager.h"
 
 using namespace testing;

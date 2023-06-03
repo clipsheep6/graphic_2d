@@ -14,7 +14,6 @@
  */
 
 #include "gtest/gtest.h"
-#include <unistd.h>
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_render_service_connection.h"
 #include "rs_irender_service.h"
@@ -44,7 +43,7 @@ void RSRenderServiceConnectionTest::TearDown() {}
  * @tc.name: RSRenderServiceConnection
  * @tc.desc: Construct RSRenderServiceConnection
  * @tc.type: FUNC
- * @tc.require: issueI7ALJX
+ * @tc.require: issueI7ANSF
  */
 HWTEST_F(RSRenderServiceConnectionTest, RSRenderServiceConnection, TestSize.Level1)
 {
@@ -56,7 +55,12 @@ HWTEST_F(RSRenderServiceConnectionTest, RSRenderServiceConnection, TestSize.Leve
     ASSERT_NE(connection, nullptr);
 }
 
-
+/**
+ * @tc.name: RSRenderServiceConnection
+ * @tc.desc: GetMemoryGraphic
+ * @tc.type: FUNC
+ * @tc.require: issueI7ANSF
+ */
 HWTEST_F(RSRenderServiceConnectionTest, GetMemoryGraphic, TestSize.Level1)
 {
     auto mainThread = RSMainThread::Instance();
@@ -90,7 +94,7 @@ HWTEST_F(RSRenderServiceConnectionTest, GetMemoryGraphic, TestSize.Level1)
  * @tc.name: RSRenderServiceConnection
  * @tc.desc: GetScreenInfo
  * @tc.type: FUNC
- * @tc.require: issueI7ALJX
+ * @tc.require: issueI7ANSF
  */
 HWTEST_F(RSRenderServiceConnectionTest, GetScreenInfo, TestSize.Level1)
 {

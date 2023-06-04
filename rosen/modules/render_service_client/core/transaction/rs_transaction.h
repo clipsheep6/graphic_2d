@@ -45,6 +45,15 @@ public:
     void Begin();
     void Commit();
 
+    bool IsOpen()
+    {
+        return isOpen_;
+    }
+
+    void SetStartCount(const int32_t count);
+
+    bool IsNeedCommit();
+
 private:
     uint64_t GenerateSyncId();
     void ResetSyncTransactionInfo();
@@ -60,6 +69,8 @@ private:
     std::vector<sptr<RSISyncTransactionController>> controllers_;
     std::function<void()> createStartCallback_;
     std::function<void()> createFinishCallback_;
+    bool isOpen_ { false };
+    int32_t startCount_ { 1 };
 
     friend class RSSyncTransactionController;
 };

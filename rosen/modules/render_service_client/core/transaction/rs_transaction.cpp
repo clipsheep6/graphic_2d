@@ -55,21 +55,39 @@ void RSTransaction::CloseSyncTransaction(const uint64_t transactionCount)
 
 void RSTransaction::Begin()
 {
+    if (isOpen_) {
+        return;
+    }
+    isOpen_ = true;
     auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->StartSyncTransaction();
+    if (transactionProxy != nullptr && transactionProxy->StartSyncTransaction()) {
         transactionProxy->Begin();
     }
 }
 
+bool RSTransaction::IsNeedCommit()
+{
+    startCount_--;
+    return startCount_ == 0;
+}
+
+void RSTransaction::SetStartCount(const int32_t count)
+{
+    startCount_ = count;
+}
+
 void RSTransaction::Commit()
 {
+    if (!isOpen_) {
+        return;
+    }
+    isOpen_ = false;
+    startCount_ = 1;
     CreateTransactionFinish();
     auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
+    if (transactionProxy != nullptr && transactionProxy->CloseSyncTransaction()) {
         transactionProxy->SetSyncId(syncId_);
         transactionProxy->CommitSyncTransaction();
-        transactionProxy->CloseSyncTransaction();
     }
 }
 

@@ -63,28 +63,36 @@ void FontParser::ProcessCmapTable(const struct CmapTables* cmapTable, FontParser
     }
 }
 
-void FontParser::GetStringFromNameId(FontParser::NameId nameId, const char* stringStorage, uint16_t stringOffset,
-    uint16_t len, FontParser::FontDescriptor& fontDescriptor) const
+void FontParser::GetStringFromNameId(FontParser::NameId nameId, const char* data, uint16_t len,
+    FontParser::FontDescriptor& fontDescriptor) const
 {
     switch (nameId) {
         case FontParser::NameId::FONT_FAMILY: {
-            std::string fontFamily(stringStorage + stringOffset, len);
-            fontDescriptor.fontFamily = fontFamily;
+            if (fontDescriptor.fontFamily.size() == 0) {
+                std::string fontFamily(data, len);
+                fontDescriptor.fontFamily = fontFamily;
+            }
             break;
         }
         case FontParser::NameId::FONT_SUBFAMILY: {
-            std::string fontSubfamily(stringStorage + stringOffset, len);
-            fontDescriptor.fontSubfamily = fontSubfamily;
+            if (fontDescriptor.fontSubfamily.size() == 0) {
+                std::string fontSubfamily(data, len);
+                fontDescriptor.fontSubfamily = fontSubfamily;
+            }
             break;
         }
         case FontParser::NameId::FULL_NAME: {
-            std::string fullName(stringStorage + stringOffset, len);
-            fontDescriptor.fullName = fullName;
+            if (fontDescriptor.fullName.size() == 0) {
+                std::string fullName(data, len);
+                fontDescriptor.fullName = fullName;
+            }
             break;
         }
         case FontParser::NameId::POSTSCRIPT_NAME: {
-            std::string postScriptName(stringStorage + stringOffset, len);
-            fontDescriptor.postScriptName = postScriptName;
+            if (fontDescriptor.postScriptName.size() == 0) {
+                std::string postScriptName(data, len);
+                fontDescriptor.postScriptName = postScriptName;
+            }
             break;
         }
         default: {
@@ -99,13 +107,28 @@ void FontParser::ProcessNameTable(const struct NameTable* nameTable, FontParser:
     auto storageOffset = nameTable->storageOffset.Get();
     auto stringStorage = data_ + storageOffset;
     for (int i = 0; i < count; ++i) {
+        if (nameTable->nameRecord[i].stringOffset.Get() == 0 || nameTable->nameRecord[i].length.Get() == 0) {
+            LOGSO_FUNC_LINE(ERROR) << "empty";
+            continue;
+        }
         FontParser::NameId nameId = static_cast<FontParser::NameId>(nameTable->nameRecord[i].nameId.Get());
         FontParser::PlatformId platformId =
             static_cast<FontParser::PlatformId>(nameTable->nameRecord[i].platformId.Get());
+        auto len = nameTable->nameRecord[i].length.Get();
+        auto stringOffset = nameTable->nameRecord[i].stringOffset.Get();
+        const char* data = stringStorage + stringOffset;
         if (platformId == FontParser::PlatformId::MACINTOSH) {
-            auto len = nameTable->nameRecord[i].length.Get();
-            auto stringOffset = nameTable->nameRecord[i].stringOffset.Get();
-            GetStringFromNameId(nameId, stringStorage, stringOffset, len, fontDescriptor);
+            GetStringFromNameId(nameId, data, len, fontDescriptor);
+        } else if (platformId == FontParser::PlatformId::WINDOWS) {
+            char* buffer = new char[len + 1];
+            int index = 0;
+            for (int j = 0; j < len; ++j) {
+                buffer[index++] = data[++j];
+            }
+            buffer[index] = '\0';
+            data = buffer;
+            GetStringFromNameId(nameId, data, index, fontDescriptor);
+            delete[] buffer;
         }
     }
 }

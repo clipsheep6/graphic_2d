@@ -16,6 +16,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_PROP_H
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_PROP_H
 
+#include <memory>
 #include "animation/rs_value_estimator.h"
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
@@ -55,6 +56,7 @@ public:
     {
         return DEFAULT_NEAR_ZERO_THRESHOLD;
     }
+    std::shared_ptr<RSBaseRenderNode> GetNode() { return node_.lock(); }
 
 protected:
     void OnChange() const

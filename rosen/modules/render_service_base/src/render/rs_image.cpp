@@ -14,6 +14,7 @@
  */
 
 #include "render/rs_image.h"
+#include "SkCanvas.h"
 
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA

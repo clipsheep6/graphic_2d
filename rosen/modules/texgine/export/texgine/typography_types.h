@@ -34,7 +34,7 @@ enum class BreakStrategy {
     GREEDY,                  // this strategy wraps lines when they have to.
     HIGH_QUALITY,            // this strategy aims to make the line-wrapped result
                              // look as neat as possible, not jagged.
-    BALANCED = HIGH_QUALITY, // to be done.
+    BALANCED,                // compromise strategy between GREEDY and HIGHQUALITY.
 };
 
 /*
@@ -145,9 +145,9 @@ enum class TextDirection {
  * @brief WordBreakType is the type of word break when multiline text wraps.
  */
 enum class WordBreakType {
-    NORMAL,     // to be done.
+    NORMAL,     // break according to spaces and punctuation mark.
     BREAK_ALL,  // break occur after any characters.
-    BREAK_WORD, // break only occur after word.
+    BREAK_WORD, // break based on the NORMAL strategy, special cases such as hyphens and numbers will be considered.
 };
 } // namespace TextEngine
 } // namespace Rosen

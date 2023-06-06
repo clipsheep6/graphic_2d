@@ -542,15 +542,6 @@ void RSUniRenderVisitor::MarkSubHardwareEnableNodeState(RSSurfaceRenderNode& sur
 
 void RSUniRenderVisitor::AdjustLocalZOrder(std::shared_ptr<RSSurfaceRenderNode> surfaceNode)
 {
-    if (!IsHardwareComposerEnabled() || !surfaceNode || !surfaceNode->IsAppWindow()) {
-        return;
-    }
-
-    auto hardwareEnabledNodes = surfaceNode->GetChildHardwareEnabledNodes();
-    if (hardwareEnabledNodes.empty()) {
-        return;
-    }
-    localZOrder_ = static_cast<float>(hardwareEnabledNodes.size());
     if (isParallel_ && !isUIFirst_) {
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
         RSParallelRenderManager::Instance()->AddAppWindowNode(parallelRenderVisitorIndex_, surfaceNode);
@@ -585,6 +576,11 @@ void RSUniRenderVisitor::PrepareTypesOfSurfaceRenderNodeBeforeUpdate(RSSurfaceRe
     // collect app window node's child hardware enabled node
     if (node.IsHardwareEnabledType() && node.GetBuffer() != nullptr && curSurfaceNode_) {
         curSurfaceNode_->AddChildHardwareEnabledNode(node.ReinterpretCastTo<RSSurfaceRenderNode>());
+        auto parentNode = curSurfaceNode_->GetParent().lock();
+        auto rsParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parentNode);
+        if (rsParent) {
+            rsParent->AddChildHardwareEnabledNode(node.ReinterpretCastTo<RSSurfaceRenderNode>());
+        }
         node.SetLocalZOrder(localZOrder_++);
     }
 
@@ -622,6 +618,10 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     // avoid EntryView upload texture while screen rotation
     if (node.GetName() == "EntryView") {
         node.SetStaticCached(curDisplayNode_->IsRotationChanged());
+    }
+
+    if (node.IsAppWindow()) {
+        AdjustLocalZOrder(node.ReinterpretCastTo<RSSurfaceRenderNode>());
     }
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     if (drivenInfo_ && (node.GetName() == "imeWindow" || node.GetName() == "RecentView")) {
@@ -2413,7 +2413,6 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 #ifdef RS_ENABLE_EGLQUERYSURFACE
     if (node.IsAppWindow()) {
         curSurfaceNode_ = node.ReinterpretCastTo<RSSurfaceRenderNode>();
-        AdjustLocalZOrder(curSurfaceNode_);
     }
     // skip clean surface node
     if (isOpDropped_ && node.IsAppWindow() &&
@@ -2501,7 +2500,32 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (property.IsSpherizeValid()) {
         DrawSpherize(node);
     } else {
-        if (isUIFirst_ && RSUniRenderUtil::HandleSubThreadNode(node, *canvas_)) {
+        if (isUIFirst_ && !isSubThread_ && !node.IsMainThreadNode()) {
+            auto childHardwareEnabledNodes = node.GetChildHardwareEnabledNodes();
+            for (auto& child : childHardwareEnabledNodes) {
+                auto childNode = child.lock();
+                if (childNode && childNode->GetBuffer() != nullptr && !childNode->IsHardwareForcedDisabled()) {
+                    canvas_->save();
+                    canvas_->resetMatrix();
+                    const auto& childNodeProperty = node.GetRenderProperties();
+                    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(childNodeProperty.GetBoundsGeometry());
+                    RectI absRect;
+                    absRect = geoPtr ? geoPtr->GetAbsRect() : absRect;
+                    if (childNodeProperty.GetCornerRadius().IsZero()) {
+                        SkRect skRect = SkRect::MakeXYWH(absRect.GetLeft(), absRect.GetTop(),
+                            absRect.GetWidth(), absRect.GetHeight());
+                        canvas_->clipRect(skRect);
+                    } else {
+                        const RectF rectF = {absRect.GetLeft(), absRect.GetTop(),
+                            absRect.GetWidth(), absRect.GetHeight()};
+                        RRect clipRRect = RRect(rectF, childNodeProperty.GetCornerRadius());
+                        canvas_->clipRRect(RSPropertiesPainter::RRect2SkRRect(clipRRect), true);
+                    }
+                    canvas_->clear(SK_ColorTRANSPARENT);
+                    canvas_->restore();
+                }
+            }
+            RSUniRenderUtil::HandleSubThreadNode(node, *canvas_);
             return;
         }
         node.ProcessRenderBeforeChildren(*canvas_);
@@ -2509,8 +2533,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         if (node.GetBuffer() != nullptr) {
             if (node.IsHardwareEnabledType()) {
                 // since node has buffer, hwc disabledState could be reset by filter or surface cached
-                node.SetHardwareForcedDisabledState((node.IsHardwareForcedDisabledByFilter() ||
-                    isUpdateCachedSurface_));
+                node.SetHardwareForcedDisabledState(node.IsHardwareForcedDisabledByFilter());
             }
             // if this window is in freeze state, disable hardware composer for its child surfaceView
             if (IsHardwareComposerEnabled() && !node.IsHardwareForcedDisabled() && node.IsHardwareEnabledType()) {
@@ -2518,7 +2541,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
                 node.SetGlobalAlpha(canvas_->GetAlpha());
                 ParallelRenderEnableHardwareComposer(node);
 
-                {
+                if (!isSubThread_) {
                     SkAutoCanvasRestore acr(canvas_.get(), true);
 
                     if (displayNodeMatrix_.has_value()) {

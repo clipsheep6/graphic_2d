@@ -31,12 +31,10 @@ config("flutter_config") {
     # "-fvisibility=hidden",
     "-fdata-sections",
     "-ffunction-sections",
-    "-Os",
   ]
 
   cflags_cc = [
     "-fvisibility-inlines-hidden",
-    "-Os",
   ]
   defines = []
   defines += ace_common_defines

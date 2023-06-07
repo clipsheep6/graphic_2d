@@ -19,7 +19,6 @@ config("thirdparty_lib_txt_rosen_config") {
     "-Wno-implicit-fallthrough",
 
     #    "-fvisibility-inlines-hidden",
-    "-Os",
   ]
 }
 

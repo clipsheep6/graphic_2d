@@ -32,7 +32,6 @@ config("rosen_text_config") {
   cflags_cc = [
     "-Wno-implicit-fallthrough",
     "-fvisibility-inlines-hidden",
-    "-Os",
   ]
   include_dirs = [
     "$rosen_2d_engine_root",

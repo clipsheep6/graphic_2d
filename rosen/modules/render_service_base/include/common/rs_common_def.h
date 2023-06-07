@@ -44,6 +44,7 @@ enum class RSUINodeType : uint32_t {
     CANVAS_NODE  = 0x008110u,   // formerly RSNode
     EFFECT_NODE  = 0x010110u,
     ROOT_NODE    = 0x108110u,
+    CANVAS_DRAWING_NODE = 0x28110u,
 };
 
 enum class FollowType : uint8_t {
@@ -73,6 +74,7 @@ enum class RSRenderNodeType : uint32_t {
     CANVAS_NODE  = 0x008111u,   // formerly RSRenderNode
     EFFECT_NODE  = 0x010111u,
     ROOT_NODE    = 0x108111u,
+    CANVAS_DRAWING_NODE = 0x18111u,
 };
 
 enum class CacheType : uint8_t {

@@ -48,7 +48,7 @@ public:
 #else
     void UpdateRecording(std::shared_ptr<Drawing::DrawCmdList> drawCmds, RSModifierType type);
 #endif
-    void ClearRecording();
+    virtual void ClearRecording();
 
     void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
     void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
@@ -75,7 +75,7 @@ public:
         return RSRenderNodeType::CANVAS_NODE;
     }
 private:
-    void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const;
+    virtual void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const;
     void InternalDrawContent(RSPaintFilterCanvas& canvas);
     // functions that are dedicated to driven render [start]
     void DrawDrivenContent(RSPaintFilterCanvas& canvas);

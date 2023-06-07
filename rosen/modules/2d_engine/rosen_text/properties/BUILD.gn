@@ -19,7 +19,6 @@ import(
 config("rosen_text_config") {
   cflags_cc = [
     "-Wno-implicit-fallthrough",
-    "-Os",
   ]
   include_dirs = [
     "$rosen_2d_engine_root",

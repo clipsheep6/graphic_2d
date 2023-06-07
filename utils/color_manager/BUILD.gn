@@ -23,7 +23,6 @@ config("color_manager_config") {
     "-g3",
     "-Wno-error=missing-braces",
     "-Wno-error=#warnings",
-    "-Os",
   ]
 
   ldflags = [ "-Wl,--no-as-needed" ]

@@ -2711,9 +2711,6 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
             }
             return;
         }
-        // The cache is not refreshed continuously.
-        cacheRenderNodeMap_[node.GetId()] = 0;
-        return;
     }
     if (node.GetDrawingCacheType() == RSDrawingCacheType::TARGETED_CACHE) {
         // If the number of consecutive refreshes exceeds CACHE_MAX_UPDATE_TIME times, the cache is cleaned,
@@ -2723,7 +2720,7 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
             if (updateTimes >= CACHE_MAX_UPDATE_TIME) {
                 node.SetCacheType(CacheType::NONE);
                 node.ClearCacheSurface();
-                cacheRenderNodeMap_.erase(node.GetId());
+                cacheRenderNodeMap_.[node.GetId()] = updateTimes;
                 return;
             }
             node.SetCacheType(CacheType::CONTENT);
@@ -2732,6 +2729,8 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
             cacheRenderNodeMap_[node.GetId()] = updateTimes;
         }
     }
+    // The cache is not refreshed continuously.
+    cacheRenderNodeMap_[node.GetId()] = 0;
 }
 
 void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)

@@ -35,7 +35,7 @@ void DumpCharGroup(int32_t index, const CharGroup &cg, double glyphEm,
     // 0xffffff is the default char when the cg is null or invalid
     auto ch = (cg.chars.size() > 0) ? cg.chars[0] : 0xffffff;
     // the follow numbers is to align log
-    LOGEX_FUNC_LINE_DEBUG() << std::setw(2) << std::setfill('0') << index <<
+    LOGEX_FUNC_LINE_DEBUG() << std::setw(2) << std::setfill('0') << index <<    // 2 & 4 means output width，0 means fill with 0
         std::hex << std::uppercase <<
         ": " << std::right << std::setw(4) << std::setfill(' ') << "\033[40m" << "'" <<
         uTF8Str.data() << "'" << "\033[0m" <<
@@ -155,7 +155,7 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
         std::shared_ptr<Typeface> lastTypeface = nullptr;
         while (utf16Index < runsit->end) {
             U16_NEXT(text_.data(), utf16Index, runsit->end, cp);
-            LOGEX_FUNC_LINE_DEBUG(Logger::SetToNoReturn) << "[" << std::setw(2) << std::setfill('0') << index++
+            LOGEX_FUNC_LINE_DEBUG(Logger::SetToNoReturn) << "[" << std::setw(2) << std::setfill('0') << index++     // 2 & 6 means output width，0 means fill with 0
                 << ": 0x" << std::setw(6) << std::setfill('0') << std::hex << std::uppercase << cp << "]";
             if (lastTypeface && lastTypeface->Has(cp)) {
                 LOGCEX_DEBUG() << " cached";
@@ -227,7 +227,7 @@ void MeasurerImpl::DoSeekScript(std::list<struct MeasuringRun> &runs, hb_unicode
 
             U16_NEXT(text_.data(), utf16Index, it->end, cp);
             auto s = hb_unicode_script(icuGetUnicodeFuncs, cp);
-            LOGEX_FUNC_LINE_DEBUG() << "[" << std::setw(2) << std::setfill('0') << index++ << ": 0x"
+            LOGEX_FUNC_LINE_DEBUG() << "[" << std::setw(2) << std::setfill('0') << index++ << ": 0x"    // 2 & 6 means output width，0 means fill with 0
                 << std::setw(6) << std::setfill('0') << std::hex << std::uppercase << cp << "]" << " " << s;
             if (script == HB_SCRIPT_INVALID) {
                 script = s;

@@ -27,7 +27,7 @@ namespace TextEngine {
 struct CmapSubtable;
 class CmapParser {
 public:
-    static constexpr int32_t InvalidGlyphId = Ranges::InvalidGlyphId;
+    static constexpr int32_t INVALIDGLYPHID = Ranges::INVALIDGLYPHID;
 
     /*
      * @brief Parse the cmap data

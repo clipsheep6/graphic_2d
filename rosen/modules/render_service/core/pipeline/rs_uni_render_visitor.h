@@ -340,8 +340,6 @@ private:
 
     bool isCalcCostEnable_ = false;
 
-    std::optional<SkMatrix> rootMatrix_ = std::nullopt;
-
     uint32_t appWindowNum_ = 0;
 
     bool isParallel_ = false;

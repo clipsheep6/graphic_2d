@@ -928,6 +928,7 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
         RS_LOGE("RSUniRenderVisitor::PrepareCanvasRenderNode curSurfaceDirtyManager is nullptr");
         return;
     }
+    node.GetMutableRenderProperties().UpdateSandBoxMatrix(parentSurfaceNodeMatrix_);
     dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
         dirtyFlag_, prepareClipRect_);
 
@@ -2648,16 +2649,8 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     } else {
         saveCount = canvas_->save();
     }
-
-    bool saveRootMatrix = node.GetChildrenCount() > 0 && !rootMatrix_.has_value();
-    if (saveRootMatrix) {
-        rootMatrix_ = canvas_->getTotalMatrix();
-    }
     ProcessCanvasRenderNode(node);
     canvas_->restoreToCount(saveCount);
-    if (saveRootMatrix) {
-        rootMatrix_.reset();
-    }
 }
 
 bool RSUniRenderVisitor::GenerateNodeContentCache(RSRenderNode& node)
@@ -2775,10 +2768,9 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     // in case preparation'update is skipped
     node.GetMutableRenderProperties().CheckEmptyBounds();
     // draw self and children in sandbox which will not be affected by parent's transition
-    const auto& sandboxPos = node.GetRenderProperties().GetSandBox();
-    if (sandboxPos.has_value() && rootMatrix_.has_value()) {
-        canvas_->setMatrix(rootMatrix_.value());
-        canvas_->translate(sandboxPos->x_, sandboxPos->y_);
+    const auto& sandboxMatrix = node.GetRenderProperties().GetSandBoxMatrix();
+    if (sandboxMatrix) {
+        canvas_->setMatrix(*sandboxMatrix);
     }
 
     const auto& property = node.GetRenderProperties();

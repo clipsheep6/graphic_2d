@@ -31,7 +31,8 @@ constexpr int BYTE_CONVERT = 1024;
 enum MEMORY_TYPE {
     MEM_PIXELMAP,
     MEM_SKIMAGE,
-    MEM_RENDER_NODE
+    MEM_RENDER_NODE,
+    MEM_BITMAP
 };
 
 struct MemoryInfo {

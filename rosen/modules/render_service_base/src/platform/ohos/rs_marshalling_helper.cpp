@@ -494,6 +494,129 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val, voi
         return val != nullptr;
     }
 }
+
+// SkBitmap
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SkBitmap& val)
+{
+    SkPixmap pixmap;
+    int32_t has_pixmap = -1;
+    if (!val.peekPixels(&pixmap)) {
+        parcel.WriteInt32(has_pixmap);
+        ROSEN_LOGE("RSMarshallingHelper::Marshalling SkBitmap peekPixels failed");
+        return false;
+    } else {
+        has_pixmap = 1;
+        parcel.WriteInt32(has_pixmap);
+    }
+    size_t rb = pixmap.rowBytes();
+    int width = pixmap.width();
+    int height = pixmap.height();
+    const void* addr = pixmap.addr();
+    size_t size = rb * static_cast<size_t>(height);
+
+    parcel.WriteUint32(size);
+    if (!WriteToParcel(parcel, addr, size)) {
+        ROSEN_LOGE("RSMarshallingHelper::Marshalling SkBitmap WriteToParcel failed");
+        return false;
+    }
+
+    parcel.WriteUint32(rb);
+    parcel.WriteInt32(width);
+    parcel.WriteInt32(height);
+
+    parcel.WriteUint32(pixmap.colorType());
+    parcel.WriteUint32(pixmap.alphaType());
+
+    if (pixmap.colorSpace() == nullptr) {
+        parcel.WriteUint32(0);
+        return true;
+    } else {
+        auto data = pixmap.colorSpace()->serialize();
+        parcel.WriteUint32(data->size());
+        if (!WriteToParcel(parcel, data->data(), data->size())) {
+            ROSEN_LOGE("RSMarshallingHelper::Marshalling SkBitmap WriteToParcel colorSpace failed");
+            return false;
+        }
+    }
+    return true;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SkBitmap& val)
+{
+    void* addr = nullptr;
+    return Unmarshalling(parcel, val, addr);
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SkBitmap& val, void*& imagepixelAddr)
+{
+    int32_t has_pixmap = parcel.ReadInt32();
+    if (has_pixmap == -1) {
+        ROSEN_LOGE("RSMarshallingHelper::Unmarshalling: not found pixmap");
+        return false;
+    }
+    size_t pixmapSize = parcel.ReadUint32();
+    const void* addr = RSMarshallingHelper::ReadFromParcel(parcel, pixmapSize);
+    if (addr == nullptr) {
+        ROSEN_LOGE("RSMarshallingHelper::Unmarshalling: read SkBitmap addr failed");
+        return false;
+    }
+
+    size_t rb = parcel.ReadUint32();
+    int width = parcel.ReadInt32();
+    int height = parcel.ReadInt32();
+
+    SkColorType colorType = static_cast<SkColorType>(parcel.ReadUint32());
+    SkAlphaType alphaType = static_cast<SkAlphaType>(parcel.ReadUint32());
+    sk_sp<SkColorSpace> colorSpace;
+
+    size_t size = parcel.ReadUint32();
+    if (size == 0) {
+        colorSpace = nullptr;
+    } else {
+        const void* data = RSMarshallingHelper::ReadFromParcel(parcel, size);
+        if (data == nullptr) {
+            ROSEN_LOGE("failed RSMarshallingHelper::Unmarshalling SkBitmap data");
+            return false;
+        }
+        colorSpace = SkColorSpace::Deserialize(data, size);
+
+#ifdef RS_ENABLE_RECORDING
+        if (size >= MIN_DATA_SIZE && parcel.GetMaxCapacity() != RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
+#else
+        if (size >= MIN_DATA_SIZE) {
+#endif
+            free(const_cast<void*>(data));
+        }
+    }
+
+    // if pixelmapSize >= MIN_DATA_SIZE(copyFromAshMem). record this memory size
+    // use this proc to follow release step
+    SkImageInfo imageInfo = SkImageInfo::Make(width, height, colorType, alphaType, colorSpace);
+#ifdef RS_ENABLE_RECORDING
+    auto skData =
+        (pixmapSize < MIN_DATA_SIZE || parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY)
+            ? SkData::MakeWithCopy(addr, pixmapSize)
+#else
+    auto skData = pixmapSize < MIN_DATA_SIZE ? SkData::MakeWithCopy(addr, pixmapSize)
+#endif
+            : SkData::MakeWithProc(addr, pixmapSize, sk_free_releaseproc, nullptr);
+    val.setInfo(imageInfo, rb);
+    val.allocPixels();
+    void* data = (void*)skData->data();
+    val.setPixels(data);
+    // add to MemoryTrack for memoryManager
+#ifdef RS_ENABLE_RECORDING
+    if (pixmapSize >= MIN_DATA_SIZE && parcel.GetMaxCapacity() != RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
+#else
+    if (pixmapSize >= MIN_DATA_SIZE) {
+#endif
+        MemoryInfo info = { pixmapSize, 0, 0, MEMORY_TYPE::MEM_BITMAP };
+        MemoryTrack::Instance().AddPictureRecord(addr, info);
+        imagepixelAddr = const_cast<void*>(addr);
+    }
+    return true;
+}
+
 #else
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<Drawing::Image>& val)
 {

@@ -26,7 +26,7 @@ namespace Rosen {
 class DrawCmdList;
 struct RSModifierContext;
 
-class RSCanvasDrawingRenderNode : public RSCanvasRenderNode {
+class RSB_EXPORT RSCanvasDrawingRenderNode : public RSCanvasRenderNode {
 public:
     using WeakPtr = std::weak_ptr<RSCanvasDrawingRenderNode>;
     using SharedPtr = std::shared_ptr<RSCanvasDrawingRenderNode>;
@@ -41,6 +41,8 @@ public:
     {
         return Type;
     }
+
+    bool GetBitmap(SkBitmap& bitmap);
 
 private:
     void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const override;

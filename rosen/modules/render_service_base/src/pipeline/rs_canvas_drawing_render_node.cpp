@@ -69,5 +69,18 @@ void RSCanvasDrawingRenderNode::ApplyDrawCmdModifier(RSModifierContext& context,
         cmd->ClearOp();
     }
 }
+
+bool RSCanvasDrawingRenderNode::GetBitmap(SkBitmap& bitmap)
+{
+    if (canvas_ == nullptr) {
+        return false;
+    }
+    SkImageInfo info =
+        SkImageInfo::Make(skSurface_->width(), skSurface_->height(), kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+    bitmap.setInfo(info);
+    bitmap.allocPixels();
+    canvas_->GetSurface()->readPixels(bitmap, 0, 0);
+    return true;
+}
 } // namespace Rosen
 } // namespace OHOS

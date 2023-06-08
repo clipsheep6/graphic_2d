@@ -43,6 +43,7 @@ class SkRegion;
 class SkTextBlob;
 class SkVertices;
 class SkTypeface;
+class SkBitmap;
 
 #ifdef NEW_SKIA
 struct SkSamplingOptions;
@@ -132,6 +133,9 @@ public:
     static RSB_EXPORT bool Marshalling(Parcel& parcel, const sk_sp<SkImage>& val);
     static RSB_EXPORT bool Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val);
     static RSB_EXPORT bool Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val, void*& imagepixelAddr);
+    static RSB_EXPORT bool Marshalling(Parcel& parcel, const SkBitmap& val);
+    static RSB_EXPORT bool Unmarshalling(Parcel& parcel, SkBitmap& val);
+    static RSB_EXPORT bool Unmarshalling(Parcel& parcel, SkBitmap& val, void*& imagepixelAddr);
 #else
     static RSB_EXPORT bool Marshalling(Parcel& parcel, const std::shared_ptr<Drawing::Image>& val);
     static RSB_EXPORT bool Unmarshalling(Parcel& parcel, std::shared_ptr<Drawing::Image>& val);

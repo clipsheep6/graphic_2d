@@ -2723,7 +2723,7 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
             if (updateTimes >= CACHE_MAX_UPDATE_TIME) {
                 node.SetCacheType(CacheType::NONE);
                 node.ClearCacheSurface();
-                cacheRenderNodeMap_.erase(node.GetId());
+                cacheRenderNodeMap_.[node.GetId()] = updateTimes;
                 return;
             }
             node.SetCacheType(CacheType::CONTENT);

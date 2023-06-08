@@ -87,6 +87,7 @@ public:
         SHOW_WATERMARK,
         GET_MEMORY_GRAPHIC,
         GET_MEMORY_GRAPHICS,
+        GET_BITMAP,
     };
 
     virtual void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) = 0;
@@ -170,6 +171,8 @@ public:
     virtual int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) = 0;
 
     virtual int32_t GetScreenType(ScreenId id, RSScreenType& screenType) = 0;
+
+    virtual int32_t GetBitmap(NodeId id, SkBitmap& bitmap) = 0;
 
     virtual int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval) = 0;
 

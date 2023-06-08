@@ -184,6 +184,7 @@ void RSRenderThreadVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
             DirtyRegionType::UPDATE_DIRTY_REGION, node.GetOldDirty());
     }
     ResetAndPrepareChildrenNode(node, nodeParent);
+    node.UpdateEffectRect(node.GetChildrenRect());
     dirtyFlag_ = dirtyFlag;
 }
 

@@ -39,6 +39,10 @@ public:
 
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
+    void UpdateEffectRect(const RectI& rect) { effectRect_ = rect; }
+
+private:
+    RectI effectRect_ = RectI();
 };
 } // namespace Rosen
 } // namespace OHOS

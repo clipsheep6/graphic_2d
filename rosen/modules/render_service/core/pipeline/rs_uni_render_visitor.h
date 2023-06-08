@@ -356,6 +356,7 @@ private:
     bool resetRotate_ = false;
     bool needCacheImg_ = false;
     uint32_t captureWindowZorder_ = 0;
+    RectI effectRect_ = RectI();
 };
 } // namespace Rosen
 } // namespace OHOS

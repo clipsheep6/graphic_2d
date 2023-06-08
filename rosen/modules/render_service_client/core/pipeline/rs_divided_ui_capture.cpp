@@ -288,6 +288,7 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareEffectRenderNode(RSEf
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
     node.Update(*dirtyManager, nullptr, false);
     PrepareBaseRenderNode(node);
+    node.UpdateEffectRect(node.GetChildrenRect());
 }
 
 } // namespace Rosen

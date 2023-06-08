@@ -110,7 +110,7 @@ bool Typeface::Has(uint32_t ch)
         }
     }
 
-    return cmapParser_->GetGlyphId(ch) != CmapParser::InvalidGlyphId;
+    return cmapParser_->GetGlyphId(ch) != CmapParser::INVALIDGLYPHID;
 }
 } // namespace TextEngine
 } // namespace Rosen

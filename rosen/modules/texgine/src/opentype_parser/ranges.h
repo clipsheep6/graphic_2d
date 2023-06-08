@@ -31,7 +31,7 @@ public:
         uint32_t end;
         int32_t gid;
     };
-    static constexpr int32_t InvalidGlyphId = -1;
+    static constexpr int32_t INVALIDGLYPHID = -1;
 
     /*
      * @brief Add a new range

@@ -37,7 +37,7 @@ public:
 
     static SharedPtr Create(bool isRenderServiceNode = false);
 
-    SkCanvas* BeginRecording(int width, int height);
+    virtual SkCanvas* BeginRecording(int width, int height);
     bool IsRecording() const;
     void FinishRecording();
     float GetPaintWidth() const;
@@ -52,11 +52,10 @@ protected:
     RSCanvasNode(const RSCanvasNode&&) = delete;
     RSCanvasNode& operator=(const RSCanvasNode&) = delete;
     RSCanvasNode& operator=(const RSCanvasNode&&) = delete;
-
-private:
     SkCanvas* recordingCanvas_ = nullptr;
     bool recordingUpdated_ = false;
 
+private:
     friend class RSUIDirector;
     friend class RSAnimation;
     friend class RSPathAnimation;

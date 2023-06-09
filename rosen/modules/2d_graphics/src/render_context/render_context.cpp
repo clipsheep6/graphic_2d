@@ -278,7 +278,7 @@ EGLSurface RenderContext::CreateEGLSurface(EGLNativeWindowType eglNativeWindow)
     return surface;
 }
 
-void RenderContext::SetColorSpace(ColorGamut colorSpace)
+void RenderContext::SetColorSpace(GraphicColorGamut colorSpace)
 {
     colorSpace_ = colorSpace;
 }
@@ -373,7 +373,7 @@ sk_sp<SkSurface> RenderContext::AcquireSurface(int width, int height)
 
     switch (colorSpace_) {
         // [planning] in order to stay consistant with the colorspace used before, we disabled
-        // COLOR_GAMUT_SRGB to let the branch to default, then skColorSpace is set to nullptr
+        // GRAPHIC_COLOR_GAMUT_SRGB to let the branch to default, then skColorSpace is set to nullptr
         case COLOR_GAMUT_DISPLAY_P3:
 #if defined(NEW_SKIA)
             skColorSpace = SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, SkNamedGamut::kDisplayP3);

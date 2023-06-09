@@ -16,6 +16,7 @@
 #include "pipeline/rs_surface_capture_task.h"
 
 #include <memory>
+#include <sys/mman.h>
 
 #include "include/core/SkCanvas.h"
 #include "include/core/SkMatrix.h"
@@ -40,6 +41,7 @@
 #include "render/rs_skia_filter.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "screen_manager/rs_screen_mode_info.h"
+#include "transaction/rs_ashmem_helper.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -97,8 +99,9 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         RS_LOGE("RSSurfaceCaptureTask::Run: img is nullptr");
         return nullptr;
     }
-
-    auto data = (uint8_t *)malloc(pixelmap->GetRowBytes() * pixelmap->GetHeight());
+    auto size = pixelmap->GetRowBytes() * pixelmap->GetHeight();
+    auto allocator = AshmemAllocator::CreateAshmemAllocator(size, PROT_READ | PROT_WRITE);
+    auto data = static_cast<uint8_t*>(allocator->GetData());
     if (data == nullptr) {
         RS_LOGE("RSSurfaceCaptureTask::Run: data is nullptr");
         return nullptr;
@@ -111,8 +114,9 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         data = nullptr;
         return nullptr;
     }
-    pixelmap->SetPixelsAddr(data, nullptr, pixelmap->GetRowBytes() * pixelmap->GetHeight(),
-        Media::AllocatorType::HEAP_ALLOC, nullptr);
+    void* fd = new int32_t();
+    *static_cast<int32_t*>(fd) = allocator->GetFd();
+    pixelmap->SetPixelsAddr(data, fd, size, Media::AllocatorType::SHARE_MEM_ALLOC, nullptr);
 #endif
     if (auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>()) {
         if (visitor_->IsUniRender() && !visitor_->GetHasingSecurityLayer()) {

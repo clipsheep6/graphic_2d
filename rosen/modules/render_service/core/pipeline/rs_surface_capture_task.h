@@ -17,6 +17,7 @@
 #define RS_SURFACE_CAPTURE_TASK
 
 #include "common/rs_common_def.h"
+#include "SkImage.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkSurface.h"
@@ -91,6 +92,7 @@ class RSSurfaceCaptureVisitor : public RSNodeVisitor {
 
         std::vector<std::shared_ptr<RSSurfaceRenderNode>> hardwareEnabledNodes_;
 };
+
 class RSSurfaceCaptureTask {
 public:
     explicit RSSurfaceCaptureTask(NodeId nodeId, float scaleX, float scaleY)
@@ -103,6 +105,7 @@ private:
     std::shared_ptr<RSSurfaceCaptureVisitor> visitor_ = nullptr;
 
     sk_sp<SkSurface> CreateSurface(const std::unique_ptr<Media::PixelMap>& pixelmap);
+    bool CopyDataToPixelMap(sk_sp<SkImage> img, const std::unique_ptr<Media::PixelMap>& pixelmap);
 
     std::unique_ptr<Media::PixelMap> CreatePixelMapBySurfaceNode(std::shared_ptr<RSSurfaceRenderNode> node,
         bool isUniRender = false);

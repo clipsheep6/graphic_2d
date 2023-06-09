@@ -16,6 +16,7 @@
 #include "pipeline/rs_surface_capture_task.h"
 
 #include <memory>
+#include <sys/mman.h>
 
 #include "include/core/SkCanvas.h"
 #include "include/core/SkMatrix.h"
@@ -97,22 +98,10 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         RS_LOGE("RSSurfaceCaptureTask::Run: img is nullptr");
         return nullptr;
     }
-
-    auto data = (uint8_t *)malloc(pixelmap->GetRowBytes() * pixelmap->GetHeight());
-    if (data == nullptr) {
-        RS_LOGE("RSSurfaceCaptureTask::Run: data is nullptr");
+    if (!CopyDataToPixelMap(img, pixelmap)) {
+        RS_LOGE("RSSurfaceCaptureTask::Run: CopyDataToPixelMap failed");
         return nullptr;
     }
-    SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
-        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-    if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
-        RS_LOGE("RSSurfaceCaptureTask::Run: readPixels failed");
-        free(data);
-        data = nullptr;
-        return nullptr;
-    }
-    pixelmap->SetPixelsAddr(data, nullptr, pixelmap->GetRowBytes() * pixelmap->GetHeight(),
-        Media::AllocatorType::HEAP_ALLOC, nullptr);
 #endif
     if (auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>()) {
         if (visitor_->IsUniRender() && !visitor_->GetHasingSecurityLayer()) {
@@ -124,6 +113,56 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         }
     }
     return pixelmap;
+}
+
+bool RSSurfaceCaptureTask::CopyDataToPixelMap(sk_sp<SkImage> img, const std::unique_ptr<Media::PixelMap>& pixelmap)
+{
+    auto size = pixelmap->GetRowBytes() * pixelmap->GetHeight();
+    SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+#ifdef ROSEN_OHOS
+    int fd = AshmemCreate("RSSurfaceCapture Data", size);
+    if (fd < 0) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap AshmemCreate fd < 0");
+        return false;
+    }
+    int result = AshmemSetProt(fd, PROT_READ | PROT_WRITE);
+    if (result < 0) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap AshmemSetProt error");
+        ::close(fd);
+        return false;
+    }
+    void* ptr = ::mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    auto data = static_cast<uint8_t*>(ptr);
+    if (ptr == MAP_FAILED || ptr == nullptr) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap data is nullptr");
+        ::close(fd);
+        return false;
+    }
+
+    if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap readPixels failed");
+        ::close(fd);
+        return false;
+    }
+    void* fdPtr = new int32_t();
+    *static_cast<int32_t*>(fdPtr) = fd;
+    pixelmap->SetPixelsAddr(data, fdPtr, size, Media::AllocatorType::SHARE_MEM_ALLOC, nullptr);
+#else
+    auto data = (uint8_t *)malloc(size);
+    if (data == nullptr) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap data is nullptr");
+        return false;
+    }
+    if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap readPixels failed");
+        free(data);
+        data = nullptr;
+        return false;
+    }
+    pixelmap->SetPixelsAddr(data, nullptr, size, Media::AllocatorType::HEAP_ALLOC, nullptr);
+#endif
+    return true;
 }
 
 std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::CreatePixelMapBySurfaceNode(

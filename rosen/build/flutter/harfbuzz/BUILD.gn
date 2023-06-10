@@ -27,13 +27,11 @@ config("libharfbuzz_compile_flags") {
     "-fno-rtti",
 
     # "-fvisibility-inlines-hidden",
-    "-Os",
   ]
 
   cflags = [
     "-w",
     "-fstrict-aliasing",
-    "-Os",
     "-fdata-sections",
     "-ffunction-sections",
     "-gline-tables-only",

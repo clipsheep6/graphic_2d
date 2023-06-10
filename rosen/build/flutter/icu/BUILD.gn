@@ -63,7 +63,6 @@ config("icu_compile_flags") {
     "-fno-exceptions",
 
     # "-fvisibility-inlines-hidden",
-    "-Os",
   ]
 
   cflags = [
@@ -77,7 +76,6 @@ config("icu_compile_flags") {
     "-Wno-unused-parameter",
 
     # "-fvisibility=hidden",
-    "-Os",
   ]
   if (use_mingw_win) {
     cflags_cc += [ "-DWINVER=0x0601" ]

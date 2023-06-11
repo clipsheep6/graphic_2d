@@ -35,6 +35,7 @@ ohos_shared_library("color_space_object_convertor") {
   deps = [ "//foundation/graphic/graphic_2d/utils:libgraphic_utils" ]
 
   external_deps = [
+    "ability_runtime:module_manager",
     "hiviewdfx_hilog_native:libhilog",
     "napi:ace_napi",
   ]
@@ -71,6 +72,7 @@ ohos_shared_library("colorspacemanager_napi") {
   ]
 
   external_deps = [
+    "ability_runtime:module_manager",
     "hiviewdfx_hilog_native:libhilog",
     "napi:ace_napi",
   ]

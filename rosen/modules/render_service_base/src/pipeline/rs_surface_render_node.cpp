@@ -304,26 +304,11 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanv
         return;
     }
     const auto& property = GetRenderProperties();
+    SkAutoCanvasRestore acr(&canvas, !property.ShouldClipContent());
     const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
     RSPropertiesPainter::DrawShadow(property, canvas, &absClipRRect);
-
-#ifndef USE_ROSEN_DRAWING
-    if (!property.GetCornerRadius().IsZero()) {
-        canvas.clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
-    } else {
-        canvas.clipRect(SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight()));
-    }
-#else
-    if (!property.GetCornerRadius().IsZero()) {
-        canvas.ClipRoundRect(
-            RSPropertiesPainter::RRect2DrawingRRect(absClipRRect), Drawing::ClipOp::INTERSECT, true);
-    } else {
-        canvas.ClipRect(Drawing::Rect(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()),
-            Drawing::ClipOp::INTERSECT, false);
-    }
-#endif
-
+    RSPropertiesPainter::ClipBounds(canvas, property);
     RSPropertiesPainter::DrawBackground(property, canvas);
     RSPropertiesPainter::DrawMask(property, canvas);
 #ifndef USE_ROSEN_DRAWING

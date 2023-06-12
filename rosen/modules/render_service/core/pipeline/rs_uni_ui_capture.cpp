@@ -364,14 +364,23 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
     }
 #endif
     if (isSelfDrawingSurface) {
-        RSPropertiesPainter::DrawBackground(property, *canvas_);
-        RSPropertiesPainter::DrawMask(property, *canvas_);
+        auto& canvas = *canvas_;
+        RSPropertiesPainter::DrawShadow(property, canvas);
+        SkAutoCanvasRestore acr(&canvas, !property.ShouldClipContent());
+#ifdef NEW_SKIA
+        RSPropertiesPainter::ClipBounds(canvas, property, false);
+#else
+        RSPropertiesPainter::ClipBounds(canvas, property);
+#endif
+        RSPropertiesPainter::DrawBackground(property, canvas);
+        RSPropertiesPainter::DrawMask(property, canvas);
+
 #ifndef USE_ROSEN_DRAWING
         auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
         if (filter != nullptr) {
             auto skRectPtr = std::make_unique<SkRect>();
             skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-            RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
+            RSPropertiesPainter::DrawFilter(property, canvas, filter, skRectPtr, canvas.GetSurface());
         }
     } else {
         auto backgroundColor = static_cast<SkColor>(property.GetBackgroundColor().AsArgbInt());

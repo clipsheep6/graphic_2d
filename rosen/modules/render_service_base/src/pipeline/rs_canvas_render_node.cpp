@@ -108,26 +108,34 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::TRANSITION);
     ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR);
-    // In NEW_SKIA version, L96 code will cause dump if the 3rd parameter is true.
-#ifdef NEW_SKIA
-    RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas, false);
-#else
-    RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas);
-#endif
 
-    if (GetRenderProperties().GetUseEffect()) {
-        RSPropertiesPainter::ApplyBackgroundEffect(GetRenderProperties(), canvas);
-    }
-#ifndef USE_ROSEN_DRAWING
-    auto filter = std::static_pointer_cast<RSSkiaFilter>(GetRenderProperties().GetBackgroundFilter());
+    const auto property = GetRenderProperties();
+    RSPropertiesPainter::DrawShadow(property, canvas);
+    {
+        // everything in this scope (background, border, filter) will be clipped by the bounds.
+        // if property.ShouldClipContent() is true, the clip will be also applied to the content and children.
+        SkAutoCanvasRestore acr(&canvas, !property.ShouldClipContent());
+#ifdef NEW_SKIA
+        RSPropertiesPainter::ClipBounds(canvas, property, false);
 #else
-    auto filter = std::static_pointer_cast<RSDrawingFilter>(GetRenderProperties().GetBackgroundFilter());
+        RSPropertiesPainter::ClipBounds(canvas, property);
 #endif
-    if (filter != nullptr) {
+        RSPropertiesPainter::DrawBackground(property, canvas);
+
+        if (property.GetUseEffect()) {
+            RSPropertiesPainter::ApplyBackgroundEffect(property, canvas);
+        }
+#ifndef USE_ROSEN_DRAWING
+        auto filter = std::static_pointer_cast<RSSkiaFilter>(GetRenderProperties().GetBackgroundFilter());
+#else
+        auto filter = std::static_pointer_cast<RSDrawingFilter>(GetRenderProperties().GetBackgroundFilter());
+#endif
+        if (filter != nullptr) {
 #ifndef NEW_SKIA
-        RSTagTracker tagTracker(canvas.getGrContext(), GetId(), RSTagTracker::TAGTYPE::TAG_FILTER);
+            RSTagTracker tagTracker(canvas.getGrContext(), GetId(), RSTagTracker::TAGTYPE::TAG_FILTER);
 #endif
-        RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, filter, nullptr, canvas.GetSurface());
+            RSPropertiesPainter::DrawFilter(property, canvas, filter, nullptr, canvas.GetSurface());
+        }
     }
 
     ApplyDrawCmdModifier(context, RSModifierType::BACKGROUND_STYLE);
@@ -138,18 +146,19 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     canvasNodeSaveCount_ = canvas.SaveAllStatus();
 #endif
     ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY);
+
 #ifndef USE_ROSEN_DRAWING
     canvas.translate(GetRenderProperties().GetFrameOffsetX(), GetRenderProperties().GetFrameOffsetY());
 #else
     canvas.Translate(GetRenderProperties().GetFrameOffsetX(), GetRenderProperties().GetFrameOffsetY());
 #endif
 
-    if (GetRenderProperties().GetClipToFrame()) {
+    if (property.GetClipToFrame()) {
     // In NEW_SKIA version, L116 code will cause dump if the 3rd parameter is true.
 #ifdef NEW_SKIA
-        RSPropertiesPainter::Clip(canvas, GetRenderProperties().GetFrameRect(), false);
+        RSPropertiesPainter::ClipFrame(canvas, property, false);
 #else
-        RSPropertiesPainter::Clip(canvas, GetRenderProperties().GetFrameRect());
+        RSPropertiesPainter::ClipFrame(canvas, property);
 #endif
     }
 }
@@ -170,9 +179,21 @@ void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas
 {
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::FOREGROUND_STYLE);
-    RSPropertiesPainter::DrawColorFilter(GetRenderProperties(), canvas);
-
     canvas.RestoreStatus(canvasNodeSaveCount_);
+
+    const auto property = GetRenderProperties();
+    SkAutoCanvasRestore acr(&canvas, true);
+    if (!property.ShouldClipContent()) {
+        // Although the content & children should not be clipped, the ColorFilter/ContentFilter/ForegroundColor should
+        // be clipped by bounds rrect. So we re-clip the bounds rrect here.
+#ifdef NEW_SKIA
+        RSPropertiesPainter::ClipBounds(canvas, property, false);
+#else
+        RSPropertiesPainter::ClipBounds(canvas, property);
+#endif
+    }
+
+    RSPropertiesPainter::DrawColorFilter(GetRenderProperties(), canvas);
 #ifndef USE_ROSEN_DRAWING
     auto filter = std::static_pointer_cast<RSSkiaFilter>(GetRenderProperties().GetFilter());
     if (GetRenderProperties().IsLightUpEffectValid()) {
@@ -238,7 +259,7 @@ void RSCanvasRenderNode::InternalDrawContent(RSPaintFilterCanvas& canvas)
 #endif
 
     if (GetRenderProperties().GetClipToFrame()) {
-        RSPropertiesPainter::Clip(canvas, GetRenderProperties().GetFrameRect());
+        RSPropertiesPainter::ClipFrame(canvas, GetRenderProperties());
     }
     ApplyDrawCmdModifier(context, RSModifierType::CONTENT_STYLE);
 
@@ -263,13 +284,23 @@ void RSCanvasRenderNode::ProcessDrivenBackgroundRender(RSPaintFilterCanvas& canv
     ApplyDrawCmdModifier(context, RSModifierType::TRANSITION);
     ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR);
 
-    RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas);
-    auto filter = std::static_pointer_cast<RSSkiaFilter>(GetRenderProperties().GetBackgroundFilter());
-    if (filter != nullptr) {
-#ifndef NEW_SKIA
-        RSTagTracker tagTracker(canvas.getGrContext(), GetId(), RSTagTracker::TAGTYPE::TAG_FILTER);
+    const auto& property = GetRenderProperties();
+    RSPropertiesPainter::DrawShadow(property, canvas);
+    {
+        SkAutoCanvasRestore acr(&canvas, !property.ShouldClipContent());
+#ifdef NEW_SKIA
+        RSPropertiesPainter::ClipBounds(canvas, property, false);
+#else
+        RSPropertiesPainter::ClipBounds(canvas, property);
 #endif
-        RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, filter, nullptr, canvas.GetSurface());
+        RSPropertiesPainter::DrawBackground(property, canvas);
+        auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
+        if (filter != nullptr) {
+#ifndef NEW_SKIA
+            RSTagTracker tagTracker(canvas.getGrContext(), GetId(), RSTagTracker::TAGTYPE::TAG_FILTER);
+#endif
+            RSPropertiesPainter::DrawFilter(property, canvas, filter, nullptr, canvas.GetSurface());
+        }
     }
     ApplyDrawCmdModifier(context, RSModifierType::BACKGROUND_STYLE);
     RSRenderNode::ProcessRenderAfterChildren(canvas);

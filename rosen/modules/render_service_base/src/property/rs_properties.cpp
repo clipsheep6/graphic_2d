@@ -1915,5 +1915,9 @@ std::string RSProperties::Dump() const
 
     return dumpInfo;
 }
+bool RSProperties::ShouldClipContent() const
+{
+    return (GetClipBounds() != nullptr) || GetClipToBounds() || GetClipToRRect();
+}
 } // namespace Rosen
 } // namespace OHOS

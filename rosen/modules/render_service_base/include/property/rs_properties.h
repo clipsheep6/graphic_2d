@@ -199,6 +199,7 @@ public:
     bool GetClipToBounds() const;
     void SetClipToFrame(bool clipToFrame);
     bool GetClipToFrame() const;
+    bool ShouldClipContent() const;
 
     void SetVisible(bool visible);
     bool GetVisible() const;

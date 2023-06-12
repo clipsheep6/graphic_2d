@@ -308,7 +308,7 @@ bool RSPropertiesPainterFuzzTest(const uint8_t* data, size_t size)
     float fH = GetData<float>();
     SkMatrix mat;
 
-    RSPropertiesPainter::Clip(skCanvas, rect);
+    RSPropertiesPainter::ClipFrame(skCanvas, rect);
     RSPropertiesPainter::DrawBorder(properties, skCanvas);
     RSPropertiesPainter::GetShadowDirtyRect(dirtyShadow, properties);
     RSPropertiesPainter::DrawForegroundColor(properties, skCanvas);

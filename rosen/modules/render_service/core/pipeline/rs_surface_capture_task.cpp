@@ -460,9 +460,7 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
     }
 
     bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
-    if (isSelfDrawingSurface) {
-        canvas_->save();
-    }
+    SkAutoCanvasRestore acr(canvas_.get(), isSelfDrawingSurface);
 
     const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
@@ -480,18 +478,17 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
             process RSSurfaceRenderNode(id:[%" PRIu64 "]) clear white since it is security layer.",
             node.GetId());
         canvas_->clear(SK_ColorWHITE);
-        canvas_->restore(); // restore clipRect
-        canvas_->restore(); // restore translate and concat
         return;
     }
     if (isSelfDrawingSurface) {
-        RSPropertiesPainter::DrawBackground(property, *canvas_);
-        RSPropertiesPainter::DrawMask(property, *canvas_);
+        auto& canvas = *canvas_;
+        RSPropertiesPainter::DrawBackground(property, canvas);
+        RSPropertiesPainter::DrawMask(property, canvas);
         auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
         if (filter != nullptr) {
             auto skRectPtr = std::make_unique<SkRect>();
             skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-            RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
+            RSPropertiesPainter::DrawFilter(property, canvas, filter, skRectPtr, canvas.GetSurface());
         }
     } else {
         auto backgroundColor = static_cast<SkColor>(property.GetBackgroundColor().AsArgbInt());
@@ -519,9 +516,6 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         }
     }
 
-    if (isSelfDrawingSurface) {
-        canvas_->restore();
-    }
     if (node.IsAppWindow() && RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId()) &&
         node.GetCachedImage() != nullptr) {
         RS_LOGD("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni: DrawCachedImage.");
@@ -590,12 +584,21 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         return;
     }
     if (isSelfDrawingSurface) {
-        RSPropertiesPainter::DrawBackground(property, *canvas_);
-        RSPropertiesPainter::DrawMask(property, *canvas_);
+        auto& canvas = *canvas_;
+        SkAutoCanvasRestore acr(&canvas, !property.ShouldClipContent());
+        RSPropertiesPainter::DrawShadow(property, canvas);
+#ifdef NEW_SKIA
+        RSPropertiesPainter::ClipBounds(canvas, property, false);
+#else
+        RSPropertiesPainter::ClipBounds(canvas, property);
+#endif
+        RSPropertiesPainter::DrawBackground(property, canvas);
+        RSPropertiesPainter::DrawMask(property, canvas);
+
         auto filter = std::static_pointer_cast<RSDrawingFilter>(property.GetBackgroundFilter());
         if (filter != nullptr) {
             auto rectPtr = std::make_unique<Drawing::Rect>(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-            RSPropertiesPainter::DrawFilter(property, *canvas_, filter, rectPtr, canvas_->GetSurface());
+            RSPropertiesPainter::DrawFilter(property, canvas, filter, rectPtr, canvas.GetSurface());
         }
     } else {
         auto backgroundColor = static_cast<Drawing::ColorQuad>(property.GetBackgroundColor().AsArgbInt());

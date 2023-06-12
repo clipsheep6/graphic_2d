@@ -37,10 +37,11 @@ class RSPaintFilterCanvas;
 class RSB_EXPORT RSPropertiesPainter {
 public:
 #ifndef USE_ROSEN_DRAWING
-    static void Clip(SkCanvas& canvas, RectF rect, bool isAntiAlias = true);
+    static void ClipFrame(SkCanvas& canvas, const RSProperties& properties, bool isAntiAlias = true);
+    static void ClipBounds(SkCanvas& canvas, const RSProperties& properties, bool isAntiAlias = true);
     static void SetBgAntiAlias(bool forceBgAntiAlias);
     static bool GetBgAntiAlias();
-    static void DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas, bool isAntiAlias = true);
+    static void DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void DrawBorder(const RSProperties& properties, SkCanvas& canvas);
     static void DrawFrame(const RSProperties& properties, RSPaintFilterCanvas& canvas, DrawCmdListPtr& drawCmdList);
     static void GetShadowDirtyRect(RectI& dirtyShadow, const RSProperties& properties,
@@ -89,7 +90,8 @@ private:
                                             sk_sp<SkShader> shader, sk_sp<SkShader> gradientShader);
 #endif
 #else
-    static void Clip(Drawing::Canvas& canvas, RectF rect);
+    static void ClipFrame(Drawing::Canvas& canvas, const RSProperties& properties, bool isAntiAlias = true);
+    static void ClipBounds(Drawing::Canvas& canvas, const RSProperties& properties, bool isAntiAlias = true);
     static void SetBgAntiAlias(bool forceBgAntiAlias);
     static bool GetBgAntiAlias();
     static void DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas);

@@ -173,6 +173,7 @@ public:
     {
         cacheSurface_ = nullptr;
         cacheCompletedSurface_ = nullptr;
+        cacheTexture_ = nullptr;
     }
 
     void DrawCacheSurface(RSPaintFilterCanvas& canvas, bool isSubThreadNode = false) const;
@@ -283,6 +284,26 @@ public:
         hasFilter_ = hasFilter;
     }
 
+    bool HasHardwareNode() const
+    {
+        return hasHardwareNode_;
+    }
+
+    void SetHasHardwareNode(bool hasHardwareNode)
+    {
+        hasHardwareNode_ = hasHardwareNode;
+    }
+
+    bool HasAbilityComponent() const
+    {
+        return hasAbilityComponent_;
+    }
+
+    void SetHasAbilityComponent(bool hasAbilityComponent)
+    {
+        hasAbilityComponent_ = hasAbilityComponent;
+    }
+
     bool IsMainThreadNode() const
     {
         return isMainThreadNode_;
@@ -315,17 +336,28 @@ public:
 
     bool HasCachedTexture() const
     {
-        return cacheCompletedSurface_ != nullptr;
+        return cacheTexture_ != nullptr;
     }
 
     void SetCacheTexture(sk_sp<SkImage> texture)
     {
+        cacheTexture_ = nullptr;
         cacheTexture_ = texture;
     }
 
     sk_sp<SkImage> GetCacheTexture() const
     {
         return cacheTexture_;
+    }
+
+    void SetNeedClearFlag(bool needClear)
+    {
+        needClear_ = needClear;
+    }
+
+    bool NeedClear() const
+    {
+        return needClear_;
     }
 
     void SetDrawRegion(std::shared_ptr<RectF> rect)
@@ -412,6 +444,9 @@ private:
     bool isMainThreadNode_ = true;
     bool isScale_ = false;
     bool hasFilter_ = false;
+    bool hasHardwareNode_ = false;
+    bool hasAbilityComponent_ = false;
+    bool needClear_ = false;
     NodePriorityType priority_ = NodePriorityType::MAIN_PRIORITY;
 
     // driven render

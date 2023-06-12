@@ -88,6 +88,7 @@ public:
         GET_MEMORY_GRAPHIC,
         GET_MEMORY_GRAPHICS,
         GET_BITMAP,
+        REPORT_JANK_STATS,
     };
 
     virtual void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) = 0;
@@ -181,6 +182,8 @@ public:
     virtual void SetAppWindowNum(uint32_t num) = 0;
 
     virtual void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow) = 0;
+
+    virtual void ReportJankStats() = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

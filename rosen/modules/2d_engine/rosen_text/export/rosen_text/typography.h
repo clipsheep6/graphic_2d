@@ -59,8 +59,8 @@ struct IndexAndAffinity {
 };
 
 struct Boundary {
-    size_t leftIndex; // include leftIndex_
-    size_t rightIndex; // not include rightIndex_
+    size_t leftIndex = 0; // include leftIndex_
+    size_t rightIndex = 0; // not include rightIndex_
 
     Boundary(size_t left, size_t right);
     bool operator ==(const Boundary& rhs) const;

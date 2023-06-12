@@ -102,12 +102,12 @@ int Typography::GetLineCount() const
 
 void Typography::SetIndents(const std::vector<float>& indents)
 {
+#if !defined(USE_CANVASKIT0310_SKIA) && !defined(NEW_SKIA)
     auto paragraphTxt = reinterpret_cast<txt::ParagraphTxt *>(paragraph_.get());
     if (paragraphTxt) {
-#if !defined(USE_CANVASKIT0310_SKIA) && !defined(NEW_SKIA)
         paragraphTxt->SetIndents(indents);
-#endif
     }
+#endif
 }
 
 void Typography::Layout(double width)

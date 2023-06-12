@@ -20,17 +20,19 @@
 #include "rosen_text/font_collection.h"
 
 namespace {
-std::map<OHOS::Rosen::FontCollection *, std::shared_ptr<OHOS::Rosen::FontCollection>> FONT_COLLECTION_REF_MAP;
+std::map<OHOS::Rosen::FontCollection *, std::shared_ptr<OHOS::Rosen::FontCollection>> g_fontCollectionRefMap;
 } // namespace
 
 OH_Drawing_FontCollection* OH_Drawing_CreateFontCollection(void)
 {
     auto fc = OHOS::Rosen::FontCollection::Create();
-    FONT_COLLECTION_REF_MAP[fc.get()] = fc;
+    g_fontCollectionRefMap[fc.get()] = fc;
     return (OH_Drawing_FontCollection*)fc.get();
 }
 
 void OH_Drawing_DestroyFontCollection(OH_Drawing_FontCollection* fontCollection)
 {
-    FONT_COLLECTION_REF_MAP.erase(reinterpret_cast<OHOS::Rosen::FontCollection *>(fontCollection));
+    if (fontCollection) {
+        g_fontCollectionRefMap.erase(reinterpret_cast<OHOS::Rosen::FontCollection *>(fontCollection));
+    }
 }

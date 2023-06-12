@@ -281,7 +281,10 @@ void OH_Drawing_SetTextStyleLocale(OH_Drawing_TextStyle* style, const char* loca
 OH_Drawing_TypographyCreate* OH_Drawing_CreateTypographyHandler(OH_Drawing_TypographyStyle* style,
     OH_Drawing_FontCollection* fontCollection)
 {
-    const TypographyStyle* typoStyle = ConvertToOriginalText<TypographyStyle>(style);
+    const TypographyStyle *typoStyle = ConvertToOriginalText<TypographyStyle>(style);
+    if (!typoStyle) {
+        return nullptr;
+    }
     std::unique_ptr<TypographyCreate> handler = TypographyCreate::Create(*typoStyle,
         std::shared_ptr<FontCollection>(ConvertToOriginalText<FontCollection>(fontCollection)));
     return ConvertToNDKText<OH_Drawing_TypographyCreate>(handler.release());

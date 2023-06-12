@@ -48,7 +48,7 @@ TextAlign TypographyStyle::GetEffectiveAlign() const
 
 bool TypographyStyle::IsUnlimitedLines() const
 {
-    return maxLines == 1e9;
+    return maxLines == 1e9;     // maximum number of lines
 }
 
 bool TypographyStyle::IsEllipsized() const

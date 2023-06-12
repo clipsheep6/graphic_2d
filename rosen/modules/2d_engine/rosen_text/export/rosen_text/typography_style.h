@@ -46,7 +46,7 @@ struct TypographyStyle {
 
     TextAlign textAlign = TextAlign::START;
     TextDirection textDirection = TextDirection::LTR;
-    size_t maxLines = 1e9;
+    size_t maxLines = 1e9;      // maximum number of lines
     std::u16string ellipsis;
     std::string locale;
 

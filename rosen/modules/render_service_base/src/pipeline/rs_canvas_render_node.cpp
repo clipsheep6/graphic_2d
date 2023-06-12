@@ -115,11 +115,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
         // everything in this scope (background, border, filter) will be clipped by the bounds.
         // if property.ShouldClipContent() is true, the clip will be also applied to the content and children.
         SkAutoCanvasRestore acr(&canvas, !property.ShouldClipContent());
-#ifdef NEW_SKIA
-        RSPropertiesPainter::ClipBounds(canvas, property, false);
-#else
         RSPropertiesPainter::ClipBounds(canvas, property);
-#endif
         RSPropertiesPainter::DrawBackground(property, canvas);
 
         if (property.GetUseEffect()) {
@@ -186,11 +182,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas
     if (!property.ShouldClipContent()) {
         // Although the content & children should not be clipped, the ColorFilter/ContentFilter/ForegroundColor should
         // be clipped by bounds rrect. So we re-clip the bounds rrect here.
-#ifdef NEW_SKIA
-        RSPropertiesPainter::ClipBounds(canvas, property, false);
-#else
         RSPropertiesPainter::ClipBounds(canvas, property);
-#endif
     }
 
     RSPropertiesPainter::DrawColorFilter(GetRenderProperties(), canvas);
@@ -288,11 +280,7 @@ void RSCanvasRenderNode::ProcessDrivenBackgroundRender(RSPaintFilterCanvas& canv
     RSPropertiesPainter::DrawShadow(property, canvas);
     {
         SkAutoCanvasRestore acr(&canvas, !property.ShouldClipContent());
-#ifdef NEW_SKIA
-        RSPropertiesPainter::ClipBounds(canvas, property, false);
-#else
         RSPropertiesPainter::ClipBounds(canvas, property);
-#endif
         RSPropertiesPainter::DrawBackground(property, canvas);
         auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
         if (filter != nullptr) {

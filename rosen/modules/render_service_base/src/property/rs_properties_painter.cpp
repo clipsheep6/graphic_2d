@@ -262,7 +262,7 @@ void RSPropertiesPainter::ClipFrame(Drawing::Canvas& canvas, const RSProperties&
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::ClipBounds(SkCanvas& canvas, const RSProperties& properties, bool isAntiAlias)
+void RSPropertiesPainter::ClipBounds(SkCanvas& canvas, const RSProperties& properties)
 {
     // only disable antialias when background is rect and g_forceBgAntiAlias is false
     bool antiAlias = g_forceBgAntiAlias || !properties.GetCornerRadius().IsZero();
@@ -273,21 +273,11 @@ void RSPropertiesPainter::ClipBounds(SkCanvas& canvas, const RSProperties& prope
     } else if (properties.GetClipToRRect()) {
         canvas.clipRRect(RRect2SkRRect(properties.GetClipRRect()), antiAlias);
     } else {
-        // In NEW_SKIA version, L476 code will cause crash if the second parameter is true.
-        // so isAntiAlias is false only the method is called in ProcessAnimatePropertyBeforeChildren().
-#ifdef NEW_SKIA
-        if (properties.GetCornerRadius().IsZero()) {
-            canvas.clipRect(Rect2SkRect(properties.GetBoundsRect()), isAntiAlias);
-        } else {
-            canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
-        }
-#else
         canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
-#endif
     }
 }
 #else
-void RSPropertiesPainter::ClipBounds(Drawing::Canvas& canvas, const RSProperties& properties, bool isAntiAlias)
+void RSPropertiesPainter::ClipBounds(Drawing::Canvas& canvas, const RSProperties& properties)
 {
     // only disable antialias when background is rect and g_forceBgAntiAlias is false
     bool antiAlias = g_forceBgAntiAlias || !properties.GetCornerRadius().IsZero();

@@ -38,7 +38,7 @@ class RSB_EXPORT RSPropertiesPainter {
 public:
 #ifndef USE_ROSEN_DRAWING
     static void ClipFrame(SkCanvas& canvas, const RSProperties& properties, bool isAntiAlias = true);
-    static void ClipBounds(SkCanvas& canvas, const RSProperties& properties, bool isAntiAlias = true);
+    static void ClipBounds(SkCanvas& canvas, const RSProperties& properties);
     static void SetBgAntiAlias(bool forceBgAntiAlias);
     static bool GetBgAntiAlias();
     static void DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas);
@@ -91,7 +91,7 @@ private:
 #endif
 #else
     static void ClipFrame(Drawing::Canvas& canvas, const RSProperties& properties, bool isAntiAlias = true);
-    static void ClipBounds(Drawing::Canvas& canvas, const RSProperties& properties, bool isAntiAlias = true);
+    static void ClipBounds(Drawing::Canvas& canvas, const RSProperties& properties);
     static void SetBgAntiAlias(bool forceBgAntiAlias);
     static bool GetBgAntiAlias();
     static void DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas);

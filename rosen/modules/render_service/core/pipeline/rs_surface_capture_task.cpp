@@ -587,11 +587,7 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         auto& canvas = *canvas_;
         SkAutoCanvasRestore acr(&canvas, !property.ShouldClipContent());
         RSPropertiesPainter::DrawShadow(property, canvas);
-#ifdef NEW_SKIA
-        RSPropertiesPainter::ClipBounds(canvas, property, false);
-#else
         RSPropertiesPainter::ClipBounds(canvas, property);
-#endif
         RSPropertiesPainter::DrawBackground(property, canvas);
         RSPropertiesPainter::DrawMask(property, canvas);
 

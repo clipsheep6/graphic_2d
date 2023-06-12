@@ -367,11 +367,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
         auto& canvas = *canvas_;
         RSPropertiesPainter::DrawShadow(property, canvas);
         SkAutoCanvasRestore acr(&canvas, !property.ShouldClipContent());
-#ifdef NEW_SKIA
-        RSPropertiesPainter::ClipBounds(canvas, property, false);
-#else
         RSPropertiesPainter::ClipBounds(canvas, property);
-#endif
         RSPropertiesPainter::DrawBackground(property, canvas);
         RSPropertiesPainter::DrawMask(property, canvas);
 

@@ -223,6 +223,7 @@ void MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(GrContext* grContext)
         RS_LOGE("ReleaseUnlockAndSafeCacheGpuResource fail, grContext is nullptr");
     }
     RS_TRACE_NAME_FMT("ReleaseUnlockAndSafeCacheGpuResource");
+    grContext->freeGpuResources();
     grContext->purgeUnlockAndSafeCacheGpuResources();
 #endif
 }

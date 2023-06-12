@@ -16,6 +16,7 @@
 #include "rs_render_service_connection.h"
 
 #include "offscreen_render/rs_offscreen_render_thread.h"
+#include "pipeline/rs_canvas_drawing_render_node.h"
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_render_service_listener.h"
 #include "pipeline/rs_surface_capture_task.h"
@@ -624,6 +625,25 @@ int32_t RSRenderServiceConnection::GetScreenType(ScreenId id, RSScreenType& scre
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return screenManager_->GetScreenType(id, screenType);
+}
+
+int32_t RSRenderServiceConnection::GetBitmap(NodeId id, SkBitmap& bitmap)
+{
+    auto node = mainThread_->GetContext().GetNodeMap().GetRenderNode<RSCanvasDrawingRenderNode>(id);
+    if (node == nullptr) {
+        RS_LOGE("RSRenderServiceConnection::GetBitmap cannot find nodeId: [%" PRIu64 "]", id);
+        return INVALID_ARGUMENTS;
+    }
+    if (node->GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
+        auto captureTask = [&]() -> bool { return node->GetBitmap(bitmap); };
+        if (mainThread_->ScheduleTask(captureTask).get()) {
+            return SUCCESS;
+        } else {
+            return BITMAP_NOT_FOUND;
+        }
+    } else {
+        return INVALID_ARGUMENTS;
+    }
 }
 
 int32_t RSRenderServiceConnection::SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval)

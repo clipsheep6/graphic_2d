@@ -82,5 +82,24 @@ void RSCanvasDrawingRenderNode::ApplyDrawCmdModifier(RSModifierContext& context,
         cmd->ClearOp();
     }
 }
+
+bool RSCanvasDrawingRenderNode::GetBitmap(SkBitmap& bitmap)
+{
+    if (nullptr == skSurface_) {
+        RS_LOGE("RSCanvasDrawingRenderNode::GetBitmap: SkSurface is nullptr");
+        return false;
+    }
+    sk_sp<SkImage> image = skSurface_->makeImageSnapshot();
+    if (nullptr == image) {
+        RS_LOGE("RSCanvasDrawingRenderNode::GetBitmap: SkImage is nullptr");
+        return false;
+    }
+    if (image->asLegacyBitmap(&bitmap)) {
+        return true;
+    } else {
+        RS_LOGE("RSCanvasDrawingRenderNode::GetBitmap: asLegacyBitmap failed");
+        return false;
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

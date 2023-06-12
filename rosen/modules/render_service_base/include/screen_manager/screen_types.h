@@ -157,6 +157,7 @@ typedef enum : uint32_t {
     WRITE_PARCEL_ERR,
     HDI_ERROR,
     SCREEN_MANAGER_NULL,
+    BITMAP_NOT_FOUND,
 } StatusCode;
 
 /*

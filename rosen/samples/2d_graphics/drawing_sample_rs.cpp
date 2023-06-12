@@ -16,6 +16,7 @@
 #include <iostream>
 #include <surface.h>
 #include <cmath>
+#include <algorithm>
 
 #include "command/rs_base_node_command.h"
 #include "command/rs_display_node_command.h"
@@ -512,10 +513,7 @@ void DoDraw(uint8_t *addr, uint32_t width, uint32_t height, size_t index)
 
     constexpr uint32_t stride = 4;
     uint32_t addrSize = width * height * stride;
-    auto ret = memcpy_s(addr, addrSize, bitmap.GetPixels(), addrSize);
-    if (ret != EOK) {
-        LOGI("memcpy_s failed");
-    }
+    memcpy(addr, bitmap.GetPixels(), addrSize);
 }
 
 void DrawSurface(std::shared_ptr<RSSurfaceNode> surfaceNode, int32_t width, int32_t height, size_t index)

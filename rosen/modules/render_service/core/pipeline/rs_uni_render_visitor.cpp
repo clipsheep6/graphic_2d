@@ -1058,6 +1058,9 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
             curSurfaceNode_->UpdateChildrenFilterRects(node.GetOldDirtyInSurface());
         }
     }
+    if (property.GetUseEffect()) {
+        effectRect_ = effectRect_.JoinRect(node.GetOldDirty());
+    }
     curAlpha_ = alpha;
     dirtyFlag_ = dirtyFlag;
     prepareClipRect_ = prepareClipRect;
@@ -1076,7 +1079,9 @@ void RSUniRenderVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
     bool dirtyFlag = dirtyFlag_;
     RectI prepareClipRect = prepareClipRect_;
     float alpha = curAlpha_;
+    RectI effectRect = effectRect_;
 
+    effectRect_ = RectI();
     const auto& property = node.GetRenderProperties();
     curAlpha_ *= property.GetAlpha();
 
@@ -1088,7 +1093,9 @@ void RSUniRenderVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
     node.UpdateChildrenOutOfRectFlag(false);
     PrepareBaseRenderNode(node);
     node.UpdateParentChildrenRect(logicParentNode_.lock());
+    node.UpdateEffectRect(effectRect_);
 
+    effectRect_ = effectRect;
     curAlpha_ = alpha;
     dirtyFlag_ = dirtyFlag;
     prepareClipRect_ = prepareClipRect;

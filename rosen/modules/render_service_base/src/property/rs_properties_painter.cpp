@@ -1021,27 +1021,17 @@ void RSPropertiesPainter::ApplyBackgroundEffect(const RSProperties& properties, 
     auto visibleIRect = canvas.GetVisibleRect().round();
     if (visibleIRect.intersect(clipIBounds)) {
         canvas.clipRect(SkRect::Make(visibleIRect));
-        auto visibleIPadding = visibleIRect.makeOutset(-1, -1);
-#ifdef NEW_SKIA
-        canvas.drawImageRect(bgImage.get(),
-            SkRect::Make(visibleIPadding.makeOffset(-imageIRect.left(), -imageIRect.top())),
-            SkRect::Make(visibleIPadding), SkSamplingOptions(), &defaultPaint, SkCanvas::kStrict_SrcRectConstraint);
-#else
-        canvas.drawImageRect(bgImage.get(),
-            SkRect::Make(visibleIPadding.makeOffset(-imageIRect.left(), -imageIRect.top())),
-            SkRect::Make(visibleIPadding), &defaultPaint);
-#endif
-    } else {
-#ifdef NEW_SKIA
-        canvas.drawImageRect(bgImage.get(),
-            SkRect::Make(clipIPadding.makeOffset(-imageIRect.left(), -imageIRect.top())),
-            SkRect::Make(clipIPadding), SkSamplingOptions(), &defaultPaint, SkCanvas::kStrict_SrcRectConstraint);
-#else
-        canvas.drawImageRect(bgImage.get(),
-            SkRect::Make(clipIPadding.makeOffset(-imageIRect.left(), -imageIRect.top())),
-            SkRect::Make(clipIPadding), &defaultPaint);
-#endif
+        clipIPadding = visibleIRect.makeOutset(-1, -1);
     }
+#ifdef NEW_SKIA
+    canvas.drawImageRect(bgImage.get(),
+        SkRect::Make(clipIPadding.makeOffset(-imageIRect.left(), -imageIRect.top())),
+        SkRect::Make(clipIPadding), SkSamplingOptions(), &defaultPaint, SkCanvas::kStrict_SrcRectConstraint);
+#else
+    canvas.drawImageRect(bgImage.get(),
+        SkRect::Make(clipIPadding.makeOffset(-imageIRect.left(), -imageIRect.top())),
+        SkRect::Make(clipIPadding), &defaultPaint);
+#endif
 }
 
 void RSPropertiesPainter::DrawForegroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas)

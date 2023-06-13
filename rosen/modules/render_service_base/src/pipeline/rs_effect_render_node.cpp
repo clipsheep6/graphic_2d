@@ -70,10 +70,9 @@ void RSEffectRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas
         }
     }
 
-    if (GetRenderProperties().GetBackgroundFilter() != nullptr) {
-        RectI childRec = GetChildrenRect();
+    if (GetRenderProperties().GetBackgroundFilter() != nullptr && !effectRect_.IsEmpty()) {
         RSPropertiesPainter::DrawBackgroundEffect(GetRenderProperties(), canvas,
-            { childRec.GetLeft(), childRec.GetTop(), childRec.GetRight(), childRec.GetBottom() });
+            { effectRect_.GetLeft(), effectRect_.GetTop(), effectRect_.GetRight(), effectRect_.GetBottom() });
     }
 }
 

@@ -206,6 +206,7 @@ void RSRenderThreadVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
     }
     dirtyFlag_ = node.Update(*curDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr, dirtyFlag_);
     ResetAndPrepareChildrenNode(node, nodeParent);
+    node.UpdateEffectRect(node.GetChildrenRect());
     dirtyFlag_ = dirtyFlag;
 }
 

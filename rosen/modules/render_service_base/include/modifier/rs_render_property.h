@@ -50,7 +50,7 @@ protected:
     void OnChange() const
     {
         if (auto node = node_.lock()) {
-            node->SetDirty();
+            node->SetDirty(RSBaseRenderNode::NodeDirty::MODIFIER_DIRTY);
         }
     }
 

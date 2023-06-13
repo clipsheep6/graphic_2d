@@ -347,6 +347,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
         RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect);
     }
 #ifndef USE_ROSEN_DRAWING
+    // PLANNING: merge all save & clip in this function
     canvas_->save();
     if (isSelfDrawingSurface && !property.GetCornerRadius().IsZero()) {
         canvas_->clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
@@ -364,19 +365,17 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
     }
 #endif
     if (isSelfDrawingSurface) {
-        auto& canvas = *canvas_;
-        RSPropertiesPainter::DrawShadow(property, canvas);
-        SkAutoCanvasRestore acr(&canvas, !property.ShouldClipContent());
-        RSPropertiesPainter::ClipBounds(canvas, property);
-        RSPropertiesPainter::DrawBackground(property, canvas);
-        RSPropertiesPainter::DrawMask(property, canvas);
+        RSAutoCanvasRestore acr(canvas_.get(), RSAutoCanvasRestore::kCanvas);
+        RSPropertiesPainter::ClipBounds(*canvas_, property);
+        RSPropertiesPainter::DrawBackground(property, *canvas_);
+        RSPropertiesPainter::DrawMask(property, *canvas_);
 
 #ifndef USE_ROSEN_DRAWING
         auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
         if (filter != nullptr) {
             auto skRectPtr = std::make_unique<SkRect>();
             skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-            RSPropertiesPainter::DrawFilter(property, canvas, filter, skRectPtr, canvas.GetSurface());
+            RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
         }
     } else {
         auto backgroundColor = static_cast<SkColor>(property.GetBackgroundColor().AsArgbInt());
@@ -404,8 +403,10 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
         auto params = RSUniRenderUtil::CreateBufferDrawParam(node, true);
         renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
     }
-#ifndef USE_ROSEN_DRAWING
     if (isSelfDrawingSurface) {
+        RSAutoCanvasRestore acr(canvas_.get(), RSAutoCanvasRestore::kCanvas);
+        RSPropertiesPainter::ClipBounds(*canvas_, property);
+#ifndef USE_ROSEN_DRAWING
         auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetFilter());
         if (filter != nullptr) {
             auto skRectPtr = std::make_unique<SkRect>();
@@ -421,7 +422,6 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
     }
     canvas_->restore();
 #else
-    if (isSelfDrawingSurface) {
         auto filter = std::static_pointer_cast<RSDrawingFilter>(property.GetFilter());
         if (filter != nullptr) {
             auto drawingRectPtr =

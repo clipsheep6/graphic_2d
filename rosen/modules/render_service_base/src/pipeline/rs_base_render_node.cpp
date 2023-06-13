@@ -368,19 +368,19 @@ uint8_t RSBaseRenderNode::GetDirtyFlag() const
 }
 
 // check dirty bits
-bool RSBaseRenderNode::IsDirty(NodeDirty bitMask) const
+bool RSBaseRenderNode::IsDirty(uint8_t bitMask) const
 {
     return GetDirtyFlag() & bitMask;
 }
 
 // set dirty bits
-void RSBaseRenderNode::SetDirty(NodeDirty bitMask)
+void RSBaseRenderNode::SetDirty(uint8_t bitMask)
 {
     dirtyStatus_ = dirtyStatus_ | bitMask;
 }
 
 // reset dirty bits
-void RSBaseRenderNode::ResetDirty(NodeDirty bitMask)
+void RSBaseRenderNode::ResetDirty(uint8_t bitMask)
 {
     dirtyStatus_ = dirtyStatus_ & (~bitMask);
 }

@@ -31,12 +31,13 @@ class RSCommand;
 class RSB_EXPORT RSBaseRenderNode : public std::enable_shared_from_this<RSBaseRenderNode> {
 public:
     enum NodeDirty : uint8_t {
-        CLEAN                  = 0,
+        CLEAN                  = 0x00,
         HIERARCHY_DIRTY        = 0x01,
-        PROPERTY_DIRTY         = 0x02,
-        CONTEXT_VARIABLE_DIRTY = 0x04,
-        CONTENT_DIRTY          = 0x08,
-        TRANSITION_DIRTY       = 0x10,
+        MODIFIER_DIRTY         = 0x04,
+        PROPERTY_DIRTY         = 0x08,
+        CONTEXT_VARIABLE_DIRTY = 0x10,
+        CONTENT_DIRTY          = 0x20,
+        TRANSITION_DIRTY       = 0x40,
         GENERIC_DIRTY          = 0xFF,
     };
 
@@ -199,12 +200,12 @@ public:
     // accumulate all valid children's area
     void UpdateChildrenRect(const RectI& subRect);
 
-    void SetDirty(NodeDirty bitMask = NodeDirty::GENERIC_DIRTY);
-    bool IsDirty(NodeDirty bitMask = NodeDirty::GENERIC_DIRTY) const;
+    void SetDirty(uint8_t bitMask = NodeDirty::GENERIC_DIRTY);
+    bool IsDirty(uint8_t bitMask = NodeDirty::GENERIC_DIRTY) const;
 
 protected:
-    virtual uint8_t GetDirtyFlag() const;
-    void ResetDirty(NodeDirty filter = NodeDirty::GENERIC_DIRTY);
+    uint8_t GetDirtyFlag() const;
+    void ResetDirty(uint8_t filter = NodeDirty::GENERIC_DIRTY);
 
     void DumpNodeType(std::string& out) const;
 

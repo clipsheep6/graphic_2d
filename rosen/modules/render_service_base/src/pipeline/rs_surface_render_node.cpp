@@ -304,7 +304,6 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanv
         return;
     }
     const auto& property = GetRenderProperties();
-    SkAutoCanvasRestore acr(&canvas, !property.ShouldClipContent());
     const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
     RSPropertiesPainter::DrawShadow(property, canvas, &absClipRRect);
@@ -430,8 +429,7 @@ void RSSurfaceRenderNode::SetContextAlpha(float alpha, bool sendMsg)
         return;
     }
     contextAlpha_ = alpha;
-    // context alpha was multiplied into the alpha, so we need to mark property dirty here.
-    SetDirty(RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY);
+    SetDirty(RSBaseRenderNode::NodeDirty::CONTEXT_VARIABLE_DIRTY);
     if (!sendMsg) {
         return;
     }

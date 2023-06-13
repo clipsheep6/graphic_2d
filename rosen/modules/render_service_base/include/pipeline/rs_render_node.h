@@ -400,7 +400,6 @@ protected:
     bool isShadowValidLastFrame_ = false;
 
     virtual void OnApplyModifiers() {}
-    uint8_t GetDirtyFlag() const override;
 
 private:
     void FallbackAnimationsToRoot();

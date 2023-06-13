@@ -194,12 +194,6 @@ void RSRenderNode::UpdateDirtyRegion(
     ResetDirty();
 }
 
-uint8_t RSRenderNode::GetDirtyFlag() const
-{
-    return RSBaseRenderNode::GetDirtyFlag() |
-           (renderProperties_.IsDirty() ? RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY : 0u);
-}
-
 bool RSRenderNode::IsContentDirty() const
 {
     // Considering renderNode, it should consider both basenode's case and its properties
@@ -306,7 +300,7 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
         drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
     }
     modifier->GetProperty()->Attach(shared_from_this());
-    SetDirty(RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY);
+    SetDirty(RSBaseRenderNode::NodeDirty::MODIFIER_DIRTY);
 }
 
 void RSRenderNode::AddGeometryModifier(const std::shared_ptr<RSRenderModifier> modifier)
@@ -330,7 +324,7 @@ void RSRenderNode::AddGeometryModifier(const std::shared_ptr<RSRenderModifier> m
 void RSRenderNode::RemoveModifier(const PropertyId& id)
 {
     bool success = modifiers_.erase(id);
-    SetDirty(RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY);
+    SetDirty(RSBaseRenderNode::NodeDirty::MODIFIER_DIRTY);
     if (success) {
         return;
     }
@@ -342,7 +336,8 @@ void RSRenderNode::RemoveModifier(const PropertyId& id)
 
 void RSRenderNode::ApplyModifiers()
 {
-    if (!IsDirty(RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY)) {
+    // Either if modifier or context variable is dirty, we should re-evaluate all modifiers.
+    if (!IsDirty(RSBaseRenderNode::NodeDirty::MODIFIER_DIRTY | RSBaseRenderNode::NodeDirty::CONTEXT_VARIABLE_DIRTY)) {
         return;
     }
     RSModifierContext context = { GetMutableRenderProperties() };
@@ -369,6 +364,9 @@ void RSRenderNode::ApplyModifiers()
             parent->ResetSortedChildren();
         }
     }
+    // modifier and context variable is not dirty now, set property dirty instead
+    ResetDirty(RSBaseRenderNode::NodeDirty::MODIFIER_DIRTY | RSBaseRenderNode::NodeDirty::CONTEXT_VARIABLE_DIRTY);
+    SetDirty(RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY);
 }
 
 void RSRenderNode::UpdateDrawRegion()
@@ -442,7 +440,7 @@ void RSRenderNode::SetSharedTransitionParam(const std::optional<SharedTransition
         return;
     }
     sharedTransitionParam_ = sharedTransitionParam;
-    SetDirty(NodeDirty::PROPERTY_DIRTY);
+    SetDirty(NodeDirty::MODIFIER_DIRTY);
 }
 
 const std::optional<RSRenderNode::SharedTransitionParam>& RSRenderNode::GetSharedTransitionParam() const

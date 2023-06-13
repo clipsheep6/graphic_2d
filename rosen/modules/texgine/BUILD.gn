@@ -104,15 +104,21 @@ ohos_shared_library("libtexgine") {
     if (platform == "mingw") {
       platform = "windows"
     }
-
     public_deps = [
-      "$graphic_2d_root/rosen/build/flutter/icu:rosen_libicu_$platform",
-      "$hilog_root/interfaces/native/innerkits:libhilog",
       "texgine_drawing:libtexgine_drawing",
       "//third_party/jsoncpp:jsoncpp",
     ]
-
-    external_deps = [ "hitrace_native:hitrace_meter" ]
+    if (platform == "ohos") {
+      external_deps = [ "hitrace_native:hitrace_meter" ]
+      public_deps += [
+        "$graphic_2d_root/rosen/build/flutter/icu:rosen_libicu_$platform",
+        "$hilog_root/interfaces/native/innerkits:libhilog",
+      ]
+    } else {
+      sources -= [
+        "src/utils/trace_ohos.cpp",
+      ]
+    }
   }
 
   part_name = "graphic_standard"

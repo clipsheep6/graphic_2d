@@ -501,8 +501,8 @@ RectI RSObjAbsGeometry::MapAbsRect(const RectF& rect) const
         // Set the absolute rectangle's properties
         absRect.left_ = static_cast<int>(xRange[0]);
         absRect.top_ = static_cast<int>(yRange[0]);
-        absRect.width_ = static_cast<int>(std::ceil(xRange[1] - absRect.left_));
-        absRect.height_ = static_cast<int>(std::ceil(yRange[1] - absRect.top_));
+        absRect.width_ = static_cast<int>(std::floor(xRange[1] - absRect.left_));
+        absRect.height_ = static_cast<int>(std::floor(yRange[1] - absRect.top_));
     } else {
         // Calculate the absolute rectangle based on the matrix's translation and scaling
 #ifndef USE_ROSEN_DRAWING
@@ -510,8 +510,8 @@ RectI RSObjAbsGeometry::MapAbsRect(const RectF& rect) const
         absRect.top_ = static_cast<int>(rect.top_ + matrix.getTranslateY());
         float right = rect.left_ + matrix.getTranslateX() + rect.width_ * matrix.getScaleX();
         float bottom = rect.top_ + matrix.getTranslateY() + rect.height_ * matrix.getScaleY();
-        absRect.width_ = static_cast<int>(std::ceil(right - absRect.left_));
-        absRect.height_ = static_cast<int>(std::ceil(bottom - absRect.top_));
+        absRect.width_ = static_cast<int>(std::floor(right - absRect.left_));
+        absRect.height_ = static_cast<int>(std::floor(bottom - absRect.top_));
 #else
         absRect.left_ = static_cast<int>(rect.left_ + matrix.Get(Drawing::Matrix::TRANS_X));
         absRect.top_ = static_cast<int>(rect.top_ + matrix.Get(Drawing::Matrix::TRANS_Y));
@@ -519,8 +519,8 @@ RectI RSObjAbsGeometry::MapAbsRect(const RectF& rect) const
             rect.width_ * matrix.Get(Drawing::Matrix::SCALE_X);
         float bottom = rect.top_ + matrix.Get(Drawing::Matrix::TRANS_Y) +
             rect.height_ * matrix.Get(Drawing::Matrix::SCALE_Y);
-        absRect.width_ = static_cast<int>(std::ceil(right - absRect.left_));
-        absRect.height_ = static_cast<int>(std::ceil(bottom - absRect.top_));
+        absRect.width_ = static_cast<int>(std::floor(right - absRect.left_));
+        absRect.height_ = static_cast<int>(std::floor(bottom - absRect.top_));
 #endif
     }
     return absRect;

@@ -1113,10 +1113,7 @@ RectI RSProperties::GetDirtyRect() const
     } else {
         auto drawRegion = boundsGeometry->MapAbsRect(*drawRegion_);
         // this is used to fix the scene with drawRegion problem, which is need to be optimized
-        drawRegion.SetRight(drawRegion.GetRight() + 1);
-        drawRegion.SetBottom(drawRegion.GetBottom() + 1);
-        drawRegion.SetAll(drawRegion.left_ - 1, drawRegion.top_ - 1,
-            drawRegion.width_ + 1, drawRegion.height_ + 1);
+        
         return dirtyRect.JoinRect(drawRegion);
     }
 }
@@ -1138,10 +1135,7 @@ RectI RSProperties::GetDirtyRect(RectI& drawRegion) const
     } else {
         drawRegion = boundsGeometry->MapAbsRect(*drawRegion_);
         // this is used to fix the scene with drawRegion problem, which is need to be optimized
-        drawRegion.SetRight(drawRegion.GetRight() + 1);
-        drawRegion.SetBottom(drawRegion.GetBottom() + 1);
-        drawRegion.SetAll(drawRegion.left_ - 1, drawRegion.top_ - 1,
-            drawRegion.width_ + 1, drawRegion.height_ + 1);
+        
         return dirtyRect.JoinRect(drawRegion);
     }
 }

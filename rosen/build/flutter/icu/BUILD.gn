@@ -127,6 +127,8 @@ template("rosen_libicu") {
       } else if (config.use_external_icu == "shared") {
         deps = [ "//third_party/icu/icu4c:shared_icuuc" ]
       }
+    } else if (use_new_skia) {
+      deps = [ "//third_party/skia/third_party/icu" ]
     } else {
       configs += [ "//build/config/compiler:rtti" ]
       configs += [ "$ace_root/build:reduce_eh_frame_config" ]

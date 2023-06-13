@@ -22,7 +22,7 @@ group("texgine_feature_test") {
     ":texgine_sample_decoration",
     ":texgine_sample_direction",
     ":texgine_sample_dynamic_font",
-    ":texgine_sample_dynamic_otffont",
+    ":texgine_sample_dynamic_otf_font",
     ":texgine_sample_ellipsis",
     ":texgine_sample_emoji",
     ":texgine_sample_feature",
@@ -328,7 +328,7 @@ ohos_executable("texgine_sample_layout") {
   subsystem_name = "graphic"
 }
 
-ohos_executable("texgine_sample_dynamic_otffont") {
+ohos_executable("texgine_sample_dynamic_otf_font") {
   install_enable = true
 
   sources = [ "feature_test/dynamic_otf_font_test.cpp" ]

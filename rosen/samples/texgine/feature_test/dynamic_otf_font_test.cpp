@@ -39,8 +39,8 @@ struct FontsInfo {
     },
     {
         .path = RESOURCE_PATH_PREFIX "SourceHanSansSC-Regular.otf",
-        .fontFamily = "SourceHanSansSC-Regular",
-        .title = "SourceHanSansSC-Regular",
+        .fontFamily = "Source Han Sans SC",
+        .title = "Source Han Sans SC",
     },
 };
 

@@ -14,7 +14,6 @@
  */
 
 #include "pipeline/rs_uni_render_visitor.h"
-#include <memory>
 #include "SkPictureRecorder.h"
 
 #ifdef RS_ENABLE_VK
@@ -2610,11 +2609,15 @@ void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
     node.ProcessTransitionBeforeChildren(*canvas_);
     switch (cacheType) {
         case CacheType::NONE: {
-            if (node.GetSortedChildren().size() == 0) {
-                if (node.GetRecordedContents() == nullptr) {
+            if (node.GetSortedChildren().empty() && node.GetType() != RSRenderNodeType::CANVAS_DRAWING_NODE &&
+                !node.GetRenderProperties().NeedFilter()) {
+                if (node.GetRecordedContents() == nullptr) { // record draw call to skPicture for leaf node
                     SkPictureRecorder recorder;
-                    auto recordingCanvas = std::make_shared<RSPaintFilterCanvas>(recorder.beginRecording(
-                        node.GetRenderProperties().GetBoundsWidth(), node.GetRenderProperties().GetBoundsHeight()));
+                    auto drawRegion = node.GetDrawRegion();
+                    SkRect bounds = drawRegion ? RSPropertiesPainter::Rect2SkRect(*drawRegion) :
+                        SkRect::MakeWH(node.GetRenderProperties().GetBoundsWidth(),
+                        node.GetRenderProperties().GetBoundsHeight());
+                    auto recordingCanvas = std::make_shared<RSPaintFilterCanvas>(recorder.beginRecording(bounds));
                     swap(canvas_, recordingCanvas);
                     node.ProcessAnimatePropertyBeforeChildren(*canvas_);
                     node.ProcessRenderContents(*canvas_);

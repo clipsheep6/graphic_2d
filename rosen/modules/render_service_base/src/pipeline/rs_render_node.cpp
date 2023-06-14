@@ -222,7 +222,7 @@ bool RSRenderNode::IsDirty() const
 bool RSRenderNode::IsContentDirty() const
 {
     // Considering renderNode, it should consider both basenode's case and its properties
-    return !RSBaseRenderNode::IsContentDirty() && renderProperties_.IsContentDirty();
+    return RSBaseRenderNode::IsContentDirty() || renderProperties_.IsContentDirty();
 }
 
 void RSRenderNode::UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEnabled)
@@ -360,10 +360,14 @@ void RSRenderNode::RemoveModifier(const PropertyId& id)
         modifiers_.erase(it);
         return;
     }
+    size_t removedCount = 0;
     for (auto& [type, modifiers] : drawCmdModifiers_) {
-        modifiers.remove_if([id](const auto& modifier) -> bool {
-            return modifier ? modifier->GetPropertyId() == id : true;
+        removedCount += EraseIf(modifiers, [id](const auto& modifier) -> bool {
+            return !modifier || modifier->GetPropertyId() == id;
         });
+    }
+    if (removedCount > 0) {
+        SetRecordedContents(nullptr);
     }
 }
 

@@ -24,6 +24,7 @@
 #include "surface_buffer.h"
 
 namespace OHOS {
+
 void ReadFileDescriptor(MessageParcel &parcel, int32_t &fd);
 void WriteFileDescriptor(MessageParcel &parcel, int32_t fd);
 

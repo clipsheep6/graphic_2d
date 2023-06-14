@@ -202,8 +202,6 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessBaseRenderNode(RSBaseRenderNo
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
-    // clear SortedChildren, it will be generated again in next frame
-    node.ResetSortedChildren();
 }
 
 void RSUniUICapture::RSUniUICaptureVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
@@ -349,6 +347,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
         RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect);
     }
 #ifndef USE_ROSEN_DRAWING
+    // PLANNING: merge all save & clip in this function
     canvas_->save();
     if (isSelfDrawingSurface && !property.GetCornerRadius().IsZero()) {
         canvas_->clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
@@ -366,8 +365,11 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
     }
 #endif
     if (isSelfDrawingSurface) {
+        RSAutoCanvasRestore acr(canvas_.get(), RSAutoCanvasRestore::kCanvas);
+        RSPropertiesPainter::ClipBounds(*canvas_, property);
         RSPropertiesPainter::DrawBackground(property, *canvas_);
         RSPropertiesPainter::DrawMask(property, *canvas_);
+
 #ifndef USE_ROSEN_DRAWING
         auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
         if (filter != nullptr) {
@@ -401,8 +403,10 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
         auto params = RSUniRenderUtil::CreateBufferDrawParam(node, true);
         renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
     }
-#ifndef USE_ROSEN_DRAWING
     if (isSelfDrawingSurface) {
+        RSAutoCanvasRestore acr(canvas_.get(), RSAutoCanvasRestore::kCanvas);
+        RSPropertiesPainter::ClipBounds(*canvas_, property);
+#ifndef USE_ROSEN_DRAWING
         auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetFilter());
         if (filter != nullptr) {
             auto skRectPtr = std::make_unique<SkRect>();
@@ -418,7 +422,6 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
     }
     canvas_->restore();
 #else
-    if (isSelfDrawingSurface) {
         auto filter = std::static_pointer_cast<RSDrawingFilter>(property.GetFilter());
         if (filter != nullptr) {
             auto drawingRectPtr =
@@ -513,6 +516,11 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithoutUni(RSSurfa
 
 void RSUniUICapture::RSUniUICaptureVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 {
+    for (auto& child : node.GetChildren()) {
+        if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child)) {
+            renderChild->ApplyModifiers();
+        }
+    }
     for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
     }
@@ -520,7 +528,6 @@ void RSUniUICapture::RSUniUICaptureVisitor::PrepareBaseRenderNode(RSBaseRenderNo
 
 void RSUniUICapture::RSUniUICaptureVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
-    node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
     node.Update(*dirtyManager, nullptr, false);
     PrepareBaseRenderNode(node);
@@ -528,7 +535,6 @@ void RSUniUICapture::RSUniUICaptureVisitor::PrepareCanvasRenderNode(RSCanvasRend
 
 void RSUniUICapture::RSUniUICaptureVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
-    node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
     node.Update(*dirtyManager, nullptr, false);
     PrepareBaseRenderNode(node);
@@ -536,13 +542,11 @@ void RSUniUICapture::RSUniUICaptureVisitor::PrepareSurfaceRenderNode(RSSurfaceRe
 
 void RSUniUICapture::RSUniUICaptureVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
-    node.ApplyModifiers();
     PrepareCanvasRenderNode(node);
 }
 
 void RSUniUICapture::RSUniUICaptureVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
 {
-    node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
     node.Update(*dirtyManager, nullptr, false);
     PrepareBaseRenderNode(node);

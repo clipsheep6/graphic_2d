@@ -18,10 +18,10 @@
 #include <algorithm>
 #include <securec.h>
 
-#include "platform/common/rs_log.h"
-#include "render/rs_filter.h"
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
+#include "platform/common/rs_log.h"
+#include "render/rs_filter.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -1039,8 +1039,8 @@ void RSProperties::Reset()
     frameGravity_ = Gravity::DEFAULT;
     alpha_ = 1.f;
 
-    boundsGeo_ = std::make_shared<RSObjAbsGeometry>();
-    frameGeo_ = std::make_shared<RSObjGeometry>();
+    boundsGeo_->Reset();
+    frameGeo_->Reset();
 
     backgroundFilter_.reset();
     linearGradientBlurPara_.reset();
@@ -1914,6 +1914,10 @@ std::string RSProperties::Dump() const
     }
 
     return dumpInfo;
+}
+bool RSProperties::ShouldClipContent() const
+{
+    return (GetClipBounds() != nullptr) || GetClipToBounds() || GetClipToRRect();
 }
 } // namespace Rosen
 } // namespace OHOS

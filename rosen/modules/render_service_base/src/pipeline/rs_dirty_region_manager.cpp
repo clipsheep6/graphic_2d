@@ -153,7 +153,7 @@ void RSDirtyRegionManager::GetDirtyRegionInfo(std::map<NodeId, RectI>& target,
     }
 }
 
-RectI RSDirtyRegionManager::GetLastestHistory() const
+RectI RSDirtyRegionManager::GetLatestHistory() const
 {
     return GetHistory(historyHead_);
 }

@@ -249,15 +249,44 @@ bool RSPropertiesPainter::GetGravityMatrix(Gravity gravity, RectF rect, float w,
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::Clip(SkCanvas& canvas, RectF rect, bool isAntiAlias)
+void RSPropertiesPainter::ClipFrame(SkCanvas& canvas, const RSProperties& properties, bool isAntiAlias)
 {
     // isAntiAlias is false only the method is called in ProcessAnimatePropertyBeforeChildren().
-    canvas.clipRect(Rect2SkRect(rect), isAntiAlias);
+    canvas.clipRect(Rect2SkRect(properties.GetFrameRect()), isAntiAlias);
 }
 #else
-void RSPropertiesPainter::Clip(Drawing::Canvas& canvas, RectF rect, bool isAntiAlias)
+void RSPropertiesPainter::ClipFrame(Drawing::Canvas& canvas, const RSProperties& properties, bool isAntiAlias)
 {
-    canvas.ClipRect(Rect2DrawingRect(rect), Drawing::ClipOp::INTERSECT, isAntiAlias);
+    canvas.ClipRect(Rect2DrawingRect(properties.GetFrameRect()), Drawing::ClipOp::INTERSECT, isAntiAlias);
+}
+#endif
+
+#ifndef USE_ROSEN_DRAWING
+void RSPropertiesPainter::ClipBounds(SkCanvas& canvas, const RSProperties& properties)
+{
+    // only disable antialias when background is rect and g_forceBgAntiAlias is false
+    bool antiAlias = g_forceBgAntiAlias || !properties.GetCornerRadius().IsZero();
+
+    // AntiAlias is false only the method is called in ProcessAnimatePropertyBeforeChildren().
+    if (properties.GetClipBounds() != nullptr) {
+        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), antiAlias);
+    } else if (properties.GetClipToRRect()) {
+        canvas.clipRRect(RRect2SkRRect(properties.GetClipRRect()), antiAlias);
+    } else {
+        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
+    }
+}
+#else
+void RSPropertiesPainter::ClipBounds(Drawing::Canvas& canvas, const RSProperties& properties)
+{
+    // only disable antialias when background is rect and g_forceBgAntiAlias is false
+    bool antiAlias = g_forceBgAntiAlias || !properties.GetCornerRadius().IsZero();
+
+    if (properties.GetClipBounds() != nullptr) {
+        canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, antiAlias);
+    } else {
+        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, antiAlias);
+    }
 }
 #endif
 
@@ -748,13 +777,6 @@ void RSPropertiesPainter::DrawLinearGradientBlurFilter(
         return;
     }
     SkAutoCanvasRestore acr(&canvas, true);
-    if (rect != nullptr) {
-        canvas.clipRect((*rect), true);
-    } else if (properties.GetClipBounds() != nullptr) {
-        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
-    } else {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
-    }
 
     auto clipBounds = canvas.getDeviceClipBounds();
     auto clipIPadding = clipBounds.makeOutset(-1, -1);
@@ -820,13 +842,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     RS_TRACE_NAME("DrawFilter " + filter->GetDescription());
     g_blurCnt++;
     SkAutoCanvasRestore acr(&canvas, true);
-    if (rect != nullptr) {
-        canvas.clipRect((*rect), true);
-    } else if (properties.GetClipBounds() != nullptr) {
-        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
-    } else {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
-    }
+
     auto paint = filter->GetPaint();
     if (skSurface == nullptr) {
         if (!canvas.GetIsParallelCanvas()) {
@@ -884,12 +900,9 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
 {
     g_blurCnt++;
     Drawing::AutoCanvasRestore acr(canvas, true);
-    if (rect != nullptr) {
-        canvas.ClipRect((*rect), Drawing::ClipOp::INTERSECT, true);
-    } else if (properties.GetClipBounds() != nullptr) {
-        canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
-    } else {
-        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
+    if (!properties.ShouldClipContent()) {
+        // if the content is not clipped, we should clip before draw filter
+        RSPropertiesPainter::ClipBounds(canvas, properties);
     }
     auto brush = filter->GetBrush();
     if (surface == nullptr) {
@@ -984,12 +997,12 @@ void RSPropertiesPainter::ApplyBackgroundEffect(const RSProperties& properties, 
     SkAutoCanvasRestore acr(&canvas, true);
     const auto& data = canvas.GetEffectData();
     SkPath clipPath;
+    // The caller should already clip the canvas, so we don't need to clip again, but we need to collect the clip path
+    // in case for merged post-process.
     if (properties.GetClipBounds() != nullptr) {
         clipPath = properties.GetClipBounds()->GetSkiaPath();
-        canvas.clipPath(clipPath, true);
     } else {
         auto rrect = RRect2SkRRect(properties.GetRRect());
-        canvas.clipRRect(rrect, true);
         clipPath.addRRect(rrect);
     }
 
@@ -1268,46 +1281,25 @@ int RSPropertiesPainter::GetAndResetBlurCnt()
     return blurCnt;
 }
 
-void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas, bool isAntiAlias)
+// Note: the caller should take care of the canvas save & clip
+void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
-    DrawShadow(properties, canvas);
     // only disable antialias when background is rect and g_forceBgAntiAlias is false
     bool antiAlias = g_forceBgAntiAlias || !properties.GetCornerRadius().IsZero();
-    // clip
 #ifndef USE_ROSEN_DRAWING
-    if (properties.GetClipBounds() != nullptr) {
-        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), antiAlias);
-    } else if (properties.GetClipToBounds()) {
-        // In NEW_SKIA version, L476 code will cause crash if the second parameter is true.
-        // so isAntiAlias is false only the method is called in ProcessAnimatePropertyBeforeChildren().
-#ifdef NEW_SKIA
-        if (properties.GetCornerRadius().IsZero()) {
-            canvas.clipRect(Rect2SkRect(properties.GetBoundsRect()), isAntiAlias);
-        } else {
-            canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
-        }
-#else
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
-#endif
-    } else if (properties.GetClipToRRect()) {
-        canvas.clipRRect(RRect2SkRRect(properties.GetClipRRect()), antiAlias);
-    }
     // paint backgroundColor
     SkPaint paint;
     paint.setAntiAlias(antiAlias);
-    canvas.save();
     auto bgColor = properties.GetBackgroundColor();
     if (bgColor != RgbPalette::Transparent()) {
         paint.setColor(bgColor.AsArgbInt());
-        canvas.drawRRect(RRect2SkRRect(properties.GetRRect()), paint);
+        canvas.drawRect(Rect2SkRect(properties.GetBoundsRect()), paint);
     }
     if (const auto& bgShader = properties.GetBackgroundShader()) {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
         paint.setShader(bgShader->GetSkShader());
         canvas.drawPaint(paint);
     }
     if (const auto& bgImage = properties.GetBgImage()) {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), antiAlias);
         auto boundsRect = Rect2SkRect(properties.GetBoundsRect());
         bgImage->SetDstRect(properties.GetBgImageRect());
 #ifdef NEW_SKIA
@@ -1316,38 +1308,28 @@ void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaint
         bgImage->CanvasDrawImage(canvas, boundsRect, paint, true);
 #endif
     }
-    canvas.restore();
 #else
-    if (properties.GetClipBounds() != nullptr) {
-        canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, antiAlias);
-    } else if (properties.GetClipToBounds()) {
-        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, antiAlias);
-    }
     // paint backgroundColor
     Drawing::Brush brush;
     brush.SetAntiAlias(antiAlias);
-    canvas.Save();
     auto bgColor = properties.GetBackgroundColor();
     if (bgColor != RgbPalette::Transparent()) {
         brush.SetColor(Drawing::Color(bgColor.AsArgbInt()));
         canvas.AttachBrush(brush);
-        canvas.DrawRoundRect(RRect2DrawingRRect(properties.GetRRect()));
+        canvas.DrawRect(Rect2DrawingRect(properties.GetBoundsRect()));
         canvas.DetachBrush();
     }
     if (const auto& bgShader = properties.GetBackgroundShader()) {
-        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, antiAlias);
         brush.SetShaderEffect(bgShader->GetDrawingShader());
         canvas.DrawBackground(brush);
     }
     if (const auto& bgImage = properties.GetBgImage()) {
-        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, antiAlias);
         auto boundsRect = Rect2DrawingRect(properties.GetBoundsRect());
         bgImage->SetDstRect(properties.GetBgImageRect());
         canvas.AttachBrush(brush);
         bgImage->CanvasDrawImage(canvas, boundsRect, true);
         canvas.DetachBrush();
     }
-    canvas.Restore();
 #endif
 }
 
@@ -1477,13 +1459,7 @@ void RSPropertiesPainter::DrawForegroundColor(const RSProperties& properties, Sk
         return;
     }
     // clip
-    if (properties.GetClipBounds() != nullptr) {
-        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
-    } else if (properties.GetClipToBounds()) {
-        canvas.clipRect(Rect2SkRect(properties.GetBoundsRect()), true);
-    } else if (properties.GetClipToRRect()) {
-        canvas.clipRRect(RRect2SkRRect(properties.GetClipRRect()), true);
-    }
+    ClipBounds(canvas, properties);
 
     SkPaint paint;
     paint.setColor(bgColor.AsArgbInt());
@@ -1498,11 +1474,7 @@ void RSPropertiesPainter::DrawForegroundColor(const RSProperties& properties, Dr
         return;
     }
     // clip
-    if (properties.GetClipBounds() != nullptr) {
-        canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
-    } else if (properties.GetClipToBounds()) {
-        canvas.ClipRect(Rect2DrawingRect(properties.GetBoundsRect()), Drawing::ClipOp::INTERSECT, true);
-    }
+    ClipBounds(canvas, properties);
 
     Drawing::Brush brush;
     brush.SetColor(Drawing::Color(bgColor.AsArgbInt()));
@@ -1796,7 +1768,6 @@ void RSPropertiesPainter::DrawColorFilter(const RSProperties& properties, RSPain
         return;
     }
     SkAutoCanvasRestore acr(&canvas, true);
-    canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setColorFilter(colorFilter);

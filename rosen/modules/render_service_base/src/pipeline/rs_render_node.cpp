@@ -22,11 +22,11 @@
 #include "common/rs_obj_abs_geometry.h"
 #include "modifier/rs_modifier_type.h"
 #include "pipeline/rs_context.h"
+#include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
-#include "property/rs_property_trace.h"
-#include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties_painter.h"
+#include "property/rs_property_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -191,18 +191,13 @@ void RSRenderNode::UpdateDirtyRegion(
             }
         }
     }
-    SetClean();
-}
-
-bool RSRenderNode::IsDirty() const
-{
-    return RSBaseRenderNode::IsDirty() || renderProperties_.IsDirty();
+    ResetDirty();
 }
 
 bool RSRenderNode::IsContentDirty() const
 {
     // Considering renderNode, it should consider both basenode's case and its properties
-    return RSBaseRenderNode::IsContentDirty() || renderProperties_.IsContentDirty();
+    return RSBaseRenderNode::GetDirtyFlag() || renderProperties_.IsDirty() || renderProperties_.IsContentDirty();
 }
 
 void RSRenderNode::UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEnabled)
@@ -305,7 +300,7 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
         drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
     }
     modifier->GetProperty()->Attach(shared_from_this());
-    SetDirty();
+    SetDirty(RSBaseRenderNode::NodeDirty::MODIFIER_DIRTY);
 }
 
 void RSRenderNode::AddGeometryModifier(const std::shared_ptr<RSRenderModifier> modifier)
@@ -329,31 +324,49 @@ void RSRenderNode::AddGeometryModifier(const std::shared_ptr<RSRenderModifier> m
 void RSRenderNode::RemoveModifier(const PropertyId& id)
 {
     bool success = modifiers_.erase(id);
-    SetDirty();
+    SetDirty(RSBaseRenderNode::NodeDirty::MODIFIER_DIRTY);
     if (success) {
         return;
     }
     for (auto& [type, modifiers] : drawCmdModifiers_) {
-        modifiers.remove_if([id](const auto& modifier) -> bool {
-            return modifier ? modifier->GetPropertyId() == id : true;
-        });
+        modifiers.remove_if(
+            [id](const auto& modifier) -> bool { return modifier ? modifier->GetPropertyId() == id : true; });
     }
 }
 
 void RSRenderNode::ApplyModifiers()
 {
-    if (!RSBaseRenderNode::IsDirty()) {
+    // Either if modifier or context variable is dirty, we should re-evaluate all modifiers.
+    if (!IsDirty(RSBaseRenderNode::NodeDirty::MODIFIER_DIRTY | RSBaseRenderNode::NodeDirty::CONTEXT_VARIABLE_DIRTY)) {
         return;
     }
     RSModifierContext context = { GetMutableRenderProperties() };
+    auto prevZIndex = context.property_.GetPositionZ();
     context.property_.Reset();
+    // apply all modifiers
     for (auto& [id, modifier] : modifiers_) {
         if (modifier) {
             modifier->Apply(context);
         }
     }
+    if (drawCmdModifiers_.count(RSModifierType::GEOMETRYTRANS)) {
+        for (auto& modifier : drawCmdModifiers_[RSModifierType::GEOMETRYTRANS]) {
+            modifier->Apply(context);
+        }
+    }
+
     OnApplyModifiers();
     UpdateDrawRegion();
+    // z index changed, tell parent to sort children
+    if (prevZIndex != context.property_.GetPositionZ()) {
+        auto parent = GetParent().lock();
+        if (parent) {
+            parent->ResetSortedChildren();
+        }
+    }
+    // modifier and context variable is not dirty now, set property dirty instead
+    ResetDirty(RSBaseRenderNode::NodeDirty::MODIFIER_DIRTY | RSBaseRenderNode::NodeDirty::CONTEXT_VARIABLE_DIRTY);
+    SetDirty(RSBaseRenderNode::NodeDirty::PROPERTY_DIRTY);
 }
 
 void RSRenderNode::UpdateDrawRegion()
@@ -427,7 +440,7 @@ void RSRenderNode::SetSharedTransitionParam(const std::optional<SharedTransition
         return;
     }
     sharedTransitionParam_ = sharedTransitionParam;
-    SetDirty();
+    SetDirty(NodeDirty::MODIFIER_DIRTY);
 }
 
 const std::optional<RSRenderNode::SharedTransitionParam>& RSRenderNode::GetSharedTransitionParam() const

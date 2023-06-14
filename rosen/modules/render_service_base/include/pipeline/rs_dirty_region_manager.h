@@ -65,11 +65,11 @@ public:
     void Clear();
     // return merged historical region
     const RectI& GetDirtyRegion() const;
-    // return merged historical region upsize down in surface
+    // return merged historical region upside down in surface
     RectI GetDirtyRegionFlipWithinSurface() const;
     // return current frame's region
     const RectI& GetLatestDirtyRegion() const;
-    // return merged historical region upsize down in surface
+    // return merged historical region upside down in surface
     RectI GetRectFlipWithinSurface(const RectI& rect) const;
     // Get aligned rect as times of alignedBits
     static RectI GetPixelAlignedRect(const RectI& rect, int32_t alignedBits = ALIGNED_BITS);
@@ -112,7 +112,7 @@ public:
         return isDfxTarget_;
     }
 
-    RectI GetLastestHistory() const; // Get lastest dirtyregion history
+    RectI GetLatestHistory() const; // Get latest dirty region history
     bool HasOffset();
     void SetOffset(int offsetX, int offsetY);
     RectI GetOffsetedDirtyRegion() const;

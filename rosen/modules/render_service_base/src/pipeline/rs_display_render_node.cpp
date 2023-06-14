@@ -40,8 +40,7 @@ RSDisplayRenderNode::~RSDisplayRenderNode()
 void RSDisplayRenderNode::CollectSurface(
     const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender)
 {
-    ResetSortedChildren();
-    for (auto& child : node->GetSortedChildren()) {
+    for (auto& child : node->GetChildren()) {
         child->CollectSurface(child, vec, isUniRender);
     }
 }

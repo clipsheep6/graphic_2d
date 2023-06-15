@@ -33,6 +33,14 @@ bool FontFeatures::operator ==(const FontFeatures &rhs) const
     return features_ == rhs.features_;
 }
 
+TextShadow::TextShadow(double offsetX, double offsetY, uint32_t color, uint32_t blurLeave)
+{
+    this->offsetX = offsetX;
+    this->offsetY = offsetY;
+    this->color = color;
+    this->blurLeave = blurLeave;
+}
+
 bool TextShadow::operator ==(TextShadow const &rhs) const
 {
     return offsetX == rhs.offsetX &&

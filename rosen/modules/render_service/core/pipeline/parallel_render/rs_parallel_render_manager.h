@@ -22,6 +22,9 @@
 #include <memory>
 #include <mutex>
 #include "EGL/egl.h"
+#ifdef NEW_RENDER_CONTEXT
+#include "render_context_base.h"
+#endif
 #include "rs_parallel_hardware_composer.h"
 #include "rs_parallel_sub_thread.h"
 #include "rs_parallel_pack_visitor.h"
@@ -64,7 +67,12 @@ public:
     void SetParallelMode(bool parallelMode);
     bool GetParallelMode() const;
     bool GetParallelModeSafe() const;
+#ifdef NEW_RENDER_CONTEXT
+    void StartSubRenderThread(uint32_t threadNum, std::shared_ptr<RenderContextBase> context,
+        std::shared_ptr<DrawingContext> drawingContext);
+#else
     void StartSubRenderThread(uint32_t threadNum, RenderContext *context);
+#endif
     void EndSubRenderThread();
     void CopyVisitorAndPackTask(RSUniRenderVisitor &visitor, RSDisplayRenderNode &node);
     void CopyPrepareVisitorAndPackTask(RSUniRenderVisitor &visitor, RSDisplayRenderNode &node);
@@ -185,7 +193,12 @@ private:
     std::mutex cvParallelRenderMutex_;
     std::mutex flushMutex_;
     std::condition_variable cvParallelRender_;
-    RenderContext *renderContext_ = nullptr;
+#ifdef NEW_RENDER_CONTEXT
+    std::shared_ptr<RenderContextBase> renderContext_ = nullptr;
+    std::shared_ptr<DrawingContext> drawingContext_ = nullptr;
+#else
+    RenderContext* renderContext_ = nullptr;
+#endif
     ParallelRenderType renderType_ = ParallelRenderType::DRAW_IMAGE;
     std::shared_ptr<RSBaseRenderNode> displayNode_ = nullptr;
     std::shared_ptr<RSDisplayRenderNode> mainDisplayNode_ = nullptr;

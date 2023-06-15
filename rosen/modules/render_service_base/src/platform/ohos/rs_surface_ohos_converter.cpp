@@ -14,15 +14,26 @@
  */
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_surface_converter.h"
+#if defined(NEW_RENDER_CONTEXT)
+#include "render_backend/ohos/rs_render_surface_ohos.h"
+#else
 #include "rs_surface_ohos.h"
 #include "platform/ohos/backend/rs_surface_ohos_raster.h"
 #include "platform/ohos/backend/rs_surface_ohos_gl.h"
 #ifdef RS_ENABLE_VK
 #include "platform/ohos/backend/rs_surface_ohos_vulkan.h"
 #endif
+#endif
 
 namespace OHOS {
 namespace Rosen {
+#if defined(NEW_RENDER_CONTEXT)
+sptr<Surface> RSSurfaceConverter::ConvertToOhosSurface(std::shared_ptr<RSRenderSurface> surface)
+{
+    auto derivedPtr = std::static_pointer_cast<RSRenderSurfaceOhos>(surface);
+    return derivedPtr->GetSurfaceOhos();
+}
+#else
 sptr<Surface> RSSurfaceConverter::ConvertToOhosSurface(std::shared_ptr<RSSurface> surface)
 {
     if (surface == nullptr) {
@@ -38,6 +49,7 @@ sptr<Surface> RSSurfaceConverter::ConvertToOhosSurface(std::shared_ptr<RSSurface
 #endif
     return derivedPtr->GetSurface();
 }
+#endif
 
 } // namespace Rosen
 } // namespace OHOS

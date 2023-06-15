@@ -21,6 +21,7 @@
 
 #include "rs_skia_memory_tracer.h"
 #include "memory/rs_memory_graphic.h"
+#include "render_context/memory_handler.h"
 #ifdef NEW_SKIA
 #include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrDirectContextPriv.h"
@@ -223,7 +224,7 @@ void MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(GrContext* grContext)
         RS_LOGE("ReleaseUnlockAndSafeCacheGpuResource fail, grContext is nullptr");
     }
     RS_TRACE_NAME_FMT("ReleaseUnlockAndSafeCacheGpuResource");
-    grContext->purgeUnlockAndSafeCacheGpuResources();
+    // grContext->purgeUnlockAndSafeCacheGpuResources();
 #endif
 }
 #else

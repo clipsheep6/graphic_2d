@@ -27,7 +27,6 @@ std::shared_ptr<RSRenderSurface> RSSurfaceFactory::CreateRSSurface(const Platfor
     if (platformName == PlatformName::OHOS) {
         rsSurface = std::make_shared<RSRenderSurfaceOhos>(surface, drawingContext);
     }
-    LOGD("Create rsSurface successfully");
     return rsSurface;
 }
 }

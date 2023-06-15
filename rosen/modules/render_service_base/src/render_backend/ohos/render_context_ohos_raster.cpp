@@ -39,32 +39,43 @@ bool RenderContextOhosRaster::CreateSurface(const std::shared_ptr<RSRenderSurfac
         return false;
     }
 
-    frame->requestConfig_.width = frame->width_;
-    frame->requestConfig_.height = frame->height_;
-    frame->requestConfig_.usage = frame->bufferUsage_;
-    frame->requestConfig_.format = frame->pixelFormat_;
-    frame->flushConfig_.damage.w = frame->width_;
-    frame->flushConfig_.damage.h = frame->height_;
+    std::shared_ptr<FrameConfig> frameConfig = frame->frameConfig;
+    frameConfig->requestConfig.width = frameConfig->width;
+    frameConfig->requestConfig.height = frameConfig->height;
     
-    if (frame->producer_ == nullptr) {
-        LOGE("Failed to create surface, frame_->producer is nullptr");
+    frameConfig->requestConfig.usage = frameConfig->bufferUsage;
+    frameConfig->requestConfig.format = frameConfig->pixelFormat;
+
+    frameConfig->flushConfig.damage.w = frameConfig->width;
+    frameConfig->flushConfig.damage.h = frameConfig->height;
+
+    frameConfig->releaseFence = -1;
+    std::shared_ptr<SurfaceConfig> surfaceConfig = frame->surfaceConfig;
+    if (surfaceConfig->producer == nullptr) {
+        LOGE("Failed to create surface, producer is nullptr");
         return false;
     }
-    SurfaceError err = frame->producer_->RequestBuffer(frame->buffer_, frame->releaseFence_, frame->requestConfig_);
+    SurfaceError err = surfaceConfig->producer->RequestBuffer(frameConfig->buffer, frameConfig->releaseFence,
+        frameConfig->requestConfig);
     if (err != SURFACE_ERROR_OK) {
-        LOGE("RenderContextOhosRaster::RequestBuffer Failed, error is : %s", SurfaceErrorStr(err).c_str());
+        LOGE("Failed to create surface, error is : %{public}s", SurfaceErrorStr(err).c_str());
         return false;
     }
-    if (frame->buffer_ == nullptr) {
-        LOGE("Failed to create surface, frame_->producer is nullptr");
+    
+    if (frameConfig->buffer == nullptr) {
+        LOGE("Failed to create surface, producer is nullptr");
         return false;
     }
-    err = frame->buffer_->Map();
-    sptr<SyncFence> tempFence = new SyncFence(frame->releaseFence_);
+
+    err = frameConfig->buffer->Map();
+    if (err != SURFACE_ERROR_OK) {
+        LOGE("Failed to create surface, map failed, error is : %{public}s", SurfaceErrorStr(err).c_str());
+        return false;
+    }
+    sptr<SyncFence> tempFence = new SyncFence(frameConfig->releaseFence);
     int res = tempFence->Wait(3000);
     if (res < 0) {
         LOGE("Failed to create surface, this buffer is not available");
-        return false;
     }
     return true;
 }

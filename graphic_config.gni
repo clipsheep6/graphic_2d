@@ -20,8 +20,13 @@ declare_args() {
   graphic_standard_feature_wuji_enable = false
   graphic_standard_feature_enable_afbc = false
   graphic_standard_feature_freemem_enable = false
-  graphic_standard_feature_parallel_render_enable = true
+  graphic_standard_feature_parallel_render_enable = false
   graphic_standard_feature_enable_vulkan = false
+  if (defined(build_cross_platform_version) && build_cross_platform_version) {
+    use_new_render_context = false
+  } else {
+    use_new_render_context = true
+  }
 }
 
 gpu_defines = []
@@ -95,6 +100,8 @@ if (graphic_standard_feature_enable_afbc &&
 if (graphic_standard_feature_parallel_render_enable) {
   rs_enable_parallel_render = true
   gpu_defines += [ "RS_ENABLE_PARALLEL_RENDER" ]
+} else {
+  rs_enable_parallel_render = false
 }
 graphic_2d_ext_configs = {
 }

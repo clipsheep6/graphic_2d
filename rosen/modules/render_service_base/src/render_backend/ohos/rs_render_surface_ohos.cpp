@@ -37,11 +37,21 @@ RSRenderSurfaceOhos::RSRenderSurfaceOhos(const sptr<Surface>& producer,
 
 RSRenderSurfaceOhos::~RSRenderSurfaceOhos()
 {
+    std::shared_ptr<SurfaceConfig> surfaceConfig = frame_->surfaceConfig;
+    std::shared_ptr<EGLState> eglState = frame_->eglState;
+    if (surfaceConfig->nativeWindow != nullptr) {
+        DestoryNativeWindow(surfaceConfig->nativeWindow);
+        surfaceConfig->nativeWindow = nullptr;
+    }
+    if (renderContext_ != nullptr) {
+        renderContext_->DestroySurface(frame_);
+    }
     frame_ = nullptr;
     drawingContext_ = nullptr;
     renderContext_ = nullptr;
 }
-bool RSRenderSurfaceOhos::IsValid()
+
+bool RSRenderSurfaceOhos::IsValid() const
 {
     if (frame_ == nullptr) {
         LOGE("Failed to get queue size, frame_ is nullptr");
@@ -90,8 +100,7 @@ std::shared_ptr<RSRenderSurfaceFrame> RSRenderSurfaceOhos::RequestFrame(
         LOGE("Failed to request frame, create surface by renderContext_ failed");
         return nullptr;
     }
-
-    LOGD("Request frame successfully, width is %d, height is %d", width, height);
+    LOGD("Request frame successfully, width is %{public}d, height is %{public}d", width, height);
     return frame_;
 }
 
@@ -171,9 +180,12 @@ void RSRenderSurfaceOhos::ClearBuffer()
         LOGE("Failed to set clear buffer, renderContext_ is nullptr");
         return;
     }
-    DestoryNativeWindow(frame_->nativeWindow_);
+    std::shared_ptr<SurfaceConfig> surfaceConfig = frame_->surfaceConfig;
+    std::shared_ptr<EGLState> eglState = frame_->eglState;
+    DestoryNativeWindow(surfaceConfig->nativeWindow);
+    surfaceConfig->nativeWindow = nullptr;
     renderContext_->MakeCurrent();
-    renderContext_->DestroySurface();
+    renderContext_->DestroySurface(frame_);
     if (!IsValid()) {
         LOGE("Failed to clear buffer, render surface is invalid");
         return;
@@ -250,7 +262,8 @@ void RSRenderSurfaceOhos::SetReleaseFence(const int32_t& fence)
         LOGE("Failed to set release fence, frame_ is nullptr");
         return;
     }
-    frame_->releaseFence_ = fence;
+    std::shared_ptr<FrameConfig> frameConfig = frame_->frameConfig;
+    frameConfig->releaseFence = fence;
 }
 
 int32_t RSRenderSurfaceOhos::GetReleaseFence() const
@@ -268,8 +281,9 @@ void RSRenderSurfaceOhos::RenderFrame()
         LOGE("Failed to render frame, frame_ is nullptr");
         return;
     }
-    if (frame_->skSurface_ == nullptr) {
-        LOGE("Failed to render frame, frame_->skSurface is nullptr");
+    std::shared_ptr<FrameConfig> frameConfig = frame_->frameConfig;
+    if (frameConfig->skSurface == nullptr) {
+        LOGE("Failed to render frame, frameConfig skSurface is nullptr");
         return;
     }
     RS_TRACE_FUNC();

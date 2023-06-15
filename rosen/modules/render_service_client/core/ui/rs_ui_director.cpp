@@ -128,15 +128,24 @@ void RSUIDirector::GoBackground()
         // clean bufferQueue cache
         RSRenderThread::Instance().PostTask([surfaceNode]() {
             if (surfaceNode != nullptr) {
+#ifdef NEW_RENDER_CONTEXT
+                std::shared_ptr<RSRenderSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
+#else
                 std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
+#endif
                 rsSurface->ClearBuffer();
             }
         });
 #ifdef ACE_ENABLE_GL
         RSRenderThread::Instance().PostTask([this]() {
+            
+#if defined(NEW_RENDER_CONTEXT)
             auto renderContext = RSRenderThread::Instance().GetRenderContext();
             if (renderContext != nullptr) {
 #ifndef ROSEN_CROSS_PLATFORM
+                auto drawingContext = RSRenderThread::Instance().GetDrawingContext();
+                MemoryManager::ClearRedundantResources(drawingContext->GetDrawingContext());
+#else
                 renderContext->ClearRedundantResources();
 #endif
             }

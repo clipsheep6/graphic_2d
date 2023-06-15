@@ -61,7 +61,7 @@
           "hicollie_native",
           "bounds_checking_function",
           "multimedia_image_framework",
-          "cjson",
+          "cJSON",
           "ipc",
           "player_framework"
         ],

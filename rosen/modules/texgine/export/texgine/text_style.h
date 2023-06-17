@@ -67,6 +67,10 @@ struct TextShadow {
     uint32_t color = 0xffcccccc;
     uint32_t blurLeave = 0;
 
+    // Constructor
+    TextShadow() = default;
+    TextShadow(double offsetX, double offsetY, uint32_t color, uint32_t blurLeave);
+
     // Implements the equality operator.
     bool operator ==(TextShadow const& rhs) const;
 };

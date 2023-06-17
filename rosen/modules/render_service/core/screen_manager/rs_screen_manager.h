@@ -280,7 +280,9 @@ private:
     void OnHwcDeadEvent();
     void Reinit();
     void ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &output);
+    void AddScreenToHgm(std::shared_ptr<HdiOutput> &output);
     void ProcessScreenDisConnectedLocked(std::shared_ptr<HdiOutput> &output);
+    void RemoveScreenFromHgm(std::shared_ptr<HdiOutput> &output);
     void HandleDefaultScreenDisConnectedLocked();
     std::vector<ScreenHotPlugEvent> pendingHotPlugEvents_;
 

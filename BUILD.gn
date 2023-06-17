@@ -16,7 +16,10 @@ import("//foundation/graphic/graphic_2d/utils/wmlayout/wmlayout.gni")
 import("graphic_config.gni")
 
 group("default") {
-  public_deps = [ ":graphic.rc" ]
+  public_deps = [
+    ":graphic.rc",
+    "rosen/modules/hyper_graphic_manager:hgm_policy_config.xml",
+  ]
 
   if (graphic_standard_feature_bootanimation_enable) {
     public_deps += [ "frameworks/bootanimation:bootanimation" ]

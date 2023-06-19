@@ -43,8 +43,8 @@ private:
 	PFN_vkGetSwapchainImagesKHR fpGetSwapchainImagesKHR;
 	PFN_vkAcquireNextImageKHR fpAcquireNextImageKHR;
 	PFN_vkQueuePresentKHR fpQueuePresentKHR;
-	PFN_vkGetOHOSNativeBufferPropertiesOpenHarmony fpGetOHOSNativeBufferPropertiesOpenHarmony;
-	PFN_vkGetMemoryOHOSNativeBufferOpenHarmony fpGetMemoryOHOSNativeBufferOpenHarmony;
+	PFN_vkGetNativeBufferPropertiesOHOS fpGetNativeBufferPropertiesOHOS;
+	PFN_vkGetMemoryNativeBufferOHOS fpGetMemoryNativeBufferOHOS;
 
 public:
 	VkFormat colorFormat;

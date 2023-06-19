@@ -117,7 +117,7 @@ PFN_vkCmdEndQuery vkCmdEndQuery;
 PFN_vkCmdResetQueryPool vkCmdResetQueryPool;
 PFN_vkCmdCopyQueryPoolResults vkCmdCopyQueryPoolResults;
 
-PFN_vkCreateOHOSSurfaceOpenHarmony vkCreateOHOSSurfaceOpenHarmony;
+PFN_vkCreateSurfaceOHOS vkCreateSurfaceOHOS;
 PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR;
 PFN_vkCmdFillBuffer vkCmdFillBuffer;
 
@@ -284,7 +284,7 @@ namespace vks
 			vkCmdResetQueryPool = reinterpret_cast<PFN_vkCmdResetQueryPool>(vkGetInstanceProcAddr(instance, "vkCmdResetQueryPool"));
 			vkCmdCopyQueryPoolResults = reinterpret_cast<PFN_vkCmdCopyQueryPoolResults>(vkGetInstanceProcAddr(instance, "vkCmdCopyQueryPoolResults"));
 
-			vkCreateOHOSSurfaceOpenHarmony = reinterpret_cast<PFN_vkCreateOHOSSurfaceOpenHarmony>(vkGetInstanceProcAddr(instance, "vkCreateOHOSSurfaceOpenHarmony"));
+			vkCreateSurfaceOHOS = reinterpret_cast<PFN_vkCreateSurfaceOHOS>(vkGetInstanceProcAddr(instance, "vkCreateSurfaceOHOS"));
 			vkDestroySurfaceKHR = reinterpret_cast<PFN_vkDestroySurfaceKHR>(vkGetInstanceProcAddr(instance, "vkDestroySurfaceKHR"));
 
 			vkCmdFillBuffer = reinterpret_cast<PFN_vkCmdFillBuffer>(vkGetInstanceProcAddr(instance, "vkCmdFillBuffer"));

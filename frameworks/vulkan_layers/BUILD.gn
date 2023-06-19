@@ -97,7 +97,7 @@ ohos_executable("triangle") {
   ]
 
   defines = [
-    "VK_USE_PLATFORM_OHOS_OPENHARMONY",
+    "VK_USE_PLATFORM_OHOS",
     "VK_NO_PROTOTYPES"
     ]
 

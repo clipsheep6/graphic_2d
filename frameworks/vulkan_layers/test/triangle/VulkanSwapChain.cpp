@@ -18,10 +18,10 @@ void VulkanSwapChain::initSurface(NativeWindow* window)
 
 	// Create the os-specific surface
 
-	VkOHOSSurfaceCreateInfoOpenHarmony surfaceCreateInfo = {};
-	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_OHOS_SURFACE_CREATE_INFO_OPENHARMONY;
+	VkSurfaceCreateInfoOHOS surfaceCreateInfo = {};
+	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_SURFACE_CREATE_INFO_OHOS;
 	surfaceCreateInfo.window = window;
-	err = vkCreateOHOSSurfaceOpenHarmony(instance, &surfaceCreateInfo, NULL, &surface);
+	err = vkCreateSurfaceOHOS(instance, &surfaceCreateInfo, NULL, &surface);
 
 	if (err != VK_SUCCESS) {
 		std::cout << "Could not create surface!" << std::endl;
@@ -158,10 +158,10 @@ void VulkanSwapChain::connect(VkInstance instance, VkPhysicalDevice physicalDevi
 	fpGetSwapchainImagesKHR = reinterpret_cast<PFN_vkGetSwapchainImagesKHR>(vkGetDeviceProcAddr(device, "vkGetSwapchainImagesKHR"));
 	fpAcquireNextImageKHR = reinterpret_cast<PFN_vkAcquireNextImageKHR>(vkGetDeviceProcAddr(device, "vkAcquireNextImageKHR"));
 	fpQueuePresentKHR = reinterpret_cast<PFN_vkQueuePresentKHR>(vkGetDeviceProcAddr(device, "vkQueuePresentKHR"));
-	fpGetMemoryOHOSNativeBufferOpenHarmony = reinterpret_cast<PFN_vkGetMemoryOHOSNativeBufferOpenHarmony>(vkGetDeviceProcAddr(device, "vkGetMemoryOHOSNativeBufferOpenHarmony"));
-	std::cout << "PFN_vkGetMemoryOHOSNativeBufferOpenHarmony is " << (fpGetMemoryOHOSNativeBufferOpenHarmony ? "not null" : "null") << std::endl;
-	fpGetOHOSNativeBufferPropertiesOpenHarmony = reinterpret_cast<PFN_vkGetOHOSNativeBufferPropertiesOpenHarmony>(vkGetDeviceProcAddr(device, "vkGetOHOSNativeBufferPropertiesOpenHarmony"));
-	std::cout << "PFN_vkGetOHOSNativeBufferPropertiesOpenHarmony is " << (fpGetOHOSNativeBufferPropertiesOpenHarmony ? "not null" : "null") << std::endl;
+	fpGetMemoryNativeBufferOHOS = reinterpret_cast<PFN_vkGetMemoryNativeBufferOHOS>(vkGetDeviceProcAddr(device, "vkGetMemoryNativeBufferOHOS"));
+	std::cout << "PFN_vkGetMemoryNativeBufferOHOS is " << (fpGetMemoryNativeBufferOHOS ? "not null" : "null") << std::endl;
+	fpGetNativeBufferPropertiesOHOS = reinterpret_cast<PFN_vkGetNativeBufferPropertiesOHOS>(vkGetDeviceProcAddr(device, "vkGetNativeBufferPropertiesOHOS"));
+	std::cout << "PFN_vkGetNativeBufferPropertiesOHOS is " << (fpGetNativeBufferPropertiesOHOS ? "not null" : "null") << std::endl;
 }
 
 /** 

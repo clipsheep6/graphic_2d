@@ -118,7 +118,7 @@ extern PFN_vkCmdEndQuery vkCmdEndQuery;
 extern PFN_vkCmdResetQueryPool vkCmdResetQueryPool;
 extern PFN_vkCmdCopyQueryPoolResults vkCmdCopyQueryPoolResults;
 
-extern PFN_vkCreateOHOSSurfaceOpenHarmony vkCreateOHOSSurfaceOpenHarmony;
+extern PFN_vkCreateSurfaceOHOS vkCreateSurfaceOHOS;
 extern PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR;
 extern PFN_vkCmdFillBuffer vkCmdFillBuffer;
 

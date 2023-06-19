@@ -20,7 +20,7 @@ VkResult VulkanExampleBase::createInstance()
 
 	// Enable surface extensions depending on os
 
-	instanceExtensions.push_back(VK_OPENHARMONY_OHOS_SURFACE_EXTENSION_NAME);
+	instanceExtensions.push_back(VK_OHOS_SURFACE_EXTENSION_NAME);
 
 
 	// Get extensions supported by the instance and store for later use

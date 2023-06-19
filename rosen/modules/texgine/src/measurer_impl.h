@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#ifndef ROSEN_MODULES_TEXGINE_SRC_MEASURER_IMPL_H
+#define ROSEN_MODULES_TEXGINE_SRC_MEASURER_IMPL_H
 #include <iomanip>
 #include <list>
 #include <queue>

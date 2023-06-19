@@ -71,7 +71,7 @@ int VariantFontStyleSet::Count()
     return 0;
 }
 
-void VariantFontStyleSet::GetStyle(int index, std::shared_ptr<TexgineFontStyle> style,
+void VariantFontStyleSet::GetStyle(const int index, std::shared_ptr<TexgineFontStyle> style,
     std::shared_ptr<TexgineString> name)
 {
     CheckPointer();

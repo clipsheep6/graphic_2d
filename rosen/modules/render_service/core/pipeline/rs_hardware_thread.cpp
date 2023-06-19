@@ -15,6 +15,7 @@
 
 #include "pipeline/rs_hardware_thread.h"
 
+#include "hgm_core.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "pipeline/rs_main_thread.h"
@@ -131,6 +132,7 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
     RSTaskMessage::RSTask task = [this, output = output, layers = layers]() {
         RS_TRACE_NAME("RSHardwareThread::CommitAndReleaseLayers");
         RS_LOGD("RSHardwareThread::CommitAndReleaseLayers start");
+        PerformSetActiveMode();
         output->SetLayerInfo(layers);
         hdiBackend_->Repaint(output);
         auto layerMap = output->GetLayers();
@@ -138,6 +140,37 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         RS_LOGD("RSHardwareThread::CommitAndReleaseLayers end");
     };
     PostTask(task);
+}
+
+void RSHardwareThread::PerformSetActiveMode()
+{
+    auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
+    auto screenManager = CreateOrGetScreenManager();
+    if (screenManager == nullptr) {
+        RS_LOGE("RSHardwareThread CreateOrGetScreenManager fail.");
+    }
+    std::unique_ptr<std::unordered_map<ScreenId, int32_t>> modeMap(hgmCore.GetModesToApply());
+    auto map = modeMap.get();
+    if (map == nullptr) {
+        return;
+    }
+
+    RS_TRACE_NAME("RSHardwareThread::PerformSetActiveMode setting active mode");
+    for (auto mapIter = map->begin(); mapIter != map->end(); ++mapIter) {
+        ScreenId id = mapIter->first;
+        int32_t modeId = mapIter->second;
+
+        auto supportedModes = screenManager->GetScreenSupportedModes(id);
+        for (auto mode : supportedModes) {
+            std::string temp = "RSHardwareThread check modes w: " + std::to_string(mode.GetScreenWidth()) +
+                ", h: " + std::to_string(mode.GetScreenHeight()) +
+                ", rate: " + std::to_string(mode.GetScreenRefreshRate()) +
+                ", id: " + std::to_string(mode.GetScreenModeId());
+            RS_LOGI(temp.c_str());
+        }
+
+        screenManager->SetScreenActiveMode(id, modeId);
+    }
 }
 
 void RSHardwareThread::OnPrepareComplete(sptr<Surface>& surface,

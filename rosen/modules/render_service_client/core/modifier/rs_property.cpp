@@ -17,6 +17,7 @@
 
 #include "command/rs_node_command.h"
 #include "modifier/rs_modifier.h"
+#include "modifier/rs_modifier_type.h"
 #include "sandbox_utils.h"
 
 namespace OHOS {
@@ -314,6 +315,11 @@ template<>
 RSRenderPropertyType RSAnimatableProperty<RRect>::GetPropertyType() const
 {
     return RSRenderPropertyType::PROPERTY_RRECT;
+}
+template<>
+RSRenderPropertyType RSAnimatableProperty<Particle>::GetPropertyType() const
+{
+    return RSRenderPropertyType::PROPERTY_PARTICLE;
 }
 } // namespace Rosen
 } // namespace OHOS

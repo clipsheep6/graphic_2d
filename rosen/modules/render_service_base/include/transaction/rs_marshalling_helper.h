@@ -72,6 +72,7 @@ class RSMask;
 class RSPath;
 class RSLinearGradientBlurPara;
 class RSRenderCurveAnimation;
+class RSRenderParticleAnimation;
 class RSRenderInterpolatingSpringAnimation;
 class RSRenderKeyframeAnimation;
 class RSRenderPathAnimation;
@@ -218,6 +219,7 @@ public:
     static bool Unmarshalling(Parcel& parcel, std::shared_ptr<TEMPLATE>& val);
 
     DECLARE_ANIMATION_OVERLOAD(RSRenderCurveAnimation)
+    DECLARE_ANIMATION_OVERLOAD(RSRenderParticleAnimation)
     DECLARE_ANIMATION_OVERLOAD(RSRenderInterpolatingSpringAnimation)
     DECLARE_ANIMATION_OVERLOAD(RSRenderKeyframeAnimation)
     DECLARE_ANIMATION_OVERLOAD(RSRenderSpringAnimation)

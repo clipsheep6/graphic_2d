@@ -24,6 +24,7 @@
 #include "command/rs_animation_command.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
+#include "common/rs_particle.h"
 #include "modifier/rs_modifier_extractor.h"
 #include "modifier/rs_modifier_type.h"
 #include "modifier/rs_showing_properties_freezer.h"
@@ -214,6 +215,7 @@ public:
 
     void SetEnvForegroundColor(uint32_t colorValue);
     void SetEnvForegroundColorStrategy(ForegroundColorStrategyType colorType);
+    void SetParticleParams(ParticleSystem particle);
     void SetForegroundColor(uint32_t colorValue);
     void SetBackgroundColor(uint32_t colorValue);
     void SetBackgroundShader(const std::shared_ptr<RSShader>& shader);
@@ -390,6 +392,7 @@ private:
     friend class RSExtendedModifier;
     friend class RSGeometryTransModifier;
     friend class RSImplicitAnimator;
+    friend class RSParticleAnimation;
     friend class RSInterpolatingSpringAnimation;
     friend class RSKeyframeAnimation;
     friend class RSModifier;

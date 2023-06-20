@@ -24,6 +24,7 @@
 #include "animation/rs_transition_effect.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
+#include "common/rs_particle.h"
 #include "modifier/rs_modifier_extractor.h"
 #include "modifier/rs_modifier_type.h"
 #include "pipeline/rs_recording_canvas.h"
@@ -155,6 +156,7 @@ public:
 
     void SetEnvForegroundColor(uint32_t colorValue);
     void SetEnvForegroundColorStrategy(ForegroundColorStrategyType colorType);
+    void SetParticleParams(ParticleSystem particle);
     void SetForegroundColor(uint32_t colorValue);
     void SetBackgroundColor(uint32_t colorValue);
     void SetBackgroundShader(const std::shared_ptr<RSShader>& shader);
@@ -306,6 +308,7 @@ private:
 
     friend class RSAnimation;
     friend class RSCurveAnimation;
+    friend class RSParticleAnimation;
     friend class RSInterpolatingSpringAnimation;
     friend class RSKeyframeAnimation;
     friend class RSPropertyAnimation;

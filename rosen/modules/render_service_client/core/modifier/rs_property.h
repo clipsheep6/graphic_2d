@@ -25,6 +25,7 @@
 #include "common/rs_color.h"
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
+#include "common/rs_particle.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
 #include "modifier/rs_animatable_arithmetic.h"
@@ -186,6 +187,7 @@ private:
     friend bool operator!=(
         const std::shared_ptr<const RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b);
     friend class RSCurveAnimation;
+    friend class RSParticleAnimation;
     friend class RSCustomTransitionEffect;
     friend class RSExtendedModifier;
     friend class RSGeometryTransModifier;
@@ -295,7 +297,7 @@ class RSAnimatableProperty : public RSProperty<T> {
                   std::is_same_v<Matrix3f, T> || std::is_same_v<Vector2f, T> || std::is_same_v<Vector4f, T> ||
                   std::is_same_v<Quaternion, T> || std::is_same_v<std::shared_ptr<RSFilter>, T> ||
                   std::is_same_v<Vector4<Color>, T> || std::is_base_of_v<RSAnimatableArithmetic<T>, T> ||
-                  supports_animatable_arithmetic<T>::value || std::is_same_v<RRect, T>);
+                  supports_animatable_arithmetic<T>::value || std::is_same_v<ParticleSystem, T> || std::is_same_v<RRect, T>);
 
 public:
     RSAnimatableProperty() : RSProperty<T>() {}
@@ -328,6 +330,9 @@ public:
                 implicitAnimator->CreateImplicitAnimation(
                     node, RSProperty<T>::shared_from_this(), startValue, endValue);
                 implicitAnimator->EndImplicitPathAnimation();
+            } else if (isParticleAnimation_) {
+                //执行粒子动画，将particleSystem 传递到particleAnimation做仿真计算
+
             } else {
                 implicitAnimator->CreateImplicitAnimation(
                     node, RSProperty<T>::shared_from_this(), startValue, endValue);
@@ -461,6 +466,7 @@ protected:
     int runningPathNum_ { 0 };
     std::shared_ptr<RSMotionPathOption> motionPathOption_ {};
     std::function<void(T)> propertyChangeListener_;
+    bool isParticleAnimation_ = false;
 
 private:
     RSRenderPropertyType GetPropertyType() const override

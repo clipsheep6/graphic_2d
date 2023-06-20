@@ -75,7 +75,7 @@ public:
 
     // Foreground Color filter
     static void DrawColorFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas);
-
+    static void DrawParticle(const RSProperties& properties, RSPaintFilterCanvas& canvas);
 private:
     inline static int g_blurCnt = 0;
     static void DrawColorfulShadowInner(const RSProperties& properties, RSPaintFilterCanvas& canvas, SkPath& path);

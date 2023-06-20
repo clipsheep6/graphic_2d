@@ -1812,5 +1812,12 @@ void RSPropertiesPainter::DrawColorFilter(const RSProperties& properties, RSPain
     SkCanvas::SaveLayerRec slr(nullptr, &paint, SkCanvas::kInitWithPrevious_SaveLayerFlag);
     canvas.saveLayer(slr);
 }
+
+void RSPropertiesPainter::DrawParticle(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+{
+    // 画粒子
+    
+}
+
 } // namespace Rosen
 } // namespace OHOS

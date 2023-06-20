@@ -687,6 +687,13 @@ void RSNode::SetEnvForegroundColorStrategy(ForegroundColorStrategyType strategyT
         RSProperty<ForegroundColorStrategyType>>(RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY, strategyType);
 }
 
+// Set ParticleParams 
+void RSNode::SetParticleParams(ParticleSystem particle)
+{
+    SetProperty<RSParticleModifier, RSProperty<ParticleSystem>>(RSModifierType::PARTICLE, particle);
+    isParticleAnimation_ = true;
+}
+
 // foreground
 void RSNode::SetForegroundColor(uint32_t colorValue)
 {

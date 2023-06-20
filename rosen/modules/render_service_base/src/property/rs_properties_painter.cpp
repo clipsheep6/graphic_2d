@@ -2083,5 +2083,12 @@ sk_sp<SkShader> RSPropertiesPainter::MakeLightUpEffectShader(float lightUpDeg, s
 }
 #endif
 #endif
+
+void RSPropertiesPainter::DrawParticle(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+{
+    // 画粒子
+    
+}
+
 } // namespace Rosen
 } // namespace OHOS

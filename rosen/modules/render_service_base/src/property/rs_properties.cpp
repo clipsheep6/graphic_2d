@@ -572,6 +572,18 @@ float RSProperties::GetTranslateZ() const
     return boundsGeo_->GetTranslateZ();
 }
 
+
+void RSProperties::SetParticle(Particle particle)
+{
+    particle_ = particle;
+    SetDirty();
+}
+
+float RSProperties::GetParticle() const
+{
+    return particle_;
+}
+
 void RSProperties::SetAlpha(float alpha)
 {
     alpha_ = alpha;

@@ -132,6 +132,7 @@ private:
     friend class RSRenderSpringAnimation;
     friend class RSRenderInterpolatingSpringAnimation;
     friend class RSRenderCurveAnimation;
+    friend class RSRenderParticleAnimation;
     friend class RSRenderKeyframeAnimation;
     template<typename T>
     friend class RSSpringModel;

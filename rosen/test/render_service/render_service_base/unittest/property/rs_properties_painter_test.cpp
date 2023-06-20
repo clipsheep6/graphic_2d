@@ -337,6 +337,37 @@ HWTEST_F(RSPropertiesPainterTest, DrawFilter002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: DrawLinearGradientBlurFilter001
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+
+HWTEST_F(RSPropertiesPainterTest, DrawLinearGradientBlurFilter001, TestSize.Level1)
+{
+    auto skSurface = SkSurface::MakeRasterN32Premul(100, 100);
+    auto skCanvas = skSurface->getCanvas();
+    RSPaintFilterCanvas canvas(skCanvas);
+    RSProperties properties;
+    float blurRadius = 20.0f;
+    std::vector<std::pair<float, float>> fractionStops;
+    for (size_t i = 0; i < 2; i++) { // 2 represents fractionStops size
+        std::pair<float, float> fractionStop;
+        fractionStop.first = i;
+        fractionStop.second = i;
+        fractionStops.emplace_back(fractionStop);
+    }
+    GradientDirection direction = GradientDirection::BOTTOM;
+     std::shared_ptr<RSLinearGradientBlurPara> rsLinearGradientBlurPara(
+        std::make_shared<RSLinearGradientBlurPara>(blurRadius, fractionStops, direction));
+    properties.SetLinearGradientBlurPara(rsLinearGradientBlurPara);
+    auto skRectPtr = std::make_unique<SkRect>();
+    skRectPtr->setXYWH(0, 0, 100.0f, 100.0f);
+    RSPropertiesPainter::DrawLinearGradientBlurFilter(properties, canvas, skRectPtr);
+    EXPECT_FALSE(canvas.GetSurface() == nullptr);
+}
+
+/**
  * @tc.name: DrawBackground001
  * @tc.desc: test
  * @tc.type:FUNC

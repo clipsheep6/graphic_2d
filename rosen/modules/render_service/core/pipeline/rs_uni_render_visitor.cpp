@@ -1174,9 +1174,9 @@ void RSUniRenderVisitor::DrawDirtyRegionForDFX(std::vector<RectI> dirtyRects)
     const float fillAlpha = 0.2;
     for (const auto& subRect : dirtyRects) {
 #ifndef USE_ROSEN_DRAWING
-        DrawDirtyRectForDFX(subRect, SK_ColorBLUE, SkPaint::kStroke_Style, fillAlpha);
+        DrawDirtyRectForDFX(subRect, SK_ColorGREEN, SkPaint::kFill_Style, fillAlpha);
 #else
-        DrawDirtyRectForDFX(subRect, Drawing::Color::COLOR_BLUE, RSPaintStyle::STROKE, fillAlpha);
+        DrawDirtyRectForDFX(subRect, Drawing::Color::COLOR_GREEN, RSPaintStyle::FILL, fillAlpha);
 #endif
     }
 }
@@ -1906,6 +1906,10 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 DrawAllSurfaceOpaqueRegionForDFX(node);
             }
         }
+
+        if (isDrawingCacheEnabled_) {
+            DrawDirtyRegionForDFX(cacheRenderNodeMapRects_);
+        }
 #ifdef RS_ENABLE_RECORDING
         if (recordingEnabled) {
             swap(canvas_, recordingCanvas);
@@ -2575,6 +2579,7 @@ void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
             node.ProcessAnimatePropertyBeforeChildren(*canvas_);
             node.DrawCacheSurface(*canvas_);
             node.ProcessAnimatePropertyAfterChildren(*canvas_);
+            cacheRenderNodeMapRects_.push_back(node.GetOldDirtyInSurface());
             break;
         }
         case CacheType::ANIMATE_PROPERTY: {

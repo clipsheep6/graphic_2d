@@ -14,6 +14,7 @@
  */
 
 #include "sandbox_utils.h"
+#include <cerrno>
 #include <cstdlib>
 #include <cstring>
 
@@ -46,6 +47,55 @@ static int FindAndConvertPid(char *buf)
     }
     return atoi(pidBuf);
 }
+
+class RealPidGetter {
+    pid_t pid;
+    int error;
+
+public:
+    RealPidGetter()
+    {
+        bool found = false;
+        const char *path = "/proc/self/status";
+        char buf[STATUS_LINE_SIZE] = {0};
+        FILE *fp = fopen(path, "r");
+        if (fp == nullptr) {
+            pid = -1;
+            error = errno;
+            return;
+        }
+
+        while (!feof(fp)) {
+            if (fgets(buf, STATUS_LINE_SIZE, fp) == nullptr) {
+                pid = -1;
+                error = errno;
+                fclose(fp);
+                return;
+            }
+            if (strncmp(buf, "Tgid:", PID_STR_SIZE) == 0) {
+                found = true;
+                break;
+            }
+        }
+        (void)fclose(fp);
+
+        if (found) {
+            pid = static_cast<pid_t>(FindAndConvertPid(buf));
+            error = 0;
+        } else {
+            pid = -1;
+            error = EINVAL;
+        }
+    }
+
+    pid_t getpid()
+    {
+        if (pid < 0) {
+            errno = error;
+        }
+        return pid;
+    }
+};
 #endif
 
 pid_t GetRealPid(void)
@@ -55,25 +105,8 @@ pid_t GetRealPid(void)
 #elif defined(OHOS_LITE) || defined(__APPLE__) || defined(__gnu_linux__)
     return getpid();
 #else
-    const char *path = "/proc/self/status";
-    char buf[STATUS_LINE_SIZE] = {0};
-    FILE *fp = fopen(path, "r");
-    if (fp == nullptr) {
-        return -1;
-    }
-
-    while (!feof(fp)) {
-        if (fgets(buf, STATUS_LINE_SIZE, fp) == nullptr) {
-            fclose(fp);
-            return -1;
-        }
-        if (strncmp(buf, "Tgid:", PID_STR_SIZE) == 0) {
-            break;
-        }
-    }
-    (void)fclose(fp);
-
-    return static_cast<pid_t>(FindAndConvertPid(buf));
+    static RealPidGetter getter;
+    return getter.getpid();
 #endif
 }
 } // namespace OHOS

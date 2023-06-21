@@ -42,7 +42,7 @@ public:
         NONE = 0,
         BLUR,
         MATERIAL,
-        LIGHTUPEFFECT,
+        LIGHT_UP_EFFECT,
     };
     FilterType GetFilterType() const
     {
@@ -64,8 +64,14 @@ public:
         return true;
     }
 
+    uint32_t Hash() const
+    {
+        return hash_;
+    }
+
 protected:
     FilterType type_;
+    uint32_t hash_ = 0;
     RSFilter();
     virtual std::shared_ptr<RSFilter> Add(const std::shared_ptr<RSFilter>& rhs) { return nullptr; }
     virtual std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs) { return nullptr; }

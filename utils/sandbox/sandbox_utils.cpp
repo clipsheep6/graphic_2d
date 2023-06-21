@@ -23,7 +23,7 @@
 
 namespace OHOS {
 #if !defined(OHOS_LITE) && !defined(_WIN32) && !defined(__APPLE__) && !defined(__gnu_linux__)
-const int PID_STR_SIZE = 4;
+const int PID_STR_SIZE = 5;
 const int STATUS_LINE_SIZE = 1024;
 
 static int FindAndConvertPid(char *buf)
@@ -67,7 +67,7 @@ pid_t GetRealPid(void)
             fclose(fp);
             return -1;
         }
-        if (strncmp(buf, "Pid:", PID_STR_SIZE) == 0) {
+        if (strncmp(buf, "Tgid:", PID_STR_SIZE) == 0) {
             break;
         }
     }

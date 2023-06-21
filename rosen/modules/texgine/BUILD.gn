@@ -24,11 +24,7 @@ config("libtexgine_config") {
     "-Wall",
     "-Werror",
     "-g3",
-  ]
-
-  defines = [
-    "LOGGER_ENABLE_SCOPE",
-    "TEXGINE_ENABLE_DEBUGLOG",
+    "-std=c++17",
   ]
 
   include_dirs = [
@@ -106,16 +102,28 @@ ohos_shared_library("libtexgine") {
     }
 
     public_deps = [
-      "$graphic_2d_root/rosen/build/flutter/icu:rosen_libicu_$platform",
-      "$hilog_root/interfaces/native/innerkits:libhilog",
       "texgine_drawing:libtexgine_drawing",
       "//third_party/jsoncpp:jsoncpp",
     ]
 
-    external_deps = [
-      "c_utils:utils",
-      "hitrace_native:hitrace_meter",
-    ]
+    if (platform == "ohos") {
+      defines = [
+        "BUILD_NON_SDK_VER",
+        "LOGGER_ENABLE_SCOPE",
+        "TEXGINE_ENABLE_DEBUGLOG",
+      ]
+      external_deps = [
+        "c_utils:utils",
+        "hitrace_native:hitrace_meter",
+      ]
+      public_deps += [
+        "$graphic_2d_root/rosen/build/flutter/icu:rosen_libicu_$platform",
+        "$hilog_root/interfaces/native/innerkits:libhilog",
+      ]
+    } else {
+      sources -= [ "src/utils/trace_ohos.cpp" ]
+      public_deps += [ "//third_party/skia/third_party/icu" ]
+    }
   }
 
   part_name = "graphic_standard"

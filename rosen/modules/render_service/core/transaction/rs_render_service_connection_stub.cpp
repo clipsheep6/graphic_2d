@@ -654,6 +654,40 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             ReportJankStats();
             break;
         }
+        case EXECUTE_SYNCHRONOUS_TASK: {
+            ROSEN_LOGE("wly enter EXECUTE_SYNCHRONOUS_TASK");
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            auto type = data.ReadInt16();
+            auto subType = data.ReadInt16();
+            if (type != RS_NODE_SYNCHRONOUS_READ_PROPERTY) {
+                ROSEN_LOGE("wly type is not RS_NODE_SYNCHRONOUS_READ_PROPERTY");
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            auto func = RSCommandFactory::Instance().GetUnmarshallingFunc(type, subType);
+            if (func == nullptr) {
+                ROSEN_LOGE("wly func is nullptr");
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            auto command = static_cast<RSSyncTask*>((*func)(data));
+            if (command == nullptr) {
+                ROSEN_LOGE("wly command is nullptr");
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            std::shared_ptr<RSSyncTask> task(command);
+            ExecuteSynchronousTask(task);
+            if (!task->Marshalling(reply)) {
+                ROSEN_LOGE("wly marshalling reply failed");
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+        }
         default: {
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
         }

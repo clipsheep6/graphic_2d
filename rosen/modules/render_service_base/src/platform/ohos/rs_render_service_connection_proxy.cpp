@@ -70,6 +70,38 @@ void RSRenderServiceConnectionProxy::CommitTransaction(std::unique_ptr<RSTransac
     }
 }
 
+
+void RSRenderServiceConnectionProxy::ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task)
+{
+    ROSEN_LOGE("wly enter RSRenderServiceConnectionProxy::ExecuteSynchronousTask");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(RSRenderServiceConnectionProxy::GetDescriptor())) {
+        return;
+    }
+
+    if (!task->Marshalling(data)) {
+        ROSEN_LOGE("wly RSRenderServiceConnectionProxy::ExecuteSynchronousTask, task::Marshalling is failed");
+        return;
+    }
+
+    option.SetFlags(MessageOption::TF_SYNC);
+    int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::EXECUTE_SYNCHRONOUS_TASK, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("wly RSRenderServiceConnectionProxy::ExecuteSynchronousTask, error is error");
+        return;
+    }
+
+    if (task->CheckHeader(reply)) {
+        ROSEN_LOGE("wly RSRenderServiceConnectionProxy::ExecuteSynchronousTask, next is task::readfromparcel");
+        task->ReadFromParcel(reply);
+    } else {
+        ROSEN_LOGE("wly RSRenderServiceConnectionProxy::ExecuteSynchronousTask, task::CheckHeader is failed");
+    }
+}
+
 bool RSRenderServiceConnectionProxy::FillParcelWithTransactionData(
     std::unique_ptr<RSTransactionData>& transactionData, std::shared_ptr<MessageParcel>& data)
 {

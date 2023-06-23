@@ -56,48 +56,6 @@ void Init(std::shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
     rsUiDirector->SetRoot(rootNode->GetId());
 }
 
-class NodeModifier : public RSNodeModifier {
-public:
-    NodeModifier() = default;
-    virtual ~NodeModifier() = default;
-
-    void Modify(RSNode& target) const override
-    {
-        target.SetTranslate(translate_->Get());
-    }
-
-    void SetTranslate(Vector2f translate)
-    {
-        if (translate_ == nullptr) {
-            translate_ = std::make_shared<RSAnimatableProperty<Vector2f>>(translate);
-            AttachProperty(translate_);
-        } else {
-            translate_->Set(translate);
-        }
-    }
-
-    Vector2f GetTranslate() const
-    {
-        return currentTranslateValue_;
-    }
-
-    bool SetTranslateCallBack()
-    {
-        if (!translate_) {
-            return false;
-        }
-
-        // add callback for each frame
-        translate_->SetUpdateCallback([&](Vector2f vec) { currentTranslateValue_ = vec; });
-        return true;
-    }
-
-    Vector2f currentTranslateValue_ = Vector2f(0.0f, 0.0f);
-
-private:
-    std::shared_ptr<RSAnimatableProperty<Vector2f>> translate_;
-};
-
 int main()
 {
     int cnt = 0;
@@ -159,18 +117,7 @@ int main()
 
     std::cout << "rs app demo stage " << cnt++ << std::endl;
 
-    auto nodeModifier = std::make_shared<NodeModifier>();
-    nodes[0]->AddModifier(nodeModifier);
-
-    // init property
-    nodeModifier->SetTranslate(handPoint[pointsNum - 1]);
-
-    // set callback for each frame
-    if (nodeModifier->SetTranslateCallBack()) {
-        std::cout << "set translate callback successfully" << std::endl;
-    } else {
-        std::cout << "set translate callback failed" << std::endl;
-    }
+    nodes[0]->SetTranslate(handPoint[pointsNum - 1]);
 
     RSAnimationTimingProtocol protocol;
     // duration is not effective when the curve is interpolatingSpring
@@ -184,45 +131,13 @@ int main()
         [&]() {
             std::cout << "the end tranlate of sliding animation is " << finalTrans.data_[0] << ", "
                       << finalTrans.data_[1] << std::endl;
-            nodeModifier->SetTranslate(finalTrans);
+            nodes[0]->SetTranslate(finalTrans);
         },
         []() { std::cout << "sliding animation finish callback" << std::endl; });
 
-    int64_t startNum = 80825861106;
-    int64_t interruptNum = 80825861106 + 10000000 * 10;
-
-    bool hasRunningAnimation = true;
-    bool stopSignal = true;
-
-    while (hasRunningAnimation) {
-        hasRunningAnimation = rsUiDirector->RunningCustomAnimation(startNum);
-        rsUiDirector->SendMessages();
-        std::cout << "the current translate is " << nodeModifier->GetTranslate().data_[0] << ", "
-                  << nodeModifier->GetTranslate().data_[1] << endl;
-
-        // simulate to stop animation by gesture
-        if ((startNum >= interruptNum) && stopSignal) {
-            std::cout << "stop sliding animation in current translate " << nodeModifier->GetTranslate().data_[0] << ", "
-                      << nodeModifier->GetTranslate().data_[1] << endl;
-
-            // set duration to 0
-            protocol.SetDuration(0);
-
-            // create interrupt animation
-            RSNode::Animate(
-                protocol, RSAnimationTimingCurve::EASE_IN_OUT,
-                [&]() { nodeModifier->SetTranslate(nodeModifier->GetTranslate()); },
-                [&]() {
-                    std::cout << "interrupt animation finish callback, the end translate is "
-                              << nodeModifier->GetTranslate().data_[0] << ", " << nodeModifier->GetTranslate().data_[1]
-                              << std::endl;
-                });
-
-            stopSignal = false;
-        }
-        startNum += 10000000;
-        usleep(10000);
-    }
+            auto [value, success] = nodes[0]->GetShowingProperties().GetTranslate();
+            std::cout << "success is " << success << "value is " << value.data_[0] << ", " << value.data_[1]
+                      << std::endl;
 
     // dump property via modifiers
     std::cout << "rs app demo stage " << cnt++ << std::endl;

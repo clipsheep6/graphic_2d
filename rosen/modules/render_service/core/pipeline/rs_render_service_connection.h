@@ -53,7 +53,7 @@ private:
 
     // IPC RSIRenderServiceConnection Interfaces
     void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) override;
-
+    void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) override;
     MemoryGraphic GetMemoryGraphic(int pid) override;
     std::vector<MemoryGraphic> GetMemoryGraphics() override;
     bool GetUniRenderEnabled() override;

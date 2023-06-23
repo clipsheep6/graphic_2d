@@ -125,7 +125,7 @@ bool RSModifierExtractor::GetAlphaOffscreen() const
 
 Vector4f RSModifierExtractor::GetCornerRadius() const
 {
-    GET_PROPERTY_FROM_MODIFIERS(Vector4f, CORNER_RADIUS, 0.f, =);
+    GET_PROPERTY_FROM_MODIFIERS(Vector4f, CORNER_RADIUS, Vector4f(), =);
 }
 
 Color RSModifierExtractor::GetForegroundColor() const

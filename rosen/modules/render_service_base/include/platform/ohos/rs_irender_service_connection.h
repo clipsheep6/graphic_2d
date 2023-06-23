@@ -21,6 +21,7 @@
 #include <surface.h>
 
 #include "command/rs_command.h"
+#include "command/rs_node_showing_command.h"
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/iapplication_agent.h"
 #include "ipc_callbacks/screen_change_callback.h"
@@ -88,9 +89,11 @@ public:
         GET_MEMORY_GRAPHIC,
         GET_MEMORY_GRAPHICS,
         REPORT_JANK_STATS,
+        EXECUTE_SYNCHRONOUS_TASK,
     };
 
     virtual void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) = 0;
+    virtual void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) = 0;
 
     virtual bool GetUniRenderEnabled() = 0;
 

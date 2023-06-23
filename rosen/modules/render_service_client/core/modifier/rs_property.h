@@ -22,6 +22,7 @@
 #include "animation/rs_implicit_animator.h"
 #include "animation/rs_implicit_animator_map.h"
 #include "animation/rs_motion_path_option.h"
+#include "command/rs_node_showing_command.h"
 #include "common/rs_color.h"
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
@@ -64,7 +65,7 @@ constexpr float FLOAT_NEAR_ZERO_COARSE_THRESHOLD = 0.5f;
 constexpr float FLOAT_NEAR_ZERO_MEDIUM_THRESHOLD = 1.0f / 256.0f;
 constexpr float FLOAT_NEAR_ZERO_FINE_THRESHOLD = 1.0f / 3072.0f;
 constexpr float INT16T_NEAR_ZERO_THRESHOLD = 1.0f;
-} //namespace
+} // namespace
 
 template<class...>
 struct make_void { using type = void; };
@@ -144,6 +145,11 @@ protected:
         return std::make_shared<RSRenderPropertyBase>(id_);
     }
 
+    virtual bool GetShowingValueAndCancelAnimation(bool isRenderServiceNode)
+    {
+        return false;
+    }
+
     PropertyId id_;
     RSModifierType type_ { RSModifierType::INVALID };
     std::weak_ptr<RSNode> target_;
@@ -204,6 +210,8 @@ private:
     friend class RSTransition;
     template<typename T1>
     friend class RSAnimatableProperty;
+    template<uint16_t commandType, uint16_t commandSubType>
+    friend class RSGetShowingValueAndCancelAnimationTask;
 };
 
 template<typename T>
@@ -244,8 +252,7 @@ public:
     }
 
 protected:
-    void UpdateToRender(const T& value, bool isDelta, bool forceUpdate = false) const
-    {}
+    void UpdateToRender(const T& value, bool isDelta, bool forceUpdate = false) const {}
 
     void SetValue(const std::shared_ptr<RSPropertyBase>& value) override
     {
@@ -358,6 +365,11 @@ public:
             return showingValue_;
         }
         return RSProperty<T>::stagingValue_;
+    }
+
+    bool GetShowingValueAndCancelAnimation(bool isRenderServiceNode) override
+    {
+        return false;
     }
 
     void SetUpdateCallback(const std::function<void(T)>& updateCallback)
@@ -577,6 +589,25 @@ template<>
 RSC_EXPORT RSRenderPropertyType RSAnimatableProperty<Vector4<Color>>::GetPropertyType() const;
 template<>
 RSC_EXPORT RSRenderPropertyType RSAnimatableProperty<RRect>::GetPropertyType() const;
+
+template<>
+RSC_EXPORT bool RSAnimatableProperty<float>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode);
+template<>
+RSC_EXPORT bool RSAnimatableProperty<Color>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode);
+template<>
+RSC_EXPORT bool RSAnimatableProperty<Matrix3f>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode);
+template<>
+RSC_EXPORT bool RSAnimatableProperty<Vector2f>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode);
+template<>
+RSC_EXPORT bool RSAnimatableProperty<Vector4f>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode);
+template<>
+RSC_EXPORT bool RSAnimatableProperty<Quaternion>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode);
+template<>
+RSC_EXPORT bool RSAnimatableProperty<std::shared_ptr<RSFilter>>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode);
+template<>
+RSC_EXPORT bool RSAnimatableProperty<Vector4<Color>>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode);
+template<>
+RSC_EXPORT bool RSAnimatableProperty<RRect>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode);
 } // namespace Rosen
 } // namespace OHOS
 

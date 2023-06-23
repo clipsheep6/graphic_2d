@@ -15,9 +15,10 @@
 
 #include "modifier/rs_property.h"
 
+#include "sandbox_utils.h"
+
 #include "command/rs_node_command.h"
 #include "modifier/rs_modifier.h"
-#include "sandbox_utils.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -39,8 +40,7 @@ PropertyId GeneratePropertyId()
 }
 } // namespace
 
-RSPropertyBase::RSPropertyBase() : id_(GeneratePropertyId())
-{}
+RSPropertyBase::RSPropertyBase() : id_(GeneratePropertyId()) {}
 
 float RSPropertyBase::GetZeroThresholdByModifierType() const
 {
@@ -122,8 +122,8 @@ void RSPropertyBase::UpdateExtendModifierForGeometry(const std::shared_ptr<RSNod
     }
 }
 
-std::shared_ptr<RSPropertyBase> operator+=(const std::shared_ptr<RSPropertyBase>& a,
-    const std::shared_ptr<const RSPropertyBase>& b)
+std::shared_ptr<RSPropertyBase> operator+=(
+    const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b)
 {
     if (a == nullptr) {
         return {};
@@ -132,8 +132,8 @@ std::shared_ptr<RSPropertyBase> operator+=(const std::shared_ptr<RSPropertyBase>
     return a->Add(b);
 }
 
-std::shared_ptr<RSPropertyBase> operator-=(const std::shared_ptr<RSPropertyBase>& a,
-    const std::shared_ptr<const RSPropertyBase>& b)
+std::shared_ptr<RSPropertyBase> operator-=(
+    const std::shared_ptr<RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b)
 {
     if (a == nullptr) {
         return {};
@@ -151,8 +151,8 @@ std::shared_ptr<RSPropertyBase> operator*=(const std::shared_ptr<RSPropertyBase>
     return value->Multiply(scale);
 }
 
-std::shared_ptr<RSPropertyBase> operator+(const std::shared_ptr<const RSPropertyBase>& a,
-    const std::shared_ptr<const RSPropertyBase>& b)
+std::shared_ptr<RSPropertyBase> operator+(
+    const std::shared_ptr<const RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b)
 {
     if (a == nullptr) {
         return {};
@@ -161,8 +161,8 @@ std::shared_ptr<RSPropertyBase> operator+(const std::shared_ptr<const RSProperty
     return a->Clone()->Add(b);
 }
 
-std::shared_ptr<RSPropertyBase> operator-(const std::shared_ptr<const RSPropertyBase>& a,
-    const std::shared_ptr<const RSPropertyBase>& b)
+std::shared_ptr<RSPropertyBase> operator-(
+    const std::shared_ptr<const RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b)
 {
     if (a == nullptr) {
         return {};
@@ -296,14 +296,12 @@ void RSProperty<Vector2f>::UpdateToRender(const Vector2f& value, bool isDelta, b
     UPDATE_TO_RENDER(RSUpdatePropertyVector2f, value, isDelta, forceUpdate);
 }
 template<>
-void RSProperty<Vector4<uint32_t>>::UpdateToRender(const Vector4<uint32_t>& value,
-    bool isDelta, bool forceUpdate) const
+void RSProperty<Vector4<uint32_t>>::UpdateToRender(const Vector4<uint32_t>& value, bool isDelta, bool forceUpdate) const
 {
     UPDATE_TO_RENDER(RSUpdatePropertyBorderStyle, value, isDelta, forceUpdate);
 }
 template<>
-void RSProperty<Vector4<Color>>::UpdateToRender(const Vector4<Color>& value,
-    bool isDelta, bool forceUpdate) const
+void RSProperty<Vector4<Color>>::UpdateToRender(const Vector4<Color>& value, bool isDelta, bool forceUpdate) const
 {
     UPDATE_TO_RENDER(RSUpdatePropertyVector4Color, value, isDelta, forceUpdate);
 }
@@ -380,5 +378,88 @@ RSRenderPropertyType RSAnimatableProperty<RRect>::GetPropertyType() const
 {
     return RSRenderPropertyType::PROPERTY_RRECT;
 }
+
+#define GET_SHOWING_VALUE_AND_CANCEL_ANIMATION(getPropertyTask, type, isRenderServiceNode)                             \
+    bool success = false;                                                                                              \
+    auto node = RSProperty<type>::target_.lock();                                                                      \
+    if (node == nullptr) {                                                                                             \
+        return success;                                                                                                \
+    }                                                                                                                  \
+    if (node->HasPropertyAnimation(RSProperty<type>::id_)) {                                                           \
+        if (!GetIsCustom()) {                                                                                          \
+            auto task = std::make_shared<getPropertyTask>(node->GetId(), GetRenderProperty());                         \
+            RSTransactionProxy::GetInstance()->ExecuteSynchronousTask(task, node->IsRenderServiceNode());              \
+            if (task->GetResult()) {                                                                                   \
+                ROSEN_LOGE("wly RSProperty::GetShowingValueAndCancelAnimation, id is %lld, task is success",           \
+                    RSProperty<type>::id_);                                                                            \
+                auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<type>>(task->GetProperty()); \
+                if (renderProperty) {                                                                                  \
+                    RSProperty<type>::stagingValue_ = renderProperty->Get();                                           \
+                    success = true;                                                                                    \
+                }                                                                                                      \
+            } else {                                                                                                   \
+                ROSEN_LOGE("wly RSProperty::GetShowingValueAndCancelAnimation, id is %lld, task is false",             \
+                    RSProperty<type>::id_);                                                                            \
+            }                                                                                                          \
+        }                                                                                                              \
+    }                                                                                                                  \
+    return success;
+
+template<>
+bool RSAnimatableProperty<float>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode)
+{
+    GET_SHOWING_VALUE_AND_CANCEL_ANIMATION(RSNodeGetShowingPropertyAndCancelAnimation, float, isRenderServiceNode)
+}
+template<>
+bool RSAnimatableProperty<Vector4f>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode)
+{
+    GET_SHOWING_VALUE_AND_CANCEL_ANIMATION(RSNodeGetShowingPropertyAndCancelAnimation, Vector4f, isRenderServiceNode)
+}
+template<>
+bool RSAnimatableProperty<Quaternion>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode)
+{
+    GET_SHOWING_VALUE_AND_CANCEL_ANIMATION(RSNodeGetShowingPropertyAndCancelAnimation, Quaternion, isRenderServiceNode)
+}
+template<>
+bool RSAnimatableProperty<Vector2f>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode)
+{
+    GET_SHOWING_VALUE_AND_CANCEL_ANIMATION(RSNodeGetShowingPropertyAndCancelAnimation, Vector2f, isRenderServiceNode)
+}
+template<>
+bool RSAnimatableProperty<Matrix3f>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode)
+{
+    GET_SHOWING_VALUE_AND_CANCEL_ANIMATION(RSNodeGetShowingPropertyAndCancelAnimation, Matrix3f, isRenderServiceNode)
+}
+template<>
+bool RSAnimatableProperty<Color>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode)
+{
+    GET_SHOWING_VALUE_AND_CANCEL_ANIMATION(RSNodeGetShowingPropertyAndCancelAnimation, Color, isRenderServiceNode)
+}
+template<>
+bool RSAnimatableProperty<std::shared_ptr<RSFilter>>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode)
+{
+    GET_SHOWING_VALUE_AND_CANCEL_ANIMATION(
+        RSNodeGetShowingPropertyAndCancelAnimation, std::shared_ptr<RSFilter>, isRenderServiceNode)
+}
+template<>
+bool RSAnimatableProperty<Vector4<Color>>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode)
+{
+    GET_SHOWING_VALUE_AND_CANCEL_ANIMATION(
+        RSNodeGetShowingPropertyAndCancelAnimation, Vector4<Color>, isRenderServiceNode)
+}
+template<>
+bool RSAnimatableProperty<RRect>::GetShowingValueAndCancelAnimation(bool isRenderServiceNode)
+{
+    GET_SHOWING_VALUE_AND_CANCEL_ANIMATION(RSNodeGetShowingPropertyAndCancelAnimation, RRect, isRenderServiceNode)
+}
+template class RSAnimatableProperty<float>;
+template class RSAnimatableProperty<Vector4f>;
+template class RSAnimatableProperty<Quaternion>;
+template class RSAnimatableProperty<Vector2f>;
+template class RSAnimatableProperty<Matrix3f>;
+template class RSAnimatableProperty<Color>;
+template class RSAnimatableProperty<std::shared_ptr<RSFilter>>;
+template class RSAnimatableProperty<Vector4<Color>>;
+template class RSAnimatableProperty<RRect>;
 } // namespace Rosen
 } // namespace OHOS

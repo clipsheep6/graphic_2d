@@ -108,7 +108,7 @@ void RSComposerAdapter::CommitLayers(const std::vector<LayerInfoPtr>& layers)
     }
 
     // set all layers' releaseFence.
-    const auto layersReleaseFence = hdiBackend_->GetLayersReleaseFence(output_);
+    const auto layersReleaseFence = output_->GetLayersReleaseFence();
     for (const auto& [layer, fence] : layersReleaseFence) {
         if (layer == nullptr) {
             continue;
@@ -838,6 +838,11 @@ void RSComposerAdapter::OnPrepareComplete(sptr<Surface>& surface, const PrepareC
     if (fallbackCb_ != nullptr) {
         fallbackCb_(surface, param.layers);
     }
+}
+
+void RSComposerAdapter::SetHdiBackendDevice(HdiDevice* device)
+{
+    hdiBackend_->SetHdiBackendDevice(device);
 }
 } // namespace Rosen
 } // namespace OHOS

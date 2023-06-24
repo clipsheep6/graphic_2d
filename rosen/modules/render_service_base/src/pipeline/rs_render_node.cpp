@@ -45,6 +45,10 @@ RSRenderNode::~RSRenderNode()
     if (fallbackAnimationOnDestroy_) {
         FallbackAnimationsToRoot();
     }
+    if (clearCacheSurfaceFunc_ && (cacheSurface_ || cacheCompletedSurface_)) {
+        clearCacheSurfaceFunc_(cacheSurface_, cacheCompletedSurface_, cacheSurfaceThreadIndex_);
+    }
+    ClearCacheSurface();
 }
 
 void RSRenderNode::FallbackAnimationsToRoot()
@@ -65,12 +69,13 @@ void RSRenderNode::FallbackAnimationsToRoot()
     }
     context->RegisterAnimatingRenderNode(target);
 
-    for (const auto& [animationId, animation] : animationManager_.animations_) {
+    for (auto& [unused, animation] : animationManager_.animations_) {
         animation->Detach();
         // avoid infinite loop for fallback animation
         animation->SetRepeatCount(1);
-        target->animationManager_.AddAnimation(animation);
+        target->animationManager_.AddAnimation(std::move(animation));
     }
+    animationManager_.animations_.clear();
 }
 
 std::pair<bool, bool> RSRenderNode::Animate(int64_t timestamp)
@@ -258,7 +263,7 @@ void RSRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas)
     }
     auto alpha = renderProperties_.GetAlpha();
     if (alpha < 1.f) {
-        if ((GetChildrenCount() == 0) || !(GetRenderProperties().GetAlphaOffscreen() || isForcedDrawInGroup())) {
+        if ((GetChildrenCount() == 0) || !(GetRenderProperties().GetAlphaOffscreen() || IsForcedDrawInGroup())) {
             canvas.MultiplyAlpha(alpha);
         } else {
 #ifndef USE_ROSEN_DRAWING
@@ -385,6 +390,30 @@ void RSRenderNode::UpdateDrawRegion()
     context.property_.SetDrawRegion(std::make_shared<RectF>(joinRect));
 }
 
+void RSRenderNode::UpdateEffectRegion(std::optional<SkPath>& region) const
+{
+    if (!region.has_value()) {
+        return;
+    }
+    const auto& property = GetRenderProperties();
+    if (!property.GetUseEffect()) {
+        return;
+    }
+    auto& effectPath = region.value();
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+
+    SkPath clipPath;
+    if (property.GetClipBounds() != nullptr) {
+        clipPath = property.GetClipBounds()->GetSkiaPath();
+    } else {
+        auto rrect = RSPropertiesPainter::RRect2SkRRect(property.GetRRect());
+        clipPath.addRRect(rrect);
+    }
+
+    // accumulate children clip path, with matrix
+    effectPath.addPath(clipPath, geoPtr->GetAbsMatrix());
+}
+
 std::shared_ptr<RSRenderModifier> RSRenderNode::GetModifier(const PropertyId& id)
 {
     if (modifiers_.count(id)) {
@@ -450,16 +479,28 @@ float RSRenderNode::GetGlobalAlpha() const
 }
 
 #ifdef NEW_SKIA
-void RSRenderNode::InitCacheSurface(GrRecordingContext* grContext)
+void RSRenderNode::InitCacheSurface(GrRecordingContext* grContext, ClearCacheSurfaceFunc func, uint32_t threadIndex)
 #else
-void RSRenderNode::InitCacheSurface(GrContext* grContext)
+void RSRenderNode::InitCacheSurface(GrContext* grContext, ClearCacheSurfaceFunc func, uint32_t threadIndex)
 #endif
 {
-    cacheSurface_ = nullptr;
+    if (!func) {
+        RS_LOGE("InitCacheSurface failed: fuc is null");
+        return;
+    }
+    cacheSurfaceThreadIndex_ = threadIndex;
+    if (!clearCacheSurfaceFunc_) {
+        clearCacheSurfaceFunc_ = func;
+    }
+    if (cacheSurface_) {
+        func(cacheSurface_, cacheCompletedSurface_, cacheSurfaceThreadIndex_);
+        ClearCacheSurface();
+    }
     auto cacheType = GetCacheType();
     float width = 0.0f, height = 0.0f;
-    boundsWidth_ = renderProperties_.GetBoundsRect().GetWidth();
-    boundsHeight_ = renderProperties_.GetBoundsRect().GetHeight();
+    Vector2f size = GetOptionalBufferSize();
+    boundsWidth_ = size.x_;
+    boundsHeight_ = size.y_;
     if (cacheType == CacheType::ANIMATE_PROPERTY &&
         renderProperties_.IsShadowValid() && !renderProperties_.IsSpherizeValid()) {
         const RectF boundsRect = renderProperties_.GetBoundsRect();
@@ -476,7 +517,8 @@ void RSRenderNode::InitCacheSurface(GrContext* grContext)
     }
 #if ((defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)) || (defined RS_ENABLE_VK)
     if (grContext == nullptr) {
-        cacheSurface_ = nullptr;
+        func(cacheSurface_, cacheCompletedSurface_, cacheSurfaceThreadIndex_);
+        ClearCacheSurface();
         return;
     }
     SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
@@ -486,34 +528,68 @@ void RSRenderNode::InitCacheSurface(GrContext* grContext)
 #endif
 }
 
-void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, bool isSubThreadNode) const
+Vector2f RSRenderNode::GetOptionalBufferSize() const
 {
-    auto surface = GetCompletedCacheSurface();
-    if (surface == nullptr || (boundsWidth_ == 0 || boundsHeight_ == 0)) {
-        return;
+    const auto& modifier = boundsModifier_ ? boundsModifier_ : frameModifier_;
+    if (!modifier) {
+        return {0.0f, 0.0f};
     }
+    auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<Vector4f>>(modifier->GetProperty());
+    auto vector4f = renderProperty->Get();
+    // bounds vector4f: x y z w -> left top width height
+    return { vector4f.z_, vector4f.w_ };
+}
+
+void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t threadIndex, bool isUIFirst)
+{
     auto cacheType = GetCacheType();
     canvas.save();
-    float scaleX = renderProperties_.GetBoundsRect().GetWidth() / boundsWidth_;
-    float scaleY = renderProperties_.GetBoundsRect().GetHeight() / boundsHeight_;
+    Vector2f size = GetOptionalBufferSize();
+    float scaleX = size.x_ / boundsWidth_;
+    float scaleY = size.y_ / boundsHeight_;
     canvas.scale(scaleX, scaleY);
     SkPaint paint;
 #ifdef NEW_SKIA
-    if (isSubThreadNode) {
+    if (isUIFirst) {
         if (cacheTexture_ == nullptr) {
             RS_LOGE("invalid cache texture");
+            canvas.restore();
             return;
         }
         canvas.drawImage(cacheTexture_, -shadowRectOffsetX_ * scaleX, -shadowRectOffsetY_ * scaleY);
+        canvas.restore();
         return;
     }
 #endif
+    auto surface = GetCompletedCacheSurface(threadIndex, isUIFirst);
+    if (surface == nullptr || (boundsWidth_ == 0 || boundsHeight_ == 0)) {
+        RS_LOGE("invalid complete cache surface");
+        return;
+    }
     if (cacheType == CacheType::ANIMATE_PROPERTY && renderProperties_.IsShadowValid()) {
         surface->draw(&canvas, -shadowRectOffsetX_ * scaleX, -shadowRectOffsetY_ * scaleY, &paint);
     } else {
         surface->draw(&canvas, 0.0, 0.0, &paint);
     }
     canvas.restore();
+}
+
+#ifndef USE_ROSEN_DRAWING
+sk_sp<SkSurface> RSRenderNode::GetCompletedCacheSurface(uint32_t threadIndex, bool isUIFirst)
+#else
+std::shared_ptr<Drawing::Surface> RSRenderNode::GetCompletedCacheSurface(uint32_t threadIndex, bool isUIFirst)
+#endif
+{
+    if (isUIFirst || cacheSurfaceThreadIndex_ == threadIndex || !cacheCompletedSurface_) {
+        return cacheCompletedSurface_;
+    }
+
+    // freeze cache scene
+    if (clearCacheSurfaceFunc_) {
+        clearCacheSurfaceFunc_(cacheSurface_, cacheCompletedSurface_, cacheSurfaceThreadIndex_);
+    }
+    ClearCacheSurface();
+    return nullptr;
 }
 
 void RSRenderNode::CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd)
@@ -527,6 +603,7 @@ void RSRenderNode::CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd)
     }
     if (isAnimAdd) {
         MarkNodeGroup(NodeGroupType::GROUPED_BY_ANIM, true);
+        return;
     }
     for (auto& [_, animation] : animationManager_.animations_) {
         if (!animation || id == animation->GetPropertyId()) {
@@ -540,12 +617,12 @@ void RSRenderNode::CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd)
     MarkNodeGroup(NodeGroupType::GROUPED_BY_ANIM, false);
 }
 
-bool RSRenderNode::isForcedDrawInGroup() const
+bool RSRenderNode::IsForcedDrawInGroup() const
 {
     return (nodeGroupType_ == NodeGroupType::GROUPED_BY_USER) && (renderProperties_.GetAlpha() < 1.f);
 }
 
-bool RSRenderNode::isSuggestedDrawInGroup() const
+bool RSRenderNode::IsSuggestedDrawInGroup() const
 {
     return nodeGroupType_ != NodeGroupType::NONE;
 }
@@ -554,15 +631,19 @@ void RSRenderNode::MarkNodeGroup(NodeGroupType type, bool isNodeGroup)
 {
     if (type >= nodeGroupType_) {
         nodeGroupType_ = isNodeGroup ? type : NodeGroupType::NONE;
-        if ((nodeGroupType_ == NodeGroupType::GROUPED_BY_USER) && (renderProperties_.GetAlpha() < 1.f)) {
-            SetDrawingCacheType(RSDrawingCacheType::FORCED_CACHE);
-        } else if (nodeGroupType_ != NodeGroupType::NONE) {
-            SetDrawingCacheType(RSDrawingCacheType::TARGETED_CACHE);
-        } else {
-            SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
-        }
+        SetDirty();
     }
 }
 
+void RSRenderNode::CheckDrawingCacheType()
+{
+    if (nodeGroupType_ == NodeGroupType::NONE) {
+        SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
+    } else if ((nodeGroupType_ == NodeGroupType::GROUPED_BY_USER) && (renderProperties_.GetAlpha() < 1.f)) {
+        SetDrawingCacheType(RSDrawingCacheType::FORCED_CACHE);
+    } else {
+        SetDrawingCacheType(RSDrawingCacheType::TARGETED_CACHE);
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

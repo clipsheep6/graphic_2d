@@ -33,7 +33,10 @@ class RSSkiaFilter;
 class RSDrawingFilter;
 #endif
 class RSPaintFilterCanvas;
-
+enum FilterType {
+    BACKGROUND_FILTER,
+    FOREGROUND_FILTER,
+};
 class RSB_EXPORT RSPropertiesPainter {
 public:
 #ifndef USE_ROSEN_DRAWING
@@ -47,8 +50,7 @@ public:
         const RRect* rrect = nullptr, bool isAbsCoordinate = true);
     static void DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect = nullptr);
     static void DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
-        std::shared_ptr<RSSkiaFilter>& filter, const std::unique_ptr<SkRect>& rect = nullptr,
-        SkSurface* sKSurface = nullptr);
+        std::shared_ptr<RSSkiaFilter>& filter, FilterType filterType, const std::unique_ptr<SkRect>& rect = nullptr);
     static void DrawLinearGradientBlurFilter(const RSProperties& properties,
                                 RSPaintFilterCanvas& canvas, const std::unique_ptr<SkRect>& rect);
     static void DrawForegroundColor(const RSProperties& properties, SkCanvas& canvas);
@@ -76,6 +78,8 @@ public:
     // Foreground Color filter
     static void DrawColorFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void DrawParticle(const RSProperties& properties, RSPaintFilterCanvas& canvas);
+
+    static void DrawLightUpEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
 private:
     inline static int g_blurCnt = 0;
     static void DrawColorfulShadowInner(const RSProperties& properties, RSPaintFilterCanvas& canvas, SkPath& path);
@@ -87,6 +91,7 @@ private:
                                             sk_sp<SkShader> shader, sk_sp<SkShader> gradientShader);
     static sk_sp<SkShader>MakeVerticalMeanBlurShader(float radiusIn,
                                             sk_sp<SkShader> shader, sk_sp<SkShader> gradientShader);
+    static sk_sp<SkShader> MakeLightUpEffectShader(float lightUpDeg, sk_sp<SkShader> imageShader);
 #endif
 #else
     static void Clip(Drawing::Canvas& canvas, RectF rect);
@@ -99,8 +104,8 @@ private:
     static void GetShadowDirtyRect(RectI& dirtyShadow, const RSProperties& properties, const RRect* rrect = nullptr);
     static void DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect = nullptr);
     static void DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
-        std::shared_ptr<RSDrawingFilter>& filter, const std::unique_ptr<Drawing::Rect>& rect = nullptr,
-        Drawing::Surface* surface = nullptr);
+        std::shared_ptr<RSDrawingFilter>& filter, FilterType filterType,
+        const std::unique_ptr<Drawing::Rect>& rect = nullptr);
     static void DrawForegroundColor(const RSProperties& properties, Drawing::Canvas& canvas);
     static void DrawMask(const RSProperties& properties, Drawing::Canvas& canvas);
     static void DrawMask(const RSProperties& properties, Drawing::Canvas& canvas, Drawing::Rect maskBounds);

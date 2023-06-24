@@ -58,7 +58,7 @@
           "eventhandler",
           "config_policy",
           "init",
-          "hicollie_native",
+          "hicollie",
           "bounds_checking_function",
           "multimedia_image_framework",
           "cjson",
@@ -67,7 +67,9 @@
         ],
         "third_party": [
           "flutter",
-          "libuv"
+          "libuv",
+          "openssl",
+          "third_party_skia"
         ]
       },
       "build": {
@@ -239,6 +241,27 @@
                 "image/bitmap.h"
               ],
               "header_base": "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/effect/color_picker:color_picker",
+            "header": {
+              "header_files": [
+                "color_picker.h",
+                "effect_errors.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/effect/color_picker/include"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/graphic_2d/utils/color_manager:color_manager",
+            "header": {
+              "header_files": [
+                "export/color.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/utils/color_manager"
             }
           }
         ],

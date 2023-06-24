@@ -243,7 +243,7 @@ void RSSurfaceRenderNode::OnTreeStateChanged()
 {
 #ifdef RS_ENABLE_GL
     if (grContext_ && !IsOnTheTree() && IsLeashWindow()) {
-        RS_TRACE_NAME_FMT("purgeUnlockedResources this SurfaceNode isn't onthe tree Id:%" PRIu64 " Name:%s",
+        RS_TRACE_NAME_FMT("purgeUnlockedResources this SurfaceNode isn't on the tree Id:%" PRIu64 " Name:%s",
             GetId(), GetName().c_str());
         grContext_->purgeUnlockedResources(true);
     }
@@ -328,7 +328,7 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanv
     if (filter != nullptr) {
         auto skRectPtr = std::make_unique<SkRect>();
         skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawFilter(property, canvas, filter, skRectPtr, canvas.GetSurface());
+        RSPropertiesPainter::DrawFilter(property, canvas, filter, FilterType::BACKGROUND_FILTER, skRectPtr);
     }
     SetTotalMatrix(canvas.getTotalMatrix());
 #else
@@ -336,7 +336,7 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanv
     if (filter != nullptr) {
         auto rectPtr =
             std::make_unique<Drawing::Rect>(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawFilter(property, canvas, filter, rectPtr, canvas.GetSurface());
+        RSPropertiesPainter::DrawFilter(property, canvas, filter, FilterType::BACKGROUND_FILTER, rectPtr);
     }
     SetTotalMatrix(canvas.GetTotalMatrix());
 #endif
@@ -360,7 +360,7 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanva
     if (filter != nullptr) {
         auto skRectPtr = std::make_unique<SkRect>();
         skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawFilter(property, canvas, filter, skRectPtr, canvas.GetSurface());
+        RSPropertiesPainter::DrawFilter(property, canvas, filter, FilterType::FOREGROUND_FILTER, skRectPtr);
     }
     auto para = property.GetLinearGradientBlurPara();
     if (para != nullptr && para->blurRadius_ > 0) {
@@ -379,7 +379,7 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanva
     auto filter = std::static_pointer_cast<RSDrawingFilter>(property.GetFilter());
     if (filter != nullptr) {
         auto rectPtr = std::make_unique<Drawing::Rect>(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawFilter(property, canvas, filter, rectPtr, canvas.GetSurface());
+        RSPropertiesPainter::DrawFilter(property, canvas, filter, FilterType::FOREGROUND_FILTER, rectPtr);
     }
     canvas.Save();
     if (GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE) {
@@ -427,7 +427,7 @@ void RSSurfaceRenderNode::SetContextMatrix(const std::optional<Drawing::Matrix>&
         return;
     }
     contextMatrix_ = matrix;
-    SetDirty();
+    SetContentDirty();
     if (!sendMsg) {
         return;
     }
@@ -442,7 +442,7 @@ void RSSurfaceRenderNode::SetContextAlpha(float alpha, bool sendMsg)
         return;
     }
     contextAlpha_ = alpha;
-    SetDirty();
+    SetContentDirty();
     if (!sendMsg) {
         return;
     }
@@ -461,7 +461,7 @@ void RSSurfaceRenderNode::SetContextClipRegion(const std::optional<Drawing::Rect
         return;
     }
     contextClipRect_ = clipRegion;
-    SetDirty();
+    SetContentDirty();
     if (!sendMsg) {
         return;
     }
@@ -792,7 +792,7 @@ Occlusion::Region RSSurfaceRenderNode::ResetOpaqueRegion(const RectI& absRect,
     }
 }
 
-void RSSurfaceRenderNode::ContarinerConfig::Update(bool hasContainer, float density)
+void RSSurfaceRenderNode::ContainerConfig::Update(bool hasContainer, float density)
 {
     this->hasContainerWindow_ = hasContainer;
     this->density = density;
@@ -886,7 +886,7 @@ Occlusion::Region RSSurfaceRenderNode::SetUnfocusedWindowOpaqueRegion(const Rect
     If a surfacenode with containerwindow is a focused window, then its containerWindow region
 should be set transparent, including: title, content padding area, border, and content corners.
 Note this region is not centrosymmetric, hence it should be differentiated under different
-screen rotation state as top/left/botton/right has changed when screen rotated.
+screen rotation state as top/left/bottom/right has changed when screen rotated.
 */
 Occlusion::Region RSSurfaceRenderNode::SetFocusedWindowOpaqueRegion(const RectI& absRect,
     const ScreenRotation screenRotation) const
@@ -1161,7 +1161,7 @@ std::shared_ptr<RSSurfaceRenderNode> RSSurfaceRenderNode::GetLeashWindowNestedAp
 
 bool RSSurfaceRenderNode::IsCurrentFrameStatic()
 {
-    if (dirtyManager_ == nullptr || !dirtyManager_->GetLastestHistory().IsEmpty()) {
+    if (dirtyManager_ == nullptr || !dirtyManager_->GetLatestDirtyRegion().IsEmpty()) {
         return false;
     }
     if (IsMainWindowType()) {
@@ -1182,7 +1182,7 @@ void RSSurfaceRenderNode::UpdateCacheSurfaceDirtyManager(int bufferAge)
         return;
     }
     cacheSurfaceDirtyManager_->Clear();
-    cacheSurfaceDirtyManager_->MergeDirtyRect(dirtyManager_->GetLastestHistory());
+    cacheSurfaceDirtyManager_->MergeDirtyRect(dirtyManager_->GetLatestDirtyRegion());
     cacheSurfaceDirtyManager_->SetBufferAge(bufferAge);
     cacheSurfaceDirtyManager_->UpdateDirty(false);
     // for leashwindow type, nested app surfacenode's cacheSurfaceDirtyManager update is required

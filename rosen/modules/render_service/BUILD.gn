@@ -89,6 +89,8 @@ ohos_shared_library("librender_service") {
       "core/pipeline/parallel_render/rs_parallel_sub_thread.cpp",
       "core/pipeline/parallel_render/rs_parallel_task_manager.cpp",
       "core/pipeline/parallel_render/rs_render_task.cpp",
+      "core/pipeline/parallel_render/rs_sub_thread.cpp",
+      "core/pipeline/parallel_render/rs_sub_thread_manager.cpp",
     ]
   }
 
@@ -118,11 +120,13 @@ ohos_shared_library("librender_service") {
 
   if (defined(use_new_skia) && use_new_skia) {
     public_deps += [ "//third_party/skia:skia_ohos" ]
-    if (is_ohos) {
-      defines += [ "SK_BUILD_TRACE_FOR_OHOS" ]
-    }
   } else {
     public_deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+  }
+
+  if (defined(use_new_render_context) && use_new_render_context) {
+    include_dirs += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
+    defines += [ "NEW_RENDER_CONTEXT" ]
   }
 
   if (rs_enable_gpu) {
@@ -136,7 +140,7 @@ ohos_shared_library("librender_service") {
   external_deps = [
     "c_utils:utils",
     "eventhandler:libeventhandler",
-    "hicollie_native:libhicollie",
+    "hicollie:libhicollie",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "init:libbegetutil",

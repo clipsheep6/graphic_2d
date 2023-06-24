@@ -17,6 +17,7 @@
 #define RENDER_SERVICE_CORE_PIPELINE_RS_UNI_RENDER_UTIL_H
 
 #include <list>
+#include <set>
 #include "surface.h"
 #include "sync_fence.h"
 #include "pipeline/rs_base_render_util.h"
@@ -46,6 +47,7 @@ public:
     static Occlusion::Region MergeVisibleDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
         bool useAlignedDirtyRegion = false);
     static bool HandleSubThreadNode(RSRenderNode& node, RSPaintFilterCanvas& canvas);
+    static bool HandleCaptureNode(RSRenderNode& node, RSPaintFilterCanvas& canvas);
     static void SrcRectScaleDown(BufferDrawParam& params, const RSSurfaceRenderNode& node);
     static BufferDrawParam CreateBufferDrawParam(const RSSurfaceRenderNode& node, bool forceCPU);
     static BufferDrawParam CreateBufferDrawParam(const RSDisplayRenderNode& node, bool forceCPU);
@@ -60,12 +62,14 @@ public:
     static Occlusion::Region AlignedDirtyRegion(const Occlusion::Region& dirtyRegion, int32_t alignedBits = 32);
     static int GetRotationFromMatrix(Drawing::Matrix matrix);
 #endif
-    static void AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNode>& displayNode, uint64_t focusNodeId,
+    static void AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
         std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
         std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes);
     static void ClearSurfaceIfNeed(const RSRenderNodeMap& map, const std::shared_ptr<RSDisplayRenderNode>& displayNode,
-        std::set<std::shared_ptr<RSBaseRenderNode>>& oldChildren,
-        std::list<std::shared_ptr<RSSurfaceRenderNode>>& currentNodes);
+        std::set<std::shared_ptr<RSBaseRenderNode>>& oldChildren);
+    static void ClearCacheSurface(RSRenderNode& node, uint32_t threadIndex, bool isUIFirst);
+    static void ClearNodeCacheSurface(sk_sp<SkSurface> cacheSurface, sk_sp<SkSurface> cacheCompletedSurface,
+        uint32_t threadIndex);
 
 private:
     static void AssignMainThreadNode(std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,

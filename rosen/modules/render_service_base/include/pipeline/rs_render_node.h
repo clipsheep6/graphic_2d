@@ -17,6 +17,8 @@
 
 #include <memory>
 #include <unordered_set>
+#include <stdint.h>
+#include <functional>
 #include "common/rs_common_def.h"
 
 #ifndef USE_ROSEN_DRAWING
@@ -43,6 +45,7 @@ class DrawCmdList;
 
 class RSB_EXPORT RSRenderNode : public RSBaseRenderNode {
 public:
+    using ClearCacheSurfaceFunc = std::function<void(sk_sp<SkSurface>, sk_sp<SkSurface>, uint32_t)>;
     using WeakPtr = std::weak_ptr<RSRenderNode>;
     using SharedPtr = std::shared_ptr<RSRenderNode>;
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::RS_NODE;
@@ -141,10 +144,14 @@ public:
     }
 
 #ifdef NEW_SKIA
-    void InitCacheSurface(GrRecordingContext* grContext);
+    void InitCacheSurface(GrRecordingContext* grContext, ClearCacheSurfaceFunc func = nullptr,
+        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #else
-    void InitCacheSurface(GrContext* grContext);
+    void InitCacheSurface(GrContext* grContext, ClearCacheSurfaceFunc func = nullptr,
+        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #endif
+
+    Vector2f GetOptionalBufferSize() const;
 
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> GetCacheSurface() const
@@ -161,13 +168,12 @@ public:
     }
 
 #ifndef USE_ROSEN_DRAWING
-    sk_sp<SkSurface> GetCompletedCacheSurface() const
+    sk_sp<SkSurface> GetCompletedCacheSurface(uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
+        bool isUIFirst = false);
 #else
-    std::shared_ptr<Drawing::Surface> GetCompletedCacheSurface() const
+    std::shared_ptr<Drawing::Surface> GetCompletedCacheSurface(uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
+        bool isUIFirst = false);
 #endif
-    {
-        return cacheCompletedSurface_;
-    }
 
     void ClearCacheSurface()
     {
@@ -175,7 +181,8 @@ public:
         cacheCompletedSurface_ = nullptr;
     }
 
-    void DrawCacheSurface(RSPaintFilterCanvas& canvas, bool isSubThreadNode = false) const;
+    void DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
+        bool isUIFirst = false);
 
     void SetCacheType(CacheType cacheType)
     {
@@ -196,7 +203,7 @@ public:
     {
         return shadowRectOffsetY_;
     }
-    
+
     void SetDrawingCacheType(RSDrawingCacheType cacheType)
     {
         drawingCacheType_ = cacheType;
@@ -303,6 +310,11 @@ public:
         hasAbilityComponent_ = hasAbilityComponent;
     }
 
+    uint32_t GetCacheSurfaceThreadIndex() const
+    {
+        return cacheSurfaceThreadIndex_;
+    }
+
     bool IsMainThreadNode() const
     {
         return isMainThreadNode_;
@@ -364,10 +376,12 @@ public:
     }
 
     void UpdateDrawRegion();
+    void UpdateEffectRegion(std::optional<SkPath>& region) const;
 
     void CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd);
-    bool isForcedDrawInGroup() const;
-    bool isSuggestedDrawInGroup() const;
+    bool IsForcedDrawInGroup() const;
+    bool IsSuggestedDrawInGroup() const;
+    void CheckDrawingCacheType();
 
     enum NodeGroupType {
         NONE = 0,
@@ -438,7 +452,9 @@ private:
     RSDrawingCacheType drawingCacheType_ = RSDrawingCacheType::DISABLED_CACHE;
     bool isDrawingCacheChanged_ = false;
 
-    sk_sp<SkImage> cacheTexture_;
+    sk_sp<SkImage> cacheTexture_ = nullptr;
+    ClearCacheSurfaceFunc clearCacheSurfaceFunc_ = nullptr;
+    uint32_t cacheSurfaceThreadIndex_ = UNI_MAIN_THREAD_INDEX;
     bool isMainThreadNode_ = true;
     bool isScale_ = false;
     bool hasFilter_ = false;

@@ -15,8 +15,6 @@
 
 #include "ui/rs_ui_director.h"
 
-#include <src/core/SkTraceEventCommon.h>
-
 #include "rs_trace.h"
 #include "sandbox_utils.h"
 
@@ -27,7 +25,6 @@
 #include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_thread.h"
 #include "platform/common/rs_log.h"
-#include "platform/common/rs_system_properties.h"
 #include "transaction/rs_application_agent_impl.h"
 #include "transaction/rs_interfaces.h"
 #include "transaction/rs_transaction_proxy.h"
@@ -88,11 +85,6 @@ void RSUIDirector::Init(bool shouldCreateRenderThread)
     RSApplicationAgentImpl::Instance().RegisterRSApplicationAgent();
 
     GoForeground();
-
-#ifdef SK_BUILD_TRACE_FOR_OHOS
-    isSkiaTraceEnabled_ = RSSystemProperties::GetSkiaTraceEnabled();
-    SkOHOSTraceUtil::setEnableTracing(isSkiaTraceEnabled_);
-#endif
 }
 
 void RSUIDirector::GoForeground()
@@ -131,7 +123,11 @@ void RSUIDirector::GoBackground()
         // clean bufferQueue cache
         RSRenderThread::Instance().PostTask([surfaceNode]() {
             if (surfaceNode != nullptr) {
+#ifdef NEW_RENDER_CONTEXT
+                std::shared_ptr<RSRenderSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
+#else
                 std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
+#endif
                 rsSurface->ClearBuffer();
             }
         });
@@ -141,7 +137,8 @@ void RSUIDirector::GoBackground()
             if (renderContext != nullptr) {
 #ifndef ROSEN_CROSS_PLATFORM
 #if defined(NEW_RENDER_CONTEXT)
-                MemoryManager::ClearRedundantResources(renderContext->GetGrContext());
+                auto drawingContext = RSRenderThread::Instance().GetDrawingContext();
+                MemoryManager::ClearRedundantResources(drawingContext->GetDrawingContext());
 #else
                 renderContext->ClearRedundantResources();
 #endif

@@ -73,7 +73,7 @@ void VSyncCallBackListener::OnReadable(int32_t fileDescriptor)
         }
         if (ncb != nullptr) {
             VSyncInfo vsyncInfo = {now, data[1]}; // data[1] means expectedEnd
-            ncb(vsyncInfo);
+            ncb(vsyncInfo, userData_);
         }
     }
 }
@@ -140,16 +140,6 @@ VsyncError VSyncReceiver::RequestNextVSync(FrameCallback callback)
     return connection_->RequestNextVSync();
 }
 
-VsyncError VSyncReceiver::RequestNextVSync(VSyncInfoCallback ncb)
-{
-    std::lock_guard<std::mutex> locker(initMutex_);
-    if (!init_) {
-        return VSYNC_ERROR_API_FAILED;
-    }
-    listener_->SetCallback(ncb);
-    ScopedBytrace func("VSyncReceiver::RequestNextVSync_pid:" + std::to_string(GetRealPid()) + "_name:" + name_);
-    return connection_->RequestNextVSync();
-}
 VsyncError VSyncReceiver::SetVSyncRate(FrameCallback callback, int32_t rate)
 {
     std::lock_guard<std::mutex> locker(initMutex_);
@@ -157,16 +147,6 @@ VsyncError VSyncReceiver::SetVSyncRate(FrameCallback callback, int32_t rate)
         return VSYNC_ERROR_API_FAILED;
     }
     listener_->SetCallback(callback);
-    return connection_->SetVSyncRate(rate);
-}
-
-VsyncError VSyncReceiver::SetVSyncRate(VSyncInfoCallback ncb, int32_t rate)
-{
-    std::lock_guard<std::mutex> locker(initMutex_);
-    if (!init_) {
-        return VSYNC_ERROR_API_FAILED;
-    }
-    listener_->SetCallback(ncb);
     return connection_->SetVSyncRate(rate);
 }
 } // namespace Rosen

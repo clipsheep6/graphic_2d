@@ -36,10 +36,11 @@ public:
         int64_t expectedEnd;
     };
     using VSyncCallback = std::function<void(int64_t, void*)>;
-    using VSyncInfoCallback = std::function<void(VSyncInfo)>;
+    using VSyncInfoCallback = std::function<void(VSyncInfo, void*)>;
     struct FrameCallback {
         void *userData_;
         VSyncCallback callback_;
+        VSyncInfoCallback vsyncCallback_;
     };
     VSyncCallBackListener() : vsyncCallbacks_(nullptr), vsyncInfoCallback_(nullptr), userData_(nullptr)
     {
@@ -51,13 +52,9 @@ public:
     void SetCallback(FrameCallback cb)
     {
         std::lock_guard<std::mutex> locker(mtx_);
+        vsyncInfoCallback_ = cb.vsyncCallback_;
         vsyncCallbacks_ = cb.callback_;
         userData_ = cb.userData_;
-    }
-    void SetCallback(VSyncInfoCallback ncb)
-    {
-        std::lock_guard<std::mutex> locker(mtx_);
-        vsyncInfoCallback_ = ncb;
     }
 
 private:
@@ -72,9 +69,7 @@ private:
 class VSyncReceiver : public RefBase {
 public:
     // check
-    using VSyncInfo = VSyncCallBackListener::VSyncInfo;
     using FrameCallback = VSyncCallBackListener::FrameCallback;
-    using VSyncInfoCallback = VSyncCallBackListener::VSyncInfoCallback;
 
     VSyncReceiver(const sptr<IVSyncConnection>& conn,
         const std::shared_ptr<OHOS::AppExecFwk::EventHandler>& looper = nullptr,
@@ -86,9 +81,7 @@ public:
 
     virtual VsyncError Init();
     virtual VsyncError RequestNextVSync(FrameCallback callback);
-    virtual VsyncError RequestNextVSync(VSyncInfoCallback ncb);
     virtual VsyncError SetVSyncRate(FrameCallback callback, int32_t rate);
-    virtual VsyncError SetVSyncRate(VSyncInfoCallback ncb, int32_t rate);
 
 private:
     sptr<IVSyncConnection> connection_;

@@ -39,6 +39,11 @@ void AnimationFinishCallback::Execute()
     }
 }
 
+void AnimationFinishCallback::Reset()
+{
+    callback_ = nullptr;
+}
+
 void AnimationRepeatCallback::Execute()
 {
     if (callback_ != nullptr) {

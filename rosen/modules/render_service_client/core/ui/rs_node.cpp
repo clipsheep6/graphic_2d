@@ -95,7 +95,7 @@ void RSNode::OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtoc
     implicitAnimator->OpenImplicitAnimation(timingProtocol, timingCurve, std::move(animationFinishCallback));
 }
 
-std::vector<std::shared_ptr<RSAnimation>> RSNode::CloseImplicitAnimation()
+std::vector<std::shared_ptr<RSAnimation>> RSNode::CloseImplicitAnimation(bool skipCallbackIfNoAnimationCreated)
 {
     auto implicitAnimator = RSImplicitAnimatorMap::Instance().GetAnimator(gettid());
     if (implicitAnimator == nullptr) {
@@ -103,7 +103,7 @@ std::vector<std::shared_ptr<RSAnimation>> RSNode::CloseImplicitAnimation()
         return {};
     }
 
-    return implicitAnimator->CloseImplicitAnimation();
+    return implicitAnimator->CloseImplicitAnimation(skipCallbackIfNoAnimationCreated);
 }
 
 void RSNode::AddKeyFrame(

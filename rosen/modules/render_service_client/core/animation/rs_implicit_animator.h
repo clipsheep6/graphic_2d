@@ -89,7 +89,7 @@ private:
     void ExecuteWithoutAnimation(const std::function<void()>& callback);
 
     std::stack<std::tuple<RSAnimationTimingProtocol, RSAnimationTimingCurve,
-        const std::shared_ptr<AnimationFinishCallback>, std::shared_ptr<AnimationRepeatCallback>>>
+        const std::shared_ptr<AnimationFinishCallback>, const std::shared_ptr<AnimationRepeatCallback>>>
         globalImplicitParams_;
     std::stack<std::shared_ptr<RSImplicitAnimationParam>> implicitAnimationParams_;
     std::stack<std::vector<std::pair<std::shared_ptr<RSAnimation>, NodeId>>> implicitAnimations_;

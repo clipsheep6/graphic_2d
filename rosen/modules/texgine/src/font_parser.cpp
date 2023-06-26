@@ -39,9 +39,9 @@ FontParser::FontDescriptor::FontDescriptor()
     fullName = "";
     fontFamily = "";
     fontSubfamily = "";
-    weight = 0;
+    weight = -1;
     width = 0;
-    italic = 0;
+    italic = -1;
     monoSpace = 0;
     symbolic = 0;
 }
@@ -148,7 +148,9 @@ int FontParser::ProcessNameTable(const struct NameTable* nameTable, FontParser::
 void FontParser::ProcessPostTable(const struct PostTable* postTable, FontParser::FontDescriptor& fontDescriptor) const
 {
     if (postTable->italicAngle.Get() != 0) {
-        fontDescriptor.italic = true;
+        fontDescriptor.italic = 1;
+    } else {
+        fontDescriptor.italic = 0;
     }
     if (postTable->isFixedPitch.Get() == 1) {
         fontDescriptor.monoSpace = true;

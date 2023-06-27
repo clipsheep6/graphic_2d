@@ -1053,5 +1053,81 @@ HWTEST_F(RSSurfaceCaptureTaskTest, ProcessSurfaceRenderNode008, Function | Small
         visitor_->ProcessSurfaceRenderNode(*surfaceNode);
     }
 }
+
+/*
+ * @tc.name: ProcessEffectRenderNode
+ * @tc.desc: Test RSSurfaceCaptureTaskTest.ProcessEffectRenderNode
+ * @tc.type: FUNC
+ * @tc.require: issueI7G9F0
+*/
+HWTEST_F(RSSurfaceCaptureTaskTest, ProcessEffectRenderNode, Function | SmallTest | Level2)
+{
+    ASSERT_NE(nullptr, visitor_);
+    NodeId id = 0;
+    RSEffectRenderNode node(id);
+    SkCanvas skCanvas(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    visitor_->canvas_ = std::make_unique<RSPaintFilterCanvas>(&skCanvas);
+    visitor_->ProcessEffectRenderNode(node);
+}
+
+/*
+ * @tc.name: ProcessDisplayRenderNode
+ * @tc.desc: Test RSSurfaceCaptureTaskTest.ProcessDisplayRenderNode
+ * @tc.type: FUNC
+ * @tc.require: issueI7G9F0
+*/
+HWTEST_F(RSSurfaceCaptureTaskTest, ProcessDisplayRenderNode, Function | SmallTest | Level2)
+{
+    ASSERT_NE(nullptr, visitor_);
+	NodeId id = 0;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(id);
+    (visitor_->hardwareEnabledNodes_).emplace_back(surfaceNode);
+    RSDisplayNodeConfig config;
+	RSDisplayRenderNode node(id, config);
+    visitor_->ProcessDisplayRenderNode(node);
+}
+
+/*
+ * @tc.name: CaptureSingleSurfaceNodeWithUni001
+ * @tc.desc: Test RSSurfaceCaptureTaskTest.CaptureSingleSurfaceNodeWithUni
+ * @tc.type: FUNC
+ * @tc.require: issueI7G9F0
+*/
+HWTEST_F(RSSurfaceCaptureTaskTest, CaptureSingleSurfaceNodeWithUni001, Function | SmallTest | Level2)
+{
+    bool isUnirender = RSUniRenderJudgement::IsUniRender();
+    ASSERT_NE(nullptr, visitor_);
+    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+	ASSERT_NE(nullptr, surfaceNode);
+    surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::SELF_DRAWING_NODE);
+    surfaceNode->SetSecurityLayer(true);
+    if (isUnirender) {
+        visitor_->CaptureSingleSurfaceNodeWithUni(*surfaceNode);
+    }
+}
+
+/*
+ * @tc.name: CaptureSingleSurfaceNodeWithUni002
+ * @tc.desc: Test RSSurfaceCaptureTaskTest.CaptureSingleSurfaceNodeWithUni
+ * @tc.type: FUNC
+ * @tc.require: issueI7G9F0
+*/
+HWTEST_F(RSSurfaceCaptureTaskTest, CaptureSingleSurfaceNodeWithUni002, Function | SmallTest | Level2)
+{
+    bool isUnirender = RSUniRenderJudgement::IsUniRender();
+    ASSERT_NE(nullptr, visitor_);
+    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+	ASSERT_NE(nullptr, surfaceNode);
+    surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::SELF_DRAWING_NODE);
+    surfaceNode->SetSecurityLayer(false);
+    Vector4f cornerRadius(1.f, 2.f, 0.f, 0.f);
+    surfaceNode->GetMutableRenderProperties().SetCornerRadius(cornerRadius);
+    std::shared_ptr<RSFilter> filter = RSFilter::CreateBlurFilter(5.0f, 5.0f);
+    surfaceNode->GetMutableRenderProperties().SetFilter(filter);
+    if (isUnirender) {
+        visitor_->CaptureSingleSurfaceNodeWithUni(*surfaceNode);
+    }
+}
+
 } // namespace Rosen
 } // namespace OHOS

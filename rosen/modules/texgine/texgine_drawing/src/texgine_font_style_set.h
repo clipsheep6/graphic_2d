@@ -43,7 +43,7 @@ public:
      * @param style The style value that returned to the caller
      * @param name  The style name that returned to the caller
      */
-    void GetStyle(const int index, std::shared_ptr<TexgineFontStyle> style, std::shared_ptr<TexgineString> name) const;
+    void GetStyle(int index, std::shared_ptr<TexgineFontStyle> style, std::shared_ptr<TexgineString> name) const;
 
     /*
      * @brief To create a typeface

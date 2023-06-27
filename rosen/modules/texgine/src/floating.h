@@ -18,7 +18,7 @@
 
 #include <math.h>
 
-static inline double FloatingAbs(double floating)
+inline double FloatingAbs(double floating)
 {
     return fabs(floating);
 }

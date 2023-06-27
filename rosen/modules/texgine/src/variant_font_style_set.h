@@ -37,7 +37,7 @@ public:
     std::shared_ptr<DynamicFontStyleSet> TryToDynamicFontStyleSet() const noexcept(false);
 
     int Count();
-    void GetStyle(int index, std::shared_ptr<TexgineFontStyle> style, std::shared_ptr<TexgineString> name);
+    void GetStyle(const int index, std::shared_ptr<TexgineFontStyle> style, std::shared_ptr<TexgineString> name);
     std::shared_ptr<TexgineTypeface> CreateTypeface(int index);
     std::shared_ptr<TexgineTypeface> MatchStyle(std::shared_ptr<TexgineFontStyle> pattern);
 private:

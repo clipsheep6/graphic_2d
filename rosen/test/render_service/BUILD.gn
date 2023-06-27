@@ -20,6 +20,8 @@ group("test") {
     "render_service/unittest/screen_manager:unittest",
     "render_service/unittest/system:unittest",
     "render_service/unittest/transaction:unittest",
+    "render_service/fuzztest/rsrenderserviceconnection_fuzzer:fuzztest",
+    "render_service/fuzztest/rsrenderserviceconnectionstub_fuzzer:fuzztest",
     "render_service_base/fuzztest/pipeline/rspipelinerender_fuzzer:fuzztest",
     "render_service_base/fuzztest/pipeline/rsrendernode_fuzzer:fuzztest",
     "render_service_base/fuzztest/rsbasecommon_fuzzer:fuzztest",

@@ -27,12 +27,13 @@ class RSB_EXPORT RSBlurFilter : public RSDrawingFilter {
 #endif
 public:
     RSBlurFilter(float blurRadiusX, float blurRadiusY);
+    RSBlurFilter(const RSBlurFilter& other) = default;
     ~RSBlurFilter() override;
     float GetBlurRadiusX();
     float GetBlurRadiusY();
     bool IsValid() const override;
 #ifndef USE_ROSEN_DRAWING
-    std::shared_ptr<RSSkiaFilter> Compose(const std::shared_ptr<RSSkiaFilter>& inner) override;
+    std::shared_ptr<RSSkiaFilter> Compose(const std::shared_ptr<RSSkiaFilter>& inner) const override;
 #else
     std::shared_ptr<RSDrawingFilter> Compose(const std::shared_ptr<RSDrawingFilter>& inner) override;
 #endif

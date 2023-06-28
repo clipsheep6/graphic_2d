@@ -26,6 +26,17 @@
 
 using namespace rosen;
 
+typedef struct OH_Drawing_PlaceholderSpan OH_Drawing_PlaceholderSpan;
+
+enum OH_Drawing_PlaceholderAlignment {
+    BASELINE,
+    ABOVEBASELINE,
+    BELOWBASELINE,
+    TOP,
+    BOTTOM,
+    MIDDLE,
+};
+
 template<typename T1, typename T2>
 inline T1* ConvertToOriginalText(T2* ptr)
 {

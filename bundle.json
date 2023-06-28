@@ -69,7 +69,9 @@
           "flutter",
           "libuv",
           "openssl",
-          "third_party_skia"
+          "third_party_skia",
+          "cjson",
+          "skia"
         ]
       },
       "build": {

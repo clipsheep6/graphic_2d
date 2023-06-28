@@ -68,6 +68,9 @@ ohos_shared_library("skeffectchain") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "c_utils:utils",
+    "multimedia_image_framework:pixelconvertadapter",
+    "multimedia_image_framework:image",
   ]
 
   sources = [

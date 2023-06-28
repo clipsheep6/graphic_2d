@@ -48,12 +48,12 @@ ohos_shared_library("libeffectchain") {
 
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
   ]
 
   external_deps = [
     "c_utils:utils",
     "hitrace_native:hitrace_meter",
+    "multimedia_image_framework:image_native",
   ]
 
   if (effect_enable_gpu) {

@@ -33,7 +33,6 @@ ohos_shared_library("windowanimationmanager_napi") {
 
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/animation/window_animation:window_animation",
-    "//foundation/window/window_manager/utils:libwmutil",
   ]
 
   external_deps = [
@@ -45,6 +44,7 @@ ohos_shared_library("windowanimationmanager_napi") {
     "napi:ace_napi",
     "samgr:samgr_proxy",
     "window_manager:libwm",
+    "window_manager:libwmutil",
   ]
 
   defines = []

@@ -66,6 +66,8 @@
           "multimedia_player_framework"
         ],
         "third_party": [
+          "bounds_checking_function",
+          "zlib",
           "flutter",
           "libuv"
         ]

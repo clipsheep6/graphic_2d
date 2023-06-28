@@ -148,15 +148,6 @@ enum OH_Drawing_FontStyle {
     FONT_STYLE_ITALIC,
 };
 
-enum OH_Drawing_PlaceholderAlignment {
-    BASELINE,
-    ABOVEBASELINE,
-    BELOWBASELINE,
-    TOP,
-    BOTTOM,
-    MIDDLE,
-};
-
 /**
  * @brief Creates an <b>OH_Drawing_TypographyStyle</b> object.
  *

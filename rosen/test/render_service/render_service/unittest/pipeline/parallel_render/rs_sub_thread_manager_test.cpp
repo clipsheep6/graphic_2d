@@ -1,0 +1,88 @@
+/*
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "gtest/gtest.h"
+#include "pipeline/parallel_render/rs_sub_thread_manager.h"
+using namespace testing;
+using namespace testing::ext;
+
+namespace OHOS::Rosen {
+class RsSubThreadManagerTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp() override;
+    void TearDown() override;
+};
+
+void RsSubThreadManagerTest::SetUpTestCase() {}
+void RsSubThreadManagerTest::TearDownTestCase() {}
+void RsSubThreadManagerTest::SetUp() {}
+void RsSubThreadManagerTest::TearDown() {}
+
+/**
+ * @tc.name: StartTest
+ * @tc.desc: Test RsSubThreadManagerTest.StartTest
+ * @tc.type: FUNC
+ * @tc.require: TODO
+ */
+HWTEST_F(RsSubThreadManagerTest, StartTest, TestSize.Level1)
+{
+    auto rsSubThreadManager = RSSubThreadManager::Instance();
+    ASSERT_TRUE(rsSubThreadManager->threadList_.empty());
+    rsSubThreadManager->Start(nullptr);
+
+    auto renderContext = std::make_shared<RenderContext>;
+    rsSubThreadManager->Start(RenderContext);
+
+    auto curThread = std::make_shared<RSSubThread>(renderContext, 0);
+    rsSubThreadManager->threadList_.push_back(curThread);
+    ASSERT_FALSE(rsSubThreadManager->threadList_.empty());
+    rsSubThreadManager->Start(nullptr);
+}
+
+/**
+ * @tc.name: PostTaskTest
+ * @tc.desc: Test RsSubThreadManagerTest.PostTaskTest
+ * @tc.type: FUNC
+ * @tc.require: TODO
+ */
+HWTEST_F(, PostTaskTest, TestSize.Level1)
+{
+    auto rsSubThreadManager = RRsSubThreadManagerTestSSubThreadManager::Instance();
+    ASSERT_EQ(rsSubThreadManager->threadList_.size(), 0);
+    rsSubThreadManager->PostTask([]{}, 1);
+
+    auto renderContext = std::make_shared<RenderContext>;
+    auto curThread = std::make_shared<RSSubThread>(renderContext, 0);
+    rsSubThreadManager->threadList_.push_back(curThread);
+    ASSERT_EQ(rsSubThreadManager->threadList_.size(), 1);
+    rsSubThreadManager->PostTask([]{}, 1);
+}
+
+/**
+ * @tc.name: SubmitSubThreadTaskTest
+ * @tc.desc: Test RsSubThreadManagerTest.SubmitSubThreadTaskTest
+ * @tc.type: FUNC
+ * @tc.require: TODO
+ */
+HWTEST_F(RsSubThreadManagerTest, SubmitSubThreadTaskTest, TestSize.Level1)
+{
+    std::list<std::shared_ptr<RSSurfaceRenderNode>> list;
+    auto rsSubThreadManager = RRsSubThreadManagerTestSSubThreadManager::Instance();
+    rsSubThreadManager->SubmitSubThreadTask(nullptr, list);
+}
+
+} // namespace OHOS::Rosen

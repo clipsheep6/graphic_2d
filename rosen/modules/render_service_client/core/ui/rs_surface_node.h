@@ -80,7 +80,7 @@ public:
     bool SetBufferAvailableCallback(BufferAvailableCallback callback);
     void SetAnimationFinished();
 
-    bool Marshalling(Parcel& parcel) const;
+    bool Marshalling(Parcel& parcel);
     static SharedPtr Unmarshalling(Parcel& parcel);
     // Create RSProxyNode by unmarshalling RSSurfaceNode, return existing node if it exists in RSNodeMap.
     static RSNode::SharedPtr UnmarshallingAsProxyNode(Parcel& parcel);
@@ -131,6 +131,7 @@ private:
     bool isSecurityLayer_ = false;
     bool hasFingerprint_ = false;
     bool isChildOperationDisallowed_ { false };
+    int marshallingCnt_ = 0;
 
     uint32_t windowId_ = 0;
 #ifndef ROSEN_CROSS_PLATFORM

@@ -291,9 +291,11 @@ void RSSurfaceNode::SetAnimationFinished()
     }
 }
 
-bool RSSurfaceNode::Marshalling(Parcel& parcel) const
+bool RSSurfaceNode::Marshalling(Parcel& parcel)
 {
-    return parcel.WriteUint64(GetId()) && parcel.WriteString(name_) && parcel.WriteBool(IsRenderServiceNode());
+    marshallingCnt_++;
+    return parcel.WriteUint64(GetId()) && parcel.WriteString(name_) && parcel.WriteBool(IsRenderServiceNode()) &&
+           parcel.WriteBool(marshallingCnt_ == 1);
 }
 
 std::shared_ptr<RSSurfaceNode> RSSurfaceNode::Unmarshalling(Parcel& parcel)
@@ -301,7 +303,9 @@ std::shared_ptr<RSSurfaceNode> RSSurfaceNode::Unmarshalling(Parcel& parcel)
     uint64_t id = UINT64_MAX;
     std::string name;
     bool isRenderServiceNode = false;
-    if (!(parcel.ReadUint64(id) && parcel.ReadString(name) && parcel.ReadBool(isRenderServiceNode))) {
+    bool isFirstUnmarshalling = false;
+    if (!(parcel.ReadUint64(id) && parcel.ReadString(name) && parcel.ReadBool(isRenderServiceNode) &&
+        parcel.ReadBool(isFirstUnmarshalling))) {
         ROSEN_LOGE("RSSurfaceNode::Unmarshalling, read param failed");
         return nullptr;
     }
@@ -309,6 +313,10 @@ std::shared_ptr<RSSurfaceNode> RSSurfaceNode::Unmarshalling(Parcel& parcel)
 
     if (auto prevNode = RSNodeMap::Instance().GetNode(id)) {
         // if the node id is already in the map, we should not create a new node
+        auto surfaceNode = prevNode->ReinterpretCastTo<RSSurfaceNode>();
+        if (isFirstUnmarshalling) {
+            surfaceNode->ClearAllModifiers();
+        }
         return prevNode->ReinterpretCastTo<RSSurfaceNode>();
     }
 

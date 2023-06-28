@@ -1048,6 +1048,8 @@ void RSNode::ClearAllModifiers()
             modifier->DetachFromNode();
         }
     }
+    propertyModifiers_.clear();
+    modifiers_.clear();
 }
 
 void RSNode::AddModifier(const std::shared_ptr<RSModifier> modifier)

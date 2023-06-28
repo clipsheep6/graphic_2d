@@ -258,6 +258,9 @@ protected:
 
     bool drawContentLast_ = false;
 
+    // Planning: refactor RSUIAnimationManager and remove this method
+    void ClearAllModifiers();
+
     void OnAddChildren() override;
     void OnRemoveChildren() override;
 
@@ -282,9 +285,6 @@ private:
     void MarkAllExtendModifierDirty();
     void ResetExtendModifierDirty();
     void UpdateImplicitAnimator();
-
-    // Planning: refactor RSUIAnimationManager and remove this method
-    void ClearAllModifiers();
 
     pid_t implicitAnimatorTid_ = 0;
     bool extendModifierIsDirty_ { false };

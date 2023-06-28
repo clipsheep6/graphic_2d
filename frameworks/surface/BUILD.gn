@@ -86,13 +86,13 @@ ohos_shared_library("surface") {
     "$graphic_2d_root/utils/buffer_handle:buffer_handle",
     "$graphic_2d_root/utils/sandbox:sandbox_utils",
     "$graphic_2d_root/utils/scoped_bytrace:scoped_bytrace",
-    "//commonlibrary/c_utils/base:utils",
     "//drivers/peripheral/display/hdi_service/gralloc/client:hdi_gralloc_client",
     "//third_party/EGL:libEGL",
     "//third_party/openGLES:libGLES",
   ]
 
   external_deps = [
+    "c_utils:utils",
     "drivers_interface_display:display_buffer_idl_headers",
     "drivers_interface_display:libdisplay_buffer_hdi_impl",
     "hitrace_native:hitrace_meter",
@@ -100,7 +100,10 @@ ohos_shared_library("surface") {
     "ipc:ipc_single",
   ]
 
-  symlink_target_name = [ "libnative_window.so" ]
+  symlink_target_name = [
+    "libnative_buffer.so",
+    "libnative_window.so",
+  ]
 
   if (defined(graphic_2d_ext_configs.vendor_root)) {
     sources += graphic_2d_ext_configs.libsurface_ext_sources

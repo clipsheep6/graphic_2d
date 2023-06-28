@@ -69,7 +69,10 @@
           "flutter",
           "libuv",
           "openssl",
-          "third_party_skia"
+          "third_party_skia",
+          "libEGL",
+          "libGLES",
+          "vulkan_headers"
         ]
       },
       "build": {

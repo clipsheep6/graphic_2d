@@ -511,12 +511,6 @@ double OH_Drawing_TypographyGetAlphabeticBaseline(OH_Drawing_Typography*);
  */
 double OH_Drawing_TypographyGetIdeographicBaseline(OH_Drawing_Typography*);
 
-OH_Drawing_PlaceholderSpan* OH_Drawing_CreatePlaceholderSpan(double width, double height,
-    OH_Drawing_PlaceholderAlignment placeholderAlignment, OH_Drawing_TextBaseline textbaseline, double baselineOffset);
-
-void OH_Drawing_TypographyHandlerAppendPlaceholder(OH_Drawing_TypographyCreate* handler,
-    OH_Drawing_PlaceholderSpan* placeholderSpan);
-
 #ifdef __cplusplus
 }
 #endif

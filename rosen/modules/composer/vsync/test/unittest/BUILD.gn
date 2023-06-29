@@ -89,6 +89,7 @@ ohos_unittest("vsync_receiver_test") {
     ":vsync_test_common",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//foundation/graphic/graphic_2d/utils:socketpair",
+    "../../../../render_service_client:librender_service_client",
   ]
 }
 

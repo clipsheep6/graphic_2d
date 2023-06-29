@@ -100,6 +100,8 @@ bool RSRenderNode::Update(
 {
     // no need to update invisible nodes
     if (!ShouldPaint() && !isLastVisible_) {
+        SetClean();
+        renderProperties_.ResetDirty();
         return false;
     }
     // [planning] surfaceNode use frame instead
@@ -308,9 +310,6 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
         modifiers_.emplace(modifier->GetPropertyId(), modifier);
     } else {
         drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
-        if (GetRecordedContents()) {
-            SetRecordedContents(nullptr);
-        }
     }
     modifier->GetProperty()->Attach(ReinterpretCastTo<RSRenderNode>());
     SetDirty();
@@ -345,14 +344,10 @@ void RSRenderNode::RemoveModifier(const PropertyId& id)
         modifiers_.erase(it);
         return;
     }
-    size_t removedCount = 0;
     for (auto& [type, modifiers] : drawCmdModifiers_) {
-        removedCount += EraseIf(modifiers, [id](const auto& modifier) -> bool {
-            return !modifier || modifier->GetPropertyId() == id;
+        modifiers.remove_if([id](const auto& modifier) -> bool {
+            return modifier ? modifier->GetPropertyId() == id : true;
         });
-    }
-    if (removedCount > 0) {
-        SetRecordedContents(nullptr);
     }
 }
 
@@ -542,7 +537,7 @@ void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheS
         return;
     }
     SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
-    std::scoped_lock<std::mutex> lock(surfaceMutex_);
+    std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
     cacheSurface_ = SkSurface::MakeRenderTarget(grContext, SkBudgeted::kYes, info);
 #else
     cacheSurface_ = SkSurface::MakeRasterN32Premul(width, height);
@@ -561,7 +556,7 @@ void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheS
     image.BuildFromBitmap(*gpuContext, bitmap);
     auto surface = std::make_shared<Drawing::Surface>();
     surface->Bind(image);
-    std::scoped_lock<std::mutex> lock(surfaceMutex_);
+    std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
     cacheSurface_ = surface;
 #else
     cacheSurface_ = std::make_shared<Drawing::Surface>();
@@ -667,8 +662,11 @@ sk_sp<SkSurface> RSRenderNode::GetCompletedCacheSurface(uint32_t threadIndex, bo
 std::shared_ptr<Drawing::Surface> RSRenderNode::GetCompletedCacheSurface(uint32_t threadIndex, bool isUIFirst)
 #endif
 {
-    if (isUIFirst || cacheSurfaceThreadIndex_ == threadIndex || !cacheCompletedSurface_) {
-        return cacheCompletedSurface_;
+    {
+        std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
+        if (isUIFirst || cacheSurfaceThreadIndex_ == threadIndex || !cacheCompletedSurface_) {
+            return cacheCompletedSurface_;
+        }
     }
 
     // freeze cache scene

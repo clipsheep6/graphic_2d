@@ -14,8 +14,6 @@
  */
 
 #include "pipeline/rs_uni_render_visitor.h"
-#include <memory>
-#include "SkPictureRecorder.h"
 
 #ifdef RS_ENABLE_VK
 #include <vulkan_window.h>
@@ -265,8 +263,8 @@ void RSUniRenderVisitor::SetNodeCacheChangeStatus(RSBaseRenderNode& node, int ma
     }
     // Attention: currently not support filter and out of parent
     // Only enable lowest marked cached node
-    if (targetNode->ChildHasFilter() || targetNode->HasChildrenOutOfRect() ||
-        (markedCachedNodeCnt != markedCachedNodes_)) {
+    if ((cacheRenderNodeMap.find(node.GetId()) == cacheRenderNodeMap.end() || isDrawingCacheChanged_) &&
+        (targetNode->ChildHasFilter() || (markedCachedNodeCnt != markedCachedNodes_))) {
         targetNode->SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
     }
     RS_TRACE_NAME_FMT("RSUniRenderVisitor::SetNodeCacheChangeStatus: node %" PRIu64 " drawingtype %d, "
@@ -415,7 +413,7 @@ void RSUniRenderVisitor::ParallelPrepareDisplayRenderNodeChildrens(RSDisplayRend
     doParallelRender_ = (node.GetChildrenCount() >= PARALLEL_RENDER_MINIMUM_RENDER_NODE_NUMBER) &&
                         (!doParallelComposition_);
     isParallel_ = AdaptiveSubRenderThreadMode(doParallelRender_) && parallelRenderManager->GetParallelMode();
-    isDirtyRegionAlignedEnable_ = isParallel_;
+    isDirtyRegionAlignedEnable_ = false;
     // we will open prepare parallel after check all properties.
     if (isParallel_ &&
         RSSystemProperties::GetPrepareParallelRenderingEnabled() != ParallelRenderingType::DISABLE) {
@@ -679,6 +677,11 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     // Update node properties, including position (dstrect), OldDirty()
     auto parentNode = node.GetParent().lock();
     auto rsParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(parentNode);
+    auto rsSurfaceParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parentNode);
+    if (node.IsAppWindow() && rsSurfaceParent && rsSurfaceParent->IsLeashWindow()
+        && rsSurfaceParent->GetDstRect().IsEmpty()) {
+            prepareClipRect_ = RectI {0, 0, 0, 0};
+    }
     dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
         dirtyFlag_, prepareClipRect_);
 
@@ -957,9 +960,6 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     if (curSurfaceDirtyManager_ == nullptr) {
         RS_LOGE("RSUniRenderVisitor::PrepareCanvasRenderNode curSurfaceDirtyManager is nullptr");
         return;
-    }
-    if (node.IsContentDirty() && node.GetRecordedContents()) {
-        node.SetRecordedContents(nullptr);
     }
     dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
         dirtyFlag_, prepareClipRect_);
@@ -2577,31 +2577,10 @@ void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
     node.ProcessTransitionBeforeChildren(*canvas_);
     switch (cacheType) {
         case CacheType::NONE: {
-            if (node.GetSortedChildren().empty()) {
-                if (node.GetRecordedContents() == nullptr) { // record draw call to skPicture for leaf node
-                    SkPictureRecorder recorder;
-                    auto drawRegion = node.GetDrawRegion();
-                    SkRect bounds = drawRegion ? RSPropertiesPainter::Rect2SkRect(*drawRegion) :
-                        SkRect::MakeWH(node.GetRenderProperties().GetBoundsWidth(),
-                        node.GetRenderProperties().GetBoundsHeight());
-                    auto recordingCanvas = std::make_shared<RSPaintFilterCanvas>(recorder.beginRecording(bounds));
-                    swap(canvas_, recordingCanvas);
-                    node.ProcessAnimatePropertyBeforeChildren(*canvas_);
-                    node.ProcessRenderContents(*canvas_);
-                    ProcessBaseRenderNode(node);
-                    node.ProcessAnimatePropertyAfterChildren(*canvas_);
-                    swap(canvas_, recordingCanvas);
-                    node.SetRecordedContents(recorder.finishRecordingAsPicture());
-                }
-                if (auto recordedContents = node.GetRecordedContents()) {
-                    recordedContents->playback(canvas_.get());
-                }
-            } else {
-                node.ProcessAnimatePropertyBeforeChildren(*canvas_);
-                node.ProcessRenderContents(*canvas_);
-                ProcessBaseRenderNode(node);
-                node.ProcessAnimatePropertyAfterChildren(*canvas_);
-            }
+            node.ProcessAnimatePropertyBeforeChildren(*canvas_);
+            node.ProcessRenderContents(*canvas_);
+            ProcessBaseRenderNode(node);
+            node.ProcessAnimatePropertyAfterChildren(*canvas_);
             break;
         }
         case CacheType::CONTENT: {

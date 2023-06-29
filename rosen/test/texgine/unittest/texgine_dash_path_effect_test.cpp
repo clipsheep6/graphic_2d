@@ -13,23 +13,31 @@
  * limitations under the License.
  */
 
-#include "post_table_parser.h"
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-#include "texgine/utils/exlog.h"
+#include "texgine_dash_path_effect.h"
+
+using namespace testing;
+using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
-const struct PostTable* PostTableParser::Parse(const char* data, int32_t size)
-{
-    return reinterpret_cast<const struct PostTable*>(data);
-}
+class TexgineDashPathEffectTest : public testing::Test {
+};
 
-void PostTableParser::Dump() const
+/**
+ * @tc.name:Make
+ * @tc.desc: Verify the Make
+ * @tc.type:FUNC
+ */
+HWTEST_F(TexgineDashPathEffectTest, Make, TestSize.Level1)
 {
-    const auto& table = *reinterpret_cast<const struct PostTable*>(data_);
-    LOGSO_FUNC_LINE(INFO) << "postTable size: " << size_ << "version: " << table.version.Get()
-        << "italicAngle: " << table.italicAngle.Get() << "isFixedPitch: " << table.isFixedPitch.Get();
+    float intervals[] = {0.0};
+    EXPECT_NO_THROW({
+        TexgineDashPathEffect::Make(intervals, 0, 0.0);
+    });
 }
 } // namespace TextEngine
 } // namespace Rosen

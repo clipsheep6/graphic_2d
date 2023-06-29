@@ -13,23 +13,34 @@
  * limitations under the License.
  */
 
-#include "post_table_parser.h"
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-#include "texgine/utils/exlog.h"
+#include "texgine_font_metrics.h"
+
+using namespace testing;
+using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
-const struct PostTable* PostTableParser::Parse(const char* data, int32_t size)
-{
-    return reinterpret_cast<const struct PostTable*>(data);
-}
+class TexgineFontMetricsTest : public testing::Test {
+};
 
-void PostTableParser::Dump() const
+/**
+ * @tc.name:SetFontMetrics
+ * @tc.desc: Verify the SetFontMetrics
+ * @tc.type:FUNC
+ */
+HWTEST_F(TexgineFontMetricsTest, SetFontMetrics, TestSize.Level1)
 {
-    const auto& table = *reinterpret_cast<const struct PostTable*>(data_);
-    LOGSO_FUNC_LINE(INFO) << "postTable size: " << size_ << "version: " << table.version.Get()
-        << "italicAngle: " << table.italicAngle.Get() << "isFixedPitch: " << table.isFixedPitch.Get();
+    std::shared_ptr<TexgineFontMetrics> tfm = std::make_shared<TexgineFontMetrics>();
+    std::shared_ptr<SkFontMetrics> sfm = std::make_shared<SkFontMetrics>();
+    EXPECT_NO_THROW({
+        tfm->SetFontMetrics(nullptr);
+        tfm->SetFontMetrics(sfm);
+        EXPECT_EQ(tfm->GetFontMetrics(), sfm);
+    });
 }
 } // namespace TextEngine
 } // namespace Rosen

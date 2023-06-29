@@ -10,10 +10,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 import("//foundation/graphic/graphic_2d/rosen/modules/effect/effect_config.gni")
+import("../../../../../graphic_config.gni")
 
 ## Build libeffectchain.so
 
@@ -46,7 +46,7 @@ config("effect_public_config") {
 ohos_shared_library("libeffectchain") {
   sources = [ "//third_party/cJSON/cJSON.c" ]
 
-  deps = [ "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog" ]
+  deps = [ "$hilog_root/interfaces/native/innerkits:libhilog" ]
 
   external_deps = [
     "c_utils:utils",

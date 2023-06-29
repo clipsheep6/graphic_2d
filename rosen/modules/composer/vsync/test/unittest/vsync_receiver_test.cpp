@@ -17,6 +17,7 @@
 #include "vsync_receiver.h"
 #include "vsync_distributor.h"
 #include "vsync_controller.h"
+#include "transaction/rs_interfaces.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -120,6 +121,24 @@ HWTEST_F(vsyncReceiverTest, SetVSyncRate002, Function | MediumTest| Level3)
     vsyncDistributor->AddConnection(conn);
     ASSERT_EQ(vsyncReceiverTest::vsyncReceiver->SetVSyncRate(fcb, 1), VSYNC_ERROR_OK);
     vsyncDistributor->RemoveConnection(conn);
+}
+
+/*
+* Function: GetVSyncPeriod
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetVSyncPeriod
+ */
+HWTEST_F(vsyncReceiverTest, GetVSyncPeriod, Function | MediumTest| Level3)
+{
+    auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
+    std::shared_ptr<OHOS::Rosen::VSyncReceiver> receiver = rsClient.CreateVSyncReceiver("TestGetVSyncPeriod");
+    ASSERT_EQ(receiver->Init(), VSYNC_ERROR_OK);
+    int64_t period = 0;
+    ASSERT_EQ(receiver->GetVSyncPeriod(period), VSYNC_ERROR_OK);
+    ASSERT_NE(period, 0);
+    std::cout << "period = " << period << std::endl;
 }
 } // namespace
 } // namespace Rosen

@@ -945,13 +945,13 @@ uint8_t RSPropertiesPainter::CalcDirectionBias(const SkMatrix& mat) {
     uint8_t directionBias = 0;
     // 1 and 3 represents rotate matrix's index
     if ((mat.get(1) > FLOAT_ZERO_THRESHOLD) && (mat.get(3) < (0 - FLOAT_ZERO_THRESHOLD))) {
-        uint8_t directionBias = 1; // 1 represents rotate 90 degree
+        directionBias = 1; // 1 represents rotate 90 degree
     // 0 and 4 represents rotate matrix's index
     } else if ((mat.get(0) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.get(4) < (0 - FLOAT_ZERO_THRESHOLD))) {
-        uint8_t directionBias = 2; // 2 represents rotate 180 degree
+        directionBias = 2; // 2 represents rotate 180 degree
     // 1 and 3 represents rotate matrix's index
     } else if ((mat.get(1) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.get(3) > FLOAT_ZERO_THRESHOLD)) {
-        uint8_t directionBias = 3; // 3 represents rotate 270 degree
+        directionBias = 3; // 3 represents rotate 270 degree
     }
     return directionBias;
 }

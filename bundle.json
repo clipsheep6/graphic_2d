@@ -73,9 +73,7 @@
           "libuv",
           "openssl",
           "third_party_skia",
-          "bounds_checking_function",
-          "icu",
-          "libpng",
+          "cjson",
           "skia"
         ]
       },

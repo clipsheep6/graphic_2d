@@ -85,7 +85,7 @@ private:
     static void DrawShadowInner(const RSProperties& properties, RSPaintFilterCanvas& canvas, SkPath& path);
 #ifdef NEW_SKIA
     static bool GetGradientDirectionPoints(SkPoint* pts,
-                                const SkRect& clipBounds, GradientDirection direction, uint8_t directionBias);
+                                const SkRect& clipBounds, GradientDirection direction);
     static void TransformGradientBlurDirection(uint8_t& direction, const uint8_t directionBias);
     static sk_sp<SkShader> MakeAlphaGradientShader(const SkRect& clipBounds,
                                 const std::shared_ptr<RSLinearGradientBlurPara>& para, uint8_t directionBias);

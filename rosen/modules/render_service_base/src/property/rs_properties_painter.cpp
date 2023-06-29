@@ -723,7 +723,7 @@ void RSPropertiesPainter::DrawShadowInner(
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
 bool RSPropertiesPainter::GetGradientDirectionPoints(
-    SkPoint* pts, const SkRect& clipBounds, GradientDirection direction, uint8_t directionBias)
+    SkPoint* pts, const SkRect& clipBounds, GradientDirection direction)
 {
     switch (direction) {
         case GradientDirection::BOTTOM: {
@@ -812,7 +812,7 @@ sk_sp<SkShader> RSPropertiesPainter::MakeAlphaGradientShader(
         TransformGradientBlurDirection(direction, directionBias);
     }
     bool result = GetGradientDirectionPoints(
-                        pts, clipBounds, static_cast<GradientDirection>(direction), directionBias);
+                        pts, clipBounds, static_cast<GradientDirection>(direction));
     if (!result) {
         return nullptr;
     }

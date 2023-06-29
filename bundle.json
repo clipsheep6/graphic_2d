@@ -64,18 +64,14 @@
           "cjson",
           "ipc",
           "player_framework",
-          "resource_schedule_service",
-          "soc_perf",
-          "accessibility"
+          "soc_perf"
         ],
         "third_party": [
           "flutter",
           "libuv",
           "openssl",
           "third_party_skia",
-          "bounds_checking_function",
-          "icu",
-          "libpng",
+          "zilb",
           "skia"
         ]
       },

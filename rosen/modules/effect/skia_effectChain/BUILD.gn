@@ -47,7 +47,6 @@ ohos_shared_library("skeffectchain") {
     "//commonlibrary/c_utils/base:utils",
     "//foundation/multimedia/image_framework/frameworks/innerkitsimpl/pixelconverter:pixelconvertadapter",
     "//foundation/multimedia/image_framework/interfaces/kits/js/common:image",
-    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
   ]
 
   if (ace_enable_gpu) {
@@ -68,6 +67,7 @@ ohos_shared_library("skeffectchain") {
     "ipc:ipc_core",
     "napi:ace_napi",
     "samgr:samgr_proxy",
+    "multimedia_image_framework:image_native",
   ]
 
   sources = [

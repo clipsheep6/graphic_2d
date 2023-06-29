@@ -64,7 +64,8 @@
           "cjson",
           "ipc",
           "player_framework",
-          "soc_perf"
+          "soc_perf",
+          "multimedia_image_framework"
         ],
         "third_party": [
           "flutter",

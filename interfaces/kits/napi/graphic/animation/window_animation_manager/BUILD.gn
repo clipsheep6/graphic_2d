@@ -10,7 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import("../../../../graphic_config.gni")
 import("//build/ohos.gni")
 
 ohos_shared_library("windowanimationmanager_napi") {
@@ -31,7 +31,7 @@ ohos_shared_library("windowanimationmanager_napi") {
 
   cflags_cc = [ "-std=c++17" ]
 
-  deps = [ "//foundation/graphic/graphic_2d/rosen/modules/animation/window_animation:window_animation" ]
+  deps = [ "$graphic_2d_root/rosen/modules/animation/window_animation:window_animation" ]
 
   external_deps = [
     "ability_runtime:ability_manager",

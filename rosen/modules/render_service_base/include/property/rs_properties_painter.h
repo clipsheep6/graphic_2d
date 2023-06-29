@@ -86,6 +86,7 @@ private:
 #ifdef NEW_SKIA
     static bool GetGradientDirectionPoints(SkPoint* pts,
                                 const SkRect& clipBounds, GradientDirection direction, uint8_t directionBias);
+    static void TransformGradientBlurDirection(uint8_t& direction, const uint8_t directionBias);
     static sk_sp<SkShader> MakeAlphaGradientShader(const SkRect& clipBounds,
                                 const std::shared_ptr<RSLinearGradientBlurPara>& para, uint8_t directionBias);
     static sk_sp<SkShader> MakeHorizontalMeanBlurShader(float radiusIn,

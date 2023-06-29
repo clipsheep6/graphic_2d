@@ -70,6 +70,7 @@ constexpr float MIN_SPOT_RATIO = 1.0f;
 constexpr float MAX_SPOT_RATIO = 1.95f;
 constexpr float MAX_AMBIENT_RADIUS = 150.0f;
 constexpr static float FLOAT_ZERO_THRESHOLD = 0.001f;
+constexpr static uint8_t DIRECTION_NUM = 4;
 } // namespace
 
 #ifndef USE_ROSEN_DRAWING
@@ -771,6 +772,34 @@ bool RSPropertiesPainter::GetGradientDirectionPoints(
     }
     return true;
 }
+void RSPropertiesPainter::TransformGradientBlurDirection(uint8_t& direction, const uint8_t directionBias)
+{
+    if (direction == static_cast<uint8_t>(GradientDirection::LEFT_BOTTOM)) {
+        direction += 2; // 2 is used to transtorm diagnal direction.
+    } else if (direction == static_cast<uint8_t>(GradientDirection::RIGHT_TOP) ||
+                    direction == static_cast<uint8_t>(GradientDirection::RIGHT_BOTTOM)) {
+        direction -= 1; // 1 is used to transtorm diagnal direction.
+    }
+    if (direction <= static_cast<uint8_t>(GradientDirection::BOTTOM)) {
+        if (direction < directionBias) {
+            direction += DIRECTION_NUM;
+        }
+        direction -= directionBias;
+    } else {
+        direction -= DIRECTION_NUM;
+        if (direction < directionBias) {
+            direction += DIRECTION_NUM;
+        }
+        direction -= directionBias;
+        direction += DIRECTION_NUM;
+    }
+    if (direction == static_cast<uint8_t>(GradientDirection::RIGHT_BOTTOM)) {
+        direction -= 2; // 2 is used to restore diagnal direction.
+    } else if (direction == static_cast<uint8_t>(GradientDirection::LEFT_BOTTOM) ||
+                        direction == static_cast<uint8_t>(GradientDirection::RIGHT_TOP)) {
+        direction += 1; // 1 is used to restore diagnal direction.
+    }
+}
 
 sk_sp<SkShader> RSPropertiesPainter::MakeAlphaGradientShader(
     const SkRect& clipBounds, const std::shared_ptr<RSLinearGradientBlurPara>& para, uint8_t directionBias)
@@ -778,7 +807,12 @@ sk_sp<SkShader> RSPropertiesPainter::MakeAlphaGradientShader(
     std::vector<SkColor> c;
     std::vector<SkScalar> p;
     SkPoint pts[2];
-    bool result = GetGradientDirectionPoints(pts, clipBounds, para->direction_, directionBias);
+    uint8_t direction = static_cast<uint8_t>(para->direction_);
+    if (directionBias != 0) {
+        TransformGradientBlurDirection(direction, directionBias);
+    }
+    bool result = GetGradientDirectionPoints(
+                        pts, clipBounds, static_cast<GradientDirection>(direction), directionBias);
     if (!result) {
         return nullptr;
     }

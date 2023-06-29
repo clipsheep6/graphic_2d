@@ -64,9 +64,12 @@ ohos_shared_library("skeffectchain") {
   }
 
   external_deps = [
+    "c_utils:utils",
     "hitrace_native:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "multimedia_image_framework:image",
+    "multimedia_image_framework:pixelconvertadapter",
     "samgr:samgr_proxy",
   ]
 

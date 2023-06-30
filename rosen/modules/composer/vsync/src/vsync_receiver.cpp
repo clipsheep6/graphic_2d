@@ -55,17 +55,26 @@ void VSyncCallBackListener::OnReadable(int32_t fileDescriptor)
     } while (ret != -1);
 
     VSyncCallback cb = nullptr;
+    VSyncInfoCallback ncb = nullptr;
     {
         std::lock_guard<std::mutex> locker(mtx_);
         cb = vsyncCallbacks_;
+        ncb = vsyncInfoCallback_;
     }
     now = data[0];
-    VLOGD("dataCount:%{public}d, cb == nullptr:%{public}d", dataCount, (cb == nullptr));
+    VLOGD("dataCount:%{public}d, cb == nullptr:%{public}d, ncb == nullptr:%{public}d",
+        dataCount, (cb == nullptr), (ncb == nullptr));
     // 1, 2: index of array data.
     ScopedBytrace func("ReceiveVsync dataCount:" + std::to_string(dataCount) + "bytes now:" + std::to_string(now) +
         " expectedEnd:" + std::to_string(data[1]) + " vsyncId:" + std::to_string(data[2]));
-    if (dataCount > 0 && cb != nullptr) {
-        cb(now, userData_);
+    if (dataCount > 0) {
+        if (cb != nullptr) {
+            cb(now, userData_);
+        }
+        if (ncb != nullptr) {
+            VSyncInfo vsyncInfo = {now, data[1]}; // data[1] means expectedEnd
+            ncb(vsyncInfo, userData_);
+        }
     }
 }
 

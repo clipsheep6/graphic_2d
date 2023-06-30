@@ -31,12 +31,18 @@ namespace OHOS {
 namespace Rosen {
 class VSyncCallBackListener : public OHOS::AppExecFwk::FileDescriptorListener {
 public:
+    struct VSyncInfo {
+        int64_t timestamp;
+        int64_t expectedEnd;
+    };
     using VSyncCallback = std::function<void(int64_t, void*)>;
+    using VSyncInfoCallback = std::function<void(VSyncInfo, void*)>;
     struct FrameCallback {
         void *userData_;
         VSyncCallback callback_;
+        VSyncInfoCallback vsyncCallback_;
     };
-    VSyncCallBackListener() : vsyncCallbacks_(nullptr), userData_(nullptr)
+    VSyncCallBackListener() : vsyncCallbacks_(nullptr), vsyncInfoCallback_(nullptr), userData_(nullptr)
     {
     }
 
@@ -46,6 +52,7 @@ public:
     void SetCallback(FrameCallback cb)
     {
         std::lock_guard<std::mutex> locker(mtx_);
+        vsyncInfoCallback_ = cb.vsyncCallback_;
         vsyncCallbacks_ = cb.callback_;
         userData_ = cb.userData_;
     }
@@ -53,6 +60,7 @@ public:
 private:
     void OnReadable(int32_t fileDescriptor) override;
     VSyncCallback vsyncCallbacks_;
+    VSyncInfoCallback vsyncInfoCallback_;
     void *userData_;
     std::mutex mtx_;
 };

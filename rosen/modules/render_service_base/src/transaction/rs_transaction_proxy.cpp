@@ -102,12 +102,12 @@ void RSTransactionProxy::ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask
         return;
     }
 
-    if ((renderThreadClient_ == nullptr) || isRenderServiceTask) {
+    if ((renderThreadClient_ == nullptr) && (renderServiceClient_ != nullptr) && isRenderServiceTask) {
         renderServiceClient_->ExecuteSynchronousTask(task);
         return;
     }
 
-    if ((renderServiceClient_ == nullptr) || (!isRenderServiceTask)) {
+    if ((renderServiceClient_ == nullptr) && (renderThreadClient_ != nullptr) && (!isRenderServiceTask)) {
         renderThreadClient_->ExecuteSynchronousTask(task);
         return;
     }

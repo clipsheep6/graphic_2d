@@ -179,7 +179,7 @@ template("graphics2d_source_set") {
       }
     }
 
-    part_name = "graphic_standard"
+    part_name = "graphic_2d"
     subsystem_name = "graphic"
   }
 }
@@ -216,7 +216,7 @@ if (!is_cross_platform_build) {
     deps = [ ":2d_graphics_source_ohos" ]
     public_configs = [ ":export_config" ]
     innerapi_tags = [ "platformsdk_indirect" ]
-    part_name = "graphic_standard"
+    part_name = "graphic_2d"
     subsystem_name = "graphic"
   }
 }
@@ -281,7 +281,7 @@ ohos_shared_library("2d_graphics_canvaskit0310") {
     "multimedia_image_framework:image_native",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 ## Build 2d_graphics.so

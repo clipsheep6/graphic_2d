@@ -40,7 +40,7 @@ namespace Rosen {
 class RSPaintFilterCanvas;
 class RSUniRenderVisitor : public RSNodeVisitor {
 public:
-    using SurfaceDirtyMgrPair = std::pair<std::weak_ptr<RSSurfaceRenderNode>, std::shared_ptr<RSSurfaceRenderNode>>;
+    using SurfaceDirtyMgrPair = std::pair<std::shared_ptr<RSSurfaceRenderNode>, std::shared_ptr<RSSurfaceRenderNode>>;
     RSUniRenderVisitor();
     RSUniRenderVisitor(std::shared_ptr<RSPaintFilterCanvas> canvas, uint32_t surfaceIndex);
     explicit RSUniRenderVisitor(const RSUniRenderVisitor& visitor);
@@ -93,6 +93,13 @@ public:
     {
         mainThreadNodes_ = mainThreadNodes;
         subThreadNodes_ = subThreadNodes;
+    }
+
+    void SetSubThreadConfig(uint32_t threadIndex)
+    {
+        isSubThread_ = true;
+        isHardwareForcedDisabled_ = true;
+        threadIndex_ = threadIndex;
     }
 
     void DrawSurfaceLayer(RSDisplayRenderNode& node);
@@ -191,13 +198,13 @@ private:
      * Save rest validNodes in prevHwcEnabledNodes
      * [planning] Update hwc surface dirty status at the same time
      */
-    void UpdateHardwardNodeStatusBasedOnFilter(std::shared_ptr<RSSurfaceRenderNode>& node,
+    void UpdateHardwareNodeStatusBasedOnFilter(std::shared_ptr<RSSurfaceRenderNode>& node,
         std::vector<SurfaceDirtyMgrPair>& prevHwcEnabledNodes,
         std::shared_ptr<RSDirtyRegionManager>& displayDirtyManager);
     /* Disable hwc surface intersect with filter rects and merge dirty filter region
      * [planning] If invisible filterRects could be removed
      */
-    RectI UpdateHardwardEnableList(std::vector<RectI>& filterRects,
+    RectI UpdateHardwareEnableList(std::vector<RectI>& filterRects,
         std::vector<SurfaceDirtyMgrPair>& validHwcNodes);
     void AddContainerDirtyToGlobalDirty(std::shared_ptr<RSDisplayRenderNode>& node) const;
 
@@ -205,6 +212,7 @@ private:
     void SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node);
     void SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
         const Occlusion::Region alignedDirtyRegion);
+    void AlignGlobalAndSurfaceDirtyRegions(std::shared_ptr<RSDisplayRenderNode>& node);
 
     void CheckAndSetNodeCacheType(RSRenderNode& node);
     bool UpdateCacheSurface(RSRenderNode& node);
@@ -319,6 +327,7 @@ private:
     std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes_;
     bool isSubThread_ = false;
     bool isUIFirst_ = false;
+    uint32_t threadIndex_ = UNI_MAIN_THREAD_INDEX;
 
     bool needColdStartThread_ = false; // flag used for cold start app window
 
@@ -350,16 +359,10 @@ private:
 #else
     using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, float, std::optional<Drawing::Matrix>>;
 #endif
-    using TransitionNodeList = std::vector<std::pair<NodeId, RenderParam>>;
-    TransitionNodeList unpairedTransitionNodes_;
+    std::unordered_map<NodeId, RenderParam> unpairedTransitionNodes_;
     // return true if we should prepare/process, false if we should skip.
     bool PrepareSharedTransitionNode(RSBaseRenderNode& node);
     bool ProcessSharedTransitionNode(RSBaseRenderNode& node);
-    // try to pair nodes, call func on paired ones, and move unpaired ones to outList
-    TransitionNodeList FindPairedSharedTransitionNodes(TransitionNodeList& existingNodes, TransitionNodeList& newNodes,
-        TransitionNodeList (RSUniRenderVisitor::*func)(const RenderParam&, const RenderParam&));
-    TransitionNodeList PreparePairedSharedTransitionNodes(const RenderParam& first, const RenderParam& second);
-    TransitionNodeList ProcessPairedSharedTransitionNodes(const RenderParam& first, const RenderParam& second);
 
     std::weak_ptr<RSBaseRenderNode> logicParentNode_;
 
@@ -387,11 +390,12 @@ private:
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkImage> cacheImgForCapture_ = nullptr;
 #else
-    std::shared_ptr<<Drawing::Image> cacheImgForCapture_ = nullptr;
+    std::shared_ptr<Drawing::Image> cacheImgForCapture_ = nullptr;
 #endif
     bool resetRotate_ = false;
     bool needCacheImg_ = false;
     uint32_t captureWindowZorder_ = 0;
+    std::optional<SkPath> effectRegion_ = std::nullopt;
 };
 } // namespace Rosen
 } // namespace OHOS

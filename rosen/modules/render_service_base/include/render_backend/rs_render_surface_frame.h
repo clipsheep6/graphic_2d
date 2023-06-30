@@ -47,9 +47,11 @@ typedef struct EGLState {
     {
         eglContext = EGL_NO_CONTEXT;
         eglDisplay = EGL_NO_DISPLAY;
+        eglSurface = EGL_NO_SURFACE;
     }
     EGLContext eglContext;
     EGLDisplay eglDisplay;
+    EGLSurface eglSurface;
 } EGLState;
 
 #ifdef RS_ENABLE_VK
@@ -68,7 +70,7 @@ typedef struct FrameConfig {
         releaseFence = -1;
         pixelFormat = PIXEL_FMT_RGBA_8888;
         bufferUsage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_DMA;
-        GraphicColorGamut colorSpace = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
+        colorSpace = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
         requestConfig = {
             .width = 0x100,
             .height = 0x100,
@@ -85,6 +87,8 @@ typedef struct FrameConfig {
                 .h = 0x100,
             },
         };
+        skSurface = nullptr;
+        buffer = nullptr;
     }
     int32_t width;
     int32_t height;
@@ -108,11 +112,11 @@ typedef struct SurfaceConfig {
 } SurfaceConfig;
 
 typedef struct RSRenderSurfaceFrame {
-    SurfaceConfig* surfaceConfig;
-    FrameConfig* frameConfig;
-    EGLState* eglState;
+    std::shared_ptr<SurfaceConfig> surfaceConfig;
+    std::shared_ptr<FrameConfig> frameConfig;
+    std::shared_ptr<EGLState> eglState;
 #if defined(RS_ENABLE_VK)
-    VulkanState* vulkanState;
+    std::shared_ptr<VulkanState> vulkanState;
 #endif
 } RSRenderSurfaceFrame;
 }

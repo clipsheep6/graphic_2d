@@ -81,11 +81,6 @@ public:
         return nodeType_ == RSSurfaceNodeType::ABILITY_COMPONENT_NODE;
     }
 
-    bool IsExtensionAbility() const
-    {
-        return nodeType_ == RSSurfaceNodeType::EXTENSION_ABILITY_NODE;
-    }
-
     bool IsLeashWindow() const
     {
         return nodeType_ == RSSurfaceNodeType::LEASH_WINDOW_NODE;
@@ -154,7 +149,7 @@ public:
     bool IsMainWindowType() const
     {
         // a mainWindowType surfacenode will not mounted under another mainWindowType surfacenode
-        // incluing app main window, starting window, and selfdrawing window
+        // including app main window, starting window, and selfdrawing window
         return nodeType_ == RSSurfaceNodeType::APP_WINDOW_NODE ||
                nodeType_ == RSSurfaceNodeType::STARTING_WINDOW_NODE ||
                nodeType_ == RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
@@ -575,7 +570,7 @@ public:
     void SetCachedImage(std::shared_ptr<Drawing::Image> image)
 #endif
     {
-        SetDirty();
+        SetContentDirty();
         std::lock_guard<std::mutex> lock(cachedImageMutex_);
         cachedImage_ = image;
     }
@@ -596,7 +591,7 @@ public:
         cachedImage_ = nullptr;
     }
 
-    // if surfacenode's buffer has been comsumed, it should be set dirty
+    // if surfacenode's buffer has been consumed, it should be set dirty
     bool UpdateDirtyIfFrameBufferConsumed();
 
 #ifndef USE_ROSEN_DRAWING
@@ -754,7 +749,7 @@ private:
         ContainerWindow configs acquired from arkui, including container window state, screen density, container border
         width, padding width, inner/outer radius, etc.
     */
-    class ContarinerConfig {
+    class ContainerConfig {
     public:
         void Update(bool hasContainer, float density);
     private:
@@ -768,7 +763,7 @@ private:
         const static int CONTAINER_TITLE_HEIGHT = 37;   // container title height = 37 vp
         const static int CONTENT_PADDING = 4;           // container <--> content distance 4 vp
         const static int CONTAINER_BORDER_WIDTH = 1;    // container border width 2 vp
-        const static int CONTAINER_OUTER_RADIUS = 16;   // container outter radius 16 vp
+        const static int CONTAINER_OUTER_RADIUS = 16;   // container outer radius 16 vp
         const static int CONTAINER_INNER_RADIUS = 14;   // container inner radius 14 vp
 
         bool hasContainerWindow_ = false;               // set to false as default, set by arkui
@@ -779,7 +774,7 @@ private:
         int bt = 76;                                    // border width + title (int value)
     };
 
-    ContarinerConfig containerConfig_;
+    ContainerConfig containerConfig_;
 
     bool startAnimationFinished_ = false;
     mutable std::mutex cachedImageMutex_;

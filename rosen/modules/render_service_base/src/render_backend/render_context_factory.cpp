@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Rosen {
-std::shared_ptr<RenderContextBase> RenderContextFactory::CreateRenderContext(RenderType renderType)
+std::shared_ptr<RenderContextBase> RenderContextBaseFactory::CreateRenderContext(RenderType renderType)
 {
     std::shared_ptr<RenderContextBase> renderContext;
 #if defined(ROSEN_OHOS)
@@ -34,7 +34,9 @@ std::shared_ptr<RenderContextBase> RenderContextFactory::CreateRenderContext(Ren
     } else if (renderType == RenderType::RASTER) {
         renderContext = std::make_shared<RenderContextOhosRaster>();
     } else {
+#ifdef RS_ENABLE_VK
         renderContext = std::make_shared<RenderContextOhosVk>();
+#endif
     }
     renderContext->SetPlatformName(PlatformName::OHOS);
     renderContext->SetRenderType(renderType);

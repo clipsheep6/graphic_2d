@@ -32,6 +32,7 @@ namespace Rosen {
 using AnimationId = uint64_t;
 using NodeId = uint64_t;
 using PropertyId = uint64_t;
+constexpr uint32_t UNI_MAIN_THREAD_INDEX = UINT32_MAX;
 
 // types in the same layer should be 0/1/2/4/8
 // types for UINode
@@ -113,7 +114,6 @@ enum class RSSurfaceNodeType : uint8_t {
     STARTING_WINDOW_NODE,     // starting window, surfacenode created by wms
     LEASH_WINDOW_NODE,        // leashwindow
     SELF_DRAWING_WINDOW_NODE, // create by wms, such as pointer window and bootanimation
-    EXTENSION_ABILITY_NODE,   // create by arkui to manage extension views
 };
 
 struct RSSurfaceRenderNodeConfig {

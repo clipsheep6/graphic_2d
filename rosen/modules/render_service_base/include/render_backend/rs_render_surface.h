@@ -25,6 +25,8 @@
 #ifndef ROSEN_CROSS_PLATFORM
 #include "surface_type.h"
 #endif
+
+#include "drawing_context.h"
 #include "rs_render_surface_frame.h"
 #include "render_context_base.h"
 
@@ -34,7 +36,7 @@ class RSRenderSurface {
 public:
     explicit RSRenderSurface() = default;
     virtual ~RSRenderSurface() = default;
-    virtual bool IsValid() = 0;
+    virtual bool IsValid() const = 0;
     virtual uint32_t GetQueueSize() const = 0;
     virtual std::shared_ptr<RSRenderSurfaceFrame> RequestFrame(
         int32_t width, int32_t height, uint64_t uiTimestamp = 0, bool useAFBC = true) = 0;
@@ -57,9 +59,14 @@ public:
     {
         renderContext_ = renderContext;
     }
+    void SetDrawingContext(const std::shared_ptr<DrawingContext>& drawingContext)
+    {
+        drawingContext_ = drawingContext;
+    }
 protected:
     std::shared_ptr<RSRenderSurfaceFrame> frame_;
     std::shared_ptr<RenderContextBase> renderContext_;
+    std::shared_ptr<DrawingContext> drawingContext_;
 };
 }
 } // namespace Rosen

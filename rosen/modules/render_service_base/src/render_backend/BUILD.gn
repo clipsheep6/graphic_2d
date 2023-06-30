@@ -42,6 +42,7 @@ ohos_static_library("librender_backend") {
     "drawing_context.cpp",
     "ohos/render_context_ohos_raster.cpp",
     "ohos/rs_render_surface_ohos.cpp",
+    "render_backend_utils.cpp",
     "render_context_factory.cpp",
     "rs_surface_factory.cpp",
   ]
@@ -72,19 +73,14 @@ ohos_static_library("librender_backend") {
     }
 
     if (graphic_standard_feature_enable_vulkan) {
-      include_dirs += [
-        "$graphic_2d_root/frameworks/vulkan_wrapper/include",
-        "//third_party/flutter/engine/flutter/vulkan",
-      ]
+      include_dirs += [ "//third_party/flutter/engine/flutter/vulkan" ]
       sources += [ "ohos/render_context_ohos_vk.cpp" ]
     }
 
     public_deps += [
       "$graphic_2d_root:libgl",
-      "$graphic_2d_root:libsurface",
       "$graphic_2d_root:libvulkan",
       "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
-      "$graphic_2d_root/utils:sync_fence",
       "//third_party/openssl:libcrypto_shared",
     ]
   }

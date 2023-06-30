@@ -28,7 +28,11 @@
 #ifndef ROSEN_CROSS_PLATFORM
 #include "platform/drawing/rs_surface_converter.h"
 #endif
+#ifdef NEW_RENDER_CONTEXT
+#include "render_context_base.h"
+#else
 #include "render_context/render_context.h"
+#endif
 #include "transaction/rs_render_service_client.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_proxy_node.h"
@@ -452,5 +456,22 @@ RSSurfaceNode::~RSSurfaceNode()
     }
 }
 
+void RSSurfaceNode::AttachToDisplay(uint64_t screenId)
+{
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeAttachToDisplay>(GetId(), screenId);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    }
+}
+
+void RSSurfaceNode::DetachToDisplay(uint64_t screenId)
+{
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeDetachToDisplay>(GetId(), screenId);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

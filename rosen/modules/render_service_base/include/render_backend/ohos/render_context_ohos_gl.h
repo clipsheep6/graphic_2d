@@ -39,12 +39,13 @@ public:
     void MakeCurrent(void* curSurface = nullptr, void* curContext = nullptr) override;
     void* CreateContext(bool share = false) override;
     bool CreateSurface(const std::shared_ptr<RSRenderSurfaceFrame>& frame) override;
-    void DestroySurface() override;
+    void DestroySurface(const std::shared_ptr<RSRenderSurfaceFrame>& frame) override;
     void DamageFrame(const std::shared_ptr<RSRenderSurfaceFrame>& frame) override;
     int32_t GetBufferAge() override;
     void SwapBuffers(const std::shared_ptr<RSRenderSurfaceFrame>& frame) override;
 private:
     void CreatePbufferSurface();
+    void SetEGLState();
 
     EGLNativeWindowType nativeWindow_;
     EGLDisplay eglDisplay_ = EGL_NO_DISPLAY;

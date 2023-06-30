@@ -14,7 +14,7 @@
  */
 
 #ifndef RS_RENDER_SURFACE_OHOS_H
-#define RS_REDNER_SURFACE_OHOS_H
+#define RS_RENDER_SURFACE_OHOS_H
 
 #include <memory>
 
@@ -23,7 +23,6 @@
 
 #include "common/rs_rect.h"
 
-#include "drawing_context.h"
 #include "rs_render_surface.h"
 #include "rs_render_surface_frame.h"
 
@@ -31,9 +30,9 @@ namespace OHOS {
 namespace Rosen {
 class RSRenderSurfaceOhos : public RSRenderSurface {
 public:
-    explicit RSRenderSurfaceOhos(const sptr<Surface>& producer, const std::shared_ptr<DrawingContext>& drawingContext);
+    explicit RSRenderSurfaceOhos(const sptr<Surface>& surface, const std::shared_ptr<DrawingContext>& drawingContext);
     ~RSRenderSurfaceOhos();
-    bool IsValid() override;
+    bool IsValid() const override;
     sptr<Surface> GetSurfaceOhos() const;
     uint32_t GetQueueSize() const override;
     std::shared_ptr<RSRenderSurfaceFrame> RequestFrame(
@@ -49,13 +48,10 @@ public:
     void SetColorSpace(GraphicColorGamut colorSpace) override;
     void SetSurfaceBufferUsage(uint64_t usage);
     void SetSurfacePixelFormat(uint64_t pixelFormat);
-    void SetDrawingContext(const std::shared_ptr<DrawingContext>& drawingContext);
 private:
     void RenderFrame();
     void SetReleaseFence(const int32_t& fence);
     int32_t GetReleaseFence() const;
-
-    std::shared_ptr<DrawingContext> drawingContext_;
 };
 }
 } // namespace Rosen

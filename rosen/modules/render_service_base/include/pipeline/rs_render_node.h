@@ -16,7 +16,10 @@
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_RENDER_NODE_H
 
 #include <memory>
+#include <mutex>
 #include <unordered_set>
+#include <stdint.h>
+#include <functional>
 #include "common/rs_common_def.h"
 
 #ifndef USE_ROSEN_DRAWING
@@ -43,6 +46,7 @@ class DrawCmdList;
 
 class RSB_EXPORT RSRenderNode : public RSBaseRenderNode {
 public:
+    using ClearCacheSurfaceFunc = std::function<void(sk_sp<SkSurface>, sk_sp<SkSurface>, uint32_t)>;
     using WeakPtr = std::weak_ptr<RSRenderNode>;
     using SharedPtr = std::shared_ptr<RSRenderNode>;
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::RS_NODE;
@@ -54,13 +58,16 @@ public:
     ~RSRenderNode() override;
     bool IsDirty() const override;
     bool IsContentDirty() const override;
+    void AddDirtyType(RSModifierType type)
+    {
+        dirtyTypes_.emplace(type);
+    }
 
     std::pair<bool, bool> Animate(int64_t timestamp) override;
-    // PrepareCanvasRenderNode in UniRender
-    bool Update(
-        RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, RectI clipRect);
-    // Other situation
-    bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty);
+
+    // clipRect has value in UniRender when calling PrepareCanvasRenderNode, else it is nullopt
+    bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty,
+        std::optional<RectI> clipRect = std::nullopt);
 #ifndef USE_ROSEN_DRAWING
     virtual std::optional<SkRect> GetContextClipRegion() const { return std::nullopt; }
 #else
@@ -141,10 +148,14 @@ public:
     }
 
 #ifdef NEW_SKIA
-    void InitCacheSurface(GrRecordingContext* grContext);
+    void InitCacheSurface(GrRecordingContext* grContext, ClearCacheSurfaceFunc func = nullptr,
+        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #else
-    void InitCacheSurface(GrContext* grContext);
+    void InitCacheSurface(GrContext* grContext, ClearCacheSurfaceFunc func = nullptr,
+        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #endif
+
+    Vector2f GetOptionalBufferSize() const;
 
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> GetCacheSurface() const
@@ -152,30 +163,33 @@ public:
     std::shared_ptr<Drawing::Surface> GetCacheSurface() const
 #endif
     {
+        std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
         return cacheSurface_;
     }
 
     void UpdateCompletedCacheSurface()
     {
+        std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
         std::swap(cacheSurface_, cacheCompletedSurface_);
     }
 
 #ifndef USE_ROSEN_DRAWING
-    sk_sp<SkSurface> GetCompletedCacheSurface() const
+    sk_sp<SkSurface> GetCompletedCacheSurface(uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
+        bool isUIFirst = false);
 #else
-    std::shared_ptr<Drawing::Surface> GetCompletedCacheSurface() const
+    std::shared_ptr<Drawing::Surface> GetCompletedCacheSurface(uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
+        bool isUIFirst = false);
 #endif
-    {
-        return cacheCompletedSurface_;
-    }
 
     void ClearCacheSurface()
     {
+        std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
         cacheSurface_ = nullptr;
         cacheCompletedSurface_ = nullptr;
     }
 
-    void DrawCacheSurface(RSPaintFilterCanvas& canvas, bool isSubThreadNode = false) const;
+    void DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
+        bool isUIFirst = false);
 
     void SetCacheType(CacheType cacheType)
     {
@@ -196,7 +210,7 @@ public:
     {
         return shadowRectOffsetY_;
     }
-    
+
     void SetDrawingCacheType(RSDrawingCacheType cacheType)
     {
         drawingCacheType_ = cacheType;
@@ -283,6 +297,11 @@ public:
         hasFilter_ = hasFilter;
     }
 
+    std::recursive_mutex& GetSurfaceMutex() const
+    {
+        return surfaceMutex_;
+    }
+
     bool HasHardwareNode() const
     {
         return hasHardwareNode_;
@@ -301,6 +320,11 @@ public:
     void SetHasAbilityComponent(bool hasAbilityComponent)
     {
         hasAbilityComponent_ = hasAbilityComponent;
+    }
+
+    uint32_t GetCacheSurfaceThreadIndex() const
+    {
+        return cacheSurfaceThreadIndex_;
     }
 
     bool IsMainThreadNode() const
@@ -364,10 +388,12 @@ public:
     }
 
     void UpdateDrawRegion();
+    void UpdateEffectRegion(std::optional<SkPath>& region) const;
 
     void CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd);
-    bool isForcedDrawInGroup() const;
-    bool isSuggestedDrawInGroup() const;
+    bool IsForcedDrawInGroup() const;
+    bool IsSuggestedDrawInGroup() const;
+    void CheckDrawingCacheType();
 
     enum NodeGroupType {
         NONE = 0,
@@ -405,12 +431,7 @@ private:
     void FallbackAnimationsToRoot();
     void FilterModifiersByPid(pid_t pid);
 
-    // clipRect only used in UniRener when calling PrepareCanvasRenderNode
-    // PrepareCanvasRenderNode in UniRender: needClip = true and clipRect is meaningful
-    // Other situation: needClip = false and clipRect is meaningless
-    bool Update(RSDirtyRegionManager& dirtyManager,
-        const RSProperties* parent, bool parentDirty, bool needClip, RectI clipRect);
-    void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, bool needClip, RectI clipRect);
+    void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, std::optional<RectI> clipRect);
 
     bool isDirtyRegionUpdated_ = false;
     bool isLastVisible_ = false;
@@ -438,7 +459,10 @@ private:
     RSDrawingCacheType drawingCacheType_ = RSDrawingCacheType::DISABLED_CACHE;
     bool isDrawingCacheChanged_ = false;
 
-    sk_sp<SkImage> cacheTexture_;
+    mutable std::recursive_mutex surfaceMutex_;
+    sk_sp<SkImage> cacheTexture_ = nullptr;
+    ClearCacheSurfaceFunc clearCacheSurfaceFunc_ = nullptr;
+    uint32_t cacheSurfaceThreadIndex_ = UNI_MAIN_THREAD_INDEX;
     bool isMainThreadNode_ = true;
     bool isScale_ = false;
     bool hasFilter_ = false;
@@ -465,6 +489,7 @@ private:
     // Only use in RSRenderNode::DrawCacheSurface to calculate scale factor
     float boundsWidth_ = 0.0f;
     float boundsHeight_ = 0.0f;
+    std::unordered_set<RSModifierType> dirtyTypes_;
 
     friend class RSRenderTransition;
     friend class RSRenderNodeMap;

@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine/ace_config.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 ohos_executable("drawing_engine_sample") {
@@ -70,8 +71,9 @@ ohos_executable("drawing_engine_sample") {
 
   sources += [
     "benchmarks/benchmark_config.cpp",
-    "benchmarks/benchmark_dcl/dcl_command.cpp",
-    "benchmarks/benchmark_dcl/drawing_dcl.cpp",
+    "benchmarks/benchmark_dcl/drawing_command.cpp",
+    "benchmarks/benchmark_dcl/drawing_playback.cpp",
+    "benchmarks/benchmark_dcl/skia_recording.cpp",
     "benchmarks/benchmark_multithread/drawing_mutilthread.cpp",
     "benchmarks/benchmark_singlethread/drawing_singlethread.cpp",
   ]
@@ -116,6 +118,7 @@ ohos_executable("drawing_engine_sample") {
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog_native:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "multimedia_image_framework:image_native",
   ]

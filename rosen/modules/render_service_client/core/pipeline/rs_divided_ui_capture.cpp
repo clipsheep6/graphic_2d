@@ -25,6 +25,7 @@
 
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
+#include "pipeline/rs_canvas_drawing_render_node.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_render_thread.h"
@@ -225,10 +226,18 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessCanvasRenderNode(RSCa
         canvas_->SetMatrix(relativeMatrix);
 #endif
     }
-    node.ProcessRenderBeforeChildren(*canvas_);
-    node.ProcessRenderContents(*canvas_);
-    ProcessBaseRenderNode(node);
-    node.ProcessRenderAfterChildren(*canvas_);
+    if (node.GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
+        auto canvasDrawingNode = node.ReinterpretCastTo<RSCanvasDrawingRenderNode>();
+        SkBitmap bitmap;
+        canvasDrawingNode->GetBitmap(bitmap);
+        canvas_->drawImage(bitmap.asImage(), 0, 0);
+        ProcessBaseRenderNode(*canvasDrawingNode);
+    } else {
+        node.ProcessRenderBeforeChildren(*canvas_);
+        node.ProcessRenderContents(*canvas_);
+        ProcessBaseRenderNode(node);
+        node.ProcessRenderAfterChildren(*canvas_);
+    }
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessEffectRenderNode(RSEffectRenderNode& node)
@@ -287,30 +296,6 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessSurfaceRenderNode(RSS
         ROSEN_LOGI(
             "RSDividedUICaptureVisitor::ProcessSurfaceRenderNode node : %" PRIu64 " is invisible", node.GetId());
         return;
-    }
-    if (node.GetId() == nodeId_) {
-        // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
-        const auto& property = node.GetRenderProperties();
-        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
-#ifndef USE_ROSEN_DRAWING
-        SkMatrix relativeMatrix = SkMatrix::I();
-        relativeMatrix.setScaleX(scaleX_);
-        relativeMatrix.setScaleY(scaleY_);
-        SkMatrix invertMatrix;
-        if (geoPtr->GetMatrix().invert(&invertMatrix)) {
-            relativeMatrix.preConcat(invertMatrix);
-        }
-        canvas_->setMatrix(relativeMatrix);
-#else
-        Drawing::Matrix relativeMatrix;
-        relativeMatrix.Set(Drawing::Matrix::SCALE_X, scaleX_);
-        relativeMatrix.Set(Drawing::Matrix::SCALE_Y, scaleY_);
-        Drawing::Matrix invertMatrix;
-        if (geoPtr->GetMatrix().Invert(invertMatrix)) {
-            relativeMatrix.PreConcat(invertMatrix);
-        }
-        canvas_->SetMatrix(relativeMatrix);
-#endif
     }
     std::shared_ptr<RSOffscreenRenderCallback> callback = std::make_shared<RSOffscreenRenderCallback>();
     auto renderServiceClient = std::make_unique<RSRenderServiceClient>();

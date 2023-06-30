@@ -15,7 +15,9 @@
 
 #include "font_parser.h"
 
+#include <codecvt>
 #include <iomanip>
+#include <securec.h>
 
 #include "font_config.h"
 #include "texgine/utils/exlog.h"
@@ -28,18 +30,12 @@ namespace TextEngine {
 
 #define FONT_CONFIG_FILE  "/system/fonts/visibility_list.json"
 
-FontParser::FontDescriptor::FontDescriptor()
+#define HALF(a) ((a) / 2)
+
+// "weight" and "italic" will assigned value 0 and 1, -1 used to exclude unassigned
+FontParser::FontDescriptor::FontDescriptor(): path(""), postScriptName(""), fullName(""),
+    fontFamily(""), fontSubfamily(""), weight(-1), italic(-1), monoSpace(0), symbolic(0)
 {
-    path = "";
-    postScriptName = "";
-    fullName = "";
-    fontFamily = "";
-    fontSubfamily = "";
-    weight = 0;
-    width = 0;
-    italic = 0;
-    monoSpace = 0;
-    symbolic = 0;
 }
 
 FontParser::FontParser()
@@ -50,7 +46,7 @@ FontParser::FontParser()
     fontSet_ = fontConfig.GetFontSet();
 }
 
-void FontParser::ProcessCmapTable(const struct CmapTables* cmapTable, FontParser::FontDescriptor& fontDescriptor) const
+void FontParser::ProcessCmapTable(const struct CmapTables* cmapTable, FontParser::FontDescriptor& fontDescriptor)
 {
     for (auto i = 0; i < cmapTable->numTables.Get(); ++i) {
         const auto& record = cmapTable->encodingRecords[i];
@@ -63,28 +59,32 @@ void FontParser::ProcessCmapTable(const struct CmapTables* cmapTable, FontParser
     }
 }
 
-void FontParser::GetStringFromNameId(FontParser::NameId nameId, const char* stringStorage, uint16_t stringOffset,
-    uint16_t len, FontParser::FontDescriptor& fontDescriptor) const
+void FontParser::GetStringFromNameId(FontParser::NameId nameId, const std::string& nameString,
+    FontParser::FontDescriptor& fontDescriptor)
 {
     switch (nameId) {
         case FontParser::NameId::FONT_FAMILY: {
-            std::string fontFamily(stringStorage + stringOffset, len);
-            fontDescriptor.fontFamily = fontFamily;
+            if (fontDescriptor.fontFamily.size() == 0) {
+                fontDescriptor.fontFamily = nameString;
+            }
             break;
         }
         case FontParser::NameId::FONT_SUBFAMILY: {
-            std::string fontSubfamily(stringStorage + stringOffset, len);
-            fontDescriptor.fontSubfamily = fontSubfamily;
+            if (fontDescriptor.fontSubfamily.size() == 0) {
+                fontDescriptor.fontSubfamily = nameString;
+            }
             break;
         }
         case FontParser::NameId::FULL_NAME: {
-            std::string fullName(stringStorage + stringOffset, len);
-            fontDescriptor.fullName = fullName;
+            if (fontDescriptor.fullName.size() == 0) {
+                fontDescriptor.fullName = nameString;
+            }
             break;
         }
         case FontParser::NameId::POSTSCRIPT_NAME: {
-            std::string postScriptName(stringStorage + stringOffset, len);
-            fontDescriptor.postScriptName = postScriptName;
+            if (fontDescriptor.postScriptName.size() == 0) {
+                fontDescriptor.postScriptName = nameString;
+            }
             break;
         }
         default: {
@@ -93,27 +93,55 @@ void FontParser::GetStringFromNameId(FontParser::NameId nameId, const char* stri
     }
 }
 
-void FontParser::ProcessNameTable(const struct NameTable* nameTable, FontParser::FontDescriptor& fontDescriptor) const
+int FontParser::ProcessNameTable(const struct NameTable* nameTable, FontParser::FontDescriptor& fontDescriptor) const
 {
     auto count = nameTable->count.Get();
     auto storageOffset = nameTable->storageOffset.Get();
     auto stringStorage = data_ + storageOffset;
     for (int i = 0; i < count; ++i) {
+        if (nameTable->nameRecord[i].stringOffset.Get() == 0 || nameTable->nameRecord[i].length.Get() == 0) {
+            continue;
+        }
         FontParser::NameId nameId = static_cast<FontParser::NameId>(nameTable->nameRecord[i].nameId.Get());
         FontParser::PlatformId platformId =
             static_cast<FontParser::PlatformId>(nameTable->nameRecord[i].platformId.Get());
+        auto len = nameTable->nameRecord[i].length.Get();
+        auto stringOffset = nameTable->nameRecord[i].stringOffset.Get();
+        const char* data = stringStorage + stringOffset;
         if (platformId == FontParser::PlatformId::MACINTOSH) {
-            auto len = nameTable->nameRecord[i].length.Get();
-            auto stringOffset = nameTable->nameRecord[i].stringOffset.Get();
-            GetStringFromNameId(nameId, stringStorage, stringOffset, len, fontDescriptor);
+            std::string nameString(data, len);
+            GetStringFromNameId(nameId, nameString, fontDescriptor);
+        } else if (platformId == FontParser::PlatformId::WINDOWS) {
+            char* buffer = new char[len]();
+            if (buffer == nullptr) {
+                return FAILED;
+            }
+            if (memcpy_s(buffer, len, data, len) != EOK) {
+                LOGSO_FUNC_LINE(ERROR) << "memcpy failed";
+                delete[] buffer;
+                return FAILED;
+            }
+            const char16_t* strPtr = reinterpret_cast<const char16_t*>(buffer);
+            const std::u16string u16str(strPtr, strPtr + HALF(len));
+            std::wstring_convert<std::codecvt_utf16<char16_t>, char16_t> converter;
+            const std::string name = converter.to_bytes(u16str);
+            std::vector<char> vec(name.begin(), name.end());
+            vec.erase(std::remove(vec.begin(), vec.end(), '\0'), vec.end());
+            std::string nameString = std::string(vec.begin(), vec.end());
+            GetStringFromNameId(nameId, nameString, fontDescriptor);
+            delete[] buffer;
         }
     }
+
+    return SUCCESSED;
 }
 
-void FontParser::ProcessPostTable(const struct PostTable* postTable, FontParser::FontDescriptor& fontDescriptor) const
+void FontParser::ProcessPostTable(const struct PostTable* postTable, FontParser::FontDescriptor& fontDescriptor)
 {
     if (postTable->italicAngle.Get() != 0) {
-        fontDescriptor.italic = true;
+        fontDescriptor.italic = 1; // means support italics
+    } else {
+        fontDescriptor.italic = 0;
     }
     if (postTable->isFixedPitch.Get() == 1) {
         fontDescriptor.monoSpace = true;
@@ -177,7 +205,11 @@ int FontParser::ParseNameTable(sk_sp<SkTypeface> typeface, FontParser::FontDescr
     length_ = hb_blob_get_length(hblob);
     auto parseName = std::make_shared<NameTableParser>(data_, length_);
     auto nameTable = parseName->Parse(data_, length_);
-    ProcessNameTable(nameTable, fontDescriptor);
+    int ret = ProcessNameTable(nameTable, fontDescriptor);
+    if (ret != SUCCESSED) {
+        LOGSO_FUNC_LINE(ERROR) << "process name table failed";
+        return FAILED;
+    }
 
     return SUCCESSED;
 }
@@ -239,8 +271,8 @@ int FontParser::SetFontDescriptor()
         const char* path = fontSet_[i].c_str();
         auto typeface = SkTypeface::MakeFromFile(path);
         if (typeface == nullptr) {
-            LOGSO_FUNC_LINE(ERROR) << "typeface is nullptr";
-            return FAILED;
+            LOGSO_FUNC_LINE(ERROR) << "typeface is nullptr, can not parse: " << fontDescriptor.path;
+            continue;
         }
         auto fontStyle = typeface->fontStyle();
         fontDescriptor.weight = fontStyle.weight();

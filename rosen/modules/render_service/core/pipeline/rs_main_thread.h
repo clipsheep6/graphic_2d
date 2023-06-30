@@ -39,7 +39,6 @@
 #include "pipeline/rs_uni_render_judgement.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "platform/common/rs_event_manager.h"
-#include "platform/common/rs_system_properties.h"
 #include "transaction/rs_transaction_data.h"
 
 namespace OHOS::Rosen {
@@ -223,13 +222,10 @@ private:
     void PerfAfterAnim(bool needRequestNextVsync);
     void PerfForBlurIfNeeded();
     void PerfMultiWindow();
+    void RenderFrameStart();
     void ResetHardwareEnabledState();
 
     bool IsResidentProcess(pid_t pid);
-
-    // used for drawop statistic
-    void DrawOpStatisticBegin() const;
-    void DrawOpStatisticEnd(const std::string &logPrefix) const;
 
     // Click animation, report the start event to RS
     void ResSchedDataStartReport(bool needRequestNextVsync);
@@ -339,9 +335,6 @@ private:
     // driven render
     bool hasDrivenNodeOnUniTree_ = false;
     bool hasDrivenNodeMarkRender_ = false;
-
-    // used for print control of trace
-    SkiaTraceType skiaTraceEnabled_ = SkiaTraceType::DISABLED;
 
     // used for control start and end of the click animation
     bool requestResschedReport_ = true;

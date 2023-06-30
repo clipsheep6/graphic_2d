@@ -123,6 +123,7 @@ ohos_source_set("render_service_base_src") {
     "src/pipeline/rs_surface_render_node.cpp",
 
     #property
+    "src/property/rs_filter_cache_manager.cpp",
     "src/property/rs_properties.cpp",
     "src/property/rs_properties_painter.cpp",
     "src/property/rs_property_trace.cpp",
@@ -173,6 +174,10 @@ ohos_source_set("render_service_base_src") {
 
   public_configs = [ ":export_config" ]
   public_deps = [ "src/platform:platform" ]
+
+  if (defined(use_new_render_context) && use_new_render_context) {
+    public_deps += [ "src/render_backend:librender_backend" ]
+  }
 
   if (enable_export_macro) {
     defines += [ "ENABLE_EXPORT_MACRO" ]
@@ -231,6 +236,9 @@ ohos_source_set("render_service_base_src") {
     sources -= graphic_2d_ext_configs.librender_service_base_ext_sources_del
     sources += graphic_2d_ext_configs.librender_service_base_ext_sources
   }
+
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
 }
 
 config("render_service_base_all_deps_config") {
@@ -246,6 +254,10 @@ ohos_shared_library("librender_service_base") {
     "src/platform:platform",
   ]
 
+  if (defined(use_new_render_context) && use_new_render_context) {
+    public_deps += [ "src/render_backend:librender_backend" ]
+  }
+
   innerapi_tags = [ "platformsdk_indirect" ]
   part_name = "graphic_standard"
   subsystem_name = "graphic"
@@ -258,6 +270,10 @@ ohos_source_set("librender_service_base_static") {
     ":render_service_base_src",
     "src/platform:platform",
   ]
+
+  if (defined(use_new_render_context) && use_new_render_context) {
+    public_deps += [ "src/render_backend:librender_backend" ]
+  }
 
   part_name = "graphic_standard"
   subsystem_name = "graphic"

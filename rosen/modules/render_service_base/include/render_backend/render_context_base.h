@@ -25,6 +25,8 @@ public:
     explicit RenderContextBase()
     {
         frame_ = std::make_unique<RSRenderSurfaceFrame>();
+        std::shared_ptr<EGLState> eglState = std::make_shared<EGLState>();
+        frame_->eglState = eglState;
     }
     virtual ~RenderContextBase() = default;
     virtual void Init() = 0;
@@ -32,7 +34,7 @@ public:
     virtual void MakeCurrent(void* curSurface = nullptr, void* curContext = nullptr) {}
     virtual void* CreateContext(bool share = false) { return nullptr; };
     virtual bool CreateSurface(const std::shared_ptr<RSRenderSurfaceFrame>& frame) { return false; }
-    virtual void DestroySurface() {}
+    virtual void DestroySurface(const std::shared_ptr<RSRenderSurfaceFrame>& frame) {}
     virtual void DamageFrame(const std::shared_ptr<RSRenderSurfaceFrame>& frame) {};
     virtual int32_t GetBufferAge() { return 0; }
     virtual void SwapBuffers(const std::shared_ptr<RSRenderSurfaceFrame>& frame) {}

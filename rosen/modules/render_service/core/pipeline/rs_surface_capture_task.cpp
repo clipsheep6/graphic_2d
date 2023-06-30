@@ -16,6 +16,7 @@
 #include "pipeline/rs_surface_capture_task.h"
 
 #include <memory>
+#include <sys/mman.h>
 
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkCanvas.h"
@@ -79,13 +80,22 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         RS_LOGE("RSSurfaceCaptureTask::Run: pixelmap == nullptr!");
         return nullptr;
     }
-#ifdef RS_ENABLE_GL
 #ifndef USE_ROSEN_DRAWING
+#if defined(RS_ENABLE_GL)
+#if defined(NEW_RENDER_CONTEXT)
+    auto drawingContext = RSMainThread::Instance()->GetRenderEngine()->GetDrawingContext();
+#ifdef NEW_SKIA
+    GrDirectContext* grContext = drawingContext != nullptr ? drawingContext->GetDrawingContext() : nullptr;
+#else
+    GrContext* grContext = drawingContext != nullptr ? drawingContext->GetDrawingContext() : nullptr;
+#endif
+#else
     auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
 #ifdef NEW_SKIA
     GrDirectContext* grContext = renderContext != nullptr ? renderContext->GetGrContext() : nullptr;
 #else
     GrContext* grContext = renderContext != nullptr ? renderContext->GetGrContext() : nullptr;
+#endif
 #endif
     RSTagTracker tagTracker(grContext, node->GetId(), RSTagTracker::TAGTYPE::TAG_CAPTURE);
 #endif
@@ -113,22 +123,10 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         RS_LOGE("RSSurfaceCaptureTask::Run: img is nullptr");
         return nullptr;
     }
-
-    auto data = (uint8_t *)malloc(pixelmap->GetRowBytes() * pixelmap->GetHeight());
-    if (data == nullptr) {
-        RS_LOGE("RSSurfaceCaptureTask::Run: data is nullptr");
+    if (!CopyDataToPixelMap(img, pixelmap)) {
+        RS_LOGE("RSSurfaceCaptureTask::Run: CopyDataToPixelMap failed");
         return nullptr;
     }
-    SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
-        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-    if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
-        RS_LOGE("RSSurfaceCaptureTask::Run: readPixels failed");
-        free(data);
-        data = nullptr;
-        return nullptr;
-    }
-    pixelmap->SetPixelsAddr(data, nullptr, pixelmap->GetRowBytes() * pixelmap->GetHeight(),
-        Media::AllocatorType::HEAP_ALLOC, nullptr);
 #else
     std::shared_ptr<Drawing::Image> img(surface.get()->GetImageSnapshot());
     if (!img) {
@@ -242,6 +240,15 @@ sk_sp<SkSurface> RSSurfaceCaptureTask::CreateSurface(const std::unique_ptr<Media
     SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
         kRGBA_8888_SkColorType, kPremul_SkAlphaType);
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
+#if defined(NEW_RENDER_CONTEXT)
+    auto drawingContext = RSMainThread::Instance()->GetRenderEngine()->GetDrawingContext();
+    if (drawingContext == nullptr) {
+        RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderContext is nullptr");
+        return nullptr;
+    }
+    drawingContext->SetUpDrawingContext();
+    return SkSurface::MakeRenderTarget(drawingContext->GetDrawingContext(), SkBudgeted::kNo, info);
+#else
     auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
     if (renderContext == nullptr) {
         RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderContext is nullptr");
@@ -250,8 +257,60 @@ sk_sp<SkSurface> RSSurfaceCaptureTask::CreateSurface(const std::unique_ptr<Media
     renderContext->SetUpGrContext();
     return SkSurface::MakeRenderTarget(renderContext->GetGrContext(), SkBudgeted::kNo, info);
 #endif
+#endif
     return SkSurface::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
 }
+
+bool RSSurfaceCaptureTask::CopyDataToPixelMap(sk_sp<SkImage> img, const std::unique_ptr<Media::PixelMap>& pixelmap)
+{
+    auto size = pixelmap->GetRowBytes() * pixelmap->GetHeight();
+    SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+#ifdef ROSEN_OHOS
+    int fd = AshmemCreate("RSSurfaceCapture Data", size);
+    if (fd < 0) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap AshmemCreate fd < 0");
+        return false;
+    }
+    int result = AshmemSetProt(fd, PROT_READ | PROT_WRITE);
+    if (result < 0) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap AshmemSetProt error");
+        ::close(fd);
+        return false;
+    }
+    void* ptr = ::mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    auto data = static_cast<uint8_t*>(ptr);
+    if (ptr == MAP_FAILED || ptr == nullptr) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap data is nullptr");
+        ::close(fd);
+        return false;
+    }
+
+    if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap readPixels failed");
+        ::close(fd);
+        return false;
+    }
+    void* fdPtr = new int32_t();
+    *static_cast<int32_t*>(fdPtr) = fd;
+    pixelmap->SetPixelsAddr(data, fdPtr, size, Media::AllocatorType::SHARE_MEM_ALLOC, nullptr);
+#else
+    auto data = (uint8_t *)malloc(size);
+    if (data == nullptr) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap data is nullptr");
+        return false;
+    }
+    if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap readPixels failed");
+        free(data);
+        data = nullptr;
+        return false;
+    }
+    pixelmap->SetPixelsAddr(data, nullptr, size, Media::AllocatorType::HEAP_ALLOC, nullptr);
+#endif
+    return true;
+}
+
 #else
 std::shared_ptr<Drawing::Surface> RSSurfaceCaptureTask::CreateSurface(const std::unique_ptr<Media::PixelMap>& pixelmap)
 {
@@ -308,6 +367,7 @@ RSSurfaceCaptureVisitor::RSSurfaceCaptureVisitor(float scaleX, float scaleY, boo
     : scaleX_(scaleX), scaleY_(scaleY), isUniRender_(isUniRender)
 {
     renderEngine_ = RSMainThread::Instance()->GetRenderEngine();
+    isUIFirst_ = RSSystemProperties::GetUIFirstEnabled();
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -466,6 +526,23 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         canvas_->save();
     }
 
+    if (node.IsAppWindow()) {
+        // When CaptureSingleSurfaceNodeWithUni, we should consider scale factor of canvas_ and
+        // child nodes (self-drawing surfaceNode) of AppWindow should use relative coordinates
+        // which is the node relative to the upper-left corner of the window.
+        // So we have to get the invert matrix of AppWindow here and apply it to canvas_
+        // when we calculate the position of self-drawing surfaceNode.
+        captureMatrix_.setScaleX(scaleX_);
+        captureMatrix_.setScaleY(scaleY_);
+        SkMatrix invertMatrix;
+        if (geoPtr->GetAbsMatrix().invert(&invertMatrix)) {
+            captureMatrix_.preConcat(invertMatrix);
+        }
+    } else if (!node.IsStartingWindow()) {
+        canvas_->setMatrix(captureMatrix_);
+        canvas_->concat(geoPtr->GetAbsMatrix());
+    }
+
     const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
     if (isSelfDrawingSurface) {
@@ -486,15 +563,11 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         canvas_->restore(); // restore translate and concat
         return;
     }
+
     if (isSelfDrawingSurface) {
         RSPropertiesPainter::DrawBackground(property, *canvas_);
         RSPropertiesPainter::DrawMask(property, *canvas_);
-        auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
-        if (filter != nullptr) {
-            auto skRectPtr = std::make_unique<SkRect>();
-            skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-            RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
-        }
+        RSPropertiesPainter::DrawFilter(property, *canvas_, FilterType::BACKGROUND_FILTER);
     } else {
         auto backgroundColor = static_cast<SkColor>(property.GetBackgroundColor().AsArgbInt());
         if (SkColorGetA(backgroundColor) != SK_AlphaTRANSPARENT) {
@@ -507,23 +580,21 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
     }
     if (isSelfDrawingSurface) {
-        auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetFilter());
-        if (filter != nullptr) {
-            auto skRectPtr = std::make_unique<SkRect>();
-            skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-            RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
-        }
-        auto para = property.GetLinearGradientBlurPara();
-        if (para != nullptr && para->blurRadius_ > 0) {
-            auto skRectPtr = std::make_unique<SkRect>();
-            skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-            RSPropertiesPainter::DrawLinearGradientBlurFilter(property, *canvas_, skRectPtr);
-        }
+        RSPropertiesPainter::DrawFilter(property, *canvas_, FilterType::FOREGROUND_FILTER);
+        RSPropertiesPainter::DrawLinearGradientBlurFilter(property, *canvas_);
     }
 
     if (isSelfDrawingSurface) {
         canvas_->restore();
     }
+
+    if (isUIFirst_ && RSUniRenderUtil::HandleCaptureNode(node, *canvas_)) {
+        RS_LOGD("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni: \
+            process RSSurfaceRenderNode [%s, %" PRIu64 "] use cache texture.",
+            node.GetName().c_str(), node.GetId());
+        return;
+    }
+
     if (node.IsAppWindow() && RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId()) &&
         node.GetCachedImage() != nullptr) {
         RS_LOGD("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni: DrawCachedImage.");
@@ -564,7 +635,7 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         if (geoPtr->GetAbsMatrix().Invert(invertMatrix)) {
             captureMatrix_.PreConcat(invertMatrix);
         }
-    } else if (!node.IsStartingWindow() && !isSelfDrawingSurface) {
+    } else if (!node.IsStartingWindow()) {
         canvas_->SetMatrix(captureMatrix_);
         canvas_->ConcatMatrix(geoPtr->GetAbsMatrix());
     }
@@ -597,7 +668,7 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         auto filter = std::static_pointer_cast<RSDrawingFilter>(property.GetBackgroundFilter());
         if (filter != nullptr) {
             auto rectPtr = std::make_unique<Drawing::Rect>(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-            RSPropertiesPainter::DrawFilter(property, *canvas_, filter, rectPtr, canvas_->GetSurface());
+            RSPropertiesPainter::DrawFilter(property, *canvas_, filter, FilterType::BACKGROUND_FILTER, rectPtr);
         }
     } else {
         auto backgroundColor = static_cast<Drawing::ColorQuad>(property.GetBackgroundColor().AsArgbInt());
@@ -614,7 +685,7 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         auto filter = std::static_pointer_cast<RSDrawingFilter>(property.GetFilter());
         if (filter != nullptr) {
             auto rectPtr = std::make_unique<Drawing::Rect>(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-            RSPropertiesPainter::DrawFilter(property, *canvas_, filter, rectPtr, canvas_->GetSurface());
+            RSPropertiesPainter::DrawFilter(property, *canvas_, filter, FilterType::FOREGROUND_FILTER, rectPtr);
         }
     }
 
@@ -640,6 +711,13 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
             node.GetId());
         return;
     }
+
+    if (isUIFirst_ && RSUniRenderUtil::HandleSubThreadNode(node, *canvas_)) {
+        RS_LOGD("RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni: \
+            process RSSurfaceRenderNode [%s, %" PRIu64 "] use cache texture.",
+            node.GetName().c_str(), node.GetId());
+        return;
+    }
     bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
     if (isSelfDrawingSurface) {
         canvas_->save();
@@ -648,7 +726,7 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
     const auto& property = node.GetRenderProperties();
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
     if (geoPtr) {
-        canvas_->concat(geoPtr->GetMatrix());
+        canvas_->setMatrix(node.GetTotalMatrix());
     }
 
     if (isSelfDrawingSurface) {
@@ -669,12 +747,7 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
     }
     RSPropertiesPainter::DrawMask(property, *canvas_);
 
-    auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
-    if (filter != nullptr) {
-        auto skRectPtr = std::make_unique<SkRect>();
-        skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
-    }
+    RSPropertiesPainter::DrawFilter(property, *canvas_, FilterType::BACKGROUND_FILTER);
     if (isSelfDrawingSurface) {
         canvas_->restore();
     }
@@ -692,18 +765,8 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
     }
 
     ProcessBaseRenderNode(node);
-    filter = std::static_pointer_cast<RSSkiaFilter>(property.GetFilter());
-    if (filter != nullptr) {
-        auto skRectPtr = std::make_unique<SkRect>();
-        skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawFilter(property, *canvas_, filter, skRectPtr, canvas_->GetSurface());
-    }
-    auto para = property.GetLinearGradientBlurPara();
-    if (para != nullptr && para->blurRadius_ > 0) {
-        auto skRectPtr = std::make_unique<SkRect>();
-        skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawLinearGradientBlurFilter(property, *canvas_, skRectPtr);
-    }
+    RSPropertiesPainter::DrawFilter(property, *canvas_, FilterType::FOREGROUND_FILTER);
+    RSPropertiesPainter::DrawLinearGradientBlurFilter(property, *canvas_);
     DrawWatermarkIfNeed(property.GetBoundsWidth(), property.GetBoundsHeight());
 }
 #else
@@ -756,7 +819,7 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
     auto filter = std::static_pointer_cast<RSDrawingFilter>(property.GetBackgroundFilter());
     if (filter != nullptr) {
         auto rectPtr = std::make_unique<Drawing::Rect>(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawFilter(property, *canvas_, filter, rectPtr, canvas_->GetSurface());
+        RSPropertiesPainter::DrawFilter(property, *canvas_, filter, FilterType::BACKGROUND_FILTER, rectPtr);
     }
     if (isSelfDrawingSurface) {
         canvas_->Restore();
@@ -775,7 +838,7 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
     filter = std::static_pointer_cast<RSDrawingFilter>(property.GetFilter());
     if (filter != nullptr) {
         auto rectPtr = std::make_unique<Drawing::Rect>(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawFilter(property, *canvas_, filter, rectPtr, canvas_->GetSurface());
+        RSPropertiesPainter::DrawFilter(property, *canvas_, filter, FilterType::FOREGROUND_FILTER, rectPtr);
     }
     DrawWatermarkIfNeed(property.GetBoundsWidth(), property.GetBoundsHeight());
 }
@@ -995,14 +1058,10 @@ void RSSurfaceCaptureVisitor::DrawWatermarkIfNeed(float screenWidth, float scree
     if (RSMainThread::Instance()->GetWatermarkFlag()) {
 #ifndef USE_ROSEN_DRAWING
         sk_sp<SkImage> skImage = RSMainThread::Instance()->GetWatermarkImg();
-        SkPaint rectPaint;
-        auto skSrcRect = SkRect::MakeWH(skImage->width(), skImage->height());
-        auto skDstRect = SkRect::MakeWH(screenWidth, screenHeight);
 #ifdef NEW_SKIA
-        canvas_->drawImageRect(
-            skImage, skSrcRect, skDstRect, SkSamplingOptions(), &rectPaint, SkCanvas::kStrict_SrcRectConstraint);
+        sk_sp<SkShader> shader = skImage->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions());
 #else
-        canvas_->drawImageRect(skImage, skSrcRect, skDstRect, &rectPaint);
+        sk_sp<SkShader> shader = skImage->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat);
 #endif
 #else
         auto image = RSMainThread::Instance()->GetWatermarkImg();

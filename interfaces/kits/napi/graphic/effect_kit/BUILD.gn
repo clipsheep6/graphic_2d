@@ -64,14 +64,18 @@ ohos_shared_library("effectkit") {
   ]
 
   deps = [
-    "//foundation/arkui/napi:ace_napi",
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/graphic_2d/rosen/modules/effect/color_picker:color_picker",
     "//foundation/graphic/graphic_2d/rosen/modules/effect/skia_effectChain:skeffectchain",
-    "//foundation/multimedia/image_framework/interfaces/kits/js/common:image",
+    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
+    "//foundation/graphic/graphic_2d/rosen/modules/effect/color_picker:color_picker",
+    "//foundation/graphic/graphic_2d/rosen/modules/effect/skia_effectChain:skeffectchain",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "multimedia_image_framewor:image",
+    "napi:ace_napi",
     "hilog_native:libhilog",
     "multimedia_image_framework:image_native",
   ]

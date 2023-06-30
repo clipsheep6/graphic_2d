@@ -60,6 +60,9 @@ ohos_executable("bootanimation") {
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//foundation/window/window_manager/wm:libwm",
+    "//base/global/resource_management/frameworks/resmgr:global_resmgr",
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+    "//foundation/window/window_manager/dm:libdm",
     "//third_party/cJSON:cjson_static",
     "//third_party/zlib:libz",
   ]
@@ -75,11 +78,15 @@ ohos_executable("bootanimation") {
   }
 
   external_deps = [
+    "config_policy:configpolicy_util",
+    "hilog_native:libhilog",
     "hitrace_native:hitrace_meter",
     "ipc:ipc_core",
     "player_framework:media_client",
     "resource_management:global_resmgr",
     "window_manager:libdm",
+    "samgr:samgr_proxy",
+    "window_manager:libwm",
   ]
 
   if (is_standard_system) {

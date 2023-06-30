@@ -17,6 +17,7 @@
 #include "common/rs_common_def.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_canvas_render_node.h"
+#include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 
@@ -78,6 +79,17 @@ static bool IsResidentProcess(const std::shared_ptr<RSSurfaceRenderNode> surface
            surfaceNode->GetName() == SCREENLOCK_WINDOW || surfaceNode->GetName() == WALLPAPER_VIEW;
 }
 
+bool RSRenderNodeMap::IsResidentProcessNode(NodeId id) const
+{
+    auto nodePid = ExtractPid(id);
+    for (auto& [residentId, _] : residentSurfaceNodeMap_) {
+        if (ExtractPid(residentId) == nodePid) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool RSRenderNodeMap::RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>& nodePtr)
 {
     NodeId id = nodePtr->GetId();
@@ -97,12 +109,24 @@ bool RSRenderNodeMap::RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>
     return true;
 }
 
+bool RSRenderNodeMap::RegisterDisplayRenderNode(const std::shared_ptr<RSDisplayRenderNode>& nodePtr)
+{
+    NodeId id = nodePtr->GetId();
+    if (renderNodeMap_.find(id) != renderNodeMap_.end()) {
+        return false;
+    }
+    renderNodeMap_.emplace(id, nodePtr);
+    displayNodeMap_.emplace(id, nodePtr);
+    return true;
+}
+
 void RSRenderNodeMap::UnregisterRenderNode(NodeId id)
 {
     renderNodeMap_.erase(id);
     surfaceNodeMap_.erase(id);
     drivenRenderNodeMap_.erase(id);
     residentSurfaceNodeMap_.erase(id);
+    displayNodeMap_.erase(id);
 }
 
 void RSRenderNodeMap::AddDrivenRenderNode(const std::shared_ptr<RSBaseRenderNode>& nodePtr)
@@ -151,6 +175,10 @@ void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
         return ExtractPid(pair.first) == pid;
     });
 
+    EraseIf(displayNodeMap_, [pid](const auto& pair) -> bool {
+        return ExtractPid(pair.first) == pid;
+    });
+
     auto it = renderNodeMap_.find(0);
     if (it != renderNodeMap_.end()) {
         auto fallbackNode = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(it->second);
@@ -190,6 +218,13 @@ bool RSRenderNodeMap::ContainPid(pid_t pid) const
 void RSRenderNodeMap::TraverseDrivenRenderNodes(std::function<void (const std::shared_ptr<RSRenderNode>&)> func) const
 {
     for (const auto& [_, node] : drivenRenderNodeMap_) {
+        func(node);
+    }
+}
+
+void RSRenderNodeMap::TraverseDisplayNodes(std::function<void (const std::shared_ptr<RSDisplayRenderNode>&)> func) const
+{
+    for (const auto& [_, node] : displayNodeMap_) {
         func(node);
     }
 }

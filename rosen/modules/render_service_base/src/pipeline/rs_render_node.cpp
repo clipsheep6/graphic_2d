@@ -235,7 +235,7 @@ bool RSRenderNode::IsDirty() const
 bool RSRenderNode::IsContentDirty() const
 {
     // Considering renderNode, it should consider both basenode's case and its properties
-    return RSBaseRenderNode::IsContentDirty() || renderProperties_.IsContentDirty();
+    return !RSBaseRenderNode::IsContentDirty() && renderProperties_.IsContentDirty();
 }
 
 void RSRenderNode::UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEnabled)
@@ -336,6 +336,9 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
         modifiers_.emplace(modifier->GetPropertyId(), modifier);
     } else {
         drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
+        if (GetRecordedContents()) {
+            SetRecordedContents(nullptr);
+        }
     }
     modifier->GetProperty()->Attach(ReinterpretCastTo<RSRenderNode>());
     SetDirty();

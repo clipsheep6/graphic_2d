@@ -84,5 +84,23 @@ bool RSCanvasDrawingNode::GetBitmap(SkBitmap& bitmap, std::shared_ptr<DrawCmdLis
     }
     return true;
 }
+
+void RSCanvasDrawingNode::SetWidth(int32_t width)
+{
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy) {
+        std::unique_ptr<RSCommand> command = std::make_unique<RSCanvasDrawingNodeSetWidth>(GetId(), width);
+        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    }
+}
+
+void RSCanvasDrawingNode::SetHeight(int32_t height)
+{
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy) {
+        std::unique_ptr<RSCommand> command = std::make_unique<RSCanvasDrawingNodeSetHeight>(GetId(), height);
+        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

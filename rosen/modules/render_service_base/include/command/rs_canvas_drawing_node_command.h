@@ -25,15 +25,23 @@ namespace Rosen {
 
 enum RSCanvasDrawingNodeCommandType : uint16_t {
     CANVAS_DRAWING_NODE_CREATE,
+    CANVAS_DRAWING_NODE_SET_WIDTH,
+    CANVAS_DRAWING_NODE_SET_HEIGHT,
 };
 
 class RSB_EXPORT RSCanvasDrawingNodeCommandHelper {
 public:
     static void Create(RSContext& context, NodeId id);
+    static void SetWidth(RSContext& context, NodeId id, int32_t width);
+    static void SetHeight(RSContext& context, NodeId id, int32_t height);
 };
 
 ADD_COMMAND(RSCanvasDrawingNodeCreate,
     ARG(CANVAS_DRAWING_NODE, CANVAS_DRAWING_NODE_CREATE, RSCanvasDrawingNodeCommandHelper::Create, NodeId))
+ADD_COMMAND(RSCanvasDrawingNodeSetWidth, ARG(CANVAS_DRAWING_NODE, CANVAS_DRAWING_NODE_SET_WIDTH,
+                                             RSCanvasDrawingNodeCommandHelper::SetWidth, NodeId, int32_t))
+ADD_COMMAND(RSCanvasDrawingNodeSetHeight, ARG(CANVAS_DRAWING_NODE, CANVAS_DRAWING_NODE_SET_HEIGHT,
+                                              RSCanvasDrawingNodeCommandHelper::SetHeight, NodeId, int32_t))
 
 } // namespace Rosen
 } // namespace OHOS

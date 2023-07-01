@@ -35,6 +35,9 @@ public:
 
     void ProcessRenderContents(RSPaintFilterCanvas& canvas) override;
 
+    void SetWidth(int32_t width);
+    void SetHeight(int32_t height);
+
     RSRenderNodeType GetType() const override
     {
         return Type;
@@ -45,6 +48,8 @@ public:
 private:
     void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const override;
 
+    int32_t width_ = 0;
+    int32_t height_ = 0;
     sk_sp<SkSurface> skSurface_;
     std::unique_ptr<RSPaintFilterCanvas> canvas_;
 };

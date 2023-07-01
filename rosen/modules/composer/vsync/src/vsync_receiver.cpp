@@ -25,9 +25,6 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace {
-constexpr int32_t INVALID_FD = -1;
-}
 void VSyncCallBackListener::OnReadable(int32_t fileDescriptor)
 {
     if (fileDescriptor < 0) {
@@ -115,7 +112,7 @@ VSyncReceiver::~VSyncReceiver()
 {
     if (fd_ != INVALID_FD) {
         looper_->RemoveFileDescriptorListener(fd_);
-        close(fd_);
+        // do not close fd here, it will be closed in VSyncConnectionProxy destructor
         fd_ = INVALID_FD;
     }
 }

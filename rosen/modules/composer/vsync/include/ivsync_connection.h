@@ -21,6 +21,9 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+constexpr int32_t INVALID_FD = -1;
+}
 class IVSyncConnection : public IRemoteBroker {
 public:
     virtual VsyncError RequestNextVSync() = 0;
@@ -43,6 +46,7 @@ protected:
         IVSYNC_CONNECTION_SET_RATE,
         IVSYNC_CONNECTION_GET_PERIOD,
     };
+    int32_t fd_ = INVALID_FD;
 };
 } // namespace Vsync
 } // namespace OHOS

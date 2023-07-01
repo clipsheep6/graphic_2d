@@ -26,5 +26,18 @@ void RSCanvasDrawingNodeCommandHelper::Create(RSContext& context, NodeId id)
     context.GetMutableNodeMap().RegisterRenderNode(node);
 }
 
+void RSCanvasDrawingNodeCommandHelper::SetWidth(RSContext& context, NodeId id, int32_t width)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSCanvasDrawingRenderNode>(id)) {
+        node->SetWidth(width);
+    }
+}
+
+void RSCanvasDrawingNodeCommandHelper::SetHeight(RSContext& context, NodeId id, int32_t height)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSCanvasDrawingRenderNode>(id)) {
+        node->SetHeight(height);
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

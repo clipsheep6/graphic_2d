@@ -19,11 +19,16 @@
 #include "boot_animation.h"
 #include "util.h"
 
+#include "cxx.h"
+#include "lib.rs.h"
+
 using namespace OHOS;
 
 int main(int argc, const char *argv[])
 {
     LOGI("main enter");
+    int32_t ret = add_function(1, 2);
+    LOGE("call add_function，ret: %d", ret);
     WaitRenderServiceInit();
 
     auto& dms = OHOS::Rosen::DisplayManager::GetInstance();

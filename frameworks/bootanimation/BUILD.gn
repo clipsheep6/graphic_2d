@@ -14,6 +14,34 @@
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
+
+rust_cxx("test_cxx_gen") {
+  sources = [ "rust/src/lib.rs" ]
+}
+
+ohos_rust_static_ffi("test_cxx_rust") {
+  sources = [ "rust/src/lib.rs" ]
+  deps = [ "//third_party/rust/crates/cxx:lib" ]
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+}
+
+ohos_static_library("test_cxx_cppdeps") {
+  part_name = "graphic_standard"
+  subsystem_name = "graphic"
+  defines = [ "RUST_CXX_NO_EXCEPTIONS" ]
+  sources = [
+    "//third_party/rust/crates/cxx/include/cxx.h",
+    "//third_party/rust/crates/cxx/src/cxx.cc",
+  ]
+  deps = [ "//third_party/rust/crates/cxx:lib" ]
+  if (is_win) {
+    defines += [ "CXX_RS_EXPORT=__declspec(dllexport)" ]
+  } else {
+    defines += [ "CXX_RS_EXPORT=__attribute__((visibility(\"default\")))" ]
+  }
+}
+
 ## Build bootanimation {{{
 config("bootanimation_config") {
   visibility = [ ":*" ]
@@ -23,6 +51,8 @@ config("bootanimation_config") {
     "$graphic_2d_root/utils/log",
     "//third_party/cJSON",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
+    "//third_party/rust/crates/cxx/include",
+    "${target_gen_dir}/rust/src",
   ]
 
   cflags = [
@@ -46,12 +76,17 @@ ohos_executable("bootanimation") {
     "src/util.cpp",
   ]
 
+  sources += get_target_outputs(":test_cxx_gen")
+
   configs = [
     ":bootanimation_config",
     "//commonlibrary/c_utils/base:utils_config",
   ]
 
   deps = [
+    ":test_cxx_cppdeps",
+    ":test_cxx_gen",
+    ":test_cxx_rust",
     "$graphic_2d_root:libsurface",
     "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
     "$graphic_2d_root/rosen/modules/render_service_base/src/platform:platform",

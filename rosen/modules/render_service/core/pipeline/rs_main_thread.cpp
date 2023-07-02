@@ -16,6 +16,7 @@
 
 #include <list>
 #include "include/core/SkGraphics.h"
+#include "memory/rs_memory_graphic.h"
 #include <securec.h>
 #include <stdint.h>
 #include <string>
@@ -850,7 +851,36 @@ void RSMainThread::ReleaseAllNodesBuffer()
         });
     }
 #endif
-}
+
+#ifdef RS_ENABLE_GL
+    if (nodeMap.GetAllApplicationCount() > 16 && nodeMap.GetAllApplicationCount() < 27) {
+        PostTask([this]() {
+#ifndef USE_ROSEN_DRAWING
+#ifdef NEW_RENDER_CONTEXT
+            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(
+                GetRenderEngine()->GetDrawingContext()->GetDrawingContext());
+#else
+            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(GetRenderEngine()->GetRenderContext()->GetGrContext());
+#endif
+#else
+            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(
+                GetRenderEngine()->GetRenderContext()->GetDrGPUContext());
+#endif
+        });
+    } else if (nodeMap.GetAllApplicationCount() > 26) {
+        PostTask([this]() {
+#ifndef USE_ROSEN_DRAWING
+#ifdef NEW_RENDER_CONTEXT
+            MemoryManager::ReleaseUnlockGpuResource(GetRenderEngine()->GetDrawingContext()->GetDrawingContext(), false);
+#else
+            MemoryManager::ReleaseUnlockGpuResource(GetRenderEngine()->GetRenderContext()->GetGrContext(), false);
+#endif
+#else
+            MemoryManager::ReleaseUnlockGpuResource(GetRenderEngine()->GetRenderContext()->GetDrGPUContext(), false);
+#endif
+        });
+    }
+#endif
 
 void RSMainThread::WaitUtilUniRenderFinished()
 {

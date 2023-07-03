@@ -300,7 +300,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             int32_t mode = data.ReadInt32();
-            SetRefreshRateMode(mode);
+            int32_t setResult = SetRefreshRateMode(mode);
+            reply.WriteInt32(setResult);
             break;
         }
         case GET_SCREEN_CURRENT_REFRESH_RATE: {

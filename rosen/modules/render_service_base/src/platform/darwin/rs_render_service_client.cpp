@@ -142,8 +142,9 @@ void RSRenderServiceClient::SetScreenRefreshRate(ScreenId id, int32_t sceneId, i
 {
 }
 
-void RSRenderServiceClient::SetRefreshRateMode(int32_t refreshRateMode)
+int32_t RSRenderServiceClient::SetRefreshRateMode(int32_t refreshRateMode)
 {
+    return {};
 }
 
 uint32_t RSRenderServiceClient::GetScreenCurrentRefreshRate(ScreenId id)

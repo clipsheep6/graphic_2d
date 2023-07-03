@@ -134,7 +134,7 @@ public:
 
     virtual void SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate) = 0;
 
-    virtual void SetRefreshRateMode(int32_t refreshRateMode) = 0;
+    virtual int32_t SetRefreshRateMode(int32_t refreshRateMode) = 0;
 
     virtual uint32_t GetScreenCurrentRefreshRate(ScreenId id) = 0;
 

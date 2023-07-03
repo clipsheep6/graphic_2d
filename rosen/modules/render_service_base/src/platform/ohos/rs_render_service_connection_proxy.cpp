@@ -435,7 +435,7 @@ void RSRenderServiceConnectionProxy::SetScreenRefreshRate(ScreenId id, int32_t s
     }
 }
 
-void RSRenderServiceConnectionProxy::SetRefreshRateMode(int32_t refreshRateMode)
+int32_t RSRenderServiceConnectionProxy::SetRefreshRateMode(int32_t refreshRateMode)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -443,14 +443,17 @@ void RSRenderServiceConnectionProxy::SetRefreshRateMode(int32_t refreshRateMode)
 
     if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
         ROSEN_LOGE("RSRenderServiceProxy failed to get descriptor");
-        return;
+        return HGM_SET_REFRESH_RATE_ERROR;
     }
     option.SetFlags(MessageOption::TF_SYNC);
     data.WriteInt32(refreshRateMode);
     int32_t err = Remote()->SendRequest(RSIRenderServiceConnection::SET_REFRESH_RATE_MODE, data, reply, option);
     if (err != NO_ERROR) {
         ROSEN_LOGE("RSRenderServiceProxy sendrequest error : %d", err);
+        return HGM_SET_REFRESH_RATE_ERROR;
     }
+    int32_t setResult = reply.ReadInt32();
+    return setResult;
 }
 
 uint32_t RSRenderServiceConnectionProxy::GetScreenCurrentRefreshRate(ScreenId id)
@@ -461,7 +464,7 @@ uint32_t RSRenderServiceConnectionProxy::GetScreenCurrentRefreshRate(ScreenId id
 
     if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
         ROSEN_LOGE("RSRenderServiceProxy failed to get descriptor");
-        return SUCCESS;
+        return HGM_GET_CURRENT_RATE_ERR;
     }
     option.SetFlags(MessageOption::TF_SYNC);
     data.WriteUint64(id);
@@ -469,7 +472,7 @@ uint32_t RSRenderServiceConnectionProxy::GetScreenCurrentRefreshRate(ScreenId id
         data, reply, option);
     if (err != NO_ERROR) {
         ROSEN_LOGE("RSRenderServiceProxy sendrequest error : %d", err);
-        return SUCCESS;
+        return HGM_GET_CURRENT_RATE_ERR;
     }
     uint32_t rate = reply.ReadUint32();
     return rate;

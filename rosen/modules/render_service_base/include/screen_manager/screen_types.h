@@ -35,6 +35,10 @@ constexpr uint32_t LAYER_COMPOSITION_CAPACITY = 12;
 
 constexpr uint32_t DEFAULT_SKIP_FRAME_INTERVAL = 1;
 
+constexpr uint32_t HGM_GET_CURRENT_RATE_ERR = 0;
+
+constexpr int32_t HGM_SET_REFRESH_RATE_ERROR = -1;
+
 inline constexpr ScreenId ToScreenId(ScreenPhysicalId physicalId)
 {
     return static_cast<ScreenId>(physicalId);

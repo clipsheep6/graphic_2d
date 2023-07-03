@@ -157,6 +157,9 @@ void RSImage::ApplyCanvasClip(Drawing::Canvas& canvas)
 #ifndef USE_ROSEN_DRAWING
 void RSImage::UploadGpu(SkCanvas& canvas)
 {
+    if (!RSSystemProperties::GetASTCEnabled()) {
+        return;
+    }
 #ifdef RS_ENABLE_GL
     if (compressData_) {
         auto cache = RSImageCache::Instance().GetSkiaImageCache(uniqueId_);
@@ -175,16 +178,9 @@ void RSImage::UploadGpu(SkCanvas& canvas)
 #ifdef NEW_SKIA
             // [planning] new skia remove enum kASTC_CompressionType
             // Need to confirm if kBC1_RGBA8_UNORM and kASTC_CompressionType are the same
-            sk_sp<SkImage> image;
-            if(RSSystemProperties::GetASTCEnabled()) {
-                image = SkImage::MakeTextureFromCompressed(GrAsDirectContext(canvas.recordingContext()), compressData_,
-                    static_cast<int>(srcRect_.width_), static_cast<int>(srcRect_.height_),
-                    SkImage::CompressionType::kASTC_RGBA8_UNORM);
-            } else {
-                image = SkImage::MakeTextureFromCompressed(GrAsDirectContext(canvas.recordingContext()), compressData_,
-                    static_cast<int>(srcRect_.width_), static_cast<int>(srcRect_.height_),
-                    SkImage::CompressionType::kBC1_RGBA8_UNORM);
-            }
+            auto image = SkImage::MakeTextureFromCompressed(GrAsDirectContext(canvas.recordingContext()), compressData_,
+                static_cast<int>(srcRect_.width_), static_cast<int>(srcRect_.height_),
+                SkImage::CompressionType::kASTC_RGBA8_UNORM);
 #else
             auto image = SkImage::MakeFromCompressed(canvas.getGrContext(), compressData_,
                 static_cast<int>(srcRect_.width_), static_cast<int>(srcRect_.height_), SkImage::kASTC_CompressionType);
@@ -337,6 +333,7 @@ void RSImage::SetRadius(const SkVector radius[])
 void RSImage::SetRadius(const std::vector<Drawing::Point>& radius)
 #endif
 {
+    hasRadius_ = false;
     for (auto i = 0; i < CORNER_SIZE; i++) {
         radius_[i] = radius[i];
         hasRadius_ = hasRadius_ || !radius_[i].isZero();

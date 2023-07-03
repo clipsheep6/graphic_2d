@@ -111,7 +111,7 @@ RSProperties::RSProperties()
     frameGeo_ = std::make_shared<RSObjGeometry>();
 }
 
-RSProperties::~RSProperties() {}
+RSProperties::~RSProperties() = default;
 
 void RSProperties::ResetProperty(RSModifierType type)
 {
@@ -213,7 +213,6 @@ void RSProperties::SetFrame(Vector4f frame)
 {
     frameGeo_->SetRect(frame.x_, frame.y_, frame.z_, frame.w_);
     geoDirty_ = true;
-    contentDirty_ = true;
     SetDirty();
 }
 
@@ -221,7 +220,6 @@ void RSProperties::SetFrameSize(Vector2f size)
 {
     frameGeo_->SetSize(size.x_, size.y_);
     geoDirty_ = true;
-    contentDirty_ = true;
     SetDirty();
 }
 
@@ -229,7 +227,6 @@ void RSProperties::SetFrameWidth(float width)
 {
     frameGeo_->SetWidth(width);
     geoDirty_ = true;
-    contentDirty_ = true;
     SetDirty();
 }
 
@@ -237,7 +234,6 @@ void RSProperties::SetFrameHeight(float height)
 {
     frameGeo_->SetHeight(height);
     geoDirty_ = true;
-    contentDirty_ = true;
     SetDirty();
 }
 
@@ -769,7 +765,7 @@ Vector4<uint32_t> RSProperties::GetBorderStyle() const
     return border_ ? border_->GetStyleFour() : Vector4<uint32_t>(static_cast<uint32_t>(BorderStyle::NONE));
 }
 
-std::shared_ptr<RSBorder> RSProperties::GetBorder() const
+const std::shared_ptr<RSBorder>& RSProperties::GetBorder() const
 {
     return border_;
 }
@@ -794,17 +790,17 @@ void RSProperties::SetFilter(std::shared_ptr<RSFilter> filter)
     contentDirty_ = true;
 }
 
-std::shared_ptr<RSFilter> RSProperties::GetBackgroundFilter() const
+const std::shared_ptr<RSFilter>& RSProperties::GetBackgroundFilter() const
 {
     return backgroundFilter_;
 }
 
-std::shared_ptr<RSLinearGradientBlurPara> RSProperties::GetLinearGradientBlurPara() const
+const std::shared_ptr<RSLinearGradientBlurPara>& RSProperties::GetLinearGradientBlurPara() const
 {
     return linearGradientBlurPara_;
 }
 
-std::shared_ptr<RSFilter> RSProperties::GetFilter() const
+const std::shared_ptr<RSFilter>& RSProperties::GetFilter() const
 {
     return filter_;
 }
@@ -1555,9 +1551,11 @@ const sk_sp<SkColorFilter> RSProperties::GetColorFilter() const
     }
     if (contrast_.has_value() && !NearEqual(*contrast_, 1.0)) {
         auto contrast = contrast_.value();
+        uint32_t contrastValue128 = 128;
+        uint32_t contrastValue255 = 255;
         float matrix[20] = { 0.0f }; // 20 : matrix size
         matrix[0] = matrix[INDEX_6] = matrix[INDEX_12] = contrast;
-        matrix[INDEX_4] = matrix[INDEX_9] = matrix[INDEX_14] = 128 * (1 - contrast) / 255;
+        matrix[INDEX_4] = matrix[INDEX_9] = matrix[INDEX_14] = contrastValue128 * (1 - contrast) / contrastValue255;
         matrix[INDEX_18] = 1.0f;
         tmpFilter = SkColorFilters::Matrix(matrix);
         filter = tmpFilter->makeComposed(filter);

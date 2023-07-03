@@ -27,9 +27,7 @@
 
 namespace OHOS {
 namespace Rosen {
-#ifndef USE_ROSEN_DRAWING
-class RSSkiaFilter;
-#else
+#ifdef USE_ROSEN_DRAWING
 class RSDrawingFilter;
 #endif
 class RSPaintFilterCanvas;
@@ -49,10 +47,10 @@ public:
     static void GetShadowDirtyRect(RectI& dirtyShadow, const RSProperties& properties,
         const RRect* rrect = nullptr, bool isAbsCoordinate = true);
     static void DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect = nullptr);
-    static void DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
-        std::shared_ptr<RSSkiaFilter>& filter, FilterType filterType, const std::unique_ptr<SkRect>& rect = nullptr);
-    static void DrawLinearGradientBlurFilter(const RSProperties& properties,
-                                RSPaintFilterCanvas& canvas, const std::unique_ptr<SkRect>& rect);
+    static void DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas, FilterType filterType,
+        const std::optional<SkRect>& rect = std::nullopt);
+    static void DrawLinearGradientBlurFilter(
+        const RSProperties& properties, RSPaintFilterCanvas& canvas, const std::optional<SkRect>& rect = std::nullopt);
     static void DrawForegroundColor(const RSProperties& properties, SkCanvas& canvas);
     static void DrawMask(const RSProperties& properties, SkCanvas& canvas);
     static void DrawMask(const RSProperties& properties, SkCanvas& canvas, SkRect maskBounds);
@@ -84,9 +82,11 @@ private:
     static void DrawColorfulShadowInner(const RSProperties& properties, RSPaintFilterCanvas& canvas, SkPath& path);
     static void DrawShadowInner(const RSProperties& properties, RSPaintFilterCanvas& canvas, SkPath& path);
 #ifdef NEW_SKIA
-    static bool GetGradientDirectionPoints(SkPoint* pts, const SkRect& clipBounds, GradientDirection direction);
+    static bool GetGradientDirectionPoints(SkPoint* pts,
+                                const SkRect& clipBounds, GradientDirection direction);
+    static void TransformGradientBlurDirection(uint8_t& direction, const uint8_t directionBias);
     static sk_sp<SkShader> MakeAlphaGradientShader(const SkRect& clipBounds,
-                                            const std::shared_ptr<RSLinearGradientBlurPara>& para);
+                                const std::shared_ptr<RSLinearGradientBlurPara>& para, uint8_t directionBias);
     static sk_sp<SkShader> MakeHorizontalMeanBlurShader(float radiusIn,
                                             sk_sp<SkShader> shader, sk_sp<SkShader> gradientShader);
     static sk_sp<SkShader> MakeVerticalMeanBlurShader(float radiusIn,
@@ -96,6 +96,7 @@ private:
         float radius, sk_sp<SkShader> alphaGradientShader, const SkIRect& clipIPadding);
     static void DrawVerticalLinearGradientBlur(SkSurface* skSurface, RSPaintFilterCanvas& canvas,
         float radius, sk_sp<SkShader> alphaGradientShader, const SkIRect& clipIPadding);
+    static uint8_t CalcDirectionBias(const SkMatrix& mat);
 #endif
 #else
     static void Clip(Drawing::Canvas& canvas, RectF rect);

@@ -280,6 +280,8 @@ void RSUIDirector::RecvMessages()
     RecvMessages(transactionDataPtr);
 }
 
+std::atomic_int g_cnt = 0;
+
 void RSUIDirector::RecvMessages(std::shared_ptr<RSTransactionData> cmds)
 {
     if (cmds == nullptr || cmds->IsEmpty()) {
@@ -288,7 +290,9 @@ void RSUIDirector::RecvMessages(std::shared_ptr<RSTransactionData> cmds)
     ROSEN_LOGD("RSUIDirector::RecvMessages success");
     PostTask([cmds]() {
         ROSEN_LOGD("RSUIDirector::ProcessMessages success");
-        RSUIDirector::ProcessMessages(cmds);
+        if (g_cnt < 10) {
+            RSUIDirector::ProcessMessages(cmds);
+        }
     });
 }
 
@@ -306,6 +310,7 @@ void RSUIDirector::AnimationCallbackProcessor(NodeId nodeId, AnimationId animId,
             ROSEN_LOGE("RSUIDirector::AnimationCallbackProcessor, could not find animation %" PRIu64 " on node %" PRIu64
                        ".", animId, nodeId);
         }
+        g_cnt++;
         return;
     }
 
@@ -313,9 +318,11 @@ void RSUIDirector::AnimationCallbackProcessor(NodeId nodeId, AnimationId animId,
     auto& fallbackNode = RSNodeMap::Instance().GetAnimationFallbackNode();
     if (fallbackNode && fallbackNode->AnimationCallback(animId, event)) {
         ROSEN_LOGD("RSUIDirector::AnimationCallbackProcessor, found animation %" PRIu64 " on fallback node.", animId);
+        g_cnt = 0;
     } else {
         ROSEN_LOGE("RSUIDirector::AnimationCallbackProcessor, could not find animation %" PRIu64 " on fallback node.",
             animId);
+        g_cnt++;
     }
 }
 

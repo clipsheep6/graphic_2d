@@ -114,6 +114,11 @@ BufferHandle *CloneBufferHandle(const BufferHandle *handle)
             return nullptr;
         }
     }
+
+    UTILS_LOGE("hjj new handle reserveFds %{public}d, reserveInts %{public}d", newHandle->reserveFds, newHandle->reserveInts);
+    UTILS_LOGE("hjj handle reserveFds %{public}d, reserveInts %{public}d", handle->reserveFds, handle->reserveInts);
+    UTILS_LOGE("hjj handle reserve size %{public}zu, new handle reserve size %{public}zu", 
+                sizeof(handle->reserve), sizeof(newHandle->reserve));
     if (memcpy_s(&newHandle->reserve[newHandle->reserveFds], sizeof(int32_t) * newHandle->reserveInts,
         &handle->reserve[handle->reserveFds], sizeof(int32_t) * handle->reserveInts) != EOK) {
         UTILS_LOGE("CloneBufferHandle memcpy_s failed");

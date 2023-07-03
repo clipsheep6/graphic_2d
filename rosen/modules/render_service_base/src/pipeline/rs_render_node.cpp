@@ -373,12 +373,18 @@ void RSRenderNode::ApplyModifiers()
     for (auto type : dirtyTypes_) {
         renderProperties_.ResetProperty(type);
     }
-
+    bool isDirty = renderProperties_.isDirty_;
+    bool geoDirty = renderProperties_.geoDirty_;
+    bool contentDirty = renderProperties_.contentDirty_;
+    renderProperties_.Reset();
     for (auto& [id, modifier] : modifiers_) {
-        if (modifier && (dirtyTypes_.find(modifier->GetType()) != dirtyTypes_.end())) {
+        if (modifier) {
             modifier->Apply(context);
         }
     }
+    renderProperties_.isDirty_ = isDirty;
+    renderProperties_.geoDirty_ = geoDirty;
+    renderProperties_.contentDirty_ = contentDirty;
     OnApplyModifiers();
     UpdateDrawRegion();
     dirtyTypes_.clear();

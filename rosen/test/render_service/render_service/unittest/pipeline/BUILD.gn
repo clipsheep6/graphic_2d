@@ -33,6 +33,7 @@ group("unittest") {
     ":RSProcessorFactoryTest",
     ":RSQosThreadTest",
     ":RSRenderEngineTest",
+    ":RSRenderServiceConnectionUnitTest",
     ":RSRenderServiceListenerTest",
     ":RSRenderServiceUnitTest",
     ":RSRenderServiceVisitorTest",
@@ -391,6 +392,15 @@ ohos_unittest("RSRenderEngineTest") {
   defines += gpu_defines
 }
 
+## Build RSRenderServiceConnectionUnitTest
+ohos_unittest("RSRenderServiceConnectionUnitTest") {
+  module_out_path = module_output_path
+  sources = [ "rs_render_service_connection_test.cpp" ]
+  deps = [ ":rs_test_common" ]
+  defines = []
+  defines += gpu_defines
+}
+
 ## Build RSNodeCostManagerTest
 ohos_unittest("RSNodeCostManagerTest") {
   module_out_path = module_output_path
@@ -509,6 +519,7 @@ ohos_static_library("rs_test_common") {
   external_deps = [
     "c_utils:utils",
     "init:libbegetutil",
+    "ipc:ipc_core",
   ]
 
   subsystem_name = "graphic"

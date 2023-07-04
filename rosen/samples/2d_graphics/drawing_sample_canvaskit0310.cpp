@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include <cinttypes>
 #include <cstdio>
 #include <cstdlib>
@@ -196,11 +197,8 @@ void HelloDrawing::DoDrawData(void *image, uint32_t width, uint32_t height)
 
     TestDrawImage(canvas, width, height);
     constexpr uint32_t stride = 4;
-    int32_t addrSize = width * height * stride;
-    auto ret = memcpy_s(image, addrSize, bitmap.GetPixels(), addrSize);
-    if (ret != EOK) {
-        LOGE("memcpy_s failed");
-    }
+    uint32_t addrSize = width * height * stride;
+    memcpy(image, bitmap.GetPixels(), addrSize);
 }
 
 void HelloDrawing::DoDrawBaseData(void *image, uint32_t width, uint32_t height, uint32_t index)
@@ -217,11 +215,8 @@ void HelloDrawing::DoDrawBaseData(void *image, uint32_t width, uint32_t height, 
         TestDrawImage(canvas, width, height);
     }
     constexpr uint32_t stride = 4;
-    int32_t addrSize = width * height * stride;
-    auto ret = memcpy_s(image, addrSize, bitmap.GetPixels(), addrSize);
-    if (ret != EOK) {
-        LOGE("memcpy_s failed");
-    }
+    uint32_t addrSize = width * height * stride;
+    memcpy(image, bitmap.GetPixels(), addrSize);
 }
 
 SurfaceError HelloDrawing::ProduceBuffer(sptr<Surface> &produceSurface, uint32_t width,

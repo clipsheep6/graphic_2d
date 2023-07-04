@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include <cinttypes>
 #include <codecvt>
 #include <cstdio>
@@ -99,11 +100,8 @@ void DoDraw(uint8_t *addr, uint32_t width, uint32_t height, size_t index)
     typography->Layout(lastLayoutMaxWidth);
     typography->Paint(&canvas, 10.0, 15.0); // pos to paint 10.0, 15.0
     constexpr uint32_t stride = 4;
-    int32_t addrSize = width * height * stride;
-    auto ret = memcpy_s(addr, addrSize, bitmapCache.GetPixels(), addrSize);
-    if (ret != EOK) {
-        LOGD("memcpy_s failed");
-    }
+    uint32_t addrSize = width * height * stride;
+    memcpy(addr, bitmapCache.GetPixels(), addrSize);
 }
 
 void DrawSurface(std::shared_ptr<RSSurfaceNode> surfaceNode, int32_t width, int32_t height, size_t index)

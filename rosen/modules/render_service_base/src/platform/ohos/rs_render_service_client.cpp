@@ -344,15 +344,15 @@ void RSRenderServiceClient::SetScreenRefreshRate(ScreenId id, int32_t sceneId, i
     renderService->SetScreenRefreshRate(id, sceneId, rate);
 }
 
-void RSRenderServiceClient::SetRefreshRateMode(int32_t refreshRateMode)
+int32_t RSRenderServiceClient::SetRefreshRateMode(int32_t refreshRateMode)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
         ROSEN_LOGW("RSRenderServiceClient renderService == nullptr!");
-        return;
+        return {};
     }
 
-    renderService->SetRefreshRateMode(refreshRateMode);
+    return renderService->SetRefreshRateMode(refreshRateMode);
 }
 
 uint32_t RSRenderServiceClient::GetScreenCurrentRefreshRate(ScreenId id)

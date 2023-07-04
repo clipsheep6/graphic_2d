@@ -67,7 +67,7 @@ public:
 
     void SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate) override;
 
-    void SetRefreshRateMode(int32_t refreshRateMode) override;
+    int32_t SetRefreshRateMode(int32_t refreshRateMode) override;
 
     uint32_t GetScreenCurrentRefreshRate(ScreenId id) override;
 

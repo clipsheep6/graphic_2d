@@ -983,7 +983,7 @@ HWTEST_F(RSInterfacesTest, SetRefreshRateMode001, Function | SmallTest | Level2)
 
     rsInterfaces->SetScreenRefreshRate(screenId, 0, formerRate);
     sleep(SET_REFRESHRATE_SLEEP_S);
-    rsInterfaces->SetRefreshRateMode(rateModeToSet);
+    int32_t setResult = rsInterfaces->SetRefreshRateMode(rateModeToSet);
     sleep(SET_REFRESHRATE_SLEEP_S);
     uint32_t currentRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
     auto supportedRates = rsInterfaces->GetScreenSupportedRefreshRates(screenId);
@@ -996,6 +996,7 @@ HWTEST_F(RSInterfacesTest, SetRefreshRateMode001, Function | SmallTest | Level2)
     }
     if (ifSupported) {
         EXPECT_EQ(currentRate, newRate);
+        EXPECT_EQ(setResult, 0);
     } else {
         EXPECT_EQ(currentRate, formerRate);
     }

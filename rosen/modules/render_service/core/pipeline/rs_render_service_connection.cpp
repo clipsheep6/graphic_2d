@@ -366,28 +366,28 @@ void RSRenderServiceConnection::SetScreenRefreshRate(ScreenId id, int32_t sceneI
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }
 
-void RSRenderServiceConnection::SetRefreshRateMode(int32_t refreshRateMode)
+int32_t RSRenderServiceConnection::SetRefreshRateMode(int32_t refreshRateMode)
 {
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderService::SetRefreshRateMode");
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
     if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
-        RSHardwareThread::Instance().ScheduleTask([=]() {
+        return RSHardwareThread::Instance().ScheduleTask([=]() {
             auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
             int32_t setResult = hgmCore.SetRefreshRateMode(static_cast<RefreshRateMode>(refreshRateMode));
             if (setResult != 0) {
                 RS_LOGW("SetRefreshRateMode mode %d is not supported", refreshRateMode);
-                return;
             }
-        }).wait();
+            return setResult;
+        }).get();
     } else {
-        mainThread_->ScheduleTask([=]() {
+        return mainThread_->ScheduleTask([=]() {
             auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
             int32_t setResult = hgmCore.SetRefreshRateMode(static_cast<RefreshRateMode>(refreshRateMode));
             if (setResult != 0) {
                 RS_LOGW("SetRefreshRateMode mode %d is not supported", refreshRateMode);
-                return;
             }
-        }).wait();
+            return setResult;
+        }).get();
     }
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }

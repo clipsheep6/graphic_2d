@@ -93,7 +93,7 @@ public:
 
     void SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate);
 
-    void SetRefreshRateMode(int32_t refreshRateMode);
+    int32_t SetRefreshRateMode(int32_t refreshRateMode);
 
     uint32_t GetScreenCurrentRefreshRate(ScreenId id);
 

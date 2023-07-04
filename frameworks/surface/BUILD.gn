@@ -118,7 +118,7 @@ ohos_shared_library("surface") {
     "chipsetsdk",
     "platformsdk",
   ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 

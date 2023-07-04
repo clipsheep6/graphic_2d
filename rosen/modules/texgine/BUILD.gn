@@ -119,7 +119,7 @@ ohos_shared_library("libtexgine") {
     ]
   }
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 ## Build libtexgine.so }}}

@@ -204,6 +204,9 @@ bool RSBorder::ApplyFillStyle(SkPaint& paint) const
 bool RSBorder::ApplyFillStyle(Drawing::Brush& brush) const
 #endif
 {
+    if (GetStyle() == BorderStyle::SOLID3D) {
+        return false;
+    }
     if (colors_.size() != 1) {
         return false;
     }
@@ -225,6 +228,9 @@ bool RSBorder::ApplyPathStyle(SkPaint& paint) const
 bool RSBorder::ApplyPathStyle(Drawing::Pen& pen) const
 #endif
 {
+    if (GetStyle() == BorderStyle::SOLID3D) {
+        return false;
+    }
     if (colors_.size() != 1 || widths_.size() != 1 || styles_.size() != 1) {
         return false;
     }
@@ -247,6 +253,9 @@ bool RSBorder::ApplyFourLine(SkPaint& paint) const
 bool RSBorder::ApplyFourLine(Drawing::Pen& pen) const
 #endif
 {
+    if (GetStyle() == BorderStyle::SOLID3D) {
+        return false;
+    }
     if (colors_.size() != 1 || styles_.size() != 1) {
         return false;
     }
@@ -459,9 +468,16 @@ void RSBorder::PaintTopPath(Drawing::Canvas& canvas, Drawing::Pen& pen, Drawing:
             canvas.ClipPath(topClipPath, Drawing::ClipOp::DIFFERENCE, true);
 #endif
         }
+
 #ifndef USE_ROSEN_DRAWING
+        if (GetStyle() == BorderStyle::SOLID3D) {
+            paint.setColor(SK_ColorWHITE);
+        }
         canvas.drawPath(topBorder, paint);
 #else
+        if (GetStyle() == BorderStyle::SOLID3D) {
+            pen.setColor(SK_ColorWHITE);
+        }
         canvas.AttachPen(pen);
         canvas.DrawPath(topBorder);
         canvas.DetachPen();
@@ -572,9 +588,16 @@ void RSBorder::PaintRightPath(Drawing::Canvas& canvas, Drawing::Pen& pen, Drawin
             canvas.ClipPath(rightClipPath, Drawing::ClipOp::DIFFERENCE, true);
 #endif
         }
+
 #ifndef USE_ROSEN_DRAWING
+        if (GetStyle() == BorderStyle::SOLID3D) {
+            paint.setColor(SK_ColorGRAY);
+        }
         canvas.drawPath(rightBorder, paint);
 #else
+        if (GetStyle() == BorderStyle::SOLID3D) {
+            pen.setColor(SK_ColorGRAY);
+        }
         canvas.AttachPen(pen);
         canvas.DrawPath(rightBorder);
         canvas.DetachPen();
@@ -689,9 +712,16 @@ void RSBorder::PaintBottomPath(Drawing::Canvas& canvas, Drawing::Pen& pen, Drawi
             canvas.ClipPath(bottomClipPath, Drawing::ClipOp::DIFFERENCE, true);
 #endif
         }
+
 #ifndef USE_ROSEN_DRAWING
+        if (GetStyle() == BorderStyle::SOLID3D) {
+            paint.setColor(SK_ColorGRAY);
+        }
         canvas.drawPath(bottomBorder, paint);
 #else
+        if (GetStyle() == BorderStyle::SOLID3D) {
+            pen.setColor(SK_ColorGRAY);
+        }
         canvas.AttachPen(pen);
         canvas.DrawPath(bottomBorder);
         canvas.DetachPen();
@@ -803,8 +833,14 @@ void RSBorder::PaintLeftPath(Drawing::Canvas& canvas, Drawing::Pen& pen, Drawing
 #endif
         }
 #ifndef USE_ROSEN_DRAWING
+        if (GetStyle() == BorderStyle::SOLID3D) {
+            paint.setColor(SK_ColorWHITE);
+        }
         canvas.drawPath(leftBorder, paint);
 #else
+        if (GetStyle() == BorderStyle::SOLID3D) {
+            pen.setColor(SK_ColorWHITE);
+        }
         canvas.AttachPen(pen);
         canvas.DrawPath(leftBorder);
         canvas.DetachPen();

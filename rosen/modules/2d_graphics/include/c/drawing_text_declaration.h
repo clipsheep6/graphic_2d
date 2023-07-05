@@ -82,6 +82,14 @@ typedef struct OH_Drawing_TypographyStyle OH_Drawing_TypographyStyle;
  */
 typedef struct OH_Drawing_TypographyCreate OH_Drawing_TypographyCreate;
 
+/**
+ * @brief Defines an <b>OH_Drawing_PlaceholderSpan</b>, which is used to a placeholder.
+ *
+ * @since 8
+ * @version 1.0
+ */
+typedef struct OH_Drawing_PlaceholderSpan OH_Drawing_PlaceholderSpan;
+
 #ifdef __cplusplus
 }
 #endif

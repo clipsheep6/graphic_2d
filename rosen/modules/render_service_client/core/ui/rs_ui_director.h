@@ -88,7 +88,7 @@ private:
 
     friend class RSApplicationAgentImpl;
     friend class RSRenderThread;
-    friend class RSImplicitAnimator;
+    friend class AnimationCallback;
 };
 } // namespace Rosen
 } // namespace OHOS

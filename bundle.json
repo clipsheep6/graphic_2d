@@ -71,7 +71,8 @@
           "libuv",
           "openssl",
           "third_party_skia",
-          "zilb",
+          "cjson",
+          "zlib",
           "skia"
         ]
       },

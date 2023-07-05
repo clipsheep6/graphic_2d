@@ -65,6 +65,7 @@
           "ipc",
           "player_framework",
           "resource_schedule_service",
+          "hilog",
           "soc_perf",
           "accessibility"
         ],

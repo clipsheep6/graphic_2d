@@ -24,6 +24,8 @@ class AnimationCallback {
 public:
     explicit AnimationCallback(const std::function<void()>& callback);
     virtual ~AnimationCallback();
+    void Execute();
+    virtual void OnExecute() {}
 
 protected:
     std::function<void()> callback_;
@@ -33,20 +35,15 @@ class AnimationFinishCallback : public AnimationCallback {
 public:
     AnimationFinishCallback(const std::function<void()>& callback, bool isTimingSensitive = true);
     ~AnimationFinishCallback() override = default;
-    // Execute the callback function immediately.
-    void Execute();
+    void OnExecute() override;
 
     const bool isTimingSensitive_;
 };
 
-class AnimationRepeatCallback {
+class AnimationRepeatCallback : public AnimationCallback {
 public:
-    AnimationRepeatCallback(const std::function<void()>& callback) : callback_(callback) {};
-    ~AnimationRepeatCallback() {};
-    // Execute the callback function repeatitive.
-    void Execute();
-protected:
-    std::function<void()> callback_;
+    AnimationRepeatCallback(const std::function<void()>& callback) : AnimationCallback(callback) {};
+    ~AnimationRepeatCallback() override;
 };
 } // namespace Rosen
 } // namespace OHOS

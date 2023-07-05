@@ -15,35 +15,40 @@
 
 #include "animation/rs_animation_callback.h"
 
+#include "ui/rs_ui_director.h"
+
 namespace OHOS {
 namespace Rosen {
 AnimationCallback::AnimationCallback(const std::function<void()>& callback) : callback_(callback) {}
 
-AnimationCallback::~AnimationCallback()
+AnimationCallback::~AnimationCallback() {
+    Execute();
+}
+
+void AnimationCallback::Execute()
 {
     if (callback_ != nullptr) {
-        callback_();
+        // Asynchronous execute the callback function, we make a copy of the callback function to avoid the callback
+        // being destroyed.
+        RSUIDirector::PostTask([callback = this->callback_]() { callback(); });
     }
+    OnExecute();
 }
 
 AnimationFinishCallback::AnimationFinishCallback(const std::function<void()>& callback, bool isTimingSensitive)
     : AnimationCallback(callback), isTimingSensitive_(isTimingSensitive)
 {}
 
-void AnimationFinishCallback::Execute()
+void AnimationFinishCallback::OnExecute()
 {
-    if (callback_ != nullptr) {
-        callback_();
-        // avoid callback_ being called repeatedly.
-        callback_ = nullptr;
-    }
+    // Avoid the callback being executed more than once.
+    callback_ = nullptr;
 }
 
-void AnimationRepeatCallback::Execute()
+AnimationRepeatCallback::~AnimationRepeatCallback()
 {
-    if (callback_ != nullptr) {
-        callback_();
-    }
-}
+    // Avoid the callback being executed on animation finish.
+    callback_ = nullptr;
+};
 } // namespace Rosen
 } // namespace OHOS

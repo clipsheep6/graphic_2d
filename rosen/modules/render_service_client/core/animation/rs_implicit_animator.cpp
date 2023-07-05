@@ -23,7 +23,6 @@
 #include "pipeline/rs_node_map.h"
 #include "platform/common/rs_log.h"
 #include "ui/rs_node.h"
-#include "ui/rs_ui_director.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -112,7 +111,6 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
         if (finishCallback->isTimingSensitive_ == false) {
             ROSEN_LOGD("RSImplicitAnimator::CloseImplicitAnimation, No implicit animations created, execute finish "
                        "callback asynchronously");
-            RSUIDirector::PostTask([finishCallback]() { finishCallback->Execute(); });
             globalImplicitParams_.pop();
             implicitAnimations_.pop();
             keyframeAnimations_.pop();

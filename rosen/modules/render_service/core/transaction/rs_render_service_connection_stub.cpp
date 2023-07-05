@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -154,6 +154,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             auto type = static_cast<RSSurfaceNodeType>(data.ReadUint8());
             RSSurfaceRenderNodeConfig config = {.id = nodeId, .name = surfaceName, .nodeType = type };
             sptr<Surface> surface = CreateNodeAndSurface(config);
+            if (surface == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
             auto producer = surface->GetProducer();
             reply.WriteRemoteObject(producer->AsObject());
             break;
@@ -218,6 +222,11 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             ScreenId mirrorId = data.ReadUint64();
             int32_t flags = data.ReadInt32();
 
+            if (surface == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+
             ScreenId id = CreateVirtualScreen(name, width, height, surface, mirrorId, flags);
             reply.WriteUint64(id);
             break;
@@ -238,7 +247,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             auto bufferProducer = iface_cast<IBufferProducer>(remoteObject);
             sptr<Surface> surface = Surface::CreateSurfaceAsProducer(bufferProducer);
-
+            if (surface == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
             int32_t status = SetVirtualScreenSurface(id, surface);
             reply.WriteInt32(status);
             break;
@@ -266,6 +278,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             sptr<RSIScreenChangeCallback> cb = iface_cast<RSIScreenChangeCallback>(remoteObject);
+            if (cb == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
             int32_t status = SetScreenChangeCallback(cb);
             reply.WriteInt32(status);
             break;
@@ -279,6 +295,53 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             ScreenId id = data.ReadUint64();
             uint32_t modeId = data.ReadUint32();
             SetScreenActiveMode(id, modeId);
+            break;
+        }
+        case SET_SCREEN_REFRESH_RATE: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            int32_t sceneId = data.ReadInt32();
+            int32_t rate = data.ReadInt32();
+            SetScreenRefreshRate(id, sceneId, rate);
+            break;
+        }
+        case SET_REFRESH_RATE_MODE: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            int32_t mode = data.ReadInt32();
+            SetRefreshRateMode(mode);
+            break;
+        }
+        case GET_SCREEN_CURRENT_REFRESH_RATE: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            uint32_t refreshRate = GetScreenCurrentRefreshRate(id);
+            reply.WriteUint32(refreshRate);
+            break;
+        }
+        case GET_SCREEN_SUPPORTED_REFRESH_RATES: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            std::vector<uint32_t> rates = GetScreenSupportedRefreshRates(id);
+            reply.WriteUint64(static_cast<uint64_t>(rates.size()));
+            for (auto ratesIter : rates) {
+                reply.WriteUint32(ratesIter);
+            }
             break;
         }
         case SET_VIRTUAL_SCREEN_RESOLUTION: {
@@ -313,6 +376,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             sptr<RSISurfaceCaptureCallback> cb = iface_cast<RSISurfaceCaptureCallback>(remoteObject);
+            if (cb == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
             float scaleX = data.ReadFloat();
             float scaleY = data.ReadFloat();
             TakeSurfaceCapture(id, cb, scaleX, scaleY);
@@ -326,6 +393,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             sptr<IApplicationAgent> app = iface_cast<IApplicationAgent>(remoteObject);
+            if (app == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
             RegisterApplicationAgent(pid, app);
             break;
         }
@@ -458,6 +529,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             sptr<RSIBufferAvailableCallback> cb = iface_cast<RSIBufferAvailableCallback>(remoteObject);
+            if (cb == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
             RegisterBufferAvailableListener(id, cb, isFromRenderThread);
             break;
         }
@@ -558,6 +633,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
         case CREATE_VSYNC_CONNECTION: {
             std::string name = data.ReadString();
             sptr<IVSyncConnection> conn = CreateVSyncConnection(name);
+            if (conn == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
             reply.WriteRemoteObject(conn->AsObject());
             break;
         }
@@ -633,6 +712,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             sptr<RSIOcclusionChangeCallback> callback = iface_cast<RSIOcclusionChangeCallback>(remoteObject);
+            if (callback == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
             int32_t status = RegisterOcclusionChangeCallback(callback);
             reply.WriteInt32(status);
             break;
@@ -668,6 +751,35 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             ReportJankStats();
             break;
+        }
+        case EXECUTE_SYNCHRONOUS_TASK: {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            auto type = data.ReadInt16();
+            auto subType = data.ReadInt16();
+            if (type != RS_NODE_SYNCHRONOUS_READ_PROPERTY) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            auto func = RSCommandFactory::Instance().GetUnmarshallingFunc(type, subType);
+            if (func == nullptr) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            auto command = static_cast<RSSyncTask*>((*func)(data));
+            if (command == nullptr) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            std::shared_ptr<RSSyncTask> task(command);
+            ExecuteSynchronousTask(task);
+            if (!task->Marshalling(reply)) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
         }
         default: {
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);

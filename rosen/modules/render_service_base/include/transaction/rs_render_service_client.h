@@ -68,6 +68,7 @@ public:
     void operator=(const RSRenderServiceClient&) = delete;
 
     void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) override;
+    void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) override;
 
     bool GetUniRenderEnabled();
 
@@ -107,6 +108,14 @@ public:
     int32_t SetScreenChangeCallback(const ScreenChangeCallback& callback);
 
     void SetScreenActiveMode(ScreenId id, uint32_t modeId);
+
+    void SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate);
+
+    void SetRefreshRateMode(int32_t refreshRateMode);
+
+    uint32_t GetScreenCurrentRefreshRate(ScreenId id);
+
+    std::vector<uint32_t> GetScreenSupportedRefreshRates(ScreenId id);
 
     int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height);
 

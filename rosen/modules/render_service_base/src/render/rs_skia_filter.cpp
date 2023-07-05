@@ -37,7 +37,6 @@ SkPaint RSSkiaFilter::GetPaint() const
 {
     SkPaint paint;
     paint.setAntiAlias(true);
-    paint.setBlendMode(SkBlendMode::kSrcOver);
     paint.setImageFilter(imageFilter_);
     return paint;
 }
@@ -61,6 +60,17 @@ std::shared_ptr<Drawing::ImageFilter> RSDrawingFilter::GetImageFilter() const
 #endif
 {
     return imageFilter_;
+}
+
+void RSSkiaFilter::DrawImageRect(
+    SkCanvas& canvas, const sk_sp<SkImage>& image, const SkRect& src, const SkRect& dst) const
+{
+    auto paint = GetPaint();
+#ifdef NEW_SKIA
+    canvas.drawImageRect(image.get(), src, dst, SkSamplingOptions(), &paint, SkCanvas::kStrict_SrcRectConstraint);
+#else
+    canvas.drawImageRect(image.get(), src, dst, &paint);
+#endif
 }
 } // namespace Rosen
 } // namespace OHOS

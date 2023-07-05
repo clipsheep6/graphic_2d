@@ -17,9 +17,11 @@
 #define ROSEN_RENDER_SERVICE_BASE_RS_TRANSACTION_DATA_H
 
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include "command/rs_command.h"
+#include "command/rs_node_showing_command.h"
 #include "common/rs_macros.h"
 #include "pipeline/rs_context.h"
 
@@ -153,6 +155,7 @@ private:
     bool needCloseSync_ { false };
     int32_t syncTransactionCount_ { 0 };
     uint64_t syncId_ { 0 };
+    std::mutex commandMutex_;
 
     friend class RSTransactionProxy;
     friend class RSMessageProcessor;

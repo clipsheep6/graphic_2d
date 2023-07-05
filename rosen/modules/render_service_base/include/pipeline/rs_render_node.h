@@ -16,6 +16,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_RENDER_NODE_H
 
 #include <memory>
+#include <mutex>
 #include <unordered_set>
 #include <stdint.h>
 #include <functional>
@@ -24,6 +25,7 @@
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkSurface.h"
+#include "include/gpu/GrBackendSurface.h"
 #else
 #include "draw/surface.h"
 #endif
@@ -57,13 +59,16 @@ public:
     ~RSRenderNode() override;
     bool IsDirty() const override;
     bool IsContentDirty() const override;
+    void AddDirtyType(RSModifierType type)
+    {
+        dirtyTypes_.emplace(type);
+    }
 
     std::pair<bool, bool> Animate(int64_t timestamp) override;
-    // PrepareCanvasRenderNode in UniRender
-    bool Update(
-        RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, RectI clipRect);
-    // Other situation
-    bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty);
+
+    // clipRect has value in UniRender when calling PrepareCanvasRenderNode, else it is nullopt
+    bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty,
+        std::optional<RectI> clipRect = std::nullopt);
 #ifndef USE_ROSEN_DRAWING
     virtual std::optional<SkRect> GetContextClipRegion() const { return std::nullopt; }
 #else
@@ -159,11 +164,13 @@ public:
     std::shared_ptr<Drawing::Surface> GetCacheSurface() const
 #endif
     {
+        std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
         return cacheSurface_;
     }
 
     void UpdateCompletedCacheSurface()
     {
+        std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
         std::swap(cacheSurface_, cacheCompletedSurface_);
     }
 
@@ -177,9 +184,14 @@ public:
 
     void ClearCacheSurface()
     {
+        std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
         cacheSurface_ = nullptr;
         cacheCompletedSurface_ = nullptr;
     }
+
+#ifdef RS_ENABLE_GL
+    void UpdateBackendTexture();
+#endif
 
     void DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
         bool isUIFirst = false);
@@ -290,6 +302,11 @@ public:
         hasFilter_ = hasFilter;
     }
 
+    std::recursive_mutex& GetSurfaceMutex() const
+    {
+        return surfaceMutex_;
+    }
+
     bool HasHardwareNode() const
     {
         return hasHardwareNode_;
@@ -347,17 +364,12 @@ public:
 
     bool HasCachedTexture() const
     {
-        return cacheTexture_ != nullptr;
-    }
-
-    void SetCacheTexture(sk_sp<SkImage> texture)
-    {
-        cacheTexture_ = texture;
-    }
-
-    sk_sp<SkImage> GetCacheTexture() const
-    {
-        return cacheTexture_;
+#ifdef RS_ENABLE_GL
+        return grBackendTexture_.isValid();
+#else
+        return true;
+#endif
+    
     }
 
     void SetNeedClearFlag(bool needClear)
@@ -419,12 +431,7 @@ private:
     void FallbackAnimationsToRoot();
     void FilterModifiersByPid(pid_t pid);
 
-    // clipRect only used in UniRener when calling PrepareCanvasRenderNode
-    // PrepareCanvasRenderNode in UniRender: needClip = true and clipRect is meaningful
-    // Other situation: needClip = false and clipRect is meaningless
-    bool Update(RSDirtyRegionManager& dirtyManager,
-        const RSProperties* parent, bool parentDirty, bool needClip, RectI clipRect);
-    void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, bool needClip, RectI clipRect);
+    void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, std::optional<RectI> clipRect);
 
     bool isDirtyRegionUpdated_ = false;
     bool isLastVisible_ = false;
@@ -446,13 +453,16 @@ private:
     std::shared_ptr<Drawing::Surface> cacheSurface_ = nullptr;
     std::shared_ptr<Drawing::Surface> cacheCompletedSurface_ = nullptr;
 #endif
+#ifdef RS_ENABLE_GL
+    GrBackendTexture grBackendTexture_;
+#endif
     std::atomic<bool> isStaticCached_ = false;
     CacheType cacheType_ = CacheType::NONE;
     // drawing group cache
     RSDrawingCacheType drawingCacheType_ = RSDrawingCacheType::DISABLED_CACHE;
     bool isDrawingCacheChanged_ = false;
 
-    sk_sp<SkImage> cacheTexture_ = nullptr;
+    mutable std::recursive_mutex surfaceMutex_;
     ClearCacheSurfaceFunc clearCacheSurfaceFunc_ = nullptr;
     uint32_t cacheSurfaceThreadIndex_ = UNI_MAIN_THREAD_INDEX;
     bool isMainThreadNode_ = true;
@@ -481,6 +491,7 @@ private:
     // Only use in RSRenderNode::DrawCacheSurface to calculate scale factor
     float boundsWidth_ = 0.0f;
     float boundsHeight_ = 0.0f;
+    std::unordered_set<RSModifierType> dirtyTypes_;
 
     friend class RSRenderTransition;
     friend class RSRenderNodeMap;

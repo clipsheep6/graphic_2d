@@ -37,7 +37,6 @@ public:
     void NodeTaskNotify(uint64_t nodeId);
     void SubmitSubThreadTask(const std::shared_ptr<RSDisplayRenderNode>& node,
         const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes);
-    void SaveCacheTexture(RSRenderNode& node) const;
 
 private:
     RSSubThreadManager() = default;
@@ -51,7 +50,7 @@ private:
     uint32_t minLoadThreadIndex_ = 0;
     std::mutex parallelRenderMutex_;
     std::condition_variable cvParallelRender_;
-    std::map<uint64_t, bool> nodeTaskState_;
+    std::map<uint64_t, uint8_t> nodeTaskState_;
     std::vector<std::shared_ptr<RSSubThread>> threadList_;
 };
 }

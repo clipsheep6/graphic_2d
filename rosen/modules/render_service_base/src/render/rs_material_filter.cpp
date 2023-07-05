@@ -13,8 +13,16 @@
  * limitations under the License.
  */
 #include "render/rs_material_filter.h"
+#include "render/rs_kawase_blur.h"
 
 #include <unordered_map>
+
+#include "src/core/SkOpts.h"
+
+#include "common/rs_common_def.h"
+#include "pipeline/rs_paint_filter_canvas.h"
+#include "property/rs_properties_painter.h"
+#include "platform/common/rs_system_properties.h"
 
 #if defined(NEW_SKIA)
 #include "include/effects/SkImageFilters.h"
@@ -22,10 +30,6 @@
 #else
 #include "include/effects/SkBlurImageFilter.h"
 #endif
-
-#include "common/rs_common_def.h"
-#include "pipeline/rs_paint_filter_canvas.h"
-#include "property/rs_properties_painter.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -61,15 +65,34 @@ RSMaterialFilter::RSMaterialFilter(int style, float dipScale, BLUR_COLOR_MODE mo
 {
     imageFilter_ = RSMaterialFilter::CreateMaterialStyle(static_cast<MATERIAL_BLUR_STYLE>(style), dipScale, ratio);
     type_ = FilterType::MATERIAL;
+
+    hash_ = SkOpts::hash(&type_, sizeof(type_), 0);
+    hash_ = SkOpts::hash(&style, sizeof(style), hash_);
+    hash_ = SkOpts::hash(&colorMode_, sizeof(colorMode_), hash_);
+    hash_ = SkOpts::hash(&ratio, sizeof(ratio), hash_);
+#ifndef USE_ROSEN_DRAWING
+    useKawase = RSSystemProperties::GetKawaseEnabled();
+#endif
 }
 
 RSMaterialFilter::RSMaterialFilter(MaterialParam materialParam, BLUR_COLOR_MODE mode)
+#ifndef USE_ROSEN_DRAWING
     : RSSkiaFilter(nullptr), colorMode_(mode), radius_(materialParam.radius), saturation_(materialParam.saturation),
+#else
+    : RSDrawingFilter(nullptr), colorMode_(mode), radius_(materialParam.radius), saturation_(materialParam.saturation),
+#endif
       brightness_(materialParam.brightness), maskColor_(materialParam.maskColor)
 {
     imageFilter_ = RSMaterialFilter::CreateMaterialFilter(
         materialParam.radius, materialParam.saturation, materialParam.brightness);
     type_ = FilterType::MATERIAL;
+
+    hash_ = SkOpts::hash(&type_, sizeof(type_), 0);
+    hash_ = SkOpts::hash(&materialParam, sizeof(materialParam), hash_);
+    hash_ = SkOpts::hash(&colorMode_, sizeof(colorMode_), hash_);
+#ifndef USE_ROSEN_DRAWING
+    useKawase = RSSystemProperties::GetKawaseEnabled();
+#endif
 }
 
 RSMaterialFilter::~RSMaterialFilter() = default;
@@ -90,25 +113,25 @@ std::string RSMaterialFilter::GetDescription()
 }
 
 #ifndef USE_ROSEN_DRAWING
-std::shared_ptr<RSSkiaFilter> RSMaterialFilter::Compose(const std::shared_ptr<RSSkiaFilter>& inner)
-{
-    MaterialParam materialParam = {radius_, saturation_, brightness_, maskColor_};
-    std::shared_ptr<RSMaterialFilter> material = std::make_shared<RSMaterialFilter>(materialParam, colorMode_);
-    material->imageFilter_ = SkImageFilters::Compose(imageFilter_, inner->GetImageFilter());
-    return material;
-}
+std::shared_ptr<RSSkiaFilter> RSMaterialFilter::Compose(const std::shared_ptr<RSSkiaFilter>& other) const
 #else
-std::shared_ptr<RSDrawingFilter> RSMaterialFilter::Compose(const std::shared_ptr<RSDrawingFilter>& inner)
+std::shared_ptr<RSDrawingFilter> RSMaterialFilter::Compose(const std::shared_ptr<RSDrawingFilter>& inner) const
+#endif
 {
-    if (inner == nullptr) {
+    if (other == nullptr) {
         return nullptr;
     }
     MaterialParam materialParam = {radius_, saturation_, brightness_, maskColor_};
-    std::shared_ptr<RSMaterialFilter> material = std::make_shared<RSMaterialFilter>(materialParam, colorMode_);
-    material->imageFilter_ = Drawing::ColorFilter::CreateComposeColorFilter(imageFilter_, inner->GetImageFilter());
-    return material;
-}
+    std::shared_ptr<RSMaterialFilter> result = std::make_shared<RSMaterialFilter>(materialParam, colorMode_);
+#ifndef USE_ROSEN_DRAWING
+    result->imageFilter_ = SkImageFilters::Compose(imageFilter_, other->GetImageFilter());
+#else
+    result->imageFilter_ = Drawing::ImageFilter::CreateComposeImageFilter(imageFilter_, other->GetImageFilter());
 #endif
+    auto otherHash = other->Hash();
+    result->hash_ = SkOpts::hash(&otherHash, sizeof(otherHash), hash_);
+    return result;
+}
 
 #ifndef USE_ROSEN_DRAWING
 sk_sp<SkImageFilter> RSMaterialFilter::CreateMaterialFilter(float radius, float sat, float brightness)
@@ -126,7 +149,7 @@ sk_sp<SkImageFilter> RSMaterialFilter::CreateMaterialFilter(float radius, float 
         0.000000f, 0.000000f, 1.000000f, 0.000000f, normalizedDegree,
         0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f,
     };
-    
+
     sk_sp<SkColorFilter> brightnessFilter = SkColorFilters::Matrix(brightnessMat); // brightness
     SkColorMatrix cm;
     cm.setSaturation(sat);
@@ -196,9 +219,9 @@ void RSMaterialFilter::PreProcess(std::shared_ptr<Drawing::Image> imageSnapshot)
 {
     if (colorMode_ == AVERAGE && imageSnapshot != nullptr) {
         // update maskColor while persevere alpha
-        auto avgColor = RSPropertiesPainter::CalcAverageColor(imageSnapshot);
-        avgColor.SetAlpha(maskColor_.GetAlpha());
-        maskColor_ = avgColor;
+        auto colorPicker = RSPropertiesPainter::CalcAverageColor(imageSnapshot);
+        maskColor_ = RSColor(Drawing::Color::ColorQuadGetR(colorPicker), Drawing::Color::ColorQuadGetG(colorPicker),
+            Drawing::Color::ColorQuadGetB(colorPicker), maskColor_.GetAlpha());
     }
 }
 #endif
@@ -211,12 +234,12 @@ void RSMaterialFilter::PostProcess(RSPaintFilterCanvas& canvas)
     canvas.drawPaint(paint);
 #else
     Drawing::Brush brush;
-    brush.SetColor(maskColor_);
+    brush.SetColor(maskColor_.AsArgbInt());
     canvas.DrawBackground(brush);
 #endif
 }
 
-std::shared_ptr<RSFilter> RSMaterialFilter::TransformFilter(float fraction)
+std::shared_ptr<RSFilter> RSMaterialFilter::TransformFilter(float fraction) const
 {
     MaterialParam materialParam;
     materialParam.radius = radius_ * fraction;
@@ -300,6 +323,22 @@ bool RSMaterialFilter::IsNearEqual(const std::shared_ptr<RSFilter>& other, float
 bool RSMaterialFilter::IsNearZero(float threshold) const
 {
     return ROSEN_EQ(radius_, 0.0f, threshold);
+}
+
+void RSMaterialFilter::DrawImageRect(
+    SkCanvas& canvas, const sk_sp<SkImage>& image, const SkRect& src, const SkRect& dst) const
+{
+    if (!useKawase) {
+        auto paint = GetPaint();
+#ifdef NEW_SKIA
+        canvas.drawImageRect(image.get(), src, dst, SkSamplingOptions(), &paint, SkCanvas::kStrict_SrcRectConstraint);
+#else
+        canvas.drawImageRect(image.get(), src, dst, &paint);
+#endif
+        return;
+    }
+    KawaseBlur kawase;
+    kawase.ApplyKawaseBlur(canvas, image, src, dst, static_cast<int>(radius_));
 }
 } // namespace Rosen
 } // namespace OHOS

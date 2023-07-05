@@ -15,7 +15,7 @@
 #include "pipeline/rs_main_thread.h"
 
 #include <list>
-#include <SkGraphics.h>
+#include "include/core/SkGraphics.h"
 #include <securec.h>
 #include <stdint.h>
 #include <string>
@@ -477,7 +477,7 @@ void RSMainThread::CheckParallelSubThreadNodesStatus()
 void RSMainThread::ProcessCommandForUniRender()
 {
     ResetHardwareEnabledState();
-    TransactionDataMap transactionDataEffective;
+    std::shared_ptr<TransactionDataMap> transactionDataEffective = std::make_shared<TransactionDataMap>();
     std::string transactionFlags;
     if (RSSystemProperties::GetUIFirstEnabled() && RSSystemProperties::GetCacheCmdEnabled()) {
         CheckParallelSubThreadNodesStatus();
@@ -522,17 +522,17 @@ void RSMainThread::ProcessCommandForUniRender()
                 }
             }
             if (iter != transactionVec.begin()) {
-                transactionDataEffective[pid].insert(transactionDataEffective[pid].end(),
+                (*transactionDataEffective)[pid].insert((*transactionDataEffective)[pid].end(),
                     std::make_move_iterator(transactionVec.begin()), std::make_move_iterator(iter));
                 transactionVec.erase(transactionVec.begin(), iter);
             }
         }
     }
-    if (!transactionDataEffective.empty()) {
+    if (!transactionDataEffective->empty()) {
         doDirectComposition_ = false;
     }
     RS_TRACE_NAME("RSMainThread::ProcessCommandUni" + transactionFlags);
-    for (auto& rsTransactionElem: transactionDataEffective) {
+    for (auto& rsTransactionElem: *transactionDataEffective) {
         for (auto& rsTransaction: rsTransactionElem.second) {
             if (rsTransaction) {
                 if (rsTransaction->IsNeedSync() || syncTransactionData_.count(rsTransactionElem.first) > 0) {
@@ -543,6 +543,10 @@ void RSMainThread::ProcessCommandForUniRender()
             }
         }
     }
+    RSUnmarshalThread::Instance().PostTask([ transactionDataEffective ] () {
+        RS_TRACE_NAME("RSMainThread::ProcessCommandForUniRender transactionDataEffective clear");
+        transactionDataEffective->clear();
+    });
 }
 
 void RSMainThread::ProcessCommandForDividedRender()
@@ -648,6 +652,7 @@ void RSMainThread::ProcessAllSyncTransactionData()
     }
     syncTransactionData_.clear();
     syncTransactionCount_ = 0;
+    RequestNextVSync();
 }
 
 void RSMainThread::ConsumeAndUpdateAllNodes()
@@ -1002,8 +1007,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
             const auto& nodeMap = context_->GetNodeMap();
             RSUniRenderUtil::ClearSurfaceIfNeed(nodeMap, displayNode, oldDisplayChildren_);
             uniVisitor->SetAssignedWindowNodes(mainThreadNodes, subThreadNodes);
-            subThreadNodes_.clear();
-            subThreadNodes_ = subThreadNodes;
+            RSUniRenderUtil::CacheSubThreadNodes(subThreadNodes_, subThreadNodes);
         }
         rootNode->Process(uniVisitor);
     }
@@ -1353,7 +1357,7 @@ void RSMainThread::Animate(uint64_t timestamp)
         }
         if (cacheCmdSkippedInfo_.count(ExtractPid(node->GetId())) > 0) {
             RS_LOGD("RSMainThread::Animate skip the cached node");
-            return true;
+            return false;
         }
         activeProcessPids_.emplace(ExtractPid(node->GetId()));
         auto [hasRunningAnimation, nodeNeedRequestNextVsync] = node->Animate(timestamp);
@@ -1618,6 +1622,11 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
             return;
         }
         gpuContext->Flush();
+        if (!IsResidentProcess(remotePid)) {
+            ReleaseExitSurfaceNodeAllGpuResource(gpuContext);
+        } else {
+            RS_LOGW("this pid:%d is resident process, no need release gpu resource", remotePid);
+        }
 #endif // USE_ROSEN_DRAWING
         lastCleanCacheTimestamp_ = timestamp_;
 #endif

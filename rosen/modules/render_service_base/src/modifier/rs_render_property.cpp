@@ -15,8 +15,18 @@
 
 #include "modifier/rs_render_property.h"
 
+#include "pipeline/rs_render_node.h"
+
 namespace OHOS {
 namespace Rosen {
+
+void RSRenderPropertyBase::OnChange() const
+{
+    if (auto node = node_.lock()) {
+        node->SetDirty();
+        node->AddDirtyType(modifierType_);
+    }
+}
 
 bool RSRenderPropertyBase::Marshalling(Parcel& parcel, const std::shared_ptr<RSRenderPropertyBase>& val)
 {
@@ -359,7 +369,6 @@ bool RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>::IsNearEqual(
 
     auto filter = RSRenderProperty<std::shared_ptr<RSFilter>>::stagingValue_;
     auto otherFilter = animatableProperty->Get();
-
     if ((filter != nullptr) && (otherFilter != nullptr)) {
         return filter->IsNearEqual(otherFilter, zeroThreshold);
     } else if ((filter == nullptr) && (otherFilter == nullptr)) {

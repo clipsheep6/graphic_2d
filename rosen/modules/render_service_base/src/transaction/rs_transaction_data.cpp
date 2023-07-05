@@ -106,12 +106,14 @@ void RSTransactionData::Clear()
 void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType)
 {
     std::unique_lock<std::mutex> lock(commandMutex_);
+    ROSEN_LOGD("RSTransactionData::AddCommand %zu %p", payload_.size(), command.get());
     payload_.emplace_back(nodeId, followType, std::move(command));
 }
 
 void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>&& command, NodeId nodeId, FollowType followType)
 {
     std::unique_lock<std::mutex> lock(commandMutex_);
+    ROSEN_LOGD("RSTransactionData::AddCommand %zu %p", payload_.size(), command.get());
     payload_.emplace_back(nodeId, followType, std::move(command));
 }
 

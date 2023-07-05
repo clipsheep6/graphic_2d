@@ -26,6 +26,17 @@
 
 using namespace rosen;
 
+typedef struct OH_Drawing_PlaceholderSpan OH_Drawing_PlaceholderSpan;
+
+enum OH_Drawing_PlaceholderAlignment {
+    BASELINE,
+    ABOVEBASELINE,
+    BELOWBASELINE,
+    TOP,
+    BOTTOM,
+    MIDDLE,
+};
+
 template<typename T1, typename T2>
 inline T1* ConvertToOriginalText(T2* ptr)
 {
@@ -354,4 +365,19 @@ double OH_Drawing_TypographyGetAlphabeticBaseline(OH_Drawing_Typography* typogra
 double OH_Drawing_TypographyGetIdeographicBaseline(OH_Drawing_Typography* typography)
 {
     return ConvertToOriginalText<Typography>(typography)->GetIdeographicBaseline();
+}
+
+OH_Drawing_PlaceholderSpan* OH_Drawing_CreatePlaceholderSpan(double width, double height,
+    OH_Drawing_PlaceholderAlignment placeholderAlignment, OH_Drawing_TextBaseline textbaseline, double baselineOffset)
+{
+    return (OH_Drawing_PlaceholderSpan*)new PlaceholderRun(width, height,
+        *(ConvertToOriginalText<PlaceholderAlignment>(&placeholderAlignment)),
+        *(ConvertToOriginalText<TextBaseline>(&textbaseline)), 0);
+}
+
+void OH_Drawing_TypographyHandlerAppendPlaceholder(OH_Drawing_TypographyCreate* handler,
+    OH_Drawing_PlaceholderSpan* placeholderSpan)
+{
+    auto span = ConvertToOriginalText<PlaceholderRun>(placeholderSpan);
+    ConvertToOriginalText<TypographyCreate>(handler)->AddPlaceholder(*span);
 }

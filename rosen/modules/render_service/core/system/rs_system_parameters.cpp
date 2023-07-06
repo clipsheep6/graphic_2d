@@ -31,5 +31,10 @@ bool RSSystemParameters::GetDrawingCacheEnabled()
 {
     return std::atoi((system::GetParameter("rosen.drawingCache.enabled", "1")).c_str()) != 0;
 }
+
+bool RSSystemParameters::GetOcclusionOptimizeEnabled()
+{
+    return std::atoi((system::GetParameter("rosen.occlusionOptimize.enabled", "0")).c_str()) != 0;
+}
 } // namespace Rosen
 } // namespace OHOS

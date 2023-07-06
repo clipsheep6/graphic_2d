@@ -754,6 +754,52 @@ void RSSurfaceRenderNode::ResetSurfaceOpaqueRegion(const RectI& screeninfo, cons
     opaqueRegionChanged_ = !oldOpaqueRegion.Xor(opaqueRegion_).IsEmpty();
 }
 
+void RSSurfaceRenderNode::UpdateFilterNodes(const std::shared_ptr<RSRenderNode>& nodePtr)
+{
+    if (nodePtr == nullptr) {
+        return;
+    }
+    filterNodes_.emplace_back(nodePtr);
+}
+
+void RSSurfaceRenderNode::UpdateFilterCacheStatusIfNodeStatic()
+{
+    if (!dirtyManager_) {
+        return;
+    }
+    bool isFilterCached = false;
+    RS_TRACE_NAME("UpdateFilterCacheStatusIfNodeStatic filterNodes_ " + std::to_string(filterNodes_.size()));
+    for (auto node : filterNodes_) {
+        if (!node) {
+            continue;
+        }
+        node->UpdateFilterCacheWithDirty(*dirtyManager_, false);
+        node->UpdateFilterCacheWithDirty(*dirtyManager_, true);
+        node->UpdateFilterCacheManagerWithCacheRegion();
+        if (IsFilterCacheValid()) {
+            dirtyManager_->UpdateCacheableFilterRect(GetOldDirtyInSurface());
+        }
+    }
+    // if (IsTransparent() && GetRenderProperties().NeedFilter() && isFilterCached &&
+    //     dirtyManager_->IfCacheableFilterRectFullyCover(GetOldDirtyInSurface())) {
+    if (isFilterCached) {
+        // todo
+        auto& properties = GetRenderProperties();
+        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+        if (!geoPtr) {
+            return;
+        }
+        auto dirtyRect = dirtyManager_->GetIntersectedVisitedDirtyRect(geoPtr->GetAbsRect());
+        RS_TRACE_NAME("UpdateFilterCacheStatusIfNodeStatic dirtyRect " + dirtyRect.ToString());
+        if (IsTransparent() && GetRenderProperties().NeedFilter() && 
+            dirtyManager_->IfCacheableFilterRectFullyCover(GetOldDirtyInSurface())) {
+            SetFilterCacheFullyCovered(true);
+            RS_TRACE_NAME("UpdateFilterCacheStatusIfNodeStatic surfacenode " + std::to_string(GetId()) +
+                " [" + GetName() + "]");
+        }
+    }
+}
+
 Vector4f RSSurfaceRenderNode::GetWindowCornerRadius()
 {
     if (!GetRenderProperties().GetCornerRadius().IsZero()) {

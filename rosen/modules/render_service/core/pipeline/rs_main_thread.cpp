@@ -67,6 +67,7 @@
 #endif
 #include "render/rs_pixel_map_util.h"
 #include "screen_manager/rs_screen_manager.h"
+#include "system/rs_system_parameters.h"
 #include "transaction/rs_transaction_proxy.h"
 
 #include "rs_qos_thread.h"
@@ -1162,6 +1163,13 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
                         curSurface->ResetAnimateState();
                     }
                 }
+#ifndef USE_ROSEN_DRAWING
+                if (RSSystemParameters::GetOcclusionOptimizeEnabled() &&
+                    curSurface->IsTransparent() && curSurface->GetFilterCacheFullyCovered()) {
+                    Occlusion::Region cachedRegion { curSurface->GetOldDirtyInSurface() };
+                    accumulatedRegion.OrSelf(cachedRegion);
+                }
+#endif
             } else {
                 bool diff = (curSurface->GetDstRect().width_ > curSurface->GetBuffer()->GetWidth() ||
                             curSurface->GetDstRect().height_ > curSurface->GetBuffer()->GetHeight()) &&

@@ -1,5 +1,5 @@
 {
-    "name": "@ohos/graphic_2d",
+    "name": "@ohos/graphic_standard",
     "description": "graphic_standard",
     "version": "3.1",
     "license": "Apache License 2.0",
@@ -10,7 +10,7 @@
     "dirs": {},
     "scripts": {},
     "component": {
-      "name": "graphic_2d",
+      "name": "graphic_standard",
       "subsystem": "graphic",
       "syscap": [
         "SystemCapability.Graphic.Graphic2D.ColorManager.Core",

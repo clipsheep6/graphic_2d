@@ -65,8 +65,8 @@
           "ipc",
           "player_framework",
           "resource_schedule_service",
-          "soc_perf",
           "hilog",
+          "soc_perf",
           "accessibility"
         ],
         "third_party": [
@@ -78,8 +78,9 @@
           "bounds_checking_function",
           "icu",
           "libpng",
-          "zilb",
-          "skia"
+          "zlib",
+          "skia",
+          "cjson"
         ]
       },
       "build": {

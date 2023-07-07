@@ -73,7 +73,7 @@ ohos_shared_library("effectkit") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
-    "multimedia_image_framework:image_native",
+    "image_framework:image_native",
   ]
 
   cflags_cc = [ "-std=c++17" ]

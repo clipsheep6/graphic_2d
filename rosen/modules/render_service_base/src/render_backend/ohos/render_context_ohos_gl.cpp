@@ -207,6 +207,19 @@ void* RenderContextOhosGl::CreateContext(bool share)
     return static_cast<void*>(context);
 }
 
+void RenderContextOhosGl::DestoryContext(void* curContext)
+{
+    EGLContext context = static_cast<EGLContext>(curContext);
+    if (!eglDestroyContext(eglDisplay_, context)) {
+        LOGE("Failed to destory context");
+        return;
+    }
+    if (!eglMakeCurrent(eglDisplay_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
+        LOGE("Failed to make current in destory context");
+        return;
+    }
+}
+
 bool RenderContextOhosGl::CreateSurface(const std::shared_ptr<RSRenderSurfaceFrame>& frame)
 {
     if (!RenderBackendUtils::IsValidFrame(frame)) {

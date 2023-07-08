@@ -43,7 +43,11 @@ RSSubThread::~RSSubThread()
 {
     RS_LOGI("~RSSubThread():%d", threadIndex_);
     PostTask([this]() {
+#ifdef NEW_RENDER_CONTEXT
+        DestroyShareContext();
+#else
         DestroyShareEglContext();
+#endif
     });
 }
 
@@ -92,6 +96,23 @@ void RSSubThread::DumpMem(DfxString& log)
     });
 }
 
+#ifdef NEW_RENDER_CONTEXT
+void RSSubThread::CreateShareContext()
+{
+#ifdef RS_ENABLE_GL
+    if (renderContext_ == nullptr) {
+        RS_LOGE("renderContext_ is nullptr");
+        return;
+    }
+    eglShareContext_ = renderContext_->CreateContext(true);
+    if (eglShareContext_ == EGL_NO_CONTEXT) {
+        RS_LOGE("eglShareContext_ is EGL_NO_CONTEXT");
+        return;
+    }
+    renderContext_->MakeCurrent(nullptr, eglShareContext_);
+#endif
+}
+#else
 void RSSubThread::CreateShareEglContext()
 {
 #ifdef RS_ENABLE_GL
@@ -110,7 +131,19 @@ void RSSubThread::CreateShareEglContext()
     }
 #endif
 }
+#endif
 
+#ifdef NEW_RENDER_CONTEXT
+void RSSubThread::DestroyShareContext()
+{
+#ifdef RS_ENABLE_GL
+    if (renderContext_ != nullptr) {
+        renderContext_->DestoryContext(eglShareContext_);
+        eglShareContext_ = EGL_NO_CONTEXT;
+    }
+#endif
+}
+#else
 void RSSubThread::DestroyShareEglContext()
 {
 #ifdef RS_ENABLE_GL
@@ -121,7 +154,7 @@ void RSSubThread::DestroyShareEglContext()
     }
 #endif
 }
-
+#endif
 void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTask)
 {
     if (threadTask == nullptr) {
@@ -207,7 +240,13 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
             RSSubThreadManager::Instance()->NodeTaskNotify(node->GetId());
         }
     }
+#ifdef NEW_RENDER_CONTEXT
+    auto frame = renderContext_->GetRSRenderSurfaceFrame();
+    EGLDisplay eglDisplay = frame->eglState->eglDisplay;
+    eglCreateSyncKHR(eglDisplay, EGL_SYNC_FENCE_KHR, nullptr);
+#else    
     eglCreateSyncKHR(renderContext_->GetEGLDisplay(), EGL_SYNC_FENCE_KHR, nullptr);
+#endif
 #endif
 }
 
@@ -217,6 +256,13 @@ sk_sp<GrDirectContext> RSSubThread::CreateShareGrContext()
 #else
 sk_sp<GrContext> RSSubThread::CreateShareGrContext()
 #endif
+#if defined(NEW_RENDER_CONTEXT)
+{
+    RS_TRACE_NAME("CreateShareGrContext");
+    CreateShareContext();
+    return DrawingContext::CreateDrawingContext(true);
+}
+#else
 {
     RS_TRACE_NAME("CreateShareGrContext");
     CreateShareEglContext();
@@ -249,6 +295,7 @@ sk_sp<GrContext> RSSubThread::CreateShareGrContext()
     }
     return grContext;
 }
+#endif
 #else
 std::shared_ptr<Drawing::GPUContext> RSSubThread::CreateShareGrContext()
 {

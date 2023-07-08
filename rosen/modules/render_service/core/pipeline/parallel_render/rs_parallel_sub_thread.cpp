@@ -54,11 +54,8 @@ RSParallelSubThread::~RSParallelSubThread()
 {
     if (renderContext_ != nullptr) {
 #ifdef NEW_RENDER_CONTEXT
-        auto frame = renderContext_->GetRSRenderSurfaceFrame();
-        EGLDisplay eglDisplay = frame->eglState->eglDisplay;
-        eglDestroyContext(eglDisplay, eglShareContext_);
+        renderContext_->DestoryContext(eglShareContext_);
         eglShareContext_ = EGL_NO_CONTEXT;
-        eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 #else
         eglDestroyContext(renderContext_->GetEGLDisplay(), eglShareContext_);
         eglShareContext_ = EGL_NO_CONTEXT;
@@ -79,7 +76,11 @@ void RSParallelSubThread::MainLoop()
 {
     InitSubThread();
 #ifdef RS_ENABLE_GL
+#if defined(NEW_RENDER_CONTEXT)
+    CreateShareContext();
+#else
     CreateShareEglContext();
+#endif
 #endif
     while (true) {
         WaitTaskSync();
@@ -148,7 +149,25 @@ void RSParallelSubThread::InitSubThread()
     param.sched_priority = 2;
     (void)sched_setscheduler(0, SCHED_FIFO, &param);
 }
-
+#ifdef NEW_RENDER_CONTEXT
+void RSParallelSubThread::CreateShareContext()
+{
+#ifdef RS_ENABLE_GL
+    if (renderContext_ == nullptr) {
+        RS_LOGE("renderContext_ is nullptr");
+        return;
+    }
+    eglShareContext_ = renderContext_->CreateContext(true);
+    if (eglShareContext_ == EGL_NO_CONTEXT) {
+        RS_LOGE("eglShareContext_ is EGL_NO_CONTEXT");
+        return;
+    }
+    if (renderType_ == ParallelRenderType::DRAW_IMAGE) {
+        renderContext_->MakeCurrent(nullptr, eglShareContext_);
+    }
+#endif
+}
+#else
 void RSParallelSubThread::CreateShareEglContext()
 {
 #ifdef RS_ENABLE_GL
@@ -156,30 +175,20 @@ void RSParallelSubThread::CreateShareEglContext()
         RS_LOGE("renderContext_ is nullptr");
         return;
     }
-#ifdef NEW_RENDER_CONTEXT
-    eglShareContext_ = renderContext_->CreateContext(true);
-#else
     eglShareContext_ = renderContext_->CreateShareContext();
-#endif
     if (eglShareContext_ == EGL_NO_CONTEXT) {
         RS_LOGE("eglShareContext_ is EGL_NO_CONTEXT");
         return;
     }
     if (renderType_ == ParallelRenderType::DRAW_IMAGE) {
-#ifdef NEW_RENDER_CONTEXT
-        auto frame = renderContext_->GetRSRenderSurfaceFrame();
-        EGLDisplay eglDisplay = frame->eglState->eglDisplay;
-        if (!eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, eglShareContext_)) {
-#else
         if (!eglMakeCurrent(renderContext_->GetEGLDisplay(), EGL_NO_SURFACE, EGL_NO_SURFACE, eglShareContext_)) {
-#endif
             RS_LOGE("eglMakeCurrent failed");
             return;
         }
     }
 #endif
 }
-
+#endif
 void RSParallelSubThread::StartPrepare()
 {
     InitUniVisitor();

@@ -33,6 +33,7 @@ public:
     virtual bool IsContextReady() { return false; }
     virtual void MakeCurrent(void* curSurface = nullptr, void* curContext = nullptr) {}
     virtual void* CreateContext(bool share = false) { return nullptr; };
+    virtual void DestoryContext(void* curContext) {};
     virtual bool CreateSurface(const std::shared_ptr<RSRenderSurfaceFrame>& frame) { return false; }
     virtual void DestroySurface(const std::shared_ptr<RSRenderSurfaceFrame>& frame) {}
     virtual void DamageFrame(const std::shared_ptr<RSRenderSurfaceFrame>& frame) {};

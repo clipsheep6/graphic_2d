@@ -25,13 +25,21 @@
 #include "EGL/egl.h"
 #include "pipeline/parallel_render/rs_render_task.h"
 #include "pipeline/rs_base_render_node.h"
+#ifdef NEW_RENDER_CONTEXT
+#include "render_context_base.h"
+#include "drawing_context.h"
+#else
 #include "render_context/render_context.h"
-
+#endif
 namespace OHOS::Rosen {
 class RSSubThreadManager {
 public:
     static RSSubThreadManager *Instance();
+#ifdef NEW_RENDER_CONTEXT
+    void Start(std::shared_ptr<RenderContextBase> context);
+#else    
     void Start(RenderContext *context);
+#endif
     void PostTask(const std::function<void()>& task, uint32_t threadIndex);
     void WaitNodeTask(uint64_t nodeId);
     void NodeTaskNotify(uint64_t nodeId);
@@ -46,8 +54,11 @@ private:
     RSSubThreadManager(const RSSubThreadManager &&) = delete;
     RSSubThreadManager &operator = (const RSSubThreadManager &) = delete;
     RSSubThreadManager &operator = (const RSSubThreadManager &&) = delete;
-
+#ifdef NEW_RENDER_CONTEXT
+    std::shared_ptr<RenderContextBase> renderContext_ = nullptr;
+#else
     RenderContext* renderContext_ = nullptr;
+#endif
     uint32_t minLoadThreadIndex_ = 0;
     std::mutex parallelRenderMutex_;
     std::condition_variable cvParallelRender_;

@@ -91,7 +91,11 @@ private:
     void Flush();
     void CreateResource();
     void CreatePbufferSurface();
+#ifdef NEW_RENDER_CONTEXT
+    void CreateShareContext();
+#else
     void CreateShareEglContext();
+#endif
     void StartPrepare();
     void Prepare();
     void CalcCost();

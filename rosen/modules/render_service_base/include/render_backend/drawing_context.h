@@ -33,6 +33,11 @@ public:
     sk_sp<SkSurface> AcquireSurface(const std::shared_ptr<RSRenderSurfaceFrame>& frame);
     bool SetUpDrawingContext();
 #if defined(NEW_SKIA)
+    static sk_sp<GrDirectContext> CreateDrawingContext(bool isUni);
+#else
+    static sk_sp<GrContext> CreateDrawingContext(bool isUni);
+#endif
+#if defined(NEW_SKIA)
     GrDirectContext* GetDrawingContext() const;
 #else
     GrContext* GetDrawingContext() const;

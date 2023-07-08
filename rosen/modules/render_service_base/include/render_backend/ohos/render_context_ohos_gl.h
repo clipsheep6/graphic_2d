@@ -38,6 +38,7 @@ public:
     bool IsContextReady() override;
     void MakeCurrent(void* curSurface = nullptr, void* curContext = nullptr) override;
     void* CreateContext(bool share = false) override;
+    void DestoryContext(void* curContext) override;
     bool CreateSurface(const std::shared_ptr<RSRenderSurfaceFrame>& frame) override;
     void DestroySurface(const std::shared_ptr<RSRenderSurfaceFrame>& frame) override;
     void DamageFrame(const std::shared_ptr<RSRenderSurfaceFrame>& frame) override;

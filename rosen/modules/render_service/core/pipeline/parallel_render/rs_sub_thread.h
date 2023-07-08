@@ -26,13 +26,23 @@
 #include "include/gpu/GrContext.h"
 #endif
 #include "pipeline/parallel_render/rs_render_task.h"
+#ifdef NEW_RENDER_CONTEXT
+#include "render_context_base.h"
+#include "include/gpu/gl/GrGLInterface.h"
+#else
 #include "render_context/render_context.h"
+#endif
 #include "event_handler.h"
 
 namespace OHOS::Rosen {
 class RSSubThread {
 public:
+#ifdef NEW_RENDER_CONTEXT
+    RSSubThread(std::shared_ptr<RenderContextBase> context, uint32_t threadIndex) : threadIndex_(threadIndex),
+        renderContext_(context) {}
+#else
     RSSubThread(RenderContext* context, uint32_t threadIndex) : threadIndex_(threadIndex), renderContext_(context) {}
+#endif
     ~RSSubThread();
 
     void Start();
@@ -42,8 +52,16 @@ public:
     void ResetGrContext();
     void DumpMem(DfxString& log);
 private:
+#ifdef NEW_RENDER_CONTEXT
+    void CreateShareContext();
+#else
     void CreateShareEglContext();
+#endif
+#ifdef NEW_RENDER_CONTEXT
+    void DestroyShareContext();
+#else
     void DestroyShareEglContext();
+#endif
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
     sk_sp<GrDirectContext> CreateShareGrContext();
@@ -57,7 +75,11 @@ private:
     uint32_t threadIndex_;
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
+#ifdef NEW_RENDER_CONTEXT
+    std::shared_ptr<RenderContextBase> renderContext_ = nullptr;
+#else    
     RenderContext *renderContext_ = nullptr;
+#endif
     EGLContext eglShareContext_ = EGL_NO_CONTEXT;
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA

@@ -25,7 +25,7 @@ declare_args() {
   if (defined(build_cross_platform_version) && build_cross_platform_version) {
     use_new_render_context = false
   } else {
-    use_new_render_context = false
+    use_new_render_context = true
   }
 }
 

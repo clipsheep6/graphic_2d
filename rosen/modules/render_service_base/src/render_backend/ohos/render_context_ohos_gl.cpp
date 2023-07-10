@@ -241,7 +241,7 @@ bool RenderContextOhosGl::CreateSurface(const std::shared_ptr<RSRenderSurfaceFra
     if (RSSystemProperties::GetAFBCEnabled()) {
         int32_t format = 0;
         NativeWindowHandleOpt(surfaceConfig->nativeWindow, GET_FORMAT, &format);
-        if (format == PIXEL_FMT_RGBA_8888 && useAFBC) {
+        if (format == GRAPHIC_PIXEL_FMT_RGBA_8888 && useAFBC) {
             bufferUsage_ =
                 (BUFFER_USAGE_HW_RENDER | BUFFER_USAGE_HW_TEXTURE | BUFFER_USAGE_HW_COMPOSER | BUFFER_USAGE_MEM_DMA);
         }

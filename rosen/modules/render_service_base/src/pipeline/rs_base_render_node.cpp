@@ -279,8 +279,7 @@ void RSBaseRenderNode::DumpTree(int32_t depth, std::string& out) const
     DumpNodeType(out);
     out += "[" + std::to_string(GetId()) + "]";
     if (auto node = GetRootSurfaceNode().lock()) {
-        out += ", RootSurfaceNode ";
-        out += "[" + std::to_string(node->GetId()) + "]";
+        out += ", RootSurfaceNode " + "[" + std::to_string(node->GetId()) + "]";
     }
     if (IsInstanceOf<RSRenderNode>()) {
         auto node = (static_cast<const RSRenderNode*>(this));

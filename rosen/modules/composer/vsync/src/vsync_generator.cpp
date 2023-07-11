@@ -125,6 +125,9 @@ void VSyncGenerator::ThreadLoop()
         }
         ScopedBytrace func("GenerateVsyncCount:" + std::to_string(listeners.size()));
         for (uint32_t i = 0; i < listeners.size(); i++) {
+            if (listeners[i].callback_ == nullptr) {
+                continue;
+            }
             listeners[i].callback_->OnVSyncEvent(listeners[i].lastTime_);
         }
     }

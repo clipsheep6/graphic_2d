@@ -220,6 +220,7 @@ void RSUniRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 
     for (auto& child : children) {
         if (PrepareSharedTransitionNode(*child)) {
+            curDirty_ = child->IsDirty();
             child->Prepare(shared_from_this());
         }
     }
@@ -250,7 +251,7 @@ void RSUniRenderVisitor::UpdateCacheChangeStatus(RSBaseRenderNode& node)
             static_cast<int>(isDrawingCacheChanged_));
     } else {
         // Any child node dirty causes cache change
-        isDrawingCacheChanged_ = isDrawingCacheChanged_ || targetNode->IsDirty();
+        isDrawingCacheChanged_ = isDrawingCacheChanged_ || curDirty_;
     }
 }
 
@@ -1651,17 +1652,17 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode, RGBA 8888 to RGBA 1010102");
         }
         node.SetFingerprint(hasFingerprint_);
+        RS_TRACE_BEGIN("RSUniRender::wait for bufferRequest cond");
+        if (!RSMainThread::Instance()->WaitUntilDisplayNodeBufferReleased(node)) {
+            RS_TRACE_NAME("RSUniRenderVisitor no released buffer");
+        }
+        RS_TRACE_END();
 #ifdef NEW_RENDER_CONTEXT
         renderFrame_ = renderEngine_->RequestFrame(std::static_pointer_cast<RSRenderSurfaceOhos>(rsSurface),
             bufferConfig);
 #else
         renderFrame_ = renderEngine_->RequestFrame(std::static_pointer_cast<RSSurfaceOhos>(rsSurface), bufferConfig);
 #endif
-        RS_TRACE_BEGIN("RSUniRender::wait for bufferRequest cond");
-        if (!RSMainThread::Instance()->WaitUntilDisplayNodeBufferReleased(node)) {
-            RS_TRACE_NAME("RSUniRenderVisitor no released buffer");
-        }
-        RS_TRACE_END();
         RS_TRACE_END();
 
         if (renderFrame_ == nullptr) {

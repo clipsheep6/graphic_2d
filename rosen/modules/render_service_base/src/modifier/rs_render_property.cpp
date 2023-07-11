@@ -14,6 +14,7 @@
  */
 
 #include "modifier/rs_render_property.h"
+#include "common/rs_particle.h"
 
 #include "pipeline/rs_render_node.h"
 
@@ -93,6 +94,13 @@ bool RSRenderPropertyBase::Marshalling(Parcel& parcel, const std::shared_ptr<RSR
         }
         case RSRenderPropertyType::PROPERTY_RRECT: {
             auto property = std::static_pointer_cast<RSRenderAnimatableProperty<RRect>>(val);
+            if (property == nullptr) {
+                return false;
+            }
+            return parcel.WriteUint64(property->GetId()) && RSMarshallingHelper::Marshalling(parcel, property->Get());
+        }
+        case RSRenderPropertyType::PROPERTY_PARTICLE: {
+            auto property = std::static_pointer_cast<RSRenderAnimatableProperty<Particle>>(val);
             if (property == nullptr) {
                 return false;
             }
@@ -187,6 +195,14 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
                 return false;
             }
             val.reset(new RSRenderAnimatableProperty<RRect>(value, id, type));
+            break;
+        }
+        case RSRenderPropertyType::PROPERTY_PARTICLE: {
+            Particle value;
+            if (!RSMarshallingHelper::Unmarshalling(parcel, value)) {
+                return false;
+            }
+            val.reset(new RSRenderAnimatableProperty<Particle>(value, id, type));
             break;
         }
         default: {
@@ -407,6 +423,17 @@ bool RSRenderAnimatableProperty<RRect>::IsNearEqual(
     return true;
 }
 
+template<>
+bool RSRenderAnimatableProperty<Particle>::IsNearEqual(
+    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const
+{
+    auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<Particle>>(value);
+    if (animatableProperty != nullptr) {
+        return RSRenderProperty<Particle>::stagingValue_.IsNearEqual(animatableProperty->Get(), zeroThreshold);
+    }
+    return true;
+}
+
 bool operator!=(
     const std::shared_ptr<const RSRenderPropertyBase>& a, const std::shared_ptr<const RSRenderPropertyBase>& b)
 {
@@ -426,5 +453,6 @@ template class RSRenderAnimatableProperty<Color>;
 template class RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>;
 template class RSRenderAnimatableProperty<Vector4<Color>>;
 template class RSRenderAnimatableProperty<RRect>;
+template class RSRenderAnimatableProperty<Particle>;
 } // namespace Rosen
 } // namespace OHOS

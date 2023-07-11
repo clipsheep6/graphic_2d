@@ -24,6 +24,7 @@
 
 #include "common/rs_macros.h"
 #include "common/rs_matrix3.h"
+#include "common/rs_particle.h"
 #include "common/rs_vector4.h"
 #include "modifier/rs_modifier_type.h"
 #include "property/rs_properties_def.h"
@@ -133,6 +134,10 @@ public:
 
     void SetSublayerTransform(const std::optional<Matrix3f>& sublayerTransform);
     const std::optional<Matrix3f>& GetSublayerTransform() const;
+
+    // particle properties
+    void SetParticle(Particle particle);
+    ParticleSystem GetParticle() const;
 
     // foreground properties
     void SetForegroundColor(Color color);
@@ -353,6 +358,7 @@ private:
     std::optional<float> invert_;
     std::optional<float> hueRotate_;
     std::optional<Color> colorBlend_;
+    std::optional<Particle> particle_;
     sk_sp<SkColorFilter> colorFilter_ = nullptr;
 
 #ifndef USE_ROSEN_DRAWING

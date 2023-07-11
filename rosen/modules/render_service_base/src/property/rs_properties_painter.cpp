@@ -1973,6 +1973,12 @@ void RSPropertiesPainter::DrawColorFilter(const RSProperties& properties, RSPain
     canvas.saveLayer(slr);
 }
 
+void RSPropertiesPainter::DrawParticle(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+{
+    // 画粒子
+    
+}
+
 void RSPropertiesPainter::DrawLightUpEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
 #ifdef NEW_SKIA

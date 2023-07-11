@@ -75,6 +75,7 @@ public:
 
     // Foreground Color filter
     static void DrawColorFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas);
+    static void DrawParticle(const RSProperties& properties, RSPaintFilterCanvas& canvas);
 
     static void DrawLightUpEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
 private:

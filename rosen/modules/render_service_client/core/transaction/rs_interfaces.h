@@ -28,6 +28,22 @@
 namespace OHOS {
 namespace Rosen {
 
+struct DataBaseRs {
+    int32_t pid {-1};
+    int32_t eventType {-1};
+    int64_t uniqueId {0};
+    int64_t inputTime {0};
+    int64_t beginVsyncTime {0};
+    int64_t endVsyncTime {0};
+    std::string sceneId {""};
+    std::string versionCode {""};
+    std::string versionName {""};
+    std::string bundleName {""};
+    std::string processName {""};
+    std::string abilityName {""};
+    std::string pageUrl {""};
+};
+
 struct FocusAppInfo {
     int32_t pid = -1;
     int32_t uid = -1;
@@ -143,6 +159,12 @@ public:
     void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow);
 
     void ReportJankStats();
+
+    void ReportEventResponse(DataBaseRs dataRs);
+
+    void ReportEventComplete(DataBaseRs dataRs);
+
+    void ReportEventJankFrame(DataBaseRs dataRs);
 private:
     RSInterfaces();
     ~RSInterfaces() noexcept;

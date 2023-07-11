@@ -242,7 +242,7 @@
     { "name": "vkUpdateDescriptorSetWithTemplate" },
     { "name": "vkWaitForFences" },
     { "name": "vkWaitSemaphores" },
-    { "name": "vkCreateSurfaceOHOS" },
-    { "name": "vkGetNativeBufferPropertiesOHOS" },
-    { "name": "vkGetMemoryNativeBufferOHOS" }
+    { "name": "vkCreateOHOSSurfaceOpenHarmony" },
+    { "name": "vkGetOHOSNativeBufferPropertiesOpenHarmony" },
+    { "name": "vkGetMemoryOHOSNativeBufferOpenHarmony" }
 ]

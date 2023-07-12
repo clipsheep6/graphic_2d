@@ -1788,12 +1788,6 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             int saveCount = canvas_->save();
             canvas_->SetHighContrast(renderEngine_->IsHighContrastEnabled());
             auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
-            if (geoPtr != nullptr) {
-                // enable cache if screen rotation is not times of 90 degree
-                canvas_->SetCacheType(geoPtr->IsNeedClientCompose() ? RSPaintFilterCanvas::CacheType::ENABLED
-                                                                    : RSPaintFilterCanvas::CacheType::DISABLED);
-            }
-
             bool needOffscreen = clipPath || canvas_->GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED;
             if (needOffscreen) {
                 ClearTransparentBeforeSaveLayer(); // clear transparent before concat display node's matrix
@@ -1817,11 +1811,6 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             canvas_->Save();
             canvas_->SetHighContrast(renderEngine_->IsHighContrastEnabled());
             auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
-            if (geoPtr != nullptr) {
-                // enable cache if screen rotation is not times of 90 degree
-                canvas_->SetCacheType(geoPtr->IsNeedClientCompose() ? RSPaintFilterCanvas::CacheType::ENABLED
-                    : RSPaintFilterCanvas::CacheType::DISABLED);
-            }
             if (clipPath) {
                 canvas_->SetCacheType(RSPaintFilterCanvas::CacheType::ENABLED);
             }

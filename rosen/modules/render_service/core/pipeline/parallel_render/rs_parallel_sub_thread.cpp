@@ -289,8 +289,6 @@ void RSParallelSubThread::Render()
     canvas_->save();
     if (physicalGeoPtr != nullptr) {
         canvas_->concat(physicalGeoPtr->GetMatrix());
-        canvas_->SetCacheType(physicalGeoPtr->IsNeedClientCompose() ? RSPaintFilterCanvas::CacheType::ENABLED
-                                                                    : RSPaintFilterCanvas::CacheType::DISABLED);
     }
 #else
     auto saveCount = canvas_->GetSaveCount();
@@ -304,8 +302,6 @@ void RSParallelSubThread::Render()
     canvas_->Save();
     if (physicalGeoPtr != nullptr) {
         canvas_->ConcatMatrix(physicalGeoPtr->GetMatrix());
-        canvas_->SetCacheType(physicalGeoPtr->IsNeedClientCompose() ? RSPaintFilterCanvas::CacheType::ENABLED
-            : RSPaintFilterCanvas::CacheType::DISABLED);
     }
 #endif
     while (threadTask_->GetTaskSize() > 0) {

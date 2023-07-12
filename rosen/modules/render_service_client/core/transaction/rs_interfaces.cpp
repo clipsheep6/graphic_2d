@@ -319,5 +319,19 @@ void RSInterfaces::ReportJankStats()
     renderServiceClient_->ReportJankStats();
 }
 
+void RSInterfaces::ReportEventResponse(DataBaseRs dataRs)
+{
+
+}
+
+void RSInterfaces::ReportEventComplete(DataBaseRs dataRs)
+{
+
+}
+
+void RSInterfaces::ReportEventJankFrame(DataBaseRs dataRs)
+{
+
+}
 } // namespace Rosen
 } // namespace OHOS

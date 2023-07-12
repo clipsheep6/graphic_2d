@@ -103,6 +103,6 @@ ohos_static_library("librender_backend") {
     "samgr:samgr_proxy",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

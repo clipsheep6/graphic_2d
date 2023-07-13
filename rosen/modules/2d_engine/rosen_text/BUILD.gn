@@ -18,6 +18,8 @@ config("rosen_text_public_config") {
   include_dirs = [
     "export",
     "$graphic_2d_root/rosen/modules/2d_graphics/include",
+    "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing",
+    "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing/engine_adapter",
     "$graphic_2d_root/rosen/modules/2d_graphics/src",
   ]
 }
@@ -39,14 +41,14 @@ ohos_shared_library("rosen_text") {
     deps = [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics_new" ]
   }
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
 ohos_source_set("rosen_text_inner") {
   public_deps = [ ":rosen_text_txt" ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -55,11 +57,6 @@ ohos_source_set("rosen_text_texgine") {
 
   cflags_cc = [ "-Wno-c++17-extensions" ]
   cflags = [ "-Wno-c++17-extensions" ]
-
-  include_dirs = [
-    "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing",
-    "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing/engine_adapter",
-  ]
 
   sources = [
     "adapter/common/text_style.cpp",
@@ -75,17 +72,13 @@ ohos_source_set("rosen_text_texgine") {
     "$graphic_2d_root/rosen/modules/texgine/texgine_drawing:libtexgine_drawing",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
 ohos_source_set("rosen_text_txt") {
   public_configs = [ ":rosen_text_public_config" ]
-  include_dirs = [
-    "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing",
-    "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing/engine_adapter",
-    "$flutter_root/engine",
-  ]
+  include_dirs = [ "$flutter_root/engine" ]
 
   cflags_cc = [
     "-Wno-c++17-extensions",
@@ -118,6 +111,6 @@ ohos_source_set("rosen_text_txt") {
 
   deps += [ "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform" ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

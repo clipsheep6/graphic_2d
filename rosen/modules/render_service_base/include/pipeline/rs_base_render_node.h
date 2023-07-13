@@ -188,6 +188,9 @@ public:
     // accumulate all valid children's area
     void UpdateChildrenRect(const RectI& subRect);
     void SetDirty();
+
+    void SetRootSurfaceNode(WeakPtr node);
+    WeakPtr GetRootSurfaceNode() const;
 protected:
     enum class NodeDirty {
         CLEAN = 0,
@@ -207,6 +210,7 @@ protected:
 private:
     NodeId id_;
 
+    WeakPtr rootSurfaceNode_;
     WeakPtr parent_;
     void SetParent(WeakPtr parent);
     bool isOnTheTree_ = false;

@@ -239,6 +239,16 @@ void RSBaseRenderNode::ClearChildren()
     SetContentDirty();
 }
 
+void RSBaseRenderNode::SetRootSurfaceNode(WeakPtr node)
+{
+    rootSurfaceNode_ = node;
+}
+
+RSBaseRenderNode::WeakPtr RSBaseRenderNode::GetRootSurfaceNode() const
+{
+    return rootSurfaceNode_;
+}
+
 void RSBaseRenderNode::SetParent(WeakPtr parent)
 {
     parent_ = parent;
@@ -268,6 +278,9 @@ void RSBaseRenderNode::DumpTree(int32_t depth, std::string& out) const
     out += "| ";
     DumpNodeType(out);
     out += "[" + std::to_string(GetId()) + "]";
+    if (auto node = GetRootSurfaceNode().lock()) {
+        out += ", RootSurfaceNode [" + std::to_string(node->GetId()) + "]";
+    }
     if (IsInstanceOf<RSRenderNode>()) {
         auto node = (static_cast<const RSRenderNode*>(this));
         if (node->IsSuggestedDrawInGroup()) {

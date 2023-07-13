@@ -15,6 +15,8 @@
 
 #include "recording/draw_cmd_list.h"
 
+#include <memory>
+
 #include "recording/draw_cmd.h"
 #include "utils/log.h"
 
@@ -72,7 +74,11 @@ void DrawCmdList::Playback(Canvas& canvas, const Rect* rect) const
         return;
     }
 
-    CanvasPlayer player = { canvas, *this };
+    auto rectOther = std::make_shared<Rect>();
+    if ( rect == nullptr) {
+        rect = rectOther.get();
+    }
+    CanvasPlayer player = { canvas, *this , *rect};
     do {
         void* itemPtr = opAllocator_.OffsetToAddr(offset);
         auto* curOpItemPtr = static_cast<OpItem*>(itemPtr);

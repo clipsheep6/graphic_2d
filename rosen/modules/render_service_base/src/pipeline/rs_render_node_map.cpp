@@ -14,6 +14,7 @@
  */
 
 #include "pipeline/rs_render_node_map.h"
+#include <stdint.h>
 #include "common/rs_common_def.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_canvas_render_node.h"
@@ -71,6 +72,17 @@ NodeId RSRenderNodeMap::GetWallPaperViewNodeId() const
 NodeId RSRenderNodeMap::GetScreenLockWindowNodeId() const
 {
     return screenLockWindowNodeId_;
+}
+
+uint32_t RSRenderNodeMap::GetAllApplicationCount() const
+{
+    std::set<uint32_t> processNumbers;
+    for (auto [_, surfaceNode] : surfaceNodeMap_) {
+        if (surfaceNode) {
+            processNumbers.emplace(ExtractPid(surfaceNode->GetId()));
+        }
+    }
+    return processNumbers.size();
 }
 
 static bool IsResidentProcess(const std::shared_ptr<RSSurfaceRenderNode> surfaceNode)

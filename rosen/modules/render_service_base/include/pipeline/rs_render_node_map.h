@@ -16,6 +16,7 @@
 #define RENDER_SERVICE_BASE_PIPELINE_RS_RENDER_NODE_MAP_H
 
 #include <mutex>
+#include <stdint.h>
 #include <unordered_map>
 
 #include "common/rs_common_def.h"
@@ -50,6 +51,7 @@ public:
 
     bool ContainPid(pid_t pid) const;
     void FilterNodeByPid(pid_t pid);
+    uint32_t GetAllApplicationCount() const;
     void TraversalNodes(std::function<void (const std::shared_ptr<RSBaseRenderNode>&)> func) const;
     void TraverseSurfaceNodes(std::function<void (const std::shared_ptr<RSSurfaceRenderNode>&)> func) const;
     void TraverseDrivenRenderNodes(std::function<void (const std::shared_ptr<RSRenderNode>&)> func) const;

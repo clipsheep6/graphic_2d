@@ -119,7 +119,7 @@ template("graphics2d_source_set") {
     if (platform == "ohos") {
       external_deps = [
         "hilog:libhilog",
-        "multimedia_image_framework:image_native",
+        "image_framework:image_native",
       ]
       deps = [
         "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform",

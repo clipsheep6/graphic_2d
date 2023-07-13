@@ -145,11 +145,15 @@ template("graphics2d_source_set") {
       cflags = [ "-Wno-c++17-extensions" ]
       configs = [ "$ace_flutter_engine_root/icu:icu_config_$platform" ]
 
-      deps = [
-        "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform",
-        "//third_party/skia:skia_$platform",
-      ]
-      include_dirs += [ "$flutter_root/txt/src" ]
+      deps = [ "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform" ]
+
+      if (defined(use_new_skia) && use_new_skia) {
+        include_dirs += [ "$flutter_root/txt/src" ]
+        deps += [ "$skia_root_new:skia_$platform" ]
+      } else {
+        include_dirs += [ "$flutter_root/engine/flutter/third_party/txt/src" ]
+        deps += [ "$ace_flutter_engine_root/skia:ace_skia_$platform" ]
+      }
 
       if (!is_cross_platform_build) {
         deps += [ "//base/hiviewdfx/hilog/frameworks/libhilog:libhilog_source_$platform" ]
@@ -157,7 +161,7 @@ template("graphics2d_source_set") {
     }
     deps += [ "$rosen_root/modules/2d_engine/rosen_text:rosen_text_inner" ]
 
-    part_name = "graphic_standard"
+    part_name = "graphic_2d"
     subsystem_name = "graphic"
   }
 }
@@ -189,12 +193,19 @@ foreach(item, ace_platforms) {
 if (!is_cross_platform_build) {
   ## Build 2d_graphics.so
   ohos_shared_library("2d_graphics") {
-    version_script = "2d_graphics.versionscript"
+    if (current_os == "mingw") {
+      platform = "windows"
+    } else {
+      platform = current_os
+    }
+    if (platform == "ohos") {
+      version_script = "2d_graphics.versionscript"
+    }
     symlink_target_name = [ "libnative_drawing.so" ]
-    deps = [ ":2d_graphics_source_ohos" ]
+    deps = [ ":2d_graphics_source_$platform" ]
     public_configs = [ ":2d_graphics_config" ]
     innerapi_tags = [ "platformsdk_indirect" ]
-    part_name = "graphic_standard"
+    part_name = "graphic_2d"
     subsystem_name = "graphic"
   }
 }
@@ -207,7 +218,7 @@ ohos_shared_library("2d_graphics_new") {
   deps = [ ":2d_graphics_source_$platform" ]
   public_configs = [ ":2d_graphics_config" ]
   innerapi_tags = [ "platformsdk_indirect" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -268,7 +279,7 @@ ohos_shared_library("2d_graphics_canvaskit0310") {
 
   external_deps = [ "hilog:libhilog" ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -307,6 +318,6 @@ ohos_shared_library("2d_graphics_drawing") {
   }
   deps = [ "$rosen_root/modules/2d_engine/rosen_text:rosen_text_inner" ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

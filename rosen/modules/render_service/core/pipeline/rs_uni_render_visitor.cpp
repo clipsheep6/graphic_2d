@@ -189,6 +189,9 @@ void RSUniRenderVisitor::CopyPropertyForParallelVisitor(RSUniRenderVisitor *main
 
 void RSUniRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 {
+    if (curSurfaceNode_) {
+        node.SetRootSurfaceNodeId(curSurfaceNode_->GetId());
+    }
     node.ResetSortedChildren();
     for (auto& child : node.GetChildren()) {
         if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child.lock())) {
@@ -245,7 +248,7 @@ void RSUniRenderVisitor::UpdateCacheChangeStatus(RSBaseRenderNode& node)
     if (targetNode->GetDrawingCacheType() != RSDrawingCacheType::DISABLED_CACHE) {
         markedCachedNodes_++;
         // For rootnode, init drawing changes only if there is any content dirty
-        isDrawingCacheChanged_ = targetNode->IsContentDirty();
+        isDrawingCacheChanged_ = curContentDirty_;
         RS_TRACE_NAME_FMT("RSUniRenderVisitor::UpdateCacheChangeStatus: cachable node %" PRIu64 " markedNum: %d, "
             "contentDirty(cacheChanged): %d", targetNode->GetId(), static_cast<int>(markedCachedNodes_),
             static_cast<int>(isDrawingCacheChanged_));
@@ -574,6 +577,7 @@ void RSUniRenderVisitor::PrepareTypesOfSurfaceRenderNodeBeforeUpdate(RSSurfaceRe
     // if current surfacenode is a main window type, reset the curSurfaceDirtyManager
     // reset leash window's dirtyManager pointer to avoid curSurfaceDirtyManager mis-pointing
     if (node.IsMainWindowType() || node.IsLeashWindow()) {
+        curSurfaceNode_ = node.ReinterpretCastTo<RSSurfaceRenderNode>();
         curSurfaceDirtyManager_ = node.GetDirtyManager();
         if (curSurfaceDirtyManager_ == nullptr) {
             RS_LOGE("RSUniRenderVisitor::PrepareTypesOfSurfaceRenderNodeBeforeUpdate %s has no SurfaceDirtyManager",
@@ -714,7 +718,6 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         curDisplayNode_->UpdateSurfaceNodePos(node.GetId(), node.GetOldDirty());
 
         if (node.IsAppWindow()) {
-            curSurfaceNode_ = node.ReinterpretCastTo<RSSurfaceRenderNode>();
             // if update appwindow, its children should not skip
             localZOrder_ = 0.0f;
             isQuickSkipPreparationEnabled_ = false;
@@ -953,6 +956,7 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
 {
     preparedCanvasNodeInCurrentSurface_++;
     node.ApplyModifiers();
+    curContentDirty_ = node.IsContentDirty();
     bool dirtyFlag = dirtyFlag_;
     RectI prepareClipRect = prepareClipRect_;
 

@@ -69,6 +69,8 @@
           "accessibility"
         ],
         "third_party": [
+          "bounds_checking_function",
+          "zlib",
           "flutter",
           "libuv",
           "openssl",

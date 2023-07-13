@@ -105,46 +105,50 @@ void RSCanvasRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& ca
 
 void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas)
 {
+    auto& properties = GetRenderProperties();
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
+    // transition & foreground color modifiers
     ApplyDrawCmdModifier(context, RSModifierType::TRANSITION);
     ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR);
-    // In NEW_SKIA version, L96 code will cause dump if the 3rd parameter is true.
+    // Background color / image / shadow
+    // NOTE: In NEW_SKIA version, L96 code will cause dump if the 3rd parameter is true.
 #ifdef NEW_SKIA
-    RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas, false);
+    RSPropertiesPainter::DrawBackground(properties, canvas, false);
 #else
-    RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas);
+    RSPropertiesPainter::DrawBackground(properties, canvas);
 #endif
-
-    if (GetRenderProperties().GetUseEffect()) {
-        RSPropertiesPainter::ApplyBackgroundEffect(GetRenderProperties(), canvas);
-    }
+    // UseEffect
+    RSPropertiesPainter::ApplyBackgroundEffect(properties, canvas);
+    // background filter
 #ifndef USE_ROSEN_DRAWING
-    RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, FilterType::BACKGROUND_FILTER);
+    RSPropertiesPainter::DrawFilter(properties, canvas, FilterType::BACKGROUND_FILTER);
 #else
-    auto filter = std::static_pointer_cast<RSDrawingFilter>(GetRenderProperties().GetBackgroundFilter());
-    RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, filter, FilterType::BACKGROUND_FILTER, nullptr);
+    auto filter = std::static_pointer_cast<RSDrawingFilter>(properties.GetBackgroundFilter());
+    RSPropertiesPainter::DrawFilter(properties, canvas, filter, FilterType::BACKGROUND_FILTER, nullptr);
 #endif
-
+    // background modifier & color-strategy modifier
     ApplyDrawCmdModifier(context, RSModifierType::BACKGROUND_STYLE);
-
+    ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY);
 #ifndef USE_ROSEN_DRAWING
     canvasNodeSaveCount_ = canvas.Save();
 #else
     canvasNodeSaveCount_ = canvas.SaveAllStatus();
 #endif
-    ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY);
+    // ↑ Draw in Bounds geometry (background, filter, color filter, etc.)
+    // ------------------------------------------------------------
+    // ↓ Draw in Frame geometry (content, children, etc.)
 #ifndef USE_ROSEN_DRAWING
-    canvas.translate(GetRenderProperties().GetFrameOffsetX(), GetRenderProperties().GetFrameOffsetY());
+    canvas.translate(properties.GetFrameOffsetX(), properties.GetFrameOffsetY());
 #else
-    canvas.Translate(GetRenderProperties().GetFrameOffsetX(), GetRenderProperties().GetFrameOffsetY());
+    canvas.Translate(properties.GetFrameOffsetX(), properties.GetFrameOffsetY());
 #endif
 
-    if (GetRenderProperties().GetClipToFrame()) {
-    // In NEW_SKIA version, L116 code will cause dump if the 3rd parameter is true.
+    if (properties.GetClipToFrame()) {
+    // NOTE: In NEW_SKIA version, L116 code will cause dump if the 3rd parameter is true.
 #ifdef NEW_SKIA
-        RSPropertiesPainter::Clip(canvas, GetRenderProperties().GetFrameRect(), false);
+        RSPropertiesPainter::Clip(canvas, properties.GetFrameRect(), false);
 #else
-        RSPropertiesPainter::Clip(canvas, GetRenderProperties().GetFrameRect());
+        RSPropertiesPainter::Clip(canvas, properties.GetFrameRect());
 #endif
     }
 }
@@ -153,6 +157,8 @@ void RSCanvasRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canvas)
 {
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::CONTENT_STYLE);
+    // color filter
+    RSPropertiesPainter::DrawColorFilter(GetRenderProperties(), canvas);
 }
 
 void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
@@ -163,26 +169,31 @@ void RSCanvasRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas
 
 void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas)
 {
+    auto& properties = GetRenderProperties();
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
+    // foreground modifiers
     ApplyDrawCmdModifier(context, RSModifierType::FOREGROUND_STYLE);
-    RSPropertiesPainter::DrawColorFilter(GetRenderProperties(), canvas);
-
     canvas.RestoreStatus(canvasNodeSaveCount_);
-    if (GetRenderProperties().IsLightUpEffectValid()) {
-        RSPropertiesPainter::DrawLightUpEffect(GetRenderProperties(), canvas);
-    }
+    // ↑ Draw in Frame geometry (content, children, etc.)
+    // ------------------------------------------------------------
+    // ↓ Draw in Bounds geometry (foreground, filter, border, etc.)
+    // light up effect
+    RSPropertiesPainter::DrawLightUpEffect(properties, canvas);
+    // foreground filter
 #ifndef USE_ROSEN_DRAWING
-    RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, FilterType::FOREGROUND_FILTER);
+    RSPropertiesPainter::DrawFilter(properties, canvas, FilterType::FOREGROUND_FILTER);
 #else
-    auto filter = std::static_pointer_cast<RSDrawingFilter>(GetRenderProperties().GetFilter());
-    RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, filter, FilterType::FOREGROUND_FILTER, nullptr);
+    auto filter = std::static_pointer_cast<RSDrawingFilter>(properties.GetFilter());
+    RSPropertiesPainter::DrawFilter(properties, canvas, filter, FilterType::FOREGROUND_FILTER, nullptr);
 #endif
-    auto para = GetRenderProperties().GetLinearGradientBlurPara();
-    RSPropertiesPainter::DrawLinearGradientBlurFilter(GetRenderProperties(), canvas);
-
-    RSPropertiesPainter::DrawBorder(GetRenderProperties(), canvas);
+    // linear gradient blur filter
+    RSPropertiesPainter::DrawLinearGradientBlurFilter(properties, canvas);
+    // border
+    RSPropertiesPainter::DrawBorder(properties, canvas);
+    // overlay modifiers
     ApplyDrawCmdModifier(context, RSModifierType::OVERLAY_STYLE);
-    RSPropertiesPainter::DrawForegroundColor(GetRenderProperties(), canvas);
+    // foreground color
+    RSPropertiesPainter::DrawForegroundColor(properties, canvas);
 }
 
 void RSCanvasRenderNode::ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas)

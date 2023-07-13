@@ -1178,6 +1178,9 @@ void RSPropertiesPainter::DrawBackgroundEffect(
 
 void RSPropertiesPainter::ApplyBackgroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
+    if (!properties.GetUseEffect()) {
+        return;
+    }
     RS_TRACE_NAME("ApplyBackgroundEffect");
     SkAutoCanvasRestore acr(&canvas, true);
     if (properties.GetClipBounds() != nullptr) {
@@ -1973,6 +1976,9 @@ void RSPropertiesPainter::DrawColorFilter(const RSProperties& properties, RSPain
 
 void RSPropertiesPainter::DrawLightUpEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
+    if (!properties.IsLightUpEffectValid()) {
+        return;
+    }
 #ifdef NEW_SKIA
     SkSurface* skSurface = canvas.GetSurface();
     if (skSurface == nullptr) {

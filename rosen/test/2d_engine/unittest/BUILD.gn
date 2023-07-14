@@ -15,6 +15,7 @@ group("unittest") {
   testonly = true
 
   deps = [
+    "rosen_text/export/rosen_text:unittest",
     "rosen_text/properties:unittest",
     "rosen_text/ui:unittest",
   ]

@@ -68,14 +68,6 @@ bool StdFilesystemExists(const std::string &p)
 }
 #endif
 
-#else
-bool StdFilesystemExists(const std::string &p)
-{
-    std::ifstream f(p.c_str());
-    return f.good();
-}
-#endif
-
 } // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS

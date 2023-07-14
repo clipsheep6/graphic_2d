@@ -309,7 +309,7 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanv
     const auto& property = GetRenderProperties();
     const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
-    RSPropertiesPainter::DrawShadow(property, canvas, &absClipRRect);
+    RSPropertiesPainter::DrawShadow(property, canvas, &absClipRRect, IsLeashWindow());
 
 #ifndef USE_ROSEN_DRAWING
     if (!property.GetCornerRadius().IsZero()) {
@@ -327,7 +327,7 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanv
     }
 #endif
 
-    RSPropertiesPainter::DrawBackground(property, canvas);
+    RSPropertiesPainter::DrawBackground(property, canvas, IsLeashWindow());
     RSPropertiesPainter::DrawMask(property, canvas);
     RSPropertiesPainter::DrawFilter(property, canvas, FilterType::BACKGROUND_FILTER);
 #ifndef USE_ROSEN_DRAWING

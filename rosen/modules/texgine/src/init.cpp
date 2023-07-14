@@ -22,6 +22,7 @@
 static __attribute__((constructor)) void Init()
 {
     u_setDataDirectory("/system/usr/ohos_icu");
+
 #ifdef LOGGER_ENABLE_SCOPE
 #ifndef TEXGINE_ENABLE_TRACE
     OHOS::Rosen::TextEngine::Trace::Disable();

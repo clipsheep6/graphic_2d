@@ -30,10 +30,6 @@ public:
     IApplicationAgent() = default;
     virtual ~IApplicationAgent() noexcept = default;
 
-    enum {
-        COMMIT_TRANSACTION,
-    };
-
     virtual void OnTransaction(std::shared_ptr<RSTransactionData> transactionData) = 0;
 };
 } // namespace Rosen

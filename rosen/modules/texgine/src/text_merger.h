@@ -32,8 +32,8 @@ enum class MergeResult {
 
 class TextMerger {
 public:
-    std::vector<VariantSpan> MergeSpans(const std::vector<VariantSpan> &spans);
-    MergeResult MergeSpan(const VariantSpan &span, std::optional<bool> &currentRTL, CharGroups &cgs);
+    static std::vector<VariantSpan> MergeSpans(const std::vector<VariantSpan> &spans);
+    static MergeResult MergeSpan(const VariantSpan &span, std::optional<bool> &currentRTL, CharGroups &cgs);
 };
 } // namespace TextEngine
 } // namespace Rosen

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,11 +15,13 @@
 
 #include "pipeline/rs_hardware_thread.h"
 
+#include "hgm_core.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_uni_render_engine.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "rs_trace.h"
 #include "hdi_backend.h"
@@ -131,6 +133,7 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
     RSTaskMessage::RSTask task = [this, output = output, layers = layers]() {
         RS_TRACE_NAME("RSHardwareThread::CommitAndReleaseLayers");
         RS_LOGD("RSHardwareThread::CommitAndReleaseLayers start");
+        PerformSetActiveMode();
         output->SetLayerInfo(layers);
         hdiBackend_->Repaint(output);
         auto layerMap = output->GetLayers();
@@ -138,6 +141,49 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         RS_LOGD("RSHardwareThread::CommitAndReleaseLayers end");
     };
     PostTask(task);
+}
+
+void RSHardwareThread::PerformSetActiveMode()
+{
+    RS_TRACE_NAME("RSHardwareThread::PerformSetActiveMode setting active mode");
+    auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
+    auto screenManager = CreateOrGetScreenManager();
+    if (screenManager == nullptr) {
+        RS_LOGE("RSHardwareThread CreateOrGetScreenManager fail.");
+        return;
+    }
+
+    HgmRefreshRates newRate = RSSystemProperties::GetHgmRefreshRatesEnabled();
+    HgmRefreshRateModes newRateMode = RSSystemProperties::GetHgmRefreshRateModesEnabled();
+    if (hgmRefreshRates_ != newRate) {
+        hgmRefreshRates_ = newRate;
+        hgmCore.SetScreenRefreshRate(screenManager->GetDefaultScreenId(), 0, static_cast<int32_t>(hgmRefreshRates_));
+    }
+    if (hgmRefreshRateModes_ != newRateMode) {
+        hgmRefreshRateModes_ = newRateMode;
+        hgmCore.SetRefreshRateMode(static_cast<RefreshRateMode>(hgmRefreshRateModes_));
+    }
+
+    std::unique_ptr<std::unordered_map<ScreenId, int32_t>> modeMap(hgmCore.GetModesToApply());
+    if (modeMap == nullptr) {
+        return;
+    }
+
+    for (auto mapIter = modeMap->begin(); mapIter != modeMap->end(); ++mapIter) {
+        ScreenId id = mapIter->first;
+        int32_t modeId = mapIter->second;
+
+        auto supportedModes = screenManager->GetScreenSupportedModes(id);
+        for (auto mode : supportedModes) {
+            std::string temp = "RSHardwareThread check modes w: " + std::to_string(mode.GetScreenWidth()) +
+                ", h: " + std::to_string(mode.GetScreenHeight()) +
+                ", rate: " + std::to_string(mode.GetScreenRefreshRate()) +
+                ", id: " + std::to_string(mode.GetScreenModeId());
+            RS_LOGD(temp.c_str());
+        }
+
+        screenManager->SetScreenActiveMode(id, modeId);
+    }
 }
 
 void RSHardwareThread::OnPrepareComplete(sptr<Surface>& surface,
@@ -245,7 +291,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
             }
             auto bufferId = params.buffer->GetSeqNum();
             imageCacheSeqs[bufferId] = std::move(eglImageCache);
-            SkColorType colorType = (params.buffer->GetFormat() == PIXEL_FMT_BGRA_8888) ?
+            SkColorType colorType = (params.buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ?
                 kBGRA_8888_SkColorType : kRGBA_8888_SkColorType;
             GrGLTextureInfo grExternalTextureInfo = { GL_TEXTURE_EXTERNAL_OES, eglTextureId, GL_RGBA8 };
             GrBackendTexture backendTexture(params.buffer->GetSurfaceBufferWidth(),

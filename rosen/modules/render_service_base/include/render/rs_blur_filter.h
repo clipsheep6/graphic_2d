@@ -14,9 +14,13 @@
  */
 #ifndef RENDER_SERVICE_CLIENT_CORE_RENDER_RS_BLUR_FILTER_H
 #define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_BLUR_FILTER_H
+#ifdef NEW_SKIA
+#include "include/effects/SkRuntimeEffect.h"
+#endif
 
-#include "render/rs_skia_filter.h"
 #include "common/rs_macros.h"
+#include "render/rs_skia_filter.h"
+#include "render/rs_kawase_blur.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -27,14 +31,16 @@ class RSB_EXPORT RSBlurFilter : public RSDrawingFilter {
 #endif
 public:
     RSBlurFilter(float blurRadiusX, float blurRadiusY);
+    RSBlurFilter(const RSBlurFilter&) = delete;
+    RSBlurFilter operator=(const RSBlurFilter&) = delete;
     ~RSBlurFilter() override;
     float GetBlurRadiusX();
     float GetBlurRadiusY();
     bool IsValid() const override;
 #ifndef USE_ROSEN_DRAWING
-    std::shared_ptr<RSSkiaFilter> Compose(const std::shared_ptr<RSSkiaFilter>& inner) override;
+    std::shared_ptr<RSSkiaFilter> Compose(const std::shared_ptr<RSSkiaFilter>& other) const override;
 #else
-    std::shared_ptr<RSDrawingFilter> Compose(const std::shared_ptr<RSDrawingFilter>& inner) override;
+    std::shared_ptr<RSDrawingFilter> Compose(const std::shared_ptr<RSDrawingFilter>& other) const override;
 #endif
     std::string GetDescription() override;
 
@@ -42,13 +48,21 @@ public:
     std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs) override;
     std::shared_ptr<RSFilter> Multiply(float rhs) override;
     std::shared_ptr<RSFilter> Negate() override;
-    bool IsNearEqual(
-        const std::shared_ptr<RSFilter>& other, float threshold = std::numeric_limits<float>::epsilon()) const override;
-    bool IsNearZero(float threshold = std::numeric_limits<float>::epsilon()) const override;
+#ifndef USE_ROSEN_DRAWING
+    void DrawImageRect(
+        SkCanvas& canvas, const sk_sp<SkImage>& image, const SkRect& src, const SkRect& dst) const override;
+#else
+    void DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
+        const Drawing::Rect& src, const Drawing::Rect& dst) const override;
+#endif
 
 private:
     float blurRadiusX_;
     float blurRadiusY_;
+#ifndef USE_ROSEN_DRAWING
+    std::shared_ptr<KawaseBlurFilter> kawaseFunc_;
+    bool useKawase_ = false;
+#endif
 };
 } // namespace Rosen
 } // namespace OHOS

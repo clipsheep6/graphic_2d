@@ -22,6 +22,7 @@
 #include "animation/rs_implicit_animator.h"
 #include "animation/rs_implicit_animator_map.h"
 #include "animation/rs_motion_path_option.h"
+#include "command/rs_node_showing_command.h"
 #include "common/rs_color.h"
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
@@ -58,14 +59,6 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace {
-constexpr float DEFAULT_NEAR_ZERO_THRESHOLD = 1.0f / 256.0f;
-constexpr float FLOAT_NEAR_ZERO_COARSE_THRESHOLD = 0.5f;
-constexpr float FLOAT_NEAR_ZERO_MEDIUM_THRESHOLD = 1.0f / 256.0f;
-constexpr float FLOAT_NEAR_ZERO_FINE_THRESHOLD = 1.0f / 3072.0f;
-constexpr float INT16T_NEAR_ZERO_THRESHOLD = 1.0f;
-} //namespace
-
 template<class...>
 struct make_void { using type = void; };
 template<class... T>
@@ -120,8 +113,6 @@ protected:
         return RSRenderPropertyType::INVALID;
     }
 
-    float GetZeroThresholdByModifierType() const;
-
     virtual void UpdateOnAllAnimationFinish() {}
 
     virtual void AddPathAnimation() {}
@@ -142,6 +133,11 @@ protected:
     virtual std::shared_ptr<RSRenderPropertyBase> GetRenderProperty()
     {
         return std::make_shared<RSRenderPropertyBase>(id_);
+    }
+
+    virtual bool GetShowingValueAndCancelAnimation()
+    {
+        return false;
     }
 
     PropertyId id_;
@@ -204,6 +200,8 @@ private:
     friend class RSTransition;
     template<typename T1>
     friend class RSAnimatableProperty;
+    template<uint16_t commandType, uint16_t commandSubType>
+    friend class RSGetShowingValueAndCancelAnimationTask;
 };
 
 template<typename T>
@@ -358,6 +356,29 @@ public:
             return showingValue_;
         }
         return RSProperty<T>::stagingValue_;
+    }
+
+    bool GetShowingValueAndCancelAnimation() override
+    {
+        auto node = RSProperty<T>::target_.lock();
+        if (node == nullptr) {
+            return false;
+        }
+        if (!node->HasPropertyAnimation(this->id_) || this->GetIsCustom()) {
+            return true;
+        }
+        auto task = std::make_shared<RSNodeGetShowingPropertyAndCancelAnimation>(node->GetId(), GetRenderProperty());
+        RSTransactionProxy::GetInstance()->ExecuteSynchronousTask(task, node->IsRenderServiceNode());
+        if (!task || !task->GetResult()) {
+            return false;
+        }
+        auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<T>>(task->GetProperty());
+        if (!renderProperty) {
+            return false;
+        }
+        node->CancelAnimationByProperty(this->id_);
+        RSProperty<T>::stagingValue_ = renderProperty->Get();
+        return true;
     }
 
     void SetUpdateCallback(const std::function<void(T)>& updateCallback)

@@ -58,7 +58,7 @@ ohos_shared_library("libframe_analyzer") {
 
     external_deps = [
       "c_utils:utils",
-      "hitrace_native:hitrace_meter",
+      "hitrace:hitrace_meter",
       "init:libbeget_proxy",
       "init:libbegetutil",
     ]
@@ -75,6 +75,6 @@ ohos_shared_library("libframe_analyzer") {
 
   subsystem_name = "graphic"
   innerapi_tags = [ "platformsdk_indirect" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
 }
 ## Build libframe_analyzer.so }}}

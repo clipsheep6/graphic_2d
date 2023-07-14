@@ -16,17 +16,19 @@
 #include "pipeline/rs_render_node.h"
 
 #include <algorithm>
+#include <mutex>
 #include <set>
 
 #include "animation/rs_render_animation.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "modifier/rs_modifier_type.h"
 #include "pipeline/rs_context.h"
-#include "pipeline/rs_surface_render_node.h"
-#include "platform/common/rs_log.h"
-#include "property/rs_property_trace.h"
 #include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_surface_render_node.h"
+#include "pipeline/rs_uni_render_judgement.h"
+#include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
+#include "property/rs_property_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -37,6 +39,8 @@ const std::set<RSModifierType> GROUPABLE_ANIMATION_TYPE = {
     RSModifierType::SCALE,
 };
 }
+
+bool RSRenderNode::isUniRender_ = RSUniRenderJudgement::IsUniRender();
 
 RSRenderNode::RSRenderNode(NodeId id, std::weak_ptr<RSContext> context) : RSBaseRenderNode(id, context) {}
 
@@ -84,22 +88,12 @@ std::pair<bool, bool> RSRenderNode::Animate(int64_t timestamp)
 }
 
 bool RSRenderNode::Update(
-    RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, RectI clipRect)
-{
-    return Update(dirtyManager, parent, parentDirty, true, clipRect);
-}
-
-bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty)
-{
-    RectI clipRect{0, 0, 0, 0};
-    return Update(dirtyManager, parent, parentDirty, false, clipRect);
-}
-
-bool RSRenderNode::Update(
-    RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, bool needClip, RectI clipRect)
+    RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, std::optional<RectI> clipRect)
 {
     // no need to update invisible nodes
     if (!ShouldPaint() && !isLastVisible_) {
+        SetClean();
+        renderProperties_.ResetDirty();
         return false;
     }
     // [planning] surfaceNode use frame instead
@@ -122,9 +116,29 @@ bool RSRenderNode::Update(
         }
     }
     isDirtyRegionUpdated_ = false;
-    UpdateDirtyRegion(dirtyManager, dirty, needClip, clipRect);
     isLastVisible_ = ShouldPaint();
     renderProperties_.ResetDirty();
+
+#ifndef USE_ROSEN_DRAWING
+    // Note:
+    // 1. cache manager will use dirty region to update cache validity, background filter cache manager should use
+    // 'dirty region of all the nodes drawn before this node', and foreground filter cache manager should use 'dirty
+    // region of all the nodes drawn before this node, this node, and the children of this node'
+    // 2. Filter must be valid when filter cache manager is valid, we make sure that in RSRenderNode::ApplyModifiers().
+
+    // background filter
+    if (auto& manager = renderProperties_.GetFilterCacheManager(false)) {
+        // empty implementation, invalidate filter cache on every update
+        manager->UpdateCacheStateWithDirtyRegion({ 0, 0, INT_MAX, INT_MAX });
+    }
+    // foreground filter
+    if (auto& manager = renderProperties_.GetFilterCacheManager(true)) {
+        // empty implementation, invalidate filter cache on every update
+        manager->UpdateCacheStateWithDirtyRegion({ 0, 0, INT_MAX, INT_MAX });
+    }
+#endif
+
+    UpdateDirtyRegion(dirtyManager, dirty, clipRect);
     return dirty;
 }
 
@@ -139,7 +153,7 @@ const RSProperties& RSRenderNode::GetRenderProperties() const
 }
 
 void RSRenderNode::UpdateDirtyRegion(
-    RSDirtyRegionManager& dirtyManager, bool geoDirty, bool needClip, RectI clipRect)
+    RSDirtyRegionManager& dirtyManager, bool geoDirty, std::optional<RectI> clipRect)
 {
     if (!IsDirty() && !geoDirty) {
         return;
@@ -173,8 +187,8 @@ void RSRenderNode::UpdateDirtyRegion(
             dirtyRect = dirtyRect.JoinRect(stretchDirtyRect);
         }
 
-        if (needClip) {
-            dirtyRect = dirtyRect.IntersectRect(clipRect);
+        if (clipRect.has_value()) {
+            dirtyRect = dirtyRect.IntersectRect(*clipRect);
         }
         oldDirty_ = dirtyRect;
         oldDirtyInSurface_ = oldDirty_.IntersectRect(dirtyManager.GetSurfaceRect());
@@ -192,10 +206,11 @@ void RSRenderNode::UpdateDirtyRegion(
                 dirtyManager.UpdateDirtyRegionInfoForDfx(
                     GetId(), GetType(), DirtyRegionType::SHADOW_RECT, shadowRect);
                 dirtyManager.UpdateDirtyRegionInfoForDfx(
-                    GetId(), GetType(), DirtyRegionType::PREPARE_CLIP_RECT, clipRect);
+                    GetId(), GetType(), DirtyRegionType::PREPARE_CLIP_RECT, clipRect.value_or(RectI()));
             }
         }
     }
+
     SetClean();
 }
 
@@ -309,7 +324,7 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
     } else {
         drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
     }
-    modifier->GetProperty()->Attach(shared_from_this());
+    modifier->GetProperty()->Attach(ReinterpretCastTo<RSRenderNode>());
     SetDirty();
 }
 
@@ -333,9 +348,13 @@ void RSRenderNode::AddGeometryModifier(const std::shared_ptr<RSRenderModifier> m
 
 void RSRenderNode::RemoveModifier(const PropertyId& id)
 {
-    bool success = modifiers_.erase(id);
     SetDirty();
-    if (success) {
+    auto it = modifiers_.find(id);
+    if (it != modifiers_.end()) {
+        if (it->second) {
+            AddDirtyType(it->second->GetType());
+        }
+        modifiers_.erase(it);
         return;
     }
     for (auto& [type, modifiers] : drawCmdModifiers_) {
@@ -347,18 +366,33 @@ void RSRenderNode::RemoveModifier(const PropertyId& id)
 
 void RSRenderNode::ApplyModifiers()
 {
-    if (!RSBaseRenderNode::IsDirty()) {
+    if (!RSBaseRenderNode::IsDirty() || dirtyTypes_.empty()) {
         return;
     }
-    RSModifierContext context = { GetMutableRenderProperties() };
-    context.property_.Reset();
+    RSModifierContext context = { renderProperties_ };
+    for (auto type : dirtyTypes_) {
+        renderProperties_.ResetProperty(type);
+    }
+    auto dirtyStatus = renderProperties_.GetDirtyStatus();
+    renderProperties_.Reset();
     for (auto& [id, modifier] : modifiers_) {
         if (modifier) {
             modifier->Apply(context);
         }
     }
+    renderProperties_.SetDirtyStatus(dirtyStatus);
     OnApplyModifiers();
     UpdateDrawRegion();
+    dirtyTypes_.clear();
+
+#ifndef USE_ROSEN_DRAWING
+    // Disable filter cache if either uni-render is disabled or filter cache is disabled by property.
+    if (!isUniRender_ || !RSSystemProperties::GetFilterCacheEnabled()) {
+        return;
+    }
+    // Create or release filter cache manager on demand, update cache state with filter hash.
+    renderProperties_.CreateFilterCacheManagerIfNeed();
+#endif
 }
 
 void RSRenderNode::UpdateDrawRegion()
@@ -390,7 +424,11 @@ void RSRenderNode::UpdateDrawRegion()
     context.property_.SetDrawRegion(std::make_shared<RectF>(joinRect));
 }
 
+#ifndef USE_ROSEN_DRAWING
 void RSRenderNode::UpdateEffectRegion(std::optional<SkPath>& region) const
+#else
+void RSRenderNode::UpdateEffectRegion(std::optional<Drawing::Path>& region) const
+#endif
 {
     if (!region.has_value()) {
         return;
@@ -402,6 +440,7 @@ void RSRenderNode::UpdateEffectRegion(std::optional<SkPath>& region) const
     auto& effectPath = region.value();
     auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
 
+#ifndef USE_ROSEN_DRAWING
     SkPath clipPath;
     if (property.GetClipBounds() != nullptr) {
         clipPath = property.GetClipBounds()->GetSkiaPath();
@@ -412,6 +451,18 @@ void RSRenderNode::UpdateEffectRegion(std::optional<SkPath>& region) const
 
     // accumulate children clip path, with matrix
     effectPath.addPath(clipPath, geoPtr->GetAbsMatrix());
+#else
+    Drawing::Path clipPath;
+    if (property.GetClipBounds() != nullptr) {
+        clipPath = property.GetClipBounds()->GetDrawingPath();
+    } else {
+        auto rrect = RSPropertiesPainter::RRect2DrawingRRect(property.GetRRect());
+        clipPath.AddRoundRect(rrect);
+    }
+
+    // accumulate children clip path, with matrix
+    effectPath.AddPath(clipPath, geoPtr->GetAbsMatrix());
+#endif
 }
 
 std::shared_ptr<RSRenderModifier> RSRenderNode::GetModifier(const PropertyId& id)
@@ -478,10 +529,14 @@ float RSRenderNode::GetGlobalAlpha() const
     return globalAlpha_;
 }
 
+#ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
 void RSRenderNode::InitCacheSurface(GrRecordingContext* grContext, ClearCacheSurfaceFunc func, uint32_t threadIndex)
 #else
 void RSRenderNode::InitCacheSurface(GrContext* grContext, ClearCacheSurfaceFunc func, uint32_t threadIndex)
+#endif
+#else
+void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheSurfaceFunc func, uint32_t threadIndex)
 #endif
 {
     if (!func) {
@@ -515,6 +570,7 @@ void RSRenderNode::InitCacheSurface(GrContext* grContext, ClearCacheSurfaceFunc 
         width = boundsWidth_;
         height = boundsHeight_;
     }
+#ifndef USE_ROSEN_DRAWING
 #if ((defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)) || (defined RS_ENABLE_VK)
     if (grContext == nullptr) {
         func(cacheSurface_, cacheCompletedSurface_, cacheSurfaceThreadIndex_);
@@ -522,10 +578,32 @@ void RSRenderNode::InitCacheSurface(GrContext* grContext, ClearCacheSurfaceFunc 
         return;
     }
     SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
+    std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
     cacheSurface_ = SkSurface::MakeRenderTarget(grContext, SkBudgeted::kYes, info);
 #else
     cacheSurface_ = SkSurface::MakeRasterN32Premul(width, height);
 #endif
+#else // USE_ROSEN_DRAWING
+    Drawing::BitmapFormat format = { Drawing::ColorType::COLORTYPE_N32, Drawing::AlphaType::ALPHATYPE_PREMUL };
+    Drawing::Bitmap bitmap;
+    bitmap.Build(width, height, format);
+#if ((defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)) || (defined RS_ENABLE_VK)
+    if (gpuContext == nullptr) {
+        func(cacheSurface_, cacheCompletedSurface_, cacheSurfaceThreadIndex_);
+        ClearCacheSurface();
+        return;
+    }
+    Drawing::Image image;
+    image.BuildFromBitmap(*gpuContext, bitmap);
+    auto surface = std::make_shared<Drawing::Surface>();
+    surface->Bind(image);
+    std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
+    cacheSurface_ = surface;
+#else
+    cacheSurface_ = std::make_shared<Drawing::Surface>();
+    cacheSurface_->Bind(bitmap);
+#endif
+#endif // USE_ROSEN_DRAWING
 }
 
 Vector2f RSRenderNode::GetOptionalBufferSize() const
@@ -540,6 +618,7 @@ Vector2f RSRenderNode::GetOptionalBufferSize() const
     return { vector4f.z_, vector4f.w_ };
 }
 
+#ifndef USE_ROSEN_DRAWING
 void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t threadIndex, bool isUIFirst)
 {
     auto cacheType = GetCacheType();
@@ -549,14 +628,22 @@ void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t thread
     float scaleY = size.y_ / boundsHeight_;
     canvas.scale(scaleX, scaleY);
     SkPaint paint;
-#ifdef NEW_SKIA
+#if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
     if (isUIFirst) {
-        if (cacheTexture_ == nullptr) {
-            RS_LOGE("invalid cache texture");
+        std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
+        if (!cacheCompletedBackendTexture_.isValid()) {
+            RS_LOGE("invalid grBackendTexture_");
             canvas.restore();
             return;
         }
-        canvas.drawImage(cacheTexture_, -shadowRectOffsetX_ * scaleX, -shadowRectOffsetY_ * scaleY);
+        auto image = SkImage::MakeFromTexture(canvas.recordingContext(), cacheCompletedBackendTexture_,
+            kBottomLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
+        if (image == nullptr) {
+            RS_LOGE("make Image failed");
+            canvas.restore();
+            return;
+        }
+        canvas.drawImage(image, -shadowRectOffsetX_ * scaleX, -shadowRectOffsetY_ * scaleY);
         canvas.restore();
         return;
     }
@@ -573,6 +660,61 @@ void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t thread
     }
     canvas.restore();
 }
+#else
+void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t threadIndex, bool isUIFirst)
+{
+    auto cacheType = GetCacheType();
+    canvas.Save();
+    Vector2f size = GetOptionalBufferSize();
+    float scaleX = size.x_ / boundsWidth_;
+    float scaleY = size.y_ / boundsHeight_;
+    canvas.Scale(scaleX, scaleY);
+#if defined(RS_ENABLE_GL)
+    if (isUIFirst) {
+        RS_LOGE("[%s:%d] Drawing is not supported", __func__, __LINE__);
+        return;
+    }
+#endif
+    auto surface = GetCompletedCacheSurface(threadIndex, isUIFirst);
+    if (surface == nullptr || (boundsWidth_ == 0 || boundsHeight_ == 0)) {
+        RS_LOGE("invalid complete cache surface");
+        canvas.Restore();
+        return;
+    }
+    auto image = surface->GetImageSnapshot();
+    if (image == nullptr) {
+        RS_LOGE("invalid complete cache image");
+        canvas.Restore();
+        return;
+    }
+    Drawing::Brush brush;
+    canvas.AttachBrush(brush);
+    if (cacheType == CacheType::ANIMATE_PROPERTY && renderProperties_.IsShadowValid()) {
+        canvas.DrawImage(*image, -shadowRectOffsetX_ * scaleX,
+            -shadowRectOffsetY_ * scaleY, Drawing::SamplingOptions());
+    } else {
+        canvas.DrawImage(*image, 0.0, 0.0, Drawing::SamplingOptions());
+    }
+    canvas.DetachBrush();
+    canvas.Restore();
+}
+#endif
+
+#ifdef RS_ENABLE_GL
+void RSRenderNode::UpdateBackendTexture()
+{
+#ifndef USE_ROSEN_DRAWING
+    std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
+    if (cacheSurface_ == nullptr) {
+        return;
+    }
+    cacheBackendTexture_
+        = cacheSurface_->getBackendTexture(SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess);
+#else
+    RS_LOGE("[%s:%d] Drawing is not supported", __func__, __LINE__);
+#endif
+}
+#endif
 
 #ifndef USE_ROSEN_DRAWING
 sk_sp<SkSurface> RSRenderNode::GetCompletedCacheSurface(uint32_t threadIndex, bool isUIFirst)
@@ -580,8 +722,11 @@ sk_sp<SkSurface> RSRenderNode::GetCompletedCacheSurface(uint32_t threadIndex, bo
 std::shared_ptr<Drawing::Surface> RSRenderNode::GetCompletedCacheSurface(uint32_t threadIndex, bool isUIFirst)
 #endif
 {
-    if (isUIFirst || cacheSurfaceThreadIndex_ == threadIndex || !cacheCompletedSurface_) {
-        return cacheCompletedSurface_;
+    {
+        std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
+        if (isUIFirst || cacheSurfaceThreadIndex_ == threadIndex || !cacheCompletedSurface_) {
+            return cacheCompletedSurface_;
+        }
     }
 
     // freeze cache scene
@@ -594,7 +739,11 @@ std::shared_ptr<Drawing::Surface> RSRenderNode::GetCompletedCacheSurface(uint32_
 
 void RSRenderNode::CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd)
 {
-    if (id <= 0) {
+    if (id <= 0 || GetType() != RSRenderNodeType::CANVAS_NODE) {
+        return;
+    }
+    auto context = GetContext().lock();
+    if (!context || !context->GetNodeMap().IsResidentProcessNode(GetId())) {
         return;
     }
     auto target = modifiers_.find(id);
@@ -644,6 +793,51 @@ void RSRenderNode::CheckDrawingCacheType()
     } else {
         SetDrawingCacheType(RSDrawingCacheType::TARGETED_CACHE);
     }
+}
+
+RectI RSRenderNode::GetFilterRect() const
+{
+    auto& properties = GetRenderProperties();
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    if (properties.GetClipBounds() != nullptr) {
+#ifndef USE_ROSEN_DRAWING
+        auto filterRect = properties.GetClipBounds()->GetSkiaPath().getBounds();
+        auto absRect = geoPtr->GetAbsMatrix().mapRect(filterRect);
+        return {absRect.x(), absRect.y(), absRect.width(), absRect.height()};
+#else
+        auto filterRect = properties.GetClipBounds()->GetDrawingPath().GetBounds();
+        Drawing::Rect absRect;
+        geoPtr->GetAbsMatrix().MapRect(absRect, filterRect);
+        return {absRect.GetLeft(), absRect.GetTop(), absRect.GetWidth(), absRect.GetHeight()};
+#endif
+    } else {
+        return geoPtr->GetAbsRect();
+    }
+}
+
+void RSRenderNode::UpdateFilterCacheManagerWithCacheRegion() const
+{
+#ifndef USE_ROSEN_DRAWING
+    // background filter
+    if (auto& manager = GetRenderProperties().GetFilterCacheManager(false)) {
+        manager->UpdateCacheStateWithFilterRegion(GetFilterRect());
+    }
+    // foreground filter
+    if (auto& manager = GetRenderProperties().GetFilterCacheManager(true)) {
+        manager->UpdateCacheStateWithFilterRegion(GetFilterRect());
+    }
+#endif
+}
+
+void RSRenderNode::OnTreeStateChanged()
+{
+#ifndef USE_ROSEN_DRAWING
+    if (IsOnTheTree()) {
+        GetMutableRenderProperties().CreateFilterCacheManagerIfNeed();
+    } else {
+        GetMutableRenderProperties().ResetFilterCacheManager();
+    }
+#endif
 }
 } // namespace Rosen
 } // namespace OHOS

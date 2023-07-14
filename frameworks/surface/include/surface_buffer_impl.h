@@ -49,7 +49,6 @@ public:
     int32_t GetFormat() const override;
     uint64_t GetUsage() const override;
     uint64_t GetPhyAddr() const override;
-    int32_t GetKey() const override;
     void *GetVirAddr() override;
     int32_t GetFileDescriptor() const override;
     uint32_t GetSize() const override;
@@ -80,8 +79,6 @@ public:
 
     static GSError CheckBufferConfig(int32_t width, int32_t height,
                                      int32_t format, uint64_t usage);
-
-    uint64_t BufferUsageToGrallocUsage(uint64_t bufferUsage);
 
     BufferWrapper GetBufferWrapper() override;
     void SetBufferWrapper(BufferWrapper wrapper) override;

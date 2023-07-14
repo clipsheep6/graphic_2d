@@ -60,6 +60,13 @@ bool StdFilesystemExists(const std::string &p, std::error_code &ec)
 {
     return std::filesystem::exists(p, ec);
 }
+#else
+bool StdFilesystemExists(const std::string &p)
+{
+    std::ifstream f(p.c_str());
+    return f.good();
+}
+#endif
 
 #else
 bool StdFilesystemExists(const std::string &p)

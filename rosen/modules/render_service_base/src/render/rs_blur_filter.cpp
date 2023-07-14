@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,8 +13,13 @@
  * limitations under the License.
  */
 
-#include "common/rs_common_def.h"
 #include "render/rs_blur_filter.h"
+
+#include "src/core/SkOpts.h"
+
+#include "common/rs_common_def.h"
+
+#include "platform/common/rs_system_properties.h"
 
 #ifndef USE_ROSEN_DRAWING
 #if defined(NEW_SKIA)
@@ -24,6 +29,7 @@
 #include "include/effects/SkBlurImageFilter.h"
 #endif
 #endif
+
 namespace OHOS {
 namespace Rosen {
 #ifndef USE_ROSEN_DRAWING
@@ -33,6 +39,18 @@ RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY): RSSkiaFilter(S
     blurRadiusY_(blurRadiusY)
 {
     type_ = FilterType::BLUR;
+
+    hash_ = SkOpts::hash(&type_, sizeof(type_), 0);
+    hash_ = SkOpts::hash(&blurRadiusX, sizeof(blurRadiusX), hash_);
+    hash_ = SkOpts::hash(&blurRadiusY, sizeof(blurRadiusY), hash_);
+    useKawase_ = RSSystemProperties::GetKawaseEnabled();
+    int gaussRadius = static_cast<int>(blurRadiusX);
+    if (gaussRadius == 0) {
+        useKawase_ = false;
+    }
+    if (useKawase_) {
+        kawaseFunc_ = std::make_shared<KawaseBlurFilter>(gaussRadius);
+    }
 }
 #else
 RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY): RSSkiaFilter(SkBlurImageFilter::Make(blurRadiusX,
@@ -40,18 +58,27 @@ RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY): RSSkiaFilter(S
     blurRadiusY_(blurRadiusY)
 {
     type_ = FilterType::BLUR;
+
+    hash_ = SkOpts::hash(&type_, sizeof(type_), 0);
+    hash_ = SkOpts::hash(&blurRadiusX, sizeof(blurRadiusX), hash_);
+    hash_ = SkOpts::hash(&blurRadiusY, sizeof(blurRadiusY), hash_);
 }
 #endif
 #else
-RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY)
-    : RSDrawingFilter(Drawing::ImageFilter::CreateBlurImageFilter(blurRadiusX, blurRadiusY, Drawing::TileMode::CLAMP,
-    nullptr)), blurRadiusX_(blurRadiusX), blurRadiusY_(blurRadiusY)
+RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY) : RSDrawingFilter(
+    Drawing::ImageFilter::CreateBlurImageFilter(blurRadiusX, blurRadiusY, Drawing::TileMode::CLAMP, nullptr)),
+    blurRadiusX_(blurRadiusX),
+    blurRadiusY_(blurRadiusY)
 {
     type_ = FilterType::BLUR;
+
+    hash_ = SkOpts::hash(&type_, sizeof(type_), 0);
+    hash_ = SkOpts::hash(&blurRadiusX, sizeof(blurRadiusX), hash_);
+    hash_ = SkOpts::hash(&blurRadiusY, sizeof(blurRadiusY), hash_);
 }
 #endif
 
-RSBlurFilter::~RSBlurFilter() {}
+RSBlurFilter::~RSBlurFilter() = default;
 
 float RSBlurFilter::GetBlurRadiusX()
 {
@@ -77,11 +104,21 @@ bool RSBlurFilter::IsValid() const
     return true;
 }
 
-std::shared_ptr<RSSkiaFilter> RSBlurFilter::Compose(const std::shared_ptr<RSSkiaFilter>& inner)
+#ifndef USE_ROSEN_DRAWING
+std::shared_ptr<RSSkiaFilter> RSBlurFilter::Compose(const std::shared_ptr<RSSkiaFilter>& other) const
+#else
+std::shared_ptr<RSDrawingFilter> RSBlurFilter::Compose(const std::shared_ptr<RSDrawingFilter>& other) const
+#endif
 {
-    std::shared_ptr<RSBlurFilter> blur = std::make_shared<RSBlurFilter>(blurRadiusX_, blurRadiusY_);
-    blur->imageFilter_ = SkImageFilters::Compose(imageFilter_, inner->GetImageFilter());
-    return blur;
+    std::shared_ptr<RSBlurFilter> result = std::make_shared<RSBlurFilter>(blurRadiusX_, blurRadiusY_);
+#ifndef USE_ROSEN_DRAWING
+    result->imageFilter_ = SkImageFilters::Compose(imageFilter_, other->GetImageFilter());
+#else
+    result->imageFilter_ = Drawing::ImageFilter::CreateComposeImageFilter(imageFilter_, other->GetImageFilter());
+#endif
+    auto otherHash = other->Hash();
+    result->hash_ = SkOpts::hash(&otherHash, sizeof(otherHash), hash_);
+    return result;
 }
 
 std::shared_ptr<RSFilter> RSBlurFilter::Add(const std::shared_ptr<RSFilter>& rhs)
@@ -90,8 +127,8 @@ std::shared_ptr<RSFilter> RSBlurFilter::Add(const std::shared_ptr<RSFilter>& rhs
         return shared_from_this();
     }
     auto blurR = std::static_pointer_cast<RSBlurFilter>(rhs);
-    return std::make_shared<RSBlurFilter>(blurRadiusX_ + blurR->GetBlurRadiusX(),
-        blurRadiusY_ + blurR->GetBlurRadiusY());
+    return std::make_shared<RSBlurFilter>(
+        blurRadiusX_ + blurR->GetBlurRadiusX(), blurRadiusY_ + blurR->GetBlurRadiusY());
 }
 
 std::shared_ptr<RSFilter> RSBlurFilter::Sub(const std::shared_ptr<RSFilter>& rhs)
@@ -100,8 +137,8 @@ std::shared_ptr<RSFilter> RSBlurFilter::Sub(const std::shared_ptr<RSFilter>& rhs
         return shared_from_this();
     }
     auto blurR = std::static_pointer_cast<RSBlurFilter>(rhs);
-    return std::make_shared<RSBlurFilter>(blurRadiusX_ - blurR->GetBlurRadiusX(),
-        blurRadiusY_ - blurR->GetBlurRadiusY());
+    return std::make_shared<RSBlurFilter>(
+        blurRadiusX_ - blurR->GetBlurRadiusX(), blurRadiusY_ - blurR->GetBlurRadiusY());
 }
 
 std::shared_ptr<RSFilter> RSBlurFilter::Multiply(float rhs)
@@ -114,19 +151,31 @@ std::shared_ptr<RSFilter> RSBlurFilter::Negate()
     return std::make_shared<RSBlurFilter>(-blurRadiusX_, -blurRadiusY_);
 }
 
-bool RSBlurFilter::IsNearEqual(const std::shared_ptr<RSFilter>& other, float threshold) const
+#ifndef USE_ROSEN_DRAWING
+void RSBlurFilter::DrawImageRect(
+    SkCanvas& canvas, const sk_sp<SkImage>& image, const SkRect& src, const SkRect& dst) const
+#else
+void RSBlurFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
+    const Drawing::Rect& src, const Drawing::Rect& dst) const
+#endif
 {
-    auto otherBlurFilter = std::static_pointer_cast<RSBlurFilter>(other);
-    if (otherBlurFilter == nullptr) {
-        return true;
+#ifndef USE_ROSEN_DRAWING
+    auto paint = GetPaint();
+#ifdef NEW_SKIA
+    if (useKawase_) {
+        kawaseFunc_->ApplyKawaseBlur(canvas, image, src, dst);
+    } else {
+        canvas.drawImageRect(image.get(), src, dst, SkSamplingOptions(), &paint, SkCanvas::kStrict_SrcRectConstraint);
     }
-    return ROSEN_EQ(blurRadiusX_, otherBlurFilter->GetBlurRadiusX(), threshold) &&
-           ROSEN_EQ(blurRadiusY_, otherBlurFilter->GetBlurRadiusY(), threshold);
-}
-
-bool RSBlurFilter::IsNearZero(float threshold) const
-{
-    return ROSEN_EQ(blurRadiusX_, 0.0f, threshold) && ROSEN_EQ(blurRadiusY_, 0.0f, threshold);
+#else
+    canvas.drawImageRect(image.get(), src, dst, &paint);
+#endif
+#else
+    auto brush = GetBrush();
+    canvas.AttachBrush(brush);
+    canvas.DrawImageRect(*image, src, dst, Drawing::SamplingOptions());
+    canvas.DetachBrush();
+#endif
 }
 } // namespace Rosen
 } // namespace OHOS

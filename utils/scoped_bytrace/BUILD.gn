@@ -37,9 +37,9 @@ ohos_static_library("scoped_bytrace") {
 
   deps = [ "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog" ]
 
-  external_deps = [ "hitrace_native:hitrace_meter" ]
+  external_deps = [ "hitrace:hitrace_meter" ]
 
   subsystem_name = "graphic"
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
 }
 ## Build scoped_bytrace.a }}}

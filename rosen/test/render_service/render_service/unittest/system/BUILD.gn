@@ -34,7 +34,7 @@ ohos_unittest("RSSystemParametersTest") {
   ]
   defines = []
   external_deps = [
-    "hilog_native:libhilog",
+    "hilog:libhilog",
     "init:libbegetutil",
   ]
   defines += gpu_defines
@@ -47,5 +47,5 @@ ohos_unittest("RSSystemParametersTest") {
     "-Dprotected=public",
   ]
   subsystem_name = "graphic"
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
 }

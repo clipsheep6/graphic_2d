@@ -71,10 +71,10 @@ ohos_executable("drawing_sample") {
   }
   external_deps = [
     "eventhandler:libeventhandler",
-    "hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 ## Build drawing_sample }}}

@@ -16,11 +16,17 @@
 #ifndef CMD_LIST_H
 #define CMD_LIST_H
 
+#include <optional>
+#include <vector>
+
 #include "draw/color.h"
 #include "recording/op_item.h"
 #include "recording/mem_allocator.h"
 
 namespace OHOS {
+namespace Media {
+class PixelMap;
+}
 namespace Rosen {
 namespace Drawing {
 struct ImageHandle {
@@ -59,7 +65,7 @@ public:
 
     CmdList() = default;
     explicit CmdList(const CmdListData& cmdListData);
-    virtual ~CmdList() = default;
+    virtual ~CmdList();
 
     virtual uint32_t GetType() const
     {
@@ -79,11 +85,15 @@ public:
         if (op == nullptr) {
             return;
         }
-        if (lastOpItem_ != nullptr) {
-            int offset = opAllocator_.AddrToOffset(op);
-            lastOpItem_->SetNextOpItemOffset(offset);
+
+        int32_t offset = opAllocator_.AddrToOffset(op);
+        if (lastOpItemOffset_.has_value()) {
+            auto* lastOpItem = static_cast<OpItem*>(opAllocator_.OffsetToAddr(lastOpItemOffset_.value()));
+            if (lastOpItem != nullptr) {
+                lastOpItem->SetNextOpItemOffset(offset);
+            }
         }
-        lastOpItem_ = op;
+        lastOpItemOffset_.emplace(offset);
     }
 
     /*
@@ -91,7 +101,7 @@ public:
      * @param src   A contiguous buffers.
      * @return      Returns the offset of the contiguous buffers and CmdList head point.
      */
-    int AddCmdListData(const CmdListData& data);
+    int32_t AddCmdListData(const CmdListData& data);
 
     const void* GetCmdListData(uint32_t offset) const;
 
@@ -102,9 +112,29 @@ public:
 
     // using for recording, should to remove after using shared memory
     bool SetUpImageData(const void* data, size_t size);
-    int AddImageData(const void* data, size_t size);
+    int32_t AddImageData(const void* data, size_t size);
     const void* GetImageData(uint32_t offset) const;
     CmdListData GetAllImageData() const;
+
+    /*
+     * @brief  return pixelmap index, negative is error.
+     */
+    int32_t AddPixelMap(const std::shared_ptr<Media::PixelMap>& pixelMap);
+
+    /*
+     * @brief  get pixelmap by index.
+     */
+    std::shared_ptr<Media::PixelMap> GetPixelMap(int32_t id);
+
+    /*
+     * @brief  return pixelmaplist size, 0 is no pixelmap.
+     */
+    uint32_t GetAllPixelMap(std::vector<std::shared_ptr<Media::PixelMap>>& pixelMapList);
+
+    /*
+     * @brief  return real setup pixelmap size.
+     */
+    uint32_t SetupPixelMap(const std::vector<std::shared_ptr<Media::PixelMap>>& pixelMapList);
 
     CmdList(CmdList&&) = delete;
     CmdList(const CmdList&) = delete;
@@ -114,8 +144,12 @@ public:
 protected:
     MemAllocator opAllocator_;
     MemAllocator imageAllocator_;
-    OpItem* lastOpItem_ = nullptr;
+    std::optional<int32_t> lastOpItemOffset_ = std::nullopt;
     std::mutex mutex_;
+#ifdef SUPPORT_OHOS_PIXMAP
+    std::vector<std::shared_ptr<Media::PixelMap>> pixelMapVec_;
+    std::mutex pixelMapMutex_;
+#endif
 };
 } // namespace Drawing
 } // namespace Rosen

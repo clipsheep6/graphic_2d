@@ -66,6 +66,9 @@ public:
     void PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas);
     void ResetParent() override;
 
+#ifdef OHOS_PLATFORM
+    void SetIsOnTheTree(bool flag) override;
+#endif
     bool IsAppWindow() const
     {
         return nodeType_ == RSSurfaceNodeType::APP_WINDOW_NODE;
@@ -186,6 +189,11 @@ public:
     std::string GetName() const
     {
         return name_;
+    }
+
+    std::string GetBundleName() const
+    {
+        return bundleName_;
     }
 
     void SetOffSetX(int32_t offset)
@@ -627,10 +635,14 @@ public:
 
     void OnTreeStateChanged() override;
 
+#ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
     void SetGrContext(GrDirectContext* grContext)
 #else
     void SetGrContext(GrContext* grContext)
+#endif
+#else
+    void SetDrawingGPUContext(Drawing::GPUContext* grContext)
 #endif
     {
         grContext_ = grContext;
@@ -643,7 +655,7 @@ public:
 
     uint32_t GetSubmittedSubThreadIndex() const
     {
-        return submittedSubThreadIndex_;        
+        return submittedSubThreadIndex_;
     }
 
     void SetCacheSurfaceProcessedStatus(CacheProcessStatus cacheProcessStatus)
@@ -666,10 +678,14 @@ private:
     std::mutex mutexRT_;
     std::mutex mutexUI_;
     std::mutex mutex_;
+#ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
     GrDirectContext* grContext_ = nullptr;
 #else
     GrContext* grContext_ = nullptr;
+#endif
+#else
+    Drawing::GPUContext* grContext_ = nullptr;
 #endif
     std::mutex parallelVisitMutex_;
 
@@ -684,6 +700,7 @@ private:
 
     bool isSecurityLayer_ = false;
     bool hasFingerprint_ = false;
+    bool isReportFirstFrame_ = false;
     RectI srcRect_;
 #ifndef USE_ROSEN_DRAWING
     SkMatrix totalMatrix_;
@@ -697,6 +714,7 @@ private:
     bool qosPidCal_ = false;
 
     std::string name_;
+    std::string bundleName_;
     RSSurfaceNodeType nodeType_ = RSSurfaceNodeType::DEFAULT;
 #ifndef ROSEN_CROSS_PLATFORM
     GraphicColorGamut colorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;

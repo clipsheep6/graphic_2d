@@ -28,10 +28,6 @@ public:
     RSIScreenChangeCallback() = default;
     virtual ~RSIScreenChangeCallback() noexcept = default;
 
-    enum {
-        ON_SCREEN_CHANGED,
-    };
-
     virtual void OnScreenChanged(ScreenId id, ScreenEvent event) = 0;
 };
 } // namespace Rosen

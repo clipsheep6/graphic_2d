@@ -17,12 +17,16 @@
 #define CMD_LIST_HELPER_H
 
 #include <utility>
+#include <memory>
 
 #include "image/image.h"
 #include "recording/cmd_list.h"
 #include "utils/log.h"
 
 namespace OHOS {
+namespace Media {
+class PixelMap;
+}
 namespace Rosen {
 namespace Drawing {
 class CmdListHelper {
@@ -31,43 +35,73 @@ public:
     ~CmdListHelper() = default;
 
     static ImageHandle AddImageToCmdList(CmdList& cmdList, const Image& image);
+    static ImageHandle AddImageToCmdList(CmdList& cmdList, const std::shared_ptr<Image>& image);
     static std::shared_ptr<Image> GetImageFromCmdList(const CmdList& cmdList, const ImageHandle& imageHandle);
     static ImageHandle AddBitmapToCmdList(CmdList& cmdList, const Bitmap& bitmap);
     static std::shared_ptr<Bitmap> GetBitmapFromCmdList(const CmdList& cmdList, const ImageHandle& bitmapHandle);
+    static ImageHandle AddPixelMapToCmdList(CmdList& cmdList, const std::shared_ptr<Media::PixelMap>& pixelMap);
+    static std::shared_ptr<Media::PixelMap> GetPixelMapFromCmdList(
+        const CmdList& cmdList, const ImageHandle& pixelMapHandle);
     static ImageHandle AddPictureToCmdList(CmdList& cmdList, const Picture& picture);
     static std::shared_ptr<Picture> GetPictureFromCmdList(const CmdList& cmdList, const ImageHandle& pictureHandle);
+    static ImageHandle AddCompressDataToCmdList(CmdList& cmdList, const std::shared_ptr<Data>& data);
+    static std::shared_ptr<Data> GetCompressDataFromCmdList(const CmdList& cmdList, const ImageHandle& imageHandle);
 
-    template<typename Recorded>
-    static CmdListHandle AddRecordedToCmdList(CmdList& cmdList, const Recorded& recorded)
+    template<typename RecordingType, typename CommonType>
+    static CmdListHandle AddRecordedToCmdList(CmdList& cmdList, const CommonType& recorded)
     {
-        if (recorded.GetCmdList() == nullptr) {
+        if (recorded.GetDrawingType() != DrawingType::RECORDING) {
+            LOGE("recorded is invalid!");
+            return { 0 };
+        }
+
+        auto recording = static_cast<const RecordingType&>(recorded);
+        if (recording.GetCmdList() == nullptr) {
             LOGE("recorded cmdlist is invalid!");
             return { 0 };
         }
 
-        return AddChildToCmdList(cmdList, recorded.GetCmdList());
+        return AddChildToCmdList(cmdList, recording.GetCmdList());
     }
 
-    template<typename Recorded>
-    static CmdListHandle AddRecordedToCmdList(CmdList& cmdList, const std::shared_ptr<Recorded>& recorded)
+    template<typename RecordingType, typename CommonType>
+    static CmdListHandle AddRecordedToCmdList(CmdList& cmdList, const std::shared_ptr<CommonType>& recorded)
     {
-        if (recorded == nullptr || recorded->GetCmdList() == nullptr) {
+        if (recorded == nullptr) {
+            return { 0 };
+        }
+        if (recorded->GetDrawingType() != DrawingType::RECORDING) {
             LOGE("recorded is invalid!");
             return { 0 };
         }
 
-        return AddChildToCmdList(cmdList, recorded->GetCmdList());
+        auto recording = std::static_pointer_cast<RecordingType>(recorded);
+        if (recording->GetCmdList() == nullptr) {
+            LOGE("recorded cmdlist is invalid!");
+            return { 0 };
+        }
+
+        return AddChildToCmdList(cmdList, recording->GetCmdList());
     }
 
-    template<typename Recorded>
-    static CmdListHandle AddRecordedToCmdList(CmdList& cmdList, const Recorded* recorded)
+    template<typename RecordingType, typename CommonType>
+    static CmdListHandle AddRecordedToCmdList(CmdList& cmdList, const CommonType* recorded)
     {
-        if (recorded == nullptr || recorded->GetCmdList() == nullptr) {
+        if (recorded == nullptr) {
+            return { 0 };
+        }
+        if (recorded->GetDrawingType() != DrawingType::RECORDING) {
             LOGE("recorded is invalid!");
             return { 0 };
         }
 
-        return AddChildToCmdList(cmdList, recorded->GetCmdList());
+        auto recording = static_cast<const RecordingType*>(recorded);
+        if (recording->GetCmdList() == nullptr) {
+            LOGE("recorded cmdlist is invalid!");
+            return { 0 };
+        }
+
+        return AddChildToCmdList(cmdList, recording->GetCmdList());
     }
 
     template<typename CmdListType, typename Type>
@@ -116,9 +150,8 @@ public:
     template<typename CmdListType>
     static std::shared_ptr<CmdListType> GetChildFromCmdList(const CmdList& cmdList, const CmdListHandle& childHandle)
     {
-        if (childHandle.offset == 0 || childHandle.size == 0) {
-            LOGE("child data is nullptr!");
-            return nullptr;
+        if (childHandle.size == 0) {
+            return std::make_shared<CmdListType>();
         }
 
         const void* childData = cmdList.GetCmdListData(childHandle.offset);

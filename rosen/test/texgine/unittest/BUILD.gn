@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
-module_output_path = "graphic_standard/rosen/test/texgine/unittest"
+module_output_path = "graphic_2d/rosen/test/texgine/unittest"
 is_ok = true
 
 group("unittest") {
@@ -26,6 +26,7 @@ group("unittest") {
       ":texgine_unittest_part3",
       ":texgine_unittest_part4",
       ":texgine_unittest_part5",
+      ":texgine_unittest_part6",
     ]
   }
 }
@@ -35,6 +36,7 @@ config("texgine_test_config") {
     "$graphic_2d_root/rosen/modules/texgine/export/texgine",
     "$graphic_2d_root/rosen/modules/texgine/src",
     "$graphic_2d_root/rosen/modules/texgine/texgine_drawing",
+    "$graphic_2d_root/rosen/modules/texgine/texgine_drawing/src",
   ]
 }
 
@@ -72,7 +74,7 @@ ohos_unittest("texgine_unittest_part1") {
 
   use_exceptions = true
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -91,7 +93,7 @@ ohos_unittest("texgine_unittest_part2") {
 
   use_exceptions = true
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -110,7 +112,7 @@ ohos_unittest("texgine_unittest_part3") {
 
   use_exceptions = true
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -127,20 +129,47 @@ ohos_unittest("texgine_unittest_part4") {
 
   use_exceptions = true
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
 ohos_unittest("texgine_unittest_part5") {
   module_out_path = module_output_path
 
-  sources = [ "measurer_impl_test.cpp" ]
+  sources = [
+    "measurer_impl_test.cpp",
+    "texgine_dash_path_effect_test.cpp",
+    "texgine_data_test.cpp",
+    "texgine_font_metrics_test.cpp",
+    "texgine_font_style_set_test.cpp",
+    "texgine_font_style_test.cpp",
+    "texgine_font_test.cpp",
+    "texgine_mask_filter_test.cpp",
+    "texgine_paint_test.cpp",
+    "texgine_path_1d_path_effect_test.cpp",
+    "texgine_path_effect_test.cpp",
+    "texgine_path_test.cpp",
+  ]
 
   public_configs = [ ":texgine_test_config" ]
   public_deps = [ ":common_deps" ]
 
   use_exceptions = true
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+ohos_unittest("texgine_unittest_part6") {
+  module_out_path = module_output_path
+
+  sources = [ "font_manager_test.cpp" ]
+
+  public_configs = [ ":texgine_test_config" ]
+  public_deps = [ ":common_deps" ]
+
+  use_exceptions = true
+
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

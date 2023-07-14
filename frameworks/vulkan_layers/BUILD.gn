@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 ## Build libvulkan_swapchain.so {{{
 config("vulkan_config") {
@@ -43,19 +44,21 @@ ohos_shared_library("vulkan_swapchain_layer") {
 
   public_configs = [ ":vulkan_public_config" ]
 
-  deps = [ "//third_party/vulkan-headers:vulkan_headers" ]
+  deps = [
+    "$graphic_2d_root:libsurface",
+    "$graphic_2d_root/utils:sync_fence",
+    "//third_party/vulkan-headers:vulkan_headers",
+  ]
 
   external_deps = [
     "c_utils:utils",
-    "graphic_standard:surface",
-    "graphic_standard:sync_fence",
-    "hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   output_name = "vulkan_swapchain"
   output_extension = "so"
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -64,7 +67,7 @@ ohos_shared_library("vulkan_swapchain_layer") {
 ## Build VkLayer_swapchain.json {{{
 ohos_prebuilt_etc("vulkan_swapchain_layer_json") {
   source = "swapchain_layer/VkLayer_swapchain.json"
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
   module_install_dir = "etc/vulkan/implicit_layer.d"
 }

@@ -57,6 +57,8 @@ public:
     std::string PlayBackForRecord(RSPaintFilterCanvas& canvas, int startOpId, int endOpId,
         int descStartOpId, const SkRect* rect = nullptr);
 
+    void SetWidth(int width);
+    void SetHeight(int height);
     std::string GetOpsWithDesc() const;
     size_t GetSize() const;
     int GetWidth() const;
@@ -84,6 +86,12 @@ private:
     int width_;
     int height_;
 
+#if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
+    // variables that are dedicated to driven render [start]
+    std::vector<std::pair<int, std::unique_ptr<OpItem>>> opReplacedByDrivenRender_;
+    // variables that are dedicated to driven render [end]
+#endif
+
 #ifdef ROSEN_OHOS
     // cache related, only available on OHOS
     std::vector<std::pair<int, std::unique_ptr<OpItem>>> opReplacedByCache_;
@@ -92,12 +100,6 @@ private:
     friend class RSMarshallingHelper;
     using OpUnmarshallingFunc = OpItem* (*)(Parcel& parcel);
     static OpUnmarshallingFunc GetOpUnmarshallingFunc(RSOpType type);
-#endif
-
-#if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
-    // variables that are dedicated to driven render [start]
-    std::unordered_map<int, std::unique_ptr<OpItem>> opReplacedByDrivenRender_;
-    // variables that are dedicated to driven render [end]
 #endif
 };
 

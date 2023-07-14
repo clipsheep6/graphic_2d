@@ -39,7 +39,7 @@ namespace OHOS {
 namespace Rosen {
 
 #ifndef USE_ROSEN_DRAWING
-struct CacheEffectData {
+struct CachedEffectData {
     sk_sp<SkImage> cachedImage_ = nullptr;
     SkIRect cachedRect_ = SkIRect::MakeEmpty();
     SkPath childrenPath_;
@@ -186,8 +186,6 @@ public:
 
     static std::optional<Drawing::Rect> GetLocalClipBounds(const Drawing::Canvas& canvas,
         const Drawing::RectI* clipBounds = nullptr);
-    std::stack<float> GetAlphaStack();
-    std::stack<Env> GetEnvStack();
 
     CoreCanvas& AttachPen(const Drawing::Pen& pen) override;
     CoreCanvas& AttachBrush(const Drawing::Brush& brush) override;
@@ -203,9 +201,9 @@ public:
 
 #ifndef USE_ROSEN_DRAWING
     // effect cache data related
-    void SetEffectData(const CacheEffectData& effectData);
+    void SetEffectData(const CachedEffectData& effectData);
     void SetChildrenPath(const SkPath& childrenPath);
-    const CacheEffectData& GetEffectData() const;
+    const CachedEffectData& GetEffectData() const;
 
     void SaveEffectData();
     void RestoreEffectData();
@@ -220,6 +218,8 @@ protected:
     using Env = struct {
         Color envForegroundColor;
     };
+    std::stack<float> GetAlphaStack();
+    std::stack<Env> GetEnvStack();
     bool OnFilter() const override;
 #endif
 
@@ -247,7 +247,7 @@ private:
 
     bool isParallelCanvas_ = false;
 #ifndef USE_ROSEN_DRAWING
-    std::stack<CacheEffectData> effectStack_;
+    std::stack<CachedEffectData> effectStack_;
 #endif
 };
 

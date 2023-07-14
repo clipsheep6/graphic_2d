@@ -35,11 +35,11 @@ ohos_shared_library("window_animation") {
 
   external_deps = [
     "eventhandler:libeventhandler",
-    "hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
   ]
 
   innerapi_tags = [ "platformsdk" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

@@ -49,6 +49,8 @@ struct RSSurfaceNodeConfig {
 
 class RSC_EXPORT RSSurfaceNode : public RSNode {
 public:
+    static constexpr float POINTER_WINDOW_POSITION_Z = 9999;
+
     using WeakPtr = std::weak_ptr<RSSurfaceNode>;
     using SharedPtr = std::shared_ptr<RSSurfaceNode>;
     static inline constexpr RSUINodeType Type = RSUINodeType::SURFACE_NODE;
@@ -90,6 +92,9 @@ public:
     static RSNode::SharedPtr UnmarshallingAsProxyNode(Parcel& parcel);
 
     FollowType GetFollowType() const override;
+    
+    void AttachToDisplay(uint64_t screenId);
+    void DetachToDisplay(uint64_t screenId);
 
 #ifndef ROSEN_CROSS_PLATFORM
     sptr<OHOS::Surface> GetSurface() const;
@@ -103,6 +108,11 @@ public:
     std::string GetName() const
     {
         return name_;
+    }
+
+    const std::string GetBundleName() const
+    {
+        return bundleName_;
     }
 
     void ResetContextAlpha() const;
@@ -125,12 +135,14 @@ private:
     bool CreateNode(const RSSurfaceRenderNodeConfig& config);
     bool CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config);
     void OnBoundsSizeChanged() const override;
+    std::pair<std::string, std::string> SplitSurfaceNodeName(std::string surfaceNodeName);
 #ifdef NEW_RENDER_CONTEXT
     std::shared_ptr<RSRenderSurface> surface_;
 #else
     std::shared_ptr<RSSurface> surface_;
 #endif
     std::string name_;
+    std::string bundleName_;
     std::mutex mutex_;
     BufferAvailableCallback callback_;
 #ifndef ROSEN_CROSS_PLATFORM

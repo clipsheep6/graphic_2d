@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-module_out_path = "graphic_standard/composer"
+module_out_path = "graphic_2d/composer"
 
 group("unittest") {
   testonly = true
@@ -50,6 +50,7 @@ ohos_unittest("vsync_controller_test") {
   sources = [ "vsync_controller_test.cpp" ]
 
   deps = [ ":vsync_test_common" ]
+  external_deps = [ "c_utils:utils" ]
 }
 
 ## UnitTest vsync_controller_test }}}
@@ -75,6 +76,7 @@ ohos_unittest("vsync_generator_test") {
   sources = [ "vsync_generator_test.cpp" ]
 
   deps = [ ":vsync_test_common" ]
+  external_deps = [ "c_utils:utils" ]
 }
 
 ## UnitTest vsync_generator_test }}}
@@ -101,6 +103,7 @@ ohos_unittest("vsync_sampler_test") {
   sources = [ "vsync_sampler_test.cpp" ]
 
   deps = [ ":vsync_test_common" ]
+  external_deps = [ "c_utils:utils" ]
 }
 
 ## UnitTest vsync_sampler_test }}}
@@ -145,6 +148,6 @@ ohos_static_library("vsync_test_common") {
     "//third_party/googletest:gtest_main",
   ]
   subsystem_name = "graphic"
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
 }
 ## Build vsync_test_common.a }}}

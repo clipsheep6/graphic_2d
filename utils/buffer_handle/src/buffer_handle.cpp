@@ -104,7 +104,6 @@ BufferHandle *CloneBufferHandle(const BufferHandle *handle)
     newHandle->format = handle->format;
     newHandle->usage = handle->usage;
     newHandle->phyAddr = handle->phyAddr;
-    newHandle->key = handle->key;
 
     for (uint32_t i = 0; i < newHandle->reserveFds; i++) {
         newHandle->reserve[i] = dup(handle->reserve[i]);
@@ -114,6 +113,12 @@ BufferHandle *CloneBufferHandle(const BufferHandle *handle)
             return nullptr;
         }
     }
+
+    if (handle->reserveInts == 0) {
+        UTILS_LOGD("There is no reserved integer value in old handle, no need to copy");
+        return newHandle;
+    }
+
     if (memcpy_s(&newHandle->reserve[newHandle->reserveFds], sizeof(int32_t) * newHandle->reserveInts,
         &handle->reserve[handle->reserveFds], sizeof(int32_t) * handle->reserveInts) != EOK) {
         UTILS_LOGE("CloneBufferHandle memcpy_s failed");
@@ -128,7 +133,7 @@ bool WriteBufferHandle(MessageParcel &parcel, const BufferHandle &handle)
     if (!parcel.WriteUint32(handle.reserveFds) || !parcel.WriteUint32(handle.reserveInts) ||
         !parcel.WriteInt32(handle.width) || !parcel.WriteInt32(handle.stride) || !parcel.WriteInt32(handle.height) ||
         !parcel.WriteInt32(handle.size) || !parcel.WriteInt32(handle.format) || !parcel.WriteInt64(handle.usage) ||
-        !parcel.WriteUint64(handle.phyAddr) || !parcel.WriteInt32(handle.key)) {
+        !parcel.WriteUint64(handle.phyAddr)) {
         UTILS_LOGE("%{public}s a lot failed", __func__);
         return false;
     }
@@ -174,7 +179,7 @@ BufferHandle *ReadBufferHandle(MessageParcel &parcel)
 
     if (!parcel.ReadInt32(handle->width) || !parcel.ReadInt32(handle->stride) || !parcel.ReadInt32(handle->height) ||
         !parcel.ReadInt32(handle->size) || !parcel.ReadInt32(handle->format) || !parcel.ReadUint64(handle->usage) ||
-        !parcel.ReadUint64(handle->phyAddr) || !parcel.ReadInt32(handle->key)) {
+        !parcel.ReadUint64(handle->phyAddr)) {
         UTILS_LOGE("%{public}s a lot failed", __func__);
         FreeBufferHandle(handle);
         return nullptr;

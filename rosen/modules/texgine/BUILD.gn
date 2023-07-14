@@ -24,7 +24,6 @@ config("libtexgine_config") {
     "-Wall",
     "-Werror",
     "-g3",
-    "-std=c++17",
   ]
 
   include_dirs = [
@@ -51,6 +50,7 @@ ohos_shared_library("libtexgine") {
       "src/dynamic_font_style_set.cpp",
       "src/font_collection.cpp",
       "src/font_config.cpp",
+      "src/font_manager.cpp",
       "src/font_parser.cpp",
       "src/font_providers.cpp",
       "src/font_styles.cpp",
@@ -94,6 +94,8 @@ ohos_shared_library("libtexgine") {
       "//build/config/compiler:exceptions",
     ]
 
+    cflags_cc = [ "-Wno-c++17-extensions" ]
+    cflags = [ "-Wno-c++17-extensions" ]
     public_configs = [ ":libtexgine_public_config" ]
 
     platform = current_os
@@ -112,13 +114,15 @@ ohos_shared_library("libtexgine") {
         "LOGGER_ENABLE_SCOPE",
         "TEXGINE_ENABLE_DEBUGLOG",
       ]
+
       external_deps = [
         "c_utils:utils",
-        "hitrace_native:hitrace_meter",
+        "hitrace:hitrace_meter",
       ]
+
       public_deps += [
-        "$graphic_2d_root/rosen/build/flutter/icu:rosen_libicu_$platform",
         "$hilog_root/interfaces/native/innerkits:libhilog",
+        "//third_party/flutter/build/icu:ace_libicu_$platform",
       ]
     } else {
       sources -= [ "src/utils/trace_ohos.cpp" ]
@@ -126,7 +130,7 @@ ohos_shared_library("libtexgine") {
     }
   }
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 ## Build libtexgine.so }}}

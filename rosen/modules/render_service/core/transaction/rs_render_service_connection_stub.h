@@ -21,6 +21,7 @@
 #include <message_parcel.h>
 
 #include "platform/ohos/rs_irender_service_connection.h"
+#include "platform/ohos/rs_irender_service_connection_ipc_interface_code.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -30,6 +31,9 @@ public:
     ~RSRenderServiceConnectionStub() noexcept = default;
 
     int OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
+
+private:
+    void ReadDataBaseRs(DataBaseRs& info, MessageParcel& data);
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -25,6 +25,7 @@
 
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
+#include "pipeline/rs_canvas_drawing_render_node.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_render_thread.h"
@@ -225,10 +226,28 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessCanvasRenderNode(RSCa
         canvas_->SetMatrix(relativeMatrix);
 #endif
     }
-    node.ProcessRenderBeforeChildren(*canvas_);
-    node.ProcessRenderContents(*canvas_);
-    ProcessBaseRenderNode(node);
-    node.ProcessRenderAfterChildren(*canvas_);
+    if (node.GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
+        auto canvasDrawingNode = node.ReinterpretCastTo<RSCanvasDrawingRenderNode>();
+#ifndef USE_ROSEN_DRAWING
+        SkBitmap bitmap;
+        canvasDrawingNode->GetBitmap(bitmap);
+#ifndef NEW_SKIA
+        canvas_->drawBitmap(bitmap, 0, 0);
+#else
+        canvas_->drawImage(bitmap.asImage(), 0, 0);
+#endif
+#else
+        Drawing::Bitmap bitmap;
+        canvasDrawingNode->GetBitmap(bitmap);
+        canvas_->DrawBitmap(bitmap, 0, 0);
+#endif
+        ProcessBaseRenderNode(*canvasDrawingNode);
+    } else {
+        node.ProcessRenderBeforeChildren(*canvas_);
+        node.ProcessRenderContents(*canvas_);
+        ProcessBaseRenderNode(node);
+        node.ProcessRenderAfterChildren(*canvas_);
+    }
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessEffectRenderNode(RSEffectRenderNode& node)

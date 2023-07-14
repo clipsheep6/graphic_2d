@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 #include <surface.h>
 
 #include "command/rs_command.h"
+#include "command/rs_node_showing_command.h"
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/iapplication_agent.h"
 #include "ipc_callbacks/screen_change_callback.h"
@@ -33,6 +34,7 @@
 #include "screen_manager/screen_types.h"
 #include "screen_manager/rs_virtual_screen_resolution.h"
 #include "transaction/rs_transaction_data.h"
+#include "transaction/rs_render_service_client.h"
 #include "ivsync_connection.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
 
@@ -46,52 +48,8 @@ public:
     RSIRenderServiceConnection() = default;
     virtual ~RSIRenderServiceConnection() noexcept = default;
 
-    enum {
-        COMMIT_TRANSACTION,
-        GET_UNI_RENDER_ENABLED,
-        CREATE_NODE,
-        CREATE_NODE_AND_SURFACE,
-        SET_FOCUS_APP_INFO,
-        GET_DEFAULT_SCREEN_ID,
-        GET_ALL_SCREEN_IDS,
-        CREATE_VIRTUAL_SCREEN,
-        SET_VIRTUAL_SCREEN_RESOLUTION,
-        SET_VIRTUAL_SCREEN_SURFACE,
-        REMOVE_VIRTUAL_SCREEN,
-        SET_SCREEN_CHANGE_CALLBACK,
-        SET_SCREEN_ACTIVE_MODE,
-        SET_SCREEN_POWER_STATUS,
-        SET_SCREEN_BACK_LIGHT,
-        TAKE_SURFACE_CAPTURE,
-        GET_SCREEN_ACTIVE_MODE,
-        GET_SCREEN_SUPPORTED_MODES,
-        GET_SCREEN_CAPABILITY,
-        GET_SCREEN_POWER_STATUS,
-        GET_SCREEN_BACK_LIGHT,
-        GET_SCREEN_DATA,
-        GET_VIRTUAL_SCREEN_RESOLUTION,
-        REGISTER_APPLICATION_AGENT,
-        SET_BUFFER_AVAILABLE_LISTENER,
-        GET_SCREEN_SUPPORTED_GAMUTS,
-        GET_SCREEN_SUPPORTED_METADATAKEYS,
-        GET_SCREEN_GAMUT,
-        SET_SCREEN_GAMUT,
-        SET_SCREEN_GAMUT_MAP,
-        GET_SCREEN_GAMUT_MAP,
-        CREATE_VSYNC_CONNECTION,
-        GET_SCREEN_HDR_CAPABILITY,
-        GET_SCREEN_TYPE,
-        SET_SCREEN_SKIP_FRAME_INTERVAL,
-        REGISTER_OCCLUSION_CHANGE_CALLBACK,
-        SET_APP_WINDOW_NUM,
-        SHOW_WATERMARK,
-        GET_MEMORY_GRAPHIC,
-        GET_MEMORY_GRAPHICS,
-        REPORT_JANK_STATS,
-        GET_BITMAP,
-    };
-
     virtual void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) = 0;
+    virtual void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) = 0;
 
     virtual bool GetUniRenderEnabled() = 0;
 
@@ -124,6 +82,14 @@ public:
     virtual int32_t SetScreenChangeCallback(sptr<RSIScreenChangeCallback> callback) = 0;
 
     virtual void SetScreenActiveMode(ScreenId id, uint32_t modeId) = 0;
+
+    virtual void SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate) = 0;
+
+    virtual void SetRefreshRateMode(int32_t refreshRateMode) = 0;
+
+    virtual uint32_t GetScreenCurrentRefreshRate(ScreenId id) = 0;
+
+    virtual std::vector<uint32_t> GetScreenSupportedRefreshRates(ScreenId id) = 0;
 
     virtual int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height) = 0;
 
@@ -173,7 +139,11 @@ public:
 
     virtual int32_t GetScreenType(ScreenId id, RSScreenType& screenType) = 0;
 
+#ifndef USE_ROSEN_DRAWING
     virtual bool GetBitmap(NodeId id, SkBitmap& bitmap) = 0;
+#else
+    virtual bool GetBitmap(NodeId id, Drawing::Bitmap& bitmap) = 0;
+#endif
 
     virtual int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval) = 0;
 
@@ -184,6 +154,14 @@ public:
     virtual void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow) = 0;
 
     virtual void ReportJankStats() = 0;
+
+    virtual void ReportEventResponse(DataBaseRs info) = 0;
+
+    virtual void ReportEventComplete(DataBaseRs info) = 0;
+
+    virtual void ReportEventJankFrame(DataBaseRs info) = 0;
+
+    virtual void ReportEventFirstFrame(DataBaseRs info) = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

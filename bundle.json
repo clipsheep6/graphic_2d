@@ -1,6 +1,6 @@
 {
-    "name": "@ohos/graphic_standard",
-    "description": "graphic_standard",
+    "name": "@ohos/graphic_2d",
+    "description": "graphic_2d",
     "version": "3.1",
     "license": "Apache License 2.0",
     "publishAs": "code-segment",
@@ -10,7 +10,7 @@
     "dirs": {},
     "scripts": {},
     "component": {
-      "name": "graphic_standard",
+      "name": "graphic_2d",
       "subsystem": "graphic",
       "syscap": [
         "SystemCapability.Graphic.Graphic2D.ColorManager.Core",
@@ -19,19 +19,20 @@
         "SystemCapability.Graphic.Graphic2D.NativeWindow",
         "SystemCapability.Graphic.Graphic2D.NativeDrawing",
         "SystemCapability.Graphic.Graphic2D.WebGL",
-        "SystemCapability.Graphic.Graphic2D.WebGL2"
+        "SystemCapability.Graphic.Graphic2D.WebGL2",
+        "SystemCapability.Graphic.Vulkan"
       ],
       "adapted_system_type": [ "standard" ],
       "features": [
-        "graphic_standard_feature_bootanimation_enable",
-        "graphic_standard_feature_ace_enable_gpu",
-        "graphic_standard_feature_rs_enable_eglimage",
-        "graphic_standard_feature_color_gamut_enable",
-        "graphic_standard_feature_rs_enable_uni_render",
-        "graphic_standard_feature_wuji_enable",
-        "graphic_standard_feature_enable_afbc",
-        "graphic_standard_feature_freemem_enable",
-        "graphic_standard_feature_parallel_render_enable"
+        "graphic_2d_feature_bootanimation_enable",
+        "graphic_2d_feature_ace_enable_gpu",
+        "graphic_2d_feature_rs_enable_eglimage",
+        "graphic_2d_feature_color_gamut_enable",
+        "graphic_2d_feature_rs_enable_uni_render",
+        "graphic_2d_feature_wuji_enable",
+        "graphic_2d_feature_enable_afbc",
+        "graphic_2d_feature_freemem_enable",
+        "graphic_2d_feature_parallel_render_enable"
       ],
       "rom": "10000KB",
       "ram": "10000KB",
@@ -46,15 +47,14 @@
           "napi",
           "samgr",
           "zlib",
-          "hiviewdfx_hilog_native",
-          "hitrace_native",
+          "hilog",
+          "hisysevent",
+          "hitrace",
           "ability_runtime",
           "drivers_interface_display",
-          "hilog_native",
           "c_utils",
           "access_token",
           "safwk",
-          "hisysevent_native",
           "eventhandler",
           "config_policy",
           "init",
@@ -63,13 +63,23 @@
           "multimedia_image_framework",
           "cjson",
           "ipc",
-          "player_framework"
+          "player_framework",
+          "resource_schedule_service",
+          "soc_perf",
+          "accessibility"
         ],
         "third_party": [
           "flutter",
           "libuv",
           "openssl",
-          "third_party_skia"
+          "skia",
+          "libxml2",
+          "bounds_checking_function",
+          "icu",
+          "libpng",
+          "zlib",
+          "skia",
+          "cjson"
         ]
       },
       "build": {
@@ -224,6 +234,7 @@
                 "modifier/rs_modifier_extractor.h",
                 "modifier/rs_modifier_manager.h",
                 "modifier/rs_property.h",
+                "modifier/rs_showing_properties_freezer.h",
                 "modifier/rs_extended_modifier.h",
                 "modifier/rs_property_modifier.h",
                 "transaction/rs_interfaces.h"
@@ -259,9 +270,46 @@
             "name": "//foundation/graphic/graphic_2d/utils/color_manager:color_manager",
             "header": {
               "header_files": [
-                "export/color.h"
+                "export/color.h",
+                "export/color_space.h",
+                "export/color_space_convertor.h"
               ],
               "header_base": "//foundation/graphic/graphic_2d/utils/color_manager"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
+            "header": {
+              "header_files": [
+                "any_span.h",
+                "dynamic_file_font_provider.h",
+                "dynamic_font_provider.h",
+                "font_providers.h",
+                "ifont_provider.h",
+                "system_font_provider.h",
+                "text_style.h",
+                "typography_builder.h",
+                "typography_style.h",
+                "typography_types.h",
+                "typography.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/texgine/export/texgine"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text:rosen_text",
+            "header": {
+              "header_files": [
+                "font_collection.h",
+                "typography_create.h",
+                "typography_style.h",
+                "text_style.h",
+                "typography.h",
+                "typography_types.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/export/rosen_text"
             }
           }
         ],

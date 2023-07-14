@@ -35,14 +35,14 @@ ohos_shared_library("color_space_object_convertor") {
   deps = [ "//foundation/graphic/graphic_2d/utils:libgraphic_utils" ]
 
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "napi:ace_napi",
   ]
 
   cflags_cc = [ "-std=c++17" ]
 
   innerapi_tags = [ "platformsdk" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -71,13 +71,13 @@ ohos_shared_library("colorspacemanager_napi") {
   ]
 
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "napi:ace_napi",
   ]
 
   cflags_cc = [ "-std=c++17" ]
 
   relative_install_dir = "module/graphics"
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

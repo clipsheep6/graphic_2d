@@ -43,7 +43,7 @@ config("surface_public_config") {
   if (ace_enable_gpu) {
     defines = [ "ACE_ENABLE_GPU" ]
   }
-  if (graphic_standard_feature_freemem_enable) {
+  if (graphic_2d_feature_freemem_enable) {
     defines += [ "SURFACE_ENABLE_FREEMEM" ]
   }
   defines += gpu_defines
@@ -95,12 +95,15 @@ ohos_shared_library("surface") {
   external_deps = [
     "drivers_interface_display:display_buffer_idl_headers",
     "drivers_interface_display:libdisplay_buffer_hdi_impl",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "ipc:ipc_single",
   ]
 
-  symlink_target_name = [ "libnative_window.so" ]
+  symlink_target_name = [
+    "libnative_buffer.so",
+    "libnative_window.so",
+  ]
 
   if (defined(graphic_2d_ext_configs.vendor_root)) {
     sources += graphic_2d_ext_configs.libsurface_ext_sources
@@ -115,7 +118,7 @@ ohos_shared_library("surface") {
     "chipsetsdk",
     "platformsdk",
   ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 

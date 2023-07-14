@@ -220,6 +220,18 @@ ParallelRenderingType RSSystemProperties::GetParallelRenderingEnabled()
         std::atoi((system::GetParameter("rosen.parallelrender.enabled", "0")).c_str()));
 }
 
+HgmRefreshRates RSSystemProperties::GetHgmRefreshRatesEnabled()
+{
+    return static_cast<HgmRefreshRates>(
+        std::atoi((system::GetParameter("rosen.sethgmrefreshrate.enabled", "0")).c_str()));
+}
+
+HgmRefreshRateModes RSSystemProperties::GetHgmRefreshRateModesEnabled()
+{
+    return static_cast<HgmRefreshRateModes>(
+        std::atoi((system::GetParameter("rosen.sethgmrefreshratemode.enabled", "0")).c_str()));
+}
+
 bool RSSystemProperties::GetColdStartThreadEnabled()
 {
     return std::atoi((system::GetParameter("rosen.coldstartthread.enabled", "0")).c_str()) != 0;
@@ -235,15 +247,37 @@ float RSSystemProperties::GetAnimationScale()
     return std::atof((system::GetParameter("persist.sys.graphic.animationscale", "1.0")).c_str());
 }
 
+bool RSSystemProperties::GetFilterCacheEnabled()
+{
+    static bool filterCacheEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.filterCacheEnabled", "1")).c_str()) != 0;
+    return filterCacheEnabled;
+}
+
+int RSSystemProperties::GetFilterCacheUpdateInterval()
+{
+    static int filterCacheUpdateInterval =
+        std::atoi((system::GetParameter("persist.sys.graphic.filterCacheUpdateInterval", "1")).c_str());
+    return filterCacheUpdateInterval;
+}
+
+bool RSSystemProperties::GetKawaseEnabled()
+{
+    static bool kawaseBlurEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.kawaseEnable", "1")).c_str()) != 0;
+    return kawaseBlurEnabled;
+}
+
 bool RSSystemProperties::GetProxyNodeDebugEnabled()
 {
-    static bool flag = system::GetParameter("rosen.proxyNode.debug.enabled", "0") != "0";
-    return flag;
+    static bool proxyNodeDebugEnabled = system::GetParameter("persist.sys.graphic.proxyNodeDebugEnabled", "0") != "0";
+    return proxyNodeDebugEnabled;
 }
 
 bool RSSystemProperties::GetUIFirstEnabled()
 {
-    return std::atoi((system::GetParameter("rosen.ui.first.enabled", "0")).c_str()) != 0;
+    static bool isPhone = system::GetParameter("const.product.devicetype", "pc") == "phone";
+    return (std::atoi((system::GetParameter("rosen.ui.first.enabled", "1")).c_str()) != 0) && isPhone;
 }
 
 bool RSSystemProperties::GetCacheCmdEnabled()
@@ -253,7 +287,7 @@ bool RSSystemProperties::GetCacheCmdEnabled()
 
 bool RSSystemProperties::GetASTCEnabled()
 {
-    static bool isASTCEnabled = std::atoi((system::GetParameter("rosen.astc.enabled", "0")).c_str()) != 0;
+    static bool isASTCEnabled = std::atoi((system::GetParameter("persist.rosen.astc.enabled", "0")).c_str()) != 0;
     return isASTCEnabled;
 }
 

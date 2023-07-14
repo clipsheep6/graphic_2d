@@ -41,7 +41,7 @@ ohos_executable("drawing_engine_sample") {
   ]
 
   if (ace_enable_gpu) {
-    if (graphic_standard_feature_enable_vulkan) {
+    if (graphic_2d_feature_enable_vulkan) {
       sources += [
         "drawing_engine/drawing_surface/surface_frame_ohos_vulkan.cpp",
         "drawing_engine/drawing_surface/surface_ohos_vulkan.cpp",
@@ -106,7 +106,7 @@ ohos_executable("drawing_engine_sample") {
   deps += [
     #"//third_party/skia:skia",
   ]
-  if (graphic_standard_feature_enable_vulkan) {
+  if (graphic_2d_feature_enable_vulkan) {
     include_dirs += [ "//third_party/flutter/engine/flutter/vulkan" ]
   }
   public_deps += [
@@ -117,14 +117,14 @@ ohos_executable("drawing_engine_sample") {
   external_deps = [
     "c_utils:utils",
     "eventhandler:libeventhandler",
-    "hilog_native:libhilog",
+    "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
     "multimedia_image_framework:image_native",
   ]
 
   subsystem_name = "graphic"
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
 }
 
 ohos_executable("drawing_sample_rs") {
@@ -149,9 +149,9 @@ ohos_executable("drawing_sample_rs") {
     "//third_party/zlib:libz",
   ]
 
-  external_deps = [ "hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -178,10 +178,10 @@ ohos_executable("drawing_sample_canvaskit0310") {
   ]
 
   external_deps = [
-    "hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
   ]
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

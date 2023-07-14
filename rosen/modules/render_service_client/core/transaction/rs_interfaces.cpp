@@ -118,6 +118,26 @@ void RSInterfaces::SetScreenActiveMode(ScreenId id, uint32_t modeId)
     renderServiceClient_->SetScreenActiveMode(id, modeId);
 }
 
+void RSInterfaces::SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate)
+{
+    renderServiceClient_->SetScreenRefreshRate(id, sceneId, rate);
+}
+
+void RSInterfaces::SetRefreshRateMode(int32_t refreshRateMode)
+{
+    renderServiceClient_->SetRefreshRateMode(refreshRateMode);
+}
+
+uint32_t RSInterfaces::GetScreenCurrentRefreshRate(ScreenId id)
+{
+    return renderServiceClient_->GetScreenCurrentRefreshRate(id);
+}
+
+std::vector<uint32_t> RSInterfaces::GetScreenSupportedRefreshRates(ScreenId id)
+{
+    return renderServiceClient_->GetScreenSupportedRefreshRates(id);
+}
+
 bool RSInterfaces::TakeSurfaceCaptureForUI(
     std::shared_ptr<RSNode> node, std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY)
 {
@@ -299,5 +319,24 @@ void RSInterfaces::ReportJankStats()
     renderServiceClient_->ReportJankStats();
 }
 
+void RSInterfaces::ReportEventResponse(DataBaseRs info)
+{
+    renderServiceClient_->ReportEventResponse(info);
+}
+
+void RSInterfaces::ReportEventComplete(DataBaseRs info)
+{
+    renderServiceClient_->ReportEventComplete(info);
+}
+
+void RSInterfaces::ReportEventJankFrame(DataBaseRs info)
+{
+    renderServiceClient_->ReportEventJankFrame(info);
+}
+
+void RSInterfaces::ReportEventFirstFrame(DataBaseRs info)
+{
+    renderServiceClient_->ReportEventFirstFrame(info);
+}
 } // namespace Rosen
 } // namespace OHOS

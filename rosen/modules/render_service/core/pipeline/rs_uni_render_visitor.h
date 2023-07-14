@@ -88,13 +88,6 @@ public:
         currentFocusedPid_ = pid;
     }
 
-    void SetAssignedWindowNodes(const std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
-        const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes)
-    {
-        mainThreadNodes_ = mainThreadNodes;
-        subThreadNodes_ = subThreadNodes;
-    }
-
     void SetSubThreadConfig(uint32_t threadIndex)
     {
         isSubThread_ = true;
@@ -102,7 +95,8 @@ public:
         threadIndex_ = threadIndex;
     }
 
-    void DrawSurfaceLayer(RSDisplayRenderNode& node);
+    void DrawSurfaceLayer(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
+        const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes) const;
 
     bool GetAnimateState() const
     {
@@ -323,8 +317,6 @@ private:
     std::vector<ScreenColorGamut> colorGamutModes_;
     pid_t currentFocusedPid_ = -1;
 
-    std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes_;
-    std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes_;
     bool isSubThread_ = false;
     bool isUIFirst_ = false;
     uint32_t threadIndex_ = UNI_MAIN_THREAD_INDEX;
@@ -390,12 +382,18 @@ private:
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkImage> cacheImgForCapture_ = nullptr;
 #else
-    std::shared_ptr<<Drawing::Image> cacheImgForCapture_ = nullptr;
+    std::shared_ptr<Drawing::Image> cacheImgForCapture_ = nullptr;
 #endif
     bool resetRotate_ = false;
     bool needCacheImg_ = false;
     uint32_t captureWindowZorder_ = 0;
+#ifndef USE_ROSEN_DRAWING
     std::optional<SkPath> effectRegion_ = std::nullopt;
+#else
+    std::optional<Drawing::Path> effectRegion_ = std::nullopt;
+#endif
+    bool curDirty_ = false;
+    bool curContentDirty_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

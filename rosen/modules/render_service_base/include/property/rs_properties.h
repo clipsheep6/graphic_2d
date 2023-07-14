@@ -17,12 +17,15 @@
 #define RENDER_SERVICE_CLIENT_CORE_PROPERTY_RS_PROPERTIES_H
 
 #include <optional>
+#include <tuple>
 #include <vector>
 
 #include "include/effects/SkColorMatrix.h"
+
 #include "common/rs_macros.h"
 #include "common/rs_matrix3.h"
 #include "common/rs_vector4.h"
+#include "modifier/rs_modifier_type.h"
 #include "property/rs_properties_def.h"
 #include "render/rs_border.h"
 #include "render/rs_filter.h"
@@ -33,12 +36,20 @@
 #include "render/rs_shader.h"
 #include "render/rs_shadow.h"
 
+#ifndef USE_ROSEN_DRAWING
+#include "property/rs_filter_cache_manager.h"
+#endif
+
 namespace OHOS {
 namespace Rosen {
 class RSRenderNode;
 class RSB_EXPORT RSProperties final {
 public:
     RSProperties();
+    RSProperties(const RSProperties&) = delete;
+    RSProperties(const RSProperties&&) = delete;
+    RSProperties& operator=(const RSProperties&) = delete;
+    RSProperties& operator=(const RSProperties&&) = delete;
     virtual ~RSProperties();
 
     // geometry properties
@@ -154,15 +165,15 @@ public:
     Vector4<Color> GetBorderColor() const;
     Vector4f GetBorderWidth() const;
     Vector4<uint32_t> GetBorderStyle() const;
-    std::shared_ptr<RSBorder> GetBorder() const;
+    const std::shared_ptr<RSBorder>& GetBorder() const;
 
     // filter properties
     void SetBackgroundFilter(std::shared_ptr<RSFilter> backgroundFilter);
     void SetLinearGradientBlurPara(std::shared_ptr<RSLinearGradientBlurPara> para);
     void SetFilter(std::shared_ptr<RSFilter> filter);
-    std::shared_ptr<RSFilter> GetBackgroundFilter() const;
-    std::shared_ptr<RSLinearGradientBlurPara> GetLinearGradientBlurPara() const;
-    std::shared_ptr<RSFilter> GetFilter() const;
+    const std::shared_ptr<RSFilter>& GetBackgroundFilter() const;
+    const std::shared_ptr<RSLinearGradientBlurPara>& GetLinearGradientBlurPara() const;
+    const std::shared_ptr<RSFilter>& GetFilter() const;
     bool NeedFilter() const;
 
     // shadow properties
@@ -265,13 +276,35 @@ public:
     void SetColorBlend(const std::optional<Color>& colorBlend);
     const std::optional<Color>& GetColorBlend() const;
 
+#ifndef USE_ROSEN_DRAWING
     const sk_sp<SkColorFilter> GetColorFilter() const;
+#else
+    const std::shared_ptr<Drawing::ColorFilter> GetColorFilter() const;
+#endif
 
     void SetUseEffect(bool useEffect);
     bool GetUseEffect() const;
 
+    std::tuple<bool, bool, bool> GetDirtyStatus() const
+    {
+        return { isDirty_, geoDirty_, contentDirty_ };
+    }
+    void SetDirtyStatus(std::tuple<bool, bool, bool> status)
+    {
+        isDirty_ = std::get<0>(status);
+        geoDirty_ = std::get<1>(status);
+        contentDirty_ = std::get<2>(status);
+    }
+
+#ifndef USE_ROSEN_DRAWING
+    void CreateFilterCacheManagerIfNeed();
+    void ResetFilterCacheManager();
+    const std::unique_ptr<RSFilterCacheManager>& GetFilterCacheManager(bool isForeground) const;
+#endif
+
 private:
     void Reset();
+    void ResetProperty(RSModifierType type);
     void SetDirty();
     void ResetDirty();
     bool IsDirty() const;
@@ -301,7 +334,7 @@ private:
     std::shared_ptr<RectF> drawRegion_ = nullptr;
 
     float alpha_ = 1.f;
-    bool alphaOffscreen_ = true;
+    bool alphaOffscreen_ = false;
 
     std::shared_ptr<RSObjGeometry> boundsGeo_;
     std::shared_ptr<RSObjGeometry> frameGeo_;
@@ -334,8 +367,18 @@ private:
     std::optional<float> invert_;
     std::optional<float> hueRotate_;
     std::optional<Color> colorBlend_;
+#ifndef USE_ROSEN_DRAWING
     sk_sp<SkColorFilter> colorFilter_ = nullptr;
+#else
+    std::shared_ptr<Drawing::ColorFilter> colorFilter_ = nullptr;
+#endif
 
+#ifndef USE_ROSEN_DRAWING
+    std::unique_ptr<RSFilterCacheManager> backgroundFilterCacheManager_;
+    std::unique_ptr<RSFilterCacheManager> foregroundFilterCacheManager_;
+#endif
+
+    friend class RSCanvasDrawingRenderNode;
     friend class RSCanvasRenderNode;
     friend class RSPropertiesPainter;
     friend class RSRenderNode;

@@ -52,6 +52,23 @@ namespace Rosen {
 using ScreenChangeCallback = std::function<void(ScreenId, ScreenEvent)>;
 using BufferAvailableCallback = std::function<void()>;
 using OcclusionChangeCallback = std::function<void(std::shared_ptr<RSOcclusionData>)>;
+
+struct DataBaseRs {
+    int32_t appPid = -1;
+    int32_t eventType = -1;
+    int64_t uniqueId = 0;
+    int64_t inputTime = 0;
+    int64_t beginVsyncTime = 0;
+    int64_t endVsyncTime = 0;
+    std::string sceneId;
+    std::string versionCode;
+    std::string versionName;
+    std::string bundleName;
+    std::string processName;
+    std::string abilityName;
+    std::string pageUrl;
+};
+
 class SurfaceCaptureCallback {
 public:
     SurfaceCaptureCallback() {}
@@ -68,6 +85,7 @@ public:
     void operator=(const RSRenderServiceClient&) = delete;
 
     void CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData) override;
+    void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) override;
 
     bool GetUniRenderEnabled();
 
@@ -107,6 +125,14 @@ public:
     int32_t SetScreenChangeCallback(const ScreenChangeCallback& callback);
 
     void SetScreenActiveMode(ScreenId id, uint32_t modeId);
+
+    void SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate);
+
+    void SetRefreshRateMode(int32_t refreshRateMode);
+
+    uint32_t GetScreenCurrentRefreshRate(ScreenId id);
+
+    std::vector<uint32_t> GetScreenSupportedRefreshRates(ScreenId id);
 
     int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height);
 
@@ -151,7 +177,11 @@ public:
 
     int32_t GetScreenType(ScreenId id, RSScreenType& screenType);
 
+#ifndef USE_ROSEN_DRAWING
     bool GetBitmap(NodeId id, SkBitmap& bitmap);
+#else
+    bool GetBitmap(NodeId id, Drawing::Bitmap& bitmap);
+#endif
 
     int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval);
 
@@ -162,6 +192,15 @@ public:
     void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow);
 
     void ReportJankStats();
+
+    void ReportEventResponse(DataBaseRs info);
+
+    void ReportEventComplete(DataBaseRs info);
+
+    void ReportEventJankFrame(DataBaseRs info);
+
+    void ReportEventFirstFrame(DataBaseRs info);
+
 private:
     void TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap);
     std::mutex mutex_;

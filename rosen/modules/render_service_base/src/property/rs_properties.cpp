@@ -18,10 +18,11 @@
 #include <algorithm>
 #include <securec.h>
 
-#include "platform/common/rs_log.h"
-#include "render/rs_filter.h"
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
+#include "common/rs_vector4.h"
+#include "platform/common/rs_log.h"
+#include "render/rs_filter.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -39,6 +40,69 @@ constexpr int32_t INDEX_14 = 14;
 constexpr int32_t INDEX_18 = 18;
 
 const Vector4f Vector4fZero { 0.f, 0.f, 0.f, 0.f };
+
+using ResetPropertyFunc = void (*)(RSProperties* prop);
+const std::unordered_map<RSModifierType, ResetPropertyFunc> g_funcLUT = {
+    { RSModifierType::BOUNDS, [](RSProperties* prop) { prop->SetBounds(Vector4f(-INFINITY)); } },
+    { RSModifierType::FRAME, [](RSProperties* prop) { prop->SetFrame(Vector4f(-INFINITY)); } },
+    { RSModifierType::SANDBOX, [](RSProperties* prop) { prop->SetSandBox(std::nullopt); } },
+    { RSModifierType::POSITION_Z, [](RSProperties* prop) { prop->SetPositionZ(0.f); } },
+    { RSModifierType::PIVOT, [](RSProperties* prop) { prop->SetPivot(Vector2f(0.5f, 0.5f)); } },
+    { RSModifierType::PIVOT_Z, [](RSProperties* prop) { prop->SetPivotZ(0.f); } },
+    { RSModifierType::QUATERNION, [](RSProperties* prop) { prop->SetQuaternion(Quaternion()); } },
+    { RSModifierType::ROTATION, [](RSProperties* prop) { prop->SetRotation(0.f); } },
+    { RSModifierType::ROTATION_X, [](RSProperties* prop) { prop->SetRotationX(0.f); } },
+    { RSModifierType::ROTATION_Y, [](RSProperties* prop) { prop->SetRotationY(0.f); } },
+    { RSModifierType::CAMERA_DISTANCE, [](RSProperties* prop) { prop->SetCameraDistance(0.f); } },
+    { RSModifierType::SCALE, [](RSProperties* prop) { prop->SetScale(Vector2f(1.f, 1.f)); } },
+    { RSModifierType::TRANSLATE, [](RSProperties* prop) { prop->SetTranslate(Vector2f(0.f, 0.f)); } },
+    { RSModifierType::TRANSLATE_Z, [](RSProperties* prop) { prop->SetTranslateZ(0.f); } },
+    { RSModifierType::CORNER_RADIUS, [](RSProperties* prop) { prop->SetCornerRadius(0.f); } },
+    { RSModifierType::ALPHA, [](RSProperties* prop) { prop->SetAlpha(1.f); } },
+    { RSModifierType::ALPHA_OFFSCREEN, [](RSProperties* prop) { prop->SetAlphaOffscreen(false); } },
+    { RSModifierType::FOREGROUND_COLOR, [](RSProperties* prop) { prop->SetForegroundColor(RSColor()); } },
+    { RSModifierType::BACKGROUND_COLOR, [](RSProperties* prop) { prop->SetBackgroundColor(RSColor()); } },
+    { RSModifierType::BACKGROUND_SHADER, [](RSProperties* prop) { prop->SetBackgroundShader(nullptr); } },
+    { RSModifierType::BG_IMAGE, [](RSProperties* prop) { prop->SetBgImage(nullptr); } },
+    { RSModifierType::BG_IMAGE_WIDTH, [](RSProperties* prop) { prop->SetBgImageWidth(0.f); } },
+    { RSModifierType::BG_IMAGE_HEIGHT, [](RSProperties* prop) { prop->SetBgImageHeight(0.f); } },
+    { RSModifierType::BG_IMAGE_POSITION_X, [](RSProperties* prop) { prop->SetBgImagePositionX(0.f); } },
+    { RSModifierType::BG_IMAGE_POSITION_Y, [](RSProperties* prop) { prop->SetBgImagePositionY(0.f); } },
+    { RSModifierType::BORDER_COLOR, [](RSProperties* prop) { prop->SetBorderColor(RSColor()); } },
+    { RSModifierType::BORDER_WIDTH, [](RSProperties* prop) { prop->SetBorderWidth(0.f); } },
+    { RSModifierType::BORDER_STYLE, [](RSProperties* prop) { prop->SetBorderStyle((uint32_t)BorderStyle::NONE); } },
+    { RSModifierType::FILTER, [](RSProperties* prop) { prop->SetFilter(nullptr); } },
+    { RSModifierType::BACKGROUND_FILTER, [](RSProperties* prop) { prop->SetBackgroundFilter(nullptr); } },
+    { RSModifierType::LINEAR_GRADIENT_BLUR_PARA, [](RSProperties* prop) { prop->SetLinearGradientBlurPara(nullptr); } },
+    { RSModifierType::FRAME_GRAVITY, [](RSProperties* prop) { prop->SetFrameGravity(Gravity::DEFAULT); } },
+    { RSModifierType::CLIP_RRECT, [](RSProperties* prop) { prop->SetClipRRect(RRect()); } },
+    { RSModifierType::CLIP_BOUNDS, [](RSProperties* prop) { prop->SetClipBounds(nullptr); } },
+    { RSModifierType::CLIP_TO_BOUNDS, [](RSProperties* prop) { prop->SetClipToBounds(false); } },
+    { RSModifierType::CLIP_TO_FRAME, [](RSProperties* prop) { prop->SetClipToFrame(false); } },
+    { RSModifierType::VISIBLE, [](RSProperties* prop) { prop->SetVisible(true); } },
+    { RSModifierType::SHADOW_COLOR, [](RSProperties* prop) { prop->SetShadowColor(RgbPalette::Transparent()); } },
+    { RSModifierType::SHADOW_OFFSET_X, [](RSProperties* prop) { prop->SetShadowOffsetX(0.f); } },
+    { RSModifierType::SHADOW_OFFSET_Y, [](RSProperties* prop) { prop->SetShadowOffsetY(0.f); } },
+    { RSModifierType::SHADOW_ALPHA, [](RSProperties* prop) { prop->SetShadowAlpha(0.f); } },
+    { RSModifierType::SHADOW_ELEVATION, [](RSProperties* prop) { prop->SetShadowElevation(0.f); } },
+    { RSModifierType::SHADOW_RADIUS, [](RSProperties* prop) { prop->SetShadowRadius(0.f); } },
+    { RSModifierType::SHADOW_PATH, [](RSProperties* prop) { prop->SetShadowPath(nullptr); } },
+    { RSModifierType::SHADOW_MASK, [](RSProperties* prop) { prop->SetShadowMask(false); } },
+    { RSModifierType::MASK, [](RSProperties* prop) { prop->SetMask(nullptr); } },
+    { RSModifierType::SPHERIZE, [](RSProperties* prop) { prop->SetSpherize(0.f); } },
+    { RSModifierType::LIGHT_UP_EFFECT, [](RSProperties* prop) { prop->SetLightUpEffect(1.f); } },
+    { RSModifierType::PIXEL_STRETCH, [](RSProperties* prop) { prop->SetPixelStretch(Vector4f()); } },
+    { RSModifierType::PIXEL_STRETCH_PERCENT, [](RSProperties* prop) { prop->SetPixelStretchPercent(Vector4f()); } },
+    { RSModifierType::GRAY_SCALE, [](RSProperties* prop) { prop->SetGrayScale(std::nullopt); } },
+    { RSModifierType::BRIGHTNESS, [](RSProperties* prop) { prop->SetBrightness(std::nullopt); } },
+    { RSModifierType::CONTRAST, [](RSProperties* prop) { prop->SetContrast(std::nullopt); } },
+    { RSModifierType::SATURATE, [](RSProperties* prop) { prop->SetSaturate(std::nullopt); } },
+    { RSModifierType::SEPIA, [](RSProperties* prop) { prop->SetSepia(std::nullopt); } },
+    { RSModifierType::INVERT, [](RSProperties* prop) { prop->SetInvert(std::nullopt); } },
+    { RSModifierType::HUE_ROTATE, [](RSProperties* prop) { prop->SetHueRotate(std::nullopt); } },
+    { RSModifierType::COLOR_BLEND, [](RSProperties* prop) { prop->SetColorBlend(std::nullopt); } },
+    { RSModifierType::USE_EFFECT, [](RSProperties* prop) { prop->SetUseEffect(false); } },
+};
 } // namespace
 
 RSProperties::RSProperties()
@@ -47,13 +111,22 @@ RSProperties::RSProperties()
     frameGeo_ = std::make_shared<RSObjGeometry>();
 }
 
-RSProperties::~RSProperties() {}
+RSProperties::~RSProperties() = default;
+
+void RSProperties::ResetProperty(RSModifierType type)
+{
+    auto it = g_funcLUT.find(type);
+    if (it != g_funcLUT.end()) {
+        it->second(this);
+    }
+}
 
 void RSProperties::SetBounds(Vector4f bounds)
 {
     boundsGeo_->SetRect(bounds.x_, bounds.y_, bounds.z_, bounds.w_);
     hasBounds_ = true;
     geoDirty_ = true;
+    contentDirty_ = true;
     SetDirty();
 }
 
@@ -62,6 +135,7 @@ void RSProperties::SetBoundsSize(Vector2f size)
     boundsGeo_->SetSize(size.x_, size.y_);
     hasBounds_ = true;
     geoDirty_ = true;
+    contentDirty_ = true;
     SetDirty();
 }
 
@@ -70,6 +144,7 @@ void RSProperties::SetBoundsWidth(float width)
     boundsGeo_->SetWidth(width);
     hasBounds_ = true;
     geoDirty_ = true;
+    contentDirty_ = true;
     SetDirty();
 }
 
@@ -78,6 +153,7 @@ void RSProperties::SetBoundsHeight(float height)
     boundsGeo_->SetHeight(height);
     hasBounds_ = true;
     geoDirty_ = true;
+    contentDirty_ = true;
     SetDirty();
 }
 
@@ -141,6 +217,7 @@ void RSProperties::SetFrame(Vector4f frame)
 {
     frameGeo_->SetRect(frame.x_, frame.y_, frame.z_, frame.w_);
     geoDirty_ = true;
+    contentDirty_ = true;
     SetDirty();
 }
 
@@ -148,6 +225,7 @@ void RSProperties::SetFrameSize(Vector2f size)
 {
     frameGeo_->SetSize(size.x_, size.y_);
     geoDirty_ = true;
+    contentDirty_ = true;
     SetDirty();
 }
 
@@ -155,6 +233,7 @@ void RSProperties::SetFrameWidth(float width)
 {
     frameGeo_->SetWidth(width);
     geoDirty_ = true;
+    contentDirty_ = true;
     SetDirty();
 }
 
@@ -162,6 +241,7 @@ void RSProperties::SetFrameHeight(float height)
 {
     frameGeo_->SetHeight(height);
     geoDirty_ = true;
+    contentDirty_ = true;
     SetDirty();
 }
 
@@ -693,7 +773,7 @@ Vector4<uint32_t> RSProperties::GetBorderStyle() const
     return border_ ? border_->GetStyleFour() : Vector4<uint32_t>(static_cast<uint32_t>(BorderStyle::NONE));
 }
 
-std::shared_ptr<RSBorder> RSProperties::GetBorder() const
+const std::shared_ptr<RSBorder>& RSProperties::GetBorder() const
 {
     return border_;
 }
@@ -718,17 +798,17 @@ void RSProperties::SetFilter(std::shared_ptr<RSFilter> filter)
     contentDirty_ = true;
 }
 
-std::shared_ptr<RSFilter> RSProperties::GetBackgroundFilter() const
+const std::shared_ptr<RSFilter>& RSProperties::GetBackgroundFilter() const
 {
     return backgroundFilter_;
 }
 
-std::shared_ptr<RSLinearGradientBlurPara> RSProperties::GetLinearGradientBlurPara() const
+const std::shared_ptr<RSLinearGradientBlurPara>& RSProperties::GetLinearGradientBlurPara() const
 {
     return linearGradientBlurPara_;
 }
 
-std::shared_ptr<RSFilter> RSProperties::GetFilter() const
+const std::shared_ptr<RSFilter>& RSProperties::GetFilter() const
 {
     return filter_;
 }
@@ -1447,7 +1527,11 @@ static bool GreatOrEqual(double left, double right)
     return (left - right) > epsilon;
 }
 
+#ifndef USE_ROSEN_DRAWING
 const sk_sp<SkColorFilter> RSProperties::GetColorFilter() const
+#else
+const std::shared_ptr<Drawing::ColorFilter> RSProperties::GetColorFilter() const
+#endif
 {
     if (!grayScale_ && !brightness_ && !contrast_ && !saturate_ && !sepia_ && !invert_ && !hueRotate_ && !colorBlend_) {
         return nullptr;
@@ -1455,8 +1539,13 @@ const sk_sp<SkColorFilter> RSProperties::GetColorFilter() const
     if (colorFilter_) {
         return colorFilter_;
     }
+#ifndef USE_ROSEN_DRAWING
     sk_sp<SkColorFilter> filter = nullptr;
     sk_sp<SkColorFilter> tmpFilter = nullptr;
+#else
+    std::shared_ptr<Drawing::ColorFilter> filter = nullptr;
+    std::shared_ptr<Drawing::ColorFilter> tmpFilter = nullptr;
+#endif
     if (grayScale_.has_value() && GreatNotEqual(*grayScale_, 0.f)) {
         auto grayScale = grayScale_.value();
         float matrix[20] = { 0.0f }; // 20 : matrix size
@@ -1464,8 +1553,18 @@ const sk_sp<SkColorFilter> RSProperties::GetColorFilter() const
         matrix[1] = matrix[INDEX_6] = matrix[INDEX_11] = 0.7152f * grayScale; // 0.7152 : gray scale coefficient
         matrix[INDEX_2] = matrix[INDEX_7] = matrix[INDEX_12] = 0.0722f * grayScale; // 0.0722 : gray scale coefficient
         matrix[INDEX_18] = 1.0 * grayScale;
+#ifndef USE_ROSEN_DRAWING
         tmpFilter = SkColorFilters::Matrix(matrix);
         filter = tmpFilter->makeComposed(filter);
+#else
+        Drawing::ColorMatrix colorMatrix;
+        colorMatrix.SetArray(matrix);
+        tmpFilter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        if (filter) {
+            tmpFilter->Compose(*filter);
+        }
+        filter = tmpFilter;
+#endif
     }
     if (brightness_.has_value() && !NearEqual(*brightness_, 1.0)) {
         auto brightness = brightness_.value();
@@ -1474,17 +1573,39 @@ const sk_sp<SkColorFilter> RSProperties::GetColorFilter() const
         brightness = brightness - 1;
         matrix[0] = matrix[INDEX_6] = matrix[INDEX_12] = matrix[INDEX_18] = 1.0f;
         matrix[INDEX_4] = matrix[INDEX_9] = matrix[INDEX_14] = brightness;
+#ifndef USE_ROSEN_DRAWING
         tmpFilter = SkColorFilters::Matrix(matrix);
         filter = tmpFilter->makeComposed(filter);
+#else
+        Drawing::ColorMatrix colorMatrix;
+        colorMatrix.SetArray(matrix);
+        tmpFilter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        if (filter) {
+            tmpFilter->Compose(*filter);
+        }
+        filter = tmpFilter;
+#endif
     }
     if (contrast_.has_value() && !NearEqual(*contrast_, 1.0)) {
         auto contrast = contrast_.value();
+        uint32_t contrastValue128 = 128;
+        uint32_t contrastValue255 = 255;
         float matrix[20] = { 0.0f }; // 20 : matrix size
         matrix[0] = matrix[INDEX_6] = matrix[INDEX_12] = contrast;
-        matrix[INDEX_4] = matrix[INDEX_9] = matrix[INDEX_14] = 128 * (1 - contrast) / 255;
+        matrix[INDEX_4] = matrix[INDEX_9] = matrix[INDEX_14] = contrastValue128 * (1 - contrast) / contrastValue255;
         matrix[INDEX_18] = 1.0f;
+#ifndef USE_ROSEN_DRAWING
         tmpFilter = SkColorFilters::Matrix(matrix);
         filter = tmpFilter->makeComposed(filter);
+#else
+        Drawing::ColorMatrix colorMatrix;
+        colorMatrix.SetArray(matrix);
+        tmpFilter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        if (filter) {
+            tmpFilter->Compose(*filter);
+        }
+        filter = tmpFilter;
+#endif
     }
     if (saturate_.has_value() && !NearEqual(*saturate_, 1.0) && GreatOrEqual(*saturate_, 0.0)) {
         auto saturate = saturate_.value();
@@ -1496,8 +1617,18 @@ const sk_sp<SkColorFilter> RSProperties::GetColorFilter() const
         matrix[INDEX_6] = 0.6094f * (1 - saturate) + saturate; // 0.6094 : saturate coefficient
         matrix[INDEX_12] = 0.0820f * (1 - saturate) + saturate; // 0.0820 : saturate coefficient
         matrix[INDEX_18] = 1.0f;
+#ifndef USE_ROSEN_DRAWING
         tmpFilter = SkColorFilters::Matrix(matrix);
         filter = tmpFilter->makeComposed(filter);
+#else
+        Drawing::ColorMatrix colorMatrix;
+        colorMatrix.SetArray(matrix);
+        tmpFilter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        if (filter) {
+            tmpFilter->Compose(*filter);
+        }
+        filter = tmpFilter;
+#endif
     }
     if (sepia_.has_value() && GreatNotEqual(*sepia_, 0.0)) {
         auto sepia = sepia_.value();
@@ -1514,8 +1645,18 @@ const sk_sp<SkColorFilter> RSProperties::GetColorFilter() const
         matrix[INDEX_11] = 0.534f * sepia;
         matrix[INDEX_12] = 0.131f * sepia;
         matrix[INDEX_18] = 1.0f * sepia;
+#ifndef USE_ROSEN_DRAWING
         tmpFilter = SkColorFilters::Matrix(matrix);
         filter = tmpFilter->makeComposed(filter);
+#else
+        Drawing::ColorMatrix colorMatrix;
+        colorMatrix.SetArray(matrix);
+        tmpFilter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        if (filter) {
+            tmpFilter->Compose(*filter);
+        }
+        filter = tmpFilter;
+#endif
     }
     if (invert_.has_value() && GreatNotEqual(*invert_, 0.0)) {
         auto invert = invert_.value();
@@ -1525,16 +1666,26 @@ const sk_sp<SkColorFilter> RSProperties::GetColorFilter() const
         }
         // complete color invert when dstRGB = 1 - srcRGB
         // map (0, 1) to (1, -1)
-        matrix[0] = matrix[INDEX_6] = matrix[INDEX_12] = 1.0 - 2.0 * invert;
+        matrix[0] = matrix[INDEX_6] = matrix[INDEX_12] = 1.0 - 2.0 * invert; // 2.0: invert
         matrix[INDEX_18] = 1.0f;
         // invert = 0.5 -> RGB = (0.5, 0.5, 0.5) -> image completely gray
         matrix[INDEX_4] = matrix[INDEX_9] = matrix[INDEX_14] = invert;
+#ifndef USE_ROSEN_DRAWING
         tmpFilter = SkColorFilters::Matrix(matrix);
         filter = tmpFilter->makeComposed(filter);
+#else
+        Drawing::ColorMatrix colorMatrix;
+        colorMatrix.SetArray(matrix);
+        tmpFilter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        if (filter) {
+            tmpFilter->Compose(*filter);
+        }
+        filter = tmpFilter;
+#endif
     }
     if (hueRotate_.has_value() && GreatNotEqual(*hueRotate_, 0.0)) {
         auto hueRotate = hueRotate_.value();
-        while (hueRotate >= 360) { // 360 : degree
+        while (GreatOrEqual(hueRotate, 360)) { // 360 : degree
             hueRotate -= 360; // 360 : degree
         }
         float matrix[20] = { 0.0f }; // 20 : matrix size
@@ -1561,15 +1712,35 @@ const sk_sp<SkColorFilter> RSProperties::GetColorFilter() const
             default:
                 break;
         }
+#ifndef USE_ROSEN_DRAWING
         tmpFilter = SkColorFilters::Matrix(matrix);
         filter = tmpFilter->makeComposed(filter);
+#else
+        Drawing::ColorMatrix colorMatrix;
+        colorMatrix.SetArray(matrix);
+        tmpFilter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        if (filter) {
+            tmpFilter->Compose(*filter);
+        }
+        filter = tmpFilter;
+#endif
     }
     if (colorBlend_.has_value() && *colorBlend_ != RgbPalette::Transparent()) {
         auto colorBlend = colorBlend_.value();
+#ifndef USE_ROSEN_DRAWING
         tmpFilter = SkColorFilters::Blend(
             SkColorSetARGB(colorBlend.GetAlpha(), colorBlend.GetRed(), colorBlend.GetGreen(), colorBlend.GetBlue()),
             SkBlendMode::kPlus);
         filter = tmpFilter->makeComposed(filter);
+#else
+        tmpFilter = Drawing::ColorFilter::CreateBlendModeColorFilter(Drawing::Color::ColorQuadSetARGB(
+            colorBlend.GetRed(), colorBlend.GetGreen(), colorBlend.GetBlue(), colorBlend.GetAlpha()),
+            Drawing::BlendMode::PLUS);
+        if (filter) {
+            tmpFilter->Compose(*filter);
+        }
+        filter = tmpFilter;
+#endif
     }
     return filter;
 }
@@ -1915,5 +2086,39 @@ std::string RSProperties::Dump() const
 
     return dumpInfo;
 }
+
+#ifndef USE_ROSEN_DRAWING
+void RSProperties::CreateFilterCacheManagerIfNeed() {
+    if (auto& filter = GetBackgroundFilter()) {
+        auto& cacheManager = backgroundFilterCacheManager_;
+        if (cacheManager == nullptr) {
+            cacheManager = std::make_unique<RSFilterCacheManager>();
+        }
+        cacheManager->UpdateCacheStateWithFilterHash(filter->Hash());
+    } else {
+        backgroundFilterCacheManager_.reset();
+    }
+    if (auto& filter = GetFilter()) {
+        auto& cacheManager = foregroundFilterCacheManager_;
+        if (cacheManager == nullptr) {
+            cacheManager = std::make_unique<RSFilterCacheManager>();
+        }
+        cacheManager->UpdateCacheStateWithFilterHash(filter->Hash());
+    } else {
+        foregroundFilterCacheManager_.reset();
+    }
+}
+
+void RSProperties::ResetFilterCacheManager()
+{
+    backgroundFilterCacheManager_.reset();
+    foregroundFilterCacheManager_.reset();
+}
+
+const std::unique_ptr<RSFilterCacheManager>& RSProperties::GetFilterCacheManager(bool isForeground) const
+{
+    return isForeground ? foregroundFilterCacheManager_ : backgroundFilterCacheManager_;
+}
+#endif
 } // namespace Rosen
 } // namespace OHOS

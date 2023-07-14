@@ -64,6 +64,7 @@ ohos_source_set("render_service_base_src") {
     "src/command/rs_display_node_command.cpp",
     "src/command/rs_effect_node_command.cpp",
     "src/command/rs_node_command.cpp",
+    "src/command/rs_node_showing_command.cpp",
     "src/command/rs_proxy_node_command.cpp",
     "src/command/rs_root_node_command.cpp",
     "src/command/rs_surface_node_command.cpp",
@@ -121,8 +122,10 @@ ohos_source_set("render_service_base_src") {
     "src/pipeline/rs_root_render_node.cpp",
     "src/pipeline/rs_surface_handler.cpp",
     "src/pipeline/rs_surface_render_node.cpp",
+    "src/pipeline/rs_uni_render_judgement.cpp",
 
     #property
+    "src/property/rs_filter_cache_manager.cpp",
     "src/property/rs_properties.cpp",
     "src/property/rs_properties_painter.cpp",
     "src/property/rs_property_trace.cpp",
@@ -134,6 +137,7 @@ ohos_source_set("render_service_base_src") {
     "src/render/rs_image.cpp",
     "src/render/rs_image_base.cpp",
     "src/render/rs_image_cache.cpp",
+    "src/render/rs_kawase_blur.cpp",
     "src/render/rs_light_up_effect_filter.cpp",
     "src/render/rs_mask.cpp",
     "src/render/rs_material_filter.cpp",
@@ -211,6 +215,7 @@ ohos_source_set("render_service_base_src") {
     include_dirs += [ "//third_party/skia/src" ]
   } else {
     include_dirs += [ "//third_party/flutter/skia/src" ]
+    sources -= [ "src/render/rs_kawase_blur.cpp" ]
   }
   deps = [
     "$graphic_2d_root/utils/sandbox:sandbox_utils",
@@ -224,7 +229,7 @@ ohos_source_set("render_service_base_src") {
       "$rosen_root/modules/platform:image_native_config",
     ]
   } else {
-    external_deps = [ "hitrace_native:hitrace_meter" ]
+    external_deps = [ "hitrace:hitrace_meter" ]
   }
 
   if (rosen_is_win) {
@@ -235,6 +240,9 @@ ohos_source_set("render_service_base_src") {
     sources -= graphic_2d_ext_configs.librender_service_base_ext_sources_del
     sources += graphic_2d_ext_configs.librender_service_base_ext_sources
   }
+
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
 }
 
 config("render_service_base_all_deps_config") {
@@ -255,7 +263,7 @@ ohos_shared_library("librender_service_base") {
   }
 
   innerapi_tags = [ "platformsdk_indirect" ]
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
 
@@ -271,6 +279,6 @@ ohos_source_set("librender_service_base_static") {
     public_deps += [ "src/render_backend:librender_backend" ]
   }
 
-  part_name = "graphic_standard"
+  part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

@@ -27,6 +27,7 @@
 #endif
 
 #include "command/rs_surface_node_command.h"
+#include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "common/rs_rect.h"
 #include "common/rs_vector2.h"
@@ -34,6 +35,7 @@
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_root_render_node.h"
 #include "platform/common/rs_log.h"
+#include "platform/ohos/rs_jank_stats.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_skia_filter.h"
 #include "transaction/rs_render_service_client.h"
@@ -45,6 +47,7 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config
     : RSRenderNode(config.id, context),
       RSSurfaceHandler(config.id),
       name_(config.name),
+      bundleName_(config.bundleName),
       nodeType_(config.nodeType),
       dirtyManager_(std::make_shared<RSDirtyRegionManager>()),
       cacheSurfaceDirtyManager_(std::make_shared<RSDirtyRegionManager>())
@@ -242,10 +245,13 @@ void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSBaseRenderN
 void RSSurfaceRenderNode::OnTreeStateChanged()
 {
 #ifdef RS_ENABLE_GL
+    RSRenderNode::OnTreeStateChanged();
     if (grContext_ && !IsOnTheTree() && IsLeashWindow()) {
+#ifndef USE_ROSEN_DRAWING
         RS_TRACE_NAME_FMT("purgeUnlockedResources this SurfaceNode isn't on the tree Id:%" PRIu64 " Name:%s",
             GetId(), GetName().c_str());
         grContext_->purgeUnlockedResources(true);
+#endif
     }
 #endif
 }
@@ -323,21 +329,10 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanv
 
     RSPropertiesPainter::DrawBackground(property, canvas);
     RSPropertiesPainter::DrawMask(property, canvas);
+    RSPropertiesPainter::DrawFilter(property, canvas, FilterType::BACKGROUND_FILTER);
 #ifndef USE_ROSEN_DRAWING
-    auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetBackgroundFilter());
-    if (filter != nullptr) {
-        auto skRectPtr = std::make_unique<SkRect>();
-        skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawFilter(property, canvas, filter, FilterType::BACKGROUND_FILTER, skRectPtr);
-    }
     SetTotalMatrix(canvas.getTotalMatrix());
 #else
-    auto filter = std::static_pointer_cast<RSDrawingFilter>(property.GetBackgroundFilter());
-    if (filter != nullptr) {
-        auto rectPtr =
-            std::make_unique<Drawing::Rect>(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawFilter(property, canvas, filter, FilterType::BACKGROUND_FILTER, rectPtr);
-    }
     SetTotalMatrix(canvas.GetTotalMatrix());
 #endif
 }
@@ -355,19 +350,9 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanva
         return;
     }
     const auto& property = GetRenderProperties();
+    RSPropertiesPainter::DrawFilter(property, canvas, FilterType::FOREGROUND_FILTER);
+    RSPropertiesPainter::DrawLinearGradientBlurFilter(property, canvas);
 #ifndef USE_ROSEN_DRAWING
-    auto filter = std::static_pointer_cast<RSSkiaFilter>(property.GetFilter());
-    if (filter != nullptr) {
-        auto skRectPtr = std::make_unique<SkRect>();
-        skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawFilter(property, canvas, filter, FilterType::FOREGROUND_FILTER, skRectPtr);
-    }
-    auto para = property.GetLinearGradientBlurPara();
-    if (para != nullptr && para->blurRadius_ > 0) {
-        auto skRectPtr = std::make_unique<SkRect>();
-        skRectPtr->setXYWH(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawLinearGradientBlurFilter(property, canvas, skRectPtr);
-    }
     canvas.save();
     if (GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE) {
         auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
@@ -376,11 +361,6 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanva
     RSPropertiesPainter::DrawBorder(property, canvas);
     canvas.restore();
 #else
-    auto filter = std::static_pointer_cast<RSDrawingFilter>(property.GetFilter());
-    if (filter != nullptr) {
-        auto rectPtr = std::make_unique<Drawing::Rect>(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
-        RSPropertiesPainter::DrawFilter(property, canvas, filter, FilterType::FOREGROUND_FILTER, rectPtr);
-    }
     canvas.Save();
     if (GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE) {
         auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
@@ -428,6 +408,8 @@ void RSSurfaceRenderNode::SetContextMatrix(const std::optional<Drawing::Matrix>&
     }
     contextMatrix_ = matrix;
     SetContentDirty();
+    AddDirtyType(RSModifierType::SCALE);
+    AddDirtyType(RSModifierType::TRANSLATE);
     if (!sendMsg) {
         return;
     }
@@ -443,6 +425,7 @@ void RSSurfaceRenderNode::SetContextAlpha(float alpha, bool sendMsg)
     }
     contextAlpha_ = alpha;
     SetContentDirty();
+    AddDirtyType(RSModifierType::ALPHA);
     if (!sendMsg) {
         return;
     }
@@ -462,6 +445,7 @@ void RSSurfaceRenderNode::SetContextClipRegion(const std::optional<Drawing::Rect
     }
     contextClipRect_ = clipRegion;
     SetContentDirty();
+    AddDirtyType(RSModifierType::BOUNDS);
     if (!sendMsg) {
         return;
     }
@@ -1192,5 +1176,19 @@ void RSSurfaceRenderNode::UpdateCacheSurfaceDirtyManager(int bufferAge)
     }
 }
 
+#ifdef OHOS_PLATFORM
+void RSSurfaceRenderNode::SetIsOnTheTree(bool flag)
+{
+    RSBaseRenderNode::SetIsOnTheTree(flag);
+    if (flag == isReportFirstFrame_ || !IsAppWindow()) {
+        return;
+    }
+    if (flag) {
+        RSJankStats::GetInstance().SetFirstFrame();
+        RSJankStats::GetInstance().SetPid(ExtractPid(GetId()));
+    }
+    isReportFirstFrame_ = flag;
+}
+#endif
 } // namespace Rosen
 } // namespace OHOS

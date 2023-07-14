@@ -17,12 +17,7 @@
 #define ROSEN_TEXT_ADAPTER_TXT_TYPOGRAPHY_H
 
 #include "rosen_text/typography.h"
-
-#ifdef NEW_SKIA
-#include "third_party/flutter/txt/src/txt/paragraph.h"
-#else
-#include "third_party/flutter/engine/flutter/third_party/txt/src/txt/paragraph.h"
-#endif
+#include "txt/paragraph.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -44,7 +39,7 @@ public:
     void SetIndents(const std::vector<float>& indents) override;
     void Layout(double width) override;
     void Paint(SkCanvas *canvas, double x, double y) override;
-    void Paint(Drawing::Canvas *canvas, double x, double y) override;
+    void Paint(Drawing::Canvas *drawCanvas, double x, double y) override;
 
     std::vector<TextRect> GetTextRectsByBoundary(size_t left, size_t right,
         TextRectHeightStyle heightStyle, TextRectWidthStyle widthStyle) override;

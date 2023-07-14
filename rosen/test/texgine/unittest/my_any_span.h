@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#ifndef ROSEN_TEST_TEXGINE_UNITTEST_MY_ANY_SPAN_H
+#define ROSEN_TEST_TEXGINE_UNITTEST_MY_ANY_SPAN_H
+
 #include "texgine/any_span.h"
 #include "texgine_canvas.h"
 #include "texgine_paint.h"
@@ -21,22 +24,15 @@
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
-#define ColorGRAY 4287137928U
+#define COLOR_GRAY 4287137928U
 
 class MyAnySpan : public AnySpan {
 public:
     MyAnySpan(double width, double height,
               AnySpanAlignment align = AnySpanAlignment::ABOVE_BASELINE,
-              TextBaseline baseline = TextBaseline::ALPHABETIC,
-              double offset = 0.0,
-              uint32_t color = ColorGRAY)
+              TextBaseline baseline = TextBaseline::ALPHABETIC
+              ): width_(width), height_(height), align_(align), baseline_(baseline), offset_(0.0), color_(COLOR_GRAY)
     {
-        width_ = width;
-        height_ = height;
-        align_ = align;
-        baseline_ = baseline;
-        offset_ = offset;
-        color_ = color;
     }
 
     ~MyAnySpan() = default;
@@ -81,8 +77,9 @@ private:
     AnySpanAlignment align_ = AnySpanAlignment::ABOVE_BASELINE;
     TextBaseline baseline_ = TextBaseline::ALPHABETIC;
     double offset_ = 0.0;
-    uint32_t color_ = ColorGRAY;
+    uint32_t color_ = COLOR_GRAY;
 };
 } // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS
+#endif // ROSEN_TEST_TEXGINE_UNITTEST_MY_ANY_SPAN_H

@@ -14,7 +14,7 @@
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
 import("//build/test.gni")
-module_output_path = "graphic_standard/composer"
+module_output_path = "graphic_2d/composer"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("VsyncControllerFuzzTest") {
@@ -35,6 +35,7 @@ ohos_fuzztest("VsyncControllerFuzzTest") {
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/composer/vsync:libvsync",
   ]
+  external_deps = [ "c_utils:utils" ]
 }
 
 ###############################################################################

@@ -54,6 +54,10 @@ struct RSModifierContext {
 class RSB_EXPORT RSRenderModifier {
 public:
     RSRenderModifier() = default;
+    RSRenderModifier(const RSRenderModifier&) = delete;
+    RSRenderModifier(const RSRenderModifier&&) = delete;
+    RSRenderModifier& operator=(const RSRenderModifier&) = delete;
+    RSRenderModifier& operator=(const RSRenderModifier&&) = delete;
     virtual ~RSRenderModifier() = default;
 
     virtual void Apply(RSModifierContext& context) const = 0;
@@ -273,7 +277,10 @@ public:
     class RSB_EXPORT RS##MODIFIER_NAME##RenderModifier : public RS##MODIFIER_TIER##RenderModifier { \
     public:                                                                                         \
         RS##MODIFIER_NAME##RenderModifier(const std::shared_ptr<RSRenderPropertyBase>& property)    \
-            : RS##MODIFIER_TIER##RenderModifier(property) {}                                        \
+            : RS##MODIFIER_TIER##RenderModifier(property)                                           \
+        {                                                                                           \
+            property->SetModifierType(RSModifierType::MODIFIER_TYPE);                               \
+        }                                                                                           \
         virtual ~RS##MODIFIER_NAME##RenderModifier() = default;                                     \
         void Apply(RSModifierContext& context) const override;                                      \
         void Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) override;      \

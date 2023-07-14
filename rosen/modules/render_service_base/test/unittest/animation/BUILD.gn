@@ -15,7 +15,7 @@ import("//build/test.gni")
 import(
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/render_service_client.gni")
 
-module_output_path = "graphic_standard/rosen/modules/render_service_base"
+module_output_path = "graphic_2d/rosen/modules/render_service_base"
 
 ohos_unittest("RSRenderAnimationTest") {
   module_out_path = module_output_path
@@ -24,6 +24,7 @@ ohos_unittest("RSRenderAnimationTest") {
     "rs_animation_fraction_test.cpp",
     "rs_animation_manager_test.cpp",
     "rs_interpolator_test.cpp",
+    "rs_node_showing_command_test.cpp",
     "rs_property_trace_test.cpp",
     "rs_render_curve_animation_test.cpp",
     "rs_render_keyframe_animation_test.cpp",

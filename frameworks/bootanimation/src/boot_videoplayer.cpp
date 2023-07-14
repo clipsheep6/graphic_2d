@@ -37,11 +37,24 @@ void BootVideoPlayer::SetPlayerWindow(const OHOS::sptr<OHOS::Rosen::Window>& win
     window_ = window;
 }
 
+void BootVideoPlayer::SetPlayerSurface(const sptr<Surface>& surface)
+{
+    if (surface == nullptr) {
+        LOGE("SetPlayerSurface surface is nullptr");
+        return;
+    }
+    surface_ = surface;
+}
+
 bool BootVideoPlayer::PlayVideo()
 {
     LOGI("PlayVideo begin");
     if (mediaPlayer_ == nullptr) {
         mediaPlayer_ = Media::PlayerFactory::CreatePlayer();
+    }
+    if (mediaPlayer_ == nullptr) {
+        LOGE("PlayVideo SetPlayerCallback fail, mediaPlayer_ is nullptr");
+        return false;
     }
     std::shared_ptr<VideoPlayerCallback> cb = std::make_shared<VideoPlayerCallback>(shared_from_this());
     int32_t ret = mediaPlayer_->SetPlayerCallback(cb);
@@ -56,12 +69,11 @@ bool BootVideoPlayer::PlayVideo()
         LOGE("PlayVideo SetSource fail, uri:%{public}s, errorCode:%{public}d", uri.c_str(), ret);
         return false;
     }
-    auto surface = window_->GetSurfaceNode()->GetSurface();
-    if (surface == nullptr) {
+    if (surface_ == nullptr) {
         LOGE("PlayVideo surface is null");
         return false;
     }
-    ret = mediaPlayer_->SetVideoSurface(surface);
+    ret = mediaPlayer_->SetVideoSurface(surface_);
     if (ret != 0) {
         LOGE("PlayVideo SetVideoSurface fail, errorCode:%{public}d", ret);
         return false;

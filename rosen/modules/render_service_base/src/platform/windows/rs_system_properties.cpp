@@ -130,6 +130,16 @@ ParallelRenderingType RSSystemProperties::GetParallelRenderingEnabled()
     return {};
 }
 
+HgmRefreshRates RSSystemProperties::GetHgmRefreshRatesEnabled()
+{
+    return {};
+}
+
+HgmRefreshRateModes RSSystemProperties::GetHgmRefreshRateModesEnabled()
+{
+    return {};
+}
+
 bool RSSystemProperties::GetColdStartThreadEnabled()
 {
     return {};
@@ -146,6 +156,21 @@ float RSSystemProperties::GetAnimationScale()
 }
 
 bool RSSystemProperties::GetProxyNodeDebugEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetFilterCacheEnabled()
+{
+    return false;
+}
+
+int RSSystemProperties::GetFilterCacheUpdateInterval()
+{
+    return 0;
+}
+
+bool RSSystemProperties::GetKawaseEnabled()
 {
     return false;
 }

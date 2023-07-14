@@ -75,6 +75,10 @@ int32_t VSyncConnection::PostEvent(int64_t now, int64_t period, int64_t vsyncCou
     // 1, 2: index of array data.
     data[1] = now + period;
     data[2] = vsyncCount;
+    if (info_.name_ == "rs") {
+        // 5000000 is the vsync offset.
+        data[1] += period - 5000000;
+    }
     int32_t ret = socketPair_->SendData(data, sizeof(data));
     if (ret > -1) {
         ScopedBytrace successful("successful");
@@ -95,6 +99,15 @@ VsyncError VSyncConnection::SetVSyncRate(int32_t rate)
         return VSYNC_ERROR_NULLPTR;
     }
     return distributor->SetVSyncRate(rate, this);
+}
+
+VsyncError VSyncConnection::GetVSyncPeriod(int64_t &period)
+{
+    const sptr<VSyncDistributor> distributor = distributor_.promote();
+    if (distributor == nullptr) {
+        return VSYNC_ERROR_NULLPTR;
+    }
+    return distributor->GetVSyncPeriod(period);
 }
 
 VSyncDistributor::VSyncDistributor(sptr<VSyncController> controller, std::string name)
@@ -387,6 +400,13 @@ VsyncError VSyncDistributor::GetQosVSyncRateInfos(std::vector<std::pair<uint32_t
         int32_t tmpRate = connection->highPriorityState_ ? connection->highPriorityRate_ : connection->rate_;
         vsyncRateInfos.push_back(std::make_pair(tmpPid, tmpRate));
     }
+    return VSYNC_ERROR_OK;
+}
+
+VsyncError VSyncDistributor::GetVSyncPeriod(int64_t &period)
+{
+    std::lock_guard<std::mutex> locker(mutex_);
+    period = event_.period;
     return VSYNC_ERROR_OK;
 }
 }

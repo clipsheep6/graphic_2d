@@ -37,15 +37,21 @@ public:
 
     void Start();
     void PostTask(const std::function<void()>& task);
+    void PostSyncTask(const std::function<void()>& task);
     void RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTask);
-
+    void ResetGrContext();
+    void DumpMem(DfxString& log);
 private:
     void CreateShareEglContext();
     void DestroyShareEglContext();
+#ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
     sk_sp<GrDirectContext> CreateShareGrContext();
 #else
     sk_sp<GrContext> CreateShareGrContext();
+#endif
+#else
+    std::shared_ptr<Drawing::GPUContext> CreateShareGrContext();
 #endif
 
     uint32_t threadIndex_;
@@ -53,10 +59,14 @@ private:
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     RenderContext *renderContext_ = nullptr;
     EGLContext eglShareContext_ = EGL_NO_CONTEXT;
+#ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
     sk_sp<GrDirectContext> grContext_ = nullptr;
 #else
     sk_sp<GrContext> grContext_ = nullptr;
+#endif
+#else
+    std::shared_ptr<Drawing::GPUContext> grContext_ = nullptr;
 #endif
 };
 }

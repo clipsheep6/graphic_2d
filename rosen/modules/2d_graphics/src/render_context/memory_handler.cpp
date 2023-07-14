@@ -41,11 +41,21 @@ void MemoryHandler::ConfigureContext(Drawing::GPUContextOptions* context, const 
 }
 #endif
 
-#ifdef NEW_RENDER_CONTEXT
-std::string MemoryHandler::QuerryShader()
+#if defined(NEW_SKIA)
+void MemoryHandler::ClearRedundantResources(GrDirectContext* grContext)
 #else
-std::string MemoryHandler::QuerryShader() const
+void MemoryHandler::ClearRedundantResources(GrContext* grContext)
 #endif
+{
+    if (grContext != nullptr) {
+        LOGD("grContext clear redundant resources");
+        grContext->flush();
+        // GPU resources that haven't been used in the past 10 seconds
+        grContext->purgeResourcesNotUsedInMs(std::chrono::seconds(10));
+    }
+}
+
+std::string MemoryHandler::QuerryShader()
 {
     const auto& cache = ShaderCache::Instance();
     if (!cache.IfInitialized()) {
@@ -58,11 +68,7 @@ std::string MemoryHandler::QuerryShader() const
     return ramString;
 }
 
-#ifdef NEW_RENDER_CONTEXT
 std::string MemoryHandler::ClearShader()
-#else
-std::string MemoryHandler::ClearShader() const
-#endif
 {
     const auto& cache = ShaderCache::Instance();
     LOGW("All shaders are cleaned");

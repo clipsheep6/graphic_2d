@@ -62,6 +62,12 @@ ohos_shared_library("libframe_analyzer") {
       "init:libbeget_proxy",
       "init:libbegetutil",
     ]
+
+    if (defined(use_rosen_drawing) && use_rosen_drawing) {
+      defines = [ "USE_ROSEN_DRAWING" ]
+      deps += [ "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics" ]
+    }
+
   } else {
     sources = [
       "src/mingw/frame_collector.cpp",

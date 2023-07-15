@@ -186,7 +186,9 @@ void Logger::AppendPidTid(Logger &logger, enum LOG_PHASE phase)
 #ifdef BUILD_NON_SDK_VER
         logger << getpid() << ":" << GET_TID() << " ";
 #else
+#ifdef _WIN32
         logger << getpid() << ":" << gettid() << " ";
+#endif
 #endif
     }
 }

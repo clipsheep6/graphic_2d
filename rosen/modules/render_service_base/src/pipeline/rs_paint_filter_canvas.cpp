@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include "pipeline/rs_paint_filter_canvas.h"
 
 #ifndef USE_ROSEN_DRAWING

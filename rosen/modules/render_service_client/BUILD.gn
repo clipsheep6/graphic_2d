@@ -133,9 +133,14 @@ template("render_service_client_source_set") {
 
     if (defined(use_rosen_drawing) && use_rosen_drawing) {
       defines += [ "USE_ROSEN_DRAWING" ]
-      deps += [ "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics" ]
+      deps += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
+      if (ace_enable_gpu) {
+        defines += [ "ACE_ENABLE_GPU" ]
+      }
+      if (current_os == "mingw") {
+        defines += [ "WINDOWS_PLATFORM" ]
+      }
     }
-
     if (rosen_is_ohos) {
       public_deps +=
           [ "$graphic_2d_root/rosen/modules/frame_analyzer:libframe_analyzer" ]

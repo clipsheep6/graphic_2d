@@ -28,6 +28,7 @@
 #include "include/gpu/GrBackendSurface.h"
 #else
 #include "draw/surface.h"
+#include "image/gpu_context.h"
 #endif
 
 #include "animation/rs_animation_manager.h"

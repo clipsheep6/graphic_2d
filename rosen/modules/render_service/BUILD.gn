@@ -140,6 +140,16 @@ ohos_shared_library("librender_service") {
     public_deps += [ "$graphic_2d_root:libvulkan" ]
   }
 
+  if (defined(use_rosen_drawing) && use_rosen_drawing) {
+    defines += [ "USE_ROSEN_DRAWING" ]
+    deps += [ "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics" ]
+  }
+
+  public_deps += [
+    "//third_party/flutter/build/skia:ace_skia_ohos",
+    "//third_party/libpng:libpng",
+  ]
+
   external_deps = [
     "c_utils:utils",
     "eventhandler:libeventhandler",

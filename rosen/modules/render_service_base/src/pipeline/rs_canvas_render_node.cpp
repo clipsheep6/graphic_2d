@@ -110,7 +110,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR);
     // In NEW_SKIA version, L96 code will cause dump if the 3rd parameter is true.
 #ifdef NEW_SKIA
-    RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas, false);
+    RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas, false, false);
 #else
     RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas);
 #endif

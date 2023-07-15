@@ -28,6 +28,7 @@ config("2d_graphics_config") {
     "$src_dir",
     "$drawing_src_dir",
     "$platform_dir/image_native",
+    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/export",
   ]
 }
 

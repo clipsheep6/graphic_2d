@@ -168,6 +168,7 @@ ohos_source_set("render_service_base_src") {
     "-Wno-missing-field-initializers",
     "-Wno-c++11-narrowing",
     "-fvisibility=hidden",
+    "-std=c++17",
   ]
 
   cflags_cc = [
@@ -222,6 +223,15 @@ ohos_source_set("render_service_base_src") {
     "$rosen_root/modules/platform:hilog",
     "$rosen_root/modules/platform:ipc_core",
   ]
+
+  if (defined(use_rosen_drawing) && use_rosen_drawing) {
+    defines += [ "USE_ROSEN_DRAWING" ]
+    deps += [ "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics" ]
+    if (ace_enable_gpu) {
+      defines += [ "ACE_ENABLE_GPU" ]
+    }
+
+  }
 
   if (rosen_cross_platform) {
     public_configs += [

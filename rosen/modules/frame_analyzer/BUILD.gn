@@ -69,6 +69,11 @@ ohos_shared_library("libframe_analyzer") {
     ]
   }
 
+  if (defined(use_rosen_drawing) && use_rosen_drawing) {
+    defines = [ "USE_ROSEN_DRAWING" ]
+    deps += [ "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics" ]
+  }
+
   configs = [ ":libframe_analyzer_config" ]
 
   public_configs = [ ":libframe_analyzer_public_config" ]

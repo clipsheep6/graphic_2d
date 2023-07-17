@@ -99,7 +99,7 @@ bool RSRenderPropertyBase::Marshalling(Parcel& parcel, const std::shared_ptr<RSR
             return parcel.WriteUint64(property->GetId()) && RSMarshallingHelper::Marshalling(parcel, property->Get());
         }
         case RSRenderPropertyType::PROPERTY_PARTICLE: {
-            auto property = std::static_pointer_cast<RSRenderAnimatableProperty<Particle>>(val);
+            auto property = std::static_pointer_cast<RSRenderAnimatableProperty<std::vector<RSRenderParticle>>>(val);
             if (property == nullptr) {
                 return false;
             }
@@ -201,7 +201,7 @@ bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRende
             if (!RSMarshallingHelper::Unmarshalling(parcel, value)) {
                 return false;
             }
-            val.reset(new RSRenderAnimatableProperty<Particle>(value, id, type));
+            val.reset(new RSRenderAnimatableProperty<std::vector<RSRenderParticle>>(value, id, type));
             break;
         }
         default: {

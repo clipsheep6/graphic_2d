@@ -15,38 +15,38 @@
 
 #include "animation/rs_render_particle_animation.h"
 
+#include <memory>
+
+#include "animation/rs_render_particle_system.h"
+#include "animation/rs_render_particle_emitter.h"
 #include "animation/rs_value_estimator.h"
+#include "command/rs_animation_command.h"
+#include "common/rs_particle.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_marshalling_helper.h"
 
 namespace OHOS {
 namespace Rosen {
 RSRenderParticleAnimation::RSRenderParticleAnimation(AnimationId id, const PropertyId& propertyId,
-    const std::shared_ptr<RSRenderPropertyBase>& originValue, const std::shared_ptr<RSRenderPropertyBase>& startValue,
-    const std::shared_ptr<RSRenderPropertyBase>& endValue) : RSRenderPropertyAnimation(id, propertyId, originValue),
-    startValue_(startValue), endValue_(endValue)
-{}
-
-void RSRenderParticleAnimation::SetInterpolator(const std::shared_ptr<RSInterpolator>& interpolator)
-{
-    interpolator_ = interpolator;
+    const std::shared_ptr<RSRenderPropertyBase>& originRenderValue, const std::shared_ptr<RSPropertyBase>& originValue)
+    : RSRenderPropertyAnimation(id, propertyId, originRenderValue)
+{ 
+    particlesParams_ = originValue.Get();
+   
 }
 
-const std::shared_ptr<RSInterpolator>& RSRenderParticleAnimation::GetInterpolator() const
-{
-    return interpolator_;
-}
 
-void RSRenderParticleAnimation::AttachRenderProperty(const std::shared_ptr<RSRenderPropertyBase>& property)
+void RSRenderParticleAnimation::AttachRenderProperty(const std::shared_ptr<RSRenderPropertyBase>& renderProperty)
 {
-    property_ = property;
-    if (property_ == nullptr) {
-        return;
+    auto particleRenderProperty = std::make_shared<RSRenderProperty<std::vector<RSRenderParticle>>>(property);
+    // auto particleRenderProperty = std::make_shared<RSRenderParticle>(property);
+    auto particleRenderModifier = std::make_shared<RSParticleRenderModifier>(renderProperty);
+    auto target = GetTarget();
+    if (target) {
+        target->AddModifier(particleRenderModifier);
     }
-    InitValueEstimator();
-    if (originValue_ != nullptr) {
-        property_->SetPropertyType(originValue_->GetPropertyType());
-    }
+    // 动画结束的时候将modifier清掉
+    // node->RemoveModifier(PROPERTYid);
 }
 
 bool RSRenderParticleAnimation::Marshalling(Parcel& parcel) const
@@ -93,36 +93,63 @@ bool RSRenderParticleAnimation::ParseParam(Parcel& parcel)
     return true;
 }
 
-void RSRenderParticleAnimation::OnSetFraction(float fraction)
+bool RSRenderParticleAnimation::Animate(int64_t time)
 {
-    OnAnimateInner(fraction, linearInterpolator_);
-    SetFractionInner(valueEstimator_->EstimateFraction(interpolator_));
+    // time 就是当前的时间，GetLastFrameTime获取上一帧的时间，
+    int64_t deltaTime = time - animationFraction_.GetLastFrameTime();
+    auto particleSystem = RSRenderParticleSystem(particlesParams_);
+    particleSystem->simulation(deltaTime);
+    auto emitter = RSRenderParticleEmitter(particlesParams_);
+    emitter->Emit(deltaTime);
+    //update(time);
 }
 
-void RSRenderParticleAnimation::OnAnimate(float fraction)
-{
-    //实现粒子动画仿真
-    OnAnimateInner(fraction, interpolator_);
-}
+// void RSRenderParticleAnimation::OnAnimate(float fraction)
+// {
+//     //实现粒子动画仿真
+//     //Particle simulation calculations
+//     auto particle = std::static_pointer_cast<RSRenderAnimatableProperty<Particle>>(GetOriginValue());
+//     if (GetOriginValue()->GetPropertyType() == RSRenderPropertyType::PROPERTY_PARTICLE) {
 
-void RSRenderParticleAnimation::OnAnimateInner(float fraction, const std::shared_ptr<RSInterpolator>& interpolator)
+
+
+
+//         auto particleSystem = RSRenderParticleSystem(startValue_);
+//         update(fraction);
+//         SetAnimationValue(endValue_);
+//         return;
+//     }
+// }
+
+
+
+
+RSRenderParticleAnimation::Emit()
 {
-    if (GetPropertyId() == 0) {
-        return;
+    auto emitter = RSRenderParticleEmitter::RSRenderParticleEmitter(particlesParams_);
+    auto particles = emitter->getParticles();
+    //particles 是 RSRenderParticle的数组
+    auto particleRenderProperty = std::make_shared<RSRenderProperty<std::vector<RSRenderParticle>>>(particles, GetPropertyId());
+    auto particleRenderModifier = std::make_shared<RSParticleRenderModifier>(particleRenderProperty);
+    auto target = GetTarget();
+    if (target) {
+        target->AddModifier(particleRenderModifier);
     }
-
-    if (valueEstimator_ == nullptr) {
-        return;
-    }
-    valueEstimator_->UpdateAnimationValue(interpolator_->Interpolate(fraction), GetAdditive());
+    //auto animation =
+    //    std::make_shared<RSRenderParticleAnimation>(GetId(), GetPropertyId(), originValue_->GetRenderProperty());
+	//animation->AttachRenderProperty(particleRenderProperty);
 }
 
-void RSRenderParticleAnimation::InitValueEstimator()
+
+void RSRenderParticleAnimation::update(int64_t deltaTime)
 {
-    if (valueEstimator_ == nullptr) {
-        valueEstimator_ = property_->CreateRSValueEstimator(RSValueEstimatorType::CURVE_VALUE_ESTIMATOR);
-    }
-    valueEstimator_->InitParticleAnimationValue(property_, startValue_, endValue_, lastValue_);
+    // 每帧更新数据
+    // 设置到properties
+    // drawParticle拿到properties2 画出来
+    SetAnimationValue(XXX);
 }
+
+}
+
 } // namespace Rosen
 } // namespace OHOS

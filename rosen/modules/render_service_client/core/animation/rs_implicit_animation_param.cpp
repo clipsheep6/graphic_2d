@@ -65,21 +65,21 @@ std::shared_ptr<RSAnimation> RSImplicitCurveAnimationParam::CreateAnimation(std:
     return curveAnimation;
 }
 
-RSImplicitCurveAnimationParam::RSImplicitParticleAnimationParam(
-    const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingParticle& timingCurve)
-    : RSImplicitAnimationParam(timingProtocol), timingCurve_(timingCurve)
-{
-    animationType_ = ImplicitAnimationParamType::PARTICLE;
-}
+// RSImplicitParticleAnimationParam::RSImplicitParticleAnimationParam(const RSAnimationTimingProtocol& timingProtocol)
+//     : RSImplicitAnimationParam(timingProtocol)
+// {
+//     animationType_ = ImplicitAnimationParamType::PARTICLE;
+// }
 
-std::shared_ptr<RSAnimation> RSImplicitParticleAnimationParam::CreateAnimation(std::shared_ptr<RSPropertyBase> property,
-    const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const
-{
-    auto ParticleAnimation = std::make_shared<RSParticleAnimation>(property);
+// std::shared_ptr<RSAnimation> RSImplicitParticleAnimationParam::CreateAnimation(std::shared_ptr<RSPropertyBase> property,
+//     const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const
+// {
+//     auto ParticleAnimation = std::make_shared<RSParticleAnimation>(property);
     
-    ApplyTimingProtocol(ParticleAnimation);
-    return ParticleAnimation;
-}
+//     //ApplyTimingProtocol(ParticleAnimation);
+//     return ParticleAnimation;
+    
+// }
 
 RSImplicitKeyframeAnimationParam::RSImplicitKeyframeAnimationParam(
     const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve, float fraction)

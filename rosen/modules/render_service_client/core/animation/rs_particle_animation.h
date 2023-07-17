@@ -28,24 +28,16 @@ class RSRenderParticleAnimation;
 
 class RSC_EXPORT RSParticleAnimation : public RSPropertyAnimation {
 public:
-    RSParticleAnimation(std::shared_ptr<RSPropertyBase> property);
-    RSParticleAnimation(std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
-        const std::shared_ptr<RSPropertyBase>& endValue);
+    RSParticleAnimation(std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& endValue);
     virtual ~RSParticleAnimation() = default;
-
-    void SetTimingParticle(const RSAnimationTimingParticle& timingParticle);
-
-    const RSAnimationTimingParticle& GetTimingParticle() const;
 
 protected:
     void OnStart() override;
-
+    void Emit();
 private:
     void StartRenderAnimation(const std::shared_ptr<RSRenderParticleAnimation>& animation);
-
-    void StartUIAnimation(const std::shared_ptr<RSRenderParticleAnimation>& animation);
-
-    RSAnimationTimingParticle timingParticle_ { RSAnimationTimingParticle::DEFAULT };
+    // std::shared_ptr<RSPropertyBase> property_;
+    // std::shared_ptr<RSPropertyBase> endValue_;
 };
 } // namespace Rosen
 } // namespace OHOS

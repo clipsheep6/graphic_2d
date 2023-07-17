@@ -573,13 +573,13 @@ float RSProperties::GetTranslateZ() const
 }
 
 
-void RSProperties::SetParticle(Particle particle)
+void RSProperties::SetParticle(RSRenderParticle particle)
 {
     particle_ = particle;
     SetDirty();
 }
 
-float RSProperties::GetParticle() const
+RSRenderParticle RSProperties::GetParticle() const
 {
     return particle_;
 }

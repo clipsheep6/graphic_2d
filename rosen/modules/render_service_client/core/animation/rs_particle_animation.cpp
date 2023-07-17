@@ -17,42 +17,21 @@
 
 #include "animation/rs_animation_common.h"
 #include "animation/rs_render_particle_animation.h"
+#include "animation/rs_render_particle_emitter.h"
 #include "command/rs_animation_command.h"
+#include "modifier/rs_property.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_node.h"
-#include "modifier/rs_property.h"
 
 namespace OHOS {
 namespace Rosen {
-RSParticleAnimation::RSParticleAnimation(std::shared_ptr<RSPropertyBase> property) : RSPropertyAnimation(property)
-{
-    isDelta_ = true;
-}
-
-RSParticleAnimation::RSParticleAnimation(std::shared_ptr<RSPropertyBase> property,
-    const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue)
+RSParticleAnimation::RSParticleAnimation(
+    std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& endValue)
     : RSPropertyAnimation(property)
 {
-    isDelta_ = false;
-    startValue_ = startValue;
     endValue_ = endValue;
 }
-
-void RSParticleAnimation::SetTimingParticle(const RSAnimationTimingParticle& timingParticle)
-{
-    if (timingParticle.type_ != RSAnimationTimingParticle::ParticleType::INTERPOLATING) {
-        ROSEN_LOGE("RSParticleAnimation::SetTimingParticle: invalid timing particle type");
-        return;
-    }
-    timingParticle_ = timingParticle;
-}
-
-const RSAnimationTimingParticle& RSParticleAnimation::GetTimingParticle() const
-{
-    return timingParticle_;
-}
-
 void RSParticleAnimation::StartRenderAnimation(const std::shared_ptr<RSRenderParticleAnimation>& animation)
 {
     auto target = GetTarget().lock();
@@ -68,26 +47,29 @@ void RSParticleAnimation::StartRenderAnimation(const std::shared_ptr<RSRenderPar
     }
 }
 
-void RSParticleAnimation::StartUIAnimation(const std::shared_ptr<RSRenderParticleAnimation>& animation)
+// emit --> particleRenderProperty -->RSProperties::setParticle(particle2);
+void RSParticleAnimation::Emit()
 {
-    StartCustomAnimation(animation);
+    //particlesParams 是particleParams的数组
+    auto particlesParams = property_.Get();
+    auto id = property_.GetId();
+    auto emitter = RSRenderParticleEmitter::RSRenderParticleEmitter(particlesParams);
+    auto particles = emitter->getParticles();
+    //particles 是 RSRenderParticle的数组
+    auto particleRenderProperty = std::make_shared<RSRenderProperty<std::vector<RSRenderParticle>>>(particles, id);
+    auto animation =
+        std::make_shared<RSRenderParticleAnimation>(GetId(), GetPropertyId(), originValue_->GetRenderProperty());
+	animation->AttachRenderProperty(particleRenderProperty);
 }
 
 void RSParticleAnimation::OnStart()
 {
     RSPropertyAnimation::OnStart();
-    auto interpolator = timingParticle_.GetInterpolator(GetDuration());
-    auto animation = std::make_shared<RSRenderParticleAnimation>(GetId(), GetPropertyId(),
-        originValue_->GetRenderProperty(), startValue_->GetRenderProperty(), endValue_->GetRenderProperty());
-    animation->SetInterpolator(interpolator);
-    animation->SetAdditive(GetAdditive());
-    UpdateParamToRenderAnimation(animation);
-    if (isCustom_) {
-        animation->AttachRenderProperty(property_->GetRenderProperty());
-        StartUIAnimation(animation);
-    } else {
-        StartRenderAnimation(animation);
-    }
+    auto animation =
+        std::make_shared<RSRenderParticleAnimation>(GetId(), GetPropertyId(), originValue_->GetRenderProperty(), originValue_);
+    //animation->SetAdditive(GetAdditive());
+    // UpdateParamToRenderAnimation(animation);
+    StartRenderAnimation(animation);
 }
 } // namespace Rosen
 } // namespace OHOS

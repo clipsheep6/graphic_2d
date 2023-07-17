@@ -72,7 +72,7 @@ public:
 
 class RSB_EXPORT RSCustomInterpolator : public RSInterpolator {
 public:
-    RSCustomInterpolator(const std::function<float(float)>& func, int duration);
+    RSCustomInterpolator(const std::function<float(float)>& func, int  );
     virtual ~RSCustomInterpolator() = default;
 
     float Interpolate(float input) const override;

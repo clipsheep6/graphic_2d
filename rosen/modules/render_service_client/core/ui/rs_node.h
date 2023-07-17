@@ -20,11 +20,11 @@
 #include "animation/rs_animation_timing_curve.h"
 #include "animation/rs_animation_timing_protocol.h"
 #include "animation/rs_motion_path_option.h"
+#include "animation/rs_particle_params.h"
 #include "animation/rs_transition_effect.h"
 #include "command/rs_animation_command.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
-#include "common/rs_particle.h"
 #include "modifier/rs_modifier_extractor.h"
 #include "modifier/rs_modifier_type.h"
 #include "modifier/rs_showing_properties_freezer.h"
@@ -215,7 +215,7 @@ public:
 
     void SetEnvForegroundColor(uint32_t colorValue);
     void SetEnvForegroundColorStrategy(ForegroundColorStrategyType colorType);
-    void SetParticleParams(ParticleSystem particle);
+    void SetParticleParams(std::vector<ParticleParams>& particleParams);
     void SetForegroundColor(uint32_t colorValue);
     void SetBackgroundColor(uint32_t colorValue);
     void SetBackgroundShader(const std::shared_ptr<RSShader>& shader);
@@ -392,7 +392,6 @@ private:
     friend class RSExtendedModifier;
     friend class RSGeometryTransModifier;
     friend class RSImplicitAnimator;
-    friend class RSParticleAnimation;
     friend class RSInterpolatingSpringAnimation;
     friend class RSKeyframeAnimation;
     friend class RSModifier;

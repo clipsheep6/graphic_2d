@@ -2212,79 +2212,43 @@ sk_sp<SkShader> RSPropertiesPainter::MakeDynamicLightUpShader(
 #endif
 #endif
 
-void RSPropertiesPainter::DrawDynamicLightUp(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+void RSPropertiesPainter::DrawParticle(const RSProperties& properties, SkCanvas& canvas)
 {
-#ifndef USE_ROSEN_DRAWING
-#ifdef NEW_SKIA
-    SkSurface* skSurface = canvas.GetSurface();
-    if (skSurface == nullptr) {
-        ROSEN_LOGD("RSPropertiesPainter::DrawDynamicLightUp skSurface is null");
-        return;
-    }
-    SkAutoCanvasRestore acr(&canvas, true);
-    if (properties.GetClipBounds() != nullptr) {
-        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
-    } else {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
-    }
-
-    auto clipBounds = canvas.getDeviceClipBounds();
-    auto image = skSurface->makeImageSnapshot(clipBounds);
-    if (image == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawDynamicLightUp image is null");
-        return;
-    }
-    auto imageShader = image->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
-    auto shader = MakeDynamicLightUpShader(
-        properties.GetDynamicLightUpRate().value(), properties.GetDynamicLightUpDegree().value(), imageShader);
-    SkPaint paint;
-    paint.setShader(shader);
-    canvas.resetMatrix();
-    canvas.translate(clipBounds.left(), clipBounds.top());
-    canvas.drawPaint(paint);
-#endif
-#endif
-}
-
-#ifndef USE_ROSEN_DRAWING
-#ifdef NEW_SKIA
-sk_sp<SkShader> RSPropertiesPainter::MakeDynamicLightUpShader(
-    float dynamicLightUpRate, float dynamicLightUpDeg, sk_sp<SkShader> imageShader)
-{
-    static constexpr char prog[] = R"(
-        uniform half dynamicLightUpRate;
-        uniform half dynamicLightUpDeg;
-        uniform shader imageShader;
-
-        half4 main(float2 coord) {
-            vec3 c = vec3(imageShader.eval(coord).r * 255,
-                imageShader.eval(coord).g * 255, imageShader.eval(coord).b * 255);
-            float x = 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
-            float y = (0 - dynamicLightUpRate) * x + dynamicLightUpDeg * 255;
-            float R = clamp((c.r + y) / 255, 0.0, 1.0);
-            float G = clamp((c.g + y) / 255, 0.0, 1.0);
-            float B = clamp((c.b + y) / 255, 0.0, 1.0);
-            return vec4(R, G, B, 1.0);
-        }
-    )";
-    auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
-    if (!effect) {
-        ROSEN_LOGE("MakeDynamicLightUpShader::RuntimeShader effect error: %s\n", err.c_str());
-        return nullptr;
-    }
-    SkRuntimeShaderBuilder builder(effect);
-    builder.child("imageShader") = imageShader;
-    builder.uniform("dynamicLightUpRate") = dynamicLightUpRate;
-    builder.uniform("dynamicLightUpDeg") = dynamicLightUpDeg;
-    return builder.makeShader(nullptr, false);
-}
-#endif
-#endif
-
-void RSPropertiesPainter::DrawParticle(const RSProperties& properties, RSPaintFilterCanvas& canvas)
-{
-    // 画粒子
-    
+    // 画粒子。properties是个粒子数组，判断粒子是否alive，然后取当前粒子的属性值
+    auto particles = properties.GetParticles();
+    for (int i = 0; i < particles.size(); i++) 
+	{ 
+		if (particles[i].IsAlive()) { 
+			// Get particle properties 
+            auto position = particles[i].GetPosition();
+			float opacity = particles[i].GetOpacity();
+            auto particleType = particles[i].GetParticleType();
+            SkPaint paint;
+            paint.setAntiAlias(true);
+            paint.setAlphaf(opacity);
+            if (particleType == ParticleType::POINTS) {
+                auto radius = particles[i].GetRadius();
+			    Color color = particles[i].GetColor();
+                //draw point
+                paint.setColor(color.AsArgbInt());
+                canvas.drawCircle(position.x_, position.y_, radius, paint);
+            } else {
+            //     auto imageFilter = particles[i].GetImageFilter();
+            //     paint.setImageFilter(imageFilter);
+            //     auto image = particles[i].GetRSImage(); 
+            //     SkAutoCanvasRestore acr(&canvas, true);
+            //     auto size = particles[i].GetParticleSize();
+            //     RRect rrect = RRect({position.x_, position.y_, size.width_, size.height_}, {0, 0, 0, 0});;
+            //     canvas.clipRRect(RRect2SkRRect(rrect), antiAlias);
+            //     auto boundsRect = Rect2SkRect(properties.GetBoundsRect());
+            // #ifdef NEW_SKIA
+            //     Image->CanvasDrawImage(canvas, boundsRect, SkSamplingOptions(), paint, true);
+            // #else
+            //     image->CanvasDrawImage(canvas, boundsRect, paint, true);
+            // #endif
+            }
+		}
+	} 
 }
 
 } // namespace Rosen

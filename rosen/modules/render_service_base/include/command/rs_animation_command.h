@@ -136,7 +136,7 @@ ADD_COMMAND(RSAnimationCreateCurve, ARG(ANIMATION, ANIMATION_CREATE_CURVE, Anima
     NodeId, std::shared_ptr<RSRenderCurveAnimation>))
 
 // create particle animation
-ADD_COMMAND(RSAnimationCreateParticle, ARG(ANIMATION, ANIMATION_CREATE_PARTICLE, AnimationCommandHelper::CreateAnimation,
+ADD_COMMAND(RSAnimationCreateParticle, ARG(ANIMATION, ANIMATION_CREATE_PARTICLE, AnimationCommandHelper::CreateParticleAnimation,
     NodeId, std::shared_ptr<RSRenderParticleAnimation>))
 
 // create keyframe animation

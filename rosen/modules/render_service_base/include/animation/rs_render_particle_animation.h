@@ -16,46 +16,45 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_PARTICLE_ANIMATION_H
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_PARTICLE_ANIMATION_H
 
+#include "rs_render_particle.h"
+
 #include "animation/rs_interpolator.h"
 #include "animation/rs_render_property_animation.h"
+#include "modifier/rs_property.h"
 #include "common/rs_macros.h"
 
 namespace OHOS {
 namespace Rosen {
 class RSB_EXPORT RSRenderParticleAnimation : public RSRenderPropertyAnimation {
 public:
-    RSRenderParticleAnimation(AnimationId id, const PropertyId& propertyId,
-        const std::shared_ptr<RSRenderPropertyBase>& originValue,
-        const std::shared_ptr<RSRenderPropertyBase>& startValue,
-        const std::shared_ptr<RSRenderPropertyBase>& endValue);
+    RSRenderParticleAnimation(AnimationId id, const RSRenderParticle renderParticle);
 
     virtual ~RSRenderParticleAnimation() = default;
-
-    void SetInterpolator(const std::shared_ptr<RSInterpolator>& interpolator);
-
-    const std::shared_ptr<RSInterpolator>& GetInterpolator() const;
 
     bool Marshalling(Parcel& parcel) const override;
 
     [[nodiscard]] static RSRenderParticleAnimation* Unmarshalling(Parcel& parcel);
 protected:
-    void OnSetFraction(float fraction) override;
-
-    void OnAnimate(float fraction) override;
-
-    void InitValueEstimator() override;
-    
+    bool Animate(int64_t time) override;
     void AttachRenderProperty(const std::shared_ptr<RSRenderPropertyBase>& property) override;
 
+    // void OnSetFraction(float fraction) override;
+    // void OnAnimate(float fraction) override;
+    // void InitValueEstimator() override;
+    // void StartRenderAnimation(const std::shared_ptr<RSNode>& target);
+    // RSAnimationFraction animationFraction_;
 private:
     bool ParseParam(Parcel& parcel) override;
     RSRenderParticleAnimation() = default;
-    void OnAnimateInner(float fraction, const std::shared_ptr<RSInterpolator>& interpolator);
+    // void OnAnimateInner(float fraction, const std::shared_ptr<RSInterpolator>& interpolator);
 
-    std::shared_ptr<RSRenderPropertyBase> startValue_ {};
-    std::shared_ptr<RSRenderPropertyBase> endValue_ {};
-    std::shared_ptr<RSInterpolator> interpolator_ { RSInterpolator::DEFAULT };
-    inline static std::shared_ptr<RSInterpolator> linearInterpolator_ { std::make_shared<LinearInterpolator>() };
+    // std::shared_ptr<RSRenderPropertyBase> startValue_ {};
+    // std::shared_ptr<RSRenderPropertyBase> endValue_ {};
+    // std::shared_ptr<RSInterpolator> interpolator_ { RSInterpolator::DEFAULT };
+    // inline static std::shared_ptr<RSInterpolator> linearInterpolator_ { std::make_shared<LinearInterpolator>() };
+
+    std::vector<ParticleParams> particlesParams_;
+    RSRenderParticle renderParticle_;
 };
 } // namespace Rosen
 } // namespace OHOS

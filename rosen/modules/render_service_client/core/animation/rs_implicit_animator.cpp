@@ -369,11 +369,6 @@ void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& 
             animation = curveImplicitParam->CreateAnimation(property, startValue, endValue);
             break;
         }
-        case ImplicitAnimationParamType::PARTICLE: {
-            //处理particle动画流程
-            auto particleImplicitParam = static_cast<RSImplicitParticleAnimationParam*>(params.get());
-            animation = particleImplicitParam->CreateAnimation(property, startValue, endValue);
-        }
         case ImplicitAnimationParamType::KEYFRAME: {
             auto keyframeImplicitParam = static_cast<RSImplicitKeyframeAnimationParam*>(params.get());
             auto& keyframeAnimations = keyframeAnimations_.top();
@@ -457,5 +452,6 @@ void RSImplicitAnimator::ExecuteWithoutAnimation(const std::function<void()>& ca
     callback();
     implicitAnimationDisabled_ = implicitAnimationDisabled;
 }
+
 } // namespace Rosen
 } // namespace OHOS

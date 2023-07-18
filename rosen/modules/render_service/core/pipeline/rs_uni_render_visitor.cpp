@@ -62,6 +62,7 @@ namespace Rosen {
 namespace {
 constexpr uint32_t PHONE_MAX_APP_WINDOW_NUM = 1;
 constexpr uint32_t CACHE_MAX_UPDATE_TIME = 5;
+constexpr size_t SINGLE_DIRTY_MAX_NUM = 10;
 static const std::string CAPTURE_WINDOW_NAME = "CapsuleWindow";
 static std::map<NodeId, uint32_t> cacheRenderNodeMap = {};
 static uint32_t cacheReuseTimes = 0;
@@ -448,7 +449,7 @@ void RSUniRenderVisitor::ParallelPrepareDisplayRenderNodeChildrens(RSDisplayRend
 #endif
 }
 
-bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& node)
+bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& node, std::set<NodeId>& activeNodeIds)
 {
     // dirtyFlag_ includes leashWindow dirty
     // window layout change(e.g. move or zooming) | proxyRenderNode's cmd
@@ -456,7 +457,10 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& nod
         return false;
     }
     // if node has to be prepared, it's not static
-    if (RSMainThread::Instance()->CheckNodeHasToBePreparedByPid(node.GetId())) {
+    if (RSMainThread::Instance()->CheckNodeHasToBePreparedByPid(node.GetId(), activeNodeIds)) {
+        if (node.IsMainWindowType() && activeGeoDirtyNodes_.find(node.GetId()) != activeGeoDirtyNodes_.end()) {
+            return true;
+        }
         return false;
     }
     if (node.IsAppWindow()) {
@@ -464,7 +468,8 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& nod
         // [Attention] node's ability pid could be different
         auto abilityNodeIds = node.GetAbilityNodeIds();
         if (std::any_of(abilityNodeIds.begin(), abilityNodeIds.end(),
-                [&](uint64_t nodeId) { return RSMainThread::Instance()->CheckNodeHasToBePreparedByPid(nodeId); })) {
+                [&](uint64_t nodeId) {
+                    return RSMainThread::Instance()->CheckNodeHasToBePreparedByPid(nodeId, activeNodeIds); })) {
             return false;
         }
     }
@@ -479,6 +484,204 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& nod
     }
     // static surface keeps same position
     curDisplayNode_->UpdateSurfaceNodePos(node.GetId(), curDisplayNode_->GetLastFrameSurfacePos(node.GetId()));
+    return true;
+}
+
+void RSUniRenderVisitor::UpdateAppSelfDrawingSurfaceInfo(std::shared_ptr<RSSurfaceRenderNode> nodeParent)
+{
+    if (!nodeParent || !curDisplayNode_) {
+        return;
+    }
+    auto dirtyManager = nodeParent->GetDirtyManager();
+    std::string dirtySelfDrawing;
+    if (dirtyManager) {
+        // update current app selfdrawing nodes
+        for (auto selfDrawingNode : nodeParent->GetChildSelfDrawingNodes()) {
+            auto subNode = selfDrawingNode.lock();
+            if (!subNode || !subNode->IsOnTheTree()) {
+                continue;
+            }
+            if (subNode->IsHardwareEnabledType()) {
+                // collect app window node's child hardware enabled node
+                if (subNode->GetBuffer() != nullptr) {
+                    nodeParent->AddChildHardwareEnabledNode(subNode);
+                    subNode->SetLocalZOrder(localZOrder_++);
+                }
+                if ((!IsHardwareComposerEnabled() && subNode->IsCurrentFrameBufferConsumed()) ||
+                    (IsHardwareComposerEnabled() && !subNode->IsHardwareForcedDisabled() &&
+                    !subNode->IsLastFrameHardwareEnabled())) {
+                    dirtyManager->MergeDirtyRect(subNode->GetOldDirtyInSurface());
+                    dirtySelfDrawing += "hwc[" + std::to_string(subNode->GetId()) + "] ";
+                }
+            } else if (subNode->IsCurrentFrameBufferConsumed()) {
+                dirtyManager->MergeDirtyRect(subNode->GetOldDirtyInSurface());
+                dirtySelfDrawing += "swc[" + std::to_string(subNode->GetId()) + "] ";
+            }
+        }
+        RS_TRACE_NAME_FMT("RSUniRenderVisitor::UpdateAppSelfDrawingSurfaceInfo: node %" PRIu64 " [%s],"
+            " update selfDrawing:%s, IsDirty: %d, dirtyRect: %s", nodeParent->GetId(), 
+            nodeParent->GetName().c_str(), dirtySelfDrawing.c_str(), static_cast<int>(dirtyManager->IsDirty()),
+            dirtyManager->GetDirtyRegion().ToString().c_str());
+    }
+    dirtySurfaceNodeMap_.emplace(nodeParent->GetId(), nodeParent);
+    curDisplayNode_->UpdateSurfaceNodePos(nodeParent->GetId(),
+        curDisplayNode_->GetLastFrameSurfacePos(nodeParent->GetId()));
+}
+
+void RSUniRenderVisitor::UpdateFilterInfoAntiTraversal(std::shared_ptr<RSRenderNode> node,
+    std::shared_ptr<RSSurfaceRenderNode> parentNode)
+{
+    if (!node || !parentNode || !node->GetRenderProperties().NeedFilter()) {
+        return;
+    }
+    auto directParent = node->GetParent().lock();
+    while (directParent && !directParent->ChildHasFilter()) {
+        directParent->SetChildHasFilter(true);
+        directParent = directParent->GetParent().lock();
+    }
+    // [planning] collect both surfacenode and canvasnode info
+    if (auto renderChild = RSRenderNode::ReinterpretCast<RSCanvasRenderNode>(node)) {
+        auto dirtyManager = parentNode->GetDirtyManager();
+        if (dirtyManager && dirtyManager->IsTargetForDfx()) {
+            dirtyManager->UpdateDirtyRegionInfoForDfx(node->GetId(), RSRenderNodeType::CANVAS_NODE,
+                DirtyRegionType::FILTER_RECT, node->GetOldDirtyInSurface());
+        }
+        parentNode->UpdateChildrenFilterRects(node->GetOldDirtyInSurface());
+    }
+}
+
+bool RSUniRenderVisitor::ClassifyGeoContentDirtyNodes(std::set<NodeId>& activeNodeIds,
+        std::set<std::shared_ptr<RSRenderNode>>& geoDirtyNodes,
+        std::set<std::shared_ptr<RSRenderNode>>& contentDirtyNodes) const
+{
+    std::string subInfo;
+    for (auto nodeId : activeNodeIds) {
+        // create animate
+        if (nodeId == 0) {
+            return false;
+        }
+        // skip visited nodes in same pid window
+        if (activeProcessVisitedNodes_.find(nodeId) != activeProcessVisitedNodes_.end()) {
+            continue;
+        }
+        subInfo += "nodeId " + std::to_string(nodeId);
+        auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(nodeId);
+        auto childNode = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(node);
+        if (!childNode || !childNode->IsOnTheTree()) {
+            subInfo += " is invalid, ";
+            continue;
+        }
+        // node may have both geo and content dirty
+        if (childNode->GetRenderProperties().IsGeoDirty() || childNode->IsTreeRelationshipChange()) {
+            subInfo += " is geodirty, ";
+            geoDirtyNodes.emplace(childNode);
+        } else if (childNode->GetAlphaChanged() || childNode->HasDisappearingTransition(false)) {
+            subInfo += " is geodirty(alpha/anime), ";
+            geoDirtyNodes.emplace(childNode);
+        } else {
+            subInfo += " is contentDirty, dirtyInSurface %s " + childNode->GetOldDirtyInSurface().ToString();
+            if (childNode->GetOldDirtyInSurface().IsEmpty()) {
+                RS_TRACE_NAME_FMT("RSUniRenderVisitor::CheckIfDynamicWidgetPrepared: content node %" PRIu64 " "
+                    "has empty dirty", childNode->GetId());
+                return false;
+            }
+            // here just mark pure content dirty nodes
+            contentDirtyNodes.emplace(childNode);
+        }
+    }
+    RS_TRACE_NAME_FMT("RSUniRenderVisitor::ClassifyGeoContentDirtyNodes: node %" PRIu64 " [%s], "
+        "unvisited activeNodeIds|geo|content DirtyNodes_ size: (%d, %d, %d), subInfo: %s", curSurfaceNode_->GetId(),
+        curSurfaceNode_->GetName().c_str(), static_cast<int>(activeNodeIds.size()),
+        static_cast<int>(geoDirtyNodes.size()), static_cast<int>(contentDirtyNodes.size()), subInfo.c_str());
+    return true;
+}
+
+bool RSUniRenderVisitor::RecognizeGeoDirtyMainWindow(const std::set<std::shared_ptr<RSRenderNode>>& geoDirtyNodes)
+{
+    if (geoDirtyNodes.empty() || !curSurfaceNode_) {
+        return false;
+    }
+    std::string geoChange;
+    for (auto childNode : geoDirtyNodes) {
+        auto nodeParent = childNode;
+        // find app parent
+        while (nodeParent) {
+            auto appParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(nodeParent);
+            if (appParent && appParent->IsMainWindowType()) {
+                activeProcessVisitedNodes_.emplace(childNode->GetId());
+                activeGeoDirtyNodes_.emplace(appParent->GetId());
+                geoChange += " app " + appParent->GetName() + " id " + std::to_string(appParent->GetId());
+                break;
+            }
+            nodeParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(nodeParent->GetParent().lock());
+        }
+    }
+    RS_TRACE_NAME_FMT("RecognizeGeoDirtyMainWindow: marked geo dirty appSurface: %s", geoChange.c_str());
+    return (activeGeoDirtyNodes_.find(curSurfaceNode_->GetId()) != activeGeoDirtyNodes_.end());
+}
+
+bool RSUniRenderVisitor::CheckIfDynamicWidgetPrepared(std::set<NodeId>& activeNodeIds)
+{
+    // skip if app window geo dirty
+    if (!curSurfaceNode_ || !curDisplayNode_ || !curSurfaceDirtyManager_ || dirtyFlag_ ||
+        activeGeoDirtyNodes_.find(curSurfaceNode_->GetId()) != activeGeoDirtyNodes_.end()) {
+        return false;
+    }
+    // skip resident process's node
+    if (auto context = curSurfaceNode_->GetContext().lock()) {
+        if (context->GetNodeMap().IsResidentProcessNode(curSurfaceNode_->GetId())) {
+            activeGeoDirtyNodes_.emplace(curSurfaceNode_->GetId());
+            return false;
+        }
+    }
+    // Step 1: sorted geo/content dirty node map
+    std::set<std::shared_ptr<RSRenderNode>> geoDirtyNodes;
+    std::set<std::shared_ptr<RSRenderNode>> contentDirtyNodes;
+    if (!ClassifyGeoContentDirtyNodes(activeNodeIds, geoDirtyNodes, contentDirtyNodes)) {
+        RS_TRACE_NAME_FMT("CheckIfDynamicWidgetPrepared::ClassifyGeoContentDirtyNodes: node %" PRIu64 " [%s], "
+            "has invalid node so cannot skip", curSurfaceNode_->GetId(), curSurfaceNode_->GetName().c_str());
+        return false;
+    }
+    // Step 2: judge if current geo dirty or too many contentDirtyNodes
+    if (RecognizeGeoDirtyMainWindow(geoDirtyNodes) || contentDirtyNodes.size() > SINGLE_DIRTY_MAX_NUM) {
+        RS_TRACE_NAME_FMT("CheckIfDynamicWidgetPrepared::RecognizeGeoDirtyMainWindow: node %" PRIu64 " [%s], "
+            "has geo dirty node or too many contentdirty(%d) so cannot skip",
+            curSurfaceNode_->GetId(), curSurfaceNode_->GetName().c_str(), static_cast<int>(contentDirtyNodes.size()));
+        return false;
+    }
+    // Step 3: execute pure content dirty
+    for (auto childNode : contentDirtyNodes) {
+        // update self's and parent's cache dirty
+        auto nodeParent = childNode;
+        auto appParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(nodeParent);
+        while (nodeParent) {
+            // find root self-drawing cache and update status
+            if (cacheRenderNodeMap.find(nodeParent->GetId()) != cacheRenderNodeMap.end()) {
+                nodeParent->SetDrawingCacheChanged(true);
+            }
+            // find dirtymanager and add dirtyRect
+            if (appParent && appParent->IsMainWindowType()) {
+                if (auto dirtyManager = appParent->GetDirtyManager()) {
+                    dirtyManager->MergeDirtyRect(childNode->GetOldDirtyInSurface());
+                    RS_TRACE_NAME_FMT("CheckIfDynamicWidgetPrepared: node %" PRIu64 " [%s], "
+                        "has content dirtyRect: (%s)", appParent->GetId(), appParent->GetName().c_str(),
+                        dirtyManager->GetDirtyRegion().ToString().c_str());
+                }
+                break;
+            }
+            nodeParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(nodeParent->GetParent().lock());
+            appParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(nodeParent);
+        }
+        // cannot find valid app parent
+        if (!appParent) {
+            return false;
+        }
+        UpdateAppSelfDrawingSurfaceInfo(appParent);
+        // [planning] clean disable filter 
+        UpdateFilterInfoAntiTraversal(childNode, appParent);
+        // mark visited nodes
+        activeProcessVisitedNodes_.emplace(childNode->GetId());
+    }
     return true;
 }
 
@@ -616,6 +819,9 @@ void RSUniRenderVisitor::PrepareTypesOfSurfaceRenderNodeBeforeUpdate(RSSurfaceRe
     }
 
     if (node.IsSelfDrawingType()) {
+        if (curSurfaceNode_) {
+            curSurfaceNode_->AddChildSelfDrawingNode(node.ReinterpretCastTo<RSSurfaceRenderNode>());
+        }
         if (node.IsHardwareEnabledType()) {
             if (!IsHardwareComposerEnabled() &&
                 (node.IsCurrentFrameBufferConsumed() || node.IsLastFrameHardwareEnabled())) {
@@ -630,7 +836,7 @@ void RSUniRenderVisitor::PrepareTypesOfSurfaceRenderNodeBeforeUpdate(RSSurfaceRe
 void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
     RS_TRACE_NAME("RSUniRender::Prepare:[" + node.GetName() + "] pid: " + std::to_string(ExtractPid(node.GetId())) +
-        ", nodeType " + std::to_string(static_cast<uint>(node.GetSurfaceNodeType())));
+        "id: " + std::to_string(node.GetId()) + ", nodeType " + std::to_string(static_cast<uint>(node.GetSurfaceNodeType())));
     if (node.GetName().find(CAPTURE_WINDOW_NAME) != std::string::npos) {
         needCacheImg_ = true;
         captureWindowZorder_ = static_cast<uint32_t>(node.GetRenderProperties().GetPositionZ());
@@ -657,7 +863,8 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
 #endif
     // stop traversal if node keeps static
-    if (isQuickSkipPreparationEnabled_ && CheckIfSurfaceRenderNodeStatic(node)) {
+    std::set<NodeId> activeNodeIds;
+    if (isQuickSkipPreparationEnabled_ && CheckIfSurfaceRenderNodeStatic(node, activeNodeIds)) {
         return;
     }
     node.CleanDstRectChanged();
@@ -705,6 +912,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         && rsSurfaceParent->GetDstRect().IsEmpty()) {
             prepareClipRect_ = RectI {0, 0, 0, 0};
     }
+    bool isChildAdded = node.IsTreeRelationshipChange();
     dirtyFlag_ = node.Update(*curSurfaceDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
         dirtyFlag_, prepareClipRect_);
 
@@ -732,11 +940,19 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         curDisplayNode_->UpdateSurfaceNodePos(node.GetId(), node.GetOldDirty());
 
         if (node.IsAppWindow()) {
+            if (RSSystemParameters::GetQuickSkipPrepareType() == QuickSkipPrepareType::STATIC_WIDGET &&
+                !isChildAdded && CheckIfDynamicWidgetPrepared(activeNodeIds)) {
+                curAlpha_ = alpha;
+                dirtyFlag_ = dirtyFlag;
+                prepareClipRect_ = prepareClipRect;
+                return ;
+            }
             // if update appwindow, its children should not skip
             localZOrder_ = 0.0f;
             isQuickSkipPreparationEnabled_ = false;
             node.ResetAbilityNodeIds();
             node.ResetChildHardwareEnabledNodes();
+            node.ResetChildSelfDrawingNodes();
 #ifndef USE_ROSEN_DRAWING
             boundsRect_ = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
 #else
@@ -854,6 +1070,7 @@ void RSUniRenderVisitor::PrepareProxyRenderNode(RSProxyRenderNode& node)
 {
     // alpha is not affected by dirty flag, always update
     node.SetContextAlpha(curAlpha_);
+    node.SetGlobalAlpha(curAlpha_);
     // skip matrix & clipRegion update if not dirty
     if (!dirtyFlag_) {
         return;
@@ -939,6 +1156,7 @@ void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
     }
 #endif
     curAlpha_ *= property.GetAlpha();
+    node.SetGlobalAlpha(curAlpha_);
     if (rsParent == curSurfaceNode_) {
         const float rootWidth = property.GetFrameWidth() * property.GetScaleX();
         const float rootHeight = property.GetFrameHeight() * property.GetScaleY();
@@ -1118,6 +1336,7 @@ void RSUniRenderVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
 #endif
     const auto& property = node.GetRenderProperties();
     curAlpha_ *= property.GetAlpha();
+    node.SetGlobalAlpha(curAlpha_);
 
     auto parentNode = node.GetParent().lock();
     auto rsParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(parentNode);

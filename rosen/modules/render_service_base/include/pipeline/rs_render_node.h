@@ -442,7 +442,10 @@ public:
     void SetGlobalAlpha(float alpha);
     float GetGlobalAlpha() const;
     virtual void OnAlphaChanged() {}
-
+    virtual bool GetAlphaChanged() const
+    {
+        return (prevGlobalAlpha_ != globalAlpha_);
+    }
 protected:
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
     void AddGeometryModifier(const std::shared_ptr<RSRenderModifier> modifier);
@@ -510,6 +513,7 @@ private:
     bool isMarkDrivenRender_ = false;
     bool paintState_ = false;
     bool isContentChanged_ = false;
+    float prevGlobalAlpha_ = 1.0f;
     float globalAlpha_ = 1.0f;
     std::optional<SharedTransitionParam> sharedTransitionParam_;
 

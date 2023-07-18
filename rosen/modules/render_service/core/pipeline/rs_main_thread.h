@@ -110,13 +110,17 @@ public:
     /* Judge if node has to be prepared based on it corresponding process is active
      * If its pid is in activeProcessPids_ set, return true
      */
-    inline bool CheckNodeHasToBePreparedByPid(NodeId nodeId) const
+    inline bool CheckNodeHasToBePreparedByPid(NodeId nodeId, std::set<NodeId>& activeNodeIds)
     {
-        if (activeProcessPids_.empty()) {
+        if (activeProcessNodeIds_.empty()) {
             return false;
         }
         pid_t pid = ExtractPid(nodeId);
-        return (activeProcessPids_.find(pid) != activeProcessPids_.end());
+        if (activeProcessNodeIds_.find(pid) != activeProcessNodeIds_.end()) {
+            activeNodeIds.insert(activeProcessNodeIds_[pid].begin(), activeProcessNodeIds_[pid].end());
+            return true;
+        }
+        return false;
     }
 
     void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app);
@@ -159,11 +163,11 @@ public:
     std::shared_ptr<Drawing::Image> GetWatermarkImg();
 #endif
     bool GetWatermarkFlag();
-    void AddActivePid(pid_t pid);
     uint64_t GetFrameCount() const
     {
         return frameCount_;
     }
+    void AddActiveNodeId(NodeId id);
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
         std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;
@@ -254,7 +258,7 @@ private:
     std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>> effectiveCommands_;
     std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>> pendingEffectiveCommands_;
     // Collect pids of surfaceview's update(ConsumeAndUpdateAllNodes), effective commands(processCommand) and Animate
-    std::unordered_set<pid_t> activeProcessPids_;
+    std::unordered_map<pid_t, std::set<NodeId>> activeProcessNodeIds_;
     std::unordered_map<pid_t, std::vector<std::unique_ptr<RSTransactionData>>> syncTransactionData_;
     int32_t syncTransactionCount_ { 0 };
 

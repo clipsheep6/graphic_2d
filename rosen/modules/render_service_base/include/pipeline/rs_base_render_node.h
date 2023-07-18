@@ -198,6 +198,11 @@ public:
     // accumulate all valid children's area
     void UpdateChildrenRect(const RectI& subRect);
     void SetDirty();
+    bool IsTreeRelationshipChange() const
+    {
+        return isTreeRelationshipChanged_;
+    }
+
 protected:
     enum class NodeDirty {
         CLEAN = 0,
@@ -221,6 +226,8 @@ private:
     WeakPtr parent_;
     void SetParent(WeakPtr parent);
     bool isOnTheTree_ = false;
+    // record pure tree action
+    bool isTreeRelationshipChanged_ = false;
 
     std::list<WeakPtr> children_;
     std::list<std::pair<SharedPtr, uint32_t>> disappearingChildren_;

@@ -23,7 +23,8 @@ namespace OHOS {
 namespace Rosen {
 
 RSCommandRegister<RSNodeGetShowingPropertyAndCancelAnimation::commandType,
-    RSNodeGetShowingPropertyAndCancelAnimation::commandSubType, RSNodeGetShowingPropertyAndCancelAnimation::Unmarshalling>
+    RSNodeGetShowingPropertyAndCancelAnimation::commandSubType,
+    RSNodeGetShowingPropertyAndCancelAnimation::Unmarshalling>
     RSNodeGetShowingPropertyAndCancelAnimation::registry;
 
 bool RSNodeGetShowingPropertyAndCancelAnimation::Marshalling(Parcel& parcel) const

@@ -92,7 +92,7 @@ public:
 
 protected:
     uint64_t timeoutNS_ = 0;
-    bool result_ = false;
+    bool result_ = true;
 };
 
 } // namespace Rosen

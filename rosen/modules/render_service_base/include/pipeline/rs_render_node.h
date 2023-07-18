@@ -408,6 +408,11 @@ public:
         drawRegion_ = rect;
     }
 
+    std::shared_ptr<RectF> GetDrawRegion() const
+    {
+        return drawRegion_;
+    }
+
     void UpdateDrawRegion();
 #ifndef USE_ROSEN_DRAWING
     void UpdateEffectRegion(std::optional<SkPath>& region) const;
@@ -445,6 +450,15 @@ public:
     void SetGlobalAlpha(float alpha);
     float GetGlobalAlpha() const;
     virtual void OnAlphaChanged() {}
+
+    sk_sp<SkPicture> GetRecordedContents() const
+    {
+        return recordedContents_;
+    }
+    void SetRecordedContents(sk_sp<SkPicture> recordedContents)
+    {
+        recordedContents_ = recordedContents;
+    }
 
 protected:
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
@@ -526,6 +540,8 @@ private:
     float boundsWidth_ = 0.0f;
     float boundsHeight_ = 0.0f;
     std::unordered_set<RSModifierType> dirtyTypes_;
+
+    sk_sp<SkPicture> recordedContents_ = nullptr;
 
     friend class RSRenderTransition;
     friend class RSRenderNodeMap;

@@ -66,6 +66,7 @@ static const std::string CAPTURE_WINDOW_NAME = "CapsuleWindow";
 static std::map<NodeId, uint32_t> cacheRenderNodeMap = {};
 static uint32_t cacheReuseTimes = 0;
 static std::mutex generateNodeContentCacheMutex;
+static std::mutex updateCacheRenderNodeMapMutex;
 
 bool IsFirstFrameReadyToDraw(RSSurfaceRenderNode& node)
 {
@@ -3090,8 +3091,8 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 
 bool RSUniRenderVisitor::GenerateNodeContentCache(RSRenderNode& node)
 {
-    std::lock_guard<std::mutex> lock(generateNodeContentCacheMutex);
     // Node cannot have cache.
+    std::lock_guard<std::mutex> lock(generateNodeContentCacheMutex);
     if (node.GetDrawingCacheType() == RSDrawingCacheType::DISABLED_CACHE) {
         if (cacheRenderNodeMap.count(node.GetId()) > 0) {
             node.SetCacheType(CacheType::NONE);
@@ -3131,6 +3132,7 @@ bool RSUniRenderVisitor::InitNodeCache(RSRenderNode& node)
 
 void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
 {
+    std::lock_guard<std::mutex> lock(updateCacheRenderNodeMapMutex);
     if (InitNodeCache(node)) {
         RS_LOGD("RSUniRenderVisitor::UpdateCacheRenderNodeMap, generate the node cache for the first time.");
         return;

@@ -171,7 +171,6 @@ void VSyncDistributor::ThreadMain()
     sched_setscheduler(0, SCHED_FIFO, &param);
 
     int64_t timestamp;
-    int64_t vsyncCount;
     while (vsyncThreadRunning_ == true) {
         std::vector<sptr<VSyncConnection>> conns;
         {
@@ -179,8 +178,7 @@ void VSyncDistributor::ThreadMain()
             std::unique_lock<std::mutex> locker(mutex_);
             timestamp = event_.timestamp;
             event_.timestamp = 0;
-            vsyncCount = event_.vsyncCount;
-            CollectConnections(waitForVSync, timestamp, conns, vsyncCount);
+            CollectConnections(waitForVSync, timestamp, conns, event_.vsyncCountReference);
             // no vsync signal
             if (timestamp == 0) {
                 // there is some connections request next vsync, enable vsync if vsync disable and
@@ -193,6 +191,7 @@ void VSyncDistributor::ThreadMain()
                         timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
                         event_.timestamp = timestamp;
                         event_.vsyncCount++;
+                        event_.vsyncCountReference++;
                     }
                 } else {
                     // just wait request or vsync signal
@@ -247,6 +246,7 @@ void VSyncDistributor::OnVSyncEvent(int64_t now, int64_t period)
     std::lock_guard<std::mutex> locker(mutex_);
     event_.timestamp = now;
     event_.vsyncCount++;
+    event_.vsyncCountReference++;
     event_.period = period;
     con_.notify_all();
 }
@@ -315,6 +315,7 @@ VsyncError VSyncDistributor::SetVSyncRate(int32_t rate, const sptr<VSyncConnecti
         return VSYNC_ERROR_INVALID_ARGUMENTS;
     }
     connection->rate_ = rate;
+    event_.vsyncCountReference = 0;
     VLOGD("conn name:%{public}s", connection->info_.name_.c_str());
     con_.notify_all();
     return VSYNC_ERROR_OK;

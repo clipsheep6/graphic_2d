@@ -51,6 +51,7 @@ if (graphic_2d_feature_ace_enable_gpu) {
   # real libgl installed in /vendor/lib/chipsetsdk
   libgl = [
     "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:EGL",
+    "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:GLESv2",
     "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:GLESv3",
   ]
 

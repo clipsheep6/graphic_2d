@@ -137,27 +137,41 @@ config("glesv2_public_config") {
   include_dirs = [ "include" ]
 }
 
-ohos_shared_library("GLESv2") {
-  sources = [
-    "src/GLES2/gles2.cpp",
-    "src/thread_private_data_ctl.cpp",
-  ]
-  configs = [ ":glesv2_config" ]
+if (current_os != "ohos") {
+  group("GLESv2") {
+    public_deps = [
+      "//third_party/EGL:libEGL",
+      "//third_party/openGLES:libGLES",
+    ]
+  }
+} else {
+  ohos_shared_library("GLESv2") {
+    sources = [
+      "src/GLES2/gles2.cpp",
+      "src/thread_private_data_ctl.cpp",
+    ]
+    configs = [ ":glesv2_config" ]
 
-  public_configs = [ ":glesv2_public_config" ]
+    public_configs = [ ":glesv2_public_config" ]
 
-  public_deps = [
-    "//third_party/EGL:libEGL",
-    "//third_party/openGLES:libGLES",
-  ]
+    public_deps = [
+      "//third_party/EGL:libEGL",
+      "//third_party/openGLES:libGLES",
+    ]
 
-  external_deps = [ "hilog:libhilog" ]
+    external_deps = [ "hilog:libhilog" ]
 
-  output_name = "GLESv2"
-  output_extension = "so"
+    if (defined(graphic_2d_ext_configs.vendor_root)) {
+      install_enable = false
+    }
 
-  part_name = "graphic_2d"
-  subsystem_name = "graphic"
+    output_name = "GLESv2"
+    output_extension = "so"
+
+    innerapi_tags = [ "platformsdk" ]
+    part_name = "graphic_2d"
+    subsystem_name = "graphic"
+  }
 }
 
 ## Build libGLESv2.so }}}

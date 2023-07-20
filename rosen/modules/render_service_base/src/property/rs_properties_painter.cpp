@@ -1492,12 +1492,8 @@ int RSPropertiesPainter::GetAndResetBlurCnt()
     return blurCnt;
 }
 
-void RSPropertiesPainter::DrawBackground(const RSProperties& properties,
-    RSPaintFilterCanvas& canvas, bool isLeashWindow, bool isAntiAlias)
+void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas, bool isAntiAlias)
 {
-    if (!isLeashWindow) {
-        DrawShadow(properties, canvas);
-    }
     // only disable antialias when background is rect and g_forceBgAntiAlias is false
     bool antiAlias = g_forceBgAntiAlias || !properties.GetCornerRadius().IsZero();
     // clip

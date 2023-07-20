@@ -41,8 +41,7 @@ public:
     static void Clip(SkCanvas& canvas, RectF rect, bool isAntiAlias = true);
     static void SetBgAntiAlias(bool forceBgAntiAlias);
     static bool GetBgAntiAlias();
-    static void DrawBackground(const RSProperties& properties,
-        RSPaintFilterCanvas& canvas, bool isLeashWindow = false, bool isAntiAlias = true);
+    static void DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas, bool isAntiAlias = true);
     static void DrawBorder(const RSProperties& properties, SkCanvas& canvas);
     static void DrawFrame(const RSProperties& properties, RSPaintFilterCanvas& canvas, DrawCmdListPtr& drawCmdList);
     static void GetShadowDirtyRect(RectI& dirtyShadow, const RSProperties& properties,
@@ -104,8 +103,7 @@ private:
     static void Clip(Drawing::Canvas& canvas, RectF rect, bool isAntiAlias = true);
     static void SetBgAntiAlias(bool forceBgAntiAlias);
     static bool GetBgAntiAlias();
-    static void DrawBackground(const RSProperties& properties,
-        RSPaintFilterCanvas& canvas, bool isLeashWindow = false, bool isAntiAlias = true);
+    static void DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas, bool isAntiAlias = true);
     static void DrawBorder(const RSProperties& properties, Drawing::Canvas& canvas);
     static void DrawFrame(const RSProperties& properties, RSPaintFilterCanvas& canvas,
         Drawing::DrawCmdListPtr& drawCmdList);

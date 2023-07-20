@@ -57,6 +57,9 @@ char* FontConfig::GetFileData(const char* fname, int& size)
             fclose(fp);
             return nullptr;
         }
+#ifdef USE_GRAPHIC_TEXT_GINE
+#ifdef BUILD_NON_SDK_VER
+#endif
         if (memset_s(data, size, 0, size) != EOK) {
             LOGSO_FUNC_LINE(ERROR) << "memset failed";
             free(data);
@@ -64,6 +67,11 @@ char* FontConfig::GetFileData(const char* fname, int& size)
             fclose(fp);
             return nullptr;
         }
+#ifdef USE_GRAPHIC_TEXT_GINE
+#else
+            memset(data, 0, size);
+#endif
+#endif
         (void)fread(data, size, 1, fp);
         fclose(fp);
         return data;

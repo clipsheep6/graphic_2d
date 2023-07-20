@@ -525,7 +525,8 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect, bool isLeashWindow)
+void RSPropertiesPainter::DrawShadow(const RSProperties& properties,
+    RSPaintFilterCanvas& canvas, const RRect* rrect, bool isLeashWindow)
 {
     // skip shadow if not valid or cache is enabled
     if (properties.IsSpherizeValid() || !properties.IsShadowValid() ||
@@ -564,7 +565,8 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilt
     }
 }
 #else
-void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect, bool isLeashWindow)
+void RSPropertiesPainter::DrawShadow(const RSProperties& properties,
+    RSPaintFilterCanvas& canvas, const RRect* rrect, bool isLeashWindow)
 {
     // skip shadow if not valid or cache is enabled
     //Todo isCacheEnabled

@@ -327,7 +327,7 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanv
     }
 #endif
 
-    RSPropertiesPainter::DrawBackground(property, canvas, IsLeashWindow());
+    RSPropertiesPainter::DrawBackground(property, canvas);
     RSPropertiesPainter::DrawMask(property, canvas);
     RSPropertiesPainter::DrawFilter(property, canvas, FilterType::BACKGROUND_FILTER);
 #ifndef USE_ROSEN_DRAWING

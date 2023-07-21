@@ -70,7 +70,7 @@ void RSRenderEngine::DrawLayers(RSPaintFilterCanvas& canvas, const std::vector<L
             layer->GetCompositionType() == GraphicCompositionType::GRAPHIC_COMPOSITION_DEVICE_CLEAR) {
             continue;
         }
-        auto nodePtr = static_cast<RSBaseRenderNode*>(layer->GetLayerAdditionalInfo());
+        auto nodePtr = static_cast<RSRenderNode*>(layer->GetLayerAdditionalInfo());
         if (nodePtr == nullptr) {
             RS_LOGE("RSRenderEngine::DrawLayers: node is nullptr!");
             continue;

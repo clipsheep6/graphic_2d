@@ -19,7 +19,7 @@
 #include "pipeline/rs_uni_render_visitor.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_root_render_node.h"
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_proxy_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_display_render_node.h"
@@ -71,9 +71,9 @@ void RSUniRenderVisitorTest::TearDown()
 HWTEST_F(RSUniRenderVisitorTest, PrepareBaseRenderNode001, TestSize.Level1)
 {
     auto rsContext = std::make_shared<RSContext>();
-    auto rsBaseRenderNode = std::make_shared<RSBaseRenderNode>(10, rsContext->weak_from_this());
+    auto RSRenderNode = std::make_shared<RSRenderNode>(10, rsContext->weak_from_this());
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
-    rsUniRenderVisitor->PrepareBaseRenderNode(*rsBaseRenderNode);
+    rsUniRenderVisitor->PrepareChild(*RSRenderNode);
 }
 
 /*
@@ -388,24 +388,24 @@ HWTEST_F(RSUniRenderVisitorTest, SetSurfafaceGlobalDirtyRegion, TestSize.Level1)
 HWTEST_F(RSUniRenderVisitorTest, ParallelCompositionTest, TestSize.Level1)
 {
     auto rsContext = std::make_shared<RSContext>();
-    auto rsBaseRenderNode = std::make_shared<RSBaseRenderNode>(10, rsContext->weak_from_this());
+    auto RSRenderNode = std::make_shared<RSRenderNode>(10, rsContext->weak_from_this());
     RSDisplayNodeConfig displayConfig1 = {
         .screenId = 0,
         .isMirrored = false,
         .mirrorNodeId = 0,
     };
     auto rsDisplayRenderNode1 = std::make_shared<RSDisplayRenderNode>(20, displayConfig1, rsContext->weak_from_this());
-    rsBaseRenderNode->AddChild(rsDisplayRenderNode1);
+    RSRenderNode->AddChild(rsDisplayRenderNode1);
     RSDisplayNodeConfig displayConfig2 = {
         .screenId = 1,
         .isMirrored = true,
         .mirrorNodeId = 20,
     };
     auto rsDisplayRenderNode2 = std::make_shared<RSDisplayRenderNode>(30, displayConfig2, rsContext->weak_from_this());
-    rsBaseRenderNode->AddChild(rsDisplayRenderNode2);
+    RSRenderNode->AddChild(rsDisplayRenderNode2);
 
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
-    bool ret = rsUniRenderVisitor->ParallelComposition(rsBaseRenderNode);
+    bool ret = rsUniRenderVisitor->ParallelComposition(RSRenderNode);
     ASSERT_EQ(ret, true);
 }
 

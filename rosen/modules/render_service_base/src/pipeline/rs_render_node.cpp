@@ -49,8 +49,6 @@ const std::set<RSModifierType> CACHEABLE_ANIMATION_TYPE = {
 const bool FILTER_CACHE_ENABLED = RSSystemProperties::GetFilterCacheEnabled() && RSUniRenderJudgement::IsUniRender();
 }
 
-RSRenderNode::RSRenderNode(NodeId id, std::weak_ptr<RSContext> context) : RSBaseRenderNode(id, context) {}
-
 RSRenderNode::~RSRenderNode()
 {
     if (fallbackAnimationOnDestroy_) {
@@ -232,13 +230,13 @@ void RSRenderNode::UpdateDirtyRegion(
 
 bool RSRenderNode::IsDirty() const
 {
-    return RSBaseRenderNode::IsDirty() || renderProperties_.IsDirty();
+    return dirtyStatus_ != NodeDirty::CLEAN || renderProperties_.IsDirty();
 }
 
 bool RSRenderNode::IsContentDirty() const
 {
     // Considering renderNode, it should consider both basenode's case and its properties
-    return RSBaseRenderNode::IsContentDirty() || renderProperties_.IsContentDirty();
+    return isContentDirty_ || renderProperties_.IsContentDirty();
 }
 
 void RSRenderNode::UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEnabled)
@@ -255,9 +253,9 @@ void RSRenderNode::UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEn
     }
 }
 
-void RSRenderNode::UpdateParentChildrenRect(std::shared_ptr<RSBaseRenderNode> parentNode) const
+void RSRenderNode::UpdateParentChildrenRect(std::shared_ptr<RSRenderNode> parentNode) const
 {
-    auto renderParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(parentNode);
+    auto renderParent = (parentNode);
     if (renderParent) {
         // accumulate current node's all children region(including itself)
         // apply oldDirty_ as node's real region(including overlay and shadow)
@@ -423,7 +421,7 @@ void RSRenderNode::RemoveModifier(const PropertyId& id)
 
 void RSRenderNode::ApplyModifiers()
 {
-    if (!RSBaseRenderNode::IsDirty() || dirtyTypes_.empty()) {
+    if (!RSRenderNode::IsDirty() || dirtyTypes_.empty()) {
         return;
     }
     RSModifierContext context = { renderProperties_ };

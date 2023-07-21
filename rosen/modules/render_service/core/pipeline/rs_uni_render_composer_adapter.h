@@ -52,10 +52,10 @@ private:
         const LayerInfoPtr& layer,
         const ComposeInfo& info,
         const sptr<IConsumerSurface>& surface,
-        RSBaseRenderNode* node) const;
+        RSRenderNode* node) const;
     void SetMetaDataInfoToLayer(const LayerInfoPtr& layer, const ComposeInfo& info,
                                 const sptr<IConsumerSurface>& surface) const;
-    void LayerRotate(const LayerInfoPtr& layer, RSBaseRenderNode& node) const;
+    void LayerRotate(const LayerInfoPtr& layer, RSRenderNode& node) const;
     void DealWithNodeGravity(const RSSurfaceRenderNode& node, ComposeInfo& info) const;
     LayerInfoPtr CreateBufferLayer(RSSurfaceRenderNode& node) const;
 

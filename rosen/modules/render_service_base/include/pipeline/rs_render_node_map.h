@@ -20,7 +20,7 @@
 
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -29,28 +29,28 @@ class RSSurfaceRenderNode;
 class RSDisplayRenderNode;
 class RSB_EXPORT RSRenderNodeMap final {
 public:
-    bool RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>& nodePtr);
+    bool RegisterRenderNode(const std::shared_ptr<RSRenderNode>& nodePtr);
     bool RegisterDisplayRenderNode(const std::shared_ptr<RSDisplayRenderNode>& nodePtr);
     void UnregisterRenderNode(NodeId id);
 
-    void AddDrivenRenderNode(const std::shared_ptr<RSBaseRenderNode>& nodePtr);
+    void AddDrivenRenderNode(const std::shared_ptr<RSRenderNode>& nodePtr);
     void RemoveDrivenRenderNode(NodeId id);
 
     // Get RenderNode with type T, return nullptr if not found or type mismatch
-    template<typename T = RSBaseRenderNode>
+    template<typename T = RSRenderNode>
     const std::shared_ptr<T> GetRenderNode(NodeId id) const
     {
-        auto renderNode = GetRenderNode<RSBaseRenderNode>(id);
-        return RSBaseRenderNode::ReinterpretCast<T>(renderNode);
+        auto renderNode = GetRenderNode<RSRenderNode>(id);
+        return RSRenderNode::ReinterpretCast<T>(renderNode);
     }
     template<>
-    const std::shared_ptr<RSBaseRenderNode> GetRenderNode(NodeId id) const;
+    const std::shared_ptr<RSRenderNode> GetRenderNode(NodeId id) const;
 
     const std::shared_ptr<RSRenderNode> GetAnimationFallbackNode() const;
 
     bool ContainPid(pid_t pid) const;
     void FilterNodeByPid(pid_t pid);
-    void TraversalNodes(std::function<void (const std::shared_ptr<RSBaseRenderNode>&)> func) const;
+    void TraversalNodes(std::function<void (const std::shared_ptr<RSRenderNode>&)> func) const;
     void TraverseSurfaceNodes(std::function<void (const std::shared_ptr<RSSurfaceRenderNode>&)> func) const;
     void TraverseDrivenRenderNodes(std::function<void (const std::shared_ptr<RSRenderNode>&)> func) const;
     void TraverseDisplayNodes(std::function<void (const std::shared_ptr<RSDisplayRenderNode>&)> func) const;
@@ -71,7 +71,7 @@ private:
     RSRenderNodeMap& operator=(const RSRenderNodeMap&&) = delete;
 
 private:
-    std::unordered_map<NodeId, std::shared_ptr<RSBaseRenderNode>> renderNodeMap_;
+    std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> renderNodeMap_;
     std::unordered_map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> surfaceNodeMap_;
     std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> drivenRenderNodeMap_;
     std::unordered_map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> residentSurfaceNodeMap_;

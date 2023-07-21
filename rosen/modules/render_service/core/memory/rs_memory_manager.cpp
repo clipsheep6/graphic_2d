@@ -345,7 +345,7 @@ static std::tuple<uint64_t, std::string, RectI> FindGeoById(uint64_t nodeId)
     auto parent = node->GetParent().lock();
     while (parent) {
         if (parent->IsInstanceOf<RSSurfaceRenderNode>()) {
-            const auto& surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parent);
+            const auto& surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parent);
             windowName = surfaceNode->GetName();
             windowId = surfaceNode->GetId();
             break;

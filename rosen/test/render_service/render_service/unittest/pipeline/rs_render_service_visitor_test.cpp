@@ -17,7 +17,7 @@
 #include "limit_number.h"
 #include "pipeline/rs_render_service_visitor.h"
 
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_render_node.h"
@@ -66,7 +66,7 @@ HWTEST_F(RSRenderServiceVisitorTest, PrepareBaseRenderNode001, TestSize.Level1)
     RSSurfaceRenderNodeConfig config;
     RSSurfaceRenderNode rsSurfaceRenderNode(config);
     RSRenderServiceVisitor rsRenderServiceVisitor;
-    rsRenderServiceVisitor.PrepareBaseRenderNode(rsSurfaceRenderNode);
+    rsRenderServiceVisitor.PrepareChild(rsSurfaceRenderNode);
 }
 
 /**
@@ -582,7 +582,7 @@ HWTEST_F(RSRenderServiceVisitorTest, ProcessBaseRenderNode001, TestSize.Level1)
     RSRenderServiceVisitor rsRenderServiceVisitor;
     RSSurfaceRenderNodeConfig config;
     RSSurfaceRenderNode rsSurfaceRenderNode(config);
-    rsRenderServiceVisitor.ProcessBaseRenderNode(rsSurfaceRenderNode);
+    rsRenderServiceVisitor.ProcessChild(rsSurfaceRenderNode);
 }
 
 /*
@@ -596,7 +596,7 @@ HWTEST_F(RSRenderServiceVisitorTest, ProcessBaseRenderNode002, TestSize.Level1)
     RSRenderServiceVisitor rsRenderServiceVisitor(true);
     RSSurfaceRenderNodeConfig config;
     RSSurfaceRenderNode rsSurfaceRenderNode(config);
-    rsRenderServiceVisitor.ProcessBaseRenderNode(rsSurfaceRenderNode);
+    rsRenderServiceVisitor.ProcessChild(rsSurfaceRenderNode);
 }
 
 /**

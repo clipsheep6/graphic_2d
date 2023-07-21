@@ -15,7 +15,7 @@
 
 #include "command/rs_base_node_command.h"
 
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 
 namespace OHOS {
 namespace Rosen {

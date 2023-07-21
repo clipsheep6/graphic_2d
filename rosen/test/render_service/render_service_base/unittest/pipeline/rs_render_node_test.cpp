@@ -74,10 +74,10 @@ HWTEST_F(RSRenderNodeTest, UpdateRenderStatus001, TestSize.Level1)
 HWTEST_F(RSRenderNodeTest, UpdateParentChildrenRectTest, TestSize.Level1)
 {
     RSRenderNode node(id, context);
-    std::shared_ptr<RSBaseRenderNode> parentNode;
+    std::shared_ptr<RSRenderNode> parentNode;
     node.UpdateParentChildrenRect(parentNode);
-    RSBaseRenderNode rsBaseRenderNode(id, context);
-    ASSERT_FALSE(rsBaseRenderNode.HasChildrenOutOfRect());
+    RSRenderNode RSRenderNode(id, context);
+    ASSERT_FALSE(RSRenderNode.HasChildrenOutOfRect());
 }
 
 /**
@@ -103,8 +103,8 @@ HWTEST_F(RSRenderNodeTest, AddModifierTest, TestSize.Level1)
     std::shared_ptr<RSRenderModifier> modifier = nullptr;
     RSRenderNode node(id, context);
     node.AddModifier(modifier);
-    RSBaseRenderNode rsBaseRenderNode(id, context);
-    ASSERT_TRUE(rsBaseRenderNode.IsDirty());
+    RSRenderNode RSRenderNode(id, context);
+    ASSERT_TRUE(RSRenderNode.IsDirty());
 }
 
 /**
@@ -119,8 +119,8 @@ HWTEST_F(RSRenderNodeTest, SetSharedTransitionParamTest, TestSize.Level1)
     const std::optional<SharedTransitionParam> sharedTransitionParam;
     RSRenderNode node(id, context);
     node.SetSharedTransitionParam(std::move(sharedTransitionParam));
-    RSBaseRenderNode rsBaseRenderNode(id, context);
-    ASSERT_TRUE(rsBaseRenderNode.IsDirty());
+    RSRenderNode RSRenderNode(id, context);
+    ASSERT_TRUE(RSRenderNode.IsDirty());
 }
 
 /**

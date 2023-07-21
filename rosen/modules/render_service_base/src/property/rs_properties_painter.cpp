@@ -617,7 +617,7 @@ void RSPropertiesPainter::DrawColorfulShadowInner(
     canvas.clipPath(skPath);
     // draw node content as shadow
     // [PLANNING]: maybe we should also draw background color / image here, and we should cache the shadow image
-    if (auto node = RSBaseRenderNode::ReinterpretCast<RSCanvasRenderNode>(properties.backref_.lock())) {
+    if (auto node = RSRenderNode::ReinterpretCast<RSCanvasRenderNode>(properties.backref_.lock())) {
         node->InternalDrawContent(canvas);
     }
 }
@@ -645,7 +645,7 @@ void RSPropertiesPainter::DrawColorfulShadowInner(
     canvas.ClipPath(path, Drawing::ClipOp::INTERSECT, false);
     // draw node content as shadow
     // [PLANNING]: maybe we should also draw background color / image here, and we should cache the shadow image
-    if (auto node = RSBaseRenderNode::ReinterpretCast<RSCanvasRenderNode>(properties.backref_.lock())) {
+    if (auto node = RSRenderNode::ReinterpretCast<RSCanvasRenderNode>(properties.backref_.lock())) {
         node->InternalDrawContent(canvas);
     }
 }

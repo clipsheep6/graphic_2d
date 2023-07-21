@@ -14,7 +14,7 @@
  */
 
 #include "rs_parallel_pack_visitor.h"
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/parallel_render/rs_parallel_render_manager.h"
@@ -32,7 +32,7 @@ RSParallelPackVisitor::RSParallelPackVisitor(RSUniRenderVisitor &visitor)
     doAnimate_ = visitor.GetAnimateState();
 }
 
-void RSParallelPackVisitor::PrepareBaseRenderNode(RSBaseRenderNode &node)
+void RSParallelPackVisitor::PrepareChild(RSRenderNode &node)
 {
     node.ResetSortedChildren();
     for (auto& child : node.GetSortedChildren()) {
@@ -43,7 +43,7 @@ void RSParallelPackVisitor::PrepareBaseRenderNode(RSBaseRenderNode &node)
 void RSParallelPackVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode &node)
 {
     isFirstSurfaceNode_ = true;
-    PrepareBaseRenderNode(node);
+    PrepareChild(node);
 }
 
 void RSParallelPackVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode &node)
@@ -56,7 +56,7 @@ void RSParallelPackVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode &node)
     }
 }
 
-void RSParallelPackVisitor::ProcessBaseRenderNode(RSBaseRenderNode &node)
+void RSParallelPackVisitor::ProcessChild(RSRenderNode &node)
 {
     for (auto &child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
@@ -69,7 +69,7 @@ void RSParallelPackVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node)
 {
     RSParallelRenderManager::Instance()->ClearFilterSurfaceRenderNode();
     isSecurityDisplay_ = node.GetSecurityDisplay();
-    ProcessBaseRenderNode(node);
+    ProcessChild(node);
 }
 
 void RSParallelPackVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node)
@@ -130,7 +130,7 @@ void RSParallelPackVisitor::CalcSurfaceRenderNodeCost(RSSurfaceRenderNode& node)
 void RSParallelPackVisitor::CalcDisplayRenderNodeCost(RSDisplayRenderNode& node) const
 {
     for (auto& child : node.GetSortedChildren()) {
-        auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+        auto surface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
         if (surface != nullptr) {
             CalcSurfaceRenderNodeCost(*surface);
         }

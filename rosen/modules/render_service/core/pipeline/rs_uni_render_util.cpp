@@ -47,7 +47,7 @@ void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& no
 {
     // update all child surfacenode history
     for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        auto surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
             continue;
         }
@@ -67,7 +67,7 @@ Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDis
 {
     Occlusion::Region allSurfaceVisibleDirtyRegion;
     for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        auto surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (surfaceNode == nullptr || !surfaceNode->IsAppWindow() || surfaceNode->GetDstRect().IsEmpty()) {
             continue;
         }
@@ -405,7 +405,7 @@ bool RSUniRenderUtil::HandleCaptureNode(RSRenderNode& node, RSPaintFilterCanvas&
         return false;
     }
     if (surfaceNodePtr->IsAppWindow()) {
-        auto rsParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(surfaceNodePtr->GetParent().lock());
+        auto rsParent = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(surfaceNodePtr->GetParent().lock());
         auto curNode = surfaceNodePtr;
         if (rsParent && rsParent->IsLeashWindow()) {
             curNode = rsParent;
@@ -470,16 +470,16 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
     bool isRotation = displayNode->IsRotationChanged();
     bool isScale = false;
     uint32_t leashWindowCount = 0;
-    std::list<RSBaseRenderNode::SharedPtr> curAllSurfaces;
+    std::list<RSRenderNode::SharedPtr> curAllSurfaces;
     if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
-        std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
+        std::vector<RSRenderNode::SharedPtr> curAllSurfacesVec;
         displayNode->CollectSurface(displayNode, curAllSurfacesVec, true, true);
         std::copy(curAllSurfacesVec.begin(), curAllSurfacesVec.end(), std::back_inserter(curAllSurfaces));
     } else {
         curAllSurfaces = displayNode->GetSortedChildren();
     }
     for (auto iter = curAllSurfaces.begin(); iter != curAllSurfaces.end(); iter++) {
-        auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*iter);
+        auto node = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*iter);
         if (node == nullptr) {
             ROSEN_LOGE("RSUniRenderUtil::AssignWindowNodes nullptr found in sortedChildren, this should not happen");
             continue;
@@ -496,7 +496,7 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
         "leashWindowCount: " + std::to_string(leashWindowCount) + ", " +
         "isRotation: " + std::to_string(isRotation) + " }; ";
     for (auto iter = curAllSurfaces.begin(); iter != curAllSurfaces.end(); iter++) {
-        auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*iter);
+        auto node = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*iter);
         if (node == nullptr) {
             ROSEN_LOGE("RSUniRenderUtil::AssignWindowNodes nullptr found in sortedChildren, this should not happen");
             continue;
@@ -589,8 +589,8 @@ void RSUniRenderUtil::SortSubThreadNodes(std::list<std::shared_ptr<RSSurfaceRend
 {
     // sort subThreadNodes by priority and z-order
     subThreadNodes.sort([](const auto& first, const auto& second) -> bool {
-        auto node1 = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(first);
-        auto node2 = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(second);
+        auto node1 = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(first);
+        auto node2 = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(second);
         if (node1 == nullptr || node2 == nullptr) {
             ROSEN_LOGE(
                 "RSUniRenderUtil::SortSubThreadNodes sort nullptr found in subThreadNodes, this should not happen");
@@ -629,7 +629,7 @@ void RSUniRenderUtil::HandleHardwareNode(const std::shared_ptr<RSSurfaceRenderNo
     auto appWindow = node;
     if (node->IsLeashWindow()) {
         for (auto& child : node->GetSortedChildren()) {
-            auto surfaceNodePtr = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+            auto surfaceNodePtr = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
             if (surfaceNodePtr && surfaceNodePtr->IsAppWindow()) {
                 appWindow = surfaceNodePtr;
                 break;
@@ -647,22 +647,22 @@ void RSUniRenderUtil::HandleHardwareNode(const std::shared_ptr<RSSurfaceRenderNo
 
 void RSUniRenderUtil::ClearSurfaceIfNeed(const RSRenderNodeMap& map,
     const std::shared_ptr<RSDisplayRenderNode>& displayNode,
-    std::set<std::shared_ptr<RSBaseRenderNode>>& oldChildren)
+    std::set<std::shared_ptr<RSRenderNode>>& oldChildren)
 {
     if (displayNode == nullptr) {
         return;
     }
-    std::list<RSBaseRenderNode::SharedPtr> curAllSurfaces;
+    std::list<RSRenderNode::SharedPtr> curAllSurfaces;
     if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
-        std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
+        std::vector<RSRenderNode::SharedPtr> curAllSurfacesVec;
         displayNode->CollectSurface(displayNode, curAllSurfacesVec, true, true);
         std::copy(curAllSurfacesVec.begin(), curAllSurfacesVec.end(), std::back_inserter(curAllSurfaces));
     } else {
         curAllSurfaces = displayNode->GetSortedChildren();
     }
-    std::set<std::shared_ptr<RSBaseRenderNode>> tmpSet(curAllSurfaces.begin(), curAllSurfaces.end());
+    std::set<std::shared_ptr<RSRenderNode>> tmpSet(curAllSurfaces.begin(), curAllSurfaces.end());
     for (auto& child : oldChildren) {
-        auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+        auto surface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
         if (tmpSet.count(surface) == 0) {
             if (surface && map.GetRenderNode(surface->GetId()) != nullptr) {
                 RS_LOGD("RSUniRenderUtil::ClearSurfaceIfNeed clear cache surface:[%s, %llu]",

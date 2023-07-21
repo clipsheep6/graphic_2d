@@ -88,7 +88,10 @@ template("thirdparty_lib_txt_rosen") {
 
     deps = [
       "$ace_flutter_engine_root:flutter_engine_fml_$platform",
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    ]
+
+    external_deps = [
+      "hilog:libhilog",
     ]
 
     if (defined(use_new_skia) && use_new_skia) {

@@ -95,6 +95,8 @@
 #include "benchmarks/rs_recording_thread.h"
 #endif
 
+#include "scene_board_judgement.h"
+
 using namespace FRAME_TRACE;
 static const std::string RS_INTERVAL_NAME = "renderservice";
 
@@ -1210,7 +1212,7 @@ void RSMainThread::CalcOcclusion()
             curAllSurfaces = displayNode->GetCurAllSurfaces();
         }
     } else {
-        node->CollectSurface(node, curAllSurfaces, isUniRender_);
+        node->CollectSurface(node, curAllSurfaces, isUniRender_, false);
     }
     // Judge whether it is dirty
     // Surface cnt changed or surface DstRectChanged or surface ZorderChanged

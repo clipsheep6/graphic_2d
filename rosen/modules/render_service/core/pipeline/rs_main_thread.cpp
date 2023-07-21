@@ -34,6 +34,7 @@
 
 #include "animation/rs_animation_fraction.h"
 #include "command/rs_message_processor.h"
+#include "common/rs_background_thread.h"
 #include "delegate/rs_functional_delegate.h"
 #include "memory/rs_memory_manager.h"
 #include "memory/rs_memory_track.h"
@@ -238,7 +239,8 @@ void RSMainThread::Init()
         InformHgmNodeInfo();
         ReleaseAllNodesBuffer();
         SendCommands();
-        activeProcessPids_.clear();
+        activeAppsInProcess_.clear();
+        activeProcessNodeIds_.clear();
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         SetRSEventDetectorLoopFinishTag();
         rsEventManager_.UpdateParam();
@@ -484,6 +486,7 @@ void RSMainThread::CheckParallelSubThreadNodesStatus()
                     }
                 }
             }
+            cacheCmdSkippedNodes_[node->GetId()] = false;
             if (pid == 0) {
                 continue;
             }
@@ -494,7 +497,6 @@ void RSMainThread::CheckParallelSubThreadNodesStatus()
             } else {
                 cacheCmdSkippedInfo_[pid].first.push_back(node->GetId());
             }
-            cacheCmdSkippedNodes_[node->GetId()] = false;
         }
     }
 }
@@ -633,7 +635,7 @@ void RSMainThread::ProcessCommandForUniRender()
             }
         }
     }
-    RSUnmarshalThread::Instance().PostTask([ transactionDataEffective ] () {
+    RSBackgroundThread::Instance().PostTask([ transactionDataEffective ] () {
         RS_TRACE_NAME("RSMainThread::ProcessCommandForUniRender transactionDataEffective clear");
         transactionDataEffective->clear();
     });
@@ -685,7 +687,11 @@ void RSMainThread::ProcessRSTransactionData(std::unique_ptr<RSTransactionData>& 
 {
     context_->transactionTimestamp_ = rsTransactionData->GetTimestamp();
     rsTransactionData->Process(*context_);
-    activeProcessPids_.emplace(pid);
+    for (auto& [nodeId, followType, command] : rsTransactionData->GetPayload()) {
+        if (command != nullptr) {
+            AddActiveNodeId(pid, command->GetNodeId());
+        }
+    }
 }
 
 void RSMainThread::ProcessSyncRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData, pid_t pid)
@@ -762,7 +768,7 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
             this->bufferTimestamps_[surfaceNode->GetId()] = static_cast<uint64_t>(surfaceNode->GetTimestamp());
             if (surfaceNode->IsCurrentFrameBufferConsumed()) {
                 // collect surface view's pid to prevent wrong skip
-                activeProcessPids_.emplace(ExtractPid(surfaceNode->GetId()));
+                AddActiveNodeId(ExtractPid(surfaceNode->GetId()), surfaceNode->GetId());
             }
         }
 
@@ -818,7 +824,7 @@ void RSMainThread::CollectInfoForHardwareComposer()
         for (auto& surfaceNode : hardwareEnabledNodes_) {
             if (surfaceNode->IsLastFrameHardwareEnabled()) {
                 surfaceNode->SetContentDirty();
-                activeProcessPids_.emplace(ExtractPid(surfaceNode->GetId()));
+                AddActiveNodeId(ExtractPid(surfaceNode->GetId()), surfaceNode->GetId());
             }
         }
     }
@@ -1042,6 +1048,8 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     uniVisitor->SetDrivenRenderFlag(hasDrivenNodeOnUniTree_, hasDrivenNodeMarkRender_);
 #endif
+    uniVisitor->ResetFrameRateRangeMaps();
+
     uniVisitor->SetHardwareEnabledNodes(hardwareEnabledNodes_);
     uniVisitor->SetAppWindowNum(appWindowNum_);
     uniVisitor->SetProcessorRenderEngine(GetRenderEngine());
@@ -1100,6 +1108,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
             RSUniRenderUtil::CacheSubThreadNodes(subThreadNodes_, subThreadNodes);
         }
         rootNode->Process(uniVisitor);
+        uniVisitor->FindAndSendRefreshRate();
     }
     isDirty_ = false;
     uniRenderEngine_->ShrinkCachesIfNeeded();
@@ -1373,8 +1382,9 @@ void RSMainThread::OnVsync(uint64_t timestamp, void* data)
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::OnVsync");
     RSJankStats::GetInstance().SetStartTime();
     timestamp_ = timestamp;
-    curTime_ = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now().time_since_epoch()).count();
+    curTime_ = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count());
     requestNextVsyncNum_ = 0;
     frameCount_++;
     if (isUniRender_) {
@@ -1455,7 +1465,7 @@ void RSMainThread::Animate(uint64_t timestamp)
             RS_LOGD("RSMainThread::Animate skip the cached node");
             return false;
         }
-        activeProcessPids_.emplace(ExtractPid(node->GetId()));
+        AddActiveNodeId(ExtractPid(node->GetId()), node->GetId());
         auto [hasRunningAnimation, nodeNeedRequestNextVsync] = node->Animate(timestamp);
         if (!hasRunningAnimation) {
             RS_LOGD("RSMainThread::Animate removing finished animating node %" PRIu64, node->GetId());
@@ -2046,9 +2056,19 @@ void RSMainThread::SetAppWindowNum(uint32_t num)
     appWindowNum_ = num;
 }
 
-void RSMainThread::AddActivePid(pid_t pid)
+void RSMainThread::AddActiveNodeId(pid_t pid, NodeId id)
 {
-    activeProcessPids_.emplace(pid);
+    auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(id);
+    if (node == nullptr) {
+        RS_LOGE("AddActiveNodeId: node is nullptr");
+        return;
+    }
+    if (id == 0) {
+        activeAppsInProcess_[pid].emplace(id);
+    } else {
+        activeAppsInProcess_[pid].emplace(node->GetRootSurfaceNodeId());
+        activeProcessNodeIds_[node->GetRootSurfaceNodeId()].emplace(id);
+    }
 }
 
 void RSMainThread::ResetHardwareEnabledState()

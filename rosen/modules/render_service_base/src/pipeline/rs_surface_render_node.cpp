@@ -752,6 +752,7 @@ void RSSurfaceRenderNode::ResetSurfaceOpaqueRegion(const RectI& screeninfo, cons
     transparentRegion_.AndSelf(screenRegion);
     opaqueRegion_.AndSelf(screenRegion);
     opaqueRegionChanged_ = !oldOpaqueRegion.Xor(opaqueRegion_).IsEmpty();
+    ResetSurfaceContainerRegion(screeninfo, absRect, screenRotation);
 }
 
 void RSSurfaceRenderNode::UpdateFilterNodes(const std::shared_ptr<RSRenderNode>& nodePtr)
@@ -768,14 +769,13 @@ void RSSurfaceRenderNode::UpdateFilterCacheStatusIfNodeStatic(const RectI& clipR
         return;
     }
 #ifndef USE_ROSEN_DRAWING
-    // traversal filternodes including app window
+    // traversal filter nodes including app window
     for (auto node : filterNodes_) {
         if (!node) {
             continue;
         }
         node->UpdateFilterCacheWithDirty(*dirtyManager_, false);
         node->UpdateFilterCacheWithDirty(*dirtyManager_, true);
-        node->UpdateFilterCacheManagerWithCacheRegion(clipRect);
         // collect valid filter nodes for occlusion optimization
         if (node->IsFilterCacheValid()) {
             dirtyManager_->UpdateCacheableFilterRect(node->GetOldDirtyInSurface());
@@ -1061,6 +1061,26 @@ void RSSurfaceRenderNode::ResetSurfaceContainerRegion(const RectI& screeninfo, c
     containerRegion_ = absRegion.Sub(innerRectRegion);
 }
 
+bool RSSurfaceRenderNode::CheckOpaqueRegionBaseInfo(
+    const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation, const bool isFocusWindow)
+{
+    // 0:screenRect, 1:absRect, 2:screenRotation, 3:isFocusWindow
+    return std::get<0>(OpaqueRegionBaseInfo_) == screeninfo &&
+        std::get<1>(OpaqueRegionBaseInfo_) == absRect &&
+        std::get<2>(OpaqueRegionBaseInfo_) == screenRotation &&
+        std::get<3>(OpaqueRegionBaseInfo_) == isFocusWindow;
+}
+
+void RSSurfaceRenderNode::SetOpaqueRegionBaseInfo(
+    const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation, const bool isFocusWindow)
+{
+    // 0:screenRect, 1:absRect, 2:screenRotation, 3:isFocusWindow
+    std::get<0>(OpaqueRegionBaseInfo_) = screeninfo;
+    std::get<1>(OpaqueRegionBaseInfo_) = absRect;
+    std::get<2>(OpaqueRegionBaseInfo_) = screenRotation;
+    std::get<3>(OpaqueRegionBaseInfo_) = isFocusWindow;
+}
+
 // [planning] Remove this after skia is upgraded, the clipRegion is supported
 void RSSurfaceRenderNode::ResetChildrenFilterRects()
 {
@@ -1160,21 +1180,22 @@ bool RSSurfaceRenderNode::LeashWindowRelatedAppWindowOccluded(std::shared_ptr<RS
     return false;
 }
 
-std::shared_ptr<RSSurfaceRenderNode> RSSurfaceRenderNode::GetLeashWindowNestedAppSurface()
+std::vector<std::shared_ptr<RSSurfaceRenderNode>> RSSurfaceRenderNode::GetLeashWindowNestedSurfaces()
 {
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>> res;
     if (!IsLeashWindow()) {
-        return nullptr;
+        return res;
     }
     for (auto& child : GetChildren()) {
         auto childNode = child.lock();
         if (childNode) {
             auto childNodeSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
             if (childNodeSurface) {
-                return childNodeSurface;
+                res.emplace_back(childNodeSurface);
             }
         }
     }
-    return nullptr;
+    return res;
 }
 
 bool RSSurfaceRenderNode::IsCurrentFrameStatic()
@@ -1185,8 +1206,15 @@ bool RSSurfaceRenderNode::IsCurrentFrameStatic()
     if (IsMainWindowType()) {
         return true;
     } else if (IsLeashWindow()) {
-        auto appSurfaceNode = GetLeashWindowNestedAppSurface();
-        return appSurfaceNode ? appSurfaceNode->IsCurrentFrameStatic() : true;
+        // leashwindow subthread cache considered static if and only if all nested surfacenode static
+        // (include appwindow and starting window)
+        auto nestedSurfaceNodes = GetLeashWindowNestedSurfaces();
+        for (auto& nestedSurface: nestedSurfaceNodes) {
+            if (nestedSurface && !nestedSurface->IsCurrentFrameStatic()) {
+                return false;
+            }
+        }
+        return true;
     } else if (IsSelfDrawingType()) {
         return isCurrentFrameBufferConsumed_;
     } else {
@@ -1204,9 +1232,11 @@ void RSSurfaceRenderNode::UpdateCacheSurfaceDirtyManager(int bufferAge)
     cacheSurfaceDirtyManager_->SetBufferAge(bufferAge);
     cacheSurfaceDirtyManager_->UpdateDirty(false);
     // for leashwindow type, nested app surfacenode's cacheSurfaceDirtyManager update is required
-    auto appSurfaceNode = GetLeashWindowNestedAppSurface();
-    if (appSurfaceNode) {
-        appSurfaceNode->UpdateCacheSurfaceDirtyManager(bufferAge);
+    auto nestedSurfaceNodes = GetLeashWindowNestedSurfaces();
+    for (auto& nestedSurface : nestedSurfaceNodes) {
+        if (nestedSurface) {
+            nestedSurface->UpdateCacheSurfaceDirtyManager(bufferAge);
+        }
     }
 }
 

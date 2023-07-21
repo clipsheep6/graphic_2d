@@ -88,6 +88,25 @@ std::pair<bool, bool> RSRenderNode::Animate(int64_t timestamp)
     return animationManager_.Animate(timestamp, IsOnTheTree());
 }
 
+FrameRateRange RSRenderNode::GetRSFrameRateRange()
+{
+    if (rsRange_.IsValid()) {
+        return rsRange_;
+    }
+    rsRange_ = animationManager_.GetFrameRateRangeFromRSAnimations();
+    return rsRange_;
+}
+
+void RSRenderNode::ResetRSFrameRateRange()
+{
+    rsRange_.Reset();
+}
+
+void RSRenderNode::ResetUIFrameRateRange()
+{
+    uiRange_.Reset();
+}
+
 bool RSRenderNode::Update(
     RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty, std::optional<RectI> clipRect)
 {
@@ -247,6 +266,9 @@ void RSRenderNode::UpdateParentChildrenRect(std::shared_ptr<RSBaseRenderNode> pa
 
 bool RSRenderNode::IsFilterCacheValid() const
 {
+    if (!FILTER_CACHE_ENABLED) {
+        return false;
+    }
 #ifndef USE_ROSEN_DRAWING
     // background filter
     auto& bgManager = renderProperties_.GetFilterCacheManager(false);
@@ -261,15 +283,25 @@ bool RSRenderNode::IsFilterCacheValid() const
 
 void RSRenderNode::UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground) const
 {
-    auto& properties = GetRenderProperties();
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
-    if (!geoPtr) {
+#ifndef USE_ROSEN_DRAWING
+    if (!FILTER_CACHE_ENABLED) {
         return;
     }
-#ifndef USE_ROSEN_DRAWING
-    if (auto& manager = renderProperties_.GetFilterCacheManager(isForeground)) {
-        manager->UpdateCacheStateWithDirtyRegion(dirtyManager.GetIntersectedVisitedDirtyRect(geoPtr->GetAbsRect()));
+    auto& properties = GetRenderProperties();
+    auto& manager = properties.GetFilterCacheManager(isForeground);
+    if (manager == nullptr) {
+        return;
     }
+    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    if (geoPtr == nullptr) {
+        return;
+    }
+    auto& cachedImageRegion = manager->GetCachedImageRegion();
+    RectI cachedImageRect = RectI(cachedImageRegion.x(), cachedImageRegion.y(), cachedImageRegion.width(),
+        cachedImageRegion.height());
+    auto isCachedImageRegionIntersectedWithDirtyRegion =
+        cachedImageRect.IntersectRect(dirtyManager.GetIntersectedVisitedDirtyRect(geoPtr->GetAbsRect()));
+    manager->UpdateCacheStateWithDirtyRegion(isCachedImageRegionIntersectedWithDirtyRegion);
 #endif
 }
 
@@ -541,8 +573,11 @@ void RSRenderNode::SetGlobalAlpha(float alpha)
     if (globalAlpha_ == alpha) {
         return;
     }
+    if ((ROSEN_EQ(globalAlpha_, 1.0f) && alpha != 1.0f) ||
+        (ROSEN_EQ(alpha, 1.0f) && globalAlpha_ != 1.0f)) {
+        OnAlphaChanged();
+    }
     globalAlpha_ = alpha;
-    OnAlphaChanged();
 }
 
 float RSRenderNode::GetGlobalAlpha() const

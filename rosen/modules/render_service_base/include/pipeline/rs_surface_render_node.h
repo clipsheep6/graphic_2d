@@ -166,7 +166,6 @@ public:
                nodeType_ == RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
     }
 
-    std::shared_ptr<RSSurfaceRenderNode> GetLeashWindowNestedAppSurface();
     // used to determine whether the layer-1 surfacenodes can be skipped in the subthread of focus-first framework
     bool IsCurrentFrameStatic();
     void UpdateCacheSurfaceDirtyManager(int bufferAge = 2);
@@ -342,8 +341,9 @@ public:
 
     void SetAbilityBGAlpha(uint8_t alpha)
     {
+        alphaChanged_ = (alpha == 255 && abilityBgAlpha_ != 255) ||
+            (alpha != 255 && abilityBgAlpha_ == 255);
         abilityBgAlpha_ = alpha;
-        alphaChanged_ = true;
     }
 
     uint8_t GetAbilityBgAlpha() const
@@ -569,6 +569,10 @@ public:
     Occlusion::Region SetCornerRadiusOpaqueRegion(const RectI& absRect, float radius) const;
     void ResetSurfaceContainerRegion(const RectI& screeninfo, const RectI& absRect,
         const ScreenRotation screenRotation);
+    bool CheckOpaqueRegionBaseInfo(
+        const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation, const bool isFocusWindow);
+    void SetOpaqueRegionBaseInfo(
+        const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation, const bool isFocusWindow);
 
     bool IsStartAnimationFinished() const;
     void SetStartAnimationFinished();
@@ -692,6 +696,7 @@ private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
     Vector4f GetWindowCornerRadius();
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>> GetLeashWindowNestedSurfaces();
 
     std::mutex mutexRT_;
     std::mutex mutexUI_;
@@ -782,6 +787,9 @@ private:
     Occlusion::Region containerRegion_;
     bool isFilterCacheFullyCovered_ = false;
     std::vector<std::shared_ptr<RSRenderNode>> filterNodes_ = {};  // valid filter nodes within, including itself
+
+    //<screenRect, absRect, screenRotation, isFocusWindow>
+    std::tuple<RectI, RectI, ScreenRotation, bool> OpaqueRegionBaseInfo_;
 
     /*
         ContainerWindow configs acquired from arkui, including container window state, screen density, container border

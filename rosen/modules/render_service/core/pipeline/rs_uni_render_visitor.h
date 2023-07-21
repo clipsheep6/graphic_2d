@@ -25,6 +25,7 @@
 
 #include "rs_base_render_engine.h"
 
+#include "hgm_frame_rate_manager.h"
 #include "pipeline/driven_render/rs_driven_render_manager.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_processor.h"
@@ -32,6 +33,7 @@
 #include "platform/ohos/overdraw/rs_gpu_overdraw_canvas_listener.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #include "screen_manager/rs_screen_manager.h"
+#include "system/rs_system_parameters.h"
 #include "visitor/rs_node_visitor.h"
 
 class SkPicture;
@@ -148,6 +150,11 @@ public:
         renderFrame_ = std::move(renderFrame);
     }
     void SetAppWindowNum(uint32_t num);
+
+    void ResetFrameRateRangeMaps();
+    void UpdateSurfaceFrameRateRange(RSRenderNode& node);
+    void FindAndSendRefreshRate();
+
 private:
     void DrawWatermarkIfNeed();
 #ifndef USE_ROSEN_DRAWING
@@ -310,6 +317,7 @@ private:
     bool isOcclusionEnabled_ = false;
     std::vector<std::string> dfxTargetSurfaceNames_;
     PartialRenderType partialRenderType_;
+    QuickSkipPrepareType quickSkipPrepareType_;
     DirtyRegionDebugType dirtyRegionDebugType_;
     bool isDirty_ = false;
     // added for judge if drawing cache changes
@@ -365,6 +373,9 @@ private:
     std::weak_ptr<RSBaseRenderNode> logicParentNode_;
 
     bool isCalcCostEnable_ = false;
+    // adapt to sceneboard, mark if the canvasNode within the scope of surfaceNode
+    bool isSubNodeOfSurfaceInPrepare_ = false;
+    bool isSubNodeOfSurfaceInProcess_ = false;
 
 #ifndef USE_ROSEN_DRAWING
     std::optional<SkMatrix> rootMatrix_ = std::nullopt;
@@ -400,6 +411,17 @@ private:
 #endif
     bool curDirty_ = false;
     bool curContentDirty_ = false;
+
+    // calculate preferred fps
+    FrameRateRange currSurfaceRSRange_ = {0, 0, 0};
+    FrameRateRange currSurfaceUIRange_ = {0, 0, 0};
+    FrameRateRange currDisplayRSRange_ = {0, 0, 0};
+    FrameRateRange currDisplayUIRange_ = {0, 0, 0};
+    std::unordered_map<NodeId, FrameRateRange> rsFrameRateRangeMap_; // RSDisplayRenderNode id
+    std::unordered_map<NodeId, FrameRateRange> uiFrameRateRangeMap_; // RSSurfaceRenderNode id
+    std::unordered_map<NodeId, FrameRateRange> finalFrameRateRangeMap_; // RSDisplayRenderNode id
+
+    std::unique_ptr<HgmFrameRateManager> frameRateMgr_;
 };
 } // namespace Rosen
 } // namespace OHOS

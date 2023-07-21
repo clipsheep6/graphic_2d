@@ -31,6 +31,7 @@
 #endif
 
 #include "animation/rs_animation_manager.h"
+#include "animation/rs_frame_rate_range.h"
 #include "common/rs_macros.h"
 #include "modifier/rs_render_modifier.h"
 #include "pipeline/rs_base_render_node.h"
@@ -389,6 +390,16 @@ public:
         return priority_;
     }
 
+    bool IsAncestorDirty() const
+    {
+        return isAncestorDirty_;
+    }
+
+    void SetIsAncestorDirty(bool isAncestorDirty)
+    {
+        isAncestorDirty_ = isAncestorDirty;
+    }
+
     bool HasCachedTexture() const
     {
         std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
@@ -445,6 +456,26 @@ public:
     void SetGlobalAlpha(float alpha);
     float GetGlobalAlpha() const;
     virtual void OnAlphaChanged() {}
+
+    void SetRSFrameRateRange(FrameRateRange range)
+    {
+        rsRange_ = range;
+    }
+
+    FrameRateRange GetRSFrameRateRange();
+
+    void SetUIFrameRateRange(FrameRateRange range)
+    {
+        uiRange_ = range;
+    }
+
+    FrameRateRange GetUIFrameRateRange() const
+    {
+        return uiRange_;
+    }
+
+    void ResetRSFrameRateRange();
+    void ResetUIFrameRateRange();
 
 protected:
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
@@ -505,6 +536,7 @@ private:
     bool hasFilter_ = false;
     bool hasHardwareNode_ = false;
     bool hasAbilityComponent_ = false;
+    bool isAncestorDirty_ = false;
     NodePriorityType priority_ = NodePriorityType::MAIN_PRIORITY;
 
     // driven render
@@ -526,6 +558,9 @@ private:
     float boundsWidth_ = 0.0f;
     float boundsHeight_ = 0.0f;
     std::unordered_set<RSModifierType> dirtyTypes_;
+
+    FrameRateRange rsRange_ = {0, 0, 0};
+    FrameRateRange uiRange_ = {0, 0, 0};
 
     friend class RSRenderTransition;
     friend class RSRenderNodeMap;

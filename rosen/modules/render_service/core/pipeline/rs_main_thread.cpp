@@ -504,7 +504,7 @@ void RSMainThread::CheckParallelSubThreadNodesStatus()
 void RSMainThread::SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransactionData>>& transactionVec, pid_t pid)
 {
     RS_TRACE_FUNC();
-	std::vector<std::unique_ptr<RSTransactionData>> skipTransactionVec;
+    std::vector<std::unique_ptr<RSTransactionData>> skipTransactionVec;
     const auto& nodeMap = context_->GetNodeMap();
     for (auto& transactionData: transactionVec) {
         std::vector<std::tuple<NodeId, FollowType, std::unique_ptr<RSCommand>>> skipPayload;

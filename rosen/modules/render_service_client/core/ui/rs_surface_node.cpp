@@ -134,22 +134,22 @@ void RSSurfaceNode::CreateNodeInRenderThread()
     }
 }
 
-void RSSurfaceNode::AddChild(std::shared_ptr<RSBaseNode> child, int index)
+void RSSurfaceNode::AddChild(std::shared_ptr<RSNode> child, int index)
 {
     if (isChildOperationDisallowed_) {
         ROSEN_LOGE("RSSurfaceNode::AddChild for non RenderServiceNodeType surfaceNode is not allowed");
         return;
     }
-    RSBaseNode::AddChild(child, index);
+    RSNode::AddChild(child, index);
 }
 
-void RSSurfaceNode::RemoveChild(std::shared_ptr<RSBaseNode> child)
+void RSSurfaceNode::RemoveChild(std::shared_ptr<RSNode> child)
 {
     if (isChildOperationDisallowed_) {
         ROSEN_LOGE("RSSurfaceNode::RemoveChild for non RenderServiceNodeType surfaceNode is not allowed");
         return;
     }
-    RSBaseNode::RemoveChild(child);
+    RSNode::RemoveChild(child);
 }
 
 void RSSurfaceNode::ClearChildren()
@@ -158,7 +158,7 @@ void RSSurfaceNode::ClearChildren()
         ROSEN_LOGE("RSSurfaceNode::ClearChildren for non RenderServiceNodeType surfaceNode is not allowed");
         return;
     }
-    RSBaseNode::ClearChildren();
+    RSNode::ClearChildren();
 }
 
 FollowType RSSurfaceNode::GetFollowType() const
@@ -273,7 +273,7 @@ bool RSSurfaceNode::SetBufferAvailableCallback(BufferAvailableCallback callback)
         return false;
     }
     return renderServiceClient->RegisterBufferAvailableListener(GetId(), [weakThis = weak_from_this()]() {
-        auto rsSurfaceNode = RSBaseNode::ReinterpretCast<RSSurfaceNode>(weakThis.lock());
+        auto rsSurfaceNode = RSNode::ReinterpretCast<RSSurfaceNode>(weakThis.lock());
         if (rsSurfaceNode == nullptr) {
             ROSEN_LOGE("RSSurfaceNode::SetBufferAvailableCallback this == null");
             return;

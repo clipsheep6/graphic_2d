@@ -20,7 +20,7 @@
 
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
-#include "ui/rs_base_node.h"
+#include "ui/rs_node.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -31,17 +31,17 @@ public:
     static const RSNodeMap& Instance();
     static RSNodeMap& MutableInstance();
 
-    bool RegisterNode(const std::shared_ptr<RSBaseNode>& nodePtr);
+    bool RegisterNode(const std::shared_ptr<RSNode>& nodePtr);
     void UnregisterNode(NodeId id);
 
     // Get RSNode with type T, return nullptr if not found or type mismatch
-    template<typename T = RSBaseNode>
+    template<typename T = RSNode>
     const std::shared_ptr<T> GetNode(NodeId id) const
     {
-        return RSBaseNode::ReinterpretCast<T>(GetNode<RSBaseNode>(id));
+        return RSNode::ReinterpretCast<T>(GetNode<RSNode>(id));
     }
     template<>
-    const std::shared_ptr<RSBaseNode> GetNode(NodeId id) const;
+    const std::shared_ptr<RSNode> GetNode(NodeId id) const;
 
     const std::shared_ptr<RSNode> GetAnimationFallbackNode() const;
 
@@ -55,7 +55,7 @@ private:
 
 private:
     mutable std::mutex mutex_;
-    std::unordered_map<NodeId, std::weak_ptr<RSBaseNode>> nodeMap_;
+    std::unordered_map<NodeId, std::weak_ptr<RSNode>> nodeMap_;
     std::shared_ptr<RSNode> animationFallbackNode_;
 };
 } // namespace Rosen

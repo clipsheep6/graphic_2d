@@ -573,6 +573,7 @@ void RSRenderNode::SetGlobalAlpha(float alpha)
     if (globalAlpha_ == alpha) {
         return;
     }
+    prevGlobalAlpha_ = globalAlpha_;
     globalAlpha_ = alpha;
     OnAlphaChanged();
 }

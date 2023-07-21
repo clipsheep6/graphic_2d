@@ -110,7 +110,8 @@ public:
     /* Judge if rootnode has to be prepared based on it corresponding process is active
      * If its pid is in activeProcessPids_ set, return true
      */
-    bool CheckNodeHasToBePreparedByPid(NodeId nodeId, NodeId rootNodeId, bool isClassifyByRoot)
+    bool CheckNodeHasToBePreparedByPid(NodeId nodeId, NodeId rootNodeId, bool isClassifyByRoot,
+        std::set<NodeId>& activeNodeIds)
     {
         if (activeAppsInProcess_.empty()) {
             return false;
@@ -124,7 +125,10 @@ public:
             if (activeAppsInProcess.find(0) != activeAppsInProcess.end()) {
                 return true;
             }
-            return (activeProcessNodeIds_.find(rootNodeId) != activeProcessNodeIds_.end());
+            if (activeProcessNodeIds_.find(rootNodeId) != activeProcessNodeIds_.end()) {
+                activeNodeIds.insert(activeProcessNodeIds_[pid].begin(), activeProcessNodeIds_[pid].end());
+                return true;
+            }
         }
         return false;
     }

@@ -239,7 +239,6 @@ private:
     // UIFirst
     void CheckParallelSubThreadNodesStatus();
     void CacheCommands();
-    void NewCacheCommands();
 
     // used for informing hgm the bundle name of SurfaceRenderNodes
     void InformHgmNodeInfo();

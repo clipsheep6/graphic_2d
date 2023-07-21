@@ -402,6 +402,8 @@ private:
     template<typename T>
     friend class RSAnimatableProperty;
 };
+// backward compatibility
+using RSBaseNode = RSNode;
 } // namespace Rosen
 } // namespace OHOS
 

@@ -71,9 +71,9 @@ void RSUniRenderVisitorTest::TearDown()
 HWTEST_F(RSUniRenderVisitorTest, PrepareBaseRenderNode001, TestSize.Level1)
 {
     auto rsContext = std::make_shared<RSContext>();
-    auto RSRenderNode = std::make_shared<RSRenderNode>(10, rsContext->weak_from_this());
+    auto rsRenderNode = std::make_shared<RSRenderNode>(10, rsContext->weak_from_this());
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
-    rsUniRenderVisitor->PrepareChild(*RSRenderNode);
+    rsUniRenderVisitor->PrepareChild(*rsRenderNode);
 }
 
 /*
@@ -388,24 +388,24 @@ HWTEST_F(RSUniRenderVisitorTest, SetSurfafaceGlobalDirtyRegion, TestSize.Level1)
 HWTEST_F(RSUniRenderVisitorTest, ParallelCompositionTest, TestSize.Level1)
 {
     auto rsContext = std::make_shared<RSContext>();
-    auto RSRenderNode = std::make_shared<RSRenderNode>(10, rsContext->weak_from_this());
+    auto rsRenderNode = std::make_shared<RSRenderNode>(10, rsContext->weak_from_this());
     RSDisplayNodeConfig displayConfig1 = {
         .screenId = 0,
         .isMirrored = false,
         .mirrorNodeId = 0,
     };
     auto rsDisplayRenderNode1 = std::make_shared<RSDisplayRenderNode>(20, displayConfig1, rsContext->weak_from_this());
-    RSRenderNode->AddChild(rsDisplayRenderNode1);
+    rsRenderNode->AddChild(rsDisplayRenderNode1);
     RSDisplayNodeConfig displayConfig2 = {
         .screenId = 1,
         .isMirrored = true,
         .mirrorNodeId = 20,
     };
     auto rsDisplayRenderNode2 = std::make_shared<RSDisplayRenderNode>(30, displayConfig2, rsContext->weak_from_this());
-    RSRenderNode->AddChild(rsDisplayRenderNode2);
+    rsRenderNode->AddChild(rsDisplayRenderNode2);
 
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
-    bool ret = rsUniRenderVisitor->ParallelComposition(RSRenderNode);
+    bool ret = rsUniRenderVisitor->ParallelComposition(rsRenderNode);
     ASSERT_EQ(ret, true);
 }
 

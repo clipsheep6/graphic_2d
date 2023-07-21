@@ -62,7 +62,7 @@ public:
     }
 
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {}) : id_(id), context_(context) {};
-    explicit RSRenderNode(NodeId id, bool isOnTheTree = false, std::weak_ptr<RSContext> context = {})
+    explicit RSRenderNode(NodeId id, bool isOnTheTree, std::weak_ptr<RSContext> context = {})
         : id_(id), isOnTheTree_(isOnTheTree), context_(context) {};
     RSRenderNode(const RSRenderNode&) = delete;
     RSRenderNode(const RSRenderNode&&) = delete;
@@ -514,16 +514,12 @@ public:
     void AddCrossParentChild(const SharedPtr& child, int32_t index = -1);
     void RemoveCrossParentChild(const SharedPtr& child, const WeakPtr& newParent);
 
-    virtual void CollectSurface(const std::shared_ptr<RSBaseRenderNode>& node,
-                                std::vector<RSBaseRenderNode::SharedPtr>& vec,
+    virtual void CollectSurface(const std::shared_ptr<RSRenderNode>& node,
+                                std::vector<RSRenderNode::SharedPtr>& vec,
                                 bool isUniRender,
                                 bool onlyFirstLevel);
     virtual void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor);
     virtual void Process(const std::shared_ptr<RSNodeVisitor>& visitor);
-    virtual bool IsDirty() const;
-    // attention: current all base node's dirty ops causing content dirty
-    // if there is any new dirty op, check it
-    virtual bool IsContentDirty() const;
     virtual void SetContentDirty();
 
     WeakPtr GetParent() const;
@@ -773,7 +769,8 @@ private:
     friend class RSProxyRenderNode;
     friend class RSRenderNode;
 };
+// backward compatibility
+using RSBaseRenderNode = RSRenderNode;
 } // namespace Rosen
 } // namespace OHOS
-
 #endif // RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_RENDER_NODE_H

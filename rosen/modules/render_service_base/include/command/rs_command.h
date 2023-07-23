@@ -58,17 +58,17 @@ public:
 
     virtual void Process(RSContext& context) = 0;
 
+    virtual NodeId GetNodeId() const
+    {
+        return 0;
+    }
+    
     virtual uint16_t GetType() const
     {
         return 0;
     }
 
     virtual uint16_t GetSubType() const
-    {
-        return 0;
-    }
-
-    virtual NodeId GetNodeId() const
     {
         return 0;
     }

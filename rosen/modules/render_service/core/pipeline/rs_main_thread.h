@@ -206,6 +206,7 @@ private:
     void RemoveRSEventDetector();
     void SetRSEventDetectorLoopStartTag();
     void SetRSEventDetectorLoopFinishTag();
+    void SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransactionData>>& transactionVec, pid_t pid);
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
     void ReleaseExitSurfaceNodeAllGpuResource(GrDirectContext* grContext);
@@ -270,6 +271,7 @@ private:
     int32_t syncTransactionCount_ { 0 };
 
     TransactionDataMap cachedTransactionDataMap_;
+    std::map<pid_t, std::vector<std::unique_ptr<RSTransactionData>>> cachedSkipTransactionDataMap_;
     TransactionDataIndexMap effectiveTransactionDataIndexMap_;
     std::unordered_map<pid_t, uint64_t> transactionDataLastWaitTime_;
 

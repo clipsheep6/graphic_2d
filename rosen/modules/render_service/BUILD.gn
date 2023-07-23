@@ -109,6 +109,7 @@ ohos_shared_library("librender_service") {
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/utils/include",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/config/include",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/interface/include",
+    "$graphic_2d_root/rosen/modules/hyper_graphic_manager/frame_rate_manager",
   ]
 
   deps = [
@@ -150,6 +151,7 @@ ohos_shared_library("librender_service") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "window_manager:libwsutils",
   ]
 
   if (rosen_is_ohos) {

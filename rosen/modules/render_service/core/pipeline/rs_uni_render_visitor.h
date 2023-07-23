@@ -25,6 +25,7 @@
 
 #include "rs_base_render_engine.h"
 
+#include "hgm_frame_rate_manager.h"
 #include "pipeline/driven_render/rs_driven_render_manager.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_processor.h"
@@ -32,6 +33,7 @@
 #include "platform/ohos/overdraw/rs_gpu_overdraw_canvas_listener.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #include "screen_manager/rs_screen_manager.h"
+#include "system/rs_system_parameters.h"
 #include "visitor/rs_node_visitor.h"
 
 class SkPicture;
@@ -151,7 +153,13 @@ public:
 
     void ResetFrameRateRangeMaps();
     void UpdateSurfaceFrameRateRange(RSRenderNode& node);
+    void FindAndSendRefreshRate();
 
+#ifndef USE_ROSEN_DRAWING
+    using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, float, std::optional<SkMatrix>>;
+#else
+    using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, float, std::optional<Drawing::Matrix>>;
+#endif
 private:
     void DrawWatermarkIfNeed();
 #ifndef USE_ROSEN_DRAWING
@@ -314,6 +322,7 @@ private:
     bool isOcclusionEnabled_ = false;
     std::vector<std::string> dfxTargetSurfaceNames_;
     PartialRenderType partialRenderType_;
+    QuickSkipPrepareType quickSkipPrepareType_;
     DirtyRegionDebugType dirtyRegionDebugType_;
     bool isDirty_ = false;
     // added for judge if drawing cache changes
@@ -356,12 +365,8 @@ private:
     // driven render
     std::unique_ptr<DrivenInfo> drivenInfo_ = nullptr;
 
-#ifndef USE_ROSEN_DRAWING
-    using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, float, std::optional<SkMatrix>>;
-#else
-    using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, float, std::optional<Drawing::Matrix>>;
-#endif
     std::unordered_map<NodeId, RenderParam> unpairedTransitionNodes_;
+    std::stack<RenderParam> curGroupedNodes_;
     // return true if we should prepare/process, false if we should skip.
     bool PrepareSharedTransitionNode(RSBaseRenderNode& node);
     bool ProcessSharedTransitionNode(RSBaseRenderNode& node);
@@ -369,6 +374,9 @@ private:
     std::weak_ptr<RSBaseRenderNode> logicParentNode_;
 
     bool isCalcCostEnable_ = false;
+    // adapt to sceneboard, mark if the canvasNode within the scope of surfaceNode
+    bool isSubNodeOfSurfaceInPrepare_ = false;
+    bool isSubNodeOfSurfaceInProcess_ = false;
 
 #ifndef USE_ROSEN_DRAWING
     std::optional<SkMatrix> rootMatrix_ = std::nullopt;
@@ -413,6 +421,8 @@ private:
     std::unordered_map<NodeId, FrameRateRange> rsFrameRateRangeMap_; // RSDisplayRenderNode id
     std::unordered_map<NodeId, FrameRateRange> uiFrameRateRangeMap_; // RSSurfaceRenderNode id
     std::unordered_map<NodeId, FrameRateRange> finalFrameRateRangeMap_; // RSDisplayRenderNode id
+
+    std::unique_ptr<HgmFrameRateManager> frameRateMgr_;
 };
 } // namespace Rosen
 } // namespace OHOS

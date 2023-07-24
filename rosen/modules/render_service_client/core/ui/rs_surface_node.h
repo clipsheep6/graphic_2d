@@ -71,8 +71,8 @@ public:
     // After calling it, this surfaceNode is disallowed to add/remove child.
     void CreateNodeInRenderThread();
 
-    void AddChild(std::shared_ptr<RSBaseNode> child, int index) override;
-    void RemoveChild(std::shared_ptr<RSBaseNode> child) override;
+    void AddChild(std::shared_ptr<RSNode> child, int index) override;
+    void RemoveChild(std::shared_ptr<RSNode> child) override;
     void ClearChildren() override;
 
     void SetSecurityLayer(bool isSecurityLayer);

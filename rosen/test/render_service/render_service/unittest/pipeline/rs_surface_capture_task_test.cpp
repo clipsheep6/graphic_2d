@@ -20,7 +20,7 @@
 
 #include "rs_test_util.h"
 #include "pipeline/rs_surface_capture_task.h"
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_render_node.h"

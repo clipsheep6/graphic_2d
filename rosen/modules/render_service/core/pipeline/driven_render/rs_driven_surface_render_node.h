@@ -113,8 +113,8 @@ public:
     const RectI& GetSrcRect() const;
     const RectI& GetDstRect() const;
 
-    void SetDrivenCanvasNode(RSBaseRenderNode::SharedPtr node);
-    RSBaseRenderNode::SharedPtr GetDrivenCanvasNode() const;
+    void SetDrivenCanvasNode(RSRenderNode::SharedPtr node);
+    RSRenderNode::SharedPtr GetDrivenCanvasNode() const;
 
     bool CreateSurface(sptr<IBufferConsumerListener> listener);
     bool IsSurfaceCreated() const;
@@ -159,7 +159,7 @@ private:
     std::shared_ptr<RSSurface> surface_;
 #endif
     sptr<IBufferConsumerListener> consumerListener_;
-    RSBaseRenderNode::SharedPtr drivenCanvasNode_ = nullptr;
+    RSRenderNode::SharedPtr drivenCanvasNode_ = nullptr;
 
     DrivenExtInfo drivenExtInfo_;
 };

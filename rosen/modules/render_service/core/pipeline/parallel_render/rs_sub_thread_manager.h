@@ -24,7 +24,7 @@
 #include <mutex>
 #include "EGL/egl.h"
 #include "pipeline/parallel_render/rs_render_task.h"
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 #include "render_context/render_context.h"
 
 namespace OHOS::Rosen {

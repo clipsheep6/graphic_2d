@@ -15,8 +15,93 @@
 
 #include "command/rs_node_command.h"
 
+#include "animation/rs_frame_rate_range.h"
+
 namespace OHOS {
 namespace Rosen {
+void RSNodeCommandHelper::Destroy(RSContext& context, NodeId nodeId)
+{
+    auto& nodeMap = context.GetMutableNodeMap();
+    auto node = nodeMap.GetRenderNode(nodeId);
+    if (node == nullptr) {
+        return;
+    }
+    node->ClearChildren();
+    node->RemoveFromTree();
+    nodeMap.UnregisterRenderNode(node->GetId());
+}
+
+void RSNodeCommandHelper::AddChild(RSContext& context, NodeId nodeId, NodeId childNodeId, int32_t index)
+{
+    auto& nodeMap = context.GetNodeMap();
+    auto node = nodeMap.GetRenderNode(nodeId);
+    auto child = nodeMap.GetRenderNode(childNodeId);
+    if (node && child) {
+        node->AddChild(child, index);
+    }
+}
+
+void RSNodeCommandHelper::MoveChild(RSContext& context, NodeId nodeId, NodeId childNodeId, int32_t index)
+{
+    auto& nodeMap = context.GetNodeMap();
+    auto node = nodeMap.GetRenderNode(nodeId);
+    auto child = nodeMap.GetRenderNode(childNodeId);
+    if (node && child) {
+        node->MoveChild(child, index);
+    }
+}
+
+void RSNodeCommandHelper::RemoveChild(RSContext& context, NodeId nodeId, NodeId childNodeId)
+{
+    auto& nodeMap = context.GetNodeMap();
+    auto node = nodeMap.GetRenderNode(nodeId);
+    auto child = nodeMap.GetRenderNode(childNodeId);
+    if (node && child) {
+        node->RemoveChild(child);
+    }
+}
+
+void RSNodeCommandHelper::AddCrossParentChild(RSContext& context, NodeId id, NodeId childId, int32_t index)
+{
+    auto& nodeMap = context.GetNodeMap();
+    auto node = nodeMap.GetRenderNode(id);
+    auto child = nodeMap.GetRenderNode(childId);
+    if (node && child) {
+        node->AddCrossParentChild(child, index);
+    }
+}
+
+void RSNodeCommandHelper::RemoveCrossParentChild(RSContext& context, NodeId nodeId, NodeId childNodeId,
+    NodeId newParentId)
+{
+    auto& nodeMap = context.GetNodeMap();
+    auto node = nodeMap.GetRenderNode(nodeId);
+    auto child = nodeMap.GetRenderNode(childNodeId);
+    auto newParent = nodeMap.GetRenderNode(newParentId);
+    if (node && child && newParent) {
+        node->RemoveCrossParentChild(child, newParent);
+    }
+}
+
+void RSNodeCommandHelper::RemoveFromTree(RSContext& context, NodeId nodeId)
+{
+    auto& nodeMap = context.GetNodeMap();
+    auto node = nodeMap.GetRenderNode(nodeId);
+    if (node == nullptr) {
+        return;
+    }
+    node->RemoveFromTree();
+}
+
+void RSNodeCommandHelper::ClearChildren(RSContext& context, NodeId nodeId)
+{
+    auto& nodeMap = context.GetNodeMap();
+    auto node = nodeMap.GetRenderNode(nodeId);
+    if (node) {
+        node->ClearChildren();
+    }
+}
+
 void RSNodeCommandHelper::AddModifier(RSContext& context, NodeId nodeId,
     const std::shared_ptr<RSRenderModifier>& modifier)
 {

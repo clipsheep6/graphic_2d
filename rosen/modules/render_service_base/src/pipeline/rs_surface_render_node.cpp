@@ -137,7 +137,7 @@ void RSSurfaceRenderNode::PrepareRenderBeforeChildren(RSPaintFilterCanvas& canva
     canvas.MultiplyAlpha(properties.GetAlpha());
 
     // Apply matrix to canvas
-    auto currentGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    auto currentGeoPtr = (properties.GetBoundsGeometry());
     if (currentGeoPtr != nullptr) {
         currentGeoPtr->UpdateByMatrixFromSelf();
         auto matrix = currentGeoPtr->GetMatrix();
@@ -187,7 +187,7 @@ void RSSurfaceRenderNode::PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas
 }
 
 void RSSurfaceRenderNode::CollectSurface(
-    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender,
+    const std::shared_ptr<RSRenderNode>& node, std::vector<RSRenderNode::SharedPtr>& vec, bool isUniRender,
     bool onlyFirstLevel)
 {
     if (IsStartingWindow()) {
@@ -230,7 +230,7 @@ void RSSurfaceRenderNode::CollectSurface(
     }
 }
 
-void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node)
+void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSRenderNode>& node)
 {
     for (auto& child : node->GetSortedChildren()) {
         auto surfaceNode = child->ReinterpretCastTo<RSSurfaceRenderNode>();
@@ -248,21 +248,21 @@ void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSBaseRenderN
 
 void RSSurfaceRenderNode::OnTreeStateChanged()
 {
-#ifdef RS_ENABLE_GL
     RSRenderNode::OnTreeStateChanged();
-    if (grContext_ && !IsOnTheTree() && IsLeashWindow()) {
+#ifdef RS_ENABLE_GL
 #ifndef USE_ROSEN_DRAWING
+    if (grContext_ && !IsOnTheTree() && IsLeashWindow()) {
         RS_TRACE_NAME_FMT("purgeUnlockedResources this SurfaceNode isn't on the tree Id:%" PRIu64 " Name:%s",
             GetId(), GetName().c_str());
         grContext_->purgeUnlockedResources(true);
-#endif
     }
+#endif
 #endif
 }
 
 void RSSurfaceRenderNode::ResetParent()
 {
-    RSBaseRenderNode::ResetParent();
+    RSRenderNode::ResetParent();
 
     if (nodeType_ == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
         ClearChildrenCache(shared_from_this());
@@ -359,7 +359,7 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanva
 #ifndef USE_ROSEN_DRAWING
     canvas.save();
     if (GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE) {
-        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+        auto geoPtr = (property.GetBoundsGeometry());
         canvas.concat(geoPtr->GetMatrix());
     }
     RSPropertiesPainter::DrawBorder(property, canvas);
@@ -367,7 +367,7 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanva
 #else
     canvas.Save();
     if (GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE) {
-        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+        auto geoPtr = (property.GetBoundsGeometry());
         canvas.ConcatMatrix(geoPtr->GetMatrix());
     }
     RSPropertiesPainter::DrawBorder(property, canvas);
@@ -534,7 +534,7 @@ void RSSurfaceRenderNode::ConnectToNodeInRenderService()
     if (renderServiceClient != nullptr) {
         renderServiceClient->RegisterBufferAvailableListener(
             GetId(), [weakThis = weak_from_this()]() {
-                auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(weakThis.lock());
+                auto node = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(weakThis.lock());
                 if (node == nullptr) {
                     return;
                 }
@@ -665,7 +665,7 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
 
     SetOcclusionVisible(vis);
     for (auto& child : GetSortedChildren()) {
-        if (auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)) {
+        if (auto surface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)) {
             surface->SetVisibleRegionRecursive(region, visibleVec, pidVisMap);
         }
     }
@@ -797,7 +797,7 @@ Vector4f RSSurfaceRenderNode::GetWindowCornerRadius()
     if (!GetRenderProperties().GetCornerRadius().IsZero()) {
         return GetRenderProperties().GetCornerRadius();
     }
-    auto parent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetParent().lock());
+    auto parent = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetParent().lock());
     if (parent != nullptr && parent->IsLeashWindow()) {
         return parent->GetRenderProperties().GetCornerRadius();
     }
@@ -1147,7 +1147,7 @@ float RSSurfaceRenderNode::GetLocalZOrder() const
 void RSSurfaceRenderNode::OnApplyModifiers()
 {
     auto& properties = GetMutableRenderProperties();
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    auto geoPtr = (properties.GetBoundsGeometry());
 
     // Multiply context alpha into alpha
     properties.SetAlpha(properties.GetAlpha() * contextAlpha_);
@@ -1175,7 +1175,7 @@ bool RSSurfaceRenderNode::LeashWindowRelatedAppWindowOccluded(std::shared_ptr<RS
     }
     for (auto& child : GetChildren()) {
         auto childNode = child.lock();
-        const auto& childNodeSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
+        const auto& childNodeSurface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
         if (childNodeSurface && childNodeSurface->GetVisibleRegion().IsEmpty()) {
             appNode = childNodeSurface;
             return true;
@@ -1193,7 +1193,7 @@ std::vector<std::shared_ptr<RSSurfaceRenderNode>> RSSurfaceRenderNode::GetLeashW
     for (auto& child : GetChildren()) {
         auto childNode = child.lock();
         if (childNode) {
-            auto childNodeSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
+            auto childNodeSurface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
             if (childNodeSurface) {
                 res.emplace_back(childNodeSurface);
             }
@@ -1247,7 +1247,7 @@ void RSSurfaceRenderNode::UpdateCacheSurfaceDirtyManager(int bufferAge)
 #ifdef OHOS_PLATFORM
 void RSSurfaceRenderNode::SetIsOnTheTree(bool flag)
 {
-    RSBaseRenderNode::SetIsOnTheTree(flag);
+    RSRenderNode::SetIsOnTheTree(flag);
     if (flag == isReportFirstFrame_ || !IsAppWindow()) {
         return;
     }

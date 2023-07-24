@@ -18,7 +18,7 @@
 #include <memory>
 #include <unistd.h>
 
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_context.h"
 
 using namespace testing;
@@ -36,13 +36,13 @@ public:
     void TearDown() override;
 
     static inline std::shared_ptr<RSContext> context = nullptr;
-    static inline std::shared_ptr<RSBaseRenderNode> node1 = nullptr;
+    static inline std::shared_ptr<RSRenderNode> node1 = nullptr;
 };
 
 void RSTunnelHandleTest::SetUpTestCase()
 {
     context = std::make_shared<RSContext>();
-    node1 = std::make_shared<RSBaseRenderNode>(nodeId1, context->weak_from_this());
+    node1 = std::make_shared<RSRenderNode>(nodeId1, context->weak_from_this());
 }
 
 void RSTunnelHandleTest::TearDownTestCase()

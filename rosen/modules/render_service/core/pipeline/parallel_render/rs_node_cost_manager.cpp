@@ -70,7 +70,7 @@ bool RSNodeCostManager::IsSkipProcessing(RSSurfaceRenderNode& node) const
     return false;
 }
 
-void RSNodeCostManager::CalcBaseRenderNodeCost(RSBaseRenderNode& node)
+void RSNodeCostManager::CalcBaseRenderNodeCost(RSRenderNode& node)
 {
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
     for (auto& child : node.GetSortedChildren()) {

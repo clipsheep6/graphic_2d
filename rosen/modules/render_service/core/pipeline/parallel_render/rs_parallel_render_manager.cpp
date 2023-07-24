@@ -233,7 +233,7 @@ void RSParallelRenderManager::PackRenderTask(RSSurfaceRenderNode &node, TaskType
 }
 
 void RSParallelRenderManager::PackParallelCompositionTask(std::shared_ptr<RSNodeVisitor> visitor,
-                                                          const std::shared_ptr<RSBaseRenderNode> node)
+                                                          const std::shared_ptr<RSRenderNode> node)
 {
     uniParallelCompositionVisitor_ = std::static_pointer_cast<RSUniRenderVisitor>(visitor);
     baseNode_ = node;
@@ -241,7 +241,7 @@ void RSParallelRenderManager::PackParallelCompositionTask(std::shared_ptr<RSNode
     auto children = node->GetSortedChildren();
     for (auto iter = children.rbegin(); iter != children.rend(); iter++) {
         std::shared_ptr<RSDisplayRenderNode> displayNode =
-            RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(*iter);
+            RSRenderNode::ReinterpretCast<RSDisplayRenderNode>(*iter);
         if (*iter == *children.begin()) {
             mainDisplayNode_ = displayNode;
             break;

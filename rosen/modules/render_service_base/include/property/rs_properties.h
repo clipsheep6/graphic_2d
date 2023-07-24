@@ -234,7 +234,7 @@ public:
 
     bool IsPixelStretchPercentValid() const;
 
-    const std::shared_ptr<RSObjGeometry>& GetBoundsGeometry() const;
+    const std::shared_ptr<RSObjAbsGeometry>& GetBoundsGeometry() const;
     const std::shared_ptr<RSObjGeometry>& GetFrameGeometry() const;
 #ifndef USE_ROSEN_DRAWING
     bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag, const std::optional<SkPoint>& offset,
@@ -336,7 +336,7 @@ private:
     float alpha_ = 1.f;
     bool alphaOffscreen_ = false;
 
-    std::shared_ptr<RSObjGeometry> boundsGeo_;
+    std::shared_ptr<RSObjAbsGeometry> boundsGeo_;
     std::shared_ptr<RSObjGeometry> frameGeo_;
 
     std::shared_ptr<RSFilter> backgroundFilter_ = nullptr;

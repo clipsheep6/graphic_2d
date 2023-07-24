@@ -92,12 +92,12 @@ bool RSDrivenRenderManager::ClipHoleForDrivenNode(RSPaintFilterCanvas& canvas, c
     return true;
 }
 
-static bool IsValidSurfaceName(RSBaseRenderNode::SharedPtr backgroundNode)
+static bool IsValidSurfaceName(RSRenderNode::SharedPtr backgroundNode)
 {
     if (!backgroundNode) {
         return false;
     }
-    auto rsParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(backgroundNode->GetParent().lock());
+    auto rsParent = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(backgroundNode->GetParent().lock());
     if (!rsParent) {
         return false;
     }
@@ -110,8 +110,8 @@ void RSDrivenRenderManager::DoPrepareRenderTask(const DrivenPrepareInfo& info)
     bool contentDirty = info.dirtyInfo.contentDirty;
     bool nonContentDirty = info.dirtyInfo.nonContentDirty;
     bool isValidSurface = IsValidSurfaceName(info.backgroundNode);
-    RSBaseRenderNode::SharedPtr currBackground = nullptr;
-    RSBaseRenderNode::SharedPtr currContent = nullptr;
+    RSRenderNode::SharedPtr currBackground = nullptr;
+    RSRenderNode::SharedPtr currContent = nullptr;
     DrivenDirtyType dirtyType = info.dirtyInfo.type;
 
     RS_TRACE_NAME("RSDrivenRender:DoPrepareRenderTask backgroundDirty: " +
@@ -168,7 +168,7 @@ void RSDrivenRenderManager::DoProcessRenderTask(const DrivenProcessInfo& info)
     bool isReusableMode = false;
     auto currBackground = backgroundSurfaceNode_->GetDrivenCanvasNode();
     if (currBackground != nullptr && uniRenderMode_ == DrivenUniRenderMode::REUSE_WITH_CLIP_HOLE) {
-        auto rsParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(currBackground->GetParent().lock());
+        auto rsParent = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(currBackground->GetParent().lock());
         if (rsParent != nullptr) {
             isReusableMode = true;
             traceMsg = "RSDrivenRender::ReusableProcess:[" + rsParent->GetName() + "]" +
@@ -259,7 +259,7 @@ RectI RSDrivenRenderManager::CalcUniRenderSurfaceClipHoleRect()
     RectI rect;
     if (contentSurfaceNode_->GetDrivenCanvasNode() != nullptr) {
         auto canvasNode =
-            RSBaseRenderNode::ReinterpretCast<RSCanvasRenderNode>(contentSurfaceNode_->GetDrivenCanvasNode());
+            RSRenderNode::ReinterpretCast<RSCanvasRenderNode>(contentSurfaceNode_->GetDrivenCanvasNode());
         if (canvasNode == nullptr) {
             return rect;
         }
@@ -268,7 +268,7 @@ RectI RSDrivenRenderManager::CalcUniRenderSurfaceClipHoleRect()
         if (clipHoleRect.IsZero()) {
             clipHoleRect = property.GetFrame();
         }
-        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+        auto geoPtr = (property.GetBoundsGeometry());
         rect = geoPtr->MapAbsRect(RectF(clipHoleRect.x_, clipHoleRect.y_, clipHoleRect.z_, clipHoleRect.w_));
     }
     return rect;

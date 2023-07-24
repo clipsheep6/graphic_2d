@@ -205,11 +205,25 @@ VsyncError VSyncGenerator::UpdateMode(int64_t period, int64_t phase, int64_t ref
     if (period < 0 || refrenceTime < 0) {
         return VSYNC_ERROR_INVALID_ARGUMENTS;
     }
-    period_ = period;
     phase_ = phase;
     refrenceTime_ = refrenceTime;
+    EnableLTPOLocked(period);
     con_.notify_all();
     return VSYNC_ERROR_OK;
+}
+
+void VSyncGenerator::EnableLTPOLocked(int64_t period)
+{
+    double refreshRate = 1.0/((double)period/1000000000.0);
+    if (refreshRate > 115.0 && refreshRate < 125.0) {
+        period_ = (int64_t)((double)period/3);
+    } else if (refreshRate > 85.0 && refreshRate < 95.0) {
+        period_ = (int64_t)((double)period/4);
+    } else if (refreshRate > 55.0 && refreshRate < 65.0) {
+        period_ = (int64_t)((double)period/6);
+    } else if (refreshRate > 25.0 && refreshRate < 35.0) {
+        period_ = (int64_t)((double)period/12);
+    }
 }
 
 VsyncError VSyncGenerator::AddListener(int64_t phase, const sptr<OHOS::Rosen::VSyncGenerator::Callback>& cb)

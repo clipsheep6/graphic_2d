@@ -89,6 +89,7 @@ private:
         int64_t timestamp;
         int64_t vsyncCount;
         int64_t period;
+        int64_t vsyncCountReference;
     };
     void ThreadMain();
     void EnableVSync();

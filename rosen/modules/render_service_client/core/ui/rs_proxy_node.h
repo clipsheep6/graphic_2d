@@ -42,8 +42,8 @@ public:
         return name_;
     }
 
-    void AddChild(std::shared_ptr<RSBaseNode> child, int index) override;
-    void RemoveChild(std::shared_ptr<RSBaseNode> child) override;
+    void AddChild(std::shared_ptr<RSNode> child, int index) override;
+    void RemoveChild(std::shared_ptr<RSNode> child) override;
     void ClearChildren() override;
 
     void SetBounds(const Vector4f& bounds) override {}

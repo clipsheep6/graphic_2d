@@ -72,7 +72,7 @@ HWTEST_F(RSDrivenRenderVisitorTest, ProcessBaseRenderNode, TestSize.Level1)
     secondItemNode->SetItemIndex(1);
     drivenContentNode->AddChild(secondItemNode, -1);
     drivenBackgroundNode->AddChild(drivenContentNode, -1);
-    rsDrivenRenderVisitor->ProcessBaseRenderNode(*drivenBackgroundNode);
+    rsDrivenRenderVisitor->ProcessChild(*drivenBackgroundNode);
     rsDrivenRenderVisitor->ProcessCanvasRenderNode(*drivenBackgroundNode);
 }
 

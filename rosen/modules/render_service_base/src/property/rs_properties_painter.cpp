@@ -432,7 +432,7 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
         }
     }
 
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    auto geoPtr = (properties.GetBoundsGeometry());
     SkMatrix matrix = (geoPtr && isAbsCoordinate) ? geoPtr->GetAbsMatrix() : SkMatrix::I();
     matrix.mapRect(&shadowRect);
 
@@ -513,7 +513,7 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
         brush.SetFilter(filter);
     }
 
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    auto geoPtr = (properties.GetBoundsGeometry());
     Drawing::Matrix matrix = geoPtr ? geoPtr->GetAbsMatrix() : Drawing::Matrix();
     matrix.MapRect(shadowRect, shadowRect);
 
@@ -617,7 +617,7 @@ void RSPropertiesPainter::DrawColorfulShadowInner(
     canvas.clipPath(skPath);
     // draw node content as shadow
     // [PLANNING]: maybe we should also draw background color / image here, and we should cache the shadow image
-    if (auto node = RSBaseRenderNode::ReinterpretCast<RSCanvasRenderNode>(properties.backref_.lock())) {
+    if (auto node = RSRenderNode::ReinterpretCast<RSCanvasRenderNode>(properties.backref_.lock())) {
         node->InternalDrawContent(canvas);
     }
 }
@@ -645,7 +645,7 @@ void RSPropertiesPainter::DrawColorfulShadowInner(
     canvas.ClipPath(path, Drawing::ClipOp::INTERSECT, false);
     // draw node content as shadow
     // [PLANNING]: maybe we should also draw background color / image here, and we should cache the shadow image
-    if (auto node = RSBaseRenderNode::ReinterpretCast<RSCanvasRenderNode>(properties.backref_.lock())) {
+    if (auto node = RSRenderNode::ReinterpretCast<RSCanvasRenderNode>(properties.backref_.lock())) {
         node->InternalDrawContent(canvas);
     }
 }
@@ -1341,7 +1341,7 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
 
     SkPaint paint;
     SkMatrix inverseMat, scaleMat;
-    auto boundsGeo = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    auto boundsGeo = (properties.GetBoundsGeometry());
     if (boundsGeo && !boundsGeo->IsEmpty()) {
         if (!canvas.getTotalMatrix().invert(&inverseMat)) {
             ROSEN_LOGE("RSPropertiesPainter::DrawPixelStretch get inverse matrix failed.");
@@ -1412,7 +1412,7 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
 
     Drawing::Brush brush;
     Drawing::Matrix inverseMat, scaleMat;
-    auto boundsGeo = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    auto boundsGeo = (properties.GetBoundsGeometry());
     if (boundsGeo && !boundsGeo->IsEmpty()) {
         if (!canvas.GetTotalMatrix().Invert(inverseMat)) {
             ROSEN_LOGE("RSPropertiesPainter::DrawPixelStretch get inverse matrix failed.");

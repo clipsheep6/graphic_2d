@@ -160,7 +160,7 @@ void RSDividedUICapture::PostTaskToRTRecord(std::shared_ptr<Drawing::RecordingCa
     RSRenderThread::Instance().PostSyncTask(recordingDrawCall);
 }
 
-void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
+void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessChild(RSRenderNode& node)
 {
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
@@ -205,7 +205,7 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessCanvasRenderNode(RSCa
     if (node.GetId() == nodeId_) {
         // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
         const auto& property = node.GetRenderProperties();
-        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+        auto geoPtr = (property.GetBoundsGeometry());
 #ifndef USE_ROSEN_DRAWING
         SkMatrix relativeMatrix = SkMatrix::I();
         relativeMatrix.setScaleY(scaleX_);
@@ -246,7 +246,7 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessCanvasRenderNode(RSCa
     } else {
         node.ProcessRenderContents(*canvas_);
     }
-    ProcessBaseRenderNode(node);
+    ProcessChild(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }
 
@@ -261,7 +261,7 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessEffectRenderNode(RSEf
         return;
     }
     node.ProcessRenderBeforeChildren(*canvas_);
-    ProcessBaseRenderNode(node);
+    ProcessChild(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }
 
@@ -325,10 +325,10 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessSurfaceRenderNode(RSS
     canvas_->DrawImage(*image, node.GetRenderProperties().GetBoundsPositionX(),
         node.GetRenderProperties().GetBoundsPositionY(), Drawing::SamplingOptions());
 #endif
-    ProcessBaseRenderNode(node);
+    ProcessChild(node);
 }
 
-void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
+void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareChild(RSRenderNode& node)
 {
     for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
@@ -340,7 +340,7 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareCanvasRenderNode(RSCa
     node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
     node.Update(*dirtyManager, nullptr, false);
-    PrepareBaseRenderNode(node);
+    PrepareChild(node);
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
@@ -348,7 +348,7 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareSurfaceRenderNode(RSS
     node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
     node.Update(*dirtyManager, nullptr, false);
-    PrepareBaseRenderNode(node);
+    PrepareChild(node);
 }
 
 void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
@@ -362,7 +362,7 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareEffectRenderNode(RSEf
     node.ApplyModifiers();
     auto dirtyManager = std::make_shared<RSDirtyRegionManager>();
     node.Update(*dirtyManager, nullptr, false);
-    PrepareBaseRenderNode(node);
+    PrepareChild(node);
 }
 
 } // namespace Rosen

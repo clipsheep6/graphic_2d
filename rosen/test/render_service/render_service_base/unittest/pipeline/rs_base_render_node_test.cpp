@@ -15,7 +15,7 @@
 
 #include "gtest/gtest.h"
 
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 #include "platform/common/rs_log.h"
 using namespace testing;
 using namespace testing::ext;
@@ -47,9 +47,9 @@ HWTEST_F(RSBaseRenderNodeTest, AddChild001, TestSize.Level1)
     /**
      * @tc.steps: step1. AddChild
      */
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    auto childone = std::make_shared<RSBaseRenderNode>(id + 1, context);
-    auto childtwo = std::make_shared<RSBaseRenderNode>(id + 2, context);
+    auto node = std::make_shared<RSRenderNode>(id, context);
+    auto childone = std::make_shared<RSRenderNode>(id + 1, context);
+    auto childtwo = std::make_shared<RSRenderNode>(id + 2, context);
     int index = -1;
     node->SetIsOnTheTree(true);
     node->AddChild(node, index);
@@ -79,8 +79,8 @@ HWTEST_F(RSBaseRenderNodeTest, RemoveChild001, TestSize.Level1)
     /**
      * @tc.steps: step1. AddChild
      */
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    auto childone = std::make_shared<RSBaseRenderNode>(id + 1, context);
+    auto node = std::make_shared<RSRenderNode>(id, context);
+    auto childone = std::make_shared<RSRenderNode>(id + 1, context);
     int index = -1;
     node->AddChild(childone, index);
     ASSERT_EQ(node->GetChildrenCount(), 1);
@@ -104,8 +104,8 @@ HWTEST_F(RSBaseRenderNodeTest, ClearChildren001, TestSize.Level1)
     /**
      * @tc.steps: step1. AddChild
      */
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    auto childone = std::make_shared<RSBaseRenderNode>(id + 1, context);
+    auto node = std::make_shared<RSRenderNode>(id, context);
+    auto childone = std::make_shared<RSRenderNode>(id + 1, context);
     int index = -1;
     node->AddChild(childone, index);
     ASSERT_EQ(node->GetChildrenCount(), 1);
@@ -128,8 +128,8 @@ HWTEST_F(RSBaseRenderNodeTest, MoveChild001, TestSize.Level1)
     /**
      * @tc.steps: step1. AddChild
      */
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    auto childone = std::make_shared<RSBaseRenderNode>(id + 1, context);
+    auto node = std::make_shared<RSRenderNode>(id, context);
+    auto childone = std::make_shared<RSRenderNode>(id + 1, context);
     int index = -1;
     node->AddChild(childone, index);
     ASSERT_EQ(node->GetChildrenCount(), 1);
@@ -152,7 +152,7 @@ HWTEST_F(RSBaseRenderNodeTest, SetIsOnTheTree001, TestSize.Level1)
     /**
      * @tc.steps: step1. AddChild
      */
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
+    auto node = std::make_shared<RSRenderNode>(id, context);
     auto childone = nullptr;
     int index = -1;
     node->SetIsOnTheTree(true);
@@ -177,8 +177,8 @@ HWTEST_F(RSBaseRenderNodeTest, AddCrossParentChild001, TestSize.Level1)
     /**
      * @tc.steps: step1. AddChild
      */
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    auto childone = std::make_shared<RSBaseRenderNode>(id + 1, context);
+    auto node = std::make_shared<RSRenderNode>(id, context);
+    auto childone = std::make_shared<RSRenderNode>(id + 1, context);
     int index = -1;
     node->AddCrossParentChild(childone, index);
     ASSERT_EQ(node->GetChildrenCount(), 1);
@@ -201,9 +201,9 @@ HWTEST_F(RSBaseRenderNodeTest, RemoveCrossParentChild001, TestSize.Level1)
     /**
      * @tc.steps: step1. AddChild
      */
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    auto childone = std::make_shared<RSBaseRenderNode>(id + 1, context);
-    auto newParent = std::make_shared<RSBaseRenderNode>(id + 2, context);
+    auto node = std::make_shared<RSRenderNode>(id, context);
+    auto childone = std::make_shared<RSRenderNode>(id + 1, context);
+    auto newParent = std::make_shared<RSRenderNode>(id + 2, context);
     int index = -1;
     node->AddCrossParentChild(childone, index);
     ASSERT_EQ(node->GetChildrenCount(), 1);
@@ -222,7 +222,7 @@ HWTEST_F(RSBaseRenderNodeTest, RemoveCrossParentChild001, TestSize.Level1)
  */
 HWTEST_F(RSBaseRenderNodeTest, SetIsOnTheTree002, TestSize.Level1)
 {
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
+    auto node = std::make_shared<RSRenderNode>(id, context);
     auto childone = nullptr;
     int index = -1;
     node->SetIsOnTheTree(true);
@@ -242,9 +242,9 @@ HWTEST_F(RSBaseRenderNodeTest, AddCrossParentChildTest001, TestSize.Level1)
 {
     int32_t index = 1;
     int32_t index_ = 0;
-    std::shared_ptr<RSBaseRenderNode> child = nullptr;
-    std::shared_ptr<RSBaseRenderNode> child_;
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
+    std::shared_ptr<RSRenderNode> child = nullptr;
+    std::shared_ptr<RSRenderNode> child_;
+    auto node = std::make_shared<RSRenderNode>(id, context);
     node->AddCrossParentChild(child, index);
     node->AddCrossParentChild(child_, index_);
 }
@@ -257,9 +257,9 @@ HWTEST_F(RSBaseRenderNodeTest, AddCrossParentChildTest001, TestSize.Level1)
  */
 HWTEST_F(RSBaseRenderNodeTest, RemoveCrossParentChildTest001, TestSize.Level1)
 {
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    std::shared_ptr<RSBaseRenderNode> child = nullptr;
-    std::weak_ptr<RSBaseRenderNode> newParent;
+    auto node = std::make_shared<RSRenderNode>(id, context);
+    std::shared_ptr<RSRenderNode> child = nullptr;
+    std::weak_ptr<RSRenderNode> newParent;
     node->RemoveCrossParentChild(child, newParent);
 }
 
@@ -273,7 +273,7 @@ HWTEST_F(RSBaseRenderNodeTest, RemoveFromTreeTest, TestSize.Level1)
 {
     bool skipTransition = false;
     bool skipTransition_ = true;
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
+    auto node = std::make_shared<RSRenderNode>(id, context);
     node->RemoveFromTree(skipTransition);
     node->RemoveFromTree(skipTransition_);
 }
@@ -286,7 +286,7 @@ HWTEST_F(RSBaseRenderNodeTest, RemoveFromTreeTest, TestSize.Level1)
  */
 HWTEST_F(RSBaseRenderNodeTest, PrepareTest, TestSize.Level1)
 {
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
+    auto node = std::make_shared<RSRenderNode>(id, context);
     std::shared_ptr<RSNodeVisitor> visitor = nullptr;
     node->Prepare(visitor);
 }

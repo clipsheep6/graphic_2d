@@ -23,6 +23,7 @@
 namespace OHOS {
 namespace Rosen {
 class RSObjGeometry;
+class RSObjAbsGeometry;
 class RSImage;
 class RSShader;
 

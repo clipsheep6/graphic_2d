@@ -14,7 +14,7 @@
  */
 
 
-#include "command/rs_base_node_command.h"
+#include "command/rs_node_command.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_render_service_client.h"
 #include "transaction/rs_transaction_proxy.h"
@@ -24,7 +24,7 @@ using namespace OHOS::Rosen;
 
 int main()
 {
-    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeAddChild>(1, 1, 1);
+    std::unique_ptr<RSCommand> command = std::make_unique<RSNodeAddChild>(1, 1, 1);
     auto renderClient = RSIRenderClient::CreateRenderServiceClient();
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {

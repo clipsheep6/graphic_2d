@@ -148,7 +148,7 @@ void RSUniRenderComposerAdapter::SetComposeInfoToLayer(
     const LayerInfoPtr& layer,
     const ComposeInfo& info,
     const sptr<IConsumerSurface>& surface,
-    RSBaseRenderNode* node) const
+    RSRenderNode* node) const
 {
     if (layer == nullptr) {
         return;
@@ -474,7 +474,7 @@ bool RSUniRenderComposerAdapter::CheckStatusBeforeCreateLayer(RSSurfaceRenderNod
         return false;
     }
 
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
+    auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
     if (geoPtr == nullptr) {
         RS_LOGW("RsDebug RSUniRenderComposerAdapter::CheckStatusBeforeCreateLayer:"\
             " node(%" PRIu64 ")'s geoPtr is nullptr!", node.GetId());
@@ -705,7 +705,7 @@ LayerInfoPtr RSUniRenderComposerAdapter::CreateLayer(RSDrivenSurfaceRenderNode& 
 #endif
 }
 
-static int GetSurfaceNodeRotation(RSBaseRenderNode& node)
+static int GetSurfaceNodeRotation(RSRenderNode& node)
 {
     // only surface render node has the ability to rotate
     // the rotation of display render node is calculated as screen rotation
@@ -717,7 +717,7 @@ static int GetSurfaceNodeRotation(RSBaseRenderNode& node)
     return RSUniRenderUtil::GetRotationFromMatrix(surfaceNode.GetTotalMatrix());
 }
 
-static void SetLayerTransform(const LayerInfoPtr& layer, RSBaseRenderNode& node,
+static void SetLayerTransform(const LayerInfoPtr& layer, RSRenderNode& node,
     const sptr<IConsumerSurface>& surface, ScreenRotation screenRotation)
 {
     // screenRotation: anti-clockwise, surfaceNodeRotation: anti-clockwise, surfaceTransform: anti-clockwise
@@ -770,7 +770,7 @@ static void SetLayerSize(const LayerInfoPtr& layer, const ScreenInfo& screenInfo
 }
 
 // private func, guarantee the layer is valid
-void RSUniRenderComposerAdapter::LayerRotate(const LayerInfoPtr& layer, RSBaseRenderNode& node) const
+void RSUniRenderComposerAdapter::LayerRotate(const LayerInfoPtr& layer, RSRenderNode& node) const
 {
     auto surface = layer->GetSurface();
     if (surface == nullptr) {

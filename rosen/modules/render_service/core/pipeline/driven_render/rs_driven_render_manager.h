@@ -48,8 +48,8 @@ struct DrivenDirtyInfo {
 
 struct DrivenPrepareInfo {
     DrivenDirtyInfo dirtyInfo;
-    RSBaseRenderNode::SharedPtr backgroundNode;
-    RSBaseRenderNode::SharedPtr contentNode;
+    RSRenderNode::SharedPtr backgroundNode;
+    RSRenderNode::SharedPtr contentNode;
     RectI screenRect;
     bool hasInvalidScene = false;
     bool hasDrivenNodeOnUniTree = false;
@@ -69,7 +69,7 @@ struct DrivenInfo {
     bool hasDrivenNodeMarkRender = false;
     bool isPrepareLeashWinSubTree = false;
     std::shared_ptr<RSDirtyRegionManager> surfaceDirtyManager = nullptr;
-    RSBaseRenderNode::SharedPtr currentRootNode = nullptr;
+    RSRenderNode::SharedPtr currentRootNode = nullptr;
     DrivenUniTreePrepareMode drivenUniTreePrepareMode = DrivenUniTreePrepareMode::PREPARE_DRIVEN_NODE_BEFORE;
     DrivenUniRenderMode currDrivenRenderMode = DrivenUniRenderMode::RENDER_WITH_NORMAL;
 };

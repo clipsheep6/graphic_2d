@@ -38,12 +38,12 @@ RSDrivenSurfaceRenderNode::~RSDrivenSurfaceRenderNode()
     MemoryTrack::Instance().RemoveNodeRecord(GetId());
 }
 
-void RSDrivenSurfaceRenderNode::SetDrivenCanvasNode(RSBaseRenderNode::SharedPtr node)
+void RSDrivenSurfaceRenderNode::SetDrivenCanvasNode(RSRenderNode::SharedPtr node)
 {
     drivenCanvasNode_ = node;
 }
 
-RSBaseRenderNode::SharedPtr RSDrivenSurfaceRenderNode::GetDrivenCanvasNode() const
+RSRenderNode::SharedPtr RSDrivenSurfaceRenderNode::GetDrivenCanvasNode() const
 {
     return drivenCanvasNode_;
 }

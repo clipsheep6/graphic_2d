@@ -195,9 +195,9 @@ private:
     void ReleaseAllNodesBuffer();
     void Render();
     void SetDeviceType();
-    void UniRender(std::shared_ptr<RSBaseRenderNode> rootNode);
+    void UniRender(std::shared_ptr<RSRenderNode> rootNode);
     bool CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
-    void CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
+    void CalcOcclusionImplementation(std::vector<RSRenderNode::SharedPtr>& curAllSurfaces);
     void CalcOcclusion();
     bool CheckQosVisChanged(std::map<uint32_t, bool>& pidVisMap);
     void CallbackToQOS(std::map<uint32_t, bool>& pidVisMap);
@@ -218,8 +218,8 @@ private:
     void ReleaseExitSurfaceNodeAllGpuResource(Drawing::GPUContext* grContext);
 #endif
 
-    bool DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
-    void ResetSortedChildren(std::shared_ptr<RSBaseRenderNode> node);
+    bool DoParallelComposition(std::shared_ptr<RSRenderNode> rootNode);
+    void ResetSortedChildren(std::shared_ptr<RSRenderNode> node);
 
     void ClassifyRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void ProcessRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData, pid_t pid);
@@ -367,7 +367,7 @@ private:
     std::unordered_map<NodeId, bool> cacheCmdSkippedNodes_;
     std::unordered_map<pid_t, std::pair<std::vector<NodeId>, bool>> cacheCmdSkippedInfo_;
     std::atomic<uint64_t> frameCount_ = 0;
-    std::set<std::shared_ptr<RSBaseRenderNode>> oldDisplayChildren_;
+    std::set<std::shared_ptr<RSRenderNode>> oldDisplayChildren_;
     DeviceType deviceType_ = DeviceType::PHONE;
 
     // used for informing hgm the bundle name of SurfaceRenderNodes

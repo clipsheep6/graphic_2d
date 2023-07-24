@@ -16,7 +16,6 @@
 #ifndef ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_NODE_COMMAND_H
 #define ROSEN_RENDER_SERVICE_BASE_COMMAND_RS_NODE_COMMAND_H
 
-#include "animation/rs_frame_rate_range.h"
 #include "command/rs_command_templates.h"
 #include "common/rs_macros.h"
 #include "pipeline/rs_render_node.h"
@@ -24,8 +23,17 @@
 
 namespace OHOS {
 namespace Rosen {
-
+class FrameRateRange;
 enum RSNodeCommandType : uint16_t {
+    DESTROY,
+    ADD_CHILD,
+    MOVE_CHILD,
+    ADD_CROSS_PARENT_CHILD,
+    REMOVE_CHILD,
+    REMOVE_CROSS_PARENT_CHILD,
+    REMOVE_FROM_TREE,
+    CLEAR_CHILDREN,
+
     ADD_MODIFIER,
     REMOVE_MODIFIER,
 
@@ -70,6 +78,15 @@ enum RSNodeCommandType : uint16_t {
 
 class RSB_EXPORT RSNodeCommandHelper {
 public:
+    static void Destroy(RSContext& context, NodeId nodeId);
+    static void AddChild(RSContext& context, NodeId nodeId, NodeId childNodeId, int32_t index);
+    static void MoveChild(RSContext& context, NodeId nodeId, NodeId childNodeId, int32_t index);
+    static void RemoveChild(RSContext& context, NodeId nodeId, NodeId childNodeId);
+    static void AddCrossParentChild(RSContext& context, NodeId nodeId, NodeId childNodeId, int32_t index);
+    static void RemoveCrossParentChild(RSContext& context, NodeId nodeId, NodeId childNodeId, NodeId newParentId);
+    static void RemoveFromTree(RSContext& context, NodeId nodeId);
+    static void ClearChildren(RSContext& context, NodeId nodeId);
+
     static void AddModifier(RSContext& context, NodeId nodeId, const std::shared_ptr<RSRenderModifier>& modifier);
     static void RemoveModifier(RSContext& context, NodeId nodeId, PropertyId propertyId);
 
@@ -101,6 +118,24 @@ public:
     static void UnregisterGeometryTransitionPair(RSContext& context, NodeId inNodeId, NodeId outNodeId);
     static void SetUIFrameRateRange(RSContext& context, NodeId nodeId, FrameRateRange range);
 };
+
+ADD_COMMAND(RSNodeDestroy, ARG(BASE_NODE, DESTROY, RSNodeCommandHelper::Destroy, NodeId))
+ADD_COMMAND(
+    RSNodeAddChild, ARG(BASE_NODE, ADD_CHILD, RSNodeCommandHelper::AddChild, NodeId, NodeId, int32_t))
+ADD_COMMAND(RSNodeMoveChild,
+    ARG(BASE_NODE, MOVE_CHILD, RSNodeCommandHelper::MoveChild, NodeId, NodeId, int32_t))
+ADD_COMMAND(
+    RSNodeRemoveChild, ARG(BASE_NODE, REMOVE_CHILD, RSNodeCommandHelper::RemoveChild, NodeId, NodeId))
+ADD_COMMAND(
+    RSNodeAddCrossParentChild, ARG(BASE_NODE, ADD_CROSS_PARENT_CHILD,
+    RSNodeCommandHelper::AddCrossParentChild, NodeId, NodeId, int32_t))
+ADD_COMMAND(
+    RSNodeRemoveCrossParentChild, ARG(BASE_NODE, REMOVE_CROSS_PARENT_CHILD,
+    RSNodeCommandHelper::RemoveCrossParentChild, NodeId, NodeId, NodeId))
+ADD_COMMAND(
+    RSNodeRemoveFromTree, ARG(BASE_NODE, REMOVE_FROM_TREE, RSNodeCommandHelper::RemoveFromTree, NodeId))
+ADD_COMMAND(
+    RSNodeClearChild, ARG(BASE_NODE, CLEAR_CHILDREN, RSNodeCommandHelper::ClearChildren, NodeId))
 
 ADD_COMMAND(RSAddModifier,
     ARG(RS_NODE, ADD_MODIFIER, RSNodeCommandHelper::AddModifier, NodeId, std::shared_ptr<RSRenderModifier>))

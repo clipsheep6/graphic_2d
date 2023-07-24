@@ -41,7 +41,12 @@ public:
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::CANVAS_NODE;
 
     explicit RSCanvasRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
-    virtual ~RSCanvasRenderNode();
+    ~RSCanvasRenderNode() override;
+
+    RSRenderNodeType GetType() const override
+    {
+        return RSRenderNodeType::CANVAS_NODE;
+    }
 
 #ifndef USE_ROSEN_DRAWING
     void UpdateRecording(std::shared_ptr<DrawCmdList> drawCmds, RSModifierType type);
@@ -68,12 +73,6 @@ public:
     RSB_EXPORT RectF GetDrivenContentClipFrameRect() const;
     // functions that are dedicated to driven render [end]
 
-    void OnApplyModifiers() override;
-
-    RSRenderNodeType GetType() const override
-    {
-        return RSRenderNodeType::CANVAS_NODE;
-    }
 private:
     virtual void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const;
     void InternalDrawContent(RSPaintFilterCanvas& canvas);

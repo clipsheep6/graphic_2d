@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSBaseRenderNode;
+class RSRenderNode;
 enum class UniRenderEnabledType {
     UNI_RENDER_DISABLED = 0,
     UNI_RENDER_ENABLED_FOR_ALL,

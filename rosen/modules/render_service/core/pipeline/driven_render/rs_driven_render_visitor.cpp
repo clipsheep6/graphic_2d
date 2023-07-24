@@ -15,17 +15,18 @@
 
 #include "rs_driven_render_visitor.h"
 
+#include "rs_driven_render_listener.h"
+#include "rs_trace.h"
+
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
-#include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_main_thread.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
-#include "rs_driven_render_listener.h"
-#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -35,7 +36,7 @@ RSDrivenRenderVisitor::RSDrivenRenderVisitor()
     renderEngine_ = mainThread->GetRenderEngine();
 }
 
-void RSDrivenRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
+void RSDrivenRenderVisitor::PrepareChild(RSRenderNode& node)
 {
     for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
@@ -44,14 +45,14 @@ void RSDrivenRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 
 void RSDrivenRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
-    auto rsParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(node.GetParent().lock());
+    auto rsParent = (node.GetParent().lock());
     if (rsParent && rsParent->IsMarkDrivenRender()) {
         auto paintItem = node.GetRenderProperties().GetFrame();
         int32_t itemIndex = node.GetItemIndex();
         currDrivenSurfaceNode_->PushFramePaintItem(paintItem, itemIndex);
         return;
     }
-    PrepareBaseRenderNode(node);
+    PrepareChild(node);
 }
 
 void RSDrivenRenderVisitor::PrepareDrivenSurfaceRenderNode(RSDrivenSurfaceRenderNode& node)
@@ -60,7 +61,7 @@ void RSDrivenRenderVisitor::PrepareDrivenSurfaceRenderNode(RSDrivenSurfaceRender
         return;
     }
     currDrivenSurfaceNode_ = std::static_pointer_cast<RSDrivenSurfaceRenderNode>(node.shared_from_this());
-    auto canvasNode = RSBaseRenderNode::ReinterpretCast<RSCanvasRenderNode>(node.GetDrivenCanvasNode());
+    auto canvasNode = RSRenderNode::ReinterpretCast<RSCanvasRenderNode>(node.GetDrivenCanvasNode());
     if (canvasNode == nullptr) {
         RS_LOGE("RSDrivenRenderVisitor:: Driven canvasNode is null!");
         return;
@@ -71,7 +72,7 @@ void RSDrivenRenderVisitor::PrepareDrivenSurfaceRenderNode(RSDrivenSurfaceRender
         PrepareCanvasRenderNode(*canvasNode);
     }
 
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    auto geoPtr = (property.GetBoundsGeometry());
     RectF surfaceBounds = RectF(0, 0, screenRect_.GetWidth(), screenRect_.GetHeight());
     RectF viewPort = RectF(0, 0, screenRect_.GetWidth(), screenRect_.GetHeight());
     RectI dstRect = screenRect_;
@@ -98,7 +99,7 @@ void RSDrivenRenderVisitor::PrepareDrivenSurfaceRenderNode(RSDrivenSurfaceRender
         node.GetDstRect().ToString().c_str(), node.GetSrcRect().ToString().c_str());
 }
 
-void RSDrivenRenderVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
+void RSDrivenRenderVisitor::ProcessChild(RSRenderNode& node)
 {
     if (hasTraverseDrivenNode_ && currDrivenSurfaceNode_->IsBackgroundSurface()) {
         return;
@@ -131,7 +132,7 @@ void RSDrivenRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     node.GetMutableRenderProperties().CheckEmptyBounds();
     node.ProcessRenderBeforeChildren(*canvas_);
     node.ProcessRenderContents(*canvas_);
-    ProcessBaseRenderNode(node);
+    ProcessChild(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }
 
@@ -155,7 +156,7 @@ void RSDrivenRenderVisitor::ProcessDrivenCanvasRenderNode(RSCanvasRenderNode& no
         node.ProcessDrivenBackgroundRender(*canvas_);
     } else {
         node.ProcessDrivenContentRender(*canvas_);
-        ProcessBaseRenderNode(node);
+        ProcessChild(node);
         node.ProcessDrivenContentRenderAfterChildren(*canvas_);
     }
 }
@@ -194,7 +195,7 @@ void RSDrivenRenderVisitor::RenderExpandedFrame(RSDrivenSurfaceRenderNode& node)
         return;
     }
 
-    auto canvasNode = RSBaseRenderNode::ReinterpretCast<RSCanvasRenderNode>(node.GetDrivenCanvasNode());
+    auto canvasNode = RSRenderNode::ReinterpretCast<RSCanvasRenderNode>(node.GetDrivenCanvasNode());
     if (canvasNode == nullptr) {
         RS_LOGE("RSDrivenRenderVisitor canvasNode is null!");
         return;
@@ -263,11 +264,11 @@ void RSDrivenRenderVisitor::RenderExpandedFrame(RSDrivenSurfaceRenderNode& node)
 
     if (node.IsBackgroundSurface()) {
         RS_LOGD("RSDrivenRenderVisitor process BACKGROUND");
-        auto rsDrivenParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(canvasNode->GetParent().lock());
+        auto rsDrivenParent = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(canvasNode->GetParent().lock());
         if (rsDrivenParent == nullptr) {
             return;
         }
-        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(
+        auto geoPtr = (
             rsDrivenParent->GetRenderProperties().GetBoundsGeometry());
         canvas_->concat(geoPtr->GetAbsMatrix());
     } else {

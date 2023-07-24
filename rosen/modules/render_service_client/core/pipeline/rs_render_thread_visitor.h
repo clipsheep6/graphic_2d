@@ -41,7 +41,7 @@ public:
     RSRenderThreadVisitor();
     virtual ~RSRenderThreadVisitor();
 
-    void PrepareBaseRenderNode(RSBaseRenderNode& node) override;
+    void PrepareChild(RSRenderNode& node) override;
     void PrepareCanvasRenderNode(RSCanvasRenderNode& node) override;
     void PrepareDisplayRenderNode(RSDisplayRenderNode& node) override {}
     void PrepareProxyRenderNode(RSProxyRenderNode& node) override {}
@@ -49,7 +49,7 @@ public:
     void PrepareSurfaceRenderNode(RSSurfaceRenderNode& node) override;
     void PrepareEffectRenderNode(RSEffectRenderNode& node) override;
 
-    void ProcessBaseRenderNode(RSBaseRenderNode& node) override;
+    void ProcessChild(RSRenderNode& node) override;
     void ProcessCanvasRenderNode(RSCanvasRenderNode& node) override;
     void ProcessDisplayRenderNode(RSDisplayRenderNode& node) override {}
     void ProcessProxyRenderNode(RSProxyRenderNode& node) override;
@@ -79,7 +79,7 @@ private:
     void UpdateDirtyAndSetEGLDamageRegion(std::unique_ptr<RSSurfaceFrame>& surfaceFrame);
 #endif
     // Reset and update children node's info like outOfParent and isRemoveChild
-    void ResetAndPrepareChildrenNode(RSRenderNode& node, std::shared_ptr<RSBaseRenderNode> nodeParent);
+    void ResetAndPrepareChildrenNode(RSRenderNode& node, std::shared_ptr<RSRenderNode> nodeParent);
 
     bool UpdateAnimatePropertyCacheSurface(RSRenderNode& node);
 

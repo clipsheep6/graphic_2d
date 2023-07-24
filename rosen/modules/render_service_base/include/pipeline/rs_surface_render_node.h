@@ -221,7 +221,7 @@ public:
         offsetY_ = offsetY;
     }
 
-    void CollectSurface(const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec,
+    void CollectSurface(const std::shared_ptr<RSRenderNode>& node, std::vector<RSRenderNode::SharedPtr>& vec,
         bool isUniRender, bool onlyFirstLevel) override;
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
@@ -693,7 +693,7 @@ public:
     void UpdateFilterCacheStatusIfNodeStatic(const RectI& clipRect);
 
 private:
-    void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
+    void ClearChildrenCache(const std::shared_ptr<RSRenderNode>& node);
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
     Vector4f GetWindowCornerRadius();
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> GetLeashWindowNestedSurfaces();
@@ -852,7 +852,7 @@ private:
     CacheProcessStatus cacheProcessStatus_ = CacheProcessStatus::WAITING;
 
     friend class RSUniRenderVisitor;
-    friend class RSBaseRenderNode;
+    friend class RSRenderNode;
     friend class RSRenderService;
 };
 } // namespace Rosen

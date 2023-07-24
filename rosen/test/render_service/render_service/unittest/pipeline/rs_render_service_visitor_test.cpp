@@ -17,7 +17,7 @@
 #include "limit_number.h"
 #include "pipeline/rs_render_service_visitor.h"
 
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_render_node.h"
@@ -66,7 +66,7 @@ HWTEST_F(RSRenderServiceVisitorTest, PrepareBaseRenderNode001, TestSize.Level1)
     RSSurfaceRenderNodeConfig config;
     RSSurfaceRenderNode rsSurfaceRenderNode(config);
     RSRenderServiceVisitor rsRenderServiceVisitor;
-    rsRenderServiceVisitor.PrepareBaseRenderNode(rsSurfaceRenderNode);
+    rsRenderServiceVisitor.PrepareChild(rsSurfaceRenderNode);
 }
 
 /**
@@ -206,7 +206,7 @@ HWTEST_F(RSRenderServiceVisitorTest, PrepareDisplayRenderNode009, TestSize.Level
     property.SetBounds({ 0, 0, 400, 600 });
     property.SetFrameWidth(0);
     property.SetFrameHeight(0);
-    auto absGeo = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    auto absGeo = (property.GetBoundsGeometry());
     absGeo->SetRotation(90);
     rsRenderServiceVisitor.PrepareDisplayRenderNode(node);
 }
@@ -228,7 +228,7 @@ HWTEST_F(RSRenderServiceVisitorTest, PrepareDisplayRenderNode010, TestSize.Level
     property.SetBounds({ 0, 0, 400, 600 });
     property.SetFrameWidth(0);
     property.SetFrameHeight(0);
-    auto absGeo = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    auto absGeo = (property.GetBoundsGeometry());
     absGeo->SetRotation(270);
     rsRenderServiceVisitor.PrepareDisplayRenderNode(node);
 }
@@ -582,7 +582,7 @@ HWTEST_F(RSRenderServiceVisitorTest, ProcessBaseRenderNode001, TestSize.Level1)
     RSRenderServiceVisitor rsRenderServiceVisitor;
     RSSurfaceRenderNodeConfig config;
     RSSurfaceRenderNode rsSurfaceRenderNode(config);
-    rsRenderServiceVisitor.ProcessBaseRenderNode(rsSurfaceRenderNode);
+    rsRenderServiceVisitor.ProcessChild(rsSurfaceRenderNode);
 }
 
 /*
@@ -596,7 +596,7 @@ HWTEST_F(RSRenderServiceVisitorTest, ProcessBaseRenderNode002, TestSize.Level1)
     RSRenderServiceVisitor rsRenderServiceVisitor(true);
     RSSurfaceRenderNodeConfig config;
     RSSurfaceRenderNode rsSurfaceRenderNode(config);
-    rsRenderServiceVisitor.ProcessBaseRenderNode(rsSurfaceRenderNode);
+    rsRenderServiceVisitor.ProcessChild(rsSurfaceRenderNode);
 }
 
 /**

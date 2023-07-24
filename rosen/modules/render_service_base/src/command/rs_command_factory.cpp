@@ -20,7 +20,6 @@
 // manually instantiate all RScommands (this is when the registry happens)
 #define ROSEN_INSTANTIATE_COMMAND_TEMPLATE
 // node
-#include "command/rs_base_node_command.h"
 #include "command/rs_canvas_drawing_node_command.h"
 #include "command/rs_canvas_node_command.h"
 #include "command/rs_display_node_command.h"

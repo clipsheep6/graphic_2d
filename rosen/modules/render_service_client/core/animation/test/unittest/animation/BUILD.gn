@@ -52,7 +52,6 @@ ohos_unittest("RSAnimationTest") {
 
     #command
     "$rosen_root/modules/render_service_base/src/command/rs_animation_command.cpp",
-    "$rosen_root/modules/render_service_base/src/command/rs_base_node_command.cpp",
     "$rosen_root/modules/render_service_base/src/command/rs_canvas_node_command.cpp",
     "$rosen_root/modules/render_service_base/src/command/rs_command_factory.cpp",
     "$rosen_root/modules/render_service_base/src/command/rs_display_node_command.cpp",

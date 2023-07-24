@@ -14,13 +14,17 @@
  */
 
 #include <algorithm>
-#include <iostream>
-#include <surface.h>
 #include <cmath>
+#include <iostream>
 #include <securec.h>
+#include <surface.h>
 
-#include "command/rs_base_node_command.h"
+#include "core/transaction/rs_interfaces.h"
+#include "core/ui/rs_display_node.h"
+#include "core/ui/rs_surface_node.h"
+
 #include "command/rs_display_node_command.h"
+#include "command/rs_node_command.h"
 #include "command/rs_surface_node_command.h"
 #include "common/rs_common_def.h"
 #include "pipeline/rs_render_result.h"
@@ -28,9 +32,6 @@
 #include "ui/rs_node.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_ui_director.h"
-#include "core/transaction/rs_interfaces.h"
-#include "core/ui/rs_display_node.h"
-#include "core/ui/rs_surface_node.h"
 // temporary debug
 #include "foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/platform/ohos/rs_surface_frame_ohos.h"
 #include "foundation/graphic/graphic_2d/rosen/modules/render_service_base/src/platform/ohos/rs_surface_ohos.h"

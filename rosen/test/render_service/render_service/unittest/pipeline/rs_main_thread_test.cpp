@@ -505,8 +505,8 @@ HWTEST_F(RSMainThreadTest, ClassifyRSTransactionData004, TestSize.Level1)
     // build the NodeTree
     NodeId nodeId = 1;
     std::weak_ptr<RSContext> context = {};
-    auto node = std::make_shared<RSBaseRenderNode>(nodeId, context);
-    auto childNode = std::make_shared<RSBaseRenderNode>(nodeId + 1, context);
+    auto node = std::make_shared<RSRenderNode>(nodeId, context);
+    auto childNode = std::make_shared<RSRenderNode>(nodeId + 1, context);
     int index = 0;
     node->SetIsOnTheTree(true);
     node->AddChild(node, index);
@@ -543,8 +543,8 @@ HWTEST_F(RSMainThreadTest, ResetSortedChildren, TestSize.Level1)
     auto mainThread = RSMainThread::Instance();
     NodeId nodeId = 0;
     std::weak_ptr<RSContext> context = {};
-    auto node = std::make_shared<RSBaseRenderNode>(nodeId, context);
-    auto childNode = std::make_shared<RSBaseRenderNode>(nodeId + 1, context);
+    auto node = std::make_shared<RSRenderNode>(nodeId, context);
+    auto childNode = std::make_shared<RSRenderNode>(nodeId + 1, context);
     int index = -1;
     node->SetIsOnTheTree(true);
     node->AddChild(node, index);
@@ -713,8 +713,8 @@ HWTEST_F(RSMainThreadTest, DoParallelComposition, TestSize.Level1)
 {
     NodeId nodeId = 1;
     std::weak_ptr<RSContext> context = {};
-    auto node = std::make_shared<RSBaseRenderNode>(nodeId, context);
-    auto childNode = std::make_shared<RSBaseRenderNode>(nodeId + 1, context);
+    auto node = std::make_shared<RSRenderNode>(nodeId, context);
+    auto childNode = std::make_shared<RSRenderNode>(nodeId + 1, context);
     int index = 0;
     node->SetIsOnTheTree(true);
     node->AddChild(childNode, index);

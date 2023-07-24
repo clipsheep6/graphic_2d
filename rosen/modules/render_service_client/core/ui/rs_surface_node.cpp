@@ -19,7 +19,6 @@
 #include <algorithm>
 #include <string>
 
-#include "command/rs_base_node_command.h"
 #include "command/rs_node_command.h"
 #include "command/rs_surface_node_command.h"
 #include "pipeline/rs_node_map.h"
@@ -134,22 +133,22 @@ void RSSurfaceNode::CreateNodeInRenderThread()
     }
 }
 
-void RSSurfaceNode::AddChild(std::shared_ptr<RSBaseNode> child, int index)
+void RSSurfaceNode::AddChild(std::shared_ptr<RSNode> child, int index)
 {
     if (isChildOperationDisallowed_) {
         ROSEN_LOGE("RSSurfaceNode::AddChild for non RenderServiceNodeType surfaceNode is not allowed");
         return;
     }
-    RSBaseNode::AddChild(child, index);
+    RSNode::AddChild(child, index);
 }
 
-void RSSurfaceNode::RemoveChild(std::shared_ptr<RSBaseNode> child)
+void RSSurfaceNode::RemoveChild(std::shared_ptr<RSNode> child)
 {
     if (isChildOperationDisallowed_) {
         ROSEN_LOGE("RSSurfaceNode::RemoveChild for non RenderServiceNodeType surfaceNode is not allowed");
         return;
     }
-    RSBaseNode::RemoveChild(child);
+    RSNode::RemoveChild(child);
 }
 
 void RSSurfaceNode::ClearChildren()
@@ -158,7 +157,7 @@ void RSSurfaceNode::ClearChildren()
         ROSEN_LOGE("RSSurfaceNode::ClearChildren for non RenderServiceNodeType surfaceNode is not allowed");
         return;
     }
-    RSBaseNode::ClearChildren();
+    RSNode::ClearChildren();
 }
 
 FollowType RSSurfaceNode::GetFollowType() const
@@ -273,7 +272,7 @@ bool RSSurfaceNode::SetBufferAvailableCallback(BufferAvailableCallback callback)
         return false;
     }
     return renderServiceClient->RegisterBufferAvailableListener(GetId(), [weakThis = weak_from_this()]() {
-        auto rsSurfaceNode = RSBaseNode::ReinterpretCast<RSSurfaceNode>(weakThis.lock());
+        auto rsSurfaceNode = RSNode::ReinterpretCast<RSSurfaceNode>(weakThis.lock());
         if (rsSurfaceNode == nullptr) {
             ROSEN_LOGE("RSSurfaceNode::SetBufferAvailableCallback this == null");
             return;
@@ -454,7 +453,7 @@ RSSurfaceNode::~RSSurfaceNode()
     // The destructor of render node in RenderService should controlled by application
     // Command sent only in divided render
     if (skipDestroyCommandInDestructor_ && !IsUniRenderEnabled()) {
-        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeDestroy>(GetId());
+        std::unique_ptr<RSCommand> command = std::make_unique<RSNodeDestroy>(GetId());
         transactionProxy->AddCommand(command, false, FollowType::FOLLOW_TO_PARENT, GetId());
         return;
     }
@@ -468,7 +467,7 @@ RSSurfaceNode::~RSSurfaceNode()
     // For self-drawing surfaceNode, we should destroy the corresponding render node in RenderService
     // Command sent only in divided render
     if (!IsRenderServiceNode()) {
-        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeDestroy>(GetId());
+        std::unique_ptr<RSCommand> command = std::make_unique<RSNodeDestroy>(GetId());
         transactionProxy->AddCommand(command, true, FollowType::FOLLOW_TO_PARENT, GetId());
         return;
     }

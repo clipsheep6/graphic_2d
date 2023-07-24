@@ -90,7 +90,7 @@ public:
     }
 
     void CollectSurface(
-        const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec,
+        const std::shared_ptr<RSRenderNode>& node, std::vector<RSRenderNode::SharedPtr>& vec,
         bool isUniRender, bool onlyFirstLevel) override;
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
@@ -118,10 +118,6 @@ public:
         return mirrorSource_;
     }
 
-    bool HasDisappearingTransition(bool) const override
-    {
-        return false;
-    }
 #ifdef NEW_RENDER_CONTEXT
     std::shared_ptr<RSRenderSurface> GetRSSurface() const
     {
@@ -207,7 +203,7 @@ public:
         return rects;
     }
 
-    std::vector<RSBaseRenderNode::SharedPtr>& GetCurAllSurfaces()
+    std::vector<RSRenderNode::SharedPtr>& GetCurAllSurfaces()
     {
         return curAllSurfaces_;
     }
@@ -267,7 +263,7 @@ private:
     std::map<NodeId, RectI> currentFrameSurfacePos_;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
 
-    std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces_;
+    std::vector<RSRenderNode::SharedPtr> curAllSurfaces_;
     std::mutex mtx_;
 
     // Use in vulkan parallel rendering

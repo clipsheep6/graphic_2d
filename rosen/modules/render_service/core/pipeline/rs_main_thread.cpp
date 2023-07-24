@@ -42,7 +42,7 @@
 #include "hgm_core.h"
 #include "platform/ohos/rs_jank_stats.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_cold_start_thread.h"
 #include "pipeline/rs_divided_render_util.h"
@@ -1065,7 +1065,7 @@ void RSMainThread::NotifyDrivenRenderFinish()
 #endif
 }
 
-void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
+void RSMainThread::UniRender(std::shared_ptr<RSRenderNode> rootNode)
 {
     auto uniVisitor = std::make_shared<RSUniRenderVisitor>();
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
@@ -1120,7 +1120,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
             }
         }
         if (RSSystemProperties::GetUIFirstEnabled() && IsSingleDisplay()) {
-            auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
+            auto displayNode = RSRenderNode::ReinterpretCast<RSDisplayRenderNode>(
                 rootNode->GetSortedChildren().front());
             std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes;
             std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes;
@@ -1139,7 +1139,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
 
 void RSMainThread::Render()
 {
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
+    const std::shared_ptr<RSRenderNode> rootNode = context_->GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
         RS_LOGE("RSMainThread::Render GetGlobalRootRenderNode fail");
         return;
@@ -1204,14 +1204,14 @@ bool RSMainThread::CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces,
     return needProcess;
 }
 
-void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)
+void RSMainThread::CalcOcclusionImplementation(std::vector<RSRenderNode::SharedPtr>& curAllSurfaces)
 {
     Occlusion::Region accumulatedRegion;
     VisibleData curVisVec;
     OcclusionRectISet occlusionSurfaces;
     std::map<uint32_t, bool> pidVisMap;
     for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
-        auto curSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        auto curSurface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (curSurface == nullptr || curSurface->GetDstRect().IsEmpty() || curSurface->IsLeashWindow()) {
             continue;
         }
@@ -1233,7 +1233,7 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
             // fix grey block when directly open app (i.e. setting) from notification center
             auto parentPtr = curSurface->GetParent().lock();
             if (parentPtr != nullptr && parentPtr->IsInstanceOf<RSSurfaceRenderNode>()) {
-                auto surfaceParentPtr = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parentPtr);
+                auto surfaceParentPtr = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parentPtr);
                 if (surfaceParentPtr->GetSurfaceNodeType() == RSSurfaceNodeType::LEASH_WINDOW_NODE &&
                     !curSurface->IsNotifyUIBufferAvailable()) {
                     continue;
@@ -1274,14 +1274,14 @@ void RSMainThread::CalcOcclusion()
     if (doWindowAnimate_ && !isUniRender_) {
         return;
     }
-    const std::shared_ptr<RSBaseRenderNode> node = context_->GetGlobalRootRenderNode();
+    const std::shared_ptr<RSRenderNode> node = context_->GetGlobalRootRenderNode();
     if (node == nullptr) {
         RS_LOGE("RSMainThread::CalcOcclusion GetGlobalRootRenderNode fail");
         return;
     }
-    std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
+    std::vector<RSRenderNode::SharedPtr> curAllSurfaces;
     if (node->GetSortedChildren().size() == 1) {
-        auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
+        auto displayNode = RSRenderNode::ReinterpretCast<RSDisplayRenderNode>(
             node->GetSortedChildren().front());
         if (displayNode) {
             curAllSurfaces = displayNode->GetCurAllSurfaces();
@@ -1297,7 +1297,7 @@ void RSMainThread::CalcOcclusion()
     lastFocusAppPid_ = focusAppPid_;
     if (!winDirty) {
         for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
-            auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+            auto surface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
             if (surface == nullptr || surface->IsLeashWindow()) {
                 continue;
             }
@@ -1496,7 +1496,7 @@ void RSMainThread::Animate(uint64_t timestamp)
         needRequestNextVsync = needRequestNextVsync || nodeNeedRequestNextVsync || (node.use_count() == 1);
         if (node->template IsInstanceOf<RSSurfaceRenderNode>() && hasRunningAnimation) {
             if (isUniRender_) {
-                auto surfacenode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
+                auto surfacenode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
                 surfacenode->SetAnimateState();
             }
             curWinAnim = true;
@@ -1648,7 +1648,7 @@ void RSMainThread::RenderServiceTreeDump(std::string& dumpString)
         dumpString.append(std::to_string(nodeId) + ", ");
     }
     dumpString.append("];\n");
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
+    const std::shared_ptr<RSRenderNode> rootNode = context_->GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
         dumpString.append("rootNode is null\n");
         return;
@@ -1656,7 +1656,7 @@ void RSMainThread::RenderServiceTreeDump(std::string& dumpString)
     rootNode->DumpTree(0, dumpString);
 }
 
-bool RSMainThread::DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode)
+bool RSMainThread::DoParallelComposition(std::shared_ptr<RSRenderNode> rootNode)
 {
     using CreateParallelSyncSignalFunc = void* (*)(uint32_t);
     using SignalCountDownFunc = void (*)(void*);
@@ -1700,7 +1700,7 @@ bool RSMainThread::DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootN
     return true;
 }
 
-void RSMainThread::ResetSortedChildren(std::shared_ptr<RSBaseRenderNode> node)
+void RSMainThread::ResetSortedChildren(std::shared_ptr<RSRenderNode> node)
 {
     for (auto& child : node->GetSortedChildren()) {
         ResetSortedChildren(child);
@@ -2134,7 +2134,7 @@ bool RSMainThread::GetWatermarkFlag()
 
 bool RSMainThread::IsSingleDisplay()
 {
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
+    const std::shared_ptr<RSRenderNode> rootNode = context_->GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
         RS_LOGE("RSMainThread::IsSingleDisplay GetGlobalRootRenderNode fail");
         return false;

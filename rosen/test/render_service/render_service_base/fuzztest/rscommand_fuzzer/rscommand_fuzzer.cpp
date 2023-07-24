@@ -17,9 +17,9 @@
 
 #include <securec.h>
 
-#include "command/rs_base_node_command.h"
 #include "command/rs_canvas_node_command.h"
 #include "command/rs_message_processor.h"
+#include "command/rs_node_command.h"
 #include "command/rs_proxy_node_command.h"
 #include "command/rs_root_node_command.h"
 #include "command/rs_surface_node_command.h"
@@ -96,7 +96,7 @@ bool RSSurfaceNodeCommandFuzzTest(const uint8_t* data, size_t size)
     return true;
 }
 
-bool RSBaseNodeCommandFuzzTest(const uint8_t* data, size_t size)
+bool RSNodeCommandFuzzTest(const uint8_t* data, size_t size)
 {
     if (data == nullptr) {
         return false;
@@ -115,17 +115,16 @@ bool RSBaseNodeCommandFuzzTest(const uint8_t* data, size_t size)
 
     // test
     RSContext context;
-    BaseNodeCommandHelper::Destroy(context, static_cast<NodeId>(nodeId));
-    BaseNodeCommandHelper::AddChild(context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId), index);
-    BaseNodeCommandHelper::MoveChild(context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId), index);
-    BaseNodeCommandHelper::RemoveChild(context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId));
-    BaseNodeCommandHelper::AddCrossParentChild(context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId),
-                                               index);
-    BaseNodeCommandHelper::RemoveCrossParentChild(context, static_cast<NodeId>(nodeId),
-                                                  static_cast<NodeId>(childNodeId),
-                                                  static_cast<NodeId>(newParentId));
-    BaseNodeCommandHelper::RemoveFromTree(context, static_cast<NodeId>(nodeId));
-    BaseNodeCommandHelper::ClearChildren(context, static_cast<NodeId>(nodeId));
+    RSNodeCommandHelper::Destroy(context, static_cast<NodeId>(nodeId));
+    RSNodeCommandHelper::AddChild(context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId), index);
+    RSNodeCommandHelper::MoveChild(context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId), index);
+    RSNodeCommandHelper::RemoveChild(context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId));
+    RSNodeCommandHelper::AddCrossParentChild(
+        context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId), index);
+    RSNodeCommandHelper::RemoveCrossParentChild(
+        context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId), static_cast<NodeId>(newParentId));
+    RSNodeCommandHelper::RemoveFromTree(context, static_cast<NodeId>(nodeId));
+    RSNodeCommandHelper::ClearChildren(context, static_cast<NodeId>(nodeId));
 
     return true;
 }
@@ -238,7 +237,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
     OHOS::Rosen::RSSurfaceNodeCommandFuzzTest(data, size);
-    OHOS::Rosen::RSBaseNodeCommandFuzzTest(data, size);
+    OHOS::Rosen::RSNodeCommandFuzzTest(data, size);
     OHOS::Rosen::RSRootNodeCommandFuzzTest(data, size);
     OHOS::Rosen::RSCanvasNodeCommandFuzzTest(data, size);
     OHOS::Rosen::RSProxyNodeCommandFuzzTest(data, size);

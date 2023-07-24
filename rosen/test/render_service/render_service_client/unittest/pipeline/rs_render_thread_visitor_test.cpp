@@ -19,7 +19,7 @@
 #include "limit_number.h"
 
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_context.h"
 #include "pipeline/rs_node_map.h"
@@ -63,11 +63,11 @@ HWTEST_F(RSRenderThreadVisitorTest, PrepareBaseRenderNode001, TestSize.Level1)
     RSSurfaceRenderNodeConfig config;
     RSSurfaceRenderNode rsSurfaceRenderNode(config);
     std::shared_ptr rsRenderThreadVisitor = std::make_shared<RSRenderThreadVisitor>();
-    rsRenderThreadVisitor->PrepareBaseRenderNode(rsSurfaceRenderNode);
+    rsRenderThreadVisitor->PrepareChild(rsSurfaceRenderNode);
     config.id = 1;
     auto surfaceRenderNode2 = std::make_shared<RSSurfaceRenderNode>(config);
     rsSurfaceRenderNode.AddChild(surfaceRenderNode2, -1);
-    rsRenderThreadVisitor->PrepareBaseRenderNode(rsSurfaceRenderNode);
+    rsRenderThreadVisitor->PrepareChild(rsSurfaceRenderNode);
 }
 
 /**
@@ -296,11 +296,11 @@ HWTEST_F(RSRenderThreadVisitorTest, ProcessBaseRenderNode001, TestSize.Level1)
     RSSurfaceRenderNodeConfig config;
     RSSurfaceRenderNode rsSurfaceRenderNode(config);
     std::shared_ptr rsRenderThreadVisitor = std::make_shared<RSRenderThreadVisitor>();
-    rsRenderThreadVisitor->ProcessBaseRenderNode(rsSurfaceRenderNode);
+    rsRenderThreadVisitor->ProcessChild(rsSurfaceRenderNode);
     config.id = 1;
     auto surfaceRenderNode = std::make_shared<RSSurfaceRenderNode>(config);
     rsSurfaceRenderNode.AddChild(surfaceRenderNode, -1);
-    rsRenderThreadVisitor->ProcessBaseRenderNode(rsSurfaceRenderNode);
+    rsRenderThreadVisitor->ProcessChild(rsSurfaceRenderNode);
 }
 
 /**

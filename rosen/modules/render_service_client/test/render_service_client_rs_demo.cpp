@@ -16,7 +16,7 @@
 #include <iostream>
 #include <surface.h>
 
-#include "command/rs_base_node_command.h"
+#include "command/rs_node_command.h"
 #include "command/rs_display_node_command.h"
 #include "command/rs_surface_node_command.h"
 #include "common/rs_common_def.h"

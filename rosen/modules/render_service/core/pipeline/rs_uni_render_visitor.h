@@ -48,7 +48,7 @@ public:
     explicit RSUniRenderVisitor(const RSUniRenderVisitor& visitor);
     ~RSUniRenderVisitor() override;
 
-    void PrepareBaseRenderNode(RSBaseRenderNode& node) override;
+    void PrepareChild(RSRenderNode& node) override;
     void PrepareCanvasRenderNode(RSCanvasRenderNode& node) override;
     void PrepareDisplayRenderNode(RSDisplayRenderNode& node) override;
     void PrepareProxyRenderNode(RSProxyRenderNode& node) override;
@@ -56,7 +56,7 @@ public:
     void PrepareSurfaceRenderNode(RSSurfaceRenderNode& node) override;
     void PrepareEffectRenderNode(RSEffectRenderNode& node) override;
 
-    void ProcessBaseRenderNode(RSBaseRenderNode& node) override;
+    void ProcessChild(RSRenderNode& node) override;
     void ProcessCanvasRenderNode(RSCanvasRenderNode& node) override;
     void ProcessDisplayRenderNode(RSDisplayRenderNode& node) override;
     void ProcessProxyRenderNode(RSProxyRenderNode& node) override;
@@ -64,8 +64,8 @@ public:
     void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
     void ProcessEffectRenderNode(RSEffectRenderNode& node) override;
 
-    bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
-    bool ParallelComposition(const std::shared_ptr<RSBaseRenderNode> rootNode);
+    bool DoDirectComposition(std::shared_ptr<RSRenderNode> rootNode);
+    bool ParallelComposition(const std::shared_ptr<RSRenderNode> rootNode);
     void UpdateCacheRenderNodeMap(RSRenderNode& node);
     bool GenerateNodeContentCache(RSRenderNode& node);
     bool InitNodeCache(RSRenderNode& node);
@@ -239,9 +239,9 @@ private:
     void PrepareTypesOfSurfaceRenderNodeBeforeUpdate(RSSurfaceRenderNode& node);
     void PrepareTypesOfSurfaceRenderNodeAfterUpdate(RSSurfaceRenderNode& node);
     // judge if node's cache changes
-    void UpdateCacheChangeStatus(RSBaseRenderNode& node);
+    void UpdateCacheChangeStatus(RSRenderNode& node);
     // set node cacheable animation after checking whold child tree
-    void SetNodeCacheChangeStatus(RSBaseRenderNode& node, int markedCachedNodeCnt);
+    void SetNodeCacheChangeStatus(RSRenderNode& node, int markedCachedNodeCnt);
     // update rendernode's cache status and collect valid cache rect
     void UpdateForegroundFilterCacheWithDirty(RSRenderNode& node);
 
@@ -368,10 +368,10 @@ private:
     std::unordered_map<NodeId, RenderParam> unpairedTransitionNodes_;
     std::stack<RenderParam> curGroupedNodes_;
     // return true if we should prepare/process, false if we should skip.
-    bool PrepareSharedTransitionNode(RSBaseRenderNode& node);
-    bool ProcessSharedTransitionNode(RSBaseRenderNode& node);
+    bool PrepareSharedTransitionNode(RSRenderNode& node);
+    bool ProcessSharedTransitionNode(RSRenderNode& node);
 
-    std::weak_ptr<RSBaseRenderNode> logicParentNode_;
+    std::weak_ptr<RSRenderNode> logicParentNode_;
 
     bool isCalcCostEnable_ = false;
 

@@ -70,7 +70,8 @@ enum class ParallelRenderingType {
 };
 
 enum class HgmRefreshRates {
-    SET_RATE_AUTO = 0,
+    SET_RATE_NULL = 0,
+    SET_RATE_30 = 30,
     SET_RATE_60 = 60,
     SET_RATE_90 = 90,
     SET_RATE_120 = 120
@@ -78,6 +79,7 @@ enum class HgmRefreshRates {
 
 enum class HgmRefreshRateModes {
     SET_RATE_MODE_AUTO = -1,
+    SET_RATE_MODE_NULL = 0,
     SET_RATE_MODE_LOW = 1,
     SET_RATE_MODE_MEDIUN = 2,
     SET_RATE_MODE_HIGH = 3
@@ -111,7 +113,6 @@ public:
     static bool GetTargetDirtyRegionDfxEnabled(std::vector<std::string>& dfxTargetSurfaceNames_);
     static bool GetOpaqueRegionDfxEnabled();
     static bool GetDumpLayersEnabled();
-    static bool GetQuickSkipPrepareEnabled();
     static bool GetHardwareComposerEnabled();
     static bool GetAFBCEnabled();
     static ReleaseGpuResourceType GetReleaseGpuResourceEnabled();
@@ -121,6 +122,7 @@ public:
     static ParallelRenderingType GetPrepareParallelRenderingEnabled();
     static ParallelRenderingType GetParallelRenderingEnabled();
     static HgmRefreshRates GetHgmRefreshRatesEnabled();
+    static void SetHgmRefreshRateModesEnabled(std::string param);
     static HgmRefreshRateModes GetHgmRefreshRateModesEnabled();
 
     static bool GetColdStartThreadEnabled();
@@ -128,8 +130,10 @@ public:
     static bool GetProxyNodeDebugEnabled();
     static bool GetFilterCacheEnabled();
     static int GetFilterCacheUpdateInterval();
+    static int GetFilterCacheSizeThreshold();
     static bool GetKawaseEnabled();
     static bool GetSkipForAlphaZeroEnabled();
+    static bool GetSkipGeometryNotChangeEnabled();
 
     static bool GetBoolSystemProperty(const char* name, bool defaultValue);
     static int WatchSystemProperty(const char* name, OnSystemPropertyChanged func, void* context);

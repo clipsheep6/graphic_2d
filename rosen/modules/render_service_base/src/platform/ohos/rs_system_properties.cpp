@@ -125,11 +125,6 @@ bool RSSystemProperties::GetOcclusionEnabled()
     return std::atoi((system::GetParameter("rosen.occlusion.enabled", "1")).c_str()) != 0;
 }
 
-bool RSSystemProperties::GetQuickSkipPrepareEnabled()
-{
-    return system::GetParameter("rosen.quickskipprepare.enabled", "1") != "0";
-}
-
 bool RSSystemProperties::GetHardwareComposerEnabled()
 {
     return system::GetParameter("rosen.hardwarecomposer.enabled", "1") != "0";
@@ -226,10 +221,16 @@ HgmRefreshRates RSSystemProperties::GetHgmRefreshRatesEnabled()
         std::atoi((system::GetParameter("rosen.sethgmrefreshrate.enabled", "0")).c_str()));
 }
 
+void RSSystemProperties::SetHgmRefreshRateModesEnabled(std::string param)
+{
+    system::SetParameter("persist.rosen.sethgmrefreshratemode.enabled", param);
+    RS_LOGD("RSSystemProperties::SetHgmRefreshRateModesEnabled set to %{public}s", param.c_str());
+}
+
 HgmRefreshRateModes RSSystemProperties::GetHgmRefreshRateModesEnabled()
 {
     return static_cast<HgmRefreshRateModes>(
-        std::atoi((system::GetParameter("rosen.sethgmrefreshratemode.enabled", "0")).c_str()));
+        std::atoi((system::GetParameter("persist.rosen.sethgmrefreshratemode.enabled", "0")).c_str()));
 }
 
 bool RSSystemProperties::GetColdStartThreadEnabled()
@@ -242,6 +243,13 @@ bool RSSystemProperties::GetSkipForAlphaZeroEnabled()
     return std::atoi((system::GetParameter("persist.skipForAlphaZero.enabled", "1")).c_str()) != 0;
 }
 
+bool RSSystemProperties::GetSkipGeometryNotChangeEnabled()
+{
+    static bool skipGeoNotChangeEnabled =
+        std::atoi((system::GetParameter("persist.skipGeometryNotChange.enabled", "0")).c_str()) != 0;
+    return skipGeoNotChangeEnabled;
+}
+
 float RSSystemProperties::GetAnimationScale()
 {
     return std::atof((system::GetParameter("persist.sys.graphic.animationscale", "1.0")).c_str());
@@ -249,6 +257,8 @@ float RSSystemProperties::GetAnimationScale()
 
 bool RSSystemProperties::GetFilterCacheEnabled()
 {
+    // Determine whether the filter cache should be enabled. The default value is 1, which means that it is enabled.
+    // If dirty-region is not properly implemented, the filter cache will act as a skip-frame strategy for filters.
     static bool filterCacheEnabled =
         std::atoi((system::GetParameter("persist.sys.graphic.filterCacheEnabled", "1")).c_str()) != 0;
     return filterCacheEnabled;
@@ -256,9 +266,20 @@ bool RSSystemProperties::GetFilterCacheEnabled()
 
 int RSSystemProperties::GetFilterCacheUpdateInterval()
 {
+    // Configure whether to enable skip-frame for the filter cache. The default value is 1, which means that the cached
+    // image is updated with a delay of 1 frame.
     static int filterCacheUpdateInterval =
         std::atoi((system::GetParameter("persist.sys.graphic.filterCacheUpdateInterval", "1")).c_str());
     return filterCacheUpdateInterval;
+}
+
+int RSSystemProperties::GetFilterCacheSizeThreshold()
+{
+    // Set the minimum size for enabling skip-frame in the filter cache. By default, this value is 400, which means that
+    // skip-frame is only enabled for regions where both the width and height are greater than 400.
+    static int filterCacheSizeThreshold =
+        std::atoi((system::GetParameter("persist.sys.graphic.filterCacheSizeThreshold", "400")).c_str());
+    return filterCacheSizeThreshold;
 }
 
 bool RSSystemProperties::GetKawaseEnabled()

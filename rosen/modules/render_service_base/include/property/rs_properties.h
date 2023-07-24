@@ -373,6 +373,8 @@ private:
     std::optional<float> hueRotate_;
     std::optional<Color> colorBlend_;
     std::optional<RSRenderParticle> particle_;
+    std::optional<RectI> lastRect_;
+#ifndef USE_ROSEN_DRAWING
     sk_sp<SkColorFilter> colorFilter_ = nullptr;
 #else
     std::shared_ptr<Drawing::ColorFilter> colorFilter_ = nullptr;

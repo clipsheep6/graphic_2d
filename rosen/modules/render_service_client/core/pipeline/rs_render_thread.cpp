@@ -177,7 +177,27 @@ void RSRenderThread::RecvTransactionData(std::unique_ptr<RSTransactionData>& tra
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
     }
     // [PLANNING]: process in next vsync (temporarily)
+#ifdef ROSEN_CROSS_PLATFORM
+    uint64_t currentTimestamp =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch())
+            .count();
+    auto uiDuration = currentTimestamp - commandTimestamp_;
+    if (uiDuration > REFRESH_PERIOD) {
+        if (handler_) {
+            handler_->PostTask(
+                [this, uiDuration, currentTimestamp] {
+                    ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "FlushImmediately:" + std::to_string(uiDuration));
+                    this->OnVsync(currentTimestamp);
+                    ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
+                },
+                AppExecFwk::EventHandler::Priority::HIGH);
+        }
+    } else {
+        RSRenderThread::Instance().RequestNextVSync();
+    }
+#else
     RSRenderThread::Instance().RequestNextVSync();
+#endif
 }
 
 void RSRenderThread::RequestNextVSync()
@@ -354,6 +374,16 @@ void RSRenderThread::ProcessCommands()
     uint64_t uiEndTimeStamp = jankDetector_->GetSysTimeNs();
     for (auto& cmdData : cmds) {
         std::string str = "ProcessCommands ptr:" + std::to_string(reinterpret_cast<uintptr_t>(cmdData.get()));
+#ifdef ROSEN_CROSS_PLATFORM
+        if (cmdData->GetTimestamp() >= timestamp_) {
+            str += " SKIP!!!";
+            ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, str.c_str());
+            cmds_.emplace_back(std::move(cmdData));
+            RequestNextVSync();
+            ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
+            continue;
+        }
+#endif
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, str.c_str());
         // only set transactionTimestamp_ in UniRender mode
         context_->transactionTimestamp_ = RSSystemProperties::GetUniRenderEnabled() ? cmdData->GetTimestamp() : 0;

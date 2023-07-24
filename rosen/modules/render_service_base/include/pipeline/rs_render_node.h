@@ -31,6 +31,7 @@
 #endif
 
 #include "animation/rs_animation_manager.h"
+#include "animation/rs_frame_rate_range.h"
 #include "common/rs_macros.h"
 #include "modifier/rs_render_modifier.h"
 #include "pipeline/rs_base_render_node.h"
@@ -142,7 +143,7 @@ public:
 
     // update parent's children rect including childRect and itself
     void UpdateParentChildrenRect(std::shared_ptr<RSBaseRenderNode> parentNode) const;
-    void UpdateFilterCacheManagerWithCacheRegion() const;
+    void UpdateFilterCacheManagerWithCacheRegion(const std::optional<RectI>& clipRect = std::nullopt) const;
 
     void SetStaticCached(bool isStaticCached)
     {
@@ -389,6 +390,16 @@ public:
         return priority_;
     }
 
+    bool IsAncestorDirty() const
+    {
+        return isAncestorDirty_;
+    }
+
+    void SetIsAncestorDirty(bool isAncestorDirty)
+    {
+        isAncestorDirty_ = isAncestorDirty;
+    }
+
     bool HasCachedTexture() const
     {
         std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
@@ -414,11 +425,15 @@ public:
 #else
     void UpdateEffectRegion(std::optional<Drawing::Path>& region) const;
 #endif
+    // check node's rect if it has valid filter cache
+    bool IsFilterCacheValid() const;
+    void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground=true) const;
 
     void CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd);
     bool IsForcedDrawInGroup() const;
     bool IsSuggestedDrawInGroup() const;
     void CheckDrawingCacheType();
+    bool HasCacheableAnim() const { return hasCacheableAnim_; }
 
     enum NodeGroupType {
         NONE = 0,
@@ -442,6 +457,31 @@ public:
     void SetGlobalAlpha(float alpha);
     float GetGlobalAlpha() const;
     virtual void OnAlphaChanged() {}
+
+    void SetRSFrameRateRange(FrameRateRange range)
+    {
+        rsRange_ = range;
+    }
+
+    FrameRateRange GetRSFrameRateRange();
+
+    void SetUIFrameRateRange(FrameRateRange range)
+    {
+        uiRange_ = range;
+    }
+
+    FrameRateRange GetUIFrameRateRange() const
+    {
+        return uiRange_;
+    }
+
+    void ResetRSFrameRateRange();
+    void ResetUIFrameRateRange();
+
+    void MarkNonGeometryChanged()
+    {
+        geometryChangeNotPerceived_ = true;
+    }
 
 protected:
     explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
@@ -502,6 +542,7 @@ private:
     bool hasFilter_ = false;
     bool hasHardwareNode_ = false;
     bool hasAbilityComponent_ = false;
+    bool isAncestorDirty_ = false;
     NodePriorityType priority_ = NodePriorityType::MAIN_PRIORITY;
 
     // driven render
@@ -523,7 +564,11 @@ private:
     float boundsWidth_ = 0.0f;
     float boundsHeight_ = 0.0f;
     std::unordered_set<RSModifierType> dirtyTypes_;
-    static bool isUniRender_;
+    bool hasCacheableAnim_ = false;
+    bool geometryChangeNotPerceived_ = false;
+
+    FrameRateRange rsRange_ = {0, 0, 0};
+    FrameRateRange uiRange_ = {0, 0, 0};
 
     friend class RSRenderTransition;
     friend class RSRenderNodeMap;

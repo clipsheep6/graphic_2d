@@ -16,11 +16,11 @@
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_RENDER_NODE_H
 
 #include <atomic>
+#include <cstdint>
 #include <functional>
 #include <list>
 #include <memory>
 #include <mutex>
-#include <stdint.h>
 #include <unordered_set>
 
 #include "animation/rs_animation_manager.h"
@@ -83,15 +83,9 @@ public:
     bool Update(RSDirtyRegionManager& dirtyManager, const RSProperties* parent, bool parentDirty,
         std::optional<RectI> clipRect = std::nullopt);
 #ifndef USE_ROSEN_DRAWING
-    virtual std::optional<SkRect> GetContextClipRegion() const
-    {
-        return std::nullopt;
-    }
+    virtual std::optional<SkRect> GetContextClipRegion() const { return std::nullopt; }
 #else
-    virtual std::optional<Drawing::Rect> GetContextClipRegion() const
-    {
-        return std::nullopt;
-    }
+    virtual std::optional<Drawing::Rect> GetContextClipRegion() const { return std::nullopt; }
 #endif
 
     RSProperties& GetMutableRenderProperties();
@@ -119,17 +113,7 @@ public:
     virtual void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas);
 
     void RenderTraceDebug() const;
-    bool HasDisappearingTransition(bool recursive) const
-    {
-        if (disappearingTransitionCount_ > 0) {
-            return true;
-        }
-        if (recursive == false) {
-            return false;
-        }
-        auto parent = GetParent().lock();
-        return parent ? parent->HasDisappearingTransition(true) : false;
-    }
+    bool HasDisappearingTransition(bool recursive) const;
     bool ShouldPaint() const;
 
     inline RectI GetOldDirty() const
@@ -187,8 +171,8 @@ public:
     void InitCacheSurface(GrRecordingContext* grContext, ClearCacheSurfaceFunc func = nullptr,
         uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #else
-    void InitCacheSurface(
-        GrContext* grContext, ClearCacheSurfaceFunc func = nullptr, uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
+    void InitCacheSurface(GrContext* grContext, ClearCacheSurfaceFunc func = nullptr,
+        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #endif
 #else
     void InitCacheSurface(Drawing::GPUContext* grContext, ClearCacheSurfaceFunc func = nullptr,
@@ -237,10 +221,11 @@ public:
     }
 
 #ifndef USE_ROSEN_DRAWING
-    sk_sp<SkSurface> GetCompletedCacheSurface(uint32_t threadIndex = UNI_MAIN_THREAD_INDEX, bool isUIFirst = false);
+    sk_sp<SkSurface> GetCompletedCacheSurface(uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
+        bool isUIFirst = false);
 #else
-    std::shared_ptr<Drawing::Surface> GetCompletedCacheSurface(
-        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX, bool isUIFirst = false);
+    std::shared_ptr<Drawing::Surface> GetCompletedCacheSurface(uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
+        bool isUIFirst = false);
 #endif
 
     void ClearCacheSurface()
@@ -254,8 +239,8 @@ public:
     void UpdateBackendTexture();
 #endif
 
-    void DrawCacheSurface(
-        RSPaintFilterCanvas& canvas, uint32_t threadIndex = UNI_MAIN_THREAD_INDEX, bool isUIFirst = false);
+    void DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
+        bool isUIFirst = false);
 
     void SetCacheType(CacheType cacheType)
     {
@@ -589,6 +574,11 @@ public:
     std::shared_ptr<T> ReinterpretCastTo()
     {
         return (IsInstanceOf<T>()) ? std::static_pointer_cast<T>(shared_from_this()) : nullptr;
+    }
+    template<typename T>
+    std::shared_ptr<const T> ReinterpretCastTo() const
+    {
+        return (IsInstanceOf<T>()) ? std::static_pointer_cast<const T>(shared_from_this()) : nullptr;
     }
 
     bool HasChildrenOutOfRect() const

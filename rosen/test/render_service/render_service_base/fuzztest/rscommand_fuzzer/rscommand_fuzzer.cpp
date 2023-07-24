@@ -119,11 +119,10 @@ bool RSNodeCommandFuzzTest(const uint8_t* data, size_t size)
     RSNodeCommandHelper::AddChild(context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId), index);
     RSNodeCommandHelper::MoveChild(context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId), index);
     RSNodeCommandHelper::RemoveChild(context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId));
-    RSNodeCommandHelper::AddCrossParentChild(context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId),
-                                               index);
-    RSNodeCommandHelper::RemoveCrossParentChild(context, static_cast<NodeId>(nodeId),
-                                                  static_cast<NodeId>(childNodeId),
-                                                  static_cast<NodeId>(newParentId));
+    RSNodeCommandHelper::AddCrossParentChild(
+        context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId), index);
+    RSNodeCommandHelper::RemoveCrossParentChild(
+        context, static_cast<NodeId>(nodeId), static_cast<NodeId>(childNodeId), static_cast<NodeId>(newParentId));
     RSNodeCommandHelper::RemoveFromTree(context, static_cast<NodeId>(nodeId));
     RSNodeCommandHelper::ClearChildren(context, static_cast<NodeId>(nodeId));
 

@@ -131,7 +131,7 @@ void RSRenderNode::RemoveChild(SharedPtr child, bool skipTransition)
         ROSEN_LOGD("RSRenderNode::RemoveChild %" PRIu64 " move child(id %" PRIu64 ") into disappearingChildren",
             GetId(), child->GetId());
         // keep shared_ptr alive for transition
-        uint32_t origPos = static_cast<uint32_t>(std::distance(children_.begin(), it));
+        auto origPos = static_cast<uint32_t>(std::distance(children_.begin(), it));
         disappearingChildren_.emplace_back(child, origPos);
     } else {
         child->ResetParent();
@@ -222,7 +222,7 @@ void RSRenderNode::RemoveCrossParentChild(const SharedPtr& child, const WeakPtr&
         ROSEN_LOGD("RSRenderNode::RemoveChild %" PRIu64 " move child(id %" PRIu64 ") into disappearingChildren",
             GetId(), child->GetId());
         // keep shared_ptr alive for transition
-        uint32_t origPos = static_cast<uint32_t>(std::distance(children_.begin(), it));
+        auto origPos = static_cast<uint32_t>(std::distance(children_.begin(), it));
         disappearingChildren_.emplace_back(child, origPos);
     } else {
         child->SetParent(newParent);
@@ -307,18 +307,15 @@ void RSRenderNode::DumpTree(int32_t depth, std::string& out) const
     out += "| ";
     DumpNodeType(out);
     out += "[" + std::to_string(GetId()) + "]";
-    out += ", rootSurfaceNodeId";
-    out += "[" + std::to_string(GetRootSurfaceNodeId()) + "]";
-    auto node = (static_cast<const RSRenderNode*>(this));
-    if (node->IsSuggestedDrawInGroup()) {
+    out += ", rootSurfaceNodeId [" + std::to_string(GetRootSurfaceNodeId()) + "]";
+    if (IsSuggestedDrawInGroup()) {
         out += ", [node group]";
     }
-    if (GetType() == RSRenderNodeType::SURFACE_NODE) {
-        auto surfaceNode = (static_cast<const RSSurfaceRenderNode*>(this));
-        auto p = parent_.lock();
-        out += ", Parent [" + (p != nullptr ? std::to_string(p->GetId()) : "null") + "]";
+    if (auto surfaceNode = ReinterpretCastTo<RSSurfaceRenderNode>()) {
+        auto parent = parent_.lock();
+        out += ", Parent [" + (parent != nullptr ? std::to_string(parent->GetId()) : "null") + "]";
         out += ", Name [" + surfaceNode->GetName() + "]";
-        const RSSurfaceHandler& surfaceHandler = static_cast<const RSSurfaceHandler&>(*surfaceNode);
+        const auto& surfaceHandler = static_cast<const RSSurfaceHandler&>(*surfaceNode);
         out += ", hasConsumer: " + std::to_string(surfaceHandler.HasConsumer());
         std::string contextAlpha = std::to_string(surfaceNode->contextAlpha_);
         std::string propertyAlpha = std::to_string(surfaceNode->GetRenderProperties().GetAlpha());
@@ -327,17 +324,13 @@ void RSRenderNode::DumpTree(int32_t depth, std::string& out) const
         out += ", " + surfaceNode->GetVisibleRegion().GetRegionInfo();
         out += ", OcclusionBg: " + std::to_string(surfaceNode->GetAbilityBgAlpha());
         out += ", Properties: " + surfaceNode->GetRenderProperties().Dump();
-    }
-    if (GetType() == RSRenderNodeType::ROOT_NODE) {
-        auto rootNode = static_cast<const RSRootRenderNode*>(this);
+    } else if (auto rootNode = ReinterpretCastTo<RSRootRenderNode>()) {
         out += ", Visible: " + std::to_string(rootNode->GetRenderProperties().GetVisible());
         out += ", Size: [" + std::to_string(rootNode->GetRenderProperties().GetFrameWidth()) + ", " +
             std::to_string(rootNode->GetRenderProperties().GetFrameHeight()) + "]";
         out += ", EnableRender: " + std::to_string(rootNode->GetEnableRender());
         out += ", Properties: " + rootNode->GetRenderProperties().Dump();
-    }
-    if (GetType() == RSRenderNodeType::CANVAS_NODE) {
-        auto canvasNode = static_cast<const RSCanvasRenderNode*>(this);
+    } else if (auto canvasNode = ReinterpretCastTo<RSCanvasRenderNode>()) {
         out += ", Properties: " + canvasNode->GetRenderProperties().Dump();
     }
     out += "\n";
@@ -847,7 +840,7 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
     } else {
         drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
     }
-    modifier->GetProperty()->Attach(ReinterpretCastTo<RSRenderNode>());
+    modifier->GetProperty()->Attach(shared_from_this());
     SetDirty();
 }
 
@@ -1421,6 +1414,18 @@ void RSRenderNode::OnTreeStateChanged()
 void RSRenderNode::MarkNonGeometryChanged()
 {
     geometryChangeNotPerceived_ = true;
+}
+
+bool RSRenderNode::HasDisappearingTransition(bool recursive) const
+{
+    if (disappearingTransitionCount_ > 0) {
+        return true;
+    }
+    if (recursive == false) {
+        return false;
+    }
+    auto parent = GetParent().lock();
+    return parent ? parent->HasDisappearingTransition(true) : false;
 }
 } // namespace Rosen
 } // namespace OHOS

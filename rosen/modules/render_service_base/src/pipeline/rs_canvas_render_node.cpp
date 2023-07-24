@@ -44,6 +44,7 @@ RSCanvasRenderNode::RSCanvasRenderNode(NodeId id, std::weak_ptr<RSContext> conte
 {
     MemoryInfo info = {sizeof(*this), ExtractPid(id), id, MEMORY_TYPE::MEM_RENDER_NODE};
     MemoryTrack::Instance().AddNodeRecord(id, info);
+    GetMutableRenderProperties().backref_ = weak_from_this();
 }
 
 RSCanvasRenderNode::~RSCanvasRenderNode()
@@ -220,11 +221,6 @@ void RSCanvasRenderNode::InternalDrawContent(RSPaintFilterCanvas& canvas)
             canvasChild->InternalDrawContent(canvas);
         }
     }
-}
-
-void RSCanvasRenderNode::OnApplyModifiers()
-{
-    GetMutableRenderProperties().backref_ = ReinterpretCastTo<RSRenderNode>();
 }
 
 void RSCanvasRenderNode::ProcessDrivenBackgroundRender(RSPaintFilterCanvas& canvas)

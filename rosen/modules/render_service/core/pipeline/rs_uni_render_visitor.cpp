@@ -214,7 +214,7 @@ void RSUniRenderVisitor::PrepareChild(RSRenderNode& node)
     }
     node.ResetSortedChildren();
     for (auto& child : node.GetChildren()) {
-        if (auto renderChild = (child.lock())) {
+        if (auto renderChild = child.lock()) {
             renderChild->ApplyModifiers();
         }
     }
@@ -260,21 +260,20 @@ void RSUniRenderVisitor::PrepareChild(RSRenderNode& node)
 void RSUniRenderVisitor::UpdateCacheChangeStatus(RSRenderNode& node)
 {
     node.SetChildHasFilter(false);
-    auto targetNode = node.ReinterpretCastTo<RSRenderNode>();
-    if (!isDrawingCacheEnabled_ || targetNode == nullptr) {
+    if (!isDrawingCacheEnabled_) {
         return;
     }
-    targetNode->CheckDrawingCacheType();
-    if (!targetNode->ShouldPaint()) {
-        targetNode->SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
+    node.CheckDrawingCacheType();
+    if (!node.ShouldPaint()) {
+        node.SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
     }
     // drawing group root node
-    if (targetNode->GetDrawingCacheType() != RSDrawingCacheType::DISABLED_CACHE) {
+    if (node.GetDrawingCacheType() != RSDrawingCacheType::DISABLED_CACHE) {
         markedCachedNodes_++;
         // For rootnode, init drawing changes only if there is any content dirty
         isDrawingCacheChanged_ = curContentDirty_;
         RS_TRACE_NAME_FMT("RSUniRenderVisitor::UpdateCacheChangeStatus: cachable node %" PRIu64 " markedNum: %d, "
-            "contentDirty(cacheChanged): %d", targetNode->GetId(), static_cast<int>(markedCachedNodes_),
+            "contentDirty(cacheChanged): %d", node.GetId(), static_cast<int>(markedCachedNodes_),
             static_cast<int>(isDrawingCacheChanged_));
     } else {
         // Any child node dirty causes cache change
@@ -288,23 +287,21 @@ void RSUniRenderVisitor::SetNodeCacheChangeStatus(RSRenderNode& node, int marked
     if (directParent != nullptr && node.ChildHasFilter()) {
         directParent->SetChildHasFilter(true);
     }
-    auto targetNode = node.ReinterpretCastTo<RSRenderNode>();
-    if (!isDrawingCacheEnabled_ || targetNode == nullptr ||
-        targetNode->GetDrawingCacheType() == RSDrawingCacheType::DISABLED_CACHE) {
+    if (!isDrawingCacheEnabled_ || node.GetDrawingCacheType() == RSDrawingCacheType::DISABLED_CACHE) {
         return;
     }
     // Attention: currently not support filter. Only enable lowest marked cached node
     // [planning] check if outofparent causes edge problem
     if ((cacheRenderNodeMap.find(node.GetId()) == cacheRenderNodeMap.end() || isDrawingCacheChanged_) &&
-        (targetNode->ChildHasFilter() || (markedCachedNodeCnt != markedCachedNodes_))) {
-        targetNode->SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
+        (node.ChildHasFilter() || (markedCachedNodeCnt != markedCachedNodes_))) {
+        node.SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
     }
     RS_TRACE_NAME_FMT("RSUniRenderVisitor::SetNodeCacheChangeStatus: node %" PRIu64 " drawingtype %d, "
         "cacheChange %d, childHasFilter: %d, outofparent: %d, markedCachedNodeCnt|markedCachedNodes_: (%d, %d)",
-        targetNode->GetId(), static_cast<int>(targetNode->GetDrawingCacheType()),
-        static_cast<int>(isDrawingCacheChanged_), static_cast<int>(targetNode->ChildHasFilter()),
-        static_cast<int>(targetNode->HasChildrenOutOfRect()), markedCachedNodeCnt, markedCachedNodes_);
-    targetNode->SetDrawingCacheChanged(isDrawingCacheChanged_);
+        node.GetId(), static_cast<int>(node.GetDrawingCacheType()),
+        static_cast<int>(isDrawingCacheChanged_), static_cast<int>(node.ChildHasFilter()),
+        static_cast<int>(node.HasChildrenOutOfRect()), markedCachedNodeCnt, markedCachedNodes_);
+    node.SetDrawingCacheChanged(isDrawingCacheChanged_);
     // reset counter after executing the very first marked node
     if (markedCachedNodeCnt == 1) {
         markedCachedNodes_ = 0;
@@ -680,7 +677,7 @@ void RSUniRenderVisitor::PrepareTypesOfSurfaceRenderNodeAfterUpdate(RSSurfaceRen
             parentNode->SetChildHasFilter(true);
         }
         if (curSurfaceNode_) {
-            curSurfaceNode_->UpdateFilterNodes(node.ReinterpretCastTo<RSRenderNode>());
+            curSurfaceNode_->UpdateFilterNodes(node.shared_from_this());
         }
     }
     if (node.IsAppWindow()) {
@@ -1102,10 +1099,7 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
         RSSurfaceNodeType::SELF_DRAWING_NODE) {
         nodeParent = nodeParent->GetParent().lock();
     }
-    std::shared_ptr<RSRenderNode> rsParent = nullptr;
-    if (nodeParent != nullptr) {
-        rsParent = nodeParent->ReinterpretCastTo<RSRenderNode>();
-    }
+    std::shared_ptr<RSRenderNode> rsParent = nodeParent;
 
     node.SetIsAncestorDirty(rsParent->IsDirty() || rsParent->IsAncestorDirty());
     if (curSurfaceDirtyManager_ == nullptr) {
@@ -1213,7 +1207,7 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
         }
         if (curSurfaceNode_) {
             curSurfaceNode_->UpdateChildrenFilterRects(node.GetOldDirtyInSurface());
-            curSurfaceNode_->UpdateFilterNodes(node.ReinterpretCastTo<RSRenderNode>());
+            curSurfaceNode_->UpdateFilterNodes(node.shared_from_this());
         }
         UpdateForegroundFilterCacheWithDirty(node);
     }
@@ -3277,9 +3271,9 @@ bool RSUniRenderVisitor::InitNodeCache(RSRenderNode& node)
         node.GetDrawingCacheType() == RSDrawingCacheType::TARGETED_CACHE) {
         if (cacheRenderNodeMap.count(node.GetId()) == 0) {
 #ifndef USE_ROSEN_DRAWING
-            RenderParam val { node.ReinterpretCastTo<RSRenderNode>(), canvas_->GetAlpha(), canvas_->getTotalMatrix() };
+            RenderParam val { node.shared_from_this(), canvas_->GetAlpha(), canvas_->getTotalMatrix() };
 #else
-            RenderParam val { node.ReinterpretCastTo<RSRenderNode>(), canvas_->GetAlpha(), canvas_->GetTotalMatrix() };
+            RenderParam val { node.shared_from_this(), canvas_->GetAlpha(), canvas_->GetTotalMatrix() };
 #endif
             curGroupedNodes_.push(val);
             groupedTransitionNodes[node.GetId()] = { val, {} };
@@ -3308,9 +3302,9 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
         // Regardless of the number of consecutive refreshes, the current cache is forced to be updated.
         if (node.GetDrawingCacheChanged()) {
 #ifndef USE_ROSEN_DRAWING
-            RenderParam val { node.ReinterpretCastTo<RSRenderNode>(), canvas_->GetAlpha(), canvas_->getTotalMatrix() };
+            RenderParam val { node.shared_from_this(), canvas_->GetAlpha(), canvas_->getTotalMatrix() };
 #else
-            RenderParam val { node.ReinterpretCastTo<RSRenderNode>(), canvas_->GetAlpha(), canvas_->GetTotalMatrix() };
+            RenderParam val { node.shared_from_this(), canvas_->GetAlpha(), canvas_->GetTotalMatrix() };
 #endif
             curGroupedNodes_.push(val);
             groupedTransitionNodes[node.GetId()] = { val, {} };
@@ -3338,9 +3332,9 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
                 return;
             }
 #ifndef USE_ROSEN_DRAWING
-            RenderParam val { node.ReinterpretCastTo<RSRenderNode>(), canvas_->GetAlpha(), canvas_->getTotalMatrix() };
+            RenderParam val { node.shared_from_this(), canvas_->GetAlpha(), canvas_->getTotalMatrix() };
 #else
-            RenderParam val { node.ReinterpretCastTo<RSRenderNode>(), canvas_->GetAlpha(), canvas_->GetTotalMatrix() };
+            RenderParam val { node.shared_from_this(), canvas_->GetAlpha(), canvas_->GetTotalMatrix() };
 #endif
             curGroupedNodes_.push(val);
             groupedTransitionNodes[node.GetId()] = { val, {} };
@@ -3717,13 +3711,7 @@ bool RSUniRenderVisitor::ParallelComposition(const std::shared_ptr<RSRenderNode>
 
 bool RSUniRenderVisitor::PrepareSharedTransitionNode(RSRenderNode& node)
 {
-    auto renderChild = node.ReinterpretCastTo<RSRenderNode>();
-    if (!renderChild) {
-        // non-render node, prepare directly
-        return true;
-    }
-
-    auto transitionParam = renderChild->GetSharedTransitionParam();
+    auto transitionParam = node.GetSharedTransitionParam();
     if (!transitionParam.has_value()) {
         // non-transition node, prepare directly
         return true;
@@ -3742,9 +3730,9 @@ bool RSUniRenderVisitor::PrepareSharedTransitionNode(RSRenderNode& node)
         prepareClipRect_.SetAll(0, 0, INT_MAX, INT_MAX);
 
         // set curAlpha_ and prepare paired node
-        [[maybe_unused]] auto& [node, alpha, unused_matrix] = existingNodeIter->second;
+        [[maybe_unused]] auto& [existingNode, alpha, unused_matrix] = existingNodeIter->second;
         curAlpha_ = alpha;
-        node->Prepare(shared_from_this());
+        existingNode->Prepare(shared_from_this());
         unpairedTransitionNodes_.erase(existingNodeIter);
 
         // restore environment variables and continue prepare node
@@ -3756,7 +3744,7 @@ bool RSUniRenderVisitor::PrepareSharedTransitionNode(RSRenderNode& node)
     auto pairedNode = transitionParam->second.lock();
     if (pairedNode == nullptr) {
         // paired node is already destroyed, clear transition param and prepare directly
-        renderChild->SetSharedTransitionParam(std::nullopt);
+        node.SetSharedTransitionParam(std::nullopt);
         return true;
     }
 
@@ -3764,22 +3752,22 @@ bool RSUniRenderVisitor::PrepareSharedTransitionNode(RSRenderNode& node)
     if (!pairedParam.has_value() || pairedParam->first != transitionParam->first) {
         // if 1. paired node is not a transition node or 2. paired node is not paired with this node, then clear
         // transition param and prepare directly
-        renderChild->SetSharedTransitionParam(std::nullopt);
+        node.SetSharedTransitionParam(std::nullopt);
         return true;
     }
 
-    if (const auto& transitionInNode = (node.GetId() == transitionParam->first) ? renderChild : pairedNode;
-        !transitionInNode->HasAnimation() || !pairedNode->IsOnTheTree()) {
+    if (const auto& transitionInNode = (node.GetId() == transitionParam->first) ? node : *pairedNode;
+        !transitionInNode.HasAnimation() || !pairedNode->IsOnTheTree()) {
         // if no animation on transition in node, or paired node is detached from tree, clear transition param on both
         // node and prepare directly
         pairedNode->SetSharedTransitionParam(std::nullopt);
-        renderChild->SetSharedTransitionParam(std::nullopt);
+        node.SetSharedTransitionParam(std::nullopt);
         return true;
     }
 
     // all sanity checks passed, add this node and render params (only alpha for prepare phase) into
     // unpairedTransitionNodes_.
-    RenderParam value { std::move(renderChild), curAlpha_, std::nullopt };
+    RenderParam value { node.shared_from_this(), curAlpha_, std::nullopt };
     unpairedTransitionNodes_.emplace(key, std::move(value));
 
     // skip prepare for shared transition node and its children
@@ -3788,13 +3776,7 @@ bool RSUniRenderVisitor::PrepareSharedTransitionNode(RSRenderNode& node)
 
 bool RSUniRenderVisitor::ProcessSharedTransitionNode(RSRenderNode& node)
 {
-    auto renderChild = node.ReinterpretCastTo<RSRenderNode>();
-    if (!renderChild) {
-        // non-render node, process directly
-        return true;
-    }
-
-    auto& transitionParam = renderChild->GetSharedTransitionParam();
+    auto& transitionParam = node.GetSharedTransitionParam();
     if (!transitionParam.has_value()) {
         // non-transition node, process directly
         return true;
@@ -3847,12 +3829,12 @@ bool RSUniRenderVisitor::ProcessSharedTransitionNode(RSRenderNode& node)
         // if in node group cache, add this node and render params (alpha and matrix) into groupedTransitionNodes.
         auto& [child, alpha, matrix] = curGroupedNodes_.top();
 #ifndef USE_ROSEN_DRAWING
-        RenderParam value { std::move(renderChild), canvas_->GetAlpha() / alpha, canvas_->getTotalMatrix() };
+        RenderParam value { node.shared_from_this(), canvas_->GetAlpha() / alpha, canvas_->getTotalMatrix() };
         if (!matrix->invert(&std::get<2>(value).value())) {
             RS_LOGE("RSUniRenderVisitor::ProcessSharedTransitionNode invert failed");
         }
 #else
-        RenderParam value { std::move(renderChild), canvas_->GetAlpha(), canvas_->GetTotalMatrix() };
+        RenderParam value { node.shared_from_this(), canvas_->GetAlpha(), canvas_->GetTotalMatrix() };
 #endif
         groupedTransitionNodes[child->GetId()].second.emplace(key, std::move(value));
         return false;
@@ -3860,9 +3842,9 @@ bool RSUniRenderVisitor::ProcessSharedTransitionNode(RSRenderNode& node)
 
     // all sanity checks passed, add this node and render params (alpha and matrix) into unpairedTransitionNodes_.
 #ifndef USE_ROSEN_DRAWING
-    RenderParam value { std::move(renderChild), canvas_->GetAlpha(), canvas_->getTotalMatrix() };
+    RenderParam value { node.shared_from_this(), canvas_->GetAlpha(), canvas_->getTotalMatrix() };
 #else
-    RenderParam value { std::move(renderChild), canvas_->GetAlpha(), canvas_->GetTotalMatrix() };
+    RenderParam value { node.shared_from_this(), canvas_->GetAlpha(), canvas_->GetTotalMatrix() };
 #endif
     unpairedTransitionNodes_.emplace(key, std::move(value));
 

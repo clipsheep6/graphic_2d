@@ -61,7 +61,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-static bool gIsUniRenderEnabled = false;
+static bool g_isUniRenderEnabled = false;
 bool IsPathAnimatableModifier(const RSModifierType& type)
 {
     if (type == RSModifierType::BOUNDS || type == RSModifierType::FRAME || type == RSModifierType::TRANSLATE) {
@@ -1424,8 +1424,6 @@ void RSNode::UpdateModifierMotionPathOption()
     }
 }
 
-
-
 void RSNode::UpdateImplicitAnimator()
 {
     auto tid = gettid();
@@ -1575,19 +1573,19 @@ void RSNode::InitUniRenderEnabled()
     static bool inited = false;
     if (!inited) {
         inited = true;
-        gIsUniRenderEnabled = RSSystemProperties::GetUniRenderEnabled();
-        ROSEN_LOGD("RSNode::InitUniRenderEnabled:%d", gIsUniRenderEnabled);
+        g_isUniRenderEnabled = RSSystemProperties::GetUniRenderEnabled();
+        ROSEN_LOGD("RSNode::InitUniRenderEnabled:%d", g_isUniRenderEnabled);
     }
 }
 
 bool RSNode::IsUniRenderEnabled() const
 {
-    return gIsUniRenderEnabled;
+    return g_isUniRenderEnabled;
 }
 
 bool RSNode::IsRenderServiceNode() const
 {
-    return gIsUniRenderEnabled || isRenderServiceNode_;
+    return g_isUniRenderEnabled || isRenderServiceNode_;
 }
 } // namespace Rosen
 } // namespace OHOS

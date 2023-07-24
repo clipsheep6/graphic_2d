@@ -15,7 +15,7 @@
 
 #include "ui/rs_proxy_node.h"
 
-#include "command/rs_base_node_command.h"
+#include "command/rs_node_command.h"
 #include "command/rs_proxy_node_command.h"
 #include "pipeline/rs_node_map.h"
 #include "platform/common/rs_log.h"
@@ -63,12 +63,12 @@ RSProxyNode::~RSProxyNode()
     }
 
     // destroy remote RSProxyRenderNode, NOT the target node.
-    std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeDestroy>(proxyNodeId_);
+    std::unique_ptr<RSCommand> command = std::make_unique<RSNodeDestroy>(proxyNodeId_);
     transactionProxy->AddCommand(command, IsUniRenderEnabled());
 
     // destroy corresponding RSProxyRenderNode in RS even if uni render not enabled.
     if (!IsUniRenderEnabled()) {
-        command = std::make_unique<RSBaseNodeDestroy>(proxyNodeId_);
+        command = std::make_unique<RSNodeDestroy>(proxyNodeId_);
         transactionProxy->AddCommand(command, true);
     }
 

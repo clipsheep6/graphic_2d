@@ -19,7 +19,6 @@
 #include <algorithm>
 #include <string>
 
-#include "command/rs_base_node_command.h"
 #include "command/rs_node_command.h"
 #include "command/rs_surface_node_command.h"
 #include "pipeline/rs_node_map.h"
@@ -454,7 +453,7 @@ RSSurfaceNode::~RSSurfaceNode()
     // The destructor of render node in RenderService should controlled by application
     // Command sent only in divided render
     if (skipDestroyCommandInDestructor_ && !IsUniRenderEnabled()) {
-        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeDestroy>(GetId());
+        std::unique_ptr<RSCommand> command = std::make_unique<RSNodeDestroy>(GetId());
         transactionProxy->AddCommand(command, false, FollowType::FOLLOW_TO_PARENT, GetId());
         return;
     }
@@ -468,7 +467,7 @@ RSSurfaceNode::~RSSurfaceNode()
     // For self-drawing surfaceNode, we should destroy the corresponding render node in RenderService
     // Command sent only in divided render
     if (!IsRenderServiceNode()) {
-        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeDestroy>(GetId());
+        std::unique_ptr<RSCommand> command = std::make_unique<RSNodeDestroy>(GetId());
         transactionProxy->AddCommand(command, true, FollowType::FOLLOW_TO_PARENT, GetId());
         return;
     }

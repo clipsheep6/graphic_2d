@@ -406,5 +406,4 @@ private:
 using RSBaseNode = RSNode;
 } // namespace Rosen
 } // namespace OHOS
-
 #endif // RENDER_SERVICE_CLIENT_CORE_UI_RS_NODE_H

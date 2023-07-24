@@ -16,20 +16,10 @@
 #include "pipeline/rs_render_thread_visitor.h"
 
 #include <cmath>
-#ifndef USE_ROSEN_DRAWING
-#include <include/core/SkColor.h>
-#include <include/core/SkFont.h>
-#include <include/core/SkMatrix.h>
-#include <include/core/SkPaint.h>
-#include <include/core/SkRect.h>
-#else
-#include "draw/color.h"
-#include "drawing/engine_adapter/impl_interface/matrix_impl.h"
-#endif
 
 #include "rs_trace.h"
 
-#include "command/rs_base_node_command.h"
+#include "command/rs_node_command.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "common/rs_vector4.h"
 #include "pipeline/rs_canvas_render_node.h"
@@ -41,18 +31,31 @@
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
+#include "transaction/rs_transaction_proxy.h"
+#include "ui/rs_surface_extractor.h"
+#include "ui/rs_surface_node.h"
+
 #ifdef NEW_RENDER_CONTEXT
 #include "rs_render_surface.h"
 #else
 #include "platform/drawing/rs_surface.h"
 #endif
-#include "transaction/rs_transaction_proxy.h"
-#include "ui/rs_surface_extractor.h"
-#include "ui/rs_surface_node.h"
+
+#ifndef USE_ROSEN_DRAWING
+#include <include/core/SkColor.h>
+#include <include/core/SkFont.h>
+#include <include/core/SkMatrix.h>
+#include <include/core/SkPaint.h>
+#include <include/core/SkRect.h>
+#else
+#include "draw/color.h"
+#include "drawing/engine_adapter/impl_interface/matrix_impl.h"
+#endif
 
 #ifdef ROSEN_OHOS
 #include <frame_collector.h>
 #include <frame_painter.h>
+
 #include "platform/ohos/overdraw/rs_cpu_overdraw_canvas_listener.h"
 #include "platform/ohos/overdraw/rs_gpu_overdraw_canvas_listener.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
@@ -610,10 +613,10 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 
     if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_) {
         auto thisSurfaceNodeId = node.GetRSSurfaceNodeId();
-        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearChild>(thisSurfaceNodeId);
+        std::unique_ptr<RSCommand> command = std::make_unique<RSNodeClearChild>(thisSurfaceNodeId);
         SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
         for (const auto& childSurfaceNodeId : childSurfaceNodeIds_) {
-            command = std::make_unique<RSBaseNodeAddChild>(thisSurfaceNodeId, childSurfaceNodeId, -1);
+            command = std::make_unique<RSNodeAddChild>(thisSurfaceNodeId, childSurfaceNodeId, -1);
             SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
         }
         node.childSurfaceNodeIds_ = std::move(childSurfaceNodeIds_);
@@ -830,10 +833,10 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     // 4. if children changed, sync children to RenderService
     if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_) {
         auto thisSurfaceNodeId = node.GetId();
-        std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeClearChild>(thisSurfaceNodeId);
+        std::unique_ptr<RSCommand> command = std::make_unique<RSNodeClearChild>(thisSurfaceNodeId);
         SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
         for (const auto& childSurfaceNodeId : childSurfaceNodeIds_) {
-            command = std::make_unique<RSBaseNodeAddChild>(thisSurfaceNodeId, childSurfaceNodeId, -1);
+            command = std::make_unique<RSNodeAddChild>(thisSurfaceNodeId, childSurfaceNodeId, -1);
             SendCommandFromRT(command, thisSurfaceNodeId, FollowType::FOLLOW_TO_SELF);
         }
         node.childSurfaceNodeIds_ = std::move(childSurfaceNodeIds_);

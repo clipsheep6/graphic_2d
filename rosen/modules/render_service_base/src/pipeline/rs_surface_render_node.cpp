@@ -248,15 +248,15 @@ void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSRenderNode>
 
 void RSSurfaceRenderNode::OnTreeStateChanged()
 {
-#ifdef RS_ENABLE_GL
     RSRenderNode::OnTreeStateChanged();
-    if (grContext_ && !IsOnTheTree() && IsLeashWindow()) {
+#ifdef RS_ENABLE_GL
 #ifndef USE_ROSEN_DRAWING
+    if (grContext_ && !IsOnTheTree() && IsLeashWindow()) {
         RS_TRACE_NAME_FMT("purgeUnlockedResources this SurfaceNode isn't on the tree Id:%" PRIu64 " Name:%s",
             GetId(), GetName().c_str());
         grContext_->purgeUnlockedResources(true);
-#endif
     }
+#endif
 #endif
 }
 

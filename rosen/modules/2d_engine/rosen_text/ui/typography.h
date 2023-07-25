@@ -33,7 +33,7 @@ public:
     double GetMaxWidth();
     double GetHeight();
     double GetLongestLine();
-    size_t Typography::GetLineCount()；
+    size_t Typography::GetLineCount();
     double GetMinIntrinsicWidth();
     double GetMaxIntrinsicWidth();
     double GetAlphabeticBaseline();

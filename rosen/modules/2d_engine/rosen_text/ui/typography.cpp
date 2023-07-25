@@ -43,6 +43,11 @@ double Typography::GetLongestLine()
     return typography_->GetLongestLine();
 }
 
+size_t Typography::GetLineCount()
+{
+    return typography_->GetLineCount();
+}
+
 double Typography::GetMinIntrinsicWidth()
 {
     return typography_->GetMinIntrinsicWidth();

@@ -243,11 +243,6 @@ private:
     bool IsResidentProcess(pid_t pid);
     bool IsNeedSkip(NodeId rootSurfaceNodeId, pid_t pid);
 
-    // Click animation, report the start event to RS
-    void ResSchedDataStartReport(bool needRequestNextVsync);
-    // Click animation, report the complete event to RS
-    void ResSchedDataCompleteReport(bool needRequestNextVsync);
-
     bool NeedReleaseGpuResource(const RSRenderNodeMap& nodeMap);
 
     // UIFirst
@@ -358,9 +353,6 @@ private:
     // driven render
     bool hasDrivenNodeOnUniTree_ = false;
     bool hasDrivenNodeMarkRender_ = false;
-
-    // used for control start and end of the click animation
-    bool requestResschedReport_ = true;
 
     // UIFirst
     std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes_;

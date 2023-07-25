@@ -1381,4 +1381,48 @@ HWTEST_F(RSUniRenderVisitorTest, ClosePartialRenderWhenAnimatingWindows001, Test
     ASSERT_NE(rsUniRenderVisitor, nullptr);
     rsUniRenderVisitor->ClosePartialRenderWhenAnimatingWindows(node);
 }
+
+/**
+ * @tc.name: CheckColorSpace001
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckColorSpace001 api
+ * @tc.type: FUNC
+ * @tc.require: issueI7LE6W
+ */
+HWTEST_F(RSUniRenderVisitorTest, CheckColorSpace001, TestSize.Level2)
+{
+    auto node = RSTestUtil::CreateSurfaceNode();
+    auto nodeVisitor = std::make_shared<RSUniRenderVisitor>();
+    node->SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
+    node->SetColorSpace(GraphicColorGamut::GRAPHIC_COLOR_GAMUT_ADOBE_RGB);
+    nodeVisitor->colorGamutModes_.push_back(
+        static_cast<ScreenColorGamut>(GraphicColorGamut::GRAPHIC_COLOR_GAMUT_ADOBE_RGB));
+    nodeVisitor->CheckColorSpace(*node);
+    ASSERT_EQ(nodeVisitor->newColorSpace_, node->GetColorSpace());
+}
+
+/**
+ * @tc.name: DoDirectComposition001
+ * @tc.desc: Test RSUniRenderVisitorTest.DoDirectComposition api
+ * @tc.type: FUNC
+ * @tc.require: issueI7LE6W
+ */
+HWTEST_F(RSUniRenderVisitorTest, DoDirectComposition001, TestSize.Level2)
+{
+    std::shared_ptr<RSContext> context = std::make_shared<RSContext>();
+    const std::shared_ptr<RSBaseRenderNode> rootNode = context->GetGlobalRootRenderNode();
+    auto nodeVisitor = std::make_shared<RSUniRenderVisitor>();
+    nodeVisitor->isHardwareForcedDisabled_ = false;
+    nodeVisitor->doAnimate_ = false;
+    nodeVisitor->isHardwareComposerEnabled_ = false;
+    ASSERT_EQ(nodeVisitor->DoDirectComposition(rootNode), false);
+    nodeVisitor->isHardwareComposerEnabled_ = true;
+    NodeId id = 1;
+    RSDisplayNodeConfig config;
+    auto childDisplayNode = std::make_shared<RSDisplayRenderNode>(id, config);
+    rootNode->AddChild(childDisplayNode, 0);
+    childDisplayNode->SetCompositeType(RSDisplayRenderNode::CompositeType::SOFTWARE_COMPOSITE);
+    ASSERT_EQ(nodeVisitor->DoDirectComposition(rootNode), false);
+    childDisplayNode->SetCompositeType(RSDisplayRenderNode::CompositeType::UNI_RENDER_COMPOSITE);
+    ASSERT_EQ(nodeVisitor->DoDirectComposition(rootNode), false);
+}
 } // OHOS::Rosen

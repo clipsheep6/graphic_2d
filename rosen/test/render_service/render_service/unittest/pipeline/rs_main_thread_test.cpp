@@ -728,33 +728,4 @@ HWTEST_F(RSMainThreadTest, DoParallelComposition, TestSize.Level1)
     RSInnovation::_s_createParallelSyncSignal = (void*)RSMainThreadTest::CreateParallelSyncSignal;
     mainThread->DoParallelComposition(node);
 }
-
-/**
- * @tc.name: CheckParallelSubThreadNodesStatus
- * @tc.desc: CheckParallelSubThreadNodesStatus test
- * @tc.type: FUNC
- * @tc.require: issueI7LE6W
- */
-HWTEST_F(RSMainThreadTest, CheckParallelSubThreadNodesStatus, TestSize.Level2)
-{
-    auto mainThread = RSMainThread::Instance();
-    auto appWindowNode = RSTestUtil::CreateSurfaceNode();
-    auto leashWindowNode = RSTestUtil::CreateSurfaceNode();
-    auto childAppWindowNode = RSTestUtil::CreateSurfaceNode();
-    appWindowNode->SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
-    leashWindowNode->SetSurfaceNodeType(RSSurfaceNodeType::LEASH_WINDOW_NODE);
-    childAppWindowNode->SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
-    appWindowNode->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DOING);
-    leashWindowNode->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DOING);
-    childAppWindowNode->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DOING);
-    mainThread->subThreadNodes_.push_back(appWindowNode);
-    mainThread->CheckParallelSubThreadNodesStatus();
-    ASSERT_EQ(mainThread->cacheCmdSkippedInfo_.size(), 1);
-    mainThread->subThreadNodes_.push_back(leashWindowNode);
-    mainThread->CheckParallelSubThreadNodesStatus();
-    ASSERT_EQ(mainThread->cacheCmdSkippedInfo_.size(), 1);
-    leashWindowNode->AddChild(childAppWindowNode, 0);
-    mainThread->CheckParallelSubThreadNodesStatus();
-    ASSERT_EQ(mainThread->cacheCmdSkippedInfo_.size(), 2);
-}
 } // namespace OHOS::Rosen

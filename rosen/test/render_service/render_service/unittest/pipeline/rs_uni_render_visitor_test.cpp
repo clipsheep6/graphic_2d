@@ -1395,43 +1395,301 @@ HWTEST_F(RSUniRenderVisitorTest, ClosePartialRenderWhenAnimatingWindows001, Test
  * @tc.name: CheckColorSpace001
  * @tc.desc: Test RSUniRenderVisitorTest.CheckColorSpace001 api
  * @tc.type: FUNC
- * @tc.require: issueI7LE6W
+ * @tc.require: issueI7O6WO
  */
 HWTEST_F(RSUniRenderVisitorTest, CheckColorSpace001, TestSize.Level2)
 {
     auto node = RSTestUtil::CreateSurfaceNode();
-    auto nodeVisitor = std::make_shared<RSUniRenderVisitor>();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
     node->SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
     node->SetColorSpace(GraphicColorGamut::GRAPHIC_COLOR_GAMUT_ADOBE_RGB);
-    nodeVisitor->colorGamutModes_.push_back(
+    rsUniRenderVisitor->colorGamutModes_.push_back(
         static_cast<ScreenColorGamut>(GraphicColorGamut::GRAPHIC_COLOR_GAMUT_ADOBE_RGB));
-    nodeVisitor->CheckColorSpace(*node);
-    ASSERT_EQ(nodeVisitor->newColorSpace_, node->GetColorSpace());
+    rsUniRenderVisitor->CheckColorSpace(*node);
+    ASSERT_EQ(rsUniRenderVisitor->newColorSpace_, node->GetColorSpace());
 }
 
 /**
  * @tc.name: DoDirectComposition001
  * @tc.desc: Test RSUniRenderVisitorTest.DoDirectComposition api
  * @tc.type: FUNC
- * @tc.require: issueI7LE6W
+ * @tc.require: issueI7O6WO
  */
 HWTEST_F(RSUniRenderVisitorTest, DoDirectComposition001, TestSize.Level2)
 {
     std::shared_ptr<RSContext> context = std::make_shared<RSContext>();
     const std::shared_ptr<RSBaseRenderNode> rootNode = context->GetGlobalRootRenderNode();
-    auto nodeVisitor = std::make_shared<RSUniRenderVisitor>();
-    nodeVisitor->isHardwareForcedDisabled_ = false;
-    nodeVisitor->doAnimate_ = false;
-    nodeVisitor->isHardwareComposerEnabled_ = false;
-    ASSERT_EQ(nodeVisitor->DoDirectComposition(rootNode), false);
-    nodeVisitor->isHardwareComposerEnabled_ = true;
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    rsUniRenderVisitor->isHardwareForcedDisabled_ = false;
+    rsUniRenderVisitor->doAnimate_ = false;
+    rsUniRenderVisitor->isHardwareComposerEnabled_ = false;
+    ASSERT_EQ(rsUniRenderVisitor->DoDirectComposition(rootNode), false);
+    rsUniRenderVisitor->isHardwareComposerEnabled_ = true;
     NodeId id = 1;
     RSDisplayNodeConfig config;
     auto childDisplayNode = std::make_shared<RSDisplayRenderNode>(id, config);
     rootNode->AddChild(childDisplayNode, 0);
     childDisplayNode->SetCompositeType(RSDisplayRenderNode::CompositeType::SOFTWARE_COMPOSITE);
-    ASSERT_EQ(nodeVisitor->DoDirectComposition(rootNode), false);
+    ASSERT_EQ(rsUniRenderVisitor->DoDirectComposition(rootNode), false);
     childDisplayNode->SetCompositeType(RSDisplayRenderNode::CompositeType::UNI_RENDER_COMPOSITE);
-    ASSERT_EQ(nodeVisitor->DoDirectComposition(rootNode), false);
+    ASSERT_EQ(rsUniRenderVisitor->DoDirectComposition(rootNode), false);
+}
+
+/**
+ * @tc.name: AdjustLocalZOrder001
+ * @tc.desc: Test RSUniRenderVisitorTest.AdjustLocalZOrder
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderVisitorTest, AdjustLocalZOrder001, TestSize.Level2)
+{
+    auto node = RSTestUtil::CreateSurfaceNode();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    auto ChildHardwareEnabledNode = RSTestUtil::CreateSurfaceNode();
+    node->nodeType_ = RSSurfaceNodeType::APP_WINDOW_NODE;
+    rsUniRenderVisitor->isHardwareComposerEnabled_ = true;
+    rsUniRenderVisitor->isParallel_ = false;
+    node->AddChildHardwareEnabledNode(ChildHardwareEnabledNode);
+    ASSERT_EQ(rsUniRenderVisitor->appWindowNodesInZOrder_.size(), 0);
+    rsUniRenderVisitor->AdjustLocalZOrder(node);
+    ASSERT_EQ(rsUniRenderVisitor->appWindowNodesInZOrder_.size(), 1);
+}
+
+/**
+ * @tc.name: UpdateHardwareEnableList001
+ * @tc.desc: Test RSUniRenderVisitorTest.UpdateHardwareEnableList
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateHardwareEnableList001, TestSize.Level2)
+{
+    using SurfaceDirtyMgrPair = std::pair<std::shared_ptr<RSSurfaceRenderNode>, std::shared_ptr<RSSurfaceRenderNode>>;
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    auto firstNode = RSTestUtil::CreateSurfaceNode();
+    auto secondNode = RSTestUtil::CreateSurfaceNode();
+    RectI DstRect(0, 0, 2, 2);
+    firstNode->SetDstRect(DstRect);
+    vector<SurfaceDirtyMgrPair> validHwcNodes;
+    vector<RectI> filterRects;
+    validHwcNodes.push_back({firstNode, secondNode});
+    ASSERT_TRUE(rsUniRenderVisitor->UpdateHardwareEnableList(filterRects, validHwcNodes).IsEmpty());
+    RectI filterRect(3, 3, 2, 2);
+    filterRects.push_back(filterRect);
+    ASSERT_TRUE(rsUniRenderVisitor->UpdateHardwareEnableList(filterRects, validHwcNodes).IsEmpty());
+    filterRect.SetAll(1, 1, 2, 2);
+    filterRects.push_back(filterRect);
+    firstNode->isLastFrameHardwareEnabled_ = false;
+    rsUniRenderVisitor->UpdateHardwareEnableList(filterRects, validHwcNodes);
+    ASSERT_TRUE(firstNode->isHardwareForcedDisabledByFilter_);
+    ASSERT_EQ(rsUniRenderVisitor->dirtySurfaceNodeMap_.size(), 0);
+    firstNode->isLastFrameHardwareEnabled_ = true;
+    validHwcNodes.push_back({firstNode, secondNode});
+    rsUniRenderVisitor->UpdateHardwareEnableList(filterRects, validHwcNodes);
+    ASSERT_EQ(rsUniRenderVisitor->dirtySurfaceNodeMap_.size(), 1);
+}
+
+/**
+ * @tc.name: AddContainerDirtyToGlobalDirty001
+ * @tc.desc: Test RSUniRenderVisitorTest.AddContainerDirtyToGlobalDirty
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderVisitorTest, AddContainerDirtyToGlobalDirty001, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    NodeId id = 1;
+    RSDisplayNodeConfig config;
+    auto displayNode = std::make_shared<RSDisplayRenderNode>(id, config);
+    auto surfaceNode = RSTestUtil::CreateSurfaceNode();
+    displayNode->curAllSurfaces_.push_back(surfaceNode);
+    surfaceNode->containerConfig_.hasContainerWindow_ = true;
+    rsUniRenderVisitor->AddContainerDirtyToGlobalDirty(displayNode);
+    ASSERT_TRUE(displayNode->GetDirtyManager()->currentFrameDirtyRegion_.IsEmpty());
+    surfaceNode->GetDirtyManager()->currentFrameDirtyRegion_ = RectI(0, 0, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    surfaceNode->containerRegion_.rects_.push_back(Occlusion::Rect(0, 0, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT));
+    surfaceNode->containerRegion_.bound_ = Occlusion::Rect(0, 0, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    rsUniRenderVisitor->AddContainerDirtyToGlobalDirty(displayNode);
+    ASSERT_FALSE(displayNode->GetDirtyManager()->currentFrameDirtyRegion_.IsEmpty());
+}
+
+/**
+ * @tc.name: CheckIfSurfaceRenderNodeNeedProcess001
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckIfSurfaceRenderNodeNeedProcess
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderVisitorTest, CheckIfSurfaceRenderNodeNeedProcess001, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    auto node = RSTestUtil::CreateSurfaceNode();
+    rsUniRenderVisitor->isSecurityDisplay_ = true;
+    node->isSecurityLayer_ = true;
+    ASSERT_EQ(rsUniRenderVisitor->CheckIfSurfaceRenderNodeNeedProcess(*node), false);
+    rsUniRenderVisitor->isSecurityDisplay_ = false;
+    node->renderProperties_.visible_ = true;
+    node->isOcclusionVisible_ = true;
+    node->nodeType_ = RSSurfaceNodeType::ABILITY_COMPONENT_NODE;
+    ASSERT_EQ(rsUniRenderVisitor->CheckIfSurfaceRenderNodeNeedProcess(*node), false);
+}
+
+/**
+ * @tc.name: DoDirectComposition002
+ * @tc.desc: Test RSUniRenderVisitorTest.DoDirectComposition api
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderVisitorTest, DoDirectComposition002, TestSize.Level2)
+{
+    std::shared_ptr<RSContext> context = std::make_shared<RSContext>();
+    const std::shared_ptr<RSBaseRenderNode> rootNode = context->GetGlobalRootRenderNode();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    rsUniRenderVisitor->isHardwareForcedDisabled_ = false;
+    rsUniRenderVisitor->doAnimate_ = false;
+    rsUniRenderVisitor->isHardwareComposerEnabled_ = true;
+    ASSERT_EQ(rsUniRenderVisitor->DoDirectComposition(rootNode), false);
+}
+
+/**
+ * @tc.name: PrepareSharedTransitionNode001
+ * @tc.desc: Test RSUniRenderVisitorTest.PrepareSharedTransitionNode api
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderVisitorTest, PrepareSharedTransitionNode001, TestSize.Level2)
+{
+    auto node = RSTestUtil::CreateSurfaceNode();
+    auto destroyedNode = RSTestUtil::CreateSurfaceNode();
+    auto shareNode = RSTestUtil::CreateSurfaceNode();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    node->sharedTransitionParam_ = {shareNode->GetId(), destroyedNode};
+    destroyedNode.reset();
+    rsUniRenderVisitor->PrepareSharedTransitionNode(*node);
+    ASSERT_EQ(node->sharedTransitionParam_, std::nullopt);
+    node->sharedTransitionParam_ = {shareNode->GetId(), shareNode};
+    shareNode->sharedTransitionParam_ = std::nullopt;
+    ASSERT_EQ(rsUniRenderVisitor->PrepareSharedTransitionNode(*node), true);
+    shareNode->sharedTransitionParam_ = {shareNode->GetId()+1, shareNode};
+    ASSERT_EQ(rsUniRenderVisitor->PrepareSharedTransitionNode(*node), true);
+    shareNode->sharedTransitionParam_ = {shareNode->GetId(), shareNode};
+    shareNode->isOnTheTree_ = false;
+    ASSERT_EQ(rsUniRenderVisitor->PrepareSharedTransitionNode(*node), true);
+    shareNode->isOnTheTree_ = true;
+    ASSERT_EQ(rsUniRenderVisitor->PrepareSharedTransitionNode(*node), true);
+}
+
+/**
+ * @tc.name: ClosePartialRenderWhenAnimatingWindows002
+ * @tc.desc: Test RSUniRenderVisitorTest.ClosePartialRenderWhenAnimatingWindows api
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderVisitorTest, ClosePartialRenderWhenAnimatingWindows002, TestSize.Level2)
+{
+    NodeId id = 0;
+    RSDisplayNodeConfig config;
+    auto node = std::make_shared<RSDisplayRenderNode>(id, config);
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    rsUniRenderVisitor->isPartialRenderEnabled_ = true;
+    rsUniRenderVisitor->doAnimate_ = true;
+    rsUniRenderVisitor->appWindowNum_ = 1;
+    rsUniRenderVisitor->ClosePartialRenderWhenAnimatingWindows(node);
+    ASSERT_FALSE(rsUniRenderVisitor->isPartialRenderEnabled_);
+    rsUniRenderVisitor->appWindowNum_ = 2;
+    RectI rect(0, 0, 2, 2);
+    node->GetDirtyManager()->surfaceRect_ = rect;
+    rsUniRenderVisitor->ClosePartialRenderWhenAnimatingWindows(node);
+    ASSERT_EQ(node->GetDirtyManager()->currentFrameDirtyRegion_, rect);
+}
+
+/**
+ * @tc.name: DrawChildRenderNode001
+ * @tc.desc: Test RSUniRenderVisitorTest.DrawChildRenderNode api
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderVisitorTest, DrawChildRenderNode001, TestSize.Level2)
+{
+    auto rsContext = std::make_shared<RSContext>();
+    auto node = std::make_shared<RSCanvasRenderNode>(1, rsContext->weak_from_this());
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    auto skCanvas = std::make_shared<SkCanvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    rsUniRenderVisitor->canvas_ = std::make_unique<RSPaintFilterCanvas>(skCanvas.get());
+    node->cacheType_ = CacheType::ANIMATE_PROPERTY;
+    rsUniRenderVisitor->DrawChildRenderNode(*node);
+}
+
+/*
+ * @tc.name: MarkSubHardwareEnableNodeState003
+ * @tc.desc: Test RSUniRenderVisitorTest.MarkSubHardwareEnableNodeStateTest
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderVisitorTest, MarkSubHardwareEnableNodeStateTest003, TestSize.Level2)
+{
+    auto node = RSTestUtil::CreateSurfaceNode();
+    auto hardwareEnabledNode = RSTestUtil::CreateSurfaceNode();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    rsUniRenderVisitor->isHardwareForcedDisabled_ = false;
+    rsUniRenderVisitor->doAnimate_ = false;
+    rsUniRenderVisitor->isHardwareComposerEnabled_ = true;
+    node->nodeType_ = RSSurfaceNodeType::APP_WINDOW_NODE;
+    node->childHardwareEnabledNodes_.emplace_back(hardwareEnabledNode);
+    rsUniRenderVisitor->MarkSubHardwareEnableNodeState(*node);
+    ASSERT_TRUE(hardwareEnabledNode->isHardwareForcedDisabled_);
+}
+
+/*
+ * @tc.name: PrepareTypesOfSurfaceRenderNodeBeforeUpdate001
+ * @tc.desc: Test RSUniRenderVisitorTest.PrepareTypesOfSurfaceRenderNodeBeforeUpdateTest
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderVisitorTest, PrepareTypesOfSurfaceRenderNodeBeforeUpdate001, TestSize.Level2)
+{
+    auto leashWindowNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    leashWindowNode->nodeType_ = RSSurfaceNodeType::LEASH_WINDOW_NODE;
+    rsUniRenderVisitor->isTargetDirtyRegionDfxEnabled_ = true;
+    rsUniRenderVisitor->dfxTargetSurfaceNames_.push_back(leashWindowNode->GetName());
+    rsUniRenderVisitor->PrepareTypesOfSurfaceRenderNodeBeforeUpdate(*leashWindowNode);
+    ASSERT_TRUE(rsUniRenderVisitor->curSurfaceDirtyManager_->isDfxTarget_);
+}
+
+/*
+ * @tc.name: PrepareTypesOfSurfaceRenderNodeBeforeUpdate002
+ * @tc.desc: Test RSUniRenderVisitorTest.PrepareTypesOfSurfaceRenderNodeBeforeUpdateTest
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderVisitorTest, PrepareTypesOfSurfaceRenderNodeBeforeUpdate002, TestSize.Level2)
+{
+    auto selfDrawingWindowNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    selfDrawingWindowNode->nodeType_ = RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
+    selfDrawingWindowNode->name_ = "";
+    rsUniRenderVisitor->PrepareTypesOfSurfaceRenderNodeBeforeUpdate(*selfDrawingWindowNode);
+    ASSERT_EQ(selfDrawingWindowNode->localZOrder_, rsUniRenderVisitor->localZOrder_);
+    selfDrawingWindowNode->isCurrentFrameBufferConsumed_ = true;
+    ASSERT_FALSE(selfDrawingWindowNode->isContentDirty_);
+    rsUniRenderVisitor->PrepareTypesOfSurfaceRenderNodeBeforeUpdate(*selfDrawingWindowNode);
+    ASSERT_TRUE(selfDrawingWindowNode->isContentDirty_);
+}
+
+/*
+ * @tc.name: PrepareSurfaceRenderNode001
+ * @tc.desc: Test RSUniRenderVisitorTest.PrepareSurfaceRenderNodeTest
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderVisitorTest, PrepareSurfaceRenderNode001, TestSize.Level2)
+{
+    auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    node->name_ = "CapsuleWindow";
+    rsUniRenderVisitor->PrepareSurfaceRenderNode(*node);
+    ASSERT_TRUE(rsUniRenderVisitor->needCacheImg_);
+    node->hasFingerprint_ = true;
+    rsUniRenderVisitor->PrepareSurfaceRenderNode(*node);
+    ASSERT_TRUE(rsUniRenderVisitor->hasFingerprint_);
 }
 } // OHOS::Rosen

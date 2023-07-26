@@ -16,6 +16,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_MODIFIER_RS_PROPERTY_H
 #define RENDER_SERVICE_CLIENT_CORE_MODIFIER_RS_PROPERTY_H
 
+#include <memory>
 #include <type_traits>
 #include <unistd.h>
 
@@ -26,6 +27,7 @@
 #include "common/rs_color.h"
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
+#include "common/rs_particle.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
 #include "modifier/rs_animatable_arithmetic.h"
@@ -39,6 +41,7 @@
 #include "render/rs_mask.h"
 #include "render/rs_path.h"
 #include "render/rs_shader.h"
+#include "transaction/rs_marshalling_helper.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_node.h"
 
@@ -182,6 +185,7 @@ private:
     friend bool operator!=(
         const std::shared_ptr<const RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b);
     friend class RSCurveAnimation;
+    friend class RSParticleAnimation;
     friend class RSCustomTransitionEffect;
     friend class RSExtendedModifier;
     friend class RSGeometryTransModifier;
@@ -293,7 +297,7 @@ class RSAnimatableProperty : public RSProperty<T> {
                   std::is_same_v<Matrix3f, T> || std::is_same_v<Vector2f, T> || std::is_same_v<Vector4f, T> ||
                   std::is_same_v<Quaternion, T> || std::is_same_v<std::shared_ptr<RSFilter>, T> ||
                   std::is_same_v<Vector4<Color>, T> || std::is_base_of_v<RSAnimatableArithmetic<T>, T> ||
-                  supports_animatable_arithmetic<T>::value || std::is_same_v<RRect, T>);
+                  supports_animatable_arithmetic<T>::value || std::is_same_v<std::vector<ParticleParams>, T> || std::is_same_v<RRect, T>);
 
 public:
     RSAnimatableProperty() : RSProperty<T>() {}
@@ -306,7 +310,7 @@ public:
 
     void Set(const T& value) override
     {
-        if (ROSEN_EQ(value, RSProperty<T>::stagingValue_) || !RSProperty<T>::IsValid(value)) {
+        if ((ROSEN_EQ(value, RSProperty<T>::stagingValue_) || !RSProperty<T>::IsValid(value)) && !(type_ ==  RSModifierType::PARTICLE)) {
             return;
         }
 
@@ -326,11 +330,17 @@ public:
                 implicitAnimator->CreateImplicitAnimation(
                     node, RSProperty<T>::shared_from_this(), startValue, endValue);
                 implicitAnimator->EndImplicitPathAnimation();
+
             } else {
                 implicitAnimator->CreateImplicitAnimation(
                     node, RSProperty<T>::shared_from_this(), startValue, endValue);
             }
             return;
+        }
+        if (type_ ==  RSModifierType::PARTICLE) {
+            auto endValue = std::make_shared<RSAnimatableProperty<T>>(value);
+            auto animation = std::make_shared<RSParticleAnimation>(RSProperty<T>::shared_from_this(), endValue);
+            animation->OnStart();
         }
 
         if (runningPathNum_ > 0) {
@@ -482,6 +492,7 @@ protected:
     int runningPathNum_ { 0 };
     std::shared_ptr<RSMotionPathOption> motionPathOption_ {};
     std::function<void(T)> propertyChangeListener_;
+    //bool isParticleAnimation_ = false;
 
 private:
     RSRenderPropertyType GetPropertyType() const override
@@ -569,6 +580,9 @@ template<>
 RSC_EXPORT void RSProperty<Vector4<Color>>::UpdateToRender(
     const Vector4<Color>& value, bool isDelta, bool forceUpdate) const;
 template<>
+RSC_EXPORT void RSProperty<std::vector<ParticleParams>>::UpdateToRender(
+    const std::vector<ParticleParams>& value, bool isDelta, bool forceUpdate) const;
+template<>
 RSC_EXPORT void RSProperty<Vector4f>::UpdateToRender(const Vector4f& value, bool isDelta, bool forceUpdate) const;
 template<>
 RSC_EXPORT void RSProperty<RRect>::UpdateToRender(const RRect& value, bool isDelta, bool forceUpdate) const;
@@ -598,6 +612,9 @@ template<>
 RSC_EXPORT RSRenderPropertyType RSAnimatableProperty<Vector4<Color>>::GetPropertyType() const;
 template<>
 RSC_EXPORT RSRenderPropertyType RSAnimatableProperty<RRect>::GetPropertyType() const;
+template<>
+RSC_EXPORT RSRenderPropertyType RSAnimatableProperty<std::vector<ParticleParams>>::GetPropertyType() const;
+
 } // namespace Rosen
 } // namespace OHOS
 

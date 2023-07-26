@@ -2095,5 +2095,44 @@ sk_sp<SkShader> RSPropertiesPainter::MakeLightUpEffectShader(float lightUpDeg, s
 }
 #endif
 #endif
+
+void RSPropertiesPainter::DrawParticle(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+{
+    // 画粒子。properties是个粒子数组，判断粒子是否alive，然后取当前粒子的属性值
+    
+    for (int i = 0; i < properties.size(); i++) 
+	{ 
+		if (properties[i].isAlive()) { 
+			// Get particle properties 
+            //auto position = properties.GetParticle().getPosition();
+			float x = properties[i].GetParticle().getPosition().x; 
+			float y = properties[i].GetParticle().getPosition().y;
+			float opacity = properties[i].GetParticle().getOpacity();
+            auto particleType = properties[i].GetParticle().getParticleType();
+            if (particleType == POINTS) {
+                auto radius = properties.GetParticle().getRadius();
+			    Color color = properties[i].GetParticle().getColor();
+
+                //draw point
+			    canvas.setColor(color);
+                //radius 转化承size
+                canvas.setSize(size);
+            } else {
+                auto image = properties.GetParticle().getRSImage(); 
+			    float size = properties[i].GetParticle().getSize();
+                //draw image
+                canvas.setSize(size);
+                canvas.setImage(image);
+            }
+			 // Set canvas properties
+			 canvas.setPosition(x, y);
+			 canvas.setOpacity(opacity);
+
+			 // Draw particle on canvas
+			 canvas.draw();
+		}
+	} 
+}
+
 } // namespace Rosen
 } // namespace OHOS

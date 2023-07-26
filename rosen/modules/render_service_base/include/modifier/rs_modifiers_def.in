@@ -137,3 +137,5 @@ DECLARE_ANIMATABLE_MODIFIER(HueRotate, float, HUE_ROTATE, Add, Foreground)
 DECLARE_ANIMATABLE_MODIFIER(ColorBlend, Color, COLOR_BLEND, Add, Foreground)
 
 DECLARE_NOANIMATABLE_MODIFIER(UseEffect, bool, USE_EFFECT, Background)
+
+DECLARE_ANIMATABLE_MODIFIER(Particle, std::shared_ptr<ParticleSystem>, PARTICLE, Add, Foreground)

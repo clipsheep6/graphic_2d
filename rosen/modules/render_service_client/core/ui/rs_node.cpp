@@ -27,6 +27,7 @@
 #include "command/rs_node_command.h"
 #include "common/rs_color.h"
 #include "common/rs_obj_geometry.h"
+#include "common/rs_particle.h"
 #include "modifier/rs_modifier.h"
 #include "modifier/rs_property_modifier.h"
 #include "pipeline/rs_node_map.h"
@@ -359,6 +360,9 @@ void RSNode::SetProperty(RSModifierType modifierType, T value)
     auto property = std::make_shared<PropertyName>(value);
     auto propertyModifier = std::make_shared<ModifierName>(property);
     propertyModifiers_.emplace(modifierType, propertyModifier);
+    if (modifierType == RSModifierType::PARTICLE) {
+        property->Set(value);
+    }//set 不进来
     AddModifier(propertyModifier);
 }
 
@@ -685,6 +689,12 @@ void RSNode::SetEnvForegroundColorStrategy(ForegroundColorStrategyType strategyT
 {
     SetProperty<RSEnvForegroundColorStrategyModifier,
         RSProperty<ForegroundColorStrategyType>>(RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY, strategyType);
+}
+
+// Set ParticleParams 
+void RSNode::SetParticleParams(const std::vector<ParticleParams>& particleParams)
+{
+    SetProperty<RSParticleModifier, RSAnimatableProperty<std::vector<ParticleParams>>>(RSModifierType::PARTICLE, particleParams);
 }
 
 // foreground

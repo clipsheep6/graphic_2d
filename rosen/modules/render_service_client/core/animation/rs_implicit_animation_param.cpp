@@ -18,6 +18,7 @@
 #include "animation/rs_curve_animation.h"
 #include "animation/rs_interpolating_spring_animation.h"
 #include "animation/rs_keyframe_animation.h"
+#include "animation/rs_particle_animation.h"
 #include "animation/rs_motion_path_option.h"
 #include "animation/rs_path_animation.h"
 #include "animation/rs_spring_animation.h"
@@ -67,6 +68,22 @@ std::shared_ptr<RSAnimation> RSImplicitCurveAnimationParam::CreateAnimation(std:
     ApplyTimingProtocol(curveAnimation);
     return curveAnimation;
 }
+
+// RSImplicitParticleAnimationParam::RSImplicitParticleAnimationParam(const RSAnimationTimingProtocol& timingProtocol)
+//     : RSImplicitAnimationParam(timingProtocol)
+// {
+//     animationType_ = ImplicitAnimationParamType::PARTICLE;
+// }
+
+// std::shared_ptr<RSAnimation> RSImplicitParticleAnimationParam::CreateAnimation(std::shared_ptr<RSPropertyBase> property,
+//     const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const
+// {
+//     auto ParticleAnimation = std::make_shared<RSParticleAnimation>(property);
+    
+//     //ApplyTimingProtocol(ParticleAnimation);
+//     return ParticleAnimation;
+    
+// }
 
 RSImplicitKeyframeAnimationParam::RSImplicitKeyframeAnimationParam(
     const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve, float fraction)

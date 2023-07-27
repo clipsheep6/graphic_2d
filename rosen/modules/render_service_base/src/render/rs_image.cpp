@@ -32,17 +32,6 @@
 #include "rs_trace.h"
 #include "sandbox_utils.h"
 
-#ifdef ROSEN_OHOS
-#include "EGL/egl.h"
-#include "EGL/eglext.h"
-#include "GLES2/gl2.h"
-#include "GLES2/gl2ext.h"
-
-#include "external_window.h"
-#include "surface_buffer.h"
-#include "window.h"
-#endif
-
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -50,7 +39,26 @@ constexpr int32_t CORNER_SIZE = 4;
 }
 
 RSImage::~RSImage()
-{}
+{
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+#ifndef USE_ROSEN_DRAWING
+    if (texId_ != 0U) {
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDeleteTextures(1, &texId_);
+        texId_ = 0U;
+    }
+    if (nativeWindowBuffer_ != nullptr) {
+        DestoryNativeWindowBuffer(nativeWindowBuffer_);
+        nativeWindowBuffer_ = nullptr;
+    }
+    if (eglImage_ != EGL_NO_IMAGE_KHR) {
+        auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        eglDestroyImageKHR(disp, eglImage_);
+        eglImage_ = EGL_NO_IMAGE_KHR;
+    }
+#endif
+#endif
+}
 
 bool RSImage::IsEqual(const RSImage& other) const
 {
@@ -242,16 +250,19 @@ void RSImage::UploadGpu(Drawing::Canvas& canvas)
 
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
 #ifndef USE_ROSEN_DRAWING
-static sk_sp<SkImage> GetSkImageFromSurfaceBuffer(SkCanvas& canvas, sptr<SurfaceBuffer> surfaceBuffer)
+sk_sp<SkImage> GetSkImageFromSurfaceBuffer(SkCanvas& canvas, SurfaceBuffer* surfaceBuffer)
 {
     if (surfaceBuffer == nullptr) {
         RS_LOGE("GetSkImageFromSurfaceBuffer surfaceBuffer is nullptr");
         return nullptr;
     }
-    OHNativeWindowBuffer* nativeWindowBuffer = CreateNativeWindowBufferFromSurfaceBuffer(&surfaceBuffer);
-    if (!nativeWindowBuffer) {
-        RS_LOGE("GetSkImageFromSurfaceBuffer create native window buffer fail");
-        return nullptr;
+    if (nativeWindowBuffer_ == nullptr) {
+        sptr<SurfaceBuffer> sfBuffer(surfaceBuffer);
+        nativeWindowBuffer_ = CreateNativeWindowBufferFromSurfaceBuffer(&sfBuffer);
+        if (!nativeWindowBuffer_) {
+            RS_LOGE("GetSkImageFromSurfaceBuffer create native window buffer fail");
+            return nullptr;
+        }
     }
     EGLint attrs[] = {
         EGL_IMAGE_PRESERVED,
@@ -260,10 +271,12 @@ static sk_sp<SkImage> GetSkImageFromSurfaceBuffer(SkCanvas& canvas, sptr<Surface
     };
 
     auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    EGLImageKHR eglImage = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_OHOS, nativeWindowBuffer, attrs);
-    if (eglImage == EGL_NO_IMAGE_KHR) {
-        RS_LOGE("%s create egl image fail %d", __func__, eglGetError());
-        return nullptr;
+    if (eglImage_ == EGL_NO_IMAGE_KHR) {
+        eglImage_ = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_OHOS, nativeWindowBuffer_, attrs);
+        if (eglImage_ == EGL_NO_IMAGE_KHR) {
+            RS_LOGE("%s create egl image fail %d", __func__, eglGetError());
+            return nullptr;
+        }
     }
 
     // save
@@ -279,14 +292,16 @@ static sk_sp<SkImage> GetSkImageFromSurfaceBuffer(SkCanvas& canvas, sptr<Surface
     glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, &wrapT);
 
     // Create texture object
-    GLuint texId = 0;
-    glGenTextures(1, &texId);
-    glBindTexture(GL_TEXTURE_2D, texId);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, static_cast<GLeglImageOES>(eglImage));
+    if (texId_ == 0U) {
+        GLuint texId_ = 0;
+        glGenTextures(1, &texId);
+        glBindTexture(GL_TEXTURE_2D, texId_);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, static_cast<GLeglImageOES>(eglImage_));
+    }
 
     // restore
     glBindTexture(GL_TEXTURE_2D, originTexture);
@@ -295,7 +310,7 @@ static sk_sp<SkImage> GetSkImageFromSurfaceBuffer(SkCanvas& canvas, sptr<Surface
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
 
-    GrGLTextureInfo textureInfo = { GL_TEXTURE_2D, texId, GL_RGBA8_OES };
+    GrGLTextureInfo textureInfo = { GL_TEXTURE_2D, texId_, GL_RGBA8_OES };
 
     GrBackendTexture backendTexture(
         surfaceBuffer->GetWidth(), surfaceBuffer->GetHeight(), GrMipMapped::kNo, textureInfo);
@@ -310,7 +325,7 @@ static sk_sp<SkImage> GetSkImageFromSurfaceBuffer(SkCanvas& canvas, sptr<Surface
 }
 #else
 static std::shared_ptr<Drawing::Image> GetDrawingImageFromSurfaceBuffer(
-    Drawing::Canvas& canvas, sptr<SurfaceBuffer> surfaceBuffer)
+    Drawing::Canvas& canvas, SurfaceBuffer* surfaceBuffer)
 {
     RS_LOGD("[%s:%d] Drawing is not supported", __func__, __LINE__);
     return nullptr;
@@ -360,11 +375,10 @@ void RSImage::DrawImageRepeatRect(Drawing::Canvas& canvas)
     ConvertPixelMapToSkImage();
 #else
     if (pixelMap_ && pixelMap_->GetFd() && pixelMap_->GetAllocatorType() == Media::AllocatorType::DMA_ALLOC) {
-        sptr<SurfaceBuffer> surfaceBuffer(reinterpret_cast<SurfaceBuffer*> (pixelMap_->GetFd()));
 #ifndef USE_ROSEN_DRAWING
-        image_ = GetSkImageFromSurfaceBuffer(canvas, surfaceBuffer);
+        image_ = GetSkImageFromSurfaceBuffer(canvas, reinterpret_cast<SurfaceBuffer*> (pixelMap_->GetFd()));
 #else
-        image_ = GetDrawingImageFromSurfaceBuffer(canvas, surfaceBuffer);
+        image_ = GetDrawingImageFromSurfaceBuffer(canvas, reinterpret_cast<SurfaceBuffer*> (pixelMap_->GetFd()));
 #endif
     } else {
         ConvertPixelMapToSkImage();
@@ -375,11 +389,10 @@ void RSImage::DrawImageRepeatRect(Drawing::Canvas& canvas)
     ConvertPixelMapToDrawingImage();
 #else
     if (pixelMap_ && pixelMap_->GetFd() && pixelMap_->GetAllocatorType() == Media::AllocatorType::DMA_ALLOC) {
-        sptr<SurfaceBuffer> surfaceBuffer(reinterpret_cast<SurfaceBuffer*> (pixelMap_->GetFd()));
 #ifndef USE_ROSEN_DRAWING
-        image_ = GetSkImageFromSurfaceBuffer(canvas, surfaceBuffer);
+        image_ = GetSkImageFromSurfaceBuffer(canvas, reinterpret_cast<SurfaceBuffer*> (pixelMap_->GetFd()));
 #else
-        image_ = GetDrawingImageFromSurfaceBuffer(canvas, surfaceBuffer);
+        image_ = GetDrawingImageFromSurfaceBuffer(canvas, reinterpret_cast<SurfaceBuffer*> (pixelMap_->GetFd()));
 #endif
     } else {
         ConvertPixelMapToDrawingImage();

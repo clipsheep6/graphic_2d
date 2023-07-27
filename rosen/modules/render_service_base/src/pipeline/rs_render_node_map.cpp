@@ -27,7 +27,6 @@ namespace {
 constexpr const char* ENTRY_VIEW = "SCBDesktop2";
 constexpr const char* WALLPAPER_VIEW = "SCBWallpaper1";
 constexpr const char* SCREENLOCK_WINDOW = "SCBScreenLock10";
-constexpr const char* SYSUI_DROPDOWN = "SCBVolumePanel8";
 };
 RSRenderNodeMap::RSRenderNodeMap()
 {
@@ -73,10 +72,15 @@ NodeId RSRenderNodeMap::GetScreenLockWindowNodeId() const
     return screenLockWindowNodeId_;
 }
 
-static bool IsResidentProcess(const std::shared_ptr<RSSurfaceRenderNode> surfaceNode)
+void RSRenderNodeMap::SetResidentNode()
 {
-    return surfaceNode->GetName() == ENTRY_VIEW || surfaceNode->GetName() == SYSUI_DROPDOWN ||
-           surfaceNode->GetName() == SCREENLOCK_WINDOW || surfaceNode->GetName() == WALLPAPER_VIEW;
+    for (auto it = surfaceNodeMap_.begin(); it != surfaceNodeMap_.end(); ++it) {
+        NodeId nodeId = it->first;
+        std::shared_ptr<RSSurfaceRenderNode> surfaceNode = it->second;
+        if (surfaceNode->GetKeepAlive()) {
+            residentSurfaceNodeMap_.emplace(nodeId, surfaceNode);
+        }
+    }
 }
 
 bool RSRenderNodeMap::IsResidentProcessNode(NodeId id) const
@@ -100,9 +104,7 @@ bool RSRenderNodeMap::RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>
     if (nodePtr->GetType() == RSRenderNodeType::SURFACE_NODE) {
         std::shared_ptr<RSSurfaceRenderNode> surfaceNode = nodePtr->ReinterpretCastTo<RSSurfaceRenderNode>();
         surfaceNodeMap_.emplace(id, surfaceNode);
-        if (IsResidentProcess(surfaceNode)) {
-            residentSurfaceNodeMap_.emplace(id, surfaceNode);
-        }
+
         ObtainLauncherNodeId(surfaceNode);
         ObtainScreenLockWindowNodeId(surfaceNode);
     }

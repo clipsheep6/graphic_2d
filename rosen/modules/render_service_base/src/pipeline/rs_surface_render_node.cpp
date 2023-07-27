@@ -469,6 +469,16 @@ bool RSSurfaceRenderNode::GetSecurityLayer() const
     return isSecurityLayer_;
 }
 
+void RSSurfaceRenderNode::SetKeepAlive(bool keepAlive)
+{
+    isKeepAlive_ = keepAlive;
+}
+
+bool RSSurfaceRenderNode::GetKeepAlive() const
+{
+    return isKeepAlive_;
+}
+
 void RSSurfaceRenderNode::SetFingerprint(bool hasFingerprint)
 {
     hasFingerprint_ = hasFingerprint;

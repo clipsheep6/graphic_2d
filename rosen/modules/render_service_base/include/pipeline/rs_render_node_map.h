@@ -57,6 +57,7 @@ public:
     std::unordered_map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> GetResidentSurfaceNodeMap() const;
     bool IsResidentProcessNode(NodeId id) const;
 
+    void SetResidentNode();
     NodeId GetEntryViewNodeId() const;
     NodeId GetWallPaperViewNodeId() const;
     NodeId GetScreenLockWindowNodeId() const;

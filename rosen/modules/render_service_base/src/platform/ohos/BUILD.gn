@@ -13,7 +13,7 @@
 
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
-import("../../../config.gni")
+import("../../../../platform/config.gni")
 
 group("ohos") {
   public_deps = [ ":rosen_ohos_sources" ]
@@ -26,7 +26,7 @@ config("export_config") {
     "//commonlibrary/c_utils/base/include",
     "//utils/system/safwk/native/include",
     "$graphic_2d_root/frameworks/surface/src",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
+    "$image_framework_root/interfaces/innerkits/include",
   ]
   if (defined(use_new_render_context) && use_new_render_context) {
     include_dirs += [ "$graphic_2d_root/rosen/modules/render_service_base/include/render_backend" ]

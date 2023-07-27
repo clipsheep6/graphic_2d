@@ -13,6 +13,7 @@
 
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
+import("../../platform/config.gni")
 
 group("test") {
   testonly = true
@@ -38,7 +39,7 @@ ohos_executable("render_service_client_rs_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
     "//foundation/graphic/graphic_2d/rosen/include",
     "//drivers/peripheral/display/interfaces/include",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
+    "$image_framework_root/interfaces/innerkits/include",
   ]
 
   deps = [
@@ -406,7 +407,7 @@ ohos_executable("render_service_display_mode_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
     "//foundation/graphic/graphic_2d/rosen/include",
     "//drivers/peripheral/display/interfaces/include",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
+    "$image_framework_root/interfaces/innerkits/include",
   ]
 
   deps = [

@@ -14,6 +14,7 @@
 import("//build/test.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 import("//foundation/graphic/graphic_2d/rosen/modules/effect/effect_config.gni")
+import("../../../platform/config.gni")
 
 module_output_path = "graphic_2d/rosen/modules/effect"
 
@@ -58,8 +59,8 @@ ohos_unittest("EffectTest") {
     "$graphic_2d_root/rosen/modules/effect/egl:libegl_effect",
     "$graphic_2d_root/utils/color_manager:color_manager",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
-    "//foundation/multimedia/image_framework/interfaces/kits/js/common:image",
+    "$image_framework_root/interfaces/innerkits:image_native",
+    "$image_framework_root/interfaces/kits/js/common:image",
   ]
 
   if (defined(use_new_skia) && use_new_skia) {
@@ -86,7 +87,7 @@ config("effect_test_config") {
     "$graphic_2d_root/rosen/modules/effect/egl/include",
     "$graphic_2d_root/utils/color_manager/export",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include/",
+    "$image_framework_root/interfaces/innerkits/include/",
   ]
 }
 

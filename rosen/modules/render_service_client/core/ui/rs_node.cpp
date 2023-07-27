@@ -1194,6 +1194,11 @@ void RSNode::SetIsCustomTextType(bool isCustomTextType)
     isCustomTextType_ = isCustomTextType;
 }
 
+bool RSNode::GetIsCustomTextType()
+{
+    return isCustomTextType_;
+}
+
 void RSNode::SetDrawRegion(std::shared_ptr<RectF> rect)
 {
     if (drawRegion_ != rect) {

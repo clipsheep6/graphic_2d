@@ -13,16 +13,22 @@
  * limitations under the License.
  */
 
+#include <vector>
+#include "buffer_handle.h"
 #include "gtest/gtest.h"
 #include "limit_number.h"
+#include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_base_render_util.h"
+#include "pipeline/rs_divided_render_util.h"
 #include "rs_test_util.h"
 #include "surface_buffer_impl.h"
+#include "surface_type.h"
 
 using namespace testing;
 using namespace testing::ext;
 
 namespace OHOS::Rosen {
+using PixelTransformFunc = std::function<float(float)>;
 class RSBaseRenderUtilTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -92,6 +98,7 @@ private:
 std::shared_ptr<RSSurfaceRenderNode> node_ = nullptr;
 
 const uint32_t STUB_PIXEL_FMT_RGBA_16161616 = 0X7fff0001;
+const uint32_t STUB_PIXEL_FMT_RGBA_1010102 = 0X7fff0002;
 
 void RSBaseRenderUtilTest::SetUpTestCase()
 {
@@ -379,6 +386,130 @@ HWTEST_F(RSBaseRenderUtilTest, ConvertBufferToBitmap_004, TestSize.Level2)
     sptr<SurfaceBuffer> buffer;
     sptr<SyncFence> requestFence = SyncFence::INVALID_FENCE;
     requestConfig.format = STUB_PIXEL_FMT_RGBA_16161616;
+    [[maybe_unused]] GSError ret = psurf->RequestBuffer(buffer, requestFence, requestConfig);
+    sptr<SyncFence> flushFence = SyncFence::INVALID_FENCE;
+    ret = psurf->FlushBuffer(buffer, flushFence, flushConfig);
+    OHOS::sptr<SurfaceBuffer> cbuffer;
+    Rect damage;
+    sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
+    int64_t timestamp = 0;
+    ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
+
+    std::vector<uint8_t> newBuffer;
+    GraphicColorGamut dstGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
+    SkBitmap bitmap;
+    ASSERT_EQ(false, RSBaseRenderUtil::ConvertBufferToBitmap(cbuffer, newBuffer, dstGamut, bitmap));
+}
+
+/*
+ * @tc.name: ConvertBufferToBitmap_005
+ * @tc.desc: Test ConvertBufferToBitmap by CreateNewColorGamutBitmap
+ * @tc.type: FUNC
+ * @tc.require: issueI614RU
+ */
+HWTEST_F(RSBaseRenderUtilTest, ConvertBufferToBitmap_005, TestSize.Level2)
+{
+    auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
+    const auto& surfaceConsumer = rsSurfaceRenderNode->GetConsumer();
+    auto producer = surfaceConsumer->GetProducer();
+    psurf = Surface::CreateSurfaceAsProducer(producer);
+    psurf->SetQueueSize(1);
+    sptr<SurfaceBuffer> buffer;
+    sptr<SyncFence> requestFence = SyncFence::INVALID_FENCE;
+    requestConfig.format = STUB_PIXEL_FMT_RGBA_1010102;
+    [[maybe_unused]] GSError ret = psurf->RequestBuffer(buffer, requestFence, requestConfig);
+    sptr<SyncFence> flushFence = SyncFence::INVALID_FENCE;
+    ret = psurf->FlushBuffer(buffer, flushFence, flushConfig);
+    OHOS::sptr<SurfaceBuffer> cbuffer;
+    Rect damage;
+    sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
+    int64_t timestamp = 0;
+    ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
+
+    std::vector<uint8_t> newBuffer;
+    GraphicColorGamut dstGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
+    SkBitmap bitmap;
+    ASSERT_EQ(false, RSBaseRenderUtil::ConvertBufferToBitmap(cbuffer, newBuffer, dstGamut, bitmap));
+}
+
+/*
+ * @tc.name: ConvertBufferToBitmap_006
+ * @tc.desc: Test ConvertBufferToBitmap by CreateNewColorGamutBitmap
+ * @tc.type: FUNC
+ * @tc.require: issueI614RU
+ */
+HWTEST_F(RSBaseRenderUtilTest, ConvertBufferToBitmap_006, TestSize.Level2)
+{
+    auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
+    const auto& surfaceConsumer = rsSurfaceRenderNode->GetConsumer();
+    auto producer = surfaceConsumer->GetProducer();
+    psurf = Surface::CreateSurfaceAsProducer(producer);
+    psurf->SetQueueSize(1);
+    sptr<SurfaceBuffer> buffer;
+    sptr<SyncFence> requestFence = SyncFence::INVALID_FENCE;
+    requestConfig.format = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_RGB_888;
+    [[maybe_unused]] GSError ret = psurf->RequestBuffer(buffer, requestFence, requestConfig);
+    sptr<SyncFence> flushFence = SyncFence::INVALID_FENCE;
+    ret = psurf->FlushBuffer(buffer, flushFence, flushConfig);
+    OHOS::sptr<SurfaceBuffer> cbuffer;
+    Rect damage;
+    sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
+    int64_t timestamp = 0;
+    ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
+
+    std::vector<uint8_t> newBuffer;
+    GraphicColorGamut dstGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
+    SkBitmap bitmap;
+    ASSERT_EQ(false, RSBaseRenderUtil::ConvertBufferToBitmap(cbuffer, newBuffer, dstGamut, bitmap));
+}
+
+/*
+ * @tc.name: ConvertBufferToBitmap_007
+ * @tc.desc: Test ConvertBufferToBitmap by CreateNewColorGamutBitmap
+ * @tc.type: FUNC
+ * @tc.require: issueI614RU
+ */
+HWTEST_F(RSBaseRenderUtilTest, ConvertBufferToBitmap_007, TestSize.Level2)
+{
+    auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
+    const auto& surfaceConsumer = rsSurfaceRenderNode->GetConsumer();
+    auto producer = surfaceConsumer->GetProducer();
+    psurf = Surface::CreateSurfaceAsProducer(producer);
+    psurf->SetQueueSize(1);
+    sptr<SurfaceBuffer> buffer;
+    sptr<SyncFence> requestFence = SyncFence::INVALID_FENCE;
+    requestConfig.format = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_BGRA_8888;
+    [[maybe_unused]] GSError ret = psurf->RequestBuffer(buffer, requestFence, requestConfig);
+    sptr<SyncFence> flushFence = SyncFence::INVALID_FENCE;
+    ret = psurf->FlushBuffer(buffer, flushFence, flushConfig);
+    OHOS::sptr<SurfaceBuffer> cbuffer;
+    Rect damage;
+    sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
+    int64_t timestamp = 0;
+    ret = surfaceConsumer->AcquireBuffer(cbuffer, acquireFence, timestamp, damage);
+
+    std::vector<uint8_t> newBuffer;
+    GraphicColorGamut dstGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
+    SkBitmap bitmap;
+    ASSERT_EQ(false, RSBaseRenderUtil::ConvertBufferToBitmap(cbuffer, newBuffer, dstGamut, bitmap));
+}
+
+/*
+ * @tc.name: ConvertBufferToBitmap_007
+ * @tc.desc: Test ConvertBufferToBitmap by CreateNewColorGamutBitmap
+ * @tc.type: FUNC
+ * @tc.require: issueI614RU
+ */
+HWTEST_F(RSBaseRenderUtilTest, ConvertBufferToBitmap_007, TestSize.Level2)
+{
+    auto rsSurfaceRenderNode = RSTestUtil::CreateSurfaceNode();
+    const auto& surfaceConsumer = rsSurfaceRenderNode->GetConsumer();
+    auto producer = surfaceConsumer->GetProducer();
+    psurf = Surface::CreateSurfaceAsProducer(producer);
+    psurf->SetQueueSize(1);
+    sptr<SurfaceBuffer> buffer;
+    sptr<SyncFence> requestFence = SyncFence::INVALID_FENCE;
+    requestConfig.format = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_BUTT;
     [[maybe_unused]] GSError ret = psurf->RequestBuffer(buffer, requestFence, requestConfig);
     sptr<SyncFence> flushFence = SyncFence::INVALID_FENCE;
     ret = psurf->FlushBuffer(buffer, flushFence, flushConfig);
@@ -1022,5 +1153,39 @@ HWTEST_F(RSBaseRenderUtilTest, ConvertBufferToBitmapTest, TestSize.Level2)
     GraphicColorGamut dstGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_DCI_P3;
     SkBitmap bitmap;
     ASSERT_EQ(true, RSBaseRenderUtil::ConvertBufferToBitmap(buffer, newBuffer, dstGamut, bitmap));
+}
+
+/*
+ * @tc.name: GetColorSpaceOfCertainGamut``
+ * @tc.desc: Test ConvertBufferToBitmap when dstGamut is different from srcGamut
+ * @tc.type: FUNC
+ * @tc.require: issueI7HDVG
+ */
+HWTEST_F(RSBaseRenderUtilTest, ConvertBufferToBitmapTest, TestSize.Level2)
+{
+    sptr<SurfaceBuffer> buffer = new SurfaceBufferImpl();
+    ASSERT_EQ(buffer->GetBufferHandle(), nullptr);
+    BufferRequestConfig requestConfig = {
+        .width = 0x100,
+        .height = 0x100,
+        .strideAlignment = 0x8,
+        .format = GRAPHIC_PIXEL_FMT_RGBA_8888,
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
+        .timeout = 0,
+        .colorGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB,
+    };
+    GSError ret = buffer->Alloc(requestConfig);
+    ASSERT_EQ(ret, OHOS::GSERROR_OK);
+    std::vector<uint8_t> newBuffer;
+    SkBitmap bitmap;
+
+    EXPECT_EQ(true, RSBaseRenderUtil::ConvertBufferToBitmap(buffer, newBuffer, GraphicColorGamut::GRAPHIC_COLOR_GAMUT_ADOBE_RGB, bitmap));
+    EXPECT_EQ(true, RSBaseRenderUtil::ConvertBufferToBitmap(buffer, newBuffer, GraphicColorGamut::GRAPHIC_COLOR_GAMUT_BT2100_PQ, bitmap));
+
+    GraphicHDRMetaData metaData = {GRAPHIC_MATAKEY_RED_PRIMARY_Y, 1};
+    std::vector<GraphicHDRMetaData> metaDatas;
+    metaDatas.push_back(metaData);
+    EXPECT_EQ(true, RSBaseRenderUtil::ConvertBufferToBitmap(buffer, newBuffer, GraphicColorGamut::GRAPHIC_COLOR_GAMUT_BT2100_PQ, bitmap));
+    EXPECT_EQ(true, RSBaseRenderUtil::ConvertBufferToBitmap(buffer, newBuffer, GraphicColorGamut::GRAPHIC_COLOR_GAMUT_INVALID, bitmap));
 }
 } // namespace OHOS::Rosen

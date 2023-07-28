@@ -38,10 +38,12 @@ RSPaintFilterCanvasBase::RSPaintFilterCanvasBase(Drawing::Canvas* canvas)
     }
 }
 
+#ifdef ACE_ENABLE_GPU
 std::shared_ptr<Drawing::GPUContext> RSPaintFilterCanvasBase::GetGPUContext() const
 {
     return canvas_ != nullptr ? canvas_->GetGPUContext() : nullptr;
 }
+#endif
 
 void RSPaintFilterCanvasBase::DrawPoint(const Point& point)
 {

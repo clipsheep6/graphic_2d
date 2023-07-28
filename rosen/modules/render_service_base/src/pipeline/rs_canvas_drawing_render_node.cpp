@@ -174,7 +174,7 @@ bool RSCanvasDrawingRenderNode::ResetSurface(int width, int height, RSPaintFilte
     }
 #else
     auto surface = std::make_shared<Drawing::Surface>();
-    if (!surface->Bind(bitmap)) {
+    if (!surface->Bind(*bitmap)) {
         RS_LOGE("RSCanvasDrawingRenderNode::ResetSurface Drawing::Surface is nullptr");
         return false;
     }

@@ -38,6 +38,11 @@ RSPaintFilterCanvasBase::RSPaintFilterCanvasBase(Drawing::Canvas* canvas)
     }
 }
 
+std::shared_ptr<Drawing::GPUContext> RSPaintFilterCanvasBase::GetGPUContext() const
+{
+    return canvas_ != nullptr ? canvas_->GetGPUContext() : nullptr;
+}
+
 void RSPaintFilterCanvasBase::DrawPoint(const Point& point)
 {
     if (canvas_ != nullptr && OnFilter()) {

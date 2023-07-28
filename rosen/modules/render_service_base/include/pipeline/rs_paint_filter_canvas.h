@@ -52,6 +52,8 @@ public:
     RSPaintFilterCanvasBase(Drawing::Canvas* canvas);
     ~RSPaintFilterCanvasBase() override = default;
 
+    std::shared_ptr<Drawing::GPUContext> GetGPUContext() const override;
+
     void DrawPoint(const Drawing::Point& point) override;
     void DrawLine(const Drawing::Point& startPt, const Drawing::Point& endPt) override;
     void DrawRect(const Drawing::Rect& rect) override;

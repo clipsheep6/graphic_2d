@@ -82,7 +82,8 @@
           "skia",
           "cjson",
           "egl",
-          "opengles"
+          "opengles",
+          "jsoncpp"
         ]
       },
       "build": {

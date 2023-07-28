@@ -23,6 +23,16 @@
 #include "draw/canvas.h"
 #include "effect/color_filter.h"
 #include "image/image.h"
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+#include "EGL/egl.h"
+#include "EGL/eglext.h"
+#include "GLES2/gl2.h"
+#include "GLES2/gl2ext.h"
+
+#include "external_window.h"
+#include "surface_buffer.h"
+#include "window.h"
+#endif
 #endif
 #include "render/rs_image_base.h"
 
@@ -108,6 +118,11 @@ public:
 #ifdef ROSEN_OHOS
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static RSImage* Unmarshalling(Parcel& parcel);
+#ifdef RS_ENABLE_GL
+#ifndef USE_ROSEN_DRAWING
+    sk_sp<SkImage> GetSkImageFromSurfaceBuffer(SkCanvas& canvas, SurfaceBuffer* surfaceBuffer);
+#endif
+#endif
 #endif
     void dump(std::string &desc, int depth) const
     {
@@ -163,6 +178,13 @@ private:
     RectF frameRect_;
     double scale_ = 1.0;
     NodeId nodeId_ = 0;
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+#ifndef USE_ROSEN_DRAWING
+    EGLImageKHR eglImage_ = EGL_NO_IMAGE_KHR;
+    GLuint texId_ = 0;
+    OHNativeWindowBuffer* nativeWindowBuffer_ = nullptr;
+#endif
+#endif
 };
 
 template<>

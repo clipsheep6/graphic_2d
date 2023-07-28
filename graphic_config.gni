@@ -78,8 +78,8 @@ if ((graphic_2d_feature_rs_enable_eglimage &&
   ]
   rs_enable_eglimage = true
 } else {
-  gpu_defines += [ "RS_DISABLE_EGLIMAGE" ]
-  rs_enable_eglimage = false
+  gpu_defines += [ "RS_ENABLE_EGLIMAGE" ]
+  rs_enable_eglimage = true
 }
 
 if (graphic_2d_feature_rs_enable_uni_render) {

@@ -81,6 +81,9 @@ void RSBaseRenderNode::AddChild(SharedPtr child, int index)
         child->SetIsOnTheTree(true);
     }
     SetContentDirty();
+#ifdef ENABLE_DDGR
+    subTreeChanged_ = true;
+#endif
 }
 
 void RSBaseRenderNode::MoveChild(SharedPtr child, int index)
@@ -102,6 +105,9 @@ void RSBaseRenderNode::MoveChild(SharedPtr child, int index)
     }
     children_.erase(it);
     SetContentDirty();
+#ifdef ENABLE_DDGR
+    subTreeChanged_ = true;
+#endif    
 }
 
 void RSBaseRenderNode::RemoveChild(SharedPtr child, bool skipTransition)
@@ -129,6 +135,9 @@ void RSBaseRenderNode::RemoveChild(SharedPtr child, bool skipTransition)
     }
     children_.erase(it);
     SetContentDirty();
+#ifdef ENABLE_DDGR
+    subTreeChanged_ = true;
+#endif    
 }
 
 void RSBaseRenderNode::SetIsOnTheTree(bool flag)
@@ -191,6 +200,9 @@ void RSBaseRenderNode::AddCrossParentChild(const SharedPtr& child, int32_t index
         child->SetIsOnTheTree(true);
     }
     SetContentDirty();
+#ifdef ENABLE_DDGR
+    subTreeChanged_ = true;
+#endif    
 }
 
 void RSBaseRenderNode::RemoveCrossParentChild(const SharedPtr& child, const WeakPtr& newParent)
@@ -222,6 +234,9 @@ void RSBaseRenderNode::RemoveCrossParentChild(const SharedPtr& child, const Weak
     }
     children_.erase(it);
     SetContentDirty();
+#ifdef ENABLE_DDGR
+    subTreeChanged_ = true;
+#endif    
 }
 
 void RSBaseRenderNode::RemoveFromTree(bool skipTransition)
@@ -239,6 +254,9 @@ void RSBaseRenderNode::RemoveFromTree(bool skipTransition)
     parentPtr->disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
     parentPtr->sortedChildren_.clear();
     child->ResetParent();
+#ifdef ENABLE_DDGR
+    subTreeChanged_ = true;
+#endif    
 }
 
 void RSBaseRenderNode::ClearChildren()
@@ -267,6 +285,9 @@ void RSBaseRenderNode::ClearChildren()
     }
     children_.clear();
     SetContentDirty();
+#ifdef ENABLE_DDGR
+    subTreeChanged_ = true;
+#endif    
 }
 
 void RSBaseRenderNode::SetParent(WeakPtr parent)

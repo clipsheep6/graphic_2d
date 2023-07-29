@@ -99,6 +99,53 @@ void RSSurfaceRenderNode::UpdateSrcRect(const RSPaintFilterCanvas& canvas, const
 }
 #endif
 
+#ifdef ENABLE_DDGR
+void RSSurfaceRenderNode::PerformUniformVisibleRegionDivision()
+{
+    RectI bound = visibleRegion_.GetBound().ToRectI();
+    RectI dirtyBound = visibleDirtyRegion_.GetBound().ToRectI();
+    int leftBegin = bound.GetLeft();
+    int topBegin = bound.GetTop();
+    int boundW = bound.GetWidth();
+    int boundH = bound.GetHeight();
+    int dirtyW = dirtyBound.GetWidth();
+    int dirtyH = dirtyBound.GetHeight();
+    int wNum = dirtyW > 0 ? boundW / dirtyW : 1;
+    int hNum = dirtyH > 0 ? boundH / dirtyH : 1;
+    int wLast = dirtyW > 0 ? boundW % dirtyW + dirtyW : boundW;
+    int hLast = dirtyH > 0 ? boundH % dirtyH + dirtyH : boundH;
+    for (int i = 0; i < wNum; ++i) {
+        int divWidth = i < wNum - 1 ? dirtyW : wLast;
+        for (int j = 0; j < hNum; ++j) {
+            int divHeight = j < hNum - 1 ? dirtyH : hLast;
+            RectI divd = RectI(leftBegin + i * dirtyW, topBegin + j * dirtyH, divWidth, divHeight);
+            spaceDivisionList_.emplace_back(divd);
+        }
+    }
+}
+
+bool RSSurfaceRenderNode::UpdateStableDirtyRegion()
+{
+    lastStableDirtyRegion_ = stableDirtyRegion_;
+    stableDirtyRegion_.Clear();
+    if (spaceDivisionList_.empty()) {
+        if (visibleRegion_.IsEmpty() || visibleDirtyRegion_.IsEmpty()) {
+            return false;
+        }
+        PerformUniformVisibleRegionDivision();
+    }
+    auto currDirty = visibleDirtyRegion_.GetBound().ToRectI();
+    for (auto rect : spaceDivisionList_) {
+        if (!rect.IntersectRect(currDirty).IsEmpty()) {
+            stableDirtyRegion_ = stableDirtyRegion_.JoinRect(rect);
+        }
+    }
+    if (stableDirtyRegion_.IsEmpty() || stableDirtyRegion_==visibleRegion_.GetBound().ToRectI()) {
+        return false;
+    }
+    return stableDirtyRegion_==lastStableDirtyRegion_;
+}
+#endif
 bool RSSurfaceRenderNode::ShouldPrepareSubnodes()
 {
     // if a appwindow or abilitycomponent has a empty dstrect, its subnodes' prepare stage can be skipped

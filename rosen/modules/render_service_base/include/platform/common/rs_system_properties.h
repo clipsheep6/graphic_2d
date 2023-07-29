@@ -116,6 +116,7 @@ public:
     static bool GetHardwareComposerEnabled();
     static bool GetAFBCEnabled();
     static ReleaseGpuResourceType GetReleaseGpuResourceEnabled();
+    static bool GetLocalProcessEnabled();
 
     static void SetDrawTextAsBitmap(bool flag);
     static bool GetDrawTextAsBitmap();

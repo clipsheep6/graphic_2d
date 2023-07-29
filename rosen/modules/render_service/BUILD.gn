@@ -133,6 +133,8 @@ ohos_shared_library("librender_service") {
     defines += [ "NEW_RENDER_CONTEXT" ]
   }
 
+  defines += [ "ENABLE_DDGR" ]
+
   if (rs_enable_gpu) {
     if (graphic_2d_feature_enable_vulkan) {
       include_dirs += [ "//third_party/flutter/engine/flutter/vulkan" ]

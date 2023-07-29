@@ -126,6 +126,10 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     isQuickSkipPreparationEnabled_ = (quickSkipPrepareType_ != QuickSkipPrepareType::DISABLED);
     isHardwareComposerEnabled_ = RSSystemProperties::GetHardwareComposerEnabled();
     isDrawingCacheEnabled_ = RSSystemParameters::GetDrawingCacheEnabled();
+#ifdef ENABLE_DDGR
+    isLocalProcessEnabled_ = RSSystemProperties::GetLocalProcessEnabled() &&
+        (!isDirtyRegionDfxEnabled_ && !isTargetDirtyRegionDfxEnabled_ && !isOpaqueRegionDfxEnabled_);
+#endif    
     RSTagTracker::UpdateReleaseGpuResourceEnable(RSSystemProperties::GetReleaseGpuResourceEnabled());
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     if (RSDrivenRenderManager::GetInstance().GetDrivenRenderEnabled()) {
@@ -257,6 +261,9 @@ void RSUniRenderVisitor::PrepareChildren(RSRenderNode& node)
     SetNodeCacheChangeStatus(node, markedCachedNodeCnt);
     // restore environment variables
     logicParentNode_ = std::move(parentNode);
+#ifdef ENABLE_DDGR
+    node.ResetSubTreeChanged();
+#endif    
 }
 
 void RSUniRenderVisitor::UpdateCacheChangeStatus(RSBaseRenderNode& node)
@@ -885,7 +892,11 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         }
     }
 #endif
-
+#ifdef ENABLE_DDGR
+    if (node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE) {
+        isSubTreeChanged_ |= node.GetSubTreeChanged();
+    }
+#endif
     bool isSubNodeOfSurfaceInPrepare = isSubNodeOfSurfaceInPrepare_;
     if (node.IsMainWindowType() || node.IsLeashWindow()) {
         isSubNodeOfSurfaceInPrepare_ = true;
@@ -1012,6 +1023,12 @@ void RSUniRenderVisitor::PrepareProxyRenderNode(RSProxyRenderNode& node)
 
 void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
+#ifdef ENABLE_DDGR
+    if (curSurfaceNode_) {
+        curSurfaceNode_->ClearDirtyNodes();
+        isSubTreeChanged_ = node.GetSubTreeChanged();
+    }
+#endif
     node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
     float alpha = curAlpha_;
@@ -1074,6 +1091,11 @@ void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
     curAlpha_ = alpha;
     dirtyFlag_ = dirtyFlag;
     prepareClipRect_ = prepareClipRect;
+#ifdef ENABLE_DDGR
+    if (curSurfaceNode_) {
+        curSurfaceNode_->SetIsTreeChanged(isSubTreeChanged_);
+    }
+#endif
 }
 
 void RSUniRenderVisitor::UpdateSurfaceFrameRateRange(RSRenderNode& node)
@@ -1093,6 +1115,9 @@ void RSUniRenderVisitor::UpdateSurfaceFrameRateRange(RSRenderNode& node)
 
 void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
 {
+#ifdef ENABLE_DDGR
+    isSubTreeChanged_ |= node.GetSubTreeChanged();
+#endif
     preparedCanvasNodeInCurrentSurface_++;
     node.ApplyModifiers();
     curContentDirty_ = node.IsContentDirty();
@@ -1116,6 +1141,11 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
         return;
     }
     node.GetMutableRenderProperties().UpdateSandBoxMatrix(parentSurfaceNodeMatrix_);
+#ifdef ENABLE_DDGR
+    if (node.IsDirty() && curSurfaceNode_) {
+        curSurfaceNode_->SaveDirtyNode(node.GetId());
+    }
+#endif
     if (!isSubNodeOfSurfaceInPrepare_) {
         // if canvasNode is not sub node of surfaceNode, merge the dirtyRegion to curDisplayDirtyManager_
         dirtyFlag_ = node.Update(*curDisplayDirtyManager_, rsParent ? &(rsParent->GetRenderProperties()) : nullptr,
@@ -2826,6 +2856,108 @@ void RSUniRenderVisitor::DrawSpherize(RSRenderNode& node)
     node.ProcessTransitionAfterChildren(*canvas_);
 }
 
+#ifdef ENABLE_DDGR
+void RSUniRenderVisitor::DrawDirtyNodeBeforeChild(RSCanvasRenderNode& node)
+{
+    CacheType cacheType = node.GetCacheType();
+    node.ProcessTransitionBeforeChildren(*canvas_);
+    switch (cacheType) {
+        case CacheType::NONE: {
+            if (node.HasCacheableAnim() && isDrawingCacheEnabled_) {
+                canvas_->SetCacheType(RSPaintFilterCanvas::CacheType::ENABLED);
+            }
+            node.ProcessAnimatePropertyBeforeChildren(*canvas_);
+            node.ProcessRenderContents(*canvas_);
+            break;
+        }
+        case CacheType::CONTENT: {
+            node.ProcessAnimatePropertyBeforeChildren(*canvas_);
+            node.DrawCacheSurface(*canvas_, threadIndex_, false);
+            break;
+        }
+        case CacheType::ANIMATE_PROPERTY: {
+            node.DrawCacheSurface(*canvas_, threadIndex_, false);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+void RSUniRenderVisitor::DrawDirtyNodeAfterChild(RSCanvasRenderNode& node)
+{
+    CacheType cacheType = node.GetCacheType();
+    node.ProcessTransitionBeforeChildren(*canvas_);
+    switch (cacheType) {
+        case CacheType::NONE: {
+            auto preCache = canvas_->GetCacheType();
+            if (node.HasCacheableAnim() && isDrawingCacheEnabled_) {
+                canvas_->SetCacheType(RSPaintFilterCanvas::CacheType::ENABLED);
+            }
+            node.ProcessAnimatePropertyAfterChildren(*canvas_);
+            if (node.HasCacheableAnim() && isDrawingCacheEnabled_) {
+                canvas_->SetCacheType(preCache);
+            }
+            break;
+        }
+        case CacheType::CONTENT: {
+            node.ProcessAnimatePropertyAfterChildren(*canvas_);
+            cacheRenderNodeMapRects_.push_back(node.GetOldDirtyInSurface());
+            break;
+        }
+        default:
+            break;
+    }
+    node.ProcessTransitionAfterChildren(*canvas_);
+}
+
+void RSUniRenderVisitor::ProcessDirtyListRenderNode()
+{
+    const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
+    for (auto& child : curSurfaceNode_->GetDirtyList()) {
+        auto node = nodeMap.GetRenderNode<RSRenderNode>(child.first);
+        if (node == nullptr) {
+            continue;
+        }
+        if (node->GetType() == RSRenderNodeType::SURFACE_NODE) {
+            auto surNode = node->ReinterpretCastTo<RSSurfaceRenderNode>();
+            ProcessSurfaceRenderNode(*(surNode));
+        } else {
+            auto canvasNode = node->ReinterpretCastTo<RSCanvasRenderNode>();
+            if (child.second) {
+                ProcessCanvasRenderNode(*(canvasNode));
+                DrawDirtyNodeBeforeChild(*(canvasNode));
+            } else {
+                DrawDirtyNodeAfterChild(*(canvasNode));
+            }
+        }
+    }
+}
+
+void RSUniRenderVisitor::CheckIfSurfaceRenderNodeCouldLocalProcess(RSSurfaceRenderNode& node)
+{
+    RS_TRACE_NAME("RSUniRenderVisitor::CheckLocalProcess node" + node.GetName());
+    bool checkLP = false;
+    // auto ddgrChecker = DDGRRenderer::Make();
+    // if (isLocalProcessEnabled_ && ddgrChecker->IsRenderTreeStatic(node.IsTreeChanged(), node.IsDirtyNodesChanged())) {
+    if (isLocalProcessEnabled_ && !node.IsTreeChanged() && !node.IsDirtyNodesChanged()) {
+        checkLP = node.UpdateStableDirtyRegion();
+    }
+    node.SetIfCouldLocalProcess(checkLP);
+    if (node.IfCouldLocalProcess() && !node.IsInLocalProcess()) {
+        node.SetIsInRecordDirtyList(true);
+    }
+    if (!node.IfCouldLocalProcess()) {
+        node.ClearSpaceDivisionList();
+        if (node.IsInLocalProcess()) {
+            RS_LOGD("RSUniRenderVisitor::LocalProcess End for node %s", node.GetName().c_str());
+            node.SetIsInLocalProcess(false);
+            node.ClearDirtyList();
+        }
+    }
+}
+#endif
+
 void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
 {
     CacheType cacheType = node.GetCacheType();
@@ -2895,6 +3027,12 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeNeedProcess(RSSurfaceRenderNode
 
 void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
+#ifdef ENABLE_DDGR
+    if (node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE && curSurfaceNode_ &&
+        curSurfaceNode_->IsInRecordDirtyList()) {
+        curSurfaceNode_->AddToDirtyList(node.GetId(), true);
+    }
+#endif
     if (isUIFirst_ && isSubThread_) {
         if (auto parentNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(node.GetParent().lock()) ||
             (Rosen::SceneBoardJudgement::IsSceneBoardEnabled() && node.IsLeashWindow())) {
@@ -3135,6 +3273,9 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
         if (node.IsAppWindow() &&
             (!needColdStartThread_ || !RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId()))) {
+#ifdef ENABLE_DDGR
+            CheckIfSurfaceRenderNodeCouldLocalProcess(node);
+#endif            
             bool needDrawCachedImage = false;
             if (RSColdStartManager::Instance().IsColdStartThreadRunning(node.GetId())) {
                 if (RSColdStartManager::Instance().IsColdStartThreadIdle(node.GetId())) {
@@ -3186,6 +3327,13 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         // count processed canvas node
         RS_TRACE_NAME(node.GetName() + " ProcessedNodes: " + std::to_string(processedCanvasNodeInCurrentSurface_));
         processedCanvasNodeInCurrentSurface_ = 0; // reset
+#ifdef ENABLE_DDGR
+        if (curSurfaceNode_ && curSurfaceNode_->IsInRecordDirtyList()) {
+            curSurfaceNode_->SetIsInLocalProcess(true);
+            curSurfaceNode_->SetIsInRecordDirtyList(false);
+        }
+        node.CacheDirtyNodes();
+#endif        
     }
     if (node.IsMainWindowType() || node.IsLeashWindow()) {
         isSubNodeOfSurfaceInProcess_ = isSubNodeOfSurfaceInProcess;
@@ -3247,7 +3395,17 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     } else {
         saveCount = canvas_->save();
     }
+#ifdef ENABLE_DDGR
+    if (curSurfaceNode_ && curSurfaceNode_->IsInLocalProcess() && curSurfaceNode_->GetDirtyListSize() > 0) {
+        RS_TRACE_NAME("RSUniRenderVisitor::InLocalProcess DirtyListNum " + std::to_string(curSurfaceNode_->GetDirtyListSize()));
+        RS_LOGD("RSUniRenderVisitor::ProcessRootRenderNode, LocalProcess Begin.");
+        ProcessDirtyListRenderNode();
+    } else {
+        ProcessCanvasRenderNode(node);
+    }
+#else
     ProcessCanvasRenderNode(node);
+#endif
     canvas_->restoreToCount(saveCount);
 #else
         Drawing::Brush brush;
@@ -3259,7 +3417,17 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
         saveCount = canvas_->GetSaveCount();
         canvas_->Save();
     }
+#ifdef ENABLE_DDGR
+    if (curSurfaceNode_ && curSurfaceNode_->IsInLocalProcess() && curSurfaceNode_->GetDirtyListSize() > 0) {
+        RS_TRACE_NAME("RSUniRenderVisitor::InLocalProcess DirtyListNum " + std::to_string(curSurfaceNode_->GetDirtyListSize()));
+        RS_LOGD("RSUniRenderVisitor::ProcessRootRenderNode, LocalProcess Begin.");
+        ProcessDirtyListRenderNode();
+    } else {
+        ProcessCanvasRenderNode(node);
+    }
+#else
     ProcessCanvasRenderNode(node);
+#endif
     canvas_->RestoreToCount(saveCount);
 #endif
 }
@@ -3391,6 +3559,18 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         // Otherwise, its childrenRect_ should be considered.
         RectI dirtyRect = node.HasChildrenOutOfRect() ?
             node.GetOldDirtyInSurface().JoinRect(node.GetChildrenRect()) : node.GetOldDirtyInSurface();
+#ifdef ENABLE_DDGR
+        bool shouldInDirtyList = curSurfaceNode_->IsInRecordDirtyList() && !dirtyRect.IntersectRect(curSurfaceNode_->GetStableDirtyRegion()).IsEmpty();
+        if (!shouldInDirtyList && isSubNodeOfSurfaceInProcess_ && !node.IsAncestorDirty() &&
+            !curSurfaceNode_->SubNodeNeedDraw(dirtyRect, partialRenderType_)) {
+            auto parent = node.GetParent().lock();
+            bool isParentLeashWindow = parent && parent->ReinterpretCastTo<RSSurfaceRenderNode>() &&
+                parent->ReinterpretCastTo<RSSurfaceRenderNode>()->IsLeashWindow();
+            if (!isParentLeashWindow) {
+                return;
+            }
+        }
+#else
         if (isSubNodeOfSurfaceInProcess_ && !node.IsAncestorDirty() &&
             !curSurfaceNode_->SubNodeNeedDraw(dirtyRect, partialRenderType_)) {
             auto parent = node.GetParent().lock();
@@ -3400,6 +3580,7 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
                 return;
             }
         }
+#endif
     }
 #endif
     if (!canvas_) {
@@ -3414,6 +3595,11 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         if (RSDrivenRenderManager::GetInstance().ClipHoleForDrivenNode(*canvas_, node)) {
             return;
         }
+    }
+#endif
+#ifdef ENABLE_DDGR
+    if (curSurfaceNode_ && curSurfaceNode_->IsInRecordDirtyList()) {
+        curSurfaceNode_->AddToDirtyList(node.GetId(), true);
     }
 #endif
     // in case preparation'update is skipped
@@ -3442,7 +3628,15 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         drawingNode->SetSurfaceClearFunc({ threadIndex_, clearFunc });
     }
     CheckAndSetNodeCacheType(node);
+#ifdef ENABLE_DDGR
+    if (curSurfaceNode_ && !curSurfaceNode_->IsInRecordDirtyList()) {
+        curSurfaceNode_->AddToDirtyList(node.GetId(), false);
+    } else {
+        DrawChildRenderNode(node);
+    }
+#else    
     DrawChildRenderNode(node);
+#endif
     canvas_->restore();
 }
 

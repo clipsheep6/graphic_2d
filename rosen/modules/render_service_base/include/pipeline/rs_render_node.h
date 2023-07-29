@@ -633,7 +633,17 @@ public:
     {
         geometryChangeNotPerceived_ = true;
     }
+#ifdef ENABLE_DDGR
+    inline void ResetSubTreeChanged()
+    {
+        subTreeChanged_ = false;
+    }
 
+    bool GetSubTreeChanged() const
+    {
+        return subTreeChanged_;
+    }
+#endif
 protected:
     enum class NodeDirty {
         CLEAN = 0,
@@ -756,6 +766,9 @@ private:
     std::unordered_set<RSModifierType> dirtyTypes_;
     bool hasCacheableAnim_ = false;
     bool geometryChangeNotPerceived_ = false;
+#ifdef ENABLE_DDGR
+    bool subTreeChanged_ = false;
+#endif
 
     FrameRateRange rsRange_ = {0, 0, 0};
     FrameRateRange uiRange_ = {0, 0, 0};

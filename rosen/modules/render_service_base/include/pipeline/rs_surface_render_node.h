@@ -20,6 +20,7 @@
 #include <limits>
 #include <memory>
 #include <tuple>
+#include <unordered_set>
 
 #include "memory/rs_memory_track.h"
 
@@ -693,6 +694,110 @@ public:
     // update static node's back&front-ground filter cache status
     void UpdateFilterCacheStatusIfNodeStatic(const RectI& clipRect);
 
+#ifdef ENABLE_DDGR
+    void SetIsInLocalProcess(bool flag)
+    {
+        isInLocalProcess_ = flag;
+    }
+
+    bool IsInLocalProcess() const
+    {
+        return isInLocalProcess_;
+    }
+
+    void SetIfCouldLocalProcess(bool flag)
+    {
+        ifCouldLocalProcess_ = flag;
+    }
+
+    bool IfCouldLocalProcess() const
+    {
+        return ifCouldLocalProcess_;
+    }
+
+    void SetIsInRecordDirtyList(bool flag)
+    {
+        isInRecordDirtyList_ = flag;
+    }
+
+    bool IsInRecordDirtyList() const
+    {
+        return isInRecordDirtyList_;
+    }
+
+    std::list<std::pair<NodeId, bool>> GetDirtyList() const
+    {
+        return dirtyList_;
+    }
+
+    void ClearDirtyList()
+    {
+        dirtyList_.clear();
+    }
+
+    void AddToDirtyList(NodeId id, bool isBeforeChild)
+    {
+        dirtyList_.emplace_back(std::make_pair(id, isBeforeChild));
+    }
+
+    int GetDirtyListSize() const
+    {
+        return dirtyList_.size();
+    }
+
+    RectI GetStableDirtyRegion() const
+    {
+        return stableDirtyRegion_;
+    }
+
+    void ClearSpaceDivisionList()
+    {
+        spaceDivisionList_.clear();
+    }
+
+    std::list<RectI> GetSpaceDivisionList()
+    {
+        return spaceDivisionList_;
+    }
+
+    void SetIsTreeChanged(bool value)
+    {
+        isTreeChanged_ = value;
+    }
+
+    bool IsTreeChanged()
+    {
+        return isTreeChanged_;
+    }
+
+    void SaveDirtyNode(NodeId id)
+    {
+        dirtyNodes_.insert(id);
+    }
+
+    void ClearDirtyNodes()
+    {
+        dirtyNodes_.clear();
+    }
+
+    std::unordered_set<NodeId> GetDirtyNodes()
+    {
+        return dirtyNodes_;
+    }
+
+    void CacheDirtyNodes()
+    {
+        lastDirtyNodes_.swap(dirtyNodes_);
+    }
+
+    bool IsDirtyNodesChanged()
+    {
+        return !(dirtyNodes_ == lastDirtyNodes_);
+    }
+
+    bool UpdateStableDirtyRegion();
+    void PerformUniformVisibleRegionDivision();
+#endif
 private:
     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
@@ -792,6 +897,18 @@ private:
     //<screenRect, absRect, screenRotation, isFocusWindow>
     std::tuple<RectI, RectI, ScreenRotation, bool> OpaqueRegionBaseInfo_;
 
+#ifdef ENABLE_DDGR
+    std::list<RectI> spaceDivisionList_;
+    RectI stableDirtyRegion_;
+    RectI lastStableDirtyRegion_;
+    std::list<std::pair<NodeId, bool>> dirtyList_;
+    bool ifCouldLocalProcess_ = false;
+    bool isInRecordDirtyList_ = false;
+    bool isInLocalProcess_ = false;
+    bool isTreeChanged_ = false;
+    std::unordered_set<NodeId> dirtyNodes_;
+    std::unordered_set<NodeId> lastDirtyNodes_;
+#endif    
     /*
         ContainerWindow configs acquired from arkui, including container window state, screen density, container border
         width, padding width, inner/outer radius, etc.

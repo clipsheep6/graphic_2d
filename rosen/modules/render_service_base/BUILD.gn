@@ -239,6 +239,8 @@ ohos_source_set("render_service_base_src") {
     defines += [ "_USE_MATH_DEFINES" ]
   }
 
+  defines += [ "ENABLE_DDGR" ]
+
   if (defined(graphic_2d_ext_configs.vendor_root)) {
     sources -= graphic_2d_ext_configs.librender_service_base_ext_sources_del
     sources += graphic_2d_ext_configs.librender_service_base_ext_sources

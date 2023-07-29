@@ -251,6 +251,12 @@ private:
 
     bool CheckIfSurfaceRenderNodeNeedProcess(RSSurfaceRenderNode& node);
 
+#ifdef ENABLE_DDGR
+    void CheckIfSurfaceRenderNodeCouldLocalProcess(RSSurfaceRenderNode& node);
+    void ProcessDirtyListRenderNode();
+    void DrawDirtyNodeBeforeChild(RSCanvasRenderNode& node);
+    void DrawDirtyNodeAfterChild(RSCanvasRenderNode& node);
+#endif
     void ClearTransparentBeforeSaveLayer();
     // mark surfaceNode's child surfaceView nodes hardware forced disabled
     void MarkSubHardwareEnableNodeState(RSSurfaceRenderNode& surfaceNode);
@@ -322,6 +328,9 @@ private:
     bool isQuickSkipPreparationEnabled_ = false;
     bool isHardwareComposerEnabled_ = false;
     bool isOcclusionEnabled_ = false;
+#ifdef ENABLE_DDGR
+    bool isLocalProcessEnabled_ = false;
+#endif
     std::vector<std::string> dfxTargetSurfaceNames_;
     PartialRenderType partialRenderType_;
     QuickSkipPrepareType quickSkipPrepareType_;
@@ -409,6 +418,9 @@ private:
     bool curDirty_ = false;
     bool curContentDirty_ = false;
 
+#ifdef ENABLE_DDGR
+    bool isSubTreeChanged_ = false;
+#endif
     // calculate preferred fps
     FrameRateRange currSurfaceRSRange_ = {0, 0, 0};
     FrameRateRange currSurfaceUIRange_ = {0, 0, 0};

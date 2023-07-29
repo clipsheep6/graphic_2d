@@ -130,6 +130,11 @@ bool RSSystemProperties::GetHardwareComposerEnabled()
     return system::GetParameter("rosen.hardwarecomposer.enabled", "1") != "0";
 }
 
+bool RSSystemProperties::GetLocalProcessEnabled()
+{
+    return system::GetParameter("rosen.localProcess.enabled", "1") != "0";
+}
+
 bool RSSystemProperties::GetAFBCEnabled()
 {
     return system::GetParameter("rosen.afbc.enabled", "1") != "0";

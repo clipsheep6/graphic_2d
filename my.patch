@@ -1,0 +1,259 @@
+diff --git a/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.h b/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.h
+index 22d1751e3..27c888a1d 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.h
++++ b/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.h
+@@ -249,6 +249,12 @@ private:
+ 
+     bool CheckIfSurfaceRenderNodeNeedProcess(RSSurfaceRenderNode& node);
+ 
++#ifdef ENABLE_DDGR
++    void CheckIfSurfaceRenderNodeCouldLocalProcess(RSSurfaceRenderNode& node);
++    void ProcessDirtyListRenderNode();
++    void DrawDirtyNodeBeforeChild(RSCanvasRenderNode& node);
++    void DrawDirtyNodeAfterChild(RSCanvasRenderNode& node);
++#endif
+     void ClearTransparentBeforeSaveLayer();
+     // mark surfaceNode's child surfaceView nodes hardware forced disabled
+     void MarkSubHardwareEnableNodeState(RSSurfaceRenderNode& surfaceNode);
+@@ -413,6 +419,9 @@ private:
+     bool curDirty_ = false;
+     bool curContentDirty_ = false;
+ 
++#ifdef ENABLE_DDGR
++    bool isSubTreeChanged_ = false;
++#endif
+     // calculate preferred fps
+     FrameRateRange currSurfaceRSRange_ = {0, 0, 0};
+     FrameRateRange currSurfaceUIRange_ = {0, 0, 0};
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_base_render_node.h b/rosen/modules/render_service_base/include/pipeline/rs_base_render_node.h
+index 25675b182..79451cc07 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_base_render_node.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_base_render_node.h
+@@ -186,6 +186,17 @@ public:
+         childHasFilter_ = childHasFilter;
+     }
+ 
++#ifdef ENABLE_DDGR
++    inline void ResetSubTreeChanged()
++    {
++        subTreeChanged_ = false;
++    }
++
++    bool GetSubTreeChanged() const
++    {
++        return subTreeChanged_;
++    }
++#endif
+     void SetRootSurfaceNodeId(NodeId id)
+     {
+         rootSurfaceNodeId_ = id;
+@@ -240,6 +251,9 @@ private:
+     bool hasChildrenOutOfRect_ = false;
+     RectI childrenRect_;
+     bool childHasFilter_ = false;  // only cllect children filter status
++#ifdef ENABLE_DDGR
++    bool subTreeChanged_ = false;
++#endif
+ 
+     void InternalRemoveSelfFromDisappearingChildren();
+ };
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_surface_render_node.h b/rosen/modules/render_service_base/include/pipeline/rs_surface_render_node.h
+index 81dec444a..68a1b2d14 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_surface_render_node.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_surface_render_node.h
+@@ -20,6 +20,7 @@
+ #include <limits>
+ #include <memory>
+ #include <tuple>
++#include <unordered_set>
+ 
+ #ifndef USE_ROSEN_DRAWING
+ #include "include/core/SkRect.h"
+@@ -692,6 +693,110 @@ public:
+     // update static node's back&front-ground filter cache status
+     void UpdateFilterCacheStatusIfNodeStatic(const RectI& clipRect);
+ 
++#ifdef ENABLE_DDGR
++    void SetIsInLocalProcess(bool flag)
++    {
++        isInLocalProcess_ = flag;
++    }
++
++    bool IsInLocalProcess() const
++    {
++        return isInLocalProcess_;
++    }
++
++    void SetIfCouldLocalProcess(bool flag)
++    {
++        ifCouldLocalProcess_ = flag;
++    }
++
++    bool IfCouldLocalProcess() const
++    {
++        return ifCouldLocalProcess_;
++    }
++
++    void SetIsInRecordDirtyList(bool flag)
++    {
++        isInRecordDirtyList_ = flag;
++    }
++
++    bool IsInRecordDirtyList() const
++    {
++        return isInRecordDirtyList_;
++    }
++
++    std::list<std::pair<NodeId, bool>> GetDirtyList() const
++    {
++        return dirtyList_;
++    }
++
++    void ClearDirtyList()
++    {
++        dirtyList_.clear();
++    }
++
++    void AddToDirtyList(NodeId id, bool isBeforeChild)
++    {
++        dirtyList_.emplace_back(std::make_pair(id, isBeforeChild));
++    }
++
++    int GetDirtyListSize() const
++    {
++        return dirtyList_.size();
++    }
++
++    RectI GetStableDirtyRegion() const
++    {
++        return stableDirtyRegion_;
++    }
++
++    void ClearSpaceDivisionList()
++    {
++        spaceDivisionList_.clear();
++    }
++
++    std::list<RectI> GetSpaceDivisionList()
++    {
++        return spaceDivisionList_;
++    }
++
++    void SetIsTreeChanged(bool value)
++    {
++        isTreeChanged_ = value;
++    }
++
++    bool IsTreeChanged()
++    {
++        return isTreeChanged_;
++    }
++
++    void SaveDirtyNode(NodeId id)
++    {
++        dirtyNodes_.insert(id);
++    }
++
++    void ClearDirtyNodes()
++    {
++        dirtyNodes_.clear();
++    }
++
++    std::unordered_set<NodeId> GetDirtyNodes()
++    {
++        return dirtyNodes_;
++    }
++
++    void CacheDirtyNodes()
++    {
++        lastDirtyNodes_.swap(dirtyNodes_);
++    }
++
++    bool IsDirtyNodesChanged()
++    {
++        return !(dirtyNodes_ == lastDirtyNodes_);
++    }
++
++    bool UpdateStableDirtyRegion();
++    void PerformUniformVisibleRegionDivision();
++#endif
+ private:
+     void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
+     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
+@@ -791,6 +896,18 @@ private:
+     //<screenRect, absRect, screenRotation, isFocusWindow>
+     std::tuple<RectI, RectI, ScreenRotation, bool> OpaqueRegionBaseInfo_;
+ 
++#ifdef ENABLE_DDGR
++    std::list<RectI> spaceDivisionList_;
++    RectI stableDirtyRegion_;
++    RectI lastStableDirtyRegion_;
++    std::list<std::pair<NodeId, bool>> dirtyList_;
++    bool ifCouldLocalProcess_ = false;
++    bool isInRecordDirtyList_ = false;
++    bool isInLocalProcess_ = false;
++    bool isTreeChanged_ = false;
++    std::unordered_set<NodeId> dirtyNodes_;
++    std::unordered_set<NodeId> lastDirtyNodes_;
++#endif    
+     /*
+         ContainerWindow configs acquired from arkui, including container window state, screen density, container border
+         width, padding width, inner/outer radius, etc.
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp
+index c6bc7371e..29b486e7d 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp
+@@ -98,6 +98,53 @@ void RSSurfaceRenderNode::UpdateSrcRect(const RSPaintFilterCanvas& canvas, const
+ }
+ #endif
+ 
++#ifdef ENABLE_DDGR
++void RSSurfaceRenderNode::PerformUniformVisibleRegionDivision()
++{
++    RectI bound = visibleRegion_.GetBound().ToRectI();
++    RectI dirtyBound = visibleDirtyRegion_.GetBound().ToRectI();
++    int leftBegin = bound.GetLeft();
++    int topBegin = bound.GetTop();
++    int boundW = bound.GetWidth();
++    int boundH = bound.GetHeight();
++    int dirtyW = dirtyBound.GetWidth();
++    int dirtyH = dirtyBound.GetHeight();
++    int wNum = dirtyW > 0 ? boundW / dirtyW : 1;
++    int hNum = dirtyH > 0 ? boundH / dirtyH : 1;
++    int wLast = dirtyW > 0 ? boundW % dirtyW + dirtyW : boundW;
++    int hLast = dirtyH > 0 ? boundH % dirtyH + dirtyH : boundH;
++    for (int i = 0; i < wNum; ++i) {
++        int divWidth = i < wNum - 1 ? dirtyW : wLast;
++        for (int j = 0; j < hNum; ++j) {
++            int divHeight = j < hNum - 1 ? dirtyH : hLast;
++            RectI divd = RectI(leftBegin + i * dirtyW, topBegin + j * dirtyH, divWidth, divHeight);
++            spaceDivisionList_.emplace_back(divd);
++        }
++    }
++}
++
++bool RSSurfaceRenderNode::UpdateStableDirtyRegion()
++{
++    lastStableDirtyRegion_ = stableDirtyRegion_;
++    stableDirtyRegion_.Clear();
++    if (spaceDivisionList_.empty()) {
++        if (visibleRegion_.IsEmpty() || visibleDirtyRegion_.IsEmpty()) {
++            return false;
++        }
++        PerformUniformVisibleRegionDivision();
++    }
++    auto currDirty = visibleDirtyRegion_.GetBound().ToRectI();
++    for (auto rect : spaceDivisionList_) {
++        if (!rect.IntersectRect(currDirty).IsEmpty()) {
++            stableDirtyRegion_ = stableDirtyRegion_.JoinRect(rect);
++        }
++    }
++    if (stableDirtyRegion_.IsEmpty() || stableDirtyRegion_==visibleRegion_.GetBound().ToRectI()) {
++        return false;
++    }
++    return stableDirtyRegion_==lastStableDirtyRegion_;
++}
++#endif
+ bool RSSurfaceRenderNode::ShouldPrepareSubnodes()
+ {
+     // if a appwindow or abilitycomponent has a empty dstrect, its subnodes' prepare stage can be skipped

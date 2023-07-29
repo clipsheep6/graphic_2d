@@ -66,20 +66,20 @@ public:
     int32_t SetActiveRefreshRate(int32_t sceneId, uint32_t rate);
     int32_t SetRateAndResolution(int32_t sceneId, uint32_t rate, int32_t width, int32_t height);
     int32_t SetRefreshRateRange(uint32_t minRate, uint32_t maxRate);
-    int32_t AddScreenModeInfo(int32_t width, int32_t height, uint32_t rate, int32_t modeId);
+    int32_t AddScreenModeInfo(int32_t width, int32_t height, uint32_t rate, int32_t modeId, int32_t group);
 
 private:
     class ScreenProfile {
     public:
-        ScreenProfile(int32_t width, int32_t height, uint32_t rate, int32_t modeId)
-            : width_(width), height_(height), refreshrate_(rate), modeId_(modeId) {}
+        ScreenProfile(int32_t width, int32_t height, uint32_t rate, int32_t modeId, int32_t group)
+            : width_(width), height_(height), refreshrate_(rate), modeId_(modeId), groupId_(group) {}
 
         ~ScreenProfile() = default;
 
         bool operator==(const ScreenProfile& rValue) const
         {
             if (rValue.GetWidth() != width_ || rValue.GetHeight() != height_ ||
-                rValue.GetRate() != refreshrate_) {
+                rValue.GetRate() != refreshrate_ || rValue.GetGroupId() != groupId_) {
                 return false;
             }
             return true;
@@ -105,11 +105,17 @@ private:
             return modeId_;
         }
 
+        int32_t GetGroupId() const
+        {
+            return groupId_;
+        }
+
     private:
         int32_t width_ = -1;
         int32_t height_ = -1;
         uint32_t refreshrate_ = 0;
         int32_t modeId_ = -1;
+        int32_t groupId_ = 0;
     };
 
     ScreenId id_ = 0;

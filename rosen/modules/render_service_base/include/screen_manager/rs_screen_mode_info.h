@@ -27,6 +27,7 @@ class RSB_EXPORT RSScreenModeInfo : public Parcelable {
 public:
     RSScreenModeInfo() = default;
     RSScreenModeInfo(int32_t width, int32_t height, uint32_t refreshRate, int32_t id);
+    RSScreenModeInfo(int32_t width, int32_t height, uint32_t refreshRate, int32_t id, int32_t groupId);
     ~RSScreenModeInfo() noexcept = default;
 
     RSScreenModeInfo(const RSScreenModeInfo& other);
@@ -39,16 +40,19 @@ public:
     int32_t GetScreenHeight() const;
     uint32_t GetScreenRefreshRate() const;
     int32_t GetScreenModeId() const;
+    int32_t GetScreenGroupId() const;
     void SetScreenWidth(int32_t width);
     void SetScreenHeight(int32_t height);
     void SetScreenRefreshRate(uint32_t refreshRate);
     void SetScreenModeId(int32_t id);
+    void SetScreenGroupId(int32_t groupId);
 
 private:
     int32_t width_ = -1;
     int32_t height_ = -1;
     uint32_t refreshRate_ = 0;
     int32_t modeId_ = -1;
+    int32_t groupId_ = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

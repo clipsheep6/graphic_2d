@@ -177,7 +177,7 @@ void RSRenderThread::RecvTransactionData(std::unique_ptr<RSTransactionData>& tra
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
     }
     // [PLANNING]: process in next vsync (temporarily)
-#ifdef ROSEN_CROSS_PLATFORM
+#if defined ROSEN_CROSS_PLATFORM && !defined(ROSEN_PREVIEW)
     uint64_t currentTimestamp =
         std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch())
             .count();

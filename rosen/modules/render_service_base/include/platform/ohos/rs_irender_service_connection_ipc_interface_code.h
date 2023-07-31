@@ -72,6 +72,7 @@ enum class RSIRenderServiceConnectionInterfaceCode {
     REPORT_EVENT_JANK_FRAME,
     REPORT_EVENT_FIRST_FRAME,
     SET_HARDWARE_ENABLED,
+    GET_ANIM_DYNAMIC_CFG_CALLBACK,
 };
 } // namespace Rosen
 } // namespace OHOS

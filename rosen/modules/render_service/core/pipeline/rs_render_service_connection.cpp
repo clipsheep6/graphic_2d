@@ -858,6 +858,25 @@ void RSRenderServiceConnection::ReportEventJankFrame(DataBaseRs info)
     mainThread_->PostTask(task);
 }
 
+bool RSRenderServiceConnection::GetAnimDynamicCfgCallback(sptr<RSIAnimDynamicCfgCallback> callback)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (animDynamicCfgCallback_ == callback) {
+        return INVALID_ARGUMENTS;
+    }
+
+    if (animDynamicCfgCallback_ != nullptr) {
+        // remove the old callback
+        hgmAnimDynamicCfgManager_->RemoveAnimDynamicCfgCallback(animDynamicCfgCallback_);
+    }
+
+    // update
+    bool status = hgmAnimDynamicCfgManager_->GetAnimDynamicCfgCallback(callback);
+    auto tmp = animDynamicCfgCallback_;
+    animDynamicCfgCallback_ = callback;
+    return status;
+}
+
 void RSRenderServiceConnection::SetHardwareEnabled(NodeId id, bool isEnabled)
 {
     auto task = [this, id, isEnabled]() -> void {

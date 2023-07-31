@@ -23,6 +23,7 @@
 
 #include "command/rs_command.h"
 #include "command/rs_node_showing_command.h"
+#include "ipc_callbacks/anim_dynamic_cfg_callback_stub.h"
 #include "ipc_callbacks/screen_change_callback_stub.h"
 #include "ipc_callbacks/surface_capture_callback_stub.h"
 #include "ipc_callbacks/buffer_available_callback_stub.h"
@@ -750,6 +751,34 @@ void RSRenderServiceClient::ReportEventJankFrame(DataBaseRs info)
     if (renderService != nullptr) {
         renderService->ReportEventJankFrame(info);
     }
+}
+
+class CustomAnimDynamicCfgCallback : public RSAnimDynamicCfgCallbackStub
+{
+public:
+    explicit CustomAnimDynamicCfgCallback(const AnimDynamicCfgCallback &callback) : cb_(callback) {}
+    ~CustomAnimDynamicCfgCallback() override {};
+
+    void GetAnimDynamicConfigs(AnimDynamicCfgs config) override
+    {
+        if (cb_ != nullptr) {
+            cb_(config);
+        }
+    }
+
+private:
+    AnimDynamicCfgCallback cb_;
+};
+
+bool RSRenderServiceClient::GetAnimDynamicCfgCallback(const AnimDynamicCfgCallback &callback)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return RENDER_SERVICE_NULL;
+    }
+
+    AnimDynamicCfgCb_ = new CustomAnimDynamicCfgCallback(callback);
+    return renderService->GetAnimDynamicCfgCallback(AnimDynamicCfgCb_);
 }
 
 void RSRenderServiceClient::SetHardwareEnabled(NodeId id, bool isEnabled)

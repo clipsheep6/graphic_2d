@@ -304,6 +304,11 @@ void RSRenderServiceClient::ReportEventJankFrame(DataBaseRs info)
 {
 }
 
+bool RSRenderServiceClient::GetAnimDynamicCfgCallback(const AnimDynamicCfgCallback &callback)
+{
+    return false;
+}
+
 void RSRenderServiceClient::SetHardwareEnabled(NodeId id, bool isEnabled)
 {
 }

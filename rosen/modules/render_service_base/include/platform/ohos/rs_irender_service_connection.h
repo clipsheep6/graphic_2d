@@ -22,6 +22,7 @@
 
 #include "command/rs_command.h"
 #include "command/rs_node_showing_command.h"
+#include "ipc_callbacks/anim_dynamic_cfg_callback.h"
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/buffer_clear_callback.h"
 #include "ipc_callbacks/iapplication_agent.h"
@@ -166,6 +167,8 @@ public:
     virtual void ReportEventComplete(DataBaseRs info) = 0;
 
     virtual void ReportEventJankFrame(DataBaseRs info) = 0;
+
+    virtual bool GetAnimDynamicCfgCallback(sptr<RSIAnimDynamicCfgCallback> callback) = 0;
 
     virtual void SetHardwareEnabled(NodeId id, bool isEnabled) = 0;
 };

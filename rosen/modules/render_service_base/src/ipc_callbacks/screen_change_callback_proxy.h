@@ -19,7 +19,7 @@
 #include <iremote_proxy.h>
 
 #include "ipc_callbacks/screen_change_callback.h"
-#include "ipc_callbacks/screen_change_callback_ipc_interface_code.h"
+#include "ipc_security/rs_ipc_interface_code_security_manager_registry.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -31,6 +31,13 @@ public:
     void OnScreenChanged(ScreenId id, ScreenEvent event) override;
 
 private:
+    template<size_t N>
+    std::string GetCallerName(const char (&callerFuncCstr)[N]) const;
+
+    static inline const std::string callerPrefix_{"RSScreenChangeCallbackProxy::"};
+
+    static const RSInterfaceCodeSecurityManager<RSIScreenChangeCallbackInterfaceCode> securityManager_;
+
     static inline BrokerDelegator<RSScreenChangeCallbackProxy> delegator_;
 };
 } // namespace Rosen

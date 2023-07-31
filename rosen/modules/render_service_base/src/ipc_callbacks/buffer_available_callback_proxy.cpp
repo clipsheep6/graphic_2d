@@ -29,6 +29,11 @@ RSBufferAvailableCallbackProxy::RSBufferAvailableCallbackProxy(const sptr<IRemot
 
 void RSBufferAvailableCallbackProxy::OnBufferAvailable()
 {
+    constexpr auto interfaceCode = RSIBufferAvailableCallbackInterfaceCode::ON_BUFFER_AVAILABLE;
+    if (!securityManager_.IsInterfaceCodeAccessible(interfaceCode, GetCallerName(__func__))) {
+        return;
+    }
+
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -38,11 +43,22 @@ void RSBufferAvailableCallbackProxy::OnBufferAvailable()
     }
 
     option.SetFlags(MessageOption::TF_ASYNC);
-    uint32_t code = static_cast<uint32_t>(RSIBufferAvailableCallbackInterfaceCode::ON_BUFFER_AVAILABLE);
+    uint32_t code = static_cast<uint32_t>(interfaceCode);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
         ROSEN_LOGE("RSBufferAvailableCallbackProxy::OnBufferAvailable error = %d", err);
     }
 }
+
+template<size_t N>
+std::string RSBufferAvailableCallbackProxy::GetCallerName(const char (&callerFuncCstr)[N]) const
+{
+    const std::string callerFunction{callerFuncCstr};
+    std::string callerName{callerPrefix_ + callerFunction};
+    return callerName;
+}
+
+const RSInterfaceCodeSecurityManager<RSIBufferAvailableCallbackInterfaceCode> \
+    RSBufferAvailableCallbackProxy::securityManager_ = CreateRSIBufferAvailableCallbackInterfaceCodeSecurityManager();
 } // namespace Rosen
 } // namespace OHOS

@@ -25,6 +25,8 @@
 #include <surface.h>
 #endif
 
+#include "anim_dynamic_configs.h"
+#include "ipc_callbacks/anim_dynamic_cfg_callback.h"
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/iapplication_agent.h"
 #include "ipc_callbacks/screen_change_callback.h"
@@ -52,6 +54,7 @@ namespace Rosen {
 using ScreenChangeCallback = std::function<void(ScreenId, ScreenEvent)>;
 using BufferAvailableCallback = std::function<void()>;
 using OcclusionChangeCallback = std::function<void(std::shared_ptr<RSOcclusionData>)>;
+using AnimDynamicCfgCallback = std::function<void(AnimDynamicCfgs)>;
 
 struct DataBaseRs {
     int32_t appPid = -1;
@@ -199,6 +202,8 @@ public:
 
     void ReportEventJankFrame(DataBaseRs info);
 
+    bool GetAnimDynamicCfgCallback(const AnimDynamicCfgCallback &callback);
+
 private:
     void TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap);
     std::mutex mutex_;
@@ -206,6 +211,7 @@ private:
     std::map<NodeId, sptr<RSIBufferAvailableCallback>> bufferAvailableCbUIMap_;
     sptr<RSIScreenChangeCallback> screenChangeCb_;
     sptr<RSISurfaceCaptureCallback> surfaceCaptureCbDirector_;
+    sptr<RSIAnimDynamicCfgCallback> AnimDynamicCfgCb_;
     std::map<NodeId, std::vector<std::shared_ptr<SurfaceCaptureCallback>>> surfaceCaptureCbMap_;
 
     friend class SurfaceCaptureCallbackDirector;

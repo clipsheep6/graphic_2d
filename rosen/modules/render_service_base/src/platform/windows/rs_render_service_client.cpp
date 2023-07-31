@@ -294,5 +294,9 @@ void RSRenderServiceClient::ReportEventJankFrame(DataBaseRs info)
 {
 }
 
+bool RSRenderServiceClient::GetAnimDynamicCfgCallback(const AnimDynamicCfgCallback &callback)
+{
+    return 0;
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -19,6 +19,7 @@
 #include <mutex>
 #include <unordered_set>
 
+#include "anim_dynamic_cfg_manager.h"
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "pipeline/rs_render_service.h"
 #include "pipeline/rs_hardware_thread.h"
@@ -165,11 +166,14 @@ private:
 
     void ReportEventJankFrame(DataBaseRs info) override;
 
+    bool GetAnimDynamicCfgCallback(sptr<RSIAnimDynamicCfgCallback> callback) override;
+
     pid_t remotePid_;
     wptr<RSRenderService> renderService_;
     RSMainThread* mainThread_ = nullptr;
     sptr<RSScreenManager> screenManager_;
     sptr<IRemoteObject> token_;
+    sptr<HgmAnimDynamicCfgManager> hgmAnimDynamicCfgManager_;
 
     class RSConnectionDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
@@ -208,6 +212,8 @@ private:
     sptr<RSIScreenChangeCallback> screenChangeCallback_;
     sptr<VSyncDistributor> appVSyncDistributor_;
     std::vector<sptr<VSyncConnection>> vsyncConnections_;
+
+    sptr<RSIAnimDynamicCfgCallback> animDynamicCfgCallback_;
 };
 } // namespace Rosen
 } // namespace OHOS

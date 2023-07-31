@@ -20,6 +20,7 @@ namespace OHOS {
 namespace Rosen {
 enum class RSIBufferAvailableCallbackInterfaceCode {
     ON_BUFFER_AVAILABLE,
+    ON_BUFFER_CLEAR,
 };
 } // namespace Rosen
 } // namespace OHOS

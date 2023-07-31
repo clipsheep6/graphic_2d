@@ -842,6 +842,17 @@ void RSNode::SetLinearGradientBlurPara(const std::shared_ptr<RSLinearGradientBlu
                                                                     (RSModifierType::LINEAR_GRADIENT_BLUR_PARA, para);
 }
 
+void RSNode::SetDynamicLightUpRate(const float rate)
+{
+    SetProperty<RSDynamicLightUpRateModifier, RSAnimatableProperty<float>>(RSModifierType::DYNAMIC_LIGHT_UP_RATE, rate);
+}
+
+void RSNode::SetDynamicLightUpDegree(const float lightUpDegree)
+{
+    SetProperty<RSDynamicLightUpDegreeModifier,
+        RSAnimatableProperty<float>>(RSModifierType::DYNAMIC_LIGHT_UP_DEGREE, lightUpDegree);
+}
+
 void RSNode::SetCompositingFilter(const std::shared_ptr<RSFilter>& compositingFilter) {}
 
 void RSNode::SetShadowColor(uint32_t colorValue)
@@ -1206,6 +1217,11 @@ void RSNode::ResetExtendModifierDirty()
 void RSNode::SetIsCustomTextType(bool isCustomTextType)
 {
     isCustomTextType_ = isCustomTextType;
+}
+
+bool RSNode::GetIsCustomTextType()
+{
+    return isCustomTextType_;
 }
 
 void RSNode::SetDrawRegion(std::shared_ptr<RectF> rect)

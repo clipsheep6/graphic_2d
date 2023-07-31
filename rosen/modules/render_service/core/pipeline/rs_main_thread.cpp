@@ -30,7 +30,6 @@
 #include "include/gpu/GrGpuResource.h"
 #endif
 #include "rs_trace.h"
-#include "sandbox_utils.h"
 
 #include "animation/rs_animation_fraction.h"
 #include "command/rs_message_processor.h"
@@ -75,10 +74,6 @@
 
 #include "render_frame_trace.h"
 
-#ifdef RES_SCHED_ENABLE
-#include "res_sched_client.h"
-#endif
-
 #if defined(ACCESSIBILITY_ENABLE)
 #include "accessibility_config.h"
 #endif
@@ -96,6 +91,7 @@
 #endif
 
 #include "scene_board_judgement.h"
+#include "vsync_iconnection_token.h"
 
 using namespace FRAME_TRACE;
 static const std::string RS_INTERVAL_NAME = "renderservice";
@@ -111,6 +107,7 @@ constexpr uint32_t REQUEST_VSYNC_NUMBER_LIMIT = 10;
 constexpr uint64_t REFRESH_PERIOD = 16666667;
 constexpr int32_t PERF_MULTI_WINDOW_REQUESTED_CODE = 10026;
 constexpr int32_t FLUSH_SYNC_TRANSACTION_TIMEOUT = 100;
+constexpr uint64_t PERF_PERIOD = 250000000;
 constexpr uint64_t CLEAN_CACHE_FREQ = 60;
 constexpr uint64_t SKIP_COMMAND_FREQ_LIMIT = 30;
 constexpr uint64_t PERF_PERIOD_BLUR = 80000000;
@@ -120,15 +117,6 @@ constexpr uint32_t MULTI_WINDOW_PERF_START_NUM = 2;
 constexpr uint32_t MULTI_WINDOW_PERF_END_NUM = 4;
 constexpr uint32_t WAIT_FOR_RELEASED_BUFFER_TIMEOUT = 3000;
 constexpr const char* WALLPAPER_VIEW = "WallpaperView";
-#ifdef RES_SCHED_ENABLE
-constexpr uint64_t PERF_PERIOD                  = 250000000;
-constexpr uint32_t RES_TYPE_CLICK_ANIMATION     = 35;
-constexpr uint32_t RES_TYPE_CONTINUE_ANIMATION  = 36;
-constexpr int32_t CLICK_ANIMATION_START         = 0;
-constexpr int32_t CLICK_ANIMATION_COMPLETE      = 4;
-constexpr int32_t ANIMATION_START               = 0;
-constexpr int32_t ANIMATION_COMPLETE            = 1;
-#endif
 #ifdef RS_ENABLE_GL
 constexpr size_t DEFAULT_SKIA_CACHE_SIZE        = 96 * (1 << 20);
 constexpr int DEFAULT_SKIA_CACHE_COUNT          = 2 * (1 << 12);
@@ -197,8 +185,10 @@ public:
         } else {
             RSBaseRenderEngine::SetHighContrast(value.highContrastText);
         }
-        RSMainThread::Instance()->PostTask(
-            []() { RSMainThread::Instance()->SetAccessibilityConfigChanged(); });
+        RSMainThread::Instance()->PostTask([]() {
+            RSMainThread::Instance()->SetAccessibilityConfigChanged();
+            RSMainThread::Instance()->RequestNextVSync();
+        });
     }
 };
 #endif
@@ -251,7 +241,6 @@ void RSMainThread::Init()
 #ifdef RS_ENABLE_RECORDING
     RSRecordingThread::Instance().Start();
 #endif
-    GetProcessInfo();
     isUniRender_ = RSUniRenderJudgement::IsUniRender();
     SetDeviceType();
     RsFrameReport::GetInstance().Init();
@@ -275,9 +264,10 @@ void RSMainThread::Init()
         RS_LOGW("Add watchdog thread failed");
     }
     InitRSEventDetector();
-    sptr<VSyncConnection> conn = new VSyncConnection(rsVSyncDistributor_, "rs");
+    sptr<VSyncIConnectionToken> token = new IRemoteStub<VSyncIConnectionToken>();
+    sptr<VSyncConnection> conn = new VSyncConnection(rsVSyncDistributor_, "rs", token->AsObject());
     rsVSyncDistributor_->AddConnection(conn);
-    receiver_ = std::make_shared<VSyncReceiver>(conn, handler_);
+    receiver_ = std::make_shared<VSyncReceiver>(conn, token->AsObject(), handler_);
     receiver_->Init();
     if (isUniRender_) {
         uniRenderEngine_ = std::make_shared<RSUniRenderEngine>();
@@ -398,12 +388,6 @@ void RSMainThread::SetRSEventDetectorLoopFinishTag()
                 -1, -1, defaultFocusAppInfo, defaultFocusAppInfo);
         }
     }
-}
-
-void RSMainThread::GetProcessInfo()
-{
-    payload_["uid"] = std::to_string(getuid());
-    payload_["pid"] = std::to_string(GetRealPid());
 }
 
 void RSMainThread::SetFocusAppInfo(
@@ -536,9 +520,7 @@ bool RSMainThread::IsNeedSkip(NodeId rootSurfaceNodeId, pid_t pid)
 
 void RSMainThread::SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransactionData>>& transactionVec, pid_t pid)
 {
-    RS_TRACE_FUNC();
-    if (RSSystemProperties::GetCacheCmdEnabled() &&
-        cacheCmdSkippedInfo_.find(pid) != cacheCmdSkippedInfo_.end()) {
+    if (cacheCmdSkippedInfo_.find(pid) == cacheCmdSkippedInfo_.end()) {
         return;
     }
     std::vector<std::unique_ptr<RSTransactionData>> skipTransactionVec;
@@ -595,10 +577,10 @@ void RSMainThread::CheckAndUpdateTransactionIndex(std::shared_ptr<TransactionDat
             if ((*iter) == nullptr) {
                 continue;
             }
-            auto curIndex = (*iter)->GetIndex();
             if ((*iter)->GetIsCached()) {
                 continue;
             }
+            auto curIndex = (*iter)->GetIndex();
             if (curIndex == lastIndex + 1) {
                 if ((*iter)->GetTimestamp() >= timestamp_) {
                     break;
@@ -642,7 +624,9 @@ void RSMainThread::ProcessCommandForUniRender()
         for (auto& rsTransactionElem: effectiveTransactionDataIndexMap_) {
             auto pid = rsTransactionElem.first;
             auto& transactionVec = rsTransactionElem.second.second;
-            SkipCommandByNodeId(transactionVec, pid);
+            if (RSSystemProperties::GetUIFirstEnabled() && RSSystemProperties::GetCacheCmdEnabled()) {
+                SkipCommandByNodeId(transactionVec, pid);
+            }
             std::sort(transactionVec.begin(), transactionVec.end(), Compare);
         }
         if (RSSystemProperties::GetUIFirstEnabled() && RSSystemProperties::GetCacheCmdEnabled()) {
@@ -1435,31 +1419,6 @@ void RSMainThread::OnVsync(uint64_t timestamp, void* data)
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }
 
-void RSMainThread::ResSchedDataStartReport(bool needRequestNextVsync)
-{
-#ifdef RES_SCHED_ENABLE
-    RS_TRACE_FUNC();
-    if (needRequestNextVsync && requestResschedReport_) {
-        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE_CLICK_ANIMATION,
-            CLICK_ANIMATION_START, payload_);
-        RS_LOGD("Animate :: animation start event to soc perf.");
-        requestResschedReport_ = false;
-    }
-#endif
-}
-
-void RSMainThread::ResSchedDataCompleteReport(bool needRequestNextVsync)
-{
-#ifdef RES_SCHED_ENABLE
-    RS_TRACE_FUNC();
-    if (!requestResschedReport_ && !needRequestNextVsync) {
-        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE_CLICK_ANIMATION,
-            CLICK_ANIMATION_COMPLETE, payload_);
-        requestResschedReport_ = true;
-    }
-#endif
-}
-
 void RSMainThread::Animate(uint64_t timestamp)
 {
     RS_TRACE_FUNC();
@@ -1504,7 +1463,6 @@ void RSMainThread::Animate(uint64_t timestamp)
         }
         return !hasRunningAnimation;
     });
-    ResSchedDataStartReport(needRequestNextVsync);
     if (!doWindowAnimate_ && curWinAnim && RSInnovation::UpdateQosVsyncEnabled()) {
         RSQosThread::ResetQosPid();
     }
@@ -1515,7 +1473,6 @@ void RSMainThread::Animate(uint64_t timestamp)
     if (needRequestNextVsync) {
         RequestNextVSync();
     }
-    ResSchedDataCompleteReport(needRequestNextVsync);
     PerfAfterAnim(needRequestNextVsync);
 }
 
@@ -1981,20 +1938,13 @@ void RSMainThread::PerfAfterAnim(bool needRequestNextVsync)
     if (!isUniRender_) {
         return;
     }
-#ifdef RES_SCHED_ENABLE
-    RS_TRACE_FUNC();
     if (needRequestNextVsync && timestamp_ - prePerfTimestamp_ > PERF_PERIOD) {
         RS_LOGD("RSMainThread:: soc perf to render_service_animation");
-        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE_CONTINUE_ANIMATION,
-            ANIMATION_START, payload_);
         prePerfTimestamp_ = timestamp_;
     } else if (!needRequestNextVsync && prePerfTimestamp_) {
         RS_LOGD("RSMainThread:: soc perf off render_service_animation");
-        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(RES_TYPE_CONTINUE_ANIMATION,
-            ANIMATION_COMPLETE, payload_);
         prePerfTimestamp_ = 0;
     }
-#endif
 }
 
 void RSMainThread::ForceRefreshForUni()
@@ -2078,16 +2028,17 @@ void RSMainThread::SetAppWindowNum(uint32_t num)
 
 void RSMainThread::AddActiveNodeId(pid_t pid, NodeId id)
 {
-    auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(id);
-    if (node == nullptr) {
-        RS_LOGE("AddActiveNodeId: node is nullptr");
-        return;
-    }
     if (id == 0) {
-        activeAppsInProcess_[pid].emplace(id);
+        activeAppsInProcess_[pid].emplace(INVALID_NODEID);
     } else {
-        activeAppsInProcess_[pid].emplace(node->GetRootSurfaceNodeId());
-        activeProcessNodeIds_[node->GetRootSurfaceNodeId()].emplace(id);
+        auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(id);
+        auto rootNodeId = INVALID_NODEID;
+        // if node is just set on tree, it cannot be found yet
+        if (node != nullptr) {
+            rootNodeId = node->GetRootSurfaceNodeId();
+        }
+        activeAppsInProcess_[pid].emplace(rootNodeId);
+        activeProcessNodeIds_[rootNodeId].emplace(id);
     }
 }
 

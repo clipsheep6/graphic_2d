@@ -201,13 +201,15 @@ sptr<Surface> RSRenderServiceConnectionProxy::CreateNodeAndSurface(const RSSurfa
     return surface;
 }
 
-sptr<IVSyncConnection> RSRenderServiceConnectionProxy::CreateVSyncConnection(const std::string& name)
+sptr<IVSyncConnection> RSRenderServiceConnectionProxy::CreateVSyncConnection(const std::string& name,
+                                                                             const sptr<VSyncIConnectionToken>& token)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
 
     data.WriteString(name);
+    data.WriteRemoteObject(token->AsObject());
     option.SetFlags(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::CREATE_VSYNC_CONNECTION);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
@@ -876,6 +878,32 @@ void RSRenderServiceConnectionProxy::SetScreenBacklight(ScreenId id, uint32_t le
     }
 }
 
+void RSRenderServiceConnectionProxy::RegisterBufferClearListener(
+    NodeId id, sptr<RSIBufferClearCallback> callback)
+{
+    if (callback == nullptr) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::RegisterBufferClearListener: callback is nullptr.");
+        return;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return;
+    }
+    ROSEN_LOGE("ccc: proxy");
+    option.SetFlags(MessageOption::TF_SYNC);
+    data.WriteUint64(id);
+    data.WriteRemoteObject(callback->AsObject());
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_BUFFER_CLEAR_LISTENER);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::RegisterBufferClearListener: Send Request err.");
+    }
+}
+
 void RSRenderServiceConnectionProxy::RegisterBufferAvailableListener(
     NodeId id, sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread)
 {
@@ -1301,6 +1329,28 @@ bool RSRenderServiceConnectionProxy::GetAnimDynamicCfgCallback(sptr<RSIAnimDynam
     }
     int32_t result = reply.ReadInt32();
     return result;
+}
+
+void RSRenderServiceConnectionProxy::SetHardwareEnabled(NodeId id, bool isEnabled)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return;
+    }
+    if (!data.WriteUint64(id)) {
+        return;
+    }
+    if (!data.WriteBool(isEnabled)) {
+        return;
+    }
+    option.SetFlags(MessageOption::TF_ASYNC);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_HARDWARE_ENABLED);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::SetHardwareEnabled: Send Request err.");
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

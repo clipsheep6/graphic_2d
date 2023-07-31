@@ -66,10 +66,11 @@ namespace Rosen {
 namespace {
 constexpr uint32_t PHONE_MAX_APP_WINDOW_NUM = 1;
 constexpr uint32_t CACHE_MAX_UPDATE_TIME = 5;
+constexpr uint32_t CACHE_RENDER_NODE_MAP_COUNT = 2;
 static const std::string CAPTURE_WINDOW_NAME = "CapsuleWindow";
 static std::map<NodeId, uint32_t> cacheRenderNodeMap = {};
 static uint32_t cacheReuseTimes = 0;
-static std::mutex generateNodeContentCacheMutex;
+static std::mutex cacheRenderNodeMapMutex;
 static std::unordered_map<NodeId, std::pair<RSUniRenderVisitor::RenderParam,
     std::unordered_map<NodeId, RSUniRenderVisitor::RenderParam>>> groupedTransitionNodes = {};
 
@@ -297,7 +298,13 @@ void RSUniRenderVisitor::SetNodeCacheChangeStatus(RSBaseRenderNode& node, int ma
     }
     // Attention: currently not support filter. Only enable lowest marked cached node
     // [planning] check if outofparent causes edge problem
-    if ((cacheRenderNodeMap.find(node.GetId()) == cacheRenderNodeMap.end() || isDrawingCacheChanged_) &&
+    
+    uint32_t cacheRenderNodeMapCnt = CACHE_RENDER_NODE_MAP_COUNT;
+    {
+        std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+        cacheRenderNodeMapCnt = cacheRenderNodeMap.count(node.GetId());
+    }
+    if ((cacheRenderNodeMapCnt == 0 || isDrawingCacheChanged_) &&
         (targetNode->ChildHasFilter() || (markedCachedNodeCnt != markedCachedNodes_))) {
         targetNode->SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
     }
@@ -762,8 +769,8 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     node.CleanDstRectChanged();
     node.ApplyModifiers();
+    curContentDirty_ = node.IsContentDirty();
     bool dirtyFlag = dirtyFlag_;
-    
 
     RectI prepareClipRect = prepareClipRect_;
     bool isQuickSkipPreparationEnabled = isQuickSkipPreparationEnabled_;
@@ -929,6 +936,10 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         bool isScale = (matrix.Get(Drawing::Matrix::SCALE_X) > 0 && matrix.Get(Drawing::Matrix::SCALE_X) != 1.0f)
             || (matrix.Get(Drawing::Matrix::SCALE_Y) > 0 && matrix.Get(Drawing::Matrix::SCALE_Y) != 1.0f);
 #endif
+        if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
+            isScale = isScale && matrix.getSkewX() < std::numeric_limits<float>::epsilon() &&
+                matrix.getSkewX() < std::numeric_limits<float>::epsilon();
+        }
         node.SetIsScale(isScale);
     }
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
@@ -1930,9 +1941,10 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                     region.op(SkIRect::MakeXYWH(r.left_, disH - r.GetBottom(), r.width_, r.height_),
                         SkRegion::kUnion_Op);
 #else
-                    region.Op(Drawing::Rect(r.left_, disH - r.GetBottom(),
-                        r.left_ + r.width_, disH - r.GetBottom() + r.height_),
-                        Drawing::Region::RegionOp::UNION);
+                    Drawing::Region tmpRegion;
+                    tmpRegion.SetRect(Drawing::RectI(r.left_, disH - r.GetBottom(),
+                        r.left_ + r.width_, disH - r.GetBottom() + r.height_));
+                    region.Op(tmpRegion, Drawing::RegionOp::UNION);
 #endif
                     RS_LOGD("SetDamageRegion %s", r.ToString().c_str());
                 }
@@ -1943,6 +1955,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             }
         }
         if (isOpDropped_ && !isDirtyRegionAlignedEnable_) {
+#ifndef USE_ROSEN_DRAWING
             if (region.isEmpty()) {
                 // [planning] Remove this after frame buffer can cancel
                 canvas_->clipRect(SkRect::MakeEmpty());
@@ -1955,6 +1968,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 region.getBoundaryPath(&dirtyPath);
                 canvas_->clipPath(dirtyPath, true);
             }
+#else
+            RS_LOGD("[%s:%d] Drawing is not supported, canvas clipRegion", __func__, __LINE__);
+#endif
         }
 #endif
         RSPropertiesPainter::SetBgAntiAlias(true);
@@ -1997,20 +2013,17 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 canvas_->SetCacheType(geoPtr->IsNeedClientCompose() ? RSPaintFilterCanvas::CacheType::ENABLED
                     : RSPaintFilterCanvas::CacheType::DISABLED);
             }
-            if (clipPath) {
-                canvas_->SetCacheType(RSPaintFilterCanvas::CacheType::ENABLED);
-            }
 
-            bool cacheEnabled = canvas_->GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED;
-            if (cacheEnabled) {
+            bool needOffscreen = clipPath || canvas_->GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED;
+            if (needOffscreen) {
                 ClearTransparentBeforeSaveLayer(); // clear transparent before concat display node's matrix
             }
             if (geoPtr != nullptr) {
                 canvas_->ConcatMatrix(geoPtr->GetMatrix());
-                displayNodeMatrix_ = canvas_->GetTotalMatrix();
             }
-            if (cacheEnabled) {
+            if (needOffscreen) {
                 // we are doing rotation animation, try offscreen render if capable
+                displayNodeMatrix_ = canvas_->GetTotalMatrix();
                 PrepareOffscreenRender(node);
                 ProcessChildren(node);
                 FinishOffscreenRender();
@@ -2096,8 +2109,10 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         }
 #endif
         RSBackgroundThread::Instance().PostTask([]() {
+#ifndef USE_ROSEN_DRAWING
             RS_TRACE_NAME("RSUniRender:OpItemTasks ProcessTask");
             OpItemTasks::Instance().ProcessTask();
+#endif
         });
         RS_TRACE_BEGIN("RSUniRender:FlushFrame");
         renderFrame_->Flush();
@@ -2977,8 +2992,13 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (isOpDropped_ && node.IsAppWindow()) {
         const auto& visibleRegions = node.GetVisibleRegion().GetRegionRects();
         if (visibleRegions.size() == 1) {
+#ifndef USE_ROSEN_DRAWING
             canvas_->SetVisibleRect(SkRect::MakeLTRB(
                 visibleRegions[0].left_, visibleRegions[0].top_, visibleRegions[0].right_, visibleRegions[0].bottom_));
+#else
+            canvas_->SetVisibleRect(Drawing::Rect(
+                visibleRegions[0].left_, visibleRegions[0].top_, visibleRegions[0].right_, visibleRegions[0].bottom_));
+#endif
         }
     }
 #endif
@@ -3056,6 +3076,9 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (property.IsSpherizeValid()) {
         DrawSpherize(node);
     } else {
+        if (isSelfDrawingSurface) {
+            RSUniRenderUtil::FloorTransXYInCanvasMatrix(*canvas_);
+        }
         if (isUIFirst_ && node.GetCacheType() == CacheType::ANIMATE_PROPERTY) {
             RSUniRenderUtil::HandleSubThreadNode(node, *canvas_);
             if (node.IsMainWindowType() || node.IsLeashWindow()) {
@@ -3267,7 +3290,7 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 
 bool RSUniRenderVisitor::GenerateNodeContentCache(RSRenderNode& node)
 {
-    std::lock_guard<std::mutex> lock(generateNodeContentCacheMutex);
+    std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
     // Node cannot have cache.
     if (node.GetDrawingCacheType() == RSDrawingCacheType::DISABLED_CACHE) {
         if (cacheRenderNodeMap.count(node.GetId()) > 0) {
@@ -3294,7 +3317,12 @@ bool RSUniRenderVisitor::InitNodeCache(RSRenderNode& node)
 {
     if (node.GetDrawingCacheType() == RSDrawingCacheType::FORCED_CACHE ||
         node.GetDrawingCacheType() == RSDrawingCacheType::TARGETED_CACHE) {
-        if (cacheRenderNodeMap.count(node.GetId()) == 0) {
+        uint32_t cacheRenderNodeMapCnt = CACHE_RENDER_NODE_MAP_COUNT;
+        {
+            std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+            cacheRenderNodeMapCnt = cacheRenderNodeMap.count(node.GetId());
+        }
+        if (cacheRenderNodeMapCnt == 0) {
 #ifndef USE_ROSEN_DRAWING
             RenderParam val { node.ReinterpretCastTo<RSRenderNode>(), canvas_->GetAlpha(), canvas_->getTotalMatrix() };
 #else
@@ -3306,7 +3334,7 @@ bool RSUniRenderVisitor::InitNodeCache(RSRenderNode& node)
             RSUniRenderUtil::ClearCacheSurface(node, threadIndex_, false);
             if (UpdateCacheSurface(node)) {
                 node.UpdateCompletedCacheSurface();
-                cacheRenderNodeMap[node.GetId()] = 0;
+                ChangeCacheRenderNodeMap(node);
                 cacheReuseTimes = 0;
             }
             curGroupedNodes_.pop();
@@ -3314,6 +3342,11 @@ bool RSUniRenderVisitor::InitNodeCache(RSRenderNode& node)
         }
     }
     return false;
+}
+
+void RSUniRenderVisitor::ChangeCacheRenderNodeMap(RSRenderNode& node, const uint32_t count) {
+    std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+    cacheRenderNodeMap[node.GetId()] = count;
 }
 
 void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
@@ -3333,11 +3366,14 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
 #endif
             curGroupedNodes_.push(val);
             groupedTransitionNodes[node.GetId()] = { val, {} };
-            updateTimes = cacheRenderNodeMap[node.GetId()] + 1;
+            {
+                std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+                updateTimes = cacheRenderNodeMap[node.GetId()] + 1;
+            }
             node.SetCacheType(CacheType::CONTENT);
             if (UpdateCacheSurface(node)) {
                 node.UpdateCompletedCacheSurface();
-                cacheRenderNodeMap[node.GetId()] = updateTimes;
+                ChangeCacheRenderNodeMap(node, updateTimes);
                 cacheReuseTimes = 0;
             }
             curGroupedNodes_.pop();
@@ -3348,11 +3384,14 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
         // If the number of consecutive refreshes exceeds CACHE_MAX_UPDATE_TIME times, the cache is cleaned,
         // otherwise the cache is updated.
         if (node.GetDrawingCacheChanged()) {
-            updateTimes = cacheRenderNodeMap[node.GetId()] + 1;
+            {
+                std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+                updateTimes = cacheRenderNodeMap[node.GetId()] + 1;
+            }
             if (updateTimes >= CACHE_MAX_UPDATE_TIME) {
                 node.SetCacheType(CacheType::NONE);
                 RSUniRenderUtil::ClearCacheSurface(node, threadIndex_, false);
-                cacheRenderNodeMap[node.GetId()] = updateTimes;
+                ChangeCacheRenderNodeMap(node, updateTimes);
                 cacheReuseTimes = 0;
                 return;
             }
@@ -3366,14 +3405,14 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
             node.SetCacheType(CacheType::CONTENT);
             UpdateCacheSurface(node);
             node.UpdateCompletedCacheSurface();
-            cacheRenderNodeMap[node.GetId()] = updateTimes;
+            ChangeCacheRenderNodeMap(node, updateTimes);
             cacheReuseTimes = 0;
             curGroupedNodes_.pop();
             return;
         }
     }
     // The cache is not refreshed continuously.
-    cacheRenderNodeMap[node.GetId()] = 0;
+    ChangeCacheRenderNodeMap(node);
     cacheReuseTimes++;
     RS_TRACE_NAME("RSUniRenderVisitor::UpdateCacheRenderNodeMap ,NodeId: " + std::to_string(node.GetId()) +
         " ,CacheRenderNodeMapCnt: " + std::to_string(cacheReuseTimes));
@@ -3392,7 +3431,7 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         // Otherwise, its childrenRect_ should be considered.
         RectI dirtyRect = node.HasChildrenOutOfRect() ?
             node.GetOldDirtyInSurface().JoinRect(node.GetChildrenRect()) : node.GetOldDirtyInSurface();
-        if (isSubNodeOfSurfaceInProcess_ && !node.IsAncestorDirty() &&
+        if (isSubNodeOfSurfaceInProcess_ && !dirtyRect.IsEmpty() && !node.IsAncestorDirty() &&
             !curSurfaceNode_->SubNodeNeedDraw(dirtyRect, partialRenderType_)) {
             auto parent = node.GetParent().lock();
             bool isParentLeashWindow = parent && parent->ReinterpretCastTo<RSSurfaceRenderNode>() &&
@@ -3419,11 +3458,22 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
 #endif
     // in case preparation'update is skipped
     node.GetMutableRenderProperties().CheckEmptyBounds();
+#ifndef USE_ROSEN_DRAWING
     canvas_->save();
+#else
+    canvas_->Save();
+#endif
+    if (node.GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
+        RSUniRenderUtil::FloorTransXYInCanvasMatrix(*canvas_);
+    }
     // draw self and children in sandbox which will not be affected by parent's transition
     const auto& sandboxMatrix = node.GetRenderProperties().GetSandBoxMatrix();
     if (sandboxMatrix) {
+#ifndef USE_ROSEN_DRAWING
         canvas_->setMatrix(*sandboxMatrix);
+#else
+        canvas_->SetMatrix(*sandboxMatrix);
+#endif
     }
     const auto& property = node.GetRenderProperties();
     if (property.IsSpherizeValid()) {
@@ -3444,7 +3494,11 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     }
     CheckAndSetNodeCacheType(node);
     DrawChildRenderNode(node);
+#ifndef USE_ROSEN_DRAWING
     canvas_->restore();
+#else
+    canvas_->Restore();
+#endif
 }
 
 void RSUniRenderVisitor::ProcessEffectRenderNode(RSEffectRenderNode& node)

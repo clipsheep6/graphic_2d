@@ -267,16 +267,29 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRend
     node.ProcessRenderBeforeChildren(*canvas_);
     if (node.GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
         auto canvasDrawingNode = node.ReinterpretCastTo<RSCanvasDrawingRenderNode>();
+#ifndef USE_ROSEN_DRAWING
+        auto clearFunc = [id = UNI_MAIN_THREAD_INDEX](sk_sp<SkSurface> surface) {
+#else
+        auto clearFunc = [id = UNI_MAIN_THREAD_INDEX](std::shared_ptr<Drawing::Surface> surface) {
+#endif
+            RSUniRenderUtil::ClearNodeCacheSurface(surface, nullptr, id);
+        };
+        canvasDrawingNode->SetSurfaceClearFunc({ UNI_MAIN_THREAD_INDEX, clearFunc });
         canvasDrawingNode->ProcessRenderContents(*canvas_);
 #ifndef USE_ROSEN_DRAWING
         SkBitmap bitmap;
         canvasDrawingNode->GetBitmap(bitmap);
+#ifndef NEW_SKIA
+        canvas_->drawBitmap(
+            bitmap, node.GetRenderProperties().GetBoundsPositionX(), node.GetRenderProperties().GetBoundsPositionY());
+#else
         canvas_->drawImage(bitmap.asImage(), node.GetRenderProperties().GetBoundsPositionX(),
             node.GetRenderProperties().GetBoundsPositionY());
+#endif
 #else
         Drawing::Bitmap bitmap;
         canvasDrawingNode->GetBitmap(bitmap);
-        canvas_->drawImage(bitmap, node.GetRenderProperties().GetBoundsPositionX(),
+        canvas_->DrawBitmap(bitmap, node.GetRenderProperties().GetBoundsPositionX(),
             node.GetRenderProperties().GetBoundsPositionY());
 #endif
     } else {

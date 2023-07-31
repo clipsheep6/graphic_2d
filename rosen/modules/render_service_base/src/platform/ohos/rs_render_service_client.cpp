@@ -27,6 +27,7 @@
 #include "ipc_callbacks/screen_change_callback_stub.h"
 #include "ipc_callbacks/surface_capture_callback_stub.h"
 #include "ipc_callbacks/buffer_available_callback_stub.h"
+#include "ipc_callbacks/buffer_clear_callback_stub.h"
 #include "ipc_callbacks/rs_occlusion_change_callback_stub.h"
 #include "platform/common/rs_log.h"
 #ifdef NEW_RENDER_CONTEXT
@@ -34,6 +35,7 @@
 #endif
 #include "rs_render_service_connect_hub.h"
 #include "rs_surface_ohos.h"
+#include "vsync_iconnection_token.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -144,8 +146,9 @@ std::shared_ptr<VSyncReceiver> RSRenderServiceClient::CreateVSyncReceiver(
     if (renderService == nullptr) {
         return nullptr;
     }
-    sptr<IVSyncConnection> conn = renderService->CreateVSyncConnection(name);
-    return std::make_shared<VSyncReceiver>(conn, looper, name);
+    sptr<VSyncIConnectionToken> token = new IRemoteStub<VSyncIConnectionToken>();
+    sptr<IVSyncConnection> conn = renderService->CreateVSyncConnection(name, token);
+    return std::make_shared<VSyncReceiver>(conn, token->AsObject(), looper, name);
 }
 
 void RSRenderServiceClient::TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap)
@@ -496,6 +499,23 @@ private:
     BufferAvailableCallback cb_;
 };
 
+class CustomBufferClearCallback : public RSBufferClearCallbackStub
+{
+public:
+    explicit CustomBufferClearCallback(const BufferClearCallback &callback) : cb_(callback) {}
+    ~CustomBufferClearCallback() override {};
+
+    void OnBufferClear() override
+    {
+        if (cb_ != nullptr) {
+            cb_();
+        }
+    }
+
+private:
+    BufferClearCallback cb_;
+};
+
 bool RSRenderServiceClient::RegisterBufferAvailableListener(
     NodeId id, const BufferAvailableCallback &callback, bool isFromRenderThread)
 {
@@ -524,6 +544,19 @@ bool RSRenderServiceClient::RegisterBufferAvailableListener(
     }
     return true;
 }
+
+bool RSRenderServiceClient::RegisterBufferClearListener(
+        NodeId id, const BufferClearCallback& callback)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return false;
+    }
+    sptr<RSIBufferClearCallback> bufferClearCb = new CustomBufferClearCallback(callback);
+    renderService->RegisterBufferClearListener(id, bufferClearCb);
+    return true;
+}
+
 
 bool RSRenderServiceClient::UnregisterBufferAvailableListener(NodeId id)
 {
@@ -746,6 +779,14 @@ bool RSRenderServiceClient::GetAnimDynamicCfgCallback(const AnimDynamicCfgCallba
 
     AnimDynamicCfgCb_ = new CustomAnimDynamicCfgCallback(callback);
     return renderService->GetAnimDynamicCfgCallback(AnimDynamicCfgCb_);
+}
+
+void RSRenderServiceClient::SetHardwareEnabled(NodeId id, bool isEnabled)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService != nullptr) {
+        renderService->SetHardwareEnabled(id, isEnabled);
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

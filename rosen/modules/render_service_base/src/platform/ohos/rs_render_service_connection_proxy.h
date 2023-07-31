@@ -39,7 +39,8 @@ public:
     bool CreateNode(const RSSurfaceRenderNodeConfig& config) override;
     sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) override;
 
-    virtual sptr<IVSyncConnection> CreateVSyncConnection(const std::string& name) override;
+    virtual sptr<IVSyncConnection> CreateVSyncConnection(const std::string& name,
+                                                         const sptr<VSyncIConnectionToken>& token) override;
 
     int32_t SetFocusAppInfo(
         int32_t pid, int32_t uid, const std::string &bundleName, const std::string &abilityName,
@@ -101,6 +102,9 @@ public:
     void RegisterBufferAvailableListener(
         NodeId id, sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread) override;
 
+    void RegisterBufferClearListener(
+        NodeId id, sptr<RSIBufferClearCallback> callback) override;
+
     int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode) override;
 
     int32_t GetScreenSupportedMetaDataKeys(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys) override;
@@ -140,6 +144,8 @@ public:
     void ReportEventJankFrame(DataBaseRs info) override;
 
     bool GetAnimDynamicCfgCallback(sptr<RSIAnimDynamicCfgCallback> callback) override;
+
+    void SetHardwareEnabled(NodeId id, bool isEnabled) override;
 
 private:
     bool FillParcelWithTransactionData(

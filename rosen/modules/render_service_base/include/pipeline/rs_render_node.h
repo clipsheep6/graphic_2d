@@ -39,6 +39,7 @@
 #include "include/gpu/GrBackendSurface.h"
 #else
 #include "draw/surface.h"
+#include "image/gpu_context.h"
 #endif
 
 #ifndef USE_ROSEN_DRAWING
@@ -708,6 +709,7 @@ private:
     sk_sp<SkSurface> cacheSurface_ = nullptr;
     sk_sp<SkSurface> cacheCompletedSurface_ = nullptr;
 #else
+    std::shared_ptr<Drawing::Bitmap> cacheBitmap_ = nullptr;
     std::shared_ptr<Drawing::Surface> cacheSurface_ = nullptr;
     std::shared_ptr<Drawing::Surface> cacheCompletedSurface_ = nullptr;
 #endif

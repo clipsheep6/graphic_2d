@@ -55,7 +55,9 @@ std::unordered_map<MATERIAL_BLUR_STYLE, MaterialParam> materialParams_ {
 };
 } // namespace
 
+#ifndef USE_ROSEN_DRAWING
 std::shared_ptr<KawaseBlurFilter> RSMaterialFilter::kawaseFunc_ = std::make_shared<KawaseBlurFilter>();
+#endif
 
 RSMaterialFilter::RSMaterialFilter(int style, float dipScale, BLUR_COLOR_MODE mode, float ratio)
 #ifndef USE_ROSEN_DRAWING
@@ -345,5 +347,11 @@ void RSMaterialFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_
     canvas.DetachBrush();
 #endif
 }
+
+bool RSMaterialFilter::CanSkipFrame() const
+{
+    constexpr float HEAVY_BLUR_THRESHOLD = 25.0f;
+    return radius_ > HEAVY_BLUR_THRESHOLD;
+};
 } // namespace Rosen
 } // namespace OHOS

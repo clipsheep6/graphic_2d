@@ -31,6 +31,7 @@
 #include "common/rs_obj_abs_geometry.h"
 #include "memory/rs_tag_tracker.h"
 #include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_canvas_drawing_render_node.h"
 #include "pipeline/rs_cold_start_thread.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_divided_render_util.h"
@@ -313,7 +314,6 @@ bool RSSurfaceCaptureTask::CopyDataToPixelMap(sk_sp<SkImage> img, const std::uni
 #endif
     return true;
 }
-
 #else
 std::shared_ptr<Drawing::Surface> RSSurfaceCaptureTask::CreateSurface(const std::unique_ptr<Media::PixelMap>& pixelmap)
 {
@@ -338,7 +338,7 @@ std::shared_ptr<Drawing::Surface> RSSurfaceCaptureTask::CreateSurface(const std:
         RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderContext is nullptr");
         return nullptr;
     }
-    renderContext->SetUpGrContext();
+    renderContext->SetUpGpuContext();
 #endif
     Drawing::Bitmap bitmap;
     bitmap.Build(pixelmap->GetWidth(), pixelmap->GetHeight(), format);
@@ -790,7 +790,7 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
     const auto& property = node.GetRenderProperties();
     auto geoPtr = (property.GetBoundsGeometry());
     if (geoPtr) {
-        canvas_->setMatrix(geoPtr->GetAbsMatrix());
+        canvas_->SetMatrix(geoPtr->GetAbsMatrix());
     }
 
     if (isSelfDrawingSurface) {
@@ -889,6 +889,16 @@ void RSSurfaceCaptureVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     if (!canvas_) {
         RS_LOGE("RSSurfaceCaptureVisitor::ProcessCanvasRenderNode, canvas is nullptr");
         return;
+    }
+    if (auto drawingNode = node.ReinterpretCastTo<RSCanvasDrawingRenderNode>()) {
+#ifndef USE_ROSEN_DRAWING
+        auto clearFunc = [id = UNI_MAIN_THREAD_INDEX](sk_sp<SkSurface> surface) {
+#else
+        auto clearFunc = [id = UNI_MAIN_THREAD_INDEX](std::shared_ptr<Drawing::Surface> surface) {
+#endif
+            RSUniRenderUtil::ClearNodeCacheSurface(surface, nullptr, id);
+        };
+        drawingNode->SetSurfaceClearFunc({ UNI_MAIN_THREAD_INDEX, clearFunc });
     }
     node.GetMutableRenderProperties().CheckEmptyBounds();
     node.ProcessRenderBeforeChildren(*canvas_);
@@ -1052,7 +1062,7 @@ void RSSurfaceCaptureVisitor::DrawWatermarkIfNeed(float screenWidth, float scree
         auto skDstRect = SkRect::MakeWH(screenWidth, screenHeight);
 #ifdef NEW_SKIA
         canvas_->drawImageRect(
-            skImage, skSrcRect, skDstRect, SkSamplingOptions(), 
+            skImage, skSrcRect, skDstRect, SkSamplingOptions(),
             &rectPaint, SkCanvas::kStrict_SrcRectConstraint);
 #else
         canvas_->drawImageRect(skImage, skSrcRect, skDstRect, &rectPaint);

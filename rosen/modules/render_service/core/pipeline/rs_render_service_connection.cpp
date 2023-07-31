@@ -254,9 +254,10 @@ sptr<Surface> RSRenderServiceConnection::CreateNodeAndSurface(const RSSurfaceRen
 }
 
 
-sptr<IVSyncConnection> RSRenderServiceConnection::CreateVSyncConnection(const std::string& name)
+sptr<IVSyncConnection> RSRenderServiceConnection::CreateVSyncConnection(const std::string& name,
+                                                                        const sptr<VSyncIConnectionToken>& token)
 {
-    sptr<VSyncConnection> conn = new VSyncConnection(appVSyncDistributor_, name);
+    sptr<VSyncConnection> conn = new VSyncConnection(appVSyncDistributor_, name, token->AsObject());
     appVSyncDistributor_->AddConnection(conn);
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -649,6 +650,21 @@ void RSRenderServiceConnection::SetScreenBacklight(ScreenId id, uint32_t level)
     }
 }
 
+void RSRenderServiceConnection::RegisterBufferClearListener(
+    NodeId id, sptr<RSIBufferClearCallback> callback)
+{
+    auto registerBufferClearListener = [id, callback, this]() -> bool {
+        if (auto node = this->mainThread_->GetContext().GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
+            node->RegisterBufferClearListener(callback);
+            return true;
+        }
+        return false;
+    };
+    if (!registerBufferClearListener()) {
+        mainThread_->PostTask(registerBufferClearListener);
+    }
+}
+
 void RSRenderServiceConnection::RegisterBufferAvailableListener(
     NodeId id, sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread)
 {
@@ -859,6 +875,18 @@ bool RSRenderServiceConnection::GetAnimDynamicCfgCallback(sptr<RSIAnimDynamicCfg
     auto tmp = animDynamicCfgCallback_;
     animDynamicCfgCallback_ = callback;
     return status;
+}
+
+void RSRenderServiceConnection::SetHardwareEnabled(NodeId id, bool isEnabled)
+{
+    auto task = [this, id, isEnabled]() -> void {
+        auto& context = mainThread_->GetContext();
+        auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id);
+        if (node) {
+            node->SetHardwareEnabled(isEnabled);
+        }
+    };
+    mainThread_->PostTask(task);
 }
 } // namespace Rosen
 } // namespace OHOS

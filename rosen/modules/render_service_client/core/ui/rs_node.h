@@ -239,6 +239,8 @@ public:
     void SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter);
     void SetFilter(const std::shared_ptr<RSFilter>& filter);
     void SetLinearGradientBlurPara(const std::shared_ptr<RSLinearGradientBlurPara>& para);
+    void SetDynamicLightUpRate(const float rate);
+    void SetDynamicLightUpDegree(const float lightUpDegree);
     void SetCompositingFilter(const std::shared_ptr<RSFilter>& compositingFilter);
 
     void SetShadowColor(uint32_t colorValue);
@@ -285,6 +287,8 @@ public:
     void RemoveModifier(const std::shared_ptr<RSModifier> modifier);
 
     void SetIsCustomTextType(bool isCustomTextType);
+
+    bool GetIsCustomTextType();
 
     void SetDrawRegion(std::shared_ptr<RectF> rect);
 

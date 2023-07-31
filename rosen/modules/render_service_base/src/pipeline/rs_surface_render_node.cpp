@@ -527,6 +527,22 @@ void RSSurfaceRenderNode::RegisterBufferAvailableListener(
     }
 }
 
+void RSSurfaceRenderNode::RegisterBufferClearListener(
+    sptr<RSIBufferClearCallback> callback)
+{
+    std::lock_guard<std::mutex> lock(mutexClear_);
+    clearBufferCallback_ = callback;
+}
+
+void RSSurfaceRenderNode::SetNotifyRTBufferAvailable(bool isNotifyRTBufferAvailable)
+{
+    isNotifyRTBufferAvailable_ = isNotifyRTBufferAvailable;
+    std::lock_guard<std::mutex> lock(mutexClear_);
+    if (clearBufferCallback_) {
+        clearBufferCallback_->OnBufferClear();
+    }
+}
+
 void RSSurfaceRenderNode::ConnectToNodeInRenderService()
 {
     ROSEN_LOGI("RSSurfaceRenderNode::ConnectToNodeInRenderService nodeId = %" PRIu64, GetId());
@@ -541,6 +557,14 @@ void RSSurfaceRenderNode::ConnectToNodeInRenderService()
                 }
                 node->NotifyRTBufferAvailable();
             }, true);
+        renderServiceClient->RegisterBufferClearListener(
+            GetId(), [weakThis = weak_from_this()]() {
+                auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(weakThis.lock());
+                if (node == nullptr) {
+                    return;
+                }
+                node->SetNotifyRTBufferAvailable(false);
+            });
     }
 }
 
@@ -765,7 +789,7 @@ void RSSurfaceRenderNode::UpdateFilterNodes(const std::shared_ptr<RSRenderNode>&
     if (nodePtr == nullptr) {
         return;
     }
-    filterNodes_.emplace_back(nodePtr);
+    filterNodes_.emplace(nodePtr->GetId(), nodePtr);
 }
 
 void RSSurfaceRenderNode::UpdateFilterCacheStatusIfNodeStatic(const RectI& clipRect)
@@ -775,9 +799,10 @@ void RSSurfaceRenderNode::UpdateFilterCacheStatusIfNodeStatic(const RectI& clipR
     }
 #ifndef USE_ROSEN_DRAWING
     // traversal filter nodes including app window
-    for (auto node : filterNodes_) {
-        if (!node) {
-            continue;
+    EraseIf(filterNodes_, [this](const auto& pair) { 
+        auto& node = pair.second;
+        if (node == nullptr || !node->IsOnTheTree() || !node->GetRenderProperties().NeedFilter()) {
+            return true;
         }
         node->UpdateFilterCacheWithDirty(*dirtyManager_, false);
         node->UpdateFilterCacheWithDirty(*dirtyManager_, true);
@@ -785,7 +810,8 @@ void RSSurfaceRenderNode::UpdateFilterCacheStatusIfNodeStatic(const RectI& clipR
         if (node->IsFilterCacheValid()) {
             dirtyManager_->UpdateCacheableFilterRect(node->GetOldDirtyInSurface());
         }
-    }
+        return false;
+    });
     if (IsTransparent() && dirtyManager_->IfCacheableFilterRectFullyCover(GetOldDirtyInSurface())) {
         SetFilterCacheFullyCovered(true);
         RS_LOGD("UpdateFilterCacheStatusIfNodeStatic surfacenode %" PRIu64 " [%s]", GetId(), GetName().c_str());

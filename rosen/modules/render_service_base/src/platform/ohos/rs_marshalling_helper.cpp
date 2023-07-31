@@ -889,8 +889,12 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSShader
 #else
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSShader>& val)
 {
-    if (!val) {
+    if (!val || !val->GetDrawingShader()) {
         ROSEN_LOGD("unirender: RSMarshallingHelper::Marshalling RSShader is nullptr");
+        return parcel.WriteInt32(-1);
+    }
+    if (val->GetDrawingShader()->GetDrawingType() != Drawing::DrawingType::RECORDING) {
+        ROSEN_LOGD("unirender: RSMarshallingHelper::Marshalling Drawing::ShaderEffect is invalid");
         return parcel.WriteInt32(-1);
     }
     auto recordingShaderEffect = static_cast<Drawing::RecordingShaderEffect*>(val->GetDrawingShader().get());
@@ -927,7 +931,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSShader
         ROSEN_LOGE("unirender: failed RSMarshallingHelper::Unmarshalling RSShader");
         return false;
     }
-    auto shaderEffectCmdList = Drawing::ShaderEffectCmdList::CreateFromData({data, size});
+    auto shaderEffectCmdList = Drawing::ShaderEffectCmdList::CreateFromData({data, size}, true);
     if (shaderEffectCmdList == nullptr) {
         ROSEN_LOGE("unirender: failed RSMarshallingHelper::Unmarshalling RSShader shader effect cmdlist is nullptr");
         return false;
@@ -1041,6 +1045,10 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSPa
         ROSEN_LOGD("unirender: RSMarshallingHelper::Marshalling RSPath is nullptr");
         return parcel.WriteInt32(-1);
     }
+    if (val->GetDrawingPath().GetDrawingType() != Drawing::DrawingType::RECORDING) {
+        ROSEN_LOGD("unirender: RSMarshallingHelper::Marshalling Drawing::Path is invalid");
+        return parcel.WriteInt32(-1);
+    }
     auto recordingPath = static_cast<const Drawing::RecordingPath&>(val->GetDrawingPath());
     auto cmdListData = recordingPath.GetCmdList()->GetData();
     bool ret = parcel.WriteInt32(cmdListData.second);
@@ -1074,7 +1082,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSPath>&
         ROSEN_LOGE("unirender: failed RSMarshallingHelper::Unmarshalling RSPath");
         return false;
     }
-    auto pathCmdList = Drawing::PathCmdList::CreateFromData({ data, size });
+    auto pathCmdList = Drawing::PathCmdList::CreateFromData({ data, size }, true);
     if (pathCmdList == nullptr) {
         ROSEN_LOGE("unirender: failed RSMarshallingHelper::Unmarshalling RSPath path cmdlist is nullptr");
         return false;
@@ -1409,7 +1417,8 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Drawing:
         ROSEN_LOGE("unirender: failed RSMarshallingHelper::Unmarshalling Drawing::DrawCmdList");
         return false;
     }
-    val = Drawing::DrawCmdList::CreateFromData({ data, size });
+
+    val = Drawing::DrawCmdList::CreateFromData({ data, size }, true);
     if (val == nullptr) {
         ROSEN_LOGE("unirender: failed RSMarshallingHelper::Unmarshalling Drawing::DrawCmdList is nullptr");
         return false;

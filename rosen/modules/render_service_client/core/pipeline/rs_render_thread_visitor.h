@@ -99,6 +99,9 @@ private:
     void ClipHoleForSurfaceNode(RSSurfaceRenderNode& node);
 
     std::vector<NodeId> childSurfaceNodeIds_;
+    unsigned int preparedCanvasNodeInCurrentSurface_ = 0;
+    unsigned int processedCanvasNodeInCurrentSurface_ = 0;
+
 #ifndef USE_ROSEN_DRAWING
     SkMatrix parentSurfaceNodeMatrix_;
     std::optional<SkPath> effectRegion_ = std::nullopt;

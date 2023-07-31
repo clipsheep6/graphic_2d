@@ -29,6 +29,7 @@
 #include "surface_buffer_impl.h"
 #include "sync_fence.h"
 #include "sandbox_utils.h"
+#include "sync_fence_tracker.h"
 
 namespace OHOS {
 namespace {
@@ -315,6 +316,10 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, sptr<BufferE
         retval.buffer = nullptr;
     }
 
+    if (GetRealPid() == getpid()) {
+        static SyncFenceTracker releaseFenceThread("Release Fence");
+        releaseFenceThread.TrackFence(retval.fence);
+    }
     ScopedBytrace bufferName(name_ + ":" + std::to_string(retval.sequence));
     return GSERROR_OK;
 }
@@ -474,7 +479,10 @@ GSError BufferQueue::DoFlushBuffer(uint32_t sequence, const sptr<BufferExtraData
     } else {
         bufferQueueCache_[sequence].timestamp = config.timestamp;
     }
-
+    if (GetRealPid() == getpid()) {
+        static SyncFenceTracker acquireFenceThread("Acquire Fence");
+        acquireFenceThread.TrackFence(fence);
+    }
     // if you need dump SurfaceBuffer to file, you should call DumpToFile(sequence) here
     return GSERROR_OK;
 }

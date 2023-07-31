@@ -19,7 +19,7 @@
 #include <iremote_proxy.h>
 
 #include "ipc_callbacks/buffer_available_callback.h"
-#include "ipc_callbacks/buffer_available_callback_ipc_interface_code.h"
+#include "ipc_security/rs_ipc_interface_code_security_manager_registry.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -31,6 +31,13 @@ public:
     void OnBufferAvailable() override;
 
 private:
+    template<size_t N>
+    std::string GetCallerName(const char (&callerFuncCstr)[N]) const;
+
+    static inline const std::string callerPrefix_{"RSBufferAvailableCallbackProxy::"};
+
+    static const RSInterfaceCodeSecurityManager<RSIBufferAvailableCallbackInterfaceCode> securityManager_;
+
     static inline BrokerDelegator<RSBufferAvailableCallbackProxy> delegator_;
 };
 } // namespace Rosen

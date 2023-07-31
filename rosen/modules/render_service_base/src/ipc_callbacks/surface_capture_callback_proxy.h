@@ -19,7 +19,7 @@
 #include <iremote_proxy.h>
 
 #include "ipc_callbacks/surface_capture_callback.h"
-#include "ipc_callbacks/surface_capture_callback_ipc_interface_code.h"
+#include "ipc_security/rs_ipc_interface_code_security_manager_registry.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -31,6 +31,13 @@ public:
     void OnSurfaceCapture(NodeId id, Media::PixelMap* pixelmap) override;
 
 private:
+    template<size_t N>
+    std::string GetCallerName(const char (&callerFuncCstr)[N]) const;
+
+    static inline const std::string callerPrefix_{"RSSurfaceCaptureCallbackProxy::"};
+
+    static const RSInterfaceCodeSecurityManager<RSISurfaceCaptureCallbackInterfaceCode> securityManager_;
+
     static inline BrokerDelegator<RSSurfaceCaptureCallbackProxy> delegator_;
 };
 } // namespace Rosen

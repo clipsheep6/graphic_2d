@@ -27,6 +27,11 @@ RSScreenChangeCallbackProxy::RSScreenChangeCallbackProxy(const sptr<IRemoteObjec
 
 void RSScreenChangeCallbackProxy::OnScreenChanged(ScreenId id, ScreenEvent event)
 {
+    constexpr auto interfaceCode = RSIScreenChangeCallbackInterfaceCode::ON_SCREEN_CHANGED;
+    if (!securityManager_.IsInterfaceCodeAccessible(interfaceCode, GetCallerName(__func__))) {
+        return;
+    }
+
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -39,11 +44,22 @@ void RSScreenChangeCallbackProxy::OnScreenChanged(ScreenId id, ScreenEvent event
     data.WriteUint8(ECast(event));
 
     option.SetFlags(MessageOption::TF_ASYNC);
-    uint32_t code = static_cast<uint32_t>(RSIScreenChangeCallbackInterfaceCode::ON_SCREEN_CHANGED);
+    uint32_t code = static_cast<uint32_t>(interfaceCode);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
         // [PLANNING]: Error log
     }
 }
+
+template<size_t N>
+std::string RSScreenChangeCallbackProxy::GetCallerName(const char (&callerFuncCstr)[N]) const
+{
+    const std::string callerFunction{callerFuncCstr};
+    std::string callerName{callerPrefix_ + callerFunction};
+    return callerName;
+}
+
+const RSInterfaceCodeSecurityManager<RSIScreenChangeCallbackInterfaceCode> \
+    RSScreenChangeCallbackProxy::securityManager_ = CreateRSIScreenChangeCallbackInterfaceCodeSecurityManager();
 } // namespace Rosen
 } // namespace OHOS

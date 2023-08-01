@@ -860,6 +860,27 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             SetHardwareEnabled(id, isEnabled);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_ANIM_DYNAMIC_CFG_CALLBACK): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+
+            auto remoteObject = data.ReadRemoteObject();
+            if (remoteObject == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            sptr<RSIAnimDynamicCfgCallback> cb = iface_cast<RSIAnimDynamicCfgCallback>(remoteObject);
+            if (cb == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            bool status = GetAnimDynamicCfgCallback(cb);
+            reply.WriteBool(status);
+            break;
+        }
         default: {
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
         }

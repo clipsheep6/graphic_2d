@@ -149,6 +149,9 @@ public:
     void ReportEventComplete(DataBaseRs info);
 
     void ReportEventJankFrame(DataBaseRs info);
+
+    bool GetAnimDynamicCfgCallback(const AnimDynamicCfgCallback &callback);
+
 private:
     RSInterfaces();
     ~RSInterfaces() noexcept;

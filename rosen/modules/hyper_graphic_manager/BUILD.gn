@@ -21,7 +21,7 @@ config("libhyper_graphic_manager_config") {
     "core/include",
     "utils/include",
     "config/include",
-    "interface/include",
+    "interfaces",
     "frame_rate_manager",
     "$graphic_2d_root/rosen/modules/render_service_base/include",
     "$graphic_2d_root/rosen/modules/composer/hdi_backend/include",
@@ -42,6 +42,7 @@ ohos_shared_library("libhyper_graphic_manager") {
     "core/src/hgm_screen.cpp",
     "frame_rate_manager/hgm_frame_rate_manager.cpp",
     "frame_rate_manager/hgm_frame_rate_tool.cpp",
+    "interfaces/anim_dynamic_cfg_manager.cpp",
   ]
 
   deps = [ "//third_party/libxml2:xml2" ]

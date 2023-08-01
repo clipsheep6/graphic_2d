@@ -25,6 +25,9 @@
 #include <surface.h>
 #endif
 
+// #include "anim_dynamic_cfg_manager.h"
+#include "anim_dynamic_configs.h"
+#include "ipc_callbacks/anim_dynamic_cfg_callback.h"
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/iapplication_agent.h"
 #include "ipc_callbacks/screen_change_callback.h"
@@ -205,6 +208,9 @@ public:
     void ReportEventJankFrame(DataBaseRs info);
 
     void SetHardwareEnabled(NodeId id, bool isEnabled);
+
+    bool GetAnimDynamicCfgCallback(const AnimDynamicCfgCallback &callback);
+
 private:
     void TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap);
     std::mutex mutex_;
@@ -212,6 +218,7 @@ private:
     std::map<NodeId, sptr<RSIBufferAvailableCallback>> bufferAvailableCbUIMap_;
     sptr<RSIScreenChangeCallback> screenChangeCb_;
     sptr<RSISurfaceCaptureCallback> surfaceCaptureCbDirector_;
+    sptr<RSIAnimDynamicCfgCallback> AnimDynamicCfgCb_;
     std::map<NodeId, std::vector<std::shared_ptr<SurfaceCaptureCallback>>> surfaceCaptureCbMap_;
 
     friend class SurfaceCaptureCallbackDirector;

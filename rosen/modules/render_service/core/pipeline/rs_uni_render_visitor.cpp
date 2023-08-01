@@ -981,8 +981,8 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     auto nodeParent = node.GetParent().lock();
     if (nodeParent && nodeParent->ReinterpretCastTo<RSDisplayRenderNode>()) {
         if (currSurfaceUIRange_.IsValid()) {
-            uiFrameRateRangeMap_[node.GetId()] =
-                {nodeParent->ReinterpretCastTo<RSDisplayRenderNode>()->GetScreenId(), currSurfaceUIRange_};
+            uiFrameRateRangeMap_[node.GetId()] = {
+                nodeParent->ReinterpretCastTo<RSDisplayRenderNode>()->GetScreenId(), currSurfaceUIRange_};
         }
         currSurfaceRSRange_.Reset();
         currSurfaceUIRange_.Reset();

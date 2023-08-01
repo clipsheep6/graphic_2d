@@ -307,5 +307,10 @@ void RSRenderServiceClient::ReportEventJankFrame(DataBaseRs info)
 void RSRenderServiceClient::SetHardwareEnabled(NodeId id, bool isEnabled)
 {
 }
+
+bool RSRenderServiceClient::GetAnimDynamicCfgCallback(const AnimDynamicCfgCallback &callback)
+{
+    return false;
+}
 } // namespace Rosen
 } // namespace OHOS

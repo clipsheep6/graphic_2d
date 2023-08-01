@@ -87,6 +87,8 @@ ohos_source_set("render_service_base_src") {
     "src/delegate/rs_functional_delegate.cpp",
 
     #ipc_callbacks
+    "src/ipc_callbacks/anim_dynamic_cfg_callback_proxy.cpp",
+    "src/ipc_callbacks/anim_dynamic_cfg_callback_stub.cpp",
     "src/ipc_callbacks/buffer_available_callback_proxy.cpp",
     "src/ipc_callbacks/buffer_available_callback_stub.cpp",
     "src/ipc_callbacks/buffer_clear_callback_proxy.cpp",
@@ -219,6 +221,7 @@ ohos_source_set("render_service_base_src") {
     "$graphic_2d_root/frameworks/surface/include",
     "$graphic_2d_root/rosen/modules/render_service_base/src",
     "$graphic_2d_root/utils/log",
+    "$graphic_2d_root/rosen/modules/hyper_graphic_manager/interfaces",
   ]
   if (defined(use_new_skia) && use_new_skia) {
     include_dirs += [ "//third_party/skia/src" ]

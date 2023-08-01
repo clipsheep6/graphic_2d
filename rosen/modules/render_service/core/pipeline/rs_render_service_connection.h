@@ -172,11 +172,14 @@ private:
 
     void SetHardwareEnabled(NodeId id, bool isEnabled) override;
 
+    bool GetAnimDynamicCfgCallback(sptr<RSIAnimDynamicCfgCallback> callback) override;
+
     pid_t remotePid_;
     wptr<RSRenderService> renderService_;
     RSMainThread* mainThread_ = nullptr;
     sptr<RSScreenManager> screenManager_;
     sptr<IRemoteObject> token_;
+    sptr<HgmAnimDynamicCfgManager> hgmAnimDynamicCfgManager_;
 
     class RSConnectionDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
@@ -215,6 +218,8 @@ private:
     sptr<RSIScreenChangeCallback> screenChangeCallback_;
     sptr<VSyncDistributor> appVSyncDistributor_;
     std::vector<sptr<VSyncConnection>> vsyncConnections_;
+
+    sptr<RSIAnimDynamicCfgCallback> animDynamicCfgCallback_;
 };
 } // namespace Rosen
 } // namespace OHOS

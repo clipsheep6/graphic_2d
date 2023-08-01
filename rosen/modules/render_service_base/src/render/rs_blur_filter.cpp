@@ -157,10 +157,6 @@ void RSBlurFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<
     auto paint = GetPaint();
 #ifdef NEW_SKIA
     // if kawase blur failed, use gauss blur
-    KawaseParameter param = KawaseParameter(src, dst, blurRadiusX_, nullptr, paint.getAlphaf());
-    if (useKawase_ && kawaseFunc_->ApplyKawaseBlur(canvas, image, param)) {
-        return;
-    }
     canvas.drawImageRect(image.get(), src, dst, SkSamplingOptions(), &paint, SkCanvas::kStrict_SrcRectConstraint);
 #else
     canvas.drawImageRect(image.get(), src, dst, &paint);

@@ -33,6 +33,7 @@ public:
     double GetMaxWidth();
     double GetHeight();
     double GetLongestLine();
+    size_t GetLineCount();
     double GetMinIntrinsicWidth();
     double GetMaxIntrinsicWidth();
     double GetAlphabeticBaseline();

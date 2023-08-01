@@ -34,6 +34,7 @@ public:
     virtual double GetMaxWidth();
     virtual double GetHeight();
     virtual double GetLongestLine();
+    virtual size_t GetLineCount();
     virtual double GetMinIntrinsicWidth();
     virtual double GetMaxIntrinsicWidth();
     virtual double GetAlphabeticBaseline();

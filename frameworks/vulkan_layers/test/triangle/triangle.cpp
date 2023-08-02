@@ -41,34 +41,24 @@ constexpr int WINDOW_WIDTH = 360;
 constexpr int WINDOW_HEIGHT = 360;
 int main(const int argc, const char *argv[])
 {
-    // Create Window
-    OHOS::sptr<OHOS::Rosen::WindowOption> option(new OHOS::Rosen::WindowOption());
-    option->SetDisplayId(DEFAULT_DISPLAY_ID);
-    option->SetWindowRect( {WINDOW_LEFT, WINDOW_TOP, WINDOW_WIDTH, WINDOW_HEIGHT} );
-    // option->SetWindowType(OHOS::Rosen::WindowType::APP_MAIN_WINDOW_BASE);
-    option->SetWindowType(OHOS::Rosen::WindowType::WINDOW_TYPE_POINTER);
-    option->SetWindowMode(OHOS::Rosen::WindowMode::WINDOW_MODE_FLOATING);
-    option->SetWindowName("vulkan_triangle_window");
-    OHOS::sptr<OHOS::Rosen::Window> window_ = OHOS::Rosen::Window::Create(option->GetWindowName(), option);
-    if (window_ == nullptr) {
-        std::cout << "Create OHOS::Rosen::Window failed" << std::endl;
+
+    OHOS::Rosen::RSSurfaceNodeConfig surfaceNodeConfig = {"vulkan_triangle_demo"};
+    OHOS::Rosen::RSSurfaceNodeType surfaceNodeType = OHOS::Rosen::RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
+    auto surfaceNode = OHOS::Rosen::RSSurfaceNode::Create(surfaceNodeConfig, surfaceNodeType);
+    if (!surfaceNode) {
+        std::cout << "triangle :: rsSurfaceNode_ is nullptr" << std::endl;
         return -1;
     }
-    auto surfaceNodeWindow = window_->GetSurfaceNode();
-    // Create SurfaceNode
-    // OHOS::Rosen::RSSurfaceNodeConfig surfaceNodeConfig = {"vulkan_triangle_demo"};
-    // auto surfaceNode = OHOS::Rosen::RSSurfaceNode::Create(surfaceNodeConfig, false);
 
-    // surfaceNode->SetAbilityBGAlpha(255);
-    // surfaceNode->SetBounds(0,0, WINDOW_WIDTH, WINDOW_HEIGHT);
-    // surfaceNodeWindow->AddChild(surfaceNode, -1);
-
-
+    surfaceNode->SetFrameGravity(OHOS::Rosen::Gravity::RESIZE_ASPECT_FILL);
+    surfaceNode->SetPositionZ(OHOS::Rosen::RSSurfaceNode::POINTER_WINDOW_POSITION_Z);
+    surfaceNode->SetBounds(WINDOW_LEFT, WINDOW_TOP, WINDOW_WIDTH, WINDOW_HEIGHT);
+    surfaceNode->AttachToDisplay(DEFAULT_DISPLAY_ID);
     OHOS::Rosen::RSTransaction::FlushImplicitTransaction();
-    window_->Show();
 
-    OHOS::sptr<OHOS::Surface> surf = surfaceNodeWindow->GetSurface();
+    OHOS::sptr<OHOS::Surface> surf = surfaceNode->GetSurface();
     OHNativeWindow* nativeWindow = CreateNativeWindowFromSurface(&surf);
+    NativeWindowHandleOpt(nativeWindow, SET_BUFFER_GEOMETRY, WINDOW_WIDTH, WINDOW_HEIGHT);
     if (nativeWindow == nullptr) {
         std::cout << "CreateNativeWindowFromSurface Failed" << std::endl;
         return -1;
@@ -80,10 +70,11 @@ int main(const int argc, const char *argv[])
     vulkanExample->prepare();
     vulkanExample->renderLoop();
 
-    delete(vulkanExample);
-    window_->Hide();
-    window_->Destroy();
+    surfaceNode->DetachToDisplay(DEFAULT_DISPLAY_ID);
+    OHOS::Rosen::RSTransaction::FlushImplicitTransaction();
 
+
+    delete(vulkanExample);
     return 0;
 }
 

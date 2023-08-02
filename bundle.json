@@ -84,7 +84,7 @@
           "egl",
           "opengles",
           "vulkan-headers",
-          "libvulkan"
+          "vulkan-loader"
         ]
       },
       "build": {

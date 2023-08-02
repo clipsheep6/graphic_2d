@@ -22,7 +22,7 @@
 #include "render_context_factory.h"
 #include "rs_surface_factory.h"
 #endif
-#include <display_manager.h>
+// #include <display_manager.h>
 
 using namespace OHOS;
 

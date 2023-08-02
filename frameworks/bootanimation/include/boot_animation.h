@@ -21,11 +21,11 @@
 #include <include/core/SkImageInfo.h>
 #include <include/core/SkImage.h>
 #include <include/codec/SkCodec.h>
-#include <display.h>
-#include <display_type.h>
-#include <display_manager.h>
+// #include <display.h>
+// #include <display_type.h>
+// #include <display_manager.h>
 #include <media_errors.h>
-#include <foundation/window/window_manager/interfaces/innerkits/wm/window_manager.h>
+// #include <foundation/window/window_manager/interfaces/innerkits/wm/window_manager.h>
 #include <ipc_skeleton.h>
 #include <iremote_broker.h>
 #include <iservice_registry.h>
@@ -39,9 +39,9 @@
 #endif
 #include <system_ability_definition.h>
 #include <ui/rs_surface_extractor.h>
-#include <window.h>
-#include <window_option.h>
-#include <window_scene.h>
+// #include <window.h>
+// #include <window_option.h>
+// #include <window_scene.h>
 #include "boot_animationconfig.h"
 #include "boot_videoplayer.h"
 #include "event_handler.h"
@@ -69,8 +69,8 @@ private:
     int32_t windowWidth_;
     int32_t windowHeight_;
     Rosen::ScreenId defaultId_;
-    sptr<OHOS::Rosen::Window> window_;
-    sptr<OHOS::Rosen::WindowScene> scene_;
+    // sptr<OHOS::Rosen::Window> window_;
+    // sptr<OHOS::Rosen::WindowScene> scene_;
 #ifdef NEW_RENDER_CONTEXT
     std::shared_ptr<OHOS::Rosen::RenderContextBase> renderContext_;
     std::shared_ptr<OHOS::Rosen::RSRenderSurface> rsSurface_;

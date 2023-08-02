@@ -17,4 +17,7 @@ group("test") {
     "fuzztest:fuzztest",
     "unittest:unittest",
   ]
+  external_deps = [
+    "hilog:libhilog",
+  ]
 }

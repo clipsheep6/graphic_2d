@@ -43,7 +43,6 @@ ohos_static_library("color_manager_test_common") {
   public_configs = [ ":color_manager_test_config" ]
 
   public_deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/graphic_2d/utils/color_manager:color_manager",
     "//third_party/googletest:gtest_main",
   ]
@@ -52,6 +51,10 @@ ohos_static_library("color_manager_test_common") {
   } else {
     public_deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
   }
+  
+  external_deps = [
+    "hilog:libhilog",
+  ]
   subsystem_name = "graphic"
   part_name = "graphic_2d"
 }

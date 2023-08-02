@@ -28,7 +28,11 @@ RSSubThreadManager* RSSubThreadManager::Instance()
     return &instance;
 }
 
+#ifdef NEW_RENDER_CONTEXT
+void RSSubThreadManager::Start(std::shared_ptr<RenderContextBase> context)
+#else
 void RSSubThreadManager::Start(RenderContext *context)
+#endif
 {
     if (!threadList_.empty()) {
         return;

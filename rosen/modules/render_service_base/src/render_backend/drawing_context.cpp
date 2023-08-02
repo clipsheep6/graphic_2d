@@ -54,11 +54,32 @@ bool DrawingContext::SetUpDrawingContext()
         LOGD("grContext has already initialized");
         return true;
     }
+    bool isUni = false;
+#if defined(RS_ENABLE_UNI_RENDER)
+    isUni = true;
+#endif
+#if defined(NEW_SKIA)
+    sk_sp<GrDirectContext> grContext = DrawingContext::CreateDrawingContext(isUni);
+#else
+    sk_sp<GrContext> grContext = DrawingContext::CreateDrawingContext(isUni);
+#endif
+    grContext_ = std::move(grContext);
+    return true;
+#else
+    return false;
+#endif
+}
 
+#if defined(NEW_SKIA)
+sk_sp<GrDirectContext> DrawingContext::CreateDrawingContext(bool isUni)
+#else
+sk_sp<GrContext> DrawingContext::CreateDrawingContext(bool isUni)
+#endif
+{
     sk_sp<const GrGLInterface> glInterface(GrGLCreateNativeInterface());
     if (glInterface.get() == nullptr) {
-        LOGE("SetUpDrawingContext failed to make native interface");
-        return false;
+        LOGE("Failed to make native interface");
+        return nullptr;
     }
 
     GrContextOptions options;
@@ -68,12 +89,10 @@ bool DrawingContext::SetUpDrawingContext()
     options.fAllowPathMaskCaching = true;
     auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
     auto size = glesVersion ? strlen(glesVersion) : 0;
-    bool isUni = false;
     auto &cache = ShaderCache::Instance();
-#if defined(RS_ENABLE_UNI_RENDER)
-    isUni = true;
-    cache.SetFilePath(UNIRENDER_CACHE_DIR);
-#endif
+    if (isUni) {
+        cache.SetFilePath(UNIRENDER_CACHE_DIR);
+    }
     cache.InitShaderCache(glesVersion, size, isUni);
     options.fPersistentCache = &cache;
 
@@ -84,13 +103,9 @@ bool DrawingContext::SetUpDrawingContext()
 #endif
     if (grContext == nullptr) {
         LOGE("Failed to create grContext, grContext is nullptr");
-        return false;
+        return nullptr;
     }
-    grContext_ = std::move(grContext);
-    return true;
-#else
-    return false;
-#endif
+    return grContext;
 }
 
 #if defined(NEW_SKIA)

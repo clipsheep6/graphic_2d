@@ -141,6 +141,7 @@ RSUniRenderVisitor::RSUniRenderVisitor()
 #endif
     isUIFirst_ = RSSystemProperties::GetUIFirstEnabled();
     frameRateMgr_ = std::make_unique<HgmFrameRateManager>();
+    isSceneBoard_ = SceneBoardJudgement::IsSceneBoardEnabled();
 }
 
 RSUniRenderVisitor::RSUniRenderVisitor(std::shared_ptr<RSPaintFilterCanvas> canvas, uint32_t surfaceIndex)
@@ -367,6 +368,7 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     RS_TRACE_NAME("RSUniRender:PrepareDisplay " + std::to_string(currentVisitDisplay_));
     curDisplayDirtyManager_ = node.GetDirtyManager();
     curDisplayDirtyManager_->Clear();
+    curDisplayDirtyManager_->MarkIfSceneBoard(isSceneBoard_);
     curDisplayNode_ = node.shared_from_this()->ReinterpretCastTo<RSDisplayRenderNode>();
 
     dirtyFlag_ = isDirty_;
@@ -531,6 +533,7 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& nod
     curSurfaceDirtyManager_ = node.GetDirtyManager();
     if (curSurfaceDirtyManager_) {
         curSurfaceDirtyManager_->Clear();
+        curSurfaceDirtyManager_->MarkIfSceneBoard(isSceneBoard_);
         curSurfaceDirtyManager_->UpdateVisitedDirtyRects(accumulatedDirtyRegions_);
         node.UpdateFilterCacheStatusIfNodeStatic(prepareClipRect_);
     }
@@ -658,6 +661,7 @@ void RSUniRenderVisitor::PrepareTypesOfSurfaceRenderNodeBeforeUpdate(RSSurfaceRe
             return;
         }
         curSurfaceDirtyManager_->Clear();
+        curSurfaceDirtyManager_->MarkIfSceneBoard(isSceneBoard_);
         curSurfaceDirtyManager_->UpdateVisitedDirtyRects(accumulatedDirtyRegions_);
         curSurfaceDirtyManager_->SetSurfaceSize(screenInfo_.width, screenInfo_.height);
         if (isTargetDirtyRegionDfxEnabled_ && CheckIfSurfaceTargetedForDFX(node.GetName())) {

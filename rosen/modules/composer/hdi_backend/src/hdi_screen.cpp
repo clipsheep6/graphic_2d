@@ -130,10 +130,10 @@ int32_t HdiScreen::GetScreenMode(uint32_t &modeId) const
     return device_->GetScreenMode(screenId_, modeId);
 }
 
-int32_t HdiScreen::SetScreenMode(uint32_t modeId) const
+int32_t HdiScreen::SetScreenMode(uint32_t modeId, DisplayModeCallback callback) const
 {
     CHECK_DEVICE_NULL(device_);
-    return device_->SetScreenMode(screenId_, modeId);
+    return device_->SetScreenMode(screenId_, modeId, callback);
 }
 
 int32_t HdiScreen::GetScreenPowerStatus(GraphicDispPowerStatus &status) const

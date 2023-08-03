@@ -59,7 +59,7 @@ public:
     int32_t SetDefaultRefreshRateMode();
     int32_t AddScreen(ScreenId id, int32_t defaultMode);
     int32_t RemoveScreen(ScreenId id);
-    int32_t AddScreenInfo(ScreenId id, int32_t width, int32_t height, uint32_t rate, int32_t mode);
+    int32_t AddScreenInfo(ScreenId id, int32_t width, int32_t height, uint32_t rate, int32_t mode, int32_t group);
     int32_t RefreshBundleName(std::string name);
     uint32_t GetScreenCurrentRefreshRate(ScreenId id);
     sptr<HgmScreen> GetScreen(ScreenId id) const;

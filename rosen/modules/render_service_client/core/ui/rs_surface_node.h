@@ -82,6 +82,8 @@ public:
     void SetAbilityBGAlpha(uint8_t alpha);
     void SetIsNotifyUIBufferAvailable(bool available);
     void MarkUIHidden(bool isHidden);
+    void SetKeepAlive(bool keepAlive);
+    bool GetKeepAlive() const;
 
     bool SetBufferAvailableCallback(BufferAvailableCallback callback);
     void SetAnimationFinished();
@@ -153,6 +155,7 @@ private:
     bool hasFingerprint_ = false;
     bool isChildOperationDisallowed_ { false };
 
+    bool isKeepAlive_ = false;
     uint32_t windowId_ = 0;
 #ifndef ROSEN_CROSS_PLATFORM
     sptr<SurfaceDelegate> surfaceDelegate_;

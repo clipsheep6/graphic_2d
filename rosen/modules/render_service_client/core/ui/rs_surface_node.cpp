@@ -211,6 +211,23 @@ bool RSSurfaceNode::GetSecurityLayer() const
     return isSecurityLayer_;
 }
 
+void RSSurfaceNode::SetKeepAlive(bool keepAlive)
+{
+    isKeepAlive_ = keepAlive;
+    std::unique_ptr<RSCommand> command =
+        std::make_unique<RSSurfaceNodeSetFingerprint>(GetId(), keepAlive);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, true);
+        transactionProxy->FlushImplicitTransaction();
+    }
+}
+
+bool RSSurfaceNode::GetKeepAlive() const
+{
+    return isKeepAlive_;
+}
+
 void RSSurfaceNode::SetFingerprint(bool hasFingerprint)
 {
     hasFingerprint_ = hasFingerprint;

@@ -187,5 +187,12 @@ void SurfaceNodeCommandHelper::DetachToDisplay(RSContext& context, NodeId nodeId
             displayRenderNode->RemoveChild(surfaceRenderNode);
         });
 }
+
+void SurfaceNodeCommandHelper::SetKeepAlive(RSContext& context, NodeId nodeId, bool keepAlive)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(nodeId)) {
+        node->SetKeepAlive(keepAlive);
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

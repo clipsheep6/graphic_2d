@@ -281,6 +281,8 @@ public:
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
 
+    void SetKeepAlive(bool isKeepAlive);
+    bool GetKeepAlive() const;
     void SetFingerprint(bool hasFingerprint);
     bool GetFingerprint() const;
 
@@ -769,6 +771,7 @@ private:
     Occlusion::Region visibleRegion_;
     Occlusion::Region visibleDirtyRegion_;
     bool isDirtyRegionAlignedEnable_ = false;
+    bool isKeepAlive_ = false;
     Occlusion::Region alignedVisibleDirtyRegion_;
     bool isOcclusionVisible_ = true;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;

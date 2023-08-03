@@ -54,6 +54,7 @@ enum RSSurfaceNodeCommandType : uint16_t {
     SURFACE_NODE_MARK_UIHIDDEN,
     SURFACE_NODE_ATTACH_TO_DISPLAY,
     SURFACE_NODE_DETACH_TO_DISPLAY,
+    SURFACE_NODE_SET_KEEP_ALIVE,
 };
 
 class RSB_EXPORT SurfaceNodeCommandHelper {
@@ -87,6 +88,7 @@ public:
     static void SetAnimationFinished(RSContext& context, NodeId nodeId);
     static void AttachToDisplay(RSContext& context, NodeId nodeId, uint64_t screenId);
     static void DetachToDisplay(RSContext& context, NodeId nodeId, uint64_t screenId);
+    static void SetKeepAlive(RSContext& context, NodeId nodeId, bool keepAlive);
 };
 
 ADD_COMMAND(RSSurfaceNodeCreate, ARG(SURFACE_NODE, SURFACE_NODE_CREATE, SurfaceNodeCommandHelper::Create, NodeId))
@@ -140,7 +142,8 @@ ADD_COMMAND(RSSurfaceNodeAttachToDisplay,
     ARG(SURFACE_NODE, SURFACE_NODE_ATTACH_TO_DISPLAY, SurfaceNodeCommandHelper::AttachToDisplay, NodeId, uint64_t))
 ADD_COMMAND(RSSurfaceNodeDetachToDisplay,
     ARG(SURFACE_NODE, SURFACE_NODE_DETACH_TO_DISPLAY, SurfaceNodeCommandHelper::DetachToDisplay, NodeId, uint64_t))
-
+ADD_COMMAND(RSSurfaceNodeSetKeepAlive,
+    ARG(SURFACE_NODE, SURFACE_NODE_SET_KEEP_ALIVE, SurfaceNodeCommandHelper::SetKeepAlive, NodeId, bool))
 #ifndef ROSEN_CROSS_PLATFORM
 ADD_COMMAND(RSSurfaceNodeSetColorSpace,
     ARG(SURFACE_NODE, SURFACE_NODE_SET_COLOR_SPACE, SurfaceNodeCommandHelper::SetColorSpace, NodeId, GraphicColorGamut))

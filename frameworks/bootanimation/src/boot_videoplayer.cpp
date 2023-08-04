@@ -28,15 +28,6 @@ void BootVideoPlayer::SetVideoPath(const std::string& path)
     videopath_ = path;
 }
 
-void BootVideoPlayer::SetPlayerWindow(const OHOS::sptr<OHOS::Rosen::Window>& window)
-{
-    if (window == nullptr) {
-        LOGE("SetPlayerWindow window is nullptr");
-        return;
-    }
-    window_ = window;
-}
-
 void BootVideoPlayer::SetPlayerSurface(const sptr<Surface>& surface)
 {
     if (surface == nullptr) {
@@ -58,6 +49,7 @@ bool BootVideoPlayer::PlayVideo()
         usleep(SLEEP_TIME_US);
     }
 
+    LOGI("PlayVideo PlayVideo");
     std::shared_ptr<VideoPlayerCallback> cb = std::make_shared<VideoPlayerCallback>(shared_from_this());
     int32_t ret = mediaPlayer_->SetPlayerCallback(cb);
     if (ret != 0) {

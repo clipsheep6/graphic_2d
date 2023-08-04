@@ -22,10 +22,10 @@ config("libhyper_graphic_manager_config") {
     "core/frame_rate_manager",
     "core/hgm_screen_manager",
     "core/utils",
-    "$graphic_2d_root/rosen/modules/render_service_base/include",
     "$graphic_2d_root/rosen/modules/composer/hdi_backend/include",
     "$graphic_2d_root/rosen/modules/render_service/core",
     "$graphic_2d_root/rosen/modules/render_service_base/include",
+    "$graphic_2d_root/rosen/modules/platform/ipc_core",
     "//third_party/libxml2/include",
   ]
 
@@ -36,6 +36,7 @@ ohos_shared_library("libhyper_graphic_manager") {
   public_configs = [ ":libhyper_graphic_manager_config" ]
 
   sources = [
+    "core/config/anim_dynamic_cfg_manager.cpp",
     "core/config/xml_parser.cpp",
     "core/frame_rate_manager/hgm_frame_rate_manager.cpp",
     "core/frame_rate_manager/hgm_frame_rate_tool.cpp",

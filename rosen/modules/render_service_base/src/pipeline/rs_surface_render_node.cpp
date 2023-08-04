@@ -468,6 +468,16 @@ bool RSSurfaceRenderNode::GetSecurityLayer() const
     return isSecurityLayer_;
 }
 
+void RSSurfaceRenderNode::SetSkipLayer(bool isSkipLayer)
+{
+    isSkipLayer_ = isSkipLayer;
+}
+
+bool RSSurfaceRenderNode::GetSkipLayer() const
+{
+    return isSkipLayer_;
+}
+
 void RSSurfaceRenderNode::SetFingerprint(bool hasFingerprint)
 {
     hasFingerprint_ = hasFingerprint;

@@ -211,13 +211,18 @@ void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         auto name = node.GetName();
         mForceSerial |= CheckForSerialForced(name);
     }
-
-    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
+    if (node.GetSkipLayer()) {
         RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node[%" PRIu64 "] prepare paused because of \
-            security DisplayNode.",
+            Skip SurfaceNode.",
             node.GetId());
         return;
     }
+    // if (isSecurityDisplay_ && node.GetSecurityLayer()) {
+    //     RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node[%" PRIu64 "] prepare paused because of \
+    //         security DisplayNode.",
+    //         node.GetId());
+    //     return;
+    // }
     if (!canvas_) {
         RS_LOGD("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : %" PRIu64 " canvas is nullptr", node.GetId());
         return;
@@ -239,11 +244,18 @@ void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         RS_LOGE("RSRenderServiceVisitor::ProcessSurfaceRenderNode processor is nullptr");
         return;
     }
-    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
+    if (node.GetSkipLayer()) {
         RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node[%" PRIu64 "] process paused because of \
-            security DisplayNode.",
+            security SurfaceNode.",
             node.GetId());
         return;
+    }
+    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
+        // RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node[%" PRIu64 "] process paused because of \
+        //     security DisplayNode.",
+        //     node.GetId());
+        // return;
+        // 设置node的buffer数据为黑屏数据
     }
     if (!node.ShouldPaint()) {
         RS_LOGD("RSRenderServiceVisitor::ProcessSurfaceRenderNode node : %" PRIu64 " is invisible", node.GetId());

@@ -56,17 +56,17 @@ HWTEST_F(RSRenderServiceVisitorTest, CreateAndDestroy001, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrepareBaseRenderNode001
- * @tc.desc: Test RSRenderServiceVisitorTest.PrepareBaseRenderNode
+ * @tc.name: PrepareChildren001
+ * @tc.desc: Test RSRenderServiceVisitorTest.PrepareChildren
  * @tc.type: FUNC
  * @tc.require: issueI614P1
  */
-HWTEST_F(RSRenderServiceVisitorTest, PrepareBaseRenderNode001, TestSize.Level1)
+HWTEST_F(RSRenderServiceVisitorTest, PrepareChildren001, TestSize.Level1)
 {
     RSSurfaceRenderNodeConfig config;
     RSSurfaceRenderNode rsSurfaceRenderNode(config);
     RSRenderServiceVisitor rsRenderServiceVisitor;
-    rsRenderServiceVisitor.PrepareBaseRenderNode(rsSurfaceRenderNode);
+    rsRenderServiceVisitor.PrepareChildren(rsSurfaceRenderNode);
 }
 
 /**
@@ -206,7 +206,7 @@ HWTEST_F(RSRenderServiceVisitorTest, PrepareDisplayRenderNode009, TestSize.Level
     property.SetBounds({ 0, 0, 400, 600 });
     property.SetFrameWidth(0);
     property.SetFrameHeight(0);
-    auto absGeo = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    auto absGeo = (property.GetBoundsGeometry());
     absGeo->SetRotation(90);
     rsRenderServiceVisitor.PrepareDisplayRenderNode(node);
 }
@@ -228,7 +228,7 @@ HWTEST_F(RSRenderServiceVisitorTest, PrepareDisplayRenderNode010, TestSize.Level
     property.SetBounds({ 0, 0, 400, 600 });
     property.SetFrameWidth(0);
     property.SetFrameHeight(0);
-    auto absGeo = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    auto absGeo = (property.GetBoundsGeometry());
     absGeo->SetRotation(270);
     rsRenderServiceVisitor.PrepareDisplayRenderNode(node);
 }
@@ -572,31 +572,31 @@ HWTEST_F(RSRenderServiceVisitorTest, PrepareRootRenderNode008, TestSize.Level1)
 }
 
 /**
- * @tc.name: ProcessBaseRenderNode001
- * @tc.desc: Test RSRenderServiceVisitorTest.ProcessBaseRenderNode
+ * @tc.name: ProcessChildren001
+ * @tc.desc: Test RSRenderServiceVisitorTest.ProcessChildren
  * @tc.type: FUNC
  * @tc.require: issueI614P1
  */
-HWTEST_F(RSRenderServiceVisitorTest, ProcessBaseRenderNode001, TestSize.Level1)
+HWTEST_F(RSRenderServiceVisitorTest, ProcessChildren001, TestSize.Level1)
 {
     RSRenderServiceVisitor rsRenderServiceVisitor;
     RSSurfaceRenderNodeConfig config;
     RSSurfaceRenderNode rsSurfaceRenderNode(config);
-    rsRenderServiceVisitor.ProcessBaseRenderNode(rsSurfaceRenderNode);
+    rsRenderServiceVisitor.ProcessChildren(rsSurfaceRenderNode);
 }
 
 /*
- * @tc.name: ProcessBaseRenderNode002
- * @tc.desc: Test RSRenderServiceVisitorTest.ProcessBaseRenderNode
+ * @tc.name: ProcessChildren002
+ * @tc.desc: Test RSRenderServiceVisitorTest.ProcessChildren
  * @tc.type: FUNC
  * @tc.require: issueI614P1
  */
-HWTEST_F(RSRenderServiceVisitorTest, ProcessBaseRenderNode002, TestSize.Level1)
+HWTEST_F(RSRenderServiceVisitorTest, ProcessChildren002, TestSize.Level1)
 {
     RSRenderServiceVisitor rsRenderServiceVisitor(true);
     RSSurfaceRenderNodeConfig config;
     RSSurfaceRenderNode rsSurfaceRenderNode(config);
-    rsRenderServiceVisitor.ProcessBaseRenderNode(rsSurfaceRenderNode);
+    rsRenderServiceVisitor.ProcessChildren(rsSurfaceRenderNode);
 }
 
 /**

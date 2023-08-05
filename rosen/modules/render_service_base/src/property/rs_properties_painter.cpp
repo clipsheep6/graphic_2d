@@ -36,6 +36,8 @@
 #include "draw/canvas.h"
 #include "draw/clip.h"
 #include "drawing/draw/core_canvas.h"
+#include "recording/recording_path.h"
+#include "recording/recording_shader_effect.h"
 #include "utils/rect.h"
 #else
 #include "include/core/SkCanvas.h"
@@ -50,6 +52,7 @@
 #include "include/effects/SkGradientShader.h"
 #include "include/effects/SkLumaColorFilter.h"
 #include "include/utils/SkShadowUtils.h"
+#include "src/image/SkImage_Base.h"
 #ifdef NEW_SKIA
 #include "include/effects/SkImageFilters.h"
 #include "include/effects/SkRuntimeEffect.h"
@@ -432,7 +435,7 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
         }
     }
 
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    auto geoPtr = (properties.GetBoundsGeometry());
     SkMatrix matrix = (geoPtr && isAbsCoordinate) ? geoPtr->GetAbsMatrix() : SkMatrix::I();
     matrix.mapRect(&shadowRect);
 
@@ -513,7 +516,7 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
         brush.SetFilter(filter);
     }
 
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    auto geoPtr = (properties.GetBoundsGeometry());
     Drawing::Matrix matrix = geoPtr ? geoPtr->GetAbsMatrix() : Drawing::Matrix();
     matrix.MapRect(shadowRect, shadowRect);
 
@@ -525,7 +528,8 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect)
+void RSPropertiesPainter::DrawShadow(const RSProperties& properties,
+    RSPaintFilterCanvas& canvas, const RRect* rrect, bool isLeashWindow)
 {
     // skip shadow if not valid or cache is enabled
     if (properties.IsSpherizeValid() || !properties.IsShadowValid() ||
@@ -536,20 +540,23 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilt
     SkPath skPath;
     if (properties.GetShadowPath() && !properties.GetShadowPath()->GetSkiaPath().isEmpty()) {
         skPath = properties.GetShadowPath()->GetSkiaPath();
-        canvas.clipPath(skPath, SkClipOp::kDifference, true);
+        if (!isLeashWindow) {
+            canvas.clipPath(skPath, SkClipOp::kDifference, true);
+        }
     } else if (properties.GetClipBounds()) {
         skPath = properties.GetClipBounds()->GetSkiaPath();
-        canvas.clipPath(skPath, SkClipOp::kDifference, true);
+        if (!isLeashWindow) {
+            canvas.clipPath(skPath, SkClipOp::kDifference, true);
+        }
     } else {
-        float shadowAlpha = properties.GetShadowAlpha();
         if (rrect != nullptr) {
             skPath.addRRect(RRect2SkRRect(*rrect));
-            if (shadowAlpha == 1.0f) {
+            if (!isLeashWindow) {
                 canvas.clipRRect(RRect2SkRRect(*rrect), SkClipOp::kDifference, true);
             }
         } else {
             skPath.addRRect(RRect2SkRRect(properties.GetRRect()));
-            if (shadowAlpha == 1.0f) {
+            if (!isLeashWindow) {
                 canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), SkClipOp::kDifference, true);
             }
         }
@@ -561,7 +568,8 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilt
     }
 }
 #else
-void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect)
+void RSPropertiesPainter::DrawShadow(const RSProperties& properties,
+    RSPaintFilterCanvas& canvas, const RRect* rrect, bool isLeashWindow)
 {
     // skip shadow if not valid or cache is enabled
     //Todo isCacheEnabled
@@ -572,17 +580,25 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilt
     Drawing::Path path;
     if (properties.GetShadowPath() && !properties.GetShadowPath()->GetDrawingPath().IsValid()) {
         path = properties.GetShadowPath()->GetDrawingPath();
-        canvas.ClipPath(path, Drawing::ClipOp::DIFFERENCE, true);
+        if (!isLeashWindow) {
+            canvas.ClipPath(path, Drawing::ClipOp::DIFFERENCE, true);
+        }
     } else if (properties.GetClipBounds()) {
         path = properties.GetClipBounds()->GetDrawingPath();
-        canvas.ClipPath(path, Drawing::ClipOp::DIFFERENCE, true);
+        if (!isLeashWindow) {
+            canvas.ClipPath(path, Drawing::ClipOp::DIFFERENCE, true);
+        }
     } else {
         if (rrect != nullptr) {
             path.AddRoundRect(RRect2DrawingRRect(*rrect));
-            canvas.ClipRoundRect(RRect2DrawingRRect(*rrect), Drawing::ClipOp::DIFFERENCE, true);
+            if (!isLeashWindow) {
+                canvas.ClipRoundRect(RRect2DrawingRRect(*rrect), Drawing::ClipOp::DIFFERENCE, true);
+            }
         } else {
             path.AddRoundRect(RRect2DrawingRRect(properties.GetRRect()));
-            canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::DIFFERENCE, true);
+            if (!isLeashWindow) {
+                canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::DIFFERENCE, true);
+            }
         }
     }
     if (properties.GetShadowMask()) {
@@ -1066,6 +1082,12 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         ROSEN_LOGE("RSPropertiesPainter::DrawFilter image null");
         return;
     }
+    if (RSSystemProperties::GetImageGpuResourceCacheEnable(imageSnapshot->width(), imageSnapshot->height())) {
+        ROSEN_LOGD("DrawFilter cache image resource(width:%d, height:%d).",
+            imageSnapshot->width(), imageSnapshot->height());
+        as_IB(imageSnapshot)->hintCacheGpuResource();
+    }
+
     filter->PreProcess(imageSnapshot);
     canvas.resetMatrix();
     auto visibleIRect = canvas.GetVisibleRect().round();
@@ -1341,7 +1363,7 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
 
     SkPaint paint;
     SkMatrix inverseMat, scaleMat;
-    auto boundsGeo = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    auto boundsGeo = (properties.GetBoundsGeometry());
     if (boundsGeo && !boundsGeo->IsEmpty()) {
         if (!canvas.getTotalMatrix().invert(&inverseMat)) {
             ROSEN_LOGE("RSPropertiesPainter::DrawPixelStretch get inverse matrix failed.");
@@ -1394,6 +1416,22 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
     canvas.Restore();
 
     Vector4f stretchSize = GetStretchSize(properties);
+    /*  Calculates the relative coordinates of the clipbounds
+        with respect to the origin of the current canvas coordinates */
+    Drawing::Matrix worldToLocalMat;
+    if (!canvas.GetTotalMatrix().Invert(worldToLocalMat)) {
+        ROSEN_LOGE("RSPropertiesPainter::DrawPixelStretch get invert matrix failed.");
+    }
+    Drawing::Rect localClipBounds;
+    Drawing::Rect fClipBounds(clipBounds.GetLeft(), clipBounds.GetTop(), clipBounds.GetWidth(),
+        clipBounds.GetBottom());
+    if (!worldToLocalMat.MapRect(localClipBounds, fClipBounds)) {
+        ROSEN_LOGE("RSPropertiesPainter::DrawPixelStretch map rect failed.");
+    }
+
+    if (!bounds.Intersect(localClipBounds)) {
+        ROSEN_LOGE("RSPropertiesPainter::DrawPixelStretch intersect clipbounds failed");
+    }
 
     auto scaledBounds = Drawing::Rect(bounds.GetLeft() - stretchSize.x_, bounds.GetTop() - stretchSize.y_,
         bounds.GetRight() + stretchSize.z_, bounds.GetBottom() + stretchSize.w_);
@@ -1402,8 +1440,8 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
         return;
     }
 
-    Drawing::RectI rectI(static_cast<int>(clipBounds.GetLeft()), static_cast<int>(clipBounds.GetRight()),
-        static_cast<int>(clipBounds.GetTop()), static_cast<int>(clipBounds.GetBottom()));
+    Drawing::RectI rectI(static_cast<int>(fClipBounds.GetLeft()), static_cast<int>(fClipBounds.GetTop()),
+        static_cast<int>(fClipBounds.GetRight()), static_cast<int>(fClipBounds.GetBottom()));
     auto image = surface->GetImageSnapshot(rectI);
     if (image == nullptr) {
         ROSEN_LOGE("RSPropertiesPainter::DrawPixelStretch image null");
@@ -1412,7 +1450,7 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
 
     Drawing::Brush brush;
     Drawing::Matrix inverseMat, scaleMat;
-    auto boundsGeo = std::static_pointer_cast<RSObjAbsGeometry>(properties.GetBoundsGeometry());
+    auto boundsGeo = (properties.GetBoundsGeometry());
     if (boundsGeo && !boundsGeo->IsEmpty()) {
         if (!canvas.GetTotalMatrix().Invert(inverseMat)) {
             ROSEN_LOGE("RSPropertiesPainter::DrawPixelStretch get inverse matrix failed.");
@@ -1421,6 +1459,8 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
         scaleMat.Set(Drawing::Matrix::SCALE_Y, inverseMat.Get(Drawing::Matrix::SCALE_Y));
     }
 
+    canvas.Save();
+    canvas.Translate(bounds.GetLeft(), bounds.GetTop());
     Drawing::SamplingOptions samplingOptions;
     if (properties.IsPixelStretchExpanded()) {
         brush.SetShaderEffect(Drawing::ShaderEffect::CreateImageShader(
@@ -1435,14 +1475,13 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
         brush.SetShaderEffect(Drawing::ShaderEffect::CreateImageShader(
             *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, samplingOptions, scaleMat));
 
-        canvas.Save();
         canvas.Translate(-stretchSize.x_, -stretchSize.y_);
         canvas.AttachBrush(brush);
         canvas.DrawRect(Drawing::Rect(
             stretchSize.x_, stretchSize.y_, stretchSize.x_ + bounds.GetWidth(), stretchSize.y_ + bounds.GetHeight()));
         canvas.DetachBrush();
-        canvas.Restore();
     }
+    canvas.Restore();
 }
 #endif
 
@@ -1529,14 +1568,25 @@ void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaint
     }
 #else
     if (properties.GetClipBounds() != nullptr) {
-        canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, antiAlias);
+        auto& path = properties.GetClipBounds()->GetDrawingPath();
+        if (path.GetDrawingType() == Drawing::DrawingType::RECORDING) {
+            auto clipPath = static_cast<const Drawing::RecordingPath&>(path).GetCmdList()->Playback();
+            canvas.ClipPath(*clipPath, Drawing::ClipOp::INTERSECT, antiAlias);
+        } else {
+            canvas.ClipPath(path, Drawing::ClipOp::INTERSECT, antiAlias);
+        }
     } else if (properties.GetClipToBounds()) {
-        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, antiAlias);
+        if (properties.GetCornerRadius().IsZero()) {
+            canvas.ClipRect(Rect2DrawingRect(properties.GetBoundsRect()), Drawing::ClipOp::INTERSECT, isAntiAlias);
+        } else {
+            canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, antiAlias);
+        }
+    } else if (properties.GetClipToRRect()) {
+        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetClipRRect()), Drawing::ClipOp::INTERSECT, antiAlias);
     }
     // paint backgroundColor
     Drawing::Brush brush;
     brush.SetAntiAlias(antiAlias);
-    canvas.Save();
     auto bgColor = properties.GetBackgroundColor();
     if (bgColor != RgbPalette::Transparent()) {
         brush.SetColor(Drawing::Color(bgColor.AsArgbInt()));
@@ -1545,19 +1595,29 @@ void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaint
         canvas.DetachBrush();
     }
     if (const auto& bgShader = properties.GetBackgroundShader()) {
+        canvas.Save();
         canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, antiAlias);
-        brush.SetShaderEffect(bgShader->GetDrawingShader());
+        auto shaderEffect = bgShader->GetDrawingShader();
+        if (shaderEffect && shaderEffect->GetDrawingType() == Drawing::DrawingType::RECORDING) {
+            auto shader =
+                std::static_pointer_cast<Drawing::RecordingShaderEffect>(shaderEffect)->GetCmdList()->Playback();
+            brush.SetShaderEffect(shader);
+        } else {
+            brush.SetShaderEffect(shaderEffect);
+        }
         canvas.DrawBackground(brush);
+        canvas.Restore();
     }
     if (const auto& bgImage = properties.GetBgImage()) {
+        canvas.Save();
         canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, antiAlias);
         auto boundsRect = Rect2DrawingRect(properties.GetBoundsRect());
         bgImage->SetDstRect(properties.GetBgImageRect());
         canvas.AttachBrush(brush);
         bgImage->CanvasDrawImage(canvas, boundsRect, true);
         canvas.DetachBrush();
+        canvas.Restore();
     }
-    canvas.Restore();
 #endif
 }
 
@@ -2079,6 +2139,75 @@ sk_sp<SkShader> RSPropertiesPainter::MakeLightUpEffectShader(float lightUpDeg, s
     size_t childCount = 1;
     return effect->makeShader(SkData::MakeWithCopy(
         &lightUpDeg, sizeof(lightUpDeg)), children, childCount, nullptr, false);
+}
+#endif
+#endif
+
+void RSPropertiesPainter::DrawDynamicLightUp(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+{
+#ifndef USE_ROSEN_DRAWING
+#ifdef NEW_SKIA
+    SkSurface* skSurface = canvas.GetSurface();
+    if (skSurface == nullptr) {
+        ROSEN_LOGD("RSPropertiesPainter::DrawDynamicLightUp skSurface is null");
+        return;
+    }
+    SkAutoCanvasRestore acr(&canvas, true);
+    if (properties.GetClipBounds() != nullptr) {
+        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
+    } else {
+        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
+    }
+
+    auto clipBounds = canvas.getDeviceClipBounds();
+    auto image = skSurface->makeImageSnapshot(clipBounds);
+    if (image == nullptr) {
+        ROSEN_LOGE("RSPropertiesPainter::DrawDynamicLightUp image is null");
+        return;
+    }
+    auto imageShader = image->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
+    auto shader = MakeDynamicLightUpShader(
+        properties.GetDynamicLightUpRate().value(), properties.GetDynamicLightUpDegree().value(), imageShader);
+    SkPaint paint;
+    paint.setShader(shader);
+    canvas.resetMatrix();
+    canvas.translate(clipBounds.left(), clipBounds.top());
+    canvas.drawPaint(paint);
+#endif
+#endif
+}
+
+#ifndef USE_ROSEN_DRAWING
+#ifdef NEW_SKIA
+sk_sp<SkShader> RSPropertiesPainter::MakeDynamicLightUpShader(
+    float dynamicLightUpRate, float dynamicLightUpDeg, sk_sp<SkShader> imageShader)
+{
+    static constexpr char prog[] = R"(
+        uniform half dynamicLightUpRate;
+        uniform half dynamicLightUpDeg;
+        uniform shader imageShader;
+
+        half4 main(float2 coord) {
+            vec3 c = vec3(imageShader.eval(coord).r * 255,
+                imageShader.eval(coord).g * 255, imageShader.eval(coord).b * 255);
+            float x = 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+            float y = (0 - dynamicLightUpRate) * x + dynamicLightUpDeg * 255;
+            float R = clamp((c.r + y) / 255, 0.0, 1.0);
+            float G = clamp((c.g + y) / 255, 0.0, 1.0);
+            float B = clamp((c.b + y) / 255, 0.0, 1.0);
+            return vec4(R, G, B, 1.0);
+        }
+    )";
+    auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
+    if (!effect) {
+        ROSEN_LOGE("MakeDynamicLightUpShader::RuntimeShader effect error: %s\n", err.c_str());
+        return nullptr;
+    }
+    SkRuntimeShaderBuilder builder(effect);
+    builder.child("imageShader") = imageShader;
+    builder.uniform("dynamicLightUpRate") = dynamicLightUpRate;
+    builder.uniform("dynamicLightUpDeg") = dynamicLightUpDeg;
+    return builder.makeShader(nullptr, false);
 }
 #endif
 #endif

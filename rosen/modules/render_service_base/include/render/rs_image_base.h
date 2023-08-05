@@ -39,7 +39,11 @@ public:
     virtual ~RSImageBase();
 
 #ifndef USE_ROSEN_DRAWING
+#ifdef NEW_SKIA
+    virtual void DrawImage(SkCanvas& canvas, const SkSamplingOptions& samplingOptions, const SkPaint& paint);
+#else
     virtual void DrawImage(SkCanvas& canvas, const SkPaint& paint);
+#endif
     void SetImage(const sk_sp<SkImage> image);
 #else
     virtual void DrawImage(Drawing::Canvas& canvas, const Drawing::Brush& brush);
@@ -51,6 +55,7 @@ public:
     void SetImagePixelAddr(void* addr);
     void UpdateNodeIdToPicture(NodeId nodeId);
     void MarkRenderServiceImage();
+    std::shared_ptr<Media::PixelMap> GetPixelMap() const;
 #ifdef ROSEN_OHOS
     virtual bool Marshalling(Parcel& parcel) const;
     [[nodiscard]] static RSImageBase* Unmarshalling(Parcel& parcel);

@@ -31,6 +31,7 @@
 #include "common/rs_obj_abs_geometry.h"
 #include "memory/rs_tag_tracker.h"
 #include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_canvas_drawing_render_node.h"
 #include "pipeline/rs_cold_start_thread.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_divided_render_util.h"
@@ -313,7 +314,6 @@ bool RSSurfaceCaptureTask::CopyDataToPixelMap(sk_sp<SkImage> img, const std::uni
 #endif
     return true;
 }
-
 #else
 std::shared_ptr<Drawing::Surface> RSSurfaceCaptureTask::CreateSurface(const std::unique_ptr<Media::PixelMap>& pixelmap)
 {
@@ -327,6 +327,9 @@ std::shared_ptr<Drawing::Surface> RSSurfaceCaptureTask::CreateSurface(const std:
         return nullptr;
     }
     Drawing::BitmapFormat format { Drawing::ColorType::COLORTYPE_RGBA_8888, Drawing::AlphaType::ALPHATYPE_PREMUL };
+    auto bitmap = std::make_shared<Drawing::Bitmap>();
+    bitmap->Build(pixelmap->GetWidth(), pixelmap->GetHeight(), format);
+    bitmap->SetPixels(address);
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
     auto renderEngine = RSMainThread::Instance()->GetRenderEngine();
     if (renderEngine == nullptr) {
@@ -338,14 +341,33 @@ std::shared_ptr<Drawing::Surface> RSSurfaceCaptureTask::CreateSurface(const std:
         RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderContext is nullptr");
         return nullptr;
     }
-    renderContext->SetUpGrContext();
-#endif
-    Drawing::Bitmap bitmap;
-    bitmap.Build(pixelmap->GetWidth(), pixelmap->GetHeight(), format);
-    bitmap.SetPixels(address);
+    renderContext->SetUpGpuContext();
+    auto gpuContext = renderContext->GetDrGPUContext();
+    if (gpuContext == nullptr) {
+        RS_LOGE("RSSurfaceCaptureTask::CreateSurface: Drawing::GPUContext is nullptr");
+        return nullptr;
+    }
+    auto image = std::make_shared<Drawing::Image>();
+    if (!image->BuildFromBitmap(*gpuContext, *bitmap)) {
+        RS_LOGE("RSSurfaceCaptureTask::CreateSurface: Drawing::Image is nullptr");
+        return nullptr;
+    }
     auto surface = std::make_shared<Drawing::Surface>();
-    surface->Bind(bitmap);
+    if (!surface->Bind(*image)) {
+        if (!surface->Bind(*bitmap)) {
+            RS_LOGE("RSSurfaceCaptureTask::CreateSurface: Drawing::Surface is nullptr");
+            return nullptr;
+        }
+    }
     return surface;
+#else
+    auto surface = std::make_shared<Drawing::Surface>();
+    if (!surface->Bind(*bitmap)) {
+        RS_LOGE("RSSurfaceCaptureTask::CreateSurface: Drawing::Surface is nullptr");
+        return nullptr;
+    }
+    return surface;
+#endif
 }
 #endif
 
@@ -370,7 +392,7 @@ RSSurfaceCaptureVisitor::RSSurfaceCaptureVisitor(float scaleX, float scaleY, boo
     : scaleX_(scaleX), scaleY_(scaleY), isUniRender_(isUniRender)
 {
     renderEngine_ = RSMainThread::Instance()->GetRenderEngine();
-    isUIFirst_ = RSSystemProperties::GetUIFirstEnabled();
+    isUIFirst_ = RSMainThread::Instance()->IsUIFirstOn();
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -395,13 +417,11 @@ void RSSurfaceCaptureVisitor::SetSurface(Drawing::Surface* surface)
 }
 #endif
 
-void RSSurfaceCaptureVisitor::ProcessBaseRenderNode(RSBaseRenderNode &node)
+void RSSurfaceCaptureVisitor::ProcessChildren(RSRenderNode &node)
 {
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
-    // clear SortedChildren, it will be generated again in next frame
-    node.ResetSortedChildren();
 }
 
 void RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node)
@@ -428,7 +448,7 @@ void RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node
         if (hasSecurityLayer_) {
             RS_LOGD("RSSurfaceCaptureVisitor::ProcessDisplayRenderNode: \
                 process RSDisplayRenderNode(id:[%" PRIu64 "]) Not using UniRender buffer.", node.GetId());
-            ProcessBaseRenderNode(node);
+            ProcessChildren(node);
         } else {
             if (node.GetBuffer() == nullptr) {
                 RS_LOGE("RSSurfaceCaptureVisitor::ProcessDisplayRenderNode: buffer is null!");
@@ -456,7 +476,7 @@ void RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node
             renderEngine_->DrawDisplayNodeWithParams(*canvas_, node, params);
         }
     } else {
-        ProcessBaseRenderNode(node);
+        ProcessChildren(node);
     }
 }
 
@@ -474,7 +494,7 @@ void RSSurfaceCaptureVisitor::ProcessEffectRenderNode(RSEffectRenderNode& node)
         return;
     }
     node.ProcessRenderBeforeChildren(*canvas_);
-    ProcessBaseRenderNode(node);
+    ProcessChildren(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }
 
@@ -522,7 +542,7 @@ void RSSurfaceCaptureVisitor::AdjustZOrderAndDrawSurfaceNode()
 void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNode& node)
 {
     const auto& property = node.GetRenderProperties();
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    auto geoPtr = (property.GetBoundsGeometry());
     if (!geoPtr) {
         RS_LOGE("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni node:%" PRIu64 ", get geoPtr failed",
             node.GetId());
@@ -608,14 +628,14 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         RS_LOGD("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni: DrawCachedImage.");
         RSUniRenderUtil::DrawCachedImage(node, *canvas_, node.GetCachedImage());
     } else {
-        ProcessBaseRenderNode(node);
+        ProcessChildren(node);
     }
 }
 #else
 void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNode& node)
 {
     const auto& property = node.GetRenderProperties();
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    auto geoPtr = (property.GetBoundsGeometry());
     if (!geoPtr) {
         RS_LOGE("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni node:%" PRIu64 ", get geoPtr failed",
             node.GetId());
@@ -707,7 +727,7 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         RS_LOGD("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni: DrawCachedImage.");
         RSUniRenderUtil::DrawCachedImage(node, *canvas_, node.GetCachedImage());
     } else {
-        ProcessBaseRenderNode(node);
+        ProcessChildren(node);
     }
 }
 #endif
@@ -731,7 +751,7 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
     bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
 
     const auto& property = node.GetRenderProperties();
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    auto geoPtr = (property.GetBoundsGeometry());
     if (geoPtr) {
         canvas_->setMatrix(geoPtr->GetAbsMatrix());
     }
@@ -742,7 +762,7 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
 
     const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
-    RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect);
+    RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect, node.IsLeashWindow());
     if (!property.GetCornerRadius().IsZero()) {
         canvas_->clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
     } else {
@@ -764,7 +784,7 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
         renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
     }
 
-    ProcessBaseRenderNode(node);
+    ProcessChildren(node);
     RSPropertiesPainter::DrawFilter(property, *canvas_, FilterType::FOREGROUND_FILTER);
     RSPropertiesPainter::DrawLinearGradientBlurFilter(property, *canvas_);
     DrawWatermarkIfNeed(property.GetBoundsWidth(), property.GetBoundsHeight());
@@ -788,9 +808,9 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
     bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
 
     const auto& property = node.GetRenderProperties();
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    auto geoPtr = (property.GetBoundsGeometry());
     if (geoPtr) {
-        canvas_->setMatrix(geoPtr->GetAbsMatrix());
+        canvas_->SetMatrix(geoPtr->GetAbsMatrix());
     }
 
     if (isSelfDrawingSurface) {
@@ -799,7 +819,7 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
 
     const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
-    RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect);
+    RSPropertiesPainter::DrawShadow(property, *canvas_, &absClipRRect, node.IsLeashWindow());
     if (!property.GetCornerRadius().IsZero()) {
         canvas_->ClipRoundRect(
             RSPropertiesPainter::RRect2DrawingRRect(absClipRRect), Drawing::ClipOp::INTERSECT, true);
@@ -826,7 +846,7 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
         canvas_->Restore();
     }
 
-    ProcessBaseRenderNode(node);
+    ProcessChildren(node);
     RSPropertiesPainter::DrawFilter(property, *canvas_, FilterType::FOREGROUND_FILTER);
     RSPropertiesPainter::DrawLinearGradientBlurFilter(property, *canvas_);
     DrawWatermarkIfNeed(property.GetBoundsWidth(), property.GetBoundsHeight());
@@ -835,7 +855,7 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
 
 void RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWithUni(RSSurfaceRenderNode &node)
 {
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
+    auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
     if (geoPtr == nullptr) {
         RS_LOGW("RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode node:%" PRIu64 ", get geoPtr failed", node.GetId());
         return;
@@ -890,10 +910,20 @@ void RSSurfaceCaptureVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         RS_LOGE("RSSurfaceCaptureVisitor::ProcessCanvasRenderNode, canvas is nullptr");
         return;
     }
+    if (auto drawingNode = node.ReinterpretCastTo<RSCanvasDrawingRenderNode>()) {
+#ifndef USE_ROSEN_DRAWING
+        auto clearFunc = [id = UNI_MAIN_THREAD_INDEX](sk_sp<SkSurface> surface) {
+#else
+        auto clearFunc = [id = UNI_MAIN_THREAD_INDEX](std::shared_ptr<Drawing::Surface> surface) {
+#endif
+            RSUniRenderUtil::ClearNodeCacheSurface(surface, nullptr, id);
+        };
+        drawingNode->SetSurfaceClearFunc({ UNI_MAIN_THREAD_INDEX, clearFunc });
+    }
     node.GetMutableRenderProperties().CheckEmptyBounds();
     node.ProcessRenderBeforeChildren(*canvas_);
     node.ProcessRenderContents(*canvas_);
-    ProcessBaseRenderNode(node);
+    ProcessChildren(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }
 
@@ -925,7 +955,7 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithoutUni(RSSurfaceRender
     if (node.GetChildrenCount() > 0) {
         canvas_->concat(translateMatrix);
         const auto saveCnt = canvas_->save();
-        ProcessBaseRenderNode(node);
+        ProcessChildren(node);
         canvas_->restoreToCount(saveCnt);
         if (node.GetBuffer() != nullptr) {
             // in node's local coordinate.
@@ -975,7 +1005,7 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithoutUni(RSSurfaceRender
         canvas_->ConcatMatrix(translateMatrix);
         const auto saveCnt = canvas_->GetSaveCount();
         canvas_->Save();
-        ProcessBaseRenderNode(node);
+        ProcessChildren(node);
         canvas_->RestoreToCount(saveCnt);
         if (node.GetBuffer() != nullptr) {
             // in node's local coordinate.
@@ -1003,7 +1033,7 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithoutUni(RSSurfaceRenderN
             node.GetId());
         return;
     }
-    ProcessBaseRenderNode(node);
+    ProcessChildren(node);
     if (node.GetBuffer() != nullptr) {
         // in display's coordinate.
         auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, false, false, false, false);
@@ -1052,7 +1082,7 @@ void RSSurfaceCaptureVisitor::DrawWatermarkIfNeed(float screenWidth, float scree
         auto skDstRect = SkRect::MakeWH(screenWidth, screenHeight);
 #ifdef NEW_SKIA
         canvas_->drawImageRect(
-            skImage, skSrcRect, skDstRect, SkSamplingOptions(), 
+            skImage, skSrcRect, skDstRect, SkSamplingOptions(),
             &rectPaint, SkCanvas::kStrict_SrcRectConstraint);
 #else
         canvas_->drawImageRect(skImage, skSrcRect, skDstRect, &rectPaint);

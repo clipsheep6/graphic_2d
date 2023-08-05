@@ -47,27 +47,23 @@ RSRenderServiceVisitor::RSRenderServiceVisitor(bool parallel) : mParallelEnable(
 
 RSRenderServiceVisitor::~RSRenderServiceVisitor() {}
 
-void RSRenderServiceVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
+void RSRenderServiceVisitor::PrepareChildren(RSRenderNode& node)
 {
+    node.ApplyChildrenModifiers();
     for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
     }
 }
 
-void RSRenderServiceVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
+void RSRenderServiceVisitor::ProcessChildren(RSRenderNode& node)
 {
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
-    }
-    if (!mParallelEnable) {
-        // clear SortedChildren, it will be generated again in next frame
-        node.ResetSortedChildren();
     }
 }
 
 void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
 {
-    node.ApplyModifiers();
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
         RS_LOGE("RSRenderServiceVisitor::PrepareDisplayRenderNode ScreenManager is nullptr");
@@ -127,9 +123,9 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
             canvas_->ClipRect(tmpRect, Drawing::ClipOp::INTERSECT, false);
 #endif
         }
-        PrepareBaseRenderNode(*existingSource);
+        PrepareChildren(*existingSource);
     } else {
-        auto boundsGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
+        auto boundsGeoPtr = (node.GetRenderProperties().GetBoundsGeometry());
         RSBaseRenderUtil::SetNeedClient(boundsGeoPtr && boundsGeoPtr->IsNeedClientCompose());
 #ifndef USE_ROSEN_DRAWING
         skCanvas_ = std::make_unique<SkCanvas>(logicalScreenWidth, logicalScreenHeight);
@@ -145,7 +141,7 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
         Drawing::Rect tmpRect(0, 0, logicalScreenWidth, logicalScreenHeight);
         canvas_->ClipRect(tmpRect, Drawing::ClipOp::INTERSECT, false);
 #endif
-        PrepareBaseRenderNode(node);
+        PrepareChildren(node);
     }
 
     node.GetCurAllSurfaces().clear();
@@ -195,9 +191,9 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             RS_LOGI("RSRenderServiceVisitor::ProcessDisplayRenderNode mirrorSource haven't existed");
             return;
         }
-        ProcessBaseRenderNode(*existingSource);
+        ProcessChildren(*existingSource);
     } else {
-        ProcessBaseRenderNode(node);
+        ProcessChildren(node);
     }
     processor_->PostProcess();
 }
@@ -222,14 +218,13 @@ void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         RS_LOGD("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : %" PRIu64 " canvas is nullptr", node.GetId());
         return;
     }
-    node.ApplyModifiers();
     if (!node.ShouldPaint()) {
         RS_LOGD("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : %" PRIu64 " is invisible", node.GetId());
         return;
     }
     node.SetOffset(offsetX_, offsetY_);
     node.PrepareRenderBeforeChildren(*canvas_);
-    PrepareBaseRenderNode(node);
+    PrepareChildren(node);
     node.PrepareRenderAfterChildren(*canvas_);
 }
 
@@ -255,7 +250,7 @@ void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (mParallelEnable) {
         node.ParallelVisitLock();
     }
-    ProcessBaseRenderNode(node);
+    ProcessChildren(node);
     node.SetGlobalZOrder(globalZOrder_);
     globalZOrder_ = globalZOrder_ + 1;
     processor_->ProcessSurface(node);

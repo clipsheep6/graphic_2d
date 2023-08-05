@@ -43,6 +43,7 @@
 namespace OHOS {
 namespace Rosen {
 class RSRenderNode;
+class RSObjAbsGeometry;
 class RSB_EXPORT RSProperties final {
 public:
     RSProperties();
@@ -87,8 +88,13 @@ public:
 
     void SetSandBox(const std::optional<Vector2f>& parentPosition);
     std::optional<Vector2f> GetSandBox() const;
+#ifndef USE_ROSEN_DRAWING
     void UpdateSandBoxMatrix(const std::optional<SkMatrix>& rootMatrix);
     std::optional<SkMatrix> GetSandBoxMatrix() const;
+#else
+    void UpdateSandBoxMatrix(const std::optional<Drawing::Matrix>& rootMatrix);
+    std::optional<Drawing::Matrix> GetSandBoxMatrix() const;
+#endif
 
     void SetPositionZ(float positionZ);
     float GetPositionZ() const;
@@ -172,6 +178,8 @@ public:
     // filter properties
     void SetBackgroundFilter(std::shared_ptr<RSFilter> backgroundFilter);
     void SetLinearGradientBlurPara(std::shared_ptr<RSLinearGradientBlurPara> para);
+    void SetDynamicLightUpRate(const std::optional<float>& rate);
+    void SetDynamicLightUpDegree(const std::optional<float>& lightUpDegree);
     void SetFilter(std::shared_ptr<RSFilter> filter);
     const std::shared_ptr<RSFilter>& GetBackgroundFilter() const;
     const std::shared_ptr<RSLinearGradientBlurPara>& GetLinearGradientBlurPara() const;
@@ -193,6 +201,8 @@ public:
     float GetShadowAlpha() const;
     float GetShadowElevation() const;
     float GetShadowRadius() const;
+    const std::optional<float>& GetDynamicLightUpRate() const;
+    const std::optional<float>& GetDynamicLightUpDegree() const;
     std::shared_ptr<RSPath> GetShadowPath() const;
     bool GetShadowMask() const;
     bool IsShadowValid() const;
@@ -236,7 +246,7 @@ public:
 
     bool IsPixelStretchPercentValid() const;
 
-    const std::shared_ptr<RSObjGeometry>& GetBoundsGeometry() const;
+    const std::shared_ptr<RSObjAbsGeometry>& GetBoundsGeometry() const;
     const std::shared_ptr<RSObjGeometry>& GetFrameGeometry() const;
 #ifndef USE_ROSEN_DRAWING
     bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag, const std::optional<SkPoint>& offset,
@@ -259,6 +269,7 @@ public:
     void SetLightUpEffect(float lightUpEffectDegree);
     float GetLightUpEffect() const;
     bool IsLightUpEffectValid() const;
+    bool IsDynamicLightUpValid() const;
 
     // Image effect properties
     void SetGrayScale(const std::optional<float>& grayScale);
@@ -338,7 +349,7 @@ private:
     float alpha_ = 1.f;
     bool alphaOffscreen_ = false;
 
-    std::shared_ptr<RSObjGeometry> boundsGeo_;
+    std::shared_ptr<RSObjAbsGeometry> boundsGeo_;
     std::shared_ptr<RSObjGeometry> frameGeo_;
 
     std::shared_ptr<RSFilter> backgroundFilter_ = nullptr;
@@ -367,6 +378,8 @@ private:
     std::optional<float> sepia_;
     std::optional<float> invert_;
     std::optional<float> hueRotate_;
+    std::optional<float> dynamicLightUpRate_;
+    std::optional<float> dynamicLightUpDegree_;
     std::optional<Color> colorBlend_;
     std::optional<RectI> lastRect_;
 #ifndef USE_ROSEN_DRAWING

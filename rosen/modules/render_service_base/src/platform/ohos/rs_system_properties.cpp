@@ -20,9 +20,13 @@
 #include <parameters.h>
 #include "platform/common/rs_log.h"
 #include "transaction/rs_render_service_client.h"
+#include "scene_board_judgement.h"
 
 namespace OHOS {
 namespace Rosen {
+
+constexpr int DEFAULT_CACHE_WIDTH = 1344;
+constexpr int DEFAULT_CACHE_HEIGHT = 2772;
 
 static void ParseDfxSurfaceNamesString(const std::string& paramsStr,
     std::vector<std::string>& splitStrs, const std::string& seperator)
@@ -41,6 +45,11 @@ static void ParseDfxSurfaceNamesString(const std::string& paramsStr,
     if (pos1 != paramsStr.length()) {
         splitStrs.push_back(paramsStr.substr(pos1));
     }
+}
+
+bool RSSystemProperties::IsSceneBoardEnabled()
+{
+    return SceneBoardJudgement::IsSceneBoardEnabled();
 }
 
 // used by clients
@@ -297,7 +306,8 @@ bool RSSystemProperties::GetProxyNodeDebugEnabled()
 
 bool RSSystemProperties::GetUIFirstEnabled()
 {
-    return std::atoi((system::GetParameter("rosen.ui.first.enabled", "1")).c_str()) != 0;
+    static bool isPhone = system::GetParameter("const.product.devicetype", "pc") == "phone";
+    return (std::atoi((system::GetParameter("rosen.ui.first.enabled", "1")).c_str()) != 0) && isPhone;
 }
 
 bool RSSystemProperties::GetDebugTraceEnabled()
@@ -323,6 +333,27 @@ bool RSSystemProperties::GetASTCEnabled()
 {
     static bool isASTCEnabled = std::atoi((system::GetParameter("persist.rosen.astc.enabled", "0")).c_str()) != 0;
     return isASTCEnabled;
+}
+
+bool RSSystemProperties::GetImageGpuResourceCacheEnable(int width, int height)
+{
+    static bool cacheEnable =
+        std::atoi((system::GetParameter("persist.sys.graphic.gpuResourceCacheEnable", "1")).c_str()) != 0;
+    if (!cacheEnable) {
+        return false;
+    }
+
+    // default cache full screen image gpu resource.
+    static int widthConfig =
+        std::atoi((system::GetParameter("persist.sys.graphic.gpuResourceCacheWidth", "0")).c_str());
+    static int heightConfig =
+        std::atoi((system::GetParameter("persist.sys.graphic.gpuResourceCacheHeight", "0")).c_str());
+    int cacheWidth = widthConfig == 0 ? DEFAULT_CACHE_WIDTH : widthConfig;
+    int cacheHeight = heightConfig == 0 ? DEFAULT_CACHE_HEIGHT : heightConfig;
+    if (width >= cacheWidth && height >= cacheHeight) {
+        return true;
+    }
+    return false;
 }
 
 bool RSSystemProperties::GetBoolSystemProperty(const char* name, bool defaultValue)

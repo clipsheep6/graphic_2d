@@ -105,11 +105,10 @@ ohos_shared_library("librender_service") {
     "//utils/system/safwk/native/include",
     "$graphic_2d_root/utils/log",
     "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk/include",
-    "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/include",
-    "$graphic_2d_root/rosen/modules/hyper_graphic_manager/utils/include",
-    "$graphic_2d_root/rosen/modules/hyper_graphic_manager/config/include",
-    "$graphic_2d_root/rosen/modules/hyper_graphic_manager/interface/include",
-    "$graphic_2d_root/rosen/modules/hyper_graphic_manager/frame_rate_manager",
+    "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/config",
+    "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/frame_rate_manager",
+    "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/hgm_screen_manager",
+    "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/utils",
   ]
 
   deps = [
@@ -141,7 +140,13 @@ ohos_shared_library("librender_service") {
     public_deps += [ "$graphic_2d_root:libvulkan" ]
   }
 
+  if (defined(use_rosen_drawing) && use_rosen_drawing) {
+    defines += [ "USE_ROSEN_DRAWING" ]
+    deps += [ "$rosen_root/modules/2d_graphics:2d_graphics" ]
+  }
+
   external_deps = [
+    "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hicollie:libhicollie",
@@ -160,14 +165,8 @@ ohos_shared_library("librender_service") {
 
   if (defined(global_parts_info) &&
       defined(global_parts_info.resourceschedule_soc_perf)) {
-    external_deps += [
-      "resource_schedule_service:ressched_client",
-      "soc_perf:socperf_client",
-    ]
-    defines += [
-      "SOC_PERF_ENABLE",
-      "RES_SCHED_ENABLE",
-    ]
+    external_deps += [ "soc_perf:socperf_client" ]
+    defines += [ "SOC_PERF_ENABLE" ]
   }
 
   if (accessibility_enable) {
@@ -194,6 +193,8 @@ ohos_executable("render_service") {
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager:libhyper_graphic_manager",
     "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
   ]
+
+  external_deps = [ "ipc:ipc_core" ]
 
   part_name = "graphic_2d"
   subsystem_name = "graphic"

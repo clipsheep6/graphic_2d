@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("../render_service_base/config.gni")
 
 ## Build libframe_analyzer.so {{{
 config("libframe_analyzer_config") {
@@ -45,10 +46,7 @@ ohos_shared_library("libframe_analyzer") {
 
     include_dirs = [ "//foundation/graphic/graphic_2d/utils/sandbox" ]
 
-    deps = [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-      "//foundation/graphic/graphic_2d/utils/sandbox:sandbox_utils",
-    ]
+    deps = [ "../../../utils/sandbox:sandbox_utils" ]
 
     if (defined(use_new_skia) && use_new_skia) {
       deps += [ "//third_party/skia:skia_ohos" ]
@@ -58,6 +56,7 @@ ohos_shared_library("libframe_analyzer") {
 
     external_deps = [
       "c_utils:utils",
+      "hilog:libhilog",
       "hitrace:hitrace_meter",
       "init:libbeget_proxy",
       "init:libbegetutil",
@@ -67,6 +66,11 @@ ohos_shared_library("libframe_analyzer") {
       "src/mingw/frame_collector.cpp",
       "src/mingw/frame_painter.cpp",
     ]
+  }
+
+  if (defined(use_rosen_drawing) && use_rosen_drawing) {
+    defines = [ "USE_ROSEN_DRAWING" ]
+    deps += [ "$rosen_root/modules/2d_graphics:2d_graphics" ]
   }
 
   configs = [ ":libframe_analyzer_config" ]

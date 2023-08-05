@@ -136,7 +136,11 @@ std::unique_ptr<OpItem> OpItemWithPaint::GenerateCachedOpItem(
 void OpItemWithRSImage::Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const
 {
     if (rsImage_) {
+#ifdef NEW_SKIA
+        rsImage_->DrawImage(canvas, samplingOptions_, paint_);
+#else
         rsImage_->DrawImage(canvas, paint_);
+#endif
     }
 }
 
@@ -316,7 +320,7 @@ void TextBlobOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 #ifdef NEW_SKIA
 BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float top,
     const SkSamplingOptions& samplingOptions, const SkPaint* paint)
-    : OpItemWithRSImage(sizeof(BitmapOpItem)), samplingOptions_(samplingOptions)
+    : OpItemWithRSImage(samplingOptions, sizeof(BitmapOpItem)), samplingOptions_(samplingOptions)
 {
     if (bitmapInfo) {
         rsImage_ = std::make_shared<RSImageBase>();
@@ -331,7 +335,7 @@ BitmapOpItem::BitmapOpItem(const sk_sp<SkImage> bitmapInfo, float left, float to
 
 BitmapOpItem::BitmapOpItem(std::shared_ptr<RSImageBase> rsImage, const SkSamplingOptions& samplingOptions,
     const SkPaint& paint)
-    : OpItemWithRSImage(rsImage, paint, sizeof(BitmapOpItem)), samplingOptions_(samplingOptions)
+    : OpItemWithRSImage(rsImage, samplingOptions, paint, sizeof(BitmapOpItem)), samplingOptions_(samplingOptions)
 {}
 
 ColorFilterBitmapOpItem::ColorFilterBitmapOpItem(
@@ -383,7 +387,8 @@ void ColorFilterBitmapOpItem::Draw(RSPaintFilterCanvas &canvas, const SkRect *) 
 BitmapRectOpItem::BitmapRectOpItem(
     const sk_sp<SkImage> bitmapInfo, const SkRect* rectSrc, const SkRect& rectDst,
     const SkSamplingOptions& samplingOptions, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint)
-    : OpItemWithRSImage(sizeof(BitmapRectOpItem)), samplingOptions_(samplingOptions), constraint_(constraint)
+    : OpItemWithRSImage(samplingOptions, sizeof(BitmapRectOpItem)),
+    samplingOptions_(samplingOptions), constraint_(constraint)
 {
     if (bitmapInfo) {
         rsImage_ = std::make_shared<RSImageBase>();
@@ -399,7 +404,7 @@ BitmapRectOpItem::BitmapRectOpItem(
 
 BitmapRectOpItem::BitmapRectOpItem(std::shared_ptr<RSImageBase> rsImage, const SkSamplingOptions& samplingOptions,
     const SkPaint& paint, SkCanvas::SrcRectConstraint constraint)
-    : OpItemWithRSImage(rsImage, paint, sizeof(BitmapRectOpItem)),
+    : OpItemWithRSImage(rsImage, samplingOptions, paint, sizeof(BitmapRectOpItem)),
     samplingOptions_(samplingOptions), constraint_(constraint)
 {}
 #else
@@ -428,7 +433,7 @@ BitmapRectOpItem::BitmapRectOpItem(std::shared_ptr<RSImageBase> rsImage, const S
 PixelMapOpItem::PixelMapOpItem(
     const std::shared_ptr<Media::PixelMap>& pixelmap, float left, float top,
     const SkSamplingOptions& samplingOptions, const SkPaint* paint)
-    : OpItemWithRSImage(sizeof(PixelMapOpItem)), samplingOptions_(samplingOptions)
+    : OpItemWithRSImage(samplingOptions, sizeof(PixelMapOpItem)), samplingOptions_(samplingOptions)
 {
     if (pixelmap) {
         rsImage_ = std::make_shared<RSImageBase>();
@@ -443,7 +448,7 @@ PixelMapOpItem::PixelMapOpItem(
 
 PixelMapOpItem::PixelMapOpItem(std::shared_ptr<RSImageBase> rsImage, const SkSamplingOptions& samplingOptions,
     const SkPaint& paint)
-    : OpItemWithRSImage(rsImage, paint, sizeof(PixelMapOpItem)), samplingOptions_(samplingOptions)
+    : OpItemWithRSImage(rsImage, samplingOptions, paint, sizeof(PixelMapOpItem)), samplingOptions_(samplingOptions)
 {}
 #else
 PixelMapOpItem::PixelMapOpItem(
@@ -470,7 +475,8 @@ PixelMapOpItem::PixelMapOpItem(std::shared_ptr<RSImageBase> rsImage, const SkPai
 PixelMapRectOpItem::PixelMapRectOpItem(
     const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& src, const SkRect& dst,
     const SkSamplingOptions& samplingOptions, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint)
-    : OpItemWithRSImage(sizeof(PixelMapRectOpItem)), samplingOptions_(samplingOptions), constraint_(constraint)
+    : OpItemWithRSImage(samplingOptions, sizeof(PixelMapRectOpItem)),
+    samplingOptions_(samplingOptions), constraint_(constraint)
 {
     if (pixelmap) {
         rsImage_ = std::make_shared<RSImageBase>();
@@ -485,7 +491,7 @@ PixelMapRectOpItem::PixelMapRectOpItem(
 
 PixelMapRectOpItem::PixelMapRectOpItem(std::shared_ptr<RSImageBase> rsImage, const SkSamplingOptions& samplingOptions,
     const SkPaint& paint, SkCanvas::SrcRectConstraint constraint)
-    : OpItemWithRSImage(rsImage, paint, sizeof(PixelMapRectOpItem)),
+    : OpItemWithRSImage(rsImage, samplingOptions, paint, sizeof(PixelMapRectOpItem)),
     samplingOptions_(samplingOptions), constraint_(constraint)
 {}
 #else
@@ -688,19 +694,109 @@ ImageWithParmOpItem::ImageWithParmOpItem(const std::shared_ptr<RSImage>& rsImage
 {
     paint_ = paint;
 }
-
+ImageWithParmOpItem::~ImageWithParmOpItem()
+{
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+#ifndef USE_ROSEN_DRAWING
+    if (texId_ != 0U) {
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDeleteTextures(1, &texId_);
+        texId_ = 0U;
+    }
+    if (nativeWindowBuffer_ != nullptr) {
+        DestroyNativeWindowBuffer(nativeWindowBuffer_);
+        nativeWindowBuffer_ = nullptr;
+    }
+    if (eglImage_ != EGL_NO_IMAGE_KHR) {
+        auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        eglDestroyImageKHR(disp, eglImage_);
+        eglImage_ = EGL_NO_IMAGE_KHR;
+    }
+#endif
+#endif
+}
 void ImageWithParmOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const
 {
     if (!rect) {
         ROSEN_LOGE("ImageWithParmOpItem: no rect");
         return;
     }
+
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+#ifndef USE_ROSEN_DRAWING
+    std::shared_ptr<Media::PixelMap> pixelmap = rsImage_->GetPixelMap();
+    if (pixelmap != nullptr && pixelmap->GetAllocatorType() == Media::AllocatorType::DMA_ALLOC) {
+        sk_sp<SkImage> dmaImage = GetSkImageFromSurfaceBuffer(canvas,
+            reinterpret_cast<SurfaceBuffer*> (pixelmap->GetFd()));
+        rsImage_->SetImage(dmaImage);
+    }
+#endif
+#endif
+
 #ifdef NEW_SKIA
     rsImage_->CanvasDrawImage(canvas, *rect, samplingOptions_, paint_);
 #else
     rsImage_->CanvasDrawImage(canvas, *rect, paint_);
 #endif
 }
+
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+#ifndef USE_ROSEN_DRAWING
+sk_sp<SkImage> ImageWithParmOpItem::GetSkImageFromSurfaceBuffer(SkCanvas& canvas, SurfaceBuffer* surfaceBuffer) const
+{
+    if (surfaceBuffer == nullptr) {
+        RS_LOGE("GetSkImageFromSurfaceBuffer surfaceBuffer is nullptr");
+        return nullptr;
+    }
+    if (nativeWindowBuffer_ == nullptr) {
+        sptr<SurfaceBuffer> sfBuffer(surfaceBuffer);
+        nativeWindowBuffer_ = CreateNativeWindowBufferFromSurfaceBuffer(&sfBuffer);
+        if (!nativeWindowBuffer_) {
+            RS_LOGE("GetSkImageFromSurfaceBuffer create native window buffer fail");
+            return nullptr;
+        }
+    }
+    EGLint attrs[] = {
+        EGL_IMAGE_PRESERVED,
+        EGL_TRUE,
+        EGL_NONE,
+    };
+
+    auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (eglImage_ == EGL_NO_IMAGE_KHR) {
+        eglImage_ = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_OHOS, nativeWindowBuffer_, attrs);
+        if (eglImage_ == EGL_NO_IMAGE_KHR) {
+            RS_LOGE("%s create egl image fail %d", __func__, eglGetError());
+            return nullptr;
+        }
+    }
+
+    // Create texture object
+    if (texId_ == 0U) {
+        glGenTextures(1, &texId_);
+        glBindTexture(GL_TEXTURE_2D, texId_);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, static_cast<GLeglImageOES>(eglImage_));
+    }
+
+    GrGLTextureInfo textureInfo = { GL_TEXTURE_2D, texId_, GL_RGBA8_OES };
+
+    GrBackendTexture backendTexture(
+        surfaceBuffer->GetWidth(), surfaceBuffer->GetHeight(), GrMipMapped::kNo, textureInfo);
+#ifdef NEW_SKIA
+    auto skImage = SkImage::MakeFromTexture(canvas.recordingContext(), backendTexture, kTopLeft_GrSurfaceOrigin,
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType, SkColorSpace::MakeSRGB());
+#else
+    auto skImage = SkImage::MakeFromTexture(canvas.getGrContext(), backendTexture, kTopLeft_GrSurfaceOrigin,
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType, SkColorSpace::MakeSRGB());
+#endif
+    return skImage;
+}
+#endif // USE_ROSEN_DRAWING
+#endif // ROSEN_OHOS & RS_ENABLE_GL
 
 #ifdef NEW_SKIA
 ConcatOpItem::ConcatOpItem(const SkM44& matrix) : OpItem(sizeof(ConcatOpItem)), matrix_(matrix) {}

@@ -100,14 +100,9 @@ void RSRenderThreadVisitor::SetPartialRenderStatus(PartialRenderType status, boo
     partialRenderStatus_ = status;
 }
 
-void RSRenderThreadVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
+void RSRenderThreadVisitor::PrepareChildren(RSRenderNode& node)
 {
-    node.ResetSortedChildren();
-    for (auto& child : node.GetChildren()) {
-        if (auto renderChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child.lock())) {
-            renderChild->ApplyModifiers();
-        }
-    }
+    node.ApplyChildrenModifiers();
     for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
     }
@@ -121,7 +116,6 @@ void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
         curDirtyManager_->UpdateDebugRegionTypeEnable(dfxDirtyType_);
         // After the node calls ApplyModifiers, the modifiers assign the renderProperties to the node
         // Otherwise node.GetSuggestedBufferHeight always less than 0, causing black screen
-        node.ApplyModifiers();
         if (!IsValidRootRenderNode(node)) {
             return;
         }
@@ -145,14 +139,13 @@ void RSRenderThreadVisitor::ResetAndPrepareChildrenNode(RSRenderNode& node,
     // reset childRect before prepare children
     node.ResetChildrenRect();
     node.UpdateChildrenOutOfRectFlag(false);
-    PrepareBaseRenderNode(node);
+    PrepareChildren(node);
     // accumulate direct parent's childrenRect
     node.UpdateParentChildrenRect(nodeParent);
 }
 
 void RSRenderThreadVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
-    node.ApplyModifiers();
     if (!node.ShouldPaint() || curDirtyManager_ == nullptr) {
         return;
     }
@@ -177,7 +170,6 @@ void RSRenderThreadVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (curDirtyManager_ == nullptr) {
         return;
     }
-    node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
     auto nodeParent = node.GetParent().lock();
     std::shared_ptr<RSRenderNode> rsParent = nullptr;
@@ -201,7 +193,6 @@ void RSRenderThreadVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 
 void RSRenderThreadVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
 {
-    node.ApplyModifiers();
     if (!node.ShouldPaint() || curDirtyManager_ == nullptr) {
         return;
     }
@@ -407,13 +398,11 @@ void RSRenderThreadVisitor::UpdateDirtyAndSetEGLDamageRegion(std::unique_ptr<RSS
     RS_TRACE_END();
 }
 
-void RSRenderThreadVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
+void RSRenderThreadVisitor::ProcessChildren(RSRenderNode& node)
 {
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
-    // clear SortedChildren, it will be generated again in next frame
-    node.ResetSortedChildren();
 }
 
 void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
@@ -696,7 +685,7 @@ void RSRenderThreadVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     }
     node.ProcessRenderBeforeChildren(*canvas_);
     node.ProcessRenderContents(*canvas_);
-    ProcessBaseRenderNode(node);
+    ProcessChildren(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }
 
@@ -732,7 +721,7 @@ bool RSRenderThreadVisitor::UpdateAnimatePropertyCacheSurface(RSRenderNode& node
     swap(cacheCanvas, canvas_);
     node.ProcessAnimatePropertyBeforeChildren(*canvas_);
     node.ProcessRenderContents(*canvas_);
-    ProcessBaseRenderNode(node);
+    ProcessChildren(node);
     node.ProcessAnimatePropertyAfterChildren(*canvas_);
     swap(cacheCanvas, canvas_);
 
@@ -751,7 +740,7 @@ void RSRenderThreadVisitor::ProcessEffectRenderNode(RSEffectRenderNode& node)
         return;
     }
     node.ProcessRenderBeforeChildren(*canvas_);
-    ProcessBaseRenderNode(node);
+    ProcessChildren(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }
 
@@ -825,7 +814,7 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     // 3. traversal children, child surface node will be added to childSurfaceNodeIds_
     // note: apply current node properties onto canvas if there is any child node
-    ProcessBaseRenderNode(node);
+    ProcessChildren(node);
 
     // 4. if children changed, sync children to RenderService
     if (childSurfaceNodeIds_ != node.childSurfaceNodeIds_) {
@@ -846,13 +835,13 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     // 6.draw border
 #ifndef USE_ROSEN_DRAWING
     canvas_->save();
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
+    auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
     canvas_->concat(geoPtr->GetMatrix());
     RSPropertiesPainter::DrawBorder(node.GetRenderProperties(), *canvas_);
     canvas_->restore();
 #else
     canvas_->Save();
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(node.GetRenderProperties().GetBoundsGeometry());
+    auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
     canvas_->ConcatMatrix(geoPtr->GetMatrix());
     RSPropertiesPainter::DrawBorder(node.GetRenderProperties(), *canvas_);
     canvas_->Restore();
@@ -893,10 +882,6 @@ void RSRenderThreadVisitor::ProcessProxyRenderNode(RSProxyRenderNode& node)
     // same as canvas coordinate system.
     auto clipRect = RSPaintFilterCanvas::GetLocalClipBounds(*canvas_);
     node.SetContextClipRegion(clipRect);
-
-    // for proxied nodes (i.e. remote window components), we only extract matrix & alpha, do not change their hierarchy
-    // or clip or other properties.
-    node.ResetSortedChildren();
 #endif
 }
 

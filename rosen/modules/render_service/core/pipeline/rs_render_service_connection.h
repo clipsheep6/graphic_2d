@@ -20,6 +20,7 @@
 #include <unordered_set>
 
 #include "ipc_callbacks/buffer_available_callback.h"
+#include "ipc_callbacks/buffer_clear_callback.h"
 #include "pipeline/rs_render_service.h"
 #include "pipeline/rs_hardware_thread.h"
 #include "screen_manager/rs_screen_manager.h"
@@ -61,7 +62,8 @@ private:
     bool CreateNode(const RSSurfaceRenderNodeConfig& config) override;
     sptr<Surface> CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config) override;
 
-    sptr<IVSyncConnection> CreateVSyncConnection(const std::string& name) override;
+    sptr<IVSyncConnection> CreateVSyncConnection(const std::string& name,
+                                                 const sptr<VSyncIConnectionToken>& token) override;
 
     int32_t SetFocusAppInfo(
         int32_t pid, int32_t uid, const std::string &bundleName, const std::string &abilityName,
@@ -126,6 +128,9 @@ private:
 
     void RegisterBufferAvailableListener(
         NodeId id, sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread) override;
+    
+    void RegisterBufferClearListener(
+        NodeId id, sptr<RSIBufferClearCallback> callback) override;
 
     int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode) override;
 
@@ -164,6 +169,8 @@ private:
     void ReportEventComplete(DataBaseRs info) override;
 
     void ReportEventJankFrame(DataBaseRs info) override;
+
+    void SetHardwareEnabled(NodeId id, bool isEnabled) override;
 
     pid_t remotePid_;
     wptr<RSRenderService> renderService_;

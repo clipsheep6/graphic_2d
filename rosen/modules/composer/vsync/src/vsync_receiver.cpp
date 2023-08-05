@@ -70,9 +70,10 @@ void VSyncCallBackListener::OnReadable(int32_t fileDescriptor)
 }
 
 VSyncReceiver::VSyncReceiver(const sptr<IVSyncConnection>& conn,
+    const sptr<IRemoteObject>& token,
     const std::shared_ptr<OHOS::AppExecFwk::EventHandler>& looper,
     const std::string& name)
-    : connection_(conn), looper_(looper),
+    : connection_(conn), token_(token), looper_(looper),
     listener_(std::make_shared<VSyncCallBackListener>()),
     init_(false),
     fd_(INVALID_FD),
@@ -143,6 +144,10 @@ VsyncError VSyncReceiver::SetVSyncRate(FrameCallback callback, int32_t rate)
 
 VsyncError VSyncReceiver::GetVSyncPeriod(int64_t &period)
 {
+    std::lock_guard<std::mutex> locker(initMutex_);
+    if (!init_) {
+        return VSYNC_ERROR_API_FAILED;
+    }
     VsyncError ret = connection_->GetVSyncPeriod(period);
     if (ret != VSYNC_ERROR_OK) {
         VLOGE("%{public}s get vsync period failed", __func__);

@@ -41,7 +41,6 @@ void RSDisplayRenderNode::CollectSurface(
     const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender,
     bool onlyFirstLevel)
 {
-    ResetSortedChildren();
     for (auto& child : node->GetSortedChildren()) {
         child->CollectSurface(child, vec, isUniRender, onlyFirstLevel);
     }
@@ -163,7 +162,7 @@ bool RSDisplayRenderNode::SkipFrame(uint32_t skipFrameInterval)
 
 ScreenRotation RSDisplayRenderNode::GetRotation() const
 {
-    auto boundsGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(GetRenderProperties().GetBoundsGeometry());
+    auto boundsGeoPtr = (GetRenderProperties().GetBoundsGeometry());
     if (boundsGeoPtr == nullptr) {
         return ScreenRotation::ROTATION_0;
     }
@@ -173,7 +172,7 @@ ScreenRotation RSDisplayRenderNode::GetRotation() const
 
 bool RSDisplayRenderNode::IsRotationChanged() const
 {
-    auto boundsGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(GetRenderProperties().GetBoundsGeometry());
+    auto boundsGeoPtr = (GetRenderProperties().GetBoundsGeometry());
     if (boundsGeoPtr == nullptr) {
         return false;
     }
@@ -185,7 +184,7 @@ bool RSDisplayRenderNode::IsRotationChanged() const
 
 void RSDisplayRenderNode::UpdateRotation()
 {
-    auto boundsGeoPtr = std::static_pointer_cast<RSObjAbsGeometry>(GetRenderProperties().GetBoundsGeometry());
+    auto boundsGeoPtr = (GetRenderProperties().GetBoundsGeometry());
     if (boundsGeoPtr == nullptr) {
         return;
     }

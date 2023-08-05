@@ -210,6 +210,12 @@ bool RSRenderServiceClient::RegisterBufferAvailableListener(
     return {};
 }
 
+bool RSRenderServiceClient::RegisterBufferClearListener(
+    NodeId id, const BufferAvailableCallback &callback)
+{
+    return {};
+}
+
 bool RSRenderServiceClient::UnregisterBufferAvailableListener(NodeId id)
 {
     return {};
@@ -255,7 +261,11 @@ int32_t RSRenderServiceClient::GetScreenType(ScreenId id, RSScreenType& screenTy
     return {};
 }
 
+#ifndef USE_ROSEN_DRAWING
 bool RSRenderServiceClient::GetBitmap(NodeId id, SkBitmap& bitmap)
+#else
+bool RSRenderServiceClient::GetBitmap(NodeId id, Drawing::Bitmap& bitmap)
+#endif
 {
     return {};
 }
@@ -294,5 +304,8 @@ void RSRenderServiceClient::ReportEventJankFrame(DataBaseRs info)
 {
 }
 
+void RSRenderServiceClient::SetHardwareEnabled(NodeId id, bool isEnabled)
+{
+}
 } // namespace Rosen
 } // namespace OHOS

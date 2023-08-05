@@ -15,6 +15,8 @@
 
 #include "pipeline/rs_paint_filter_canvas.h"
 
+#include <algorithm>
+
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkColorFilter.h"
 #endif
@@ -35,6 +37,13 @@ RSPaintFilterCanvasBase::RSPaintFilterCanvasBase(Drawing::Canvas* canvas)
         this->SetMatrix(canvas_->GetTotalMatrix());
     }
 }
+
+#ifdef ACE_ENABLE_GPU
+std::shared_ptr<Drawing::GPUContext> RSPaintFilterCanvasBase::GetGPUContext() const
+{
+    return canvas_ != nullptr ? canvas_->GetGPUContext() : nullptr;
+}
+#endif
 
 void RSPaintFilterCanvasBase::DrawPoint(const Point& point)
 {

@@ -220,12 +220,24 @@ protected:
 
 class OpItemWithRSImage : public OpItemWithPaint {
 public:
+#ifdef NEW_SKIA
+    OpItemWithRSImage(std::shared_ptr<RSImageBase> rsImage, const SkSamplingOptions& samplingOptions,
+        const SkPaint& paint, size_t size)
+        : OpItemWithPaint(size), rsImage_(rsImage), samplingOptions_(samplingOptions)
+    {
+        paint_ = paint;
+    }
+    explicit OpItemWithRSImage(const SkSamplingOptions& samplingOptions, size_t size)
+        : OpItemWithPaint(size), samplingOptions_(samplingOptions)
+    {}
+#else
     OpItemWithRSImage(std::shared_ptr<RSImageBase> rsImage, const SkPaint& paint, size_t size)
         : OpItemWithPaint(size), rsImage_(rsImage)
     {
         paint_ = paint;
     }
     explicit OpItemWithRSImage(size_t size) : OpItemWithPaint(size) {}
+#endif
     ~OpItemWithRSImage() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
     void SetNodeId(NodeId id) override;
@@ -235,6 +247,10 @@ public:
     }
 protected:
     std::shared_ptr<RSImageBase> rsImage_;
+#ifdef NEW_SKIA
+private:
+    SkSamplingOptions samplingOptions_;
+#endif
 };
 
 class RectOpItem : public OpItemWithPaint {
@@ -309,7 +325,7 @@ public:
         const std::shared_ptr<Media::PixelMap>& pixelmap, const RsImageInfo& rsimageInfo, const SkPaint& paint);
     ImageWithParmOpItem(const std::shared_ptr<RSImage>& rsImage, const SkPaint& paint);
 #endif
-    ~ImageWithParmOpItem() override {}
+    ~ImageWithParmOpItem() override;
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 
     std::string GetTypeWithDesc() const override
@@ -337,9 +353,20 @@ public:
 
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static OpItem* Unmarshalling(Parcel& parcel);
-
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+#ifndef USE_ROSEN_DRAWING
+    sk_sp<SkImage> GetSkImageFromSurfaceBuffer(SkCanvas& canvas, SurfaceBuffer* surfaceBuffer) const;
+#endif
+#endif
 private:
     std::shared_ptr<RSImage> rsImage_;
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+#ifndef USE_ROSEN_DRAWING
+    mutable EGLImageKHR eglImage_ = EGL_NO_IMAGE_KHR;
+    mutable GLuint texId_ = 0;
+    mutable OHNativeWindowBuffer* nativeWindowBuffer_ = nullptr;
+#endif
+#endif
 #ifdef NEW_SKIA
     SkSamplingOptions samplingOptions_;
 #endif

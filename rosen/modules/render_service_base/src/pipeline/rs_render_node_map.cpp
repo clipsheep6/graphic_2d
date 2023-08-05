@@ -148,13 +148,13 @@ void RSRenderNodeMap::RemoveDrivenRenderNode(NodeId id)
 
 void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
 {
-    ROSEN_LOGI("RSRenderNodeMap::FilterNodeByPid removing all nodes belong to pid %d", pid);
+    ROSEN_LOGD("RSRenderNodeMap::FilterNodeByPid removing all nodes belong to pid %d", pid);
     // remove all nodes belong to given pid (by matching higher 32 bits of node id)
     EraseIf(renderNodeMap_, [pid](const auto& pair) -> bool {
         if (ExtractPid(pair.first) != pid) {
             return false;
         }
-        if (auto renderNode = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(pair.second)) {
+        if (auto renderNode = (pair.second)) {
             // update node flag to avoid animation fallback
             renderNode->fallbackAnimationOnDestroy_ = false;
         }
@@ -181,7 +181,7 @@ void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
 
     auto it = renderNodeMap_.find(0);
     if (it != renderNodeMap_.end()) {
-        auto fallbackNode = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(it->second);
+        auto fallbackNode = (it->second);
         if (fallbackNode) {
             // remove all fallback animations belong to given pid
             fallbackNode->GetAnimationManager().FilterAnimationByPid(pid);

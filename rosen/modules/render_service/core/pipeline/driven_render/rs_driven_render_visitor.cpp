@@ -35,8 +35,9 @@ RSDrivenRenderVisitor::RSDrivenRenderVisitor()
     renderEngine_ = mainThread->GetRenderEngine();
 }
 
-void RSDrivenRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
+void RSDrivenRenderVisitor::PrepareChildren(RSRenderNode& node)
 {
+    node.ApplyChildrenModifiers();
     for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
     }
@@ -44,14 +45,14 @@ void RSDrivenRenderVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 
 void RSDrivenRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
-    auto rsParent = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(node.GetParent().lock());
+    auto rsParent = (node.GetParent().lock());
     if (rsParent && rsParent->IsMarkDrivenRender()) {
         auto paintItem = node.GetRenderProperties().GetFrame();
         int32_t itemIndex = node.GetItemIndex();
         currDrivenSurfaceNode_->PushFramePaintItem(paintItem, itemIndex);
         return;
     }
-    PrepareBaseRenderNode(node);
+    PrepareChildren(node);
 }
 
 void RSDrivenRenderVisitor::PrepareDrivenSurfaceRenderNode(RSDrivenSurfaceRenderNode& node)
@@ -71,7 +72,7 @@ void RSDrivenRenderVisitor::PrepareDrivenSurfaceRenderNode(RSDrivenSurfaceRender
         PrepareCanvasRenderNode(*canvasNode);
     }
 
-    auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(property.GetBoundsGeometry());
+    auto geoPtr = (property.GetBoundsGeometry());
     RectF surfaceBounds = RectF(0, 0, screenRect_.GetWidth(), screenRect_.GetHeight());
     RectF viewPort = RectF(0, 0, screenRect_.GetWidth(), screenRect_.GetHeight());
     RectI dstRect = screenRect_;
@@ -98,7 +99,7 @@ void RSDrivenRenderVisitor::PrepareDrivenSurfaceRenderNode(RSDrivenSurfaceRender
         node.GetDstRect().ToString().c_str(), node.GetSrcRect().ToString().c_str());
 }
 
-void RSDrivenRenderVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
+void RSDrivenRenderVisitor::ProcessChildren(RSRenderNode& node)
 {
     if (hasTraverseDrivenNode_ && currDrivenSurfaceNode_->IsBackgroundSurface()) {
         return;
@@ -106,8 +107,6 @@ void RSDrivenRenderVisitor::ProcessBaseRenderNode(RSBaseRenderNode& node)
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
-    // clear SortedChildren, it will be generated again in next frame
-    node.ResetSortedChildren();
 }
 
 void RSDrivenRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
@@ -131,7 +130,7 @@ void RSDrivenRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     node.GetMutableRenderProperties().CheckEmptyBounds();
     node.ProcessRenderBeforeChildren(*canvas_);
     node.ProcessRenderContents(*canvas_);
-    ProcessBaseRenderNode(node);
+    ProcessChildren(node);
     node.ProcessRenderAfterChildren(*canvas_);
 }
 
@@ -155,7 +154,7 @@ void RSDrivenRenderVisitor::ProcessDrivenCanvasRenderNode(RSCanvasRenderNode& no
         node.ProcessDrivenBackgroundRender(*canvas_);
     } else {
         node.ProcessDrivenContentRender(*canvas_);
-        ProcessBaseRenderNode(node);
+        ProcessChildren(node);
         node.ProcessDrivenContentRenderAfterChildren(*canvas_);
     }
 }
@@ -267,7 +266,7 @@ void RSDrivenRenderVisitor::RenderExpandedFrame(RSDrivenSurfaceRenderNode& node)
         if (rsDrivenParent == nullptr) {
             return;
         }
-        auto geoPtr = std::static_pointer_cast<RSObjAbsGeometry>(
+        auto geoPtr = (
             rsDrivenParent->GetRenderProperties().GetBoundsGeometry());
         canvas_->concat(geoPtr->GetAbsMatrix());
     } else {

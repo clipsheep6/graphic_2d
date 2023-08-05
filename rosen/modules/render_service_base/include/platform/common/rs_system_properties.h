@@ -93,6 +93,7 @@ public:
 
     // used by clients
     static std::string GetRecordingFile();
+    static bool IsSceneBoardEnabled();
     static int GetDumpFrameNum();
     static void SetRecordingDisenabled();
     static bool GetRecordingEnabled();
@@ -142,6 +143,7 @@ public:
     static bool GetDebugLogEnabled();
     static bool GetCacheCmdEnabled();
     static bool GetASTCEnabled();
+    static bool GetImageGpuResourceCacheEnable(int width, int height);
 private:
     RSSystemProperties() = default;
 

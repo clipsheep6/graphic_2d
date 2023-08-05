@@ -323,7 +323,8 @@ BufferDrawParam RSUniRenderUtil::CreateLayerBufferDrawParam(const LayerInfoPtr& 
     auto transform = RSBaseRenderUtil::RotateEnumToInt(realRotation, flip);
 
     RectF localBounds = { 0.0f, 0.0f, static_cast<float>(boundRect.w), static_cast<float>(boundRect.h) };
-    RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(transform, Gravity::RESIZE, localBounds, params);
+    RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(transform, static_cast<Gravity>(layer->GetGravity()),
+        localBounds, params);
     RSBaseRenderUtil::FlipMatrix(transform, params);
     return params;
 }
@@ -468,7 +469,6 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
         ROSEN_LOGE("RSUniRenderUtil::AssignWindowNodes display node is null");
         return;
     }
-    RS_TRACE_NAME("AssignWindowNodes");
     bool isRotation = displayNode->IsRotationChanged();
     bool isScale = false;
     uint32_t leashWindowCount = 0;
@@ -775,6 +775,21 @@ void RSUniRenderUtil::ClearNodeCacheSurface(std::shared_ptr<Drawing::Surface> ca
         }, threadIndex);
 #endif
     }
+}
+
+void RSUniRenderUtil::FloorTransXYInCanvasMatrix(RSPaintFilterCanvas& canvas)
+{
+#ifndef USE_ROSEN_DRAWING
+    auto matrix = canvas.getTotalMatrix();
+    matrix.setTranslateX(std::floor(matrix.getTranslateX()));
+    matrix.setTranslateY(std::floor(matrix.getTranslateY()));
+    canvas.setMatrix(matrix);
+#else
+    auto matrix = canvas.GetTotalMatrix();
+    matrix.Set(Drawing::Matrix::TRANS_X, std::floor(matrix.Get(Drawing::Matrix::TRANS_X)));
+    matrix.Set(Drawing::Matrix::TRANS_Y, std::floor(matrix.Get(Drawing::Matrix::TRANS_Y)));
+    canvas.SetMatrix(matrix);
+#endif
 }
 } // namespace Rosen
 } // namespace OHOS

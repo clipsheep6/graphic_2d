@@ -64,6 +64,7 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
         }
         preThreadInfo_ = curThreadInfo_;
     } else if (preThreadInfo_.first != curThreadInfo_.first) {
+        auto preMatrix = canvas_->getTotalMatrix();
         auto preSurface = skSurface_;
         if (!ResetSurface(width, height, canvas)) {
             return;
@@ -73,13 +74,14 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
         if (!image) {
             return;
         }
-        auto sharedBackendTexture = image->getBackendTexture(false);
+        GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin;
+        auto sharedBackendTexture = image->getBackendTexture(false, &origin);
         if (!sharedBackendTexture.isValid()) {
             RS_LOGE("RSCanvasDrawingRenderNode::ProcessRenderContents sharedBackendTexture is nullptr");
             return;
         }
-        auto sharedTexture = SkImage::MakeFromTexture(canvas.recordingContext(), sharedBackendTexture,
-            kBottomLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
+        auto sharedTexture = SkImage::MakeFromTexture(
+            canvas.recordingContext(), sharedBackendTexture, origin, image->colorType(), image->alphaType(), nullptr);
         if (sharedTexture == nullptr) {
             RS_LOGE("RSCanvasDrawingRenderNode::ProcessRenderContents sharedTexture is nullptr");
             return;
@@ -94,6 +96,7 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
             preThreadInfo_.second(std::move(preSurface));
         }
         preThreadInfo_ = curThreadInfo_;
+        canvas_->setMatrix(preMatrix);
     }
 
     RSModifierContext context = { GetMutableRenderProperties(), canvas_.get() };
@@ -107,7 +110,8 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
     }
     auto image = skSurface_->makeImageSnapshot();
 #ifdef NEW_SKIA
-    canvas.drawImage(image, 0.f, 0.f, SkSamplingOptions(), nullptr);
+    auto samplingOptions = SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kLinear);
+    canvas.drawImage(image, 0.f, 0.f, samplingOptions, nullptr);
 #else
     canvas.drawImage(image, 0.f, 0.f, nullptr);
 #endif
@@ -147,8 +151,8 @@ bool RSCanvasDrawingRenderNode::ResetSurface(int width, int height, RSPaintFilte
 bool RSCanvasDrawingRenderNode::ResetSurface(int width, int height, RSPaintFilterCanvas& canvas)
 {
     Drawing::BitmapFormat info = Drawing::BitmapFormat{ Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL };
-    Drawing::Bitmap drBitmap;
-    drBitmap.Build(width, height, info);
+    auto bitmap = std::make_shared<Drawing::Bitmap>();
+    bitmap->Build(width, height, info);
 
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
     auto gpuContext = canvas.GetGPUContext();
@@ -156,17 +160,28 @@ bool RSCanvasDrawingRenderNode::ResetSurface(int width, int height, RSPaintFilte
         RS_LOGE("RSCanvasDrawingRenderNode::ProcessRenderContents: GpuContext is nullptr");
         return false;
     }
-    Drawing::Image image;
-    image.BuildFromBitmap(*gpuContext, bitmap);
-    surface_ = std::make_shared<Drawing::Surface>();
-    if (!surface->Bind(image)) {
+    auto image = std::make_shared<Drawing::Image>();
+    if (!image->BuildFromBitmap(*gpuContext, *bitmap)) {
+        RS_LOGE("RSCanvasDrawingRenderNode::ResetSurface Drawing::Image is nullptr");
+        return false;
+    }
+    auto surface = std::make_shared<Drawing::Surface>();
+    if (!surface->Bind(*image)) {
+        if (!surface->Bind(*bitmap)) {
+            RS_LOGE("RSCanvasDrawingRenderNode::ResetSurface Drawing::Surface is nullptr");
+            return false;
+        }
+        bitmap_ = bitmap;
+    }
 #else
-    surface_ = std::make_shared<Drawing::Surface>();
-    if (!surface_->Bind(drBitmap)) {
-#endif
+    auto surface = std::make_shared<Drawing::Surface>();
+    if (!surface->Bind(*bitmap)) {
         RS_LOGE("RSCanvasDrawingRenderNode::ResetSurface Drawing::Surface is nullptr");
         return false;
     }
+    bitmap_ = bitmap;
+#endif
+    surface_ = surface;
     canvas_ = std::make_unique<RSPaintFilterCanvas>(surface_.get());
     return true;
 }
@@ -253,16 +268,27 @@ bool RSCanvasDrawingRenderNode::GetSizeFromDrawCmdModifiers(int& width, int& hei
 
 bool RSCanvasDrawingRenderNode::IsNeedResetSurface(const int& width, const int& height) const
 {
+#ifndef USE_ROSEN_DRAWING
     if (!skSurface_) {
+#else
+    if (!surface_ || !surface_->GetCanvas()) {
+#endif
         return true;
     } else {
         // There is no need to reapply the buffer during the animation, only if the size of the DrawCmdList set by ArkUI
         // changes. When the component sets the margin and padding properties, ArkUI does not set the DrawCmdList size,
         // in which case the size of the SkSurface should be the same as the size of Render Properties Bounds. In other
         // cases, ArkUI sets the DrawCmdList to the same size as the Render Properties Bounds.
+#ifndef USE_ROSEN_DRAWING
         return (skSurface_->width() != width || skSurface_->height() != height) &&
-               (GetRenderProperties().GetBoundsWidth() != skSurface_->width() ||
-                   GetRenderProperties().GetBoundsHeight() != skSurface_->height());
+               (static_cast<int>(GetRenderProperties().GetBoundsWidth()) != skSurface_->width() ||
+                   static_cast<int>(GetRenderProperties().GetBoundsHeight()) != skSurface_->height());
+#else
+        auto canvas = surface_->GetCanvas();
+        return (canvas->GetWidth() != width || canvas->GetHeight() != height) &&
+            (static_cast<int>(GetRenderProperties().GetBoundsWidth()) != canvas->GetWidth() ||
+            static_cast<int>(GetRenderProperties().GetBoundsHeight()) != canvas->GetHeight());
+#endif
     }
 }
 } // namespace Rosen

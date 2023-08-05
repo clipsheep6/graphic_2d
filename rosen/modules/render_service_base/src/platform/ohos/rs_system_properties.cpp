@@ -307,6 +307,13 @@ bool RSSystemProperties::GetDebugTraceEnabled()
     return openDebugTrace;
 }
 
+bool RSSystemProperties::GetDebugLogEnabled()
+{
+    static bool openDebugLog =
+        std::atoi((system::GetParameter("persist.sys.graphic.openDebugLog", "0")).c_str()) != 0;
+    return openDebugLog;
+}
+
 bool RSSystemProperties::GetCacheCmdEnabled()
 {
     return std::atoi((system::GetParameter("rosen.cacheCmd.enabled", "1")).c_str()) != 0;

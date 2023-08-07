@@ -215,6 +215,13 @@ bool RSSystemProperties::GetASTCEnabled()
     return false;
 }
 
+bool RSSystemProperties::GetDebugLogEnabled()
+{
+    static bool openDebugLog =
+        std::atoi((system::GetParameter("persist.sys.graphic.openDebugLog", "0")).c_str()) != 0;
+    return openDebugLog;
+}
+
 bool RSSystemProperties::GetImageGpuResourceCacheEnable(int width, int height)
 {
     return false;

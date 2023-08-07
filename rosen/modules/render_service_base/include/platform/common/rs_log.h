@@ -21,6 +21,7 @@
 #include <string>
 
 #include "common/rs_macros.h"
+#include "platform/common/rs_system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -38,7 +39,11 @@ void RSB_EXPORT RSLogOutput(RSLog::Tag tag, RSLog::Level level, const char* form
 #define ROSEN_LOGI(format, ...) \
     RSLogOutput(RSLog::Tag::RS_CLIENT, RSLog::Level::LEVEL_INFO, format, ##__VA_ARGS__)
 #define ROSEN_LOGD(format, ...) \
-    RSLogOutput(RSLog::Tag::RS_CLIENT, RSLog::Level::LEVEL_DEBUG, format, ##__VA_ARGS__)
+{ \
+    if (RSSystemProperties::GetDebugLogEnabled()) { \
+        RSLogOutput(RSLog::Tag::RS_CLIENT, RSLog::Level::LEVEL_DEBUG, format, ##__VA_ARGS__); \
+    } \
+}
 #define ROSEN_LOGE(format, ...) \
     RSLogOutput(RSLog::Tag::RS_CLIENT, RSLog::Level::LEVEL_ERROR, format, ##__VA_ARGS__)
 #define ROSEN_LOGW(format, ...) \
@@ -49,7 +54,11 @@ void RSB_EXPORT RSLogOutput(RSLog::Tag tag, RSLog::Level level, const char* form
 #define RS_LOGI(format, ...) \
     RSLogOutput(RSLog::Tag::RS, RSLog::Level::LEVEL_INFO, format, ##__VA_ARGS__)
 #define RS_LOGD(format, ...) \
-    RSLogOutput(RSLog::Tag::RS, RSLog::Level::LEVEL_DEBUG, format, ##__VA_ARGS__)
+{ \
+    if (RSSystemProperties::GetDebugLogEnabled()) { \
+        RSLogOutput(RSLog::Tag::RS, RSLog::Level::LEVEL_DEBUG, format, ##__VA_ARGS__); \
+    } \
+}
 #define RS_LOGE(format, ...) \
     RSLogOutput(RSLog::Tag::RS, RSLog::Level::LEVEL_ERROR, format, ##__VA_ARGS__)
 #define RS_LOGW(format, ...) \

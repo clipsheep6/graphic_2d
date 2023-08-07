@@ -23,6 +23,28 @@ config("export_config") {
   defines = rs_common_define
 }
 
+rust_cxx("particle_cxx_gen") {
+  sources = [ "rust/src/lib.rs" ]
+}
+
+ohos_rust_static_ffi("particle_cxx_rust") {
+  sources = [ "rust/src/lib.rs" ]
+  deps = [ "//third_party/rust/crates/cxx:lib" ]
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+ohos_static_library("particle_cxx_cppdeps") {
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+  defines = [ "RUST_CXX_NO_EXCEPTIONS" ]
+  sources = [
+    "//third_party/rust/crates/cxx/include/cxx.h",
+    "//third_party/rust/crates/cxx/src/cxx.cc",
+  ]
+  deps = [ "//third_party/rust/crates/cxx:lib" ]
+}
+
 ohos_source_set("render_service_base_src") {
   defines = []
   defines += gpu_defines
@@ -180,6 +202,8 @@ ohos_source_set("render_service_base_src") {
     "src/screen_manager/rs_virtual_screen_resolution.cpp",
   ]
 
+  sources += get_target_outputs(":particle_cxx_gen")
+
   cflags = [
     "-Wall",
     "-Wno-pointer-arith",
@@ -230,6 +254,8 @@ ohos_source_set("render_service_base_src") {
     "$graphic_2d_root/rosen/modules/render_service_base/src",
     "$graphic_2d_root/rosen/modules/render_service_base/include",
     "$graphic_2d_root/utils/log",
+    "//third_party/rust/crates/cxx/include",
+    "${target_gen_dir}/rust/src",
   ]
   if (defined(use_new_skia) && use_new_skia) {
     include_dirs += [ "//third_party/skia/src" ]
@@ -238,6 +264,9 @@ ohos_source_set("render_service_base_src") {
     sources -= [ "src/render/rs_kawase_blur.cpp" ]
   }
   deps = [
+    ":particle_cxx_cppdeps",
+    ":particle_cxx_gen",
+    ":particle_cxx_rust",
     "$graphic_2d_root/utils/sandbox:sandbox_utils",
     "$rosen_root/modules/platform:hilog",
     "$rosen_root/modules/platform:ipc_core",

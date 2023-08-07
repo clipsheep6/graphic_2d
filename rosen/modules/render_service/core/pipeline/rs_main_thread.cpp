@@ -38,6 +38,7 @@
 #include "memory/rs_memory_manager.h"
 #include "memory/rs_memory_track.h"
 #include "common/rs_common_def.h"
+#include "common/rs_optional_trace.h"
 #include "hgm_core.h"
 #include "platform/ohos/rs_jank_stats.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
@@ -1377,7 +1378,7 @@ void RSMainThread::CallbackToWMS(VisibleData& curVisVec)
 
 void RSMainThread::RequestNextVSync()
 {
-    RS_TRACE_FUNC();
+    RS_OPTIONAL_TRACE_FUNC_BEGIN();
     VSyncReceiver::FrameCallback fcb = {
         .userData_ = this,
         .callback_ = [this](uint64_t timestamp, void* data) { OnVsync(timestamp, data); },
@@ -1389,6 +1390,7 @@ void RSMainThread::RequestNextVSync()
         }
         receiver_->RequestNextVSync(fcb);
     }
+    RS_OPTIONAL_TRACE_FUNC_END();
 }
 
 void RSMainThread::OnVsync(uint64_t timestamp, void* data)

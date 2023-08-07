@@ -15,8 +15,7 @@
 
 #include "property/rs_properties_painter.h"
 
-#include "rs_trace.h"
-
+#include "common/rs_optional_trace.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "common/rs_vector2.h"
 #include "pipeline/rs_draw_cmd_list.h"
@@ -1040,7 +1039,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         return;
     }
 #ifdef NEW_SKIA
-    RS_TRACE_NAME("DrawFilter " + RSFilter->GetDescription());
+    RS_OPTIONAL_TRACE_BEGIN("DrawFilter " + RSFilter->GetDescription());
     g_blurCnt++;
     SkAutoCanvasRestore acr(&canvas, true);
     if (rect.has_value()) {
@@ -1059,6 +1058,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         SkCanvas::SaveLayerRec slr(nullptr, &paint, SkCanvas::kInitWithPrevious_SaveLayerFlag);
         canvas.saveLayer(slr);
         filter->PostProcess(canvas);
+        RS_OPTIONAL_TRACE_END();
         return;
     }
 
@@ -1073,6 +1073,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     // Optional use cacheManager to draw filter
     if (auto& cacheManager = properties.GetFilterCacheManager(filterType == FilterType::FOREGROUND_FILTER)) {
         cacheManager->DrawFilter(canvas, filter);
+        RS_OPTIONAL_TRACE_END();
         return;
     }
 
@@ -1080,6 +1081,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     auto imageSnapshot = skSurface->makeImageSnapshot(clipIBounds);
     if (imageSnapshot == nullptr) {
         ROSEN_LOGE("RSPropertiesPainter::DrawFilter image null");
+        RS_OPTIONAL_TRACE_END();
         return;
     }
     if (RSSystemProperties::GetImageGpuResourceCacheEnable(imageSnapshot->width(), imageSnapshot->height())) {
@@ -1097,6 +1099,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     filter->DrawImageRect(
         canvas, imageSnapshot, SkRect::Make(imageSnapshot->bounds().makeOutset(-1, -1)), SkRect::Make(clipIBounds));
     filter->PostProcess(canvas);
+    RS_OPTIONAL_TRACE_END();
 #endif
 }
 #else

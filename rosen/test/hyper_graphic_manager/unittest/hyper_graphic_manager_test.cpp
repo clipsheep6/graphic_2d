@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <test_header.h>
 
@@ -244,6 +246,7 @@ HWTEST_F(HyperGraphicManagerTest, SetScreenRefreshRate, Function | MediumTest | 
     int32_t height0 = 2772;
     uint32_t rate0 = 60;
     int32_t mode0 = 0;
+    int32_t group = 0;
 
     PART("EnvConditions") {
         STEP("get Instance") {
@@ -259,9 +262,9 @@ HWTEST_F(HyperGraphicManagerTest, SetScreenRefreshRate, Function | MediumTest | 
         }
 
         STEP("2. add a config mode - rate : 1, 120 to the new screen") {
-            auto addScreenProfile = instance8.AddScreenInfo(screenId, width, height, rate, mode);
+            auto addScreenProfile = instance8.AddScreenInfo(screenId, width, height, rate, mode, group);
             STEP_ASSERT_EQ(addScreenProfile, 0);
-            auto addScreenProfile0 = instance8.AddScreenInfo(screenId, width0, height0, rate0, mode0);
+            auto addScreenProfile0 = instance8.AddScreenInfo(screenId, width0, height0, rate0, mode0, group);
             STEP_ASSERT_EQ(addScreenProfile0, 0);
         }
 
@@ -302,6 +305,7 @@ HWTEST_F(HyperGraphicManagerTest, SetRefreshRateMode, Function | SmallTest | Lev
     int32_t height = 2772;
     uint32_t rate = 120;
     int32_t mode = 1;
+    int32_t group = 0;
     RefreshRateMode modeToSet = HGM_REFRESHRATE_MODE_MEDIUM;
 
     PART("EnvConditions") {
@@ -317,8 +321,8 @@ HWTEST_F(HyperGraphicManagerTest, SetRefreshRateMode, Function | SmallTest | Lev
             STEP_ASSERT_GE(addScreen, 0);
         }
 
-        STEP("2. add a a supported config to the new screen") {
-            auto addScreenProfile = instance.AddScreenInfo(screenId, width, height, rate, mode);
+        STEP("2. add a supported config to the new screen") {
+            auto addScreenProfile = instance.AddScreenInfo(screenId, width, height, rate, mode, group);
             STEP_ASSERT_EQ(addScreenProfile, 0);
         }
 
@@ -347,9 +351,11 @@ HWTEST_F(HyperGraphicManagerTest, HgmScreenTests, Function | MediumTest | Level2
     uint32_t rate2 = 60;
     int32_t mode = 1;
     int32_t mode2 = 2;
+    int32_t group = 0;
+
     instance.AddScreen(screenId2, 1);
-    instance.AddScreenInfo(screenId2, width, height, rate, mode);
-    instance.AddScreenInfo(screenId2, width, height, rate2, mode2);
+    instance.AddScreenInfo(screenId2, width, height, rate, mode, group);
+    instance.AddScreenInfo(screenId2, width, height, rate2, mode2, group);
     sptr<HgmScreen> screen2 = instance.GetScreen(screenId2);
 
     PART("Prepare") {
@@ -382,7 +388,7 @@ HWTEST_F(HyperGraphicManagerTest, HgmScreenTests, Function | MediumTest | Level2
         }
 
         STEP("4. mode already exists") {
-            int32_t addResult = screen2->AddScreenModeInfo(width, height, rate, mode);
+            int32_t addResult = screen2->AddScreenModeInfo(width, height, rate, mode, group);
             STEP_ASSERT_NE(addResult, 0);
         }
 
@@ -412,9 +418,10 @@ HWTEST_F(HyperGraphicManagerTest, HgmCoreTests, Function | MediumTest | Level2)
     uint32_t rate3 = -1;
     int32_t mode = 1;
     int32_t mode2 = 2;
+    int32_t group = 0;
     instance.AddScreen(screenId2, 1);
-    instance.AddScreenInfo(screenId2, width, height, rate, mode);
-    instance.AddScreenInfo(screenId2, width, height, rate2, mode2);
+    instance.AddScreenInfo(screenId2, width, height, rate, mode, group);
+    instance.AddScreenInfo(screenId2, width, height, rate2, mode2, group);
 
     PART("HgmCore") {
         STEP("1. set active mode") {
@@ -442,7 +449,7 @@ HWTEST_F(HyperGraphicManagerTest, HgmCoreTests, Function | MediumTest | Level2)
         }
 
         STEP("4. add screen info, screen does not exist") {
-            int32_t setResult = instance.AddScreenInfo(screenId3, 0, 0, 0, 0);
+            int32_t setResult = instance.AddScreenInfo(screenId3, 0, 0, 0, 0, 0);
             STEP_ASSERT_NE(setResult, 0);
             uint32_t getResult = instance.GetScreenCurrentRefreshRate(screenId3);
             STEP_ASSERT_EQ(getResult, 0);

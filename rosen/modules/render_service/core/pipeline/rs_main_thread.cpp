@@ -331,6 +331,7 @@ void RSMainThread::Init()
     auto delegate = RSFunctionalDelegate::Create();
     delegate->SetRepaintCallback([]() { RSMainThread::Instance()->RequestNextVSync(); });
     RSOverdrawController::GetInstance().SetDelegate(delegate);
+    RSLog::SetDebugLogFlag(RSSystemProperties::GetDebugLogEnabled());
 }
 
 void RSMainThread::RsEventParamDump(std::string& dumpString)

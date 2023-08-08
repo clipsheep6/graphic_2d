@@ -21,6 +21,7 @@
 #include <sys/resource.h>
 #include <scoped_bytrace.h>
 #include "vsync_log.h"
+#include "vsync_type.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -173,6 +174,15 @@ VsyncError VSyncConnection::GetVSyncPeriod(int64_t &period)
         return VSYNC_ERROR_NULLPTR;
     }
     return distributor->GetVSyncPeriod(period);
+}
+
+VsyncError VSyncConnection::SetVSyncRefreshRate(int32_t refreshRate)
+{
+    if (VSYNC_MAX_REFRESHRATE % refreshRate != 0) {
+        return VSYNC_ERROR_NOT_SUPPORT;
+    }
+    rate_ = VSYNC_MAX_REFRESHRATE / refreshRate;
+    return VSYNC_ERROR_OK;
 }
 
 VsyncError VSyncConnection::OnVSyncRemoteDied()

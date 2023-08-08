@@ -150,5 +150,14 @@ VsyncError VSyncReceiver::GetVSyncPeriod(int64_t &period)
     }
     return ret;
 }
+
+VsyncError VSyncReceiver::SetVSyncRefreshRate(int32_t refreshRate)
+{
+    VsyncError ret = connection_->SetVSyncRefreshRate(refreshRate);
+    if (ret != VSYNC_ERROR_OK) {
+        VLOGE("%{public}s get vsync period failed", __func__);
+    }
+    return ret;
+}
 } // namespace Rosen
 } // namespace OHOS

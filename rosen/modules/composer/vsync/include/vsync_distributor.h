@@ -51,6 +51,7 @@ public:
     virtual VsyncError GetReceiveFd(int32_t &fd) override;
     virtual VsyncError SetVSyncRate(int32_t rate, bool autoTrigger) override;
     virtual VsyncError GetVSyncPeriod(int64_t &period) override;
+    virtual VsyncError SetVSyncRefreshRate(int32_t refreshRate) override;
     VsyncError OnVSyncRemoteDied();
 
     int32_t PostEvent(int64_t now, int64_t period, int64_t vsyncCount);

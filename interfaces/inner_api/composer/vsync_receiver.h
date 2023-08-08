@@ -76,6 +76,7 @@ public:
     virtual VsyncError RequestNextVSync(FrameCallback callback);
     virtual VsyncError SetVSyncRate(FrameCallback callback, int32_t rate, bool autoTrigger = true);
     virtual VsyncError GetVSyncPeriod(int64_t &period);
+    virtual VsyncError SetVSyncRefreshRate(int32_t refreshRate);
 
 private:
     sptr<IVSyncConnection> connection_;

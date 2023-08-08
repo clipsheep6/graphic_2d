@@ -90,7 +90,7 @@ VsyncError VSyncController::SetPhaseOffsetByPulseNum(int32_t pulseNum)
     return generator->ChangePhaseOffset(this, phaseOffset_);
 }
 
-void VSyncController::OnVSyncEvent(int64_t now, int64_t period)
+void VSyncController::OnVSyncEvent(int64_t now, int64_t period, int32_t refreshRate)
 {
     Callback *cb = nullptr;
     {
@@ -98,7 +98,7 @@ void VSyncController::OnVSyncEvent(int64_t now, int64_t period)
         cb = callback_;
     }
     if (cb != nullptr) {
-        cb->OnVSyncEvent(now, period);
+        cb->OnVSyncEvent(now, period, refreshRate);
     }
 }
 }

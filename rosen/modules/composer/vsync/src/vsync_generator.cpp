@@ -66,7 +66,8 @@ void VSyncGenerator::DeleteInstance() noexcept
 }
 
 VSyncGenerator::VSyncGenerator()
-    : period_(0), phase_(0), refrenceTime_(0), wakeupDelay_(0), pulse_(0)
+    : period_(0), phase_(0), refrenceTime_(0), wakeupDelay_(0), pulse_(0), refreshRate_(0),
+      shouldUpdateRefrenceTime_(false)
 {
     vsyncThreadRunning_ = true;
     thread_ = std::thread(std::bind(&VSyncGenerator::ThreadLoop, this));
@@ -111,6 +112,9 @@ void VSyncGenerator::ThreadLoop()
                     con_.wait(locker);
                 }
                 continue;
+            } else if (shouldUpdateRefrenceTime_) {
+                refrenceTime_ = nextTimeStamp;
+                shouldUpdateRefrenceTime_ = false;
             }
         }
 
@@ -137,7 +141,7 @@ void VSyncGenerator::ThreadLoop()
             "GenerateVsyncCount:" + std::to_string(listeners.size()) + ", period:" + std::to_string(period_));
         VLOGE("sgbdebug period_ = %{public}lld", period_);
         for (uint32_t i = 0; i < listeners.size(); i++) {
-            listeners[i].callback_->OnVSyncEvent(listeners[i].lastTime_, period_);
+            listeners[i].callback_->OnVSyncEvent(listeners[i].lastTime_, period_, refreshRate_);
         }
     }
 }
@@ -205,7 +209,7 @@ std::vector<VSyncGenerator::Listener> VSyncGenerator::GetListenerTimeouted(int64
 
 VsyncError VSyncGenerator::UpdateMode(int64_t period, int64_t phase, int64_t refrenceTime)
 {
-    VLOGE("VSyncGenerator::UpdateMode period = %{public}lld", period);
+    VLOGE("VSyncGenerator::UpdateMode period = %{public}lld, phase = %{public}lld", period, phase);
     std::lock_guard<std::mutex> locker(mutex_);
     if (period < 0 || refrenceTime < 0) {
         return VSYNC_ERROR_INVALID_ARGUMENTS;
@@ -285,7 +289,7 @@ bool VSyncGenerator::IsEnable()
 
 void VSyncGenerator::UpdatePulseLocked(int64_t period)
 {
-    int32_t actualRefreshRate = round(1.0/((double)period/1000000000.0));
+    int32_t actualRefreshRate = round(1.0/((double)period/1000000000.0)); // 1.0s == 1000000000.0ns
     VLOGE("VSyncGenerator::UpdatePulseLocked actualRefreshRate = %{public}d", actualRefreshRate);
     int32_t refreshRate = actualRefreshRate;
     int32_t diff = 0;
@@ -304,10 +308,11 @@ void VSyncGenerator::UpdatePulseLocked(int64_t period)
         return;
     }
     pulse_ = period / (VSYNC_MAX_REFRESHRATE / refreshRate);
+    refreshRate_ = refreshRate;
     VLOGE("VSyncGenerator::UpdatePulseLocked pulse_ = %{public}lld", pulse_);
 }
 
-VsyncError VSyncGenerator::SetVSyncRefreshRate(int32_t refreshRate)
+VsyncError VSyncGenerator::SetGeneratorRefreshRate(int32_t refreshRate)
 {
     std::lock_guard<std::mutex> locker(mutex_);
     if (pulse_ == 0) {
@@ -319,6 +324,8 @@ VsyncError VSyncGenerator::SetVSyncRefreshRate(int32_t refreshRate)
         return VSYNC_ERROR_NOT_SUPPORT;
     }
     period_ = pulse_ * (VSYNC_MAX_REFRESHRATE / refreshRate);
+    refreshRate_ = refreshRate;
+    shouldUpdateRefrenceTime_ = true;
     return VSYNC_ERROR_OK;
 }
 

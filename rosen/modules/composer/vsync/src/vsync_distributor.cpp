@@ -179,11 +179,18 @@ VsyncError VSyncConnection::GetVSyncPeriod(int64_t &period)
 VsyncError VSyncConnection::SetVSyncRefreshRate(int32_t refreshRate)
 {
     std::unique_lock<std::mutex> locker(mutex_);
-    if (VSYNC_MAX_REFRESHRATE % refreshRate != 0) {
-        return VSYNC_ERROR_NOT_SUPPORT;
+    if (isRemoteDead_) {
+        VLOGE("%{public}s VSync Client Connection is dead, name:%{public}s.", __func__, info_.name_.c_str());
+        return VSYNC_ERROR_API_FAILED;
     }
-    rate_ = VSYNC_MAX_REFRESHRATE / refreshRate;
-    return VSYNC_ERROR_OK;
+    if (distributor_ == nullptr) {
+        return VSYNC_ERROR_NULLPTR;
+    }
+    const sptr<VSyncDistributor> distributor = distributor_.promote();
+    if (distributor == nullptr) {
+        return VSYNC_ERROR_NULLPTR;
+    }
+    return distributor->SetVSyncRefreshRate(refreshRate, this);
 }
 
 VsyncError VSyncConnection::OnVSyncRemoteDied()
@@ -324,13 +331,13 @@ void VSyncDistributor::DisableVSync()
     }
 }
 
-void VSyncDistributor::OnVSyncEvent(int64_t now, int64_t period)
+void VSyncDistributor::OnVSyncEvent(int64_t now, int64_t period, int32_t refreshRate)
 {
     std::lock_guard<std::mutex> locker(mutex_);
     event_.timestamp = now;
     event_.vsyncCount++;
     event_.period = period;
-    event_.vsyncPulseCount++;
+    event_.vsyncPulseCount += (VSYNC_MAX_REFRESHRATE / event_.refreshRate);
     con_.notify_all();
 }
 
@@ -482,6 +489,26 @@ VsyncError VSyncDistributor::GetVSyncPeriod(int64_t &period)
 {
     std::lock_guard<std::mutex> locker(mutex_);
     period = event_.period;
+    return VSYNC_ERROR_OK;
+}
+
+VsyncError VSyncDistributor::SetVSyncRefreshRate(int32_t refreshRate, const sptr<VSyncConnection>& connection)
+{
+    if (refreshRate <= 0 || connection == nullptr) {
+        return VSYNC_ERROR_INVALID_ARGUMENTS;
+    }
+    std::lock_guard<std::mutex> locker(mutex_);
+    auto it = find(connections_.begin(), connections_.end(), connection);
+    if (it == connections_.end()) {
+        return VSYNC_ERROR_INVALID_ARGUMENTS;
+    }
+    VLOGE("%{public}s conn name:%{public}s", __func__, connection->info_.name_.c_str());
+    if (VSYNC_MAX_REFRESHRATE % refreshRate != 0) {
+        return VSYNC_ERROR_NOT_SUPPORT;
+    }
+    connection->rate_ = VSYNC_MAX_REFRESHRATE / refreshRate;
+    event_.vsyncPulseCount = 0;
+    con_.notify_all();
     return VSYNC_ERROR_OK;
 }
 }

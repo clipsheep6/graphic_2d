@@ -31,7 +31,7 @@ class VSyncGenerator : public RefBase {
 public:
     class Callback : public RefBase {
     public:
-        virtual void OnVSyncEvent(int64_t now, int64_t period) = 0;
+        virtual void OnVSyncEvent(int64_t now, int64_t period, int32_t refreshRate) = 0;
     };
     VSyncGenerator() = default;
     virtual ~VSyncGenerator() noexcept = default;
@@ -40,7 +40,7 @@ public:
     virtual VsyncError RemoveListener(const sptr<Callback>& cb) = 0;
     virtual VsyncError ChangePhaseOffset(const sptr<Callback>& cb, int64_t offset) = 0;
     virtual bool IsEnable() = 0;
-    virtual VsyncError SetVSyncRefreshRate(int32_t refreshRate) = 0;
+    virtual VsyncError SetGeneratorRefreshRate(int32_t refreshRate) = 0;
     virtual int64_t GetVSyncPulse() = 0;
 };
 
@@ -61,7 +61,7 @@ public:
     VsyncError RemoveListener(const sptr<OHOS::Rosen::VSyncGenerator::Callback>& cb) override;
     VsyncError ChangePhaseOffset(const sptr<OHOS::Rosen::VSyncGenerator::Callback>& cb, int64_t offset) override;
     bool IsEnable() override;
-    VsyncError SetVSyncRefreshRate(int32_t refreshRate) override;
+    VsyncError SetGeneratorRefreshRate(int32_t refreshRate) override;
     int64_t GetVSyncPulse() override;
 
 private:
@@ -87,7 +87,9 @@ private:
     int64_t phase_;
     int64_t refrenceTime_;
     int64_t wakeupDelay_;
-    int64_t pulse_; // 360Hz
+    int64_t pulse_; // 360Hz脉冲的单位时间
+    int32_t refreshRate_; // vsync刷新率，更新period_时需要同时更改refreshRate_
+    bool shouldUpdateRefrenceTime_;
 
     std::vector<Listener> listeners_;
 

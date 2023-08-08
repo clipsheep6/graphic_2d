@@ -100,6 +100,7 @@ public:
     VsyncError GetQosVSyncRateInfos(std::vector<std::pair<uint32_t, int32_t>>& vsyncRateInfos);
     VsyncError SetQosVSyncRate(uint32_t pid, int32_t rate);
     VsyncError GetVSyncPeriod(int64_t &period);
+    VsyncError SetVSyncRefreshRate(int32_t refreshRate, const sptr<VSyncConnection>& connection);
 
 private:
 
@@ -109,11 +110,12 @@ private:
         int64_t vsyncCount;
         int64_t period;
         int64_t vsyncPulseCount;
+        int32_t refreshRate;
     };
     void ThreadMain();
     void EnableVSync();
     void DisableVSync();
-    void OnVSyncEvent(int64_t now, int64_t period);
+    void OnVSyncEvent(int64_t now, int64_t period, int32_t refreshRate);
     void CollectConnections(bool &waitForVSync, int64_t timestamp,
                             std::vector<sptr<VSyncConnection>> &conns, int64_t vsyncCount);
     VsyncError QosGetPidByName(const std::string& name, uint32_t& pid);

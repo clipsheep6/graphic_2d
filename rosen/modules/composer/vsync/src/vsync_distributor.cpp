@@ -178,6 +178,7 @@ VsyncError VSyncConnection::GetVSyncPeriod(int64_t &period)
 
 VsyncError VSyncConnection::SetVSyncRefreshRate(int32_t refreshRate)
 {
+    std::unique_lock<std::mutex> locker(mutex_);
     if (VSYNC_MAX_REFRESHRATE % refreshRate != 0) {
         return VSYNC_ERROR_NOT_SUPPORT;
     }

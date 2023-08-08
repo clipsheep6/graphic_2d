@@ -19,6 +19,7 @@
 #include <sys/resource.h>
 #include <string>
 #include "vsync_log.h"
+#include "vsync_type.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -35,6 +36,7 @@ constexpr int64_t maxWaleupDelay = 1500000;
 constexpr int32_t THREAD_PRIORTY = -6;
 constexpr int32_t SCHED_PRIORITY = 2;
 constexpr int64_t errorThreshold = 500000;
+constexpr int32_t MAX_REFRESHRATE_DEVIATION = 5; // ±5Hz
 
 static void SetThreadHighPriority()
 {
@@ -203,12 +205,13 @@ std::vector<VSyncGenerator::Listener> VSyncGenerator::GetListenerTimeouted(int64
 
 VsyncError VSyncGenerator::UpdateMode(int64_t period, int64_t phase, int64_t refrenceTime)
 {
+    VLOGE("VSyncGenerator::UpdateMode period = %{public}lld", period);
     std::lock_guard<std::mutex> locker(mutex_);
     if (period < 0 || refrenceTime < 0) {
         return VSYNC_ERROR_INVALID_ARGUMENTS;
     }
     period_ = period;
-    CalculatePulseLocked(period);
+    UpdatePulseLocked(period);
     phase_ = phase;
     refrenceTime_ = refrenceTime;
     con_.notify_all();
@@ -280,43 +283,42 @@ bool VSyncGenerator::IsEnable()
     return period_ > 0;
 }
 
-void VSyncGenerator::CalculatePulseLocked(int64_t period)
+void VSyncGenerator::UpdatePulseLocked(int64_t period)
 {
-    double refreshRate = 1.0/((double)period/1000000000.0);
-    if (refreshRate > 115.0 && refreshRate < 125.0) {
-        pulse_ = (int64_t)((double)period/3);
-    } else if (refreshRate > 85.0 && refreshRate < 95.0) {
-        pulse_ = (int64_t)((double)period/4);
-    } else if (refreshRate > 55.0 && refreshRate < 65.0) {
-        pulse_ = (int64_t)((double)period/6);
-    } else if (refreshRate > 25.0 && refreshRate < 35.0) {
-        pulse_ = (int64_t)((double)period/12);
+    int32_t actualRefreshRate = round(1.0/((double)period/1000000000.0));
+    VLOGE("VSyncGenerator::UpdatePulseLocked actualRefreshRate = %{public}d", actualRefreshRate);
+    int32_t refreshRate = actualRefreshRate;
+    int32_t diff = 0;
+    // 在actualRefreshRate附近找到一个能被VSYNC_MAX_REFRESHRATE整除的刷新率作为训练pulse的参考刷新率
+    while ((abs(refreshRate - actualRefreshRate) < MAX_REFRESHRATE_DEVIATION) &&
+           (VSYNC_MAX_REFRESHRATE % refreshRate != 0)) {
+        if (diff < 0) {
+            diff = -diff;
+        } else {
+            diff = -diff - 1;
+        }
     }
+    if (VSYNC_MAX_REFRESHRATE % refreshRate != 0) {
+        VLOGE("%{public}s Recognize an unsupported refresh rate: %{public}d, update pulse failed.",
+                __func__, actualRefreshRate);
+        return;
+    }
+    pulse_ = period / (VSYNC_MAX_REFRESHRATE / refreshRate);
+    VLOGE("VSyncGenerator::UpdatePulseLocked pulse_ = %{public}lld", pulse_);
 }
 
 VsyncError VSyncGenerator::SetVSyncRefreshRate(int32_t refreshRate)
 {
     std::lock_guard<std::mutex> locker(mutex_);
     if (pulse_ == 0) {
+        VLOGE("pulse is not ready!!!");
         return VSYNC_ERROR_API_FAILED;
     }
-    switch (refreshRate) {
-        case 30:
-            period_ = pulse_ * 12;
-            break;
-        case 60:
-            period_ = pulse_ * 6;
-            break;
-        case 90:
-            period_ = pulse_ * 4;
-            break;
-        case 120:
-            period_ = pulse_ * 3;
-            break;
-        default:
-            VLOGW("SetVSyncRefreshRate Failed, refreshRate:%{public}d is not support.", refreshRate);
-            return VSYNC_ERROR_INVALID_ARGUMENTS;
+    if (VSYNC_MAX_REFRESHRATE % refreshRate != 0) {
+        VLOGE("not support this refresh rate: %{public}d", refreshRate);
+        return VSYNC_ERROR_NOT_SUPPORT;
     }
+    period_ = pulse_ * (VSYNC_MAX_REFRESHRATE / refreshRate);
     return VSYNC_ERROR_OK;
 }
 

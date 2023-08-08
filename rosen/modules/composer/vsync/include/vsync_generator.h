@@ -81,7 +81,7 @@ private:
     int64_t ComputeListenerNextVSyncTimeStamp(const Listener &listen, int64_t now, int64_t refrenceTime);
     void ThreadLoop();
     void UpdateWakeupDelay(int64_t occurTimestamp, int64_t nextTimeStamp);
-    void CalculatePulseLocked(int64_t period);
+    void UpdatePulseLocked(int64_t period);
 
     int64_t period_;
     int64_t phase_;

@@ -21,7 +21,6 @@
 #include <string>
 
 #include "common/rs_macros.h"
-#include "platform/common/rs_system_properties.h"
 
 namespace OHOS {
 namespace Rosen {

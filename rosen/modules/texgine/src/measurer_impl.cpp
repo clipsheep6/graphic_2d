@@ -169,12 +169,15 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
                 index--;
                 LOGCEX_DEBUG() << " new";
                 auto next = runsit;
-                runs.insert(++next, {
-                    .start = utf16Index - U16_LENGTH(cp),
-                    .end = runsit->end,
-                    .script = runsit->script,
-                });
-                runsit->end = utf16Index - U16_LENGTH(cp);
+                auto iter = ++next;
+                if (iter != runs.end()) {
+                    runs.insert(iter, {
+                        .start = utf16Index - U16_LENGTH(cp),
+                        .end = runsit->end,
+                        .script = runsit->script,
+                    });
+                    runsit->end = utf16Index - U16_LENGTH(cp);
+                }
                 break;
             }
 
@@ -249,8 +252,11 @@ void MeasurerImpl::DoSeekScript(std::list<struct MeasuringRun> &runs, hb_unicode
             } else {
                 index--;
                 auto next = it;
-                runs.insert(++next, { .start = utf16Index - U16_LENGTH(cp), .end = it->end });
-                it->end = utf16Index - U16_LENGTH(cp);
+                auto iter = ++next;
+                if (iter != runs.end()) {
+                    runs.insert(iter, { .start = utf16Index - U16_LENGTH(cp), .end = it->end });
+                    it->end = utf16Index - U16_LENGTH(cp);
+                }
                 break;
             }
         }

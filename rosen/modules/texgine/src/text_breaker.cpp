@@ -16,6 +16,10 @@
 #include "text_breaker.h"
 
 #include <cassert>
+#include <hb.h>
+#include <unicode/brkiter.h>
+#include <unicode/rbbi.h>
+#include <unicode/locid.h>
 
 #include "measurer.h"
 #include "texgine/any_span.h"
@@ -119,6 +123,38 @@ int TextBreaker::Measure(const TextStyle &xs, const std::vector<uint16_t> &u16ve
     return 0;
 }
 
+static void SetHyphenation(CharGroups &currentCgs)
+{
+    auto text = currentCgs.ToUTF16All();
+    UErrorCode status = U_ZERO_ERROR;
+    icu::Locale locale = icu::Locale::getDefault();
+    icu::BreakIterator* breakIterator = icu::RuleBasedBreakIterator::createWordInstance(locale, status);
+    if (U_FAILURE(status)) {
+        LOGEX_FUNC_LINE(ERROR) << "break iterator failed!";
+        return;
+    }
+    icu::UnicodeString uText(reinterpret_cast<const UChar*>(text.data()), text.size());
+    breakIterator->setText(uText);
+    std::u16string resultString;
+    std::vector<size_t> hyphenPositions;
+    size_t startPos = breakIterator->next();
+    while (startPos != icu::BreakIterator::DONE) {
+        if (startPos > 0 && startPos < uText.length()) {
+            hyphenPositions.push_back(startPos);
+        }
+        startPos = breakIterator->next();
+    }
+
+    for (auto &pos : hyphenPositions) {
+        for (size_t j = 0; j < currentCgs.GetNumberOfCharGroup(); j++) {
+            if (j == pos) {
+            auto &cg = currentCgs.Get(j);
+            cg.hyphenType= HyphenationType::BREAK_AND_INSERT_HYPHEN;
+            }
+        }
+    }
+}
+
 void TextBreaker::BreakWord(const CharGroups &wordcgs, const TypographyStyle &ys,
     const TextStyle &xs, std::vector<VariantSpan> &spans)
 {
@@ -145,6 +181,9 @@ void TextBreaker::BreakWord(const CharGroups &wordcgs, const TypographyStyle &ys
         }
 
         auto currentCgs = wordcgs.GetSub(rangeOffset, i + 1);
+        if (isBreakWord) {
+            SetHyphenation(currentCgs);
+        }
         GenerateSpan(currentCgs, ys, xs, spans);
         rangeOffset = i + 1;
     }

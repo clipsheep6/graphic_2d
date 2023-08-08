@@ -32,6 +32,16 @@ struct ScoredSpan {
     int32_t prev;
 };
 
+struct Candidate {
+    size_t prev;
+    double preBreak;
+    double postBreak;
+    double penalty;
+    double score;
+    bool isHyphCandidate;
+    HyphenationType hyphenType;
+};
+
 class LineBreaker {
 public:
     static std::vector<LineMetrics> BreakLines(std::vector<VariantSpan> &spans,
@@ -42,6 +52,13 @@ public:
     static std::vector<int32_t> GenerateBreaks(const std::vector<struct ScoredSpan> &scoredSpans) noexcept(false);
     static std::vector<LineMetrics> GenerateLineMetrics(std::vector<VariantSpan> &spans,
         std::vector<int32_t> &breaks) noexcept(false);
+    static std::vector<Candidate> GenerateCandidate(const std::vector<VariantSpan> &spans,
+        std::vector<VariantSpan> &newSpans);
+    static void DoBreakLines(std::vector<struct Candidate> &candidates, const double widthLimit,
+        const TypographyStyle &tstyle) noexcept(false);
+    static std::vector<int32_t> GenerateBreaks(const std::vector<struct Candidate> &candidates) noexcept(false);
+    static std::vector<LineMetrics> GenerateLineMetrics(std::vector<Candidate> &candidates,
+        std::vector<int32_t> &breaks, std::vector<VariantSpan> &newSpans) noexcept(false);
 };
 } // namespace TextEngine
 } // namespace Rosen

@@ -65,6 +65,7 @@ public:
 private:
     void ReportMemoryUsage(const std::string &member, bool needThis) const override;
 
+    void InsertHyphen();
     void ComputeIntrinsicWidth();
     void ConsiderEllipsis();
     int ComputeStrut();

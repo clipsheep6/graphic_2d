@@ -25,7 +25,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-constexpr int32_t SOFT_VSYNC_PERIOD = 16;
+constexpr int32_t SOFT_VSYNC_PERIOD = 16666666; // nanoseconds
 constexpr int32_t ERRNO_EAGAIN = -1;
 constexpr int32_t ERRNO_OTHER = -2;
 constexpr int32_t THREAD_PRIORTY = -6;
@@ -144,7 +144,7 @@ int32_t VSyncConnection::PostEvent(int64_t now, int64_t period, int64_t vsyncCou
     return ret;
 }
 
-VsyncError VSyncConnection::SetVSyncRate(int32_t rate)
+VsyncError VSyncConnection::SetVSyncRate(int32_t rate, bool autoTrigger)
 {
     std::unique_lock<std::mutex> locker(mutex_);
     if (isRemoteDead_) {
@@ -158,7 +158,7 @@ VsyncError VSyncConnection::SetVSyncRate(int32_t rate)
     if (distributor == nullptr) {
         return VSYNC_ERROR_NULLPTR;
     }
-    return distributor->SetVSyncRate(rate, this);
+    return distributor->SetVSyncRate(rate, autoTrigger, this);
 }
 
 VsyncError VSyncConnection::GetVSyncPeriod(int64_t &period)
@@ -245,7 +245,7 @@ void VSyncDistributor::ThreadMain()
     sched_setscheduler(0, SCHED_FIFO, &param);
 
     int64_t timestamp;
-    int64_t vsyncCount;
+    int64_t softVSyncPeriod;
     while (vsyncThreadRunning_ == true) {
         std::vector<sptr<VSyncConnection>> conns;
         {
@@ -253,20 +253,21 @@ void VSyncDistributor::ThreadMain()
             std::unique_lock<std::mutex> locker(mutex_);
             timestamp = event_.timestamp;
             event_.timestamp = 0;
-            vsyncCount = event_.vsyncCount;
-            CollectConnections(waitForVSync, timestamp, conns, vsyncCount);
+            softVSyncPeriod = (event_.period == 0) ? SOFT_VSYNC_PERIOD : event_.period;
+            CollectConnections(waitForVSync, timestamp, conns, event_.vsyncPulseCount);
             // no vsync signal
             if (timestamp == 0) {
                 // there is some connections request next vsync, enable vsync if vsync disable and
                 // and start the software vsync with wait_for function
                 if (waitForVSync == true && vsyncEnabled_ == false) {
                     EnableVSync();
-                    if (con_.wait_for(locker, std::chrono::milliseconds(SOFT_VSYNC_PERIOD)) ==
+                    if (con_.wait_for(locker, std::chrono::nanoseconds(softVSyncPeriod)) ==
                         std::cv_status::timeout) {
                         const auto &now = std::chrono::steady_clock::now().time_since_epoch();
                         timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
                         event_.timestamp = timestamp;
                         event_.vsyncCount++;
+                        event_.vsyncPulseCount++;
                     }
                 } else {
                     // just wait request or vsync signal
@@ -290,10 +291,8 @@ void VSyncDistributor::ThreadMain()
                 RemoveConnection(conns[i]);
             } else if (ret == ERRNO_EAGAIN) {
                 std::unique_lock<std::mutex> locker(mutex_);
-                // Exclude SetVSyncRate
-                if (conns[i]->rate_ < 0) {
-                    conns[i]->rate_ = 0;
-                }
+                // Trigger VSync Again
+                conns[i]->triggerThisTime_ = true;
             }
         }
     }
@@ -320,6 +319,7 @@ void VSyncDistributor::OnVSyncEvent(int64_t now, int64_t period)
     event_.timestamp = now;
     event_.vsyncCount++;
     event_.period = period;
+    event_.vsyncPulseCount++;
     con_.notify_all();
 }
 
@@ -329,23 +329,15 @@ void VSyncDistributor::CollectConnections(bool &waitForVSync, int64_t timestamp,
     for (uint32_t i = 0; i < connections_.size(); i++) {
         int32_t rate = connections_[i]->highPriorityState_ ? connections_[i]->highPriorityRate_ :
                                                              connections_[i]->rate_;
-        if (rate == 0) {  // for RequestNextVSync
+        if (rate == 0) {
+            rate = 1;
+        }
+        if (connections_[i]->triggerThisTime_) {
             waitForVSync = true;
-            if (timestamp > 0) {
-                connections_[i]->rate_ = -1;
+            if (timestamp > 0 && (vsyncCount % rate == 0)) {
                 conns.push_back(connections_[i]);
-            }
-        } else if (rate > 0) {
-            if (connections_[i]->rate_ == 0) {  // for SetHighPriorityVSyncRate with RequestNextVSync
-                waitForVSync = true;
-                if (timestamp > 0 && (vsyncCount % rate == 0)) {
-                    connections_[i]->rate_ = -1;
-                    conns.push_back(connections_[i]);
-                }
-            } else if (connections_[i]->rate_ > 0) {  // for SetVSyncRate
-                waitForVSync = true;
-                if (timestamp > 0 && (vsyncCount % rate == 0)) {
-                    conns.push_back(connections_[i]);
+                if (!connections_[i]->autoTrigger_) {
+                    connections_[i]->triggerThisTime_ = false;
                 }
             }
         }
@@ -365,15 +357,13 @@ VsyncError VSyncDistributor::RequestNextVSync(const sptr<VSyncConnection>& conne
         VLOGE("connection is invalid arguments");
         return VSYNC_ERROR_INVALID_ARGUMENTS;
     }
-    if (connection->rate_ < 0) {
-        connection->rate_ = 0;
-        con_.notify_all();
-    }
+    connection->triggerThisTime_ = true;
+    con_.notify_all();
     VLOGD("conn name:%{public}s, rate:%{public}d", connection->info_.name_.c_str(), connection->rate_);
     return VSYNC_ERROR_OK;
 }
 
-VsyncError VSyncDistributor::SetVSyncRate(int32_t rate, const sptr<VSyncConnection>& connection)
+VsyncError VSyncDistributor::SetVSyncRate(int32_t rate, bool autoTrigger, const sptr<VSyncConnection>& connection)
 {
     if (rate <= 0 || connection == nullptr) {
         return VSYNC_ERROR_INVALID_ARGUMENTS;
@@ -387,6 +377,8 @@ VsyncError VSyncDistributor::SetVSyncRate(int32_t rate, const sptr<VSyncConnecti
         return VSYNC_ERROR_INVALID_ARGUMENTS;
     }
     connection->rate_ = rate;
+    connection->autoTrigger_ = autoTrigger;
+    event_.vsyncPulseCount = 0;
     VLOGD("conn name:%{public}s", connection->info_.name_.c_str());
     con_.notify_all();
     return VSYNC_ERROR_OK;

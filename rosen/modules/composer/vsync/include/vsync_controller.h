@@ -42,6 +42,7 @@ public:
     VsyncError SetEnable(bool enable, bool& isGeneratorEnable);
     VsyncError SetCallback(Callback* cb);
     VsyncError SetPhaseOffset(int64_t offset);
+    VsyncError SetPhaseOffsetByPulseNum(int32_t pulseNum);
 
 private:
 

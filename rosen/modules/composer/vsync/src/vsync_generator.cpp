@@ -18,6 +18,7 @@
 #include <sched.h>
 #include <sys/resource.h>
 #include <string>
+#include "vsync_log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -63,7 +64,7 @@ void VSyncGenerator::DeleteInstance() noexcept
 }
 
 VSyncGenerator::VSyncGenerator()
-    : period_(0), phase_(0), refrenceTime_(0), wakeupDelay_(0)
+    : period_(0), phase_(0), refrenceTime_(0), wakeupDelay_(0), pulse_(0)
 {
     vsyncThreadRunning_ = true;
     thread_ = std::thread(std::bind(&VSyncGenerator::ThreadLoop, this));
@@ -132,6 +133,7 @@ void VSyncGenerator::ThreadLoop()
         }
         ScopedBytrace func(
             "GenerateVsyncCount:" + std::to_string(listeners.size()) + ", period:" + std::to_string(period_));
+        VLOGE("sgbdebug period_ = %{public}lld", period_);
         for (uint32_t i = 0; i < listeners.size(); i++) {
             listeners[i].callback_->OnVSyncEvent(listeners[i].lastTime_, period_);
         }
@@ -206,6 +208,7 @@ VsyncError VSyncGenerator::UpdateMode(int64_t period, int64_t phase, int64_t ref
         return VSYNC_ERROR_INVALID_ARGUMENTS;
     }
     period_ = period;
+    CalculatePulseLocked(period);
     phase_ = phase;
     refrenceTime_ = refrenceTime;
     con_.notify_all();
@@ -276,6 +279,53 @@ bool VSyncGenerator::IsEnable()
     std::lock_guard<std::mutex> locker(mutex_);
     return period_ > 0;
 }
+
+void VSyncGenerator::CalculatePulseLocked(int64_t period)
+{
+    double refreshRate = 1.0/((double)period/1000000000.0);
+    if (refreshRate > 115.0 && refreshRate < 125.0) {
+        pulse_ = (int64_t)((double)period/3);
+    } else if (refreshRate > 85.0 && refreshRate < 95.0) {
+        pulse_ = (int64_t)((double)period/4);
+    } else if (refreshRate > 55.0 && refreshRate < 65.0) {
+        pulse_ = (int64_t)((double)period/6);
+    } else if (refreshRate > 25.0 && refreshRate < 35.0) {
+        pulse_ = (int64_t)((double)period/12);
+    }
+}
+
+VsyncError VSyncGenerator::SetVSyncRefreshRate(int32_t refreshRate)
+{
+    std::lock_guard<std::mutex> locker(mutex_);
+    if (pulse_ == 0) {
+        return VSYNC_ERROR_API_FAILED;
+    }
+    switch (refreshRate) {
+        case 30:
+            period_ = pulse_ * 12;
+            break;
+        case 60:
+            period_ = pulse_ * 6;
+            break;
+        case 90:
+            period_ = pulse_ * 4;
+            break;
+        case 120:
+            period_ = pulse_ * 3;
+            break;
+        default:
+            VLOGW("SetVSyncRefreshRate Failed, refreshRate:%{public}d is not support.", refreshRate);
+            return VSYNC_ERROR_INVALID_ARGUMENTS;
+    }
+    return VSYNC_ERROR_OK;
+}
+
+int64_t VSyncGenerator::GetVSyncPulse()
+{
+    std::lock_guard<std::mutex> locker(mutex_);
+    return pulse_;
+}
+
 } // namespace impl
 sptr<VSyncGenerator> CreateVSyncGenerator()
 {

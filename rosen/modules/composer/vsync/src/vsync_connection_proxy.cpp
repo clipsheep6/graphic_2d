@@ -52,7 +52,7 @@ VsyncError VSyncConnectionProxy::GetReceiveFd(int32_t &fd)
     return VSYNC_ERROR_OK;
 }
 
-VsyncError VSyncConnectionProxy::SetVSyncRate(int32_t rate)
+VsyncError VSyncConnectionProxy::SetVSyncRate(int32_t rate, bool autoTrigger)
 {
     if (rate <= 0) {
         return VSYNC_ERROR_INVALID_ARGUMENTS;
@@ -63,6 +63,7 @@ VsyncError VSyncConnectionProxy::SetVSyncRate(int32_t rate)
 
     arg.WriteInterfaceToken(GetDescriptor());
     arg.WriteInt32(rate);
+    arg.WriteBool(autoTrigger);
     int res = Remote()->SendRequest(IVSYNC_CONNECTION_SET_RATE, arg, ret, opt);
     if (res != NO_ERROR) {
         return VSYNC_ERROR_BINDER_ERROR;

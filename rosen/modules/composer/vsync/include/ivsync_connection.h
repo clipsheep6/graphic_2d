@@ -30,7 +30,7 @@ public:
     // We assume that the vsync frequency is FREQ:
     // if rate <= 0, we just return error
     // if rate > 0, we will continue to send Vsync signals at a frequency of FREQ / rate
-    virtual VsyncError SetVSyncRate(int32_t rate) = 0;
+    virtual VsyncError SetVSyncRate(int32_t rate, bool autoTrigger) = 0;
 
     virtual VsyncError GetVSyncPeriod(int64_t &period) = 0;
 

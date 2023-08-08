@@ -74,7 +74,7 @@ public:
 
     virtual VsyncError Init();
     virtual VsyncError RequestNextVSync(FrameCallback callback);
-    virtual VsyncError SetVSyncRate(FrameCallback callback, int32_t rate);
+    virtual VsyncError SetVSyncRate(FrameCallback callback, int32_t rate, bool autoTrigger = true);
     virtual VsyncError GetVSyncPeriod(int64_t &period);
 
 private:
@@ -100,7 +100,7 @@ public:
 
     virtual VsyncError Init() = 0;
     virtual VsyncError RequestNextVSync(FrameCallback callback) = 0;
-    virtual VsyncError SetVSyncRate(FrameCallback callback, int32_t rate) = 0;
+    virtual VsyncError SetVSyncRate(FrameCallback callback, int32_t rate, bool autoTrigger = true) = 0;
 };
 #endif
 } // namespace Rosen

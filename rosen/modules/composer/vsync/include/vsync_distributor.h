@@ -49,7 +49,7 @@ public:
 
     virtual VsyncError RequestNextVSync() override;
     virtual VsyncError GetReceiveFd(int32_t &fd) override;
-    virtual VsyncError SetVSyncRate(int32_t rate) override;
+    virtual VsyncError SetVSyncRate(int32_t rate, bool autoTrigger) override;
     virtual VsyncError GetVSyncPeriod(int64_t &period) override;
     VsyncError OnVSyncRemoteDied();
 
@@ -59,6 +59,8 @@ public:
     int32_t highPriorityRate_ = -1;
     bool highPriorityState_ = false;
     ConnectionInfo info_;
+    bool autoTrigger_ = false;
+    bool triggerThisTime_ = false;
 private:
     class VSyncConnectionDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
@@ -91,7 +93,7 @@ public:
     VsyncError AddConnection(const sptr<VSyncConnection>& connection);
     VsyncError RemoveConnection(const sptr<VSyncConnection> &connection);
     VsyncError RequestNextVSync(const sptr<VSyncConnection>& connection);
-    VsyncError SetVSyncRate(int32_t rate, const sptr<VSyncConnection>& connection);
+    VsyncError SetVSyncRate(int32_t rate, bool autoTrigger, const sptr<VSyncConnection>& connection);
     VsyncError SetHighPriorityVSyncRate(int32_t highPriorityRate, const sptr<VSyncConnection>& connection);
     VsyncError GetVSyncConnectionInfos(std::vector<ConnectionInfo>& infos);
     VsyncError GetQosVSyncRateInfos(std::vector<std::pair<uint32_t, int32_t>>& vsyncRateInfos);
@@ -105,6 +107,7 @@ private:
         int64_t timestamp;
         int64_t vsyncCount;
         int64_t period;
+        int64_t vsyncPulseCount;
     };
     void ThreadMain();
     void EnableVSync();

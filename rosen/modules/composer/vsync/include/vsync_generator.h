@@ -40,6 +40,8 @@ public:
     virtual VsyncError RemoveListener(const sptr<Callback>& cb) = 0;
     virtual VsyncError ChangePhaseOffset(const sptr<Callback>& cb, int64_t offset) = 0;
     virtual bool IsEnable() = 0;
+    virtual VsyncError SetVSyncRefreshRate(int32_t refreshRate) = 0;
+    virtual int64_t GetVSyncPulse() = 0;
 };
 
 sptr<VSyncGenerator> CreateVSyncGenerator();
@@ -59,6 +61,8 @@ public:
     VsyncError RemoveListener(const sptr<OHOS::Rosen::VSyncGenerator::Callback>& cb) override;
     VsyncError ChangePhaseOffset(const sptr<OHOS::Rosen::VSyncGenerator::Callback>& cb, int64_t offset) override;
     bool IsEnable() override;
+    VsyncError SetVSyncRefreshRate(int32_t refreshRate) override;
+    int64_t GetVSyncPulse() override;
 
 private:
     friend class OHOS::Rosen::VSyncGenerator;
@@ -77,11 +81,13 @@ private:
     int64_t ComputeListenerNextVSyncTimeStamp(const Listener &listen, int64_t now, int64_t refrenceTime);
     void ThreadLoop();
     void UpdateWakeupDelay(int64_t occurTimestamp, int64_t nextTimeStamp);
+    void CalculatePulseLocked(int64_t period);
 
     int64_t period_;
     int64_t phase_;
     int64_t refrenceTime_;
     int64_t wakeupDelay_;
+    int64_t pulse_; // 360Hz
 
     std::vector<Listener> listeners_;
 

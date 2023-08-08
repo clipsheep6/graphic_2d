@@ -76,6 +76,20 @@ VsyncError VSyncController::SetPhaseOffset(int64_t offset)
     return generator->ChangePhaseOffset(this, phaseOffset_);
 }
 
+VsyncError VSyncController::SetPhaseOffsetByPulseNum(int32_t pulseNum)
+{
+    if (generator_ == nullptr) {
+        return VSYNC_ERROR_NULLPTR;
+    }
+    const sptr<VSyncGenerator> generator = generator_.promote();
+    if (generator == nullptr) {
+        return VSYNC_ERROR_NULLPTR;
+    }
+    std::lock_guard<std::mutex> locker(offsetMutex_);
+    phaseOffset_ = generator->GetVSyncPulse() * pulseNum;
+    return generator->ChangePhaseOffset(this, phaseOffset_);
+}
+
 void VSyncController::OnVSyncEvent(int64_t now, int64_t period)
 {
     Callback *cb = nullptr;

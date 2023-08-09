@@ -168,6 +168,8 @@ public:
     virtual void ReportEventJankFrame(DataBaseRs info) = 0;
 
     virtual void SetHardwareEnabled(NodeId id, bool isEnabled) = 0;
+
+    virtual bool GetAnimDynamicCfgCallback(sptr<RSIAnimDynamicCfgCallback> callback) = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

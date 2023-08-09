@@ -1597,6 +1597,34 @@ void RSRenderServiceConnectionProxy::SetHardwareEnabled(NodeId id, bool isEnable
     }
 }
 
+bool RSRenderServiceConnectionProxy::GetAnimDynamicCfgCallback(sptr<RSIAnimDynamicCfgCallback> callback)
+{
+    if (callback == nullptr) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetAnimDynamicCfgCallback: callback is nullptr.");
+        return INVALID_ARGUMENTS;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return WRITE_PARCEL_ERR;
+    }
+
+    option.SetFlags(MessageOption::TF_ASYNC);
+    data.WriteRemoteObject(callback->AsObject());
+    uint32_t code =
+        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_ANIM_DYNAMIC_CFG_CALLBACK);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetAnimDynamicCfgCallback: Send Request err.");
+        return RS_CONNECTION_ERROR;
+    }
+    int32_t result = reply.ReadInt32();
+    return result;
+}
+
 const RSInterfaceCodeSecurityManager<RSIRenderServiceConnectionInterfaceCode> \
     RSRenderServiceConnectionProxy::securityManager_ = CreateRSIRenderServiceConnectionInterfaceCodeSecurityManager();
 } // namespace Rosen

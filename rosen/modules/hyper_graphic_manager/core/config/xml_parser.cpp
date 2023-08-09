@@ -15,6 +15,8 @@
 #include "xml_parser.h"
 #include <algorithm>
 
+#include "anim_dynamic_configs.h"
+
 namespace OHOS::Rosen {
 int32_t XMLParser::LoadConfiguration()
 {
@@ -273,6 +275,8 @@ int32_t XMLParser::ParserAnimationDynamicSetting(xmlNode &node)
             animationDynamicSetting.max = std::stoi(ExtractPropertyValue("max", *thresholdNode));
             animationDynamicSetting.preferred_fps = std::stoi(ExtractPropertyValue("preferred_fps", *thresholdNode));
             mParsedData_->dynamicSetting_[dynamicSettingType][name] = animationDynamicSetting;
+            AnimDynamicCfgs::GetInstance().AddAnimaDynamicConfigs({dynamicSettingType, name,
+                animationDynamicSetting.min, animationDynamicSetting.max, animationDynamicSetting.preferred_fps});
         }
     }
     return EXEC_SUCCESS;

@@ -39,6 +39,7 @@
 #endif
 #include <system_ability_definition.h>
 #include <ui/rs_surface_extractor.h>
+#include <ui/rs_display_node.h>
 // #include <window.h>
 // #include <window_option.h>
 // #include <window_scene.h>
@@ -61,10 +62,14 @@ public:
     ~BootAnimation();
     void CloseVideoPlayer();
 private:
+    static void OnBootComplete(const char *key, const char *value, void *context);
     void OnVsync();
     void OnDraw(SkCanvas* canvas, int32_t curNo);
     void InitRsSurface();
     void InitRsSurfaceNode();
+#ifdef SUPPORT_DISPLAY_NODE
+    void InitRsDisplayNode();
+#endif
     void InitPicCoordinates();
     int32_t windowWidth_;
     int32_t windowHeight_;
@@ -80,6 +85,7 @@ private:
     OHOS::Rosen::RenderContext* rc_;
 #endif
     std::shared_ptr<OHOS::Rosen::RSSurfaceNode> rsSurfaceNode_;
+    std::shared_ptr<OHOS::Rosen::RSDisplayNode> rsDisplayNode_;
     int32_t freq_ = 30;
     int32_t realHeight_ = 0;
     int32_t realWidth_ = 0;

@@ -49,6 +49,8 @@ ohos_executable("bootanimation") {
     "src/util.cpp",
   ]
 
+  defines = ["SUPPORT_DISPLAY_NODE"]
+
   configs = [
     ":bootanimation_config",
     "//commonlibrary/c_utils/base:utils_config",
@@ -63,7 +65,7 @@ ohos_executable("bootanimation") {
     "$graphic_2d_root/rosen/modules/render_service_client:librender_service_client",
     "//third_party/cJSON:cjson_static",
     "//third_party/zlib:libz",
-    
+
   ]
 
   if (defined(use_new_skia) && use_new_skia) {

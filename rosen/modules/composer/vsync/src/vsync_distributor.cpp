@@ -26,7 +26,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-constexpr int32_t SOFT_VSYNC_PERIOD = 16666666; // nanoseconds
+constexpr int32_t SOFT_VSYNC_PERIOD = 16666667; // nanoseconds
 constexpr int32_t ERRNO_EAGAIN = -1;
 constexpr int32_t ERRNO_OTHER = -2;
 constexpr int32_t THREAD_PRIORTY = -6;

@@ -79,6 +79,7 @@ private:
     void UpdateModeLocked();
     void UpdateErrorLocked();
     void ResetErrorLocked();
+    void UpdateErrorLTPOLocked();
 
     int64_t period_;
     int64_t phase_;

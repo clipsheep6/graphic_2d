@@ -214,6 +214,44 @@ void VSyncSampler::UpdateErrorLocked()
     }
 }
 
+// TODO
+void VSyncSampler::UpdateErrorLTPOLocked()
+{
+    if (!modeUpdated_) {
+        return;
+    }
+
+    int numErrSamples = 0;
+    int64_t sqErrSum = 0;
+
+    // int64_t generatorOffset = CreateVSyncGenerator()->GetReferenceTimeOffset();
+    for (uint32_t i = 0; i < NUM_PRESENT; i++) {
+        int64_t t = presentFenceTime_[i];
+        if (t <= 0) {
+            continue;
+        }
+
+        int64_t sample = t - referenceTime_;
+        if (sample <= phase_) {
+            continue;
+        }
+
+        int64_t sampleErr = (sample - phase_) % period_;
+        // 1/2 just a empirical value
+        if (sampleErr > period_ / 2) {
+            sampleErr -= period_;
+        }
+        sqErrSum += sampleErr * sampleErr;
+        numErrSamples++;
+    }
+
+    if (numErrSamples > 0) {
+        error_ = sqErrSum / numErrSamples;
+    } else {
+        error_ = 0;
+    }
+}
+
 bool VSyncSampler::AddPresentFenceTime(int64_t timestamp)
 {
     std::lock_guard<std::mutex> lock(mutex_);

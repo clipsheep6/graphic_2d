@@ -760,7 +760,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     node.CleanDstRectChanged();
     node.ApplyModifiers();
     bool dirtyFlag = dirtyFlag_;
-    
+
 
     RectI prepareClipRect = prepareClipRect_;
     bool isQuickSkipPreparationEnabled = isQuickSkipPreparationEnabled_;
@@ -2846,10 +2846,21 @@ void RSUniRenderVisitor::DrawChildRenderNode(RSRenderNode& node)
     node.ProcessTransitionAfterChildren(*canvas_);
 }
 
+void RSUniRenderVisitor::BlackSurfaceRenderNode(RSSurfaceRenderNode& node)
+{
+    SurfaceBuffer *buffer = node.GetBuffer().GetRefPtr();
+    if (buffer != nullptr) {
+        char *virtAddr = static_cast<char *>(buffer->GetVirAddr());
+        if (virtAddr != nullptr) {
+            std::memset(virtAddr, 0x0, buffer->GetSize());
+        }
+    }
+}
+
 bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeNeedProcess(RSSurfaceRenderNode& node)
 {
-    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
-        RS_TRACE_NAME(node.GetName() + " SecurityLayer Skip");
+    if (node.GetSkipLayer()) {
+        RS_TRACE_NAME(node.GetName() + " SkipLayer Skip");
         return false;
     }
     if (!node.ShouldPaint()) {
@@ -2929,6 +2940,10 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 #endif
     if (!CheckIfSurfaceRenderNodeNeedProcess(node)) {
         return;
+    }
+    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
+        RS_TRACE_NAME(node.GetName() + " SecurityLayer Black Screen");
+        BlackSurfaceRenderNode(node);
     }
 #ifdef RS_ENABLE_EGLQUERYSURFACE
     if (node.IsAppWindow()) {

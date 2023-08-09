@@ -217,12 +217,6 @@ void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
             node.GetId());
         return;
     }
-    // if (isSecurityDisplay_ && node.GetSecurityLayer()) {
-    //     RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node[%" PRIu64 "] prepare paused because of \
-    //         security DisplayNode.",
-    //         node.GetId());
-    //     return;
-    // }
     if (!canvas_) {
         RS_LOGD("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : %" PRIu64 " canvas is nullptr", node.GetId());
         return;
@@ -238,6 +232,17 @@ void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     node.PrepareRenderAfterChildren(*canvas_);
 }
 
+void RSRenderServiceVisitor::BlackSurfaceRenderNode(RSSurfaceRenderNode& node)
+{
+    SurfaceBuffer *buffer = node.GetBuffer().GetRefPtr();
+    if (buffer != nullptr) {
+        char *virtAddr = static_cast<char *>(buffer->GetVirAddr());
+        if (virtAddr != nullptr) {
+            std::memset(virtAddr, 0x0, buffer->GetSize());
+        }
+    }
+}
+
 void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
     if (!processor_) {
@@ -251,11 +256,9 @@ void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         return;
     }
     if (isSecurityDisplay_ && node.GetSecurityLayer()) {
-        // RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node[%" PRIu64 "] process paused because of \
-        //     security DisplayNode.",
-        //     node.GetId());
-        // return;
-        // 设置node的buffer数据为黑屏数据
+        RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node[%" PRIu64 "] process Security SurfaceNode.",
+            node.GetId());
+        BlackSurfaceRenderNode(node);
     }
     if (!node.ShouldPaint()) {
         RS_LOGD("RSRenderServiceVisitor::ProcessSurfaceRenderNode node : %" PRIu64 " is invisible", node.GetId());

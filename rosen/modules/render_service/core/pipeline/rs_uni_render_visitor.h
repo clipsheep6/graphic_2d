@@ -266,6 +266,8 @@ private:
     void ParallelRenderEnableHardwareComposer(RSSurfaceRenderNode& node);
     // close partialrender when perform window animation
     void ClosePartialRenderWhenAnimatingWindows(std::shared_ptr<RSDisplayRenderNode>& node);
+    // set Surface Render Node Color Black
+    void BlackSurfaceRenderNode(RSSurfaceRenderNode& node);
 
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> offscreenSurface_;                 // temporary holds offscreen surface

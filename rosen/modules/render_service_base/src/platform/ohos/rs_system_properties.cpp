@@ -312,7 +312,7 @@ bool RSSystemProperties::GetUIFirstEnabled()
 bool RSSystemProperties::GetDebugTraceEnabled()
 {
     static bool openDebugTrace =
-        std::atoi((system::GetParameter("persist.sys.graphic.openDebugTrace", "0")).c_str()) != 0;
+        std::atoi((system::GetParameter("persist.sys.graphic.openDebugTrace", "1")).c_str()) != 0;
     return openDebugTrace;
 }
 

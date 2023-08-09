@@ -171,14 +171,14 @@ HWTEST_F(RSUniUiCaptureTest, ProcessEffectRenderNode001, TestSize.Level1)
 /**
  * @tc.name: CreateSurface
  * @tc.desc: Test RSUniUiCapture.CreateSurface api
- * @tc.type:
- * @tc.require:
+ * @tc.type: FUNC
+ * @tc.require: issuesI7PJ2Z
  */
 HWTEST_F(RSUniUiCaptureTest, CreateSurface, TestSize.Level1)
 {
     NodeId nodeId = 0;
-    float scaleX = 0.0;
-    float scaleY = 0.0;
+    float scaleX = 0.0f;
+    float scaleY = 0.0f;
     RSUniUICapture rsUniUICapture(nodeId, scaleX, scaleY);
     Media::InitializationOptions opts;
     opts.size.width = 1;
@@ -195,14 +195,14 @@ HWTEST_F(RSUniUiCaptureTest, CreateSurface, TestSize.Level1)
 /**
  * @tc.name: PostTaskToRSRecord
  * @tc.desc: Test RSUniUiCapture.PostTaskToRSRecord api
- * @tc.type:
- * @tc.require:
+ * @tc.type: FUNC
+ * @tc.require: issuesI7PJ2Z
  */
 HWTEST_F(RSUniUiCaptureTest, PostTaskToRSRecord, TestSize.Level1)
 {
     NodeId nodeId = 0;
-    float scaleX = 0.0;
-    float scaleY = 0.0;
+    float scaleX = 0.0f;
+    float scaleY = 0.0f;
     std::weak_ptr<RSContext> context;
     RSUniUICapture rsUniUICapture(nodeId, scaleX, scaleY);
     auto rsUniUICaptureVistorPtr = std::make_shared<RSUniUICapture::RSUniUICaptureVisitor>(nodeId, scaleX, scaleY);
@@ -216,14 +216,14 @@ HWTEST_F(RSUniUiCaptureTest, PostTaskToRSRecord, TestSize.Level1)
 /**
  * @tc.name: ProcessRenderNode
  * @tc.desc: Test RSUniUiCapture.ProcessRenderNode api
- * @tc.type:
- * @tc.require:
+ * @tc.type: FUNC
+ * @tc.require: issuesI7PJ2Z
  */
 HWTEST_F(RSUniUiCaptureTest, ProcessRenderNode, TestSize.Level1)
 {
     NodeId nodeId = 0;
-    float scaleX = 0.0;
-    float scaleY = 0.0;
+    float scaleX = 0.0f;
+    float scaleY = 0.0f;
     std::weak_ptr<RSContext> context;
     RSUniUICapture rsUniUICapture(nodeId, scaleX, scaleY);
     RSUniUICapture::RSUniUICaptureVisitor rsUniUICaptureVisitor(nodeId, scaleX, scaleY);

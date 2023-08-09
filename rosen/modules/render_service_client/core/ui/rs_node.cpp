@@ -709,8 +709,68 @@ void RSNode::SetEnvForegroundColor(uint32_t colorValue)
 // Set the foreground color strategy of the control
 void RSNode::SetEnvForegroundColorStrategy(ForegroundColorStrategyType strategyType)
 {
-    SetProperty<RSEnvForegroundColorStrategyModifier,
-        RSProperty<ForegroundColorStrategyType>>(RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY, strategyType);
+    // SetProperty<RSEnvForegroundColorStrategyModifier,
+    //     RSProperty<ForegroundColorStrategyType>>(RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY, strategyType);
+
+    std::vector<ParticleParams> particlesParams = {};
+
+    int emitRate = 20;
+    ShapeType emitShape = ShapeType::RECT;
+    Vector2f position = Vector2f(0.f, 200.f);
+    Vector2f emitSize = Vector2f(700.f, 600.f);
+    int particleCount = 100;
+    int lifeTime = 5000;
+    ParticleType type = ParticleType::POINTS;
+    float radius = 10.f;
+    std::shared_ptr<RSImage> image = nullptr;
+    EmitterConfig emitterConfig = EmitterConfig(emitRate, emitShape, position, emitSize, 
+            particleCount, lifeTime, type, radius, image);
+
+    Range<float> velocityValue = Range<float>(0.0, 0.0);
+    Range<float> velocityAngle = Range<float>(0.0, 0.0);
+    ParticleVelocity velocity = ParticleVelocity(velocityValue, velocityAngle);
+
+    Range<float> val = Range<float>(0.0, 0.0);
+    ParticleUpdator updator = ParticleUpdator::NONE;
+    Range<float> random;
+    std::vector<Change<float>> valChangeOverLife = {};
+    ParticleParaType<float> accelerationValue = ParticleParaType(val, updator, random, valChangeOverLife);
+    ParticleParaType<float> accelerationAngle = ParticleParaType(val, updator, random, valChangeOverLife);
+    ParticleAcceleration acceleration = ParticleAcceleration(accelerationValue, accelerationAngle);
+
+    Color start = RSColor(10, 139, 245, 255);
+    Color end = RSColor(255, 255, 255, 255);
+    Range<Color> colorVal = Range<Color>(start, end);
+    ParticleUpdator colorUpdator = ParticleUpdator::NONE;
+    Range<float> redRandom = Range<float>();
+    Range<float> greenRandom;
+    Range<float> blueRandom;
+    Range<float> alphaRandom;
+    std::vector<Change<Color>> colorChangeOverLife = {};
+    ParticleColorParaType color= ParticleColorParaType(colorVal, colorUpdator, redRandom, greenRandom, blueRandom, alphaRandom, colorChangeOverLife);
+    
+    Range<float> opacityVal = Range<float>(0.f, 0.f);
+    ParticleUpdator opacityUpdator = ParticleUpdator::CURVE;
+    std::vector<Change<float>> opacityChangeOverLife;
+    float fromValue = 0.f;
+    float endValue = 1.f;
+    int startTime = 0;
+    int endTime = 1000;
+    auto curve = RSAnimationTimingCurve::LINEAR;
+    Change<float> change1 = Change<float>(fromValue, endValue, startTime, endTime, curve);
+    opacityChangeOverLife.push_back(change1);
+    Change<float> change2 = Change<float>(endValue, fromValue, endTime + 3000, lifeTime,  curve);
+    opacityChangeOverLife.push_back(change2);
+    ParticleParaType<float> opacity = ParticleParaType(opacityVal, opacityUpdator, random, opacityChangeOverLife);
+
+    Range<float> scaleVal = Range<float>(1.f, 1.f);
+    ParticleParaType<float> scale = ParticleParaType(scaleVal, updator, random, valChangeOverLife);
+    Range<float> spinVal = Range<float>(0.f, 0.f);
+    ParticleParaType<float> spin = ParticleParaType(spinVal, updator, random, valChangeOverLife);
+
+    ParticleParams params = ParticleParams(emitterConfig, velocity, acceleration, color, opacity, scale, spin);
+    particlesParams.push_back(params);
+    SetParticleParams(particlesParams);
 }
 
 // Set ParticleParams 

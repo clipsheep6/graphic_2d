@@ -259,6 +259,13 @@ bool RSSystemProperties::GetSkipGeometryNotChangeEnabled()
     return skipGeoNotChangeEnabled;
 }
 
+bool RSSystemProperties::GetBoundsAndFrameRoundEnabled()
+{
+    static bool boundsAndFrameEnabled =
+        std::atoi((system::GetParameter("persist.sys.boundsAndFrameRound.enabled", "1")).c_str()) != 0;
+    return boundsAndFrameEnabled;
+}
+
 float RSSystemProperties::GetAnimationScale()
 {
     return std::atof((system::GetParameter("persist.sys.graphic.animationscale", "1.0")).c_str());

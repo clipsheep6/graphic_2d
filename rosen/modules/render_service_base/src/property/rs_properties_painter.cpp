@@ -17,6 +17,7 @@
 
 #include "rs_trace.h"
 
+#include "animation/rs_render_particle.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "common/rs_vector2.h"
 #include "pipeline/rs_draw_cmd_list.h"
@@ -29,16 +30,16 @@
 #include "render/rs_path.h"
 #include "render/rs_shader.h"
 #include "render/rs_skia_filter.h"
-#include "animation/rs_render_particle.h"
 
 #ifdef USE_ROSEN_DRAWING
 #include <cstdint>
 
+#include "recording/recording_path.h"
+#include "recording/recording_shader_effect.h"
+
 #include "draw/canvas.h"
 #include "draw/clip.h"
 #include "drawing/draw/core_canvas.h"
-#include "recording/recording_path.h"
-#include "recording/recording_shader_effect.h"
 #include "utils/rect.h"
 #else
 #include "include/core/SkCanvas.h"
@@ -379,8 +380,8 @@ void RSPropertiesPainter::Clip(Drawing::Canvas& canvas, RectF rect, bool isAntiA
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSProperties& properties,
-    const RRect* rrect, bool isAbsCoordinate)
+void RSPropertiesPainter::GetShadowDirtyRect(
+    RectI& dirtyShadow, const RSProperties& properties, const RRect* rrect, bool isAbsCoordinate)
 {
     // [Planning]: After Skia being updated, we should directly call SkShadowUtils::GetLocalBounds here.
     if (!properties.IsShadowValid()) {
@@ -446,8 +447,8 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
     dirtyShadow.height_ = shadowRect.height();
 }
 #else
-void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSProperties& properties,
-    const RRect* rrect, bool isAbsCoordinate)
+void RSPropertiesPainter::GetShadowDirtyRect(
+    RectI& dirtyShadow, const RSProperties& properties, const RRect* rrect, bool isAbsCoordinate)
 {
     // [Planning]: After Skia being updated, we should directly call SkShadowUtils::GetLocalBounds here.
     if (!properties.IsShadowValid()) {
@@ -529,8 +530,8 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::DrawShadow(const RSProperties& properties,
-    RSPaintFilterCanvas& canvas, const RRect* rrect, bool isLeashWindow)
+void RSPropertiesPainter::DrawShadow(
+    const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect, bool isLeashWindow)
 {
     // skip shadow if not valid or cache is enabled
     if (properties.IsSpherizeValid() || !properties.IsShadowValid() ||
@@ -569,11 +570,11 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties,
     }
 }
 #else
-void RSPropertiesPainter::DrawShadow(const RSProperties& properties,
-    RSPaintFilterCanvas& canvas, const RRect* rrect, bool isLeashWindow)
+void RSPropertiesPainter::DrawShadow(
+    const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect, bool isLeashWindow)
 {
     // skip shadow if not valid or cache is enabled
-    //Todo isCacheEnabled
+    // Todo isCacheEnabled
     if (properties.IsSpherizeValid() || !properties.IsShadowValid()) {
         return;
     }
@@ -651,11 +652,11 @@ void RSPropertiesPainter::DrawColorfulShadowInner(
     // save layer, draw image with clipPath, blur and draw back
     Drawing::Brush blurBrush;
     Drawing::Filter filter;
-    filter.SetImageFilter(Drawing::ImageFilter::CreateBlurImageFilter(
-        blurRadius, blurRadius, Drawing::TileMode::DECAL, nullptr));
+    filter.SetImageFilter(
+        Drawing::ImageFilter::CreateBlurImageFilter(blurRadius, blurRadius, Drawing::TileMode::DECAL, nullptr));
     blurBrush.SetFilter(filter);
 
-    canvas.SaveLayer({nullptr, &blurBrush});
+    canvas.SaveLayer({ nullptr, &blurBrush });
 
     canvas.Translate(properties.GetShadowOffsetX(), properties.GetShadowOffsetY());
 
@@ -718,15 +719,13 @@ void RSPropertiesPainter::DrawShadowInner(
         Drawing::Point3 planeParams = { 0.0f, 0.0f, properties.GetShadowElevation() };
         Drawing::scalar centerX = path.GetBounds().GetLeft() + path.GetBounds().GetWidth() / 2;
         Drawing::scalar centerY = path.GetBounds().GetTop() + path.GetBounds().GetHeight() / 2;
-        Drawing::Point3 lightPos = {
-            canvas.GetTotalMatrix().Get(Drawing::Matrix::TRANS_X) + centerX,
+        Drawing::Point3 lightPos = { canvas.GetTotalMatrix().Get(Drawing::Matrix::TRANS_X) + centerX,
             canvas.GetTotalMatrix().Get(Drawing::Matrix::TRANS_X) + centerY, DEFAULT_LIGHT_HEIGHT };
         Color ambientColor = Color::FromArgbInt(DEFAULT_AMBIENT_COLOR);
         ambientColor.MultiplyAlpha(canvas.GetAlpha());
         spotColor.MultiplyAlpha(canvas.GetAlpha());
-        canvas.DrawShadow(path, planeParams, lightPos, DEFAULT_LIGHT_RADIUS,
-            Drawing::Color(ambientColor.AsArgbInt()), Drawing::Color(spotColor.AsArgbInt()),
-            Drawing::ShadowFlags::TRANSPARENT_OCCLUDER);
+        canvas.DrawShadow(path, planeParams, lightPos, DEFAULT_LIGHT_RADIUS, Drawing::Color(ambientColor.AsArgbInt()),
+            Drawing::Color(spotColor.AsArgbInt()), Drawing::ShadowFlags::TRANSPARENT_OCCLUDER);
     } else {
         Drawing::Brush brush;
         brush.SetColor(Drawing::Color(spotColor.AsArgbInt()));
@@ -749,23 +748,23 @@ bool RSPropertiesPainter::GetGradientDirectionPoints(
 {
     switch (direction) {
         case GradientDirection::BOTTOM: {
-            pts[0].set(clipBounds.width() / 2, 0); // 2 represents middle of width;
+            pts[0].set(clipBounds.width() / 2, 0);                   // 2 represents middle of width;
             pts[1].set(clipBounds.width() / 2, clipBounds.height()); // 2 represents middle of width;
             break;
         }
         case GradientDirection::TOP: {
             pts[0].set(clipBounds.width() / 2, clipBounds.height()); // 2 represents middle of width;
-            pts[1].set(clipBounds.width() / 2, 0); // 2 represents middle of width;
+            pts[1].set(clipBounds.width() / 2, 0);                   // 2 represents middle of width;
             break;
         }
         case GradientDirection::RIGHT: {
-            pts[0].set(0, clipBounds.height() / 2); // 2 represents middle of height;
+            pts[0].set(0, clipBounds.height() / 2);                  // 2 represents middle of height;
             pts[1].set(clipBounds.width(), clipBounds.height() / 2); // 2 represents middle of height;
             break;
         }
         case GradientDirection::LEFT: {
             pts[0].set(clipBounds.width(), clipBounds.height() / 2); // 2 represents middle of height;
-            pts[1].set(0, clipBounds.height() / 2); // 2 represents middle of height;
+            pts[1].set(0, clipBounds.height() / 2);                  // 2 represents middle of height;
             break;
         }
         case GradientDirection::RIGHT_BOTTOM: {
@@ -799,7 +798,7 @@ void RSPropertiesPainter::TransformGradientBlurDirection(uint8_t& direction, con
     if (direction == static_cast<uint8_t>(GradientDirection::LEFT_BOTTOM)) {
         direction += 2; // 2 is used to transtorm diagnal direction.
     } else if (direction == static_cast<uint8_t>(GradientDirection::RIGHT_TOP) ||
-                    direction == static_cast<uint8_t>(GradientDirection::RIGHT_BOTTOM)) {
+               direction == static_cast<uint8_t>(GradientDirection::RIGHT_BOTTOM)) {
         direction -= 1; // 1 is used to transtorm diagnal direction.
     }
     if (direction <= static_cast<uint8_t>(GradientDirection::BOTTOM)) {
@@ -818,7 +817,7 @@ void RSPropertiesPainter::TransformGradientBlurDirection(uint8_t& direction, con
     if (direction == static_cast<uint8_t>(GradientDirection::RIGHT_BOTTOM)) {
         direction -= 2; // 2 is used to restore diagnal direction.
     } else if (direction == static_cast<uint8_t>(GradientDirection::LEFT_BOTTOM) ||
-                        direction == static_cast<uint8_t>(GradientDirection::RIGHT_TOP)) {
+               direction == static_cast<uint8_t>(GradientDirection::RIGHT_TOP)) {
         direction += 1; // 1 is used to restore diagnal direction.
     }
 }
@@ -833,14 +832,13 @@ sk_sp<SkShader> RSPropertiesPainter::MakeAlphaGradientShader(
     if (directionBias != 0) {
         TransformGradientBlurDirection(direction, directionBias);
     }
-    bool result = GetGradientDirectionPoints(
-        pts, clipBounds, static_cast<GradientDirection>(direction));
+    bool result = GetGradientDirectionPoints(pts, clipBounds, static_cast<GradientDirection>(direction));
     if (!result) {
         return nullptr;
     }
     uint8_t ColorMax = 255;
     uint8_t ColorMin = 0;
-    if (para->fractionStops_[0].second > 0.01) {  // 0.01 represents the fraction bias
+    if (para->fractionStops_[0].second > 0.01) { // 0.01 represents the fraction bias
         c.emplace_back(SkColorSetARGB(ColorMin, ColorMax, ColorMax, ColorMax));
         p.emplace_back(para->fractionStops_[0].second - 0.01); // 0.01 represents the fraction bias
     }
@@ -891,10 +889,9 @@ sk_sp<SkShader> RSPropertiesPainter::MakeHorizontalMeanBlurShader(
         }
     )";
     auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
-    sk_sp<SkShader> children[] = {shader, gradientShader};
+    sk_sp<SkShader> children[] = { shader, gradientShader };
     size_t childCount = 2;
-    return effect->makeShader(SkData::MakeWithCopy(
-        &radiusIn, sizeof(radiusIn)), children, childCount, nullptr, false);
+    return effect->makeShader(SkData::MakeWithCopy(&radiusIn, sizeof(radiusIn)), children, childCount, nullptr, false);
 }
 
 sk_sp<SkShader> RSPropertiesPainter::MakeVerticalMeanBlurShader(
@@ -929,10 +926,9 @@ sk_sp<SkShader> RSPropertiesPainter::MakeVerticalMeanBlurShader(
         }
     )";
     auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
-    sk_sp<SkShader> children[] = {shader, gradientShader};
+    sk_sp<SkShader> children[] = { shader, gradientShader };
     size_t childCount = 2;
-    return effect->makeShader(SkData::MakeWithCopy(
-        &radiusIn, sizeof(radiusIn)), children, childCount, nullptr, false);
+    return effect->makeShader(SkData::MakeWithCopy(&radiusIn, sizeof(radiusIn)), children, childCount, nullptr, false);
 }
 
 void RSPropertiesPainter::DrawHorizontalLinearGradientBlur(SkSurface* skSurface, RSPaintFilterCanvas& canvas,
@@ -969,10 +965,10 @@ uint8_t RSPropertiesPainter::CalcDirectionBias(const SkMatrix& mat)
     // 1 and 3 represents rotate matrix's index
     if ((mat.get(1) > FLOAT_ZERO_THRESHOLD) && (mat.get(3) < (0 - FLOAT_ZERO_THRESHOLD))) {
         directionBias = 1; // 1 represents rotate 90 degree
-    // 0 and 4 represents rotate matrix's index
+        // 0 and 4 represents rotate matrix's index
     } else if ((mat.get(0) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.get(4) < (0 - FLOAT_ZERO_THRESHOLD))) {
         directionBias = 2; // 2 represents rotate 180 degree
-    // 1 and 3 represents rotate matrix's index
+        // 1 and 3 represents rotate matrix's index
     } else if ((mat.get(1) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.get(3) > FLOAT_ZERO_THRESHOLD)) {
         directionBias = 3; // 3 represents rotate 270 degree
     }
@@ -1026,14 +1022,12 @@ void RSPropertiesPainter::DrawLinearGradientBlurFilter(
 #else
 void RSPropertiesPainter::DrawLinearGradientBlurFilter(
     const RSProperties& properties, RSPaintFilterCanvas& canvas, const std::optional<Drawing::Rect>& rect)
-{
-}
+{}
 #endif
 
-
 #ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
-    FilterType filterType, const std::optional<SkRect>& rect)
+void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas, FilterType filterType,
+    const std::optional<SkRect>& rect)
 {
     auto& RSFilter =
         (filterType == FilterType::BACKGROUND_FILTER) ? properties.GetBackgroundFilter() : properties.GetFilter();
@@ -1084,8 +1078,8 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         return;
     }
     if (RSSystemProperties::GetImageGpuResourceCacheEnable(imageSnapshot->width(), imageSnapshot->height())) {
-        ROSEN_LOGD("DrawFilter cache image resource(width:%d, height:%d).",
-            imageSnapshot->width(), imageSnapshot->height());
+        ROSEN_LOGD(
+            "DrawFilter cache image resource(width:%d, height:%d).", imageSnapshot->width(), imageSnapshot->height());
         as_IB(imageSnapshot)->hintCacheGpuResource();
     }
 
@@ -1101,8 +1095,8 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
 #endif
 }
 #else
-void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
-    FilterType filterType, const std::optional<Drawing::Rect>& rect)
+void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas, FilterType filterType,
+    const std::optional<Drawing::Rect>& rect)
 {
     auto& RSFilter =
         (filterType == FilterType::BACKGROUND_FILTER) ? properties.GetBackgroundFilter() : properties.GetFilter();
@@ -1139,8 +1133,8 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     }
 
     auto clipIBounds = canvas.GetDeviceClipBounds();
-    auto clipIPadding = Drawing::RectI(clipIBounds.GetLeft() + 1, clipIBounds.GetTop() + 1,
-        clipIBounds.GetRight() - 1, clipIBounds.GetBottom() - 1);
+    auto clipIPadding = Drawing::RectI(
+        clipIBounds.GetLeft() + 1, clipIBounds.GetTop() + 1, clipIBounds.GetRight() - 1, clipIBounds.GetBottom() - 1);
     auto imageSnapshot = surface->GetImageSnapshot(clipIPadding);
     if (imageSnapshot == nullptr) {
         ROSEN_LOGE("RSPropertiesPainter::DrawFilter image null");
@@ -1149,20 +1143,20 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     filter->PreProcess(imageSnapshot);
     canvas.ResetMatrix();
     auto visibleRect = canvas.GetVisibleRect();
-    auto visibleIRect = Drawing::RectI(visibleRect.GetLeft(), visibleRect.GetTop(),
-        visibleRect.GetRight(), visibleRect.GetBottom());
+    auto visibleIRect =
+        Drawing::RectI(visibleRect.GetLeft(), visibleRect.GetTop(), visibleRect.GetRight(), visibleRect.GetBottom());
     if (visibleIRect.Intersect(clipIBounds)) {
-        auto clipRect = Drawing::Rect(visibleIRect.GetLeft(), visibleIRect.GetTop(),
-            visibleIRect.GetRight(), visibleIRect.GetBottom());
+        auto clipRect = Drawing::Rect(
+            visibleIRect.GetLeft(), visibleIRect.GetTop(), visibleIRect.GetRight(), visibleIRect.GetBottom());
         canvas.ClipRect(clipRect, Drawing::ClipOp::INTERSECT, false);
-        auto srcRect = Drawing::Rect(visibleIRect.GetLeft() + 1, visibleIRect.GetTop() + 1,
-            visibleIRect.GetRight() - 1, visibleIRect.GetBottom() - 1);
+        auto srcRect = Drawing::Rect(visibleIRect.GetLeft() + 1, visibleIRect.GetTop() + 1, visibleIRect.GetRight() - 1,
+            visibleIRect.GetBottom() - 1);
         srcRect.Offset(-clipIPadding.GetLeft(), -clipIPadding.GetTop());
         filter->DrawImageRect(canvas, imageSnapshot, srcRect, clipRect);
     } else {
         auto srcRect = Drawing::Rect(0, 0, clipIPadding.GetWidth(), clipIPadding.GetHeight());
-        auto dstRect = Drawing::Rect(clipIBounds.GetLeft(), clipIBounds.GetTop(),
-            clipIBounds.GetRight(), clipIBounds.GetBottom());
+        auto dstRect =
+            Drawing::Rect(clipIBounds.GetLeft(), clipIBounds.GetTop(), clipIBounds.GetRight(), clipIBounds.GetBottom());
         filter->DrawImageRect(canvas, imageSnapshot, srcRect, dstRect);
     }
     filter->PostProcess(canvas);
@@ -1230,8 +1224,7 @@ void RSPropertiesPainter::DrawBackgroundEffect(
 #else
 void RSPropertiesPainter::DrawBackgroundEffect(
     const RSProperties& properties, RSPaintFilterCanvas& canvas, const Drawing::RectI& rect)
-{
-}
+{}
 #endif
 
 void RSPropertiesPainter::ApplyBackgroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas)
@@ -1246,11 +1239,11 @@ void RSPropertiesPainter::ApplyBackgroundEffect(const RSProperties& properties, 
     }
     canvas.resetMatrix();
     auto visibleIRect = canvas.GetVisibleRect().round();
-    #ifdef NEW_SKIA
+#ifdef NEW_SKIA
     if (!visibleIRect.isEmpty()) {
         canvas.clipIRect(visibleIRect);
     }
-    #endif
+#endif
 
     const auto& [bgImage, imageIRect, unused] = canvas.GetEffectData();
     if (bgImage == nullptr) {
@@ -1380,8 +1373,8 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
 #else
         paint.setShader(image->makeShader(SkTileMode::kClamp, SkTileMode::kClamp, &scaleMat));
 #endif
-        canvas.drawRect(SkRect::MakeXYWH(-stretchSize.x_, -stretchSize.y_, scaledBounds.width(), scaledBounds.height()),
-            paint);
+        canvas.drawRect(
+            SkRect::MakeXYWH(-stretchSize.x_, -stretchSize.y_, scaledBounds.width(), scaledBounds.height()), paint);
     } else {
         scaleMat.setScale(scaledBounds.width() / bounds.width() * scaleMat.getScaleX(),
             scaledBounds.height() / bounds.height() * scaleMat.getScaleY());
@@ -1424,8 +1417,7 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
         ROSEN_LOGE("RSPropertiesPainter::DrawPixelStretch get invert matrix failed.");
     }
     Drawing::Rect localClipBounds;
-    Drawing::Rect fClipBounds(clipBounds.GetLeft(), clipBounds.GetTop(), clipBounds.GetWidth(),
-        clipBounds.GetBottom());
+    Drawing::Rect fClipBounds(clipBounds.GetLeft(), clipBounds.GetTop(), clipBounds.GetWidth(), clipBounds.GetBottom());
     if (!worldToLocalMat.MapRect(localClipBounds, fClipBounds)) {
         ROSEN_LOGE("RSPropertiesPainter::DrawPixelStretch map rect failed.");
     }
@@ -1467,8 +1459,8 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
         brush.SetShaderEffect(Drawing::ShaderEffect::CreateImageShader(
             *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, samplingOptions, scaleMat));
         canvas.AttachBrush(brush);
-        canvas.DrawRect(Drawing::Rect(-stretchSize.x_, -stretchSize.y_,
-            -stretchSize.x_ + scaledBounds.GetWidth(), -stretchSize.y_ + scaledBounds.GetHeight()));
+        canvas.DrawRect(Drawing::Rect(-stretchSize.x_, -stretchSize.y_, -stretchSize.x_ + scaledBounds.GetWidth(),
+            -stretchSize.y_ + scaledBounds.GetHeight()));
         canvas.DetachBrush();
     } else {
         scaleMat.Scale(
@@ -1932,11 +1924,11 @@ RectF RSPropertiesPainter::GetCmdsClipRect(Drawing::DrawCmdListPtr& cmds)
 }
 
 #ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::DrawFrameForDriven(const RSProperties& properties, RSPaintFilterCanvas& canvas,
-                                             DrawCmdListPtr& cmds)
+void RSPropertiesPainter::DrawFrameForDriven(
+    const RSProperties& properties, RSPaintFilterCanvas& canvas, DrawCmdListPtr& cmds)
 #else
-void RSPropertiesPainter::DrawFrameForDriven(const RSProperties& properties, RSPaintFilterCanvas& canvas,
-                                             Drawing::DrawCmdListPtr& cmds)
+void RSPropertiesPainter::DrawFrameForDriven(
+    const RSProperties& properties, RSPaintFilterCanvas& canvas, Drawing::DrawCmdListPtr& cmds)
 #endif
 {
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
@@ -1966,8 +1958,8 @@ void RSPropertiesPainter::DrawFrameForDriven(const RSProperties& properties, RSP
 }
 
 #ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::DrawSpherize(const RSProperties& properties, RSPaintFilterCanvas& canvas,
-    const sk_sp<SkSurface>& spherizeSurface)
+void RSPropertiesPainter::DrawSpherize(
+    const RSProperties& properties, RSPaintFilterCanvas& canvas, const sk_sp<SkSurface>& spherizeSurface)
 {
     if (spherizeSurface == nullptr) {
         return;
@@ -2000,9 +1992,7 @@ void RSPropertiesPainter::DrawSpherize(const RSProperties& properties, RSPaintFi
     bool isWidthGreater = width > height;
     ROSEN_LOGI("RSPropertiesPainter::DrawCachedSpherizeSurface spherize degree [%f]", degree);
 
-    const SkPoint texCoords[4] = {
-        {0.0f, 0.0f}, {width, 0.0f}, {width, height}, {0.0f, height}
-    };
+    const SkPoint texCoords[4] = { { 0.0f, 0.0f }, { width, 0.0f }, { width, height }, { 0.0f, height } };
     float offsetSquare = 0.f;
     if (isWidthGreater) {
         offsetSquare = (width - height) * degree / 2.0; // half of the change distance
@@ -2017,22 +2007,21 @@ void RSPropertiesPainter::DrawSpherize(const RSProperties& properties, RSPaintFi
     float segmentHeightOne = height / 3.0;
     float segmentHeightTwo = height / 3.0 * 2.0;
     float offsetSphereWidth = width / 6 * degree;
-    float offsetSphereHeight = height / 6  * degree;
+    float offsetSphereHeight = height / 6 * degree;
 
-    SkPoint ctrlPoints[12] = {
-        // top edge control points
-        {0.0f, 0.0f}, {segmentWidthOne, 0.0f}, {segmentWidthTwo, 0.0f}, {width, 0.0f},
+    SkPoint ctrlPoints[12] = { // top edge control points
+        { 0.0f, 0.0f }, { segmentWidthOne, 0.0f }, { segmentWidthTwo, 0.0f }, { width, 0.0f },
         // right edge control points
-        {width, segmentHeightOne}, {width, segmentHeightTwo},
+        { width, segmentHeightOne }, { width, segmentHeightTwo },
         // bottom edge control points
-        {width, height}, {segmentWidthTwo, height}, {segmentWidthOne, height}, {0.0f, height},
+        { width, height }, { segmentWidthTwo, height }, { segmentWidthOne, height }, { 0.0f, height },
         // left edge control points
-        {0.0f, segmentHeightTwo}, {0.0f, segmentHeightOne}
+        { 0.0f, segmentHeightTwo }, { 0.0f, segmentHeightOne }
     };
-    ctrlPoints[0].offset(offsetSphereWidth, offsetSphereHeight); // top left control point
-    ctrlPoints[3].offset(-offsetSphereWidth, offsetSphereHeight); // top right control point
+    ctrlPoints[0].offset(offsetSphereWidth, offsetSphereHeight);   // top left control point
+    ctrlPoints[3].offset(-offsetSphereWidth, offsetSphereHeight);  // top right control point
     ctrlPoints[6].offset(-offsetSphereWidth, -offsetSphereHeight); // bottom right control point
-    ctrlPoints[9].offset(offsetSphereWidth, -offsetSphereHeight); // bottom left control point
+    ctrlPoints[9].offset(offsetSphereWidth, -offsetSphereHeight);  // bottom left control point
     if (isWidthGreater) {
         SkPoint::Offset(ctrlPoints, SK_ARRAY_COUNT(ctrlPoints), offsetSquare, 0);
     } else {
@@ -2040,9 +2029,9 @@ void RSPropertiesPainter::DrawSpherize(const RSProperties& properties, RSPaintFi
     }
     SkPath path;
     path.moveTo(ctrlPoints[0]);
-    path.cubicTo(ctrlPoints[1], ctrlPoints[2], ctrlPoints[3]); // upper edge
-    path.cubicTo(ctrlPoints[4], ctrlPoints[5], ctrlPoints[6]); // right edge
-    path.cubicTo(ctrlPoints[7], ctrlPoints[8], ctrlPoints[9]); // bottom edge
+    path.cubicTo(ctrlPoints[1], ctrlPoints[2], ctrlPoints[3]);   // upper edge
+    path.cubicTo(ctrlPoints[4], ctrlPoints[5], ctrlPoints[6]);   // right edge
+    path.cubicTo(ctrlPoints[7], ctrlPoints[8], ctrlPoints[9]);   // bottom edge
     path.cubicTo(ctrlPoints[10], ctrlPoints[11], ctrlPoints[0]); // left edge
     canvas.clipPath(path, true);
     canvas.drawPatch(ctrlPoints, nullptr, texCoords, SkBlendMode::kSrcOver, paint);
@@ -2050,8 +2039,7 @@ void RSPropertiesPainter::DrawSpherize(const RSProperties& properties, RSPaintFi
 #else
 void RSPropertiesPainter::DrawSpherize(const RSProperties& properties, RSPaintFilterCanvas& canvas,
     const std::shared_ptr<Drawing::Surface>& spherizeSurface)
-{
-}
+{}
 #endif
 
 void RSPropertiesPainter::DrawColorFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas)
@@ -2136,10 +2124,10 @@ sk_sp<SkShader> RSPropertiesPainter::MakeLightUpEffectShader(float lightUpDeg, s
         }
     )";
     auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
-    sk_sp<SkShader> children[] = {imageShader};
+    sk_sp<SkShader> children[] = { imageShader };
     size_t childCount = 1;
-    return effect->makeShader(SkData::MakeWithCopy(
-        &lightUpDeg, sizeof(lightUpDeg)), children, childCount, nullptr, false);
+    return effect->makeShader(
+        SkData::MakeWithCopy(&lightUpDeg, sizeof(lightUpDeg)), children, childCount, nullptr, false);
 }
 #endif
 #endif
@@ -2232,6 +2220,10 @@ void RSPropertiesPainter::DrawParticle(const RSProperties& properties, RSPaintFi
                 auto alpha = color.GetAlpha();
                 color.SetAlpha(alpha * opacity);
                 paint.setColor(color.AsArgbInt());
+
+                ROSEN_LOGE("WMM DrawParticle position.x_ = [%f], position.y_ = [%f], radius = [%f], alpha = [%d], RED "
+                           "= [%d], GREEN = [%d], OPACITY = [%f],",
+                    position.x_, position.y_, radius, color.GetAlpha(),color.GetRed(),color.GetGreen(),color.GetBlue(), opacity);
                 canvas.drawCircle(position.x_, position.y_, radius, paint);
             } else {
                 auto image = particles[i]->GetImage();

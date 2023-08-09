@@ -150,9 +150,17 @@ float ParticleRenderParams::GetBlueRandomStart() const
 {
     return color_.blueRandom_.start_;
 }
-float ParticleRenderParams::GetBlurRandomEnd() const
+float ParticleRenderParams::GetBlueRandomEnd() const
 {
     return color_.blueRandom_.end_;
+}
+float ParticleRenderParams::GetAlphaRandomStart() const
+{
+    return color_.alphaRandom_.start_;
+}
+float ParticleRenderParams::GetAlphaRandomEnd() const
+{
+    return color_.alphaRandom_.end_;
 }
 
 float ParticleRenderParams::GetOpacityStartValue()
@@ -374,6 +382,10 @@ std::shared_ptr<ParticleRenderParams> RSRenderParticle::GetParticleRenderParams(
 void RSRenderParticle::InitProperty(std::shared_ptr<ParticleRenderParams> particleParams)
 {
     // Initialize particle properties
+        ROSEN_LOGE("WMM InitProperty position.x_ = [%f], position.y_ = [%f], radius = [%f], alpha = [%d], RED "
+                           "= [%d], GREEN = [%d], BLUE = [%d], OPACITY = [%f],",
+                    position_.x_, position_.y_, radius_, color_.GetAlpha(),color_.GetRed(),color_.GetGreen(),color_.GetBlue(), opacity_);
+   
     auto emitShape = particleParams->GetEmitShape();
     auto position = particleParams->GetEmitPosition();
     auto emitSize = particleParams->GetEmitSize();
@@ -405,6 +417,10 @@ void RSRenderParticle::InitProperty(std::shared_ptr<ParticleRenderParams> partic
     }
     activeTime_ = 0;
     lifeTime_ = particleParams->GetParticleLifeTime();
+    ROSEN_LOGE("WMM InitProperty position.x_ = [%f], position.y_ = [%f], radius = [%f], alpha = [%d], RED "
+                           "= [%d], GREEN = [%d], BLUE = [%d], OPACITY = [%f],",
+                    position_.x_, position_.y_, radius_, color_.GetAlpha(),color_.GetRed(),color_.GetGreen(),color_.GetBlue(), opacity_);
+    
 }
 
 bool RSRenderParticle::IsAlive() const

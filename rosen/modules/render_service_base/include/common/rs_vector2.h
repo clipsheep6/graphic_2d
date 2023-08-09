@@ -55,6 +55,12 @@ public:
     bool operator!=(const Vector2& other) const;
     T* GetData();
 
+    Vector2& Round()
+    {
+        data_[0] = std::round(data_[0]);
+        data_[1] = std::round(data_[1]);
+        return *this;
+    }
     T GetLength() const;
     T GetSqrLength() const;
     T Normalize();

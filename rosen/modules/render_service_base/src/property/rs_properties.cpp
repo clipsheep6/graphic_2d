@@ -130,7 +130,12 @@ void RSProperties::SetBounds(Vector4f bounds)
     if (bounds.z_ != boundsGeo_->GetWidth() || bounds.w_ != boundsGeo_->GetHeight()) {
         contentDirty_ = true;
     }
-    boundsGeo_->SetRect(bounds.x_, bounds.y_, bounds.z_, bounds.w_);
+    if (RSSystemProperties::GetBoundsAndFrameRoundEnabled()) {
+        auto& roundBounds = bounds.Round();
+        boundsGeo_->SetRect(roundBounds.x_, roundBounds.y_, roundBounds.z_, roundBounds.w_);
+    } else {
+        boundsGeo_->SetRect(bounds.x_, bounds.y_, bounds.z_, bounds.w_);
+    }
     hasBounds_ = true;
     geoDirty_ = true;
     SetDirty();
@@ -224,7 +229,12 @@ void RSProperties::SetFrame(Vector4f frame)
     if (frame.z_ != frameGeo_->GetWidth() || frame.w_ != frameGeo_->GetHeight()) {
         contentDirty_ = true;
     }
-    frameGeo_->SetRect(frame.x_, frame.y_, frame.z_, frame.w_);
+    if (RSSystemProperties::GetBoundsAndFrameRoundEnabled()) {
+        auto& roundFrame = frame.Round();
+        frameGeo_->SetRect(roundFrame.x_, roundFrame.y_, roundFrame.z_, roundFrame.w_);
+    } else {
+        frameGeo_->SetRect(frame.x_, frame.y_, frame.z_, frame.w_);
+    }
     // ProcessAnimate would translate frame offset
     if (GetFrameOffsetX() != 0. || GetFrameOffsetY() != 0.) {
         isDrawn_ = true;
@@ -567,8 +577,14 @@ void RSProperties::SetScaleY(float sy)
 
 void RSProperties::SetTranslate(Vector2f translate)
 {
-    boundsGeo_->SetTranslateX(translate[0]);
-    boundsGeo_->SetTranslateY(translate[1]);
+    if (RSSystemProperties::GetBoundsAndFrameRoundEnabled()) {
+        auto& roundTranslate = translate.Round();
+        boundsGeo_->SetTranslateX(roundTranslate[0]);
+        boundsGeo_->SetTranslateY(roundTranslate[1]);
+    } else {
+        boundsGeo_->SetTranslateX(translate[0]);
+        boundsGeo_->SetTranslateY(translate[1]);
+    }
     geoDirty_ = true;
     SetDirty();
 }

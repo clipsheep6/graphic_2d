@@ -40,6 +40,9 @@ public:
     virtual bool GetHardwareVSyncStatus() const = 0;
     virtual void RegSetScreenVsyncEnabledCallback(SetScreenVsyncEnabledCallback cb) = 0;
     virtual void SetScreenVsyncEnabledInRSMainThread(bool enabled) = 0;
+    virtual void BeginSampleLTPO() = 0;
+    virtual bool AddSampleLTPO(int64_t timestamp) = 0;
+    virtual void ResetErrorLocked() = 0;
 protected:
     SetScreenVsyncEnabledCallback setScreenVsyncEnabledCallback_ = nullptr;
 };
@@ -65,6 +68,9 @@ public:
     virtual bool GetHardwareVSyncStatus() const override;
     virtual void RegSetScreenVsyncEnabledCallback(SetScreenVsyncEnabledCallback cb) override;
     virtual void SetScreenVsyncEnabledInRSMainThread(bool enabled) override;
+    virtual void BeginSampleLTPO() override;
+    virtual bool AddSampleLTPO(int64_t timestamp) override;
+    virtual void ResetErrorLocked() override;
 
 private:
     friend class OHOS::Rosen::VSyncSampler;
@@ -77,8 +83,8 @@ private:
     ~VSyncSampler() noexcept override;
 
     void UpdateModeLocked();
+    void UpdateModeLTPOLocked();
     void UpdateErrorLocked();
-    void ResetErrorLocked();
     void UpdateErrorLTPOLocked();
 
     int64_t period_;

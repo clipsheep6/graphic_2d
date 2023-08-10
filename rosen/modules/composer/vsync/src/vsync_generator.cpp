@@ -20,6 +20,7 @@
 #include <string>
 #include "vsync_log.h"
 #include "vsync_type.h"
+#include "vsync_sampler.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -139,7 +140,7 @@ void VSyncGenerator::ThreadLoop()
         }
         ScopedBytrace func(
             "GenerateVsyncCount:" + std::to_string(listeners.size()) + ", period:" + std::to_string(period_));
-        VLOGE("sgbdebug period_ = " VPUBI64, period_);
+        // VLOGE("sgbdebug period_ = " VPUBI64, period_);
         for (uint32_t i = 0; i < listeners.size(); i++) {
             listeners[i].callback_->OnVSyncEvent(listeners[i].lastTime_, period_, refreshRate_);
         }
@@ -211,7 +212,7 @@ VsyncError VSyncGenerator::UpdateMode(int64_t period, int64_t phase, int64_t ref
 {
     VLOGE("VSyncGenerator::UpdateMode period = " VPUBI64 ", phase = " VPUBI64, period, phase);
     std::lock_guard<std::mutex> locker(mutex_);
-    if (period < 0 || referenceTime < 0) {
+    if (period <= 0 || referenceTime <= 0) {
         return VSYNC_ERROR_INVALID_ARGUMENTS;
     }
     period_ = period;
@@ -329,6 +330,8 @@ VsyncError VSyncGenerator::SetGeneratorRefreshRate(int32_t refreshRate)
     period_ = pulse_ * (VSYNC_MAX_REFRESHRATE / refreshRate);
     refreshRate_ = refreshRate;
     shouldUpdateReferenceTime_ = true;
+    // 清空fenceTime
+    CreateVSyncSampler()->ResetErrorLocked();
     return VSYNC_ERROR_OK;
 }
 

@@ -75,6 +75,21 @@ void VSyncSampler::BeginSample()
     numSamples_ = 0;
     modeUpdated_ = false;
     hardwareVSyncStatus_ = true;
+    period_ = 0;
+    phase_ = 0;
+    referenceTime_ = 0;
+}
+
+// deprecated
+void VSyncSampler::BeginSampleLTPO()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    numSamples_ = 0;
+    modeUpdated_ = false;
+    hardwareVSyncStatus_ = true;
+    period_ = 0;
+    phase_ = 0;
+    referenceTime_ = 0;
 }
 
 void VSyncSampler::SetHardwareVSyncStatus(bool enabled)
@@ -105,6 +120,7 @@ void VSyncSampler::SetScreenVsyncEnabledInRSMainThread(bool enabled)
 
 bool VSyncSampler::AddSample(int64_t timeStamp)
 {
+    return AddSampleLTPO(timeStamp);
     std::lock_guard<std::mutex> lock(mutex_);
     if (numSamples_ == 0) {
         phase_ = 0;
@@ -139,6 +155,42 @@ bool VSyncSampler::AddSample(int64_t timeStamp)
     return !shouldDisableScreenVsync;
 }
 
+void VSyncSampler::UpdateModeLTPOLocked()
+{
+    if (numSamples_ == 2 || numSamples_ > MIN_SAMPLES_FOR_UPDATE) {
+        int64_t sum = 0;
+        for (uint32_t i = 1; i < numSamples_; i++) {
+            int64_t prevSample = samples_[(firstSampleIndex_ + i - 1 + MAX_SAMPLES) % MAX_SAMPLES];
+            int64_t currentSample = samples_[(firstSampleIndex_ + i) % MAX_SAMPLES];
+            int64_t diff = currentSample - prevSample;
+            sum += diff;
+        }
+        period_ = sum / (int64_t)numSamples_;
+    }
+    CreateVSyncGenerator()->UpdateMode(period_, phase_, referenceTime_);
+    if (numSamples_ > MIN_SAMPLES_FOR_UPDATE) {
+        modeUpdated_ = true;
+    }
+}
+
+bool VSyncSampler::AddSampleLTPO(int64_t timeStamp)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    samples_[(firstSampleIndex_ + numSamples_) % MAX_SAMPLES] = timeStamp;
+    numSamples_++;
+    UpdateModeLTPOLocked();
+
+    // 1/2 just a empirical value
+    bool shouldDisableScreenVsync = modeUpdated_ && (error_ < g_errorThreshold / 2);
+
+    if (shouldDisableScreenVsync) {
+        // disabled screen vsync in rsMainThread
+        VLOGD("Disable Screen Vsync");
+        SetScreenVsyncEnabledInRSMainThread(false);
+    }
+
+    return !shouldDisableScreenVsync;
+}
 
 void VSyncSampler::UpdateModeLocked()
 {
@@ -214,7 +266,7 @@ void VSyncSampler::UpdateErrorLocked()
     }
 }
 
-// TODO
+// deprecated
 void VSyncSampler::UpdateErrorLTPOLocked()
 {
     if (!modeUpdated_) {

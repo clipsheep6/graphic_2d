@@ -149,6 +149,18 @@ enum class WordBreakType {
     BREAK_ALL,  // break occur after any characters.
     BREAK_WORD, // break only occur after word.
 };
+
+enum class HyphenationType : uint8_t {
+  DONT_BREAK = 0,
+  BREAK_AND_INSERT_HYPHEN = 1,
+  BREAK_AND_INSERT_ARMENIAN_HYPHEN = 2,
+  BREAK_AND_INSERT_MAQAF = 3,
+  BREAK_AND_INSERT_UCAS_HYPHEN = 4,
+  BREAK_AND_DONT_INSERT_HYPHEN = 5,
+  BREAK_AND_REPLACE_WITH_HYPHEN = 6,
+  BREAK_AND_INSERT_HYPHEN_AT_NEXT_LINE = 7,
+  BREAK_AND_INSERT_HYPHEN_AND_ZWJ = 8
+};
 } // namespace TextEngine
 } // namespace Rosen
 } // namespace OHOS

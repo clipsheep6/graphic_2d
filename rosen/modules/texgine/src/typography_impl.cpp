@@ -293,6 +293,8 @@ void TypographyImpl::Layout(double maxWidth)
             return;
         }
 
+        InsertHyphen();
+
         ComputeIntrinsicWidth();
 
         ConsiderEllipsis();
@@ -312,6 +314,35 @@ void TypographyImpl::Layout(double maxWidth)
         ApplyAlignment();
     } catch (struct TexgineException &e) {
         LOGEX_FUNC_LINE(ERROR) << "catch exception: " << e.message;
+    }
+}
+
+static std::string GetHyphenString(HyphenationType type)
+{
+    switch (type) {
+        case HyphenationType::BREAK_AND_INSERT_HYPHEN:
+            return "\u002D";
+        case HyphenationType::BREAK_AND_INSERT_ARMENIAN_HYPHEN:
+            return "\u2013";
+        default:
+            return "\u002D";
+  }
+}
+
+void TypographyImpl::InsertHyphen()
+{
+    for (auto &line : lineMetrics_) {
+        auto &lastSpanOfCurrLine = line.lineSpans.back();
+        if (auto ts = lastSpanOfCurrLine.TryToTextSpan(); ts != nullptr) {
+            auto cgs = ts->cgs_;
+            if (cgs.GetBack().hyphenType == HyphenationType::DONT_BREAK) {
+                continue;
+            }
+            std::string hyphenString = GetHyphenString(cgs.GetBack().hyphenType);
+            auto hyphenSpan = TextSpan::MakeFromText(hyphenString);
+            VariantSpan vs(hyphenSpan);
+            line.lineSpans.insert(line.lineSpans.end(), vs);
+        }
     }
 }
 

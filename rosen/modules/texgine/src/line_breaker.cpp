@@ -27,14 +27,181 @@
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
+static void SetCandidates(std::vector<struct Candidate> &candidates, double postBreak, double preBreak,
+    HyphenationType hyphenType, double penalty, bool isHyphenCandidate)
+{
+    Candidate candidate;
+    candidate.postBreak = postBreak;
+    candidate.preBreak = preBreak;
+    candidate.hyphenType = hyphenType;
+    candidate.prev = 0;
+    candidate.score = 0;
+    candidate.penalty = penalty;
+    candidate.isHyphCandidate = isHyphenCandidate;
+
+    candidates.push_back(candidate);
+}
+
+static void SetSpans(CharGroups &cgs, double postBreak, double preBreak, const TextStyle &style,
+    std::vector<VariantSpan> &newSpans)
+{
+    auto newSpan = std::make_shared<TextSpan>();
+    newSpan->cgs_ = cgs;
+    newSpan->postBreak_ = postBreak;
+    newSpan->preBreak_ = preBreak;
+    newSpan->typeface_ = cgs.Get(0).typeface;
+    VariantSpan vs(newSpan);
+    vs.SetTextStyle(style);
+
+    newSpans.push_back(vs);
+}
+
+std::vector<Candidate> LineBreaker::GenerateCandidate(const std::vector<VariantSpan> &spans,
+    std::vector<VariantSpan> &newSpans)
+{
+    std::vector<struct Candidate> candidates = {{}};
+    double offset = 0.0;
+    double preBreak = 0.0;
+    double postBreak = 0.0;
+    CharGroups lastcgs;
+    for (const auto &span : spans) {
+        if (span == nullptr) {
+            throw TEXGINE_EXCEPTION(INVALID_ARGUMENT);
+        }
+
+        if (auto ts = span.TryToTextSpan(); ts != nullptr) {
+            if (lastcgs.IsSameCharGroups(ts->cgs_) == false) {      
+                offset = candidates.back().postBreak;
+                lastcgs = ts->cgs_;
+                size_t start = 0;
+                for (size_t i = 0; i < lastcgs.GetNumberOfCharGroup(); i++) {
+                    const auto &cg = lastcgs.Get(i);
+                    double post = 0;
+                    post += cg.GetWidth();
+                    if (cg.hyphenType != HyphenationType::DONT_BREAK) {
+                        postBreak = candidates.back().postBreak + post;
+                        preBreak = postBreak;
+                        double penalty = 4;
+                        SetCandidates(candidates, postBreak, preBreak, cg.hyphenType, penalty, true);
+                        auto hyphenCgs = lastcgs.GetSub(start, i);
+                        SetSpans(hyphenCgs, postBreak, preBreak, span.GetTextStyle(), newSpans);
+                        start = i + 1;
+                    }
+                }
+                postBreak = ts->GetPostBreak() + offset;
+                preBreak = ts->GetPreBreak() + offset;
+                SetCandidates(candidates, postBreak, preBreak, HyphenationType::DONT_BREAK, 0, false);
+                auto cgs = lastcgs.GetSub(start, lastcgs.GetNumberOfCharGroup());
+                SetSpans(cgs, postBreak, preBreak, span.GetTextStyle(), newSpans);
+            }
+        }
+
+        if (auto as = span.TryToAnySpan(); as != nullptr) {
+            offset = candidates.back().postBreak;
+            postBreak = as->GetWidth() + offset;
+            preBreak = postBreak;
+            // prevent after as is a SameCharGroups ts with before this as
+            lastcgs = {};
+            SetCandidates(candidates, postBreak, preBreak, HyphenationType::DONT_BREAK, 0, false);
+            newSpans.push_back(span);
+        }
+    }
+    candidates.erase(candidates.begin());
+
+    return candidates;
+}
+
+void LineBreaker::DoBreakLines(std::vector<struct Candidate> &candidates, const double widthLimit,
+    const TypographyStyle &tstyle)
+{
+    candidates.emplace(candidates.cbegin());
+    for (size_t i = 1; i < candidates.size(); i++) {
+        auto &is = candidates[i];
+        is.prev = candidates[i - 1].prev;
+        double currWidth = is.preBreak - candidates[is.prev].postBreak;
+        if (is.isHyphCandidate) {
+            currWidth += 2;
+        }
+        if (FLOATING_GT(currWidth, widthLimit)) {
+            is.prev = i - 1;
+        }
+
+        if (tstyle.breakStrategy == BreakStrategy::GREEDY) {
+            continue;
+        }
+
+        double delta = widthLimit - (is.preBreak - candidates[is.prev].postBreak) + is.penalty;
+        is.score = delta * delta + candidates[is.prev].score;
+
+        for (size_t j = 0; j < i; j++) {
+            const auto &js = candidates[j];
+            double jdelta = widthLimit - (is.preBreak - js.postBreak) + js.penalty;
+            if (jdelta < 0) {
+                continue;
+            }
+
+            double jscore = js.score + jdelta * jdelta;
+
+            if (jscore < is.score) {
+                is.score = jscore;
+                is.prev = static_cast<int>(j);
+            }
+        }
+    }
+    candidates.erase(candidates.begin());
+}
+
+std::vector<int32_t> LineBreaker::GenerateBreaks(const std::vector<struct Candidate> &candidates)
+{
+    std::vector<int32_t> lineBreaks;
+    for (int i = static_cast<int>(candidates.size()); i > 0; i = candidates[i - 1].prev) {
+        if (candidates[i - 1].prev >= i) {
+            throw TEXGINE_EXCEPTION(ERROR_STATUS);
+        }
+
+        lineBreaks.push_back(i);
+    }
+    std::reverse(lineBreaks.begin(), lineBreaks.end());
+    return lineBreaks;
+}
+
+std::vector<LineMetrics> LineBreaker::GenerateLineMetrics(std::vector<Candidate> &candidates,
+    std::vector<int32_t> &breaks, std::vector<VariantSpan> &newSpans)
+{
+    std::vector<LineMetrics> lineMetrics;
+    auto prev = 0;
+    if (!breaks.empty() && breaks.back() > static_cast<int>(candidates.size())) {
+        throw TEXGINE_EXCEPTION(OUT_OF_RANGE);
+    }
+
+    for (const auto &lb : breaks) {
+        if (lb <= prev) {
+            throw TEXGINE_EXCEPTION(ERROR_STATUS);
+        }
+
+        std::vector<VariantSpan> vss;
+        for (int32_t i = prev; i < lb; i++) {
+            vss.push_back(newSpans[i]);
+        }
+
+        lineMetrics.push_back({
+            .lineSpans = vss,
+        });
+        prev = lb;
+    }
+
+    return lineMetrics;
+}
+
 std::vector<LineMetrics> LineBreaker::BreakLines(std::vector<VariantSpan> &spans,
     const TypographyStyle &tstyle, const double widthLimit)
 {
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "BreakLines");
-    auto ss = GenerateScoreSpans(spans);
-    DoBreakLines(ss, widthLimit, tstyle);
-    auto lineBreaks = GenerateBreaks(ss);
-    return GenerateLineMetrics(spans, lineBreaks);
+    std::vector<VariantSpan> newSpans;
+    auto candidates = GenerateCandidate(spans, newSpans);
+    DoBreakLines(candidates, widthLimit, tstyle);
+    auto lineBreaks = GenerateBreaks(candidates);
+    return GenerateLineMetrics(candidates, lineBreaks, newSpans);
 }
 
 std::vector<struct ScoredSpan> LineBreaker::GenerateScoreSpans(const std::vector<VariantSpan> &spans)

@@ -22,6 +22,8 @@
 #include <ostream>
 #include <vector>
 
+#include "texgine/typography_types.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -40,6 +42,7 @@ struct CharGroup {
     std::shared_ptr<Typeface> typeface;
     double visibleWidth = 0;
     double invisibleWidth = 0;
+    HyphenationType hyphenType= HyphenationType::DONT_BREAK;
 
     double GetWidth() const
     {

@@ -281,6 +281,9 @@ public:
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
 
+    void SetSkipLayer(bool isSkipLayer);
+    bool GetSkipLayer() const;
+
     void SetFingerprint(bool hasFingerprint);
     bool GetFingerprint() const;
 
@@ -726,6 +729,7 @@ private:
 #endif
 
     bool isSecurityLayer_ = false;
+    bool isSkipLayer_ = false;
     bool hasFingerprint_ = false;
     bool isReportFirstFrame_ = false;
     RectI srcRect_;

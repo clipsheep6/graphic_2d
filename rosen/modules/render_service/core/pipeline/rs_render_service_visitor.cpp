@@ -207,10 +207,9 @@ void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         auto name = node.GetName();
         mForceSerial |= CheckForSerialForced(name);
     }
-
-    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
+    if (node.GetSkipLayer()) {
         RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node[%" PRIu64 "] prepare paused because of \
-            security DisplayNode.",
+            Skip SurfaceNode.",
             node.GetId());
         return;
     }
@@ -228,17 +227,33 @@ void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     node.PrepareRenderAfterChildren(*canvas_);
 }
 
+void RSRenderServiceVisitor::BlackSurfaceRenderNode(RSSurfaceRenderNode& node)
+{
+    SurfaceBuffer *buffer = node.GetBuffer().GetRefPtr();
+    if (buffer != nullptr) {
+        char *virtAddr = static_cast<char *>(buffer->GetVirAddr());
+        if (virtAddr != nullptr) {
+            std::memset(virtAddr, 0x0, buffer->GetSize());
+        }
+    }
+}
+
 void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
     if (!processor_) {
         RS_LOGE("RSRenderServiceVisitor::ProcessSurfaceRenderNode processor is nullptr");
         return;
     }
-    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
+    if (node.GetSkipLayer()) {
         RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node[%" PRIu64 "] process paused because of \
-            security DisplayNode.",
+            security SurfaceNode.",
             node.GetId());
         return;
+    }
+    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
+        RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node[%" PRIu64 "] process Security SurfaceNode.",
+            node.GetId());
+        BlackSurfaceRenderNode(node);
     }
     if (!node.ShouldPaint()) {
         RS_LOGD("RSRenderServiceVisitor::ProcessSurfaceRenderNode node : %" PRIu64 " is invisible", node.GetId());

@@ -316,6 +316,7 @@ public:
     void AddFRCSceneInfo(const std::string& scene, float speed);
 
     void UpdateUIFrameRateRange(FrameRateRange range);
+    void SetOutOfParent(bool outOfParent) {}
 
 protected:
     explicit RSNode(bool isRenderServiceNode);

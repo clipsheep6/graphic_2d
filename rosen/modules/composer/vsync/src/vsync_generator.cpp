@@ -212,16 +212,17 @@ VsyncError VSyncGenerator::UpdateMode(int64_t period, int64_t phase, int64_t ref
 {
     VLOGE("VSyncGenerator::UpdateMode period = " VPUBI64 ", phase = " VPUBI64, period, phase);
     std::lock_guard<std::mutex> locker(mutex_);
-    if (period <= 0 || referenceTime <= 0) {
-        return VSYNC_ERROR_INVALID_ARGUMENTS;
+    if (period > 0) {
+        period_ = period;
+        UpdatePulseLocked(period);
     }
-    period_ = period;
-    UpdatePulseLocked(period);
     phase_ = phase;
-    // TODO：这里暂时按LTPO屏幕的方式校准，后续补充区分LTPO的屏幕和LTPS的屏幕的方式
-    // 按pulse整数倍的偏移来校准generator的referenceTime_
-    referenceTimeOffset_ = round((double)((referenceTime - referenceTime_) % period) / pulse_) * pulse_;
-    referenceTime_ = referenceTime - referenceTimeOffset_;
+    if (referenceTime > 0) {
+        // TODO：这里暂时按LTPO屏幕的方式校准，后续补充区分LTPO的屏幕和LTPS的屏幕的方式
+        // 按pulse整数倍的偏移来校准generator的referenceTime_
+        referenceTimeOffset_ = round((double)((referenceTime - referenceTime_) % period) / pulse_) * pulse_;
+        referenceTime_ = referenceTime - referenceTimeOffset_;
+    }
     con_.notify_all();
     return VSYNC_ERROR_OK;
 }

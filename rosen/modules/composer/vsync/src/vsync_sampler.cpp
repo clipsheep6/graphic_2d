@@ -166,8 +166,8 @@ void VSyncSampler::UpdateModeLTPOLocked()
             sum += diff;
         }
         period_ = sum / (int64_t)numSamples_;
+        CreateVSyncGenerator()->UpdateMode(period_, phase_, referenceTime_);
     }
-    CreateVSyncGenerator()->UpdateMode(period_, phase_, referenceTime_);
     if (numSamples_ > MIN_SAMPLES_FOR_UPDATE) {
         modeUpdated_ = true;
     }
@@ -176,8 +176,21 @@ void VSyncSampler::UpdateModeLTPOLocked()
 bool VSyncSampler::AddSampleLTPO(int64_t timeStamp)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    samples_[(firstSampleIndex_ + numSamples_) % MAX_SAMPLES] = timeStamp;
-    numSamples_++;
+    if (numSamples_ == 0) {
+        phase_ = 0;
+        referenceTime_ = timeStamp;
+        CreateVSyncGenerator()->UpdateMode(period_, phase_, referenceTime_);
+    }
+
+    if (numSamples_ < MAX_SAMPLES - 1) {
+        numSamples_++;
+    } else {
+        firstSampleIndex_ = (firstSampleIndex_ + 1) % MAX_SAMPLES;
+    }
+
+    uint32_t index = (firstSampleIndex_ + numSamples_ - 1) % MAX_SAMPLES;
+    samples_[index] = timeStamp;
+
     UpdateModeLTPOLocked();
 
     // 1/2 just a empirical value

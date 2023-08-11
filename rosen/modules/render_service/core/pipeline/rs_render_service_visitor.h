@@ -61,6 +61,8 @@ public:
     {
         return mForceSerial;
     }
+private:
+    void BlackSurfaceRenderNode(RSSurfaceRenderNode& node);
 
 private:
 #ifndef USE_ROSEN_DRAWING

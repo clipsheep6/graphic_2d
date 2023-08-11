@@ -87,7 +87,6 @@ ohos_shared_library("surface") {
     "$graphic_2d_root/utils/sandbox:sandbox_utils",
     "$graphic_2d_root/utils/scoped_bytrace:scoped_bytrace",
     "//commonlibrary/c_utils/base:utils",
-    "//drivers/peripheral/display/hdi_service/gralloc/client:hdi_gralloc_client",
     "//third_party/EGL:libEGL",
     "//third_party/openGLES:libGLES",
   ]

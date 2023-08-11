@@ -315,6 +315,8 @@ public:
 
     void UpdateFrameRateRange(FrameRateRange range);
 
+    void SetOutOfParent(bool outOfParent) {}
+
     FrameRateRange GetFrameRateRange()
     {
         return nodeRange_;

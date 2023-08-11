@@ -220,8 +220,12 @@ VsyncError VSyncGenerator::UpdateMode(int64_t period, int64_t phase, int64_t ref
     if (referenceTime > 0) {
         // TODO：这里暂时按LTPO屏幕的方式校准，后续补充区分LTPO的屏幕和LTPS的屏幕的方式
         // 按pulse整数倍的偏移来校准generator的referenceTime_
-        referenceTimeOffset_ = round((double)((referenceTime - referenceTime_) % period) / pulse_) * pulse_;
-        referenceTime_ = referenceTime - referenceTimeOffset_;
+        if (pulse_ > 0) {
+            referenceTimeOffset_ = round((double)((referenceTime - referenceTime_) % period) / pulse_) * pulse_;
+            referenceTime_ = referenceTime - referenceTimeOffset_;
+        } else {
+            referenceTime_ = referenceTime;
+        }
     }
     con_.notify_all();
     return VSYNC_ERROR_OK;
@@ -306,15 +310,17 @@ void VSyncGenerator::UpdatePulseLocked(int64_t period)
         } else {
             diff = -diff - 1;
         }
+        refreshRate = actualRefreshRate + diff;
+        // VLOGE("VSyncGenerator::UpdatePulseLocked diff = %{public}d, refreshRate:%{public}d, actualRefreshRate:%{public}d, (VSYNC_MAX_REFRESHRATE %% refreshRate):%{public}d, period:" VPUBI64, diff, refreshRate, actualRefreshRate, (VSYNC_MAX_REFRESHRATE % refreshRate), period);
     }
+    // VLOGE("VSyncGenerator::UpdatePulseLocked VSYNC_MAX_REFRESHRATE = %{public}d, refreshRate = %{public}d, (VSYNC_MAX_REFRESHRATE %% refreshRate) = %{public}d", VSYNC_MAX_REFRESHRATE, refreshRate, (VSYNC_MAX_REFRESHRATE % refreshRate));
     if (VSYNC_MAX_REFRESHRATE % refreshRate != 0) {
-        VLOGE("%{public}s Recognize an unsupported refresh rate: %{public}d, update pulse failed.",
-                __func__, actualRefreshRate);
+        VLOGE("VSyncGenerator::UpdatePulseLocked Recognize an unsupported refresh rate: %{public}d, update pulse failed.", actualRefreshRate);
         return;
     }
     pulse_ = period / (VSYNC_MAX_REFRESHRATE / refreshRate);
     refreshRate_ = refreshRate;
-    VLOGE("VSyncGenerator::UpdatePulseLocked pulse_ = " VPUBI64, pulse_);
+    // VLOGE("VSyncGenerator::UpdatePulseLocked pulse_ = " VPUBI64, pulse_);
 }
 
 VsyncError VSyncGenerator::SetGeneratorRefreshRate(int32_t refreshRate)

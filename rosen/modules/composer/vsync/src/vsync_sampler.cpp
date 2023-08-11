@@ -157,7 +157,7 @@ bool VSyncSampler::AddSample(int64_t timeStamp)
 
 void VSyncSampler::UpdateModeLTPOLocked()
 {
-    if (numSamples_ == 2 || numSamples_ > MIN_SAMPLES_FOR_UPDATE) {
+    if (/*numSamples_ == 2 || */numSamples_ > MIN_SAMPLES_FOR_UPDATE) {
         int64_t sum = 0;
         for (uint32_t i = 1; i < numSamples_; i++) {
             int64_t prevSample = samples_[(firstSampleIndex_ + i - 1 + MAX_SAMPLES) % MAX_SAMPLES];

@@ -13,7 +13,8 @@
 
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
-import("//foundation/multimedia/image_framework/ide/image_decode_config.gni")
+import("//foundation/graphic/image_framework/ide/image_decode_config.gni")
+import("../../platform/config.gni")
 
 ## Build libskeffectchain.so
 
@@ -34,7 +35,7 @@ config("effect_SKeffectChian_public_config") {
   include_dirs = [
     "../effectChain/include",
     "../egl/include",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
+    "$image_framework_root/interfaces/innerkits/include",
     "$graphic_2d_root/utils/log",
     "include",
   ]

@@ -14,6 +14,7 @@
 import("//build/ohos.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
 import("//foundation/graphic/graphic_2d/rosen/modules/effect/effect_config.gni")
+import("../../platform/config.gni")
 
 ## Build libeffectchain.so
 
@@ -34,7 +35,7 @@ config("effect_config") {
 config("effect_public_config") {
   include_dirs = [
     "//third_party/cJSON",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
+    "$image_framework_root/interfaces/innerkits/include",
     "$graphic_2d_root/utils/log",
     "include",
   ]

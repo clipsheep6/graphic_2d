@@ -27,7 +27,7 @@ if (platform == "ohos") {
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
   ]
   image_deps = [
-    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
+    "//foundation/graphic/image_framework/interfaces/innerkits:image_native",
   ]
   utils_deps = [ "//commonlibrary/c_utils/base:utils" ]
 } else {
@@ -38,4 +38,4 @@ if (platform == "ohos") {
 
 appframework_root = "//foundation/appframework"
 c_utils_root = "//commonlibrary/c_utils"
-image_framework_root = "//foundation/multimedia/image_framework"
+image_framework_root = "//foundation/graphic/image_framework"

@@ -45,6 +45,7 @@ ohos_unittest("2d_engine_rosen_text_prop_test") {
       "//third_party/flutter/skia",
       "//third_party/flutter/engine",
     ]
+    defines = [ "USE_GRAPHIC_TEXT_GINE" ]
   }
 
   if (defined(use_new_skia) && use_new_skia) {
@@ -53,7 +54,7 @@ ohos_unittest("2d_engine_rosen_text_prop_test") {
       "//third_party/skia",
       "//third_party/flutter/txt/src",
     ]
-    defines = [ "NEW_SKIA" ]
+    defines += [ "NEW_SKIA" ]
   } else {
     include_dirs += [
       "//third_party/flutter/skia/third_party/externals/harfbuzz/src",

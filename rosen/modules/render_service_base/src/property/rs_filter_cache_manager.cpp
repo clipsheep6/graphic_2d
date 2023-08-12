@@ -107,12 +107,10 @@ void RSFilterCacheManager::UpdateCacheStateWithDirtyRegion(const RectI& dirtyReg
     // The underlying image is affected by the dirty region, determine if the cache should be invalidated by cache  age.
     // [PLANNING]: also take into account the filter radius / cache size / percentage of intersected area.
     if (cacheUpdateInterval_ > 0) {
-        ROSEN_LOGD("RSFilterCacheManager::UpdateCacheStateWithDirtyRegion Delaying cache invalidation for %d frames.",
-            cacheUpdateInterval_);
+        RS_OPTIONAL_TRACE_NAME_FMT(
+            "RSFilterCacheManager::UpdateCacheStateWithDirtyRegion Delaying cache invalidation "
+            "for %d frames.", cacheUpdateInterval_);
     } else {
-        ROSEN_LOGD(
-            "RSFilterCacheManager::UpdateCacheStateWithDirtyRegion Cache expired. Reason: Dirty region intersects "
-            "with cached region.");
         InvalidateCache();
     }
     RS_OPTIONAL_TRACE_FUNC_END();
@@ -128,12 +126,10 @@ void RSFilterCacheManager::UpdateCacheStateWithDirtyRegion(bool isIntersectedWit
     // The underlying image is affected by the dirty region, determine if the cache should be invalidated by cache age.
     // [PLANNING]: also take into account the filter radius / cache size / percentage of intersected area.
     if (cacheUpdateInterval_ > 0) {
-        ROSEN_LOGD("RSFilterCacheManager::UpdateCacheStateWithDirtyRegion Delaying cache invalidation for %d frames.",
-            cacheUpdateInterval_);
+        RS_OPTIONAL_TRACE_NAME_FMT(
+            "RSFilterCacheManager::UpdateCacheStateWithDirtyRegion Delaying cache invalidation "
+            "for %d frames.", cacheUpdateInterval_);
     } else {
-        ROSEN_LOGD(
-            "RSFilterCacheManager::UpdateCacheStateWithDirtyRegion Cache expired. Reason: Dirty region intersects "
-            "with cached region.");
         InvalidateCache();
     }
     RS_OPTIONAL_TRACE_FUNC_END();
@@ -156,7 +152,6 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
 
     if (cacheType_ == CacheType::CACHE_TYPE_NONE) {
         // The cache is expired, take a snapshot again.
-        ROSEN_LOGD("RSFilterCacheManager::DrawFilter Cache expired, taking snapshot.");
         TakeSnapshot(canvas, filter);
         ClipVisibleRect(canvas);
         DrawCachedSnapshot(canvas, filter);

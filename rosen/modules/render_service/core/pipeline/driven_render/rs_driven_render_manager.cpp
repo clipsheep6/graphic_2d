@@ -250,8 +250,6 @@ void RSDrivenRenderManager::UpdateUniDrivenRenderMode(DrivenDirtyType dirtyType)
 
     auto contentRenderMode = contentSurfaceNode_->GetDrivenSurfaceRenderMode();
     auto backgroundRenderMode = backgroundSurfaceNode_->GetDrivenSurfaceRenderMode();
-    RS_LOGD("RSDrivenRenderManager: contentRenderMode = %d, backgroundRenderMode = %d, uniRenderMode = %d",
-        contentRenderMode, backgroundRenderMode, uniRenderMode_);
 }
 
 RectI RSDrivenRenderManager::CalcUniRenderSurfaceClipHoleRect()

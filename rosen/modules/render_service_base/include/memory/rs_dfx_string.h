@@ -16,7 +16,6 @@
 #define DFXSTRING_H
 #include <stdarg.h>
 #include <string>
-#include "securec.h"
 
 namespace OHOS::Rosen {
 constexpr int STRING_BUF_SIZE = 4096;
@@ -42,23 +41,7 @@ public:
     }
 
 private:
-    std::string AppendFormatInner(const char* fmt, va_list args)
-    {
-        int n;
-        std::string result;
-        va_list tmp_args;
-        char buf[STRING_BUF_SIZE] = {0};
-        va_copy(tmp_args, args);
-        n = vsnprintf_s(buf, sizeof(buf), sizeof(buf) - 1, fmt, tmp_args);
-        va_end(tmp_args);
-        if (n < 0) {
-            result.append("dump info length > 4096, error");
-        } else {
-            result.append(buf, n);
-        }
-        return result;
-    }
-    
+    std::string AppendFormatInner(const char* fmt, va_list args);
     std::string str_;
 };
 } // namespace OHOS::Rosen

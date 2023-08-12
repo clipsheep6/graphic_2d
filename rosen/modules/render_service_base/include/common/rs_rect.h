@@ -21,7 +21,6 @@
 #include "common/rs_common_def.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
-#include "platform/common/rs_log.h"
 #include "transaction/rs_marshalling_helper.h"
 
 namespace OHOS {
@@ -197,7 +196,6 @@ public:
                 RSMarshallingHelper::Marshalling(parcel, top_) &&
                 RSMarshallingHelper::Marshalling(parcel, width_) &&
                 RSMarshallingHelper::Marshalling(parcel, height_))) {
-            ROSEN_LOGE("RectT::Marshalling failed!");
             return false;
         }
         return true;
@@ -210,7 +208,6 @@ public:
                 RSMarshallingHelper::Unmarshalling(parcel, rect->top_) &&
                 RSMarshallingHelper::Unmarshalling(parcel, rect->width_) &&
                 RSMarshallingHelper::Unmarshalling(parcel, rect->height_))) {
-            ROSEN_LOGE("RectT::Unmarshalling failed!");
             return nullptr;
         }
         return rect.release();

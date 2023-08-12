@@ -120,7 +120,7 @@ void VSyncSampler::SetScreenVsyncEnabledInRSMainThread(bool enabled)
 
 bool VSyncSampler::AddSample(int64_t timeStamp)
 {
-    return AddSampleLTPO(timeStamp);
+    // return AddSampleLTPO(timeStamp);
     std::lock_guard<std::mutex> lock(mutex_);
     if (numSamples_ == 0) {
         phase_ = 0;

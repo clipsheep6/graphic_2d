@@ -119,6 +119,7 @@ private:
     void CollectConnections(bool &waitForVSync, int64_t timestamp,
                             std::vector<sptr<VSyncConnection>> &conns, int64_t vsyncCount);
     VsyncError QosGetPidByName(const std::string& name, uint32_t& pid);
+    void SetPhasePulseNum(int32_t pulseNum);
 
     std::thread threadLoop_;
     sptr<VSyncController> controller_;
@@ -129,6 +130,7 @@ private:
     bool vsyncEnabled_;
     std::string name_;
     bool vsyncThreadRunning_;
+    int32_t phasePulseNum_;
 };
 } // namespace Rosen
 } // namespace OHOS

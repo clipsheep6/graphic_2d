@@ -85,8 +85,16 @@ VsyncError VSyncController::SetPhaseOffsetByPulseNum(int32_t pulseNum)
     if (generator == nullptr) {
         return VSYNC_ERROR_NULLPTR;
     }
+    Callback *cb = nullptr;
+    {
+        std::lock_guard<std::mutex> locker(callbackMutex_);
+        cb = callback_;
+    }
     std::lock_guard<std::mutex> locker(offsetMutex_);
     phaseOffset_ = generator->GetVSyncPulse() * pulseNum;
+    if (cb != nullptr) {
+        cb->SetPhasePulseNum(pulseNum);
+    }
     return generator->ChangePhaseOffset(this, phaseOffset_);
 }
 

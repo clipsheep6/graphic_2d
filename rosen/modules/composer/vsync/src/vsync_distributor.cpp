@@ -26,7 +26,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-constexpr int32_t SOFT_VSYNC_PERIOD = 16666667; // nanoseconds
+// constexpr int32_t SOFT_VSYNC_PERIOD = 16666667; // nanoseconds
 constexpr int32_t ERRNO_EAGAIN = -1;
 constexpr int32_t ERRNO_OTHER = -2;
 constexpr int32_t THREAD_PRIORTY = -6;
@@ -204,7 +204,7 @@ VsyncError VSyncConnection::OnVSyncRemoteDied()
 
 VSyncDistributor::VSyncDistributor(sptr<VSyncController> controller, std::string name)
     : controller_(controller), mutex_(), con_(), connections_(),
-    event_(), vsyncEnabled_(false), name_(name)
+    event_(), vsyncEnabled_(false), name_(name), phasePulseNum_(0)
 {
     vsyncThreadRunning_ = true;
     threadLoop_ = std::thread(std::bind(&VSyncDistributor::ThreadMain, this));
@@ -263,7 +263,7 @@ void VSyncDistributor::ThreadMain()
     sched_setscheduler(0, SCHED_FIFO, &param);
 
     int64_t timestamp;
-    int64_t softVSyncPeriod;
+    // int64_t softVSyncPeriod;
     while (vsyncThreadRunning_ == true) {
         std::vector<sptr<VSyncConnection>> conns;
         {
@@ -271,7 +271,7 @@ void VSyncDistributor::ThreadMain()
             std::unique_lock<std::mutex> locker(mutex_);
             timestamp = event_.timestamp;
             event_.timestamp = 0;
-            softVSyncPeriod = (event_.period == 0) ? SOFT_VSYNC_PERIOD : event_.period;
+            // softVSyncPeriod = (event_.period == 0) ? SOFT_VSYNC_PERIOD : event_.period;
             CollectConnections(waitForVSync, timestamp, conns, event_.vsyncPulseCount);
             // no vsync signal
             if (timestamp == 0) {
@@ -279,14 +279,14 @@ void VSyncDistributor::ThreadMain()
                 // and start the software vsync with wait_for function
                 if (waitForVSync == true && vsyncEnabled_ == false) {
                     EnableVSync();
-                    if (con_.wait_for(locker, std::chrono::nanoseconds(softVSyncPeriod)) ==
-                        std::cv_status::timeout) {
-                        const auto &now = std::chrono::steady_clock::now().time_since_epoch();
-                        timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
-                        event_.timestamp = timestamp;
-                        event_.vsyncCount++;
-                        event_.vsyncPulseCount++;
-                    }
+                    // if (con_.wait_for(locker, std::chrono::nanoseconds(softVSyncPeriod)) ==
+                    //     std::cv_status::timeout) {
+                    //     const auto &now = std::chrono::steady_clock::now().time_since_epoch();
+                    //     timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+                    //     event_.timestamp = timestamp;
+                    //     event_.vsyncCount++;
+                    //     event_.vsyncPulseCount++;
+                    // }
                 } else {
                     // just wait request or vsync signal
                     if (vsyncThreadRunning_ == true) {
@@ -337,8 +337,15 @@ void VSyncDistributor::OnVSyncEvent(int64_t now, int64_t period, int32_t refresh
     event_.timestamp = now;
     event_.vsyncCount++;
     event_.period = period;
+    event_.refreshRate = refreshRate;
     event_.vsyncPulseCount += (VSYNC_MAX_REFRESHRATE / event_.refreshRate);
     con_.notify_all();
+}
+
+void VSyncDistributor::SetPhasePulseNum(int32_t pulseNum)
+{
+    std::lock_guard<std::mutex> locker(mutex_);
+    phasePulseNum_ = pulseNum;
 }
 
 void VSyncDistributor::CollectConnections(bool &waitForVSync, int64_t timestamp,
@@ -352,7 +359,7 @@ void VSyncDistributor::CollectConnections(bool &waitForVSync, int64_t timestamp,
         }
         if (connections_[i]->triggerThisTime_) {
             waitForVSync = true;
-            if (timestamp > 0 && (vsyncCount % rate == 0)) {
+            if (timestamp > 0 && ((vsyncCount + phasePulseNum_) % rate == 0)) {
                 conns.push_back(connections_[i]);
                 if (!connections_[i]->autoTrigger_) {
                     connections_[i]->triggerThisTime_ = false;

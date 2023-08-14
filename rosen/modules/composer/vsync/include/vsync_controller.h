@@ -30,6 +30,7 @@ public:
     public:
         virtual void OnVSyncEvent(int64_t now, int64_t period, int32_t refreshRate) = 0;
         virtual ~Callback() = default;
+        virtual void SetPhasePulseNum(int32_t pulseNum) = 0;
     };
 
     VSyncController(const sptr<VSyncGenerator> &geng, int64_t offset);

@@ -359,7 +359,7 @@ void VSyncDistributor::CollectConnections(bool &waitForVSync, int64_t timestamp,
         }
         if (connections_[i]->triggerThisTime_) {
             waitForVSync = true;
-            if (timestamp > 0 && ((vsyncCount + phasePulseNum_) % rate == 0)) {
+            if (timestamp > 0 && (vsyncCount % rate == 0)) {
                 conns.push_back(connections_[i]);
                 if (!connections_[i]->autoTrigger_) {
                     connections_[i]->triggerThisTime_ = false;

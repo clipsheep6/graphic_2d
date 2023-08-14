@@ -80,18 +80,6 @@ void VSyncSampler::BeginSample()
     referenceTime_ = 0;
 }
 
-// deprecated
-void VSyncSampler::BeginSampleLTPO()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    numSamples_ = 0;
-    modeUpdated_ = false;
-    hardwareVSyncStatus_ = true;
-    period_ = 0;
-    phase_ = 0;
-    referenceTime_ = 0;
-}
-
 void VSyncSampler::SetHardwareVSyncStatus(bool enabled)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -120,7 +108,6 @@ void VSyncSampler::SetScreenVsyncEnabledInRSMainThread(bool enabled)
 
 bool VSyncSampler::AddSample(int64_t timeStamp)
 {
-    // return AddSampleLTPO(timeStamp);
     std::lock_guard<std::mutex> lock(mutex_);
     if (numSamples_ == 0) {
         phase_ = 0;
@@ -142,56 +129,6 @@ bool VSyncSampler::AddSample(int64_t timeStamp)
     if (numResyncSamplesSincePresent_++ > MAX_SAMPLES_WITHOUT_PRESENT) {
         ResetErrorLocked();
     }
-
-    // 1/2 just a empirical value
-    bool shouldDisableScreenVsync = modeUpdated_ && (error_ < g_errorThreshold / 2);
-
-    if (shouldDisableScreenVsync) {
-        // disabled screen vsync in rsMainThread
-        VLOGD("Disable Screen Vsync");
-        SetScreenVsyncEnabledInRSMainThread(false);
-    }
-
-    return !shouldDisableScreenVsync;
-}
-
-void VSyncSampler::UpdateModeLTPOLocked()
-{
-    if (/*numSamples_ == 2 || */numSamples_ > MIN_SAMPLES_FOR_UPDATE) {
-        int64_t sum = 0;
-        for (uint32_t i = 1; i < numSamples_; i++) {
-            int64_t prevSample = samples_[(firstSampleIndex_ + i - 1 + MAX_SAMPLES) % MAX_SAMPLES];
-            int64_t currentSample = samples_[(firstSampleIndex_ + i) % MAX_SAMPLES];
-            int64_t diff = currentSample - prevSample;
-            sum += diff;
-        }
-        period_ = sum / (int64_t)numSamples_;
-        CreateVSyncGenerator()->UpdateMode(period_, phase_, referenceTime_);
-    }
-    if (numSamples_ > MIN_SAMPLES_FOR_UPDATE) {
-        modeUpdated_ = true;
-    }
-}
-
-bool VSyncSampler::AddSampleLTPO(int64_t timeStamp)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (numSamples_ == 0) {
-        phase_ = 0;
-        referenceTime_ = timeStamp;
-        CreateVSyncGenerator()->UpdateMode(period_, phase_, referenceTime_);
-    }
-
-    if (numSamples_ < MAX_SAMPLES - 1) {
-        numSamples_++;
-    } else {
-        firstSampleIndex_ = (firstSampleIndex_ + 1) % MAX_SAMPLES;
-    }
-
-    uint32_t index = (firstSampleIndex_ + numSamples_ - 1) % MAX_SAMPLES;
-    samples_[index] = timeStamp;
-
-    UpdateModeLTPOLocked();
 
     // 1/2 just a empirical value
     bool shouldDisableScreenVsync = modeUpdated_ && (error_ < g_errorThreshold / 2);
@@ -252,44 +189,6 @@ void VSyncSampler::UpdateErrorLocked()
     int numErrSamples = 0;
     int64_t sqErrSum = 0;
 
-    for (uint32_t i = 0; i < NUM_PRESENT; i++) {
-        int64_t t = presentFenceTime_[i];
-        if (t <= 0) {
-            continue;
-        }
-
-        int64_t sample = t - referenceTime_;
-        if (sample <= phase_) {
-            continue;
-        }
-
-        int64_t sampleErr = (sample - phase_) % period_;
-        // 1/2 just a empirical value
-        if (sampleErr > period_ / 2) {
-            sampleErr -= period_;
-        }
-        sqErrSum += sampleErr * sampleErr;
-        numErrSamples++;
-    }
-
-    if (numErrSamples > 0) {
-        error_ = sqErrSum / numErrSamples;
-    } else {
-        error_ = 0;
-    }
-}
-
-// deprecated
-void VSyncSampler::UpdateErrorLTPOLocked()
-{
-    if (!modeUpdated_) {
-        return;
-    }
-
-    int numErrSamples = 0;
-    int64_t sqErrSum = 0;
-
-    // int64_t generatorOffset = CreateVSyncGenerator()->GetReferenceTimeOffset();
     for (uint32_t i = 0; i < NUM_PRESENT; i++) {
         int64_t t = presentFenceTime_[i];
         if (t <= 0) {

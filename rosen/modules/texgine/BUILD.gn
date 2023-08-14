@@ -112,6 +112,7 @@ ohos_shared_library("libtexgine") {
 
     public_deps = [
       "texgine_drawing:libtexgine_drawing",
+      "//third_party/bounds_checking_function:libsec_static",
       "//third_party/jsoncpp:jsoncpp",
     ]
 

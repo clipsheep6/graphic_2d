@@ -111,6 +111,8 @@ template("graphics2d_source_set") {
       "$drawing_src_dir/utils/matrix.cpp",
       "$drawing_src_dir/utils/matrix44.cpp",
       "$drawing_src_dir/utils/region.cpp",
+      "$drawing_src_dir/engine_adapter/skia_adapter/skia_font.cpp",
+      "$drawing_src_dir/engine_adapter/skia_adapter/skia_typeface.cpp",
     ]
 
     sources += [
@@ -303,6 +305,9 @@ ohos_shared_library("2d_graphics_canvaskit0310") {
     "$drawing_src_dir/text/text.cpp",
     "$drawing_src_dir/utils/camera3d.cpp",
     "$drawing_src_dir/utils/matrix.cpp",
+    "$drawing_src_dir/engine_adapter/skia_adapter/skia_font.cpp",
+    "$drawing_src_dir/engine_adapter/skia_adapter/skia_typeface.cpp",
+    
   ]
 
   defines = [ "USE_CANVASKIT0310_SKIA" ]

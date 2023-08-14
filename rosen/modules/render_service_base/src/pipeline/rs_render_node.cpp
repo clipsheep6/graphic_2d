@@ -750,7 +750,7 @@ void RSRenderNode::RenderTraceDebug() const
     }
 }
 
-void RSRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas)
+void RSRenderNode::ApplyBoundsGeometry(RSPaintFilterCanvas& canvas)
 {
 #ifndef USE_ROSEN_DRAWING
     renderNodeSaveCount_ = canvas.Save();
@@ -765,6 +765,11 @@ void RSRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas)
         canvas.ConcatMatrix(boundsGeo->GetMatrix());
 #endif
     }
+}
+
+void RSRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas)
+{
+    ApplyBoundsGeometry(canvas);
     auto alpha = renderProperties_.GetAlpha();
     if (alpha < 1.f) {
         if ((GetChildrenCount() == 0) || !(GetRenderProperties().GetAlphaOffscreen() || IsForcedDrawInGroup())) {

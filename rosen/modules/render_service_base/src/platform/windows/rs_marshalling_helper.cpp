@@ -69,7 +69,6 @@
 #include "render/rs_gradient_blur_para.h"
 #include "render/rs_image.h"
 #include "render/rs_image_base.h"
-#include "render/rs_light_up_effect_filter.h"
 #include "render/rs_material_filter.h"
 #include "render/rs_path.h"
 #include "render/rs_shader.h"

@@ -23,6 +23,9 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
+// The "0xD001400" is the domain ID for graphic module that alloted by the OS.
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL_RS = { LOG_CORE, 0xD001400, "OHOS::RS" };
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL_ROSEN = { LOG_CORE, 0xD001400, "OHOS::ROSEN" };
 inline const OHOS::HiviewDFX::HiLogLabel& GenerateLabel(RSLog::Tag tag)
 {
     return (tag == RSLog::Tag::RS) ? LABEL_RS : LABEL_ROSEN;

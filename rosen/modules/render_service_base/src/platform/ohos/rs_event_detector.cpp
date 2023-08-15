@@ -14,6 +14,7 @@
  */
 
 #include "platform/common/rs_event_manager.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {

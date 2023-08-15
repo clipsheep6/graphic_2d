@@ -19,6 +19,7 @@
 #include "memory/rs_memory_graphic.h"
 #include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include <securec.h>
+#include <src/core/SkTraceEventCommon.h>
 #include <stdint.h>
 #include <string>
 #include <unistd.h>
@@ -330,6 +331,9 @@ void RSMainThread::Init()
     auto delegate = RSFunctionalDelegate::Create();
     delegate->SetRepaintCallback([]() { RSMainThread::Instance()->RequestNextVSync(); });
     RSOverdrawController::GetInstance().SetDelegate(delegate);
+
+    bool skiaTraceEnabled = RSSystemProperties::GetSkiaTraceEnabled();
+    SkOHOSTraceUtil::setEnableTracing(skiaTraceEnabled);
 }
 
 void RSMainThread::RsEventParamDump(std::string& dumpString)

@@ -170,6 +170,7 @@ public:
         // a mainWindowType surfacenode will not mounted under another mainWindowType surfacenode
         // including app main window, starting window, and selfdrawing window
         return nodeType_ == RSSurfaceNodeType::APP_WINDOW_NODE ||
+               nodeType_ == RSSurfaceNodeType::DEFAULT ||
                nodeType_ == RSSurfaceNodeType::STARTING_WINDOW_NODE ||
                nodeType_ == RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
     }

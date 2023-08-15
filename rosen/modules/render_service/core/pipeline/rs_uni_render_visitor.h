@@ -249,7 +249,7 @@ private:
     // set node cacheable animation after checking whold child tree
     void SetNodeCacheChangeStatus(RSBaseRenderNode& node, int markedCachedNodeCnt);
     // update rendernode's cache status and collect valid cache rect
-    void UpdateForegroundFilterCacheWithDirty(RSRenderNode& node);
+    void UpdateForegroundFilterCacheWithDirty(RSRenderNode& node, RSDirtyRegionManager& dirtyManager);
 
     bool IsHardwareComposerEnabled();
 

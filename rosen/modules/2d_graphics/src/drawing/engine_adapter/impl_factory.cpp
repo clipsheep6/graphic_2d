@@ -127,6 +127,20 @@ std::unique_ptr<RegionImpl> ImplFactory::CreateRegionImpl()
 {
     return EngineImplFactory::CreateRegion();
 }
+
+std::unique_ptr<FontImpl> ImplFactory::CreateFontImpl()
+{
+    return EngineImplFactory::CreateFont();
+}
+
+std::unique_ptr<TypefaceImpl> ImplFactory::CreateTypeFaceImpl()
+{
+    return EngineImplFactory::CreateTypeFace();
+}
+std::unique_ptr<DashPathEffectImpl> ImplFactory::CreateDashPathEffectImpl()
+{
+    return EngineImplFactory::CreateDashPathEffect();    
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

@@ -35,7 +35,9 @@
 #include "skia_adapter/skia_region.h"
 #include "skia_adapter/skia_shader_effect.h"
 #include "skia_adapter/skia_surface.h"
-
+#include "skia_adapter/skia_font.h"
+#include "skia_adapter/skia_typeface.h"
+#include "skia_adapter/skia_dash_path_effect.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -147,6 +149,22 @@ std::unique_ptr<RegionImpl> SkiaImplFactory::CreateRegion()
 {
     return std::make_unique<SkiaRegion>();
 }
+
+std::unique_ptr<FontImpl> SkiaImplFactory::CreateFont()
+{
+    return std::make_unique<SkiaFont>();
+}
+
+std::unique_ptr<TypefaceImpl> SkiaImplFactory::CreateTypeFace()
+{
+    return std::make_unique<SkiaTypeface>();
+}
+
+std::unique_ptr<DashPathEffectImpl> CreateDashPathEffect()
+{
+    return std::make_unique<SkiaDashPathEffect>();
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

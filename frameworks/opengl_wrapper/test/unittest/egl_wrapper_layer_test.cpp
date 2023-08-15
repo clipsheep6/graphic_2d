@@ -66,7 +66,7 @@ HWTEST_F(EglWrapperLayerTest, Init002, Level2)
 HWTEST_F(EglWrapperLayerTest, InitLayers001, Level1)
 {
     EglWrapperDispatchTable dispatchTable;
-     auto result = ture;
+     auto result = true;
     EglWrapperLayer::GetInstance().InitLayers(&dispatchTable);
     ASSERT_TRUE(result);
 }
@@ -80,7 +80,7 @@ HWTEST_F(EglWrapperLayerTest, LoadLayers001, Level1)
 {
     EglWrapperDispatchTable dispatchTable;
 
-    auto result = EglWrapperLayer::GetInstance().LoadLayers(&dispatchTable);
+    auto result = EglWrapperLayer::GetInstance().LoadLayers();
     ASSERT_TRUE(result);
 }
 
@@ -92,9 +92,9 @@ HWTEST_F(EglWrapperLayerTest, LoadLayers001, Level1)
 HWTEST_F(EglWrapperLayerTest, LoadLayers002, Level2)
 {
     EglWrapperDispatchTable dispatchTable;
-    auto result = EglWrapperLayer::GetInstance().LoadLayers(&dispatchTable);
+    auto result = EglWrapperLayer::GetInstance().LoadLayers();
     ASSERT_TRUE(result);
-    result = EglWrapperLayer::GetInstance().LoadLayers(&dispatchTable);
+    result = EglWrapperLayer::GetInstance().LoadLayers();
     ASSERT_TRUE(result);
 }
 } // OHOS::Rosen

@@ -13,28 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef FONT_IMPL_H
-#define FONT_IMPL_H
-#include "utils/scalar.h"
-#include "base_impl.h"
+#include "skia_dash_path_effect.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class FontImpl : public BaseImpl {
-public:
-    static inline constexpr AdapterType TYPE = AdapterType::BASE_INTERFACE;
-    FontImpl() noexcept {}
-    ~FontImpl() override {}
-    AdapterType GetType() const override
-    {
-        return AdapterType::BASE_INTERFACE;
-    }
-
-    virtual void SetSize(scalar textSize) = 0;
-   // virtual float GetMetrics(FontMetricsImpl *metrics) const = 0;
-};
+std::shared_ptr<SkiaPathEffect> SkiaDashPathEffect::Make(const scalar intervals[], int count, scalar phase)
+{
+    auto effect = SkDashPathEffect::Make(intervals, count, phase);
+    auto pathEffect = std::make_shared<SkiaPathEffect>();
+    pathEffect->SetSkPathEffect(effect);
+    return pathEffect;
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS
-#endif

@@ -38,6 +38,7 @@
 #include "impl_interface/surface_impl.h"
 #include "impl_interface/typeface_impl.h"
 #include "impl_interface/font_impl.h"
+#include "impl_interface/dash_path_effect_impl.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -67,7 +68,8 @@ public:
     static std::unique_ptr<CameraImpl> CreateCamera();
     static std::unique_ptr<RegionImpl> CreateRegion();
     static std::unique_ptr<FontImpl> CreateFont();
-    static std::unique_ptr<TypefaceImpl> CreateTypeFace();    
+    static std::unique_ptr<TypefaceImpl> CreateTypeFace();
+    static std::unique_ptr<DashPathEffectImpl> CreateDashPathEffect();
 };
 } // namespace Drawing
 } // namespace Rosen

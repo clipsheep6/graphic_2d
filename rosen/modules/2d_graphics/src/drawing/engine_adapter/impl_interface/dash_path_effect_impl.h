@@ -13,26 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef FONT_IMPL_H
-#define FONT_IMPL_H
+#ifndef DASH_PATH_EFFECT_IMPL_H
+#define DASH_PATH_EFFECT_IMPL_H
 #include "utils/scalar.h"
 #include "base_impl.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class FontImpl : public BaseImpl {
+class DashPathEffectImpl : public BaseImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::BASE_INTERFACE;
-    FontImpl() noexcept {}
-    ~FontImpl() override {}
+    DashPathEffectImpl() noexcept {}
+    ~DashPathEffectImpl() override {}
     AdapterType GetType() const override
     {
         return AdapterType::BASE_INTERFACE;
     }
-
-    virtual void SetSize(scalar textSize) = 0;
-   // virtual float GetMetrics(FontMetricsImpl *metrics) const = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

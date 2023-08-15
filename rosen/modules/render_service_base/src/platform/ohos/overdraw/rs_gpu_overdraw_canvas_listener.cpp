@@ -31,6 +31,7 @@
 #endif
 
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {

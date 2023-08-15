@@ -170,6 +170,7 @@ template("render_service_client_source_set") {
       defines += [ "OHOS_RSS_CLIENT" ]
       external_deps += [ "resource_schedule_service:ressched_client" ]
     }
+    external_deps += [ "hilog:libhilog" ]
 
     if (is_static_lib) {
       public_deps += [ "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base_static" ]

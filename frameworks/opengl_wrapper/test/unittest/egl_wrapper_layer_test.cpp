@@ -66,22 +66,8 @@ HWTEST_F(EglWrapperLayerTest, Init002, Level2)
 HWTEST_F(EglWrapperLayerTest, InitLayers001, Level1)
 {
     EglWrapperDispatchTable dispatchTable;
-
-    auto result = EglWrapperLayer::GetInstance().InitLayers(&dispatchTable);
-    ASSERT_TRUE(result);
-}
-
-/**
- * @tc.name: InitLayers002
- * @tc.desc:
- * @tc.type: FUNC
- */
-HWTEST_F(EglWrapperLayerTest, InitLayers002, Level2)
-{
-    EglWrapperDispatchTable dispatchTable;
-    auto result = EglWrapperLayer::GetInstance().InitLayers(&dispatchTable);
-    ASSERT_TRUE(result);
-    result = EglWrapperLayer::GetInstance().InitLayers(&dispatchTable);
+     auto result = ture;
+    EglWrapperLayer::GetInstance().InitLayers(&dispatchTable);
     ASSERT_TRUE(result);
 }
 

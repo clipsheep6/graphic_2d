@@ -316,7 +316,7 @@ HWTEST_F(RSShowingPropertiesFreezerTest, GetFilterTest, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "RSShowingPropertiesFreezerTest GetFilterTest start";
     float blurRadius = 1.0f;
-    auto filter = std::make_shared<RSBlurFilter>(blurRadius);
+    auto filter = std::make_shared<RSBlurFilter>(blurRadius, blurRadius);
     auto canvasNode = RSCanvasNode::Create();
     canvasNode->SetBackgroundFilter(filter);
     auto result1 = canvasNode->GetShowingProperties().GetBackgroundFilter();

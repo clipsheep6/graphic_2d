@@ -35,7 +35,7 @@ inline const OHOS::HiviewDFX::HiLogLabel& GenerateLabel(RSLog::Tag tag)
     return (tag == RSLog::Tag::RS) ? LABEL_RS : LABEL_ROSEN;
 }
 }
-
+bool RSLog::DebugLogFlag = true;
 
 void RSLogOutput(RSLog::Tag tag, RSLog::Level level, const char* format, ...)
 {

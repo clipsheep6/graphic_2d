@@ -29,6 +29,10 @@ public:
     enum Tag { RS = 0, RS_CLIENT };
     enum Level { LEVEL_INFO = 0, LEVEL_DEBUG, LEVEL_WARN, LEVEL_ERROR, LEVEL_FATAL };
     virtual ~RSLog() = default;
+    static bool DebugLogFlag;
+    static void SetDebugLogFlag(bool debugLogFlag) {
+        DebugLogFlag = debugLogFlag;
+    }
 };
 
 void RSB_EXPORT RSLogOutput(RSLog::Tag tag, RSLog::Level level, const char* format, ...);
@@ -36,9 +40,17 @@ void RSB_EXPORT RSLogOutput(RSLog::Tag tag, RSLog::Level level, const char* form
 } // namespace OHOS
 
 #define ROSEN_LOGI(format, ...) \
-    RSLogOutput(RSLog::Tag::RS_CLIENT, RSLog::Level::LEVEL_INFO, format, ##__VA_ARGS__)
+{ \
+    if (RSLog::DebugLogFlag) { \
+        RSLogOutput(RSLog::Tag::RS_CLIENT, RSLog::Level::LEVEL_INFO, format, ##__VA_ARGS__); \
+    } \
+}
 #define ROSEN_LOGD(format, ...) \
-    RSLogOutput(RSLog::Tag::RS_CLIENT, RSLog::Level::LEVEL_DEBUG, format, ##__VA_ARGS__)
+{ \
+    if (RSLog::DebugLogFlag) { \
+        RSLogOutput(RSLog::Tag::RS_CLIENT, RSLog::Level::LEVEL_DEBUG, format, ##__VA_ARGS__); \
+    } \
+}
 #define ROSEN_LOGE(format, ...) \
     RSLogOutput(RSLog::Tag::RS_CLIENT, RSLog::Level::LEVEL_ERROR, format, ##__VA_ARGS__)
 #define ROSEN_LOGW(format, ...) \
@@ -47,9 +59,17 @@ void RSB_EXPORT RSLogOutput(RSLog::Tag tag, RSLog::Level level, const char* form
     RSLogOutput(RSLog::Tag::RS_CLIENT, RSLog::Level::LEVEL_FATAL, format, ##__VA_ARGS__)
 
 #define RS_LOGI(format, ...) \
-    RSLogOutput(RSLog::Tag::RS, RSLog::Level::LEVEL_INFO, format, ##__VA_ARGS__)
+{ \
+    if (RSLog::DebugLogFlag) { \
+        RSLogOutput(RSLog::Tag::RS, RSLog::Level::LEVEL_INFO, format, ##__VA_ARGS__); \
+    } \
+}
 #define RS_LOGD(format, ...) \
-    RSLogOutput(RSLog::Tag::RS, RSLog::Level::LEVEL_DEBUG, format, ##__VA_ARGS__)
+{ \
+    if (RSLog::DebugLogFlag) { \
+        RSLogOutput(RSLog::Tag::RS, RSLog::Level::LEVEL_DEBUG, format, ##__VA_ARGS__); \
+    } \
+}
 #define RS_LOGE(format, ...) \
     RSLogOutput(RSLog::Tag::RS, RSLog::Level::LEVEL_ERROR, format, ##__VA_ARGS__)
 #define RS_LOGW(format, ...) \

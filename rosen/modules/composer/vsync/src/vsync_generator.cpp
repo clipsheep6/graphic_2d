@@ -255,6 +255,13 @@ VsyncError VSyncGenerator::ChangePhaseOffset(const sptr<OHOS::Rosen::VSyncGenera
     }
     return VSYNC_ERROR_OK;
 }
+
+bool VSyncGenerator::IsEnable()
+{
+    std::lock_guard<std::mutex> locker(mutex_);
+    return period_ > 0;
+}
+
 } // namespace impl
 sptr<VSyncGenerator> CreateVSyncGenerator()
 {

@@ -20,7 +20,6 @@
 #include "animation/rs_animation_timing_curve.h"
 #include "animation/rs_interpolator.h"
 #include "animation/rs_transition_effect.h"
-#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -37,7 +36,6 @@ public:
     void SetTimingCurve(const RSAnimationTimingCurve& timingCurve)
     {
         if (timingCurve.type_ != RSAnimationTimingCurve::CurveType::INTERPOLATING) {
-            ROSEN_LOGE("RSTransition::SetTimingCurve: invalid timing curve type");
             return;
         }
         timingCurve_ = timingCurve;

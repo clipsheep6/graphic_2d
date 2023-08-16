@@ -522,7 +522,7 @@ void MemoryManager::DumpMallocStat(std::string& log)
                 if (strncmp(str, "Allocated", strlen("Allocated")) == 0) {
                     sp->append(str);
                 }
-                RS_LOGW("[mallocstat]:%s", str);
+                RS_LOGW("[mallocstat]:%{public}s", str);
             }
         },
         &log, nullptr);

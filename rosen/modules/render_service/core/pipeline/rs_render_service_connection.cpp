@@ -491,15 +491,16 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
     if ((node->GetType() == RSRenderNodeType::DISPLAY_NODE) ||
         ((node->GetType() == RSRenderNodeType::SURFACE_NODE) &&
             (node->ReinterpretCastTo<RSSurfaceRenderNode>()->IsMainWindowType()))) {
-        std::function<void()> captureTask = [scaleY, scaleX, callback, id]() -> void {
+        std::unique_ptr<Media::PixelMap> pixelmap;
+        std::function<void()> captureTask = [scaleY, scaleX, id, &pixelmap]() -> void {
             RS_LOGD("RSRenderService::TakeSurfaceCapture callback->OnSurfaceCapture nodeId:[%" PRIu64 "]", id);
             ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderService::TakeSurfaceCapture");
             RSSurfaceCaptureTask task(id, scaleX, scaleY);
-            std::unique_ptr<Media::PixelMap> pixelmap = task.Run();
-            callback->OnSurfaceCapture(id, pixelmap.get());
+            pixelmap = task.Run();
             ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         };
-        mainThread_->PostTask(captureTask);
+        mainThread_->ScheduleTask(captureTask).wait();
+        callback->OnSurfaceCapture(id, pixelmap.get());
     } else {
         TakeSurfaceCaptureForUIWithUni(id, callback, scaleX, scaleY);
     }

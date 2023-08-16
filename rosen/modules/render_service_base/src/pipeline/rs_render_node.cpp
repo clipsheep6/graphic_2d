@@ -56,6 +56,16 @@ const std::unordered_set<RSModifierType> ANIMATION_MODIFIER_TYPE  = {
 };
 }
 
+RSRenderNode::RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context) : id_(id), context_(context)
+{
+    renderProperties_.backref_ = weak_from_this();
+}
+RSRenderNode::RSRenderNode(NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context)
+    : isOnTheTree_(isOnTheTree), id_(id), context_(context)
+{
+    renderProperties_.backref_ = weak_from_this();
+}
+
 void RSRenderNode::AddChild(SharedPtr child, int index)
 {
     // sanity check, avoid loop
@@ -951,7 +961,6 @@ void RSRenderNode::UpdateEffectRegion(std::optional<SkPath>& region)
 void RSRenderNode::UpdateEffectRegion(std::optional<Drawing::Path>& region)
 #endif
 {
-    hasUpdateEffectRegion_ = false;
     if (!region.has_value()) {
         return;
     }
@@ -988,7 +997,6 @@ void RSRenderNode::UpdateEffectRegion(std::optional<Drawing::Path>& region)
     // accumulate children clip path, with matrix
     effectPath.AddPath(clipPath, geoPtr->GetAbsMatrix());
 #endif
-    hasUpdateEffectRegion_ = true;
 }
 
 std::shared_ptr<RSRenderModifier> RSRenderNode::GetModifier(const PropertyId& id)

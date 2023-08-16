@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,38 +13,47 @@
  * limitations under the License.
  */
 
-#ifndef SKIA_MASK_FILTER_H
-#define SKIA_MASK_FILTER_H
+#ifndef SKIA_FONT_MANAGER__H
+#define SKIA_FONT_MANAGER__H
 
-#include "include/core/SkMaskFilter.h"
+#include <include/core/SkFontMgr.h>
+#include <memory>
 
-#include "impl_interface/mask_filter_impl.h"
+#include "impl_interface/font_manager_impl.h"
+#include "skia_font_style.h"
+#include "skia_font_style_set.h"
+#include "skia_typeface.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class SkiaMaskFilter : public MaskFilterImpl {
+class SkiaFontManager : public FontManagerImpl{
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
-    SkiaMaskFilter() noexcept;
-    ~SkiaMaskFilter() override {};
+    SkiaFontManager();
+    ~SkiaFontManager() override {}
     AdapterType GetType() const override
     {
         return AdapterType::SKIA_ADAPTER;
     }
 
-    void InitWithBlur(BlurType t, scalar sigma) override;
-    sk_sp<SkMaskFilter> GetMaskFilter() const;
-    /*
-     * @brief  Update the member variable to filter, adaptation layer calls.
-     */
-    void SetSkMaskFilter(const sk_sp<SkMaskFilter>& filter);
-    
-    std::shared_ptr<SkiaMaskFilter> CustomBlur(BlurType t, scalar sigma);
+    static std::shared_ptr<SkiaFontManager> RefDefault();
+
+    sk_sp<SkFontMgr> GetFontMgr() const;
+
+    void SetFontMgr(const sk_sp<SkFontMgr> mgr);
+
+    std::shared_ptr<SkiaTypeface> MatchFamilyStyleCharacter(const std::string &familyName,
+        const SkiaFontStyle &style, const char* bcp47[], int bcp47Count, int32_t character);
+
+    std::shared_ptr<SkiaFontStyleSet> MatchFamily(const std::string &familyName);
+
 private:
-    sk_sp<SkMaskFilter> filter_;
+    sk_sp<SkFontMgr> fontMgr_;
 };
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS
-#endif
+
+#endif 
+ 

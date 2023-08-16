@@ -36,6 +36,15 @@ void SkiaMaskFilter::SetSkMaskFilter(const sk_sp<SkMaskFilter>& filter)
 {
     filter_ = filter;
 }
+
+std::shared_ptr<SkiaMaskFilter> SkiaMaskFilter::CustomBlur(BlurType t, scalar sigma)
+{
+    auto filter = SkMaskFilter::MakeBlur(static_cast<SkBlurStyle>(t), sigma);
+    auto maskFilter = std::make_shared<SkiaMaskFilter>();
+    maskFilter->SetSkMaskFilter(filter);
+    return maskFilter;
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

@@ -1393,7 +1393,7 @@ void RSRenderNode::CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd)
 
 bool RSRenderNode::IsForcedDrawInGroup() const
 {
-    return (nodeGroupType_ == NodeGroupType::GROUPED_BY_USER) && (renderProperties_.GetAlpha() < 1.f);
+    return nodeGroupType_ == NodeGroupType::GROUPED_BY_USER;
 }
 
 bool RSRenderNode::IsSuggestedDrawInGroup() const

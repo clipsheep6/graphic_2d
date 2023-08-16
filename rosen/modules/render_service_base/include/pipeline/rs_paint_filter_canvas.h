@@ -37,8 +37,6 @@
 namespace OHOS {
 namespace Rosen {
 
-
-
 #ifdef USE_ROSEN_DRAWING
 class RSB_EXPORT RSPaintFilterCanvasBase : public Drawing::Canvas {
 public:

@@ -19,8 +19,6 @@
 #include <stdint.h>
 #include <string>
 
-#include "platform/common/rs_log.h"
-
 namespace OHOS {
 namespace Rosen {
 /*
@@ -44,9 +42,7 @@ template<typename CodeEnumType>
 inline void CheckCodeUnderlyingTypeStandardized(const std::string& CodeEnumTypeName = "RSInterfaceCode")
 {
     constexpr bool isStandardized = std::is_same<std::underlying_type_t<CodeEnumType>, CodeUnderlyingType>::value;
-    if (!isStandardized) {
-        ROSEN_LOGW("The underlying type of %s does not accord with standardized definition.", CodeEnumTypeName.c_str());
-    }
+    if (!isStandardized) {}
 }
 } // namespace Rosen
 } // namespace OHOS

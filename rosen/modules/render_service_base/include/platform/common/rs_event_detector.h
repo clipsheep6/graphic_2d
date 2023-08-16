@@ -19,7 +19,6 @@
 #include <map>
 #include <memory>
 #include <atomic>
-#include "rs_log.h"
 #include "base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include/hisysevent.h"
 
 namespace OHOS {
@@ -50,7 +49,6 @@ public:
     virtual ~RSBaseEventDetector()
     {
         ClearParamList();
-        RS_LOGD("RSBaseEventDetector::~RSBaseEventDetector finish");
     }
 
     std::string GetStringId()
@@ -86,7 +84,6 @@ protected:
         paramList_.clear();
         std::map<std::string, std::string> tempParamList;
         paramList_.swap(tempParamList);
-        RS_LOGD("RSBaseEventDetector::ClearParamList finish");
     }
 
     std::map<std::string, std::string> paramList_; // key: paramName

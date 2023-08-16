@@ -22,7 +22,6 @@
 
 #include "common/rs_color_palette.h"
 #include "common/rs_vector4.h"
-#include "platform/common/rs_log.h"
 #include "property/rs_properties_def.h"
 
 #ifndef USE_ROSEN_DRAWING

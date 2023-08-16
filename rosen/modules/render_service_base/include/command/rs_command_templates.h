@@ -18,7 +18,6 @@
 
 #include "command/rs_command.h"
 #include "command/rs_command_factory.h"
-#include "platform/common/rs_log.h"
 #include "transaction/rs_marshalling_helper.h"
 
 namespace OHOS {

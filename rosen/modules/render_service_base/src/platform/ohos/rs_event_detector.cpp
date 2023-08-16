@@ -14,6 +14,7 @@
  */
 
 #include "platform/common/rs_event_manager.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -34,7 +35,7 @@ std::shared_ptr<RSBaseEventDetector> RSBaseEventDetector::CreateRSTimeOutDetecto
 RSTimeOutDetector::RSTimeOutDetector(int timeOutThresholdMs,
     std::string detectorStringId) :RSBaseEventDetector(detectorStringId)
 {
-    RS_LOGD("RSTimeOutDetector ::RSTimeOutDetector timeOutThresholdMs is %d ", timeOutThresholdMs);
+    RS_LOGD("RSTimeOutDetector ::RSTimeOutDetector timeOutThresholdMs is %{public}d ", timeOutThresholdMs);
     timeOutThresholdMs_ = timeOutThresholdMs;
     paramList_["timeOutThresholdMs"] = std::to_string(timeOutThresholdMs_);
 }

@@ -24,7 +24,6 @@
 
 #include "common/rs_macros.h"
 #include "delegate/rs_delegate.h"
-#include "platform/common/rs_log.h"
 #include "rs_listened_canvas.h"
 
 namespace OHOS {
@@ -57,7 +56,6 @@ public:
         if (enabled_ == true && canvas != nullptr) {
             auto listener = std::make_shared<RSCanvasListenerImpl>(*canvas);
             if (listener->IsValid() == false) {
-                ROSEN_LOGD("CreateListener %s failed", listener->Name());
                 return nullptr;
             }
             return listener;

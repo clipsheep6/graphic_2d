@@ -202,7 +202,7 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
     RS_OPTIONAL_TRACE_FUNC_END();
 }
 
-CachedEffectData RSFilterCacheManager::GeneratedCachedEffectData(
+RSPaintFilterCanvas::CachedEffectData RSFilterCacheManager::GeneratedCachedEffectData(
     RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter)
 {
     // This function is similar to RSFilterCacheManager::DrawFilter, but does not draw anything on the canvas. Instead,

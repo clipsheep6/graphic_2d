@@ -805,15 +805,13 @@ void RSSurfaceRenderNode::UpdateFilterCacheStatusIfNodeStatic(const RectI& clipR
         }
         node->UpdateFilterCacheWithDirty(*dirtyManager_, false);
         node->UpdateFilterCacheWithDirty(*dirtyManager_, true);
-        // collect valid filter nodes for occlusion optimization
-        if (node->IsFilterCacheValid()) {
-            dirtyManager_->UpdateCacheableFilterRect(node->GetOldDirtyInSurface());
-        }
         return false;
     });
+    SetFilterCacheFullyCovered(false);
     if (IsTransparent() && dirtyManager_->IfCacheableFilterRectFullyCover(GetOldDirtyInSurface())) {
         SetFilterCacheFullyCovered(true);
-        RS_LOGD("UpdateFilterCacheStatusIfNodeStatic surfacenode %" PRIu64 " [%s]", GetId(), GetName().c_str());
+        RS_TRACE_NAME_FMT("UpdateFilterCacheStatusIfNodeStatic surfacenode %" PRIu64 " [%s] rectsize %s",
+            GetId(), GetName().c_str(), GetOldDirtyInSurface().ToString().c_str());
     }
 #endif
 }

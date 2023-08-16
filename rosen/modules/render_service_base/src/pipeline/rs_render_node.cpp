@@ -34,6 +34,7 @@
 #include "property/rs_property_trace.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
+#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -698,23 +699,6 @@ void RSRenderNode::UpdateParentChildrenRect(std::shared_ptr<RSRenderNode> parent
     }
 }
 
-bool RSRenderNode::IsFilterCacheValid() const
-{
-    if (!RSProperties::FilterCacheEnabled) {
-        return false;
-    }
-#ifndef USE_ROSEN_DRAWING
-    // background filter
-    auto& bgManager = renderProperties_.GetFilterCacheManager(false);
-    // foreground filter
-    auto& frManager = renderProperties_.GetFilterCacheManager(true);
-    if ((bgManager && bgManager->IsCacheValid()) || (frManager && frManager->IsCacheValid())) {
-        return true;
-    }
-#endif
-    return false;
-}
-
 void RSRenderNode::UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground) const
 {
 #ifndef USE_ROSEN_DRAWING
@@ -736,6 +720,12 @@ void RSRenderNode::UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager
     auto isCachedImageRegionIntersectedWithDirtyRegion =
         cachedImageRect.IntersectRect(dirtyManager.GetIntersectedVisitedDirtyRect(geoPtr->GetAbsRect()));
     manager->UpdateCacheStateWithDirtyRegion(isCachedImageRegionIntersectedWithDirtyRegion);
+    // record node's cache area if it has valid filter cache
+    if (manager->IsCacheValid()) {
+        dirtyManager.UpdateCacheableFilterRect(cachedImageRect);
+        RS_TRACE_NAME_FMT("UpdateFilterCacheWithDirty validcache node %llu cacheregion %s",
+            GetId(), cachedImageRect.ToString().c_str());
+    }
 #endif
 }
 

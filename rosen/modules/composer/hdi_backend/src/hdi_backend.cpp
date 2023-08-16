@@ -53,6 +53,30 @@ RosenError HdiBackend::RegScreenHotplug(OnScreenHotplugFunc func, void* data)
     return ROSEN_ERROR_OK;
 }
 
+RosenError HdiBackend::RegSeamlessChange(OnSeamlessChangeFunc callback, void *data)
+{
+    if (callback == nullptr) {
+        HLOGE("OnSeamlessChangeFunc is null");
+        return ROSEN_ERROR_INVALID_ARGUMENTS;
+    }
+
+    onSeamlessChangeCb_ = callback;
+    onSeamlessChangeData_ = data;
+
+    RosenError retCode = InitDevice();
+    if (retCode != ROSEN_ERROR_OK) {
+        return retCode;
+    }
+
+    int32_t ret = device_->RegSeamlessChangeCallback(HdiBackend::OnSeamlessChangeEvent, this);
+    if (!ret) {
+        HLOGE("RegSeamlessChangeCallback failed, ret is %{public}d", ret);
+        return ROSEN_ERROR_API_FAILED;
+    }
+
+    return ROSEN_ERROR_OK;
+}
+
 RosenError HdiBackend::RegPrepareComplete(OnPrepareCompleteFunc func, void* data)
 {
     if (func == nullptr) {
@@ -190,6 +214,19 @@ void HdiBackend::ReorderLayerInfo(std::vector<LayerInfoPtr> &newLayerInfos)
     std::sort(newLayerInfos.begin(), newLayerInfos.end(), Cmp);
 }
 
+void HdiBackend::OnSeamlessChange(uint32_t screenId)
+{
+    auto iter = outputs_.find(screenId);
+    if (iter == outputs_.end()) {
+        HLOGE("invalid hotplug screen id[%{public}u]", screenId);
+        return;
+    }
+
+    if (onSeamlessChangeCb_ != nullptr) {
+        onSeamlessChangeCb_(iter->second, onHotPlugCbData_);
+    }
+}
+
 void HdiBackend::OnHdiBackendHotPlugEvent(uint32_t screenId, bool connected, void *data)
 {
     HLOGI("HotPlugEvent, screenId is %{public}u, connected is %{public}u", screenId, connected);
@@ -201,6 +238,19 @@ void HdiBackend::OnHdiBackendHotPlugEvent(uint32_t screenId, bool connected, voi
     }
 
     hdiBackend->OnHdiBackendConnected(screenId, connected);
+}
+
+void HdiBackend::OnSeamlessChangeEvent(uint32_t deviceId, void *data)
+{
+    HLOGI("SeamlessChangeEvent, screenId is %{public}u", deviceId);
+    HdiBackend *hdiBackend = nullptr;
+    if (data != nullptr) {
+        hdiBackend = static_cast<HdiBackend *>(data);
+    } else {
+        hdiBackend = HdiBackend::GetInstance();
+    }
+
+    hdiBackend->OnSeamlessChange(deviceId);
 }
 
 void HdiBackend::OnHdiBackendConnected(uint32_t screenId, bool connected)

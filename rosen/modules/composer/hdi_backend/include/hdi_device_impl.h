@@ -31,10 +31,12 @@ public:
     int32_t RegHotPlugCallback(HotPlugCallback callback, void *data) override;
     int32_t RegScreenVBlankCallback(uint32_t screenId, VBlankCallback callback, void *data) override;
     bool RegHwcDeadCallback(OnHwcDeadCallback callback, void *data) override;
+    int32_t RegSeamlessChangeCallback(OnSeamlessChange callback, void *data) override;
+    int32_t GetScreenVblankPeriod(uint32_t screenId, uint64_t &period) override;
     int32_t GetScreenCapability(uint32_t screenId, GraphicDisplayCapability &info) override;
     int32_t GetScreenSupportedModes(uint32_t screenId, std::vector<GraphicDisplayModeInfo> &modes) override;
     int32_t GetScreenMode(uint32_t screenId, uint32_t &modeId) override;
-    int32_t SetScreenMode(uint32_t screenId, uint32_t modeId) override;
+    int32_t SetScreenMode(uint32_t screenId, uint32_t modeId, DisplayModeCallback callback) override;
     int32_t GetScreenPowerStatus(uint32_t screenId, GraphicDispPowerStatus &status) override;
     int32_t SetScreenPowerStatus(uint32_t screenId, GraphicDispPowerStatus status) override;
     int32_t GetScreenBacklight(uint32_t screenId, uint32_t &level) override;

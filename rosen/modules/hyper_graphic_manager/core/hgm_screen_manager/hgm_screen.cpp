@@ -76,7 +76,7 @@ int32_t HgmScreen::SetRefreshRateRange(uint32_t minRate, uint32_t maxRate)
     return EXEC_SUCCESS;
 }
 
-int32_t HgmScreen::AddScreenModeInfo(int32_t width, int32_t height, uint32_t rate, int32_t modeId)
+int32_t HgmScreen::AddScreenModeInfo(int32_t width, int32_t height, uint32_t rate, int32_t modeId, int32_t group)
 {
     if (supportedModeIds_.find(modeId) == supportedModeIds_.end()) {
         supportedModeIds_.emplace(modeId);
@@ -88,7 +88,7 @@ int32_t HgmScreen::AddScreenModeInfo(int32_t width, int32_t height, uint32_t rat
         supportedRefreshRates_.emplace(rate);
     }
 
-    auto newProfile = std::make_shared<ScreenProfile>(width, height, rate, modeId);
+    auto newProfile = std::make_shared<ScreenProfile>(width, height, rate, modeId, group);
     screenModeInfos_.emplace_back(newProfile);
     return EXEC_SUCCESS;
 }

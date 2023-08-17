@@ -43,13 +43,11 @@ public:
         int style, float dipScale, BLUR_COLOR_MODE mode = DEFAULT, float ratio = 1.0);
     static std::shared_ptr<RSFilter> CreateMaterialFilter(
         float radius, float saturation, float brightness, uint32_t colorValue);
-    static std::shared_ptr<RSFilter> CreateLightUpEffectFilter(float lightUpDegree);
 
     enum FilterType {
         NONE = 0,
         BLUR,
         MATERIAL,
-        LIGHT_UP_EFFECT,
     };
     FilterType GetFilterType() const
     {

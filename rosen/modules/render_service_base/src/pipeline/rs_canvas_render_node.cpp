@@ -30,7 +30,6 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_blur_filter.h"
-#include "render/rs_light_up_effect_filter.h"
 #include "platform/common/rs_log.h"
 #include "visitor/rs_node_visitor.h"
 

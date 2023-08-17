@@ -302,7 +302,7 @@ void RSUniRenderVisitor::SetNodeCacheChangeStatus(RSBaseRenderNode& node, int ma
         std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
         cacheRenderNodeMapCnt = cacheRenderNodeMap.count(node.GetId());
     }
-    if ((cacheRenderNodeMapCnt == 0 || isDrawingCacheChanged_) &&
+    if ((cacheRenderNodeMapCnt == 0 || isDrawingCacheChanged_) && !node.IsForcedDrawInGroup() &&
         ((markedCachedNodeCnt != markedCachedNodes_) || node.HasChildrenOutOfRect() || childHasSurface_)) {
         node.SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
     }
@@ -2841,25 +2841,26 @@ void RSUniRenderVisitor::DrawSpherize(RSRenderNode& node)
 }
 
 bool RSUniRenderVisitor::DrawBlurInCache(RSRenderNode& node) {
-    if (!curCacheFilterRects_.empty()) {
-        if (curCacheFilterRects_.top().count(node.GetId())) {
-            if (curGroupedNodes_.empty()) {
-                // draw filter before drawing cached surface
-                curCacheFilterRects_.top().erase(node.GetId());
-                if (curCacheFilterRects_.empty() || !node.ChildHasFilter()) {
-                    // no filter to draw, return
-                    return true;
-                }
-            } else if (node.GetRenderProperties().GetBackgroundFilter() || node.GetRenderProperties().GetUseEffect()) {
-                // clear hole while generating cache surface
-                SkAutoCanvasRestore arc(canvas_.get(), true);
-                canvas_->clipRect(RSPropertiesPainter::Rect2SkRect(node.GetRenderProperties().GetBoundsRect()));
-                canvas_->clear(SK_ColorTRANSPARENT);
+    if (curCacheFilterRects_.empty()) {
+        return false;
+    }
+    if (curCacheFilterRects_.top().count(node.GetId())) {
+        if (curGroupedNodes_.empty()) {
+            // draw filter before drawing cached surface
+            curCacheFilterRects_.top().erase(node.GetId());
+            if (curCacheFilterRects_.empty() || !node.ChildHasFilter()) {
+                // no filter to draw, return
+                return true;
             }
-        } else if (curGroupedNodes_.empty() && !node.ChildHasFilter()) {
-            // no filter to draw, return
-            return true;
+        } else if (node.GetRenderProperties().GetBackgroundFilter() || node.GetRenderProperties().GetUseEffect()) {
+            // clear hole while generating cache surface
+            SkAutoCanvasRestore arc(canvas_.get(), true);
+            canvas_->clipRect(RSPropertiesPainter::Rect2SkRect(node.GetRenderProperties().GetBoundsRect()));
+            canvas_->clear(SK_ColorTRANSPARENT);
         }
+    } else if (curGroupedNodes_.empty() && !node.ChildHasFilter()) {
+        // no filter to draw, return
+        return true;
     }
     return false;
 }
@@ -3405,6 +3406,10 @@ void RSUniRenderVisitor::ChangeCacheRenderNodeMap(RSRenderNode& node, const uint
 
 void RSUniRenderVisitor::UpdateCacheRenderNodeMapWithBlur(RSRenderNode& node)
 {
+    if (allCacheFilterRects_[node.GetId()].empty()) {
+        UpdateCacheRenderNodeMap(node);
+        return;
+    }
     curCacheFilterRects_.push(allCacheFilterRects_[node.GetId()]);
     auto canvasType = canvas_->GetCacheType();
     canvas_->SetCacheType(RSPaintFilterCanvas::CacheType::OFFSCREEN);

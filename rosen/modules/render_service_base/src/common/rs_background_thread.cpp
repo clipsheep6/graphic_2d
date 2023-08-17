@@ -35,4 +35,91 @@ void RSBackgroundThread::PostTask(const std::function<void()>& task)
         handler_->PostTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
 }
+
+void RSBackgroundThread::InitRenderContext(RenderContext* context)
+{
+    renderContext_ = context;
+    PostTask([this]() {
+	    grContext_ = CreateShareGrContext();
+    });
+}
+
+void RSBackgroundThread::CreateShareEglContext()
+{
+#ifdef RS_ENABLE_GL
+    if (renderContext_ == nullptr) {
+        RS_LOGE("renderContext_ is nullptr.");
+        return;
+    }
+    eglShareContext_ = renderContext_->CreateShareContext();
+    if (eglShareContext_ == EGL_NO_CONTEXT) {
+        RS_LOGE("eglShareContext_ is EGL_NO_CONTEXT");
+        return;
+    }
+    if (!eglMakeCurrent(renderContext_->GetEGLDisplay(), EGL_NO_SURFACE, EGL_NO_SURFACE, eglShareContext_)) {
+        RS_LOGE("eglMakeCurrent failed.");
+        return;
+    }
+#endif
+}
+
+#ifndef USE_ROSEN_DRAWING
+#ifdef NEW_SKIA
+sk_sp<GrDirectContext> RSBackgroundThread::CreateShareGrContext()
+#else
+sk_sp<GrContext> RSBackgroundThread::CreateShareGrContext()
+#endif
+{
+    RS_TRACE_NAME("CreateShareGrContext");
+    CreateShareEglContext();
+    const GrGLInterface* glGlInterface = GrGLCreateNativeInterface();
+    sk_sp<const GrGLInterface> glInterface(glGlInterface);
+    if (glInterface.get() == nullptr) {
+        RS_LOGE("GrGLCreateNativeInterface failed.");
+        return nullptr;
+    }
+
+    GrContextOptions options = {};
+    options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+    options.fPreferExternalImagesOverES3 = true;
+    options.fDisableDistanceFieldPaths = true;
+
+    auto handler = std::make_shared<MemoryHandler>();
+    auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    auto size = glesVersion ? strlen(glesVersion) : 0;
+    /* /data/service/el0/render_service is shader cache dir*/
+    handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
+
+#ifdef NEW_SKIA
+    sk_sp<GrDirectContext> grContext = GrDirectContext::MakeGL(std::move(glInterface), options);
+#else
+    sk_sp<GrContext> grContext = GrContext::MakeGL(std::move(glInterface), options);
+#endif
+    if (grContext == nullptr) {
+        RS_LOGE("nullptr grContext is null");
+        return nullptr;
+    }
+    return grContext;
+}
+
+#else
+std::shared_ptr<Drawing::GPUContext> RSBackgroundThread::CreateShareGrContext()
+{
+    RS_TRACE_NAME("CreateShareGrContext");
+    CreateShareEglContext();
+    auto gpuContext = std::make_shared<Drawing::GPUContext>();
+    Drawing::GPUContextOptions options;
+    auto handler = std::make_shared<MemoryHandler>();
+    auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    auto size = glesVersion ? strlen(glesVersion) : 0;
+    /* /data/service/el0/render_service is shader cache dir*/
+    handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
+
+    if (!gpuContext->BuildFromGL(options)) {
+        RS_LOGE("nullptr gpuContext is null");
+        return nullptr;
+    }
+    return gpuContext;
+}
+#endif
 }

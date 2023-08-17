@@ -25,7 +25,7 @@ ohos_unittest("RSRenderServiceClientAnimationTest") {
   configs = [
     ":ui_test",
     "$ace_root:ace_test_config",
-    "//../../../../../render_service_client:render_service_client_config",
+    "../../../../../render_service_client:render_service_client_config",
   ]
 
   deps = [
@@ -45,7 +45,7 @@ config("ui_test") {
   visibility = [ ":*" ]
   include_dirs = [
     "$ace_root",
-    "//../../../../modules/render_service_client",
+    "../../../../modules/render_service_client",
   ]
 }
 

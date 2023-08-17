@@ -25,7 +25,6 @@
 
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkColorFilter.h"
-#include "include/core/SkPath.h"
 #include "include/core/SkSurface.h"
 #else
 #include "draw/canvas.h"
@@ -38,13 +37,7 @@
 namespace OHOS {
 namespace Rosen {
 
-#ifndef USE_ROSEN_DRAWING
-struct CachedEffectData {
-    sk_sp<SkImage> cachedImage_ = nullptr;
-    SkIRect cachedRect_ = SkIRect::MakeEmpty();
-    SkPath childrenPath_;
-};
-#endif
+
 
 #ifdef USE_ROSEN_DRAWING
 class RSB_EXPORT RSPaintFilterCanvasBase : public Drawing::Canvas {
@@ -205,13 +198,21 @@ public:
     }
 
 #ifndef USE_ROSEN_DRAWING
-    // effect cache data related
-    void SetEffectData(const CachedEffectData& effectData);
-    void SetChildrenPath(const SkPath& childrenPath);
-    const CachedEffectData& GetEffectData() const;
+    // effect cache data relate
+    struct CachedEffectData {
+        sk_sp<SkImage> cachedImage_ = nullptr;
+        SkIRect cachedRect_ = SkIRect::MakeEmpty();
+    };
+    void SetEffectData(const std::optional<CachedEffectData>& effectData);
+    const std::optional<CachedEffectData>& GetEffectData() const;
 
-    void SaveEffectData();
-    void RestoreEffectData();
+    struct CanvasStatus {
+        float alpha_;
+        SkMatrix matrix_;
+        std::optional<CachedEffectData> effectData_;
+    };
+    CanvasStatus GetCanvasStatus() const;
+    void SetCanvasStatus(const CanvasStatus& status);
 #endif
 
 protected:
@@ -237,7 +238,8 @@ private:
     std::stack<float> alphaStack_;
 #ifndef USE_ROSEN_DRAWING
     using Env = struct {
-        Color envForegroundColor;
+        Color envForegroundColor_;
+        std::optional<CachedEffectData> effectData_;
     };
 #endif
     std::stack<Env> envStack_;
@@ -251,16 +253,13 @@ private:
 #endif
 
     bool isParallelCanvas_ = false;
-#ifndef USE_ROSEN_DRAWING
-    std::stack<CachedEffectData> effectStack_;
-#endif
 };
 
 // This class extends RSPaintFilterCanvas to also create a color filter for the paint.
 class RSB_EXPORT RSColorFilterCanvas : public RSPaintFilterCanvas {
 public:
     explicit RSColorFilterCanvas(RSPaintFilterCanvas* canvas);
-    ~RSColorFilterCanvas() override {};
+    ~RSColorFilterCanvas() override = default;
 
 #ifdef USE_ROSEN_DRAWING
     CoreCanvas& AttachPen(const Drawing::Pen& pen) override;

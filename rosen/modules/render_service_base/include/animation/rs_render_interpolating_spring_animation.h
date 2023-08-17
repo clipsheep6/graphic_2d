@@ -37,21 +37,30 @@ public:
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static RSRenderInterpolatingSpringAnimation* Unmarshalling(Parcel& parcel);
 #endif
+
+    void SetZeroThreshold(float zeroThreshold);
+
 protected:
     void OnSetFraction(float fraction) override;
     void OnAnimate(float fraction) override;
     void InitValueEstimator() override;
     void OnInitialize(int64_t time) override;
+    bool SupportLogicallyFinishCallback() const override;
 
 private:
 #ifdef ROSEN_OHOS
     bool ParseParam(Parcel& parcel) override;
 #endif
     RSRenderInterpolatingSpringAnimation() = default;
+    std::shared_ptr<RSRenderPropertyBase> CalculateVelocity(float time) const;
 
     std::shared_ptr<RSRenderPropertyBase> startValue_;
     std::shared_ptr<RSRenderPropertyBase> endValue_;
     float normalizedInitialVelocity_ = 0.0;
+    bool isFinishCallbackCalled_ = false;
+
+    // used to determine whether the animation is near finish
+    float zeroThreshold_ = 1.0f / 256.0f;
 };
 
 } // namespace Rosen

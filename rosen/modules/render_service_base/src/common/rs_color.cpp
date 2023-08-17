@@ -44,6 +44,12 @@ bool RSColor::operator==(const RSColor& rhs) const
     return red_ == rhs.red_ && green_ == rhs.green_ && blue_ == rhs.blue_ && alpha_ == rhs.alpha_;
 }
 
+bool RSColor::IsNearEqual(const RSColor& other, int16_t threshold) const
+{
+    return (std::abs(red_ - other.red_) <= threshold) && (std::abs(green_ - other.green_) <= threshold) &&
+           (std::abs(blue_ - other.blue_) <= threshold) && (std::abs(alpha_ - other.alpha_) <= threshold);
+}
+
 RSColor RSColor::operator+(const RSColor& rhs) const
 {
     return RSColor(red_ + rhs.red_, green_ + rhs.green_, blue_ + rhs.blue_, alpha_ + rhs.alpha_);

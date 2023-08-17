@@ -68,7 +68,11 @@ int RSImplicitAnimator::OpenImplicitAnimation(std::shared_ptr<AnimationFinishCal
     } else {
         // copy current implicit animation params and replace finish callback
         [[maybe_unused]] const auto& [protocol, curve, unused, unused_repeatCallback] = globalImplicitParams_.top();
-        return OpenImplicitAnimation(protocol, curve, std::move(finishCallback));
+        // the finishCallback will always be invoked when animation is completely finished,
+        // and need to close the logically finish callback
+        auto newProtocol = protocol;
+        newProtocol.SetIsLogicallyFinishCallback(false);
+        return OpenImplicitAnimation(newProtocol, curve, std::move(finishCallback));
     }
 }
 

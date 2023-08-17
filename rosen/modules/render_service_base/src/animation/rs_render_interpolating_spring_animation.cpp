@@ -24,6 +24,7 @@ namespace Rosen {
 namespace {
 constexpr float SECOND_TO_MILLISECOND = 1e3;
 constexpr float MILLISECOND_TO_SECOND = 1e-3;
+constexpr float FRAME_TIME_INTERVAL = 1.0f / 60.0f;
 } // namespace
 
 RSRenderInterpolatingSpringAnimation::RSRenderInterpolatingSpringAnimation(AnimationId id, const PropertyId& propertyId,
@@ -60,7 +61,8 @@ bool RSRenderInterpolatingSpringAnimation::Marshalling(Parcel& parcel) const
     if (!(RSMarshallingHelper::Marshalling(parcel, response_) &&
             RSMarshallingHelper::Marshalling(parcel, dampingRatio_) &&
             RSMarshallingHelper::Marshalling(parcel, normalizedInitialVelocity_) &&
-            RSMarshallingHelper::Marshalling(parcel, minimumAmplitudeRatio_))) {
+            RSMarshallingHelper::Marshalling(parcel, minimumAmplitudeRatio_) &&
+            RSMarshallingHelper::Marshalling(parcel, zeroThreshold_))) {
         ROSEN_LOGE("RSRenderInterpolatingSpringAnimation::Marshalling, invalid parametter failed");
         return false;
     }
@@ -94,7 +96,8 @@ bool RSRenderInterpolatingSpringAnimation::ParseParam(Parcel& parcel)
     if (!(RSMarshallingHelper::Unmarshalling(parcel, response_) &&
             RSMarshallingHelper::Unmarshalling(parcel, dampingRatio_) &&
             RSMarshallingHelper::Unmarshalling(parcel, normalizedInitialVelocity_) &&
-            RSMarshallingHelper::Unmarshalling(parcel, minimumAmplitudeRatio_))) {
+            RSMarshallingHelper::Unmarshalling(parcel, minimumAmplitudeRatio_) &&
+            RSMarshallingHelper::Unmarshalling(parcel, zeroThreshold_))) {
         return false;
     }
 
@@ -123,6 +126,18 @@ void RSRenderInterpolatingSpringAnimation::OnAnimate(float fraction)
     auto mappedTime = fraction * GetDuration() * MILLISECOND_TO_SECOND;
     float displacement = 1.0f + CalculateDisplacement(mappedTime);
     valueEstimator_->UpdateAnimationValue(displacement, GetAdditive());
+    if (!isFinishCallbackCalled_ && GetIsLogicallyFinishCallback() &&
+        (animationFraction_.GetRemainingRepeatCount() == 1)) {
+        auto interpolationValue = valueEstimator_->Estimate(displacement, startValue_, endValue_);
+        auto endValue = animationFraction_.GetCurrentIsReverseCycle() ? startValue_ : endValue_;
+        auto velocity = CalculateVelocity(mappedTime);
+        auto zeroValue = startValue_ - startValue_;
+        if (interpolationValue->IsNearEqual(endValue, zeroThreshold_) &&
+            (velocity * FRAME_TIME_INTERVAL)->IsNearEqual(zeroValue, zeroThreshold_)) {
+            CallLogicallyFinishCallback();
+            isFinishCallbackCalled_ = true;
+        }
+    }
 }
 
 void RSRenderInterpolatingSpringAnimation::OnInitialize(int64_t time)
@@ -143,6 +158,28 @@ void RSRenderInterpolatingSpringAnimation::InitValueEstimator()
         valueEstimator_ = property_->CreateRSValueEstimator(RSValueEstimatorType::CURVE_VALUE_ESTIMATOR);
     }
     valueEstimator_->InitCurveAnimationValue(property_, startValue_, endValue_, lastValue_);
+}
+
+bool RSRenderInterpolatingSpringAnimation::SupportLogicallyFinishCallback() const
+{
+    return true;
+}
+
+std::shared_ptr<RSRenderPropertyBase> RSRenderInterpolatingSpringAnimation::CalculateVelocity(float time) const
+{
+    float TIME_INTERVAL = 1e-6f; // 1e-6f : 1 microsecond
+    float currentDisplacement = 1.0f + CalculateDisplacement(time);
+    float nextDisplacement = 1.0f + CalculateDisplacement(time + TIME_INTERVAL);
+    auto velocity = (valueEstimator_->Estimate(nextDisplacement, startValue_, endValue_) -
+                        valueEstimator_->Estimate(currentDisplacement, startValue_, endValue_)) *
+                    (1 / TIME_INTERVAL);
+
+    return velocity;
+}
+
+void RSRenderInterpolatingSpringAnimation::SetZeroThreshold(float zeroThreshold)
+{
+    zeroThreshold_ = zeroThreshold;
 }
 } // namespace Rosen
 } // namespace OHOS

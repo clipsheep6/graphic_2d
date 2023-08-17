@@ -56,6 +56,16 @@ const RSAnimationTimingCurve& RSInterpolatingSpringAnimation::GetTimingCurve() c
     return timingCurve_;
 }
 
+bool RSInterpolatingSpringAnimation::SupportLogicallyFinishCallback() const
+{
+    return true;
+}
+
+void RSInterpolatingSpringAnimation::SetZeroThreshold(const float zeroThreshold)
+{
+    zeroThreshold_ = zeroThreshold;
+}
+
 void RSInterpolatingSpringAnimation::OnStart()
 {
     RSPropertyAnimation::OnStart();
@@ -66,6 +76,7 @@ void RSInterpolatingSpringAnimation::OnStart()
     UpdateParamToRenderAnimation(animation);
     animation->SetSpringParameters(timingCurve_.response_, timingCurve_.dampingRatio_, timingCurve_.initialVelocity_);
     animation->SetAdditive(GetAdditive());
+    animation->SetZeroThreshold(zeroThreshold_);
     if (isCustom_) {
         animation->AttachRenderProperty(property_->GetRenderProperty());
         StartUIAnimation(animation);

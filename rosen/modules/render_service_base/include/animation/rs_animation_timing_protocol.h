@@ -74,6 +74,11 @@ public:
         range_ = range;
     }
 
+    void SetIsLogicallyFinishCallback(bool isLogicallyFinishCallback)
+    {
+        isLogicallyFinishCallback_ = isLogicallyFinishCallback;
+    }
+
     int GetDuration() const
     {
         return duration_;
@@ -114,6 +119,11 @@ public:
         return range_;
     }
 
+    bool GetIsLogicallyFinishCallback() const
+    {
+        return isLogicallyFinishCallback_; 
+    }
+
     static const RSAnimationTimingProtocol DEFAULT;
     static const RSAnimationTimingProtocol IMMEDIATE;
 
@@ -126,6 +136,7 @@ protected:
     FillMode fillMode_ { FillMode::FORWARDS };
     bool isForward_ { true };
     FrameRateRange range_ = {0, 0, 0};
+    bool isLogicallyFinishCallback_ { false };
 };
 } // namespace Rosen
 } // namespace OHOS

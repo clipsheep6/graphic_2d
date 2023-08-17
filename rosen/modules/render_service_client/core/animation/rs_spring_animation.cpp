@@ -55,6 +55,16 @@ const RSAnimationTimingCurve& RSSpringAnimation::GetTimingCurve() const
     return timingCurve_;
 }
 
+void RSSpringAnimation::SetZeroThreshold(const float zeroThreshold)
+{
+    zeroThreshold_ = zeroThreshold;
+}
+
+bool RSSpringAnimation::SupportLogicallyFinishCallback() const
+{
+    return true;
+}
+
 void RSSpringAnimation::OnStart()
 {
     RSPropertyAnimation::OnStart();
@@ -65,6 +75,7 @@ void RSSpringAnimation::OnStart()
     UpdateParamToRenderAnimation(animation);
     animation->SetSpringParameters(timingCurve_.response_, timingCurve_.dampingRatio_, timingCurve_.blendDuration_);
     animation->SetAdditive(GetAdditive());
+    animation->SetZeroThreshold(zeroThreshold_);
     if (isCustom_) {
         animation->AttachRenderProperty(property_->GetRenderProperty());
         StartUIAnimation(animation);

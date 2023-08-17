@@ -80,6 +80,21 @@ void RSAnimation::CallRepeatCallback()
     repeatCallback_->Execute();
 }
 
+bool RSAnimation::SupportLogicallyFinishCallback() const
+{
+    return false;
+}
+
+void RSAnimation::CallLogicallyFinishCallback()
+{
+    if (!SupportLogicallyFinishCallback()) {
+        ROSEN_LOGE(
+            "RSAnimation::CallLogicallyFinishCallback, animation not surpprot to invoke logically finishcallback.");
+        return;
+    }
+    finishCallback_.reset();
+}
+
 AnimationId RSAnimation::GetId() const
 {
     return id_;
@@ -378,6 +393,7 @@ void RSAnimation::UpdateParamToRenderAnimation(const std::shared_ptr<RSRenderAni
     animation->SetDirection(GetDirection());
     animation->SetFillMode(GetFillMode());
     animation->SetRepeatCallbackEnable(repeatCallback_ != nullptr);
+    animation->SetIsLogicallyFinishCallback(GetIsLogicallyFinishCallback());
     auto range = GetFrameRateRange();
     if (range.IsValid()) {
         animation->SetFrameRateRange(range);

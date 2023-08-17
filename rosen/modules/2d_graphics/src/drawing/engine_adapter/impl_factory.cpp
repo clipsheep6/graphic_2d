@@ -127,6 +127,41 @@ std::unique_ptr<RegionImpl> ImplFactory::CreateRegionImpl()
 {
     return EngineImplFactory::CreateRegion();
 }
+
+std::unique_ptr<FontImpl> ImplFactory::CreateFontImpl()
+{
+    return EngineImplFactory::CreateFont();
+}
+
+std::unique_ptr<FontMetricsImpl> ImplFactory::CreateFontMetricsImpl()
+{
+    return EngineImplFactory::CreateFontMetrics();
+}
+
+std::unique_ptr<FontManagerImpl> ImplFactory::CreateFontManagerImpl()
+{
+    return EngineImplFactory::CreateFontManager();
+}
+
+std::unique_ptr<FontStyleSetImpl> ImplFactory::CreateFontStyleSetImpl()
+{
+    return EngineImplFactory::CreateFontStyleSet();
+}
+
+std::unique_ptr<FontStyleImpl> ImplFactory::CreateFontStyleImpl()
+{
+    return EngineImplFactory::CreateFontStyle();
+}
+
+std::unique_ptr<TypefaceImpl> ImplFactory::CreateTypeFaceImpl()
+{
+    return EngineImplFactory::CreateTypeFace();
+}
+
+std::unique_ptr<DashPathEffectImpl> ImplFactory::CreateDashPathEffectImpl()
+{
+    return EngineImplFactory::CreateDashPathEffect();    
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

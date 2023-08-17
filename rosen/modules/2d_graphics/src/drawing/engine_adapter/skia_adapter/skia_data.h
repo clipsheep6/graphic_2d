@@ -50,6 +50,11 @@ public:
      * @brief  Update the member variable to filter, adaptation layer calls.
      */
     void SetSkData(const sk_sp<SkData>& data);
+    
+    /*
+     * @brief  Obtain the data in the path from the three-party database by path
+     */
+    std::shared_ptr<SkiaData> MakeFromFileName(const std::string &path);
 private:
     sk_sp<SkData> skData_;
 };

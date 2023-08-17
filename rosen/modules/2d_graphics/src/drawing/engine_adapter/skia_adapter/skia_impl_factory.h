@@ -36,7 +36,13 @@
 #include "impl_interface/region_impl.h"
 #include "impl_interface/shader_effect_impl.h"
 #include "impl_interface/surface_impl.h"
-
+#include "impl_interface/typeface_impl.h"
+#include "impl_interface/font_impl.h"
+#include "impl_interface/dash_path_effect_impl.h"
+#include "impl_interface/font_manager_impl.h"
+#include "impl_interface/font_metrics_impl.h"
+#include "impl_interface/font_style_set_impl.h"
+#include "impl_interface/font_style_impl.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -65,6 +71,13 @@ public:
     static std::unique_ptr<Matrix44Impl> CreateMatrix44();
     static std::unique_ptr<CameraImpl> CreateCamera();
     static std::unique_ptr<RegionImpl> CreateRegion();
+    static std::unique_ptr<FontImpl> CreateFont();
+    static std::unique_ptr<TypefaceImpl> CreateTypeFace();
+    static std::unique_ptr<DashPathEffectImpl> CreateDashPathEffect();
+    static std::unique_ptr<FontManagerImpl> CreateFontManager();
+    static std::unique_ptr<FontMetricsImpl> CreateFontMetrics();
+    static std::unique_ptr<FontStyleSetImpl> CreateFontStyleSet();
+    static std::unique_ptr<FontStyleImpl> CreateFontStyle();
 };
 } // namespace Drawing
 } // namespace Rosen

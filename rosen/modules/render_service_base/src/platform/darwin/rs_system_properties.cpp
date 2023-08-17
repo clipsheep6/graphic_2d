@@ -195,9 +195,19 @@ bool RSSystemProperties::GetDebugTraceEnabled()
     return false;
 }
 
+bool RSSystemProperties::FindNodeInTargetList(std::string node)
+{
+    return false;
+}
+
 bool RSSystemProperties::GetKawaseEnabled()
 {
     return false;
+}
+
+bool RSSystemProperties::GetBlurEnabled()
+{
+    return true;
 }
 
 bool RSSystemProperties::GetBoolSystemProperty(const char* name, bool defaultValue)

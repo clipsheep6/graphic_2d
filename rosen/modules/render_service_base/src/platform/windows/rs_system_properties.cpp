@@ -190,6 +190,11 @@ bool RSSystemProperties::GetDebugTraceEnabled()
     return false;
 }
 
+bool RSSystemProperties::FindNodeInTargetList(std::string node)
+{
+    return false;
+}
+
 int RSSystemProperties::GetFilterCacheSizeThreshold()
 {
     return 0;
@@ -198,6 +203,11 @@ int RSSystemProperties::GetFilterCacheSizeThreshold()
 bool RSSystemProperties::GetKawaseEnabled()
 {
     return false;
+}
+
+bool RSSystemProperties::GetBlurEnabled()
+{
+    return true;
 }
 
 bool RSSystemProperties::GetBoolSystemProperty(const char* name, bool defaultValue)

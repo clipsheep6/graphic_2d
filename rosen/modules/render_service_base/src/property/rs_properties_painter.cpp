@@ -71,6 +71,7 @@ constexpr float MAX_TRANS_RATIO = 0.95f;
 constexpr float MIN_SPOT_RATIO = 1.0f;
 constexpr float MAX_SPOT_RATIO = 1.95f;
 constexpr float MAX_AMBIENT_RADIUS = 150.0f;
+const bool BLUR_ENABLED = RSSystemProperties::GetBlurEnabled();
 #ifndef USE_ROSEN_DRAWING
 constexpr static float FLOAT_ZERO_THRESHOLD = 0.001f;
 constexpr static uint8_t DIRECTION_NUM = 4;
@@ -237,7 +238,7 @@ bool RSPropertiesPainter::GetGravityMatrix(Gravity gravity, RectF rect, float w,
             return true;
         }
         default: {
-            ROSEN_LOGE("GetGravityMatrix unknow gravity=[%d]", gravity);
+            ROSEN_LOGE("GetGravityMatrix unknow gravity=[%{public}d]", gravity);
             return false;
         }
     }
@@ -357,7 +358,7 @@ bool RSPropertiesPainter::GetGravityMatrix(Gravity gravity, RectF rect, float w,
             return true;
         }
         default: {
-            ROSEN_LOGE("GetGravityMatrix unknow gravity=[%d]", gravity);
+            ROSEN_LOGE("GetGravityMatrix unknow gravity=[%{public}d]", gravity);
             return false;
         }
     }
@@ -1034,6 +1035,10 @@ void RSPropertiesPainter::DrawLinearGradientBlurFilter(
 void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
     FilterType filterType, const std::optional<SkRect>& rect)
 {
+    if (!BLUR_ENABLED) {
+        ROSEN_LOGD("RSPropertiesPainter::DrawFilter close blur.");
+        return;
+    }
     auto& RSFilter =
         (filterType == FilterType::BACKGROUND_FILTER) ? properties.GetBackgroundFilter() : properties.GetFilter();
     if (RSFilter == nullptr || !RSFilter->IsValid()) {
@@ -1086,7 +1091,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         return;
     }
     if (RSSystemProperties::GetImageGpuResourceCacheEnable(imageSnapshot->width(), imageSnapshot->height())) {
-        ROSEN_LOGD("DrawFilter cache image resource(width:%d, height:%d).",
+        ROSEN_LOGD("DrawFilter cache image resource(width:%{public}d, height:%{public}d).",
             imageSnapshot->width(), imageSnapshot->height());
         as_IB(imageSnapshot)->hintCacheGpuResource();
     }
@@ -1239,6 +1244,11 @@ void RSPropertiesPainter::DrawBackgroundEffect(
 
 void RSPropertiesPainter::ApplyBackgroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
+    const auto& [bgImage, imageIRect, unused] = canvas.GetEffectData();
+    if (bgImage == nullptr) {
+        ROSEN_LOGE("RSPropertiesPainter::ApplyBackgroundEffect bgImage null");
+        return;
+    }
 #ifndef USE_ROSEN_DRAWING
     RS_TRACE_NAME("ApplyBackgroundEffect");
     SkAutoCanvasRestore acr(&canvas, true);
@@ -1255,11 +1265,6 @@ void RSPropertiesPainter::ApplyBackgroundEffect(const RSProperties& properties, 
     }
     #endif
 
-    const auto& [bgImage, imageIRect, unused] = canvas.GetEffectData();
-    if (bgImage == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::ApplyBackgroundEffect bgImage null");
-        return;
-    }
     SkPaint defaultPaint;
     // dstRect: canvas clip region
     auto dstRect = SkRect::Make(canvas.getDeviceClipBounds());
@@ -1986,7 +1991,7 @@ void RSPropertiesPainter::DrawSpherize(const RSProperties& properties, RSPaintFi
     float height = imageSnapshot->height();
     float degree = properties.GetSpherize();
     bool isWidthGreater = width > height;
-    ROSEN_LOGI("RSPropertiesPainter::DrawCachedSpherizeSurface spherize degree [%f]", degree);
+    ROSEN_LOGI("RSPropertiesPainter::DrawCachedSpherizeSurface spherize degree [%{public}f]", degree);
 
     const SkPoint texCoords[4] = {
         {0.0f, 0.0f}, {width, 0.0f}, {width, height}, {0.0f, height}
@@ -2200,7 +2205,7 @@ sk_sp<SkShader> RSPropertiesPainter::MakeDynamicLightUpShader(
     )";
     auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
     if (!effect) {
-        ROSEN_LOGE("MakeDynamicLightUpShader::RuntimeShader effect error: %s\n", err.c_str());
+        ROSEN_LOGE("MakeDynamicLightUpShader::RuntimeShader effect error: %{public}s\n", err.c_str());
         return nullptr;
     }
     SkRuntimeShaderBuilder builder(effect);
@@ -2239,10 +2244,11 @@ void RSPropertiesPainter::DrawParticle(const RSProperties& properties, RSPaintFi
             } else {
                 auto image = particles[i]->GetImage();
                 canvas.rotate(particles[i]->GetSpin());
-                float fLeft = 0.0f;
-                float ftop = 0.0f;
-                float fRight = 1.0f;
-                float fBottom = 1.0f;
+                float fLeft = position.x_;
+                float ftop = position.y_;
+                auto imageSize = particles[i]->GetImageSize();
+                float fRight = imageSize.x_;
+                float fBottom = imageSize.y_;
                 SkRect rect { fLeft, ftop, fRight, fBottom };
 #ifdef NEW_SKIA
                 image->CanvasDrawImage(canvas, rect, SkSamplingOptions(), paint, false);

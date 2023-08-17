@@ -41,7 +41,7 @@
       ],
       "deps": {
         "components": [
-          "common",
+          "build_framework",
           "window_manager",
           "resource_management",
           "napi",
@@ -80,10 +80,12 @@
           "libpng",
           "zlib",
           "skia",
-          "cjson",
+          "cJSON",
           "jsoncpp",
           "egl",
-          "opengles"
+          "opengles",
+          "vulkan-headers",
+          "vulkan-loader"
         ]
       },
       "build": {

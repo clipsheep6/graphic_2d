@@ -39,7 +39,7 @@ inline bool IsLargeArea(int width, int height)
 
 void RSFilterCacheManager::UpdateCacheStateWithFilterHash(uint32_t filterHash)
 {
-    if (cacheType_ != CacheType::CACHE_TYPE_FILTERED_SNAPSHOT) {
+    if (cachedFilteredSnapshot_ == nullptr) {
         return;
     }
     // If we are caching a filtered snapshot, we need to check if the filter hash matches.
@@ -52,21 +52,21 @@ void RSFilterCacheManager::UpdateCacheStateWithFilterHash(uint32_t filterHash)
         "RSFilterCacheManager::UpdateCacheStateWithFilterHash Cache expired. Reason: Cached filtered snapshot"
         "%{public}X does not match filter hash %{public}X.",
         cachedFilterHash_, filterHash);
-    InvalidateCache();
+    InvalidateCache(CacheType::CACHE_TYPE_FILTERED_SNAPSHOT);
     RS_OPTIONAL_TRACE_FUNC_END();
 }
 
 void RSFilterCacheManager::UpdateCacheStateWithFilterRegion(const RectI& filterRegion)
 {
-    if (cacheType_ == CacheType::CACHE_TYPE_NONE) {
+    if (!IsCacheValid()) {
         return;
     }
 
     // Test if the filter region is contained in the cached region.
     auto skFilterRegion = SkIRect::MakeLTRB(
         filterRegion.GetLeft(), filterRegion.GetTop(), filterRegion.GetRight(), filterRegion.GetBottom());
-    if (cachedImageRegion_.contains(skFilterRegion)) {
-        filterRegion_ = skFilterRegion;
+    if (snapshotRegion_.contains(skFilterRegion)) {
+        snapshotRegion_ = skFilterRegion;
         return;
     }
     RS_OPTIONAL_TRACE_FUNC_BEGIN();
@@ -78,7 +78,7 @@ void RSFilterCacheManager::UpdateCacheStateWithFilterRegion(const RectI& filterR
 
 void RSFilterCacheManager::UpdateCacheStateWithFilterRegion(bool isCachedRegionCannotCoverFilterRegion)
 {
-    if (cacheType_ == CacheType::CACHE_TYPE_NONE || isCachedRegionCannotCoverFilterRegion == false) {
+    if (isCachedRegionCannotCoverFilterRegion == false || !IsCacheValid()) {
         return;
     }
     RS_OPTIONAL_TRACE_FUNC_BEGIN();
@@ -91,7 +91,7 @@ void RSFilterCacheManager::UpdateCacheStateWithFilterRegion(bool isCachedRegionC
 
 void RSFilterCacheManager::UpdateCacheStateWithDirtyRegion(const RectI& dirtyRegion)
 {
-    if (cacheType_ == CacheType::CACHE_TYPE_NONE) {
+    if (!IsCacheValid()) {
         return;
     }
 
@@ -99,7 +99,7 @@ void RSFilterCacheManager::UpdateCacheStateWithDirtyRegion(const RectI& dirtyReg
     auto SkDirtyRegion =
         SkIRect::MakeLTRB(dirtyRegion.GetLeft(), dirtyRegion.GetTop(), dirtyRegion.GetRight(), dirtyRegion.GetBottom());
     // The underlying image is not affected by the dirty region, cache is valid.
-    if (!SkDirtyRegion.intersect(filterRegion_)) {
+    if (!SkDirtyRegion.intersect(snapshotRegion_)) {
         return;
     }
 
@@ -117,7 +117,7 @@ void RSFilterCacheManager::UpdateCacheStateWithDirtyRegion(const RectI& dirtyReg
 
 void RSFilterCacheManager::UpdateCacheStateWithDirtyRegion(bool isIntersectedWithDirtyRegion)
 {
-    if (cacheType_ == CacheType::CACHE_TYPE_NONE || isIntersectedWithDirtyRegion == false) {
+    if (isIntersectedWithDirtyRegion == false || !IsCacheValid()) {
         return;
     }
     RS_OPTIONAL_TRACE_FUNC_BEGIN();
@@ -133,7 +133,8 @@ void RSFilterCacheManager::UpdateCacheStateWithDirtyRegion(bool isIntersectedWit
     RS_OPTIONAL_TRACE_FUNC_END();
 }
 
-void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter)
+void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter,
+    const std::optional<SkIRect>& srcRect, const std::optional<SkIRect>& dstRect)
 {
     // Filter validation is not needed, since it's already done in RSPropertiesPainter::DrawFilter.
     auto clipIBounds = canvas.getDeviceClipBounds();
@@ -148,96 +149,98 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
 
     ReattachCachedImage(canvas);
 
-    if (cacheType_ == CacheType::CACHE_TYPE_NONE) {
-        // The cache is expired, take a snapshot again.
-        TakeSnapshot(canvas, filter);
-        ClipVisibleRect(canvas);
-        DrawCachedSnapshot(canvas, filter);
-        RS_OPTIONAL_TRACE_FUNC_END();
-        return;
-    }
+    // if (cacheType_ == CacheType::CACHE_TYPE_NONE) {
+    //     // The cache is expired, take a snapshot again.
+    //     TakeSnapshot(canvas, filter);
+    //     ClipVisibleRect(canvas);
+    //     DrawCachedSnapshot(canvas, filter);
+    //     RS_OPTIONAL_TRACE_FUNC_END();
+    //     return;
+    // }
 
-    // Update the cache age, this will ensure that an old cache will be invalidated immediately when intersecting with
-    // dirty region.
-    if (cacheUpdateInterval_ > 0) {
-        --cacheUpdateInterval_;
-    }
-    if (cacheType_ == CacheType::CACHE_TYPE_FILTERED_SNAPSHOT) {
-        // We are caching a filtered snapshot, draw the cached filtered image directly.
-        ClipVisibleRect(canvas);
-        DrawCachedFilteredSnapshot(canvas);
-        RS_OPTIONAL_TRACE_FUNC_END();
-        return;
-    }
+    // // Update the cache age, this will ensure that an old cache will be invalidated immediately when intersecting with
+    // // dirty region.
+    // if (cacheUpdateInterval_ > 0) {
+    //     --cacheUpdateInterval_;
+    // }
+    // if (cacheType_ == CacheType::CACHE_TYPE_FILTERED_SNAPSHOT) {
+    //     // We are caching a filtered snapshot, draw the cached filtered image directly.
+    //     ClipVisibleRect(canvas);
+    //     DrawCachedFilteredSnapshot(canvas);
+    //     RS_OPTIONAL_TRACE_FUNC_END();
+    //     return;
+    // }
 
-    // cacheType_ == CacheType::CACHE_TYPE_SNAPSHOT
-    // We are caching a snapshot, check if we should convert it to a filtered snapshot.
-    auto filterHash = filter->Hash();
-    if (filterHash == cachedFilterHash_ && filterRegion_ == clipIBounds) {
-        // Both filter and filterRegion have not changed, increase the counter.
-        frameSinceLastFilterChange_++;
-    } else {
-        // Filter or filterRegion changed, reset the counter.
-        frameSinceLastFilterChange_ = 0;
-        filterRegion_ = clipIBounds;
-        if (filterHash != cachedFilterHash_) {
-            filter->PreProcess(cachedImage_);
-            cachedFilterHash_ = filterHash;
-        }
-    }
-    // filter has not changed for more than 3 frames, convert the cache image to a filtered image.
-    if (frameSinceLastFilterChange_ >= 3) {
-        ROSEN_LOGD(
-            "RSFilterCacheManager::DrawFilter The filter filter and region have not changed in the last 3 frames, "
-            "generating a filtered image cache.");
-        GenerateFilteredSnapshot(canvas, filter);
-        ClipVisibleRect(canvas);
-        DrawCachedFilteredSnapshot(canvas);
-        RS_OPTIONAL_TRACE_FUNC_END();
-        return;
-    }
+    // // cacheType_ == CacheType::CACHE_TYPE_SNAPSHOT
+    // // We are caching a snapshot, check if we should convert it to a filtered snapshot.
+    // auto filterHash = filter->Hash();
+    // if (filterHash == cachedFilterHash_ && snapshotRegion_ == clipIBounds) {
+    //     // Both filter and filterRegion have not changed, increase the counter.
+    //     frameSinceLastFilterChange_++;
+    // } else {
+    //     // Filter or filterRegion changed, reset the counter.
+    //     frameSinceLastFilterChange_ = 0;
+    //     snapshotRegion_ = clipIBounds;
+    //     if (filterHash != cachedFilterHash_) {
+    //         filter->PreProcess(cachedImage_);
+    //         cachedFilterHash_ = filterHash;
+    //     }
+    // }
+    // // filter has not changed for more than 3 frames, convert the cache image to a filtered image.
+    // if (frameSinceLastFilterChange_ >= 3) {
+    //     ROSEN_LOGD(
+    //         "RSFilterCacheManager::DrawFilter The filter filter and region have not changed in the last 3 frames, "
+    //         "generating a filtered image cache.");
+    //     GenerateFilteredSnapshot(canvas, filter);
+    //     ClipVisibleRect(canvas);
+    //     DrawCachedFilteredSnapshot(canvas);
+    //     RS_OPTIONAL_TRACE_FUNC_END();
+    //     return;
+    // }
 
-    ClipVisibleRect(canvas);
-    DrawCachedSnapshot(canvas, filter);
-    RS_OPTIONAL_TRACE_FUNC_END();
+    // ClipVisibleRect(canvas);
+    // DrawCachedSnapshot(canvas, filter);
+    // RS_OPTIONAL_TRACE_FUNC_END();
 }
 
-RSPaintFilterCanvas::CachedEffectData RSFilterCacheManager::GeneratedCachedEffectData(
-    RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter)
+const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData>& RSFilterCacheManager::GeneratedCachedEffectData(
+    RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter, const std::optional<SkIRect>& srcRect,
+        const std::optional<SkIRect>& dstRect)
 {
-    // This function is similar to RSFilterCacheManager::DrawFilter, but does not draw anything on the canvas. Instead,
-    // it directly returns the cached image and region. Filter validation is not needed, since it's already done in
-    // RSPropertiesPainter::GenerateCachedEffectData.
-    RS_OPTIONAL_TRACE_FUNC_BEGIN();
+    // // This function is similar to RSFilterCacheManager::DrawFilter, but does not draw anything on the canvas. Instead,
+    // // it directly returns the cached image and region. Filter validation is not needed, since it's already done in
+    // // RSPropertiesPainter::GenerateCachedEffectData.
+    // RS_OPTIONAL_TRACE_FUNC_BEGIN();
 
-    ReattachCachedImage(canvas);
+    // ReattachCachedImage(canvas);
 
-    if (cacheType_ == CacheType::CACHE_TYPE_NONE) {
-        // The cache is expired, so take an image snapshot again and cache it.
-        ROSEN_LOGD("RSFilterCacheManager::GeneratedCachedEffectData Cache expired, taking snapshot.");
-        TakeSnapshot(canvas, filter);
-    }
+    // if (cacheType_ == CacheType::CACHE_TYPE_NONE) {
+    //     // The cache is expired, so take an image snapshot again and cache it.
+    //     ROSEN_LOGD("RSFilterCacheManager::GeneratedCachedEffectData Cache expired, taking snapshot.");
+    //     TakeSnapshot(canvas, filter);
+    // }
 
-    // The GeneratedCachedEffectData function generates a filtered image cache, but it does not use any cache policies
-    // like DrawFilter.
-    if (cacheType_ == CacheType::CACHE_TYPE_SNAPSHOT) {
-        ROSEN_LOGD(
-            "RSFilterCacheManager::GeneratedCachedEffectData Cache is snapshot, generating filtered image cache.");
-        filterRegion_ = cachedImageRegion_;
-        GenerateFilteredSnapshot(canvas, filter);
-    }
+    // // The GeneratedCachedEffectData function generates a filtered image cache, but it does not use any cache policies
+    // // like DrawFilter.
+    // if (cacheType_ == CacheType::CACHE_TYPE_SNAPSHOT) {
+    //     ROSEN_LOGD(
+    //         "RSFilterCacheManager::GeneratedCachedEffectData Cache is snapshot, generating filtered image cache.");
+    //     snapshotRegion_ = cachedImageRegion_;
+    //     GenerateFilteredSnapshot(canvas, filter);
+    // }
 
-    if (cacheType_ != CacheType::CACHE_TYPE_FILTERED_SNAPSHOT) {
-        ROSEN_LOGE("RSFilterCacheManager::GeneratedCachedEffectData Cache generation failed.");
-        RS_OPTIONAL_TRACE_FUNC_END();
-        return {};
-    }
+    // if (cacheType_ != CacheType::CACHE_TYPE_FILTERED_SNAPSHOT) {
+    //     ROSEN_LOGE("RSFilterCacheManager::GeneratedCachedEffectData Cache generation failed.");
+    //     RS_OPTIONAL_TRACE_FUNC_END();
+    //     return {};
+    // }
 
-    RS_OPTIONAL_TRACE_FUNC_END();
-    return { cachedImage_, cachedImageRegion_ };
+    // RS_OPTIONAL_TRACE_FUNC_END();
+    // return { cachedImage_, cachedImageRegion_ };
+    return nullptr;
 }
 
-void RSFilterCacheManager::TakeSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter)
+void RSFilterCacheManager::TakeSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter, const SkIRect& srcRect)
 {
     auto skSurface = canvas.GetSurface();
     if (skSurface == nullptr) {
@@ -245,55 +248,45 @@ void RSFilterCacheManager::TakeSnapshot(RSPaintFilterCanvas& canvas, const std::
     }
     RS_OPTIONAL_TRACE_FUNC_BEGIN();
 
-    auto clipIBounds = canvas.getDeviceClipBounds();
-    auto snapshotIBounds = clipIBounds;
-    bool isLargeArea = IsLargeArea(clipIBounds.width(), clipIBounds.height());
-    if (isLargeArea) {
-        // If the filter region is smaller than the threshold, we will not increase the cache update interval.
-        // To reduce the chance of cache invalidation caused by small movements, we expand the snapshot region by 5
-        // pixels.
-        snapshotIBounds.outset(5, 5); // expand the snapshot region by 5 pixels.
-        // Make sure the clipIPadding is not larger than the canvas or screen size.
-        snapshotIBounds.intersect(SkIRect::MakeSize(canvas.getBaseLayerSize()));
-    }
+    auto clipIBounds = srcRect;
+    // shrink the clipIBounds by 1px to avoid edge artifacts.
+    auto snapshotIBounds = clipIBounds.makeOutset(-1, -1);
 
     // Take a screenshot.
-    cachedImage_ = skSurface->makeImageSnapshot(snapshotIBounds);
-    if (cachedImage_ == nullptr) {
+    auto snapshot = skSurface->makeImageSnapshot(snapshotIBounds);
+    if (snapshot == nullptr) {
         ROSEN_LOGE("RSFilterCacheManager::TakeSnapshot failed to make an image snapshot.");
         RS_OPTIONAL_TRACE_FUNC_END();
         return;
     }
 #ifdef NEW_SKIA
-    if (RSSystemProperties::GetImageGpuResourceCacheEnable(cachedImage_->width(), cachedImage_->height())) {
+    if (RSSystemProperties::GetImageGpuResourceCacheEnable(snapshot->width(), snapshot->height())) {
         ROSEN_LOGD("TakeSnapshot cache image resource(width:%{public}d, height:%{public}d).",
-            cachedImage_->width(), cachedImage_->height());
-        as_IB(cachedImage_)->hintCacheGpuResource();
+            snapshot->width(), snapshot->height());
+        as_IB(snapshot)->hintCacheGpuResource();
     }
 #endif
-    filter->PreProcess(cachedImage_);
+    filter->PreProcess(snapshot);
 
     // Update the cache state.
-    cacheType_ = CacheType::CACHE_TYPE_SNAPSHOT;
-    filterRegion_ = clipIBounds;
-    cachedFilterHash_ = filter->Hash();
-    cachedImageRegion_ = snapshotIBounds;
-    frameSinceLastFilterChange_ = 0;
+    snapshotRegion_ = clipIBounds;
+    cachedSnapshot_ = std::make_shared<RSPaintFilterCanvas::CachedEffectData>(snapshot, snapshotIBounds);
 
     // If the cached image is larger than threshold, we will increase the cache update interval, which is configurable
     // by `hdc shell param set persist.sys.graphic.filterCacheUpdateInterval <interval>`, the default value is 1.
     // Update: we also considered the filter parameters, only enable skip-frame if the blur radius is large enough.
     // Note: the cache will be invalidated immediately if the cached region cannot fully cover the filter region.
+    bool isLargeArea = IsLargeArea(clipIBounds.width(), clipIBounds.height());
     cacheUpdateInterval_ =
         isLargeArea && filter->CanSkipFrame() ? RSSystemProperties::GetFilterCacheUpdateInterval() : 0;
     RS_OPTIONAL_TRACE_FUNC_END();
 }
 
 void RSFilterCacheManager::GenerateFilteredSnapshot(
-    RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter)
+    RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter, const SkIRect& dstRect)
 {
     auto surface = canvas.GetSurface();
-    if (cacheType_ != CacheType::CACHE_TYPE_SNAPSHOT || surface == nullptr) {
+    if (surface == nullptr || cachedSnapshot_ == nullptr) {
         return;
     }
     // The cache type has been validated, so filterRegion_ and cachedImage_ should be valid. There is no need to check
@@ -301,76 +294,65 @@ void RSFilterCacheManager::GenerateFilteredSnapshot(
     RS_OPTIONAL_TRACE_FUNC_BEGIN();
 
     // Create an offscreen canvas with the same size as the filter region.
-    auto offscreenSurface = surface->makeSurface(filterRegion_.width(), filterRegion_.height());
+    auto offscreenRect = dstRect;
+    auto offscreenSurface = surface->makeSurface(offscreenRect.width(), offscreenRect.height());
     RSPaintFilterCanvas offscreenCanvas(offscreenSurface.get());
 
     // Align the offscreen canvas coordinate system to the filter region.
-    offscreenCanvas.translate(-SkIntToScalar(filterRegion_.x()), -SkIntToScalar(filterRegion_.y()));
+    // offscreenCanvas.translate(-SkIntToScalar(offscreenRect.x()), -SkIntToScalar(offscreenRect.y()));
+    auto src = SkRect::MakeSize(SkSize::Make(cachedSnapshot_->cachedRect_.size()));
+    auto dst = SkRect::MakeSize(SkSize::Make(offscreenRect.size()));
 
     // Draw the cached snapshot onto the offscreen canvas, applying the filter.
-    DrawCachedSnapshot(offscreenCanvas, filter);
+    // DrawCachedSnapshot(offscreenCanvas, filter);
+    filter->DrawImageRect(offscreenCanvas, cachedSnapshot_->cachedImage_, src, dst);
+    filter->PostProcess(canvas);
 
     // Update the cache state with the filtered snapshot.
-    cacheType_ = CacheType::CACHE_TYPE_FILTERED_SNAPSHOT;
-    cachedImage_ = offscreenSurface->makeImageSnapshot();
+    auto filteredSnapshot = offscreenSurface->makeImageSnapshot();
 #ifdef NEW_SKIA
-    if (RSSystemProperties::GetImageGpuResourceCacheEnable(cachedImage_->width(), cachedImage_->height())) {
+    if (RSSystemProperties::GetImageGpuResourceCacheEnable(filteredSnapshot->width(), filteredSnapshot->height())) {
         ROSEN_LOGD("GenerateFilteredSnapshot cache image resource(width:%{public}d, height:%{public}d).",
-            cachedImage_->width(), cachedImage_->height());
-        as_IB(cachedImage_)->hintCacheGpuResource();
+            filteredSnapshot->width(), filteredSnapshot->height());
+        as_IB(filteredSnapshot)->hintCacheGpuResource();
     }
 #endif
-    cachedImageRegion_ = filterRegion_;
+    cachedFilteredSnapshot_ = std::make_shared<RSPaintFilterCanvas::CachedEffectData>(filteredSnapshot, offscreenRect);
     RS_OPTIONAL_TRACE_FUNC_END();
 }
 
-void RSFilterCacheManager::DrawCachedSnapshot(
-    RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter) const
+void RSFilterCacheManager::DrawCachedFilteredSnapshot(
+    RSPaintFilterCanvas& canvas, const SkIRect& dstRect) const
 {
-    if (cacheType_ != CacheType::CACHE_TYPE_SNAPSHOT) {
-        return;
-    }
-    RS_OPTIONAL_TRACE_FUNC_BEGIN();
-
-    // The cache type has been validated, so filterRegion_, cachedImage_, and cachedImageRegion_ should be valid. There
-    // is no need to check them again.
-    auto dstRect = SkRect::Make(filterRegion_);
-
-    // Shrink the srcRect by 1px to avoid edge artifacts, and align it to the cachedImage_ coordinate system.
-    auto srcRect = dstRect.makeOutset(-1.0f, -1.0f);
-    srcRect.offset(-SkIntToScalar(cachedImageRegion_.x()), -SkIntToScalar(cachedImageRegion_.y()));
-
-    filter->DrawImageRect(canvas, cachedImage_, srcRect, dstRect);
-    filter->PostProcess(canvas);
-    RS_OPTIONAL_TRACE_FUNC_END();
-}
-
-void RSFilterCacheManager::DrawCachedFilteredSnapshot(RSPaintFilterCanvas& canvas) const
-{
-    if (cacheType_ != CacheType::CACHE_TYPE_FILTERED_SNAPSHOT) {
+    if (cachedSnapshot_ == nullptr) {
         return;
     }
     RS_OPTIONAL_TRACE_FUNC_BEGIN();
 
     // The cache type has been validated, so filterRegion_ and cachedImage_ should be valid. There is no need to check
     // them again.
-    auto dstRect = SkRect::Make(filterRegion_);
+    auto src = SkRect::MakeSize(SkSize::Make(cachedFilteredSnapshot_->cachedRect_.size()));
+    auto dst = SkRect::MakeSize(SkSize::Make(dstRect.size()));
 
     SkPaint paint;
     paint.setAntiAlias(true);
 #ifdef NEW_SKIA
-    canvas.drawImageRect(cachedImage_, dstRect, SkSamplingOptions(), &paint);
+    canvas.drawImageRect(
+        cachedSnapshot_->cachedImage_, src, dst, SkSamplingOptions(), &paint, SkCanvas::kFast_SrcRectConstraint);
 #endif
     RS_OPTIONAL_TRACE_FUNC_END();
 }
 
-void RSFilterCacheManager::InvalidateCache()
+void RSFilterCacheManager::InvalidateCache(CacheType cacheType)
 {
-    cacheType_ = CacheType::CACHE_TYPE_NONE;
-    cachedFilterHash_ = 0;
-    cachedImage_.reset();
+    if (cacheType & CacheType::CACHE_TYPE_SNAPSHOT) {
+        cachedSnapshot_.reset();
+    }
+    if (cacheType & CacheType::CACHE_TYPE_FILTERED_SNAPSHOT) {
+        cachedFilteredSnapshot_.reset();
+        cachedFilterHash_ = 0;
+    }
     cacheUpdateInterval_ = 0;
-    frameSinceLastFilterChange_ = 0;
 }
 
 void RSFilterCacheManager::ClipVisibleRect(RSPaintFilterCanvas& canvas) const
@@ -386,49 +368,59 @@ void RSFilterCacheManager::ClipVisibleRect(RSPaintFilterCanvas& canvas) const
 
 const SkIRect& RSFilterCacheManager::GetCachedImageRegion() const
 {
-    return cachedImageRegion_;
+    static const auto emptyRect = SkIRect::MakeEmpty();
+    return IsCacheValid() ? snapshotRegion_ : emptyRect;
 }
 
 void RSFilterCacheManager::ReattachCachedImage(RSPaintFilterCanvas& canvas)
 {
+    if (cachedSnapshot_ && !ReattachCachedImageImpl(canvas, cachedSnapshot_)) {
+        InvalidateCache(CacheType::CACHE_TYPE_SNAPSHOT);
+    }
+    if (cachedFilteredSnapshot_ && !ReattachCachedImageImpl(canvas, cachedFilteredSnapshot_)) {
+        InvalidateCache(CacheType::CACHE_TYPE_FILTERED_SNAPSHOT);
+    }
+}
+
+bool RSFilterCacheManager::ReattachCachedImageImpl(
+    RSPaintFilterCanvas& canvas, const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData>& effectData)
+{
 #if defined(NEW_SKIA)
-    if (cacheType_ == CacheType::CACHE_TYPE_NONE || cachedImage_->isValid(canvas.recordingContext())) {
+    if (effectData == nullptr || effectData->cachedImage_->isValid(canvas.recordingContext())) {
 #else
-    if (cacheType_ == CacheType::CACHE_TYPE_NONE || cachedImage_->isValid(canvas.getGrContext())) {
+    if (cachedEffectData == nullptr || cachedEffectData->cachedImage_->isValid(canvas.getGrContext())) {
 #endif
-        return;
+        return true;
     }
     RS_OPTIONAL_TRACE_FUNC_BEGIN();
 
 #ifdef RS_ENABLE_GL
-    auto sharedBackendTexture = cachedImage_->getBackendTexture(false);
+    auto sharedBackendTexture = effectData->cachedImage_->getBackendTexture(false);
     if (!sharedBackendTexture.isValid()) {
         ROSEN_LOGE("RSFilterCacheManager::ReattachCachedImage failed to get backend texture.");
-        InvalidateCache();
         RS_OPTIONAL_TRACE_FUNC_END();
-        return;
+        return false;
     }
 #if defined(NEW_SKIA)
     auto reattachedCachedImage = SkImage::MakeFromTexture(canvas.recordingContext(), sharedBackendTexture,
 #else
     auto reattachedCachedImage = SkImage::MakeFromTexture(canvas.getGrContext(), sharedBackendTexture,
 #endif
-        kBottomLeft_GrSurfaceOrigin, cachedImage_->colorType(), cachedImage_->alphaType(), nullptr);
+        kBottomLeft_GrSurfaceOrigin, effectData->cachedImage_->colorType(),
+        effectData->cachedImage_->alphaType(), nullptr);
 #if defined(NEW_SKIA)
     if (reattachedCachedImage == nullptr || !reattachedCachedImage->isValid(canvas.recordingContext())) {
 #else
     if (reattachedCachedImage == nullptr || !reattachedCachedImage->isValid(canvas.getGrContext())) {
 #endif
         ROSEN_LOGE("RSFilterCacheManager::ReattachCachedImage failed to create SkImage from backend texture.");
-        InvalidateCache();
         RS_OPTIONAL_TRACE_FUNC_END();
-        return;
+        return false;
     }
-    cachedImage_ = reattachedCachedImage;
-#else
-    InvalidateCache();
+    effectData->cachedImage_ = reattachedCachedImage;
 #endif
     RS_OPTIONAL_TRACE_FUNC_END();
+    return false;
 }
 } // namespace Rosen
 } // namespace OHOS

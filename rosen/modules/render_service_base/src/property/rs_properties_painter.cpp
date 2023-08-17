@@ -1231,7 +1231,7 @@ void RSPropertiesPainter::DrawBackgroundEffect(
         ROSEN_LOGE("RSPropertiesPainter::DrawBackgroundEffect imageCache snapshot null");
         return;
     }
-    RSPaintFilterCanvas::CachedEffectData data = { imageCache, imageRect };
+    auto data = std::make_shared<RSPaintFilterCanvas::CachedEffectData>(imageCache, imageRect);
     canvas.SetEffectData(data);
 }
 #else

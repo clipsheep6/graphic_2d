@@ -57,52 +57,56 @@ public:
     // regenerate the cache or reuse the existing cache.
     // Note: The caller should clip the canvas before calling this method, we'll use the DeviceClipRect as the filtered
     // and cached region.
-    void DrawFilter(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter);
+    void DrawFilter(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter,
+        const std::optional<SkIRect>& srcRect, const std::optional<SkIRect>& dstRect);
 
     // This function is similar to DrawFilter(), but instead of drawing anything on the canvas, it simply returns the
     // cache data. This is used with effect component in RSPropertiesPainter::DrawBackgroundEffect.
-    RSPaintFilterCanvas::CachedEffectData GeneratedCachedEffectData(
-        RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter);
+    const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData>& GeneratedCachedEffectData(RSPaintFilterCanvas& canvas,
+        const std::shared_ptr<RSSkiaFilter>& filter, const std::optional<SkIRect>& srcRect,
+        const std::optional<SkIRect>& dstRect);
+
+    enum CacheType : uint8_t {
+        CACHE_TYPE_NONE              = 0,
+        CACHE_TYPE_SNAPSHOT          = 1,
+        CACHE_TYPE_FILTERED_SNAPSHOT = 2,
+        CACHE_TYPE_BOTH              = 3,
+    };
 
     // Call this function to manually invalidate the cache. The next time DrawFilter() is called, it will regenerate the
     // cache.
-    void InvalidateCache();
+    void InvalidateCache(CacheType cacheType = CacheType::CACHE_TYPE_BOTH);
 
     bool IsCacheValid() const
     {
-        return cacheType_ != CacheType::CACHE_TYPE_NONE;
+        return cachedSnapshot_ != nullptr || cachedFilteredSnapshot_ != nullptr;
     }
 
 private:
     // TakeSnapshot won't apply the filter, but we need to call filter::PreProcess()
-    void TakeSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter);
+    void TakeSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter,
+        const SkIRect& srcRect);
     // GenerateFilteredSnapshot will call DrawCachedSnapshot to generate filtered snapshot and cache it.
-    void GenerateFilteredSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter);
-    void DrawCachedSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter) const;
-    void DrawCachedFilteredSnapshot(RSPaintFilterCanvas& canvas) const;
+    void GenerateFilteredSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter,
+        const SkIRect& dstRect);
+    // void DrawCachedSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter) const;
+    void DrawCachedFilteredSnapshot(RSPaintFilterCanvas& canvas, const SkIRect& dstRect) const;
     void ClipVisibleRect(RSPaintFilterCanvas& canvas) const;
     // Attempt to reattach cached image to recording context if needed, if failed, we'll invalidate the cache.
     void ReattachCachedImage(RSPaintFilterCanvas& canvas);
+    bool ReattachCachedImageImpl(
+        RSPaintFilterCanvas& canvas, const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData>& effectData);
 
-    enum class CacheType : uint8_t {
-        CACHE_TYPE_NONE,
-        CACHE_TYPE_SNAPSHOT,
-        CACHE_TYPE_FILTERED_SNAPSHOT,
-    };
-
-    CacheType cacheType_ = CacheType::CACHE_TYPE_NONE;
-    sk_sp<SkImage> cachedImage_ = nullptr;
+    // Note: all rects (include ones in CachedEffectData) should be in device coordinate space
+    SkIRect snapshotRegion_;      // region of previous filter region
+    std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshot_ = nullptr;
+    std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedFilteredSnapshot_ = nullptr;
 
     // for automatically converting cached snapshot to filtered snapshot if the filter is persistent
     uint32_t cachedFilterHash_ = 0;
-    int frameSinceLastFilterChange_ = 0;
 
     // for delaying cached snapshot update even if the cached area is intersected with dirty region.
     int cacheUpdateInterval_ = 0;
-
-    // Note: all rects should be in device coordinate space
-    SkIRect cachedImageRegion_; // region of cached image
-    SkIRect filterRegion_;      // region of previous filter region
 };
 
 } // namespace Rosen

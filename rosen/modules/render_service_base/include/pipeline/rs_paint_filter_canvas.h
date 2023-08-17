@@ -201,13 +201,14 @@ public:
         sk_sp<SkImage> cachedImage_ = nullptr;
         SkIRect cachedRect_ = SkIRect::MakeEmpty();
     };
-    void SetEffectData(const std::optional<CachedEffectData>& effectData);
-    const std::optional<CachedEffectData>& GetEffectData() const;
+    void SetEffectData(const std::shared_ptr<CachedEffectData>& effectData);
+    const std::shared_ptr<CachedEffectData>& GetEffectData() const;
 
+    // canvas status relate
     struct CanvasStatus {
         float alpha_;
         SkMatrix matrix_;
-        std::optional<CachedEffectData> effectData_;
+        std::shared_ptr<CachedEffectData> effectData_;
     };
     CanvasStatus GetCanvasStatus() const;
     void SetCanvasStatus(const CanvasStatus& status);
@@ -237,7 +238,7 @@ private:
 #ifndef USE_ROSEN_DRAWING
     using Env = struct {
         Color envForegroundColor_;
-        std::optional<CachedEffectData> effectData_;
+        std::shared_ptr<CachedEffectData> effectData_;
     };
 #endif
     std::stack<Env> envStack_;

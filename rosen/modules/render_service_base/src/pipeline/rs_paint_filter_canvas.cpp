@@ -806,12 +806,12 @@ SkCanvas::SaveLayerStrategy RSPaintFilterCanvas::getSaveLayerStrategy(const Save
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-void RSPaintFilterCanvas::SetEffectData(const std::optional<RSPaintFilterCanvas::CachedEffectData>& effectData)
+void RSPaintFilterCanvas::SetEffectData(const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData>& effectData)
 {
     envStack_.top().effectData_ = effectData;
 }
 
-const std::optional<RSPaintFilterCanvas::CachedEffectData>& RSPaintFilterCanvas::GetEffectData() const
+const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData>& RSPaintFilterCanvas::GetEffectData() const
 {
     return envStack_.top().effectData_;
 }

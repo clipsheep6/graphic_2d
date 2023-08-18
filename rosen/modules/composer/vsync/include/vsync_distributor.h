@@ -101,6 +101,7 @@ public:
     VsyncError SetQosVSyncRate(uint32_t pid, int32_t rate);
     VsyncError GetVSyncPeriod(int64_t &period);
     VsyncError SetVSyncRefreshRate(int32_t refreshRate, const sptr<VSyncConnection>& connection);
+    VsyncError SetAllConnRefreshRate(int32_t refreshRate); // 此接口用于调试
 
 private:
 

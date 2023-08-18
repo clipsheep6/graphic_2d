@@ -505,7 +505,7 @@ VsyncError VSyncDistributor::SetVSyncRefreshRate(int32_t refreshRate, const sptr
     if (refreshRate <= 0 || connection == nullptr) {
         return VSYNC_ERROR_INVALID_ARGUMENTS;
     }
-    std::lock_guard<std::mutex> locker(mutex_);
+    // std::lock_guard<std::mutex> locker(mutex_);
     auto it = find(connections_.begin(), connections_.end(), connection);
     if (it == connections_.end()) {
         return VSYNC_ERROR_INVALID_ARGUMENTS;
@@ -517,6 +517,19 @@ VsyncError VSyncDistributor::SetVSyncRefreshRate(int32_t refreshRate, const sptr
     connection->rate_ = VSYNC_MAX_REFRESHRATE / refreshRate;
     event_.vsyncPulseCount = 0;
     con_.notify_all();
+    return VSYNC_ERROR_OK;
+}
+
+// 此接口用于调试
+VsyncError VSyncDistributor::SetAllConnRefreshRate(int32_t refreshRate)
+{
+    if (refreshRate <= 0) {
+        return VSYNC_ERROR_INVALID_ARGUMENTS;
+    }
+    std::lock_guard<std::mutex> locker(mutex_);
+    for (auto conn : connections_) {
+        SetVSyncRefreshRate(refreshRate, conn);
+    }
     return VSYNC_ERROR_OK;
 }
 }

@@ -89,6 +89,8 @@ public:
 
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status);
 
+    void SetTpFeatureConfig(ScreenId id, int32_t feature, const char* config);
+
     RSScreenModeInfo GetScreenActiveMode(ScreenId id);
 
     void SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate);

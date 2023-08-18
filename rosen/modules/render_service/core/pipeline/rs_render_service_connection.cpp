@@ -482,6 +482,18 @@ void RSRenderServiceConnection::SetScreenPowerStatus(ScreenId id, ScreenPowerSta
     }
 }
 
+void RSRenderServiceConnection::SetTpFeatureConfig(ScreenId id, int32_t feature, const char* config)
+{
+    auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
+    if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
+        RSHardwareThread::Instance().ScheduleTask(
+            [=]() { screenManager_->SetTpFeatureConfig(id, feature, config); }).wait();
+    } else {
+        mainThread_->ScheduleTask(
+            [=]() { screenManager_->SetTpFeatureConfig(id, feature, config); }).wait();
+    }
+}
+
 void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback,
     float scaleX, float scaleY)
 {

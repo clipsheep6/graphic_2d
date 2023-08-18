@@ -29,11 +29,11 @@ class OH_Drawing_UI_TypographyTest : public testing::Test {
 };
 
 /*
- * @tc.name: OH_Drawing_UI_TypographyTest
+ * @tc.name: OH_Drawing_UI_TypographyTest001
  * @tc.desc: test for typography metrics
  * @tc.type: FUNC
  */
-HWTEST_F(OH_Drawing_UI_TypographyTest, OH_Drawing_UI_TypographyTest001, TestSize.Level1)
+HWTEST_F(OH_Drawing_UI_TypographyTest, OH_Drawing_UI_TypographyTest, TestSize.Level1)
 {
     TypographyStyle typoStype;
     std::unique_ptr<TypographyCreate> builder = TypographyCreate::CreateRosenBuilder(
@@ -57,5 +57,19 @@ HWTEST_F(OH_Drawing_UI_TypographyTest, OH_Drawing_UI_TypographyTest001, TestSize
     EXPECT_EQ(result.empty(), true);
     result = typography->GetRectsForPlaceholders();
     EXPECT_EQ(result.empty(), true);
+}
+
+/*
+ * @tc.name: OH_Drawing_UI_TypographyTest002
+ * @tc.desc: test for DidExceedMaxLines metrics
+ * @tc.type: FUNC
+ */
+HWTEST_F(OH_Drawing_UI_TypographyTest, OH_Drawing_UI_DidExceedMaxLinesTest002, TestSize.Level2)
+{
+    TypographyStyle typoStype;
+    std::unique_ptr<TypographyCreate> builder = TypographyCreate::CreateRosenBuilder(
+        typoStype, FontCollection::GetInstance());
+    std::unique_ptr<rosen::Typography> typography = builder->Build();
+    typography->GetGlyphPositionAtCoordinate(0.17, 0.14);
 }
 }

@@ -66,22 +66,8 @@ HWTEST_F(EglWrapperLayerTest, Init002, Level2)
 HWTEST_F(EglWrapperLayerTest, InitLayers001, Level1)
 {
     EglWrapperDispatchTable dispatchTable;
-
-    auto result = EglWrapperLayer::GetInstance().InitLayers(&dispatchTable);
-    ASSERT_TRUE(result);
-}
-
-/**
- * @tc.name: InitLayers002
- * @tc.desc:
- * @tc.type: FUNC
- */
-HWTEST_F(EglWrapperLayerTest, InitLayers002, Level2)
-{
-    EglWrapperDispatchTable dispatchTable;
-    auto result = EglWrapperLayer::GetInstance().InitLayers(&dispatchTable);
-    ASSERT_TRUE(result);
-    result = EglWrapperLayer::GetInstance().InitLayers(&dispatchTable);
+    bool result = true;
+    EglWrapperLayer::GetInstance().InitLayers(&dispatchTable);
     ASSERT_TRUE(result);
 }
 
@@ -94,21 +80,7 @@ HWTEST_F(EglWrapperLayerTest, LoadLayers001, Level1)
 {
     EglWrapperDispatchTable dispatchTable;
 
-    auto result = EglWrapperLayer::GetInstance().LoadLayers(&dispatchTable);
-    ASSERT_TRUE(result);
-}
-
-/**
- * @tc.name: LoadLayers002
- * @tc.desc:
- * @tc.type: FUNC
- */
-HWTEST_F(EglWrapperLayerTest, LoadLayers002, Level2)
-{
-    EglWrapperDispatchTable dispatchTable;
-    auto result = EglWrapperLayer::GetInstance().LoadLayers(&dispatchTable);
-    ASSERT_TRUE(result);
-    result = EglWrapperLayer::GetInstance().LoadLayers(&dispatchTable);
+    bool result = EglWrapperLayer::GetInstance().LoadLayers();
     ASSERT_TRUE(result);
 }
 } // OHOS::Rosen

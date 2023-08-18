@@ -91,7 +91,7 @@ private:
     int64_t wakeupDelay_;
     int64_t pulse_; // 360Hz脉冲的单位时间（单位：纳秒）
     int32_t refreshRate_; // vsync刷新率，更新period_时需要同时更改refreshRate_（单位：HZ）
-    bool shouldUpdateReferenceTime_;
+    bool shouldUpdateVsyncInfo_;
     // 说明：referenceTimeOffset_表示generator的referenceTime_与硬件vsync时间戳之间的偏移值，必须是pulse的整数倍。
     // 使用硬件vsync时间戳更新referenceTime_时，计算referenceTime_与硬件vsync时间戳之间的差值并就近取一个pulse的整数倍值更新referenceTimeOffset_。
     // referenceTime_ = 硬件vsync时间戳 - referenceTimeOffset_。

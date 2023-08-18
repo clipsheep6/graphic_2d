@@ -68,7 +68,7 @@ void VSyncGenerator::DeleteInstance() noexcept
 
 VSyncGenerator::VSyncGenerator()
     : period_(0), phase_(0), referenceTime_(0), wakeupDelay_(0), pulse_(0), refreshRate_(0),
-      shouldUpdateReferenceTime_(false), referenceTimeOffset_(0)
+      shouldUpdateVsyncInfo_(false), referenceTimeOffset_(0)
 {
     vsyncThreadRunning_ = true;
     thread_ = std::thread(std::bind(&VSyncGenerator::ThreadLoop, this));
@@ -113,9 +113,6 @@ void VSyncGenerator::ThreadLoop()
                     con_.wait(locker);
                 }
                 continue;
-            } else if (shouldUpdateReferenceTime_) {
-                referenceTime_ = nextTimeStamp;
-                shouldUpdateReferenceTime_ = false;
             }
         }
 
@@ -136,7 +133,13 @@ void VSyncGenerator::ThreadLoop()
             if (isWakeup) {
                 UpdateWakeupDelay(occurTimestamp, nextTimeStamp);
             }
-            listeners = GetListenerTimeouted(occurTimestamp, occurRefrenceTime);
+            if (shouldUpdateVsyncInfo_) {
+                ScopedBytrace shouldUpdateVsyncInfo("shouldUpdateVsyncInfo_ listeners.size = " + std::to_string(listeners.size()));
+                period_ = pulse_ * (VSYNC_MAX_REFRESHRATE / refreshRate_);
+                referenceTime_ = occurTimestamp - period_;
+                shouldUpdateVsyncInfo_ = false;
+            }
+            listeners = GetListenerTimeouted(occurTimestamp, referenceTime_);
         }
         ScopedBytrace func(
             "GenerateVsyncCount:" + std::to_string(listeners.size()) + ", period:" + std::to_string(period_));
@@ -169,8 +172,10 @@ int64_t VSyncGenerator::ComputeNextVSyncTimeStamp(int64_t now, int64_t reference
 
 int64_t VSyncGenerator::ComputeListenerNextVSyncTimeStamp(const Listener& listener, int64_t now, int64_t referenceTime)
 {
+    ScopedBytrace phase_trace1("ComputeListenerNextVSyncTimeStamp now:" + std::to_string(now) + ",referenceTime:" + std::to_string(referenceTime) + ",period_:" + std::to_string(period_));
     int64_t lastVSyncTime = listener.lastTime_ + wakeupDelay_;
     if (now < lastVSyncTime) {
+        ScopedBytrace lasttime("lastVSyncTime:" + std::to_string(lastVSyncTime));
         now = lastVSyncTime;
     }
 
@@ -178,18 +183,19 @@ int64_t VSyncGenerator::ComputeListenerNextVSyncTimeStamp(const Listener& listen
     int64_t phase = phase_ + listener.phase_;
     now -= phase;
     if (now < 0) {
-        now = -period_;
+        now -= period_;
     }
     int64_t numPeriod = now / period_;
     int64_t nextTime = (numPeriod + 1) * period_ + phase;
     nextTime += referenceTime;
 
     // 3 / 5 just empirical value
-    if (nextTime - listener.lastTime_ < (3 * period_ / 5)) {
+    if (nextTime - listener.lastTime_ < (1 * period_ / 5)) {
         nextTime += period_;
     }
 
     nextTime -= wakeupDelay_;
+    ScopedBytrace phase_trace2("ComputeListenerNextVSyncTimeStamp phase:" + std::to_string(phase) + ",nextTime:" + std::to_string(nextTime));
     return nextTime;
 }
 
@@ -198,6 +204,7 @@ std::vector<VSyncGenerator::Listener> VSyncGenerator::GetListenerTimeouted(int64
     std::vector<VSyncGenerator::Listener> ret;
     int64_t onePeriodAgo = now - period_;
 
+    ScopedBytrace func("GetListenerTimeouted now:" + std::to_string(now) + ",onePeriodAgo:" + std::to_string(onePeriodAgo));
     for (uint32_t i = 0; i < listeners_.size(); i++) {
         int64_t t = ComputeListenerNextVSyncTimeStamp(listeners_[i], onePeriodAgo, referenceTime);
         if (t < now || (t - now < errorThreshold)) {
@@ -319,12 +326,19 @@ void VSyncGenerator::UpdatePulseLocked(int64_t period)
         return;
     }
     pulse_ = period / (VSYNC_MAX_REFRESHRATE / refreshRate);
-    refreshRate_ = refreshRate;
+    {
+        // 校准时不更新刷新率和周期，仅调试用
+        if (refreshRate_ <= 0) {
+            refreshRate_ = refreshRate;
+        }
+        period_ = pulse_ * (VSYNC_MAX_REFRESHRATE / refreshRate_);
+    }
     // VLOGE("VSyncGenerator::UpdatePulseLocked pulse_ = " VPUBI64, pulse_);
 }
 
 VsyncError VSyncGenerator::SetGeneratorRefreshRate(int32_t refreshRate)
 {
+    ScopedBytrace func("VSyncGenerator::SetGeneratorRefreshRate:" + std::to_string(refreshRate));
     std::lock_guard<std::mutex> locker(mutex_);
     if (pulse_ == 0) {
         VLOGE("pulse is not ready!!!");
@@ -334,9 +348,9 @@ VsyncError VSyncGenerator::SetGeneratorRefreshRate(int32_t refreshRate)
         VLOGE("not support this refresh rate: %{public}d", refreshRate);
         return VSYNC_ERROR_NOT_SUPPORT;
     }
-    period_ = pulse_ * (VSYNC_MAX_REFRESHRATE / refreshRate);
+    // period_ = pulse_ * (VSYNC_MAX_REFRESHRATE / refreshRate); // 改为不立刻更新周期，只更新刷新率，通过shouldUpdateVsyncInfo_变量通知分发线程去修改period_
     refreshRate_ = refreshRate;
-    shouldUpdateReferenceTime_ = true;
+    shouldUpdateVsyncInfo_ = true;
     // 清空fenceTime
     CreateVSyncSampler()->ResetErrorLocked();
     return VSYNC_ERROR_OK;

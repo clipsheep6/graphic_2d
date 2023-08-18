@@ -339,6 +339,7 @@ void VSyncDistributor::OnVSyncEvent(int64_t now, int64_t period, int32_t refresh
     event_.period = period;
     event_.refreshRate = refreshRate;
     event_.vsyncPulseCount += (VSYNC_MAX_REFRESHRATE / event_.refreshRate);
+    ScopedBytrace pulseCount("vsyncPulseCount:" + std::to_string(VSYNC_MAX_REFRESHRATE / event_.refreshRate));
     con_.notify_all();
 }
 

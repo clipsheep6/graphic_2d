@@ -560,6 +560,16 @@ ScreenPowerStatus RSScreenManager::GetScreenPowerStatusLocked(ScreenId id) const
     return status;
 }
 
+void RSScreenManager::SetTpFeatureConfig(ScreenId id, int32_t feature, const char* config)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return;
+    }
+    screens_.at(id)->SetTpFeatureConfig(feature, config);
+}
+
 std::vector<ScreenId> RSScreenManager::GetAllScreenIds()
 {
     std::vector<ScreenId> ids;

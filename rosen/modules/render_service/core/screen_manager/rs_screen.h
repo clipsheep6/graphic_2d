@@ -130,6 +130,7 @@ public:
     void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) override;
     uint32_t GetScreenSkipFrameInterval() const override;
     void SetScreenVsyncEnabled(bool enabled) const override;
+    void SetTpFeatureConfig(int32_t feature, const char* config) override;
 
 private:
     // create hdiScreen and get some information from drivers.

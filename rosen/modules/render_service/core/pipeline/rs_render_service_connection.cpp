@@ -489,7 +489,7 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
             callback->OnSurfaceCapture(id, pixelmap.get());
             ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         };
-        mainThread_->PostTask(captureTask);
+        RSBackgroundThread::Instance().PostTask(captureTask);
     } else {
         TakeSurfaceCaptureForUIWithUni(id, callback, scaleX, scaleY);
     }

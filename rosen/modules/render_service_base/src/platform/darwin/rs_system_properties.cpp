@@ -59,6 +59,13 @@ bool RSSystemProperties::GetRenderNodeTraceEnabled()
     return {};
 }
 
+#ifdef ENABLE_DDGR_OPTIMIZE
+bool RSSystemProperties::GetPartialProcessEnabled()
+{
+    return false;
+}
+#endif
+
 DirtyRegionDebugType RSSystemProperties::GetDirtyRegionDebugType()
 {
     return {};

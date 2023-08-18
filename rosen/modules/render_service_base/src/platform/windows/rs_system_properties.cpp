@@ -54,6 +54,13 @@ bool RSSystemProperties::GetRenderNodeTraceEnabled()
     return {};
 }
 
+#ifdef ENABLE_DDGR_OPTIMIZE
+bool RSSystemProperties::GetPartialProcessEnabled()
+{
+    return false;
+}
+#endif
+
 bool RSSystemProperties::GetDrawOpTraceEnabled()
 {
     return false;

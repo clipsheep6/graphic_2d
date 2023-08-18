@@ -362,7 +362,7 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const sk_sp<SkTextBlob>& v
     serialProcs.fTypefaceProc = &RSMarshallingHelper::SerializeTypeface;
 #if defined (ENABLE_DDGR_OPTIMIZE)
     if (RSSystemProperties::GetDDGRIntegrateEnable()) {
-        ROSEN_LOGD("Marshalling text Integrate");
+        ROSEN_LOGD("[DDGR] Marshalling text Integrate");
         return SerializeInternal(parcel, val, serialProcs);
     }
 #endif
@@ -384,7 +384,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkTextBlob>& val)
     deserialProcs.fTypefaceProc = &RSMarshallingHelper::DeserializeTypeface;
 #if defined (ENABLE_DDGR_OPTIMIZE)
     if (RSSystemProperties::GetDDGRIntegrateEnable()) {
-        ROSEN_LOGD("Unmarshalling text Integrate");
+        ROSEN_LOGD("[DDGR] Unmarshalling text Integrate");
         return DserializeInternal(parcel, val, deserialProcs, data);
     }
 #endif

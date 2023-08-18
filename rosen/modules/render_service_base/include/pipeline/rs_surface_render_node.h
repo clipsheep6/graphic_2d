@@ -50,6 +50,9 @@ namespace OHOS {
 namespace Rosen {
 class RSCommand;
 class RSDirtyRegionManager;
+#ifdef ENABLE_DDGR_OPTIMIZE
+class RSSurfaceRenderNodeAdaptor;
+#endif
 class RSB_EXPORT RSSurfaceRenderNode : public RSRenderNode, public RSSurfaceHandler {
 public:
     using WeakPtr = std::weak_ptr<RSSurfaceRenderNode>;
@@ -454,6 +457,12 @@ public:
         return globalDirtyRegion_;
     }
 
+#ifdef ENABLE_DDGR_OPTIMIZE
+    std::shared_ptr<RSSurfaceRenderNodeAdaptor> GetSurfaceNodeAdaptor() const
+    {
+        return surfaceAdaptorPtr_;
+    }
+#endif
     void SetLocalZOrder(float localZOrder);
     float GetLocalZOrder() const;
 
@@ -780,6 +789,9 @@ private:
     Occlusion::Region alignedVisibleDirtyRegion_;
     bool isOcclusionVisible_ = true;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
+#ifdef ENABLE_DDGR_OPTIMIZE
+    std::shared_ptr<RSSurfaceRenderNodeAdaptor> surfaceAdaptorPtr_ = nullptr;
+#endif
     std::shared_ptr<RSDirtyRegionManager> cacheSurfaceDirtyManager_ = nullptr;
     RectI dstRect_;
     bool dstRectChanged_ = false;

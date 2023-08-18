@@ -77,6 +77,7 @@ public:
     virtual void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) = 0;
     virtual uint32_t GetScreenSkipFrameInterval() const = 0;
     virtual void SetScreenVsyncEnabled(bool enabled) const = 0;
+    virtual void SetTpFeatureConfig(int32_t feature, const char* config) = 0;
 };
 
 namespace impl {

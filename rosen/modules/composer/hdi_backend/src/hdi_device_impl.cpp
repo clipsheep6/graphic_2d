@@ -36,6 +36,20 @@ namespace {
 using namespace OHOS::HDI::Display::Composer::V1_0;
 using IDisplayComposerInterfaceSptr = sptr<IDisplayComposerInterface>;
 static IDisplayComposerInterfaceSptr g_composer;
+const std::map<InterfaceType, std::string> g_interfaceTypeInfo = {
+    {DISP_INTF_HDMI,    "DISP_INTF_HDMI"},
+    {DISP_INTF_LCD,     "DISP_INTF_LCD"},
+    {DISP_INTF_BT1120,  "DISP_INTF_BT1120"},
+    {DISP_INTF_BT656,   "DISP_INTF_BT656"},
+    {DISP_INTF_YPBPR,   "DISP_INTF_YPBPR"},
+    {DISP_INTF_RGB,     "DISP_INTF_RGB"},
+    {DISP_INTF_CVBS,    "DISP_INTF_CVBS"},
+    {DISP_INTF_SVIDEO,  "DISP_INTF_SVIDEO"},
+    {DISP_INTF_VGA,     "DISP_INTF_VGA"},
+    {DISP_INTF_MIPI,    "DISP_INTF_MIPI"},
+    {DISP_INTF_PANEL,   "DISP_INTF_PANEL"},
+    {DISP_INTF_BUTT,    "DISP_INTF_BUTT"},
+};
 }
 
 class HwcDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -112,6 +126,19 @@ int32_t HdiDeviceImpl::GetScreenCapability(uint32_t screenId, GraphicDisplayCapa
     DisplayCapability hdiInfo;
     int32_t ret = g_composer->GetDisplayCapability(screenId, hdiInfo);
     if (ret == GRAPHIC_DISPLAY_SUCCESS) {
+        std::string hdiInfoString;
+        hdiInfoString += "capability:\n name=" + hdiInfo.name + ", phywidth=" + std::to_string(hdiInfo.phyWidth) +
+                         ", phyheight=" + std::to_string(hdiInfo.phyHeight) +
+                         ", supportlayers=" + std::to_string(hdiInfo.supportLayers) +
+                         ", virtualDispCount=" + std::to_string(hdiInfo.virtualDispCount) +
+                         ", propCount=" + std::to_string(hdiInfo.propertyCount);
+        if (g_interfaceTypeInfo.find(hdiInfo.type) != g_interfaceTypeInfo.end()) {
+            hdiInfoString += ", type=" + g_interfaceTypeInfo.at(hdiInfo.type);
+        } else {
+            hdiInfoString += ", type=" + g_interfaceTypeInfo.at(DISP_INTF_BUTT);
+        }
+        hdiInfoString += ", supportWriteBack=";
+        hdiInfoString += (hdiInfo.supportWriteBack) ? "true\n" : "false\n";
         info.name = hdiInfo.name;
         info.type = static_cast<GraphicInterfaceType>(hdiInfo.type);
         info.phyWidth = hdiInfo.phyWidth;
@@ -123,6 +150,9 @@ int32_t HdiDeviceImpl::GetScreenCapability(uint32_t screenId, GraphicDisplayCapa
         info.props.clear();
         info.props.reserve(hdiInfo.propertyCount);
         for (uint32_t i = 0; i < hdiInfo.propertyCount; i++) {
+            hdiInfoString += "prop[" + std::to_string(i) + "]: name=" + hdiInfo.props[i].name +
+                             ", propid=" + std::to_string(hdiInfo.props[i].propId) +
+                             ", value=" + std::to_string(hdiInfo.props[i].value) + "\n";
             GraphicPropertyObject graphicProperty = {
                 .name = hdiInfo.props[i].name,
                 .propId = hdiInfo.props[i].propId,
@@ -130,7 +160,11 @@ int32_t HdiDeviceImpl::GetScreenCapability(uint32_t screenId, GraphicDisplayCapa
             };
             info.props.emplace_back(graphicProperty);
         }
+        HLOGI("Get display capability succeed, %{public}s", hdiInfoString.c_str());
+    } else {
+        HLOGE("Get display capability failed, ret is %{public}d.", ret);
     }
+
     return ret;
 }
 
@@ -161,12 +195,15 @@ int32_t HdiDeviceImpl::GetScreenSupportedModes(uint32_t screenId, std::vector<Gr
 int32_t HdiDeviceImpl::GetScreenMode(uint32_t screenId, uint32_t &modeId)
 {
     CHECK_FUNC(g_composer);
-    return g_composer->GetDisplayMode(screenId, modeId);
+    int32_t ret = g_composer->GetDisplayMode(screenId, modeId);
+    HLOGI("Get screen mode: screenId is %{public}d, current modeId is %{public}d", screenId, modeId);
+    return ret;
 }
 
 int32_t HdiDeviceImpl::SetScreenMode(uint32_t screenId, uint32_t modeId)
 {
     CHECK_FUNC(g_composer);
+    HLOGI("Set screen mode: screenId is %{public}d, new modeId is %{public}d", screenId, modeId);
     return g_composer->SetDisplayMode(screenId, modeId);
 }
 

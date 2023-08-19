@@ -40,8 +40,15 @@ public:
 
     static inline RSInterfaces* rsInterfaces = nullptr;
 
+    uint32_t GenerateVirtualScreenMirrorId()
+    {
+        virtualScreenMirrorId++;
+        return virtualScreenMirrorId;
+    }
+
 private:
     static constexpr uint32_t SET_REFRESHRATE_SLEEP_S = 1;  // wait for refreshrate change
+    uint32_t virtualScreenMirrorId = 1;
 };
 
 /*
@@ -174,7 +181,7 @@ HWTEST_F(RSInterfacesTest, GetAllScreenIds, Function | SmallTest | Level2)
     EXPECT_NE(psurface, nullptr);
 
     ScreenId virtualScreenId = rsInterfaces->CreateVirtualScreen(
-        "virtual6", defaultWidth, defaultHeight, psurface, INVALID_SCREEN_ID, -1);
+        "virtual6", defaultWidth, defaultHeight, psurface, GenerateVirtualScreenMirrorId(), -1);
     EXPECT_NE(virtualScreenId, INVALID_SCREEN_ID);
     ids = rsInterfaces->GetAllScreenIds();
     EXPECT_EQ(size + 1, ids.size());
@@ -990,10 +997,11 @@ HWTEST_F(RSInterfacesTest, SetRefreshRateMode001, Function | SmallTest | Level2)
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
     int32_t rateModeToSet = 2;
-    uint32_t formerRate = 60;
-    uint32_t newRate = 90;
 
-    rsInterfaces->SetScreenRefreshRate(screenId, 0, formerRate);
+    //let the new rate not equal to former rate
+    uint32_t formerRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
+    uint32_t newRate = formerRate * 0.9;
+    rsInterfaces->SetScreenRefreshRate(screenId, 0, newRate);
     sleep(SET_REFRESHRATE_SLEEP_S);
     rsInterfaces->SetRefreshRateMode(rateModeToSet);
     sleep(SET_REFRESHRATE_SLEEP_S);
@@ -1008,9 +1016,9 @@ HWTEST_F(RSInterfacesTest, SetRefreshRateMode001, Function | SmallTest | Level2)
     }
 
     if (ifSupported) {
-        EXPECT_GE(currentRate, formerRate);
-    } else {
         EXPECT_NE(currentRate, formerRate);
+    } else {
+        EXPECT_EQ(currentRate, formerRate);
     }
 }
 

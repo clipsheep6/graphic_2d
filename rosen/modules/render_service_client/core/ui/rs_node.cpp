@@ -724,16 +724,18 @@ void RSNode::SetEnvForegroundColorStrategy(ForegroundColorStrategyType strategyT
 
 // Set ParticleParams
 void RSNode::SetParticleParams(std::vector<ParticleParams>& particleParams)
-{
+{  
+ROSEN_LOGE("WMM SetParticleParams 1");
     std::vector<std::shared_ptr<ParticleRenderParams>> particlesRenderParams;
     for (size_t i = 0; i < particleParams.size(); i++) {
+        RS_LOGE("WMM SetParticleParams particleParams[%{public}d] = %{public}s", i, particleParams[i].ToString().c_str());
         particlesRenderParams.push_back(particleParams[i].SetParamsToRenderParticle());
     }
 
     auto animationId = RSAnimation::GenerateId();
     auto animation =
         std::make_shared<RSRenderParticleAnimation>(animationId, particlesRenderParams);
-
+ROSEN_LOGE("WMM SetParticleParams 2");
     std::unique_ptr<RSCommand> command = std::make_unique<RSAnimationCreateParticle>(GetId(), animation);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {

@@ -239,20 +239,19 @@ void RSUIDirector::SetCacheDir(const std::string& cacheFilePath)
     cacheDir_ = cacheFilePath;
 }
 
-bool RSUIDirector::RunningCustomAnimation(uint64_t timeStamp)
+std::pair<bool, int> RSUIDirector::RunningCustomAnimation(uint64_t timeStamp)
 {
-    bool hasRunningAnimation = false;
     auto modifierManager = RSModifierManagerMap::Instance()->GetModifierManager(gettid());
     if (modifierManager == nullptr) {
-        return hasRunningAnimation;
+        return { false, 0 };
     }
 
-    hasRunningAnimation = modifierManager->Animate(timeStamp);
+    auto result = modifierManager->Animate(timeStamp);
     modifierManager->Draw();
 
     // post animation finish callback(s) to task queue
     RSUIDirector::RecvMessages();
-    return hasRunningAnimation;
+    return result;
 }
 
 void RSUIDirector::SetUITaskRunner(const TaskRunner& uiTaskRunner)

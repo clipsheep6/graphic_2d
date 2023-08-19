@@ -41,7 +41,8 @@ bool RSRenderAnimation::Marshalling(Parcel& parcel) const
         parcel.WriteBool(animationFraction_.GetRepeatCallbackEnable()) &&
         parcel.WriteInt32(animationFraction_.GetFrameRateRange().min_) &&
         parcel.WriteInt32(animationFraction_.GetFrameRateRange().max_) &&
-        parcel.WriteInt32(animationFraction_.GetFrameRateRange().preferred_))) {
+        parcel.WriteInt32(animationFraction_.GetFrameRateRange().preferred_)) &&
+        parcel.WriteInt32(animationFraction_.GetVsyncDuration())) {
         ROSEN_LOGE("RSRenderAnimation::Marshalling, write param failed");
         return false;
     }
@@ -61,10 +62,12 @@ bool RSRenderAnimation::ParseParam(Parcel& parcel)
     int fpsMin = 0;
     int fpsMax = 0;
     int fpsPreferred = 0;
+    int32_t vsyncDuration = 0;
     if (!(parcel.ReadUint64(id_) && parcel.ReadInt32(duration) && parcel.ReadInt32(startDelay) &&
             parcel.ReadFloat(speed) && parcel.ReadInt32(repeatCount) && parcel.ReadBool(autoReverse) &&
             parcel.ReadBool(direction) && parcel.ReadInt32(fillMode) && parcel.ReadBool(isRepeatCallbackEnable) &&
-            parcel.ReadInt32(fpsMin) && parcel.ReadInt32(fpsMax) && parcel.ReadInt32(fpsPreferred))) {
+            parcel.ReadInt32(fpsMin) && parcel.ReadInt32(fpsMax) && parcel.ReadInt32(fpsPreferred)) &&
+            parcel.ReadInt32(vsyncDuration)) {
         ROSEN_LOGE("RSRenderAnimation::ParseParam, read param failed");
         return false;
     }
@@ -77,6 +80,7 @@ bool RSRenderAnimation::ParseParam(Parcel& parcel)
     SetFillMode(static_cast<FillMode>(fillMode));
     SetRepeatCallbackEnable(isRepeatCallbackEnable);
     SetFrameRateRange({fpsMin, fpsMax, fpsPreferred});
+    SetVsyncDuration(vsyncDuration);
     return true;
 }
 AnimationId RSRenderAnimation::GetAnimationId() const

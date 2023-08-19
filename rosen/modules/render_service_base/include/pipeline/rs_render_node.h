@@ -160,7 +160,7 @@ public:
         dirtyTypes_.emplace(type);
     }
 
-    virtual std::pair<bool, bool> Animate(int64_t timestamp);
+    virtual std::tuple<bool, bool, int32_t> Animate(int64_t timestamp);
 
     bool IsClipBound() const;
     // clipRect has value in UniRender when calling PrepareCanvasRenderNode, else it is nullopt

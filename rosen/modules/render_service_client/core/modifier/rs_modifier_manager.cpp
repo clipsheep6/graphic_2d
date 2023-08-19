@@ -16,6 +16,8 @@
 
 #include "modifier/rs_modifier_manager.h"
 
+#include <climits>
+
 #include "animation/rs_render_animation.h"
 #include "command/rs_animation_command.h"
 #include "command/rs_message_processor.h"
@@ -66,19 +68,24 @@ void RSModifierManager::RemoveAnimation(AnimationId keyId)
     animations_.erase(animationItr);
 }
 
-bool RSModifierManager::Animate(int64_t time)
+std::pair<bool, int> RSModifierManager::Animate(int64_t time)
 {
+    if (animations_.empty()) {
+        return { false, 0 };
+    }
     RS_TRACE_NAME("RunningCustomAnimation num:[" + std::to_string(animations_.size()) + "]");
     // process animation
     bool hasRunningAnimation = false;
+    int vsyncDuration = INT_MAX;
 
     // iterate and execute all animations, remove finished animations
-    EraseIf(animations_, [this, &hasRunningAnimation, time](auto& iter) -> bool {
+    EraseIf(animations_, [this, &hasRunningAnimation, &vsyncDuration, time](auto& iter) -> bool {
         auto animation = iter.second.lock();
         if (animation == nullptr) {
             return true;
         }
         bool isFinished = animation->Animate(time);
+        vsyncDuration = std::min(vsyncDuration, animation->GetVsyncDuration());
         if (isFinished) {
             OnAnimationFinished(animation);
         } else {
@@ -87,7 +94,7 @@ bool RSModifierManager::Animate(int64_t time)
         return isFinished;
     });
 
-    return hasRunningAnimation;
+    return { hasRunningAnimation, vsyncDuration };
 }
 
 void RSModifierManager::OnAnimationFinished(const std::shared_ptr<RSRenderAnimation>& animation)

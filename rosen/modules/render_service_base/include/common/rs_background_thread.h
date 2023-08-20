@@ -18,6 +18,11 @@
 
 #include "event_handler.h"
 #include "common/rs_macros.h"
+#include "EGL/egl.h"
+#include "EGL/eglext.h"
+#include "include/core/SkSurface.h"
+#include "include/gpu/GrDirectContext.h"
+#include "render_context/render_context.h"
 
 namespace OHOS::Rosen {
 class RSB_EXPORT RSBackgroundThread final {
@@ -32,9 +37,14 @@ private:
     RSBackgroundThread(const RSBackgroundThread&&);
     RSBackgroundThread& operator=(const RSBackgroundThread&);
     RSBackgroundThread& operator=(const RSBackgroundThread&&);
+    sk_sp<GrDirectContext> CreateShareGrContext();
+    void CreateShareEglContext();
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
+    sk_sp<GrDirectContext> grContext_ = nullptr;
+    RenderContext* renderContext_ = nullptr;
+    EGLContext eglShareContext_ = EGL_NO_CONTEXT;
 };
 }
 #endif // RS_BACKGROUND_THREAD_H

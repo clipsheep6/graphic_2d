@@ -28,6 +28,7 @@
 #endif
 #include "rs_trace.h"
 
+#include "common/rs_background_thread.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "memory/rs_tag_tracker.h"
 #include "pipeline/rs_base_render_node.h"
@@ -50,16 +51,16 @@
 
 namespace OHOS {
 namespace Rosen {
-std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
+bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
 {
     if (ROSEN_EQ(scaleX_, 0.f) || ROSEN_EQ(scaleY_, 0.f) || scaleX_ < 0.f || scaleY_ < 0.f) {
         RS_LOGE("RSSurfaceCaptureTask::Run: SurfaceCapture scale is invalid.");
-        return nullptr;
+        return false;
     }
     auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(nodeId_);
     if (node == nullptr) {
         RS_LOGE("RSSurfaceCaptureTask::Run: node is nullptr");
-        return nullptr;
+        return false;
     }
     std::unique_ptr<Media::PixelMap> pixelmap;
     visitor_ = std::make_shared<RSSurfaceCaptureVisitor>(scaleX_, scaleY_, RSUniRenderJudgement::IsUniRender());
@@ -77,11 +78,11 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         visitor_->IsDisplayNode(true);
     } else {
         RS_LOGE("RSSurfaceCaptureTask::Run: Invalid RSRenderNodeType!");
-        return nullptr;
+        return false;
     }
     if (pixelmap == nullptr) {
         RS_LOGE("RSSurfaceCaptureTask::Run: pixelmap == nullptr!");
-        return nullptr;
+        return false;
     }
 #ifndef USE_ROSEN_DRAWING
 #if defined(RS_ENABLE_GL)
@@ -107,14 +108,14 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
     auto skSurface = CreateSurface(pixelmap);
     if (skSurface == nullptr) {
         RS_LOGE("RSSurfaceCaptureTask::Run: surface is nullptr!");
-        return nullptr;
+        return false;
     }
     visitor_->SetSurface(skSurface.get());
 #else
     auto surface = CreateSurface(pixelmap);
     if (surface == nullptr) {
         RS_LOGE("RSSurfaceCaptureTask::Run: surface is nullptr!");
-        return nullptr;
+        return false;
     }
     visitor_->SetSurface(surface.get());
 #endif
@@ -126,33 +127,84 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         glFinish();
         ReleaseGLMemory();
     } else {
-        sk_sp<SkImage> img(skSurface.get()->makeImageSnapshot());
-        if (!img) {
-            RS_LOGE("RSSurfaceCaptureTask::Run: img is nullptr");
-            return nullptr;
+        skSurface->flushAndSubmit(true); 
+        GrBackendTexture grBackendTexture
+            = skSurface->getBackendTexture(SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess); 
+        if (!grBackendTexture.isValid()) {
+            RS_LOGE("SkiaSurface bind Image failed: BackendTexture is invalid");
+            return false;
         }
-        if (!CopyDataToPixelMap(img, pixelmap)) {
-            RS_LOGE("RSSurfaceCaptureTask::Run: CopyDataToPixelMap failed");
-            return nullptr;
-        }
+        auto wrapper = std::make_shared<std::tuple<std::unique_ptr<Media::PixelMap>>>();
+        std::get<0>(*wrapper) = std::move(pixelmap);
+        auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>();
+        auto rotation = (displayNode != nullptr) ? node->ReinterpretCastTo<RSDisplayRenderNode>()->GetRotation()
+            : ScreenRotation::INVALID_SCREEN_ROTATION;
+        bool ableRotation = ((displayNode != nullptr) && visitor_->IsUniRender());
+        auto id = nodeId_;
+
+        std::function<void()> copytask = [wrapper, grBackendTexture, callback, ableRotation, rotation, id]() -> void {
+            ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "copy and send capture");
+            if (!grBackendTexture.isValid()) {
+                RS_LOGE("COPYTASK: SkiaSurface bind Image failed: BackendTexture is invalid");
+                return;
+            }
+            auto pixelmap = std::move(std::get<0>(*wrapper));
+            if (pixelmap == nullptr) {
+                RS_LOGE("COPYTASK: pixelmap == nullptr");
+                return;
+            }
+
+            auto grContext = RSBackgroundThread::Instance().GetShareGrContext();
+            if (grContext == nullptr) {
+                RS_LOGE("COPYTASK: renderContext is nullptr");
+                return;
+            }
+
+            SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
+                kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+            auto skSurface = SkSurface::MakeRenderTarget(grContext.get(), SkBudgeted::kNo, info);
+            auto canvas = std::make_shared<RSPaintFilterCanvas>(skSurface.get());
+
+            auto tmpImg = SkImage::MakeFromTexture(canvas->recordingContext(), grBackendTexture,
+                kBottomLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
+            
+            if (!CopyDataToPixelMap(tmpImg, pixelmap)) {
+                RS_LOGE("COPYTASK: CopyDataToPixelMap failed");
+                return;
+            }
+
+            if (ableRotation) {
+                if (rotation == ScreenRotation::ROTATION_90) {
+                    pixelmap->rotate(static_cast<int32_t>(90)); // 90 degrees
+                }
+                if (rotation == ScreenRotation::ROTATION_270) {
+                    pixelmap->rotate(static_cast<int32_t>(270)); // 270 degrees
+                }
+                RS_LOGD("COPYTASK: PixelmapRotation: %d", static_cast<int32_t>(rotation));
+            }
+            callback->OnSurfaceCapture(id, pixelmap.get());
+            ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
+        };
+        RSBackgroundThread::Instance().PostTask(copytask);
+        return true;
     }
 #else
     std::shared_ptr<Drawing::Image> img(surface.get()->GetImageSnapshot());
     if (!img) {
         RS_LOGE("RSSurfaceCaptureTask::Run: img is nullptr");
-        return nullptr;
+        return false;
     }
 
     auto size = pixelmap->GetRowBytes() * pixelmap->GetHeight();
     if (size < 0) {
         RS_LOGE("RSSurfaceCaptureTask::Run: pxielmap size is invalid");
-        return nullptr;
+        return false;
     }
 
     auto data = (uint8_t *)malloc(size);
     if (data == nullptr) {
         RS_LOGE("RSSurfaceCaptureTask::Run: data is nullptr");
-        return nullptr;
+        return false;
     }
     Drawing::BitmapFormat format { Drawing::ColorType::COLORTYPE_RGBA_8888, Drawing::AlphaType::ALPHATYPE_PREMUL };
     Drawing::Bitmap bitmap;
@@ -162,7 +214,7 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
         RS_LOGE("RSSurfaceCaptureTask::Run: readPixels failed");
         free(data);
         data = nullptr;
-        return nullptr;
+        return false;
     }
     pixelmap->SetPixelsAddr(data, nullptr, pixelmap->GetRowBytes() * pixelmap->GetHeight(),
         Media::AllocatorType::HEAP_ALLOC, nullptr);
@@ -180,7 +232,8 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::Run()
             RS_LOGD("RSSurfaceCaptureTask::Run: PixelmapRotation: %{public}d", static_cast<int32_t>(rotation));
         }
     }
-    return pixelmap;
+    callback->OnSurfaceCapture(nodeId_, pixelmap.get());
+    return true;
 }
 
 std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::CreatePixelMapBySurfaceNode(
@@ -390,7 +443,7 @@ sk_sp<SkSurface> RSSurfaceCaptureTask::GetSkSurfaceFromSurfaceBuffer(std::shared
 #endif
 #endif
 
-bool RSSurfaceCaptureTask::CopyDataToPixelMap(sk_sp<SkImage> img, const std::unique_ptr<Media::PixelMap>& pixelmap)
+bool CopyDataToPixelMap(sk_sp<SkImage> img, const std::unique_ptr<Media::PixelMap>& pixelmap)
 {
     auto size = pixelmap->GetRowBytes() * pixelmap->GetHeight();
     SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),

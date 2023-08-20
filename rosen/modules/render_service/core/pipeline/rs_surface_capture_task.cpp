@@ -146,17 +146,20 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
             ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "copy and send capture");
             if (!grBackendTexture.isValid()) {
                 RS_LOGE("COPYTASK: SkiaSurface bind Image failed: BackendTexture is invalid");
+                callback->OnSurfaceCapture(id, nullptr);
                 return;
             }
             auto pixelmap = std::move(std::get<0>(*wrapper));
             if (pixelmap == nullptr) {
                 RS_LOGE("COPYTASK: pixelmap == nullptr");
+                callback->OnSurfaceCapture(id, nullptr);
                 return;
             }
 
             auto grContext = RSBackgroundThread::Instance().GetShareGrContext();
             if (grContext == nullptr) {
                 RS_LOGE("COPYTASK: renderContext is nullptr");
+                callback->OnSurfaceCapture(id, nullptr);
                 return;
             }
 
@@ -170,6 +173,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
             
             if (!CopyDataToPixelMap(tmpImg, pixelmap)) {
                 RS_LOGE("COPYTASK: CopyDataToPixelMap failed");
+                callback->OnSurfaceCapture(id, nullptr);
                 return;
             }
 

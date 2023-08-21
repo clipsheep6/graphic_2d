@@ -650,7 +650,7 @@ void RSRenderNode::UpdateDirtyRegion(
 
 bool RSRenderNode::IsSelfDrawingNode() const
 {
-    return GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE;
+    return GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE || GetType() == RSRenderNodeType::SURFACE_NODE;
 }
 
 bool RSRenderNode::IsDirty() const
@@ -758,9 +758,8 @@ void RSRenderNode::ApplyBoundsGeometry(RSPaintFilterCanvas& canvas)
     }
 }
 
-void RSRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas)
+void RSRenderNode::ApplyAlpha(RSPaintFilterCanvas& canvas)
 {
-    ApplyBoundsGeometry(canvas);
     auto alpha = renderProperties_.GetAlpha();
     if (alpha < 1.f) {
         if ((GetChildrenCount() == 0) || !(GetRenderProperties().GetAlphaOffscreen() || IsForcedDrawInGroup())) {
@@ -778,6 +777,12 @@ void RSRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas)
 #endif
         }
     }
+}
+
+void RSRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas)
+{
+    ApplyBoundsGeometry(canvas);
+    ApplyAlpha(canvas);
     RSPropertiesPainter::DrawMask(GetRenderProperties(), canvas);
 }
 

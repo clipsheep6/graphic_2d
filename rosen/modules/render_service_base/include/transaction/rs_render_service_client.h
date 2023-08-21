@@ -217,6 +217,7 @@ private:
     void TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap);
     std::mutex mutex_;
     std::map<NodeId, sptr<RSIBufferAvailableCallback>> bufferAvailableCbRTMap_;
+    std::mutex mapMutex_;
     std::map<NodeId, sptr<RSIBufferAvailableCallback>> bufferAvailableCbUIMap_;
     sptr<RSIScreenChangeCallback> screenChangeCb_;
     sptr<RSISurfaceCaptureCallback> surfaceCaptureCbDirector_;

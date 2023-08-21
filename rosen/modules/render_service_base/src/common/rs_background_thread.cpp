@@ -47,6 +47,7 @@ void RSBackgroundThread::InitRenderContext(RenderContext* context)
 
 void RSBackgroundThread::CreateShareEglContext()
 {
+#ifdef RS_ENABLE_GL
     if (renderContext_ == nullptr) {
         RS_LOGE("renderContext_ is nullptr.");
         return;
@@ -60,6 +61,7 @@ void RSBackgroundThread::CreateShareEglContext()
         RS_LOGE("eglMakeCurrent failed.");
         return;
     }
+#endif
 }
 
 sk_sp<GrDirectContext> RSBackgroundThread::GetShareGrContext()

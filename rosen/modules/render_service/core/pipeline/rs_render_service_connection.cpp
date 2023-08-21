@@ -485,6 +485,7 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
         std::function<void()> captureTask = [scaleY, scaleX, callback, id]() -> void {
             RS_LOGD("RSRenderService::TakeSurfaceCapture callback->OnSurfaceCapture nodeId:[%{public}" PRIu64 "]", id);
             ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderService::TakeSurfaceCapture");
+            RSSurfaceCaptureTask task(id, scaleX, scaleY);
             if (!task.Run(callback)) {
                 callback->OnSurfaceCapture(id, nullptr);
             }

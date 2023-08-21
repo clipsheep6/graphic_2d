@@ -17,6 +17,8 @@
 
 #include <cinttypes>
 
+#include "v1_0/itp_interfaces.h"
+
 #include "platform/common/rs_log.h"
 #include "string_utils.h"
 #include "hisysevent.h"
@@ -251,6 +253,19 @@ void RSScreen::SetPowerStatus(uint32_t powerStatus)
         if (hdiScreen_->SetScreenVsyncEnabled(true) != GRAPHIC_DISPLAY_SUCCESS) {
             RS_LOGE("RSScreen %{public}s SetScreenVsyncEnabled failed", __func__);
         }
+    }
+}
+
+void RSScreen::SetTpFeatureConfig(int32_t feature, const char* config)
+{
+    if (IsVirtual()) {
+        RS_LOGW("RSScreen %{public}s: virtual screen not support SetTpFeatureConfig.", __func__);
+        return;
+    }
+    int32_t code = 0;
+    auto client = OHOS::HDI::Tp::V1_0::ITpInterfaces::Get(true);
+    if (client->hwSetFeatureConfig(feature, config, code) < 0) {
+        RS_LOGE("RSScreen %{public}s SetTpFeatureConfig failed", __func__);
     }
 }
 

@@ -102,6 +102,8 @@ private:
 
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) override;
 
+    void SetTpFeatureConfig(ScreenId id, int32_t feature, const char* config) override;
+
     void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY) override;
 
     void TakeSurfaceCaptureForUIWithUni(

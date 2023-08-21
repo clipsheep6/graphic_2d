@@ -1027,5 +1027,50 @@ HWTEST_F(RSInterfacesTest, RegisterHgmConfigChangeCallback_Test, Function | Smal
     int32_t ret = rsInterfaces->RegisterHgmConfigChangeCallback(cb);
     ASSERT_EQ(ret, 0);
 }
+
+/*
+* Function: SetTpFeatureConfig
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetTpFeatureConfig with INVALID_SCREEN_ID
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, SetTpFeatureConfig001, Function | SmallTest | Level2)
+{
+    auto screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
+
+    int32_t feature = 12;
+    const char* config = "0";
+    rsInterfaces->SetTpFeatureConfig(INVALID_SCREEN_ID, feature, config);
+}
+
+/*
+* Function: SetTpFeatureConfig002
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetTpFeatureConfig with defalult screen i
+*                  2. check
+*/
+HWTEST_F(RSInterfacesTest, SetTpFeatureConfig002, Function | SmallTest | Level2)
+{
+    int32_t feature = 12;
+
+    ScreenId screenId0 =  = static_cast<uint64_t>(5);
+    const char*  unfold = "0";
+    rsInterfaces->SetTpFeatureConfig(screenId0, feature, unfold);
+    usleep(50000); // wait 50000us to ensure SetTpFeatureConfig done.
+    rsInterfaces->SetScreenPowerStatus(screenId0, ScreenPowerStatus::POWER_STATUS_OFF);
+    usleep(50000); // wait 50000us to ensure SetScreenPowerStatus done.
+
+    ScreenId screenId1 =  = static_cast<uint64_t>(0);
+    const char*  offFold = "2";
+    rsInterfaces->SetTpFeatureConfig(screenId1, feature, offFold);
+    usleep(50000); // wait 50000us to ensure SetTpFeatureConfig done.
+    rsInterfaces->SetScreenPowerStatus(screenId1, ScreenPowerStatus::POWER_STATUS_OFF);
+    usleep(50000); // wait 50000us to ensure SetScreenPowerStatus done.
+}
 } // namespace Rosen
 } // namespace OHOS

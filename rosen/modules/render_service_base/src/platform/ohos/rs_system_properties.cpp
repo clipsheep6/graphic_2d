@@ -139,6 +139,15 @@ bool RSSystemProperties::GetHardwareComposerEnabled()
     return system::GetParameter("rosen.hardwarecomposer.enabled", "1") != "0";
 }
 
+#ifdef ENABLE_DDGR_OPTIMIZE
+bool RSSystemProperties::GetPartialProcessEnabled()
+{
+    static bool openPartialProcess =
+        std::atoi((system::GetParameter("persist.ddgr.partialprocess.enabled", "0")).c_str()) != 0;
+    return openPartialProcess;
+}
+#endif
+
 bool RSSystemProperties::GetAFBCEnabled()
 {
     return system::GetParameter("rosen.afbc.enabled", "1") != "0";

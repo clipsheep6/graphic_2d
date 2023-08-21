@@ -81,6 +81,9 @@ void RSRenderNode::AddChild(SharedPtr child, int index)
         child->SetIsOnTheTree(true, instanceRootNodeId_);
     }
     SetContentDirty();
+#ifdef ENABLE_DDGR_OPTIMIZE
+    subTreeChanged_ = true;
+#endif
     isFullChildrenListValid_ = false;
 }
 
@@ -103,6 +106,9 @@ void RSRenderNode::MoveChild(SharedPtr child, int index)
     }
     children_.erase(it);
     SetContentDirty();
+#ifdef ENABLE_DDGR_OPTIMIZE
+    subTreeChanged_ = true;
+#endif
     isFullChildrenListValid_ = false;
 }
 
@@ -131,6 +137,9 @@ void RSRenderNode::RemoveChild(SharedPtr child, bool skipTransition)
     }
     children_.erase(it);
     SetContentDirty();
+#ifdef ENABLE_DDGR_OPTIMIZE
+    subTreeChanged_ = true;
+#endif
     isFullChildrenListValid_ = false;
 }
 
@@ -191,6 +200,9 @@ void RSRenderNode::AddCrossParentChild(const SharedPtr& child, int32_t index)
         child->SetIsOnTheTree(true, instanceRootNodeId_);
     }
     SetContentDirty();
+#ifdef ENABLE_DDGR_OPTIMIZE
+    subTreeChanged_ = true;
+#endif
     isFullChildrenListValid_ = false;
 }
 
@@ -223,6 +235,9 @@ void RSRenderNode::RemoveCrossParentChild(const SharedPtr& child, const WeakPtr&
     }
     children_.erase(it);
     SetContentDirty();
+#ifdef ENABLE_DDGR_OPTIMIZE
+    subTreeChanged_ = true;
+#endif
     isFullChildrenListValid_ = false;
 }
 
@@ -241,6 +256,9 @@ void RSRenderNode::RemoveFromTree(bool skipTransition)
     parentPtr->disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
     parentPtr->isFullChildrenListValid_ = false;
     child->ResetParent();
+#ifdef ENABLE_DDGR_OPTIMIZE
+    subTreeChanged_ = true;
+#endif
 }
 
 void RSRenderNode::ClearChildren()
@@ -269,6 +287,9 @@ void RSRenderNode::ClearChildren()
     }
     children_.clear();
     SetContentDirty();
+#ifdef ENABLE_DDGR_OPTIMIZE
+    subTreeChanged_ = true;
+#endif
     isFullChildrenListValid_ = false;
 }
 

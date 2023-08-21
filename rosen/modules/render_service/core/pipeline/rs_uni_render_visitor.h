@@ -35,6 +35,10 @@
 #include "screen_manager/rs_screen_manager.h"
 #include "system/rs_system_parameters.h"
 #include "visitor/rs_node_visitor.h"
+#ifdef ENABLE_DDGR_OPTIMIZE
+#include "ddgr_renderer.h"
+#include "rs_surface_render_node_adaptor.h"
+#endif
 
 class SkPicture;
 namespace OHOS {
@@ -231,6 +235,21 @@ private:
     void DrawSpherize(RSRenderNode& node);
     void DrawChildRenderNode(RSRenderNode& node);
     void DrawChildCanvasRenderNode(RSRenderNode& node);
+    void DrawRenderNodeBeforeChild(RSRenderNode& node);
+    void DrawRenderNodeAfterChild(RSRenderNode& node);
+#ifdef ENABLE_DDGR_OPTIMIZE
+    bool isPartialProcessEnabled_ = false;
+    bool isSubTreeChanged_ = false;
+    friend class RSUniRenderVisitorAdaptor;
+    std::shared_ptr<RSSurfaceRenderNodeAdaptor> surfaceNodeAdaptor_ = nullptr;
+    bool IfSurfaceNodeAndAdaptorExist()
+    {
+        if (curSurfaceNode_) {
+            surfaceNodeAdaptor_ = curSurfaceNode_->GetSurfaceNodeAdaptor();
+        }
+        return curSurfaceNode_ && surfaceNodeAdaptor_;
+    }
+#endif
 
     void CheckColorSpace(RSSurfaceRenderNode& node);
     void HandleColorGamuts(RSDisplayRenderNode& node, const sptr<RSScreenManager>& screenManager);

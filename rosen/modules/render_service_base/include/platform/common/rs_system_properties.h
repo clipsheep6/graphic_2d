@@ -117,6 +117,9 @@ public:
     static bool GetHardwareComposerEnabled();
     static bool GetAFBCEnabled();
     static ReleaseGpuResourceType GetReleaseGpuResourceEnabled();
+#ifdef ENABLE_DDGR_OPTIMIZE
+    static bool GetPartialProcessEnabled();
+#endif
 
     static void SetDrawTextAsBitmap(bool flag);
     static bool GetDrawTextAsBitmap();

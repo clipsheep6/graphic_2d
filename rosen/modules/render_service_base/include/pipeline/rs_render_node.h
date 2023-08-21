@@ -399,7 +399,17 @@ public:
 
     void ResetRSFrameRateRange();
     void ResetUIFrameRateRange();
+#ifdef ENABLE_DDGR_OPTIMIZE
+    inline void ResetSubTreeChanged()
+    {
+        subTreeChanged_ = false;
+    }
 
+    bool GetSubTreeChanged() const
+    {
+        return subTreeChanged_;
+    }
+#endif
     void MarkNonGeometryChanged();
     std::vector<HgmModifierProfile> GetHgmModifierProfileList() const;
     void SetRSFrameRateRangeByPreferred(int32_t preferred);
@@ -545,6 +555,9 @@ private:
     std::unordered_set<RSModifierType> dirtyTypes_;
     bool hasCacheableAnim_ = false;
     bool geometryChangeNotPerceived_ = false;
+#ifdef ENABLE_DDGR_OPTIMIZE
+    bool subTreeChanged_ = false;
+#endif
 
     FrameRateRange rsRange_ = {0, 0, 0};
     FrameRateRange uiRange_ = {0, 0, 0};

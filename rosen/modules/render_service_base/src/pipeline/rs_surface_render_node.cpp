@@ -41,6 +41,9 @@
 #include "render/rs_skia_filter.h"
 #include "transaction/rs_render_service_client.h"
 #include "visitor/rs_node_visitor.h"
+#ifdef ENABLE_DDGR_OPTIMIZE
+#include "rs_surface_render_node_adaptor.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -51,6 +54,9 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config
       bundleName_(config.bundleName),
       nodeType_(config.nodeType),
       dirtyManager_(std::make_shared<RSDirtyRegionManager>()),
+#ifdef ENABLE_DDGR_OPTIMIZE
+      surfaceAdaptorPtr_(std::make_shared<RSSurfaceRenderNodeAdaptor>()),
+#endif
       cacheSurfaceDirtyManager_(std::make_shared<RSDirtyRegionManager>())
 {
     MemoryInfo info = {sizeof(*this), ExtractPid(config.id), config.id, MEMORY_TYPE::MEM_RENDER_NODE};

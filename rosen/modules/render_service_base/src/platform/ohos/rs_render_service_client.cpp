@@ -341,6 +341,17 @@ void RSRenderServiceClient::SetScreenActiveMode(ScreenId id, uint32_t modeId)
     renderService->SetScreenActiveMode(id, modeId);
 }
 
+void RSRenderServiceClient::TransferPointerEvent(int32_t event)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGW("RSRenderServiceClient renderService == nullptr!");
+        return;
+    }
+
+    renderService->TransferPointerEvent(event);
+}
+
 void RSRenderServiceClient::SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();

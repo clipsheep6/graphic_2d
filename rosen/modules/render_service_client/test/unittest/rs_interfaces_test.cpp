@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 #include <memory>
@@ -1026,6 +1027,20 @@ HWTEST_F(RSInterfacesTest, RegisterHgmConfigChangeCallback_Test, Function | Smal
     HgmConfigChangeCallback cb = [](std::shared_ptr<RSHgmConfigData> data){};
     int32_t ret = rsInterfaces->RegisterHgmConfigChangeCallback(cb);
     ASSERT_EQ(ret, 0);
+}
+
+/*
+ * @tc.name: TransferPointerEvent
+ * @tc.desc: Transfer a pointer event to render service
+ * @tc.type: FUNC
+ * @tc.require: 
+ */
+HWTEST_F(RSInterfacesTest, TransferPointerEvent, Function | SmallTest | Level3)
+{
+    ASSERT_NE(rsInterfaces, nullptr);
+    int32_t pointerEvent = 0;
+    rsInterfaces->TransferPointerEvent(pointerEvent);
+    ASSERT_NE(rsInterfaces, nullptr);
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -344,6 +344,12 @@ void RSRenderServiceConnection::SetScreenActiveMode(ScreenId id, uint32_t modeId
     }
 }
 
+void RSRenderServiceConnection::TransferPointerEvent(int32_t event)
+{
+    auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
+    hgmCore.OnPointerEvent(event);
+}
+
 void RSRenderServiceConnection::SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate)
 {
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderService::SetScreenRefreshRate");

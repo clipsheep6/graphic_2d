@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include "hgm_log.h"
+#include "hgm_touch_thread.h"
 
 namespace OHOS::Rosen {
 HgmCore& HgmCore::Instance()
@@ -393,6 +394,20 @@ int32_t HgmCore::CalModifierPreferred(HgmModifierProfile &hgmModifierProfile) co
 void HgmCore::SetActiveScreenId(ScreenId id)
 {
     activeScreenId_ = id;
+}
+
+void HgmCore::OnPointerEvent(int32_t event)
+{
+    HGM_LOGE("HgmCore OnPointerEvent received a pointer event: %d", event);
+
+    auto touchThread = HgmTouchThread::Instance();
+    touchThread->OnTouchEventReceived(event);
+    return;
+}
+
+void HgmCore::SetIdleRefreshRate()
+{
+    HGM_LOGE("HgmCore SetIdleRefreshRate Set refreshrate to a low value due to idle");
 }
 
 } // namespace OHOS::Rosen

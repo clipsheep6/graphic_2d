@@ -91,6 +91,8 @@ public:
 
     RSScreenModeInfo GetScreenActiveMode(ScreenId id);
 
+    void TransferPointerEvent(int32_t event);
+
     void SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate);
 
     void SetRefreshRateMode(int32_t refreshRateMode);

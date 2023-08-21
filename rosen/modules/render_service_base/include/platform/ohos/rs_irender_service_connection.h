@@ -87,6 +87,8 @@ public:
 
     virtual void SetScreenActiveMode(ScreenId id, uint32_t modeId) = 0;
 
+    virtual void TransferPointerEvent(int32_t event) = 0;
+
     virtual void SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate) = 0;
 
     virtual void SetRefreshRateMode(int32_t refreshRateMode) = 0;

@@ -14,6 +14,7 @@
  */
 
 #include "rs_render_service_connection_stub.h"
+#include <cstdint>
 #include "ivsync_connection.h"
 #include "securec.h"
 #include "sys_binder.h"
@@ -351,6 +352,16 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             ScreenId id = data.ReadUint64();
             uint32_t modeId = data.ReadUint32();
             SetScreenActiveMode(id, modeId);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::POINTER_EVENT): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            int32_t event = data.ReadInt32();
+            TransferPointerEvent(event);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_REFRESH_RATE): {

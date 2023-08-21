@@ -76,6 +76,19 @@ enum RefreshRateMode {
     HGM_REFRESHRATE_MODE_HIGH,
 };
 
+enum HgmTouchEvent {
+    HGM_TOUCH_DOWN = 0,
+    HGM_TOUCH_MOVE,
+    HGM_TOUCH_UP,
+};
+
+enum HgmTouchStatus {
+    HGM_TOUCH_STATUS_DOWN = 0,
+    HGM_TOUCH_STATUS_MOVE,
+    HGM_TOUCH_STATUS_UP,
+    HGM_TOUCH_STATUS_IDLE,
+};
+
 enum class SpeedTransType {
     TRANS_PIXEL_TO_MM,
     TRANS_MM_TO_PIXEL,

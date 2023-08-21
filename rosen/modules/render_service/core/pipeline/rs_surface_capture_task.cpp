@@ -127,9 +127,9 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
         glFinish();
         ReleaseGLMemory();
     } else {
-        skSurface->flushAndSubmit(true); 
+        skSurface->flushAndSubmit(true);
         GrBackendTexture grBackendTexture
-            = skSurface->getBackendTexture(SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess); 
+            = skSurface->getBackendTexture(SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess);
         if (!grBackendTexture.isValid()) {
             RS_LOGE("SkiaSurface bind Image failed: BackendTexture is invalid");
             return false;
@@ -170,7 +170,6 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
 
             auto tmpImg = SkImage::MakeFromTexture(canvas->recordingContext(), grBackendTexture,
                 kBottomLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
-            
             if (!CopyDataToPixelMap(tmpImg, pixelmap)) {
                 RS_LOGE("COPYTASK: CopyDataToPixelMap failed");
                 callback->OnSurfaceCapture(id, nullptr);

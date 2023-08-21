@@ -60,16 +60,14 @@ HWTEST_F(OH_Drawing_UI_TypographyTest, OH_Drawing_UI_TypographyTest, TestSize.Le
 }
 
 /*
- * @tc.name: OH_Drawing_UI_TypographyTest002
+ * @tc.name: OH_Drawing_UI_TypographyTest001
  * @tc.desc: test for DidExceedMaxLines metrics
  * @tc.type: FUNC
  */
-HWTEST_F(OH_Drawing_UI_TypographyTest, OH_Drawing_UI_DidExceedMaxLinesTest002, TestSize.Level2)
+HWTEST_F(OH_Drawing_UI_TypographyTest, OH_Drawing_UI_DidExceedMaxLinesTest001, TestSize.Level1)
 {
     TypographyStyle typoStype;
-    std::unique_ptr<TypographyCreate> builder = TypographyCreate::CreateRosenBuilder(
-        typoStype, FontCollection::GetInstance());
-    std::unique_ptr<rosen::Typography> typography = builder->Build();
-    typography->GetGlyphPositionAtCoordinate(0.17, 0.14);
-}
+    #ifndef USE_GRAPHIC_TEXT_GINE
+    result = typography->GetGlyphPositionAtCoordinate();
+    #endif
 }

@@ -65,10 +65,13 @@ bool RSPhysicalScreenFuzzTest(const uint8_t* data, size_t size)
     uint32_t level = GetData<uint32_t>();
     int32_t modeIdx = GetData<uint32_t>();
     uint32_t skipFrameInterval = GetData<uint32_t>();
+    int32_t feature = GetData<int32_t>();
+    std::string config = GetData<std::string>();
 
     // test
     auto& rsInterfaces = RSInterfaces::GetInstance();
     rsInterfaces.SetScreenActiveMode(static_cast<ScreenId>(id), modeId);
+    rsScreen->SetTpFeatureConfig(static_cast<ScreenId>(id), feature, config);
     rsInterfaces.SetScreenPowerStatus(static_cast<ScreenId>(id), static_cast<ScreenPowerStatus>(status));
     rsInterfaces.SetScreenBacklight(static_cast<ScreenId>(id), level);
     rsInterfaces.SetScreenColorGamut(static_cast<ScreenId>(id), modeIdx);

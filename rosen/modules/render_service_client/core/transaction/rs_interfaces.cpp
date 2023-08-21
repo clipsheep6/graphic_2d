@@ -176,6 +176,11 @@ void RSInterfaces::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status)
     renderServiceClient_->SetScreenPowerStatus(id, status);
 }
 
+void RSInterfaces::SetTpFeatureConfig(ScreenId id, int32_t feature, const std::string& config)
+{
+    renderServiceClient_->SetTpFeatureConfig(id, feature, config);
+}
+
 bool RSInterfaces::TakeSurfaceCaptureForUIWithoutUni(NodeId id,
     std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY)
 {

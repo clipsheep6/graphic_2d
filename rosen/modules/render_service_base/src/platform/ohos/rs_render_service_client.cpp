@@ -416,6 +416,16 @@ void RSRenderServiceClient::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus 
     renderService->SetScreenPowerStatus(id, status);
 }
 
+void RSRenderServiceClient::SetTpFeatureConfig(ScreenId id, int32_t feature, const std::string& config)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return;
+    }
+
+    renderService->SetTpFeatureConfig(id, feature, config);
+}
+
 RSScreenModeInfo RSRenderServiceClient::GetScreenActiveMode(ScreenId id)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();

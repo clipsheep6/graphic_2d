@@ -288,4 +288,19 @@ HWTEST_F(RSScreenTest, SetScreenSkipFrameIntervalTest, testing::ext::TestSize.Le
     auto res = virtualScreen->GetScreenSkipFrameInterval();
     ASSERT_EQ(res, 0);
 }
+
+/*
+ * @tc.name: SetTpFeatureConfig_001
+ * @tc.desc: SetTpFeatureConfig Test
+ * @tc.type: FUNC
+ * @tc.require: issueI78T3Z
+ */
+HWTEST_F(RSScreenTest, SetTpFeatureConfig_001, testing::ext::TestSize.Level2)
+{
+    ScreenId id = INVALID_SCREEN_ID;
+    auto rsScreen = std::make_unique<impl::RSScreen>(id, false, HdiOutput::CreateHdiOutput(id), nullptr);
+    int32_t feature = 12;
+    std::string config = "0"
+    rsScreen->SetTpFeatureConfig(INVALID_SCREEN_ID, feature, config);
+}
 } // namespace OHOS::Rosen

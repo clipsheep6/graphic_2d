@@ -67,7 +67,8 @@
           "resource_schedule_service",
           "soc_perf",
           "accessibility",
-          "frame_aware_sched"
+          "frame_aware_sched",
+          "drivers_interface_tp_extra"
         ],
         "third_party": [
           "flutter",

@@ -99,6 +99,8 @@ public:
 
     virtual void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) = 0;
 
+    virtual void SetTpFeatureConfig(ScreenId id, int32_t feature, const std::string& config) = 0;
+
     virtual void TakeSurfaceCapture(
         NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY) = 0;
 

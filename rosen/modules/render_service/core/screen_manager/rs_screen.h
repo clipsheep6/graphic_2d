@@ -77,6 +77,7 @@ public:
     virtual void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) = 0;
     virtual uint32_t GetScreenSkipFrameInterval() const = 0;
     virtual void SetScreenVsyncEnabled(bool enabled) const = 0;
+    virtual void SetTpFeatureConfig(int32_t feature, const std::string& config) = 0;
 };
 
 namespace impl {
@@ -129,6 +130,7 @@ public:
     void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) override;
     uint32_t GetScreenSkipFrameInterval() const override;
     void SetScreenVsyncEnabled(bool enabled) const override;
+    void SetTpFeatureConfig(int32_t feature, const std::string& config) override;
 
 private:
     // create hdiScreen and get some information from drivers.

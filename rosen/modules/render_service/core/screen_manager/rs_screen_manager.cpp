@@ -741,6 +741,17 @@ void RSScreenManager::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status
     screenPowerStatus_[id] = status;
 }
 
+void RSScreenManager::SetTpFeatureConfig(ScreenId id, int32_t feature, const std::string& config)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return;
+    }
+    screens_.at(id)->SetTpFeatureConfig(feature, config);
+}
+
 void RSScreenManager::GetVirtualScreenResolution(ScreenId id, RSVirtualScreenResolution& virtualScreenResolution) const
 {
     std::lock_guard<std::mutex> lock(mutex_);

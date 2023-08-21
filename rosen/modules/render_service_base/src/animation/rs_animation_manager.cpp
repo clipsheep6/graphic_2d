@@ -78,22 +78,24 @@ void RSAnimationManager::FilterAnimationByPid(pid_t pid)
     });
 }
 
-std::pair<bool, bool> RSAnimationManager::Animate(int64_t time, bool nodeIsOnTheTree)
+std::tuple<bool, bool, int32_t> RSAnimationManager::Animate(int64_t time, bool nodeIsOnTheTree)
 {
     // process animation
     bool hasRunningAnimation = false;
     bool needRequestNextVsync = false;
+    int32_t vsyncDuration = INT_MAX;
 
     rsRange_.Reset();
     // iterate and execute all animations, remove finished animations
     EraseIf(animations_, [this, &hasRunningAnimation, time,
-        &needRequestNextVsync, nodeIsOnTheTree](auto& iter) -> bool {
+        &needRequestNextVsync, &vsyncDuration, nodeIsOnTheTree](auto& iter) -> bool {
         auto& animation = iter.second;
         if (!nodeIsOnTheTree && animation->GetRepeatCount() == -1) {
             hasRunningAnimation = animation->IsRunning() || hasRunningAnimation;
             return false;
         }
         bool isFinished = animation->Animate(time);
+        vsyncDuration = std::min(vsyncDuration, animation->GetVsyncDuration());
         if (isFinished) {
             OnAnimationFinished(animation);
         } else {
@@ -108,7 +110,7 @@ std::pair<bool, bool> RSAnimationManager::Animate(int64_t time, bool nodeIsOnThe
         return isFinished;
     });
 
-    return { hasRunningAnimation, needRequestNextVsync };
+    return { hasRunningAnimation, needRequestNextVsync, vsyncDuration };
 }
 
 FrameRateRange RSAnimationManager::GetFrameRateRangeFromRSAnimations()

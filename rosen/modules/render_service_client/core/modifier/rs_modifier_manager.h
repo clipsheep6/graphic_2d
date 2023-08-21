@@ -37,7 +37,7 @@ public:
     void AddAnimation(const std::shared_ptr<RSRenderAnimation>& animation);
     void RemoveAnimation(const AnimationId keyId);
 
-    bool Animate(int64_t time);
+    std::pair<bool, int> Animate(int64_t time);
     void Draw();
 
 private:

@@ -141,6 +141,16 @@ public:
         return animationFraction_.GetFrameRateRange();
     }
 
+    void SetVsyncDuration(int vsyncDuration)
+    {
+        animationFraction_.SetVsyncDuration(vsyncDuration);
+    }
+
+    int GetVsyncDuration() const
+    {
+        return animationFraction_.GetVsyncDuration();
+    }
+
     void Attach(RSRenderNode* renderNode);
     void Detach();
     RSRenderNode* GetTarget() const;

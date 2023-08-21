@@ -114,6 +114,16 @@ public:
         return range_;
     }
 
+    void SetVsyncDuration(int vsyncDuration)
+    {
+        vsyncDuration_ = vsyncDuration;
+    }
+
+    int GetVsyncDuration() const
+    {
+        return vsyncDuration_;
+    }
+
     static const RSAnimationTimingProtocol DEFAULT;
     static const RSAnimationTimingProtocol IMMEDIATE;
 
@@ -126,6 +136,7 @@ protected:
     FillMode fillMode_ { FillMode::FORWARDS };
     bool isForward_ { true };
     FrameRateRange range_ = {0, 0, 0};
+    int vsyncDuration_ { 0 };
 };
 } // namespace Rosen
 } // namespace OHOS

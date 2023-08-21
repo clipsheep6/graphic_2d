@@ -1501,9 +1501,10 @@ void RSMainThread::Animate(uint64_t timestamp)
     doDirectComposition_ = false;
     bool curWinAnim = false;
     bool needRequestNextVsync = false;
+    int32_t vsyncDuration = INT_MAX;
     // iterate and animate all animating nodes, remove if animation finished
     EraseIf(context_->animatingNodeList_,
-        [this, timestamp, &curWinAnim, &needRequestNextVsync](const auto& iter) -> bool {
+        [this, timestamp, &curWinAnim, &needRequestNextVsync, &vsyncDuration](const auto& iter) -> bool {
         auto node = iter.second.lock();
         if (node == nullptr) {
             RS_LOGD("RSMainThread::Animate removing expired animating node");
@@ -1516,7 +1517,8 @@ void RSMainThread::Animate(uint64_t timestamp)
         if (node->IsOnTheTree()) {
             AddActiveNodeId(ExtractPid(node->GetId()), node->GetId());
         }
-        auto [hasRunningAnimation, nodeNeedRequestNextVsync] = node->Animate(timestamp);
+        auto [hasRunningAnimation, nodeNeedRequestNextVsync, animationVsyncDuration] = node->Animate(timestamp);
+        vsyncDuration = std::min(vsyncDuration, animationVsyncDuration);
         if (!hasRunningAnimation) {
             RS_LOGD("RSMainThread::Animate removing finished animating node %{public}" PRIu64, node->GetId());
         }
@@ -1538,7 +1540,16 @@ void RSMainThread::Animate(uint64_t timestamp)
     RS_LOGD("RSMainThread::Animate end, animating nodes remains, has window animation: %{public}d", curWinAnim);
 
     if (needRequestNextVsync) {
-        RequestNextVSync();
+        if (vsyncDuration) {
+            if (handler_) {
+                auto task = [this]() {
+                    RequestNextVSync();
+                };
+                handler_->PostTask(task, "RequestNextVSyncTimeoutTask", vsyncDuration);
+            }
+        } else {
+            RequestNextVSync();
+        }
     }
     PerfAfterAnim(needRequestNextVsync);
 }

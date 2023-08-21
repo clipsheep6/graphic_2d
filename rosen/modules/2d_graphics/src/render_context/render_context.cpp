@@ -287,7 +287,6 @@ void RenderContext::SetColorSpace(GraphicColorGamut colorSpace)
 bool RenderContext::SetUpGrContext()
 {
     if (grContext_ != nullptr) {
-        LOGD("grContext has already created!!");
         return true;
     }
 

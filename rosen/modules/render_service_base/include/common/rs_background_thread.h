@@ -19,15 +19,18 @@
 #include "event_handler.h"
 #include "common/rs_macros.h"
 
-#ifdef RS_ENABLE_GL
+#include "event_handler.h"
+#include "common/rs_macros.h"
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 #include "include/core/SkSurface.h"
+#if defined(NEW_SKIA)
 #include "include/gpu/GrDirectContext.h"
-#include "render_context/render_context.h"
 #endif
 
 namespace OHOS::Rosen {
+class RenderContext;
+
 class RSB_EXPORT RSBackgroundThread final {
 public:
     static RSBackgroundThread& Instance();

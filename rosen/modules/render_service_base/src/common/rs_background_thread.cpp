@@ -15,6 +15,7 @@
 
 #include "common/rs_background_thread.h"
 #include "platform/common/rs_log.h"
+#include "render_context/render_context.h"
 #include "rs_trace.h"
 
 namespace OHOS::Rosen {

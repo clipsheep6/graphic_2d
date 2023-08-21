@@ -94,6 +94,10 @@ void RSUniRenderEngine::DrawHdiLayerWithParams(RSPaintFilterCanvas& canvas, cons
 #endif
     if (!params.useCPU) {
         RegisterDeleteBufferListener(layer->GetSurface(), true);
+        SkAutoCanvasRestore arc(&canvas, false);
+        if (!canvas.isClipRect()) {
+            canvas.saveLayer(param.dstRect, nullptr);
+        }
         DrawImage(canvas, params);
     } else {
         DrawBuffer(canvas, params);

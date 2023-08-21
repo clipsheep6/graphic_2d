@@ -32,6 +32,8 @@ class RSB_EXPORT RSBackgroundThread final {
 public:
     static RSBackgroundThread& Instance();
     void PostTask(const std::function<void()>& task);
+    void InitRenderContext(RenderContext* context);
+    sk_sp<GrDirectContext> GetShareGrContext();
 
 private:
     RSBackgroundThread();

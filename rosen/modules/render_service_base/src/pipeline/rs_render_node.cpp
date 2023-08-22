@@ -1600,17 +1600,6 @@ void RSRenderNode::SortChildren()
     isChildrenSorted_ = true;
 }
 
-void RSRenderNode::ApplyChildrenModifiers()
-{
-    bool anyChildZOrderChanged = false;
-    for (auto& child : GetChildren()) {
-        anyChildZOrderChanged = child->ApplyModifiers() || anyChildZOrderChanged;
-    }
-    if (anyChildZOrderChanged) {
-        isChildrenSorted_ = false;
-    }
-}
-
 uint32_t RSRenderNode::GetChildrenCount() const
 {
     return children_.size();

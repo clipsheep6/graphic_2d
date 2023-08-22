@@ -106,6 +106,7 @@ RSRenderThread::RSRenderThread()
         ROSEN_LOGD("RSRenderThread DrawFrame(%{public}" PRIu64 ") in %{public}s",
             prevTimestamp_, renderContext_ ? "GPU" : "CPU");
         Animate(prevTimestamp_);
+        ApplyModifiers();
         Render();
         SendCommands();
         context_->activeNodesInRoot_.clear();
@@ -402,7 +403,7 @@ void RSRenderThread::Animate(uint64_t timestamp)
     bool needRequestNextVsync = false;
     // iterate and animate all animating nodes, remove if animation finished
     EraseIf(context_->animatingNodeList_,
-        [timestamp, &needRequestNextVsync](const auto& iter) -> bool {
+        [timestamp, &needRequestNextVsync, this](const auto& iter) -> bool {
         auto node = iter.second.lock();
         if (node == nullptr) {
             ROSEN_LOGD("RSRenderThread::Animate removing expired animating node");
@@ -412,6 +413,7 @@ void RSRenderThread::Animate(uint64_t timestamp)
         if (!result.first) {
             ROSEN_LOGD("RSRenderThread::Animate removing finished animating node %{public}" PRIu64, node->GetId());
         }
+        context_->AddActiveNode(node);
         needRequestNextVsync = needRequestNextVsync || result.second;
         return !result.first;
     });
@@ -484,6 +486,21 @@ void RSRenderThread::PostPreTask()
 {
     if (handler_ && preTask_) {
         handler_->PostTask(preTask_);
+    }
+}
+
+void RSRenderThread::ApplyModifiers()
+{
+    for (const auto& [unused, nodeSet] : context_->activeNodesInRoot_) {
+        for (const auto& [id, nodePtr] : nodeSet) {
+            bool isZOrderChanged = nodePtr->ApplyModifiers();
+            if (!isZOrderChanged) {
+                continue;
+            }
+            if (auto parent = nodePtr->GetParent().lock()) {
+                parent->isChildrenSorted_ = false;
+            }
+        }
     }
 }
 } // namespace Rosen

@@ -204,8 +204,6 @@ public:
     void RemoveModifier(const PropertyId& id);
     std::shared_ptr<RSRenderModifier> GetModifier(const PropertyId& id);
 
-    void ApplyChildrenModifiers();
-
     bool IsShadowValidLastFrame() const;
     void SetShadowValidLastFrame(bool isShadowValidLastFrame)
     {
@@ -554,11 +552,11 @@ private:
     std::unordered_map<PropertyId, std::variant<float, Vector2f>> propertyValueMap_;
     std::vector<HgmModifierProfile> hgmModifierProfileList_;
 
-    friend class RSRenderTransition;
-    friend class RSRenderNodeMap;
-    friend class RSProxyRenderNode;
-    friend class RSRenderNode;
     friend class RSMainThread;
+    friend class RSProxyRenderNode;
+    friend class RSRenderNodeMap;
+    friend class RSRenderThread;
+    friend class RSRenderTransition;
 };
 // backward compatibility
 using RSBaseRenderNode = RSRenderNode;

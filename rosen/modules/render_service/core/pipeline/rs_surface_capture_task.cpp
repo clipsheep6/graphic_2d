@@ -123,7 +123,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
 #ifndef USE_ROSEN_DRAWING
     if (RSSystemProperties::GetSnapshotWithDMAEnabled()) {
-#ifdef RS_ENABLE_DRIVEN_RENDER
+#ifndef RS_ENABLE_DRIVEN_RENDER
         skSurface->flushAndSubmit();
         glFinish();
         ReleaseGLMemory();

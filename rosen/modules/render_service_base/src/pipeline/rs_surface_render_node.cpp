@@ -44,21 +44,18 @@
 
 namespace OHOS {
 namespace Rosen {
-RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, std::weak_ptr<RSContext> context)
-    : RSRenderNode(config.id, context),
-      RSSurfaceHandler(config.id),
-      name_(config.name),
-      bundleName_(config.bundleName),
-      nodeType_(config.nodeType),
-      dirtyManager_(std::make_shared<RSDirtyRegionManager>()),
+RSSurfaceRenderNode::RSSurfaceRenderNode(
+    const RSSurfaceRenderNodeConfig& config, const std::weak_ptr<RSContext>& context)
+    : RSRenderNode(config.id, context), RSSurfaceHandler(config.id), name_(config.name), bundleName_(config.bundleName),
+      nodeType_(config.nodeType), dirtyManager_(std::make_shared<RSDirtyRegionManager>()),
       cacheSurfaceDirtyManager_(std::make_shared<RSDirtyRegionManager>())
 {
     MemoryInfo info = {sizeof(*this), ExtractPid(config.id), config.id, MEMORY_TYPE::MEM_RENDER_NODE};
     MemoryTrack::Instance().AddNodeRecord(config.id, info);
 }
 
-RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context)
-    : RSSurfaceRenderNode(RSSurfaceRenderNodeConfig{id, "SurfaceNode"}, context)
+RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, const std::weak_ptr<RSContext>& context)
+    : RSSurfaceRenderNode(RSSurfaceRenderNodeConfig { id, "SurfaceNode" }, context)
 {}
 
 RSSurfaceRenderNode::~RSSurfaceRenderNode()
@@ -784,6 +781,19 @@ void RSSurfaceRenderNode::ResetSurfaceOpaqueRegion(const RectI& screeninfo, cons
     ResetSurfaceContainerRegion(screeninfo, absRect, screenRotation);
 }
 
+void RSSurfaceRenderNode::SetFilterCacheValid()
+{
+    if (!dirtyManager_) {
+        return;
+    }
+    isFilterCacheStatusChanged_ = false;
+    bool currentCacheValid = isFilterCacheFullyCovered_ && dirtyManager_->GetSubNodeFilterCacheValid();
+    if (isFilterCacheValid_ != currentCacheValid) {
+        isFilterCacheValid_ = currentCacheValid;
+        isFilterCacheStatusChanged_ = true;
+    }
+}
+
 void RSSurfaceRenderNode::UpdateFilterNodes(const std::shared_ptr<RSRenderNode>& nodePtr)
 {
     if (nodePtr == nullptr) {
@@ -806,17 +816,15 @@ void RSSurfaceRenderNode::UpdateFilterCacheStatusIfNodeStatic(const RectI& clipR
         }
         node->UpdateFilterCacheWithDirty(*dirtyManager_, false);
         node->UpdateFilterCacheWithDirty(*dirtyManager_, true);
-        // collect valid filter nodes for occlusion optimization
-        if (node->IsFilterCacheValid()) {
-            dirtyManager_->UpdateCacheableFilterRect(node->GetOldDirtyInSurface());
-        }
         return false;
     });
+    SetFilterCacheFullyCovered(false);
     if (IsTransparent() && dirtyManager_->IfCacheableFilterRectFullyCover(GetOldDirtyInSurface())) {
         SetFilterCacheFullyCovered(true);
-        RS_LOGD("UpdateFilterCacheStatusIfNodeStatic surfacenode %{public}" PRIu64 " [%{public}s]",
-            GetId(), GetName().c_str());
+        RS_LOGD("UpdateFilterCacheStatusIfNodeStatic surfacenode %{public}" PRIu64 " [%{public}s] rectsize %{public}s",
+            GetId(), GetName().c_str(), GetOldDirtyInSurface().ToString().c_str());
     }
+    SetFilterCacheValid();
 #endif
 }
 

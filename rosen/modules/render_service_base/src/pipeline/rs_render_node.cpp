@@ -56,6 +56,16 @@ const std::unordered_set<RSModifierType> ANIMATION_MODIFIER_TYPE  = {
 };
 }
 
+RSRenderNode::RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context) : id_(id), context_(context)
+{
+    renderProperties_.backref_ = weak_from_this();
+}
+RSRenderNode::RSRenderNode(NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context)
+    : isOnTheTree_(isOnTheTree), id_(id), context_(context)
+{
+    renderProperties_.backref_ = weak_from_this();
+}
+
 void RSRenderNode::AddChild(SharedPtr child, int index)
 {
     // sanity check, avoid loop
@@ -693,23 +703,6 @@ void RSRenderNode::UpdateParentChildrenRect(std::shared_ptr<RSRenderNode> parent
     }
 }
 
-bool RSRenderNode::IsFilterCacheValid() const
-{
-    if (!RSProperties::FilterCacheEnabled) {
-        return false;
-    }
-#ifndef USE_ROSEN_DRAWING
-    // background filter
-    auto& bgManager = renderProperties_.GetFilterCacheManager(false);
-    // foreground filter
-    auto& frManager = renderProperties_.GetFilterCacheManager(true);
-    if ((bgManager && bgManager->IsCacheValid()) || (frManager && frManager->IsCacheValid())) {
-        return true;
-    }
-#endif
-    return false;
-}
-
 void RSRenderNode::UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground) const
 {
 #ifndef USE_ROSEN_DRAWING
@@ -731,6 +724,12 @@ void RSRenderNode::UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager
     auto isCachedImageRegionIntersectedWithDirtyRegion =
         cachedImageRect.IntersectRect(dirtyManager.GetIntersectedVisitedDirtyRect(geoPtr->GetAbsRect()));
     manager->UpdateCacheStateWithDirtyRegion(isCachedImageRegionIntersectedWithDirtyRegion);
+    // record node's cache area if it has valid filter cache
+    if (manager->IsCacheValid()) {
+        dirtyManager.UpdateCacheableFilterRect(cachedImageRect);
+    } else {
+        dirtyManager.ResetSubNodeFilterCacheValid();
+    }
 #endif
 }
 
@@ -956,7 +955,6 @@ void RSRenderNode::UpdateEffectRegion(std::optional<SkPath>& region)
 void RSRenderNode::UpdateEffectRegion(std::optional<Drawing::Path>& region)
 #endif
 {
-    hasUpdateEffectRegion_ = false;
     if (!region.has_value()) {
         return;
     }
@@ -993,7 +991,6 @@ void RSRenderNode::UpdateEffectRegion(std::optional<Drawing::Path>& region)
     // accumulate children clip path, with matrix
     effectPath.AddPath(clipPath, geoPtr->GetAbsMatrix());
 #endif
-    hasUpdateEffectRegion_ = true;
 }
 
 std::shared_ptr<RSRenderModifier> RSRenderNode::GetModifier(const PropertyId& id)

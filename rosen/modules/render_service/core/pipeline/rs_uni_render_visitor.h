@@ -86,9 +86,10 @@ public:
         isDirty_ = isDirty;
     }
 
-    void SetFocusedNodeId(uint64_t nodeId)
+    void SetFocusedNodeId(uint64_t nodeId, uint64_t leashId)
     {
         currentFocusedNodeId_ = nodeId;
+        focusedLeashWindowId_ = leashId;
     }
 
     void SetSubThreadConfig(uint32_t threadIndex)
@@ -159,7 +160,7 @@ public:
     void CollectFrameRateRange(RSRenderNode& node);
 
 #ifndef USE_ROSEN_DRAWING
-    using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, float, std::optional<SkMatrix>>;
+    using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, RSPaintFilterCanvas::CanvasStatus>;
 #else
     using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, float, std::optional<Drawing::Matrix>>;
 #endif
@@ -250,7 +251,7 @@ private:
     // set node cacheable animation after checking whold child tree
     void SetNodeCacheChangeStatus(RSBaseRenderNode& node, int markedCachedNodeCnt);
     // update rendernode's cache status and collect valid cache rect
-    void UpdateForegroundFilterCacheWithDirty(RSRenderNode& node);
+    void UpdateForegroundFilterCacheWithDirty(RSRenderNode& node, RSDirtyRegionManager& dirtyManager);
 
     bool IsHardwareComposerEnabled();
 
@@ -347,6 +348,7 @@ private:
     GraphicColorGamut newColorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
     std::vector<ScreenColorGamut> colorGamutModes_;
     uint64_t currentFocusedNodeId_ = 0;
+    uint64_t focusedLeashWindowId_ = 0;
 
     bool isSubThread_ = false;
     bool isUIFirst_ = false;
@@ -419,6 +421,7 @@ private:
 #endif
     bool curDirty_ = false;
     bool curContentDirty_ = false;
+    bool isPhone_ = false;
 
     // calculate preferred fps
     FrameRateRangeData frameRateRangeData_;

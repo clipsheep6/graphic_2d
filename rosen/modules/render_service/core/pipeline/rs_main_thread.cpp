@@ -378,6 +378,28 @@ DeviceType RSMainThread::GetDeviceType() const
     return deviceType_;
 }
 
+uint64_t RSMainThread::GetFocusNodeId() const
+{
+    return focusNodeId_;
+}
+
+uint64_t RSMainThread::GetFocusLeashWindowId() const
+{
+    return focusLeashWindowId_;
+}
+
+void RSMainThread::SetFocusLeashWindowId()
+{
+    const auto& nodeMap = context_->GetNodeMap();
+    auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(nodeMap.GetRenderNode(focusNodeId_));
+    if (node != nullptr) {
+        auto parent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node->GetParent().lock());
+        if (node->IsAppWindow() && parent && parent->IsLeashWindow()) {
+            focusLeashWindowId_ = parent->GetId();
+        }
+    }
+}
+
 void RSMainThread::SetIsCachedSurfaceUpdated(bool isCachedSurfaceUpdated)
 {
     isCachedSurfaceUpdated_ = isCachedSurfaceUpdated;
@@ -1159,7 +1181,8 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         uniVisitor->SetAnimateState(doWindowAnimate_);
         uniVisitor->SetDirtyFlag(isDirty_ || isAccessibilityConfigChanged_);
         isAccessibilityConfigChanged_ = false;
-        uniVisitor->SetFocusedNodeId(focusNodeId_);
+        SetFocusLeashWindowId();
+        uniVisitor->SetFocusedNodeId(focusNodeId_, focusLeashWindowId_);
         rootNode->Prepare(uniVisitor);
         ProcessHgmFrameRate(uniVisitor->GetFrameRateRangeData(), timestamp_);
         CalcOcclusion();
@@ -1303,7 +1326,14 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
                         }
                     }
                     if (!(curSurface->GetAnimateState())) {
-                        accumulatedRegion.OrSelf(curSurface->GetOpaqueRegion());
+                        if (RSSystemParameters::GetFilterCacheOcculusionEnabled() &&
+                            curSurface->IsTransparent() && curSurface->GetFilterCacheValid()) {
+                            RS_OPTIONAL_TRACE_NAME_FMT("calc occlusion nodename: %s id: %llu curRegion %s",
+                                curSurface->GetName().c_str(), curSurface->GetId(), curRegion.GetRegionInfo().c_str());
+                            accumulatedRegion.OrSelf(curRegion);
+                        } else {
+                            accumulatedRegion.OrSelf(curSurface->GetOpaqueRegion());
+                        }
                     } else {
                         curSurface->ResetAnimateState();
                     }
@@ -1364,6 +1394,11 @@ void RSMainThread::CalcOcclusion()
             if (surface->GetZorderChanged() || surface->GetDstRectChanged() ||
                 surface->IsOpaqueRegionChanged() ||
                 surface->GetAlphaChanged() || (isUniRender_ && surface->IsDirtyRegionUpdated())) {
+                winDirty = true;
+            } else if (RSSystemParameters::GetFilterCacheOcculusionEnabled() &&
+                surface->IsTransparent() && surface->IsFilterCacheStatusChanged()) {
+                // When current frame's filter cache is valid or last frame's occlusion use filter cache as opaque
+                // The occlusion needs to be recalculated
                 winDirty = true;
             }
             surface->CleanDstRectChanged();

@@ -186,10 +186,6 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
                 }
                 RS_LOGD("COPYTASK: PixelmapRotation: %d", static_cast<int32_t>(rotation));
             }
-            auto base = pixelmap->GetWritablePixels();
-            for (int i = 0; i <20;i++){
-                RS_LOGE("LJX:pixelmap:%{public}d", static_cast<uint8_t*>(base)[i]);
-            }
             callback->OnSurfaceCapture(id, pixelmap.get());
             dmaMem.ReleaseGLMemory();
         };

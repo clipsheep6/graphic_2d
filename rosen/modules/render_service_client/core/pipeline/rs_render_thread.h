@@ -168,6 +168,9 @@ private:
 
     std::string cacheDir_;
     bool isRTRenderForced_ = false;
+#ifdef ROSEN_PREVIEW
+    std::atomic_bool isRunning_ = false;
+#endif
 };
 } // namespace Rosen
 } // namespace OHOS

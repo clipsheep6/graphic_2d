@@ -47,7 +47,6 @@ void GLESRenderBackend::InitDrawContext()
 bool GLESRenderBackend::SetUpGrContext()
 {
     if (grContext_ != nullptr) {
-        LOGD("grContext has already created!!");
         return true;
     }
 

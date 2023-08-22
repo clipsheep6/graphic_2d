@@ -39,6 +39,7 @@ public:
     static bool GetDrawingCacheEnabledDfx();
     static QuickSkipPrepareType GetQuickSkipPrepareType();
     static bool GetFilterCacheOcculusionEnabled();
+    static bool GetOutOfParentDfxEnabled();
 };
 
 } // namespace Rosen

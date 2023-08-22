@@ -357,6 +357,8 @@ public:
 
     void SetDrawRegion(std::shared_ptr<RectF> rect);
     std::shared_ptr<RectF> GetDrawRegion() const;
+    void SetOutOfParent(bool outOfParent);
+    bool GetOutOfParent() const;
 
 #ifndef USE_ROSEN_DRAWING
     void UpdateEffectRegion(std::optional<SkPath>& region);
@@ -531,6 +533,7 @@ private:
     bool isMarkDrivenRender_ = false;
     bool paintState_ = false;
     bool isContentChanged_ = false;
+    bool outOfParent_ = false;
     float globalAlpha_ = 1.0f;
     std::optional<SharedTransitionParam> sharedTransitionParam_;
 

@@ -299,6 +299,9 @@ private:
     std::shared_ptr<RSPaintFilterCanvas> canvas_;
     std::map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> dirtySurfaceNodeMap_;
     std::vector<RectI> cacheRenderNodeMapRects_;
+    std::vector<RectI> OutOfParentNodeRects_;
+    std::vector<RectI> OutOfParentNodeSubRects_;
+
 #ifndef USE_ROSEN_DRAWING
     SkRect boundsRect_ {};
 #else

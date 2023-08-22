@@ -120,5 +120,13 @@ public:
         }
     }
 };
+
+class ParsedComponentData {
+public:
+    ParsedComponentData() = default;
+    ~ParsedComponentData() = default;
+
+    std::unordered_map<std::string, std::string> refreshRateForSettings_;
+};
 } // namespace OHOS
 #endif // HGM_COMMAND_H

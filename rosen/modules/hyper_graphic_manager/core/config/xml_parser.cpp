@@ -16,13 +16,14 @@
 #include <algorithm>
 
 #include "anim_dynamic_configs.h"
+#include "config_policy_utils.h"
 
 namespace OHOS::Rosen {
-int32_t XMLParser::LoadConfiguration()
+int32_t XMLParser::LoadConfiguration(const char* fileDir)
 {
     if (!xmlDocument_) {
         HGM_LOGI("XMLParser opening xml file");
-        xmlDocument_ = xmlReadFile(CONFIG_FILE, nullptr, 0);
+        xmlDocument_ = xmlReadFile(fileDir, nullptr, 0);
     }
 
     if (!xmlDocument_) {
@@ -31,8 +32,11 @@ int32_t XMLParser::LoadConfiguration()
     }
 
     if (!mParsedData_) {
-        HGM_LOGI("XMLParser initializing parsed data");
         mParsedData_ = std::make_unique<ParsedConfigData>();
+    }
+
+    if (!mComponentData_) {
+        mComponentData_ = std::make_unique<ParsedComponentData>();
     }
     return EXEC_SUCCESS;
 }
@@ -63,6 +67,33 @@ void XMLParser::Destroy()
         xmlFreeDoc(xmlDocument_);
         xmlDocument_ = nullptr;
     }
+}
+
+int32_t XMLParser::ParseComponentData()
+{
+    CfgFiles *cfgFiles = GetCfgFiles(CONFIG_CCM);
+    if (cfgFiles == nullptr) {
+        HGM_LOGE("XMLParser no ccm component found, exit");
+        return XML_FILE_LOAD_FAIL;
+    }
+
+    for (int32_t i = MAX_CFG_POLICY_DIRS_CNT - 1; i >= 0; i--) {
+        Destroy();
+        if (cfgFiles->paths[i] && *(cfgFiles->paths[i]) != '\0') {
+            HGM_LOGD("XMLParser hgm ccm_config file path:%{public}s", cfgFiles->paths[i]);
+            if (LoadConfiguration(cfgFiles->paths[i]) != EXEC_SUCCESS) {
+                HGM_LOGE("XMLParser failed to load this xml document from ccm"); 
+                continue;
+            }
+            if (Parse() != EXEC_SUCCESS) {
+                HGM_LOGE("XMLParser failed to parse this xml document from ccm"); 
+                continue;
+            }
+        }
+    }
+
+    Destroy();
+    return EXEC_SUCCESS;
 }
 
 int32_t XMLParser::GetHgmXmlNodeAsInt(xmlNode &node)
@@ -181,6 +212,13 @@ int32_t XMLParser::ParseParams(xmlNode &node)
     if (paraName == "property_animation_dynamic_settings") {
         if (ParserAnimationDynamicSetting(node) != EXEC_SUCCESS) {
             HGM_LOGD("XMLParser failed to parse property_animation_dynamic_settings");
+        }
+        return EXEC_SUCCESS;
+    }
+
+    if (paraName == "refresh_rate_4settings") {
+        if (ParseSetting(node, mComponentData_->refreshRateForSettings_) != EXEC_SUCCESS) {
+            HGM_LOGD("XMLParser failed to parse animation_dynamic_settings");
         }
         return EXEC_SUCCESS;
     }

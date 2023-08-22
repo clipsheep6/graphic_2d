@@ -386,17 +386,17 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             reply.WriteUint32(refreshRate);
             break;
         }
-        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_SCREEN_SUPPORTED_REFRESH_RATES): {
+        case static_cast<int32_t>(RSIRenderServiceConnectionInterfaceCode::GET_SCREEN_SUPPORTED_REFRESH_RATES): {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {
                 ret = ERR_INVALID_STATE;
                 break;
             }
             ScreenId id = data.ReadUint64();
-            std::vector<uint32_t> rates = GetScreenSupportedRefreshRates(id);
+            std::vector<int32_t> rates = GetScreenSupportedRefreshRates(id);
             reply.WriteUint64(static_cast<uint64_t>(rates.size()));
             for (auto ratesIter : rates) {
-                reply.WriteUint32(ratesIter);
+                reply.WriteInt32(ratesIter);
             }
             break;
         }

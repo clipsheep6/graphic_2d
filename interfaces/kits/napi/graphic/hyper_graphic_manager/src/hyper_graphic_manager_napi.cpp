@@ -137,7 +137,7 @@ static napi_value GetScreenSupportedRefreshRates(napi_env env, napi_callback_inf
     } else {
         id = static_cast<ScreenId>(screen);
     }
-    std::vector<uint32_t> currentRates = interfaces.GetScreenSupportedRefreshRates(id);
+    std::vector<int32_t> currentRates = interfaces.GetScreenSupportedRefreshRates(id);
 
     napi_value returnRates = nullptr;
     NAPI_CALL(env, napi_create_array(env, &returnRates));

@@ -137,11 +137,6 @@ private:
 
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> CreateSurface(const std::unique_ptr<Media::PixelMap>& pixelmap);
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
-    sptr<SurfaceBuffer> DmaMemAlloc(SkImageInfo &dstInfo, const std::unique_ptr<Media::PixelMap>& pixelmap);
-    sk_sp<SkSurface> GetSkSurfaceFromSurfaceBuffer(std::shared_ptr<RenderContext> renderContext, sptr<SurfaceBuffer> surfaceBuffer);
-    void ReleaseGLMemory();
-#endif
 #else
     std::shared_ptr<Drawing::Surface> CreateSurface(const std::unique_ptr<Media::PixelMap>& pixelmap);
 #endif
@@ -159,7 +154,17 @@ private:
     float scaleX_;
 
     float scaleY_;
+};
 
+class DmaMem {
+public:
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+    sptr<SurfaceBuffer> DmaMemAlloc(SkImageInfo &dstInfo, const std::unique_ptr<Media::PixelMap>& pixelmap);
+    sk_sp<SkSurface> GetSkSurfaceFromSurfaceBuffer(std::shared_ptr<RenderContext> renderContext,
+        sptr<SurfaceBuffer> surfaceBuffer);
+    void ReleaseGLMemory();
+#endif
+private:
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
 #ifndef USE_ROSEN_DRAWING
     EGLImageKHR eglImage_ = EGL_NO_IMAGE_KHR;

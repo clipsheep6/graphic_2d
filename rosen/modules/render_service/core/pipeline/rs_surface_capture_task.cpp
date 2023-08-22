@@ -120,7 +120,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
     visitor_->SetSurface(surface.get());
 #endif
     node->Process(visitor_);
-#if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
+#if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE) && (defined RS_ENABLE_DRIVEN_RENDER)
 #ifndef USE_ROSEN_DRAWING
     if (RSSystemProperties::GetSnapshotWithDMAEnabled()) {
         skSurface->flushAndSubmit();

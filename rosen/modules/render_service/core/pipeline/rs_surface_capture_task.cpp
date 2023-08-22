@@ -199,11 +199,11 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
         sk_sp<SkImage> img(skSurface.get()->makeImageSnapshot());
         if (!img) {
             RS_LOGE("RSSurfaceCaptureTask::Run: img is nullptr");
-            return nullptr;
+            return false;
         }
         if (!CopyDataToPixelMap(img, pixelmap)) {
             RS_LOGE("RSSurfaceCaptureTask::Run: CopyDataToPixelMap failed");
-            return nullptr;
+            return false;
         }
     }
 #else

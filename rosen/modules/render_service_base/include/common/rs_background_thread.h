@@ -21,13 +21,14 @@
 
 #include "event_handler.h"
 #include "common/rs_macros.h"
+#if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 #include "include/core/SkSurface.h"
 #if defined(NEW_SKIA)
 #include "include/gpu/GrDirectContext.h"
 #endif
-
+#endif
 namespace OHOS::Rosen {
 class RenderContext;
 
@@ -35,9 +36,10 @@ class RSB_EXPORT RSBackgroundThread final {
 public:
     static RSBackgroundThread& Instance();
     void PostTask(const std::function<void()>& task);
+#if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     void InitRenderContext(RenderContext* context);
     sk_sp<GrDirectContext> GetShareGrContext();
-
+#endif
 private:
     RSBackgroundThread();
     ~RSBackgroundThread() = default;
@@ -45,14 +47,17 @@ private:
     RSBackgroundThread(const RSBackgroundThread&&);
     RSBackgroundThread& operator=(const RSBackgroundThread&);
     RSBackgroundThread& operator=(const RSBackgroundThread&&);
+#if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     sk_sp<GrDirectContext> CreateShareGrContext();
     void CreateShareEglContext();
-
+#endif
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
-    sk_sp<GrDirectContext> grContext_ = nullptr;
+#if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     RenderContext* renderContext_ = nullptr;
+    sk_sp<GrDirectContext> grContext_ = nullptr;
     EGLContext eglShareContext_ = EGL_NO_CONTEXT;
+#endif
 };
 }
 #endif // RS_BACKGROUND_THREAD_H

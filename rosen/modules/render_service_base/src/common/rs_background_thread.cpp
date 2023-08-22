@@ -15,7 +15,9 @@
 
 #include "common/rs_background_thread.h"
 #include "platform/common/rs_log.h"
+#if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
 #include "render_context/render_context.h"
+#endif
 #include "rs_trace.h"
 
 namespace OHOS::Rosen {
@@ -37,7 +39,7 @@ void RSBackgroundThread::PostTask(const std::function<void()>& task)
         handler_->PostTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
 }
-
+#if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
 void RSBackgroundThread::InitRenderContext(RenderContext* context)
 {
     renderContext_ = context;
@@ -48,7 +50,6 @@ void RSBackgroundThread::InitRenderContext(RenderContext* context)
 
 void RSBackgroundThread::CreateShareEglContext()
 {
-#ifdef RS_ENABLE_GL
     if (renderContext_ == nullptr) {
         RS_LOGE("renderContext_ is nullptr.");
         return;
@@ -62,7 +63,6 @@ void RSBackgroundThread::CreateShareEglContext()
         RS_LOGE("eglMakeCurrent failed.");
         return;
     }
-#endif
 }
 
 sk_sp<GrDirectContext> RSBackgroundThread::GetShareGrContext()
@@ -99,4 +99,5 @@ sk_sp<GrDirectContext> RSBackgroundThread::CreateShareGrContext()
     }
     return grContext;
 }
+#endif
 }

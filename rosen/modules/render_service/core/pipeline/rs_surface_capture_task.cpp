@@ -120,9 +120,14 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
     visitor_->SetSurface(surface.get());
 #endif
     node->Process(visitor_);
-#if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE) && (defined RS_ENABLE_DRIVEN_RENDER)
+#if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
 #ifndef USE_ROSEN_DRAWING
     if (RSSystemProperties::GetSnapshotWithDMAEnabled()) {
+#ifdef RS_ENABLE_DRIVEN_RENDER
+        skSurface->flushAndSubmit();
+        glFinish();
+        ReleaseGLMemory();
+#else
         skSurface->flushAndSubmit(true);
         GrBackendTexture grBackendTexture
             = skSurface->getBackendTexture(SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess);
@@ -191,6 +196,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
         };
         RSBackgroundThread::Instance().PostTask(copytask);
         return true;
+#endif
     } else {
         sk_sp<SkImage> img(skSurface.get()->makeImageSnapshot());
         if (!img) {

@@ -403,7 +403,7 @@ void RSRenderThread::Animate(uint64_t timestamp)
     bool needRequestNextVsync = false;
     // iterate and animate all animating nodes, remove if animation finished
     EraseIf(context_->animatingNodeList_,
-        [timestamp, &needRequestNextVsync, this](const auto& iter) -> bool {
+        [timestamp, &needRequestNextVsync](const auto& iter) -> bool {
         auto node = iter.second.lock();
         if (node == nullptr) {
             ROSEN_LOGD("RSRenderThread::Animate removing expired animating node");
@@ -413,7 +413,6 @@ void RSRenderThread::Animate(uint64_t timestamp)
         if (!result.first) {
             ROSEN_LOGD("RSRenderThread::Animate removing finished animating node %{public}" PRIu64, node->GetId());
         }
-        context_->AddActiveNode(node);
         needRequestNextVsync = needRequestNextVsync || result.second;
         return !result.first;
     });

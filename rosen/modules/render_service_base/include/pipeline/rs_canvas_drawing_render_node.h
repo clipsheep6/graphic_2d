@@ -29,6 +29,9 @@ using ThreadInfo = std::pair<uint64_t, std::function<void(sk_sp<SkSurface>)>>;
 #else
 using ThreadInfo = std::pair<uint64_t, std::function<void(std::shared_ptr<Drawing::Surface>)>>;
 #endif
+#if !defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_GL) && defined(NEW_SKIA)
+using GpuResourceClearFun = std::function<void(RSPaintFilterCanvas*, uint64_t)>;
+#endif
 
 class RSB_EXPORT RSCanvasDrawingRenderNode : public RSCanvasRenderNode {
 public:
@@ -61,6 +64,10 @@ public:
         curThreadInfo_ = threadInfo;
     }
 
+#if !defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_GL) && defined(NEW_SKIA)
+    void SetGpuResourceClearFunc(GpuResourceClearFun fun);
+#endif
+
 private:
     void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const override;
     bool ResetSurface(int width, int height, RSPaintFilterCanvas& canvas);
@@ -76,6 +83,9 @@ private:
     std::unique_ptr<RSPaintFilterCanvas> canvas_;
     ThreadInfo curThreadInfo_ = {};
     ThreadInfo preThreadInfo_ = {};
+#if !defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_GL) && defined(NEW_SKIA)
+    GpuResourceClearFun gpuResourceClearFun_ = nullptr;
+#endif
 };
 
 } // namespace Rosen

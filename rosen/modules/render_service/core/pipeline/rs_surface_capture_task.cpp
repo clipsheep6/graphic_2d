@@ -122,7 +122,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
     node->Process(visitor_);
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
 #ifndef USE_ROSEN_DRAWING
-#ifndef RS_ENABLE_DRIVEN_RENDER
+#ifdef RS_ENABLE_DRIVEN_RENDER
     if (RSSystemProperties::GetSnapshotWithDMAEnabled()) {
 #else
     if (false) {

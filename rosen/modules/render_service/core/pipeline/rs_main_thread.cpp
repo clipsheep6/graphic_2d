@@ -850,7 +850,7 @@ void RSMainThread::CollectInfoForHardwareComposer()
             // if hwc node is set on the tree this frame, mark its parent app node to be prepared
             if (surfaceNode->IsNewOnTree()) {
                 auto appNodeId = surfaceNode->GetInstanceRootNodeId();
-                AddActiveNodeId(appNodeId);
+                context_->AddActiveNodeId(appNodeId);
                 surfaceNode->ResetIsNewOnTree();
             }
 
@@ -1548,9 +1548,6 @@ void RSMainThread::Animate(uint64_t timestamp)
         if (cacheCmdSkippedInfo_.count(ExtractPid(node->GetId())) > 0) {
             RS_LOGD("RSMainThread::Animate skip the cached node");
             return false;
-        }
-        if (node->IsOnTheTree()) {
-            AddActiveNode(node);
         }
         auto [hasRunningAnimation, nodeNeedRequestNextVsync] = node->Animate(timestamp);
         if (!hasRunningAnimation) {

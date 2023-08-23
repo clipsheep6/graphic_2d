@@ -1052,7 +1052,7 @@ void RSSurfaceCaptureVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
             auto clearGpuFunc = [](RSPaintFilterCanvas* canvas, uint64_t index) {
                 RSUniRenderUtil::ClearCanvasGpuResource(canvas, index);
             };
-            drawingNode->SetGpuResourceClearFunc(clearGpuFunc);
+            canvasDrawingNode->SetGpuResourceClearFunc(clearGpuFunc);
 #endif
             canvasDrawingNode->SetSurfaceClearFunc({ UNI_MAIN_THREAD_INDEX, clearFunc });
             canvasDrawingNode->ProcessRenderBeforeChildren(*canvas_);

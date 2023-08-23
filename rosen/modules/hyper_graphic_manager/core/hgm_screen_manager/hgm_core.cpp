@@ -88,17 +88,26 @@ int32_t HgmCore::InitXmlConfig()
     if (!mParser_) {
         mParser_ = std::make_unique<XMLParser>();
     }
-    if (mParser_->LoadConfiguration() != EXEC_SUCCESS) {
+    if (mParser_->LoadConfiguration(CONFIG_FILE) != EXEC_SUCCESS) {
         HGM_LOGE("HgmCore failed to load xml configuration file");
         return XML_FILE_LOAD_FAIL;
     }
-    if (mParser_->Parse()) {
+    if (mParser_->Parse() != EXEC_SUCCESS) {
         HGM_LOGE("HgmCore failed to parse xml configuration");
         return XML_GET_ROOT_FAIL;
     }
     if (!mParsedConfigData_) {
         mParsedConfigData_ = mParser_->GetParsedData();
     }
+
+    // parse ccm component
+    if (mParser_->ParseComponentData() != EXEC_SUCCESS) {
+        HGM_LOGE("HgmCore failed to parse xml configuration from ccm");
+    }
+    if (!mParsedComponentData_) {
+        mParsedComponentData_ = mParser_->GetComponentData();
+    }
+
     return EXEC_SUCCESS;
 }
 
@@ -367,6 +376,33 @@ std::vector<uint32_t> HgmCore::GetScreenSupportedRefreshRates(ScreenId id)
     std::vector<uint32_t> retVec;
     retVec.assign(supportedRates.begin(), supportedRates.end());
     return retVec;
+}
+
+std::vector<int32_t> HgmCore::GetScreenComponentRefreshRates(ScreenId id)
+{
+    if (!mParsedComponentData_) {
+        HGM_LOGW("HgmCore no parsed component data, returning default value");
+        return std::vector<int32_t>(static_cast<uint32_t>(EXEC_SUCCESS));
+    }
+
+    std::vector<int32_t> retVec;
+    for (const auto& [rate,_] : mParsedComponentData_->refreshRateForSettings_) {
+        retVec.emplace_back(std::stoi(rate));
+        HGM_LOGE("HgmCore Adding component rate: %{public}d", std::stoi(rate));
+    }
+    return retVec;
+}
+
+void HgmCore::CheckCcmParse()
+{
+    if (!mParsedComponentData_) {
+        HGM_LOGE("HgmCore::CheckCcmParse No parsed ccm data");
+        return;
+    }
+
+    for (const auto& [rate,_] : mParsedComponentData_->refreshRateForSettings_) {
+        HGM_LOGE("HgmCore::CheckCcmParse component has rate: %{public}s", rate.c_str());
+    }
 }
 
 std::unique_ptr<std::unordered_map<ScreenId, int32_t>> HgmCore::GetModesToApply()

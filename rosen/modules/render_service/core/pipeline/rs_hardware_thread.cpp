@@ -144,6 +144,7 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
 void RSHardwareThread::PerformSetActiveMode()
 {
     auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
+    hgmCore.CheckCcmParse();
     auto screenManager = CreateOrGetScreenManager();
     if (screenManager == nullptr) {
         RS_LOGE("RSHardwareThread CreateOrGetScreenManager fail.");

@@ -75,6 +75,9 @@ void VSyncSampler::BeginSample()
     numSamples_ = 0;
     modeUpdated_ = false;
     hardwareVSyncStatus_ = true;
+    period_ = 0;
+    phase_ = 0;
+    referenceTime_ = 0;
 }
 
 void VSyncSampler::SetHardwareVSyncStatus(bool enabled)
@@ -138,7 +141,6 @@ bool VSyncSampler::AddSample(int64_t timeStamp)
 
     return !shouldDisableScreenVsync;
 }
-
 
 void VSyncSampler::UpdateModeLocked()
 {

@@ -132,14 +132,14 @@ VsyncError VSyncReceiver::RequestNextVSync(FrameCallback callback)
     return connection_->RequestNextVSync();
 }
 
-VsyncError VSyncReceiver::SetVSyncRate(FrameCallback callback, int32_t rate)
+VsyncError VSyncReceiver::SetVSyncRate(FrameCallback callback, int32_t rate, bool autoTrigger)
 {
     std::lock_guard<std::mutex> locker(initMutex_);
     if (!init_) {
         return VSYNC_ERROR_API_FAILED;
     }
     listener_->SetCallback(callback);
-    return connection_->SetVSyncRate(rate);
+    return connection_->SetVSyncRate(rate, autoTrigger);
 }
 
 VsyncError VSyncReceiver::GetVSyncPeriod(int64_t &period)
@@ -149,6 +149,15 @@ VsyncError VSyncReceiver::GetVSyncPeriod(int64_t &period)
         return VSYNC_ERROR_API_FAILED;
     }
     VsyncError ret = connection_->GetVSyncPeriod(period);
+    if (ret != VSYNC_ERROR_OK) {
+        VLOGE("%{public}s get vsync period failed", __func__);
+    }
+    return ret;
+}
+
+VsyncError VSyncReceiver::SetVSyncRefreshRate(int32_t refreshRate)
+{
+    VsyncError ret = connection_->SetVSyncRefreshRate(refreshRate);
     if (ret != VSYNC_ERROR_OK) {
         VLOGE("%{public}s get vsync period failed", __func__);
     }

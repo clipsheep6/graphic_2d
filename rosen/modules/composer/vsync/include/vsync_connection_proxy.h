@@ -30,8 +30,9 @@ public:
 
     virtual VsyncError RequestNextVSync() override;
     virtual VsyncError GetReceiveFd(int32_t &fd) override;
-    virtual VsyncError SetVSyncRate(int32_t rate) override;
+    virtual VsyncError SetVSyncRate(int32_t rate, bool autoTrigger) override;
     virtual VsyncError GetVSyncPeriod(int64_t &period) override;
+    virtual VsyncError SetVSyncRefreshRate(int32_t refreshRate) override;
 
 private:
     static inline BrokerDelegator<VSyncConnectionProxy> delegator_;

@@ -41,7 +41,8 @@ bool RSRenderAnimation::Marshalling(Parcel& parcel) const
         parcel.WriteBool(animationFraction_.GetRepeatCallbackEnable()) &&
         parcel.WriteInt32(animationFraction_.GetFrameRateRange().min_) &&
         parcel.WriteInt32(animationFraction_.GetFrameRateRange().max_) &&
-        parcel.WriteInt32(animationFraction_.GetFrameRateRange().preferred_))) {
+        parcel.WriteInt32(animationFraction_.GetFrameRateRange().preferred_) &&
+        parcel.WriteBool(animationFraction_.GetIsLogicallyFinishCallback()))) {
         ROSEN_LOGE("RSRenderAnimation::Marshalling, write param failed");
         return false;
     }
@@ -61,10 +62,12 @@ bool RSRenderAnimation::ParseParam(Parcel& parcel)
     int fpsMin = 0;
     int fpsMax = 0;
     int fpsPreferred = 0;
+    bool isLogicallyFinishCallback = false;
     if (!(parcel.ReadUint64(id_) && parcel.ReadInt32(duration) && parcel.ReadInt32(startDelay) &&
             parcel.ReadFloat(speed) && parcel.ReadInt32(repeatCount) && parcel.ReadBool(autoReverse) &&
             parcel.ReadBool(direction) && parcel.ReadInt32(fillMode) && parcel.ReadBool(isRepeatCallbackEnable) &&
-            parcel.ReadInt32(fpsMin) && parcel.ReadInt32(fpsMax) && parcel.ReadInt32(fpsPreferred))) {
+            parcel.ReadInt32(fpsMin) && parcel.ReadInt32(fpsMax) && parcel.ReadInt32(fpsPreferred) &&
+            parcel.ReadBool(isLogicallyFinishCallback))) {
         ROSEN_LOGE("RSRenderAnimation::ParseParam, read param failed");
         return false;
     }
@@ -77,8 +80,10 @@ bool RSRenderAnimation::ParseParam(Parcel& parcel)
     SetFillMode(static_cast<FillMode>(fillMode));
     SetRepeatCallbackEnable(isRepeatCallbackEnable);
     SetFrameRateRange({fpsMin, fpsMax, fpsPreferred});
+    SetIsLogicallyFinishCallback(isLogicallyFinishCallback);
     return true;
 }
+
 AnimationId RSRenderAnimation::GetAnimationId() const
 {
     return id_;
@@ -299,6 +304,33 @@ void RSRenderAnimation::SetStartTime(int64_t time)
 {
     animationFraction_.SetLastFrameTime(time);
     needUpdateStartTime_ = false;
+}
+
+void RSRenderAnimation::SetIsLogicallyFinishCallback(bool isLogicallyFinishCallback)
+{
+    if (!SupportLogicallyFinishCallback()) {
+        ROSEN_LOGE("RSRenderAnimation::SetIsLogicallyFinishCallback, animation not support logically finishcallback.");
+    }
+    animationFraction_.SetIsLogicallyFinishCallback(isLogicallyFinishCallback);
+}
+
+bool RSRenderAnimation::GetIsLogicallyFinishCallback() const
+{
+    return animationFraction_.GetIsLogicallyFinishCallback();
+}
+
+void RSRenderAnimation::CallLogicallyFinishCallback() const
+{
+    if (!SupportLogicallyFinishCallback()) {
+        ROSEN_LOGE("RSRenderAnimation::CallLogicallyFinishCallback, animation not surpprot to invoke logically finishcallback.");
+        return;
+    }
+    NodeId targetId = GetTargetId();
+    AnimationId animationId = GetAnimationId();
+
+    std::unique_ptr<RSCommand> command =
+        std::make_unique<RSAnimationCallback>(targetId, animationId, LOGICALLY_FINISHED);
+    RSMessageProcessor::Instance().AddUIMessage(ExtractPid(animationId), std::move(command));
 }
 } // namespace Rosen
 } // namespace OHOS

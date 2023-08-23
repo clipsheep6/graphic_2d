@@ -63,6 +63,7 @@ public:
     Vector4& operator=(const Vector4<T>& other);
     bool operator==(const Vector4& other) const;
     bool operator!=(const Vector4& other) const;
+    bool IsNearEqual(const Vector4& other, T threshold = std::numeric_limits<T>::epsilon()) const;
 
     T operator[](int index) const;
     T& operator[](int index);
@@ -381,6 +382,15 @@ template<typename T>
 inline bool Vector4<T>::operator!=(const Vector4& other) const
 {
     return !operator==(other);
+}
+
+template<typename T>
+bool Vector4<T>::IsNearEqual(const Vector4& other, T threshold) const
+{
+    const T* value = other.data_;
+
+    return (ROSEN_EQ<T>(data_[0], value[0], threshold)) && (ROSEN_EQ<T>(data_[1], value[1], threshold)) &&
+           (ROSEN_EQ<T>(data_[2], value[2], threshold)) && (ROSEN_EQ<T>(data_[3], value[3], threshold));
 }
 
 template<typename T>

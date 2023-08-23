@@ -346,5 +346,22 @@ bool RSMaterialFilter::CanSkipFrame() const
     constexpr float HEAVY_BLUR_THRESHOLD = 25.0f;
     return radius_ > HEAVY_BLUR_THRESHOLD;
 };
+
+bool RSMaterialFilter::IsNearEqual(const std::shared_ptr<RSFilter>& other, float threshold) const
+{
+    auto otherMaterialFilter = std::static_pointer_cast<RSMaterialFilter>(other);
+    if (otherMaterialFilter == nullptr) {
+        return true;
+    }
+    return ROSEN_EQ(radius_, otherMaterialFilter->radius_, 1.0f) &&
+           ROSEN_EQ(saturation_, otherMaterialFilter->saturation_, threshold) &&
+           ROSEN_EQ(brightness_, otherMaterialFilter->brightness_, threshold) &&
+           maskColor_.IsNearEqual(otherMaterialFilter->maskColor_, 1);
+}
+
+bool RSMaterialFilter::IsNearZero(float threshold) const
+{
+    return ROSEN_EQ(radius_, 0.0f, threshold);
+}
 } // namespace Rosen
 } // namespace OHOS

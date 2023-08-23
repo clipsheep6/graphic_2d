@@ -45,6 +45,9 @@ void RSImplicitAnimationParam::ApplyTimingProtocol(const std::shared_ptr<RSAnima
     animation->SetAutoReverse(timingProtocol_.GetAutoReverse());
     animation->SetRepeatCount(timingProtocol_.GetRepeatCount());
     animation->SetFillMode(timingProtocol_.GetFillMode());
+    if (animation->SupportLogicallyFinishCallback()) {
+        animation->SetIsLogicallyFinishCallback(timingProtocol_.GetIsLogicallyFinishCallback());
+    }
     auto range = timingProtocol_.GetFrameRateRange();
     if (range.IsValid()) {
         animation->SetFrameRateRange(range);
@@ -139,6 +142,7 @@ std::shared_ptr<RSAnimation> RSImplicitSpringAnimationParam::CreateAnimation(std
     auto springAnimation = std::make_shared<RSSpringAnimation>(property, startValue, endValue);
     springAnimation->SetTimingCurve(timingCurve_);
     springAnimation->SetIsCustom(property->GetIsCustom());
+    springAnimation->SetZeroThreshold(property->GetZeroThresholdByModifierType());
     ApplyTimingProtocol(springAnimation);
     return springAnimation;
 }
@@ -158,6 +162,7 @@ std::shared_ptr<RSAnimation> RSImplicitInterpolatingSpringAnimationParam::Create
         std::make_shared<RSInterpolatingSpringAnimation>(property, startValue, endValue);
     interpolatingSpringAnimation->SetTimingCurve(timingCurve_);
     interpolatingSpringAnimation->SetIsCustom(property->GetIsCustom());
+    interpolatingSpringAnimation->SetZeroThreshold(property->GetZeroThresholdByModifierType());
     ApplyTimingProtocol(interpolatingSpringAnimation);
     return interpolatingSpringAnimation;
 }

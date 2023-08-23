@@ -61,6 +61,7 @@ public:
     Matrix3& operator*=(T scale);
     bool operator==(const Matrix3& other) const;
     bool operator!=(const Matrix3& other) const;
+    bool IsNearEqual(const Matrix3& other, T threshold = std::numeric_limits<T>::epsilon()) const;
     T* GetData();
     const T* GetConstData() const;
     T Determinant() const;
@@ -375,6 +376,15 @@ template<typename T>
 bool Matrix3<T>::operator!=(const Matrix3& other) const
 {
     return !operator==(other);
+}
+
+template<typename T>
+bool Matrix3<T>::IsNearEqual(const Matrix3& other, T threshold) const
+{
+    const T* otherData = other.data_;
+    auto result = std::equal(data_, data_ + 8, otherData,
+        [&threshold](const T& left, const T& right) { return ROSEN_EQ<T>(left, right, threshold); });
+    return result;
 }
 
 template<typename T>

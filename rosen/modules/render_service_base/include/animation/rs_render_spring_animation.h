@@ -31,6 +31,7 @@ public:
         const std::shared_ptr<RSRenderPropertyBase>& endValue);
 
     void SetSpringParameters(float response, float dampingRatio, float blendDuration = 0.0f);
+    void SetZeroThreshold(float zeroThreshold);
 
     ~RSRenderSpringAnimation() override = default;
 
@@ -57,6 +58,8 @@ private:
     // return current <value, velocity> as a tuple
     std::tuple<std::shared_ptr<RSRenderPropertyBase>, std::shared_ptr<RSRenderPropertyBase>> GetSpringStatus() const;
     void InheritSpringStatus(const RSRenderSpringAnimation* from);
+    std::shared_ptr<RSRenderPropertyBase> CalculateVelocity(float time) const;
+    bool SupportLogicallyFinishCallback() const override;
 
     // blend related
     uint64_t blendDuration_ = 0;
@@ -64,6 +67,11 @@ private:
 
     std::shared_ptr<RSRenderPropertyBase> startValue_;
     std::shared_ptr<RSRenderPropertyBase> endValue_;
+
+    bool isFinishCallbackCalled_ = false;
+
+    // used to determine whether the animation is near finish
+    float zeroThreshold_ = 1.0f / 256.0f;
 };
 } // namespace Rosen
 } // namespace OHOS

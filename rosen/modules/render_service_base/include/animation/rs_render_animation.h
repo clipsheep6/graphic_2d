@@ -153,6 +153,10 @@ public:
 
     void SetStartTime(int64_t);
 
+    void SetIsLogicallyFinishCallback(bool isLogicallyFinishCallback);
+
+    bool GetIsLogicallyFinishCallback() const;
+
 protected:
     explicit RSRenderAnimation(AnimationId id);
     RSRenderAnimation() = default;
@@ -176,6 +180,12 @@ protected:
 
     void FinishOnCurrentPosition();
 
+    virtual bool SupportLogicallyFinishCallback() const
+    {
+        return false;
+    }
+
+    void CallLogicallyFinishCallback() const;
     RSAnimationFraction animationFraction_;
 
 private:

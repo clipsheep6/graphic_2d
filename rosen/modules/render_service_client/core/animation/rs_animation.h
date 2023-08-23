@@ -102,6 +102,7 @@ protected:
     virtual void SetPropertyOnAllAnimationFinish() {}
 
     void StartCustomAnimation(const std::shared_ptr<RSRenderAnimation>& animation);
+    virtual bool SupportLogicallyFinishCallback() const;
 
 private:
     static AnimationId GenerateId();
@@ -112,6 +113,7 @@ private:
     void UpdateStagingValue(bool isFirstStart);
     void CallFinishCallback();
     void CallRepeatCallback();
+    void CallLogicallyFinishCallback();
 
     bool isReversed_ { false };
     AnimationState state_ { AnimationState::INITIALIZED };
@@ -124,6 +126,7 @@ private:
     friend class RSAnimationGroup;
     friend class RSNode;
     friend class RSImplicitAnimator;
+    friend class RSImplicitAnimationParam;
 };
 } // namespace Rosen
 } // namespace OHOS

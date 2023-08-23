@@ -142,6 +142,21 @@ std::shared_ptr<RSFilter> RSBlurFilter::Negate()
     return std::make_shared<RSBlurFilter>(-blurRadiusX_, -blurRadiusY_);
 }
 
+bool RSBlurFilter::IsNearEqual(const std::shared_ptr<RSFilter>& other, float threshold) const
+{
+    auto otherBlurFilter = std::static_pointer_cast<RSBlurFilter>(other);
+    if (otherBlurFilter == nullptr) {
+        return true;
+    }
+    return ROSEN_EQ(blurRadiusX_, otherBlurFilter->GetBlurRadiusX(), threshold) &&
+           ROSEN_EQ(blurRadiusY_, otherBlurFilter->GetBlurRadiusY(), threshold);
+}
+
+bool RSBlurFilter::IsNearZero(float threshold) const
+{
+    return ROSEN_EQ(blurRadiusX_, 0.0f, threshold) && ROSEN_EQ(blurRadiusY_, 0.0f, threshold);
+}
+
 #ifndef USE_ROSEN_DRAWING
 void RSBlurFilter::DrawImageRect(
     SkCanvas& canvas, const sk_sp<SkImage>& image, const SkRect& src, const SkRect& dst) const

@@ -1080,6 +1080,9 @@ bool RSNode::AnimationCallback(AnimationId animationId, AnimationCallbackEvent e
     } else if (event == REPEAT_FINISHED) {
         animation->CallRepeatCallback();
         return true;
+    } else if (event == LOGICALLY_FINISHED) {
+        animation->CallLogicallyFinishCallback();
+        return true;
     }
     ROSEN_LOGE("Failed to callback animation event[%{public}d], event is null!", event);
     return false;

@@ -26,6 +26,7 @@ constexpr static float MILLISECOND_TO_SECOND = 1e-3;
 constexpr static float SECOND_TO_NANOSECOND = 1e9;
 constexpr static float RESPONSE_THRESHOLD = 0.001f;
 constexpr static float FRACTION_THRESHOLD = 0.001f;
+constexpr static float FRAME_TIME_INTERVAL = 1.0f / 60.0f;
 } // namespace
 
 RSRenderSpringAnimation::RSRenderSpringAnimation(AnimationId id, const PropertyId& propertyId,
@@ -47,6 +48,11 @@ void RSRenderSpringAnimation::SetSpringParameters(float response, float dampingR
     blendDuration_ = blendDuration * SECOND_TO_NANOSECOND; // convert to ns
 }
 
+void RSRenderSpringAnimation::SetZeroThreshold(float zeroThreshold)
+{
+    zeroThreshold_ = zeroThreshold;
+}
+
 #ifdef ROSEN_OHOS
 bool RSRenderSpringAnimation::Marshalling(Parcel& parcel) const
 {
@@ -62,7 +68,8 @@ bool RSRenderSpringAnimation::Marshalling(Parcel& parcel) const
 
     if (!(RSMarshallingHelper::Marshalling(parcel, response_) &&
             RSMarshallingHelper::Marshalling(parcel, dampingRatio_) &&
-            RSMarshallingHelper::Marshalling(parcel, blendDuration_))) {
+            RSMarshallingHelper::Marshalling(parcel, blendDuration_) &&
+            RSMarshallingHelper::Marshalling(parcel, zeroThreshold_))) {
         return false;
     }
 
@@ -94,7 +101,8 @@ bool RSRenderSpringAnimation::ParseParam(Parcel& parcel)
 
     if (!(RSMarshallingHelper::Unmarshalling(parcel, response_) &&
             RSMarshallingHelper::Unmarshalling(parcel, dampingRatio_) &&
-            RSMarshallingHelper::Unmarshalling(parcel, blendDuration_))) {
+            RSMarshallingHelper::Unmarshalling(parcel, blendDuration_) &&
+            RSMarshallingHelper::Unmarshalling(parcel, zeroThreshold_))) {
         return false;
     }
     // copy response to final response
@@ -120,11 +128,22 @@ void RSRenderSpringAnimation::OnAnimate(float fraction)
         return;
     }
     auto mappedTime = fraction * GetDuration() * MILLISECOND_TO_SECOND;
-    auto displacement = CalculateDisplacement(mappedTime);
-    SetAnimationValue(endValue_ + displacement);
+    auto displacement = CalculateDisplacement(mappedTime) + endValue_;
+    SetAnimationValue(displacement);
 
     // keep the mapped time, this will be used to calculate instantaneous velocity
     prevMappedTime_ = mappedTime;
+    if (!isFinishCallbackCalled_ && GetIsLogicallyFinishCallback() &&
+        (animationFraction_.GetRemainingRepeatCount() == 1)) {
+        auto velocity = CalculateVelocity(mappedTime);
+        auto zeroValue = startValue_ - startValue_;
+        auto endValue = animationFraction_.GetCurrentIsReverseCycle() ? startValue_ : endValue_;
+        if (displacement->IsNearEqual(endValue, zeroThreshold_) &&
+            (velocity * FRAME_TIME_INTERVAL)->IsNearEqual(zeroValue, zeroThreshold_)) {
+            CallLogicallyFinishCallback();
+            isFinishCallbackCalled_ = true;
+        }
+    }
 }
 
 void RSRenderSpringAnimation::OnAttach()
@@ -245,6 +264,19 @@ void RSRenderSpringAnimation::InheritSpringStatus(const RSRenderSpringAnimation*
     std::tie(startValue_, initialVelocity_) = from->GetSpringStatus();
     originValue_ = startValue_->Clone();
     lastValue_ = startValue_->Clone();
+}
+
+std::shared_ptr<RSRenderPropertyBase> RSRenderSpringAnimation::CalculateVelocity(float time) const
+{
+    float TIME_INTERVAL = 1e-6f; // 1e-6f : 1 microsecond
+    auto velocity = (CalculateDisplacement(time + TIME_INTERVAL) - CalculateDisplacement(time)) * (1 / TIME_INTERVAL);
+
+    return velocity;
+}
+
+bool RSRenderSpringAnimation::SupportLogicallyFinishCallback() const
+{
+    return true;
 }
 } // namespace Rosen
 } // namespace OHOS

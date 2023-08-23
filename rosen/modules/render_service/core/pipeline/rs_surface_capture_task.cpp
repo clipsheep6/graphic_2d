@@ -156,24 +156,11 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
                 return;
             }
 
-            auto grContext = RSBackgroundThread::Instance().GetShareGrContext();
-            if (grContext == nullptr) {
-                RS_LOGE("COPYTASK: renderContext is nullptr");
-                callback->OnSurfaceCapture(id, nullptr);
-                return;
-            }
-
-            auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
-            if (renderContext == nullptr) {
-                RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderContext is nullptr");
-                callback->OnSurfaceCapture(id, nullptr);
-                return;
-            }
             DmaMem dmaMem;
             SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
                 kRGBA_8888_SkColorType, kPremul_SkAlphaType);
             sptr<SurfaceBuffer> surfaceBuffer = dmaMem.DmaMemAlloc(info, pixelmap);
-            auto skSurface = dmaMem.GetSkSurfaceFromSurfaceBuffer(renderContext, surfaceBuffer);
+            auto skSurface = dmaMem.GetSkSurfaceFromSurfaceBuffer(surfaceBuffer);
             auto canvas = std::make_shared<RSPaintFilterCanvas>(skSurface.get());
 
             auto tmpImg = SkImage::MakeFromTexture(canvas->recordingContext(), grBackendTexture,
@@ -405,7 +392,7 @@ sptr<SurfaceBuffer> DmaMem::DmaMemAlloc(SkImageInfo &dstInfo, const std::unique_
 
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
 #ifndef USE_ROSEN_DRAWING
-sk_sp<SkSurface> DmaMem::GetSkSurfaceFromSurfaceBuffer(std::shared_ptr<RenderContext> renderContext, sptr<SurfaceBuffer> surfaceBuffer)
+sk_sp<SkSurface> DmaMem::GetSkSurfaceFromSurfaceBuffer(sptr<SurfaceBuffer> surfaceBuffer)
 {
     if (surfaceBuffer == nullptr) {
         RS_LOGE("GetSkImageFromSurfaceBuffer surfaceBuffer is nullptr");
@@ -449,8 +436,8 @@ sk_sp<SkSurface> DmaMem::GetSkSurfaceFromSurfaceBuffer(std::shared_ptr<RenderCon
     GrBackendTexture backendTexture(
         surfaceBuffer->GetWidth(), surfaceBuffer->GetHeight(), GrMipMapped::kNo, textureInfo);
 
-    auto skSurface = SkSurface::MakeFromBackendTexture(renderContext->GetGrContext(), backendTexture, kTopLeft_GrSurfaceOrigin, 0,
-        kRGBA_8888_SkColorType, SkColorSpace::MakeSRGB(), nullptr);
+    auto skSurface = SkSurface::MakeFromBackendTexture(RSBackgroundThread::Instance().GetShareGrContext().get(),
+        backendTexture, kTopLeft_GrSurfaceOrigin, 0, kRGBA_8888_SkColorType, SkColorSpace::MakeSRGB(), nullptr);
     return skSurface;
 }
 #endif

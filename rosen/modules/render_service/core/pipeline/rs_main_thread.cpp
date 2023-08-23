@@ -317,6 +317,9 @@ void RSMainThread::Init()
     RSInnovation::OpenInnovationSo();
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     RSDrivenRenderManager::InitInstance();
+#ifndef USE_ROSEN_DRAWING
+    RSBackgroundThread::Instance().InitRenderContext(GetRenderEngine()->GetRenderContext().get());
+#endif
 #endif
 
 #if defined(ACCESSIBILITY_ENABLE)
@@ -335,9 +338,6 @@ void RSMainThread::Init()
     RSOverdrawController::GetInstance().SetDelegate(delegate);
 
     frameRateMgr_ = std::make_unique<HgmFrameRateManager>();
-#if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
-    RSBackgroundThread::Instance().InitRenderContext(GetRenderEngine()->GetRenderContext().get());
-#endif
 }
 
 void RSMainThread::RsEventParamDump(std::string& dumpString)

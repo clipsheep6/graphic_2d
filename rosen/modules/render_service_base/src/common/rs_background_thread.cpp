@@ -40,6 +40,7 @@ void RSBackgroundThread::PostTask(const std::function<void()>& task)
     }
 }
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
+#ifndef USE_ROSEN_DRAWING
 void RSBackgroundThread::InitRenderContext(RenderContext* context)
 {
     renderContext_ = context;
@@ -99,5 +100,6 @@ sk_sp<GrDirectContext> RSBackgroundThread::CreateShareGrContext()
     }
     return grContext;
 }
+#endif
 #endif
 }

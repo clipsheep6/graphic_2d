@@ -2147,7 +2147,10 @@ bool RSMainThread::CheckNodeHasToBePreparedByPid(NodeId nodeId, bool isClassifyB
 
 void RSMainThread::ApplyModifiers()
 {
-    for (const auto& [unused, nodeSet] : context_->activeNodesInRoot_) {
+    ROSEN_LOGE("ooxxcc RSMainThread ApplyModifiers totally %{public}zu roots", context_->activeNodesInRoot_.size());
+    for (const auto& [root, nodeSet] : context_->activeNodesInRoot_) {
+        ROSEN_LOGE(
+            "ooxxcc RSMainThread ApplyModifiers root %{public}" PRIu64 " has %{public}zu nodes", root, nodeSet.size());
         for (const auto& [id, nodePtr] : nodeSet) {
             bool isZOrderChanged = nodePtr->ApplyModifiers();
             if (!isZOrderChanged) {

@@ -1914,9 +1914,9 @@ std::vector<HgmModifierProfile> RSRenderNode::GetHgmModifierProfileList() const
 
 inline void RSRenderNode::AddActiveNode()
 {
-    if (!isOnTheTree_) {
-        return;
-    }
+    // if (!isOnTheTree_) {
+    //     return;
+    // }
     if (auto context = GetContext().lock()) {
         context->AddActiveNode(shared_from_this());
     }

@@ -64,7 +64,7 @@ public:
 
 private:
     RSRenderNodeMap nodeMap;
-    std::shared_ptr<RSBaseRenderNode> globalRootRenderNode_ = std::make_shared<RSBaseRenderNode>(0, true);
+    std::shared_ptr<RSBaseRenderNode> globalRootRenderNode_ = std::make_shared<RSRenderNode>(0, true);
     std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>> animatingNodeList_;
 
     uint64_t transactionTimestamp_ = 0;

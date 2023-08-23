@@ -491,7 +491,10 @@ void RSRenderThread::PostPreTask()
 
 void RSRenderThread::ApplyModifiers()
 {
-    for (const auto& [unused, nodeSet] : context_->activeNodesInRoot_) {
+    ROSEN_LOGE("ooxxcc RSRenderThread ApplyModifiers totally %{public}zu roots", context_->activeNodesInRoot_.size());
+    for (const auto& [root, nodeSet] : context_->activeNodesInRoot_) {
+        ROSEN_LOGE("ooxxcc RSRenderThread ApplyModifiers root %{public}" PRIu64 " has %{public}zu nodes", root,
+            nodeSet.size());
         for (const auto& [id, nodePtr] : nodeSet) {
             bool isZOrderChanged = nodePtr->ApplyModifiers();
             if (!isZOrderChanged) {

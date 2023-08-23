@@ -494,7 +494,7 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
             callback->OnSurfaceCapture(id, pixelmap.get());
             ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         };
- #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_DRIVEN_RENDER)       
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_DRIVEN_RENDER)
         if (node->GetType() == RSRenderNodeType::DISPLAY_NODE) {
             mainThread_->PostTask(captureTask);
         } else {

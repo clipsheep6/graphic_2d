@@ -15,6 +15,7 @@
 
 #include "rs_render_service_connection.h"
 
+#include "common/rs_background_thread.h"
 #include "hgm_core.h"
 #include "hgm_command.h"
 #include "offscreen_render/rs_offscreen_render_thread.h"
@@ -493,7 +494,15 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
             callback->OnSurfaceCapture(id, pixelmap.get());
             ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         };
+ #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_DRIVEN_RENDER)       
+        if (node->GetType() == RSRenderNodeType::DISPLAY_NODE) {
+            mainThread_->PostTask(captureTask);
+        } else {
+            RSBackgroundThread::Instance().PostTask(captureTask);
+        }
+#else
         mainThread_->PostTask(captureTask);
+#endif
     } else {
         TakeSurfaceCaptureForUIWithUni(id, callback, scaleX, scaleY);
     }

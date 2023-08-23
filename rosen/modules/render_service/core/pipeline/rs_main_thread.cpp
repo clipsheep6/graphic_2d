@@ -335,6 +335,9 @@ void RSMainThread::Init()
     RSOverdrawController::GetInstance().SetDelegate(delegate);
 
     frameRateMgr_ = std::make_unique<HgmFrameRateManager>();
+#ifndef USE_ROSEN_DRAWING
+    RSBackgroundThread::Instance().InitRenderContext(GetRenderEngine()->GetRenderContext().get());
+#endif
 }
 
 void RSMainThread::RsEventParamDump(std::string& dumpString)

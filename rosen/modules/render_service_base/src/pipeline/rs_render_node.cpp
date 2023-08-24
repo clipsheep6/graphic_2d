@@ -816,7 +816,7 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier> modifier)
     } else {
         drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
     }
-    modifier->GetProperty()->Attach(ReinterpretCastTo<RSRenderNode>());
+    modifier->GetProperty()->Attach(shared_from_this());
     SetDirty();
 }
 

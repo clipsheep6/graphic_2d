@@ -545,7 +545,7 @@ HWTEST_F(RSMainThreadTest, AddActiveNodeId, TestSize.Level1)
     pid_t pid = 1;
     // invalid pid
     NodeId id = ((NodeId)pid << 32) + 1;
-    mainThread->AddActiveNodeId(id);
+    mainThread->context_->AddActiveNodeId(id);
     ASSERT_EQ(static_cast<int>(mainThread->context_->activeNodesInRoot_.size()), 0);
 }
 

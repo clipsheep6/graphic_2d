@@ -850,7 +850,7 @@ void RSMainThread::CollectInfoForHardwareComposer()
             // if hwc node is set on the tree this frame, mark its parent app node to be prepared
             if (surfaceNode->IsNewOnTree()) {
                 auto appNodeId = surfaceNode->GetInstanceRootNodeId();
-                AddActiveNodeId(appNodeId);
+                context_->AddActiveNodeId(appNodeId);
                 surfaceNode->ResetIsNewOnTree();
             }
 
@@ -1549,9 +1549,6 @@ void RSMainThread::Animate(uint64_t timestamp)
             RS_LOGD("RSMainThread::Animate skip the cached node");
             return false;
         }
-        if (node->IsOnTheTree()) {
-            AddActiveNode(node);
-        }
         auto [hasRunningAnimation, nodeNeedRequestNextVsync] = node->Animate(timestamp);
         if (!hasRunningAnimation) {
             RS_LOGD("RSMainThread::Animate removing finished animating node %{public}" PRIu64, node->GetId());
@@ -2150,7 +2147,10 @@ bool RSMainThread::CheckNodeHasToBePreparedByPid(NodeId nodeId, bool isClassifyB
 
 void RSMainThread::ApplyModifiers()
 {
-    for (const auto& [unused, nodeSet] : context_->activeNodesInRoot_) {
+    ROSEN_LOGE("ooxxcc RSMainThread ApplyModifiers totally %{public}zu roots", context_->activeNodesInRoot_.size());
+    for (const auto& [root, nodeSet] : context_->activeNodesInRoot_) {
+        ROSEN_LOGE(
+            "ooxxcc RSMainThread ApplyModifiers root %{public}" PRIu64 " has %{public}zu nodes", root, nodeSet.size());
         for (const auto& [id, nodePtr] : nodeSet) {
             bool isZOrderChanged = nodePtr->ApplyModifiers();
             if (!isZOrderChanged) {

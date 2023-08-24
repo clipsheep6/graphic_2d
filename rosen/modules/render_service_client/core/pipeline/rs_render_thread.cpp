@@ -106,6 +106,7 @@ RSRenderThread::RSRenderThread()
         ROSEN_LOGD("RSRenderThread DrawFrame(%{public}" PRIu64 ") in %{public}s",
             prevTimestamp_, renderContext_ ? "GPU" : "CPU");
         Animate(prevTimestamp_);
+        ApplyModifiers();
         Render();
         SendCommands();
         context_->activeNodesInRoot_.clear();
@@ -484,6 +485,24 @@ void RSRenderThread::PostPreTask()
 {
     if (handler_ && preTask_) {
         handler_->PostTask(preTask_);
+    }
+}
+
+void RSRenderThread::ApplyModifiers()
+{
+    ROSEN_LOGE("ooxxcc RSRenderThread ApplyModifiers totally %{public}zu roots", context_->activeNodesInRoot_.size());
+    for (const auto& [root, nodeSet] : context_->activeNodesInRoot_) {
+        ROSEN_LOGE("ooxxcc RSRenderThread ApplyModifiers root %{public}" PRIu64 " has %{public}zu nodes", root,
+            nodeSet.size());
+        for (const auto& [id, nodePtr] : nodeSet) {
+            bool isZOrderChanged = nodePtr->ApplyModifiers();
+            if (!isZOrderChanged) {
+                continue;
+            }
+            if (auto parent = nodePtr->GetParent().lock()) {
+                parent->isChildrenSorted_ = false;
+            }
+        }
     }
 }
 } // namespace Rosen

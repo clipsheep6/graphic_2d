@@ -315,6 +315,8 @@ public:
 
     void AddFRCSceneInfo(const std::string& scene, float speed);
 
+    void SetOutOfParent(bool outOfParent) {}
+
     FrameRateRange GetFrameRateRange()
     {
         return nodeRange_;

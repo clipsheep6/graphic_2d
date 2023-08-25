@@ -49,7 +49,7 @@ public:
 #ifndef USE_ROSEN_DRAWING
     SkBitmap GetBitmap();
 #else
-    bool GetBitmap(Drawing::Bitmap& bitmap);
+    Drawing::Bitmap GetBitmap();
 #endif
 
     void SetSurfaceClearFunc(ThreadInfo threadInfo)
@@ -57,8 +57,9 @@ public:
         curThreadInfo_ = threadInfo;
     }
 
+    void AddDirtyType(RSModifierType type) override;
 private:
-    void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const override;
+    void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type);
     bool ResetSurface(int width, int height, RSPaintFilterCanvas& canvas);
     bool GetSizeFromDrawCmdModifiers(int& width, int& height);
     bool IsNeedResetSurface(const int& width, const int& height) const;
@@ -72,6 +73,7 @@ private:
     std::unique_ptr<RSPaintFilterCanvas> canvas_;
     ThreadInfo curThreadInfo_ = {};
     ThreadInfo preThreadInfo_ = {};
+    std::map<RSModifierType, std::list<DrawCmdListPtr>> drawCmdLists_;
 };
 
 } // namespace Rosen

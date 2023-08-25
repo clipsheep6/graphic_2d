@@ -188,23 +188,17 @@ bool RSCanvasDrawingRenderNode::ResetSurface(int width, int height, RSPaintFilte
 }
 #endif
 
-void RSCanvasDrawingRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const
+void RSCanvasDrawingRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type)
 {
-    auto it = drawCmdModifiers_.find(type);
-    if (it == drawCmdModifiers_.end() || it->second.empty()) {
+    auto it = drawCmdLists_.find(type);
+    if (it == drawCmdLists_.end() || it->second.empty()) {
         return;
     }
-    for (const auto& modifier : it->second) {
-        auto prop = modifier->GetProperty();
-#ifndef USE_ROSEN_DRAWING
-        auto cmd = std::static_pointer_cast<RSRenderProperty<DrawCmdListPtr>>(prop)->Get();
-        cmd->Playback(*context.canvas_);
-        cmd->ClearOp();
-#else
-        auto cmd = std::static_pointer_cast<RSRenderProperty<Drawing::DrawCmdListPtr>>(prop)->Get();
-        cmd->Playback(*context.canvas_);
-#endif
+    for (const auto& drawCmdList : it->second) {
+        drawCmdList->Playback(*context.canvas_);
+        drawCmdList->ClearOp();
     }
+    it->second.clear();
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -226,19 +220,20 @@ SkBitmap RSCanvasDrawingRenderNode::GetBitmap()
     return bitmap;
 }
 #else
-bool RSCanvasDrawingRenderNode::GetBitmap(Drawing::Bitmap& bitmap)
+Drawing::Bitmap RSCanvasDrawingRenderNode::GetBitmap()
 {
+    Drawing::Bitmap bitmap;
     if (surface_ == nullptr) {
         RS_LOGE("RSCanvasDrawingRenderNode::GetBitmap: Drawing::Surface is nullptr");
-        return false;
+        return bitmap;
     }
     std::shared_ptr<Drawing::Image> image = surface_->GetImageSnapshot();
     if (image == nullptr) {
         RS_LOGE("RSCanvasDrawingRenderNode::GetBitmap: Drawing::Image is nullptr");
-        return false;
+        return bitmap;
     }
     RS_LOGE("RSCanvasDrawingRenderNode::GetBitmap: Drawing asLegacyBitmap failed");
-    return false;
+    return bitmap;
 }
 #endif
 
@@ -290,6 +285,28 @@ bool RSCanvasDrawingRenderNode::IsNeedResetSurface(const int& width, const int& 
             (static_cast<int>(GetRenderProperties().GetBoundsWidth()) != canvas->GetWidth() ||
             static_cast<int>(GetRenderProperties().GetBoundsHeight()) != canvas->GetHeight());
 #endif
+    }
+}
+
+void RSCanvasDrawingRenderNode::AddDirtyType(RSModifierType type)
+{
+    dirtyTypes_.emplace(type);
+    for (auto drawCmdModifier : drawCmdModifiers_) {
+        if (drawCmdModifier.second.empty()) {
+            continue;
+        }
+        for (const auto& modifier : drawCmdModifier.second) {
+            if (modifier == nullptr) {
+                continue;
+            }
+            auto prop = modifier->GetProperty();
+            if (prop == nullptr) {
+                continue;
+            }
+            if (auto cmd = std::static_pointer_cast<RSRenderProperty<DrawCmdListPtr>>(prop)->Get()) {
+                drawCmdLists_[drawCmdModifier.first].emplace_back(cmd);
+            }
+        }
     }
 }
 } // namespace Rosen

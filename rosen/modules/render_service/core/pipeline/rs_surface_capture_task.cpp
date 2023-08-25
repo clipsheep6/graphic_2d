@@ -1067,7 +1067,6 @@ void RSSurfaceCaptureVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
             canvas_->DrawBitmap(bitmap, node.GetRenderProperties().GetBoundsPositionX(),
                 node.GetRenderProperties().GetBoundsPositionY());
 #endif
-            RSMainThread()->GetInstance()->
         }
     } else {
         node.ProcessRenderBeforeChildren(*canvas_);

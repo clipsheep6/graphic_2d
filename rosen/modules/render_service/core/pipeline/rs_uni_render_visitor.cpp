@@ -3399,7 +3399,6 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMapWithBlur(RSRenderNode& node)
     canvas_->SetCacheType(RSPaintFilterCanvas::CacheType::OFFSCREEN);
     UpdateCacheRenderNodeMap(node);
     canvas_->SetCacheType(canvasType);
-    RS_TRACE_NAME_FMT("Draw cache with blur [%llu]", node.GetId());
     SkAutoCanvasRestore arc(canvas_.get(), true);
     auto nodeType = node.GetCacheType();
     node.SetCacheType(CacheType::NONE);

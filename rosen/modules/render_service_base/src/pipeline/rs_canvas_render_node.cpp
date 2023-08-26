@@ -49,8 +49,6 @@ RSCanvasRenderNode::RSCanvasRenderNode(NodeId id, const std::weak_ptr<RSContext>
 RSCanvasRenderNode::~RSCanvasRenderNode()
 {
     MemoryTrack::Instance().RemoveNodeRecord(GetId());
-    
-
 }
 
 #ifndef USE_ROSEN_DRAWING

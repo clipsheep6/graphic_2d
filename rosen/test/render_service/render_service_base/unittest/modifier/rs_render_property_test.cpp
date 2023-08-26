@@ -182,6 +182,8 @@ HWTEST_F(RSRenderPropertyTest, PropertyIPC001, TestSize.Level1)
         RSRenderPropertyType::PROPERTY_VECTOR4F));
     props.push_back(std::make_shared<MockRSRenderAnimatableProperty<Vector4<Color>>>(
         RSRenderPropertyType::PROPERTY_VECTOR4_COLOR));
+    props.push_back(std::make_shared<MockRSRenderAnimatableProperty<RRect>>(
+        RSRenderPropertyType::PROPERTY_RRECT));
 
     for (auto& prop : props) {
         MessageParcel parcel;
@@ -199,6 +201,19 @@ HWTEST_F(RSRenderPropertyTest, PropertyIPC001, TestSize.Level1)
     int data = 0;
     parcel2.ParseFrom(data, sizeof(int));
     ASSERT_FALSE(RSRenderPropertyBase::Marshalling(parcel2, intProp));
+}
+
+/**
+ * @tc.name: PropertyOp003
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSRenderPropertyTest, PropertyOp003, TestSize.Level1)
+{
+    std::shared_ptr<RSRenderPropertyBase> prop1 = nullptr;
+    auto prop2 = std::make_shared<RSRenderPropertyBase>(id);
+    ASSERT_FALSE(prop1 == prop2);
+    ASEERT_TRUE(prop1 != prop2);
 }
 
 /**
@@ -225,6 +240,8 @@ HWTEST_F(RSRenderPropertyTest, PropertyIPC002, TestSize.Level1)
         RSRenderPropertyType::PROPERTY_FLOAT));
     props.push_back(std::make_shared<MockRSRenderProperty<Vector4<Color>>>(
         RSRenderPropertyType::PROPERTY_FLOAT));
+    props.push_back(std::make_shared<MockRSRenderAnimatableProperty<RRect>>(
+        RSRenderPropertyType::PROPERTY_RRECT));
 
     for (auto& prop : props) {
         MessageParcel parcel;

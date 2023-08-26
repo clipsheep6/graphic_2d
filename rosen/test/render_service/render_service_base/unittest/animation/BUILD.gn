@@ -23,7 +23,7 @@ ohos_unittest("RSRenderServiceBaseAnimationTest") {
   sources = [
     "rs_render_particle_test.cpp",
     "rs_steps_interpolator_test.cpp",
-    ]
+  ]
 
   configs = [
     ":render_test",

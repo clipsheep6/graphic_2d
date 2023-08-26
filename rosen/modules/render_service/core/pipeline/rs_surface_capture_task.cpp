@@ -28,6 +28,7 @@
 #endif
 #include "rs_trace.h"
 
+#include "common/rs_background_thread.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "memory/rs_tag_tracker.h"
 #include "pipeline/rs_base_render_node.h"
@@ -382,10 +383,20 @@ sk_sp<SkSurface> RSSurfaceCaptureTask::GetSkSurfaceFromSurfaceBuffer(std::shared
 
     GrBackendTexture backendTexture(
         surfaceBuffer->GetWidth(), surfaceBuffer->GetHeight(), GrMipMapped::kNo, textureInfo);
-
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_DRIVEN_RENDER)
+    auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode<RSRenderNode>(nodeId_);
+    if (node->GetType() == RSRenderNodeType::DISPLAY_NODE) {
+        return SkSurface::MakeFromBackendTexture(renderContext->GetGrContext(), backendTexture,
+            kTopLeft_GrSurfaceOrigin, 0, kRGBA_8888_SkColorType, SkColorSpace::MakeSRGB(), nullptr);
+    } else {
+        return SkSurface::MakeFromBackendTexture(RSBackgroundThread::Instance().GetGrContext(), backendTexture,
+            kTopLeft_GrSurfaceOrigin, 0, kRGBA_8888_SkColorType, SkColorSpace::MakeSRGB(), nullptr);
+    }
+#else
     auto skSurface = SkSurface::MakeFromBackendTexture(renderContext->GetGrContext(), backendTexture, kTopLeft_GrSurfaceOrigin, 0,
         kRGBA_8888_SkColorType, SkColorSpace::MakeSRGB(), nullptr);
     return skSurface;
+#endif
 }
 #endif
 #endif

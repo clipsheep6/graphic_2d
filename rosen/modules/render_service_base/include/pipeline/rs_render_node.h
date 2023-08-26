@@ -66,9 +66,8 @@ public:
         return Type;
     }
 
-    explicit RSRenderNode(NodeId id, std::weak_ptr<RSContext> context = {}) : id_(id), context_(context) {};
-    explicit RSRenderNode(NodeId id, bool isOnTheTree, std::weak_ptr<RSContext> context = {}) :
-        isOnTheTree_(isOnTheTree), id_(id), context_(context) {};
+    explicit RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {});
+    explicit RSRenderNode(NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context = {});
     RSRenderNode(const RSRenderNode&) = delete;
     RSRenderNode(const RSRenderNode&&) = delete;
     RSRenderNode& operator=(const RSRenderNode&) = delete;
@@ -91,11 +90,11 @@ public:
                                 bool onlyFirstLevel);
     virtual void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor);
     virtual void Process(const std::shared_ptr<RSNodeVisitor>& visitor);
-    virtual bool IsDirty() const;
+    bool IsDirty() const;
     // attention: current all base node's dirty ops causing content dirty
     // if there is any new dirty op, check it
-    virtual bool IsContentDirty() const;
-    virtual void SetContentDirty();
+    bool IsContentDirty() const;
+    void SetContentDirty();
 
     WeakPtr GetParent() const;
 
@@ -104,7 +103,8 @@ public:
         return id_;
     }
 
-    virtual void SetIsOnTheTree(bool flag, NodeId instanceRootNodeId = INVALID_NODEID);
+    virtual void SetIsOnTheTree(bool flag, NodeId instanceRootNodeId = INVALID_NODEID,
+        NodeId firstLevelNodeId = INVALID_NODEID);
     bool IsOnTheTree() const;
 
     // return children and disappeared children, not guaranteed to be sorted by z-index
@@ -150,17 +150,18 @@ public:
     void SetChildHasFilter(bool childHasFilter);
 
     NodeId GetInstanceRootNodeId() const;
+    NodeId GetFirstLevelNodeId() const;
 
     // accumulate all valid children's area
     void UpdateChildrenRect(const RectI& subRect);
     void SetDirty();
 
-    void AddDirtyType(RSModifierType type)
+    virtual void AddDirtyType(RSModifierType type)
     {
         dirtyTypes_.emplace(type);
     }
 
-    virtual std::pair<bool, bool> Animate(int64_t timestamp);
+    std::pair<bool, bool> Animate(int64_t timestamp);
 
     bool IsClipBound() const;
     // clipRect has value in UniRender when calling PrepareCanvasRenderNode, else it is nullopt
@@ -231,7 +232,7 @@ public:
     }
 
 #ifndef USE_ROSEN_DRAWING
-    using ClearCacheSurfaceFunc = std::function<void(sk_sp<SkSurface>&, sk_sp<SkSurface>&, uint32_t, uint32_t)>;
+    using ClearCacheSurfaceFunc = std::function<void(sk_sp<SkSurface>&&, sk_sp<SkSurface>&&, uint32_t, uint32_t)>;
 #ifdef NEW_SKIA
     void InitCacheSurface(GrRecordingContext* grContext, ClearCacheSurfaceFunc func = nullptr,
         uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
@@ -241,7 +242,8 @@ public:
 #endif
 #else
     using ClearCacheSurfaceFunc =
-        std::function<void(std::shared_ptr<Drawing::Surface>&, std::shared_ptr<Drawing::Surface>&, uint32_t, uint32_t)>;
+        std::function<void(std::shared_ptr<Drawing::Surface>&&,
+        std::shared_ptr<Drawing::Surface>&&, uint32_t, uint32_t)>;
     void InitCacheSurface(Drawing::GPUContext* grContext, ClearCacheSurfaceFunc func = nullptr,
         uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #endif
@@ -260,19 +262,20 @@ public:
 
 // use for uni render visitor
 #ifndef USE_ROSEN_DRAWING
-    sk_sp<SkSurface> GetCacheSurface(uint32_t threadIndex, bool needCheckThread);
+    sk_sp<SkSurface> GetCacheSurface(uint32_t threadIndex, bool needCheckThread, bool releaseAfterGet = false);
 #else
-    std::shared_ptr<Drawing::Surface> GetCacheSurface(uint32_t threadIndex, bool needCheckThread);
+    std::shared_ptr<Drawing::Surface> GetCacheSurface(uint32_t threadIndex, bool needCheckThread,
+        bool releaseAfterGet) = false);
 #endif
 
     void UpdateCompletedCacheSurface();
     void SetTextureValidFlag(bool isValid);
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> GetCompletedCacheSurface(uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
-        bool needCheckThread = true);
+        bool needCheckThread = true, bool releaseAfterGet = false);
 #else
     std::shared_ptr<Drawing::Surface> GetCompletedCacheSurface(uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
-        bool needCheckThread = true);
+        bool needCheckThread = true, bool releaseAfterGet = false);
 #endif
     void ClearCacheSurface();
 
@@ -360,8 +363,6 @@ public:
 #else
     void UpdateEffectRegion(std::optional<Drawing::Path>& region);
 #endif
-    // check node's rect if it has valid filter cache
-    bool IsFilterCacheValid() const;
     void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground=true) const;
 
     void CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd);
@@ -369,9 +370,6 @@ public:
     bool IsSuggestedDrawInGroup() const;
     void CheckDrawingCacheType();
     bool HasCacheableAnim() const { return hasCacheableAnim_; }
-    bool HasUpdateEffectRegion() const { return hasUpdateEffectRegion_; }
-    void SetHasUpdateEffectRegion(bool hasUpdate) { hasUpdateEffectRegion_ = hasUpdate; }
-
     enum NodeGroupType {
         NONE = 0,
         GROUPED_BY_ANIM,
@@ -394,7 +392,7 @@ public:
 
     void SetRSFrameRateRange(FrameRateRange range);
     FrameRateRange GetRSFrameRateRange();
-    void SetUIFrameRateRange(FrameRateRange range);
+    void UpdateUIFrameRateRange(FrameRateRange range);
     FrameRateRange GetUIFrameRateRange() const;
 
     void ResetRSFrameRateRange();
@@ -414,7 +412,7 @@ protected:
         CLEAN = 0,
         DIRTY,
     };
-    virtual void SetClean();
+    void SetClean();
 
     void DumpNodeType(std::string& out) const;
 
@@ -437,9 +435,12 @@ protected:
     bool IsSelfDrawingNode() const;
     bool isOnTheTree_ = false;
 
+    std::unordered_set<RSModifierType> dirtyTypes_;
+
 private:
     NodeId id_;
     NodeId instanceRootNodeId_ = INVALID_NODEID;
+    NodeId firstLevelNodeId_ = INVALID_NODEID;
 
     WeakPtr parent_;
     void SetParent(WeakPtr parent);
@@ -457,7 +458,7 @@ private:
     void SortChildren();
 
     const std::weak_ptr<RSContext> context_;
-    NodeDirty dirtyStatus_ = NodeDirty::DIRTY;
+    NodeDirty dirtyStatus_ = NodeDirty::CLEAN;
     bool isContentDirty_ = false;
     friend class RSRenderPropertyBase;
     friend class RSRenderTransition;
@@ -471,6 +472,7 @@ private:
     void InternalRemoveSelfFromDisappearingChildren();
     void FallbackAnimationsToRoot();
     void FilterModifiersByPid(pid_t pid);
+    inline void AddActiveNode();
 
     void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, std::optional<RectI> clipRect);
     void AddModifierProfile(std::shared_ptr<RSRenderModifier> modifier, float width, float height);
@@ -521,7 +523,6 @@ private:
     bool hasHardwareNode_ = false;
     bool hasAbilityComponent_ = false;
     bool isAncestorDirty_ = false;
-    bool hasUpdateEffectRegion_ = false;
     NodePriorityType priority_ = NodePriorityType::MAIN_PRIORITY;
 
     // driven render
@@ -542,7 +543,6 @@ private:
     // Only use in RSRenderNode::DrawCacheSurface to calculate scale factor
     float boundsWidth_ = 0.0f;
     float boundsHeight_ = 0.0f;
-    std::unordered_set<RSModifierType> dirtyTypes_;
     bool hasCacheableAnim_ = false;
     bool geometryChangeNotPerceived_ = false;
 
@@ -559,6 +559,7 @@ private:
     friend class RSRenderNodeMap;
     friend class RSProxyRenderNode;
     friend class RSRenderNode;
+    friend class RSMainThread;
 };
 // backward compatibility
 using RSBaseRenderNode = RSRenderNode;

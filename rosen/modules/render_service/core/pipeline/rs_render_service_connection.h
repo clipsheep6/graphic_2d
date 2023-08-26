@@ -102,7 +102,8 @@ private:
 
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) override;
 
-    void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY) override;
+    void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
+        SurfaceCaptureType surfaceCaptureType) override;
 
     void TakeSurfaceCaptureForUIWithUni(
         NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY);
@@ -217,7 +218,6 @@ private:
     std::unordered_set<ScreenId> virtualScreenIds_;
     sptr<RSIScreenChangeCallback> screenChangeCallback_;
     sptr<VSyncDistributor> appVSyncDistributor_;
-    std::vector<sptr<VSyncConnection>> vsyncConnections_;
 };
 } // namespace Rosen
 } // namespace OHOS

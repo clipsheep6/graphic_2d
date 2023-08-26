@@ -805,9 +805,9 @@ void RSUniRenderUtil::ClearDrawingNodeGpuResource(uint64_t threadIndex)
 }
 
 void RSUniRenderUtil::PostPurgeUnlockedResourcesTask(uint64_t threadIndex)
-{    
+{
     auto task = []() {
-        auto renderContext = RSMainThread::GetInstance()->getRenderEngine()->GetRenderContext();
+        auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
         if (renderContext == nullptr) {
             RS_LOGE("RSUniRenderUtil: renderContext is nullptr");
             return;

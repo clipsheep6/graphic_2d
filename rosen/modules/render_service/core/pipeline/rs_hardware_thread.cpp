@@ -16,6 +16,7 @@
 #include "pipeline/rs_hardware_thread.h"
 
 #include "hgm_core.h"
+#include "hgm_touch_thread.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "pipeline/rs_main_thread.h"
@@ -143,6 +144,8 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
 
 void RSHardwareThread::PerformSetActiveMode()
 {
+    OHOS::Rosen::FrameRefreshDetector::Instance()->UpdateLastFrameTimestamp();
+
     auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
     auto screenManager = CreateOrGetScreenManager();
     if (screenManager == nullptr) {

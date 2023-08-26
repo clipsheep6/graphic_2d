@@ -16,6 +16,7 @@
 #ifndef HGM_CORE_H
 #define HGM_CORE_H
 
+#include <cstdint>
 #include <functional>
 #include <cinttypes>
 #include <thread>
@@ -75,6 +76,10 @@ public:
     int32_t CalModifierPreferred(HgmModifierProfile &hgmModifierProfile) const;
     void SetActiveScreenId(ScreenId id);
 
+    // pointer event
+    void OnPointerEvent(int32_t event);
+    void SetIdleRefreshRate();
+
 private:
     HgmCore();
     ~HgmCore();
@@ -105,6 +110,10 @@ private:
     std::string currentBundleName_;
     std::shared_ptr<HgmFrameRateTool> hgmFrameRateTool_ = nullptr;
     ScreenId activeScreenId_ = 0;
+
+    // pointer event
+    // int32_t temporalTouchRate = 90;
+    
 };
 } // namespace OHOS::Rosen
 #endif // HGM_CORE_H

@@ -444,6 +444,24 @@ void RSRenderServiceConnectionProxy::SetScreenActiveMode(ScreenId id, uint32_t m
     }
 }
 
+void RSRenderServiceConnectionProxy::TransferPointerEvent(int32_t event)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return;
+    }
+    option.SetFlags(MessageOption::TF_SYNC);
+    data.WriteInt32(event);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::POINTER_EVENT);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        return;
+    }
+}
+
 void RSRenderServiceConnectionProxy::SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate)
 {
     MessageParcel data;

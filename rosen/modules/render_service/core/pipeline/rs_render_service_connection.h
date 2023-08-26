@@ -90,6 +90,8 @@ private:
 
     void SetScreenActiveMode(ScreenId id, uint32_t modeId) override;
 
+    void TransferPointerEvent(int32_t event) override;
+
     void SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate) override;
 
     void SetRefreshRateMode(int32_t refreshRateMode) override;

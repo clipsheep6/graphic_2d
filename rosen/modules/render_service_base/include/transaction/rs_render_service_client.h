@@ -133,6 +133,8 @@ public:
 
     void SetScreenActiveMode(ScreenId id, uint32_t modeId);
 
+    void TransferPointerEvent(int32_t event);
+
     void SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate);
 
     void SetRefreshRateMode(int32_t refreshRateMode);

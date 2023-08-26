@@ -71,6 +71,8 @@ public:
 
     void SetRefreshRateMode(int32_t refreshRateMode) override;
 
+    void TransferPointerEvent(int32_t event) override;
+
     uint32_t GetScreenCurrentRefreshRate(ScreenId id) override;
 
     std::vector<uint32_t> GetScreenSupportedRefreshRates(ScreenId id) override;

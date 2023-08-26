@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <functional>
 
 #include "rs_interfaces.h"
@@ -118,6 +119,11 @@ bool RSInterfaces::TakeSurfaceCapture(NodeId id,
 void RSInterfaces::SetScreenActiveMode(ScreenId id, uint32_t modeId)
 {
     renderServiceClient_->SetScreenActiveMode(id, modeId);
+}
+
+void RSInterfaces::TransferPointerEvent(int32_t event)
+{
+    renderServiceClient_->TransferPointerEvent(event);
 }
 
 void RSInterfaces::SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate)

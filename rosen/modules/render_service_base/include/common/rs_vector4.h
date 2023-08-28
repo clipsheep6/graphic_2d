@@ -68,6 +68,15 @@ public:
     T& operator[](int index);
     T* GetData();
 
+    Vector4& Round()
+    {
+        data_[0] = std::floor(data_[0]);
+        data_[1] = std::floor(data_[1]);
+        data_[2] = std::ceil(data_[2]);
+        data_[3] = std::ceil(data_[3]);
+        return *this;
+    }
+
     void Scale(float arg);
     void Sub(const Vector4<T>& arg);
     void Add(const Vector4<T>& arg);

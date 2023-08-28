@@ -143,7 +143,7 @@ void RSRenderNode::RemoveChild(SharedPtr child, bool skipTransition)
     isFullChildrenListValid_ = false;
 }
 
-void RSRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, NodeId firstLevelNodeId)
+void RSRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, NodeId firstLevelNodeId, bool isUsedBySubThread)
 {
     // We do not need to label a child when the child is removed from a parent that is not on the tree
     if (flag == isOnTheTree_) {
@@ -152,18 +152,18 @@ void RSRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, NodeId f
     instanceRootNodeId_ = instanceRootNodeId;
     firstLevelNodeId_ = firstLevelNodeId;
     isOnTheTree_ = flag;
-    OnTreeStateChanged();
+    OnTreeStateChanged(isUsedBySubThread);
 
     for (auto& weakChild : children_) {
         auto child = weakChild.lock();
         if (child == nullptr) {
             continue;
         }
-        child->SetIsOnTheTree(flag, instanceRootNodeId, firstLevelNodeId);
+        child->SetIsOnTheTree(flag, instanceRootNodeId, firstLevelNodeId, isUsedBySubThread);
     }
 
     for (auto& [child, _] : disappearingChildren_) {
-        child->SetIsOnTheTree(flag, instanceRootNodeId, firstLevelNodeId);
+        child->SetIsOnTheTree(flag, instanceRootNodeId, firstLevelNodeId, isUsedBySubThread);
     }
 }
 
@@ -1490,12 +1490,14 @@ void RSRenderNode::UpdateFilterCacheManagerWithCacheRegion(const std::optional<R
 #endif
 }
 
-void RSRenderNode::OnTreeStateChanged()
+void RSRenderNode::OnTreeStateChanged(bool isUsedBySubThread)
 {
     if (!isOnTheTree_) {
         // attempt to clear FullChildrenList, to avoid memory leak
         isFullChildrenListValid_ = false;
-        ClearFullChildrenListIfNeeded();
+        if (!isUsedBySubThread) {
+            ClearFullChildrenListIfNeeded(false);
+        }
     } else {
         SetDirty();
     }

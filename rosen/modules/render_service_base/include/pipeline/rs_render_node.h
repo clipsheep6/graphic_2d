@@ -104,7 +104,7 @@ public:
     }
 
     virtual void SetIsOnTheTree(bool flag, NodeId instanceRootNodeId = INVALID_NODEID,
-        NodeId firstLevelNodeId = INVALID_NODEID);
+        NodeId firstLevelNodeId = INVALID_NODEID, bool isUsedBySubThread = false);
     bool IsOnTheTree() const;
 
     // return children and disappeared children, not guaranteed to be sorted by z-index
@@ -420,7 +420,7 @@ protected:
     {
         return context_;
     }
-    virtual void OnTreeStateChanged();
+    virtual void OnTreeStateChanged(bool isUsedBySubThread);
 
     static void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId);
     void AddGeometryModifier(const std::shared_ptr<RSRenderModifier> modifier);

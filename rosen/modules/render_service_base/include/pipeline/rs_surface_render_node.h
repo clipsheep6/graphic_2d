@@ -68,8 +68,7 @@ public:
     void PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas);
 
 #ifdef OHOS_PLATFORM
-    void SetIsOnTheTree(bool flag, NodeId instanceRootNodeId = INVALID_NODEID,
-        NodeId firstLevelNodeId = INVALID_NODEID) override;
+    void SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, NodeId firstLevelNodeId, bool isUsedBySubThread) override;
 #endif
     bool IsAppWindow() const
     {
@@ -658,7 +657,7 @@ public:
     }
     bool LeashWindowRelatedAppWindowOccluded(std::shared_ptr<RSSurfaceRenderNode>& appNode);
 
-    void OnTreeStateChanged() override;
+    void OnTreeStateChanged(bool isUsedBySubThread) override;
 
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA

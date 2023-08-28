@@ -63,7 +63,7 @@ void RSDisplayRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->ProcessDisplayRenderNode(*this);
 }
 
-void RSDisplayRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, NodeId firstLevelNodeId)
+void RSDisplayRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, NodeId firstLevelNodeId, bool)
 {
     RSRenderNode::SetIsOnTheTree(flag, GetId(), firstLevelNodeId);
 }

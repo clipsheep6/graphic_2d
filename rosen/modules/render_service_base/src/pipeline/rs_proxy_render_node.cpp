@@ -116,9 +116,9 @@ void RSProxyRenderNode::ResetContextVariableCache()
     contextClipRect_.reset();
 }
 
-void RSProxyRenderNode::OnTreeStateChanged()
+void RSProxyRenderNode::OnTreeStateChanged(bool isUsedBySubThread)
 {
-    RSRenderNode::OnTreeStateChanged();
+    RSRenderNode::OnTreeStateChanged(isUsedBySubThread);
     if (!IsOnTheTree()) {
         // removed from tree, clean up context variables
         CleanUp(false);

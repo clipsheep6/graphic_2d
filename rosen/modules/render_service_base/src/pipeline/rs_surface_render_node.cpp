@@ -243,12 +243,12 @@ void RSSurfaceRenderNode::ClearChildrenCache()
 #endif
     }
     // Temporary solution, GetChildren will generate fullChildrenList_, which will cause memory leak
-    OnTreeStateChanged();
+    OnTreeStateChanged(NodeIsUsedBySubThread());
 }
 
-void RSSurfaceRenderNode::OnTreeStateChanged()
+void RSSurfaceRenderNode::OnTreeStateChanged(bool isUsedBySubThread)
 {
-    RSRenderNode::OnTreeStateChanged();
+    RSRenderNode::OnTreeStateChanged(isUsedBySubThread);
 #ifdef RS_ENABLE_GL
     if (grContext_ && !IsOnTheTree() && IsLeashWindow()) {
 #ifndef USE_ROSEN_DRAWING
@@ -1298,7 +1298,7 @@ void RSSurfaceRenderNode::UpdateCacheSurfaceDirtyManager(int bufferAge)
 }
 
 #ifdef OHOS_PLATFORM
-void RSSurfaceRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, NodeId firstLevelNodeId)
+void RSSurfaceRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, NodeId firstLevelNodeId, bool isUsedBySubThread)
 {
     instanceRootNodeId = (IsMainWindowType() || IsLeashWindow()) ? GetId() : instanceRootNodeId;
     if (IsLeashWindow()) {
@@ -1311,7 +1311,8 @@ void RSSurfaceRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, N
         }
     }
     isNewOnTree_ = flag && !isOnTheTree_;
-    RSBaseRenderNode::SetIsOnTheTree(flag, instanceRootNodeId, firstLevelNodeId);
+    RSBaseRenderNode::SetIsOnTheTree(
+        flag, instanceRootNodeId, firstLevelNodeId, isUsedBySubThread || NodeIsUsedBySubThread());
     if (flag == isReportFirstFrame_ || !IsAppWindow()) {
         return;
     }

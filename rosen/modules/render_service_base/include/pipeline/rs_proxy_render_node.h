@@ -56,7 +56,7 @@ public:
 
     void ResetContextVariableCache();
 protected:
-    void OnTreeStateChanged() override;
+    void OnTreeStateChanged(bool isUsedBySubThread ) override;
 
 private:
     std::weak_ptr<RSSurfaceRenderNode> target_;

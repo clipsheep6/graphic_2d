@@ -352,7 +352,7 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     for (auto& child : node.GetSortedChildren()) {
         auto surfaceNodePtr = child->ReinterpretCastTo<RSSurfaceRenderNode>();
         if (!surfaceNodePtr) {
-            RS_LOGE("RSUniRenderVisitor::PrepareDisplayRenderNode ReinterpretCastTo fail");
+            RS_LOGD("RSUniRenderVisitor::PrepareDisplayRenderNode ReinterpretCastTo fail");
             continue;
         }
         CheckColorSpace(*surfaceNodePtr);

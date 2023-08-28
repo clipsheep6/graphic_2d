@@ -32,6 +32,7 @@
 namespace OHOS {
 namespace Rosen {
 constexpr size_t MAX_SIZE = 4;
+const std::u16string RENDERSERVICECONNECTION_INTERFACE_TOKEN = u"ohos.rosen.RenderServiceConnection";
 static inline std::shared_ptr<RSRenderServiceClient> rsClient = nullptr;
 namespace {
 const uint8_t* data_ = nullptr;
@@ -74,10 +75,29 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     size_ = size;
     pos = 0;
 
-    rsClient = std::make_shared<RSRenderServiceClient>();
+    // get data
+    uint64_t id = GetData<uint64_t>();
+    uint32_t modeId = GetData<uint32_t>();
+    uint32_t status = GetData<uint32_t>();
+    uint32_t level = GetData<uint32_t>();
+    int32_t modeIdx = GetData<uint32_t>();
+    uint32_t skipFrameInterval = GetData<uint32_t>();
+
     MessageParcel datas;
-    auto transactionData = RSBaseRenderUtil::ParseTransactionData(datas);
-    rsClient->CommitTransaction(transactionData);
+    datas.WriteInterfaceToken(RENDERSERVICECONNECTION_INTERFACE_TOKEN);
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+    rsClient = std::make_shared<RSRenderServiceClient>();
+    auto nodeId = data.ReadUint64();
+    auto surfaceName = data.ReadString();
+    auto type = static_cast<RSSurfaceNodeType>(data.ReadUint8());
+    auto bundleName = data.ReadString();
+    RSSurfaceRenderNodeConfig config = {
+        .id = nodeId, .name = surfaceName, .bundleName = bundleName, .nodeType = type};
+    sptr<Surface> surface = rsClient->CreateNodeAndSurface(config);
+    if (surface == nullptr) {
+        return false;
+    }
     return true;
 }
 } // ROSEN

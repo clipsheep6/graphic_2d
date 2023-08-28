@@ -32,6 +32,7 @@
 namespace OHOS {
 namespace Rosen {
 constexpr size_t MAX_SIZE = 4;
+const std::u16string RENDERSERVICECONNECTION_INTERFACE_TOKEN = u"ohos.rosen.RenderServiceConnection";
 static inline std::shared_ptr<RSRenderServiceClient> rsClient = nullptr;
 namespace {
 const uint8_t* data_ = nullptr;
@@ -74,8 +75,12 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     size_ = size;
     pos = 0;
 
-    rsClient = std::make_shared<RSRenderServiceClient>();
     MessageParcel datas;
+    datas.WriteInterfaceToken(RENDERSERVICECONNECTION_INTERFACE_TOKEN);
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+
+    rsClient = std::make_shared<RSRenderServiceClient>();
     auto transactionData = RSBaseRenderUtil::ParseTransactionData(datas);
     rsClient->CommitTransaction(transactionData);
     return true;

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "rscommittransaction_fuzzer.h"
+#include "rscreatevirtualscreen_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -32,7 +32,7 @@
 namespace OHOS {
 namespace Rosen {
 constexpr size_t MAX_SIZE = 4;
-static inline std::shared_ptr<RSRenderServiceClient> rsClient = nullptr;
+const std::u16string RENDERSERVICECONNECTION_INTERFACE_TOKEN = u"ohos.rosen.RenderServiceConnection";
 namespace {
 const uint8_t* data_ = nullptr;
 size_t size_ = 0;
@@ -74,10 +74,22 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     size_ = size;
     pos = 0;
 
-    rsClient = std::make_shared<RSRenderServiceClient>();
     MessageParcel datas;
-    auto transactionData = RSBaseRenderUtil::ParseTransactionData(datas);
-    rsClient->CommitTransaction(transactionData);
+    datas.WriteInterfaceToken(RENDERSERVICECONNECTION_INTERFACE_TOKEN);
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    auto screenManager = CreateOrGetScreenManager();
+    sptr<RSIConnectionToken> token = new IRemoteStub<RSIConnectionToken>();
+    RSMainThread* mainThread = nullptr;
+    mainThread = RSMainThread::Instance();
+    mainThread->Start();
+    RSHardwareThread::Instance().Start();
+    sptr<RSRenderServiceConnectionStub> connectionStub =
+        new RSRenderServiceConnection(0, nullptr, mainThread, screenManager, token->AsObject(), nullptr);
+    connectionStub->OnRemoteRequest(
+        static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::EXECUTE_SYNCHRONOUS_TASK), datas, reply, option);
     return true;
 }
 } // ROSEN

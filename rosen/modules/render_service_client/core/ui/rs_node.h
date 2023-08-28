@@ -316,6 +316,7 @@ public:
     void AddFRCSceneInfo(const std::string& scene, float speed);
 
     void UpdateUIFrameRateRange(FrameRateRange range);
+    void SetOutOfParent(bool outOfParent);
 
 protected:
     explicit RSNode(bool isRenderServiceNode);
@@ -375,6 +376,7 @@ private:
     std::unordered_map<PropertyId, std::shared_ptr<RSModifier>> modifiers_;
     std::unordered_map<RSModifierType, std::shared_ptr<RSModifier>> propertyModifiers_;
     std::shared_ptr<RectF> drawRegion_;
+    bool outOfParent_ = false;
 
     std::unordered_map<AnimationId, std::shared_ptr<RSAnimation>> animations_;
     std::unordered_map<PropertyId, uint32_t> animatingPropertyNum_;

@@ -1905,6 +1905,14 @@ std::shared_ptr<RectF> RSRenderNode::GetDrawRegion() const
 {
     return drawRegion_;
 }
+void RSRenderNode::SetOutOfParent(bool outOfParent)
+{
+    outOfParent_ = outOfParent;
+}
+bool RSRenderNode::GetOutOfParent() const
+{
+    return outOfParent_;
+}
 RSRenderNode::NodeGroupType RSRenderNode::GetNodeGroupType()
 {
     return nodeGroupType_;

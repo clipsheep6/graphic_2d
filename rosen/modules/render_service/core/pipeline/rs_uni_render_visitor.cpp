@@ -2093,6 +2093,18 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             }
         }
 
+        if (RSSystemParameters::GetOutOfParentDfxEnabled()) {
+            for (auto i = 0; i < OutOfParentNodeRects_.size(); ++i) {
+#ifndef USE_ROSEN_DRAWING
+                DrawDirtyRectForDFX(OutOfParentNodeRects_[i], SK_ColorRED, SkPaint::kFill_Style, 0.2);
+                DrawDirtyRectForDFX(OutOfParentNodeSubRects_[i], SK_ColorBLUE, SkPaint::kFill_Style, 0.1);
+#else
+                DrawDirtyRectForDFX(OutOfParentNodeRects_[i], Drawing::Color::COLOR_RED, RSPaintStyle::FILL, 0.2);
+                DrawDirtyRectForDFX(OutOfParentNodeSubRects_[i], Drawing::Color::COLOR_BLUE, RSPaintStyle::FILL, 0.1);
+#endif
+            }
+        }
+
         if (isDrawingCacheEnabled_ && RSSystemParameters::GetDrawingCacheEnabledDfx()) {
             DrawCacheRegionForDFX(cacheRenderNodeMapRects_);
         }
@@ -3522,6 +3534,14 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     processedCanvasNodeInCurrentSurface_++;
     if (!node.ShouldPaint()) {
         return;
+    }
+    if (node.HasChildrenOutOfRect() != node.GetOutOfParent()) {
+        RS_TRACE_NAME_FMT("ProcessCanvasRenderNode HasChildrenOutOfRect %d is not equal to GetOutOfParent %d",
+            node.HasChildrenOutOfRect(), node.GetOutOfParent());
+        if (RSSystemParameters::GetOutOfParentDfxEnabled()) {
+            OutOfParentNodeRects_.emplace_back(node.GetOldDirty());
+            OutOfParentNodeSubRects_.emplace_back(node.GetChildrenRect());
+        }
     }
 #ifdef RS_ENABLE_EGLQUERYSURFACE
     if (isOpDropped_ && (curSurfaceNode_ != nullptr)) {

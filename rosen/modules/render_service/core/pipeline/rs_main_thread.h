@@ -252,7 +252,7 @@ private:
         std::shared_ptr<TransactionDataMap>& transactionDataEffective, std::string& transactionFlags);
 
     bool IsResidentProcess(pid_t pid);
-    bool IsNeedSkip(NodeId instanceRootNodeId, pid_t pid);
+    bool IsNeedSkip(NodeId instanceRootNodeId, pid_t pid, std::shared_ptr<RSRenderNode>& node, uint16_t commandType);
 
     bool NeedReleaseGpuResource(const RSRenderNodeMap& nodeMap);
 
@@ -371,6 +371,7 @@ private:
     std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes_;
     std::unordered_map<NodeId, bool> cacheCmdSkippedNodes_;
     std::unordered_map<pid_t, std::pair<std::vector<NodeId>, bool>> cacheCmdSkippedInfo_;
+    std::unordered_map<pid_t, std::vector<NodeId>> cacheCmdSkippedInfoScb_;
     std::atomic<uint64_t> frameCount_ = 0;
     std::set<std::shared_ptr<RSBaseRenderNode>> oldDisplayChildren_;
     DeviceType deviceType_ = DeviceType::PHONE;

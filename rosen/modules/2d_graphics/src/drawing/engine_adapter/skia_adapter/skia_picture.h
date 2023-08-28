@@ -37,6 +37,7 @@ public:
     std::shared_ptr<Data> Serialize() const override;
     bool Deserialize(std::shared_ptr<Data> data) override;
 
+    void SetPicture(const sk_sp<SkPicture> picture);
 private:
     sk_sp<SkPicture> skiaPicture_;
 };

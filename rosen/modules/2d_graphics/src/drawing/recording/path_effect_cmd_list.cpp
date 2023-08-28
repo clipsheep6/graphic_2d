@@ -66,6 +66,9 @@ std::shared_ptr<PathEffect> PathEffectCmdList::Playback() const
             case PathEffectOpItem::CREATE_COMPOSE:
                 pe = static_cast<CreateComposePathEffectOpItem*>(itemPtr)->Playback(*this);
                 break;
+            case PathEffectOpItem::CREATE_1D:
+                pe = static_cast<Create1DPathEffectOpItem*>(itemPtr)->Playback(*this);
+                break;
             default:
                 LOGE("PathEffectCmdList unknown OpItem type!");
                 break;
@@ -85,6 +88,20 @@ std::shared_ptr<PathEffect> CreateDashPathEffectOpItem::Playback(const CmdList& 
     auto intervals = CmdListHelper::GetVectorFromCmdList<scalar>(cmdList, intervals_);
     int32_t count = intervals_.second / sizeof(scalar);
     return PathEffect::CreateDashPathEffect(intervals.data(), count, phase_);
+}
+
+
+/* OpItem */
+Create1DPathEffectOpItem::Create1DPathEffectOpItem(const CmdListHandle& path, float advance, float phase, Path1DStyle style)
+    : PathEffectOpItem(CREATE_1D), path_(path), advance_(advance), phase_(phase), style_(style) {}
+
+std::shared_ptr<PathEffect> Create1DPathEffectOpItem::Playback(const CmdList& cmdList) const
+{
+    auto path = CmdListHelper::GetFromCmdList<PathCmdList, Path>(cmdList, path_);
+    if (path == nullptr) {
+        return nullptr;
+    }
+    return PathEffect::Create1DPathEffect(*path, advance_, phase_, style_);
 }
 
 CreatePathDashEffectOpItem::CreatePathDashEffectOpItem(

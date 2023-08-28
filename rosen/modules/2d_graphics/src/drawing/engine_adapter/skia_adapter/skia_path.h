@@ -82,6 +82,9 @@ public:
 
     scalar GetLength(bool forceClosed) const override;
     bool GetPositionAndTangent(scalar distance, Point& position, Point& tangent, bool forceClosed) const override;
+
+    void MoveTo(const Point& p) override;
+    void LineTo(const Point& p) override;
 private:
     SkPath path_;
 };

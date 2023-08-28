@@ -36,6 +36,16 @@
 #include "skia_adapter/skia_shader_effect.h"
 #include "skia_adapter/skia_surface.h"
 
+#include "skia_adapter/skia_text_blob_builder.h"
+#include "skia_adapter/skia_text_blob.h"
+#include "skia_adapter/skia_string.h"
+#include "skia_adapter/skia_stream.h"
+#include "skia_adapter/skia_rect.h"
+// #include "skia_adapter/skia_path_1d_path_effect.h"
+#include "skia_adapter/skia_font.h"
+#include "skia_adapter/skia_typeface.h"
+#include "skia_adapter/skia_dash_path_effect.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -147,6 +157,53 @@ std::unique_ptr<RegionImpl> SkiaImplFactory::CreateRegion()
 {
     return std::make_unique<SkiaRegion>();
 }
+
+// add
+std::unique_ptr<TextBlobBuilderImpl> SkiaImplFactory::CreateTextBlobBuilder()
+{
+    return std::make_unique<SkiaTextBlobBuilder>();
+}
+
+std::unique_ptr<TextBlobImpl> SkiaImplFactory::CreateTextBlob()
+{
+    return std::make_unique<SkiaTextBlob>();
+}
+
+std::unique_ptr<StringImpl> SkiaImplFactory::CreateString()
+{
+    return std::make_unique<SkiaString>();
+}
+
+std::unique_ptr<StreamImpl> SkiaImplFactory::CreateMemoryStream()
+{
+    return std::make_unique<SkiaMemoryStream>();
+}
+
+std::unique_ptr<RectImpl> SkiaImplFactory::CreateRect()
+{
+    return std::make_unique<SkiaRect>();
+}
+
+// std::unique_ptr<Path1dEffectImpl> SkiaImplFactory::CreatePath1dEffect()
+// {
+//     return std::make_unique<SkiaPath1DPathEffect>();
+// }
+
+std::unique_ptr<FontImpl> SkiaImplFactory::CreateFont()
+{
+    return std::make_unique<SkiaFont>();
+}
+
+std::unique_ptr<TypefaceImpl> SkiaImplFactory::CreateTypeFace()
+{
+    return std::make_unique<SkiaTypeface>();
+}
+
+std::unique_ptr<DashPathEffectImpl> CreateDashPathEffect()
+{
+    return std::make_unique<SkiaDashPathEffect>();
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

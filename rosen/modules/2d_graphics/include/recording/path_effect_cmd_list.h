@@ -57,6 +57,7 @@ public:
         CREATE_CORNER,
         CREATE_SUM,
         CREATE_COMPOSE,
+        CREATE_1D,
     };
 };
 
@@ -73,6 +74,23 @@ public:
 private:
     std::pair<uint32_t, size_t> intervals_;
     scalar phase_;
+};
+
+class Create1DPathEffectOpItem : public PathEffectOpItem {
+public:
+    Create1DPathEffectOpItem(const CmdListHandle& path, float advance, float phase, Path1DStyle style);
+    ~Create1DPathEffectOpItem() = default;
+
+    /*
+     * @brief            Restores arguments from contiguous memory and plays back the OpItem to create PathEffect.
+     * @param cmdList  A contiguous memory.
+     */
+    std::shared_ptr<PathEffect> Playback(const CmdList& cmdList) const;
+private:
+    CmdListHandle path_;
+    float advance_;
+    float phase_;
+    Path1DStyle style_;
 };
 
 class CreatePathDashEffectOpItem : public PathEffectOpItem {

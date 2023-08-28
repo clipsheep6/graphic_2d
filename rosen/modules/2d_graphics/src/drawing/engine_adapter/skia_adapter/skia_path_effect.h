@@ -38,6 +38,9 @@ public:
     void InitWithCorner(scalar radius) override;
     void InitWithSum(const PathEffect& e1, const PathEffect& e2) override;
     void InitWithCompose(const PathEffect& e1, const PathEffect& e2) override;
+
+    void InitWith1DPath(const Path& path, float advance, float phase, Path1DStyle style) override;
+
     sk_sp<SkPathEffect> GetPathEffect() const;
     /*
      * @brief  Update the member variable to pathEffect, adaptation layer calls.

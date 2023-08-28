@@ -21,6 +21,7 @@
 
 #include "include/core/SkRefCnt.h"
 
+#include "text/text_blob.h"
 #include "draw/brush.h"
 #include "draw/clip.h"
 #include "draw/path.h"
@@ -130,6 +131,7 @@ public:
     virtual void AttachBrush(const Brush& brush) = 0;
     virtual void DetachPen() = 0;
     virtual void DetachBrush() = 0;
+    virtual void DrawTextBlob(const TextBlob& blob, float x, float y) = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

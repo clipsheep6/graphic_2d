@@ -319,6 +319,18 @@ bool SkiaPath::GetPositionAndTangent(scalar distance, Point& position, Point& ta
     return ret;
 }
 
+void SkiaPath::MoveTo(const Point& p)
+{
+    SkPoint point({p.GetX(), p.GetY()});
+    path_ = path_.moveTo(point);
+}
+
+void SkiaPath::LineTo(const Point& p)
+{
+    SkPoint point({p.GetX(), p.GetY()});
+    path_ = path_.lineTo(point);
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

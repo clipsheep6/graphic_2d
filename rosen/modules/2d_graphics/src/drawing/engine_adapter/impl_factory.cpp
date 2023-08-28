@@ -127,6 +127,52 @@ std::unique_ptr<RegionImpl> ImplFactory::CreateRegionImpl()
 {
     return EngineImplFactory::CreateRegion();
 }
+
+
+std::unique_ptr<TextBlobImpl> ImplFactory::CreateTextBlobImpl()
+{
+    return EngineImplFactory::CreateTextBlob();
+}
+
+std::unique_ptr<TextBlobBuilderImpl> ImplFactory::CreateTextBlobBuilderImpl()
+{
+    return EngineImplFactory::CreateTextBlobBuilder();
+}
+
+std::unique_ptr<StringImpl> ImplFactory::CreateStringImpl()
+{
+    return EngineImplFactory::CreateString();
+}
+
+std::unique_ptr<StreamImpl> ImplFactory::CreateStreamImpl()
+{
+    return EngineImplFactory::CreateMemoryStream();
+}
+
+std::unique_ptr<RectImpl> ImplFactory::CreateRectImpl()
+{
+    return EngineImplFactory::CreateRect();
+}
+
+// std::unique_ptr<Path1dEffectImpl> ImplFactory::CreatePath1dEffectImpl()
+// {
+//     return EngineImplFactory::CreatePath1dEffect();
+// }
+
+std::unique_ptr<FontImpl> ImplFactory::CreateFontImpl()
+{
+    return EngineImplFactory::CreateFont();
+}
+
+std::unique_ptr<TypefaceImpl> ImplFactory::CreateTypeFaceImpl()
+{
+    return EngineImplFactory::CreateTypeFace();
+}
+
+std::unique_ptr<DashPathEffectImpl> ImplFactory::CreateDashPathEffectImpl()
+{
+    return EngineImplFactory::CreateDashPathEffect();
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

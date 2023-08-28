@@ -80,11 +80,13 @@ static napi_value Export(napi_env env, napi_value exports)
     size_t webglItem = vec[0].find("webgl");
     string webgl2Str = vec[0].substr(webglItem, 6);
     string webgl1Str = vec[0].substr(webglItem, 5);
+    bool newCreate = false;
     if (webgl2Str == "webgl2") {
         auto& webgl2Objects = ObjectManager::GetInstance().GetWebgl2ObjectMap();
         WebGL2RenderingContext *webGl2RenderingContext = nullptr;
         auto it = webgl2Objects.find(idStr);
         if (it == webgl2Objects.end()) {
+            newCreate = true;
             webGl2RenderingContext = new WebGL2RenderingContext(env, exports);
             webgl2Objects.insert({idStr, webGl2RenderingContext});
             webGl2RenderingContext->mEGLSurface = EglManager::GetInstance().CreateSurface(
@@ -92,11 +94,13 @@ static napi_value Export(napi_env env, napi_value exports)
         } else {
             webGl2RenderingContext = reinterpret_cast<WebGL2RenderingContext *>(it->second);
         }
+        if (!newCreate) {
+            return exports;
+        }
         if (!webGl2RenderingContext->Export(env, exports)) {
             return nullptr;
         }
     } else if (webgl1Str == "webgl") {
-        bool newCreate = false;
         auto& webgl1Objects = ObjectManager::GetInstance().GetWebgl1ObjectMap();
         WebGLRenderingContext *webGlRenderingContext = nullptr;
         auto it = webgl1Objects.find(idStr);
@@ -116,10 +120,12 @@ static napi_value Export(napi_env env, napi_value exports)
             webGlRenderingContext->webGlContextAttributes = webGlContextAttributes;
             webGlContextAttributes = nullptr;
         }
-        if (newCreate) {
-            webGlRenderingContext->mEGLSurface =
-                EglManager::GetInstance().CreateSurface(webGlRenderingContext->mEglWindow);
+        if (!newCreate) {
+            return exports;
         }
+
+        webGlRenderingContext->mEGLSurface =
+            EglManager::GetInstance().CreateSurface(webGlRenderingContext->mEglWindow);
         if (!webGlRenderingContext->Export(env, exports)) {
             return nullptr;
         }

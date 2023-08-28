@@ -13,11 +13,7 @@
  * limitations under the License.
  */
 
-#include "../include/util/util.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "util/util.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -37,92 +33,51 @@ void Util::SplitString(const string& str, vector<string>& vec, const string& pat
     }
 }
 
-WebGLRenderingContextBasicBase *Util::GetContextObject(napi_env env, napi_value thisVar, const std::string& contextType)
+bool Util::GetContextInfo(napi_env env, napi_value thisVar, std::string &contextId, std::vector<std::string> &info)
 {
-    bool succ = false;
     napi_status status;
-    napi_value id;
+    bool succ = false;
+    napi_value id = nullptr;
     status = napi_get_named_property(env, thisVar, "id", &id);
     if (status != napi_ok) {
-        return nullptr;
+        return false;
     }
     unique_ptr<char[]> idRev;
     tie(succ, idRev, ignore) = NVal(env, id).ToUTF8String();
     if (!succ) {
-        return nullptr;
+        return false;
     }
-    string idStr = idRev.get();
-    auto& objects = (contextType == "webgl") ? ObjectManager::GetInstance().GetWebgl1ObjectMap() :
-        ObjectManager::GetInstance().GetWebgl2ObjectMap();
-    auto it = objects.find(idStr);
-    if (it == objects.end()) {
-        return nullptr;
+    contextId = idRev.get();
+
+    napi_value param = nullptr;
+    status = napi_get_named_property(env, thisVar, "param", &param);
+    if (status != napi_ok) {
+        return false;
     }
-    return it->second;
+    unique_ptr<char[]> strRev;
+    tie(succ, strRev, ignore) = NVal(env, param).ToUTF8String();
+    if (!succ) {
+        return false;
+    }
+    string str = strRev.get();
+    Util::SplitString(str, info, ",");
+    if (info.size() == 0) {
+        return false;
+    }
+    return true;
 }
 
-string Util::GetContextAttr(const std::string& str, const std::string& key, int keyLength, int value)
+WebGLRenderingContextBasicBase *Util::GetContextObject(napi_env env, napi_value thisVar)
 {
-    size_t item = str.find(key);
-    if (item != string::npos) {
-        string itemVar = str.substr(item + keyLength, value);
-        return itemVar;
+    string contextId;
+    std::vector<std::string> info;
+    bool succ = GetContextInfo(env, thisVar, contextId, info);
+    if (!succ) {
+        return nullptr;
     }
-    string res = "false";
-    return res;
-}
-
-void Util::SetContextAttr(vector<string>& vec, WebGLContextAttributes *webGlContextAttributes)
-{
-    size_t i;
-    for (i = 1; i < vec.size(); i++) {
-        string alpha = Util::GetContextAttr(vec[i], "alpha", 7, 4);
-        if (alpha == "true") {
-            webGlContextAttributes->alpha = true;
-        }
-        string depth = Util::GetContextAttr(vec[i], "depth", 7, 4);
-        if (depth == "true") {
-            webGlContextAttributes->depth = true;
-        }
-        string stencil = Util::GetContextAttr(vec[i], "stencil", 9, 4);
-        if (stencil == "true") {
-            webGlContextAttributes->stencil = true;
-        }
-        string premultipliedAlpha = Util::GetContextAttr(vec[i], "premultipliedAlpha", 23, 4);
-        if (premultipliedAlpha == "true") {
-            webGlContextAttributes->premultipliedAlpha = true;
-        }
-        string preserveDrawingBuffer = Util::GetContextAttr(vec[i], "preserveDrawingBuffer", 18, 4);
-        if (preserveDrawingBuffer == "true") {
-            webGlContextAttributes->preserveDrawingBuffer = true;
-        }
-        string failIfMajorPerformanceCaveat = Util::GetContextAttr(vec[i], "failIfMajorPerformanceCaveat", 30, 4);
-        if (failIfMajorPerformanceCaveat == "true") {
-            webGlContextAttributes->failIfMajorPerformanceCaveat = true;
-        }
-        string desynchronized = Util::GetContextAttr(vec[i], "desynchronized", 16, 4);
-        if (desynchronized == "true") {
-            webGlContextAttributes->desynchronized = true;
-        }
-        string highPerformance = Util::GetContextAttr(vec[i], "powerPreference", 18, 16);
-        if (highPerformance == "high-performance") {
-            webGlContextAttributes->powerPreference = highPerformance;
-        } else {
-            string lowPower = Util::GetContextAttr(vec[i], "powerPreference", 18, 9);
-            if (lowPower == "low-power") {
-                webGlContextAttributes->powerPreference = lowPower;
-            } else {
-                string defaultVar = Util::GetContextAttr(vec[i], "powerPreference", 18, 7);
-                if (defaultVar == "default") {
-                    webGlContextAttributes->powerPreference = defaultVar;
-                }
-            }
-        }
-    }
+    size_t webglItem = info[0].find("webgl");
+    string webgl2Str = info[0].substr(webglItem, 6); // length of webgl2
+    return ObjectManager::GetInstance().GetWebGLContext(webgl2Str == "webgl2", contextId);
 }
 } // namespace Rosen
 } // namespace OHOS
-
-#ifdef __cplusplus
-}
-#endif

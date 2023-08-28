@@ -16,37 +16,99 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_FRAMEBUFFER
 #define ROSENRENDER_ROSEN_WEBGL_FRAMEBUFFER
 
-#include "../../../common/napi/n_exporter.h"
+#include <map>
+
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLFramebuffer final : public NExporter {
+enum AttachmentType : uint32_t {
+    RENDER_BUFFER,
+    TEXTURE,
+    INVALID_TYPE,
+};
+
+struct WebGLAttachment {
+    WebGLAttachment(AttachmentType type, GLenum attachment, GLuint id)
+    {
+        this->type = type;
+        this->attachment = attachment;
+        this->id = id;
+    }
+    bool IsTexture()
+    {
+        return type == AttachmentType::TEXTURE;
+    }
+    bool IsRenderBuffer()
+    {
+        return type == AttachmentType::RENDER_BUFFER;
+    }
+    AttachmentType type;
+    GLenum attachment;
+    GLuint id;
+};
+
+struct AttachmentTexture : public WebGLAttachment {
+    AttachmentTexture(AttachmentType type, GLenum attachment, GLuint id)
+    : WebGLAttachment(type, attachment, id) {}
+    GLenum target {};
+    GLint level {};
+};
+
+class WebGLFramebuffer : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLFramebuffer";
+    inline static const int objectType = WEBGL_OBJECT_FRAME_BUFFER;
+    inline static const int DEFAULT_FRAME_BUFFER = 0;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLFramebuffer **instance);
 
     void SetFramebuffer(unsigned int framebuffer)
     {
-        m_framebuffer = framebuffer;
+        framebuffer_ = framebuffer;
     }
 
     unsigned int GetFramebuffer() const
     {
-        return m_framebuffer;
+        return framebuffer_;
     }
 
-    explicit WebGLFramebuffer() : m_framebuffer(0) {};
+    explicit WebGLFramebuffer() : framebuffer_(0) {};
 
-    WebGLFramebuffer(napi_env env, napi_value exports) : NExporter(env, exports), m_framebuffer(0) {};
+    WebGLFramebuffer(napi_env env, napi_value exports) : NExporter(env, exports), framebuffer_(0) {};
 
-    ~WebGLFramebuffer() {};
+    ~WebGLFramebuffer();
+
+    static WebGLFramebuffer *GetObjectInstance(napi_env env, napi_value obj)
+    {
+        return WebGLObject::GetObjectInstance<WebGLFramebuffer>(env, obj);
+    }
+
+    GLenum GetTarget() const
+    {
+        return target_;
+    }
+
+    void SetTarget(GLenum target)
+    {
+        target_ = target;
+    }
+    bool AddAttachment(GLenum attachment, GLuint id);
+    bool AddAttachment(GLenum attachment, GLuint id, GLenum target, GLint level);
+    WebGLAttachment* GetAttachment(GLenum attachment);
+    void RemoveAttachment(GLenum attachment);
+    void RemoveAttachment(GLuint id, AttachmentType type);
 private:
-    unsigned int m_framebuffer;
+    void Clear();
+    std::map<GLenum, WebGLAttachment *> attachments_ {};
+    GLenum target_;
+    unsigned int framebuffer_;
 };
 } // namespace Rosen
 } // namespace OHOS

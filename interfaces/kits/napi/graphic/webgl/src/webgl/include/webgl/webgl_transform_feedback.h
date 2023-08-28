@@ -16,37 +16,44 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_TRANSFORM_FEEDBACK
 #define ROSENRENDER_ROSEN_WEBGL_TRANSFORM_FEEDBACK
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLTransformFeedback final : public NExporter {
+class WebGLTransformFeedback final : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLTransformFeedback";
+    inline static const int objectType = WEBGL_OBJECT_TRANSFORM_FEEDBACK;
+    inline static const uint32_t DEFAULT_TRANSFORM_FEEDBACK = 0;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
-
-    void SetTransformFeedback(int transformFeedback)
+    static NVal CreateObjectInstance(napi_env env, WebGLTransformFeedback **instance)
     {
-        m_transformFeedback = transformFeedback;
+        return WebGLObject::CreateObjectInstance<WebGLTransformFeedback>(env, instance);
     }
 
-    int GetTransformFeedback() const
+    void SetTransformFeedback(uint32_t transformFeedback)
     {
-        return m_transformFeedback;
+        transformFeedback_ = transformFeedback;
     }
 
-    explicit WebGLTransformFeedback() : m_transformFeedback(0) {};
+    uint32_t GetTransformFeedback() const
+    {
+        return transformFeedback_;
+    }
 
-    WebGLTransformFeedback(napi_env env, napi_value exports) : NExporter(env, exports), m_transformFeedback(0) {};
+    explicit WebGLTransformFeedback() : transformFeedback_(0) {};
+
+    WebGLTransformFeedback(napi_env env, napi_value exports) : NExporter(env, exports), transformFeedback_(0) {};
 
     ~WebGLTransformFeedback() {};
 private:
-    int m_transformFeedback;
+    uint32_t transformFeedback_;
 };
 } // namespace Rosen
 } // namespace OHOS

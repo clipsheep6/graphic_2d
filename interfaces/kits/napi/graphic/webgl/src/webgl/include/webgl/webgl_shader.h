@@ -16,37 +16,70 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_SHADER
 #define ROSENRENDER_ROSEN_WEBGL_SHADER
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLShader final : public NExporter {
+class WebGLShader final : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLShader";
+    inline static const int objectType = WEBGL_OBJECT_SHADER;
+    inline static const int DEFAULT_SHADER_ID = 0;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
-
-    void SetShaderId(int shaderId)
+    static NVal CreateObjectInstance(napi_env env, WebGLShader** instance)
     {
-        m_shaderId = shaderId;
+        return WebGLObject::CreateObjectInstance<WebGLShader>(env, instance);
     }
 
-    int GetShaderId() const
+    void SetShaderId(uint32_t shaderId)
     {
-        return m_shaderId;
+        shaderId_ = shaderId;
     }
 
-    explicit WebGLShader() : m_shaderId(0) {};
+    uint32_t GetShaderId() const
+    {
+        return shaderId_;
+    }
 
-    WebGLShader(napi_env env, napi_value exports) : NExporter(env, exports), m_shaderId(0) {};
+    void SetShaderRes(const std::string& res)
+    {
+        res_ = std::move(res);
+    }
+
+    const std::string& GetShaderRes() const
+    {
+        return res_;
+    }
+
+    explicit WebGLShader() : shaderId_(0), type_(0) {};
+
+    WebGLShader(napi_env env, napi_value exports) : NExporter(env, exports), shaderId_(0), type_(0) {};
 
     ~WebGLShader() {};
+
+    static WebGLShader* GetObjectInstance(napi_env env, napi_value obj)
+    {
+        return WebGLObject::GetObjectInstance<WebGLShader>(env, obj);
+    }
+    void SetShaderType(GLenum type)
+    {
+        type_ = type;
+    }
+    GLenum GetShaderType()
+    {
+        return type_;
+    }
+
 private:
-    int m_shaderId;
+    std::string res_ = {};
+    uint32_t shaderId_ { 0 };
+    GLenum type_ { 0 };
 };
 } // namespace Rosen
 } // namespace OHOS

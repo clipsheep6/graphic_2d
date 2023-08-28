@@ -16,37 +16,59 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_UNIFORM_LOCATION
 #define ROSENRENDER_ROSEN_WEBGL_UNIFORM_LOCATION
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLUniformLocation final : public NExporter {
+class WebGLUniformLocation final : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLUniformLocation";
+    inline static const int objectType = WEBGL_OBJECT_UNIFORM_LOCATION;
+    inline static const int DEFAULT_ID = 0;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLUniformLocation** instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLUniformLocation>(env, instance);
+    }
 
     void SetUniformLocationId(int location)
     {
-        m_location = location;
+        location_ = location;
     }
 
     int GetUniformLocationId() const
     {
-        return m_location;
+        return location_;
     }
 
-    explicit WebGLUniformLocation() : m_location(0) {};
+    explicit WebGLUniformLocation() : location_(0) {};
 
-    WebGLUniformLocation(napi_env env, napi_value exports) : NExporter(env, exports), m_location(0) {};
+    WebGLUniformLocation(napi_env env, napi_value exports) : NExporter(env, exports), location_(0) {};
 
     ~WebGLUniformLocation() {};
+
+    static WebGLUniformLocation* GetObjectInstance(napi_env env, napi_value obj)
+    {
+        return WebGLObject::GetObjectInstance<WebGLUniformLocation>(env, obj);
+    }
+
+    const std::string &GetUniformLocationName() const
+    {
+        return name_;
+    }
+    void SetUniformLocationName(const std::string &name)
+    {
+        name_ = std::move(name);
+    }
 private:
-    int m_location;
+    std::string name_ {};
+    int location_;
 };
 } // namespace Rosen
 } // namespace OHOS

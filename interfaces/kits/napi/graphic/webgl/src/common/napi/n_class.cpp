@@ -13,7 +13,8 @@
  * limitations under the License.
  */
 
-#include "n_class.h"
+#include "napi/n_class.h"
+#include "util/log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -62,12 +63,14 @@ napi_value NClass::InstantiateClass(napi_env env, string className, vector<napi_
     napi_value cons = nullptr;
     napi_status status = napi_get_reference_value(env, it->second, &cons);
     if (status != napi_ok) {
+        LOGI("InstantiateClass %{public}s fail",  className.c_str());
         return nullptr;
     }
 
     napi_value instance = nullptr;
     status = napi_new_instance(env, cons, args.size(), args.data(), &instance);
     if (status != napi_ok) {
+        LOGI("InstantiateClass %{public}s fail",  className.c_str());
         return nullptr;
     }
     return instance;

@@ -16,13 +16,17 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_BUFFER
 #define ROSENRENDER_ROSEN_WEBGL_BUFFER
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
+#include "webgl_arg.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLBuffer final : public NExporter {
+class WebGLBuffer final : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLBuffer";
+    inline static const int objectType = WEBGL_OBJECT_BUFFER;
+    inline static const int DEFAULT_BUFFER = 0;
 
     bool Export(napi_env env, napi_value exports) override;
 
@@ -30,32 +34,54 @@ public:
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
 
-    void SetBuffer(unsigned int buffer)
+    void SetBufferId(uint32_t bufferId)
     {
-        m_buffer = buffer;
-    }
-    void SetParams(float params)
-    {
-        m_params = params;
+        bufferId_ = bufferId;
     }
 
-    unsigned int GetBuffer() const
+    uint32_t GetBufferId() const
     {
-        return m_buffer;
-    }
-    float GetParams() const
-    {
-        return m_params;
+        return bufferId_;
     }
 
-    explicit WebGLBuffer() : m_buffer(0), m_params(0.0) {};
+    explicit WebGLBuffer() : bufferId_(0), target_(0) {};
 
-    WebGLBuffer(napi_env env, napi_value exports) : NExporter(env, exports), m_buffer(0), m_params(0.0) {};
+    WebGLBuffer(napi_env env, napi_value exports) : NExporter(env, exports), bufferId_(0), target_(0) {};
 
-    ~WebGLBuffer() {};
+    ~WebGLBuffer();
+
+    GLenum GetTarget() const
+    {
+        return target_;
+    }
+    void SetTarget(GLenum target)
+    {
+        target_ = target;
+    }
+
+    static NVal CreateObjectInstance(napi_env env, WebGLBuffer** instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLBuffer>(env, instance);
+    }
+    static WebGLBuffer* GetObjectInstance(napi_env env, napi_value obj)
+    {
+        return WebGLObject::GetObjectInstance<WebGLBuffer>(env, obj);
+    }
+
+    void SetBufferSize(size_t bufferSize)
+    {
+        bufferSize_ = bufferSize;
+    }
+
+    size_t GetBufferSize()
+    {
+        return bufferSize_;
+    }
 private:
-    unsigned int m_buffer;
-    float m_params;
+    WebGLReadBufferArg* bufferData_ { nullptr };
+    uint32_t bufferId_ { 0 };
+    GLenum target_ { 0 };
+    size_t bufferSize_ { 0 };
 };
 } // namespace Rosen
 } // namespace OHOS

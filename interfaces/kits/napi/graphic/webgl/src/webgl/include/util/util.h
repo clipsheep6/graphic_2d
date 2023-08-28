@@ -21,14 +21,10 @@
 #include <cerrno>
 #include <cstdlib>
 #include "log.h"
-#include "object_manager.h"
-#include "../../../common/napi/n_exporter.h"
-#include "../../include/context/webgl_rendering_context_basic_base.h"
-#include "../../include/context/webgl_context_attributes.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "util/object_manager.h"
+#include "napi/n_exporter.h"
+#include "context/webgl_rendering_context_basic_base.h"
+#include "context/webgl_context_attributes.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -36,12 +32,10 @@ class Util {
 public:
     static void SplitString(const std::string& str, std::vector<std::string>& vec, const std::string& pattern);
 
-    static WebGLRenderingContextBasicBase *GetContextObject(napi_env env, napi_value thisVar,
-        const std::string& contextType);
+    static bool GetContextInfo(napi_env env, napi_value thisVar,
+        std::string &contextId, std::vector<std::string> &info);
 
-    static std::string GetContextAttr(const std::string& str, const std::string& key, int keyLength, int value);
-
-    static void SetContextAttr(std::vector<std::string>& vec, WebGLContextAttributes *webGlContextAttributes);
+    static WebGLRenderingContextBasicBase *GetContextObject(napi_env env, napi_value thisVar);
 
     static inline int32_t StringToInt(const std::string& value)
     {
@@ -57,9 +51,4 @@ public:
 };
 } // namespace Rosen
 } // namespace OHOS
-
-#ifdef __cplusplus
-}
-#endif
-
 #endif // ROSENRENDER_ROSEN_WEBGL_UTIL

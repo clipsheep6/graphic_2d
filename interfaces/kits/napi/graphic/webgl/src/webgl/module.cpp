@@ -16,28 +16,27 @@
 #include <memory>
 #include <vector>
 
-#include "common/napi/n_val.h"
-#include "include/context/webgl_rendering_context.h"
-#include "include/context/webgl2_rendering_context.h"
-#include "include/webgl/webgl_active_info.h"
-#include "include/webgl/webgl_buffer.h"
-#include "include/webgl/webgl_framebuffer.h"
-#include "include/webgl/webgl_program.h"
-#include "include/webgl/webgl_query.h"
-#include "include/webgl/webgl_renderbuffer.h"
-#include "include/webgl/webgl_sampler.h"
-#include "include/webgl/webgl_sync.h"
-#include "include/webgl/webgl_shader.h"
-#include "include/webgl/webgl_texture.h"
-#include "include/webgl/webgl_transform_feedback.h"
-#include "include/webgl/webgl_uniform_location.h"
-#include "include/webgl/webgl_vertex_array_object.h"
-#include "include/webgl/webgl_shader_precision_format.h"
-#include "include/util/log.h"
-#include "include/util/object_manager.h"
-#include "include/util/egl_manager.h"
-#include "include/util/util.h"
-#include "include/context/webgl_context_attributes.h"
+#include "context/webgl_context_attributes.h"
+#include "context/webgl_rendering_context.h"
+#include "context/webgl2_rendering_context.h"
+#include "napi/n_val.h"
+#include "webgl/webgl_active_info.h"
+#include "webgl/webgl_buffer.h"
+#include "webgl/webgl_framebuffer.h"
+#include "webgl/webgl_program.h"
+#include "webgl/webgl_query.h"
+#include "webgl/webgl_renderbuffer.h"
+#include "webgl/webgl_sampler.h"
+#include "webgl/webgl_sync.h"
+#include "webgl/webgl_shader.h"
+#include "webgl/webgl_texture.h"
+#include "webgl/webgl_transform_feedback.h"
+#include "webgl/webgl_uniform_location.h"
+#include "webgl/webgl_vertex_array_object.h"
+#include "webgl/webgl_shader_precision_format.h"
+#include "util/log.h"
+#include "util/object_manager.h"
+#include "util/util.h"
 
 using namespace std;
 
@@ -45,85 +44,50 @@ namespace OHOS {
 namespace Rosen {
 static napi_value Export(napi_env env, napi_value exports)
 {
-    napi_status status;
-    bool succ = false;
-    napi_value id = nullptr;
-    status = napi_get_named_property(env, exports, "id", &id);
-    if (status != napi_ok) {
-        return nullptr;
-    }
-    unique_ptr<char[]> idRev;
-    tie(succ, idRev, ignore) = NVal(env, id).ToUTF8String();
+    string idStr;
+    std::vector<std::string> vec;
+    bool succ = Util::GetContextInfo(env, exports, idStr, vec);
     if (!succ) {
         return nullptr;
     }
-    string idStr = idRev.get();
-
-    napi_value param = nullptr;
-    status = napi_get_named_property(env, exports, "param", &param);
-    if (status != napi_ok) {
-        return nullptr;
-    }
-    unique_ptr<char[]> strRev;
-    tie(succ, strRev, ignore) = NVal(env, param).ToUTF8String();
-    if (!succ) {
-        return nullptr;
-    }
-    string str = strRev.get();
-
-    vector<string> vec;
-    Util::SplitString(str, vec, ",");
-    if (vec.size() == 0) {
-        return nullptr;
-    }
-
     size_t webglItem = vec[0].find("webgl");
-    string webgl2Str = vec[0].substr(webglItem, 6);
+    string webgl2Str = vec[0].substr(webglItem, 6); // length of webgl2
+    string webgl1Str = vec[0].substr(webglItem, 5); // length of webgl
     if (webgl2Str == "webgl2") {
-        auto& webgl2Objects = ObjectManager::GetInstance().GetWebgl2ObjectMap();
-        WebGL2RenderingContext *webGl2RenderingContext = nullptr;
-        auto it = webgl2Objects.find(idStr);
-        if (it == webgl2Objects.end()) {
+        WebGL2RenderingContext *webGl2RenderingContext =
+            static_cast<WebGL2RenderingContext *>(ObjectManager::GetInstance().GetWebGLContext(true, idStr));
+        if (webGl2RenderingContext == nullptr) {
             webGl2RenderingContext = new WebGL2RenderingContext(env, exports);
-            webgl2Objects.insert({idStr, webGl2RenderingContext});
-        } else {
-            webGl2RenderingContext = reinterpret_cast<WebGL2RenderingContext *>(it->second);
+            if (webGl2RenderingContext == nullptr) {
+                return nullptr;
+            }
+            ObjectManager::GetInstance().AddWebGLObject(true, idStr, webGl2RenderingContext);
         }
 
-        webGl2RenderingContext->mEGLSurface = EglManager::GetInstance().CreateSurface(
-            webGl2RenderingContext->mEglWindow);
-
+        webGl2RenderingContext->SetWebGLContextAttributes(vec);
+        webGl2RenderingContext->CreateSurface();
         if (!webGl2RenderingContext->Export(env, exports)) {
             return nullptr;
         }
-    } else {
-        string webgl1Str = vec[0].substr(webglItem, 5);
-        if (webgl1Str == "webgl") {
-            auto& webgl1Objects = ObjectManager::GetInstance().GetWebgl1ObjectMap();
-            WebGLRenderingContext *webGlRenderingContext = nullptr;
-            auto it = webgl1Objects.find(idStr);
-            if (it == webgl1Objects.end()) {
-                webGlRenderingContext = new WebGLRenderingContext(env, exports);
-                webgl1Objects.insert({idStr, webGlRenderingContext});
-            } else {
-                webGlRenderingContext = reinterpret_cast<WebGLRenderingContext *>(it->second);
-            }
-            if (vec.size() > 1) {
-                WebGLContextAttributes *webGlContextAttributes = new WebGLContextAttributes();
-                Util::SetContextAttr(vec, webGlContextAttributes);
-                webGlRenderingContext->webGlContextAttributes = webGlContextAttributes;
-                webGlContextAttributes = nullptr;
-            }
-            webGlRenderingContext->mEGLSurface = EglManager::GetInstance().CreateSurface(
-                webGlRenderingContext->mEglWindow);
-
-            if (!webGlRenderingContext->Export(env, exports)) {
+    } else if (webgl1Str == "webgl") {
+        WebGLRenderingContext *webGlRenderingContext =
+            static_cast<WebGLRenderingContext *>(ObjectManager::GetInstance().GetWebGLContext(false, idStr));
+        if (webGlRenderingContext == nullptr) {
+            webGlRenderingContext = new WebGLRenderingContext(env, exports);
+            if (webGlRenderingContext == nullptr) {
                 return nullptr;
             }
-        } else {
+            ObjectManager::GetInstance().AddWebGLObject(false, idStr, webGlRenderingContext);
+        }
+        webGlRenderingContext->SetWebGLContextAttributes(vec);
+        webGlRenderingContext->CreateSurface();
+        if (!webGlRenderingContext->Export(env, exports)) {
             return nullptr;
         }
+    } else {
+        return nullptr;
     }
+
     std::vector<unique_ptr<NExporter>> products;
     products.emplace_back(make_unique<WebGLActiveInfo>(env, exports));
     products.emplace_back(make_unique<WebGLBuffer>(env, exports));

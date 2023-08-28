@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "../include/util/egl_manager.h"  // for EglManager
+#include "util/egl_manager.h"  // for EglManager
 
 #include <cstddef>                       // for NULL
 
@@ -21,7 +21,7 @@
 #include "EGL/eglplatform.h"              // for EGLint, NativeWindow
 #include "__config"                       // for std
 
-#include "../include/util/log.h"          // for LOGE, LOGI
+#include "util/log.h"          // for LOGE, LOGI
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,9 +61,9 @@ EGLConfig EglManager::GetConfig(int version, EGLDisplay eglDisplay)
 
 void EglManager::MakeCurrentIfNeeded(EGLSurface newEGLSurface)
 {
-    if (mCurrentSurface != newEGLSurface) {
-        mCurrentSurface = newEGLSurface;
-        eglMakeCurrent(mEGLDisplay, mCurrentSurface, mCurrentSurface, mEGLContext);
+    if (currentSurface_ != newEGLSurface) {
+        currentSurface_ = newEGLSurface;
+        eglMakeCurrent(eglDisplay_, currentSurface_, currentSurface_, eglContext_);
     }
 }
 
@@ -72,74 +72,77 @@ EGLSurface EglManager::CreateSurface(NativeWindow* window)
     EGLSurface eglSurface = nullptr;
     if (window) {
         LOGI("EglManager CreateSurface from eglWindow");
-        eglSurface = eglCreateWindowSurface(mEGLDisplay, mEGLConfig, window, NULL);
+        eglSurface = eglCreateWindowSurface(eglDisplay_, eglConfig_, window, NULL);
     } else {
         LOGI("EglManager CreateSurface from PBuffer width = %{public}d, height = %{public}d",
-            mEglWidth, mEglHeight);
+            eglWidth_, eglHeight_);
         int surfaceAttributes[] = {
-            EGL_WIDTH, mEglWidth,
-            EGL_HEIGHT, mEglHeight,
+            EGL_WIDTH, eglWidth_,
+            EGL_HEIGHT, eglHeight_,
             EGL_NONE
         };
-        eglSurface = eglCreatePbufferSurface(mEGLDisplay, mEGLConfig, surfaceAttributes);
+        eglSurface = eglCreatePbufferSurface(eglDisplay_, eglConfig_, surfaceAttributes);
+    }
+    if (eglSurface == NULL) {
+        LOGE("EglManager CreateSurface eglSurface = null error %{public}d", eglGetError());
     }
     return eglSurface;
 }
 
 void EglManager::Init()
 {
-    if (initialized) {
+    if (initialized_) {
         return;
     }
-    initialized = true;
+    initialized_ = true;
     LOGI("EglManager ----- Init.\n");
-    if (mEGLContext != nullptr) {
+    if (eglContext_ != nullptr) {
         LOGE("EglManager Init mEGLContext is already init.\n");
         return;
     }
 
-    mEGLDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if (mEGLDisplay == EGL_NO_DISPLAY) {
+    eglDisplay_ = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (eglDisplay_ == EGL_NO_DISPLAY) {
         LOGE("EglManager Init unable to get EGL display.\n");
         return;
     }
 
     EGLint eglMajVers, eglMinVers;
-    if (!eglInitialize(mEGLDisplay, &eglMajVers, &eglMinVers)) {
-        mEGLDisplay = EGL_NO_DISPLAY;
+    if (!eglInitialize(eglDisplay_, &eglMajVers, &eglMinVers)) {
+        eglDisplay_ = EGL_NO_DISPLAY;
         LOGE("EglManager Init unable to initialize display");
         return;
     }
 
     int version = OPENGL_ES3_VERSION;
-    mEGLConfig = EglManager::GetConfig(version, mEGLDisplay);
-    if (mEGLConfig == NULL) {
+    eglConfig_ = EglManager::GetConfig(version, eglDisplay_);
+    if (eglConfig_ == NULL) {
         LOGE("EglManager Init config ERROR, try again");
         version = OPENGL_ES2_VERSION;
-        mEGLConfig = EglManager::GetConfig(version, mEGLDisplay);
-        if (mEGLConfig == NULL) {
+        eglConfig_ = EglManager::GetConfig(version, eglDisplay_);
+        if (eglConfig_ == NULL) {
             LOGE("EglManager Init config ERROR again");
             return;
         }
     }
 
-    if (mEglWindow) {
+    if (eglWindow_) {
         LOGI("EglManager Init eglSurface from eglWindow");
-        mCurrentSurface = eglCreateWindowSurface(mEGLDisplay, mEGLConfig, mEglWindow, NULL);
-        if (mCurrentSurface == NULL) {
+        currentSurface_ = eglCreateWindowSurface(eglDisplay_, eglConfig_, eglWindow_, NULL);
+        if (currentSurface_ == NULL) {
             LOGE("EglManager Init eglSurface = null");
             return;
         }
     } else {
         LOGI("EglManager Init eglSurface from PBuffer width = %{public}d, height = %{public}d",
-            mEglWidth, mEglHeight);
+            eglWidth_, eglHeight_);
         int surfaceAttributes[] = {
-            EGL_WIDTH, mEglWidth,
-            EGL_HEIGHT, mEglHeight,
+            EGL_WIDTH, eglWidth_,
+            EGL_HEIGHT, eglHeight_,
             EGL_NONE
         };
-        mCurrentSurface = eglCreatePbufferSurface(mEGLDisplay, mEGLConfig, surfaceAttributes);
-        if (mCurrentSurface == NULL) {
+        currentSurface_ = eglCreatePbufferSurface(eglDisplay_, eglConfig_, surfaceAttributes);
+        if (currentSurface_ == NULL) {
             LOGE("EglManager Init eglCreateContext eglSurface = null");
             return;
         }
@@ -149,14 +152,14 @@ void EglManager::Init()
         EGL_CONTEXT_CLIENT_VERSION, version,
         EGL_NONE
     };
-    mEGLContext = eglCreateContext(mEGLDisplay, mEGLConfig, nullptr, attrib3List);
+    eglContext_ = eglCreateContext(eglDisplay_, eglConfig_, nullptr, attrib3List);
     int error = eglGetError();
     if (error == EGL_SUCCESS) {
         LOGI("EglManager Init Create mEGLContext ok");
     } else {
         LOGE("EglManager Init eglCreateContext error %{public}x", error);
     }
-    eglMakeCurrent(mEGLDisplay, mCurrentSurface, mCurrentSurface, mEGLContext);
+    eglMakeCurrent(eglDisplay_, currentSurface_, currentSurface_, eglContext_);
 }
 } // namespace Rosen
 } // namespace OHOS

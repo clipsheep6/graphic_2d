@@ -13,21 +13,13 @@
  * limitations under the License.
  */
 
-#include "../include/webgl/webgl_program.h"  // for WebGLProgram, WebGLProgr...
+#include "webgl/webgl_program.h"  // for WebGLProgram, WebGLProgr...
 
-#include "__config"                          // for std
-#include "iosfwd"                            // for string
-#include "js_native_api_types.h"             // for napi_property_descriptor
-#include "memory"                            // for make_unique, unique_ptr
-#include "new"                               // for operator delete
-#include "string"                            // for basic_string
-#include "tuple"                             // for tuple, tie
-#include "type_traits"                       // for move
-#include "vector"                            // for vector
-
-#include "../../common/napi/n_class.h"       // for NClass
-#include "../../common/napi/n_func_arg.h"    // for NFuncArg, NARG_CNT, ZERO
-#include "common/napi/n_val.h"               // for NVal
+#include "napi/n_class.h"       // for NClass
+#include "napi/n_func_arg.h"    // for NFuncArg, NARG_CNT, ZERO
+#include "napi/n_val.h"               // for NVal
+#include "util/log.h"
+#include "webgl/webgl_program.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -50,7 +42,7 @@ napi_value WebGLProgram::Constructor(napi_env env, napi_callback_info info)
 bool WebGLProgram::Export(napi_env env, napi_value exports)
 {
     vector<napi_property_descriptor> props = {};
-
+    LOGE("WebGLProgram::Export %{public}p", this);
     string className = GetClassName();
     bool succ = false;
     napi_value clas = nullptr;
@@ -69,6 +61,40 @@ bool WebGLProgram::Export(napi_env env, napi_value exports)
 string WebGLProgram::GetClassName()
 {
     return WebGLProgram::className;
+}
+
+WebGLProgram::WebGLProgram(napi_env env, napi_value exports) : NExporter(env, exports), programId_(0)
+{
+    LOGE("WebGLProgram::WebGLProgram %{public}p", this);
+};
+
+WebGLProgram::~WebGLProgram()
+{
+    LOGE("~WebGLProgram::WebGLProgram %{public}p %{public}u", this, programId_);
+}
+
+bool WebGLProgram::AttachShader(uint32_t index, uint32_t shaderId)
+{
+    if (index >= (sizeof(attachedShader_) / sizeof(attachedShader_[0]))) {
+        return false;
+    }
+    if (attachedShader_[index]) {
+        return false;
+    }
+    attachedShader_[index] = shaderId;
+    return true;
+}
+
+bool WebGLProgram::DetachShader(uint32_t index, uint32_t shaderId)
+{
+    if (index >= (sizeof(attachedShader_) / sizeof(attachedShader_[0]))) {
+        return false;
+    }
+    if (attachedShader_[index] && attachedShader_[index] == shaderId) {
+        attachedShader_[index] = 0;
+        return true;
+    }
+    return false;
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -13,21 +13,14 @@
  * limitations under the License.
  */
 
-#include "../include/webgl/webgl_framebuffer.h"  // for WebGLFramebuffer
+#include "webgl/webgl_framebuffer.h" // for WebGLFramebuffer
 
-#include "__config"                              // for std
-#include "iosfwd"                                // for string
-#include "js_native_api_types.h"                 // for napi_property_descri...
-#include "memory"                                // for make_unique, unique_ptr
-#include "new"                                   // for operator delete
-#include "string"                                // for basic_string
-#include "tuple"                                 // for tuple, tie
-#include "type_traits"                           // for move
-#include "vector"                                // for vector
-
-#include "../../common/napi/n_class.h"           // for NClass
-#include "../../common/napi/n_func_arg.h"        // for NFuncArg, NARG_CNT
-#include "common/napi/n_val.h"                   // for NVal
+#include "context/webgl2_rendering_context_base.h"
+#include "context/webgl_rendering_context_base.h"
+#include "napi/n_class.h"    // for NClass
+#include "napi/n_func_arg.h" // for NFuncArg, NARG_CNT
+#include "napi/n_val.h"      // for NVal
+#include "util/util.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -69,6 +62,75 @@ bool WebGLFramebuffer::Export(napi_env env, napi_value exports)
 string WebGLFramebuffer::GetClassName()
 {
     return WebGLFramebuffer::className;
+}
+
+NVal WebGLFramebuffer::CreateObjectInstance(napi_env env, WebGLFramebuffer** instance)
+{
+    return WebGLObject::CreateObjectInstance<WebGLFramebuffer>(env, instance);
+}
+
+WebGLFramebuffer::~WebGLFramebuffer()
+{
+    auto it = attachments_.begin();
+    while (it != attachments_.end()) {
+        delete it->second;
+        attachments_.erase(it);
+        it = attachments_.begin();
+    }
+}
+
+bool WebGLFramebuffer::AddAttachment(GLenum attachment, GLuint id)
+{
+    WebGLAttachment* attachmentObject = new WebGLAttachment(AttachmentType::RENDER_BUFFER, attachment, id);
+    if (attachmentObject == nullptr) {
+        return false;
+    }
+    attachments_[attachment] = attachmentObject;
+    return true;
+}
+
+bool WebGLFramebuffer::AddAttachment(GLenum attachment, GLuint id, GLenum target, GLint level)
+{
+    AttachmentTexture* attachmentObject = new AttachmentTexture(AttachmentType::TEXTURE, attachment, id);
+    if (attachmentObject == nullptr) {
+        return false;
+    }
+    attachments_[attachment] = attachmentObject;
+    attachmentObject->target = target;
+    attachmentObject->level = level;
+    return true;
+}
+
+void WebGLFramebuffer::RemoveAttachment(GLenum attachment)
+{
+    auto it = attachments_.find(attachment);
+    if (it == attachments_.end()) {
+        return;
+    }
+    delete it->second;
+    attachments_.erase(it);
+}
+
+void WebGLFramebuffer::RemoveAttachment(GLuint id, AttachmentType type)
+{
+    for (auto iter = attachments_.begin(); iter != attachments_.end(); iter++) {
+        auto object = iter->second;
+        if (object != nullptr && object->id == id && type == object->type) {
+            delete iter->second;
+            iter->second = nullptr;
+            attachments_.erase(iter);
+            break;
+        }
+    }
+}
+
+WebGLAttachment* WebGLFramebuffer::GetAttachment(GLenum attachment)
+{
+    auto it = attachments_.find(attachment);
+    if (it != attachments_.end()) {
+        return it->second;
+    }
+    return nullptr;
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -22,10 +22,11 @@ config("render_config") {
 
 ohos_source_set("webgl_src") {
   include_dirs = [
-    "$graphic_2d_root/interfaces/inner_api/surface",
-    "src",
     "//third_party/node/src",
     "//commonlibrary/c_utils/base/include",
+    "$graphic_2d_root/interfaces/inner_api/surface",
+    "$graphic_2d_root/interfaces/kits/napi/graphic/webgl/src/common",
+    "$graphic_2d_root/interfaces/kits/napi/graphic/webgl/src/webgl/include",
   ]
 
   sources = [
@@ -36,6 +37,7 @@ ohos_source_set("webgl_src") {
 
   external_deps = [
     "hilog:libhilog",
+    "image_framework:image_native",
     "napi:ace_napi",
   ]
 
@@ -51,8 +53,10 @@ ohos_source_set("webgl_src") {
       "src/webgl/src/util.cpp",
       "src/webgl/src/webgl2_rendering_context.cpp",
       "src/webgl/src/webgl2_rendering_context_base.cpp",
-      "src/webgl/src/webgl2_rendering_context_overloads.cpp",
+      "src/webgl/src/webgl2_rendering_context_impl.cpp",
+      "src/webgl/src/webgl2_rendering_context_override.cpp",
       "src/webgl/src/webgl_active_info.cpp",
+      "src/webgl/src/webgl_arg.cpp",
       "src/webgl/src/webgl_buffer.cpp",
       "src/webgl/src/webgl_framebuffer.cpp",
       "src/webgl/src/webgl_program.cpp",
@@ -60,8 +64,11 @@ ohos_source_set("webgl_src") {
       "src/webgl/src/webgl_renderbuffer.cpp",
       "src/webgl/src/webgl_rendering_context.cpp",
       "src/webgl/src/webgl_rendering_context_base.cpp",
+      "src/webgl/src/webgl_rendering_context_base_impl.cpp",
       "src/webgl/src/webgl_rendering_context_basic_base.cpp",
+      "src/webgl/src/webgl_rendering_context_common.cpp",
       "src/webgl/src/webgl_rendering_context_overloads.cpp",
+      "src/webgl/src/webgl_rendering_context_draw.cpp",
       "src/webgl/src/webgl_sampler.cpp",
       "src/webgl/src/webgl_shader.cpp",
       "src/webgl/src/webgl_shader_precision_format.cpp",

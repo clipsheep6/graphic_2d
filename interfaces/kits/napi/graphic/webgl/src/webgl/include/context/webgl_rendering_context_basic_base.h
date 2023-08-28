@@ -16,31 +16,30 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_RENDERING_CONTEXT_BASIC_BASE
 #define ROSENRENDER_ROSEN_WEBGL_RENDERING_CONTEXT_BASIC_BASE
 
-#include <GLES2/gl2.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include "../canvas_render_context_base.h"
-#include "webgl_context_attributes.h"
+#include <GLES2/gl2.h>
+#include <map>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "canvas_render_context_base.h"
+#include "context/webgl_context_attributes.h"
+#include "napi/n_class.h"
+#include "napi/n_exporter.h"
+#include "webgl/webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
+enum : int { WEBGL_1_X = 0, WEBGL_2_0 };
+
 class WebGLRenderingContextBasicBase : public OHOS::Ace::CanvasRenderContextBase {
 public:
-    static WebGLRenderingContextBasicBase *instance;
-
     WebGLRenderingContextBasicBase() {};
 
-    virtual ~WebGLRenderingContextBasicBase() {};
+    virtual ~WebGLRenderingContextBasicBase();
 
-    static WebGLRenderingContextBasicBase *GetContext(std::string id);
+    void SetEglWindow(void* window);
 
-    void SetEglWindow(void *window);
-
-    void Create(void *context) override;
+    void Create(void* context) override;
 
     void Init() override;
 
@@ -50,7 +49,7 @@ public:
 
     void Detach() override;
 
-    void SetBitMapPtr(char *bitMapPtr, int bitMapWidth, int bitMapHeight) override;
+    void SetBitMapPtr(char* bitMapPtr, int bitMapWidth, int bitMapHeight) override;
 
     uint64_t CreateTexture() override;
 
@@ -58,32 +57,43 @@ public:
 
     void SetUpdateCallback(std::function<void()>) override;
 
-public:
-    GLuint frameBufferId = 0;
-    GLuint textureId = 0;
-    GLuint imgId = 0;
+    bool CreateSurface();
+    bool SetWebGLContextAttributes(const std::vector<std::string>& vec);
+
     void drawImg();
-    GLuint compileShader(GLenum type, const char *sources);
+    GLuint compileShader(GLenum type, const char* sources);
     int useProgram();
-    GLuint program = 0;
-    GLuint vertShader = 0;
-    GLuint fragShader = 0;
-    GLint uniformSampler = 0;
-    EGLSurface mEGLSurface = nullptr;
-    NativeWindow *mEglWindow = nullptr;
-    WebGLContextAttributes *webGlContextAttributes = nullptr;
-    char *mBitMapPtr = nullptr;
-    int mBitMapWidth = 0;
-    int mBitMapHeight = 0;
-    std::function<void()> mUpdateCallback;
+    std::function<void()> updateCallback_;
+
+    int GetBufferWidth()
+    {
+        return bitMapWidth_;
+    }
+
+    int GetBufferHeight()
+    {
+        return bitMapHeight_;
+    }
+    WebGLContextAttributes *GetWebGlContextAttributes()
+    {
+        if (webGlContextAttributes_ == nullptr) {
+            webGlContextAttributes_ = new WebGLContextAttributes();
+        }
+        return webGlContextAttributes_;
+    }
+
+    napi_value GetContextInstance(napi_env env, std::string className,
+        napi_callback constructor, napi_finalize finalize_cb);
+    napi_ref contextRef_ = nullptr;
+private:
+    std::string GetContextAttr(const std::string& str, const std::string& key, int keyLength, int value);
+    char* bitMapPtr_ = nullptr;
+    int bitMapWidth_ = 0;
+    int bitMapHeight_ = 0;
+    EGLSurface eglSurface_ = nullptr;
+    NativeWindow* eglWindow_ = nullptr;
+    WebGLContextAttributes* webGlContextAttributes_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS
-
-OHOS::Rosen::WebGLRenderingContextBasicBase *GetWebGLInstance(std::string id);
-
-#ifdef __cplusplus
-}
-#endif
-
 #endif // ROSENRENDER_ROSEN_WEBGL_RENDERING_CONTEXT_BASIC_BASE

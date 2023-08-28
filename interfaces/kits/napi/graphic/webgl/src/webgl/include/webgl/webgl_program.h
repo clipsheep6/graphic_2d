@@ -16,37 +16,56 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_PROGRAM
 #define ROSENRENDER_ROSEN_WEBGL_PROGRAM
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLProgram final : public NExporter {
+
+class WebGLProgram final : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLProgram";
+    inline static const int objectType = WEBGL_OBJECT_PROGRAM;
+    inline static const int DEFAULT_PROGRAM_ID = 0;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
-
-    void SetProgramId(int programId)
+    static NVal CreateObjectInstance(napi_env env, WebGLProgram **instance)
     {
-        m_programId = programId;
+        return WebGLObject::CreateObjectInstance<WebGLProgram>(env, instance);
+    }
+    static WebGLProgram *GetObjectInstance(napi_env env, napi_value obj)
+    {
+        return WebGLObject::GetObjectInstance<WebGLProgram>(env, obj);
     }
 
-    int GetProgramId() const
+    void SetProgramId(uint32_t programId)
     {
-        return m_programId;
+        programId_ = programId;
     }
 
-    explicit WebGLProgram() : m_programId(0) {};
+    uint32_t GetProgramId() const
+    {
+        return programId_;
+    }
 
-    WebGLProgram(napi_env env, napi_value exports) : NExporter(env, exports), m_programId(0) {};
+    explicit WebGLProgram() : programId_(0) {};
 
-    ~WebGLProgram() {};
+    WebGLProgram(napi_env env, napi_value exports);
+
+    ~WebGLProgram();
+
+    bool AttachShader(uint32_t index, uint32_t shaderId);
+    bool DetachShader(uint32_t index, uint32_t shaderId);
 private:
-    int m_programId;
+    // 获取删除状态
+    // WebGLRenderingContextBase::DELETE_STATUS / LINK_STATUS / VALIDATE_STATUS
+    // glGetProgramiv(static_cast<GLuint>(programId), pname, &params);
+    GLuint attachedShader_[2] = { 0 };
+    uint32_t programId_;
 };
 } // namespace Rosen
 } // namespace OHOS

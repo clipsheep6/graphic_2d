@@ -16,59 +16,69 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_SHADER_PRECISION_FORMAT
 #define ROSENRENDER_ROSEN_WEBGL_SHADER_PRECISION_FORMAT
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLShaderPrecisionFormat final : public NExporter {
+class WebGLShaderPrecisionFormat final : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLShaderPrecisionFormat";
+    inline static const int objectType = WEBGL_OBJECT_SHADER;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static WebGLShaderPrecisionFormat *GetObjectFromArg(napi_env env, napi_callback_info info);
+    static napi_value GetShaderPrecisionFormatRangeMin(napi_env env, napi_callback_info info);
+    static napi_value GetShaderPrecisionFormatRangeMax(napi_env env, napi_callback_info info);
+    static napi_value GetShaderPrecisionFormatPrecision(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLShaderPrecisionFormat **instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLShaderPrecisionFormat>(env, instance);
+    }
 
     void SetShaderPrecisionFormatRangeMin(int rangeMin)
     {
-        m_rangeMin = rangeMin;
+        rangeMin_ = rangeMin;
     }
 
     void SetShaderPrecisionFormatRangeMax(int rangeMax)
     {
-        m_rangeMax = rangeMax;
+        rangeMax_ = rangeMax;
     }
 
     void SetShaderPrecisionFormatPrecision(int precision)
     {
-        m_precision = precision;
+        precision_ = precision;
     }
 
-    int GetsetShaderPrecisionFormatRangeMin() const
+    int GetShaderPrecisionFormatRangeMin() const
     {
-        return m_rangeMin;
+        return rangeMin_;
     }
 
     int GetShaderPrecisionFormatRangeMax() const
     {
-        return m_rangeMax;
+        return rangeMax_;
     }
 
     int GetShaderPrecisionFormatPrecision() const
     {
-        return m_precision;
+        return precision_;
     }
-    explicit WebGLShaderPrecisionFormat() : m_rangeMin(0), m_rangeMax(0), m_precision(0) {};
+    explicit WebGLShaderPrecisionFormat() : rangeMin_(0), rangeMax_(0), precision_(0) {};
 
     WebGLShaderPrecisionFormat(napi_env env, napi_value exports) : NExporter(env, exports),
-        m_rangeMin(0), m_rangeMax(0), m_precision(0) {};
+        rangeMin_(0), rangeMax_(0), precision_(0) {};
 
     ~WebGLShaderPrecisionFormat() {};
 private:
-    int m_rangeMin;
-    int m_rangeMax;
-    int m_precision;
+    int rangeMin_;
+    int rangeMax_;
+    int precision_;
 };
 } // namespace Rosen
 } // namespace OHOS

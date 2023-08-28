@@ -18,11 +18,13 @@
 
 #include "webgl_rendering_context_base.h"
 #include "webgl_rendering_context_overloads.h"
-#include "../../../common/napi/n_exporter.h"
+#include "webgl_rendering_context_base_impl.h"
+#include "napi/n_exporter.h"
+#include "util/object_source.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLRenderingContext : public WebGLRenderingContextBase,
+class WebGLRenderingContext : public WebGLRenderingContextBasicBase, public WebGLRenderingContextBase,
     public WebGLRenderingContextOverloads, public NExporter {
 public:
     inline static const std::string className = "WebGLRenderingContext";
@@ -31,11 +33,24 @@ public:
 
     std::string GetClassName() override;
 
-    WebGLRenderingContext(napi_env env, napi_value exports) : NExporter(env, exports) {};
+    WebGLRenderingContext(napi_env env, napi_value exports);
 
-    explicit WebGLRenderingContext() {};
+    explicit WebGLRenderingContext() : WebGLRenderingContextBasicBase(), contextImpl_(0, this) {};
 
     virtual ~WebGLRenderingContext();
+
+    Impl::WebGLRenderingContextBaseImpl &GetWebGLRenderingContextImpl()
+    {
+        return contextImpl_;
+    }
+
+    void Init() override
+    {
+        WebGLRenderingContextBasicBase::Init();
+        contextImpl_.Init();
+    }
+private:
+    Impl::WebGLRenderingContextBaseImpl contextImpl_;
 };
 } // namespace Rosen
 } // namespace OHOS

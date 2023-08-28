@@ -16,37 +16,67 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_RENDERBUFFER
 #define ROSENRENDER_ROSEN_WEBGL_RENDERBUFFER
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLRenderbuffer final : public NExporter {
+class WebGLRenderbuffer final : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLRenderbuffer";
+    inline static const int objectType = WEBGL_OBJECT_RENDER_BUFFER;
+    inline static const int DEFAULT_RENDER_BUFFER = 0;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
-
-    void SetRenderbuffer(unsigned int renderbuffer)
+    static NVal CreateObjectInstance(napi_env env, WebGLRenderbuffer **instance)
     {
-        m_renderbuffer = renderbuffer;
+        return WebGLObject::CreateObjectInstance<WebGLRenderbuffer>(env, instance);
     }
 
-    unsigned int GetRenderbuffer() const
+    void SetRenderbuffer(uint32_t renderbuffer)
     {
-        return m_renderbuffer;
+        renderbuffer_ = renderbuffer;
     }
 
-    explicit WebGLRenderbuffer() : m_renderbuffer(0) {};
+    uint32_t GetRenderbuffer() const
+    {
+        return renderbuffer_;
+    }
 
-    WebGLRenderbuffer(napi_env env, napi_value exports) : NExporter(env, exports), m_renderbuffer(0) {};
+    explicit WebGLRenderbuffer() : renderbuffer_(0) {};
+
+    WebGLRenderbuffer(napi_env env, napi_value exports) : NExporter(env, exports), renderbuffer_(0) {};
 
     ~WebGLRenderbuffer() {};
+
+    static WebGLRenderbuffer *GetObjectInstance(napi_env env, napi_value obj)
+    {
+        return WebGLObject::GetObjectInstance<WebGLRenderbuffer>(env, obj);
+    }
+
+    GLenum GetTarget() const { return target_; }
+    void SetTarget(GLenum target) { target_ = target; }
+
+    void SetInternalFormat(GLenum internalFormat) { internalFormat_ = internalFormat; }
+    GLenum GetInternalFormat() const { return internalFormat_; }
+
+    void SetSize(GLsizei width, GLsizei height)
+    {
+        width_ = width;
+        height_ = height;
+    }
+    GLsizei GetWidth() const { return width_; }
+    GLsizei GetHeight() const { return height_; }
 private:
-    unsigned int m_renderbuffer;
+    uint32_t renderbuffer_;
+    GLenum target_ { 0 };
+    GLenum internalFormat_ { GL_RGBA4 };
+    GLsizei width_ { 0 };
+    GLsizei height_ { 0 };
 };
 } // namespace Rosen
 } // namespace OHOS

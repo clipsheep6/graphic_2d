@@ -22,15 +22,15 @@ namespace OHOS {
 namespace Rosen {
 class WebGLContextAttributes {
 public:
-    bool alpha = true;
-    bool antialias = true;
-    bool depth = true;
-    bool failIfMajorPerformanceCaveat = false;
-    bool desynchronized = false;
-    bool premultipliedAlpha = true;
-    bool preserveDrawingBuffer = false;
-    std::string powerPreference = "default";
-    bool stencil = false;
+    bool alpha_ = true;
+    bool antialias_ = true;
+    bool depth_ = true;
+    bool failIfMajorPerformanceCaveat_ = false;
+    bool desynchronized_ = false;
+    bool premultipliedAlpha_ = true;
+    bool preserveDrawingBuffer_ = false;
+    std::string powerPreference_ = "default";
+    bool stencil_ = false;
     WebGLContextAttributes() = default;
     virtual ~WebGLContextAttributes() {}
 };

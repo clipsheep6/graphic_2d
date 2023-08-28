@@ -20,46 +20,71 @@
 #include <GLES3/gl31.h>
 #include <GLES2/gl2ext.h>
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
 
 #define WEBGL_ACTIVE_INFO_NAME_MAX_LENGTH 128
 
 namespace OHOS {
 namespace Rosen {
-class WebGLActiveInfo final : public NExporter {
+class WebGLActiveInfo final : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLActiveInfo";
+    inline static const int objectType = WEBGL_OBJECT_ACTIVE_INFO;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static WebGLActiveInfo *GetWebGLActiveInfo(napi_env env, napi_callback_info info);
+    static napi_value GetActiveName(napi_env env, napi_callback_info info);
+    static napi_value GetActiveSize(napi_env env, napi_callback_info info);
+    static napi_value GetActiveType(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLActiveInfo **instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLActiveInfo>(env, instance);
+    }
 
     void SetActiveName(GLchar* activename)
     {
-        m_name = activename;
+        name_ = activename;
     }
 
     void SetActiveSize(int activesize)
     {
-        m_size = activesize;
+        size_ = activesize;
     }
 
     void SetActiveType(int activetype)
     {
-        m_type = activetype;
+        type_ = activetype;
     }
 
-    explicit WebGLActiveInfo() : m_size(0), m_type(0) {};
+    std::string GetActiveName()
+    {
+        return name_;
+    }
 
-    WebGLActiveInfo(napi_env env, napi_value exports) : NExporter(env, exports), m_size(0), m_type(0) {};
+    int GetActiveSize()
+    {
+        return size_;
+    }
+
+    int GetActiveType()
+    {
+        return type_;
+    }
+
+    explicit WebGLActiveInfo() : size_(0), type_(0) {};
+
+    WebGLActiveInfo(napi_env env, napi_value exports) : NExporter(env, exports), size_(0), type_(0) {};
 
     ~WebGLActiveInfo() {};
 private:
-    std::string m_name;
-    int m_size;
-    int m_type;
+    std::string name_;
+    int size_;
+    int type_;
 };
 } // namespace Rosen
 } // namespace OHOS

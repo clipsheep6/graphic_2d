@@ -16,37 +16,52 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_SAMPLER
 #define ROSENRENDER_ROSEN_WEBGL_SAMPLER
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLSampler final : public NExporter {
+class WebGLSampler final : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLSampler";
+    inline static const int objectType = WEBGL_OBJECT_SAMPLE;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
-
-    void SetSampler(unsigned int sampler)
+    static NVal CreateObjectInstance(napi_env env, WebGLSampler **instance)
     {
-        m_sampler = sampler;
+        return WebGLObject::CreateObjectInstance<WebGLSampler>(env, instance);
+    }
+    void SetSampler(GLuint sampler)
+    {
+        samplerId_ = sampler;
     }
 
-    unsigned int GetSampler() const
+    GLuint GetSampler() const
     {
-        return m_sampler;
+        return samplerId_;
     }
 
-    explicit WebGLSampler() : m_sampler(0) {};
+    explicit WebGLSampler() : samplerId_(0) {};
 
-    WebGLSampler(napi_env env, napi_value exports) : NExporter(env, exports), m_sampler(0) {};
+    WebGLSampler(napi_env env, napi_value exports) : NExporter(env, exports), samplerId_(0) {};
 
     ~WebGLSampler() {};
+
+    void SetSampleUnit(GLuint unit)
+    {
+        unit_ = unit;
+    }
+    GLuint GetSampleUnit()
+    {
+        return unit_;
+    }
 private:
-    unsigned int m_sampler;
+    GLuint unit_ {};
+    GLuint samplerId_ {};
 };
 } // namespace Rosen
 } // namespace OHOS

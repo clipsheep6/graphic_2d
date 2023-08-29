@@ -35,7 +35,15 @@
 #include "skia_adapter/skia_region.h"
 #include "skia_adapter/skia_shader_effect.h"
 #include "skia_adapter/skia_surface.h"
-
+//以下为新增头文件
+#include "skia_adapter/skia_font.h"
+#include "skia_adapter/skia_typeface.h"
+#include "skia_adapter/skia_memory_stream.h"
+#include "skia_adapter/skia_font_string.h"
+#include "skia_adapter/skia_font_style.h"
+#include "skia_adapter/skia_font_style_set.h"
+#include "skia_adapter/skia_text_blob.h"
+#include "skia_adapter/skia_text_blob_builder.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -146,6 +154,46 @@ std::unique_ptr<CameraImpl> SkiaImplFactory::CreateCamera()
 std::unique_ptr<RegionImpl> SkiaImplFactory::CreateRegion()
 {
     return std::make_unique<SkiaRegion>();
+}
+//以下为字体单元新增代码
+std::unique_ptr<FontImpl> SkiaImplFactory::CreateFont()
+{
+    return std::make_unique<SkiaFont>();
+}
+
+std::unique_ptr<TypefaceImpl> SkiaImplFactory::CreateFontTypeface()
+{
+    return std::make_unique<SkiaTypeface>();
+}
+
+std::unique_ptr<MemoryStreamImpl> SkiaImplFactory::CreateMemoryStream()
+{
+    return std::make_unique<SkiaMemoryStream>();
+}
+
+std::unique_ptr<FontStringImpl> SkiaImplFactory::CreateFontString()
+{
+    return std::make_unique<SkiaFontString>();
+}
+
+std::unique_ptr<FontStyleImpl> SkiaImplFactory::CreateFontStyle()
+{
+    return std::make_unique<SkiaFontStyle>();
+}
+
+std::unique_ptr<FontStyleSetImpl> SkiaImplFactory::CreateFontStyleSet()
+{
+    return std::make_unique<SkiaFontStyleSet>();
+}
+
+std::unique_ptr<TextBlobImpl> SkiaImplFactory::CreateTextBlob()
+{
+    return std::make_unique<SkiaTextBlob>();
+}
+
+std::unique_ptr<TextBlobBuilderImpl> SkiaImplFactory::CreateTextBlobBuilder()
+{
+    return std::make_unique<SkiaTextBlobBuilder>();
 }
 } // namespace Drawing
 } // namespace Rosen

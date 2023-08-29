@@ -116,6 +116,7 @@ public:
         CLIP_ADAPTIVE_ROUND_RECT_OPITEM,
         ADAPTIVE_IMAGE_OPITEM,
         ADAPTIVE_PIXELMAP_OPITEM,
+        DRWA_TEXT_BLOB_OPITEM,
     };
 };
 
@@ -337,6 +338,20 @@ public:
 
 private:
     ImageHandle picture_;
+};
+
+class DrawTextBlobOpItem : public DrawOpItem {
+public:
+    explicit DrawTextBlobOpItem(const ImageHandle& picture, float x, float y);
+    ~DrawTextBlobOpItem() = default;
+
+    static void Playback(CanvasPlayer& player, const void* opItem);
+    void Playback(Canvas& canvas, const CmdList& cmdList) const;
+
+private:
+    ImageHandle handle_;
+    float x_;
+    float y_;
 };
 
 class ClipRectOpItem : public DrawOpItem {

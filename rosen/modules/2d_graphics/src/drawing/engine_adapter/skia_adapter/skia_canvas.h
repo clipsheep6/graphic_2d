@@ -117,6 +117,8 @@ public:
     void DetachPen() override;
     void DetachBrush() override;
 
+    void DrawTextBlob(const TextBlob& blob, float x, float y) override;
+
     SkCanvas* ExportSkCanvas() const;
     void ImportSkCanvas(SkCanvas* skCanvas);
 

@@ -42,7 +42,7 @@
 #include "utils/round_rect.h"
 #include "utils/sampling_options.h"
 #include "utils/scalar.h"
-
+#include "text/text_blob.h"
 class SkSVGDOM;
 
 namespace OHOS {
@@ -130,6 +130,7 @@ public:
     virtual void AttachBrush(const Brush& brush) = 0;
     virtual void DetachPen() = 0;
     virtual void DetachBrush() = 0;
+    virtual void DrawTextBlob(const TextBlob& blob, float x, float y) = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

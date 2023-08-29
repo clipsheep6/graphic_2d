@@ -36,6 +36,15 @@
 #include "impl_interface/region_impl.h"
 #include "impl_interface/shader_effect_impl.h"
 #include "impl_interface/surface_impl.h"
+//以下为字体单元新增头文件
+#include "impl_interface/font_impl.h"
+#include "impl_interface/typeface_impl.h"
+#include "impl_interface/memory_stream_impl.h"
+#include "impl_interface/font_string_impl.h"
+#include "impl_interface/font_style_impl.h"
+#include "impl_interface/font_style_set_impl.h"
+#include "impl_interface/text_blob_impl.h"
+#include "impl_interface/text_blob_builder_impl.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -65,6 +74,15 @@ public:
     static std::unique_ptr<Matrix44Impl> CreateMatrix44();
     static std::unique_ptr<CameraImpl> CreateCamera();
     static std::unique_ptr<RegionImpl> CreateRegion();
+    //以下为字体单元新增代码
+    static std::unique_ptr<FontImpl> CreateFont();
+    static std::unique_ptr<TypefaceImpl> CreateFontTypeface();
+    static std::unique_ptr<MemoryStreamImpl> CreateMemoryStream();
+    static std::unique_ptr<FontStringImpl> CreateFontString();
+    static std::unique_ptr<FontStyleImpl> CreateFontStyle();
+    static std::unique_ptr<FontStyleSetImpl> CreateFontStyleSet();
+    static std::unique_ptr<TextBlobImpl> CreateTextBlob();
+    static std::unique_ptr<TextBlobBuilderImpl> CreateTextBlobBuilder();
 };
 } // namespace Drawing
 } // namespace Rosen

@@ -57,6 +57,16 @@ void* Data::WritableData()
 {
     return impl_->WritableData();
 }
+
+std::shared_ptr<Data> Data::MakeFromFileName(const std::string &path)
+{
+    return ImplFactory::CreateDataImpl()->MakeFromFileName(path);
+}
+
+void Data::InitDateImpl(std::shared_ptr<DataImpl> replaceDataImpl)
+{
+    impl_ = replaceDataImpl;
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

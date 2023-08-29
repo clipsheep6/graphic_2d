@@ -517,6 +517,7 @@ void RSMainThread::CheckParallelSubThreadNodesStatus()
     RS_OPTIONAL_TRACE_FUNC();
     cacheCmdSkippedInfo_.clear();
     cacheCmdSkippedNodes_.clear();
+    cacheCmdSkippedInfoScb_.clear();
     for (auto& node : subThreadNodes_) {
         if (node == nullptr) {
             RS_LOGE("RSMainThread::CheckParallelSubThreadNodesStatus sunThreadNode is nullptr!");
@@ -525,9 +526,11 @@ void RSMainThread::CheckParallelSubThreadNodesStatus()
         if (node->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DOING) {
             RS_TRACE_NAME("node:[ " + node->GetName() + "]");
             pid_t pid = 0;
+            pid_t scbPid = 0;
             if (node->IsAppWindow()) {
                 pid = ExtractPid(node->GetId());
             } else if (node->IsLeashWindow()) {
+                scbPid = ExtractPid(node->GetId());
                 for (auto& child : node->GetSortedChildren()) {
                     auto surfaceNodePtr = child->ReinterpretCastTo<RSSurfaceRenderNode>();
                     if (surfaceNodePtr && surfaceNodePtr->IsAppWindow()) {
@@ -547,21 +550,41 @@ void RSMainThread::CheckParallelSubThreadNodesStatus()
             } else {
                 cacheCmdSkippedInfo_[pid].first.push_back(node->GetId());
             }
+            if (scbPid && cacheCmdSkippedInfoScb_.count(scbPid) == 0) {
+                cacheCmdSkippedInfoScb_[scbPid] = std::vector<NodeId>{node->GetId()};
+            } else if (scbPid) {
+                cacheCmdSkippedInfoScb_[scbPid].push_back(node->GetId());
+            }
         }
     }
 }
 
-bool RSMainThread::IsNeedSkip(NodeId instanceRootNodeId, pid_t pid)
+bool RSMainThread::IsNeedSkip(NodeId instanceRootNodeId, pid_t pid, std::shared_ptr<RSRenderNode>& node,
+    uint16_t commandType)
 {
-    return std::any_of(cacheCmdSkippedInfo_[pid].first.begin(), cacheCmdSkippedInfo_[pid].first.end(),
-        [instanceRootNodeId](const auto& cacheCmdSkipNodeId) {
-            return cacheCmdSkipNodeId == instanceRootNodeId;
-        });
+    if (node->GetId() == instanceRootNodeId) {
+        if (auto surfaceNode = node->ReinterpretCastTo<RSSurfaceRenderNode>()) {
+            if (surfaceNode->IsLeashWindow() && commandType == RSCommandType::BASE_NODE &&
+                cacheCmdSkippedInfoScb_.find(pid) != cacheCmdSkippedInfoScb_.end()) {
+                return std::any_of(cacheCmdSkippedInfoScb_[pid].begin(),
+                    cacheCmdSkippedInfoScb_[pid].end(), [instanceRootNodeId](const auto& cacheCmdSkipNodeId) {
+                        return cacheCmdSkipNodeId == instanceRootNodeId;
+                    });
+            }
+        }
+    } else if (cacheCmdSkippedInfo_.find(pid) == cacheCmdSkippedInfo_.end()){
+        return std::any_of(cacheCmdSkippedInfo_[pid].first.begin(), cacheCmdSkippedInfo_[pid].first.end(),
+            [instanceRootNodeId](const auto& cacheCmdSkipNodeId) {
+                return cacheCmdSkipNodeId == instanceRootNodeId;
+            });
+    }
+    return false;
 }
 
 void RSMainThread::SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransactionData>>& transactionVec, pid_t pid)
 {
-    if (cacheCmdSkippedInfo_.find(pid) == cacheCmdSkippedInfo_.end()) {
+    if (cacheCmdSkippedInfo_.find(pid) == cacheCmdSkippedInfo_.end() &&
+        cacheCmdSkippedInfoScb_.find(pid) == cacheCmdSkippedInfoScb_.end()) {
         return;
     }
     std::vector<std::unique_ptr<RSTransactionData>> skipTransactionVec;
@@ -572,16 +595,17 @@ void RSMainThread::SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransaction
         auto& processPayload = transactionData->GetPayload();
         for (size_t index = 0; index < processPayload.size(); ++index) {
             auto& elem = processPayload[index];
-            if (std::get<2>(elem) == nullptr) { // check elem is valid
+            auto& command = std::get<2>(elem); // 2 is command index in elem
+            if (command == nullptr) {
                 continue;
             }
-            NodeId nodeId = std::get<2>(elem)->GetNodeId();
+            NodeId nodeId = command->GetNodeId();
             auto node = nodeMap.GetRenderNode(nodeId);
             if (node == nullptr) {
                 continue;
             }
             NodeId firstLevelNodeId = node->GetFirstLevelNodeId();
-            if (IsNeedSkip(firstLevelNodeId, pid)) {
+            if (IsNeedSkip(firstLevelNodeId, pid, node, command->GetType())) {
                 skipPayload.emplace_back(std::move(elem));
                 skipPayloadIndexVec.push_back(index);
             }

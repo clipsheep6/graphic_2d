@@ -490,7 +490,14 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest016, TestSize.Level
     OH_Drawing_TypographyHandlerPushTextStyle(handler, txtStyle);
 
     const char* text = "OpenHarmony\n";
+    const char* text1 = "hello";
+    const char* text2 = "world\n";
     OH_Drawing_TypographyHandlerAddText(handler, text);
+    OH_Drawing_PlaceholderSpan* placeholderSpan = OH_Drawing_CreatePlaceholderSpan(100, 100,
+        BASELINE, TEXT_BASELINE_ALPHABETIC, 0);
+    OH_Drawing_TypographyHandlerAddText(handler, text1);
+    OH_Drawing_TypographyHandlerAppendPlaceholder(handler, placeholderSpan);
+    OH_Drawing_TypographyHandlerAddText(handler, text2);
     OH_Drawing_TypographyHandlerPopTextStyle(handler);
 
     OH_Drawing_Typography* typography = OH_Drawing_CreateTypography(handler);

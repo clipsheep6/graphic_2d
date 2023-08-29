@@ -457,3 +457,18 @@ double OH_Drawing_TypographyGetIdeographicBaseline(OH_Drawing_Typography* typogr
 {
     return ConvertToOriginalText<Typography>(typography)->GetIdeographicBaseline();
 }
+
+
+OH_Drawing_PlaceholderSpan* OH_Drawing_CreatePlaceholderSpan(double width, double height,
+    OH_Drawing_PlaceholderAlignment placeholderAlignment, OH_Drawing_TextBaseline textbaseline, double baselineOffset)
+{
+    return (OH_Drawing_PlaceholderSpan*)new PlaceholderRun(width, height,
+        *(ConvertToOriginalText<PlaceholderAlignment>(&placeholderAlignment)),
+        *(ConvertToOriginalText<TextBaseline>(&textbaseline)), 0);
+}
+void OH_Drawing_TypographyHandlerAppendPlaceholder(OH_Drawing_TypographyCreate* handler,
+    OH_Drawing_PlaceholderSpan* placeholderSpan)
+{
+    auto span = ConvertToOriginalText<PlaceholderRun>(placeholderSpan);
+    ConvertToOriginalText<TypographyCreate>(handler)->AddPlaceholder(*span);
+}

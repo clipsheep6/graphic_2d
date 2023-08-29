@@ -15,6 +15,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_PARTICLE_H
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_RENDER_PARTICLE_H
 
+#include <cstddef>
 #include <memory>
 #include <sys/types.h>
 #include <vector>
@@ -109,6 +110,40 @@ public:
     std::shared_ptr<RSImage> image_;
     Vector2f imageSize_;
 
+std::string ToString() const 
+{
+    std::string str;
+    str.append("{")
+        .append("[emitRate_]:")
+        .append(std::to_string(emitRate_))
+        .append("[emitShape_]:")
+        .append(std::to_string(static_cast<int32_t>(emitShape_)))
+        .append("[position_.x_]:")
+        .append(std::to_string(position_.x_))
+        .append("[position_.y_]:")
+        .append(std::to_string(position_.y_))
+        .append("[emitSize_.x_]:")
+        .append(std::to_string(emitSize_.x_))
+        .append("[emitSize_.y_]:")
+        .append(std::to_string(emitSize_.y_))
+        .append("[particleCount_]:")
+        .append(std::to_string(particleCount_))
+        .append("[lifeTime_]:")
+        .append(std::to_string(lifeTime_))
+        .append("[particleType_]:")
+        .append(std::to_string(static_cast<int32_t>(type_)))  
+        .append("[radius_]:")
+        .append(std::to_string(radius_))  
+        .append("[image_]:")
+        .append(std::to_string(static_cast<int32_t>(image_ != nullptr)))
+        .append("[imageSize_.x_]:")
+        .append(std::to_string(imageSize_.x_))
+        .append("[imageSize_.y_]:")
+        .append(std::to_string(imageSize_.y_))
+        .append("}");
+    return str;
+}
+
     EmitterConfig()
         : emitRate_(), emitShape_(ShapeType::RECT), position_(), emitSize_(), particleCount_(), lifeTime_(),
           type_(ParticleType::POINTS), radius_(), image_(), imageSize_()
@@ -143,6 +178,22 @@ class RSB_EXPORT ParticleVelocity {
 public:
     Range<float> velocityValue_;
     Range<float> velocityAngle_;
+
+std::string ToString() const 
+{
+    std::string str;
+    str.append("{")
+        .append("[velocityValue_.start_]:")
+        .append(std::to_string(velocityValue_.start_))
+        .append("[velocityValue_.end_]:")
+        .append(std::to_string(velocityValue_.end_))
+        .append("[velocityAngle_.start_]:")
+        .append(std::to_string(velocityAngle_.start_))
+        .append("[velocityAngle_.end_]:")
+        .append(std::to_string(velocityAngle_.end_))
+        .append("}");
+    return str;
+}
 
     ParticleVelocity() : velocityValue_(), velocityAngle_() {}
     ParticleVelocity(const Range<float>& velocityValue, const Range<float>& velocityAngle)

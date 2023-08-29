@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <vector>
 
+#include "platform/common/rs_log.h"
 #include "animation/rs_animation_timing_curve.h"
 #include "animation/rs_render_particle.h"
 #include "common/rs_color.h"
@@ -42,6 +43,33 @@ public:
     int startMillis_;
     int endMillis_;
     RSAnimationTimingCurve curve_;
+
+std::string ToString() const 
+{
+    std::string str;
+    str.append("{")
+        .append("[fromValue_]:");
+        // if (std::is_same<T, float>::value) {
+        //     str.append(std::to_string(static_cast<float>(fromValue_)));
+        // } else if (std::is_same<T, Color>::value) {
+        //     str.append(std::to_string(fromValue_.AsArgbInt()));
+        // }
+        // str.append("toValue_:");
+        // if (std::is_same<T, float>::value) {
+        //     str.append(std::to_string(static_cast<float>(toValue_)));
+        // } else if (std::is_same<T, Color>::value) {
+        //     str.append(std::to_string(toValue_.AsArgbInt()));
+        // }
+        str.append("[startMillis_]:")
+        .append(std::to_string(startMillis_))
+        .append("[endMillis_]:")
+        .append(std::to_string(endMillis_))
+        .append("[curve_]:")
+        .append(std::to_string(static_cast<int32_t>(curve_.type_)))
+        .append("}");
+        return str;
+}
+
     Change() : fromValue_(), toValue_(), startMillis_(), endMillis_(), curve_(RSAnimationTimingCurve::LINEAR) {}
     Change(T fromValue, T toValue, int startMillis, int endMillis, RSAnimationTimingCurve& curve)
     {
@@ -78,6 +106,34 @@ public:
     ParticleParaType(const ParticleParaType& paraType) = default;
     ParticleParaType& operator=(const ParticleParaType& paraType) = default;
     ~ParticleParaType() = default;
+
+std::string ToString() const 
+{
+    std::string str;
+    str.append("{")
+        .append("[val_.start_]:")
+        .append(std::to_string(val_.start_))
+        .append("[val_.end_]:")
+        .append(std::to_string(val_.end_))
+        .append("[updator_]:")
+        .append(std::to_string(static_cast<int32_t>(updator_))) 
+        .append("[random_.start_]:")
+        .append(std::to_string(random_.start_))
+        .append("[random_.end_]:")
+        .append(std::to_string(random_.end_))
+        .append("[valChangeOverLife_]:[")
+        .append(std::to_string(valChangeOverLife_.size()));
+        if (valChangeOverLife_.size() > 0) {
+            for (size_t i = 0; i < valChangeOverLife_.size(); i++) {
+                str.append(valChangeOverLife_[i].ToString());
+            }
+        } 
+        str.append("]")
+        .append("}");
+        return str;
+        
+}
+
 };
 
 class RSB_EXPORT ParticleAcceleration {
@@ -106,6 +162,45 @@ public:
     Range<float> alphaRandom_;
 
     std::vector<Change<Color>> valChangeOverLife_;
+
+std::string ToString() const 
+{
+    std::string str;
+    str.append("{")
+        .append("[colorVal_.start_]:")
+        .append(std::to_string(colorVal_.start_.AsArgbInt()))
+        .append("[colorVal_.end_]:")
+        .append(std::to_string(colorVal_.end_.AsArgbInt()))
+        .append("[updator_]:")
+        .append(std::to_string(static_cast<int32_t>(updator_))) 
+        .append("[redRandom_.start_]:")
+        .append(std::to_string(redRandom_.start_))
+        .append("[redRandom_.end_]:")
+        .append(std::to_string(redRandom_.end_))
+        .append("[greenRandom_.start_]:")
+        .append(std::to_string(greenRandom_.start_))
+        .append("[greenRandom_.end_]:")
+        .append(std::to_string(greenRandom_.end_))
+        .append("[blueRandom_.start_]:")
+        .append(std::to_string(blueRandom_.start_))
+        .append("[blueRandom_.end_]:")
+        .append(std::to_string(blueRandom_.end_))
+        .append("[alphaRandom_.start_]:")
+        .append(std::to_string(alphaRandom_.start_))
+        .append("[alphaRandom_.end_]:")
+        .append(std::to_string(alphaRandom_.end_))
+        .append("[valChangeOverLife_]:[")
+        .append(std::to_string(valChangeOverLife_.size()));
+        if (valChangeOverLife_.size() > 0) {
+            for (size_t i = 0; i < valChangeOverLife_.size(); i++) {
+                str.append(valChangeOverLife_[i].ToString());
+            }
+        } 
+        str.append("]")
+        .append("}");
+    return str;
+        
+}
     ParticleColorParaType(const Range<Color>& colorVal, const ParticleUpdator& updator, const Range<float>& redRandom,
         const Range<float>& greenRandom, const Range<float>& blueRandom, const Range<float>& alphaRandom,
         std::vector<Change<Color>>& valChangeOverLife)
@@ -156,6 +251,33 @@ public:
     ParticleParams(const ParticleParams& params) = default;
     ParticleParams& operator=(const ParticleParams& params) = default;
     ~ParticleParams() = default;
+    
+std::string ToString() const 
+{
+    ROSEN_LOGE("WMM ParticleParams::ToString");
+    std::string str;
+    str.append("{")
+        .append("[emitterConfig_]:")
+        .append(emitterConfig_.ToString())
+        .append("[velocity_]:")
+        .append(velocity_.ToString())
+        .append("[acceleration_.accelerationValue_]:")
+        .append(acceleration_.accelerationValue_.ToString())
+        .append("[acceleration_.accelerationAngle_]:")
+        .append(acceleration_.accelerationAngle_.ToString())
+        .append("[color_]:")
+        .append(color_.ToString())
+        .append("[opacity_]:")
+        .append(opacity_.ToString())
+        .append("[scale_]:")
+        .append(scale_.ToString())
+        .append("[spin_]:")
+        .append(spin_.ToString())
+        .append("}");
+    ROSEN_LOGE("WMM ParticleParams::ToString %{public}s", str.c_str());
+    return str;
+}
+
 
     RenderParticleParaType<float> translateValToRender(const ParticleParaType<float>& val) const
     {

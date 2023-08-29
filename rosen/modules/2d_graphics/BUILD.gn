@@ -188,6 +188,13 @@ template("graphics2d_source_set") {
         deps +=
             [ "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform" ]
         defines += [ "USE_GRAPHIC_TEXT_GINE" ]
+        if (only_texgine) {
+          deps -= [ "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform" ]
+          deps += [
+            "$graphic_2d_root/rosen/build/flutter/harfbuzz:rosen_libharfbuzz_$platform",
+            "//third_party/skia:skia_$platform",
+          ]
+        }
       } else {
         deps += [
           "$ace_flutter_engine_root:flutter_engine_fml_$platform",
@@ -216,6 +223,13 @@ template("graphics2d_source_set") {
       cflags = [ "-Wno-c++17-extensions" ]
 
       deps = [ "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform" ]
+      if (enable_text_gine && only_texgine) {
+        deps -= [ "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform" ]
+        deps += [
+          "$graphic_2d_root/rosen/build/flutter/harfbuzz:rosen_libharfbuzz_$platform",
+          "//third_party/skia:skia_$platform",
+        ]
+      }
 
       if (!is_cross_platform_build) {
         deps += [ "$rosen_root/modules/platform:hilog" ]
@@ -227,10 +241,16 @@ template("graphics2d_source_set") {
       defines += [ "MODULE_DRAWING" ]
 
       if (enable_text_gine) {
-        configs = [ "$ace_flutter_engine_root/icu:icu_config_$platform" ]
-        deps += [ "//third_party/skia:skia_$platform" ]
+        deps += [
+          "$graphic_2d_root/rosen/build/flutter/icu:rosen_libicu_$platform",
+          "//third_party/skia:skia_$platform",
+        ]
         defines += [ "USE_GRAPHIC_TEXT_GINE" ]
         include_dirs += [ "$flutter_root/txt/src" ]
+        if (only_texgine) {
+          include_dirs -= [ "$flutter_root/txt/src" ]
+          deps += [ "$graphic_2d_root/rosen/build/flutter/harfbuzz:rosen_libharfbuzz_$platform" ]
+        }
       } else {
         deps += [ "$ace_flutter_engine_root:flutter_engine_fml_$platform" ]
         include_dirs += [ "$flutter_root/engine" ]

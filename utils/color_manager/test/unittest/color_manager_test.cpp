@@ -274,6 +274,20 @@ HWTEST_F(ColorManagerTest, skiaToColorSpace, Function | SmallTest | Level2)
     ASSERT_EQ(p3Color.ColorEqual(result), true);
 }
 
+/*
+* Function: ColorManagerTest
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: test Color::ColorEqual
+*/
+HWTEST_F(ColorManagerTest, ColorEqualTest, Function | SmallTest | Level2)
+{
+    Color color = Color(0.1, 0.2, 0.3, 0.4, ColorSpaceName::SRGB);
+    Color p3Color = Color(0.1238f, 0.19752f, 0.29182f, 0.4, ColorSpaceName::DISPLAY_P3);
+    ASSERT_EQ(p3Color.ColorEqual(color), false);
+}
+
 /**
  * @tc.name: CreateColorSpace001
  * @tc.desc: Create colorspace with customized parameters

@@ -1351,5 +1351,13 @@ void RSSurfaceRenderNode::SetCacheSurfaceProcessedStatus(CacheProcessStatus cach
 {
     cacheProcessStatus_.store(cacheProcessStatus);
 }
+void RSSurfaceRenderNode::SetChildrenHasSharedTransition(bool flag)
+{
+    childrenHasSharedTransition_ = flag;
+}
+bool RSSurfaceRenderNode::GetChildrenHasSharedTransition() const
+{
+    return childrenHasSharedTransition_;
+}
 } // namespace Rosen
 } // namespace OHOS

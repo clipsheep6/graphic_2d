@@ -1079,6 +1079,10 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
 #if defined(RS_ENABLE_GL)
     // Optional use cacheManager to draw filter
     if (auto& cacheManager = properties.GetFilterCacheManager(filterType == FilterType::FOREGROUND_FILTER)) {
+        if (canvas.GetIsParallelCanvas()) {
+            // UI-First may delay the cache invalidation, to avoid display issues, we need to do it here.
+            cacheManager->InvalidateCache();
+        }
         cacheManager->DrawFilter(canvas, filter);
         return;
     }

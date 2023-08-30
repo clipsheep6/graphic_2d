@@ -57,7 +57,21 @@ public:
         CREATE_CORNER,
         CREATE_SUM,
         CREATE_COMPOSE,
+        CREATE_1D,
     };
+};
+
+class Create1DPathEffectOpItem : public PathEffectOpItem {
+public:
+    Create1DPathEffectOpItem(const CmdListHandle& path, float advance, float phase, Path1DStyle style);
+    ~Create1DPathEffectOpItem() = default;
+
+    std::shared_ptr<PathEffect> Playback(const CmdList& cmdList) const;
+private:
+    CmdListHandle path_;
+    float advance_;
+    float phase_;
+    Path1DStyle style_;
 };
 
 class CreateDashPathEffectOpItem : public PathEffectOpItem {

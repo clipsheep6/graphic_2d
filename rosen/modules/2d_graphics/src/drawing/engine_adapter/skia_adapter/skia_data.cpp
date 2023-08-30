@@ -70,6 +70,12 @@ void SkiaData::SetSkData(const sk_sp<SkData>& data)
 {
     skData_ = data;
 }
+
+bool SkiaData::MakeFromFileName(const std::string &path)
+{
+    skData_ = SkData::MakeFromFileName(path.c_str());
+    return skData_ != nullptr;
+}
 } // Drawing
 } // Rosen
 } // OHOS

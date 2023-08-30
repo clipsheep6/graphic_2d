@@ -18,7 +18,7 @@
 
 #include "include/core/SkData.h"
 #include "impl_interface/data_impl.h"
-
+#include "utils/data.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -50,6 +50,8 @@ public:
      * @brief  Update the member variable to filter, adaptation layer calls.
      */
     void SetSkData(const sk_sp<SkData>& data);
+
+    bool MakeFromFileName(const std::string &path) override;
 private:
     sk_sp<SkData> skData_;
 };

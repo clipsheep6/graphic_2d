@@ -57,6 +57,11 @@ void* Data::WritableData()
 {
     return impl_->WritableData();
 }
+
+bool Data::MakeFromFileName(const std::string &path)
+{
+    return impl_->MakeFromFileName(path);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

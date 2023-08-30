@@ -29,6 +29,10 @@ class PixelMap;
 }
 namespace Rosen {
 namespace Drawing {
+
+struct TextBlobHandler
+{};
+
 struct ImageHandle {
     uint32_t offset;
     size_t size;
@@ -61,6 +65,7 @@ public:
         PATH_EFFECT_CMD_LIST,
         REGION_CMD_LIST,
         SHADER_EFFECT_CMD_LIST,
+        TEXT_CMD_LIST,
     };
 
     CmdList() = default;

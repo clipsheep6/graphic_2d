@@ -160,6 +160,11 @@ void CoreCanvas::DrawPicture(const Picture& picture)
     impl_->DrawPicture(picture);
 }
 
+void CoreCanvas::DrawTextBlob(const TextBlob& blob, float x, float y)
+{
+    impl_->DrawTextBlob(blob, x, y);
+}
+
 void CoreCanvas::DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom)
 {
     impl_->DrawSVGDOM(svgDom);

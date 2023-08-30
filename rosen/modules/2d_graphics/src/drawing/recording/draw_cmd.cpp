@@ -79,6 +79,7 @@ std::unordered_map<uint32_t, CanvasPlayer::PlaybackFunc> CanvasPlayer::opPlaybac
     { DrawOpItem::CLIP_ADAPTIVE_ROUND_RECT_OPITEM, ClipAdaptiveRoundRectOpItem::Playback},
     { DrawOpItem::ADAPTIVE_IMAGE_OPITEM,    DrawAdaptiveImageOpItem::Playback},
     { DrawOpItem::ADAPTIVE_PIXELMAP_OPITEM, DrawAdaptivePixelMapOpItem::Playback},
+    { DrawOpItem::DRWA_TEXT_BLOB_OPITEM,    DrawTextBlobOpItem::Playback},
 };
 
 CanvasPlayer::CanvasPlayer(Canvas& canvas, const CmdList& cmdList, const Rect& rect)
@@ -424,6 +425,26 @@ void DrawPictureOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
     }
 
     canvas.DrawPicture(*picture);
+}
+
+DrawTextBlobOpItem::DrawTextBlobOpItem(const ImageHandle& textBlob, float x, float y) : DrawOpItem(DRWA_TEXT_BLOB_OPITEM), handle_(textBlob), x_(x), y_(y) {}
+
+void DrawTextBlobOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const DrawTextBlobOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawTextBlobOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto textBlob = CmdListHelper::GetTextBlobFromCmdList(cmdList, handle_);
+    if (textBlob == nullptr) {
+        return;
+    }
+
+    canvas.DrawTextBlob(*textBlob, x_, y_);
 }
 
 ClipRectOpItem::ClipRectOpItem(const Rect& rect, ClipOp op, bool doAntiAlias)

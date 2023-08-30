@@ -14,8 +14,9 @@
  */
 
 #include "skia_text_blob.h"
-#include "utils/data.h"
 #include "utils/log.h"
+#include "skia_adapter/skia_data.h"
+#include <include/core/SkSerialProcs.h>
 
 namespace OHOS {
 namespace Rosen {

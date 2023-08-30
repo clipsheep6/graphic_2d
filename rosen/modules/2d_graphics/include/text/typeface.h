@@ -15,7 +15,8 @@
 
 #ifndef TYPEFACE_H
 #define TYPEFACE_H
-#include "drawing/engine_adapter/impl_interface/typeface_impl.h"
+
+#include "impl_interface/typeface_impl.h"
 
 namespace OHOS {
 namespace Rosen {

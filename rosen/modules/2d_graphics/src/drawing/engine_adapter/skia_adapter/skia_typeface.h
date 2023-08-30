@@ -16,11 +16,10 @@
 #ifndef SKIA_TYPEFACE_H
 #define SKIA_TYPEFACE_H
 
-#include <memory>
 #include <include/core/SkFont.h>
-#include "impl_interface/typeface_impl.h"
 #include "text/typeface.h"
 #include "skia_font_style.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {

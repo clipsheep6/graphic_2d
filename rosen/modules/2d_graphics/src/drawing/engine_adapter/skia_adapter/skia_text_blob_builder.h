@@ -16,12 +16,9 @@
 #ifndef SKIA_TEXT_BLOB_BUILDER_H
 #define SKIA_TEXT_BLOB_BUILDER_H
 
-#include <memory>
 #include <include/core/SkTextBlob.h>
 #include "impl_interface/text_blob_builder_impl.h"
 #include "text/text_blob.h"
-#include "skia_font.h"
-#include "skia_text_blob.h"
 
 namespace OHOS {
 namespace Rosen {

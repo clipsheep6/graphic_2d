@@ -16,10 +16,7 @@
 #ifndef RECORDING_TEXT_H
 #define RECORDING_TEXT_H
 
-#include "text/text_blob_builder.h"
-#include "text/text_blob.h"
 #include "recording/text_cmd_list.h"
-#include "impl_interface/text_blob_builder_impl.h"
 
 namespace OHOS {
 namespace Rosen {

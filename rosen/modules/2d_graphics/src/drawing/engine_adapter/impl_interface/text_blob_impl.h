@@ -18,6 +18,7 @@
 
 #include "base_impl.h"
 #include "utils/data.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {

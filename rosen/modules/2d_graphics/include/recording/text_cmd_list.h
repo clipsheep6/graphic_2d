@@ -16,9 +16,7 @@
 #ifndef TEXT_CMD_LIST_H
 #define TEXT_CMD_LIST_H
 
-#include "text/text_blob.h"
 #include "recording/cmd_list.h"
-#include "text/font.h"
 #include "text/text_blob_builder.h"
 
 namespace OHOS {

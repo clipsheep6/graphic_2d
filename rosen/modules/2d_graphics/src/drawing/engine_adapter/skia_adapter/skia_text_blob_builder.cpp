@@ -14,6 +14,8 @@
  */
 
 #include "skia_text_blob_builder.h"
+#include "skia_font.h"
+#include "skia_text_blob.h"
 
 namespace OHOS {
 namespace Rosen {

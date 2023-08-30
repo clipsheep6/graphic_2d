@@ -14,6 +14,9 @@
  */
 
 #include "skia_font_style_set.h"
+#include "skia_typeface.h"
+#include "skia_font_style.h"
+#include "skia_font_string.h"
 
 namespace OHOS {
 namespace Rosen {

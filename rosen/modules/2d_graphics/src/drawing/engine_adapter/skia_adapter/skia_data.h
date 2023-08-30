@@ -19,6 +19,7 @@
 #include "include/core/SkData.h"
 #include "impl_interface/data_impl.h"
 #include "utils/data.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {

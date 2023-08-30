@@ -16,13 +16,8 @@
 #ifndef SKIA_FONT_STYLE_SET_H
 #define SKIA_FONT_STYLE_SET_H
 
-#include <memory>
 #include <include/core/SkFontMgr.h>
 #include "text/font_style_set.h"
-#include "impl_interface/font_style_set_impl.h"
-#include "skia_typeface.h"
-#include "skia_font_style.h"
-#include "skia_font_string.h"
 
 namespace OHOS {
 namespace Rosen {

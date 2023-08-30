@@ -16,11 +16,8 @@
 #ifndef SKIA_TEXT_BLOB_H
 #define SKIA_TEXT_BLOB_H
 
-#include <memory>
 #include <include/core/SkTextBlob.h>
-#include <include/core/SkSerialProcs.h>
 #include "impl_interface/text_blob_impl.h"
-#include "skia_adapter/skia_data.h"
 
 namespace OHOS {
 namespace Rosen {

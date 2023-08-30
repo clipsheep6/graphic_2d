@@ -16,7 +16,6 @@
 #ifndef SKIA_FONT_STRING_H
 #define SKIA_FONT_STRING_H
 
-#include <memory>
 #include <include/core/SkString.h>
 #include "impl_interface/font_string_impl.h"
 

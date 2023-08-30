@@ -19,7 +19,7 @@
 #include "draw/canvas.h"
 #include "recording/adaptive_image_helper.h"
 #include "recording/draw_cmd_list.h"
-#include "text/text_blob.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {

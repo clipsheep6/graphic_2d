@@ -14,6 +14,7 @@
  */
 
 #include "skia_font_style.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {

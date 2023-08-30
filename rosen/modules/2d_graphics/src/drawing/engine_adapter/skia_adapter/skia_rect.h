@@ -17,7 +17,6 @@
 #define SKIA_RECT_H
 
 #include <include/core/SkRect.h>
-#include "impl_interface/rect_impl.h"
 #include "text/text_rect.h"
 
 namespace OHOS {

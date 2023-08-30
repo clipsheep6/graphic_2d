@@ -16,9 +16,7 @@
 #ifndef SKIA_FONT_STYLE_H
 #define SKIA_FONT_STYLE_H
 
-#include <memory>
 #include <include/core/SkFontStyle.h>
-#include "impl_interface/font_style_impl.h"
 #include "text/font_style.h"
 
 namespace OHOS {

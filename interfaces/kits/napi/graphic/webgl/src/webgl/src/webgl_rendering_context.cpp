@@ -17,6 +17,7 @@
 
 #include "../include/util/object_manager.h"
 #include "../include/util/log.h"
+#include "../include/util/egl_manager.h"
 #include "../../common/napi/n_class.h"
 #include "../../common/napi/n_func_arg.h"
 
@@ -1510,29 +1511,33 @@ static napi_value GetBrowserDefaultWebgl(napi_env env, napi_callback_info info)
 
 bool WebGLRenderingContext::Export(napi_env env, napi_value exports)
 {
-    napi_status status;
-    napi_value contextClass = nullptr;
-    napi_define_class(
-        env, "WebGLRenderingContext", NAPI_AUTO_LENGTH,
+    LOGI("WebGL WebGLRenderingContext::Export env %{public}p mContextRef %{public}p", env, mContextRef);
+    napi_value instanceValue = GetContextInstance(env, GetClassName(),
         [](napi_env env, napi_callback_info info) -> napi_value {
             napi_value thisVar = nullptr;
             napi_get_cb_info(env, info, nullptr, nullptr, &thisVar, nullptr);
-
+            LOGI("WebGL WebGLRenderingContext::create");
             return thisVar;
         },
-        nullptr, 0, nullptr, &contextClass);
-
-    napi_value instanceValue = nullptr;
-    napi_new_instance(env, contextClass, 0, nullptr, &instanceValue);
-    status = napi_wrap(
-        env, instanceValue, static_cast<void*>(this),
         [](napi_env env, void* data, void* hint) {
             auto entity = static_cast<WebGLRenderingContext *>(data);
+            LOGI("WebGL WebGLRenderingContext::delete");
+            if (entity->mContextRef) {
+                napi_delete_reference(env, entity->mContextRef);
+            }
+            if (entity->mEGLSurface != nullptr) {
+                eglDestroySurface(EglManager::GetInstance().GetEGLDisplay(), entity->mEGLSurface);
+                entity->mEGLSurface = nullptr;
+            }
             delete entity;
-        }, nullptr, nullptr);
-    if (status != napi_ok) {
+        }
+    );
+    if (instanceValue == nullptr) {
+        LOGE("Failed to create instance");
         return false;
     }
+    LOGI("WebGL WebGLRenderingContext::Export instanceValue %{public}p", instanceValue);
+
     napi_property_descriptor props[] = {
         NVal::DeclareNapiFunction("getContextAttributes", WebGLRenderingContextBase::GetContextAttributes),
         NVal::DeclareNapiFunction("isContextLost", WebGLRenderingContextBase::IsContextLost),
@@ -1972,7 +1977,7 @@ bool WebGLRenderingContext::Export(napi_env env, napi_value exports)
         NVal::DeclareNapiProperty("WebGLRenderingContext", instanceValue),
     };
 
-    status = napi_define_properties(env, exports, sizeof(props) / sizeof(props[0]), props);
+    napi_status status = napi_define_properties(env, exports, sizeof(props) / sizeof(props[0]), props);
     if (status != napi_ok) {
         return false;
     }
@@ -1986,7 +1991,7 @@ string WebGLRenderingContext::GetClassName()
 
 WebGLRenderingContext::~WebGLRenderingContext()
 {
-    LOGI("WebGLRenderingContext::~WebGLRenderingContext");
+    LOGI("WebGLRenderingContext::~WebGLRenderingContext id %{public}p", this);
     auto& webgl1Objects = ObjectManager::GetInstance().GetWebgl1ObjectMap();
     for (auto iter = webgl1Objects.begin(); iter != webgl1Objects.end(); iter++) {
         if (iter->second == this) {
@@ -1994,6 +1999,11 @@ WebGLRenderingContext::~WebGLRenderingContext()
             break;
         }
     }
+}
+
+WebGLRenderingContext::WebGLRenderingContext(napi_env env, napi_value exports) : NExporter(env, exports)
+{
+    LOGI("WebGLRenderingContext::WebGLRenderingContext id %{public}p", this);
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -19,6 +19,9 @@
 
 #include <memory>
 #include <vector>
+#include <GLES2/gl2.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include "uni_header.h"
 
 namespace OHOS {
@@ -54,9 +57,15 @@ public:
 
     std::tuple<bool, int32_t> ToInt32() const;
 
+    std::tuple<bool, uint32_t> ToUint32() const;
+
     std::tuple<bool, int64_t> ToInt64() const;
 
+    std::tuple<bool, GLenum> ToGLenum() const;
+
     std::tuple<bool, void *, size_t> ToArraybuffer() const;
+
+    std::tuple<bool, float *, size_t> ToFloatBuffer() const;
 
     std::tuple<bool, napi_typedarray_type, void *, size_t> ToTypedArray() const;
 
@@ -65,6 +74,8 @@ public:
     std::tuple<bool, void *, size_t> ToDataview() const;
 
     std::tuple<bool, bool> IsArray() const;
+
+    bool IsDataView() const;
 
     std::tuple<bool, void *, size_t, size_t, napi_typedarray_type> ToTypedArrayInfo() const;
 
@@ -84,6 +95,13 @@ public:
     static NVal CreateUint8Array(napi_env env, void *buf, size_t bufLen);
 
     static NVal CreateDouble(napi_env env, double val);
+
+    static NVal CreateBoolArray(napi_env env, GLboolean *data, size_t count);
+    static NVal CreateBoolArrayForInt(napi_env env, GLint *data, size_t count);
+
+    static NVal CreateInt32ExternalArray(napi_env env, GLint *res, uint32_t count);
+
+    static NVal CreateFloatExternalArray(napi_env env, float *res, uint32_t count);
 
     /* SHOULD ONLY BE USED FOR OBJECT */
     bool HasProp(std::string propName) const;

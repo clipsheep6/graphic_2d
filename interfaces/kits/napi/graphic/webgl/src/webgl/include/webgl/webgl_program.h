@@ -17,10 +17,12 @@
 #define ROSENRENDER_ROSEN_WEBGL_PROGRAM
 
 #include "../../../common/napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLProgram final : public NExporter {
+
+class WebGLProgram final : public NExporter, WebGLObject {
 public:
     inline static const std::string className = "WebGLProgram";
 
@@ -29,24 +31,28 @@ public:
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLProgram **instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLProgram>(env, instance);
+    }
 
-    void SetProgramId(int programId)
+    void SetProgramId(uint32_t programId)
     {
         m_programId = programId;
     }
 
-    int GetProgramId() const
+    uint32_t GetProgramId() const
     {
         return m_programId;
     }
 
     explicit WebGLProgram() : m_programId(0) {};
 
-    WebGLProgram(napi_env env, napi_value exports) : NExporter(env, exports), m_programId(0) {};
+    WebGLProgram(napi_env env, napi_value exports);
 
-    ~WebGLProgram() {};
+    ~WebGLProgram();
 private:
-    int m_programId;
+    uint32_t m_programId;
 };
 } // namespace Rosen
 } // namespace OHOS

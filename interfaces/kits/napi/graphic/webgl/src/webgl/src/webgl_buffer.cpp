@@ -70,5 +70,15 @@ string WebGLBuffer::GetClassName()
 {
     return WebGLBuffer::className;
 }
+
+napi_value WebGLBuffer::GetWebGLBufferObj(napi_env env, napi_value thisVar, uint32_t bufferId)
+{
+    WebGLObjectManager *maps = WebGLObjectManager::GetWebGLObjectManager(env,
+        thisVar, WebGLObjectManager::WEBGL_OBJECT_BUFFER);
+    if (maps != nullptr) {
+        return maps->GetObject(bufferId);
+    }
+    return nullptr;
+}
 } // namespace Rosen
 } // namespace OHOS

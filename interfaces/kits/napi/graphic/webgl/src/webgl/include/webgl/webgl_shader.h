@@ -17,10 +17,11 @@
 #define ROSENRENDER_ROSEN_WEBGL_SHADER
 
 #include "../../../common/napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLShader final : public NExporter {
+class WebGLShader final : public NExporter, WebGLObject {
 public:
     inline static const std::string className = "WebGLShader";
 
@@ -29,15 +30,29 @@ public:
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLShader **instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLShader>(env, instance);
+    }
 
-    void SetShaderId(int shaderId)
+    void SetShaderId(uint32_t shaderId)
     {
         m_shaderId = shaderId;
     }
 
-    int GetShaderId() const
+    uint32_t GetShaderId() const
     {
         return m_shaderId;
+    }
+
+    void SetShaderRes(const std::string &res)
+    {
+        m_res = std::move(res);
+    }
+
+    const std::string & GetShaderRes() const
+    {
+        return m_res;
     }
 
     explicit WebGLShader() : m_shaderId(0) {};
@@ -46,7 +61,8 @@ public:
 
     ~WebGLShader() {};
 private:
-    int m_shaderId;
+    std::string m_res = {};
+    uint32_t m_shaderId;
 };
 } // namespace Rosen
 } // namespace OHOS

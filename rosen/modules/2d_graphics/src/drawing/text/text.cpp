@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "text/text.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {}

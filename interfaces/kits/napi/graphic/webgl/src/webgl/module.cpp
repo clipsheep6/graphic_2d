@@ -71,6 +71,8 @@ static napi_value Export(napi_env env, napi_value exports)
     }
     string str = strRev.get();
 
+    LOGI("WebGL Export idStr %{public}s  %{public}s", idStr.c_str(), str.c_str());
+
     vector<string> vec;
     Util::SplitString(str, vec, ",");
     if (vec.size() == 0) {
@@ -86,24 +88,28 @@ static napi_value Export(napi_env env, napi_value exports)
         auto it = webgl2Objects.find(idStr);
         if (it == webgl2Objects.end()) {
             webGl2RenderingContext = new WebGL2RenderingContext(env, exports);
+            webGl2RenderingContext->CreateWebGLObjectManager(env);
             webgl2Objects.insert({idStr, webGl2RenderingContext});
             webGl2RenderingContext->mEGLSurface = EglManager::GetInstance().CreateSurface(
                 webGl2RenderingContext->mEglWindow);
         } else {
             webGl2RenderingContext = reinterpret_cast<WebGL2RenderingContext *>(it->second);
         }
+        if (webGl2RenderingContext->mEGLSurface == nullptr) {
+            webGl2RenderingContext->mEGLSurface =
+                EglManager::GetInstance().CreateSurface(webGl2RenderingContext->mEglWindow);
+        }
         if (!webGl2RenderingContext->Export(env, exports)) {
             return nullptr;
         }
     } else if (webgl1Str == "webgl") {
-        bool newCreate = false;
         auto& webgl1Objects = ObjectManager::GetInstance().GetWebgl1ObjectMap();
         WebGLRenderingContext *webGlRenderingContext = nullptr;
         auto it = webgl1Objects.find(idStr);
         if (it == webgl1Objects.end()) {
             webGlRenderingContext = new WebGLRenderingContext(env, exports);
+            webGlRenderingContext->CreateWebGLObjectManager(env);
             webgl1Objects.insert({idStr, webGlRenderingContext});
-            newCreate = true;
         } else {
             webGlRenderingContext = reinterpret_cast<WebGLRenderingContext *>(it->second);
         }
@@ -116,7 +122,7 @@ static napi_value Export(napi_env env, napi_value exports)
             webGlRenderingContext->webGlContextAttributes = webGlContextAttributes;
             webGlContextAttributes = nullptr;
         }
-        if (newCreate) {
+        if (webGlRenderingContext->mEGLSurface == nullptr) {
             webGlRenderingContext->mEGLSurface =
                 EglManager::GetInstance().CreateSurface(webGlRenderingContext->mEglWindow);
         }

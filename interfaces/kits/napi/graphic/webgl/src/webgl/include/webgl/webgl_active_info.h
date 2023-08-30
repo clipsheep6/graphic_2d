@@ -21,12 +21,13 @@
 #include <GLES2/gl2ext.h>
 
 #include "../../../common/napi/n_exporter.h"
+#include "webgl_object.h"
 
 #define WEBGL_ACTIVE_INFO_NAME_MAX_LENGTH 128
 
 namespace OHOS {
 namespace Rosen {
-class WebGLActiveInfo final : public NExporter {
+class WebGLActiveInfo final : public NExporter, WebGLObject {
 public:
     inline static const std::string className = "WebGLActiveInfo";
 
@@ -35,6 +36,14 @@ public:
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static WebGLActiveInfo *GetWebGLActiveInfo(napi_env env, napi_callback_info info);
+    static napi_value GetActiveName(napi_env env, napi_callback_info info);
+    static napi_value GetActiveSize(napi_env env, napi_callback_info info);
+    static napi_value GetActiveType(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLActiveInfo **instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLActiveInfo>(env, instance);
+    }
 
     void SetActiveName(GLchar* activename)
     {
@@ -49,6 +58,21 @@ public:
     void SetActiveType(int activetype)
     {
         m_type = activetype;
+    }
+
+    std::string GetActiveName()
+    {
+        return m_name;
+    }
+
+    int GetActiveSize()
+    {
+        return m_size;
+    }
+
+    int GetActiveType()
+    {
+        return m_type;
     }
 
     explicit WebGLActiveInfo() : m_size(0), m_type(0) {};

@@ -70,5 +70,10 @@ string WebGLFramebuffer::GetClassName()
 {
     return WebGLFramebuffer::className;
 }
+
+NVal WebGLFramebuffer::CreateObjectInstance(napi_env env, WebGLFramebuffer **instance)
+{
+    return WebGLObject::CreateObjectInstance<WebGLFramebuffer>(env, instance);
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -567,6 +567,9 @@ public:
     static napi_value VertexAttrib4fv(napi_env env, napi_callback_info info);
 
     static napi_value GetVertexAttrib(napi_env env, napi_callback_info info);
+
+    static napi_value GetFramebufferAttachmentObjName(
+        napi_env env, napi_value thisVar, GLenum target, GLenum attachment, GLenum pname);
 };
 } // namespace Rosen
 } // namespace OHOS

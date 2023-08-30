@@ -21,6 +21,7 @@
 #include <EGL/eglext.h>
 #include "../canvas_render_context_base.h"
 #include "webgl_context_attributes.h"
+#include "../webgl/webgl_object.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,13 +29,17 @@ extern "C" {
 
 namespace OHOS {
 namespace Rosen {
-class WebGLRenderingContextBasicBase : public OHOS::Ace::CanvasRenderContextBase {
+class WebGLRenderingContextBasicBase : public WebGLObjectContext, OHOS::Ace::CanvasRenderContextBase {
 public:
     static WebGLRenderingContextBasicBase *instance;
 
     WebGLRenderingContextBasicBase() {};
 
-    virtual ~WebGLRenderingContextBasicBase() {};
+    virtual ~WebGLRenderingContextBasicBase() {
+        if (webGlContextAttributes != nullptr) {
+            delete webGlContextAttributes;
+        }
+    };
 
     static WebGLRenderingContextBasicBase *GetContext(std::string id);
 
@@ -58,6 +63,7 @@ public:
 
     void SetUpdateCallback(std::function<void()>) override;
 
+    napi_value GetContextInstance(napi_env env, std::string className, napi_callback constructor, napi_finalize finalize_cb);
 public:
     GLuint frameBufferId = 0;
     GLuint textureId = 0;
@@ -76,6 +82,7 @@ public:
     int mBitMapWidth = 0;
     int mBitMapHeight = 0;
     std::function<void()> mUpdateCallback;
+    napi_ref mContextRef = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

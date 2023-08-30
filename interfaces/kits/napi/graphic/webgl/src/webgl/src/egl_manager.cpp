@@ -83,6 +83,9 @@ EGLSurface EglManager::CreateSurface(NativeWindow* window)
         };
         eglSurface = eglCreatePbufferSurface(mEGLDisplay, mEGLConfig, surfaceAttributes);
     }
+    if (eglSurface == NULL) {
+        LOGE("EglManager CreateSurface eglSurface = null error %{public}d", eglGetError());
+    }
     return eglSurface;
 }
 
@@ -99,8 +102,9 @@ void EglManager::Init()
     }
 
     mEGLDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    int error = eglGetError();
     if (mEGLDisplay == EGL_NO_DISPLAY) {
-        LOGE("EglManager Init unable to get EGL display.\n");
+        LOGE("EglManager Init unable to get EGL display error %{public}d.\n", error);
         return;
     }
 
@@ -150,7 +154,7 @@ void EglManager::Init()
         EGL_NONE
     };
     mEGLContext = eglCreateContext(mEGLDisplay, mEGLConfig, nullptr, attrib3List);
-    int error = eglGetError();
+    error = eglGetError();
     if (error == EGL_SUCCESS) {
         LOGI("EglManager Init Create mEGLContext ok");
     } else {

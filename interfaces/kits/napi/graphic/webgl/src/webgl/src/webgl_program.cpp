@@ -28,6 +28,7 @@
 #include "../../common/napi/n_class.h"       // for NClass
 #include "../../common/napi/n_func_arg.h"    // for NFuncArg, NARG_CNT, ZERO
 #include "common/napi/n_val.h"               // for NVal
+#include "../include/util/log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -41,16 +42,31 @@ napi_value WebGLProgram::Constructor(napi_env env, napi_callback_info info)
     }
 
     unique_ptr<WebGLProgram> webGlProgram = make_unique<WebGLProgram>();
+    LOGE("WebGLProgram::Constructor %{public}p", webGlProgram.get());
+    /*
     if (!NClass::SetEntityFor<WebGLProgram>(env, funcArg.GetThisVar(), move(webGlProgram))) {
         return nullptr;
     }
+    */
+    napi_wrap(
+        env,
+        funcArg.GetThisVar(),
+        webGlProgram.get(),
+        [](napi_env env, void *data, void *hint) {
+            auto entity = static_cast<WebGLProgram *>(data);
+            LOGE("WebGLProgram:: delete %{public}p", entity);
+            delete entity;
+        },
+        nullptr,
+        nullptr);
+    webGlProgram.release();
     return funcArg.GetThisVar();
 }
 
 bool WebGLProgram::Export(napi_env env, napi_value exports)
 {
     vector<napi_property_descriptor> props = {};
-
+    LOGE("WebGLProgram::Export %{public}p", this);
     string className = GetClassName();
     bool succ = false;
     napi_value clas = nullptr;
@@ -69,6 +85,15 @@ bool WebGLProgram::Export(napi_env env, napi_value exports)
 string WebGLProgram::GetClassName()
 {
     return WebGLProgram::className;
+}
+
+WebGLProgram::WebGLProgram(napi_env env, napi_value exports) : NExporter(env, exports), m_programId(0)
+{
+    LOGE("WebGLProgram::WebGLProgram %{public}p", this);
+};
+
+WebGLProgram::~WebGLProgram() {
+    LOGE("~WebGLProgram::WebGLProgram %{public}p %{public}u", this, m_programId);
 }
 } // namespace Rosen
 } // namespace OHOS

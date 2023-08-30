@@ -16,9 +16,8 @@
 #ifndef WEBGL_SHADER_PRECISION_FORMAT_H_OBJECT_SOURCE_H
 #define WEBGL_SHADER_PRECISION_FORMAT_H_OBJECT_SOURCE_H
 
-
 #include <map>
-#include "../context/webgl_rendering_context_basic_base.h"
+#include "../../../common/napi/n_exporter.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,24 +27,68 @@ namespace OHOS {
 namespace Rosen {
 class ObjectSource {
 public:
-    static ObjectSource& GetInstance()
-    {
-        static ObjectSource source;
-        return source;
+    ObjectSource(napi_env env) : env_(env) {}
+    ~ObjectSource() {
+        for (auto it = objects.begin(); it != objects.end(); it++) {
+            napi_delete_reference(env_, it->second);
+        }
+        objects.clear();
     }
 
-    ~ObjectSource() {}
-
-    std::map<int, std::string>& GetObjectMap()
+    bool AddObject(uint64_t key, napi_value obj)
     {
-        return objects;
+        if (objects.find(key) != objects.end()) {
+            return false;
+        }
+        napi_ref ref;
+        napi_status status = napi_create_reference(env_, obj, 1, &ref);
+        if (status != napi_ok) {
+            return false;
+        }
+        objects.insert({key, ref});
+        return true;
     }
 
+    napi_value GetObject(uint64_t key)
+    {
+        napi_value retNull = nullptr;
+        napi_get_null(env_, &retNull);
+        auto it = objects.find(key);
+        if (it == objects.end()) {
+            return retNull;
+        }
+        napi_value obj;
+        napi_status status = napi_get_reference_value(env_, it->second, &obj);
+        if (status != napi_ok) {
+            return retNull;
+        }
+        return obj;
+    }
+
+    void DeleteObject(uint64_t key)
+    {
+        auto it = objects.find(key);
+        if (it == objects.end()) {
+            return;
+        }
+        napi_delete_reference(env_, it->second);
+        objects.erase(it);
+    }
+
+    enum {
+        WEBGL_OBJECT_PROGRAM = 0,
+        WEBGL_OBJECT_SHADER,
+        WEBGL_OBJECT_BUFFER,
+        WEBGL_OBJECT_FRAME_BUFFER,
+        WEBGL_OBJECT_RENDER_BUFFER,
+        WEBGL_OBJECT_TEXTURE,
+        WEBGL_OBJECT_MAX
+    };
 private:
-    ObjectSource() = default;
+    napi_env env_;
     ObjectSource(const ObjectSource&) = delete;
     ObjectSource& operator=(const ObjectSource&) = delete;
-    std::map<int, std::string> objects;
+    std::map<uint64_t, napi_ref> objects;
 };
 } // namespace Rosen
 } // namespace OHOS

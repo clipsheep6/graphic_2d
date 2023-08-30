@@ -19,6 +19,7 @@
 #include "webgl_rendering_context_base.h"
 #include "webgl_rendering_context_overloads.h"
 #include "../../../common/napi/n_exporter.h"
+#include "../util/object_source.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -31,7 +32,7 @@ public:
 
     std::string GetClassName() override;
 
-    WebGLRenderingContext(napi_env env, napi_value exports) : NExporter(env, exports) {};
+    WebGLRenderingContext(napi_env env, napi_value exports);
 
     explicit WebGLRenderingContext() {};
 

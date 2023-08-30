@@ -44,6 +44,7 @@ WebGLRenderingContextBasicBase *WebGLRenderingContextBasicBase::GetContext(strin
 
 void WebGLRenderingContextBasicBase::SetEglWindow(void *window)
 {
+    LOGI("WebGLRenderingContextBasicBase::SetEglWindow.\n");
     mEglWindow = reinterpret_cast<NativeWindow *>(window);
 }
 
@@ -54,7 +55,11 @@ void WebGLRenderingContextBasicBase::Create(void *context)
 
 void WebGLRenderingContextBasicBase::Init()
 {
+    LOGI("WebGLRenderingContextBasicBase::Init.\n");
     EglManager::GetInstance().Init();
+    if (mEGLSurface == nullptr) {
+        mEGLSurface = EglManager::GetInstance().CreateSurface(mEglWindow);
+    }
 }
 
 void WebGLRenderingContextBasicBase::SetBitMapPtr(char *bitMapPtr, int bitMapWidth, int bitMapHeight)
@@ -100,6 +105,34 @@ void WebGLRenderingContextBasicBase::Update()
     }
 }
 
+napi_value WebGLRenderingContextBasicBase::GetContextInstance(napi_env env,
+    std::string className, napi_callback constructor, napi_finalize finalize_cb)
+{
+    napi_value instanceValue = nullptr;
+    napi_status status;
+    if (mContextRef == nullptr) {
+        napi_value contextClass = nullptr;
+        napi_define_class(env, className.c_str(), NAPI_AUTO_LENGTH, constructor, nullptr, 0, nullptr, &contextClass);
+        status = napi_new_instance(env, contextClass, 0, nullptr, &instanceValue);
+        if (status != napi_ok) {
+            return nullptr;
+        }
+        status = napi_wrap(env, instanceValue, static_cast<void*>(this), finalize_cb, nullptr, nullptr);
+        if (status != napi_ok) {
+            return nullptr;
+        }
+        status = napi_create_reference(env, instanceValue, 1, &mContextRef);
+        if (status != napi_ok) {
+            return nullptr;
+        }
+    } else {
+        status = napi_get_reference_value(env, mContextRef, &instanceValue);
+        if (status != napi_ok) {
+            return nullptr;
+        }
+    }
+    return instanceValue;
+}
 void WebGLRenderingContextBasicBase::Detach() {}
 } // namespace Rosen
 } // namespace OHOS

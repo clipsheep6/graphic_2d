@@ -17,6 +17,9 @@
 
 #include <sstream>
 #include <string>
+#include "securec.h"
+#include "../../webgl/include/util/log.h"
+#include "n_class.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -103,6 +106,13 @@ tuple<bool, bool> NVal::IsTypeArray() const
     return make_tuple(status == napi_ok, res);
 }
 
+bool NVal::IsDataView() const
+{
+    bool res = false;
+    napi_status status = napi_is_dataview(env_, val_, &res);
+    return ((status == napi_ok) && res);
+}
+
 tuple<bool, bool> NVal::ToBool() const
 {
     bool flag = false;
@@ -124,11 +134,25 @@ tuple<bool, int32_t> NVal::ToInt32() const
     return make_tuple(status == napi_ok, res);
 }
 
+tuple<bool, uint32_t> NVal::ToUint32() const
+{
+    uint32_t res = 0;
+    napi_status status = napi_get_value_uint32(env_, val_, &res);
+    return make_tuple(status == napi_ok, res);
+}
+
 tuple<bool, int64_t> NVal::ToInt64() const
 {
     int64_t res = 0;
     napi_status status = napi_get_value_int64(env_, val_, &res);
     return make_tuple(status == napi_ok, res);
+}
+
+tuple<bool, GLenum> NVal::ToGLenum() const
+{
+    int64_t res = 0;
+    napi_status status = napi_get_value_int64(env_, val_, &res);
+    return make_tuple(status == napi_ok, static_cast<GLenum>(res));
 }
 
 tuple<bool, void *, size_t> NVal::ToArraybuffer() const
@@ -180,9 +204,64 @@ bool NVal::HasProp(string propName) const
     if (!env_ || !val_ || !TypeIs(napi_object)) {
         return false;
     }
-        
+
     napi_status status = napi_has_named_property(env_, val_, propName.c_str(), &res);
     return (status == napi_ok) && res;
+}
+
+std::tuple<bool, float *, size_t> NVal::ToFloatBuffer() const
+{
+    bool isArray = false;
+    float *vertexAttrib = nullptr;
+    napi_status status = napi_is_array(env_, val_, &isArray);
+    if (isArray) {     // []
+        uint32_t length;
+        napi_status lengthStatus = napi_get_array_length(env_, val_, &length);
+        if (lengthStatus != napi_ok) {
+            make_tuple(false, nullptr, 0);
+        }
+        LOGI("WebGL ToFloatBuffer length %{public}u ", length);
+        vertexAttrib = new float[length];
+        uint32_t i;
+        for (i = 0; i < length; i++) {
+            napi_value element;
+            napi_status eleStatus = napi_get_element(env_, val_, i, &element);
+            if (eleStatus != napi_ok) {
+                delete vertexAttrib;
+                make_tuple(false, nullptr, 0);
+            }
+            double elm;
+            napi_status doubleStatus = napi_get_value_double(env_, element, &elm);
+            if (doubleStatus != napi_ok) {
+                delete vertexAttrib;
+                make_tuple(false, nullptr, 0);
+            }
+            vertexAttrib[i] = elm;
+        }
+        return make_tuple(true, vertexAttrib, static_cast<size_t>(length));
+    }
+    status = napi_is_typedarray(env_, val_, &isArray);
+    if (status || !isArray) {
+        return make_tuple(false, nullptr, 0);
+    }
+
+    void *data = nullptr;
+    size_t length;
+    napi_typedarray_type type;
+    napi_value in_array_buffer = nullptr;
+    size_t byte_offset;
+    status = napi_get_typedarray_info(env_, val_, &type, &length, (void **) &data, &in_array_buffer, &byte_offset);
+    if (type != napi_float32_array) {
+        return make_tuple(false, nullptr, 0);
+    }
+    LOGI("WebGL ToFloatBuffer %{public}zu byte_offset %{public}zu", length, byte_offset);
+
+    vertexAttrib = new float[length];
+    errno_t ret = memcpy_s(vertexAttrib, length, static_cast<uint8_t *>(data) + byte_offset, length);
+    if (ret != EOK) {
+        return make_tuple(false, nullptr, 0);
+    }
+    return make_tuple(true, vertexAttrib, length / sizeof(float));
 }
 
 NVal NVal::GetProp(string propName) const
@@ -281,6 +360,61 @@ NVal NVal::CreateDouble(napi_env env, double val)
     napi_value res = nullptr;
     napi_create_double(env, val, &res);
     return {env, res};
+}
+
+NVal NVal::CreateBoolArray(napi_env env, GLboolean *params, size_t count)
+{
+    napi_value res = nullptr;
+    napi_create_array_with_length(env, count, &res);
+    for (size_t i = 0; i < count; i++) {
+        napi_set_element(env, res, i, NVal::CreateBool(env, static_cast<bool>(params[i])).val_);
+    }
+    return {env, res};
+}
+
+NVal NVal::CreateBoolArrayForInt(napi_env env, GLint *data, size_t count)
+{
+    napi_value res = nullptr;
+    napi_create_array_with_length(env, count, &res);
+    for (size_t i = 0; i < count; i++) {
+        napi_set_element(env, res, i, NVal::CreateBool(env, static_cast<bool>(data[i])).val_);
+    }
+    return {env, res};
+}
+
+NVal NVal::CreateInt32ExternalArray(napi_env env, GLint *res, uint32_t count)
+{
+    uint32_t *data = (uint32_t *)malloc(count * sizeof(uint32_t));
+    if (data == nullptr) {
+        return {env, nullptr};
+    }
+    for (uint32_t i = 0; i < count; i++) {
+        data[i] = static_cast<uint32_t>(res[i]);
+    }
+    LOGI("CreateInt32ExternalArray count[%{public}u] %{public}p", count, data);
+    napi_value outputBuffer = nullptr;
+    napi_create_external_arraybuffer(env, data, sizeof(uint32_t) * count,
+        [](napi_env env, void *finalize_data, void *finalize_hint) {
+            LOGI("CreateInt32ExternalArray free %{public}p", finalize_data);
+            free(finalize_data);
+        },
+        nullptr, &outputBuffer);
+    napi_value outputArray = nullptr;
+    napi_create_typedarray(env, napi_int32_array, count, outputBuffer, 0, &outputArray);
+    return {env, outputArray};
+}
+
+NVal NVal::CreateFloatExternalArray(napi_env env, float *res, uint32_t count)
+{
+    LOGI("CreateFloatExternalArray count[%{public}u] ", count);
+    napi_value outputBuffer = nullptr;
+    napi_create_external_arraybuffer(env, res, sizeof(float) * count,
+        [](napi_env env, void *finalize_data, void *finalize_hint) {  },
+        nullptr, &outputBuffer);
+    napi_value outputArray = nullptr;
+    napi_create_typedarray(env, napi_float32_array, count, outputBuffer, 0, &outputArray);
+    LOGI("CreateFloatExternalArray count %{public}u end ", count);
+    return {env, outputArray};
 }
 
 napi_property_descriptor NVal::DeclareNapiProperty(const char *name, napi_value val)

@@ -17,10 +17,11 @@
 #define ROSENRENDER_ROSEN_WEBGL_TEXTRUE
 
 #include "../../../common/napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLTexture final : public NExporter {
+class WebGLTexture final : public NExporter, WebGLObject {
 public:
     inline static const std::string className = "WebGLTexture";
 
@@ -29,13 +30,17 @@ public:
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLTexture **instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLTexture>(env, instance);
+    }
 
-    void SetTexture(unsigned int texture)
+    void SetTexture(uint32_t texture)
     {
         m_texture = texture;
     }
 
-    unsigned int GetTexture() const
+    uint32_t GetTexture() const
     {
         return m_texture;
     }
@@ -45,8 +50,9 @@ public:
     WebGLTexture(napi_env env, napi_value exports) : NExporter(env, exports), m_texture(0) {};
 
     ~WebGLTexture() {};
+
 private:
-    unsigned int m_texture;
+    uint32_t m_texture;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -17,10 +17,11 @@
 #define ROSENRENDER_ROSEN_WEBGL_BUFFER
 
 #include "../../../common/napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLBuffer final : public NExporter {
+class WebGLBuffer final : public NExporter, WebGLObject {
 public:
     inline static const std::string className = "WebGLBuffer";
 
@@ -29,6 +30,10 @@ public:
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLBuffer **instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLBuffer>(env, instance);
+    }
 
     void SetBuffer(unsigned int buffer)
     {
@@ -53,6 +58,8 @@ public:
     WebGLBuffer(napi_env env, napi_value exports) : NExporter(env, exports), m_buffer(0), m_params(0.0) {};
 
     ~WebGLBuffer() {};
+
+    static napi_value GetWebGLBufferObj(napi_env env, napi_value thisVar, uint32_t bufferId);
 private:
     unsigned int m_buffer;
     float m_params;

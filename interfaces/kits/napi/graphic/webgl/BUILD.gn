@@ -47,6 +47,7 @@ ohos_source_set("webgl_src") {
 
     sources += [
       "src/webgl/module.cpp",
+      "src/webgl/src/buffer_data.cpp",
       "src/webgl/src/egl_manager.cpp",
       "src/webgl/src/util.cpp",
       "src/webgl/src/webgl2_rendering_context.cpp",
@@ -55,6 +56,8 @@ ohos_source_set("webgl_src") {
       "src/webgl/src/webgl_active_info.cpp",
       "src/webgl/src/webgl_buffer.cpp",
       "src/webgl/src/webgl_framebuffer.cpp",
+      "src/webgl/src/webgl_image_source.cpp",
+      "src/webgl/src/webgl_object.cpp",
       "src/webgl/src/webgl_program.cpp",
       "src/webgl/src/webgl_query.cpp",
       "src/webgl/src/webgl_renderbuffer.cpp",

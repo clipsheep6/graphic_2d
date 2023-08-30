@@ -291,7 +291,11 @@ ScaleOpItem::ScaleOpItem(float scaleX, float scaleY)
 
 void ScaleOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
+#ifndef USE_ROSEN_DRAWING
     canvas.scale(scaleX_, scaleY_);
+#else
+    canvas.Scale(scaleX_, scaleY_);
+#endif
 }
 
 TextBlobOpItem::TextBlobOpItem(const sk_sp<SkTextBlob> textBlob, float x, float y, const SkPaint& paint)

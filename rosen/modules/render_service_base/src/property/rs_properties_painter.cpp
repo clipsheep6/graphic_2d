@@ -2232,6 +2232,9 @@ void RSPropertiesPainter::DrawParticle(const RSProperties& properties, RSPaintFi
             }
             float opacity = particles[i]->GetOpacity();
             float scale = particles[i]->GetScale();
+            if (opacity <= 0.f || scale <= 0.f) {
+                continue;
+            }
             auto particleType = particles[i]->GetParticleType();
 #ifndef USE_ROSEN_DRAWING
             SkPaint paint;

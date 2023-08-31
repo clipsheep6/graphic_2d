@@ -25,11 +25,27 @@ RSRenderParticleEmitter::RSRenderParticleEmitter(std::shared_ptr<ParticleRenderP
 void RSRenderParticleEmitter::EmitParticle(int64_t deltaTime)
 {
     auto particleType = particleParams_->GetParticleType();
+    auto opacityUpdater = particleParams_->GetOpacityUpdator();
+    auto opacity = particleParams_->GetOpacity();
+    auto scaleUpdater = particleParams_->GetScaleUpdator();
+
+    opacity_ = GetRandomValue(particleParams->GetOpacityStartValue(), particleParams->GetOpacityEndValue());
+    scale_ = GetRandomValue(particleParams->GetScaleStartValue(), particleParams->GetScaleEndValue());
+
+    if (opacityUpdater == ParticleUpdator::NONE && opacity <= 0.f) {
+        return;
+    } else if (opacityUpdater == ParticleUpdator::RANDOM && opacity <= 0.f &&
+        particleParams->GetOpacityStartValue() < 0.f && particleParams->GetOpacityEndValue() < 0.f) {
+        return;
+    }
     if (particleType == ParticleType::IMAGES) {
         auto image = particleParams_->GetParticleImage();
         auto imageSize = particleParams_->GetImageSize();
         auto updater = particleParams_->GetScaleUpdator();
         if (image == nullptr || (updater == ParticleUpdator::NONE && (imageSize.x_ <= 0.f || imageSize.y_ <= 0.f))) {
+            return;
+        } else if (scaleUpdater == ParticleUpdator::RANDOM && (imageSize.x_ <= 0.f || imageSize.y_ <= 0.f) &&
+            particleParams->GetScaleStartValue() < 0.f && particleParams->GetScaleEndValue() < 0.f) {
             return;
         } else {
             auto pixelMap = image->GetPixelMap();
@@ -38,9 +54,22 @@ void RSRenderParticleEmitter::EmitParticle(int64_t deltaTime)
             }
         }
     }
+    if (particleType == ParticleType::POINTS) {
+        auto radius = particleParams_->GetRadius();
+        if (scaleUpdater == ParticleUpdator::NONE && radius <= 0.f) {
+            return;
+        } else if (scaleUpdater == ParticleUpdator::RANDOM && radius <= 0.f &&
+            particleParams->GetScaleStartValue() < 0.f && particleParams->GetScaleEndValue() < 0.f) {
+            return;
+        }
+    }
 
     auto emitRate = particleParams_->GetEmitRate();
     auto maxParticle = particleParams_->GetParticleCount();
+    auto lifeTime = particleParams_->GetParticleLifeTime();
+    if (maxParticle <= 0 || lifeTime == 0) {
+        return;
+    }
     float last = particleCount_;
     particleCount_ += static_cast<float>(emitRate * deltaTime) / NS_TO_S;
     spawnNum_ += particleCount_ - last;

@@ -336,6 +336,7 @@ public:
     // Other methods
     void InitProperty(std::shared_ptr<ParticleRenderParams> particleParams);
     bool IsAlive() const;
+    bool SetIsDead() const;
     static float GetRandomValue(float min, float max);
     Vector2f CalculateParticlePosition(const ShapeType& emitShape, const Vector2f& position, const Vector2f& emitSize);
     Color Lerp(const Color& start, const Color& end, float t);
@@ -364,6 +365,7 @@ private:
     ParticleType particleType_;
     int64_t activeTime_;
     int64_t lifeTime_;
+    bool dead_ = false;
 };
 
 class RSB_EXPORT RSRenderParticleVector {

@@ -173,6 +173,15 @@ std::unique_ptr<RectImpl> ImplFactory::CreateRectImpl()
     return EngineImplFactory::CreateRect();
 }
 
+std::unique_ptr<FontMetricsImpl> ImplFactory::CreateFontMetricsImpl()
+{
+    return EngineImplFactory::CreateFontMetrics();
+}
+
+std::unique_ptr<FontManagerImpl> ImplFactory::CreateFontManagerImpl()
+{
+    return EngineImplFactory::CreateFontManager();
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

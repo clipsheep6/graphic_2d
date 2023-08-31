@@ -46,7 +46,8 @@
 #include "impl_interface/text_blob_impl.h"
 #include "impl_interface/text_blob_builder_impl.h"
 #include "impl_interface/rect_impl.h"
-
+#include "impl_interface/font_metrics_impl.h"
+#include "impl_interface/font_manager_impl.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -85,6 +86,8 @@ public:
     static std::unique_ptr<TextBlobImpl> CreateTextBlob();
     static std::unique_ptr<TextBlobBuilderImpl> CreateTextBlobBuilder();
     static std::unique_ptr<RectImpl> CreateRect();
+    static std::unique_ptr<FontMetricsImpl> CreateFontMetrics();
+    static std::unique_ptr<FontManagerImpl> CreateFontManager();
 };
 } // namespace Drawing
 } // namespace Rosen

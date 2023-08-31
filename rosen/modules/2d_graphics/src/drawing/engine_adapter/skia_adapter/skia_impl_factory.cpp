@@ -45,7 +45,8 @@
 #include "skia_adapter/skia_text_blob.h"
 #include "skia_adapter/skia_text_blob_builder.h"
 #include "skia_adapter/skia_rect.h"
-
+#include "skia_adapter/skia_font_metrics.h"
+#include "skia_adapter/skia_font_manager.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -201,6 +202,16 @@ std::unique_ptr<TextBlobBuilderImpl> SkiaImplFactory::CreateTextBlobBuilder()
 std::unique_ptr<RectImpl> SkiaImplFactory::CreateRect()
 {
     return std::make_unique<SkiaRect>();
+}
+
+std::unique_ptr<FontMetricsImpl> SkiaImplFactory::CreateFontMetrics()
+{
+    return std::make_unique<SkiaFontMetrics>();
+}
+
+std::unique_ptr<FontManagerImpl> SkiaImplFactory::CreateFontManager()
+{
+    return std::make_unique<SkiaFontManager>();
 }
 } // namespace Drawing
 } // namespace Rosen

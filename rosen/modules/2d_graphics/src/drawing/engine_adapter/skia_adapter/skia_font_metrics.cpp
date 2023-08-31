@@ -12,9 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 #include "skia_font_metrics.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {

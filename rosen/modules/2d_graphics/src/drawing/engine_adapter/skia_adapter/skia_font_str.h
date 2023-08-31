@@ -13,20 +13,21 @@
  * limitations under the License.
  */
 
-#ifndef SKIA_FONT_STRING_H
-#define SKIA_FONT_STRING_H
+#ifndef SKIA_FONT_STR_H
+#define SKIA_FONT_STR_H
 
+#include <memory>
 #include <include/core/SkString.h>
 #include "impl_interface/font_string_impl.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class SkiaFontString : public FontStringImpl {
+class SkiaFontStr : public FontStringImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
-    SkiaFontString() noexcept {};
-    ~SkiaFontString() override {}
+    SkiaFontStr() noexcept {};
+    ~SkiaFontStr() override {}
     AdapterType GetType() const override
     {
         return AdapterType::SKIA_ADAPTER;

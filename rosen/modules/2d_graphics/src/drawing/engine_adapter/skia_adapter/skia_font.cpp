@@ -33,14 +33,14 @@ void SkiaFont::SetSize(scalar textSize)
     font_->setSize(textSize);
 }
 
-// scalar SkiaFont::GetMetrics(FontMetrics *metrics) const
-// {
-//     if (!metrics) {
-//         return 0;
-//     }
-//     auto skiaFontMetrics = metrics->GetImpl<SkiaFontMetrics>();
-//     return font_->getMetrics(skiaFontMetrics->GetFontMetrics().get());
-// }
+scalar SkiaFont::GetMetrics(FontMetrics *metrics) const
+{
+    if (!metrics) {
+        return 0;
+    }
+    auto skiaFontMetrics = metrics->GetImpl<SkiaFontMetrics>();
+    return font_->getMetrics(skiaFontMetrics->GetSkFontMetrics().get());
+}
 
 std::shared_ptr<SkFont> SkiaFont::GetFont() const
 {

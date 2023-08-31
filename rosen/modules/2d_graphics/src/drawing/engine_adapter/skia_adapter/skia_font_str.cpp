@@ -14,22 +14,21 @@
  */
 
 
-#include "skia_font_string.h"
-
+#include "skia_font_str.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-void SkiaFontString::SetString(const std::string &s)
+void SkiaFontStr::SetString(const std::string &s)
 {
     *skString_ = s.c_str();
 }
 
-void SkiaFontString::SetSkString(const std::shared_ptr<SkString> string)
+void SkiaFontStr::SetSkString(const std::shared_ptr<SkString> string)
 {
     skString_ = string;
 }
 
-std::string SkiaFontString::ToString() const
+std::string SkiaFontStr::ToString() const
 {
     if (!skString_) {
         return "";
@@ -37,7 +36,7 @@ std::string SkiaFontString::ToString() const
     return skString_->c_str();
 }
 
-SkString *SkiaFontString::GetString() const
+SkString *SkiaFontStr::GetString() const
 {
     return skString_.get();
 }

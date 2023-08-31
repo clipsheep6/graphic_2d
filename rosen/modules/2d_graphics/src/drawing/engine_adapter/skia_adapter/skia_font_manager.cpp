@@ -12,9 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
-#include "skia_font_manager.h"
+ 
+ #include "skia_font_manager.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {

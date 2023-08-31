@@ -16,7 +16,7 @@
 #ifndef FONT_MANAGER_IMPL_H
 #define FONT_MANAGER_IMPL_H
 
-#include "utils/scalar.h"
+
 #include "base_impl.h"
 #include "text/typeface.h"
 #include "text/font_style.h"

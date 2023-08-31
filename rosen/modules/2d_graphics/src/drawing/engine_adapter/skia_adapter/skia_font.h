@@ -16,10 +16,12 @@
 #ifndef SKIA_FONT_H
 #define SKIA_FONT_H
 
+#include <memory>
 #include <include/core/SkFont.h>
 #include "impl_interface/font_impl.h"
 #include "skia_typeface.h"
-
+#include "text/typeface.h"
+#include "skia_font_metrics.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -37,7 +39,7 @@ public:
 
     void SetSize(scalar textSize) override;
 
-    //scalar GetMetrics(FontMetrics *metrics) const override;
+    scalar GetMetrics(FontMetrics *metrics) const override;
 
     std::shared_ptr<SkFont> GetFont() const;
 

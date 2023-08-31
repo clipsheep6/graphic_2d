@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class DRAWING_API FontMetrics {
+class  FontMetrics {
 public:
     FontMetrics() noexcept;
     virtual ~FontMetrics() = default;

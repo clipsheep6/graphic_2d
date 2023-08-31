@@ -35,11 +35,11 @@
 #include "skia_adapter/skia_region.h"
 #include "skia_adapter/skia_shader_effect.h"
 #include "skia_adapter/skia_surface.h"
-//以下为新增头文件
+//锟斤拷锟斤拷为锟斤拷锟斤拷头锟侥硷拷
 #include "skia_adapter/skia_font.h"
 #include "skia_adapter/skia_typeface.h"
 #include "skia_adapter/skia_memory_stream.h"
-#include "skia_adapter/skia_font_string.h"
+#include "skia_adapter/skia_font_str.h"
 #include "skia_adapter/skia_font_style.h"
 #include "skia_adapter/skia_font_style_set.h"
 #include "skia_adapter/skia_text_blob.h"
@@ -158,7 +158,7 @@ std::unique_ptr<RegionImpl> SkiaImplFactory::CreateRegion()
 {
     return std::make_unique<SkiaRegion>();
 }
-//以下为字体单元新增代码
+//锟斤拷锟斤拷为锟斤拷锟藉单元锟斤拷锟斤拷锟斤拷锟斤拷
 std::unique_ptr<FontImpl> SkiaImplFactory::CreateFont()
 {
     return std::make_unique<SkiaFont>();
@@ -176,7 +176,7 @@ std::unique_ptr<MemoryStreamImpl> SkiaImplFactory::CreateMemoryStream()
 
 std::unique_ptr<FontStringImpl> SkiaImplFactory::CreateFontString()
 {
-    return std::make_unique<SkiaFontString>();
+    return std::make_unique<SkiaFontStr>();
 }
 
 std::unique_ptr<FontStyleImpl> SkiaImplFactory::CreateFontStyle()

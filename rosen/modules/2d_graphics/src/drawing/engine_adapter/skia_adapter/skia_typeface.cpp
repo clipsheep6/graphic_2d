@@ -15,7 +15,7 @@
 
 #include "skia_typeface.h"
 #include "skia_memory_stream.h"
-#include "skia_font_string.h"
+#include "skia_font_str.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -95,7 +95,7 @@ void SkiaTypeface::GetFamilyName(std::shared_ptr<FontString> name) const
     if (skTypeface_ == nullptr || name == nullptr) {
         return;
     }
-    auto skiaStringName = name->GetImpl<SkiaFontString>();
+    auto skiaStringName = name->GetImpl<SkiaFontStr>();
     skTypeface_->getFamilyName(skiaStringName->GetString());
 }
 

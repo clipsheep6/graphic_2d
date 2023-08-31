@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class DRAWING_API FontManager {
+class  FontManager {
 public:
     FontManager() noexcept;
     virtual ~FontManager() = default;

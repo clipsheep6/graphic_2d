@@ -16,7 +16,7 @@
 #include "skia_font_style_set.h"
 #include "skia_typeface.h"
 #include "skia_font_style.h"
-#include "skia_font_string.h"
+#include "skia_font_str.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -48,7 +48,7 @@ void SkiaFontStyleSet::GetStyle(const int index, std::shared_ptr<FontStyle> styl
         return;
     }
     auto skiastyle = style->GetImpl<SkiaFontStyle>();
-    auto skianame = style->GetImpl<SkiaFontString>();
+    auto skianame = style->GetImpl<SkiaFontStr>();
     skFontStyleSet_->getStyle(index, skiastyle->GetSkFontStyle().get(), skianame->GetString());
 }
 

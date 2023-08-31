@@ -33,10 +33,10 @@ void Font::SetSize(scalar textSize)
     fontImpl_->SetSize(textSize);
 }
 
-// float Font::GetMetrics(FontMetrics *metrics) const
-// {
-//     return fontImpl_->getMetrics(metrics);
-// }
+scalar Font::GetMetrics(FontMetrics *metrics) const
+{
+    return fontImpl_->GetMetrics(metrics);
+}
 
 } // namespace Drawing
 } // namespace Rosen

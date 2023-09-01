@@ -4048,9 +4048,9 @@ bool RSUniRenderVisitor::ParallelComposition(const std::shared_ptr<RSBaseRenderN
 {
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined (RS_ENABLE_GL)
     auto parallelRenderManager = RSParallelRenderManager::Instance();
-    doParallelComposition_ = true;
-    doParallelComposition_ = AdaptiveSubRenderThreadMode(doParallelComposition_) &&
-                             parallelRenderManager->GetParallelMode();
+    parallelRenderManager->SetParallelMode(true);
+    doParallelComposition_ = RSMainThread::Instance()->GetDoParallelComposition() &&
+        parallelRenderManager->GetParallelMode();
     if (doParallelComposition_) {
         parallelRenderManager->PackParallelCompositionTask(shared_from_this(), rootNode);
         parallelRenderManager->LoadBalanceAndNotify(TaskType::COMPOSITION_TASK);

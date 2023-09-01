@@ -195,6 +195,7 @@ public:
 
     void SubscribeAppState();
     void HandleOnTrim(Memory::SystemMemoryLevel level);
+    bool GetDoParallelComposition() const;
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
         std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;
@@ -394,6 +395,7 @@ private:
     // driven render
     bool hasDrivenNodeOnUniTree_ = false;
     bool hasDrivenNodeMarkRender_ = false;
+    bool doParallelComposition_ = false;
 
     std::shared_ptr<HgmFrameRateManager> frameRateMgr_ = nullptr;
     std::shared_ptr<FrameRateRangeData> frameRateRangeData_ = nullptr;

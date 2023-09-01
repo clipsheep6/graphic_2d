@@ -35,6 +35,7 @@ public:
     ~AnimationFinishCallback() override = default;
     // Execute the callback function immediately.
     void Execute();
+    void Reset();
 
     const bool isTimingSensitive_;
 };

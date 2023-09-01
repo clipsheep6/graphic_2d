@@ -54,7 +54,7 @@ public:
         const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve);
 
     // close implicit animation and return all animations
-    std::vector<std::shared_ptr<RSAnimation>> CloseImplicitAnimation();
+    std::vector<std::shared_ptr<RSAnimation>> CloseImplicitAnimation(bool skipCallbackIfNoAnimationCreated = false);
 
     void BeginImplicitKeyFrameAnimation(float fraction, const RSAnimationTimingCurve& timingCurve);
     void BeginImplicitKeyFrameAnimation(float fraction);
@@ -83,6 +83,8 @@ private:
     void PushImplicitParam(const std::shared_ptr<RSImplicitAnimationParam>& implicitParam);
     void PopImplicitParam();
     void CreateEmptyAnimation();
+
+    void InternalPopStacks();
 
     void SetPropertyValue(std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& value);
 

@@ -31,8 +31,7 @@ int RSImplicitAnimator::OpenImplicitAnimation(const RSAnimationTimingProtocol& t
     const RSAnimationTimingCurve& timingCurve, std::shared_ptr<AnimationFinishCallback>&& finishCallback,
     std::shared_ptr<AnimationRepeatCallback>&& repeatCallback)
 {
-    globalImplicitParams_.push({ timingProtocol, timingCurve, std::move(finishCallback),
-        std::move(repeatCallback) });
+    globalImplicitParams_.push({ timingProtocol, timingCurve, std::move(finishCallback), std::move(repeatCallback) });
     implicitAnimations_.push({});
     keyframeAnimations_.push({});
     switch (timingCurve.type_) {
@@ -86,7 +85,16 @@ int RSImplicitAnimator::OpenImplicitAnimation(
     }
 }
 
-std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnimation()
+void RSImplicitAnimator::InternalPopStacks()
+{
+    globalImplicitParams_.pop();
+    implicitAnimations_.pop();
+    keyframeAnimations_.pop();
+    EndImplicitAnimation();
+}
+
+std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnimation(
+    bool skipCallbackIfNoAnimationCreated)
 {
     if (globalImplicitParams_.empty() || implicitAnimations_.empty() || keyframeAnimations_.empty()) {
         ROSEN_LOGD("Failed to close implicit animation, need to open implicit animation firstly!");
@@ -98,25 +106,25 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
     auto& currentKeyframeAnimations = keyframeAnimations_.top();
     // if no implicit animation created
     if (currentAnimations.empty() && currentKeyframeAnimations.empty()) {
-        // If finish callback either 1. is null or 2. is referenced by any animation or implicitly parameters, we don't
-        // do anything.
+        // If finish callback either 1. is nullptr or 2. is referenced by any animation or implicitly parameters, we
+        // don't do anything.
         if (finishCallback.use_count() != 1) {
-            globalImplicitParams_.pop();
-            implicitAnimations_.pop();
-            keyframeAnimations_.pop();
-            EndImplicitAnimation();
+            InternalPopStacks();
             return {};
         }
-        // we are the only one who holds the finish callback, if the callback is NOT timing sensitive, we need to
+        // Avoid creating empty animation and avoid executing finish callback if it is not necessary.
+        if (skipCallbackIfNoAnimationCreated) {
+            finishCallback->Reset();
+            InternalPopStacks();
+            return {};
+        }
+        // We are the only one who holds the finish callback, if the callback is NOT timing sensitive, we need to
         // execute it asynchronously, in order to avoid timing issues.
         if (finishCallback->isTimingSensitive_ == false) {
             ROSEN_LOGD("RSImplicitAnimator::CloseImplicitAnimation, No implicit animations created, execute finish "
                        "callback asynchronously");
             RSUIDirector::PostTask([finishCallback]() { finishCallback->Execute(); });
-            globalImplicitParams_.pop();
-            implicitAnimations_.pop();
-            keyframeAnimations_.pop();
-            EndImplicitAnimation();
+            InternalPopStacks();
             return {};
         }
         // we are the only one who holds the finish callback, and the callback is timing sensitive, we need to create an
@@ -145,10 +153,7 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
         resultAnimations.emplace_back(animation);
     }
 
-    globalImplicitParams_.pop();
-    implicitAnimations_.pop();
-    keyframeAnimations_.pop();
-    EndImplicitAnimation();
+    InternalPopStacks();
     return resultAnimations;
 }
 

@@ -276,7 +276,7 @@ private:
             }
             if ((float)totalPixelNum) == 0) {
                 RS_LOGE("GetAverageColor failed, (float)totalPixelNum) is zero ");
-                return;
+                return ERROR;
             }
             uint32_t redMean = round(redSum / (float)totalPixelNum);
             uint32_t greenMean = round(greenSum / (float)totalPixelNum);

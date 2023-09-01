@@ -26,26 +26,28 @@ void RSRenderParticleEmitter::EmitParticle(int64_t deltaTime)
 {
     auto particleType = particleParams_->GetParticleType();
     auto opacityUpdater = particleParams_->GetOpacityUpdator();
-    auto opacity = particleParams_->GetOpacity();
     auto scaleUpdater = particleParams_->GetScaleUpdator();
-
-    opacity_ = GetRandomValue(particleParams->GetOpacityStartValue(), particleParams->GetOpacityEndValue());
-    scale_ = GetRandomValue(particleParams->GetScaleStartValue(), particleParams->GetScaleEndValue());
-
-    if (opacityUpdater == ParticleUpdator::NONE && opacity <= 0.f) {
+    if (opacityUpdater == ParticleUpdator::NONE && particleParams_->GetOpacityStartValue() <= 0.f &&
+        particleParams_->GetOpacityEndValue() <= 0.f) {
         return;
-    } else if (opacityUpdater == ParticleUpdator::RANDOM && opacity <= 0.f &&
-        particleParams->GetOpacityStartValue() < 0.f && particleParams->GetOpacityEndValue() < 0.f) {
+    } else if (opacityUpdater == ParticleUpdator::RANDOM &&
+        particleParams_->GetOpacityStartValue() <= 0.f && particleParams_->GetOpacityEndValue() <= 0.f &&
+        particleParams_->GetOpacityRandomStart() <= 0.f && particleParams_->GetOpacityRandomEnd() <= 0.f) {
         return;
     }
+    if (scaleUpdater == ParticleUpdator::NONE &&
+        particleParams_->GetScaleStartValue() <= 0.f && particleParams_->GetScaleEndValue() <= 0.f) {
+        return;
+    } else if (scaleUpdater == ParticleUpdator::RANDOM &&
+        particleParams_->GetScaleStartValue() <= 0.f && particleParams_->GetScaleEndValue() <= 0.f &&
+        particleParams_->GetScaleRandomStart() <= 0.f && particleParams_->GetScaleRandomEnd() <= 0.f) {
+        return;
+    }
+
     if (particleType == ParticleType::IMAGES) {
         auto image = particleParams_->GetParticleImage();
         auto imageSize = particleParams_->GetImageSize();
-        auto updater = particleParams_->GetScaleUpdator();
-        if (image == nullptr || (updater == ParticleUpdator::NONE && (imageSize.x_ <= 0.f || imageSize.y_ <= 0.f))) {
-            return;
-        } else if (scaleUpdater == ParticleUpdator::RANDOM && (imageSize.x_ <= 0.f || imageSize.y_ <= 0.f) &&
-            particleParams->GetScaleStartValue() < 0.f && particleParams->GetScaleEndValue() < 0.f) {
+        if (image == nullptr || ( imageSize.x_ <= 0.f || imageSize.y_ <= 0.f)) {
             return;
         } else {
             auto pixelMap = image->GetPixelMap();
@@ -55,11 +57,8 @@ void RSRenderParticleEmitter::EmitParticle(int64_t deltaTime)
         }
     }
     if (particleType == ParticleType::POINTS) {
-        auto radius = particleParams_->GetRadius();
-        if (scaleUpdater == ParticleUpdator::NONE && radius <= 0.f) {
-            return;
-        } else if (scaleUpdater == ParticleUpdator::RANDOM && radius <= 0.f &&
-            particleParams->GetScaleStartValue() < 0.f && particleParams->GetScaleEndValue() < 0.f) {
+        auto radius = particleParams_->GetParticleRadius();
+        if (radius <= 0.f) {
             return;
         }
     }

@@ -449,7 +449,7 @@ bool RSRenderParticle::IsAlive() const
     return activeTime_ < lifeTime_;
 }
 
-bool RSRenderParticle::SetIsDead() const
+void RSRenderParticle::SetIsDead()
 {
     dead_ = true;
 }

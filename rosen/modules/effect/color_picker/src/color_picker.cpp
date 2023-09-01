@@ -178,8 +178,7 @@ uint32_t ColorPicker::GetAverageColor(ColorManager::Color &color) const
         greenSum += featureColors_[i].second * ((featureColors_[i].first >> ARGB_G_SHIFT) & ARGB_MASK);
         blueSum += featureColors_[i].second * ((featureColors_[i].first >> ARGB_B_SHIFT) & ARGB_MASK);
     }
-    if ((float)totalPixelNum) == 0) {
-        RS_LOGE("ColorPicker::GetAverageColor failed, (float)totalPixelNum is zero ");
+    if (totalPixelNum == 0) {
         return ERR_EFFECT_INVALID_VALUE;
     }
     uint32_t redMean = round(redSum / (float)totalPixelNum);
@@ -237,7 +236,6 @@ HSV ColorPicker::RGB2HSV(uint32_t rgb) const
         h = 0.0;
     } else {
         if (delta == 0) {
-            RS_LOGE("ColorPicker::RGB2HSV failed, delta is zero");
             return hsv;
         }
         if (IsEquals(r, maxComponent) && g >= b) {

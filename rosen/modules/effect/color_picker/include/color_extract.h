@@ -274,7 +274,7 @@ private:
                 greenSum += colorPixelNum * QuantizedGreen(color);
                 blueSum += colorPixelNum * QuantizedBlue(color);
             }
-            if (totalPixelNum) == 0) {
+            if (totalPixelNum == 0) {
                 uint32_t error_color = 0;
                 return std::pair<error_color, error_color>;
             }

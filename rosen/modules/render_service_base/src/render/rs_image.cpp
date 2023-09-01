@@ -94,12 +94,18 @@ void RSImage::CanvasDrawImage(Drawing::Canvas& canvas, const Drawing::Rect& rect
 
 void RSImage::ApplyImageFit()
 {
+    if (scale_ == 0) {
+        return RS_LOGE("RSImage::ApplyImageFit failed, scale_ is zero ");
+    }
     const float srcW = srcRect_.width_ / scale_;
     const float srcH = srcRect_.height_ / scale_;
     const float frameW = frameRect_.width_;
     const float frameH = frameRect_.height_;
     float dstW = frameW;
     float dstH = frameH;
+    if (srcH == 0) {
+        return RS_LOGE("RSImage::ApplyImageFit failed, srcH is zero ");
+    }
     float ratio = srcW / srcH;
     switch (imageFit_) {
         case ImageFit::TOP_LEFT:

@@ -35,7 +35,7 @@
 #include "skia_adapter/skia_region.h"
 #include "skia_adapter/skia_shader_effect.h"
 #include "skia_adapter/skia_surface.h"
-//����Ϊ����ͷ�ļ�
+
 #include "skia_adapter/skia_font.h"
 #include "skia_adapter/skia_typeface.h"
 #include "skia_adapter/skia_memory_stream.h"
@@ -44,7 +44,6 @@
 #include "skia_adapter/skia_font_style_set.h"
 #include "skia_adapter/skia_text_blob.h"
 #include "skia_adapter/skia_text_blob_builder.h"
-#include "skia_adapter/skia_rect.h"
 #include "skia_adapter/skia_font_metrics.h"
 #include "skia_adapter/skia_font_manager.h"
 namespace OHOS {
@@ -158,7 +157,7 @@ std::unique_ptr<RegionImpl> SkiaImplFactory::CreateRegion()
 {
     return std::make_unique<SkiaRegion>();
 }
-//����Ϊ���嵥Ԫ��������
+
 std::unique_ptr<FontImpl> SkiaImplFactory::CreateFont()
 {
     return std::make_unique<SkiaFont>();
@@ -197,11 +196,6 @@ std::unique_ptr<TextBlobImpl> SkiaImplFactory::CreateTextBlob()
 std::unique_ptr<TextBlobBuilderImpl> SkiaImplFactory::CreateTextBlobBuilder()
 {
     return std::make_unique<SkiaTextBlobBuilder>();
-}
-
-std::unique_ptr<RectImpl> SkiaImplFactory::CreateRect()
-{
-    return std::make_unique<SkiaRect>();
 }
 
 std::unique_ptr<FontMetricsImpl> SkiaImplFactory::CreateFontMetrics()

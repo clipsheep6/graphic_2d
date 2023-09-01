@@ -18,6 +18,7 @@
 
 #include "utils/scalar.h"
 #include "base_impl.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {

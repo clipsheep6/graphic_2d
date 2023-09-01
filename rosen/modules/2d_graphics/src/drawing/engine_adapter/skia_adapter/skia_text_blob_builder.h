@@ -41,7 +41,7 @@ public:
      * @param The count The number of glyphs
      * @return Writable glyph buffer and SkPoint buffer
      */
-    std::shared_ptr<RunBuffer> AllocRunPos(const Font &font, int count) override;
+    std::shared_ptr<RunBuffer> AllocRunPos(const Font& font, int count) override;
 
     /*
      * @brief Create TexgineTextBlob

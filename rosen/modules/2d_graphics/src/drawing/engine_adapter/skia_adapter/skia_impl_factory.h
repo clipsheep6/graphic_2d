@@ -36,7 +36,6 @@
 #include "impl_interface/region_impl.h"
 #include "impl_interface/shader_effect_impl.h"
 #include "impl_interface/surface_impl.h"
-//以下为字体单元新增头文件
 #include "impl_interface/font_impl.h"
 #include "impl_interface/typeface_impl.h"
 #include "impl_interface/memory_stream_impl.h"
@@ -45,7 +44,6 @@
 #include "impl_interface/font_style_set_impl.h"
 #include "impl_interface/text_blob_impl.h"
 #include "impl_interface/text_blob_builder_impl.h"
-#include "impl_interface/rect_impl.h"
 #include "impl_interface/font_metrics_impl.h"
 #include "impl_interface/font_manager_impl.h"
 namespace OHOS {
@@ -76,7 +74,6 @@ public:
     static std::unique_ptr<Matrix44Impl> CreateMatrix44();
     static std::unique_ptr<CameraImpl> CreateCamera();
     static std::unique_ptr<RegionImpl> CreateRegion();
-    //以下为字体单元新增代码
     static std::unique_ptr<FontImpl> CreateFont();
     static std::unique_ptr<TypefaceImpl> CreateFontTypeface();
     static std::unique_ptr<MemoryStreamImpl> CreateMemoryStream();
@@ -85,7 +82,6 @@ public:
     static std::unique_ptr<FontStyleSetImpl> CreateFontStyleSet();
     static std::unique_ptr<TextBlobImpl> CreateTextBlob();
     static std::unique_ptr<TextBlobBuilderImpl> CreateTextBlobBuilder();
-    static std::unique_ptr<RectImpl> CreateRect();
     static std::unique_ptr<FontMetricsImpl> CreateFontMetrics();
     static std::unique_ptr<FontManagerImpl> CreateFontManager();
 };

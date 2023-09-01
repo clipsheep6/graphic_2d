@@ -48,7 +48,7 @@ public:
     void SetTypeface(const std::shared_ptr<Typeface> tf);
 
     void SetSize(scalar textSize);
-    
+
     scalar GetMetrics(FontMetrics *metrics) const;
 
 private:

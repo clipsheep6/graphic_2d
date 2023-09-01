@@ -15,7 +15,8 @@
 
 #ifndef FONT_MANAGER_H
 #define FONT_MANAGER_H
-#include "drawing/engine_adapter/impl_interface/font_manager_impl.h"
+
+#include "impl_interface/font_manager_impl.h"
 
 namespace OHOS {
 namespace Rosen {

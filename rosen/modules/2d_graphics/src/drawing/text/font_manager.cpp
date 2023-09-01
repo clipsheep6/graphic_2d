@@ -40,7 +40,7 @@ std::shared_ptr<FontStyleSet> FontManager::MatchFamily(const std::string &family
 
 void FontManager::InitFontManagerImpl(std::shared_ptr<FontManagerImpl> replaceFontManagerImpl)
 {
-    fontManagerImpl_ = replaceFontManagerImpl;
+    fontManagerImpl_ = move(replaceFontManagerImpl);
 }
 } // namespace Drawing
 } // namespace Rosen

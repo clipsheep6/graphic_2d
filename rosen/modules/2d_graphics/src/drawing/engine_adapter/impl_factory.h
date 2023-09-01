@@ -45,9 +45,9 @@
 #include "impl_interface/font_style_set_impl.h"
 #include "impl_interface/text_blob_impl.h"
 #include "impl_interface/text_blob_builder_impl.h"
-#include "impl_interface/rect_impl.h"
 #include "impl_interface/font_metrics_impl.h"
 #include "impl_interface/font_manager_impl.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -76,7 +76,6 @@ public:
     static std::unique_ptr<Matrix44Impl> CreateMatrix44Impl();
     static std::unique_ptr<CameraImpl> CreateCameraImpl();
     static std::unique_ptr<RegionImpl> CreateRegionImpl();
-    //以下为新增字体单元代码 Cq
     static std::unique_ptr<FontImpl> CreateFontImpl();
     static std::unique_ptr<TypefaceImpl> CreateTypefaceImpl();
     static std::unique_ptr<MemoryStreamImpl> CreateMemoryStreamImpl();
@@ -85,7 +84,6 @@ public:
     static std::unique_ptr<FontStyleSetImpl> CreateFontStyleSetImpl();
     static std::unique_ptr<TextBlobImpl> CreateTextBlobImpl();
     static std::unique_ptr<TextBlobBuilderImpl> CreateTextBlobBuilderImpl();
-    static std::unique_ptr<RectImpl> CreateRectImpl();
     static std::unique_ptr<FontMetricsImpl> CreateFontMetricsImpl();
     static std::unique_ptr<FontManagerImpl> CreateFontManagerImpl();
 };

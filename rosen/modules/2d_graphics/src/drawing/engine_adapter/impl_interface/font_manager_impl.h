@@ -16,11 +16,11 @@
 #ifndef FONT_MANAGER_IMPL_H
 #define FONT_MANAGER_IMPL_H
 
-
 #include "base_impl.h"
 #include "text/typeface.h"
 #include "text/font_style.h"
 #include "text/font_style_set.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -39,7 +39,6 @@ public:
 
     virtual std::shared_ptr<Typeface> MatchFamilyStyleCharacter(const std::string &familyName,
         const FontStyle &style, const char* bcp47[], int bcp47Count, int32_t character) = 0;
-
     virtual std::shared_ptr<FontStyleSet> MatchFamily(const std::string &familyName) = 0;
 };
 } // namespace Drawing

@@ -19,6 +19,7 @@
 #include "utils/scalar.h"
 #include "base_impl.h"
 #include "text/font_metrics.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -38,7 +39,7 @@ public:
     virtual void SetTypeface(const std::shared_ptr<Typeface> tf) = 0;
 
     virtual void SetSize(scalar textSize) = 0;
-    
+
     virtual scalar GetMetrics(FontMetrics *metrics) const = 0;
 
 };

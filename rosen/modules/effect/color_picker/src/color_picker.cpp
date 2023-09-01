@@ -238,7 +238,7 @@ HSV ColorPicker::RGB2HSV(uint32_t rgb) const
     } else {
         if (delta == 0) {
             RS_LOGE("ColorPicker::RGB2HSV failed, delta is zero");
-            return;
+            return hsv;
         }
         if (IsEquals(r, maxComponent) && g >= b) {
             h = 60 * (g - b) / delta + 0; // 60 is used to calculate color's hue, ranging between 0 and 360.

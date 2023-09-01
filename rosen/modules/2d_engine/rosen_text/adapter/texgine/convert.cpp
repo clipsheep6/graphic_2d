@@ -50,6 +50,7 @@ TextEngine::TypographyStyle Convert(const TypographyStyle &style)
             .heightOnly_ = style.lineStyleHeightOnly_,
             .fontSize_ = style.lineStyleFontSize_,
             .heightScale_ = style.lineStyleHeightScale_,
+        },
 #else
         .fontWeight = Convert(style.fontWeight),
         .fontStyle = Convert(style.fontStyle),
@@ -65,7 +66,6 @@ TextEngine::TypographyStyle Convert(const TypographyStyle &style)
         .align = Convert(style.textAlign),
         .direction = Convert(style.textDirection),
         .useLineStyle = style.useLineStyle,
-        .ellipsisModal = Convert(style.ellipsisModal),
         .lineStyle = {
             .only = style.lineStyleOnly,
             .fontWeight = Convert(style.lineStyleFontWeight),
@@ -74,8 +74,9 @@ TextEngine::TypographyStyle Convert(const TypographyStyle &style)
             .heightOnly = style.lineStyleHeightOnly,
             .fontSize = style.lineStyleFontSize,
             .heightScale = style.lineStyleHeightScale,
-#endif
         },
+        .ellipsisModal = Convert(style.ellipsisModal),
+#endif
     };
 #ifndef USE_GRAPHIC_TEXT_GINE
     if (style.lineStyleSpacingScale_ >= 0) {

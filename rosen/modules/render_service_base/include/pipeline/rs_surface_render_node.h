@@ -722,6 +722,9 @@ public:
 
     void SetNotifyRTBufferAvailable(bool isNotifyRTBufferAvailable);
 
+    void SetChildrenHasSharedTransition(bool flag);
+    bool GetChildrenHasSharedTransition() const;
+
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
@@ -821,6 +824,7 @@ private:
     bool isFilterCacheFullyCovered_ = false;
     bool isFilterCacheValid_ = false;
     bool isFilterCacheStatusChanged_ = false;
+    bool childrenHasSharedTransition_ = false;
     std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>>
         filterNodes_; // valid filter nodes within, including itself
     std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> drawingCacheNodes_;

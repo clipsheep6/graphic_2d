@@ -397,6 +397,8 @@ private:
     bool isSubNodeOfSurfaceInPrepare_ = false;
     bool isSubNodeOfSurfaceInProcess_ = false;
 
+    bool surfaceHasSharedTransitionChildren_ = false;
+
     uint32_t appWindowNum_ = 0;
 
     bool isParallel_ = false;

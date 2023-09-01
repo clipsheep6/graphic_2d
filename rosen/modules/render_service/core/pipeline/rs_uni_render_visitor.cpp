@@ -913,7 +913,11 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     node.UpdateChildrenOutOfRectFlag(false);
     if (node.ShouldPrepareSubnodes()) {
+        auto savedResult = surfaceHasSharedTransitionChildren_;
+        surfaceHasSharedTransitionChildren_ = false;
         PrepareChildren(node);
+        node.SetChildrenHasSharedTransition(surfaceHasSharedTransitionChildren_);
+        surfaceHasSharedTransitionChildren_ = savedResult;
     }
 #if defined(RS_ENABLE_PARALLEL_RENDER) && (defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK))
     rsParent = (logicParentNode_.lock());
@@ -1535,7 +1539,8 @@ void RSUniRenderVisitor::ProcessChildren(RSRenderNode& node)
         node.SetIsUsedBySubThread(true);
     }
     for (auto& child : node.GetSortedChildren(isSubThread_)) {
-        if (UNLIKELY(child->GetSharedTransitionParam().has_value()) && !ProcessSharedTransitionNode(*child)) {
+        if (UNLIKELY(surfaceHasSharedTransitionChildren_) && UNLIKELY(child->GetSharedTransitionParam().has_value()) &&
+            !ProcessSharedTransitionNode(*child)) {
             continue;
         }
         child->Process(shared_from_this());
@@ -3163,6 +3168,8 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     canvas_->ConcatMatrix(geoPtr->GetMatrix());
 #endif
     bool isSubNodeOfSurfaceInProcess = isSubNodeOfSurfaceInProcess_;
+    auto savedValue = surfaceHasSharedTransitionChildren_;
+    surfaceHasSharedTransitionChildren_ = node.GetChildrenHasSharedTransition();
     if (node.IsMainWindowType() || node.IsLeashWindow()) {
         isSubNodeOfSurfaceInProcess_ = true;
     }
@@ -3291,6 +3298,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
         node.ProcessRenderAfterChildren(*canvas_);
     }
+    surfaceHasSharedTransitionChildren_ = savedValue;
 
     RSPropertiesPainter::SetBgAntiAlias(bgAntiAliasState);
     if (node.IsAppWindow()) {
@@ -3986,6 +3994,8 @@ bool RSUniRenderVisitor::ProcessSharedTransitionNode(RSBaseRenderNode& node)
     // all sanity checks passed, add this node and render params (alpha and matrix) into unpairedTransitionNodes_.
     RenderParam value { node.shared_from_this(), canvas_->GetCanvasStatus() };
     unpairedTransitionNodes_.emplace(key, std::move(value));
+
+    surfaceHasSharedTransitionChildren_ = true;
 
     // skip processing the current node and all its children.
     return false;

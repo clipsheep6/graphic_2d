@@ -274,6 +274,10 @@ private:
                 greenSum += colorPixelNum * QuantizedGreen(color);
                 blueSum += colorPixelNum * QuantizedBlue(color);
             }
+            if ((float)totalPixelNum) == 0) {
+                RS_LOGE("GetAverageColor failed, (float)totalPixelNum) is zero ");
+                return;
+            }
             uint32_t redMean = round(redSum / (float)totalPixelNum);
             uint32_t greenMean = round(greenSum / (float)totalPixelNum);
             uint32_t blueMean = round(blueSum / (float)totalPixelNum);

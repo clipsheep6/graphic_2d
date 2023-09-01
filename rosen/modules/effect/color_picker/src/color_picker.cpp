@@ -180,7 +180,7 @@ uint32_t ColorPicker::GetAverageColor(ColorManager::Color &color) const
     }
     if ((float)totalPixelNum) == 0) {
         RS_LOGE("ColorPicker::GetAverageColor failed, (float)totalPixelNum is zero ");
-        return;
+        return ERR_EFFECT_INVALID_VALUE;
     }
     uint32_t redMean = round(redSum / (float)totalPixelNum);
     uint32_t greenMean = round(greenSum / (float)totalPixelNum);

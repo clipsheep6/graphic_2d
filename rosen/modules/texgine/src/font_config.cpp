@@ -46,8 +46,7 @@ FontConfig::FontConfig(const char* fname)
 char* FontConfig::GetFileData(const char* fname, int& size)
 {
 #ifdef BUILD_NON_SDK_VER
-    char realPath[PATH_MAX] = {0};
-    if (fname == nullptr || realpath(fname, realPath) == NULL) {
+    if (fname == nullptr) {
         LOGSO_FUNC_LINE(ERROR) << "path or realPath is NULL";
         return nullptr;
     }

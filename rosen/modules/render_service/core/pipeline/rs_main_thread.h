@@ -197,6 +197,7 @@ private:
     void ProcessCommand();
     void Animate(uint64_t timestamp);
     void ApplyModifiers();
+    void CleanProcessedActiveNodes();
     void ConsumeAndUpdateAllNodes();
     void CollectInfoForHardwareComposer();
     void CollectInfoForDrivenRender();

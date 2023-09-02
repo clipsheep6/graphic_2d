@@ -49,12 +49,12 @@ void RSRenderParticleEmitter::EmitParticle(int64_t deltaTime)
         auto imageSize = particleParams_->GetImageSize();
         if (image == nullptr || ( imageSize.x_ <= 0.f || imageSize.y_ <= 0.f)) {
             return;
-        } else {
+        }/* else {
             auto pixelMap = image->GetPixelMap();
             if (pixelMap == nullptr) {
                 return;
             }
-        }
+        }*/
     }
     if (particleType == ParticleType::POINTS) {
         auto radius = particleParams_->GetParticleRadius();

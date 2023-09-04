@@ -104,7 +104,7 @@ void RSImage::ApplyImageFit()
     const float frameH = frameRect_.height_;
     float dstW = frameW;
     float dstH = frameH;
-        if (srcH == 0) {
+    if (srcH == 0) {
         RS_LOGE("RSImage::ApplyImageFit failed, srcH is zero ");
         return;
     }

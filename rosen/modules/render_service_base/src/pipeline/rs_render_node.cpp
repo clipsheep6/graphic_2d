@@ -713,19 +713,22 @@ void RSRenderNode::UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager
     }
     auto& properties = GetRenderProperties();
     auto& manager = properties.GetFilterCacheManager(isForeground);
-    if (manager == nullptr || !manager->IsCacheValid()) {
+    if (manager == nullptr) {
+        return;
+    }
+    if (!manager->IsCacheValid()) {
         dirtyManager.ResetSubNodeFilterCacheValid();
         return;
     }
     auto& cachedImageRect = manager->GetCachedImageRegion();
-    if (IsDirty() || dirtyManager.HasIntersectionWithVisitedDirtyRect(cachedImageRect)) {
+    if (dirtyManager.HasIntersectionWithVisitedDirtyRect(cachedImageRect)) {
         manager->UpdateCacheStateWithDirtyRegion();
     }
     // record node's cache area if it has valid filter cache
-    if (manager->IsCacheValid() && ROSEN_EQ(GetGlobalAlpha(), 1.0f)) {
-        dirtyManager.UpdateCacheableFilterRect(cachedImageRect);
-    } else {
+    if (!manager->IsCacheValid()) {
         dirtyManager.ResetSubNodeFilterCacheValid();
+    } else if (ROSEN_EQ(GetGlobalAlpha(), 1.0f) && ROSEN_EQ(properties.GetCornerRadius().x_, 0.0f)) {
+        dirtyManager.UpdateCacheableFilterRect(cachedImageRect);
     }
 #endif
 }
@@ -937,6 +940,15 @@ bool RSRenderNode::ApplyModifiers()
     // execute hooks
     renderProperties_.OnApplyModifiers();
     OnApplyModifiers();
+
+    if (auto& manager = renderProperties_.GetFilterCacheManager(false);
+        manager != nullptr &&
+        (dirtyTypes_.count(RSModifierType::BACKGROUND_COLOR) || dirtyTypes_.count(RSModifierType::BG_IMAGE))) {
+        manager->UpdateCacheStateWithDirtyRegion();
+    }
+    if (auto& manager = renderProperties_.GetFilterCacheManager(true)) {
+        manager->UpdateCacheStateWithDirtyRegion();
+    }
 
     // update state
     dirtyTypes_.clear();
@@ -1222,11 +1234,11 @@ void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t thread
         canvas.restore();
         return;
     }
+    auto samplingOptions = SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNone);
     if ((cacheType == CacheType::ANIMATE_PROPERTY && renderProperties_.IsShadowValid()) || isUIFirst) {
-        auto samplingOptions = SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNone);
         canvas.drawImage(cacheImage, -shadowRectOffsetX_ * scaleX, -shadowRectOffsetY_ * scaleY, samplingOptions);
     } else {
-        canvas.drawImage(cacheImage, 0.0, 0.0);
+        canvas.drawImage(cacheImage, 0.f, 0.f, samplingOptions);
     }
     canvas.restore();
 }

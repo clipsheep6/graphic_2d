@@ -1199,10 +1199,10 @@ void RSPropertiesPainter::DrawBackgroundEffect(
 
 #if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
     // Optional use cacheManager to draw filter
-    if (auto& cacheManager = properties.GetFilterCacheManager(false)) {
-        // the input rect is in global coordinate, so we need to save/reset matrix before clip
-        auto data = cacheManager->GeneratedCachedEffectData(canvas, filter);
-        canvas.SetEffectData(std::move(data));
+    if (auto& cacheManager = properties.GetFilterCacheManager(false);
+        cacheManager != nullptr && !canvas.GetIsParallelCanvas()) {
+        auto&& data = cacheManager->GeneratedCachedEffectData(canvas, filter);
+        canvas.SetEffectData(data);
         return;
     }
 #endif
@@ -2239,6 +2239,9 @@ void RSPropertiesPainter::DrawParticle(const RSProperties& properties, RSPaintFi
             }
             float opacity = particles[i]->GetOpacity();
             float scale = particles[i]->GetScale();
+            if (opacity <= 0.f || scale <= 0.f) {
+                continue;
+            }
             auto particleType = particles[i]->GetParticleType();
 #ifndef USE_ROSEN_DRAWING
             SkPaint paint;

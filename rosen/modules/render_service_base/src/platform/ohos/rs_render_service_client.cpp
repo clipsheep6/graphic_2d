@@ -165,7 +165,7 @@ std::shared_ptr<VSyncReceiver> RSRenderServiceClient::CreateVSyncReceiver(
     return std::make_shared<VSyncReceiver>(conn, token->AsObject(), looper, name);
 }
 
-void RSRenderServiceClient::TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap)
+void RSRenderServiceClient::TriggerSurfaceCaptureCallback(NodeId id, std::shared_ptr<Media::PixelMap> pixelmap)
 {
     ROSEN_LOGI("RSRenderServiceClient::Into TriggerSurfaceCaptureCallback nodeId:[%{public}" PRIu64 "]", id);
     std::vector<std::shared_ptr<SurfaceCaptureCallback>> callbackVector;
@@ -186,17 +186,16 @@ void RSRenderServiceClient::TriggerSurfaceCaptureCallback(NodeId id, Media::Pixe
             ROSEN_LOGE("RSRenderServiceClient::TriggerSurfaceCaptureCallback: callback is nullptr!");
             continue;
         }
-        Media::PixelMap* pixelmapCopyRelease = nullptr;
+        std::shared_ptr<Media::PixelMap> surfaceCapture = nullptr;
         if (i != callbackVector.size() - 1) {
             if (pixelmap != nullptr) {
                 Media::InitializationOptions options;
                 std::unique_ptr<Media::PixelMap> pixelmapCopy = Media::PixelMap::Create(*pixelmap, options);
-                pixelmapCopyRelease = pixelmapCopy.release();
+                surfaceCapture = std::move(pixelmapCopy);
             }
         } else {
-            pixelmapCopyRelease = pixelmap;
+            surfaceCapture = pixelmap;
         }
-        std::shared_ptr<Media::PixelMap> surfaceCapture(pixelmapCopyRelease);
         callbackVector[i]->OnSurfaceCapture(surfaceCapture);
     }
 }
@@ -206,7 +205,7 @@ class SurfaceCaptureCallbackDirector : public RSSurfaceCaptureCallbackStub
 public:
     explicit SurfaceCaptureCallbackDirector(RSRenderServiceClient* client) : client_(client) {}
     ~SurfaceCaptureCallbackDirector() override {};
-    void OnSurfaceCapture(NodeId id, Media::PixelMap* pixelmap) override
+    void OnSurfaceCapture(NodeId id, std::shared_ptr<Media::PixelMap> pixelmap) override
     {
         client_->TriggerSurfaceCaptureCallback(id, pixelmap);
     };

@@ -25,7 +25,7 @@ RSSurfaceCaptureCallbackProxy::RSSurfaceCaptureCallbackProxy(const sptr<IRemoteO
 {
 }
 
-void RSSurfaceCaptureCallbackProxy::OnSurfaceCapture(NodeId id, Media::PixelMap* pixelmap)
+void RSSurfaceCaptureCallbackProxy::OnSurfaceCapture(NodeId id, std::shared_ptr<Media::PixelMap> pixelmap)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -35,7 +35,7 @@ void RSSurfaceCaptureCallbackProxy::OnSurfaceCapture(NodeId id, Media::PixelMap*
         return;
     }
     data.WriteUint64(id);
-    data.WriteParcelable(pixelmap);
+    data.WriteParcelable(pixelmap.get());
     option.SetFlags(MessageOption::TF_ASYNC);
     uint32_t code = static_cast<uint32_t>(RSISurfaceCaptureCallbackInterfaceCode::ON_SURFACE_CAPTURE);
     int32_t err = Remote()->SendRequest(code, data, reply, option);

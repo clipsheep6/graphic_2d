@@ -120,4 +120,17 @@ HWTEST_F(RSStepsInterpolatorTest, StepsCurveTest003, TestSize.Level1)
     ASSERT_EQ(1.0f, stepsCurveStart.Interpolate(testValueFirst));
     ASSERT_EQ(1.0f, stepsCurveStart.Interpolate(testValueSecond));
 }
+
+/**
+ * @tc.name: MarshallingTest001
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSStepsInterpolatorTest, MarshallingTest001, TestSize.Level1)
+{
+    RSStepsInterpolator stepsCurveStart(0);
+    Parcel parcel;
+    bool res = stepsCurveStart.Marshalling(parcel);
+    ASSERT_EQ(res, false);
+}
 } // namespace OHOS::Rosen

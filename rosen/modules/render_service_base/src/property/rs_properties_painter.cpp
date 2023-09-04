@@ -408,6 +408,9 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
         }
         float elevation = properties.GetShadowElevation() + DEFAULT_TRANSLATION_Z;
 
+        if (ROSEN_EQ(DEFAULT_LIGHT_HEIGHT - elevation, 0.f)) {
+            return;
+        }
         float userTransRatio =
             (elevation != DEFAULT_LIGHT_HEIGHT) ? elevation / (DEFAULT_LIGHT_HEIGHT - elevation) : MAX_TRANS_RATIO;
         float transRatio = std::max(MIN_TRANS_RATIO, std::min(userTransRatio, MAX_TRANS_RATIO));
@@ -475,6 +478,9 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
         }
         float elevation = properties.GetShadowElevation() + DEFAULT_TRANSLATION_Z;
 
+        if (ROSEN_EQ(DEFAULT_LIGHT_HEIGHT - elevation, 0.f)) {
+            return;
+        }
         float userTransRatio =
             (elevation != DEFAULT_LIGHT_HEIGHT) ? elevation / (DEFAULT_LIGHT_HEIGHT - elevation) : MAX_TRANS_RATIO;
         float transRatio = std::max(MIN_TRANS_RATIO, std::min(userTransRatio, MAX_TRANS_RATIO));
@@ -1375,6 +1381,9 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
         canvas.drawRect(
             SkRect::MakeXYWH(-pixelStretch->x_, -pixelStretch->y_, scaledBounds.width(), scaledBounds.height()), paint);
     } else {
+        if (ROSEN_EQ(bounds.width(), 0.f) || ROSEN_EQ(bounds.height(), 0.f)) {
+            return;
+        }
         scaleMat.setScale(scaledBounds.width() / bounds.width() * scaleMat.getScaleX(),
             scaledBounds.height() / bounds.height() * scaleMat.getScaleY());
 #ifdef NEW_SKIA
@@ -1463,6 +1472,9 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
             -pixelStretch->x_ + scaledBounds.GetWidth(), -pixelStretch->y_ + scaledBounds.GetHeight()));
         canvas.DetachBrush();
     } else {
+        if (ROSEN_EQ(bounds.GetWidth(), 0.f) || ROSEN_EQ(bounds.GetHeight(), 0.f)) {
+            return;
+        }
         scaleMat.Scale(
             scaledBounds.GetWidth() / bounds.GetWidth(), scaledBounds.GetHeight() / bounds.GetHeight(), 0, 0);
         brush.SetShaderEffect(Drawing::ShaderEffect::CreateImageShader(

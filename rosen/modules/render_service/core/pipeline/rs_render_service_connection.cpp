@@ -506,7 +506,7 @@ void RSRenderServiceConnection::TakeSurfaceCaptureForUIWithUni(NodeId id, sptr<R
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderService::TakeSurfaceCaptureForUIWithUni");
         std::shared_ptr<RSUniUICapture> rsUniUICapture = std::make_shared<RSUniUICapture>(id, scaleX, scaleY);
         std::shared_ptr<Media::PixelMap> pixelmap = rsUniUICapture->TakeLocalCapture();
-        callback->OnSurfaceCapture(id, pixelmap.get());
+        callback->OnSurfaceCapture(id, pixelmap);
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         RSOffscreenRenderThread::Instance().FinishOffscreenRenderTask();
     };

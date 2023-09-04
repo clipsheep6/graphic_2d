@@ -19,6 +19,7 @@
 #include <unordered_set>
 #include <parameters.h>
 
+#include "common/rs_common_def.h"
 #include "common/rs_matrix3.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "common/rs_vector2.h"
@@ -105,18 +106,33 @@ struct TransferParameters {
 inline float RcpResponsePq(float x, const TransferParameters& p)
 {
     float tmp = powf(x, p.a);
+    if (ROSEN_EQ(1 + p.e * tmp, 0.f)) {
+        return -1.f;
+    }
     return std::powf((p.c + p.d * tmp) / (1 + p.e * tmp), p.b);
 }
 
 inline float ResponsePq(float x, const TransferParameters& p)
 {
+    if (ROSEN_EQ(p.b, 0.f)) {
+        return -1.f;
+    }
     float tmp = powf(x, 1.f / p.b);
+    if (ROSEN_EQ(p.d - p.e * tmp, 0.f) || ROSEN_EQ(p.a, 0.f)) {
+        return -1.f;
+    }
     return std::powf(std::max((tmp - p.c), p.f) / (p.d - p.e * tmp), 1.f / p.a);
 }
 
 
 static constexpr float RcpResponse(float x, const TransferParameters& p)
 {
+    if (x >= p.d * p.c && (ROSEN_EQ(p.g, 0.f) || ROSEN_EQ(p.a, 0.f))) {
+        return -1.f;
+    }
+    if (x < p.d * p.c && ROSEN_EQ(p.c, 0.f)) {
+        return -1.f;
+    }
     return x >= p.d * p.c ? (std::pow(x, 1.0f / p.g) - p.b) / p.a : x / p.c;
 }
 
@@ -127,6 +143,12 @@ inline constexpr float Response(float x, const TransferParameters& p)
 
 inline constexpr float RcpFullResponse(float x, const TransferParameters& p)
 {
+    if (x >= p.d * p.c && (ROSEN_EQ(p.g, 0.f) || ROSEN_EQ(p.a, 0.f))) {
+        return -1.f;
+    }
+    if (x < p.d * p.c && ROSEN_EQ(p.c, 0.f)) {
+        return -1.f;
+    }
     return x >= p.d * p.c ? (std::pow(x - p.e, 1.0f / p.g) - p.b) / p.a : (x - p.f) / p.c;
 }
 
@@ -170,6 +192,9 @@ float ACESToneMapping(float color, float targetLum)
     const float e = 0.14f;
 
     color *= targetLum;
+    if (ROSEN_EQ(color * (c * color + d) + e, 0.f)) {
+        return -1;
+    }
     return (color * (a * color + b)) / (color * (c * color + d) + e);
 }
 
@@ -188,6 +213,9 @@ Matrix3f GenRGBToXYZMatrix(const std::array<Vector2f, 3>& basePoints, const Vect
     const Vector2f& G = basePoints[1];
     const Vector2f& B = basePoints[2];
 
+    if (ROSEN_EQ(R.y_, 0.f) || ROSEN_EQ(G.y_, 0.f) || ROSEN_EQ(B.y_, 0.f) || ROSEN_EQ(whitePoint.y_, 0.f)) {
+        return Matrix3f{};
+    }
     float RxRy = R.x_ / R.y_;
     float GxGy = G.x_ / G.y_;
     float BxBy = B.x_ / B.y_;
@@ -198,6 +226,9 @@ Matrix3f GenRGBToXYZMatrix(const std::array<Vector2f, 3>& basePoints, const Vect
     float oneBxBy = (1 - B.x_) / B.y_;
     float oneWxWy = (1 - whitePoint.x_) / whitePoint.y_;
 
+    if (ROSEN_EQ((oneBxBy - oneRxRy) * (GxGy - RxRy), (BxBy - RxRy) * (oneGxGy - oneRxRy)) || ROSEN_EQ(GxGy, RxRy)) {
+        return Matrix3f{};
+    }
     float BY =
         ((oneWxWy - oneRxRy) * (GxGy - RxRy) - (WxWy - RxRy) * (oneGxGy - oneRxRy)) /
         ((oneBxBy - oneRxRy) * (GxGy - RxRy) - (BxBy - RxRy) * (oneGxGy - oneRxRy));
@@ -1516,15 +1547,14 @@ bool RSBaseRenderUtil::CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffe
 std::unique_ptr<RSTransactionData> RSBaseRenderUtil::ParseTransactionData(MessageParcel& parcel)
 {
     RS_TRACE_NAME("UnMarsh RSTransactionData: data size:" + std::to_string(parcel.GetDataSize()));
-    auto transactionData = parcel.ReadParcelable<RSTransactionData>();
+    std::unique_ptr<RSTransactionData> transactionData(parcel.ReadParcelable<RSTransactionData>());
     if (!transactionData) {
         RS_TRACE_NAME("UnMarsh RSTransactionData fail!");
         RS_LOGE("UnMarsh RSTransactionData fail!");
         return nullptr;
     }
     RS_TRACE_NAME("UnMarsh RSTransactionData: recv data from " + std::to_string(transactionData->GetSendingPid()));
-    std::unique_ptr<RSTransactionData> transData(transactionData);
-    return transData;
+    return transactionData;
 }
 
 bool RSBaseRenderUtil::WriteSurfaceRenderNodeToPng(const RSSurfaceRenderNode& node)

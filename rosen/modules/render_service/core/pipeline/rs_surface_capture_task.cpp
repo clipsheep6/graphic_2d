@@ -181,7 +181,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
                 }
                 RS_LOGD("COPYTASK: PixelmapRotation: %d", static_cast<int32_t>(rotation));
             }
-            callback->OnSurfaceCapture(id, pixelmap.get());
+            callback->OnSurfaceCapture(id, static_cast<std::shared_ptr<Media::PixelMap>>(std::move(pixelmap)));
             dmaMem.ReleaseGLMemory();
             RSBackgroundThread::Instance().CleanGrResource();
         };
@@ -253,7 +253,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
             RS_LOGD("RSSurfaceCaptureTask::Run: PixelmapRotation: %{public}d", static_cast<int32_t>(rotation));
         }
     }
-    callback->OnSurfaceCapture(nodeId_, pixelmap.get());
+    callback->OnSurfaceCapture(nodeId_, static_cast<std::shared_ptr<Media::PixelMap>>(std::move(pixelmap)));
     return true;
 }
 

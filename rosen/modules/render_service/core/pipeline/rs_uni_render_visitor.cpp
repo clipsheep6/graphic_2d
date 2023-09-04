@@ -3917,6 +3917,9 @@ bool RSUniRenderVisitor::ProcessSharedTransitionNode(RSBaseRenderNode& node)
         // if in node group cache, add this node and render params (alpha and matrix) into groupedTransitionNodes.
         auto& [child, currentStatus] = curGroupedNodes_.top();
         auto canvasStatus = canvas_->GetCanvasStatus();
+        if (ROSEN_EQ(currentStatus.alpha_, 0.f)) {
+            return false;
+        }
         canvasStatus.alpha_ /= currentStatus.alpha_;
         if (!currentStatus.matrix_.invert(&canvasStatus.matrix_)) {
             RS_LOGE("RSUniRenderVisitor::ProcessSharedTransitionNode invert failed");

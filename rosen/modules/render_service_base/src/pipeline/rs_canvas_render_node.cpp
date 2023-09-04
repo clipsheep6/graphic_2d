@@ -80,6 +80,17 @@ void RSCanvasRenderNode::ClearRecording()
     RemoveModifier(ANONYMOUS_MODIFIER_ID);
 }
 
+void RSCanvasRenderNode::OnTreeStateChanged()
+{
+    if (!IsOnTheTree()) {
+        // clear node groups cache when node is removed from tree
+        if (GetCacheType() == CacheType::CONTENT) {
+            SetCacheType(CacheType::NONE);
+            ClearCacheSurface();
+        }
+    }
+}
+
 void RSCanvasRenderNode::Prepare(const std::shared_ptr<RSNodeVisitor>& visitor)
 {
     if (!visitor) {

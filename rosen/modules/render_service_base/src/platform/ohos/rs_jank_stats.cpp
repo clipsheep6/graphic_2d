@@ -279,6 +279,9 @@ void RSJankStats::ReportEventComplete(const JankFrames& jankFrames, const TraceI
 void RSJankStats::ReportEventJankFrame(const JankFrames& jankFrames) const
 {
     auto reportName = "INTERACTION_RENDER_JANK";
+    if (ROSEN_EQ(static_cast<float>(jankFrames.totalFrames_), 0.f)) {
+        return;
+    }
     float aveFrameTime = jankFrames.totalFrameTime_ / static_cast<float>(jankFrames.totalFrames_);
     auto info = jankFrames.info_;
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::GRAPHIC, reportName,

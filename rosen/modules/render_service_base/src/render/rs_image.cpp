@@ -112,6 +112,7 @@ void RSImage::ApplyImageFit()
     if (ratio == 0) {
         RS_LOGE("RSImage::ApplyImageFit failed, ratio is zero ");
         return;
+    }
     switch (imageFit_) {
         case ImageFit::TOP_LEFT:
             dstRect_.SetAll(0.f, 0.f, srcW, srcH);

@@ -725,6 +725,9 @@ void RSComposerAdapter::LayerCrop(const LayerInfoPtr& layer) const
         return;
     }
     dstRect = {resDstRect.left_, resDstRect.top_, resDstRect.width_, resDstRect.height_};
+    if (dstRectI.width_ == 0 || dstRectI.height_ == 0) {
+        return;
+    }
     srcRect.x = resDstRect.IsEmpty() ? 0 : std::ceil((resDstRect.left_ - dstRectI.left_) *
         originSrcRect.w / dstRectI.width_);
     srcRect.y = resDstRect.IsEmpty() ? 0 : std::ceil((resDstRect.top_ - dstRectI.top_) *
@@ -761,9 +764,15 @@ void RSComposerAdapter::LayerScaleDown(const LayerInfoPtr& layer)
 
         if (newWidth * dstRect.h > newHeight * dstRect.w) {
             // too wide
+            if (dstRect.h == 0) {
+                return;
+            }
             newWidth = dstRect.w * newHeight / dstRect.h;
         } else if (newWidth * dstRect.h < newHeight * dstRect.w) {
             // too tall
+            if (dstRect.w == 0) {
+                return;
+            }
             newHeight = dstRect.h * newWidth / dstRect.w;
         } else {
             return;

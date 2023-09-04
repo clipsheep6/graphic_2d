@@ -35,7 +35,7 @@ int RSSurfaceCaptureCallbackStub::OnRemoteRequest(
     switch (code) {
         case static_cast<uint32_t>(RSISurfaceCaptureCallbackInterfaceCode::ON_SURFACE_CAPTURE): {
             NodeId id = data.ReadUint64();
-            auto pixelmap = data.ReadParcelable<OHOS::Media::PixelMap>();
+            std::shared_ptr<OHOS::Media::PixelMap> pixelmap(data.ReadParcelable<OHOS::Media::PixelMap>());
             OnSurfaceCapture(id, pixelmap);
             break;
         }

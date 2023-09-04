@@ -28,7 +28,7 @@ public:
     explicit RSSurfaceCaptureCallbackProxy(const sptr<IRemoteObject>& impl);
     virtual ~RSSurfaceCaptureCallbackProxy() noexcept = default;
 
-    void OnSurfaceCapture(NodeId id, Media::PixelMap* pixelmap) override;
+    void OnSurfaceCapture(NodeId id, std::shared_ptr<Media::PixelMap> pixelmap) override;
 
 private:
     static inline BrokerDelegator<RSSurfaceCaptureCallbackProxy> delegator_;

@@ -128,9 +128,15 @@ void RSUniRenderUtil::SrcRectScaleDown(BufferDrawParam& params, const RSSurfaceR
 
         if (newWidth * boundsHeight > newHeight * boundsWidth) {
             // too wide
+            if (boundsHeight == 0) {
+                return;
+            }
             newWidth = boundsWidth * newHeight / boundsHeight;
         } else if (newWidth * boundsHeight < newHeight * boundsWidth) {
             // too tall
+            if (boundsWidth == 0) {
+                return;
+            }
             newHeight = boundsHeight * newWidth / boundsWidth;
         } else {
             return;
@@ -359,6 +365,9 @@ void RSUniRenderUtil::DrawCachedImage(RSSurfaceRenderNode& node, RSPaintFilterCa
         return;
     }
     canvas.save();
+    if (image->width() == 0 || image->height() == 0) {
+        return;
+    }
     canvas.scale(node.GetRenderProperties().GetBoundsWidth() / image->width(),
         node.GetRenderProperties().GetBoundsHeight() / image->height());
     SkPaint paint;
@@ -377,6 +386,9 @@ void RSUniRenderUtil::DrawCachedImage(RSSurfaceRenderNode& node, RSPaintFilterCa
         return;
     }
     canvas.Save();
+    if (image->GetWidth() == 0 || image->GetHeight() == 0) {
+        return;
+    }
     canvas.Scale(node.GetRenderProperties().GetBoundsWidth() / image->GetWidth(),
         node.GetRenderProperties().GetBoundsHeight() / image->GetHeight());
     Drawing::Brush brush;
@@ -396,6 +408,9 @@ Occlusion::Region RSUniRenderUtil::AlignedDirtyRegion(const Occlusion::Region& d
         return dirtyRegion;
     }
     for (const auto& dirtyRect : dirtyRegion.GetRegionRects()) {
+        if (alignedBits == 0) {
+            return dirtyRegion;
+        }
         int32_t left = (dirtyRect.left_ / alignedBits) * alignedBits;
         int32_t top = (dirtyRect.top_ / alignedBits) * alignedBits;
         int32_t width = ((dirtyRect.right_ + alignedBits - 1) / alignedBits) * alignedBits - left;

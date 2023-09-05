@@ -40,6 +40,8 @@ public:
         return DrawingType::RECORDING;
     }
 
+    void DrawTextBlob(const TextBlob& blob, float x, float y) override;
+
     void DrawPoint(const Point& point) override;
     void DrawLine(const Point& startPt, const Point& endPt) override;
     void DrawRect(const Rect& rect) override;

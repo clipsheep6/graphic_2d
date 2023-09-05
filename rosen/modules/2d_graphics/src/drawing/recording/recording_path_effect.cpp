@@ -24,6 +24,15 @@ namespace Rosen {
 namespace Drawing {
 RecordingPathEffect::RecordingPathEffect() noexcept : cmdList_(std::make_shared<PathEffectCmdList>()) {}
 
+std::shared_ptr<RecordingPathEffect> RecordingPathEffect::Create1DPathEffect(const Path& path, float advance, float phase, Path1DStyle style)
+{
+    auto pathEffect = std::make_shared<RecordingPathEffect>();
+    auto pathHandle = CmdListHelper::AddRecordedToCmdList<RecordingPath>(*pathEffect->GetCmdList(), path);
+
+    pathEffect->GetCmdList()->AddOp<Create1DPathEffectOpItem>(pathHandle, advance, phase, style);
+    return pathEffect;
+}
+
 std::shared_ptr<RecordingPathEffect> RecordingPathEffect::CreateDashPathEffect(
     const std::vector<scalar>& intervals, scalar phase)
 {

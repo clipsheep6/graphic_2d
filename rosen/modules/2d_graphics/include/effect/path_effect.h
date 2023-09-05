@@ -24,6 +24,13 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+enum class Path1DStyle {
+    K_TRANSLATE_STYLE,
+    K_ROTATE_STYLE,
+    K_MORPH_STYLE,
+    K_LASTENUM_STYLE = K_MORPH_STYLE,
+};
+
 enum class PathDashStyle {
     TRANSLATE,
     ROTATE,
@@ -38,6 +45,7 @@ public:
         CORNER,
         SUM,
         COMPOSE,
+        PATH_1D,
     };
 
     static std::shared_ptr<PathEffect> CreateDashPathEffect(const scalar intervals[], int count, scalar phase);
@@ -46,6 +54,7 @@ public:
     static std::shared_ptr<PathEffect> CreateCornerPathEffect(scalar radius);
     static std::shared_ptr<PathEffect> CreateSumPathEffect(PathEffect& e1, PathEffect& e2);
     static std::shared_ptr<PathEffect> CreateComposePathEffect(PathEffect& e1, PathEffect& e2);
+    static std::shared_ptr<PathEffect> Create1DPathEffect(const Path& path, float advance, float phase, Path1DStyle style);
 
     virtual ~PathEffect() {}
     PathEffectType GetType() const;
@@ -57,6 +66,7 @@ public:
     PathEffect(PathEffectType t, const Path& path, scalar advance, scalar phase, PathDashStyle style) noexcept;
     PathEffect(PathEffectType t, scalar radius) noexcept;
     PathEffect(PathEffectType t, PathEffect& e1, PathEffect& e2) noexcept;
+    PathEffect(PathEffectType t, const Path& path, float advance, float phase, Path1DStyle style) noexcept;
 
     template<typename T>
     const std::shared_ptr<T> GetImpl() const

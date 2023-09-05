@@ -22,6 +22,13 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+
+PathEffect::PathEffect(PathEffectType t, const Path& path, float advance, float phase, Path1DStyle style) noexcept : PathEffect()
+{
+    type_ = t;
+    impl_->InitWith1DPath(path, advance, phase, style);
+}
+
 PathEffect::PathEffect(PathEffectType t, const scalar intervals[], int count, scalar phase) noexcept : PathEffect()
 {
     type_ = t;
@@ -84,6 +91,11 @@ std::shared_ptr<PathEffect> PathEffect::CreateSumPathEffect(PathEffect& e1, Path
 std::shared_ptr<PathEffect> PathEffect::CreateComposePathEffect(PathEffect& e1, PathEffect& e2)
 {
     return std::make_shared<PathEffect>(PathEffect::PathEffectType::COMPOSE, e1, e2);
+}
+
+std::shared_ptr<PathEffect> PathEffect::Create1DPathEffect(const Path& path, float advance, float phase, Path1DStyle style)
+{
+    return std::make_shared<PathEffect>(PathEffect::PathEffectType::PATH_1D, path, advance, phase, style);
 }
 } // namespace Drawing
 } // namespace Rosen

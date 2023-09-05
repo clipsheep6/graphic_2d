@@ -77,9 +77,11 @@ public:
     const void* GetData() const;
 
     /*
-     * @brief   Get the adaptation layer instance, called in the adaptation layer.
-     * @return  Adaptation Layer instance.
+     * @brief   Create a new dataref from a stdio FILE.
+     * @return  If create Data successed, return true.
      */
+    bool MakeFromFileName(const std::string &path);
+
     template<typename T>
     const std::shared_ptr<T> GetImpl() const
     {

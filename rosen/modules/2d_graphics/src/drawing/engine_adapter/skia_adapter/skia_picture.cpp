@@ -50,6 +50,11 @@ bool SkiaPicture::Deserialize(std::shared_ptr<Data> data)
     skiaPicture_ = SkPicture::MakeFromData(data->GetData(), data->GetSize());
     return skiaPicture_ != nullptr;
 }
+
+void SkiaPicture::SetPicture(const sk_sp<SkPicture> picture)
+{
+    skiaPicture_ = picture;
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

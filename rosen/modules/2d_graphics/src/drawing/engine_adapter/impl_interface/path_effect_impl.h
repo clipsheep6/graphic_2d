@@ -28,6 +28,7 @@ namespace Rosen {
 namespace Drawing {
 class PathEffect;
 enum class PathDashStyle;
+enum class Path1DStyle;
 class PathEffectImpl : public BaseImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::BASE_INTERFACE;
@@ -43,6 +44,7 @@ public:
     virtual void InitWithCorner(scalar radius) = 0;
     virtual void InitWithSum(const PathEffect& e1, const PathEffect& e2) = 0;
     virtual void InitWithCompose(const PathEffect& e1, const PathEffect& e2) = 0;
+    virtual void InitWith1DPath(const Path& path, float advance, float phase, Path1DStyle style) = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

@@ -36,6 +36,16 @@
 #include "skia_adapter/skia_shader_effect.h"
 #include "skia_adapter/skia_surface.h"
 
+#include "skia_adapter/skia_font.h"
+#include "skia_adapter/skia_typeface.h"
+#include "skia_adapter/skia_memory_stream.h"
+#include "skia_adapter/skia_font_str.h"
+#include "skia_adapter/skia_font_style.h"
+#include "skia_adapter/skia_font_style_set.h"
+#include "skia_adapter/skia_text_blob.h"
+#include "skia_adapter/skia_text_blob_builder.h"
+#include "skia_adapter/skia_font_metrics.h"
+#include "skia_adapter/skia_font_manager.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -146,6 +156,56 @@ std::unique_ptr<CameraImpl> SkiaImplFactory::CreateCamera()
 std::unique_ptr<RegionImpl> SkiaImplFactory::CreateRegion()
 {
     return std::make_unique<SkiaRegion>();
+}
+
+std::unique_ptr<FontImpl> SkiaImplFactory::CreateFont()
+{
+    return std::make_unique<SkiaFont>();
+}
+
+std::unique_ptr<TypefaceImpl> SkiaImplFactory::CreateFontTypeface()
+{
+    return std::make_unique<SkiaTypeface>();
+}
+
+std::unique_ptr<MemoryStreamImpl> SkiaImplFactory::CreateMemoryStream()
+{
+    return std::make_unique<SkiaMemoryStream>();
+}
+
+std::unique_ptr<FontStringImpl> SkiaImplFactory::CreateFontString()
+{
+    return std::make_unique<SkiaFontStr>();
+}
+
+std::unique_ptr<FontStyleImpl> SkiaImplFactory::CreateFontStyle()
+{
+    return std::make_unique<SkiaFontStyle>();
+}
+
+std::unique_ptr<FontStyleSetImpl> SkiaImplFactory::CreateFontStyleSet()
+{
+    return std::make_unique<SkiaFontStyleSet>();
+}
+
+std::unique_ptr<TextBlobImpl> SkiaImplFactory::CreateTextBlob()
+{
+    return std::make_unique<SkiaTextBlob>();
+}
+
+std::unique_ptr<TextBlobBuilderImpl> SkiaImplFactory::CreateTextBlobBuilder()
+{
+    return std::make_unique<SkiaTextBlobBuilder>();
+}
+
+std::unique_ptr<FontMetricsImpl> SkiaImplFactory::CreateFontMetrics()
+{
+    return std::make_unique<SkiaFontMetrics>();
+}
+
+std::unique_ptr<FontManagerImpl> SkiaImplFactory::CreateFontManager()
+{
+    return std::make_unique<SkiaFontManager>();
 }
 } // namespace Drawing
 } // namespace Rosen

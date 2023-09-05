@@ -127,6 +127,56 @@ std::unique_ptr<RegionImpl> ImplFactory::CreateRegionImpl()
 {
     return EngineImplFactory::CreateRegion();
 }
+//以下为字体单元新增代码
+std::unique_ptr<FontImpl> ImplFactory::CreateFontImpl()
+{
+    return EngineImplFactory::CreateFont();
+}
+
+std::unique_ptr<TypefaceImpl> ImplFactory::CreateTypefaceImpl()
+{
+    return EngineImplFactory::CreateFontTypeface();
+}
+
+std::unique_ptr<MemoryStreamImpl> ImplFactory::CreateMemoryStreamImpl()
+{
+    return EngineImplFactory::CreateMemoryStream();
+}
+
+std::unique_ptr<FontStringImpl> ImplFactory::CreateFontStringImpl()
+{
+    return EngineImplFactory::CreateFontString();
+}
+
+std::unique_ptr<FontStyleImpl> ImplFactory::CreateFontStyleImpl()
+{
+    return EngineImplFactory::CreateFontStyle();
+}
+
+std::unique_ptr<FontStyleSetImpl> ImplFactory::CreateFontStyleSetImpl()
+{
+    return EngineImplFactory::CreateFontStyleSet();
+}
+
+std::unique_ptr<TextBlobImpl> ImplFactory::CreateTextBlobImpl()
+{
+    return EngineImplFactory::CreateTextBlob();
+}
+
+std::unique_ptr<TextBlobBuilderImpl> ImplFactory::CreateTextBlobBuilderImpl()
+{
+    return EngineImplFactory::CreateTextBlobBuilder();
+}
+
+std::unique_ptr<FontMetricsImpl> ImplFactory::CreateFontMetricsImpl()
+{
+    return EngineImplFactory::CreateFontMetrics();
+}
+
+std::unique_ptr<FontManagerImpl> ImplFactory::CreateFontManagerImpl()
+{
+    return EngineImplFactory::CreateFontManager();
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

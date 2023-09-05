@@ -35,6 +35,16 @@ void SkiaPathEffect::InitWithDash(const scalar intervals[], int count, scalar ph
     pathEffect_ = SkDashPathEffect::Make(intervals, count, phase);
 }
 
+void SkiaPathEffect::InitWith1DPath(const Path& path, float advance, float phase, Path1DStyle style)
+{
+    auto tmp_path = path.GetImpl<SkiaPath>();
+    if (tmp_path == nullptr) {
+        return;
+    }
+    pathEffect_ = SkPath1DPathEffect::Make(tmp_path->GetPath(), advance, phase,
+        static_cast<SkPath1DPathEffect::Style>(style));
+}
+
 void SkiaPathEffect::InitWithPathDash(const Path& path, scalar advance, scalar phase, PathDashStyle style)
 {
     auto p = path.GetImpl<SkiaPath>();

@@ -63,6 +63,8 @@ public:
      */
     static std::shared_ptr<RecordingPathEffect> CreateComposePathEffect(const PathEffect& e1, const PathEffect& e2);
 
+    static std::shared_ptr<RecordingPathEffect> Create1DPathEffect(const Path& path, float advance, float phase, Path1DStyle style);
+
     RecordingPathEffect() noexcept;
     ~RecordingPathEffect() override = default;
 

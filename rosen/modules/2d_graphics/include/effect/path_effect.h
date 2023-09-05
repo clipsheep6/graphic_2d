@@ -28,7 +28,15 @@ enum class PathDashStyle {
     ROTATE,
     MORPH,
 };
-class PathEffect {
+
+enum class Path1DStyle {
+    K_TRANSLATE_STYLE,
+    K_ROTATE_STYLE,
+    K_MORPH_STYLE,
+    K_LASTENUM_STYLE = K_MORPH_STYLE,
+};
+
+class DRAWING_API PathEffect {
 public:
     enum class PathEffectType {
         NO_TYPE,
@@ -37,6 +45,7 @@ public:
         CORNER,
         SUM,
         COMPOSE,
+        PATH_1D,
     };
 
     static std::shared_ptr<PathEffect> CreateDashPathEffect(const scalar intervals[], int count, scalar phase);
@@ -46,6 +55,9 @@ public:
     static std::shared_ptr<PathEffect> CreateSumPathEffect(PathEffect& e1, PathEffect& e2);
     static std::shared_ptr<PathEffect> CreateComposePathEffect(PathEffect& e1, PathEffect& e2);
 
+    static std::shared_ptr<PathEffect> Create1DPathEffect(const Path& path, float advance, float phase, Path1DStyle style);
+
+
     virtual ~PathEffect() {}
     PathEffectType GetType() const;
     virtual DrawingType GetDrawingType() const
@@ -53,6 +65,8 @@ public:
         return DrawingType::COMMON;
     }
     PathEffect(PathEffectType t, const scalar intervals[], int count, scalar phase) noexcept;
+    PathEffect(PathEffectType t, const Path& path, float advance, float phase, Path1DStyle style) noexcept;
+
     PathEffect(PathEffectType t, const Path& path, scalar advance, scalar phase, PathDashStyle style) noexcept;
     PathEffect(PathEffectType t, scalar radius) noexcept;
     PathEffect(PathEffectType t, PathEffect& e1, PathEffect& e2) noexcept;

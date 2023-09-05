@@ -37,6 +37,17 @@
 #include "impl_interface/shader_effect_impl.h"
 #include "impl_interface/surface_impl.h"
 
+
+#include "impl_interface/text_blob_builder_impl.h"
+#include "impl_interface/text_blob_impl.h"
+#include "impl_interface/string_impl.h"
+#include "impl_interface/stream_impl.h"
+#include "impl_interface/rect_impl.h"
+#include "impl_interface/path_1d_effect_impl.h"
+#include "impl_interface/typeface_impl.h"
+#include "impl_interface/font_impl.h"
+#include "impl_interface/dash_path_effect_impl.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -65,6 +76,16 @@ public:
     static std::unique_ptr<Matrix44Impl> CreateMatrix44();
     static std::unique_ptr<CameraImpl> CreateCamera();
     static std::unique_ptr<RegionImpl> CreateRegion();
+
+    static std::unique_ptr<TextBlobBuilderImpl> CreateTextBlobBuilder();
+    static std::unique_ptr<TextBlobImpl> CreateTextBlob();
+    static std::unique_ptr<StringImpl> CreateString();
+    static std::unique_ptr<StreamImpl> CreateMemoryStream();
+    static std::unique_ptr<RectImpl> CreateRect();
+    // static std::unique_ptr<Path1dEffectImpl> CreatePath1dEffect();
+    static std::unique_ptr<FontImpl> CreateFont();
+    static std::unique_ptr<TypefaceImpl> CreateTypeFace();
+    static std::unique_ptr<DashPathEffectImpl> CreateDashPathEffect();
 };
 } // namespace Drawing
 } // namespace Rosen

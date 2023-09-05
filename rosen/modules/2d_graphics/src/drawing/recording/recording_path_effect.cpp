@@ -34,6 +34,15 @@ std::shared_ptr<RecordingPathEffect> RecordingPathEffect::CreateDashPathEffect(
     return pathEffect;
 }
 
+std::shared_ptr<RecordingPathEffect> RecordingPathEffect::Create1DPathEffect(const Path& path, float advance, float phase, Path1DStyle style)
+{
+    auto pathEffect = std::make_shared<RecordingPathEffect>();
+    auto pathHandle = CmdListHelper::AddRecordedToCmdList<RecordingPath>(*pathEffect->GetCmdList(), path);
+
+    pathEffect->GetCmdList()->AddOp<Create1DPathEffectOpItem>(pathHandle, advance, phase, style);
+    return pathEffect;
+}
+
 std::shared_ptr<RecordingPathEffect> RecordingPathEffect::CreatePathDashEffect(
     const Path& path, scalar advance, scalar phase, PathDashStyle style)
 {

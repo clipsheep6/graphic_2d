@@ -87,6 +87,9 @@ public:
 
     virtual scalar GetLength(bool forceClosed) const = 0;
     virtual bool GetPositionAndTangent(scalar distance, Point& position, Point& tangent, bool forceClosed) const = 0;
+
+    virtual void MoveTo(const Point& p) = 0;
+    virtual void LineTo(const Point& p) = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

@@ -175,6 +175,13 @@ void RecordingCanvas::DrawPicture(const Picture& picture)
     cmdList_->AddOp<DrawPictureOpItem>(pictureHandle);
 }
 
+
+void RecordingCanvas::DrawTextBlob(const TextBlob& blob, float x, float y)
+{
+    auto handle = CmdListHelper::AddTextBlobDataToCmdList(*cmdList_, blob);
+    cmdList_->AddOp<DrawTextBlobOpItem>(handle, x, y);
+}
+
 void RecordingCanvas::ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias)
 {
     cmdList_->AddOp<ClipRectOpItem>(rect, op, doAntiAlias);

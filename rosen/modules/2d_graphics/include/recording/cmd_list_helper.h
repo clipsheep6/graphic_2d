@@ -22,6 +22,7 @@
 #include "image/image.h"
 #include "recording/cmd_list.h"
 #include "utils/log.h"
+#include "text/text_blob.h"
 
 namespace OHOS {
 namespace Media {
@@ -46,6 +47,9 @@ public:
     static std::shared_ptr<Picture> GetPictureFromCmdList(const CmdList& cmdList, const ImageHandle& pictureHandle);
     static ImageHandle AddCompressDataToCmdList(CmdList& cmdList, const std::shared_ptr<Data>& data);
     static std::shared_ptr<Data> GetCompressDataFromCmdList(const CmdList& cmdList, const ImageHandle& imageHandle);
+    // text blob
+    static ImageHandle AddTextBlobDataToCmdList(CmdList& cmdList, const TextBlob& textBlob);
+    static std::shared_ptr<TextBlob> GetTextBlobFromCmdList(const CmdList& cmdList, const ImageHandle& textHandle);
 
     template<typename RecordingType, typename CommonType>
     static CmdListHandle AddRecordedToCmdList(CmdList& cmdList, const CommonType& recorded)

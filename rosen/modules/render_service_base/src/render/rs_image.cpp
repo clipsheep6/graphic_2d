@@ -113,6 +113,10 @@ void RSImage::ApplyImageFit()
         RS_LOGE("RSImage::ApplyImageFit failed, ratio is zero ");
         return;
     }
+    ApplyImageFitSwitch(ratio,srcW,srcH,frameW,frameH,dstW,dstH);
+}
+
+void ApplyImageFitSwitch(float &ratio,float &srcW,float &srcH,float &frameW,float &frameH,float &dstW,float &dstH) {
     switch (imageFit_) {
         case ImageFit::TOP_LEFT:
             dstRect_.SetAll(0.f, 0.f, srcW, srcH);
@@ -148,7 +152,6 @@ void RSImage::ApplyImageFit()
             dstH = std::min(frameH, frameW / ratio);
             break;
     }
-    dstRect_.SetAll((frameW - dstW) / 2, (frameH - dstH) / 2, dstW, dstH);
 }
 
 bool RSImage::HasRadius() const

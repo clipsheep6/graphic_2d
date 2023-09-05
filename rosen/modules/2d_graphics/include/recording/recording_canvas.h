@@ -19,7 +19,7 @@
 #include "draw/canvas.h"
 #include "recording/adaptive_image_helper.h"
 #include "recording/draw_cmd_list.h"
-
+#include "text/text_blob.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -39,6 +39,8 @@ public:
     {
         return DrawingType::RECORDING;
     }
+
+    void DrawTextBlob(const TextBlob& blob, float x, float y) override;
 
     void DrawPoint(const Point& point) override;
     void DrawLine(const Point& startPt, const Point& endPt) override;

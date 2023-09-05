@@ -80,6 +80,9 @@ public:
      * @brief   Get the adaptation layer instance, called in the adaptation layer.
      * @return  Adaptation Layer instance.
      */
+    static std::shared_ptr<Data> MakeFromFileName(const std::string &path);
+
+    void InitDateImpl(std::shared_ptr<DataImpl> replaceDataImpl);
     template<typename T>
     const std::shared_ptr<T> GetImpl() const
     {

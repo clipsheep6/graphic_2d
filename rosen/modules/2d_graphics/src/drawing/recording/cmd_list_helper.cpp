@@ -30,6 +30,7 @@
 #include "utils/log.h"
 
 #include "skia_adapter/skia_picture.h"
+#include "skia_adapter/skia_text_blob.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -142,6 +143,36 @@ std::shared_ptr<Media::PixelMap> CmdListHelper::GetPixelMapFromCmdList(
     LOGE("Not support drawing Media::PixelMap");
     return nullptr;
 #endif
+}
+
+ImageHandle CmdListHelper::AddTextBlobDataToCmdList(CmdList& cmdList, const TextBlob& textBlob)
+{
+    auto data = textBlob.GetImpl<SkiaTextBlob>()->Serialize();
+    if (data == nullptr || data->GetSize() == 0) {
+        LOGE("TextBlob is valid!");
+        return { 0 };
+    }
+
+    auto offset = cmdList.AddImageData(data->GetData(), data->GetSize());
+    return { offset, data->GetSize() };
+}
+
+std::shared_ptr<TextBlob> CmdListHelper::GetTextBlobFromCmdList(const CmdList& cmdList, const ImageHandle& textHandle)
+{
+    const void* ptr = cmdList.GetImageData(textHandle.offset);
+    if (ptr == nullptr) {
+        LOGE("get TextBlob data failed!");
+        return nullptr;
+    }
+
+    auto textData = std::make_shared<Data>();
+    textData->BuildWithoutCopy(ptr, textHandle.size);
+    auto textBlob = std::make_shared<TextBlob>();
+    if (textBlob->GetImpl<SkiaTextBlob>()->Deserialize(textData) == false) {
+        LOGE("textBlob deserialize failed!");
+        return nullptr;
+    }
+    return textBlob;
 }
 
 ImageHandle CmdListHelper::AddPictureToCmdList(CmdList& cmdList, const Picture& picture)

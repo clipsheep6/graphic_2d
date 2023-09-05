@@ -39,7 +39,7 @@ enum class BlendMode {
     SRC_ATOP,
     DST_ATOP,
     XOR,
-    PLUS,
+    // PLUS,
     MODULATE,
     SCREEN,
     OVERLAY,

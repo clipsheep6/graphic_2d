@@ -70,6 +70,15 @@ void SkiaData::SetSkData(const sk_sp<SkData>& data)
 {
     skData_ = data;
 }
+
+std::shared_ptr<Data> SkiaData::MakeFromFileName(const std::string &path)
+{
+    auto skiaData = std::make_shared<SkiaData>();
+    auto data = std::make_shared<Data>();
+    skiaData->SetSkData(SkData::MakeFromFileName(path.c_str()));
+    data->InitDateImpl(skiaData);
+    return data;
+}
 } // Drawing
 } // Rosen
 } // OHOS

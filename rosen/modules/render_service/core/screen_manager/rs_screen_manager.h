@@ -101,6 +101,8 @@ public:
 
     virtual void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) = 0;
 
+    virtual void SetTpFeatureConfig(ScreenId id, int32_t feature, const std::string& config) = 0;
+
     virtual void GetVirtualScreenResolution(ScreenId id, RSVirtualScreenResolution& virtualScreenResolution) const = 0;
 
     virtual void GetScreenActiveMode(ScreenId id, RSScreenModeInfo& screenModeInfo) const = 0;
@@ -207,6 +209,8 @@ public:
     int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height) override;
 
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) override;
+
+    void SetTpFeatureConfig(ScreenId id, int32_t feature, const std::string& config) override;
 
     void GetVirtualScreenResolution(ScreenId id, RSVirtualScreenResolution& virtualScreenResolution) const override;
 

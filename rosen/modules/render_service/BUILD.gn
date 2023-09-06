@@ -152,6 +152,7 @@ ohos_shared_library("librender_service") {
 
   external_deps = [
     "c_utils:utils",
+    "drivers_interface_tp_extra:libtp_proxy_1.0",
     "eventhandler:libeventhandler",
     "hicollie:libhicollie",
     "hilog:libhilog",

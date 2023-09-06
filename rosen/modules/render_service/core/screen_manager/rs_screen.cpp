@@ -17,6 +17,8 @@
 
 #include <cinttypes>
 
+#include "v1_0/itp_interfaces.h"
+
 #include "platform/common/rs_log.h"
 #include "string_utils.h"
 #include "hisysevent.h"
@@ -658,6 +660,20 @@ void RSScreen::SetScreenVsyncEnabled(bool enabled) const
     }
     if (hdiScreen_ != nullptr) {
         hdiScreen_->SetScreenVsyncEnabled(enabled);
+    }
+}
+
+void RSScreen::void SetTpFeatureConfig(int32_t feature, const std::string& config)
+{
+    if (IsVirtual()) {
+        RS_LOGW("RSScreen %{public}s: virtual screen not support SetTpFeatureConfig.", __func__);
+        return;
+    }
+    
+    int32_t code = 0;
+    auto client = OHOS::HDI::Tp::V1_0::ITpInterfaces:Get(true);
+    if (client->hwSetTpFeatureConfig(feature, config, code) < 0) {
+        RS_LOGW("RSScreen %{public}s: SetTpFeatureConfig failed.", __func__);
     }
 }
 } // namespace impl

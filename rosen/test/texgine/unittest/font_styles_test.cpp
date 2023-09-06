@@ -121,9 +121,9 @@ HWTEST_F(FontStylesTest, FontStyles2, TestSize.Level1)
  */
 HWTEST_F(FontStylesTest, ToTexgineFontStyle, TestSize.Level1)
 {
-    // (0, 0) is (FontWeight, FontStyle)
-    EXPECT_EQ(GetFontStyles(0, 0).ToTexgineFontStyle().GetFontStyle()->weight(), 100);
-    EXPECT_EQ(GetFontStyles(0, 0).ToTexgineFontStyle().GetFontStyle()->slant(), 0);
+    // (1, 0) is (FontWeight, FontStyle)
+    EXPECT_EQ(GetFontStyles(1, 0).ToTexgineFontStyle().GetFontStyle()->weight(), 100);
+    EXPECT_EQ(GetFontStyles(1, 0).ToTexgineFontStyle().GetFontStyle()->slant(), 0);
 
     // (1, 0, 0) is (FontStyles::Weight, FontStyles::Width, FontStyles::Slant)
     EXPECT_EQ(GetFontStyles(1, 0, 0).ToTexgineFontStyle().GetFontStyle()->weight(), 100);

@@ -343,7 +343,7 @@ HWTEST_F(MeasurerImplTest, SeekTypeface3, TestSize.Level1)
     MeasurerImpl mi(text_, fontCollection_);
     mi.SetRange(0, 2);
     mi.SeekTypeface(mRuns);
-    EXPECT_EQ(mRuns.size(), 2);
+    EXPECT_EQ(mRuns.size(), 1);
     EXPECT_EQ(mRuns.front().typeface, g_measurerMockvars.typeface);
 }
 

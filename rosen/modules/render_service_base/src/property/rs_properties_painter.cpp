@@ -1366,7 +1366,7 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
 
     canvas.save();
     canvas.translate(bounds.x(), bounds.y());
-    if (pixelStretch->x_ < 0) {
+    if (properties.IsPixelStretchExpanded()) {
 #ifdef NEW_SKIA
         paint.setShader(image->makeShader(SkTileMode::kClamp, SkTileMode::kClamp, SkSamplingOptions(), &scaleMat));
 #else

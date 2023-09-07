@@ -305,6 +305,8 @@ ScreenId RSRenderServiceConnection::CreateVirtualScreen(
     std::lock_guard<std::mutex> lock(mutex_);
     auto newVirtualScreenId = screenManager_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags);
     virtualScreenIds_.insert(newVirtualScreenId);
+    auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
+    hgmCore.StartScreenScene(mirrorId, SceneType::SCREEN_RECORD);
     return newVirtualScreenId;
 }
 
@@ -319,6 +321,8 @@ void RSRenderServiceConnection::RemoveVirtualScreen(ScreenId id)
     std::lock_guard<std::mutex> lock(mutex_);
     screenManager_->RemoveVirtualScreen(id);
     virtualScreenIds_.erase(id);
+    auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
+    hgmCore.StartScreenScene(id, SceneType::SCREEN_RECORD);
 }
 
 int32_t RSRenderServiceConnection::SetScreenChangeCallback(sptr<RSIScreenChangeCallback> callback)

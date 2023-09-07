@@ -196,6 +196,8 @@ public:
      */
     virtual void ClipPath(const Path& path, ClipOp op, bool doAntiAlias = false);
 
+    virtual void ClipRegion(const Region& region, ClipOp op = ClipOp::INTERSECT);
+
     // transform
     virtual void SetMatrix(const Matrix& matrix);
     virtual void ResetMatrix();

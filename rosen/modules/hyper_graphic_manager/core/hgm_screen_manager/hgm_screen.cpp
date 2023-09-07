@@ -123,7 +123,7 @@ bool HgmScreen::IfSwitchToRate(int32_t screenId, uint32_t rate) const
     }
 
     if (rate == profilePtr->GetRate() || screenId < 0) {
-        HGM_LOGI("HgmScreen Set framerate to %{public}u is rejected!!!", rate);
+        HGM_LOGI("HgmScreen Set framerate to %{public}u is rejected!!!!", rate);
         return ifSwitch;
     }
 

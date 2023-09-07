@@ -16,6 +16,7 @@
 #include "hgm_core.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <string>
 #include <unistd.h>
 
@@ -329,6 +330,12 @@ uint32_t HgmCore::GetScreenCurrentRefreshRate(ScreenId id) const
     }
 
     return screen->GetActiveRefreshRate();
+}
+
+int32_t HgmCore::GetCurrentRefreshRateMode() const
+{
+    int32_t currentRefreshRateMode = static_cast<int32_t>(customFrameRateMode_);
+    return currentRefreshRateMode;
 }
 
 sptr<HgmScreen> HgmCore::GetScreen(ScreenId id) const

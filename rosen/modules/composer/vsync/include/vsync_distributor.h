@@ -49,9 +49,10 @@ public:
 
     virtual VsyncError RequestNextVSync() override;
     virtual VsyncError GetReceiveFd(int32_t &fd) override;
-    virtual VsyncError SetVSyncRate(int32_t rate) override;
+    virtual VsyncError SetVSyncRate(int32_t rate, bool autoTrigger) override;
     virtual VsyncError GetVSyncPeriod(int64_t &period) override;
     virtual VsyncError Destroy() override;
+    virtual VsyncError SetVSyncRefreshRate(int32_t refreshRate) override;
 
     int32_t PostEvent(int64_t now, int64_t period, int64_t vsyncCount);
 
@@ -60,6 +61,8 @@ public:
     bool highPriorityState_ = false;
     ConnectionInfo info_;
     int32_t proxyPid_;
+    bool autoTrigger_ = false;
+    bool triggerThisTime_ = false;
 private:
     VsyncError CleanAllLocked();
     class VSyncConnectionDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -93,12 +96,14 @@ public:
     VsyncError AddConnection(const sptr<VSyncConnection>& connection);
     VsyncError RemoveConnection(const sptr<VSyncConnection> &connection);
     VsyncError RequestNextVSync(const sptr<VSyncConnection>& connection);
-    VsyncError SetVSyncRate(int32_t rate, const sptr<VSyncConnection>& connection);
+    VsyncError SetVSyncRate(int32_t rate, bool autoTrigger, const sptr<VSyncConnection>& connection);
     VsyncError SetHighPriorityVSyncRate(int32_t highPriorityRate, const sptr<VSyncConnection>& connection);
     VsyncError GetVSyncConnectionInfos(std::vector<ConnectionInfo>& infos);
     VsyncError GetQosVSyncRateInfos(std::vector<std::pair<uint32_t, int32_t>>& vsyncRateInfos);
     VsyncError SetQosVSyncRate(uint32_t pid, int32_t rate);
     VsyncError GetVSyncPeriod(int64_t &period);
+    VsyncError SetVSyncRefreshRate(int32_t refreshRate, const sptr<VSyncConnection>& connection);
+    VsyncError SetAllConnRefreshRate(int32_t refreshRate); // 此接口用于调试
 
 private:
 
@@ -107,14 +112,17 @@ private:
         int64_t timestamp;
         int64_t vsyncCount;
         int64_t period;
+        int64_t vsyncPulseCount;
+        int32_t refreshRate;
     };
     void ThreadMain();
     void EnableVSync();
     void DisableVSync();
-    void OnVSyncEvent(int64_t now, int64_t period);
+    void OnVSyncEvent(int64_t now, int64_t period, int32_t refreshRate);
     void CollectConnections(bool &waitForVSync, int64_t timestamp,
                             std::vector<sptr<VSyncConnection>> &conns, int64_t vsyncCount);
     VsyncError QosGetPidByName(const std::string& name, uint32_t& pid);
+    void SetPhasePulseNum(int32_t pulseNum);
     void PostVSyncEvent(const std::vector<sptr<VSyncConnection>> &conns, int64_t timestamp);
 
     std::thread threadLoop_;
@@ -127,6 +135,7 @@ private:
     std::string name_;
     bool vsyncThreadRunning_;
     std::unordered_map<int32_t, int32_t> connectionCounter_;
+    int32_t phasePulseNum_;
 };
 } // namespace Rosen
 } // namespace OHOS

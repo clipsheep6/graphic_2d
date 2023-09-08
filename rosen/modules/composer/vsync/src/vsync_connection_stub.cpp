@@ -44,7 +44,8 @@ int32_t VSyncConnectionStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
         }
         case IVSYNC_CONNECTION_SET_RATE: {
             int32_t rate = data.ReadInt32();
-            int32_t ret = SetVSyncRate(rate);
+            bool autoTrigger = data.ReadBool();
+            int32_t ret = SetVSyncRate(rate, autoTrigger);
             if (ret != VSYNC_ERROR_OK) {
                 // check add log
                 return ret;
@@ -62,6 +63,14 @@ int32_t VSyncConnectionStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
         }
         case IVSYNC_CONNECTION_DESTROY: {
             return Destroy();
+        }
+        case IVSYNC_CONNECTION_SET_REFRESHRATE: {
+            int32_t refreshRate = data.ReadInt32();
+            int32_t ret = SetVSyncRefreshRate(refreshRate);
+            if (ret != VSYNC_ERROR_OK) {
+                return ret;
+            }
+            break;
         }
         default: {
             // check add log

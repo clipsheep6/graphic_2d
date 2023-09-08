@@ -28,8 +28,9 @@ class VSyncController : public VSyncGenerator::Callback {
 public:
     class Callback {
     public:
-        virtual void OnVSyncEvent(int64_t now, int64_t period) = 0;
+        virtual void OnVSyncEvent(int64_t now, int64_t period, int32_t refreshRate) = 0;
         virtual ~Callback() = default;
+        virtual void SetPhasePulseNum(int32_t pulseNum) = 0;
     };
 
     VSyncController(const sptr<VSyncGenerator> &geng, int64_t offset);
@@ -42,10 +43,11 @@ public:
     VsyncError SetEnable(bool enable, bool& isGeneratorEnable);
     VsyncError SetCallback(Callback* cb);
     VsyncError SetPhaseOffset(int64_t offset);
+    VsyncError SetPhaseOffsetByPulseNum(int32_t pulseNum);
 
 private:
 
-    void OnVSyncEvent(int64_t now, int64_t period);
+    void OnVSyncEvent(int64_t now, int64_t period, int32_t refreshRate);
     wptr<VSyncGenerator> generator_;
     std::mutex callbackMutex_;
     Callback* callback_;

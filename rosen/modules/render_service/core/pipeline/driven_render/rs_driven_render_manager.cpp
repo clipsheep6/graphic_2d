@@ -91,6 +91,13 @@ bool RSDrivenRenderManager::ClipHoleForDrivenNode(RSPaintFilterCanvas& canvas, c
     canvas.clipRRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect), true);
     canvas.clear(SK_ColorTRANSPARENT);
     canvas.restore();
+#else
+    canvas.Save();
+    canvas.ClipRoundRect(RSPropertiesPainter::RRect2SkRRect(absClipRRect),
+            Drawing::ClipOp::INTERSECT, true);
+    canvas.Clear(Drawing::Color::COLOR_TRANSPARENT);
+    canvas.Restore();
+#endif
     return true;
 #else
     return false;

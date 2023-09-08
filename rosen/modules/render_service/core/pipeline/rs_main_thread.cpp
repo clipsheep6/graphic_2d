@@ -2249,6 +2249,33 @@ bool RSMainThread::CheckNodeHasToBePreparedByPid(NodeId nodeId, bool isClassifyB
     }
 }
 
+bool RSMainThread::IfDrawingGroupChanged(RSRenderNode& node) const
+{
+    std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> activeNodeIds = {};
+    auto iter = context_->activeNodesInRoot_.find(node.GetInstanceRootNodeId());
+    if (iter != context_->activeNodesInRoot_.end()) {
+        activeNodeIds = iter->second;
+    }
+    iter = context_->activeNodesInRoot_.find(INVALID_NODEID);
+    if (iter != context_->activeNodesInRoot_.end()) {
+        activeNodeIds.insert(iter->second.begin(), iter->second.end());
+    }
+    // do not need to check cacheroot node itself
+    // in case of tree change, parent node would set content dirty and reject before
+    auto cacheRootId = node.GetId();
+    EraseIf(activeNodeIds, [cacheRootId](const auto& pair) -> bool { return pair.first == cacheRootId; });
+    auto groupNodeIds = node.GetVisitedCacheRootIds();
+    for (auto [id, subNode] : activeNodeIds) {
+        if (subNode == nullptr) {
+            continue;
+        }
+        if (groupNodeIds.find(subNode->GetDrawingCacheRootId()) != groupNodeIds.end()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 int32_t RSMainThread::GetNodePreferred(const std::vector<HgmModifierProfile>& hgmModifierProfileList) const
 {
     if (hgmModifierProfileList.size() == 0) {

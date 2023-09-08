@@ -116,8 +116,7 @@ namespace OHOS {
                 return false;
             }
         }
-        
-        g_hdiScreen->SetScreenMode(modeId);
+        g_hdiScreen->SetScreenMode(modeId, nullptr);
         g_hdiScreen->SetScreenPowerStatus(status);
         g_hdiScreen->SetScreenBacklight(level);
         g_hdiScreen->SetScreenVsyncEnabled(enabled);

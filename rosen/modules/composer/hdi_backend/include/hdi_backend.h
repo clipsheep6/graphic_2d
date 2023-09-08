@@ -38,6 +38,7 @@ struct PrepareCompleteParam {
 };
 
 using OnScreenHotplugFunc = std::function<void(OutputPtr &output, bool connected, void* data)>;
+using OnSeamlessChangeFunc = std::function<void(OutputPtr &output, void* data)>;
 using OnPrepareCompleteFunc = std::function<void(sptr<Surface>& surface,
                                                  const struct PrepareCompleteParam &param, void* data)>;
 
@@ -48,6 +49,7 @@ public:
     RosenError RegScreenHotplug(OnScreenHotplugFunc func, void* data);
     RosenError RegPrepareComplete(OnPrepareCompleteFunc func, void* data);
     RosenError RegHwcDeadListener(OnHwcDeadCallback func, void* data);
+    RosenError RegSeamlessChange(OnSeamlessChangeFunc func, void *data);
     void Repaint(const OutputPtr &output);
     void ResetDevice();
     /* for RS end */
@@ -66,15 +68,19 @@ private:
     HdiDevice *device_ = nullptr;
     void* onHotPlugCbData_ = nullptr;
     void* onPrepareCompleteCbData_ = nullptr;
+    void* onSeamlessChangeData_ = nullptr;
     OnScreenHotplugFunc onScreenHotplugCb_ = nullptr;
+    OnSeamlessChangeFunc onSeamlessChangeCb_ = nullptr;
     OnPrepareCompleteFunc onPrepareCompleteCb_ = nullptr;
     std::unordered_map<uint32_t, OutputPtr> outputs_;
 
     static void OnHdiBackendHotPlugEvent(uint32_t deviceId, bool connected, void *data);
+    static void OnSeamlessChangeEvent(uint32_t deviceId, void *data);
     RosenError InitDevice();
     void OnHdiBackendConnected(uint32_t screenId, bool connected);
     void CreateHdiOutput(uint32_t screenId);
     void OnScreenHotplug(uint32_t screenId, bool connected);
+    void OnSeamlessChange(uint32_t deviceId);
     void ReorderLayerInfo(std::vector<LayerInfoPtr> &newLayerInfos);
     void OnPrepareComplete(bool needFlush, const OutputPtr &output, std::vector<LayerInfoPtr> &newLayerInfos);
     int32_t PrepareCompleteIfNeed(const OutputPtr &output, bool needFlush);

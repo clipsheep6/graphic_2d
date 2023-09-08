@@ -49,7 +49,7 @@ public:
     virtual uint32_t Height() const = 0;
     virtual bool IsEnable() const = 0;
     virtual bool IsVirtual() const = 0;
-    virtual void SetActiveMode(uint32_t modeId) = 0;
+    virtual void SetActiveMode(uint32_t modeId, DisplayModeCallback callback) = 0;
     virtual void SetResolution(uint32_t width, uint32_t height) = 0;
     virtual void SetPowerStatus(uint32_t powerStatus) = 0;
     virtual std::optional<GraphicDisplayModeInfo> GetActiveMode() const = 0;
@@ -101,7 +101,7 @@ public:
     uint32_t Height() const override;
     bool IsEnable() const override;
     bool IsVirtual() const override;
-    void SetActiveMode(uint32_t modeId) override;
+    void SetActiveMode(uint32_t modeId, DisplayModeCallback callback) override;
     void SetResolution(uint32_t width, uint32_t height) override;
     void SetPowerStatus(uint32_t powerStatus) override;
     std::optional<GraphicDisplayModeInfo> GetActiveMode() const override;

@@ -283,7 +283,7 @@ int32_t HgmCore::RemoveScreen(ScreenId id)
     return EXEC_SUCCESS;
 }
 
-int32_t HgmCore::AddScreenInfo(ScreenId id, int32_t width, int32_t height, uint32_t rate, int32_t mode)
+int32_t HgmCore::AddScreenInfo(ScreenId id, int32_t width, int32_t height, uint32_t rate, int32_t mode, int32_t group)
 {
     // add a supported screen mode to the screen
     auto screen = GetScreen(id);
@@ -292,7 +292,7 @@ int32_t HgmCore::AddScreenInfo(ScreenId id, int32_t width, int32_t height, uint3
         return HGM_NO_SCREEN;
     }
 
-    if (screen->AddScreenModeInfo(width, height, rate, mode) == EXEC_SUCCESS) {
+    if (screen->AddScreenModeInfo(width, height, rate, mode, group) == EXEC_SUCCESS) {
         return EXEC_SUCCESS;
     }
 

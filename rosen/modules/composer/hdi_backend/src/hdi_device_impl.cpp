@@ -16,6 +16,7 @@
 #include "hdi_device_impl.h"
 #include "hdi_log.h"
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <mutex>
 #include <scoped_bytrace.h>
@@ -100,6 +101,18 @@ int32_t HdiDeviceImpl::RegScreenVBlankCallback(uint32_t screenId, VBlankCallback
     return g_composer->RegDisplayVBlankCallback(screenId, callback, data);
 }
 
+int32_t HdiDeviceImpl::RegSeamlessChangeCallback(OnSeamlessChange callback, void *data)
+{
+    CHECK_FUNC(g_composer);
+    return g_composer->RegSeamlessChangeCallback(callback, data);
+}
+
+int32_t HdiDeviceImpl::GetScreenVblankPeriod(uint32_t screenId, uint64_t &period)
+{
+    CHECK_FUNC(g_composer);
+    return g_composer->GetDisplayVblankPeriod(screenId, period);
+}
+
 int32_t HdiDeviceImpl::SetScreenVsyncEnabled(uint32_t screenId, bool enabled)
 {
     CHECK_FUNC(g_composer);
@@ -152,6 +165,7 @@ int32_t HdiDeviceImpl::GetScreenSupportedModes(uint32_t screenId, std::vector<Gr
             .height = iter->height,
             .freshRate = iter->freshRate,
             .id = iter->id,
+            .groupId = iter->groupId,
         };
         modes.emplace_back(tempMode);
     }
@@ -164,16 +178,16 @@ int32_t HdiDeviceImpl::GetScreenMode(uint32_t screenId, uint32_t &modeId)
     return g_composer->GetDisplayMode(screenId, modeId);
 }
 
-int32_t HdiDeviceImpl::SetScreenMode(uint32_t screenId, uint32_t modeId)
+int32_t HdiDeviceImpl::SetScreenMode(uint32_t screenId, uint32_t modeId, DisplayModeCallback callback)
 {
     CHECK_FUNC(g_composer);
-    return g_composer->SetDisplayMode(screenId, modeId);
+    return g_composer->SetDisplayMode(screenId, modeId, callback);
 }
 
 int32_t HdiDeviceImpl::GetScreenPowerStatus(uint32_t screenId, GraphicDispPowerStatus &status)
 {
     CHECK_FUNC(g_composer);
-    DispPowerStatus hdiStatus;
+    DispPowerStatus hdiStatus; 
     int32_t ret = g_composer->GetDisplayPowerStatus(screenId, hdiStatus);
     if (ret == GRAPHIC_DISPLAY_SUCCESS) {
         status = static_cast<GraphicDispPowerStatus>(hdiStatus);

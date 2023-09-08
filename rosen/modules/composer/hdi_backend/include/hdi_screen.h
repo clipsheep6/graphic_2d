@@ -16,6 +16,7 @@
 #ifndef HDI_BACKEND_HDI_SCREEN_H
 #define HDI_BACKEND_HDI_SCREEN_H
 
+#include <cstdint>
 #include <functional>
 #include <vector>
 #include <refbase.h>
@@ -26,7 +27,9 @@
 namespace OHOS {
 namespace Rosen {
 
+// using OutputPtr = std::shared_ptr<HdiOutput>;
 using OnVsyncFunc = std::function<void()>;
+// using OnSetDisplayModeFunc = std::function<void(OutputPtr &output, bool connected, void* data)>;
 
 class HdiScreen {
 public:
@@ -39,7 +42,7 @@ public:
     int32_t GetScreenCapability(GraphicDisplayCapability &info) const;
     int32_t GetScreenSupportedModes(std::vector<GraphicDisplayModeInfo> &modes) const;
     int32_t GetScreenMode(uint32_t &modeId) const;
-    int32_t SetScreenMode(uint32_t modeId) const;
+    int32_t SetScreenMode(uint32_t modeId, DisplayModeCallback callback) const;
     int32_t GetScreenPowerStatus(GraphicDispPowerStatus &status) const;
     int32_t SetScreenPowerStatus(GraphicDispPowerStatus status) const;
     int32_t GetScreenBacklight(uint32_t &level) const;

@@ -176,7 +176,7 @@ HWTEST_F(RSScreenTest, SetActiveMode_001, testing::ext::TestSize.Level1)
     VirtualScreenConfigs config;
     auto virtualScreen = std::make_unique<impl::RSScreen>(config);
     uint32_t modeId = static_cast<uint32_t>(1);
-    virtualScreen->SetActiveMode(modeId);
+    virtualScreen->SetActiveMode(modeId, nullptr);
 }
 
 /*

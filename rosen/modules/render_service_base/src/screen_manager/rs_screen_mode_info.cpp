@@ -22,8 +22,13 @@ RSScreenModeInfo::RSScreenModeInfo(int32_t width, int32_t height, uint32_t refre
 {
 }
 
+RSScreenModeInfo::RSScreenModeInfo(int32_t width, int32_t height, uint32_t refreshRate, int32_t id, int32_t groupId)
+    : width_(width),height_(height), refreshRate_(refreshRate), modeId_(id), groupId_(groupId)
+{
+}
+
 RSScreenModeInfo::RSScreenModeInfo(const RSScreenModeInfo& other) : width_(other.width_),
-    height_(other.height_), refreshRate_(other.refreshRate_), modeId_(other.modeId_)
+    height_(other.height_), refreshRate_(other.refreshRate_), modeId_(other.modeId_), groupId_(other.groupId_)
 {
 }
 
@@ -33,13 +38,14 @@ RSScreenModeInfo& RSScreenModeInfo::operator=(const RSScreenModeInfo& other)
     height_ = other.height_;
     refreshRate_ = other.refreshRate_;
     modeId_ = other.modeId_;
+    groupId_ = other.groupId_;
     return *this;
 }
 
 bool RSScreenModeInfo::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteInt32(width_) && parcel.WriteInt32(height_) &&
-        parcel.WriteUint32(refreshRate_) && parcel.WriteInt32(modeId_);
+        parcel.WriteUint32(refreshRate_) && parcel.WriteInt32(modeId_) && parcel.WriteInt32(groupId_);
 }
 
 RSScreenModeInfo* RSScreenModeInfo::Unmarshalling(Parcel& parcel)
@@ -48,12 +54,13 @@ RSScreenModeInfo* RSScreenModeInfo::Unmarshalling(Parcel& parcel)
     int32_t height;
     uint32_t refreshRate;
     int32_t id;
+    int32_t groupId;
     if (!(parcel.ReadInt32(width) && parcel.ReadInt32(height) && parcel.ReadUint32(refreshRate)
-        && parcel.ReadInt32(id))) {
+        && parcel.ReadInt32(id) && parcel.ReadInt32(groupId))) {
         return nullptr;
     }
 
-    RSScreenModeInfo* screenModeInfo = new RSScreenModeInfo(width, height, refreshRate, id);
+    RSScreenModeInfo* screenModeInfo = new RSScreenModeInfo(width, height, refreshRate, id, groupId);
     return screenModeInfo;
 }
 
@@ -77,6 +84,11 @@ int32_t RSScreenModeInfo::GetScreenModeId() const
     return modeId_;
 }
 
+int32_t RSScreenModeInfo::GetScreenGroupId() const
+{
+    return groupId_;
+}
+
 void RSScreenModeInfo::SetScreenWidth(int32_t width)
 {
     width_ = width;
@@ -95,6 +107,11 @@ void RSScreenModeInfo::SetScreenRefreshRate(uint32_t refreshRate)
 void RSScreenModeInfo::SetScreenModeId(int32_t id)
 {
     modeId_ = id;
+}
+
+void RSScreenModeInfo::SetScreenGroupId(int32_t groupId)
+{
+    groupId_ = groupId;
 }
 } // namespace Rosen
 } // namespace OHOS

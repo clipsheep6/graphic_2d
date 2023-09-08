@@ -14,6 +14,7 @@
  */
 
 #include "hdi_device.h"
+#include <cstdint>
 #include <gtest/gtest.h>
 
 using namespace testing;
@@ -52,16 +53,18 @@ HWTEST_F(HdiDeviceTest, DeviceFuncs001, Function | MediumTest| Level3)
 {
     ASSERT_EQ(HdiDeviceTest::hdiDevice_->RegHotPlugCallback(nullptr, nullptr), GRAPHIC_DISPLAY_SUCCESS);
     uint32_t screenId = 1, screenModeId = 0, screenLightLevel = 0;
+    uint64_t period = 0;
     ASSERT_EQ(HdiDeviceTest::hdiDevice_->RegScreenVBlankCallback(screenId, nullptr, nullptr),
               GRAPHIC_DISPLAY_SUCCESS);
     bool enabled = false, needFlush = false;
+    ASSERT_EQ(HdiDeviceTest::hdiDevice_->GetScreenVblankPeriod(screenId, period), GRAPHIC_DISPLAY_SUCCESS);
     ASSERT_EQ(HdiDeviceTest::hdiDevice_->SetScreenVsyncEnabled(screenId, enabled), GRAPHIC_DISPLAY_SUCCESS);
     GraphicDisplayCapability dcpInfo;
     ASSERT_EQ(HdiDeviceTest::hdiDevice_->GetScreenCapability(screenId, dcpInfo), GRAPHIC_DISPLAY_SUCCESS);
     std::vector<GraphicDisplayModeInfo> dmodes;
     ASSERT_EQ(HdiDeviceTest::hdiDevice_->GetScreenSupportedModes(screenId, dmodes), GRAPHIC_DISPLAY_SUCCESS);
     ASSERT_EQ(HdiDeviceTest::hdiDevice_->GetScreenMode(screenId, screenModeId), GRAPHIC_DISPLAY_SUCCESS);
-    ASSERT_EQ(HdiDeviceTest::hdiDevice_->SetScreenMode(screenId, screenModeId), GRAPHIC_DISPLAY_SUCCESS);
+    ASSERT_EQ(HdiDeviceTest::hdiDevice_->SetScreenMode(screenId, screenModeId, nullptr), GRAPHIC_DISPLAY_SUCCESS);
     GraphicDispPowerStatus dstatus = GRAPHIC_POWER_STATUS_ON;
     ASSERT_EQ(HdiDeviceTest::hdiDevice_->GetScreenPowerStatus(screenId, dstatus), GRAPHIC_DISPLAY_SUCCESS);
     ASSERT_EQ(HdiDeviceTest::hdiDevice_->SetScreenPowerStatus(screenId, dstatus), GRAPHIC_DISPLAY_SUCCESS);

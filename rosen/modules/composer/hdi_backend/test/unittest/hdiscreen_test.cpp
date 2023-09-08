@@ -41,7 +41,7 @@ void HdiScreenTest::SetUpTestCase()
     EXPECT_CALL(*mockDevice_, GetScreenCapability(_, _)).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*mockDevice_, GetScreenSupportedModes(_, _)).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*mockDevice_, GetScreenMode(_, _)).WillRepeatedly(testing::Return(0));
-    EXPECT_CALL(*mockDevice_, SetScreenMode(_, _)).WillRepeatedly(testing::Return(0));
+    EXPECT_CALL(*mockDevice_, SetScreenMode(_, _, _)).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*mockDevice_, GetScreenPowerStatus(_, _)).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*mockDevice_, SetScreenPowerStatus(_, _)).WillRepeatedly(testing::Return(0));
     EXPECT_CALL(*mockDevice_, GetScreenBacklight(_, _)).WillRepeatedly(testing::Return(0));
@@ -76,7 +76,7 @@ HWTEST_F(HdiScreenTest, CheckDeviceNull001, Function | MediumTest| Level3)
     ASSERT_EQ(hdiScreen_->GetScreenSupportedModes(modes), GRAPHIC_DISPLAY_NULL_PTR);
     uint32_t modeId = 0;
     ASSERT_EQ(hdiScreen_->GetScreenMode(modeId), GRAPHIC_DISPLAY_NULL_PTR);
-    ASSERT_EQ(hdiScreen_->SetScreenMode(modeId), GRAPHIC_DISPLAY_NULL_PTR);
+    ASSERT_EQ(hdiScreen_->SetScreenMode(modeId, nullptr), GRAPHIC_DISPLAY_NULL_PTR);
     GraphicDispPowerStatus status = GRAPHIC_POWER_STATUS_ON;
     ASSERT_EQ(hdiScreen_->GetScreenPowerStatus(status), GRAPHIC_DISPLAY_NULL_PTR);
     ASSERT_EQ(hdiScreen_->SetScreenPowerStatus(status), GRAPHIC_DISPLAY_NULL_PTR);
@@ -176,7 +176,7 @@ HWTEST_F(HdiScreenTest, GetScreenMode001, Function | MediumTest| Level3)
 HWTEST_F(HdiScreenTest, SetScreenMode001, Function | MediumTest| Level3)
 {
     uint32_t modeId = 0;
-    ASSERT_EQ(HdiScreenTest::hdiScreen_->SetScreenMode(modeId), 0);
+    ASSERT_EQ(HdiScreenTest::hdiScreen_->SetScreenMode(modeId, nullptr), 0);
 }
 
 /*

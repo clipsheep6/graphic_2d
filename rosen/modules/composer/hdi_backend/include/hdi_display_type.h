@@ -15,6 +15,7 @@
 
 #ifndef GRAPHIC_COMPOSER_DISPLAY_TYPE_H
 #define GRAPHIC_COMPOSER_DISPLAY_TYPE_H
+#include <cstdint>
 #include "buffer_handle.h"
 #include "surface_type.h"
 
@@ -75,6 +76,7 @@ typedef struct {
     int32_t height;     /**< Height in pixel */
     uint32_t freshRate; /**< Fresh rate per second */
     int32_t id;         /**< ID of the mode */
+    int32_t groupId;    /**< Group supporting seamless framerate change */
 } GraphicDisplayModeInfo;
 
 typedef enum {
@@ -161,6 +163,26 @@ typedef void (*VBlankCallback)(unsigned int sequence, uint64_t ns, void *data);
  * @param data Indicates the pointer to the private data carried by the graphics service.
  */
 typedef void (*OnHwcDeadCallback)(void *data);
+
+/*
+ * @brief Called when setting a new display mode.
+ *
+ * @param devId Indicates the ID of the display device.
+ * @param isSuccess Indicates the the result of calling SetScreenMode. The value <b>true</b> means that
+ *  the call succeeded, and <b>false</b> means the opposite.
+ * @param data Indicates the pointer to the private data carried by the graphics service.
+ */
+typedef void (*DisplayModeCallback)(uint32_t devId, bool isSuccess, void *data);
+
+/*
+ * @brief Called when hardware is ready for a seamless refresh rate change.
+ *
+ * This callback must be registered by calling <b>RegSeamlessChangeCallback</b>.
+ *
+ * @param devId Indicates the ID of the display device.
+ * @param data Indicates the pointer to the private data carried by the graphics service.
+ */
+typedef void (*OnSeamlessChange)(uint32_t devId, void *data);
 
 #ifdef __cplusplus
 }

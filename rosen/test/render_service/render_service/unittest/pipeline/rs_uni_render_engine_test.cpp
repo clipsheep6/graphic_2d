@@ -47,10 +47,13 @@ HWTEST(RSUniRenderEngineTest, DrawSurfaceNodeWithParams001, TestSize.Level1)
     std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
     std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
     ASSERT_NE(canvas, nullptr);
-    auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    auto param = RSDividedRenderUtil::CreateBufferDrawParam(*node);
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
+    BufferDrawParam param;
     param.useCPU = true;
-    uniRenderEngine->DrawSurfaceNodeWithParams(*canvas, *node, param, nullptr, nullptr);
+    uniRenderEngine->DrawSurfaceNodeWithParams(*canvas, *surfaceNode, param, nullptr, nullptr);
 }
 
 /**
@@ -65,10 +68,13 @@ HWTEST(RSUniRenderEngineTest, DrawSurfaceNodeWithParams002, TestSize.Level1)
     std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
     std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
     ASSERT_NE(canvas, nullptr);
-    auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    auto param = RSDividedRenderUtil::CreateBufferDrawParam(*node);
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
+    BufferDrawParam param;
     param.useCPU = true;
-    uniRenderEngine->DrawSurfaceNodeWithParams(*canvas, *node, param, nullptr, nullptr);
+    uniRenderEngine->DrawSurfaceNodeWithParams(*canvas, *surfaceNode, param, nullptr, nullptr);
 }
 
 /**

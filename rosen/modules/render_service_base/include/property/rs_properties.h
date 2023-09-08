@@ -266,6 +266,10 @@ public:
     bool IsLightUpEffectValid() const;
     bool IsDynamicLightUpValid() const;
 
+    bool IsPixelStretchValid() const
+    bool IsPixelStretchPercentValid() const
+    bool IsPixelStretchExpanded() const
+
     // Image effect properties
     void SetGrayScale(const std::optional<float>& grayScale);
     const std::optional<float>& GetGrayScale() const;

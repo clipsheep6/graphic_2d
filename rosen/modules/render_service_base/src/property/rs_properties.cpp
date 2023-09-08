@@ -2314,5 +2314,63 @@ void RSProperties::CalculateFrameOffset()
         isDrawn_ = true;
     }
 }
+
+bool RSProperties::IsPixelStretchValid() const
+{
+    if (!pixelStretch_ || pixelStretch_->IsZero()) {
+        return false;
+    }
+
+    constexpr static float EPS = 1e-5f;
+    if (pixelStretch_->x_ <= EPS && pixelStretch_->y_ <= EPS && pixelStretch_->z_ <= EPS && pixelStretch_->w_ <= EPS) {
+        return  true;
+    }
+
+    if (pixelStretch_->x_ >= -EPS && pixelStretch_->y_ >= -EPS && pixelStretch_->z_ >= -EPS
+        && pixelStretch_->w_ >= -EPS) {
+        return  true;
+    }
+
+    return false;
+}
+
+bool RSProperties::IsPixelStretchPercentValid() const
+{
+    if (!pixelStretchPercent_ || pixelStretchPercent_->IsZero()) {
+        return false;
+    }
+
+    constexpr static float EPS = 1e-5f;
+    if (pixelStretchPercent_->x_ <= EPS && pixelStretchPercent_->y_ <= EPS && pixelStretchPercent_->z_ <= EPS
+        && pixelStretchPercent_->w_ <= EPS) {
+        return  true;
+    }
+
+    if (pixelStretchPercent_->x_ >= -EPS && pixelStretchPercent_->y_ >= -EPS && pixelStretchPercent_->z_ >= -EPS
+        && pixelStretchPercent_->w_ >= -EPS) {
+        return  true;
+    }
+
+    return false;
+}
+
+bool RSProperties::IsPixelStretchExpanded() const
+{
+    if (IsPixelStretchValid()) {
+        constexpr static float EPS = 1e-5f;
+        if (pixelStretch_->x_ >= -EPS && pixelStretch_->y_ >= -EPS && pixelStretch_->z_ >= -EPS
+            && pixelStretch_->w_ >= -EPS) {
+            return true;
+        }
+    }
+    if (IsPixelStretchPercentValid()) {
+        constexpr static float EPS = 1e-5f;
+        if (pixelStretchPercent_->x_ >= -EPS && pixelStretchPercent_->y_ >= -EPS && pixelStretchPercent_->z_ >= -EPS
+            && pixelStretchPercent_->w_ >= -EPS) {
+            return true;
+        }
+    }
+    return false;
+}
 } // namespace Rosen
 } // namespace OHOS

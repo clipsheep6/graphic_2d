@@ -104,18 +104,14 @@ TextEngine::TextStyle Convert(const TextStyle &style)
     auto decorationColor = SkColorSetARGB(style.decorationColor.GetAlpha(),
         style.decorationColor.GetRed(), style.decorationColor.GetGreen(), style.decorationColor.GetBlue());
 #endif
-    auto foreground = std::make_shared<TextEngine::TexginePaint>();
-#ifndef USE_GRAPHIC_TEXT_GINE
-    foreground->SetPaint(*style.foreground_);
-#else
-    foreground->SetPaint(*style.foreground);
-#endif
-    auto background = std::make_shared<TextEngine::TexginePaint>();
-#ifndef USE_GRAPHIC_TEXT_GINE
-    background->SetPaint(*style.background_);
-#else
-    background->SetPaint(*style.background);
-#endif
+    std::optional<TextEngine::TexginePaint> foreground = std::nullopt;
+    if (style.foreground.has_value()) {
+        foreground.value().SetPaint(style.foreground.value());
+    }
+    std::optional<TextEngine::TexginePaint> background = std::nullopt;
+    if (style.background.has_value()) {
+        background.value().SetPaint(style.background.value());
+    }
     TextEngine::TextStyle xs = {
 #ifndef USE_GRAPHIC_TEXT_GINE
         .fontWeight_ = Convert(style.fontWeight_),
@@ -151,8 +147,8 @@ TextEngine::TextStyle Convert(const TextStyle &style)
         .heightScale = style.heightScale,
         .letterSpacing = style.letterSpacing,
         .wordSpacing = style.wordSpacing,
-        .foreground = *foreground,
-        .background = *background,
+        .foreground = foreground,
+        .background = background,
 #endif
     };
 

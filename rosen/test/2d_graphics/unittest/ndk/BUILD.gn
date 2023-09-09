@@ -48,6 +48,7 @@ ohos_unittest("2d_graphics_ndk_test") {
 
   deps = [
     "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
+    "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics_drawing",
     "//third_party/googletest:gtest_main",
   ]
 

@@ -41,7 +41,10 @@ ohos_fuzztest("DrawingFuzzTest") {
     "get_object.h",
   ]
 
-  deps = [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
+  deps = [
+    "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
+    "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics_drawing",
+  ]
 
   part_name = "graphic_2d"
   subsystem_name = "graphic"

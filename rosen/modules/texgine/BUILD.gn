@@ -108,6 +108,11 @@ ohos_shared_library("libtexgine") {
     ]
 
     defines = []
+
+    if (graphic_2d_feature_enable_hyphen) {
+      defines += [ "ENABLE_HYPHEN" ]
+    }
+
     if (enable_text_gine) {
       defines += [ "USE_GRAPHIC_TEXT_GINE" ]
     }
@@ -140,6 +145,9 @@ ohos_shared_library("libtexgine") {
   }
 
   innerapi_tags = [ "platformsdk" ]
+  if (graphic_2d_feature_enable_hyphen) {
+    sources += [ "src/hyphenator.cpp" ]
+  }
   part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

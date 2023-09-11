@@ -50,6 +50,7 @@ TextEngine::TypographyStyle Convert(const TypographyStyle &style)
             .heightOnly_ = style.lineStyleHeightOnly_,
             .fontSize_ = style.lineStyleFontSize_,
             .heightScale_ = style.lineStyleHeightScale_,
+        },
 #else
         .fontWeight = Convert(style.fontWeight),
         .fontStyle = Convert(style.fontStyle),
@@ -74,8 +75,8 @@ TextEngine::TypographyStyle Convert(const TypographyStyle &style)
             .heightOnly = style.lineStyleHeightOnly,
             .fontSize = style.lineStyleFontSize,
             .heightScale = style.lineStyleHeightScale,
-#endif
         },
+#endif
     };
 #ifndef USE_GRAPHIC_TEXT_GINE
     if (style.lineStyleSpacingScale_ >= 0) {

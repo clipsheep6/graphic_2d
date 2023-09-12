@@ -29,7 +29,7 @@
 #include "modifier/rs_modifier_type.h"
 #include "modifier/rs_showing_properties_freezer.h"
 #include "pipeline/rs_recording_canvas.h"
-#include "property/rs_properties.h"
+#include "platform/common/rs_system_properties.h"
 #include "render/rs_mask.h"
 #include "render/rs_path.h"
 

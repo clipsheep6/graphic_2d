@@ -19,8 +19,9 @@
 #include <mutex>
 #include <vector>
 
-#include "common/rs_macros.h"
 #include "event_handler.h"
+
+#include "common/rs_macros.h"
 
 namespace OHOS {
 namespace Rosen {

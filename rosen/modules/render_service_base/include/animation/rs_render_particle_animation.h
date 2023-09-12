@@ -20,7 +20,6 @@
 
 #include "rs_render_particle.h"
 
-#include "animation/rs_interpolator.h"
 #include "animation/rs_render_particle_system.h"
 #include "animation/rs_render_property_animation.h"
 #include "common/rs_macros.h"

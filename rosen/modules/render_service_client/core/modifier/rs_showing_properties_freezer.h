@@ -16,8 +16,14 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_MODIFIER_RS_SHOWING_PROPERTIES_FREEZER_H
 #define RENDER_SERVICE_CLIENT_CORE_MODIFIER_RS_SHOWING_PROPERTIES_FREEZER_H
 
+#include <optional>
+
 #include "common/rs_common_def.h"
-#include "property/rs_properties.h"
+#include "common/rs_macros.h"
+#include "common/rs_vector2.h"
+#include "common/rs_vector4.h"
+#include "modifier/rs_modifier_type.h"
+#include "render/rs_filter.h"
 
 namespace OHOS {
 namespace Rosen {

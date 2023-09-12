@@ -15,12 +15,16 @@
 
 #include "rs_render_service_connection.h"
 
-#include "common/rs_background_thread.h"
-#include "hgm_core.h"
 #include "hgm_command.h"
+#include "hgm_config_callback_manager.h"
+#include "hgm_core.h"
 #include "offscreen_render/rs_offscreen_render_thread.h"
+#include "rs_main_thread.h"
+#include "rs_trace.h"
+
 #include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
+#include "pipeline/rs_hardware_thread.h"
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_render_service_listener.h"
 #include "pipeline/rs_surface_capture_task.h"
@@ -30,8 +34,6 @@
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "platform/ohos/rs_jank_stats.h"
-#include "rs_main_thread.h"
-#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -14,11 +14,14 @@
  */
 
 #include "gtest/gtest.h"
-#include "pipeline/rs_context.h"
-#include "pipeline/parallel_render/rs_node_cost_manager.h"
 #include "limit_number.h"
-#include "pipeline/rs_surface_render_node.h"
+
+#include "pipeline/parallel_render/rs_node_cost_manager.h"
 #include "pipeline/rs_canvas_render_node.h"
+#include "pipeline/rs_context.h"
+#include "pipeline/rs_dirty_region_manager.h"
+#include "pipeline/rs_surface_render_node.h"
+
 using namespace testing;
 using namespace testing::ext;
 

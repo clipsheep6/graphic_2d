@@ -510,7 +510,7 @@ HWTEST_F(RSParallelRenderManagerTest, IsSecurityDisplayTest, TestSize.Level1)
 HWTEST_F(RSParallelRenderManagerTest, PackParallelCompositionTask, TestSize.Level1)
 {
     auto rsContext = std::make_shared<RSContext>();
-    auto rsBaseRenderNode = std::make_shared<RSBaseRenderNode>(11, rsContext->weak_from_this());
+    auto rsBaseRenderNode = std::make_shared<RSRenderNode>(11, rsContext->weak_from_this());
     RSDisplayNodeConfig displayConfig1 = {
         .screenId = 0,
         .isMirrored = false,

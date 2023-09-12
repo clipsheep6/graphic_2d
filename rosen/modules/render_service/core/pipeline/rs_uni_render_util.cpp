@@ -14,20 +14,21 @@
  */
 
 #include "rs_uni_render_util.h"
+
 #include <cstdint>
+#include <parameter.h>
+#include <parameters.h>
 #include <unordered_set>
+
+#include "rs_trace.h"
+#include "scene_board_judgement.h"
 
 #include "common/rs_optional_trace.h"
 #include "pipeline/parallel_render/rs_sub_thread_manager.h"
-#include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_base_render_util.h"
+#include "pipeline/rs_dirty_region_manager.h"
+#include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
-#include "render/rs_path.h"
-#include "rs_trace.h"
-#include "common/rs_optional_trace.h"
-#include "scene_board_judgement.h"
-#include <parameter.h>
-#include <parameters.h>
 
 namespace OHOS {
 namespace Rosen {

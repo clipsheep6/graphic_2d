@@ -16,23 +16,20 @@
 #include "pipeline/rs_canvas_render_node.h"
 
 #include <algorithm>
-#include "modifier/rs_modifier_type.h"
 
-#include "common/rs_obj_abs_geometry.h"
 #include "common/rs_common_def.h"
+#include "memory/rs_memory_track.h"
+#include "modifier/rs_modifier_type.h"
+#include "modifier/rs_render_modifier.h"
+#include "pipeline/rs_paint_filter_canvas.h"
+#include "property/rs_properties_painter.h"
+#include "visitor/rs_node_visitor.h"
+
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkCanvas.h"
 #else
 #include "recording/recording_canvas.h"
 #endif
-#include "memory/rs_memory_track.h"
-#include "memory/rs_tag_tracker.h"
-#include "pipeline/rs_paint_filter_canvas.h"
-#include "property/rs_properties_painter.h"
-#include "render/rs_blur_filter.h"
-#include "render/rs_light_up_effect_filter.h"
-#include "platform/common/rs_log.h"
-#include "visitor/rs_node_visitor.h"
 
 namespace OHOS {
 namespace Rosen {

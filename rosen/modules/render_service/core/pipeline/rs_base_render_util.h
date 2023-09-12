@@ -17,13 +17,19 @@
 #define RENDER_SERVICE_CORE_PIPELINE_RS_BASE_RENDER_UTIL_H
 
 #include <vector>
+
+#include "pixel_map.h"
+#include "sync_fence.h"
+
+#include "pipeline/rs_composer_adapter.h"
+#include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_surface_render_node.h"
+#include "screen_manager/rs_screen_manager.h"
+
 #ifndef USE_ROSEN_DRAWING
-#include "include/core/SkBitmap.h"
-#include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
-#include "include/core/SkColorFilter.h"
 #else
 #include "image/bitmap.h"
 #include "utils/matrix.h"
@@ -31,12 +37,6 @@
 #include "draw/pen.h"
 #endif
 
-#include "screen_manager/rs_screen_manager.h"
-#include "pipeline/rs_paint_filter_canvas.h"
-#include "pipeline/rs_surface_render_node.h"
-#include "pipeline/rs_composer_adapter.h"
-#include "pixel_map.h"
-#include "sync_fence.h"
 
 namespace OHOS {
 namespace Rosen {

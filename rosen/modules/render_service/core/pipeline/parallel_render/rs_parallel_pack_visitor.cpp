@@ -14,13 +14,15 @@
  */
 
 #include "rs_parallel_pack_visitor.h"
-#include "pipeline/rs_base_render_node.h"
-#include "pipeline/rs_surface_render_node.h"
-#include "pipeline/rs_display_render_node.h"
-#include "pipeline/parallel_render/rs_parallel_render_manager.h"
-#include "pipeline/rs_uni_render_visitor.h"
+
 #include "rs_trace.h"
+
 #include "common/rs_optional_trace.h"
+#include "pipeline/parallel_render/rs_parallel_render_manager.h"
+#include "pipeline/rs_display_render_node.h"
+#include "pipeline/rs_render_node.h"
+#include "pipeline/rs_surface_render_node.h"
+#include "pipeline/rs_uni_render_visitor.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -128,7 +130,7 @@ void RSParallelPackVisitor::CalcSurfaceRenderNodeCost(RSSurfaceRenderNode& node)
 void RSParallelPackVisitor::CalcDisplayRenderNodeCost(RSDisplayRenderNode& node) const
 {
     for (auto& child : node.GetChildren()) {
-        auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+        auto surface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
         if (surface != nullptr) {
             CalcSurfaceRenderNodeCost(*surface);
         }

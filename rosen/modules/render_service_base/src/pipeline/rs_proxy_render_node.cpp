@@ -15,7 +15,10 @@
 
 #include "pipeline/rs_proxy_render_node.h"
 
+#include <utility>
+
 #include "command/rs_surface_node_command.h"
+#include "memory/rs_memory_track.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #include "visitor/rs_node_visitor.h"
@@ -24,7 +27,7 @@ namespace OHOS {
 namespace Rosen {
 RSProxyRenderNode::RSProxyRenderNode(
     NodeId id, std::weak_ptr<RSSurfaceRenderNode> target, NodeId targetId, const std::weak_ptr<RSContext>& context)
-    : RSRenderNode(id, context), target_(target), targetId_(targetId)
+    : RSRenderNode(id, context), target_(std::move(target)), targetId_(targetId)
 {
     MemoryInfo info = {sizeof(*this), ExtractPid(id), id, MEMORY_TYPE::MEM_RENDER_NODE};
     MemoryTrack::Instance().AddNodeRecord(id, info);

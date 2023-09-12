@@ -17,11 +17,16 @@
 
 #include "common/rs_obj_abs_geometry.h"
 #include "common/rs_optional_trace.h"
+#include "common/rs_vector2.h"
+#include "pipeline/rs_canvas_render_node.h"
+#include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_effect_render_node.h"
 #include "pipeline/rs_paint_filter_canvas.h"
-#include "pipeline/rs_root_render_node.h"
 #include "platform/common/rs_log.h"
-#include "render/rs_blur_filter.h"
+#include "render/rs_image.h"
+#include "render/rs_mask.h"
+#include "render/rs_path.h"
+#include "render/rs_shader.h"
 #include "render/rs_skia_filter.h"
 
 #ifdef USE_ROSEN_DRAWING
@@ -41,8 +46,6 @@
 #include "include/core/SkPoint3.h"
 #include "include/core/SkRRect.h"
 #include "include/core/SkSurface.h"
-#include "include/effects/Sk1DPathEffect.h"
-#include "include/effects/SkDashPathEffect.h"
 #include "include/effects/SkGradientShader.h"
 #include "include/effects/SkLumaColorFilter.h"
 #include "include/utils/SkShadowUtils.h"
@@ -627,7 +630,7 @@ void RSPropertiesPainter::DrawColorfulShadowInner(
     canvas.clipPath(skPath);
     // draw node content as shadow
     // [PLANNING]: maybe we should also draw background color / image here, and we should cache the shadow image
-    if (auto node = RSBaseRenderNode::ReinterpretCast<RSCanvasRenderNode>(properties.backref_.lock())) {
+    if (auto node = RSRenderNode::ReinterpretCast<RSCanvasRenderNode>(properties.backref_.lock())) {
         node->InternalDrawContent(canvas);
     }
 }
@@ -655,7 +658,7 @@ void RSPropertiesPainter::DrawColorfulShadowInner(
     canvas.ClipPath(path, Drawing::ClipOp::INTERSECT, false);
     // draw node content as shadow
     // [PLANNING]: maybe we should also draw background color / image here, and we should cache the shadow image
-    if (auto node = RSBaseRenderNode::ReinterpretCast<RSCanvasRenderNode>(properties.backref_.lock())) {
+    if (auto node = RSRenderNode::ReinterpretCast<RSCanvasRenderNode>(properties.backref_.lock())) {
         node->InternalDrawContent(canvas);
     }
 }

@@ -19,7 +19,6 @@
 #include <memory>
 
 #include "common/rs_color.h"
-#include "common/rs_macros.h"
 #include "render/rs_path.h"
 namespace OHOS {
 namespace Rosen {

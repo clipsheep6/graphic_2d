@@ -21,17 +21,15 @@
 #include <surface.h>
 
 #include "common/rs_rect.h"
-#include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
+
 #ifdef NEW_RENDER_CONTEXT
 #include "rs_render_surface.h"
 #include "render_context_base.h"
 #else
 #include "platform/drawing/rs_surface.h"
-#include "render_context/render_context.h"
 #endif
-#include "sync_fence.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -113,8 +111,8 @@ public:
     const RectI& GetSrcRect() const;
     const RectI& GetDstRect() const;
 
-    void SetDrivenCanvasNode(RSBaseRenderNode::SharedPtr node);
-    RSBaseRenderNode::SharedPtr GetDrivenCanvasNode() const;
+    void SetDrivenCanvasNode(RSRenderNode::SharedPtr node);
+    RSRenderNode::SharedPtr GetDrivenCanvasNode() const;
 
     bool CreateSurface(sptr<IBufferConsumerListener> listener);
     bool IsSurfaceCreated() const;
@@ -159,7 +157,7 @@ private:
     std::shared_ptr<RSSurface> surface_;
 #endif
     sptr<IBufferConsumerListener> consumerListener_;
-    RSBaseRenderNode::SharedPtr drivenCanvasNode_ = nullptr;
+    RSRenderNode::SharedPtr drivenCanvasNode_ = nullptr;
 
     DrivenExtInfo drivenExtInfo_;
 };

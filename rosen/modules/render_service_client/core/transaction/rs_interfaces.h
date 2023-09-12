@@ -23,7 +23,6 @@
 #include "transaction/rs_render_service_client.h"
 #include "ui/rs_display_node.h"
 #include "ui/rs_surface_node.h"
-#include "ipc_callbacks/rs_iocclusion_change_callback.h"
 
 namespace OHOS {
 namespace Rosen {

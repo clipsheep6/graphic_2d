@@ -15,14 +15,16 @@
 
 #include "rs_uni_render_composer_adapter.h"
 
+#include "rs_trace.h"
+#include "string_utils.h"
+
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "common/rs_optional_trace.h"
+#include "pipeline/rs_hardware_thread.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "platform/common/rs_log.h"
-#include "rs_divided_render_util.h"
-#include "rs_trace.h"
-#include "string_utils.h"
+#include "property/rs_properties_painter.h"
 
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
 #include "pipeline/driven_render/rs_driven_surface_render_node.h"

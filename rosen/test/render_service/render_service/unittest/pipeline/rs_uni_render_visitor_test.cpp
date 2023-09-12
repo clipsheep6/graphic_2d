@@ -14,23 +14,24 @@
  */
 
 #include <memory>
+
 #include "gtest/gtest.h"
 #include "limit_number.h"
-#include "pipeline/rs_uni_render_visitor.h"
-#include "pipeline/rs_render_node.h"
-#include "pipeline/rs_root_render_node.h"
-#include "pipeline/rs_base_render_node.h"
-#include "pipeline/rs_proxy_render_node.h"
-#include "pipeline/rs_surface_render_node.h"
-#include "pipeline/rs_display_render_node.h"
-#include "pipeline/rs_context.h"
-#include "pipeline/rs_uni_render_engine.h"
-#include "pipeline/rs_uni_render_judgement.h"
-#include "pipeline/rs_effect_render_node.h"
-#include "pipeline/rs_processor_factory.h"
 #include "rs_test_util.h"
 #include "system/rs_system_parameters.h"
+
 #include "draw/color.h"
+#include "pipeline/rs_context.h"
+#include "pipeline/rs_display_render_node.h"
+#include "pipeline/rs_effect_render_node.h"
+#include "pipeline/rs_processor_factory.h"
+#include "pipeline/rs_proxy_render_node.h"
+#include "pipeline/rs_render_node.h"
+#include "pipeline/rs_root_render_node.h"
+#include "pipeline/rs_surface_render_node.h"
+#include "pipeline/rs_uni_render_engine.h"
+#include "pipeline/rs_uni_render_judgement.h"
+#include "pipeline/rs_uni_render_visitor.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -72,7 +73,7 @@ void RSUniRenderVisitorTest::TearDown()
 HWTEST_F(RSUniRenderVisitorTest, PrepareChildren001, TestSize.Level1)
 {
     auto rsContext = std::make_shared<RSContext>();
-    auto rsBaseRenderNode = std::make_shared<RSBaseRenderNode>(10, rsContext->weak_from_this());
+    auto rsBaseRenderNode = std::make_shared<RSRenderNode>(10, rsContext->weak_from_this());
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
     rsUniRenderVisitor->PrepareChildren(*rsBaseRenderNode);
 }
@@ -1371,7 +1372,7 @@ HWTEST_F(RSUniRenderVisitorTest, CheckColorSpace001, TestSize.Level2)
 HWTEST_F(RSUniRenderVisitorTest, DoDirectComposition001, TestSize.Level2)
 {
     std::shared_ptr<RSContext> context = std::make_shared<RSContext>();
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context->GetGlobalRootRenderNode();
+    const std::shared_ptr<RSRenderNode> rootNode = context->GetGlobalRootRenderNode();
     ASSERT_NE(rootNode, nullptr);
     
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
@@ -1388,7 +1389,7 @@ HWTEST_F(RSUniRenderVisitorTest, DoDirectComposition001, TestSize.Level2)
 HWTEST_F(RSUniRenderVisitorTest, DoDirectComposition002, TestSize.Level2)
 {
     std::shared_ptr<RSContext> context = std::make_shared<RSContext>();
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context->GetGlobalRootRenderNode();
+    const std::shared_ptr<RSRenderNode> rootNode = context->GetGlobalRootRenderNode();
     ASSERT_NE(rootNode, nullptr);
     
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
@@ -1405,7 +1406,7 @@ HWTEST_F(RSUniRenderVisitorTest, DoDirectComposition002, TestSize.Level2)
 HWTEST_F(RSUniRenderVisitorTest, DoDirectComposition003, TestSize.Level2)
 {
     std::shared_ptr<RSContext> context = std::make_shared<RSContext>();
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context->GetGlobalRootRenderNode();
+    const std::shared_ptr<RSRenderNode> rootNode = context->GetGlobalRootRenderNode();
     NodeId id = 1;
     RSDisplayNodeConfig config;
     auto childDisplayNode = std::make_shared<RSDisplayRenderNode>(id, config);
@@ -1429,7 +1430,7 @@ HWTEST_F(RSUniRenderVisitorTest, DoDirectComposition003, TestSize.Level2)
 HWTEST_F(RSUniRenderVisitorTest, DoDirectComposition004, TestSize.Level2)
 {
     std::shared_ptr<RSContext> context = std::make_shared<RSContext>();
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context->GetGlobalRootRenderNode();
+    const std::shared_ptr<RSRenderNode> rootNode = context->GetGlobalRootRenderNode();
     NodeId id = 1;
     RSDisplayNodeConfig config;
     auto childDisplayNode = std::make_shared<RSDisplayRenderNode>(id, config);

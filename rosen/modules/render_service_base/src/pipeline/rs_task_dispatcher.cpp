@@ -14,7 +14,6 @@
  */
 
 #include "pipeline/rs_task_dispatcher.h"
-#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {

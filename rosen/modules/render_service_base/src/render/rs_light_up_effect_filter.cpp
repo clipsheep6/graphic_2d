@@ -14,7 +14,10 @@
  */
 #include "render/rs_light_up_effect_filter.h"
 
+#include "include/core/SkColorFilter.h"
+#include "include/effects/SkImageFilters.h"
 #include "src/core/SkOpts.h"
+
 #ifdef USE_ROSEN_DRAWING
 #include "effect/color_matrix.h"
 #endif

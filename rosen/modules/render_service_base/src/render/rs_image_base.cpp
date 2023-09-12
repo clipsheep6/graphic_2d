@@ -15,21 +15,24 @@
 
 #include "render/rs_image_base.h"
 
+#include "memory/rs_memory_track.h"
+#include "rs_trace.h"
+#include "sandbox_utils.h"
+
+#include "common/rs_background_thread.h"
+#include "common/rs_common_def.h"
+#include "pipeline/rs_task_dispatcher.h"
+#include "platform/common/rs_log.h"
+#include "property/rs_properties_painter.h"
+#include "render/rs_image_cache.h"
+#include "render/rs_pixel_map_util.h"
+
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkImage.h"
 #else
 #include "image/image.h"
 #endif
-#include "common/rs_background_thread.h"
-#include "common/rs_common_def.h"
-#include "platform/common/rs_log.h"
-#include "pipeline/rs_task_dispatcher.h"
-#include "property/rs_properties_painter.h"
-#include "render/rs_image_cache.h"
-#include "render/rs_pixel_map_util.h"
-#include "memory/rs_memory_track.h"
-#include "rs_trace.h"
-#include "sandbox_utils.h"
+
 
 namespace OHOS::Rosen {
 RSImageBase::~RSImageBase()

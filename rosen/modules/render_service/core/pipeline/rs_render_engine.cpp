@@ -14,11 +14,13 @@
  */
 
 #include "pipeline/rs_render_engine.h"
-#include "pipeline/rs_divided_render_util.h"
-#include "string_utils.h"
-#include "render/rs_skia_filter.h"
+
 #include "rs_trace.h"
+#include "string_utils.h"
+
+#include "pipeline/rs_divided_render_util.h"
 #include "platform/common/rs_log.h"
+#include "property/rs_properties_painter.h"
 
 #ifdef USE_ROSEN_DRAWING
 #include "image/image.h"

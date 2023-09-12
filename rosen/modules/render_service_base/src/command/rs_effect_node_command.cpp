@@ -16,7 +16,6 @@
 #include "command/rs_effect_node_command.h"
 
 #include "pipeline/rs_effect_render_node.h"
-#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {

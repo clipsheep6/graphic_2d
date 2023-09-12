@@ -16,10 +16,10 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_ANIMATION_FRACTION_H
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_ANIMATION_FRACTION_H
 
-#include "atomic"
+#include <atomic>
+#include <tuple>
 
 #include "animation/rs_animation_timing_protocol.h"
-#include "common/rs_macros.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -31,7 +31,7 @@ enum class ForwardDirection {
 class RSB_EXPORT RSAnimationFraction : public RSAnimationTimingProtocol {
 public:
     RSAnimationFraction();
-    ~RSAnimationFraction() = default;
+    ~RSAnimationFraction() override = default;
 
     static void Init();
     static float GetAnimationScale();

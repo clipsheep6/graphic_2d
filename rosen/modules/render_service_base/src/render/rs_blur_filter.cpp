@@ -15,11 +15,11 @@
 
 #include "render/rs_blur_filter.h"
 
+#include "include/core/SkColorFilter.h"
 #include "src/core/SkOpts.h"
 
-#include "common/rs_common_def.h"
-
 #include "platform/common/rs_system_properties.h"
+#include "render/rs_kawase_blur.h"
 
 #ifndef USE_ROSEN_DRAWING
 #if defined(NEW_SKIA)

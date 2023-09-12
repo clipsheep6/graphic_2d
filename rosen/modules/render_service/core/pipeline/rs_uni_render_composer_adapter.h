@@ -18,13 +18,10 @@
 
 #include "hdi_backend.h"
 #include "rs_composer_adapter.h"
+
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
-#include "pipeline/rs_render_node_map.h"
 #include "screen_manager/rs_screen_manager.h"
-#include "rs_base_render_util.h"
-#include "rs_hardware_thread.h"
-#include "rs_main_thread.h"
 
 namespace OHOS {
 namespace Rosen {

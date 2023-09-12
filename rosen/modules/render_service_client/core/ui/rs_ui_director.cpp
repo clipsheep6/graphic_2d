@@ -26,7 +26,6 @@
 #include "pipeline/rs_render_thread.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_application_agent_impl.h"
-#include "transaction/rs_interfaces.h"
 #include "transaction/rs_transaction.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_frame_rate_policy.h"

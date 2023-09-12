@@ -17,7 +17,7 @@
 
 #include <atomic>
 
-#include "ui/rs_base_node.h"
+#include "ui/rs_node.h"
 #include "ui/rs_canvas_node.h"
 #include "platform/common/rs_log.h"
 
@@ -56,7 +56,7 @@ const RSNodeMap& RSNodeMap::Instance()
     return MutableInstance();
 }
 
-bool RSNodeMap::RegisterNode(const RSBaseNode::SharedPtr& nodePtr)
+bool RSNodeMap::RegisterNode(const RSNode::SharedPtr& nodePtr)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     NodeId id = nodePtr->GetId();
@@ -65,7 +65,7 @@ bool RSNodeMap::RegisterNode(const RSBaseNode::SharedPtr& nodePtr)
         ROSEN_LOGW("RSNodeMap::RegisterNode: node id %{public}" PRIu64 " already exists", id);
         return false;
     }
-    RSBaseNode::WeakPtr ptr(nodePtr);
+    RSNode::WeakPtr ptr(nodePtr);
     nodeMap_.emplace(id, ptr);
     return true;
 }
@@ -85,7 +85,7 @@ void RSNodeMap::UnregisterNode(NodeId id)
 }
 
 template<>
-const std::shared_ptr<RSBaseNode> RSNodeMap::GetNode<RSBaseNode>(NodeId id) const
+const std::shared_ptr<RSNode> RSNodeMap::GetNode<RSNode>(NodeId id) const
 {
     if (!g_instance_valid.load()) {
         return nullptr;

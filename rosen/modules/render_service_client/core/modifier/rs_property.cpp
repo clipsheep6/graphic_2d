@@ -15,9 +15,10 @@
 
 #include "modifier/rs_property.h"
 
+#include "sandbox_utils.h"
+
 #include "command/rs_node_command.h"
 #include "modifier/rs_modifier.h"
-#include "sandbox_utils.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS {

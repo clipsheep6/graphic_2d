@@ -16,18 +16,17 @@
 #include <unordered_map>
 #include <vector>
 
-#include "include/core/SkString.h"
 #include "include/core/SkTraceMemoryDump.h"
 #include "memory/rs_dfx_string.h"
 
 namespace OHOS::Rosen {
-typedef std::pair<const char*, const char*> ResourcePair;
+using ResourcePair = std::pair<const char *, const char *>;
 
 class SkiaMemoryTracer : public SkTraceMemoryDump {
 public:
     SkiaMemoryTracer(const char* categoryKey, bool itemizeType);
     SkiaMemoryTracer(std::vector<ResourcePair> resourceMap, bool itemizeType);
-    ~SkiaMemoryTracer() override {}
+    ~SkiaMemoryTracer() override = default;
 
     void LogOutput(DfxString& log);
     void LogTotals(DfxString& log);
@@ -56,18 +55,12 @@ public:
     }
 private:
     struct TraceValue {
-        TraceValue(const char* units, uint64_t value) : units(units), value(value), count(1) {}
-        TraceValue(const TraceValue& v) : units(v.units), value(v.value), count(v.count) {}
-        TraceValue& operator=(const TraceValue& v)
-        {
-            units = v.units;
-            value = v.value;
-            count = v.count;
-            return *this;
-        }
+        TraceValue(const char* units, uint64_t value) : units(units), value(value)  {}
+        TraceValue(const TraceValue& v) = default;
+        TraceValue& operator=(const TraceValue& v) = default;
         const char* units;
         float value;
-        int count;
+        int count { 1 };
     };
 
     const char* MapName(const char* resourceName);

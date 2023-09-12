@@ -18,8 +18,6 @@
 #include <cstdint>
 #include <random>
 
-#include "animation/rs_interpolator.h"
-#include "animation/rs_render_particle_system.h"
 #include "common/rs_color.h"
 namespace OHOS {
 namespace Rosen {

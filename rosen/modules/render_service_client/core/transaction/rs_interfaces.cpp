@@ -13,17 +13,16 @@
  * limitations under the License.
  */
 
+#include "rs_interfaces.h"
+
 #include <functional>
 
-#include "rs_interfaces.h"
+#include "offscreen_render/rs_offscreen_render_thread.h"
 #include "rs_trace.h"
 
-#include "platform/common/rs_system_properties.h"
 #include "pipeline/rs_divided_ui_capture.h"
-#include "offscreen_render/rs_offscreen_render_thread.h"
-#include "ui/rs_frame_rate_policy.h"
-#include "ui/rs_proxy_node.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 
 namespace OHOS {
 namespace Rosen {

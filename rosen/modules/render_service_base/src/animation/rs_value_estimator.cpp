@@ -15,8 +15,9 @@
 
 #include "animation/rs_value_estimator.h"
 
+#include "animation/rs_animation_common.h"
 #include "common/rs_common_def.h"
-#include "platform/common/rs_log.h"
+#include "common/rs_vector4.h"
 #include "modifier/rs_render_property.h"
 #include "render/rs_material_filter.h"
 

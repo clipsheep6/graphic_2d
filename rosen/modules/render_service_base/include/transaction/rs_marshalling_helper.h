@@ -18,14 +18,13 @@
 
 #include <memory>
 #include <optional>
+
 #include "common/rs_macros.h"
 #ifdef USE_ROSEN_DRAWING
 #include "image/image.h"
 #endif
 
 #include <parcel.h>
-
-#include "common/rs_common_def.h"
 
 #ifndef USE_ROSEN_DRAWING
 template<typename T>

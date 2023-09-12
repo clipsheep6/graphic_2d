@@ -16,11 +16,12 @@
 #include "rs_driven_render_manager.h"
 
 #include <parameters.h>
-#include "common/rs_obj_abs_geometry.h"
-#include "common/rs_optional_trace.h"
-#include "platform/common/rs_log.h"
+
 #include "rs_driven_render_ext.h"
 #include "rs_driven_render_visitor.h"
+
+#include "common/rs_obj_abs_geometry.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -101,12 +102,12 @@ bool RSDrivenRenderManager::ClipHoleForDrivenNode(RSPaintFilterCanvas& canvas, c
     return true;
 }
 
-static bool IsValidSurfaceName(RSBaseRenderNode::SharedPtr backgroundNode)
+static bool IsValidSurfaceName(RSRenderNode::SharedPtr backgroundNode)
 {
     if (!backgroundNode) {
         return false;
     }
-    auto rsParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(backgroundNode->GetParent().lock());
+    auto rsParent = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(backgroundNode->GetParent().lock());
     if (!rsParent) {
         return false;
     }
@@ -119,8 +120,8 @@ void RSDrivenRenderManager::DoPrepareRenderTask(const DrivenPrepareInfo& info)
     bool contentDirty = info.dirtyInfo.contentDirty;
     bool nonContentDirty = info.dirtyInfo.nonContentDirty;
     bool isValidSurface = IsValidSurfaceName(info.backgroundNode);
-    RSBaseRenderNode::SharedPtr currBackground = nullptr;
-    RSBaseRenderNode::SharedPtr currContent = nullptr;
+    RSRenderNode::SharedPtr currBackground = nullptr;
+    RSRenderNode::SharedPtr currContent = nullptr;
     DrivenDirtyType dirtyType = info.dirtyInfo.type;
 
     if (OHOS::Rosen::RSSystemProperties::GetDebugTraceEnabled()) {
@@ -179,7 +180,7 @@ void RSDrivenRenderManager::DoProcessRenderTask(const DrivenProcessInfo& info)
     bool isReusableMode = false;
     auto currBackground = backgroundSurfaceNode_->GetDrivenCanvasNode();
     if (currBackground != nullptr && uniRenderMode_ == DrivenUniRenderMode::REUSE_WITH_CLIP_HOLE) {
-        auto rsParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(currBackground->GetParent().lock());
+        auto rsParent = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(currBackground->GetParent().lock());
         if (rsParent != nullptr) {
             isReusableMode = true;
             traceMsg = "RSDrivenRender::ReusableProcess:[" + rsParent->GetName() + "]" +
@@ -271,7 +272,7 @@ RectI RSDrivenRenderManager::CalcUniRenderSurfaceClipHoleRect()
     RectI rect;
     if (contentSurfaceNode_->GetDrivenCanvasNode() != nullptr) {
         auto canvasNode =
-            RSBaseRenderNode::ReinterpretCast<RSCanvasRenderNode>(contentSurfaceNode_->GetDrivenCanvasNode());
+            RSRenderNode::ReinterpretCast<RSCanvasRenderNode>(contentSurfaceNode_->GetDrivenCanvasNode());
         if (canvasNode == nullptr) {
             return rect;
         }

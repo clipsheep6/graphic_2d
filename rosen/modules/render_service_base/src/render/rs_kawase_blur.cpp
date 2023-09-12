@@ -14,10 +14,15 @@
  */
 
 #include "render/rs_kawase_blur.h"
+
+#include "include/core/SkPaint.h"
+#include "include/core/SkString.h"
+#include "include/effects/SkRuntimeEffect.h"
+#include "include/gpu/GrDirectContext.h"
+
+#include "common/rs_optional_trace.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
-#include "common/rs_optional_trace.h"
-#include "include/gpu/GrDirectContext.h"
 
 namespace OHOS {
 namespace Rosen {

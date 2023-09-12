@@ -17,12 +17,16 @@
 
 #include <native_window.h>
 #include <platform/common/rs_log.h>
+#include <surface.h>
+
+#include "GLES/glext.h"
 #include "sync_fence.h"
-#include "pipeline/rs_main_thread.h"
-#include "pipeline/rs_hardware_thread.h"
-#include "pipeline/parallel_render/rs_sub_thread_manager.h"
-#include "rs_trace.h"
+
+#include "common/rs_common_def.h"
 #include "common/rs_optional_trace.h"
+#include "pipeline/parallel_render/rs_sub_thread_manager.h"
+#include "pipeline/rs_hardware_thread.h"
+#include "pipeline/rs_main_thread.h"
 
 #ifndef NDEBUG
 #include <cassert>

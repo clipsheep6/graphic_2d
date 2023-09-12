@@ -16,15 +16,13 @@
 #ifndef RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_SUB_THREAD_MANAGER_H
 #define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_SUB_THREAD_MANAGER_H
 
-#include "rs_sub_thread.h"
-
 #include <condition_variable>
 #include <cstdint>
 #include <map>
 #include <mutex>
-#include "EGL/egl.h"
-#include "pipeline/parallel_render/rs_render_task.h"
-#include "pipeline/rs_base_render_node.h"
+
+#include "rs_sub_thread.h"
+
 #include "render_context/render_context.h"
 
 namespace OHOS::Rosen {

@@ -16,31 +16,30 @@
 #ifndef RS_MAIN_THREAD
 #define RS_MAIN_THREAD
 
+#include <event_handler.h>
 #include <future>
 #include <memory>
 #include <mutex>
 #include <queue>
-#include <thread>
 #include <set>
+#include <thread>
 
 #include "refbase.h"
 #include "rs_base_render_engine.h"
 #include "vsync_distributor.h"
-#include <event_handler.h>
 #include "vsync_receiver.h"
 
 #include "command/rs_command.h"
 #include "common/rs_common_def.h"
 #include "common/rs_thread_handler.h"
-#include "common/rs_thread_looper.h"
 #include "ipc_callbacks/iapplication_agent.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
 #include "ipc_callbacks/rs_isurface_occlusion_change_callback.h"
 #include "memory/rs_memory_graphic.h"
 #include "pipeline/rs_context.h"
 #include "pipeline/rs_uni_render_judgement.h"
-#include "platform/drawing/rs_vsync_client.h"
 #include "platform/common/rs_event_manager.h"
+#include "platform/drawing/rs_vsync_client.h"
 #include "transaction/rs_transaction_data.h"
 
 namespace OHOS::Rosen {
@@ -207,9 +206,9 @@ private:
     void ReleaseAllNodesBuffer();
     void Render();
     void SetDeviceType();
-    void UniRender(std::shared_ptr<RSBaseRenderNode> rootNode);
+    void UniRender(std::shared_ptr<RSRenderNode> rootNode);
     bool CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
-    void CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
+    void CalcOcclusionImplementation(std::vector<RSRenderNode::SharedPtr>& curAllSurfaces);
     void CalcOcclusion();
     bool CheckQosVisChanged(std::map<uint32_t, bool>& pidVisMap);
     void CallbackToQOS(std::map<uint32_t, bool>& pidVisMap);
@@ -232,7 +231,7 @@ private:
     void ReleaseExitSurfaceNodeAllGpuResource(Drawing::GPUContext* grContext);
 #endif
 
-    bool DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
+    bool DoParallelComposition(std::shared_ptr<RSRenderNode> rootNode);
 
     void ClassifyRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void ProcessRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData, pid_t pid);
@@ -378,7 +377,7 @@ private:
     std::unordered_map<NodeId, bool> cacheCmdSkippedNodes_;
     std::unordered_map<pid_t, std::pair<std::vector<NodeId>, bool>> cacheCmdSkippedInfo_;
     std::atomic<uint64_t> frameCount_ = 0;
-    std::set<std::shared_ptr<RSBaseRenderNode>> oldDisplayChildren_;
+    std::set<std::shared_ptr<RSRenderNode>> oldDisplayChildren_;
     DeviceType deviceType_ = DeviceType::PHONE;
     bool isCachedSurfaceUpdated_ = false;
     bool isUiFirstOn_ = false;

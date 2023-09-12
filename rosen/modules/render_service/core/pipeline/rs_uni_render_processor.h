@@ -17,7 +17,6 @@
 #define RS_CORE_PIPELINE_UNI_RENDER_PROCESSOR_H
 
 #include "rs_processor.h"
-#include "rs_composer_adapter.h"
 #include "rs_uni_render_composer_adapter.h"
 
 namespace OHOS {

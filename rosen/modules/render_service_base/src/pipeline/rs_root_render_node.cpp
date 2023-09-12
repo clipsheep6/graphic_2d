@@ -15,13 +15,15 @@
 
 #include "pipeline/rs_root_render_node.h"
 
+#include "memory/rs_memory_track.h"
+#include "pipeline/rs_dirty_region_manager.h"
+#include "visitor/rs_node_visitor.h"
+
 #ifdef NEW_RENDER_CONTEXT
 #include "rs_render_surface.h"
 #else
 #include "platform/drawing/rs_surface.h"
 #endif
-#include "transaction/rs_transaction_proxy.h"
-#include "visitor/rs_node_visitor.h"
 #ifndef ROSEN_CROSS_PLATFORM
 #include <surface.h>
 #endif

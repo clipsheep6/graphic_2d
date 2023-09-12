@@ -17,7 +17,6 @@
 #include "limit_number.h"
 
 #include "pipeline/parallel_render/rs_parallel_pack_visitor.h"
-#include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_context.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_proxy_render_node.h"

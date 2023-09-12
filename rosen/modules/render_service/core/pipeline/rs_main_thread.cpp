@@ -14,68 +14,63 @@
  */
 #include "pipeline/rs_main_thread.h"
 
-#include <list>
 #include <algorithm>
-#include "include/core/SkGraphics.h"
-#include "memory/rs_memory_graphic.h"
-#include "pipeline/parallel_render/rs_sub_thread_manager.h"
+#include <cstdint>
+#include <list>
+#include <malloc.h>
 #include <securec.h>
-#include <stdint.h>
 #include <string>
 #include <unistd.h>
-#include <malloc.h>
+
+#include "delegate/rs_functional_delegate.h"
+#include "hgm_core.h"
+#include "hgm_frame_rate_manager.h"
+#include "include/core/SkGraphics.h"
+#include "render_frame_trace.h"
+#include "rs_qos_thread.h"
+#include "rs_trace.h"
+#include "scene_board_judgement.h"
+#include "vsync_iconnection_token.h"
+#include "xcollie/watchdog.h"
+
+#include "animation/rs_animation_fraction.h"
+#include "command/rs_message_processor.h"
+#include "common/rs_background_thread.h"
+#include "common/rs_common_def.h"
+#include "common/rs_optional_trace.h"
+#include "memory/rs_memory_graphic.h"
+#include "memory/rs_memory_manager.h"
+#include "pipeline/parallel_render/rs_sub_thread_manager.h"
+#include "pipeline/rs_base_render_util.h"
+#include "pipeline/rs_frame_report.h"
+#include "pipeline/rs_hardware_thread.h"
+#include "pipeline/rs_render_engine.h"
+#include "pipeline/rs_render_service_visitor.h"
+#include "pipeline/rs_surface_render_node.h"
+#include "pipeline/rs_task_dispatcher.h"
+#include "pipeline/rs_uni_render_engine.h"
+#include "pipeline/rs_uni_render_util.h"
+#include "pipeline/rs_uni_render_visitor.h"
+#include "pipeline/rs_unmarshal_thread.h"
+#include "platform/common/rs_innovation.h"
+#include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
+#include "platform/ohos/overdraw/rs_overdraw_controller.h"
+#include "platform/ohos/rs_jank_stats.h"
+#include "property/rs_properties_painter.h"
+#include "property/rs_property_trace.h"
+#include "render/rs_pixel_map_util.h"
+
 #ifdef NEW_SKIA
 #include "include/gpu/GrDirectContext.h"
 #else
 #include "include/gpu/GrContext.h"
 #include "include/gpu/GrGpuResource.h"
 #endif
-#include "rs_trace.h"
 
-#include "animation/rs_animation_fraction.h"
-#include "command/rs_message_processor.h"
-#include "common/rs_background_thread.h"
-#include "delegate/rs_functional_delegate.h"
-#include "memory/rs_memory_manager.h"
-#include "memory/rs_memory_track.h"
-#include "common/rs_common_def.h"
-#include "common/rs_optional_trace.h"
-#include "hgm_core.h"
-#include "hgm_frame_rate_manager.h"
-#include "platform/ohos/rs_jank_stats.h"
-#include "platform/ohos/overdraw/rs_overdraw_controller.h"
-#include "pipeline/rs_base_render_node.h"
-#include "pipeline/rs_base_render_util.h"
-#include "pipeline/rs_divided_render_util.h"
-#include "pipeline/rs_frame_report.h"
-#include "pipeline/rs_render_engine.h"
-#include "pipeline/rs_render_service_visitor.h"
-#include "pipeline/rs_root_render_node.h"
-#include "pipeline/rs_hardware_thread.h"
-#include "pipeline/rs_surface_render_node.h"
-#include "pipeline/rs_task_dispatcher.h"
-#include "pipeline/rs_unmarshal_thread.h"
-#include "pipeline/rs_uni_render_engine.h"
-#include "pipeline/rs_uni_render_visitor.h"
-#include "pipeline/rs_uni_render_util.h"
-#include "pipeline/rs_occlusion_config.h"
-#include "platform/common/rs_log.h"
-#include "platform/common/rs_innovation.h"
-#include "platform/common/rs_system_properties.h"
-#include "platform/drawing/rs_vsync_client.h"
-#include "property/rs_property_trace.h"
-#include "property/rs_properties_painter.h"
 #ifdef NEW_RENDER_CONTEXT
 #include "render_context/memory_handler.h"
 #endif
-#include "render/rs_pixel_map_util.h"
-#include "screen_manager/rs_screen_manager.h"
-#include "transaction/rs_transaction_proxy.h"
-
-#include "rs_qos_thread.h"
-#include "xcollie/watchdog.h"
-
-#include "render_frame_trace.h"
 
 #if defined(ACCESSIBILITY_ENABLE)
 #include "accessibility_config.h"
@@ -92,9 +87,6 @@
 #if defined(RS_ENABLE_RECORDING)
 #include "benchmarks/rs_recording_thread.h"
 #endif
-
-#include "scene_board_judgement.h"
-#include "vsync_iconnection_token.h"
 
 using namespace FRAME_TRACE;
 static const std::string RS_INTERVAL_NAME = "renderservice";
@@ -402,9 +394,9 @@ uint64_t RSMainThread::GetFocusLeashWindowId() const
 void RSMainThread::SetFocusLeashWindowId()
 {
     const auto& nodeMap = context_->GetNodeMap();
-    auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(nodeMap.GetRenderNode(focusNodeId_));
+    auto node = nodeMap.GetRenderNode<RSSurfaceRenderNode>(focusNodeId_);
     if (node != nullptr) {
-        auto parent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node->GetParent().lock());
+        auto parent = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node->GetParent().lock());
         if (node->IsAppWindow() && parent && parent->IsLeashWindow()) {
             focusLeashWindowId_ = parent->GetId();
         }
@@ -616,8 +608,8 @@ void RSMainThread::SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransaction
         if (!skipPayload.empty()) {
             std::unique_ptr<RSTransactionData> skipTransactionData = std::make_unique<RSTransactionData>();
             skipTransactionData->SetTimestamp(transactionData->GetTimestamp());
-            std::string ablityName = transactionData->GetAbilityName();
-            skipTransactionData->SetAbilityName(ablityName);
+            std::string abilityName = transactionData->GetAbilityName();
+            skipTransactionData->SetAbilityName(abilityName);
             skipTransactionData->SetSendingPid(transactionData->GetSendingPid());
             skipTransactionData->SetIndex(transactionData->GetIndex());
             skipTransactionData->GetPayload() = std::move(skipPayload);
@@ -915,7 +907,7 @@ void RSMainThread::CheckIfHardwareForcedDisabled()
     ColorFilterMode colorFilterMode = renderEngine_->GetColorFilterMode();
     bool hasColorFilter = colorFilterMode >= ColorFilterMode::INVERT_COLOR_ENABLE_MODE &&
         colorFilterMode <= ColorFilterMode::INVERT_DALTONIZATION_TRITANOMALY_MODE;
-    std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
+    std::shared_ptr<RSRenderNode> rootNode = context_->GetGlobalRootRenderNode();
     bool isMultiDisplay = rootNode && rootNode->GetChildrenCount() > 1;
 
     // [PLANNING] GetChildrenCount > 1 indicates multi display, only Mirror Mode need be marked here
@@ -1173,7 +1165,7 @@ void RSMainThread::ProcessHgmFrameRate(std::shared_ptr<FrameRateRangeData> data,
     // 3.[Planning]: Post app and rs switch software vsync rate task.
 }
 
-void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
+void RSMainThread::UniRender(std::shared_ptr<RSRenderNode> rootNode)
 {
     UpdateUIFirstSwitch();
     auto uniVisitor = std::make_shared<RSUniRenderVisitor>();
@@ -1226,7 +1218,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
             }
         }
         if (IsUIFirstOn()) {
-            auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
+            auto displayNode = RSRenderNode::ReinterpretCast<RSDisplayRenderNode>(
                 rootNode->GetSortedChildren().front());
             std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes;
             std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes;
@@ -1244,7 +1236,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
 
 void RSMainThread::Render()
 {
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
+    const std::shared_ptr<RSRenderNode> rootNode = context_->GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
         RS_LOGE("RSMainThread::Render GetGlobalRootRenderNode fail");
         return;
@@ -1308,7 +1300,7 @@ bool RSMainThread::CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces,
     return needProcess;
 }
 
-void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)
+void RSMainThread::CalcOcclusionImplementation(std::vector<RSRenderNode::SharedPtr>& curAllSurfaces)
 {
     Occlusion::Region accumulatedRegion;
     VisibleData curVisVec;
@@ -1336,8 +1328,7 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
             // when surface is in starting window stage, do not occlude other window surfaces
             // fix grey block when directly open app (i.e. setting) from notification center
             auto parentPtr = curSurface->GetParent().lock();
-            if (parentPtr != nullptr && parentPtr->IsInstanceOf<RSSurfaceRenderNode>()) {
-                auto surfaceParentPtr = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parentPtr);
+            if (auto surfaceParentPtr = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parentPtr)) {
                 if (surfaceParentPtr->GetSurfaceNodeType() == RSSurfaceNodeType::LEASH_WINDOW_NODE &&
                     !curSurface->IsNotifyUIBufferAvailable()) {
                     continue;
@@ -1347,15 +1338,14 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
                 if (curSurface->GetName().find("hisearch") == std::string::npos) {
                     // When a surfacenode is in animation (i.e. 3d animation), its dstrect cannot be trusted, we treated
                     // it as a full transparent layer.
-                    if (parentPtr != nullptr && parentPtr->IsInstanceOf<RSSurfaceRenderNode>()) {
-                        auto surfaceParentPtr = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parentPtr);
+                    if (auto surfaceParentPtr = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parentPtr)) {
                         // leashwindow scaling is also means animation
                         if (surfaceParentPtr->IsLeashWindow() && surfaceParentPtr->IsScale()) {
                             curSurface->SetAnimateState();
                         }
                     }
                     if (!(curSurface->GetAnimateState())) {
-                        if (RSSystemParameters::GetFilterCacheOcculusionEnabled() &&
+                        if (RSSystemParameters::GetFilterCacheOcclusionEnabled() &&
                             curSurface->IsTransparent() && curSurface->GetFilterCacheValid()) {
                             RS_OPTIONAL_TRACE_NAME_FMT("calc occlusion nodename: %s id: %llu curRegion %s",
                                 curSurface->GetName().c_str(), curSurface->GetId(), curRegion.GetRegionInfo().c_str());
@@ -1395,7 +1385,7 @@ void RSMainThread::CalcOcclusion()
     if (doWindowAnimate_ && !isUniRender_) {
         return;
     }
-    const std::shared_ptr<RSBaseRenderNode> node = context_->GetGlobalRootRenderNode();
+    const std::shared_ptr<RSRenderNode> node = context_->GetGlobalRootRenderNode();
     if (node == nullptr) {
         RS_LOGE("RSMainThread::CalcOcclusion GetGlobalRootRenderNode fail");
         return;
@@ -1415,7 +1405,7 @@ void RSMainThread::CalcOcclusion()
     std::vector<NodeId> curSurfaceIds;
     curSurfaceIds.reserve(curAllSurfaces.size());
     for (auto it = curAllSurfaces.begin(); it != curAllSurfaces.end(); ++it) {
-        auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        auto surface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (surface == nullptr) {
             continue;
         }
@@ -1427,7 +1417,7 @@ void RSMainThread::CalcOcclusion()
     lastFocusNodeId_ = focusNodeId_;
     if (!winDirty) {
         for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
-            auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+            auto surface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
             if (surface == nullptr || surface->IsLeashWindow()) {
                 continue;
             }
@@ -1435,7 +1425,7 @@ void RSMainThread::CalcOcclusion()
                 surface->IsOpaqueRegionChanged() ||
                 surface->GetAlphaChanged() || (isUniRender_ && surface->IsDirtyRegionUpdated())) {
                 winDirty = true;
-            } else if (RSSystemParameters::GetFilterCacheOcculusionEnabled() &&
+            } else if (RSSystemParameters::GetFilterCacheOcclusionEnabled() &&
                 surface->IsTransparent() && surface->IsFilterCacheStatusChanged()) {
                 // When current frame's filter cache is valid or last frame's occlusion use filter cache as opaque
                 // The occlusion needs to be recalculated
@@ -1632,7 +1622,7 @@ void RSMainThread::Animate(uint64_t timestamp)
         needRequestNextVsync = needRequestNextVsync || nodeNeedRequestNextVsync || (node.use_count() == 1);
         if (node->template IsInstanceOf<RSSurfaceRenderNode>() && hasRunningAnimation) {
             if (isUniRender_) {
-                auto surfacenode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
+                auto surfacenode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
                 surfacenode->SetAnimateState();
             }
             curWinAnim = true;
@@ -1823,7 +1813,7 @@ void RSMainThread::RenderServiceTreeDump(std::string& dumpString)
         dumpString.append(std::to_string(nodeId) + ", ");
     }
     dumpString.append("];\n");
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
+    const auto& rootNode = context_->GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
         dumpString.append("rootNode is null\n");
         return;
@@ -1831,7 +1821,7 @@ void RSMainThread::RenderServiceTreeDump(std::string& dumpString)
     rootNode->DumpTree(0, dumpString);
 }
 
-bool RSMainThread::DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode)
+bool RSMainThread::DoParallelComposition(std::shared_ptr<RSRenderNode> rootNode)
 {
     using CreateParallelSyncSignalFunc = void* (*)(uint32_t);
     using SignalCountDownFunc = void (*)(void*);
@@ -1946,7 +1936,7 @@ void RSMainThread::ReleaseExitSurfaceNodeAllGpuResource(Drawing::GPUContext* gpu
 {
     switch (RSSystemProperties::GetReleaseGpuResourceEnabled()) {
         case ReleaseGpuResourceType::WINDOW_HIDDEN:
-        case ReleaseGpuResourceType::WINDOW_HIDDEN_AND_LAUCHER:
+        case ReleaseGpuResourceType::WINDOW_HIDDEN_AND_LAUNCHER:
 #ifndef USE_ROSEN_DRAWING
             MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
 #else
@@ -2350,7 +2340,7 @@ bool RSMainThread::GetWatermarkFlag()
 
 bool RSMainThread::IsSingleDisplay()
 {
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
+    const auto& rootNode = context_->GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
         RS_LOGE("RSMainThread::IsSingleDisplay GetGlobalRootRenderNode fail");
         return false;
@@ -2366,14 +2356,14 @@ void RSMainThread::UpdateUIFirstSwitch()
         return;
     }
     isUiFirstOn_ = false;
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
+    const auto& rootNode = context_->GetGlobalRootRenderNode();
     if (rootNode && IsSingleDisplay()) {
-        auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
+        auto displayNode = RSRenderNode::ReinterpretCast<RSDisplayRenderNode>(
             rootNode->GetSortedChildren().front());
         if (displayNode) {
             uint32_t childrenCount = 0;
             if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
-                std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
+                std::vector<RSRenderNode::SharedPtr> curAllSurfacesVec;
                 displayNode->CollectSurface(displayNode, curAllSurfacesVec, true, true);
                 childrenCount = curAllSurfacesVec.size();
             } else {

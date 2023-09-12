@@ -22,19 +22,21 @@
 #include <memory>
 #include <mutex>
 #include <vector>
-#include "EGL/egl.h"
+
+#include "rs_parallel_hardware_composer.h"
+#include "rs_parallel_pack_visitor.h"
+#include "rs_parallel_sub_thread.h"
+#include "rs_parallel_task_manager.h"
+
+#include "common/rs_rect.h"
+#include "common/rs_vector4.h"
+#include "pipeline/parallel_render/rs_render_task.h"
+#include "pipeline/rs_base_render_engine.h"
+#include "pipeline/rs_render_node.h"
+
 #ifdef NEW_RENDER_CONTEXT
 #include "render_context_base.h"
 #endif
-#include "rs_parallel_hardware_composer.h"
-#include "rs_parallel_sub_thread.h"
-#include "rs_parallel_pack_visitor.h"
-#include "rs_parallel_task_manager.h"
-#include "pipeline/parallel_render/rs_render_task.h"
-#include "pipeline/rs_base_render_engine.h"
-#include "pipeline/rs_base_render_node.h"
-#include "common/rs_rect.h"
-#include "common/rs_vector4.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -80,7 +82,7 @@ public:
         bool doAnimate, bool isOpDropped);
     void PackRenderTask(RSSurfaceRenderNode &node, TaskType type = TaskType::PROCESS_TASK);
     void PackParallelCompositionTask(std::shared_ptr<RSNodeVisitor> visitor,
-                                     const std::shared_ptr<RSBaseRenderNode> node);
+                                     const std::shared_ptr<RSRenderNode> node);
     void LoadBalanceAndNotify(TaskType type = TaskType::PROCESS_TASK);
     void MergeRenderResult(RSPaintFilterCanvas& canvas);
     void SetFrameSize(int width, int height);
@@ -207,9 +209,9 @@ private:
     RenderContext* renderContext_ = nullptr;
 #endif
     ParallelRenderType renderType_ = ParallelRenderType::DRAW_IMAGE;
-    std::shared_ptr<RSBaseRenderNode> displayNode_ = nullptr;
+    std::shared_ptr<RSRenderNode> displayNode_ = nullptr;
     std::shared_ptr<RSDisplayRenderNode> mainDisplayNode_ = nullptr;
-    std::shared_ptr<RSBaseRenderNode> baseNode_ = nullptr;
+    std::shared_ptr<RSRenderNode> baseNode_ = nullptr;
 
     uint32_t expectedSubThreadNum_ = 0;
     std::atomic<uint32_t> readySubThreadNum_ = 0;

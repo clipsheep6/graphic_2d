@@ -63,8 +63,8 @@ public:
     void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
     void ProcessEffectRenderNode(RSEffectRenderNode& node) override;
 
-    bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
-    bool ParallelComposition(const std::shared_ptr<RSBaseRenderNode> rootNode);
+    bool DoDirectComposition(std::shared_ptr<RSRenderNode> rootNode);
+    bool ParallelComposition(const std::shared_ptr<RSRenderNode> rootNode);
     void ChangeCacheRenderNodeMap(RSRenderNode& node, const uint32_t count = 0);
     void UpdateCacheRenderNodeMap(RSRenderNode& node);
     bool GenerateNodeContentCache(RSRenderNode& node);
@@ -374,11 +374,11 @@ private:
     std::unordered_map<NodeId, RenderParam> unpairedTransitionNodes_;
     std::stack<RenderParam> curGroupedNodes_;
     // return true if we should prepare/process, false if we should skip.
-    void PrepareSharedTransitionNode(RSBaseRenderNode& node);
-    bool ProcessSharedTransitionNode(RSBaseRenderNode& node);
+    void PrepareSharedTransitionNode(RSRenderNode& node);
+    bool ProcessSharedTransitionNode(RSRenderNode& node);
     void ProcessUnpairedSharedTransitionNode();
 
-    std::weak_ptr<RSBaseRenderNode> logicParentNode_;
+    std::weak_ptr<RSRenderNode> logicParentNode_;
 
     bool isCalcCostEnable_ = false;
     // adapt to sceneboard, mark if the canvasNode within the scope of surfaceNode

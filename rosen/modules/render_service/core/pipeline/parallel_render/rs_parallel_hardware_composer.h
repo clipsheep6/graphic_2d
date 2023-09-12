@@ -20,16 +20,16 @@
 #include <memory>
 #include <vector>
 
+#include "common/rs_vector4.h"
+#include "pipeline/rs_paint_filter_canvas.h"
+#include "property/rs_properties_painter.h"
+
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkRRect.h"
 #include "include/core/SkRect.h"
 #else
 #include "utils/round_rect.h"
 #endif
-
-#include "common/rs_vector4.h"
-#include "pipeline/rs_paint_filter_canvas.h"
-#include "property/rs_properties_painter.h"
 
 namespace OHOS {
 namespace Rosen {

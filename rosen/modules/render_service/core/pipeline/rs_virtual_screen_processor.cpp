@@ -19,9 +19,6 @@
 #include <ctime>
 
 #include "platform/common/rs_log.h"
-#ifndef NEW_RENDER_CONTEXT
-#include "platform/ohos/backend/rs_surface_frame_ohos_raster.h"
-#endif
 #include "rs_base_render_util.h"
 #include "rs_divided_render_util.h"
 #include "rs_trace.h"
@@ -29,13 +26,9 @@
 
 namespace OHOS {
 namespace Rosen {
-RSVirtualScreenProcessor::RSVirtualScreenProcessor()
-{
-}
+RSVirtualScreenProcessor::RSVirtualScreenProcessor() = default;
 
-RSVirtualScreenProcessor::~RSVirtualScreenProcessor() noexcept
-{
-}
+RSVirtualScreenProcessor::~RSVirtualScreenProcessor() noexcept = default;
 
 bool RSVirtualScreenProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId,
                                     std::shared_ptr<RSBaseRenderEngine> renderEngine)

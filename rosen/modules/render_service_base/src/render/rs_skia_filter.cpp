@@ -14,6 +14,8 @@
  */
 
 #include "render/rs_skia_filter.h"
+
+#include <utility>
 #ifdef USE_ROSEN_DRAWING
 #include <memory>
 #include "draw/blend_mode.h"
@@ -22,9 +24,9 @@
 namespace OHOS {
 namespace Rosen {
 #ifndef USE_ROSEN_DRAWING
-RSSkiaFilter::RSSkiaFilter(sk_sp<SkImageFilter> imageFilter) : RSFilter(), imageFilter_(imageFilter) {}
+RSSkiaFilter::RSSkiaFilter(sk_sp<SkImageFilter> imageFilter) : RSFilter(), imageFilter_(std::move(imageFilter)) {}
 
-RSSkiaFilter::~RSSkiaFilter() {}
+RSSkiaFilter::~RSSkiaFilter() = default;
 #else
 RSDrawingFilter::RSDrawingFilter(std::shared_ptr<Drawing::ImageFilter> imageFilter)
     : RSFilter(), imageFilter_(imageFilter) {}

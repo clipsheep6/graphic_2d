@@ -17,12 +17,6 @@
 
 #include <mutex>
 
-#ifndef USE_ROSEN_DRAWING
-#include "include/core/SkMatrix.h"
-#else
-#include "utils/matrix.h"
-#endif
-
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
@@ -30,9 +24,15 @@
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_render_thread.h"
 #include "pipeline/rs_root_render_node.h"
+#include "platform/common/rs_log.h"
 #include "render/rs_pixel_map_util.h"
 #include "transaction/rs_render_service_client.h"
-#include "platform/common/rs_log.h"
+
+#ifndef USE_ROSEN_DRAWING
+#include "include/core/SkMatrix.h"
+#else
+#include "utils/matrix.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {

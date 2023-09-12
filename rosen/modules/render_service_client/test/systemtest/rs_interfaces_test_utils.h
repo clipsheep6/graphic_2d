@@ -23,17 +23,19 @@
 #include "display_manager.h"
 #include "display_property.h"
 #include "dm_common.h"
+#include "iconsumer_surface.h"
 #include "screen.h"
 #include "screen_manager.h"
-#include "ui/rs_display_node.h"
-#include "ui/rs_root_node.h"
-#include "ui/rs_surface_node.h"
-#include "ui/rs_ui_director.h"
 #include "unique_fd.h"
 #include "window.h"
 #include "window_manager_hilog.h"
 #include "window_option.h"
 #include "wm_common.h"
+
+#include "ui/rs_display_node.h"
+#include "ui/rs_root_node.h"
+#include "ui/rs_surface_node.h"
+#include "ui/rs_ui_director.h"
 
 namespace OHOS {
 namespace Rosen {

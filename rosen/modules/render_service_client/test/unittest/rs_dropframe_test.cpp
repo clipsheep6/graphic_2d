@@ -18,8 +18,8 @@
 #include <memory>
 #include <unistd.h>
 
-#include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_context.h"
+#include "pipeline/rs_render_node.h"
 
 using namespace testing::ext;
 
@@ -33,8 +33,8 @@ public:
     static constexpr HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, 0, "RSDropframeTest" };
 
     static inline std::shared_ptr<RSContext> context = nullptr;
-    static inline std::shared_ptr<RSBaseRenderNode> node1 = nullptr;
-    static inline std::shared_ptr<RSBaseRenderNode> node2 = nullptr;
+    static inline std::shared_ptr<RSRenderNode> node1 = nullptr;
+    static inline std::shared_ptr<RSRenderNode> node2 = nullptr;
 
     static void SetUpTestCase();
     static void TearDownTestCase();
@@ -45,8 +45,8 @@ public:
 void RSDropframeTest::SetUpTestCase()
 {
     context = std::make_shared<RSContext>();
-    node1 = std::make_shared<RSBaseRenderNode>(nodeId1, context->weak_from_this());
-    node2 = std::make_shared<RSBaseRenderNode>(nodeId2, context->weak_from_this());
+    node1 = std::make_shared<RSRenderNode>(nodeId1, context->weak_from_this());
+    node2 = std::make_shared<RSRenderNode>(nodeId2, context->weak_from_this());
     context->GetMutableNodeMap().RegisterRenderNode(node1);
     context->GetMutableNodeMap().RegisterRenderNode(node2);
 }
@@ -99,7 +99,7 @@ HWTEST_F(RSDropframeTest, AddChild001, Function | SmallTest | Level2)
 {
     // call AddChild
     auto rootNode = context->GetGlobalRootRenderNode();
-    auto child = context->GetMutableNodeMap().GetRenderNode<RSBaseRenderNode>(nodeId1);
+    auto child = context->GetMutableNodeMap().GetRenderNode<RSRenderNode>(nodeId1);
     rootNode->AddChild(child);
 
     // check IsOnTheTree
@@ -118,8 +118,8 @@ HWTEST_F(RSDropframeTest, AddChild001, Function | SmallTest | Level2)
 HWTEST_F(RSDropframeTest, AddChild002, Function | SmallTest | Level2)
 {
     // call AddChild
-    auto parent = context->GetMutableNodeMap().GetRenderNode<RSBaseRenderNode>(nodeId1);
-    auto child = context->GetMutableNodeMap().GetRenderNode<RSBaseRenderNode>(nodeId2);
+    auto parent = context->GetMutableNodeMap().GetRenderNode<RSRenderNode>(nodeId1);
+    auto child = context->GetMutableNodeMap().GetRenderNode<RSRenderNode>(nodeId2);
     parent->AddChild(child, -1);
     
     // check IsOnTheTree
@@ -139,8 +139,8 @@ HWTEST_F(RSDropframeTest, RemoveChild, Function | SmallTest | Level2)
 {
     // build render tree
     auto rootNode = context->GetGlobalRootRenderNode();
-    auto child1 = context->GetMutableNodeMap().GetRenderNode<RSBaseRenderNode>(nodeId1);
-    auto child2 = context->GetMutableNodeMap().GetRenderNode<RSBaseRenderNode>(nodeId2);
+    auto child1 = context->GetMutableNodeMap().GetRenderNode<RSRenderNode>(nodeId1);
+    auto child2 = context->GetMutableNodeMap().GetRenderNode<RSRenderNode>(nodeId2);
     child1->AddChild(child2, -1);
     rootNode->AddChild(child1, -1);
 
@@ -166,8 +166,8 @@ HWTEST_F(RSDropframeTest, RemoveFromTree, Function | SmallTest | Level2)
 {
     // build render tree
     auto rootNode = context->GetGlobalRootRenderNode();
-    auto child1 = context->GetMutableNodeMap().GetRenderNode<RSBaseRenderNode>(nodeId1);
-    auto child2 = context->GetMutableNodeMap().GetRenderNode<RSBaseRenderNode>(nodeId2);
+    auto child1 = context->GetMutableNodeMap().GetRenderNode<RSRenderNode>(nodeId1);
+    auto child2 = context->GetMutableNodeMap().GetRenderNode<RSRenderNode>(nodeId2);
     child1->AddChild(child2, -1);
     rootNode->AddChild(child1, -1);
     
@@ -193,8 +193,8 @@ HWTEST_F(RSDropframeTest, ClearChildren, Function | SmallTest | Level2)
 {
     // build render tree
     auto rootNode = context->GetGlobalRootRenderNode();
-    auto child1 = context->GetMutableNodeMap().GetRenderNode<RSBaseRenderNode>(nodeId1);
-    auto child2 = context->GetMutableNodeMap().GetRenderNode<RSBaseRenderNode>(nodeId2);
+    auto child1 = context->GetMutableNodeMap().GetRenderNode<RSRenderNode>(nodeId1);
+    auto child2 = context->GetMutableNodeMap().GetRenderNode<RSRenderNode>(nodeId2);
     rootNode->AddChild(child1, -1);
     rootNode->AddChild(child2, -1);
     

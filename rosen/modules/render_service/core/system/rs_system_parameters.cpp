@@ -18,7 +18,6 @@
 #include <cstdlib>
 #include <parameter.h>
 #include <parameters.h>
-#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -43,7 +42,7 @@ QuickSkipPrepareType RSSystemParameters::GetQuickSkipPrepareType()
         std::atoi((system::GetParameter("rosen.quickskipprepare.enabled", "2")).c_str()));
 }
 
-bool RSSystemParameters::GetFilterCacheOcculusionEnabled()
+bool RSSystemParameters::GetFilterCacheOcclusionEnabled()
 {
     static bool filterCacheOcclusionEnabled =
         std::atoi((system::GetParameter("persist.sys.graphic.filterCacheOcclusionEnabled", "1")).c_str()) != 0;

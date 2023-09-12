@@ -16,10 +16,10 @@
 #ifndef RENDER_SERVICE_PIPELINE_RS_UNI_RENDER_LISTENER_H
 #define RENDER_SERVICE_PIPELINE_RS_UNI_RENDER_LISTENER_H
 
-#include <mutex>
 #include <ibuffer_consumer_listener.h>
+#include <mutex>
+
 #include "pipeline/rs_display_render_node.h"
-#include "pipeline/rs_processor.h"
 
 namespace OHOS {
 namespace Rosen {

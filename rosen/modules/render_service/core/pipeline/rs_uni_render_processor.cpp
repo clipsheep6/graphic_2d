@@ -15,9 +15,6 @@
 
 #include "rs_uni_render_processor.h"
 
-#include "rs_trace.h"
-#include "string_utils.h"
-
 #include "platform/common/rs_log.h"
 
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
@@ -83,7 +80,7 @@ void RSUniRenderProcessor::ProcessDisplaySurface(RSDisplayRenderNode& node)
     }
     layers_.emplace_back(layer);
     for (auto surface : node.GetCurAllSurfaces()) {
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(surface);
+        auto surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(surface);
         if (!surfaceNode || !surfaceNode->GetOcclusionVisible() || surfaceNode->IsLeashWindow()) {
             continue;
         }

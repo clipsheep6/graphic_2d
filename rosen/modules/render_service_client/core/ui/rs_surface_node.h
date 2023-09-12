@@ -19,8 +19,10 @@
 #include <refbase.h>
 #include <string>
 
+#include "transaction/rs_transaction_proxy.h"
+#include "ui/rs_node.h"
+
 #ifdef ROSEN_OHOS
-#include "iconsumer_surface.h"
 #include "surface.h"
 #include "surface_delegate.h"
 #include "surface_type.h"
@@ -31,8 +33,6 @@
 #else
 #include "platform/drawing/rs_surface.h"
 #endif
-#include "transaction/rs_transaction_proxy.h"
-#include "ui/rs_node.h"
 
 #ifndef USE_ROSEN_DRAWING
 class SkCanvas;
@@ -69,8 +69,8 @@ public:
     // After calling it, this surfaceNode is disallowed to add/remove child.
     void CreateNodeInRenderThread();
 
-    void AddChild(std::shared_ptr<RSBaseNode> child, int index) override;
-    void RemoveChild(std::shared_ptr<RSBaseNode> child) override;
+    void AddChild(std::shared_ptr<RSNode> child, int index) override;
+    void RemoveChild(std::shared_ptr<RSNode> child) override;
     void ClearChildren() override;
 
     void SetSecurityLayer(bool isSecurityLayer);

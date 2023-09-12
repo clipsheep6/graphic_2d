@@ -14,10 +14,15 @@
  */
 
 #include "rs_node_cost_manager.h"
-#include "pipeline/rs_surface_render_node.h"
-#include "platform/common/rs_system_properties.h"
+
 #include "rs_parallel_render_manager.h"
 #include "rs_trace.h"
+
+#include "pipeline/rs_display_render_node.h"
+#include "pipeline/rs_surface_render_node.h"
+#include "pipeline/rs_uni_render_visitor.h"
+#include "platform/common/rs_system_properties.h"
+
 namespace OHOS::Rosen {
 
 RSNodeCostManager::RSNodeCostManager(bool doAnimate, bool opDropped, bool isSecurityDisplay)
@@ -70,7 +75,7 @@ bool RSNodeCostManager::IsSkipProcessing(RSSurfaceRenderNode& node) const
     return false;
 }
 
-void RSNodeCostManager::CalcBaseRenderNodeCost(RSBaseRenderNode& node)
+void RSNodeCostManager::CalcBaseRenderNodeCost(RSRenderNode& node)
 {
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
     for (auto& child : node.GetChildren()) {

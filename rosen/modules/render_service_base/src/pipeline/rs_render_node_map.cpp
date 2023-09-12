@@ -14,8 +14,8 @@
  */
 
 #include "pipeline/rs_render_node_map.h"
+
 #include "common/rs_common_def.h"
-#include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
@@ -86,7 +86,7 @@ bool RSRenderNodeMap::IsResidentProcessNode(NodeId id) const
         [nodePid](const auto& pair) -> bool { return ExtractPid(pair.first) == nodePid; });
 }
 
-bool RSRenderNodeMap::RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>& nodePtr)
+bool RSRenderNodeMap::RegisterRenderNode(const std::shared_ptr<RSRenderNode>& nodePtr)
 {
     NodeId id = nodePtr->GetId();
     if (renderNodeMap_.count(id)) {
@@ -125,7 +125,7 @@ void RSRenderNodeMap::UnregisterRenderNode(NodeId id)
     displayNodeMap_.erase(id);
 }
 
-void RSRenderNodeMap::AddDrivenRenderNode(const std::shared_ptr<RSBaseRenderNode>& nodePtr)
+void RSRenderNodeMap::AddDrivenRenderNode(const std::shared_ptr<RSRenderNode>& nodePtr)
 {
     NodeId id = nodePtr->GetId();
     if (!renderNodeMap_.count(id)) {
@@ -177,7 +177,7 @@ void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
     }
 }
 
-void RSRenderNodeMap::TraversalNodes(std::function<void (const std::shared_ptr<RSBaseRenderNode>&)> func) const
+void RSRenderNodeMap::TraversalNodes(std::function<void (const std::shared_ptr<RSRenderNode>&)> func) const
 {
     for (const auto& [_, node] : renderNodeMap_) {
         func(node);
@@ -217,7 +217,7 @@ std::unordered_map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> RSRenderNodeMap
 }
 
 template<>
-const std::shared_ptr<RSBaseRenderNode> RSRenderNodeMap::GetRenderNode(NodeId id) const
+const std::shared_ptr<RSRenderNode> RSRenderNodeMap::GetRenderNode(NodeId id) const
 {
     auto itr = renderNodeMap_.find(id);
     if (itr == renderNodeMap_.end()) {

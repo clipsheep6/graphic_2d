@@ -16,7 +16,9 @@
 #ifndef RENDER_SERVICE_CORE_DRIVEN_RENDER_EXT_H
 #define RENDER_SERVICE_CORE_DRIVEN_RENDER_EXT_H
 
-#include "rs_driven_render_manager.h"
+#include "rs_driven_surface_render_node.h"
+
+#include "common/rs_rect.h"
 
 namespace OHOS {
 namespace Rosen {

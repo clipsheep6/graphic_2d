@@ -41,7 +41,7 @@ public:
         return nodeMap;
     }
 
-    const std::shared_ptr<RSBaseRenderNode>& GetGlobalRootRenderNode() const
+    const std::shared_ptr<RSRenderNode>& GetGlobalRootRenderNode() const
     {
         return globalRootRenderNode_;
     }
@@ -68,7 +68,7 @@ public:
 
 private:
     RSRenderNodeMap nodeMap;
-    std::shared_ptr<RSBaseRenderNode> globalRootRenderNode_ = std::make_shared<RSRenderNode>(0, true);
+    std::shared_ptr<RSRenderNode> globalRootRenderNode_ = std::make_shared<RSRenderNode>(0, true);
     std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>> animatingNodeList_;
     bool needPurge_ = false;
 

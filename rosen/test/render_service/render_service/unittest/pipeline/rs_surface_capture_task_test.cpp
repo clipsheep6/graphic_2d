@@ -19,17 +19,17 @@
 #include <unistd.h>
 
 #include "rs_test_util.h"
-#include "pipeline/rs_surface_capture_task.h"
-#include "pipeline/rs_base_render_node.h"
+
 #include "pipeline/rs_display_render_node.h"
-#include "pipeline/rs_root_render_node.h"
+#include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_render_node.h"
+#include "pipeline/rs_root_render_node.h"
+#include "pipeline/rs_surface_capture_task.h"
 #include "pipeline/rs_surface_render_node.h"
+#include "pipeline/rs_uni_render_engine.h"
+#include "pipeline/rs_uni_render_judgement.h"
 #include "transaction/rs_interfaces.h"
 #include "ui/rs_surface_extractor.h"
-#include "pipeline/rs_paint_filter_canvas.h"
-#include "pipeline/rs_uni_render_judgement.h"
-#include "pipeline/rs_uni_render_engine.h"
 
 using namespace testing::ext;
 

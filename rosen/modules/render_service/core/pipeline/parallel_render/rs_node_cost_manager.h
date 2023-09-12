@@ -16,10 +16,9 @@
 #ifndef RS_NODE_COST_MANAGER_H
 #define RS_NODE_COST_MANAGER_H
 
-#include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_canvas_render_node.h"
-#include "pipeline/rs_display_render_node.h"
-#include "pipeline/rs_uni_render_visitor.h"
+#include "pipeline/rs_render_node.h"
+#include "platform/common/rs_system_properties.h"
 
 namespace OHOS::Rosen {
 class RSSurfaceRenderNode;
@@ -31,7 +30,7 @@ public:
     void CalcNodeCost(RSSurfaceRenderNode& node);
 private:
     bool IsSkipProcessing(RSSurfaceRenderNode& node) const;
-    void CalcBaseRenderNodeCost(RSBaseRenderNode& node);
+    void CalcBaseRenderNodeCost(RSRenderNode& node);
     void CalcCanvasRenderNodeCost(RSCanvasRenderNode& node);
     void AddNodeCost(int32_t cost);
     void CalcSurfaceRenderNodeCost(RSSurfaceRenderNode& node);

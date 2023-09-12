@@ -16,10 +16,11 @@
 #include "pipeline/rs_display_render_node.h"
 
 #include "common/rs_obj_abs_geometry.h"
+#include "pipeline/rs_dirty_region_manager.h"
 #include "platform/common/rs_log.h"
 #include "screen_manager/screen_types.h"
-#include "visitor/rs_node_visitor.h"
 #include "transaction/rs_render_service_client.h"
+#include "visitor/rs_node_visitor.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -38,7 +39,7 @@ RSDisplayRenderNode::~RSDisplayRenderNode()
 }
 
 void RSDisplayRenderNode::CollectSurface(
-    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender,
+    const std::shared_ptr<RSRenderNode>& node, std::vector<RSRenderNode::SharedPtr>& vec, bool isUniRender,
     bool onlyFirstLevel)
 {
     for (auto& child : node->GetSortedChildren()) {

@@ -16,23 +16,23 @@
 #ifndef RS_DIVIDED_UI_CAPTURE
 #define RS_DIVIDED_UI_CAPTURE
 
-#ifndef USE_ROSEN_DRAWING
-#include "include/core/SkCanvas.h"
-#include "include/core/SkSurface.h"
-#endif
 #include "pixel_map.h"
 
 #include "common/rs_macros.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_effect_render_node.h"
+
+#include "pipeline/rs_surface_render_node.h"
+#include "visitor/rs_node_visitor.h"
+
 #ifndef USE_ROSEN_DRAWING
+#include "include/core/SkSurface.h"
+
 #include "pipeline/rs_recording_canvas.h"
 #else
 #include "recording/recording_canvas.h"
 #endif
-#include "pipeline/rs_surface_render_node.h"
-#include "visitor/rs_node_visitor.h"
 
 namespace OHOS {
 namespace Rosen {

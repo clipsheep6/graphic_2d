@@ -17,25 +17,18 @@
 
 #include <cstdint>
 
+#include "delegate/rs_functional_delegate.h"
 #include "rs_trace.h"
 #include "sandbox_utils.h"
 
 #include "animation/rs_animation_fraction.h"
-#include "command/rs_surface_node_command.h"
-#include "delegate/rs_functional_delegate.h"
-#include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_frame_report.h"
-#include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_root_render_node.h"
-#include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "property/rs_property_trace.h"
-#include "render_context/shader_cache.h"
 #include "transaction/rs_render_service_client.h"
-#include "ui/rs_surface_extractor.h"
-#include "ui/rs_surface_node.h"
 #include "ui/rs_ui_director.h"
 
 #ifdef OHOS_RSS_CLIENT
@@ -54,7 +47,6 @@
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
 
 #ifdef ACCESSIBILITY_ENABLE
-#include "accessibility_config.h"
 #include "platform/common/rs_accessibility.h"
 #endif
 

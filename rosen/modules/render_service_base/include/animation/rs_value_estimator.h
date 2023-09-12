@@ -18,14 +18,9 @@
 
 #include <memory>
 
-#include "animation/rs_animation_common.h"
 #include "animation/rs_interpolator.h"
-#include "common/rs_color.h"
 #include "common/rs_macros.h"
-#include "common/rs_matrix3.h"
-#include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
-#include "modifier/rs_modifier_type.h"
 #include "render/rs_filter.h"
 
 namespace OHOS {
@@ -53,14 +48,15 @@ public:
     }
 
     virtual void InitCurveAnimationValue(const std::shared_ptr<RSRenderPropertyBase>& property,
-        const std::shared_ptr<RSRenderPropertyBase>& startValue,
-        const std::shared_ptr<RSRenderPropertyBase>& endValue,
-        const std::shared_ptr<RSRenderPropertyBase>& lastValue) {}
+        const std::shared_ptr<RSRenderPropertyBase>& startValue, const std::shared_ptr<RSRenderPropertyBase>& endValue,
+        const std::shared_ptr<RSRenderPropertyBase>& lastValue)
+    {}
 
     virtual void InitKeyframeAnimationValue(const std::shared_ptr<RSRenderPropertyBase>& property,
-        std::vector<std::tuple<float, std::shared_ptr<RSRenderPropertyBase>,
-        std::shared_ptr<RSInterpolator>>>& keyframes,
-        const std::shared_ptr<RSRenderPropertyBase>& lastValue) {}
+        std::vector<std::tuple<float, std::shared_ptr<RSRenderPropertyBase>, std::shared_ptr<RSInterpolator>>>&
+            keyframes,
+        const std::shared_ptr<RSRenderPropertyBase>& lastValue)
+    {}
 
     virtual void UpdateAnimationValue(const float fraction, const bool isAdditive) = 0;
 };
@@ -72,8 +68,7 @@ public:
     virtual ~RSCurveValueEstimator() = default;
 
     void InitCurveAnimationValue(const std::shared_ptr<RSRenderPropertyBase>& property,
-        const std::shared_ptr<RSRenderPropertyBase>& startValue,
-        const std::shared_ptr<RSRenderPropertyBase>& endValue,
+        const std::shared_ptr<RSRenderPropertyBase>& startValue, const std::shared_ptr<RSRenderPropertyBase>& endValue,
         const std::shared_ptr<RSRenderPropertyBase>& lastValue) override
     {
         auto animatableProperty = std::static_pointer_cast<RSRenderAnimatableProperty<T>>(property);

@@ -14,12 +14,17 @@
  */
 
 #include "memory/rs_skia_memory_tracer.h"
+
 #include <numeric>
+#include <utility>
+
+#include "include/core/SkString.h"
+
 namespace OHOS::Rosen {
 constexpr uint32_t MEMUNIT_RATE = 1024;
-
 SkiaMemoryTracer::SkiaMemoryTracer(std::vector<ResourcePair> resourceMap, bool itemizeType)
-    : resourceMap_(resourceMap), itemizeType_(itemizeType), totalSize_("bytes", 0), purgeableSize_("bytes", 0)
+    : resourceMap_(std::move(resourceMap)), itemizeType_(itemizeType), totalSize_("bytes", 0),
+      purgeableSize_("bytes", 0)
 {}
 
 SkiaMemoryTracer::SkiaMemoryTracer(const char* categoryKey, bool itemizeType)

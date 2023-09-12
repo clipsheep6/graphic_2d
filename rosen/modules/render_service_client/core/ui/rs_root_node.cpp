@@ -17,10 +17,8 @@
 
 #include "command/rs_root_node_command.h"
 #include "pipeline/rs_node_map.h"
-#include "platform/common/rs_log.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_surface_node.h"
-#include "ui/rs_ui_director.h"
 
 namespace OHOS {
 namespace Rosen {

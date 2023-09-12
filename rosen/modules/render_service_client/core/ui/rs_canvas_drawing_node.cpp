@@ -16,7 +16,6 @@
 #include "ui/rs_canvas_drawing_node.h"
 
 #include "command/rs_canvas_drawing_node_command.h"
-#include "common/rs_obj_geometry.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
 #include "pipeline/rs_node_map.h"
 #include "pipeline/rs_render_thread.h"

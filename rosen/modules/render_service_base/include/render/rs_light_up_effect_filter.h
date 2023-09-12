@@ -16,8 +16,6 @@
 #define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_LIGHT_UP_EFFECT_FILTER_H
 
 #include <memory>
-#include "include/core/SkColorFilter.h"
-#include "include/effects/SkImageFilters.h"
 #include "render/rs_skia_filter.h"
 
 namespace OHOS {

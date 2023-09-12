@@ -14,21 +14,22 @@
  */
 
 #include "rs_render_service.h"
+
+#include <iservice_registry.h>
+#include <platform/common/rs_log.h>
+#include <string>
+#include <system_ability_definition.h>
+#include <unistd.h>
+
+#include "parameter.h"
 #include "rs_main_thread.h"
 #include "rs_qos_thread.h"
 #include "rs_render_service_connection.h"
 #include "vsync_generator.h"
+
+#include "pipeline/rs_hardware_thread.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_uni_render_judgement.h"
-#include "pipeline/rs_hardware_thread.h"
-
-#include <string>
-#include <unistd.h>
-
-#include <iservice_registry.h>
-#include <platform/common/rs_log.h>
-#include <system_ability_definition.h>
-#include "parameter.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -155,12 +156,12 @@ void RSRenderService::DumpNodesNotOnTheTree(std::string& dumpString) const
     dumpString.append("-- Node Not On Tree\n");
 
     const auto& nodeMap = mainThread_->GetContext().GetNodeMap();
-    nodeMap.TraversalNodes([&dumpString](const std::shared_ptr<RSBaseRenderNode>& node) {
+    nodeMap.TraversalNodes([&dumpString](const auto& node) {
         if (node == nullptr) {
             return;
         }
 
-        if (node->IsInstanceOf<RSSurfaceRenderNode>() && !node->IsOnTheTree()) {
+        if (node->template IsInstanceOf<RSSurfaceRenderNode>() && !node->IsOnTheTree()) {
             const auto& surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
             dumpString += "\n node Id[" + std::to_string(node->GetId()) + "]:\n";
             const auto& surfaceConsumer = surfaceNode->GetConsumer();
@@ -179,12 +180,12 @@ void RSRenderService::DumpAllNodesMemSize(std::string& dumpString) const
     dumpString.append("the memory size of all surfaces buffer is : dumpend");
 
     const auto& nodeMap = mainThread_->GetContext().GetNodeMap();
-    nodeMap.TraversalNodes([&dumpString](const std::shared_ptr<RSBaseRenderNode>& node) {
-        if (node == nullptr || !node->IsInstanceOf<RSSurfaceRenderNode>()) {
+    nodeMap.TraversalNodes([&dumpString](const auto& node) {
+        if (node == nullptr || !node->template IsInstanceOf<RSSurfaceRenderNode>()) {
             return;
         }
 
-        const auto& surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
+        const auto& surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
         const auto& surfaceConsumer = surfaceNode->GetConsumer();
         if (surfaceConsumer == nullptr) {
             return;

@@ -15,37 +15,34 @@
 
 #include "pipeline/rs_render_service_visitor.h"
 
-#ifndef USE_ROSEN_DRAWING
-#include "include/core/SkCanvas.h"
-#include "include/core/SkPoint.h"
-#include "include/core/SkRect.h"
-#endif
-#include "rs_divided_render_util.h"
 #include "rs_trace.h"
 
 #include "common/rs_obj_abs_geometry.h"
-#include "pipeline/rs_main_thread.h"
-#include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_display_render_node.h"
+#include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_processor.h"
 #include "pipeline/rs_processor_factory.h"
 #include "pipeline/rs_surface_render_node.h"
-#include "platform/common/rs_log.h"
 #include "platform/common/rs_innovation.h"
-#ifdef NEW_RENDER_CONTEXT
-#include "rs_render_surface.h"
-#else
-#include "platform/drawing/rs_surface.h"
-#endif
+#include "platform/common/rs_log.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "screen_manager/screen_types.h"
+
+#ifdef NEW_RENDER_CONTEXT
+#include "rs_render_surface.h"
+#endif
+
+#ifndef USE_ROSEN_DRAWING
+#include "include/core/SkCanvas.h"
+#include "include/core/SkRect.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
 
 RSRenderServiceVisitor::RSRenderServiceVisitor(bool parallel) : mParallelEnable(parallel) {}
 
-RSRenderServiceVisitor::~RSRenderServiceVisitor() {}
+RSRenderServiceVisitor::~RSRenderServiceVisitor() = default;
 
 void RSRenderServiceVisitor::PrepareChildren(RSRenderNode& node)
 {
@@ -88,8 +85,8 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     }
 
     ScreenRotation rotation = node.GetRotation();
-    int32_t logicalScreenWidth = static_cast<int32_t>(node.GetRenderProperties().GetFrameWidth());
-    int32_t logicalScreenHeight = static_cast<int32_t>(node.GetRenderProperties().GetFrameHeight());
+    auto logicalScreenWidth = static_cast<int32_t>(node.GetRenderProperties().GetFrameWidth());
+    auto logicalScreenHeight = static_cast<int32_t>(node.GetRenderProperties().GetFrameHeight());
 
     if (logicalScreenWidth <= 0 || logicalScreenHeight <= 0) {
         logicalScreenWidth = static_cast<int32_t>(curScreenInfo.width);
@@ -202,7 +199,7 @@ void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
     if (RSInnovation::GetParallelCompositionEnabled(false)) {
         typedef bool (*CheckForSerialForcedFunc)(std::string&);
-        CheckForSerialForcedFunc CheckForSerialForced =
+        auto CheckForSerialForced =
             reinterpret_cast<CheckForSerialForcedFunc>(RSInnovation::_s_checkForSerialForced);
         auto name = node.GetName();
         mForceSerial |= CheckForSerialForced(name);

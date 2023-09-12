@@ -165,7 +165,7 @@ HWTEST_F(RSUniRenderUtilTest, AssignWindowNodes, Function | SmallTest | Level2)
 HWTEST_F(RSUniRenderUtilTest, ClearSurfaceIfNeed, Function | SmallTest | Level2)
 {
     RSRenderNodeMap map;
-    std::set<std::shared_ptr<RSBaseRenderNode>> oldChildren;
+    std::set<std::shared_ptr<RSRenderNode>> oldChildren;
     RSUniRenderUtil::ClearSurfaceIfNeed(map, nullptr, oldChildren);
     NodeId id = 0;
     RSDisplayNodeConfig config;

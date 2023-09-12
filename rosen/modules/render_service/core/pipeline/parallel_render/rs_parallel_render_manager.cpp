@@ -14,21 +14,21 @@
  */
 
 #include "rs_parallel_render_manager.h"
+
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <mutex>
 
 #include "EGL/egl.h"
+#include "rs_parallel_render_ext.h"
 #include "rs_render_task.h"
+#include "rs_trace.h"
+
 #include "pipeline/rs_base_render_engine.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_uni_render_engine.h"
-#include "pipeline/rs_uni_render_listener.h"
 #include "pipeline/rs_uni_render_visitor.h"
-#include "rs_parallel_render_ext.h"
-#include "rs_trace.h"
-
 
 namespace OHOS {
 namespace Rosen {
@@ -233,7 +233,7 @@ void RSParallelRenderManager::PackRenderTask(RSSurfaceRenderNode &node, TaskType
 }
 
 void RSParallelRenderManager::PackParallelCompositionTask(std::shared_ptr<RSNodeVisitor> visitor,
-                                                          const std::shared_ptr<RSBaseRenderNode> node)
+                                                          const std::shared_ptr<RSRenderNode> node)
 {
     uniParallelCompositionVisitor_ = std::static_pointer_cast<RSUniRenderVisitor>(visitor);
     baseNode_ = node;
@@ -241,7 +241,7 @@ void RSParallelRenderManager::PackParallelCompositionTask(std::shared_ptr<RSNode
     auto children = node->GetSortedChildren();
     for (auto iter = children.rbegin(); iter != children.rend(); iter++) {
         std::shared_ptr<RSDisplayRenderNode> displayNode =
-            RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(*iter);
+            RSRenderNode::ReinterpretCast<RSDisplayRenderNode>(*iter);
         if (*iter == *children.begin()) {
             mainDisplayNode_ = displayNode;
             break;

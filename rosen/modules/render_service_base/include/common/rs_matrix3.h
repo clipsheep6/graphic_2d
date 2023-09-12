@@ -19,7 +19,6 @@
 #define USE_MATH_DEFINES
 #include <cmath>
 
-#include "common/rs_macros.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector3.h"
 

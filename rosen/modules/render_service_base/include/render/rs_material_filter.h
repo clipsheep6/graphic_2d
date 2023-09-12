@@ -15,19 +15,11 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_RENDER_RS_MATERIAL_FILTER_H
 #define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_MATERIAL_FILTER_H
 
-#ifdef NEW_SKIA
-#include "include/effects/SkRuntimeEffect.h"
-#endif
-
 #include "common/rs_color.h"
 #include "render/rs_skia_filter.h"
-#include "render/rs_kawase_blur.h"
 
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkColorFilter.h"
-#include "include/core/SkColor.h"
-#include "include/effects/SkColorMatrix.h"
-#include "include/effects/SkImageFilters.h"
 #else
 #include "effect/color_filter.h"
 #include "draw/color.h"

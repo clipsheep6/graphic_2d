@@ -20,9 +20,9 @@
 #include <message_option.h>
 #include <message_parcel.h>
 
-#include "platform/ohos/rs_irender_service.h"
-#include "platform/ohos/rs_irender_service_ipc_interface_code_access_verifier.h"
 #include "ipc_security/rs_ipc_interface_code_security_manager.h"
+
+#include "platform/ohos/rs_irender_service.h"
 
 namespace OHOS {
 namespace Rosen {

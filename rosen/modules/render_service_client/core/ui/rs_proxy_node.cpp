@@ -96,12 +96,12 @@ void RSProxyNode::ResetContextVariableCache() const
     std::unique_ptr<RSCommand> command = std::make_unique<RSProxyNodeResetContextVariableCache>(proxyNodeId_);
     transactionProxy->AddCommand(command, IsUniRenderEnabled());
 }
-void RSProxyNode::AddChild(std::shared_ptr<RSBaseNode> child, int index)
+void RSProxyNode::AddChild(std::shared_ptr<RSNode> child, int index)
 {
     // RSProxyNode::AddChild for proxyNode is not allowed
 }
 
-void RSProxyNode::RemoveChild(std::shared_ptr<RSBaseNode> child)
+void RSProxyNode::RemoveChild(std::shared_ptr<RSNode> child)
 {
     // RSProxyNode::RemoveChild for proxyNode is not allowed
 }

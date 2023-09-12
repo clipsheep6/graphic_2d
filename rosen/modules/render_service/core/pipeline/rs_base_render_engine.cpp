@@ -14,8 +14,11 @@
  */
 
 #include "rs_base_render_engine.h"
+
 #include <memory>
-#include "rs_divided_render_util.h"
+
+#include "GLES/glext.h"
+
 #include "common/rs_optional_trace.h"
 #include "pipeline/rs_uni_render_judgement.h"
 #include "platform/common/rs_log.h"
@@ -31,17 +34,12 @@
 #include "platform/ohos/backend/rs_surface_ohos_vulkan.h"
 #endif
 #endif
-#include "render/rs_skia_filter.h"
 
 namespace OHOS {
 namespace Rosen {
-RSBaseRenderEngine::RSBaseRenderEngine()
-{
-}
+RSBaseRenderEngine::RSBaseRenderEngine() = default;
 
-RSBaseRenderEngine::~RSBaseRenderEngine() noexcept
-{
-}
+RSBaseRenderEngine::~RSBaseRenderEngine() noexcept = default;
 
 void RSBaseRenderEngine::Init()
 {

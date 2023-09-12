@@ -31,9 +31,9 @@
 #include "image/gpu_context.h"
 #endif // USE_ROSEN_DRAWING
 
-typedef void* EGLSurface;
-typedef void* EGLContext;
-typedef void* EGLDisplay;
+using EGLSurface = void *;
+using EGLContext = void *;
+using EGLDisplay = void *;
 
 namespace OHOS::Rosen {
 

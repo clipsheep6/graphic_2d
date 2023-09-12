@@ -16,8 +16,9 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_ANIMATION_TIMING_PROTOCOL_H
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_ANIMATION_TIMING_PROTOCOL_H
 
-#include "common/rs_common_def.h"
 #include "rs_frame_rate_range.h"
+
+#include "common/rs_macros.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -15,6 +15,10 @@
 
 #include <vector>
 
+#include "common/rs_common_def.h"
+#include "memory/rs_dfx_string.h"
+#include "memory/rs_memory_graphic.h"
+
 #ifndef USE_ROSEN_DRAWING
 #if defined(NEW_SKIA)
 #include "include/gpu/GrDirectContext.h"
@@ -25,13 +29,7 @@
 #include "image/gpu_context.h"
 #endif
 
-#include "memory/rs_dfx_string.h"
-#include "memory/rs_memory_graphic.h"
-#include "memory/rs_memory_track.h"
-#include "pipeline/rs_surface_render_node.h"
-
 namespace OHOS::Rosen {
-
 class MemoryManager {
 public:
 #ifndef USE_ROSEN_DRAWING

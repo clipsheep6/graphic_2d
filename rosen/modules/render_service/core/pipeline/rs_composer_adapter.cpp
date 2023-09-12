@@ -19,13 +19,14 @@
 #include <sstream>
 #include <sys/time.h>
 
+#include "rs_base_render_util.h"
+#include "rs_trace.h"
+#include "string_utils.h"
+
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "platform/common/rs_log.h"
-#include "rs_base_render_util.h"
-#include "rs_divided_render_util.h"
-#include "rs_trace.h"
-#include "string_utils.h"
+#include "property/rs_properties_painter.h"
 
 #ifdef USE_ROSEN_DRAWING
 #include "draw/canvas.h"
@@ -114,7 +115,7 @@ void RSComposerAdapter::CommitLayers(const std::vector<LayerInfoPtr>& layers)
             continue;
         }
 
-        auto nodePtr = static_cast<RSBaseRenderNode*>(layer->GetLayerAdditionalInfo());
+        auto nodePtr = static_cast<RSRenderNode*>(layer->GetLayerAdditionalInfo());
         if (nodePtr == nullptr) {
             RS_LOGW("RSComposerAdapter::PostProcess: layer's node is nullptr.");
             continue;
@@ -402,7 +403,7 @@ void RSComposerAdapter::SetComposeInfoToLayer(
     const LayerInfoPtr& layer,
     const ComposeInfo& info,
     const sptr<IConsumerSurface>& surface,
-    RSBaseRenderNode* node) const
+    RSRenderNode* node) const
 {
     if (layer == nullptr) {
         return;
@@ -616,7 +617,7 @@ LayerInfoPtr RSComposerAdapter::CreateLayer(RSDisplayRenderNode& node) const
     return layer;
 }
 
-static int GetSurfaceNodeRotation(RSBaseRenderNode& node)
+static int GetSurfaceNodeRotation(RSRenderNode& node)
 {
     // only surface render node has the ability to rotate
     // the rotation of display render node is calculated as screen rotation
@@ -646,7 +647,7 @@ static int GetSurfaceNodeRotation(RSBaseRenderNode& node)
     return iter != supportedDegrees.end() ? iter->second : 0;
 }
 
-static void SetLayerTransform(const LayerInfoPtr& layer, RSBaseRenderNode& node,
+static void SetLayerTransform(const LayerInfoPtr& layer, RSRenderNode& node,
     const sptr<IConsumerSurface>& surface, ScreenRotation screenRotation)
 {
     // screenRotation: anti-clockwise, surfaceNodeRotation: anti-clockwise, surfaceTransform: anti-clockwise
@@ -699,7 +700,7 @@ static void SetLayerSize(const LayerInfoPtr& layer, const ScreenInfo& screenInfo
 }
 
 // private func, guarantee the layer is valid
-void RSComposerAdapter::LayerRotate(const LayerInfoPtr& layer, RSBaseRenderNode& node) const
+void RSComposerAdapter::LayerRotate(const LayerInfoPtr& layer, RSRenderNode& node) const
 {
     auto surface = layer->GetSurface();
     if (surface == nullptr) {

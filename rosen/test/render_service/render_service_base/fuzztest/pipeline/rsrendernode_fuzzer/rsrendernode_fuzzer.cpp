@@ -19,7 +19,7 @@
 #include <cstdint>
 #include <securec.h>
 
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_context.h"
 #include "pipeline/rs_dirty_region_manager.h"
@@ -95,10 +95,10 @@ bool RSBaseRenderNodeFuzzTest(const uint8_t* data, size_t size)
     NodeId id = GetData<NodeId>();
     std::shared_ptr<RSContext> context = std::make_shared<RSContext>();
     bool isOnTheTree = GetData<bool>();
-    RSBaseRenderNode::SharedPtr child = std::make_shared<RSCanvasRenderNode>(id, context);
+    RSRenderNode::SharedPtr child = std::make_shared<RSCanvasRenderNode>(id, context);
     int index = GetData<int>();
     bool skipTransition = GetData<bool>();
-    std::vector<RSBaseRenderNode::SharedPtr> vec = { child };
+    std::vector<RSRenderNode::SharedPtr> vec = { child };
     bool isUniRender = GetData<bool>();
     int64_t timestamp = GetData<int64_t>();
     bool flag = GetData<bool>();
@@ -238,8 +238,8 @@ bool RSDisplayRenderNodeFuzzTest(const uint8_t* data, size_t size)
     int32_t offsetX = GetData<int32_t>();
     int32_t offsetY = GetData<int32_t>();
     std::shared_ptr<RSContext> context = std::make_shared<RSContext>();
-    std::shared_ptr<RSBaseRenderNode> node = std::make_shared<RSBaseRenderNode>(id, context);
-    std::vector<RSBaseRenderNode::SharedPtr> vec = { node };
+    std::shared_ptr<RSRenderNode> node = std::make_shared<RSRenderNode>(id, context);
+    std::vector<RSRenderNode::SharedPtr> vec = { node };
     bool isUniRender = GetData<bool>();
     RSDisplayRenderNode::CompositeType type = GetData<RSDisplayRenderNode::CompositeType>();
     bool flag = GetData<bool>();

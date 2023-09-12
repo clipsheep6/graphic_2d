@@ -442,6 +442,27 @@ void MemoryManager::DumpGpuCache(DfxString& log, const GrContext* grContext, GrG
 #endif
 }
 #else
+void MemoryManager::DumpGpuCache(
+    DfxString& log, const GPUContext* gpuContext, GrGpuResourceTag* tag, std::string& name)
+{
+    if (!gpuContext) {
+        log.AppendFormat("gpuContext is nullptr.\n");
+        return;
+    }
+    /////////////////////////////GPU/////////////////////////
+    #ifdef RS_ENABLE_GL
+    log.AppendFormat("\n---------------\nSkia GPU Caches:%s\n", name.c_str());
+    SkiaMemoryTracer gpuTracer("category", true);
+    if (tag) {
+        gpuContext->DumpMemoryStatisticsByTag(&gpuTracer, *tag);
+    } else {
+        gpuContext->DumpMemoryStatistics(&gpuTracer);
+    }
+    gpuTracer.LogOutput(log);
+    log.AppendFormat("Total GPU memory usage:\n");
+    gpuTracer.LogTotals(log);
+#endif
+}
 #endif
 
 #ifndef USE_ROSEN_DRAWING
@@ -528,6 +549,44 @@ void MemoryManager::DumpDrawingGpuMemory(DfxString& log, const GrContext* grCont
 #else
 void MemoryManager::DumpDrawingGpuMemory(DfxString& log, const Drawing::GPUContext* gpuContext)
 {
+    if (!gpuContext) {
+        log.AppendFormat("No valid gpu cache instance.\n");
+        return;
+    }
+    /////////////////////////////GPU/////////////////////////
+#ifdef RS_ENABLE_GL
+    std::string gpuInfo;
+    // total
+    DumpGpuCache(log, gpuContext, nullptr, gpuInfo);
+    // Get memory of window by tag
+    DumpAllGpuInfo(log, gpuContext);
+    for (uint32_t tagtype = RSTagTracker::TAG_SAVELAYER_DRAW_NODE; tagtype <= RSTagTracker::TAG_CAPTURE; tagtype++) {
+        GrGpuResourceTag tag(0, 0, 0, tagtype);
+        std::string tagType = RSTagTracker::TagType2String(static_cast<RSTagTracker::TAGTYPE>(tagtype));
+        DumpGpuCache(log, gpuContext, &tag, tagType);
+    }
+    // cache limit
+    size_t cacheLimit = 0;
+    size_t cacheUsed = 0;
+    grContext->GetResourceCacheLimits(nullptr, cacheLimit);
+    grContext->GetResourceCacheUsage(nullptr, cacheUsed);
+    log.AppendFormat("\ngpu limit = %zu ( used = %zu ):\n", cacheLimit, cacheUsed);
+
+    //////////////////////////ShaderCache///////////////////
+    log.AppendFormat("\n---------------\nShader Caches:\n");
+#ifdef NEW_RENDER_CONTEXT
+    log.AppendFormat(MemoryHandler::QuerryShader().c_str());
+#else
+    std::shared_ptr<RenderContext> rendercontext = std::make_shared<RenderContext>();
+    log.AppendFormat(rendercontext->GetShaderCacheSize().c_str());
+#endif
+    // gpu stat
+    log.AppendFormat("\n---------------\ndumpGpuStats:\n");
+    std::string stat;
+    grContext->DumpGpuStats(stat);
+
+    log.AppendFormat("%s\n", stat.c_str());
+#endif
 }
 #endif
 

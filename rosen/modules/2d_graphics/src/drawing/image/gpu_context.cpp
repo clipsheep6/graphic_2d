@@ -47,6 +47,21 @@ void GPUContext::PerformDeferredCleanup(std::chrono::milliseconds msNotUsed)
     impl_->PerformDeferredCleanup(msNotUsed);
 }
 
+void GPUContext::GetResourceCacheUsage(int& resourceCount, size_t& resourceBytes) const
+{
+    impl_->GetResourceCacheUsage(resourceCount, resourceBytes);
+}
+
+void GPUContext::FreeGpuResources()
+{
+    impl_->FreeGpuResources();
+}
+
+void GPUContext::DumpGpuStats(std::string& out) const
+{
+    impl_->DumpGpuStats(out);
+}
+
 void GPUContextOptions::SetPersistentCache(PersistentCache* persistentCache)
 {
     persistentCache_ = persistentCache;

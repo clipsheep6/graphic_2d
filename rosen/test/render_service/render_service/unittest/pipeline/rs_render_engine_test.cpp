@@ -72,6 +72,12 @@ HWTEST_F(RSRenderEngineTest, DrawSurfaceNodeWithParams001, TestSize.Level1)
     auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
     auto param = RSDividedRenderUtil::CreateBufferDrawParam(*node);
     param.useCPU = true;
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto node = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
+    BufferDrawParam param;
+    param.useCPU = false;
     renderEngine->DrawSurfaceNodeWithParams(*canvas, *node, param, nullptr, nullptr);
     ASSERT_NE(canvas, nullptr);
 }
@@ -87,8 +93,11 @@ HWTEST_F(RSRenderEngineTest, DrawSurfaceNodeWithParams002, TestSize.Level1)
     auto renderEngine = std::make_shared<RSRenderEngine>();
     std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
     std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
-    auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    auto param = RSDividedRenderUtil::CreateBufferDrawParam(*node);
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto node = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
+    BufferDrawParam param;
     param.useCPU = true;
     renderEngine->DrawSurfaceNodeWithParams(*canvas, *node, param, nullptr, nullptr);
     ASSERT_NE(canvas, nullptr);
@@ -131,8 +140,7 @@ HWTEST_F(RSRenderEngineTest, DrawWithParams001, TestSize.Level1)
     auto renderEngine = std::make_shared<RSRenderEngine>();
     std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
     std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
-    auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    auto param = RSDividedRenderUtil::CreateBufferDrawParam(*node);
+    BufferDrawParam param;
     renderEngine->DrawWithParams(*canvas, param, nullptr, nullptr);
 }
 
@@ -147,8 +155,7 @@ HWTEST_F(RSRenderEngineTest, DrawWithParams002, TestSize.Level1)
     auto renderEngine = std::make_shared<RSRenderEngine>();
     std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
     std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
-    auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    auto param = RSDividedRenderUtil::CreateBufferDrawParam(*node);
+    BufferDrawParam param;
     param.setColorFilter = false;
     renderEngine->DrawWithParams(*canvas, param, nullptr, nullptr);
 }
@@ -164,8 +171,7 @@ HWTEST_F(RSRenderEngineTest, DrawWithParams003, TestSize.Level1)
     auto renderEngine = std::make_shared<RSRenderEngine>();
     std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
     std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
-    auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    auto param = RSDividedRenderUtil::CreateBufferDrawParam(*node);
+    BufferDrawParam param;
     param.setColorFilter = true;
     renderEngine->DrawWithParams(*canvas, param, nullptr, nullptr);
 }
@@ -181,8 +187,7 @@ HWTEST_F(RSRenderEngineTest, DrawWithParams004, TestSize.Level1)
     auto renderEngine = std::make_shared<RSRenderEngine>();
     std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
     std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
-    auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    auto param = RSDividedRenderUtil::CreateBufferDrawParam(*node);
+    BufferDrawParam param;
     param.useCPU = true;
     renderEngine->DrawWithParams(*canvas, param, nullptr, nullptr);
 }
@@ -198,8 +203,7 @@ HWTEST_F(RSRenderEngineTest, DrawWithParams005, TestSize.Level1)
     auto renderEngine = std::make_shared<RSRenderEngine>();
     std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
     std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
-    auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    auto param = RSDividedRenderUtil::CreateBufferDrawParam(*node);
+    BufferDrawParam param;
     param.useCPU = false;
     renderEngine->DrawWithParams(*canvas, param, nullptr, nullptr);
 }
@@ -215,8 +219,11 @@ HWTEST_F(RSRenderEngineTest, RSSurfaceNodeCommonPreProcess, TestSize.Level1)
     auto renderEngine = std::make_shared<RSRenderEngine>();
     std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
     std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
-    auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    auto param = RSDividedRenderUtil::CreateBufferDrawParam(*node);
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto node = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
+    BufferDrawParam param;
     renderEngine->RSSurfaceNodeCommonPreProcess(*node, *canvas, param);
     ASSERT_NE(canvas, nullptr);
 }
@@ -232,8 +239,11 @@ HWTEST_F(RSRenderEngineTest, RSSurfaceNodeCommonPostProcess, TestSize.Level1)
     auto renderEngine = std::make_shared<RSRenderEngine>();
     std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
     std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
-    auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    auto param = RSDividedRenderUtil::CreateBufferDrawParam(*node);
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto node = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
+    BufferDrawParam param;
     renderEngine->RSSurfaceNodeCommonPostProcess(*node, *canvas, param);
     ASSERT_NE(canvas, nullptr);
 }
@@ -249,7 +259,10 @@ HWTEST_F(RSRenderEngineTest, ClipHoleForLayer, TestSize.Level1)
     auto renderEngine = std::make_shared<RSRenderEngine>();
     std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
     std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
-    auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto node = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     renderEngine->ClipHoleForLayer(*canvas, *node);
     ASSERT_NE(canvas, nullptr);
 }
@@ -269,42 +282,6 @@ HWTEST_F(RSRenderEngineTest, SetColorFilterModeToPaint, TestSize.Level1)
 }
 
 /*
- * @tc.name: CaptureSurfaceInDisplayWithUni006
- * @tc.desc: Test RSRenderEngineTest.CaptureSurfaceInDisplayWithUni
- * @tc.type: FUNC
- * @tc.require: issueI794H6
-*/
-HWTEST_F(RSRenderEngineTest, CaptureSurfaceInDisplayWithUni006, Function | SmallTest | Level2)
-{
-    bool isUnirender = RSUniRenderJudgement::IsUniRender();
-    ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::SELF_DRAWING_NODE);
-    surfaceNode->SetSecurityLayer(true);
-    if (isUnirender) {
-        visitor_->CaptureSurfaceInDisplayWithUni(*surfaceNode);
-    }
-}
-
-/*
- * @tc.name: CaptureSurfaceInDisplayWithUni004
- * @tc.desc: Test RSRenderEngineTest.CaptureSurfaceInDisplayWithUni
- * @tc.type: FUNC
- * @tc.require: issueI794H6
-*/
-HWTEST_F(RSRenderEngineTest, CaptureSurfaceInDisplayWithUni004, Function | SmallTest | Level2)
-{
-    bool isUnirender = RSUniRenderJudgement::IsUniRender();
-    ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
-    surfaceNode->SetSecurityLayer(false);
-    if (isUnirender) {
-        visitor_->CaptureSurfaceInDisplayWithUni(*surfaceNode);
-    }
-}
-
-/*
  * @tc.name: CaptureSurfaceInDisplayWithUni001
  * @tc.desc: Test RSRenderEngineTest.CaptureSurfaceInDisplayWithUni
  * @tc.type: FUNC
@@ -314,8 +291,10 @@ HWTEST_F(RSRenderEngineTest, CaptureSurfaceInDisplayWithUni001, Function | Small
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
     ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     surfaceNode->SetSecurityLayer(true);
     if (isUnirender) {
         visitor_->CaptureSurfaceInDisplayWithUni(*surfaceNode);
@@ -332,8 +311,10 @@ HWTEST_F(RSRenderEngineTest, CaptureSurfaceInDisplayWithUni002, Function | Small
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
     ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::SELF_DRAWING_NODE);
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     surfaceNode->SetSecurityLayer(false);
     if (isUnirender) {
         visitor_->CaptureSurfaceInDisplayWithUni(*surfaceNode);
@@ -350,10 +331,13 @@ HWTEST_F(RSRenderEngineTest, ProcessSurfaceRenderNodeWithUni001, Function | Smal
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
     ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     surfaceNode->renderProperties_.SetBackgroundFilter(nullptr);
     if (isUnirender) {
-        visitor_->CaptureSurfaceInDisplayWithUni(*surfaceNode);
+        visitor_->ProcessSurfaceRenderNodeWithUni(*surfaceNode);
     }
 }
 
@@ -367,27 +351,13 @@ HWTEST_F(RSRenderEngineTest, ProcessSurfaceRenderNodeWithUni002, Function | Smal
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
     ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     visitor_->isDisplayNode_ = true;
     if (isUnirender) {
-        visitor_->CaptureSurfaceInDisplayWithUni(*surfaceNode);
-    }
-}
-
-/*
- * @tc.name: ProcessSurfaceRenderNodeWithUni003
- * @tc.desc: Test RSRenderEngineTest.ProcessSurfaceRenderNodeWithUni
- * @tc.type: FUNC
- * @tc.require: issueI794H6
-*/
-HWTEST_F(RSRenderEngineTest, ProcessSurfaceRenderNodeWithUni003, Function | SmallTest | Level2)
-{
-    bool isUnirender = RSUniRenderJudgement::IsUniRender();
-    ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    visitor_->isDisplayNode_ = false;
-    if (isUnirender) {
-        visitor_->CaptureSurfaceInDisplayWithUni(*surfaceNode);
+        visitor_->ProcessSurfaceRenderNodeWithUni(*surfaceNode);
     }
 }
 
@@ -401,7 +371,10 @@ HWTEST_F(RSRenderEngineTest, CaptureSingleSurfaceNodeWithoutUni001, Function | S
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
     ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     surfaceNode->SetSecurityLayer(true);
     if (isUnirender) {
         visitor_->CaptureSingleSurfaceNodeWithoutUni(*surfaceNode);
@@ -418,7 +391,10 @@ HWTEST_F(RSRenderEngineTest, CaptureSingleSurfaceNodeWithoutUni002, Function | S
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
     ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     surfaceNode->SetSecurityLayer(false);
     if (isUnirender) {
         visitor_->CaptureSingleSurfaceNodeWithoutUni(*surfaceNode);
@@ -435,7 +411,10 @@ HWTEST_F(RSRenderEngineTest, CaptureSurfaceInDisplayWithoutUni001, Function | Sm
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
     ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     surfaceNode->SetSecurityLayer(false);
     if (!isUnirender) {
         visitor_->CaptureSingleSurfaceNodeWithoutUni(*surfaceNode);
@@ -452,7 +431,10 @@ HWTEST_F(RSRenderEngineTest, ProcessSurfaceRenderNode006, Function | SmallTest |
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
     ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     surfaceNode->renderProperties_.SetVisible(true);
     surfaceNode->renderProperties_.SetAlpha(DEFAULT_BOUNDS_WIDTH);
     if (!isUnirender) {
@@ -470,7 +452,10 @@ HWTEST_F(RSRenderEngineTest, ProcessSurfaceRenderNode007, Function | SmallTest |
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
     ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     surfaceNode->renderProperties_.SetVisible(true);
     surfaceNode->renderProperties_.SetAlpha(.0f);
     if (isUnirender) {
@@ -488,7 +473,10 @@ HWTEST_F(RSRenderEngineTest, ProcessSurfaceRenderNode008, Function | SmallTest |
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
     ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     visitor_->canvas_ = nullptr;
     if (isUnirender) {
         visitor_->ProcessSurfaceRenderNode(*surfaceNode);
@@ -505,9 +493,11 @@ HWTEST_F(RSRenderEngineTest, CaptureSingleSurfaceNodeWithUni001, Function | Smal
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
     ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     ASSERT_NE(nullptr, surfaceNode);
-    surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::SELF_DRAWING_NODE);
     surfaceNode->SetSecurityLayer(true);
     if (isUnirender) {
         visitor_->CaptureSingleSurfaceNodeWithUni(*surfaceNode);
@@ -524,14 +514,12 @@ HWTEST_F(RSRenderEngineTest, CaptureSingleSurfaceNodeWithUni002, Function | Smal
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
     ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    auto rsContext = std::make_shared<RSContext>();
+    RSSurfaceRenderNodeConfig config;
+    config.id = 10;
+    auto surfaceNode = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     ASSERT_NE(nullptr, surfaceNode);
-    surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::SELF_DRAWING_NODE);
     surfaceNode->SetSecurityLayer(false);
-    Vector4f cornerRadius(1.f, 2.f, 0.f, 0.f);
-    surfaceNode->GetMutableRenderProperties().SetCornerRadius(cornerRadius);
-    std::shared_ptr<RSFilter> filter = RSFilter::CreateBlurFilter(5.0f, 5.0f);
-    surfaceNode->GetMutableRenderProperties().SetFilter(filter);
     if (isUnirender) {
         visitor_->CaptureSingleSurfaceNodeWithUni(*surfaceNode);
     }

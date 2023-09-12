@@ -178,7 +178,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
                 canvas->drawImage(tmpImg, 0, 0);
                 skSurface->flushAndSubmit(true);
             } else {
-                auto grContext = RSBackgroundThread::Instance().GetSharedContext().get();
+                auto grContext = RSBackgroundThread::Instance().GetShareGrContext().get();
                 skSurface = SkSurface::MakeRenderTarget(grContext, SkBudgeted::kNo, info);
                 if (skSurface == nullptr) {
                     RS_LOGE("RSSurfaceCaptureTask::Run MakeRenderTarget fail.");

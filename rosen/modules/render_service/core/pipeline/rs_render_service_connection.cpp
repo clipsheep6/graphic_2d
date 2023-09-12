@@ -454,6 +454,24 @@ std::vector<int32_t> RSRenderServiceConnection::GetScreenSupportedRefreshRates(S
     }
 }
 
+int32_t RSRenderServiceConnection::GetCurrentRefreshRateMode()
+{
+    auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
+    if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
+        return RSHardwareThread::Instance().ScheduleTask([=]() {
+            auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
+            int32_t refreshRateMode = hgmCore.GetCurrentRefreshRateMode();
+            return refreshRateMode;
+        }).get();
+    } else {
+        return mainThread_->ScheduleTask([=]() {
+            auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
+            int32_t refreshRateMode = hgmCore.GetCurrentRefreshRateMode();
+            return refreshRateMode;
+        }).get();
+    }
+}
+
 int32_t RSRenderServiceConnection::SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height)
 {
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();

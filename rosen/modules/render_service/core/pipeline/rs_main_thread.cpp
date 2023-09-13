@@ -237,7 +237,7 @@ void RSMainThread::Init()
         InformHgmNodeInfo();
         ReleaseAllNodesBuffer();
         SendCommands();
-        context_->activeNodesInRoot_.clear();
+        CleanProcessedActiveNodes();
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         SetRSEventDetectorLoopFinishTag();
         rsEventManager_.UpdateParam();
@@ -2319,6 +2319,20 @@ void RSMainThread::ApplyModifiers()
     }
 }
 
+void RSMainThread::CleanProcessedActiveNodes() {
+    if (!isUiFirstOn_) {
+        context_->activeNodesInRoot_.clear();
+        return;
+    }
+    // If UI first is turned on, prepare may skip some of active nodes, thus cause them left in dirty state.
+    // Keep them in activeNodesInRoot_ to avoid issues.
+    EraseIf(context_->activeNodesInRoot_, [](auto& rootIter) {
+        // Remove processed node from root
+        EraseIf(rootIter.second, [](const auto& nodeIter) { return !nodeIter.second->IsDirty(); });
+        return rootIter.second.empty();
+    });
+}
+
 void RSMainThread::ResetHardwareEnabledState()
 {
     isHardwareForcedDisabled_ = !RSSystemProperties::GetHardwareComposerEnabled();
@@ -2435,6 +2449,5 @@ void RSMainThread::GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize)
         cpuMemSize = MemoryTrack::Instance().GetAppMemorySizeInMB();
     });
 }
-
 } // namespace Rosen
 } // namespace OHOS

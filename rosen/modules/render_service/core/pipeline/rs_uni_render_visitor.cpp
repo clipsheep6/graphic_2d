@@ -308,6 +308,8 @@ bool RSUniRenderVisitor::IsDrawingCacheStatic(RSRenderNode& node)
     if (curContentDirty_ || node.GetDrawingCacheChanged() || !node.IsCacheSurfaceValid() ||
         curSurfaceNode_ == nullptr || curSurfaceNode_->GetId() != node.GetInstanceRootNodeId() ||
         RSMainThread::Instance()->IfDrawingGroupChanged(node)) {
+        RS_TRACE_NAME_FMT("IsDrawingCacheStatic false curContentDirty_ %d cacheChange %d surfaceValid %d",
+            curContentDirty_, node.GetDrawingCacheChanged(), node.IsCacheSurfaceValid());
         return false;
     }
     // simplify Cache status reset
@@ -348,7 +350,9 @@ bool RSUniRenderVisitor::UpdateCacheChangeStatus(RSRenderNode& node)
     // drawing group root node
     if (node.GetDrawingCacheType() != RSDrawingCacheType::DISABLED_CACHE) {
         if (isPhone_ && IsDrawingCacheStatic(node)) {
-            return false;
+            if (quickSkipPrepareType_ == QuickSkipPrepareType::STATIC_CACHE) {
+                return false;
+            }
         }
         // For rootnode, init drawing changes only if there is any content dirty
         isDrawingCacheChanged_.push(curContentDirty_);
@@ -576,7 +580,7 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& nod
         accumulatedDirtyRegions_[0] = curDisplayDirtyManager_->GetCurrentFrameDirtyRegion();
     }
     // if node has to be prepared, it's not static
-    bool isClassifyByRootNode = (quickSkipPrepareType_ == QuickSkipPrepareType::STATIC_WIDGET);
+    bool isClassifyByRootNode = (quickSkipPrepareType_ >= QuickSkipPrepareType::STATIC_WIDGET);
     NodeId rootId = node.GetInstanceRootNodeId();
     if (RSMainThread::Instance()->CheckNodeHasToBePreparedByPid(
         isClassifyByRootNode ? rootId : node.GetId(), isClassifyByRootNode)) {

@@ -2253,26 +2253,45 @@ bool RSMainThread::IfDrawingGroupChanged(RSRenderNode& node) const
 {
     std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> activeNodeIds = {};
     auto iter = context_->activeNodesInRoot_.find(node.GetInstanceRootNodeId());
+    std::string allInfo = "";
     if (iter != context_->activeNodesInRoot_.end()) {
         activeNodeIds = iter->second;
+        allInfo += "activenode in instance [" + std::to_string(node.GetInstanceRootNodeId()) +
+            "](" + std::to_string(iter->second.size()) + "): ";
+        for (auto [id, subNode] : iter->second) {
+            allInfo += std::to_string(id) + ", ";
+        }
     }
     iter = context_->activeNodesInRoot_.find(INVALID_NODEID);
     if (iter != context_->activeNodesInRoot_.end()) {
         activeNodeIds.insert(iter->second.begin(), iter->second.end());
+        allInfo.append("\n");
+        allInfo += "activenode in invalid instance [0](" + std::to_string(iter->second.size()) + "): ";;
+        for (auto [id, subNode] : iter->second) {
+            allInfo += std::to_string(id) + ", ";
+        }
     }
     // do not need to check cacheroot node itself
     // in case of tree change, parent node would set content dirty and reject before
     auto cacheRootId = node.GetId();
     EraseIf(activeNodeIds, [cacheRootId](const auto& pair) -> bool { return pair.first == cacheRootId; });
     auto groupNodeIds = node.GetVisitedCacheRootIds();
+    allInfo.append("\n");
+    allInfo += "cache groupNodeIds of node [" + std::to_string(node.GetId()) +
+        "](" + std::to_string(groupNodeIds.size()) + "): ";;
+    for (auto id : groupNodeIds) {
+        allInfo += std::to_string(id) + ", ";
+    }
     for (auto [id, subNode] : activeNodeIds) {
         if (subNode == nullptr) {
             continue;
         }
         if (groupNodeIds.find(subNode->GetDrawingCacheRootId()) != groupNodeIds.end()) {
+            RS_TRACE_NAME_FMT("IfDrawingGroupChanged find dirty subnode [% llu]: %s", id, allInfo.c_str());
             return true;
         }
     }
+    RS_TRACE_NAME_FMT("IfDrawingGroupChanged %s", allInfo.c_str());
     return false;
 }
 

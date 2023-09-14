@@ -308,6 +308,7 @@ int TypographyImpl::UpdateMetrics()
     lineMaxCoveredAscent_ = {};
     lineMaxCoveredDescent_ = {};
     height_ = 0.0;
+    double prevMaxdecent = 0.0;
 
     for (auto i = 0; i < static_cast<int>(lineMetrics_.size()); i++) {
         lineMaxAscent_.push_back(strut_.ascent);
@@ -332,8 +333,10 @@ int TypographyImpl::UpdateMetrics()
             }
         }
 
-        height_ += lineMaxCoveredAscent_.back() + lineMaxCoveredDescent_.back();
+        height_ += ceil(lineMaxCoveredAscent_.back() + lineMaxCoveredDescent_.back());
         baselines_.push_back(height_ - lineMaxCoveredDescent_.back());
+        yOffsets_.push_back(round(lineMaxCoveredAscent_.back() + prevMaxdecent));
+        prevMaxdecent = lineMaxCoveredDescent_.back();
         LOGEX_FUNC_LINE_DEBUG() << "[" << i << "] ascent: " << lineMaxAscent_.back() <<
             ", coveredAscent: " << lineMaxCoveredAscent_.back() <<
             ", coveredDescent: " << lineMaxCoveredDescent_.back();
@@ -348,7 +351,7 @@ void TypographyImpl::DoLayout()
     for (auto i = 0; i < static_cast<int>(lineMetrics_.size()); i++) {
         double offsetX = 0;
         for (auto &vs : lineMetrics_[i].lineSpans) {
-            vs.AdjustOffsetY(baselines_[i]);
+            vs.AdjustOffsetY(yOffsets_[i]);
             vs.AdjustOffsetX(offsetX);
             offsetX += vs.GetWidth();
 
@@ -513,10 +516,6 @@ void TypographyImpl::UpadateAnySpanMetrics(std::shared_ptr<AnySpan> &span, doubl
 void TypographyImpl::Paint(TexgineCanvas &canvas, double offsetX, double offsetY)
 {
     for (auto &metric : lineMetrics_) {
-        for (auto &span : metric.lineSpans) {
-            span.PaintShadow(canvas, offsetX + span.GetOffsetX(), offsetY + span.GetOffsetY());
-        }
-
         for (auto &span : metric.lineSpans) {
             span.Paint(canvas, offsetX + span.GetOffsetX(), offsetY + span.GetOffsetY());
         }

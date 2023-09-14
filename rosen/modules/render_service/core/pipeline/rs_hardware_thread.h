@@ -43,6 +43,59 @@ public:
         return std::move(taskFuture);
     }
 private:
+    class BufferReleaseInfo {
+    public:
+        BufferReleaseInfo() = default;
+
+        sptr<SurfaceBuffer> GetPreBuffer() const
+        {
+            return preBuffer_;
+        }
+
+        sptr<SyncFence> GetPreFence() const
+        {
+            return preFence_;
+        }
+
+        void ResetPreBufferInfo()
+        {
+            preBuffer_ = nullptr;
+            preFence_ = SyncFence::INVALID_FENCE;
+        }
+
+        void UpdateCurBufferInfo(sptr<SurfaceBuffer> buffer, sptr<SyncFence> releaseFence)
+        {
+            if (curBuffer_ != buffer) {
+                preBuffer_ = curBuffer_;
+                preFence_ = curFence_;
+                curBuffer_ = buffer;
+            }
+            curFence_ = releaseFence;
+            infoUpdated_ = true;
+        }
+
+        bool IsUpdated() const
+        {
+            return infoUpdated_;
+        }
+
+        void ResetInfoUpdated()
+        {
+            infoUpdated_ = false;
+        }
+
+        void SetCurFence(sptr<SyncFence> releaseFence)
+        {
+            curFence_ = releaseFence;
+        }
+    private:
+        sptr<SurfaceBuffer> preBuffer_;
+        sptr<SurfaceBuffer> curBuffer_;
+        sptr<SyncFence> preFence_ = SyncFence::INVALID_FENCE;
+        sptr<SyncFence> curFence_ = SyncFence::INVALID_FENCE;
+        bool infoUpdated_ = false;
+    };
+
     RSHardwareThread() = default;
     ~RSHardwareThread() = default;
     RSHardwareThread(const RSHardwareThread&);
@@ -66,6 +119,7 @@ private:
     bool lockRefreshRateOnce_ = false;
     HgmRefreshRates hgmRefreshRates_;
     HgmRefreshRateModes hgmRefreshRateModes_;
+    std::unordered_map<uint64_t, BufferReleaseInfo> bufferReleaseInfoMap_;
 };
 }
 #endif // RS_HARDWARE_THREAD_H

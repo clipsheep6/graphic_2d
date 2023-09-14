@@ -117,9 +117,33 @@ void RSHardwareThread::ReleaseLayers(OutputPtr output, const std::unordered_map<
         if (layer == nullptr) {
             continue;
         }
-        auto preBuffer = layer->GetPreBuffer();
         auto consumer = layer->GetSurface();
-        ReleaseBuffer(preBuffer, fence, consumer);
+        if (consumer == nullptr) {
+            continue;
+        }
+        auto uniqueId = consumer->GetUniqueId();
+        if (bufferReleaseInfoMap_.count(uniqueId) == 0) {
+            bufferReleaseInfoMap_.emplace(uniqueId, BufferReleaseInfo());
+        }
+        auto& releaseInfo = bufferReleaseInfoMap_.at(uniqueId);
+        releaseInfo.UpdateCurBufferInfo(layer->GetBuffer(), fence);
+
+        auto preBuffer = layer->GetPreBuffer();
+        sptr<SyncFence> releaseFence = SyncFence::INVALID_FENCE;
+        if (preBuffer == releaseInfo.GetPreBuffer()) {
+            releaseFence = releaseInfo.GetPreFence();
+            releaseInfo.ResetPreBufferInfo();
+        }
+        ReleaseBuffer(preBuffer, releaseFence, consumer);
+
+    }
+    for (auto iter = bufferReleaseInfoMap_.begin(); iter != bufferReleaseInfoMap_.end();) {
+        if (iter->second.IsUpdated()) {
+            iter->second.ResetInfoUpdated();
+            ++iter;
+        } else {
+            iter = bufferReleaseInfoMap_.erase(iter);
+        }
     }
     RSMainThread::Instance()->NotifyDisplayNodeBufferReleased();
 }

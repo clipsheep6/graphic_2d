@@ -75,6 +75,9 @@ HWTEST_F(RSScreenTest, SetResolution_001, testing::ext::TestSize.Level1)
     uint32_t height = 100;
     auto virtualScreen = std::make_unique<impl::RSScreen>(config);
     virtualScreen->SetResolution(width, height);
+    ScreenId id = static_cast<uint64_t>(1000);
+    auto rsScreen = std::make_unique<impl::RSScreen>(id, false, HdiOutput::CreateHdiOutput(id), nullptr);
+    rsScreen->SetResolution(width, height);
 }
 
 /*
@@ -117,6 +120,9 @@ HWTEST_F(RSScreenTest, SetScreenBacklight_001, testing::ext::TestSize.Level1)
     auto virtualScreen = std::make_unique<impl::RSScreen>(config);
     virtualScreen->SetScreenBacklight(static_cast<uint32_t>(1000));
     ASSERT_EQ(virtualScreen->GetScreenBacklight(), INVALID_BACKLIGHT_VALUE);
+    ScreenId id = static_cast<uint64_t>(1000);
+    auto rsScreen = std::make_unique<impl::RSScreen>(id, false, HdiOutput::CreateHdiOutput(id), nullptr);
+    rsScreen->SetScreenBacklight(static_cast<uint32_t>(1000));
 }
 
 /*
@@ -173,10 +179,12 @@ HWTEST_F(RSScreenTest, SetScreenVsyncEnabled_001, testing::ext::TestSize.Level1)
  */
 HWTEST_F(RSScreenTest, SetActiveMode_001, testing::ext::TestSize.Level1)
 {
-    VirtualScreenConfigs config;
-    auto virtualScreen = std::make_unique<impl::RSScreen>(config);
+    ScreenId id = static_cast<uint64_t>(1000);
+    auto virtualScreen = std::make_unique<impl::RSScreen>(id, true, HdiOutput::CreateHdiOutput(id), nullptr);
     uint32_t modeId = static_cast<uint32_t>(1);
     virtualScreen->SetActiveMode(modeId);
+    auto rsScreen = std::make_unique<impl::RSScreen>(id, false, HdiOutput::CreateHdiOutput(id), nullptr);
+    rsScreen->SetActiveMode(modeId);
 }
 
 /*
@@ -204,6 +212,9 @@ HWTEST_F(RSScreenTest, GetActiveMode_001, testing::ext::TestSize.Level1)
     VirtualScreenConfigs config;
     auto virtualScreen = std::make_unique<impl::RSScreen>(config);
     ASSERT_EQ(virtualScreen->GetActiveMode().has_value(), false);
+    ScreenId id = static_cast<uint64_t>(1000);
+    auto rsScreen = std::make_unique<impl::RSScreen>(id, false, HdiOutput::CreateHdiOutput(id), nullptr);
+    rsScreen->GetActiveMode();
 }
 
 /*

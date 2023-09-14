@@ -63,6 +63,16 @@ public:
 
     void FreeGpuResources() override;
 
+    void DumpGpuStats(std::string& out) override;
+
+    void ReleaseResourcesAndAbandonContext() override;
+
+    void PurgeUnlockedResources() override;
+
+    void PurgeUnlockedResourcesByTag(bool scratchResourcesOnly, const GPUResourceTag tag) override;
+
+    void PurgeUnlockAndSafeCacheGpuResources() override;
+
 #ifdef NEW_SKIA
     sk_sp<GrDirectContext> GetGrContext() const;
     void SetGrContext(const sk_sp<GrDirectContext>& grContext);

@@ -141,6 +141,54 @@ void SkiaGPUContext::FreeGpuResources()
     }
     grContext_->freeGpuResources();
 }
+
+void SkiaGPUContext::DumpGpuStats(std::string& out);
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::DumpGpuStats, grContext_ is nullptr");
+        return;
+    }
+    SkString stat;
+    grContext_->priv().dumpGpuStats(&stat);
+    SkiaConvertUtils::SkStringCastToStdString(stat, out);
+}
+
+void SkiaGPUContext::ReleaseResourcesAndAbandonContext()
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::ReleaseResourcesAndAbandonContext, grContext_ is nullptr");
+        return;
+    }
+    grContext_->releaseResourcesAndAbandonContext();
+}
+
+void SkiaGPUContext::PurgeUnlockedResources()
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::PurgeUnlockedResources, grContext_ is nullptr");
+        return;
+    }
+    grContext_->purgeUnlockedResources();
+}
+
+void SkiaGPUContext::PurgeUnlockedResourcesByTag(bool scratchResourcesOnly, const GPUResourceTag tag)
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::PurgeUnlockedResourcesByTag, grContext_ is nullptr");
+        return;
+    }
+    GrGpuResourceTag grTag(tag.fPid, tag.fTid, tag.fWid, tag.fFid);
+    grContext_->purgeUnlockedResourcesByTag(scratchResourcesOnly, grTag);
+}
+
+void SkiaGPUContext::PurgeUnlockAndSafeCacheGpuResources()
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::PurgeUnlockAndSafeCacheGpuResources, grContext_ is nullptr");
+        return;
+    }
+    grContext_->purgeUnlockAndSafeCacheGpuResources();
+}
 #ifdef NEW_SKIA
 sk_sp<GrDirectContext> SkiaGPUContext::GetGrContext() const
 #else

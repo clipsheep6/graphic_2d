@@ -62,6 +62,31 @@ void GPUContext::FreeGpuResources()
     impl_->FreeGpuResources();
 }
 
+void GPUContext::DumpGpuStats(std::string& out) const
+{
+    impl_->DumpGpuStats(out);
+}
+
+void GPUContext::ReleaseResourcesAndAbandonContext()
+{
+    impl_->ReleaseResourcesAndAbandonContext();
+}
+
+void GPUContext::PurgeUnlockedResources()
+{
+    impl_->PurgeUnlockedResources();
+}
+
+void GPUContext::PurgeUnlockedResourcesByTag(bool scratchResourcesOnly, const GPUResourceTag tag)
+{
+    impl_->PurgeUnlockedResourcesByTag(scratchResourcesOnly, tag);
+}
+
+void GPUContext::PurgeUnlockAndSafeCacheGpuResources()
+{
+    impl_->PurgeUnlockAndSafeCacheGpuResources();
+}
+
 GPUContextOptions::PersistentCache* GPUContextOptions::GetPersistentCache() const
 {
     return persistentCache_;

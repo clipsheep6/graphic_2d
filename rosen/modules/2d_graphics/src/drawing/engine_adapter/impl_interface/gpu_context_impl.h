@@ -47,6 +47,16 @@ public:
     virtual void GetResourceCacheUsage(int& resourceCount, size_t& resourceBytes) const = 0;
 
     virtual void FreeGpuResources() = 0;
+
+    virtual void DumpGpuStats(std::string& out) = 0;
+
+    virtual void ReleaseResourcesAndAbandonContext() = 0;
+
+    virtual void PurgeUnlockedResources() = 0;
+
+    virtual void PurgeUnlockedResourcesByTag(bool scratchResourcesOnly, const GPUResourceTag tag) = 0;
+
+    virtual void PurgeUnlockAndSafeCacheGpuResources() = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

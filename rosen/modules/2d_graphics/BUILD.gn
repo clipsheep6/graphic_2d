@@ -440,6 +440,7 @@ ohos_shared_library("2d_graphics_canvaskit0310") {
 ## Build 2d_graphics.so
 if (enable_text_gine) {
   defines += [ "USE_GRAPHIC_TEXT_GINE" ]
+  defines += [ "USE_TEXGINE" ]
   ohos_shared_library("2d_graphics_drawing") {
     include_dirs = [
       "include",

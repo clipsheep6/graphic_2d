@@ -23,7 +23,8 @@
 #include "texgine_font.h"
 #include "texgine_rect.h"
 #include "texgine/typography_types.h"
-
+#include "recording/recording_canvas.h"
+#include "draw/canvas.h"
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -168,8 +169,8 @@ public:
      * @param offsetx The Offset in x-asix of the starting point for drawing the Typography
      * @param offsety The Offset in y-asix of the starting point for drawing the Typography
      */
-    virtual void Paint(TexgineCanvas& canvas, double offsetx, double offsety) = 0;
-
+    // virtual void Paint(TexgineCanvas& canvas, double offsetx, double offsety) = 0;
+    virtual void Paint(std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas, double offsetX, double offsetY, Drawing::Canvas& canvasSkia) = 0;
     /*
      * @brief Returns a vector of bounding boxes that enclose all text
      *        between start and end glyph indexes. The bounding boxes

@@ -38,6 +38,8 @@ config("libtexgine_public_config") {
     "export",
     "texgine_drawing",
     "//third_party/skia/third_party/externals/harfbuzz/src",
+    "$graphic_2d_root/rosen/modules/2d_graphics/include",
+    "$graphic_2d_root/rosen/modules/2d_graphics/src",
   ]
 }
 
@@ -106,6 +108,12 @@ ohos_shared_library("libtexgine") {
       "texgine_drawing:libtexgine_drawing",
       "//third_party/jsoncpp:jsoncpp",
     ]
+
+    if (platform == "ohos") {
+      public_deps += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
+    } else {
+      public_deps += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics_new" ]
+    }
 
     defines = []
     if (enable_text_gine) {

@@ -59,14 +59,6 @@ template("graphics2d_source_set") {
       defines += [ "USE_TEXGINE" ]
     }
     sources = [
-      "$drawing_src_dir/c/drawing_bitmap.cpp",
-      "$drawing_src_dir/c/drawing_brush.cpp",
-      "$drawing_src_dir/c/drawing_canvas.cpp",
-      "$drawing_src_dir/c/drawing_color.cpp",
-      "$drawing_src_dir/c/drawing_font_collection.cpp",
-      "$drawing_src_dir/c/drawing_path.cpp",
-      "$drawing_src_dir/c/drawing_pen.cpp",
-      "$drawing_src_dir/c/drawing_text_typography.cpp",
       "$drawing_src_dir/draw/brush.cpp",
       "$drawing_src_dir/draw/color.cpp",
       "$drawing_src_dir/draw/core_canvas.cpp",
@@ -133,6 +125,8 @@ template("graphics2d_source_set") {
       "$drawing_src_dir/utils/matrix.cpp",
       "$drawing_src_dir/utils/matrix44.cpp",
       "$drawing_src_dir/utils/region.cpp",
+      "$drawing_src_dir/engine_adapter/skia_adapter/skia_text_blob.cpp",
+      "$drawing_src_dir/text/text_blob.cpp",
     ]
 
     if (ace_enable_gpu) {
@@ -158,6 +152,7 @@ template("graphics2d_source_set") {
 
     if (enable_text_gine) {
       defines += [ "USE_GRAPHIC_TEXT_GINE" ]
+      defines += [ "USE_TEXGINE" ]
       include_dirs += [
         "$flutter_root/engine",
         "$rosen_root/modules/2d_engine/rosen_text/adapter",
@@ -282,7 +277,6 @@ template("graphics2d_source_set") {
       }
     }
     if (enable_text_gine) {
-      deps += [ "$rosen_root/modules/2d_engine/rosen_text:rosen_text_inner" ]
       defines += [ "USE_GRAPHIC_TEXT_GINE" ]
     }
 
@@ -328,7 +322,6 @@ if (!is_cross_platform_build) {
 
       if (platform == "ohos") {
         version_script = "2d_graphics.versionscript"
-        symlink_target_name = [ "libnative_drawing.so" ]
         innerapi_tags = [ "platformsdk_indirect" ]
       }
 
@@ -338,7 +331,6 @@ if (!is_cross_platform_build) {
   } else {
     ohos_shared_library("2d_graphics") {
       version_script = "2d_graphics.versionscript"
-      symlink_target_name = [ "libnative_drawing.so" ]
       deps = [ ":2d_graphics_source_ohos" ]
       public_configs = [ ":export_config" ]
       innerapi_tags = [ "platformsdk_indirect" ]
@@ -439,7 +431,6 @@ ohos_shared_library("2d_graphics_canvaskit0310") {
 
 ## Build 2d_graphics.so
 if (enable_text_gine) {
-  defines += [ "USE_GRAPHIC_TEXT_GINE" ]
   ohos_shared_library("2d_graphics_drawing") {
     include_dirs = [
       "include",
@@ -450,8 +441,11 @@ if (enable_text_gine) {
       "$rosen_root/modules/2d_engine/rosen_text/adapter",
       "$rosen_root/modules/2d_engine/rosen_text/export",
       "//third_party/bounds_checking_function/include",
+      "$rosen_root/modules/render_service_base/include",
     ]
 
+    defines += [ "USE_GRAPHIC_TEXT_GINE" ]
+    defines += [ "USE_TEXGINE" ]
     sources = [
       "$drawing_src_dir/c/drawing_bitmap.cpp",
       "$drawing_src_dir/c/drawing_brush.cpp",
@@ -463,17 +457,29 @@ if (enable_text_gine) {
       "$drawing_src_dir/c/drawing_text_typography.cpp",
     ]
 
-    if (defined(use_new_skia) && use_new_skia) {
-      include_dirs += [ "$flutter_root/txt/src" ]
-    } else {
-      include_dirs += [ "$flutter_root/engine/flutter/third_party/txt/src" ]
-    }
     platform = current_os
     if (platform == "mingw") {
       platform = "windows"
     }
-    deps = [ "$rosen_root/modules/2d_engine/rosen_text:rosen_text_inner" ]
+    deps = [
+      ":2d_graphics_source_ohos",
+      "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform",
+      "$rosen_root/modules/2d_engine/rosen_text:rosen_text_inner",
+    ]
 
+    if (defined(use_new_skia) && use_new_skia) {
+      remove_configs = [ "//build/config/compiler:default_include_dirs" ]
+      include_dirs += [
+        "$flutter_root/txt/src",
+        "//third_party/skia/third_party/externals/harfbuzz/src",
+        "//",
+        root_gen_dir,
+      ]
+    } else {
+      include_dirs += [ "$flutter_root/engine/flutter/third_party/txt/src" ]
+    }
+    symlink_target_name = [ "libnative_drawing.so" ]
+    innerapi_tags = [ "platformsdk_indirect" ]
     part_name = "graphic_2d"
     subsystem_name = "graphic"
   }

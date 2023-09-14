@@ -36,6 +36,7 @@
 #include "skia_adapter/skia_shader_effect.h"
 #include "skia_adapter/skia_surface.h"
 
+#include "skia_adapter/skia_text_blob.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -146,6 +147,10 @@ std::unique_ptr<CameraImpl> SkiaImplFactory::CreateCamera()
 std::unique_ptr<RegionImpl> SkiaImplFactory::CreateRegion()
 {
     return std::make_unique<SkiaRegion>();
+}
+std::unique_ptr<TextBlobImpl> SkiaImplFactory::CreateTextBlob()
+{
+    return std::make_unique<SkiaTextBlob>();
 }
 } // namespace Drawing
 } // namespace Rosen

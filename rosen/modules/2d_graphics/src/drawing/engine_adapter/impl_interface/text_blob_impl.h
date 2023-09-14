@@ -13,35 +13,30 @@
  * limitations under the License.
  */
 
-#ifndef ROSEN_MODULES_TEXGINE_SRC_TEXGINE_DRAWING_TEXGINE_TEXT_BLOB_H
-#define ROSEN_MODULES_TEXGINE_SRC_TEXGINE_DRAWING_TEXGINE_TEXT_BLOB_H
+#ifndef TEXT_BLOB_IMPL_H
+#define TEXT_BLOB_IMPL_H
 
-#include <memory>
-
-#include <include/core/SkTextBlob.h>
+#include "base_impl.h"
+#include "utils/data.h"
 
 namespace OHOS {
 namespace Rosen {
-namespace TextEngine {
-class TexgineTextBlob {
+namespace Drawing {
+class TextBlobImpl : public BaseImpl {
 public:
-    /*
-     * @brief Return the pointer of SkTextBlob to prepare the paint info
-     */
-    sk_sp<SkTextBlob> GetTextBlob() const;
+    static inline constexpr AdapterType TYPE = AdapterType::BASE_INTERFACE;
+    TextBlobImpl() noexcept {};
+    ~TextBlobImpl() override {};
 
-    /*
-     * @brief Sets SkTextBlob to TexgineTextBlob
-     */
-    void SetTextBlob(const sk_sp<SkTextBlob> textBlob);
-
-    bool DetectionEffectiveness();
-
-private:
-    sk_sp<SkTextBlob> textBlob_ = nullptr;
+    AdapterType GetType() const override
+    {
+        return AdapterType::BASE_INTERFACE;
+    }
+    // using for recording, should to remove after using shared memory
+    virtual std::shared_ptr<Data> Serialize() const = 0;
+    virtual bool Deserialize(std::shared_ptr<Data> data) = 0;
 };
-} // namespace TextEngine
+} // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS
-
-#endif // ROSEN_MODULES_TEXGINE_SRC_TEXGINE_DRAWING_TEXGINE_TEXT_BLOB_H
+#endif // TEXT_BLOB_IMPL_H

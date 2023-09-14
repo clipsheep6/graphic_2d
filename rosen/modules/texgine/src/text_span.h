@@ -24,7 +24,13 @@
 #include "texgine_text_blob.h"
 #include "texgine/typography.h"
 #include "texgine/typography_style.h"
-
+#include "recording/recording_canvas.h"
+#include "draw/canvas.h"
+#include "text/text_blob.h"
+//#include "effect/mask_filter.h"
+#include "drawing/engine_adapter/skia_adapter/skia_paint.h"
+#include "drawing/engine_adapter/skia_adapter/skia_text_blob.h"
+#include "drawing/engine_adapter/skia_adapter/skia_canvas.h"
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -47,8 +53,15 @@ public:
     double GetPostBreak() const;
     double GetPreBreak() const;
     bool IsRTL() const;
-    void Paint(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs);
-    void PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY, const std::vector<TextShadow> &shadows);
+    // void Paint(Drawing::RecordingCanvas &recordingCanvas, double offsetX, double offsetY, const TextStyle &xs, Drawing::Canvas &canvasSkia);
+    // void PaintShadow(Drawing::RecordingCanvas &recordingCanvas, double offsetX, double offsetY, const std::vector<TextShadow> &shadows, Drawing::Canvas &customCanvas);
+    //void Paint(RecordingCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs);
+    //void PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY, const std::vector<TextShadow> &shadows);
+    void Paint(std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas, double offsetX, double offsetY,\
+        const TextStyle &xs, Drawing::Canvas& canvasSkia);
+    void PaintShadow(std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas, double offsetX, double offsetY, \
+        const std::vector<TextShadow> &shadows, Drawing::Canvas& customCanvas);
+
     std::shared_ptr<TextSpan> CloneWithCharGroups(CharGroups const &cgs);
 
     void operator+=(TextSpan const &textSpan)
@@ -63,7 +76,7 @@ public:
     std::vector<uint16_t> u16vect_;
     std::shared_ptr<TexgineTextBlob> textBlob_ = nullptr;
     std::vector<double> glyphWidths_;
-
+    Drawing::TextBlob skTextBlob_;
     CharGroups cgs_;
 
     double preBreak_ = 0.0;
@@ -82,8 +95,13 @@ private:
     friend class TextReverser;
     friend void ReportMemoryUsage(std::string const &member, TextSpan const &that, bool needThis);
 
-    void PaintDecoration(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs);
-    void PaintDecorationStyle(TexgineCanvas &canvas, double left, double right, double y, const TextStyle &xs);
+    // void PaintDecoration(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs);
+    // void PaintDecorationStyle(TexgineCanvas &canvas, double left, double right, double y, const TextStyle &xs);
+    void PaintDecoration(std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas, double offsetX, double offsetY,
+         const TextStyle &xs, Drawing::Canvas& customCanvas);
+    void PaintDecorationStyle(std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas, double left, double right, double y,
+         const TextStyle &xs, Drawing::Canvas& customCanvas);
+    void CheckTextValidity();
 };
 } // namespace TextEngine
 } // namespace Rosen

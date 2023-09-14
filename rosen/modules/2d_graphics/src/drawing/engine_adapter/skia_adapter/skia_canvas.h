@@ -127,9 +127,14 @@ public:
     void DetachPen() override;
     void DetachBrush() override;
 
+    void DrawTextBlob(const TextBlob& blob, float x, float y) override;
+
     SkCanvas* ExportSkCanvas() const;
     void ImportSkCanvas(SkCanvas* skCanvas);
+    //cq
+    void InitPaintData(SkPaint &replacePaint);
 
+    SkPaint TestFillPaint();
 private:
     void RoundRectCastToSkRRect(const RoundRect& roundRect, SkRRect& skRRect) const;
     std::shared_ptr<SkCanvas> skiaCanvas_;

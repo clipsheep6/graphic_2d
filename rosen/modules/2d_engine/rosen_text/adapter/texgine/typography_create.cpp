@@ -84,10 +84,12 @@ public:
         return span_.baselineOffset;
     }
 
-    void Paint(TextEngine::TexgineCanvas &canvas, double offsetX, double offsetY) override
+//    void Paint(TextEngine::TexgineCanvas &canvas, double offsetX, double offsetY) override
+//    {
+//    }
+    void Paint(std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas, double offsetX, double offsetY, Drawing::Canvas &customCanvas) override
     {
     }
-
 private:
     PlaceholderSpan span_;
 };

@@ -34,7 +34,7 @@
 #include "effect/mask_filter.h"
 #include "effect/path_effect.h"
 #include "effect/shader_effect.h"
-
+#include "utils/log.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -45,11 +45,13 @@ RecordingCanvas::RecordingCanvas(int width, int height) : Canvas(width, height)
 
 std::shared_ptr<DrawCmdList> RecordingCanvas::GetDrawCmdList() const
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::GetDrawCmdList()");
     return cmdList_;
 }
 
 void RecordingCanvas::DrawPoint(const Point& point)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawPoint");
     cmdList_->AddOp<DrawPointOpItem>(point);
 }
 
@@ -62,16 +64,19 @@ void RecordingCanvas::DrawPoints(PointMode mode, size_t count, const Point pts[]
 
 void RecordingCanvas::DrawLine(const Point& startPt, const Point& endPt)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawLine");
     cmdList_->AddOp<DrawLineOpItem>(startPt, endPt);
 }
 
 void RecordingCanvas::DrawRect(const Rect& rect)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas  DrawRect");
     cmdList_->AddOp<DrawRectOpItem>(rect);
 }
 
 void RecordingCanvas::DrawRoundRect(const RoundRect& roundRect)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawRoundRect");
     std::vector<Point> radiusXY;
     radiusXY.push_back(roundRect.GetCornerRadius(RoundRect::CornerPos::TOP_LEFT_POS));
     radiusXY.push_back(roundRect.GetCornerRadius(RoundRect::CornerPos::TOP_RIGHT_POS));
@@ -84,6 +89,7 @@ void RecordingCanvas::DrawRoundRect(const RoundRect& roundRect)
 
 void RecordingCanvas::DrawNestedRoundRect(const RoundRect& outer, const RoundRect& inner)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawNestedRoundRect");
     std::vector<Point> outerRadiusXY;
     outerRadiusXY.push_back(outer.GetCornerRadius(RoundRect::CornerPos::TOP_LEFT_POS));
     outerRadiusXY.push_back(outer.GetCornerRadius(RoundRect::CornerPos::TOP_RIGHT_POS));
@@ -103,26 +109,31 @@ void RecordingCanvas::DrawNestedRoundRect(const RoundRect& outer, const RoundRec
 
 void RecordingCanvas::DrawArc(const Rect& oval, scalar startAngle, scalar sweepAngle)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawArc");
     cmdList_->AddOp<DrawArcOpItem>(oval, startAngle, sweepAngle);
 }
 
 void RecordingCanvas::DrawPie(const Rect& oval, scalar startAngle, scalar sweepAngle)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawPie");
     cmdList_->AddOp<DrawPieOpItem>(oval, startAngle, sweepAngle);
 }
 
 void RecordingCanvas::DrawOval(const Rect& oval)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawOval");
     cmdList_->AddOp<DrawOvalOpItem>(oval);
 }
 
 void RecordingCanvas::DrawCircle(const Point& centerPt, scalar radius)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawCircle");
     cmdList_->AddOp<DrawCircleOpItem>(centerPt, radius);
 }
 
 void RecordingCanvas::DrawPath(const Path& path)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawPath");
     auto pathHandle = CmdListHelper::AddRecordedToCmdList<RecordingPath>(*cmdList_, path);
     cmdList_->AddOp<DrawPathOpItem>(pathHandle);
 }
@@ -147,6 +158,7 @@ void RecordingCanvas::DrawBackground(const Brush& brush)
 void RecordingCanvas::DrawShadow(const Path& path, const Point3& planeParams, const Point3& devLightPos,
     scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawShadow");
     auto pathHandle = CmdListHelper::AddRecordedToCmdList<RecordingPath>(*cmdList_, path);
     cmdList_->AddOp<DrawShadowOpItem>(pathHandle, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag);
 }
@@ -158,12 +170,14 @@ void RecordingCanvas::DrawColor(ColorQuad color, BlendMode mode)
 
 void RecordingCanvas::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawBitmap");
     auto bitmapHandle = CmdListHelper::AddBitmapToCmdList(*cmdList_, bitmap);
     cmdList_->AddOp<DrawBitmapOpItem>(bitmapHandle, px, py);
 }
 
 void RecordingCanvas::DrawImage(const Image& image, const scalar px, const scalar py, const SamplingOptions& sampling)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawImage");
     auto imageHandle = CmdListHelper::AddImageToCmdList(*cmdList_, image);
     cmdList_->AddOp<DrawImageOpItem>(imageHandle, px, py, sampling);
 }
@@ -171,12 +185,14 @@ void RecordingCanvas::DrawImage(const Image& image, const scalar px, const scala
 void RecordingCanvas::DrawImageRect(
     const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling, SrcRectConstraint constraint)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawImageRect One");
     auto imageHandle = CmdListHelper::AddImageToCmdList(*cmdList_, image);
     cmdList_->AddOp<DrawImageRectOpItem>(imageHandle, src, dst, sampling, constraint);
 }
 
 void RecordingCanvas::DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawImageRect Two");
     auto imageHandle = CmdListHelper::AddImageToCmdList(*cmdList_, image);
     Rect src(0, 0, image.GetWidth(), image.GetHeight());
     cmdList_->AddOp<DrawImageRectOpItem>(imageHandle, src, dst, sampling, SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
@@ -184,8 +200,17 @@ void RecordingCanvas::DrawImageRect(const Image& image, const Rect& dst, const S
 
 void RecordingCanvas::DrawPicture(const Picture& picture)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawPicture");
     auto pictureHandle = CmdListHelper::AddPictureToCmdList(*cmdList_, picture);
     cmdList_->AddOp<DrawPictureOpItem>(pictureHandle);
+}
+
+void RecordingCanvas::DrawTextBlob(const TextBlob& blob, float x, float y)
+{
+    LOGD("RecordingCanvas |into RecordingCanvas  DrawTextBlob");
+    // auto handle = CmdListHelper::AddTextBlobDataToCmdList(*cmdList_, blob);
+    // cmdList_->AddOp<DrawTextBlobOpItem>(handle, x, y);
+    cmdList_->AddOp<DrawTextBlobOpItem>(blob, x, y);
 }
 
 void RecordingCanvas::ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias)
@@ -323,6 +348,7 @@ void RecordingCanvas::ClipAdaptiveRoundRect(const std::vector<Point>& radius)
 void RecordingCanvas::DrawImage(const std::shared_ptr<Image>& image, const std::shared_ptr<Data>& data,
     const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawImage");
     ImageHandle imageHandle;
     if (data != nullptr) {
         imageHandle = CmdListHelper::AddCompressDataToCmdList(*cmdList_, data);
@@ -338,6 +364,7 @@ void RecordingCanvas::DrawImage(const std::shared_ptr<Image>& image, const std::
 void RecordingCanvas::DrawPixelMap(const std::shared_ptr<Media::PixelMap>& pixelMap,
     const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling)
 {
+    LOGD("RecordingCanvas |into RecordingCanvas::DrawPixelMap");
     auto pixelmapHandle = CmdListHelper::AddPixelMapToCmdList(*cmdList_, pixelMap);
     cmdList_->AddOp<DrawAdaptivePixelMapOpItem>(pixelmapHandle, rsImageInfo, smapling);
 }

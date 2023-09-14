@@ -41,6 +41,7 @@ ohos_unittest("2d_engine_rosen_text_ui_test") {
       "$rosen_root/modules/render_service_base/include",
       "//third_party/skia",
     ]
+    deps += [ "$rosen_root/modules/2d_engine/rosen_text:rosen_text_inner" ]
   }
   part_name = "graphic_2d"
   subsystem_name = "graphic"

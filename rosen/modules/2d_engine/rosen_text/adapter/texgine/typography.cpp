@@ -17,11 +17,13 @@
 
 #include "engine_adapter/skia_adapter/skia_canvas.h"
 #include "texgine_canvas.h"
-
+#include "recording/recording_canvas.h"
+#include "draw/canvas.h"
 #include "convert.h"
 
 namespace OHOS {
 namespace Rosen {
+using namespace Drawing;
 #ifndef USE_GRAPHIC_TEXT_GINE
 TextRect::TextRect(Drawing::RectF rect, TextDirection direction)
 #else
@@ -139,17 +141,23 @@ void Typography::Layout(double width)
 
 void Typography::Paint(SkCanvas *canvas, double x, double y)
 {
-    auto texgineCanvas = std::make_shared<TextEngine::TexgineCanvas>();
-    texgineCanvas->SetCanvas(canvas);
-    return typography_->Paint(*texgineCanvas, x, y);
+    //LOGD("Recording | into Typography::Paint(SkCanvas *canvas, double x, double y)");
+    // auto texgineCanvas = std::make_shared<TextEngine::TexgineCanvas>();
+    // texgineCanvas->SetCanvas(canvas);
+    std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas = std::make_shared<Drawing::RecordingCanvas>(10,20);
+    Canvas canvasSkia; 
+    auto skiaCanvas = canvasSkia.GetImpl<SkiaCanvas>();
+    skiaCanvas->ImportSkCanvas(canvas);
+    return typography_->Paint(recordingCanvas, x, y,canvasSkia);
 }
 
 void Typography::Paint(Drawing::Canvas *drawCanvas, double x, double y)
 {
+   // LOGD("Recording | into Typography::Paint(Drawing::Canvas *drawCanvas, double x, double y)");
     std::shared_ptr<Drawing::CoreCanvasImpl> coreCanvas = drawCanvas->GetCanvasData();
     auto drawingCanvas = static_cast<Drawing::SkiaCanvas *>(coreCanvas.get());
     auto canvas = drawingCanvas->ExportSkCanvas();
-    Paint(canvas, x, y);
+    Paint(canvas, x, y);//canvas == SkCanvas ֱ�ӵ�������
 }
 
 std::vector<TextRect> Typography::GetTextRectsByBoundary(size_t left, size_t right,

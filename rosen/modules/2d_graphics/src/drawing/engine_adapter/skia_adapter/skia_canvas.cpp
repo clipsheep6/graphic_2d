@@ -30,7 +30,7 @@
 #include "skia_image_filter.h"
 #include "skia_path.h"
 #include "skia_image_info.h"
-
+#include "skia_text_blob.h"
 #include "draw/core_canvas.h"
 #include "image/bitmap.h"
 #include "image/image.h"
@@ -626,6 +626,16 @@ void SkiaCanvas::DrawImageRect(const Image& image, const Rect& dst, const Sampli
     }
 }
 
+void SkiaCanvas::DrawTextBlob(const TextBlob& blob, float x, float y) 
+{
+    for (auto d : skiaPaint_.GetSortedPaints()) {
+        if (d != nullptr) {
+            skCanvas_->drawTextBlob(blob.GetImpl<SkiaTextBlob>()->GetSkTextBlob(), x, y, d->paint);
+        }
+    }
+    
+}
+
 void SkiaCanvas::DrawPicture(const Picture& picture)
 {
     if (!skCanvas_) {
@@ -885,6 +895,16 @@ void SkiaCanvas::RoundRectCastToSkRRect(const RoundRect& roundRect, SkRRect& skR
     radii[SkRRect::kLowerLeft_Corner] = { p.GetX(), p.GetY() };
 
     skRRect.setRectRadii(outer, radii);
+}
+
+void SkiaCanvas::InitPaintData(SkPaint &replacePaint)
+{
+    skiaPaint_.InitFillPaint(replacePaint);
+}
+
+SkPaint SkiaCanvas::TestFillPaint()
+{
+    return skiaPaint_.TestFillPaintData();
 }
 } // namespace Drawing
 } // namespace Rosen

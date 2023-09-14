@@ -18,9 +18,9 @@
 #include <cassert>
 #include <functional>
 #include <variant>
-
+#include "utils/log.h"
 #include <unicode/ubidi.h>
-
+#include <memory>
 #include "font_collection.h"
 #include "shaper.h"
 #include "texgine/any_span.h"
@@ -32,10 +32,13 @@
 #include "texgine/utils/trace.h"
 #endif
 #include "word_breaker.h"
+#include "recording/recording_canvas.h"
+#include "drawing/engine_adapter/skia_adapter/skia_canvas.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
+using namespace Drawing;
 #define MAXWIDTH 1e9
 #define HALF 0.5f
 #define MINDEV 1e-3
@@ -510,15 +513,24 @@ void TypographyImpl::UpadateAnySpanMetrics(std::shared_ptr<AnySpan> &span, doubl
     coveredDescent = he - coveredAscent;
 }
 
-void TypographyImpl::Paint(TexgineCanvas &canvas, double offsetX, double offsetY)
+void TypographyImpl::Paint(std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas, double offsetX, double offsetY,Canvas& canvasSkia)
 {
+    
+
+    //auto canvasSkia = std::static_pointer_cast<Canvas>(recordingCanvas);
+    // if (canvasSkia == nullptr) {
+    //     LOGEX_FUNC_LINE(ERROR) << "  TypographyImpl::Paint canvasSkia = nullptr";
+    //     return ;
+    // }
+    LOGEX_FUNC_LINE(ERROR) << "into TypographyImpl::Paint";
+    LOGE("Recording | into TypographyImpl::Paint");
     for (auto &metric : lineMetrics_) {
         for (auto &span : metric.lineSpans) {
-            span.PaintShadow(canvas, offsetX + span.GetOffsetX(), offsetY + span.GetOffsetY());
+            span.PaintShadow(recordingCanvas, offsetX + span.GetOffsetX(), offsetY + span.GetOffsetY(), canvasSkia);
         }
 
         for (auto &span : metric.lineSpans) {
-            span.Paint(canvas, offsetX + span.GetOffsetX(), offsetY + span.GetOffsetY());
+            span.Paint(recordingCanvas, offsetX + span.GetOffsetX(), offsetY + span.GetOffsetY(), canvasSkia);
         }
     }
 }

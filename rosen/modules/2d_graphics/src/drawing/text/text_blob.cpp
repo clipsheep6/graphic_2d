@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,29 +13,21 @@
  * limitations under the License.
  */
 
-#include "texgine_text_blob.h"
+#include "text/text_blob.h"
+#include "impl_factory.h"
 
 namespace OHOS {
 namespace Rosen {
-namespace TextEngine {
-sk_sp<SkTextBlob> TexgineTextBlob::GetTextBlob() const
-{
-    return std::move(textBlob_);
-}
+namespace Drawing {
+TextBlob::TextBlob() noexcept : textBlobImpl_(ImplFactory::CreateTextBlobImpl())
+{}
 
-void TexgineTextBlob::SetTextBlob(const sk_sp<SkTextBlob> textBlob)
+void TextBlob::InitTextBlobImpl(std::shared_ptr<TextBlobImpl> replaceTextBlobImpl)
 {
-    textBlob_ = textBlob;
+    textBlobImpl_ = replaceTextBlobImpl;
 }
 
 
-bool TexgineTextBlob::DetectionEffectiveness()
-{
-    if (!textBlob_) {
-        return false;
-    }
-    return true;
-}
-} // namespace TextEngine
+} // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

@@ -18,7 +18,7 @@
 #include "texgine_exception.h"
 #include "texgine/utils/exlog.h"
 #include "text_converter.h"
-
+#include "utils/log.h"
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -234,23 +234,34 @@ void VariantSpan::AdjustOffsetY(double offset) noexcept(true)
     offsetY_ += offset;
 }
 
-void VariantSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false)
+// void VariantSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false)
+// void VariantSpan::Paint(Drawing::RecordingCanvas &recordingCanvas, double offsetX, double offsetY, Drawing::Canvas &customCanvas) noexcept(false)
+void VariantSpan::Paint(std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas, double offsetX, double offsetY, Drawing::Canvas &customCanvas) noexcept(false)
 {
     CheckPointer();
     if (as_) {
-        as_->Paint(canvas, offsetX, offsetY);
+        LOGEX_FUNC_LINE(ERROR) << "into as paint ";
+        LOGE("Recording | into as paint");
+        as_->Paint(recordingCanvas, offsetX, offsetY, customCanvas);
     }
 
     if (ts_) {
-        ts_->Paint(canvas, offsetX, offsetY, xs_);
+        LOGEX_FUNC_LINE(ERROR) << "into Ts paint ";
+        LOGE("Recording | into Ts paint ");
+        ts_->Paint(recordingCanvas, offsetX, offsetY, xs_, customCanvas);
     }
 }
 
-void VariantSpan::PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false)
+// void VariantSpan::PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false)
+// void VariantSpan::PaintShadow(RecordingCanvas &recordingCanvas, double offsetX, double offsetY, Canvas& customCanvas) noexcept(false)
+
+void VariantSpan::PaintShadow(std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas, double offsetX, double offsetY, Drawing::Canvas& customCanvas) noexcept(false)
 {
     CheckPointer();
     if (ts_) {
-        ts_->PaintShadow(canvas, offsetX, offsetY, xs_.shadows);
+        LOGE("Recording | into Ts PaintShadow  ");
+        LOGEX_FUNC_LINE(ERROR) << "into Ts PaintShadow ";
+        ts_->PaintShadow(recordingCanvas, offsetX, offsetY, xs_.shadows, customCanvas);
     }
 }
 

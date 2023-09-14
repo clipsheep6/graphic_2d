@@ -27,7 +27,8 @@ namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 SkiaPaint::SkiaPaint() noexcept
-    : stroke_(std::make_shared<PaintData>()), fill_(std::make_shared<PaintData>()), isStrokeFirst_(false)
+    : stroke_(std::make_shared<PaintData>()), fill_(std::make_shared<PaintData>()), 
+      customPaint_(std::make_shared<PaintData>()), isStrokeFirst_(false)
 {}
 
 void SkiaPaint::ApplyBrushToFill(const Brush& brush)
@@ -154,10 +155,15 @@ void SkiaPaint::DisableFill()
 std::vector<std::shared_ptr<PaintData>> SkiaPaint::GetSortedPaints() const
 {
     std::vector<std::shared_ptr<PaintData>> paints;
-    if (IsStrokeFirst() && stroke_->isEnabled && fill_->isEnabled) {
+    if (IsStrokeFirst() && stroke_->isEnabled && fill_->isEnabled &&customPaint_->isEnabled) {
+        paints.push_back(customPaint_);
         paints.push_back(stroke_);
         paints.push_back(fill_);
         return paints;
+    }
+
+    if (customPaint_->isEnabled) {
+        paints.push_back(customPaint_);
     }
 
     if (fill_->isEnabled) {
@@ -229,6 +235,19 @@ void SkiaPaint::ApplyFilter(SkPaint& paint, const Filter& filter) const
         paint.setMaskFilter(nullptr);
     }
 }
+
+//cq
+void SkiaPaint::InitFillPaint(SkPaint& replaceSkPaint)
+{
+    customPaint_->paint.reset();
+    customPaint_->isEnabled = true;
+    customPaint_->paint = replaceSkPaint;
+}
+SkPaint SkiaPaint::TestFillPaintData()
+{
+    return customPaint_->paint;
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

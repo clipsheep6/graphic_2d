@@ -49,12 +49,15 @@ public:
     std::vector<std::shared_ptr<PaintData>> GetSortedPaints() const;
     void SetStrokeFirst(bool isStrokeFirst);
     bool IsStrokeFirst() const;
-
+    //cq
+    void InitFillPaint(SkPaint& replaceSkPaint);
+    SkPaint TestFillPaintData();
 private:
     void ApplyFilter(SkPaint& paint, const Filter& filter) const;
 
     std::shared_ptr<PaintData> stroke_;
     std::shared_ptr<PaintData> fill_;
+    std::shared_ptr<PaintData> customPaint_;
     bool isStrokeFirst_;
 };
 } // namespace Drawing

@@ -24,6 +24,7 @@
 #include "texgine/font_providers.h"
 #include "texgine/any_span.h"
 #include "text_span.h"
+#include "utils/point.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -66,8 +67,12 @@ public:
     void AdjustOffsetX(double offset) noexcept(true);
     void AdjustOffsetY(double offset) noexcept(true);
 
-    void Paint(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false);
-    void PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false);
+    // void Paint(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false);
+    // void PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false);
+    // void Paint(Drawing::RecordingCanvas &recordingCanvas, double offsetX, double offsetY, Drawing::Canvas &customCanvas) noexcept(false);
+    // void PaintShadow(Drawing::RecordingCanvas &recordingCanvas, double offsetX, double offsetY, Drawing::Canvas &customCanvas) noexcept(false);
+    void Paint(std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas, double offsetX, double offsetY, Drawing::Canvas &customCanvas) noexcept(false);
+    void PaintShadow(std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas, double offsetX, double offsetY, Drawing::Canvas &customCanvas) noexcept(false);
     bool IsRTL() const noexcept(false);
 
     operator bool() const noexcept(false);

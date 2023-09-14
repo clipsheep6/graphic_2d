@@ -37,6 +37,7 @@
 #include "impl_interface/shader_effect_impl.h"
 #include "impl_interface/surface_impl.h"
 
+#include "impl_interface/text_blob_impl.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -65,6 +66,7 @@ public:
     static std::unique_ptr<Matrix44Impl> CreateMatrix44();
     static std::unique_ptr<CameraImpl> CreateCamera();
     static std::unique_ptr<RegionImpl> CreateRegion();
+    static std::unique_ptr<TextBlobImpl> CreateTextBlob();
 };
 } // namespace Drawing
 } // namespace Rosen

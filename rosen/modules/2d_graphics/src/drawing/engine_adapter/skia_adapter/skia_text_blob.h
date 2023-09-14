@@ -13,35 +13,44 @@
  * limitations under the License.
  */
 
-#ifndef ROSEN_MODULES_TEXGINE_SRC_TEXGINE_DRAWING_TEXGINE_TEXT_BLOB_H
-#define ROSEN_MODULES_TEXGINE_SRC_TEXGINE_DRAWING_TEXGINE_TEXT_BLOB_H
-
-#include <memory>
+#ifndef SKIA_TEXT_BLOB_H
+#define SKIA_TEXT_BLOB_H
 
 #include <include/core/SkTextBlob.h>
+#include "impl_interface/text_blob_impl.h"
 
 namespace OHOS {
 namespace Rosen {
-namespace TextEngine {
-class TexgineTextBlob {
+namespace Drawing {
+class SkiaTextBlob : public TextBlobImpl {
 public:
+    static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
+    SkiaTextBlob() noexcept {};
+    ~SkiaTextBlob() override {};
+    AdapterType GetType() const override
+    {
+        return AdapterType::SKIA_ADAPTER;
+    }
+
     /*
      * @brief Return the pointer of SkTextBlob to prepare the paint info
      */
-    sk_sp<SkTextBlob> GetTextBlob() const;
+    sk_sp<SkTextBlob> GetSkTextBlob() const;
 
     /*
      * @brief Sets SkTextBlob to TexgineTextBlob
      */
-    void SetTextBlob(const sk_sp<SkTextBlob> textBlob);
+    void SetSkTextBlob(const sk_sp<SkTextBlob> textBlob);
 
-    bool DetectionEffectiveness();
+    std::shared_ptr<Data> Serialize() const override;
+
+    bool Deserialize(std::shared_ptr<Data> data) override;
 
 private:
-    sk_sp<SkTextBlob> textBlob_ = nullptr;
+    sk_sp<SkTextBlob> skTextBlob_ = nullptr;
 };
-} // namespace TextEngine
-} // namespace Rosen
-} // namespace OHOS
+} // Drawing
+} // Rosen
+} // OHOS
 
-#endif // ROSEN_MODULES_TEXGINE_SRC_TEXGINE_DRAWING_TEXGINE_TEXT_BLOB_H
+#endif

@@ -39,6 +39,7 @@ public:
     virtual bool BuildFromGL(const GPUContextOptions& options) = 0;
 
     virtual void Flush() = 0;
+    virtual void FlushAndSubmit(bool syncCpu) = 0;
     virtual void PerformDeferredCleanup(std::chrono::milliseconds msNotUsed) = 0;
 
     virtual void GetResourceCacheLimits(int& maxResource, size_t& maxResourceBytes) const = 0;
@@ -47,6 +48,16 @@ public:
     virtual void GetResourceCacheUsage(int& resourceCount, size_t& resourceBytes) const = 0;
 
     virtual void FreeGpuResources() = 0;
+
+    virtual void DumpGpuStats(std::string& out) = 0;
+
+    virtual void ReleaseResourcesAndAbandonContext() = 0;
+
+    virtual void PurgeUnlockedResources(bool scratchResourcesOnly) = 0;
+
+    virtual void PurgeUnlockedResourcesByTag(bool scratchResourcesOnly, const GPUResourceTag tag) = 0;
+
+    virtual void PurgeUnlockAndSafeCacheGpuResources() = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

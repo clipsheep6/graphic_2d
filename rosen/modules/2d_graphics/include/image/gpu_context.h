@@ -38,6 +38,15 @@ enum class PathRenderers : uint32_t {
     DEFAULT           = ALL & ~COVERAGECOUNTING
 };
 
+struct GPUResourceTag {
+    GPUResourceTag(uint32_t pid, uint32_t tid, uint32_t wid, uint32_t fid)
+        : fPid(pid), fTid(tid), fWid(wid), fFid(fid) {}
+    uint32_t fPid;
+    uint32_t fTid;
+    uint32_t fWid;
+    uint32_t fFid;
+}
+
 /*
  * @brief  Option to create a GPUContext. Currently only supports setting persistent cache,
            other options may be expanded in the future
@@ -93,6 +102,8 @@ public:
      */
     void Flush();
 
+    void FlushAndSubmit(bool syncCpu = false);
+
     /*
      * @brief             Purge GPU resources that haven't been used in the past 'msNotUsed' milliseconds
                           or are otherwise marked for deletion.
@@ -126,6 +137,23 @@ public:
      * @brief                   Free GPU created by the contetx.
      */
     void FreeGpuResources();
+
+    /*
+     * @brief                   Dump GPU stats.
+     * @param out               Dump GPU stat string.
+     */
+    void DumpGpuStats(std::string& out) const;
+
+    /*
+     * @brief                   After returning it will assume that the underlying context may no longer be valid.
+     */
+    void ReleaseResourcesAndAbandonContext();
+
+    void PurgeUnlockedResources(bool scratchResourcesOnly);
+
+    void PurgeUnlockedResourcesByTag(bool scratchResourcesOnly, const GPUResourceTag tag);
+
+    void PurgeUnlockAndSafeCacheGpuResources();
 
     /*
      * @brief   Get the adaptation layer instance, called in the adaptation layer.

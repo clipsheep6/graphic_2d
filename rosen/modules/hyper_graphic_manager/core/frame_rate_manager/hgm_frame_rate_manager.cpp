@@ -47,6 +47,9 @@ void HgmFrameRateManager::UniProcessData(const FrameRateRangeData& data)
         if (data.forceUpdateFlag) {
             finalRange.max_ = DEFAULT_PREFERRED;
             finalRange.preferred_ = DEFAULT_PREFERRED;
+            if (forceUpdateCallback_ != nullptr) {
+                forceUpdateCallback_();
+            }
         } else {
             HgmCore::Instance().InsertAndStartScreenTimer(screenId, IDLE_TIMER_EXPIRED, nullptr, expiredCallback_);
             return;

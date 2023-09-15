@@ -346,6 +346,9 @@ void RSMainThread::Init()
         RSMainThread::Instance()->SetForceUpdateUniRenderFlag(true);
         RSMainThread::Instance()->RequestNextVSync();
     });
+    frameRateMgr_->SetForceUpdateCallback([]() {
+        RSMainThread::Instance()->SetForceUpdateUniRenderFlag(false);
+    });
 }
 
 void RSMainThread::RsEventParamDump(std::string& dumpString)
@@ -1234,7 +1237,6 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         rootNode->Process(uniVisitor);
     }
     isDirty_ = false;
-    forceUpdateUniRenderFlag_ = false;
 }
 
 void RSMainThread::Render()

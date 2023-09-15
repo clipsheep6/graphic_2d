@@ -127,7 +127,8 @@ public:
     void RegisterOcclusionChangeCallback(pid_t pid, sptr<RSIOcclusionChangeCallback> callback);
     void UnRegisterOcclusionChangeCallback(pid_t pid);
 
-    void RegisterSurfaceOcclusionChangeCallback(NodeId id, pid_t pid, sptr<RSISurfaceOcclusionChangeCallback> callback);
+    void RegisterSurfaceOcclusionChangeCallback(
+        NodeId id, pid_t pid, sptr<RSISurfaceOcclusionChangeCallback> callback, std::vector<float>& partitionPoints);
     void UnRegisterSurfaceOcclusionChangeCallback(NodeId id);
     void ClearSurfaceOcclusionChangeCallback(pid_t pid);
 
@@ -398,7 +399,8 @@ private:
     // for surface occlusion change callback
     std::mutex surfaceOcclusionMutex_;
     std::unordered_map<NodeId,
-        std::tuple<pid_t, sptr<RSISurfaceOcclusionChangeCallback>, bool>> surfaceOcclusionListeners_;
+        std::tuple<pid_t, sptr<RSISurfaceOcclusionChangeCallback>,
+        std::vector<float>, uint8_t>> surfaceOcclusionListeners_;
     std::unordered_map<NodeId,
         std::pair<std::shared_ptr<RSSurfaceRenderNode>, std::shared_ptr<RSSurfaceRenderNode>>> savedAppWindowNode_;
 };

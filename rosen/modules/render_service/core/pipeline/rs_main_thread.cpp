@@ -1544,12 +1544,31 @@ void RSMainThread::SurfaceOcclusionCallback()
             }
             savedAppWindowNode_[listener.first] = std::make_pair(surfaceNode, appWindowNode);
         }
-        bool visible = savedAppWindowNode_[listener.first].second->GetVisibleRegion().IsIntersectWith(
-            savedAppWindowNode_[listener.first].first->GetDstRect());
-        if (std::get<2>(listener.second) != visible) { // get 2 in tuple to check visible is changed
+        RectI surfaceRect = savedAppWindowNode_[listener.first].first->GetDstRect();
+        if (surfaceRect.IsEmpty()) {
+            continue;
+        }
+        float visibleAreaRatio = static_cast<float>(savedAppWindowNode_[listener.first].second->GetVisibleRegion().
+            IntersectArea(surfaceRect)) / static_cast<float>(surfaceRect.GetWidth() * surfaceRect.GetHeight());
+        bool vectorEmpty = std::get<2>(listener.second).empty(); // tuple 2, check partitionPoints is empty or not
+        uint8_t level = 0;
+        if (vectorEmpty && visibleAreaRatio) {
+            level = 1;
+        } else if (!vectorEmpty && visibleAreaRatio == 1) {
+            level = std::get<2>(listener.second).size(); // tuple 2, level equals to vector size if 100% visible
+        } else if (!vectorEmpty && visibleAreaRatio) {
+            for (auto &point : std::get<2>(listener.second)) { // tuple 2, check point in partitionPoints
+                if (visibleAreaRatio > point) {
+                    level += 1;
+                    continue;
+                }
+                break;
+            }
+        }
+        if (std::get<3>(listener.second) != level) { // tuple 3, check visible is changed
             RS_LOGD("RSMainThread::SurfaceOcclusionCallback surfacenode: %{public}" PRIu64 ".", listener.first);
-            std::get<1>(listener.second)->OnSurfaceOcclusionVisibleChanged(visible);
-            std::get<2>(listener.second) = visible; // get 2 in tuple, change the visible status
+            std::get<1>(listener.second)->OnSurfaceOcclusionVisibleChanged(visibleAreaRatio);
+            std::get<3>(listener.second) = level; // tuple 3, change the visible status
         }
     }
 }
@@ -1748,10 +1767,14 @@ void RSMainThread::UnRegisterOcclusionChangeCallback(pid_t pid)
 }
 
 void RSMainThread::RegisterSurfaceOcclusionChangeCallback(
-    NodeId id, pid_t pid, sptr<RSISurfaceOcclusionChangeCallback> callback)
+    NodeId id, pid_t pid, sptr<RSISurfaceOcclusionChangeCallback> callback, std::vector<float>& partitionPoints)
 {
     std::lock_guard<std::mutex> lock(surfaceOcclusionMutex_);
-    surfaceOcclusionListeners_[id] = std::make_tuple(pid, callback, true);
+    uint8_t level = 1;
+    if (!partitionPoints.empty()) {
+        level = partitionPoints.size();
+    }
+    surfaceOcclusionListeners_[id] = std::make_tuple(pid, callback, partitionPoints, level);
 }
 
 void RSMainThread::UnRegisterSurfaceOcclusionChangeCallback(NodeId id)

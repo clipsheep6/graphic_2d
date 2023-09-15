@@ -735,10 +735,10 @@ public:
     explicit CustomSurfaceOcclusionChangeCallback(const SurfaceOcclusionChangeCallback &callback) : cb_(callback) {}
     ~CustomSurfaceOcclusionChangeCallback() override {};
 
-    void OnSurfaceOcclusionVisibleChanged(bool visible) override
+    void OnSurfaceOcclusionVisibleChanged(float visibleAreaRatio) override
     {
         if (cb_ != nullptr) {
-            cb_(visible);
+            cb_(visibleAreaRatio);
         }
     }
 
@@ -747,7 +747,7 @@ private:
 };
 
 int32_t RSRenderServiceClient::RegisterSurfaceOcclusionChangeCallback(
-    NodeId id, const SurfaceOcclusionChangeCallback& callback)
+    NodeId id, const SurfaceOcclusionChangeCallback& callback, std::vector<float>& partitionPoints)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
@@ -755,7 +755,7 @@ int32_t RSRenderServiceClient::RegisterSurfaceOcclusionChangeCallback(
         return RENDER_SERVICE_NULL;
     }
     sptr<CustomSurfaceOcclusionChangeCallback> cb = new CustomSurfaceOcclusionChangeCallback(callback);
-    return renderService->RegisterSurfaceOcclusionChangeCallback(id, cb);
+    return renderService->RegisterSurfaceOcclusionChangeCallback(id, cb, partitionPoints);
 }
 
 int32_t RSRenderServiceClient::UnRegisterSurfaceOcclusionChangeCallback(NodeId id)

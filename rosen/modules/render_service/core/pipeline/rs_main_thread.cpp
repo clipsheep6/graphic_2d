@@ -2037,7 +2037,6 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         MemoryManager::ReleaseAllGpuResource(grContext, tag);
     }
     dumpString.append("trimMem: " + type + "\n");
-#endif
 #else
     auto gpuContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
     if (type.empty()) {
@@ -2076,10 +2075,12 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         dumpString.append("flushcache " + std::to_string(ret) + "\n");
     } else {
         uint32_t pid = static_cast<uint32_t>(std::stoll(type));
-        GPUResourceTag tag(pid, 0, 0, 0);
+        Drawing::GPUResourceTag tag(pid, 0, 0, 0);
         MemoryManager::ReleaseAllGpuResource(gpuContext, tag);
     }
     dumpString.append("trimMem: " + type + "\n");
+#endif
+#endif
 }
 
 void RSMainThread::DumpMem(std::unordered_set<std::u16string>& argSets, std::string& dumpString,

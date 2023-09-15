@@ -16,10 +16,12 @@
 #include "skia_gpu_context.h"
 
 #include "include/gpu/gl/GrGLInterface.h"
+#include "src/gpu/GrDirectContextPriv.h"
 
 #include "skia_data.h"
 #include "utils/data.h"
 #include "utils/log.h"
+#include "skia_convert_utils.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -97,7 +99,7 @@ void SkiaGPUContext::Flush()
     grContext_->flush();
 }
 
-void GPUContext::FlushAndSubmit(bool syncCpu)
+void SkiaGPUContext::FlushAndSubmit(bool syncCpu)
 {
     if (!grContext_) {
         LOGE("SkiaGPUContext::FlushAndSubmit, grContext_ is nullptr");
@@ -151,7 +153,7 @@ void SkiaGPUContext::FreeGpuResources()
     grContext_->freeGpuResources();
 }
 
-void SkiaGPUContext::DumpGpuStats(std::string& out);
+void SkiaGPUContext::DumpGpuStats(std::string& out)
 {
     if (!grContext_) {
         LOGE("SkiaGPUContext::DumpGpuStats, grContext_ is nullptr");
@@ -198,6 +200,17 @@ void SkiaGPUContext::PurgeUnlockAndSafeCacheGpuResources()
     }
     grContext_->purgeUnlockAndSafeCacheGpuResources();
 }
+
+void SkiaGPUContext::ReleaseByTag(const GPUResourceTag tag)
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::ReleaseByTag, grContext_ is nullptr");
+        return;
+    }
+    GrGpuResourceTag grTag(tag.fPid, tag.fTid, tag.fWid, tag.fFid);
+    grContext_->releaseByTag(grTag);
+}
+
 #ifdef NEW_SKIA
 sk_sp<GrDirectContext> SkiaGPUContext::GetGrContext() const
 #else

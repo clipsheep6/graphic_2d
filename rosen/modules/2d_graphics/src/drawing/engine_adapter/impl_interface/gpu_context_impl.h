@@ -23,6 +23,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+struct GPUResourceTag;
 class GPUContext;
 class GPUContextOptions;
 class GPUContextImpl : public BaseImpl {
@@ -58,6 +59,8 @@ public:
     virtual void PurgeUnlockedResourcesByTag(bool scratchResourcesOnly, const GPUResourceTag tag) = 0;
 
     virtual void PurgeUnlockAndSafeCacheGpuResources() = 0;
+
+    virtual void ReleaseByTag(const GPUResourceTag tag) = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

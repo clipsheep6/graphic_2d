@@ -92,6 +92,11 @@ void GPUContext::PurgeUnlockAndSafeCacheGpuResources()
     impl_->PurgeUnlockAndSafeCacheGpuResources();
 }
 
+void GPUContext::ReleaseByTag(const GPUResourceTag tag)
+{
+    impl_->ReleaseByTag(tag);
+}
+
 GPUContextOptions::PersistentCache* GPUContextOptions::GetPersistentCache() const
 {
     return persistentCache_;

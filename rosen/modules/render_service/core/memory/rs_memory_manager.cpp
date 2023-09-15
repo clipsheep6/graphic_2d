@@ -39,6 +39,10 @@
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 
+#ifdef USE_ROSEN_DRAWING
+#include "image/gpu_context.h"
+#endif
+
 namespace OHOS::Rosen {
 namespace {
 constexpr uint32_t MEMUNIT_RATE = 1024;
@@ -107,6 +111,17 @@ void MemoryManager::ReleaseAllGpuResource(GrContext* grContext, GrGpuResourceTag
 #endif
 }
 #else
+void MemoryManager::ReleaseAllGpuResource(Drawing::GPUContext* gpuContext, Drawing::GPUResourceTag& tag)
+{
+#ifdef RS_ENABLE_GL
+    if (!gpuContext) {
+        RS_LOGE("ReleaseGpuResByTag fail, gpuContext is nullptr");
+    }
+    RS_TRACE_NAME_FMT("ReleaseAllGpuResource [Pid:%d Tid:%d Nid:%d Funcid:%d]",
+        tag.fPid, tag.fTid, tag.fWid, tag.fFid);
+    gpuContext->ReleaseByTag(tag);
+#endif
+}
 #endif
 
 #ifndef USE_ROSEN_DRAWING
@@ -144,7 +159,7 @@ void MemoryManager::ReleaseUnlockGpuResource(GrContext* grContext, GrGpuResource
 #endif
 }
 #else
-void MemoryManager::ReleaseUnlockGpuResource(GPUContext* gpuContext, GPUResourceTag& tag)
+void MemoryManager::ReleaseUnlockGpuResource(Drawing::GPUContext* gpuContext, Drawing::GPUResourceTag& tag)
 {
 #ifdef RS_ENABLE_GL
     if (!gpuContext) {
@@ -173,7 +188,7 @@ void MemoryManager::ReleaseUnlockGpuResource(GrContext* grContext, NodeId surfac
 void MemoryManager::ReleaseUnlockGpuResource(Drawing::GPUContext* grContext, NodeId surfaceNodeId)
 {
 #ifdef RS_ENABLE_GL
-    GPUResourceTag tag(ExtractPid(surfaceNodeId), 0, 0, 0);
+    Drawing::GPUResourceTag tag(ExtractPid(surfaceNodeId), 0, 0, 0);
     ReleaseUnlockGpuResource(grContext, tag);
 #endif
 }

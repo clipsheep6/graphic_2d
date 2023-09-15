@@ -45,7 +45,7 @@ struct GPUResourceTag {
     uint32_t fTid;
     uint32_t fWid;
     uint32_t fFid;
-}
+};
 
 /*
  * @brief  Option to create a GPUContext. Currently only supports setting persistent cache,
@@ -154,6 +154,8 @@ public:
     void PurgeUnlockedResourcesByTag(bool scratchResourcesOnly, const GPUResourceTag tag);
 
     void PurgeUnlockAndSafeCacheGpuResources();
+
+    void ReleaseByTag(const GPUResourceTag tag);
 
     /*
      * @brief   Get the adaptation layer instance, called in the adaptation layer.

@@ -151,6 +151,12 @@ void RecordingCanvas::DrawShadow(const Path& path, const Point3& planeParams, co
     cmdList_->AddOp<DrawShadowOpItem>(pathHandle, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag);
 }
 
+void RecordingCanvas::DrawRegion(const Region& region)
+{
+    auto regionHandle = CmdListHelper::AddRecordedToCmdList<RecordingRegion>(*cmdList_, region);
+    cmdList_->AddOp<DrawRegionOpItem>(regionHandle);
+}
+
 void RecordingCanvas::DrawColor(ColorQuad color, BlendMode mode)
 {
     cmdList_->AddOp<DrawColorOpItem>(color, mode);

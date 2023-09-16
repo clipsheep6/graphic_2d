@@ -54,6 +54,7 @@ public:
     void DrawBackground(const Brush& brush) override;
     void DrawShadow(const Path& path, const Point3& planeParams, const Point3& devLightPos, scalar lightRadius,
         Color ambientColor, Color spotColor, ShadowFlags flag) override;
+    void DrawRegion(const Region& region) override;
 
     void DrawColor(ColorQuad color, BlendMode mode = BlendMode::SRC_OVER) override;
 

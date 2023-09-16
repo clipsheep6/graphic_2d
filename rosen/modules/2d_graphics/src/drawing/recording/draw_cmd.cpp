@@ -83,6 +83,7 @@ std::unordered_map<uint32_t, CanvasPlayer::PlaybackFunc> CanvasPlayer::opPlaybac
     { DrawOpItem::CLIP_ADAPTIVE_ROUND_RECT_OPITEM, ClipAdaptiveRoundRectOpItem::Playback},
     { DrawOpItem::ADAPTIVE_IMAGE_OPITEM,    DrawAdaptiveImageOpItem::Playback},
     { DrawOpItem::ADAPTIVE_PIXELMAP_OPITEM, DrawAdaptivePixelMapOpItem::Playback},
+    { DrawOpItem::REGION_OPITEM,            DrawRegionOpItem::Playback},
 };
 
 CanvasPlayer::CanvasPlayer(Canvas& canvas, const CmdList& cmdList, const Rect& rect)
@@ -360,6 +361,27 @@ void DrawShadowOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
     }
 
     canvas.DrawShadow(*path, planeParams_, devLightPos_, lightRadius_, ambientColor_, spotColor_, flag_);
+}
+
+DrawRegionOpItem::DrawRegionOpItem(const CmdListHandle& region) : DrawOpItem(REGION_OPITEM), region_(region) {}
+
+void DrawRegionOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const DrawRegionOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawRegionOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto region = CmdListHelper::GetFromCmdList<RegionCmdList, Region>(cmdList, region_);
+    if (path == nullptr) {
+        LOGE("region is nullptr!");
+        return;
+    }
+
+    canvas.DrawRegion(*region);
 }
 
 DrawColorOpItem::DrawColorOpItem(ColorQuad color, BlendMode mode) : DrawOpItem(COLOR_OPITEM),

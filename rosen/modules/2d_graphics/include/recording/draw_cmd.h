@@ -119,6 +119,7 @@ public:
         CLIP_ADAPTIVE_ROUND_RECT_OPITEM,
         ADAPTIVE_IMAGE_OPITEM,
         ADAPTIVE_PIXELMAP_OPITEM,
+        REGION_OPITEM,
     };
 };
 
@@ -295,6 +296,18 @@ private:
     Color ambientColor_;
     Color spotColor_;
     ShadowFlags flag_;
+};
+
+class DrawRegionOpItem : public DrawOpItem {
+public:
+    DrawRegionOpItem(const CmdListHandle& path);
+    ~DrawRegionOpItem() = default;
+
+    static void Playback(CanvasPlayer& player, const void* opItem);
+    void Playback(Canvas& canvas, const CmdList& cmdList) const;
+
+private:
+    CmdListHandle region_;
 };
 
 class DrawBitmapOpItem : public DrawOpItem {

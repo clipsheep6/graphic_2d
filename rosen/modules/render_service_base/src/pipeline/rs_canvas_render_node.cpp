@@ -99,6 +99,7 @@ void RSCanvasRenderNode::OnTreeStateChanged()
         if (GetCacheType() == CacheType::CONTENT) {
             SetCacheType(CacheType::NONE);
             ClearCacheSurface();
+            SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
         }
     } else {
         SetDirty();

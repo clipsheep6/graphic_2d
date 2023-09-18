@@ -549,7 +549,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     Drawing::Matrix gravityMatrix;
 #endif // USE_ROSEN_DRAWING
     (void)RSPropertiesPainter::GetGravityMatrix(
-        Gravity::RESIZE, RectF { 0.0f, 0.0f, bufferWidth, bufferHeight }, rootWidth, rootHeight, gravityMatrix);
+        Gravity::RESIZE, Vector4f(1.0f), RectF { 0.0f, 0.0f, bufferWidth, bufferHeight }, rootWidth, rootHeight, gravityMatrix);
 
     if (isRenderForced_ ||
         curDirtyManager_->GetCurrentFrameDirtyRegion().GetWidth() == 0 ||

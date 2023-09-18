@@ -55,7 +55,7 @@ public:
     static void DrawForegroundColor(const RSProperties& properties, SkCanvas& canvas);
     static void DrawMask(const RSProperties& properties, SkCanvas& canvas);
     static void DrawMask(const RSProperties& properties, SkCanvas& canvas, SkRect maskBounds);
-    static bool GetGravityMatrix(Gravity gravity, RectF rect, float w, float h, SkMatrix& mat);
+    static bool GetGravityMatrix(Gravity gravity, Vector4f gravityWeight, RectF rect, float w, float h, SkMatrix& mat);
     static SkRRect RRect2SkRRect(const RRect& rr);
     static SkRect Rect2SkRect(const RectF& r);
     static int GetAndResetBlurCnt();
@@ -125,7 +125,7 @@ private:
     static void DrawForegroundColor(const RSProperties& properties, Drawing::Canvas& canvas);
     static void DrawMask(const RSProperties& properties, Drawing::Canvas& canvas);
     static void DrawMask(const RSProperties& properties, Drawing::Canvas& canvas, Drawing::Rect maskBounds);
-    static bool GetGravityMatrix(Gravity gravity, RectF rect, float w, float h, Drawing::Matrix& mat);
+    static bool GetGravityMatrix(Gravity gravity, Vector4f gravityWeight, RectF rect, float w, float h, Drawing::Matrix& mat);
     static Drawing::RoundRect RRect2DrawingRRect(const RRect& rr);
     static Drawing::Rect Rect2DrawingRect(const RectF& r);
     static int GetAndResetBlurCnt();

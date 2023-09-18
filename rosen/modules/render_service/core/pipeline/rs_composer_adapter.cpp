@@ -199,6 +199,7 @@ void RSComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& node, Com
     const int boundsWidth = static_cast<int>(property.GetBoundsWidth());
     const int boundsHeight = static_cast<int>(property.GetBoundsHeight());
     const Gravity frameGravity = property.GetFrameGravity();
+    const Vector4f gravityWeight = property.GetGravityWeight();
     // we do not need to do additional works for Gravity::RESIZE and if frameSize == boundsSize.
     if (frameGravity == Gravity::RESIZE || (frameWidth == boundsWidth && frameHeight == boundsHeight)) {
         return;
@@ -213,7 +214,7 @@ void RSComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& node, Com
         std::ceil(node.GetTotalMatrix().getTranslateX()), std::ceil(node.GetTotalMatrix().getTranslateY()));
 #endif
     SkMatrix gravityMatrix;
-    (void)RSPropertiesPainter::GetGravityMatrix(frameGravity,
+    (void)RSPropertiesPainter::GetGravityMatrix(frameGravity, gravityWeight,
         RectF {0.0f, 0.0f, boundsWidth, boundsHeight}, frameWidth, frameHeight, gravityMatrix);
 
     // create a canvas to calculate new dstRect and new srcRect
@@ -259,6 +260,7 @@ void RSComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& node, Com
     const int boundsWidth = static_cast<int>(property.GetBoundsWidth());
     const int boundsHeight = static_cast<int>(property.GetBoundsHeight());
     const Gravity frameGravity = property.GetFrameGravity();
+    const Vector4f gravityWeight = property.GetGravityWeight();
     // we do not need to do additional works for Gravity::RESIZE and if frameSize == boundsSize.
     if (frameGravity == Gravity::RESIZE || (frameWidth == boundsWidth && frameHeight == boundsHeight)) {
         return;
@@ -270,7 +272,7 @@ void RSComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& node, Com
         std::ceil(node.GetTotalMatrix().Get(Drawing::Matrix::Index::TRANS_X)),
         std::ceil(node.GetTotalMatrix().Get(Drawing::Matrix::Index::TRANS_Y)));
     Drawing::Matrix gravityMatrix;
-    (void)RSPropertiesPainter::GetGravityMatrix(frameGravity,
+    (void)RSPropertiesPainter::GetGravityMatrix(frameGravity, gravityWeight,
         RectF {0.0f, 0.0f, boundsWidth, boundsHeight}, frameWidth, frameHeight, gravityMatrix);
 
     // create a canvas to calculate new dstRect and new srcRect

@@ -106,8 +106,8 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
     ApplyDrawCmdModifier(context, RSModifierType::OVERLAY_STYLE);
 
     SkMatrix mat;
-    if (RSPropertiesPainter::GetGravityMatrix(
-        GetRenderProperties().GetFrameGravity(), GetRenderProperties().GetFrameRect(), width, height, mat)) {
+    if (RSPropertiesPainter::GetGravityMatrix(GetRenderProperties().GetFrameGravity(), GetRenderProperties().GetGravityWeight(),
+        GetRenderProperties().GetFrameRect(), width, height, mat)) {
         canvas.concat(mat);
     }
     auto image = skSurface_->makeImageSnapshot();

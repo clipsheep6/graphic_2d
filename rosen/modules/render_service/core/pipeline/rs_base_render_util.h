@@ -111,10 +111,10 @@ public:
 
 #ifndef USE_ROSEN_DRAWING
     static SkMatrix GetSurfaceTransformMatrix(GraphicTransformType rotationTransform, const RectF& bounds);
-    static SkMatrix GetGravityMatrix(Gravity gravity, const sptr<SurfaceBuffer>& buffer, const RectF& bounds);
+    static SkMatrix GetGravityMatrix(Gravity gravity, Vector4f gravityWeight, const sptr<SurfaceBuffer>& buffer, const RectF& bounds);
 #else
     static Drawing::Matrix GetSurfaceTransformMatrix(GraphicTransformType rotationTransform, const RectF& bounds);
-    static Drawing::Matrix GetGravityMatrix(Gravity gravity, const sptr<SurfaceBuffer>& buffer, const RectF& bounds);
+    static Drawing::Matrix GetGravityMatrix(Gravity gravity, Vector4f gravityWeight, const sptr<SurfaceBuffer>& buffer, const RectF& bounds);
 #endif
     static void SetPropertiesForCanvas(RSPaintFilterCanvas& canvas, const BufferDrawParam& params);
 
@@ -149,7 +149,7 @@ public:
 
     static bool WritePixelMapToPng(Media::PixelMap& pixelMap);
     static void DealWithSurfaceRotationAndGravity(GraphicTransformType transform, Gravity gravity,
-        RectF& localBounds, BufferDrawParam& params);
+         Vector4f gravityWeight, RectF& localBounds, BufferDrawParam& params);
     static void FlipMatrix(GraphicTransformType transform, BufferDrawParam& params);
 
     // GraphicTransformType has two attributes: rotation and flip, it take out one of the attributes separately

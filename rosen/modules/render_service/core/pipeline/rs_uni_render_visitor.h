@@ -304,6 +304,7 @@ private:
     Drawing::Rect boundsRect_ {};
 #endif
     Gravity frameGravity_ = Gravity::DEFAULT;
+    Vector4f gravityWeight_ = Vector4f(1.0f);
 
     int32_t offsetX_ { 0 };
     int32_t offsetY_ { 0 };

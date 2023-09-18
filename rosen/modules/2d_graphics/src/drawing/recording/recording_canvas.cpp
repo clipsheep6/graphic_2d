@@ -157,6 +157,33 @@ void RecordingCanvas::DrawRegion(const Region& region)
     cmdList_->AddOp<DrawRegionOpItem>(regionHandle);
 }
 
+void RecordingCanvas::DrawPatch(const Point cubics[12], const ColorQuad colors[4],
+    const Point texCoords[4], BlendMode mode)
+{
+    size_t cubicsCount = 12;
+    std::vector<Point> skiaCubics = {};
+    if (cubics != nullptr) {
+        skiaCubics = std::vector<Point>(cubics, cubics + cubicsCount);
+    }
+
+    size_t colorsCount = 4;
+    std::vector<ColorQuad> skiaColors = {};
+    if (colors != nullptr) {
+        skiaColors = std::vector<ColorQuad>(colors, colors + colorsCount);
+    }
+
+    size_t texCoordsCount = 4;
+    std::vector<Point> skiaTexCoords = {};
+    if (texCoords != nullptr) {
+        skiaTexCoords = std::vector<Point>(texCoords, texCoords + texCoordsCount);
+    }
+
+    auto cubicsData = CmdListHelper::AddVectorToCmdList<Point>(*cmdList_, skiaCubics);
+    auto colorsData = CmdListHelper::AddVectorToCmdList<ColorQuad>(*cmdList_, skiaColors);
+    auto texCoordsData = CmdListHelper::AddVectorToCmdList<Point>(*cmdList_, skiaTexCoords);
+    cmdList_->AddOp<DrawPatchOpItem>(cubicsData, colorsData, texCoordsData, mode);
+}
+
 void RecordingCanvas::DrawColor(ColorQuad color, BlendMode mode)
 {
     cmdList_->AddOp<DrawColorOpItem>(color, mode);

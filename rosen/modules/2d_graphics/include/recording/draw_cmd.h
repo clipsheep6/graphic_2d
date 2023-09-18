@@ -120,6 +120,7 @@ public:
         ADAPTIVE_IMAGE_OPITEM,
         ADAPTIVE_PIXELMAP_OPITEM,
         REGION_OPITEM,
+        PATCH_OPITEM,
     };
 };
 
@@ -308,6 +309,22 @@ public:
 
 private:
     CmdListHandle region_;
+};
+
+class DrawPatchOpItem : public DrawOpItem {
+public:
+    explicit DrawPatchOpItem(const std::pair<uint32_t, size_t> cubics, const std::pair<uint32_t, size_t> colors,
+        const std::pair<uint32_t, size_t> texCoords, BlendMode mode);
+    ~DrawPatchOpItem() = default;
+
+    static void Playback(CanvasPlayer& player, const void* opItem);
+    void Playback(Canvas& canvas, const CmdList& cmdList) const;
+
+private:
+    std::pair<uint32_t, size_t> cubics_;
+    std::pair<uint32_t, size_t> colors_;
+    std::pair<uint32_t, size_t> texCoords_;
+    BlendMode mode_;
 };
 
 class DrawBitmapOpItem : public DrawOpItem {

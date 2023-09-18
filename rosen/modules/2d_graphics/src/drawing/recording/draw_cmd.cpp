@@ -83,7 +83,8 @@ std::unordered_map<uint32_t, CanvasPlayer::PlaybackFunc> CanvasPlayer::opPlaybac
     { DrawOpItem::CLIP_ADAPTIVE_ROUND_RECT_OPITEM, ClipAdaptiveRoundRectOpItem::Playback},
     { DrawOpItem::ADAPTIVE_IMAGE_OPITEM,    DrawAdaptiveImageOpItem::Playback},
     { DrawOpItem::ADAPTIVE_PIXELMAP_OPITEM, DrawAdaptivePixelMapOpItem::Playback},
-    { DrawOpItem::REGION_OPITEM,            DrawRegionOpItem::Playback},
+    { DrawOpItem::REGION_OPITEM,            DrawRegionOpItem::Playback },
+    { DrawOpItem::PATCH_OPITEM,             DrawPatchOpItem::Playback },
 };
 
 CanvasPlayer::CanvasPlayer(Canvas& canvas, const CmdList& cmdList, const Rect& rect)
@@ -382,6 +383,30 @@ void DrawRegionOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
     }
 
     canvas.DrawRegion(*region);
+}
+
+DrawPatchOpItem::DrawPatchOpItem(const std::pair<uint32_t, size_t> cubics, const std::pair<uint32_t, size_t> colors,
+    const std::pair<uint32_t, size_t> texCoords, BlendMode mode)
+    : DrawOpItem(PATCH_OPITEM), cubics_(cubics), colors_(colors), texCoords_(texCoords), mode_(mode) {}
+
+void DrawPatchOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const DrawPatchOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawPatchOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto cubics = CmdListHelper::GetVectorFromCmdList<Point>(cmdList, cubics_);
+    auto colors = CmdListHelper::GetVectorFromCmdList<Point>(cmdList, colors_);
+    auto texCoords = CmdListHelper::GetVectorFromCmdList<Point>(cmdList, texCoords_);
+
+    canvas.DrawPatch(cubics.empty() ? nullptr : cubics.data(),
+        colors.empty() ? nullptr : colors.data(),
+        texCoords.empty() ? nullptr : texCoords.data(),
+        mode_);
 }
 
 DrawColorOpItem::DrawColorOpItem(ColorQuad color, BlendMode mode) : DrawOpItem(COLOR_OPITEM),

@@ -368,6 +368,55 @@ void SkiaCanvas::DrawRegion(const Region& region)
     }
 }
 
+void SkiaCanvas::DrawPatch(const Point cubics[12], const ColorQuad colors[4], const Point texCoords[4], BlendMode mode)
+{
+    if (!skCanvas_) {
+        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        return;
+    }
+
+    size_t cubicsPointCount = 12;
+    std::vector<SkPoint> skiaCubics = {};
+    if (cubics != nullptr) {
+        skiaCubics.resize(cubicsPointCount);
+        for (size_t i = 0; i < cubicsPointCount; ++i) {
+            skiaCubics[i].fX = cubics[i].GetX();
+            skiaCubics[i].fY = cubics[i].GetY();
+        }
+    }
+
+    size_t colorCount = 4;
+    std::vector<SkColor> skiaColors = {};
+    if (colors != nullptr) {
+        skiaColors.resize(colorCount);
+        for (size_t i = 0; i < colorCount; ++i) {
+            skiaColors[i] = static_cast<SkColor>(colors[i]);
+        }
+    }
+
+    size_t texCoordCount = 4;
+    std::vector<SkPoint> skiaTexCoords = {};
+    if (texCoords != nullptr) {
+        skiaTexCoords.resize(texCoordCount);
+        for (size_t i = 0; i < texCoordCount; ++i) {
+            skiaTexCoords[i].fX = texCoords[i].GetX();
+            skiaTexCoords[i].fY = texCoords[i].GetY();
+        }
+    }
+
+    for (auto d : skiaPaint_.GetSortedPaints()) {
+        if (d != nullptr) {
+            LOGI("skCanvas_ drawPatch");
+            skCanvas_->drawPatch(
+                skiaCubics.empty() ? nullptr : skiaCubics.data(),
+                skiaColors.empty() ? nullptr : skiaColors.data(),
+                skiaTexCoords.empty() ? nullptr : skiaTexCoords.data(),
+                static_cast<SkBlendMode>(mode), d->paint);
+        }
+    }
+    return;
+}
+
 void SkiaCanvas::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py)
 {
     if (!skCanvas_) {

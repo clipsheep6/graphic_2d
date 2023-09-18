@@ -185,6 +185,8 @@ public:
      */
     virtual void DrawRegion(const Region& region);
 
+    virtual void DrawPatch(const Point cubics[12], const ColorQuad colors[4], const Point texCoords[4], BlendMode mode);
+
     // image
     virtual void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py);
     virtual void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py);

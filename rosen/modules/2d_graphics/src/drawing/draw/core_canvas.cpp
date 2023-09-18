@@ -144,6 +144,11 @@ void CoreCanvas::DrawRegion(const Region& region)
     impl_->DrawRegion(region);
 }
 
+void CoreCanvas::DrawPatch(const Point cubics[12], const ColorQuad colors[4], const Point texCoords[4], BlendMode mode)
+{
+    impl_->DrawPatch(cubics, colors, texCoords, mode);
+}
+
 void CoreCanvas::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py)
 {
     impl_->DrawBitmap(bitmap, px, py);

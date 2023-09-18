@@ -486,6 +486,7 @@ GSError BufferQueue::DoFlushBuffer(uint32_t sequence, const sptr<BufferExtraData
         acquireFenceThread.TrackFence(fence);
     }
     // if you need dump SurfaceBuffer to file, you should call DumpToFile(sequence) here
+    DumpToFile(sequence);
     return GSERROR_OK;
 }
 

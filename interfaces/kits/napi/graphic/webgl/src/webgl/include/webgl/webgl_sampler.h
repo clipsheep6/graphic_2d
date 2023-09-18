@@ -17,19 +17,24 @@
 #define ROSENRENDER_ROSEN_WEBGL_SAMPLER
 
 #include "../../../common/napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLSampler final : public NExporter {
+class WebGLSampler final : public NExporter, WebGLObject {
 public:
     inline static const std::string className = "WebGLSampler";
+    inline static const int objectType = WEBGL_OBJECT_SAMPLE;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
-
+    static NVal CreateObjectInstance(napi_env env, WebGLSampler **instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLSampler>(env, instance);
+    }
     void SetSampler(unsigned int sampler)
     {
         m_sampler = sampler;

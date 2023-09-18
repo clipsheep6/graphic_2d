@@ -14,8 +14,13 @@
  */
 
 #include "../include/webgl/webgl_texture.h"
+
 #include "../../common/napi/n_class.h"
 #include "../../common/napi/n_func_arg.h"
+#include "../include/util/util.h"
+#include "../include/context/webgl_rendering_context_base.h"
+#include "../include/context/webgl_rendering_context_basic_base.h"
+#include "../include/context/webgl2_rendering_context_base.h"
 
 namespace OHOS {
 namespace Rosen {

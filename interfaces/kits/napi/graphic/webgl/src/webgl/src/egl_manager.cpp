@@ -83,6 +83,9 @@ EGLSurface EglManager::CreateSurface(NativeWindow* window)
         };
         eglSurface = eglCreatePbufferSurface(mEGLDisplay, mEGLConfig, surfaceAttributes);
     }
+    if (eglSurface == NULL) {
+        LOGE("EglManager CreateSurface eglSurface = null error %{public}d", eglGetError());
+    }
     return eglSurface;
 }
 

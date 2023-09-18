@@ -45,41 +45,15 @@ namespace OHOS {
 namespace Rosen {
 static napi_value Export(napi_env env, napi_value exports)
 {
-    napi_status status;
-    bool succ = false;
-    napi_value id = nullptr;
-    status = napi_get_named_property(env, exports, "id", &id);
-    if (status != napi_ok) {
-        return nullptr;
-    }
-    unique_ptr<char[]> idRev;
-    tie(succ, idRev, ignore) = NVal(env, id).ToUTF8String();
+    string idStr;
+    std::vector<std::string> vec;
+    bool succ = Util::GetContextInfo(env, exports, idStr, vec);
     if (!succ) {
         return nullptr;
     }
-    string idStr = idRev.get();
-
-    napi_value param = nullptr;
-    status = napi_get_named_property(env, exports, "param", &param);
-    if (status != napi_ok) {
-        return nullptr;
-    }
-    unique_ptr<char[]> strRev;
-    tie(succ, strRev, ignore) = NVal(env, param).ToUTF8String();
-    if (!succ) {
-        return nullptr;
-    }
-    string str = strRev.get();
-
-    vector<string> vec;
-    Util::SplitString(str, vec, ",");
-    if (vec.size() == 0) {
-        return nullptr;
-    }
-
     size_t webglItem = vec[0].find("webgl");
-    string webgl2Str = vec[0].substr(webglItem, 6);
-    string webgl1Str = vec[0].substr(webglItem, 5);
+    string webgl2Str = vec[0].substr(webglItem, 6); // length of webgl2
+    string webgl1Str = vec[0].substr(webglItem, 5); // length of webgl
     if (webgl2Str == "webgl2") {
         auto& webgl2Objects = ObjectManager::GetInstance().GetWebgl2ObjectMap();
         WebGL2RenderingContext *webGl2RenderingContext = nullptr;
@@ -87,23 +61,23 @@ static napi_value Export(napi_env env, napi_value exports)
         if (it == webgl2Objects.end()) {
             webGl2RenderingContext = new WebGL2RenderingContext(env, exports);
             webgl2Objects.insert({idStr, webGl2RenderingContext});
-            webGl2RenderingContext->mEGLSurface = EglManager::GetInstance().CreateSurface(
-                webGl2RenderingContext->mEglWindow);
         } else {
             webGl2RenderingContext = reinterpret_cast<WebGL2RenderingContext *>(it->second);
+        }
+        if (webGl2RenderingContext->mEGLSurface == nullptr) {
+            webGl2RenderingContext->mEGLSurface =
+                EglManager::GetInstance().CreateSurface(webGl2RenderingContext->mEglWindow);
         }
         if (!webGl2RenderingContext->Export(env, exports)) {
             return nullptr;
         }
     } else if (webgl1Str == "webgl") {
-        bool newCreate = false;
         auto& webgl1Objects = ObjectManager::GetInstance().GetWebgl1ObjectMap();
         WebGLRenderingContext *webGlRenderingContext = nullptr;
         auto it = webgl1Objects.find(idStr);
         if (it == webgl1Objects.end()) {
             webGlRenderingContext = new WebGLRenderingContext(env, exports);
             webgl1Objects.insert({idStr, webGlRenderingContext});
-            newCreate = true;
         } else {
             webGlRenderingContext = reinterpret_cast<WebGLRenderingContext *>(it->second);
         }
@@ -116,7 +90,7 @@ static napi_value Export(napi_env env, napi_value exports)
             webGlRenderingContext->webGlContextAttributes = webGlContextAttributes;
             webGlContextAttributes = nullptr;
         }
-        if (newCreate) {
+        if (webGlRenderingContext->mEGLSurface == nullptr) {
             webGlRenderingContext->mEGLSurface =
                 EglManager::GetInstance().CreateSurface(webGlRenderingContext->mEglWindow);
         }

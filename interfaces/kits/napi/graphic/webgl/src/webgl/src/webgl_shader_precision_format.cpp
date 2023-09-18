@@ -27,11 +27,64 @@
 
 #include "../../common/napi/n_class.h"                       // for NClass
 #include "../../common/napi/n_func_arg.h"                    // for NFuncArg
+#include "../include/util/log.h"
 #include "common/napi/n_val.h"                               // for NVal
 
 namespace OHOS {
 namespace Rosen {
 using namespace std;
+
+WebGLShaderPrecisionFormat *WebGLShaderPrecisionFormat::GetObjectFromArg(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+        LOGE("WebGLShaderPrecisionFormat::GetObjectFromArg invalid arg");
+        return nullptr;
+    }
+    if (funcArg.GetThisVar() == nullptr) {
+        LOGE("WebGLShaderPrecisionFormat::GetObjectFromArg invalid arg");
+        return nullptr;
+    }
+    WebGLShaderPrecisionFormat *obj = nullptr;
+    napi_status status = napi_unwrap(env, funcArg.GetThisVar(), (void **) &obj);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    return obj;
+}
+
+napi_value WebGLShaderPrecisionFormat::GetShaderPrecisionFormatRangeMin(napi_env env, napi_callback_info info)
+{
+    WebGLShaderPrecisionFormat *obj = GetObjectFromArg(env, info);
+    if (obj == nullptr) {
+        return nullptr;
+    }
+    int size = obj->GetShaderPrecisionFormatRangeMin();
+    LOGI("WebGLShaderPrecisionFormat::GetShaderPrecisionFormatRangeMin %d", size);
+    return NVal::CreateInt64(env, size).val_;
+}
+
+napi_value WebGLShaderPrecisionFormat::GetShaderPrecisionFormatRangeMax(napi_env env, napi_callback_info info)
+{
+    WebGLShaderPrecisionFormat *obj = GetObjectFromArg(env, info);
+    if (obj == nullptr) {
+        return nullptr;
+    }
+    int size = obj->GetShaderPrecisionFormatRangeMax();
+    LOGI("WebGLShaderPrecisionFormat::GetShaderPrecisionFormatRangeMax %d", size);
+    return NVal::CreateInt64(env, size).val_;
+}
+
+napi_value WebGLShaderPrecisionFormat::GetShaderPrecisionFormatPrecision(napi_env env, napi_callback_info info)
+{
+    WebGLShaderPrecisionFormat *obj = GetObjectFromArg(env, info);
+    if (obj == nullptr) {
+        return nullptr;
+    }
+    int precision = obj->GetShaderPrecisionFormatPrecision();
+    LOGI("WebGLShaderPrecisionFormat::GetShaderPrecisionFormatPrecision %d", precision);
+    return NVal::CreateInt64(env, precision).val_;
+}
 
 napi_value WebGLShaderPrecisionFormat::Constructor(napi_env env, napi_callback_info info)
 {
@@ -50,7 +103,11 @@ napi_value WebGLShaderPrecisionFormat::Constructor(napi_env env, napi_callback_i
 
 bool WebGLShaderPrecisionFormat::Export(napi_env env, napi_value exports)
 {
-    vector<napi_property_descriptor> props = {};
+    vector<napi_property_descriptor> props = {
+        NVal::DeclareNapiGetter("precision", WebGLShaderPrecisionFormat::GetShaderPrecisionFormatPrecision),
+        NVal::DeclareNapiGetter("rangeMax", WebGLShaderPrecisionFormat::GetShaderPrecisionFormatRangeMax),
+        NVal::DeclareNapiGetter("rangeMin", WebGLShaderPrecisionFormat::GetShaderPrecisionFormatRangeMin)
+    };
 
     string className = GetClassName();
     bool succ = false;

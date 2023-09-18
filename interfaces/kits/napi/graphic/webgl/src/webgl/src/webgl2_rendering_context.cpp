@@ -15,7 +15,9 @@
 
 #include "../include/context/webgl2_rendering_context.h"
 
+#include "../include/context/webgl_rendering_context_overloads.h"
 #include "../include/util/object_manager.h"
+#include "../include/util/egl_manager.h"
 #include "../include/util/log.h"
 #include "../../common/napi/n_class.h"
 #include "../../common/napi/n_func_arg.h"
@@ -1345,30 +1347,33 @@ static napi_value GetMaxClientWaitTimeoutWebgl(napi_env env, napi_callback_info 
 
 bool WebGL2RenderingContext::Export(napi_env env, napi_value exports)
 {
-    napi_status status;
-    napi_value contextClass = nullptr;
-    napi_define_class(
-        env, "WebGL2RenderingContext", NAPI_AUTO_LENGTH,
-        [](napi_env env, napi_callback_info info) -> napi_value {
+    LOGI("WebGL WebGL2RenderingContext::Export env %{public}p mContextRef %{public}p", env, mContextRef);
+    napi_value instanceValue = GetContextInstance(env,
+        GetClassName(), [](napi_env env, napi_callback_info info) -> napi_value {
             napi_value thisVar = nullptr;
             napi_get_cb_info(env, info, nullptr, nullptr, &thisVar, nullptr);
-
+            LOGI("WebGL WebGL2RenderingContext::create");
             return thisVar;
-        },
-        nullptr, 0, nullptr, &contextClass);
-
-    napi_value instanceValue = nullptr;
-    napi_new_instance(env, contextClass, 0, nullptr, &instanceValue);
-    status = napi_wrap(
-        env, instanceValue, static_cast<void*>(this),
-        [](napi_env env, void* data, void* hint) {
+        }, [](napi_env env, void* data, void* hint) {
             auto entity = static_cast<WebGL2RenderingContext *>(data);
+            LOGI("WebGL WebGL2RenderingContext::delete");
+            if (entity->mContextRef) {
+                napi_delete_reference(env, entity->mContextRef);
+            }
+            if (entity->mEGLSurface != nullptr) {
+                eglDestroySurface(EglManager::GetInstance().GetEGLDisplay(), entity->mEGLSurface);
+                entity->mEGLSurface = nullptr;
+            }
             delete entity;
-        }, nullptr, nullptr);
-    if (status != napi_ok) {
+        }
+    );
+    if (instanceValue == nullptr) {
+        LOGE("Failed to create instance");
         return false;
     }
-    napi_property_descriptor props[] = {
+    LOGI("WebGL WebGL2RenderingContext::Export instanceValue %{public}p", instanceValue);
+
+    std::vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("drawBuffers", WebGL2RenderingContextBase::DrawBuffers),
         NVal::DeclareNapiFunction("clearBufferfv", WebGL2RenderingContextBase::ClearBufferfv),
         NVal::DeclareNapiFunction("clearBufferiv", WebGL2RenderingContextBase::ClearBufferiv),
@@ -1455,7 +1460,7 @@ bool WebGL2RenderingContext::Export(napi_env env, napi_value exports)
                                   WebGL2RenderingContextBase::GetActiveUniformBlockParameter),
         NVal::DeclareNapiFunction("bufferData", WebGL2RenderingContextOverloads::BufferData),
         NVal::DeclareNapiFunction("bufferSubData", WebGL2RenderingContextOverloads::BufferSubData),
-        NVal::DeclareNapiFunction("texImage2D", WebGL2RenderingContextOverloads::TexImage2D),
+        NVal::DeclareNapiFunction("texImage2D", WebGLRenderingContextOverloads::TexImage2D),
         NVal::DeclareNapiFunction("texSubImage2D", WebGL2RenderingContextOverloads::TexSubImage2D),
         NVal::DeclareNapiFunction("compressedTexImage2D", WebGL2RenderingContextOverloads::CompressedTexImage2D),
         NVal::DeclareNapiFunction("compressedTexSubImage2D", WebGL2RenderingContextOverloads::CompressedTexSubImage2D),
@@ -1750,7 +1755,11 @@ bool WebGL2RenderingContext::Export(napi_env env, napi_value exports)
         NVal::DeclareNapiGetter("MAX_CLIENT_WAIT_TIMEOUT_WEBGL", GetMaxClientWaitTimeoutWebgl),
         NVal::DeclareNapiProperty("WebGLRenderingContext", instanceValue),
     };
-    status = napi_define_properties(env, exports, sizeof(props) / sizeof(props[0]), props);
+    std::vector<napi_property_descriptor> properties = {};
+    // WebGLRenderingContextBase::GetRenderingContextBasePropertyDesc(properties);
+    properties.insert(properties.end(), props.begin(), props.end());
+    LOGI("WebGLRenderingContext properties %{public}d", properties.size());
+    napi_status status = napi_define_properties(env, exports, properties.size(), properties.data());
     if (status != napi_ok) {
         return false;
     }

@@ -417,6 +417,33 @@ void SkiaCanvas::DrawPatch(const Point cubics[12], const ColorQuad colors[4], co
     return;
 }
 
+void SkiaCanvas::ExperimentalDrawEdgeAAQuad(const Rect& rect, const Point clip[4],
+        QuadAAFlags aaFlags, ColorQuad color, BlendMode mode)
+{
+    if (!skCanvas_) {
+        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        return;
+    }
+
+    SkRect skiaRect = SkRect::MakeLTRB(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
+
+    size_t clipPointCount = 4;
+    std::vector<SkPoint> skiaClip = {};
+    if (clip != nullptr) {
+        skiaClip.resize(clipPointCount);
+        for (size_t i = 0; i < clipPointCount; ++i) {
+            skiaClip[i].fX = clip[i].GetX();
+            skiaClip[i].fY = clip[i].GetY();
+        }
+    }
+
+    skCanvas_->experimental_DrawEdgeAAQuad(skiaRect
+        skiaClip.empty() ? nullptr : skiaClip.data(),
+        static_cast<SkCanvas::QuadAAFlags>(aaFlags),
+        static_cast<SkColor>(color),
+        static_cast<SkBlendMode>(mode));
+}
+
 void SkiaCanvas::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py)
 {
     if (!skCanvas_) {

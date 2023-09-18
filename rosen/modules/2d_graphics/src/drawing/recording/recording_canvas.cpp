@@ -184,6 +184,19 @@ void RecordingCanvas::DrawPatch(const Point cubics[12], const ColorQuad colors[4
     cmdList_->AddOp<DrawPatchOpItem>(cubicsData, colorsData, texCoordsData, mode);
 }
 
+void RecordingCanvas::ExperimentalDrawEdgeAAQuad(const Rect& rect, const Point clip[4],
+    QuadAAFlags aaFlags, ColorQuad color, BlendMode mode)
+{
+    size_t clipCount = 4;
+    std::vector<Point> clipData = {};
+    if (clip != nullptr) {
+        clipData = std::vector<Point>(clip, clip + clipCount);
+    }
+
+    auto clipDataPtr = CmdListHelper::AddVectorToCmdList<Point>(*cmdList_, clipData);
+    cmdList_->AddOp<ExperimentalDrawEdgeAAQuadOpItem>(rect, clipDataPtr, aaFalgs, color, mode);
+}
+
 void RecordingCanvas::DrawColor(ColorQuad color, BlendMode mode)
 {
     cmdList_->AddOp<DrawColorOpItem>(color, mode);

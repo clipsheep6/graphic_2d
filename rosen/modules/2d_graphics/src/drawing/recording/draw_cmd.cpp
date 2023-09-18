@@ -85,6 +85,7 @@ std::unordered_map<uint32_t, CanvasPlayer::PlaybackFunc> CanvasPlayer::opPlaybac
     { DrawOpItem::ADAPTIVE_PIXELMAP_OPITEM, DrawAdaptivePixelMapOpItem::Playback},
     { DrawOpItem::REGION_OPITEM,            DrawRegionOpItem::Playback },
     { DrawOpItem::PATCH_OPITEM,             DrawPatchOpItem::Playback },
+    { DrawOpItem::EXPERIMENTAL_EDGEAAQUAD_OPITEM, ExperimentalDrawEdgeAAQuadOpIterm::Playback },
 };
 
 CanvasPlayer::CanvasPlayer(Canvas& canvas, const CmdList& cmdList, const Rect& rect)
@@ -407,6 +408,25 @@ void DrawPatchOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
         colors.empty() ? nullptr : colors.data(),
         texCoords.empty() ? nullptr : texCoords.data(),
         mode_);
+}
+
+ExperimentalDrawEdgeAAQuadOpItem::ExperimentalDrawEdgeAAQuadOpItem(const Rect& src,
+    const std::pair<uint32_t, size_t> clipQuad, QuadAAFlags aaFlags, ColorQuad color, BlendMode mode)
+    : DrawOpItem(EXPERIMENTAL_EDGEAAQUAD_OPITEM), rect_(rect), clipQuad_(clipQuad),
+    aaFlags_(aaFlags), color_(color), mode_(mode) {}
+
+void ExperimentalDrawEdgeAAQuadOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const ExperimentalDrawEdgeAAQuadOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void ExperimentalDrawEdgeAAQuadOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto clip = CmdListHelper::GetVectorFromCmdList<Point>(cmdList, clipQuad_);
+    canvas.ExperimentalDrawEdgeAAQuad(rect_, clip.empty() ? nullptr : clip.data(), aaFlags_, color_, mode_);
 }
 
 DrawColorOpItem::DrawColorOpItem(ColorQuad color, BlendMode mode) : DrawOpItem(COLOR_OPITEM),

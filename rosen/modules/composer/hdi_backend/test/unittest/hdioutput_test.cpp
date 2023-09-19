@@ -227,6 +227,90 @@ HWTEST_F(HdiOutputTest, Commit002, Function | MediumTest| Level1)
     ASSERT_EQ(HdiOutputTest::hdiOutput_->Commit(fbFence), GRAPHIC_DISPLAY_SUCCESS);
 }
 
+/*
+* Function: CreateLayer
+* Type: Function
+* Rank: Important(1)
+* EnvConditions: N/A
+* CaseDescription: 1. call CreateLayer
+*                  2. check ret
+*/
+HWTEST_F(HdiOutputTest, CreateLayer, Function | MediumTest | Level3)
+{
+    uint64_t surfaceId = 0;
+    uint32_t screenId_ = HdiOutputTest::hdiOutput_->GetScreenId();
+    const LayerInfoPtr layerInfo;
+    LayerPtr layer = HdiLayer::CreateHdiLayer(screenId_);
+    bool ret = layer->Init(layerInfo);
+    ASSERT_FALSE(ret);
+    auto res = HdiOutputTest::hdiOutput_->CreateLayer(surfaceId, layerInfo);
+    ASSERT_EQ(res, GRAPHIC_DISPLAY_FAILURE);
+}
+
+/*
+* Function: PreProcessLayersComp
+* Type: Function
+* Rank: Important(1)
+* EnvConditions: N/A
+* CaseDescription: 1. call PreProcessLayersComp
+*                  2. check ret
+*/
+HWTEST_F(HdiOutputTest, PreProcessLayersComp, Function | MediumTest | Level3)
+{
+    bool needFlush;
+    int32_t ret = 0;
+    std::unordered_map<uint32_t, LayerPtr> layerIdMap_ = HdiOutputTest::hdiOutput_->GetLayers();
+    for (auto iter = layerIdMap_.begin(); iter != layerIdMap_.end(); ++iter) {
+        const LayerPtr& layer = iter->second;
+        ret = layer->SetHdiLayerInfo();
+        ASSERT_EQ(ret, GRAPHIC_DISPLAY_SUCCESS);
+        auto res = HdiOutputTest::hdiOutput_->PreProcessLayersComp(needFlush);
+        ASSERT_EQ(res, 0);
+    }
+}
+
+/*
+* Function: CheckAndUpdateClientBufferCahce001
+* Type: Function
+* Rank: Important(1)
+* EnvConditions: N/A
+* CaseDescription: 1. call CheckAndUpdateClientBufferCahce
+*                  2. check ret
+*/
+HWTEST_F(HdiOutputTest, CheckAndUpdateClientBufferCahce001, Function | MediumTest| Level3)
+{
+    sptr<SurfaceBuffer> buffer;
+    uint32_t index = 0;
+    uint32_t bufferCacheCountMax_ = 100;
+    std::vector<sptr<SurfaceBuffer>> bufferCache_;
+    for (uint32_t i = 0; i < bufferCacheCountMax_; i++) {
+        auto ret = bufferCache_[i];
+        ASSERT_EQ(ret, buffer);
+        index = i;
+        auto res = HdiOutputTest::hdiOutput_->CheckAndUpdateClientBufferCahce(buffer, index);
+        ASSERT_TRUE(res);
+    }
+}
+
+/*
+* Function: CheckAndUpdateClientBufferCahce002
+* Type: Function
+* Rank: Important(1)
+* EnvConditions: N/A
+* CaseDescription: 1. call CheckAndUpdateClientBufferCahce
+*                  2. check ret
+*/
+HWTEST_F(HdiOutputTest, CheckAndUpdateClientBufferCahce002, Function | MediumTest| Level3)
+{
+    sptr<SurfaceBuffer> buffer;
+    uint32_t index = 0;
+    uint32_t bufferCacheCountMax_ = 100;
+    uint32_t bufferCacheIndex_ = 200;
+    bool ret = (bufferCacheIndex_ >= bufferCacheCountMax_);
+    ASSERT_TRUE(ret);
+    auto result = HdiOutputTest::hdiOutput_->CheckAndUpdateClientBufferCahce(buffer, index);
+    ASSERT_FALSE(result);
+}
 } // namespace
 } // namespace Rosen
 } // namespace OHOS

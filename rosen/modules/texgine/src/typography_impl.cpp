@@ -185,7 +185,7 @@ IndexAndAffinity TypographyImpl::GetGlyphIndexByCoordinate(double x, double y) c
     // process y more than typography
     if (targetLine == static_cast<int>(lineMetrics_.size())) {
         LOGEX_FUNC_LINE_DEBUG() << "special: y >= max";
-        return {count - 1, Affinity::PREV};
+        return {count, Affinity::PREV};
     }
 
     // find targetIndex
@@ -204,17 +204,22 @@ IndexAndAffinity TypographyImpl::GetGlyphIndexByCoordinate(double x, double y) c
     // process right part
     auto affinity = Affinity::PREV;
     if (targetIndex == widths.size()) {
-        return {count - 1, affinity};
+        return {count, affinity};
     }
 
     // calc affinity
     if (targetIndex > 0 && targetIndex < widths.size()) {
         auto mid = offsetX + widths[targetIndex] * HALF;
-        affinity = x < mid ? Affinity::NEXT : Affinity::PREV;
+        if (x < mid) {
+            count--;
+            affinity = Affinity::NEXT;
+        } else {
+            affinity = Affinity::PREV;
+        }
     }
     LOGEX_FUNC_LINE_DEBUG() << "affinity: " << (affinity == Affinity::PREV ? "upstream" : "downstream");
 
-    return {count - 1, affinity};
+    return {count, affinity};
 }
 
 void TypographyImpl::ComputeWordBoundary() const

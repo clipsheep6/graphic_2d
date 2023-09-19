@@ -42,6 +42,10 @@ public:
     {
         expiredCallback_ = expiredCallback;
     }
+    void SetForceUpdateCallback(std::function<void()> forceUpdateCallback)
+    {
+        forceUpdateCallback_ = forceUpdateCallback;
+    }
 private:
     void CalcRefreshRate(const ScreenId id, const FrameRateRange& range);
     void ExecuteSwitchRefreshRate(const ScreenId id);
@@ -51,6 +55,7 @@ private:
     uint32_t rsFrameRate_ = -1;
     std::unordered_map<pid_t, uint32_t> multiAppFrameRate_;
     std::function<void()> expiredCallback_;
+    std::function<void()> forceUpdateCallback_;
 };
 } // namespace Rosen
 } // namespace OHOS
